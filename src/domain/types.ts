@@ -71,8 +71,12 @@ export interface TextileWall {
   from: number;
   /** Span along the wall, metres. */
   width: number;
-  /** Height in metres. Omitted means full wall height. */
+  /** Height in metres. Omitted means full wall height (less `bottom`). */
   height?: number;
+  /** Distance from the floor to the frame, metres. Omitted means on the floor. */
+  bottom?: number;
+  /** Wall face, as for door swing: 1 = left normal of from → to, −1 = the other. Omitted: into the stand (see decor.ts). */
+  side?: 1 | -1;
   motif?: string;
 }
 
@@ -81,10 +85,16 @@ export interface Foil {
   id: string;
   wallId: string;
   module: number;
-  /** Covers the whole panel. Width and height are then ignored. */
+  /** Wall face, as for textiles. */
+  side?: 1 | -1;
+  /** Covers the whole panel. Size and position then follow the panel. */
   full: boolean;
+  /** Decal size, metres. */
   width: number;
   height: number;
+  /** Decal centre: offset from the panel centre along the wall (from → to), and height above the floor, metres. */
+  x: number;
+  y: number;
   motif?: string;
 }
 

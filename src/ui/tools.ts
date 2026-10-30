@@ -8,7 +8,11 @@ export type Brush =
   | { kind: 'wall'; ral: string }
   | { kind: 'floor'; product: string }
   | { kind: 'opening'; product: string }
-  | { kind: 'object'; product: string };
+  | { kind: 'object'; product: string }
+  /** InFrame textile wall: click a wall face to fill its free part. */
+  | { kind: 'textile' }
+  /** A motif: on a textile it becomes the print, on a wall panel a foil decal. */
+  | { kind: 'motif'; motif: string };
 
 /** Floor brush size in 0,5 m cells. */
 export interface FloorSize {
@@ -24,4 +28,4 @@ export const FLOOR_SIZES: { label: string; size: FloorSize }[] = [
 ];
 
 /** Calc group hovered in the calc panel; the plan dims everything else. */
-export type Highlight = 'walls' | 'beams' | 'openings' | 'textile' | 'floor' | 'objects' | null;
+export type Highlight = 'walls' | 'beams' | 'openings' | 'textile' | 'foil' | 'floor' | 'objects' | null;

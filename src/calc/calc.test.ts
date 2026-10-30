@@ -199,7 +199,7 @@ describe('labour', () => {
   it('foil adds 0,25 t/m²', () => {
     const v = createVariant('A', { width: 4, depth: 4, type: 'row' });
     const base = run(v).keyFigures.hours;
-    const foils = Array.from({ length: 4 }, (_, i) => ({ id: `f${i}`, wallId: 'side-back', module: i, full: true, width: 0, height: 0 }));
+    const foils = Array.from({ length: 4 }, (_, i) => ({ id: `f${i}`, wallId: 'side-back', module: i, full: true, width: 0, height: 0, x: 0, y: 0 }));
     const res = run({ ...v, foils });
     // 4 × 0,96 × 2,42 = 9,29 m² × 0,25 = 2,32 h
     expect(qty(res, S.foilFull)).toBe(9.3);

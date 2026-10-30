@@ -1,5 +1,5 @@
-import { Blinds, Box, Check, ChevronRight, DoorClosed, Eraser, PaintBucket, Paintbrush, Search, Trash2 } from 'lucide-react'
-import { Fragment, useMemo, useState } from 'react'
+import { Blinds, Box, Check, ChevronRight, DoorClosed, Eraser, PaintBucket, Paintbrush, Search, Trash2, Upload } from 'lucide-react'
+import { Fragment, useMemo, useRef, useState } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import type { Product } from '../../catalog/types'
 import { setCounted, setStand } from '../../domain/edit'
@@ -7,8 +7,13 @@ import { addObjectAnywhere, removeObjects } from '../../domain/objects'
 import { addDefaultRoom } from '../../domain/rooms'
 import type { StandType, Variant } from '../../domain/types'
 import { fillFloor } from '../../domain/variant'
+import { textileBox } from '../../domain/decor'
+import { wallLabel } from '../../calc/production'
+import type { Motif } from '../../persistence/file'
+import type { PlanSelection } from '../plan/PlanView'
+import { readMotif, SAMPLE_MOTIFS } from '../motifs'
 import { INK, LAYER_COLOR, SUNKEN } from '../colors'
-import { CommitInput, Counter, IconButton, Segmented } from '../controls'
+import { Button, CommitInput, Counter, IconButton, Segmented } from '../controls'
 import { catalog, place, productOf, rules, wallPlates } from '../env'
 import { fmt, kr, mm } from '../format'
 import { beamSummary } from '../names'
@@ -27,6 +32,11 @@ export interface RailProps {
   pick: (b: Brush, tool?: Tool) => void
   onEdit: (fn: (v: Variant) => Variant) => void
   onToast: (t: string) => void
+  /** Motif library: samples and the customer's own. */
+  motifs: Motif[]
+  onAddMotif: (m: Motif) => void
+  /** Open a textile in the wall drawer. */
+  onSelect: (s: PlanSelection) => void
 }
 
 const TYPE_TEXT: Record<StandType, string> = {
@@ -87,6 +97,7 @@ export function Rail(p: RailProps) {
               {tab === 'stand' && <StandSection {...p} />}
               {tab === 'vegg' && <WallSection {...p} />}
               {tab === 'gulv' && <FloorSection {...p} />}
+              {tab === 'prof' && <ProfileSection {...p} />}
               {menu.group === 'equip' && <EquipSection {...p} menu={menu.key} />}
             </>
           )}
@@ -372,6 +383,101 @@ function FloorSection({ v, res, brush, tool, pick, onEdit }: RailProps) {
         </div>
       )}
       <p className="panel-note">Fyll dekker hele standen. Penselen tegner valgt gulv i planen: 1 × 1 som standard, ned til 0,5 × 0,5. Flere gulvtyper kan stå på samme stand.</p>
+    </>
+  )
+}
+
+/** Profilering: textile walls (InFrame) and the motif library. Counted profiling items follow below. */
+function ProfileSection({ v, res, brush, tool, pick, motifs, onAddMotif, onSelect, onToast }: RailProps) {
+  const file = useRef<HTMLInputElement>(null)
+  const pen = tool !== 'select' && brush?.kind === 'textile'
+  const frame = productOf(catalog.system.frame)?.variants[0]
+  const print = productOf(catalog.system.print)?.variants[0]
+  const k = res.keyFigures
+  const name = (id?: string) => motifs.find((m) => m.id === id)?.name
+  const upload = async (f: File) => {
+    try {
+      const m = await readMotif(f, motifs.map((x) => x.id))
+      onAddMotif(m)
+      onToast(`${m.name} lagt til i grafikkbiblioteket`)
+    } catch (e) {
+      onToast((e as Error).message)
+    }
+  }
+  return (
+    <>
+      <div className="panel-sec eyebrow">Tekstilvegg</div>
+      <ProductRow
+        on={v.textiles.length > 0}
+        pen={pen}
+        thumb={<i className="tex-thumb" />}
+        title="Tekstilvegg InFrame"
+        meta={
+          <>
+            Tekstil i aluminiumsramme · <span className="num">{kr(frame?.price ?? 0)} kr/lm · {kr(print?.price ?? 0)} kr/m²</span> · klikk en vegg
+          </>
+        }
+        result={v.textiles.length ? `${v.textiles.length} ${v.textiles.length === 1 ? 'ramme' : 'rammer'} · ${fmt(k.textileM2)} m²` : null}
+        action={<IconButton icon={Paintbrush} label="Sett opp tekstilvegg i plan" pressed={pen && tool === 'brush'} onClick={() => pick({ kind: 'textile' })} />}
+      />
+      {v.textiles.map((t) => {
+        const w = v.walls.find((x) => x.id === t.wallId)
+        if (!w) return null
+        const m = name(t.motif)
+        return (
+          <button key={t.id} type="button" className="trow" onClick={() => onSelect({ wallId: w.id, side: t.side, textileId: t.id })}>
+            <span className="name">
+              {wallLabel(w, v.stand)}
+              {m ? <span className="faint"> · {m}</span> : <span className="warn"> · uten motiv</span>}
+            </span>
+            <span className="num">
+              {fmt(t.width)} × {fmt(textileBox(t, rules).height, 2)} m
+            </span>
+          </button>
+        )
+      })}
+
+      <div className="panel-sec eyebrow gfx-head">
+        <span>Grafikk · {motifs.length}</span>
+        <Button icon={Upload} onClick={() => file.current?.click()}>
+          Last opp
+        </Button>
+      </div>
+      <input
+        ref={file}
+        type="file"
+        accept="image/*"
+        hidden
+        onChange={(e) => {
+          const f = e.target.files?.[0]
+          if (f) void upload(f)
+          e.target.value = ''
+        }}
+      />
+      <div className="gfx-grid">
+        {motifs.map((m) => {
+          const on = tool !== 'select' && brush?.kind === 'motif' && brush.motif === m.id
+          return (
+            <button key={m.id} type="button" className={on ? 'gfx on' : 'gfx'} aria-pressed={on} onClick={() => pick({ kind: 'motif', motif: m.id })}>
+              <span className="art">
+                <img src={m.src} alt="" />
+              </span>
+              <span className="lbl">
+                {m.name}
+                {!SAMPLE_MOTIFS.includes(m) && <span className="faint"> · eget</span>}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+      <p className="panel-note">
+        Velg et motiv og klikk på en tekstilvegg for trykk, eller på et veggfelt for foliedekor. Folie går aldri over en stolpe. Velg veggen for å justere størrelse og plassering.
+      </p>
+      {v.foils.length > 0 && (
+        <p className="panel-note num">
+          {v.foils.length} {v.foils.length === 1 ? 'foliedekor' : 'foliedekorer'} · {fmt(k.foilM2)} m²
+        </p>
+      )}
     </>
   )
 }

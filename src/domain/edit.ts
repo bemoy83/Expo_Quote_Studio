@@ -70,16 +70,25 @@ export function replaceWalls(v: Variant, walls: Wall[]): Variant {
     const swing = o.swing === undefined ? undefined : sameDir ? o.swing : (-o.swing as 1 | -1);
     openings.push({ ...o, wallId: hit.wallId, module: Math.round(hit.from), ...(swing === undefined ? {} : { swing }) });
   }
+  // Textiles and foils keep their world face: the side flips when the new wall runs the other way.
+  const faceOn = (x: { wallId: string; side?: 1 | -1 }, hit: { wall: Wall }): 1 | -1 => {
+    const oldW = old.find((w) => w.id === x.wallId)!;
+    const s = x.side ?? defaultSwing(v.stand, oldW);
+    return dot(wallDirection(oldW), wallDirection(hit.wall)) > 0 ? s : s === 1 ? -1 : 1;
+  };
   const textiles: TextileWall[] = [];
   for (const t of v.textiles) {
     const at = locate(old, t.wallId, t.from, t.from + t.width);
     const hit = at && reanchor(walls, at);
-    if (hit) textiles.push({ ...t, wallId: hit.wallId, from: hit.from });
+    if (hit) textiles.push({ ...t, wallId: hit.wallId, from: hit.from, side: faceOn(t, hit) });
   }
   const foils = v.foils.flatMap((f) => {
     const at = locate(old, f.wallId, f.module, f.module + 1);
     const hit = at && reanchor(walls, at);
-    return hit ? [{ ...f, wallId: hit.wallId, module: Math.round(hit.from) }] : [];
+    if (!hit) return [];
+    const side = faceOn(f, hit);
+    const flipped = side !== (f.side ?? defaultSwing(v.stand, old.find((w) => w.id === f.wallId)!));
+    return [{ ...f, wallId: hit.wallId, module: Math.round(hit.from), side, x: flipped ? -f.x : f.x }];
   });
   return { ...v, walls, openings: dedupeOpenings(walls, openings), textiles, foils };
 }

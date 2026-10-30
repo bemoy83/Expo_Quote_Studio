@@ -47,6 +47,14 @@ describe('3D scene from the model', () => {
     expect(new Set(picks)).toEqual(new Set(v.objects.map((o) => o.id)))
   })
 
+  it('one print per foil decal, on its wall', () => {
+    const f = { id: 'f1', wallId: 'side-left', module: 3, side: -1 as const, full: false, width: 0.5, height: 0.2, x: 0, y: 1.5 }
+    const g2 = build({ ...v, foils: [f] }, res)
+    const foils = meshes(g2).filter((o) => (o.userData as Tag).layer === 'foil')
+    expect(foils).toHaveLength(1)
+    expect((foils[0].userData as Tag).pick?.wallId).toBe('side-left')
+  })
+
   it('one textile box per textile wall, and floor cells are instanced per product', () => {
     expect(layer('textile')).toHaveLength(v.textiles.length)
     const inst = layer('floor').filter((o) => (o as THREE.InstancedMesh).isInstancedMesh) as THREE.InstancedMesh[]

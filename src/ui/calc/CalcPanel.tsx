@@ -12,6 +12,7 @@ export function layerOf(g: CalcGroup): Highlight {
   if (g.id === 'beams') return 'beams'
   if (g.id === 'openings') return 'openings'
   if (g.id === 'textile') return 'textile'
+  if (g.id === 'foil') return 'foil'
   if (g.id === 'floor') return 'floor'
   if (g.id.startsWith('cat:')) return 'objects'
   return null
