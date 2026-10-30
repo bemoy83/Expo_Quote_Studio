@@ -169,6 +169,8 @@ export function updateTextile(v: Variant, rules: Rules, id: string, patch: Texti
   const t = v.textiles.find((x) => x.id === id);
   if (!t) return v;
   const s = patch.side ?? sideOf(v, t);
+  const w = v.walls.find((x) => x.id === t.wallId);
+  if (!w || !faces(v, w).includes(s)) return v;
   const spans = freeSpans(v, rules, t.wallId, s, textilesOn(v, t.wallId, s, id));
   const from = patch.from ?? t.from;
   const width = patch.width ?? t.width;
@@ -293,21 +295,26 @@ export interface FoilPatch {
   width?: number;
   full?: boolean;
   motif?: string | null;
+  /** Move to the other face of the wall. */
+  side?: FaceSide;
 }
 
-/** Change a foil. Moving to another felt is refused when that felt cannot take foil. */
+/** Change a foil. Moving to another felt or face is refused when it cannot take foil there. */
 export function updateFoil(v: Variant, rules: Rules, id: string, patch: FoilPatch, ratio: number): Variant {
   const f = v.foils.find((x) => x.id === id);
   if (!f) return v;
   const module = patch.module ?? f.module;
-  if (module !== f.module && feltBlocked(v, rules, f.wallId, module, sideOf(v, f))) return v;
+  const side = patch.side ?? sideOf(v, f);
+  const w = v.walls.find((x) => x.id === f.wallId);
+  if (side !== sideOf(v, f) && (!w || !faces(v, w).includes(side))) return v;
+  if ((module !== f.module || side !== sideOf(v, f)) && feltBlocked(v, rules, f.wallId, module, side)) return v;
   const { motif: _m, ...rest } = f;
   const motif = patch.motif === undefined ? f.motif : patch.motif ?? undefined;
   const wasFull = f.full;
   const full = patch.full ?? f.full;
   const base: Foil = {
     ...rest,
-    side: sideOf(v, f),
+    side,
     module,
     full,
     width: patch.width ?? (wasFull && !full ? felt(rules, module).w * 0.8 : f.width),
@@ -318,7 +325,7 @@ export function updateFoil(v: Variant, rules: Rules, id: string, patch: FoilPatc
   };
   const next = fitFoil(base, rules, ratio);
   // A full-felt foil replaces the other foils on that felt.
-  const drop = full ? new Set(foilsOn(v, f.wallId, sideOf(v, f)).filter((o) => o.module === module && o.id !== id).map((o) => o.id)) : new Set<string>();
+  const drop = full ? new Set(foilsOn(v, f.wallId, side).filter((o) => o.module === module && o.id !== id).map((o) => o.id)) : new Set<string>();
   return { ...v, foils: v.foils.filter((o) => !drop.has(o.id)).map((o) => (o.id === id ? next : o)) };
 }
 

@@ -113,6 +113,25 @@ describe('textile walls', () => {
   });
 });
 
+describe('moving to the other face', () => {
+  it('foil and frames move to the other face of an inner wall, never to the outside of a perimeter wall', () => {
+    let v = paintWalls(row(), [3, 0], [3, 2]);
+    const inner = v.walls.find((w) => w.from[0] === 3)!;
+    v = ok(addFoil(v, RULES, inner.id, 0, 1, 'logo', 2)).v;
+    v = updateFoil(v, RULES, 'f1', { side: -1 }, 2);
+    expect(v.foils[0].side).toBe(-1);
+    v = ok(addTextile(v, RULES, inner.id, 1, 1)).v;
+    v = updateTextile(v, RULES, 't1', { side: -1 });
+    expect(v.textiles[0].side).toBe(-1);
+    // The frame left face 1, so the foil can go back there
+    expect(updateFoil(v, RULES, 'f1', { side: 1 }, 2)).not.toBe(v);
+    let p = ok(addFoil(row(), RULES, 'side-back', 1, 1, 'logo', 2)).v;
+    expect(updateFoil(p, RULES, 'f1', { side: -1 }, 2)).toBe(p);
+    p = ok(addTextile(p, RULES, 'side-back', 1, 3)).v;
+    expect(updateTextile(p, RULES, 't1', { side: -1 })).toBe(p);
+  });
+});
+
 describe('foil decor', () => {
   it('a decal sits inside one felt and keeps the motif ratio', () => {
     const { v, id } = ok(addFoil(row(), RULES, 'side-back', 2, 1, 'logo', 2));

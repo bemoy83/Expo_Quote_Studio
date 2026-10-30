@@ -142,6 +142,14 @@ export function WallDrawer(p: Props) {
     select({})
   }
 
+  /** With a frame or decal selected, the face control moves it to the other face of the wall. */
+  const moveToSide = (side: FaceSide) => {
+    const next = T ? updateTextile(v, rules, T.id, { side }) : F ? updateFoil(v, rules, F.id, { side }, ratioOf(F.motif)) : v
+    if (next === v) return p.onToast(T ? 'Ingen ledig veggflate på den siden' : 'Feltet på den siden kan ikke ha folie')
+    p.onEdit(() => next)
+    select(T ? { side, textileId: T.id } : { side, foilId: F!.id })
+  }
+
   const addFrame = () => {
     const r = addTextile(v, rules, w.id, s, L / 2)
     if (!r) return p.onToast('Ingen ledig veggflate på denne siden')
@@ -180,13 +188,16 @@ export function WallDrawer(p: Props) {
               : `${L} m · ${wallModules(w).length - openings.length} ${L - openings.length === 1 ? 'plate' : 'plater'}${openings.length ? ` · ${openings.length} ${openings.length === 1 ? 'åpning' : 'åpninger'}` : ''}${tex.length ? ` · ${tex.length} ${tex.length === 1 ? 'tekstilvegg' : 'tekstilvegger'}` : ''}`}
         </p>
         {fs.length > 1 ? (
-          <Segmented<FaceSide>
-            inWell
-            label="Side"
-            value={s}
-            onChange={(side) => p.onSelect({ wallId: w.id, side })}
-            options={fs.map((x) => ({ value: x, label: faceName(w, x) }))}
-          />
+          <>
+            {(T || F) && <div className="eyebrow">{T ? 'Rammen står' : 'Folien sitter'}</div>}
+            <Segmented<FaceSide>
+              inWell
+              label={T || F ? 'Flytt til side' : 'Vis side'}
+              value={s}
+              onChange={(side) => (T || F ? moveToSide(side) : p.onSelect({ wallId: w.id, side }))}
+              options={fs.map((x) => ({ value: x, label: faceName(w, x) }))}
+            />
+          </>
         ) : null}
 
         {T && (
