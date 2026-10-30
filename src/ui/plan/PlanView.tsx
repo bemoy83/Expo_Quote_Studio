@@ -1,7 +1,7 @@
 // 2D plan. Explicit layers, bottom to top: ground, floor, grid, walls, openings, textiles, beams and posts,
 // objects, labels, interaction preview. Pointer handling is done on the svg with model coordinates, so the
 // draw order never decides what can be clicked.
-import { useEffect, useMemo, useRef, useState, type PointerEvent as RPointerEvent, type SVGProps } from 'react'
+import { useEffect, useMemo, useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent, type SVGProps } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import { defaultSwing, eraseWalls, isPerimeterWall, paintFloor, paintWalls, segmentKeys, setOpening } from '../../domain/edit'
 import { CELL, parseCellKey, pointAlong, sideLength, sidePoint, wallDirection, wallLength, type Module } from '../../domain/grid'
@@ -11,6 +11,7 @@ import type { Motif } from '../../persistence/file'
 import type { Point, Side, Variant, Wall } from '../../domain/types'
 import { builtModules, type BuiltModule } from '../../domain/walls'
 import { BORDER, BORDER_STRONG, BLOCK, CANVAS, INK, INK_FAINT, INK_MUTED, LAYER_COLOR, SURFACE } from '../colors'
+import { applyDrop, decorDrag, endDecorDrag, type DecorDrag } from '../dnd'
 import { dragWall, dropObject, type WallDrag } from '../drag'
 import { fmt } from '../format'
 import { idx, place, plateColor, productOf, rules } from '../env'
@@ -85,6 +86,8 @@ export function PlanView(p: Props) {
   const drag = useRef<Drag | null>(null)
   const [hover, setHover] = useState<P | null>(null)
   const [stroke, setStroke] = useState<[Point, Point] | null>(null)
+  /** A frame or motif dragged from Profilering, over a wall face. */
+  const [dropHover, setDropHover] = useState<{ h: FaceHit; d: DecorDrag } | null>(null)
 
   const mods = useMemo(() => builtModules(v), [v])
   const bad = useMemo(() => conflicts(v, place), [v])
@@ -285,6 +288,30 @@ export function PlanView(p: Props) {
     } else if (d.kind === 'object' && d.moved) dropObject(v, d.id, d.start, p.onEdit, p.onToast)
   }
 
+  // Drag and drop from Profilering: the same as a click with the textile or motif brush
+  const onDragOver = (e: RDragEvent<SVGSVGElement>) => {
+    const d = decorDrag(e)
+    if (!d || p.mini) return
+    e.preventDefault()
+    const h = faceHit(toModel(e))
+    e.dataTransfer.dropEffect = h ? 'copy' : 'none'
+    setDropHover(h ? { h, d } : null)
+  }
+  const onDrop = (e: RDragEvent<SVGSVGElement>) => {
+    const d = decorDrag(e)
+    setDropHover(null)
+    endDecorDrag()
+    if (!d || p.mini) return
+    e.preventDefault()
+    const h = faceHit(toModel(e))
+    if (!h) return p.onToast(d.kind === 'textile' ? 'Slipp tekstilveggen ved en vegg, på siden rammen skal stå' : 'Slipp grafikken ved en vegg eller en tekstilvegg')
+    const r = applyDrop(v, d, { wallId: h.w.id, s: h.s, t: h.t }, ratioOf)
+    if ('error' in r) return p.onToast(r.error)
+    p.onEdit(() => r.v)
+    p.onSelect(r.select)
+    if (r.toast) p.onToast(r.toast)
+  }
+
   const dim = (layer: Exclude<Highlight, null>) => (highlight && highlight !== layer ? DIMMED : 1)
   const cursor = tool === 'select' ? 'default' : 'crosshair'
 
@@ -323,6 +350,9 @@ export function PlanView(p: Props) {
         setStroke(null)
       }}
       onPointerLeave={() => setHover(null)}
+      onDragOver={onDragOver}
+      onDragLeave={() => setDropHover(null)}
+      onDrop={onDrop}
       role="img"
       aria-label={`Plan for standen, ${W} × ${D} m`}
     >
@@ -497,6 +527,7 @@ export function PlanView(p: Props) {
         {stroke && <StrokePreview a={stroke[0]} b={stroke[1]} erase={tool === 'erase'} />}
         {hoverModule && <HoverModule m={hoverModule} />}
         {hoverFace && <FacePreview v={v} h={hoverFace} brush={brush!} erase={tool === 'erase'} />}
+        {dropHover && <FacePreview v={v} h={dropHover.h} brush={dropHover.d} erase={false} />}
         {hoverFloor && (
           <rect
             x={hoverFloor.i * CELL}

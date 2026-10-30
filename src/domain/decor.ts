@@ -433,3 +433,54 @@ export function faceSegment(w: Wall, s: FaceSide, from: number, to: number, off:
     [b[0] + n[0] * off, b[1] + n[1] * off],
   ];
 }
+
+/**
+ * Drag a textile along its face: `dt` metres along the wall, `dh` metres up, both from `start` (the textile when the
+ * drag began). Width and height are kept; it stops at openings, junctions, other frames, the floor and the wall top.
+ */
+export function moveTextileBy(v: Variant, rules: Rules, start: TextileWall, dt: number, dh: number): Variant {
+  const moved = updateTextile(v, rules, start.id, { from: start.from + dt }, 'move');
+  const { bottom, height } = textileBox(start, rules);
+  const top = Math.floor((fullTextileHeight(rules) - height + EPS) * 10) / 10;
+  return updateTextile(moved, rules, start.id, { bottom: clamp(bottom + dh, 0, Math.max(0, top)) });
+}
+
+/**
+ * Drag a foil on its face from `start`: `dt` along the wall, `dh` up. The centre moves to the felt under it when that
+ * felt can take foil, else it stays in its own felt, clamped to the edge.
+ */
+export function moveFoilBy(v: Variant, rules: Rules, start: Foil, dt: number, dh: number, ratio: number): Variant {
+  const w = v.walls.find((x) => x.id === start.wallId);
+  if (!w) return v;
+  const c = foilCenter(rules, start) + dt;
+  const module = clamp(Math.floor(c), 0, Math.round(wallLength(w)) - 1);
+  const y = start.y + dh;
+  const next = updateFoil(v, rules, start.id, { module, x: c - (module + 0.5), y }, ratio);
+  return next !== v || module === start.module ? next : updateFoil(v, rules, start.id, { x: c - (start.module + 0.5), y }, ratio);
+}
+
+/**
+ * Drop a motif on a wall face at offset `t` (and height `y` when known, as in 3D). On a textile it becomes the print;
+ * on a wall panel it becomes a foil decal, centred where it was dropped. Null id when nothing changed.
+ */
+export function dropMotif(
+  v: Variant,
+  rules: Rules,
+  wallId: string,
+  s: FaceSide,
+  t: number,
+  motif: string,
+  ratio: number,
+  y?: number,
+): { v: Variant; textileId?: string; foilId?: string } | { error: string } {
+  const tx = textileAt(v, wallId, s, t);
+  if (tx) return { v: updateTextile(v, rules, tx.id, { motif }), textileId: tx.id };
+  const w = v.walls.find((x) => x.id === wallId);
+  if (!w) return { error: 'Ingen vegg her' };
+  const module = clamp(Math.floor(t), 0, Math.round(wallLength(w)) - 1);
+  const r = addFoil(v, rules, wallId, module, s, motif, ratio);
+  if ('error' in r) return r;
+  const f = r.v.foils.find((x) => x.id === r.id)!;
+  if (y === undefined || f.full) return { v: r.v, foilId: r.id };
+  return { v: updateFoil(r.v, rules, r.id, { x: t - felt(rules, module).center, y }, ratio), foilId: r.id };
+}

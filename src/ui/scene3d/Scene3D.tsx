@@ -1,18 +1,23 @@
 // 3D view. Rebuilds the scene from the model on every change (see build.ts) and keeps only the camera.
 // Velg works as in the plan: click a wall to edit it, drag furniture, drag an inner wall to move it.
-// The brushes draw in the plan.
+// Textile frames and foil decals are clicked to select and dragged along their face; a frame or a motif dragged
+// from Profilering is dropped on the wall face under the pointer. The brushes draw in the plan.
 import { House, RotateCcw, RotateCw, ScanEye } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import type { CalcResult } from '../../calc/calc'
+import { faceAt, faceNormal, faces, moveFoilBy, moveTextileBy, sideOf, textileOffset, type FaceSide } from '../../domain/decor'
 import { isPerimeterWall } from '../../domain/edit'
+import { pointAlong, wallDirection, wallLength } from '../../domain/grid'
 import { moveObject } from '../../domain/objects'
 import type { Motif } from '../../persistence/file'
-import type { Variant } from '../../domain/types'
+import type { Foil, TextileWall, Variant, Wall } from '../../domain/types'
 import { IconButton } from '../controls'
+import { applyDrop, decorDrag, dropSpot, endDecorDrag, type DropSpot, type FaceTarget } from '../dnd'
 import { dragWall, dropObject, type WallDrag } from '../drag'
-import { place } from '../env'
+import { place, rules } from '../env'
+import { findMotif } from '../motifs'
 import type { Highlight } from '../tools'
 import type { PlanSelection } from '../plan/PlanView'
 import { build, dispose, type Tag } from './build'
@@ -33,6 +38,8 @@ type Drag =
   | { kind: 'orbit' }
   | { kind: 'object'; id: string; start: { x: number; y: number }; off: { x: number; y: number }; moved: boolean }
   | ({ kind: 'wall'; moved: boolean } & WallDrag)
+  /** A textile or foil dragged on its face: deltas from where it was grabbed (t along the wall, h up). */
+  | { kind: 'decor'; item: { textile: TextileWall } | { foil: Foil }; w: Wall; s: FaceSide; t0: number; h0: number; moved: boolean }
 
 const deg = Math.PI / 180
 const HOME = { az: 28 * deg, el: 30 * deg }
@@ -45,6 +52,8 @@ interface View {
   controls: OrbitControls
   sun: THREE.DirectionalLight
   content: THREE.Group | null
+  /** Where a dragged frame or motif would land. */
+  preview: { key: string; mesh: THREE.Mesh } | null
   render: () => void
 }
 
@@ -81,7 +90,7 @@ export function Scene3D(p: Props) {
     controls.minDistance = 2
     controls.maxDistance = 60
     controls.zoomToCursor = true
-    const v: View = { renderer, scene, camera, controls, sun, content: null, render: () => renderer.render(scene, camera) }
+    const v: View = { renderer, scene, camera, controls, sun, content: null, preview: null, render: () => renderer.render(scene, camera) }
     view.current = v
     controls.addEventListener('change', v.render)
 
@@ -103,20 +112,55 @@ export function Scene3D(p: Props) {
     const ndc = new THREE.Vector2()
     ray.params.Line = { threshold: 0.01 }
     const floor = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
-    const setRay = (e: PointerEvent) => {
+    const setRay = (e: { clientX: number; clientY: number }) => {
       const r = renderer.domElement.getBoundingClientRect()
       ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1)
       ray.setFromCamera(ndc, camera)
     }
-    const pick = (e: PointerEvent): Tag['pick'] | null => {
+    type Hit = NonNullable<Tag['pick']> & { point: THREE.Vector3 }
+    const pick = (e: { clientX: number; clientY: number }): Hit | null => {
       if (!v.content) return null
       setRay(e)
       for (const h of ray.intersectObjects(v.content.children, true)) {
         const t = h.object.userData as Partial<Tag>
-        if (t.pick) return t.pick
+        if (t.pick) return { ...t.pick, point: h.point }
         if (t.layer || !h.object.userData.label) return null
       }
       return null
+    }
+    const toModel = (q: THREE.Vector3) => {
+      const s = props.current.v.stand
+      return { x: q.x + s.width / 2, y: q.z + s.depth / 2 }
+    }
+    /** Offset along the wall of a model point, clamped to the wall. */
+    const along = (w: Wall, q: { x: number; y: number }) => {
+      const [dx, dy] = wallDirection(w)
+      return Math.max(0, Math.min(wallLength(w), (q.x - w.from[0]) * dx + (q.y - w.from[1]) * dy))
+    }
+    /** The wall face under the pointer: the face of the frame or decal hit, else the side of the wall the hit is on. */
+    const faceOf = (hit: Hit | null): FaceTarget | null => {
+      const V = props.current.v
+      const w = hit?.wallId && V.walls.find((x) => x.id === hit.wallId)
+      if (!hit || !w) return null
+      const q = toModel(hit.point)
+      const deco = V.textiles.find((x) => x.id === hit.textileId) ?? V.foils.find((x) => x.id === hit.foilId)
+      const t = along(w, q)
+      if (deco) return { wallId: w.id, s: sideOf(V, deco), t, y: hit.point.y, foilId: hit.foilId }
+      const n = faceNormal(w, 1)
+      const raw: FaceSide = (q.x - w.from[0]) * n[0] + (q.y - w.from[1]) * n[1] >= 0 ? 1 : -1
+      return { wallId: w.id, s: faceAt(V, w, q), t, y: hit.point.y, outside: !faces(V, w).includes(raw) }
+    }
+    /** Pointer on the vertical plane of a wall face: offset along the wall and height. */
+    const onFace = (e: PointerEvent, w: Wall, s: FaceSide) => {
+      setRay(e)
+      const n = faceNormal(w, s)
+      const W0 = props.current.v.stand
+      const p0 = new THREE.Vector3(w.from[0] - W0.width / 2, 0, w.from[1] - W0.depth / 2)
+      const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(new THREE.Vector3(n[0], 0, n[1]), p0)
+      const q = new THREE.Vector3()
+      if (!ray.ray.intersectPlane(plane, q)) return null
+      const [dx, dy] = wallDirection(w)
+      return { t: (q.x - p0.x) * dx + (q.z - p0.z) * dy, h: q.y }
     }
     /** Pointer on the floor plane, in model coordinates. */
     const onFloor = (e: PointerEvent) => {
@@ -127,7 +171,7 @@ export function Scene3D(p: Props) {
       return { x: q.x + s.width / 2, y: q.z + s.depth / 2 }
     }
     let drag: Drag | null = null
-    let down: { x: number; y: number; hit: Tag['pick'] | null } | null = null
+    let down: { x: number; y: number; hit: Hit | null } | null = null
 
     const onDown = (e: PointerEvent) => {
       if (e.button !== 0) return
@@ -135,7 +179,13 @@ export function Scene3D(p: Props) {
       down = { x: e.clientX, y: e.clientY, hit }
       const P = props.current
       drag = { kind: 'orbit' }
-      if (hit?.objectId) {
+      const deco = hit?.textileId ? P.v.textiles.find((x) => x.id === hit.textileId) : hit?.foilId ? P.v.foils.find((x) => x.id === hit.foilId) : undefined
+      const w = deco && P.v.walls.find((x) => x.id === deco.wallId)
+      if (deco && w) {
+        const s = sideOf(P.v, deco)
+        const q = onFace(e, w, s)
+        if (q) drag = { kind: 'decor', item: 'from' in deco ? { textile: deco } : { foil: deco }, w, s, t0: q.t, h0: q.h, moved: false }
+      } else if (hit?.objectId) {
         const o = P.v.objects.find((x) => x.id === hit.objectId)
         const q = onFloor(e)
         if (o && q) drag = { kind: 'object', id: o.id, start: { x: o.x, y: o.y }, off: { x: q.x - o.x, y: q.y - o.y }, moved: false }
@@ -154,14 +204,27 @@ export function Scene3D(p: Props) {
       if (!drag || drag.kind === 'orbit') {
         if (!drag) {
           const hit = pick(e)
-          const movable = hit?.objectId || (hit?.wallId && !isPerimeterWall(P.v.stand, P.v.walls.find((x) => x.id === hit.wallId)!))
+          const movable = hit?.objectId || hit?.textileId || hit?.foilId || (hit?.wallId && !isPerimeterWall(P.v.stand, P.v.walls.find((x) => x.id === hit.wallId)!))
           renderer.domElement.style.cursor = movable ? 'move' : hit ? 'pointer' : 'grab'
         }
         return
       }
-      const q = onFloor(e)
-      if (!q || !down) return
+      if (!down) return
       if (!drag.moved && Math.hypot(e.clientX - down.x, e.clientY - down.y) < 4) return
+      if (drag.kind === 'decor') {
+        const f = onFace(e, drag.w, drag.s)
+        if (!f) return
+        if (!drag.moved) P.onCheckpoint()
+        drag.moved = true
+        const { item, t0, h0 } = drag
+        const dt = f.t - t0
+        const dh = f.h - h0
+        if ('textile' in item) P.onEdit((x) => moveTextileBy(x, rules, item.textile, dt, dh), false)
+        else P.onEdit((x) => moveFoilBy(x, rules, item.foil, dt, dh, findMotif(P.motifs, item.foil.motif)?.ratio ?? 0), false)
+        return
+      }
+      const q = onFloor(e)
+      if (!q) return
       if (drag.kind === 'object') {
         if (!drag.moved) P.onCheckpoint()
         drag.moved = true
@@ -183,18 +246,82 @@ export function Scene3D(p: Props) {
       const hit = down.hit
       down = null
       if (d?.kind === 'object' && d.moved) return dropObject(P.v, d.id, d.start, P.onEdit, P.onToast)
+      // A frame or decal is selected when let go, so the drawer does not open (and shrink the view) mid-drag
+      if (hit?.textileId || hit?.foilId) {
+        const deco = P.v.textiles.find((x) => x.id === hit.textileId) ?? P.v.foils.find((x) => x.id === hit.foilId)
+        if (deco) P.onSelect({ wallId: deco.wallId, side: sideOf(P.v, deco), ...(hit.textileId ? { textileId: deco.id } : { foilId: deco.id }) })
+        return
+      }
       if (!click) return
       if (hit?.objectId) P.onSelect({ objectId: hit.objectId })
-      else if (hit?.wallId) P.onSelect({ wallId: hit.wallId })
+      else if (hit?.wallId) P.onSelect({ wallId: hit.wallId, side: faceOf(hit)?.s })
       else P.onSelect({})
     }
+
+    // Drag and drop from Profilering: a frame or a motif lands on the wall face under the pointer
+    const clearPreview = () => {
+      if (!v.preview) return
+      scene.remove(v.preview.mesh)
+      dispose(v.preview.mesh)
+      v.preview = null
+      v.render()
+    }
+    const showPreview = (h: FaceTarget, spot: DropSpot) => {
+      const key = [h.wallId, h.s, spot.on, spot.from, spot.to, spot.y0, !spot.error].join('|')
+      if (v.preview?.key === key) return
+      clearPreview()
+      const w = props.current.v.walls.find((x) => x.id === h.wallId)
+      if (!w) return
+      const off = spot.on === 'wall' ? rules.wall.profile.thickness / 2 + 0.006 : textileOffset(rules) + rules.textile.depth / 2 + 0.008
+      const mesh = previewMesh(props.current.v.stand, w, h.s, spot, off, !spot.error)
+      scene.add(mesh)
+      v.preview = { key, mesh }
+      v.render()
+    }
+    const onDragOver = (e: DragEvent) => {
+      const d = decorDrag(e)
+      if (!d) return
+      const h = faceOf(pick(e))
+      const spot = h && dropSpot(props.current.v, d, h)
+      // Over a wall the drop is always taken, so a refused one can say why
+      e.preventDefault()
+      e.dataTransfer!.dropEffect = h ? 'copy' : 'none'
+      if (h && spot) showPreview(h, spot)
+      else clearPreview()
+    }
+    const onDragLeave = (e: DragEvent) => {
+      if (!el.contains(e.relatedTarget as Node | null)) clearPreview()
+    }
+    const onDrop = (e: DragEvent) => {
+      const d = decorDrag(e)
+      clearPreview()
+      endDecorDrag()
+      if (!d) return
+      e.preventDefault()
+      const P = props.current
+      const h = faceOf(pick(e))
+      if (!h) return P.onToast(d.kind === 'textile' ? 'Slipp tekstilveggen på en vegg' : 'Slipp grafikken på en vegg eller en tekstilvegg')
+      const r = applyDrop(P.v, d, h, (id) => findMotif(P.motifs, id)?.ratio ?? 1)
+      if ('error' in r) return P.onToast(r.error)
+      P.onEdit(() => r.v)
+      P.onSelect(r.select)
+      if (r.toast) P.onToast(r.toast)
+    }
+
     el.addEventListener('pointerdown', onDown, true)
     el.addEventListener('pointermove', onMove)
     window.addEventListener('pointerup', onUp)
+    el.addEventListener('dragover', onDragOver)
+    el.addEventListener('dragleave', onDragLeave)
+    el.addEventListener('drop', onDrop)
     return () => {
       el.removeEventListener('pointerdown', onDown, true)
       el.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerup', onUp)
+      el.removeEventListener('dragover', onDragOver)
+      el.removeEventListener('dragleave', onDragLeave)
+      el.removeEventListener('drop', onDrop)
+      clearPreview()
       ro.disconnect()
       controls.dispose()
       if (v.content) dispose(v.content)
@@ -262,6 +389,21 @@ function setCamera(v: View, W: number, D: number, at: { az: number; el: number }
   v.controls.target.copy(target)
   v.camera.position.set(Math.sin(at.az) * Math.cos(at.el) * dist, 0.9 + Math.sin(at.el) * dist, Math.cos(at.az) * Math.cos(at.el) * dist)
   v.controls.update()
+}
+
+/** A see-through box on a wall face showing where a drop lands: blue when it can, red when it cannot. */
+function previewMesh(stand: { width: number; depth: number }, w: Wall, s: FaceSide, b: { from: number; to: number; y0: number; y1: number }, off: number, ok: boolean) {
+  const n = faceNormal(w, s)
+  const [dx, dy] = wallDirection(w)
+  const a = pointAlong(w, (b.from + b.to) / 2)
+  const mesh = new THREE.Mesh(
+    new THREE.BoxGeometry(b.to - b.from - 0.02, b.y1 - b.y0, 0.01),
+    new THREE.MeshBasicMaterial({ color: ok ? '#6aaecb' : '#d24b3f', transparent: true, opacity: 0.4, depthWrite: false }),
+  )
+  mesh.position.set(a[0] + n[0] * off - stand.width / 2, (b.y0 + b.y1) / 2, a[1] + n[1] * off - stand.depth / 2)
+  mesh.rotation.y = Math.atan2(-dy, dx)
+  mesh.renderOrder = 10
+  return mesh
 }
 
 /** Fade everything outside the hovered calc group. */

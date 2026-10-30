@@ -13,6 +13,8 @@ import {
   foilCenter,
   foilsOn,
   freeSpans,
+  moveFoilBy,
+  moveTextileBy,
   removeFoil,
   removeTextile,
   textileBox,
@@ -114,11 +116,8 @@ export function WallDrawer(p: Props) {
 
   const applyDrag = (x: Variant, kind: DragKind, item: TextileWall | Foil, du: number, dz: number): Variant => {
     if ('from' in item) {
-      const { bottom, height } = textileBox(item, rules)
-      if (kind === 'tmove') {
-        const moved = updateTextile(x, rules, item.id, { from: item.from + du * dir }, 'move')
-        return updateTextile(moved, rules, item.id, { bottom: bottom + dz })
-      }
+      const { height } = textileBox(item, rules)
+      if (kind === 'tmove') return moveTextileBy(x, rules, item, du * dir, dz)
       if (kind === 'theight') return updateTextile(x, rules, item.id, { height: height + dz })
       // The right edge in the drawing is the wall's end on one face and its start on the other
       if (dir === 1) return updateTextile(x, rules, item.id, { width: item.width + du })
@@ -129,11 +128,7 @@ export function WallDrawer(p: Props) {
     }
     const r = ratioOf(item.motif)
     if (kind === 'fsize') return updateFoil(x, rules, item.id, { width: item.width + 2 * du }, r)
-    const c = foilCenter(rules, item) + du * dir
-    const module = Math.max(0, Math.min(L - 1, Math.floor(c)))
-    const y = item.y + dz
-    const next = updateFoil(x, rules, item.id, { module, x: c - (module + 0.5), y }, r)
-    return next !== x || module === item.module ? next : updateFoil(x, rules, item.id, { x: c - (item.module + 0.5), y }, r)
+    return moveFoilBy(x, rules, item, du * dir, dz, r)
   }
 
   const remove = () => {

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { SURFACE } from '../colors'
+import type { decorSource } from '../dnd'
 import { fmt } from '../format'
 
 export interface Chip {
@@ -19,6 +20,7 @@ export function ProductRow({
   action,
   on,
   pen,
+  drag,
   children,
 }: {
   thumb: ReactNode
@@ -31,10 +33,12 @@ export function ProductRow({
   on?: boolean
   /** Active brush: card marking. */
   pen?: boolean
+  /** Makes the row draggable onto a wall (see dnd.ts). */
+  drag?: ReturnType<typeof decorSource>
   children?: ReactNode
 }) {
   return (
-    <div className={['pd-row', on && 'on', pen && 'pen'].filter(Boolean).join(' ')}>
+    <div className={['pd-row', on && 'on', pen && 'pen'].filter(Boolean).join(' ')} {...drag}>
       <span className="pd-thumb">{thumb}</span>
       <span className="pd-title">{title}</span>
       <span className="pd-action">{action}</span>

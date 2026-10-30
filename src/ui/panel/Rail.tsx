@@ -12,6 +12,7 @@ import { wallLabel } from '../../calc/production'
 import type { Motif } from '../../persistence/file'
 import type { PlanSelection } from '../plan/PlanView'
 import { findMotif, readMotif, SAMPLE_MOTIFS } from '../motifs'
+import { decorSource } from '../dnd'
 import { INK, LAYER_COLOR, SUNKEN } from '../colors'
 import { Button, CommitInput, Counter, IconButton, Segmented } from '../controls'
 import { catalog, place, productOf, rules, wallPlates } from '../env'
@@ -410,10 +411,11 @@ function ProfileSection({ v, res, brush, tool, pick, motifs, onAddMotif, onSelec
         on={v.textiles.length > 0}
         pen={pen}
         thumb={<i className="tex-thumb" />}
+        drag={decorSource({ kind: 'textile' })}
         title="Tekstilvegg InFrame"
         meta={
           <>
-            Tekstil i aluminiumsramme · <span className="num">{kr(frame?.price ?? 0)} kr/lm · {kr(print?.price ?? 0)} kr/m²</span> · klikk en vegg
+            Tekstil i aluminiumsramme · <span className="num">{kr(frame?.price ?? 0)} kr/lm · {kr(print?.price ?? 0)} kr/m²</span> · klikk eller dra til en vegg
           </>
         }
         result={v.textiles.length ? `${count(v.textiles.length, 'ramme', 'rammer')} · ${fmt(k.textileM2)} m²` : null}
@@ -457,9 +459,16 @@ function ProfileSection({ v, res, brush, tool, pick, motifs, onAddMotif, onSelec
         {motifs.map((m) => {
           const on = tool !== 'select' && brush?.kind === 'motif' && brush.motif === m.id
           return (
-            <button key={m.id} type="button" className={on ? 'gfx on' : 'gfx'} aria-pressed={on} onClick={() => pick({ kind: 'motif', motif: m.id })}>
+            <button
+              key={m.id}
+              type="button"
+              className={on ? 'gfx on' : 'gfx'}
+              aria-pressed={on}
+              onClick={() => pick({ kind: 'motif', motif: m.id })}
+              {...decorSource({ kind: 'motif', motif: m.id })}
+            >
               <span className="art">
-                <img src={m.src} alt="" />
+                <img src={m.src} alt="" draggable={false} />
               </span>
               <span className="lbl">
                 {m.name}
@@ -470,7 +479,7 @@ function ProfileSection({ v, res, brush, tool, pick, motifs, onAddMotif, onSelec
         })}
       </div>
       <p className="panel-note">
-        Velg et motiv og klikk på en tekstilvegg for trykk, eller på et veggfelt for foliedekor. Folie går aldri over en stolpe. Velg veggen for å justere størrelse og plassering.
+        Velg et motiv og klikk på en tekstilvegg for trykk, eller på et veggfelt for foliedekor. Du kan også dra motivet rett til veggen i plan eller 3D. Folie går aldri over en stolpe. Velg veggen for å justere størrelse og plassering.
       </p>
       {v.foils.length > 0 && (
         <p className="panel-note num">
