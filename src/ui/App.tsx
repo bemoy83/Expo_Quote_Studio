@@ -361,7 +361,7 @@ export default function App() {
   }
 }
 
-const HINT_3D = 'Dra for å rotere · rull for å zoome · dra møbler eller en innervegg for å flytte · klikk en vegg for å redigere'
+const HINT_3D = 'Dra for å rotere · rull for å zoome · dra møbler, en innervegg eller grafikk for å flytte · dra grafikk eller tekstilvegg fra Profilering til en vegg'
 
 function hint(tool: Tool, brush: Brush | null): string {
   if (tool === 'select') return 'Klikk en vegg for å endre den · dra en innervegg for å flytte den · dra møbler for å flytte dem · Delete fjerner valgt møbel'

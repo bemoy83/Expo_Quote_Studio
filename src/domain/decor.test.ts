@@ -5,10 +5,13 @@ import { RULES } from '../rules/rules';
 import {
   addFoil,
   addTextile,
+  dropMotif,
   faces,
   fitDecor,
   foilCenter,
   freeSpans,
+  moveFoilBy,
+  moveTextileBy,
   textileBox,
   updateFoil,
   updateTextile,
@@ -174,5 +177,45 @@ describe('foil decor', () => {
     expect(foilCenter(RULES, v.foils[0])).toBeCloseTo(2.5);
     v = updateFoil(v, RULES, 'f1', { x: 0.1 }, 1);
     expect(foilCenter(RULES, v.foils[0])).toBeCloseTo(2.6);
+  });
+});
+
+describe('drag and drop on a wall (3D)', () => {
+  it('a motif dropped on a textile becomes its print, on a wall panel a decal where it was dropped', () => {
+    let v = ok(addTextile(row(), RULES, 'side-back', 1, 1)).v;
+    v = updateTextile(v, RULES, 't1', { width: 2 });
+    const a = ok(dropMotif(v, RULES, 'side-back', 1, 1.2, 'logo', 2));
+    expect(a.textileId).toBe('t1');
+    expect(a.v.textiles[0].motif).toBe('logo');
+    const b = ok(dropMotif(v, RULES, 'side-back', 1, 3.6, 'logo', 2, 1.2));
+    expect(b.foilId).toBe('f1');
+    expect(b.v.foils[0]).toMatchObject({ module: 3, side: 1, y: 1.2 });
+    expect(foilCenter(RULES, b.v.foils[0])).toBeCloseTo(3.6);
+    // Without a height (the plan) it lands at eye height in the middle of the felt
+    expect(ok(dropMotif(v, RULES, 'side-back', 1, 3.6, 'logo', 2)).v.foils[0]).toMatchObject({ x: 0, y: 1.5 });
+  });
+
+  it('a drop on an opening is refused with the reason', () => {
+    const v = setOpening(row(), moduleKey([0, 0], [1, 0]), DOOR);
+    expect(dropMotif(v, RULES, 'side-back', 1, 0.5, 'logo', 1, 1)).toEqual({ error: 'Folie kan ikke ligge på en åpning' });
+  });
+
+  it('dragging a textile keeps its width and stops at the free span', () => {
+    let v = ok(addTextile(row(), RULES, 'side-back', 1, 1)).v;
+    v = updateTextile(v, RULES, 't1', { width: 2, height: 1.5 });
+    const start = v.textiles[0];
+    expect(moveTextileBy(v, RULES, start, 1.04, 0.5).textiles[0]).toMatchObject({ from: 1, width: 2, bottom: 0.5 });
+    expect(moveTextileBy(v, RULES, start, 9, 9).textiles[0]).toMatchObject({ from: 4, width: 2, bottom: 1 });
+  });
+
+  it('dragging a decal moves it to the felt under it, never onto an opening', () => {
+    let v = setOpening(row(), moduleKey([3, 0], [4, 0]), DOOR);
+    v = ok(addFoil(v, RULES, 'side-back', 1, 1, 'logo', 2)).v;
+    const start = v.foils[0];
+    expect(moveFoilBy(v, RULES, start, 1, 0, 2).foils[0].module).toBe(2);
+    // Onto the opening: stays in its own felt, clamped to the edge
+    const f = moveFoilBy(v, RULES, start, 2, 0, 2).foils[0];
+    expect(f.module).toBe(1);
+    expect(f.x).toBeGreaterThan(0);
   });
 });

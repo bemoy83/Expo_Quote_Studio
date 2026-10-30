@@ -21,7 +21,7 @@ export type Layer = Exclude<Highlight, null>
 /** What a mesh stands for. `pick` marks meshes the pointer can hit. */
 export interface Tag {
   layer: Layer
-  pick?: { wallId?: string; objectId?: string }
+  pick?: { wallId?: string; objectId?: string; textileId?: string; foilId?: string }
 }
 
 /** Colours of the build system. Product colours come from the catalog. */
@@ -47,7 +47,7 @@ const ALU_FINISH = { metalness: 0.4, roughness: 0.5 }
 const OPENING_H = 2.1
 
 export interface BuildOptions {
-  selection?: { wallId?: string; objectId?: string }
+  selection?: { wallId?: string; objectId?: string; textileId?: string; foilId?: string }
   /** Flat text on the floor (dimensions, area). Needs a canvas, so tests turn it off. */
   labels?: boolean
   /** Motif library for prints on textiles and foils. Without it they are drawn blank. */
@@ -86,7 +86,7 @@ function motifTexture(src: string, onLoad?: () => void): THREE.Texture {
 }
 
 /** The motif as a texture covering a face of the given aspect ratio (cropped, never stretched). */
-function printMaterial(m: Motif, aspect: number, onLoad?: () => void): THREE.MeshStandardMaterial {
+function printMaterial(m: Motif, aspect: number, onLoad?: () => void, extra: THREE.MeshStandardMaterialParameters = {}): THREE.MeshStandardMaterial {
   const tex = motifTexture(m.src, onLoad)
   tex.colorSpace = THREE.SRGBColorSpace
   tex.anisotropy = 4
@@ -98,7 +98,7 @@ function printMaterial(m: Motif, aspect: number, onLoad?: () => void): THREE.Mes
     tex.repeat.set(k, 1)
     tex.offset.set((1 - k) / 2, 0)
   }
-  return new THREE.MeshStandardMaterial({ map: tex, roughness: 0.9, metalness: 0 })
+  return new THREE.MeshStandardMaterial({ map: tex, roughness: 0.9, metalness: 0, ...extra })
 }
 
 export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THREE.Group {
@@ -188,7 +188,7 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
   for (const m of mods) {
     const tag: Tag = { layer: m.opening ? 'openings' : 'walls', pick: { wallId: m.wallId } }
     const wallTag: Tag = { layer: 'walls', pick: { wallId: m.wallId } }
-    const selected = sel.wallId === m.wallId
+    const selected = sel.wallId === m.wallId && !sel.textileId && !sel.foilId
     const plate = mat('walls', plateColor(m.plate), selected ? { emissive: SELECT, emissiveIntensity: 0.35 } : {})
     const frame = mat('walls', ALU, ALU_FINISH)
     const len = rules.wall.cc - post
@@ -278,12 +278,13 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
     const off = s * (textileOffset(rules) + 0.005)
     const { bottom, height } = textileBox(t, rules)
     const h = Math.min(height, H - bottom)
-    const fabric = mat('textile', FABRIC, { roughness: 1 })
-    const alu = mat('textile', ALU, ALU_FINISH)
+    const glow = sel.textileId === t.id ? { emissive: SELECT, emissiveIntensity: 0.35 } : {}
+    const fabric = mat('textile', FABRIC, { roughness: 1, ...glow })
+    const alu = mat('textile', ALU, { ...ALU_FINISH, ...glow })
     const m = findMotif(opts.motifs, t.motif)
-    const print = m ? printMaterial(m, (to - from) / h, opts.onLoad) : fabric
+    const print = m ? printMaterial(m, (to - from) / h, opts.onLoad, glow) : fabric
     const faces = s === 1 ? [alu, alu, alu, alu, print, fabric] : [alu, alu, alu, alu, fabric, print]
-    along(pointAlong(w, from), pointAlong(w, to), to - from - 0.02, h, rules.textile.depth, bottom, faces, { layer: 'textile', pick: { wallId: w.id } }, off)
+    along(pointAlong(w, from), pointAlong(w, to), to - from - 0.02, h, rules.textile.depth, bottom, faces, { layer: 'textile', pick: { wallId: w.id, textileId: t.id } }, off)
   }
 
   // Foil decor: a thin print on the wall plate, inside its felt
@@ -293,8 +294,9 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
     const s = sideOf(v, f)
     const c = foilCenter(rules, f)
     const m = findMotif(opts.motifs, f.motif)
-    const print = m ? printMaterial(m, f.width / f.height, opts.onLoad) : mat('foil', FABRIC, { roughness: 0.6 })
-    along(pointAlong(w, c - f.width / 2), pointAlong(w, c + f.width / 2), f.width, f.height, 0.002, f.y - f.height / 2, print, { layer: 'foil', pick: { wallId: w.id } }, s * (rules.wall.profile.thickness / 2 + 0.002))
+    const glow = sel.foilId === f.id ? { emissive: SELECT, emissiveIntensity: 0.35 } : {}
+    const print = m ? printMaterial(m, f.width / f.height, opts.onLoad, glow) : mat('foil', FABRIC, { roughness: 0.6, ...glow })
+    along(pointAlong(w, c - f.width / 2), pointAlong(w, c + f.width / 2), f.width, f.height, 0.002, f.y - f.height / 2, print, { layer: 'foil', pick: { wallId: w.id, foilId: f.id } }, s * (rules.wall.profile.thickness / 2 + 0.002))
   }
 
   // Furniture: top, pole and foot from the footprint
