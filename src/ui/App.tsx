@@ -1,5 +1,5 @@
-import { Copy, Eraser, Maximize2, MousePointer2, Paintbrush, Plus, Redo2, Trash2, Undo2 } from 'lucide-react'
-import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
+import { Copy, Eraser, Maximize2, MousePointer2, Paintbrush, Redo2, Trash2, Undo2 } from 'lucide-react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore } from 'react'
 import { calc, type CalcResult } from '../calc/calc'
 import { r2 } from '../calc/referenceStands'
 import { addObject } from '../domain/objects'
@@ -10,18 +10,21 @@ import { loadSketch, saveSketch } from '../persistence/storage'
 import { initState, reduce } from '../state/history'
 import { CalcPanel } from './calc/CalcPanel'
 import { Button, IconButton, Segmented, Toast, useToast } from './controls'
-import { catalog, idx, place, plateColor, productOf, rules } from './env'
+import { CatalogPage } from './catalog/CatalogPage'
+import { catalog, getVersion, idx, place, plateColor, productOf, rules, subscribe } from './env'
 import { fmt, kr, signed } from './format'
 import { Rail } from './panel/Rail'
 import { PlanView, type PlanSelection } from './plan/PlanView'
 import { WallPopover } from './plan/WallPopover'
+import { ProductionPage } from './production/ProductionPage'
+import { QuotePage } from './quote/QuotePage'
 import { TopNav, type Page } from './shell/TopNav'
 import { FLOOR_SIZES, type Brush, type FloorSize, type Highlight, type Tool } from './tools'
 
 // three.js is only loaded when the 3D view is opened
 const Scene3D = lazy(() => import('./scene3d/Scene3D').then((m) => ({ default: m.Scene3D })))
 
-const TYPE_NAME = { row: 'Rekkestand', corner: 'Hjørnestand', end: 'Endestand', island: 'Øystand' } as const
+import { TYPE_NAME } from './names'
 
 function exampleSketch(): Sketch {
   let v: Variant = fillFloor(r2(), '5903')
@@ -32,8 +35,14 @@ function exampleSketch(): Sketch {
 }
 
 // calc is pure; cache per variant object so unchanged variants are not recalculated.
-const calcCache = new WeakMap<Variant, CalcResult>()
+// A new catalog or new rules (product list, production assumptions) start a fresh cache.
+let calcCache = new WeakMap<Variant, CalcResult>()
+let cacheVersion = getVersion()
 const calcOf = (v: Variant) => {
+  if (cacheVersion !== getVersion()) {
+    calcCache = new WeakMap()
+    cacheVersion = getVersion()
+  }
   let r = calcCache.get(v)
   if (!r) {
     r = calc(v, rules, catalog)
@@ -43,6 +52,7 @@ const calcOf = (v: Variant) => {
 }
 
 export default function App() {
+  useSyncExternalStore(subscribe, getVersion)
   const [state, dispatch] = useReducer(reduce, undefined, () => initState(loadSketch() ?? exampleSketch()))
   const { sketch, current } = state
   const v = sketch.variants[current]
@@ -301,16 +311,19 @@ export default function App() {
             <CalcPanel res={res} name={v.name} onHover={setHighlight} onQuote={() => setPage('tilbud')} />
           </div>
         </>
+      ) : page === 'tilbud' ? (
+        <QuotePage project={sketch.project} variants={sketch.variants} current={current} onSelect={(index) => dispatch({ type: 'select', index })} calcOf={calcOf} />
+      ) : page === 'produksjon' ? (
+        <ProductionPage
+          variants={sketch.variants}
+          current={current}
+          onSelect={(index) => dispatch({ type: 'select', index })}
+          customer={customerName(sketch.project)}
+          motifName={(id) => sketch.motifs.find((m) => m.id === id)?.name}
+          onToast={showToast}
+        />
       ) : (
-        <div className="page-empty">
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ font: 'var(--type-group)', color: 'rgb(var(--ink))' }}>{page === 'tilbud' ? 'Tilbud' : page === 'produksjon' ? 'Produksjon' : 'Produktliste'}</div>
-            <p>Kommer i neste steg.</p>
-            <Button icon={Plus} onClick={() => setPage('skisse')}>
-              Tilbake til standskissen
-            </Button>
-          </div>
-        </div>
+        <CatalogPage onToast={showToast} />
       )}
       <Toast msg={toast} />
     </div>

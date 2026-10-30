@@ -32,7 +32,7 @@ export function TopNav({
   const customer = project.fields.find((f) => f.id === 'kunde')?.value.trim()
   const proj = project.fields.find((f) => f.id === 'prosjekt')?.value.trim()
   return (
-    <header className="topnav" style={{ position: 'relative' }}>
+    <header className="topnav no-print" style={{ position: 'relative' }}>
       <span className="brand">Expo Planner</span>
       {PAGES.map((p) => (
         <button key={p.key} type="button" className="navb" aria-current={page === p.key ? 'page' : undefined} onClick={() => setPage(p.key)}>
