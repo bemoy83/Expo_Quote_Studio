@@ -38,6 +38,8 @@ export interface Product {
   footprint?: Footprint;
   /** Short spec shown in the product row, e.g. "ø 70 · h 111". */
   dim?: string;
+  /** Goes in a wall module. A door swings and blocks its swing area; a curtain does not. */
+  opening?: 'door' | 'curtain';
 }
 
 /** Roles the calc needs, mapped to art.nr so the catalog can change without touching calc. */

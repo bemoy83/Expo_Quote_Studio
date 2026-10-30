@@ -1,0 +1,25 @@
+:root{
+  --font-ui:'Schibsted Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --font-numeric:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --type-page-title:700 22px/1.2 var(--font-ui); /* band h1, -.02em (Innleid 20px) */
+  --type-panel-title:700 18px/1.25 var(--font-ui); /* slide-over head */
+  --type-group:700 14px/1.3 var(--font-ui); /* top-level grid label */
+  --type-row-name:600 13.5px/1.3 var(--font-ui); /* ledger project name */
+  --type-body:400 14px/1.45 var(--font-ui);
+  --type-control:500 13px/1 var(--font-ui); /* buttons, segments in band */
+  --type-picker:500 14px/1 var(--font-ui); /* page picker, strip segments; selected 600 */
+  --type-phase:500 13px/1.3 var(--font-ui); /* phase label, muted */
+  --type-meta:400 11.5px/1.3 var(--font-numeric); /* project no · halls */
+  --type-eyebrow:600 11px/1.2 var(--font-ui); /* uppercase +.06em; key-figure labels, panel sections */
+  --type-eyebrow-mono:500 10.5px/1.2 var(--font-numeric); /* uppercase +.07em; month labels, ledger heads */
+  --type-kpi:600 21px/1.15 var(--font-numeric); /* key figure value, -.02em */
+  --type-kpi-unit:500 12px/1 var(--font-numeric);
+  --type-cell:400 13px/1.2 var(--font-numeric); /* number cells, tabular */
+  --type-block:600 11.5px/1 var(--font-numeric); /* run block figure */
+  --type-count:500 11.5px/1 var(--font-numeric); /* plain count, ink-faint */
+  --type-alert-count:600 12px/1 var(--font-numeric); /* alert count, ink */
+  --type-kbd:500 10px/1 var(--font-numeric);
+  --tracking-title:-.02em; /* @kind font */
+  --tracking-eyebrow:.06em; /* @kind font */
+  --tracking-eyebrow-mono:.07em; /* @kind font */
+}

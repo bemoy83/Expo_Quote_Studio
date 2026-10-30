@@ -101,7 +101,8 @@ export function addRoom(
         if (face === door.face && i === door.module) {
           // The door lands on an existing wall: put the opening on that wall.
           const host = findModuleOwner(v, at(i), at(i + 1));
-          if (host) openings.push({ id: `${idPrefix}-door`, wallId: host.wallId, module: host.index, product: door.product });
+          const hw = host && v.walls.find((x) => x.id === host.wallId);
+          if (host && hw) openings.push(roomDoor(`${idPrefix}-door`, hw, host.index, door.product, face));
         }
         i++;
         continue;
@@ -111,12 +112,23 @@ export function addRoom(
       const id = `${idPrefix}-${face}-${run++}`;
       walls.push({ id, from: at(i), to: at(e) });
       if (face === door.face && door.module >= i && door.module < e) {
-        openings.push({ id: `${idPrefix}-door`, wallId: id, module: door.module - i, product: door.product });
+        openings.push(roomDoor(`${idPrefix}-door`, { id, from: at(i), to: at(e) }, door.module - i, door.product, face));
       }
       i = e;
     }
   }
   return { ...v, walls: [...v.walls, ...walls], openings: [...v.openings, ...openings] };
+}
+
+const OUTWARD: Record<RectFace, Point> = { back: [0, -1], front: [0, 1], left: [-1, 0], right: [1, 0] };
+
+/** A door that swings out of the room. */
+function roomDoor(id: string, w: Wall, module: number, product: string, face: RectFace): Opening {
+  const dx = Math.sign(w.to[0] - w.from[0]);
+  const dy = Math.sign(w.to[1] - w.from[1]);
+  const [ox, oy] = OUTWARD[face];
+  const swing = -dy * ox + dx * oy >= 0 ? 1 : -1;
+  return { id, wallId: w.id, module, product, ...(swing === 1 ? {} : { swing }) };
 }
 
 function findModuleOwner(v: Variant, a: Point, b: Point) {

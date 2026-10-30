@@ -61,8 +61,8 @@ const products: Product[] = [
   one('6103', 'Bunnprofil 960 × 30 mm', 'system', 'stk', 'Stolper og profiler', 85),
   one('6110', 'Takdrager 80 × 20 mm', 'system', 'lm', 'Takdrager', 240),
   // Openings
-  one('6130', 'Dør med lås', 'object', 'stk', 'Dører og forheng', 2400, { menu: 'vegg' }),
-  one('6131', 'Forheng', 'object', 'stk', 'Dører og forheng', 650, { menu: 'vegg', dim: 'i åpning 960 mm' }),
+  one('6130', 'Dør med lås', 'object', 'stk', 'Dører og forheng', 2400, { menu: 'vegg', opening: 'door' }),
+  one('6131', 'Forheng', 'object', 'stk', 'Dører og forheng', 650, { menu: 'vegg', dim: 'i åpning 960 mm', opening: 'curtain' }),
   one('6132', 'Overstykke over åpning', 'system', 'stk', 'Dører og forheng', 220),
   // Textile and foil
   one('8010', 'Aluminiumsramme 40 mm', 'system', 'lm', 'Tekstilvegger', 310),
@@ -161,6 +161,12 @@ const products: Product[] = [
   counted('6160', 'Frontplate med logo', 'prof', 'Profilering', 'Disk og frontbord', 1650),
   one('9900', 'Montering og demontering', 'system', 't', 'Montering', 750),
 ];
+
+// Colours for drawing placed furniture (product data, not tokens).
+const BLACK = '#2B2C2E';
+const WHITE = '#F3F2EE';
+const OBJECT_COLORS: Record<string, string> = { '5276': BLACK, '5275': WHITE, '5296': BLACK, '5186': BLACK, '5196': BLACK, '5195': WHITE };
+for (const p of products) for (const v of p.variants) if (OBJECT_COLORS[v.artnr]) v.color = OBJECT_COLORS[v.artnr];
 
 export const DEFAULT_CATALOG: Catalog = {
   products,

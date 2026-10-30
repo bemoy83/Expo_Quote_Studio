@@ -40,6 +40,11 @@ export interface Opening {
   module: number;
   /** Art.nr of the door or curtain. */
   product: string;
+  /**
+   * Which side a door swings to, relative to the wall direction from → to:
+   * 1 = left normal (−dy, dx), −1 = the other side. Omitted: into the stand on a perimeter wall, else 1.
+   */
+  swing?: 1 | -1;
 }
 
 export interface Floor {
