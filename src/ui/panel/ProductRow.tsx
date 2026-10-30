@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { SURFACE } from '../colors'
 import { fmt } from '../format'
 
 export interface Chip {
@@ -40,7 +41,7 @@ export function ProductRow({
       {meta && <span className="pd-meta">{meta}</span>}
       {result && <span className="pd-result num">{result}</span>}
       {chips && <span className="pd-chips">{chips}</span>}
-      {children && <div style={{ gridColumn: '2 / -1', marginTop: 4 }}>{children}</div>}
+      {children && <div className="pd-extra">{children}</div>}
     </div>
   )
 }
@@ -93,5 +94,5 @@ export function Swatch({ color, pattern }: { color?: string; pattern?: 'tiles' |
       : pattern === 'planks'
         ? 'repeating-linear-gradient(0deg,transparent 0 4px,rgb(0 0 0 / .12) 4px 5px),'
         : ''
-  return <span className="swatch" style={{ background: tex + (color ?? 'rgb(var(--surface))') }} />
+  return <span className="swatch" style={{ background: tex + (color ?? SURFACE) }} />
 }

@@ -12,19 +12,20 @@ import { CalcPanel } from './calc/CalcPanel'
 import { Button, IconButton, Segmented, Toast, useToast } from './controls'
 import { CatalogPage } from './catalog/CatalogPage'
 import { catalog, getVersion, idx, place, plateColor, productOf, rules, subscribe } from './env'
-import { fmt, kr, signed } from './format'
+import { download } from './download'
+import { count, fmt, kr, signed } from './format'
+import { frameCount, TYPE_NAME } from './names'
 import { Rail } from './panel/Rail'
-import { PlanView, type PlanSelection } from './plan/PlanView'
+import { PlanPreview, PlanView, type PlanSelection } from './plan/PlanView'
 import { WallPopover } from './plan/WallPopover'
 import { ProductionPage } from './production/ProductionPage'
 import { QuotePage } from './quote/QuotePage'
 import { TopNav, type Page } from './shell/TopNav'
+import { VariantTabs } from './shell/VariantTabs'
 import { FLOOR_SIZES, type Brush, type FloorSize, type Highlight, type Tool } from './tools'
 
 // three.js is only loaded when the 3D view is opened
 const Scene3D = lazy(() => import('./scene3d/Scene3D').then((m) => ({ default: m.Scene3D })))
-
-import { TYPE_NAME } from './names'
 
 function exampleSketch(): Sketch {
   let v: Variant = fillFloor(r2(), '5903')
@@ -75,6 +76,7 @@ export default function App() {
 
   const onEdit = useCallback((fn: (v: Variant) => Variant, history = true) => dispatch({ type: 'edit', fn, history }), [])
   const onCheckpoint = useCallback(() => dispatch({ type: 'checkpoint' }), [])
+  const selectVariant = (index: number) => dispatch({ type: 'select', index })
 
   /** Changing panel tab always returns to Velg. */
   const setTab = (k: string) => {
@@ -129,13 +131,8 @@ export default function App() {
   const plateRal = v.defaultPlate
 
   const saveFile = () => {
-    const blob = new Blob([serialize(sketch)], { type: 'application/json' })
-    const a = document.createElement('a')
     const name = customerName(sketch.project).replace(/[^A-Za-z0-9æøåÆØÅ]+/g, '') || 'standskisse'
-    a.href = URL.createObjectURL(blob)
-    a.download = `${name}.standskisse.json`
-    a.click()
-    window.setTimeout(() => URL.revokeObjectURL(a.href), 1000)
+    download(serialize(sketch), 'application/json', `${name}.standskisse.json`)
   }
   const openFile = async (f: File) => {
     const r = parse(await f.text())
@@ -226,13 +223,7 @@ export default function App() {
                 />
               )}
               <span className="spacer" />
-              <Segmented<number>
-                onBand
-                label="Varianter"
-                value={current}
-                onChange={(index) => dispatch({ type: 'select', index })}
-                options={sketch.variants.map((x, i) => ({ value: i, label: `Variant ${x.name}` }))}
-              />
+              <VariantTabs variants={sketch.variants} current={current} onSelect={selectVariant} />
               <Button onBand icon={Copy} disabled={sketch.variants.length >= 4} onClick={() => dispatch({ type: 'duplicate' })}>
                 Ny variant
               </Button>
@@ -243,10 +234,10 @@ export default function App() {
             <div className="kpis">
               <Kpi label="Areal" value={fmt(k.area)} unit="m²" sub={`${v.stand.width} × ${v.stand.depth} m`} />
               <Kpi label="Åpne sider" value={String(k.openSides)} sub={TYPE_NAME[v.stand.type]} />
-              <Kpi label="Standvegg" value={fmt(k.wallLm)} unit="lm" sub={k.openings ? `${k.openings} ${k.openings === 1 ? 'åpning' : 'åpninger'}` : undefined} />
+              <Kpi label="Standvegg" value={fmt(k.wallLm)} unit="lm" sub={k.openings ? count(k.openings, 'åpning', 'åpninger') : undefined} />
               <Kpi label="Takdrager" value={fmt(k.beamLm)} unit="m" />
-              {k.textileM2 > 0 && <Kpi label="Tekstilvegg" value={fmt(k.textileM2)} unit="m²" sub={`${res.production.pieces.length} ${res.production.pieces.length === 1 ? 'ramme' : 'rammer'}`} />}
-              <span className="spacer" style={{ flex: 1 }} />
+              {k.textileM2 > 0 && <Kpi label="Tekstilvegg" value={fmt(k.textileM2)} unit="m²" sub={frameCount(res.production.pieces.length)} />}
+              <span className="spacer" />
               <Kpi
                 label="Veiledende sum"
                 value={kr(res.sum)}
@@ -286,20 +277,7 @@ export default function App() {
                       onToast={showToast}
                     />
                     <div className="minimap">
-                      <PlanView
-                        mini
-                        v={v}
-                        res={res}
-                        tool="select"
-                        brush={null}
-                        floorSize={floorSize}
-                        highlight={null}
-                        selection={{}}
-                        onSelect={() => {}}
-                        onEdit={() => {}}
-                        onCheckpoint={() => {}}
-                        onToast={() => {}}
-                      />
+                      <PlanPreview mini v={v} res={res} />
                       <IconButton icon={Maximize2} label="Vis plan" size={14} className="minimap-open" onClick={() => setView('plan')} />
                     </div>
                   </Suspense>
@@ -312,12 +290,12 @@ export default function App() {
           </div>
         </>
       ) : page === 'tilbud' ? (
-        <QuotePage project={sketch.project} variants={sketch.variants} current={current} onSelect={(index) => dispatch({ type: 'select', index })} calcOf={calcOf} />
+        <QuotePage project={sketch.project} variants={sketch.variants} current={current} onSelect={selectVariant} calcOf={calcOf} />
       ) : page === 'produksjon' ? (
         <ProductionPage
           variants={sketch.variants}
           current={current}
-          onSelect={(index) => dispatch({ type: 'select', index })}
+          onSelect={selectVariant}
           customer={customerName(sketch.project)}
           motifName={(id) => sketch.motifs.find((m) => m.id === id)?.name}
           onToast={showToast}

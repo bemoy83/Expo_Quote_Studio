@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import { Minus, Plus } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState, type ButtonHTMLAttributes, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode } from 'react'
 
 type BtnProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   icon?: LucideIcon
@@ -98,6 +98,30 @@ export function Stepper({ value, min = 0, max = 99, onChange }: { value: number;
 /** Counter that shows a single + until the item is in use. */
 export function Counter({ value, onChange, label, max = 99 }: { value: number; onChange: (v: number) => void; label: string; max?: number }) {
   return value > 0 ? <Stepper value={value} max={max} onChange={onChange} /> : <IconButton icon={Plus} label={label} onClick={() => onChange(1)} />
+}
+
+type CommitInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'defaultValue' | 'onBlur' | 'onKeyDown' | 'onFocus'> & {
+  value: string
+  /** Called on blur (Enter blurs). Return false to put the stored value back in the field. */
+  onCommit: (text: string) => boolean | void
+  /** Select the text on focus, for numbers that are usually replaced. */
+  selectOnFocus?: boolean
+}
+
+/** Text field that edits freely and saves on blur or Enter. A new stored value resets the field. */
+export function CommitInput({ value, onCommit, selectOnFocus, ...rest }: CommitInputProps) {
+  return (
+    <input
+      key={value}
+      defaultValue={value}
+      onFocus={selectOnFocus ? (e) => e.target.select() : undefined}
+      onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+      onBlur={(e) => {
+        if (onCommit(e.target.value) === false) e.target.value = value
+      }}
+      {...rest}
+    />
+  )
 }
 
 export interface ToastMsg {

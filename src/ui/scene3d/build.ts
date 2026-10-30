@@ -3,6 +3,7 @@
 // Model → world: x → x, y (toward the aisle) → z, height → y. The stand is centred on the origin.
 import * as THREE from 'three'
 import type { CalcResult } from '../../calc/calc'
+import { FURNITURE_WHITE } from '../../catalog/defaultCatalog'
 import { defaultSwing } from '../../domain/edit'
 import { CELL, parseCellKey, pointAlong, pointKey, wallDirection, wallLength } from '../../domain/grid'
 import { conflicts } from '../../domain/objects'
@@ -29,6 +30,15 @@ const FABRIC = '#cfc7e6'
 const STAND_FLOOR = '#e3e0d8'
 const SELECT = '#6aaecb'
 const CONFLICT = '#d24b3f'
+const GROUND = '#ebe9e3'
+const HANDLE = '#55575b'
+const CHROME = '#a4a6aa'
+/** --ink, for lines and text drawn on the floor. */
+const INK = '#171613'
+/** Fallback when a product has no colour. */
+const NO_COLOR = '#999'
+/** Aluminium profiles: posts, rails, beams and textile frames. */
+const ALU_FINISH = { metalness: 0.4, roughness: 0.5 }
 
 /** Clear height of a door or curtain opening; the header panel fills the rest. Drawing only. */
 const OPENING_H = 2.1
@@ -80,7 +90,7 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
   }
 
   // Ground and stand surface
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(W + 40, D + 40), new THREE.MeshStandardMaterial({ color: '#ebe9e3', roughness: 1 }))
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(W + 40, D + 40), new THREE.MeshStandardMaterial({ color: GROUND, roughness: 1 }))
   ground.rotation.x = -Math.PI / 2
   ground.position.y = -0.002
   ground.receiveShadow = true
@@ -101,7 +111,7 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
   const cellGeo = new THREE.PlaneGeometry(CELL - 0.006, CELL - 0.006).rotateX(-Math.PI / 2)
   const tmp = new THREE.Object3D()
   for (const [a, cells] of byProduct) {
-    const color = idx.byArtnr.get(a)?.variant.color ?? '#999'
+    const color = idx.byArtnr.get(a)?.variant.color ?? NO_COLOR
     const inst = new THREE.InstancedMesh(cellGeo, mat('floor', color, { roughness: 1 }), cells.length)
     cells.forEach(([i, j], n) => {
       tmp.position.copy(at([(i + 0.5) * CELL, (j + 0.5) * CELL], 0.003))
@@ -128,7 +138,7 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
     const wallTag: Tag = { layer: 'walls', pick: { wallId: m.wallId } }
     const selected = sel.wallId === m.wallId
     const plate = mat('walls', plateColor(m.plate), selected ? { emissive: SELECT, emissiveIntensity: 0.35 } : {})
-    const frame = mat('walls', ALU, { metalness: 0.4, roughness: 0.5 })
+    const frame = mat('walls', ALU, ALU_FINISH)
     const len = rules.wall.cc - post
     along(m.a, m.b, len, prof.top, prof.thickness, H - prof.top, frame, wallTag)
     if (!m.opening) {
@@ -169,7 +179,7 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
     const b = pointAlong(w, o.module + 1)
     // Handle near the free edge (the hinge is at a, as in the plan)
     const hp: Point = [b[0] - dx * 0.12 + n[0] * 0.04, b[1] - dy * 0.12 + n[1] * 0.04]
-    const handle = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.02, 0.02), mat('openings', '#55575b'))
+    const handle = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.02, 0.02), mat('openings', HANDLE))
     handle.position.copy(at(hp, 1.05))
     handle.rotation.y = Math.atan2(-dy, dx)
     add(handle, tag)
@@ -185,7 +195,7 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
       pts.push(at([a[0] + Math.cos(t) * r, a[1] + Math.sin(t) * r], 0.008))
     }
     pts.push(at(a, 0.008))
-    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineDashedMaterial({ color: '#171613', dashSize: 0.05, gapSize: 0.05 }))
+    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineDashedMaterial({ color: INK, dashSize: 0.05, gapSize: 0.05 }))
     line.computeLineDistances()
     add(line, { layer: 'openings' })
   }
@@ -194,14 +204,14 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
   const wallPts = wallPoints(mods)
   for (const p of res.posts) {
     const onWall = wallPts.has(pointKey(p))
-    const mesh = new THREE.Mesh(new THREE.BoxGeometry(post, H, post), mat(onWall ? 'walls' : 'beams', ALU, { metalness: 0.4, roughness: 0.5 }))
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(post, H, post), mat(onWall ? 'walls' : 'beams', ALU, ALU_FINISH))
     mesh.position.copy(at(p, H / 2))
     add(mesh, { layer: onWall ? 'walls' : 'beams' })
   }
 
   // Beams (takdrager), top flush with the walls
   for (const s of res.beams.segments) {
-    along(s.from, s.to, s.length, rules.beam.height, rules.beam.thickness, H - rules.beam.height, mat('beams', BEAM, { metalness: 0.4, roughness: 0.5 }), { layer: 'beams' })
+    along(s.from, s.to, s.length, rules.beam.height, rules.beam.thickness, H - rules.beam.height, mat('beams', BEAM, ALU_FINISH), { layer: 'beams' })
   }
 
   // Textile walls (InFrame): a fabric box in an aluminium frame, standing in front of its wall
@@ -215,7 +225,7 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
     const off = s * (post / 2 + rules.textile.depth / 2 + 0.005)
     const h = Math.min(t.height ?? H, H)
     const fabric = mat('textile', FABRIC, { roughness: 1 })
-    const alu = mat('textile', ALU, { metalness: 0.4, roughness: 0.5 })
+    const alu = mat('textile', ALU, ALU_FINISH)
     along(pointAlong(w, from), pointAlong(w, to), to - from - 0.02, h, rules.textile.depth, 0, [alu, alu, alu, alu, fabric, fabric], { layer: 'textile', pick: { wallId: w.id } }, off)
   }
 
@@ -225,11 +235,11 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
     const r = idx.byArtnr.get(o.product)
     const f = r?.product.footprint
     if (!f) continue
-    const color = r.variant.color ?? '#888'
+    const color = r.variant.color ?? NO_COLOR
     const tag: Tag = { layer: 'objects', pick: { objectId: o.id } }
     const warn = bad.has(o.id) ? { emissive: CONFLICT, emissiveIntensity: 0.6 } : sel.objectId === o.id ? { emissive: SELECT, emissiveIntensity: 0.5 } : {}
     const body = mat('objects', color, { roughness: 0.6, ...warn })
-    const metal = mat('objects', '#a4a6aa', { metalness: 0.6, roughness: 0.35, ...warn })
+    const metal = mat('objects', CHROME, { metalness: 0.6, roughness: 0.35, ...warn })
     const g = new THREE.Group()
     g.position.copy(at([o.x, o.y]))
     g.rotation.y = (-o.rot * Math.PI) / 180
@@ -238,7 +248,7 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
     const topMesh = new THREE.Mesh(topGeo, body)
     topMesh.position.y = f.h - top / 2
     add(topMesh, tag, g)
-    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, f.h - top - 0.02, 16), color === '#F3F2EE' ? metal : body)
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, f.h - top - 0.02, 16), color === FURNITURE_WHITE ? metal : body)
     pole.position.y = (f.h - top - 0.02) / 2 + 0.02
     add(pole, tag, g)
     const footR = Math.min(f.w, f.d) * 0.32
@@ -255,7 +265,6 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
 /** Dimension lines along the front and right edge, lying on the floor. */
 function labels(root: THREE.Group, v: Variant) {
   const { width: W, depth: D } = v.stand
-  const ink = '#171613'
   const lines: number[] = []
   const o = 0.55
   const tick = 0.12
@@ -266,7 +275,7 @@ function labels(root: THREE.Group, v: Variant) {
   lines.push(W / 2 + o, 0.004, -D / 2, W / 2 + o, 0.004, D / 2)
   lines.push(W / 2 + o - tick, 0.004, -D / 2, W / 2 + o + tick, 0.004, -D / 2, W / 2 + o - tick, 0.004, D / 2, W / 2 + o + tick, 0.004, D / 2)
   const g = new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(lines, 3))
-  root.add(new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: ink, transparent: true, opacity: 0.45 })))
+  root.add(new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: INK, transparent: true, opacity: 0.45 })))
   const mm = (m: number) => String(Math.round(m * 1000)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
   root.add(flatText(mm(W), 0, D / 2 + o + 0.28, 0, 0.26, 0.55))
   root.add(flatText(mm(D), W / 2 + o + 0.28, 0, Math.PI / 2, 0.26, 0.55))
@@ -282,7 +291,8 @@ function flatText(text: string, x: number, z: number, rot: number, size: number,
   c.width = w
   c.height = px * 1.3
   ctx.font = font
-  ctx.fillStyle = `rgba(23,22,19,${alpha})`
+  ctx.fillStyle = INK
+  ctx.globalAlpha = alpha
   ctx.textBaseline = 'middle'
   ctx.fillText(text, 8, c.height / 2)
   const tex = new THREE.CanvasTexture(c)

@@ -40,6 +40,14 @@ export function createProject(): Project {
   return { fields: FIXED_PROJECT_FIELDS.map((f) => ({ ...f, value: '' })) };
 }
 
-export function customerName(p: Project): string {
-  return p.fields.find((f) => f.id === 'kunde')?.value.trim() ?? '';
+const FIXED_IDS = new Set<string>(FIXED_PROJECT_FIELDS.map((f) => f.id));
+
+/** Kundenavn, Prosjekt and Standnr. can be filled in but not renamed or removed. */
+export const isFixedField = (id: string) => FIXED_IDS.has(id);
+
+/** Trimmed value of a project field, '' when missing. */
+export function projectField(p: Project, id: string): string {
+  return p.fields.find((f) => f.id === id)?.value.trim() ?? '';
 }
+
+export const customerName = (p: Project) => projectField(p, 'kunde');

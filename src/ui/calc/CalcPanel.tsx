@@ -1,5 +1,6 @@
 import { FileText } from 'lucide-react'
 import type { CalcGroup, CalcResult } from '../../calc/calc'
+import { LAYER_COLOR } from '../colors'
 import { Button } from '../controls'
 import { rules } from '../env'
 import { fmt, kr } from '../format'
@@ -16,21 +17,21 @@ export function layerOf(g: CalcGroup): Highlight {
   return null
 }
 
-const DOT: Partial<Record<string, string>> = { walls: 'var(--line-sky)', textile: 'var(--line-violet)', openings: 'var(--line-slate)' }
+const DOT: Partial<Record<string, string>> = LAYER_COLOR
 
 export function CalcPanel({ res, name, onHover, onQuote }: { res: CalcResult; name: string; onHover: (h: Highlight) => void; onQuote: () => void }) {
   const lines = res.groups.flatMap((g) => g.lines)
   const placeholders = lines.filter((l) => l.placeholder).length
   return (
     <aside className="calc" aria-label="Veiledende kalkyle">
-      <div className="calc-head" style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-        <div style={{ flex: 1 }}>
+      <div className="calc-head">
+        <div className="spacer">
           <h2>Veiledende kalkyle</h2>
           <div className="sub">
             Eksempelpriser{placeholders ? <span className="ph"> · {placeholders} plassholderpriser</span> : null}
           </div>
         </div>
-        <span className="band-tag" style={{ background: 'rgb(var(--surface))', boxShadow: 'var(--raise)' }}>
+        <span className="band-tag">
           {name}
         </span>
       </div>
@@ -40,7 +41,7 @@ export function CalcPanel({ res, name, onHover, onQuote }: { res: CalcResult; na
             <div className="cg-head">
               <span className="sq" style={DOT[g.id] ? { background: DOT[g.id], borderRadius: '50%' } : undefined} />
               <span className="name">{g.name}</span>
-              <span className="num" style={{ font: '600 13px var(--font-numeric)' }}>
+              <span className="num">
                 {kr(g.sum)}
               </span>
             </div>

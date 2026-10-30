@@ -6,10 +6,11 @@ import { useEffect, useLayoutEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import type { CalcResult } from '../../calc/calc'
-import { isPerimeterWall, moveWall } from '../../domain/edit'
-import { moveObject, settleObject } from '../../domain/objects'
+import { isPerimeterWall } from '../../domain/edit'
+import { moveObject } from '../../domain/objects'
 import type { Variant } from '../../domain/types'
 import { IconButton } from '../controls'
+import { dragWall, dropObject, type WallDrag } from '../drag'
 import { place } from '../env'
 import type { Highlight } from '../tools'
 import type { PlanSelection } from '../plan/PlanView'
@@ -29,7 +30,7 @@ interface Props {
 type Drag =
   | { kind: 'orbit' }
   | { kind: 'object'; id: string; start: { x: number; y: number }; off: { x: number; y: number }; moved: boolean }
-  | { kind: 'wall'; id: string; p0: { x: number; y: number }; v0: Variant; delta: number; horizontal: boolean; moved: boolean }
+  | ({ kind: 'wall'; moved: boolean } & WallDrag)
 
 const deg = Math.PI / 180
 const HOME = { az: 28 * deg, el: 30 * deg }
@@ -166,13 +167,7 @@ export function Scene3D(p: Props) {
         P.onEdit((x) => moveObject(x, place, d.id, q.x - d.off.x, q.y - d.off.y), false)
       } else {
         drag.moved = true
-        const delta = Math.round(drag.horizontal ? q.y - drag.p0.y : q.x - drag.p0.x)
-        if (delta === drag.delta) return
-        const next = moveWall(drag.v0, drag.id, delta)
-        if (next === drag.v0 && delta !== 0) return
-        if (drag.delta === 0) P.onCheckpoint()
-        drag.delta = delta
-        P.onEdit(() => next, false)
+        dragWall(drag, q, P.onEdit, P.onCheckpoint)
       }
     }
     const onUp = (e: PointerEvent) => {
@@ -185,12 +180,7 @@ export function Scene3D(p: Props) {
       const click = Math.hypot(e.clientX - down.x, e.clientY - down.y) < 4
       const hit = down.hit
       down = null
-      if (d?.kind === 'object' && d.moved) {
-        const r = settleObject(P.v, place, d.id, d.start)
-        if (r.v !== P.v) P.onEdit(() => r.v, false)
-        if (!r.ok) P.onToast('Ikke plass der')
-        return
-      }
+      if (d?.kind === 'object' && d.moved) return dropObject(P.v, d.id, d.start, P.onEdit, P.onToast)
       if (!click) return
       if (hit?.objectId) P.onSelect({ objectId: hit.objectId })
       else if (hit?.wallId) P.onSelect({ wallId: hit.wallId })
