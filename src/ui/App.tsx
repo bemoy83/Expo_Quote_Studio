@@ -17,7 +17,9 @@ import { count, fmt, kr, signed } from './format'
 import { frameCount, TYPE_NAME } from './names'
 import { Rail } from './panel/Rail'
 import { PlanPreview, PlanView, type PlanSelection } from './plan/PlanView'
-import { WallPopover } from './plan/WallPopover'
+import { WallDrawer } from './plan/WallDrawer'
+import { motifLibrary } from './motifs'
+import { fitDecor, removeFoil, removeTextile } from '../domain/decor'
 import { ProductionPage } from './production/ProductionPage'
 import { QuotePage } from './quote/QuotePage'
 import { TopNav, type Page } from './shell/TopNav'
@@ -74,7 +76,15 @@ export default function App() {
     return () => window.clearTimeout(t)
   }, [sketch])
 
-  const onEdit = useCallback((fn: (v: Variant) => Variant, history = true) => dispatch({ type: 'edit', fn, history }), [])
+  const motifs = useMemo(() => motifLibrary(sketch.motifs), [sketch.motifs])
+  // Every edit keeps textiles and foils valid: on a wall, off openings, inside their felt.
+  const onEdit = useCallback(
+    (fn: (v: Variant) => Variant, history = true) => {
+      const ratio = (id: string | undefined) => motifs.find((m) => m.id === id)?.ratio ?? 0
+      dispatch({ type: 'edit', fn: (x) => fitDecor(fn(x), rules, ratio), history })
+    },
+    [motifs],
+  )
   const onCheckpoint = useCallback(() => dispatch({ type: 'checkpoint' }), [])
   const selectVariant = (index: number) => dispatch({ type: 'select', index })
 
@@ -116,6 +126,10 @@ export default function App() {
       else if (k === 'g') {
         const f = brush?.kind === 'floor' ? brush.product : (Object.keys(res.keyFigures.floor)[0] ?? '5902')
         pick({ kind: 'floor', product: f })
+      } else if ((k === 'delete' || k === 'backspace') && (selection.textileId || selection.foilId)) {
+        const { textileId, foilId } = selection
+        onEdit((x) => (textileId ? removeTextile(x, textileId) : removeFoil(x, foilId!)))
+        setSelection({ wallId: selection.wallId, side: selection.side })
       } else if ((k === 'delete' || k === 'backspace') && selection.objectId) {
         const id = selection.objectId
         onEdit((x) => ({ ...x, objects: x.objects.filter((o) => o.id !== id) }))
@@ -142,7 +156,7 @@ export default function App() {
     showToast({ text: `Åpnet ${f.name}`, action: 'Angre', onAction: () => dispatch({ type: 'undo' }) })
   }
 
-  const brushLabel = useMemo(() => describeBrush(brush), [brush])
+  const brushLabel = describeBrush(brush)
 
   return (
     <div className="app">
@@ -247,7 +261,23 @@ export default function App() {
             </div>
           </div>
           <div className="workspace">
-            <Rail v={v} res={res} tab={tab} setTab={setTab} tool={tool} brush={brush} pick={pick} onEdit={onEdit} onToast={showToast} />
+            <Rail
+              v={v}
+              res={res}
+              tab={tab}
+              setTab={setTab}
+              tool={tool}
+              brush={brush}
+              pick={pick}
+              onEdit={onEdit}
+              onToast={showToast}
+              motifs={motifs}
+              onAddMotif={(m) => dispatch({ type: 'motifs', motifs: [...sketch.motifs, m] })}
+              onSelect={(s) => {
+                setTool('select')
+                setSelection(s)
+              }}
+            />
             <main className="stage">
               <div className="plan-wrap">
                 {view === 'plan' ? (
@@ -263,6 +293,7 @@ export default function App() {
                     onEdit={onEdit}
                     onCheckpoint={onCheckpoint}
                     onToast={showToast}
+                    motifs={motifs}
                   />
                 ) : (
                   <Suspense fallback={<div className="stage-empty">Laster 3D …</div>}>
@@ -275,6 +306,7 @@ export default function App() {
                       onEdit={onEdit}
                       onCheckpoint={onCheckpoint}
                       onToast={showToast}
+                      motifs={motifs}
                     />
                     <div className="minimap">
                       <PlanPreview mini v={v} res={res} />
@@ -282,8 +314,19 @@ export default function App() {
                     </div>
                   </Suspense>
                 )}
-                {selection.wallId && tool === 'select' && <WallPopover v={v} wallId={selection.wallId} onEdit={onEdit} onClose={() => setSelection({})} />}
               </div>
+              {selection.wallId && tool === 'select' && (
+                <WallDrawer
+                  v={v}
+                  selection={selection}
+                  motifs={motifs}
+                  onSelect={setSelection}
+                  onEdit={onEdit}
+                  onCheckpoint={onCheckpoint}
+                  onToast={showToast}
+                  onClose={() => setSelection({})}
+                />
+              )}
               <div className="stage-hint">{view === '3d' ? HINT_3D : hint(tool, brush)}</div>
             </main>
             <CalcPanel res={res} name={v.name} onHover={setHighlight} onQuote={() => setPage('tilbud')} />
@@ -297,7 +340,7 @@ export default function App() {
           current={current}
           onSelect={selectVariant}
           customer={customerName(sketch.project)}
-          motifName={(id) => sketch.motifs.find((m) => m.id === id)?.name}
+          motifName={(id) => motifs.find((m) => m.id === id)?.name}
           onToast={showToast}
         />
       ) : (
@@ -310,6 +353,8 @@ export default function App() {
   function describeBrush(b: Brush | null): { name: string; color?: string } {
     if (!b) return { name: 'Pensel' }
     if (b.kind === 'wall') return { name: `Standvegg RAL ${b.ral}`, color: plateColor(b.ral) }
+    if (b.kind === 'textile') return { name: 'Tekstilvegg' }
+    if (b.kind === 'motif') return { name: motifs.find((m) => m.id === b.motif)?.name ?? 'Motiv' }
     const r = idx.byArtnr.get(b.product)
     const name = r ? (r.product.variants.length > 1 ? `${r.product.name.split(' ')[0]} ${r.variant.name.toLowerCase()}` : r.product.name) : b.product
     return { name, color: r?.variant.color }
@@ -328,6 +373,10 @@ function hint(tool: Tool, brush: Brush | null): string {
       return erase ? 'Klikk og dra for å fjerne gulv' : 'Klikk og dra for å tegne gulv · velg penselstørrelse i båndet'
     case 'opening':
       return erase ? 'Klikk en åpning for å gjøre den til vegg igjen' : 'Klikk en veggmodul for å sette inn åpning med overstykke · klikk en åpning for å bytte fyll'
+    case 'textile':
+      return erase ? 'Klikk en tekstilvegg for å fjerne den' : 'Klikk ved en vegg, på siden rammen skal stå · rammen fyller den ledige delen av veggen'
+    case 'motif':
+      return erase ? 'Klikk en foliedekor for å fjerne den, eller en tekstilvegg for å ta bort motivet' : 'Klikk en tekstilvegg for trykk, eller et veggfelt for foliedekor'
     case 'object':
       return erase ? 'Klikk et møbel for å fjerne det' : `Klikk i planen for å sette ut ${productOf(brush?.kind === 'object' ? brush.product : '')?.name.toLowerCase() ?? 'varen'}`
   }

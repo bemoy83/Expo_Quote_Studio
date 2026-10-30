@@ -752,38 +752,217 @@ kbd {
   font: var(--type-text);
   color: rgb(var(--ink-muted));
 }
-.wall-pop {
-  position: absolute;
-  top: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 320px;
-  padding: 12px 14px;
-  z-index: 10;
+/* ---------- Wall drawer (veggskuff) ---------- */
+.wall-drawer {
+  flex: none;
+  max-height: min(56%, 480px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  display: grid;
+  grid-template-columns: minmax(250px, 290px) minmax(0, 1fr);
+  border-top: 1px solid rgb(var(--border-strong));
+  background: rgb(var(--panel));
 }
-.wall-pop h3 {
-  margin: 0 0 2px;
-  font: 600 14px var(--font-ui);
+.wd-insp {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px 16px 20px;
+  border-right: 1px solid var(--g-row);
+  min-width: 0;
+}
+.wd-insp .btn {
+  justify-content: center;
+}
+.wd-head {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
-.wall-pop h3 span {
+.wd-head h3 {
   flex: 1;
+  margin: 0;
+  font: var(--type-group);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.wall-pop p {
-  margin: 0 0 8px;
+.wd-meta {
+  margin: -4px 0 2px;
   font: var(--type-note);
   color: rgb(var(--ink-muted));
 }
-.wall-pop .eyebrow {
-  margin-bottom: 4px;
-}
-.wall-pop .pop-actions {
+.wd-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 10px;
+}
+.wd-dim {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--r-track);
+  background: var(--well);
+}
+.wd-dim .field.num {
+  width: 54px;
+  text-align: center;
+}
+.wd-dim .unit {
+  padding: 0 6px 0 2px;
+}
+.wd-view {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 20px 10px;
+}
+.wd-svg {
+  flex: 1;
+  width: 100%;
+  min-height: 200px;
+  max-height: 380px;
+  touch-action: none;
+  user-select: none;
+}
+.wd-hint {
+  text-align: center;
+  font: var(--type-note);
+  color: rgb(var(--ink-faint));
+}
+.mot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
+  gap: 6px;
+  margin-top: 4px;
+}
+.mot {
+  display: grid;
+  place-items: center;
+  height: 38px;
+  min-width: 0;
+  padding: 3px;
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: var(--well);
+  cursor: pointer;
+  transition: background var(--dur) var(--ease);
+}
+.mot img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 2px;
+}
+.mot .none {
+  width: 30px;
+  height: 22px;
+  box-shadow: inset 0 0 0 2px #b9bcc0;
+  background: rgb(var(--surface));
+}
+.mot.on {
+  background: rgb(var(--surface));
+  box-shadow: var(--raise), inset 0 0 0 1.5px rgb(var(--ink));
+}
+
+/* ---------- Profilering: textile rows and motif library ---------- */
+.tex-thumb {
+  display: block;
+  width: 28px;
+  height: 22px;
+  box-sizing: border-box;
+  border: 2.5px solid #c9ccd0;
+  border-top-color: #e1e3e6;
+  border-bottom-color: #a6a9ad;
+  background: color-mix(in oklab, var(--line-violet) 18%, rgb(var(--surface)));
+}
+.trow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 6px;
+  border: 0;
+  border-top: 1px solid var(--g-row);
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  font: 500 12.5px var(--font-ui);
+  color: rgb(var(--ink));
+}
+.trow:hover {
+  background: var(--row-hover);
+}
+.trow .name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.trow .num {
+  font: 500 12px var(--font-numeric);
+  color: rgb(var(--ink-muted));
+  white-space: nowrap;
+}
+.faint {
+  color: rgb(var(--ink-faint));
+}
+.warn {
+  color: var(--over);
+}
+.gfx-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.gfx-head span {
+  flex: 1;
+}
+.gfx-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.gfx {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  padding: 4px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+}
+.gfx .art {
+  height: 58px;
+  border-radius: var(--r-sm);
+  background: var(--well);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  overflow: hidden;
+}
+.gfx img {
+  max-width: 100%;
+  max-height: 46px;
+  border-radius: 2px;
+}
+.gfx .lbl {
+  font: 500 12px var(--font-ui);
+  color: rgb(var(--ink-muted));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gfx.on {
+  background: rgb(var(--surface));
+  box-shadow: var(--raise);
 }
 
 /* ---------- Calc (right) ---------- */

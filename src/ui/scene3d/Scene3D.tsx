@@ -8,6 +8,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import type { CalcResult } from '../../calc/calc'
 import { isPerimeterWall } from '../../domain/edit'
 import { moveObject } from '../../domain/objects'
+import type { Motif } from '../../persistence/file'
 import type { Variant } from '../../domain/types'
 import { IconButton } from '../controls'
 import { dragWall, dropObject, type WallDrag } from '../drag'
@@ -25,6 +26,7 @@ interface Props {
   onEdit: (fn: (v: Variant) => Variant, history?: boolean) => void
   onCheckpoint: () => void
   onToast: (text: string) => void
+  motifs: Motif[]
 }
 
 type Drag =
@@ -210,12 +212,12 @@ export function Scene3D(p: Props) {
       v.scene.remove(v.content)
       dispose(v.content)
     }
-    const g = build(p.v, p.res, { selection: p.selection, labels: true })
+    const g = build(p.v, p.res, { selection: p.selection, labels: true, motifs: p.motifs, onLoad: v.render })
     if (p.highlight) dimExcept(g, p.highlight)
     v.content = g
     v.scene.add(g)
     v.render()
-  }, [p.v, p.res, p.selection, p.highlight])
+  }, [p.v, p.res, p.selection, p.highlight, p.motifs])
 
   // Camera and sun follow the stand size
   useEffect(() => {

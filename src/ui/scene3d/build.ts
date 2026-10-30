@@ -4,11 +4,13 @@
 import * as THREE from 'three'
 import type { CalcResult } from '../../calc/calc'
 import { FURNITURE_WHITE } from '../../catalog/defaultCatalog'
+import { felt, sideOf, textileBox } from '../../domain/decor'
 import { defaultSwing } from '../../domain/edit'
 import { CELL, parseCellKey, pointAlong, pointKey, wallDirection, wallLength } from '../../domain/grid'
 import { conflicts } from '../../domain/objects'
 import type { Point, Variant } from '../../domain/types'
 import { builtModules, wallPoints, type BuiltModule } from '../../domain/walls'
+import type { Motif } from '../../persistence/file'
 import { wallHeight } from '../../rules/rules'
 import { idx, place, plateColor, productOf, rules } from '../env'
 import type { Highlight } from '../tools'
@@ -47,6 +49,26 @@ export interface BuildOptions {
   selection?: { wallId?: string; objectId?: string }
   /** Flat text on the floor (dimensions, area). Needs a canvas, so tests turn it off. */
   labels?: boolean
+  /** Motif library for prints on textiles and foils. Without it they are drawn blank. */
+  motifs?: Motif[]
+  /** Called when a motif image has loaded, so the view can render again. */
+  onLoad?: () => void
+}
+
+/** The motif as a texture covering a face of the given aspect ratio (cropped, never stretched). */
+function printMaterial(m: Motif, aspect: number, onLoad?: () => void): THREE.MeshStandardMaterial {
+  const tex = new THREE.TextureLoader().load(m.src, onLoad)
+  tex.colorSpace = THREE.SRGBColorSpace
+  tex.anisotropy = 4
+  const k = aspect / m.ratio
+  if (k > 1) {
+    tex.repeat.set(1, 1 / k)
+    tex.offset.set(0, (1 - 1 / k) / 2)
+  } else {
+    tex.repeat.set(k, 1)
+    tex.offset.set((1 - k) / 2, 0)
+  }
+  return new THREE.MeshStandardMaterial({ map: tex, roughness: 0.9, metalness: 0 })
 }
 
 export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THREE.Group {
@@ -214,19 +236,37 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
     along(s.from, s.to, s.length, rules.beam.height, rules.beam.thickness, H - rules.beam.height, mat('beams', BEAM, ALU_FINISH), { layer: 'beams' })
   }
 
-  // Textile walls (InFrame): a fabric box in an aluminium frame, standing in front of its wall
+  // Textile walls (InFrame): a fabric box in an aluminium frame, standing in front of its face. The motif is
+  // printed on the front.
+  const motif = (id: string | undefined) => (id ? opts.motifs?.find((m) => m.id === id) : undefined)
   for (const t of v.textiles) {
     const w = v.walls.find((x) => x.id === t.wallId)
     if (!w) continue
     const L = wallLength(w)
     const from = Math.max(0, Math.min(L, t.from))
     const to = Math.max(from, Math.min(L, t.from + t.width))
-    const s = defaultSwing(v.stand, w)
+    const s = sideOf(v, t)
     const off = s * (post / 2 + rules.textile.depth / 2 + 0.005)
-    const h = Math.min(t.height ?? H, H)
+    const { bottom, height } = textileBox(t, rules)
+    const h = Math.min(height, H - bottom)
     const fabric = mat('textile', FABRIC, { roughness: 1 })
     const alu = mat('textile', ALU, ALU_FINISH)
-    along(pointAlong(w, from), pointAlong(w, to), to - from - 0.02, h, rules.textile.depth, 0, [alu, alu, alu, alu, fabric, fabric], { layer: 'textile', pick: { wallId: w.id } }, off)
+    const m = motif(t.motif)
+    const print = m ? printMaterial(m, (to - from) / h, opts.onLoad) : fabric
+    const faces = s === 1 ? [alu, alu, alu, alu, print, fabric] : [alu, alu, alu, alu, fabric, print]
+    along(pointAlong(w, from), pointAlong(w, to), to - from - 0.02, h, rules.textile.depth, bottom, faces, { layer: 'textile', pick: { wallId: w.id } }, off)
+  }
+
+  // Foil decor: a thin print on the wall plate, inside its felt
+  for (const f of v.foils) {
+    const w = v.walls.find((x) => x.id === f.wallId)
+    if (!w) continue
+    const s = sideOf(v, f)
+    const fe = felt(rules, f.module)
+    const c = fe.center + f.x
+    const m = motif(f.motif)
+    const print = m ? printMaterial(m, f.width / f.height, opts.onLoad) : mat('foil', FABRIC, { roughness: 0.6 })
+    along(pointAlong(w, c - f.width / 2), pointAlong(w, c + f.width / 2), f.width, f.height, 0.002, f.y - f.height / 2, print, { layer: 'foil', pick: { wallId: w.id } }, s * (rules.wall.profile.thickness / 2 + 0.002))
   }
 
   // Furniture: top, pole and foot from the footprint

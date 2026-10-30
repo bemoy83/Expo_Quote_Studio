@@ -1,6 +1,6 @@
 // Sketch state with undo and redo at model level (snapshots). Pure reducer, no React.
 import type { Project, Variant, VariantName } from '../domain/types';
-import type { Sketch } from '../persistence/file';
+import type { Motif, Sketch } from '../persistence/file';
 
 export interface SketchState {
   sketch: Sketch;
@@ -20,6 +20,8 @@ export type SketchAction =
   | { type: 'edit'; fn: (v: Variant) => Variant; history?: boolean }
   | { type: 'checkpoint' }
   | { type: 'project'; project: Project }
+  /** Replace the customer's own motifs. Undoable. */
+  | { type: 'motifs'; motifs: Motif[] }
   | { type: 'select'; index: number }
   | { type: 'duplicate' }
   | { type: 'remove'; index: number }
@@ -57,6 +59,8 @@ export function reduce(s: SketchState, a: SketchAction): SketchState {
       return { ...s, past: [...s.past, snap(s)].slice(-LIMIT), future: [] };
     case 'project':
       return commit(s, { sketch: { ...sketch, project: a.project }, current });
+    case 'motifs':
+      return commit(s, { sketch: { ...sketch, motifs: a.motifs }, current });
     case 'select':
       return a.index === current ? s : { ...s, current: a.index };
     case 'duplicate': {
