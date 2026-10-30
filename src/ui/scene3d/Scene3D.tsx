@@ -208,12 +208,14 @@ export function Scene3D(p: Props) {
   useEffect(() => {
     const v = view.current
     if (!v) return
+    // A motif that finishes loading after this view is gone must not render into a disposed renderer.
+    const onLoad = () => view.current === v && v.render()
+    const g = build(p.v, p.res, { selection: p.selection, labels: true, motifs: p.motifs, onLoad })
+    if (p.highlight) dimExcept(g, p.highlight)
     if (v.content) {
       v.scene.remove(v.content)
       dispose(v.content)
     }
-    const g = build(p.v, p.res, { selection: p.selection, labels: true, motifs: p.motifs, onLoad: v.render })
-    if (p.highlight) dimExcept(g, p.highlight)
     v.content = g
     v.scene.add(g)
     v.render()

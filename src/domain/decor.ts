@@ -57,6 +57,12 @@ export function felt(rules: Rules, module: number) {
 
 export const fullTextileHeight = (rules: Rules) => wallHeight(rules);
 
+/** Distance from the wall centre line to the middle of a textile frame standing in front of a face. */
+export const textileOffset = (rules: Rules) => rules.wall.post / 2 + rules.textile.depth / 2;
+
+/** Centre of a foil along the wall, metres from the wall start. */
+export const foilCenter = (rules: Rules, f: Foil) => felt(rules, f.module).center + f.x;
+
 /** Height and bottom of a textile, metres. */
 export function textileBox(t: TextileWall, rules: Rules): { bottom: number; height: number } {
   const bottom = t.bottom ?? 0;

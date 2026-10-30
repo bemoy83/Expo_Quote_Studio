@@ -7,6 +7,7 @@ import {
   addTextile,
   faces,
   fitDecor,
+  foilCenter,
   freeSpans,
   textileBox,
   updateFoil,
@@ -166,5 +167,12 @@ describe('foil decor', () => {
     let v = ok(addFoil(row(), RULES, 'side-back', 1, 1, 'a', 1)).v;
     v = fitDecor(ok(addTextile(v, RULES, 'side-back', 1, 1)).v, RULES);
     expect(v.foils).toHaveLength(0);
+  });
+
+  it('a foil centre is its felt centre plus its offset', () => {
+    let v = ok(addFoil(row(), RULES, 'side-back', 2, 1, 'a', 1)).v;
+    expect(foilCenter(RULES, v.foils[0])).toBeCloseTo(2.5);
+    v = updateFoil(v, RULES, 'f1', { x: 0.1 }, 1);
+    expect(foilCenter(RULES, v.foils[0])).toBeCloseTo(2.6);
   });
 });

@@ -26,6 +26,8 @@
   --type-small:400 12px var(--font-ui); /* footnotes, hints */
   --type-num:500 13px var(--font-numeric); /* figures in rows */
   --type-num-strong:600 13px var(--font-numeric); /* group sums */
+  --type-label-sm:500 12px var(--font-ui); /* small names: library tiles, chips */
+  --type-num-sm:500 12px var(--font-numeric); /* small figures beside a name */
   --tracking-title:-.02em; /* @kind font */
   --tracking-eyebrow:.06em; /* @kind font */
   --tracking-eyebrow-mono:.07em; /* @kind font */

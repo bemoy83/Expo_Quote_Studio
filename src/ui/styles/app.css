@@ -12,6 +12,17 @@
   --bc: 0.13;
 }
 
+/* Build system hardware as drawn in 2D (wall drawer, thumbnails). The 3D view has its own lit colours. */
+:root {
+  --alu: #b9bcc0; /* profiles and textile frames */
+  --alu-post: #8d9095;
+  --alu-light: #e1e3e6; /* lit and shaded edge of a frame thumbnail */
+  --alu-shade: #a6a9ad;
+  --alu-thumb: #c9ccd0;
+  --feet: #2a2b2e;
+  --fabric: color-mix(in oklab, var(--line-violet) 14%, rgb(var(--surface)));
+}
+
 html,
 body,
 #root {
@@ -625,7 +636,7 @@ kbd {
 }
 .pd-result {
   grid-column: 2 / -1;
-  font: 500 12px var(--font-numeric);
+  font: var(--type-num-sm);
 }
 .pd-chips {
   grid-column: 2 / -1;
@@ -859,7 +870,7 @@ kbd {
 .mot .none {
   width: 30px;
   height: 22px;
-  box-shadow: inset 0 0 0 2px #b9bcc0;
+  box-shadow: inset 0 0 0 2px var(--alu);
   background: rgb(var(--surface));
 }
 .mot.on {
@@ -873,10 +884,10 @@ kbd {
   width: 28px;
   height: 22px;
   box-sizing: border-box;
-  border: 2.5px solid #c9ccd0;
-  border-top-color: #e1e3e6;
-  border-bottom-color: #a6a9ad;
-  background: color-mix(in oklab, var(--line-violet) 18%, rgb(var(--surface)));
+  border: 2.5px solid var(--alu-thumb);
+  border-top-color: var(--alu-light);
+  border-bottom-color: var(--alu-shade);
+  background: var(--fabric);
 }
 .trow {
   display: flex;
@@ -903,12 +914,9 @@ kbd {
   white-space: nowrap;
 }
 .trow .num {
-  font: 500 12px var(--font-numeric);
+  font: var(--type-num-sm);
   color: rgb(var(--ink-muted));
   white-space: nowrap;
-}
-.faint {
-  color: rgb(var(--ink-faint));
 }
 .warn {
   color: var(--over);
@@ -954,7 +962,7 @@ kbd {
   border-radius: 2px;
 }
 .gfx .lbl {
-  font: 500 12px var(--font-ui);
+  font: var(--type-label-sm);
   color: rgb(var(--ink-muted));
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1252,7 +1260,7 @@ kbd {
   font: 700 14px var(--font-ui);
 }
 .tbl-sec-head .num {
-  font: 500 12px var(--font-numeric);
+  font: var(--type-num-sm);
   color: rgb(var(--ink-faint));
 }
 .tbl-row {
@@ -1323,7 +1331,7 @@ kbd {
   background: none;
   padding: 0;
   cursor: pointer;
-  font: 500 12px var(--font-ui);
+  font: var(--type-label-sm);
   color: rgb(var(--ink-muted));
   text-decoration: underline;
 }
@@ -1414,7 +1422,7 @@ kbd {
   box-shadow: var(--raise), inset 0 0 0 1.5px rgb(var(--ink));
 }
 .chip-toggle .num {
-  font: 500 12px var(--font-numeric);
+  font: var(--type-num-sm);
   color: rgb(var(--ink-muted));
 }
 .ph-dot {

@@ -11,11 +11,11 @@ import { textileBox } from '../../domain/decor'
 import { wallLabel } from '../../calc/production'
 import type { Motif } from '../../persistence/file'
 import type { PlanSelection } from '../plan/PlanView'
-import { readMotif, SAMPLE_MOTIFS } from '../motifs'
+import { findMotif, readMotif, SAMPLE_MOTIFS } from '../motifs'
 import { INK, LAYER_COLOR, SUNKEN } from '../colors'
 import { Button, CommitInput, Counter, IconButton, Segmented } from '../controls'
 import { catalog, place, productOf, rules, wallPlates } from '../env'
-import { fmt, kr, mm } from '../format'
+import { count, fmt, kr, mm } from '../format'
 import { beamSummary } from '../names'
 import type { Brush, Tool } from '../tools'
 import { MENUS } from './menus'
@@ -394,7 +394,6 @@ function ProfileSection({ v, res, brush, tool, pick, motifs, onAddMotif, onSelec
   const frame = productOf(catalog.system.frame)?.variants[0]
   const print = productOf(catalog.system.print)?.variants[0]
   const k = res.keyFigures
-  const name = (id?: string) => motifs.find((m) => m.id === id)?.name
   const upload = async (f: File) => {
     try {
       const m = await readMotif(f, motifs.map((x) => x.id))
@@ -417,13 +416,13 @@ function ProfileSection({ v, res, brush, tool, pick, motifs, onAddMotif, onSelec
             Tekstil i aluminiumsramme · <span className="num">{kr(frame?.price ?? 0)} kr/lm · {kr(print?.price ?? 0)} kr/m²</span> · klikk en vegg
           </>
         }
-        result={v.textiles.length ? `${v.textiles.length} ${v.textiles.length === 1 ? 'ramme' : 'rammer'} · ${fmt(k.textileM2)} m²` : null}
+        result={v.textiles.length ? `${count(v.textiles.length, 'ramme', 'rammer')} · ${fmt(k.textileM2)} m²` : null}
         action={<IconButton icon={Paintbrush} label="Sett opp tekstilvegg i plan" pressed={pen && tool === 'brush'} onClick={() => pick({ kind: 'textile' })} />}
       />
       {v.textiles.map((t) => {
         const w = v.walls.find((x) => x.id === t.wallId)
         if (!w) return null
-        const m = name(t.motif)
+        const m = findMotif(motifs, t.motif)?.name
         return (
           <button key={t.id} type="button" className="trow" onClick={() => onSelect({ wallId: w.id, side: t.side, textileId: t.id })}>
             <span className="name">
@@ -475,7 +474,7 @@ function ProfileSection({ v, res, brush, tool, pick, motifs, onAddMotif, onSelec
       </p>
       {v.foils.length > 0 && (
         <p className="panel-note num">
-          {v.foils.length} {v.foils.length === 1 ? 'foliedekor' : 'foliedekorer'} · {fmt(k.foilM2)} m²
+          {count(v.foils.length, 'foliedekor', 'foliedekorer')} · {fmt(k.foilM2)} m²
         </p>
       )}
     </>

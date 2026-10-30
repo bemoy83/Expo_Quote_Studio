@@ -4,7 +4,7 @@
 import * as THREE from 'three'
 import type { CalcResult } from '../../calc/calc'
 import { FURNITURE_WHITE } from '../../catalog/defaultCatalog'
-import { felt, sideOf, textileBox } from '../../domain/decor'
+import { foilCenter, sideOf, textileBox, textileOffset } from '../../domain/decor'
 import { defaultSwing } from '../../domain/edit'
 import { CELL, parseCellKey, pointAlong, pointKey, wallDirection, wallLength } from '../../domain/grid'
 import { conflicts } from '../../domain/objects'
@@ -13,6 +13,7 @@ import { builtModules, wallPoints, type BuiltModule } from '../../domain/walls'
 import type { Motif } from '../../persistence/file'
 import { wallHeight } from '../../rules/rules'
 import { idx, place, plateColor, productOf, rules } from '../env'
+import { findMotif } from '../motifs'
 import type { Highlight } from '../tools'
 
 export type Layer = Exclude<Highlight, null>
@@ -55,9 +56,38 @@ export interface BuildOptions {
   onLoad?: () => void
 }
 
+/**
+ * Decoded motif images by source, shared by every build. The view rebuilds the scene on each edit (many times a
+ * second while dragging); loading the image again each time left the print blank until it decoded, so it flickered.
+ */
+const images = new Map<string, { img: HTMLImageElement; ready: boolean; waiting: (() => void)[] }>()
+
+/** A texture of the motif image. Ready at once when the image is decoded; otherwise `onLoad` runs when it is. */
+function motifTexture(src: string, onLoad?: () => void): THREE.Texture {
+  let e = images.get(src)
+  if (!e) {
+    const entry = { img: new Image(), ready: false, waiting: [] as (() => void)[] }
+    entry.img.onload = () => {
+      entry.ready = true
+      for (const f of entry.waiting.splice(0)) f()
+    }
+    entry.img.src = src
+    images.set(src, entry)
+    e = entry
+  }
+  const tex = new THREE.Texture(e.img)
+  if (e.ready) tex.needsUpdate = true
+  else
+    e.waiting.push(() => {
+      tex.needsUpdate = true
+      onLoad?.()
+    })
+  return tex
+}
+
 /** The motif as a texture covering a face of the given aspect ratio (cropped, never stretched). */
 function printMaterial(m: Motif, aspect: number, onLoad?: () => void): THREE.MeshStandardMaterial {
-  const tex = new THREE.TextureLoader().load(m.src, onLoad)
+  const tex = motifTexture(m.src, onLoad)
   tex.colorSpace = THREE.SRGBColorSpace
   tex.anisotropy = 4
   const k = aspect / m.ratio
@@ -238,7 +268,6 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
 
   // Textile walls (InFrame): a fabric box in an aluminium frame, standing in front of its face. The motif is
   // printed on the front.
-  const motif = (id: string | undefined) => (id ? opts.motifs?.find((m) => m.id === id) : undefined)
   for (const t of v.textiles) {
     const w = v.walls.find((x) => x.id === t.wallId)
     if (!w) continue
@@ -246,12 +275,12 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
     const from = Math.max(0, Math.min(L, t.from))
     const to = Math.max(from, Math.min(L, t.from + t.width))
     const s = sideOf(v, t)
-    const off = s * (post / 2 + rules.textile.depth / 2 + 0.005)
+    const off = s * (textileOffset(rules) + 0.005)
     const { bottom, height } = textileBox(t, rules)
     const h = Math.min(height, H - bottom)
     const fabric = mat('textile', FABRIC, { roughness: 1 })
     const alu = mat('textile', ALU, ALU_FINISH)
-    const m = motif(t.motif)
+    const m = findMotif(opts.motifs, t.motif)
     const print = m ? printMaterial(m, (to - from) / h, opts.onLoad) : fabric
     const faces = s === 1 ? [alu, alu, alu, alu, print, fabric] : [alu, alu, alu, alu, fabric, print]
     along(pointAlong(w, from), pointAlong(w, to), to - from - 0.02, h, rules.textile.depth, bottom, faces, { layer: 'textile', pick: { wallId: w.id } }, off)
@@ -262,9 +291,8 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
     const w = v.walls.find((x) => x.id === f.wallId)
     if (!w) continue
     const s = sideOf(v, f)
-    const fe = felt(rules, f.module)
-    const c = fe.center + f.x
-    const m = motif(f.motif)
+    const c = foilCenter(rules, f)
+    const m = findMotif(opts.motifs, f.motif)
     const print = m ? printMaterial(m, f.width / f.height, opts.onLoad) : mat('foil', FABRIC, { roughness: 0.6 })
     along(pointAlong(w, c - f.width / 2), pointAlong(w, c + f.width / 2), f.width, f.height, 0.002, f.y - f.height / 2, print, { layer: 'foil', pick: { wallId: w.id } }, s * (rules.wall.profile.thickness / 2 + 0.002))
   }
