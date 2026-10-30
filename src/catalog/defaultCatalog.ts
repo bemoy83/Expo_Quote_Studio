@@ -164,8 +164,8 @@ const products: Product[] = [
 
 // Colours for drawing placed furniture (product data, not tokens).
 const BLACK = '#2B2C2E';
-const WHITE = '#F3F2EE';
-const OBJECT_COLORS: Record<string, string> = { '5276': BLACK, '5275': WHITE, '5296': BLACK, '5186': BLACK, '5196': BLACK, '5195': WHITE };
+export const FURNITURE_WHITE = '#F3F2EE';
+const OBJECT_COLORS: Record<string, string> = { '5276': BLACK, '5275': FURNITURE_WHITE, '5296': BLACK, '5186': BLACK, '5196': BLACK, '5195': FURNITURE_WHITE };
 for (const p of products) for (const v of p.variants) if (OBJECT_COLORS[v.artnr]) v.color = OBJECT_COLORS[v.artnr];
 
 export const DEFAULT_CATALOG: Catalog = {

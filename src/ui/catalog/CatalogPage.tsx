@@ -4,7 +4,8 @@ import { Check, Download, Plus, RotateCcw, Search, Trash2, Upload } from 'lucide
 import { useMemo, useRef, useState } from 'react'
 import { addProduct, artnrFree, catalogRows, editRow, importTable, NO_EDITS, parsePrice, parseTable, removeProduct, toCSV, UNITS, type CatalogRow } from '../../catalog/edits'
 import type { Unit } from '../../catalog/types'
-import { Button, IconButton, type ToastMsg } from '../controls'
+import { Button, CommitInput, IconButton, type ToastMsg } from '../controls'
+import { download } from '../download'
 import { catalog, edits, setCatalogEdits } from '../env'
 import { fmt } from '../format'
 import { MENUS } from '../panel/menus'
@@ -29,6 +30,12 @@ export function CatalogPage({ onToast }: { onToast: Toast }) {
   const equipmentMenus = MENUS.filter((m) => m.group === 'equip')
 
   const update = (r: CatalogRow, patch: Parameters<typeof editRow>[2]) => setCatalogEdits(editRow(edits, r, patch))
+  /** Apply new edits and offer Angre in the toast. */
+  const withUndo = (next: typeof edits, text: string) => {
+    const before = edits
+    setCatalogEdits(next)
+    onToast({ text, action: 'Angre', onAction: () => setCatalogEdits(before) })
+  }
 
   const add = () => {
     const { edits: e, artnr } = addProduct(catalog, edits)
@@ -42,30 +49,17 @@ export function CatalogPage({ onToast }: { onToast: Toast }) {
     }, 30)
   }
 
-  const exportCsv = () => {
-    const blob = new Blob([toCSV(rows)], { type: 'text/csv;charset=utf-8' })
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(blob)
-    a.download = 'produktliste.csv'
-    a.click()
-    window.setTimeout(() => URL.revokeObjectURL(a.href), 1000)
-  }
+  const exportCsv = () => download(toCSV(rows), 'text/csv;charset=utf-8', 'produktliste.csv')
 
   const importFile = async (f: File) => {
     if (/\.xlsx?$/i.test(f.name)) return onToast('Lagre arket som CSV først (Fil → Lagre som → CSV)')
-    const before = edits
     const r = importTable(catalog, edits, parseTable(await f.text()))
     if ('error' in r) return onToast(r.error)
-    setCatalogEdits(r.edits)
     const parts = [`${r.updated} oppdatert`, `${r.added} nye`, r.skipped ? `${r.skipped} hoppet over` : ''].filter(Boolean)
-    onToast({ text: `${f.name} · ${parts.join(' · ')}`, action: 'Angre', onAction: () => setCatalogEdits(before) })
+    withUndo(r.edits, `${f.name} · ${parts.join(' · ')}`)
   }
 
-  const reset = () => {
-    const before = edits
-    setCatalogEdits(NO_EDITS)
-    onToast({ text: 'Produktlisten er tilbakestilt til eksempelprisene', action: 'Angre', onAction: () => setCatalogEdits(before) })
-  }
+  const reset = () => withUndo(NO_EDITS, 'Produktlisten er tilbakestilt til eksempelprisene')
 
   return (
     <>
@@ -125,20 +119,16 @@ export function CatalogPage({ onToast }: { onToast: Toast }) {
               {list.map((r) => (
                 <div key={r.artnr} data-row={r.artnr} className="cat-grid tbl-row cat-row">
                   {r.added ? (
-                    <input
-                      key={'a' + r.artnr}
+                    <CommitInput
                       className="cin num"
-                      defaultValue={r.artnr}
+                      value={r.artnr}
                       aria-label="Varenr"
-                      onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
-                      onBlur={(e) => {
-                        const x = e.target.value.trim()
+                      onCommit={(text) => {
+                        const x = text.trim()
                         if (x === r.artnr) return
-                        if (artnrFree(catalog, x, r.artnr)) update(r, { artnr: x })
-                        else {
-                          e.target.value = r.artnr
-                          onToast(x ? `Varenr ${x} finnes allerede` : 'Varenr kan ikke være tomt')
-                        }
+                        if (artnrFree(catalog, x, r.artnr)) return update(r, { artnr: x })
+                        onToast(x ? `Varenr ${x} finnes allerede` : 'Varenr kan ikke være tomt')
+                        return false
                       }}
                     />
                   ) : (
@@ -147,16 +137,14 @@ export function CatalogPage({ onToast }: { onToast: Toast }) {
                   <div className="cellstack">
                     <span className="name-line">
                       {r.variant !== null && <span className="prefix">{r.product} ·</span>}
-                      <input
-                        key={'n' + (r.variant ?? r.product)}
+                      <CommitInput
                         className="cin"
-                        defaultValue={r.variant ?? r.product}
+                        value={r.variant ?? r.product}
                         aria-label="Navn"
-                        onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
-                        onBlur={(e) => {
-                          const x = e.target.value.trim()
-                          if (!x) e.target.value = r.variant ?? r.product
-                          else if (x !== (r.variant ?? r.product)) update(r, r.variant !== null ? { variant: x } : { product: x })
+                        onCommit={(text) => {
+                          const x = text.trim()
+                          if (!x) return false
+                          if (x !== (r.variant ?? r.product)) update(r, r.variant !== null ? { variant: x } : { product: x })
                         }}
                       />
                     </span>
@@ -164,14 +152,13 @@ export function CatalogPage({ onToast }: { onToast: Toast }) {
                       <span className="row-opts">
                         <label>
                           Prisgruppe
-                          <input
-                            key={'c' + r.category}
+                          <CommitInput
                             className="cin small"
-                            defaultValue={r.category}
+                            value={r.category}
                             list="cat-categories"
                             aria-label="Prisgruppe"
-                            onBlur={(e) => {
-                              const x = e.target.value.trim()
+                            onCommit={(text) => {
+                              const x = text.trim()
                               if (x && x !== r.category) update(r, { category: x })
                             }}
                           />
@@ -201,18 +188,16 @@ export function CatalogPage({ onToast }: { onToast: Toast }) {
                     <span className="num cell-ro">{r.unit}</span>
                   )}
                   <span className="price-cell">
-                    <input
-                      key={'p' + r.price}
+                    <CommitInput
                       className="cin num"
                       inputMode="decimal"
-                      defaultValue={priceText(r.price)}
+                      value={priceText(r.price)}
                       aria-label="Pris"
-                      onFocus={(e) => e.target.select()}
-                      onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
-                      onBlur={(e) => {
-                        const x = parsePrice(e.target.value)
-                        if (x !== null && x !== r.price) update(r, { price: x, placeholder: false })
-                        else e.target.value = priceText(r.price)
+                      selectOnFocus
+                      onCommit={(text) => {
+                        const x = parsePrice(text)
+                        if (x === null || x === r.price) return false
+                        update(r, { price: x, placeholder: false })
                       }}
                     />
                     <span className="faint num">kr</span>
@@ -231,11 +216,7 @@ export function CatalogPage({ onToast }: { onToast: Toast }) {
                       icon={Trash2}
                       label="Fjern vare"
                       size={14}
-                      onClick={() => {
-                        const before = edits
-                        setCatalogEdits(removeProduct(edits, r.artnr))
-                        onToast({ text: `Fjernet ${r.product}`, action: 'Angre', onAction: () => setCatalogEdits(before) })
-                      }}
+                      onClick={() => withUndo(removeProduct(edits, r.artnr), `Fjernet ${r.product}`)}
                     />
                   ) : (
                     <span />

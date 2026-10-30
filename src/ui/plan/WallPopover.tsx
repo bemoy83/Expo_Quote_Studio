@@ -30,7 +30,7 @@ export function WallPopover({ v, wallId, onEdit, onClose }: { v: Variant; wallId
         {openings.length ? ` · ${openings.length} ${openings.length === 1 ? 'åpning' : 'åpninger'}` : ''}
         {isPerimeterWall(v.stand, w) ? '' : ' · dra for å flytte'}
       </p>
-      <div className="eyebrow" style={{ marginBottom: 4 }}>
+      <div className="eyebrow">
         Veggplate · {plates.find((p) => p.ral === ral)?.name} · RAL {ral}
       </div>
       <VariantChips
@@ -38,7 +38,7 @@ export function WallPopover({ v, wallId, onEdit, onClose }: { v: Variant; wallId
         selected={plates.findIndex((p) => p.ral === ral)}
         onSelect={(i) => onEdit((x) => setWallPlate(x, w.id, plates[i].ral!))}
       />
-      <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
+      <div className="pop-actions">
         {doors.map((d, i) => (
           <Button key={d.id} variant="ghost" icon={FlipHorizontal2} onClick={() => onEdit((x) => flipSwing(x, d.id))}>
             Snu dør{doors.length > 1 ? ` ${i + 1}` : ''}

@@ -19,6 +19,13 @@
   --type-count:500 11.5px/1 var(--font-numeric); /* plain count, ink-faint */
   --type-alert-count:600 12px/1 var(--font-numeric); /* alert count, ink */
   --type-kbd:500 10px/1 var(--font-numeric);
+  /* Standskisse: recurring UI text */
+  --type-label:500 13px var(--font-ui); /* option labels, list names */
+  --type-text:400 13px var(--font-ui); /* body text in panels and tables */
+  --type-note:400 12.5px var(--font-ui); /* secondary lines, popover help */
+  --type-small:400 12px var(--font-ui); /* footnotes, hints */
+  --type-num:500 13px var(--font-numeric); /* figures in rows */
+  --type-num-strong:600 13px var(--font-numeric); /* group sums */
   --tracking-title:-.02em; /* @kind font */
   --tracking-eyebrow:.06em; /* @kind font */
   --tracking-eyebrow-mono:.07em; /* @kind font */

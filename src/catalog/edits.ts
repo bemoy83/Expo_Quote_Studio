@@ -1,6 +1,7 @@
 // Edits to the product list (Produktliste), stored apart from the built-in catalog so code updates to the
 // example catalog still come through. Pure: apply, list as rows, CSV export and import.
 import type { Catalog, Product, ProductVariant, Unit } from './types';
+import { toCsvText } from '../persistence/csv';
 
 export interface VariantEdit {
   name?: string;
@@ -141,17 +142,13 @@ export function artnrFree(c: Catalog, artnr: string, self: string): boolean {
 // ---- CSV ----
 
 const num = (n: number) => String(Math.round(n * 100) / 100).replace('.', ',');
-const cell = (x: string | number) => {
-  const s = String(x);
-  return /[;"\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-};
 
-/** Semicolon-separated with a BOM, so Excel in Norway opens it directly. */
+/** The product list as CSV (see toCsvText). */
 export function toCSV(rows: CatalogRow[]): string {
   const out = [['Varenr', 'Navn', 'Enhet', 'Kategori', 'Pris', 'Status']];
   for (const r of rows)
     out.push([r.artnr, r.variant ? `${r.product} ${r.variant}` : r.product, r.unit, r.category, num(r.price), r.placeholder ? 'Plassholder' : 'Bekreftet']);
-  return '\ufeff' + out.map((r) => r.map(cell).join(';')).join('\n');
+  return toCsvText(out);
 }
 
 /** Parse CSV or TSV (separator ; , or tab, quotes allowed) into rows of cells. */

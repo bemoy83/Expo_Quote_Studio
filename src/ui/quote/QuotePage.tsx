@@ -3,15 +3,14 @@ import { useState } from 'react'
 import { Printer } from 'lucide-react'
 import type { CalcResult } from '../../calc/calc'
 import type { Project, Variant } from '../../domain/types'
-import { FIXED_PROJECT_FIELDS } from '../../domain/variant'
-import { Button, Segmented } from '../controls'
-import { catalog, plateName, productOf, rules } from '../env'
-import { fmt, kr } from '../format'
-import { PlanView } from '../plan/PlanView'
+import { isFixedField, projectField } from '../../domain/variant'
+import { Button } from '../controls'
+import { idx, plateName, productOf, rules } from '../env'
+import { count, fmt, kr, mm } from '../format'
+import { beamSummary, frameCount, TYPE_NAME } from '../names'
+import { PLAN_MARGIN, PlanPreview } from '../plan/PlanView'
 import { PageBand } from '../shell/PageBand'
-import { TYPE_NAME } from '../names'
-
-const noop = () => {}
+import { VariantTabs } from '../shell/VariantTabs'
 
 interface Props {
   project: Project
@@ -25,11 +24,10 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
   const v = variants[current]
   const res = calcOf(v)
   const k = res.keyFigures
-  const field = (id: string) => project.fields.find((f) => f.id === id)?.value.trim() ?? ''
+  const field = (id: string) => projectField(project, id)
   const customer = field('kunde')
   const sub = [field('prosjekt'), field('standnr') && `stand ${field('standnr')}`].filter(Boolean).join(' · ')
-  const fixed = new Set<string>(FIXED_PROJECT_FIELDS.map((f) => f.id))
-  const extra = project.fields.filter((f) => !fixed.has(f.id) && f.value.trim())
+  const extra = project.fields.filter((f) => !isFixedField(f.id) && f.value.trim())
   const [date] = useState(() => new Date().toLocaleDateString('nb-NO', { day: 'numeric', month: 'long', year: 'numeric' }))
   const lines = res.groups.flatMap((g) => g.lines)
   const placeholders = lines.filter((l) => l.placeholder).length
@@ -46,9 +44,8 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
     }, {}),
   ).map(([n, q]) => `${q} ${n}`)
   const floorNames = Object.keys(k.floor).map((a) => {
-    const r = catalog.products.find((p) => p.variants.some((x) => x.artnr === a))
-    const vr = r?.variants.find((x) => x.artnr === a)
-    return r && vr ? (r.variants.length > 1 ? `${r.name} ${vr.name.toLowerCase()}` : r.name) : a
+    const r = idx.byArtnr.get(a)
+    return r ? (r.product.variants.length > 1 ? `${r.product.name} ${r.variant.name.toLowerCase()}` : r.product.name) : a
   })
   const facts: [string, string][] = [
     [`${v.stand.width} × ${v.stand.depth} m`, `${fmt(k.area)} m² · ${TYPE_NAME[v.stand.type]} · ${k.openSides} åpne sider`],
@@ -57,21 +54,18 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
       [`veggplate ${plates.map((r) => `${plateName(r).toLowerCase()} RAL ${r}`).join(', ')}`, ...openingNames].join(' · '),
     ],
     k.beamLm
-      ? [`${fmt(k.beamLm)} m takdrager`, `${k.beamLengths} ${k.beamLengths === 1 ? 'lengde' : 'lengder'} · ${k.beamPosts} ${k.beamPosts === 1 ? 'stolpe' : 'stolper'}`]
+      ? [`${fmt(k.beamLm)} m takdrager`, beamSummary(k)]
       : ['Uten takdrager', 'ingen åpne sider å avstive'],
     k.floorTotal ? [floorNames.join(', '), `${fmt(k.floorTotal)} m² ferdig lagt${v.floor.protection ? ' med monteringsbeskyttelse' : ''}`] : ['Hallgulv uten belegg', ''],
   ]
-  if (k.textileM2) facts.push([`${fmt(k.textileM2)} m² tekstilvegg`, `${res.production.pieces.length} ${res.production.pieces.length === 1 ? 'ramme' : 'rammer'} InFrame`])
+  if (k.textileM2) facts.push([`${fmt(k.textileM2)} m² tekstilvegg`, `${frameCount(res.production.pieces.length)} InFrame`])
 
-  const mm = (m: number) => fmt(m * 1000, 0)
   const unpriced = v.loose.filter((l) => !l.price)
 
   return (
     <>
       <PageBand title="Tilbud" meta={`Variant ${v.name} · ${kr(res.sum)} kr eks. mva.`}>
-        {variants.length > 1 && (
-          <Segmented<number> onBand label="Varianter" value={current} onChange={onSelect} options={variants.map((x, i) => ({ value: i, label: `Variant ${x.name}` }))} />
-        )}
+        {variants.length > 1 && <VariantTabs variants={variants} current={current} onSelect={onSelect} />}
         <Button onBand icon={Printer} onClick={() => window.print()}>
           Skriv ut
         </Button>
@@ -105,20 +99,8 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
           </header>
 
           <section className="qdoc-summary">
-            <div className="qdoc-plan" style={{ aspectRatio: `${v.stand.width + 2.6} / ${v.stand.depth + 2.6}` }}>
-              <PlanView
-                v={v}
-                res={res}
-                tool="select"
-                brush={null}
-                floorSize={{ w: 2, h: 2 }}
-                highlight={null}
-                selection={{}}
-                onSelect={noop}
-                onEdit={noop}
-                onCheckpoint={noop}
-                onToast={noop}
-              />
+            <div className="qdoc-plan" style={{ aspectRatio: `${v.stand.width + 2 * PLAN_MARGIN} / ${v.stand.depth + 2 * PLAN_MARGIN}` }}>
+              <PlanPreview v={v} res={res} />
             </div>
             <dl>
               {facts.map(([a, b], i) => (
@@ -178,7 +160,7 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
             </div>
             {placeholders > 0 && (
               <p className="foot">
-                * {placeholders} {placeholders === 1 ? 'linje har plassholderpris' : 'linjer har plassholderpris'} og må bekreftes før tilbudet sendes.
+                * {count(placeholders, 'linje', 'linjer')} har plassholderpris og må bekreftes før tilbudet sendes.
               </p>
             )}
             {preliminary && <p className="foot">† Monteringstid er beregnet med foreløpige satser og bekreftes av produksjon.</p>}

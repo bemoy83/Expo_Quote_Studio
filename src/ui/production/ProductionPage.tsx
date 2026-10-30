@@ -6,10 +6,13 @@ import { fullHeight } from '../../calc/fabric'
 import { production, type Production } from '../../calc/production'
 import type { Variant } from '../../domain/types'
 import type { InFrameParams } from '../../rules/rules'
-import { Button, Segmented } from '../controls'
+import { toCsvText } from '../../persistence/csv'
+import { Button, CommitInput } from '../controls'
+import { download } from '../download'
 import { DEFAULT_IN_FRAME, rules, setInFrame } from '../env'
-import { fmt } from '../format'
+import { count, fmt } from '../format'
 import { PageBand } from '../shell/PageBand'
+import { VariantTabs } from '../shell/VariantTabs'
 
 const FIELDS: { k: keyof InFrameParams; name: string; help: string; unit?: string }[] = [
   { k: 'side', name: 'Sidefradrag', help: 'Vegg eller takdrager på begge sider, 2 × 10 mm' },
@@ -36,24 +39,15 @@ export function ProductionPage({ variants, current, onSelect, customer, motifNam
   const s = rules.textile.inFrame
   const P = useMemo(() => production(v, s, customer), [v, s, customer])
   const n = (x: number) => fmt(x, 0)
-  const count = P.pieces.length
+  const nPieces = P.pieces.length
 
-  const exportCsv = () => {
-    const blob = new Blob([productionCsv(P, s)], { type: 'text/csv;charset=utf-8' })
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(blob)
-    a.download = `produksjon-variant-${v.name}.csv`
-    a.click()
-    window.setTimeout(() => URL.revokeObjectURL(a.href), 1000)
-  }
+  const exportCsv = () => download(productionCsv(P, s), 'text/csv;charset=utf-8', `produksjon-variant-${v.name}.csv`)
 
   return (
     <>
-      <PageBand title="Produksjon" meta={`Variant ${v.name} · ${count} ${count === 1 ? 'tekstilvegg' : 'tekstilvegger'}`}>
-        {variants.length > 1 && (
-          <Segmented<number> onBand label="Varianter" value={current} onChange={onSelect} options={variants.map((x, i) => ({ value: i, label: `Variant ${x.name}` }))} />
-        )}
-        <Button onBand icon={Download} disabled={!count} onClick={exportCsv}>
+      <PageBand title="Produksjon" meta={`Variant ${v.name} · ${count(nPieces, 'tekstilvegg', 'tekstilvegger')}`}>
+        {variants.length > 1 && <VariantTabs variants={variants} current={current} onSelect={onSelect} />}
+        <Button onBand icon={Download} disabled={!nPieces} onClick={exportCsv}>
           Eksporter
         </Button>
       </PageBand>
@@ -75,9 +69,9 @@ export function ProductionPage({ variants, current, onSelect, customer, motifNam
             <section className="tbl-sec">
               <div className="tbl-sec-head">
                 <span>Tekstilvegger</span>
-                <span className="num">{count}</span>
+                <span className="num">{nPieces}</span>
               </div>
-              {!count && <div className="tbl-empty">Ingen tekstilvegger i variant {v.name}.</div>}
+              {!nPieces && <div className="tbl-empty">Ingen tekstilvegger i variant {v.name}.</div>}
               {P.pieces.map((p) => (
                 <div key={p.pos} className="prod-grid tbl-row">
                   <span className="num muted">{p.pos}</span>
@@ -108,7 +102,7 @@ export function ProductionPage({ variants, current, onSelect, customer, motifNam
             <div className="prod-grid tbl-sum">
               <span />
               <span className="title">Sum</span>
-              <span className="num r">{count}</span>
+              <span className="num r">{nPieces}</span>
               <span className="num">
                 {fmt(P.lm, 2)} <span className="muted">lm profil</span>
               </span>
@@ -137,18 +131,16 @@ export function ProductionPage({ variants, current, onSelect, customer, motifNam
                   <span className="help">{f.help}</span>
                 </span>
                 <span className="unit-field">
-                  <input
-                    key={f.k + s[f.k]}
+                  <CommitInput
                     className="num"
                     inputMode="numeric"
-                    defaultValue={s[f.k]}
+                    value={String(s[f.k])}
                     aria-label={f.name}
-                    onFocus={(e) => e.target.select()}
-                    onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
-                    onBlur={(e) => {
-                      const x = parseFloat(e.target.value.replace(',', '.'))
-                      if (Number.isFinite(x) && x >= 0 && x !== s[f.k] && !(f.k === 'stag' && x === 0) && !(f.k === 'scale' && x === 0)) setInFrame({ ...s, [f.k]: x })
-                      else e.target.value = String(s[f.k])
+                    selectOnFocus
+                    onCommit={(text) => {
+                      const x = parseFloat(text.replace(',', '.'))
+                      if (!Number.isFinite(x) || x < 0 || x === s[f.k] || (f.k === 'stag' && x === 0) || (f.k === 'scale' && x === 0)) return false
+                      setInFrame({ ...s, [f.k]: x })
                     }}
                   />
                   <span>{f.unit ?? 'mm'}</span>
@@ -194,5 +186,5 @@ function productionCsv(P: Production, s: InFrameParams): string {
       c(p.lm),
       p.braces ? `${p.braces.qty} × ${p.braces.length}` : '',
     ])
-  return '\ufeff' + rows.map((r) => r.map((x) => (/[;"\n]/.test(String(x)) ? `"${String(x).replace(/"/g, '""')}"` : x)).join(';')).join('\n')
+  return toCsvText(rows)
 }

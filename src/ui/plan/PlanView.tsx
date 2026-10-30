@@ -1,13 +1,15 @@
 // 2D plan. Explicit layers, bottom to top: ground, floor, grid, walls, openings, textiles, beams and posts,
 // objects, labels, interaction preview. Pointer handling is done on the svg with model coordinates, so the
 // draw order never decides what can be clicked.
-import { useEffect, useMemo, useRef, useState, type PointerEvent as RPointerEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type PointerEvent as RPointerEvent, type SVGProps } from 'react'
 import type { CalcResult } from '../../calc/calc'
-import { defaultSwing, eraseWalls, isPerimeterWall, moveWall, paintFloor, paintWalls, segmentKeys, setOpening } from '../../domain/edit'
+import { defaultSwing, eraseWalls, isPerimeterWall, paintFloor, paintWalls, segmentKeys, setOpening } from '../../domain/edit'
 import { CELL, parseCellKey, pointAlong, sideLength, sidePoint, wallDirection, type Module } from '../../domain/grid'
-import { addObject, conflicts, footprintBox, moveObject, removeObject, settleObject } from '../../domain/objects'
+import { addObject, conflicts, footprintBox, moveObject, removeObject } from '../../domain/objects'
 import type { Point, Side, Variant } from '../../domain/types'
 import { builtModules, type BuiltModule } from '../../domain/walls'
+import { BORDER, BORDER_STRONG, BLOCK, CANVAS, INK, INK_FAINT, INK_MUTED, LAYER_COLOR, SURFACE } from '../colors'
+import { dragWall, dropObject, type WallDrag } from '../drag'
 import { fmt } from '../format'
 import { idx, place, plateColor, productOf, rules } from '../env'
 import type { Brush, FloorSize, Highlight, Tool } from '../tools'
@@ -34,16 +36,24 @@ interface Props {
   mini?: boolean
 }
 
-const M = 1.3
+/** Margin around the stand for the aisle and the side labels, m. */
+export const PLAN_MARGIN = 1.3
+const M = PLAN_MARGIN
 const SIDE_LABEL: Record<Side, string> = { back: 'Bak', front: 'Front', left: 'Venstre', right: 'Høyre' }
-const WALL = 'var(--line-sky)'
-const TEXTILE = 'var(--line-violet)'
+const WALL = LAYER_COLOR.walls
+const TEXTILE = LAYER_COLOR.textile
+/** Grid lines over a laid floor: dark enough to read on any floor colour. */
+const GRID_ON_FLOOR = 'rgb(0 0 0 / .14)'
+/** Half-metre lines while painting floor. */
+const GRID_FINE = 'rgb(0 0 0 / .1)'
+/** Opacity of layers outside the hovered calc group. */
+const DIMMED = 0.25
 
 type Drag =
   | { kind: 'stroke'; p0: P; moved: boolean }
   | { kind: 'floor'; last: string | null }
   | { kind: 'object'; id: string; dx: number; dy: number; start: P; moved: boolean }
-  | { kind: 'wall'; id: string; p0: P; v0: Variant; delta: number; horizontal: boolean }
+  | ({ kind: 'wall' } & WallDrag)
 
 interface P {
   x: number
@@ -192,15 +202,7 @@ export function PlanView(p: Props) {
         p.onCheckpoint()
       }
       p.onEdit((x) => moveObject(x, place, d.id, q.x - d.dx, q.y - d.dy), false)
-    } else if (d.kind === 'wall') {
-      const delta = Math.round(d.horizontal ? q.y - d.p0.y : q.x - d.p0.x)
-      if (delta === d.delta) return
-      const next = moveWall(d.v0, d.id, delta)
-      if (next === d.v0 && delta !== 0) return
-      if (d.delta === 0) p.onCheckpoint()
-      d.delta = delta
-      p.onEdit(() => next, false)
-    }
+    } else if (d.kind === 'wall') dragWall(d, q, p.onEdit, p.onCheckpoint)
   }
 
   const onUp = (e: RPointerEvent<SVGSVGElement>) => {
@@ -215,14 +217,10 @@ export function PlanView(p: Props) {
       setStroke(null)
       if (tool === 'erase') p.onEdit((x) => eraseWalls(x, segmentKeys(a, b)))
       else if (brush?.kind === 'wall') p.onEdit((x) => paintWalls(x, a, b, brush.ral))
-    } else if (d.kind === 'object' && d.moved) {
-      const r = settleObject(v, place, d.id, d.start)
-      if (r.v !== v) p.onEdit(() => r.v, false)
-      if (!r.ok) p.onToast('Ikke plass der')
-    }
+    } else if (d.kind === 'object' && d.moved) dropObject(v, d.id, d.start, p.onEdit, p.onToast)
   }
 
-  const dim = (layer: Exclude<Highlight, null>) => (highlight && highlight !== layer ? 0.25 : 1)
+  const dim = (layer: Exclude<Highlight, null>) => (highlight && highlight !== layer ? DIMMED : 1)
   const cursor = tool === 'select' ? 'default' : 'crosshair'
 
   // Hover previews
@@ -271,12 +269,12 @@ export function PlanView(p: Props) {
           y={D + M * 0.66}
           textAnchor={floorIds.length > 1 ? 'end' : 'middle'}
           className="plan-label"
-          fill="rgb(var(--ink-faint))"
+          fill={INK_FAINT}
           style={LABEL}
         >
           Gang
         </text>
-        <rect x={0} y={0} width={W} height={D} fill="rgb(var(--surface))" />
+        <rect x={0} y={0} width={W} height={D} fill={SURFACE} />
       </g>
 
       {/* Floor */}
@@ -292,20 +290,20 @@ export function PlanView(p: Props) {
       <g pointerEvents="none">
         {floorTool &&
           Array.from({ length: Math.round(W / CELL) - 1 }, (_, i) =>
-            (i + 1) % 2 ? <line key={`hx${i}`} x1={(i + 1) * CELL} y1={0} x2={(i + 1) * CELL} y2={D} stroke="rgb(0 0 0 / .1)" strokeWidth={0.008} strokeDasharray=".04 .04" /> : null,
+            (i + 1) % 2 ? <line key={`hx${i}`} x1={(i + 1) * CELL} y1={0} x2={(i + 1) * CELL} y2={D} stroke={GRID_FINE} strokeWidth={0.008} strokeDasharray=".04 .04" /> : null,
           )}
         {floorTool &&
           Array.from({ length: Math.round(D / CELL) - 1 }, (_, j) =>
-            (j + 1) % 2 ? <line key={`hy${j}`} x1={0} y1={(j + 1) * CELL} x2={W} y2={(j + 1) * CELL} stroke="rgb(0 0 0 / .1)" strokeWidth={0.008} strokeDasharray=".04 .04" /> : null,
+            (j + 1) % 2 ? <line key={`hy${j}`} x1={0} y1={(j + 1) * CELL} x2={W} y2={(j + 1) * CELL} stroke={GRID_FINE} strokeWidth={0.008} strokeDasharray=".04 .04" /> : null,
           )}
         {Array.from({ length: W - 1 }, (_, i) => (
-          <line key={`gx${i}`} x1={i + 1} y1={0} x2={i + 1} y2={D} stroke={floorIds.length ? 'rgb(0 0 0 / .14)' : 'rgb(var(--border))'} strokeWidth={0.012} />
+          <line key={`gx${i}`} x1={i + 1} y1={0} x2={i + 1} y2={D} stroke={floorIds.length ? GRID_ON_FLOOR : BORDER} strokeWidth={0.012} />
         ))}
         {Array.from({ length: D - 1 }, (_, j) => (
-          <line key={`gy${j}`} x1={0} y1={j + 1} x2={W} y2={j + 1} stroke={floorIds.length ? 'rgb(0 0 0 / .14)' : 'rgb(var(--border))'} strokeWidth={0.012} />
+          <line key={`gy${j}`} x1={0} y1={j + 1} x2={W} y2={j + 1} stroke={floorIds.length ? GRID_ON_FLOOR : BORDER} strokeWidth={0.012} />
         ))}
         {Array.from({ length: (W + 1) * (D + 1) }, (_, n) => (
-          <circle key={`d${n}`} cx={n % (W + 1)} cy={Math.floor(n / (W + 1))} r={0.028} fill="rgb(var(--border-strong))" />
+          <circle key={`d${n}`} cx={n % (W + 1)} cy={Math.floor(n / (W + 1))} r={0.028} fill={BORDER_STRONG} />
         ))}
       </g>
 
@@ -315,10 +313,10 @@ export function PlanView(p: Props) {
           const sel = selection.wallId === m.wallId
           return (
             <g key={m.key}>
-              {sel && <line x1={m.a[0]} y1={m.a[1]} x2={m.b[0]} y2={m.b[1]} stroke="rgb(var(--ink))" strokeWidth={0.24} />}
-              <line x1={m.a[0]} y1={m.a[1]} x2={m.b[0]} y2={m.b[1]} stroke={WALL} strokeWidth={0.14} />
+              {sel && <Seg a={m.a} b={m.b} stroke={INK} strokeWidth={0.24} />}
+              <Seg a={m.a} b={m.b} stroke={WALL} strokeWidth={0.14} />
               {m.plate !== v.defaultPlate && (
-                <line x1={m.a[0]} y1={m.a[1]} x2={m.b[0]} y2={m.b[1]} stroke={plateColor(m.plate)} strokeWidth={0.05} />
+                <Seg a={m.a} b={m.b} stroke={plateColor(m.plate)} strokeWidth={0.05} />
               )}
             </g>
           )
@@ -349,12 +347,12 @@ export function PlanView(p: Props) {
       <g pointerEvents="none">
         <g opacity={dim('beams')}>
           {res.beams.segments.map((s, i) => (
-            <line key={i} x1={s.from[0]} y1={s.from[1]} x2={s.to[0]} y2={s.to[1]} stroke="rgb(var(--ink-muted))" strokeWidth={0.05} strokeDasharray=".16 .08" />
+            <Seg key={i} a={s.from} b={s.to} stroke={INK_MUTED} strokeWidth={0.05} strokeDasharray=".16 .08" />
           ))}
         </g>
-        <g opacity={highlight && highlight !== 'walls' && highlight !== 'beams' ? 0.25 : 1}>
+        <g opacity={highlight && highlight !== 'walls' && highlight !== 'beams' ? DIMMED : 1}>
           {res.posts.map((q) => (
-            <rect key={`${q[0]},${q[1]}`} x={q[0] - 0.04} y={q[1] - 0.04} width={0.08} height={0.08} fill="rgb(var(--ink))" />
+            <rect key={`${q[0]},${q[1]}`} x={q[0] - 0.04} y={q[1] - 0.04} width={0.08} height={0.08} fill={INK} />
           ))}
         </g>
       </g>
@@ -368,7 +366,7 @@ export function PlanView(p: Props) {
           const b = footprintBox(o, f)
           const isBad = bad.has(o.id)
           const sel = selection.objectId === o.id
-          const stroke = isBad ? 'var(--al-block)' : 'rgb(var(--ink))'
+          const stroke = isBad ? BLOCK : INK
           const sw = isBad ? 0.06 : sel ? 0.05 : 0.018
           return f.round ? (
             <circle key={o.id} cx={o.x} cy={o.y} r={f.w / 2} fill={col} stroke={stroke} strokeWidth={sw} style={{ cursor: tool === 'select' ? 'move' : undefined }} />
@@ -416,7 +414,7 @@ export function PlanView(p: Props) {
 
       {/* Interaction preview */}
       <g pointerEvents="none">
-        {hoverEdge && <line x1={hoverEdge.a[0]} y1={hoverEdge.a[1]} x2={hoverEdge.b[0]} y2={hoverEdge.b[1]} stroke={tool === 'erase' ? 'rgb(var(--ink-faint))' : WALL} strokeOpacity={0.6} strokeWidth={0.14} />}
+        {hoverEdge && <Seg a={hoverEdge.a} b={hoverEdge.b} stroke={tool === 'erase' ? INK_FAINT : WALL} strokeOpacity={0.6} strokeWidth={0.14} />}
         {stroke && <StrokePreview a={stroke[0]} b={stroke[1]} erase={tool === 'erase'} />}
         {hoverModule && <HoverModule m={hoverModule} />}
         {hoverFloor && (
@@ -426,9 +424,9 @@ export function PlanView(p: Props) {
             width={floorSize.w * CELL}
             height={floorSize.h * CELL}
             rx={0.02}
-            fill={tool === 'erase' || brush?.kind !== 'floor' ? 'rgb(var(--surface))' : idx.byArtnr.get(brush.product)?.variant.color}
+            fill={tool === 'erase' || brush?.kind !== 'floor' ? SURFACE : idx.byArtnr.get(brush.product)?.variant.color}
             fillOpacity={0.75}
-            stroke="rgb(var(--ink))"
+            stroke={INK}
             strokeWidth={0.03}
           />
         )}
@@ -437,8 +435,32 @@ export function PlanView(p: Props) {
   )
 }
 
-const LABEL = { font: '500 0.26px var(--font-ui)', fill: 'rgb(var(--ink-muted))' }
-const MONO = { font: '500 0.24px var(--font-numeric)', fill: 'rgb(var(--ink-faint))' }
+const noop = () => {}
+
+/** Read-only plan: the quote's sketch and the 3D view's mini map. */
+export function PlanPreview({ v, res, mini }: { v: Variant; res: CalcResult; mini?: boolean }) {
+  return (
+    <PlanView
+      mini={mini}
+      v={v}
+      res={res}
+      tool="select"
+      brush={null}
+      floorSize={PREVIEW_FLOOR_SIZE}
+      highlight={null}
+      selection={NO_SELECTION}
+      onSelect={noop}
+      onEdit={noop}
+      onCheckpoint={noop}
+      onToast={noop}
+    />
+  )
+}
+const PREVIEW_FLOOR_SIZE: FloorSize = { w: 2, h: 2 }
+const NO_SELECTION: PlanSelection = {}
+
+const LABEL = { font: '500 0.26px var(--font-ui)', fill: INK_MUTED }
+const MONO = { font: '500 0.24px var(--font-numeric)', fill: INK_FAINT }
 
 function OpeningMark({ v, m, selected }: { v: Variant; m: BuiltModule; selected: boolean }) {
   const o = m.opening!
@@ -452,11 +474,11 @@ function OpeningMark({ v, m, selected }: { v: Variant; m: BuiltModule; selected:
   const r = rules.door.swing
   return (
     <g>
-      {selected && <line x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke="rgb(var(--ink))" strokeOpacity={0.3} strokeWidth={0.24} />}
+      {selected && <Seg a={a} b={b} stroke={INK} strokeOpacity={0.3} strokeWidth={0.24} />}
       {/* Header panel over the opening */}
-      <line x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke={WALL} strokeOpacity={0.45} strokeWidth={0.05} />
+      <Seg a={a} b={b} stroke={WALL} strokeOpacity={0.45} strokeWidth={0.05} />
       {door ? (
-        <g fill="none" stroke="rgb(var(--ink))" strokeWidth={0.025}>
+        <g fill="none" stroke={INK} strokeWidth={0.025}>
           <line x1={a[0]} y1={a[1]} x2={a[0] + n[0] * r} y2={a[1] + n[1] * r} />
           <path
             d={`M${a[0] + dx * r} ${a[1] + dy * r} A${r} ${r} 0 0 ${s === 1 ? 1 : 0} ${a[0] + n[0] * r} ${a[1] + n[1] * r}`}
@@ -464,7 +486,7 @@ function OpeningMark({ v, m, selected }: { v: Variant; m: BuiltModule; selected:
           />
         </g>
       ) : (
-        <path d={curtainPath(a, b, n)} fill="none" stroke="rgb(var(--ink))" strokeWidth={0.025} />
+        <path d={curtainPath(a, b, n)} fill="none" stroke={INK} strokeWidth={0.025} />
       )}
     </g>
   )
@@ -489,23 +511,21 @@ function StrokePreview({ a, b, erase }: { a: Point; b: Point; erase: boolean }) 
   const hz = a[1] === b[1]
   return (
     <g>
-      <line
-        x1={a[0]}
-        y1={a[1]}
-        x2={b[0]}
-        y2={b[1]}
-        stroke={erase ? 'rgb(var(--ink-faint))' : `color-mix(in oklab, ${WALL} 60%, transparent)`}
+      <Seg
+        a={a}
+        b={b}
+        stroke={erase ? INK_FAINT : `color-mix(in oklab, ${WALL} 60%, transparent)`}
         strokeWidth={0.14}
         strokeLinecap="square"
         strokeDasharray={erase ? '.12 .08' : undefined}
       />
       {[a, b].map((q, i) => (
-        <circle key={i} cx={q[0]} cy={q[1]} r={0.07} fill="rgb(var(--ink))" />
+        <circle key={i} cx={q[0]} cy={q[1]} r={0.07} fill={INK} />
       ))}
       {L > 1 && (
         <g transform={`translate(${mx + (hz ? 0 : 0.32)} ${my + (hz ? -0.26 : 0)})`}>
-          <rect x={-0.34} y={-0.17} width={0.68} height={0.3} rx={0.06} fill="rgb(var(--ink))" />
-          <text y={0.06} textAnchor="middle" style={{ font: '600 0.19px var(--font-numeric)', fill: 'rgb(var(--canvas))' }}>
+          <rect x={-0.34} y={-0.17} width={0.68} height={0.3} rx={0.06} fill={INK} />
+          <text y={0.06} textAnchor="middle" style={{ font: '600 0.19px var(--font-numeric)', fill: CANVAS }}>
             {L} m
           </text>
         </g>
@@ -515,6 +535,11 @@ function StrokePreview({ a, b, erase }: { a: Point; b: Point; erase: boolean }) 
 }
 
 function HoverModule({ m }: { m: Module }) {
-  return <line x1={m.a[0]} y1={m.a[1]} x2={m.b[0]} y2={m.b[1]} stroke="rgb(var(--ink))" strokeOpacity={0.35} strokeWidth={0.18} />
+  return <Seg a={m.a} b={m.b} stroke={INK} strokeOpacity={0.35} strokeWidth={0.18} />
 }
 
+
+/** A line from a to b in model coordinates. */
+function Seg({ a, b, ...rest }: { a: Point; b: Point } & SVGProps<SVGLineElement>) {
+  return <line x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} {...rest} />
+}

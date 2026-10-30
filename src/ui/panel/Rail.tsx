@@ -1,5 +1,5 @@
 import { Blinds, Box, Check, ChevronRight, DoorClosed, Eraser, PaintBucket, Paintbrush, Search, Trash2 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { Fragment, useMemo, useState } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import type { Product } from '../../catalog/types'
 import { setCounted, setStand } from '../../domain/edit'
@@ -7,9 +7,11 @@ import { addObjectAnywhere, removeObjects } from '../../domain/objects'
 import { addDefaultRoom } from '../../domain/rooms'
 import type { StandType, Variant } from '../../domain/types'
 import { fillFloor } from '../../domain/variant'
-import { Counter, IconButton, Segmented } from '../controls'
-import { catalog, place, wallPlates } from '../env'
-import { fmt, kr } from '../format'
+import { INK, LAYER_COLOR, SUNKEN } from '../colors'
+import { CommitInput, Counter, IconButton, Segmented } from '../controls'
+import { catalog, place, productOf, rules, wallPlates } from '../env'
+import { fmt, kr, mm } from '../format'
+import { beamSummary } from '../names'
 import type { Brush, Tool } from '../tools'
 import { MENUS } from './menus'
 import { ProductRow, Swatch, VariantChips } from './ProductRow'
@@ -51,7 +53,7 @@ export function Rail(p: RailProps) {
     <aside className="rail">
       <nav className="strip" aria-label="Produktgrupper">
         {(['build', 'equip'] as const).map((g) => (
-          <div key={g} style={{ display: 'contents' }}>
+          <Fragment key={g}>
             <span className="grp">{g === 'build' ? 'Bygg' : 'Utstyr'}</span>
             {MENUS.filter((m) => m.group === g).map((m) => (
               <button key={m.key} type="button" className="strip-btn" aria-current={m.key === tab} onClick={() => setTab(m.key)}>
@@ -61,7 +63,7 @@ export function Rail(p: RailProps) {
                 {m.short ?? m.name}
               </button>
             ))}
-          </div>
+          </Fragment>
         ))}
       </nav>
       <div className="panel">
@@ -91,7 +93,7 @@ export function Rail(p: RailProps) {
         </div>
         {next && (
           <div className="panel-foot">
-            <span style={{ flex: 1 }}>Neste: {next.short ?? next.name}</span>
+            <span className="spacer">Neste: {next.short ?? next.name}</span>
             <button type="button" className="btn ghost" onClick={() => setTab(next.key)}>
               <ChevronRight size={16} />
               Neste
@@ -106,7 +108,7 @@ export function Rail(p: RailProps) {
 function menuCounts(v: Variant): Record<string, number> {
   const out: Record<string, number> = {}
   const add = (artnr: string, n: number) => {
-    const m = catalog.products.find((p) => p.variants.some((x) => x.artnr === artnr))?.menu
+    const m = productOf(artnr)?.menu
     if (m) out[m] = (out[m] ?? 0) + n
   }
   v.objects.forEach((o) => add(o.product, 1))
@@ -118,19 +120,16 @@ function menuCounts(v: Variant): Record<string, number> {
 
 function NumField({ value, onChange, label }: { value: number; onChange: (n: number) => void; label: string }) {
   return (
-    <input
+    <CommitInput
       className="field num"
-      style={{ width: 64 }}
       aria-label={label}
       inputMode="numeric"
-      defaultValue={value}
-      key={value}
-      onFocus={(e) => e.target.select()}
-      onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
-      onBlur={(e) => {
-        const n = Math.round(Number(e.target.value.replace(',', '.')))
-        if (Number.isFinite(n) && n >= 1 && n <= 40 && n !== value) onChange(n)
-        else e.target.value = String(value)
+      value={String(value)}
+      selectOnFocus
+      onCommit={(text) => {
+        const n = Math.round(Number(text.replace(',', '.')))
+        if (!Number.isFinite(n) || n < 1 || n > 40 || n === value) return false
+        onChange(n)
       }}
     />
   )
@@ -144,16 +143,12 @@ function StandSection({ v, res, onEdit }: RailProps) {
       <div className="opt">
         <span className="lbl">Bredde</span>
         <NumField label="Bredde i meter" value={s.width} onChange={(n) => onEdit((x) => setStand(x, { ...x.stand, width: n }))} />
-        <span className="num" style={{ color: 'rgb(var(--ink-faint))', fontSize: 12 }}>
-          m
-        </span>
+        <span className="num unit">m</span>
       </div>
       <div className="opt">
         <span className="lbl">Dybde</span>
         <NumField label="Dybde i meter" value={s.depth} onChange={(n) => onEdit((x) => setStand(x, { ...x.stand, depth: n }))} />
-        <span className="num" style={{ color: 'rgb(var(--ink-faint))', fontSize: 12 }}>
-          m
-        </span>
+        <span className="num unit">m</span>
       </div>
       <div className="panel-sec eyebrow">Standtype</div>
       <Segmented<StandType>
@@ -169,7 +164,7 @@ function StandSection({ v, res, onEdit }: RailProps) {
         ]}
       />
       {s.type === 'corner' && (
-        <div className="opt" style={{ borderTop: 0, marginTop: 4 }}>
+        <div className="opt flush">
           <span className="lbl">Åpen mot</span>
           <Segmented<'left' | 'right'>
             inWell
@@ -188,12 +183,13 @@ function StandSection({ v, res, onEdit }: RailProps) {
         <span className="lbl">
           Takdrager
           <small className="num">
-            {fmt(k.beamLm)} m · {k.beamLengths} {k.beamLengths === 1 ? 'lengde' : 'lengder'} · {k.beamPosts} {k.beamPosts === 1 ? 'stolpe' : 'stolper'}
+            {fmt(k.beamLm)} m · {beamSummary(k)}
           </small>
         </span>
       </div>
       <p className="panel-note">
-        80 × 20 mm langs åpne sider, i flukt med veggtopp. Lange drag deles jevnt i hele meter (maks 6 m) og skjøtes med stolpe og tverrdrager.
+        {mm(rules.beam.height)} × {mm(rules.beam.thickness)} mm langs åpne sider, i flukt med veggtopp. Lange drag deles jevnt i hele meter (maks {fmt(rules.beam.max)} m) og
+        skjøtes med stolpe og tverrdrager.
       </p>
     </>
   )
@@ -206,6 +202,7 @@ function WallSection({ v, res, brush, tool, pick, onEdit, onToast }: RailProps) 
   const wallPen = tool !== 'select' && brush?.kind === 'wall'
   const nPlates = res.groups.find((g) => g.id === 'walls')?.lines.reduce((a, l) => a + l.qty, 0) ?? 0
   const openingCount = (a: string) => v.openings.filter((o) => o.product === a).length
+  const header = productOf(catalog.system.header)?.variants[0].price ?? 0
   return (
     <>
       <div className="panel-sec eyebrow">Veggplater</div>
@@ -213,7 +210,7 @@ function WallSection({ v, res, brush, tool, pick, onEdit, onToast }: RailProps) 
         on
         pen={wallPen}
         thumb={<Swatch color={def?.color} />}
-        title="Veggplate 960 × 2420"
+        title={`Veggplate ${rules.wall.plate.width} × ${rules.wall.plate.height}`}
         meta={
           <>
             {def?.name} · <span className="num">RAL {def?.ral} · {kr(def?.price ?? 0)} kr/stk</span>
@@ -238,8 +235,8 @@ function WallSection({ v, res, brush, tool, pick, onEdit, onToast }: RailProps) 
       <ProductRow
         thumb={
           <svg viewBox="-1 -1 2 2" width="28" height="28" aria-hidden>
-            <rect x="-.7" y="-.7" width="1.4" height="1.4" fill="rgb(var(--sunken))" />
-            <path d="M-.7 .7 V-.7 H.7 V.7 H.25 M-.25 .7 H-.7" fill="none" stroke="var(--line-slate)" strokeWidth=".1" />
+            <rect x="-.7" y="-.7" width="1.4" height="1.4" fill={SUNKEN} />
+            <path d="M-.7 .7 V-.7 H.7 V.7 H.25 M-.25 .7 H-.7" fill="none" stroke={LAYER_COLOR.openings} strokeWidth=".1" />
           </svg>
         }
         title="Bakrom"
@@ -265,7 +262,6 @@ function WallSection({ v, res, brush, tool, pick, onEdit, onToast }: RailProps) 
           const a = p.variants[0].artnr
           const n = openingCount(a)
           const pen = tool !== 'select' && brush?.kind === 'opening' && brush.product === a
-          const header = catalog.products.find((x) => x.variants.some((y) => y.artnr === catalog.system.header))?.variants[0].price ?? 0
           return (
             <ProductRow
               key={p.id}
@@ -293,7 +289,7 @@ function FloorSection({ v, res, brush, tool, pick, onEdit }: RailProps) {
   const areas = res.keyFigures.floor
   const floors = catalog.products.filter((p) => p.menu === 'gulv' && p.kind === 'surface')
   const eraser = tool === 'erase' && brush?.kind === 'floor'
-  const protection = catalog.products.find((p) => p.variants.some((x) => x.artnr === catalog.system.floorProtection))
+  const protection = productOf(catalog.system.floorProtection)
   return (
     <>
       {floors.map((p) => {
@@ -480,7 +476,7 @@ function ObjectThumb({ product, color }: { product: Product; color?: string }) {
   const fill = color ?? (product.name.includes('hvit') ? 'oklch(0.96 0.003 90)' : 'oklch(0.24 0.004 250)')
   return (
     <svg width="30" height="30" viewBox="-15 -15 30 30" aria-hidden>
-      {f.round ? <circle r={(f.w * s) / 2} fill={fill} stroke="rgb(var(--ink))" strokeWidth={0.6} /> : <rect x={(-f.w * s) / 2} y={(-f.d * s) / 2} width={f.w * s} height={f.d * s} rx={1.5} fill={fill} stroke="rgb(var(--ink))" strokeWidth={0.6} />}
+      {f.round ? <circle r={(f.w * s) / 2} fill={fill} stroke={INK} strokeWidth={0.6} /> : <rect x={(-f.w * s) / 2} y={(-f.d * s) / 2} width={f.w * s} height={f.d * s} rx={1.5} fill={fill} stroke={INK} strokeWidth={0.6} />}
     </svg>
   )
 }
