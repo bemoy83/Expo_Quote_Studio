@@ -19,6 +19,9 @@ export const SAMPLE_MOTIFS: Motif[] = [
 
 export const motifLibrary = (own: Motif[]) => [...SAMPLE_MOTIFS, ...own]
 
+/** The motif with this id, if any. */
+export const findMotif = (motifs: readonly Motif[] | undefined, id: string | null | undefined) => (id ? motifs?.find((m) => m.id === id) : undefined)
+
 /** Read an image file, scale it to at most 640 px and return it as a motif. PNG keeps transparency. */
 export function readMotif(file: File, taken: string[]): Promise<Motif> {
   return new Promise((resolve, reject) => {

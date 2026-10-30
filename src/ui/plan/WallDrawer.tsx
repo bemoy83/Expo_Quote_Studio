@@ -10,6 +10,7 @@ import {
   faces,
   felt,
   fillTextile,
+  foilCenter,
   foilsOn,
   freeSpans,
   removeFoil,
@@ -26,10 +27,11 @@ import type { Foil, TextileWall, Variant, Wall } from '../../domain/types'
 import { builtModules } from '../../domain/walls'
 import type { Motif } from '../../persistence/file'
 import { wallHeight } from '../../rules/rules'
-import { BORDER_STRONG, INK, INK_FAINT, INK_MUTED, LAYER_COLOR, SUNKEN } from '../colors'
+import { ALU, ALU_POST, BORDER_STRONG, FABRIC, FEET, INK, INK_FAINT, INK_MUTED, LAYER_COLOR, SUNKEN } from '../colors'
 import { Button, CommitInput, IconButton, Segmented } from '../controls'
 import { plateColor, productOf, rules, wallPlates } from '../env'
-import { fmt, mm } from '../format'
+import { count, fmt, mm } from '../format'
+import { findMotif } from '../motifs'
 import { VariantChips } from '../panel/ProductRow'
 import type { PlanSelection } from './PlanView'
 
@@ -44,11 +46,10 @@ interface Props {
   onClose: () => void
 }
 
-const ALU = '#b9bcc0'
-const ALU_DARK = '#8d9095'
-const FEET = '#2a2b2e'
-const FABRIC = 'color-mix(in oklab, var(--line-violet) 14%, rgb(var(--surface)))'
 const EPS = 1e-6
+
+/** What a drag in the drawing changes: move, width or height of a frame; move or size of a decal. */
+type DragKind = 'tmove' | 'twidth' | 'theight' | 'fmove' | 'fsize'
 
 /** Face names by where the face looks. */
 function faceName(w: Wall, s: FaceSide): string {
@@ -79,13 +80,12 @@ export function WallDrawer(p: Props) {
   const F = foils.find((f) => f.id === sel.foilId)
   const built = new Map(builtModules(v).map((m) => [m.key, m]))
   const mods = wallModules(w).map((m) => built.get(m.key))
-  const motifOf = (id?: string) => (id ? motifs.find((m) => m.id === id) : undefined)
-  const ratioOf = (id?: string) => motifOf(id)?.ratio ?? 0
+  const ratioOf = (id?: string) => findMotif(motifs, id)?.ratio ?? 0
   const label = wallLabel(w, v.stand)
   const select = (x: Partial<PlanSelection>) => p.onSelect({ wallId: w.id, side: s, ...x })
 
   // ---- Dragging in the drawing: move, width, height of a frame; move and size of a decal
-  const drag = (e: RPointerEvent, kind: 'tmove' | 'twidth' | 'theight' | 'fmove' | 'fsize', item: TextileWall | Foil) => {
+  const drag = (e: RPointerEvent, kind: DragKind, item: TextileWall | Foil) => {
     e.stopPropagation()
     if (e.button !== 0) return
     const scale = svg.current?.getScreenCTM()?.a ?? 1
@@ -112,7 +112,7 @@ export function WallDrawer(p: Props) {
     window.addEventListener('pointerup', onUp)
   }
 
-  const applyDrag = (x: Variant, kind: string, item: TextileWall | Foil, du: number, dz: number): Variant => {
+  const applyDrag = (x: Variant, kind: DragKind, item: TextileWall | Foil, du: number, dz: number): Variant => {
     if ('from' in item) {
       const { bottom, height } = textileBox(item, rules)
       if (kind === 'tmove') {
@@ -129,7 +129,7 @@ export function WallDrawer(p: Props) {
     }
     const r = ratioOf(item.motif)
     if (kind === 'fsize') return updateFoil(x, rules, item.id, { width: item.width + 2 * du }, r)
-    const c = felt(rules, item.module).center + item.x + du * dir
+    const c = foilCenter(rules, item) + du * dir
     const module = Math.max(0, Math.min(L - 1, Math.floor(c)))
     const y = item.y + dz
     const next = updateFoil(x, rules, item.id, { module, x: c - (module + 0.5), y }, r)
@@ -185,7 +185,9 @@ export function WallDrawer(p: Props) {
             ? `${fmt(T.width)} × ${fmt(textileBox(T, rules).height, 2)} m · ramme ${mm(piece.W / 1000)} × ${mm(piece.H / 1000)} mm · ${fmt(piece.area)} m² trykk`
             : F
               ? `Felt ${F.module + 1} · ${mm(F.width)} × ${mm(F.height)} mm`
-              : `${L} m · ${wallModules(w).length - openings.length} ${L - openings.length === 1 ? 'plate' : 'plater'}${openings.length ? ` · ${openings.length} ${openings.length === 1 ? 'åpning' : 'åpninger'}` : ''}${tex.length ? ` · ${tex.length} ${tex.length === 1 ? 'tekstilvegg' : 'tekstilvegger'}` : ''}`}
+              : [`${L} m`, count(wallModules(w).length - openings.length, 'plate', 'plater'), openings.length && count(openings.length, 'åpning', 'åpninger'), tex.length && count(tex.length, 'tekstilvegg', 'tekstilvegger')]
+                  .filter(Boolean)
+                  .join(' · ')}
         </p>
         {fs.length > 1 ? (
           <>
@@ -301,7 +303,7 @@ export function WallDrawer(p: Props) {
           })}
           {Array.from({ length: L + 1 }, (_, i) => (
             <g key={`p${i}`}>
-              <rect x={u(i) - rules.wall.post / 2} y={z(H)} width={rules.wall.post} height={H - rules.wall.feet} fill={ALU_DARK} />
+              <rect x={u(i) - rules.wall.post / 2} y={z(H)} width={rules.wall.post} height={H - rules.wall.feet} fill={ALU_POST} />
               <rect x={u(i) - 0.012} y={z(rules.wall.feet)} width={0.024} height={rules.wall.feet} fill={FEET} />
             </g>
           ))}
@@ -309,14 +311,16 @@ export function WallDrawer(p: Props) {
 
           {/* Foil decals */}
           {foils.map((f) => {
-            const c = felt(rules, f.module).center + f.x
+            const c = foilCenter(rules, f)
             const x = spanX(c - f.width / 2, c + f.width / 2)
-            const m = motifOf(f.motif)
+            const m = findMotif(motifs, f.motif)
             const on = F?.id === f.id
             return (
               <g key={f.id} onPointerDown={(e) => drag(e, 'fmove', f)} style={{ cursor: 'move' }}>
-                {m ? (
-                  <image href={m.src} x={x} y={z(f.y + f.height / 2)} width={f.width} height={f.height} preserveAspectRatio={f.full ? 'xMidYMid slice' : 'none'} />
+                {m && f.full ? (
+                  <Print m={m} x={x} y={z(f.y + f.height / 2)} width={f.width} height={f.height} />
+                ) : m ? (
+                  <image href={m.src} x={x} y={z(f.y + f.height / 2)} width={f.width} height={f.height} preserveAspectRatio="none" />
                 ) : (
                   <rect x={x} y={z(f.y + f.height / 2)} width={f.width} height={f.height} fill={SUNKEN} />
                 )}
@@ -342,14 +346,14 @@ export function WallDrawer(p: Props) {
             const { bottom, height } = textileBox(t, rules)
             const x = spanX(t.from, t.from + t.width)
             const y = z(bottom + height)
-            const m = motifOf(t.motif)
+            const m = findMotif(motifs, t.motif)
             const on = T?.id === t.id
             const fr = 0.04
             return (
               <g key={t.id} onPointerDown={(e) => drag(e, 'tmove', t)} style={{ cursor: 'move' }}>
                 <rect x={x} y={y} width={t.width} height={height} fill={FABRIC} />
                 {m && (
-                  <image href={m.src} x={x + fr} y={y + fr} width={Math.max(0, t.width - 2 * fr)} height={Math.max(0, height - 2 * fr)} preserveAspectRatio="xMidYMid slice" />
+                  <Print m={m} x={x + fr} y={y + fr} width={Math.max(0, t.width - 2 * fr)} height={Math.max(0, height - 2 * fr)} />
                 )}
                 <rect x={x + fr / 2} y={y + fr / 2} width={t.width - fr} height={height - fr} fill="none" stroke={ALU} strokeWidth={fr} />
                 {!m && (
@@ -390,13 +394,26 @@ export function WallDrawer(p: Props) {
 const TXT = { font: '500 0.11px var(--font-ui)', fill: INK_MUTED, pointerEvents: 'none' as const }
 const DIM = { font: '500 0.12px var(--font-numeric)', fill: INK_FAINT }
 
+/**
+ * A motif filling a box, cropped like the 3D print. Drawn in its own viewport of the motif's shape: an SVG motif in a
+ * plain <image> would letterbox itself inside the box instead of being cropped.
+ */
+function Print({ m, x, y, width, height }: { m: Motif; x: number; y: number; width: number; height: number }) {
+  return (
+    <svg x={x} y={y} width={width} height={height} viewBox={`0 0 ${m.ratio} 1`} preserveAspectRatio="xMidYMid slice">
+      <image href={m.src} width={m.ratio} height={1} />
+    </svg>
+  )
+}
+
 /** A length in metres with − / + and a field you can type in. */
 function Dim({ label, value, onChange, step = 0.1, min = 0.5, decimals = 1 }: { label: string; value: number; onChange: (n: number) => void; step?: number; min?: number; decimals?: number }) {
+  const nudge = (d: number) => onChange(Math.round((value + d) * 1000) / 1000)
   return (
     <div className="opt flush">
       <span className="lbl">{label}</span>
       <span className="wd-dim">
-        <IconButton icon={Minus} size={14} label={`${label} −${fmt(step, 2)} m`} disabled={value <= min + EPS} onClick={() => onChange(Math.round((value - step) * 1000) / 1000)} />
+        <IconButton icon={Minus} size={14} label={`${label} −${fmt(step, 2)} m`} disabled={value <= min + EPS} onClick={() => nudge(-step)} />
         <CommitInput
           className="field num"
           aria-label={`${label} i meter`}
@@ -409,7 +426,7 @@ function Dim({ label, value, onChange, step = 0.1, min = 0.5, decimals = 1 }: { 
             onChange(n)
           }}
         />
-        <IconButton icon={Plus} size={14} label={`${label} +${fmt(step, 2)} m`} onClick={() => onChange(Math.round((value + step) * 1000) / 1000)} />
+        <IconButton icon={Plus} size={14} label={`${label} +${fmt(step, 2)} m`} onClick={() => nudge(step)} />
         <span className="num unit">m</span>
       </span>
     </div>
@@ -417,7 +434,7 @@ function Dim({ label, value, onChange, step = 0.1, min = 0.5, decimals = 1 }: { 
 }
 
 function MotifPicker({ motifs, value, onChange }: { motifs: Motif[]; value?: string; onChange: (id: string | null) => void }) {
-  const cur = motifs.find((m) => m.id === value)
+  const cur = findMotif(motifs, value)
   return (
     <div className="wd-motifs">
       <div className="eyebrow">Motiv · {cur ? cur.name : 'uten motiv'}</div>

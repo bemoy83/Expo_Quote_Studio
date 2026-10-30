@@ -18,7 +18,7 @@ import { frameCount, TYPE_NAME } from './names'
 import { Rail } from './panel/Rail'
 import { PlanPreview, PlanView, type PlanSelection } from './plan/PlanView'
 import { WallDrawer } from './plan/WallDrawer'
-import { motifLibrary } from './motifs'
+import { findMotif, motifLibrary } from './motifs'
 import { fitDecor, removeFoil, removeTextile } from '../domain/decor'
 import { ProductionPage } from './production/ProductionPage'
 import { QuotePage } from './quote/QuotePage'
@@ -80,7 +80,7 @@ export default function App() {
   // Every edit keeps textiles and foils valid: on a wall, off openings, inside their felt.
   const onEdit = useCallback(
     (fn: (v: Variant) => Variant, history = true) => {
-      const ratio = (id: string | undefined) => motifs.find((m) => m.id === id)?.ratio ?? 0
+      const ratio = (id: string | undefined) => findMotif(motifs, id)?.ratio ?? 0
       dispatch({ type: 'edit', fn: (x) => fitDecor(fn(x), rules, ratio), history })
     },
     [motifs],
@@ -340,7 +340,7 @@ export default function App() {
           current={current}
           onSelect={selectVariant}
           customer={customerName(sketch.project)}
-          motifName={(id) => motifs.find((m) => m.id === id)?.name}
+          motifName={(id) => findMotif(motifs, id)?.name}
           onToast={showToast}
         />
       ) : (
@@ -354,7 +354,7 @@ export default function App() {
     if (!b) return { name: 'Pensel' }
     if (b.kind === 'wall') return { name: `Standvegg RAL ${b.ral}`, color: plateColor(b.ral) }
     if (b.kind === 'textile') return { name: 'Tekstilvegg' }
-    if (b.kind === 'motif') return { name: motifs.find((m) => m.id === b.motif)?.name ?? 'Motiv' }
+    if (b.kind === 'motif') return { name: findMotif(motifs, b.motif)?.name ?? 'Motiv' }
     const r = idx.byArtnr.get(b.product)
     const name = r ? (r.product.variants.length > 1 ? `${r.product.name.split(' ')[0]} ${r.variant.name.toLowerCase()}` : r.product.name) : b.product
     return { name, color: r?.variant.color }

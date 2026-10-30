@@ -6,7 +6,7 @@ import type { CalcResult } from '../../calc/calc'
 import { defaultSwing, eraseWalls, isPerimeterWall, paintFloor, paintWalls, segmentKeys, setOpening } from '../../domain/edit'
 import { CELL, parseCellKey, pointAlong, sideLength, sidePoint, wallDirection, wallLength, type Module } from '../../domain/grid'
 import { addObject, conflicts, footprintBox, moveObject, removeObject } from '../../domain/objects'
-import { addFoil, addTextile, faceAt, faceSegment, felt, foilAt, freeSpans, removeFoil, removeTextile, sideOf, textileAt, updateTextile, type FaceSide } from '../../domain/decor'
+import { addFoil, addTextile, faceAt, faceSegment, felt, foilAt, foilCenter, freeSpans, removeFoil, removeTextile, sideOf, textileAt, textileOffset, updateTextile, type FaceSide } from '../../domain/decor'
 import type { Motif } from '../../persistence/file'
 import type { Point, Side, Variant, Wall } from '../../domain/types'
 import { builtModules, type BuiltModule } from '../../domain/walls'
@@ -14,6 +14,7 @@ import { BORDER, BORDER_STRONG, BLOCK, CANVAS, INK, INK_FAINT, INK_MUTED, LAYER_
 import { dragWall, dropObject, type WallDrag } from '../drag'
 import { fmt } from '../format'
 import { idx, place, plateColor, productOf, rules } from '../env'
+import { findMotif } from '../motifs'
 import type { Brush, FloorSize, Highlight, Tool } from '../tools'
 import { distToSegment, nearestEdge, strokeFrom } from './geometry'
 
@@ -50,6 +51,7 @@ const M = PLAN_MARGIN
 const SIDE_LABEL: Record<Side, string> = { back: 'Bak', front: 'Front', left: 'Venstre', right: 'Høyre' }
 const WALL = LAYER_COLOR.walls
 const TEXTILE = LAYER_COLOR.textile
+
 /** Grid lines over a laid floor: dark enough to read on any floor colour. */
 const GRID_ON_FLOOR = 'rgb(0 0 0 / .14)'
 /** Half-metre lines while painting floor. */
@@ -66,6 +68,14 @@ type Drag =
 interface P {
   x: number
   y: number
+}
+
+/** A wall face under the pointer: wall, face, offset along the wall and module index. */
+interface FaceHit {
+  w: Wall
+  s: FaceSide
+  t: number
+  module: number
 }
 
 export function PlanView(p: Props) {
@@ -113,8 +123,8 @@ export function PlanView(p: Props) {
     return best
   }
 
-  /** The wall face under the pointer: wall, face, offset along the wall and module index. */
-  const faceHit = (q: P) => {
+  /** The wall face under the pointer. */
+  const faceHit = (q: P): FaceHit | null => {
     const m = moduleAt(q, 0.4)
     if (!m) return null
     const w = v.walls.find((x) => x.id === m.wallId)!
@@ -123,7 +133,7 @@ export function PlanView(p: Props) {
     const t = Math.max(0, Math.min(L, (q.x - w.from[0]) * dx + (q.y - w.from[1]) * dy))
     return { w, s: faceAt(v, w, q), t, module: Math.min(Math.floor(t), L - 1) }
   }
-  const ratioOf = (id: string) => p.motifs?.find((m) => m.id === id)?.ratio ?? 1
+  const ratioOf = (id: string) => findMotif(p.motifs, id)?.ratio ?? 1
 
   /** Textile brush: fill the free part of the face. Motif brush: print on a textile, or foil on a wall panel. */
   const decorClick = (q: P) => {
@@ -389,7 +399,7 @@ export function PlanView(p: Props) {
         {v.textiles.map((t) => {
           const w = v.walls.find((x) => x.id === t.wallId)
           if (!w) return null
-          const [a, b] = faceSegment(w, sideOf(v, t), t.from + 0.02, t.from + t.width - 0.02, rules.wall.post / 2 + rules.textile.depth / 2)
+          const [a, b] = faceSegment(w, sideOf(v, t), t.from + 0.02, t.from + t.width - 0.02, textileOffset(rules))
           const sel = selection.textileId === t.id
           return (
             <g key={t.id}>
@@ -405,7 +415,7 @@ export function PlanView(p: Props) {
         {v.foils.map((f) => {
           const w = v.walls.find((x) => x.id === f.wallId)
           if (!w) return null
-          const c = felt(rules, f.module).center + f.x
+          const c = foilCenter(rules, f)
           const [a, b] = faceSegment(w, sideOf(v, f), c - f.width / 2, c + f.width / 2, rules.wall.post / 2 + 0.03)
           const sel = selection.foilId === f.id
           return <Seg key={f.id} a={a} b={b} stroke={INK} strokeWidth={sel ? 0.05 : 0.03} strokeDasharray=".06 .04" />
@@ -605,8 +615,7 @@ function StrokePreview({ a, b, erase }: { a: Point; b: Point; erase: boolean }) 
 }
 
 /** Where a textile or motif click would land on the hovered wall face. */
-function FacePreview({ v, h, brush, erase }: { v: Variant; h: { w: Wall; s: FaceSide; t: number; module: number }; brush: Brush; erase: boolean }) {
-  const off = rules.wall.post / 2 + rules.textile.depth / 2
+function FacePreview({ v, h, brush, erase }: { v: Variant; h: FaceHit; brush: Brush; erase: boolean }) {
   const tx = textileAt(v, h.w.id, h.s, h.t)
   let span: [number, number] | null = null
   if (tx) span = [tx.from, tx.from + tx.width]
@@ -616,7 +625,7 @@ function FacePreview({ v, h, brush, erase }: { v: Variant; h: { w: Wall; s: Face
     span = [f.a, f.b]
   }
   if (!span) return null
-  const [a, b] = faceSegment(h.w, h.s, span[0] + 0.02, span[1] - 0.02, off)
+  const [a, b] = faceSegment(h.w, h.s, span[0] + 0.02, span[1] - 0.02, textileOffset(rules))
   return <Seg a={a} b={b} stroke={brush.kind === 'textile' && !erase ? TEXTILE : INK} strokeOpacity={0.45} strokeWidth={rules.textile.depth + 0.04} />
 }
 
