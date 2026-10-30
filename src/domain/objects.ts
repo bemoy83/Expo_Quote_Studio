@@ -1,11 +1,12 @@
 // Placed objects (furniture, counters): footprint, collision and placement.
-// They collide with walls (post depth, plus textile depth on walls carrying a textile), door swings and each other.
+// They collide with walls (post depth), textile frames (in front of their face), door swings and each other.
 import type { Footprint } from '../catalog/types';
 import type { Rules } from '../rules/rules';
 import { pointAlong, wallDirection } from './grid';
 import type { PlacedObject, Variant } from './types';
 import { builtModules } from './walls';
 import { defaultSwing, nextId } from './edit';
+import { faceSegment, sideOf } from './decor';
 
 export interface Box {
   x0: number;
@@ -37,19 +38,28 @@ export function footprintBox(o: Pick<PlacedObject, 'x' | 'y' | 'rot'>, f: Footpr
 export function blockers(v: Variant, ctx: PlaceContext, skipId?: string): Box[] {
   const { rules, footprint: fp } = ctx;
   const out: Box[] = [];
-  const textileWalls = new Set(v.textiles.map((t) => t.wallId));
   const half = rules.wall.post / 2;
   for (const m of builtModules(v)) {
-    const t = half + (textileWalls.has(m.wallId) ? rules.textile.depth : 0);
     if (!m.opening) {
       out.push({
-        x0: Math.min(m.a[0], m.b[0]) - t,
-        y0: Math.min(m.a[1], m.b[1]) - t,
-        x1: Math.max(m.a[0], m.b[0]) + t,
-        y1: Math.max(m.a[1], m.b[1]) + t,
+        x0: Math.min(m.a[0], m.b[0]) - half,
+        y0: Math.min(m.a[1], m.b[1]) - half,
+        x1: Math.max(m.a[0], m.b[0]) + half,
+        y1: Math.max(m.a[1], m.b[1]) + half,
         kind: 'wall',
       });
     }
+  }
+  // A textile frame adds its depth in front of its face, along its span only
+  for (const t of v.textiles) {
+    const w = v.walls.find((x) => x.id === t.wallId);
+    if (!w) continue;
+    const s = sideOf(v, t);
+    const [a, b] = faceSegment(w, s, t.from, t.from + t.width, half);
+    const [c, d] = faceSegment(w, s, t.from, t.from + t.width, half + rules.textile.depth);
+    const xs = [a[0], b[0], c[0], d[0]];
+    const ys = [a[1], b[1], c[1], d[1]];
+    out.push({ x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys), kind: 'wall', id: t.id });
   }
   for (const o of v.openings) {
     const w = v.walls.find((x) => x.id === o.wallId);

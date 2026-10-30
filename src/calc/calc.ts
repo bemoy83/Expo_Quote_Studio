@@ -131,9 +131,10 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog): CalcResult {
   // Textile walls: quantities from the InFrame production rules
   const prod = production(v, rules.textile.inFrame, '');
   const nFrames = prod.pieces.length;
+  const blank = prod.pieces.filter((p) => !p.motif).reduce((a, p) => a + p.area, 0);
   push('textile', 'Tekstilvegger', [
     line(sys.frame, prod.lm, { meta: `${nFrames} ${nFrames === 1 ? 'ramme' : 'rammer'} · inkl. stag` }),
-    line(sys.print, prod.area, { meta: 'inkl. bleed' }),
+    line(sys.print, prod.area, { meta: blank > 0 ? `inkl. bleed · ${(Math.round(blank * 10) / 10).toString().replace('.', ',')} m² uten motiv` : 'inkl. bleed' }),
   ]);
 
   // Foil
