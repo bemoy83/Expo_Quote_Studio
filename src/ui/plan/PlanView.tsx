@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState, type PointerEvent as RPointerEven
 import type { CalcResult } from '../../calc/calc'
 import { defaultSwing, eraseWalls, isPerimeterWall, moveWall, paintFloor, paintWalls, segmentKeys, setOpening } from '../../domain/edit'
 import { CELL, parseCellKey, pointAlong, sideLength, sidePoint, wallDirection, type Module } from '../../domain/grid'
-import { addObject, conflicts, findSpot, footprintBox, moveObject, removeObject } from '../../domain/objects'
+import { addObject, conflicts, footprintBox, moveObject, removeObject, settleObject } from '../../domain/objects'
 import type { Point, Side, Variant } from '../../domain/types'
 import { builtModules, type BuiltModule } from '../../domain/walls'
 import { fmt } from '../format'
@@ -30,6 +30,8 @@ interface Props {
   onEdit: (fn: (v: Variant) => Variant, history?: boolean) => void
   onCheckpoint: () => void
   onToast: (text: string) => void
+  /** Small overview (the 3D view's mini plan): no labels, tighter margin. */
+  mini?: boolean
 }
 
 const M = 1.3
@@ -214,15 +216,9 @@ export function PlanView(p: Props) {
       if (tool === 'erase') p.onEdit((x) => eraseWalls(x, segmentKeys(a, b)))
       else if (brush?.kind === 'wall') p.onEdit((x) => paintWalls(x, a, b, brush.ral))
     } else if (d.kind === 'object' && d.moved) {
-      const o = v.objects.find((x) => x.id === d.id)
-      if (o && bad.has(o.id)) {
-        const spot = findSpot(v, place, o, 1)
-        if (spot) p.onEdit((x) => ({ ...x, objects: x.objects.map((y) => (y.id === o.id ? spot : y)) }), false)
-        else {
-          p.onEdit((x) => moveObject(x, place, d.id, d.start.x, d.start.y), false)
-          p.onToast('Ikke plass der')
-        }
-      }
+      const r = settleObject(v, place, d.id, d.start)
+      if (r.v !== v) p.onEdit(() => r.v, false)
+      if (!r.ok) p.onToast('Ikke plass der')
     }
   }
 
@@ -252,7 +248,7 @@ export function PlanView(p: Props) {
     <svg
       ref={svg}
       className="plan-svg"
-      viewBox={`${-M} ${-M} ${W + 2 * M} ${D + 2 * M}`}
+      viewBox={p.mini ? `-0.4 -0.4 ${W + 0.8} ${D + 0.8}` : `${-M} ${-M} ${W + 2 * M} ${D + 2 * M}`}
       preserveAspectRatio="xMidYMid meet"
       style={{ cursor }}
       onPointerDown={onDown}
@@ -383,6 +379,7 @@ export function PlanView(p: Props) {
       </g>
 
       {/* Labels */}
+      {!p.mini && (
       <g pointerEvents="none">
         <text x={W / 2} y={-M * 0.52} textAnchor="middle" style={LABEL}>
           {SIDE_LABEL.back} · {sideText('back')}
@@ -415,6 +412,7 @@ export function PlanView(p: Props) {
             )
           })}
       </g>
+      )}
 
       {/* Interaction preview */}
       <g pointerEvents="none">

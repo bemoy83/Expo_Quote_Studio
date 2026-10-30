@@ -158,3 +158,15 @@ export function conflicts(v: Variant, ctx: PlaceContext): Set<string> {
   }
   return out;
 }
+
+/**
+ * After a drag: an object left overlapping something moves to the nearest free spot within 1 m,
+ * or back to where the drag started. `ok` is false when it had to go back.
+ */
+export function settleObject(v: Variant, ctx: PlaceContext, id: string, start: { x: number; y: number }): { v: Variant; ok: boolean } {
+  const o = v.objects.find((x) => x.id === id);
+  if (!o || !conflicts(v, ctx).has(id)) return { v, ok: true };
+  const spot = findSpot(v, ctx, o, 1);
+  if (spot) return { v: { ...v, objects: v.objects.map((x) => (x.id === id ? spot : x)) }, ok: true };
+  return { v: moveObject(v, ctx, id, start.x, start.y), ok: false };
+}

@@ -1,0 +1,56 @@
+import type * as THREE from 'three'
+import { describe, expect, it } from 'vitest'
+import { calc } from '../../calc/calc'
+import { r2 } from '../../calc/referenceStands'
+import { addObject } from '../../domain/objects'
+import { fillFloor } from '../../domain/variant'
+import { builtModules } from '../../domain/walls'
+import { catalog, place, rules } from '../env'
+import { build, type Tag } from './build'
+
+/** Size of a box mesh, or null for anything else. */
+const box = (o: THREE.Object3D) => {
+  const g = (o as THREE.Mesh).geometry as THREE.BoxGeometry | undefined
+  return g?.type === 'BoxGeometry' ? g.parameters : null
+}
+
+const meshes = (g: THREE.Object3D) => {
+  const out: THREE.Object3D[] = []
+  g.traverse((o) => {
+    if ((o.userData as Partial<Tag>).layer) out.push(o)
+  })
+  return out
+}
+
+describe('3D scene from the model', () => {
+  const v = addObject(fillFloor(r2(), '5903'), place, '5276', 4, 2.7)!
+  const res = calc(v, rules, catalog)
+  const g = build(v, res)
+  const all = meshes(g)
+  const layer = (l: Tag['layer']) => all.filter((o) => (o.userData as Tag).layer === l)
+
+  it('draws one post per calc post and one beam per beam length', () => {
+    const posts = all.filter((o) => box(o)?.width === rules.wall.post)
+    expect(posts).toHaveLength(res.posts.length)
+    const beams = layer('beams').filter((o) => box(o)?.height === rules.beam.height)
+    expect(beams).toHaveLength(res.beams.segments.length)
+  })
+
+  it('every wall module can be picked and points at its wall', () => {
+    const ids = new Set(all.map((o) => (o.userData as Tag).pick?.wallId).filter(Boolean))
+    expect(ids).toEqual(new Set(builtModules(v).map((m) => m.wallId)))
+  })
+
+  it('furniture is pickable by object id', () => {
+    const picks = layer('objects').map((o) => (o.userData as Tag).pick?.objectId)
+    expect(picks.length).toBeGreaterThan(0)
+    expect(new Set(picks)).toEqual(new Set(v.objects.map((o) => o.id)))
+  })
+
+  it('one textile box per textile wall, and floor cells are instanced per product', () => {
+    expect(layer('textile')).toHaveLength(v.textiles.length)
+    const inst = layer('floor').filter((o) => (o as THREE.InstancedMesh).isInstancedMesh) as THREE.InstancedMesh[]
+    expect(inst).toHaveLength(1)
+    expect(inst[0].count).toBe(Object.keys(v.floor.cells).length)
+  })
+})

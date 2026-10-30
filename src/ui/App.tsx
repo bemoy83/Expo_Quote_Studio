@@ -1,5 +1,5 @@
-import { Copy, MousePointer2, Eraser, Paintbrush, Plus, Redo2, Trash2, Undo2 } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
+import { Copy, Eraser, Maximize2, MousePointer2, Paintbrush, Plus, Redo2, Trash2, Undo2 } from 'lucide-react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { calc, type CalcResult } from '../calc/calc'
 import { r2 } from '../calc/referenceStands'
 import { addObject } from '../domain/objects'
@@ -17,6 +17,9 @@ import { PlanView, type PlanSelection } from './plan/PlanView'
 import { WallPopover } from './plan/WallPopover'
 import { TopNav, type Page } from './shell/TopNav'
 import { FLOOR_SIZES, type Brush, type FloorSize, type Highlight, type Tool } from './tools'
+
+// three.js is only loaded when the 3D view is opened
+const Scene3D = lazy(() => import('./scene3d/Scene3D').then((m) => ({ default: m.Scene3D })))
 
 const TYPE_NAME = { row: 'Rekkestand', corner: 'Hjørnestand', end: 'Endestand', island: 'Øystand' } as const
 
@@ -45,6 +48,7 @@ export default function App() {
   const v = sketch.variants[current]
   const res = calcOf(v)
   const [page, setPage] = useState<Page>('skisse')
+  const [view, setView] = useState<'plan' | '3d'>('plan')
   const [tab, setTabRaw] = useState('stand')
   const [tool, setTool] = useState<Tool>('select')
   const [brush, setBrush] = useState<Brush | null>(null)
@@ -67,9 +71,11 @@ export default function App() {
     setTabRaw(k)
     setTool('select')
   }
+  /** Choosing a brush always goes to the plan; the brushes draw there. */
   const pick = (b: Brush, t: Tool = 'brush') => {
     setBrush(b)
     setTool(t)
+    setView('plan')
     setSelection({})
   }
 
@@ -87,8 +93,13 @@ export default function App() {
       if (mod || e.altKey) return
       const k = e.key.toLowerCase()
       if (k === 'v' || k === 'escape') setTool('select')
-      else if (k === 'p' && brush) setTool('brush')
-      else if (k === 'e') setTool('erase')
+      else if (k === 'p' && brush) {
+        setTool('brush')
+        setView('plan')
+      } else if (k === 'e') {
+        setTool('erase')
+        setView('plan')
+      }
       else if (k === 's') pick({ kind: 'wall', ral: v.defaultPlate })
       else if (k === 'g') {
         const f = brush?.kind === 'floor' ? brush.product : (Object.keys(res.keyFigures.floor)[0] ?? '5902')
@@ -157,40 +168,45 @@ export default function App() {
               <Segmented<'plan' | '3d'>
                 onBand
                 label="Visning"
-                value="plan"
-                onChange={() => showToast('3D kommer i neste steg')}
+                value={view}
+                onChange={(x) => {
+                  setView(x)
+                  setTool('select')
+                }}
                 options={[
                   { value: 'plan', label: 'Plan' },
-                  { value: '3d', label: '3D', title: 'Kommer i neste steg' },
+                  { value: '3d', label: '3D' },
                 ]}
               />
               <IconButton icon={Undo2} label="Angre (⌘Z)" onBand disabled={!state.past.length} onClick={() => dispatch({ type: 'undo' })} />
               <IconButton icon={Redo2} label="Gjør om (⇧⌘Z)" onBand disabled={!state.future.length} onClick={() => dispatch({ type: 'redo' })} />
-              <span className="band-sep" />
-              <Segmented<Tool>
-                onBand
-                label="Verktøy"
-                value={tool}
-                onChange={(t) => {
-                  if (t === 'brush' && !brush) pick({ kind: 'wall', ral: plateRal })
-                  else setTool(t)
-                }}
-                options={[
-                  { value: 'select', label: <><MousePointer2 size={14} /> Velg</>, kbd: 'V' },
-                  {
-                    value: 'brush',
-                    label: (
-                      <span className="brush-chip">
-                        {brushLabel.color ? <i className="dot" style={{ background: brushLabel.color }} /> : <Paintbrush size={14} />}
-                        {brushLabel.name}
-                      </span>
-                    ),
-                    kbd: 'P',
-                  },
-                  { value: 'erase', label: <><Eraser size={14} /> Tøm</>, kbd: 'E' },
-                ]}
-              />
-              {tool !== 'select' && brush?.kind === 'floor' && (
+              {view === 'plan' && <span className="band-sep" />}
+              {view === 'plan' && (
+                <Segmented<Tool>
+                  onBand
+                  label="Verktøy"
+                  value={tool}
+                  onChange={(t) => {
+                    if (t === 'brush' && !brush) pick({ kind: 'wall', ral: plateRal })
+                    else setTool(t)
+                  }}
+                  options={[
+                    { value: 'select', label: <><MousePointer2 size={14} /> Velg</>, kbd: 'V' },
+                    {
+                      value: 'brush',
+                      label: (
+                        <span className="brush-chip">
+                          {brushLabel.color ? <i className="dot" style={{ background: brushLabel.color }} /> : <Paintbrush size={14} />}
+                          {brushLabel.name}
+                        </span>
+                      ),
+                      kbd: 'P',
+                    },
+                    { value: 'erase', label: <><Eraser size={14} /> Tøm</>, kbd: 'E' },
+                  ]}
+                />
+              )}
+              {view === 'plan' && tool !== 'select' && brush?.kind === 'floor' && (
                 <Segmented<string>
                   onBand
                   label="Penselstørrelse"
@@ -233,22 +249,54 @@ export default function App() {
             <Rail v={v} res={res} tab={tab} setTab={setTab} tool={tool} brush={brush} pick={pick} onEdit={onEdit} onToast={showToast} />
             <main className="stage">
               <div className="plan-wrap">
-                <PlanView
-                  v={v}
-                  res={res}
-                  tool={tool}
-                  brush={brush}
-                  floorSize={floorSize}
-                  highlight={highlight}
-                  selection={selection}
-                  onSelect={setSelection}
-                  onEdit={onEdit}
-                  onCheckpoint={onCheckpoint}
-                  onToast={showToast}
-                />
+                {view === 'plan' ? (
+                  <PlanView
+                    v={v}
+                    res={res}
+                    tool={tool}
+                    brush={brush}
+                    floorSize={floorSize}
+                    highlight={highlight}
+                    selection={selection}
+                    onSelect={setSelection}
+                    onEdit={onEdit}
+                    onCheckpoint={onCheckpoint}
+                    onToast={showToast}
+                  />
+                ) : (
+                  <Suspense fallback={<div className="stage-empty">Laster 3D …</div>}>
+                    <Scene3D
+                      v={v}
+                      res={res}
+                      highlight={highlight}
+                      selection={selection}
+                      onSelect={setSelection}
+                      onEdit={onEdit}
+                      onCheckpoint={onCheckpoint}
+                      onToast={showToast}
+                    />
+                    <div className="minimap">
+                      <PlanView
+                        mini
+                        v={v}
+                        res={res}
+                        tool="select"
+                        brush={null}
+                        floorSize={floorSize}
+                        highlight={null}
+                        selection={{}}
+                        onSelect={() => {}}
+                        onEdit={() => {}}
+                        onCheckpoint={() => {}}
+                        onToast={() => {}}
+                      />
+                      <IconButton icon={Maximize2} label="Vis plan" size={14} className="minimap-open" onClick={() => setView('plan')} />
+                    </div>
+                  </Suspense>
+                )}
                 {selection.wallId && tool === 'select' && <WallPopover v={v} wallId={selection.wallId} onEdit={onEdit} onClose={() => setSelection({})} />}
               </div>
-              <div className="stage-hint">{hint(tool, brush)}</div>
+              <div className="stage-hint">{view === '3d' ? HINT_3D : hint(tool, brush)}</div>
             </main>
             <CalcPanel res={res} name={v.name} onHover={setHighlight} onQuote={() => setPage('tilbud')} />
           </div>
@@ -276,6 +324,8 @@ export default function App() {
     return { name, color: r?.variant.color }
   }
 }
+
+const HINT_3D = 'Dra for å rotere · rull for å zoome · dra møbler eller en innervegg for å flytte · klikk en vegg for å redigere'
 
 function hint(tool: Tool, brush: Brush | null): string {
   if (tool === 'select') return 'Klikk en vegg for å endre den · dra en innervegg for å flytte den · dra møbler for å flytte dem · Delete fjerner valgt møbel'
