@@ -1,0 +1,17 @@
+/* Grid lines and fills (DESIGN-RULES §1, §3). Lines are information: only these four line tokens exist. */
+:root{
+  --g-col:rgb(var(--border) / .55); /* vertical day line — editable rows + date header only */
+  --g-row:rgb(var(--border) / .40); /* horizontal row line — where numbers are read across */
+  --g-phase:rgb(var(--border) / .50); /* above a phase subtotal */
+  --g-top:rgb(var(--border-strong)); /* start of a top-level group, nothing else */
+  --sec:color-mix(in oklab,rgb(var(--canvas)) 96%,rgb(var(--ink))); /* neutral section-row tint, never hue */
+  --row-hover:color-mix(in oklab,rgb(var(--canvas)) 97.5%,rgb(var(--ink)));
+  --row-band:color-mix(in oklab,rgb(var(--canvas)) 97%,rgb(var(--ink))); /* name line / project band */
+  --we-row:var(--sunken-2); /* weekend on a plain row */
+  --we-sec:color-mix(in oklab,var(--sunken-2) 95%,rgb(var(--ink))); /* weekend on a section row */
+  --we-top:color-mix(in oklab,var(--row-band) 94%,rgb(var(--ink))); /* weekend on a band row */
+  /* Context strip (Behov v3): where you write is one step darker; fields sit one more step down */
+  --zone:var(--sec);
+  --well:color-mix(in oklab,var(--zone) 93%,rgb(var(--ink)));
+  --well-hover:color-mix(in oklab,var(--zone) 88%,rgb(var(--ink)));
+}

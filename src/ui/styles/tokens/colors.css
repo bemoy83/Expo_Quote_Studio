@@ -1,0 +1,74 @@
+/* Expo Planner palette — from src/styles/tokens.css as mirrored in the v3 handoffs (Behov v3, Resultat v2, Innleid v9).
+   Neutrals are RGB triplets: rgb(var(--ink)), rgb(var(--ink) / .5). Everything else is a full colour. */
+:root{
+  /* Neutrals — warm paper */
+  --canvas:242 240 235; /* @kind color */ /* #f2f0eb page, grid, sticky panes */
+  --panel:250 249 246; /* @kind color */ /* #faf9f6 popovers, slide-overs */
+  --surface:255 255 255; /* @kind color */ /* selected segment, raised chips */
+  --sunken:231 228 221; /* @kind color */ /* #e7e4dd tracks, hovers outside the band */
+  --border:220 216 207; /* @kind color */ /* #dcd8cf hairline */
+  --border-strong:196 191 180; /* @kind color */ /* #c4bfb4 top-level group line, popover edge */
+  --ink:23 22 19; /* @kind color */ /* #171613 */
+  --ink-muted:91 89 83; /* @kind color */ /* #5b5953 */
+  --ink-faint:119 116 108; /* @kind color */ /* #77746c */
+  --ink-body:color-mix(in srgb,rgb(var(--ink)) 45%,rgb(var(--ink-muted)));
+  --sunken-2:color-mix(in srgb,rgb(var(--sunken)) 50%,rgb(var(--canvas))); /* weekend / alternate month */
+
+  /* Accent — Brent oransje is retired (v3 addendum, 2026-10-24): accent = ink.
+     Today line, today chip, selection ring, focus, counts, primary fills. */
+  --accent:var(--ink); /* @kind color */
+  --action-bg:252 235 219; /* @kind color */ /* open/selected ledger row */
+
+  /* Status (app tokens) */
+  --pos:#287c42; /* ok / within plan */
+  --over:#8f5e0a; /* dark ochre — TEXT ONLY, never a fill */
+  --neg:#c53637; /* under / over budget / destructive */
+  --committed:40 124 66; /* @kind color */
+  --draft:143 94 10; /* @kind color */
+  --danger:197 54 55; /* @kind color */
+
+  /* Needs action — golden ochre fill, ink text (proposed app token --over-fill) */
+  --over-fill:oklch(0.8 0.13 80);
+  --al-warn:var(--over-fill);
+  --al-block:#d27f66; /* blocking chip on the band, Tøm stroke frame */
+  --al-on:rgb(var(--ink));
+
+  /* Work phases (crew) = Kalender work tones */
+  --work-m:oklch(0.8 0.065 115); /* Opprigg, olive */
+  --work-d:oklch(0.8 0.075 42); /* Nedrigg, terracotta */
+  /* Event phases on the season bar */
+  --ph-a:color-mix(in oklab,oklch(0.56 0.13 250) 34%,#fff);
+  --ph-d:color-mix(in oklab,oklch(0.56 0.13 10) 34%,#fff);
+
+  /* Category (competence / line) colours — soft, ink text on top */
+  --line-blue:oklch(0.75 0.055 250);
+  --line-teal:oklch(0.75 0.055 175);
+  --line-green:oklch(0.75 0.055 115);
+  --line-amber:oklch(0.75 0.055 78);
+  --line-rose:oklch(0.75 0.055 40);
+  --line-violet:oklch(0.75 0.055 285);
+  --line-sky:oklch(0.75 0.055 212);
+  --line-plum:oklch(0.75 0.055 0);
+  --line-slate:oklch(0.75 0.01 90);
+  --on-line:#140c05;
+
+  /* Bars (Resultat) */
+  --bar-plan:oklch(0.79 0.012 90);
+  --bar-act:oklch(0.36 0.01 280);
+  --bar-over:oklch(0.56 0.16 22); /* carmine; maps to --neg in the app */
+  --bar-tick:rgb(var(--ink));
+}
+
+/* Mode / page band hue. Set data-band on the band (or html[data-vmode]). Nothing else may carry hue. */
+[data-band]{--b-band:oklch(0.86 calc(var(--bc) * .6) var(--bh));--b-line:oklch(0.7 calc(var(--bc) * .85) var(--bh));--b-track:oklch(0.79 calc(var(--bc) * .7) var(--bh));--b-ink:oklch(0.3 calc(var(--bc) * .55) var(--bh));--b-mute:oklch(0.42 calc(var(--bc) * .6) var(--bh));--b-recess:color-mix(in oklab,var(--b-band) 88%,rgb(var(--ink)))}
+[data-band="olive"]{--bh:115 /* @kind other */;--bc:.09 /* @kind other */} /* Kalender · Plan */
+[data-band="gran"]{--bh:195 /* @kind other */;--bc:.06 /* @kind other */} /* Bemanning · Faste */
+[data-band="fjord"]{--bh:235 /* @kind other */;--bc:.065 /* @kind other */} /* Bemanning · Innleid */
+[data-band="lyng"]{--bh:300 /* @kind other */;--bc:.06 /* @kind other */} /* Behov */
+[data-band="indigo"]{--bh:285 /* @kind other */;--bc:.07 /* @kind other */} /* Resultat */
+[data-band="skifer"]{--bh:255 /* @kind other */;--bc:.03 /* @kind other */}
+[data-band="sand"]{--bh:85 /* @kind other */;--bc:.025 /* @kind other */}
+
+
+/* Dark — neutrals mirrored from the app theme */
+.dark{--canvas:15 15 14 /* @kind color */;--panel:23 23 21 /* @kind color */;--surface:31 31 28 /* @kind color */;--sunken:10 10 9 /* @kind color */;--border:38 38 35 /* @kind color */;--border-strong:58 57 53 /* @kind color */;--ink:243 242 238 /* @kind color */;--ink-muted:166 164 157 /* @kind color */;--ink-faint:123 122 115 /* @kind color */;--action-bg:48 30 16 /* @kind color */;--ink-body:color-mix(in srgb,rgb(var(--ink)) 60%,rgb(var(--ink-muted)));--sunken-2:color-mix(in srgb,rgb(var(--sunken)) 50%,rgb(var(--panel)));--pos:#6fd087;--over:#f2b54f;--neg:#f97770;--al-block:rgb(var(--danger));--committed:111 208 135 /* @kind color */;--draft:242 181 79 /* @kind color */;--danger:249 119 112 /* @kind color */}

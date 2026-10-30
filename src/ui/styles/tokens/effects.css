@@ -1,0 +1,13 @@
+:root{
+  --raise:0 1px 2px rgb(0 0 0 / .12); /* selected segment, raised chip, brush chip */
+  --pop:0 12px 32px rgb(0 0 0 / .2),0 1px 3px rgb(0 0 0 / .1); /* popovers, menus, tooltips */
+  --slide:-16px 0 40px rgb(0 0 0 / .14),-1px 0 0 rgb(var(--border)); /* slide-over */
+  --recess-shade:inset 0 3px 4px -2px color-mix(in oklab,rgb(var(--ink)) 22%,transparent); /* key-figure half of the band */
+  --focus-ring:0 0 0 1.5px rgb(var(--ink) / .5); /* field focus in a well */
+  --focus-primary:0 0 0 3px rgb(var(--ink) / .25); /* ink button focus */
+  --sel-ring:inset 0 0 0 1.5px rgb(var(--accent)); /* selected block */
+  --ease:cubic-bezier(.4,0,.2,1); /* @kind other */
+  --dur:150ms; /* @kind other */
+  --dur-slide:200ms; /* @kind other */
+}
+@keyframes ep-slide{from{transform:translateX(24px);opacity:0}}

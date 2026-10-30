@@ -1,0 +1,19 @@
+/* Signal language (DESIGN-RULES §8): the SHAPE says what kind of information it is. */
+:root{
+  --sig-dot:8px; /* circle = what something is (category, status, line colour) */
+  --sig-sq:8px; /* square = time / quantity (phases), same shape as the bars */
+  --sig-sq-r:2px;
+  --sig-warn:7px; /* ochre attention marker, + 2px halo */
+  --sig-r:4px; /* rounded rect = a graded number (heat tile) */
+  /* Avvik heat (three states, same in every view) */
+  --heat-under:var(--neg); /* 22→85 % by size, white figure past 50 % */
+  --heat-ok:var(--pos); /* flat 20 % (Kalender) / 14 % (Resultat t0) */
+  --heat-over:var(--over); /* 18→55 %, capped below red */
+  /* Review grades (Resultat, by share): t0 <3 % · t1 <10 % · t2 <25 % · t3 ≥25 % */
+  --grade-t0:color-mix(in oklab,var(--pos) 14%,rgb(var(--canvas)));
+  --grade-t1:color-mix(in oklab,var(--over) 16%,rgb(var(--canvas)));
+  --grade-t2:color-mix(in oklab,var(--over) 30%,rgb(var(--canvas)));
+  --grade-t3:color-mix(in oklab,var(--neg) 28%,rgb(var(--canvas)));
+  /* Waiting for an answer = hatch (135°), never a colour */
+  --hatch-gap:5.5px;
+}

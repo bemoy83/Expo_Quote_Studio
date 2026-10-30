@@ -1,0 +1,21 @@
+:root{
+  --ctl-h:32px; /* EVERY button, icon button, input, picker, chip, segmented track */
+  --ctl-in:3px; /* segmented track inset → 26px pills */
+  --ctl-r:8px;
+  --row-ctl-min:40px; /* a row that holds a control */
+  --top-h:52px; /* top nav */
+  --page-pad-x:24px; /* band, rows, strip */
+  --band-pad:14px 24px; /* band header */
+  --kpi-pad:12px 24px 14px; /* recessed key-figure half */
+  --kpi-gap:8px 40px;
+  /* Grid geometry */
+  --left-w:360px; /* sticky label column (Innleid); Resultat 264px */
+  --day-w:116px; /* Innleid day column */
+  --date-head-h:44px; --sec-h:28px; --need-h:40px; --need-h-compact:32px;
+  --name-h:32px; --shift-h:40px; --ledger-head-h:54px; --ledger-row-h:46px; --ledger-sec-h:30px;
+  --lane-inset:5px; /* run block inset at run ends */
+  /* Radii */
+  --r-sig:2px; --r-tile:4px; --r-block:5px; --r-sm:6px; --r-pill:7px; --r-ctl:8px; --r-track:10px; --r-pop:12px;
+  /* Panels */
+  --pop-w:328px; --slide-w:440px; --slide-w-sm:380px;
+}
