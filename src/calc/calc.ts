@@ -10,7 +10,7 @@ import { RECIPES } from '../foga/recipes';
 import type { FogaStructure } from '../foga/structure';
 import { fogaPart } from '../foga/parts';
 import { DEFAULT_PRICING, ITEM, type PricingData } from '../pricing/data';
-import { dgOf, priceLine, type Strategy, type Transfer, type Use } from '../pricing/model';
+import { addTime, dgOf, priceLine, type Strategy, type Time, type Transfer, type Use } from '../pricing/model';
 import type { Rules } from '../rules/rules';
 import { layoutBeams, type BeamLayout } from './beams';
 import { production, type Production } from './production';
@@ -39,8 +39,8 @@ export interface CalcLine {
   transfer: Transfer | 'blandet' | null;
   /** Shown to the customer when the product is part rental, part sale. */
   terms?: string;
-  /** Montør hours in the line's items (handling and montering on site). */
-  hours: number;
+  /** Minutes per handling step for the whole line (from the OMS price list or the product). */
+  time: Time;
 }
 
 /** One main group of the product grouping, lines in subgroup order. */
@@ -73,8 +73,8 @@ export interface KeyFigures {
   floorTotal: number;
   textileM2: number;
   foilM2: number;
-  /** Montør hours in the products priced as a sum (handling and montering on site). In the prices, not a line. */
-  hours: number;
+  /** Minutes per handling step for the whole stand. In the prices, not a line; the work order plans from it. */
+  time: Time;
 }
 
 /** Internal margin of the whole variant. Never on the quote. */
@@ -121,7 +121,14 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, pricing: Pricin
     const hit = idx.byArtnr.get(artnr);
     const q = hit?.product.unit === 'stk' ? qty : r1(qty);
     const cost = hit?.variant.cost;
-    const p = priceLine(q, hit?.product.pricing ?? 'fast', { price: own ?? hit?.variant.price ?? 0, ...(cost !== undefined && own === undefined ? { cost } : {}) }, uses, items);
+    const t = hit?.product.time;
+    const p = priceLine(
+      q,
+      hit?.product.pricing ?? 'fast',
+      { price: own ?? hit?.variant.price ?? 0, ...(cost !== undefined && own === undefined ? { cost } : {}), ...(t ? { time: t } : {}) },
+      uses,
+      items,
+    );
     return {
       name: hit ? displayName(hit) : artnr,
       qty: q,
@@ -137,7 +144,7 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, pricing: Pricin
       strategy: p.strategy,
       transfer: p.transfer,
       ...(p.transfer === 'blandet' ? { terms: pricing.terms[hit?.product.id ?? ''] ?? 'Delvis leie, delvis kjøp' } : {}),
-      hours: p.hours,
+      time: p.time,
       ...extra,
     };
   };
@@ -278,7 +285,7 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, pricing: Pricin
       dg: null,
       strategy: 'fast',
       transfer: null,
-      hours: 0,
+      time: {},
     })),
   );
 
@@ -287,6 +294,7 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, pricing: Pricin
     return { id: group.id, name: group.name, lines: ls, sum: ls.reduce((a, l) => a + l.sum, 0), cost: ls.reduce((a, l) => a + (l.cost ?? 0), 0) };
   });
 
+  const time = lines.reduce<Time>((a, l) => addTime(a, l.time), {});
   const known = lines.filter((l) => l.cost !== null);
   const knownSum = known.reduce((a, l) => a + l.sum, 0);
   const knownCost = known.reduce((a, l) => a + l.cost!, 0);
@@ -310,7 +318,7 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, pricing: Pricin
       floorTotal,
       textileM2: prod.area,
       foilM2: foilFull + foilDecal,
-      hours: lines.reduce((a, l) => a + l.hours, 0),
+      time,
     },
     beams,
     posts: [...allPosts.values()],

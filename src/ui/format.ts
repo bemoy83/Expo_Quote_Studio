@@ -6,6 +6,9 @@ export function fmt(n: number, decimals = 1): string {
     .replace('-', '−');
 }
 
+/** Minutes shown as hours with one decimal. */
+export const hours = (min: number) => fmt(min / 60, 1);
+
 export const kr = (n: number) => fmt(Math.round(n), 0);
 
 export const signed = (n: number) => (n > 0 ? '+' : '') + kr(n);

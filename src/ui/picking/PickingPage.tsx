@@ -2,12 +2,12 @@
 // from the Foga engine (src/foga), counted from the same structure as the quote; everything else from the calc
 // lines that are not built from Foga parts. Services and loose quote lines are not picked. Rules: docs/foga-system.md.
 import type { CalcResult } from '../../calc/calc'
-import { groupItems, resolveGroup } from '../../catalog/groups'
+import { groupItems } from '../../catalog/groups'
 import type { Variant } from '../../domain/types'
-import { plateName } from '../env'
 import { count, fmt } from '../format'
 import { PageBand } from '../shell/PageBand'
 import { VariantTabs } from '../shell/VariantTabs'
+import { pickRows } from './rows'
 
 interface Props {
   variants: Variant[]
@@ -16,48 +16,11 @@ interface Props {
   calcOf: (v: Variant) => CalcResult
 }
 
-interface PickRow {
-  key: string
-  group: string
-  code: string
-  title: string
-  /** Foga parts: what the piece is made of, or its cut lengths. */
-  detail?: string
-  preassembled?: boolean
-  lm?: number
-  qty: string
-}
-
 export function PickingPage({ variants, current, onSelect, calcOf }: Props) {
   const v = variants[current]
   const res = calcOf(v)
   const B = res.bom
-  // Calc lines first, so a door comes before the parts of its header
-  const rows: PickRow[] = [
-    ...res.groups
-      .flatMap((g) => g.lines)
-      .filter((l) => !l.foga && !resolveGroup(l.group).subgroup.notPicked)
-      .map((l) => ({ key: l.artnr + l.name, group: l.group, code: l.artnr, title: l.name, qty: `${fmt(l.qty, l.unit === 'stk' ? 0 : 1)} ${l.unit}` })),
-    ...B.lines.map((l) => ({
-      key: `${l.name}|${l.detail}`,
-      group: l.group,
-      code: l.ral ? `RAL ${l.ral}` : l.artnr,
-      title: l.ral ? `${l.name} · ${plateName(l.ral)}` : l.name,
-      detail: l.detail,
-      preassembled: l.preassembled,
-      lm: l.lm,
-      qty: `${l.qty} stk`,
-    })),
-    // The printed textile of each frame: not Foga, sold inside the textile wall product
-    ...res.production.pieces.map((p) => ({
-      key: `print|${p.pos}`,
-      group: 'prof.tekstil',
-      code: p.pos,
-      title: 'Trykt tekstil',
-      detail: `${p.pw} × ${p.ph} mm inkl. bleed`,
-      qty: '1 stk',
-    })),
-  ]
+  const rows = pickRows(res)
   const tree = groupItems(rows, (r) => r.group)
   const sum = (f: (l: (typeof B.lines)[number]) => boolean) => B.lines.filter(f).reduce((a, l) => a + l.qty, 0)
   const units = sum((l) => l.preassembled)

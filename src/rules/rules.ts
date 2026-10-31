@@ -35,6 +35,8 @@ export interface Rules {
   textile: { depth: number; minWidth: number; inFrame: InFrameParams };
   door: { swing: number };
   floor: { cell: number };
+  /** A quote holds `validDays` from it is sent, but never later than `beforeMount` days before montering. */
+  quote: { validDays: number; beforeMount: number };
   /** VAT used for the inkl. mva. figure. Prices are always eks. mva. */
   vat: number;
 }
@@ -57,6 +59,7 @@ export const RULES: Rules = {
   },
   door: { swing: 0.9 },
   floor: { cell: 0.5 },
+  quote: { validDays: 30, beforeMount: 14 },
   vat: 0.25,
 };
 

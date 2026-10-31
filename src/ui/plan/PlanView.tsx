@@ -3,6 +3,7 @@
 // draw order never decides what can be clicked.
 import { useEffect, useMemo, useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent, type SVGProps } from 'react'
 import type { CalcResult } from '../../calc/calc'
+import { mainGroupOf } from '../../catalog/groups'
 import { defaultSwing, eraseWalls, isPerimeterWall, paintFloor, paintWalls, segmentKeys, setOpening } from '../../domain/edit'
 import { CELL, parseCellKey, pointAlong, sideLength, sidePoint, wallDirection, wallLength, type Module } from '../../domain/grid'
 import { addObject, conflicts, footprintBox, moveObject, removeObject } from '../../domain/objects'
@@ -46,7 +47,12 @@ interface Props {
   mini?: boolean
   /** Motif library, for the decal ratio when a motif is put on a wall panel. */
   motifs?: Motif[]
+  /** Main groups (catalog/groups.ts) to show at full strength; the rest are dimmed. All when left out. */
+  groups?: ReadonlySet<string>
 }
+
+/** Main group of each plan layer. Objects go by their own product. */
+const LAYER_GROUP: Record<Exclude<Highlight, null | 'objects'>, string> = { walls: 'vegg', beams: 'vegg', openings: 'vegg', floor: 'gulv', textile: 'prof', foil: 'prof' }
 
 /** Margin around the stand for the aisle and the side labels, m. */
 export const PLAN_MARGIN = 1.3
@@ -346,7 +352,9 @@ export function PlanView(p: Props) {
     if (r.toast) p.onToast(r.toast)
   }
 
-  const dim = (layer: Exclude<Highlight, null>) => (highlight && highlight !== layer ? DIMMED : 1)
+  const off = (group: string) => !!p.groups && !p.groups.has(group)
+  const dim = (layer: Exclude<Highlight, null>) =>
+    (highlight && highlight !== layer) || (layer !== 'objects' && off(LAYER_GROUP[layer])) ? DIMMED : 1
   const cursor = tool !== 'select' ? 'crosshair' : roomCursor()
   function roomCursor() {
     const d = drag.current
@@ -501,7 +509,7 @@ export function PlanView(p: Props) {
             <Seg key={i} a={s.from} b={s.to} stroke={INK_MUTED} strokeWidth={0.05} strokeDasharray=".16 .08" />
           ))}
         </g>
-        <g opacity={highlight && highlight !== 'walls' && highlight !== 'beams' ? DIMMED : 1}>
+        <g opacity={(highlight && highlight !== 'walls' && highlight !== 'beams') || off('vegg') ? DIMMED : 1}>
           {res.posts.map((q) => (
             <rect key={`${q[0]},${q[1]}`} x={q[0] - 0.04} y={q[1] - 0.04} width={0.08} height={0.08} fill={INK} />
           ))}
@@ -519,10 +527,11 @@ export function PlanView(p: Props) {
           const sel = selection.objectId === o.id
           const stroke = isBad ? BLOCK : INK
           const sw = isBad ? 0.06 : sel ? 0.05 : 0.018
+          const op = off(mainGroupOf(productOf(o.product)?.group)) ? DIMMED : undefined
           return f.round ? (
-            <circle key={o.id} cx={o.x} cy={o.y} r={f.w / 2} fill={col} stroke={stroke} strokeWidth={sw} style={{ cursor: tool === 'select' ? 'move' : undefined }} />
+            <circle key={o.id} cx={o.x} cy={o.y} r={f.w / 2} fill={col} stroke={stroke} strokeWidth={sw} opacity={op} style={{ cursor: tool === 'select' ? 'move' : undefined }} />
           ) : (
-            <rect key={o.id} x={b.x0} y={b.y0} width={b.x1 - b.x0} height={b.y1 - b.y0} rx={0.03} fill={col} stroke={stroke} strokeWidth={sw} />
+            <rect key={o.id} x={b.x0} y={b.y0} width={b.x1 - b.x0} height={b.y1 - b.y0} rx={0.03} fill={col} stroke={stroke} strokeWidth={sw} opacity={op} />
           )
         })}
       </g>
@@ -601,10 +610,11 @@ export function PlanView(p: Props) {
 const noop = () => {}
 
 /** Read-only plan: the quote's sketch and the 3D view's mini map. */
-export function PlanPreview({ v, res, mini }: { v: Variant; res: CalcResult; mini?: boolean }) {
+export function PlanPreview({ v, res, mini, groups }: { v: Variant; res: CalcResult; mini?: boolean; groups?: ReadonlySet<string> }) {
   return (
     <PlanView
       mini={mini}
+      groups={groups}
       v={v}
       res={res}
       tool="select"

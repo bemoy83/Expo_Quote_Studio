@@ -59,7 +59,10 @@ eget utstyr (henge en hylle fra IKEA på veggen). I appen heter den «Arbeidstim
 
 Med sum følger prisen tegningen. Stolper som deles mellom naboer telles én gang, en tekstilvegg prises etter sin
 størrelse, og en takdrager etter sine lengder og egne stolper. Derfor kan prisen per meter variere litt fra stand til
-stand. Mangler en artikkelpris, faller linjen tilbake til produktets egen pris og kalkylen viser at kosten mangler.
+stand. Bjørn 31.10.2026: slik skal det være, prisen følger tegningen. Naboelementer deler stolper, og hver modul
+(også dør og forheng) bærer en lik andel av veggstolpene. Uten tegning, for eksempel 10 vegger lagt i en handlekurv,
+prises hvert element frittstående med to stolper. Kanskje skal vegger bare kunne bestilles tegnet, men da må
+plantegningen åpnes for kunden. Mangler en artikkelpris, faller linjen tilbake til produktets egen pris og kalkylen viser at kosten mangler.
 
 ### Veiledende pris
 OMS setter pris per artikkel. Anbefalt modell:
@@ -70,11 +73,25 @@ OMS setter pris per artikkel. Anbefalt modell:
   prosjekteres og bygges kan ha et annet mål enn en stol som kjøpes inn, lagres og flyttes.
 - DG er valgt framfor påslag fordi selgeren ser DG i kalkylen når hen gir rabatt, og da er det samme tall.
 
+### Tid per håndteringssteg
+Tid lagres i minutter per steg: **plukk, vask, transport, forhåndsmontering, montering og demontering**. Demontering har
+egen tid (Bjørn 31.10.2026). Tid er både kost (minutter × timepris, regnet i OMS) og plan på arbeidsordren, så den følger
+hver artikkel og hvert produkt som egen størrelse, også når kronene er regnet ut på forhånd. I appen er det `time` på
+`PriceItem` (sum-produkter) og på produktet (faste produkter).
+
 ## 5. Kalkyle og tilbud
 
 - **Kalkylen** (internt) viser per linje: pris, kost, DG og strategi (sum eller fast). Den viser også DG per gruppe,
   og kost, DB og DG for hele standen. Linjer uten kost står uten margin og telles opp. Selgeren trenger margin fordi
   det kan bli gitt rabatt.
+- **Gyldighet**: tilbudet gjelder 30 dager fra det sendes, men aldri lenger enn 14 dager før montering
+  (`rules.quote`). Datoene for montering, åpning og demontering ligger på prosjektet. De er plassholdere i appen og
+  skal komme fra prosjektet i OMS via API.
+- **Arbeidsordren** (prototype i appen) viser leveranse, forventet tid fra ordren påbegynnes til den er signert
+  levert (plukk, forhåndsmontering, transport og montering) per produktgruppe, plukkliste, standskisse og trykkliste.
+  Vask og demontering skjer etter messen. De ligger i systemet for planlegging, men vises ikke på arbeidsordren
+  (Bjørn 31.10.2026). Arbeidsordren kan filtreres på produktgruppe, slik at tepper går til teppelegger og
+  standkonstruksjon til standbygger. Grupper som er filtrert bort dempes i skissen. Mannskap og tidspunkt settes i OMS.
 - **Tilbudet** viser aldri kost, DB eller DG. Er et produkt dels leie og dels kjøp, får linjen en tekst til kunden,
   for eksempel «Leie av ramme, kjøp av trykt tekstil».
 
@@ -96,12 +113,26 @@ I appen i dag er dette `PriceItem` og `PricingData` i `src/pricing/`, `pricing` 
 - Kunderabatt og prislister per kunde eller messe. Kan eksponeres via API.
 - Ramme (leie) og trykk (salg, kan gjenbrukes) solgt hver for seg, slik at faste kunder kan leie rammen på nytt.
 
-## 8. Åpne spørsmål
+## 8. Avklart 31.10.2026
 
-1. **Tilpasning utenfor sortiment**: egen pris eller påslag? Gjelder det per kapp, per meter eller i prosent?
-2. **Stolper delt mellom moduler**: appen gir hver modul (også dør og forheng) en lik andel av veggstolpene. Er det
-   riktig, eller skal vegg selges med to stolper per meter som før (nominell bundle)?
-3. **Takdrager og støttestag**: appen bruker standardlengder for takdrager (1–6 m) og meterpris for støttestag, fordi
-   stagene følger tekstilhøyden. Stemmer det med sortimentet?
-4. **DG-mål** per hovedgruppe: hvilke tall? Eksempeltallene i appen er bare plassholdere.
-5. **Eie-formelen**: skal lagerkost være per enhet og år, eller fordeles på en annen måte?
+Bjørn svarte på de åpne spørsmålene. Oversikten over hele modellen, med moduler og flyt fra OMS til arbeidsordre, står i
+dokumentet «Expo Quote Studio i OMS: hele modellen».
+
+- **Foga-motoren** hører til Expo Quote Studio. Disker, podier og snekkervegger skal bygge på samme motor, i plan og 3D.
+- **Tegningen er en oppskrift**: artikler og koordinater lagres med tilbudet og følger det gjennom hele systemet,
+  også til plukklisten. Ikke noe vi bygger nå.
+- **Lagerstatus** vises mens det tegnes, men kommer senere fra OMS og følger prosjektet.
+- **Gyldighet**: prisen låses når tilbudet sendes og gjelder 30 dager. Tiden igjen til prosjektet styrer også.
+- **Spesialmål**: fast påslag per kapp, til vi lager en motor som regner det selv. Motoren kommer i et eget løp
+  senere, sammen med disker, podier og snekkervegger.
+- **DG-mål**: eksempeltallene brukes til ekte tall finnes.
+- **Lagerkost** i eie-formelen er per enhet og år.
+- **Tid**: demontering har egen tid ved siden av montering. Montørene rapporterer faktisk tid per produktgruppe, og
+  etterkalkylen i OMS forbedrer tidene.
+- **Takdrager** i standardlengder 1–6 m og **støttestag** per meter stemmer. 0,5 m takdrager finnes som særtilfelle,
+  utenfor standardlengdene.
+- **Veggpris** følger tegningen (se kapittel 4).
+
+## 9. Åpent
+
+Ingenting akkurat nå. Fristen før montering er 14 dager.

@@ -25,6 +25,7 @@ import { PickingPage } from './picking/PickingPage'
 import { ProductionPage } from './production/ProductionPage'
 import { QuotePage } from './quote/QuotePage'
 import { TopNav, type Page } from './shell/TopNav'
+import { WorkOrderPage } from './workorder/WorkOrderPage'
 import { VariantTabs } from './shell/VariantTabs'
 import { FLOOR_SIZES, type Brush, type FloorSize, type Highlight, type Tool } from './tools'
 
@@ -369,6 +370,8 @@ export default function App() {
         />
       ) : page === 'plukkliste' ? (
         <PickingPage variants={sketch.variants} current={current} onSelect={selectVariant} calcOf={calcOf} />
+      ) : page === 'arbeidsordre' ? (
+        <WorkOrderPage project={sketch.project} variants={sketch.variants} current={current} onSelect={selectVariant} calcOf={calcOf} />
       ) : (
         <CatalogPage onToast={showToast} />
       )}

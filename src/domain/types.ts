@@ -164,7 +164,15 @@ export interface ProjectField {
   value: string;
 }
 
+/** When the stand is built, opens and is taken down. ISO dates (YYYY-MM-DD). Placeholder: later from the OMS project. */
+export interface Delivery {
+  montering?: string;
+  apning?: string;
+  demontering?: string;
+}
+
 /** Customer name, project and stand no. are fixed fields; more can be added. */
 export interface Project {
   fields: ProjectField[];
+  delivery?: Delivery;
 }
