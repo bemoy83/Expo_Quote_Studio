@@ -58,6 +58,7 @@ export const FOGA_PARTS: readonly FogaPart[] = [
   profile('01TX', '873 801 22', 'Tekstilprofil, veggmontert', 'fabric', [15.5, 25.5]),
   profile('60BTX', '873 813 22', 'Tekstilprofil, 60 mm', 'fabric', [60, 65.5]),
   profile('80TX', '873 810 22', 'Tekstilprofil, 80 mm for baklys', 'fabric', [80, 40]),
+  profile('92LTX', '873 809 22', 'Tekstilprofil, hjørne', 'fabric', [57, 40]),
   // Couplings and connectors
   part('600', '871 003 92', 'Kobling med justerbart hode'),
   part('604', '871 031 92', 'Forlenger i kanal'),

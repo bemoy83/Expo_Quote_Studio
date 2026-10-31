@@ -23,12 +23,30 @@ export interface FrameSpec {
   braces: { qty: number; length: number } | null;
 }
 
+/** One frittstående tekstilvegg run. Sizes as built, mm. */
+export interface FreeFrameSpec {
+  /** Production position, F1, F2 … */
+  pos: string;
+  H: number;
+  /** Cut lengths of the top rail, and the same again for the bottom rail. */
+  railCuts: number[];
+  /** 43TX uprights at the free ends, H long. */
+  uprights: number;
+  /** Feet, each with an upright brace above it. */
+  supports: number;
+  braceLength: number;
+}
+
 export interface FogaStructure {
   /** Posts: every wall point and every point a takdrager needs. All are the same post (94 with foot). */
   posts: number;
   modules: ModuleSpec[];
   beams: BeamSpec[];
   frames: FrameSpec[];
+  /** Frittstående tekstilvegger. */
+  freeFrames?: FreeFrameSpec[];
+  /** 92LTX corner posts shared by two free-standing runs, each `H` long. */
+  cornerPosts?: { qty: number; H: number };
   /** Plates (RAL) picked to swap into a stand wall the organiser builds: plate only, the wall is not in `modules`. */
   swaps?: string[];
 }

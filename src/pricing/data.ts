@@ -29,16 +29,22 @@ export const ITEM = {
   braceM: 'stag-90-m',
   bracePiece: 'stag-90-stk',
   frameProfileM: '43TX',
+  cornerPostM: '92LTX',
   corner: '613',
   wallFixing: '520',
+  foot: '740',
   print: 'trykk',
+  white: 'tekstil-hvit',
   module: 'montering-modul',
   /** Swapping the plate of an existing stand wall: plate out and the new one in, both ways. */
   plateSwap: 'platebytte',
   beamLm: 'montering-takdrager',
   beamPost: 'montering-takdragerstolpe',
   frame: 'handtering-ramme',
-  textileM2: 'montering-tekstil',
+  /** Free-standing frame, up and down, per coupling (Bjørn 31.10.2026). */
+  frameCoupling: 'montering-ramme-kobling',
+  /** Textile pressed into the frame along its whole perimeter, up and down. */
+  textileEdge: 'montering-tekstil-omkrets',
 } as const;
 
 // Takdrager 292 in every standard length (centres 1–6 m, cut 40 shorter), couplings mounted
@@ -62,25 +68,31 @@ const ITEMS: PriceItem[] = [
   item(ITEM.bracePiece, 'Støttestag 90, kobling og håndtering per stk', 'stk', 10, 20, pvt(0.5, 0.5, 0.5)),
   // Level 3 picked directly (textile walls have no article)
   item(ITEM.frameProfileM, '43TX, per meter', 'm', 4, 10),
+  item(ITEM.cornerPostM, '92LTX hjørnestolpe, per meter', 'm', 7, 16),
   item(ITEM.corner, '613 hjørnekobling', 'stk', 1.5, 4),
   item(ITEM.wallFixing, '520 brakett', 'stk', 2, 5),
+  item(ITEM.foot, '740 fotplate 400 × 400 mm', 'stk', 8, 18, pvt(0.5, 0.5, 0.5)),
+  // Textile is sold (the customer keeps it and can bring it back)
   item(ITEM.print, 'Trykt tekstil med silikonkant, per m²', 'm²', 260, 470, undefined, 'salg'),
+  item(ITEM.white, 'Hvit tekstil med silikonkant, per m²', 'm²', 150, 280, undefined, 'salg'),
   // Handling that belongs to the product (montering on site, up and down), at the montør's rate
   item(ITEM.module, 'Montering per veggmodul', 'stk', 325, 590, onSite(18, 12)),
   item(ITEM.plateSwap, 'Platebytte i eksisterende vegg', 'stk', 110, 200, onSite(6, 4)),
   item(ITEM.beamLm, 'Montering takdrager per meter', 'm', 98, 175, onSite(6, 3)),
   item(ITEM.beamPost, 'Montering takdragerstolpe', 'stk', 163, 295, onSite(9, 6)),
   item(ITEM.frame, 'Håndtering av løse rammedeler per ramme', 'stk', 80, 140, pvt(3, 2, 2)),
-  item(ITEM.textileM2, 'Montering tekstil per m²', 'm²', 228, 380, onSite(14, 7)),
+  item(ITEM.frameCoupling, 'Montering ramme per kobling', 'stk', 35, 60, onSite(2, 1)),
+  item(ITEM.textileEdge, 'Montering tekstil per meter omkrets', 'm', 70, 120, onSite(4, 2)),
 ];
 
 export interface PricingData {
   items: PriceList;
-  /** By product id: what the quote tells the customer when a product is part rental, part sale. */
+  /** By product id, or by the quote key of lines the quote shows as one: what the quote tells the customer when it is
+   *  part rental, part sale. */
   terms: Record<string, string>;
 }
 
 export const DEFAULT_PRICING: PricingData = {
   items: new Map(ITEMS.map((x) => [x.id, x])),
-  terms: { '8000': 'Leie av ramme, kjøp av trykt tekstil' },
+  terms: { tekstil: 'Leie av ramme, kjøp av tekstil', '8040': 'Kjøp av tekstil, montering inkludert', '8041': 'Kjøp av tekstil, montering inkludert' },
 };

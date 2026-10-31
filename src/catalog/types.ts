@@ -1,3 +1,4 @@
+import type { TextileFill } from '../domain/types';
 import type { Strategy, Time } from '../pricing/model';
 
 /** surface: floor, wall (drawn with a brush) · object: placed and drawn · counted: only a quantity · system: build parts the calc derives */
@@ -58,8 +59,12 @@ export interface SystemParts {
   plateSwap: string;
   /** Takdrager per metre, posts included. */
   beam: string;
-  /** Textile wall (frame rental + print), price per m² of B × H, sold per piece. */
+  /** InFrame textile frame on a system wall (rental), price per m² of B × H, sold per piece. */
   textile: string;
+  /** Free-standing textile wall frame (rental), per metre. */
+  freeTextile: string;
+  /** Textile per m² of visible face, by what it is: printed, white, or the customer's own (mounting only). */
+  textileFill: Record<TextileFill, string>;
   foil: string;
   foilFull: string;
   floorProtection: string;

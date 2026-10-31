@@ -1,7 +1,9 @@
-import type { TextileWall, Variant, Wall } from '../domain/types';
+import type { TextileFill, TextileWall, Variant, Wall } from '../domain/types';
 import { standWallSide } from '../domain/walls';
+import { RECIPES } from '../foga/recipes';
 import type { InFrameParams } from '../rules/rules';
 import { framePiece, fullHeight, printFileName, type FramePiece } from './fabric';
+import { cornerPosts, freeFrames, type FreeFrame } from './freeFrames';
 
 export interface ProductionPiece extends FramePiece {
   pos: string;
@@ -9,15 +11,22 @@ export interface ProductionPiece extends FramePiece {
   wall: string;
   /** Offset along the wall, mm. */
   at: number;
+  fill: TextileFill;
   motif: string | null;
-  fileName: string;
+  /** Print file name, for a printed textile only. */
+  fileName: string | null;
 }
 
 export interface Production {
+  /** InFrame frames on system walls. */
   pieces: ProductionPiece[];
-  /** Print area including bleed, m². */
+  /** Frittstående tekstilvegger, each with textile on both faces. */
+  free: FreeFrame[];
+  /** 92LTX corner posts, each shared by two free-standing runs. */
+  cornerPosts: number;
+  /** Textile area including bleed, all frames and faces, m². */
   area: number;
-  /** Aluminium profile including braces, m. */
+  /** Aluminium profile including braces, InFrame frames, m. */
   lm: number;
 }
 
@@ -46,19 +55,24 @@ export function production(v: Variant, s: InFrameParams, customer: string): Prod
     if (!w) return;
     const pos = `T${pieces.length + 1}`;
     const p = framePiece(mm(t.width), s, textileHeightMm(t, s));
+    const fill = t.fill ?? 'print';
     pieces.push({
       ...p,
       pos,
       textileId: t.id,
       wall: wallLabel(w),
       at: mm(t.from),
-      motif: t.motif ?? null,
-      fileName: printFileName(customer, pos, p),
+      fill,
+      motif: fill === 'print' ? (t.motif ?? null) : null,
+      fileName: fill === 'print' ? printFileName(customer, pos, p) : null,
     });
   });
+  const free = freeFrames(v, RECIPES.freeFrame, s, customer);
   return {
     pieces,
-    area: pieces.reduce((a, p) => a + p.area, 0),
+    free,
+    cornerPosts: cornerPosts(v).length,
+    area: pieces.reduce((a, p) => a + p.area, 0) + free.reduce((a, f) => a + f.faces[0].printArea + f.faces[1].printArea, 0),
     lm: pieces.reduce((a, p) => a + p.lm, 0),
   };
 }

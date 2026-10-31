@@ -27,6 +27,25 @@ export interface FrameRecipe {
   wallFixing: { code: string; perFrame: number };
 }
 
+/** Frittstående tekstilvegg: a 43TX frame on foot plates, textile on both faces (Bjørn 31.10.2026). */
+export interface FreeFrameRecipe {
+  /** Frame profile: top and bottom rail, and the upright at a free end (mitred, 613 in each corner). */
+  profile: string;
+  corner: string;
+  /** Shared upright where two runs meet at a right angle. It replaces both runs' 43TX uprights there. */
+  cornerPost: string;
+  /** Upright brace and its couplings, one at every foot. */
+  brace: string;
+  braceCoupling: { code: string; perEnd: number };
+  /** Foot plate under the frame, one per support. */
+  foot: string;
+  /** Longest top or bottom rail before it is spliced in its length (the frame stays one rectangle), mm. */
+  maxRail: number;
+  /** Feet and braces: at least `min`, evenly spread, the outer ones at most `maxEnd` in from the frame ends, at most
+   *  `maxGap` apart, mm. */
+  support: { min: number; maxEnd: number; maxGap: number };
+}
+
 export interface BeamRecipe {
   /** Takdrager profile; one piece per beam length (max 6 m, see rules.beam.max), cut between the posts. */
   profile: string;
@@ -46,6 +65,7 @@ export interface DoorRecipe {
 export interface Recipes {
   wall: WallRecipe;
   frame: FrameRecipe;
+  freeFrame: FreeFrameRecipe;
   beam: BeamRecipe;
   door: DoorRecipe;
 }
@@ -63,6 +83,16 @@ export const RECIPES: Recipes = {
     plate: { code: 'HDF', w: 976, h: 2440 },
   },
   frame: { profile: '43TX', corner: '613', brace: '90', braceCoupling: { code: '600', perEnd: 1 }, wallFixing: { code: '520', perFrame: 2 } },
+  freeFrame: {
+    profile: '43TX',
+    corner: '613',
+    cornerPost: '92LTX',
+    brace: '90',
+    braceCoupling: { code: '600', perEnd: 1 },
+    foot: '740',
+    maxRail: 5000,
+    support: { min: 2, maxEnd: 1000, maxGap: 3000 },
+  },
   beam: { profile: '292', coupling: { code: '600', perEnd: 2 } },
   door: { leaf: 2000, floorGap: 20, topGap: 10 },
 };

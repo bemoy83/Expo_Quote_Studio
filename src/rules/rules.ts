@@ -32,7 +32,8 @@ export interface Rules {
     plate: { width: number; height: number };
   };
   beam: { max: number; height: number; thickness: number };
-  textile: { depth: number; minWidth: number; inFrame: InFrameParams };
+  /** `grid`: free-standing textile walls are drawn and sized on this grid (the elevation grid), m. */
+  textile: { depth: number; minWidth: number; grid: number; inFrame: InFrameParams };
   door: { swing: number };
   floor: { cell: number };
   /** A quote holds `validDays` from it is sent, but never later than `beforeMount` days before montering. */
@@ -55,6 +56,7 @@ export const RULES: Rules = {
   textile: {
     depth: 0.04,
     minWidth: 0.5,
+    grid: 0.25,
     inFrame: { side: 20, air: 10, wallH: 2490, feet: 50, bleed: 20, scale: 10, prof: 40, stag: 1000 },
   },
   door: { swing: 0.9 },

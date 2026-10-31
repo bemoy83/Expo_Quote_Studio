@@ -85,9 +85,14 @@ const products: Product[] = [
   one('6101', 'Stolpe 40 × 40 mm, 2,5 m', 'system', 'stk', 'vegg.stolper', 180, { article: true }),
   one('6102', 'Toppprofil 960 × 40 mm', 'system', 'stk', 'vegg.skinner', 95, { article: true }),
   one('6103', 'Bunnprofil 960 × 30 mm', 'system', 'stk', 'vegg.skinner', 85, { article: true }),
-  // Profilering. Textile wall: rental of the frame and the printed textile as one product, priced per piece from its
-  // size (price per m² of B × H). Later frame (rental) and print (sale, reusable) must be possible to sell apart.
-  one('8000', 'Tekstilvegg, leie av ramme med trykt tekstil', 'system', 'm²', 'prof.tekstil', 1000, { pricing: 'sum' }),
+  // Profilering. Textile walls: the frame (rental) and the textile (sale, the customer can bring it back) are two lines
+  // in the kalkyle and one on the quote (Bjørn 31.10.2026). InFrame frame per piece by size (price per m² of B × H),
+  // free-standing frame per metre, textile per m² of visible face.
+  one('8000', 'Tekstilramme på systemvegg, leie', 'system', 'm²', 'prof.tekstil', 450, { pricing: 'sum' }),
+  one('8010', 'Tekstilvegg frittstående, leie av ramme', 'system', 'lm', 'prof.tekstil', 1100, { dim: 'h 2,54 m, føtter og stag', pricing: 'sum' }),
+  one('8040', 'Tekstil med trykk', 'system', 'm²', 'prof.tekstil', 650, { dim: 'silikonkant, montert', pricing: 'sum' }),
+  one('8041', 'Tekstil hvit', 'system', 'm²', 'prof.tekstil', 420, { dim: 'uten grafikk, montert', pricing: 'sum' }),
+  one('8042', 'Montering av kundens tekstil', 'system', 'm²', 'prof.tekstil', 170, { dim: 'duk i samme størrelse', pricing: 'sum' }),
   one('8020', 'Foliedekor, dekal', 'system', 'm²', 'prof.folie', 520),
   one('8021', 'Foliedekor, helt veggfelt 960 × 2420 mm', 'system', 'm²', 'prof.folie', 520),
   // Floor
@@ -212,6 +217,8 @@ export const DEFAULT_CATALOG: Catalog = {
     plateSwap: '6125',
     beam: '6110',
     textile: '8000',
+    freeTextile: '8010',
+    textileFill: { print: '8040', white: '8041', reuse: '8042' },
     foil: '8020',
     foilFull: '8021',
     floorProtection: '5911',
