@@ -32,8 +32,11 @@ export interface FreeFrameSpec {
   railCuts: number[];
   /** 43TX uprights at the free ends, H long. */
   uprights: number;
-  /** Feet, each with an upright brace above it. */
+  /** Ends at a 92LTX corner post (0–2): each rail joins the post there. */
+  corners: number;
+  /** Feet, each with an upright brace above it, and the foot plate code. */
   supports: number;
+  foot: string;
   braceLength: number;
 }
 

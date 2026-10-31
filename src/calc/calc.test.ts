@@ -71,7 +71,7 @@ describe('R2 · corner stand 6 × 4, backroom 2 × 2, textile wall 4 m', () => {
     expect(p).toMatchObject({ W: 3970, H: 2540, pw: 4010, ph: 2580, braces: { qty: 3, length: 2460 } });
   });
   it('textile wall: frame rented per piece and textile bought per m², two lines here and one on the quote', () => {
-    // Frame: 43TX 2 × 3970 + 2 × 2540 = 13,02 m × 10 = 130,2 · 4 × 613 × 4 = 16 · 2 × 520 × 5 = 10
+    // Frame: 43TX 2 × 3970 + 2 × 2540 = 13,02 m × 10 = 130,2 · 4 × 617 × 4 = 16 · 2 × 520 × 5 = 10
     // braces 3 × 2,46 m × 6 = 44,28 + 3 × 20 = 60 · håndtering 140 → 400,48 → 400
     const frame = lines(res).find((x) => x.artnr === S.textile)!;
     expect(frame).toMatchObject({ name: 'Tekstilramme på systemvegg, leie, 3970 × 2540 mm', qty: 1, unit: 'stk', price: 400, strategy: 'sum', transfer: 'leie' });
@@ -361,7 +361,9 @@ describe('frittstående tekstilvegg', () => {
     const tx = res.bom.lines.filter((l) => l.group === 'prof.tekstil');
     expect(tx.find((l) => l.name.startsWith('43TX'))).toMatchObject({ qty: 6, detail: '4 × 3000 · 2 × 2540 mm' });
     expect(tx.find((l) => l.name.startsWith('Støttestag'))).toMatchObject({ qty: 3 });
-    expect(tx.find((l) => l.artnr === '871 043 92')).toMatchObject({ qty: 4 });
+    // 617: top and bottom at both free ends · 609: top and bottom splice
+    expect(tx.find((l) => l.artnr === '871 045 92')).toMatchObject({ qty: 4 });
+    expect(tx.find((l) => l.artnr === '871 037 92')).toMatchObject({ qty: 2 });
     expect(tx.find((l) => l.artnr === '876 740 92')).toMatchObject({ qty: 3 });
   });
 });

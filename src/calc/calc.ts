@@ -281,7 +281,7 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
   );
 
   // Textile walls: the frame (rental) and the textile (sale) are two lines here and one on the quote (`quote`).
-  // InFrame frame per piece by size B × H: the loose frame parts (43TX at 2W + 2H, 613, 520), braces and handling.
+  // InFrame frame per piece by size B × H: the loose frame parts (43TX at 2W + 2H, 617, 520), braces and handling.
   // Fast price: m² rate × B × H.
   const inFrameQuote = { key: 'tekstil-vegg', name: 'Tekstilvegg på systemvegg' };
   const freeQuote = { key: 'tekstil-fri', name: 'Tekstilvegg frittstående' };
@@ -320,14 +320,16 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
   add(...textileLines(prod.pieces, 'på systemvegg', { ...inFrameQuote, lead: false }));
 
   // Frittstående per metre: 43TX rails and free-end uprights, 92LTX corner posts, a foot plate and a brace at every
-  // support, mounting per coupling and handling per frame
+  // support, 617 corner and 609 splice connectors, mounting per coupling and handling per frame
   const free = prod.free;
   const freeLm = free.reduce((a, f) => a + f.length, 0) / 1000;
   const supports = free.reduce((a, f) => a + f.supports.length, 0);
   const freeUses: Use[] = [
     { id: ITEM.frameProfileM, qty: free.reduce((a, f) => a + 2 * f.railCuts.reduce((x, c) => x + c, 0) + f.uprights * f.H, 0) / 1000 },
     { id: ITEM.cornerPostM, qty: free.length ? (prod.cornerPosts * free[0].H) / 1000 : 0 },
-    { id: ITEM.foot, qty: supports },
+    ...[...new Set(free.map((f) => f.foot.code))].map((code) => ({ id: ITEM.foot(code), qty: free.filter((f) => f.foot.code === code).reduce((a, f) => a + f.supports.length, 0) })),
+    { id: ITEM.corner, qty: 2 * free.reduce((a, f) => a + f.uprights + (f.corners.from ? 1 : 0) + (f.corners.to ? 1 : 0), 0) },
+    { id: ITEM.splice, qty: 2 * free.reduce((a, f) => a + f.railCuts.length - 1, 0) },
     { id: ITEM.braceM, qty: free.reduce((a, f) => a + f.supports.length * f.braceLength, 0) / 1000 },
     { id: ITEM.bracePiece, qty: supports },
     { id: ITEM.frameCoupling, qty: free.reduce((a, f) => a + f.couplings, 0) },

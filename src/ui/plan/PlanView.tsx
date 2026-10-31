@@ -573,12 +573,14 @@ export function PlanView(p: Props) {
           const t = v.freeTextiles.find((x) => x.id === f.textileId)
           if (!t) return null
           const sel = selection.freeTextileId === t.id
-          const half = 0.2
           return (
             <g key={t.id}>
               {f.supports.map((at, i) => {
                 const [x, y] = alongRun(t, at)
-                return <rect key={i} x={x - half} y={y - half} width={2 * half} height={2 * half} fill="none" stroke={TEXTILE} strokeOpacity={0.55} strokeWidth={0.015} strokeDasharray=".04 .03" />
+                const h = t.from[1] === t.to[1]
+                const w = (h ? f.foot.along : f.foot.across) / 1000
+                const d = (h ? f.foot.across : f.foot.along) / 1000
+                return <rect key={i} x={x - w / 2} y={y - d / 2} width={w} height={d} fill="none" stroke={TEXTILE} strokeOpacity={0.55} strokeWidth={0.015} strokeDasharray=".04 .03" />
               })}
               {sel && <Seg a={t.from} b={t.to} stroke={INK} strokeWidth={0.16} />}
               <Seg a={t.from} b={t.to} stroke={TEXTILE} strokeWidth={0.08} />

@@ -307,7 +307,9 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
     along(t.from, t.to, L, h, rules.textile.depth, foot, [alu, alu, alu, alu, face(f.faces[0]), face(f.faces[1])], { layer: 'textile', pick: { freeTextileId: t.id } })
     for (const at of f.supports) {
       const [x, y] = alongRun(t, at)
-      along([x - 0.2, y], [x + 0.2, y], 0.4, foot, 0.4, 0, mat('textile', ALU, ALU_FINISH), { layer: 'textile' })
+      const [dx, dy] = [(t.to[0] - t.from[0]) / L, (t.to[1] - t.from[1]) / L]
+      const half = f.foot.along / 2000
+      along([x - dx * half, y - dy * half], [x + dx * half, y + dy * half], 2 * half, foot, f.foot.across / 1000, 0, mat('textile', ALU, ALU_FINISH), { layer: 'textile' })
     }
   }
 

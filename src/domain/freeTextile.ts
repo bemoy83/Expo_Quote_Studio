@@ -92,7 +92,7 @@ export function cornerEnds(v: Variant): Map<string, CornerEnds> {
 
 /** Why a run cannot stand there, or null. `others` are the runs already standing (the run itself left out). */
 function blocked(v: Variant, rules: Rules, t: Pick<FreeTextile, 'from' | 'to'>, others: FreeTextile[]): string | null {
-  if (runLength(t) < rules.textile.minWidth - EPS) return `Tekstilveggen må være minst ${String(rules.textile.minWidth).replace('.', ',')} m`;
+  if (runLength(t) < rules.textile.freeMin - EPS) return `Tekstilveggen må være minst ${String(rules.textile.freeMin).replace('.', ',')} m`;
   for (const m of builtModules(v)) {
     const c = contact(t, { from: m.a, to: m.b });
     if (c.kind === 'line' && !c.touchOnly) return 'Tekstilveggen kan ikke stå langs en systemvegg';
@@ -210,7 +210,7 @@ export function fitFreeTextiles(v: Variant, rules: Rules): Variant {
 export function resizeFreeTextile(v: Variant, rules: Rules, id: string, length: number): Variant | null {
   const t = v.freeTextiles.find((x) => x.id === id);
   if (!t) return null;
-  const L = Math.max(rules.textile.minWidth, snap(length, rules.textile.grid));
+  const L = Math.max(rules.textile.freeMin, snap(length, rules.textile.grid));
   const [dx, dy] = runDirection(t);
   const to: Point = [t.from[0] + dx * L, t.from[1] + dy * L];
   if (to[0] < -EPS || to[1] < -EPS || to[0] > v.stand.width + EPS || to[1] > v.stand.depth + EPS) return null;

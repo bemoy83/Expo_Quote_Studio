@@ -49,10 +49,7 @@ export function FreeTextileDrawer(p: Props) {
   const x = (atMm: number) => (face === 'a' ? (atMm - F.start) / 1000 : W - (atMm - F.start) / 1000)
   const fr = 0.04
   // Splices along the rails, from the frame start (the corner post's face when `from` is a corner)
-  const railTotal = f.railCuts.reduce((a, c) => a + c, 0)
-  const nCorners = (f.corners.from ? 1 : 0) + (f.corners.to ? 1 : 0)
-  const railStart = f.corners.from ? (f.length - railTotal) / nCorners : 0
-  const splices = f.railCuts.slice(0, -1).reduce<number[]>((a, c) => [...a, (a[a.length - 1] ?? railStart) + c], [])
+  const splices = f.railCuts.slice(0, -1).reduce<number[]>((a, c) => [...a, (a[a.length - 1] ?? f.railStart) + c], [])
   const cornerAt = [f.corners.from ? x(0) : null, f.corners.to ? x(f.length) : null].filter((c): c is number => c !== null)
   const PAD = 0.18
   const fillName = F.fill === 'reuse' ? 'kundens duk' : F.fill === 'white' ? 'hvit duk' : 'trykk'
@@ -120,9 +117,9 @@ export function FreeTextileDrawer(p: Props) {
           {cornerAt.map((cx, i) => (
             <rect key={`c${i}`} x={Math.min(Math.max(cx - 0.03, 0), W - 0.06)} y={0} width={0.06} height={H} fill={ALU_POST} />
           ))}
-          {/* Foot plates, 400 mm */}
+          {/* Foot plates */}
           {f.supports.map((at, i) => (
-            <rect key={`f${i}`} x={x(at) - 0.2} y={H} width={0.4} height={0.03} fill={FEET} />
+            <rect key={`f${i}`} x={x(at) - f.foot.along / 2000} y={H} width={f.foot.along / 1000} height={0.03} fill={FEET} />
           ))}
           <line x1={-PAD} y1={H + 0.03} x2={W + PAD} y2={H + 0.03} stroke={BORDER_STRONG} strokeWidth={0.01} />
 

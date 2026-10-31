@@ -18,7 +18,7 @@ Alle tall i appen i dag er eksempeltall (`src/pricing/data.ts`, og kost i `src/c
 | 2 Artikkel | Det montøren plukker | Stolpe 94 med fot, toppskinne 92 960 mm | Sum av nivå 3 + håndtering |
 | 3 Bestanddel | Det en artikkel er laget av | 94 × 2490 mm, 700, M10 × 65 | Kostpris per enhet |
 
-Der det ikke finnes en artikkel, plukkes bestanddelene direkte (tekstilvegg: 43TX, 613, 520, 92LTX, 740). De får da kost og pris
+Der det ikke finnes en artikkel, plukkes bestanddelene direkte (tekstilvegg: 43TX, 617, 609, 520, 92LTX, 740, 730). De får da kost og pris
 som en artikkel.
 
 ## 2. Kostpris per bestanddel (nivå 3), i OMS

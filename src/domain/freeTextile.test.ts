@@ -51,7 +51,8 @@ describe('frittstående tekstilvegg', () => {
     expect(err(inner, [2, 2], [4, 2])).toMatch(/krysse/);
   });
   it('at least the minimum width', () => {
-    expect(err(base(), [1, 2], [1.25, 2])).toMatch(/minst/);
+    expect(err(base(), [1, 2], [1.25, 2])).toBeNull();
+    expect(err(base(), [1, 2], [1.1, 2])).toMatch(/minst/);
   });
   it('faces: print by default, white or the customer’s own', () => {
     let v = draw(base(), [1, 2], [3, 2]);
