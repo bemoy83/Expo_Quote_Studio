@@ -16,12 +16,18 @@ import {
   updateFoil,
   updateTextile,
 } from './decor';
-import { paintWalls, replaceWalls, setOpening } from './edit';
+import { paintWalls, replaceWalls } from './edit';
 import { moduleKey } from './grid';
 import { conflicts } from './objects';
-import type { Variant } from './types';
+import type { Point, Variant } from './types';
 import { createVariant } from './variant';
+import { builtModules } from './walls';
 
+/** A door in a stand wall: no longer allowed (see opensInside), but older sketches can hold one. */
+const oldDoor = (v: Variant, a: Point, b: Point): Variant => {
+  const m = builtModules(v).find((x) => x.key === moduleKey(a, b))!;
+  return { ...v, openings: [...v.openings, { id: `o${v.openings.length + 1}`, wallId: m.wallId, module: m.index, product: DOOR }] };
+};
 const row = (): Variant => createVariant('A', { width: 6, depth: 3, type: 'row' });
 const ctx = placeContext(RULES, DEFAULT_CATALOG);
 const ok = <T,>(r: T | null | { error: string }): T => {
@@ -45,7 +51,7 @@ describe('textile walls', () => {
   });
 
   it('stops at openings and at walls meeting the face', () => {
-    let v = setOpening(row(), moduleKey([2, 0], [3, 0]), DOOR);
+    let v = oldDoor(row(), [2, 0], [3, 0]);
     v = paintWalls(v, [4, 0], [4, 2]);
     expect(freeSpans(v, RULES, 'side-back', 1)).toEqual([
       [0, 2],
@@ -90,7 +96,7 @@ describe('textile walls', () => {
 
   it('an opening put under a textile clips it, removing the wall removes it', () => {
     let v = ok(addTextile(row(), RULES, 'side-back', 1, 1)).v;
-    v = fitDecor(setOpening(v, moduleKey([4, 0], [5, 0]), DOOR), RULES);
+    v = fitDecor(oldDoor(v, [4, 0], [5, 0]), RULES);
     expect(v.textiles[0]).toMatchObject({ from: 0, width: 4 });
     expect(fitDecor(v, RULES)).toBe(v);
     v = fitDecor({ ...v, walls: v.walls.filter((w) => w.id !== 'side-back') }, RULES);
@@ -148,7 +154,7 @@ describe('foil decor', () => {
   });
 
   it('is refused on an opening and behind a textile', () => {
-    let v = setOpening(row(), moduleKey([0, 0], [1, 0]), DOOR);
+    let v = oldDoor(row(), [0, 0], [1, 0]);
     expect(addFoil(v, RULES, 'side-back', 0, 1, 'logo', 1)).toEqual({ error: 'Folie kan ikke ligge på en åpning' });
     v = ok(addTextile(v, RULES, 'side-back', 1, 3)).v;
     expect(addFoil(v, RULES, 'side-back', 3, 1, 'logo', 1)).toEqual({ error: 'Feltet er dekket av en tekstilvegg' });
@@ -196,7 +202,7 @@ describe('drag and drop on a wall (3D)', () => {
   });
 
   it('a drop on an opening is refused with the reason', () => {
-    const v = setOpening(row(), moduleKey([0, 0], [1, 0]), DOOR);
+    const v = oldDoor(row(), [0, 0], [1, 0]);
     expect(dropMotif(v, RULES, 'side-back', 1, 0.5, 'logo', 1, 1)).toEqual({ error: 'Folie kan ikke ligge på en åpning' });
   });
 
@@ -209,7 +215,7 @@ describe('drag and drop on a wall (3D)', () => {
   });
 
   it('dragging a decal moves it to the felt under it, never onto an opening', () => {
-    let v = setOpening(row(), moduleKey([3, 0], [4, 0]), DOOR);
+    let v = oldDoor(row(), [3, 0], [4, 0]);
     v = ok(addFoil(v, RULES, 'side-back', 1, 1, 'logo', 2)).v;
     const start = v.foils[0];
     expect(moveFoilBy(v, RULES, start, 1, 0, 2).foils[0].module).toBe(2);

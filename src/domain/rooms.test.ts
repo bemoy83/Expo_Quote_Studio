@@ -264,3 +264,13 @@ describe('L-shaped rooms', () => {
     expect(resizeRoom(v, 'rom1', 2, 1)).toBe(v);
   });
 });
+
+describe('room doors stay inside the stand', () => {
+  it('a room can not be moved or resized so its door lands on the open front', () => {
+    // Door in the front of a 2 × 2 room at the back of a 6 × 4 row stand (front open at y = 4)
+    const v = r2();
+    expect(rect(moveRoom(v, 'bk', 0, 1), 0).y).toBe(1);
+    expect(moveRoom(v, 'bk', 0, 2)).toBe(v);
+    expect(rect(resizeRoom(v, 'bk', RECT_SIDE.front, 2), 0).d).toBe(3);
+  });
+});

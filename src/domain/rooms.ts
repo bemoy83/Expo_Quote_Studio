@@ -5,7 +5,7 @@
 // side refer to `<id>.<side>` with offsets from the side's start, so they move with the room. Every side runs
 // clockwise round the room, so the room is always on the left of a side and its outside on the right.
 import { pointAlong, runs, wallLength, wallModules } from './grid';
-import { nextId, ownPlate, replaceWalls } from './edit';
+import { nextId, opensInside, ownPlate, replaceWalls } from './edit';
 import {
   area,
   bounds,
@@ -111,6 +111,14 @@ function fits(v: Variant, id: string, outline: Point[]): boolean {
   const b = bounds(outline);
   if (b.x < 0 || b.y < 0 || b.x + b.w > W || b.y + b.d > D) return false;
   return !overlapsRoom(v, outline, id);
+}
+
+/** False when a door or curtain on the room's sides would end up in the stand's outline (see opensInside). */
+function doorsInside(v: Variant, id: string): boolean {
+  return v.openings.every((o) => {
+    const w = isRoomWallId(o.wallId, id) && v.walls.find((x) => x.id === o.wallId);
+    return !w || opensInside(v.stand, pointAlong(w, o.module), pointAlong(w, o.module + 1));
+  });
 }
 
 /**
@@ -244,13 +252,14 @@ export function moveRoom(v: Variant, id: string, dx: number, dy: number): Varian
   if ((x === b.x && y === b.y) || !fits(v, id, outline)) return v;
   const inside = (o: PlacedObject) => contains(r.outline, o.x, o.y);
   const objects = v.objects.map((o) => (inside(o) ? { ...o, x: o.x + x - b.x, y: o.y + y - b.y } : o));
-  return syncRooms({ ...v, rooms: v.rooms.map((o) => (o.id === id ? { ...r, outline } : o)), objects });
+  const next = syncRooms({ ...v, rooms: v.rooms.map((o) => (o.id === id ? { ...r, outline } : o)), objects });
+  return doorsInside(next, id) ? next : v;
 }
 
 /**
  * Drag one side of a room by `delta` metres across it (+y for a side running left–right, +x for one running back–
  * front); the neighbouring sides stretch and the others stay. A side never shrinks below 1 m: the drag stops there,
- * or where the room would leave the stand or hit another room. A side dragged flush with the one beyond its
+ * or where the room would leave the stand, hit another room or put its door in the stand's outline. A side dragged flush with the one beyond its
  * neighbour merges with it (an L becomes a rectangle). Things on the other sides keep their place in the world.
  * Returns v when nothing changes.
  */
@@ -263,7 +272,8 @@ export function resizeRoom(v: Variant, id: string, side: number, delta: number):
     const moved = moveSide(r.outline, side, k);
     const outline = moved && settle(moved);
     if (!outline || !fits(v, id, outline)) continue;
-    return reshape(v, r, outline, (i) => (i === side ? (hz ? [0, k] : [k, 0]) : [0, 0]));
+    const next = reshape(v, r, outline, (i) => (i === side ? (hz ? [0, k] : [k, 0]) : [0, 0]));
+    if (doorsInside(next, id)) return next;
   }
   return v;
 }

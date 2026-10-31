@@ -198,6 +198,7 @@ export function setOpening(v: Variant, key: string, product: string | null): Var
   if (!mod) return v;
   const others = v.openings.filter((o) => o !== mod.opening);
   if (!product) return mod.opening ? { ...v, openings: others } : v;
+  if (!opensInside(v.stand, mod.a, mod.b)) return v;
   if (mod.opening?.product === product) return v;
   const id = mod.opening?.id ?? nextId(v.openings.map((o) => o.id), 'o');
   const swing = mod.opening?.swing ?? defaultSwing(v.stand, v.walls.find((w) => w.id === mod.wallId)!);
@@ -206,6 +207,7 @@ export function setOpening(v: Variant, key: string, product: string | null): Var
 
 /** Put a door or curtain on the module a–b, drawing the wall module first when there is none. */
 export function drawOpening(v: Variant, a: Point, b: Point, product: string): Variant {
+  if (!opensInside(v.stand, a, b)) return v;
   return setOpening(paintWalls(v, a, b), moduleKey(a, b), product);
 }
 
@@ -290,6 +292,12 @@ export function setCounted(v: Variant, product: string, qty: number): Variant {
 }
 
 /** True when the wall lies on the stand's outer edge. */
+/**
+ * Doors and curtains go inside the stand only: in an inner wall, a room side or an empty edge on the floor, never in
+ * the stand's own walls or on its open edges (the module a–b lying on the stand's outline).
+ */
+export const opensInside = (stand: Stand, a: Point, b: Point) => !isPerimeterWall(stand, { id: '', from: a, to: b });
+
 export function isPerimeterWall(stand: Stand, w: Wall): boolean {
   return (
     (w.from[1] === w.to[1] && (w.from[1] === 0 || w.from[1] === stand.depth)) ||

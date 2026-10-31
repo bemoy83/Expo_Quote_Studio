@@ -130,9 +130,12 @@ describe('wallsToRoom', () => {
     expect(r.textiles).toHaveLength(1);
     expect(r.textiles[0].wallId).toBe(roomWallId(r.rooms[0].id, RECT_SIDE.right));
   });
-  it('a door in the stand wall counts as the room\u2019s door', () => {
-    const v = door(path(row(), [2, 0], [2, 2], [0, 2]), [0, 0], [1, 0]);
-    const r = wallsToRoom(v, sq)!;
+  it('a door can not go in the stand wall, so that closes no room', () => {
+    const v = path(row(), [2, 0], [2, 2], [0, 2]);
+    expect(newlyClosedRooms(v, door(v, [0, 0], [1, 0]))).toEqual([]);
+  });
+  it('the door in a room side counts as the room\u2019s door', () => {
+    const r = wallsToRoom(closed(), sq)!;
     expect(roomOpenings(r, r.rooms[0])).toHaveLength(1);
   });
   it('the room takes the drawn walls’ colour', () => {

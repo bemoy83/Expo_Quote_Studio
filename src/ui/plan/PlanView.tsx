@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent, type SVGProps } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import { mainGroupOf } from '../../catalog/groups'
-import { defaultSwing, drawOpening, eraseWalls, isPerimeterWall, paintFloor, paintWalls, segmentKeys, setOpening } from '../../domain/edit'
+import { defaultSwing, drawOpening, eraseWalls, isPerimeterWall, opensInside, paintFloor, paintWalls, segmentKeys, setOpening } from '../../domain/edit'
 import { CELL, parseCellKey, pointAlong, sideLength, sidePoint, wallDirection, wallLength, type Module } from '../../domain/grid'
 import { addObject, conflicts, footprintBox, moveObject, removeObject } from '../../domain/objects'
 import { addFoil, addTextile, faceAt, faceSegment, felt, foilAt, foilCenter, freeSpans, removeFoil, removeTextile, sideOf, textileAt, textileOffset, updateTextile, type FaceSide } from '../../domain/decor'
@@ -239,12 +239,12 @@ export function PlanView(p: Props) {
     }
     if (openingTool) {
       const m = moduleAt(q, 0.4)
-      if (m) p.onEdit((x) => setOpening(x, m.key, tool === 'erase' ? null : brush!.product))
-      else if (tool !== 'erase' && onStand(q)) {
-        // No wall there: the door or curtain draws its own wall module
-        const e = nearestEdge(v.stand, q)
-        p.onEdit((x) => drawOpening(x, e.a, e.b, brush!.product))
-      }
+      const e = m ?? (tool !== 'erase' && onStand(q) ? nearestEdge(v.stand, q) : null)
+      if (!e) return
+      if (tool !== 'erase' && !opensInside(v.stand, e.a, e.b)) p.onToast('Dører og forheng settes bare inne på standen, ikke i standveggen')
+      else if (m) p.onEdit((x) => setOpening(x, m.key, tool === 'erase' ? null : brush!.product))
+      // No wall there: the door or curtain draws its own wall module
+      else p.onEdit((x) => drawOpening(x, e.a, e.b, brush!.product))
       return
     }
     if (decorTool) {
@@ -370,10 +370,11 @@ export function PlanView(p: Props) {
   }
 
   // Hover previews
-  const hoverModule = openingTool && hover ? (moduleAt(hover, 0.4) ?? (tool !== 'erase' && onStand(hover) ? nearestEdge(v.stand, hover) : null)) : null
+  const hoverEdge = openingTool && hover ? (moduleAt(hover, 0.4) ?? (tool !== 'erase' && onStand(hover) ? nearestEdge(v.stand, hover) : null)) : null
+  const hoverModule = hoverEdge && (tool === 'erase' || opensInside(v.stand, hoverEdge.a, hoverEdge.b)) ? hoverEdge : null
   const hoverFloor = floorTool && hover && !drag.current ? floorBlock(hover) : null
   const hoverFace = decorTool && hover ? faceHit(hover) : null
-  const hoverEdge = wallTool && hover && !stroke && onStand(hover) ? nearestEdge(v.stand, hover) : null
+  const hoverWallEdge = wallTool && hover && !stroke && onStand(hover) ? nearestEdge(v.stand, hover) : null
 
   const sideText = (s: Side) => {
     const n = sideLength(v.stand, s)
@@ -588,7 +589,7 @@ export function PlanView(p: Props) {
       {/* Interaction preview */}
       <g pointerEvents="none">
         {!p.mini && v.rooms.filter((r) => r.id === selection.roomId).map((r) => <RoomHandles key={r.id} r={r} />)}
-        {hoverEdge && <Seg a={hoverEdge.a} b={hoverEdge.b} stroke={tool === 'erase' ? INK_FAINT : WALL} strokeOpacity={0.6} strokeWidth={0.14} />}
+        {hoverWallEdge && <Seg a={hoverWallEdge.a} b={hoverWallEdge.b} stroke={tool === 'erase' ? INK_FAINT : WALL} strokeOpacity={0.6} strokeWidth={0.14} />}
         {stroke && <StrokePreview a={stroke[0]} b={stroke[1]} erase={tool === 'erase'} />}
         {hoverModule && <HoverModule m={hoverModule} />}
         {hoverFace && <FacePreview v={v} h={hoverFace} brush={brush!} erase={tool === 'erase'} />}
