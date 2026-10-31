@@ -199,3 +199,6 @@ motoren regner ut delelisten for det.
 - Delelisten gir bare pris for en kombinasjon av deler som ikke dekkes av et ferdigprodukt.
   Dette er en filosofi, ikke en hardkodet regel. En frihåndstegnet disk kan for eksempel prises fra deler,
   men det avgjøres når vi kommer dit.
+
+Senere kan delen få innkjøpspris i profilbiblioteket. Da gir delelisten en estimert kost per leveranse. Det er
+internt, og tilbudsprisen kommer fortsatt fra ferdigproduktet.
