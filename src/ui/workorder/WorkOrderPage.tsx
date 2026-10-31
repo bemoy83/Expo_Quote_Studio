@@ -9,7 +9,7 @@ import { groupItems } from '../../catalog/groups'
 import { dateText, DELIVERY_FIELDS, today } from '../../domain/delivery'
 import type { Project, Variant } from '../../domain/types'
 import { customerName, projectField } from '../../domain/variant'
-import { addTime, HANDLING_STEPS, minutesOf, type HandlingStep, type Time } from '../../pricing/model'
+import { addTime, minutesOf, type HandlingStep, type Time } from '../../pricing/model'
 import { Button } from '../controls'
 import { rules } from '../env'
 import { fmt } from '../format'
@@ -27,14 +27,8 @@ interface Props {
   calcOf: (v: Variant) => CalcResult
 }
 
-const STEP_NAME: Record<HandlingStep, string> = {
-  plukk: 'Plukk',
-  vask: 'Vask',
-  transport: 'Transport',
-  forhåndsmontering: 'Forh.mont.',
-  montering: 'Montering',
-  demontering: 'Demontering',
-}
+const ON_SITE: HandlingStep[] = ['montering', 'demontering']
+const STEP_NAME: Partial<Record<HandlingStep, string>> = { montering: 'Montering', demontering: 'Demontering' }
 
 /** Hours with one decimal, '–' for none. */
 const h = (min: number | undefined) => (min ? fmt(min / 60, 1) : '–')
@@ -50,8 +44,11 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf }: 
   // Expected time per main group, from the lines (sum products from their items, the rest from the product)
   const timeRows = res.groups
     .map((g) => ({ id: g.id, name: g.name, time: g.lines.reduce<Time>((a, l) => addTime(a, l.time), {}) }))
-    .filter((r) => minutesOf(r.time) > 0)
-  const steps = HANDLING_STEPS.filter((s) => k.time[s])
+    .filter((r) => (r.time.montering ?? 0) + (r.time.demontering ?? 0) > 0)
+  // On site only: montering and demontering per product group. Lager time (plukk, vask, transport) is kept per step
+  // in the data, but planned by the OMS and shown here only as one total.
+  const steps = ON_SITE
+  const lagerMin = minutesOf(k.time) - (k.time.montering ?? 0) - (k.time.demontering ?? 0)
   const tree = groupItems(pickRows(res), (r) => r.group)
   const prints = production(v, rules.textile.inFrame, customer).pieces
   const missingDates = !DELIVERY_FIELDS.some((d) => project.delivery?.[d.key])
@@ -103,18 +100,16 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf }: 
                 </dd>
               </div>
               <div>
-                <dt className="num">Ca. {fmt(k.hours, 1)} timer</dt>
-                <dd>
-                  montering {h(k.time.montering)} t · demontering {h(k.time.demontering)} t
-                </dd>
+                <dt className="num">Montering ca. {h(k.time.montering)} t</dt>
+                <dd>demontering ca. {h(k.time.demontering)} t</dd>
               </div>
             </dl>
           </section>
 
           {timeRows.length > 0 && (
             <section className="wo-sec">
-              <div className="eyebrow">Forventet tid, timer</div>
-              <div className="wo-time" style={{ gridTemplateColumns: `minmax(0, 1fr) repeat(${steps.length + 1}, 72px)` }}>
+              <div className="eyebrow">Forventet tid på messen, timer</div>
+              <div className="wo-time" style={{ gridTemplateColumns: `minmax(0, 1fr) repeat(${steps.length + 1}, 88px)` }}>
                 <span className="wo-th">Produktgruppe</span>
                 {steps.map((s) => (
                   <span key={s} className="wo-th r">
@@ -127,6 +122,7 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf }: 
                 ))}
                 <Row name="Sum" time={k.time} steps={steps} total />
               </div>
+              {lagerMin > 0 && <p className="foot">Lager (plukk, vask og transport): ca. {h(lagerMin)} t, planlegges i OMS.</p>}
               <p className="foot">Mannskap og tidspunkt settes i OMS. Montørene melder faktisk tid per produktgruppe, så etterkalkylen kan rette tidene.</p>
             </section>
           )}
@@ -198,7 +194,7 @@ function Row({ name, time, steps, total }: { name: string; time: Time; steps: Ha
           {h(time[s])}
         </span>
       ))}
-      <span className={'num r wo-sum' + (total ? ' wo-total' : '')}>{h(minutesOf(time))}</span>
+      <span className={'num r wo-sum' + (total ? ' wo-total' : '')}>{h(steps.reduce((a, s) => a + (time[s] ?? 0), 0))}</span>
     </>
   )
 }

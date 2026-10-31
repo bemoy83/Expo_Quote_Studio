@@ -3,7 +3,6 @@ import { useState } from 'react'
 import type { CalcLine, CalcResult } from '../../calc/calc'
 import { groupItems, mainGroupOf } from '../../catalog/groups'
 import type { BomLine } from '../../foga/engine'
-import { HANDLING_STEPS } from '../../pricing/model'
 import { LAYER_COLOR } from '../colors'
 import { Button } from '../controls'
 import { rules } from '../env'
@@ -95,8 +94,7 @@ export function CalcPanel({ res, name, onHover, onQuote }: { res: CalcResult; na
         </div>
         {res.keyFigures.hours > 0 && (
           <div className="inkl num">
-            Tid ca. {fmt(res.keyFigures.hours, 1)} t, inngår i prisene:{' '}
-            {HANDLING_STEPS.filter((st) => res.keyFigures.time[st]).map((st) => `${st} ${fmt((res.keyFigures.time[st] ?? 0) / 60, 1)} t`).join(' · ')}
+            Montering ca. {fmt((res.keyFigures.time.montering ?? 0) / 60, 1)} t · demontering ca. {fmt((res.keyFigures.time.demontering ?? 0) / 60, 1)} t, inngår i prisene
           </div>
         )}
         <Button variant="primary" icon={FileText} onClick={onQuote}>
