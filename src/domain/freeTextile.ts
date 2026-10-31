@@ -185,8 +185,8 @@ export function faceOfPoint(t: FreeTextile, q: { x: number; y: number }): FaceKe
 }
 
 /** Move a run by (dx, dy), snapped to the grid. Null when it cannot stand there; corners it shared come apart. */
-export function moveFreeTextile(v: Variant, rules: Rules, id: string, dx: number, dy: number, from: Variant = v): Variant | null {
-  const t = from.freeTextiles.find((x) => x.id === id);
+export function moveFreeTextile(v: Variant, rules: Rules, id: string, dx: number, dy: number): Variant | null {
+  const t = v.freeTextiles.find((x) => x.id === id);
   if (!t) return null;
   const g = rules.textile.grid;
   const ox = snap(dx, g);
