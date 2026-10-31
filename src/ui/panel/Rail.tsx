@@ -256,7 +256,7 @@ function WallSection({ v, res, brush, tool, pick, onEdit, onToast, onSelect, sel
         }
         title="Bakrom"
         on={v.rooms.length > 0}
-        meta="1 × 1 m med dør i et ledig hjørne. Bygger bare veggene som mangler. Dra gulvet eller taket for å flytte, en vegg eller et håndtak for å endre størrelsen."
+        meta="1 × 1 m med dør i et ledig hjørne. Bygger bare veggene som mangler. Flytt: dra gulvet i planen, veggen eller taket i 3D. Størrelse: dra en vegg i planen, toppkanten av veggen i 3D."
         result={v.rooms.length ? `${v.rooms.length} rom` : null}
         action={
           <IconButton

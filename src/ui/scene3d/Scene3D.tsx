@@ -19,7 +19,7 @@ import type { Foil, RectFace, Room, TextileWall, Variant, Wall } from '../../dom
 import { wallHeight } from '../../rules/rules'
 import { IconButton } from '../controls'
 import { applyDrop, decorDrag, dropSpot, endDecorDrag, type DropSpot, type FaceTarget } from '../dnd'
-import { dragRoom, dragWall, dropObject, dropRoom, type RoomDrag, type WallDrag } from '../drag'
+import { dragRoom, dragWall, dropObject, dropRoom, roomDrag, type RoomDrag, type WallDrag } from '../drag'
 import { place, rules } from '../env'
 import { findMotif } from '../motifs'
 import type { Highlight } from '../tools'
@@ -136,7 +136,7 @@ export function Scene3D(p: Props) {
         const t = h.object.userData as Partial<Tag>
         if (t.pick) {
           // A room roof is a handle only: furniture and decor seen through it win
-          if (t.pick.roomFace === 'move' && !roof) {
+          if (t.pick.roomId && !roof) {
             roof = { ...t.pick, point: h.point }
             continue
           }
@@ -248,7 +248,7 @@ export function Scene3D(p: Props) {
         const mode = side?.face ?? 'move'
         const y = hit!.point.y
         const q = onFloor(e, y)
-        if (q) drag = { kind: 'room', id, mode, p0: q, v0: P.v, last: mode === 'move' ? '0,0' : '0', moved: false, y }
+        if (q) drag = { kind: 'room', ...roomDrag(id, mode, q, P.v), y }
       } else if (hit?.wallId) {
         const w = P.v.walls.find((x) => x.id === hit.wallId)
         const q = onFloor(e)
@@ -269,7 +269,7 @@ export function Scene3D(p: Props) {
           const side = sideAt(hit)
           if (side) showGrip(side.room, side.face)
           else clearGrip()
-          const movable = hit?.objectId || hit?.textileId || hit?.foilId || hit?.roomFace === 'move' || (w && (w.room || !isPerimeterWall(P.v.stand, w)))
+          const movable = hit?.objectId || hit?.textileId || hit?.foilId || hit?.roomId || (w && (w.room || !isPerimeterWall(P.v.stand, w)))
           renderer.domElement.style.cursor = side ? resizeCursor(side.room, side.face) : movable ? 'move' : hit ? 'pointer' : 'grab'
         }
         return

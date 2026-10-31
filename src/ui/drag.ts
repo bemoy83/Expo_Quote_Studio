@@ -47,6 +47,16 @@ export interface RoomDrag {
   moved: boolean
 }
 
+/** A room drag starting at p0 on the variant v0. */
+export const roomDrag = (id: string, mode: RoomDrag['mode'], p0: { x: number; y: number }, v0: Variant): RoomDrag => ({
+  id,
+  mode,
+  p0,
+  v0,
+  last: mode === 'move' ? '0,0' : '0',
+  moved: false,
+})
+
 /** Move a room or one of its sides to whole metres under the pointer. A blocked step keeps the last good one. */
 export function dragRoom(d: RoomDrag, q: { x: number; y: number }, onEdit: Edit, onCheckpoint: () => void) {
   const dx = Math.round(q.x - d.p0.x)

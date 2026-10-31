@@ -9,7 +9,7 @@ import { defaultSwing } from '../../domain/edit'
 import { CELL, parseCellKey, pointAlong, pointKey, wallDirection, wallLength } from '../../domain/grid'
 import { conflicts } from '../../domain/objects'
 import { faceEnds, FACES } from '../../domain/rooms'
-import type { Point, RectFace, Variant } from '../../domain/types'
+import type { Point, Variant } from '../../domain/types'
 import { builtModules, wallPoints, type BuiltModule } from '../../domain/walls'
 import type { Motif } from '../../persistence/file'
 import { wallHeight } from '../../rules/rules'
@@ -22,7 +22,8 @@ export type Layer = Exclude<Highlight, null>
 /** What a mesh stands for. `pick` marks meshes the pointer can hit. */
 export interface Tag {
   layer: Layer
-  pick?: { wallId?: string; objectId?: string; textileId?: string; foilId?: string; roomId?: string; roomFace?: RectFace | 'move' }
+  /** `roomId`: a room's see-through roof, the handle that moves the room. */
+  pick?: { wallId?: string; objectId?: string; textileId?: string; foilId?: string; roomId?: string }
 }
 
 /** Colours of the build system. Product colours come from the catalog. */
@@ -310,7 +311,7 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
     )
     roof.rotation.x = -Math.PI / 2
     roof.position.copy(at([r.x + r.w / 2, r.y + r.d / 2], H + 0.012))
-    add(roof, { layer: 'walls', pick: { roomId: r.id, roomFace: 'move' } })
+    add(roof, { layer: 'walls', pick: { roomId: r.id } })
     roof.castShadow = false
     roof.receiveShadow = false
     const edge: number[] = []

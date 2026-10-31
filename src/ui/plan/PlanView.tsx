@@ -12,8 +12,8 @@ import type { Point, RectFace, Room, Side, Variant, Wall } from '../../domain/ty
 import { builtModules, type BuiltModule } from '../../domain/walls'
 import { BORDER, BORDER_STRONG, BLOCK, CANVAS, INK, INK_FAINT, INK_MUTED, LAYER_COLOR, SURFACE } from '../colors'
 import { applyDrop, decorDrag, endDecorDrag, type DecorDrag } from '../dnd'
-import { dragRoom, dragWall, dropObject, dropRoom, type RoomDrag, type WallDrag } from '../drag'
-import { faceEnds, FACES, roomAt } from '../../domain/rooms'
+import { dragRoom, dragWall, dropObject, dropRoom, roomDrag, type RoomDrag, type WallDrag } from '../drag'
+import { faceEnds, FACES, roomAt, roomSideAt } from '../../domain/rooms'
 import { fmt } from '../format'
 import { idx, place, plateColor, productOf, rules } from '../env'
 import { findMotif } from '../motifs'
@@ -150,21 +150,10 @@ export function PlanView(p: Props) {
       if (room) return { room, face: w.room.face }
     }
     const sel = v.rooms.find((r) => r.id === selection.roomId)
-    if (!sel) return null
-    let best: { room: Room; face: RectFace } | null = null
-    let bd = 0.2
-    for (const face of FACES) {
-      const [a, b] = faceEnds(sel, face)
-      const d = distToSegment(q, a, b)
-      if (d < bd) {
-        bd = d
-        best = { room: sel, face }
-      }
-    }
-    return best
+    return (sel && roomSideAt({ ...v, rooms: [sel] }, q.x, q.y, 0.2)) ?? null
   }
   const startRoomDrag = (room: Room, mode: RoomDrag['mode'], q: P) => {
-    drag.current = { kind: 'room', id: room.id, mode, p0: q, v0: v, last: mode === 'move' ? '0,0' : '0', moved: false }
+    drag.current = { kind: 'room', ...roomDrag(room.id, mode, q, v) }
   }
 
   /** Textile brush: fill the free part of the face. Motif brush: print on a textile, or foil on a wall panel. */

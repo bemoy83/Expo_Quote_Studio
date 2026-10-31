@@ -300,8 +300,9 @@ export function isPerimeterWall(stand: Stand, w: Wall): boolean {
 
 /**
  * Move an inner wall sideways by `delta` whole metres (along its normal axis: y for horizontal walls, x for vertical).
- * Perpendicular walls ending on it stretch or shrink with it, so dragging one side of a room resizes the room.
- * Its openings, textiles and foils move with it. Refused (returns v) for perimeter walls or moves outside the stand.
+ * Perpendicular drawn walls ending on it stretch or shrink with it, so walls drawn around an area resize like a room.
+ * Its openings, textiles and foils move with it. Refused (returns v) for perimeter walls, room walls (see rooms.ts)
+ * or moves outside the stand.
  */
 export function moveWall(v: Variant, wallId: string, delta: number): Variant {
   const w = v.walls.find((x) => x.id === wallId);

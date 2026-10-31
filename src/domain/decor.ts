@@ -94,25 +94,24 @@ function cut(spans: Span[], t: number): Span[] {
   return spans.flatMap(([a, b]) => (t > a + EPS && t < b - EPS ? [[a, t], [t, b]] : [[a, b]]) as Span[]);
 }
 
-/** Module indices of the wall that another wall (or a gap in a room) holds: decor on this wall must keep off them. */
-export function foreignModules(v: Variant, w: Wall): Set<number> {
-  const owner = new Map(builtModules(v).map((m) => [m.key, m.wallId]));
-  const out = new Set<number>();
+/**
+ * Module indices of the wall that decor must keep off: openings (also on an overlapping wall), and modules another
+ * wall holds or a room left open (`foreign`). A room side lying on a stand wall leaves those modules to the stand wall.
+ */
+export function blockedModules(v: Variant, w: Wall): { openings: Set<number>; foreign: Set<number> } {
+  const built = new Map(builtModules(v).map((m) => [m.key, m]));
+  const openings = new Set<number>();
+  const foreign = new Set<number>();
   wallModules(w).forEach((m, i) => {
-    if (owner.get(m.key) !== w.id) out.add(i);
+    const b = built.get(m.key);
+    if (b?.opening) openings.add(i);
+    if (b?.wallId !== w.id) foreign.add(i);
   });
-  return out;
+  return { openings, foreign };
 }
 
 /** Module indices of the wall that are openings (also when the opening sits on an overlapping wall). */
-export function openingModules(v: Variant, w: Wall): Set<number> {
-  const built = new Map(builtModules(v).map((m) => [m.key, m]));
-  const out = new Set<number>();
-  wallModules(w).forEach((m, i) => {
-    if (built.get(m.key)?.opening) out.add(i);
-  });
-  return out;
-}
+export const openingModules = (v: Variant, w: Wall): Set<number> => blockedModules(v, w).openings;
 
 /** Offsets along w where another wall meets this face (a T-junction or a crossing). The frame must stop there. */
 function junctions(v: Variant, w: Wall, s: FaceSide): number[] {
@@ -144,8 +143,8 @@ export function freeSpans(v: Variant, rules: Rules, wallId: string, s: FaceSide,
   const w = v.walls.find((x) => x.id === wallId);
   if (!w) return [];
   let spans: Span[] = [[0, wallLength(w)]];
-  for (const i of openingModules(v, w)) spans = subtract(spans, [i, i + 1]);
-  for (const i of foreignModules(v, w)) spans = subtract(spans, [i, i + 1]);
+  const { openings, foreign } = blockedModules(v, w);
+  for (const i of new Set([...openings, ...foreign])) spans = subtract(spans, [i, i + 1]);
   for (const t of junctions(v, w, s)) spans = cut(spans, t);
   for (const t of others) spans = subtract(spans, [t.from, t.from + t.width]);
   return spans.filter(([a, b]) => b - a >= rules.textile.minWidth - EPS);
@@ -262,8 +261,9 @@ export function textileAt(v: Variant, wallId: string, s: FaceSide, t: number): T
 /** Why a felt cannot take foil, or null when it can. */
 export function feltBlocked(v: Variant, rules: Rules, wallId: string, module: number, s: FaceSide): string | null {
   const w = v.walls.find((x) => x.id === wallId);
-  if (!w || module < 0 || module >= Math.round(wallLength(w)) || foreignModules(v, w).has(module)) return 'Ingen vegg her';
-  if (openingModules(v, w).has(module)) return 'Folie kan ikke ligge på en åpning';
+  const blocked = w && blockedModules(v, w);
+  if (!w || !blocked || module < 0 || module >= Math.round(wallLength(w)) || blocked.foreign.has(module)) return 'Ingen vegg her';
+  if (blocked.openings.has(module)) return 'Folie kan ikke ligge på en åpning';
   const f = felt(rules, module);
   if (textilesOn(v, wallId, s).some((t) => t.from < f.b - EPS && t.from + t.width > f.a + EPS)) return 'Feltet er dekket av en tekstilvegg';
   return null;
