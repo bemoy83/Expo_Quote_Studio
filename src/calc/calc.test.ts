@@ -29,9 +29,10 @@ describe('R1 · row stand 3 × 3, nothing added', () => {
     expect(qty(res, S.beam)).toBe(3);
     expect(res.keyFigures.beamLengths).toBe(1);
   });
-  it('labour', () => {
+  it('labour: estimated, not on the quote', () => {
     // 9 × 0,5 + 3 × 0,15 = 4,95 → 5
-    expect(qty(res, S.labour)).toBe(5);
+    expect(res.keyFigures.hours).toBe(5);
+    expect(qty(res, '9900')).toBe(0);
   });
   it('key figures', () => {
     expect(res.keyFigures).toMatchObject({ area: 9, openSides: 1, wallLm: 9, openings: 0 });
@@ -41,10 +42,11 @@ describe('R1 · row stand 3 × 3, nothing added', () => {
 describe('R2 · corner stand 6 × 4, backroom 2 × 2, textile wall 4 m', () => {
   // Walls: back 6 + left 4 + backroom right face 2 + front face 2 = 14 modules, one of them a door.
   const res = run(r2());
-  it('wall parts', () => {
+  it('wall parts: the door module has its rails in the header', () => {
     expect(qty(res, '6120-9010')).toBe(13);
-    expect(qty(res, S.topRail)).toBe(14);
+    expect(qty(res, S.topRail)).toBe(13);
     expect(qty(res, S.bottomRail)).toBe(13);
+    expect(res.keyFigures.topRails).toBe(14);
     expect(res.keyFigures.wallLm).toBe(13);
   });
   it('posts', () => {
@@ -72,7 +74,7 @@ describe('R2 · corner stand 6 × 4, backroom 2 × 2, textile wall 4 m', () => {
   });
   it('labour', () => {
     // 14 × 0,5 + 10 × 0,15 + 1 × 0,25 + 10,3458 × 0,35 = 12,37 → 12,5
-    expect(qty(res, S.labour)).toBe(12.5);
+    expect(res.keyFigures.hours).toBe(12.5);
   });
 });
 
@@ -90,7 +92,7 @@ describe('R3 · island 8 × 6, beams only', () => {
   });
   it('labour', () => {
     // 34 × 0,15 + 6 × 0,25 = 6,6 → 6,5
-    expect(qty(res, S.labour)).toBe(6.5);
+    expect(res.keyFigures.hours).toBe(6.5);
   });
 });
 
@@ -99,12 +101,12 @@ describe('openings', () => {
     const v = createVariant('A', { width: 4, depth: 3, type: 'row' });
     return { ...v, openings: mods.map((m, i) => ({ id: `o${i}`, wallId: 'side-back', module: m, product: i % 2 ? CURTAIN : DOOR })) };
   };
-  it('several openings on one wall: no plate, no bottom rail, top rail kept, one header each', () => {
+  it('several openings on one wall: no plate, rails in the header (Foga), one header each', () => {
     // Walls: back 4 + left 3 + right 3 = 10 modules
     const res = run(withOpenings(0, 2));
     expect(qty(res, '6120-9010')).toBe(8);
     expect(qty(res, S.bottomRail)).toBe(8);
-    expect(qty(res, S.topRail)).toBe(10);
+    expect(qty(res, S.topRail)).toBe(8);
     expect(qty(res, DOOR)).toBe(1);
     expect(qty(res, CURTAIN)).toBe(1);
     expect(qty(res, S.header)).toBe(2);
@@ -191,10 +193,14 @@ describe('labour', () => {
     expect(run(createVariant('A', { width: 1, depth: 1, type: 'row' })).keyFigures.hours).toBe(4);
   });
   it('preliminary rate is flagged', () => {
-    const l = run(r1()).groups.find((g) => g.id === 'labour')!.lines[0];
-    expect(l.preliminary).toBe(true);
+    expect(run(r1()).keyFigures.hoursPreliminary).toBe(true);
     const approved = calc(r1(), { ...RULES, labour: { ...RULES.labour, status: 'godkjent' } }, DEFAULT_CATALOG);
-    expect(approved.groups.find((g) => g.id === 'labour')!.lines[0].preliminary).toBeUndefined();
+    expect(approved.keyFigures.hoursPreliminary).toBe(false);
+  });
+  it('Montering counted in the panel goes on the quote under Andre tjenester', () => {
+    const res = run({ ...r1(), counted: [{ product: '9900', qty: 6 }] });
+    const g = res.groups.find((x) => x.id === 'tjen')!;
+    expect(g.lines).toEqual([expect.objectContaining({ artnr: '9900', qty: 6, unit: 't', sum: 6 * 750, group: 'tjen.montering' })]);
   });
   it('foil adds 0,25 t/m²', () => {
     const v = createVariant('A', { width: 4, depth: 4, type: 'row' });
@@ -208,7 +214,7 @@ describe('labour', () => {
 });
 
 describe('objects, counted items and sums', () => {
-  it('groups by category and sums qty × price', () => {
+  it('groups by main group, lines in subgroup order, and sums qty × price', () => {
     const v = r1();
     const res = run({
       ...v,
@@ -218,10 +224,12 @@ describe('objects, counted items and sums', () => {
       ],
       counted: [{ product: '5190-1', qty: 4 }, { product: '7010', qty: 1 }],
     });
-    const mob = res.groups.find((g) => g.id === 'cat:Møbler')!;
+    const mob = res.groups.find((g) => g.id === 'mob')!;
+    // Bord before Sittemøbler
     expect(mob.lines.map((l) => [l.artnr, l.qty])).toEqual([['5276', 2], ['5190-1', 4]]);
     expect(mob.sum).toBe(2 * 500 + 4 * 220);
-    expect(res.groups.find((g) => g.id === 'cat:Strøm og lys')!.sum).toBe(1250);
+    expect(res.groups.find((g) => g.id === 'lys')!.sum).toBe(1250);
+    expect(res.groups.map((g) => g.id)).toEqual(['vegg', 'mob', 'lys']);
     expect(res.sum).toBe(res.groups.reduce((a, g) => a + g.sum, 0));
   });
   it('unknown art.nr is kept as a placeholder line', () => {

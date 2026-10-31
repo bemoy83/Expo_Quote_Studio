@@ -1,8 +1,11 @@
+import { groupItems, resolveGroup } from '../catalog/groups';
 import { displayName, indexCatalog } from '../catalog/lookup';
 import type { Catalog, Unit } from '../catalog/types';
 import { CELL, openSides, parseCellKey } from '../domain/grid';
 import type { Point, Variant } from '../domain/types';
 import { builtModules, wallPoints } from '../domain/walls';
+import { structureOf } from '../foga/fromVariant';
+import type { FogaStructure } from '../foga/structure';
 import type { Rules } from '../rules/rules';
 import { layoutBeams, type BeamLayout } from './beams';
 import { production, type Production } from './production';
@@ -17,14 +20,15 @@ export interface CalcLine {
   artnr: string;
   /** Example or unknown price: * on the quote. */
   placeholder: boolean;
-  /** Rate not yet approved: † on the quote. */
-  preliminary?: boolean;
+  /** Subgroup id (catalog/groups.ts), from the product. */
+  group: string;
+  /** Built from Foga parts: the picking list shows the parts (foga/engine.ts) instead of this line. */
+  foga?: true;
 }
 
-export type GroupId = 'walls' | 'frame' | 'beams' | 'openings' | 'textile' | 'foil' | 'floor' | 'loose' | 'labour' | `cat:${string}`;
-
+/** One main group of the product grouping, lines in subgroup order. */
 export interface CalcGroup {
-  id: GroupId;
+  id: string;
   name: string;
   lines: CalcLine[];
   sum: number;
@@ -51,7 +55,10 @@ export interface KeyFigures {
   textileM2: number;
   textileLm: number;
   foilM2: number;
+  /** Estimated assembly hours. Included in the unit prices; on the quote only if Montering is counted. */
   hours: number;
+  /** The hour rates are not approved yet. */
+  hoursPreliminary: boolean;
 }
 
 export interface CalcResult {
@@ -61,6 +68,8 @@ export interface CalcResult {
   beams: BeamLayout;
   posts: Point[];
   production: Production;
+  /** What is built, in Foga terms: the quote counts from it and the picking list lists its parts. */
+  foga: FogaStructure;
 }
 
 const r1 = (n: number) => Math.round(n * 10) / 10;
@@ -82,6 +91,7 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog): CalcResult {
       sum: q * price,
       artnr,
       placeholder: !hit || !!hit.variant.placeholder,
+      group: resolveGroup(hit?.product.group).subgroup.id,
       ...extra,
     };
   };
@@ -101,44 +111,42 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog): CalcResult {
   }
   const walled = mods.filter((m) => !m.opening);
   const roomWalls = new Set(v.walls.filter((w) => w.room).map((w) => w.id));
-  const plates = new Map<string, number>();
-  for (const m of walled) plates.set(m.plate, (plates.get(m.plate) ?? 0) + 1);
+  const prod = production(v, rules.textile.inFrame, '');
+  // Foga structure: posts, walled modules, headers and beam lengths are counted from it
+  const foga = structureOf({ mods, posts: allPosts.size, beams, production: prod });
+  const fogaWalls = foga.modules.filter((m) => !m.opening);
+  const headers = foga.modules.length - fogaWalls.length;
+  const beamLm = foga.beams.reduce((a, b) => a + b.lengthMm, 0) / 1000;
+  const plates = countBy(fogaWalls.map((m) => m.plate));
   const plateSize = `${rules.wall.plate.width} × ${rules.wall.plate.height} mm`;
 
-  const groups: CalcGroup[] = [];
-  const push = (id: GroupId, name: string, lines: CalcLine[]) => {
-    const kept = lines.filter((l) => l.qty > 0);
-    if (kept.length) groups.push({ id, name, lines: kept, sum: kept.reduce((a, l) => a + l.sum, 0) });
-  };
+  const lines: CalcLine[] = [];
+  const add = (...ls: CalcLine[]) => lines.push(...ls.filter((l) => l.qty > 0));
+  const built = { foga: true } as const;
 
-  push(
-    'walls',
-    'Standvegger',
-    [...plates].map(([ral, n]) => {
+  add(
+    ...[...plates].map(([ral, n]) => {
       const hit = idx.plateByRal.get(ral);
-      return hit ? line(hit.variant.artnr, n, { meta: `RAL ${ral} · ${plateSize}` }) : line(`RAL ${ral}`, n);
+      return hit ? line(hit.variant.artnr, n, { ...built, meta: `RAL ${ral} · ${plateSize}` }) : line(`RAL ${ral}`, n, { ...built, group: 'vegg.plater' });
     }),
+    line(sys.post, foga.posts, { ...built, ...(beamPosts ? { meta: `${points.size} vegg, ${beamPosts} takdrager` } : {}) }),
+    // An opening's rails belong to its header (overstykke), priced with the header
+    line(sys.topRail, fogaWalls.length, built),
+    line(sys.bottomRail, fogaWalls.length, built),
   );
-  push('frame', 'Stolper og profiler', [
-    line(sys.post, allPosts.size, beamPosts ? { meta: `${points.size} vegg, ${beamPosts} takdrager` } : {}),
-    line(sys.topRail, mods.length),
-    line(sys.bottomRail, walled.length),
-  ]);
-  const nLengths = beams.segments.length;
-  push('beams', 'Takdrager', [line(sys.beam, beams.lm, { meta: `${nLengths} ${nLengths === 1 ? 'lengde' : 'lengder'}` })]);
+  const nLengths = foga.beams.length;
+  add(line(sys.beam, beamLm, { ...built, meta: `${nLengths} ${nLengths === 1 ? 'lengde' : 'lengder'}` }));
 
   const openingCounts = countBy(mods.flatMap((m) => (m.opening ? [m.opening.product] : [])));
-  const nOpenings = mods.filter((m) => m.opening).length;
-  push('openings', 'Dører og forheng', [...[...openingCounts].map(([a, n]) => line(a, n)), line(sys.header, nOpenings)]);
+  add(...[...openingCounts].map(([a, n]) => line(a, n)), line(sys.header, headers, built));
 
   // Textile walls: quantities from the InFrame production rules
-  const prod = production(v, rules.textile.inFrame, '');
   const nFrames = prod.pieces.length;
   const blank = prod.pieces.filter((p) => !p.motif).reduce((a, p) => a + p.area, 0);
-  push('textile', 'Tekstilvegger', [
-    line(sys.frame, prod.lm, { meta: `${nFrames} ${nFrames === 1 ? 'ramme' : 'rammer'} · inkl. stag` }),
+  add(
+    line(sys.frame, prod.lm, { ...built, meta: `${nFrames} ${nFrames === 1 ? 'ramme' : 'rammer'} · inkl. stag` }),
     line(sys.print, prod.area, { meta: blank > 0 ? `inkl. bleed · ${(Math.round(blank * 10) / 10).toString().replace('.', ',')} m² uten motiv` : 'inkl. bleed' }),
-  ]);
+  );
 
   // Foil
   const wallIds = new Set(v.walls.map((w) => w.id));
@@ -146,34 +154,26 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog): CalcResult {
   const foils = v.foils.filter((f) => wallIds.has(f.wallId));
   const foilFull = foils.filter((f) => f.full).length * fullFelt;
   const foilDecal = foils.filter((f) => !f.full).reduce((a, f) => a + f.width * f.height, 0);
-  push('foil', 'Profilering', [
+  add(
     line(sys.foil, foilDecal, { meta: 'innenfor ett veggfelt' }),
     line(sys.foilFull, foilFull, { meta: `${foils.filter((f) => f.full).length} felt · ${plateSize}` }),
-  ]);
+  );
 
   // Floor: cells × 0,25 m² per product. Waste is ours and not counted.
   const floor = floorAreas(v);
   const floorTotal = Object.values(floor).reduce((a, b) => a + b, 0);
-  push('floor', 'Gulv', [
+  add(
     ...Object.entries(floor).map(([a, m2]) => line(a, m2, { meta: `${a} · ferdig lagt` })),
     line(sys.floorProtection, v.floor.protection ? floorTotal : 0),
-  ]);
+  );
 
-  // Placed objects and counted items, grouped by product category in catalog order
+  // Placed objects and counted items (Montering too: hours counted in the panel), in catalog order
   const objectCounts = countBy(v.objects.map((o) => o.product));
   for (const c of v.counted) objectCounts.set(c.product, (objectCounts.get(c.product) ?? 0) + c.qty);
-  const byCategory = new Map<string, CalcLine[]>();
-  for (const [a, n] of objectCounts) {
-    const cat = idx.byArtnr.get(a)?.product.category ?? 'Annet';
-    byCategory.set(cat, [...(byCategory.get(cat) ?? []), line(a, n)]);
-  }
-  const catOrder = [...new Set(catalog.products.map((p) => p.category)), 'Annet'];
-  [...byCategory].sort(([a], [b]) => catOrder.indexOf(a) - catOrder.indexOf(b)).forEach(([cat, lines]) => push(`cat:${cat}`, cat, lines));
+  add(...[...objectCounts].map(([a, n]) => line(a, n)));
 
-  push(
-    'loose',
-    'Løse linjer',
-    v.loose.map((l) => ({
+  add(
+    ...v.loose.map((l) => ({
       name: l.name,
       qty: l.qty,
       unit: 'stk' as const,
@@ -181,22 +181,26 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog): CalcResult {
       sum: l.qty * l.price,
       artnr: '',
       placeholder: false,
+      group: 'tjen.lose',
       meta: l.price ? undefined : 'pris settes i tilbudet',
     })),
   );
 
-  // Labour
+  const groups: CalcGroup[] = groupItems(lines, (l) => l.group).map(({ group, subgroups }) => {
+    const ls = subgroups.flatMap((x) => x.items);
+    return { id: group.id, name: group.name, lines: ls, sum: ls.reduce((a, l) => a + l.sum, 0) };
+  });
+
+  // Labour: an estimate only. It is included in the unit prices; the quote gets Montering when it is counted.
   const L = rules.labour;
   const textileM2 = prod.area;
   const raw =
     L.perModule * mods.length +
-    L.perLmBeam * beams.lm +
+    L.perLmBeam * beamLm +
     L.perBeamPost * beamPosts +
     L.perM2Textile * textileM2 +
     L.perM2Foil * (foilFull + foilDecal);
-  const hours = mods.length + beams.lm > 0 ? Math.max(L.min, Math.round(raw / L.round) * L.round) : 0;
-  const prelim = L.status === 'foreløpig';
-  push('labour', 'Montering', [line(sys.labour, hours, prelim ? { meta: 'foreløpig sats', preliminary: true } : {})]);
+  const hours = mods.length + beamLm > 0 ? Math.max(L.min, Math.round(raw / L.round) * L.round) : 0;
 
   return {
     groups,
@@ -206,23 +210,25 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog): CalcResult {
       openSides: openSides(v.stand).length,
       wallLm: walled.length,
       roomWallLm: walled.filter((m) => roomWalls.has(m.wallId)).length,
-      openings: nOpenings,
-      beamLm: beams.lm,
+      openings: headers,
+      beamLm,
       beamLengths: nLengths,
       posts: allPosts.size,
       beamPosts,
-      topRails: mods.length,
-      bottomRails: walled.length,
+      topRails: foga.modules.length,
+      bottomRails: foga.modules.length,
       floor,
       floorTotal,
       textileM2,
       textileLm: prod.lm,
       foilM2: foilFull + foilDecal,
       hours,
+      hoursPreliminary: L.status === 'foreløpig',
     },
     beams,
     posts: [...allPosts.values()],
     production: prod,
+    foga,
   };
 }
 

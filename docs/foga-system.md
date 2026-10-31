@@ -147,8 +147,10 @@ Systemhøyde fra gulv: 2490 + 50 = 2540 mm.
 
 ### Plukkliste
 
-Plukklisten er en **deleliste gruppert etter produkttype**: Stolper, Skinner, Takdrager, Tekstilvegger,
-Veggplater, og så løsøre (dører og forheng, gulv, møbler). Ferdigmonterte enheter plukkes som stk (lagres ferdig montert):
+Plukklisten er en **deleliste gruppert etter den felles produktgrupperingen** (`src/catalog/groups.ts`), samme
+hovedgrupper og rekkefølge som panelet, kalkylen og tilbudet. Foga-delene ligger under Vegger og bakrom (Veggplater,
+Stolper, Skinner, Takdrager, Dører og forheng med overstykket) og Profilering → Tekstilvegger. Montering og løse
+linjer (Andre tjenester) plukkes ikke. Ferdigmonterte enheter plukkes som stk (lagres ferdig montert):
 
 - **Stolpe 94 med justeringsfot** (700 + M10 × 65)
 - **Toppskinne 92** og **bunnskinne 91**, 960 mm, med én 600 i hver ende
@@ -182,8 +184,10 @@ src/foga/
   engine.ts     bom(struktur, oppskrifter, mål) → deleliste: profiler per kappelengde, koblinger, føtter, plater
 ```
 
-Motoren vet ingenting om gulv, møbler eller priser. Plukklisten setter sammen Foga-stykklisten og løsøre fra
-kalkylen, delt etter produkt. Tilbudet bruker fortsatt kalkylen (`src/calc`) til priser.
+Motoren vet ingenting om gulv, møbler eller priser. Kalkylen bygger Foga-strukturen én gang (`structureOf`) og
+teller stolper, skinner, takdrager og plater fra den, så tilbud og plukkliste beskriver det samme. Plukklisten
+setter sammen Foga-stykklisten og kalkylelinjene som ikke er bygget av Foga-deler. Prisene kommer fortsatt fra
+kalkylen (`src/calc`).
 
 ## 5. Mål og prisfilosofi (Bjørn 31.10.2026)
 

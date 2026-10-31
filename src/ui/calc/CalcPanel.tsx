@@ -1,22 +1,23 @@
 import { FileText } from 'lucide-react'
-import type { CalcGroup, CalcResult } from '../../calc/calc'
+import type { CalcResult } from '../../calc/calc'
 import { LAYER_COLOR } from '../colors'
 import { Button } from '../controls'
 import { rules } from '../env'
 import { fmt, kr } from '../format'
 import type { Highlight } from '../tools'
 
-/** Which plan layer a calc group belongs to. */
-export function layerOf(g: CalcGroup): Highlight {
-  if (g.id === 'walls' || g.id === 'frame') return 'walls'
-  if (g.id === 'beams') return 'beams'
-  if (g.id === 'openings') return 'openings'
-  if (g.id === 'textile') return 'textile'
-  if (g.id === 'foil') return 'foil'
-  if (g.id === 'floor') return 'floor'
-  if (g.id.startsWith('cat:')) return 'objects'
-  return null
+/** Plan layer of a subgroup or main group id (catalog/groups.ts). */
+const LAYER: Record<string, Highlight> = {
+  'vegg.takdrager': 'beams',
+  'vegg.dorer': 'openings',
+  'prof.tekstil': 'textile',
+  'prof.folie': 'foil',
+  vegg: 'walls',
+  gulv: 'floor',
+  prof: 'textile',
+  tjen: null,
 }
+export const layerOf = (id: string): Highlight => (id in LAYER ? LAYER[id] : id.includes('.') ? layerOf(id.split('.')[0]) : 'objects')
 
 const DOT: Partial<Record<string, string>> = LAYER_COLOR
 
@@ -38,22 +39,21 @@ export function CalcPanel({ res, name, onHover, onQuote }: { res: CalcResult; na
       </div>
       <div className="calc-scroll" onMouseLeave={() => onHover(null)}>
         {res.groups.map((g) => (
-          <section key={g.id} className="cg" onMouseEnter={() => onHover(layerOf(g))}>
-            <div className="cg-head">
-              <span className="sq" style={DOT[g.id] ? { background: DOT[g.id], borderRadius: '50%' } : undefined} />
+          <section key={g.id} className="cg">
+            <div className="cg-head" onMouseEnter={() => onHover(layerOf(g.id))}>
+              <span className="sq" style={DOT[layerOf(g.id) ?? ''] ? { background: DOT[layerOf(g.id) ?? ''], borderRadius: '50%' } : undefined} />
               <span className="name">{g.name}</span>
               <span className="num">
                 {kr(g.sum)}
               </span>
             </div>
             {g.lines.map((l, i) => (
-              <div key={l.artnr + l.name + i} className="cl">
+              <div key={l.artnr + l.name + i} className="cl" onMouseEnter={() => onHover(layerOf(l.group))}>
                 <span className="n">{l.name}</span>
                 <span className="s">{kr(l.sum)}</span>
                 <span className="meta">
                   {fmt(l.qty)} {l.unit} × {kr(l.price)}
                   {l.meta ? ` · ${l.meta}` : ''}
-                  {l.preliminary && <span className="ph"> · foreløpig sats</span>}
                   {l.placeholder && <span className="ph"> · plassholder</span>}
                 </span>
               </div>
@@ -70,6 +70,12 @@ export function CalcPanel({ res, name, onHover, onQuote }: { res: CalcResult; na
         <div className="inkl num">
           inkl. mva. {kr(res.sum * (1 + rules.vat))} · {kr(res.keyFigures.area ? res.sum / res.keyFigures.area : 0)} per m²
         </div>
+        {res.keyFigures.hours > 0 && (
+          <div className="inkl num">
+            Montering ca. {fmt(res.keyFigures.hours)} t, inngår i prisene
+            {res.keyFigures.hoursPreliminary && <span className="ph"> · foreløpig sats</span>}
+          </div>
+        )}
         <Button variant="primary" icon={FileText} onClick={onQuote}>
           Åpne tilbud
         </Button>

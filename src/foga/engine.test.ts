@@ -2,19 +2,21 @@
 // (pre-assembled), rails 92/91 at cc − 40 = 960 with a 600 in each end (pre-assembled), HDF 976 × 2440 per walled
 // module, takdrager 292 between posts with two 600 per end (pre-assembled), frames 43TX + 4 × 613 + 2 × 520, braces
 // 90 with a 600 in each end (pre-assembled, listed with their frames), header over door or curtain:
-// 2490 − 20 − 2000 − 10 = 460, plate 976 × 410. The list is grouped by product type.
+// 2490 − 20 − 2000 − 10 = 460, plate 976 × 410. Lines go under the subgroups of the shared product grouping (catalog/groups.ts).
 import { describe, expect, it } from 'vitest';
 import { createVariant } from '../domain/variant';
 import { RULES } from '../rules/rules';
-import { bom, type Bom, type BomGroupId } from './engine';
+import { BOM_GROUP, bom, type Bom } from './engine';
 import { bomSizes, fromVariant } from './fromVariant';
 import { RECIPES } from './recipes';
 import type { FogaStructure } from './structure';
 
 const Z = bomSizes(RULES);
 const empty: FogaStructure = { posts: 0, modules: [], beams: [], frames: [] };
-const group = (b: Bom, id: BomGroupId) => b.groups.find((g) => g.id === id)?.lines ?? [];
-const line = (b: Bom, id: BomGroupId, name: string) => group(b, id).find((l) => l.name.startsWith(name));
+type Key = keyof typeof BOM_GROUP;
+const group = (b: Bom, id: Key) => b.lines.filter((l) => l.group === BOM_GROUP[id]).map(({ group: _, ...l }) => l);
+const line = (b: Bom, id: Key, name: string) => group(b, id).find((l) => l.name.startsWith(name));
+const subgroups = (b: Bom) => [...new Set(b.lines.map((l) => l.group))];
 
 describe('sizes from the rules', () => {
   it('post 2490, cc 1000', () => expect(Z).toEqual({ postLength: 2490, cc: 1000 }));
@@ -24,8 +26,8 @@ describe('row stand 3 × 3', () => {
   // Back, left, right = 9 modules, 10 posts. Front open: one takdrager 3 m resting on the side walls.
   const b = bom(fromVariant(createVariant('A', { width: 3, depth: 3, type: 'row' }), RULES), RECIPES, Z);
 
-  it('grouped by product type, in picking order', () => {
-    expect(b.groups.map((g) => g.id)).toEqual(['posts', 'rails', 'beams', 'plates']);
+  it('in the subgroups of the product grouping, in tree order', () => {
+    expect(subgroups(b)).toEqual(['vegg.plater', 'vegg.stolper', 'vegg.skinner', 'vegg.takdrager']);
   });
   it('posts: one pre-assembled piece with the foot', () => {
     expect(group(b, 'posts')).toEqual([
@@ -64,7 +66,7 @@ describe('tekstilvegger', () => {
 
   it('43TX 2W + 2H mitred, 4 × 613, 2 × 520', () => {
     const b = bom({ ...empty, frames: [frame] }, RECIPES, Z);
-    expect(b.groups.map((g) => g.id)).toEqual(['textile']);
+    expect(subgroups(b)).toEqual(['prof.tekstil']);
     expect(line(b, 'textile', '43TX')).toMatchObject({ artnr: '873 805 22', detail: '2 × 2540 · 2 × 970 mm', qty: 4, preassembled: false });
     expect(line(b, 'textile', '43TX')?.lm).toBeCloseTo(7.02);
     expect(line(b, 'textile', '613')?.qty).toBe(4);
@@ -89,14 +91,16 @@ describe('tekstilvegger', () => {
 });
 
 describe('openings', () => {
-  it('a door or curtain keeps its rails and gets a header plate: 460 − 40 − 30 + 20 = 410', () => {
+  it('a door or curtain gets a header with the same rails and a plate of 460 − 40 − 30 + 20 = 410, under Dører og forheng', () => {
     const s = { ...empty, modules: [{ plate: '9010', opening: false }, { plate: '9010', opening: true }] };
     const b = bom(s, RECIPES, Z);
-    expect(group(b, 'plates')).toEqual([
-      expect.objectContaining({ ral: '9010', detail: '976 × 2440 mm', qty: 1 }),
+    expect(group(b, 'plates')).toEqual([expect.objectContaining({ ral: '9010', detail: '976 × 2440 mm', qty: 1 })]);
+    expect(line(b, 'rails', 'Toppskinne')?.qty).toBe(1);
+    expect(line(b, 'rails', 'Bunnskinne')?.qty).toBe(1);
+    expect(group(b, 'header')).toEqual([
       expect.objectContaining({ ral: '9010', detail: '976 × 410 mm · overstykke', qty: 1 }),
+      expect.objectContaining({ name: 'Toppskinne 92, 960 mm, med 600', detail: '92 × 960 mm · 2 × 600 (871 003 92) · overstykke', qty: 1 }),
+      expect.objectContaining({ name: 'Bunnskinne 91, 960 mm, med 600', qty: 1 }),
     ]);
-    expect(line(b, 'rails', 'Toppskinne')?.qty).toBe(2);
-    expect(line(b, 'rails', 'Bunnskinne')?.qty).toBe(2);
   });
 });

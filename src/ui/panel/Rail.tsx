@@ -1,6 +1,7 @@
 import { Blinds, Box, Check, Ungroup, ChevronRight, DoorClosed, Eraser, PaintBucket, Paintbrush, Search, Trash2, Upload } from 'lucide-react'
 import { Fragment, useMemo, useRef, useState } from 'react'
 import type { CalcResult } from '../../calc/calc'
+import { mainGroupOf, PRODUCT_GROUPS, resolveGroup } from '../../catalog/groups'
 import type { Product } from '../../catalog/types'
 import { setCounted, setStand } from '../../domain/edit'
 import { addObjectAnywhere, removeObjects } from '../../domain/objects'
@@ -123,8 +124,8 @@ export function Rail(p: RailProps) {
 function menuCounts(v: Variant): Record<string, number> {
   const out: Record<string, number> = {}
   const add = (artnr: string, n: number) => {
-    const m = productOf(artnr)?.menu
-    if (m) out[m] = (out[m] ?? 0) + n
+    const p = productOf(artnr)
+    if (p) out[mainGroupOf(p.group)] = (out[mainGroupOf(p.group)] ?? 0) + n
   }
   v.objects.forEach((o) => add(o.product, 1))
   v.counted.forEach((c) => add(c.product, c.qty))
@@ -335,7 +336,7 @@ function WallSection({ v, res, brush, tool, pick, onEdit, onToast, onSelect, sel
 function FloorSection({ v, res, brush, tool, pick, onEdit }: RailProps) {
   const [sel, setSel] = useState<Record<string, number>>({})
   const areas = res.keyFigures.floor
-  const floors = catalog.products.filter((p) => p.menu === 'gulv' && p.kind === 'surface')
+  const floors = catalog.products.filter((p) => mainGroupOf(p.group) === 'gulv' && p.kind === 'surface')
   const eraser = tool === 'erase' && brush?.kind === 'floor'
   const protection = productOf(catalog.system.floorProtection)
   return (
@@ -527,20 +528,23 @@ function ProfileSection({ v, res, brush, tool, pick, motifs, onAddMotif, onSelec
 }
 
 function EquipSection(p: RailProps & { menu: string }) {
-  const products = catalog.products.filter((x) => x.menu === p.menu && (x.kind === 'object' || x.kind === 'counted'))
-  const subgroups = [...new Set(products.map((x) => x.subgroup ?? ''))]
+  const products = catalog.products.filter((x) => mainGroupOf(x.group) === p.menu && (x.kind === 'object' || x.kind === 'counted'))
+  const subgroups = PRODUCT_GROUPS.find((g) => g.id === p.menu)?.subgroups ?? []
+  const many = subgroups.length > 1
   return (
     <>
-      {subgroups.map((sg) => (
-        <div key={sg}>
-          {sg && <div className="panel-sec eyebrow">{sg}</div>}
-          {products
-            .filter((x) => (x.subgroup ?? '') === sg)
-            .map((x) => (
+      {subgroups.map((sg) => {
+        const list = products.filter((x) => resolveGroup(x.group).subgroup.id === sg.id)
+        if (!list.length) return null
+        return (
+          <div key={sg.id}>
+            {many && <div className="panel-sec eyebrow">{sg.name}</div>}
+            {list.map((x) => (
               <CatalogRow key={x.id} {...p} product={x} />
             ))}
-        </div>
-      ))}
+          </div>
+        )
+      })}
     </>
   )
 }
@@ -558,14 +562,14 @@ function SearchResults(p: RailProps & { q: string }) {
         <span className="step">{hits.length} treff</span>
       </div>
       {hits.map((x) => (
-        <CatalogRow key={x.id} {...p} product={x} />
+        <CatalogRow key={x.id} {...p} product={x} showGroup />
       ))}
     </>
   )
 }
 
 /** A placed object (counter + brush) or a counted item (counter per variant). */
-function CatalogRow({ v, product, brush, tool, pick, onEdit, onToast }: RailProps & { product: Product }) {
+function CatalogRow({ v, product, brush, tool, pick, onEdit, onToast, showGroup }: RailProps & { product: Product; showGroup?: boolean }) {
   const [vi, setVi] = useState<number | null>(null)
   const isObject = product.kind === 'object'
   const counts = product.variants.map((x) =>
@@ -585,7 +589,7 @@ function CatalogRow({ v, product, brush, tool, pick, onEdit, onToast }: RailProp
     if (next) onEdit(() => next!)
     else onToast(`Ikke plass til ${product.name.toLowerCase()} på standen`)
   }
-  const menuName = product.subgroup ? null : product.category
+  const groupName = showGroup ? resolveGroup(product.group).subgroup.name : null
   return (
     <ProductRow
       on={tot > 0}
@@ -595,12 +599,12 @@ function CatalogRow({ v, product, brush, tool, pick, onEdit, onToast }: RailProp
       meta={
         <>
           {product.variants.length > 1 && <>{cur.name} · </>}
-          {menuName && <>{menuName} · </>}
+          {groupName && <>{groupName} · </>}
           <span className="num">
             {cur.artnr} · {kr(cur.price)} kr
           </span>
           {product.dim && <> · {product.dim}</>}
-          {isObject ? ' · tegnes' : ' · plasseres senere'}
+          {isObject ? ' · tegnes' : product.unit === 't' ? ' · timer' : ' · plasseres senere'}
         </>
       }
       result={tot ? `${product.variants.length > 1 ? `${tot} totalt · ` : ''}${kr(sum)} kr` : null}
@@ -618,7 +622,7 @@ function CatalogRow({ v, product, brush, tool, pick, onEdit, onToast }: RailProp
 function ObjectThumb({ product, color }: { product: Product; color?: string }) {
   const f = product.footprint
   if (!f) {
-    const m = MENUS.find((x) => x.key === product.menu)
+    const m = MENUS.find((x) => x.key === mainGroupOf(product.group))
     const I = m?.icon ?? Box
     return <I size={16} />
   }

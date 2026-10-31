@@ -1,5 +1,6 @@
 // Edits to the product list (Produktliste), stored apart from the built-in catalog so code updates to the
 // example catalog still come through. Pure: apply, list as rows, CSV export and import.
+import { FALLBACK_SUBGROUP, isSubgroup, resolveGroup, subgroupByName } from './groups';
 import type { Catalog, Product, ProductVariant, Unit } from './types';
 import { toCsvText } from '../persistence/csv';
 
@@ -38,7 +39,9 @@ export function applyEdits(base: Catalog, e: CatalogEdits): Catalog {
     const single = p.variants.length === 1 ? e.variants[p.variants[0].artnr]?.name : undefined;
     return { ...p, ...(single !== undefined ? { name: single } : {}), variants };
   });
-  return { ...base, products: [...products, ...e.added] };
+  // Added products saved before the shared grouping have no valid group: they go to the fallback
+  const added = e.added.map((p) => (isSubgroup(p.group) ? p : { ...p, group: FALLBACK_SUBGROUP }));
+  return { ...base, products: [...products, ...added] };
 }
 
 export interface CatalogRow {
@@ -47,12 +50,12 @@ export interface CatalogRow {
   product: string;
   variant: string | null;
   unit: Unit;
-  category: string;
+  /** Subgroup id (groups.ts). */
+  group: string;
   price: number;
   placeholder: boolean;
   /** Added by the user: everything can be edited and the row can be removed. */
   added: boolean;
-  menu?: string;
   kind: Product['kind'];
 }
 
@@ -64,11 +67,10 @@ export function catalogRows(c: Catalog, e: CatalogEdits): CatalogRow[] {
       product: p.name,
       variant: p.variants.length > 1 ? v.name : null,
       unit: p.unit,
-      category: p.category,
+      group: p.group,
       price: v.price,
       placeholder: !!v.placeholder,
       added: added.has(p.id),
-      menu: p.menu,
       kind: p.kind,
     })),
   );
@@ -78,7 +80,7 @@ export function catalogRows(c: Catalog, e: CatalogEdits): CatalogRow[] {
 export function editRow(
   e: CatalogEdits,
   row: CatalogRow,
-  patch: Partial<Pick<CatalogRow, 'artnr' | 'product' | 'variant' | 'unit' | 'category' | 'price' | 'placeholder' | 'menu'>>,
+  patch: Partial<Pick<CatalogRow, 'artnr' | 'product' | 'variant' | 'unit' | 'group' | 'price' | 'placeholder'>>,
 ): CatalogEdits {
   if (row.added) {
     return {
@@ -94,8 +96,7 @@ export function editRow(
           ...(patch.price !== undefined ? { price: patch.price } : {}),
           ...(patch.placeholder !== undefined ? { placeholder: patch.placeholder } : {}),
         };
-        const menu = 'menu' in patch ? patch.menu || undefined : p.menu;
-        return { ...p, id: artnr, name, unit: patch.unit ?? p.unit, category: patch.category ?? p.category, menu, variants: [variant] };
+        return { ...p, id: artnr, name, unit: patch.unit ?? p.unit, group: patch.group ?? p.group, variants: [variant] };
       }),
     };
   }
@@ -123,8 +124,7 @@ export function addProduct(c: Catalog, e: CatalogEdits, fields: Partial<Product>
     name,
     kind: 'counted',
     unit: fields.unit ?? 'stk',
-    category: fields.category ?? 'Annet',
-    ...(fields.menu ? { menu: fields.menu } : {}),
+    group: fields.group ?? FALLBACK_SUBGROUP,
     variants: [{ artnr, name, price: fields.price ?? 0, placeholder: fields.price === undefined }],
   };
   return { edits: { ...e, added: [...e.added, p] }, artnr };
@@ -145,9 +145,11 @@ const num = (n: number) => String(Math.round(n * 100) / 100).replace('.', ',');
 
 /** The product list as CSV (see toCsvText). */
 export function toCSV(rows: CatalogRow[]): string {
-  const out = [['Varenr', 'Navn', 'Enhet', 'Kategori', 'Pris', 'Status']];
-  for (const r of rows)
-    out.push([r.artnr, r.variant ? `${r.product} ${r.variant}` : r.product, r.unit, r.category, num(r.price), r.placeholder ? 'Plassholder' : 'Bekreftet']);
+  const out = [['Varenr', 'Navn', 'Enhet', 'Gruppe', 'Undergruppe', 'Pris', 'Status']];
+  for (const r of rows) {
+    const g = resolveGroup(r.group);
+    out.push([r.artnr, r.variant ? `${r.product} ${r.variant}` : r.product, r.unit, g.group.name, g.subgroup.name, num(r.price), r.placeholder ? 'Plassholder' : 'Bekreftet']);
+  }
   return toCsvText(out);
 }
 
@@ -192,7 +194,7 @@ const HEADERS: Record<string, string[]> = {
   price: ['pris', 'price', 'pris eks. mva', 'pris eks mva'],
   name: ['navn', 'beskrivelse', 'name'],
   unit: ['enhet', 'unit'],
-  category: ['kategori', 'varegruppe', 'prisgruppe'],
+  group: ['undergruppe', 'gruppe', 'kategori', 'varegruppe', 'prisgruppe'],
 };
 
 export function parsePrice(s: string): number | null {
@@ -203,14 +205,17 @@ export function parsePrice(s: string): number | null {
 }
 
 /**
- * Import a table with a header row. Needs the columns varenr and pris; navn, enhet and kategori are optional.
+ * Import a table with a header row. Needs the columns varenr and pris; navn, enhet and undergruppe (or gruppe) are
+ * optional. A group name that does not match the product grouping puts a new product under Tilbehør.
  * Known art.nr get the new price (and name) and are marked as confirmed; unknown ones are added.
  */
 export function importTable(base: Catalog, e: CatalogEdits, table: string[][]): { edits: CatalogEdits; updated: number; added: number; skipped: number } | { error: string } {
   if (table.length < 2) return { error: 'Filen har ingen rader' };
   const head = table[0].map((h) => h.trim().toLowerCase());
   const col = (k: string) => head.findIndex((h) => HEADERS[k].includes(h));
-  const ci = { artnr: col('artnr'), price: col('price'), name: col('name'), unit: col('unit'), category: col('category') };
+  const ci = { artnr: col('artnr'), price: col('price'), name: col('name'), unit: col('unit') };
+  // The most specific group column wins: undergruppe before gruppe before kategori
+  const groupCols = HEADERS.group.map((h) => head.indexOf(h)).filter((i) => i >= 0);
   if (ci.artnr < 0 || ci.price < 0) return { error: 'Fant ikke kolonnene varenr og pris' };
   let edits = e;
   let updated = 0;
@@ -232,8 +237,8 @@ export function importTable(base: Catalog, e: CatalogEdits, table: string[][]): 
     } else {
       const unitRaw = ci.unit >= 0 ? (r[ci.unit] ?? '').trim() : '';
       const unit = (UNITS as string[]).includes(unitRaw) ? (unitRaw as Unit) : 'stk';
-      const category = ci.category >= 0 ? (r[ci.category] ?? '').trim() || 'Annet' : 'Annet';
-      edits = addProduct(c, edits, { artnr, name: name || artnr, unit, category, price }).edits;
+      const group = groupCols.map((i) => subgroupByName(r[i] ?? '')).find(Boolean) ?? FALLBACK_SUBGROUP;
+      edits = addProduct(c, edits, { artnr, name: name || artnr, unit, group, price }).edits;
       added++;
     }
   }

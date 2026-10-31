@@ -28,11 +28,8 @@ export interface Product {
   name: string;
   kind: ProductKind;
   unit: Unit;
-  /** Price group on the quote (and OMS varegruppe later). */
-  category: string;
-  subgroup?: string;
-  /** Panel menu the product appears under. */
-  menu?: string;
+  /** Subgroup id in the product grouping (groups.ts). The main group is the panel menu and the quote group. */
+  group: string;
   variants: ProductVariant[];
   /** For objects: size used for drawing and collision. */
   footprint?: Footprint;
@@ -54,7 +51,6 @@ export interface SystemParts {
   foil: string;
   foilFull: string;
   floorProtection: string;
-  labour: string;
 }
 
 export interface Catalog {
