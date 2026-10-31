@@ -283,7 +283,7 @@ export default function App() {
                   options={FLOOR_SIZES.map((s) => ({ value: s.label, label: <span className="num">{s.label}</span> }))}
                 />
               )}
-              {view === 'plan' && tool === 'brush' && (brush?.kind === 'wall' || brush?.kind === 'freeTextile') && (
+              {view === 'plan' && tool === 'brush' && (brush?.kind === 'wall' || brush?.kind === 'textile') && (
                 <GridPicker
                   value={brush.kind === 'wall' ? (rules.wall.cc as GridStep) : gridStep}
                   allowed={gridSteps(brush, rules)}
@@ -432,7 +432,6 @@ export default function App() {
     if (!b) return { name: 'Pensel' }
     if (b.kind === 'wall') return { name: `Vegg RAL ${b.ral}`, color: plateColor(b.ral) }
     if (b.kind === 'textile') return { name: 'Tekstilvegg' }
-    if (b.kind === 'freeTextile') return { name: 'Tekstilvegg frittstående' }
     if (b.kind === 'motif') return { name: findMotif(motifs, b.motif)?.name ?? 'Motiv' }
     const r = idx.byArtnr.get(b.product)
     const name = r ? (r.product.variants.length > 1 ? `${r.product.name.split(' ')[0]} ${r.variant.name.toLowerCase()}` : r.product.name) : b.product
@@ -453,9 +452,9 @@ function hint(tool: Tool, brush: Brush | null): string {
     case 'opening':
       return erase ? 'Klikk en åpning for å gjøre den til vegg igjen' : 'Klikk en vegg eller en tom kant for å sette inn åpning med overstykke · klikk en åpning for å bytte fyll'
     case 'textile':
-      return erase ? 'Klikk en tekstilvegg for å fjerne den' : 'Klikk ved en vegg, på siden rammen skal stå · rammen fyller den ledige delen av veggen'
-    case 'freeTextile':
-      return erase ? 'Klikk en frittstående tekstilvegg for å fjerne den' : 'Dra en rett strek på rutenettet, en rute av gangen · velg rutestørrelse i båndet · start der en annen slutter for å lage hjørne · dra videre i samme retning for å forlenge'
+      return erase
+        ? 'Klikk en tekstilvegg for å fjerne den'
+        : 'Dra langs en systemvegg for tekstilvegg på veggen, eller dra fritt for frittstående på fotplater · klikk ved en vegg for å fylle den · én rute av gangen, velg rutestørrelse i båndet · start der en frittstående slutter for hjørne'
     case 'motif':
       return erase ? 'Klikk en foliedekor for å fjerne den, eller en tekstilvegg for å ta bort motivet' : 'Klikk en tekstilvegg for trykk, eller et veggfelt for foliedekor'
     case 'object':

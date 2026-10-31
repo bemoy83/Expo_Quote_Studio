@@ -150,6 +150,10 @@ Systemhøyde fra gulv: 2490 + 50 = 2540 mm.
 Bjørn 31.10.2026. En 43TX-ramme som står alene på fotplater, med tekstil på begge sider. Den er ikke en del av
 systemveggen: den lager ikke rom og kan ikke ha dør (tekstildør med overstykke kommer senere).
 
+- **Én tekstilvegg, én pensel** (Bjørn 31.10.2026): tekstilveggen er den samme, forskjellen er bare montering.
+  En strek tegnet på en systemveggs linje blir tekstilvegg på veggen (InFrame, festet med 520, på siden streken ble
+  startet fra); et klikk ved en vegg fyller den ledige delen. En strek alle andre steder står fritt på fotplater
+  (domain/textileBrush.ts). 25 cm foran en vegg er dermed frittstående.
 - Tegnes med pensel som en rett strek. Den starter i et punkt på **0,25 m-rutenettet** og vokser én rute av gangen
   med rutestørrelsen valgt i båndet: **25, 50, 75 eller 100 cm** (oppriss-rutenettet). Minst 0,25 m. Samme
   tegnerutenett (domain/snapGrid.ts, båndvelgeren GridPicker) brukes av systemveggpenselen, som foreløpig bare har
