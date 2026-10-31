@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { r2, r3 } from '../calc/referenceStands';
 import { createProject, fillFloor } from '../domain/variant';
-import { parse, serialize, type Sketch } from './file';
+import { newSketch, parse, serialize, type Sketch } from './file';
 
 const sketch = (): Sketch => {
   const project = createProject();
@@ -33,5 +33,21 @@ describe('sketch file', () => {
     ['broken variant', JSON.stringify({ format: 'standskisse', versjon: 1, prosjekt: { fields: [] }, varianter: [{ name: 'A' }] })],
   ])('refuses %s', (_, text) => {
     expect(parse(text).ok).toBe(false);
+  });
+});
+
+describe('new sketch', () => {
+  it('is one empty variant A with blank customer fields and no own motifs', () => {
+    const s = newSketch();
+    expect(s.variants.map((v) => v.name)).toEqual(['A']);
+    const [v] = s.variants;
+    expect([v.objects, v.textiles, v.foils, v.rooms, v.openings]).toEqual([[], [], [], [], []]);
+    expect(v.floor.cells).toEqual({});
+    expect(s.project.fields.every((f) => f.value === '')).toBe(true);
+    expect(s.motifs).toEqual([]);
+  });
+  it('round-trips through the file format', () => {
+    const s = newSketch();
+    expect(parse(serialize(s))).toEqual({ ok: true, sketch: s });
   });
 });

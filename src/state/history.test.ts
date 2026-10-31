@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { r1 } from '../calc/referenceStands';
 import { setStand } from '../domain/edit';
 import { createProject } from '../domain/variant';
+import { newSketch } from '../persistence/file';
 import { initState, reduce } from './history';
 
 const start = () => initState({ project: createProject(), variants: [r1()], motifs: [] });
@@ -33,5 +34,15 @@ describe('sketch history', () => {
   it('a no-op edit adds no undo step', () => {
     const s = start();
     expect(reduce(s, { type: 'edit', fn: (v) => v })).toBe(s);
+  });
+  it('Ny replaces everything in one undo step and starts at variant A', () => {
+    let s = reduce(start(), { type: 'duplicate' });
+    const before = s.sketch;
+    s = reduce(s, { type: 'load', sketch: newSketch() });
+    expect(s.current).toBe(0);
+    expect(s.sketch.variants).toHaveLength(1);
+    s = reduce(s, { type: 'undo' });
+    expect(s.sketch).toBe(before);
+    expect(s.current).toBe(1);
   });
 });
