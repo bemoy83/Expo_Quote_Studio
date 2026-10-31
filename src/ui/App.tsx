@@ -387,7 +387,7 @@ export default function App() {
           onToast={showToast}
         />
       ) : page === 'plukkliste' ? (
-        <PickingPage variants={sketch.variants} current={current} onSelect={selectVariant} calcOf={calcFor} />
+        <PickingPage project={sketch.project} variants={sketch.variants} current={current} onSelect={selectVariant} calcOf={calcFor} />
       ) : page === 'arbeidsordre' ? (
         <WorkOrderPage project={sketch.project} variants={sketch.variants} current={current} onSelect={selectVariant} calcOf={calcFor} />
       ) : (

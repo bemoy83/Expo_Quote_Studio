@@ -4,7 +4,7 @@ import type { Catalog, Unit } from '../catalog/types';
 import { CELL, openSides, parseCellKey } from '../domain/grid';
 import type { Payer, Point, StandWallTerms, Variant } from '../domain/types';
 import { DEFAULT_STAND_WALLS } from '../domain/variant';
-import { builtModules, isStandWall, wallPoints, type BuiltModule } from '../domain/walls';
+import { builtModules, wallKind, wallPoints, type BuiltModule, type WallKind } from '../domain/walls';
 import { bom, type Bom } from '../foga/engine';
 import { beamSpecs, bomSizes, structureOf } from '../foga/fromVariant';
 import { RECIPES } from '../foga/recipes';
@@ -175,9 +175,9 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
   const keys = new Set(mods.map((m) => m.key));
   const beams = layoutBeams(v.stand, keys, points, rules.beam.max);
   const wallsById = new Map(v.walls.map((w) => [w.id, w]));
-  const kindOf = (m: BuiltModule) => {
+  const kindOf = (m: BuiltModule): WallKind => {
     const w = wallsById.get(m.wallId);
-    return w && isStandWall(w) ? 'stand' : w?.room ? 'room' : 'inner';
+    return w ? wallKind(w) : 'inner';
   };
   const organiserPays = standWalls.payer === 'arrangør';
   // An opening in a stand wall (only in old sketches) stays the exhibitor's door
@@ -252,7 +252,8 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
     ),
   );
   // The organiser's stand walls, in the organiser's colour, on their own posts
-  const organiserLines: CalcLine[] = theirs.length ? [{ ...wallLine(standWalls.ral, theirs.length, 'Standvegg', share(theirPoints.size, theirs.length)), payer: 'arrangør' as const }] : [];
+  const toOrganiser = (l: CalcLine): CalcLine => ({ ...l, payer: 'arrangør' });
+  const organiserLines: CalcLine[] = theirs.length ? [toOrganiser(wallLine(standWalls.ral, theirs.length, 'Standvegg', share(theirPoints.size, theirs.length)))] : [];
 
   // Takdrager per metre, its own posts included in the price. The organiser's when it follows its stand walls.
   const nLengths = beamLengths.length;
@@ -264,7 +265,7 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
     { id: ITEM.beamPost, qty: beamPosts },
   ];
   const beamLine = line(sys.beam, beamLm, { ...built, meta: beamMeta.join(' · ') }, beamUses);
-  if (organiserBeams) organiserLines.push({ ...beamLine, payer: 'arrangør' });
+  if (organiserBeams) organiserLines.push(toOrganiser(beamLine));
   else add(beamLine);
 
   // Door or curtain with header (overstykke), one product each

@@ -3,24 +3,29 @@
 // lines that are not built from Foga parts. Services and loose quote lines are not picked. Rules: docs/foga-system.md.
 import type { CalcResult } from '../../calc/calc'
 import { groupItems } from '../../catalog/groups'
-import type { Variant } from '../../domain/types'
+import type { Project, Variant } from '../../domain/types'
+import { standWallTerms } from '../../domain/variant'
+import { plateName } from '../env'
 import { count, fmt } from '../format'
 import { PageBand } from '../shell/PageBand'
 import { VariantTabs } from '../shell/VariantTabs'
+import { fromOrganiser } from '../names'
 import { pickRows } from './rows'
 
 interface Props {
+  project: Project
   variants: Variant[]
   current: number
   onSelect: (i: number) => void
   calcOf: (v: Variant) => CalcResult
 }
 
-export function PickingPage({ variants, current, onSelect, calcOf }: Props) {
+export function PickingPage({ project, variants, current, onSelect, calcOf }: Props) {
   const v = variants[current]
   const res = calcOf(v)
   const B = res.bom
   const rows = pickRows(res)
+  const organiser = fromOrganiser(res.keyFigures, plateName(standWallTerms(project).ral))
   const tree = groupItems(rows, (r) => r.group)
   const sum = (f: (l: (typeof B.lines)[number]) => boolean) => B.lines.filter(f).reduce((a, l) => a + l.qty, 0)
   const units = sum((l) => l.preassembled)
@@ -38,7 +43,7 @@ export function PickingPage({ variants, current, onSelect, calcOf }: Props) {
           <div className="page-main">
             <p className="page-intro">
               Deleliste etter gruppe og undergruppe. Ferdigmonterte enheter plukkes som stk; løse profiler står som antall per kappelengde.
-              {res.keyFigures.organiserWallLm > 0 && ` Standvegger fra arrangøren (${fmt(res.keyFigures.organiserWallLm)} lm)${res.keyFigures.organiserBeamLm ? ` og takdrager (${fmt(res.keyFigures.organiserBeamLm)} m)` : ''} bestilles for seg og er ikke med.`}
+              {organiser && ` Arrangøren bestiller ${organiser} for seg, så de er ikke med.`}
             </p>
             <div className="pick-grid tbl-head">
               <span>Art.nr</span>
