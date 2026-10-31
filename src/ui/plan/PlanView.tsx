@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent, type SVGProps } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import { mainGroupOf } from '../../catalog/groups'
-import { canMoveWall, doorAllowed, doorSwing, drawOpening, eraseWalls, paintFloor, paintWalls, segmentKeys, setOpening } from '../../domain/edit'
+import { canMoveWall, doorAllowed, doorSwing, drawOpening, eraseWalls, paintFloor, paintWalls, segmentKeys, setOpening, standWallKeys } from '../../domain/edit'
 import { CELL, parseCellKey, pointAlong, sideLength, sidePoint, wallDirection, wallLength, type Module } from '../../domain/grid'
 import { addObject, conflicts, footprintBox, moveObject, removeObject } from '../../domain/objects'
 import { addFoil, addTextile, faceAt, faceSegment, felt, foilAt, foilCenter, freeSpans, removeFoil, removeTextile, sideOf, textileAt, textileOffset, updateTextile, type FaceSide } from '../../domain/decor'
@@ -54,6 +54,9 @@ interface Props {
 
 /** Main group of each plan layer. Objects go by their own product. */
 const LAYER_GROUP: Record<Exclude<Highlight, null | 'objects'>, string> = { walls: 'vegg', beams: 'vegg', openings: 'vegg', floor: 'gulv', textile: 'prof', foil: 'prof' }
+
+/** Stand walls separate exhibitors and follow the stand type: erasing them is refused. */
+const STAND_WALL_LOCKED = 'Standvegger følger standtypen og kan ikke fjernes'
 
 /** Margin around the stand for the aisle and the side labels, m. */
 export const PLAN_MARGIN = 1.3
@@ -337,7 +340,12 @@ export function PlanView(p: Props) {
         return [m.a, m.b] as [Point, Point]
       })()
       setStroke(null)
-      if (tool === 'erase') p.onEdit((x) => eraseWalls(x, segmentKeys(a, b)))
+      if (tool === 'erase') {
+        const keys = segmentKeys(a, b)
+        const locked = standWallKeys(v)
+        if (keys.some((k) => locked.has(k))) p.onToast(STAND_WALL_LOCKED)
+        p.onEdit((x) => eraseWalls(x, keys))
+      }
       else if (brush?.kind === 'wall') p.onEdit((x) => paintWalls(x, a, b, brush.ral))
     } else if (d.kind === 'click') p.onSelect(d.select)
     else if (d.kind === 'object') {

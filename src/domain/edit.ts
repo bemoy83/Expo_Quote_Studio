@@ -147,14 +147,23 @@ export function splitWall(w: Wall, keep: (module: number) => boolean, taken: str
   });
 }
 
-/** Remove wall modules (by key). Walls are split where a module is taken out. */
+/** Module keys that carry a stand wall. These are locked: see eraseWalls. */
+export const standWallKeys = (v: Variant): Set<string> =>
+  new Set(v.walls.filter(isStandWall).flatMap((w) => wallModules(w).map((m) => m.key)));
+
+/**
+ * Remove wall modules (by key). Walls are split where a module is taken out. Stand walls are locked: they separate
+ * exhibitors sharing the hall and change only with the stand type, so their modules are skipped (also a room side
+ * lying on one). An exception agreed with the neighbour stand is not modelled.
+ */
 export function eraseWalls(v: Variant, keys: Iterable<string>): Variant {
-  const gone = new Set(keys);
+  const locked = standWallKeys(v);
+  const gone = new Set([...keys].filter((k) => !locked.has(k)));
   if (!gone.size) return v;
   const ids = v.walls.map((w) => w.id);
   const out: Wall[] = [];
   let changed = false;
-  // A module a room side owns becomes an open gap in the room. Where a stand wall owns it, that wall goes.
+  // A module a room side owns becomes an open gap in the room
   const owner = new Map(builtModules(v).map((m) => [m.key, m.wallId]));
   const roomGaps: [string, number[]][] = [];
   for (const w of v.walls) {
@@ -308,8 +317,7 @@ export function setCounted(v: Variant, product: string, qty: number): Variant {
  * side, an empty edge on the floor or an open stand edge toward the aisle are all fine.
  */
 export function doorAllowed(v: Variant, a: Point, b: Point): boolean {
-  const key = moduleKey(a, b);
-  return !v.walls.some((w) => isStandWall(w) && wallModules(w).some((m) => m.key === key));
+  return !standWallKeys(v).has(moduleKey(a, b));
 }
 
 /** The side a door swings to. On the stand's edge (toward the aisle) it always swings into the stand. */
@@ -349,8 +357,8 @@ export function moveWall(v: Variant, wallId: string, delta: number): Variant {
   const moved: Wall = { ...w, from: shift(w.from), to: shift(w.to) };
   const inside = (p: Point) => p[0] >= 0 && p[1] >= 0 && p[0] <= v.stand.width && p[1] <= v.stand.depth;
   if (!inside(moved.from) || !inside(moved.to)) return v;
-  const standKeys = new Set(v.walls.filter(isStandWall).flatMap((x) => wallModules(x).map((m) => m.key)));
-  if (wallModules(moved).some((m) => standKeys.has(m.key))) return v;
+  const locked = standWallKeys(v);
+  if (wallModules(moved).some((m) => locked.has(m.key))) return v;
   const same = (a: Point, b: Point) => a[0] === b[0] && a[1] === b[1];
   const ends = [w.from, w.to];
   const others: Wall[] = [];

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { wallLabel } from '../calc/production';
 import { faces } from './decor';
-import { canMoveWall, eraseWalls, moveWall, paintWalls, setStand } from './edit';
+import { canMoveWall, doorAllowed, eraseWalls, moveWall, paintWalls, setStand, splitWall } from './edit';
 import { moduleKey } from './grid';
 import type { Variant } from './types';
 import { createVariant } from './variant';
@@ -36,14 +36,25 @@ describe('stand walls and inner walls', () => {
     expect(moveWall(v, id, 1)).toBe(v);
   });
 
-  it('pieces of an erased stand wall stay stand walls, and a gap drawn shut again is a stand wall', () => {
-    let v = eraseWalls(row(), [moduleKey([2, 0], [3, 0])]);
-    const back = v.walls.filter((w) => w.from[1] === 0 && w.to[1] === 0);
-    expect(back).toHaveLength(2);
-    expect(back.every(isStandWall)).toBe(true);
-    expect(back.map((w) => wallLabel(w))).toEqual(['Bak', 'Bak']);
-    v = paintWalls(v, [2, 0], [3, 0]);
-    expect(inner(v)).toHaveLength(0);
+  it('stand walls are locked: they can not be erased, moved or get a door', () => {
+    const v = row();
+    expect(eraseWalls(v, [moduleKey([2, 0], [3, 0])])).toBe(v);
+    expect(moveWall(v, 'side-left', 1)).toBe(v);
+    expect(doorAllowed(v, [2, 0], [3, 0])).toBe(false);
+    // An erase stroke over a stand wall and an inner wall takes only the inner wall
+    const p = paintWalls(v, [0, 2], [2, 2]);
+    const both = eraseWalls(p, [moduleKey([0, 0], [0, 1]), moduleKey([0, 2], [1, 2])]);
+    expect(both.walls.find((w) => w.id === 'side-left')).toEqual(v.walls.find((w) => w.id === 'side-left'));
+    expect(inner(both)[0].from).toEqual([1, 2]);
+  });
+
+  it('pieces of a stand wall stay stand walls, and a gap from an older sketch drawn shut again is a stand wall', () => {
+    const back = row().walls.find((w) => w.id === 'side-back')!;
+    const pieces = splitWall(back, (i) => i !== 2, ['side-back']);
+    expect(pieces.map((w) => w.id)).toEqual(['side-back', 'side-back-1']);
+    expect(pieces.map((w) => wallLabel(w))).toEqual(['Bak', 'Bak']);
+    const old = { ...row(), walls: [...row().walls.filter((w) => w.id !== 'side-back'), ...pieces] };
+    expect(inner(paintWalls(old, [2, 0], [3, 0]))).toHaveLength(0);
   });
 
   it('a stand type change keeps an inner wall on the edge, minus what now is stand wall', () => {
