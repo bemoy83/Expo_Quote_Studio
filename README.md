@@ -17,9 +17,10 @@ src/
 ```
 
 The build system is Foga System; how it works and what is still open is in `docs/foga-system.md`.
+Stand walls, inner walls and room walls (terms and what each may do) are locked in `docs/vegger.md`.
 
 The stand model is the single source of truth. Plan, 3D, calc, quote and production are derived from it.
-A backroom is not a class: `addRoom` draws ordinary walls and one opening.
+A room (bakrom, lager, møterom) is a `Room` with an orthogonal outline; its walls are derived and reuse stand walls.
 
 ## Develop
 

@@ -281,7 +281,7 @@ export default function App() {
               <Kpi label="Areal" value={fmt(k.area)} unit="m²" sub={`${v.stand.width} × ${v.stand.depth} m`} />
               <Kpi label="Åpne sider" value={String(k.openSides)} sub={TYPE_NAME[v.stand.type]} />
               <Kpi
-                label="Standvegg"
+                label="Vegg"
                 value={fmt(k.wallLm)}
                 unit="lm"
                 sub={[k.roomWallLm ? `inkl. ${fmt(k.roomWallLm)} lm rom` : '', k.openings ? count(k.openings, 'åpning', 'åpninger') : ''].filter(Boolean).join(' · ') || undefined}
@@ -394,7 +394,7 @@ export default function App() {
 
   function describeBrush(b: Brush | null): { name: string; color?: string } {
     if (!b) return { name: 'Pensel' }
-    if (b.kind === 'wall') return { name: `Standvegg RAL ${b.ral}`, color: plateColor(b.ral) }
+    if (b.kind === 'wall') return { name: `Vegg RAL ${b.ral}`, color: plateColor(b.ral) }
     if (b.kind === 'textile') return { name: 'Tekstilvegg' }
     if (b.kind === 'motif') return { name: findMotif(motifs, b.motif)?.name ?? 'Motiv' }
     const r = idx.byArtnr.get(b.product)
@@ -410,7 +410,7 @@ function hint(tool: Tool, brush: Brush | null): string {
   const erase = tool === 'erase'
   switch (brush?.kind ?? 'wall') {
     case 'wall':
-      return erase ? 'Klikk en veggmodul eller dra langs rutenettet for å fjerne vegg' : 'Klikk en kant eller dra langs rutenettet for å tegne vegg i hele meter'
+      return erase ? 'Klikk en veggmodul eller dra langs rutenettet for å fjerne vegg · standvegger kan ikke fjernes' : 'Klikk en kant eller dra langs rutenettet for å tegne vegg i hele meter'
     case 'floor':
       return erase ? 'Klikk og dra for å fjerne gulv' : 'Klikk og dra for å tegne gulv · velg penselstørrelse i båndet'
     case 'opening':

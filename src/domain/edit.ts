@@ -2,7 +2,7 @@
 import { CELL, cellKey, moduleKey, parseCellKey, pointAlong, runs, sideEnds, SIDES, wallDirection, wallLength, wallModules } from './grid';
 import type { Opening, Point, Stand, TextileWall, Variant, Wall } from './types';
 import { addRoomGaps, clampRooms, OUTSIDE, roomOf, syncRooms } from './rooms';
-import { builtModules, isStandWall, standardWalls } from './walls';
+import { builtModules, closedSideAt, isStandWall, standardWalls, standWallSide } from './walls';
 
 /** Next free id with the given prefix: `w1`, `w2` … */
 export function nextId(taken: Iterable<string>, prefix: string): string {
@@ -108,17 +108,22 @@ function dedupeOpenings(walls: Wall[], openings: Opening[]): Opening[] {
   });
 }
 
-/** Draw wall modules from a to b. Edges that already have a wall are left as they are. */
+/**
+ * Draw wall modules from a to b. Edges that already have a wall are left as they are. Drawn on a closed side of the
+ * stand type (a gap someone erased), the wall is a stand wall again; anywhere else it is an inner wall.
+ */
 export function paintWalls(v: Variant, a: Point, b: Point, plate?: string): Variant {
   const existing = new Set(builtModules(v).map((m) => m.key));
   const n = Math.round(Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1]));
   if (!n) return v;
   const seg: Wall = { id: '', from: a, to: b };
   const mods = wallModules(seg);
+  // A straight stroke lies on one stand side or none
+  const side = closedSideAt(v.stand, mods[0].a, mods[0].b);
   const ids = v.walls.map((w) => w.id);
   const added: Wall[] = [];
   for (const [i, e] of runs(n, (t) => !existing.has(mods[t].key))) {
-    const id = nextId([...ids, ...added.map((w) => w.id)], 'w');
+    const id = nextId([...ids, ...added.map((w) => w.id)], side ? `side-${side}-` : 'w');
     added.push({ id, from: pointAlong(seg, i), to: pointAlong(seg, e), ...ownPlate(v, plate) });
   }
   return added.length ? { ...v, walls: [...v.walls, ...added] } : v;
@@ -128,25 +133,38 @@ export function paintWalls(v: Variant, a: Point, b: Point, plate?: string): Vari
 export const ownPlate = (v: Variant, ral: string | undefined): { plate?: string } => (ral && ral !== v.defaultPlate ? { plate: ral } : {});
 
 /**
- * The parts of a wall whose modules pass `keep`. The first part keeps the wall's id, the others get new ids not in `taken`.
+ * The parts of a wall whose modules pass `keep`. The first part keeps the wall's id, the others get new ids not in `taken`
+ * (`side-back-1` for pieces of a stand wall, so they stay stand walls).
  */
 export function splitWall(w: Wall, keep: (module: number) => boolean, taken: string[]): Wall[] {
   const ids = [...taken];
+  // A piece of a stand wall stays a stand wall
+  const prefix = isStandWall(w) ? `side-${standWallSide(w)}-` : 'w';
   return runs(Math.round(wallLength(w)), keep).map(([i, e], n) => {
-    const id = n ? nextId(ids, 'w') : w.id;
+    const id = n ? nextId(ids, prefix) : w.id;
     ids.push(id);
     return { ...w, id, from: pointAlong(w, i), to: pointAlong(w, e) };
   });
 }
 
-/** Remove wall modules (by key). Walls are split where a module is taken out. */
+const moduleKeys = (walls: Wall[]) => new Set(walls.flatMap((w) => wallModules(w).map((m) => m.key)));
+
+/** Module keys that carry a stand wall. These are locked: see eraseWalls. */
+export const standWallKeys = (v: Variant): Set<string> => moduleKeys(v.walls.filter(isStandWall));
+
+/**
+ * Remove wall modules (by key). Walls are split where a module is taken out. Stand walls are locked: they separate
+ * exhibitors sharing the hall and change only with the stand type, so their modules are skipped (also a room side
+ * lying on one). An exception agreed with the neighbour stand is not modelled.
+ */
 export function eraseWalls(v: Variant, keys: Iterable<string>): Variant {
-  const gone = new Set(keys);
+  const locked = standWallKeys(v);
+  const gone = new Set([...keys].filter((k) => !locked.has(k)));
   if (!gone.size) return v;
   const ids = v.walls.map((w) => w.id);
   const out: Wall[] = [];
   let changed = false;
-  // A module a room side owns becomes an open gap in the room. Where a stand wall owns it, that wall goes.
+  // A module a room side owns becomes an open gap in the room
   const owner = new Map(builtModules(v).map((m) => [m.key, m.wallId]));
   const roomGaps: [string, number[]][] = [];
   for (const w of v.walls) {
@@ -240,18 +258,21 @@ export function flipSwing(v: Variant, openingId: string): Variant {
   };
 }
 
-/** Change size or type. Perimeter walls follow the new type; inner walls that still fit are kept. */
+/** Change size or type. Stand walls follow the new type; inner walls that still fit are kept. */
 export function setStand(v: Variant, stand: Stand): Variant {
-  const old = v.stand;
-  const onOldPerimeter = (w: Wall) =>
-    (w.from[1] === w.to[1] && (w.from[1] === 0 || w.from[1] === old.depth)) ||
-    (w.from[0] === w.to[0] && (w.from[0] === 0 || w.from[0] === old.width));
   const fits = (w: Wall) =>
     [w.from, w.to].every(([x, y]) => x >= 0 && y >= 0 && x <= stand.width && y <= stand.depth);
   const perimeter = standardWalls(stand);
+  const standKeys = moduleKeys(perimeter);
   const stored = v.walls.filter((w) => !w.room);
-  const inner = stored.filter((w) => !onOldPerimeter(w) && !perimeter.some((p) => p.id === w.id) && fits(w));
-  // A kept inner wall now lying on the new perimeter would double a standard wall: builtModules dedupes it.
+  // Inner walls that still fit are kept, also on the edge, minus any part that now lies on a stand wall.
+  const taken = [...v.walls.map((w) => w.id), ...perimeter.map((w) => w.id)];
+  const inner = stored
+    .filter((w) => !isStandWall(w) && fits(w))
+    .flatMap((w) => {
+      const mods = wallModules(w);
+      return splitWall(w, (i) => !standKeys.has(mods[i].key), taken);
+    });
   // Rooms are kept inside the new size and regenerate their sides against the new stand walls.
   const resized = clampRooms({ ...v, stand, walls: stored });
   const next = replaceWalls({ ...v, stand }, [...perimeter, ...inner, ...resized.walls.filter((w) => w.room)]);
@@ -292,14 +313,12 @@ export function setCounted(v: Variant, product: string, qty: number): Variant {
   return { ...v, counted: qty > 0 ? [...rest, { product, qty }] : rest };
 }
 
-/** True when the wall lies on the stand's outer edge. */
 /**
  * Where a door or curtain may go: anywhere but in the walls the stand type brings (standvegger). An inner wall, a room
  * side, an empty edge on the floor or an open stand edge toward the aisle are all fine.
  */
 export function doorAllowed(v: Variant, a: Point, b: Point): boolean {
-  const key = moduleKey(a, b);
-  return !v.walls.some((w) => isStandWall(w) && wallModules(w).some((m) => m.key === key));
+  return !standWallKeys(v).has(moduleKey(a, b));
 }
 
 /** The side a door swings to. On the stand's edge (toward the aisle) it always swings into the stand. */
@@ -310,6 +329,10 @@ export function doorSwing(stand: Stand, w: Wall, o: Opening): 1 | -1 {
 /** A door on the stand's edge can not be turned: it swings into the stand. */
 export const canFlipSwing = (stand: Stand, w: Wall) => !isPerimeterWall(stand, w);
 
+/**
+ * True when the wall lies on the stand's outer edge. Only geometry: a door there faces the aisle or a neighbour. Whether
+ * a wall is a stand wall or an inner wall is told by isStandWall, never by where it stands.
+ */
 export function isPerimeterWall(stand: Stand, w: Wall): boolean {
   return (
     (w.from[1] === w.to[1] && (w.from[1] === 0 || w.from[1] === stand.depth)) ||
@@ -317,27 +340,33 @@ export function isPerimeterWall(stand: Stand, w: Wall): boolean {
   );
 }
 
+/** Walls the user can drag sideways: inner walls, also on the stand's edge. Not stand walls, not room sides. */
+export const canMoveWall = (w: Wall) => !w.room && !isStandWall(w);
+
 /**
  * Move an inner wall sideways by `delta` whole metres (along its normal axis: y for horizontal walls, x for vertical).
  * Perpendicular drawn walls ending on it stretch or shrink with it, so walls drawn around an area resize like a room.
- * Its openings, textiles and foils move with it. Refused (returns v) for perimeter walls, room walls (see rooms.ts)
- * or moves outside the stand.
+ * Its openings, textiles and foils move with it. It may go all the way out to the stand's edge and stays an inner
+ * wall there. Refused (returns v) for stand walls, room walls (see rooms.ts), moves outside the stand and moves onto a
+ * stand wall.
  */
 export function moveWall(v: Variant, wallId: string, delta: number): Variant {
   const w = v.walls.find((x) => x.id === wallId);
-  if (!w || !delta || w.room || isPerimeterWall(v.stand, w)) return v;
+  if (!w || !delta || !canMoveWall(w)) return v;
   const horizontal = w.from[1] === w.to[1];
   const shift = (p: Point): Point => (horizontal ? [p[0], p[1] + delta] : [p[0] + delta, p[1]]);
   const moved: Wall = { ...w, from: shift(w.from), to: shift(w.to) };
   const inside = (p: Point) => p[0] >= 0 && p[1] >= 0 && p[0] <= v.stand.width && p[1] <= v.stand.depth;
   if (!inside(moved.from) || !inside(moved.to)) return v;
+  const locked = standWallKeys(v);
+  if (wallModules(moved).some((m) => locked.has(m.key))) return v;
   const same = (a: Point, b: Point) => a[0] === b[0] && a[1] === b[1];
   const ends = [w.from, w.to];
   const others: Wall[] = [];
   for (const o of v.walls) {
     if (o.id === w.id) continue;
     const perpendicular = (o.from[1] === o.to[1]) !== horizontal;
-    if (!perpendicular || o.room || isPerimeterWall(v.stand, o)) {
+    if (!perpendicular || !canMoveWall(o)) {
       others.push(o);
       continue;
     }

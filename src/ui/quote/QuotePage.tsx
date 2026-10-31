@@ -55,7 +55,7 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
   const facts: [string, string][] = [
     [`${v.stand.width} × ${v.stand.depth} m`, `${fmt(k.area)} m² · ${TYPE_NAME[v.stand.type]} · ${k.openSides} åpne sider`],
     [
-      `${fmt(k.wallLm)} lm standvegg`,
+      `${fmt(k.wallLm)} lm vegg`,
       [`veggplate ${plates.map((r) => `${plateName(r).toLowerCase()} RAL ${r}`).join(', ')}`, ...openingNames].join(' · '),
     ],
     k.beamLm
@@ -70,7 +70,7 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
     }
     facts.splice(2, 0, [
       v.rooms.map((r) => `${roomName(r)} ${roomSize(r)}`).join(', '),
-      v.rooms.map(kind).join(' · ') + (k.roomWallLm ? ` · ${fmt(k.roomWallLm)} lm av standveggen` : ''),
+      v.rooms.map(kind).join(' · ') + (k.roomWallLm ? ` · ${fmt(k.roomWallLm)} lm romvegg` : ''),
     ])
   }
   if (k.textileM2) facts.push([`${fmt(k.textileM2)} m² tekstilvegg`, `${frameCount(res.production.pieces.length)} InFrame`])

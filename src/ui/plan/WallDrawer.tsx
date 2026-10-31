@@ -23,11 +23,11 @@ import {
   updateTextile,
   type FaceSide,
 } from '../../domain/decor'
-import { canFlipSwing, eraseWalls, flipSwing, isPerimeterWall, setWallPlate } from '../../domain/edit'
+import { canFlipSwing, eraseWalls, flipSwing, setWallPlate } from '../../domain/edit'
 import { OUTSIDE } from '../../domain/rooms'
 import { wallLength, wallModules } from '../../domain/grid'
 import type { Foil, TextileWall, Variant, Wall } from '../../domain/types'
-import { builtModules } from '../../domain/walls'
+import { builtModules, isStandWall } from '../../domain/walls'
 import type { Motif } from '../../persistence/file'
 import { wallHeight } from '../../rules/rules'
 import { ALU, ALU_POST, BORDER_STRONG, FABRIC, FEET, INK, INK_FAINT, INK_MUTED, LAYER_COLOR, SUNKEN } from '../colors'
@@ -85,7 +85,7 @@ export function WallDrawer(p: Props) {
   const built = new Map(builtModules(v).map((m) => [m.key, m]))
   const mods = wallModules(w).map((m) => built.get(m.key))
   const ratioOf = (id?: string) => findMotif(motifs, id)?.ratio ?? 0
-  const label = wallLabel(w, v.stand)
+  const label = wallLabel(w)
   const select = (x: Partial<PlanSelection>) => p.onSelect({ wallId: w.id, side: s, ...x })
 
   // ---- Dragging in the drawing: move, width, height of a frame; move and size of a decal
@@ -249,21 +249,25 @@ export function WallDrawer(p: Props) {
                   Snu dør{doors.length > 1 ? ` ${i + 1}` : ''}
                 </Button>
               ))}
-              <Button
-                variant="ghost"
-                icon={Trash2}
-                onClick={() => {
-                  p.onEdit((x) => eraseWalls(x, wallModules(w).map((m) => m.key)))
-                  p.onClose()
-                }}
-              >
-                {w.room ? 'Åpne siden' : 'Fjern veggen'}
-              </Button>
+              {!isStandWall(w) && (
+                <Button
+                  variant="ghost"
+                  icon={Trash2}
+                  onClick={() => {
+                    p.onEdit((x) => eraseWalls(x, wallModules(w).map((m) => m.key)))
+                    p.onClose()
+                  }}
+                >
+                  {w.room ? 'Åpne siden' : 'Fjern veggen'}
+                </Button>
+              )}
             </div>
-            {w.room ? (
+            {isStandWall(w) ? (
+              <p className="panel-note">Standveggen følger standtypen og skiller standen fra naboene. Den kan ikke flyttes eller fjernes, men kan få farge og profilering.</p>
+            ) : w.room ? (
               <p className="panel-note">Veggen hører til et rom. Dra den i planen for å endre størrelsen, i 3D for å flytte rommet.</p>
             ) : (
-              !isPerimeterWall(v.stand, w) && <p className="panel-note">Dra veggen i planen for å flytte den.</p>
+              <p className="panel-note">Innervegg. Dra den i planen for å flytte den.</p>
             )}
           </>
         )}

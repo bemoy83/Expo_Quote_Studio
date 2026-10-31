@@ -9,10 +9,10 @@
 import type { Rules } from '../rules/rules';
 import { wallHeight } from '../rules/rules';
 import { pointAlong, wallDirection, wallLength, wallModules } from './grid';
-import { defaultSwing, isPerimeterWall, nextId } from './edit';
+import { defaultSwing, nextId } from './edit';
 import { OUTSIDE, roomAt } from './rooms';
 import type { Foil, Point, TextileWall, Variant, Wall } from './types';
-import { builtModules } from './walls';
+import { builtModules, isStandWall } from './walls';
 
 export type FaceSide = 1 | -1;
 
@@ -34,12 +34,12 @@ export function sideOf(v: Variant, x: { wallId: string; side?: FaceSide }): Face
 }
 
 /**
- * Faces that can carry decor: the inner face of a perimeter stand wall, both faces of an inner wall or a room side
- * (the outside first; inside a room is allowed too, a meeting room is profiled).
+ * Faces that can carry decor: the inner face of a stand wall, both faces of an inner wall (also one on the stand's
+ * edge, toward the aisle) or a room side (the outside first; inside a room is allowed too, a meeting room is profiled).
  */
 export function faces(v: Variant, w: Wall): FaceSide[] {
   const d = defaultFace(v, w);
-  return isPerimeterWall(v.stand, w) && !w.room ? [d] : [d, d === 1 ? -1 : 1];
+  return isStandWall(w) ? [d] : [d, d === 1 ? -1 : 1];
 }
 
 /** Unit normal pointing out of the face. */

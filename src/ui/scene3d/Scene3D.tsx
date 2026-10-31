@@ -10,7 +10,7 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import type { CalcResult } from '../../calc/calc'
 import { faceAt, faceNormal, faces, moveFoilBy, moveTextileBy, sideOf, textileOffset, type FaceSide } from '../../domain/decor'
-import { isPerimeterWall } from '../../domain/edit'
+import { canMoveWall } from '../../domain/edit'
 import { pointAlong, wallDirection, wallLength } from '../../domain/grid'
 import { moveObject } from '../../domain/objects'
 import type { Motif } from '../../persistence/file'
@@ -253,7 +253,7 @@ export function Scene3D(p: Props) {
       } else if (hit?.wallId) {
         const w = P.v.walls.find((x) => x.id === hit.wallId)
         const q = onFloor(e)
-        if (w && q && !isPerimeterWall(P.v.stand, w)) drag = { kind: 'wall', id: w.id, p0: q, v0: P.v, delta: 0, horizontal: w.from[1] === w.to[1], moved: false }
+        if (w && q && canMoveWall(w)) drag = { kind: 'wall', id: w.id, p0: q, v0: P.v, delta: 0, horizontal: w.from[1] === w.to[1], moved: false }
       }
       if (drag.kind !== 'orbit') {
         clearGrip()
@@ -270,7 +270,7 @@ export function Scene3D(p: Props) {
           const side = sideAt(hit)
           if (side) showGrip(side.room, side.side)
           else clearGrip()
-          const movable = hit?.objectId || hit?.textileId || hit?.foilId || hit?.roomId || (w && (w.room || !isPerimeterWall(P.v.stand, w)))
+          const movable = hit?.objectId || hit?.textileId || hit?.foilId || hit?.roomId || (w && (w.room || canMoveWall(w)))
           renderer.domElement.style.cursor = side ? resizeCursor(side.room, side.side) : movable ? 'move' : hit ? 'pointer' : 'grab'
         }
         return
