@@ -3,7 +3,7 @@ import { DEFAULT_CATALOG, DOOR } from '../catalog/defaultCatalog';
 import { calc } from '../calc/calc';
 import { RULES } from '../rules/rules';
 import { addTextile } from './decor';
-import { defaultSwing, paintWalls, setOpening } from './edit';
+import { defaultSwing, drawOpening, paintWalls, setOpening } from './edit';
 import { enclosures, newlyClosedRooms, wallsToRoom } from './enclosures';
 import { moduleKey } from './grid';
 import { dissolveRoom, moveRoom } from './rooms';
@@ -55,6 +55,10 @@ describe('newlyClosedRooms', () => {
   it('the door that comes last also makes it a candidate', () => {
     const v = corner();
     expect(newlyClosedRooms(v, door(v, [0, 2], [1, 2]))).toEqual([{ x: 0, y: 0, w: 2, d: 2 }]);
+  });
+  it('a door drawn on the open fourth side closes the area itself', () => {
+    const v = path(row(), [2, 0], [2, 2], [1, 2]);
+    expect(newlyClosedRooms(v, drawOpening(v, [0, 2], [1, 2], DOOR))).toEqual([{ x: 0, y: 0, w: 2, d: 2 }]);
   });
   it('no door, no room; an L, no room', () => {
     expect(newlyClosedRooms(row(), corner())).toEqual([]);
