@@ -1,7 +1,9 @@
-import type { TextileWall, Variant, Wall } from '../domain/types';
+import type { TextileFill, TextileWall, Variant, Wall } from '../domain/types';
 import { standWallSide } from '../domain/walls';
+import { RECIPES } from '../foga/recipes';
 import type { InFrameParams } from '../rules/rules';
 import { framePiece, fullHeight, printFileName, type FramePiece } from './fabric';
+import { cornerPosts, freeFrames, type FreeFrame } from './freeFrames';
 
 export interface ProductionPiece extends FramePiece {
   pos: string;
@@ -9,15 +11,24 @@ export interface ProductionPiece extends FramePiece {
   wall: string;
   /** Offset along the wall, mm. */
   at: number;
+  fill: TextileFill;
   motif: string | null;
-  fileName: string;
+  /** Print file name, for a printed textile only. */
+  fileName: string | null;
 }
 
 export interface Production {
+  /** InFrame frames on system walls. */
   pieces: ProductionPiece[];
-  /** Print area including bleed, m². */
+  /** Frittstående tekstilvegger, each with textile on both faces. */
+  free: FreeFrame[];
+  /** Their length in all, m. */
+  freeLm: number;
+  /** 92LTX corner posts, each shared by two free-standing runs, `H` long (mm). */
+  cornerPosts: { qty: number; H: number };
+  /** Textile to produce (printed and white, not the customer's own), including bleed, m². */
   area: number;
-  /** Aluminium profile including braces, m. */
+  /** Aluminium profile including braces and corner posts, all frames, m. */
   lm: number;
 }
 
@@ -46,19 +57,53 @@ export function production(v: Variant, s: InFrameParams, customer: string): Prod
     if (!w) return;
     const pos = `T${pieces.length + 1}`;
     const p = framePiece(mm(t.width), s, textileHeightMm(t, s));
+    const fill = t.fill ?? 'print';
     pieces.push({
       ...p,
       pos,
       textileId: t.id,
       wall: wallLabel(w),
       at: mm(t.from),
-      motif: t.motif ?? null,
-      fileName: printFileName(customer, pos, p),
+      fill,
+      motif: fill === 'print' ? (t.motif ?? null) : null,
+      fileName: fill === 'print' ? printFileName(customer, pos, p) : null,
     });
   });
+  const free = freeFrames(v, RECIPES.freeFrame, s, customer);
+  const posts = { qty: cornerPosts(v).length, H: fullHeight(s) };
   return {
     pieces,
-    area: pieces.reduce((a, p) => a + p.area, 0),
-    lm: pieces.reduce((a, p) => a + p.lm, 0),
+    free,
+    freeLm: free.reduce((a, f) => a + f.length, 0) / 1000,
+    cornerPosts: posts,
+    area:
+      pieces.filter((p) => p.fill !== 'reuse').reduce((a, p) => a + p.area, 0) +
+      free.flatMap((f) => f.faces).filter((x) => x.fill !== 'reuse').reduce((a, x) => a + x.printArea, 0),
+    lm:
+      pieces.reduce((a, p) => a + p.lm, 0) +
+      free.reduce((a, f) => a + (f.profileMm + f.supports.length * f.braceLength) / 1000, 0) +
+      (posts.qty * posts.H) / 1000,
   };
+}
+
+/** Every textile to fit, InFrame frames and both faces of each free-standing wall: picking list and work order. */
+export interface TextileRow {
+  pos: string;
+  /** Where it goes: the wall, or the free-standing wall and face. */
+  where: string;
+  W: number;
+  H: number;
+  pw: number;
+  ph: number;
+  fill: TextileFill;
+  fileName: string | null;
+}
+
+export const FILL_NAME: Record<TextileFill, string> = { print: 'Trykt tekstil', white: 'Hvit tekstil', reuse: 'Kundens tekstil' };
+
+export function textileRows(P: Production): TextileRow[] {
+  return [
+    ...P.pieces.map((p) => ({ pos: p.pos, where: p.wall, W: p.W, H: p.H, pw: p.pw, ph: p.ph, fill: p.fill, fileName: p.fileName })),
+    ...P.free.flatMap((f) => f.faces.map((x) => ({ pos: x.pos, where: `Frittstående ${f.pos}, side ${x.face.toUpperCase()}`, W: x.W, H: x.H, pw: x.pw, ph: x.ph, fill: x.fill, fileName: x.fileName }))),
+  ];
 }

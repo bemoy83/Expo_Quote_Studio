@@ -3,6 +3,8 @@
 // Model → world: x → x, y (toward the aisle) → z, height → y. The stand is centred on the origin.
 import * as THREE from 'three'
 import type { CalcResult } from '../../calc/calc'
+import { alongRun } from '../../calc/freeFrames'
+import { runDirection } from '../../domain/freeTextile'
 import { FURNITURE_WHITE } from '../../catalog/defaultCatalog'
 import { foilCenter, sideOf, textileBox, textileOffset } from '../../domain/decor'
 import { doorSwing } from '../../domain/edit'
@@ -23,7 +25,7 @@ export type Layer = Exclude<Highlight, null>
 export interface Tag {
   layer: Layer
   /** `roomId`: a room's see-through roof, the handle that moves the room. */
-  pick?: { wallId?: string; objectId?: string; textileId?: string; foilId?: string; roomId?: string }
+  pick?: { wallId?: string; objectId?: string; textileId?: string; foilId?: string; roomId?: string; freeTextileId?: string }
 }
 
 /** Colours of the build system. Product colours come from the catalog. */
@@ -49,7 +51,7 @@ const ALU_FINISH = { metalness: 0.4, roughness: 0.5 }
 const OPENING_H = 2.1
 
 export interface BuildOptions {
-  selection?: { wallId?: string; objectId?: string; textileId?: string; foilId?: string; roomId?: string }
+  selection?: { wallId?: string; objectId?: string; textileId?: string; foilId?: string; roomId?: string; freeTextileId?: string }
   /** Flat text on the floor (dimensions, area). Needs a canvas, so tests turn it off. */
   labels?: boolean
   /** Motif library for prints on textiles and foils. Without it they are drawn blank. */
@@ -287,6 +289,29 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
     const print = m ? printMaterial(m, (to - from) / h, opts.onLoad, glow) : fabric
     const faces = s === 1 ? [alu, alu, alu, alu, print, fabric] : [alu, alu, alu, alu, fabric, print]
     along(pointAlong(w, from), pointAlong(w, to), to - from - 0.02, h, rules.textile.depth, bottom, faces, { layer: 'textile', pick: { wallId: w.id, textileId: t.id } }, off)
+  }
+
+  // Frittstående tekstilvegger: a frame with textile on both faces (face A toward side 1), on foot plates
+  for (const f of res.production.free) {
+    const t = v.freeTextiles.find((x) => x.id === f.textileId)
+    if (!t) continue
+    const glow = sel.freeTextileId === t.id ? { emissive: SELECT, emissiveIntensity: 0.35 } : {}
+    const alu = mat('textile', ALU, { ...ALU_FINISH, ...glow })
+    const L = f.length / 1000
+    const h = f.H / 1000
+    const face = (x: (typeof f.faces)[number]) => {
+      const m = x.fill === 'print' ? findMotif(opts.motifs, x.motif ?? undefined) : undefined
+      if (m) return printMaterial(m, L / h, opts.onLoad, glow)
+      return mat('textile', x.fill === 'white' ? '#ffffff' : FABRIC, { roughness: 1, ...glow })
+    }
+    const foot = rules.wall.feet / 10
+    along(t.from, t.to, L, h, rules.textile.depth, foot, [alu, alu, alu, alu, face(f.faces[0]), face(f.faces[1])], { layer: 'textile', pick: { freeTextileId: t.id } })
+    for (const at of f.supports) {
+      const [x, y] = alongRun(t, at)
+      const [dx, dy] = runDirection(t)
+      const half = f.foot.along / 2000
+      along([x - dx * half, y - dy * half], [x + dx * half, y + dy * half], 2 * half, foot, f.foot.across / 1000, 0, mat('textile', ALU, ALU_FINISH), { layer: 'textile' })
+    }
   }
 
   // Foil decor: a thin print on the wall plate, inside its felt

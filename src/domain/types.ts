@@ -3,7 +3,7 @@
 //
 // Glossary (spec term → code):
 //   Stand → Stand · Vegg → Wall · Åpning → Opening · Gulv → Floor · Objekt → PlacedObject
-//   Tekstilvegg → TextileWall · Foliedekor → Foil · Tellevare → CountedItem · Variant → Variant
+//   Tekstilvegg → TextileWall · Frittstående tekstilvegg → FreeTextile · Foliedekor → Foil · Tellevare → CountedItem · Variant → Variant
 //   Prosjekt → Project · Produkt → Product (see catalog)
 
 export type Point = readonly [x: number, y: number];
@@ -102,6 +102,34 @@ export interface TextileWall {
   motif?: string;
   /** Fills the free span it sits in and grows or shrinks with it ("Fyll veggen"). */
   fit?: boolean;
+  /** What the textile is. Omitted: printed. */
+  fill?: TextileFill;
+}
+
+/** trykt · hvit uten grafikk · kundens egen duk i samme størrelse (bare montering) */
+export type TextileFill = 'print' | 'white' | 'reuse';
+
+/** One face of a free-standing textile wall. Textile is always on both faces. */
+export interface TextileFace {
+  /** Omitted: printed. */
+  fill?: TextileFill;
+  /** Motif shown in plan and 3D for a printed face. */
+  motif?: string;
+}
+
+/**
+ * Frittstående tekstilvegg: a 43TX frame standing on foot plates, textile on both faces, not part of the Foga wall
+ * system (no rooms or doors). A straight run on the 0,25 m grid, axis-aligned. A run longer than the max rail length
+ * stays one frame with spliced top and bottom rails. Two runs whose ends meet at a right angle share a 92LTX corner
+ * post (see freeTextile.ts).
+ */
+export interface FreeTextile {
+  id: string;
+  from: Point;
+  to: Point;
+  /** Face A: left normal of from → to (as door swing, side 1). Face B: the other (side −1). */
+  a?: TextileFace;
+  b?: TextileFace;
 }
 
 /** Foil decor inside a single wall panel (960 × 2420), never across a post. */
@@ -150,6 +178,8 @@ export interface Variant {
   floor: Floor;
   objects: PlacedObject[];
   textiles: TextileWall[];
+  /** Frittstående tekstilvegger. */
+  freeTextiles: FreeTextile[];
   foils: Foil[];
   counted: CountedItem[];
   loose: LooseLine[];

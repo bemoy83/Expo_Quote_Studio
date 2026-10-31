@@ -424,11 +424,14 @@ function FloorSection({ v, res, brush, tool, pick, onEdit }: RailProps) {
   )
 }
 
-/** Profilering: textile walls (InFrame) and the motif library. Counted profiling items follow below. */
+const FILL_SHORT = { print: 'trykk', white: 'hvit', reuse: 'kundens' } as const
+
+/** Profilering: textile walls (on a system wall or free-standing, one brush) and the motif library. Counted profiling items follow below. */
 function ProfileSection({ v, res, brush, tool, pick, motifs, onAddMotif, onSelect, onToast }: RailProps) {
   const file = useRef<HTMLInputElement>(null)
   const pen = tool !== 'select' && brush?.kind === 'textile'
   const textile = productOf(catalog.system.textile)?.variants[0]
+  const freeFrame = productOf(catalog.system.freeTextile)?.variants[0]
   const k = res.keyFigures
   const upload = async (f: File) => {
     try {
@@ -443,18 +446,26 @@ function ProfileSection({ v, res, brush, tool, pick, motifs, onAddMotif, onSelec
     <>
       <div className="panel-sec eyebrow">Tekstilvegg</div>
       <ProductRow
-        on={v.textiles.length > 0}
+        on={v.textiles.length + v.freeTextiles.length > 0}
         pen={pen}
         thumb={<i className="tex-thumb" />}
         drag={decorSource({ kind: 'textile' })}
-        title="Tekstilvegg InFrame"
+        title="Tekstilvegg"
         meta={
           <>
-            Leie av ramme med trykt tekstil, pris per stk etter størrelse · <span className="num">{kr(textile?.price ?? 0)} kr/m²</span> · klikk eller dra til en vegg
+            Tegnet på en systemvegg monteres den på veggen, ellers står den fritt på fotplater med tekstil på begge sider · leie av ramme{' '}
+            <span className="num">{kr(textile?.price ?? 0)} kr/m²</span> på vegg, <span className="num">{kr(freeFrame?.price ?? 0)} kr/lm</span> frittstående + tekstil per m²
           </>
         }
-        result={v.textiles.length ? `${count(v.textiles.length, 'ramme', 'rammer')} · ${fmt(k.textileM2)} m²` : null}
-        action={<IconButton icon={Paintbrush} label="Sett opp tekstilvegg i plan" pressed={pen && tool === 'brush'} onClick={() => pick({ kind: 'textile' })} />}
+        result={
+          [
+            v.textiles.length ? `${v.textiles.length} på vegg · ${fmt(k.textileM2)} m²` : '',
+            res.production.free.length ? `${res.production.free.length} frittstående · ${fmt(res.production.freeLm, 2)} lm` : '',
+          ]
+            .filter(Boolean)
+            .join(' · ') || null
+        }
+        action={<IconButton icon={Paintbrush} label="Tegn tekstilvegg i plan" pressed={pen && tool === 'brush'} onClick={() => pick({ kind: 'textile' })} />}
       />
       {v.textiles.map((t) => {
         const w = v.walls.find((x) => x.id === t.wallId)
@@ -464,7 +475,7 @@ function ProfileSection({ v, res, brush, tool, pick, motifs, onAddMotif, onSelec
           <button key={t.id} type="button" className="trow" onClick={() => onSelect({ wallId: w.id, side: t.side, textileId: t.id })}>
             <span className="name">
               {wallLabel(w)}
-              {m ? <span className="faint"> · {m}</span> : <span className="warn"> · uten motiv</span>}
+              {t.fill === 'reuse' ? <span className="faint"> · kundens duk</span> : t.fill === 'white' ? <span className="faint"> · hvit</span> : m ? <span className="faint"> · {m}</span> : <span className="warn"> · uten motiv</span>}
             </span>
             <span className="num">
               {fmt(t.width)} × {fmt(textileBox(t, rules).height, 2)} m
@@ -472,6 +483,15 @@ function ProfileSection({ v, res, brush, tool, pick, motifs, onAddMotif, onSelec
           </button>
         )
       })}
+      {res.production.free.map((f) => (
+        <button key={f.textileId} type="button" className="trow" onClick={() => onSelect({ freeTextileId: f.textileId, freeFace: 'a' })}>
+          <span className="name">
+            {f.pos} frittstående
+            <span className="faint"> · {f.faces.map((x) => `${x.face.toUpperCase()} ${FILL_SHORT[x.fill]}`).join(', ')}</span>
+          </span>
+          <span className="num">{fmt(f.length / 1000, 2)} m</span>
+        </button>
+      ))}
 
       <div className="panel-sec eyebrow gfx-head">
         <span>Grafikk · {motifs.length}</span>

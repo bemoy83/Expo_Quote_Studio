@@ -18,7 +18,7 @@ Alle tall i appen i dag er eksempeltall (`src/pricing/data.ts`, og kost i `src/c
 | 2 Artikkel | Det montøren plukker | Stolpe 94 med fot, toppskinne 92 960 mm | Sum av nivå 3 + håndtering |
 | 3 Bestanddel | Det en artikkel er laget av | 94 × 2490 mm, 700, M10 × 65 | Kostpris per enhet |
 
-Der det ikke finnes en artikkel, plukkes bestanddelene direkte (tekstilvegg: 43TX, 613, 520). De får da kost og pris
+Der det ikke finnes en artikkel, plukkes bestanddelene direkte (tekstilvegg: 43TX, 617, 609, 520, 92LTX, 740, 730). De får da kost og pris
 som en artikkel.
 
 ## 2. Kostpris per bestanddel (nivå 3), i OMS
@@ -57,8 +57,8 @@ eget utstyr (henge en hylle fra IKEA på veggen). I appen heter den «Arbeidstim
   plukket direkte og montering, hver med ferdig pris fra OMS.
 - **Fast**: produktet har én pris per enhet fra OMS. Kalkylen viser likevel kost og DG.
 
-Med sum følger prisen tegningen. Stolper som deles mellom naboer telles én gang, en tekstilvegg prises etter sin
-størrelse, og en takdrager etter sine lengder og egne stolper. Derfor kan prisen per meter variere litt fra stand til
+Med sum følger prisen tegningen. Stolper som deles mellom naboer telles én gang, en tekstilramme prises etter sin
+størrelse og en frittstående tekstilvegg etter føtter, stag, skjøter og hjørner, og en takdrager etter sine lengder og egne stolper. Derfor kan prisen per meter variere litt fra stand til
 stand. Bjørn 31.10.2026: slik skal det være, prisen følger tegningen. Naboelementer deler stolper, og hver modul
 (også dør og forheng) bærer en lik andel av veggstolpene. Uten tegning, for eksempel 10 vegger lagt i en handlekurv,
 prises hvert element frittstående med to stolper. Kanskje skal vegger bare kunne bestilles tegnet, men da må
@@ -96,7 +96,10 @@ hver artikkel og hvert produkt som egen størrelse, også når kronene er regnet
   tilbudet, plukklisten eller arbeidsordren, men i en egen blokk i kalkylen. Farge på en slik vegg er produktet
   Platebytte standvegg, som utstilleren betaler. Regler og grunner: docs/vegger.md.
 - **Tilbudet** viser aldri kost, DB eller DG. Er et produkt dels leie og dels kjøp, får linjen en tekst til kunden,
-  for eksempel «Leie av ramme, kjøp av trykt tekstil».
+  for eksempel «Leie av ramme, kjøp av tekstil».
+- **Flere linjer, én i tilbudet.** Tekstilvegger er to linjer i kalkylen, ramme (leie) og tekstil (salg), og én linje
+  i tilbudet med summen av begge (Bjørn 31.10.2026). Kunden kan ha duken fra før: da er tekstillinjen bare
+  montering.
 
 ## 6. Hva appen trenger fra OMS
 

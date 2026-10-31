@@ -8,6 +8,7 @@ import { addRoom, RECT_SIDE } from '../domain/rooms';
 import { DEFAULT_PRICING } from '../pricing/data';
 import { RULES } from '../rules/rules';
 import { calc, type CalcResult } from './calc';
+import { quoteLines } from './quoteLines';
 import { r1, r2, r3 } from './referenceStands';
 
 // The exhibitor pays every wall, stand walls too: the whole drawing is theirs. Organiser-paid stand walls below.
@@ -69,14 +70,25 @@ describe('R2 · corner stand 6 × 4, backroom 2 × 2, textile wall 4 m', () => {
     const [p] = res.production.pieces;
     expect(p).toMatchObject({ W: 3970, H: 2540, pw: 4010, ph: 2580, braces: { qty: 3, length: 2460 } });
   });
-  it('textile wall sold per piece, priced as the sum of its frame, braces, print and montering', () => {
-    // 43TX 2 × 3970 + 2 × 2540 = 13,02 m × 10 = 130,2 · 4 × 613 × 4 = 16 · 2 × 520 × 5 = 10
-    // braces 3 × 2,46 m × 6 = 44,28 + 3 × 20 = 60 · print 4,010 × 2,580 = 10,3458 m² × 470 = 4862,526
-    // håndtering 140 · montering 3,970 × 2,540 = 10,0838 m² × 380 = 3831,844 → 9094,85 → 9095
-    const l = lines(res).find((x) => x.artnr === S.textile)!;
-    expect(l).toMatchObject({ name: 'Tekstilvegg, leie av ramme med trykt tekstil, 3970 × 2540 mm', qty: 1, unit: 'stk', price: 9095, strategy: 'sum' });
-    // Frame rented, print bought: the quote says so
-    expect(l).toMatchObject({ transfer: 'blandet', terms: 'Leie av ramme, kjøp av trykt tekstil' });
+  it('textile wall: frame rented per piece and textile bought per m², two lines here and one on the quote', () => {
+    // Frame: 43TX 2 × 3970 + 2 × 2540 = 13,02 m × 10 = 130,2 · 4 × 617 × 4 = 16 · 2 × 520 × 5 = 10
+    // braces 3 × 2,46 m × 6 = 44,28 + 3 × 20 = 60 · håndtering 140 → 400,48 → 400
+    const frame = lines(res).find((x) => x.artnr === S.textile)!;
+    expect(frame).toMatchObject({ name: 'Tekstilramme på systemvegg, leie, 3970 × 2540 mm', qty: 1, unit: 'stk', price: 400, strategy: 'sum', transfer: 'leie' });
+    // Textile: visible 3,970 × 2,540 = 10,0838 → 10,1 m². Print 4,010 × 2,580 = 10,3458 m² × 470 = 4862,526,
+    // pressed in along 2 × (3,97 + 2,54) = 13,02 m × 120 = 1562,4 → 6424,926 / 10,1 = 636
+    const print = lines(res).find((x) => x.artnr === S.textileFill.print)!;
+    expect(print).toMatchObject({ qty: 10.1, unit: 'm²', price: 636, strategy: 'sum' });
+    const [q] = quoteLines(res.groups.find((g) => g.id === 'prof')!.lines);
+    expect(q).toMatchObject({ name: 'Tekstilvegg på systemvegg', qty: 1, unit: 'stk', sum: 400 + 10.1 * 636, terms: 'Leie av ramme, kjøp av tekstil' });
+  });
+  it("the customer's own textile is only mounted", () => {
+    const v = r2();
+    const res2 = run({ ...v, textiles: v.textiles.map((t) => ({ ...t, fill: 'reuse' as const })) });
+    expect(qty(res2, S.textileFill.print)).toBe(0);
+    // 13,02 m × 120 = 1562,4 / 10,1 = 155
+    expect(lines(res2).find((x) => x.artnr === S.textileFill.reuse)).toMatchObject({ qty: 10.1, price: 155 });
+    expect(res2.production.pieces[0]).toMatchObject({ fill: 'reuse', fileName: null });
   });
 });
 
@@ -331,5 +343,27 @@ describe('stand walls the organiser pays (docs/vegger.md)', () => {
     ]);
     expect(res.organiser.lines).toEqual([]);
     expect(res.keyFigures).toMatchObject({ standWallLm: 10, organiserWallLm: 0, roomWallLm: 3 });
+  });
+});
+
+describe('frittstående tekstilvegg', () => {
+  const v = createVariant('A', { width: 10, depth: 8, type: 'island' });
+  const res = run({ ...v, freeTextiles: [{ id: 'f1', from: [1, 2], to: [7, 2], b: { fill: 'white' } }] });
+  it('frame per metre, textile per face', () => {
+    expect(qty(res, S.freeTextile)).toBe(6);
+    // 6 × 2,54 = 15,24 m² each side
+    expect(qty(res, S.textileFill.print)).toBeCloseTo(15.2);
+    expect(qty(res, S.textileFill.white)).toBeCloseTo(15.2);
+    const [q] = quoteLines(res.groups.find((g) => g.id === 'prof')!.lines);
+    expect(q).toMatchObject({ name: 'Tekstilvegg frittstående', qty: 6, unit: 'lm' });
+  });
+  it('picking list', () => {
+    const tx = res.bom.lines.filter((l) => l.group === 'prof.tekstil');
+    expect(tx.find((l) => l.name.startsWith('43TX'))).toMatchObject({ qty: 6, detail: '4 × 3000 · 2 × 2540 mm' });
+    expect(tx.find((l) => l.name.startsWith('Støttestag'))).toMatchObject({ qty: 3 });
+    // 617: top and bottom at both free ends · 609: top and bottom splice
+    expect(tx.find((l) => l.artnr === '871 045 92')).toMatchObject({ qty: 4 });
+    expect(tx.find((l) => l.artnr === '871 037 92')).toMatchObject({ qty: 2 });
+    expect(tx.find((l) => l.artnr === '876 740 92')).toMatchObject({ qty: 3 });
   });
 });

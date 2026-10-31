@@ -1,6 +1,6 @@
 // Foga engine. Recipes as confirmed by Bjørn 31.10.2026: posts 94 at 2490 with insert 700 + M10 × 65 as foot
 // (pre-assembled), rails 92/91 at cc − 40 = 960 with a 600 in each end (pre-assembled), HDF 976 × 2440 per walled
-// module, takdrager 292 between posts with two 600 per end (pre-assembled), frames 43TX + 4 × 613 + 2 × 520, braces
+// module, takdrager 292 between posts with two 600 per end (pre-assembled), frames 43TX + 4 × 617 + 2 × 520, braces
 // 90 with a 600 in each end (pre-assembled, listed with their frames), header over door or curtain:
 // 2490 − 20 − 2000 − 10 = 460, plate 976 × 410. Lines go under the subgroups of the shared product grouping (catalog/groups.ts).
 import { describe, expect, it } from 'vitest';
@@ -64,12 +64,12 @@ describe('takdrager posts', () => {
 describe('tekstilvegger', () => {
   const frame = { pos: 'T1', W: 970, H: 2540, braces: null };
 
-  it('43TX 2W + 2H mitred, 4 × 613, 2 × 520', () => {
+  it('43TX 2W + 2H mitred, 4 × 617, 2 × 520', () => {
     const b = bom({ ...empty, frames: [frame] }, RECIPES, Z);
     expect(subgroups(b)).toEqual(['prof.tekstil']);
     expect(line(b, 'textile', '43TX')).toMatchObject({ artnr: '873 805 22', detail: '2 × 2540 · 2 × 970 mm', qty: 4, preassembled: false });
     expect(line(b, 'textile', '43TX')?.lm).toBeCloseTo(7.02);
-    expect(line(b, 'textile', '613')?.qty).toBe(4);
+    expect(line(b, 'textile', '617')?.qty).toBe(4);
     expect(line(b, 'textile', '520')?.qty).toBe(2);
   });
 

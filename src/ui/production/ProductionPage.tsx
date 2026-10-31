@@ -4,7 +4,7 @@ import { Download } from 'lucide-react'
 import { useMemo } from 'react'
 import { fullHeight } from '../../calc/fabric'
 import { production, type Production } from '../../calc/production'
-import type { Variant } from '../../domain/types'
+import type { TextileFill, Variant } from '../../domain/types'
 import type { InFrameParams } from '../../rules/rules'
 import { toCsvText } from '../../persistence/csv'
 import { Button, CommitInput } from '../controls'
@@ -40,14 +40,17 @@ export function ProductionPage({ variants, current, onSelect, customer, motifNam
   const P = useMemo(() => production(v, s, customer), [v, s, customer])
   const n = (x: number) => fmt(x, 0)
   const nPieces = P.pieces.length
+  const nFree = P.free.length
+  const fillText = (fill: TextileFill, motif: string | null) =>
+    fill === 'reuse' ? 'Kundens duk, bare montering' : fill === 'white' ? 'Hvit, uten grafikk' : (motif && motifName(motif)) || (motif ? `Motiv ${motif}` : 'Trykk, uten motiv')
 
   const exportCsv = () => download(productionCsv(P, s), 'text/csv;charset=utf-8', `produksjon-variant-${v.name}.csv`)
 
   return (
     <>
-      <PageBand title="Produksjon" meta={`Variant ${v.name} · ${count(nPieces, 'tekstilvegg', 'tekstilvegger')}`}>
+      <PageBand title="Produksjon" meta={`Variant ${v.name} · ${count(nPieces + nFree, 'tekstilvegg', 'tekstilvegger')}`}>
         {variants.length > 1 && <VariantTabs variants={variants} current={current} onSelect={onSelect} />}
-        <Button onBand icon={Download} disabled={!nPieces} onClick={exportCsv}>
+        <Button onBand icon={Download} disabled={!nPieces && !nFree} onClick={exportCsv}>
           Eksporter
         </Button>
       </PageBand>
@@ -55,7 +58,7 @@ export function ProductionPage({ variants, current, onSelect, customer, motifNam
         <div className="page-cols">
           <div className="page-main">
             <p className="page-intro">
-              Rammene monteres utenpå standveggene. Rammemål som passer i standen, og trykkfilmålet kunden skal levere grafikken i. Trykkfilen er rammemålet pluss {s.bleed} mm bleed på
+              Rammene på systemvegg monteres utenpå veggen. Frittstående vegger har tekstil på begge sider og står på fotplater. Rammemål som passer i standen, og trykkfilmålet kunden skal levere grafikken i. Trykkfilen er rammemålet pluss {s.bleed} mm bleed på
               hver side.
             </p>
             <div className="prod-grid tbl-head">
@@ -68,7 +71,7 @@ export function ProductionPage({ variants, current, onSelect, customer, motifNam
             </div>
             <section className="tbl-sec">
               <div className="tbl-sec-head">
-                <span>Tekstilvegger</span>
+                <span>Tekstilvegger på systemvegg</span>
                 <span className="num">{nPieces}</span>
               </div>
               {!nPieces && <div className="tbl-empty">Ingen tekstilvegger i variant {v.name}.</div>}
@@ -79,13 +82,13 @@ export function ProductionPage({ variants, current, onSelect, customer, motifNam
                     <span className="title">
                       {p.wall} · spenn {n(p.span)} mm fra {n(p.at)}
                     </span>
-                    <span className="sub">{(p.motif && motifName(p.motif)) || (p.motif ? `Motiv ${p.motif}` : 'Uten motiv')}</span>
+                    <span className="sub">{fillText(p.fill, p.motif)}</span>
                     <span className="num meta">
                       {p.profiles.map((x) => `${x.qty} × ${n(x.length)}`).join(' · ')}
                       {p.braces ? ` · stag ${p.braces.qty} × ${n(p.braces.length)}` : ''} <span className="faint">mm, gjæret</span>
                     </span>
                     <span className="num meta">
-                      Fil {s.scale} %: {fmt(p.fw, 1)} × {fmt(p.fh, 1)} mm inkl. {fmt(p.fb, 1)} mm bleed · {p.fileName}
+                      {p.fileName ? `Fil ${s.scale} %: ${fmt(p.fw, 1)} × ${fmt(p.fh, 1)} mm inkl. ${fmt(p.fb, 1)} mm bleed · ${p.fileName}` : 'Ingen trykkfil'}
                     </span>
                   </div>
                   <span className="num r">1</span>
@@ -99,10 +102,42 @@ export function ProductionPage({ variants, current, onSelect, customer, motifNam
                 </div>
               ))}
             </section>
+            <section className="tbl-sec">
+              <div className="tbl-sec-head">
+                <span>Frittstående tekstilvegger</span>
+                <span className="num">{nFree}</span>
+              </div>
+              {!nFree && <div className="tbl-empty">Ingen frittstående tekstilvegger i variant {v.name}.</div>}
+              {P.free.map((f) =>
+                f.faces.map((x, i) => (
+                  <div key={x.pos} className="prod-grid tbl-row">
+                    <span className="num muted">{x.pos}</span>
+                    <div className="cellstack">
+                      <span className="title">
+                        {f.pos} · side {x.face.toUpperCase()} · {n(f.length)} mm{f.nCorners ? ' · hjørne 92LTX' : ''}
+                      </span>
+                      <span className="sub">{fillText(x.fill, x.motif)}</span>
+                      {i === 0 && (
+                        <span className="num meta">
+                          Skinner 2 × ({f.railCuts.map(n).join(' + ')}){f.uprights ? ` · stående ${f.uprights} × ${n(f.H)}` : ''} · stag {f.supports.length} × {n(f.braceLength)} · {count(f.supports.length, 'fotplate', 'fotplater')}
+                        </span>
+                      )}
+                      <span className="num meta">{x.fileName ? `Fil ${s.scale} %: ${fmt(x.fw, 1)} × ${fmt(x.fh, 1)} mm inkl. ${fmt(s.bleed * (s.scale / 100), 1)} mm bleed · ${x.fileName}` : 'Ingen trykkfil'}</span>
+                    </div>
+                    <span className="num r">1</span>
+                    <span className="num">
+                      {n(x.W)} × {n(x.H)}
+                    </span>
+                    <span className="num">{x.fill === 'reuse' ? '–' : `${n(x.pw)} × ${n(x.ph)}`}</span>
+                    <span className="num r">{x.fill === 'reuse' ? '–' : fmt(x.printArea, 2)}</span>
+                  </div>
+                )),
+              )}
+            </section>
             <div className="prod-grid tbl-sum">
               <span />
               <span className="title">Sum</span>
-              <span className="num r">{nPieces}</span>
+              <span className="num r">{nPieces + 2 * nFree}</span>
               <span className="num">
                 {fmt(P.lm, 2)} <span className="muted">lm profil</span>
               </span>
@@ -181,10 +216,30 @@ function productionCsv(P: Production, s: InFrameParams): string {
       String(p.fw).replace('.', ','),
       String(p.fh).replace('.', ','),
       `${s.scale} %`,
-      p.fileName,
-      c(p.area),
+      p.fileName ?? '',
+      c(p.fill === 'reuse' ? 0 : p.area),
       c(p.lm),
       p.braces ? `${p.braces.qty} × ${p.braces.length}` : '',
     ])
+  for (const f of P.free)
+    for (const x of f.faces)
+      rows.push([
+        x.pos,
+        'Tekstilvegg frittstående',
+        `${f.pos} side ${x.face.toUpperCase()}`,
+        1,
+        x.W,
+        x.H,
+        x.pw,
+        x.ph,
+        s.bleed,
+        String(x.fw).replace('.', ','),
+        String(x.fh).replace('.', ','),
+        `${s.scale} %`,
+        x.fileName ?? '',
+        c(x.fill === 'reuse' ? 0 : x.printArea),
+        '',
+        x.face === 'a' ? `${f.supports.length} × ${f.braceLength}` : '',
+      ])
   return toCsvText(rows)
 }

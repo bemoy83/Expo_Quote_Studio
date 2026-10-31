@@ -11,7 +11,7 @@ import { wallHeight } from '../rules/rules';
 import { pointAlong, wallDirection, wallLength, wallModules } from './grid';
 import { defaultSwing, nextId } from './edit';
 import { OUTSIDE, roomAt } from './rooms';
-import type { Foil, Point, TextileWall, Variant, Wall } from './types';
+import type { Foil, Point, TextileFill, TextileWall, Variant, Wall } from './types';
 import { builtModules, isStandWall } from './walls';
 
 export type FaceSide = 1 | -1;
@@ -177,6 +177,29 @@ export function addTextile(v: Variant, rules: Rules, wallId: string, s: FaceSide
   return { v: { ...v, textiles: [...v.textiles, t] }, id };
 }
 
+/**
+ * Add a textile on a face over the stretch t0–t1 (drawn with the textile brush along the wall), clipped to the free span
+ * it overlaps most. Where it covers that whole span it follows it ("Fyll veggen").
+ */
+export function addTextileSpan(v: Variant, rules: Rules, wallId: string, s: FaceSide, t0: number, t1: number): { v: Variant; id: string } | { error: string } {
+  const lo = Math.min(t0, t1);
+  const hi = Math.max(t0, t1);
+  let best: Span | null = null;
+  let ov = 0;
+  for (const sp of freeSpans(v, rules, wallId, s)) {
+    const o = Math.min(sp[1], hi) - Math.max(sp[0], lo);
+    if (o > ov + EPS) [best, ov] = [sp, o];
+  }
+  if (!best) return { error: 'Ingen ledig veggflate her' };
+  const from = r3(Math.max(lo, best[0]));
+  const width = r3(Math.min(hi, best[1]) - from);
+  if (width < rules.textile.minWidth - EPS) return { error: `Tekstilvegg på systemvegg må være minst ${String(rules.textile.minWidth).replace('.', ',')} m` };
+  const fit = from <= best[0] + EPS && from + width >= best[1] - EPS;
+  const id = nextId(v.textiles.map((t) => t.id), 't');
+  const t: TextileWall = { id, wallId, side: s, from, width, ...(fit ? { fit: true } : {}) };
+  return { v: { ...v, textiles: [...v.textiles, t] }, id };
+}
+
 export interface TextilePatch {
   from?: number;
   width?: number;
@@ -184,6 +207,7 @@ export interface TextilePatch {
   bottom?: number;
   motif?: string | null;
   side?: FaceSide;
+  fill?: TextileFill;
 }
 
 /**
@@ -206,8 +230,10 @@ export function updateTextile(v: Variant, rules: Rules, id: string, patch: Texti
   const cur = textileBox(t, rules);
   const bottom = r1(clamp(patch.bottom ?? cur.bottom, 0, full - minH));
   const height = r3(clamp(patch.height ?? cur.height, minH, full - bottom));
-  const { motif: _m, height: _h, bottom: _b, ...rest } = t;
+  const { motif: _m, height: _h, bottom: _b, fill: _fl, ...rest } = t;
   const motif = patch.motif === undefined ? t.motif : patch.motif ?? undefined;
+  // A motif is a print: setting one makes the textile printed again
+  const fill = patch.motif ? 'print' : (patch.fill ?? t.fill ?? 'print');
   // Resizing or moving by hand ends "Fyll veggen"
   const { fit: _f, ...base } = rest;
   const keepFit = t.fit && placed[0] === t.from && placed[1] === t.width;
@@ -220,6 +246,7 @@ export function updateTextile(v: Variant, rules: Rules, id: string, patch: Texti
     ...(bottom > EPS ? { bottom } : {}),
     ...(bottom > EPS || height < full - EPS ? { height } : {}),
     ...(motif ? { motif } : {}),
+    ...(fill !== 'print' ? { fill } : {}),
   };
   return { ...v, textiles: v.textiles.map((x) => (x.id === id ? next : x)) };
 }

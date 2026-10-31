@@ -18,9 +18,11 @@ import { count, fmt, kr, signed } from './format'
 import { frameCount, TYPE_NAME } from './names'
 import { Rail } from './panel/Rail'
 import { PlanPreview, PlanView, type PlanSelection } from './plan/PlanView'
+import { FreeTextileDrawer } from './plan/FreeTextileDrawer'
 import { WallDrawer } from './plan/WallDrawer'
 import { findMotif, motifLibrary } from './motifs'
 import { fitDecor, removeFoil, removeTextile } from '../domain/decor'
+import { fitFreeTextiles, removeFreeTextile } from '../domain/freeTextile'
 import { newlyClosedRooms, wallsToRoom } from '../domain/enclosures'
 import { PickingPage } from './picking/PickingPage'
 import { ProductionPage } from './production/ProductionPage'
@@ -28,7 +30,9 @@ import { QuotePage } from './quote/QuotePage'
 import { TopNav, type Page } from './shell/TopNav'
 import { WorkOrderPage } from './workorder/WorkOrderPage'
 import { VariantTabs } from './shell/VariantTabs'
-import { FLOOR_SIZES, type Brush, type FloorSize, type Highlight, type Tool } from './tools'
+import { FLOOR_SIZES, gridSteps, type Brush, type FloorSize, type Highlight, type Tool } from './tools'
+import { GridPicker } from './plan/GridPicker'
+import type { GridStep } from '../domain/snapGrid'
 
 // three.js is only loaded when the 3D view is opened
 const Scene3D = lazy(() => import('./scene3d/Scene3D').then((m) => ({ default: m.Scene3D })))
@@ -75,6 +79,7 @@ export default function App() {
   const [tool, setTool] = useState<Tool>('select')
   const [brush, setBrush] = useState<Brush | null>(null)
   const [floorSize, setFloorSize] = useState<FloorSize>(FLOOR_SIZES[0].size)
+  const [gridStep, setGridStep] = useState<GridStep>(1)
   const [highlight, setHighlight] = useState<Highlight>(null)
   const [selection, setSelection] = useState<PlanSelection>({})
   const [toast, showToast] = useToast()
@@ -95,7 +100,7 @@ export default function App() {
   const onEdit = useCallback(
     (fn: (v: Variant) => Variant, history = true) => {
       const ratio = (id: string | undefined) => findMotif(motifs, id)?.ratio ?? 0
-      const apply = (x: Variant) => fitDecor(fn(x), rules, ratio)
+      const apply = (x: Variant) => fitFreeTextiles(fitDecor(fn(x), rules, ratio), rules)
       dispatch({ type: 'edit', fn: apply, history })
       if (!history) return
       const areas = newlyClosedRooms(vRef.current, apply(vRef.current))
@@ -151,6 +156,10 @@ export default function App() {
         const { textileId, foilId } = selection
         onEdit((x) => (textileId ? removeTextile(x, textileId) : removeFoil(x, foilId!)))
         setSelection({ wallId: selection.wallId, side: selection.side })
+      } else if ((k === 'delete' || k === 'backspace') && selection.freeTextileId) {
+        const id = selection.freeTextileId
+        onEdit((x) => removeFreeTextile(x, id))
+        setSelection({})
       } else if ((k === 'delete' || k === 'backspace') && selection.roomId) {
         const id = selection.roomId
         onEdit((x) => removeRoom(x, id))
@@ -193,6 +202,7 @@ export default function App() {
   }
 
   const brushLabel = describeBrush(brush)
+  const freeFrame = selection.freeTextileId ? res.production.free.find((f) => f.textileId === selection.freeTextileId) : undefined
 
   return (
     <div className="app">
@@ -273,6 +283,14 @@ export default function App() {
                   options={FLOOR_SIZES.map((s) => ({ value: s.label, label: <span className="num">{s.label}</span> }))}
                 />
               )}
+              {view === 'plan' && tool === 'brush' && (brush?.kind === 'wall' || brush?.kind === 'textile') && (
+                <GridPicker
+                  value={brush.kind === 'wall' ? (rules.wall.cc as GridStep) : gridStep}
+                  allowed={gridSteps(brush, rules)}
+                  onChange={setGridStep}
+                  why="Systemvegg tegnes i hele meter til Foga-delene for cc 25, 50 og 75 er lagt inn"
+                />
+              )}
               <span className="spacer" />
               <VariantTabs variants={sketch.variants} current={current} onSelect={selectVariant} />
               <Button onBand icon={Copy} disabled={sketch.variants.length >= 4} onClick={() => dispatch({ type: 'duplicate' })}>
@@ -292,7 +310,7 @@ export default function App() {
                 sub={[wallSplit(k), k.openings ? count(k.openings, 'åpning', 'åpninger') : ''].filter(Boolean).join(' · ') || undefined}
               />
               <Kpi label="Takdrager" value={fmt(k.beamLm)} unit="m" sub={k.organiserBeamLm ? 'fra arrangør' : undefined} />
-              {k.textileM2 > 0 && <Kpi label="Tekstilvegg" value={fmt(k.textileM2)} unit="m²" sub={frameCount(res.production.pieces.length)} />}
+              {k.textileM2 > 0 && <Kpi label="Tekstilvegg" value={fmt(k.textileM2)} unit="m²" sub={textileSub(res.production)} />}
               <span className="spacer" />
               <Kpi
                 label="Veiledende sum"
@@ -330,6 +348,7 @@ export default function App() {
                     tool={tool}
                     brush={brush}
                     floorSize={floorSize}
+                    gridStep={gridStep}
                     highlight={highlight}
                     selection={selection}
                     onSelect={setSelection}
@@ -358,6 +377,18 @@ export default function App() {
                   </Suspense>
                 )}
               </div>
+              {freeFrame && tool === 'select' && (
+                <FreeTextileDrawer
+                  v={v}
+                  frame={freeFrame}
+                  selection={selection}
+                  motifs={motifs}
+                  onSelect={setSelection}
+                  onEdit={onEdit}
+                  onToast={showToast}
+                  onClose={() => setSelection({})}
+                />
+              )}
               {selection.wallId && tool === 'select' && (
                 <WallDrawer
                   v={v}
@@ -421,12 +452,19 @@ function hint(tool: Tool, brush: Brush | null): string {
     case 'opening':
       return erase ? 'Klikk en åpning for å gjøre den til vegg igjen' : 'Klikk en vegg eller en tom kant for å sette inn åpning med overstykke · klikk en åpning for å bytte fyll'
     case 'textile':
-      return erase ? 'Klikk en tekstilvegg for å fjerne den' : 'Klikk ved en vegg, på siden rammen skal stå · rammen fyller den ledige delen av veggen'
+      return erase
+        ? 'Klikk en tekstilvegg for å fjerne den'
+        : 'Dra langs en systemvegg for tekstilvegg på veggen, eller dra fritt for frittstående på fotplater · klikk ved en vegg for å fylle den · én rute av gangen, velg rutestørrelse i båndet · start der en frittstående slutter for hjørne'
     case 'motif':
       return erase ? 'Klikk en foliedekor for å fjerne den, eller en tekstilvegg for å ta bort motivet' : 'Klikk en tekstilvegg for trykk, eller et veggfelt for foliedekor'
     case 'object':
       return erase ? 'Klikk et møbel for å fjerne det' : `Klikk i planen for å sette ut ${productOf(brush?.kind === 'object' ? brush.product : '')?.name.toLowerCase() ?? 'varen'}`
   }
+}
+
+/** InFrame frames and free-standing walls. */
+function textileSub(p: CalcResult['production']) {
+  return [p.pieces.length ? frameCount(p.pieces.length) : '', p.free.length ? `${p.free.length} frittstående` : ''].filter(Boolean).join(' · ')
 }
 
 /** Stand walls apart from inner and room walls, and who pays them. */

@@ -27,6 +27,37 @@ export interface FrameRecipe {
   wallFixing: { code: string; perFrame: number };
 }
 
+/** Frittstående tekstilvegg: a 43TX frame on foot plates, textile on both faces (Bjørn 31.10.2026). */
+export interface FootPlate {
+  code: string;
+  along: number;
+  across: number;
+}
+
+export interface FreeFrameRecipe {
+  /** Frame profile: top and bottom rail, and the upright at a free end. */
+  profile: string;
+  /** In-channel connector in every frame corner, and where a rail meets the corner post. */
+  corner: string;
+  /** Shared upright where two runs meet at a right angle. It replaces both runs' 43TX uprights there, and is a
+   *  support in both runs like a foot. */
+  cornerPost: string;
+  /** Joins a top or bottom rail in its length, one per splice. */
+  splice: string;
+  /** Upright brace and its couplings, one at every foot. */
+  brace: string;
+  braceCoupling: { code: string; perEnd: number };
+  /** Foot plate under the frame, one per support, size along and across the run in mm. `smallFoot` on a frame
+   *  shorter than `support.minFrom`. */
+  foot: FootPlate;
+  smallFoot: FootPlate;
+  /** Longest top or bottom rail before it is spliced in its length (the frame stays one rectangle), mm. */
+  maxRail: number;
+  /** Feet and braces: evenly spread, at least `min` supports (corner posts count) from `minFrom` mm and up, else
+   *  one; the outer foot at most `maxEnd` in from a free end; supports at most `maxGap` apart, mm. */
+  support: { min: number; minFrom: number; maxEnd: number; maxGap: number };
+}
+
 export interface BeamRecipe {
   /** Takdrager profile; one piece per beam length (max 6 m, see rules.beam.max), cut between the posts. */
   profile: string;
@@ -46,6 +77,7 @@ export interface DoorRecipe {
 export interface Recipes {
   wall: WallRecipe;
   frame: FrameRecipe;
+  freeFrame: FreeFrameRecipe;
   beam: BeamRecipe;
   door: DoorRecipe;
 }
@@ -62,7 +94,19 @@ export const RECIPES: Recipes = {
     railCoupling: { code: '600', perEnd: 1 },
     plate: { code: 'HDF', w: 976, h: 2440 },
   },
-  frame: { profile: '43TX', corner: '613', brace: '90', braceCoupling: { code: '600', perEnd: 1 }, wallFixing: { code: '520', perFrame: 2 } },
+  frame: { profile: '43TX', corner: '617', brace: '90', braceCoupling: { code: '600', perEnd: 1 }, wallFixing: { code: '520', perFrame: 2 } },
+  freeFrame: {
+    profile: '43TX',
+    corner: '617',
+    cornerPost: '92LTX',
+    splice: '609',
+    brace: '90',
+    braceCoupling: { code: '600', perEnd: 1 },
+    foot: { code: '740', along: 400, across: 400 },
+    smallFoot: { code: '730', along: 250, across: 300 },
+    maxRail: 5000,
+    support: { min: 2, minFrom: 1000, maxEnd: 1000, maxGap: 3000 },
+  },
   beam: { profile: '292', coupling: { code: '600', perEnd: 2 } },
   door: { leaf: 2000, floorGap: 20, topGap: 10 },
 };

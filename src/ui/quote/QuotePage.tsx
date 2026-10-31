@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { Printer } from 'lucide-react'
 import type { CalcResult } from '../../calc/calc'
+import { quoteGroups } from '../../calc/quoteLines'
 import type { Project, Room, Variant } from '../../domain/types'
 import { roomName, roomOpenings, roomSize } from '../../domain/rooms'
 import { dateText, DELIVERY_FIELDS, today, validUntil } from '../../domain/delivery'
@@ -34,7 +35,8 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
   const [sent] = useState(() => today())
   const valid = validUntil(sent, project.delivery, rules.quote)
   const delivery = DELIVERY_FIELDS.filter((d) => project.delivery?.[d.key]).map((d) => `${d.name} ${dateText(project.delivery?.[d.key])}`)
-  const lines = res.groups.flatMap((g) => g.lines)
+  const groups = quoteGroups(res.groups)
+  const lines = groups.flatMap((g) => g.lines)
   const placeholders = lines.filter((l) => l.placeholder).length
   const labourLines = lines.some((l) => l.group === 'tjen.montering')
   const inFrame = rules.textile.inFrame
@@ -77,7 +79,13 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
       v.rooms.map(kind).join(' · ') + (k.roomWallLm ? ` · ${fmt(k.roomWallLm)} lm romvegg` : ''),
     ])
   }
-  if (k.textileM2) facts.push([`${fmt(k.textileM2)} m² tekstilvegg`, `${frameCount(res.production.pieces.length)} InFrame`])
+  const P = res.production
+  if (P.pieces.length || P.free.length) {
+    facts.push([
+      `${fmt(k.textileM2)} m² tekstil`,
+      [P.pieces.length ? `${frameCount(P.pieces.length)} på systemvegg` : '', P.free.length ? `${fmt(P.freeLm, 2)} lm frittstående` : ''].filter(Boolean).join(' · '),
+    ])
+  }
 
   const unpriced = v.loose.filter((l) => !l.price)
   // Stand walls and takdrager the organiser pays: not the exhibitor's lines, only named
@@ -144,7 +152,7 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
               <span>Á pris</span>
               <span>Sum</span>
             </div>
-            {res.groups.map((g) => (
+            {groups.map((g) => (
               <div key={g.id} className="qgroup">
                 <div className="qgrid qgroup-head">
                   <span>{g.name}</span>

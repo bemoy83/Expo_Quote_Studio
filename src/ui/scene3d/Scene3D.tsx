@@ -10,6 +10,7 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import type { CalcResult } from '../../calc/calc'
 import { faceAt, faceNormal, faces, moveFoilBy, moveTextileBy, sideOf, textileOffset, type FaceSide } from '../../domain/decor'
+import { faceOfPoint } from '../../domain/freeTextile'
 import { canMoveWall } from '../../domain/edit'
 import { pointAlong, wallDirection, wallLength } from '../../domain/grid'
 import { moveObject } from '../../domain/objects'
@@ -141,7 +142,7 @@ export function Scene3D(p: Props) {
             roof = { ...t.pick, point: h.point }
             continue
           }
-          if (roof && !(t.pick.objectId || t.pick.textileId || t.pick.foilId)) return roof
+          if (roof && !(t.pick.objectId || t.pick.textileId || t.pick.foilId || t.pick.freeTextileId)) return roof
           return { ...t.pick, point: h.point }
         }
         if (t.layer || !h.object.userData.label) return roof
@@ -326,7 +327,10 @@ export function Scene3D(p: Props) {
       }
       if (!click) return
       if (hit?.objectId) P.onSelect({ objectId: hit.objectId })
-      else if (hit?.roomId) P.onSelect({ roomId: hit.roomId })
+      else if (hit?.freeTextileId) {
+        const t = P.v.freeTextiles.find((x) => x.id === hit.freeTextileId)
+        if (t) P.onSelect({ freeTextileId: t.id, freeFace: faceOfPoint(t, toModel(hit.point)) })
+      } else if (hit?.roomId) P.onSelect({ roomId: hit.roomId })
       else if (hit?.wallId) P.onSelect({ wallId: hit.wallId, side: faceOf(hit)?.s })
       else P.onSelect({})
     }
