@@ -186,8 +186,8 @@ src/foga/
 
 Motoren vet ingenting om gulv, møbler eller priser. Kalkylen bygger Foga-strukturen én gang (`structureOf`) og
 teller stolper, skinner, takdrager og plater fra den, så tilbud og plukkliste beskriver det samme. Plukklisten
-setter sammen Foga-stykklisten og kalkylelinjene som ikke er bygget av Foga-deler. Prisene kommer fortsatt fra
-kalkylen (`src/calc`).
+setter sammen Foga-stykklisten og kalkylelinjene som ikke er bygget av Foga-deler. Prisene settes i kalkylen
+(`src/calc`) etter prismodellen i [prismodell.md](prismodell.md).
 
 ## 5. Tre nivåer (Bjørn 31.10.2026)
 
@@ -197,6 +197,7 @@ kalkylen (`src/calc`).
 | 2 Artikkel | Det montøren plukker | 6290-9010 veggplate, stolpe 94 med fot, topp- og bunnskinne | Plukkliste, og under hver gruppe i kalkylen |
 | 3 Bestanddel | Det en artikkel er laget av | Stolpe = 94 × 2490 + 700 + M10 × 65 | Innkjøp og kostpris (senere) |
 
+- Kost og pris per nivå, og prisstrategi (fast eller sum av artikler): se [prismodell.md](prismodell.md).
 - Et salgsprodukt er en nominell bundle (vegg: 1 plate, 2 stolper, topp- og bunnskinne per meter). Plukklisten teller
   de faktiske artiklene fra tegningen, så naboelementer deler stolpe. Bundlen vises aldri i tilbudet.
 - Salgsprodukter i dag: vegg per meter og RAL, **dør med overstykke** og **forheng med overstykke** (en åpning er aldri
@@ -221,6 +222,8 @@ motoren regner ut delelisten for det.
 - Delelisten gir bare pris for en kombinasjon av deler som ikke dekkes av et ferdigprodukt.
   Dette er en filosofi, ikke en hardkodet regel. En frihåndstegnet disk kan for eksempel prises fra deler,
   men det avgjøres når vi kommer dit.
+
+Oppdatert 31.10.2026: Bjørn vil at sum av artikler skal være standard. Se [prismodell.md](prismodell.md).
 
 Senere kan delen få innkjøpspris i profilbiblioteket. Da gir delelisten en estimert kost per leveranse. Det er
 internt, og tilbudsprisen kommer fortsatt fra ferdigproduktet.

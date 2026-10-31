@@ -142,6 +142,7 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
                     <span>
                       {l.name}
                       {l.placeholder && <span className="mark"> *</span>}
+                      {l.terms && <span className="muted"> · {l.terms}</span>}
                     </span>
                     <span className="num muted">
                       {fmt(l.qty)} {l.unit}
@@ -195,7 +196,7 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
               {k.floorTotal > 0 && <li>Gulv ferdig lagt{v.floor.protection ? ' med monteringsbeskyttelse' : ''}.</li>}
               {unpriced.length > 0 && <li>Løse linjer uten pris avtales separat: {unpriced.map((l) => l.name).join(', ')}.</li>}
               <li>
-                {labourLines ? 'Montering og demontering er tilbudt som arbeidstimer.' : 'Montering og demontering inngår i prisene.'} Strøm og lys bestilles via hallens leverandør der det kreves.
+                Montering og demontering inngår i prisene.{labourLines ? ' Arbeidstimer gjelder hjelp med eget utstyr.' : ''} Strøm og lys bestilles via hallens leverandør der det kreves.
               </li>
               <li>Alle priser er eks. mva. Tilbudet er veiledende og bekreftes ved bestilling.</li>
             </ul>
