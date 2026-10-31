@@ -75,7 +75,7 @@ export function roomSideAt(v: Variant, x: number, y: number, tol = 0.1): { room:
   return undefined;
 }
 
-const overlaps = (a: Rect, b: Rect) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.d && b.y < a.y + a.d;
+export const overlaps = (a: Rect, b: Rect) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.d && b.y < a.y + a.d;
 
 /** Inside the stand, at least 1 × 1 and not on top of another room. */
 function fits(v: Variant, r: Room): boolean {
