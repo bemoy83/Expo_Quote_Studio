@@ -1,3 +1,5 @@
+import type { Strategy } from '../pricing/model';
+
 /** surface: floor, wall (drawn with a brush) · object: placed and drawn · counted: only a quantity · system: build parts the calc derives */
 export type ProductKind = 'surface' | 'object' | 'counted' | 'system';
 
@@ -12,6 +14,8 @@ export interface ProductVariant {
   ral?: string;
   /** Price eks. mva. */
   price: number;
+  /** Cost per unit from the OMS. Internal: the kalkyle shows the margin, the quote never does. */
+  cost?: number;
   /** Example price, shown with * on the quote. */
   placeholder?: boolean;
 }
@@ -37,6 +41,8 @@ export interface Product {
   dim?: string;
   /** Level 2: an article the montør picks, part of a level 1 product. Never a line on the quote. */
   article?: true;
+  /** Sum: priced as the sum of the articles actually built (pricing/model.ts). Otherwise the variant's own price. */
+  pricing?: Strategy;
   /** Goes in a wall module. A door swings and blocks its swing area; a curtain does not. */
   opening?: 'door' | 'curtain';
 }

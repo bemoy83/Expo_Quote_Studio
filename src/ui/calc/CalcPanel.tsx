@@ -1,6 +1,6 @@
 import { ChevronDown, ChevronRight, FileText } from 'lucide-react'
 import { useState } from 'react'
-import type { CalcResult } from '../../calc/calc'
+import type { CalcLine, CalcResult } from '../../calc/calc'
 import { groupItems, mainGroupOf } from '../../catalog/groups'
 import type { BomLine } from '../../foga/engine'
 import { LAYER_COLOR } from '../colors'
@@ -37,7 +37,7 @@ export function CalcPanel({ res, name, onHover, onQuote }: { res: CalcResult; na
         <div className="spacer">
           <h2>Veiledende kalkyle</h2>
           <div className="sub">
-            Eksempelpriser{placeholders ? <span className="ph"> · {placeholders} plassholderpriser</span> : null}
+            Eksempelpriser fra OMS{placeholders ? <span className="ph"> · {placeholders} plassholderpriser</span> : null}
           </div>
         </div>
         <span className="band-tag">
@@ -53,6 +53,7 @@ export function CalcPanel({ res, name, onHover, onQuote }: { res: CalcResult; na
               <div className="cg-head" onMouseEnter={() => onHover(layer)}>
                 <span className="sq" style={dot ? { background: dot, borderRadius: '50%' } : undefined} />
                 <span className="name">{g.name}</span>
+                <span className="dg">{dgText(g.lines)}</span>
                 <span className="num">
                   {kr(g.sum)}
                 </span>
@@ -65,6 +66,11 @@ export function CalcPanel({ res, name, onHover, onQuote }: { res: CalcResult; na
                     {fmt(l.qty)} {l.unit} × {kr(l.price)}
                     {l.meta ? ` · ${l.meta}` : ''}
                     {l.placeholder && <span className="ph"> · plassholder</span>}
+                  </span>
+                  <span className="meta cost">
+                    {l.strategy === 'sum' ? 'sum av artikler' : 'fast pris'}
+                    {l.cost === null ? <span className="ph"> · kost mangler</span> : ` · kost ${kr(l.cost)} · DG ${pct(l.dg ?? 0)}`}
+                    {l.terms ? ` · ${l.terms}` : ''}
                   </span>
                 </div>
               ))}
@@ -82,18 +88,27 @@ export function CalcPanel({ res, name, onHover, onQuote }: { res: CalcResult; na
         <div className="inkl num">
           inkl. mva. {kr(res.sum * (1 + rules.vat))} · {kr(res.keyFigures.area ? res.sum / res.keyFigures.area : 0)} per m²
         </div>
-        {res.keyFigures.hours > 0 && (
-          <div className="inkl num">
-            Montering ca. {fmt(res.keyFigures.hours)} t, inngår i prisene
-            {res.keyFigures.hoursPreliminary && <span className="ph"> · foreløpig sats</span>}
-          </div>
-        )}
+        <div className="inkl num margin">
+          Internt: kost {kr(res.margin.cost)} · DB {kr(res.margin.db)} · DG {pct(res.margin.dg)}
+          {res.margin.unknown > 0 && <span className="ph"> · {res.margin.unknown} {res.margin.unknown === 1 ? 'linje' : 'linjer'} uten kost</span>}
+        </div>
+        {res.keyFigures.hours > 0 && <div className="inkl num">Håndtering og montering ca. {fmt(Math.round(res.keyFigures.hours * 2) / 2)} t, inngår i prisene</div>}
         <Button variant="primary" icon={FileText} onClick={onQuote}>
           Åpne tilbud
         </Button>
       </div>
     </aside>
   )
+}
+
+const pct = (x: number) => `${Math.round(x * 100)} %`
+
+/** DG of a group over its lines with known cost. */
+function dgText(lines: CalcLine[]) {
+  const known = lines.filter((l) => l.cost !== null)
+  const sum = known.reduce((a, l) => a + l.sum, 0)
+  const cost = known.reduce((a, l) => a + (l.cost ?? 0), 0)
+  return sum > 0 ? `DG ${pct((sum - cost) / sum)}` : ''
 }
 
 /** Level 2 under a main group: the articles the montør picks, by subgroup, quantities only. */

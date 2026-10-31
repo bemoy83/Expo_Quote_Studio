@@ -1029,6 +1029,10 @@ kbd {
 .cg-head .num {
   font: var(--type-num-strong);
 }
+.cg-head .dg {
+  font: 400 11.5px var(--font-numeric);
+  color: rgb(var(--ink-faint));
+}
 .cg-head .sq {
   width: 8px;
   height: 8px;

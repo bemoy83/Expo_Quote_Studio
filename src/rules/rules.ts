@@ -35,17 +35,6 @@ export interface Rules {
   textile: { depth: number; minWidth: number; inFrame: InFrameParams };
   door: { swing: number };
   floor: { cell: number };
-  labour: {
-    /** 'foreløpig' marks the line in calc and quote (†). */
-    status: 'foreløpig' | 'godkjent';
-    min: number;
-    round: number;
-    perModule: number;
-    perLmBeam: number;
-    perBeamPost: number;
-    perM2Textile: number;
-    perM2Foil: number;
-  };
   /** VAT used for the inkl. mva. figure. Prices are always eks. mva. */
   vat: number;
 }
@@ -68,16 +57,6 @@ export const RULES: Rules = {
   },
   door: { swing: 0.9 },
   floor: { cell: 0.5 },
-  labour: {
-    status: 'foreløpig',
-    min: 4,
-    round: 0.5,
-    perModule: 0.5,
-    perLmBeam: 0.15,
-    perBeamPost: 0.25,
-    perM2Textile: 0.35,
-    perM2Foil: 0.25,
-  },
   vat: 0.25,
 };
 

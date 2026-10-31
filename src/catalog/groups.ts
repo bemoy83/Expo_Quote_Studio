@@ -67,7 +67,7 @@ export const PRODUCT_GROUPS: ProductGroup[] = [
   ]),
   g('tilb', 'Tilbehør', [['tilbehor', 'Tilbehør']]),
   g('tjen', 'Andre tjenester', [
-    ['montering', 'Montering', true],
+    ['montering', 'Arbeidstimer', true],
     ['lose', 'Løse linjer', true],
   ]),
 ];

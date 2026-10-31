@@ -182,7 +182,8 @@ export function CatalogPage({ onToast }: { onToast: Toast }) {
                       ) : (
                         <span className="num cell-ro">{r.unit}</span>
                       )}
-                      <span className="price-cell">
+                      <span className="price-cell" title={r.sum ? 'Sum av artikler. Prisen her brukes bare hvis en artikkelpris mangler.' : undefined}>
+                        {r.sum && <span className="faint">sum ·</span>}
                         <CommitInput
                           className="cin num"
                           inputMode="decimal"

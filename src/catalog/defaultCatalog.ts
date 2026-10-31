@@ -52,11 +52,12 @@ const products: Product[] = [
     unit: 'lm',
     group: 'vegg.vegger',
     dim: '1 × 2,5 m per meter',
+    pricing: 'sum',
     variants: PLATES.map(([ral, name, color]) => ({ artnr: `6120-${ral}`, name, ral, color, price: 870, placeholder: true })),
   },
-  one('6110', 'Takdrager 80 × 20 mm', 'system', 'lm', 'vegg.takdrager', 420, { dim: 'stolper inkludert' }),
-  one('6130', 'Dør med overstykke', 'object', 'stk', 'vegg.dorer', 2620, { opening: 'door' }),
-  one('6131', 'Forheng med overstykke', 'object', 'stk', 'vegg.dorer', 870, { dim: 'i åpning 960 mm', opening: 'curtain' }),
+  one('6110', 'Takdrager 80 × 20 mm', 'system', 'lm', 'vegg.takdrager', 420, { dim: 'stolper inkludert', pricing: 'sum' }),
+  one('6130', 'Dør med overstykke', 'object', 'stk', 'vegg.dorer', 2620, { opening: 'door', pricing: 'sum' }),
+  one('6131', 'Forheng med overstykke', 'object', 'stk', 'vegg.dorer', 870, { dim: 'i åpning 960 mm', opening: 'curtain', pricing: 'sum' }),
   // Vegger: level 2 articles
   {
     id: '6290',
@@ -73,7 +74,7 @@ const products: Product[] = [
   one('6103', 'Bunnprofil 960 × 30 mm', 'system', 'stk', 'vegg.skinner', 85, { article: true }),
   // Profilering. Textile wall: rental of the frame and the printed textile as one product, priced per piece from its
   // size (price per m² of B × H). Later frame (rental) and print (sale, reusable) must be possible to sell apart.
-  one('8000', 'Tekstilvegg, leie av ramme med trykt tekstil', 'system', 'm²', 'prof.tekstil', 1000),
+  one('8000', 'Tekstilvegg, leie av ramme med trykt tekstil', 'system', 'm²', 'prof.tekstil', 1000, { pricing: 'sum' }),
   one('8020', 'Foliedekor, dekal', 'system', 'm²', 'prof.folie', 520),
   one('8021', 'Foliedekor, helt veggfelt 960 × 2420 mm', 'system', 'm²', 'prof.folie', 520),
   // Floor
@@ -163,7 +164,8 @@ const products: Product[] = [
   counted('9530', 'Kjøleskap 120 l', 'tilb.tilbehor', 950),
   counted('8030', 'Diskprofilering, folie', 'prof.disk', 890),
   counted('6160', 'Frontplate med logo', 'prof.disk', 1650),
-  one('9900', 'Montering og demontering', 'counted', 't', 'tjen.montering', 750),
+  // Montering of our own products is in their price (handling). Hours are sold only as help with the customer's own equipment.
+  one('9900', 'Arbeidstimer, hjelp med kundens eget utstyr', 'counted', 't', 'tjen.montering', 750),
 ];
 
 // Colours for drawing placed furniture (product data, not tokens).
@@ -171,6 +173,12 @@ const BLACK = '#2B2C2E';
 export const FURNITURE_WHITE = '#F3F2EE';
 const OBJECT_COLORS: Record<string, string> = { '5276': BLACK, '5275': FURNITURE_WHITE, '5296': BLACK, '5186': BLACK, '5196': BLACK, '5195': FURNITURE_WHITE };
 for (const p of products) for (const v of p.variants) if (OBJECT_COLORS[v.artnr]) v.color = OBJECT_COLORS[v.artnr];
+
+// Example cost (from the OMS later) for the fast-priced products in these groups: 55 % of the price. The rest have no
+// cost yet, so the kalkyle shows them as without margin.
+const COSTED = ['gulv.', 'mob.', 'prof.folie', 'tjen.montering'];
+for (const p of products)
+  if (!p.pricing && !p.article && COSTED.some((g) => p.group.startsWith(g))) for (const v of p.variants) v.cost = Math.round(v.price * 0.55);
 
 export const DEFAULT_CATALOG: Catalog = {
   products,

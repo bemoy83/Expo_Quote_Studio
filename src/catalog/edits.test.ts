@@ -13,12 +13,13 @@ describe('catalog edits', () => {
     expect(applyEdits(base, NO_EDITS).products).toEqual(base.products);
   });
 
-  it('a new price reaches the calc', () => {
-    const e = editRow(NO_EDITS, rowOf('6120-9010'), { price: 400, placeholder: false });
-    const before = calc(r2(), RULES, base).groups.find((g) => g.id === 'vegg')!;
-    const after = calc(r2(), RULES, applyEdits(base, e)).groups.find((g) => g.id === 'vegg')!;
-    // R2 has 13 m white wall: 13 × (400 − 870) = −6 110
-    expect(after.sum - before.sum).toBe(-6110);
+  it('a new price reaches the calc (a fast-priced product)', () => {
+    const v = { ...r2(), counted: [{ product: '5280', qty: 3 }] };
+    const e = editRow(NO_EDITS, rowOf('5280'), { price: 400, placeholder: false });
+    const before = calc(v, RULES, base).groups.find((g) => g.id === 'mob')!;
+    const after = calc(v, RULES, applyEdits(base, e)).groups.find((g) => g.id === 'mob')!;
+    // 3 × (400 − 690) = −870
+    expect(after.sum - before.sum).toBe(-870);
     expect(after.lines[0].placeholder).toBe(false);
   });
 

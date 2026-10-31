@@ -5,6 +5,7 @@ import { CURTAIN, DEFAULT_CATALOG, DOOR } from '../catalog/defaultCatalog';
 import type { Variant } from '../domain/types';
 import { createVariant, fillFloor } from '../domain/variant';
 import { addRoom } from '../domain/rooms';
+import { DEFAULT_PRICING } from '../pricing/data';
 import { RULES } from '../rules/rules';
 import { calc, type CalcResult } from './calc';
 import { r1, r2, r3 } from './referenceStands';
@@ -28,11 +29,6 @@ describe('R1 · row stand 3 × 3, nothing added', () => {
   it('beam', () => {
     expect(qty(res, S.beam)).toBe(3);
     expect(res.keyFigures.beamLengths).toBe(1);
-  });
-  it('labour: estimated, not on the quote', () => {
-    // 9 × 0,5 + 3 × 0,15 = 4,95 → 5
-    expect(res.keyFigures.hours).toBe(5);
-    expect(qty(res, '9900')).toBe(0);
   });
   it('key figures', () => {
     expect(res.keyFigures).toMatchObject({ area: 9, openSides: 1, wallLm: 9, openings: 0 });
@@ -71,14 +67,14 @@ describe('R2 · corner stand 6 × 4, backroom 2 × 2, textile wall 4 m', () => {
     const [p] = res.production.pieces;
     expect(p).toMatchObject({ W: 3970, H: 2540, pw: 4010, ph: 2580, braces: { qty: 3, length: 2460 } });
   });
-  it('textile wall sold per piece, priced from B × H', () => {
-    // 1000 kr/m² × 3,970 × 2,540 = 10 083,8 → 10 084
+  it('textile wall sold per piece, priced as the sum of its frame, braces, print and montering', () => {
+    // 43TX 2 × 3970 + 2 × 2540 = 13,02 m × 10 = 130,2 · 4 × 613 × 4 = 16 · 2 × 520 × 5 = 10
+    // braces 3 × 2,46 m × 6 = 44,28 + 3 × 20 = 60 · print 4,010 × 2,580 = 10,3458 m² × 470 = 4862,526
+    // håndtering 140 · montering 3,970 × 2,540 = 10,0838 m² × 380 = 3831,844 → 9094,85 → 9095
     const l = lines(res).find((x) => x.artnr === S.textile)!;
-    expect(l).toMatchObject({ name: 'Tekstilvegg, leie av ramme med trykt tekstil, 3970 × 2540 mm', qty: 1, unit: 'stk', price: 10084, sum: 10084 });
-  });
-  it('labour', () => {
-    // 14 × 0,5 + 10 × 0,15 + 1 × 0,25 + 10,3458 × 0,35 = 12,37 → 12,5
-    expect(res.keyFigures.hours).toBe(12.5);
+    expect(l).toMatchObject({ name: 'Tekstilvegg, leie av ramme med trykt tekstil, 3970 × 2540 mm', qty: 1, unit: 'stk', price: 9095, strategy: 'sum' });
+    // Frame rented, print bought: the quote says so
+    expect(l).toMatchObject({ transfer: 'blandet', terms: 'Leie av ramme, kjøp av trykt tekstil' });
   });
 });
 
@@ -94,10 +90,6 @@ describe('R3 · island 8 × 6, beams only', () => {
     expect(res.keyFigures.posts).toBe(6);
     expect(res.keyFigures.modules).toBe(0);
     expect(lines(res).map((l) => l.artnr)).toEqual([S.beam]);
-  });
-  it('labour', () => {
-    // 34 × 0,15 + 6 × 0,25 = 6,6 → 6,5
-    expect(res.keyFigures.hours).toBe(6.5);
   });
 });
 
@@ -190,29 +182,43 @@ describe('floor', () => {
   });
 });
 
-describe('labour', () => {
-  it('minimum 4 hours', () => {
-    // 1 × 1 row: 3 modules × 0,5 + 1 × 0,15 = 1,65 → 4
-    expect(run(createVariant('A', { width: 1, depth: 1, type: 'row' })).keyFigures.hours).toBe(4);
+describe('price as sum of articles (example price list, pricing/data.ts)', () => {
+  const res = run(r1());
+  it('wall per metre = plates, rails, its share of the posts and montering', () => {
+    // 9 modules, 10 posts: 9 × 150 + 9 × 35 + 9 × 35 + 10 × 80 + 9 × 590 = 8090 → 8090 / 9 = 898,9 → 899 per lm
+    // Cost: 9 × 85 + 9 × 18 + 9 × 17 + 10 × 45 + 9 × 325 = 4455
+    const l = lines(res).find((x) => x.artnr === '6120-9010')!;
+    expect(l).toMatchObject({ price: 899, sum: 8091, cost: 4455, strategy: 'sum', transfer: 'leie' });
+    expect(l.dg).toBeCloseTo((8091 - 4455) / 8091);
+    expect(l.placeholder).toBe(false);
   });
-  it('preliminary rate is flagged', () => {
-    expect(run(r1()).keyFigures.hoursPreliminary).toBe(true);
-    const approved = calc(r1(), { ...RULES, labour: { ...RULES.labour, status: 'godkjent' } }, DEFAULT_CATALOG);
-    expect(approved.keyFigures.hoursPreliminary).toBe(false);
+  it('takdrager per metre = its lengths, its own posts and montering', () => {
+    // One length 2960 mm: 85 + 3 m montering × 175 = 610 → 203,3 → 203 per lm; cost 29 + 3 × 98 = 323
+    expect(lines(res).find((x) => x.artnr === S.beam)).toMatchObject({ price: 203, cost: 323 });
   });
-  it('Montering counted in the panel goes on the quote under Andre tjenester', () => {
-    const res = run({ ...r1(), counted: [{ product: '9900', qty: 6 }] });
-    const g = res.groups.find((x) => x.id === 'tjen')!;
+  it('a fast product uses its own price and cost; one without cost has no margin', () => {
+    const r = run({ ...r1(), counted: [{ product: '5280', qty: 2 }, { product: '7010', qty: 1 }] });
+    // Example cost 55 % of 690 = 380 (rounded)
+    expect(lines(r).find((x) => x.artnr === '5280')).toMatchObject({ price: 690, cost: 760, strategy: 'fast' });
+    expect(lines(r).find((x) => x.artnr === '7010')).toMatchObject({ price: 1250, cost: null, dg: null });
+    expect(r.margin.unknown).toBe(1);
+    expect(r.margin.sum).toBe(r.sum - 1250);
+  });
+  it('a sum product with an item missing from the price list falls back to its own price', () => {
+    const items = new Map(DEFAULT_PRICING.items);
+    items.delete('montering-modul');
+    const r = calc(r1(), RULES, DEFAULT_CATALOG, { ...DEFAULT_PRICING, items });
+    expect(lines(r).find((x) => x.artnr === '6120-9010')).toMatchObject({ price: 870, cost: null, strategy: 'fast', placeholder: true });
+  });
+  it('handling and montering hours are in the prices, not a line', () => {
+    // posts 10 × 0,05 + rails 18 × 0,025 + plates 9 × 0,08 + montering 9 × 0,5 + beam 0,05 + 3 × 0,15 = 6,67
+    expect(res.keyFigures.hours).toBeCloseTo(6.67);
+    expect(qty(res, '9900')).toBe(0);
+  });
+  it('Arbeidstimer (customer\'s own equipment) counted in the panel goes under Andre tjenester', () => {
+    const r = run({ ...r1(), counted: [{ product: '9900', qty: 6 }] });
+    const g = r.groups.find((x) => x.id === 'tjen')!;
     expect(g.lines).toEqual([expect.objectContaining({ artnr: '9900', qty: 6, unit: 't', sum: 6 * 750, group: 'tjen.montering' })]);
-  });
-  it('foil adds 0,25 t/m²', () => {
-    const v = createVariant('A', { width: 4, depth: 4, type: 'row' });
-    const base = run(v).keyFigures.hours;
-    const foils = Array.from({ length: 4 }, (_, i) => ({ id: `f${i}`, wallId: 'side-back', module: i, full: true, width: 0, height: 0, x: 0, y: 0 }));
-    const res = run({ ...v, foils });
-    // 4 × 0,96 × 2,42 = 9,29 m² × 0,25 = 2,32 h
-    expect(qty(res, S.foilFull)).toBe(9.3);
-    expect(res.keyFigures.hours).toBeCloseTo(base + 2.5);
   });
 });
 
@@ -234,6 +240,12 @@ describe('objects, counted items and sums', () => {
     expect(res.groups.find((g) => g.id === 'lys')!.sum).toBe(1250);
     expect(res.groups.map((g) => g.id)).toEqual(['vegg', 'mob', 'lys']);
     expect(res.sum).toBe(res.groups.reduce((a, g) => a + g.sum, 0));
+  });
+  it('full foil per wall felt', () => {
+    const v = createVariant('A', { width: 4, depth: 4, type: 'row' });
+    const foils = Array.from({ length: 4 }, (_, i) => ({ id: `f${i}`, wallId: 'side-back', module: i, full: true, width: 0, height: 0, x: 0, y: 0 }));
+    // 4 × 0,96 × 2,42 = 9,29 m²
+    expect(qty(run({ ...v, foils }), S.foilFull)).toBe(9.3);
   });
   it('unknown art.nr is kept as a placeholder line', () => {
     const res = run({ ...r1(), counted: [{ product: 'X-1', qty: 2 }] });

@@ -57,6 +57,8 @@ export interface CatalogRow {
   /** Added by the user: everything can be edited and the row can be removed. */
   added: boolean;
   kind: Product['kind'];
+  /** Priced as the sum of its articles: the price here is only used when an article price is missing. */
+  sum: boolean;
 }
 
 export function catalogRows(c: Catalog, e: CatalogEdits): CatalogRow[] {
@@ -72,6 +74,7 @@ export function catalogRows(c: Catalog, e: CatalogEdits): CatalogRow[] {
       placeholder: !!v.placeholder,
       added: added.has(p.id),
       kind: p.kind,
+      sum: p.pricing === 'sum',
     })),
   );
 }
