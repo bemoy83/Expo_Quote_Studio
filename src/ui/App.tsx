@@ -5,8 +5,8 @@ import { r2 } from '../calc/referenceStands'
 import { addObject } from '../domain/objects'
 import { removeRoom } from '../domain/rooms'
 import type { Variant } from '../domain/types'
-import { createProject, customerName, fillFloor } from '../domain/variant'
-import { parse, serialize, type Sketch } from '../persistence/file'
+import { customerName, fillFloor } from '../domain/variant'
+import { newSketch, parse, serialize, type Sketch } from '../persistence/file'
 import { loadSketch, saveSketch } from '../persistence/storage'
 import { initState, reduce } from '../state/history'
 import { CalcPanel } from './calc/CalcPanel'
@@ -36,7 +36,7 @@ function exampleSketch(): Sketch {
   v = addObject(v, place, '5276', 4, 2.7) ?? v
   v = addObject(v, place, '5186', 3.3, 2.7) ?? v
   v = addObject(v, place, '5186', 4.7, 2.7) ?? v
-  return { project: createProject(), variants: [v], motifs: [] }
+  return { ...newSketch(), variants: [v] }
 }
 
 // calc is pure; cache per variant object so unchanged variants are not recalculated.
@@ -154,12 +154,23 @@ export default function App() {
     const name = customerName(sketch.project).replace(/[^A-Za-z0-9æøåÆØÅ]+/g, '') || 'standskisse'
     download(serialize(sketch), 'application/json', `${name}.standskisse.json`)
   }
+  /** Replace the whole sketch (Ny, Åpne fil). One undo step, offered in the toast. */
+  const load = (next: Sketch, text: string) => {
+    dispatch({ type: 'load', sketch: next })
+    setSelection({})
+    setTool('select')
+    showToast({ text, action: 'Angre', onAction: () => dispatch({ type: 'undo' }) })
+  }
+  const newFile = () => {
+    load(newSketch(), 'Nytt tilbud startet')
+    setPage('skisse')
+    setView('plan')
+    setTabRaw('stand')
+  }
   const openFile = async (f: File) => {
     const r = parse(await f.text())
     if (!r.ok) return showToast(r.error)
-    dispatch({ type: 'load', sketch: r.sketch })
-    setSelection({})
-    showToast({ text: `Åpnet ${f.name}`, action: 'Angre', onAction: () => dispatch({ type: 'undo' }) })
+    load(r.sketch, `Åpnet ${f.name}`)
   }
 
   const brushLabel = describeBrush(brush)
@@ -171,6 +182,7 @@ export default function App() {
         setPage={setPage}
         project={sketch.project}
         setProject={(project) => dispatch({ type: 'project', project })}
+        onNew={newFile}
         onOpen={() => fileInput.current?.click()}
         onSave={saveFile}
       />
