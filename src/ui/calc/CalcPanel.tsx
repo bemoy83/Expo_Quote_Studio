@@ -1,10 +1,8 @@
 import { ChevronDown, ChevronRight, FileText } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import type { CalcResult } from '../../calc/calc'
-import { mainGroupOf } from '../../catalog/groups'
-import { bom } from '../../foga/engine'
-import { bomSizes } from '../../foga/fromVariant'
-import { RECIPES } from '../../foga/recipes'
+import { groupItems, mainGroupOf } from '../../catalog/groups'
+import type { BomLine } from '../../foga/engine'
 import { LAYER_COLOR } from '../colors'
 import { Button } from '../controls'
 import { rules } from '../env'
@@ -30,7 +28,7 @@ export function CalcPanel({ res, name, onHover, onQuote }: { res: CalcResult; na
   const lines = res.groups.flatMap((g) => g.lines)
   const placeholders = lines.filter((l) => l.placeholder).length
   // Level 2: the Foga articles behind each main group, the same as on the picking list. Quantities only.
-  const articles = useMemo(() => bom(res.foga, RECIPES, bomSizes(rules)).lines, [res.foga])
+  const articles = res.bom.lines
   const [open, setOpen] = useState<Set<string>>(new Set())
   const toggle = (id: string) => setOpen((o) => new Set(o.has(id) ? [...o].filter((x) => x !== id) : [...o, id]))
   return (
@@ -47,52 +45,33 @@ export function CalcPanel({ res, name, onHover, onQuote }: { res: CalcResult; na
         </span>
       </div>
       <div className="calc-scroll" onMouseLeave={() => onHover(null)}>
-        {res.groups.map((g) => (
-          <section key={g.id} className="cg">
-            <div className="cg-head" onMouseEnter={() => onHover(layerOf(g.id))}>
-              <span className="sq" style={DOT[layerOf(g.id) ?? ''] ? { background: DOT[layerOf(g.id) ?? ''], borderRadius: '50%' } : undefined} />
-              <span className="name">{g.name}</span>
-              <span className="num">
-                {kr(g.sum)}
-              </span>
-            </div>
-            {g.lines.map((l, i) => (
-              <div key={l.artnr + l.name + i} className="cl" onMouseEnter={() => onHover(layerOf(l.group))}>
-                <span className="n">{l.name}</span>
-                <span className="s">{kr(l.sum)}</span>
-                <span className="meta">
-                  {fmt(l.qty)} {l.unit} × {kr(l.price)}
-                  {l.meta ? ` · ${l.meta}` : ''}
-                  {l.placeholder && <span className="ph"> · plassholder</span>}
+        {res.groups.map((g) => {
+          const layer = layerOf(g.id)
+          const dot = layer ? DOT[layer] : undefined
+          return (
+            <section key={g.id} className="cg">
+              <div className="cg-head" onMouseEnter={() => onHover(layer)}>
+                <span className="sq" style={dot ? { background: dot, borderRadius: '50%' } : undefined} />
+                <span className="name">{g.name}</span>
+                <span className="num">
+                  {kr(g.sum)}
                 </span>
               </div>
-            ))}
-            {(() => {
-              const arts = articles.filter((x) => mainGroupOf(x.group) === g.id)
-              if (!arts.length) return null
-              const on = open.has(g.id)
-              const Icon = on ? ChevronDown : ChevronRight
-              return (
-                <>
-                  <button type="button" className="cg-arts" aria-expanded={on} onClick={() => toggle(g.id)}>
-                    <Icon size={12} /> {arts.length} artikler
-                  </button>
-                  {on &&
-                    arts.map((x) => (
-                      <div key={x.group + x.name + x.detail} className="cl art">
-                        <span className="n">
-                          {x.name}
-                          {x.ral ? ` · RAL ${x.ral}` : ''}
-                          {x.detail.endsWith('overstykke') ? ' · overstykke' : ''}
-                        </span>
-                        <span className="s">{x.qty} stk</span>
-                      </div>
-                    ))}
-                </>
-              )
-            })()}
-          </section>
-        ))}
+              {g.lines.map((l, i) => (
+                <div key={l.artnr + l.name + i} className="cl" onMouseEnter={() => onHover(layerOf(l.group))}>
+                  <span className="n">{l.name}</span>
+                  <span className="s">{kr(l.sum)}</span>
+                  <span className="meta">
+                    {fmt(l.qty)} {l.unit} × {kr(l.price)}
+                    {l.meta ? ` · ${l.meta}` : ''}
+                    {l.placeholder && <span className="ph"> · plassholder</span>}
+                  </span>
+                </div>
+              ))}
+              <Articles lines={articles.filter((x) => mainGroupOf(x.group) === g.id)} open={open.has(g.id)} onToggle={() => toggle(g.id)} />
+            </section>
+          )
+        })}
       </div>
       <div className="calc-foot">
         <div className="sum">
@@ -114,5 +93,35 @@ export function CalcPanel({ res, name, onHover, onQuote }: { res: CalcResult; na
         </Button>
       </div>
     </aside>
+  )
+}
+
+/** Level 2 under a main group: the articles the montør picks, by subgroup, quantities only. */
+function Articles({ lines, open, onToggle }: { lines: BomLine[]; open: boolean; onToggle: () => void }) {
+  if (!lines.length) return null
+  const Icon = open ? ChevronDown : ChevronRight
+  return (
+    <>
+      <button type="button" className="cg-arts" aria-expanded={open} onClick={onToggle}>
+        <Icon size={12} /> {lines.length} artikler
+      </button>
+      {open &&
+        groupItems(lines, (x) => x.group).flatMap(({ subgroups }) =>
+          subgroups.map(({ subgroup, items }) => (
+            <div key={subgroup.id}>
+              <div className="cl art sub">{subgroup.name}</div>
+              {items.map((x) => (
+                <div key={x.name + x.detail} className="cl art">
+                  <span className="n">
+                    {x.name}
+                    {x.ral ? ` · RAL ${x.ral}` : ''}
+                  </span>
+                  <span className="s">{x.qty} stk</span>
+                </div>
+              ))}
+            </div>
+          )),
+        )}
+    </>
   )
 }

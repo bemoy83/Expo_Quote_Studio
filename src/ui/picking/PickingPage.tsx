@@ -1,14 +1,10 @@
 // Plukkliste: what goes on the truck, by main group and subgroup of the shared product grouping. Foga parts come
 // from the Foga engine (src/foga), counted from the same structure as the quote; everything else from the calc
 // lines that are not built from Foga parts. Services and loose quote lines are not picked. Rules: docs/foga-system.md.
-import { useMemo } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import { groupItems, resolveGroup } from '../../catalog/groups'
 import type { Variant } from '../../domain/types'
-import { bom } from '../../foga/engine'
-import { bomSizes } from '../../foga/fromVariant'
-import { RECIPES } from '../../foga/recipes'
-import { plateName, rules } from '../env'
+import { plateName } from '../env'
 import { count, fmt } from '../format'
 import { PageBand } from '../shell/PageBand'
 import { VariantTabs } from '../shell/VariantTabs'
@@ -35,7 +31,7 @@ interface PickRow {
 export function PickingPage({ variants, current, onSelect, calcOf }: Props) {
   const v = variants[current]
   const res = calcOf(v)
-  const B = useMemo(() => bom(res.foga, RECIPES, bomSizes(rules)), [res.foga])
+  const B = res.bom
   // Calc lines first, so a door comes before the parts of its header
   const rows: PickRow[] = [
     ...res.groups

@@ -4,7 +4,9 @@ import type { Catalog, Unit } from '../catalog/types';
 import { CELL, openSides, parseCellKey } from '../domain/grid';
 import type { Point, Variant } from '../domain/types';
 import { builtModules, wallPoints } from '../domain/walls';
-import { structureOf } from '../foga/fromVariant';
+import { bom, type Bom } from '../foga/engine';
+import { bomSizes, structureOf } from '../foga/fromVariant';
+import { RECIPES } from '../foga/recipes';
 import type { FogaStructure } from '../foga/structure';
 import type { Rules } from '../rules/rules';
 import { layoutBeams, type BeamLayout } from './beams';
@@ -47,13 +49,12 @@ export interface KeyFigures {
   posts: number;
   /** Posts that exist only because of the beams. */
   beamPosts: number;
-  topRails: number;
-  bottomRails: number;
+  /** Wall modules including those with a door or curtain (each gets top and bottom rail, in its header if an opening). */
+  modules: number;
   /** m² per floor art.nr. */
   floor: Record<string, number>;
   floorTotal: number;
   textileM2: number;
-  textileLm: number;
   foilM2: number;
   /** Estimated assembly hours. Included in the unit prices; on the quote only if Montering is counted. */
   hours: number;
@@ -70,6 +71,8 @@ export interface CalcResult {
   production: Production;
   /** What is built, in Foga terms: the quote counts from it and the picking list lists its parts. */
   foga: FogaStructure;
+  /** Level 2 and 3: the Foga parts list of `foga`. The picking list and the kalkyle's articles show it. */
+  bom: Bom;
 }
 
 const r1 = (n: number) => Math.round(n * 10) / 10;
@@ -222,12 +225,10 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog): CalcResult {
       beamLengths: nLengths,
       posts: allPosts.size,
       beamPosts,
-      topRails: foga.modules.length,
-      bottomRails: foga.modules.length,
+      modules: foga.modules.length,
       floor,
       floorTotal,
       textileM2,
-      textileLm: prod.lm,
       foilM2: foilFull + foilDecal,
       hours,
       hoursPreliminary: L.status === 'foreløpig',
@@ -236,6 +237,7 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog): CalcResult {
     posts: [...allPosts.values()],
     production: prod,
     foga,
+    bom: bom(foga, RECIPES, bomSizes(rules)),
   };
 }
 

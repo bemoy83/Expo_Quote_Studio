@@ -1075,6 +1075,11 @@ kbd {
   margin-top: 3px;
   padding-left: 28px;
 }
+.cl.art.sub {
+  margin-top: 6px;
+  font: 600 11px var(--font-ui);
+  color: rgb(var(--ink-faint));
+}
 .cl.art .n,
 .cl.art .s {
   font: 400 12px var(--font-ui);

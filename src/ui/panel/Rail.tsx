@@ -58,7 +58,7 @@ export function Rail(p: RailProps) {
   const counts = useMemo(() => menuCounts(v), [v])
   const done: Record<string, boolean> = {
     stand: true,
-    vegg: res.keyFigures.topRails > 0 || v.stand.type === 'island',
+    vegg: res.keyFigures.modules > 0 || v.stand.type === 'island',
     gulv: res.keyFigures.floorTotal > 0,
   }
   const step = MENUS.filter((m) => m.group === 'build').findIndex((m) => m.key === tab)

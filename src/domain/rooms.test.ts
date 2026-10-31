@@ -24,7 +24,7 @@ describe('room walls', () => {
   it('R2: the room builds only its front and right side; the stand walls are shared', () => {
     const v = r2();
     expect(own(v, 'bk')).toBe(4);
-    expect(kf(v).topRails).toBe(14);
+    expect(kf(v).modules).toBe(14);
     expect(kf(v).wallLm).toBe(13);
     expect(doorKey(v)).toBe(moduleKey([1, 2], [2, 2]));
   });
@@ -39,7 +39,7 @@ describe('room walls', () => {
     let v = addRoom(row(), { x: 0, y: 0, w: 2, d: 2 })!;
     v = addRoom(v, { x: 2, y: 0, w: 2, d: 2 })!;
     // Room 1: front 2 + right 2. Room 2: front 2 + right 2, its left side is room 1's right side.
-    expect(kf(v).topRails - kf(row()).topRails).toBe(8);
+    expect(kf(v).modules - kf(row()).modules).toBe(8);
   });
   it('rooms cannot overlap or leave the stand', () => {
     const v = addRoom(row(), { x: 0, y: 0, w: 2, d: 2 })!;
@@ -63,7 +63,7 @@ describe('room walls', () => {
   });
   it('removing the room removes only its own walls; dissolving keeps them as plain walls', () => {
     const v = r2();
-    expect(kf(removeRoom(v, 'bk')).topRails).toBe(kf(createVariant('A', v.stand)).topRails);
+    expect(kf(removeRoom(v, 'bk')).modules).toBe(kf(createVariant('A', v.stand)).modules);
     const d = dissolveRoom(v, 'bk');
     expect(d.rooms).toHaveLength(0);
     expect(d.walls.some((w) => w.room)).toBe(false);
@@ -113,7 +113,7 @@ describe('doors and eraser', () => {
     const v = createVariant('A', { width: 6, depth: 4, type: 'corner', cornerSide: 'right' });
     const r = addDefaultRoom(v, DOOR)!;
     expect(r.rooms[0]).toMatchObject({ x: 0, y: 0, w: 1, d: 1 });
-    expect(kf(r).topRails).toBe(kf(v).topRails + 2);
+    expect(kf(r).modules).toBe(kf(v).modules + 2);
     expect(doorKey(r)).toBe(moduleKey([1, 0], [1, 1]));
     const two = addDefaultRoom(addDefaultRoom(row(), DOOR)!, DOOR)!;
     expect(two.rooms).toHaveLength(2);

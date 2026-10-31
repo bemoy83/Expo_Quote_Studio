@@ -44,7 +44,7 @@ describe('R2 · corner stand 6 × 4, backroom 2 × 2, textile wall 4 m', () => {
   const res = run(r2());
   it('wall metres: the door module is not wall, it is in the door product', () => {
     expect(qty(res, '6120-9010')).toBe(13);
-    expect(res.keyFigures.topRails).toBe(14);
+    expect(res.keyFigures.modules).toBe(14);
     expect(res.keyFigures.wallLm).toBe(13);
   });
   it('posts: counted, not sold (beam posts are in the takdrager price)', () => {
@@ -92,7 +92,7 @@ describe('R3 · island 8 × 6, beams only', () => {
   it('posts', () => {
     // 4 corners + 2 joints
     expect(res.keyFigures.posts).toBe(6);
-    expect(res.keyFigures.topRails).toBe(0);
+    expect(res.keyFigures.modules).toBe(0);
     expect(lines(res).map((l) => l.artnr)).toEqual([S.beam]);
   });
   it('labour', () => {
@@ -134,7 +134,7 @@ describe('rooms build only the walls that are missing', () => {
     v = addRoom(v, { x: 5, y: 0, w: 1, d: 1 }, { face: 'left', module: 0, product: DOOR }, 'b')!;
     const res = run(v);
     // Stand walls 6 + 3 + 3 = 12. Each room adds right/left face 1 + front face 1 = 2 → 16 modules, 2 doors.
-    expect(res.keyFigures.topRails).toBe(16);
+    expect(res.keyFigures.modules).toBe(16);
     expect(res.keyFigures.openings).toBe(2);
     expect(res.keyFigures.wallLm).toBe(14);
     expect(qty(res, DOOR)).toBe(2);
