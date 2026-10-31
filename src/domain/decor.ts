@@ -10,6 +10,7 @@ import type { Rules } from '../rules/rules';
 import { wallHeight } from '../rules/rules';
 import { pointAlong, wallDirection, wallLength, wallModules } from './grid';
 import { defaultSwing, isPerimeterWall, nextId } from './edit';
+import { outwardSide } from './rooms';
 import type { Foil, Point, TextileWall, Variant, Wall } from './types';
 import { builtModules } from './walls';
 
@@ -20,17 +21,25 @@ const r1 = (n: number) => Math.round(n * 10) / 10;
 const r3 = (n: number) => Math.round(n * 1000) / 1000;
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
 
-/** The face a textile or foil sits on. Old data without `side` uses the default (into the stand). */
+/** The face new decor goes on: into the stand, and on a room side the outside of the room. */
+export function defaultFace(v: Variant, w: Wall): FaceSide {
+  return w.room ? outwardSide(w.room.face) : defaultSwing(v.stand, w);
+}
+
+/** The face a textile or foil sits on. Data without `side` uses the default face. */
 export function sideOf(v: Variant, x: { wallId: string; side?: FaceSide }): FaceSide {
   if (x.side) return x.side;
   const w = v.walls.find((o) => o.id === x.wallId);
-  return w ? defaultSwing(v.stand, w) : 1;
+  return w ? defaultFace(v, w) : 1;
 }
 
-/** Faces that can carry decor: the inner face of a perimeter wall, both faces of an inner wall. */
+/**
+ * Faces that can carry decor: the inner face of a perimeter stand wall, both faces of an inner wall or a room side
+ * (the outside first; inside a room is allowed too, a meeting room is profiled).
+ */
 export function faces(v: Variant, w: Wall): FaceSide[] {
-  const d = defaultSwing(v.stand, w);
-  return isPerimeterWall(v.stand, w) ? [d] : [d, d === 1 ? -1 : 1];
+  const d = defaultFace(v, w);
+  return isPerimeterWall(v.stand, w) && !w.room ? [d] : [d, d === 1 ? -1 : 1];
 }
 
 /** Unit normal pointing out of the face. */
@@ -85,6 +94,16 @@ function cut(spans: Span[], t: number): Span[] {
   return spans.flatMap(([a, b]) => (t > a + EPS && t < b - EPS ? [[a, t], [t, b]] : [[a, b]]) as Span[]);
 }
 
+/** Module indices of the wall that another wall (or a gap in a room) holds: decor on this wall must keep off them. */
+export function foreignModules(v: Variant, w: Wall): Set<number> {
+  const owner = new Map(builtModules(v).map((m) => [m.key, m.wallId]));
+  const out = new Set<number>();
+  wallModules(w).forEach((m, i) => {
+    if (owner.get(m.key) !== w.id) out.add(i);
+  });
+  return out;
+}
+
 /** Module indices of the wall that are openings (also when the opening sits on an overlapping wall). */
 export function openingModules(v: Variant, w: Wall): Set<number> {
   const built = new Map(builtModules(v).map((m) => [m.key, m]));
@@ -126,6 +145,7 @@ export function freeSpans(v: Variant, rules: Rules, wallId: string, s: FaceSide,
   if (!w) return [];
   let spans: Span[] = [[0, wallLength(w)]];
   for (const i of openingModules(v, w)) spans = subtract(spans, [i, i + 1]);
+  for (const i of foreignModules(v, w)) spans = subtract(spans, [i, i + 1]);
   for (const t of junctions(v, w, s)) spans = cut(spans, t);
   for (const t of others) spans = subtract(spans, [t.from, t.from + t.width]);
   return spans.filter(([a, b]) => b - a >= rules.textile.minWidth - EPS);
@@ -149,12 +169,12 @@ function spanFor(spans: Span[], t: number): Span | null {
   return best;
 }
 
-/** Add a textile on a face, filling the free span at offset `at` (or the nearest free span). Null when the face is full. */
+/** Add a textile on a face, filling the free span at offset `at` (or the nearest free span) and following it. Null when the face is full. */
 export function addTextile(v: Variant, rules: Rules, wallId: string, s: FaceSide, at: number): { v: Variant; id: string } | null {
   const sp = spanFor(freeSpans(v, rules, wallId, s), at);
   if (!sp) return null;
   const id = nextId(v.textiles.map((t) => t.id), 't');
-  const t: TextileWall = { id, wallId, side: s, from: r1(sp[0]), width: r1(sp[1] - sp[0]) };
+  const t: TextileWall = { id, wallId, side: s, from: r1(sp[0]), width: r1(sp[1] - sp[0]), fit: true };
   return { v: { ...v, textiles: [...v.textiles, t] }, id };
 }
 
@@ -189,8 +209,12 @@ export function updateTextile(v: Variant, rules: Rules, id: string, patch: Texti
   const height = r3(clamp(patch.height ?? cur.height, minH, full - bottom));
   const { motif: _m, height: _h, bottom: _b, ...rest } = t;
   const motif = patch.motif === undefined ? t.motif : patch.motif ?? undefined;
+  // Resizing or moving by hand ends "Fyll veggen"
+  const { fit: _f, ...base } = rest;
+  const keepFit = t.fit && placed[0] === t.from && placed[1] === t.width;
   const next: TextileWall = {
-    ...rest,
+    ...base,
+    ...(keepFit ? { fit: true } : {}),
     side: s,
     from: placed[0],
     width: placed[1],
@@ -201,13 +225,15 @@ export function updateTextile(v: Variant, rules: Rules, id: string, patch: Texti
   return { ...v, textiles: v.textiles.map((x) => (x.id === id ? next : x)) };
 }
 
-/** Fill the free span the textile sits in. */
+/** Fill the free span the textile sits in, and keep filling it when walls or rooms change ("Fyll veggen"). */
 export function fillTextile(v: Variant, rules: Rules, id: string): Variant {
   const t = v.textiles.find((x) => x.id === id);
   if (!t) return v;
   const s = sideOf(v, t);
   const sp = spanFor(freeSpans(v, rules, t.wallId, s, textilesOn(v, t.wallId, s, id)), t.from + t.width / 2);
-  return sp ? updateTextile(v, rules, id, { from: sp[0], width: sp[1] - sp[0] }) : v;
+  if (!sp) return v;
+  const next = updateTextile(v, rules, id, { from: sp[0], width: sp[1] - sp[0] });
+  return { ...next, textiles: next.textiles.map((x) => (x.id === id ? { ...x, fit: true } : x)) };
 }
 
 function place(spans: Span[], from: number, width: number, min: number, mode: 'move' | 'size'): [number, number] | null {
@@ -236,7 +262,7 @@ export function textileAt(v: Variant, wallId: string, s: FaceSide, t: number): T
 /** Why a felt cannot take foil, or null when it can. */
 export function feltBlocked(v: Variant, rules: Rules, wallId: string, module: number, s: FaceSide): string | null {
   const w = v.walls.find((x) => x.id === wallId);
-  if (!w || module < 0 || module >= Math.round(wallLength(w))) return 'Ingen vegg her';
+  if (!w || module < 0 || module >= Math.round(wallLength(w)) || foreignModules(v, w).has(module)) return 'Ingen vegg her';
   if (openingModules(v, w).has(module)) return 'Folie kan ikke ligge på en åpning';
   const f = felt(rules, module);
   if (textilesOn(v, wallId, s).some((t) => t.from < f.b - EPS && t.from + t.width > f.a + EPS)) return 'Feltet er dekket av en tekstilvegg';
@@ -358,20 +384,31 @@ export function fitDecor(v: Variant, rules: Rules, ratio: (motif: string | undef
   const kept: TextileWall[] = [];
   const full = fullTextileHeight(rules);
   const min = rules.textile.minWidth;
-  for (const t of v.textiles) {
+  v.textiles.forEach((t, ti) => {
     const w = v.walls.find((x) => x.id === t.wallId);
     if (!w) {
       changed = true;
-      continue;
+      return;
     }
     const allowed = faces(v, w);
     const s0 = sideOf(v, t);
     const s = allowed.includes(s0) ? s0 : allowed[0];
-    const spans = freeSpans({ ...v, textiles: kept }, rules, t.wallId, s, kept.filter((k) => k.wallId === t.wallId && k.side === s));
+    // Other frames on this face, where they are now (earlier ones already refitted)
+    const others = [...kept, ...v.textiles.slice(ti + 1)].filter((k) => k.wallId === t.wallId && sideOf(v, k) === s);
+    const spans = freeSpans(v, rules, t.wallId, s, others);
     let from = t.from;
     let width = t.width;
     const inside = spans.some(([a, b]) => from >= a - EPS && from + width <= b + EPS);
-    if (!inside) {
+    if (t.fit) {
+      // "Fyll veggen": the whole free span around its centre, growing and shrinking with it
+      const sp = spanFor(spans, from + width / 2);
+      if (!sp) {
+        changed = true;
+        return;
+      }
+      from = r1(sp[0]);
+      width = r1(sp[1] - sp[0]);
+    } else if (!inside) {
       let best: Span | null = null;
       let ov = 0;
       for (const [a, b] of spans) {
@@ -389,7 +426,7 @@ export function fitDecor(v: Variant, rules: Rules, ratio: (motif: string | undef
         const sp = spanFor(spans, from + width / 2);
         if (!sp) {
           changed = true;
-          continue;
+          return;
         }
         width = r1(Math.min(width, sp[1] - sp[0]));
         from = r1(clamp(from, sp[0], sp[1] - width));
@@ -405,7 +442,7 @@ export function fitDecor(v: Variant, rules: Rules, ratio: (motif: string | undef
     }
     if (next !== t) changed = true;
     kept.push(next);
-  }
+  });
   const withTex = changed ? { ...v, textiles: kept } : v;
   const foils: Foil[] = [];
   for (const f of v.foils) {
