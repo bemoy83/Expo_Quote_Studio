@@ -7,7 +7,8 @@ import { builtModules, wallPoints } from '../domain/walls';
 import type { Rules } from '../rules/rules';
 import type { FogaStructure, PostSpec } from './structure';
 
-export function fromVariant(v: Variant, rules: Rules): FogaStructure {
+/** `openingKind` tells a door from a curtain by art.nr (from the catalog). */
+export function fromVariant(v: Variant, rules: Rules, openingKind: (artnr: string) => 'door' | 'curtain' | undefined): FogaStructure {
   const mods = builtModules(v);
   const points = wallPoints(mods);
   const beams = layoutBeams(v.stand, new Set(mods.map((m) => m.key)), points, rules.beam.max);
@@ -19,7 +20,7 @@ export function fromVariant(v: Variant, rules: Rules): FogaStructure {
   const byId = new Map(v.textiles.map((t) => [t.id, t]));
   return {
     posts,
-    modules: mods.map((m) => ({ key: m.key, plate: m.opening ? null : m.plate, opening: m.opening?.product ?? null })),
+    modules: mods.map((m) => ({ key: m.key, plate: m.plate, opening: m.opening ? (openingKind(m.opening.product) ?? 'door') : null })),
     beams: beams.segments.map((s) => ({ lengthMm: Math.round(s.length * 1000) })),
     frames: prod.pieces.map((p) => {
       const t = byId.get(p.textileId)!;

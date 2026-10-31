@@ -112,6 +112,7 @@ Bue: minste radius 600 mm for TX-profiler (81TX «hard way» 1500), 400 mm for F
 | Stolpe | **94** (873 062 22), 40 × 40, fire kanaler. Samme profil i ende, hjørne, T og kryss | 2490 mm, én per stolpepunkt |
 | Toppskinne | **92** (873 051 22), 20 × 40 | 1000 − 40 = **960 mm**, én per modul |
 | Bunnskinne | **91** (873 042 22), 20 × 30 | 960 mm, én per modul |
+| Kobling skinne–stolpe | **600** (871 003 92), kobling med justerbart hode | 1 i hver ende av hver 92 og 91 = 4 per modul |
 | Fot | Innsats **700** (876 700 95, M10) i stolpen + settskrue **M10 × 65** (896 232 95) som fot | 1 + 1 per stolpe. Standard 50 mm fra gulv, justerbar |
 | Veggplate | **Ikke Foga.** Lakkert HDF 3 mm, bestilles **2440 × 976 mm** per RAL | Én per modul |
 
@@ -122,22 +123,27 @@ Systemhøyde fra gulv: 2490 + 50 = 2540 mm.
 ### Takdrager
 
 - Profil **292** (873 080 22), 80 × 20. **Maks 6 m sammenhengende** (`rules.beam.max`).
+- Står mellom stolpene som skinnene: kappelengde = senteravstand − 40.
+- **2 × 600 i hver ende.** 292 står 80 høy og 20 tykk, med 9 mm kanal i over- og underkant og fire kamre
+  inni. De to 600-koblingene sitter i ytterkamrene, én oppe og én nede, og låser i kanalen på stolpe 94.
 - Alle stolper, også de som bare bærer takdrager, er **94**.
 
 ### Dør
 
 - Fogas ferdige dør: karm i **292** med ferdig montert lås **410** (876 410 94). Plukkes som **1 stk dørblad**,
   ferdig montert.
-- Dørblad 2100 mm. Luft 10 mm mellom dørblad og overstykke, 20 mm mellom dørblad og gulv (regnet fra
+- Dørblad **2000 mm**. Luft 10 mm mellom dørblad og overstykke, 20 mm mellom dørblad og gulv (regnet fra
   stolpe 94 på 2490, uten fot).
-- **Overstykke** = en liten vegg på 420 mm: toppskinne 92, bunnskinne 91 og HDF-plate.
+- **Overstykke** = 2490 − 20 − 2000 − 10 = **460 mm**, en liten vegg: toppskinne 92 og bunnskinne 91 (960, med
+  600 i hver ende) og HDF-plate. Lysåpning 460 − 40 − 30 = 390, plate 390 + 20 = **976 × 410 mm** (samme
+  tillegg som veggplaten).
 
 ### Tekstilramme (43TX)
 
 - Ramme i **43TX**, gjæret, 2 × B + 2 × H, 4 × hjørnekobling **613**.
-- Tverrstag: stående stag i profil **90** (873 040 22, 20 × 20), lengde H − 2 × 40.
-- Rammen festes til veggen med **520** (876 520 22) og bevel nut **503** i profilsystemet: én side låses i 43TX,
-  den andre i veggstolpen 94.
+- Tverrstag: stående stag i profil **90** (873 040 22, 20 × 20), lengde H − 2 × 40, **600 i hver ende**.
+- Rammen festes til veggen med **2 × 520** (876 520 22) per ramme, låst med bevel nut **503** i profilsystemet:
+  én side i 43TX, den andre i veggstolpen 94. Ifølge guiden leveres 520 med skrue og 503.
 
 ### Plukkliste
 
@@ -155,15 +161,11 @@ med. Dørblad plukkes som stk.
 Motoren gjetter ikke. Det som ikke er avklart vises som et åpent punkt i plukklisten. Når et svar kommer, legges
 det inn i `src/foga/recipes.ts` og her.
 
-1. **Skinne mot stolpe:** hvilken kobling holder 92 og 91 fast i 94, og hvor mange per ende (615A?)?
-2. **Takdrager mot stolpe:** hvordan festes 292 til 94? Hvor lange er stolper som bare bærer takdrager, og har
-   de samme fot?
-3. **Tverrstag:** hvilken kobling i hver ende av stag i profil 90?
-4. **Veggfeste:** hvor mange 520-braketter per tekstilramme?
-5. **Ramme mot ramme:** hvordan kobles to 43TX-rammer side om side? Guiden har koblingssett 40 (876 774 22: skrue
-   50 mm + 505-mutter) gjennom kanalene i to profiler mot hverandre, og parallellkobling 618.
-6. **Overstykke:** platemål i overstykket (420 mm høyt med 92 og 91 gir 350 mm lysåpning?), og om forheng har
-   samme overstykke som dør.
+1. **Frittstående takdragerstolper:** samme lengde (2490) og fot som veggstolper?
+2. **Ramme mot ramme:** hvordan kobles to 43TX-rammer side om side? Guiden (s. 48) viser bare navn og mål på
+   koblingssett 20 / 40 / 80 (876 773 / 774 / 778 22): skrue 30 / 50 / 90 mm + mutter 505 (M8-mutter for kanal,
+   s. 37). Hva de brukes til står ikke.
+3. **Forheng:** har åpning med forheng samme overstykke som dør?
 
 ## 4. Slik er koden delt
 

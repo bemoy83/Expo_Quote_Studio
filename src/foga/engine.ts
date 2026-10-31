@@ -26,6 +26,9 @@ export interface PartLine {
 export interface PlateLine {
   part: FogaPart;
   ral: string;
+  /** Order size, mm. */
+  w: number;
+  h: number;
   qty: number;
 }
 
@@ -54,6 +57,9 @@ export interface BomSizes {
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
+/** Height a rail takes up in the wall: the long side of its section (92: 40, 91: 30). */
+const railHeight = (code: string) => Math.max(...(fogaPart(code).section ?? [0]));
+
 export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   const cuts = new Map<string, Map<number, number>>();
   const counts = new Map<string, number>();
@@ -71,37 +77,56 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   };
   const ask = (q: QuestionId, affects: string) => open.push({ question: q, no: QUESTIONS[q].no, text: QUESTIONS[q].text, affects });
 
+  const postW = fogaPart(r.wall.post).section?.[0] ?? 0;
+  const between = (centres: number) => centres - postW;
+  const plate = r.wall.plate;
+  const wallClear = z.postLength - railHeight(r.wall.topRail) - railHeight(r.wall.bottomRail);
+  const plateExtra = plate.h - wallClear;
+  const rails = (n: number) => {
+    cut(r.wall.topRail, between(z.cc), n);
+    cut(r.wall.bottomRail, between(z.cc), n);
+    add(r.wall.railCoupling.code, n * 2 * 2 * r.wall.railCoupling.perEnd);
+  };
+  const addPlate = (ral: string, h: number) => {
+    const k = `${ral}|${h}`;
+    plates.set(k, (plates.get(k) ?? 0) + 1);
+  };
+
   // Wall posts: profile 94 at wall height, feet on every post
   const wallPosts = s.posts.filter((p) => !p.beamOnly);
   cut(r.wall.post, z.postLength, wallPosts.length);
   for (const f of r.wall.feet) add(f.code, wallPosts.length * f.qty);
 
-  // Wall modules: top and bottom rail between the posts, one plate
-  const walled = s.modules.filter((m) => m.plate);
-  const rail = z.cc - (fogaPart(r.wall.post).section?.[0] ?? 0);
-  cut(r.wall.topRail, rail, walled.length);
-  cut(r.wall.bottomRail, rail, walled.length);
-  for (const m of walled) plates.set(m.plate!, (plates.get(m.plate!) ?? 0) + 1);
-  if (walled.length) ask('railCoupling', plural(walled.length * 2, 'skinne', 'skinner'));
-  const openings = s.modules.filter((m) => m.opening).length;
-  if (openings) ask('header', plural(openings, 'åpning', 'åpninger'));
+  // Wall modules: top and bottom rail between the posts (one 600 per end), one plate
+  const walled = s.modules.filter((m) => !m.opening);
+  rails(walled.length);
+  for (const m of walled) addPlate(m.plate, plate.h);
 
-  // Takdrager: one 292 per length, posts that only carry a beam wait for their length
-  for (const b of s.beams) cut(r.beam.profile, b.lengthMm, 1);
+  // Doors: Foga door picked as a unit (loose goods); above it a header = a small wall with its own rails and plate
+  const header = z.postLength - r.door.floorGap - r.door.leaf - r.door.topGap;
+  const doors = s.modules.filter((m) => m.opening === 'door');
+  rails(doors.length);
+  for (const m of doors) addPlate(m.plate, header - railHeight(r.wall.topRail) - railHeight(r.wall.bottomRail) + plateExtra);
+  const curtains = s.modules.filter((m) => m.opening === 'curtain').length;
+  if (curtains) ask('curtain', plural(curtains, 'forheng', 'forheng'));
+
+  // Takdrager: 292 between the posts, two 600 per end. Posts that only carry a beam wait for their length
+  for (const b of s.beams) cut(r.beam.profile, between(b.lengthMm), 1);
+  add(r.beam.coupling.code, s.beams.length * 2 * r.beam.coupling.perEnd);
   const beamPosts = s.posts.length - wallPosts.length;
-  if (s.beams.length)
-    ask('beamMount', beamPosts ? `${plural(s.beams.length, 'takdrager', 'takdragere')}, ${plural(beamPosts, 'frittstående stolpe', 'frittstående stolper')}` : plural(s.beams.length, 'takdrager', 'takdragere'));
+  if (beamPosts) ask('beamPost', plural(beamPosts, 'frittstående stolpe', 'frittstående stolper'));
 
-  // Textile frames: 2W + 2H mitred, 4 corners, upright braces in profile 90
+  // Textile frames: 2W + 2H mitred, 4 × 613, upright braces in 90 with a 600 in each end, 2 × 520 to the wall
   for (const f of s.frames) {
     cut(r.frame.profile, f.W, 2);
     cut(r.frame.profile, f.H, 2);
     add(r.frame.corner, 4);
-    if (f.braces) cut(r.frame.brace, f.braces.length, f.braces.qty);
+    add(r.frame.wallFixing.code, r.frame.wallFixing.perFrame);
+    if (f.braces) {
+      cut(r.frame.brace, f.braces.length, f.braces.qty);
+      add(r.frame.braceCoupling.code, f.braces.qty * 2 * r.frame.braceCoupling.perEnd);
+    }
   }
-  const nBraces = s.frames.reduce((a, f) => a + (f.braces?.qty ?? 0), 0);
-  if (nBraces) ask('braceCoupling', plural(nBraces, 'tverrstag', 'tverrstag'));
-  if (s.frames.length) ask('frameFixing', plural(s.frames.length, 'ramme', 'rammer'));
   const joints = s.frames.filter((f) => f.joinedToNext).length;
   if (joints) ask('frameJoint', plural(joints, 'skjøt', 'skjøter'));
 
@@ -110,7 +135,13 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
     return { part: fogaPart(code), cuts: list, lm: list.reduce((a, c) => a + (c.lengthMm * c.qty) / 1000, 0) };
   });
   const parts: PartLine[] = [...counts].map(([code, qty]) => ({ part: fogaPart(code), qty }));
-  const plate = fogaPart(r.wall.plate.code);
+  const platePart = fogaPart(plate.code);
+  const plateLines = [...plates]
+    .map(([k, qty]) => {
+      const [ral, h] = k.split('|');
+      return { part: platePart, ral, w: plate.w, h: Number(h), qty };
+    })
+    .sort((a, b) => b.h - a.h || a.ral.localeCompare(b.ral));
   open.sort((a, b) => a.no - b.no);
-  return { profiles, parts, plates: [...plates].map(([ral, qty]) => ({ part: plate, ral, qty })), open };
+  return { profiles, parts, plates: plateLines, open };
 }

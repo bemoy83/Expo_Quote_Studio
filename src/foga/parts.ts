@@ -85,7 +85,7 @@ export const FOGA_PARTS: readonly FogaPart[] = [
   part('740', '876 740 92', 'Fotplate 400 × 400 × 5 mm', 'foot'),
   part('750', '876 750 93', 'Fotplate 500 × 80 × 5 mm', 'foot'),
   // Wall plates: not Foga. Lacquered HDF, ordered per RAL
-  { artnr: '', code: 'HDF', name: 'Lakkert HDF-plate 3 mm, 2440 × 976 mm', kind: 'plate', system: 'other' },
+  { artnr: '', code: 'HDF', name: 'Lakkert HDF-plate 3 mm', kind: 'plate', system: 'other' },
 ];
 
 const BY_CODE = new Map(FOGA_PARTS.map((p) => [p.code, p]));

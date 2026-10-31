@@ -6,7 +6,7 @@ import type { Variant } from '../../domain/types'
 import { bom } from '../../foga/engine'
 import { bomSizes, fromVariant } from '../../foga/fromVariant'
 import { RECIPES } from '../../foga/recipes'
-import { plateName, rules } from '../env'
+import { catalog, plateName, productOf, rules } from '../env'
 import { count, fmt } from '../format'
 import { PageBand } from '../shell/PageBand'
 import { VariantTabs } from '../shell/VariantTabs'
@@ -23,8 +23,12 @@ const isLoose = (id: string) => id === 'floor' || id === 'openings' || id.starts
 
 export function PickingPage({ variants, current, onSelect, calcOf }: Props) {
   const v = variants[current]
-  const B = useMemo(() => bom(fromVariant(v, rules), RECIPES, bomSizes(rules)), [v])
-  const loose = calcOf(v).groups.filter((g) => isLoose(g.id))
+  const B = useMemo(() => bom(fromVariant(v, rules, (a) => productOf(a)?.opening), RECIPES, bomSizes(rules)), [v])
+  // The header (overstykke) is built from Foga parts above, so it is not picked as a product
+  const loose = calcOf(v)
+    .groups.filter((g) => isLoose(g.id))
+    .map((g) => ({ ...g, lines: g.lines.filter((l) => l.artnr !== catalog.system.header) }))
+    .filter((g) => g.lines.length)
   const n = (x: number) => fmt(x, 0)
 
   return (
@@ -90,11 +94,14 @@ export function PickingPage({ variants, current, onSelect, calcOf }: Props) {
               </div>
               {!B.plates.length && <div className="tbl-empty">Ingen veggplater.</div>}
               {B.plates.map((p) => (
-                <div key={p.ral} className="pick-grid tbl-row">
+                <div key={`${p.ral}-${p.h}`} className="pick-grid tbl-row">
                   <span className="num muted">RAL {p.ral}</span>
                   <div className="cellstack">
                     <span className="title">
                       {p.part.name} · {plateName(p.ral)}
+                    </span>
+                    <span className="num meta">
+                      {n(p.w)} × {n(p.h)} mm{p.h < RECIPES.wall.plate.h ? ' · overstykke' : ''}
                     </span>
                   </div>
                   <span className="num r">{p.qty} stk</span>

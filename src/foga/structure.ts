@@ -10,10 +10,10 @@ export interface PostSpec {
 /** One wall module between two posts (cc 1000). */
 export interface ModuleSpec {
   key: string;
-  /** RAL of the plate, or null for an opening. */
-  plate: string | null;
-  /** Art.nr of the door or curtain in the module, if any. */
-  opening: string | null;
+  /** RAL of the plate (the header plate above an opening). */
+  plate: string;
+  /** Door or curtain in the module, if any. */
+  opening: 'door' | 'curtain' | null;
 }
 
 /** One length of takdrager. */
