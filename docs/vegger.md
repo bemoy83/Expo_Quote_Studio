@@ -33,6 +33,21 @@ hva slags vegg det er.
 2. **Fakturamottaker.** Messearrangøren baker ofte standveggene inn i prisen for standarealet. Løpemeter standvegg kan
    derfor faktureres arrangøren, mens innervegger og romvegger faktureres utstilleren. Ikke bygget ennå.
 
+## Farge på standvegg (ikke bygget)
+
+Der arrangøren dekker standveggene (rundt 90 % av arrangementene), er de nesten alltid hvite. Farge på en standvegg er
+da et valg utstilleren betaler selv, men bare for **platebytte**: ny plate i valgt RAL med montering og demontering i
+den eksisterende veggen. Rammen, stolpene og løpemeteren vegg er fortsatt arrangørens.
+
+| Vegg | Utstiller betaler | Arrangør betaler |
+| --- | --- | --- |
+| Standvegg, hvit | Ingenting | Veggen per løpemeter |
+| Standvegg, farget | Platebytte (plate i RAL + montering/demontering) | Veggen per løpemeter |
+| Innervegg eller romvegg | Veggen per løpemeter i valgt RAL | Ingenting |
+
+I dag regnes alle vegger som utstillerens, med full veggpris i valgt farge. Fakturamottaker per linje og et eget
+salgsprodukt for platebytte gjenstår.
+
 ## Unntak som ikke er bygget
 
 Med godkjenning fra nabostanden kan en standvegg i praksis endres. Det er sjelden og ikke verdt å modellere nå, så appen
