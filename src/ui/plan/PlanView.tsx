@@ -4,13 +4,13 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent, type SVGProps } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import { mainGroupOf } from '../../catalog/groups'
-import { doorAllowed, doorSwing, drawOpening, eraseWalls, isPerimeterWall, paintFloor, paintWalls, segmentKeys, setOpening } from '../../domain/edit'
+import { canMoveWall, doorAllowed, doorSwing, drawOpening, eraseWalls, paintFloor, paintWalls, segmentKeys, setOpening } from '../../domain/edit'
 import { CELL, parseCellKey, pointAlong, sideLength, sidePoint, wallDirection, wallLength, type Module } from '../../domain/grid'
 import { addObject, conflicts, footprintBox, moveObject, removeObject } from '../../domain/objects'
 import { addFoil, addTextile, faceAt, faceSegment, felt, foilAt, foilCenter, freeSpans, removeFoil, removeTextile, sideOf, textileAt, textileOffset, updateTextile, type FaceSide } from '../../domain/decor'
 import type { Motif } from '../../persistence/file'
 import type { Point, Room, Side, Variant, Wall } from '../../domain/types'
-import { builtModules, type BuiltModule } from '../../domain/walls'
+import { builtModules, isStandWall, type BuiltModule } from '../../domain/walls'
 import { BORDER, BORDER_STRONG, BLOCK, CANVAS, INK, INK_FAINT, INK_MUTED, LAYER_COLOR, SURFACE } from '../colors'
 import { applyDrop, decorDrag, endDecorDrag, type DecorDrag } from '../dnd'
 import { dragRoom, dragWall, dropObject, dropRoom, roomDrag, type RoomDrag, type WallDrag } from '../drag'
@@ -69,12 +69,17 @@ const GRID_FINE = 'rgb(0 0 0 / .1)'
 /** Opacity of layers outside the hovered calc group. */
 const DIMMED = 0.25
 
+/**
+ * A press in Velg selects on release (`select`), so the wall drawer does not open, and shrink the plan, mid-drag.
+ * A wall dragged away is not selected; furniture and rooms are.
+ */
 type Drag =
   | { kind: 'stroke'; p0: P; moved: boolean }
   | { kind: 'floor'; last: string | null }
-  | { kind: 'object'; id: string; dx: number; dy: number; start: P; moved: boolean }
-  | ({ kind: 'wall' } & WallDrag)
-  | ({ kind: 'room' } & RoomDrag)
+  | { kind: 'click'; select: PlanSelection }
+  | { kind: 'object'; id: string; dx: number; dy: number; start: P; moved: boolean; select: PlanSelection }
+  | ({ kind: 'wall'; moved: boolean; select: PlanSelection } & WallDrag)
+  | ({ kind: 'room'; select: PlanSelection | null } & RoomDrag)
 
 interface P {
   x: number
@@ -101,7 +106,11 @@ export function PlanView(p: Props) {
 
   const mods = useMemo(() => builtModules(v), [v])
   const bad = useMemo(() => conflicts(v, place), [v])
-  const modKeys = useMemo(() => new Set(mods.map((m) => m.key)), [mods])
+  /** Edges carrying a stand wall: the side labels count only these, an inner wall on the edge leaves a side open. */
+  const standKeys = useMemo(() => {
+    const stand = new Set(v.walls.filter(isStandWall).map((w) => w.id))
+    return new Set(mods.filter((m) => stand.has(m.wallId)).map((m) => m.key))
+  }, [v.walls, mods])
 
   useEffect(() => {
     setStroke(null)
@@ -161,8 +170,8 @@ export function PlanView(p: Props) {
     const sel = v.rooms.find((r) => r.id === selection.roomId)
     return (sel && roomSideAt({ ...v, rooms: [sel] }, q.x, q.y, 0.2)) ?? null
   }
-  const startRoomDrag = (room: Room, mode: RoomDrag['mode'], q: P) => {
-    drag.current = { kind: 'room', ...roomDrag(room.id, mode, q, v) }
+  const startRoomDrag = (room: Room, mode: RoomDrag['mode'], q: P, select: PlanSelection | null) => {
+    drag.current = { kind: 'room', ...roomDrag(room.id, mode, q, v), select }
   }
 
   /** Textile brush: fill the free part of the face. Motif brush: print on a textile, or foil on a wall panel. */
@@ -266,13 +275,12 @@ export function PlanView(p: Props) {
     // Select. A side of the selected room comes first, so a side shared with a stand wall can still be dragged.
     const selEdge = selection.roomId ? roomEdgeAt(q) : null
     if (selEdge && selEdge.room.id === selection.roomId) {
-      startRoomDrag(selEdge.room, selEdge.side, q)
+      startRoomDrag(selEdge.room, selEdge.side, q, null)
       return
     }
     const o = objectAt(q)
     if (o) {
-      p.onSelect({ objectId: o.id })
-      drag.current = { kind: 'object', id: o.id, dx: q.x - o.x, dy: q.y - o.y, start: { x: o.x, y: o.y }, moved: false }
+      drag.current = { kind: 'object', id: o.id, dx: q.x - o.x, dy: q.y - o.y, start: { x: o.x, y: o.y }, moved: false, select: { objectId: o.id } }
       return
     }
     const m = moduleAt(q)
@@ -280,20 +288,20 @@ export function PlanView(p: Props) {
       const w = v.walls.find((x) => x.id === m.wallId)!
       const h = faceHit(q)
       const tx = h && textileAt(v, w.id, h.s, h.t)
-      p.onSelect(tx ? { wallId: w.id, side: h.s, textileId: tx.id } : { wallId: w.id, side: h?.s })
-      // A room's own wall resizes the room; a drawn inner wall moves
+      const select: PlanSelection = tx ? { wallId: w.id, side: h.s, textileId: tx.id } : { wallId: w.id, side: h?.s }
+      // A room's own wall resizes the room; an inner wall moves
       const room = w.room && v.rooms.find((r) => r.id === w.room!.id)
-      if (room) startRoomDrag(room, w.room!.side, q)
-      else if (!isPerimeterWall(v.stand, w)) drag.current = { kind: 'wall', id: w.id, p0: q, v0: v, delta: 0, horizontal: w.from[1] === w.to[1] }
+      if (room) startRoomDrag(room, w.room!.side, q, select)
+      else if (canMoveWall(w)) drag.current = { kind: 'wall', id: w.id, p0: q, v0: v, delta: 0, horizontal: w.from[1] === w.to[1], moved: false, select }
+      else drag.current = { kind: 'click', select }
       return
     }
     const room = roomAt(v, q.x, q.y)
     if (room) {
-      p.onSelect({ roomId: room.id })
-      startRoomDrag(room, 'move', q)
+      startRoomDrag(room, 'move', q, { roomId: room.id })
       return
     }
-    p.onSelect({})
+    drag.current = { kind: 'click', select: {} }
   }
 
   const onMove = (e: RPointerEvent<SVGSVGElement>) => {
@@ -312,8 +320,11 @@ export function PlanView(p: Props) {
         p.onCheckpoint()
       }
       p.onEdit((x) => moveObject(x, place, d.id, q.x - d.dx, q.y - d.dy), false)
-    } else if (d.kind === 'wall') dragWall(d, q, p.onEdit, p.onCheckpoint)
-    else if (d.kind === 'room') dragRoom(d, q, p.onEdit, p.onCheckpoint)
+    } else if (d.kind === 'wall') {
+      if (!d.moved && Math.hypot(q.x - d.p0.x, q.y - d.p0.y) < 0.1) return
+      d.moved = true
+      dragWall(d, q, p.onEdit, p.onCheckpoint)
+    } else if (d.kind === 'room') dragRoom(d, q, p.onEdit, p.onCheckpoint)
   }
 
   const onUp = (e: RPointerEvent<SVGSVGElement>) => {
@@ -328,8 +339,17 @@ export function PlanView(p: Props) {
       setStroke(null)
       if (tool === 'erase') p.onEdit((x) => eraseWalls(x, segmentKeys(a, b)))
       else if (brush?.kind === 'wall') p.onEdit((x) => paintWalls(x, a, b, brush.ral))
-    } else if (d.kind === 'object' && d.moved) dropObject(v, d.id, d.start, p.onEdit, p.onToast)
-    else if (d.kind === 'room') dropRoom(d, p.onEdit)
+    } else if (d.kind === 'click') p.onSelect(d.select)
+    else if (d.kind === 'object') {
+      if (d.moved) dropObject(v, d.id, d.start, p.onEdit, p.onToast)
+      p.onSelect(d.select)
+    } else if (d.kind === 'wall') {
+      if (!d.moved) p.onSelect(d.select)
+    } else if (d.kind === 'room') {
+      dropRoom(d, p.onEdit)
+      // A room moved by its floor stays selected; a resized side opens the drawer only on a plain click
+      if (d.select && (d.mode === 'move' || !d.moved)) p.onSelect(d.select)
+    }
   }
 
   // Drag and drop from Profilering: the same as a click with the textile or motif brush
@@ -366,7 +386,12 @@ export function PlanView(p: Props) {
     if (!hover || p.mini) return 'default'
     const e = roomEdgeAt(hover)
     if (e) return sideIsHorizontal(e.room, e.side) ? 'ns-resize' : 'ew-resize'
-    return roomAt(v, hover.x, hover.y) && !objectAt(hover) ? 'move' : 'default'
+    if (d?.kind === 'wall') return 'grabbing'
+    if (objectAt(hover)) return 'default'
+    const m = moduleAt(hover)
+    const w = m && v.walls.find((x) => x.id === m.wallId)
+    if (w) return canMoveWall(w) ? 'move' : 'default'
+    return roomAt(v, hover.x, hover.y) ? 'move' : 'default'
   }
 
   // Hover previews
@@ -382,7 +407,7 @@ export function PlanView(p: Props) {
     for (let t = 0; t < n; t++) {
       const a = sidePoint(v.stand, s, t)
       const b = sidePoint(v.stand, s, t + 1)
-      if (modKeys.has(nearestEdge(v.stand, { x: (a[0] + b[0]) / 2, y: (a[1] + b[1]) / 2 }).key)) c++
+      if (standKeys.has(nearestEdge(v.stand, { x: (a[0] + b[0]) / 2, y: (a[1] + b[1]) / 2 }).key)) c++
     }
     return c === 0 ? 'åpen' : c === n ? 'standvegg' : 'delvis standvegg'
   }

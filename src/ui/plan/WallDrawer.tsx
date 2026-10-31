@@ -23,7 +23,7 @@ import {
   updateTextile,
   type FaceSide,
 } from '../../domain/decor'
-import { canFlipSwing, eraseWalls, flipSwing, isPerimeterWall, setWallPlate } from '../../domain/edit'
+import { canFlipSwing, canMoveWall, eraseWalls, flipSwing, setWallPlate } from '../../domain/edit'
 import { OUTSIDE } from '../../domain/rooms'
 import { wallLength, wallModules } from '../../domain/grid'
 import type { Foil, TextileWall, Variant, Wall } from '../../domain/types'
@@ -85,7 +85,7 @@ export function WallDrawer(p: Props) {
   const built = new Map(builtModules(v).map((m) => [m.key, m]))
   const mods = wallModules(w).map((m) => built.get(m.key))
   const ratioOf = (id?: string) => findMotif(motifs, id)?.ratio ?? 0
-  const label = wallLabel(w, v.stand)
+  const label = wallLabel(w)
   const select = (x: Partial<PlanSelection>) => p.onSelect({ wallId: w.id, side: s, ...x })
 
   // ---- Dragging in the drawing: move, width, height of a frame; move and size of a decal
@@ -263,7 +263,7 @@ export function WallDrawer(p: Props) {
             {w.room ? (
               <p className="panel-note">Veggen hører til et rom. Dra den i planen for å endre størrelsen, i 3D for å flytte rommet.</p>
             ) : (
-              !isPerimeterWall(v.stand, w) && <p className="panel-note">Dra veggen i planen for å flytte den.</p>
+              canMoveWall(w) && <p className="panel-note">Dra veggen i planen for å flytte den.</p>
             )}
           </>
         )}

@@ -1,4 +1,5 @@
-import type { Stand, TextileWall, Variant, Wall } from '../domain/types';
+import type { TextileWall, Variant, Wall } from '../domain/types';
+import { standWallSide } from '../domain/walls';
 import type { InFrameParams } from '../rules/rules';
 import { framePiece, fullHeight, printFileName, type FramePiece } from './fabric';
 
@@ -24,15 +25,10 @@ const mm = (m: number) => Math.round(m * 1000);
 
 const SIDE_NAMES = { back: 'Bak', front: 'Front', left: 'Venstre', right: 'Høyre' } as const;
 
-/** Bak / Venstre / Høyre / Front for perimeter walls, otherwise Innervegg. */
-export function wallLabel(w: Wall, stand: Stand): string {
-  const [x0, y0] = w.from;
-  const [x1, y1] = w.to;
-  if (y0 === y1 && y0 === 0) return SIDE_NAMES.back;
-  if (y0 === y1 && y0 === stand.depth) return SIDE_NAMES.front;
-  if (x0 === x1 && x0 === 0) return SIDE_NAMES.left;
-  if (x0 === x1 && x0 === stand.width) return SIDE_NAMES.right;
-  return 'Innervegg';
+/** Bak / Venstre / Høyre / Front for the stand walls, otherwise Innervegg: an inner wall on the edge is still one. */
+export function wallLabel(w: Wall): string {
+  const side = standWallSide(w);
+  return side ? SIDE_NAMES[side] : 'Innervegg';
 }
 
 /** Height in mm for the frame: the textile's own height when lower than the full wall, else full height. */
@@ -54,7 +50,7 @@ export function production(v: Variant, s: InFrameParams, customer: string): Prod
       ...p,
       pos,
       textileId: t.id,
-      wall: wallLabel(w, v.stand),
+      wall: wallLabel(w),
       at: mm(t.from),
       motif: t.motif ?? null,
       fileName: printFileName(customer, pos, p),

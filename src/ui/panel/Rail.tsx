@@ -463,7 +463,7 @@ function ProfileSection({ v, res, brush, tool, pick, motifs, onAddMotif, onSelec
         return (
           <button key={t.id} type="button" className="trow" onClick={() => onSelect({ wallId: w.id, side: t.side, textileId: t.id })}>
             <span className="name">
-              {wallLabel(w, v.stand)}
+              {wallLabel(w)}
               {m ? <span className="faint"> · {m}</span> : <span className="warn"> · uten motiv</span>}
             </span>
             <span className="num">

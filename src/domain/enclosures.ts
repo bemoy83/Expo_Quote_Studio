@@ -4,7 +4,7 @@
 // apart into closed areas. Detection does not care about shape: any area bounded by one loop (a rectangle, an L,
 // a U …) becomes a room with that outline; an area with a hole does not.
 import { wallDirection, wallModules } from './grid';
-import { defaultSwing, isPerimeterWall, nextId, ownPlate, replaceWalls, splitWall } from './edit';
+import { canMoveWall, defaultSwing, nextId, ownPlate, replaceWalls, splitWall } from './edit';
 import { cellId, cellRim, cellSides, outlineOf, outlineSides, rimKeys, type Cell } from './outline';
 import { overlapsRoom, roomWalls, syncRooms } from './rooms';
 import type { Point, Room, Variant } from './types';
@@ -58,10 +58,10 @@ export function enclosures(v: Variant, mods: BuiltModule[] = builtModules(v)): E
   });
 }
 
-/** A drawn wall: stored, not a room side, not on the stand's edge. These are the walls a frihåndsrom takes over. */
+/** A drawn wall: an inner wall, not a room side or a stand wall. These are the walls a frihåndsrom takes over. */
 const drawn = (v: Variant, wallId: string) => {
   const w = v.walls.find((x) => x.id === wallId);
-  return !!w && !w.room && !isPerimeterWall(v.stand, w);
+  return !!w && canMoveWall(w);
 };
 
 /** A closed area that may become a room: not in a room, has a door or curtain, and at least one drawn side. */

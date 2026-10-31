@@ -1,6 +1,6 @@
-import { openSides, pointKey, SIDES, sideEnds, wallModules, type Module } from './grid';
+import { moduleKey, openSides, pointKey, SIDES, sideEnds, wallModules, type Module } from './grid';
 import { gapKeys } from './rooms';
-import type { Opening, Point, Stand, Variant, Wall } from './types';
+import type { Opening, Point, Side, Stand, Variant, Wall } from './types';
 
 /** A built wall module after merging all walls. Shared edges appear once. */
 export interface BuiltModule extends Module {
@@ -48,8 +48,27 @@ export function wallPoints(mods: readonly Module[]): Map<string, Point> {
   return out;
 }
 
-/** True for one of the walls the stand type itself brings (see standardWalls). */
+/**
+ * True for a wall the stand type itself brings (standvegg, see standardWalls), or a piece of one. These follow the
+ * bought area and may be billed to the organiser, so they are kept apart from inner walls (tilvalg) everywhere: an
+ * inner wall never becomes a stand wall, not even on the stand's edge.
+ */
 export const isStandWall = (w: Wall) => w.id.startsWith('side-');
+
+/** The side a stand wall belongs to. */
+export const standWallSide = (w: Wall): Side | null => (isStandWall(w) ? (w.id.split('-')[1] as Side) : null);
+
+/** The closed side of the stand type that the module a–b lies on: there only stand walls stand. */
+export function closedSideAt(stand: Stand, a: Point, b: Point): Side | null {
+  const open = new Set(openSides(stand));
+  const key = moduleKey(a, b);
+  for (const s of SIDES) {
+    if (open.has(s)) continue;
+    const [from, to] = sideEnds(stand, s);
+    if (wallModules({ id: '', from, to }).some((m) => m.key === key)) return s;
+  }
+  return null;
+}
 
 /** One wall per closed side of the stand type. */
 export function standardWalls(stand: Stand): Wall[] {
