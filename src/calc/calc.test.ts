@@ -10,9 +10,11 @@ import { RULES } from '../rules/rules';
 import { calc, type CalcResult } from './calc';
 import { r1, r2, r3 } from './referenceStands';
 
-const run = (v: Variant) => calc(v, RULES, DEFAULT_CATALOG);
+// The exhibitor pays every wall, stand walls too: the whole drawing is theirs. Organiser-paid stand walls below.
+const EXHIBITOR = { payer: 'utstiller', ral: '9010' } as const;
+const run = (v: Variant) => calc(v, RULES, DEFAULT_CATALOG, EXHIBITOR);
 const lines = (res: CalcResult) => res.groups.flatMap((g) => g.lines);
-const qty = (res: CalcResult, artnr: string) => lines(res).find((l) => l.artnr === artnr)?.qty ?? 0;
+const qty = (res: CalcResult, artnr: string) => lines(res).filter((l) => l.artnr === artnr).reduce((a, l) => a + l.qty, 0);
 const S = DEFAULT_CATALOG.system;
 
 describe('R1 · row stand 3 × 3, nothing added', () => {
@@ -209,7 +211,7 @@ describe('price as sum of articles (example price list, pricing/data.ts)', () =>
   it('a sum product with an item missing from the price list falls back to its own price', () => {
     const items = new Map(DEFAULT_PRICING.items);
     items.delete('montering-modul');
-    const r = calc(r1(), RULES, DEFAULT_CATALOG, { ...DEFAULT_PRICING, items });
+    const r = calc(r1(), RULES, DEFAULT_CATALOG, EXHIBITOR, { ...DEFAULT_PRICING, items });
     expect(lines(r).find((x) => x.artnr === '6120-9010')).toMatchObject({ price: 870, cost: null, strategy: 'fast', placeholder: true });
   });
   it('handling time per step is in the prices, not a line', () => {
@@ -254,5 +256,64 @@ describe('objects, counted items and sums', () => {
     const res = run({ ...r1(), counted: [{ product: 'X-1', qty: 2 }] });
     const l = res.groups.flatMap((g) => g.lines).find((x) => x.artnr === 'X-1')!;
     expect(l).toMatchObject({ price: 0, placeholder: true, qty: 2 });
+  });
+});
+
+describe('stand walls the organiser pays (docs/vegger.md)', () => {
+  const ORGANISER = { payer: 'arrangør', ral: '9010' } as const;
+  const org = (v: Variant) => calc(v, RULES, DEFAULT_CATALOG, ORGANISER);
+  const coloured = (v: Variant, wallId: string, plate: string): Variant => ({ ...v, walls: v.walls.map((w) => (w.id === wallId ? { ...w, plate } : w)) });
+  const picked = (res: CalcResult, ral: string) => res.bom.lines.filter((l) => l.ral === ral).reduce((a, l) => a + l.qty, 0);
+
+  it('R1: the stand walls are billed to the organiser, not on the quote or picking list', () => {
+    const res = org(r1());
+    expect(lines(res).map((l) => l.artnr)).toEqual([S.beam]);
+    expect(res.organiser.lines).toMatchObject([{ artnr: '6120-9010', qty: 9, payer: 'arrangør', meta: 'Standvegg · RAL 9010' }]);
+    // Same price as when the exhibitor pays: 9 modules on their own 10 posts
+    expect(res.organiser.lines[0].price).toBe(899);
+    expect(res.organiser.sum).toBe(9 * 899);
+    expect(res.sum).toBe(lines(res).reduce((a, l) => a + l.sum, 0));
+    expect(res.foga.posts).toBe(0);
+    expect(res.bom.lines.map((l) => l.group)).toEqual(['vegg.takdrager']);
+    // Key figures still describe the whole sketch
+    expect(res.keyFigures).toMatchObject({ wallLm: 9, standWallLm: 9, organiserWallLm: 9, innerWallLm: 0, posts: 10 });
+  });
+
+  it('a coloured stand wall: the organiser still pays white, the exhibitor the plate swap', () => {
+    const res = org(coloured(r1(), 'side-back', '5007'));
+    expect(res.organiser.lines).toMatchObject([{ artnr: '6120-9010', qty: 9 }]);
+    // Plate 150 + swap 200 per metre
+    expect(lines(res).find((l) => l.artnr === '6125-5007')).toMatchObject({ qty: 3, price: 350, payer: 'utstiller', foga: true });
+    expect(res.keyFigures.swapLm).toBe(3);
+    // The picker takes the three blue plates, nothing of the wall itself
+    expect(picked(res, '5007')).toBe(3);
+    expect(picked(res, '9010')).toBe(0);
+  });
+
+  it('an inner wall against a stand wall: the post on the stand wall is the organiser\'s', () => {
+    const v = { ...r1(), walls: [...r1().walls, { id: 'w1', from: [1, 0] as [number, number], to: [1, 2] as [number, number] }] };
+    const res = org(v);
+    expect(res.foga.posts).toBe(2);
+    expect(lines(res).find((l) => l.artnr === '6120-9010')).toMatchObject({ qty: 2, meta: 'Innervegg · RAL 9010' });
+    expect(res.keyFigures).toMatchObject({ standWallLm: 9, innerWallLm: 2 });
+  });
+
+  it('R2: the room uses the stand walls and builds only its own sides', () => {
+    const res = org(r2());
+    expect(res.organiser.lines[0].qty).toBe(10);
+    expect(qty(res, '6120-9010')).toBe(3);
+    // Room posts (2,1), (2,2), (1,2) + the free beam post
+    expect(res.foga.posts).toBe(4);
+    expect(qty(res, DOOR)).toBe(1);
+  });
+
+  it('the exhibitor pays: stand walls are their own line, the organiser gets nothing', () => {
+    const res = run(r2());
+    expect(lines(res).filter((l) => l.artnr === '6120-9010').map((l) => [l.meta, l.qty])).toEqual([
+      ['Standvegg · RAL 9010', 10],
+      ['Innervegg · RAL 9010', 3],
+    ]);
+    expect(res.organiser.lines).toEqual([]);
+    expect(res.keyFigures).toMatchObject({ standWallLm: 10, organiserWallLm: 0, roomWallLm: 3 });
   });
 });

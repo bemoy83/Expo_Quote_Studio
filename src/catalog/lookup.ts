@@ -18,7 +18,7 @@ export function indexCatalog(c: Catalog): CatalogIndex {
   for (const product of c.products) {
     for (const variant of product.variants) {
       byArtnr.set(variant.artnr, { product, variant });
-      if (variant.ral && !product.article) wallByRal.set(variant.ral, { product, variant });
+      if (variant.ral && product.id === c.system.wall) wallByRal.set(variant.ral, { product, variant });
     }
   }
   const idx = { byArtnr, wallByRal };

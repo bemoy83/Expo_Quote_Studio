@@ -5,7 +5,7 @@ import type { CalcResult } from '../../calc/calc'
 import type { Project, Room, Variant } from '../../domain/types'
 import { roomName, roomOpenings, roomSize } from '../../domain/rooms'
 import { dateText, DELIVERY_FIELDS, today, validUntil } from '../../domain/delivery'
-import { isFixedField, projectField } from '../../domain/variant'
+import { isFixedField, projectField, standWallTerms } from '../../domain/variant'
 import { Button } from '../controls'
 import { idx, plateName, productOf, rules } from '../env'
 import { count, fmt, kr, mm } from '../format'
@@ -55,8 +55,12 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
   const facts: [string, string][] = [
     [`${v.stand.width} × ${v.stand.depth} m`, `${fmt(k.area)} m² · ${TYPE_NAME[v.stand.type]} · ${k.openSides} åpne sider`],
     [
-      `${fmt(k.wallLm)} lm vegg`,
-      [`veggplate ${plates.map((r) => `${plateName(r).toLowerCase()} RAL ${r}`).join(', ')}`, ...openingNames].join(' · '),
+      `${fmt(k.wallLm - k.organiserWallLm)} lm vegg`,
+      [
+        `veggplate ${plates.map((r) => `${plateName(r).toLowerCase()} RAL ${r}`).join(', ')}`,
+        ...openingNames,
+        ...(k.organiserWallLm ? [`${fmt(k.organiserWallLm)} lm standvegg fra arrangøren`] : []),
+      ].join(' · '),
     ],
     k.beamLm
       ? [`${fmt(k.beamLm)} m takdrager`, beamSummary(k)]
@@ -76,6 +80,10 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
   if (k.textileM2) facts.push([`${fmt(k.textileM2)} m² tekstilvegg`, `${frameCount(res.production.pieces.length)} InFrame`])
 
   const unpriced = v.loose.filter((l) => !l.price)
+  // Stand walls the organiser pays: not the exhibitor's lines, only named
+  const byOrganiser = k.organiserWallLm
+    ? `Standvegger ${fmt(k.organiserWallLm)} lm i ${plateName(standWallTerms(project).ral).toLowerCase()} leveres av arrangøren og inngår ikke i tilbudet.`
+    : ''
 
   return (
     <>
@@ -177,6 +185,7 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
                 <span className="num muted">kr</span>
               </div>
             </div>
+            {byOrganiser && <p className="foot">{byOrganiser}</p>}
             {placeholders > 0 && (
               <p className="foot">
                 * {count(placeholders, 'linje', 'linjer')} har plassholderpris og må bekreftes før tilbudet sendes.

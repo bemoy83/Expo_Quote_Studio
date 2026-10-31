@@ -54,6 +54,8 @@ export interface Product {
 export interface SystemParts {
   /** Wall per metre, one variant per RAL. */
   wall: string;
+  /** Plate swap per metre in a stand wall the organiser pays, one variant per RAL. */
+  plateSwap: string;
   /** Takdrager per metre, posts included. */
   beam: string;
   /** Textile wall (frame rental + print), price per m² of B × H, sold per piece. */

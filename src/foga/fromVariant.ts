@@ -14,6 +14,8 @@ export interface Derived {
   posts: number;
   beams: BeamLayout;
   production: Production;
+  /** Plates swapped into stand walls the organiser builds. */
+  swaps?: string[];
 }
 
 export function structureOf(d: Derived): FogaStructure {
@@ -22,9 +24,11 @@ export function structureOf(d: Derived): FogaStructure {
     modules: d.mods.map((m) => ({ plate: m.plate, opening: !!m.opening })),
     beams: d.beams.segments.map((s) => ({ lengthMm: Math.round(s.length * 1000) })),
     frames: d.production.pieces.map((p) => ({ pos: p.pos, W: p.W, H: p.H, braces: p.braces })),
+    ...(d.swaps?.length ? { swaps: d.swaps } : {}),
   };
 }
 
+/** Everything drawn, as if the exhibitor builds it all (no stand walls left to the organiser). */
 export function fromVariant(v: Variant, rules: Rules): FogaStructure {
   const mods = builtModules(v);
   const points = wallPoints(mods);

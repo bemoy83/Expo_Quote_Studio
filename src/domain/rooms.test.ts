@@ -70,7 +70,7 @@ describe('room walls', () => {
     const d = dissolveRoom(v, 'bk');
     expect(d.rooms).toHaveLength(0);
     expect(d.walls.some((w) => w.room)).toBe(false);
-    expect({ ...kf(d), roomWallLm: 3 }).toEqual(kf(v));
+    expect({ ...kf(d), roomWallLm: 3, innerWallLm: kf(d).innerWallLm - 3 }).toEqual(kf(v));
     expect(kf(v).roomWallLm).toBe(3);
   });
   it('plate colour of a room side is the room colour', () => {
