@@ -3,7 +3,7 @@
 export interface WallRecipe {
   /** Post profile for every wall post (end, straight, corner, T, cross). Cut to the wall height without feet. */
   post: string;
-  /** Feet per post: threaded insert + set screw, 50 mm from the floor, adjustable. */
+  /** Feet per post: threaded insert + set screw, 50 mm from the floor, adjustable. Stored mounted: the post with feet is picked as one piece. */
   feet: { code: string; qty: number }[];
   /** Rails sit between two posts: length = cc − post width. */
   topRail: string;

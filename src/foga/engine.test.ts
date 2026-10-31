@@ -23,10 +23,10 @@ describe('row stand 3 × 3', () => {
   // Back, left, right = 9 modules, 10 posts. Front open: one takdrager 3 m resting on the side walls.
   const b = bom(fromVariant(createVariant('A', { width: 3, depth: 3, type: 'row' }), RULES), RECIPES, Z);
 
-  it('posts and feet', () => {
-    expect(cutsOf(b, '94')).toEqual([{ lengthMm: 2490, qty: 10 }]);
-    expect(qtyOf(b, '700')).toBe(10);
-    expect(qtyOf(b, 'M10x65')).toBe(10);
+  it('posts are picked as one piece with the foot mounted, not as parts', () => {
+    expect(b.units).toEqual([{ name: 'Stolpe 94 med justeringsfot', contains: expect.stringContaining('94 × 2490 mm'), qty: 10 }]);
+    expect(cutsOf(b, '94')).toEqual([]);
+    expect(qtyOf(b, '700')).toBe(0);
   });
   it('rails between posts: 1000 − 40 = 960', () => {
     expect(cutsOf(b, '92')).toEqual([{ lengthMm: 960, qty: 9 }]);
@@ -47,10 +47,9 @@ describe('takdrager posts', () => {
   // Island 8 × 3: no walls, beams all round. Every beam post is a 94 with foot, like a wall post.
   const s = fromVariant(createVariant('A', { width: 8, depth: 3, type: 'island' }), RULES);
   const b = bom(s, RECIPES, Z);
-  it('free-standing posts get profile 94 and feet', () => {
+  it('free-standing posts are the same post with foot', () => {
     expect(s.posts).toBeGreaterThan(0);
-    expect(cutsOf(b, '94')).toEqual([{ lengthMm: 2490, qty: s.posts }]);
-    expect(qtyOf(b, '700')).toBe(s.posts);
+    expect(b.units[0].qty).toBe(s.posts);
   });
   it('every length within 6 m', () => {
     expect(cutsOf(b, '292').every((c) => c.lengthMm <= 6000 - 40)).toBe(true);

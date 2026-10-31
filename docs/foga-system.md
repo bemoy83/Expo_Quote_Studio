@@ -148,7 +148,7 @@ Systemhøyde fra gulv: 2490 + 50 = 2540 mm.
 ### Plukkliste
 
 Plukklisten er en **deleliste**: hvor mange av hver profil (antall per kappelengde) og hvor mange plater som skal
-med. Dørblad plukkes som stk.
+med. Ferdigmonterte enheter plukkes som stk: **stolpe 94 med justeringsfot** (lagres ferdig montert) og dørblad.
 
 ### Fra fabric.js (fasit for trykk, se `src/calc/fabric.ts`)
 

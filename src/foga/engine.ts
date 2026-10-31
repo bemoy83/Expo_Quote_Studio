@@ -1,5 +1,5 @@
 // Foga engine: structure + recipes → parts list (deleliste). Pure: no prices, no loose goods.
-// Profiles come out as pieces per cut length, couplings and feet as counts, plates per RAL and size.
+// Pre-assembled units (post with feet) as pieces, profiles per cut length, couplings as counts, plates per RAL and size.
 import { fogaPart, type FogaPart } from './parts';
 import type { Recipes } from './recipes';
 import type { FogaStructure } from './structure';
@@ -31,7 +31,16 @@ export interface PlateLine {
   qty: number;
 }
 
+/** Stored pre-assembled and picked as one piece, e.g. post 94 with its adjustable foot. */
+export interface UnitLine {
+  name: string;
+  /** What the unit is made of, for reference. */
+  contains: string;
+  qty: number;
+}
+
 export interface Bom {
+  units: UnitLine[];
   profiles: ProfileLine[];
   parts: PartLine[];
   plates: PlateLine[];
@@ -78,9 +87,14 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
     plates.set(k, (plates.get(k) ?? 0) + 1);
   };
 
-  // Posts (wall and takdrager alike): profile 94 at wall height, feet on every post
-  cut(r.wall.post, z.postLength, s.posts);
-  for (const f of r.wall.feet) add(f.code, s.posts * f.qty);
+  // Posts (wall and takdrager alike): stored with the foot mounted, picked as one piece
+  const units: UnitLine[] = [];
+  if (s.posts > 0)
+    units.push({
+      name: `Stolpe ${r.wall.post} med justeringsfot`,
+      contains: [`${r.wall.post} × ${z.postLength} mm`, ...r.wall.feet.map((f) => `${f.qty} × ${f.code} (${fogaPart(f.code).artnr})`)].join(' · '),
+      qty: s.posts,
+    });
 
   // Wall modules: top and bottom rail between the posts (one 600 per end), one plate
   const walled = s.modules.filter((m) => !m.opening);
@@ -122,5 +136,5 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
       return { part: platePart, ral, w: plate.w, h: Number(h), qty };
     })
     .sort((a, b) => b.h - a.h || a.ral.localeCompare(b.ral));
-  return { profiles, parts, plates: plateLines };
+  return { units, profiles, parts, plates: plateLines };
 }
