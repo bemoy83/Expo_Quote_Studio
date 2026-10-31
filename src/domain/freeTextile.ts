@@ -2,18 +2,18 @@
 // A run is straight and axis-aligned on the 0,25 m grid (the elevation grid, Bjørn 31.10.2026). Drawing along or onto
 // a run in line with it extends that run: a long wall stays one frame with spliced top and bottom rails. Two runs may
 // only meet end to end at a right angle, where they share a 92LTX corner post. It is not part of the Foga wall system:
-// it never closes a room or carries a door, and it may not cross or lie along a system wall.
+// it never closes a room or carries a door, and it may not cross a system wall. A stroke along one becomes a textile on
+// that wall instead (textileBrush.ts).
 import type { Rules } from '../rules/rules';
 import type { FreeTextile, Point, TextileFace, Variant } from './types';
 import { nextId } from './edit';
-import { gridStroke } from './snapGrid';
+import { gridStroke, snapTo } from './snapGrid';
 import { builtModules } from './walls';
 
 /** Face A is side 1 (left normal of from → to), face B side −1. */
 export type FaceKey = 'a' | 'b';
 
 const EPS = 1e-6;
-const snap = (x: number, g: number) => Math.round(x / g) * g;
 const same = (p: Point, q: Point) => Math.abs(p[0] - q[0]) < EPS && Math.abs(p[1] - q[1]) < EPS;
 
 export const runLength = (t: Pick<FreeTextile, 'from' | 'to'>) => Math.hypot(t.to[0] - t.from[0], t.to[1] - t.from[1]);
@@ -185,8 +185,8 @@ export function moveFreeTextile(v: Variant, rules: Rules, id: string, dx: number
   const t = v.freeTextiles.find((x) => x.id === id);
   if (!t) return null;
   const g = rules.textile.grid;
-  const ox = snap(dx, g);
-  const oy = snap(dy, g);
+  const ox = snapTo(dx, g);
+  const oy = snapTo(dy, g);
   const run: FreeTextile = { ...t, from: [t.from[0] + ox, t.from[1] + oy], to: [t.to[0] + ox, t.to[1] + oy] };
   const inside = (p: Point) => p[0] >= -EPS && p[1] >= -EPS && p[0] <= v.stand.width + EPS && p[1] <= v.stand.depth + EPS;
   if (!inside(run.from) || !inside(run.to)) return null;
@@ -206,7 +206,7 @@ export function fitFreeTextiles(v: Variant, rules: Rules): Variant {
 export function resizeFreeTextile(v: Variant, rules: Rules, id: string, length: number): Variant | null {
   const t = v.freeTextiles.find((x) => x.id === id);
   if (!t) return null;
-  const L = Math.max(rules.textile.freeMin, snap(length, rules.textile.grid));
+  const L = Math.max(rules.textile.freeMin, snapTo(length, rules.textile.grid));
   const [dx, dy] = runDirection(t);
   const to: Point = [t.from[0] + dx * L, t.from[1] + dy * L];
   if (to[0] < -EPS || to[1] < -EPS || to[0] > v.stand.width + EPS || to[1] > v.stand.depth + EPS) return null;

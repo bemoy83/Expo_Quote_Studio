@@ -4,6 +4,7 @@
 import * as THREE from 'three'
 import type { CalcResult } from '../../calc/calc'
 import { alongRun } from '../../calc/freeFrames'
+import { runDirection } from '../../domain/freeTextile'
 import { FURNITURE_WHITE } from '../../catalog/defaultCatalog'
 import { foilCenter, sideOf, textileBox, textileOffset } from '../../domain/decor'
 import { doorSwing } from '../../domain/edit'
@@ -307,7 +308,7 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
     along(t.from, t.to, L, h, rules.textile.depth, foot, [alu, alu, alu, alu, face(f.faces[0]), face(f.faces[1])], { layer: 'textile', pick: { freeTextileId: t.id } })
     for (const at of f.supports) {
       const [x, y] = alongRun(t, at)
-      const [dx, dy] = [(t.to[0] - t.from[0]) / L, (t.to[1] - t.from[1]) / L]
+      const [dx, dy] = runDirection(t)
       const half = f.foot.along / 2000
       along([x - dx * half, y - dy * half], [x + dx * half, y + dy * half], 2 * half, foot, f.foot.across / 1000, 0, mat('textile', ALU, ALU_FINISH), { layer: 'textile' })
     }

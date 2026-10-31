@@ -322,21 +322,20 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
   // Frittstående per metre: 43TX rails and free-end uprights, 92LTX corner posts, a foot plate and a brace at every
   // support, 617 corner and 609 splice connectors, mounting per coupling and handling per frame
   const free = prod.free;
-  const freeLm = free.reduce((a, f) => a + f.length, 0) / 1000;
   const supports = free.reduce((a, f) => a + f.supports.length, 0);
   const freeUses: Use[] = [
-    { id: ITEM.frameProfileM, qty: free.reduce((a, f) => a + 2 * f.railCuts.reduce((x, c) => x + c, 0) + f.uprights * f.H, 0) / 1000 },
-    { id: ITEM.cornerPostM, qty: free.length ? (prod.cornerPosts * free[0].H) / 1000 : 0 },
+    { id: ITEM.frameProfileM, qty: free.reduce((a, f) => a + f.profileMm, 0) / 1000 },
+    { id: ITEM.cornerPostM, qty: (prod.cornerPosts.qty * prod.cornerPosts.H) / 1000 },
     ...[...new Set(free.map((f) => f.foot.code))].map((code) => ({ id: ITEM.foot(code), qty: free.filter((f) => f.foot.code === code).reduce((a, f) => a + f.supports.length, 0) })),
-    { id: ITEM.corner, qty: 2 * free.reduce((a, f) => a + f.uprights + (f.corners.from ? 1 : 0) + (f.corners.to ? 1 : 0), 0) },
-    { id: ITEM.splice, qty: 2 * free.reduce((a, f) => a + f.railCuts.length - 1, 0) },
+    { id: ITEM.corner, qty: free.reduce((a, f) => a + f.connectors.corner, 0) },
+    { id: ITEM.splice, qty: free.reduce((a, f) => a + f.connectors.splice, 0) },
     { id: ITEM.braceM, qty: free.reduce((a, f) => a + f.supports.length * f.braceLength, 0) / 1000 },
     { id: ITEM.bracePiece, qty: supports },
     { id: ITEM.frameCoupling, qty: free.reduce((a, f) => a + f.couplings, 0) },
     { id: ITEM.frame, qty: free.length },
   ];
-  const freeMeta = [count(free.length, 'vegg', 'vegger'), `h ${free[0]?.H ?? 0} mm`, ...(prod.cornerPosts ? [count(prod.cornerPosts, 'hjørne', 'hjørner')] : [])];
-  add(line(sys.freeTextile, freeLm, { ...built, meta: freeMeta.join(' · '), quote: { ...freeQuote, lead: true } }, freeUses));
+  const freeMeta = [count(free.length, 'vegg', 'vegger'), `h ${free[0]?.H ?? 0} mm`, ...(prod.cornerPosts.qty ? [count(prod.cornerPosts.qty, 'hjørne', 'hjørner')] : [])];
+  add(line(sys.freeTextile, prod.freeLm, { ...built, meta: freeMeta.join(' · '), quote: { ...freeQuote, lead: true } }, freeUses));
   add(...textileLines(free.flatMap((f) => f.faces), 'frittstående, begge sider', { ...freeQuote, lead: false }));
 
   // Foil

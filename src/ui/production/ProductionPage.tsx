@@ -114,7 +114,7 @@ export function ProductionPage({ variants, current, onSelect, customer, motifNam
                     <span className="num muted">{x.pos}</span>
                     <div className="cellstack">
                       <span className="title">
-                        {f.pos} · side {x.face.toUpperCase()} · {n(f.length)} mm{[f.corners.from, f.corners.to].some(Boolean) ? ' · hjørne 92LTX' : ''}
+                        {f.pos} · side {x.face.toUpperCase()} · {n(f.length)} mm{f.nCorners ? ' · hjørne 92LTX' : ''}
                       </span>
                       <span className="sub">{fillText(x.fill, x.motif)}</span>
                       {i === 0 && (

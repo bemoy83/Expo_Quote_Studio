@@ -12,7 +12,7 @@ import { count, fmt } from '../format'
 import { findMotif } from '../motifs'
 import type { PlanSelection } from './PlanView'
 import { DIM, TXT } from './drawerText'
-import { Dim, FillPicker, MotifPicker, Print } from './WallDrawer'
+import { Dim, FillPicker, MotifPicker, Print } from './drawerParts'
 
 interface Props {
   v: Variant
@@ -68,7 +68,7 @@ export function FreeTextileDrawer(p: Props) {
             `${fmt(f.length / 1000, 2)} m × ${fmt(H, 2)} m`,
             count(f.supports.length, 'fot', 'føtter'),
             f.railCuts.length > 1 ? `skjøtt i ${f.railCuts.length}` : '',
-            [f.corners.from, f.corners.to].filter(Boolean).length ? count([f.corners.from, f.corners.to].filter(Boolean).length, 'hjørne', 'hjørner') : '',
+            f.nCorners ? count(f.nCorners, 'hjørne', 'hjørner') : '',
           ]
             .filter(Boolean)
             .join(' · ')}

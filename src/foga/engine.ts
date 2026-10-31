@@ -168,8 +168,8 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   for (const [len, b] of braces) unit(BOM_GROUP.textile, 'Støttestag', r.frame.brace, len, r.frame.braceCoupling, b.qty, ` · til ${b.frames.join(', ')}`);
   // Corner connectors: four per InFrame frame; top and bottom at a free end and into a corner post (same part, 617)
   part(BOM_GROUP.textile, r.frame.corner, 4 * s.frames.length);
-  part(BOM_GROUP.textile, r.freeFrame.corner, 2 * free.reduce((a, f) => a + f.uprights + f.corners, 0));
-  part(BOM_GROUP.textile, r.freeFrame.splice, 2 * free.reduce((a, f) => a + f.railCuts.length - 1, 0));
+  part(BOM_GROUP.textile, r.freeFrame.corner, free.reduce((a, f) => a + f.connectors.corner, 0));
+  part(BOM_GROUP.textile, r.freeFrame.splice, free.reduce((a, f) => a + f.connectors.splice, 0));
   part(BOM_GROUP.textile, r.frame.wallFixing.code, r.frame.wallFixing.perFrame * s.frames.length);
   for (const code of new Set(free.map((f) => f.foot))) part(BOM_GROUP.textile, code, free.filter((f) => f.foot === code).reduce((a, f) => a + f.supports, 0));
 

@@ -460,7 +460,7 @@ function ProfileSection({ v, res, brush, tool, pick, motifs, onAddMotif, onSelec
         result={
           [
             v.textiles.length ? `${v.textiles.length} på vegg · ${fmt(k.textileM2)} m²` : '',
-            res.production.free.length ? `${res.production.free.length} frittstående · ${fmt(res.production.free.reduce((a, f) => a + f.length, 0) / 1000, 2)} lm` : '',
+            res.production.free.length ? `${res.production.free.length} frittstående · ${fmt(res.production.freeLm, 2)} lm` : '',
           ]
             .filter(Boolean)
             .join(' · ') || null

@@ -51,6 +51,8 @@ export interface FreeFrame {
   H: number;
   /** Ends at a 92LTX corner post. */
   corners: { from: boolean; to: boolean };
+  /** How many ends are at a corner post (0–2). */
+  nCorners: number;
   /** Top rail and bottom rail, each in these cut lengths (spliced when more than one). */
   railCuts: number[];
   /** Where the rails start, mm from the `from` end (past the corner post's leg). */
@@ -63,7 +65,11 @@ export interface FreeFrame {
   supports: number[];
   braceLength: number;
   faces: [FreeFace, FreeFace];
-  /** Couplings to mount and dismount: 617 in frame corners and into a corner post, brace ends, 609 rail splices. */
+  /** 43TX in all, rails and uprights, mm. */
+  profileMm: number;
+  /** 617 top and bottom at every free end and into every corner post; 609 top and bottom in every rail splice. */
+  connectors: { corner: number; splice: number };
+  /** Couplings to mount and dismount: the 617 and 609 connectors and both ends of every brace. */
   couplings: number;
 }
 
@@ -161,12 +167,14 @@ export function freeFrames(v: Variant, r: FreeFrameRecipe, s: InFrameParams, cus
       };
     };
     const freeEnds = 2 - nCorners;
+    const connectors = { corner: 2 * (freeEnds + nCorners), splice: 2 * (railCuts.length - 1) };
     return {
       pos,
       textileId: t.id,
       length,
       H,
       corners: corner,
+      nCorners,
       railCuts,
       railStart: ends.from ? postLeg - depth / 2 : 0,
       foot: length < r.support.minFrom ? r.smallFoot : r.foot,
@@ -174,7 +182,9 @@ export function freeFrames(v: Variant, r: FreeFrameRecipe, s: InFrameParams, cus
       supports,
       braceLength: H - 2 * depth,
       faces: [face('a'), face('b')],
-      couplings: 2 * freeEnds + supports.length * 2 * r.braceCoupling.perEnd + 2 * (railCuts.length - 1) + 2 * nCorners,
+      profileMm: 2 * rail + freeEnds * H,
+      connectors,
+      couplings: connectors.corner + connectors.splice + supports.length * 2 * r.braceCoupling.perEnd,
     };
   });
 }

@@ -44,7 +44,7 @@ interface Props {
   tool: Tool
   brush: Brush | null
   floorSize: FloorSize
-  /** Cell size of the drawing grid for the free-standing textile brush, m. */
+  /** Cell size of the drawing grid for the textile brush, m (domain/snapGrid). */
   gridStep?: number
   highlight: Highlight
   selection: PlanSelection
@@ -91,7 +91,7 @@ type Drag =
   | { kind: 'object'; id: string; dx: number; dy: number; start: P; moved: boolean; select: PlanSelection }
   | ({ kind: 'wall'; moved: boolean; select: PlanSelection } & WallDrag)
   | ({ kind: 'room'; select: PlanSelection | null } & RoomDrag)
-  | { kind: 'free'; p0: P }
+  | { kind: 'textile'; p0: P }
   | { kind: 'freeMove'; id: string; p0: P; v0: Variant; moved: boolean; select: PlanSelection }
 
 interface P {
@@ -119,9 +119,8 @@ export function PlanView(p: Props) {
   const drag = useRef<Drag | null>(null)
   const [hover, setHover] = useState<P | null>(null)
   const [stroke, setStroke] = useState<[Point, Point] | null>(null)
-  /** A free-standing textile run being drawn. */
   /** Textile stroke being drawn, with where it started (picks the wall face when it lies on a wall). */
-  const [freeLine, setFreeLine] = useState<TextileLine | null>(null)
+  const [textileStroke, setTextileStroke] = useState<TextileLine | null>(null)
   /** A frame or motif dragged from Profilering, over a wall face. */
   const [dropHover, setDropHover] = useState<{ h: FaceHit; d: DecorDrag } | null>(null)
 
@@ -132,7 +131,7 @@ export function PlanView(p: Props) {
 
   useEffect(() => {
     setStroke(null)
-    setFreeLine(null)
+    setTextileStroke(null)
     drag.current = null
   }, [tool, brush])
 
@@ -287,8 +286,8 @@ export function PlanView(p: Props) {
         if (tx) return p.onEdit((x) => removeTextile(x, tx.id))
         return p.onToast('Ingen tekstilvegg her')
       }
-      drag.current = { kind: 'free', p0: q }
-      setFreeLine(textileLine(q, q))
+      drag.current = { kind: 'textile', p0: q }
+      setTextileStroke(textileLine(q, q))
       return
     }
     if (objectTool) {
@@ -346,7 +345,7 @@ export function PlanView(p: Props) {
     const d = drag.current
     if (!d) return
     if (d.kind === 'floor') paintFloorAt(q)
-    else if (d.kind === 'free') setFreeLine(textileLine(d.p0, q))
+    else if (d.kind === 'textile') setTextileStroke(textileLine(d.p0, q))
     else if (d.kind === 'freeMove') {
       if (!d.moved && Math.hypot(q.x - d.p0.x, q.y - d.p0.y) < 0.15) return
       if (!d.moved) p.onCheckpoint()
@@ -385,12 +384,13 @@ export function PlanView(p: Props) {
         if (keys.some((k) => standKeys.has(k))) p.onToast(STAND_WALL_LOCKED)
         p.onEdit((x) => eraseWalls(x, keys))
       } else if (brush?.kind === 'wall') p.onEdit((x) => paintWalls(x, a, b, brush.ral))
-    } else if (d.kind === 'free') {
+    } else if (d.kind === 'textile') {
       const [a, b] = freeStroke(v, rules, d.p0, toModel(e), step)
-      setFreeLine(null)
+      setTextileStroke(null)
       // A click without a stroke fills the free part of the wall face it is next to
-      const h = a[0] === b[0] && a[1] === b[1] ? faceHit(d.p0) : null
-      if (a[0] === b[0] && a[1] === b[1] && !h) return p.onToast('Dra en strek for en frittstående tekstilvegg, eller klikk ved en systemvegg')
+      const click = a[0] === b[0] && a[1] === b[1]
+      const h = click ? faceHit(d.p0) : null
+      if (click && !h) return p.onToast('Dra en strek for en frittstående tekstilvegg, eller klikk ved en systemvegg')
       const r = h ? fillFace(v, rules, h.w.id, h.s, h.t) : drawTextile(v, rules, a, b, d.p0)
       if ('error' in r) return p.onToast(r.error)
       p.onEdit(() => r.v)
@@ -471,10 +471,10 @@ export function PlanView(p: Props) {
   const hoverModule = hoverEdge && (tool === 'erase' || doorAllowed(v, hoverEdge.a, hoverEdge.b)) ? hoverEdge : null
   const hoverFloor = floorTool && hover && !drag.current ? floorBlock(hover) : null
   // Textile brush: next to a wall the click target is that face; elsewhere the grid node a stroke starts from
-  const textileFace = textileTool && hover && !freeLine ? faceHit(hover, 0.2) : null
+  const textileFace = textileTool && hover && !textileStroke ? faceHit(hover, 0.2) : null
   const hoverFace = (decorTool && hover ? faceHit(hover) : null) ?? textileFace
   const hoverWallEdge = wallTool && hover && !stroke && onStand(hover) ? nearestEdge(v.stand, hover) : null
-  const hoverFree = textileTool && !textileFace && hover && !freeLine && onStand(hover) ? (tool === 'erase' ? (freeTextileAt(v, hover) ?? null) : freeStroke(v, rules, hover, hover, step)[0]) : null
+  const hoverFree = textileTool && !textileFace && hover && !textileStroke && onStand(hover) ? (tool === 'erase' ? (freeTextileAt(v, hover) ?? null) : freeStroke(v, rules, hover, hover, step)[0]) : null
 
   const sideText = (s: Side) => {
     const n = sideLength(v.stand, s)
@@ -722,7 +722,7 @@ export function PlanView(p: Props) {
         {!p.mini && v.rooms.filter((r) => r.id === selection.roomId).map((r) => <RoomHandles key={r.id} r={r} />)}
         {hoverWallEdge && <Seg a={hoverWallEdge.a} b={hoverWallEdge.b} stroke={tool === 'erase' ? INK_FAINT : WALL} strokeOpacity={0.6} strokeWidth={0.14} />}
         {stroke && <StrokePreview a={stroke[0]} b={stroke[1]} erase={tool === 'erase'} />}
-        {freeLine && <TextilePreview v={v} line={freeLine} />}
+        {textileStroke && <TextilePreview v={v} line={textileStroke} />}
         {hoverFree && 'id' in hoverFree && <Seg a={hoverFree.from} b={hoverFree.to} stroke={INK} strokeOpacity={0.45} strokeWidth={0.14} />}
         {hoverFree && !('id' in hoverFree) && <circle cx={hoverFree[0]} cy={hoverFree[1]} r={0.06} fill={TEXTILE} />}
         {hoverModule && <HoverModule m={hoverModule} />}

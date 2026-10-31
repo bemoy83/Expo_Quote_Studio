@@ -22,8 +22,10 @@ export interface Production {
   pieces: ProductionPiece[];
   /** Frittstående tekstilvegger, each with textile on both faces. */
   free: FreeFrame[];
-  /** 92LTX corner posts, each shared by two free-standing runs. */
-  cornerPosts: number;
+  /** Their length in all, m. */
+  freeLm: number;
+  /** 92LTX corner posts, each shared by two free-standing runs, `H` long (mm). */
+  cornerPosts: { qty: number; H: number };
   /** Textile to produce (printed and white, not the customer's own), including bleed, m². */
   area: number;
   /** Aluminium profile including braces and corner posts, all frames, m. */
@@ -68,17 +70,19 @@ export function production(v: Variant, s: InFrameParams, customer: string): Prod
     });
   });
   const free = freeFrames(v, RECIPES.freeFrame, s, customer);
+  const posts = { qty: cornerPosts(v).length, H: fullHeight(s) };
   return {
     pieces,
     free,
-    cornerPosts: cornerPosts(v).length,
+    freeLm: free.reduce((a, f) => a + f.length, 0) / 1000,
+    cornerPosts: posts,
     area:
       pieces.filter((p) => p.fill !== 'reuse').reduce((a, p) => a + p.area, 0) +
       free.flatMap((f) => f.faces).filter((x) => x.fill !== 'reuse').reduce((a, x) => a + x.printArea, 0),
     lm:
       pieces.reduce((a, p) => a + p.lm, 0) +
-      free.reduce((a, f) => a + (2 * f.railCuts.reduce((x, c) => x + c, 0) + f.uprights * f.H + f.supports.length * f.braceLength) / 1000, 0) +
-      (free.length ? (cornerPosts(v).length * free[0].H) / 1000 : 0),
+      free.reduce((a, f) => a + (f.profileMm + f.supports.length * f.braceLength) / 1000, 0) +
+      (posts.qty * posts.H) / 1000,
   };
 }
 

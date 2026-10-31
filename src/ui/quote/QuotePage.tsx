@@ -35,7 +35,8 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
   const [sent] = useState(() => today())
   const valid = validUntil(sent, project.delivery, rules.quote)
   const delivery = DELIVERY_FIELDS.filter((d) => project.delivery?.[d.key]).map((d) => `${d.name} ${dateText(project.delivery?.[d.key])}`)
-  const lines = quoteGroups(res.groups).flatMap((g) => g.lines)
+  const groups = quoteGroups(res.groups)
+  const lines = groups.flatMap((g) => g.lines)
   const placeholders = lines.filter((l) => l.placeholder).length
   const labourLines = lines.some((l) => l.group === 'tjen.montering')
   const inFrame = rules.textile.inFrame
@@ -78,11 +79,11 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
       v.rooms.map(kind).join(' · ') + (k.roomWallLm ? ` · ${fmt(k.roomWallLm)} lm romvegg` : ''),
     ])
   }
-  if (res.production.pieces.length || res.production.free.length) {
-    const free = res.production.free
+  const P = res.production
+  if (P.pieces.length || P.free.length) {
     facts.push([
       `${fmt(k.textileM2)} m² tekstil`,
-      [res.production.pieces.length ? `${frameCount(res.production.pieces.length)} på systemvegg` : '', free.length ? `${fmt(free.reduce((a, f) => a + f.length, 0) / 1000, 2)} lm frittstående` : ''].filter(Boolean).join(' · '),
+      [P.pieces.length ? `${frameCount(P.pieces.length)} på systemvegg` : '', P.free.length ? `${fmt(P.freeLm, 2)} lm frittstående` : ''].filter(Boolean).join(' · '),
     ])
   }
 
@@ -151,7 +152,7 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
               <span>Á pris</span>
               <span>Sum</span>
             </div>
-            {quoteGroups(res.groups).map((g) => (
+            {groups.map((g) => (
               <div key={g.id} className="qgroup">
                 <div className="qgrid qgroup-head">
                   <span>{g.name}</span>

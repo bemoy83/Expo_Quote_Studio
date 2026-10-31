@@ -58,6 +58,8 @@ describe('free-standing frame', () => {
     expect(f).toMatchObject({ pos: 'F1', length: 6000, H: 2540, railCuts: [3000, 3000], uprights: 2, supports: [1000, 3000, 5000], braceLength: 2460 });
     // Couplings: 2 × 2 corner 617 + 3 braces × 2 × 600 + 2 × 609
     expect(f.couplings).toBe(4 + 6 + 2);
+    expect(f.connectors).toEqual({ corner: 4, splice: 2 });
+    expect(f.profileMm).toBe(2 * 6000 + 2 * 2540);
     expect(f.faces.map((x) => [x.pos, x.W, x.pw, x.ph, x.fill])).toEqual([
       ['F1A', 6000, 6040, 2580, 'print'],
       ['F1B', 6000, 6040, 2580, 'print'],
@@ -74,6 +76,8 @@ describe('free-standing frame', () => {
     // The 92LTX leg reaches 57 from the outer corner, 20 outside the centre line: rails 3000 − 37
     expect(f1.railCuts).toEqual([2963]);
     expect(f1.uprights).toBe(1);
+    expect(f1.nCorners).toBe(1);
+    expect(f1.profileMm).toBe(2 * 2963 + 2540);
     // The post is the support at the corner: one foot, half a gap from the free end
     expect(f1.supports).toEqual([1000]);
     // Face A of (1,2) → (4,2) is the left normal (0, 1): the inner face, toward the other run
