@@ -59,14 +59,14 @@ const mmList = (cuts: Map<number, number>) =>
     .join(' · ') + ' mm';
 
 export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
-  const lines = new Map<BomGroupId, Map<string, BomLine>>(GROUPS.map((g) => [g.id, new Map()]));
-  /** Add to a line, merged by key within its group. */
-  const put = (group: BomGroupId, key: string, line: Omit<BomLine, 'qty'>, qty: number) => {
+  const lines = new Map<BomGroupId, Map<string, { line: BomLine; size: number }>>(GROUPS.map((g) => [g.id, new Map()]));
+  /** Add to a line, merged by key within its group. `size` (mm) orders lines in the group, largest first. */
+  const put = (group: BomGroupId, key: string, line: Omit<BomLine, 'qty'>, qty: number, size = 0) => {
     if (qty <= 0) return;
     const g = lines.get(group)!;
     const l = g.get(key);
-    if (l) l.qty += qty;
-    else g.set(key, { ...line, qty });
+    if (l) l.line.qty += qty;
+    else g.set(key, { line: { ...line, qty }, size });
   };
   const part = (group: BomGroupId, code: string, qty: number) => {
     const p = fogaPart(code);
@@ -81,6 +81,7 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
       `${name}|${lengthMm}`,
       { artnr: '', name: `${name} ${profile}, ${lengthMm} mm, med ${c.code}`, detail: withCouplings(profile, lengthMm, c.code, 2 * c.perEnd) + note, preassembled: true },
       qty,
+      group === 'beams' ? lengthMm : 0,
     );
 
   const postW = fogaPart(r.wall.post).section?.[0] ?? 0;
@@ -91,7 +92,7 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   const plateExtra = plate.h - (z.postLength - railsH);
   const header = z.postLength - r.door.floorGap - r.door.leaf - r.door.topGap;
   const addPlate = (ral: string, h: number, note: string) =>
-    put('plates', `${ral}|${h}`, { artnr: '', name: fogaPart(plate.code).name, detail: `${plate.w} × ${h} mm${note}`, preassembled: false, ral }, 1);
+    put('plates', `${ral}|${h}`, { artnr: '', name: fogaPart(plate.code).name, detail: `${plate.w} × ${h} mm${note}`, preassembled: false, ral }, 1, h);
 
   // Stolper: wall and takdrager alike, stored with the foot mounted
   put(
@@ -140,13 +141,11 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   part('textile', r.frame.corner, 4 * s.frames.length);
   part('textile', r.frame.wallFixing.code, r.frame.wallFixing.perFrame * s.frames.length);
 
-  // Order inside groups: beams longest first; plates tallest first, then by RAL
-  const len = (l: BomLine) => Number(/(\d+) mm/.exec(l.name)?.[1] ?? 0);
-  const plateH = (l: BomLine) => Number(/× (\d+) mm/.exec(l.detail)?.[1] ?? 0);
+  // Order inside groups: beams longest first; plates tallest first, then by RAL; the rest as added
   return {
-    groups: GROUPS.map((g) => ({ ...g, lines: [...lines.get(g.id)!.values()] }))
-      .filter((g) => g.lines.length)
-      .map((g) => (g.id === 'beams' ? { ...g, lines: g.lines.sort((a, b) => len(b) - len(a)) } : g))
-      .map((g) => (g.id === 'plates' ? { ...g, lines: g.lines.sort((a, b) => plateH(b) - plateH(a) || (a.ral ?? '').localeCompare(b.ral ?? '')) } : g)),
+    groups: GROUPS.map((g) => ({
+      ...g,
+      lines: [...lines.get(g.id)!.values()].sort((a, b) => b.size - a.size || (a.line.ral ?? '').localeCompare(b.line.ral ?? '')).map((e) => e.line),
+    })).filter((g) => g.lines.length),
   };
 }
