@@ -1,10 +1,10 @@
-import { Blinds, Box, Check, ChevronRight, DoorClosed, Eraser, PaintBucket, Paintbrush, Search, Trash2, Upload } from 'lucide-react'
+import { Blinds, Box, Check, Ungroup, ChevronRight, DoorClosed, Eraser, PaintBucket, Paintbrush, Search, Trash2, Upload } from 'lucide-react'
 import { Fragment, useMemo, useRef, useState } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import type { Product } from '../../catalog/types'
 import { setCounted, setStand } from '../../domain/edit'
 import { addObjectAnywhere, removeObjects } from '../../domain/objects'
-import { addDefaultRoom } from '../../domain/rooms'
+import { addDefaultRoom, dissolveRoom, removeRoom, updateRoom } from '../../domain/rooms'
 import type { StandType, Variant } from '../../domain/types'
 import { fillFloor } from '../../domain/variant'
 import { textileBox } from '../../domain/decor'
@@ -38,7 +38,10 @@ export interface RailProps {
   onAddMotif: (m: Motif) => void
   /** Open a textile in the wall drawer. */
   onSelect: (s: PlanSelection) => void
+  selection?: PlanSelection
 }
+
+const ROOM_LABELS = ['Bakrom', 'Lager', 'Møterom']
 
 const TYPE_TEXT: Record<StandType, string> = {
   row: 'Bare fronten er åpen. Lukkede sider får standvegg.',
@@ -207,7 +210,7 @@ function StandSection({ v, res, onEdit }: RailProps) {
   )
 }
 
-function WallSection({ v, res, brush, tool, pick, onEdit, onToast }: RailProps) {
+function WallSection({ v, res, brush, tool, pick, onEdit, onToast, onSelect, selection }: RailProps) {
   const plates = wallPlates()
   const di = Math.max(0, plates.findIndex((p) => p.ral === v.defaultPlate))
   const def = plates[di]
@@ -252,7 +255,9 @@ function WallSection({ v, res, brush, tool, pick, onEdit, onToast }: RailProps) 
           </svg>
         }
         title="Bakrom"
-        meta="Snarvei: fire vegger 1 × 1 med dør i et ledig hjørne. Dra en vegg i planen for å endre størrelsen."
+        on={v.rooms.length > 0}
+        meta="1 × 1 m med dør i et ledig hjørne. Bygger bare veggene som mangler. Dra gulvet eller taket for å flytte, en vegg eller et håndtak for å endre størrelsen."
+        result={v.rooms.length ? `${v.rooms.length} rom` : null}
         action={
           <IconButton
             icon={Box}
@@ -266,6 +271,37 @@ function WallSection({ v, res, brush, tool, pick, onEdit, onToast }: RailProps) 
           />
         }
       />
+      {v.rooms.map((r) => {
+        const doors = v.openings.filter((o) => o.wallId.startsWith(`${r.id}.`)).length
+        const label = r.label ?? ROOM_LABELS[0]
+        const selected = selection?.roomId === r.id || (selection?.wallId ?? '').startsWith(`${r.id}.`)
+        return (
+          <ProductRow
+            key={r.id}
+            on={selected}
+            thumb={<Box size={16} />}
+            title={
+              <button type="button" className="link" onClick={() => onSelect({ roomId: r.id })}>
+                {label} {r.w} × {r.d} m
+              </button>
+            }
+            meta={`${doors ? `${doors} ${doors === 1 ? 'åpning' : 'åpninger'}` : 'ingen åpning'} · plassert ${r.x} · ${r.y} m`}
+            action={
+              <>
+                <IconButton icon={Ungroup} label="Gjør om til vanlige vegger" onClick={() => onEdit((x) => dissolveRoom(x, r.id))} />
+                <IconButton icon={Trash2} label={`Fjern ${label.toLowerCase()}`} onClick={() => onEdit((x) => removeRoom(x, r.id))} />
+              </>
+            }
+            chips={
+              <VariantChips
+                chips={ROOM_LABELS.map((name) => ({ name }))}
+                selected={ROOM_LABELS.indexOf(label)}
+                onSelect={(i) => onEdit((x) => updateRoom(x, r.id, { label: i === 0 ? undefined : ROOM_LABELS[i] }))}
+              />
+            }
+          />
+        )
+      })}
 
       <div className="panel-sec eyebrow">Åpninger</div>
       {catalog.products

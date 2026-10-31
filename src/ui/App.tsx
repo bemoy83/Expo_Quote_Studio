@@ -3,6 +3,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useRef, us
 import { calc, type CalcResult } from '../calc/calc'
 import { r2 } from '../calc/referenceStands'
 import { addObject } from '../domain/objects'
+import { removeRoom } from '../domain/rooms'
 import type { Variant } from '../domain/types'
 import { createProject, customerName, fillFloor } from '../domain/variant'
 import { parse, serialize, type Sketch } from '../persistence/file'
@@ -130,6 +131,10 @@ export default function App() {
         const { textileId, foilId } = selection
         onEdit((x) => (textileId ? removeTextile(x, textileId) : removeFoil(x, foilId!)))
         setSelection({ wallId: selection.wallId, side: selection.side })
+      } else if ((k === 'delete' || k === 'backspace') && selection.roomId) {
+        const id = selection.roomId
+        onEdit((x) => removeRoom(x, id))
+        setSelection({})
       } else if ((k === 'delete' || k === 'backspace') && selection.objectId) {
         const id = selection.objectId
         onEdit((x) => ({ ...x, objects: x.objects.filter((o) => o.id !== id) }))
@@ -248,7 +253,12 @@ export default function App() {
             <div className="kpis">
               <Kpi label="Areal" value={fmt(k.area)} unit="m²" sub={`${v.stand.width} × ${v.stand.depth} m`} />
               <Kpi label="Åpne sider" value={String(k.openSides)} sub={TYPE_NAME[v.stand.type]} />
-              <Kpi label="Standvegg" value={fmt(k.wallLm)} unit="lm" sub={k.openings ? count(k.openings, 'åpning', 'åpninger') : undefined} />
+              <Kpi
+                label="Standvegg"
+                value={fmt(k.wallLm)}
+                unit="lm"
+                sub={[k.roomWallLm ? `inkl. ${fmt(k.roomWallLm)} lm rom` : '', k.openings ? count(k.openings, 'åpning', 'åpninger') : ''].filter(Boolean).join(' · ') || undefined}
+              />
               <Kpi label="Takdrager" value={fmt(k.beamLm)} unit="m" />
               {k.textileM2 > 0 && <Kpi label="Tekstilvegg" value={fmt(k.textileM2)} unit="m²" sub={frameCount(res.production.pieces.length)} />}
               <span className="spacer" />
@@ -277,6 +287,7 @@ export default function App() {
                 setTool('select')
                 setSelection(s)
               }}
+              selection={selection}
             />
             <main className="stage">
               <div className="plan-wrap">
@@ -361,10 +372,10 @@ export default function App() {
   }
 }
 
-const HINT_3D = 'Dra for å rotere · rull for å zoome · dra møbler, en innervegg eller grafikk for å flytte · dra grafikk eller tekstilvegg fra Profilering til en vegg'
+const HINT_3D = 'Dra for å rotere · rull for å zoome · dra møbler, en innervegg eller grafikk for å flytte · dra et rom i veggen eller taket, håndtakene endrer størrelsen · dra grafikk eller tekstilvegg fra Profilering til en vegg'
 
 function hint(tool: Tool, brush: Brush | null): string {
-  if (tool === 'select') return 'Klikk en vegg for å endre den · dra en innervegg for å flytte den · dra møbler for å flytte dem · Delete fjerner valgt møbel'
+  if (tool === 'select') return 'Klikk en vegg for å endre den · dra en innervegg eller møbler for å flytte · dra gulvet i et rom for å flytte rommet, en romvegg for å endre størrelsen · Delete fjerner valgt møbel eller rom'
   const erase = tool === 'erase'
   switch (brush?.kind ?? 'wall') {
     case 'wall':

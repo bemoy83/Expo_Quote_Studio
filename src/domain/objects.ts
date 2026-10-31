@@ -180,3 +180,14 @@ export function settleObject(v: Variant, ctx: PlaceContext, id: string, start: {
   if (spot) return { v: { ...v, objects: v.objects.map((x) => (x.id === id ? spot : x)) }, ok: true };
   return { v: moveObject(v, ctx, id, start.x, start.y), ok: false };
 }
+
+/** After a room was moved or resized: every object left overlapping something moves to the nearest free spot within 1 m. */
+export function settleAll(v: Variant, ctx: PlaceContext): Variant {
+  let out = v;
+  for (const id of conflicts(v, ctx)) {
+    const o = out.objects.find((x) => x.id === id);
+    const spot = o && findSpot(out, ctx, o, 1);
+    if (spot) out = { ...out, objects: out.objects.map((x) => (x.id === id ? spot : x)) };
+  }
+  return out;
+}

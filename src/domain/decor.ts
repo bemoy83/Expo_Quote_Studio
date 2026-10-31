@@ -10,7 +10,7 @@ import type { Rules } from '../rules/rules';
 import { wallHeight } from '../rules/rules';
 import { pointAlong, wallDirection, wallLength, wallModules } from './grid';
 import { defaultSwing, isPerimeterWall, nextId } from './edit';
-import { outwardSide } from './rooms';
+import { outwardSide, roomAt } from './rooms';
 import type { Foil, Point, TextileWall, Variant, Wall } from './types';
 import { builtModules } from './walls';
 
@@ -400,8 +400,8 @@ export function fitDecor(v: Variant, rules: Rules, ratio: (motif: string | undef
     let width = t.width;
     const inside = spans.some(([a, b]) => from >= a - EPS && from + width <= b + EPS);
     if (t.fit) {
-      // "Fyll veggen": the whole free span around its centre, growing and shrinking with it
-      const sp = spanFor(spans, from + width / 2);
+      // "Fyll veggen": the whole free span it overlaps most (outside a room on a tie), growing and shrinking with it
+      const sp = bestSpan(v, w, s, spans, from, width) ?? spanFor(spans, from + width / 2);
       if (!sp) {
         changed = true;
         return;
@@ -409,15 +409,8 @@ export function fitDecor(v: Variant, rules: Rules, ratio: (motif: string | undef
       from = r1(sp[0]);
       width = r1(sp[1] - sp[0]);
     } else if (!inside) {
-      let best: Span | null = null;
-      let ov = 0;
-      for (const [a, b] of spans) {
-        const o = Math.min(b, from + width) - Math.max(a, from);
-        if (o > ov) {
-          ov = o;
-          best = [a, b];
-        }
-      }
+      const best = bestSpan(v, w, s, spans, from, width);
+      const ov = best ? Math.min(best[1], from + width) - Math.max(best[0], from) : 0;
       if (best && ov >= min - EPS) {
         const f0 = Math.max(from, best[0]);
         width = r1(Math.min(from + width, best[1]) - f0);
@@ -458,6 +451,28 @@ export function fitDecor(v: Variant, rules: Rules, ratio: (motif: string | undef
     foils.push(same ? f : fit);
   }
   return changed ? { ...v, textiles: kept, foils } : v;
+}
+
+/** The span a frame overlaps most. On a tie it stays out of a room, so a frame pushed by a room keeps to its side. */
+function bestSpan(v: Variant, w: Wall, s: FaceSide, spans: Span[], from: number, width: number): Span | null {
+  let best: Span | null = null;
+  let score = 0;
+  for (const [a, b] of spans) {
+    const o = Math.min(b, from + width) - Math.max(a, from);
+    const sc = o - (inRoom(v, w, s, (a + b) / 2) ? 0.01 : 0);
+    if (o > EPS && sc > score) {
+      score = sc;
+      best = [a, b];
+    }
+  }
+  return best;
+}
+
+/** True when the face at offset t looks into a room. */
+function inRoom(v: Variant, w: Wall, s: FaceSide, t: number): boolean {
+  const [x, y] = pointAlong(w, t);
+  const n = faceNormal(w, s);
+  return !!roomAt(v, x + n[0] * 0.25, y + n[1] * 0.25);
 }
 
 /** World points of a span along a wall, pushed out from the wall centre by `off` on face s. */

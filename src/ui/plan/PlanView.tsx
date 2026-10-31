@@ -8,11 +8,12 @@ import { CELL, parseCellKey, pointAlong, sideLength, sidePoint, wallDirection, w
 import { addObject, conflicts, footprintBox, moveObject, removeObject } from '../../domain/objects'
 import { addFoil, addTextile, faceAt, faceSegment, felt, foilAt, foilCenter, freeSpans, removeFoil, removeTextile, sideOf, textileAt, textileOffset, updateTextile, type FaceSide } from '../../domain/decor'
 import type { Motif } from '../../persistence/file'
-import type { Point, Side, Variant, Wall } from '../../domain/types'
+import type { Point, RectFace, Room, Side, Variant, Wall } from '../../domain/types'
 import { builtModules, type BuiltModule } from '../../domain/walls'
 import { BORDER, BORDER_STRONG, BLOCK, CANVAS, INK, INK_FAINT, INK_MUTED, LAYER_COLOR, SURFACE } from '../colors'
 import { applyDrop, decorDrag, endDecorDrag, type DecorDrag } from '../dnd'
-import { dragWall, dropObject, type WallDrag } from '../drag'
+import { dragRoom, dragWall, dropObject, dropRoom, type RoomDrag, type WallDrag } from '../drag'
+import { faceEnds, FACES, roomAt } from '../../domain/rooms'
 import { fmt } from '../format'
 import { idx, place, plateColor, productOf, rules } from '../env'
 import { findMotif } from '../motifs'
@@ -21,6 +22,7 @@ import { distToSegment, nearestEdge, strokeFrom } from './geometry'
 
 export interface PlanSelection {
   wallId?: string
+  roomId?: string
   objectId?: string
   /** Wall face shown in the wall drawer. */
   side?: FaceSide
@@ -65,6 +67,7 @@ type Drag =
   | { kind: 'floor'; last: string | null }
   | { kind: 'object'; id: string; dx: number; dy: number; start: P; moved: boolean }
   | ({ kind: 'wall' } & WallDrag)
+  | ({ kind: 'room' } & RoomDrag)
 
 interface P {
   x: number
@@ -137,6 +140,32 @@ export function PlanView(p: Props) {
     return { w, s: faceAt(v, w, q), t, module: Math.min(Math.floor(t), L - 1) }
   }
   const ratioOf = (id: string) => findMotif(p.motifs, id)?.ratio ?? 1
+
+  /** The side of a room under the pointer: its own walls always, any side of the selected room. */
+  const roomEdgeAt = (q: P): { room: Room; face: RectFace } | null => {
+    const m = moduleAt(q, 0.2)
+    const w = m && v.walls.find((x) => x.id === m.wallId)
+    if (w?.room) {
+      const room = v.rooms.find((r) => r.id === w.room!.id)
+      if (room) return { room, face: w.room.face }
+    }
+    const sel = v.rooms.find((r) => r.id === selection.roomId)
+    if (!sel) return null
+    let best: { room: Room; face: RectFace } | null = null
+    let bd = 0.2
+    for (const face of FACES) {
+      const [a, b] = faceEnds(sel, face)
+      const d = distToSegment(q, a, b)
+      if (d < bd) {
+        bd = d
+        best = { room: sel, face }
+      }
+    }
+    return best
+  }
+  const startRoomDrag = (room: Room, mode: RoomDrag['mode'], q: P) => {
+    drag.current = { kind: 'room', id: room.id, mode, p0: q, v0: v, last: mode === 'move' ? '0,0' : '0', moved: false }
+  }
 
   /** Textile brush: fill the free part of the face. Motif brush: print on a textile, or foil on a wall panel. */
   const decorClick = (q: P) => {
@@ -235,7 +264,12 @@ export function PlanView(p: Props) {
       else p.onEdit(() => next)
       return
     }
-    // Select
+    // Select. A side of the selected room comes first, so a side shared with a stand wall can still be dragged.
+    const selEdge = selection.roomId ? roomEdgeAt(q) : null
+    if (selEdge && selEdge.room.id === selection.roomId) {
+      startRoomDrag(selEdge.room, selEdge.face, q)
+      return
+    }
     const o = objectAt(q)
     if (o) {
       p.onSelect({ objectId: o.id })
@@ -248,7 +282,16 @@ export function PlanView(p: Props) {
       const h = faceHit(q)
       const tx = h && textileAt(v, w.id, h.s, h.t)
       p.onSelect(tx ? { wallId: w.id, side: h.s, textileId: tx.id } : { wallId: w.id, side: h?.s })
-      if (!isPerimeterWall(v.stand, w)) drag.current = { kind: 'wall', id: w.id, p0: q, v0: v, delta: 0, horizontal: w.from[1] === w.to[1] }
+      // A room's own wall resizes the room; a drawn inner wall moves
+      const room = w.room && v.rooms.find((r) => r.id === w.room!.id)
+      if (room) startRoomDrag(room, w.room!.face, q)
+      else if (!isPerimeterWall(v.stand, w)) drag.current = { kind: 'wall', id: w.id, p0: q, v0: v, delta: 0, horizontal: w.from[1] === w.to[1] }
+      return
+    }
+    const room = roomAt(v, q.x, q.y)
+    if (room) {
+      p.onSelect({ roomId: room.id })
+      startRoomDrag(room, 'move', q)
       return
     }
     p.onSelect({})
@@ -271,6 +314,7 @@ export function PlanView(p: Props) {
       }
       p.onEdit((x) => moveObject(x, place, d.id, q.x - d.dx, q.y - d.dy), false)
     } else if (d.kind === 'wall') dragWall(d, q, p.onEdit, p.onCheckpoint)
+    else if (d.kind === 'room') dragRoom(d, q, p.onEdit, p.onCheckpoint)
   }
 
   const onUp = (e: RPointerEvent<SVGSVGElement>) => {
@@ -286,6 +330,7 @@ export function PlanView(p: Props) {
       if (tool === 'erase') p.onEdit((x) => eraseWalls(x, segmentKeys(a, b)))
       else if (brush?.kind === 'wall') p.onEdit((x) => paintWalls(x, a, b, brush.ral))
     } else if (d.kind === 'object' && d.moved) dropObject(v, d.id, d.start, p.onEdit, p.onToast)
+    else if (d.kind === 'room') dropRoom(d, p.onEdit)
   }
 
   // Drag and drop from Profilering: the same as a click with the textile or motif brush
@@ -313,7 +358,15 @@ export function PlanView(p: Props) {
   }
 
   const dim = (layer: Exclude<Highlight, null>) => (highlight && highlight !== layer ? DIMMED : 1)
-  const cursor = tool === 'select' ? 'default' : 'crosshair'
+  const cursor = tool !== 'select' ? 'crosshair' : roomCursor()
+  function roomCursor() {
+    const d = drag.current
+    if (d?.kind === 'room') return d.mode === 'move' ? 'grabbing' : d.mode === 'left' || d.mode === 'right' ? 'ew-resize' : 'ns-resize'
+    if (!hover || p.mini) return 'default'
+    const e = roomEdgeAt(hover)
+    if (e) return e.face === 'left' || e.face === 'right' ? 'ew-resize' : 'ns-resize'
+    return roomAt(v, hover.x, hover.y) && !objectAt(hover) ? 'move' : 'default'
+  }
 
   // Hover previews
   const hoverModule = openingTool && hover ? moduleAt(hover, 0.4) : null
@@ -485,6 +538,15 @@ export function PlanView(p: Props) {
         })}
       </g>
 
+      {/* Rooms: name and size over the floor and furniture, the selected one outlined */}
+      {!p.mini && (
+        <g pointerEvents="none">
+          {v.rooms.map((r) => (
+            <RoomMark key={r.id} r={r} selected={selection.roomId === r.id} />
+          ))}
+        </g>
+      )}
+
       {/* Labels */}
       {!p.mini && (
       <g pointerEvents="none">
@@ -523,6 +585,7 @@ export function PlanView(p: Props) {
 
       {/* Interaction preview */}
       <g pointerEvents="none">
+        {!p.mini && v.rooms.filter((r) => r.id === selection.roomId).map((r) => <RoomHandles key={r.id} r={r} />)}
         {hoverEdge && <Seg a={hoverEdge.a} b={hoverEdge.b} stroke={tool === 'erase' ? INK_FAINT : WALL} strokeOpacity={0.6} strokeWidth={0.14} />}
         {stroke && <StrokePreview a={stroke[0]} b={stroke[1]} erase={tool === 'erase'} />}
         {hoverModule && <HoverModule m={hoverModule} />}
@@ -658,6 +721,42 @@ function FacePreview({ v, h, brush, erase }: { v: Variant; h: FaceHit; brush: Br
   if (!span) return null
   const [a, b] = faceSegment(h.w, h.s, span[0] + 0.02, span[1] - 0.02, textileOffset(rules))
   return <Seg a={a} b={b} stroke={brush.kind === 'textile' && !erase ? TEXTILE : INK} strokeOpacity={0.45} strokeWidth={rules.textile.depth + 0.04} />
+}
+
+const ROOM_NAME = 'Bakrom'
+
+/** Room name and size on its floor; a dashed outline when selected. */
+function RoomMark({ r, selected }: { r: Room; selected: boolean }) {
+  const cx = r.x + r.w / 2
+  const cy = r.y + r.d / 2
+  const small = Math.min(r.w, r.d) < 2
+  return (
+    <g>
+      {selected && <rect x={r.x + 0.12} y={r.y + 0.12} width={r.w - 0.24} height={r.d - 0.24} rx={0.04} fill={INK} fillOpacity={0.04} stroke={INK} strokeWidth={0.025} strokeDasharray=".1 .06" />}
+      <rect x={cx - (small ? 0.4 : 0.6)} y={cy - (small ? 0.2 : 0.3)} width={small ? 0.8 : 1.2} height={small ? 0.44 : 0.6} rx={0.06} fill={CANVAS} fillOpacity={0.85} />
+      <text x={cx} y={cy - (small ? 0.02 : 0.06)} textAnchor="middle" style={{ ...LABEL, fontSize: small ? '0.17px' : '0.22px' }}>
+        {r.label ?? ROOM_NAME}
+      </text>
+      <text x={cx} y={cy + (small ? 0.18 : 0.22)} textAnchor="middle" style={{ ...MONO, fontSize: small ? '0.15px' : '0.19px' }}>
+        {r.w} × {r.d} m
+      </text>
+    </g>
+  )
+}
+
+/** Grips at the middle of each side of the selected room: drag a side to resize. */
+function RoomHandles({ r }: { r: Room }) {
+  return (
+    <g>
+      {FACES.map((face) => {
+        const [a, b] = faceEnds(r, face)
+        const mx = (a[0] + b[0]) / 2
+        const my = (a[1] + b[1]) / 2
+        const hz = face === 'back' || face === 'front'
+        return <rect key={face} x={mx - (hz ? 0.2 : 0.06)} y={my - (hz ? 0.06 : 0.2)} width={hz ? 0.4 : 0.12} height={hz ? 0.12 : 0.4} rx={0.05} fill={CANVAS} stroke={INK} strokeWidth={0.03} />
+      })}
+    </g>
+  )
 }
 
 function HoverModule({ m }: { m: Module }) {

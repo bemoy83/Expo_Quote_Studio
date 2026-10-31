@@ -1,5 +1,6 @@
 // 3D view. Rebuilds the scene from the model on every change (see build.ts) and keeps only the camera.
 // Velg works as in the plan: click a wall to edit it, drag furniture, drag an inner wall to move it.
+// A room is moved by dragging one of its walls or its see-through roof, and resized by the grips on top of its sides.
 // Textile frames and foil decals are clicked to select and dragged along their face; a frame or a motif dragged
 // from Profilering is dropped on the wall face under the pointer. The brushes draw in the plan.
 import { House, RotateCcw, RotateCw, ScanEye } from 'lucide-react'
@@ -15,7 +16,7 @@ import type { Motif } from '../../persistence/file'
 import type { Foil, TextileWall, Variant, Wall } from '../../domain/types'
 import { IconButton } from '../controls'
 import { applyDrop, decorDrag, dropSpot, endDecorDrag, type DropSpot, type FaceTarget } from '../dnd'
-import { dragWall, dropObject, type WallDrag } from '../drag'
+import { dragRoom, dragWall, dropObject, dropRoom, type RoomDrag, type WallDrag } from '../drag'
 import { place, rules } from '../env'
 import { findMotif } from '../motifs'
 import type { Highlight } from '../tools'
@@ -38,6 +39,8 @@ type Drag =
   | { kind: 'orbit' }
   | { kind: 'object'; id: string; start: { x: number; y: number }; off: { x: number; y: number }; moved: boolean }
   | ({ kind: 'wall'; moved: boolean } & WallDrag)
+  /** A room: moved, or one side dragged. Tracked on a level plane at the height it was grabbed. */
+  | ({ kind: 'room'; y: number } & RoomDrag)
   /** A textile or foil dragged on its face: deltas from where it was grabbed (t along the wall, h up). */
   | { kind: 'decor'; item: { textile: TextileWall } | { foil: Foil }; w: Wall; s: FaceSide; t0: number; h0: number; moved: boolean }
 
@@ -121,12 +124,21 @@ export function Scene3D(p: Props) {
     const pick = (e: { clientX: number; clientY: number }): Hit | null => {
       if (!v.content) return null
       setRay(e)
+      let roof: Hit | null = null
       for (const h of ray.intersectObjects(v.content.children, true)) {
         const t = h.object.userData as Partial<Tag>
-        if (t.pick) return { ...t.pick, point: h.point }
-        if (t.layer || !h.object.userData.label) return null
+        if (t.pick) {
+          // A room roof is a handle only: furniture and decor seen through it win
+          if (t.pick.roomFace === 'move' && !roof) {
+            roof = { ...t.pick, point: h.point }
+            continue
+          }
+          if (roof && !(t.pick.objectId || t.pick.textileId || t.pick.foilId)) return roof
+          return { ...t.pick, point: h.point }
+        }
+        if (t.layer || !h.object.userData.label) return roof
       }
-      return null
+      return roof
     }
     const toModel = (q: THREE.Vector3) => {
       const s = props.current.v.stand
@@ -162,11 +174,11 @@ export function Scene3D(p: Props) {
       const [dx, dy] = wallDirection(w)
       return { t: (q.x - p0.x) * dx + (q.z - p0.z) * dy, h: q.y }
     }
-    /** Pointer on the floor plane, in model coordinates. */
-    const onFloor = (e: PointerEvent) => {
+    /** Pointer on the floor plane (or a level plane at height y), in model coordinates. */
+    const onFloor = (e: PointerEvent, y = 0) => {
       setRay(e)
       const q = new THREE.Vector3()
-      if (!ray.ray.intersectPlane(floor, q)) return null
+      if (!ray.ray.intersectPlane(y ? new THREE.Plane(new THREE.Vector3(0, 1, 0), -y) : floor, q)) return null
       const s = props.current.v.stand
       return { x: q.x + s.width / 2, y: q.z + s.depth / 2 }
     }
@@ -189,6 +201,14 @@ export function Scene3D(p: Props) {
         const o = P.v.objects.find((x) => x.id === hit.objectId)
         const q = onFloor(e)
         if (o && q) drag = { kind: 'object', id: o.id, start: { x: o.x, y: o.y }, off: { x: q.x - o.x, y: q.y - o.y }, moved: false }
+      } else if (hit?.roomId || P.v.walls.find((x) => x.id === hit?.wallId)?.room) {
+        // A room's roof or own wall moves it; a grip on top of a side resizes it
+        const w = P.v.walls.find((x) => x.id === hit!.wallId)
+        const id = hit!.roomId ?? w!.room!.id
+        const mode = hit!.roomFace ?? 'move'
+        const y = hit!.point.y
+        const q = onFloor(e, y)
+        if (q) drag = { kind: 'room', id, mode, p0: q, v0: P.v, last: mode === 'move' ? '0,0' : '0', moved: false, y }
       } else if (hit?.wallId) {
         const w = P.v.walls.find((x) => x.id === hit.wallId)
         const q = onFloor(e)
@@ -204,8 +224,10 @@ export function Scene3D(p: Props) {
       if (!drag || drag.kind === 'orbit') {
         if (!drag) {
           const hit = pick(e)
-          const movable = hit?.objectId || hit?.textileId || hit?.foilId || (hit?.wallId && !isPerimeterWall(P.v.stand, P.v.walls.find((x) => x.id === hit.wallId)!))
-          renderer.domElement.style.cursor = movable ? 'move' : hit ? 'pointer' : 'grab'
+          const w = hit?.wallId ? P.v.walls.find((x) => x.id === hit.wallId) : undefined
+          const movable = hit?.objectId || hit?.textileId || hit?.foilId || hit?.roomFace === 'move' || (w && (w.room || !isPerimeterWall(P.v.stand, w)))
+          const grip = hit?.roomFace && hit.roomFace !== 'move'
+          renderer.domElement.style.cursor = grip ? 'col-resize' : movable ? 'move' : hit ? 'pointer' : 'grab'
         }
         return
       }
@@ -221,6 +243,11 @@ export function Scene3D(p: Props) {
         const dh = f.h - h0
         if ('textile' in item) P.onEdit((x) => moveTextileBy(x, rules, item.textile, dt, dh), false)
         else P.onEdit((x) => moveFoilBy(x, rules, item.foil, dt, dh, findMotif(P.motifs, item.foil.motif)?.ratio ?? 0), false)
+        return
+      }
+      if (drag.kind === 'room') {
+        const q = onFloor(e, drag.y)
+        if (q) dragRoom(drag, q, P.onEdit, P.onCheckpoint)
         return
       }
       const q = onFloor(e)
@@ -246,6 +273,7 @@ export function Scene3D(p: Props) {
       const hit = down.hit
       down = null
       if (d?.kind === 'object' && d.moved) return dropObject(P.v, d.id, d.start, P.onEdit, P.onToast)
+      if (d?.kind === 'room' && d.moved) return dropRoom(d, P.onEdit)
       // A frame or decal is selected when let go, so the drawer does not open (and shrink the view) mid-drag
       if (hit?.textileId || hit?.foilId) {
         const deco = P.v.textiles.find((x) => x.id === hit.textileId) ?? P.v.foils.find((x) => x.id === hit.foilId)
@@ -254,6 +282,7 @@ export function Scene3D(p: Props) {
       }
       if (!click) return
       if (hit?.objectId) P.onSelect({ objectId: hit.objectId })
+      else if (hit?.roomId) P.onSelect({ roomId: hit.roomId })
       else if (hit?.wallId) P.onSelect({ wallId: hit.wallId, side: faceOf(hit)?.s })
       else P.onSelect({})
     }

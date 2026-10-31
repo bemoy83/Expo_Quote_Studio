@@ -67,7 +67,8 @@ describe('room walls', () => {
     const d = dissolveRoom(v, 'bk');
     expect(d.rooms).toHaveLength(0);
     expect(d.walls.some((w) => w.room)).toBe(false);
-    expect(kf(d)).toEqual(kf(v));
+    expect({ ...kf(d), roomWallLm: 3 }).toEqual(kf(v));
+    expect(kf(v).roomWallLm).toBe(3);
   });
   it('plate colour of a room side is the room colour', () => {
     const v = setWallPlate(r2(), roomWallId('bk', 'front'), '9005');
@@ -174,5 +175,21 @@ describe('textile and furniture', () => {
     expect(v.objects[0]).toMatchObject({ x: 3, y: 2 });
     const hit = { ...v, objects: [{ id: 'i1', product: '5276', x: 2, y: 2.5, rot: 0 }] };
     expect(conflicts(hit, ctx).has('i1')).toBe(true);
+  });
+});
+
+describe('fixed-width frames', () => {
+  it('pushed by a room, a frame keeps to the side outside the room', () => {
+    const v = r2();
+    const fixed = { ...v, textiles: v.textiles.map((t) => ({ ...t, fit: undefined })) };
+    const moved = fitDecor(moveRoom(fixed, 'bk', 2, 0), RULES);
+    expect(moved.textiles[0]).toMatchObject({ from: 4, width: 2 });
+  });
+});
+
+describe('filling frames and rooms', () => {
+  it('a room growing over half a filling frame leaves it on the outside', () => {
+    const v = fitDecor(resizeRoom(r2(), 'bk', 'right', 2), RULES);
+    expect(v.textiles[0]).toMatchObject({ from: 4, width: 2 });
   });
 });

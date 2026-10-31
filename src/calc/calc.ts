@@ -35,6 +35,8 @@ export interface KeyFigures {
   openSides: number;
   /** Wall modules that are wall, not opening. Shared walls count once. */
   wallLm: number;
+  /** Part of wallLm that rooms build themselves (sides shared with other walls not included). */
+  roomWallLm: number;
   openings: number;
   beamLm: number;
   beamLengths: number;
@@ -98,6 +100,7 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog): CalcResult {
     }
   }
   const walled = mods.filter((m) => !m.opening);
+  const roomWalls = new Set(v.walls.filter((w) => w.room).map((w) => w.id));
   const plates = new Map<string, number>();
   for (const m of walled) plates.set(m.plate, (plates.get(m.plate) ?? 0) + 1);
   const plateSize = `${rules.wall.plate.width} × ${rules.wall.plate.height} mm`;
@@ -202,6 +205,7 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog): CalcResult {
       area: v.stand.width * v.stand.depth,
       openSides: openSides(v.stand).length,
       wallLm: walled.length,
+      roomWallLm: walled.filter((m) => roomWalls.has(m.wallId)).length,
       openings: nOpenings,
       beamLm: beams.lm,
       beamLengths: nLengths,
