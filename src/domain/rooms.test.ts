@@ -8,7 +8,7 @@ import { addTextile, faces, fitDecor, freeSpans, updateTextile } from './decor';
 import { eraseWalls, moveWall, paintWalls, setStand, setWallPlate } from './edit';
 import { moduleKey } from './grid';
 import { conflicts } from './objects';
-import { addDefaultRoom, addRoom, dissolveRoom, moveRoom, removeRoom, resizeRoom, roomWallId } from './rooms';
+import { addDefaultRoom, addRoom, dissolveRoom, moveRoom, removeRoom, resizeRoom, roomSideAt, roomWallId } from './rooms';
 import type { Variant } from './types';
 import { createVariant } from './variant';
 import { builtModules } from './walls';
@@ -191,5 +191,14 @@ describe('filling frames and rooms', () => {
   it('a room growing over half a filling frame leaves it on the outside', () => {
     const v = fitDecor(resizeRoom(r2(), 'bk', 'right', 2), RULES);
     expect(v.textiles[0]).toMatchObject({ from: 4, width: 2 });
+  });
+});
+
+describe('room side under a point', () => {
+  it('finds the side, also where it lies on a stand wall', () => {
+    const v = r2();
+    expect(roomSideAt(v, 2.05, 1)?.face).toBe('right');
+    expect(roomSideAt(v, 1, 0.03)?.face).toBe('back');
+    expect(roomSideAt(v, 4, 1)).toBeUndefined();
   });
 });

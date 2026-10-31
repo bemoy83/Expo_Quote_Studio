@@ -60,6 +60,21 @@ export function roomAt(v: Variant, x: number, y: number): Room | undefined {
   return v.rooms.find((r) => x > r.x && x < r.x + r.w && y > r.y && y < r.y + r.d);
 }
 
+/** The room side the point lies on (within `tol` of the side line), also where the side shares a stand wall. */
+export function roomSideAt(v: Variant, x: number, y: number, tol = 0.1): { room: Room; face: RectFace } | undefined {
+  for (const room of v.rooms) {
+    for (const face of FACES) {
+      const [a, b] = faceEnds(room, face);
+      const hz = a[1] === b[1];
+      const across = hz ? Math.abs(y - a[1]) : Math.abs(x - a[0]);
+      const t = hz ? x : y;
+      const [lo, hi] = hz ? [a[0], b[0]] : [a[1], b[1]];
+      if (across <= tol && t >= lo - tol && t <= hi + tol) return { room, face };
+    }
+  }
+  return undefined;
+}
+
 const overlaps = (a: Rect, b: Rect) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.d && b.y < a.y + a.d;
 
 /** Inside the stand, at least 1 × 1 and not on top of another room. */

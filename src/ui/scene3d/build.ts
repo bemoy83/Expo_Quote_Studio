@@ -300,8 +300,8 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
     along(pointAlong(w, c - f.width / 2), pointAlong(w, c + f.width / 2), f.width, f.height, 0.002, f.y - f.height / 2, print, { layer: 'foil', pick: { wallId: w.id, foilId: f.id } }, s * (rules.wall.profile.thickness / 2 + 0.002))
   }
 
-  // Rooms: a see-through roof at wall height to grab and move the room, a grip on top of each side to resize it.
-  // There is no roof product; this is only a handle.
+  // Rooms: a see-through roof at wall height to grab and move the room. There is no roof product; this is only a
+  // handle. Sides are resized by grabbing the top of a wall (see Scene3D), so nothing is drawn on the walls.
   for (const r of v.rooms) {
     const selected = sel.roomId === r.id || v.walls.some((w) => w.id === sel.wallId && w.room?.id === r.id)
     const roof = new THREE.Mesh(
@@ -325,14 +325,6 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
     outline.computeLineDistances()
     outline.userData = { label: true }
     root.add(outline)
-    const grip = mat('walls', selected ? SELECT : HANDLE, { roughness: 0.5 })
-    for (const f of FACES) {
-      const [a, b] = faceEnds(r, f)
-      const len = Math.min(0.5, (Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1])) * 0.5)
-      const mid: Point = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]
-      const half = (b[0] - a[0] ? [len / 2, 0] : [0, len / 2]) as Point
-      along([mid[0] - half[0], mid[1] - half[1]], [mid[0] + half[0], mid[1] + half[1]], len, 0.06, 0.09, H + 0.004, grip, { layer: 'walls', pick: { roomId: r.id, roomFace: f } })
-    }
   }
 
   // Furniture: top, pole and foot from the footprint
