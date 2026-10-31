@@ -77,7 +77,7 @@ export function CalcPanel({ res, name, onHover, onQuote }: { res: CalcResult; na
             {res.organiser.lines.map((l, i) => (
               <Line key={l.artnr + i} l={l} onHover={onHover} />
             ))}
-            <p className="cg-note">Ikke i standens sum, plukkliste eller arbeidsordre. Arrangøren bestiller veggene samlet i OMS.</p>
+            <p className="cg-note">Ikke i standens sum, plukkliste eller arbeidsordre. Arrangøren bestiller standvegger og takdrager samlet i OMS.</p>
           </section>
         )}
       </div>

@@ -63,7 +63,7 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
       ].join(' · '),
     ],
     k.beamLm
-      ? [`${fmt(k.beamLm)} m takdrager`, beamSummary(k)]
+      ? [`${fmt(k.beamLm)} m takdrager`, k.organiserBeamLm ? 'fra arrangøren' : beamSummary(k)]
       : ['Uten takdrager', 'ingen åpne sider å avstive'],
     k.floorTotal ? [floorNames.join(', '), `${fmt(k.floorTotal)} m² ferdig lagt${v.floor.protection ? ' med monteringsbeskyttelse' : ''}`] : ['Hallgulv uten belegg', ''],
   ]
@@ -82,7 +82,7 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
   const unpriced = v.loose.filter((l) => !l.price)
   // Stand walls the organiser pays: not the exhibitor's lines, only named
   const byOrganiser = k.organiserWallLm
-    ? `Standvegger ${fmt(k.organiserWallLm)} lm i ${plateName(standWallTerms(project).ral).toLowerCase()} leveres av arrangøren og inngår ikke i tilbudet.`
+    ? `Standvegger ${fmt(k.organiserWallLm)} lm i ${plateName(standWallTerms(project).ral).toLowerCase()}${k.organiserBeamLm ? ` og takdrager ${fmt(k.organiserBeamLm)} m` : ''} leveres av arrangøren og inngår ikke i tilbudet.`
     : ''
 
   return (

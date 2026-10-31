@@ -120,7 +120,7 @@ function ProjectPopover({ project, setProject, onClose }: { project: Project; se
       ))}
       <div className="pop-title pop-sect">Standvegger</div>
       <div className="pop-sub">
-        Veggene standtypen gir. Betaler arrangøren, er de ikke på tilbudet, plukklisten eller arbeidsordren. Annen farge enn arrangørens blir platebytte for
+        Veggene standtypen gir, og takdragerne som følger dem. Betaler arrangøren, er de ikke på tilbudet, plukklisten eller arbeidsordren. Annen farge enn arrangørens blir platebytte for
         utstilleren.
       </div>
       <div className="row">

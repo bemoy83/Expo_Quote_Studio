@@ -38,7 +38,7 @@ export function PickingPage({ variants, current, onSelect, calcOf }: Props) {
           <div className="page-main">
             <p className="page-intro">
               Deleliste etter gruppe og undergruppe. Ferdigmonterte enheter plukkes som stk; løse profiler står som antall per kappelengde.
-              {res.keyFigures.organiserWallLm > 0 && ` Standvegger fra arrangøren (${fmt(res.keyFigures.organiserWallLm)} lm) bestilles for seg og er ikke med.`}
+              {res.keyFigures.organiserWallLm > 0 && ` Standvegger fra arrangøren (${fmt(res.keyFigures.organiserWallLm)} lm)${res.keyFigures.organiserBeamLm ? ` og takdrager (${fmt(res.keyFigures.organiserBeamLm)} m)` : ''} bestilles for seg og er ikke med.`}
             </p>
             <div className="pick-grid tbl-head">
               <span>Art.nr</span>

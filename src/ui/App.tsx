@@ -291,7 +291,7 @@ export default function App() {
                 unit="lm"
                 sub={[wallSplit(k), k.openings ? count(k.openings, 'åpning', 'åpninger') : ''].filter(Boolean).join(' · ') || undefined}
               />
-              <Kpi label="Takdrager" value={fmt(k.beamLm)} unit="m" />
+              <Kpi label="Takdrager" value={fmt(k.beamLm)} unit="m" sub={k.organiserBeamLm ? 'fra arrangør' : undefined} />
               {k.textileM2 > 0 && <Kpi label="Tekstilvegg" value={fmt(k.textileM2)} unit="m²" sub={frameCount(res.production.pieces.length)} />}
               <span className="spacer" />
               <Kpi

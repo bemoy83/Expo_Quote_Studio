@@ -265,23 +265,26 @@ describe('stand walls the organiser pays (docs/vegger.md)', () => {
   const coloured = (v: Variant, wallId: string, plate: string): Variant => ({ ...v, walls: v.walls.map((w) => (w.id === wallId ? { ...w, plate } : w)) });
   const picked = (res: CalcResult, ral: string) => res.bom.lines.filter((l) => l.ral === ral).reduce((a, l) => a + l.qty, 0);
 
-  it('R1: the stand walls are billed to the organiser, not on the quote or picking list', () => {
+  it('R1: the stand walls and their takdrager are billed to the organiser, not on the quote or picking list', () => {
     const res = org(r1());
-    expect(lines(res).map((l) => l.artnr)).toEqual([S.beam]);
-    expect(res.organiser.lines).toMatchObject([{ artnr: '6120-9010', qty: 9, payer: 'arrangør', meta: 'Standvegg · RAL 9010' }]);
+    expect(lines(res)).toEqual([]);
+    expect(res.organiser.lines).toMatchObject([
+      { artnr: '6120-9010', qty: 9, payer: 'arrangør', meta: 'Standvegg · RAL 9010' },
+      { artnr: S.beam, qty: 3, payer: 'arrangør' },
+    ]);
     // Same price as when the exhibitor pays: 9 modules on their own 10 posts
     expect(res.organiser.lines[0].price).toBe(899);
-    expect(res.organiser.sum).toBe(9 * 899);
-    expect(res.sum).toBe(lines(res).reduce((a, l) => a + l.sum, 0));
+    expect(res.organiser.sum).toBe(res.organiser.lines.reduce((a, l) => a + l.sum, 0));
+    expect(res.sum).toBe(0);
     expect(res.foga.posts).toBe(0);
-    expect(res.bom.lines.map((l) => l.group)).toEqual(['vegg.takdrager']);
+    expect(res.bom.lines).toEqual([]);
     // Key figures still describe the whole sketch
-    expect(res.keyFigures).toMatchObject({ wallLm: 9, standWallLm: 9, organiserWallLm: 9, innerWallLm: 0, posts: 10 });
+    expect(res.keyFigures).toMatchObject({ wallLm: 9, standWallLm: 9, organiserWallLm: 9, innerWallLm: 0, posts: 10, beamLm: 3, organiserBeamLm: 3 });
   });
 
   it('a coloured stand wall: the organiser still pays white, the exhibitor the plate swap', () => {
     const res = org(coloured(r1(), 'side-back', '5007'));
-    expect(res.organiser.lines).toMatchObject([{ artnr: '6120-9010', qty: 9 }]);
+    expect(res.organiser.lines[0]).toMatchObject({ artnr: '6120-9010', qty: 9 });
     // Plate 150 + swap 200 per metre
     expect(lines(res).find((l) => l.artnr === '6125-5007')).toMatchObject({ qty: 3, price: 350, payer: 'utstiller', foga: true });
     expect(res.keyFigures.swapLm).toBe(3);
@@ -300,11 +303,24 @@ describe('stand walls the organiser pays (docs/vegger.md)', () => {
 
   it('R2: the room uses the stand walls and builds only its own sides', () => {
     const res = org(r2());
-    expect(res.organiser.lines[0].qty).toBe(10);
+    expect(res.organiser.lines.map((l) => [l.artnr, l.qty])).toEqual([
+      ['6120-9010', 10],
+      [S.beam, 10],
+    ]);
+    expect(res.organiser.lines[1].meta).toBe('2 lengder · 1 stolpe inkludert');
     expect(qty(res, '6120-9010')).toBe(3);
-    // Room posts (2,1), (2,2), (1,2) + the free beam post
-    expect(res.foga.posts).toBe(4);
+    // Room posts (2,1), (2,2), (1,2); the free beam post is the organiser's
+    expect(res.foga.posts).toBe(3);
+    expect(res.foga.beams).toEqual([]);
     expect(qty(res, DOOR)).toBe(1);
+  });
+
+  it('island (open area, no stand walls): the exhibitor pays the takdrager in full', () => {
+    const v = { ...createVariant('A', { width: 8, depth: 3, type: 'island' }), walls: [{ id: 'w1', from: [3, 0] as [number, number], to: [3, 3] as [number, number] }] };
+    const res = org(v);
+    expect(res.organiser.lines).toEqual([]);
+    expect(qty(res, S.beam)).toBeGreaterThan(0);
+    expect(res.keyFigures.organiserBeamLm).toBe(0);
   });
 
   it('the exhibitor pays: stand walls are their own line, the organiser gets nothing', () => {

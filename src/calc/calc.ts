@@ -6,7 +6,7 @@ import type { Payer, Point, StandWallTerms, Variant } from '../domain/types';
 import { DEFAULT_STAND_WALLS } from '../domain/variant';
 import { builtModules, isStandWall, wallPoints, type BuiltModule } from '../domain/walls';
 import { bom, type Bom } from '../foga/engine';
-import { bomSizes, structureOf } from '../foga/fromVariant';
+import { beamSpecs, bomSizes, structureOf } from '../foga/fromVariant';
 import { RECIPES } from '../foga/recipes';
 import type { FogaStructure } from '../foga/structure';
 import { fogaPart } from '../foga/parts';
@@ -42,7 +42,7 @@ export interface CalcLine {
   terms?: string;
   /** Minutes per handling step for the whole line (from the OMS price list or the product). */
   time: Time;
-  /** Who the line is invoiced to. Only stand walls can go to the organiser. */
+  /** Who the line is invoiced to. Only stand walls and the takdrager that follow them can go to the organiser. */
   payer: Payer;
 }
 
@@ -65,6 +65,8 @@ export interface KeyFigures {
   standWallLm: number;
   /** Part of standWallLm the organiser pays: not on the exhibitor's quote, picking list or work order. */
   organiserWallLm: number;
+  /** Takdrager the organiser pays (all of beamLm, or none), with the posts only they need. */
+  organiserBeamLm: number;
   /** Part of wallLm in inner walls the exhibitor draws (room walls not included). */
   innerWallLm: number;
   /** Part of wallLm that rooms build themselves (sides shared with other walls not included). */
@@ -113,7 +115,7 @@ export interface CalcResult {
   foga: FogaStructure;
   /** Level 2 and 3: the Foga parts list of `foga`. The picking list and the kalkyle's articles show it. */
   bom: Bom;
-  /** Billed to the organiser: the stand walls when the organiser pays them. Outside the exhibitor's sum, margin, time,
+  /** Billed to the organiser: the stand walls when the organiser pays them, and the takdrager that follow them. Outside the exhibitor's sum, margin, time,
    *  `foga` and `bom`, so not on the quote, picking list or work order: the organiser's walls come as their own order
    *  from the OMS, counted once for the hall (two stands back to back share one wall). */
   organiser: { lines: CalcLine[]; sum: number; cost: number };
@@ -194,12 +196,19 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
     }
   }
   const swaps = theirs.filter((m) => m.plate !== standWalls.ral).map((m) => m.plate);
+  // Takdrager follow the stand walls (docs/vegger.md). Every beam the app lays out today is a standard beam, derived from
+  // and supporting the stand walls, so the organiser pays them, with their own posts, when it pays the stand walls. Open
+  // area without stand walls (island) gets no beams from the organiser: the exhibitor pays them in full. Beams the
+  // customer adds as an option (a brush, later) will always be the exhibitor's.
+  const organiserBeams = theirs.length > 0 && beams.segments.length > 0;
+  const ourBeams: BeamLayout = organiserBeams ? { segments: [], posts: new Map(), lm: 0 } : beams;
   const walled = mods.filter((m) => !m.opening);
   const prod = production(v, rules.textile.inFrame, '');
   // Foga structure of what the exhibitor orders: posts, walled modules, headers and beam lengths are counted from it
-  const foga = structureOf({ mods: ours, posts: ourPoints.size + beamPosts, beams, production: prod, swaps });
+  const foga = structureOf({ mods: ours, posts: ourPoints.size + (organiserBeams ? 0 : beamPosts), beams: ourBeams, production: prod, swaps });
   const headers = foga.modules.filter((m) => m.opening).length;
-  const beamLm = foga.beams.reduce((a, b) => a + b.lengthMm, 0) / 1000;
+  const beamLengths = beamSpecs(beams);
+  const beamLm = beamLengths.reduce((a, b) => a + b.lengthMm, 0) / 1000;
   const plateSize = `${rules.wall.plate.width} × ${rules.wall.plate.height} mm`;
   // Wall posts are shared between modules: each module (door and curtain included) carries an equal share of the
   // posts of its builder
@@ -243,18 +252,20 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
     ),
   );
   // The organiser's stand walls, in the organiser's colour, on their own posts
-  const organiserLines = theirs.length ? [{ ...wallLine(standWalls.ral, theirs.length, 'Standvegg', share(theirPoints.size, theirs.length)), payer: 'arrangør' as const }] : [];
+  const organiserLines: CalcLine[] = theirs.length ? [{ ...wallLine(standWalls.ral, theirs.length, 'Standvegg', share(theirPoints.size, theirs.length)), payer: 'arrangør' as const }] : [];
 
-  // Takdrager per metre, its own posts included in the price
-  const nLengths = foga.beams.length;
+  // Takdrager per metre, its own posts included in the price. The organiser's when it follows its stand walls.
+  const nLengths = beamLengths.length;
   const beamMeta = [`${nLengths} ${nLengths === 1 ? 'lengde' : 'lengder'}`, ...(beamPosts ? [`${beamPosts} ${beamPosts === 1 ? 'stolpe' : 'stolper'} inkludert`] : [])];
   const beamUses: Use[] = [
-    ...foga.beams.map((b) => ({ id: ITEM.beam(b.lengthMm - 40), qty: 1 })),
+    ...beamLengths.map((b) => ({ id: ITEM.beam(b.lengthMm - 40), qty: 1 })),
     { id: ITEM.post, qty: beamPosts },
     { id: ITEM.beamLm, qty: beamLm },
     { id: ITEM.beamPost, qty: beamPosts },
   ];
-  add(line(sys.beam, beamLm, { ...built, meta: beamMeta.join(' · ') }, beamUses));
+  const beamLine = line(sys.beam, beamLm, { ...built, meta: beamMeta.join(' · ') }, beamUses);
+  if (organiserBeams) organiserLines.push({ ...beamLine, payer: 'arrangør' });
+  else add(beamLine);
 
   // Door or curtain with header (overstykke), one product each
   const openingCounts = countBy(mods.flatMap((m) => (m.opening ? [m.opening.product] : [])));
@@ -355,6 +366,7 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
       wallLm: walled.length,
       standWallLm: walled.filter((m) => kindOf(m) === 'stand').length,
       organiserWallLm: theirs.length,
+      organiserBeamLm: organiserBeams ? beamLm : 0,
       innerWallLm: walled.filter((m) => kindOf(m) === 'inner').length,
       roomWallLm: walled.filter((m) => kindOf(m) === 'room').length,
       swapLm: swaps.length,
