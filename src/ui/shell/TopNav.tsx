@@ -4,12 +4,13 @@ import type { Project } from '../../domain/types'
 import { customerName, isFixedField, projectField } from '../../domain/variant'
 import { Button, IconButton } from '../controls'
 
-export type Page = 'skisse' | 'tilbud' | 'produksjon' | 'produkter'
+export type Page = 'skisse' | 'tilbud' | 'produksjon' | 'plukkliste' | 'produkter'
 
 const PAGES: { key: Page; name: string }[] = [
   { key: 'skisse', name: 'Standskisse' },
   { key: 'tilbud', name: 'Tilbud' },
   { key: 'produksjon', name: 'Produksjon' },
+  { key: 'plukkliste', name: 'Plukkliste' },
   { key: 'produkter', name: 'Produktliste' },
 ]
 

@@ -109,9 +109,9 @@ describe('textile walls', () => {
   it('furniture collides with the frame only along its span and on its face', () => {
     let v = createVariant('A', { width: 6, depth: 4, type: 'row' });
     v = { ...v, textiles: [{ id: 't1', wallId: 'side-back', from: 0, width: 2, side: 1 }] };
-    // A chair 5 cm from the back wall fits beside the frame, but not in front of it
+    // A chair 3 cm from the back wall fits beside the 40 mm (43TX) frame, but not in front of it
     const d = ctx.footprint('5186')!.d;
-    const at = (x: number): Variant => ({ ...v, objects: [{ id: 'i1', product: '5186', x, y: 0.05 + d / 2, rot: 0 }] });
+    const at = (x: number): Variant => ({ ...v, objects: [{ id: 'i1', product: '5186', x, y: 0.03 + d / 2, rot: 0 }] });
     expect(conflicts(at(4), ctx).size).toBe(0);
     expect(conflicts(at(1), ctx).size).toBe(1);
   });
