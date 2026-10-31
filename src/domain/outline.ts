@@ -4,7 +4,7 @@
 // corner i to corner i + 1, so the room is on the left (side 1) of every side and its outside on the right (−1).
 // The 1 m cells inside an outline and the outline around a set of cells convert both ways; every change to an
 // outline goes through the cells, so a shape that is not a single loop without holes is refused.
-import { moduleKey } from './grid';
+import { moduleKey, wallModules } from './grid';
 import type { Point } from './types';
 
 export interface Rect {
@@ -39,6 +39,9 @@ export function sideLength(o: Point[], i: number): number {
 
 export const isHorizontal = ([a, b]: [Point, Point]) => a[1] === b[1];
 
+/** Unit direction of a side, from its start to its end. */
+const direction = ([a, b]: [Point, Point]): Point => [Math.sign(b[0] - a[0]), Math.sign(b[1] - a[1])];
+
 export const isRectOutline = (o: Point[]) => o.length === 4;
 
 /** The bounding rectangle. */
@@ -64,11 +67,6 @@ function inside(o: Point[], x: number, y: number): boolean {
   return c;
 }
 
-/** True when the point lies on a side, within `tol`. */
-export function onOutline(o: Point[], x: number, y: number, tol = 1e-9): boolean {
-  return nearestSide(o, x, y, tol) !== undefined;
-}
-
 /** The side the point lies on (within `tol` of the side line, and of its ends). */
 export function nearestSide(o: Point[], x: number, y: number, tol: number): number | undefined {
   const i = outlineSides(o).findIndex(([a, b]) => {
@@ -83,7 +81,7 @@ export function nearestSide(o: Point[], x: number, y: number, tol: number): numb
 }
 
 /** True when the point is on the floor inside the outline (the outline itself excluded). */
-export const contains = (o: Point[], x: number, y: number) => !onOutline(o, x, y) && inside(o, x, y);
+export const contains = (o: Point[], x: number, y: number) => nearestSide(o, x, y, 1e-9) === undefined && inside(o, x, y);
 
 /** The 1 m cells inside the outline. */
 export function cellsOf(o: Point[]): Cell[] {
@@ -214,10 +212,7 @@ export function moveSide(o: Point[], i: number, k: number): Point[] | null {
 
 /** Module keys around an outline. */
 export function rimKeys(o: Point[]): string[] {
-  return outlineSides(o).flatMap(([a, b], i) => {
-    const [dx, dy] = [Math.sign(b[0] - a[0]), Math.sign(b[1] - a[1])];
-    return Array.from({ length: sideLength(o, i) }, (_, t) => moduleKey([a[0] + dx * t, a[1] + dy * t], [a[0] + dx * (t + 1), a[1] + dy * (t + 1)]));
-  });
+  return outlineSides(o).flatMap(([from, to]) => wallModules({ id: '', from, to }).map((m) => m.key));
 }
 
 /** True when two outlines share floor (touching sides do not count). */
@@ -240,13 +235,14 @@ export function matchSides(old: Point[], next: Point[], shift: (i: number) => Po
     const [sx, sy] = shift(i);
     const a: Point = [a0[0] + sx, a0[1] + sy];
     const b: Point = [b0[0] + sx, b0[1] + sy];
-    const d: Point = [Math.sign(b[0] - a[0]), Math.sign(b[1] - a[1])];
+    const d = direction([a, b]);
     const along = (p: Point) => p[0] * d[0] + p[1] * d[1];
     const across = (p: Point) => p[0] * d[1] - p[1] * d[0];
     let best: { side: number; offset: number } | null = null;
     let most = 0;
     ns.forEach(([c, e], n) => {
-      if (Math.sign(e[0] - c[0]) !== d[0] || Math.sign(e[1] - c[1]) !== d[1] || across(c) !== across(a)) return;
+      const dn = direction([c, e]);
+      if (dn[0] !== d[0] || dn[1] !== d[1] || across(c) !== across(a)) return;
       const lap = Math.min(along(e), along(b)) - Math.max(along(c), along(a));
       if (lap > most) {
         most = lap;
@@ -260,9 +256,10 @@ export function matchSides(old: Point[], next: Point[], shift: (i: number) => Po
 /** The outline moved in by `e` on every side (for a selection mark inside the walls). */
 export function insetOutline(o: Point[], e: number): Point[] {
   const n = o.length;
-  const inward = ([a, b]: [Point, Point]): Point => {
-    const d = [Math.sign(b[0] - a[0]), Math.sign(b[1] - a[1])];
-    return [-d[1], d[0]];
+  // The left normal of a side looks into the room
+  const inward = (s: [Point, Point]): Point => {
+    const [dx, dy] = direction(s);
+    return [-dy, dx];
   };
   return o.map((p, i) => {
     const m = inward(outlineSide(o, (i + n - 1) % n));

@@ -15,7 +15,7 @@ import { BORDER, BORDER_STRONG, BLOCK, CANVAS, INK, INK_FAINT, INK_MUTED, LAYER_
 import { applyDrop, decorDrag, endDecorDrag, type DecorDrag } from '../dnd'
 import { dragRoom, dragWall, dropObject, dropRoom, roomDrag, type RoomDrag, type WallDrag } from '../drag'
 import { roomAt, roomName, roomSideAt, roomSize, sideIsHorizontal } from '../../domain/rooms'
-import { bounds, insetOutline, labelPoint, outlineSides } from '../../domain/outline'
+import { bounds, insetOutline, isHorizontal, labelPoint, outlineSides } from '../../domain/outline'
 import { fmt } from '../format'
 import { idx, place, plateColor, productOf, rules } from '../env'
 import { findMotif } from '../motifs'
@@ -767,7 +767,7 @@ function RoomHandles({ r }: { r: Room }) {
       {outlineSides(r.outline).map(([a, b], i) => {
         const mx = (a[0] + b[0]) / 2
         const my = (a[1] + b[1]) / 2
-        const hz = a[1] === b[1]
+        const hz = isHorizontal([a, b])
         return <rect key={i} x={mx - (hz ? 0.2 : 0.06)} y={my - (hz ? 0.06 : 0.2)} width={hz ? 0.4 : 0.12} height={hz ? 0.12 : 0.4} rx={0.05} fill={CANVAS} stroke={INK} strokeWidth={0.03} />
       })}
     </g>
