@@ -1090,6 +1090,13 @@ kbd {
   font: 400 12px var(--font-ui);
   color: rgb(var(--ink-muted));
 }
+/* Note under a calc group, e.g. what the organiser pays */
+.cg-note {
+  margin: 6px 0 0 16px;
+  font: 400 11.5px var(--font-ui);
+  color: rgb(var(--ink-faint));
+  text-wrap: pretty;
+}
 .calc-foot {
   flex: none;
   padding: 14px 20px 16px;

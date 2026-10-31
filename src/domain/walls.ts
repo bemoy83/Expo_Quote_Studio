@@ -55,6 +55,10 @@ export function wallPoints(mods: readonly Module[]): Map<string, Point> {
  */
 export const isStandWall = (w: Wall) => w.id.startsWith('side-');
 
+/** Stand wall (from the stand type), room wall (a side of a room) or inner wall (drawn, tilvalg). docs/vegger.md */
+export type WallKind = 'stand' | 'room' | 'inner';
+export const wallKind = (w: Wall): WallKind => (isStandWall(w) ? 'stand' : w.room ? 'room' : 'inner');
+
 /** The side a stand wall belongs to. */
 export const standWallSide = (w: Wall): Side | null => (isStandWall(w) ? (w.id.split('-')[1] as Side) : null);
 

@@ -60,25 +60,26 @@ export function CalcPanel({ res, name, onHover, onQuote }: { res: CalcResult; na
                 </span>
               </div>
               {g.lines.map((l, i) => (
-                <div key={l.artnr + l.name + i} className="cl" onMouseEnter={() => onHover(layerOf(l.group))}>
-                  <span className="n">{l.name}</span>
-                  <span className="s">{kr(l.sum)}</span>
-                  <span className="meta">
-                    {fmt(l.qty)} {l.unit} × {kr(l.price)}
-                    {l.meta ? ` · ${l.meta}` : ''}
-                    {l.placeholder && <span className="ph"> · plassholder</span>}
-                  </span>
-                  <span className="meta cost">
-                    {l.strategy === 'sum' ? 'sum av artikler' : 'fast pris'}
-                    {l.cost === null ? <span className="ph"> · kost mangler</span> : ` · kost ${kr(l.cost)} · DG ${pct(l.dg ?? 0)}`}
-                    {l.terms ? ` · ${l.terms}` : ''}
-                  </span>
-                </div>
+                <Line key={l.artnr + l.name + i} l={l} onHover={onHover} />
               ))}
               <Articles lines={articles.filter((x) => mainGroupOf(x.group) === g.id)} open={open.has(g.id)} onToggle={() => toggle(g.id)} />
             </section>
           )
         })}
+        {res.organiser.lines.length > 0 && (
+          <section className="cg">
+            <div className="cg-head" onMouseEnter={() => onHover('walls')}>
+              <span className="sq" />
+              <span className="name">Faktureres arrangør</span>
+              <span className="dg">{dgText(res.organiser.lines)}</span>
+              <span className="num">{kr(res.organiser.sum)}</span>
+            </div>
+            {res.organiser.lines.map((l, i) => (
+              <Line key={l.artnr + i} l={l} onHover={onHover} />
+            ))}
+            <p className="cg-note">Ikke i standens sum, plukkliste eller arbeidsordre. Arrangøren bestiller standvegger og takdrager samlet i OMS.</p>
+          </section>
+        )}
       </div>
       <div className="calc-foot">
         <div className="sum">
@@ -103,6 +104,25 @@ export function CalcPanel({ res, name, onHover, onQuote }: { res: CalcResult; na
         </Button>
       </div>
     </aside>
+  )
+}
+
+function Line({ l, onHover }: { l: CalcLine; onHover: (h: Highlight) => void }) {
+  return (
+    <div className="cl" onMouseEnter={() => onHover(layerOf(l.group))}>
+      <span className="n">{l.name}</span>
+      <span className="s">{kr(l.sum)}</span>
+      <span className="meta">
+        {fmt(l.qty)} {l.unit} × {kr(l.price)}
+        {l.meta ? ` · ${l.meta}` : ''}
+        {l.placeholder && <span className="ph"> · plassholder</span>}
+      </span>
+      <span className="meta cost">
+        {l.strategy === 'sum' ? 'sum av artikler' : 'fast pris'}
+        {l.cost === null ? <span className="ph"> · kost mangler</span> : ` · kost ${kr(l.cost)} · DG ${pct(l.dg ?? 0)}`}
+        {l.terms ? ` · ${l.terms}` : ''}
+      </span>
+    </div>
   )
 }
 

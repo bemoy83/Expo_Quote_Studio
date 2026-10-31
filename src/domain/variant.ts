@@ -1,5 +1,5 @@
 import { CELL, cellKey } from './grid';
-import type { Project, Stand, Variant, VariantName } from './types';
+import type { Project, Stand, StandWallTerms, Variant, VariantName } from './types';
 import { standardWalls } from './walls';
 
 export const DEFAULT_PLATE = '9010';
@@ -36,6 +36,11 @@ export const FIXED_PROJECT_FIELDS = [
   { id: 'prosjekt', name: 'Prosjekt' },
   { id: 'standnr', name: 'Standnr.' },
 ] as const;
+
+/** The organiser pays the stand walls in most fairs (about 90 %), and they are white. */
+export const DEFAULT_STAND_WALLS: StandWallTerms = { payer: 'arrangør', ral: '9010' };
+
+export const standWallTerms = (p: Project): StandWallTerms => p.standWalls ?? DEFAULT_STAND_WALLS;
 
 export function createProject(): Project {
   return { fields: FIXED_PROJECT_FIELDS.map((f) => ({ ...f, value: '' })) };

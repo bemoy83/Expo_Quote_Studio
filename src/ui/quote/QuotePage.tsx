@@ -5,11 +5,11 @@ import type { CalcResult } from '../../calc/calc'
 import type { Project, Room, Variant } from '../../domain/types'
 import { roomName, roomOpenings, roomSize } from '../../domain/rooms'
 import { dateText, DELIVERY_FIELDS, today, validUntil } from '../../domain/delivery'
-import { isFixedField, projectField } from '../../domain/variant'
+import { isFixedField, projectField, standWallTerms } from '../../domain/variant'
 import { Button } from '../controls'
 import { idx, plateName, productOf, rules } from '../env'
 import { count, fmt, kr, mm } from '../format'
-import { beamSummary, frameCount, TYPE_NAME } from '../names'
+import { beamSummary, capitalise, frameCount, fromOrganiser, TYPE_NAME } from '../names'
 import { PLAN_MARGIN, PlanPreview } from '../plan/PlanView'
 import { PageBand } from '../shell/PageBand'
 import { VariantTabs } from '../shell/VariantTabs'
@@ -55,11 +55,15 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
   const facts: [string, string][] = [
     [`${v.stand.width} × ${v.stand.depth} m`, `${fmt(k.area)} m² · ${TYPE_NAME[v.stand.type]} · ${k.openSides} åpne sider`],
     [
-      `${fmt(k.wallLm)} lm vegg`,
-      [`veggplate ${plates.map((r) => `${plateName(r).toLowerCase()} RAL ${r}`).join(', ')}`, ...openingNames].join(' · '),
+      `${fmt(k.wallLm - k.organiserWallLm)} lm vegg`,
+      [
+        `veggplate ${plates.map((r) => `${plateName(r).toLowerCase()} RAL ${r}`).join(', ')}`,
+        ...openingNames,
+        ...(k.organiserWallLm ? [`${fmt(k.organiserWallLm)} lm standvegg fra arrangøren`] : []),
+      ].join(' · '),
     ],
     k.beamLm
-      ? [`${fmt(k.beamLm)} m takdrager`, beamSummary(k)]
+      ? [`${fmt(k.beamLm)} m takdrager`, k.organiserBeamLm ? 'fra arrangøren' : beamSummary(k)]
       : ['Uten takdrager', 'ingen åpne sider å avstive'],
     k.floorTotal ? [floorNames.join(', '), `${fmt(k.floorTotal)} m² ferdig lagt${v.floor.protection ? ' med monteringsbeskyttelse' : ''}`] : ['Hallgulv uten belegg', ''],
   ]
@@ -76,6 +80,8 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
   if (k.textileM2) facts.push([`${fmt(k.textileM2)} m² tekstilvegg`, `${frameCount(res.production.pieces.length)} InFrame`])
 
   const unpriced = v.loose.filter((l) => !l.price)
+  // Stand walls and takdrager the organiser pays: not the exhibitor's lines, only named
+  const organiser = fromOrganiser(k, plateName(standWallTerms(project).ral))
 
   return (
     <>
@@ -177,6 +183,7 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
                 <span className="num muted">kr</span>
               </div>
             </div>
+            {organiser && <p className="foot">{capitalise(organiser)} leveres av arrangøren og inngår ikke i tilbudet.</p>}
             {placeholders > 0 && (
               <p className="foot">
                 * {count(placeholders, 'linje', 'linjer')} har plassholderpris og må bekreftes før tilbudet sendes.

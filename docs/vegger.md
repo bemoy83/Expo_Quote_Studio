@@ -31,22 +31,57 @@ hva slags vegg det er.
 1. **Kjøpt areal.** Standvegger er knyttet til arealet utstilleren har kjøpt. En senere versjon kan hente standtypen
    fra kunden sitt kjøpte areal, slik at valget av standtype faller bort.
 2. **Fakturamottaker.** Messearrangøren baker ofte standveggene inn i prisen for standarealet. Løpemeter standvegg kan
-   derfor faktureres arrangøren, mens innervegger og romvegger faktureres utstilleren. Ikke bygget ennå.
+   derfor faktureres arrangøren, mens innervegger og romvegger faktureres utstilleren. Se under.
 
-## Farge på standvegg (ikke bygget)
+## Hvem betaler standveggene
+
+Bygget 31.10.2026. Prosjektet (messen) har innstillingen **Standvegger betales av: Arrangør / Utstiller**, standard
+Arrangør, og **Arrangørens farge**, standard hvit RAL 9010. Den skal senere komme fra prosjektet i OMS, sammen med kjøpt
+areal. I koden: `Project.standWalls` og `standWallTerms` (`domain/variant.ts`).
 
 Der arrangøren dekker standveggene (rundt 90 % av arrangementene), er de nesten alltid hvite. Farge på en standvegg er
 da et valg utstilleren betaler selv, men bare for **platebytte**: ny plate i valgt RAL med montering og demontering i
-den eksisterende veggen. Rammen, stolpene og løpemeteren vegg er fortsatt arrangørens.
+den eksisterende veggen. Rammen, stolpene og løpemeteren vegg er fortsatt arrangørens, i arrangørens farge.
 
 | Vegg | Utstiller betaler | Arrangør betaler |
 | --- | --- | --- |
-| Standvegg, hvit | Ingenting | Veggen per løpemeter |
-| Standvegg, farget | Platebytte (plate i RAL + montering/demontering) | Veggen per løpemeter |
-| Innervegg eller romvegg | Veggen per løpemeter i valgt RAL | Ingenting |
+| Standvegg i arrangørens farge | Ingenting | Veggen per løpemeter |
+| Standvegg i annen farge | 6125-RAL Platebytte standvegg per lm | Veggen per løpemeter i arrangørens farge |
+| Innervegg eller romvegg | 6120-RAL veggen per løpemeter | Ingenting |
+| Standvegg når utstilleren betaler | 6120-RAL veggen per løpemeter, egen linje «Standvegg» | Ingenting |
 
-I dag regnes alle vegger som utstillerens, med full veggpris i valgt farge. Fakturamottaker per linje og et eget
-salgsprodukt for platebytte gjenstår.
+Platebytte prises som sum: platen i RAL og ledd for platebytte (ut og inn, montering og demontering, med egen tid).
+Art.nr. 6125 er en plassholder.
+
+### Takdrager følger standveggene
+
+Låst av Bjørn 31.10.2026. Samme regel for fakturamottaker gjelder takdragere som følger av standveggene.
+
+- **Standard takdrager** er de appen legger selv langs de åpne sidene i dag. De følger av og støtter standveggene, og
+  dermed det kjøpte arealet. Betaler arrangøren standveggene, betaler arrangøren også disse takdragerne, med stolpene
+  bare de trenger. De er da ute av tilbudet, plukklisten og arbeidsordren, som standveggene.
+- **Åpent areal uten standvegger** (øystand) får som regel ikke takdrager fra arrangøren. Utstilleren betaler dem fullt.
+- **Takdrager som tilvalg**, en pensel for kundens egne ønsker utover det veggene gir, kommer senere. De er alltid
+  utstillerens, på samme måte som innervegger. Takdragere trenger derfor egen klassifisering, slik veggene har:
+  standard (følger standveggene) og tilvalg.
+
+I koden: `organiserBeams` i `calc/calc.ts` og nøkkeltallet `organiserBeamLm`.
+
+### Hva utstilleren får, og hva arrangøren får
+
+Hver kalkylelinje har en fakturamottaker (`CalcLine.payer`). Standveggene arrangøren betaler er ikke med i noe av det
+utstilleren får:
+
+- **Tilbudet** viser bare utstillerens linjer, og én tekst uten pris: «Standvegger 10 lm i hvit og takdrager 10 m leveres av arrangøren».
+- **Plukklisten og arbeidsordren** viser bare det utstilleren har bestilt (Bjørn 31.10.2026). Arrangørens vegger kommer
+  som en egen bestilling fra OMS for hele hallen. Ellers ville de blitt plukket per stand, og en vegg mellom to stander
+  rygg i rygg ville blitt telt to ganger. Platene til platebytte plukkes hos utstilleren.
+- **Stolper**: en stolpe som står i arrangørens standvegg er arrangørens, også når en innervegg eller et rom står inntil.
+  Utstilleren betaler og plukker bare stolpene i egne vegger.
+- **Kalkylen** viser arrangørens linjer i en egen blokk, «Faktureres arrangør», med pris, kost og DG. Den er ikke med i
+  standens sum, margin eller tid. Den er et grunnlag per stand; fakturaen til arrangøren lages i OMS.
+- **Nøkkeltall**: standvegg, innervegg og romvegg i lm hver for seg (`standWallLm`, `organiserWallLm`, `innerWallLm`,
+  `roomWallLm`, `swapLm`), og takdrager fra arrangøren (`organiserBeamLm`).
 
 ## Unntak som ikke er bygget
 

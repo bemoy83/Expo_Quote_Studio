@@ -29,4 +29,6 @@ export interface FogaStructure {
   modules: ModuleSpec[];
   beams: BeamSpec[];
   frames: FrameSpec[];
+  /** Plates (RAL) picked to swap into a stand wall the organiser builds: plate only, the wall is not in `modules`. */
+  swaps?: string[];
 }

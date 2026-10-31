@@ -168,8 +168,21 @@ export interface Delivery {
   demontering?: string;
 }
 
+/** Who an invoice line goes to. Stand walls can be billed to the fair organiser (docs/vegger.md). */
+export type Payer = 'utstiller' | 'arrangør';
+
+/** Who pays the stand walls of the stand type, and the colour the organiser delivers them in. Set per project (the
+ *  fair): later from the OMS project, with the purchased area. Any other colour on a stand wall the organiser pays is a
+ *  plate swap the exhibitor pays. */
+export interface StandWallTerms {
+  payer: Payer;
+  ral: string;
+}
+
 /** Customer name, project and stand no. are fixed fields; more can be added. */
 export interface Project {
   fields: ProjectField[];
   delivery?: Delivery;
+  /** Missing: DEFAULT_STAND_WALLS (domain/variant.ts). */
+  standWalls?: StandWallTerms;
 }

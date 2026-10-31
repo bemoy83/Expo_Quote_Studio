@@ -91,7 +91,7 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   const plateExtra = plate.h - (z.postLength - railsH);
   const header = z.postLength - r.door.floorGap - r.door.leaf - r.door.topGap;
   const addPlate = (group: BomGroup, ral: string, h: number, note: string) =>
-    put(group, `${ral}|${h}`, { artnr: '', name: fogaPart(plate.code).name, detail: `${plate.w} × ${h} mm${note}`, preassembled: false, ral }, 1, h);
+    put(group, `${ral}|${h}|${note}`, { artnr: '', name: fogaPart(plate.code).name, detail: `${plate.w} × ${h} mm${note}`, preassembled: false, ral }, 1, h);
 
   // Stolper: wall and takdrager alike, stored with the foot mounted
   put(
@@ -115,6 +115,7 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
     unit(group, 'Bunnskinne', r.wall.bottomRail, rail, r.wall.railCoupling, n, note);
   }
   for (const m of walled) addPlate(BOM_GROUP.plates, m.plate, plate.h, '');
+  for (const ral of s.swaps ?? []) addPlate(BOM_GROUP.plates, ral, plate.h, ' · platebytte i standvegg');
   for (const m of headers) addPlate(BOM_GROUP.header, m.plate, header - railsH + plateExtra, ' · overstykke');
 
   // Takdrager: 292 between the posts with two 600 in each end, one piece per length

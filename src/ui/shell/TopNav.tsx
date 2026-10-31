@@ -1,9 +1,10 @@
 import { ChevronDown, Download, FilePlus, FolderOpen, Plus, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { DELIVERY_FIELDS } from '../../domain/delivery'
-import type { Delivery, Project } from '../../domain/types'
-import { customerName, isFixedField, projectField } from '../../domain/variant'
+import type { Delivery, Payer, Project } from '../../domain/types'
+import { customerName, isFixedField, projectField, standWallTerms } from '../../domain/variant'
 import { Button, IconButton } from '../controls'
+import { idx } from '../env'
 
 export type Page = 'skisse' | 'tilbud' | 'produksjon' | 'plukkliste' | 'arbeidsordre' | 'produkter'
 
@@ -81,6 +82,8 @@ function ProjectPopover({ project, setProject, onClose }: { project: Project; se
   const update = (id: string, patch: { name?: string; value?: string }) =>
     setProject({ ...project, fields: project.fields.map((f) => (f.id === id ? { ...f, ...patch } : f)) })
   const setDate = (key: keyof Delivery, value: string) => setProject({ ...project, delivery: { ...project.delivery, [key]: value || undefined } })
+  const terms = standWallTerms(project)
+  const setTerms = (patch: { payer?: Payer; ral?: string }) => setProject({ ...project, standWalls: { ...terms, ...patch } })
   const add = () => {
     let n = 1
     while (project.fields.some((f) => f.id === `felt${n}`)) n++
@@ -115,6 +118,32 @@ function ProjectPopover({ project, setProject, onClose }: { project: Project; se
           <span />
         </div>
       ))}
+      <div className="pop-title pop-sect">Standvegger</div>
+      <div className="pop-sub">
+        Veggene standtypen gir, og takdragerne som følger dem. Betaler arrangøren, er de ikke på tilbudet, plukklisten eller arbeidsordren. Annen farge enn arrangørens blir platebytte for
+        utstilleren.
+      </div>
+      <div className="row">
+        <label htmlFor="ps-payer">Betales av</label>
+        <select id="ps-payer" className="field" value={terms.payer} onChange={(e) => setTerms({ payer: e.target.value as Payer })}>
+          <option value="arrangør">Arrangør</option>
+          <option value="utstiller">Utstiller</option>
+        </select>
+        <span />
+      </div>
+      {terms.payer === 'arrangør' && (
+        <div className="row">
+          <label htmlFor="ps-ral">Arrangørens farge</label>
+          <select id="ps-ral" className="field" value={terms.ral} onChange={(e) => setTerms({ ral: e.target.value })}>
+            {[...idx.wallByRal.values()].map(({ variant }) => (
+              <option key={variant.ral} value={variant.ral}>
+                {variant.name} · RAL {variant.ral}
+              </option>
+            ))}
+          </select>
+          <span />
+        </div>
+      )}
     </div>
   )
 }

@@ -4,8 +4,8 @@ import { calc, type CalcResult } from '../calc/calc'
 import { r2 } from '../calc/referenceStands'
 import { addObject } from '../domain/objects'
 import { removeRoom, roomSize } from '../domain/rooms'
-import type { Variant } from '../domain/types'
-import { customerName, fillFloor } from '../domain/variant'
+import type { StandWallTerms, Variant } from '../domain/types'
+import { customerName, fillFloor, standWallTerms } from '../domain/variant'
 import { newSketch, parse, serialize, type Sketch } from '../persistence/file'
 import { loadSketch, saveSketch } from '../persistence/storage'
 import { initState, reduce } from '../state/history'
@@ -42,17 +42,20 @@ function exampleSketch(): Sketch {
 }
 
 // calc is pure; cache per variant object so unchanged variants are not recalculated.
-// A new catalog or new rules (product list, production assumptions) start a fresh cache.
+// A new catalog or new rules (product list, production assumptions) start a fresh cache, and so do new stand-wall terms
+// (the project says who pays the stand walls).
 let calcCache = new WeakMap<Variant, CalcResult>()
 let cacheVersion = getVersion()
-const calcOf = (v: Variant) => {
-  if (cacheVersion !== getVersion()) {
+let cacheTerms: StandWallTerms | null = null
+const calcOf = (v: Variant, terms: StandWallTerms) => {
+  if (cacheVersion !== getVersion() || cacheTerms !== terms) {
     calcCache = new WeakMap()
     cacheVersion = getVersion()
+    cacheTerms = terms
   }
   let r = calcCache.get(v)
   if (!r) {
-    r = calc(v, rules, catalog)
+    r = calc(v, rules, catalog, terms)
     calcCache.set(v, r)
   }
   return r
@@ -63,7 +66,9 @@ export default function App() {
   const [state, dispatch] = useReducer(reduce, undefined, () => initState(loadSketch() ?? exampleSketch()))
   const { sketch, current } = state
   const v = sketch.variants[current]
-  const res = calcOf(v)
+  const terms = standWallTerms(sketch.project)
+  const calcFor = useCallback((x: Variant) => calcOf(x, terms), [terms])
+  const res = calcFor(v)
   const [page, setPage] = useState<Page>('skisse')
   const [view, setView] = useState<'plan' | '3d'>('plan')
   const [tab, setTabRaw] = useState('stand')
@@ -160,7 +165,7 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey)
   })
 
-  const others = sketch.variants.filter((_, i) => i !== current).map((x) => ({ name: x.name, sum: calcOf(x).sum }))
+  const others = sketch.variants.filter((_, i) => i !== current).map((x) => ({ name: x.name, sum: calcFor(x).sum }))
   const k = res.keyFigures
   const plateRal = v.defaultPlate
 
@@ -284,9 +289,9 @@ export default function App() {
                 label="Vegg"
                 value={fmt(k.wallLm)}
                 unit="lm"
-                sub={[k.roomWallLm ? `inkl. ${fmt(k.roomWallLm)} lm rom` : '', k.openings ? count(k.openings, 'åpning', 'åpninger') : ''].filter(Boolean).join(' · ') || undefined}
+                sub={[wallSplit(k), k.openings ? count(k.openings, 'åpning', 'åpninger') : ''].filter(Boolean).join(' · ') || undefined}
               />
-              <Kpi label="Takdrager" value={fmt(k.beamLm)} unit="m" />
+              <Kpi label="Takdrager" value={fmt(k.beamLm)} unit="m" sub={k.organiserBeamLm ? 'fra arrangør' : undefined} />
               {k.textileM2 > 0 && <Kpi label="Tekstilvegg" value={fmt(k.textileM2)} unit="m²" sub={frameCount(res.production.pieces.length)} />}
               <span className="spacer" />
               <Kpi
@@ -371,7 +376,7 @@ export default function App() {
           </div>
         </>
       ) : page === 'tilbud' ? (
-        <QuotePage project={sketch.project} variants={sketch.variants} current={current} onSelect={selectVariant} calcOf={calcOf} />
+        <QuotePage project={sketch.project} variants={sketch.variants} current={current} onSelect={selectVariant} calcOf={calcFor} />
       ) : page === 'produksjon' ? (
         <ProductionPage
           variants={sketch.variants}
@@ -382,9 +387,9 @@ export default function App() {
           onToast={showToast}
         />
       ) : page === 'plukkliste' ? (
-        <PickingPage variants={sketch.variants} current={current} onSelect={selectVariant} calcOf={calcOf} />
+        <PickingPage project={sketch.project} variants={sketch.variants} current={current} onSelect={selectVariant} calcOf={calcFor} />
       ) : page === 'arbeidsordre' ? (
-        <WorkOrderPage project={sketch.project} variants={sketch.variants} current={current} onSelect={selectVariant} calcOf={calcOf} />
+        <WorkOrderPage project={sketch.project} variants={sketch.variants} current={current} onSelect={selectVariant} calcOf={calcFor} />
       ) : (
         <CatalogPage onToast={showToast} />
       )}
@@ -422,6 +427,12 @@ function hint(tool: Tool, brush: Brush | null): string {
     case 'object':
       return erase ? 'Klikk et møbel for å fjerne det' : `Klikk i planen for å sette ut ${productOf(brush?.kind === 'object' ? brush.product : '')?.name.toLowerCase() ?? 'varen'}`
   }
+}
+
+/** Stand walls apart from inner and room walls, and who pays them. */
+function wallSplit(k: CalcResult['keyFigures']) {
+  if (!k.standWallLm || k.standWallLm === k.wallLm) return k.organiserWallLm ? 'standvegg fra arrangør' : ''
+  return `${fmt(k.standWallLm)} standvegg${k.organiserWallLm ? ' fra arrangør' : ''} · ${fmt(k.wallLm - k.standWallLm)} inner`
 }
 
 function Kpi({ label, value, unit, sub }: { label: string; value: string; unit?: string; sub?: string }) {

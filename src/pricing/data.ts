@@ -33,6 +33,8 @@ export const ITEM = {
   wallFixing: '520',
   print: 'trykk',
   module: 'montering-modul',
+  /** Swapping the plate of an existing stand wall: plate out and the new one in, both ways. */
+  plateSwap: 'platebytte',
   beamLm: 'montering-takdrager',
   beamPost: 'montering-takdragerstolpe',
   frame: 'handtering-ramme',
@@ -65,6 +67,7 @@ const ITEMS: PriceItem[] = [
   item(ITEM.print, 'Trykt tekstil med silikonkant, per m²', 'm²', 260, 470, undefined, 'salg'),
   // Handling that belongs to the product (montering on site, up and down), at the montør's rate
   item(ITEM.module, 'Montering per veggmodul', 'stk', 325, 590, onSite(18, 12)),
+  item(ITEM.plateSwap, 'Platebytte i eksisterende vegg', 'stk', 110, 200, onSite(6, 4)),
   item(ITEM.beamLm, 'Montering takdrager per meter', 'm', 98, 175, onSite(6, 3)),
   item(ITEM.beamPost, 'Montering takdragerstolpe', 'stk', 163, 295, onSite(9, 6)),
   item(ITEM.frame, 'Håndtering av løse rammedeler per ramme', 'stk', 80, 140, pvt(3, 2, 2)),

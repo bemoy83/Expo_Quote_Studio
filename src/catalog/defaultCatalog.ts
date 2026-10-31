@@ -56,6 +56,18 @@ const products: Product[] = [
     pricing: 'sum',
     variants: PLATES.map(([ral, name, color]) => ({ artnr: `6120-${ral}`, name, ral, color, price: 870, placeholder: true })),
   },
+  // Coloured plate in a stand wall the organiser pays: the exhibitor pays the plate and swapping it (docs/vegger.md).
+  // Art.nr 6125 is a placeholder.
+  {
+    id: '6125',
+    name: 'Platebytte standvegg',
+    kind: 'system',
+    unit: 'lm',
+    group: 'vegg.vegger',
+    dim: 'plate i RAL med montering og demontering',
+    pricing: 'sum',
+    variants: PLATES.map(([ral, name, color]) => ({ artnr: `6125-${ral}`, name, ral, color, price: 400, placeholder: true })),
+  },
   one('6110', 'Takdrager 80 × 20 mm', 'system', 'lm', 'vegg.takdrager', 420, { dim: 'stolper inkludert', pricing: 'sum' }),
   one('6130', 'Dør med overstykke', 'object', 'stk', 'vegg.dorer', 2620, { opening: 'door', pricing: 'sum' }),
   one('6131', 'Forheng med overstykke', 'object', 'stk', 'vegg.dorer', 870, { dim: 'i åpning 960 mm', opening: 'curtain', pricing: 'sum' }),
@@ -197,6 +209,7 @@ export const DEFAULT_CATALOG: Catalog = {
   products,
   system: {
     wall: '6120',
+    plateSwap: '6125',
     beam: '6110',
     textile: '8000',
     foil: '8020',
