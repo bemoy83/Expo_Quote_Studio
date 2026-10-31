@@ -1,12 +1,12 @@
 // Plukkliste: what goes on the truck, by product. Foga parts come from the Foga engine (src/foga); loose goods
-// (floor, furniture, counted items, doors and curtains) from the calc. Open Foga questions are shown, never guessed.
+// (floor, furniture, counted items, doors and curtains) from the calc. Rules behind it: docs/foga-system.md.
 import { useMemo } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import type { Variant } from '../../domain/types'
 import { bom } from '../../foga/engine'
 import { bomSizes, fromVariant } from '../../foga/fromVariant'
 import { RECIPES } from '../../foga/recipes'
-import { catalog, plateName, productOf, rules } from '../env'
+import { catalog, plateName, rules } from '../env'
 import { count, fmt } from '../format'
 import { PageBand } from '../shell/PageBand'
 import { VariantTabs } from '../shell/VariantTabs'
@@ -23,13 +23,17 @@ const isLoose = (id: string) => id === 'floor' || id === 'openings' || id.starts
 
 export function PickingPage({ variants, current, onSelect, calcOf }: Props) {
   const v = variants[current]
-  const B = useMemo(() => bom(fromVariant(v, rules, (a) => productOf(a)?.opening), RECIPES, bomSizes(rules)), [v])
+  const B = useMemo(() => bom(fromVariant(v, rules), RECIPES, bomSizes(rules)), [v])
   // The header (overstykke) is built from Foga parts above, so it is not picked as a product
   const loose = calcOf(v)
     .groups.filter((g) => isLoose(g.id))
     .map((g) => ({ ...g, lines: g.lines.filter((l) => l.artnr !== catalog.system.header) }))
     .filter((g) => g.lines.length)
   const n = (x: number) => fmt(x, 0)
+  const pieces = B.profiles.reduce((a, p) => a + p.cuts.reduce((b, c) => b + c.qty, 0), 0)
+  const lm = B.profiles.reduce((a, p) => a + p.lm, 0)
+  const fittings = B.parts.reduce((a, p) => a + p.qty, 0)
+  const plates = B.plates.reduce((a, p) => a + p.qty, 0)
 
   return (
     <>
@@ -39,7 +43,7 @@ export function PickingPage({ variants, current, onSelect, calcOf }: Props) {
       <div className="page-scroll">
         <div className="page-cols">
           <div className="page-main">
-            <p className="page-intro">Deleliste: hvor mange av hver profil, kobling og plate som skal med, og løsøre etter produkt. Profiler står som antall per kappelengde. Det som ikke er avklart står som åpne spørsmål.</p>
+            <p className="page-intro">Deleliste: hvor mange av hver profil, kobling og plate som skal med, og løsøre etter produkt. Profiler står som antall per kappelengde.</p>
             <div className="pick-grid tbl-head">
               <span>Art.nr</span>
               <span>Produkt</span>
@@ -131,22 +135,14 @@ export function PickingPage({ variants, current, onSelect, calcOf }: Props) {
           </div>
           <aside className="page-side">
             <div className="side-head">
-              <span>Åpne spørsmål om Foga</span>
+              <span>Sum Foga</span>
             </div>
-            {!B.open.length && <p className="side-note">Ingen. Alt i denne varianten kan regnes ut.</p>}
-            {B.open.map((o) => (
-              <div key={o.question} className="assume">
-                <span>
-                  <span className="name">
-                    {o.no}. {o.text}
-                  </span>
-                  <span className="help">Gjelder {o.affects}</span>
-                </span>
-              </div>
-            ))}
-            <p className="side-note">
-              Spørsmålene står også i docs/foga-system.md. {count(B.open.length, 'punkt', 'punkter')} venter på svar før plukklisten er komplett.
-            </p>
+            <div className="formulas num">
+              <div>{count(pieces, 'profil', 'profiler')} · {fmt(lm, 1)} lm</div>
+              <div>{count(fittings, 'kobling og beslag', 'koblinger og beslag')}</div>
+              <div>{count(plates, 'plate', 'plater')}</div>
+            </div>
+            <p className="side-note">Byggesystemet og reglene bak listen står i docs/foga-system.md.</p>
           </aside>
         </div>
       </div>

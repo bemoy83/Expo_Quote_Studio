@@ -126,7 +126,7 @@ Systemhøyde fra gulv: 2490 + 50 = 2540 mm.
 - Står mellom stolpene som skinnene: kappelengde = senteravstand − 40.
 - **2 × 600 i hver ende.** 292 står 80 høy og 20 tykk, med 9 mm kanal i over- og underkant og fire kamre
   inni. De to 600-koblingene sitter i ytterkamrene, én oppe og én nede, og låser i kanalen på stolpe 94.
-- Alle stolper, også de som bare bærer takdrager, er **94**.
+- Alle stolper, også frittstående som bare bærer takdrager, er **94** på 2490 mm med samme fot.
 
 ### Dør
 
@@ -134,7 +134,7 @@ Systemhøyde fra gulv: 2490 + 50 = 2540 mm.
   ferdig montert.
 - Dørblad **2000 mm**. Luft 10 mm mellom dørblad og overstykke, 20 mm mellom dørblad og gulv (regnet fra
   stolpe 94 på 2490, uten fot).
-- **Overstykke** = 2490 − 20 − 2000 − 10 = **460 mm**, en liten vegg: toppskinne 92 og bunnskinne 91 (960, med
+- **Overstykke** (over dør, og forenklet også over forheng) = 2490 − 20 − 2000 − 10 = **460 mm**, en liten vegg: toppskinne 92 og bunnskinne 91 (960, med
   600 i hver ende) og HDF-plate. Lysåpning 460 − 40 − 30 = 390, plate 390 + 20 = **976 × 410 mm** (samme
   tillegg som veggplaten).
 
@@ -156,25 +156,19 @@ med. Dørblad plukkes som stk.
 - Tverrstag når B > maks stagavstand (1000).
 - Trykkfil = ramme + 2 × bleed.
 
-### Åpne spørsmål
+### Avgrensninger
 
-Motoren gjetter ikke. Det som ikke er avklart vises som et åpent punkt i plukklisten. Når et svar kommer, legges
-det inn i `src/foga/recipes.ts` og her.
-
-1. **Frittstående takdragerstolper:** samme lengde (2490) og fot som veggstolper?
-2. **Ramme mot ramme:** hvordan kobles to 43TX-rammer side om side? Guiden (s. 48) viser bare navn og mål på
-   koblingssett 20 / 40 / 80 (876 773 / 774 / 778 22): skrue 30 / 50 / 90 mm + mutter 505 (M8-mutter for kanal,
-   s. 37). Hva de brukes til står ikke.
-3. **Forheng:** har åpning med forheng samme overstykke som dør?
+- To tekstilrammer kobles ikke til hverandre. Hver ramme monteres på systemveggen med 2 × 520.
+- Forheng får samme overstykke som dør (forenklet).
+- Alle spørsmål til Bjørn er besvart per 31.10.2026. Nye regler legges inn i `src/foga/recipes.ts` og her.
 
 ## 4. Slik er koden delt
 
 ```
 src/foga/
   parts.ts      Foga-deler som data: profiler, koblinger, tilbehør (art.nr, tverrsnitt)
-  recipes.ts    Oppskrifter: hvordan veggmodul, takdrager og tekstilramme bygges av deler.
-                Bare bekreftede oppskrifter; det som mangler er åpne spørsmål
-  structure.ts  Nøytral beskrivelse av det som skal bygges (stolper, moduler, drager, rammer) i mm
+  recipes.ts    Oppskrifter: hvordan veggmodul, overstykke, takdrager og tekstilramme bygges av deler
+  structure.ts  Nøytral beskrivelse av det som skal bygges (antall stolper, moduler, drager, rammer) i mm
   fromVariant.ts  Oversetter standskissen (Variant) til en Foga-struktur
   engine.ts     bom(struktur, oppskrifter, mål) → deleliste: profiler per kappelengde, koblinger, føtter, plater
 ```

@@ -1,5 +1,4 @@
-// How each element is built from parts. Only what Bjørn has confirmed (31.10.2026, two rounds); anything still unknown is
-// reported by the engine as an open question instead of guessed. Numbers refer to docs/foga-system.md.
+// How each element is built from parts, as confirmed by Bjørn 31.10.2026. Background and sources: docs/foga-system.md.
 
 export interface WallRecipe {
   /** Post profile for every wall post (end, straight, corner, T, cross). Cut to the wall height without feet. */
@@ -35,7 +34,7 @@ export interface BeamRecipe {
   coupling: { code: string; perEnd: number };
 }
 
-/** Door module: Foga door (292 frame, lock 410) picked as one unit, with a header (overstykke) above it. */
+/** Opening module (door or curtain): above it a header (overstykke). The Foga door (292 frame, lock 410) is picked as one unit. */
 export interface DoorRecipe {
   /** Door leaf height, gap below it to the post foot end and gap above it to the header, mm. */
   leaf: number;
@@ -66,12 +65,3 @@ export const RECIPES: Recipes = {
   beam: { profile: '292', coupling: { code: '600', perEnd: 2 } },
   door: { leaf: 2000, floorGap: 20, topGap: 10 },
 };
-
-/** Still open. The engine names these where they affect the stand. */
-export const QUESTIONS = {
-  beamPost: { no: 1, text: 'Stolper som bare bærer takdrager: lengde og fot' },
-  frameJoint: { no: 2, text: 'Kobling mellom to tekstilrammer side om side' },
-  curtain: { no: 3, text: 'Overstykke over forheng: samme som over dør?' },
-} as const;
-
-export type QuestionId = keyof typeof QUESTIONS;
