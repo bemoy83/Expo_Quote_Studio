@@ -15,10 +15,10 @@ describe('catalog edits', () => {
 
   it('a new price reaches the calc', () => {
     const e = editRow(NO_EDITS, rowOf('6120-9010'), { price: 400, placeholder: false });
-    const before = calc(r2(), RULES, base).groups.find((g) => g.id === 'walls')!;
-    const after = calc(r2(), RULES, applyEdits(base, e)).groups.find((g) => g.id === 'walls')!;
-    // R2 has 13 white plates: 13 × (400 − 330) = 910
-    expect(after.sum - before.sum).toBe(910);
+    const before = calc(r2(), RULES, base).groups.find((g) => g.id === 'vegg')!;
+    const after = calc(r2(), RULES, applyEdits(base, e)).groups.find((g) => g.id === 'vegg')!;
+    // R2 has 13 m white wall: 13 × (400 − 870) = −6 110
+    expect(after.sum - before.sum).toBe(-6110);
     expect(after.lines[0].placeholder).toBe(false);
   });
 
@@ -35,10 +35,10 @@ describe('catalog edits', () => {
     const { edits, artnr } = addProduct(base, NO_EDITS);
     expect(artnr).toBe('ny1');
     const r = rowOf('ny1', edits);
-    expect(r).toMatchObject({ added: true, placeholder: true, unit: 'stk', category: 'Annet', kind: 'counted' });
-    const e2 = editRow(edits, r, { artnr: 'K100', product: 'Kaffemaskin', price: 900, menu: 'tilb' });
+    expect(r).toMatchObject({ added: true, placeholder: true, unit: 'stk', group: 'tilb.tilbehor', kind: 'counted' });
+    const e2 = editRow(edits, r, { artnr: 'K100', product: 'Kaffemaskin', price: 900, group: 'tilb.tilbehor' });
     const c = applyEdits(base, e2);
-    expect(c.products.find((p) => p.id === 'K100')).toMatchObject({ name: 'Kaffemaskin', menu: 'tilb', variants: [{ artnr: 'K100', price: 900 }] });
+    expect(c.products.find((p) => p.id === 'K100')).toMatchObject({ name: 'Kaffemaskin', group: 'tilb.tilbehor', variants: [{ artnr: 'K100', price: 900 }] });
     expect(artnrFree(c, '6130', 'K100')).toBe(false);
     expect(artnrFree(c, 'K101', 'K100')).toBe(true);
     expect(applyEdits(base, removeProduct(e2, 'K100')).products).toHaveLength(base.products.length);
@@ -47,8 +47,8 @@ describe('catalog edits', () => {
   it('CSV export and import round-trip prices', () => {
     const e = editRow(NO_EDITS, rowOf('5276'), { price: 525.5 });
     const csv = toCSV(catalogRows(applyEdits(base, e), e));
-    expect(csv.startsWith('\ufeffVarenr;Navn;Enhet;Kategori;Pris;Status')).toBe(true);
-    expect(csv).toContain('5276;Ståbord sort, rund;stk;Møbler;525,5;Plassholder');
+    expect(csv.startsWith('\ufeffVarenr;Navn;Enhet;Gruppe;Undergruppe;Pris;Status')).toBe(true);
+    expect(csv).toContain('5276;Ståbord sort, rund;stk;Møbler;Bord;525,5;Plassholder');
     const r = importTable(base, NO_EDITS, parseTable(csv));
     if ('error' in r) throw new Error(r.error);
     expect(r.added).toBe(0);
@@ -63,5 +63,16 @@ describe('catalog edits', () => {
     expect(r).toMatchObject({ added: 1, updated: 0, skipped: 1 });
     expect(rowOf('A1', r.edits)).toMatchObject({ product: 'Skilt; stort', price: 1250, placeholder: false });
     expect(importTable(base, NO_EDITS, parseTable('navn;x\na;b'))).toEqual({ error: 'Fant ikke kolonnene varenr og pris' });
+  });
+
+  it('import puts a new product in the subgroup named, or its main group, else Tilbehør', () => {
+    const r = importTable(base, NO_EDITS, parseTable('varenr;pris;gruppe;undergruppe\nB1;10;Møbler;Bord\nB2;10;Lyd og bilde;\nB3;10;Ukjent;\n'));
+    if ('error' in r) throw new Error(r.error);
+    expect(['B1', 'B2', 'B3'].map((a) => rowOf(a, r.edits).group)).toEqual(['mob.bord', 'av.skjermer', 'tilb.tilbehor']);
+  });
+
+  it('an added product saved with an old category gets the fallback group', () => {
+    const old = { ...NO_EDITS, added: [{ id: 'X', name: 'X', kind: 'counted', unit: 'stk', category: 'Annet', variants: [{ artnr: 'X', name: 'X', price: 1 }] }] };
+    expect(applyEdits(base, old as unknown as typeof NO_EDITS).products.at(-1)!.group).toBe('tilb.tilbehor');
   });
 });

@@ -4,7 +4,8 @@ import type { Catalog, ResolvedVariant } from './types';
 
 export interface CatalogIndex {
   byArtnr: Map<string, ResolvedVariant>;
-  plateByRal: Map<string, ResolvedVariant>;
+  /** The wall (level 1) in each RAL colour: what the brush draws and the quote sells. */
+  wallByRal: Map<string, ResolvedVariant>;
 }
 
 const cache = new WeakMap<Catalog, CatalogIndex>();
@@ -13,14 +14,14 @@ export function indexCatalog(c: Catalog): CatalogIndex {
   const hit = cache.get(c);
   if (hit) return hit;
   const byArtnr = new Map<string, ResolvedVariant>();
-  const plateByRal = new Map<string, ResolvedVariant>();
+  const wallByRal = new Map<string, ResolvedVariant>();
   for (const product of c.products) {
     for (const variant of product.variants) {
       byArtnr.set(variant.artnr, { product, variant });
-      if (variant.ral) plateByRal.set(variant.ral, { product, variant });
+      if (variant.ral && !product.article) wallByRal.set(variant.ral, { product, variant });
     }
   }
-  const idx = { byArtnr, plateByRal };
+  const idx = { byArtnr, wallByRal };
   cache.set(c, idx);
   return idx;
 }

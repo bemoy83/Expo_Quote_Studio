@@ -1058,6 +1058,33 @@ kbd {
   font: 400 13px var(--font-numeric);
   text-align: right;
 }
+/* Level 2 articles under a calc group: quantities only, no price */
+.cg-arts {
+  margin: 6px 0 0 16px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: 500 12px var(--font-ui);
+  color: rgb(var(--ink-muted));
+  cursor: pointer;
+}
+.cg-arts:hover {
+  color: rgb(var(--ink));
+}
+.cl.art {
+  margin-top: 3px;
+  padding-left: 28px;
+}
+.cl.art.sub {
+  margin-top: 6px;
+  font: 600 11px var(--font-ui);
+  color: rgb(var(--ink-faint));
+}
+.cl.art .n,
+.cl.art .s {
+  font: 400 12px var(--font-ui);
+  color: rgb(var(--ink-muted));
+}
 .calc-foot {
   flex: none;
   padding: 14px 20px 16px;
@@ -1262,6 +1289,12 @@ kbd {
 .tbl-sec-head .num {
   font: var(--type-num-sm);
   color: rgb(var(--ink-faint));
+}
+/* Subgroup heading inside a main group section (product grouping) */
+.tbl-sub-head {
+  padding: 8px 8px 4px;
+  font: 600 12px var(--font-ui);
+  color: rgb(var(--ink-muted));
 }
 .tbl-row {
   padding: 10px 8px;

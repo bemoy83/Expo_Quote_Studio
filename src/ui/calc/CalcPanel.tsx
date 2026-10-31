@@ -1,28 +1,36 @@
-import { FileText } from 'lucide-react'
-import type { CalcGroup, CalcResult } from '../../calc/calc'
+import { ChevronDown, ChevronRight, FileText } from 'lucide-react'
+import { useState } from 'react'
+import type { CalcResult } from '../../calc/calc'
+import { groupItems, mainGroupOf } from '../../catalog/groups'
+import type { BomLine } from '../../foga/engine'
 import { LAYER_COLOR } from '../colors'
 import { Button } from '../controls'
 import { rules } from '../env'
 import { fmt, kr } from '../format'
 import type { Highlight } from '../tools'
 
-/** Which plan layer a calc group belongs to. */
-export function layerOf(g: CalcGroup): Highlight {
-  if (g.id === 'walls' || g.id === 'frame') return 'walls'
-  if (g.id === 'beams') return 'beams'
-  if (g.id === 'openings') return 'openings'
-  if (g.id === 'textile') return 'textile'
-  if (g.id === 'foil') return 'foil'
-  if (g.id === 'floor') return 'floor'
-  if (g.id.startsWith('cat:')) return 'objects'
-  return null
+/** Plan layer of a subgroup or main group id (catalog/groups.ts). */
+const LAYER: Record<string, Highlight> = {
+  'vegg.takdrager': 'beams',
+  'vegg.dorer': 'openings',
+  'prof.tekstil': 'textile',
+  'prof.folie': 'foil',
+  vegg: 'walls',
+  gulv: 'floor',
+  prof: 'textile',
+  tjen: null,
 }
+export const layerOf = (id: string): Highlight => (id in LAYER ? LAYER[id] : id.includes('.') ? layerOf(id.split('.')[0]) : 'objects')
 
 const DOT: Partial<Record<string, string>> = LAYER_COLOR
 
 export function CalcPanel({ res, name, onHover, onQuote }: { res: CalcResult; name: string; onHover: (h: Highlight) => void; onQuote: () => void }) {
   const lines = res.groups.flatMap((g) => g.lines)
   const placeholders = lines.filter((l) => l.placeholder).length
+  // Level 2: the Foga articles behind each main group, the same as on the picking list. Quantities only.
+  const articles = res.bom.lines
+  const [open, setOpen] = useState<Set<string>>(new Set())
+  const toggle = (id: string) => setOpen((o) => new Set(o.has(id) ? [...o].filter((x) => x !== id) : [...o, id]))
   return (
     <aside className="calc" aria-label="Veiledende kalkyle">
       <div className="calc-head">
@@ -37,29 +45,33 @@ export function CalcPanel({ res, name, onHover, onQuote }: { res: CalcResult; na
         </span>
       </div>
       <div className="calc-scroll" onMouseLeave={() => onHover(null)}>
-        {res.groups.map((g) => (
-          <section key={g.id} className="cg" onMouseEnter={() => onHover(layerOf(g))}>
-            <div className="cg-head">
-              <span className="sq" style={DOT[g.id] ? { background: DOT[g.id], borderRadius: '50%' } : undefined} />
-              <span className="name">{g.name}</span>
-              <span className="num">
-                {kr(g.sum)}
-              </span>
-            </div>
-            {g.lines.map((l, i) => (
-              <div key={l.artnr + l.name + i} className="cl">
-                <span className="n">{l.name}</span>
-                <span className="s">{kr(l.sum)}</span>
-                <span className="meta">
-                  {fmt(l.qty)} {l.unit} × {kr(l.price)}
-                  {l.meta ? ` · ${l.meta}` : ''}
-                  {l.preliminary && <span className="ph"> · foreløpig sats</span>}
-                  {l.placeholder && <span className="ph"> · plassholder</span>}
+        {res.groups.map((g) => {
+          const layer = layerOf(g.id)
+          const dot = layer ? DOT[layer] : undefined
+          return (
+            <section key={g.id} className="cg">
+              <div className="cg-head" onMouseEnter={() => onHover(layer)}>
+                <span className="sq" style={dot ? { background: dot, borderRadius: '50%' } : undefined} />
+                <span className="name">{g.name}</span>
+                <span className="num">
+                  {kr(g.sum)}
                 </span>
               </div>
-            ))}
-          </section>
-        ))}
+              {g.lines.map((l, i) => (
+                <div key={l.artnr + l.name + i} className="cl" onMouseEnter={() => onHover(layerOf(l.group))}>
+                  <span className="n">{l.name}</span>
+                  <span className="s">{kr(l.sum)}</span>
+                  <span className="meta">
+                    {fmt(l.qty)} {l.unit} × {kr(l.price)}
+                    {l.meta ? ` · ${l.meta}` : ''}
+                    {l.placeholder && <span className="ph"> · plassholder</span>}
+                  </span>
+                </div>
+              ))}
+              <Articles lines={articles.filter((x) => mainGroupOf(x.group) === g.id)} open={open.has(g.id)} onToggle={() => toggle(g.id)} />
+            </section>
+          )
+        })}
       </div>
       <div className="calc-foot">
         <div className="sum">
@@ -70,10 +82,46 @@ export function CalcPanel({ res, name, onHover, onQuote }: { res: CalcResult; na
         <div className="inkl num">
           inkl. mva. {kr(res.sum * (1 + rules.vat))} · {kr(res.keyFigures.area ? res.sum / res.keyFigures.area : 0)} per m²
         </div>
+        {res.keyFigures.hours > 0 && (
+          <div className="inkl num">
+            Montering ca. {fmt(res.keyFigures.hours)} t, inngår i prisene
+            {res.keyFigures.hoursPreliminary && <span className="ph"> · foreløpig sats</span>}
+          </div>
+        )}
         <Button variant="primary" icon={FileText} onClick={onQuote}>
           Åpne tilbud
         </Button>
       </div>
     </aside>
+  )
+}
+
+/** Level 2 under a main group: the articles the montør picks, by subgroup, quantities only. */
+function Articles({ lines, open, onToggle }: { lines: BomLine[]; open: boolean; onToggle: () => void }) {
+  if (!lines.length) return null
+  const Icon = open ? ChevronDown : ChevronRight
+  return (
+    <>
+      <button type="button" className="cg-arts" aria-expanded={open} onClick={onToggle}>
+        <Icon size={12} /> {lines.length} artikler
+      </button>
+      {open &&
+        groupItems(lines, (x) => x.group).flatMap(({ subgroups }) =>
+          subgroups.map(({ subgroup, items }) => (
+            <div key={subgroup.id}>
+              <div className="cl art sub">{subgroup.name}</div>
+              {items.map((x) => (
+                <div key={x.name + x.detail} className="cl art">
+                  <span className="n">
+                    {x.name}
+                    {x.ral ? ` · RAL ${x.ral}` : ''}
+                  </span>
+                  <span className="s">{x.qty} stk</span>
+                </div>
+              ))}
+            </div>
+          )),
+        )}
+    </>
   )
 }

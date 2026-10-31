@@ -19,7 +19,7 @@ describe('walls', () => {
     const v = createVariant('A', { width: 4, depth: 3, type: 'row' });
     const p = paintWalls(v, [0, 2], [4, 2]);
     expect(p.walls).toHaveLength(4);
-    expect(kf(p).topRails).toBe(kf(v).topRails + 4);
+    expect(kf(p).modules).toBe(kf(v).modules + 4);
     // Painting over an existing wall is a no-op
     expect(paintWalls(p, [1, 2], [3, 2])).toBe(p);
   });
@@ -70,7 +70,7 @@ describe('stand size and type', () => {
     const v = r2();
     const s = setStand(v, { ...v.stand, type: 'row' });
     // Row: back 6 + left 4 + right 4, plus the backroom's 2 + 2
-    expect(kf(s).topRails).toBe(18);
+    expect(kf(s).modules).toBe(18);
     expect(kf(s).openings).toBe(1);
   });
   it('shrinking drops floor outside and inner walls that no longer fit', () => {

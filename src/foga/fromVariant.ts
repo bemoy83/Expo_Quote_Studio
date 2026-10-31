@@ -1,24 +1,36 @@
-// Stand sketch → Foga structure. Reuses the same derivations as calc (built modules, beam layout, InFrame sizes),
-// so the parts list and the quote always describe the same stand.
-import { layoutBeams } from '../calc/beams';
-import { production } from '../calc/production';
+// Stand sketch → Foga structure. Built from the same derivations as calc (built modules, beam layout, InFrame
+// sizes); calc passes its own so the quote, the picking list and the parts list count from one structure.
+import { layoutBeams, type BeamLayout } from '../calc/beams';
+import { production, type Production } from '../calc/production';
 import type { Variant } from '../domain/types';
-import { builtModules, wallPoints } from '../domain/walls';
+import { builtModules, wallPoints, type BuiltModule } from '../domain/walls';
 import type { Rules } from '../rules/rules';
 import type { BomSizes } from './engine';
 import type { FogaStructure } from './structure';
+
+export interface Derived {
+  mods: BuiltModule[];
+  /** Wall posts and posts that only carry takdrager. */
+  posts: number;
+  beams: BeamLayout;
+  production: Production;
+}
+
+export function structureOf(d: Derived): FogaStructure {
+  return {
+    posts: d.posts,
+    modules: d.mods.map((m) => ({ plate: m.plate, opening: !!m.opening })),
+    beams: d.beams.segments.map((s) => ({ lengthMm: Math.round(s.length * 1000) })),
+    frames: d.production.pieces.map((p) => ({ pos: p.pos, W: p.W, H: p.H, braces: p.braces })),
+  };
+}
 
 export function fromVariant(v: Variant, rules: Rules): FogaStructure {
   const mods = builtModules(v);
   const points = wallPoints(mods);
   const beams = layoutBeams(v.stand, new Set(mods.map((m) => m.key)), points, rules.beam.max);
-  const posts = new Set([...points.keys(), ...beams.posts.keys()]);
-  return {
-    posts: posts.size,
-    modules: mods.map((m) => ({ plate: m.plate, opening: !!m.opening })),
-    beams: beams.segments.map((s) => ({ lengthMm: Math.round(s.length * 1000) })),
-    frames: production(v, rules.textile.inFrame, '').pieces.map((p) => ({ pos: p.pos, W: p.W, H: p.H, braces: p.braces })),
-  };
+  const posts = new Set([...points.keys(), ...beams.posts.keys()]).size;
+  return structureOf({ mods, posts, beams, production: production(v, rules.textile.inFrame, '') });
 }
 
 /** Sizes from the rules, mm: post = system wall height without feet (2490), cc 1000. */

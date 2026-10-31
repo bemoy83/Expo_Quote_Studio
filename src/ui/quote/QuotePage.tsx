@@ -31,7 +31,7 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
   const [date] = useState(() => new Date().toLocaleDateString('nb-NO', { day: 'numeric', month: 'long', year: 'numeric' }))
   const lines = res.groups.flatMap((g) => g.lines)
   const placeholders = lines.filter((l) => l.placeholder).length
-  const preliminary = lines.some((l) => l.preliminary)
+  const labourLines = lines.some((l) => l.group === 'tjen.montering')
   const inFrame = rules.textile.inFrame
 
   // Summary next to the sketch
@@ -142,7 +142,6 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
                     <span>
                       {l.name}
                       {l.placeholder && <span className="mark"> *</span>}
-                      {l.preliminary && <span className="mark"> †</span>}
                     </span>
                     <span className="num muted">
                       {fmt(l.qty)} {l.unit}
@@ -173,7 +172,6 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
                 * {count(placeholders, 'linje', 'linjer')} har plassholderpris og må bekreftes før tilbudet sendes.
               </p>
             )}
-            {preliminary && <p className="foot">† Monteringstid er beregnet med foreløpige satser og bekreftes av produksjon.</p>}
           </section>
 
           <section className="qdoc-terms">
@@ -197,7 +195,7 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
               {k.floorTotal > 0 && <li>Gulv ferdig lagt{v.floor.protection ? ' med monteringsbeskyttelse' : ''}.</li>}
               {unpriced.length > 0 && <li>Løse linjer uten pris avtales separat: {unpriced.map((l) => l.name).join(', ')}.</li>}
               <li>
-                Montering og demontering er beregnet ut fra omfang{preliminary ? ' med foreløpige satser' : ''}. Strøm og lys bestilles via hallens leverandør der det kreves.
+                {labourLines ? 'Montering og demontering er tilbudt som arbeidstimer.' : 'Montering og demontering inngår i prisene.'} Strøm og lys bestilles via hallens leverandør der det kreves.
               </li>
               <li>Alle priser er eks. mva. Tilbudet er veiledende og bekreftes ved bestilling.</li>
             </ul>

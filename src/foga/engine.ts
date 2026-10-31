@@ -1,6 +1,7 @@
-// Foga engine: structure + recipes → parts list (deleliste), grouped by product type. Pure: no prices, no loose goods.
+// Foga engine: structure + recipes → parts list (deleliste), each line in a subgroup of the product grouping. Pure: no prices, no loose goods.
 // Pre-assembled units (post with feet, rails and beams and textile braces with their couplings) are one piece each;
 // loose profiles are counted per cut length; plates per RAL and size.
+import { resolveGroup } from '../catalog/groups';
 import { fogaPart } from './parts';
 import type { Recipes } from './recipes';
 import type { FogaStructure } from './structure';
@@ -18,19 +19,13 @@ export interface BomLine {
   ral?: string;
   /** Loose profiles: total metres. */
   lm?: number;
-}
-
-export type BomGroupId = 'posts' | 'rails' | 'beams' | 'textile' | 'plates';
-
-export interface BomGroup {
-  id: BomGroupId;
-  name: string;
-  lines: BomLine[];
+  /** Subgroup id (groups.ts). */
+  group: string;
 }
 
 export interface Bom {
-  /** In picking order; empty groups left out. */
-  groups: BomGroup[];
+  /** In tree order (groups.ts), then by size inside a subgroup. */
+  lines: BomLine[];
 }
 
 /** Sizes the engine needs from the rules, mm. */
@@ -41,13 +36,18 @@ export interface BomSizes {
   cc: number;
 }
 
-const GROUPS: { id: BomGroupId; name: string }[] = [
-  { id: 'posts', name: 'Stolper' },
-  { id: 'rails', name: 'Skinner' },
-  { id: 'beams', name: 'Takdrager' },
-  { id: 'textile', name: 'Tekstilvegger' },
-  { id: 'plates', name: 'Veggplater' },
-];
+/** Subgroups (groups.ts) the Foga parts go under. */
+export const BOM_GROUP = {
+  posts: 'vegg.stolper',
+  rails: 'vegg.skinner',
+  beams: 'vegg.takdrager',
+  plates: 'vegg.plater',
+  /** Header (overstykke) over a door or curtain: its rails and plate. */
+  header: 'vegg.dorer',
+  textile: 'prof.tekstil',
+} as const;
+
+type BomGroup = (typeof BOM_GROUP)[keyof typeof BOM_GROUP];
 
 /** Height a rail takes up in the wall: the long side of its section (92: 40, 91: 30). */
 const railHeight = (code: string) => Math.max(...(fogaPart(code).section ?? [0]));
@@ -59,29 +59,28 @@ const mmList = (cuts: Map<number, number>) =>
     .join(' · ') + ' mm';
 
 export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
-  const lines = new Map<BomGroupId, Map<string, { line: BomLine; size: number }>>(GROUPS.map((g) => [g.id, new Map()]));
+  const lines = new Map<string, { line: BomLine; size: number }>();
   /** Add to a line, merged by key within its group. `size` (mm) orders lines in the group, largest first. */
-  const put = (group: BomGroupId, key: string, line: Omit<BomLine, 'qty'>, qty: number, size = 0) => {
+  const put = (group: BomGroup, key: string, line: Omit<BomLine, 'qty' | 'group'>, qty: number, size = 0) => {
     if (qty <= 0) return;
-    const g = lines.get(group)!;
-    const l = g.get(key);
+    const l = lines.get(`${group}|${key}`);
     if (l) l.line.qty += qty;
-    else g.set(key, { line: { ...line, qty }, size });
+    else lines.set(`${group}|${key}`, { line: { ...line, qty, group }, size });
   };
-  const part = (group: BomGroupId, code: string, qty: number) => {
+  const part = (group: BomGroup, code: string, qty: number) => {
     const p = fogaPart(code);
     put(group, code, { artnr: p.artnr, name: `${p.code} · ${p.name}`, detail: '', preassembled: false }, qty);
   };
   const withCouplings = (profile: string, lengthMm: number, coupling: string, n: number) =>
     `${profile} × ${lengthMm} mm · ${n} × ${coupling} (${fogaPart(coupling).artnr})`;
   /** A profile with couplings mounted in its ends, picked as one piece. */
-  const unit = (group: BomGroupId, name: string, profile: string, lengthMm: number, c: { code: string; perEnd: number }, qty: number, note = '') =>
+  const unit = (group: BomGroup, name: string, profile: string, lengthMm: number, c: { code: string; perEnd: number }, qty: number, note = '') =>
     put(
       group,
       `${name}|${lengthMm}`,
       { artnr: '', name: `${name} ${profile}, ${lengthMm} mm, med ${c.code}`, detail: withCouplings(profile, lengthMm, c.code, 2 * c.perEnd) + note, preassembled: true },
       qty,
-      group === 'beams' ? lengthMm : 0,
+      group === BOM_GROUP.beams ? lengthMm : 0,
     );
 
   const postW = fogaPart(r.wall.post).section?.[0] ?? 0;
@@ -91,12 +90,12 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   const railsH = railHeight(r.wall.topRail) + railHeight(r.wall.bottomRail);
   const plateExtra = plate.h - (z.postLength - railsH);
   const header = z.postLength - r.door.floorGap - r.door.leaf - r.door.topGap;
-  const addPlate = (ral: string, h: number, note: string) =>
-    put('plates', `${ral}|${h}`, { artnr: '', name: fogaPart(plate.code).name, detail: `${plate.w} × ${h} mm${note}`, preassembled: false, ral }, 1, h);
+  const addPlate = (group: BomGroup, ral: string, h: number, note: string) =>
+    put(group, `${ral}|${h}`, { artnr: '', name: fogaPart(plate.code).name, detail: `${plate.w} × ${h} mm${note}`, preassembled: false, ral }, 1, h);
 
   // Stolper: wall and takdrager alike, stored with the foot mounted
   put(
-    'posts',
+    BOM_GROUP.posts,
     'post',
     {
       artnr: '',
@@ -108,15 +107,18 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   );
 
   // Skinner: top and bottom rail between the posts with a 600 in each end, for every module. An opening (door or
-  // curtain) gets the same rails in its header (overstykke), plus a lower plate.
-  unit('rails', 'Toppskinne', r.wall.topRail, rail, r.wall.railCoupling, s.modules.length);
-  unit('rails', 'Bunnskinne', r.wall.bottomRail, rail, r.wall.railCoupling, s.modules.length);
-  for (const m of s.modules)
-    if (m.opening) addPlate(m.plate, header - railsH + plateExtra, ' · overstykke');
-    else addPlate(m.plate, plate.h, '');
+  // curtain) gets the same rails in its header (overstykke) with a lower plate; the header is listed with the doors.
+  const walled = s.modules.filter((m) => !m.opening);
+  const headers = s.modules.filter((m) => m.opening);
+  for (const [group, n, note] of [[BOM_GROUP.rails, walled.length, ''], [BOM_GROUP.header, headers.length, ' · overstykke']] as const) {
+    unit(group, 'Toppskinne', r.wall.topRail, rail, r.wall.railCoupling, n, note);
+    unit(group, 'Bunnskinne', r.wall.bottomRail, rail, r.wall.railCoupling, n, note);
+  }
+  for (const m of walled) addPlate(BOM_GROUP.plates, m.plate, plate.h, '');
+  for (const m of headers) addPlate(BOM_GROUP.header, m.plate, header - railsH + plateExtra, ' · overstykke');
 
   // Takdrager: 292 between the posts with two 600 in each end, one piece per length
-  for (const b of s.beams) unit('beams', 'Takdrager', r.beam.profile, between(b.lengthMm), r.beam.coupling, 1);
+  for (const b of s.beams) unit(BOM_GROUP.beams, 'Takdrager', r.beam.profile, between(b.lengthMm), r.beam.coupling, 1);
 
   // Tekstilvegger: 43TX cut mitred 2W + 2H (loose), 4 × 613, 2 × 520, and upright braces in 90 with a 600 in each
   // end, stored pre-assembled; the brace line names the frames it belongs to
@@ -135,17 +137,17 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
     const p = fogaPart(r.frame.profile);
     const pieces = [...frameCuts.values()].reduce((a, b) => a + b, 0);
     const lm = [...frameCuts].reduce((a, [len, qty]) => a + (len * qty) / 1000, 0);
-    put('textile', p.code, { artnr: p.artnr, name: `${p.code} · ${p.name}, gjæret`, detail: mmList(frameCuts), preassembled: false, lm }, pieces);
+    put(BOM_GROUP.textile, p.code, { artnr: p.artnr, name: `${p.code} · ${p.name}, gjæret`, detail: mmList(frameCuts), preassembled: false, lm }, pieces);
   }
-  for (const [len, b] of braces) unit('textile', 'Støttestag', r.frame.brace, len, r.frame.braceCoupling, b.qty, ` · til ${b.frames.join(', ')}`);
-  part('textile', r.frame.corner, 4 * s.frames.length);
-  part('textile', r.frame.wallFixing.code, r.frame.wallFixing.perFrame * s.frames.length);
+  for (const [len, b] of braces) unit(BOM_GROUP.textile, 'Støttestag', r.frame.brace, len, r.frame.braceCoupling, b.qty, ` · til ${b.frames.join(', ')}`);
+  part(BOM_GROUP.textile, r.frame.corner, 4 * s.frames.length);
+  part(BOM_GROUP.textile, r.frame.wallFixing.code, r.frame.wallFixing.perFrame * s.frames.length);
 
-  // Order inside groups: beams longest first; plates tallest first, then by RAL; the rest as added
+  // Tree order; inside a subgroup beams longest first, plates tallest first then by RAL, the rest as added
+  const order = (l: BomLine) => resolveGroup(l.group).order;
   return {
-    groups: GROUPS.map((g) => ({
-      ...g,
-      lines: [...lines.get(g.id)!.values()].sort((a, b) => b.size - a.size || (a.line.ral ?? '').localeCompare(b.line.ral ?? '')).map((e) => e.line),
-    })).filter((g) => g.lines.length),
+    lines: [...lines.values()]
+      .sort((a, b) => order(a.line) - order(b.line) || b.size - a.size || (a.line.ral ?? '').localeCompare(b.line.ral ?? ''))
+      .map((e) => e.line),
   };
 }
