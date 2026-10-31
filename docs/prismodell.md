@@ -59,7 +59,10 @@ eget utstyr (henge en hylle fra IKEA på veggen). I appen heter den «Arbeidstim
 
 Med sum følger prisen tegningen. Stolper som deles mellom naboer telles én gang, en tekstilvegg prises etter sin
 størrelse, og en takdrager etter sine lengder og egne stolper. Derfor kan prisen per meter variere litt fra stand til
-stand. Mangler en artikkelpris, faller linjen tilbake til produktets egen pris og kalkylen viser at kosten mangler.
+stand. Bjørn 31.10.2026: slik skal det være, prisen følger tegningen. Naboelementer deler stolper, og hver modul
+(også dør og forheng) bærer en lik andel av veggstolpene. Uten tegning, for eksempel 10 vegger lagt i en handlekurv,
+prises hvert element frittstående med to stolper. Kanskje skal vegger bare kunne bestilles tegnet, men da må
+plantegningen åpnes for kunden. Mangler en artikkelpris, faller linjen tilbake til produktets egen pris og kalkylen viser at kosten mangler.
 
 ### Veiledende pris
 OMS setter pris per artikkel. Anbefalt modell:
@@ -99,9 +102,7 @@ I appen i dag er dette `PriceItem` og `PricingData` i `src/pricing/`, `pricing` 
 ## 8. Åpne spørsmål
 
 1. **Tilpasning utenfor sortiment**: egen pris eller påslag? Gjelder det per kapp, per meter eller i prosent?
-2. **Stolper delt mellom moduler**: appen gir hver modul (også dør og forheng) en lik andel av veggstolpene. Er det
-   riktig, eller skal vegg selges med to stolper per meter som før (nominell bundle)?
-3. **Takdrager og støttestag**: appen bruker standardlengder for takdrager (1–6 m) og meterpris for støttestag, fordi
+2. **Takdrager og støttestag**: appen bruker standardlengder for takdrager (1–6 m) og meterpris for støttestag, fordi
    stagene følger tekstilhøyden. Stemmer det med sortimentet?
-4. **DG-mål** per hovedgruppe: hvilke tall? Eksempeltallene i appen er bare plassholdere.
-5. **Eie-formelen**: skal lagerkost være per enhet og år, eller fordeles på en annen måte?
+3. **DG-mål** per hovedgruppe: hvilke tall? Eksempeltallene i appen er bare plassholdere.
+4. **Eie-formelen**: skal lagerkost være per enhet og år, eller fordeles på en annen måte?
