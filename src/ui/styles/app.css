@@ -1302,6 +1302,14 @@ kbd {
   overflow-wrap: anywhere;
 }
 
+/* Plukkliste */
+.pick-grid {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) 96px;
+  gap: 12px;
+  align-items: start;
+}
+
 /* Produksjon */
 .prod-grid {
   display: grid;

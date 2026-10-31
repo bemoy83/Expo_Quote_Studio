@@ -21,6 +21,7 @@ import { PlanPreview, PlanView, type PlanSelection } from './plan/PlanView'
 import { WallDrawer } from './plan/WallDrawer'
 import { findMotif, motifLibrary } from './motifs'
 import { fitDecor, removeFoil, removeTextile } from '../domain/decor'
+import { PickingPage } from './picking/PickingPage'
 import { ProductionPage } from './production/ProductionPage'
 import { QuotePage } from './quote/QuotePage'
 import { TopNav, type Page } from './shell/TopNav'
@@ -354,6 +355,8 @@ export default function App() {
           motifName={(id) => findMotif(motifs, id)?.name}
           onToast={showToast}
         />
+      ) : page === 'plukkliste' ? (
+        <PickingPage variants={sketch.variants} current={current} onSelect={selectVariant} calcOf={calcOf} />
       ) : (
         <CatalogPage onToast={showToast} />
       )}

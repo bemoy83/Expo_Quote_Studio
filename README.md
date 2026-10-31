@@ -12,8 +12,11 @@ src/
   rules/        build rules as data (approved 30.10.2026). Change values here, never in calc
   catalog/      products, variants, prices (examples) and the art.nr the calc uses for system parts
   calc/         calc(variant, rules, catalog) → groups, lines, sums, key figures. InFrame production sizes
+  foga/         Foga System engine: stand → Foga parts list (cut list + couplings). See docs/foga-system.md
   persistence/  sketch file format (versioned) and localStorage
 ```
+
+The build system is Foga System; how it works and what is still open is in `docs/foga-system.md`.
 
 The stand model is the single source of truth. Plan, 3D, calc, quote and production are derived from it.
 A backroom is not a class: `addRoom` draws ordinary walls and one opening.

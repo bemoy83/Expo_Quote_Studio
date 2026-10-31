@@ -62,7 +62,7 @@ export const RULES: Rules = {
   },
   beam: { max: 6, height: 0.08, thickness: 0.02 },
   textile: {
-    depth: 0.06,
+    depth: 0.04,
     minWidth: 0.5,
     inFrame: { side: 20, air: 10, wallH: 2490, feet: 50, bleed: 20, scale: 10, prof: 40, stag: 1000 },
   },
