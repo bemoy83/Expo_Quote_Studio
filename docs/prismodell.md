@@ -99,10 +99,25 @@ I appen i dag er dette `PriceItem` og `PricingData` i `src/pricing/`, `pricing` 
 - Kunderabatt og prislister per kunde eller messe. Kan eksponeres via API.
 - Ramme (leie) og trykk (salg, kan gjenbrukes) solgt hver for seg, slik at faste kunder kan leie rammen på nytt.
 
-## 8. Åpne spørsmål
+## 8. Avklart 31.10.2026
 
-1. **Tilpasning utenfor sortiment**: egen pris eller påslag? Gjelder det per kapp, per meter eller i prosent?
-2. **Takdrager og støttestag**: appen bruker standardlengder for takdrager (1–6 m) og meterpris for støttestag, fordi
-   stagene følger tekstilhøyden. Stemmer det med sortimentet?
-3. **DG-mål** per hovedgruppe: hvilke tall? Eksempeltallene i appen er bare plassholdere.
-4. **Eie-formelen**: skal lagerkost være per enhet og år, eller fordeles på en annen måte?
+Bjørn svarte på de åpne spørsmålene. Oversikten over hele modellen, med moduler og flyt fra OMS til arbeidsordre, står i
+dokumentet «Expo Quote Studio i OMS: hele modellen».
+
+- **Foga-motoren** hører til Expo Quote Studio. Disker, podier og snekkervegger skal bygge på samme motor, i plan og 3D.
+- **Tegningen er en oppskrift**: artikler og koordinater lagres med tilbudet og følger det gjennom hele systemet,
+  også til plukklisten. Ikke noe vi bygger nå.
+- **Lagerstatus** vises mens det tegnes, men kommer senere fra OMS og følger prosjektet.
+- **Gyldighet**: prisen låses når tilbudet sendes og gjelder 30 dager. Tiden igjen til prosjektet styrer også.
+- **Spesialmål**: fast påslag per kapp, til vi lager en motor som regner det selv.
+- **DG-mål**: eksempeltallene brukes til ekte tall finnes.
+- **Lagerkost** i eie-formelen er per enhet og år.
+- **Tid**: demontering har egen tid ved siden av montering. Montørene rapporterer faktisk tid per produktgruppe, og
+  etterkalkylen i OMS forbedrer tidene.
+- **Takdrager** i standardlengder 1–6 m og **støttestag** per meter stemmer. 0,5 m takdrager finnes som særtilfelle,
+  utenfor standardlengdene.
+- **Veggpris** følger tegningen (se kapittel 4).
+
+## 9. Åpent
+
+1. Hvor lang er fristen før montering som et tilbud senest gjelder til?
