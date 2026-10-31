@@ -1,5 +1,6 @@
 // The rows of the picking list, shared by Plukkliste and Arbeidsordre.
 import type { CalcResult } from '../../calc/calc'
+import { FILL_NAME, textileRows } from '../../calc/production'
 import { resolveGroup } from '../../catalog/groups'
 import { plateName } from '../env'
 import { fmt } from '../format'
@@ -35,13 +36,13 @@ export function pickRows(res: CalcResult): PickRow[] {
       lm: l.lm,
       qty: `${l.qty} stk`,
     })),
-    // The printed textile of each frame: not Foga, sold inside the textile wall product
-    ...res.production.pieces.map((p) => ({
-      key: `print|${p.pos}`,
+    // The textile of each frame and face: not Foga, sold as its own line
+    ...textileRows(res.production).map((t) => ({
+      key: `textile|${t.pos}`,
       group: 'prof.tekstil',
-      code: p.pos,
-      title: 'Trykt tekstil',
-      detail: `${p.pw} × ${p.ph} mm inkl. bleed`,
+      code: t.pos,
+      title: FILL_NAME[t.fill],
+      detail: t.fill === 'reuse' ? `${t.W} × ${t.H} mm synlig · ${t.where}` : `${t.pw} × ${t.ph} mm inkl. bleed · ${t.where}`,
       qty: '1 stk',
     })),
   ]

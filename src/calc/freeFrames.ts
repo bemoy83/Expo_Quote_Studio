@@ -22,6 +22,8 @@ export interface FreeFace {
   /** Visible textile, mm. */
   W: number;
   H: number;
+  /** Where the face starts, mm along the run from its `from` end: past a corner on the outside, short of it inside. */
+  start: number;
   /** Print size including bleed, mm. */
   pw: number;
   ph: number;
@@ -112,6 +114,7 @@ export function freeFrames(v: Variant, r: FreeFrameRecipe, s: InFrameParams, cus
         pos: fpos,
         W,
         H,
+        start: -at(ends.from),
         pw,
         ph,
         fw: r1(pw),

@@ -424,11 +424,15 @@ function FloorSection({ v, res, brush, tool, pick, onEdit }: RailProps) {
   )
 }
 
+const FILL_SHORT = { print: 'trykk', white: 'hvit', reuse: 'kundens' } as const
+
 /** Profilering: textile walls (InFrame) and the motif library. Counted profiling items follow below. */
 function ProfileSection({ v, res, brush, tool, pick, motifs, onAddMotif, onSelect, onToast }: RailProps) {
   const file = useRef<HTMLInputElement>(null)
   const pen = tool !== 'select' && brush?.kind === 'textile'
+  const freePen = tool !== 'select' && brush?.kind === 'freeTextile'
   const textile = productOf(catalog.system.textile)?.variants[0]
+  const freeFrame = productOf(catalog.system.freeTextile)?.variants[0]
   const k = res.keyFigures
   const upload = async (f: File) => {
     try {
@@ -450,7 +454,7 @@ function ProfileSection({ v, res, brush, tool, pick, motifs, onAddMotif, onSelec
         title="Tekstilvegg InFrame"
         meta={
           <>
-            Leie av ramme med trykt tekstil, pris per stk etter størrelse · <span className="num">{kr(textile?.price ?? 0)} kr/m²</span> · klikk eller dra til en vegg
+            På systemvegg · leie av ramme per stk etter størrelse <span className="num">{kr(textile?.price ?? 0)} kr/m²</span> + tekstil per m² · klikk eller dra til en vegg
           </>
         }
         result={v.textiles.length ? `${count(v.textiles.length, 'ramme', 'rammer')} · ${fmt(k.textileM2)} m²` : null}
@@ -464,7 +468,7 @@ function ProfileSection({ v, res, brush, tool, pick, motifs, onAddMotif, onSelec
           <button key={t.id} type="button" className="trow" onClick={() => onSelect({ wallId: w.id, side: t.side, textileId: t.id })}>
             <span className="name">
               {wallLabel(w)}
-              {m ? <span className="faint"> · {m}</span> : <span className="warn"> · uten motiv</span>}
+              {t.fill === 'reuse' ? <span className="faint"> · kundens duk</span> : t.fill === 'white' ? <span className="faint"> · hvit</span> : m ? <span className="faint"> · {m}</span> : <span className="warn"> · uten motiv</span>}
             </span>
             <span className="num">
               {fmt(t.width)} × {fmt(textileBox(t, rules).height, 2)} m
@@ -472,6 +476,29 @@ function ProfileSection({ v, res, brush, tool, pick, motifs, onAddMotif, onSelec
           </button>
         )
       })}
+
+      <ProductRow
+        on={v.freeTextiles.length > 0}
+        pen={freePen}
+        thumb={<i className="tex-thumb" />}
+        title="Tekstilvegg frittstående"
+        meta={
+          <>
+            43TX på fotplater, tekstil på begge sider · leie av ramme <span className="num">{kr(freeFrame?.price ?? 0)} kr/lm</span> + tekstil per m² · tegn med pensel
+          </>
+        }
+        result={res.production.free.length ? `${count(res.production.free.length, 'vegg', 'vegger')} · ${fmt(res.production.free.reduce((a, f) => a + f.length, 0) / 1000, 2)} lm` : null}
+        action={<IconButton icon={Paintbrush} label="Tegn frittstående tekstilvegg i plan" pressed={freePen && tool === 'brush'} onClick={() => pick({ kind: 'freeTextile' })} />}
+      />
+      {res.production.free.map((f) => (
+        <button key={f.textileId} type="button" className="trow" onClick={() => onSelect({ freeTextileId: f.textileId, freeFace: 'a' })}>
+          <span className="name">
+            {f.pos}
+            <span className="faint"> · {f.faces.map((x) => `${x.face.toUpperCase()} ${FILL_SHORT[x.fill]}`).join(', ')}</span>
+          </span>
+          <span className="num">{fmt(f.length / 1000, 2)} m</span>
+        </button>
+      ))}
 
       <div className="panel-sec eyebrow gfx-head">
         <span>Grafikk · {motifs.length}</span>

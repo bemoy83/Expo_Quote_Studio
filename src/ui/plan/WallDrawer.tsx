@@ -26,15 +26,16 @@ import {
 import { canFlipSwing, eraseWalls, flipSwing, setWallPlate } from '../../domain/edit'
 import { OUTSIDE } from '../../domain/rooms'
 import { wallLength, wallModules } from '../../domain/grid'
-import type { Foil, TextileWall, Variant, Wall } from '../../domain/types'
+import type { Foil, TextileFill, TextileWall, Variant, Wall } from '../../domain/types'
 import { builtModules, isStandWall } from '../../domain/walls'
 import type { Motif } from '../../persistence/file'
 import { wallHeight } from '../../rules/rules'
-import { ALU, ALU_POST, BORDER_STRONG, FABRIC, FEET, INK, INK_FAINT, INK_MUTED, LAYER_COLOR, SUNKEN } from '../colors'
+import { ALU, ALU_POST, BORDER_STRONG, FABRIC, FEET, INK, INK_FAINT, LAYER_COLOR, SUNKEN } from '../colors'
 import { Button, CommitInput, IconButton, Segmented } from '../controls'
 import { plateColor, productOf, rules, wallPlates } from '../env'
 import { count, fmt, mm } from '../format'
 import { findMotif } from '../motifs'
+import { DIM, TXT } from './drawerText'
 import { VariantChips } from '../panel/ProductRow'
 import type { PlanSelection } from './PlanView'
 
@@ -179,7 +180,7 @@ export function WallDrawer(p: Props) {
         </div>
         <p className="wd-meta num">
           {T && piece
-            ? `${fmt(T.width)} × ${fmt(textileBox(T, rules).height, 2)} m · ramme ${mm(piece.W / 1000)} × ${mm(piece.H / 1000)} mm · ${fmt(piece.area)} m² trykk`
+            ? `${fmt(T.width)} × ${fmt(textileBox(T, rules).height, 2)} m · ramme ${mm(piece.W / 1000)} × ${mm(piece.H / 1000)} mm · ${fmt(piece.area)} m² ${piece.fill === 'reuse' ? 'kundens duk' : piece.fill === 'white' ? 'hvit duk' : 'trykk'}`
             : F
               ? `Felt ${F.module + 1} · ${mm(F.width)} × ${mm(F.height)} mm`
               : [`${L} m`, count(wallModules(w).length - openings.length, 'plate', 'plater'), openings.length && count(openings.length, 'åpning', 'åpninger'), tex.length && count(tex.length, 'tekstilvegg', 'tekstilvegger')]
@@ -204,7 +205,8 @@ export function WallDrawer(p: Props) {
             <Dim label="Bredde" value={T.width} onChange={(n) => p.onEdit((x) => updateTextile(x, rules, T.id, { width: n }))} />
             <Dim label="Høyde" value={textileBox(T, rules).height} decimals={2} onChange={(n) => p.onEdit((x) => updateTextile(x, rules, T.id, { height: n }))} />
             <Dim label="Fra gulv" value={textileBox(T, rules).bottom} min={0} onChange={(n) => p.onEdit((x) => updateTextile(x, rules, T.id, { bottom: n }))} />
-            <MotifPicker motifs={motifs} value={T.motif} onChange={(m) => p.onEdit((x) => updateTextile(x, rules, T.id, { motif: m }))} />
+            <FillPicker value={T.fill ?? 'print'} onChange={(fill) => p.onEdit((x) => updateTextile(x, rules, T.id, { fill }))} />
+            {(T.fill ?? 'print') === 'print' && <MotifPicker motifs={motifs} value={T.motif} onChange={(m) => p.onEdit((x) => updateTextile(x, rules, T.id, { motif: m }))} />}
             <Button icon={MoveHorizontal} onClick={() => p.onEdit((x) => fillTextile(x, rules, T.id))}>
               Fyll ledig vegg
             </Button>
@@ -396,14 +398,12 @@ export function WallDrawer(p: Props) {
   )
 }
 
-const TXT = { font: '500 0.11px var(--font-ui)', fill: INK_MUTED, pointerEvents: 'none' as const }
-const DIM = { font: '500 0.12px var(--font-numeric)', fill: INK_FAINT }
 
 /**
  * A motif filling a box, cropped like the 3D print. Drawn in its own viewport of the motif's shape: an SVG motif in a
  * plain <image> would letterbox itself inside the box instead of being cropped.
  */
-function Print({ m, x, y, width, height }: { m: Motif; x: number; y: number; width: number; height: number }) {
+export function Print({ m, x, y, width, height }: { m: Motif; x: number; y: number; width: number; height: number }) {
   return (
     <svg x={x} y={y} width={width} height={height} viewBox={`0 0 ${m.ratio} 1`} preserveAspectRatio="xMidYMid slice">
       <image href={m.src} width={m.ratio} height={1} />
@@ -412,7 +412,7 @@ function Print({ m, x, y, width, height }: { m: Motif; x: number; y: number; wid
 }
 
 /** A length in metres with − / + and a field you can type in. */
-function Dim({ label, value, onChange, step = 0.1, min = 0.5, decimals = 1 }: { label: string; value: number; onChange: (n: number) => void; step?: number; min?: number; decimals?: number }) {
+export function Dim({ label, value, onChange, step = 0.1, min = 0.5, decimals = 1 }: { label: string; value: number; onChange: (n: number) => void; step?: number; min?: number; decimals?: number }) {
   const nudge = (d: number) => onChange(Math.round((value + d) * 1000) / 1000)
   return (
     <div className="opt flush">
@@ -438,7 +438,24 @@ function Dim({ label, value, onChange, step = 0.1, min = 0.5, decimals = 1 }: { 
   )
 }
 
-function MotifPicker({ motifs, value, onChange }: { motifs: Motif[]; value?: string; onChange: (id: string | null) => void }) {
+const FILLS: { value: TextileFill; label: string }[] = [
+  { value: 'print', label: 'Trykk' },
+  { value: 'white', label: 'Hvit' },
+  { value: 'reuse', label: 'Kundens' },
+]
+
+/** Printed, white without graphics, or the customer's own textile of the same size (only mounted). */
+export function FillPicker({ value, onChange }: { value: TextileFill; onChange: (f: TextileFill) => void }) {
+  return (
+    <>
+      <div className="eyebrow">Tekstil</div>
+      <Segmented<TextileFill> inWell label="Tekstil" value={value} onChange={onChange} options={FILLS} />
+      {value === 'reuse' && <p className="panel-note">Kunden har duken fra før, i samme størrelse. Bare montering.</p>}
+    </>
+  )
+}
+
+export function MotifPicker({ motifs, value, onChange }: { motifs: Motif[]; value?: string; onChange: (id: string | null) => void }) {
   const cur = findMotif(motifs, value)
   return (
     <div className="wd-motifs">

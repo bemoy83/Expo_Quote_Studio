@@ -11,6 +11,8 @@ export type Brush =
   | { kind: 'object'; product: string }
   /** InFrame textile wall: click a wall face to fill its free part. */
   | { kind: 'textile' }
+  /** Frittstående tekstilvegg: drag a straight run on the 0,25 m grid. */
+  | { kind: 'freeTextile' }
   /** A motif: on a textile it becomes the print, on a wall panel a foil decal. */
   | { kind: 'motif'; motif: string };
 

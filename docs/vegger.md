@@ -10,6 +10,9 @@ Låst av Bjørn 31.10.2026. Begrepene brukes likt i appen, koden og samtaler.
 | **Innervegg** | Vegg kunden velger i tillegg (tilvalg), tegnet hvor som helst på standen, også ut mot standkanten. | Alle lagrede vegger som ikke er standvegg eller romvegg. `canMoveWall(w)` |
 | **Romvegg** | Sidene til et rom (bakrom, lager, møterom). Også tilvalg. Der et rom står inntil en standvegg, gjenbrukes standveggen. | `w.room` |
 
+En **frittstående tekstilvegg** er ikke en vegg i denne forstand: den er ikke en del av systemveggen, lager ikke rom og
+kan ikke ha dør. Den kan ikke stå langs eller gjennom en systemvegg. Se [foga-system.md](foga-system.md).
+
 En vegg er standvegg fordi den kommer fra standtypen, aldri fordi den står i standkanten. En innervegg som flyttes helt ut
 til kanten, er fortsatt en innervegg. `isPerimeterWall` sier bare hvor en vegg står (brukes til dørslag mot gangen), ikke
 hva slags vegg det er.

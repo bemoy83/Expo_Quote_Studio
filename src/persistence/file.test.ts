@@ -20,6 +20,12 @@ describe('sketch file', () => {
     const res = parse(serialize(s));
     expect(res).toEqual({ ok: true, sketch: s });
   });
+  it('a sketch saved before free-standing textile walls has none', () => {
+    const f = JSON.parse(serialize(sketch()));
+    for (const v of f.varianter) delete v.freeTextiles;
+    const res = parse(JSON.stringify(f));
+    expect(res.ok && res.sketch.variants.map((v) => v.freeTextiles)).toEqual([[], []]);
+  });
   it('refuses a newer version with an explanation', () => {
     const f = JSON.parse(serialize(sketch()));
     const res = parse(JSON.stringify({ ...f, versjon: VERSION + 1 }));

@@ -24,9 +24,9 @@ export interface Production {
   free: FreeFrame[];
   /** 92LTX corner posts, each shared by two free-standing runs. */
   cornerPosts: number;
-  /** Textile area including bleed, all frames and faces, m². */
+  /** Textile to produce (printed and white, not the customer's own), including bleed, m². */
   area: number;
-  /** Aluminium profile including braces, InFrame frames, m. */
+  /** Aluminium profile including braces and corner posts, all frames, m. */
   lm: number;
 }
 
@@ -72,7 +72,34 @@ export function production(v: Variant, s: InFrameParams, customer: string): Prod
     pieces,
     free,
     cornerPosts: cornerPosts(v).length,
-    area: pieces.reduce((a, p) => a + p.area, 0) + free.reduce((a, f) => a + f.faces[0].printArea + f.faces[1].printArea, 0),
-    lm: pieces.reduce((a, p) => a + p.lm, 0),
+    area:
+      pieces.filter((p) => p.fill !== 'reuse').reduce((a, p) => a + p.area, 0) +
+      free.flatMap((f) => f.faces).filter((x) => x.fill !== 'reuse').reduce((a, x) => a + x.printArea, 0),
+    lm:
+      pieces.reduce((a, p) => a + p.lm, 0) +
+      free.reduce((a, f) => a + (2 * f.railCuts.reduce((x, c) => x + c, 0) + f.uprights * f.H + f.supports.length * f.braceLength) / 1000, 0) +
+      (free.length ? (cornerPosts(v).length * free[0].H) / 1000 : 0),
   };
+}
+
+/** Every textile to fit, InFrame frames and both faces of each free-standing wall: picking list and work order. */
+export interface TextileRow {
+  pos: string;
+  /** Where it goes: the wall, or the free-standing wall and face. */
+  where: string;
+  W: number;
+  H: number;
+  pw: number;
+  ph: number;
+  fill: TextileFill;
+  fileName: string | null;
+}
+
+export const FILL_NAME: Record<TextileFill, string> = { print: 'Trykt tekstil', white: 'Hvit tekstil', reuse: 'Kundens tekstil' };
+
+export function textileRows(P: Production): TextileRow[] {
+  return [
+    ...P.pieces.map((p) => ({ pos: p.pos, where: p.wall, W: p.W, H: p.H, pw: p.pw, ph: p.ph, fill: p.fill, fileName: p.fileName })),
+    ...P.free.flatMap((f) => f.faces.map((x) => ({ pos: x.pos, where: `Frittstående ${f.pos}, side ${x.face.toUpperCase()}`, W: x.W, H: x.H, pw: x.pw, ph: x.ph, fill: x.fill, fileName: x.fileName }))),
+  ];
 }

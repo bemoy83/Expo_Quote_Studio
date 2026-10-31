@@ -11,7 +11,7 @@ import { wallHeight } from '../rules/rules';
 import { pointAlong, wallDirection, wallLength, wallModules } from './grid';
 import { defaultSwing, nextId } from './edit';
 import { OUTSIDE, roomAt } from './rooms';
-import type { Foil, Point, TextileWall, Variant, Wall } from './types';
+import type { Foil, Point, TextileFill, TextileWall, Variant, Wall } from './types';
 import { builtModules, isStandWall } from './walls';
 
 export type FaceSide = 1 | -1;
@@ -184,6 +184,7 @@ export interface TextilePatch {
   bottom?: number;
   motif?: string | null;
   side?: FaceSide;
+  fill?: TextileFill;
 }
 
 /**
@@ -206,8 +207,10 @@ export function updateTextile(v: Variant, rules: Rules, id: string, patch: Texti
   const cur = textileBox(t, rules);
   const bottom = r1(clamp(patch.bottom ?? cur.bottom, 0, full - minH));
   const height = r3(clamp(patch.height ?? cur.height, minH, full - bottom));
-  const { motif: _m, height: _h, bottom: _b, ...rest } = t;
+  const { motif: _m, height: _h, bottom: _b, fill: _fl, ...rest } = t;
   const motif = patch.motif === undefined ? t.motif : patch.motif ?? undefined;
+  // A motif is a print: setting one makes the textile printed again
+  const fill = patch.motif ? 'print' : (patch.fill ?? t.fill ?? 'print');
   // Resizing or moving by hand ends "Fyll veggen"
   const { fit: _f, ...base } = rest;
   const keepFit = t.fit && placed[0] === t.from && placed[1] === t.width;
@@ -220,6 +223,7 @@ export function updateTextile(v: Variant, rules: Rules, id: string, patch: Texti
     ...(bottom > EPS ? { bottom } : {}),
     ...(bottom > EPS || height < full - EPS ? { height } : {}),
     ...(motif ? { motif } : {}),
+    ...(fill !== 'print' ? { fill } : {}),
   };
   return { ...v, textiles: v.textiles.map((x) => (x.id === id ? next : x)) };
 }

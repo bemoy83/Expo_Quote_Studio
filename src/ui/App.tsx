@@ -18,9 +18,11 @@ import { count, fmt, kr, signed } from './format'
 import { frameCount, TYPE_NAME } from './names'
 import { Rail } from './panel/Rail'
 import { PlanPreview, PlanView, type PlanSelection } from './plan/PlanView'
+import { FreeTextileDrawer } from './plan/FreeTextileDrawer'
 import { WallDrawer } from './plan/WallDrawer'
 import { findMotif, motifLibrary } from './motifs'
 import { fitDecor, removeFoil, removeTextile } from '../domain/decor'
+import { fitFreeTextiles, removeFreeTextile } from '../domain/freeTextile'
 import { newlyClosedRooms, wallsToRoom } from '../domain/enclosures'
 import { PickingPage } from './picking/PickingPage'
 import { ProductionPage } from './production/ProductionPage'
@@ -95,7 +97,7 @@ export default function App() {
   const onEdit = useCallback(
     (fn: (v: Variant) => Variant, history = true) => {
       const ratio = (id: string | undefined) => findMotif(motifs, id)?.ratio ?? 0
-      const apply = (x: Variant) => fitDecor(fn(x), rules, ratio)
+      const apply = (x: Variant) => fitFreeTextiles(fitDecor(fn(x), rules, ratio), rules)
       dispatch({ type: 'edit', fn: apply, history })
       if (!history) return
       const areas = newlyClosedRooms(vRef.current, apply(vRef.current))
@@ -151,6 +153,10 @@ export default function App() {
         const { textileId, foilId } = selection
         onEdit((x) => (textileId ? removeTextile(x, textileId) : removeFoil(x, foilId!)))
         setSelection({ wallId: selection.wallId, side: selection.side })
+      } else if ((k === 'delete' || k === 'backspace') && selection.freeTextileId) {
+        const id = selection.freeTextileId
+        onEdit((x) => removeFreeTextile(x, id))
+        setSelection({})
       } else if ((k === 'delete' || k === 'backspace') && selection.roomId) {
         const id = selection.roomId
         onEdit((x) => removeRoom(x, id))
@@ -193,6 +199,7 @@ export default function App() {
   }
 
   const brushLabel = describeBrush(brush)
+  const freeFrame = selection.freeTextileId ? res.production.free.find((f) => f.textileId === selection.freeTextileId) : undefined
 
   return (
     <div className="app">
@@ -292,7 +299,7 @@ export default function App() {
                 sub={[wallSplit(k), k.openings ? count(k.openings, 'åpning', 'åpninger') : ''].filter(Boolean).join(' · ') || undefined}
               />
               <Kpi label="Takdrager" value={fmt(k.beamLm)} unit="m" sub={k.organiserBeamLm ? 'fra arrangør' : undefined} />
-              {k.textileM2 > 0 && <Kpi label="Tekstilvegg" value={fmt(k.textileM2)} unit="m²" sub={frameCount(res.production.pieces.length)} />}
+              {k.textileM2 > 0 && <Kpi label="Tekstilvegg" value={fmt(k.textileM2)} unit="m²" sub={textileSub(res.production)} />}
               <span className="spacer" />
               <Kpi
                 label="Veiledende sum"
@@ -358,6 +365,18 @@ export default function App() {
                   </Suspense>
                 )}
               </div>
+              {freeFrame && tool === 'select' && (
+                <FreeTextileDrawer
+                  v={v}
+                  frame={freeFrame}
+                  selection={selection}
+                  motifs={motifs}
+                  onSelect={setSelection}
+                  onEdit={onEdit}
+                  onToast={showToast}
+                  onClose={() => setSelection({})}
+                />
+              )}
               {selection.wallId && tool === 'select' && (
                 <WallDrawer
                   v={v}
@@ -401,6 +420,7 @@ export default function App() {
     if (!b) return { name: 'Pensel' }
     if (b.kind === 'wall') return { name: `Vegg RAL ${b.ral}`, color: plateColor(b.ral) }
     if (b.kind === 'textile') return { name: 'Tekstilvegg' }
+    if (b.kind === 'freeTextile') return { name: 'Tekstilvegg frittstående' }
     if (b.kind === 'motif') return { name: findMotif(motifs, b.motif)?.name ?? 'Motiv' }
     const r = idx.byArtnr.get(b.product)
     const name = r ? (r.product.variants.length > 1 ? `${r.product.name.split(' ')[0]} ${r.variant.name.toLowerCase()}` : r.product.name) : b.product
@@ -422,11 +442,18 @@ function hint(tool: Tool, brush: Brush | null): string {
       return erase ? 'Klikk en åpning for å gjøre den til vegg igjen' : 'Klikk en vegg eller en tom kant for å sette inn åpning med overstykke · klikk en åpning for å bytte fyll'
     case 'textile':
       return erase ? 'Klikk en tekstilvegg for å fjerne den' : 'Klikk ved en vegg, på siden rammen skal stå · rammen fyller den ledige delen av veggen'
+    case 'freeTextile':
+      return erase ? 'Klikk en frittstående tekstilvegg for å fjerne den' : 'Dra en rett strek på rutenettet (0,25 m) · start der en annen slutter for å lage hjørne · dra videre i samme retning for å forlenge'
     case 'motif':
       return erase ? 'Klikk en foliedekor for å fjerne den, eller en tekstilvegg for å ta bort motivet' : 'Klikk en tekstilvegg for trykk, eller et veggfelt for foliedekor'
     case 'object':
       return erase ? 'Klikk et møbel for å fjerne det' : `Klikk i planen for å sette ut ${productOf(brush?.kind === 'object' ? brush.product : '')?.name.toLowerCase() ?? 'varen'}`
   }
+}
+
+/** InFrame frames and free-standing walls. */
+function textileSub(p: CalcResult['production']) {
+  return [p.pieces.length ? frameCount(p.pieces.length) : '', p.free.length ? `${p.free.length} frittstående` : ''].filter(Boolean).join(' · ')
 }
 
 /** Stand walls apart from inner and room walls, and who pays them. */

@@ -5,6 +5,7 @@
 // it never closes a room or carries a door, and it may not cross or lie along a system wall.
 import type { Rules } from '../rules/rules';
 import type { FreeTextile, Point, TextileFace, Variant } from './types';
+import { nextId } from './edit';
 import { builtModules } from './walls';
 
 /** Face A is side 1 (left normal of from → to), face B side −1. */
@@ -115,7 +116,7 @@ function blocked(v: Variant, rules: Rules, t: Pick<FreeTextile, 'from' | 'to'>, 
 export function addFreeTextile(v: Variant, rules: Rules, a: Point, b: Point): { v: Variant; id: string } | { error: string } {
   if (same(a, b)) return { error: 'Dra en strek for å tegne tekstilveggen' };
   if (Math.abs(a[0] - b[0]) > EPS && Math.abs(a[1] - b[1]) > EPS) return { error: 'Tekstilvegger tegnes rett, langs rutenettet' };
-  let run: FreeTextile = { id: `ft${Date.now().toString(36)}${Math.floor(Math.random() * 1e4)}`, from: a, to: b };
+  let run: FreeTextile = { id: nextId(v.freeTextiles.map((t) => t.id), 'ft'), from: a, to: b };
   let rest = v.freeTextiles;
   for (;;) {
     const join = rest.find((o) => contact(run, o).kind === 'line');
@@ -203,4 +204,17 @@ export function fitFreeTextiles(v: Variant, rules: Rules): Variant {
   const keep: FreeTextile[] = [];
   for (const t of v.freeTextiles) if (!blocked(v, rules, t, keep)) keep.push(t);
   return keep.length === v.freeTextiles.length ? v : { ...v, freeTextiles: keep };
+}
+
+/** Set a run's length on the grid, keeping its `from` end. Null when it cannot stand there. */
+export function resizeFreeTextile(v: Variant, rules: Rules, id: string, length: number): Variant | null {
+  const t = v.freeTextiles.find((x) => x.id === id);
+  if (!t) return null;
+  const L = Math.max(rules.textile.minWidth, snap(length, rules.textile.grid));
+  const [dx, dy] = runDirection(t);
+  const to: Point = [t.from[0] + dx * L, t.from[1] + dy * L];
+  if (to[0] < -EPS || to[1] < -EPS || to[0] > v.stand.width + EPS || to[1] > v.stand.depth + EPS) return null;
+  const run = { ...t, to };
+  if (blocked(v, rules, run, v.freeTextiles.filter((x) => x.id !== id))) return null;
+  return { ...v, freeTextiles: v.freeTextiles.map((x) => (x.id === id ? run : x)) };
 }
