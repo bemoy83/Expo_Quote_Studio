@@ -41,6 +41,23 @@ export function pointAlong(w: Wall, t: number): Point {
   return [w.from[0] + dx * t, w.from[1] + dy * t];
 }
 
+/** Runs [start, end) of consecutive indices below n where keep(i) holds. */
+export function runs(n: number, keep: (i: number) => boolean): [number, number][] {
+  const out: [number, number][] = [];
+  let i = 0;
+  while (i < n) {
+    if (!keep(i)) {
+      i++;
+      continue;
+    }
+    let e = i;
+    while (e < n && keep(e)) e++;
+    out.push([i, e]);
+    i = e;
+  }
+  return out;
+}
+
 /** Modules of a wall in order from `from`. Index i spans [i, i+1] metres along the wall. */
 export function wallModules(w: Wall): Module[] {
   const n = Math.round(wallLength(w));

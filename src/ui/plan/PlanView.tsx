@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent, type SVGProps } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import { mainGroupOf } from '../../catalog/groups'
-import { defaultSwing, eraseWalls, isPerimeterWall, paintFloor, paintWalls, segmentKeys, setOpening } from '../../domain/edit'
+import { defaultSwing, drawOpening, eraseWalls, isPerimeterWall, paintFloor, paintWalls, segmentKeys, setOpening } from '../../domain/edit'
 import { CELL, parseCellKey, pointAlong, sideLength, sidePoint, wallDirection, wallLength, type Module } from '../../domain/grid'
 import { addObject, conflicts, footprintBox, moveObject, removeObject } from '../../domain/objects'
 import { addFoil, addTextile, faceAt, faceSegment, felt, foilAt, foilCenter, freeSpans, removeFoil, removeTextile, sideOf, textileAt, textileOffset, updateTextile, type FaceSide } from '../../domain/decor'
@@ -14,7 +14,7 @@ import { builtModules, type BuiltModule } from '../../domain/walls'
 import { BORDER, BORDER_STRONG, BLOCK, CANVAS, INK, INK_FAINT, INK_MUTED, LAYER_COLOR, SURFACE } from '../colors'
 import { applyDrop, decorDrag, endDecorDrag, type DecorDrag } from '../dnd'
 import { dragRoom, dragWall, dropObject, dropRoom, roomDrag, type RoomDrag, type WallDrag } from '../drag'
-import { faceEnds, FACES, roomAt, roomSideAt } from '../../domain/rooms'
+import { faceEnds, FACES, roomAt, roomName, roomSideAt } from '../../domain/rooms'
 import { fmt } from '../format'
 import { idx, place, plateColor, productOf, rules } from '../env'
 import { findMotif } from '../motifs'
@@ -122,6 +122,8 @@ export function PlanView(p: Props) {
   const objectTool = tool !== 'select' && brush?.kind === 'object'
   const decorTool = tool !== 'select' && (brush?.kind === 'textile' || brush?.kind === 'motif')
 
+  /** On the stand, or just outside its edge (where its edge walls are drawn). */
+  const onStand = (q: P) => q.x > -0.4 && q.y > -0.4 && q.x < W + 0.4 && q.y < D + 0.4
   const moduleAt = (q: P, within = 0.3): BuiltModule | null => {
     let best: BuiltModule | null = null
     let bd = within
@@ -236,11 +238,12 @@ export function PlanView(p: Props) {
     }
     if (openingTool) {
       const m = moduleAt(q, 0.4)
-      if (!m) {
-        p.onToast('Klikk på en vegg for å sette inn en åpning')
-        return
+      if (m) p.onEdit((x) => setOpening(x, m.key, tool === 'erase' ? null : brush!.product))
+      else if (tool !== 'erase' && onStand(q)) {
+        // No wall there: the door or curtain draws its own wall module
+        const e = nearestEdge(v.stand, q)
+        p.onEdit((x) => drawOpening(x, e.a, e.b, brush!.product))
       }
-      p.onEdit((x) => setOpening(x, m.key, tool === 'erase' ? null : brush!.product))
       return
     }
     if (decorTool) {
@@ -366,10 +369,10 @@ export function PlanView(p: Props) {
   }
 
   // Hover previews
-  const hoverModule = openingTool && hover ? moduleAt(hover, 0.4) : null
+  const hoverModule = openingTool && hover ? (moduleAt(hover, 0.4) ?? (tool !== 'erase' && onStand(hover) ? nearestEdge(v.stand, hover) : null)) : null
   const hoverFloor = floorTool && hover && !drag.current ? floorBlock(hover) : null
   const hoverFace = decorTool && hover ? faceHit(hover) : null
-  const hoverEdge = wallTool && hover && !stroke && hover.x > -0.4 && hover.y > -0.4 && hover.x < W + 0.4 && hover.y < D + 0.4 ? nearestEdge(v.stand, hover) : null
+  const hoverEdge = wallTool && hover && !stroke && onStand(hover) ? nearestEdge(v.stand, hover) : null
 
   const sideText = (s: Side) => {
     const n = sideLength(v.stand, s)
@@ -722,7 +725,6 @@ function FacePreview({ v, h, brush, erase }: { v: Variant; h: FaceHit; brush: Br
   return <Seg a={a} b={b} stroke={brush.kind === 'textile' && !erase ? TEXTILE : INK} strokeOpacity={0.45} strokeWidth={rules.textile.depth + 0.04} />
 }
 
-const ROOM_NAME = 'Bakrom'
 
 /** Room name and size on its floor; a dashed outline when selected. */
 function RoomMark({ r, selected }: { r: Room; selected: boolean }) {
@@ -734,7 +736,7 @@ function RoomMark({ r, selected }: { r: Room; selected: boolean }) {
       {selected && <rect x={r.x + 0.12} y={r.y + 0.12} width={r.w - 0.24} height={r.d - 0.24} rx={0.04} fill={INK} fillOpacity={0.04} stroke={INK} strokeWidth={0.025} strokeDasharray=".1 .06" />}
       <rect x={cx - (small ? 0.4 : 0.6)} y={cy - (small ? 0.2 : 0.3)} width={small ? 0.8 : 1.2} height={small ? 0.44 : 0.6} rx={0.06} fill={CANVAS} fillOpacity={0.85} />
       <text x={cx} y={cy - (small ? 0.02 : 0.06)} textAnchor="middle" style={{ ...LABEL, fontSize: small ? '0.17px' : '0.22px' }}>
-        {r.label ?? ROOM_NAME}
+        {roomName(r)}
       </text>
       <text x={cx} y={cy + (small ? 0.18 : 0.22)} textAnchor="middle" style={{ ...MONO, fontSize: small ? '0.15px' : '0.19px' }}>
         {r.w} × {r.d} m

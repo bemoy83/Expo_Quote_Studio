@@ -3,8 +3,8 @@
 // every time the room changes (syncRooms). builtModules lets the first wall win a shared edge, so a side lying on a
 // stand wall or a drawn wall shares that wall and only the missing modules are built. Doors, textiles and foils on a
 // room side refer to `<id>.<face>` with offsets from the side's start, so they move with the room.
-import { pointAlong, wallLength, wallModules } from './grid';
-import { nextId, replaceWalls } from './edit';
+import { pointAlong, runs, wallLength, wallModules } from './grid';
+import { nextId, ownPlate, replaceWalls } from './edit';
 import type { Opening, PlacedObject, Point, RectFace, Room, Variant, Wall } from './types';
 import { builtModules } from './walls';
 
@@ -37,6 +37,27 @@ export function outwardSide(face: RectFace): 1 | -1 {
 }
 
 export const roomWallId = (roomId: string, face: RectFace) => `${roomId}.${face}`;
+
+/** Names offered for a room; the first is the default. A frihåndsrom is called «Rom» until renamed. */
+export const ROOM_LABELS = ['Bakrom', 'Lager', 'Møterom'] as const;
+export const roomName = (r: Room): string => r.label ?? ROOM_LABELS[0];
+
+/** True for one of the room's own sides (`<id>.<face>`). */
+export const isRoomWallId = (wallId: string, roomId: string) => wallId.startsWith(`${roomId}.`);
+
+/** Module keys around a rectangle. */
+export function rimKeys(r: Rect): string[] {
+  return FACES.flatMap((f) => {
+    const [from, to] = faceEnds(r, f);
+    return wallModules({ id: '', from, to }).map((m) => m.key);
+  });
+}
+
+/** Doors and curtains around a room, also those in a stand wall or another room's side it shares. */
+export function roomOpenings(v: Variant, r: Rect): Opening[] {
+  const rim = new Set(rimKeys(r));
+  return builtModules(v).flatMap((m) => (m.opening && rim.has(m.key) ? [m.opening] : []));
+}
 
 /** The four sides of a room as walls. */
 export function roomWalls(r: Room): Wall[] {
@@ -75,7 +96,7 @@ export function roomSideAt(v: Variant, x: number, y: number, tol = 0.1): { room:
   return undefined;
 }
 
-const overlaps = (a: Rect, b: Rect) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.d && b.y < a.y + a.d;
+export const overlaps = (a: Rect, b: Rect) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.d && b.y < a.y + a.d;
 
 /** Inside the stand, at least 1 × 1 and not on top of another room. */
 function fits(v: Variant, r: Room): boolean {
@@ -193,7 +214,7 @@ export function resizeRoom(v: Variant, id: string, face: RectFace, delta: number
   if ((x === r.x && y === r.y && w === r.w && d === r.d) || !fits(v, next)) return v;
   // A side that now starts elsewhere: shift offsets so its doors and decor stay put
   const shift = (wallId: string): number => {
-    if (!wallId.startsWith(`${id}.`)) return 0;
+    if (!isRoomWallId(wallId, id)) return 0;
     const f = wallId.slice(id.length + 1) as RectFace;
     return f === 'back' || f === 'front' ? r.x - x : r.y - y;
   };
@@ -242,7 +263,7 @@ export function updateRoom(v: Variant, id: string, patch: Partial<Pick<Room, 'la
       if (r.id !== id) return r;
       const next = { ...r, ...patch };
       if (!next.label) delete next.label;
-      if (!next.plate || next.plate === v.defaultPlate) delete next.plate;
+      if (!ownPlate(v, next.plate).plate) delete next.plate;
       return next;
     }),
   });
@@ -273,21 +294,12 @@ export function dissolveRoom(v: Variant, id: string): Variant {
   const stored = v.walls.filter((w) => !w.room);
   const others = v.walls.filter((w) => w.room && w.room.id !== id);
   const ids = v.walls.map((w) => w.id);
-  const runs: Wall[] = [];
+  const parts: Wall[] = [];
   for (const w of v.walls.filter((x) => x.room?.id === id)) {
-    const n = Math.round(wallLength(w));
-    let i = 0;
-    while (i < n) {
-      if (!ownAt.has(`${w.id}#${i}`)) {
-        i++;
-        continue;
-      }
-      let e = i;
-      while (e < n && ownAt.has(`${w.id}#${e}`)) e++;
-      const wid = nextId([...ids, ...runs.map((x) => x.id)], 'w');
-      runs.push({ id: wid, from: pointAlong(w, i), to: pointAlong(w, e), ...(r.plate ? { plate: r.plate } : {}) });
-      i = e;
+    for (const [i, e] of runs(Math.round(wallLength(w)), (t) => ownAt.has(`${w.id}#${t}`))) {
+      const wid = nextId([...ids, ...parts.map((x) => x.id)], 'w');
+      parts.push({ id: wid, from: pointAlong(w, i), to: pointAlong(w, e), ...ownPlate(v, r.plate) });
     }
   }
-  return { ...replaceWalls(v, [...stored, ...runs, ...others]), rooms: v.rooms.filter((x) => x.id !== id) };
+  return { ...replaceWalls(v, [...stored, ...parts, ...others]), rooms: v.rooms.filter((x) => x.id !== id) };
 }

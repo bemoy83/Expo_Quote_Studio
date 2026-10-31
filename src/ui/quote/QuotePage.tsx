@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Printer } from 'lucide-react'
 import type { CalcResult } from '../../calc/calc'
 import type { Project, Room, Variant } from '../../domain/types'
+import { roomName, roomOpenings } from '../../domain/rooms'
 import { dateText, DELIVERY_FIELDS, today, validUntil } from '../../domain/delivery'
 import { isFixedField, projectField } from '../../domain/variant'
 import { Button } from '../controls'
@@ -64,11 +65,11 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
   ]
   if (v.rooms.length) {
     const kind = (r: Room) => {
-      const ps = v.openings.filter((o) => o.wallId.startsWith(`${r.id}.`)).map((o) => productOf(o.product)?.name.toLowerCase() ?? o.product)
+      const ps = roomOpenings(v, r).map((o) => productOf(o.product)?.name.toLowerCase() ?? o.product)
       return ps.length ? `med ${ps.join(' og ')}` : 'uten åpning'
     }
     facts.splice(2, 0, [
-      v.rooms.map((r) => `${r.label ?? 'Bakrom'} ${r.w} × ${r.d} m`).join(', '),
+      v.rooms.map((r) => `${roomName(r)} ${r.w} × ${r.d} m`).join(', '),
       v.rooms.map(kind).join(' · ') + (k.roomWallLm ? ` · ${fmt(k.roomWallLm)} lm av standveggen` : ''),
     ])
   }

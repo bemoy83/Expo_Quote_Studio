@@ -21,6 +21,7 @@ import { PlanPreview, PlanView, type PlanSelection } from './plan/PlanView'
 import { WallDrawer } from './plan/WallDrawer'
 import { findMotif, motifLibrary } from './motifs'
 import { fitDecor, removeFoil, removeTextile } from '../domain/decor'
+import { newlyClosedRooms, wallsToRoom } from '../domain/enclosures'
 import { PickingPage } from './picking/PickingPage'
 import { ProductionPage } from './production/ProductionPage'
 import { QuotePage } from './quote/QuotePage'
@@ -80,13 +81,25 @@ export default function App() {
   }, [sketch])
 
   const motifs = useMemo(() => motifLibrary(sketch.motifs), [sketch.motifs])
+  const vRef = useRef(v)
+  useEffect(() => {
+    vRef.current = v
+  }, [v])
   // Every edit keeps textiles and foils valid: on a wall, off openings, inside their felt.
+  // An edit that walls in a rectangle with a door turns it into a room (frihåndsrom), as its own undo step.
   const onEdit = useCallback(
     (fn: (v: Variant) => Variant, history = true) => {
       const ratio = (id: string | undefined) => findMotif(motifs, id)?.ratio ?? 0
-      dispatch({ type: 'edit', fn: (x) => fitDecor(fn(x), rules, ratio), history })
+      const apply = (x: Variant) => fitDecor(fn(x), rules, ratio)
+      dispatch({ type: 'edit', fn: apply, history })
+      if (!history) return
+      const rects = newlyClosedRooms(vRef.current, apply(vRef.current))
+      if (!rects.length) return
+      dispatch({ type: 'edit', fn: (x) => fitDecor(rects.reduce((y, r) => wallsToRoom(y, r) ?? y, x), rules, ratio) })
+      const size = rects.map((r) => `${r.w} × ${r.d} m`).join(' og ')
+      showToast({ text: `Gjort om til rom ${size}`, action: 'Angre', onAction: () => dispatch({ type: 'undo' }) })
     },
-    [motifs],
+    [motifs, showToast],
   )
   const onCheckpoint = useCallback(() => dispatch({ type: 'checkpoint' }), [])
   const selectVariant = (index: number) => dispatch({ type: 'select', index })
@@ -401,7 +414,7 @@ function hint(tool: Tool, brush: Brush | null): string {
     case 'floor':
       return erase ? 'Klikk og dra for å fjerne gulv' : 'Klikk og dra for å tegne gulv · velg penselstørrelse i båndet'
     case 'opening':
-      return erase ? 'Klikk en åpning for å gjøre den til vegg igjen' : 'Klikk en veggmodul for å sette inn åpning med overstykke · klikk en åpning for å bytte fyll'
+      return erase ? 'Klikk en åpning for å gjøre den til vegg igjen' : 'Klikk en vegg eller en tom kant for å sette inn åpning med overstykke · klikk en åpning for å bytte fyll'
     case 'textile':
       return erase ? 'Klikk en tekstilvegg for å fjerne den' : 'Klikk ved en vegg, på siden rammen skal stå · rammen fyller den ledige delen av veggen'
     case 'motif':
