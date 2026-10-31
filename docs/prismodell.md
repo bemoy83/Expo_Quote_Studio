@@ -87,9 +87,11 @@ hver artikkel og hvert produkt som egen størrelse, også når kronene er regnet
 - **Gyldighet**: tilbudet gjelder 30 dager fra det sendes, men aldri lenger enn 14 dager før montering
   (`rules.quote`). Datoene for montering, åpning og demontering ligger på prosjektet. De er plassholdere i appen og
   skal komme fra prosjektet i OMS via API.
-- **Arbeidsordren** (prototype i appen) viser leveranse, forventet montering og demontering per produktgruppe,
-  plukkliste, standskisse og trykkliste. Lagertid (plukk, vask, transport) står bare som én sum, fordi den planlegges
-  i OMS. Tiden lagres likevel per steg, fordi kosten trenger det. Mannskap og tidspunkt settes i OMS.
+- **Arbeidsordren** (prototype i appen) viser leveranse, forventet tid fra ordren påbegynnes til den er signert
+  levert (plukk, forhåndsmontering, transport og montering) per produktgruppe, plukkliste, standskisse og trykkliste.
+  Vask og demontering skjer etter messen. De ligger i systemet for planlegging, men vises ikke på arbeidsordren
+  (Bjørn 31.10.2026). Arbeidsordren kan filtreres på produktgruppe, slik at tepper går til teppelegger og
+  standkonstruksjon til standbygger. Grupper som er filtrert bort dempes i skissen. Mannskap og tidspunkt settes i OMS.
 - **Tilbudet** viser aldri kost, DB eller DG. Er et produkt dels leie og dels kjøp, får linjen en tekst til kunden,
   for eksempel «Leie av ramme, kjøp av trykt tekstil».
 

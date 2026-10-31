@@ -1,15 +1,16 @@
-// Arbeidsordre: a prototype of what the OMS will issue once the quote is confirmed. Delivery, expected time per
-// product group and handling step, the picking list, the stand sketch and the print list. It shows the requirement to
+// Arbeidsordre: a prototype of what the OMS will issue once the quote is confirmed. Delivery, expected time from the
+// order is started until it is signed off as delivered (A to B), the picking list, the stand sketch and the print list.
+// It can be filtered by product group, so carpet goes to the carpet layer and the stand to the stand builders. It shows the requirement to
 // the OMS in practice: everything here comes from the drawing and the price list. Background: docs/prismodell.md.
 import { Printer } from 'lucide-react'
 import { useState } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import { production } from '../../calc/production'
-import { groupItems } from '../../catalog/groups'
+import { groupItems, PRODUCT_GROUPS } from '../../catalog/groups'
 import { dateText, DELIVERY_FIELDS, today } from '../../domain/delivery'
 import type { Project, Variant } from '../../domain/types'
 import { customerName, projectField } from '../../domain/variant'
-import { addTime, minutesOf, type HandlingStep, type Time } from '../../pricing/model'
+import { addTime, type HandlingStep, type Time } from '../../pricing/model'
 import { Button } from '../controls'
 import { rules } from '../env'
 import { fmt } from '../format'
@@ -27,8 +28,13 @@ interface Props {
   calcOf: (v: Variant) => CalcResult
 }
 
-const ON_SITE: HandlingStep[] = ['montering', 'demontering']
-const STEP_NAME: Partial<Record<HandlingStep, string>> = { montering: 'Montering', demontering: 'Demontering' }
+/** From the order is started until it is delivered (Bjørn 31.10.2026). Vask and demontering come after the fair:
+ *  they stay in the data for planning, but not on the work order. */
+const A_TO_B: HandlingStep[] = ['plukk', 'forhåndsmontering', 'transport', 'montering']
+const STEP_NAME: Partial<Record<HandlingStep, string>> = { plukk: 'Plukk', forhåndsmontering: 'Forh.mont.', transport: 'Transport', montering: 'Montering' }
+
+/** Minutes from the order is started until it is delivered. */
+const aToB = (t: Time) => A_TO_B.reduce((a, st) => a + (t[st] ?? 0), 0)
 
 /** Hours with one decimal, '–' for none. */
 const h = (min: number | undefined) => (min ? fmt(min / 60, 1) : '–')
@@ -41,22 +47,36 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf }: 
   const sub = [projectField(project, 'prosjekt'), projectField(project, 'standnr') && `stand ${projectField(project, 'standnr')}`].filter(Boolean).join(' · ')
   const [issued] = useState(() => today())
 
-  // Expected time per main group, from the lines (sum products from their items, the rest from the product)
-  const timeRows = res.groups
-    .map((g) => ({ id: g.id, name: g.name, time: g.lines.reduce<Time>((a, l) => addTime(a, l.time), {}) }))
-    .filter((r) => (r.time.montering ?? 0) + (r.time.demontering ?? 0) > 0)
-  // On site only: montering and demontering per product group. Lager time (plukk, vask, transport) is kept per step
-  // in the data, but planned by the OMS and shown here only as one total.
-  const steps = ON_SITE
-  const lagerMin = minutesOf(k.time) - (k.time.montering ?? 0) - (k.time.demontering ?? 0)
-  const tree = groupItems(pickRows(res), (r) => r.group)
-  const prints = production(v, rules.textile.inFrame, customer).pieces
+  // Product groups on this order: those with something to pick or time to spend. The filter shows a subset.
+  const allTime = res.groups.map((g) => ({ id: g.id, name: g.name, time: g.lines.reduce<Time>((a, l) => addTime(a, l.time), {}) }))
+  const allPicks = groupItems(pickRows(res), (r) => r.group)
+  const groupIds = PRODUCT_GROUPS.map((g) => g.id).filter((id) => allPicks.some((x) => x.group.id === id) || allTime.some((t) => t.id === id && aToB(t.time) > 0))
+  const [hidden, setHidden] = useState<ReadonlySet<string>>(new Set())
+  const shown = new Set(groupIds.filter((id) => !hidden.has(id)))
+  const toggle = (id: string) => setHidden((h) => (h.has(id) ? new Set([...h].filter((x) => x !== id)) : new Set([...h, id])))
+  const filtered = shown.size < groupIds.length
+
+  const timeRows = allTime.filter((r) => shown.has(r.id) && aToB(r.time) > 0)
+  const total = timeRows.reduce<Time>((a, r) => addTime(a, r.time), {})
+  const steps = A_TO_B.filter((st) => timeRows.some((r) => r.time[st]))
+  const tree = allPicks.filter((x) => shown.has(x.group.id))
+  const prints = shown.has('prof') ? production(v, rules.textile.inFrame, customer).pieces : []
+  const groupName = (id: string) => PRODUCT_GROUPS.find((g) => g.id === id)?.name ?? id
   const missingDates = !DELIVERY_FIELDS.some((d) => project.delivery?.[d.key])
 
   return (
     <>
       <PageBand title="Arbeidsordre" meta={`Variant ${v.name} · prototype`}>
         {variants.length > 1 && <VariantTabs variants={variants} current={current} onSelect={onSelect} />}
+        {groupIds.length > 1 && (
+          <div className="seg on-band wo-filter" role="group" aria-label="Produktgrupper på arbeidsordren">
+            {groupIds.map((id) => (
+              <button key={id} type="button" aria-pressed={shown.has(id)} onClick={() => toggle(id)}>
+                {groupName(id)}
+              </button>
+            ))}
+          </div>
+        )}
         <Button onBand icon={Printer} onClick={() => window.print()}>
           Skriv ut
         </Button>
@@ -69,7 +89,10 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf }: 
         <article className="qdoc wo">
           <header className="qdoc-head">
             <div>
-              <div className="eyebrow">Arbeidsordre · standbygg · variant {v.name}</div>
+              <div className="eyebrow">
+                Arbeidsordre · variant {v.name}
+                {filtered ? ` · ${[...shown].map(groupName).join(', ').toLowerCase()}` : ' · standbygg'}
+              </div>
               <h1 className={customer ? '' : 'missing'}>{customer || 'Kundenavn'}</h1>
               {sub && <div className="muted">{sub}</div>}
             </div>
@@ -82,7 +105,7 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf }: 
 
           <section className="qdoc-summary">
             <div className="qdoc-plan" style={{ aspectRatio: `${v.stand.width + 2 * PLAN_MARGIN} / ${v.stand.depth + 2 * PLAN_MARGIN}` }}>
-              <PlanPreview v={v} res={res} />
+              <PlanPreview v={v} res={res} groups={filtered ? shown : undefined} />
             </div>
             <dl>
               {DELIVERY_FIELDS.map((d) => (
@@ -100,15 +123,15 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf }: 
                 </dd>
               </div>
               <div>
-                <dt className="num">Montering ca. {h(k.time.montering)} t</dt>
-                <dd>demontering ca. {h(k.time.demontering)} t</dd>
+                <dt className="num">Ca. {h(aToB(total))} timer</dt>
+                <dd>fra plukk til levert · montering {h(total.montering)} t</dd>
               </div>
             </dl>
           </section>
 
           {timeRows.length > 0 && (
             <section className="wo-sec">
-              <div className="eyebrow">Forventet tid på messen, timer</div>
+              <div className="eyebrow">Forventet tid fra ordre til levert, timer</div>
               <div className="wo-time" style={{ gridTemplateColumns: `minmax(0, 1fr) repeat(${steps.length + 1}, 88px)` }}>
                 <span className="wo-th">Produktgruppe</span>
                 {steps.map((s) => (
@@ -120,16 +143,16 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf }: 
                 {timeRows.map((r) => (
                   <Row key={r.id} name={r.name} time={r.time} steps={steps} />
                 ))}
-                <Row name="Sum" time={k.time} steps={steps} total />
+                <Row name="Sum" time={total} steps={steps} total />
               </div>
-              {lagerMin > 0 && <p className="foot">Lager (plukk, vask og transport): ca. {h(lagerMin)} t, planlegges i OMS.</p>}
-              <p className="foot">Mannskap og tidspunkt settes i OMS. Montørene melder faktisk tid per produktgruppe, så etterkalkylen kan rette tidene.</p>
+              <p className="foot">
+                Vask og demontering skjer etter messen og planlegges i OMS. Mannskap og tidspunkt settes i OMS. Montørene melder faktisk tid per produktgruppe, så etterkalkylen kan rette tidene.</p>
             </section>
           )}
 
           <section className="wo-sec">
             <div className="eyebrow">Plukkliste</div>
-            {!tree.length && <p className="foot">Ingenting å plukke.</p>}
+            {!tree.length && <p className="foot">Ingenting å plukke{filtered ? ' i valgte grupper' : ''}.</p>}
             {tree.map(({ group, subgroups }) => (
               <div key={group.id} className="qgroup">
                 <div className="wo-pick qgroup-head">

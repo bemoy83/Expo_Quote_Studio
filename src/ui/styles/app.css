@@ -188,10 +188,11 @@ kbd {
 .seg.on-band > button {
   color: var(--b-ink);
 }
-.seg > button:hover:not([aria-selected='true']):not(:disabled) {
+.seg > button:hover:not([aria-selected='true']):not([aria-pressed='true']):not(:disabled) {
   background: color-mix(in oklab, rgb(var(--surface)) 45%, transparent);
 }
-.seg > button[aria-selected='true'] {
+.seg > button[aria-selected='true'],
+.seg > button[aria-pressed='true'] {
   background: rgb(var(--surface));
   color: rgb(var(--ink));
   box-shadow: var(--raise);
@@ -1794,6 +1795,11 @@ select.cin {
   margin: 12mm;
 }
 /* Arbeidsordre: reuses the quote document (qdoc) */
+.wo-filter {
+  flex-wrap: wrap;
+  height: auto;
+  max-width: 60vw;
+}
 .proj-pop .pop-sect {
   margin-top: 18px;
 }
