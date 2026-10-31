@@ -65,7 +65,9 @@ export function parse(text: string): ParseResult {
     return { ok: false, error: 'Filen har ingen gyldige varianter.' };
   }
   if (!Array.isArray(motifs)) return { ok: false, error: 'Egne motiver er ugyldige.' };
-  return { ok: true, sketch: { project: project as unknown as Project, variants: variants as Variant[], motifs: motifs as Motif[] } };
+  // Rooms came after version 1 files were first written: a variant without them has none
+  const vs = (variants as Variant[]).map((x) => (Array.isArray(x.rooms) ? x : { ...x, rooms: [] }));
+  return { ok: true, sketch: { project: project as unknown as Project, variants: vs, motifs: motifs as Motif[] } };
 }
 
 const isObject = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null && !Array.isArray(x);

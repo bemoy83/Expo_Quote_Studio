@@ -8,6 +8,7 @@ import { foilCenter, sideOf, textileBox, textileOffset } from '../../domain/deco
 import { defaultSwing } from '../../domain/edit'
 import { CELL, parseCellKey, pointAlong, pointKey, wallDirection, wallLength } from '../../domain/grid'
 import { conflicts } from '../../domain/objects'
+import { faceEnds, FACES } from '../../domain/rooms'
 import type { Point, Variant } from '../../domain/types'
 import { builtModules, wallPoints, type BuiltModule } from '../../domain/walls'
 import type { Motif } from '../../persistence/file'
@@ -21,7 +22,8 @@ export type Layer = Exclude<Highlight, null>
 /** What a mesh stands for. `pick` marks meshes the pointer can hit. */
 export interface Tag {
   layer: Layer
-  pick?: { wallId?: string; objectId?: string; textileId?: string; foilId?: string }
+  /** `roomId`: a room's see-through roof, the handle that moves the room. */
+  pick?: { wallId?: string; objectId?: string; textileId?: string; foilId?: string; roomId?: string }
 }
 
 /** Colours of the build system. Product colours come from the catalog. */
@@ -47,7 +49,7 @@ const ALU_FINISH = { metalness: 0.4, roughness: 0.5 }
 const OPENING_H = 2.1
 
 export interface BuildOptions {
-  selection?: { wallId?: string; objectId?: string; textileId?: string; foilId?: string }
+  selection?: { wallId?: string; objectId?: string; textileId?: string; foilId?: string; roomId?: string }
   /** Flat text on the floor (dimensions, area). Needs a canvas, so tests turn it off. */
   labels?: boolean
   /** Motif library for prints on textiles and foils. Without it they are drawn blank. */
@@ -297,6 +299,33 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
     const glow = sel.foilId === f.id ? { emissive: SELECT, emissiveIntensity: 0.35 } : {}
     const print = m ? printMaterial(m, f.width / f.height, opts.onLoad, glow) : mat('foil', FABRIC, { roughness: 0.6, ...glow })
     along(pointAlong(w, c - f.width / 2), pointAlong(w, c + f.width / 2), f.width, f.height, 0.002, f.y - f.height / 2, print, { layer: 'foil', pick: { wallId: w.id, foilId: f.id } }, s * (rules.wall.profile.thickness / 2 + 0.002))
+  }
+
+  // Rooms: a see-through roof at wall height to grab and move the room. There is no roof product; this is only a
+  // handle. Sides are resized by grabbing the top of a wall (see Scene3D), so nothing is drawn on the walls.
+  for (const r of v.rooms) {
+    const selected = sel.roomId === r.id || v.walls.some((w) => w.id === sel.wallId && w.room?.id === r.id)
+    const roof = new THREE.Mesh(
+      new THREE.PlaneGeometry(Math.max(0.1, r.w - 0.08), Math.max(0.1, r.d - 0.08)),
+      new THREE.MeshBasicMaterial({ color: SELECT, transparent: true, opacity: selected ? 0.22 : 0.08, depthWrite: false, side: THREE.DoubleSide }),
+    )
+    roof.rotation.x = -Math.PI / 2
+    roof.position.copy(at([r.x + r.w / 2, r.y + r.d / 2], H + 0.012))
+    add(roof, { layer: 'walls', pick: { roomId: r.id } })
+    roof.castShadow = false
+    roof.receiveShadow = false
+    const edge: number[] = []
+    for (const f of FACES) {
+      const [a, b] = faceEnds(r, f)
+      edge.push(...at(a, H + 0.014).toArray(), ...at(b, H + 0.014).toArray())
+    }
+    const outline = new THREE.LineSegments(
+      new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(edge, 3)),
+      new THREE.LineDashedMaterial({ color: SELECT, dashSize: 0.12, gapSize: 0.08, transparent: true, opacity: selected ? 0.9 : 0.5 }),
+    )
+    outline.computeLineDistances()
+    outline.userData = { label: true }
+    root.add(outline)
   }
 
   // Furniture: top, pole and foot from the footprint

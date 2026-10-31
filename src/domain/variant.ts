@@ -11,6 +11,7 @@ export function createVariant(name: VariantName, stand: Stand): Variant {
     stand,
     defaultPlate: DEFAULT_PLATE,
     walls: standardWalls(stand),
+    rooms: [],
     openings: [],
     floor: { cells: {}, protection: false },
     objects: [],

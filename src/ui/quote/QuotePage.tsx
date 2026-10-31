@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { Printer } from 'lucide-react'
 import type { CalcResult } from '../../calc/calc'
-import type { Project, Variant } from '../../domain/types'
+import type { Project, Room, Variant } from '../../domain/types'
 import { isFixedField, projectField } from '../../domain/variant'
 import { Button } from '../controls'
 import { idx, plateName, productOf, rules } from '../env'
@@ -58,6 +58,16 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
       : ['Uten takdrager', 'ingen åpne sider å avstive'],
     k.floorTotal ? [floorNames.join(', '), `${fmt(k.floorTotal)} m² ferdig lagt${v.floor.protection ? ' med monteringsbeskyttelse' : ''}`] : ['Hallgulv uten belegg', ''],
   ]
+  if (v.rooms.length) {
+    const kind = (r: Room) => {
+      const ps = v.openings.filter((o) => o.wallId.startsWith(`${r.id}.`)).map((o) => productOf(o.product)?.name.toLowerCase() ?? o.product)
+      return ps.length ? `med ${ps.join(' og ')}` : 'uten åpning'
+    }
+    facts.splice(2, 0, [
+      v.rooms.map((r) => `${r.label ?? 'Bakrom'} ${r.w} × ${r.d} m`).join(', '),
+      v.rooms.map(kind).join(' · ') + (k.roomWallLm ? ` · ${fmt(k.roomWallLm)} lm av standveggen` : ''),
+    ])
+  }
   if (k.textileM2) facts.push([`${fmt(k.textileM2)} m² tekstilvegg`, `${frameCount(res.production.pieces.length)} InFrame`])
 
   const unpriced = v.loose.filter((l) => !l.price)

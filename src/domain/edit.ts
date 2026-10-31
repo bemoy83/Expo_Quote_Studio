@@ -1,6 +1,7 @@
 // Editing operations on a variant. All pure: they return a new variant and never mutate.
 import { CELL, cellKey, moduleKey, parseCellKey, pointAlong, sideEnds, SIDES, wallDirection, wallLength, wallModules } from './grid';
 import type { Opening, Point, Stand, TextileWall, Variant, Wall } from './types';
+import { addRoomGaps, clampRooms, outwardSide, roomOf, syncRooms } from './rooms';
 import { builtModules, standardWalls } from './walls';
 
 /** Next free id with the given prefix: `w1`, `w2` … */
@@ -137,9 +138,17 @@ export function eraseWalls(v: Variant, keys: Iterable<string>): Variant {
   const ids = v.walls.map((w) => w.id);
   const out: Wall[] = [];
   let changed = false;
+  // A module a room side owns becomes an open gap in the room. Where a stand wall owns it, that wall goes.
+  const owner = new Map(builtModules(v).map((m) => [m.key, m.wallId]));
+  const roomGaps: [string, number[]][] = [];
   for (const w of v.walls) {
     const mods = wallModules(w);
     if (!mods.some((m) => gone.has(m.key))) {
+      out.push(w);
+      continue;
+    }
+    if (w.room) {
+      roomGaps.push([w.id, mods.flatMap((m, i) => (gone.has(m.key) && owner.get(m.key) === w.id ? [i] : []))]);
       out.push(w);
       continue;
     }
@@ -159,11 +168,22 @@ export function eraseWalls(v: Variant, keys: Iterable<string>): Variant {
       i = e;
     }
   }
-  return changed ? replaceWalls(v, out) : v;
+  let next = changed ? replaceWalls(v, out) : v;
+  for (const [id, mods] of roomGaps) next = addRoomGaps(next, id, mods);
+  return next;
 }
 
 /** Set the plate colour of one wall. The default plate clears the override. */
 export function setWallPlate(v: Variant, wallId: string, ral: string): Variant {
+  const room = roomOf(v, v.walls.find((w) => w.id === wallId));
+  if (room) {
+    const rooms = v.rooms.map((r) => {
+      if (r.id !== room.id) return r;
+      const { plate: _drop, ...rest } = r;
+      return ral === v.defaultPlate ? rest : { ...rest, plate: ral };
+    });
+    return syncRooms({ ...v, rooms });
+  }
   return {
     ...v,
     walls: v.walls.map((w) => {
@@ -189,8 +209,12 @@ export function setOpening(v: Variant, key: string, product: string | null): Var
   return { ...v, openings: [...others, { id, wallId: mod.wallId, module: mod.index, product, ...(swing === 1 ? {} : { swing }) }] };
 }
 
-/** Into the stand on a perimeter wall, else to the wall's left. */
+/** Into the stand on a perimeter wall, else to the wall's left. A room door swings out of the room, or in on the perimeter. */
 export function defaultSwing(stand: Stand, w: Wall): 1 | -1 {
+  if (w.room) {
+    const out = outwardSide(w.room.face);
+    return isPerimeterWall(stand, w) ? (out === 1 ? -1 : 1) : out;
+  }
   const [dx, dy] = wallDirection(w);
   const n: Point = [-dy, dx];
   const mid = pointAlong(w, wallLength(w) / 2);
@@ -223,9 +247,12 @@ export function setStand(v: Variant, stand: Stand): Variant {
   const fits = (w: Wall) =>
     [w.from, w.to].every(([x, y]) => x >= 0 && y >= 0 && x <= stand.width && y <= stand.depth);
   const perimeter = standardWalls(stand);
-  const inner = v.walls.filter((w) => !onOldPerimeter(w) && !perimeter.some((p) => p.id === w.id) && fits(w));
+  const stored = v.walls.filter((w) => !w.room);
+  const inner = stored.filter((w) => !onOldPerimeter(w) && !perimeter.some((p) => p.id === w.id) && fits(w));
   // A kept inner wall now lying on the new perimeter would double a standard wall: builtModules dedupes it.
-  const next = replaceWalls({ ...v, stand }, [...perimeter, ...inner]);
+  // Rooms are kept inside the new size and regenerate their sides against the new stand walls.
+  const resized = clampRooms({ ...v, stand, walls: stored });
+  const next = replaceWalls({ ...v, stand }, [...perimeter, ...inner, ...resized.walls.filter((w) => w.room)]);
   const nx = Math.round(stand.width / CELL);
   const ny = Math.round(stand.depth / CELL);
   const cells = Object.fromEntries(
@@ -235,7 +262,7 @@ export function setStand(v: Variant, stand: Stand): Variant {
     }),
   );
   const objects = v.objects.map((o) => ({ ...o, x: Math.min(o.x, stand.width), y: Math.min(o.y, stand.depth) }));
-  return { ...next, floor: { ...v.floor, cells }, objects };
+  return { ...next, rooms: resized.rooms, floor: { ...v.floor, cells }, objects };
 }
 
 /** Paint a w × h block of floor cells starting at (i, j). Null erases. */
@@ -273,12 +300,13 @@ export function isPerimeterWall(stand: Stand, w: Wall): boolean {
 
 /**
  * Move an inner wall sideways by `delta` whole metres (along its normal axis: y for horizontal walls, x for vertical).
- * Perpendicular walls ending on it stretch or shrink with it, so dragging one side of a room resizes the room.
- * Its openings, textiles and foils move with it. Refused (returns v) for perimeter walls or moves outside the stand.
+ * Perpendicular drawn walls ending on it stretch or shrink with it, so walls drawn around an area resize like a room.
+ * Its openings, textiles and foils move with it. Refused (returns v) for perimeter walls, room walls (see rooms.ts)
+ * or moves outside the stand.
  */
 export function moveWall(v: Variant, wallId: string, delta: number): Variant {
   const w = v.walls.find((x) => x.id === wallId);
-  if (!w || !delta || isPerimeterWall(v.stand, w)) return v;
+  if (!w || !delta || w.room || isPerimeterWall(v.stand, w)) return v;
   const horizontal = w.from[1] === w.to[1];
   const shift = (p: Point): Point => (horizontal ? [p[0], p[1] + delta] : [p[0] + delta, p[1]]);
   const moved: Wall = { ...w, from: shift(w.from), to: shift(w.to) };
@@ -290,7 +318,7 @@ export function moveWall(v: Variant, wallId: string, delta: number): Variant {
   for (const o of v.walls) {
     if (o.id === w.id) continue;
     const perpendicular = (o.from[1] === o.to[1]) !== horizontal;
-    if (!perpendicular || isPerimeterWall(v.stand, o)) {
+    if (!perpendicular || o.room || isPerimeterWall(v.stand, o)) {
       others.push(o);
       continue;
     }

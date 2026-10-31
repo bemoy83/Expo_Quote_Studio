@@ -4,10 +4,9 @@ import { placeContext } from '../catalog/lookup';
 import { calc } from '../calc/calc';
 import { r2 } from '../calc/referenceStands';
 import { RULES } from '../rules/rules';
-import { eraseWalls, moveWall, paintFloor, paintWalls, setOpening, setStand, setWallPlate } from './edit';
+import { eraseWalls, paintFloor, paintWalls, setOpening, setStand, setWallPlate } from './edit';
 import { moduleKey } from './grid';
 import { addObject, addObjectAnywhere, conflicts, moveObject } from './objects';
-import { addDefaultRoom } from './rooms';
 import type { Variant } from './types';
 import { createVariant, fillFloor } from './variant';
 import { builtModules } from './walls';
@@ -80,36 +79,6 @@ describe('stand size and type', () => {
     const s = setStand(v, { width: 4, depth: 4, type: 'row' });
     expect(kf(s).floorTotal).toBe(16);
     expect(s.walls.some((w) => w.from[0] === 5)).toBe(false);
-  });
-});
-
-describe('rooms', () => {
-  it('backroom shortcut: 1 × 1 in the corner with most wall, door on an inner face', () => {
-    const v = createVariant('A', { width: 6, depth: 4, type: 'corner', cornerSide: 'right' });
-    const r = addDefaultRoom(v, DOOR)!;
-    // Back-left corner (two walls). Adds right face + front face = 2 modules, one door.
-    expect(kf(r).topRails).toBe(kf(v).topRails + 2);
-    expect(kf(r).openings).toBe(1);
-    const door = builtModules(r).find((m) => m.opening)!;
-    // Wide stand → door on the face toward the width (right face, x = 1)
-    expect(door.key).toBe(moduleKey([1, 0], [1, 1]));
-  });
-  it('a second room takes the next corner; any number of rooms', () => {
-    const v = createVariant('A', { width: 6, depth: 4, type: 'row' });
-    const a = addDefaultRoom(v, DOOR)!;
-    const b = addDefaultRoom(a, DOOR)!;
-    expect(kf(b).openings).toBe(2);
-    expect(b.walls.filter((w) => w.id.startsWith('rom2-')).length).toBeGreaterThan(0);
-  });
-  it('dragging a room edge resizes it: perpendicular walls stretch, the door moves along', () => {
-    const v = r2(); // backroom 2 × 2, front face y = 2 with door at module 1
-    const front = v.walls.find((w) => w.id.startsWith('bk-front'))!;
-    const m = moveWall(v, front.id, 1);
-    // Room now 2 × 3: right face 3 + front face 2 = 5 inner modules (was 4)
-    expect(kf(m).topRails).toBe(kf(v).topRails + 1);
-    expect(kf(m).openings).toBe(1);
-    expect(builtModules(m).find((x) => x.opening)!.key).toBe(moduleKey([1, 3], [2, 3]));
-    expect(moveWall(v, 'side-back', 1)).toBe(v);
   });
 });
 
