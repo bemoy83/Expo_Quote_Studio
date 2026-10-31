@@ -5,6 +5,23 @@
 /** Leie: comes back after the fair (frame, posts, furniture). Salg: the customer keeps it or it is used up (print, foil). */
 export type Transfer = 'leie' | 'salg';
 
+/** Handling steps, in the order the work is done. Time is kept per step: it is cost (× hourly rate, in the OMS) and
+ *  it is the plan on the work order. */
+export const HANDLING_STEPS = ['plukk', 'vask', 'transport', 'forhåndsmontering', 'montering', 'demontering'] as const;
+export type HandlingStep = (typeof HANDLING_STEPS)[number];
+/** Minutes per handling step. */
+export type Time = Partial<Record<HandlingStep, number>>;
+
+/** a + b × times, per step. */
+export function addTime(a: Time, b: Time | undefined, times = 1): Time {
+  if (!b) return a;
+  const out: Time = { ...a };
+  for (const s of HANDLING_STEPS) if (b[s]) out[s] = (out[s] ?? 0) + b[s]! * times;
+  return out;
+}
+
+export const minutesOf = (t: Time) => HANDLING_STEPS.reduce((a, s) => a + (t[s] ?? 0), 0);
+
 /**
  * How the sales price of a level 1 product is set.
  * - fast: the product's own price per unit (from the OMS).
@@ -25,8 +42,8 @@ export interface PriceItem {
   /** Sales price per unit eks. mva., kr. */
   price: number;
   transfer?: Transfer;
-  /** Montør hours per unit (handling and montering). */
-  hours?: number;
+  /** Minutes per unit and handling step. */
+  time?: Time;
 }
 
 export type PriceList = ReadonlyMap<string, PriceItem>;
@@ -39,7 +56,8 @@ export interface Use {
 export interface Summed {
   cost: number;
   price: number;
-  hours: number;
+  /** Minutes per step for all of it. */
+  time: Time;
   /** Leie, salg or both: both means the quote must say what is rented and what is bought. */
   transfer: Transfer | 'blandet' | null;
   /** Items not in the price list: the sum is incomplete. */
@@ -50,7 +68,7 @@ export interface Summed {
 export function sumItems(uses: readonly Use[], list: PriceList): Summed {
   let cost = 0;
   let price = 0;
-  let hours = 0;
+  let time: Time = {};
   const transfers = new Set<Transfer>();
   const missing = new Set<string>();
   for (const u of uses) {
@@ -62,13 +80,13 @@ export function sumItems(uses: readonly Use[], list: PriceList): Summed {
     }
     cost += it.cost * u.qty;
     price += it.price * u.qty;
-    hours += (it.hours ?? 0) * u.qty;
+    time = addTime(time, it.time, u.qty);
     if (it.transfer) transfers.add(it.transfer);
   }
   return {
     cost,
     price,
-    hours,
+    time,
     transfer: transfers.size === 2 ? 'blandet' : transfers.size === 1 ? [...transfers][0] : null,
     missing: [...missing],
   };
@@ -81,6 +99,8 @@ export const dgOf = (price: number, cost: number) => (price > 0 ? (price - cost)
 export interface Own {
   price: number;
   cost?: number;
+  /** Minutes per unit and step. */
+  time?: Time;
 }
 
 export interface Priced {
@@ -91,7 +111,8 @@ export interface Priced {
   /** The strategy actually used: a sum product whose items are not all priced falls back to its own price. */
   strategy: Strategy;
   dg: number | null;
-  hours: number;
+  /** Minutes per step for the whole line: the built items' time when known, else the product's own × qty. */
+  time: Time;
   transfer: Transfer | 'blandet' | null;
 }
 
@@ -112,7 +133,7 @@ export function priceLine(qty: number, strategy: Strategy, own: Own, uses: reado
     cost,
     strategy: useSum ? 'sum' : 'fast',
     dg: cost === null ? null : dgOf(price * qty, cost),
-    hours: complete?.hours ?? 0,
+    time: complete ? complete.time : addTime({}, own.time, qty),
     transfer: complete?.transfer ?? null,
   };
 }

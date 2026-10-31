@@ -73,11 +73,22 @@ OMS setter pris per artikkel. Anbefalt modell:
   prosjekteres og bygges kan ha et annet mål enn en stol som kjøpes inn, lagres og flyttes.
 - DG er valgt framfor påslag fordi selgeren ser DG i kalkylen når hen gir rabatt, og da er det samme tall.
 
+### Tid per håndteringssteg
+Tid lagres i minutter per steg: **plukk, vask, transport, forhåndsmontering, montering og demontering**. Demontering har
+egen tid (Bjørn 31.10.2026). Tid er både kost (minutter × timepris, regnet i OMS) og plan på arbeidsordren, så den følger
+hver artikkel og hvert produkt som egen størrelse, også når kronene er regnet ut på forhånd. I appen er det `time` på
+`PriceItem` (sum-produkter) og på produktet (faste produkter).
+
 ## 5. Kalkyle og tilbud
 
 - **Kalkylen** (internt) viser per linje: pris, kost, DG og strategi (sum eller fast). Den viser også DG per gruppe,
   og kost, DB og DG for hele standen. Linjer uten kost står uten margin og telles opp. Selgeren trenger margin fordi
   det kan bli gitt rabatt.
+- **Gyldighet**: tilbudet gjelder 30 dager fra det sendes, men aldri lenger enn 14 dager før montering
+  (`rules.quote`). Datoene for montering, åpning og demontering ligger på prosjektet. De er plassholdere i appen og
+  skal komme fra prosjektet i OMS via API.
+- **Arbeidsordren** (prototype i appen) viser leveranse, forventet tid per produktgruppe og steg, plukkliste,
+  standskisse og trykkliste. Mannskap og tidspunkt settes i OMS.
 - **Tilbudet** viser aldri kost, DB eller DG. Er et produkt dels leie og dels kjøp, får linjen en tekst til kunden,
   for eksempel «Leie av ramme, kjøp av trykt tekstil».
 
@@ -109,7 +120,8 @@ dokumentet «Expo Quote Studio i OMS: hele modellen».
   også til plukklisten. Ikke noe vi bygger nå.
 - **Lagerstatus** vises mens det tegnes, men kommer senere fra OMS og følger prosjektet.
 - **Gyldighet**: prisen låses når tilbudet sendes og gjelder 30 dager. Tiden igjen til prosjektet styrer også.
-- **Spesialmål**: fast påslag per kapp, til vi lager en motor som regner det selv.
+- **Spesialmål**: fast påslag per kapp, til vi lager en motor som regner det selv. Motoren kommer i et eget løp
+  senere, sammen med disker, podier og snekkervegger.
 - **DG-mål**: eksempeltallene brukes til ekte tall finnes.
 - **Lagerkost** i eie-formelen er per enhet og år.
 - **Tid**: demontering har egen tid ved siden av montering. Montørene rapporterer faktisk tid per produktgruppe, og
@@ -120,4 +132,4 @@ dokumentet «Expo Quote Studio i OMS: hele modellen».
 
 ## 9. Åpent
 
-1. Hvor lang er fristen før montering som et tilbud senest gjelder til?
+Ingenting akkurat nå. Fristen før montering er 14 dager.

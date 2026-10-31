@@ -3,6 +3,7 @@ import { useState } from 'react'
 import type { CalcLine, CalcResult } from '../../calc/calc'
 import { groupItems, mainGroupOf } from '../../catalog/groups'
 import type { BomLine } from '../../foga/engine'
+import { HANDLING_STEPS } from '../../pricing/model'
 import { LAYER_COLOR } from '../colors'
 import { Button } from '../controls'
 import { rules } from '../env'
@@ -92,7 +93,12 @@ export function CalcPanel({ res, name, onHover, onQuote }: { res: CalcResult; na
           Internt: kost {kr(res.margin.cost)} · DB {kr(res.margin.db)} · DG {pct(res.margin.dg)}
           {res.margin.unknown > 0 && <span className="ph"> · {res.margin.unknown} {res.margin.unknown === 1 ? 'linje' : 'linjer'} uten kost</span>}
         </div>
-        {res.keyFigures.hours > 0 && <div className="inkl num">Håndtering og montering ca. {fmt(Math.round(res.keyFigures.hours * 2) / 2)} t, inngår i prisene</div>}
+        {res.keyFigures.hours > 0 && (
+          <div className="inkl num">
+            Tid ca. {fmt(res.keyFigures.hours, 1)} t, inngår i prisene:{' '}
+            {HANDLING_STEPS.filter((st) => res.keyFigures.time[st]).map((st) => `${st} ${fmt((res.keyFigures.time[st] ?? 0) / 60, 1)} t`).join(' · ')}
+          </div>
+        )}
         <Button variant="primary" icon={FileText} onClick={onQuote}>
           Åpne tilbud
         </Button>

@@ -202,6 +202,8 @@ describe('price as sum of articles (example price list, pricing/data.ts)', () =>
     expect(lines(r).find((x) => x.artnr === '5280')).toMatchObject({ price: 690, cost: 760, strategy: 'fast' });
     expect(lines(r).find((x) => x.artnr === '7010')).toMatchObject({ price: 1250, cost: null, dg: null });
     expect(r.margin.unknown).toBe(1);
+    // Example time for furniture: 1 + 2 + 2 + 1 + 1 min per piece
+    expect(lines(r).find((x) => x.artnr === '5280')!.time).toEqual({ plukk: 2, vask: 4, transport: 4, montering: 2, demontering: 2 });
     expect(r.margin.sum).toBe(r.sum - 1250);
   });
   it('a sum product with an item missing from the price list falls back to its own price', () => {
@@ -210,9 +212,11 @@ describe('price as sum of articles (example price list, pricing/data.ts)', () =>
     const r = calc(r1(), RULES, DEFAULT_CATALOG, { ...DEFAULT_PRICING, items });
     expect(lines(r).find((x) => x.artnr === '6120-9010')).toMatchObject({ price: 870, cost: null, strategy: 'fast', placeholder: true });
   });
-  it('handling and montering hours are in the prices, not a line', () => {
-    // posts 10 × 0,05 + rails 18 × 0,025 + plates 9 × 0,08 + montering 9 × 0,5 + beam 0,05 + 3 × 0,15 = 6,67
-    expect(res.keyFigures.hours).toBeCloseTo(6.67);
+  it('handling time per step is in the prices, not a line', () => {
+    // plukk: posts 10 + rails 18 × 0,5 + plates 9 + beam 1 = 29 · vask 10 + 9 + 27 + 1 = 47 · transport 29
+    // montering 9 × 18 + 3 × 6 = 180 · demontering 9 × 12 + 3 × 3 = 117 → 402 min = 6,7 t
+    expect(res.keyFigures.time).toEqual({ plukk: 29, vask: 47, transport: 29, montering: 180, demontering: 117 });
+    expect(res.keyFigures.hours).toBeCloseTo(6.7);
     expect(qty(res, '9900')).toBe(0);
   });
   it('Arbeidstimer (customer\'s own equipment) counted in the panel goes under Andre tjenester', () => {

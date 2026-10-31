@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Printer } from 'lucide-react'
 import type { CalcResult } from '../../calc/calc'
 import type { Project, Room, Variant } from '../../domain/types'
+import { dateText, DELIVERY_FIELDS, today, validUntil } from '../../domain/delivery'
 import { isFixedField, projectField } from '../../domain/variant'
 import { Button } from '../controls'
 import { idx, plateName, productOf, rules } from '../env'
@@ -28,7 +29,10 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
   const customer = field('kunde')
   const sub = [field('prosjekt'), field('standnr') && `stand ${field('standnr')}`].filter(Boolean).join(' · ')
   const extra = project.fields.filter((f) => !isFixedField(f.id) && f.value.trim())
-  const [date] = useState(() => new Date().toLocaleDateString('nb-NO', { day: 'numeric', month: 'long', year: 'numeric' }))
+  // Sent today: the quote holds 30 days, but ends 14 days before montering when that comes first (rules.quote)
+  const [sent] = useState(() => today())
+  const valid = validUntil(sent, project.delivery, rules.quote)
+  const delivery = DELIVERY_FIELDS.filter((d) => project.delivery?.[d.key]).map((d) => `${d.name} ${dateText(project.delivery?.[d.key])}`)
   const lines = res.groups.flatMap((g) => g.lines)
   const placeholders = lines.filter((l) => l.placeholder).length
   const labourLines = lines.some((l) => l.group === 'tjen.montering')
@@ -84,6 +88,8 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
         <div className="doc-note no-print">
           Forhåndsvisning · utskrift gir PDF
           {!customer && <span className="warn"> · kundenavn mangler, legg det inn under kunde og prosjekt øverst</span>}
+          {!project.delivery?.montering && <span className="warn"> · monteringsdato mangler, tilbudet gjelder da {rules.quote.validDays} dager</span>}
+          {valid.late && <span className="warn"> · montering er nærmere enn {rules.quote.beforeMount} dager</span>}
         </div>
         <article className="qdoc">
           <header className="qdoc-head">
@@ -91,6 +97,7 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
               <div className="eyebrow">Tilbud · standbygg · variant {v.name}</div>
               <h1 className={customer ? '' : 'missing'}>{customer || 'Kundenavn'}</h1>
               {sub && <div className="muted">{sub}</div>}
+              {delivery.length > 0 && <div className="muted num">{delivery.join(' · ')}</div>}
               {extra.length > 0 && (
                 <div className="muted extra">
                   {extra.map((f) => (
@@ -103,7 +110,8 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
             </div>
             <div className="qdoc-from">
               <strong>Expo Planner</strong>
-              <span className="muted num">{date}</span>
+              <span className="muted num">{dateText(sent)}</span>
+              <span className={'num' + (valid.late ? ' warn' : ' muted')}>Gyldig til {dateText(valid.until)}</span>
               <span className="faint">Veiledende · ikke bindende</span>
             </div>
           </header>
@@ -198,7 +206,10 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
               <li>
                 Montering og demontering inngår i prisene.{labourLines ? ' Arbeidstimer gjelder hjelp med eget utstyr.' : ''} Strøm og lys bestilles via hallens leverandør der det kreves.
               </li>
-              <li>Alle priser er eks. mva. Tilbudet er veiledende og bekreftes ved bestilling.</li>
+              <li>
+                Alle priser er eks. mva. Tilbudet gjelder til {dateText(valid.until)}
+                {valid.byMount ? `, ${rules.quote.beforeMount} dager før montering` : ''}. Det er veiledende og bekreftes ved bestilling.
+              </li>
             </ul>
           </section>
         </article>

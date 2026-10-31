@@ -1,5 +1,6 @@
 // Example catalog for the PoC. Art.nr are made up, groups are subgroup ids from groups.ts; prices are examples eks. mva. (F1, H6).
 // Later this comes from the OMS export (Bærer, Art.nr, Beskrivelse, Pris).
+import type { Time } from '../pricing/model';
 import type { Catalog, Product, ProductKind, Unit } from './types';
 
 const one = (
@@ -179,6 +180,18 @@ for (const p of products) for (const v of p.variants) if (OBJECT_COLORS[v.artnr]
 const COSTED = ['gulv.', 'mob.', 'prof.folie', 'tjen.montering'];
 for (const p of products)
   if (!p.pricing && !p.article && COSTED.some((g) => p.group.startsWith(g))) for (const v of p.variants) v.cost = Math.round(v.price * 0.55);
+
+// Example handling time per unit (minutes per step), by subgroup prefix. From the OMS later.
+const TIME: [prefix: string, time: Time][] = [
+  ['mob.', { plukk: 1, vask: 2, transport: 2, montering: 1, demontering: 1 }],
+  ['gulv.belegg', { plukk: 0.5, vask: 1, transport: 0.5, montering: 6, demontering: 3 }],
+  ['gulv.beskyttelse', { montering: 1, demontering: 0.5 }],
+  ['prof.folie', { montering: 15, demontering: 5 }],
+];
+for (const p of products) {
+  const t = !p.pricing && !p.article && TIME.find(([g]) => p.group.startsWith(g));
+  if (t) p.time = t[1];
+}
 
 export const DEFAULT_CATALOG: Catalog = {
   products,

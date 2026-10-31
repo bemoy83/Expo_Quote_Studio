@@ -1,4 +1,4 @@
-import type { Strategy } from '../pricing/model';
+import type { Strategy, Time } from '../pricing/model';
 
 /** surface: floor, wall (drawn with a brush) · object: placed and drawn · counted: only a quantity · system: build parts the calc derives */
 export type ProductKind = 'surface' | 'object' | 'counted' | 'system';
@@ -43,6 +43,8 @@ export interface Product {
   article?: true;
   /** Sum: priced as the sum of the articles actually built (pricing/model.ts). Otherwise the variant's own price. */
   pricing?: Strategy;
+  /** Minutes per unit and handling step, from the OMS. For fast products; sum products take it from their items. */
+  time?: Time;
   /** Goes in a wall module. A door swings and blocks its swing area; a curtain does not. */
   opening?: 'door' | 'curtain';
 }

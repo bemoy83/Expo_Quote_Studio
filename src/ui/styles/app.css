@@ -1793,6 +1793,74 @@ select.cin {
   size: A4;
   margin: 12mm;
 }
+/* Arbeidsordre: reuses the quote document (qdoc) */
+.proj-pop .pop-sect {
+  margin-top: 18px;
+}
+.wo-sec {
+  padding: 20px 0 8px;
+  border-bottom: 1px solid var(--g-row);
+  break-inside: avoid-page;
+}
+.wo-sec > .eyebrow {
+  color: rgb(var(--ink-faint));
+  margin-bottom: 8px;
+}
+.wo-time {
+  display: grid;
+  column-gap: 8px;
+  row-gap: 4px;
+  font: var(--type-note);
+}
+.wo-time .wo-th {
+  font: 500 11.5px var(--font-ui);
+  color: rgb(var(--ink-faint));
+}
+.wo-time .r,
+.wo-print .r {
+  text-align: right;
+}
+.wo-time .wo-sum {
+  font-weight: 600;
+}
+.wo-time .wo-total {
+  padding-top: 4px;
+  border-top: 1px solid var(--g-top);
+  font-weight: 600;
+}
+.wo-pick {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) 80px;
+  gap: 10px;
+  align-items: baseline;
+}
+.wo-pick > span:last-child {
+  text-align: right;
+}
+.wo-pick.qline > span:nth-child(2) {
+  padding-left: 0;
+}
+.wo-box {
+  display: block;
+  box-sizing: border-box;
+  width: 11px;
+  height: 11px;
+  border: 1px solid rgb(var(--ink-muted));
+  border-radius: 2px;
+  align-self: center;
+}
+.wo-print {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 100px 120px minmax(0, 1.4fr);
+  gap: 10px;
+}
+.wo-print.qline > span:first-child {
+  padding-left: 0;
+}
+.wo-file {
+  overflow-wrap: anywhere;
+}
+
 @media print {
   html,
   body,
