@@ -414,7 +414,7 @@ function hint(tool: Tool, brush: Brush | null): string {
     case 'floor':
       return erase ? 'Klikk og dra for å fjerne gulv' : 'Klikk og dra for å tegne gulv · velg penselstørrelse i båndet'
     case 'opening':
-      return erase ? 'Klikk en åpning for å gjøre den til vegg igjen' : 'Klikk en veggmodul for å sette inn åpning med overstykke · klikk en åpning for å bytte fyll'
+      return erase ? 'Klikk en åpning for å gjøre den til vegg igjen' : 'Klikk en vegg eller en tom kant for å sette inn åpning med overstykke · klikk en åpning for å bytte fyll'
     case 'textile':
       return erase ? 'Klikk en tekstilvegg for å fjerne den' : 'Klikk ved en vegg, på siden rammen skal stå · rammen fyller den ledige delen av veggen'
     case 'motif':

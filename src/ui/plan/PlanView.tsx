@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent, type SVGProps } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import { mainGroupOf } from '../../catalog/groups'
-import { defaultSwing, eraseWalls, isPerimeterWall, paintFloor, paintWalls, segmentKeys, setOpening } from '../../domain/edit'
+import { defaultSwing, drawOpening, eraseWalls, isPerimeterWall, paintFloor, paintWalls, segmentKeys, setOpening } from '../../domain/edit'
 import { CELL, parseCellKey, pointAlong, sideLength, sidePoint, wallDirection, wallLength, type Module } from '../../domain/grid'
 import { addObject, conflicts, footprintBox, moveObject, removeObject } from '../../domain/objects'
 import { addFoil, addTextile, faceAt, faceSegment, felt, foilAt, foilCenter, freeSpans, removeFoil, removeTextile, sideOf, textileAt, textileOffset, updateTextile, type FaceSide } from '../../domain/decor'
@@ -122,6 +122,8 @@ export function PlanView(p: Props) {
   const objectTool = tool !== 'select' && brush?.kind === 'object'
   const decorTool = tool !== 'select' && (brush?.kind === 'textile' || brush?.kind === 'motif')
 
+  /** On the stand, or just outside its edge (where its edge walls are drawn). */
+  const onStand = (q: P) => q.x > -0.4 && q.y > -0.4 && q.x < W + 0.4 && q.y < D + 0.4
   const moduleAt = (q: P, within = 0.3): BuiltModule | null => {
     let best: BuiltModule | null = null
     let bd = within
@@ -236,11 +238,12 @@ export function PlanView(p: Props) {
     }
     if (openingTool) {
       const m = moduleAt(q, 0.4)
-      if (!m) {
-        p.onToast('Klikk på en vegg for å sette inn en åpning')
-        return
+      if (m) p.onEdit((x) => setOpening(x, m.key, tool === 'erase' ? null : brush!.product))
+      else if (tool !== 'erase' && onStand(q)) {
+        // No wall there: the door or curtain draws its own wall module
+        const e = nearestEdge(v.stand, q)
+        p.onEdit((x) => drawOpening(x, e.a, e.b, brush!.product))
       }
-      p.onEdit((x) => setOpening(x, m.key, tool === 'erase' ? null : brush!.product))
       return
     }
     if (decorTool) {
@@ -366,10 +369,10 @@ export function PlanView(p: Props) {
   }
 
   // Hover previews
-  const hoverModule = openingTool && hover ? moduleAt(hover, 0.4) : null
+  const hoverModule = openingTool && hover ? (moduleAt(hover, 0.4) ?? (tool !== 'erase' && onStand(hover) ? nearestEdge(v.stand, hover) : null)) : null
   const hoverFloor = floorTool && hover && !drag.current ? floorBlock(hover) : null
   const hoverFace = decorTool && hover ? faceHit(hover) : null
-  const hoverEdge = wallTool && hover && !stroke && hover.x > -0.4 && hover.y > -0.4 && hover.x < W + 0.4 && hover.y < D + 0.4 ? nearestEdge(v.stand, hover) : null
+  const hoverEdge = wallTool && hover && !stroke && onStand(hover) ? nearestEdge(v.stand, hover) : null
 
   const sideText = (s: Side) => {
     const n = sideLength(v.stand, s)

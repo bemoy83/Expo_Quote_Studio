@@ -209,6 +209,11 @@ export function setOpening(v: Variant, key: string, product: string | null): Var
   return { ...v, openings: [...others, { id, wallId: mod.wallId, module: mod.index, product, ...(swing === 1 ? {} : { swing }) }] };
 }
 
+/** Put a door or curtain on the module a–b, drawing the wall module first when there is none. */
+export function drawOpening(v: Variant, a: Point, b: Point, product: string): Variant {
+  return setOpening(paintWalls(v, a, b), moduleKey(a, b), product);
+}
+
 /** Into the stand on a perimeter wall, else to the wall's left. A room door swings out of the room, or in on the perimeter. */
 export function defaultSwing(stand: Stand, w: Wall): 1 | -1 {
   if (w.room) {

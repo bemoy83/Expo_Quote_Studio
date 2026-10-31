@@ -4,7 +4,7 @@ import { placeContext } from '../catalog/lookup';
 import { calc } from '../calc/calc';
 import { r2 } from '../calc/referenceStands';
 import { RULES } from '../rules/rules';
-import { eraseWalls, paintFloor, paintWalls, setOpening, setStand, setWallPlate } from './edit';
+import { drawOpening, eraseWalls, paintFloor, paintWalls, setOpening, setStand, setWallPlate } from './edit';
 import { moduleKey } from './grid';
 import { addObject, addObjectAnywhere, conflicts, moveObject } from './objects';
 import type { Variant } from './types';
@@ -55,6 +55,13 @@ describe('openings', () => {
   });
   it('needs a wall', () => {
     expect(setOpening(v, moduleKey([0, 3], [1, 3]), DOOR)).toBe(v);
+  });
+  it('drawn where there is no wall, the door brings its wall module', () => {
+    const x = drawOpening(v, [1, 3], [2, 3], DOOR);
+    expect(kf(x).openings).toBe(1);
+    expect(kf(x).modules).toBe(kf(v).modules + 1);
+    // On an existing wall it only replaces the module
+    expect(kf(drawOpening(v, [0, 0], [1, 0], DOOR)).modules).toBe(kf(v).modules);
   });
   it('a door on a perimeter wall swings into the stand', () => {
     const x = setOpening(v, moduleKey([1, 0], [2, 0]), DOOR);

@@ -319,7 +319,7 @@ function WallSection({ v, res, brush, tool, pick, onEdit, onToast, onSelect, sel
               title={p.name}
               meta={
                 <>
-                  <span className="num">{a}</span> · <span className="num">{kr(p.variants[0].price)} kr</span> inkl. overstykke · klikk en veggmodul
+                  <span className="num">{a}</span> · <span className="num">{kr(p.variants[0].price)} kr</span> inkl. overstykke · klikk en vegg eller tom kant
                 </>
               }
               result={n ? `${n} stk` : null}
