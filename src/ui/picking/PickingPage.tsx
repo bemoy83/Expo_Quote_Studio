@@ -30,7 +30,7 @@ export function PickingPage({ variants, current, onSelect, calcOf }: Props) {
     .map((g) => ({ ...g, lines: g.lines.filter((l) => l.artnr !== catalog.system.header) }))
     .filter((g) => g.lines.length)
   const n = (x: number) => fmt(x, 0)
-  const posts = B.units.reduce((a, u) => a + u.qty, 0)
+  const units = B.units.reduce((a, u) => a + u.qty, 0)
   const pieces = B.profiles.reduce((a, p) => a + p.cuts.reduce((b, c) => b + c.qty, 0), 0)
   const lm = B.profiles.reduce((a, p) => a + p.lm, 0)
   const fittings = B.parts.reduce((a, p) => a + p.qty, 0)
@@ -56,7 +56,7 @@ export function PickingPage({ variants, current, onSelect, calcOf }: Props) {
                 <span>Foga · ferdigmontert</span>
                 <span className="num">{B.units.length}</span>
               </div>
-              {!B.units.length && <div className="tbl-empty">Ingen stolper.</div>}
+              {!B.units.length && <div className="tbl-empty">Ingen ferdigmonterte enheter.</div>}
               {B.units.map((u) => (
                 <div key={u.name} className="pick-grid tbl-row">
                   <span className="num muted" />
@@ -157,7 +157,7 @@ export function PickingPage({ variants, current, onSelect, calcOf }: Props) {
               <span>Sum Foga</span>
             </div>
             <div className="formulas num">
-              <div>{count(posts, 'stolpe', 'stolper')} med fot</div>
+              <div>{count(units, 'ferdigmontert enhet', 'ferdigmonterte enheter')}</div>
               <div>{count(pieces, 'profil', 'profiler')} · {fmt(lm, 1)} lm</div>
               <div>{count(fittings, 'kobling og beslag', 'koblinger og beslag')}</div>
               <div>{count(plates, 'plate', 'plater')}</div>

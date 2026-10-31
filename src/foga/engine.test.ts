@@ -14,6 +14,7 @@ const Z = bomSizes(RULES);
 const empty: FogaStructure = { posts: 0, modules: [], beams: [], frames: [] };
 const cutsOf = (b: Bom, code: string) => b.profiles.find((p) => p.part.code === code)?.cuts ?? [];
 const qtyOf = (b: Bom, code: string) => b.parts.find((p) => p.part.code === code)?.qty ?? 0;
+const unitQty = (b: Bom, name: string) => b.units.find((u) => u.name === name)?.qty ?? 0;
 
 describe('sizes from the rules', () => {
   it('post 2490, cc 1000', () => expect(Z).toEqual({ postLength: 2490, cc: 1000 }));
@@ -24,22 +25,27 @@ describe('row stand 3 × 3', () => {
   const b = bom(fromVariant(createVariant('A', { width: 3, depth: 3, type: 'row' }), RULES), RECIPES, Z);
 
   it('posts are picked as one piece with the foot mounted, not as parts', () => {
-    expect(b.units).toEqual([{ name: 'Stolpe 94 med justeringsfot', contains: expect.stringContaining('94 × 2490 mm'), qty: 10 }]);
+    expect(b.units[0]).toEqual({ name: 'Stolpe 94 med justeringsfot', contains: expect.stringContaining('94 × 2490 mm'), qty: 10 });
     expect(cutsOf(b, '94')).toEqual([]);
     expect(qtyOf(b, '700')).toBe(0);
   });
-  it('rails between posts: 1000 − 40 = 960', () => {
-    expect(cutsOf(b, '92')).toEqual([{ lengthMm: 960, qty: 9 }]);
-    expect(cutsOf(b, '91')).toEqual([{ lengthMm: 960, qty: 9 }]);
+  it('rails between posts (1000 − 40 = 960) are picked with a 600 mounted in each end', () => {
+    expect(unitQty(b, 'Toppskinne 92, 960 mm, med 600')).toBe(9);
+    expect(unitQty(b, 'Bunnskinne 91, 960 mm, med 600')).toBe(9);
+    expect(b.units.find((u) => u.name.startsWith('Toppskinne'))?.contains).toBe('92 × 960 mm · 2 × 600 (871 003 92)');
+    expect(cutsOf(b, '92')).toEqual([]);
+    expect(cutsOf(b, '91')).toEqual([]);
   });
   it('plates per RAL, order size', () => {
     expect(b.plates).toEqual([{ part: expect.objectContaining({ code: 'HDF' }), ral: '9010', w: 976, h: 2440, qty: 9 }]);
   });
-  it('takdrager 292 between the posts: 3000 − 40', () => {
-    expect(cutsOf(b, '292')).toEqual([{ lengthMm: 2960, qty: 1 }]);
+  it('takdrager 292 between the posts (3000 − 40) is picked with two 600 mounted in each end', () => {
+    expect(unitQty(b, 'Takdrager 292, 2960 mm, med 600')).toBe(1);
+    expect(b.units.find((u) => u.name.startsWith('Takdrager'))?.contains).toBe('292 × 2960 mm · 4 × 600 (871 003 92)');
+    expect(cutsOf(b, '292')).toEqual([]);
   });
-  it('600: one per rail end (9 × 2 rails × 2) and two per beam end (1 × 2 × 2)', () => {
-    expect(qtyOf(b, '600')).toBe(36 + 4);
+  it('no loose 600s: they are mounted on rails and beams', () => {
+    expect(qtyOf(b, '600')).toBe(0);
   });
 });
 
@@ -52,7 +58,9 @@ describe('takdrager posts', () => {
     expect(b.units[0].qty).toBe(s.posts);
   });
   it('every length within 6 m', () => {
-    expect(cutsOf(b, '292').every((c) => c.lengthMm <= 6000 - 40)).toBe(true);
+    const beams = b.units.filter((u) => u.name.startsWith('Takdrager'));
+    expect(beams.length).toBeGreaterThan(0);
+    expect(beams.every((u) => Number(u.name.match(/(\d+) mm/)![1]) <= 6000 - 40)).toBe(true);
   });
 });
 
@@ -85,8 +93,7 @@ describe('openings', () => {
       expect.objectContaining({ ral: '9010', h: 2440, qty: 1 }),
       expect.objectContaining({ ral: '9010', h: 410, qty: 1 }),
     ]);
-    expect(cutsOf(b, '92')).toEqual([{ lengthMm: 960, qty: 2 }]);
-    expect(cutsOf(b, '91')).toEqual([{ lengthMm: 960, qty: 2 }]);
-    expect(qtyOf(b, '600')).toBe(8);
+    expect(unitQty(b, 'Toppskinne 92, 960 mm, med 600')).toBe(2);
+    expect(unitQty(b, 'Bunnskinne 91, 960 mm, med 600')).toBe(2);
   });
 });

@@ -8,7 +8,7 @@ export interface WallRecipe {
   /** Rails sit between two posts: length = cc − post width. */
   topRail: string;
   bottomRail: string;
-  /** Coupling at each end of a top or bottom rail, into the post channel. */
+  /** Coupling at each end of a top or bottom rail, into the post channel. Stored mounted: rail + couplings is one piece. */
   railCoupling: { code: string; perEnd: number };
   /** Plate per walled module, ordered per RAL. Size is the order size (lysåpning 960 × 2420 + channel). */
   plate: { code: string; w: number; h: number };
@@ -30,7 +30,8 @@ export interface FrameRecipe {
 export interface BeamRecipe {
   /** Takdrager profile; one piece per beam length (max 6 m, see rules.beam.max), cut between the posts. */
   profile: string;
-  /** Couplings at each end into the post channel. 292 is 80 high: one in the top and one in the bottom chamber. */
+  /** Couplings at each end into the post channel. 292 is 80 high: one in the top and one in the bottom chamber.
+   *  Stored mounted: each beam length + its couplings is one piece. */
   coupling: { code: string; perEnd: number };
 }
 

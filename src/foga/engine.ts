@@ -1,5 +1,5 @@
 // Foga engine: structure + recipes → parts list (deleliste). Pure: no prices, no loose goods.
-// Pre-assembled units (post with feet) as pieces, profiles per cut length, couplings as counts, plates per RAL and size.
+// Pre-assembled units (post with feet, rails and beams with couplings) as pieces, profiles per cut length, couplings as counts, plates per RAL and size.
 import { fogaPart, type FogaPart } from './parts';
 import type { Recipes } from './recipes';
 import type { FogaStructure } from './structure';
@@ -31,7 +31,7 @@ export interface PlateLine {
   qty: number;
 }
 
-/** Stored pre-assembled and picked as one piece, e.g. post 94 with its adjustable foot. */
+/** Stored pre-assembled and picked as one piece: post 94 with foot, rails 92/91 and takdrager 292 with their 600s. */
 export interface UnitLine {
   name: string;
   /** What the unit is made of, for reference. */
@@ -77,10 +77,24 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   const plate = r.wall.plate;
   const wallClear = z.postLength - railHeight(r.wall.topRail) - railHeight(r.wall.bottomRail);
   const plateExtra = plate.h - wallClear;
+  // Pre-assembled units, merged by name: rails and beams are stored with their couplings mounted
+  const unitMap = new Map<string, UnitLine>();
+  const unit = (name: string, contains: string, qty: number) => {
+    if (qty <= 0) return;
+    const u = unitMap.get(name);
+    if (u) u.qty += qty;
+    else unitMap.set(name, { name, contains, qty });
+  };
+  const withCouplings = (profile: string, lengthMm: number, coupling: string, n: number) =>
+    `${profile} × ${lengthMm} mm · ${n} × ${coupling} (${fogaPart(coupling).artnr})`;
+  const railUnit = (profile: string, role: string, n: number) => {
+    const len = between(z.cc);
+    const c = r.wall.railCoupling;
+    unit(`${role} ${profile}, ${len} mm, med ${c.code}`, withCouplings(profile, len, c.code, 2 * c.perEnd), n);
+  };
   const rails = (n: number) => {
-    cut(r.wall.topRail, between(z.cc), n);
-    cut(r.wall.bottomRail, between(z.cc), n);
-    add(r.wall.railCoupling.code, n * 2 * 2 * r.wall.railCoupling.perEnd);
+    railUnit(r.wall.topRail, 'Toppskinne', n);
+    railUnit(r.wall.bottomRail, 'Bunnskinne', n);
   };
   const addPlate = (ral: string, h: number) => {
     const k = `${ral}|${h}`;
@@ -88,13 +102,11 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   };
 
   // Posts (wall and takdrager alike): stored with the foot mounted, picked as one piece
-  const units: UnitLine[] = [];
-  if (s.posts > 0)
-    units.push({
-      name: `Stolpe ${r.wall.post} med justeringsfot`,
-      contains: [`${r.wall.post} × ${z.postLength} mm`, ...r.wall.feet.map((f) => `${f.qty} × ${f.code} (${fogaPart(f.code).artnr})`)].join(' · '),
-      qty: s.posts,
-    });
+  unit(
+    `Stolpe ${r.wall.post} med justeringsfot`,
+    [`${r.wall.post} × ${z.postLength} mm`, ...r.wall.feet.map((f) => `${f.qty} × ${f.code} (${fogaPart(f.code).artnr})`)].join(' · '),
+    s.posts,
+  );
 
   // Wall modules: top and bottom rail between the posts (one 600 per end), one plate
   const walled = s.modules.filter((m) => !m.opening);
@@ -108,9 +120,12 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   rails(openings.length);
   for (const m of openings) addPlate(m.plate, header - railHeight(r.wall.topRail) - railHeight(r.wall.bottomRail) + plateExtra);
 
-  // Takdrager: 292 between the posts, two 600 per end
-  for (const b of s.beams) cut(r.beam.profile, between(b.lengthMm), 1);
-  add(r.beam.coupling.code, s.beams.length * 2 * r.beam.coupling.perEnd);
+  // Takdrager: 292 between the posts, stored with two 600 mounted in each end, one unit per length
+  for (const b of s.beams) {
+    const len = between(b.lengthMm);
+    const c = r.beam.coupling;
+    unit(`Takdrager ${r.beam.profile}, ${len} mm, med ${c.code}`, withCouplings(r.beam.profile, len, c.code, 2 * c.perEnd), 1);
+  }
 
   // Textile frames: 2W + 2H mitred, 4 × 613, upright braces in 90 with a 600 in each end, 2 × 520 to the wall
   for (const f of s.frames) {
@@ -136,5 +151,6 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
       return { part: platePart, ral, w: plate.w, h: Number(h), qty };
     })
     .sort((a, b) => b.h - a.h || a.ral.localeCompare(b.ral));
+  const units = [...unitMap.values()];
   return { units, profiles, parts, plates: plateLines };
 }
