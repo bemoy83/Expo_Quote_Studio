@@ -1,13 +1,9 @@
 // What is to be built, in Foga terms and mm. Neutral: no plan geometry, no prices, no loose goods.
 // fromVariant.ts derives it from the stand sketch; the engine turns it into a parts list.
 
-/** A wall post at a grid point. `arms` = how many wall modules meet there (1 = end, 2 = straight or corner …). */
+/** A post at a grid point. Every post is profile 94, whatever meets there; `beamOnly` posts carry a takdrager only. */
 export interface PostSpec {
   key: string;
-  arms: number;
-  /** Two arms at a right angle. */
-  corner: boolean;
-  /** Carries a takdrager only, no wall. */
   beamOnly: boolean;
 }
 
@@ -31,6 +27,8 @@ export interface FrameSpec {
   W: number;
   H: number;
   braces: { qty: number; length: number } | null;
+  /** The next frame on the same wall face starts where this one ends, so the two are joined. */
+  joinedToNext: boolean;
 }
 
 export interface FogaStructure {

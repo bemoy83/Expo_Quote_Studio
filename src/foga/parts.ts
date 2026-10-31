@@ -1,9 +1,10 @@
 // Foga System parts as data. Source: Foga System Designer's Guide v01.07 (see docs/foga-system.md).
 // Art.nr are Foga's own. Only what the guide states: no prices, no stock lengths.
 
-export type FogaSystem = 'flex' | 'fabric';
+/** `other`: not from Foga, but part of the wall system (HDF plates). */
+export type FogaSystem = 'flex' | 'fabric' | 'other';
 
-export type PartKind = 'profile' | 'coupling' | 'foot' | 'accessory';
+export type PartKind = 'profile' | 'coupling' | 'foot' | 'accessory' | 'plate';
 
 export interface FogaPart {
   /** Foga art.nr, e.g. "873 805 22". */
@@ -42,13 +43,14 @@ export const FOGA_PARTS: readonly FogaPart[] = [
   profile('92LL', '873 048 22', 'Stolpe eller skinne, dobbelt 90° hjørne', 'flex', [60, 30]),
   profile('90', '873 040 22', 'Stolpe eller skinne, firkant', 'flex', [20, 20]),
   profile('91', '873 042 22', 'Stolpe eller skinne', 'flex', [20, 30]),
+  profile('94', '873 062 22', 'Stolpe eller skinne, fire kanaler', 'flex', [40, 40]),
   profile('66', '873 032 22', 'Stolpe, seksvei', 'flex', [40, 40]),
   profile('82', '873 033 22', 'Stolpe 135°, hyllestøtte', 'flex', [48, 48]),
   profile('84', '873 037 22', 'Stolpe 135°', 'flex', [33, 48]),
   profile('85', '873 034 22', 'Stolpe 180°', 'flex', [34, 48]),
   profile('88', '873 035 22', 'Stolpe, åttevei', 'flex', [48, 48]),
   profile('101', '873 090 22', 'Terskelskinne, én kanal', 'flex', [20, 40]),
-  profile('292', '873 080 22', 'Stolpe eller skinne', 'flex', [40, 40]),
+  profile('292', '873 080 22', 'Stolpe eller skinne', 'flex', [80, 20]),
   // Fabric profiles
   profile('43TX', '873 805 22', 'Tekstilprofil', 'fabric', [40, 40]),
   profile('92TX', '873 808 22', 'Tekstilprofil', 'fabric', [40, 40]),
@@ -74,11 +76,16 @@ export const FOGA_PARTS: readonly FogaPart[] = [
   part('CK20', '876 773 22', 'Koblingssett 20, skrue 30 mm og 505', 'accessory', 'fabric'),
   part('CK40', '876 774 22', 'Koblingssett 40, skrue 50 mm og 505', 'accessory', 'fabric'),
   part('CK80', '876 778 22', 'Koblingssett 80, skrue 90 mm og 505', 'accessory', 'fabric'),
-  part('520', '876 520 22', 'Veggbrakett 20/30 mm', 'accessory', 'fabric'),
-  // Feet
+  part('520', '876 520 22', 'Universalbrakett / hyllebrakett', 'accessory', 'fabric'),
+  part('503', '876 503 95', 'Bevel nut M5', 'accessory'),
+  // Feet: threaded insert in the post + set screw as adjustable foot
+  part('700', '876 700 95', 'Innsats for 90-serien, M10', 'foot'),
+  part('M10x65', '896 232 95', 'Settskrue M10 × 65, sort', 'foot'),
   part('730', '876 730 92', 'Fotplate 250 × 300 × 5 mm', 'foot'),
   part('740', '876 740 92', 'Fotplate 400 × 400 × 5 mm', 'foot'),
   part('750', '876 750 93', 'Fotplate 500 × 80 × 5 mm', 'foot'),
+  // Wall plates: not Foga. Lacquered HDF, ordered per RAL
+  { artnr: '', code: 'HDF', name: 'Lakkert HDF-plate 3 mm, 2440 × 976 mm', kind: 'plate', system: 'other' },
 ];
 
 const BY_CODE = new Map(FOGA_PARTS.map((p) => [p.code, p]));

@@ -1,7 +1,7 @@
 # Foga System: byggesystemet bak standen
 
 Alt som bygges i en stand er Foga System (Bjørn, 31.10.2026). **Flex** brukes til alt som ikke er tekstil
-(vegger, takdrager, disker, dører). **Fabric** (TX-profiler) brukes til tekstilvegger, og standardprofilen er
+(vegger, takdrager, disker, dører). Veggplatene er lakkert HDF, ikke Foga. **Fabric** (TX-profiler) brukes til tekstilvegger, og standardprofilen er
 **43TX**. Gulv, møbler, strøm og annen løsøre er ikke Foga og ligger utenfor Foga-motoren.
 
 Kilde: *Foga System Designer's Guide* versjon 01.07 (PDF fra Bjørn, 80 sider). Nyere utgave:
@@ -103,45 +103,78 @@ Strømforsyning 24 V 48 / 150 / 240 W (67158 / 67170 / 67156).
 
 Bue: minste radius 600 mm for TX-profiler (81TX «hard way» 1500), 400 mm for Flex 90/91/92.
 
-## 3. Regler motoren bygger på
+## 3. Slik bygger vi (bekreftet av Bjørn 31.10.2026)
 
-Fra guiden (sikre):
+### Veggmodul (cc 1000)
 
-1. **Tekstilramme = 2 × B + 2 × H profil**, kappet gjæret til yttermål. 4 hjørnekoblinger per ramme (613 for 43TX).
-2. **Plate i Flex-felt = synlig + 18 mm**, maks 9 mm tykk.
-3. **Dør = fast enhet** 942/950 × 2117 mm.
-4. **Alle koblinger passer i alle Flex-profiler.**
+| Del | Hva | Mål / antall |
+| --- | --- | --- |
+| Stolpe | **94** (873 062 22), 40 × 40, fire kanaler. Samme profil i ende, hjørne, T og kryss | 2490 mm, én per stolpepunkt |
+| Toppskinne | **92** (873 051 22), 20 × 40 | 1000 − 40 = **960 mm**, én per modul |
+| Bunnskinne | **91** (873 042 22), 20 × 30 | 960 mm, én per modul |
+| Fot | Innsats **700** (876 700 95, M10) i stolpen + settskrue **M10 × 65** (896 232 95) som fot | 1 + 1 per stolpe. Standard 50 mm fra gulv, justerbar |
+| Veggplate | **Ikke Foga.** Lakkert HDF 3 mm, bestilles **2440 × 976 mm** per RAL | Én per modul |
 
-Fra fabric.js / mockup «Produksjon» (fasit for tekstil, se `src/calc/fabric.ts`):
+Lysåpning i veggfeltet er 960 × 2420 mm: 2490 − 40 (92) − 30 (91) = 2420, og 1000 − 40 (94) = 960.
+Platen er 16 mm bredere og 20 mm høyere enn lysåpningen og står i kanalene.
+Systemhøyde fra gulv: 2490 + 50 = 2540 mm.
 
-- B = spenn − sidefradrag (20) − luft (10); H = systemvegg 2490 + føtter 50 = 2540.
-- Tverrstag når B > maks stagavstand (1000); staglengde = H − 2 × profil (40).
+### Takdrager
+
+- Profil **292** (873 080 22), 80 × 20. **Maks 6 m sammenhengende** (`rules.beam.max`).
+- Alle stolper, også de som bare bærer takdrager, er **94**.
+
+### Dør
+
+- Fogas ferdige dør: karm i **292** med ferdig montert lås **410** (876 410 94). Plukkes som **1 stk dørblad**,
+  ferdig montert.
+- Dørblad 2100 mm. Luft 10 mm mellom dørblad og overstykke, 20 mm mellom dørblad og gulv (regnet fra
+  stolpe 94 på 2490, uten fot).
+- **Overstykke** = en liten vegg på 420 mm: toppskinne 92, bunnskinne 91 og HDF-plate.
+
+### Tekstilramme (43TX)
+
+- Ramme i **43TX**, gjæret, 2 × B + 2 × H, 4 × hjørnekobling **613**.
+- Tverrstag: stående stag i profil **90** (873 040 22, 20 × 20), lengde H − 2 × 40.
+- Rammen festes til veggen med **520** (876 520 22) og bevel nut **503** i profilsystemet: én side låses i 43TX,
+  den andre i veggstolpen 94.
+
+### Plukkliste
+
+Plukklisten er en **deleliste**: hvor mange av hver profil (antall per kappelengde) og hvor mange plater som skal
+med. Dørblad plukkes som stk.
+
+### Fra fabric.js (fasit for trykk, se `src/calc/fabric.ts`)
+
+- B = spenn − sidefradrag (20) − luft (10); H = 2490 + 50 = 2540.
+- Tverrstag når B > maks stagavstand (1000).
 - Trykkfil = ramme + 2 × bleed.
 
-### Åpne spørsmål (stilt Bjørn 31.10.2026)
+### Åpne spørsmål
 
-Motoren gjetter ikke. Det som ikke er avklart har ingen oppskrift, og stykklisten viser det som et åpent punkt
-i stedet for en del. Når et svar kommer, legges det inn i `src/foga/recipes.ts` og her.
+Motoren gjetter ikke. Det som ikke er avklart vises som et åpent punkt i plukklisten. Når et svar kommer, legges
+det inn i `src/foga/recipes.ts` og her.
 
-1. **Stolpe** (40 × 40 i appen): hvilken profil? Hvilken i hjørne, T-kryss og fire-veis kryss?
-2. **Topp- og bunnskinne** (960 × 40 / 960 × 30): hvilke profiler, hvilken kobling mot stolpen, hvor mange per ende?
-3. **Veggplate** 960 × 2420: står den i kanalen (synlig + 18 mm)? Tykkelse?
-4. **Føtter** (50 mm justerbare): hvilken del, hvor mange per stolpe?
-5. **Takdrager** 80 × 20: hvilken profil, hvordan festes den til stolpen, er maks 6 m riktig?
-6. **Tverrstag i 43TX-rammen**: profil og kobling? Feste av ramme til vegg? Koblingssett per skjøt mellom rammer?
-7. **Dør og overstykke**: Fogas ferdige dør (292-karm)? Hva er overstykket bygget av?
-8. **Plukkliste**: kappede lengder eller hele stenger fra lager? I så fall hvilke stanglengder?
+1. **Skinne mot stolpe:** hvilken kobling holder 92 og 91 fast i 94, og hvor mange per ende (615A?)?
+2. **Takdrager mot stolpe:** hvordan festes 292 til 94? Hvor lange er stolper som bare bærer takdrager, og har
+   de samme fot?
+3. **Tverrstag:** hvilken kobling i hver ende av stag i profil 90?
+4. **Veggfeste:** hvor mange 520-braketter per tekstilramme?
+5. **Ramme mot ramme:** hvordan kobles to 43TX-rammer side om side? Guiden har koblingssett 40 (876 774 22: skrue
+   50 mm + 505-mutter) gjennom kanalene i to profiler mot hverandre, og parallellkobling 618.
+6. **Overstykke:** platemål i overstykket (420 mm høyt med 92 og 91 gir 350 mm lysåpning?), og om forheng har
+   samme overstykke som dør.
 
 ## 4. Slik er koden delt
 
 ```
 src/foga/
   parts.ts      Foga-deler som data: profiler, koblinger, tilbehør (art.nr, tverrsnitt)
-  recipes.ts    Oppskrifter: hvordan tekstilramme, veggmodul, stolpe og takdrager bygges av deler.
-                Bare bekreftede oppskrifter; resten er null og blir åpne punkter
+  recipes.ts    Oppskrifter: hvordan veggmodul, takdrager og tekstilramme bygges av deler.
+                Bare bekreftede oppskrifter; det som mangler er åpne spørsmål
   structure.ts  Nøytral beskrivelse av det som skal bygges (stolper, moduler, drager, rammer) i mm
   fromVariant.ts  Oversetter standskissen (Variant) til en Foga-struktur
-  engine.ts     bom(struktur, oppskrifter) → stykkliste: kappliste per profil + koblinger og beslag
+  engine.ts     bom(struktur, oppskrifter, mål) → deleliste: profiler per kappelengde, koblinger, føtter, plater
 ```
 
 Motoren vet ingenting om gulv, møbler eller priser. Plukklisten setter sammen Foga-stykklisten og løsøre fra

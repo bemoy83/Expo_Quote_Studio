@@ -4,9 +4,9 @@ import { useMemo } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import type { Variant } from '../../domain/types'
 import { bom } from '../../foga/engine'
-import { fromVariant } from '../../foga/fromVariant'
+import { bomSizes, fromVariant } from '../../foga/fromVariant'
 import { RECIPES } from '../../foga/recipes'
-import { rules } from '../env'
+import { plateName, rules } from '../env'
 import { count, fmt } from '../format'
 import { PageBand } from '../shell/PageBand'
 import { VariantTabs } from '../shell/VariantTabs'
@@ -23,7 +23,7 @@ const isLoose = (id: string) => id === 'floor' || id === 'openings' || id.starts
 
 export function PickingPage({ variants, current, onSelect, calcOf }: Props) {
   const v = variants[current]
-  const B = useMemo(() => bom(fromVariant(v, rules), RECIPES), [v])
+  const B = useMemo(() => bom(fromVariant(v, rules), RECIPES, bomSizes(rules)), [v])
   const loose = calcOf(v).groups.filter((g) => isLoose(g.id))
   const n = (x: number) => fmt(x, 0)
 
@@ -35,7 +35,7 @@ export function PickingPage({ variants, current, onSelect, calcOf }: Props) {
       <div className="page-scroll">
         <div className="page-cols">
           <div className="page-main">
-            <p className="page-intro">Alt som skal plukkes til standen, delt etter produkt. Foga-delene regnes ut fra byggesystemet; det som ikke er avklart står som åpne spørsmål.</p>
+            <p className="page-intro">Deleliste: hvor mange av hver profil, kobling og plate som skal med, og løsøre etter produkt. Profiler står som antall per kappelengde. Det som ikke er avklart står som åpne spørsmål.</p>
             <div className="pick-grid tbl-head">
               <span>Art.nr</span>
               <span>Produkt</span>
@@ -56,10 +56,10 @@ export function PickingPage({ variants, current, onSelect, calcOf }: Props) {
                       {p.part.code} · {p.part.name}
                     </span>
                     <span className="num meta">
-                      {p.cuts.map((c) => `${c.qty} × ${n(c.lengthMm)}`).join(' · ')} <span className="faint">mm</span>
+                      {p.cuts.map((c) => `${c.qty} × ${n(c.lengthMm)}`).join(' · ')} <span className="faint">mm · {fmt(p.lm, 2)} lm</span>
                     </span>
                   </div>
-                  <span className="num r">{fmt(p.lm, 2)} lm</span>
+                  <span className="num r">{p.cuts.reduce((a, c) => a + c.qty, 0)} stk</span>
                 </div>
               ))}
             </section>
@@ -76,6 +76,25 @@ export function PickingPage({ variants, current, onSelect, calcOf }: Props) {
                   <div className="cellstack">
                     <span className="title">
                       {p.part.code} · {p.part.name}
+                    </span>
+                  </div>
+                  <span className="num r">{p.qty} stk</span>
+                </div>
+              ))}
+            </section>
+
+            <section className="tbl-sec">
+              <div className="tbl-sec-head">
+                <span>Veggplater</span>
+                <span className="num">{B.plates.length}</span>
+              </div>
+              {!B.plates.length && <div className="tbl-empty">Ingen veggplater.</div>}
+              {B.plates.map((p) => (
+                <div key={p.ral} className="pick-grid tbl-row">
+                  <span className="num muted">RAL {p.ral}</span>
+                  <div className="cellstack">
+                    <span className="title">
+                      {p.part.name} · {plateName(p.ral)}
                     </span>
                   </div>
                   <span className="num r">{p.qty} stk</span>
