@@ -1,5 +1,5 @@
 // Editing operations on a variant. All pure: they return a new variant and never mutate.
-import { CELL, cellKey, moduleKey, parseCellKey, pointAlong, sideEnds, SIDES, wallDirection, wallLength, wallModules } from './grid';
+import { CELL, cellKey, moduleKey, parseCellKey, pointAlong, runs, sideEnds, SIDES, wallDirection, wallLength, wallModules } from './grid';
 import type { Opening, Point, Stand, TextileWall, Variant, Wall } from './types';
 import { addRoomGaps, clampRooms, outwardSide, roomOf, syncRooms } from './rooms';
 import { builtModules, standardWalls } from './walls';
@@ -114,21 +114,29 @@ export function paintWalls(v: Variant, a: Point, b: Point, plate?: string): Vari
   const n = Math.round(Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1]));
   if (!n) return v;
   const seg: Wall = { id: '', from: a, to: b };
+  const mods = wallModules(seg);
   const ids = v.walls.map((w) => w.id);
   const added: Wall[] = [];
-  let i = 0;
-  while (i < n) {
-    if (existing.has(moduleKey(pointAlong(seg, i), pointAlong(seg, i + 1)))) {
-      i++;
-      continue;
-    }
-    let e = i;
-    while (e < n && !existing.has(moduleKey(pointAlong(seg, e), pointAlong(seg, e + 1)))) e++;
+  for (const [i, e] of runs(n, (t) => !existing.has(mods[t].key))) {
     const id = nextId([...ids, ...added.map((w) => w.id)], 'w');
-    added.push({ id, from: pointAlong(seg, i), to: pointAlong(seg, e), ...(plate && plate !== v.defaultPlate ? { plate } : {}) });
-    i = e;
+    added.push({ id, from: pointAlong(seg, i), to: pointAlong(seg, e), ...ownPlate(v, plate) });
   }
   return added.length ? { ...v, walls: [...v.walls, ...added] } : v;
+}
+
+/** `{ plate }` when the colour differs from the variant's default, else nothing: walls and rooms store only overrides. */
+export const ownPlate = (v: Variant, ral: string | undefined): { plate?: string } => (ral && ral !== v.defaultPlate ? { plate: ral } : {});
+
+/**
+ * The parts of a wall whose modules pass `keep`. The first part keeps the wall's id, the others get new ids not in `taken`.
+ */
+export function splitWall(w: Wall, keep: (module: number) => boolean, taken: string[]): Wall[] {
+  const ids = [...taken];
+  return runs(Math.round(wallLength(w)), keep).map(([i, e], n) => {
+    const id = n ? nextId(ids, 'w') : w.id;
+    ids.push(id);
+    return { ...w, id, from: pointAlong(w, i), to: pointAlong(w, e) };
+  });
 }
 
 /** Remove wall modules (by key). Walls are split where a module is taken out. */
@@ -153,20 +161,7 @@ export function eraseWalls(v: Variant, keys: Iterable<string>): Variant {
       continue;
     }
     changed = true;
-    let first = true;
-    let i = 0;
-    while (i < mods.length) {
-      if (gone.has(mods[i].key)) {
-        i++;
-        continue;
-      }
-      let e = i;
-      while (e < mods.length && !gone.has(mods[e].key)) e++;
-      const id = first ? w.id : nextId([...ids, ...out.map((x) => x.id)], 'w');
-      first = false;
-      out.push({ ...w, id, from: pointAlong(w, i), to: pointAlong(w, e) });
-      i = e;
-    }
+    out.push(...splitWall(w, (i) => !gone.has(mods[i].key), [...ids, ...out.map((x) => x.id)]));
   }
   let next = changed ? replaceWalls(v, out) : v;
   for (const [id, mods] of roomGaps) next = addRoomGaps(next, id, mods);
@@ -180,7 +175,7 @@ export function setWallPlate(v: Variant, wallId: string, ral: string): Variant {
     const rooms = v.rooms.map((r) => {
       if (r.id !== room.id) return r;
       const { plate: _drop, ...rest } = r;
-      return ral === v.defaultPlate ? rest : { ...rest, plate: ral };
+      return { ...rest, ...ownPlate(v, ral) };
     });
     return syncRooms({ ...v, rooms });
   }
@@ -189,7 +184,7 @@ export function setWallPlate(v: Variant, wallId: string, ral: string): Variant {
     walls: v.walls.map((w) => {
       if (w.id !== wallId) return w;
       const { plate: _drop, ...rest } = w;
-      return ral === v.defaultPlate ? rest : { ...rest, plate: ral };
+      return { ...rest, ...ownPlate(v, ral) };
     }),
   };
 }

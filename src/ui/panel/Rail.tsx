@@ -5,7 +5,7 @@ import { mainGroupOf, PRODUCT_GROUPS, resolveGroup } from '../../catalog/groups'
 import type { Product } from '../../catalog/types'
 import { setCounted, setStand } from '../../domain/edit'
 import { addObjectAnywhere, removeObjects } from '../../domain/objects'
-import { addDefaultRoom, dissolveRoom, removeRoom, updateRoom } from '../../domain/rooms'
+import { addDefaultRoom, dissolveRoom, isRoomWallId, removeRoom, ROOM_LABELS, roomName, roomOpenings, updateRoom } from '../../domain/rooms'
 import type { StandType, Variant } from '../../domain/types'
 import { fillFloor } from '../../domain/variant'
 import { textileBox } from '../../domain/decor'
@@ -42,7 +42,6 @@ export interface RailProps {
   selection?: PlanSelection
 }
 
-const ROOM_LABELS = ['Bakrom', 'Lager', 'Møterom']
 
 const TYPE_TEXT: Record<StandType, string> = {
   row: 'Bare fronten er åpen. Lukkede sider får standvegg.',
@@ -272,9 +271,9 @@ function WallSection({ v, res, brush, tool, pick, onEdit, onToast, onSelect, sel
         }
       />
       {v.rooms.map((r) => {
-        const doors = v.openings.filter((o) => o.wallId.startsWith(`${r.id}.`)).length
-        const label = r.label ?? ROOM_LABELS[0]
-        const selected = selection?.roomId === r.id || (selection?.wallId ?? '').startsWith(`${r.id}.`)
+        const doors = roomOpenings(v, r).length
+        const label = roomName(r)
+        const selected = selection?.roomId === r.id || isRoomWallId(selection?.wallId ?? '', r.id)
         return (
           <ProductRow
             key={r.id}
@@ -295,7 +294,7 @@ function WallSection({ v, res, brush, tool, pick, onEdit, onToast, onSelect, sel
             chips={
               <VariantChips
                 chips={ROOM_LABELS.map((name) => ({ name }))}
-                selected={ROOM_LABELS.indexOf(label)}
+                selected={ROOM_LABELS.indexOf(label as (typeof ROOM_LABELS)[number])}
                 onSelect={(i) => onEdit((x) => updateRoom(x, r.id, { label: i === 0 ? undefined : ROOM_LABELS[i] }))}
               />
             }

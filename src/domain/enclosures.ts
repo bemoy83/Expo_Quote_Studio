@@ -3,10 +3,10 @@
 // included) stands between them. Everything reachable from an open edge of the stand is the stand; the rest falls
 // apart into closed areas. Detection does not care about shape; only rectangles are turned into rooms for now,
 // because a Room is a rectangle (see rooms.ts).
-import { moduleKey, pointAlong, wallDirection, wallModules } from './grid';
-import { defaultSwing, isPerimeterWall, nextId, replaceWalls } from './edit';
-import { overlaps, roomAt, roomWalls, syncRooms, type Rect } from './rooms';
-import type { Room, Variant, Wall } from './types';
+import { moduleKey, wallDirection, wallModules } from './grid';
+import { defaultSwing, isPerimeterWall, nextId, ownPlate, replaceWalls, splitWall } from './edit';
+import { overlaps, rimKeys, roomAt, roomWalls, syncRooms, type Rect } from './rooms';
+import type { Room, Variant } from './types';
 import { builtModules, type BuiltModule } from './walls';
 
 export interface Enclosure {
@@ -34,8 +34,6 @@ function rim(cells: Cell[]): string[] {
   const inside = new Set(cells.map(([i, j]) => cellId(i, j)));
   return cells.flatMap(([i, j]) => sides(i, j).filter((e) => !inside.has(cellId(...e.to))).map((e) => e.key));
 }
-
-const cellsOf = (r: Rect): Cell[] => Array.from({ length: r.w * r.d }, (_, n) => [r.x + (n % r.w), r.y + Math.floor(n / r.w)]);
 
 /** Closed areas of the variant: cells that cannot be reached from an open stand edge. */
 export function enclosures(v: Variant, mods: BuiltModule[] = builtModules(v)): Enclosure[] {
@@ -92,7 +90,7 @@ const drawn = (v: Variant, wallId: string) => {
 /** A closed rectangle that may become a room: not in a room, has a door or curtain, and at least one drawn side. */
 function qualifies(v: Variant, r: Rect, byKey: Map<string, BuiltModule>): boolean {
   if (roomAt(v, r.x + 0.5, r.y + 0.5)) return false;
-  const around = rim(cellsOf(r)).map((k) => byKey.get(k));
+  const around = rimKeys(r).map((k) => byKey.get(k));
   return around.some((m) => m?.opening) && around.some((m) => m && drawn(v, m.wallId));
 }
 
@@ -118,7 +116,7 @@ export function wallsToRoom(v: Variant, rect: Rect, label = 'Rom'): Variant | nu
   const mods = builtModules(v);
   const byKey = new Map(mods.map((m) => [m.key, m]));
   if (!qualifies(v, rect, byKey) || v.rooms.some((o) => overlaps(o, rect))) return null;
-  const edge = new Set(rim(cellsOf(rect)));
+  const edge = new Set(rimKeys(rect));
   // The room's colour: what most of its drawn modules have
   const plates = new Map<string, number>();
   for (const k of edge) {
@@ -126,7 +124,7 @@ export function wallsToRoom(v: Variant, rect: Rect, label = 'Rom'): Variant | nu
     if (m && drawn(v, m.wallId)) plates.set(m.plate, (plates.get(m.plate) ?? 0) + 1);
   }
   const plate = [...plates].sort((a, b) => b[1] - a[1])[0]?.[0];
-  const room: Room = { id: nextId(v.rooms.map((r) => r.id), 'rom'), ...rect, label, ...(plate && plate !== v.defaultPlate ? { plate } : {}) };
+  const room: Room = { id: nextId(v.rooms.map((r) => r.id), 'rom'), ...rect, label, ...ownPlate(v, plate) };
 
   // Make door swing explicit first, so doors keep their world side on the room's walls (replaceWalls does the
   // same for textile and foil faces)
@@ -141,24 +139,10 @@ export function wallsToRoom(v: Variant, rect: Rect, label = 'Rom'): Variant | nu
   const ids = v.walls.map((w) => w.id);
   const pieces = v.walls.flatMap((w) => {
     if (!drawn(v, w.id)) return [w];
-    const keep = wallModules(w).map((m) => !edge.has(m.key));
-    const n = keep.length;
-    if (keep.every(Boolean)) return [w];
-    const out: Wall[] = [];
-    let t = 0;
-    while (t < n) {
-      if (!keep[t]) {
-        t++;
-        continue;
-      }
-      let e = t;
-      while (e < n && keep[e]) e++;
-      const id = out.length ? nextId([...ids, ...out.map((x) => x.id)], 'w') : w.id;
-      ids.push(id);
-      out.push({ ...w, id, from: pointAlong(w, t), to: pointAlong(w, e) });
-      t = e;
-    }
-    return out;
+    const mods = wallModules(w);
+    const parts = splitWall(w, (t) => !edge.has(mods[t].key), ids);
+    ids.push(...parts.map((x) => x.id));
+    return parts;
   });
   const stored = pieces.filter((w) => !w.room);
   const rooms = [...v.rooms, room];

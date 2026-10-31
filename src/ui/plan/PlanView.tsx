@@ -14,7 +14,7 @@ import { builtModules, type BuiltModule } from '../../domain/walls'
 import { BORDER, BORDER_STRONG, BLOCK, CANVAS, INK, INK_FAINT, INK_MUTED, LAYER_COLOR, SURFACE } from '../colors'
 import { applyDrop, decorDrag, endDecorDrag, type DecorDrag } from '../dnd'
 import { dragRoom, dragWall, dropObject, dropRoom, roomDrag, type RoomDrag, type WallDrag } from '../drag'
-import { faceEnds, FACES, roomAt, roomSideAt } from '../../domain/rooms'
+import { faceEnds, FACES, roomAt, roomName, roomSideAt } from '../../domain/rooms'
 import { fmt } from '../format'
 import { idx, place, plateColor, productOf, rules } from '../env'
 import { findMotif } from '../motifs'
@@ -725,7 +725,6 @@ function FacePreview({ v, h, brush, erase }: { v: Variant; h: FaceHit; brush: Br
   return <Seg a={a} b={b} stroke={brush.kind === 'textile' && !erase ? TEXTILE : INK} strokeOpacity={0.45} strokeWidth={rules.textile.depth + 0.04} />
 }
 
-const ROOM_NAME = 'Bakrom'
 
 /** Room name and size on its floor; a dashed outline when selected. */
 function RoomMark({ r, selected }: { r: Room; selected: boolean }) {
@@ -737,7 +736,7 @@ function RoomMark({ r, selected }: { r: Room; selected: boolean }) {
       {selected && <rect x={r.x + 0.12} y={r.y + 0.12} width={r.w - 0.24} height={r.d - 0.24} rx={0.04} fill={INK} fillOpacity={0.04} stroke={INK} strokeWidth={0.025} strokeDasharray=".1 .06" />}
       <rect x={cx - (small ? 0.4 : 0.6)} y={cy - (small ? 0.2 : 0.3)} width={small ? 0.8 : 1.2} height={small ? 0.44 : 0.6} rx={0.06} fill={CANVAS} fillOpacity={0.85} />
       <text x={cx} y={cy - (small ? 0.02 : 0.06)} textAnchor="middle" style={{ ...LABEL, fontSize: small ? '0.17px' : '0.22px' }}>
-        {r.label ?? ROOM_NAME}
+        {roomName(r)}
       </text>
       <text x={cx} y={cy + (small ? 0.18 : 0.22)} textAnchor="middle" style={{ ...MONO, fontSize: small ? '0.15px' : '0.19px' }}>
         {r.w} × {r.d} m

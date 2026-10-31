@@ -6,7 +6,7 @@ import { addTextile } from './decor';
 import { defaultSwing, drawOpening, paintWalls, setOpening } from './edit';
 import { enclosures, newlyClosedRooms, wallsToRoom } from './enclosures';
 import { moduleKey } from './grid';
-import { dissolveRoom, moveRoom } from './rooms';
+import { dissolveRoom, moveRoom, roomOpenings } from './rooms';
 import type { Point, Variant } from './types';
 import { createVariant } from './variant';
 import { builtModules } from './walls';
@@ -119,6 +119,11 @@ describe('wallsToRoom', () => {
     const r = wallsToRoom(t, rect)!;
     expect(r.textiles).toHaveLength(1);
     expect(r.textiles[0].wallId).toMatch(/\.right$/);
+  });
+  it('a door in the stand wall counts as the room\u2019s door', () => {
+    const v = door(path(row(), [2, 0], [2, 2], [0, 2]), [0, 0], [1, 0]);
+    const r = wallsToRoom(v, rect)!;
+    expect(roomOpenings(r, r.rooms[0])).toHaveLength(1);
   });
   it('the room takes the drawn walls’ colour', () => {
     const v = door(path(row(), [2, 0], [2, 2], [0, 2]), [0, 2], [1, 2]);
