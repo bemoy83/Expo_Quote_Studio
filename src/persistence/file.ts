@@ -1,6 +1,7 @@
 // Sketch file: JSON `{ format: 'standskisse', versjon, prosjekt, varianter, egneMotiver }`.
 // Newer versions are refused with an explanation; older versions are migrated step by step.
 import type { Project, Variant } from '../domain/types';
+import { createProject, createVariant } from '../domain/variant';
 
 export const FORMAT = 'standskisse';
 export const VERSION = 1;
@@ -25,6 +26,14 @@ export interface Sketch {
   project: Project;
   variants: Variant[];
   motifs: Motif[];
+}
+
+/** Stand a new sketch starts with: a 6 × 4 m row stand with its standard walls and nothing else. */
+export const NEW_STAND = { width: 6, depth: 4, type: 'row' } as const;
+
+/** A new, empty sketch ("Ny"): blank customer fields, one variant, no own motifs. */
+export function newSketch(): Sketch {
+  return { project: createProject(), variants: [createVariant('A', { ...NEW_STAND })], motifs: [] };
 }
 
 export type ParseResult = { ok: true; sketch: Sketch } | { ok: false; error: string };

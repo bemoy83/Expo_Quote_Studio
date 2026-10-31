@@ -1,4 +1,4 @@
-import { ChevronDown, Download, FolderOpen, Plus, X } from 'lucide-react'
+import { ChevronDown, Download, FilePlus, FolderOpen, Plus, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import type { Project } from '../../domain/types'
 import { customerName, isFixedField, projectField } from '../../domain/variant'
@@ -19,6 +19,7 @@ export function TopNav({
   setPage,
   project,
   setProject,
+  onNew,
   onOpen,
   onSave,
 }: {
@@ -26,6 +27,7 @@ export function TopNav({
   setPage: (p: Page) => void
   project: Project
   setProject: (p: Project) => void
+  onNew: () => void
   onOpen: () => void
   onSave: () => void
 }) {
@@ -46,6 +48,9 @@ export function TopNav({
       </button>
       {open && <ProjectPopover project={project} setProject={setProject} onClose={() => setOpen(false)} />}
       <span className="spacer" />
+      <Button icon={FilePlus} onClick={onNew}>
+        Ny
+      </Button>
       <Button icon={FolderOpen} onClick={onOpen}>
         Åpne fil
       </Button>
