@@ -43,6 +43,8 @@ interface Props {
   tool: Tool
   brush: Brush | null
   floorSize: FloorSize
+  /** Cell size of the drawing grid for the free-standing textile brush, m. */
+  gridStep?: number
   highlight: Highlight
   selection: PlanSelection
   onSelect: (s: PlanSelection) => void
@@ -106,6 +108,7 @@ interface FaceHit {
 
 export function PlanView(p: Props) {
   const { v, res, tool, brush, floorSize, highlight, selection } = p
+  const step = p.gridStep ?? rules.textile.grid
   const { width: W, depth: D } = v.stand
   const svg = useRef<SVGSVGElement>(null)
   const drag = useRef<Drag | null>(null)
@@ -286,7 +289,7 @@ export function PlanView(p: Props) {
         return
       }
       drag.current = { kind: 'free', p0: q }
-      setFreeLine(freeStroke(v, rules, q, q))
+      setFreeLine(freeStroke(v, rules, q, q, step))
       return
     }
     if (objectTool) {
@@ -344,7 +347,7 @@ export function PlanView(p: Props) {
     const d = drag.current
     if (!d) return
     if (d.kind === 'floor') paintFloorAt(q)
-    else if (d.kind === 'free') setFreeLine(freeStroke(v, rules, d.p0, q))
+    else if (d.kind === 'free') setFreeLine(freeStroke(v, rules, d.p0, q, step))
     else if (d.kind === 'freeMove') {
       if (!d.moved && Math.hypot(q.x - d.p0.x, q.y - d.p0.y) < 0.15) return
       if (!d.moved) p.onCheckpoint()
@@ -353,7 +356,7 @@ export function PlanView(p: Props) {
       if (next) p.onEdit(() => next, false)
     } else if (d.kind === 'stroke') {
       if (!d.moved && Math.hypot(q.x - d.p0.x, q.y - d.p0.y) > 0.35) d.moved = true
-      if (d.moved) setStroke(strokeFrom(v.stand, d.p0, q))
+      if (d.moved) setStroke(strokeFrom(v.stand, d.p0, q, rules.wall.cc))
     } else if (d.kind === 'object') {
       if (!d.moved) {
         if (Math.hypot(q.x - d.dx - d.start.x, q.y - d.dy - d.start.y) < 0.03) return
@@ -373,7 +376,7 @@ export function PlanView(p: Props) {
     drag.current = null
     if (!d) return
     if (d.kind === 'stroke') {
-      const [a, b] = d.moved ? strokeFrom(v.stand, d.p0, toModel(e)) : (() => {
+      const [a, b] = d.moved ? strokeFrom(v.stand, d.p0, toModel(e), rules.wall.cc) : (() => {
         const m = nearestEdge(v.stand, d.p0)
         return [m.a, m.b] as [Point, Point]
       })()
@@ -384,7 +387,7 @@ export function PlanView(p: Props) {
         p.onEdit((x) => eraseWalls(x, keys))
       } else if (brush?.kind === 'wall') p.onEdit((x) => paintWalls(x, a, b, brush.ral))
     } else if (d.kind === 'free') {
-      const [a, b] = freeStroke(v, rules, d.p0, toModel(e))
+      const [a, b] = freeStroke(v, rules, d.p0, toModel(e), step)
       setFreeLine(null)
       const r = addFreeTextile(v, rules, a, b)
       if ('error' in r) return p.onToast(r.error)
@@ -462,7 +465,7 @@ export function PlanView(p: Props) {
   const hoverFloor = floorTool && hover && !drag.current ? floorBlock(hover) : null
   const hoverFace = decorTool && hover ? faceHit(hover) : null
   const hoverWallEdge = wallTool && hover && !stroke && onStand(hover) ? nearestEdge(v.stand, hover) : null
-  const hoverFree = freeTool && hover && !freeLine && onStand(hover) ? (tool === 'erase' ? (freeTextileAt(v, hover) ?? null) : freeStroke(v, rules, hover, hover)[0]) : null
+  const hoverFree = freeTool && hover && !freeLine && onStand(hover) ? (tool === 'erase' ? (freeTextileAt(v, hover) ?? null) : freeStroke(v, rules, hover, hover, step)[0]) : null
 
   const sideText = (s: Side) => {
     const n = sideLength(v.stand, s)

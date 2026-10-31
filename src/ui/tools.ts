@@ -1,4 +1,6 @@
 // Tool state of the sketch screen. UI only, never stored in the model.
+import { GRID_STEPS, type GridStep } from '../domain/snapGrid';
+import type { Rules } from '../rules/rules';
 
 /** Velg · Pensel · Tøm */
 export type Tool = 'select' | 'brush' | 'erase';
@@ -11,7 +13,7 @@ export type Brush =
   | { kind: 'object'; product: string }
   /** InFrame textile wall: click a wall face to fill its free part. */
   | { kind: 'textile' }
-  /** Frittstående tekstilvegg: drag a straight run on the 0,25 m grid. */
+  /** Frittstående tekstilvegg: drag a straight run on the drawing grid, in cells of the chosen grid step. */
   | { kind: 'freeTextile' }
   /** A motif: on a textile it becomes the print, on a wall panel a foil decal. */
   | { kind: 'motif'; motif: string };
@@ -31,3 +33,11 @@ export const FLOOR_SIZES: { label: string; size: FloorSize }[] = [
 
 /** Calc group hovered in the calc panel; the plan dims everything else. */
 export type Highlight = 'walls' | 'beams' | 'openings' | 'textile' | 'foil' | 'floor' | 'objects' | null;
+
+/** Grid steps each straight-run brush can draw with (domain/snapGrid). System walls follow the wall cc: only 1 m until
+ * the Foga recipe has the parts for cc 25, 50 and 75. */
+export function gridSteps(brush: Brush | null, rules: Rules): readonly GridStep[] {
+  if (brush?.kind === 'freeTextile') return GRID_STEPS
+  if (brush?.kind === 'wall') return GRID_STEPS.filter((s) => Math.abs(s - rules.wall.cc) < 1e-9)
+  return []
+}

@@ -30,7 +30,9 @@ import { QuotePage } from './quote/QuotePage'
 import { TopNav, type Page } from './shell/TopNav'
 import { WorkOrderPage } from './workorder/WorkOrderPage'
 import { VariantTabs } from './shell/VariantTabs'
-import { FLOOR_SIZES, type Brush, type FloorSize, type Highlight, type Tool } from './tools'
+import { FLOOR_SIZES, gridSteps, type Brush, type FloorSize, type Highlight, type Tool } from './tools'
+import { GridPicker } from './plan/GridPicker'
+import type { GridStep } from '../domain/snapGrid'
 
 // three.js is only loaded when the 3D view is opened
 const Scene3D = lazy(() => import('./scene3d/Scene3D').then((m) => ({ default: m.Scene3D })))
@@ -77,6 +79,7 @@ export default function App() {
   const [tool, setTool] = useState<Tool>('select')
   const [brush, setBrush] = useState<Brush | null>(null)
   const [floorSize, setFloorSize] = useState<FloorSize>(FLOOR_SIZES[0].size)
+  const [gridStep, setGridStep] = useState<GridStep>(1)
   const [highlight, setHighlight] = useState<Highlight>(null)
   const [selection, setSelection] = useState<PlanSelection>({})
   const [toast, showToast] = useToast()
@@ -280,6 +283,14 @@ export default function App() {
                   options={FLOOR_SIZES.map((s) => ({ value: s.label, label: <span className="num">{s.label}</span> }))}
                 />
               )}
+              {view === 'plan' && tool === 'brush' && (brush?.kind === 'wall' || brush?.kind === 'freeTextile') && (
+                <GridPicker
+                  value={brush.kind === 'wall' ? (rules.wall.cc as GridStep) : gridStep}
+                  allowed={gridSteps(brush, rules)}
+                  onChange={setGridStep}
+                  why="Systemvegg tegnes i hele meter til Foga-delene for cc 25, 50 og 75 er lagt inn"
+                />
+              )}
               <span className="spacer" />
               <VariantTabs variants={sketch.variants} current={current} onSelect={selectVariant} />
               <Button onBand icon={Copy} disabled={sketch.variants.length >= 4} onClick={() => dispatch({ type: 'duplicate' })}>
@@ -337,6 +348,7 @@ export default function App() {
                     tool={tool}
                     brush={brush}
                     floorSize={floorSize}
+                    gridStep={gridStep}
                     highlight={highlight}
                     selection={selection}
                     onSelect={setSelection}
@@ -443,7 +455,7 @@ function hint(tool: Tool, brush: Brush | null): string {
     case 'textile':
       return erase ? 'Klikk en tekstilvegg for å fjerne den' : 'Klikk ved en vegg, på siden rammen skal stå · rammen fyller den ledige delen av veggen'
     case 'freeTextile':
-      return erase ? 'Klikk en frittstående tekstilvegg for å fjerne den' : 'Dra en rett strek på rutenettet (0,25 m) · start der en annen slutter for å lage hjørne · dra videre i samme retning for å forlenge'
+      return erase ? 'Klikk en frittstående tekstilvegg for å fjerne den' : 'Dra en rett strek på rutenettet, en rute av gangen · velg rutestørrelse i båndet · start der en annen slutter for å lage hjørne · dra videre i samme retning for å forlenge'
     case 'motif':
       return erase ? 'Klikk en foliedekor for å fjerne den, eller en tekstilvegg for å ta bort motivet' : 'Klikk en tekstilvegg for trykk, eller et veggfelt for foliedekor'
     case 'object':

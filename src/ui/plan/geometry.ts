@@ -1,4 +1,5 @@
 import { makeModule, type Module } from '../../domain/grid'
+import { alongX, cellsTo } from '../../domain/snapGrid'
 import type { Point, Stand } from '../../domain/types'
 
 /** The grid edge (module) closest to p, clamped to the stand. */
@@ -23,22 +24,23 @@ export function distToSegment(p: { x: number; y: number }, a: Point, b: Point): 
 }
 
 /**
- * Wall stroke while dragging: starts at the module under the pointer, then extends along the drag direction
- * in whole metres. Returns the end points.
+ * Wall stroke while dragging: starts at the module under the pointer, then extends along the drag direction in whole
+ * cells of `step` (the wall cc, 1 m today) on the shared drawing grid. Returns the end points.
  */
-export function strokeFrom(stand: Stand, p0: { x: number; y: number }, p: { x: number; y: number }): [Point, Point] {
+export function strokeFrom(stand: Stand, p0: { x: number; y: number }, p: { x: number; y: number }, step = 1): [Point, Point] {
   const { width: W, depth: D } = stand
   const e0 = nearestEdge(stand, p0)
   const e0h = e0.orientation === 'h'
-  const dx = p.x - p0.x
-  const dy = p.y - p0.y
   const cl = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v))
-  if (Math.abs(dx) >= Math.abs(dy)) {
+  if (alongX(p0, p)) {
     const y = e0h ? e0.a[1] : cl(Math.round(p0.y), 0, D)
     const i = e0h ? Math.min(e0.a[0], e0.b[0]) : cl(Math.floor(p0.x), 0, W - 1)
-    return dx >= 0 ? [[i, y], [cl(Math.max(i + 1, Math.round(p.x)), 0, W), y]] : [[i + 1, y], [cl(Math.min(i, Math.round(p.x)), 0, W), y]]
+    // The module under the pointer is always part of the stroke: start on its far side from the drag
+    const a = p.x >= p0.x ? i : i + 1
+    return [[a, y], [cellsTo(a, p.x, step, W, 1, a > i), y]]
   }
   const x = !e0h ? e0.a[0] : cl(Math.round(p0.x), 0, W)
   const j = !e0h ? Math.min(e0.a[1], e0.b[1]) : cl(Math.floor(p0.y), 0, D - 1)
-  return dy >= 0 ? [[x, j], [x, cl(Math.max(j + 1, Math.round(p.y)), 0, D)]] : [[x, j + 1], [x, cl(Math.min(j, Math.round(p.y)), 0, D)]]
+  const a = p.y >= p0.y ? j : j + 1
+  return [[x, a], [x, cellsTo(a, p.y, step, D, 1, a > j)]]
 }

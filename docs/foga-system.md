@@ -150,8 +150,10 @@ Systemhøyde fra gulv: 2490 + 50 = 2540 mm.
 Bjørn 31.10.2026. En 43TX-ramme som står alene på fotplater, med tekstil på begge sider. Den er ikke en del av
 systemveggen: den lager ikke rom og kan ikke ha dør (tekstildør med overstykke kommer senere).
 
-- Tegnes med pensel som en rett strek langs **0,25 m-rutenettet** (oppriss-rutenettet: 25, 50, 75, 100 cm). Minst
-  0,25 m. Kan stå hvor som helst på standen, men ikke langs eller gjennom en systemvegg (helt inntil er lov).
+- Tegnes med pensel som en rett strek. Den starter i et punkt på **0,25 m-rutenettet** og vokser én rute av gangen
+  med rutestørrelsen valgt i båndet: **25, 50, 75 eller 100 cm** (oppriss-rutenettet). Minst 0,25 m. Samme
+  tegnerutenett (domain/snapGrid.ts, båndvelgeren GridPicker) brukes av systemveggpenselen, som foreløpig bare har
+  1 m (cc 1000); 25, 50 og 75 cm åpnes når Foga-oppskriften har delene for de cc-ene. Kan stå hvor som helst på standen, men ikke langs eller gjennom en systemvegg (helt inntil er lov).
 - Høyde **2540** (som systemveggen med føtter). Høye vegger kommer senere.
 - **Topp- og bunnskinne** i 43TX går hele rammen. Over **5000 mm** skjøtes de i like lange stykker med **609**
   (871 037 92) i hver skjøt; rammen er fortsatt ett rektangel, ikke to rygg i rygg.
