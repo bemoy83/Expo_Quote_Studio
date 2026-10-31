@@ -1,10 +1,12 @@
 // Sketch file: JSON `{ format: 'standskisse', versjon, prosjekt, varianter, egneMotiver }`.
 // Newer versions are refused with an explanation; older versions are migrated step by step.
-import type { Project, Variant } from '../domain/types';
+import { rectOutline } from '../domain/outline';
+import { RECT_SIDE, roomWalls, roomWallId } from '../domain/rooms';
+import type { Project, Room, Variant } from '../domain/types';
 import { createProject, createVariant } from '../domain/variant';
 
 export const FORMAT = 'standskisse';
-export const VERSION = 1;
+export const VERSION = 2;
 
 /** A customer motif uploaded by the user (image as data URL). */
 export interface Motif {
@@ -43,8 +45,72 @@ export function serialize(s: Sketch): string {
   return JSON.stringify(file, null, 2);
 }
 
-/** Migrations from version n to n + 1, keyed by n. None yet. */
-const MIGRATIONS: Record<number, (f: Record<string, unknown>) => Record<string, unknown>> = {};
+/** Migrations from version n to n + 1, keyed by n. */
+const MIGRATIONS: Record<number, (f: Record<string, unknown>) => Record<string, unknown>> = {
+  1: (f) => ({ ...f, varianter: Array.isArray(f.varianter) ? f.varianter.map(rectRoomsToOutlines) : f.varianter }),
+};
+
+type Face = keyof typeof RECT_SIDE;
+interface RectRoomV1 {
+  id: string;
+  x: number;
+  y: number;
+  w: number;
+  d: number;
+  label?: string;
+  plate?: string;
+  gaps?: { face: Face; module: number }[];
+}
+type Things = Pick<Variant, 'walls' | 'openings' | 'textiles' | 'foils'> & { rooms?: RectRoomV1[] };
+
+/**
+ * Version 1 → 2: rooms were rectangles `{ x, y, w, d }` with sides named back, right, front, left (front and left
+ * running left → right and back → front); now they are outlines with numbered sides running clockwise. Front and
+ * left turn round, so offsets along them and the faces of what stands on them are mirrored.
+ */
+function rectRoomsToOutlines(x: unknown): unknown {
+  const v = x as Things;
+  if (typeof x !== 'object' || x === null || !Array.isArray(v.rooms) || !v.rooms.length) return x;
+  const sides = new Map<string, { wallId: string; len: number; flip: boolean }>();
+  const rooms: Room[] = v.rooms.map((r) => {
+    for (const face of Object.keys(RECT_SIDE) as Face[]) {
+      const len = face === 'back' || face === 'front' ? r.w : r.d;
+      sides.set(`${r.id}.${face}`, { wallId: roomWallId(r.id, RECT_SIDE[face]), len, flip: face === 'front' || face === 'left' });
+    }
+    const room: Room = { id: r.id, outline: rectOutline(r), ...(r.label ? { label: r.label } : {}), ...(r.plate ? { plate: r.plate } : {}) };
+    if (r.gaps?.length) {
+      room.gaps = r.gaps.map((g) => {
+        const s = sides.get(`${r.id}.${g.face}`)!;
+        return { side: RECT_SIDE[g.face], module: s.flip ? s.len - 1 - g.module : g.module };
+      });
+    }
+    return room;
+  });
+  const flipSide = <T extends { side?: 1 | -1 }>(t: T): T => (t.side ? { ...t, side: t.side === 1 ? -1 : 1 } : t);
+  return {
+    ...v,
+    rooms,
+    walls: [...v.walls.filter((w) => !w.room), ...rooms.flatMap(roomWalls)],
+    openings: v.openings.map((o) => {
+      const s = sides.get(o.wallId);
+      if (!s) return o;
+      const out = { ...o, wallId: s.wallId, module: s.flip ? s.len - 1 - o.module : o.module };
+      return s.flip && o.swing ? { ...out, swing: o.swing === 1 ? (-1 as const) : (1 as const) } : out;
+    }),
+    textiles: v.textiles.map((t) => {
+      const s = sides.get(t.wallId);
+      if (!s) return t;
+      const out = { ...t, wallId: s.wallId };
+      return s.flip ? flipSide({ ...out, from: s.len - t.from - t.width }) : out;
+    }),
+    foils: v.foils.map((f) => {
+      const s = sides.get(f.wallId);
+      if (!s) return f;
+      const out = { ...f, wallId: s.wallId };
+      return s.flip ? flipSide({ ...out, module: s.len - 1 - f.module, x: -f.x }) : out;
+    }),
+  };
+}
 
 export function parse(text: string): ParseResult {
   let data: unknown;

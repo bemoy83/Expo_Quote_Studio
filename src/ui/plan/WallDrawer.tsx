@@ -24,7 +24,7 @@ import {
   type FaceSide,
 } from '../../domain/decor'
 import { eraseWalls, flipSwing, isPerimeterWall, setWallPlate } from '../../domain/edit'
-import { outwardSide } from '../../domain/rooms'
+import { OUTSIDE } from '../../domain/rooms'
 import { wallLength, wallModules } from '../../domain/grid'
 import type { Foil, TextileWall, Variant, Wall } from '../../domain/types'
 import { builtModules } from '../../domain/walls'
@@ -56,7 +56,7 @@ type DragKind = 'tmove' | 'twidth' | 'theight' | 'fmove' | 'fsize'
 
 /** Face names by where the face looks. */
 function faceName(w: Wall, s: FaceSide): string {
-  if (w.room) return s === outwardSide(w.room.face) ? 'Utsiden' : 'Innsiden'
+  if (w.room) return s === OUTSIDE ? 'Utsiden' : 'Innsiden'
   const [nx, ny] = faceNormal(w, s)
   if (ny > 0) return 'Mot front'
   if (ny < 0) return 'Mot bak'

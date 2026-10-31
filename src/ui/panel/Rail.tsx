@@ -5,7 +5,8 @@ import { mainGroupOf, PRODUCT_GROUPS, resolveGroup } from '../../catalog/groups'
 import type { Product } from '../../catalog/types'
 import { setCounted, setStand } from '../../domain/edit'
 import { addObjectAnywhere, removeObjects } from '../../domain/objects'
-import { addDefaultRoom, dissolveRoom, isRoomWallId, removeRoom, ROOM_LABELS, roomName, roomOpenings, updateRoom } from '../../domain/rooms'
+import { addDefaultRoom, dissolveRoom, isRoomWallId, removeRoom, ROOM_LABELS, roomName, roomOpenings, roomSize, updateRoom } from '../../domain/rooms'
+import { bounds } from '../../domain/outline'
 import type { StandType, Variant } from '../../domain/types'
 import { fillFloor } from '../../domain/variant'
 import { textileBox } from '../../domain/decor'
@@ -281,10 +282,10 @@ function WallSection({ v, res, brush, tool, pick, onEdit, onToast, onSelect, sel
             thumb={<Box size={16} />}
             title={
               <button type="button" className="link" onClick={() => onSelect({ roomId: r.id })}>
-                {label} {r.w} × {r.d} m
+                {label} {roomSize(r)}
               </button>
             }
-            meta={`${doors ? `${doors} ${doors === 1 ? 'åpning' : 'åpninger'}` : 'ingen åpning'} · plassert ${r.x} · ${r.y} m`}
+            meta={`${doors ? `${doors} ${doors === 1 ? 'åpning' : 'åpninger'}` : 'ingen åpning'} · plassert ${bounds(r.outline).x} · ${bounds(r.outline).y} m`}
             action={
               <>
                 <IconButton icon={Ungroup} label="Gjør om til vanlige vegger" onClick={() => onEdit((x) => dissolveRoom(x, r.id))} />

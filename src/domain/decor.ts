@@ -10,7 +10,7 @@ import type { Rules } from '../rules/rules';
 import { wallHeight } from '../rules/rules';
 import { pointAlong, wallDirection, wallLength, wallModules } from './grid';
 import { defaultSwing, isPerimeterWall, nextId } from './edit';
-import { outwardSide, roomAt } from './rooms';
+import { OUTSIDE, roomAt } from './rooms';
 import type { Foil, Point, TextileWall, Variant, Wall } from './types';
 import { builtModules } from './walls';
 
@@ -23,7 +23,7 @@ const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n
 
 /** The face new decor goes on: into the stand, and on a room side the outside of the room. */
 export function defaultFace(v: Variant, w: Wall): FaceSide {
-  return w.room ? outwardSide(w.room.face) : defaultSwing(v.stand, w);
+  return w.room ? OUTSIDE : defaultSwing(v.stand, w);
 }
 
 /** The face a textile or foil sits on. Data without `side` uses the default face. */

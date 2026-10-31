@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { Printer } from 'lucide-react'
 import type { CalcResult } from '../../calc/calc'
 import type { Project, Room, Variant } from '../../domain/types'
-import { roomName, roomOpenings } from '../../domain/rooms'
+import { roomName, roomOpenings, roomSize } from '../../domain/rooms'
 import { dateText, DELIVERY_FIELDS, today, validUntil } from '../../domain/delivery'
 import { isFixedField, projectField } from '../../domain/variant'
 import { Button } from '../controls'
@@ -69,7 +69,7 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
       return ps.length ? `med ${ps.join(' og ')}` : 'uten åpning'
     }
     facts.splice(2, 0, [
-      v.rooms.map((r) => `${roomName(r)} ${r.w} × ${r.d} m`).join(', '),
+      v.rooms.map((r) => `${roomName(r)} ${roomSize(r)}`).join(', '),
       v.rooms.map(kind).join(' · ') + (k.roomWallLm ? ` · ${fmt(k.roomWallLm)} lm av standveggen` : ''),
     ])
   }

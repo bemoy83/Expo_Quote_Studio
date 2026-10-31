@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { CURTAIN, DEFAULT_CATALOG, DOOR } from '../catalog/defaultCatalog';
 import type { Variant } from '../domain/types';
 import { createVariant, fillFloor } from '../domain/variant';
-import { addRoom } from '../domain/rooms';
+import { addRoom, RECT_SIDE } from '../domain/rooms';
 import { DEFAULT_PRICING } from '../pricing/data';
 import { RULES } from '../rules/rules';
 import { calc, type CalcResult } from './calc';
@@ -122,8 +122,8 @@ describe('openings', () => {
 describe('rooms build only the walls that are missing', () => {
   it('two backrooms on one stand, shared walls counted once', () => {
     let v = createVariant('A', { width: 6, depth: 3, type: 'row' });
-    v = addRoom(v, { x: 0, y: 0, w: 1, d: 1 }, { face: 'right', module: 0, product: DOOR }, 'a')!;
-    v = addRoom(v, { x: 5, y: 0, w: 1, d: 1 }, { face: 'left', module: 0, product: DOOR }, 'b')!;
+    v = addRoom(v, { x: 0, y: 0, w: 1, d: 1 }, { side: RECT_SIDE.right, module: 0, product: DOOR }, 'a')!;
+    v = addRoom(v, { x: 5, y: 0, w: 1, d: 1 }, { side: RECT_SIDE.left, module: 0, product: DOOR }, 'b')!;
     const res = run(v);
     // Stand walls 6 + 3 + 3 = 12. Each room adds right/left face 1 + front face 1 = 2 → 16 modules, 2 doors.
     expect(res.keyFigures.modules).toBe(16);

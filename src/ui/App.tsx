@@ -3,7 +3,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useRef, us
 import { calc, type CalcResult } from '../calc/calc'
 import { r2 } from '../calc/referenceStands'
 import { addObject } from '../domain/objects'
-import { removeRoom } from '../domain/rooms'
+import { removeRoom, roomSize } from '../domain/rooms'
 import type { Variant } from '../domain/types'
 import { customerName, fillFloor } from '../domain/variant'
 import { newSketch, parse, serialize, type Sketch } from '../persistence/file'
@@ -86,17 +86,17 @@ export default function App() {
     vRef.current = v
   }, [v])
   // Every edit keeps textiles and foils valid: on a wall, off openings, inside their felt.
-  // An edit that walls in a rectangle with a door turns it into a room (frihåndsrom), as its own undo step.
+  // An edit that walls in an area with a door turns it into a room (frihåndsrom), as its own undo step.
   const onEdit = useCallback(
     (fn: (v: Variant) => Variant, history = true) => {
       const ratio = (id: string | undefined) => findMotif(motifs, id)?.ratio ?? 0
       const apply = (x: Variant) => fitDecor(fn(x), rules, ratio)
       dispatch({ type: 'edit', fn: apply, history })
       if (!history) return
-      const rects = newlyClosedRooms(vRef.current, apply(vRef.current))
-      if (!rects.length) return
-      dispatch({ type: 'edit', fn: (x) => fitDecor(rects.reduce((y, r) => wallsToRoom(y, r) ?? y, x), rules, ratio) })
-      const size = rects.map((r) => `${r.w} × ${r.d} m`).join(' og ')
+      const areas = newlyClosedRooms(vRef.current, apply(vRef.current))
+      if (!areas.length) return
+      dispatch({ type: 'edit', fn: (x) => fitDecor(areas.reduce((y, o) => wallsToRoom(y, o) ?? y, x), rules, ratio) })
+      const size = areas.map((outline) => roomSize({ outline })).join(' og ')
       showToast({ text: `Gjort om til rom ${size}`, action: 'Angre', onAction: () => dispatch({ type: 'undo' }) })
     },
     [motifs, showToast],

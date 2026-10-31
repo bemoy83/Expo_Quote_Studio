@@ -1,7 +1,7 @@
 // Editing operations on a variant. All pure: they return a new variant and never mutate.
 import { CELL, cellKey, moduleKey, parseCellKey, pointAlong, runs, sideEnds, SIDES, wallDirection, wallLength, wallModules } from './grid';
 import type { Opening, Point, Stand, TextileWall, Variant, Wall } from './types';
-import { addRoomGaps, clampRooms, outwardSide, roomOf, syncRooms } from './rooms';
+import { addRoomGaps, clampRooms, OUTSIDE, roomOf, syncRooms } from './rooms';
 import { builtModules, standardWalls } from './walls';
 
 /** Next free id with the given prefix: `w1`, `w2` … */
@@ -212,8 +212,7 @@ export function drawOpening(v: Variant, a: Point, b: Point, product: string): Va
 /** Into the stand on a perimeter wall, else to the wall's left. A room door swings out of the room, or in on the perimeter. */
 export function defaultSwing(stand: Stand, w: Wall): 1 | -1 {
   if (w.room) {
-    const out = outwardSide(w.room.face);
-    return isPerimeterWall(stand, w) ? (out === 1 ? -1 : 1) : out;
+    return isPerimeterWall(stand, w) ? 1 : OUTSIDE;
   }
   const [dx, dy] = wallDirection(w);
   const n: Point = [-dy, dx];

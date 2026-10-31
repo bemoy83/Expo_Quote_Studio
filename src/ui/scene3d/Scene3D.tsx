@@ -14,8 +14,9 @@ import { isPerimeterWall } from '../../domain/edit'
 import { pointAlong, wallDirection, wallLength } from '../../domain/grid'
 import { moveObject } from '../../domain/objects'
 import type { Motif } from '../../persistence/file'
-import { faceEnds, roomSideAt } from '../../domain/rooms'
-import type { Foil, RectFace, Room, TextileWall, Variant, Wall } from '../../domain/types'
+import { roomSideAt } from '../../domain/rooms'
+import { isHorizontal, outlineSide } from '../../domain/outline'
+import type { Foil, Point, Room, TextileWall, Variant, Wall } from '../../domain/types'
 import { wallHeight } from '../../rules/rules'
 import { IconButton } from '../controls'
 import { applyDrop, decorDrag, dropSpot, endDecorDrag, type DropSpot, type FaceTarget } from '../dnd'
@@ -190,7 +191,7 @@ export function Scene3D(p: Props) {
       return { x: q.x + s.width / 2, y: q.z + s.depth / 2 }
     }
     /** The room side whose top edge is under the pointer (a stand wall shared with the room counts too). */
-    const sideAt = (hit: Hit | null): { room: Room; face: RectFace } | undefined => {
+    const sideAt = (hit: Hit | null): { room: Room; side: number } | undefined => {
       if (!hit?.wallId || hit.point.y < wallHeight(rules) - GRIP) return undefined
       const q = toModel(hit.point)
       return roomSideAt(props.current.v, q.x, q.y, 0.12)
@@ -202,21 +203,21 @@ export function Scene3D(p: Props) {
       v.grip = null
       v.render()
     }
-    const showGrip = (room: Room, face: RectFace) => {
-      const key = `${room.id}|${face}|${room.x},${room.y},${room.w},${room.d}`
+    const showGrip = (room: Room, side: number) => {
+      const key = `${room.id}|${side}|${room.outline.join(' ')}`
       if (v.grip?.key === key) return
       clearGrip()
-      const mesh = gripMesh(props.current.v.stand, room, face, wallHeight(rules))
+      const mesh = gripMesh(props.current.v.stand, outlineSide(room.outline, side), wallHeight(rules))
       scene.add(mesh)
       v.grip = { key, mesh }
       v.render()
     }
     /** Resize cursor across the side as it appears on screen. */
-    const resizeCursor = (room: Room, face: RectFace) => {
+    const resizeCursor = (room: Room, side: number) => {
       const s = props.current.v.stand
-      const [a, b] = faceEnds(room, face)
+      const [a, b] = outlineSide(room.outline, side)
       const mid = new THREE.Vector3((a[0] + b[0]) / 2 - s.width / 2, wallHeight(rules), (a[1] + b[1]) / 2 - s.depth / 2)
-      const n = face === 'back' || face === 'front' ? new THREE.Vector3(0, 0, 1) : new THREE.Vector3(1, 0, 0)
+      const n = isHorizontal([a, b]) ? new THREE.Vector3(0, 0, 1) : new THREE.Vector3(1, 0, 0)
       const p0 = mid.clone().project(camera)
       const p1 = mid.clone().add(n).project(camera)
       return Math.abs(p1.x - p0.x) * camera.aspect > Math.abs(p1.y - p0.y) ? 'ew-resize' : 'ns-resize'
@@ -245,7 +246,7 @@ export function Scene3D(p: Props) {
         const side = sideAt(hit)
         const w = P.v.walls.find((x) => x.id === hit!.wallId)
         const id = side?.room.id ?? hit!.roomId ?? w!.room!.id
-        const mode = side?.face ?? 'move'
+        const mode = side?.side ?? 'move'
         const y = hit!.point.y
         const q = onFloor(e, y)
         if (q) drag = { kind: 'room', ...roomDrag(id, mode, q, P.v), y }
@@ -267,10 +268,10 @@ export function Scene3D(p: Props) {
           const hit = pick(e)
           const w = hit?.wallId ? P.v.walls.find((x) => x.id === hit.wallId) : undefined
           const side = sideAt(hit)
-          if (side) showGrip(side.room, side.face)
+          if (side) showGrip(side.room, side.side)
           else clearGrip()
           const movable = hit?.objectId || hit?.textileId || hit?.foilId || hit?.roomId || (w && (w.room || !isPerimeterWall(P.v.stand, w)))
-          renderer.domElement.style.cursor = side ? resizeCursor(side.room, side.face) : movable ? 'move' : hit ? 'pointer' : 'grab'
+          renderer.domElement.style.cursor = side ? resizeCursor(side.room, side.side) : movable ? 'move' : hit ? 'pointer' : 'grab'
         }
         return
       }
@@ -480,8 +481,7 @@ function previewMesh(stand: { width: number; depth: number }, w: Wall, s: FaceSi
 }
 
 /** A lit strip along the top of a room side: shown while the pointer is over the part that resizes the room. */
-function gripMesh(stand: { width: number; depth: number }, r: Room, face: RectFace, H: number) {
-  const [a, b] = faceEnds(r, face)
+function gripMesh(stand: { width: number; depth: number }, [a, b]: [Point, Point], H: number) {
   const len = Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1])
   const mesh = new THREE.Mesh(
     new THREE.BoxGeometry(len + 0.04, 0.035, 0.07),

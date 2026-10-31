@@ -1,76 +1,87 @@
-// Rooms (bakrom, møterom, lager): a rectangle that owns its walls.
-// The room is the truth; its four sides are written into `v.walls` as walls `<id>.<face>` after the stored walls,
-// every time the room changes (syncRooms). builtModules lets the first wall win a shared edge, so a side lying on a
-// stand wall or a drawn wall shares that wall and only the missing modules are built. Doors, textiles and foils on a
-// room side refer to `<id>.<face>` with offsets from the side's start, so they move with the room.
+// Rooms (bakrom, møterom, lager, frihåndsrom): a right-angled outline that owns its walls (see outline.ts).
+// The room is the truth; its sides are written into `v.walls` as walls `<id>.<side>` after the stored walls, every
+// time the room changes (syncRooms). builtModules lets the first wall win a shared edge, so a side lying on a stand
+// wall or a drawn wall shares that wall and only the missing modules are built. Doors, textiles and foils on a room
+// side refer to `<id>.<side>` with offsets from the side's start, so they move with the room. Every side runs
+// clockwise round the room, so the room is always on the left of a side and its outside on the right.
 import { pointAlong, runs, wallLength, wallModules } from './grid';
 import { nextId, ownPlate, replaceWalls } from './edit';
-import type { Opening, PlacedObject, Point, RectFace, Room, Variant, Wall } from './types';
+import {
+  area,
+  bounds,
+  cellBounds,
+  cellsOf,
+  contains,
+  isHorizontal,
+  isRectOutline,
+  matchSides,
+  moveSide,
+  nearestSide,
+  outlineOf,
+  outlineSide,
+  outlineSides,
+  outlinesOverlap,
+  rectOutline,
+  rimKeys,
+  settle,
+  sideLength,
+  translate,
+  type Rect,
+} from './outline';
+import type { Opening, PlacedObject, Point, Room, Variant, Wall } from './types';
 import { builtModules } from './walls';
 
-export const FACES: readonly RectFace[] = ['back', 'left', 'right', 'front'];
+/** Side numbers of a rectangular room. */
+export const RECT_SIDE = { back: 0, right: 1, front: 2, left: 3 } as const;
 
-export interface Rect {
-  x: number;
-  y: number;
-  w: number;
-  d: number;
-}
+/** The wall face (1 = left normal of from → to) that looks out of a room: the right of every side. */
+export const OUTSIDE = -1 as const;
 
-/** Start and end of a side. Back and front run left → right, left and right run back → front. */
-export function faceEnds(r: Rect, face: RectFace): [Point, Point] {
-  switch (face) {
-    case 'back':
-      return [[r.x, r.y], [r.x + r.w, r.y]];
-    case 'front':
-      return [[r.x, r.y + r.d], [r.x + r.w, r.y + r.d]];
-    case 'left':
-      return [[r.x, r.y], [r.x, r.y + r.d]];
-    case 'right':
-      return [[r.x + r.w, r.y], [r.x + r.w, r.y + r.d]];
-  }
-}
-
-/** Wall face (1 = left normal of from → to) that looks out of the room. */
-export function outwardSide(face: RectFace): 1 | -1 {
-  return face === 'front' || face === 'left' ? 1 : -1;
-}
-
-export const roomWallId = (roomId: string, face: RectFace) => `${roomId}.${face}`;
+export const roomWallId = (roomId: string, side: number) => `${roomId}.${side}`;
 
 /** Names offered for a room; the first is the default. A frihåndsrom is called «Rom» until renamed. */
 export const ROOM_LABELS = ['Bakrom', 'Lager', 'Møterom'] as const;
 export const roomName = (r: Room): string => r.label ?? ROOM_LABELS[0];
 
-/** True for one of the room's own sides (`<id>.<face>`). */
+/** Size for the plan, the panel and the quote: «2 × 3 m», or for other shapes area and outer size «5 m² (3 × 2 m)». */
+export function roomSize(r: Pick<Room, 'outline'>): string {
+  const b = bounds(r.outline);
+  const outer = `${b.w} × ${b.d} m`;
+  return isRectOutline(r.outline) ? outer : `${area(r.outline)} m² (${outer})`;
+}
+
+/** True for one of the room's own sides (`<id>.<side>`). */
 export const isRoomWallId = (wallId: string, roomId: string) => wallId.startsWith(`${roomId}.`);
 
-/** Module keys around a rectangle. */
-export function rimKeys(r: Rect): string[] {
-  return FACES.flatMap((f) => {
-    const [from, to] = faceEnds(r, f);
-    return wallModules({ id: '', from, to }).map((m) => m.key);
-  });
+/** Side number of one of the room's own walls, else undefined. */
+function sideOfWallId(wallId: string, roomId: string): number | undefined {
+  return isRoomWallId(wallId, roomId) ? Number(wallId.slice(roomId.length + 1)) : undefined;
 }
 
 /** Doors and curtains around a room, also those in a stand wall or another room's side it shares. */
-export function roomOpenings(v: Variant, r: Rect): Opening[] {
-  const rim = new Set(rimKeys(r));
+export function roomOpenings(v: Variant, r: Room): Opening[] {
+  const rim = new Set(rimKeys(r.outline));
   return builtModules(v).flatMap((m) => (m.opening && rim.has(m.key) ? [m.opening] : []));
 }
 
-/** The four sides of a room as walls. */
+/** The sides of a room as walls. */
 export function roomWalls(r: Room): Wall[] {
-  return FACES.map((face) => {
-    const [from, to] = faceEnds(r, face);
-    return { id: roomWallId(r.id, face), from, to, room: { id: r.id, face }, ...(r.plate ? { plate: r.plate } : {}) };
-  });
+  return outlineSides(r.outline).map(([from, to], side) => ({
+    id: roomWallId(r.id, side),
+    from,
+    to,
+    room: { id: r.id, side },
+    ...(r.plate ? { plate: r.plate } : {}),
+  }));
 }
+
+/** True when side `side` of the room runs left–right in the plan. */
+export const sideIsHorizontal = (r: Room, side: number) => isHorizontal(outlineSide(r.outline, side));
 
 /** `<wallId>#<module>` of every erased room module. */
 export function gapKeys(v: Variant): Set<string> {
   const out = new Set<string>();
-  for (const r of v.rooms ?? []) for (const g of r.gaps ?? []) out.add(`${roomWallId(r.id, g.face)}#${g.module}`);
+  for (const r of v.rooms ?? []) for (const g of r.gaps ?? []) out.add(`${roomWallId(r.id, g.side)}#${g.module}`);
   return out;
 }
 
@@ -78,31 +89,28 @@ export const roomOf = (v: Variant, w: Wall | undefined): Room | undefined => (w?
 
 /** The room whose floor holds the point (edges excluded). */
 export function roomAt(v: Variant, x: number, y: number): Room | undefined {
-  return v.rooms.find((r) => x > r.x && x < r.x + r.w && y > r.y && y < r.y + r.d);
+  return v.rooms.find((r) => contains(r.outline, x, y));
 }
 
 /** The room side the point lies on (within `tol` of the side line), also where the side shares a stand wall. */
-export function roomSideAt(v: Variant, x: number, y: number, tol = 0.1): { room: Room; face: RectFace } | undefined {
+export function roomSideAt(v: Variant, x: number, y: number, tol = 0.1): { room: Room; side: number } | undefined {
   for (const room of v.rooms) {
-    for (const face of FACES) {
-      const [a, b] = faceEnds(room, face);
-      const hz = a[1] === b[1];
-      const across = hz ? Math.abs(y - a[1]) : Math.abs(x - a[0]);
-      const t = hz ? x : y;
-      const [lo, hi] = hz ? [a[0], b[0]] : [a[1], b[1]];
-      if (across <= tol && t >= lo - tol && t <= hi + tol) return { room, face };
-    }
+    const side = nearestSide(room.outline, x, y, tol);
+    if (side !== undefined) return { room, side };
   }
   return undefined;
 }
 
-export const overlaps = (a: Rect, b: Rect) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.d && b.y < a.y + a.d;
+/** True when the outline shares floor with a room other than `except`. */
+export const overlapsRoom = (v: Variant, outline: Point[], except?: string) =>
+  v.rooms.some((o) => o.id !== except && outlinesOverlap(o.outline, outline));
 
-/** Inside the stand, at least 1 × 1 and not on top of another room. */
-function fits(v: Variant, r: Room): boolean {
+/** Inside the stand and not on top of another room. */
+function fits(v: Variant, id: string, outline: Point[]): boolean {
   const { width: W, depth: D } = v.stand;
-  if (r.w < 1 || r.d < 1 || r.x < 0 || r.y < 0 || r.x + r.w > W || r.y + r.d > D) return false;
-  return !v.rooms.some((o) => o.id !== r.id && overlaps(o, r));
+  const b = bounds(outline);
+  if (b.x < 0 || b.y < 0 || b.x + b.w > W || b.y + b.d > D) return false;
+  return !overlapsRoom(v, outline, id);
 }
 
 /**
@@ -131,13 +139,57 @@ export function syncRooms(v: Variant): Variant {
   return { ...v, walls, openings, textiles, foils };
 }
 
-/** Add a room (and optionally a door on one of its sides). Null when it does not fit. */
-export function addRoom(v: Variant, rect: Rect, door?: { face: RectFace; module: number; product: string }, id?: string): Variant | null {
-  const room: Room = { id: id ?? nextId(v.rooms.map((r) => r.id), 'rom'), ...rect };
-  if (!fits(v, room)) return null;
+/**
+ * Give a room a new outline and carry what stands on its sides along (see matchSides): doors, gaps, textiles and
+ * foils keep their place on the side they are on, a door left past an end of its side moves to the nearest module,
+ * and things on a side that is gone are dropped. `shift(i)` is how far side i itself moved.
+ */
+function reshape(v: Variant, r: Room, outline: Point[], shift?: (i: number) => Point): Variant {
+  const match = matchSides(r.outline, outline, shift);
+  const onSide = (wallId: string) => {
+    const side = sideOfWallId(wallId, r.id);
+    return side === undefined ? undefined : match[side];
+  };
+  const gaps = (r.gaps ?? []).flatMap((g) => {
+    const m = match[g.side];
+    if (!m) return [];
+    const module = g.module + m.offset;
+    return module >= 0 && module < sideLength(outline, m.side) ? [{ side: m.side, module }] : [];
+  });
+  const room: Room = { ...r, outline };
+  if (gaps.length) room.gaps = gaps;
+  else delete room.gaps;
+  return syncRooms({
+    ...v,
+    rooms: v.rooms.map((o) => (o.id === r.id ? room : o)),
+    openings: v.openings.flatMap((o) => {
+      if (!isRoomWallId(o.wallId, r.id)) return [o];
+      const m = onSide(o.wallId);
+      return m ? [{ ...o, wallId: roomWallId(r.id, m.side), module: Math.max(0, o.module + m.offset) }] : [];
+    }),
+    textiles: v.textiles.flatMap((t) => {
+      if (!isRoomWallId(t.wallId, r.id)) return [t];
+      const m = onSide(t.wallId);
+      return m ? [{ ...t, wallId: roomWallId(r.id, m.side), from: t.from + m.offset }] : [];
+    }),
+    foils: v.foils.flatMap((f) => {
+      if (!isRoomWallId(f.wallId, r.id)) return [f];
+      const m = onSide(f.wallId);
+      const module = m ? f.module + m.offset : -1;
+      return m && module >= 0 ? [{ ...f, wallId: roomWallId(r.id, m.side), module }] : [];
+    }),
+  });
+}
+
+/** Add a room (and optionally a door on one of its sides). Null when it does not fit or is not a room shape. */
+export function addRoom(v: Variant, shape: Rect | Point[], door?: { side: number; module: number; product: string }, id?: string): Variant | null {
+  const outline = Array.isArray(shape) ? settle(shape) : settle(rectOutline(shape));
+  if (!outline) return null;
+  const room: Room = { id: id ?? nextId(v.rooms.map((r) => r.id), 'rom'), outline };
+  if (!fits(v, room.id, outline)) return null;
   const next = syncRooms({ ...v, rooms: [...v.rooms, room] });
   if (!door) return next;
-  const o: Opening = { id: nextId(next.openings.map((x) => x.id), 'o'), wallId: roomWallId(room.id, door.face), module: door.module, product: door.product };
+  const o: Opening = { id: nextId(next.openings.map((x) => x.id), 'o'), wallId: roomWallId(room.id, door.side), module: door.module, product: door.product };
   return syncRooms({ ...next, openings: [...next.openings, o] });
 }
 
@@ -146,8 +198,8 @@ interface Corner {
   y: number;
   back: boolean;
   /** Inner side toward the stand's width, and toward its depth. */
-  across: RectFace;
-  along: RectFace;
+  across: number;
+  along: number;
   walls: [Point, Point][];
 }
 
@@ -160,21 +212,22 @@ export function addDefaultRoom(v: Variant, doorProduct: string): Variant | null 
   if (W < 2 || D < 2) return null;
   const keys = new Set(builtModules(v).map((m) => m.key));
   const has = (a: Point, b: Point) => keys.has(wallModules({ id: '', from: a, to: b })[0].key);
+  const { back, right, front, left } = RECT_SIDE;
   const corners: Corner[] = [
-    { x: 0, y: 0, back: true, across: 'right', along: 'front', walls: [[[0, 0], [1, 0]], [[0, 0], [0, 1]]] },
-    { x: W - 1, y: 0, back: true, across: 'left', along: 'front', walls: [[[W - 1, 0], [W, 0]], [[W, 0], [W, 1]]] },
-    { x: 0, y: D - 1, back: false, across: 'right', along: 'back', walls: [[[0, D], [1, D]], [[0, D - 1], [0, D]]] },
-    { x: W - 1, y: D - 1, back: false, across: 'left', along: 'back', walls: [[[W - 1, D], [W, D]], [[W, D - 1], [W, D]]] },
+    { x: 0, y: 0, back: true, across: right, along: front, walls: [[[0, 0], [1, 0]], [[0, 0], [0, 1]]] },
+    { x: W - 1, y: 0, back: true, across: left, along: front, walls: [[[W - 1, 0], [W, 0]], [[W, 0], [W, 1]]] },
+    { x: 0, y: D - 1, back: false, across: right, along: back, walls: [[[0, D], [1, D]], [[0, D - 1], [0, D]]] },
+    { x: W - 1, y: D - 1, back: false, across: left, along: back, walls: [[[W - 1, D], [W, D]], [[W, D - 1], [W, D]]] },
   ];
   const score = (c: Corner) => c.walls.filter(([a, b]) => has(a, b)).length * 2 + (c.back ? 1 : 0);
-  const rect = (c: Corner): Rect => ({ x: c.x, y: c.y, w: 1, d: 1 });
-  const inner = (c: Corner): [Point, Point][] => [faceEnds(rect(c), c.across), faceEnds(rect(c), c.along)];
+  const outline = (c: Corner) => rectOutline({ x: c.x, y: c.y, w: 1, d: 1 });
+  const inner = (c: Corner): [Point, Point][] => [outlineSide(outline(c), c.across), outlineSide(outline(c), c.along)];
   const free = corners
-    .filter((c) => !inner(c).some(([a, b]) => has(a, b)) && !v.rooms.some((r) => overlaps(r, rect(c))))
+    .filter((c) => !inner(c).some(([a, b]) => has(a, b)) && !overlapsRoom(v, outline(c)))
     .sort((a, b) => score(b) - score(a));
   const c = free[0];
   if (!c) return null;
-  return addRoom(v, rect(c), { face: W >= D ? c.across : c.along, module: 0, product: doorProduct });
+  return addRoom(v, outline(c), { side: W >= D ? c.across : c.along, module: 0, product: doorProduct });
 }
 
 /**
@@ -184,71 +237,54 @@ export function addDefaultRoom(v: Variant, doorProduct: string): Variant | null 
 export function moveRoom(v: Variant, id: string, dx: number, dy: number): Variant {
   const r = v.rooms.find((x) => x.id === id);
   if (!r) return v;
-  const x = Math.max(0, Math.min(v.stand.width - r.w, r.x + Math.round(dx)));
-  const y = Math.max(0, Math.min(v.stand.depth - r.d, r.y + Math.round(dy)));
-  const moved = { ...r, x, y };
-  if ((x === r.x && y === r.y) || !fits(v, moved)) return v;
-  const inside = (o: PlacedObject) => o.x > r.x && o.x < r.x + r.w && o.y > r.y && o.y < r.y + r.d;
-  const objects = v.objects.map((o) => (inside(o) ? { ...o, x: o.x + x - r.x, y: o.y + y - r.y } : o));
-  return syncRooms({ ...v, rooms: v.rooms.map((o) => (o.id === id ? moved : o)), objects });
+  const b = bounds(r.outline);
+  const x = Math.max(0, Math.min(v.stand.width - b.w, b.x + Math.round(dx)));
+  const y = Math.max(0, Math.min(v.stand.depth - b.d, b.y + Math.round(dy)));
+  const outline = translate(r.outline, x - b.x, y - b.y);
+  if ((x === b.x && y === b.y) || !fits(v, id, outline)) return v;
+  const inside = (o: PlacedObject) => contains(r.outline, o.x, o.y);
+  const objects = v.objects.map((o) => (inside(o) ? { ...o, x: o.x + x - b.x, y: o.y + y - b.y } : o));
+  return syncRooms({ ...v, rooms: v.rooms.map((o) => (o.id === id ? { ...r, outline } : o)), objects });
 }
 
 /**
- * Drag one side of a room by `delta` metres along its normal; the opposite side stays. At least 1 m.
- * Things on the other sides keep their place in the world. Returns v when nothing changes or it does not fit.
+ * Drag one side of a room by `delta` metres across it (+y for a side running left–right, +x for one running back–
+ * front); the neighbouring sides stretch and the others stay. A side never shrinks below 1 m: the drag stops there,
+ * or where the room would leave the stand or hit another room. A side dragged flush with the one beyond its
+ * neighbour merges with it (an L becomes a rectangle). Things on the other sides keep their place in the world.
+ * Returns v when nothing changes.
  */
-export function resizeRoom(v: Variant, id: string, face: RectFace, delta: number): Variant {
+export function resizeRoom(v: Variant, id: string, side: number, delta: number): Variant {
   const r = v.rooms.find((x) => x.id === id);
-  if (!r) return v;
-  const k = Math.round(delta);
-  let { x, y, w, d } = r;
-  if (face === 'left') {
-    x = Math.min(r.x + r.w - 1, r.x + k);
-    w = r.x + r.w - x;
-  } else if (face === 'right') w = Math.max(1, r.w + k);
-  else if (face === 'back') {
-    y = Math.min(r.y + r.d - 1, r.y + k);
-    d = r.y + r.d - y;
-  } else d = Math.max(1, r.d + k);
-  const next: Room = { ...r, x, y, w, d };
-  if ((x === r.x && y === r.y && w === r.w && d === r.d) || !fits(v, next)) return v;
-  // A side that now starts elsewhere: shift offsets so its doors and decor stay put
-  const shift = (wallId: string): number => {
-    if (!isRoomWallId(wallId, id)) return 0;
-    const f = wallId.slice(id.length + 1) as RectFace;
-    return f === 'back' || f === 'front' ? r.x - x : r.y - y;
-  };
-  const gaps = (r.gaps ?? [])
-    .map((g) => ({ ...g, module: g.module + shift(roomWallId(id, g.face)) }))
-    .filter((g) => g.module >= 0 && g.module < (g.face === 'back' || g.face === 'front' ? w : d));
-  const room: Room = { ...next };
-  if (gaps.length) room.gaps = gaps;
-  else delete room.gaps;
-  const out: Variant = {
-    ...v,
-    rooms: v.rooms.map((o) => (o.id === id ? room : o)),
-    openings: v.openings.flatMap((o) => {
-      const m = o.module + shift(o.wallId);
-      return m < 0 ? [] : [{ ...o, module: m }];
-    }),
-    textiles: v.textiles.map((t) => (shift(t.wallId) ? { ...t, from: t.from + shift(t.wallId) } : t)),
-    foils: v.foils.flatMap((f) => {
-      const m = f.module + shift(f.wallId);
-      return m < 0 ? [] : [{ ...f, module: m }];
-    }),
-  };
-  return syncRooms(out);
+  if (!r || side < 0 || side >= r.outline.length) return v;
+  const hz = sideIsHorizontal(r, side);
+  // The furthest step toward `delta` that gives a valid room
+  for (let k = Math.round(delta); k !== 0; k -= Math.sign(k)) {
+    const moved = moveSide(r.outline, side, k);
+    const outline = moved && settle(moved);
+    if (!outline || !fits(v, id, outline)) continue;
+    return reshape(v, r, outline, (i) => (i === side ? (hz ? [0, k] : [k, 0]) : [0, 0]));
+  }
+  return v;
 }
 
-/** Keep every room inside a (new) stand size. */
+/** Keep every room inside a (new) stand size: moved in where it fits, else cut at the stand's edge. */
 export function clampRooms(v: Variant): Variant {
   const { width: W, depth: D } = v.stand;
-  const rooms = v.rooms.map((r) => {
-    const w = Math.min(r.w, W);
-    const d = Math.min(r.d, D);
-    return { ...r, w, d, x: Math.max(0, Math.min(W - w, r.x)), y: Math.max(0, Math.min(D - d, r.y)) };
-  });
-  return syncRooms({ ...v, rooms });
+  // Back in from either edge; a room larger than the stand lines up with its back-left corner
+  const back = (x: number, w: number, max: number) => Math.max(-x, Math.min(0, max - x - w));
+  return v.rooms.reduce((acc, r) => {
+    const b = bounds(r.outline);
+    const dx = back(b.x, b.w, W);
+    const dy = back(b.y, b.d, D);
+    const moved = translate(r.outline, dx, dy);
+    const all = cellsOf(moved);
+    const cells = all.filter(([i, j]) => i < W && j < D);
+    if (!cells.length) return removeRoom(acc, r.id);
+    // The part on the stand, or its bounding rectangle when the cut falls apart
+    const outline = cells.length === all.length ? moved : (outlineOf(cells) ?? rectOutline(cellBounds(cells)));
+    return outline === r.outline ? acc : reshape(acc, r, outline, () => [dx, dy]);
+  }, v);
 }
 
 export function removeRoom(v: Variant, id: string): Variant {
@@ -274,11 +310,11 @@ export function addRoomGaps(v: Variant, wallId: string, modules: number[]): Vari
   const w = v.walls.find((x) => x.id === wallId);
   const r = roomOf(v, w);
   if (!w?.room || !r || !modules.length) return v;
-  const face = w.room.face;
-  const have = new Set((r.gaps ?? []).filter((g) => g.face === face).map((g) => g.module));
+  const side = w.room.side;
+  const have = new Set((r.gaps ?? []).filter((g) => g.side === side).map((g) => g.module));
   const add = modules.filter((m) => !have.has(m));
   if (!add.length) return v;
-  const gaps = [...(r.gaps ?? []), ...add.map((module) => ({ face, module }))];
+  const gaps = [...(r.gaps ?? []), ...add.map((module) => ({ side, module }))];
   const openings = v.openings.filter((o) => !(o.wallId === wallId && add.includes(o.module)));
   return { ...v, openings, rooms: v.rooms.map((o) => (o.id === r.id ? { ...r, gaps } : o)) };
 }
