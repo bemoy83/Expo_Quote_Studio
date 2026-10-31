@@ -5,7 +5,7 @@ import * as THREE from 'three'
 import type { CalcResult } from '../../calc/calc'
 import { FURNITURE_WHITE } from '../../catalog/defaultCatalog'
 import { foilCenter, sideOf, textileBox, textileOffset } from '../../domain/decor'
-import { defaultSwing } from '../../domain/edit'
+import { doorSwing } from '../../domain/edit'
 import { CELL, parseCellKey, pointAlong, pointKey, wallDirection, wallLength } from '../../domain/grid'
 import { conflicts } from '../../domain/objects'
 import { insetOutline, outlineSides } from '../../domain/outline'
@@ -227,7 +227,7 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
     const leaf = rules.wall.cc - post - 0.02
     along(m.a, m.b, leaf, OPENING_H - 0.01, 0.04, 0, mat('openings', DOOR), tag)
     const [dx, dy] = wallDirection(w)
-    const s = o.swing ?? defaultSwing(v.stand, w)
+    const s = doorSwing(v.stand, w, o)
     const n: Point = [-dy * s, dx * s]
     const a = pointAlong(w, o.module)
     const b = pointAlong(w, o.module + 1)

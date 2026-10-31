@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent, type SVGProps } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import { mainGroupOf } from '../../catalog/groups'
-import { defaultSwing, drawOpening, eraseWalls, isPerimeterWall, opensInside, paintFloor, paintWalls, segmentKeys, setOpening } from '../../domain/edit'
+import { doorAllowed, doorSwing, drawOpening, eraseWalls, isPerimeterWall, paintFloor, paintWalls, segmentKeys, setOpening } from '../../domain/edit'
 import { CELL, parseCellKey, pointAlong, sideLength, sidePoint, wallDirection, wallLength, type Module } from '../../domain/grid'
 import { addObject, conflicts, footprintBox, moveObject, removeObject } from '../../domain/objects'
 import { addFoil, addTextile, faceAt, faceSegment, felt, foilAt, foilCenter, freeSpans, removeFoil, removeTextile, sideOf, textileAt, textileOffset, updateTextile, type FaceSide } from '../../domain/decor'
@@ -241,7 +241,7 @@ export function PlanView(p: Props) {
       const m = moduleAt(q, 0.4)
       const e = m ?? (tool !== 'erase' && onStand(q) ? nearestEdge(v.stand, q) : null)
       if (!e) return
-      if (tool !== 'erase' && !opensInside(v.stand, e.a, e.b)) p.onToast('Dører og forheng settes bare inne på standen, ikke i standveggen')
+      if (tool !== 'erase' && !doorAllowed(v, e.a, e.b)) p.onToast('Dører og forheng kan ikke stå i standveggen')
       else if (m) p.onEdit((x) => setOpening(x, m.key, tool === 'erase' ? null : brush!.product))
       // No wall there: the door or curtain draws its own wall module
       else p.onEdit((x) => drawOpening(x, e.a, e.b, brush!.product))
@@ -371,7 +371,7 @@ export function PlanView(p: Props) {
 
   // Hover previews
   const hoverEdge = openingTool && hover ? (moduleAt(hover, 0.4) ?? (tool !== 'erase' && onStand(hover) ? nearestEdge(v.stand, hover) : null)) : null
-  const hoverModule = hoverEdge && (tool === 'erase' || opensInside(v.stand, hoverEdge.a, hoverEdge.b)) ? hoverEdge : null
+  const hoverModule = hoverEdge && (tool === 'erase' || doorAllowed(v, hoverEdge.a, hoverEdge.b)) ? hoverEdge : null
   const hoverFloor = floorTool && hover && !drag.current ? floorBlock(hover) : null
   const hoverFace = decorTool && hover ? faceHit(hover) : null
   const hoverWallEdge = wallTool && hover && !stroke && onStand(hover) ? nearestEdge(v.stand, hover) : null
@@ -644,7 +644,7 @@ function OpeningMark({ v, m, selected }: { v: Variant; m: BuiltModule; selected:
   const o = m.opening!
   const w = v.walls.find((x) => x.id === o.wallId)!
   const [dx, dy] = wallDirection(w)
-  const s = o.swing ?? defaultSwing(v.stand, w)
+  const s = doorSwing(v.stand, w, o)
   const n: Point = [-dy * s, dx * s]
   const a = pointAlong(w, o.module)
   const b = pointAlong(w, o.module + 1)

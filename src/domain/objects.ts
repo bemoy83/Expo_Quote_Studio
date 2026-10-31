@@ -5,7 +5,7 @@ import type { Rules } from '../rules/rules';
 import { pointAlong, wallDirection } from './grid';
 import type { PlacedObject, Variant } from './types';
 import { builtModules } from './walls';
-import { defaultSwing, nextId } from './edit';
+import { doorSwing, nextId } from './edit';
 import { faceSegment, sideOf } from './decor';
 
 export interface Box {
@@ -65,7 +65,7 @@ export function blockers(v: Variant, ctx: PlaceContext, skipId?: string): Box[] 
     const w = v.walls.find((x) => x.id === o.wallId);
     if (!w || !ctx.swings(o.product)) continue;
     const [dx, dy] = wallDirection(w);
-    const s = o.swing ?? defaultSwing(v.stand, w);
+    const s = doorSwing(v.stand, w, o);
     const n = [-dy * s, dx * s];
     const a = pointAlong(w, o.module);
     const b = pointAlong(w, o.module + 1);

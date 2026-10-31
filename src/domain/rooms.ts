@@ -5,7 +5,7 @@
 // side refer to `<id>.<side>` with offsets from the side's start, so they move with the room. Every side runs
 // clockwise round the room, so the room is always on the left of a side and its outside on the right.
 import { pointAlong, runs, wallLength, wallModules } from './grid';
-import { nextId, opensInside, ownPlate, replaceWalls } from './edit';
+import { doorAllowed, nextId, ownPlate, replaceWalls } from './edit';
 import {
   area,
   bounds,
@@ -113,11 +113,11 @@ function fits(v: Variant, id: string, outline: Point[]): boolean {
   return !overlapsRoom(v, outline, id);
 }
 
-/** False when a door or curtain on the room's sides would end up in the stand's outline (see opensInside). */
+/** False when a door or curtain on the room's sides would end up in a stand wall (see doorAllowed). */
 function doorsInside(v: Variant, id: string): boolean {
   return v.openings.every((o) => {
     const w = isRoomWallId(o.wallId, id) && v.walls.find((x) => x.id === o.wallId);
-    return !w || opensInside(v.stand, pointAlong(w, o.module), pointAlong(w, o.module + 1));
+    return !w || doorAllowed(v, pointAlong(w, o.module), pointAlong(w, o.module + 1));
   });
 }
 
@@ -259,7 +259,7 @@ export function moveRoom(v: Variant, id: string, dx: number, dy: number): Varian
 /**
  * Drag one side of a room by `delta` metres across it (+y for a side running left–right, +x for one running back–
  * front); the neighbouring sides stretch and the others stay. A side never shrinks below 1 m: the drag stops there,
- * or where the room would leave the stand, hit another room or put its door in the stand's outline. A side dragged flush with the one beyond its
+ * or where the room would leave the stand, hit another room or put its door in a stand wall. A side dragged flush with the one beyond its
  * neighbour merges with it (an L becomes a rectangle). Things on the other sides keep their place in the world.
  * Returns v when nothing changes.
  */

@@ -4,7 +4,7 @@ import { placeContext } from '../catalog/lookup';
 import { calc } from '../calc/calc';
 import { r2 } from '../calc/referenceStands';
 import { RULES } from '../rules/rules';
-import { drawOpening, eraseWalls, opensInside, paintFloor, paintWalls, setOpening, setStand, setWallPlate } from './edit';
+import { doorAllowed, doorSwing, drawOpening, eraseWalls, flipSwing, paintFloor, paintWalls, setOpening, setStand, setWallPlate } from './edit';
 import { moduleKey } from './grid';
 import { addObject, addObjectAnywhere, conflicts, moveObject } from './objects';
 import type { Variant } from './types';
@@ -64,14 +64,27 @@ describe('openings', () => {
     // On an existing wall it only replaces the module
     expect(kf(drawOpening(v, [0, 1], [1, 1], DOOR)).modules).toBe(kf(v).modules);
   });
-  it('never in the stand walls or on an open stand edge', () => {
+  it('never in the stand walls', () => {
     expect(setOpening(v, moduleKey([1, 0], [2, 0]), DOOR)).toBe(v);
     expect(setOpening(v, moduleKey([0, 1], [0, 2]), CURTAIN)).toBe(v);
-    expect(drawOpening(v, [0, 3], [1, 3], DOOR)).toBe(v);
-    expect(opensInside(v.stand, [1, 1], [2, 1])).toBe(true);
+    expect(doorAllowed(v, [1, 1], [2, 1])).toBe(true);
     // One already there (an older sketch) can still be taken out
     const old = { ...v, openings: [{ id: 'o1', wallId: 'side-back', module: 1, product: DOOR }] };
     expect(setOpening(old, moduleKey([1, 0], [2, 0]), null).openings).toEqual([]);
+  });
+  it('toward the aisle a door is allowed, but always swings into the stand', () => {
+    const x = drawOpening(v, [0, 3], [1, 3], DOOR);
+    expect(kf(x).openings).toBe(1);
+    const o = x.openings[0];
+    const w = x.walls.find((y) => y.id === o.wallId)!;
+    // Into the stand is −y on the front edge
+    const s = doorSwing(x.stand, w, o);
+    const [dx, dy] = [Math.sign(w.to[0] - w.from[0]), Math.sign(w.to[1] - w.from[1])];
+    expect(dx * s).toBe(-1);
+    expect(dy).toBe(0);
+    // It can not be turned, and a stored outward swing is ignored
+    expect(flipSwing(x, o.id)).toEqual(x);
+    expect(doorSwing(x.stand, w, { ...o, swing: s === 1 ? -1 : 1 })).toBe(s);
   });
 });
 

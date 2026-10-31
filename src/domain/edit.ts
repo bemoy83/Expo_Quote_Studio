@@ -2,7 +2,7 @@
 import { CELL, cellKey, moduleKey, parseCellKey, pointAlong, runs, sideEnds, SIDES, wallDirection, wallLength, wallModules } from './grid';
 import type { Opening, Point, Stand, TextileWall, Variant, Wall } from './types';
 import { addRoomGaps, clampRooms, OUTSIDE, roomOf, syncRooms } from './rooms';
-import { builtModules, standardWalls } from './walls';
+import { builtModules, isStandWall, standardWalls } from './walls';
 
 /** Next free id with the given prefix: `w1`, `w2` … */
 export function nextId(taken: Iterable<string>, prefix: string): string {
@@ -198,7 +198,7 @@ export function setOpening(v: Variant, key: string, product: string | null): Var
   if (!mod) return v;
   const others = v.openings.filter((o) => o !== mod.opening);
   if (!product) return mod.opening ? { ...v, openings: others } : v;
-  if (!opensInside(v.stand, mod.a, mod.b)) return v;
+  if (!doorAllowed(v, mod.a, mod.b)) return v;
   if (mod.opening?.product === product) return v;
   const id = mod.opening?.id ?? nextId(v.openings.map((o) => o.id), 'o');
   const swing = mod.opening?.swing ?? defaultSwing(v.stand, v.walls.find((w) => w.id === mod.wallId)!);
@@ -207,7 +207,7 @@ export function setOpening(v: Variant, key: string, product: string | null): Var
 
 /** Put a door or curtain on the module a–b, drawing the wall module first when there is none. */
 export function drawOpening(v: Variant, a: Point, b: Point, product: string): Variant {
-  if (!opensInside(v.stand, a, b)) return v;
+  if (!doorAllowed(v, a, b)) return v;
   return setOpening(paintWalls(v, a, b), moduleKey(a, b), product);
 }
 
@@ -232,8 +232,9 @@ export function flipSwing(v: Variant, openingId: string): Variant {
   return {
     ...v,
     openings: v.openings.map((o) => {
-      if (o.id !== openingId) return o;
-      const cur = o.swing ?? defaultSwing(v.stand, v.walls.find((w) => w.id === o.wallId)!);
+      const w = v.walls.find((x) => x.id === o.wallId);
+      if (o.id !== openingId || !w || !canFlipSwing(v.stand, w)) return o;
+      const cur = doorSwing(v.stand, w, o);
       return { ...o, swing: cur === 1 ? -1 : 1 };
     }),
   };
@@ -293,10 +294,21 @@ export function setCounted(v: Variant, product: string, qty: number): Variant {
 
 /** True when the wall lies on the stand's outer edge. */
 /**
- * Doors and curtains go inside the stand only: in an inner wall, a room side or an empty edge on the floor, never in
- * the stand's own walls or on its open edges (the module a–b lying on the stand's outline).
+ * Where a door or curtain may go: anywhere but in the walls the stand type brings (standvegger). An inner wall, a room
+ * side, an empty edge on the floor or an open stand edge toward the aisle are all fine.
  */
-export const opensInside = (stand: Stand, a: Point, b: Point) => !isPerimeterWall(stand, { id: '', from: a, to: b });
+export function doorAllowed(v: Variant, a: Point, b: Point): boolean {
+  const key = moduleKey(a, b);
+  return !v.walls.some((w) => isStandWall(w) && wallModules(w).some((m) => m.key === key));
+}
+
+/** The side a door swings to. On the stand's edge (toward the aisle) it always swings into the stand. */
+export function doorSwing(stand: Stand, w: Wall, o: Opening): 1 | -1 {
+  return isPerimeterWall(stand, w) ? defaultSwing(stand, w) : (o.swing ?? defaultSwing(stand, w));
+}
+
+/** A door on the stand's edge can not be turned: it swings into the stand. */
+export const canFlipSwing = (stand: Stand, w: Wall) => !isPerimeterWall(stand, w);
 
 export function isPerimeterWall(stand: Stand, w: Wall): boolean {
   return (

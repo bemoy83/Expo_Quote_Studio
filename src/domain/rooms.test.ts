@@ -5,7 +5,7 @@ import { calc } from '../calc/calc';
 import { r2 } from '../calc/referenceStands';
 import { RULES } from '../rules/rules';
 import { addTextile, faces, fitDecor, freeSpans, updateTextile } from './decor';
-import { defaultSwing, eraseWalls, moveWall, paintWalls, setStand, setWallPlate } from './edit';
+import { defaultSwing, doorSwing, eraseWalls, moveWall, paintWalls, setStand, setWallPlate } from './edit';
 import { moduleKey } from './grid';
 import { conflicts } from './objects';
 import { bounds, rectOutline } from './outline';
@@ -266,11 +266,19 @@ describe('L-shaped rooms', () => {
 });
 
 describe('room doors stay inside the stand', () => {
-  it('a room can not be moved or resized so its door lands on the open front', () => {
-    // Door in the front of a 2 × 2 room at the back of a 6 × 4 row stand (front open at y = 4)
-    const v = r2();
-    expect(rect(moveRoom(v, 'bk', 0, 1), 0).y).toBe(1);
-    expect(moveRoom(v, 'bk', 0, 2)).toBe(v);
-    expect(rect(resizeRoom(v, 'bk', RECT_SIDE.front, 2), 0).d).toBe(3);
+  it('a room can not be moved or resized so its door lands in a stand wall', () => {
+    // Door in the back of a 2 × 2 room 1 m in front of the back stand wall
+    const v = addRoom(row(), { x: 2, y: 1, w: 2, d: 2 }, { side: RECT_SIDE.back, module: 0, product: DOOR })!;
+    expect(moveRoom(v, 'rom1', 0, -1)).toBe(v);
+    expect(resizeRoom(v, 'rom1', RECT_SIDE.back, -1)).toBe(v);
+  });
+  it('toward the aisle it may go, and the door swings into the room', () => {
+    // R2's room door is in its front; moved to the open front edge of the stand
+    const v = moveRoom(r2(), 'bk', 0, 2);
+    expect(rect(v, 0).y).toBe(2);
+    const o = v.openings[0];
+    const w = v.walls.find((x) => x.id === o.wallId)!;
+    // Front side runs right → left: into the room (−y) is the left normal
+    expect(doorSwing(v.stand, w, { ...o, swing: -1 })).toBe(1);
   });
 });
