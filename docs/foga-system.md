@@ -184,3 +184,18 @@ src/foga/
 
 Motoren vet ingenting om gulv, møbler eller priser. Plukklisten setter sammen Foga-stykklisten og løsøre fra
 kalkylen, delt etter produkt. Tilbudet bruker fortsatt kalkylen (`src/calc`) til priser.
+
+## 5. Mål og prisfilosofi (Bjørn 31.10.2026)
+
+Målet er én Foga-motor med felles profilbibliotek, oppskrifter og byggeregler. Den skal sette sammen vegger nå,
+og disker og podier senere. Disker og podier bygges på samme måte som vegger, med noen nye profiler og noen
+eksisterende, for eksempel 92.
+
+Til slutt skal appen vise et varesortiment av ferdigprodukter som kan tegnes eller dras inn, for eksempel
+«Vegg hvit 1 × 2,5 m», priset per løpemeter. Et ferdigprodukt består av byggesystemprofiler og plater, og
+motoren regner ut delelisten for det.
+
+- Prisen i tilbudet kommer fra ferdigproduktet, ikke fra delelisten.
+- Delelisten gir bare pris for en kombinasjon av deler som ikke dekkes av et ferdigprodukt.
+  Dette er en filosofi, ikke en hardkodet regel. En frihåndstegnet disk kan for eksempel prises fra deler,
+  men det avgjøres når vi kommer dit.
