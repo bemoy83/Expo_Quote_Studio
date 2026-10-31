@@ -1058,6 +1058,28 @@ kbd {
   font: 400 13px var(--font-numeric);
   text-align: right;
 }
+/* Level 2 articles under a calc group: quantities only, no price */
+.cg-arts {
+  margin: 6px 0 0 16px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: 500 12px var(--font-ui);
+  color: rgb(var(--ink-muted));
+  cursor: pointer;
+}
+.cg-arts:hover {
+  color: rgb(var(--ink));
+}
+.cl.art {
+  margin-top: 3px;
+  padding-left: 28px;
+}
+.cl.art .n,
+.cl.art .s {
+  font: 400 12px var(--font-ui);
+  color: rgb(var(--ink-muted));
+}
 .calc-foot {
   flex: none;
   padding: 14px 20px 16px;

@@ -17,8 +17,8 @@ describe('catalog edits', () => {
     const e = editRow(NO_EDITS, rowOf('6120-9010'), { price: 400, placeholder: false });
     const before = calc(r2(), RULES, base).groups.find((g) => g.id === 'vegg')!;
     const after = calc(r2(), RULES, applyEdits(base, e)).groups.find((g) => g.id === 'vegg')!;
-    // R2 has 13 white plates: 13 × (400 − 330) = 910
-    expect(after.sum - before.sum).toBe(910);
+    // R2 has 13 m white wall: 13 × (400 − 870) = −6 110
+    expect(after.sum - before.sum).toBe(-6110);
     expect(after.lines[0].placeholder).toBe(false);
   });
 

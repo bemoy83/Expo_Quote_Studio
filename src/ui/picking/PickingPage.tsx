@@ -52,6 +52,15 @@ export function PickingPage({ variants, current, onSelect, calcOf }: Props) {
       lm: l.lm,
       qty: `${l.qty} stk`,
     })),
+    // The printed textile of each frame: not Foga, sold inside the textile wall product
+    ...res.production.pieces.map((p) => ({
+      key: `print|${p.pos}`,
+      group: 'prof.tekstil',
+      code: p.pos,
+      title: 'Trykt tekstil',
+      detail: `${p.pw} × ${p.ph} mm inkl. bleed`,
+      qty: '1 stk',
+    })),
   ]
   const tree = groupItems(rows, (r) => r.group)
   const sum = (f: (l: (typeof B.lines)[number]) => boolean) => B.lines.filter(f).reduce((a, l) => a + l.qty, 0)

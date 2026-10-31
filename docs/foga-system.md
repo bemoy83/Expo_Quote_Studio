@@ -189,7 +189,25 @@ teller stolper, skinner, takdrager og plater fra den, så tilbud og plukkliste b
 setter sammen Foga-stykklisten og kalkylelinjene som ikke er bygget av Foga-deler. Prisene kommer fortsatt fra
 kalkylen (`src/calc`).
 
-## 5. Mål og prisfilosofi (Bjørn 31.10.2026)
+## 5. Tre nivåer (Bjørn 31.10.2026)
+
+| Nivå | Hva | Eksempel | Hvor |
+| --- | --- | --- | --- |
+| 1 Salgsprodukt | Det kunden kjøper, med salgspris | 6120-9010 Rammevegg m/plate, komplett, per meter | Kalkyle og tilbud |
+| 2 Artikkel | Det montøren plukker | 6290-9010 veggplate, stolpe 94 med fot, topp- og bunnskinne | Plukkliste, og under hver gruppe i kalkylen |
+| 3 Bestanddel | Det en artikkel er laget av | Stolpe = 94 × 2490 + 700 + M10 × 65 | Innkjøp og kostpris (senere) |
+
+- Et salgsprodukt er en nominell bundle (vegg: 1 plate, 2 stolper, topp- og bunnskinne per meter). Plukklisten teller
+  de faktiske artiklene fra tegningen, så naboelementer deler stolpe. Bundlen vises aldri i tilbudet.
+- Salgsprodukter i dag: vegg per meter og RAL, **dør med overstykke** og **forheng med overstykke** (en åpning er aldri
+  veggmeter), **takdrager per meter** (stolper som bare bærer takdrager ligger i prisen), **tekstilvegg** per stk etter
+  størrelse B × H (leie av ramme og trykt tekstil som ett produkt, pris = m²-sats × B × H). Gulv, møbler og resten er
+  allerede salgsprodukter.
+- Der det ikke finnes en artikkel, plukkes bestanddelene direkte (tekstilvegg: 43TX, 613, 520).
+- Senere: ramme (leie) og trykk (salg, kan gjenbrukes) må kunne selges hver for seg, og prisen bør kunne bli summen
+  av artiklene når en sammensetning ikke er et produkt i sortimentet.
+
+## 6. Mål og prisfilosofi (Bjørn 31.10.2026)
 
 Målet er én Foga-motor med felles profilbibliotek, oppskrifter og byggeregler. Den skal sette sammen vegger nå,
 og disker og podier senere. Disker og podier bygges på samme måte som vegger, med noen nye profiler og noen

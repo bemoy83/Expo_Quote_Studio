@@ -1,5 +1,10 @@
-import { FileText } from 'lucide-react'
+import { ChevronDown, ChevronRight, FileText } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import type { CalcResult } from '../../calc/calc'
+import { mainGroupOf } from '../../catalog/groups'
+import { bom } from '../../foga/engine'
+import { bomSizes } from '../../foga/fromVariant'
+import { RECIPES } from '../../foga/recipes'
 import { LAYER_COLOR } from '../colors'
 import { Button } from '../controls'
 import { rules } from '../env'
@@ -24,6 +29,10 @@ const DOT: Partial<Record<string, string>> = LAYER_COLOR
 export function CalcPanel({ res, name, onHover, onQuote }: { res: CalcResult; name: string; onHover: (h: Highlight) => void; onQuote: () => void }) {
   const lines = res.groups.flatMap((g) => g.lines)
   const placeholders = lines.filter((l) => l.placeholder).length
+  // Level 2: the Foga articles behind each main group, the same as on the picking list. Quantities only.
+  const articles = useMemo(() => bom(res.foga, RECIPES, bomSizes(rules)).lines, [res.foga])
+  const [open, setOpen] = useState<Set<string>>(new Set())
+  const toggle = (id: string) => setOpen((o) => new Set(o.has(id) ? [...o].filter((x) => x !== id) : [...o, id]))
   return (
     <aside className="calc" aria-label="Veiledende kalkyle">
       <div className="calc-head">
@@ -58,6 +67,30 @@ export function CalcPanel({ res, name, onHover, onQuote }: { res: CalcResult; na
                 </span>
               </div>
             ))}
+            {(() => {
+              const arts = articles.filter((x) => mainGroupOf(x.group) === g.id)
+              if (!arts.length) return null
+              const on = open.has(g.id)
+              const Icon = on ? ChevronDown : ChevronRight
+              return (
+                <>
+                  <button type="button" className="cg-arts" aria-expanded={on} onClick={() => toggle(g.id)}>
+                    <Icon size={12} /> {arts.length} artikler
+                  </button>
+                  {on &&
+                    arts.map((x) => (
+                      <div key={x.group + x.name + x.detail} className="cl art">
+                        <span className="n">
+                          {x.name}
+                          {x.ral ? ` · RAL ${x.ral}` : ''}
+                          {x.detail.endsWith('overstykke') ? ' · overstykke' : ''}
+                        </span>
+                        <span className="s">{x.qty} stk</span>
+                      </div>
+                    ))}
+                </>
+              )
+            })()}
           </section>
         ))}
       </div>

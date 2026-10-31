@@ -10,19 +10,19 @@ import { calc, type CalcResult } from './calc';
 import { r1, r2, r3 } from './referenceStands';
 
 const run = (v: Variant) => calc(v, RULES, DEFAULT_CATALOG);
-const qty = (res: CalcResult, artnr: string) =>
-  res.groups.flatMap((g) => g.lines).find((l) => l.artnr === artnr)?.qty ?? 0;
+const lines = (res: CalcResult) => res.groups.flatMap((g) => g.lines);
+const qty = (res: CalcResult, artnr: string) => lines(res).find((l) => l.artnr === artnr)?.qty ?? 0;
 const S = DEFAULT_CATALOG.system;
 
 describe('R1 · row stand 3 × 3, nothing added', () => {
   // Walls: back 3 + left 3 + right 3 = 9 modules. Front open → beam 3 m, ends rest on the side walls.
   const res = run(r1());
-  it('wall parts', () => {
+  it('wall sold per metre, the articles behind it only on the picking list', () => {
     expect(qty(res, '6120-9010')).toBe(9);
-    expect(qty(res, S.topRail)).toBe(9);
-    expect(qty(res, S.bottomRail)).toBe(9);
+    expect(lines(res).map((l) => l.artnr)).toEqual(['6120-9010', S.beam]);
     // Back: 4 posts. Left and right: 3 more each (corners shared).
-    expect(qty(res, S.post)).toBe(10);
+    expect(res.keyFigures.posts).toBe(10);
+    expect(res.foga.posts).toBe(10);
     expect(res.keyFigures.beamPosts).toBe(0);
   });
   it('beam', () => {
@@ -42,35 +42,39 @@ describe('R1 · row stand 3 × 3, nothing added', () => {
 describe('R2 · corner stand 6 × 4, backroom 2 × 2, textile wall 4 m', () => {
   // Walls: back 6 + left 4 + backroom right face 2 + front face 2 = 14 modules, one of them a door.
   const res = run(r2());
-  it('wall parts: the door module has its rails in the header', () => {
+  it('wall metres: the door module is not wall, it is in the door product', () => {
     expect(qty(res, '6120-9010')).toBe(13);
-    expect(qty(res, S.topRail)).toBe(13);
-    expect(qty(res, S.bottomRail)).toBe(13);
     expect(res.keyFigures.topRails).toBe(14);
     expect(res.keyFigures.wallLm).toBe(13);
   });
-  it('posts', () => {
+  it('posts: counted, not sold (beam posts are in the takdrager price)', () => {
     // Back 7 + left 4 + backroom (2,1),(2,2),(1,2) = 14 wall posts; free front-right corner of the beams = 1.
-    expect(qty(res, S.post)).toBe(15);
+    expect(res.keyFigures.posts).toBe(15);
     expect(res.keyFigures.beamPosts).toBe(1);
+    expect(lines(res).find((l) => l.artnr === S.beam)?.meta).toBe('2 lengder · 1 stolpe inkludert');
   });
   it('beams on the two open sides', () => {
     expect(qty(res, S.beam)).toBe(10);
     expect(res.keyFigures.beamLengths).toBe(2);
   });
-  it('door and header', () => {
+  it('door with header is one product', () => {
     expect(qty(res, DOOR)).toBe(1);
-    expect(qty(res, S.header)).toBe(1);
+    expect(res.keyFigures.openings).toBe(1);
   });
   it('textile wall follows InFrame rules', () => {
     // Span 4000 → W = 4000 − 20 − 10 = 3970, H = 2490 + 50 = 2540.
     // Braces: ceil(3970 / 1000) − 1 = 3, each 2540 − 2 × 40 = 2460.
     // Profile: 2 × 3970 + 2 × 2540 + 3 × 2460 = 20 400 mm → 20,4 lm.
     // Print: (3970 + 40) × (2540 + 40) = 4010 × 2580 mm = 10,3458 m² → 10,3.
-    expect(qty(res, S.frame)).toBe(20.4);
-    expect(qty(res, S.print)).toBe(10.3);
+    expect(res.production.lm).toBeCloseTo(20.4);
+    expect(res.keyFigures.textileM2).toBeCloseTo(10.3458);
     const [p] = res.production.pieces;
     expect(p).toMatchObject({ W: 3970, H: 2540, pw: 4010, ph: 2580, braces: { qty: 3, length: 2460 } });
+  });
+  it('textile wall sold per piece, priced from B × H', () => {
+    // 1000 kr/m² × 3,970 × 2,540 = 10 083,8 → 10 084
+    const l = lines(res).find((x) => x.artnr === S.textile)!;
+    expect(l).toMatchObject({ name: 'Tekstilvegg, leie av ramme med trykt tekstil, 3970 × 2540 mm', qty: 1, unit: 'stk', price: 10084, sum: 10084 });
   });
   it('labour', () => {
     // 14 × 0,5 + 10 × 0,15 + 1 × 0,25 + 10,3458 × 0,35 = 12,37 → 12,5
@@ -87,8 +91,9 @@ describe('R3 · island 8 × 6, beams only', () => {
   });
   it('posts', () => {
     // 4 corners + 2 joints
-    expect(qty(res, S.post)).toBe(6);
-    expect(qty(res, S.topRail)).toBe(0);
+    expect(res.keyFigures.posts).toBe(6);
+    expect(res.keyFigures.topRails).toBe(0);
+    expect(lines(res).map((l) => l.artnr)).toEqual([S.beam]);
   });
   it('labour', () => {
     // 34 × 0,15 + 6 × 0,25 = 6,6 → 6,5
@@ -101,15 +106,13 @@ describe('openings', () => {
     const v = createVariant('A', { width: 4, depth: 3, type: 'row' });
     return { ...v, openings: mods.map((m, i) => ({ id: `o${i}`, wallId: 'side-back', module: m, product: i % 2 ? CURTAIN : DOOR })) };
   };
-  it('several openings on one wall: no plate, rails in the header (Foga), one header each', () => {
+  it('several openings on one wall: each replaces a metre of wall', () => {
     // Walls: back 4 + left 3 + right 3 = 10 modules
     const res = run(withOpenings(0, 2));
     expect(qty(res, '6120-9010')).toBe(8);
-    expect(qty(res, S.bottomRail)).toBe(8);
-    expect(qty(res, S.topRail)).toBe(8);
     expect(qty(res, DOOR)).toBe(1);
     expect(qty(res, CURTAIN)).toBe(1);
-    expect(qty(res, S.header)).toBe(2);
+    expect(res.foga.modules.filter((m) => m.opening)).toHaveLength(2);
     expect(res.keyFigures.wallLm).toBe(8);
   });
   it('an opening on a perimeter wall still counts as wall for beams', () => {

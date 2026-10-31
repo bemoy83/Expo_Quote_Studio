@@ -117,35 +117,42 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog): CalcResult {
   const fogaWalls = foga.modules.filter((m) => !m.opening);
   const headers = foga.modules.length - fogaWalls.length;
   const beamLm = foga.beams.reduce((a, b) => a + b.lengthMm, 0) / 1000;
-  const plates = countBy(fogaWalls.map((m) => m.plate));
+  const wallMetres = countBy(fogaWalls.map((m) => m.plate));
   const plateSize = `${rules.wall.plate.width} × ${rules.wall.plate.height} mm`;
 
+  // Level 1 only: what the customer buys. The articles behind wall, takdrager and textile (plates, posts, rails,
+  // profiles) are on the picking list, counted from the same Foga structure; `foga` marks the lines they replace there.
   const lines: CalcLine[] = [];
   const add = (...ls: CalcLine[]) => lines.push(...ls.filter((l) => l.qty > 0));
   const built = { foga: true } as const;
 
+  // Walls per metre and colour. A module with a door or curtain is never wall: it is in the opening product.
   add(
-    ...[...plates].map(([ral, n]) => {
-      const hit = idx.plateByRal.get(ral);
-      return hit ? line(hit.variant.artnr, n, { ...built, meta: `RAL ${ral} · ${plateSize}` }) : line(`RAL ${ral}`, n, { ...built, group: 'vegg.plater' });
+    ...[...wallMetres].map(([ral, n]) => {
+      const hit = idx.wallByRal.get(ral);
+      const lm = n * rules.wall.cc;
+      return hit ? line(hit.variant.artnr, lm, { ...built, meta: `RAL ${ral}` }) : line(`${sys.wall}-${ral}`, lm, { ...built, group: 'vegg.vegger' });
     }),
-    line(sys.post, foga.posts, { ...built, ...(beamPosts ? { meta: `${points.size} vegg, ${beamPosts} takdrager` } : {}) }),
-    // An opening's rails belong to its header (overstykke), priced with the header
-    line(sys.topRail, fogaWalls.length, built),
-    line(sys.bottomRail, fogaWalls.length, built),
   );
+  // Takdrager per metre, its own posts included in the price
   const nLengths = foga.beams.length;
-  add(line(sys.beam, beamLm, { ...built, meta: `${nLengths} ${nLengths === 1 ? 'lengde' : 'lengder'}` }));
+  const beamMeta = [`${nLengths} ${nLengths === 1 ? 'lengde' : 'lengder'}`, ...(beamPosts ? [`${beamPosts} ${beamPosts === 1 ? 'stolpe' : 'stolper'} inkludert`] : [])];
+  add(line(sys.beam, beamLm, { ...built, meta: beamMeta.join(' · ') }));
 
+  // Door or curtain with header (overstykke), one product each
   const openingCounts = countBy(mods.flatMap((m) => (m.opening ? [m.opening.product] : [])));
-  add(...[...openingCounts].map(([a, n]) => line(a, n)), line(sys.header, headers, built));
+  add(...[...openingCounts].map(([a, n]) => line(a, n)));
 
-  // Textile walls: quantities from the InFrame production rules
-  const nFrames = prod.pieces.length;
-  const blank = prod.pieces.filter((p) => !p.motif).reduce((a, p) => a + p.area, 0);
+  // Textile walls: one product per frame (frame rental + print), priced from its size B × H. Sizes from InFrame rules.
+  const sizes = countBy(prod.pieces.map((p) => `${p.W}×${p.H}`));
+  const textile = idx.byArtnr.get(sys.textile);
   add(
-    line(sys.frame, prod.lm, { ...built, meta: `${nFrames} ${nFrames === 1 ? 'ramme' : 'rammer'} · inkl. stag` }),
-    line(sys.print, prod.area, { meta: blank > 0 ? `inkl. bleed · ${(Math.round(blank * 10) / 10).toString().replace('.', ',')} m² uten motiv` : 'inkl. bleed' }),
+    ...[...sizes].map(([size, n]) => {
+      const [W, H] = size.split('×').map(Number);
+      const price = Math.round((textile?.variant.price ?? 0) * ((W * H) / 1e6));
+      const name = `${textile ? displayName(textile) : sys.textile}, ${W} × ${H} mm`;
+      return { ...line(sys.textile, n, built), name, unit: 'stk' as const, price, sum: n * price };
+    }),
   );
 
   // Foil

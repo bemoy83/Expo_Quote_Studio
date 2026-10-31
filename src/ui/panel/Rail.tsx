@@ -216,23 +216,22 @@ function WallSection({ v, res, brush, tool, pick, onEdit, onToast, onSelect, sel
   const di = Math.max(0, plates.findIndex((p) => p.ral === v.defaultPlate))
   const def = plates[di]
   const wallPen = tool !== 'select' && brush?.kind === 'wall'
-  const nPlates = res.groups.find((g) => g.id === 'walls')?.lines.reduce((a, l) => a + l.qty, 0) ?? 0
+  const wallLm = res.keyFigures.wallLm
   const openingCount = (a: string) => v.openings.filter((o) => o.product === a).length
-  const header = productOf(catalog.system.header)?.variants[0].price ?? 0
   return (
     <>
-      <div className="panel-sec eyebrow">Veggplater</div>
+      <div className="panel-sec eyebrow">Vegger</div>
       <ProductRow
         on
         pen={wallPen}
         thumb={<Swatch color={def?.color} />}
-        title={`Veggplate ${rules.wall.plate.width} × ${rules.wall.plate.height}`}
+        title={productOf(def?.artnr ?? '')?.name ?? 'Vegg'}
         meta={
           <>
-            {def?.name} · <span className="num">RAL {def?.ral} · {kr(def?.price ?? 0)} kr/stk</span>
+            {def?.name} · <span className="num">{def?.artnr} · {kr(def?.price ?? 0)} kr/lm</span>
           </>
         }
-        result={nPlates ? `${nPlates} plater` : null}
+        result={wallLm ? `${fmt(wallLm)} lm` : null}
         action={<IconButton icon={Paintbrush} label="Tegn standvegg i plan" pressed={wallPen && tool === 'brush'} onClick={() => pick({ kind: 'wall', ral: v.defaultPlate })} />}
         chips={
           <VariantChips
@@ -320,7 +319,7 @@ function WallSection({ v, res, brush, tool, pick, onEdit, onToast, onSelect, sel
               title={p.name}
               meta={
                 <>
-                  <span className="num">{a}</span> · <span className="num">{kr(p.variants[0].price + header)} kr</span> inkl. overstykke · klikk en veggmodul
+                  <span className="num">{a}</span> · <span className="num">{kr(p.variants[0].price)} kr</span> inkl. overstykke · klikk en veggmodul
                 </>
               }
               result={n ? `${n} stk` : null}
@@ -429,8 +428,7 @@ function FloorSection({ v, res, brush, tool, pick, onEdit }: RailProps) {
 function ProfileSection({ v, res, brush, tool, pick, motifs, onAddMotif, onSelect, onToast }: RailProps) {
   const file = useRef<HTMLInputElement>(null)
   const pen = tool !== 'select' && brush?.kind === 'textile'
-  const frame = productOf(catalog.system.frame)?.variants[0]
-  const print = productOf(catalog.system.print)?.variants[0]
+  const textile = productOf(catalog.system.textile)?.variants[0]
   const k = res.keyFigures
   const upload = async (f: File) => {
     try {
@@ -452,7 +450,7 @@ function ProfileSection({ v, res, brush, tool, pick, motifs, onAddMotif, onSelec
         title="Tekstilvegg InFrame"
         meta={
           <>
-            Tekstil i aluminiumsramme · <span className="num">{kr(frame?.price ?? 0)} kr/lm · {kr(print?.price ?? 0)} kr/m²</span> · klikk eller dra til en vegg
+            Leie av ramme med trykt tekstil, pris per stk etter størrelse · <span className="num">{kr(textile?.price ?? 0)} kr/m²</span> · klikk eller dra til en vegg
           </>
         }
         result={v.textiles.length ? `${count(v.textiles.length, 'ramme', 'rammer')} · ${fmt(k.textileM2)} m²` : null}

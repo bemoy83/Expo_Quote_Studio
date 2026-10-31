@@ -23,6 +23,7 @@ const g = (id: string, name: string, subs: [key: string, name: string, notPicked
 
 export const PRODUCT_GROUPS: ProductGroup[] = [
   g('vegg', 'Vegger og bakrom', [
+    ['vegger', 'Vegger'],
     ['plater', 'Veggplater'],
     ['stolper', 'Stolper'],
     ['skinner', 'Skinner'],

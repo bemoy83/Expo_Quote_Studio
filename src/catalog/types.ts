@@ -1,4 +1,4 @@
-/** surface: floor, wall plate · object: placed and drawn · counted: only a quantity · system: build parts the calc derives */
+/** surface: floor, wall (drawn with a brush) · object: placed and drawn · counted: only a quantity · system: build parts the calc derives */
 export type ProductKind = 'surface' | 'object' | 'counted' | 'system';
 
 export type Unit = 'stk' | 'lm' | 'm²' | 't';
@@ -35,19 +35,21 @@ export interface Product {
   footprint?: Footprint;
   /** Short spec shown in the product row, e.g. "ø 70 · h 111". */
   dim?: string;
+  /** Level 2: an article the montør picks, part of a level 1 product. Never a line on the quote. */
+  article?: true;
   /** Goes in a wall module. A door swings and blocks its swing area; a curtain does not. */
   opening?: 'door' | 'curtain';
 }
 
 /** Roles the calc needs, mapped to art.nr so the catalog can change without touching calc. */
+/** Level 1 products the calc derives from the drawing, by art.nr, so the catalog can change without touching calc. */
 export interface SystemParts {
-  post: string;
-  topRail: string;
-  bottomRail: string;
+  /** Wall per metre, one variant per RAL. */
+  wall: string;
+  /** Takdrager per metre, posts included. */
   beam: string;
-  header: string;
-  frame: string;
-  print: string;
+  /** Textile wall (frame rental + print), price per m² of B × H, sold per piece. */
+  textile: string;
   foil: string;
   foilFull: string;
   floorProtection: string;

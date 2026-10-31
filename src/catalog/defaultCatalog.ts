@@ -40,28 +40,40 @@ const PLATES: [ral: string, name: string, color: string][] = [
   ['3002', 'Rød', '#9B2423'],
 ];
 
+// Two levels (Bjørn 31.10.2026). Level 1 is what the customer buys: one line on the quote, with the sales price.
+// Level 2 (article: true) is what the montør picks; the picking list counts it from the drawing. A level 1 product is
+// a nominal bundle of articles (wall: plate, 2 posts, top and bottom rail per metre), never shown on the quote.
 const products: Product[] = [
-  // Standsystem
+  // Vegger: level 1
   {
     id: '6120',
-    name: 'Veggplate',
+    name: 'Rammevegg m/plate, komplett',
     kind: 'surface',
+    unit: 'lm',
+    group: 'vegg.vegger',
+    dim: '1 × 2,5 m per meter',
+    variants: PLATES.map(([ral, name, color]) => ({ artnr: `6120-${ral}`, name, ral, color, price: 870, placeholder: true })),
+  },
+  one('6110', 'Takdrager 80 × 20 mm', 'system', 'lm', 'vegg.takdrager', 420, { dim: 'stolper inkludert' }),
+  one('6130', 'Dør med overstykke', 'object', 'stk', 'vegg.dorer', 2620, { opening: 'door' }),
+  one('6131', 'Forheng med overstykke', 'object', 'stk', 'vegg.dorer', 870, { dim: 'i åpning 960 mm', opening: 'curtain' }),
+  // Vegger: level 2 articles
+  {
+    id: '6290',
+    name: 'Veggplate',
+    kind: 'system',
     unit: 'stk',
     group: 'vegg.plater',
-    dim: '960 × 2420 mm',
-    variants: PLATES.map(([ral, name, color]) => ({ artnr: `6120-${ral}`, name, ral, color, price: 330, placeholder: true })),
+    article: true,
+    dim: '976 × 2440 mm',
+    variants: PLATES.map(([ral, name, color]) => ({ artnr: `6290-${ral}`, name, ral, color, price: 330, placeholder: true })),
   },
-  one('6101', 'Stolpe 40 × 40 mm, 2,5 m', 'system', 'stk', 'vegg.stolper', 180),
-  one('6102', 'Toppprofil 960 × 40 mm', 'system', 'stk', 'vegg.skinner', 95),
-  one('6103', 'Bunnprofil 960 × 30 mm', 'system', 'stk', 'vegg.skinner', 85),
-  one('6110', 'Takdrager 80 × 20 mm', 'system', 'lm', 'vegg.takdrager', 240),
-  // Openings
-  one('6130', 'Dør med lås', 'object', 'stk', 'vegg.dorer', 2400, { opening: 'door' }),
-  one('6131', 'Forheng', 'object', 'stk', 'vegg.dorer', 650, { dim: 'i åpning 960 mm', opening: 'curtain' }),
-  one('6132', 'Overstykke over åpning', 'system', 'stk', 'vegg.dorer', 220),
-  // Textile and foil
-  one('8010', 'Aluminiumsramme 40 mm', 'system', 'lm', 'prof.tekstil', 310),
-  one('8011', 'Trykt tekstil', 'system', 'm²', 'prof.tekstil', 380),
+  one('6101', 'Stolpe 40 × 40 mm, 2,5 m', 'system', 'stk', 'vegg.stolper', 180, { article: true }),
+  one('6102', 'Toppprofil 960 × 40 mm', 'system', 'stk', 'vegg.skinner', 95, { article: true }),
+  one('6103', 'Bunnprofil 960 × 30 mm', 'system', 'stk', 'vegg.skinner', 85, { article: true }),
+  // Profilering. Textile wall: rental of the frame and the printed textile as one product, priced per piece from its
+  // size (price per m² of B × H). Later frame (rental) and print (sale, reusable) must be possible to sell apart.
+  one('8000', 'Tekstilvegg, leie av ramme med trykt tekstil', 'system', 'm²', 'prof.tekstil', 1000),
   one('8020', 'Foliedekor, dekal', 'system', 'm²', 'prof.folie', 520),
   one('8021', 'Foliedekor, helt veggfelt 960 × 2420 mm', 'system', 'm²', 'prof.folie', 520),
   // Floor
@@ -163,13 +175,9 @@ for (const p of products) for (const v of p.variants) if (OBJECT_COLORS[v.artnr]
 export const DEFAULT_CATALOG: Catalog = {
   products,
   system: {
-    post: '6101',
-    topRail: '6102',
-    bottomRail: '6103',
+    wall: '6120',
     beam: '6110',
-    header: '6132',
-    frame: '8010',
-    print: '8011',
+    textile: '8000',
     foil: '8020',
     foilFull: '8021',
     floorProtection: '5911',

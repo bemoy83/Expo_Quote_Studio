@@ -51,9 +51,10 @@ export const DEFAULT_IN_FRAME = RULES.textile.inFrame
 export const variantOf = (artnr: string): ProductVariant | undefined => idx.byArtnr.get(artnr)?.variant
 export const productOf = (artnr: string): Product | undefined => idx.byArtnr.get(artnr)?.product
 
-export const plateColor = (ral: string) => idx.plateByRal.get(ral)?.variant.color ?? '#ddd'
-export const plateName = (ral: string) => idx.plateByRal.get(ral)?.variant.name ?? `RAL ${ral}`
+export const plateColor = (ral: string) => idx.wallByRal.get(ral)?.variant.color ?? '#ddd'
+export const plateName = (ral: string) => idx.wallByRal.get(ral)?.variant.name ?? `RAL ${ral}`
 
-export const wallPlates = () => catalog.products.find((p) => p.variants.some((v) => v.ral))?.variants ?? []
+/** Wall colours: the variants of the wall product (level 1). */
+export const wallPlates = () => catalog.products.find((p) => p.id === catalog.system.wall)?.variants ?? []
 
 export const openingProducts = () => catalog.products.filter((p) => p.opening)
