@@ -214,9 +214,8 @@ describe('price as sum of articles (example price list, pricing/data.ts)', () =>
   });
   it('handling time per step is in the prices, not a line', () => {
     // plukk: posts 10 + rails 18 × 0,5 + plates 9 + beam 1 = 29 · vask 10 + 9 + 27 + 1 = 47 · transport 29
-    // montering 9 × 18 + 3 × 6 = 180 · demontering 9 × 12 + 3 × 3 = 117 → 402 min = 6,7 t
+    // montering 9 × 18 + 3 × 6 = 180 · demontering 9 × 12 + 3 × 3 = 117
     expect(res.keyFigures.time).toEqual({ plukk: 29, vask: 47, transport: 29, montering: 180, demontering: 117 });
-    expect(res.keyFigures.hours).toBeCloseTo(6.7);
     expect(qty(res, '9900')).toBe(0);
   });
   it('Arbeidstimer (customer\'s own equipment) counted in the panel goes under Andre tjenester', () => {

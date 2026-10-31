@@ -10,7 +10,7 @@ import { RECIPES } from '../foga/recipes';
 import type { FogaStructure } from '../foga/structure';
 import { fogaPart } from '../foga/parts';
 import { DEFAULT_PRICING, ITEM, type PricingData } from '../pricing/data';
-import { addTime, dgOf, minutesOf, priceLine, type Strategy, type Time, type Transfer, type Use } from '../pricing/model';
+import { addTime, dgOf, priceLine, type Strategy, type Time, type Transfer, type Use } from '../pricing/model';
 import type { Rules } from '../rules/rules';
 import { layoutBeams, type BeamLayout } from './beams';
 import { production, type Production } from './production';
@@ -75,8 +75,6 @@ export interface KeyFigures {
   foilM2: number;
   /** Minutes per handling step for the whole stand. In the prices, not a line; the work order plans from it. */
   time: Time;
-  /** All handling, hours. */
-  hours: number;
 }
 
 /** Internal margin of the whole variant. Never on the quote. */
@@ -321,7 +319,6 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, pricing: Pricin
       textileM2: prod.area,
       foilM2: foilFull + foilDecal,
       time,
-      hours: minutesOf(time) / 60,
     },
     beams,
     posts: [...allPosts.values()],

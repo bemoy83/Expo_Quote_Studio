@@ -20,8 +20,6 @@ export function addTime(a: Time, b: Time | undefined, times = 1): Time {
   return out;
 }
 
-export const minutesOf = (t: Time) => HANDLING_STEPS.reduce((a, s) => a + (t[s] ?? 0), 0);
-
 /**
  * How the sales price of a level 1 product is set.
  * - fast: the product's own price per unit (from the OMS).

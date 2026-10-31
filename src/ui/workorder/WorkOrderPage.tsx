@@ -13,7 +13,7 @@ import { customerName, projectField } from '../../domain/variant'
 import { addTime, type HandlingStep, type Time } from '../../pricing/model'
 import { Button } from '../controls'
 import { rules } from '../env'
-import { fmt } from '../format'
+import { fmt, hours } from '../format'
 import { TYPE_NAME } from '../names'
 import { pickRows } from '../picking/rows'
 import { PLAN_MARGIN, PlanPreview } from '../plan/PlanView'
@@ -37,7 +37,7 @@ const STEP_NAME: Partial<Record<HandlingStep, string>> = { plukk: 'Plukk', forh�
 const aToB = (t: Time) => A_TO_B.reduce((a, st) => a + (t[st] ?? 0), 0)
 
 /** Hours with one decimal, '–' for none. */
-const h = (min: number | undefined) => (min ? fmt(min / 60, 1) : '–')
+const h = (min: number | undefined) => (min ? hours(min) : '–')
 
 export function WorkOrderPage({ project, variants, current, onSelect, calcOf }: Props) {
   const v = variants[current]
@@ -53,7 +53,7 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf }: 
   const groupIds = PRODUCT_GROUPS.map((g) => g.id).filter((id) => allPicks.some((x) => x.group.id === id) || allTime.some((t) => t.id === id && aToB(t.time) > 0))
   const [hidden, setHidden] = useState<ReadonlySet<string>>(new Set())
   const shown = new Set(groupIds.filter((id) => !hidden.has(id)))
-  const toggle = (id: string) => setHidden((h) => (h.has(id) ? new Set([...h].filter((x) => x !== id)) : new Set([...h, id])))
+  const toggle = (id: string) => setHidden((s) => (s.has(id) ? new Set([...s].filter((x) => x !== id)) : new Set([...s, id])))
   const filtered = shown.size < groupIds.length
 
   const timeRows = allTime.filter((r) => shown.has(r.id) && aToB(r.time) > 0)
@@ -217,7 +217,7 @@ function Row({ name, time, steps, total }: { name: string; time: Time; steps: Ha
           {h(time[s])}
         </span>
       ))}
-      <span className={'num r wo-sum' + (total ? ' wo-total' : '')}>{h(steps.reduce((a, s) => a + (time[s] ?? 0), 0))}</span>
+      <span className={'num r wo-sum' + (total ? ' wo-total' : '')}>{h(aToB(time))}</span>
     </>
   )
 }

@@ -6,7 +6,7 @@ import type { BomLine } from '../../foga/engine'
 import { LAYER_COLOR } from '../colors'
 import { Button } from '../controls'
 import { rules } from '../env'
-import { fmt, kr } from '../format'
+import { fmt, hours, kr } from '../format'
 import type { Highlight } from '../tools'
 
 /** Plan layer of a subgroup or main group id (catalog/groups.ts). */
@@ -27,6 +27,7 @@ const DOT: Partial<Record<string, string>> = LAYER_COLOR
 export function CalcPanel({ res, name, onHover, onQuote }: { res: CalcResult; name: string; onHover: (h: Highlight) => void; onQuote: () => void }) {
   const lines = res.groups.flatMap((g) => g.lines)
   const placeholders = lines.filter((l) => l.placeholder).length
+  const t = res.keyFigures.time
   // Level 2: the Foga articles behind each main group, the same as on the picking list. Quantities only.
   const articles = res.bom.lines
   const [open, setOpen] = useState<Set<string>>(new Set())
@@ -92,9 +93,9 @@ export function CalcPanel({ res, name, onHover, onQuote }: { res: CalcResult; na
           Internt: kost {kr(res.margin.cost)} · DB {kr(res.margin.db)} · DG {pct(res.margin.dg)}
           {res.margin.unknown > 0 && <span className="ph"> · {res.margin.unknown} {res.margin.unknown === 1 ? 'linje' : 'linjer'} uten kost</span>}
         </div>
-        {res.keyFigures.hours > 0 && (
+        {!!(t.montering || t.demontering) && (
           <div className="inkl num">
-            Montering ca. {fmt((res.keyFigures.time.montering ?? 0) / 60, 1)} t · demontering ca. {fmt((res.keyFigures.time.demontering ?? 0) / 60, 1)} t, inngår i prisene
+            Montering ca. {hours(t.montering ?? 0)} t · demontering ca. {hours(t.demontering ?? 0)} t, inngår i prisene
           </div>
         )}
         <Button variant="primary" icon={FileText} onClick={onQuote}>
