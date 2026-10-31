@@ -31,30 +31,27 @@ export interface Wall {
   /** RAL code of the wall plate. Falls back to the variant's default plate. */
   plate?: string;
   /** Set on the walls a room generates (see rooms.ts). They are rewritten whenever the room changes. */
-  room?: { id: string; face: RectFace };
+  room?: { id: string; side: number };
 }
 
-export type RectFace = 'back' | 'front' | 'left' | 'right';
-
 /**
- * Bakrom, møterom, lager: a rectangle on the 1 m grid that owns its walls.
- * Its four sides are generated as walls (`<id>.<face>`) after the stored walls, so a side that already has a
- * stand wall or a drawn wall shares it and is built once. Calc only ever sees the walls.
+ * Bakrom, møterom, lager, frihåndsrom: a right-angled outline on the 1 m grid that owns its walls (see outline.ts).
+ * Its sides are generated as walls (`<id>.<side>`) after the stored walls, so a side that already has a stand wall
+ * or a drawn wall shares it and is built once. Calc only ever sees the walls.
  */
 export interface Room {
   id: string;
-  /** Back-left corner, whole metres. */
-  x: number;
-  y: number;
-  /** Size, whole metres, at least 1 × 1. */
-  w: number;
-  d: number;
+  /**
+   * Corners in whole metres, canonical: from the back-most, then left-most corner, clockwise in the plan.
+   * Four for a rectangle, six for an L. Side i runs from corner i to corner i + 1.
+   */
+  outline: Point[];
   /** Shown in the plan and on the quote: Bakrom, Lager, Møterom … */
   label?: string;
   /** RAL of the room's own walls. Falls back to the variant's default plate. */
   plate?: string;
   /** Modules taken out with the eraser: open, no wall and no product. */
-  gaps?: { face: RectFace; module: number }[];
+  gaps?: { side: number; module: number }[];
 }
 
 /** A door or curtain in one wall module. The header panel (overstykke) is implicit. */

@@ -1,8 +1,8 @@
 // Drag steps shared by the plan and the 3D view, so both move walls and furniture the same way.
 import { moveWall } from '../domain/edit'
 import { settleAll, settleObject } from '../domain/objects'
-import { moveRoom, resizeRoom } from '../domain/rooms'
-import type { RectFace, Variant } from '../domain/types'
+import { moveRoom, resizeRoom, sideIsHorizontal } from '../domain/rooms'
+import type { Variant } from '../domain/types'
 import { place } from './env'
 
 type Edit = (fn: (v: Variant) => Variant, history?: boolean) => void
@@ -37,8 +37,10 @@ export function dropObject(v: Variant, id: string, start: { x: number; y: number
 
 export interface RoomDrag {
   id: string
-  /** Move the whole room, or drag one side. */
-  mode: 'move' | RectFace
+  /** Move the whole room, or drag one side (its number, see outline.ts). */
+  mode: 'move' | number
+  /** A dragged side runs left–right, so it follows the pointer's y. */
+  horizontal: boolean
   p0: { x: number; y: number }
   /** The variant when the drag started; every step works from here. */
   v0: Variant
@@ -48,20 +50,24 @@ export interface RoomDrag {
 }
 
 /** A room drag starting at p0 on the variant v0. */
-export const roomDrag = (id: string, mode: RoomDrag['mode'], p0: { x: number; y: number }, v0: Variant): RoomDrag => ({
-  id,
-  mode,
-  p0,
-  v0,
-  last: mode === 'move' ? '0,0' : '0',
-  moved: false,
-})
+export const roomDrag = (id: string, mode: RoomDrag['mode'], p0: { x: number; y: number }, v0: Variant): RoomDrag => {
+  const room = v0.rooms.find((r) => r.id === id)
+  return {
+    id,
+    mode,
+    horizontal: mode !== 'move' && !!room && sideIsHorizontal(room, mode),
+    p0,
+    v0,
+    last: mode === 'move' ? '0,0' : '0',
+    moved: false,
+  }
+}
 
 /** Move a room or one of its sides to whole metres under the pointer. A blocked step keeps the last good one. */
 export function dragRoom(d: RoomDrag, q: { x: number; y: number }, onEdit: Edit, onCheckpoint: () => void) {
   const dx = Math.round(q.x - d.p0.x)
   const dy = Math.round(q.y - d.p0.y)
-  const along = d.mode === 'left' || d.mode === 'right' ? dx : dy
+  const along = d.horizontal ? dy : dx
   const key = d.mode === 'move' ? `${dx},${dy}` : `${along}`
   if (key === d.last) return
   const zero = d.mode === 'move' ? !dx && !dy : !along

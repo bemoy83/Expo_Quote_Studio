@@ -48,6 +48,9 @@ export function wallPoints(mods: readonly Module[]): Map<string, Point> {
   return out;
 }
 
+/** True for one of the walls the stand type itself brings (see standardWalls). */
+export const isStandWall = (w: Wall) => w.id.startsWith('side-');
+
 /** One wall per closed side of the stand type. */
 export function standardWalls(stand: Stand): Wall[] {
   const open = new Set(openSides(stand));

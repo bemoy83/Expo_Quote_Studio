@@ -2,7 +2,7 @@
 import { DOOR } from '../catalog/defaultCatalog';
 import type { Variant } from '../domain/types';
 import { createVariant } from '../domain/variant';
-import { addRoom } from '../domain/rooms';
+import { addRoom, RECT_SIDE } from '../domain/rooms';
 
 /** R1 · Row stand 3 × 3 m, nothing added. */
 export function r1(): Variant {
@@ -12,7 +12,7 @@ export function r1(): Variant {
 /** R2 · Corner stand 6 × 4 m (right side open), backroom 2 × 2 m back left with door in front, textile wall filling the back wall right of it (4 m). */
 export function r2(): Variant {
   const base = createVariant('A', { width: 6, depth: 4, type: 'corner', cornerSide: 'right' });
-  const v = addRoom(base, { x: 0, y: 0, w: 2, d: 2 }, { face: 'front', module: 1, product: DOOR }, 'bk')!;
+  const v = addRoom(base, { x: 0, y: 0, w: 2, d: 2 }, { side: RECT_SIDE.front, module: 0, product: DOOR }, 'bk')!;
   return { ...v, textiles: [{ id: 't1', wallId: 'side-back', from: 2, width: 4, motif: 'hoved', fit: true }] };
 }
 

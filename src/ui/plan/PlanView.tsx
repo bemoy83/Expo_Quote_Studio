@@ -4,17 +4,18 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent, type SVGProps } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import { mainGroupOf } from '../../catalog/groups'
-import { defaultSwing, drawOpening, eraseWalls, isPerimeterWall, paintFloor, paintWalls, segmentKeys, setOpening } from '../../domain/edit'
+import { doorAllowed, doorSwing, drawOpening, eraseWalls, isPerimeterWall, paintFloor, paintWalls, segmentKeys, setOpening } from '../../domain/edit'
 import { CELL, parseCellKey, pointAlong, sideLength, sidePoint, wallDirection, wallLength, type Module } from '../../domain/grid'
 import { addObject, conflicts, footprintBox, moveObject, removeObject } from '../../domain/objects'
 import { addFoil, addTextile, faceAt, faceSegment, felt, foilAt, foilCenter, freeSpans, removeFoil, removeTextile, sideOf, textileAt, textileOffset, updateTextile, type FaceSide } from '../../domain/decor'
 import type { Motif } from '../../persistence/file'
-import type { Point, RectFace, Room, Side, Variant, Wall } from '../../domain/types'
+import type { Point, Room, Side, Variant, Wall } from '../../domain/types'
 import { builtModules, type BuiltModule } from '../../domain/walls'
 import { BORDER, BORDER_STRONG, BLOCK, CANVAS, INK, INK_FAINT, INK_MUTED, LAYER_COLOR, SURFACE } from '../colors'
 import { applyDrop, decorDrag, endDecorDrag, type DecorDrag } from '../dnd'
 import { dragRoom, dragWall, dropObject, dropRoom, roomDrag, type RoomDrag, type WallDrag } from '../drag'
-import { faceEnds, FACES, roomAt, roomName, roomSideAt } from '../../domain/rooms'
+import { roomAt, roomName, roomSideAt, roomSize, sideIsHorizontal } from '../../domain/rooms'
+import { bounds, insetOutline, isHorizontal, labelPoint, outlineSides } from '../../domain/outline'
 import { fmt } from '../format'
 import { idx, place, plateColor, productOf, rules } from '../env'
 import { findMotif } from '../motifs'
@@ -150,12 +151,12 @@ export function PlanView(p: Props) {
   const ratioOf = (id: string) => findMotif(p.motifs, id)?.ratio ?? 1
 
   /** The side of a room under the pointer: its own walls always, any side of the selected room. */
-  const roomEdgeAt = (q: P): { room: Room; face: RectFace } | null => {
+  const roomEdgeAt = (q: P): { room: Room; side: number } | null => {
     const m = moduleAt(q, 0.2)
     const w = m && v.walls.find((x) => x.id === m.wallId)
     if (w?.room) {
       const room = v.rooms.find((r) => r.id === w.room!.id)
-      if (room) return { room, face: w.room.face }
+      if (room) return { room, side: w.room.side }
     }
     const sel = v.rooms.find((r) => r.id === selection.roomId)
     return (sel && roomSideAt({ ...v, rooms: [sel] }, q.x, q.y, 0.2)) ?? null
@@ -238,12 +239,12 @@ export function PlanView(p: Props) {
     }
     if (openingTool) {
       const m = moduleAt(q, 0.4)
-      if (m) p.onEdit((x) => setOpening(x, m.key, tool === 'erase' ? null : brush!.product))
-      else if (tool !== 'erase' && onStand(q)) {
-        // No wall there: the door or curtain draws its own wall module
-        const e = nearestEdge(v.stand, q)
-        p.onEdit((x) => drawOpening(x, e.a, e.b, brush!.product))
-      }
+      const e = m ?? (tool !== 'erase' && onStand(q) ? nearestEdge(v.stand, q) : null)
+      if (!e) return
+      if (tool !== 'erase' && !doorAllowed(v, e.a, e.b)) p.onToast('Dører og forheng kan ikke stå i standveggen')
+      else if (m) p.onEdit((x) => setOpening(x, m.key, tool === 'erase' ? null : brush!.product))
+      // No wall there: the door or curtain draws its own wall module
+      else p.onEdit((x) => drawOpening(x, e.a, e.b, brush!.product))
       return
     }
     if (decorTool) {
@@ -265,7 +266,7 @@ export function PlanView(p: Props) {
     // Select. A side of the selected room comes first, so a side shared with a stand wall can still be dragged.
     const selEdge = selection.roomId ? roomEdgeAt(q) : null
     if (selEdge && selEdge.room.id === selection.roomId) {
-      startRoomDrag(selEdge.room, selEdge.face, q)
+      startRoomDrag(selEdge.room, selEdge.side, q)
       return
     }
     const o = objectAt(q)
@@ -282,7 +283,7 @@ export function PlanView(p: Props) {
       p.onSelect(tx ? { wallId: w.id, side: h.s, textileId: tx.id } : { wallId: w.id, side: h?.s })
       // A room's own wall resizes the room; a drawn inner wall moves
       const room = w.room && v.rooms.find((r) => r.id === w.room!.id)
-      if (room) startRoomDrag(room, w.room!.face, q)
+      if (room) startRoomDrag(room, w.room!.side, q)
       else if (!isPerimeterWall(v.stand, w)) drag.current = { kind: 'wall', id: w.id, p0: q, v0: v, delta: 0, horizontal: w.from[1] === w.to[1] }
       return
     }
@@ -361,18 +362,19 @@ export function PlanView(p: Props) {
   const cursor = tool !== 'select' ? 'crosshair' : roomCursor()
   function roomCursor() {
     const d = drag.current
-    if (d?.kind === 'room') return d.mode === 'move' ? 'grabbing' : d.mode === 'left' || d.mode === 'right' ? 'ew-resize' : 'ns-resize'
+    if (d?.kind === 'room') return d.mode === 'move' ? 'grabbing' : d.horizontal ? 'ns-resize' : 'ew-resize'
     if (!hover || p.mini) return 'default'
     const e = roomEdgeAt(hover)
-    if (e) return e.face === 'left' || e.face === 'right' ? 'ew-resize' : 'ns-resize'
+    if (e) return sideIsHorizontal(e.room, e.side) ? 'ns-resize' : 'ew-resize'
     return roomAt(v, hover.x, hover.y) && !objectAt(hover) ? 'move' : 'default'
   }
 
   // Hover previews
-  const hoverModule = openingTool && hover ? (moduleAt(hover, 0.4) ?? (tool !== 'erase' && onStand(hover) ? nearestEdge(v.stand, hover) : null)) : null
+  const hoverEdge = openingTool && hover ? (moduleAt(hover, 0.4) ?? (tool !== 'erase' && onStand(hover) ? nearestEdge(v.stand, hover) : null)) : null
+  const hoverModule = hoverEdge && (tool === 'erase' || doorAllowed(v, hoverEdge.a, hoverEdge.b)) ? hoverEdge : null
   const hoverFloor = floorTool && hover && !drag.current ? floorBlock(hover) : null
   const hoverFace = decorTool && hover ? faceHit(hover) : null
-  const hoverEdge = wallTool && hover && !stroke && onStand(hover) ? nearestEdge(v.stand, hover) : null
+  const hoverWallEdge = wallTool && hover && !stroke && onStand(hover) ? nearestEdge(v.stand, hover) : null
 
   const sideText = (s: Side) => {
     const n = sideLength(v.stand, s)
@@ -587,7 +589,7 @@ export function PlanView(p: Props) {
       {/* Interaction preview */}
       <g pointerEvents="none">
         {!p.mini && v.rooms.filter((r) => r.id === selection.roomId).map((r) => <RoomHandles key={r.id} r={r} />)}
-        {hoverEdge && <Seg a={hoverEdge.a} b={hoverEdge.b} stroke={tool === 'erase' ? INK_FAINT : WALL} strokeOpacity={0.6} strokeWidth={0.14} />}
+        {hoverWallEdge && <Seg a={hoverWallEdge.a} b={hoverWallEdge.b} stroke={tool === 'erase' ? INK_FAINT : WALL} strokeOpacity={0.6} strokeWidth={0.14} />}
         {stroke && <StrokePreview a={stroke[0]} b={stroke[1]} erase={tool === 'erase'} />}
         {hoverModule && <HoverModule m={hoverModule} />}
         {hoverFace && <FacePreview v={v} h={hoverFace} brush={brush!} erase={tool === 'erase'} />}
@@ -642,7 +644,7 @@ function OpeningMark({ v, m, selected }: { v: Variant; m: BuiltModule; selected:
   const o = m.opening!
   const w = v.walls.find((x) => x.id === o.wallId)!
   const [dx, dy] = wallDirection(w)
-  const s = o.swing ?? defaultSwing(v.stand, w)
+  const s = doorSwing(v.stand, w, o)
   const n: Point = [-dy * s, dx * s]
   const a = pointAlong(w, o.module)
   const b = pointAlong(w, o.module + 1)
@@ -728,18 +730,31 @@ function FacePreview({ v, h, brush, erase }: { v: Variant; h: FaceHit; brush: Br
 
 /** Room name and size on its floor; a dashed outline when selected. */
 function RoomMark({ r, selected }: { r: Room; selected: boolean }) {
-  const cx = r.x + r.w / 2
-  const cy = r.y + r.d / 2
-  const small = Math.min(r.w, r.d) < 2
+  const [cx, cy] = labelPoint(r.outline)
+  const b = bounds(r.outline)
+  const small = Math.min(b.w, b.d) < 2
+  const size = roomSize(r)
+  const wide = size.length > 10
+  const boxW = (small ? 0.8 : 1.2) * (wide ? 1.6 : 1)
   return (
     <g>
-      {selected && <rect x={r.x + 0.12} y={r.y + 0.12} width={r.w - 0.24} height={r.d - 0.24} rx={0.04} fill={INK} fillOpacity={0.04} stroke={INK} strokeWidth={0.025} strokeDasharray=".1 .06" />}
-      <rect x={cx - (small ? 0.4 : 0.6)} y={cy - (small ? 0.2 : 0.3)} width={small ? 0.8 : 1.2} height={small ? 0.44 : 0.6} rx={0.06} fill={CANVAS} fillOpacity={0.85} />
+      {selected && (
+        <polygon
+          points={insetOutline(r.outline, 0.12).map((p) => p.join(',')).join(' ')}
+          fill={INK}
+          fillOpacity={0.04}
+          stroke={INK}
+          strokeWidth={0.025}
+          strokeDasharray=".1 .06"
+          strokeLinejoin="round"
+        />
+      )}
+      <rect x={cx - boxW / 2} y={cy - (small ? 0.2 : 0.3)} width={boxW} height={small ? 0.44 : 0.6} rx={0.06} fill={CANVAS} fillOpacity={0.85} />
       <text x={cx} y={cy - (small ? 0.02 : 0.06)} textAnchor="middle" style={{ ...LABEL, fontSize: small ? '0.17px' : '0.22px' }}>
         {roomName(r)}
       </text>
       <text x={cx} y={cy + (small ? 0.18 : 0.22)} textAnchor="middle" style={{ ...MONO, fontSize: small ? '0.15px' : '0.19px' }}>
-        {r.w} × {r.d} m
+        {size}
       </text>
     </g>
   )
@@ -749,12 +764,11 @@ function RoomMark({ r, selected }: { r: Room; selected: boolean }) {
 function RoomHandles({ r }: { r: Room }) {
   return (
     <g>
-      {FACES.map((face) => {
-        const [a, b] = faceEnds(r, face)
+      {outlineSides(r.outline).map(([a, b], i) => {
         const mx = (a[0] + b[0]) / 2
         const my = (a[1] + b[1]) / 2
-        const hz = face === 'back' || face === 'front'
-        return <rect key={face} x={mx - (hz ? 0.2 : 0.06)} y={my - (hz ? 0.06 : 0.2)} width={hz ? 0.4 : 0.12} height={hz ? 0.12 : 0.4} rx={0.05} fill={CANVAS} stroke={INK} strokeWidth={0.03} />
+        const hz = isHorizontal([a, b])
+        return <rect key={i} x={mx - (hz ? 0.2 : 0.06)} y={my - (hz ? 0.06 : 0.2)} width={hz ? 0.4 : 0.12} height={hz ? 0.12 : 0.4} rx={0.05} fill={CANVAS} stroke={INK} strokeWidth={0.03} />
       })}
     </g>
   )

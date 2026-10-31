@@ -23,8 +23,8 @@ import {
   updateTextile,
   type FaceSide,
 } from '../../domain/decor'
-import { eraseWalls, flipSwing, isPerimeterWall, setWallPlate } from '../../domain/edit'
-import { outwardSide } from '../../domain/rooms'
+import { canFlipSwing, eraseWalls, flipSwing, isPerimeterWall, setWallPlate } from '../../domain/edit'
+import { OUTSIDE } from '../../domain/rooms'
 import { wallLength, wallModules } from '../../domain/grid'
 import type { Foil, TextileWall, Variant, Wall } from '../../domain/types'
 import { builtModules } from '../../domain/walls'
@@ -56,7 +56,7 @@ type DragKind = 'tmove' | 'twidth' | 'theight' | 'fmove' | 'fsize'
 
 /** Face names by where the face looks. */
 function faceName(w: Wall, s: FaceSide): string {
-  if (w.room) return s === outwardSide(w.room.face) ? 'Utsiden' : 'Innsiden'
+  if (w.room) return s === OUTSIDE ? 'Utsiden' : 'Innsiden'
   const [nx, ny] = faceNormal(w, s)
   if (ny > 0) return 'Mot front'
   if (ny < 0) return 'Mot bak'
@@ -244,7 +244,7 @@ export function WallDrawer(p: Props) {
               Legg til tekstilvegg
             </Button>
             <div className="wd-actions">
-              {doors.map((d, i) => (
+              {canFlipSwing(v.stand, w) && doors.map((d, i) => (
                 <Button key={d.id} variant="ghost" icon={FlipHorizontal2} onClick={() => p.onEdit((x) => flipSwing(x, d.id))}>
                   Snu dør{doors.length > 1 ? ` ${i + 1}` : ''}
                 </Button>

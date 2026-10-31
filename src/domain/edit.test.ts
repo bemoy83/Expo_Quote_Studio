@@ -4,7 +4,7 @@ import { placeContext } from '../catalog/lookup';
 import { calc } from '../calc/calc';
 import { r2 } from '../calc/referenceStands';
 import { RULES } from '../rules/rules';
-import { drawOpening, eraseWalls, paintFloor, paintWalls, setOpening, setStand, setWallPlate } from './edit';
+import { doorAllowed, doorSwing, drawOpening, eraseWalls, flipSwing, paintFloor, paintWalls, setOpening, setStand, setWallPlate } from './edit';
 import { moduleKey } from './grid';
 import { addObject, addObjectAnywhere, conflicts, moveObject } from './objects';
 import type { Variant } from './types';
@@ -24,14 +24,14 @@ describe('walls', () => {
     expect(paintWalls(p, [1, 2], [3, 2])).toBe(p);
   });
   it('erasing splits a wall and keeps openings on the remaining parts', () => {
-    let v = createVariant('A', { width: 5, depth: 3, type: 'row' });
-    v = setOpening(v, moduleKey([3, 0], [4, 0]), DOOR);
-    v = eraseWalls(v, [moduleKey([1, 0], [2, 0])]);
-    const back = v.walls.filter((w) => w.from[1] === 0 && w.to[1] === 0);
-    expect(back).toHaveLength(2);
+    let v = paintWalls(createVariant('A', { width: 5, depth: 3, type: 'row' }), [0, 2], [5, 2]);
+    v = setOpening(v, moduleKey([3, 2], [4, 2]), DOOR);
+    v = eraseWalls(v, [moduleKey([1, 2], [2, 2])]);
+    const inner = v.walls.filter((w) => w.from[1] === 2 && w.to[1] === 2);
+    expect(inner).toHaveLength(2);
     expect(kf(v).openings).toBe(1);
     const door = builtModules(v).find((m) => m.opening)!;
-    expect(door.key).toBe(moduleKey([3, 0], [4, 0]));
+    expect(door.key).toBe(moduleKey([3, 2], [4, 2]));
   });
   it('per-wall plate, and back to default', () => {
     const v = createVariant('A', { width: 3, depth: 3, type: 'row' });
@@ -42,33 +42,49 @@ describe('walls', () => {
 });
 
 describe('openings', () => {
-  const v = createVariant('A', { width: 4, depth: 3, type: 'row' });
-  it('on any wall, several per wall, swap fill, back to wall', () => {
-    let x = setOpening(v, moduleKey([0, 0], [1, 0]), DOOR);
-    x = setOpening(x, moduleKey([2, 0], [3, 0]), CURTAIN);
-    x = setOpening(x, moduleKey([0, 1], [0, 2]), DOOR);
+  // Inner walls: across the stand at y = 1, and from there to the front at x = 2
+  const v = paintWalls(paintWalls(createVariant('A', { width: 4, depth: 3, type: 'row' }), [0, 1], [4, 1]), [2, 1], [2, 3]);
+  it('on any inner wall, several per wall, swap fill, back to wall', () => {
+    let x = setOpening(v, moduleKey([0, 1], [1, 1]), DOOR);
+    x = setOpening(x, moduleKey([2, 1], [3, 1]), CURTAIN);
+    x = setOpening(x, moduleKey([2, 1], [2, 2]), DOOR);
     expect(kf(x).openings).toBe(3);
-    x = setOpening(x, moduleKey([0, 0], [1, 0]), CURTAIN);
+    x = setOpening(x, moduleKey([0, 1], [1, 1]), CURTAIN);
     expect(x.openings.filter((o) => o.product === CURTAIN)).toHaveLength(2);
-    x = setOpening(x, moduleKey([0, 0], [1, 0]), null);
+    x = setOpening(x, moduleKey([0, 1], [1, 1]), null);
     expect(kf(x).openings).toBe(2);
   });
   it('needs a wall', () => {
-    expect(setOpening(v, moduleKey([0, 3], [1, 3]), DOOR)).toBe(v);
+    expect(setOpening(v, moduleKey([0, 2], [1, 2]), DOOR)).toBe(v);
   });
   it('drawn where there is no wall, the door brings its wall module', () => {
-    const x = drawOpening(v, [1, 3], [2, 3], DOOR);
+    const x = drawOpening(v, [0, 2], [1, 2], DOOR);
     expect(kf(x).openings).toBe(1);
     expect(kf(x).modules).toBe(kf(v).modules + 1);
     // On an existing wall it only replaces the module
-    expect(kf(drawOpening(v, [0, 0], [1, 0], DOOR)).modules).toBe(kf(v).modules);
+    expect(kf(drawOpening(v, [0, 1], [1, 1], DOOR)).modules).toBe(kf(v).modules);
   });
-  it('a door on a perimeter wall swings into the stand', () => {
-    const x = setOpening(v, moduleKey([1, 0], [2, 0]), DOOR);
-    // Back wall runs +x, left normal is +y (into the stand): default swing, not stored
-    expect(x.openings[0].swing).toBeUndefined();
-    const y = setOpening(createVariant('A', { width: 4, depth: 3, type: 'end' }), moduleKey([1, 0], [2, 0]), DOOR);
-    expect(y.openings[0].swing).toBeUndefined();
+  it('never in the stand walls', () => {
+    expect(setOpening(v, moduleKey([1, 0], [2, 0]), DOOR)).toBe(v);
+    expect(setOpening(v, moduleKey([0, 1], [0, 2]), CURTAIN)).toBe(v);
+    expect(doorAllowed(v, [1, 1], [2, 1])).toBe(true);
+    // One already there (an older sketch) can still be taken out
+    const old = { ...v, openings: [{ id: 'o1', wallId: 'side-back', module: 1, product: DOOR }] };
+    expect(setOpening(old, moduleKey([1, 0], [2, 0]), null).openings).toEqual([]);
+  });
+  it('toward the aisle a door is allowed, but always swings into the stand', () => {
+    const x = drawOpening(v, [0, 3], [1, 3], DOOR);
+    expect(kf(x).openings).toBe(1);
+    const o = x.openings[0];
+    const w = x.walls.find((y) => y.id === o.wallId)!;
+    // Into the stand is −y on the front edge
+    const s = doorSwing(x.stand, w, o);
+    const [dx, dy] = [Math.sign(w.to[0] - w.from[0]), Math.sign(w.to[1] - w.from[1])];
+    expect(dx * s).toBe(-1);
+    expect(dy).toBe(0);
+    // It can not be turned, and a stored outward swing is ignored
+    expect(flipSwing(x, o.id)).toEqual(x);
+    expect(doorSwing(x.stand, w, { ...o, swing: s === 1 ? -1 : 1 })).toBe(s);
   });
 });
 
@@ -103,7 +119,8 @@ describe('floor', () => {
 describe('objects', () => {
   it('placed clear of walls and door swing; refused when there is no room', () => {
     let v = createVariant('A', { width: 2, depth: 2, type: 'row' });
-    v = setOpening(v, moduleKey([0, 0], [1, 0]), DOOR);
+    // A door in the back wall, as an older sketch may have it
+    v = { ...v, openings: [{ id: 'o1', wallId: 'side-back', module: 0, product: DOOR }] };
     const a = addObject(v, ctx, '5276', 0.5, 0.5)!;
     expect(a).not.toBeNull();
     const o = a.objects[0];

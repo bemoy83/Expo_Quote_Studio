@@ -5,10 +5,10 @@ import * as THREE from 'three'
 import type { CalcResult } from '../../calc/calc'
 import { FURNITURE_WHITE } from '../../catalog/defaultCatalog'
 import { foilCenter, sideOf, textileBox, textileOffset } from '../../domain/decor'
-import { defaultSwing } from '../../domain/edit'
+import { doorSwing } from '../../domain/edit'
 import { CELL, parseCellKey, pointAlong, pointKey, wallDirection, wallLength } from '../../domain/grid'
 import { conflicts } from '../../domain/objects'
-import { faceEnds, FACES } from '../../domain/rooms'
+import { insetOutline, outlineSides } from '../../domain/outline'
 import type { Point, Variant } from '../../domain/types'
 import { builtModules, wallPoints, type BuiltModule } from '../../domain/walls'
 import type { Motif } from '../../persistence/file'
@@ -227,7 +227,7 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
     const leaf = rules.wall.cc - post - 0.02
     along(m.a, m.b, leaf, OPENING_H - 0.01, 0.04, 0, mat('openings', DOOR), tag)
     const [dx, dy] = wallDirection(w)
-    const s = o.swing ?? defaultSwing(v.stand, w)
+    const s = doorSwing(v.stand, w, o)
     const n: Point = [-dy * s, dx * s]
     const a = pointAlong(w, o.module)
     const b = pointAlong(w, o.module + 1)
@@ -305,18 +305,19 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
   // handle. Sides are resized by grabbing the top of a wall (see Scene3D), so nothing is drawn on the walls.
   for (const r of v.rooms) {
     const selected = sel.roomId === r.id || v.walls.some((w) => w.id === sel.wallId && w.room?.id === r.id)
+    // Shape (x, y) lies flat after turning about x: local (x, y) → world (x, −y), so y is mirrored here
+    const shape = new THREE.Shape(insetOutline(r.outline, 0.04).map(([x, y]) => new THREE.Vector2(x - W / 2, D / 2 - y)))
     const roof = new THREE.Mesh(
-      new THREE.PlaneGeometry(Math.max(0.1, r.w - 0.08), Math.max(0.1, r.d - 0.08)),
+      new THREE.ShapeGeometry(shape),
       new THREE.MeshBasicMaterial({ color: SELECT, transparent: true, opacity: selected ? 0.22 : 0.08, depthWrite: false, side: THREE.DoubleSide }),
     )
     roof.rotation.x = -Math.PI / 2
-    roof.position.copy(at([r.x + r.w / 2, r.y + r.d / 2], H + 0.012))
+    roof.position.y = H + 0.012
     add(roof, { layer: 'walls', pick: { roomId: r.id } })
     roof.castShadow = false
     roof.receiveShadow = false
     const edge: number[] = []
-    for (const f of FACES) {
-      const [a, b] = faceEnds(r, f)
+    for (const [a, b] of outlineSides(r.outline)) {
       edge.push(...at(a, H + 0.014).toArray(), ...at(b, H + 0.014).toArray())
     }
     const outline = new THREE.LineSegments(
