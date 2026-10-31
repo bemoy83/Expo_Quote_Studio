@@ -147,15 +147,17 @@ Systemhøyde fra gulv: 2490 + 50 = 2540 mm.
 
 ### Plukkliste
 
-Plukklisten er en **deleliste**: hvor mange av hver profil (antall per kappelengde) og hvor mange plater som skal
-med. Ferdigmonterte enheter plukkes som stk (lagres ferdig montert):
+Plukklisten er en **deleliste gruppert etter produkttype**: Stolper, Skinner, Takdrager, Tekstilvegger,
+Veggplater, og så løsøre (dører og forheng, gulv, møbler). Ferdigmonterte enheter plukkes som stk (lagres ferdig montert):
 
 - **Stolpe 94 med justeringsfot** (700 + M10 × 65)
 - **Toppskinne 92** og **bunnskinne 91**, 960 mm, med én 600 i hver ende
 - **Takdrager 292** per lengde, med to 600 i hver ende
+- **Støttestag 90** per lengde, med én 600 i hver ende. Står under Tekstilvegger og viser hvilke rammer de hører
+  til (T1, T3 …)
 - Dørblad
 
-Løse profiler og koblinger er da bare 43TX-rammer, tverrstag i 90 (med 600), hjørner 613 og braketter 520.
+Løse deler er da bare 43TX (gjæret, antall per kappelengde), hjørner 613 og braketter 520, alle under Tekstilvegger.
 
 ### Fra fabric.js (fasit for trykk, se `src/calc/fabric.ts`)
 

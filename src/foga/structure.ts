@@ -16,6 +16,8 @@ export interface BeamSpec {
 
 /** One textile frame (InFrame). Sizes as produced, mm. */
 export interface FrameSpec {
+  /** Production position, T1, T2 … */
+  pos: string;
   W: number;
   H: number;
   braces: { qty: number; length: number } | null;

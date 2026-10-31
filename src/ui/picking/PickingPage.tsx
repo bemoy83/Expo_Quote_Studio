@@ -29,12 +29,11 @@ export function PickingPage({ variants, current, onSelect, calcOf }: Props) {
     .groups.filter((g) => isLoose(g.id))
     .map((g) => ({ ...g, lines: g.lines.filter((l) => l.artnr !== catalog.system.header) }))
     .filter((g) => g.lines.length)
-  const n = (x: number) => fmt(x, 0)
-  const units = B.units.reduce((a, u) => a + u.qty, 0)
-  const pieces = B.profiles.reduce((a, p) => a + p.cuts.reduce((b, c) => b + c.qty, 0), 0)
-  const lm = B.profiles.reduce((a, p) => a + p.lm, 0)
-  const fittings = B.parts.reduce((a, p) => a + p.qty, 0)
-  const plates = B.plates.reduce((a, p) => a + p.qty, 0)
+  const all = B.groups.flatMap((g) => g.lines)
+  const sum = (f: (l: (typeof all)[number]) => boolean) => all.filter(f).reduce((a, l) => a + l.qty, 0)
+  const units = sum((l) => l.preassembled)
+  const plates = sum((l) => !!l.ral)
+  const loosePieces = sum((l) => !l.preassembled && !l.ral)
 
   return (
     <>
@@ -44,93 +43,41 @@ export function PickingPage({ variants, current, onSelect, calcOf }: Props) {
       <div className="page-scroll">
         <div className="page-cols">
           <div className="page-main">
-            <p className="page-intro">Deleliste: hvor mange av hver profil, kobling og plate som skal med, og løsøre etter produkt. Profiler står som antall per kappelengde.</p>
+            <p className="page-intro">Deleliste etter produkttype. Ferdigmonterte enheter plukkes som stk; løse profiler står som antall per kappelengde. Løsøre til slutt.</p>
             <div className="pick-grid tbl-head">
               <span>Art.nr</span>
               <span>Produkt</span>
               <span className="r">Antall</span>
             </div>
 
-            <section className="tbl-sec">
-              <div className="tbl-sec-head">
-                <span>Foga · ferdigmontert</span>
-                <span className="num">{B.units.length}</span>
-              </div>
-              {!B.units.length && <div className="tbl-empty">Ingen ferdigmonterte enheter.</div>}
-              {B.units.map((u) => (
-                <div key={u.name} className="pick-grid tbl-row">
-                  <span className="num muted" />
-                  <div className="cellstack">
-                    <span className="title">{u.name}</span>
-                    <span className="num meta">{u.contains}</span>
-                  </div>
-                  <span className="num r">{u.qty} stk</span>
+            {!B.groups.length && <div className="tbl-empty">Ingen Foga-deler i variant {v.name}.</div>}
+            {B.groups.map((g) => (
+              <section key={g.id} className="tbl-sec">
+                <div className="tbl-sec-head">
+                  <span>{g.name}</span>
+                  <span className="num">{g.lines.length}</span>
                 </div>
-              ))}
-            </section>
-
-            <section className="tbl-sec">
-              <div className="tbl-sec-head">
-                <span>Foga · profiler</span>
-                <span className="num">{B.profiles.length}</span>
-              </div>
-              {!B.profiles.length && <div className="tbl-empty">Ingen profiler som kan regnes ut ennå.</div>}
-              {B.profiles.map((p) => (
-                <div key={p.part.code} className="pick-grid tbl-row">
-                  <span className="num muted">{p.part.artnr}</span>
-                  <div className="cellstack">
-                    <span className="title">
-                      {p.part.code} · {p.part.name}
-                    </span>
-                    <span className="num meta">
-                      {p.cuts.map((c) => `${c.qty} × ${n(c.lengthMm)}`).join(' · ')} <span className="faint">mm · {fmt(p.lm, 2)} lm</span>
-                    </span>
+                {g.lines.map((l) => (
+                  <div key={l.name + l.detail} className="pick-grid tbl-row">
+                    <span className="num muted">{l.ral ? `RAL ${l.ral}` : l.artnr}</span>
+                    <div className="cellstack">
+                      <span className="title">
+                        {l.name}
+                        {l.ral ? ` · ${plateName(l.ral)}` : ''}
+                      </span>
+                      {(l.detail || l.preassembled) && (
+                        <span className="num meta">
+                          {l.preassembled && <span className="faint">Ferdigmontert · </span>}
+                          {l.detail}
+                          {l.lm !== undefined && <span className="faint"> · {fmt(l.lm, 2)} lm</span>}
+                        </span>
+                      )}
+                    </div>
+                    <span className="num r">{l.qty} stk</span>
                   </div>
-                  <span className="num r">{p.cuts.reduce((a, c) => a + c.qty, 0)} stk</span>
-                </div>
-              ))}
-            </section>
-
-            <section className="tbl-sec">
-              <div className="tbl-sec-head">
-                <span>Foga · koblinger og beslag</span>
-                <span className="num">{B.parts.length}</span>
-              </div>
-              {!B.parts.length && <div className="tbl-empty">Ingen koblinger som kan regnes ut ennå.</div>}
-              {B.parts.map((p) => (
-                <div key={p.part.code} className="pick-grid tbl-row">
-                  <span className="num muted">{p.part.artnr}</span>
-                  <div className="cellstack">
-                    <span className="title">
-                      {p.part.code} · {p.part.name}
-                    </span>
-                  </div>
-                  <span className="num r">{p.qty} stk</span>
-                </div>
-              ))}
-            </section>
-
-            <section className="tbl-sec">
-              <div className="tbl-sec-head">
-                <span>Veggplater</span>
-                <span className="num">{B.plates.length}</span>
-              </div>
-              {!B.plates.length && <div className="tbl-empty">Ingen veggplater.</div>}
-              {B.plates.map((p) => (
-                <div key={`${p.ral}-${p.h}`} className="pick-grid tbl-row">
-                  <span className="num muted">RAL {p.ral}</span>
-                  <div className="cellstack">
-                    <span className="title">
-                      {p.part.name} · {plateName(p.ral)}
-                    </span>
-                    <span className="num meta">
-                      {n(p.w)} × {n(p.h)} mm{p.h < RECIPES.wall.plate.h ? ' · overstykke' : ''}
-                    </span>
-                  </div>
-                  <span className="num r">{p.qty} stk</span>
-                </div>
-              ))}
-            </section>
+                ))}
+              </section>
+            ))}
 
             {loose.map((g) => (
               <section key={g.id} className="tbl-sec">
@@ -157,9 +104,15 @@ export function PickingPage({ variants, current, onSelect, calcOf }: Props) {
               <span>Sum Foga</span>
             </div>
             <div className="formulas num">
+              {B.groups.map((g) => (
+                <div key={g.id}>
+                  {g.name}: {g.lines.reduce((a, l) => a + l.qty, 0)} stk
+                </div>
+              ))}
+            </div>
+            <div className="formulas num">
               <div>{count(units, 'ferdigmontert enhet', 'ferdigmonterte enheter')}</div>
-              <div>{count(pieces, 'profil', 'profiler')} · {fmt(lm, 1)} lm</div>
-              <div>{count(fittings, 'kobling og beslag', 'koblinger og beslag')}</div>
+              <div>{count(loosePieces, 'løs del', 'løse deler')}</div>
               <div>{count(plates, 'plate', 'plater')}</div>
             </div>
             <p className="side-note">Byggesystemet og reglene bak listen står i docs/foga-system.md.</p>

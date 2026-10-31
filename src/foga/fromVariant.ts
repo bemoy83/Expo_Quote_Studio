@@ -17,7 +17,7 @@ export function fromVariant(v: Variant, rules: Rules): FogaStructure {
     posts: posts.size,
     modules: mods.map((m) => ({ plate: m.plate, opening: !!m.opening })),
     beams: beams.segments.map((s) => ({ lengthMm: Math.round(s.length * 1000) })),
-    frames: production(v, rules.textile.inFrame, '').pieces.map((p) => ({ W: p.W, H: p.H, braces: p.braces })),
+    frames: production(v, rules.textile.inFrame, '').pieces.map((p) => ({ pos: p.pos, W: p.W, H: p.H, braces: p.braces })),
   };
 }
 
