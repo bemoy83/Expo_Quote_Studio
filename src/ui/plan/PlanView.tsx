@@ -10,7 +10,7 @@ import { addObject, conflicts, footprintBox, moveObject, removeObject } from '..
 import { addFoil, addTextile, faceAt, faceSegment, felt, foilAt, foilCenter, freeSpans, removeFoil, removeTextile, sideOf, textileAt, textileOffset, updateTextile, type FaceSide } from '../../domain/decor'
 import type { Motif } from '../../persistence/file'
 import type { Point, Room, Side, Variant, Wall } from '../../domain/types'
-import { builtModules, isStandWall, type BuiltModule } from '../../domain/walls'
+import { builtModules, type BuiltModule } from '../../domain/walls'
 import { BORDER, BORDER_STRONG, BLOCK, CANVAS, INK, INK_FAINT, INK_MUTED, LAYER_COLOR, SURFACE } from '../colors'
 import { applyDrop, decorDrag, endDecorDrag, type DecorDrag } from '../dnd'
 import { dragRoom, dragWall, dropObject, dropRoom, roomDrag, type RoomDrag, type WallDrag } from '../drag'
@@ -109,11 +109,8 @@ export function PlanView(p: Props) {
 
   const mods = useMemo(() => builtModules(v), [v])
   const bad = useMemo(() => conflicts(v, place), [v])
-  /** Edges carrying a stand wall: the side labels count only these, an inner wall on the edge leaves a side open. */
-  const standKeys = useMemo(() => {
-    const stand = new Set(v.walls.filter(isStandWall).map((w) => w.id))
-    return new Set(mods.filter((m) => stand.has(m.wallId)).map((m) => m.key))
-  }, [v.walls, mods])
+  /** Edges carrying a stand wall: locked, and the only ones the side labels count (an inner wall leaves a side open). */
+  const standKeys = useMemo(() => standWallKeys(v), [v])
 
   useEffect(() => {
     setStroke(null)
@@ -342,11 +339,9 @@ export function PlanView(p: Props) {
       setStroke(null)
       if (tool === 'erase') {
         const keys = segmentKeys(a, b)
-        const locked = standWallKeys(v)
-        if (keys.some((k) => locked.has(k))) p.onToast(STAND_WALL_LOCKED)
+        if (keys.some((k) => standKeys.has(k))) p.onToast(STAND_WALL_LOCKED)
         p.onEdit((x) => eraseWalls(x, keys))
-      }
-      else if (brush?.kind === 'wall') p.onEdit((x) => paintWalls(x, a, b, brush.ral))
+      } else if (brush?.kind === 'wall') p.onEdit((x) => paintWalls(x, a, b, brush.ral))
     } else if (d.kind === 'click') p.onSelect(d.select)
     else if (d.kind === 'object') {
       if (d.moved) dropObject(v, d.id, d.start, p.onEdit, p.onToast)

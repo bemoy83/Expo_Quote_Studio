@@ -147,9 +147,10 @@ export function splitWall(w: Wall, keep: (module: number) => boolean, taken: str
   });
 }
 
+const moduleKeys = (walls: Wall[]) => new Set(walls.flatMap((w) => wallModules(w).map((m) => m.key)));
+
 /** Module keys that carry a stand wall. These are locked: see eraseWalls. */
-export const standWallKeys = (v: Variant): Set<string> =>
-  new Set(v.walls.filter(isStandWall).flatMap((w) => wallModules(w).map((m) => m.key)));
+export const standWallKeys = (v: Variant): Set<string> => moduleKeys(v.walls.filter(isStandWall));
 
 /**
  * Remove wall modules (by key). Walls are split where a module is taken out. Stand walls are locked: they separate
@@ -257,12 +258,12 @@ export function flipSwing(v: Variant, openingId: string): Variant {
   };
 }
 
-/** Change size or type. Perimeter walls follow the new type; inner walls that still fit are kept. */
+/** Change size or type. Stand walls follow the new type; inner walls that still fit are kept. */
 export function setStand(v: Variant, stand: Stand): Variant {
   const fits = (w: Wall) =>
     [w.from, w.to].every(([x, y]) => x >= 0 && y >= 0 && x <= stand.width && y <= stand.depth);
   const perimeter = standardWalls(stand);
-  const standKeys = new Set(perimeter.flatMap((w) => wallModules(w).map((m) => m.key)));
+  const standKeys = moduleKeys(perimeter);
   const stored = v.walls.filter((w) => !w.room);
   // Inner walls that still fit are kept, also on the edge, minus any part that now lies on a stand wall.
   const taken = [...v.walls.map((w) => w.id), ...perimeter.map((w) => w.id)];

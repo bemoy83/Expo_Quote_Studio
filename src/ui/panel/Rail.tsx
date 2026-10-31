@@ -232,7 +232,7 @@ function WallSection({ v, res, brush, tool, pick, onEdit, onToast, onSelect, sel
           </>
         }
         result={wallLm ? `${fmt(wallLm)} lm` : null}
-        action={<IconButton icon={Paintbrush} label="Tegn standvegg i plan" pressed={wallPen && tool === 'brush'} onClick={() => pick({ kind: 'wall', ral: v.defaultPlate })} />}
+        action={<IconButton icon={Paintbrush} label="Tegn innervegg i plan" pressed={wallPen && tool === 'brush'} onClick={() => pick({ kind: 'wall', ral: v.defaultPlate })} />}
         chips={
           <VariantChips
             chips={plates.map((p) => ({ name: `${p.name} · RAL ${p.ral}`, color: p.color }))}
