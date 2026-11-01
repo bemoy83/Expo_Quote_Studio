@@ -1965,20 +1965,27 @@ select.cin {
   z-index: 5;
 }
 .dock-surface {
+  position: relative;
   pointer-events: auto;
   max-width: 100%;
-  display: flex;
-  flex-direction: column;
-  border-radius: 16px;
-  background: rgb(var(--panel));
-  box-shadow: var(--pop);
-  overflow: hidden;
+  /* one shadow around bar and shelf together, as one shape */
+  filter: drop-shadow(0 10px 22px rgb(0 0 0 / 0.16)) drop-shadow(0 1px 2px rgb(0 0 0 / 0.1));
 }
+/* The shelf: as wide as its content, over the active tool (placed by ToolDock) */
 .dock-shelf {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  width: max-content;
+  max-width: calc(100cqw - 28px);
   display: flex;
   flex-direction: column;
+  border-radius: 14px 14px 0 0;
   background: var(--well);
   transition: opacity 200ms var(--ease);
+}
+.dock-shelf:has(.picker) {
+  min-width: min(380px, calc(100cqw - 28px));
 }
 /* While drawing, the shelf steps back so the stand shows through */
 .dock-surface.drawing .dock-shelf {
@@ -1990,6 +1997,8 @@ select.cin {
   justify-content: center;
   gap: 14px;
   padding: 4px 6px;
+  border-radius: 16px;
+  background: rgb(var(--panel));
 }
 .dock-undo,
 .dock-tools {
@@ -2231,9 +2240,7 @@ select.cin {
 
 /* ---------- Alle valg (top of the shelf) ---------- */
 .picker {
-  width: min(380px, 100%);
   max-height: min(480px, calc(100cqh - 180px));
-  align-self: center;
   display: flex;
   flex-direction: column;
   animation: dock-in var(--dur) var(--ease);
