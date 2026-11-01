@@ -31,7 +31,8 @@ import { QuotePage } from './quote/QuotePage'
 import { TopNav, type Page } from './shell/TopNav'
 import { WorkOrderPage } from './workorder/WorkOrderPage'
 import { VariantTabs } from './shell/VariantTabs'
-import { dockToolOf, FLOOR_OTHER, penToolOf, type Brush, type DockTool, type Highlight, type PenTool, type Tool } from './tools'
+import { dockToolOf, FLOOR_OTHER, penToolOf, type Brush, type DockTool, type Highlight, type PenTool, type RollMode, type Tool } from './tools'
+import { removeFill, removeLane, rotateLane } from '../domain/carpet'
 import { longestSide, TILE_FULL, type FloorBrushSize, type RollDir, type TileSize } from '../domain/floor'
 import { ToolDock } from './plan/ToolDock'
 import { QuickPicks } from './plan/QuickPicks'
@@ -94,6 +95,8 @@ export default function App() {
   const [otherSize, setOtherSize] = useState<TileSize>(FLOOR_OTHER[0].size)
   /** Roll direction of rolled floor; null follows the stand's longest side. */
   const [rollDir, setRollDir] = useState<RollDir | null>(null)
+  /** Engangsteppe: Fyll (an area the engine lays) or Bane (one lane). */
+  const [rollMode, setRollMode] = useState<RollMode>('fill')
   const roll = rollDir ?? longestSide(v.stand)
   const rollBrush = brush?.kind === 'floor' && !!idx.byArtnr.get(brush.product)?.product.roll
   const [gridStep, setGridStep] = useState<GridStep>(1)
@@ -187,7 +190,19 @@ export default function App() {
       }
       if (mod || e.altKey) return
       const k = e.key.toLowerCase()
-      if (k === 'escape') setTool('select')
+      if (k === 'escape' && (selection.lane || selection.fill)) setSelection({})
+      else if (k === 'escape') setTool('select')
+      else if (k === 'r' && selection.lane && tool === 'select') {
+        const r = rotateLane(v, selection.lane)
+        if (r) {
+          onEdit(() => r.v)
+          setSelection({ lane: { i: r.lane.i, j: r.lane.j } })
+        }
+      } else if ((k === 'delete' || k === 'backspace') && (selection.lane || selection.fill)) {
+        const { lane, fill } = selection
+        onEdit((x) => (fill ? removeFill(x, fill) : removeLane(x, lane!)))
+        setSelection({})
+      }
       else if (k === 'p' && brush) {
         setTool('brush')
         setView('plan')
@@ -251,7 +266,7 @@ export default function App() {
   const fillWithPen = () => {
     if (brush?.kind !== 'floor') return
     const product = brush.product
-    onEdit((x) => fillFloor(x, product, idx.byArtnr.get(product)?.product.roll))
+    onEdit((x) => fillFloor(x, product, idx.byArtnr.get(product)?.product.roll, rules.carpet))
   }
   /** Bakrom 1 × 1 m with a door in a free corner; from the wall tool's quick picks and the panel. */
   const addRoom = () => {
@@ -293,6 +308,8 @@ export default function App() {
       onOtherSize={setOtherSize}
       roll={roll}
       onRoll={setRollDir}
+      rollMode={rollMode}
+      onRollMode={setRollMode}
       gridStep={gridStep}
       onGridStep={setGridStep}
       onFill={fillWithPen}
@@ -407,6 +424,7 @@ export default function App() {
                       brush={brush}
                       floorSize={floorSize}
                       rollDir={roll}
+                      rollMode={rollMode}
                       gridStep={gridStep}
                       highlight={highlight}
                       selection={selection}
@@ -479,7 +497,7 @@ export default function App() {
                   onClose={() => setSelection({})}
                 />
               )}
-              <div className="stage-hint">{view === '3d' ? HINT_3D : hint(tool, brush, rollBrush)}</div>
+              <div className="stage-hint">{view === '3d' ? HINT_3D : hint(tool, brush, rollBrush && rollMode)}</div>
             </main>
             {layout.calc && <CalcPanel res={res} name={v.name} onHover={setHighlight} onQuote={() => setPage('tilbud')} />}
           </div>
@@ -532,8 +550,8 @@ const DOCK_KEYS: Record<string, DockTool> = { v: 'select', s: 'wall', g: 'floor'
 
 const HINT_3D = 'Dra for å rotere · rull for å zoome · dra møbler, en innervegg eller grafikk for å flytte · dra et rom i veggen eller taket, toppkanten av en romvegg endrer størrelsen · dra grafikk eller tekstilvegg fra Profilering til en vegg'
 
-function hint(tool: Tool, brush: Brush | null, roll = false): string {
-  if (tool === 'select') return 'Klikk en vegg for å endre den · dra en innervegg, innvendig takdrager eller møbler for å flytte · dra gulvet i et rom for å flytte rommet, en romvegg for å endre størrelsen · Delete fjerner valgt møbel, takdrager eller rom'
+function hint(tool: Tool, brush: Brush | null, roll: RollMode | false = false): string {
+  if (tool === 'select') return 'Klikk en vegg for å endre den · klikk engangsteppe for legging, snu og lengde · dra en innervegg, innvendig takdrager eller møbler for å flytte · dra gulvet i et rom for å flytte rommet, en romvegg for å endre størrelsen · Delete fjerner valgt møbel, takdrager eller rom'
   const erase = tool === 'erase'
   switch (brush?.kind ?? 'wall') {
     case 'wall':
@@ -543,7 +561,9 @@ function hint(tool: Tool, brush: Brush | null, roll = false): string {
         ? 'Klikk eller dra langs en innvendig takdrager for å fjerne den'
         : 'Dra langs rutenettet for innvendig takdrager · en ende på en annen takdrager henger på krok, ellers stolpe med fotplate · tegn en tverrdrager mot en stolpe for å spare fotplaten'
     case 'floor':
-      if (roll) return erase ? 'Klikk en bane for å fjerne den' : 'Klikk for en hel bane på ledig gulv, kappet der bare en smalere stripe er ledig · dra på tvers for flere hele baner side om side · R snur rulleretningen · klikk en bane for å bytte farge'
+      if (roll && erase) return 'Klikk en bane for å fjerne den'
+      if (roll === 'fill') return 'Dra et område for engangsteppe, klikk for hele standen · banene legges slik det koster minst · Velg teppet for andre forslag til legging'
+      if (roll) return 'Klikk for en hel bane på ledig gulv, kappet der bare en smalere stripe er ledig · dra på tvers for flere hele baner side om side · R snur rulleretningen · klikk en bane for å bytte farge · Velg banen for å snu eller endre lengden'
       return erase ? 'Klikk og dra for å fjerne gulv' : 'Klikk og dra for å tegne gulv · velg penselstørrelse over verktøyene'
     case 'opening':
       return erase ? 'Klikk en åpning for å gjøre den til vegg igjen' : 'Klikk en vegg eller en tom kant for å sette inn åpning med overstykke · klikk en åpning for å bytte fyll'
