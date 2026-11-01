@@ -50,7 +50,7 @@ export function variantBeams(
   maxLength: number,
 ): { standard: BeamLayout; inner: InnerBeamLayout; all: BeamLayout } {
   const standard = v.noBeams ? NO_BEAMS : layoutBeams(v.stand, moduleKeys, wallPoints, maxLength);
-  const inner = layoutInnerBeams(v.innerBeams ?? [], standard, wallPoints, maxLength);
+  const inner = layoutInnerBeams(v.innerBeams ?? [], standard, moduleKeys, wallPoints, maxLength);
   return { standard, inner, all: mergeBeams(standard, inner) };
 }
 

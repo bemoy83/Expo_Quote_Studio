@@ -146,11 +146,17 @@ Bjørn 1.11.2026. Kunden kan tegne egne takdragere inne på standen med en egen 
 - Tegnes rett i hele meter innenfor standen, aldri langs en vegg eller oppå en annen takdrager. Kan flyttes i plan og
   fjernes med Tøm (også bare en del av den) eller Delete.
 - **Krok:** en ende som treffer en annen takdrager (standard eller tegnet) henger på den med krok. Ingen stolpe der, og
-  standarddrageren deles ikke. Kroken er en plassholder (`KROK`) til art.nr. er bestemt, én per ende.
+  standarddrageren deles ikke. Kroken er toveis: én krok per krokpunkt, også når
+  dragere henger på begge sider av samme punkt. Plassholder (`KROK`) til art.nr. er bestemt.
 - **Kryss:** der to tegnede takdragere krysser hverandre går det lengste spennet gjennom, og det korteste deles og henger
   på krok på hver side. Like lange: den først tegnede går gjennom. En tegnet drager som krysser en standard drager deles
   på samme måte.
 - **Vegg:** der en vegg møter eller krysser den, deles den og deler veggens stolpe, som standard takdrager.
+- **Vegg langs den:** havner en vegg langs en tegnet drager etterpå (innervegg, romside, dør eller åpning, standvegg),
+  vinner veggen. Den biten bygges ikke, drageren stopper på veggens stolper, og veggen regnes ikke som holdt av den.
+  Drageren blir liggende i skissen og kommer tilbake når veggen eller rommet flyttes bort.
+- **Over et rom:** lov. Rom har ikke tak, så drageren hviler på romveggene der den krysser dem. En fri ende eller
+  6 m-skjøt inne i rommet får stolpe og fotplate som ellers.
 - **Stolper** bare i frie ender og i 6 m-skjøtene, ikke per meter. Ingen tverrdrager fra skjøtene.
 - **Fotplate:** under hver egen stolpe står en fotplate 750 med 795 på tvers av drageren, og stolpen plukkes uten fot.
   Møter en tegnet drager fra den andre retningen stolpen (en tverrdrager), faller platen bort. Stolper i en vegg eller
