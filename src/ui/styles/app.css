@@ -743,6 +743,7 @@ kbd {
   flex: 1;
   min-height: 0;
   position: relative;
+  container-type: size;
 }
 .plan-svg {
   width: 100%;
@@ -1205,7 +1206,14 @@ kbd {
   box-shadow: var(--pop), 0 0 0 1px rgb(var(--border-strong));
   overflow: hidden;
 }
-.minimap .plan-svg {
+/* A drawer open below the stage leaves too little room: the mini map would cover the drawing */
+@container (max-height: 420px) {
+  .minimap {
+    display: none;
+  }
+}
+.minimap .plan-svg,
+.minimap .scene3d-canvas {
   pointer-events: none;
 }
 .minimap .minimap-open {

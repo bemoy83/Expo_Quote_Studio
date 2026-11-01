@@ -52,7 +52,7 @@ type Drag =
 const deg = Math.PI / 180
 /** Top part of a room wall that resizes the room instead of moving it, m. */
 const GRIP = 0.2
-const HOME = { az: 28 * deg, el: 30 * deg }
+export const HOME = { az: 28 * deg, el: 30 * deg }
 const AISLE = { az: 0, el: 16 * deg }
 
 interface View {
@@ -436,7 +436,7 @@ export function Scene3D(p: Props) {
     sc.left = sc.bottom = -r
     sc.right = sc.top = r
     sc.updateProjectionMatrix()
-    setCamera(v, W, D, HOME)
+    aim(v, W, D, HOME)
   }, [W, D])
 
   const turn = (deltaDeg: number) => {
@@ -454,18 +454,25 @@ export function Scene3D(p: Props) {
       <div className="scene3d-tools">
         <IconButton icon={RotateCcw} label="Roter venstre" onClick={() => turn(-45)} />
         <IconButton icon={RotateCw} label="Roter høyre" onClick={() => turn(45)} />
-        <IconButton icon={ScanEye} label="Sett fra gangen" onClick={() => view.current && setCamera(view.current, W, D, AISLE)} />
-        <IconButton icon={House} label="Nullstill" onClick={() => view.current && setCamera(view.current, W, D, HOME)} />
+        <IconButton icon={ScanEye} label="Sett fra gangen" onClick={() => view.current && aim(view.current, W, D, AISLE)} />
+        <IconButton icon={House} label="Nullstill" onClick={() => view.current && aim(view.current, W, D, HOME)} />
       </div>
     </div>
   )
 }
 
-function setCamera(v: View, W: number, D: number, at: { az: number; el: number }) {
+/** Points the camera at the stand centre from the given angle, far enough back to see the whole stand. */
+export function setCamera(camera: THREE.PerspectiveCamera, W: number, D: number, at: { az: number; el: number }) {
   const dist = Math.hypot(W, D) * 1.45 + 3
-  const target = new THREE.Vector3(0, 0.9, 0)
-  v.controls.target.copy(target)
-  v.camera.position.set(Math.sin(at.az) * Math.cos(at.el) * dist, 0.9 + Math.sin(at.el) * dist, Math.cos(at.az) * Math.cos(at.el) * dist)
+  camera.position.set(Math.sin(at.az) * Math.cos(at.el) * dist, CAMERA_Y + Math.sin(at.el) * dist, Math.cos(at.az) * Math.cos(at.el) * dist)
+  camera.lookAt(0, CAMERA_Y, 0)
+}
+/** Height the camera looks at, m. */
+const CAMERA_Y = 0.9
+
+function aim(v: View, W: number, D: number, at: { az: number; el: number }) {
+  setCamera(v.camera, W, D, at)
+  v.controls.target.set(0, CAMERA_Y, 0)
   v.controls.update()
 }
 
