@@ -1,4 +1,4 @@
-import { Blinds, Box, Check, Ungroup, ChevronRight, DoorClosed, Eraser, PaintBucket, Paintbrush, Search, Trash2, Upload } from 'lucide-react'
+import { Blinds, Box, Check, Ungroup, ChevronRight, DoorClosed, Eraser, Minus, PaintBucket, Paintbrush, Plus, Search, Trash2, Upload } from 'lucide-react'
 import { Fragment, useMemo, useRef, useState } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import { mainGroupOf, PRODUCT_GROUPS, resolveGroup } from '../../catalog/groups'
@@ -16,7 +16,7 @@ import type { PlanSelection } from '../plan/PlanView'
 import { findMotif, readMotif, SAMPLE_MOTIFS } from '../motifs'
 import { decorSource } from '../dnd'
 import { INK, LAYER_COLOR, SUNKEN } from '../colors'
-import { Button, CommitInput, Counter, IconButton, Segmented } from '../controls'
+import { Button, CommitInput, Counter, IconButton, Segmented, Switch } from '../controls'
 import { catalog, place, productOf, rules, wallPlates } from '../env'
 import { count, fmt, kr, mm } from '../format'
 import { beamSummary } from '../names'
@@ -134,22 +134,30 @@ function menuCounts(v: Variant): Record<string, number> {
   return out
 }
 
+/** Stand side in whole metres: − and + step a metre, the number can be typed in. */
 function NumField({ value, onChange, label }: { value: number; onChange: (n: number) => void; label: string }) {
+  const set = (n: number) => n !== value && n >= SIDE_MIN && n <= SIDE_MAX && onChange(n)
   return (
-    <CommitInput
-      className="field num"
-      aria-label={label}
-      inputMode="numeric"
-      value={String(value)}
-      selectOnFocus
-      onCommit={(text) => {
-        const n = Math.round(Number(text.replace(',', '.')))
-        if (!Number.isFinite(n) || n < 1 || n > 40 || n === value) return false
-        onChange(n)
-      }}
-    />
+    <span className="num-stepper">
+      <IconButton icon={Minus} label={`${label}: 1 m mindre`} size={14} disabled={value <= SIDE_MIN} onClick={() => set(value - 1)} />
+      <CommitInput
+        className="field num"
+        aria-label={label}
+        inputMode="numeric"
+        value={String(value)}
+        selectOnFocus
+        onCommit={(text) => {
+          const n = Math.round(Number(text.replace(',', '.')))
+          if (!Number.isFinite(n) || n < SIDE_MIN || n > SIDE_MAX || n === value) return false
+          onChange(n)
+        }}
+      />
+      <IconButton icon={Plus} label={`${label}: 1 m mer`} size={14} disabled={value >= SIDE_MAX} onClick={() => set(value + 1)} />
+    </span>
   )
 }
+const SIDE_MIN = 1
+const SIDE_MAX = 40
 
 function StandSection({ v, res, onEdit }: RailProps) {
   const s = v.stand
@@ -198,15 +206,16 @@ function StandSection({ v, res, onEdit }: RailProps) {
       <div className="opt">
         <span className="lbl">
           Takdrager
-          <small className="num">
-            {fmt(k.beamLm)} m · {beamSummary(k)}
-          </small>
+          <small className="num">{v.noBeams ? 'Ingen · mer åpen stand' : `${fmt(k.beamLm)} m · ${beamSummary(k)}`}</small>
         </span>
+        <Switch label="Takdrager" on={!v.noBeams} onChange={(on) => onEdit((x) => ({ ...x, noBeams: on ? undefined : true }))} />
       </div>
-      <p className="panel-note">
-        {mm(rules.beam.height)} × {mm(rules.beam.thickness)} mm langs åpne sider, i flukt med veggtopp. Lange drag deles jevnt i hele meter (maks {fmt(rules.beam.max)} m) og
-        skjøtes med stolpe og tverrdrager.
-      </p>
+      {!v.noBeams && (
+        <p className="panel-note">
+          {mm(rules.beam.height)} × {mm(rules.beam.thickness)} mm langs åpne sider, i flukt med veggtopp. Lange drag deles jevnt i hele meter (maks {fmt(rules.beam.max)} m) og
+          skjøtes med stolpe og tverrdrager.
+        </p>
+      )}
     </>
   )
 }

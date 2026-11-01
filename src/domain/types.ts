@@ -183,6 +183,8 @@ export interface Variant {
   foils: Foil[];
   counted: CountedItem[];
   loose: LooseLine[];
+  /** No takdrager: the customer wants a more open stand. Omitted = with takdrager. */
+  noBeams?: boolean;
 }
 
 export interface ProjectField {

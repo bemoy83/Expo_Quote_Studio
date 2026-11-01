@@ -1,6 +1,6 @@
 // Stand sketch → Foga structure. Built from the same derivations as calc (built modules, beam layout, InFrame
 // sizes); calc passes its own so the quote, the picking list and the parts list count from one structure.
-import { layoutBeams, type BeamLayout } from '../calc/beams';
+import { variantBeams, type BeamLayout } from '../calc/beams';
 import { production, type Production } from '../calc/production';
 import type { Variant } from '../domain/types';
 import { builtModules, wallPoints, type BuiltModule } from '../domain/walls';
@@ -41,7 +41,7 @@ export function structureOf(d: Derived): FogaStructure {
 export function fromVariant(v: Variant, rules: Rules): FogaStructure {
   const mods = builtModules(v);
   const points = wallPoints(mods);
-  const beams = layoutBeams(v.stand, new Set(mods.map((m) => m.key)), points, rules.beam.max);
+  const beams = variantBeams(v, new Set(mods.map((m) => m.key)), points, rules.beam.max);
   const posts = new Set([...points.keys(), ...beams.posts.keys()]).size;
   return structureOf({ mods, posts, beams, production: production(v, rules.textile.inFrame, '') });
 }

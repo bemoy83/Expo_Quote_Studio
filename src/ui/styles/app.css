@@ -567,6 +567,40 @@ kbd {
 .opt .field.num {
   width: 64px;
 }
+.switch {
+  flex: none;
+  width: 34px;
+  height: 20px;
+  padding: 2px;
+  border: 0;
+  border-radius: 10px;
+  background: rgb(var(--border-strong));
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.switch[aria-checked='true'] {
+  background: rgb(var(--ink));
+}
+.switch .knob {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgb(var(--panel));
+  transition: transform 0.15s;
+}
+.switch[aria-checked='true'] .knob {
+  transform: translateX(14px);
+}
+.num-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.opt .num-stepper .field.num {
+  width: 44px;
+  text-align: center;
+}
 .opt .lbl small {
   display: block;
   font: 400 11.5px var(--font-ui);
