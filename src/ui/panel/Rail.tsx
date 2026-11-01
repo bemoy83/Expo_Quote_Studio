@@ -17,7 +17,7 @@ import { findMotif, SAMPLE_MOTIFS } from '../motifs'
 import { decorSource } from '../dnd'
 import { INK, LAYER_COLOR, SUNKEN } from '../colors'
 import { Button, CommitInput, Counter, IconButton, Segmented, Switch } from '../controls'
-import { catalog, idx, place, productOf, rules, wallPlates } from '../env'
+import { catalog, place, productOf, rules, wallPlates } from '../env'
 import { count, fmt, kr, mm } from '../format'
 import { beamSummary } from '../names'
 import type { Brush, Tool } from '../tools'
@@ -389,10 +389,9 @@ function FloorSection({ v, res, brush, tool, pick, onEdit }: RailProps) {
         const vi = active ? p.variants.findIndex((x) => brush?.kind === 'floor' && x.artnr === brush.product) : (sel[p.id] ?? Math.max(0, counts.findIndex((n) => n > 0)))
         const cur = p.variants[vi] ?? p.variants[0]
         const sum = p.variants.reduce((a, x, i) => a + counts[i] * x.price, 0)
-        const rollLines = p.roll ? res.groups.flatMap((g) => g.lines).filter((l) => l.roll && p.variants.some((x) => x.artnr === l.artnr)) : []
         return (
-          <Fragment key={p.id}>
           <ProductRow
+            key={p.id}
             on={tot > 0 || active}
             pen={active}
             thumb={<Swatch color={cur.color} pattern={p.id === 'flis' ? 'tiles' : p.name.startsWith('Vinyl') ? 'planks' : undefined} />}
@@ -424,8 +423,6 @@ function FloorSection({ v, res, brush, tool, pick, onEdit }: RailProps) {
               </>
             }
           />
-          {rollLines.length > 0 && <CutList lines={rollLines} />}
-          </Fragment>
         )
       })}
       <ProductRow
@@ -467,43 +464,6 @@ function FloorSection({ v, res, brush, tool, pick, onEdit }: RailProps) {
       )}
       <p className="panel-note">Fyll legger hele standen med 1 × 1. Penselen legger fliser hvor som helst i 0,5-rutenettet: 1 × 1 som standard, Auto tar største flis som passer på ledig gulv, og under Andre ligger 1 × 0,5, 0,5 × 1 og 0,5 × 0,5. Engangsteppe: Fyll legger et område eller hele standen slik det koster minst internt (materiale, teip og arbeid), og Velg på teppet viser andre forslag. Bane legger én hel bane av gangen; R snur retningen. Kunden betaler alltid lagt m². Teppet går under bakrom og vegger. Flere gulvtyper kan stå på samme stand.</p>
     </>
-  )
-}
-
-/** Engangsteppe as cut from the roll: the pieces, what comes off the roll, the waste and the tape. */
-function CutList({ lines }: { lines: CalcResult['groups'][number]['lines'] }) {
-  return (
-    <div className="cut-list">
-      {lines.map((l) => {
-        const r = l.roll!
-        const color = idx.byArtnr.get(l.artnr)?.variant.color
-        return (
-          <div key={l.artnr} className="cut-list-group">
-            <div className="cut-list-head">
-              <span className="eyebrow">Kappliste</span>
-              <span className="num">
-                {fmt(r.lm * r.width, 1)} m² fra rull · svinn {fmt(r.waste, 1)} m² · teip {fmt(r.tape, 1)} lm
-              </span>
-            </div>
-            {r.pieces.map((x) => (
-              <div key={`${x.length}|${x.parts.join()}|${x.endToEnd}`} className="cut-list-row">
-                <i className="cut-dot" style={{ background: color }} />
-                <span className="num">
-                  {x.qty} × {fmt(r.width, 2)} × {fmt(x.length, 2)} m
-                </span>
-                {x.parts.length > 1 ? (
-                  <span className="cut-list-note">
-                    deles på langs i {x.parts.length} × {fmt(x.parts[0], 2)} m{x.endToEnd ? ', legges etter hverandre' : ''}
-                  </span>
-                ) : (
-                  x.parts[0] < r.width - 1e-9 && <span className="cut-list-note">kappes til {fmt(x.parts[0], 2)} m bredde, resten er svinn</span>
-                )}
-              </div>
-            ))}
-          </div>
-        )
-      })}
-    </div>
   )
 }
 

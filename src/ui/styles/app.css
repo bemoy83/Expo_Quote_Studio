@@ -2258,6 +2258,8 @@ select.cin {
   cursor: default;
 }
 .cp-card {
+  /* No outline on cards and buttons in this app: the shadow alone lifts it */
+  box-shadow: var(--pop);
   padding: 10px;
   display: flex;
   flex-direction: column;
@@ -2328,35 +2330,3 @@ select.cin {
   color: rgb(var(--ink-faint));
 }
 
-/* Kappliste for engangsteppe, under its row in the floor tab */
-.cut-list {
-  margin: -2px 0 8px 46px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.cut-list-head {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  font: 400 11.5px var(--font-numeric);
-  color: rgb(var(--ink-muted));
-}
-.cut-list-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 8px;
-  font: 500 12px var(--font-numeric);
-}
-.cut-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-.cut-list-note {
-  flex-basis: 100%;
-  padding-left: 16px;
-  font: 400 11.5px var(--font-ui);
-  color: rgb(var(--ink-muted));
-}
