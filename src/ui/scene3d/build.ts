@@ -38,6 +38,8 @@ const STAND_FLOOR = '#e3e0d8'
 const SELECT = '#6aaecb'
 const CONFLICT = '#d24b3f'
 const GROUND = '#ebe9e3'
+/** Floor shown around the stand on every side, m: just enough to anchor it, not to suggest aisles. */
+const GROUND_MARGIN = 1
 const HANDLE = '#55575b'
 const CHROME = '#a4a6aa'
 /** --ink, for lines and text drawn on the floor. */
@@ -146,7 +148,7 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
   }
 
   // Ground and stand surface
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(W + 40, D + 40), new THREE.MeshStandardMaterial({ color: GROUND, roughness: 1 }))
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(W + 2 * GROUND_MARGIN, D + 2 * GROUND_MARGIN), new THREE.MeshStandardMaterial({ color: GROUND, roughness: 1 }))
   ground.rotation.x = -Math.PI / 2
   ground.position.y = -0.002
   ground.receiveShadow = true
