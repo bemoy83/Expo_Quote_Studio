@@ -1,4 +1,4 @@
-import { Copy, Maximize2, Trash2 } from 'lucide-react'
+import { Copy, Maximize2, type LucideIcon, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Trash2 } from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore } from 'react'
 import { calc, type CalcResult } from '../calc/calc'
 import { r2 } from '../calc/referenceStands'
@@ -7,7 +7,7 @@ import { addDefaultRoom, removeRoom, roomSize } from '../domain/rooms'
 import type { StandWallTerms, Variant } from '../domain/types'
 import { customerName, fillFloor, standWallTerms } from '../domain/variant'
 import { newSketch, parse, serialize, type Sketch } from '../persistence/file'
-import { loadSketch, saveSketch } from '../persistence/storage'
+import { KEYS, loadJson, loadSketch, saveJson, saveSketch } from '../persistence/storage'
 import { initState, reduce } from '../state/history'
 import { CalcPanel } from './calc/CalcPanel'
 import { Button, IconButton, Segmented, Toast, useToast } from './controls'
@@ -81,6 +81,12 @@ export default function App() {
   const [page, setPage] = useState<Page>('skisse')
   const [view, setView] = useState<'plan' | '3d'>('plan')
   const [tab, setTabRaw] = useState('stand')
+  /** Panel and calc can be folded away for more drawing room; remembered on this machine. */
+  const [layout, setLayout] = useState<Layout>(() => ({ ...LAYOUT, ...loadJson<Partial<Layout>>(KEYS.layout, {}) }))
+  const fold = (k: keyof Layout, open: boolean) => setLayout((l) => ({ ...l, [k]: open }))
+  useEffect(() => {
+    saveJson(KEYS.layout, layout)
+  }, [layout])
   const [tool, setTool] = useState<Tool>('select')
   const [brush, setBrush] = useState<Brush | null>(null)
   const [floorSize, setFloorSize] = useState<FloorBrushSize>(TILE_FULL)
@@ -274,7 +280,11 @@ export default function App() {
       wallRal={wallRal}
       motifs={motifs}
       onPick={(b) => pick(b)}
-      onMore={() => active !== 'select' && active !== 'erase' && setTabRaw(PANEL_TAB[active])}
+      onMore={() => {
+        if (active === 'select' || active === 'erase') return
+        setTabRaw(PANEL_TAB[active])
+        fold('panel', true)
+      }}
       onAddRoom={addRoom}
       onUpload={(f) => void uploadMotif(f)}
       floorSize={floorSize}
@@ -316,6 +326,7 @@ export default function App() {
         <>
           <div className="band" data-band="eple">
             <div className="band-head">
+              <FoldButton open={layout.panel} icons={[PanelLeftClose, PanelLeftOpen]} labels={['Fold inn panelet', 'Vis panelet']} onToggle={(o) => fold('panel', o)} />
               <h1>Standskisse</h1>
               <span className="band-tag">Utkast</span>
               <span className="band-sep" />
@@ -340,6 +351,8 @@ export default function App() {
               {sketch.variants.length > 1 && (
                 <IconButton icon={Trash2} label={`Slett variant ${v.name}`} onBand onClick={() => dispatch({ type: 'remove', index: current })} />
               )}
+              <span className="band-sep" />
+              <FoldButton open={layout.calc} icons={[PanelRightClose, PanelRightOpen]} labels={['Skjul kalkylen', 'Vis kalkylen']} onToggle={(o) => fold('calc', o)} />
             </div>
             <div className="kpis">
               <Kpi label="Areal" value={fmt(k.area)} unit="m²" sub={`${v.stand.width} × ${v.stand.depth} m`} />
@@ -367,6 +380,8 @@ export default function App() {
               res={res}
               tab={tab}
               setTab={setTab}
+              open={layout.panel}
+              setOpen={(o) => fold('panel', o)}
               tool={tool}
               brush={brush}
               pick={pick}
@@ -466,7 +481,7 @@ export default function App() {
               )}
               <div className="stage-hint">{view === '3d' ? HINT_3D : hint(tool, brush, rollBrush)}</div>
             </main>
-            <CalcPanel res={res} name={v.name} onHover={setHighlight} onQuote={() => setPage('tilbud')} />
+            {layout.calc && <CalcPanel res={res} name={v.name} onHover={setHighlight} onQuote={() => setPage('tilbud')} />}
           </div>
         </>
       ) : page === 'tilbud' ? (
@@ -503,6 +518,12 @@ export default function App() {
     return { name, meta: r ? `${kr(r.variant.price)} kr${b.kind === 'floor' ? '/m²' : ''}` : undefined }
   }
 }
+
+interface Layout {
+  panel: boolean
+  calc: boolean
+}
+const LAYOUT: Layout = { panel: true, calc: true }
 
 /** «…» on the quick picks opens the panel on the tool's tab, where all its options are. */
 const PANEL_TAB: Record<PenTool, string> = { wall: 'vegg', floor: 'gulv', profile: 'prof', object: 'mob' }
@@ -546,6 +567,12 @@ function textileSub(p: CalcResult['production']) {
 function wallSplit(k: CalcResult['keyFigures']) {
   if (!k.standWallLm || k.standWallLm === k.wallLm) return k.organiserWallLm ? 'standvegg fra arrangør' : ''
   return `${fmt(k.standWallLm)} standvegg${k.organiserWallLm ? ' fra arrangør' : ''} · ${fmt(k.wallLm - k.standWallLm)} inner`
+}
+
+/** Band toggle for the panel or the calc: muted fill while it is shown. Icons and labels are [shown, folded]. */
+function FoldButton({ open, icons, labels, onToggle }: { open: boolean; icons: [LucideIcon, LucideIcon]; labels: [string, string]; onToggle: (open: boolean) => void }) {
+  const i = open ? 0 : 1
+  return <IconButton icon={icons[i]} label={labels[i]} onBand pressed={open} className="band-fold" onClick={() => onToggle(!open)} />
 }
 
 function Kpi({ label, value, unit, sub }: { label: string; value: string; unit?: string; sub?: string }) {

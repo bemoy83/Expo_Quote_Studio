@@ -153,6 +153,19 @@ kbd {
   color: rgb(var(--ink));
   box-shadow: var(--raise);
 }
+/* Fold toggles for panel (first) and calc (last) sit flush with the band's edges */
+.band-fold:first-child {
+  margin: 0 -6px 0 -8px;
+}
+.band-fold:last-child {
+  margin-right: -8px;
+}
+/* On the band a setting that is on gets the band's muted track fill, not a raised chip */
+.icon-btn.on-band[aria-pressed='true'] {
+  background: var(--b-track);
+  color: var(--b-ink);
+  box-shadow: none;
+}
 
 .seg {
   display: inline-flex;

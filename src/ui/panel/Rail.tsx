@@ -29,6 +29,9 @@ export interface RailProps {
   res: CalcResult
   tab: string
   setTab: (k: string) => void
+  /** The panel beside the strip is shown; folded, only the strip stays. */
+  open: boolean
+  setOpen: (open: boolean) => void
   tool: Tool
   brush: Brush | null
   /** Choose what the brush draws, and switch to the brush (or eraser). */
@@ -55,7 +58,7 @@ const TYPE_TEXT: Record<StandType, string> = {
 }
 
 export function Rail(p: RailProps) {
-  const { v, res, tab, setTab } = p
+  const { v, res, tab, setTab, open, setOpen } = p
   const [q, setQ] = useState('')
   const menu = MENUS.find((m) => m.key === tab) ?? MENUS[0]
   const counts = useMemo(() => menuCounts(v), [v])
@@ -74,7 +77,19 @@ export function Rail(p: RailProps) {
           <Fragment key={g}>
             <span className="grp">{g === 'build' ? 'Bygg' : 'Utstyr'}</span>
             {MENUS.filter((m) => m.group === g).map((m) => (
-              <button key={m.key} type="button" className="strip-btn" aria-current={m.key === tab} onClick={() => setTab(m.key)}>
+              <button
+                key={m.key}
+                type="button"
+                className="strip-btn"
+                aria-current={open && m.key === tab}
+                title={open && m.key === tab ? 'Fold inn panelet' : undefined}
+                onClick={() => {
+                  // Like a tab bar: another group opens the panel on it, the open group folds the panel away.
+                  if (open && m.key === tab) return setOpen(false)
+                  setTab(m.key)
+                  setOpen(true)
+                }}
+              >
                 {done[m.key] && <Check size={11} className="check" />}
                 {counts[m.key] ? <span className="count">{counts[m.key]}</span> : null}
                 <m.icon size={18} />
@@ -84,42 +99,44 @@ export function Rail(p: RailProps) {
           </Fragment>
         ))}
       </nav>
-      <div className="panel">
-        <div className="panel-scroll">
-          <label className="search">
-            <Search size={15} />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Søk vare eller varenr" aria-label="Søk vare eller varenr" />
-          </label>
-          {q.trim() ? (
-            <SearchResults {...p} q={q.trim()} />
-          ) : (
-            <>
-              <div className="panel-head">
-                <h2>{menu.name}</h2>
-                {step >= 0 && (
-                  <span className="step">
-                    Steg {step + 1} av 3{done[menu.key] ? ' · fullført' : ''}
-                  </span>
-                )}
-              </div>
-              {tab === 'stand' && <StandSection {...p} />}
-              {tab === 'vegg' && <WallSection {...p} />}
-              {tab === 'gulv' && <FloorSection {...p} />}
-              {tab === 'prof' && <ProfileSection {...p} />}
-              {menu.group === 'equip' && <EquipSection {...p} menu={menu.key} />}
-            </>
+      {open && (
+        <div className="panel">
+          <div className="panel-scroll">
+            <label className="search">
+              <Search size={15} />
+              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Søk vare eller varenr" aria-label="Søk vare eller varenr" />
+            </label>
+            {q.trim() ? (
+              <SearchResults {...p} q={q.trim()} />
+            ) : (
+              <>
+                <div className="panel-head">
+                  <h2>{menu.name}</h2>
+                  {step >= 0 && (
+                    <span className="step">
+                      Steg {step + 1} av 3{done[menu.key] ? ' · fullført' : ''}
+                    </span>
+                  )}
+                </div>
+                {tab === 'stand' && <StandSection {...p} />}
+                {tab === 'vegg' && <WallSection {...p} />}
+                {tab === 'gulv' && <FloorSection {...p} />}
+                {tab === 'prof' && <ProfileSection {...p} />}
+                {menu.group === 'equip' && <EquipSection {...p} menu={menu.key} />}
+              </>
+            )}
+          </div>
+          {next && (
+            <div className="panel-foot">
+              <span className="spacer">Neste: {next.short ?? next.name}</span>
+              <button type="button" className="btn ghost" onClick={() => setTab(next.key)}>
+                <ChevronRight size={16} />
+                Neste
+              </button>
+            </div>
           )}
         </div>
-        {next && (
-          <div className="panel-foot">
-            <span className="spacer">Neste: {next.short ?? next.name}</span>
-            <button type="button" className="btn ghost" onClick={() => setTab(next.key)}>
-              <ChevronRight size={16} />
-              Neste
-            </button>
-          </div>
-        )}
-      </div>
+      )}
     </aside>
   )
 }
