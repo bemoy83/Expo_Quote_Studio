@@ -111,7 +111,7 @@ type Drag =
   | { kind: 'stroke'; p0: P; moved: boolean }
   /** A floor stroke: the tiles after the first line up with it (`anchor`). */
   | { kind: 'floor'; last: string | null; anchor: { i: number; j: number } | null }
-  /** A lane of rolled floor: a click lays the whole free run, a drag from `from` (cells) to the pointer. */
+  /** A stroke of rolled floor from `from`: whole lanes, laid on release (`rollPending` until then). */
   | { kind: 'roll'; from: P; moved: boolean }
   | { kind: 'click'; select: PlanSelection }
   | { kind: 'object'; id: string; dx: number; dy: number; start: P; moved: boolean; select: PlanSelection }
@@ -268,9 +268,9 @@ export function PlanView(p: Props) {
   const rollWidth = brush?.kind === 'floor' ? idx.byArtnr.get(brush.product)?.product.roll : undefined
   const dir = p.rollDir ?? 'x'
   const brushSize = rollWidth ? { roll: dir, width: Math.round(rollWidth / CELL) } : floorSize
-  const floorTouch = (q: P, anchor: { i: number; j: number } | null, from: P | null = null, on: Variant = v): FloorAction =>
+  const floorTouch = (q: P, anchor: { i: number; j: number } | null, from: P | null = null): FloorAction =>
     brush?.kind === 'floor'
-      ? floorAction(on, { x: q.x / CELL, y: q.y / CELL, size: brushSize, erase: tool === 'erase', product: brush.product, anchor, from })
+      ? floorAction(v, { x: q.x / CELL, y: q.y / CELL, size: brushSize, erase: tool === 'erase', product: brush.product, anchor, from })
       : { kind: 'none' }
   const laneAction = (d: { from: P }, q: P | null) => floorTouch(q ?? d.from, null, q && { x: d.from.x / CELL, y: d.from.y / CELL })
 
@@ -552,8 +552,8 @@ export function PlanView(p: Props) {
   const hoverModule = hoverEdge && (tool === 'erase' || doorAllowed(v, hoverEdge.a, hoverEdge.b)) ? hoverEdge : null
   const hoverAction = floorTool && hover && !drag.current ? floorTouch(hover, null) : null
   // Roll brush: the lanes as they will be laid, from the hover or the stroke in progress
-  const rollAction = rollWidth && tool === 'brush' ? (rollPending ?? hoverAction) : null
-  const rollPreview = rollAction && brush?.kind === 'floor' ? lanesLaid(rollAction, brush.product, dir) : []
+  const rollTouch = rollWidth && tool === 'brush' ? (rollPending ?? hoverAction) : null
+  const rollPreview = rollTouch && brush?.kind === 'floor' ? lanesLaid(rollTouch, brush.product, dir) : []
   const hoverFloor = hoverAction && hoverAction.kind !== 'none' && !rollPreview.length ? hoverAction : null
   // Textile brush: next to a wall the click target is that face; elsewhere the grid node a stroke starts from
   const textileFace = textileTool && hover && !textileStroke ? faceHit(hover, 0.2) : null

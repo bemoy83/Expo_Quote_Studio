@@ -102,9 +102,9 @@ interface Span {
   len: number;
 }
 
-/** A rectangle's span along the roll and across it, in cells. */
-const along = (r: Rect & { roll?: RollDir }, dir: RollDir = r.roll ?? 'x'): Span => (dir === 'x' ? { start: r.i, len: r.w } : { start: r.j, len: r.h });
-const across = (r: Rect & { roll?: RollDir }, dir: RollDir = r.roll ?? 'x'): Span => (dir === 'x' ? { start: r.j, len: r.h } : { start: r.i, len: r.w });
+/** A lane's span along the roll and across it, in cells. */
+const along = (r: FloorTile): Span => (r.roll === 'y' ? { start: r.j, len: r.h } : { start: r.i, len: r.w });
+const across = (r: FloorTile): Span => (r.roll === 'y' ? { start: r.i, len: r.w } : { start: r.j, len: r.h });
 const laneRect = (dir: RollDir, a: Span, c: Span): Rect =>
   dir === 'x' ? { i: a.start, j: c.start, w: a.len, h: c.len } : { i: c.start, j: a.start, w: c.len, h: a.len };
 
@@ -112,7 +112,7 @@ const laneRect = (dir: RollDir, a: Span, c: Span): Rect =>
  * Cover a set of cells with lanes running `dir`. Across, the floor is split in bands one roll wide from `band.start`;
  * in each band a lane runs as long as the cells it covers stay the same across, so a hole in a lane splits it.
  */
-export function layLanes(cells: Iterable<[number, number]>, product: string, dir: RollDir, band: Span): FloorTile[] {
+function layLanes(cells: Iterable<[number, number]>, product: string, dir: RollDir, band: Span): FloorTile[] {
   // band → along → covered cells across
   const bands = new Map<number, Map<number, number[]>>();
   const seen = new Set<string>();
@@ -247,7 +247,7 @@ export interface FloorTouch {
   /** Product painted. Ignored when erasing. */
   product: string;
   anchor?: { i: number; j: number } | null;
-  /** Roll brush: where a dragged lane starts, in cell units. Without it a click lays the lane's whole free run. */
+  /** Roll brush: where a stroke started, in cell units. Without it the touch is a click (or the hover). */
   from?: { x: number; y: number } | null;
 }
 
@@ -316,10 +316,10 @@ export function floorAction(v: Variant, t: FloorTouch): FloorAction {
 }
 
 /**
- * Roll brush. The eraser takes the whole tile or lane under the pointer. A click on a lane of another colour recolours
- * it; anywhere else it lays a lane one roll wide across, on free floor where there is room (narrower, cut, when only a
- * narrower strip is free) and as long as the free floor runs. A drag lays the lane from where it started to the pointer,
- * over what lies there.
+ * Roll brush: always whole lanes, so the hover shows exactly what a click or a stroke lays. The eraser takes the whole
+ * tile or lane under the pointer. A click on a lane of another colour recolours it; anywhere else it lays a lane one
+ * roll wide across, on free floor where there is room (narrower, cut, when only a narrower strip is free) and as long
+ * as the free floor runs, or the whole stand over laid floor. A stroke dragged across adds the lanes beside it.
  */
 function rollAction(tiles: readonly FloorTile[], s: { nx: number; ny: number }, t: FloorTouch, b: RollBrush, under: FloorTile | undefined): FloorAction {
   if (t.erase) return under ? { kind: 'erase', rect: under } : { kind: 'none' };
@@ -383,7 +383,8 @@ function rollAction(tiles: readonly FloorTile[], s: { nx: number; ny: number }, 
 
 /** The lanes a roll brush touch lays, for the preview: exactly what `applyFloor` adds. */
 export function lanesLaid(a: FloorAction, product: string, roll: RollDir): FloorTile[] {
-  if (a.kind === 'recolor') return [{ ...a.rect, product, roll }];
+  // A recoloured lane keeps its own direction
+  if (a.kind === 'recolor') return [{ roll, ...a.rect, product }];
   if (a.kind !== 'place') return [];
   return (a.lanes ?? [a.rect]).map((r) => ({ ...r, product, roll }));
 }
