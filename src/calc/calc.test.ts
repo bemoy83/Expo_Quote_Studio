@@ -2,7 +2,7 @@
 // not copied from the mockup's calc. Each case shows the arithmetic.
 import { describe, expect, it } from 'vitest';
 import { CURTAIN, DEFAULT_CATALOG, DOOR } from '../catalog/defaultCatalog';
-import type { Point, Variant } from '../domain/types';
+import type { FloorTile, Point, Variant } from '../domain/types';
 import { createVariant, fillFloor } from '../domain/variant';
 import { addRoom, RECT_SIDE } from '../domain/rooms';
 import { DEFAULT_PRICING } from '../pricing/data';
@@ -247,12 +247,24 @@ describe('floor', () => {
     expect(qty(res, S.floorProtection)).toBe(0);
   });
   it('engangsteppe: m² laid on the quote, running metres of 2 m roll with 10 cm at each end, the cut strip as waste', () => {
-    const res = run(fillFloor(r1(), '5920', 2)); // 3 × 3 m: a 2 m lane and one cut to 1 m
+    // 3 × 3 m: a 2 m lane and one cut to 1 m
+    const v = r1();
+    const tiles: FloorTile[] = [{ i: 0, j: 0, w: 6, h: 4, roll: 'x', product: '5920' }, { i: 0, j: 4, w: 6, h: 2, roll: 'x', product: '5920' }];
+    const res = run({ ...v, floor: { ...v.floor, tiles } });
     expect(qty(res, '5920')).toBe(9);
     const roll = lines(res).find((l) => l.artnr === '5920')!.roll!;
     expect(roll.lanes).toEqual([{ length: 3, width: 2, cut: false, qty: 1 }, { length: 3, width: 1, cut: true, qty: 1 }]);
     expect(roll.lm).toBeCloseTo(6.4);
     expect(roll.waste).toBeCloseTo(6.4 * 2 - 9);
+    // Taped all round and along the one seam
+    expect(roll.tape).toBeCloseTo(12 + 3);
+  });
+  it('engangsteppe filled the cheapest way: the narrow rest in two halves from one piece, still only m² laid', () => {
+    const res = run(fillFloor(r1(), '5920', 2));
+    expect(qty(res, '5920')).toBe(9);
+    const roll = lines(res).find((l) => l.artnr === '5920')!.roll!;
+    expect(roll.lm).toBeCloseTo(3.2 + 1.7);
+    expect(roll.pieces).toEqual([{ length: 3.2, parts: [2], endToEnd: false, qty: 1 }, { length: 1.7, parts: [1, 1], endToEnd: true, qty: 1 }]);
   });
 });
 
