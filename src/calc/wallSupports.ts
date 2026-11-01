@@ -1,6 +1,6 @@
 // Støtteplater: foot plates under a system wall that stands free (Bjørn 1.11.2026, docs/foga-system.md).
 //   A system wall is held by the takdrager frame. Without it (beams turned off, or an inner wall the beams don't reach)
-//   it stands free and gets foot plates on its posts by the same rule as a free-standing textile wall (supportPoints):
+//   it stands free and gets foot plates on its posts by the same rule as a free-standing textile wall (calc/supports.ts):
 //   at least 2 supports from 1 m, at most 3 m apart, a plate at each free end, pulled in (at most 1 m) only where a gap
 //   would otherwise be over 3 m.
 //   Every point where another system wall meets the run (corner, T or cross: stand, inner and room walls alike) is a
@@ -8,10 +8,10 @@
 //   Plates go only under posts (cc 1 m), centred under the wall, across it.
 import { pointKey } from '../domain/grid';
 import type { Point } from '../domain/types';
-import type { BeamLayout } from './beams';
 import type { BuiltModule } from '../domain/walls';
 import type { SupportRule } from '../foga/recipes';
-import { minSupports, spreadSupports } from './freeFrames';
+import type { BeamLayout } from './beams';
+import { minSupports, spreadSupports, type Ends } from './supports';
 
 export interface WallSupport {
   /** The post it stands under. */
@@ -102,7 +102,7 @@ export function wallSupports(
  * wall's rule on the posts. A free end gets its plate at the end post, pulled in whole posts only as far as the gaps
  * need; with two free ends the `to` end is pulled first. One more plate while that breaks the rule.
  */
-export function stretchPosts(len: number, ends: { from: boolean; to: boolean }, rule: SupportRule): number[] {
+export function stretchPosts(len: number, ends: Ends, rule: SupportRule): number[] {
   const mm = len * 1000;
   const free = (i: number) => !(i === 0 && ends.from) && !(i === len && ends.to);
   const pull = (need: number, n: number) => {
@@ -116,7 +116,7 @@ export function stretchPosts(len: number, ends: { from: boolean; to: boolean }, 
   return Array.from({ length: len + 1 }, (_, i) => i).filter(free);
 }
 
-function keepsRule(len: number, at: number[], ends: { from: boolean; to: boolean }, rule: SupportRule): boolean {
+function keepsRule(len: number, at: number[], ends: Ends, rule: SupportRule): boolean {
   const all = [...(ends.from ? [0] : []), ...at, ...(ends.to ? [len] : [])];
   if (all.length < (len * 1000 >= rule.minFrom ? rule.min : 1)) return false;
   if (!ends.from && all[0] * 1000 > rule.maxEnd) return false;
