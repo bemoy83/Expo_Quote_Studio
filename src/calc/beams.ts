@@ -1,5 +1,6 @@
 import { inward, makeModule, pointKey, SIDES, sideLength, sidePoint } from '../domain/grid';
 import type { Point, Side, Stand, Variant } from '../domain/types';
+import { layoutInnerBeams, mergeBeams, type InnerBeamLayout } from './innerBeams';
 
 const EPS = 1e-9;
 
@@ -10,6 +11,8 @@ export interface BeamSegment {
   side: Side;
   /** Tverrdrager: runs from a joint in to the facing wall. */
   cross: boolean;
+  /** Drawn by the customer (calc/innerBeams.ts), not derived from the stand. */
+  inner?: true;
 }
 
 export interface BeamLayout {
@@ -36,9 +39,19 @@ export function splitLength(length: number, max: number): number[] {
 
 const lerp = (a: Point, b: Point, t: number): Point => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
 
-/** The takdrager of a variant: none when the customer turned them off, else {@link layoutBeams}. */
-export function variantBeams(v: Variant, moduleKeys: ReadonlySet<string>, wallPoints: ReadonlyMap<string, Point>, maxLength: number): BeamLayout {
-  return v.noBeams ? { segments: [], posts: new Map(), lm: 0 } : layoutBeams(v.stand, moduleKeys, wallPoints, maxLength);
+export const NO_BEAMS: BeamLayout = { segments: [], posts: new Map(), lm: 0 };
+
+/** The takdrager of a variant. `standard`: none when the customer turned them off, else {@link layoutBeams}. `inner`:
+ *  the ones the customer drew (calc/innerBeams.ts). `all`: both. */
+export function variantBeams(
+  v: Variant,
+  moduleKeys: ReadonlySet<string>,
+  wallPoints: ReadonlyMap<string, Point>,
+  maxLength: number,
+): { standard: BeamLayout; inner: InnerBeamLayout; all: BeamLayout } {
+  const standard = v.noBeams ? NO_BEAMS : layoutBeams(v.stand, moduleKeys, wallPoints, maxLength);
+  const inner = layoutInnerBeams(v.innerBeams ?? [], standard, wallPoints, maxLength);
+  return { standard, inner, all: mergeBeams(standard, inner) };
 }
 
 /**

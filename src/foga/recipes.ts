@@ -78,6 +78,8 @@ export interface BeamRecipe {
   /** Couplings at each end into the post channel. 292 is 80 high: one in the top and one in the bottom chamber.
    *  Stored mounted: each beam length + its couplings is one piece. */
   coupling: { code: string; perEnd: number };
+  /** A drawn (innvendig) beam's end hanging on another beam (Bjørn 1.11.2026), one per end. Placeholder part. */
+  hook: string;
 }
 
 /** Opening module (door or curtain): above it a header (overstykke). The Foga door (292 frame, lock 410) is picked as one unit. */
@@ -125,6 +127,6 @@ export const RECIPES: Recipes = {
     maxRail: 5000,
     support: SUPPORT,
   },
-  beam: { profile: '292', coupling: { code: '600', perEnd: 2 } },
+  beam: { profile: '292', coupling: { code: '600', perEnd: 2 }, hook: 'KROK' },
   door: { leaf: 2000, floorGap: 20, topGap: 10 },
 };

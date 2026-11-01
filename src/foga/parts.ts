@@ -74,6 +74,8 @@ export const FOGA_PARTS: readonly FogaPart[] = [
   part('618', '871 041 92', 'Parallellkobling'),
   part('625', '871 057 92', 'Vinkelkobling, gjæret'),
   part('540', '871 540 92', 'Hengeklips'),
+  // Placeholder until Bjørn names the Foga part: the hook a drawn takdrager hangs on another beam with
+  part('KROK', '', 'Krok, takdrager på takdrager (art.nr. mangler)'),
   part('CK20', '876 773 22', 'Koblingssett 20, skrue 30 mm og 505', 'accessory', 'fabric'),
   part('CK40', '876 774 22', 'Koblingssett 40, skrue 50 mm og 505', 'accessory', 'fabric'),
   part('CK80', '876 778 22', 'Koblingssett 80, skrue 90 mm og 505', 'accessory', 'fabric'),

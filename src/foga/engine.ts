@@ -133,6 +133,8 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
 
   // Takdrager: 292 between the posts with two 600 in each end, one piece per length
   for (const b of s.beams) unit(BOM_GROUP.beams, 'Takdrager', r.beam.profile, between(b.lengthMm), r.beam.coupling, 1);
+  // A drawn takdrager's end hanging on another beam: one hook per end
+  part(BOM_GROUP.beams, r.beam.hook, s.beamHooks ?? 0);
 
   // Tekstilvegger: 43TX cut mitred 2W + 2H (loose), 4 × 617, 2 × 520, and upright braces in 90 with a 600 in each
   // end, stored pre-assembled; the brace line names the frames it belongs to

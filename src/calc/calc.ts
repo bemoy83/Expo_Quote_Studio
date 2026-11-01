@@ -69,8 +69,12 @@ export interface KeyFigures {
   standWallLm: number;
   /** Part of standWallLm the organiser pays: not on the exhibitor's quote, picking list or work order. */
   organiserWallLm: number;
-  /** Takdrager the organiser pays (all of beamLm, or none), with the posts only they need. */
+  /** Takdrager the organiser pays (the standard ones, or none), with the posts only they need. */
   organiserBeamLm: number;
+  /** Part of beamLm in innvendige takdragere the customer draws: always the exhibitor's. */
+  innerBeamLm: number;
+  /** Ends of drawn takdrager hung on another beam. */
+  beamHooks: number;
   /** Part of wallLm in inner walls the exhibitor draws (room walls not included). */
   innerWallLm: number;
   /** Part of wallLm that rooms build themselves (sides shared with other walls not included). */
@@ -83,7 +87,7 @@ export interface KeyFigures {
   posts: number;
   /** Posts that exist only because of the beams. */
   beamPosts: number;
-  /** Støtteplater under the posts of system walls that stand free. */
+  /** Støtteplater under the posts of system walls that stand free, and under drawn takdrager's own posts. */
   wallSupports: number;
   /** Wall modules including those with a door or curtain (each gets top and bottom rail, in its header if an opening). */
   modules: number;
@@ -116,7 +120,8 @@ export interface CalcResult {
   keyFigures: KeyFigures;
   beams: BeamLayout;
   posts: Point[];
-  /** Støtteplater under free-standing system walls: always the exhibitor's, also under the organiser's stand walls. */
+  /** Støtteplater under free-standing system walls and drawn takdrager's own posts: always the exhibitor's, also under
+   *  the organiser's stand walls. */
   wallSupports: WallSupport[];
   production: Production;
   /** What is built, in Foga terms: the quote counts from it and the picking list lists its parts. */
@@ -181,7 +186,7 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
   const mods = builtModules(v);
   const points = wallPoints(mods);
   const keys = new Set(mods.map((m) => m.key));
-  const beams = variantBeams(v, keys, points, rules.beam.max);
+  const { standard, inner, all: beams } = variantBeams(v, keys, points, rules.beam.max);
   const wallsById = new Map(v.walls.map((w) => [w.id, w]));
   const kindOf = (m: BuiltModule): WallKind => {
     const w = wallsById.get(m.wallId);
@@ -194,33 +199,41 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
   const ours = mods.filter((m) => !theirSet.has(m));
   const theirPoints = wallPoints(theirs);
   const ourPoints = new Map([...wallPoints(ours)].filter(([k]) => !theirPoints.has(k)));
-  // Every post on the sketch: wall posts, then the posts only takdrager need
+  // Every post on the sketch: wall posts, then the posts only the standard takdrager need, then the drawn ones'
   const allPosts = new Map(points);
-  let beamPosts = 0;
-  for (const [k, p] of beams.posts) {
-    if (!allPosts.has(k)) {
+  const ownPosts = (b: BeamLayout) => {
+    let n = 0;
+    for (const [k, p] of b.posts) {
+      if (allPosts.has(k)) continue;
       allPosts.set(k, p);
-      beamPosts++;
+      n++;
     }
-  }
+    return n;
+  };
+  const standardPosts = ownPosts(standard);
+  const innerPosts = ownPosts(inner);
+  const beamPosts = standardPosts + innerPosts;
   const swaps = theirs.filter((m) => m.plate !== standWalls.ral).map((m) => m.plate);
   // Takdrager follow the stand walls (docs/vegger.md). Every beam the app lays out today is a standard beam, derived from
   // and supporting the stand walls, so the organiser pays them, with their own posts, when it pays the stand walls. Open
   // area without stand walls (island) gets no beams from the organiser: the exhibitor pays them in full. Beams the
-  // customer adds as an option (a brush, later) will always be the exhibitor's.
-  const organiserBeams = theirs.length > 0 && beams.segments.length > 0;
-  const ourBeams: BeamLayout = organiserBeams ? { segments: [], posts: new Map(), lm: 0 } : beams;
+  // customer draws (innvendige takdragere) are always the exhibitor's.
+  const organiserBeams = theirs.length > 0 && standard.segments.length > 0;
+  const ourBeams: BeamLayout = organiserBeams ? inner : beams;
   const walled = mods.filter((m) => !m.opening);
   // A wall stands free without the takdrager frame: foot plates on its posts. With beams the stand walls are in the
   // frame. The plates are the customer's choice (no beams), so the exhibitor's even under the organiser's walls.
-  const framed = beams.segments.length > 0;
-  const wallFeet = wallSupports(mods, beams, RECIPES.wall.support.rule, (m) => framed && kindOf(m) === 'stand');
+  // A drawn takdrager's own posts stand on plates too, across the beam, unless a beam drawn the other way meets them.
+  const framed = standard.segments.length > 0;
+  const freeWallFeet = wallSupports(mods, beams, RECIPES.wall.support.rule, (m) => framed && kindOf(m) === 'stand');
+  const wallFeet = [...freeWallFeet, ...inner.feet];
   const prod = production(v, rules.textile.inFrame, '');
   // Foga structure of what the exhibitor orders: posts, walled modules, headers and beam lengths are counted from it
-  const foga = structureOf({ mods: ours, posts: ourPoints.size + (organiserBeams ? 0 : beamPosts), beams: ourBeams, production: prod, swaps, wallFeet: wallFeet.length, barePosts: wallFeet.filter((f) => ourPoints.has(pointKey(f.at))).length });
+  const foga = structureOf({ mods: ours, posts: ourPoints.size + (organiserBeams ? innerPosts : beamPosts), beams: ourBeams, hooks: inner.hooks, production: prod, swaps, wallFeet: wallFeet.length, barePosts: wallFeet.filter((f) => ourPoints.has(pointKey(f.at))).length + inner.feet.length });
   const headers = foga.modules.filter((m) => m.opening).length;
+  const lmOf = (b: BeamLayout) => beamSpecs(b).reduce((a, x) => a + x.lengthMm, 0) / 1000;
   const beamLengths = beamSpecs(beams);
-  const beamLm = beamLengths.reduce((a, b) => a + b.lengthMm, 0) / 1000;
+  const beamLm = lmOf(beams);
   const plateSize = `${rules.wall.plate.width} × ${rules.wall.plate.height} mm`;
   // Wall posts are shared between modules: each module (door and curtain included) carries an equal share of the
   // posts of its builder
@@ -256,8 +269,9 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
   }
   // Støtteplater, per piece: the plate and putting it on
   const foot = RECIPES.wall.support.foot;
+  const heldFree = [...(freeWallFeet.length ? ['vegg'] : []), ...(inner.feet.length ? ['takdrager'] : [])].join(' og ');
   add(
-    line(sys.wallSupport, wallFeet.length, { ...built, meta: `${fogaPart(foot.code).name} · frittstående vegg` }, [
+    line(sys.wallSupport, wallFeet.length, { ...built, meta: `${fogaPart(foot.code).name} · frittstående ${heldFree}` }, [
       { id: ITEM.foot(foot.code), qty: wallFeet.length },
       { id: ITEM.wallFootMount, qty: wallFeet.length },
     ]),
@@ -275,18 +289,31 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
   const toOrganiser = (l: CalcLine): CalcLine => ({ ...l, payer: 'arrangør' });
   const organiserLines: CalcLine[] = theirs.length ? [toOrganiser(wallLine(standWalls.ral, theirs.length, 'Standvegg', share(theirPoints.size, theirs.length)))] : [];
 
-  // Takdrager per metre, its own posts included in the price. The organiser's when it follows its stand walls.
+  // Takdrager per metre, its own posts and hooks included in the price. The standard ones are the organiser's when they
+  // follow its stand walls: then the drawn ones are a line of their own, so the customer sees what they pay for.
   const nLengths = beamLengths.length;
-  const beamMeta = [`${nLengths} ${nLengths === 1 ? 'lengde' : 'lengder'}`, ...(beamPosts ? [`${beamPosts} ${beamPosts === 1 ? 'stolpe' : 'stolper'} inkludert`] : [])];
-  const beamUses: Use[] = [
-    ...beamLengths.map((b) => ({ id: ITEM.beam(b.lengthMm - 40), qty: 1 })),
-    { id: ITEM.post, qty: beamPosts },
-    { id: ITEM.beamLm, qty: beamLm },
-    { id: ITEM.beamPost, qty: beamPosts },
-  ];
-  const beamLine = line(sys.beam, beamLm, { ...built, meta: beamMeta.join(' · ') }, beamUses);
-  if (organiserBeams) organiserLines.push(toOrganiser(beamLine));
-  else add(beamLine);
+  const beamLine = (b: BeamLayout, posts: number, hooks: number, what?: string) => {
+    const specs = beamSpecs(b);
+    const lm = lmOf(b);
+    const meta = [
+      ...(what ? [what] : []),
+      count(specs.length, 'lengde', 'lengder'),
+      ...(posts ? [`${count(posts, 'stolpe', 'stolper')} inkludert`] : []),
+      ...(hooks ? [count(hooks, 'krok', 'kroker')] : []),
+    ];
+    const uses: Use[] = [
+      ...specs.map((x) => ({ id: ITEM.beam(x.lengthMm - 40), qty: 1 })),
+      { id: ITEM.post, qty: posts },
+      { id: ITEM.beamLm, qty: lm },
+      { id: ITEM.beamPost, qty: posts },
+      { id: ITEM.beamHook, qty: hooks },
+    ];
+    return line(sys.beam, lm, { ...built, meta: meta.join(' · ') }, uses);
+  };
+  if (organiserBeams) {
+    organiserLines.push(toOrganiser(beamLine(standard, standardPosts, 0)));
+    add(beamLine(inner, innerPosts, inner.hooks, 'innvendig'));
+  } else add(beamLine(beams, beamPosts, inner.hooks));
 
   // Door or curtain with header (overstykke), one product each
   const openingCounts = countBy(mods.flatMap((m) => (m.opening ? [m.opening.product] : [])));
@@ -419,7 +446,9 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
       wallLm: walled.length,
       standWallLm: walled.filter((m) => kindOf(m) === 'stand').length,
       organiserWallLm: theirs.length,
-      organiserBeamLm: organiserBeams ? beamLm : 0,
+      organiserBeamLm: organiserBeams ? lmOf(standard) : 0,
+      innerBeamLm: lmOf(inner),
+      beamHooks: inner.hooks,
       innerWallLm: walled.filter((m) => kindOf(m) === 'inner').length,
       roomWallLm: walled.filter((m) => kindOf(m) === 'room').length,
       swapLm: swaps.length,
