@@ -64,9 +64,9 @@ Låst av Bjørn 31.10.2026. Samme regel for fakturamottaker gjelder takdragere s
   dermed det kjøpte arealet. Betaler arrangøren standveggene, betaler arrangøren også disse takdragerne, med stolpene
   bare de trenger. De er da ute av tilbudet, plukklisten og arbeidsordren, som standveggene.
 - **Åpent areal uten standvegger** (øystand) får som regel ikke takdrager fra arrangøren. Utstilleren betaler dem fullt.
-- **Takdrager som tilvalg**, en pensel for kundens egne ønsker utover det veggene gir, kommer senere. De er alltid
-  utstillerens, på samme måte som innervegger. Takdragere trenger derfor egen klassifisering, slik veggene har:
-  standard (følger standveggene) og tilvalg.
+- **Innvendig takdrager** (tilvalg, 1.11.2026) tegnes med egen pensel for kundens egne ønsker utover det veggene gir.
+  De er alltid utstillerens, på samme måte som innervegger, og har egen klassifisering (`Variant.innerBeams`). Regler i
+  [foga-system.md](foga-system.md).
 
 I koden: `organiserBeams` i `calc/calc.ts` og nøkkeltallet `organiserBeamLm`.
 

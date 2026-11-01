@@ -34,6 +34,13 @@ export interface Wall {
   room?: { id: string; side: number };
 }
 
+/** An optional takdrager drawn inside the stand: a straight run on the 1 m grid (calc/innerBeams.ts). */
+export interface InnerBeam {
+  id: string;
+  from: Point;
+  to: Point;
+}
+
 /**
  * Bakrom, møterom, lager, frihåndsrom: a right-angled outline on the 1 m grid that owns its walls (see outline.ts).
  * Its sides are generated as walls (`<id>.<side>`) after the stored walls, so a side that already has a stand wall
@@ -183,8 +190,10 @@ export interface Variant {
   foils: Foil[];
   counted: CountedItem[];
   loose: LooseLine[];
-  /** No takdrager: the customer wants a more open stand. Omitted = with takdrager. */
+  /** No takdrager: the customer wants a more open stand. Omitted = with takdrager. Only the standard beams. */
   noBeams?: boolean;
+  /** Innvendige takdragere the customer draws, always the exhibitor's (calc/innerBeams.ts). Omitted = none. */
+  innerBeams?: InnerBeam[];
 }
 
 export interface ProjectField {

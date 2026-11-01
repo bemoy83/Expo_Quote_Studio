@@ -13,6 +13,8 @@ export interface Derived {
   /** Wall posts and posts that only carry takdrager. */
   posts: number;
   beams: BeamLayout;
+  /** Ends of drawn takdrager hanging on another beam. */
+  hooks?: number;
   production: Production;
   /** Plates swapped into stand walls the organiser builds. */
   swaps?: string[];
@@ -36,6 +38,7 @@ export function structureOf(d: Derived): FogaStructure {
           cornerPosts: d.production.cornerPosts,
         }
       : {}),
+    ...(d.hooks ? { beamHooks: d.hooks } : {}),
     ...(d.swaps?.length ? { swaps: d.swaps } : {}),
     ...(d.wallFeet ? { wallFeet: d.wallFeet } : {}),
     ...(d.barePosts ? { barePosts: d.barePosts } : {}),
@@ -46,9 +49,9 @@ export function structureOf(d: Derived): FogaStructure {
 export function fromVariant(v: Variant, rules: Rules): FogaStructure {
   const mods = builtModules(v);
   const points = wallPoints(mods);
-  const beams = variantBeams(v, new Set(mods.map((m) => m.key)), points, rules.beam.max);
+  const { all: beams, inner } = variantBeams(v, new Set(mods.map((m) => m.key)), points, rules.beam.max);
   const posts = new Set([...points.keys(), ...beams.posts.keys()]).size;
-  return structureOf({ mods, posts, beams, production: production(v, rules.textile.inFrame, '') });
+  return structureOf({ mods, posts, beams, hooks: inner.hooks, production: production(v, rules.textile.inFrame, '') });
 }
 
 /** Sizes from the rules, mm: post = system wall height without feet (2490), cc 1000. */

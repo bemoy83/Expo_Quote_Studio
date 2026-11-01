@@ -45,12 +45,14 @@ export interface FogaStructure {
   posts: number;
   modules: ModuleSpec[];
   beams: BeamSpec[];
+  /** Ends of drawn (innvendige) takdrager hanging on another beam on a hook. */
+  beamHooks?: number;
   frames: FrameSpec[];
   /** Frittstående tekstilvegger. */
   freeFrames?: FreeFrameSpec[];
   /** 92LTX corner posts shared by two free-standing runs, each `H` long. */
   cornerPosts?: { qty: number; H: number };
-  /** Støtteplater under the posts of system walls that stand free (calc/wallSupports.ts). */
+  /** Støtteplater under the posts of system walls that stand free (calc/wallSupports.ts), and of drawn takdrager. */
   wallFeet?: number;
   /** Of `posts`, those standing on a støtteplate: picked without the adjustable foot (Bjørn 1.11.2026). */
   barePosts?: number;

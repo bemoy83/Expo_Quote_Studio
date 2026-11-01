@@ -65,7 +65,13 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
       ].join(' · '),
     ],
     k.beamLm
-      ? [`${fmt(k.beamLm)} m takdrager`, k.organiserBeamLm ? 'fra arrangøren' : beamSummary(k)]
+      ? [
+          `${fmt(k.beamLm)} m takdrager`,
+          [
+            k.organiserBeamLm ? `${fmt(k.organiserBeamLm)} m fra arrangøren` : beamSummary(k),
+            ...(k.innerBeamLm ? [`${fmt(k.innerBeamLm)} m innvendig`] : []),
+          ].join(' · '),
+        ]
       : ['Uten takdrager', v.noBeams ? 'åpen stand etter ønske' : 'ingen åpne sider å avstive'],
     k.floorTotal ? [floorNames.join(', '), `${fmt(k.floorTotal)} m² ferdig lagt${v.floor.protection ? ' med monteringsbeskyttelse' : ''}`] : ['Hallgulv uten belegg', ''],
   ]
@@ -209,6 +215,7 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
               {k.beamLm > 0 && (
                 <li>
                   Takdrager {mm(rules.beam.height)} × {mm(rules.beam.thickness)} mm langs åpne sider, lengder inntil {fmt(rules.beam.max)} m, skjøtt med stolpe og tverrdrager.
+                  {k.innerBeamLm > 0 && ' Innvendige takdragere henger på krok i andre takdragere, ellers på stolpe med fotplate.'}
                 </li>
               )}
               {res.production.pieces.length > 0 && (

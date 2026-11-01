@@ -138,6 +138,26 @@ Systemhøyde fra gulv: 2490 + 50 = 2540 mm.
 - Kunden kan velge bort takdragerne for en mer åpen stand (`Variant.noBeams`). Da står veggene fritt og får
   støtteplater, se under.
 
+### Innvendig takdrager (tilvalg)
+
+Bjørn 1.11.2026. Kunden kan tegne egne takdragere inne på standen med en egen pensel (`Variant.innerBeams`,
+`calc/innerBeams.ts`). Samme profil 292, høyde og 6 m-regel som standard takdrager, og alltid utstillerens.
+
+- Tegnes rett i hele meter innenfor standen, aldri langs en vegg eller oppå en annen takdrager. Kan flyttes i plan og
+  fjernes med Tøm (også bare en del av den) eller Delete.
+- **Krok:** en ende som treffer en annen takdrager (standard eller tegnet) henger på den med krok. Ingen stolpe der, og
+  standarddrageren deles ikke. Kroken er en plassholder (`KROK`) til art.nr. er bestemt, én per ende.
+- **Kryss:** der to tegnede takdragere krysser hverandre går det lengste spennet gjennom, og det korteste deles og henger
+  på krok på hver side. Like lange: den først tegnede går gjennom. En tegnet drager som krysser en standard drager deles
+  på samme måte.
+- **Vegg:** der en vegg møter eller krysser den, deles den og deler veggens stolpe, som standard takdrager.
+- **Stolper** bare i frie ender og i 6 m-skjøtene, ikke per meter. Ingen tverrdrager fra skjøtene.
+- **Fotplate:** under hver egen stolpe står en fotplate 750 med 795 på tvers av drageren, og stolpen plukkes uten fot.
+  Møter en tegnet drager fra den andre retningen stolpen (en tverrdrager), faller platen bort. Stolper i en vegg eller
+  under standard takdrager får ingen plate fra drageren.
+- **Tilbud:** takdrager per meter med egne stolper og kroker i prisen, i samme linje som standard takdrager. Betaler
+  arrangøren standard takdragerne, får de tegnede en egen linje «innvendig». Fotplatene ligger i linjen Støtteplate.
+
 ### Støtteplater på frittstående systemvegg
 
 Bjørn 1.11.2026. Takdragerrammen holder veggene. En systemvegg uten den står fritt og får støtteplater under stolpene,

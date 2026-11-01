@@ -227,6 +227,7 @@ function WallSection({ v, res, brush, tool, pick, onEdit, onToast, onSelect, sel
   const di = Math.max(0, plates.findIndex((p) => p.ral === v.defaultPlate))
   const def = plates[di]
   const wallPen = tool !== 'select' && brush?.kind === 'wall'
+  const beamPen = tool !== 'select' && brush?.kind === 'beam'
   const wallLm = res.keyFigures.wallLm
   const openingCount = (a: string) => v.openings.filter((o) => o.product === a).length
   return (
@@ -256,6 +257,22 @@ function WallSection({ v, res, brush, tool, pick, onEdit, onToast, onSelect, sel
         }
       />
       <p className="panel-note">Gjelder alle vegger. Velg en vegg i planen for å gi den egen farge.</p>
+
+      <div className="panel-sec eyebrow">Innvendig takdrager</div>
+      <ProductRow
+        on={beamPen || !!v.innerBeams?.length}
+        pen={beamPen}
+        thumb={
+          <svg viewBox="-1 -1 2 2" width="28" height="28" aria-hidden>
+            <path d="M-.8 0 H.8" stroke={INK} strokeWidth=".14" strokeDasharray=".3 .15" />
+            <rect x="-.9" y="-.12" width=".24" height=".24" fill={INK} />
+          </svg>
+        }
+        title="Takdrager tilvalg"
+        meta={`${mm(rules.beam.height)} × ${mm(rules.beam.thickness)} mm, alltid utstillerens. En ende på en annen takdrager henger på krok, ellers stolpe med fotplate. Deles i hele meter (maks ${fmt(rules.beam.max)} m).`}
+        result={res.keyFigures.innerBeamLm ? `${fmt(res.keyFigures.innerBeamLm)} m` : null}
+        action={<IconButton icon={Paintbrush} label="Tegn innvendig takdrager i plan" pressed={beamPen && tool === 'brush'} onClick={() => pick({ kind: 'beam' })} />}
+      />
 
       <div className="panel-sec eyebrow">Bakrom</div>
       <ProductRow

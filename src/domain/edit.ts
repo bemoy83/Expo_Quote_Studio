@@ -285,7 +285,9 @@ export function setStand(v: Variant, stand: Stand): Variant {
     }),
   );
   const objects = v.objects.map((o) => ({ ...o, x: Math.min(o.x, stand.width), y: Math.min(o.y, stand.depth) }));
-  return { ...next, rooms: resized.rooms, floor: { ...v.floor, cells }, objects };
+  // Drawn takdrager that still fit are kept
+  const innerBeams = v.innerBeams?.filter((b) => fits({ id: b.id, from: b.from, to: b.to }));
+  return { ...next, rooms: resized.rooms, floor: { ...v.floor, cells }, objects, ...(innerBeams ? { innerBeams } : {}) };
 }
 
 /** Paint a w × h block of floor cells starting at (i, j). Null erases. */
