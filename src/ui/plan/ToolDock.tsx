@@ -1,11 +1,9 @@
 // Floating tools on the drawing surface, one icon per tool: Velg · Vegg · Gulv · Profilering · Møbel · Tøm at the
 // bottom, undo and redo on their own pill to the left. Over the active tool: its quick picks, and «Alle valg» when the
-// active tool is clicked again. A short stripe under Vegg and Gulv shows the colour they draw with; a mark on Vegg
-// shows when it draws a door, curtain or beam instead of wall.
+// active tool is clicked again. A short stripe under Vegg and Gulv shows the colour they draw with.
 import type { LucideIcon } from 'lucide-react'
-import { Armchair, Blinds, BrickWall, ChevronUp, DoorClosed, Eraser, Grid2x2, Image, MousePointer2, Redo2, Undo2 } from 'lucide-react'
+import { Armchair, BrickWall, ChevronUp, Eraser, Grid2x2, Image, MousePointer2, Redo2, Undo2 } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { BeamIcon } from './QuickPicks'
 import type { DockTool } from '../tools'
 
 interface ToolDef {
@@ -26,14 +24,11 @@ const DOCK_TOOLS: ToolDef[] = [
   { id: 'erase', name: 'Tøm', key: 'E', icon: Eraser },
 ]
 
-export type WallMark = 'door' | 'curtain' | 'beam' | null
-
 export function ToolDock({
   tools,
   active,
   onTool,
   stripes,
-  wallMark,
   canUndo,
   canRedo,
   onUndo,
@@ -47,7 +42,6 @@ export function ToolDock({
   onTool: (t: DockTool) => void
   /** Colour each tool draws with (wall RAL, floor colour). */
   stripes: Partial<Record<DockTool, string | undefined>>
-  wallMark: WallMark
   canUndo: boolean
   canRedo: boolean
   onUndo: () => void
@@ -88,9 +82,6 @@ export function ToolDock({
                   {on && t.options && <ChevronUp size={10} className="dock-more" aria-hidden />}
                   <t.icon size={19} />
                   {stripe && <i className="dock-stripe" style={{ background: stripe }} />}
-                  {t.id === 'wall' && wallMark && (
-                    <span className="dock-mark">{wallMark === 'door' ? <DoorClosed size={10} /> : wallMark === 'curtain' ? <Blinds size={10} /> : <BeamIcon size={10} />}</span>
-                  )}
                 </button>
               )
             })}

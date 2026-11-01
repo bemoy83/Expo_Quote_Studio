@@ -2051,21 +2051,6 @@ select.cin {
 .dock-btn:not([aria-pressed='true']) .dock-stripe {
   box-shadow: 0 0 0 0.5px rgb(var(--ink) / 0.35);
 }
-/* What Vegg draws when it is not wall: door, curtain or beam */
-.dock-mark {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  display: grid;
-  place-items: center;
-  width: 14px;
-  height: 14px;
-  border-radius: 4px;
-}
-.dock-btn[aria-pressed='true'] .dock-mark {
-  background: rgb(var(--canvas));
-  color: rgb(var(--ink));
-}
 /* Toasts sit above the tools on the sketch page */
 .app:has(.dock) .toast {
   bottom: 140px;

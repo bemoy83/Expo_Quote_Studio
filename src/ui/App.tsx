@@ -33,7 +33,7 @@ import { WorkOrderPage } from './workorder/WorkOrderPage'
 import { VariantTabs } from './shell/VariantTabs'
 import { dockToolOf, FLOOR_OTHER, penToolOf, type Brush, type DockTool, type Highlight, type PenTool, type Tool } from './tools'
 import { longestSide, TILE_FULL, type FloorBrushSize, type RollDir, type TileSize } from '../domain/floor'
-import { ToolDock, type WallMark } from './plan/ToolDock'
+import { ToolDock } from './plan/ToolDock'
 import { QuickPicks } from './plan/QuickPicks'
 import { BrushPicker } from './plan/BrushPicker'
 import type { GridStep } from '../domain/snapGrid'
@@ -421,7 +421,6 @@ export default function App() {
                   active={active}
                   onTool={activate}
                   stripes={{ wall: plateColor(wallRal), floor: floorPen?.kind === 'floor' ? idx.byArtnr.get(floorPen.product)?.variant.color : undefined }}
-                  wallMark={wallMarkOf(pens.wall)}
                   canUndo={state.past.length > 0}
                   canRedo={state.future.length > 0}
                   onUndo={() => dispatch({ type: 'undo' })}
@@ -501,12 +500,6 @@ export default function App() {
 }
 
 const DOCK_KEYS: Record<string, DockTool> = { v: 'select', s: 'wall', g: 'floor', t: 'profile', m: 'object', e: 'erase' }
-
-function wallMarkOf(b: Brush | undefined): WallMark {
-  if (b?.kind === 'beam') return 'beam'
-  if (b?.kind !== 'opening') return null
-  return idx.byArtnr.get(b.product)?.product.opening === 'door' ? 'door' : 'curtain'
-}
 
 const HINT_3D = 'Dra for å rotere · rull for å zoome · dra møbler, en innervegg eller grafikk for å flytte · dra et rom i veggen eller taket, toppkanten av en romvegg endrer størrelsen · dra grafikk eller tekstilvegg fra Profilering til en vegg'
 
