@@ -67,7 +67,6 @@ function FillDrawer({ v, fill, onEdit, onClose }: Props & { fill: string }) {
         </p>
         <div className="eyebrow">Kappliste</div>
         <CutList pieces={pieces} roll={roll} />
-        <p className="panel-note">Kunden betaler lagt m². Forslagene er rangert etter intern kost: materiale, teip og arbeid. Satsene er forslag.</p>
       </div>
       <div className="wd-view cp-view">
         <div className="cp-props">
@@ -80,7 +79,10 @@ function FillDrawer({ v, fill, onEdit, onClose }: Props & { fill: string }) {
             </button>
           ))}
         </div>
-        <div className="wd-hint">Velg et forslag for å legge området om · Delete fjerner området · Esc lukker</div>
+        <div className="wd-hint">
+          Kunden betaler lagt m². Forslagene er rangert etter intern kost: materiale, teip og arbeid, og satsene er forslag. Velg et forslag for å legge området om · Delete fjerner
+          området · Esc lukker
+        </div>
       </div>
     </section>
   )
