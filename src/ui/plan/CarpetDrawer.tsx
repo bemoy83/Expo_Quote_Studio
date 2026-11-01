@@ -41,7 +41,8 @@ function FillDrawer({ v, fill, onEdit, onClose }: Props & { fill: string }) {
   const now = currentProposal(v, fill, all)
   const list = offered(all, 4, now)
   const laid = own.reduce((a, t) => a + t.w * t.h * CELL * CELL, 0)
-  const pieces = rollPieces(lanesOf(own, product, roll))
+  // Lanes numbered as in the plan (per colour over the whole stand), so the cut list names the lanes you see
+  const pieces = rollPieces(lanesOf(v.floor.tiles, product, roll).filter((l) => l.tile.fill === fill))
   const lm = pieces.reduce((a, x) => a + x.length, 0)
   return (
     <section className="wall-drawer" aria-label="Engangsteppe, legging">
@@ -64,7 +65,7 @@ function FillDrawer({ v, fill, onEdit, onClose }: Props & { fill: string }) {
           {fmt(laid, 1)} m² lagt · {fmt(lm * roll, 1)} m² fra rull · {wasteText(lm * roll - laid)}
         </p>
         <div className="eyebrow">Kappliste</div>
-        <CutList pieces={pieces} roll={roll} color={colorOf(product)} />
+        <CutList pieces={pieces} roll={roll} />
         <p className="panel-note">Kunden betaler lagt m². Forslagene er rangert etter intern kost: materiale, teip og arbeid. Satsene er forslag.</p>
       </div>
       <div className="wd-view cp-view">
@@ -130,29 +131,36 @@ function LaneDrawer({ v, lane, onSelect, onEdit, onClose }: Props & { lane: { i:
   )
 }
 
-/** The pieces as cut: 2 × 2,00 × 3,20 m, and how a piece is split. */
-function CutList({ pieces, roll, color }: { pieces: RollPiece[]; roll: number; color: string | undefined }) {
-  const rows = new Map<string, { piece: RollPiece; qty: number }>()
-  for (const x of pieces) {
-    const k = `${x.length.toFixed(2)}|${x.lanes.map((l) => l.width).join()}|${x.endToEnd}`
-    rows.set(k, { piece: x, qty: (rows.get(k)?.qty ?? 0) + 1 })
-  }
+/** The pieces cut from the roll, one by one: how long, and which lanes in the plan they become and how. */
+function CutList({ pieces, roll }: { pieces: RollPiece[]; roll: number }) {
+  const m = (n: number) => `${fmt(n, 2)} m`
+  const names = (ns: number[]) => (ns.length === 1 ? `bane ${ns[0]}` : `bane ${ns.slice(0, -1).join(', ')} og ${ns[ns.length - 1]}`)
   return (
-    <div className="cut-list">
-      {[...rows.values()].map(({ piece: x, qty }, n) => {
-        const narrow = x.lanes.length === 1 && x.lanes[0].width < roll - 1e-9
+    <ol className="cut-list">
+      {pieces.map((x, k) => {
+        const ls = x.lanes
+        const lanes = names(ls.map((l) => l.n))
+        const what = x.endToEnd
+          ? `Deles på langs i to halve à ${m(roll / 2)}, som legges etter hverandre som ${lanes}: ${m(ls[0].length)} + ${m(ls[1].length)}.`
+          : x.split
+            ? `Deles på langs i to à ${m(roll / 2)}: ${ls.map((l) => `bane ${l.n} ${m(l.length)}`).join(' og ')}${ls.some((l) => l.width < roll / 2 - 1e-9) ? ', kappet til bredden' : ''}.`
+            : ls[0].width < roll - 1e-9
+              ? `Blir ${lanes}, ${m(ls[0].length)} lang. Kappes til ${m(ls[0].width)} bredde, ${m(roll - ls[0].width)} av bredden er svinn.`
+              : `Blir ${lanes}, ${m(ls[0].length)} lang i full bredde.`
         return (
-          <div key={n} className="cut-list-row">
-            <i className="cut-dot" style={{ background: color }} />
-            <span className="num">
-              {qty} × {fmt(roll, 2)} × {fmt(x.length, 2)} m
+          <li key={k} className="cut-list-row">
+            <span className="cut-list-n num">{k + 1}</span>
+            <span className="cut-list-body">
+              <span className="cut-list-size num">
+                Kapp {m(x.length)} av rullen
+              </span>
+              <span className="cut-list-note">{what}</span>
             </span>
-            {x.split && <span className="cut-list-note">deles på langs i 2 × {fmt(roll / 2, 2)} m{x.endToEnd ? ', legges etter hverandre' : ''}</span>}
-            {narrow && <span className="cut-list-note">kappes til {fmt(x.lanes[0].width, 2)} m bredde, resten er svinn</span>}
-          </div>
+          </li>
         )
       })}
-    </div>
+      <li className="cut-list-foot">Hvert stykke kappes 10 cm lengre i hver ende og tilpasses ved legging.</li>
+    </ol>
   )
 }
 
