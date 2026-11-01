@@ -12,6 +12,7 @@ import { idx, rules } from '../env'
 import { fmt, kr } from '../format'
 import type { PlanSelection } from './PlanView'
 import { Dim } from './drawerParts'
+import { CUT_FOOT, cutRows } from '../cutList'
 
 interface Props {
   v: Variant
@@ -133,33 +134,18 @@ function LaneDrawer({ v, lane, onSelect, onEdit, onClose }: Props & { lane: { i:
 
 /** The pieces cut from the roll, one by one: how long, and which lanes in the plan they become and how. */
 function CutList({ pieces, roll }: { pieces: RollPiece[]; roll: number }) {
-  const m = (n: number) => `${fmt(n, 2)} m`
-  const names = (ns: number[]) => (ns.length === 1 ? `bane ${ns[0]}` : `bane ${ns.slice(0, -1).join(', ')} og ${ns[ns.length - 1]}`)
   return (
     <ol className="cut-list">
-      {pieces.map((x, k) => {
-        const ls = x.lanes
-        const lanes = names(ls.map((l) => l.n))
-        const what = x.endToEnd
-          ? `Deles på langs i to halve à ${m(roll / 2)}, som legges etter hverandre som ${lanes}: ${m(ls[0].length)} + ${m(ls[1].length)}.`
-          : x.split
-            ? `Deles på langs i to à ${m(roll / 2)}: ${ls.map((l) => `bane ${l.n} ${m(l.length)}`).join(' og ')}${ls.some((l) => l.width < roll / 2 - 1e-9) ? ', kappet til bredden' : ''}.`
-            : ls[0].width < roll - 1e-9
-              ? `Blir ${lanes}, ${m(ls[0].length)} lang. Kappes til ${m(ls[0].width)} bredde, ${m(roll - ls[0].width)} av bredden er svinn.`
-              : `Blir ${lanes}, ${m(ls[0].length)} lang i full bredde.`
-        return (
-          <li key={k} className="cut-list-row">
-            <span className="cut-list-n num">{k + 1}</span>
-            <span className="cut-list-body">
-              <span className="cut-list-size num">
-                Kapp {m(x.length)} av rullen
-              </span>
-              <span className="cut-list-note">{what}</span>
-            </span>
-          </li>
-        )
-      })}
-      <li className="cut-list-foot">Hvert stykke kappes 10 cm lengre i hver ende og tilpasses ved legging.</li>
+      {cutRows(pieces, roll).map((r, k) => (
+        <li key={k} className="cut-list-row">
+          <span className="cut-list-n num">{k + 1}</span>
+          <span className="cut-list-body">
+            <span className="cut-list-size num">{r.cut}</span>
+            <span className="cut-list-note">{r.what}</span>
+          </span>
+        </li>
+      ))}
+      <li className="cut-list-foot">{CUT_FOOT}</li>
     </ol>
   )
 }

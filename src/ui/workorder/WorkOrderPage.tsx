@@ -12,7 +12,9 @@ import type { Project, Variant } from '../../domain/types'
 import { customerName, projectField } from '../../domain/variant'
 import { addTime, type HandlingStep, type Time } from '../../pricing/model'
 import { Button } from '../controls'
-import { rules } from '../env'
+import { idx, rules } from '../env'
+import { CUT_FOOT, cutRows } from '../cutList'
+import { lanesOf, rollPieces } from '../../domain/floor'
 import { fmt, hours } from '../format'
 import { TYPE_NAME } from '../names'
 import { pickRows } from '../picking/rows'
@@ -60,6 +62,15 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf }: 
   const total = timeRows.reduce<Time>((a, r) => addTime(a, r.time), {})
   const steps = A_TO_B.filter((st) => timeRows.some((r) => r.time[st]))
   const tree = allPicks.filter((x) => shown.has(x.group.id))
+  // Engangsteppe: the cut list in words for the carpet layer, per colour, lanes numbered as in the plan
+  const carpets = shown.has('gulv')
+    ? [...new Set(v.floor.tiles.filter((t) => t.roll).map((t) => t.product))].flatMap((a) => {
+        const roll = idx.byArtnr.get(a)?.product.roll
+        if (!roll) return []
+        const r = idx.byArtnr.get(a)!
+        return [{ artnr: a, name: `${r.product.name} ${r.variant.name.toLowerCase()}`, rows: cutRows(rollPieces(lanesOf(v.floor.tiles, a, roll)), roll) }]
+      })
+    : []
   const prints = shown.has('prof') ? textileRows(production(v, rules.textile.inFrame, customer)) : []
   const groupName = (id: string) => PRODUCT_GROUPS.find((g) => g.id === id)?.name ?? id
   const missingDates = !DELIVERY_FIELDS.some((d) => project.delivery?.[d.key])
@@ -176,6 +187,31 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf }: 
               </div>
             ))}
           </section>
+
+          {carpets.length > 0 && (
+            <section className="wo-sec">
+              <div className="eyebrow">Kappliste engangsteppe</div>
+              {carpets.map((c) => (
+                <div key={c.artnr} className="qgroup">
+                  <div className="wo-cut qgroup-head">
+                    <span />
+                    <span>
+                      {c.name} <span className="faint num">· {c.artnr}</span>
+                    </span>
+                  </div>
+                  {c.rows.map((r, k) => (
+                    <div key={k} className="wo-cut qline">
+                      <span className="wo-box" aria-hidden />
+                      <span>
+                        <strong>{k + 1}. {r.cut}.</strong> <span className="muted">{r.what}</span>
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ))}
+              <p className="foot">{CUT_FOOT} Banenumrene står i skissen.</p>
+            </section>
+          )}
 
           {prints.length > 0 && (
             <section className="wo-sec">
