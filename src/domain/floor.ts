@@ -364,14 +364,19 @@ function rollAction(tiles: readonly FloorTile[], s: { nx: number; ny: number }, 
   return { kind: 'place', rect: laneRect(dir, { start: a0, len: a1 - a0 + 1 }, c) };
 }
 
+/** The lanes a roll brush touch lays, for the preview: exactly what `applyFloor` adds. */
+export function lanesLaid(a: FloorAction, product: string, roll: RollDir): FloorTile[] {
+  if (a.kind === 'recolor') return [{ ...a.rect, product, roll }];
+  if (a.kind !== 'place') return [];
+  return a.band ? layLanes(cellsIn(a.rect), product, roll, a.band) : [{ ...a.rect, product, roll }];
+}
+
 /** Apply a brush touch. `roll`: the lane's direction when the brush lays rolled floor. */
 export function applyFloor(v: Variant, a: FloorAction, product: string, roll?: RollDir): Variant {
   if (a.kind === 'none') return v;
-  const laid = (r: Rect, band?: Span): FloorTile[] =>
-    !roll ? [{ ...r, product }] : band ? layLanes(cellsIn(r), product, roll, band) : [{ ...r, product, roll }];
   const tiles =
     a.kind === 'recolor'
       ? v.floor.tiles.map((t) => (sameRect(t, a.rect) ? { ...t, product } : t))
-      : [...cutTiles(v.floor.tiles, a.rect), ...(a.kind === 'place' ? laid(a.rect, a.band) : [])];
+      : [...cutTiles(v.floor.tiles, a.rect), ...(a.kind !== 'place' ? [] : roll ? lanesLaid(a, product, roll) : [{ ...a.rect, product }])];
   return { ...v, floor: { ...v.floor, tiles } };
 }
