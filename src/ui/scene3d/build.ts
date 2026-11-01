@@ -14,7 +14,7 @@ import { insetOutline, outlineSides } from '../../domain/outline'
 import type { Point, Variant } from '../../domain/types'
 import { builtModules, wallPoints, type BuiltModule } from '../../domain/walls'
 import type { Motif } from '../../persistence/file'
-import { wallHeight } from '../../rules/rules'
+import { doorInset, wallHeight } from '../../rules/rules'
 import { idx, place, plateColor, productOf, rules } from '../env'
 import { findMotif } from '../motifs'
 import type { Highlight } from '../tools'
@@ -49,8 +49,6 @@ const NO_COLOR = '#999'
 /** Aluminium profiles: posts, rails, beams and textile frames. */
 const ALU_FINISH = { metalness: 0.4, roughness: 0.5 }
 
-/** Clear height of a door or curtain opening; the header panel fills the rest. Drawing only. */
-const OPENING_H = 2.1
 
 export interface BuildOptions {
   selection?: { wallId?: string; objectId?: string; textileId?: string; foilId?: string; roomId?: string; freeTextileId?: string }
@@ -204,7 +202,7 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
       along(m.a, m.b, len - 0.004, H - prof.top - feet - prof.bottom, 0.012, feet + prof.bottom, plate, wallTag)
       continue
     }
-    along(m.a, m.b, len - 0.004, H - prof.top - OPENING_H, 0.012, OPENING_H, plate, wallTag)
+    along(m.a, m.b, len - 0.004, H - prof.top - rules.door.height, 0.012, rules.door.height, plate, wallTag)
     opening(m, tag)
   }
 
@@ -215,28 +213,28 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
     const door = productOf(o.product)?.opening === 'door'
     if (!door) {
       // Curtain: a folded sheet in the opening
-      const geo = new THREE.PlaneGeometry(rules.wall.cc - post - 0.02, OPENING_H - 0.03, 24, 1)
+      const geo = new THREE.PlaneGeometry(rules.wall.cc - post - 0.02, rules.door.height - 0.03, 24, 1)
       const pos = geo.attributes.position
       for (let k = 0; k < pos.count; k++) pos.setZ(k, Math.sin((pos.getX(k) + 0.5) * Math.PI * 12) * 0.025)
       geo.computeVertexNormals()
       const mesh = new THREE.Mesh(geo, mat('openings', CURTAIN, { side: THREE.DoubleSide, roughness: 1 }))
       const dx = m.b[0] - m.a[0]
       const dz = m.b[1] - m.a[1]
-      mesh.position.copy(at([(m.a[0] + m.b[0]) / 2, (m.a[1] + m.b[1]) / 2], (OPENING_H - 0.03) / 2 + 0.02))
+      mesh.position.copy(at([(m.a[0] + m.b[0]) / 2, (m.a[1] + m.b[1]) / 2], (rules.door.height - 0.03) / 2 + 0.02))
       mesh.rotation.y = Math.atan2(-dz, dx)
       add(mesh, tag)
       return
     }
     // Door: closed leaf with a handle, and the swing on the floor
-    const leaf = rules.wall.cc - post - 0.02
-    along(m.a, m.b, leaf, OPENING_H - 0.01, 0.04, 0, mat('openings', DOOR), tag)
+    along(m.a, m.b, rules.door.swing, rules.door.height - 0.01, 0.04, 0, mat('openings', DOOR), tag)
     const [dx, dy] = wallDirection(w)
     const s = doorSwing(v.stand, w, o)
     const n: Point = [-dy * s, dx * s]
-    const a = pointAlong(w, o.module)
-    const b = pointAlong(w, o.module + 1)
-    // Handle near the free edge (the hinge is at a, as in the plan)
-    const hp: Point = [b[0] - dx * 0.12 + n[0] * 0.04, b[1] - dy * 0.12 + n[1] * 0.04]
+    // Leaf centred in the opening: hinge just in from a, handle near the free edge (as in the plan)
+    const k = doorInset(rules)
+    const a = pointAlong(w, o.module + k)
+    const b = pointAlong(w, o.module + 1 - k)
+    const hp: Point = [b[0] - dx * 0.08 + n[0] * 0.04, b[1] - dy * 0.08 + n[1] * 0.04]
     const handle = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.02, 0.02), mat('openings', HANDLE))
     handle.position.copy(at(hp, 1.05))
     handle.rotation.y = Math.atan2(-dy, dx)

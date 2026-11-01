@@ -29,8 +29,8 @@ import { wallLength, wallModules } from '../../domain/grid'
 import type { Foil, TextileWall, Variant, Wall } from '../../domain/types'
 import { builtModules, isStandWall } from '../../domain/walls'
 import type { Motif } from '../../persistence/file'
-import { wallHeight } from '../../rules/rules'
-import { ALU, ALU_POST, BORDER_STRONG, FABRIC, FEET, INK, INK_FAINT, LAYER_COLOR, SUNKEN } from '../colors'
+import { doorInset, wallHeight } from '../../rules/rules'
+import { ALU, ALU_POST, BORDER_STRONG, FABRIC, FEET, INK, INK_FAINT, LAYER_COLOR, SUNKEN, SURFACE } from '../colors'
 import { Button, IconButton, Segmented } from '../controls'
 import { plateColor, productOf, rules, wallPlates } from '../env'
 import { count, fmt, mm } from '../format'
@@ -291,10 +291,23 @@ export function WallDrawer(p: Props) {
             const x = spanX(i, i + 1)
             if (m?.opening) {
               const door = productOf(m.opening.product)?.opening === 'door'
+              const { swing, height: dh } = rules.door
+              const k = doorInset(rules)
               return (
                 <g key={i}>
-                  <rect x={x + 0.02} y={z(H)} width={0.96} height={H} fill="none" stroke={BORDER_STRONG} strokeWidth={0.012} strokeDasharray=".05 .04" />
-                  <text x={x + 0.5} y={z(1.05)} textAnchor="middle" style={TXT}>
+                  {/* Header panel over the opening, as in 3D */}
+                  <rect x={x + rules.wall.post / 2} y={z(H)} width={1 - rules.wall.post} height={H - dh} fill={plateColor(m.plate ?? w.plate ?? v.defaultPlate)} />
+                  <rect x={x} y={z(H)} width={1} height={rules.wall.profile.top} fill={ALU} />
+                  {door ? (
+                    <>
+                      {/* Leaf centred in the opening, handle at the free edge (hinge at the module start, as in the plan) */}
+                      <rect x={spanX(i + k, i + 1 - k)} y={z(dh)} width={swing} height={dh} fill={SURFACE} stroke={BORDER_STRONG} strokeWidth={0.012} />
+                      <rect x={u(i + 1 - k - 0.08) - 0.05} y={z(1.06)} width={0.1} height={0.02} rx={0.01} fill={INK_FAINT} />
+                    </>
+                  ) : (
+                    <rect x={x + 0.04} y={z(dh)} width={0.92} height={dh} fill="none" stroke={BORDER_STRONG} strokeWidth={0.012} strokeDasharray=".05 .04" />
+                  )}
+                  <text x={x + 0.5} y={z(1.4)} textAnchor="middle" style={TXT}>
                     {door ? 'dør' : 'forheng'}
                   </text>
                 </g>

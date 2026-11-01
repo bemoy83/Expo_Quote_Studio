@@ -21,6 +21,7 @@ import { roomAt, roomName, roomSideAt, roomSize, sideIsHorizontal } from '../../
 import { insetOutline, isHorizontal, labelRect, outlineSides } from '../../domain/outline'
 import { fmt } from '../format'
 import { idx, place, plateColor, productOf, rules } from '../env'
+import { doorInset } from '../../rules/rules'
 import { findMotif } from '../motifs'
 import type { Brush, FloorSize, Highlight, Tool } from '../tools'
 import { distToSegment, nearestEdge, strokeFrom } from './geometry'
@@ -846,6 +847,9 @@ function OpeningMark({ v, m, selected }: { v: Variant; m: BuiltModule; selected:
   const b = pointAlong(w, o.module + 1)
   const door = productOf(o.product)?.opening === 'door'
   const r = rules.door.swing
+  // Hinge: the leaf is centred in the opening, not hung on the post centre
+  const k = doorInset(rules)
+  const h: Point = [a[0] + dx * k, a[1] + dy * k]
   return (
     <g>
       {selected && <Seg a={a} b={b} stroke={INK} strokeOpacity={0.3} strokeWidth={PLAN_WALL + 0.08} />}
@@ -853,9 +857,9 @@ function OpeningMark({ v, m, selected }: { v: Variant; m: BuiltModule; selected:
       <Seg a={a} b={b} stroke={WALL} strokeOpacity={0.45} strokeWidth={0.05} />
       {door ? (
         <g fill="none" stroke={INK} strokeWidth={0.025}>
-          <line x1={a[0]} y1={a[1]} x2={a[0] + n[0] * r} y2={a[1] + n[1] * r} />
+          <line x1={h[0]} y1={h[1]} x2={h[0] + n[0] * r} y2={h[1] + n[1] * r} />
           <path
-            d={`M${a[0] + dx * r} ${a[1] + dy * r} A${r} ${r} 0 0 ${s === 1 ? 1 : 0} ${a[0] + n[0] * r} ${a[1] + n[1] * r}`}
+            d={`M${h[0] + dx * r} ${h[1] + dy * r} A${r} ${r} 0 0 ${s === 1 ? 1 : 0} ${h[0] + n[0] * r} ${h[1] + n[1] * r}`}
             strokeDasharray=".05 .05"
           />
         </g>
