@@ -4,10 +4,12 @@
 //   - Where two drawn beams cross, the longer span runs through and the shorter is split there, each side hooked on.
 //     A drawn beam crossing a standard beam is split and hooked the same way; the standard beam is never split.
 //   - Where a wall meets or crosses it (a wall post under it) it is split there and shares the wall's post.
+//   - Where a wall (inner wall, room side, door, stand wall) runs along it, the wall wins: that piece is not built and
+//     the beam stops on the wall's posts. The drawn beam stays in the sketch and comes back when the wall moves away.
 //   - Posts at free ends and at the 6 m joints. A beam post has no wall to hold it: it stands on a foot plate across the
 //     beam, unless a beam drawn the other way meets it there (a drawn cross beam replaces the plate). Posts in a wall
 //     or under a standard beam are not this beam's.
-import { pointKey } from '../domain/grid';
+import { makeModule, pointKey } from '../domain/grid';
 import type { InnerBeam, Point } from '../domain/types';
 import { splitLength, type BeamLayout, type BeamSegment } from './beams';
 import type { WallSupport } from './wallSupports';
@@ -45,17 +47,33 @@ const inside = (l: Line, p: Point) => {
 /** Of two drawn beams crossing, the one that runs through: the longer, or the first drawn when equal. */
 const runsThrough = (a: Line, ai: number, b: Line, bi: number) => len(a) > len(b) + EPS || (Math.abs(len(a) - len(b)) < EPS && ai < bi);
 
+/** The pieces of a drawn beam not covered by a wall running along it (whole metres from its start). */
+function uncovered(l: Line, moduleKeys: ReadonlySet<string>): Line[] {
+  const out: Line[] = [];
+  let a = l.lo;
+  for (let t = l.lo; t < l.hi - EPS; t++) {
+    const b = Math.min(t + 1, l.hi);
+    if (!moduleKeys.has(makeModule(pointOn(l, t), pointOn(l, b)).key)) continue;
+    if (t > a + EPS) out.push({ ...l, lo: a, hi: t });
+    a = b;
+  }
+  if (l.hi > a + EPS) out.push({ ...l, lo: a, hi: l.hi });
+  return out;
+}
+
 /**
- * Lay out the drawn beams. `standard`: the standard beams (empty when turned off); `wallPoints`: every wall post.
+ * Lay out the drawn beams. `standard`: the standard beams (empty when turned off); `moduleKeys`: every built wall
+ * module (openings included); `wallPoints`: every wall post.
  * `posts` holds every point a drawn beam rests on a post, the wall's or the standard beam's included, as in layoutBeams.
  */
 export function layoutInnerBeams(
   beams: readonly InnerBeam[],
   standard: BeamLayout,
+  moduleKeys: ReadonlySet<string>,
   wallPoints: ReadonlyMap<string, Point>,
   maxLength: number,
 ): InnerBeamLayout {
-  const lines = beams.map((b) => lineOf(b.from, b.to)).filter((l) => len(l) > EPS);
+  const lines = beams.flatMap((b) => uncovered(lineOf(b.from, b.to), moduleKeys)).filter((l) => len(l) > EPS);
   const outer = standard.segments.map((s) => lineOf(s.from, s.to));
   const sharedPost = (p: Point) => wallPoints.has(pointKey(p)) || standard.posts.has(pointKey(p));
 
