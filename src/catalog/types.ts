@@ -57,6 +57,8 @@ export interface SystemParts {
   wall: string;
   /** Plate swap per metre in a stand wall the organiser pays, one variant per RAL. */
   plateSwap: string;
+  /** Støtteplate per piece under a post of a system wall that stands free. */
+  wallSupport: string;
   /** Takdrager per metre, posts included. */
   beam: string;
   /** InFrame textile frame on a system wall (rental), price per m² of B × H, sold per piece. */

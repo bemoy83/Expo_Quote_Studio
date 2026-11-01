@@ -15,6 +15,7 @@ import { addTime, dgOf, priceLine, type Strategy, type Time, type Transfer, type
 import type { Rules } from '../rules/rules';
 import { variantBeams, type BeamLayout } from './beams';
 import { production, type Production } from './production';
+import { wallSupports, type WallSupport } from './wallSupports';
 
 export interface CalcLine {
   name: string;
@@ -82,6 +83,8 @@ export interface KeyFigures {
   posts: number;
   /** Posts that exist only because of the beams. */
   beamPosts: number;
+  /** Støtteplater under the posts of system walls that stand free. */
+  wallSupports: number;
   /** Wall modules including those with a door or curtain (each gets top and bottom rail, in its header if an opening). */
   modules: number;
   /** m² per floor art.nr. */
@@ -113,6 +116,8 @@ export interface CalcResult {
   keyFigures: KeyFigures;
   beams: BeamLayout;
   posts: Point[];
+  /** Støtteplater under free-standing system walls: always the exhibitor's, also under the organiser's stand walls. */
+  wallSupports: WallSupport[];
   production: Production;
   /** What is built, in Foga terms: the quote counts from it and the picking list lists its parts. */
   foga: FogaStructure;
@@ -206,9 +211,13 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
   const organiserBeams = theirs.length > 0 && beams.segments.length > 0;
   const ourBeams: BeamLayout = organiserBeams ? { segments: [], posts: new Map(), lm: 0 } : beams;
   const walled = mods.filter((m) => !m.opening);
+  // A wall stands free without the takdrager frame: foot plates on its posts. With beams the stand walls are in the
+  // frame. The plates are the customer's choice (no beams), so the exhibitor's even under the organiser's walls.
+  const framed = beams.segments.length > 0;
+  const wallFeet = wallSupports(mods, beams, RECIPES.wall.support.rule, (m) => framed && kindOf(m) === 'stand');
   const prod = production(v, rules.textile.inFrame, '');
   // Foga structure of what the exhibitor orders: posts, walled modules, headers and beam lengths are counted from it
-  const foga = structureOf({ mods: ours, posts: ourPoints.size + (organiserBeams ? 0 : beamPosts), beams: ourBeams, production: prod, swaps });
+  const foga = structureOf({ mods: ours, posts: ourPoints.size + (organiserBeams ? 0 : beamPosts), beams: ourBeams, production: prod, swaps, wallFeet: wallFeet.length });
   const headers = foga.modules.filter((m) => m.opening).length;
   const beamLengths = beamSpecs(beams);
   const beamLm = beamLengths.reduce((a, b) => a + b.lengthMm, 0) / 1000;
@@ -245,6 +254,14 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
     const byRal = countBy(ourWalled.filter((m) => (kindOf(m) === 'stand') === stand).map((m) => m.plate));
     add(...[...byRal].map(([ral, n]) => wallLine(ral, n, stand ? 'Standvegg' : 'Innervegg')));
   }
+  // Støtteplater, per piece: the plate and putting it on
+  const foot = RECIPES.wall.support.foot;
+  add(
+    line(sys.wallSupport, wallFeet.length, { ...built, meta: `${fogaPart(foot.code).name} · frittstående vegg` }, [
+      { id: ITEM.foot(foot.code), qty: wallFeet.length },
+      { id: ITEM.wallFootMount, qty: wallFeet.length },
+    ]),
+  );
   // Plate swap: the plate in the exhibitor's colour, swapped into the organiser's wall
   add(
     ...[...countBy(swaps)].map(([ral, n]) =>
@@ -411,6 +428,7 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
       beamLengths: nLengths,
       posts: allPosts.size,
       beamPosts,
+      wallSupports: wallFeet.length,
       modules: mods.length,
       floor,
       floorTotal,
@@ -420,6 +438,7 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
     },
     beams,
     posts: [...allPosts.values()],
+    wallSupports: wallFeet,
     production: prod,
     foga,
     bom: bom(foga, RECIPES, sizes),

@@ -68,6 +68,9 @@ const products: Product[] = [
     pricing: 'sum',
     variants: PLATES.map(([ral, name, color]) => ({ artnr: `6125-${ral}`, name, ral, color, price: 400, placeholder: true })),
   },
+  // Foot plate under a post of a system wall that stands free (no takdrager): always the exhibitor's (Bjørn 1.11.2026).
+  // Art.nr 6115 is a placeholder.
+  one('6115', 'Støtteplate systemvegg', 'system', 'stk', 'vegg.vegger', 120, { dim: '500 × 80 mm under stolpe, montert', pricing: 'sum' }),
   one('6110', 'Takdrager 80 × 20 mm', 'system', 'lm', 'vegg.takdrager', 420, { dim: 'stolper inkludert', pricing: 'sum' }),
   one('6130', 'Dør med overstykke', 'object', 'stk', 'vegg.dorer', 2620, { opening: 'door', pricing: 'sum' }),
   one('6131', 'Forheng med overstykke', 'object', 'stk', 'vegg.dorer', 870, { dim: 'i åpning 960 mm', opening: 'curtain', pricing: 'sum' }),
@@ -215,6 +218,7 @@ export const DEFAULT_CATALOG: Catalog = {
   system: {
     wall: '6120',
     plateSwap: '6125',
+    wallSupport: '6115',
     beam: '6110',
     textile: '8000',
     freeTextile: '8010',

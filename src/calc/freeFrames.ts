@@ -11,7 +11,7 @@
 import { cornerEnds, runDirection, runLength, runNormal, type FaceKey } from '../domain/freeTextile';
 import type { FreeTextile, Point, TextileFill, Variant } from '../domain/types';
 import { fogaPart } from '../foga/parts';
-import type { FootPlate, FreeFrameRecipe } from '../foga/recipes';
+import type { FootPlate, FreeFrameRecipe, SupportRule } from '../foga/recipes';
 import type { InFrameParams } from '../rules/rules';
 import { fullHeight, printFileName } from './fabric';
 
@@ -75,38 +75,47 @@ export interface FreeFrame {
 
 const mm = (m: number) => Math.round(m * 1000);
 
+type Ends = { from: boolean; to: boolean };
+
 /**
  * Where the feet (each with a brace) stand along a run of `len` mm, measured from its `from` end. A corner post at an
  * end is a support there already. The fewest feet that keep at least `min` supports in all from `minFrom` and up (else
  * one), the outer foot at most `maxEnd` in from a free end and no two supports more than `maxGap` apart, evenly spread:
  * a free end gets half a gap, held at `maxEnd` when that is less.
  */
-export function supportPoints(len: number, s: FreeFrameRecipe['support'], corners: { from: boolean; to: boolean } = { from: false, to: false }): number[] {
+export function supportPoints(len: number, s: SupportRule, corners: Ends = { from: false, to: false }): number[] {
+  return spreadSupports(len, minSupports(len, s, corners), s.maxEnd, corners);
+}
+
+/** The fewest feet {@link supportPoints} needs on a run of `len` mm, supported ends not counted. */
+export function minSupports(len: number, s: SupportRule, corners: Ends): number {
   const nCorners = (corners.from ? 1 : 0) + (corners.to ? 1 : 0);
   const total = len >= s.minFrom ? s.min : 1;
   const ceil = (x: number) => Math.max(0, Math.ceil(x - 1e-9));
-  if (nCorners === 2) {
-    const n = Math.max(total - 2, ceil(len / s.maxGap) - 1);
-    return Array.from({ length: n }, (_, i) => Math.round(((i + 1) * len) / (n + 1)));
-  }
-  if (nCorners === 1) {
-    const n = Math.max(total - 1, ceil((len - s.maxEnd) / s.maxGap));
-    if (!n) return [];
+  if (nCorners === 2) return Math.max(total - 2, ceil(len / s.maxGap) - 1);
+  if (nCorners === 1) return Math.max(total - 1, ceil((len - s.maxEnd) / s.maxGap));
+  return Math.max(total, ceil((len - 2 * s.maxEnd) / s.maxGap) + 1);
+}
+
+/** `n` feet evenly spread along a run of `len` mm: a free end gets half a gap, held at `maxEnd` when that is less. */
+export function spreadSupports(len: number, n: number, maxEnd: number, corners: Ends): number[] {
+  if (n <= 0) return [];
+  if (corners.from && corners.to) return Array.from({ length: n }, (_, i) => Math.round(((i + 1) * len) / (n + 1)));
+  if (corners.from || corners.to) {
     let gap = len / (n + 0.5);
     let end = gap / 2;
-    if (end > s.maxEnd) {
-      end = s.maxEnd;
+    if (end > maxEnd) {
+      end = maxEnd;
       gap = (len - end) / n;
     }
     // Counted from the corner, then turned to the run's own direction
     const fromCorner = Array.from({ length: n }, (_, i) => (i + 1) * gap);
     return fromCorner.map((x) => Math.round(corners.from ? x : len - x)).sort((a, b) => a - b);
   }
-  const n = Math.max(total, ceil((len - 2 * s.maxEnd) / s.maxGap) + 1);
   let gap = len / n;
   let end = gap / 2;
-  if (end > s.maxEnd) {
-    end = s.maxEnd;
+  if (end > maxEnd) {
+    end = maxEnd;
     gap = n > 1 ? (len - 2 * end) / (n - 1) : 0;
   }
   return Array.from({ length: n }, (_, i) => Math.round(end + i * gap));

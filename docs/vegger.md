@@ -70,6 +70,12 @@ Låst av Bjørn 31.10.2026. Samme regel for fakturamottaker gjelder takdragere s
 
 I koden: `organiserBeams` i `calc/calc.ts` og nøkkeltallet `organiserBeamLm`.
 
+### Støtteplater når takdragerne er valgt bort
+
+Bjørn 1.11.2026. Velger kunden bort takdragerne, står veggene fritt og får støtteplater (se
+[foga-system.md](foga-system.md)). Platene er kundens valg og faktureres alltid utstilleren, også under standvegger
+arrangøren betaler, og de plukkes og monteres hos utstilleren. Det samme vil gjelde støttevaier når den kommer.
+
 ### Hva utstilleren får, og hva arrangøren får
 
 Hver kalkylelinje har en fakturamottaker (`CalcLine.payer`). Standveggene arrangøren betaler er ikke med i noe av det

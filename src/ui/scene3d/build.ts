@@ -1,6 +1,7 @@
 // 3D scene derived from the stand model. No state of its own: build() turns a variant (and its calc) into a
 // three.js group, and the view rebuilds it whenever the model changes.
 // Model → world: x → x, y (toward the aisle) → z, height → y. The stand is centred on the origin.
+import { RECIPES } from '../../foga/recipes'
 import * as THREE from 'three'
 import type { CalcResult } from '../../calc/calc'
 import { alongRun } from '../../calc/freeFrames'
@@ -35,6 +36,8 @@ const DOOR = '#d9d6cd'
 const CURTAIN = '#3a3c41'
 const FABRIC = '#cfc7e6'
 const STAND_FLOOR = '#e3e0d8'
+/** Grey foot plates (750), darker than the floor so they show. */
+const FOOT_PLATE = '#3d4045'
 const SELECT = '#6aaecb'
 const CONFLICT = '#d24b3f'
 const GROUND = '#ebe9e3'
@@ -263,6 +266,14 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(post, H, post), mat(onWall ? 'walls' : 'beams', ALU, ALU_FINISH))
     mesh.position.copy(at(p, H / 2))
     add(mesh, { layer: onWall ? 'walls' : 'beams' })
+  }
+
+  // Støtteplater under walls that stand free, across the wall, on the floor
+  const foot = RECIPES.wall.support.foot
+  for (const { at: [x, y], orientation } of res.wallSupports) {
+    const half = foot.across / 2000
+    const [a, b]: [Point, Point] = orientation === 'h' ? [[x, y - half], [x, y + half]] : [[x - half, y], [x + half, y]]
+    along(a, b, 2 * half, 0.012, foot.along / 1000, 0, mat('walls', FOOT_PLATE, ALU_FINISH), { layer: 'walls' })
   }
 
   // Beams (takdrager), top flush with the walls

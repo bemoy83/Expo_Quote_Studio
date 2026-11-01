@@ -106,6 +106,9 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
     s.posts,
   );
 
+  // Støtteplater under the posts of walls that stand free, loose: screwed on where the wall is put up
+  part(BOM_GROUP.posts, r.wall.support.foot.code, s.wallFeet ?? 0);
+
   // Skinner: top and bottom rail between the posts with a 600 in each end, for every module. An opening (door or
   // curtain) gets the same rails in its header (overstykke) with a lower plate; the header is listed with the doors.
   const walled = s.modules.filter((m) => !m.opening);

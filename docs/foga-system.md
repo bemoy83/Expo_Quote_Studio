@@ -127,6 +127,29 @@ Systemhøyde fra gulv: 2490 + 50 = 2540 mm.
 - **2 × 600 i hver ende.** 292 står 80 høy og 20 tykk, med 9 mm kanal i over- og underkant og fire kamre
   inni. De to 600-koblingene sitter i ytterkamrene, én oppe og én nede, og låser i kanalen på stolpe 94.
 - Alle stolper, også frittstående som bare bærer takdrager, er **94** på 2490 mm med samme fot.
+- Kunden kan velge bort takdragerne for en mer åpen stand (`Variant.noBeams`). Da står veggene fritt og får
+  støtteplater, se under.
+
+### Støtteplater på frittstående systemvegg
+
+Bjørn 1.11.2026. Takdragerrammen holder veggene. En systemvegg uten den står fritt og får støtteplater under stolpene,
+etter samme regel som frittstående tekstilvegg. Det gjelder alle vegger når takdragerne er valgt bort, og innervegger og
+romvegger som takdragerne ikke holder, også når takdragerne er på (`calc/wallSupports.ts`).
+
+- Fotplate **750** (876 750 93, 500 × 80 × 5 mm, grå) under en stolpe, midt under veggen og på tvers av den. Den stikker
+  250 mm ut på hver side, også inn til naboen og ut i gangen.
+- Regelen per rett veggstrekning: minst 2 støtter fra 1 m og oppover, den ytterste maks 1000 mm inn fra en fri ende,
+  maks 3000 mm mellom to støtter, jevnt fordelt og flyttet til nærmeste stolpe (cc 1000).
+- **Støtte** er et hjørne, en T eller et kryss med en annen systemvegg (standvegg, innervegg eller romvegg, så et rom
+  holder veggene det står inntil), og en stolpe under en takdrager.
+- Med takdrager er standveggene i takdragerrammen og får ingen plater. Uten takdrager gjelder 3 m-regelen også mellom
+  to hjørner: en bakvegg på 6 m får én plate midt på.
+- Platene er alltid kundens valg og faktureres utstilleren, også under standvegger arrangøren betaler. De står på
+  tilbudet som egen linje **Støtteplate systemvegg** per stk (6115, plassholder, sum av plate og montering), og på
+  plukklisten (under Stolper) og arbeidsordren hos utstilleren.
+- Hvordan platen festes til stolpen er ikke avklart. Stolpen plukkes som før, med justeringsfot.
+- **Senere:** støttevaier i stedet for plater. Et V-oppheng fra taket i hallen ned til toppen av systemveggen, ett punkt
+  på veggen og to i taket på tvers av veggen, etter samme regel som platene. Også vaieren faktureres utstilleren.
 
 ### Dør
 

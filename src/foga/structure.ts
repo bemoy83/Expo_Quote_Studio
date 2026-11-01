@@ -50,6 +50,8 @@ export interface FogaStructure {
   freeFrames?: FreeFrameSpec[];
   /** 92LTX corner posts shared by two free-standing runs, each `H` long. */
   cornerPosts?: { qty: number; H: number };
+  /** Støtteplater under the posts of system walls that stand free (calc/wallSupports.ts). */
+  wallFeet?: number;
   /** Plates (RAL) picked to swap into a stand wall the organiser builds: plate only, the wall is not in `modules`. */
   swaps?: string[];
 }
