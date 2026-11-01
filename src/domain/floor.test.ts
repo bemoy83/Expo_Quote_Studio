@@ -125,6 +125,14 @@ describe('rolled floor in lanes', () => {
     expect(lanes(v)).toEqual([[2, 0, 6, 4, 'x', A]]);
   });
 
+  it('a drag across lays more lanes side by side in the same direction, whole roll widths cut at the edge', () => {
+    const v = touch(v0, 9.5, 5.5, { from: { x: 0.5, y: 0.5 } });
+    expect(lanes(v)).toEqual([[0, 0, 10, 4, 'x', A], [0, 4, 10, 2, 'x', A]]);
+    // Started in the narrow strip at the front and dragged to the back: the lanes keep lining up with the first
+    const up = touch(v0, 6.5, 0.5, { from: { x: 2.5, y: 5.5 } });
+    expect(lanes(up)).toEqual([[2, 0, 5, 2, 'x', A], [2, 2, 5, 4, 'x', A]]);
+  });
+
   it('a click on a lane of another colour recolours it; the eraser takes the whole lane', () => {
     const v = fillFloor(v0, A, 2);
     expect(lanes(touch(v, 3, 1, { product: B }))[0]).toEqual([0, 0, 10, 4, 'x', B]);

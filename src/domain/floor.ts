@@ -232,7 +232,8 @@ const isRoll = (s: FloorBrushSize | RollBrush): s is RollBrush => typeof s === '
 
 /** What a brush touch does. `anchor` is the first tile of a stroke; the rest of the stroke lines up with it. */
 export type FloorAction =
-  | { kind: 'place'; rect: Rect }
+  /** `band`: rolled floor, laid as lanes one roll wide across from this start (several lanes side by side). */
+  | { kind: 'place'; rect: Rect; band?: Span }
   | { kind: 'recolor'; rect: Rect }
   | { kind: 'erase'; rect: Rect }
   | { kind: 'none' };
@@ -346,7 +347,11 @@ function rollAction(tiles: readonly FloorTile[], s: { nx: number; ny: number }, 
     const c = acrossAt(f.a, f.c, f.pc);
     const a0 = Math.max(0, Math.min(f.a, p.a));
     const a1 = Math.min(na - 1, Math.max(f.a, p.a));
-    return { kind: 'place', rect: laneRect(dir, { start: a0, len: a1 - a0 + 1 }, c) };
+    // Dragged across, the stroke lays more lanes beside the first, whole roll widths (cut at the stand edge)
+    const pc = Math.max(0, Math.min(nc - 1, p.c));
+    const lo = pc < c.start ? Math.max(0, c.start - Math.ceil((c.start - pc) / b.width) * b.width) : c.start;
+    const hi = pc >= c.start + c.len ? Math.min(nc, c.start + Math.ceil((pc - c.start + 1) / b.width) * b.width) : c.start + c.len;
+    return { kind: 'place', rect: laneRect(dir, { start: a0, len: a1 - a0 + 1 }, { start: lo, len: hi - lo }), band: { start: c.start, len: b.width } };
   }
   if (under?.roll) return under.product === t.product ? { kind: 'none' } : { kind: 'recolor', rect: under };
   const c = acrossAt(p.a, p.c, p.pc);
@@ -362,9 +367,11 @@ function rollAction(tiles: readonly FloorTile[], s: { nx: number; ny: number }, 
 /** Apply a brush touch. `roll`: the lane's direction when the brush lays rolled floor. */
 export function applyFloor(v: Variant, a: FloorAction, product: string, roll?: RollDir): Variant {
   if (a.kind === 'none') return v;
+  const laid = (r: Rect, band?: Span): FloorTile[] =>
+    !roll ? [{ ...r, product }] : band ? layLanes(cellsIn(r), product, roll, band) : [{ ...r, product, roll }];
   const tiles =
     a.kind === 'recolor'
       ? v.floor.tiles.map((t) => (sameRect(t, a.rect) ? { ...t, product } : t))
-      : [...cutTiles(v.floor.tiles, a.rect), ...(a.kind === 'place' ? [{ ...a.rect, product, ...(roll ? { roll } : {}) }] : [])];
+      : [...cutTiles(v.floor.tiles, a.rect), ...(a.kind === 'place' ? laid(a.rect, a.band) : [])];
   return { ...v, floor: { ...v.floor, tiles } };
 }
