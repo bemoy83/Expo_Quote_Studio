@@ -134,9 +134,17 @@ function menuCounts(v: Variant): Record<string, number> {
   return out
 }
 
+/** Stand side, whole metres. */
+const SIDE_MIN = 1
+const SIDE_MAX = 40
+
 /** Stand side in whole metres: − and + step a metre, the number can be typed in. */
 function NumField({ value, onChange, label }: { value: number; onChange: (n: number) => void; label: string }) {
-  const set = (n: number) => n !== value && n >= SIDE_MIN && n <= SIDE_MAX && onChange(n)
+  /** False, and nothing changes, unless `n` is a new side length in range. */
+  const set = (n: number) => {
+    if (!Number.isFinite(n) || n < SIDE_MIN || n > SIDE_MAX || n === value) return false
+    onChange(n)
+  }
   return (
     <span className="num-stepper">
       <IconButton icon={Minus} label={`${label}: 1 m mindre`} size={14} disabled={value <= SIDE_MIN} onClick={() => set(value - 1)} />
@@ -146,18 +154,12 @@ function NumField({ value, onChange, label }: { value: number; onChange: (n: num
         inputMode="numeric"
         value={String(value)}
         selectOnFocus
-        onCommit={(text) => {
-          const n = Math.round(Number(text.replace(',', '.')))
-          if (!Number.isFinite(n) || n < SIDE_MIN || n > SIDE_MAX || n === value) return false
-          onChange(n)
-        }}
+        onCommit={(text) => set(Math.round(Number(text.replace(',', '.'))))}
       />
       <IconButton icon={Plus} label={`${label}: 1 m mer`} size={14} disabled={value >= SIDE_MAX} onClick={() => set(value + 1)} />
     </span>
   )
 }
-const SIDE_MIN = 1
-const SIDE_MAX = 40
 
 function StandSection({ v, res, onEdit }: RailProps) {
   const s = v.stand
