@@ -14,7 +14,7 @@ export interface TileSize {
 /** Largest tile: 1 × 1 m. */
 export const TILE_FULL: TileSize = { w: 2, h: 2 };
 /** Tile sizes, largest first: what Auto tries in turn. */
-export const TILE_SIZES: readonly TileSize[] = [TILE_FULL, { w: 2, h: 1 }, { w: 1, h: 2 }, { w: 1, h: 1 }];
+const TILE_SIZES: readonly TileSize[] = [TILE_FULL, { w: 2, h: 1 }, { w: 1, h: 2 }, { w: 1, h: 1 }];
 
 interface Rect {
   i: number;
@@ -23,14 +23,14 @@ interface Rect {
   h: number;
 }
 
-export const standCells = (s: Stand) => ({ nx: Math.round(s.width / CELL), ny: Math.round(s.depth / CELL) });
+const standCells = (s: Stand) => ({ nx: Math.round(s.width / CELL), ny: Math.round(s.depth / CELL) });
 
 const overlaps = (a: Rect, b: Rect) => a.i < b.i + b.w && b.i < a.i + a.w && a.j < b.j + b.h && b.j < a.j + a.h;
 const sameRect = (a: Rect, b: Rect) => a.i === b.i && a.j === b.j && a.w === b.w && a.h === b.h;
 const covers = (t: Rect, i: number, j: number) => i >= t.i && i < t.i + t.w && j >= t.j && j < t.j + t.h;
 
 /** The tile covering cell (i, j). */
-export const tileAt = (tiles: readonly FloorTile[], i: number, j: number) => tiles.find((t) => covers(t, i, j));
+const tileAt = (tiles: readonly FloorTile[], i: number, j: number) => tiles.find((t) => covers(t, i, j));
 
 /** Cover a set of cells with as few tiles of the allowed sizes as a row-by-row sweep finds. */
 export function tileCells(cells: Iterable<[number, number]>, product: string): FloorTile[] {
