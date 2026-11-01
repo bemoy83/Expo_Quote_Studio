@@ -36,7 +36,7 @@ import type { GridStep } from '../domain/snapGrid'
 
 // three.js is only loaded when the 3D view is opened
 const Scene3D = lazy(() => import('./scene3d/Scene3D').then((m) => ({ default: m.Scene3D })))
-// The plan's 3D mini map shares that chunk, so it loads three.js when the plan is shown (and opening 3D is quicker)
+// The plan's 3D mini map shares three.js and the scene builder with it, so they load with the plan (and 3D opens quicker)
 const Scene3DPreview = lazy(() => import('./scene3d/Scene3DPreview').then((m) => ({ default: m.Scene3DPreview })))
 
 function exampleSketch(): Sketch {
@@ -343,32 +343,31 @@ export default function App() {
             />
             <main className="stage">
               <div className="plan-wrap">
-                {view === 'plan' && (
-                  <PlanView
-                    v={v}
-                    res={res}
-                    tool={tool}
-                    brush={brush}
-                    floorSize={floorSize}
-                    gridStep={gridStep}
-                    highlight={highlight}
-                    selection={selection}
-                    onSelect={setSelection}
-                    onEdit={onEdit}
-                    onCheckpoint={onCheckpoint}
-                    onToast={showToast}
-                    motifs={motifs}
-                  />
-                )}
-                {view === 'plan' && (
-                  <div className="minimap">
-                    <Suspense fallback={null}>
-                      <Scene3DPreview v={v} res={res} motifs={motifs} />
-                    </Suspense>
-                    <IconButton icon={Maximize2} label="Vis 3D" size={14} className="minimap-open" onClick={() => setView('3d')} />
-                  </div>
-                )}
-                {view === '3d' && (
+                {view === 'plan' ? (
+                  <>
+                    <PlanView
+                      v={v}
+                      res={res}
+                      tool={tool}
+                      brush={brush}
+                      floorSize={floorSize}
+                      gridStep={gridStep}
+                      highlight={highlight}
+                      selection={selection}
+                      onSelect={setSelection}
+                      onEdit={onEdit}
+                      onCheckpoint={onCheckpoint}
+                      onToast={showToast}
+                      motifs={motifs}
+                    />
+                    <div className="minimap">
+                      <Suspense fallback={null}>
+                        <Scene3DPreview v={v} res={res} motifs={motifs} />
+                      </Suspense>
+                      <IconButton icon={Maximize2} label="Vis 3D" size={14} className="minimap-open" onClick={() => setView('3d')} />
+                    </div>
+                  </>
+                ) : (
                   <Suspense fallback={<div className="stage-empty">Laster 3D …</div>}>
                     <Scene3D
                       v={v}

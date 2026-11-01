@@ -42,8 +42,6 @@ export const isHorizontal = ([a, b]: [Point, Point]) => a[1] === b[1];
 /** Unit direction of a side, from its start to its end. */
 const direction = ([a, b]: [Point, Point]): Point => [Math.sign(b[0] - a[0]), Math.sign(b[1] - a[1])];
 
-export const isRectOutline = (o: Point[]) => o.length === 4;
-
 /** The bounding rectangle. */
 export function bounds(o: Point[]): Rect {
   const xs = o.map((p) => p[0]);
@@ -289,10 +287,4 @@ export function labelRect(o: Point[]): Rect {
           if (full) best = { n, m, r: { x: x0, y: y0, w: x1 - x0, d: y1 - y0 } };
         }
   return best.r;
-}
-
-/** A point well inside the outline for a label: the middle of {@link labelRect}. */
-export function labelPoint(o: Point[]): Point {
-  const r = labelRect(o);
-  return [r.x + r.w / 2, r.y + r.d / 2];
 }

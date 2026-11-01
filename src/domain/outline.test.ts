@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { area, cellsOf, labelPoint, matchSides, outlineOf, rectOutline, settle } from './outline';
+import { area, cellsOf, labelRect, matchSides, outlineOf, rectOutline, settle } from './outline';
 import type { Point } from './types';
 
 describe('outline of cells', () => {
@@ -44,6 +44,11 @@ describe('matchSides', () => {
   });
 });
 
-it('a label sits in the middle of the largest rectangle of the room', () => {
-  expect(labelPoint([[0, 0], [4, 0], [4, 1], [3, 1], [3, 3], [0, 3]])).toEqual([1.5, 1.5]);
+it('a label gets the largest rectangle of the room', () => {
+  expect(labelRect([[0, 0], [4, 0], [4, 1], [3, 1], [3, 3], [0, 3]])).toEqual({ x: 0, y: 0, w: 3, d: 3 });
+});
+
+it('on a tie the label gets the squarer rectangle', () => {
+  // 4 × 1 along the back and 2 × 2 in the corner are both 4 m²
+  expect(labelRect([[0, 0], [4, 0], [4, 1], [2, 1], [2, 2], [0, 2]])).toEqual({ x: 0, y: 0, w: 2, d: 2 });
 });

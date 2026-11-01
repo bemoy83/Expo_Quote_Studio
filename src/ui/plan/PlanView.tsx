@@ -936,6 +936,9 @@ function FacePreview({ v, h, brush, erase }: { v: Variant; h: FaceHit; brush: Br
 }
 
 
+/** True on a whole metre, give or take float noise from stepping in 0.25 m. */
+const onMetre = (t: number) => Number.isInteger(Math.round(t * 1000) / 1000)
+
 /** The points a wall or textile brush snaps to; whole metres are drawn a little larger. */
 function SnapDots({ W, D, step }: { W: number; D: number; step: number }) {
   const nx = Math.round(W / step)
@@ -943,8 +946,7 @@ function SnapDots({ W, D, step }: { W: number; D: number; step: number }) {
   return Array.from({ length: (nx + 1) * (ny + 1) }, (_, n) => {
     const x = (n % (nx + 1)) * step
     const y = Math.floor(n / (nx + 1)) * step
-    const whole = Number.isInteger(Math.round(x * 1000) / 1000) && Number.isInteger(Math.round(y * 1000) / 1000)
-    return <circle key={n} cx={x} cy={y} r={whole ? 0.028 : 0.018} fill={BORDER_STRONG} />
+    return <circle key={n} cx={x} cy={y} r={onMetre(x) && onMetre(y) ? 0.028 : 0.018} fill={BORDER_STRONG} />
   })
 }
 
@@ -996,8 +998,9 @@ function fitRoomLabel(r: Room) {
   const ad = box.d - 2 * LABEL_GAP
   const name = roomName(r)
   const size = roomSize(r)
-  const try_ = (two: boolean) => {
-    // Box at scale 1: text width estimated from the character count
+  /** The label box at scale 1 and the scale it fits at, with the size line (`two`) or without. */
+  const measure = (two: boolean) => {
+    // Text width estimated from the character count
     const w = Math.max(name.length * 0.135, two ? size.length * 0.125 : 0) + 0.28
     const h = two ? 0.6 : 0.36
     const flat = Math.min(1, aw / w, ad / h)
@@ -1005,8 +1008,8 @@ function fitRoomLabel(r: Room) {
     const turn = turned > flat + 0.05
     return { w, h, two, turn, k: turn ? turned : flat }
   }
-  const two = try_(true)
-  const one = two.k >= LABEL_MIN ? two : try_(false)
+  const two = measure(true)
+  const one = two.k >= LABEL_MIN ? two : measure(false)
   if (one.k < LABEL_MIN * 0.75) return null
   return { ...one, cx: box.x + box.w / 2, cy: box.y + box.d / 2 }
 }

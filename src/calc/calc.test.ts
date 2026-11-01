@@ -38,6 +38,16 @@ describe('R1 · row stand 3 × 3, nothing added', () => {
   });
 });
 
+describe('R1 with takdrager turned off', () => {
+  // The customer wants a more open stand: no beam and no beam posts, the walls keep their own posts.
+  const res = run({ ...r1(), noBeams: true });
+  it('no beam on the quote, in the key figures or in the structure', () => {
+    expect(qty(res, S.beam)).toBe(0);
+    expect(res.keyFigures).toMatchObject({ beamLm: 0, beamPosts: 0, posts: 10 });
+    expect(res.foga.posts).toBe(10);
+  });
+});
+
 describe('R2 · corner stand 6 × 4, backroom 2 × 2, textile wall 4 m', () => {
   // Walls: back 6 + left 4 + backroom right face 2 + front face 2 = 14 modules, one of them a door.
   const res = run(r2());

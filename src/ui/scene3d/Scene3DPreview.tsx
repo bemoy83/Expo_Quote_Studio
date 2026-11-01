@@ -7,7 +7,7 @@ import type { CalcResult } from '../../calc/calc'
 import type { Variant } from '../../domain/types'
 import type { Motif } from '../../persistence/file'
 import { build, dispose } from './build'
-import { HOME, setCamera } from './Scene3D'
+import { HOME, setCamera } from './camera'
 
 /** Least time between two rebuilds, ms. */
 const THROTTLE = 200

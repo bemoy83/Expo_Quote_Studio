@@ -52,7 +52,6 @@ const NO_COLOR = '#999'
 /** Aluminium profiles: posts, rails, beams and textile frames. */
 const ALU_FINISH = { metalness: 0.4, roughness: 0.5 }
 
-
 export interface BuildOptions {
   selection?: { wallId?: string; objectId?: string; textileId?: string; foilId?: string; roomId?: string; freeTextileId?: string }
   /** Flat text on the floor (dimensions, area). Needs a canvas, so tests turn it off. */
