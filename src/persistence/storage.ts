@@ -5,6 +5,7 @@ export const KEYS = {
   sketch: 'expo-quote-studio.sketch',
   catalog: 'expo-quote-studio.catalog',
   inFrame: 'expo-quote-studio.inframe',
+  layout: 'expo-quote-studio.layout',
 } as const;
 
 function read(key: string): string | null {
