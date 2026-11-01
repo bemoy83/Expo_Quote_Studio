@@ -27,6 +27,7 @@ import { findMotif } from '../motifs'
 import type { Highlight } from '../tools'
 import type { PlanSelection } from '../plan/PlanView'
 import { build, dispose, type Tag } from './build'
+import { AISLE, CAMERA_Y, HOME, setCamera, type Angle } from './camera'
 
 interface Props {
   v: Variant
@@ -52,8 +53,6 @@ type Drag =
 const deg = Math.PI / 180
 /** Top part of a room wall that resizes the room instead of moving it, m. */
 const GRIP = 0.2
-export const HOME = { az: 28 * deg, el: 30 * deg }
-const AISLE = { az: 0, el: 16 * deg }
 
 interface View {
   renderer: THREE.WebGLRenderer
@@ -461,16 +460,8 @@ export function Scene3D(p: Props) {
   )
 }
 
-/** Points the camera at the stand centre from the given angle, far enough back to see the whole stand. */
-export function setCamera(camera: THREE.PerspectiveCamera, W: number, D: number, at: { az: number; el: number }) {
-  const dist = Math.hypot(W, D) * 1.45 + 3
-  camera.position.set(Math.sin(at.az) * Math.cos(at.el) * dist, CAMERA_Y + Math.sin(at.el) * dist, Math.cos(at.az) * Math.cos(at.el) * dist)
-  camera.lookAt(0, CAMERA_Y, 0)
-}
-/** Height the camera looks at, m. */
-const CAMERA_Y = 0.9
-
-function aim(v: View, W: number, D: number, at: { az: number; el: number }) {
+/** Camera and orbit controls both turned to the stand centre from the given angle. */
+function aim(v: View, W: number, D: number, at: Angle) {
   setCamera(v.camera, W, D, at)
   v.controls.target.set(0, CAMERA_Y, 0)
   v.controls.update()
