@@ -84,6 +84,9 @@ export interface FloorTile {
   h: number;
   /** Floor product's art.nr. */
   product: string;
+  /** Set on a lane of rolled floor (engangsteppe): the direction the roll runs, along its length. A lane is at most
+   * one roll wide across it; a narrower lane is cut lengthwise from a whole roll. */
+  roll?: 'x' | 'y';
 }
 
 export interface Floor {

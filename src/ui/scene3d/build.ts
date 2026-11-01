@@ -160,7 +160,8 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
   base.rotation.x = -Math.PI / 2
   add(base, { layer: 'floor' })
 
-  // Floor tiles, one instanced mesh per product. Carpet tiles leave a joint at their edges; rolled floor is seamless.
+  // Floor tiles, one instanced mesh per product. Carpet tiles and lanes of roll leave a joint at their edges; other
+  // rolled floor (vinyl) is seamless.
   const byProduct = new Map<string, FloorTile[]>()
   for (const t of v.floor.tiles) byProduct.set(t.product, [...(byProduct.get(t.product) ?? []), t])
   const tileGeo = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2)
@@ -169,7 +170,7 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
     const hit = idx.byArtnr.get(a)
     const color = hit?.variant.color ?? NO_COLOR
     // Carpet tiles: each tile a hair smaller than its place, over a slightly darker bed. A finished floor, not a drawing.
-    const layers: [string, number, number][] = hit?.product.tiles ? [[shade(color, 0.18), 0, 0.002], [color, JOINT, 0.003]] : [[color, 0, 0.003]]
+    const layers: [string, number, number][] = hit?.product.tiles || hit?.product.roll ? [[shade(color, 0.18), 0, 0.002], [color, JOINT, 0.003]] : [[color, 0, 0.003]]
     for (const [c, joint, y] of layers) {
       const inst = new THREE.InstancedMesh(tileGeo, mat('floor', c, { roughness: 1 }), tiles.length)
       tiles.forEach((t, n) => {

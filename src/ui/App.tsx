@@ -32,7 +32,7 @@ import { TopNav, type Page } from './shell/TopNav'
 import { WorkOrderPage } from './workorder/WorkOrderPage'
 import { VariantTabs } from './shell/VariantTabs'
 import { FLOOR_MAIN, FLOOR_OTHER, floorSizeLabel, gridSteps, type Brush, type Highlight, type Tool } from './tools'
-import { TILE_FULL, type FloorBrushSize, type TileSize } from '../domain/floor'
+import { longestSide, TILE_FULL, type FloorBrushSize, type RollDir, type TileSize } from '../domain/floor'
 import { GridPicker } from './plan/GridPicker'
 import type { GridStep } from '../domain/snapGrid'
 
@@ -85,6 +85,10 @@ export default function App() {
   const [floorSize, setFloorSize] = useState<FloorBrushSize>(TILE_FULL)
   /** Last of the smaller tile sizes, so «Andre» comes back to it. */
   const [otherSize, setOtherSize] = useState<TileSize>(FLOOR_OTHER[0].size)
+  /** Roll direction of rolled floor; null follows the stand's longest side. */
+  const [rollDir, setRollDir] = useState<RollDir | null>(null)
+  const roll = rollDir ?? longestSide(v.stand)
+  const rollBrush = brush?.kind === 'floor' && !!idx.byArtnr.get(brush.product)?.product.roll
   const [gridStep, setGridStep] = useState<GridStep>(1)
   const [highlight, setHighlight] = useState<Highlight>(null)
   const [selection, setSelection] = useState<PlanSelection>({})
@@ -154,6 +158,7 @@ export default function App() {
         setTool('erase')
         setView('plan')
       }
+      else if (k === 'r' && rollBrush) setRollDir(roll === 'x' ? 'y' : 'x')
       else if (k === 's') pick({ kind: 'wall', ral: v.defaultPlate })
       else if (k === 'g') {
         const f = brush?.kind === 'floor' ? brush.product : (Object.keys(res.keyFigures.floor)[0] ?? '5902')
@@ -284,7 +289,19 @@ export default function App() {
                   ]}
                 />
               )}
-              {view === 'plan' && tool !== 'select' && brush?.kind === 'floor' && (
+              {view === 'plan' && tool === 'brush' && rollBrush && (
+                <Segmented<RollDir>
+                  onBand
+                  label="Rulleretning"
+                  value={roll}
+                  onChange={setRollDir}
+                  options={[
+                    { value: 'x', title: 'Banene går fra venstre til høyre (R snur)', label: <span className="num">↔ Bredden</span> },
+                    { value: 'y', title: 'Banene går fra bak til front (R snur)', label: <span className="num">↕ Dybden</span> },
+                  ]}
+                />
+              )}
+              {view === 'plan' && tool !== 'select' && brush?.kind === 'floor' && !(tool === 'brush' && rollBrush) && (
                 <>
                   <Segmented<string>
                     onBand
@@ -377,6 +394,7 @@ export default function App() {
                       tool={tool}
                       brush={brush}
                       floorSize={floorSize}
+                      rollDir={roll}
                       gridStep={gridStep}
                       highlight={highlight}
                       selection={selection}
@@ -437,7 +455,7 @@ export default function App() {
                   onClose={() => setSelection({})}
                 />
               )}
-              <div className="stage-hint">{view === '3d' ? HINT_3D : hint(tool, brush)}</div>
+              <div className="stage-hint">{view === '3d' ? HINT_3D : hint(tool, brush, rollBrush)}</div>
             </main>
             <CalcPanel res={res} name={v.name} onHover={setHighlight} onQuote={() => setPage('tilbud')} />
           </div>
@@ -478,7 +496,7 @@ export default function App() {
 
 const HINT_3D = 'Dra for å rotere · rull for å zoome · dra møbler, en innervegg eller grafikk for å flytte · dra et rom i veggen eller taket, toppkanten av en romvegg endrer størrelsen · dra grafikk eller tekstilvegg fra Profilering til en vegg'
 
-function hint(tool: Tool, brush: Brush | null): string {
+function hint(tool: Tool, brush: Brush | null, roll = false): string {
   if (tool === 'select') return 'Klikk en vegg for å endre den · dra en innervegg, innvendig takdrager eller møbler for å flytte · dra gulvet i et rom for å flytte rommet, en romvegg for å endre størrelsen · Delete fjerner valgt møbel, takdrager eller rom'
   const erase = tool === 'erase'
   switch (brush?.kind ?? 'wall') {
@@ -489,6 +507,7 @@ function hint(tool: Tool, brush: Brush | null): string {
         ? 'Klikk eller dra langs en innvendig takdrager for å fjerne den'
         : 'Dra langs rutenettet for innvendig takdrager · en ende på en annen takdrager henger på krok, ellers stolpe med fotplate · tegn en tverrdrager mot en stolpe for å spare fotplaten'
     case 'floor':
+      if (roll) return erase ? 'Klikk en bane for å fjerne den' : 'Klikk for en hel bane på ledig gulv, kappet der bare en smalere stripe er ledig · dra for en kortere bane · R snur rulleretningen · klikk en bane for å bytte farge'
       return erase ? 'Klikk og dra for å fjerne gulv' : 'Klikk og dra for å tegne gulv · velg penselstørrelse i båndet'
     case 'opening':
       return erase ? 'Klikk en åpning for å gjøre den til vegg igjen' : 'Klikk en vegg eller en tom kant for å sette inn åpning med overstykke · klikk en åpning for å bytte fyll'
