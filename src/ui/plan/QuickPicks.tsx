@@ -39,7 +39,7 @@ const MAX = 8
 export function QuickPicks(p: QuickPicksProps) {
   const content = quickContent(p)
   return content ? (
-    <div key={p.tool} className="dock-pill dock-quick">
+    <div key={p.tool} className="dock-quick">
       {content}
     </div>
   ) : null
@@ -214,7 +214,8 @@ function QBtn({ on, title, label, onClick, children }: { on?: boolean; title: st
   )
 }
 
-const Sep = () => <span className="q-sep" aria-hidden />
+/** Space between groups: no separator line. */
+const Sep = () => <span className="q-gap" aria-hidden />
 
 export function BeamIcon({ size = 15 }: { size?: number }) {
   return (

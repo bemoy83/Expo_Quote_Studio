@@ -1948,7 +1948,10 @@ select.cin {
   }
 }
 
-/* ---------- Tool dock (floating on the drawing surface) ---------- */
+/* ---------- Tool dock (floating on the drawing surface) ----------
+   One surface, no lines: undo and the tools in the bar, the active tool's quick picks and «Alle valg» on a shelf on
+   top of it in a darker tone. The active tool takes the shelf's tone, so button and shelf read as one piece. Layers
+   are told apart by tone, space and lift, never by a stroke. */
 /* Room kept free under the plan so the tools never cover the stand */
 .plan-wrap > .plan-svg {
   height: calc(100% - 64px);
@@ -1956,100 +1959,112 @@ select.cin {
 .dock {
   position: absolute;
   inset: auto 14px 14px 14px;
+  display: flex;
+  justify-content: center;
   pointer-events: none;
   z-index: 5;
 }
-.dock-pill {
+.dock-surface {
   pointer-events: auto;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  background: rgb(var(--panel));
+  box-shadow: var(--pop);
+  overflow: hidden;
+}
+.dock-shelf {
+  display: flex;
+  flex-direction: column;
+  background: var(--well);
+  transition: opacity 200ms var(--ease);
+}
+/* While drawing, the shelf steps back so the stand shows through */
+.dock-surface.drawing .dock-shelf {
+  opacity: 0.3;
+}
+.dock-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 4px 6px;
+}
+.dock-undo,
+.dock-tools {
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: 4px;
-  border-radius: 14px;
-  background: rgb(var(--panel));
-  box-shadow: var(--pop);
 }
-.dock-undo {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-}
-.dock-stack {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-/* The tools stay centred on the surface, clear of the undo pill; the pills above may use the full width */
 .dock-tools {
-  margin: 0 110px;
-  max-width: calc(100% - 220px);
   overflow-x: auto;
   scrollbar-width: none;
-}
-.dock-quick {
-  gap: 6px;
-  padding: 6px;
-  max-width: 100%;
-  overflow-x: auto;
-  scrollbar-width: none;
-  animation: dock-in var(--dur) var(--ease);
-}
-@keyframes dock-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
 }
 .dock-btn {
   position: relative;
   flex: none;
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 1px;
   min-width: 44px;
   height: 44px;
   padding: 0;
   border: 0;
   border-radius: 10px;
   background: transparent;
-  color: rgb(var(--ink));
-  font: var(--type-control);
+  color: rgb(var(--ink-muted));
   cursor: pointer;
   transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
 }
 .dock-undo .dock-btn {
-  min-width: 40px;
+  min-width: 38px;
 }
 .dock-btn:hover:not(:disabled):not([aria-pressed='true']) {
-  background: rgb(var(--sunken));
+  color: rgb(var(--ink));
+  background: color-mix(in oklab, var(--well) 50%, transparent);
 }
 .dock-btn:disabled {
   opacity: 0.35;
   cursor: default;
 }
 .dock-btn[aria-pressed='true'] {
-  background: rgb(var(--ink));
-  color: rgb(var(--canvas));
+  min-width: 56px;
+  padding-top: 2px;
+  background: var(--well);
+  color: rgb(var(--ink));
+}
+/* With a shelf above, the active tool reaches up into it: one piece, no seam */
+.dock-surface.has-shelf .dock-btn[aria-pressed='true'] {
+  margin-top: -4px;
+  height: 48px;
+  padding-top: 6px;
+  border-radius: 0 0 10px 10px;
 }
 .dock-btn:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
 }
+/* Name under the active tool only */
+.dock-name {
+  font: 600 10px/1 var(--font-ui);
+  letter-spacing: 0.01em;
+}
 /* Colour the tool draws with: a short thin stripe under the icon (wall RAL, floor colour) */
 .dock-stripe {
   position: absolute;
   left: 50%;
-  bottom: 6px;
+  bottom: 5px;
   width: 16px;
   margin-left: -8px;
   height: 3px;
   border-radius: 2px;
-  box-shadow: 0 0 0 1px rgb(var(--ink) / 0.15);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
 }
 .dock-btn[aria-pressed='true'] .dock-stripe {
-  box-shadow: 0 0 0 1px rgb(var(--canvas) / 0.6);
+  display: none;
 }
 /* What Vegg draws when it is not wall: door, curtain or beam */
 .dock-mark {
@@ -2062,46 +2077,165 @@ select.cin {
   height: 14px;
   border-radius: 4px;
 }
-.dock-btn[aria-pressed='true'] .dock-mark {
-  background: rgb(var(--canvas));
-  color: rgb(var(--ink));
-}
 /* Toasts sit above the tools on the sketch page */
 .app:has(.dock) .toast {
   bottom: 140px;
 }
-/* Narrow drawing surface: the tools sit right of the undo pill, and the mini map gives the plan its room */
 @container (max-width: 640px) {
-  .dock-tools {
-    margin: 0;
-    max-width: 100%;
-  }
-  /* No room beside the tools: undo and redo go to the top left corner (the mini map is hidden here) */
-  .dock-undo {
-    bottom: calc(100cqh - 80px);
-  }
   .minimap {
     display: none;
   }
+  .dock-bar {
+    gap: 4px;
+    padding: 4px;
+  }
+  .dock-btn {
+    min-width: 36px;
+  }
+  .dock-undo .dock-btn {
+    min-width: 32px;
+  }
+  .dock-btn[aria-pressed='true'] {
+    min-width: 48px;
+  }
 }
 
-/* ---------- Brush picker (over the tools) ---------- */
-.dock-more {
-  position: absolute;
-  top: 3px;
-  left: 50%;
-  margin-left: -5px;
-  opacity: 0.7;
+/* ---------- Quick picks (on the shelf) ---------- */
+.dock-quick {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  animation: dock-in var(--dur) var(--ease);
 }
-.picker {
-  pointer-events: auto;
-  width: min(380px, 100%);
-  max-height: min(520px, calc(100cqh - 160px));
+@keyframes dock-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+/* Space instead of a separator */
+.q-gap {
+  flex: none;
+  width: 8px;
+}
+.q-name {
   display: flex;
   flex-direction: column;
-  border-radius: 14px;
+  max-width: 128px;
+  padding: 0 6px 0 4px;
+  line-height: 1.25;
+}
+.q-name-main {
+  font: 500 12px var(--font-ui);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.q-name-meta {
+  font: 400 11px var(--font-numeric);
+  color: rgb(var(--ink-muted));
+  white-space: nowrap;
+}
+/* A colour: lifted by a soft shadow, no ring; the chosen one is lifted further and grows */
+.q-sw,
+.picker-sw {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.18);
+  cursor: pointer;
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.q-sw:hover,
+.picker-sw:hover {
+  transform: translateY(-1px);
+}
+.q-sw[aria-pressed='true'],
+.picker-sw[aria-pressed='true'] {
+  transform: translateY(-2px) scale(1.14);
+  box-shadow: 0 4px 10px rgb(0 0 0 / 0.28), 0 1px 2px rgb(0 0 0 / 0.2);
+}
+/* Buttons on the shelf: the lighter tone; chosen = ink */
+.q-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 30px;
+  min-width: 30px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 8px;
   background: rgb(var(--panel));
-  box-shadow: var(--pop);
+  color: rgb(var(--ink));
+  font: 500 12px var(--font-ui);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.q-btn:hover:not([aria-pressed='true']) {
+  background: rgb(var(--surface));
+}
+.q-btn[aria-pressed='true'] {
+  background: rgb(var(--ink));
+  color: rgb(var(--canvas));
+}
+.q-more {
+  padding: 0;
+  width: 30px;
+}
+.q-tex {
+  width: 16px;
+  height: 13px;
+  border-width: 2px;
+}
+.q-motif,
+.q-obj {
+  flex: none;
+  width: 36px;
+  height: 30px;
+  padding: 2px;
+  border: 0;
+  border-radius: 8px;
+  background: rgb(var(--panel));
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.q-motif img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.q-obj svg {
+  width: 22px;
+  height: 22px;
+}
+.q-motif[aria-pressed='true'],
+.q-obj[aria-pressed='true'] {
+  background: rgb(var(--surface));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgb(0 0 0 / 0.2);
+}
+/* Floor size and the like on the shelf */
+.dock-quick .seg {
+  background: rgb(var(--panel));
+}
+
+/* ---------- Alle valg (top of the shelf) ---------- */
+.picker {
+  width: min(380px, 100%);
+  max-height: min(480px, calc(100cqh - 180px));
+  align-self: center;
+  display: flex;
+  flex-direction: column;
   animation: dock-in var(--dur) var(--ease);
 }
 .picker-head {
@@ -2109,7 +2243,7 @@ select.cin {
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
-  padding: 12px 10px 8px 16px;
+  padding: 12px 8px 6px 16px;
 }
 .picker-title {
   font: var(--type-group);
@@ -2133,12 +2267,12 @@ select.cin {
   cursor: pointer;
 }
 .picker-close:hover {
-  background: rgb(var(--sunken));
+  background: rgb(var(--panel));
   color: rgb(var(--ink));
 }
 .picker-body {
   overflow-y: auto;
-  padding: 0 16px 16px;
+  padding: 2px 16px 10px;
 }
 .picker-sec + .picker-sec {
   margin-top: 16px;
@@ -2160,21 +2294,28 @@ select.cin {
   padding: 8px 4px 7px;
   border: 0;
   border-radius: 10px;
-  background: var(--well);
+  background: rgb(var(--panel));
   color: rgb(var(--ink));
   cursor: pointer;
 }
 .picker-tile:hover:not([aria-pressed='true']) {
-  background: var(--well-hover);
+  background: rgb(var(--surface));
 }
 .picker-tile[aria-pressed='true'] {
-  background: rgb(var(--surface));
-  box-shadow: var(--raise), inset 0 0 0 1.5px rgb(var(--ink));
+  background: rgb(var(--ink));
+  color: rgb(var(--canvas));
 }
 .picker-thumb {
   height: 28px;
   display: grid;
   place-items: center;
+}
+.picker-thumb .swatch {
+  display: block;
+  width: 28px;
+  height: 22px;
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.2);
 }
 .picker-label {
   max-width: 100%;
@@ -2188,23 +2329,11 @@ select.cin {
 .picker-swatches {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
 }
 .picker-tiles + .picker-swatches,
 .picker-tiles + .picker-motifs {
-  margin-top: 10px;
-}
-.picker-sw {
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  border: 0;
-  border-radius: 8px;
-  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.12);
-  cursor: pointer;
-}
-.picker-sw[aria-pressed='true'] {
-  box-shadow: 0 0 0 2px rgb(var(--panel)), 0 0 0 3.5px rgb(var(--ink));
+  margin-top: 12px;
 }
 .picker-line {
   display: flex;
@@ -2228,8 +2357,9 @@ select.cin {
   padding: 3px;
   border: 0;
   border-radius: 8px;
-  background: var(--well);
+  background: rgb(var(--panel));
   cursor: pointer;
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
 }
 .picker-motif img {
   width: 100%;
@@ -2239,115 +2369,6 @@ select.cin {
 }
 .picker-motif[aria-pressed='true'] {
   background: rgb(var(--surface));
-  box-shadow: var(--raise), inset 0 0 0 1.5px rgb(var(--ink));
-}
-.picker-thumb .swatch {
-  display: block;
-  width: 28px;
-  height: 22px;
-  border-radius: 3px;
-  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.12);
-}
-
-/* ---------- Quick picks (over the active tool) ---------- */
-.dock-quick {
-  align-items: center;
-}
-.q-name {
-  display: flex;
-  flex-direction: column;
-  max-width: 128px;
-  padding: 0 6px 0 4px;
-  line-height: 1.25;
-}
-.q-name-main {
-  font: 500 12px var(--font-ui);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.q-name-meta {
-  font: 400 11px var(--font-numeric);
-  color: rgb(var(--ink-muted));
-  white-space: nowrap;
-}
-.q-sw {
-  flex: none;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  border: 0;
-  border-radius: 8px;
-  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.12);
-  cursor: pointer;
-}
-.q-sw[aria-pressed='true'] {
-  box-shadow: 0 0 0 2px rgb(var(--panel)), 0 0 0 3.5px rgb(var(--ink));
-}
-.q-btn {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 30px;
-  min-width: 30px;
-  justify-content: center;
-  padding: 0 9px;
-  border: 0;
-  border-radius: 8px;
-  background: var(--well);
-  color: rgb(var(--ink));
-  font: 500 12px var(--font-ui);
-  white-space: nowrap;
-  cursor: pointer;
-}
-.q-btn:hover:not([aria-pressed='true']) {
-  background: var(--well-hover);
-}
-.q-btn[aria-pressed='true'] {
-  background: rgb(var(--ink));
-  color: rgb(var(--canvas));
-}
-.q-more {
-  padding: 0;
-  width: 30px;
-}
-.q-tex {
-  width: 16px;
-  height: 13px;
-  border-width: 2px;
-}
-.q-sep {
-  flex: none;
-  width: 1px;
-  height: 22px;
-  margin: 0 3px;
-  background: rgb(var(--border-strong));
-}
-.q-motif,
-.q-obj {
-  flex: none;
-  width: 36px;
-  height: 30px;
-  padding: 2px;
-  border: 0;
-  border-radius: 8px;
-  background: var(--well);
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-}
-.q-motif img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-.q-obj svg {
-  width: 22px;
-  height: 22px;
-}
-.q-motif[aria-pressed='true'],
-.q-obj[aria-pressed='true'] {
-  background: rgb(var(--surface));
-  box-shadow: inset 0 0 0 1.5px rgb(var(--ink));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgb(0 0 0 / 0.2);
 }
