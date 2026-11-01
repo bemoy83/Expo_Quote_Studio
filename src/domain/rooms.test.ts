@@ -219,7 +219,7 @@ describe('L-shaped rooms', () => {
     expect(v.walls.filter((w) => w.room)).toHaveLength(6);
     // Own: right 1, step 2 + 1, front 2 = 6 modules
     expect(own(v, 'rom1')).toBe(6);
-    expect(roomSize(v.rooms[0])).toBe('6 m² (4 × 2 m)');
+    expect(roomSize(v.rooms[0])).toBe('6 m²');
     expect(doorKey(v)).toBe(moduleKey([1, 2], [2, 2]));
   });
   it('the notch is not inside the room', () => {

@@ -268,21 +268,31 @@ export function insetOutline(o: Point[], e: number): Point[] {
   });
 }
 
-/** A point well inside the outline for a label: the middle of the largest rectangle of its cells. */
-export function labelPoint(o: Point[]): Point {
+/**
+ * The space for a label: the largest rectangle of the outline's cells (on a tie, the squarer one). A room label is
+ * fitted inside it so it never runs over the room's walls.
+ */
+export function labelRect(o: Point[]): Rect {
   const b = bounds(o);
   const cells = new Set(cellsOf(o).map(([i, j]) => cellId(i, j)));
-  let best = { n: 0, at: [b.x + b.w / 2, b.y + b.d / 2] as Point };
+  let best = { n: 0, m: 0, r: b };
   // Rooms are small: try every rectangle of cells in the bounding box
   for (let x0 = b.x; x0 < b.x + b.w; x0++)
     for (let y0 = b.y; y0 < b.y + b.d; y0++)
       for (let x1 = x0 + 1; x1 <= b.x + b.w; x1++)
         for (let y1 = y0 + 1; y1 <= b.y + b.d; y1++) {
           const n = (x1 - x0) * (y1 - y0);
-          if (n <= best.n) continue;
+          const m = Math.min(x1 - x0, y1 - y0);
+          if (n < best.n || (n === best.n && m <= best.m)) continue;
           let full = true;
           for (let i = x0; i < x1 && full; i++) for (let j = y0; j < y1 && full; j++) full = cells.has(cellId(i, j));
-          if (full) best = { n, at: [(x0 + x1) / 2, (y0 + y1) / 2] };
+          if (full) best = { n, m, r: { x: x0, y: y0, w: x1 - x0, d: y1 - y0 } };
         }
-  return best.at;
+  return best.r;
+}
+
+/** A point well inside the outline for a label: the middle of {@link labelRect}. */
+export function labelPoint(o: Point[]): Point {
+  const r = labelRect(o);
+  return [r.x + r.w / 2, r.y + r.d / 2];
 }

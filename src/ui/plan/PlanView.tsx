@@ -18,7 +18,7 @@ import { BORDER, BORDER_STRONG, BLOCK, CANVAS, INK, INK_FAINT, INK_MUTED, LAYER_
 import { applyDrop, decorDrag, endDecorDrag, type DecorDrag } from '../dnd'
 import { dragRoom, dragWall, dropObject, dropRoom, roomDrag, type RoomDrag, type WallDrag } from '../drag'
 import { roomAt, roomName, roomSideAt, roomSize, sideIsHorizontal } from '../../domain/rooms'
-import { bounds, insetOutline, isHorizontal, labelPoint, outlineSides } from '../../domain/outline'
+import { insetOutline, isHorizontal, labelRect, outlineSides } from '../../domain/outline'
 import { fmt } from '../format'
 import { idx, place, plateColor, productOf, rules } from '../env'
 import { findMotif } from '../motifs'
@@ -936,14 +936,9 @@ function SnapDots({ W, D, step }: { W: number; D: number; step: number }) {
   })
 }
 
-/** Room name and size on its floor; a dashed outline when selected. */
+/** Room name and floor area on its floor; a dashed outline when selected. */
 function RoomMark({ r, selected }: { r: Room; selected: boolean }) {
-  const [cx, cy] = labelPoint(r.outline)
-  const b = bounds(r.outline)
-  const small = Math.min(b.w, b.d) < 2
-  const size = roomSize(r)
-  const wide = size.length > 10
-  const boxW = (small ? 0.8 : 1.2) * (wide ? 1.6 : 1)
+  const fit = fitRoomLabel(r)
   return (
     <g>
       {selected && (
@@ -957,15 +952,51 @@ function RoomMark({ r, selected }: { r: Room; selected: boolean }) {
           strokeLinejoin="round"
         />
       )}
-      <rect x={cx - boxW / 2} y={cy - (small ? 0.2 : 0.3)} width={boxW} height={small ? 0.44 : 0.6} rx={0.06} fill={CANVAS} fillOpacity={0.85} />
-      <text x={cx} y={cy - (small ? 0.02 : 0.06)} textAnchor="middle" style={{ ...LABEL, fontSize: small ? '0.17px' : '0.22px' }}>
-        {roomName(r)}
-      </text>
-      <text x={cx} y={cy + (small ? 0.18 : 0.22)} textAnchor="middle" style={{ ...MONO, fontSize: small ? '0.15px' : '0.19px' }}>
-        {size}
-      </text>
+      {fit && (
+        <g transform={`translate(${fit.cx} ${fit.cy}) rotate(${fit.turn ? -90 : 0}) scale(${fit.k})`}>
+          <rect x={-fit.w / 2} y={-fit.h / 2} width={fit.w} height={fit.h} rx={0.06} fill={CANVAS} fillOpacity={0.85} />
+          <text y={fit.two ? -0.06 : 0.08} textAnchor="middle" style={{ ...LABEL, fontSize: '0.22px' }}>
+            {roomName(r)}
+          </text>
+          {fit.two && (
+            <text y={0.22} textAnchor="middle" style={{ ...MONO, fontSize: '0.19px' }}>
+              {roomSize(r)}
+            </text>
+          )}
+        </g>
+      )}
     </g>
   )
+}
+
+/** Clearance kept between a room label and the room's wall lines, m. */
+const LABEL_GAP = PLAN_WALL / 2 + 0.06
+/** Smallest scale a room label is drawn at; below it the size line is dropped, then the label. */
+const LABEL_MIN = 0.6
+
+/**
+ * Fits the label box into the room's largest free rectangle, clear of its walls: full size when it fits, else
+ * scaled down, turned along a narrow room when that leaves it larger, and without the size line as a last resort.
+ */
+function fitRoomLabel(r: Room) {
+  const box = labelRect(r.outline)
+  const aw = box.w - 2 * LABEL_GAP
+  const ad = box.d - 2 * LABEL_GAP
+  const name = roomName(r)
+  const size = roomSize(r)
+  const try_ = (two: boolean) => {
+    // Box at scale 1: text width estimated from the character count
+    const w = Math.max(name.length * 0.135, two ? size.length * 0.125 : 0) + 0.28
+    const h = two ? 0.6 : 0.36
+    const flat = Math.min(1, aw / w, ad / h)
+    const turned = Math.min(1, ad / w, aw / h)
+    const turn = turned > flat + 0.05
+    return { w, h, two, turn, k: turn ? turned : flat }
+  }
+  const two = try_(true)
+  const one = two.k >= LABEL_MIN ? two : try_(false)
+  if (one.k < LABEL_MIN * 0.75) return null
+  return { ...one, cx: box.x + box.w / 2, cy: box.y + box.d / 2 }
 }
 
 /** Grips at the middle of each side of the selected room: drag a side to resize. */
