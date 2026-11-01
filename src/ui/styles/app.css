@@ -1250,7 +1250,7 @@ kbd {
   height: 156px;
   border-radius: var(--r-pop);
   background: rgb(var(--panel));
-  box-shadow: var(--pop), 0 0 0 1px rgb(var(--border-strong));
+  box-shadow: var(--pop);
   overflow: hidden;
 }
 /* In 3D the view's own buttons hold the top right corner */
