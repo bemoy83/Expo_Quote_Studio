@@ -35,6 +35,7 @@ import { FLOOR_MAIN, FLOOR_OTHER, floorSizeLabel, gridSteps, type Brush, type Hi
 import { longestSide, TILE_FULL, type FloorBrushSize, type RollDir, type TileSize } from '../domain/floor'
 import { GridPicker } from './plan/GridPicker'
 import { ToolDock } from './plan/ToolDock'
+import { BrushPicker } from './plan/BrushPicker'
 import type { GridStep } from '../domain/snapGrid'
 
 // three.js is only loaded when the 3D view is opened
@@ -81,7 +82,7 @@ export default function App() {
   const [page, setPage] = useState<Page>('skisse')
   const [view, setView] = useState<'plan' | '3d'>('plan')
   const [tab, setTabRaw] = useState('stand')
-  const [tool, setTool] = useState<Tool>('select')
+  const [tool, setToolRaw] = useState<Tool>('select')
   const [brush, setBrush] = useState<Brush | null>(null)
   const [floorSize, setFloorSize] = useState<FloorBrushSize>(TILE_FULL)
   /** Last of the smaller tile sizes, so «Andre» comes back to it. */
@@ -92,6 +93,12 @@ export default function App() {
   const rollBrush = brush?.kind === 'floor' && !!idx.byArtnr.get(brush.product)?.product.roll
   const [gridStep, setGridStep] = useState<GridStep>(1)
   const [highlight, setHighlight] = useState<Highlight>(null)
+  /** Brush picker over the tools, opened by clicking the active Pensel. Any change of tool closes it. */
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const setTool = (t: Tool) => {
+    setPickerOpen(false)
+    setToolRaw(t)
+  }
   const [selection, setSelection] = useState<PlanSelection>({})
   const [toast, showToast] = useToast()
   const fileInput = useRef<HTMLInputElement>(null)
@@ -151,7 +158,8 @@ export default function App() {
       }
       if (mod || e.altKey) return
       const k = e.key.toLowerCase()
-      if (k === 'v' || k === 'escape') setTool('select')
+      if (k === 'escape' && pickerOpen) setPickerOpen(false)
+      else if (k === 'v' || k === 'escape') setTool('select')
       else if (k === 'p' && brush) {
         setTool('brush')
         setView('plan')
@@ -409,7 +417,8 @@ export default function App() {
                   tools={view === 'plan'}
                   tool={tool}
                   onTool={(t) => {
-                    if (t === 'brush' && !brush) pick({ kind: 'wall', ral: plateRal })
+                    if (t === 'brush' && tool === 'brush') setPickerOpen(!pickerOpen)
+                    else if (t === 'brush' && !brush) pick({ kind: 'wall', ral: plateRal })
                     else setTool(t)
                   }}
                   brush={brushLabel}
@@ -417,6 +426,11 @@ export default function App() {
                   canRedo={state.future.length > 0}
                   onUndo={() => dispatch({ type: 'undo' })}
                   onRedo={() => dispatch({ type: 'redo' })}
+                  picker={
+                    pickerOpen ? (
+                      <BrushPicker brush={brush} defaultPlate={plateRal} motifs={motifs} onPick={(b) => pick(b)} onClose={() => setPickerOpen(false)} />
+                    ) : undefined
+                  }
                 >
                   {quickOptions}
                 </ToolDock>

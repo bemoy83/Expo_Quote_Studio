@@ -22,7 +22,7 @@ import { count, fmt, kr, mm } from '../format'
 import { beamSummary } from '../names'
 import type { Brush, Tool } from '../tools'
 import { MENUS } from './menus'
-import { ProductRow, Swatch, VariantChips } from './ProductRow'
+import { ObjectThumb, ProductRow, Swatch, VariantChips } from './ProductRow'
 
 export interface RailProps {
   v: Variant
@@ -665,20 +665,3 @@ function CatalogRow({ v, product, brush, tool, pick, onEdit, onToast, showGroup 
     />
   )
 }
-
-function ObjectThumb({ product, color }: { product: Product; color?: string }) {
-  const f = product.footprint
-  if (!f) {
-    const m = MENUS.find((x) => x.key === mainGroupOf(product.group))
-    const I = m?.icon ?? Box
-    return <I size={16} />
-  }
-  const s = 26 / Math.max(f.w, f.d, 0.5)
-  const fill = color ?? (product.name.includes('hvit') ? 'oklch(0.96 0.003 90)' : 'oklch(0.24 0.004 250)')
-  return (
-    <svg width="30" height="30" viewBox="-15 -15 30 30" aria-hidden>
-      {f.round ? <circle r={(f.w * s) / 2} fill={fill} stroke={INK} strokeWidth={0.6} /> : <rect x={(-f.w * s) / 2} y={(-f.d * s) / 2} width={f.w * s} height={f.d * s} rx={1.5} fill={fill} stroke={INK} strokeWidth={0.6} />}
-    </svg>
-  )
-}
-
