@@ -36,16 +36,16 @@ export function splitLength(length: number, max: number): number[] {
 
 const lerp = (a: Point, b: Point, t: number): Point => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
 
-/**
- * Takdrager along the open parts of the perimeter. A perimeter edge with a wall module (an opening included) is closed.
- * Posts go at every joint and every run end; ends resting on a wall share the wall's post.
- * From every joint a cross beam runs inward to the first wall point on its line, or to the opposite side.
- */
 /** The takdrager of a variant: none when the customer turned them off, else {@link layoutBeams}. */
 export function variantBeams(v: Variant, moduleKeys: ReadonlySet<string>, wallPoints: ReadonlyMap<string, Point>, maxLength: number): BeamLayout {
   return v.noBeams ? { segments: [], posts: new Map(), lm: 0 } : layoutBeams(v.stand, moduleKeys, wallPoints, maxLength);
 }
 
+/**
+ * Takdrager along the open parts of the perimeter. A perimeter edge with a wall module (an opening included) is closed.
+ * Posts go at every joint and every run end; ends resting on a wall share the wall's post.
+ * From every joint a cross beam runs inward to the first wall point on its line, or to the opposite side.
+ */
 export function layoutBeams(
   stand: Stand,
   moduleKeys: ReadonlySet<string>,
