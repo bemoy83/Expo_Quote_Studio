@@ -1,6 +1,6 @@
-// What the brush draws, picked on the drawing surface: a popover over the tools, opened by clicking the active Pensel.
-// Same brushes as the panel, grouped the same way (Vegger · Gulv · Profilering · Møbler). Picking only sets the brush:
-// a wall colour here is the colour new inner walls are drawn with, the stand's wall plate is still set in the panel.
+// «Alle valg» for a drawing tool: a popover over the dock, opened by clicking the active tool again. Same brushes as the
+// panel for that tool (Vegg · Gulv · Profilering · Møbel). Picking only sets the tool's pen: a wall colour here is the
+// colour new inner walls are drawn with, the stand's wall plate is still set in the panel.
 import { Blinds, DoorClosed, X } from 'lucide-react'
 import { useEffect, useRef, type ReactNode } from 'react'
 import { mainGroupOf, PRODUCT_GROUPS } from '../../catalog/groups'
@@ -8,38 +8,60 @@ import type { Motif } from '../../persistence/file'
 import { catalog, wallPlates } from '../env'
 import { INK } from '../colors'
 import { ObjectThumb, Swatch } from '../panel/ProductRow'
-import type { Brush } from '../tools'
+import type { Brush, PenTool } from '../tools'
 
-export function BrushPicker({ brush, defaultPlate, motifs, onPick, onClose }: { brush: Brush | null; defaultPlate: string; motifs: Motif[]; onPick: (b: Brush) => void; onClose: () => void }) {
+const HEAD: Record<PenTool, { title: string; sub: string }> = {
+  wall: { title: 'Vegg', sub: 'Innervegg, åpning eller takdrager' },
+  floor: { title: 'Gulv', sub: 'Gulvtype og farge' },
+  profile: { title: 'Profilering', sub: 'Tekstilvegg eller motiv' },
+  object: { title: 'Møbel', sub: 'Klikk i planen for å sette ut' },
+}
+
+export function BrushPicker({
+  tool,
+  brush,
+  wallRal,
+  motifs,
+  onPick,
+  onClose,
+}: {
+  tool: PenTool
+  brush: Brush | null
+  /** Colour the wall pen draws new inner walls with. */
+  wallRal: string
+  motifs: Motif[]
+  onPick: (b: Brush) => void
+  onClose: () => void
+}) {
   const is = (b: Brush) => JSON.stringify(b) === JSON.stringify(brush)
   const plates = wallPlates()
-  const wallRal = brush?.kind === 'wall' ? brush.ral : defaultPlate
   const wallPlate = plates.find((p) => p.ral === wallRal)
   const openings = catalog.products.filter((p) => p.opening)
   const floors = catalog.products.filter((p) => mainGroupOf(p.group) === 'gulv' && p.kind === 'surface')
   const objects = catalog.products.filter((p) => p.kind === 'object' && !p.opening)
   const objectGroups = [...new Set(objects.map((p) => mainGroupOf(p.group)))]
-  // A press anywhere else closes it (the Pensel button toggles it itself)
+  // A press anywhere else closes it (the dock's tool buttons toggle it themselves)
   const box = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const down = (e: PointerEvent) => {
       const t = e.target as Element
-      if (!box.current?.contains(t) && !t.closest('.dock-brush')) onClose()
+      if (!box.current?.contains(t) && !t.closest('.dock-tools')) onClose()
     }
     document.addEventListener('pointerdown', down)
     return () => document.removeEventListener('pointerdown', down)
   }, [onClose])
 
   return (
-    <div ref={box} className="picker" role="dialog" aria-label="Hva penselen tegner">
+    <div ref={box} className="picker" role="dialog" aria-label={`Alle valg for ${HEAD[tool].title}`}>
       <div className="picker-head">
-        <span className="picker-title">Pensel</span>
-        <span className="picker-sub">Velg hva du vil tegne</span>
+        <span className="picker-title">{HEAD[tool].title}</span>
+        <span className="picker-sub">{HEAD[tool].sub}</span>
         <button type="button" className="picker-close" aria-label="Lukk" title="Lukk (Esc)" onClick={onClose}>
           <X size={16} />
         </button>
       </div>
       <div className="picker-body">
+        {tool === 'wall' && (
         <Section title="Vegger">
           <div className="picker-tiles">
             <Tile on={brush?.kind === 'wall'} label="Innervegg" sub={`RAL ${wallRal}`} onClick={() => onPick({ kind: 'wall', ral: wallRal })}>
@@ -74,7 +96,9 @@ export function BrushPicker({ brush, defaultPlate, motifs, onPick, onClose }: { 
             ))}
           </div>
         </Section>
+        )}
 
+        {tool === 'floor' && (
         <Section title="Gulv">
           {floors.map((p) => (
             <div key={p.id} className="picker-line">
@@ -88,7 +112,9 @@ export function BrushPicker({ brush, defaultPlate, motifs, onPick, onClose }: { 
             </div>
           ))}
         </Section>
+        )}
 
+        {tool === 'profile' && (
         <Section title="Profilering">
           <div className="picker-tiles">
             <Tile on={brush?.kind === 'textile'} label="Tekstilvegg" sub="på vegg eller frittstående" onClick={() => onPick({ kind: 'textile' })}>
@@ -106,8 +132,9 @@ export function BrushPicker({ brush, defaultPlate, motifs, onPick, onClose }: { 
             })}
           </div>
         </Section>
+        )}
 
-        {objectGroups.map((g) => (
+        {tool === 'object' && objectGroups.map((g) => (
           <Section key={g} title={PRODUCT_GROUPS.find((x) => x.id === g)?.name ?? g}>
             <div className="picker-tiles">
               {objects

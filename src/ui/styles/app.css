@@ -1979,8 +1979,13 @@ select.cin {
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  /* centred on the surface, clear of the undo pill */
+}
+/* The tools stay centred on the surface, clear of the undo pill; the pills above may use the full width */
+.dock-tools {
   margin: 0 110px;
+  max-width: calc(100% - 220px);
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 .dock-quick {
   gap: 6px;
@@ -2032,22 +2037,34 @@ select.cin {
   outline: none;
   box-shadow: var(--focus-ring);
 }
-.dock-brush {
-  padding: 0 14px 0 12px;
-  max-width: 240px;
+/* Colour the tool draws with: a short thin stripe under the icon (wall RAL, floor colour) */
+.dock-stripe {
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  width: 16px;
+  margin-left: -8px;
+  height: 3px;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgb(var(--ink) / 0.15);
 }
-.dock-brush-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.dock-btn[aria-pressed='true'] .dock-stripe {
+  box-shadow: 0 0 0 1px rgb(var(--canvas) / 0.6);
 }
-/* Colour the brush paints with (wall RAL, floor colour); the ring keeps white and dark colours visible on the ink button */
-.dock-dot {
-  flex: none;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  box-shadow: 0 0 0 1.5px rgb(var(--canvas) / 0.9), 0 0 0 2.5px rgb(var(--ink) / 0.25);
+/* What Vegg draws when it is not wall: door, curtain or beam */
+.dock-mark {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+}
+.dock-btn[aria-pressed='true'] .dock-mark {
+  background: rgb(var(--canvas));
+  color: rgb(var(--ink));
 }
 /* Toasts sit above the tools on the sketch page */
 .app:has(.dock) .toast {
@@ -2055,11 +2072,13 @@ select.cin {
 }
 /* Narrow drawing surface: the tools sit right of the undo pill, and the mini map gives the plan its room */
 @container (max-width: 640px) {
-  .dock-stack {
-    margin: 0 0 0 100px;
+  .dock-tools {
+    margin: 0;
+    max-width: 100%;
   }
-  .dock-brush {
-    max-width: 180px;
+  /* No room beside the tools: undo and redo go to the top left corner (the mini map is hidden here) */
+  .dock-undo {
+    bottom: calc(100cqh - 80px);
   }
   .minimap {
     display: none;
@@ -2228,4 +2247,107 @@ select.cin {
   height: 22px;
   border-radius: 3px;
   box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.12);
+}
+
+/* ---------- Quick picks (over the active tool) ---------- */
+.dock-quick {
+  align-items: center;
+}
+.q-name {
+  display: flex;
+  flex-direction: column;
+  max-width: 128px;
+  padding: 0 6px 0 4px;
+  line-height: 1.25;
+}
+.q-name-main {
+  font: 500 12px var(--font-ui);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.q-name-meta {
+  font: 400 11px var(--font-numeric);
+  color: rgb(var(--ink-muted));
+  white-space: nowrap;
+}
+.q-sw {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.12);
+  cursor: pointer;
+}
+.q-sw[aria-pressed='true'] {
+  box-shadow: 0 0 0 2px rgb(var(--panel)), 0 0 0 3.5px rgb(var(--ink));
+}
+.q-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  min-width: 30px;
+  justify-content: center;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--well);
+  color: rgb(var(--ink));
+  font: 500 12px var(--font-ui);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.q-btn:hover:not([aria-pressed='true']) {
+  background: var(--well-hover);
+}
+.q-btn[aria-pressed='true'] {
+  background: rgb(var(--ink));
+  color: rgb(var(--canvas));
+}
+.q-more {
+  padding: 0;
+  width: 30px;
+}
+.q-tex {
+  width: 16px;
+  height: 13px;
+  border-width: 2px;
+}
+.q-sep {
+  flex: none;
+  width: 1px;
+  height: 22px;
+  margin: 0 3px;
+  background: rgb(var(--border-strong));
+}
+.q-motif,
+.q-obj {
+  flex: none;
+  width: 36px;
+  height: 30px;
+  padding: 2px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--well);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.q-motif img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.q-obj svg {
+  width: 22px;
+  height: 22px;
+}
+.q-motif[aria-pressed='true'],
+.q-obj[aria-pressed='true'] {
+  background: rgb(var(--surface));
+  box-shadow: inset 0 0 0 1.5px rgb(var(--ink));
 }
