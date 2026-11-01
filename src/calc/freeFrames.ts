@@ -80,11 +80,12 @@ type Ends = { from: boolean; to: boolean };
 /**
  * Where the feet (each with a brace) stand along a run of `len` mm, measured from its `from` end. A corner post at an
  * end is a support there already. The fewest feet that keep at least `min` supports in all from `minFrom` and up (else
- * one), the outer foot at most `maxEnd` in from a free end and no two supports more than `maxGap` apart, evenly spread:
- * a free end gets half a gap, held at `maxEnd` when that is less.
+ * one in the middle), no two supports more than `maxGap` apart. A free end gets a foot right at the end; it is pulled
+ * in, at most `maxEnd`, only where the gaps would otherwise be more than `maxGap`. The rest are spread evenly between
+ * (Bjørn 1.11.2026).
  */
 export function supportPoints(len: number, s: SupportRule, corners: Ends = { from: false, to: false }): number[] {
-  return spreadSupports(len, minSupports(len, s, corners), s.maxEnd, corners);
+  return spreadSupports(len, minSupports(len, s, corners), s, corners).map(Math.round);
 }
 
 /** The fewest feet {@link supportPoints} needs on a run of `len` mm, supported ends not counted. */
@@ -97,28 +98,25 @@ export function minSupports(len: number, s: SupportRule, corners: Ends): number 
   return Math.max(total, ceil((len - 2 * s.maxEnd) / s.maxGap) + 1);
 }
 
-/** `n` feet evenly spread along a run of `len` mm: a free end gets half a gap, held at `maxEnd` when that is less. */
-export function spreadSupports(len: number, n: number, maxEnd: number, corners: Ends): number[] {
+/**
+ * `n` feet along a run of `len` mm, see {@link supportPoints}. `pull` is how far each free end is pulled in: by
+ * default the shortfall shared evenly (whole metres for a system wall: see wallSupports). Not rounded.
+ */
+export function spreadSupports(len: number, n: number, s: SupportRule, corners: Ends, pull?: (need: number, ends: number) => number[]): number[] {
   if (n <= 0) return [];
-  if (corners.from && corners.to) return Array.from({ length: n }, (_, i) => Math.round(((i + 1) * len) / (n + 1)));
-  if (corners.from || corners.to) {
-    let gap = len / (n + 0.5);
-    let end = gap / 2;
-    if (end > maxEnd) {
-      end = maxEnd;
-      gap = (len - end) / n;
-    }
-    // Counted from the corner, then turned to the run's own direction
-    const fromCorner = Array.from({ length: n }, (_, i) => (i + 1) * gap);
-    return fromCorner.map((x) => Math.round(corners.from ? x : len - x)).sort((a, b) => a - b);
+  if (corners.from && corners.to) return Array.from({ length: n }, (_, i) => ((i + 1) * len) / (n + 1));
+  if (!corners.from && !corners.to && n === 1) return [len / 2];
+  const free = corners.from || corners.to ? 1 : 2;
+  // Gaps between the feet (and to a corner): n − 1 with two free ends, n with one
+  const gaps = free === 2 ? n - 1 : n;
+  const need = Math.min(free * s.maxEnd, Math.max(0, len - gaps * s.maxGap));
+  const [a, b = 0] = pull ? pull(need, free) : Array.from({ length: free }, () => need / free);
+  if (free === 1) {
+    // Counted from the free end toward the corner, then turned to the run's own direction
+    const fromFree = Array.from({ length: n }, (_, i) => a + (i * (len - a)) / n);
+    return fromFree.map((x) => (corners.to ? x : len - x)).sort((x, y) => x - y);
   }
-  let gap = len / n;
-  let end = gap / 2;
-  if (end > maxEnd) {
-    end = maxEnd;
-    gap = n > 1 ? (len - 2 * end) / (n - 1) : 0;
-  }
-  return Array.from({ length: n }, (_, i) => Math.round(end + i * gap));
+  return Array.from({ length: n }, (_, i) => a + (i * (len - a - b)) / (n - 1));
 }
 
 /** `len` in the fewest equal pieces of at most `max` (the last takes the rounding). */

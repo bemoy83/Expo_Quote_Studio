@@ -1,7 +1,8 @@
 // Støtteplater: foot plates under a system wall that stands free (Bjørn 1.11.2026, docs/foga-system.md).
 //   A system wall is held by the takdrager frame. Without it (beams turned off, or an inner wall the beams don't reach)
 //   it stands free and gets foot plates on its posts by the same rule as a free-standing textile wall (supportPoints):
-//   at least 2 supports from 1 m, the outer one at most 1 m in from a free end, at most 3 m between two supports.
+//   at least 2 supports from 1 m, at most 3 m apart, a plate at each free end, pulled in (at most 1 m) only where a gap
+//   would otherwise be over 3 m.
 //   Every point where another system wall meets the run (corner, T or cross: stand, inner and room walls alike) is a
 //   support, and so is a post under a takdrager. With beams on, the stand walls are in the beam frame and need none.
 //   Plates go only under posts (cc 1 m), centred under the wall, across it.
@@ -97,16 +98,19 @@ export function wallSupports(
 }
 
 /**
- * Posts (0 … len, whole metres from the stretch's start) that get a plate on a stretch of `len` modules. The textile
- * rule's evenly spread points, moved to the nearest post; one more plate while that breaks the rule.
+ * Posts (0 … len, whole metres from the stretch's start) that get a plate on a stretch of `len` modules: the textile
+ * wall's rule on the posts. A free end gets its plate at the end post, pulled in whole posts only as far as the gaps
+ * need; with two free ends the `to` end is pulled first. One more plate while that breaks the rule.
  */
 export function stretchPosts(len: number, ends: { from: boolean; to: boolean }, rule: SupportRule): number[] {
   const mm = len * 1000;
   const free = (i: number) => !(i === 0 && ends.from) && !(i === len && ends.to);
+  const pull = (need: number, n: number) => {
+    const posts = Math.ceil(need / 1000 - 1e-9);
+    return n === 1 ? [posts * 1000] : [Math.floor(posts / 2) * 1000, Math.ceil(posts / 2) * 1000];
+  };
   for (let n = minSupports(mm, rule, ends); n <= len + 1; n++) {
-    // To the nearest post, a tie toward the end it is closest to
-    const post = (x: number) => (x < mm / 2 ? Math.ceil(x / 1000 - 0.5) : Math.floor(x / 1000 + 0.5));
-    const at = [...new Set(spreadSupports(mm, n, rule.maxEnd, ends).map(post))].filter(free).sort((a, b) => a - b);
+    const at = [...new Set(spreadSupports(mm, n, rule, ends, pull).map((x) => Math.round(x / 1000)))].filter(free).sort((a, b) => a - b);
     if (keepsRule(len, at, ends, rule)) return at;
   }
   return Array.from({ length: len + 1 }, (_, i) => i).filter(free);

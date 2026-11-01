@@ -21,17 +21,21 @@ const inner = (id: string, from: [number, number], to: [number, number]): Wall =
 const withWalls = (v: Variant, ...walls: Wall[]): Variant => ({ ...v, walls: [...v.walls, ...walls] });
 
 describe('posts on one stretch', () => {
-  it('free at both ends: 2 from 1 m, the outer ones at most 1 m in, at most 3 m apart', () => {
+  // Bjørn 1.11.2026: a plate at each free end, pulled a post in only where the gaps would be over 3 m
+  it('free at both ends: at the ends, pulled in a metre where a gap would be over 3 m', () => {
     expect(stretchPosts(1, { from: false, to: false }, RULE)).toEqual([0, 1]);
     expect(stretchPosts(2, { from: false, to: false }, RULE)).toEqual([0, 2]);
-    expect(stretchPosts(4, { from: false, to: false }, RULE)).toEqual([1, 3]);
+    expect(stretchPosts(3, { from: false, to: false }, RULE)).toEqual([0, 3]);
+    expect(stretchPosts(4, { from: false, to: false }, RULE)).toEqual([0, 3]);
     expect(stretchPosts(5, { from: false, to: false }, RULE)).toEqual([1, 4]);
+    expect(stretchPosts(6, { from: false, to: false }, RULE)).toEqual([0, 3, 6]);
     expect(stretchPosts(8, { from: false, to: false }, RULE)).toEqual([1, 4, 7]);
   });
   it('a corner or T at one end counts as one support', () => {
     expect(stretchPosts(1, { from: true, to: false }, RULE)).toEqual([1]);
-    expect(stretchPosts(3, { from: true, to: false }, RULE)).toEqual([2]);
-    expect(stretchPosts(3, { from: false, to: true }, RULE)).toEqual([1]);
+    expect(stretchPosts(3, { from: true, to: false }, RULE)).toEqual([3]);
+    expect(stretchPosts(4, { from: true, to: false }, RULE)).toEqual([3]);
+    expect(stretchPosts(4, { from: false, to: true }, RULE)).toEqual([1]);
   });
   it('held at both ends: only when they are more than 3 m apart', () => {
     expect(stretchPosts(3, { from: true, to: true }, RULE)).toEqual([]);
@@ -44,9 +48,11 @@ describe('stand walls', () => {
   it('with takdrager the frame holds them: no plates', () => {
     expect(feet(row(6, 3))).toEqual([]);
   });
-  it('without takdrager: side walls 1 m in from the free end, a 6 m back wall in the middle', () => {
-    expect(feet({ ...row(3, 3), noBeams: true })).toEqual(['0,2', '3,2']);
-    expect(feet({ ...row(6, 3), noBeams: true })).toEqual(['0,2', '3,0', '6,2']);
+  it('without takdrager: side walls at the free end, a 6 m back wall in the middle', () => {
+    expect(feet({ ...row(3, 3), noBeams: true })).toEqual(['0,3', '3,3']);
+    expect(feet({ ...row(6, 3), noBeams: true })).toEqual(['0,3', '3,0', '6,3']);
+    // 4 m side walls: pulled a metre in so the gap to the back corner is 3 m
+    expect(feet({ ...row(6, 4), noBeams: true })).toEqual(['0,3', '3,0', '6,3']);
   });
   it('the exhibitor pays and picks them, also under walls the organiser pays', () => {
     const res = calc({ ...row(3, 3), noBeams: true }, RULES, DEFAULT_CATALOG, ORGANISER);
@@ -66,24 +72,26 @@ describe('stand walls', () => {
 describe('inner walls and rooms', () => {
   const island = createVariant('A', { width: 8, depth: 6, type: 'island' });
   it('a wall standing alone in the stand gets plates even with takdrager', () => {
-    expect(feet(withWalls(island, inner('w1', [2, 3], [6, 3])))).toEqual(['3,3', '5,3']);
+    // The cross beam from the joint in the 8 m sides lands on it at (4,3): a plate at each free end
+    expect(feet(withWalls(island, inner('w1', [2, 3], [6, 3])))).toEqual(['2,3', '6,3']);
+    expect(feet({ ...withWalls(island, inner('w1', [2, 3], [6, 3])), noBeams: true })).toEqual(['2,3', '5,3']);
   });
   it('a wall into another wall (T) is held at that end', () => {
     const row = createVariant('A', { width: 6, depth: 4, type: 'row' });
-    // 2 m out from the back wall: held at the back, free end at most 1 m out
-    expect(feet(withWalls(row, inner('w1', [3, 0], [3, 2])))).toEqual(['3,1']);
+    // 2 m out from the back wall: held at the back, a plate at the free end
+    expect(feet(withWalls(row, inner('w1', [3, 0], [3, 2])))).toEqual(['3,2']);
   });
   it('a wall ending under a takdrager is held there', () => {
     const row = createVariant('A', { width: 6, depth: 3, type: 'row' });
     expect(feet(withWalls(row, inner('w1', [3, 0], [3, 3])))).toEqual([]);
     // Without beams the same wall stands free at the front
-    expect(feet({ ...withWalls(row, inner('w1', [3, 0], [3, 3])), noBeams: true })).toContain('3,2');
+    expect(feet({ ...withWalls(row, inner('w1', [3, 0], [3, 3])), noBeams: true })).toContain('3,3');
   });
   it('a room counts as support for the walls it touches, and its corners hold its own sides', () => {
     const row = createVariant('A', { width: 6, depth: 4, type: 'row' });
     const v = { ...addRoom(row, { x: 0, y: 0, w: 2, d: 2 }, undefined, 'bk')!, noBeams: true };
-    // Room sides 2 m between corners: none. Left stand wall: held at the back and at the room (0,2), free 2 m on. Back
-    // wall: the room's side (2,0) to the corner (6,0) is 4 m, one plate between
-    expect(feet(v)).toEqual(['0,3', '4,0', '6,3']);
+    // Room sides 2 m between corners: none. Left stand wall: held at the back and at the room (0,2), a plate at its free
+    // end. Back wall: the room's side (2,0) to the corner (6,0) is 4 m, one plate between. Right wall 4 m: a metre in
+    expect(feet(v)).toEqual(['0,4', '4,0', '6,3']);
   });
 });
