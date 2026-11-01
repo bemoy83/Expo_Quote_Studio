@@ -55,10 +55,11 @@ describe('3D scene from the model', () => {
     expect((foils[0].userData as Tag).pick?.wallId).toBe('side-left')
   })
 
-  it('one textile box per textile wall, and floor tiles are instanced per product', () => {
+  it('one textile box per textile wall, and floor tiles are instanced per product, carpet tiles over a joint bed', () => {
     expect(layer('textile')).toHaveLength(v.textiles.length)
     const inst = layer('floor').filter((o) => (o as THREE.InstancedMesh).isInstancedMesh) as THREE.InstancedMesh[]
-    expect(inst).toHaveLength(1)
-    expect(inst[0].count).toBe(v.floor.tiles.length)
+    // Carpet tiles: the tiles over a bed in the joint shade
+    expect(inst).toHaveLength(2)
+    expect(inst.map((m) => m.count)).toEqual([v.floor.tiles.length, v.floor.tiles.length])
   })
 })

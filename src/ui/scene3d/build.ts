@@ -17,6 +17,7 @@ import { builtModules, wallPoints, type BuiltModule } from '../../domain/walls'
 import type { Motif } from '../../persistence/file'
 import { doorInset, wallHeight } from '../../rules/rules'
 import { idx, place, plateColor, productOf, rules } from '../env'
+import { shade } from '../colors'
 import { findMotif } from '../motifs'
 import type { Highlight } from '../tools'
 
@@ -36,8 +37,8 @@ const DOOR = '#d9d6cd'
 const CURTAIN = '#3a3c41'
 const FABRIC = '#cfc7e6'
 const STAND_FLOOR = '#e3e0d8'
-/** Gap between carpet tiles, m: the joint shows the stand surface. */
-const JOINT = 0.012
+/** Joint between carpet tiles, m: barely there, as on a laid floor. */
+const JOINT = 0.006
 /** Grey foot plates (750), darker than the floor so they show. */
 const FOOT_PLATE = '#3d4045'
 const SELECT = '#6aaecb'
@@ -166,16 +167,20 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
   const tmp = new THREE.Object3D()
   for (const [a, tiles] of byProduct) {
     const hit = idx.byArtnr.get(a)
-    const joint = hit?.product.tiles ? JOINT : 0
-    const inst = new THREE.InstancedMesh(tileGeo, mat('floor', hit?.variant.color ?? NO_COLOR, { roughness: 1 }), tiles.length)
-    tiles.forEach((t, n) => {
-      tmp.position.copy(at([(t.i + t.w / 2) * CELL, (t.j + t.h / 2) * CELL], 0.003))
-      tmp.scale.set(t.w * CELL - joint, 1, t.h * CELL - joint)
-      tmp.updateMatrix()
-      inst.setMatrixAt(n, tmp.matrix)
-    })
-    inst.receiveShadow = true
-    add(inst, { layer: 'floor' })
+    const color = hit?.variant.color ?? NO_COLOR
+    // Carpet tiles: each tile a hair smaller than its place, over a slightly darker bed. A finished floor, not a drawing.
+    const layers: [string, number, number][] = hit?.product.tiles ? [[shade(color, 0.18), 0, 0.002], [color, JOINT, 0.003]] : [[color, 0, 0.003]]
+    for (const [c, joint, y] of layers) {
+      const inst = new THREE.InstancedMesh(tileGeo, mat('floor', c, { roughness: 1 }), tiles.length)
+      tiles.forEach((t, n) => {
+        tmp.position.copy(at([(t.i + t.w / 2) * CELL, (t.j + t.h / 2) * CELL], y))
+        tmp.scale.set(t.w * CELL - joint, 1, t.h * CELL - joint)
+        tmp.updateMatrix()
+        inst.setMatrixAt(n, tmp.matrix)
+      })
+      inst.receiveShadow = true
+      add(inst, { layer: 'floor' })
+    }
   }
   // 1 m grid, faint, on a stand without floor: a laid floor shows its own joints
   const grid: number[] = []
