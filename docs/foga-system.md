@@ -198,7 +198,8 @@ systemveggen: den lager ikke rom og kan ikke ha dør (tekstildør med overstykke
   hver ende. En 92LTX i hjørnet teller som støtte, som en fotplate, i begge retninger. Minst 2 støtter (hjørnestolper
   medregnet) fra 1 m og oppover, ellers 1, og maks 3000 mm mellom to støtter. Foten står helst helt ute i en fri ende,
   og trekkes inn (maks 1000 mm) bare så langt som trengs for å holde 3000 mm mellom føttene. Resten fordeles jevnt
-  over lengden (Bjørn 1.11.2026): 4 m gir føtter 500 mm inn fra hver ende, 6 m tre føtter i endene og midt på. Vegger
+  over lengden (Bjørn 1.11.2026). En fot i en fri ende står i flukt med rammeenden, ikke forbi den (senter en halv
+  plate inn, 200 mm for 740): 3 m gir føtter 200 mm inn, 4 m 500 mm inn, 6 m tre føtter, 200 mm inn og midt på. Vegger
   under 1 m står på én liten fotplate **730** (876 730 92, 250 × 300 × 5) midt på.
 - Tegnes en strek i forlengelsen av en vegg, blir de én vegg. Vegger møtes bare ende mot ende i hjørner (ingen T).
 - **Tekstil på begge sider, alltid.** Hver side er trykt, hvit uten grafikk, eller kundens egen duk i samme

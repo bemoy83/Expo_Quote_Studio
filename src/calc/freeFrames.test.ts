@@ -33,6 +33,11 @@ describe('feet and braces', () => {
     expect(supportPoints(7000, S)).toEqual([500, 3500, 6500]);
     expect(supportPoints(8000, S)).toEqual([1000, 4000, 7000]);
   });
+  it('with an inset, a foot at a free end stays flush with the frame end', () => {
+    expect(supportPoints(3000, S, undefined, 200)).toEqual([200, 2800]);
+    expect(supportPoints(5000, S, undefined, 200)).toEqual([1000, 4000]);
+    expect(supportPoints(2000, S, { from: true, to: false }, 200)).toEqual([1800]);
+  });
   it('a corner post is a support', () => {
     // Corner at one end: one foot, at the free end
     expect(supportPoints(2000, S, { from: true, to: false })).toEqual([2000]);
@@ -59,7 +64,7 @@ describe('free-standing frame', () => {
   it('a straight run: two free ends, textile both sides', () => {
     const [f] = frames(draw(island(), [1, 2], [7, 2]));
     // 6000 long, H = 2540. Rails 1 × 6000 is more than 5000: 2 × 3000 each
-    expect(f).toMatchObject({ pos: 'F1', length: 6000, H: 2540, railCuts: [3000, 3000], uprights: 2, supports: [0, 3000, 6000], braceLength: 2460 });
+    expect(f).toMatchObject({ pos: 'F1', length: 6000, H: 2540, railCuts: [3000, 3000], uprights: 2, supports: [200, 3000, 5800], braceLength: 2460 });
     // Couplings: 2 × 2 corner 617 + 3 braces × 2 × 600 + 2 × 609
     expect(f.couplings).toBe(4 + 6 + 2);
     expect(f.connectors).toEqual({ corner: 4, splice: 2 });
@@ -82,8 +87,8 @@ describe('free-standing frame', () => {
     expect(f1.uprights).toBe(1);
     expect(f1.nCorners).toBe(1);
     expect(f1.profileMm).toBe(2 * 2963 + 2540);
-    // The post is the support at the corner: one foot, at the free end
-    expect(f1.supports).toEqual([0]);
+    // The post is the support at the corner: one foot, flush with the free end
+    expect(f1.supports).toEqual([200]);
     // Face A of (1,2) → (4,2) is the left normal (0, 1): the inner face, toward the other run
     expect(f1.faces.map((x) => [x.pos, x.W])).toEqual([
       ['F1A', 2980],
@@ -93,7 +98,7 @@ describe('free-standing frame', () => {
     expect(f2.railStart).toBe(37);
     // Run (4,2) → (4,5): face A is the left normal (−1, 0), toward where the first run comes from: inner
     expect(f2.faces.map((x) => x.W)).toEqual([2980, 3020]);
-    expect(f2.supports).toEqual([3000]);
+    expect(f2.supports).toEqual([2800]);
     // 617 into the post top and bottom, plus at the free end; one brace
     expect(f2.couplings).toBe(2 + 2 + 2);
   });
