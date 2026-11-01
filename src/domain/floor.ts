@@ -16,18 +16,18 @@ export const TILE_FULL: TileSize = { w: 2, h: 2 };
 /** Tile sizes, largest first: what Auto tries in turn. */
 const TILE_SIZES: readonly TileSize[] = [TILE_FULL, { w: 2, h: 1 }, { w: 1, h: 2 }, { w: 1, h: 1 }];
 
-interface Rect {
+export interface Rect {
   i: number;
   j: number;
   w: number;
   h: number;
 }
 
-const standCells = (s: Stand) => ({ nx: Math.round(s.width / CELL), ny: Math.round(s.depth / CELL) });
+export const standCells = (s: Stand) => ({ nx: Math.round(s.width / CELL), ny: Math.round(s.depth / CELL) });
 
 const overlaps = (a: Rect, b: Rect) => a.i < b.i + b.w && b.i < a.i + a.w && a.j < b.j + b.h && b.j < a.j + a.h;
 const sameRect = (a: Rect, b: Rect) => a.i === b.i && a.j === b.j && a.w === b.w && a.h === b.h;
-const covers = (t: Rect, i: number, j: number) => i >= t.i && i < t.i + t.w && j >= t.j && j < t.j + t.h;
+export const covers = (t: Rect, i: number, j: number) => i >= t.i && i < t.i + t.w && j >= t.j && j < t.j + t.h;
 
 /** The tile covering cell (i, j). */
 const tileAt = (tiles: readonly FloorTile[], i: number, j: number) => tiles.find((t) => covers(t, i, j));
@@ -53,7 +53,7 @@ export function tileCells(cells: Iterable<[number, number]>, product: string): F
   return out;
 }
 
-function cellsIn(r: Rect): [number, number][] {
+export function cellsIn(r: Rect): [number, number][] {
   const out: [number, number][] = [];
   for (let b = r.j; b < r.j + r.h; b++) for (let a = r.i; a < r.i + r.w; a++) out.push([a, b]);
   return out;
@@ -61,7 +61,7 @@ function cellsIn(r: Rect): [number, number][] {
 
 /** What is left of a tile or lane once some of its cells are gone: smaller tiles, or narrower and shorter lanes. */
 const relay = (t: FloorTile, cells: [number, number][]) =>
-  t.roll ? layLanes(cells, t.product, t.roll, across(t)) : tileCells(cells, t.product);
+  t.roll ? layLanes(cells, t.product, t.roll, across(t)).map((x) => (t.fill ? { ...x, fill: t.fill } : x)) : tileCells(cells, t.product);
 
 /** Remove a rectangle from the floor. A tile only partly inside is cut, and what is left is laid as smaller tiles. */
 export function cutTiles(tiles: readonly FloorTile[], r: Rect): FloorTile[] {
@@ -76,15 +76,18 @@ export function clipTiles(tiles: readonly FloorTile[], s: Stand): FloorTile[] {
   );
 }
 
-/** Lay a whole stand from the back left corner: 1 × 1 tiles with smaller ones along an edge of half a metre, or with
- * `roll` (m) lanes along the longest side, the last one cut to what is left. */
-export function fillTiles(s: Stand, product: string, roll?: number): FloorTile[] {
+/** Every cell of the stand. */
+export function standCellList(s: Stand): [number, number][] {
   const { nx, ny } = standCells(s);
   const all: [number, number][] = [];
   for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) all.push([i, j]);
-  if (!roll) return tileCells(all, product);
-  const dir = longestSide(s);
-  return layLanes(all, product, dir, { start: 0, len: Math.round(roll / CELL) });
+  return all;
+}
+
+/** Lay a whole stand with carpet tiles from the back left corner: 1 × 1, smaller ones along an edge of half a metre.
+ * Rolled floor is laid by `fillCarpet` (domain/carpet.ts). */
+export function fillTiles(s: Stand, product: string): FloorTile[] {
+  return tileCells(standCellList(s), product);
 }
 
 // --- Rolled floor: lanes -----------------------------------------------------------------------------------------
@@ -97,22 +100,22 @@ export const ROLL_END = 0.1;
 /** Lanes run along the stand's longest side by default: fewest joints. */
 export const longestSide = (s: Stand): RollDir => (s.width >= s.depth ? 'x' : 'y');
 
-interface Span {
+export interface Span {
   start: number;
   len: number;
 }
 
 /** A lane's span along the roll and across it, in cells. */
-const along = (r: FloorTile): Span => (r.roll === 'y' ? { start: r.j, len: r.h } : { start: r.i, len: r.w });
-const across = (r: FloorTile): Span => (r.roll === 'y' ? { start: r.i, len: r.w } : { start: r.j, len: r.h });
-const laneRect = (dir: RollDir, a: Span, c: Span): Rect =>
+export const along = (r: FloorTile): Span => (r.roll === 'y' ? { start: r.j, len: r.h } : { start: r.i, len: r.w });
+export const across = (r: FloorTile): Span => (r.roll === 'y' ? { start: r.i, len: r.w } : { start: r.j, len: r.h });
+export const laneRect = (dir: RollDir, a: Span, c: Span): Rect =>
   dir === 'x' ? { i: a.start, j: c.start, w: a.len, h: c.len } : { i: c.start, j: a.start, w: c.len, h: a.len };
 
 /**
  * Cover a set of cells with lanes running `dir`. Across, the floor is split in bands one roll wide from `band.start`;
  * in each band a lane runs as long as the cells it covers stay the same across, so a hole in a lane splits it.
  */
-function layLanes(cells: Iterable<[number, number]>, product: string, dir: RollDir, band: Span): FloorTile[] {
+export function layLanes(cells: Iterable<[number, number]>, product: string, dir: RollDir, band: Span): FloorTile[] {
   // band → along → covered cells across
   const bands = new Map<number, Map<number, number[]>>();
   const seen = new Set<string>();
@@ -176,13 +179,43 @@ export function lanesOf(tiles: readonly FloorTile[], product: string, roll: numb
   });
 }
 
+/** One piece cut from the roll: `length` as cut (with the end allowance), and the lanes it gives. */
+export interface RollPiece {
+  length: number;
+  lanes: Lane[];
+  /** Split lengthwise into lanes narrower than the roll. */
+  split: boolean;
+  /** One narrow lane in two halves, laid end to end. */
+  endToEnd: boolean;
+}
+
+/** The pieces cut from the roll: one per lane, or one per group of lanes that share a piece (`split`). */
+export function rollPieces(lanes: readonly Lane[]): RollPiece[] {
+  const groups = new Map<string, Lane[]>();
+  lanes.forEach((l, k) => {
+    const key = l.tile.split ?? `#${k}`;
+    groups.set(key, [...(groups.get(key) ?? []), l]);
+  });
+  return [...groups.values()].map((ls) => {
+    const inLine = ls.length === 2 && ls[0].tile.roll === ls[1].tile.roll && across(ls[0].tile).start === across(ls[1].tile).start;
+    return {
+      length: Math.max(...ls.map((l) => l.length)) + 2 * ROLL_END,
+      lanes: ls,
+      split: ls.length > 1,
+      endToEnd: inLine,
+    };
+  });
+}
+
 /** What a rolled product takes from the roll: running metres including the end allowance, and the waste in m² (strips
- * cut off lengthwise and the trimmed ends). Each lane is cut from a whole roll width. */
+ * cut off lengthwise and the trimmed ends). Each piece is cut from a whole roll width; lanes that share a piece
+ * (`split`) count it once. */
 export function rollUsage(tiles: readonly FloorTile[], product: string, roll: number) {
   const lanes = lanesOf(tiles, product, roll);
-  const lm = lanes.reduce((a, l) => a + l.length + 2 * ROLL_END, 0);
+  const pieces = rollPieces(lanes);
+  const lm = pieces.reduce((a, p) => a + p.length, 0);
   const laid = lanes.reduce((a, l) => a + l.length * l.width, 0);
-  return { lanes, lm, waste: lm * roll - laid };
+  return { lanes, pieces, lm, laid, waste: lm * roll - laid };
 }
 
 /** Version 2 files: one product per 0,5 m cell. */
@@ -389,12 +422,21 @@ export function lanesLaid(a: FloorAction, product: string, roll: RollDir): Floor
   return (a.lanes ?? [a.rect]).map((r) => ({ ...r, product, roll }));
 }
 
+/** A lane given another colour leaves its fill and the piece it shared: it is cut from another roll. */
+/** A lane on its own: out of its fill and of the roll piece it shared. */
+export function loose(t: FloorTile): FloorTile {
+  const { fill: _f, split: _s, ...rest } = t;
+  return rest;
+}
+
+const recolored = (t: FloorTile, product: string): FloorTile => ({ ...loose(t), product });
+
 /** Apply a brush touch. `roll`: the lane's direction when the brush lays rolled floor. */
 export function applyFloor(v: Variant, a: FloorAction, product: string, roll?: RollDir): Variant {
   if (a.kind === 'none') return v;
   const tiles =
     a.kind === 'recolor'
-      ? v.floor.tiles.map((t) => (sameRect(t, a.rect) ? { ...t, product } : t))
+      ? v.floor.tiles.map((t) => (sameRect(t, a.rect) ? recolored(t, product) : t))
       : [
           ...(a.kind === 'place' && a.lanes ? a.lanes.reduce<FloorTile[]>(cutTiles, v.floor.tiles) : cutTiles(v.floor.tiles, a.rect)),
           ...(a.kind !== 'place' ? [] : roll ? lanesLaid(a, product, roll) : [{ ...a.rect, product }]),

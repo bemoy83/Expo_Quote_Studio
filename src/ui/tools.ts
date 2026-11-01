@@ -3,6 +3,9 @@ import { GRID_STEPS, type GridStep } from '../domain/snapGrid';
 import { TILE_FULL, type FloorBrushSize, type TileSize } from '../domain/floor';
 import type { Rules } from '../rules/rules';
 
+/** Engangsteppe: Fyll marks an area the engine lays (domain/carpet.ts), Bane places one lane. */
+export type RollMode = 'fill' | 'lane'
+
 /** Velg · Pensel · Tøm */
 export type Tool = 'select' | 'brush' | 'erase';
 

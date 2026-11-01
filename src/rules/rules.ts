@@ -20,6 +20,21 @@ export interface InFrameParams {
   stag: number;
 }
 
+export interface CarpetRates {
+  status: 'forslag' | 'godkjent';
+  /** kr per m² taken from the roll. */
+  material: number;
+  /** kr per lm tape. */
+  tapeMaterial: number;
+  /** kr per hour of work. */
+  hour: number;
+  /** Minutes per m² laid, per lm cut, per lm seam and per lm tape. */
+  minLay: number;
+  minCut: number;
+  minSeam: number;
+  minTape: number;
+}
+
 export interface Rules {
   approved: string;
   wall: {
@@ -37,6 +52,9 @@ export interface Rules {
   /** Door leaf: `swing` = leaf width = swing radius, `height` = clear height (the header panel fills the rest), m. */
   door: { swing: number; height: number };
   floor: { cell: number };
+  /** Engangsteppe: internal cost, used only to rank the ways to lay a fill and to show the waste in kr. Never in the
+   * sum: the customer pays laid m². `status` 'forslag': proposed rates, not yet approved. */
+  carpet: CarpetRates;
   /** A quote holds `validDays` from it is sent, but never later than `beforeMount` days before montering. */
   quote: { validDays: number; beforeMount: number };
   /** VAT used for the inkl. mva. figure. Prices are always eks. mva. */
@@ -63,6 +81,7 @@ export const RULES: Rules = {
   },
   door: { swing: 0.95, height: 2.0 },
   floor: { cell: 0.5 },
+  carpet: { status: 'forslag', material: 38, tapeMaterial: 3, hour: 650, minLay: 1.5, minCut: 0.5, minSeam: 1.5, minTape: 0.6 },
   quote: { validDays: 30, beforeMount: 14 },
   vat: 0.25,
 };

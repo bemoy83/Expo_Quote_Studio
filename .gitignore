@@ -25,3 +25,4 @@ dist-ssr
 
 # Design handoff stays local (not versioned)
 design_docs/
+design_docs/design_handoff_engangsteppe/

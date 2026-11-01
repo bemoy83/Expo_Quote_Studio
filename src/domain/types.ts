@@ -87,6 +87,11 @@ export interface FloorTile {
   /** Set on a lane of rolled floor (engangsteppe): the direction the roll runs, along its length. A lane is at most
    * one roll wide across it; a narrower lane is cut lengthwise from a whole roll. */
   roll?: 'x' | 'y';
+  /** Lane laid by Fyll (domain/carpet.ts): the lanes of one fill share this id, so the fill can be laid another way. */
+  fill?: string;
+  /** Lanes cut from one piece of roll: two narrow lanes side by side, or one narrow lane split in two halves laid end
+   * to end. The piece is as long as the longest of them. */
+  split?: string;
 }
 
 export interface Floor {

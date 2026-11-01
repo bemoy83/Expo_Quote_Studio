@@ -10,7 +10,7 @@ import type { Motif } from '../../persistence/file'
 import { Segmented } from '../controls'
 import { catalog, idx, rules, wallPlates } from '../env'
 import { ObjectThumb } from '../panel/ProductRow'
-import { FLOOR_MAIN, FLOOR_OTHER, floorSizeLabel, gridSteps, type Brush, type DockTool } from '../tools'
+import { FLOOR_MAIN, FLOOR_OTHER, floorSizeLabel, gridSteps, type Brush, type DockTool, type RollMode } from '../tools'
 import { GridPicker } from './GridPicker'
 
 export interface QuickPicksProps {
@@ -34,6 +34,8 @@ export interface QuickPicksProps {
   onOtherSize: (s: TileSize) => void
   roll: RollDir
   onRoll: (d: RollDir) => void
+  rollMode: RollMode
+  onRollMode: (m: RollMode) => void
   gridStep: GridStep
   onGridStep: (s: GridStep) => void
   onFill: () => void
@@ -147,15 +149,28 @@ function quickContent(p: QuickPicksProps): ReactNode {
         })}
         <Sep />
         {rollBrush ? (
-          <Segmented<RollDir>
-            label="Rulleretning"
-            value={p.roll}
-            onChange={p.onRoll}
-            options={[
-              { value: 'x', title: 'Banene går fra venstre til høyre (R snur)', label: <span className="num">↔ Bredden</span> },
-              { value: 'y', title: 'Banene går fra bak til front (R snur)', label: <span className="num">↕ Dybden</span> },
-            ]}
-          />
+          <>
+            <Segmented<RollMode>
+              label="Legging"
+              value={p.rollMode}
+              onChange={p.onRollMode}
+              options={[
+                { value: 'fill', title: 'Dra et område, banene legges slik det koster minst', label: 'Fyll' },
+                { value: 'lane', title: 'Legg én hel bane av gangen', label: 'Bane' },
+              ]}
+            />
+            {p.rollMode === 'lane' && (
+              <Segmented<RollDir>
+                label="Rulleretning"
+                value={p.roll}
+                onChange={p.onRoll}
+                options={[
+                  { value: 'x', title: 'Banene går fra venstre til høyre (R snur)', label: <span className="num">↔ Bredden</span> },
+                  { value: 'y', title: 'Banene går fra bak til front (R snur)', label: <span className="num">↕ Dybden</span> },
+                ]}
+              />
+            )}
+          </>
         ) : (
           floorSizes
         )}

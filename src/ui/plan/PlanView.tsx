@@ -26,8 +26,11 @@ import { idx, place, plateColor, productOf, rules } from '../env'
 import { doorInset } from '../../rules/rules'
 import { findMotif } from '../motifs'
 import type { Brush, Highlight, Tool } from '../tools'
-import { applyFloor, floorAction, lanesLaid, lanesOf, TILE_FULL, type FloorAction, type FloorBrushSize, type RollDir } from '../../domain/floor'
+import { across, applyFloor, floorAction, lanesLaid, lanesOf, standCells, TILE_FULL, type FloorAction, type FloorBrushSize, type Rect, type RollDir } from '../../domain/floor'
+import { fillCarpet, fillProposalsFor, fillTilesOf, laneAt } from '../../domain/carpet'
+import type { RollMode } from '../tools'
 import { distToSegment, nearestEdge, strokeFrom } from './geometry'
+import { Hatched } from './Hatched'
 
 export interface PlanSelection {
   wallId?: string
@@ -42,6 +45,10 @@ export interface PlanSelection {
   freeFace?: FaceKey
   /** An innvendig takdrager. */
   beamId?: string
+  /** A lane of engangsteppe placed on its own: its top left cell. */
+  lane?: { i: number; j: number }
+  /** Engangsteppe laid by Fyll (domain/carpet.ts). */
+  fill?: string
 }
 
 interface Props {
@@ -52,6 +59,8 @@ interface Props {
   floorSize: FloorBrushSize
   /** Direction lanes of rolled floor run when the brush lays them. */
   rollDir?: RollDir
+  /** Rolled floor: Fyll marks an area the engine lays, Bane places one lane. */
+  rollMode?: RollMode
   /** Cell size of the drawing grid for the textile brush, m (domain/snapGrid). */
   gridStep?: number
   highlight: Highlight
@@ -113,6 +122,8 @@ type Drag =
   | { kind: 'floor'; last: string | null; anchor: { i: number; j: number } | null }
   /** A stroke of rolled floor from `from`: whole lanes, laid on release (`rollPending` until then). */
   | { kind: 'roll'; from: P; moved: boolean }
+  /** Fyll with rolled floor: an area from cell `from`; a click without a drag fills the stand. */
+  | { kind: 'carpetFill'; from: { i: number; j: number }; moved: boolean }
   | { kind: 'click'; select: PlanSelection }
   | { kind: 'object'; id: string; dx: number; dy: number; start: P; moved: boolean; select: PlanSelection }
   | ({ kind: 'wall'; moved: boolean; select: PlanSelection } & WallDrag)
@@ -145,8 +156,13 @@ export function PlanView(p: Props) {
   const svg = useRef<SVGSVGElement>(null)
   const drag = useRef<Drag | null>(null)
   const [hover, setHover] = useState<P | null>(null)
+  // The drag under way as of the last pointer move, for rendering (hover previews pause, the cursor grabs): the ref
+  // itself is only read in the handlers
+  const [dragging, setDragging] = useState<Drag | null>(null)
   /** What the roll stroke in progress will lay on release: the preview shows it, the floor is untouched until then. */
   const [rollPending, setRollPending] = useState<FloorAction | null>(null)
+  /** Fyll area being dragged, in cells. */
+  const [fillRect, setFillRect] = useState<Rect | null>(null)
   const [stroke, setStroke] = useState<[Point, Point] | null>(null)
   /** Textile stroke being drawn, with where it started (picks the wall face when it lies on a wall). */
   const [textileStroke, setTextileStroke] = useState<TextileLine | null>(null)
@@ -158,9 +174,15 @@ export function PlanView(p: Props) {
   /** Edges carrying a stand wall: locked, and the only ones the side labels count (an inner wall leaves a side open). */
   const standKeys = useMemo(() => standWallKeys(v), [v])
 
-  useEffect(() => {
+  // A new tool or pen drops whatever stroke was under way
+  const [penNow, setPenNow] = useState({ tool, brush })
+  if (penNow.tool !== tool || penNow.brush !== brush) {
+    setPenNow({ tool, brush })
     setStroke(null)
     setTextileStroke(null)
+    setFillRect(null)
+  }
+  useEffect(() => {
     drag.current = null
   }, [tool, brush])
 
@@ -273,6 +295,18 @@ export function PlanView(p: Props) {
       ? floorAction(v, { x: q.x / CELL, y: q.y / CELL, size: brushSize, erase: tool === 'erase', product: brush.product, anchor, from })
       : { kind: 'none' }
   const laneAction = (d: { from: P }, q: P | null) => floorTouch(q ?? d.from, null, q && { x: d.from.x / CELL, y: d.from.y / CELL })
+  /** Fyll with engangsteppe: drag an area, the engine lays it the cheapest way. */
+  const carpetFill = !!rollWidth && tool === 'brush' && p.rollMode !== 'lane'
+  const cellOf = (q: P) => {
+    const { nx, ny } = standCells(v.stand)
+    return { i: Math.max(0, Math.min(nx - 1, Math.floor(q.x / CELL))), j: Math.max(0, Math.min(ny - 1, Math.floor(q.y / CELL))) }
+  }
+  const rectOf = (a: { i: number; j: number }, b: { i: number; j: number }): Rect => ({
+    i: Math.min(a.i, b.i),
+    j: Math.min(a.j, b.j),
+    w: Math.abs(a.i - b.i) + 1,
+    h: Math.abs(a.j - b.j) + 1,
+  })
 
   const paintFloorAt = (q: P) => {
     const d = drag.current
@@ -290,6 +324,11 @@ export function PlanView(p: Props) {
     if (e.button !== 0) return
     const q = toModel(e)
     svg.current!.setPointerCapture(e.pointerId)
+    if (carpetFill) {
+      if (!onStand(q)) return
+      drag.current = { kind: 'carpetFill', from: cellOf(q), moved: false }
+      return
+    }
     if (floorTool && rollWidth && tool === 'brush') {
       const d = { kind: 'roll' as const, from: q, moved: false }
       drag.current = d
@@ -386,6 +425,12 @@ export function PlanView(p: Props) {
       startRoomDrag(room, 'move', q, { roomId: room.id })
       return
     }
+    // Engangsteppe: a fill is chosen as a whole, a lane placed on its own by itself
+    const lt = q.x >= 0 && q.y >= 0 && q.x < W && q.y < D ? laneAt(v, Math.floor(q.x / CELL), Math.floor(q.y / CELL)) : undefined
+    if (lt) {
+      drag.current = { kind: 'click', select: lt.fill ? { fill: lt.fill } : { lane: { i: lt.i, j: lt.j } } }
+      return
+    }
     drag.current = { kind: 'click', select: {} }
   }
 
@@ -393,9 +438,15 @@ export function PlanView(p: Props) {
     const q = toModel(e)
     setHover(q)
     const d = drag.current
+    setDragging(d)
     if (!d) return
     if (d.kind === 'floor') paintFloorAt(q)
-    else if (d.kind === 'roll') {
+    else if (d.kind === 'carpetFill') {
+      const c = cellOf(q)
+      if (!d.moved && c.i === d.from.i && c.j === d.from.j) return
+      d.moved = true
+      setFillRect(rectOf(d.from, c))
+    } else if (d.kind === 'roll') {
       if (!d.moved && Math.hypot(q.x - d.from.x, q.y - d.from.y) < 0.25) return
       d.moved = true
       setRollPending(laneAction(d, q))
@@ -431,8 +482,16 @@ export function PlanView(p: Props) {
   const onUp = (e: RPointerEvent<SVGSVGElement>) => {
     const d = drag.current
     drag.current = null
+    setDragging(null)
     if (!d) return
-    if (d.kind === 'roll') {
+    if (d.kind === 'carpetFill') {
+      const rect = d.moved ? rectOf(d.from, cellOf(toModel(e))) : undefined
+      setFillRect(null)
+      if (brush?.kind === 'floor' && rollWidth) {
+        const product = brush.product
+        p.onEdit((x) => fillCarpet(x, product, rollWidth, rules.carpet, rect))
+      }
+    } else if (d.kind === 'roll') {
       const a = rollPending
       setRollPending(null)
       if (a && a.kind !== 'none' && brush?.kind === 'floor') {
@@ -526,7 +585,7 @@ export function PlanView(p: Props) {
     (highlight && highlight !== layer) || (layer !== 'objects' && off(LAYER_GROUP[layer])) ? DIMMED : 1
   const cursor = tool !== 'select' ? 'crosshair' : roomCursor()
   function roomCursor() {
-    const d = drag.current
+    const d = dragging
     if (d?.kind === 'room') return d.mode === 'move' ? 'grabbing' : d.horizontal ? 'ns-resize' : 'ew-resize'
     if (!hover || p.mini) return 'default'
     const e = roomEdgeAt(hover)
@@ -550,11 +609,23 @@ export function PlanView(p: Props) {
   // Hover previews
   const hoverEdge = openingTool && hover ? (moduleAt(hover, 0.4) ?? (tool !== 'erase' && onStand(hover) ? nearestEdge(v.stand, hover) : null)) : null
   const hoverModule = hoverEdge && (tool === 'erase' || doorAllowed(v, hoverEdge.a, hoverEdge.b)) ? hoverEdge : null
-  const hoverAction = floorTool && hover && !drag.current ? floorTouch(hover, null) : null
+  const hoverAction = floorTool && hover && !dragging ? floorTouch(hover, null) : null
   // Roll brush: the lanes as they will be laid, from the hover or the stroke in progress
-  const rollTouch = rollWidth && tool === 'brush' ? (rollPending ?? hoverAction) : null
+  const rollTouch = rollWidth && tool === 'brush' && !carpetFill ? (rollPending ?? hoverAction) : null
   const rollPreview = rollTouch && brush?.kind === 'floor' ? lanesLaid(rollTouch, brush.product, dir) : []
-  const hoverFloor = hoverAction && hoverAction.kind !== 'none' && !rollPreview.length ? hoverAction : null
+  const hoverFloor = hoverAction && hoverAction.kind !== 'none' && !rollPreview.length && !carpetFill ? hoverAction : null
+  // Fyll: the cheapest way to lay the area being dragged, or the whole stand that a click fills
+  const fillProduct = brush?.kind === 'floor' ? brush.product : ''
+  const hoverOnStand = !!hover && hover.x >= 0 && hover.y >= 0 && hover.x < W && hover.y < D
+  const fillKey = fillRect ? `${fillRect.i},${fillRect.j},${fillRect.w},${fillRect.h}` : carpetFill && hoverOnStand ? 'stand' : ''
+  // Only the floor, the stand and the area change the proposal, so moving the pointer inside the stand reuses it
+  const fillPreview = useMemo(
+    () => (carpetFill && fillKey && rollWidth ? (fillProposalsFor(v, fillProduct, rollWidth, rules.carpet, fillRect ?? undefined)[0] ?? null) : null),
+    [carpetFill, fillKey, fillProduct, rollWidth, v, fillRect],
+  )
+  // The chosen engangsteppe (Velg): its lanes, outlined while its drawer is open
+  const selLane = tool === 'select' && !p.mini && selection.lane ? laneAt(v, selection.lane.i, selection.lane.j) : undefined
+  const selLanes = tool !== 'select' || p.mini ? [] : selection.fill ? fillTilesOf(v, selection.fill) : selLane ? [selLane] : []
   // Textile brush: next to a wall the click target is that face; elsewhere the grid node a stroke starts from
   const textileFace = textileTool && hover && !textileStroke ? faceHit(hover, 0.2) : null
   const hoverFace = (decorTool && hover ? faceHit(hover) : null) ?? textileFace
@@ -587,8 +658,10 @@ export function PlanView(p: Props) {
       onPointerUp={onUp}
       onPointerCancel={() => {
         drag.current = null
+        setDragging(null)
         setStroke(null)
         setRollPending(null)
+        setFillRect(null)
       }}
       onPointerLeave={() => setHover(null)}
       onDragOver={onDragOver}
@@ -832,7 +905,19 @@ export function PlanView(p: Props) {
         {hoverModule && <HoverModule m={hoverModule} />}
         {hoverFace && <FacePreview v={v} h={hoverFace} brush={brush!} erase={tool === 'erase'} />}
         {dropHover && <FacePreview v={v} h={dropHover.h} brush={dropHover.d} erase={false} />}
-        {rollPreview.length > 0 && <RollPreview tiles={rollPreview} color={idx.byArtnr.get(rollPreview[0].product)?.variant.color} roll={rollWidth!} />}
+        {rollPreview.length > 0 && <RollPreview tiles={rollPreview} color={idx.byArtnr.get(rollPreview[0].product)?.variant.color} roll={rollWidth!} stand={standCells(v.stand)} />}
+        {fillPreview && <RollPreview tiles={fillPreview.tiles} color={idx.byArtnr.get(fillProduct)?.variant.color} roll={rollWidth!} />}
+        {fillRect && (
+          <rect x={fillRect.i * CELL} y={fillRect.j * CELL} width={fillRect.w * CELL} height={fillRect.h * CELL} fill="none" stroke={INK} strokeWidth={0.03} strokeDasharray=".08 .06" />
+        )}
+        {selLanes.length > 0 && (
+          <g>
+            {selLane && <Offcut t={selLane} roll={idx.byArtnr.get(selLane.product)?.product.roll ?? 2} stand={standCells(v.stand)} />}
+            {selLanes.map((t) => (
+              <rect key={`${t.i},${t.j}`} x={t.i * CELL} y={t.j * CELL} width={t.w * CELL} height={t.h * CELL} fill={INK} fillOpacity={0.06} stroke={INK} strokeWidth={0.025} strokeDasharray=".1 .06" />
+            ))}
+          </g>
+        )}
         {hoverFloor && (
           <rect
             x={hoverFloor.rect.i * CELL}
@@ -853,8 +938,9 @@ export function PlanView(p: Props) {
 
 const noop = () => {}
 
-/** Lanes a roll brush will lay: each with its joints, the roll direction and its width, cut lanes dashed. */
-function RollPreview({ tiles, color, roll }: { tiles: FloorTile[]; color: string | undefined; roll: number }) {
+/** Lanes a roll brush will lay: each with its joints, the roll direction and its width, cut lanes dashed. With
+ * `stand`, a cut lane shows the strip cut off it, hatched, as waste. */
+function RollPreview({ tiles, color, roll, stand }: { tiles: FloorTile[]; color: string | undefined; roll: number; stand?: { nx: number; ny: number } }) {
   const mark = jointColor(color)
   return (
     <g pointerEvents="none">
@@ -863,6 +949,7 @@ function RollPreview({ tiles, color, roll }: { tiles: FloorTile[]; color: string
         const cut = width < roll - 1e-9
         return (
           <g key={`${t.i},${t.j}`}>
+            {cut && stand && !t.split && <Offcut t={t} roll={roll} stand={stand} />}
             <rect x={t.i * CELL} y={t.j * CELL} width={t.w * CELL} height={t.h * CELL} fill={color} fillOpacity={0.8} stroke={INK} strokeWidth={0.03} strokeDasharray={cut ? '.12 .08' : undefined} />
             <LaneMark n={cut ? `${fmt(width)} m kappet` : `${fmt(width)} m`} x={(t.i + t.w / 2) * CELL} y={(t.j + t.h / 2) * CELL} dir={t.roll!} length={(t.roll === 'x' ? t.w : t.h) * CELL} color={mark} />
           </g>
@@ -870,6 +957,18 @@ function RollPreview({ tiles, color, roll }: { tiles: FloorTile[]; color: string
       })}
     </g>
   )
+}
+
+/** The strip cut off a lane narrower than the roll, hatched as waste: over the stand edge when the lane lies against
+ * it, else beside the lane. */
+function Offcut({ t, roll, stand }: { t: FloorTile; roll: number; stand: { nx: number; ny: number } }) {
+  const c = across(t)
+  const rest = Math.round(roll / CELL) - c.len
+  if (rest <= 0 || t.split) return null
+  const n = t.roll === 'x' ? stand.ny : stand.nx
+  const start = c.start + c.len >= n || c.start > 0 ? c.start + c.len : c.start - rest
+  const r = t.roll === 'x' ? { x: t.i, y: start, w: t.w, h: rest } : { x: start, y: t.j, w: rest, h: t.h }
+  return <Hatched x={r.x * CELL} y={r.y * CELL} width={r.w * CELL} height={r.h * CELL} />
 }
 
 /** Lane number and an arrow along the roll direction, in the middle of a lane of rolled floor. */

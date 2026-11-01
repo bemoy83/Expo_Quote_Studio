@@ -2,6 +2,7 @@ import { groupItems, resolveGroup } from '../catalog/groups';
 import { displayName, indexCatalog } from '../catalog/lookup';
 import type { Catalog, Unit } from '../catalog/types';
 import { openSides, pointKey } from '../domain/grid';
+import { carpetMetrics } from '../domain/carpet';
 import { rollUsage, tileAreas, tileCounts } from '../domain/floor';
 import type { Payer, Point, StandWallTerms, TextileFill, Variant } from '../domain/types';
 import { DEFAULT_STAND_WALLS } from '../domain/variant';
@@ -53,7 +54,16 @@ export interface CalcLine {
   tiles?: { size: string; qty: number }[];
   /** Rolled floor in lanes: running metres of roll (with the end allowance), waste in m², and the lanes as cut. The
    *  picking list counts the metres instead of m². */
-  roll?: { width: number; lm: number; waste: number; lanes: { length: number; width: number; cut: boolean; qty: number }[] };
+  roll?: {
+    width: number;
+    lm: number;
+    waste: number;
+    lanes: { length: number; width: number; cut: boolean; qty: number }[];
+    /** Pieces cut from the roll, alike ones counted together: length as cut, the widths it is split into. */
+    pieces: { length: number; parts: number[]; endToEnd: boolean; qty: number }[];
+    /** Tape, lm: the outline and the seams. Picked, never priced. */
+    tape: number;
+  };
 }
 
 /** One main group of the product grouping, lines in subgroup order. */
@@ -502,6 +512,14 @@ const fmt1 = (n: number) => (Math.round(n * 10) / 10).toLocaleString('nb-NO');
 /** A rolled product's lanes grouped by size as cut, longest and widest first. */
 function rollLine(tiles: Variant['floor']['tiles'], product: string, roll: number): NonNullable<CalcLine['roll']> {
   const u = rollUsage(tiles, product, roll);
+  const pieces = new Map<string, { length: number; parts: number[]; endToEnd: boolean; qty: number }>();
+  for (const p of u.pieces) {
+    const parts = p.lanes.map((l) => (p.split ? roll / p.lanes.length : l.width));
+    const k = `${p.length.toFixed(2)}|${parts.join(',')}|${p.endToEnd}`;
+    const s = pieces.get(k) ?? { length: p.length, parts, endToEnd: p.endToEnd, qty: 0 };
+    s.qty++;
+    pieces.set(k, s);
+  }
   const sizes = new Map<string, { length: number; width: number; cut: boolean; qty: number }>();
   for (const l of u.lanes) {
     const k = `${l.length}|${l.width}`;
@@ -514,5 +532,7 @@ function rollLine(tiles: Variant['floor']['tiles'], product: string, roll: numbe
     lm: u.lm,
     waste: u.waste,
     lanes: [...sizes.values()].sort((a, b) => b.width - a.width || b.length - a.length),
+    pieces: [...pieces.values()].sort((a, b) => a.parts.length - b.parts.length || b.length - a.length),
+    tape: carpetMetrics(tiles.filter((t) => t.roll && t.product === product), roll, tiles).tape,
   };
 }

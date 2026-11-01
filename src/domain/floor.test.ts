@@ -99,14 +99,17 @@ describe('rolled floor in lanes', () => {
     return applyFloor(v, a, t.product ?? A, 'x');
   };
 
-  it('fill lays lanes along the longest side, the last one cut to what is left', () => {
-    expect(lanes(fillFloor(v0, A, 2))).toEqual([[0, 0, 10, 4, 'x', A], [0, 4, 10, 2, 'x', A]]);
+  /** Two lanes along the width: a whole one at the back, one cut to 1 m in front. */
+  const laid = (v: Variant): Variant => ({ ...v, floor: { ...v.floor, tiles: [{ i: 0, j: 0, w: 10, h: 4, roll: 'x', product: A }, { i: 0, j: 4, w: 10, h: 2, roll: 'x', product: A }] } });
+
+  it('fill lays the cheapest way: along the longest side, the narrow rest in two halves from one piece', () => {
+    expect(lanes(fillFloor(v0, A, 2))).toEqual([[0, 0, 10, 4, 'x', A], [0, 4, 5, 2, 'x', A], [5, 4, 5, 2, 'x', A]]);
     const deep = createVariant('A', { width: 3, depth: 5, type: 'row' });
-    expect(lanes(fillFloor(deep, A, 2))).toEqual([[0, 0, 4, 10, 'y', A], [4, 0, 2, 10, 'y', A]]);
+    expect(lanes(fillFloor(deep, A, 2))).toEqual([[0, 0, 4, 10, 'y', A], [4, 0, 2, 5, 'y', A], [4, 5, 2, 5, 'y', A]]);
   });
 
   it('counts running metres with 10 cm at each end, and the strip cut off as waste', () => {
-    const v = fillFloor(v0, A, 2);
+    const v = laid(v0);
     const u = rollUsage(v.floor.tiles, A, 2);
     expect(u.lanes.map((l) => [l.n, l.length, l.width, l.cut])).toEqual([[1, 5, 2, false], [2, 5, 1, true]]);
     expect(u.lm).toBeCloseTo(10.4);
@@ -138,13 +141,13 @@ describe('rolled floor in lanes', () => {
   });
 
   it('a click on a lane of another colour recolours it; the eraser takes the whole lane', () => {
-    const v = fillFloor(v0, A, 2);
+    const v = laid(v0);
     expect(lanes(touch(v, 3, 1, { product: B }))[0]).toEqual([0, 0, 10, 4, 'x', B]);
     expect(lanes(touch(v, 3, 1, { erase: true }))).toEqual([[0, 4, 10, 2, 'x', A]]);
   });
 
   it('a tile laid over a lane splits it, and what is left across stays a narrower lane', () => {
-    const v = fillFloor(v0, A, 2);
+    const v = laid(v0);
     const cut = cutTiles(v.floor.tiles, { i: 4, j: 0, w: 2, h: 2 }).filter((t) => t.j < 4);
     expect(cut.map(({ i, j, w, h, roll }) => [i, j, w, h, roll]).sort((a, b) => +a[0]! - +b[0]! || +a[1]! - +b[1]!)).toEqual([
       [0, 0, 4, 4, 'x'],

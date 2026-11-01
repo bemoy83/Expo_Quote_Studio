@@ -287,7 +287,8 @@ kbd {
   box-sizing: border-box;
   border-radius: var(--r-pop);
   background: rgb(var(--panel));
-  box-shadow: var(--pop), 0 0 0 1px rgb(var(--border-strong));
+  /* No outlines on cards or buttons: the shadow alone lifts it */
+  box-shadow: var(--pop);
   color: rgb(var(--ink));
 }
 
@@ -876,7 +877,7 @@ kbd {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  padding: 12px 20px 10px;
+  padding: 12px 20px 0;
 }
 .wd-svg {
   flex: 1;
@@ -887,6 +888,12 @@ kbd {
   user-select: none;
 }
 .wd-hint {
+  /* Every drawer: the note sits at the bottom, also while the drawer scrolls */
+  position: sticky;
+  bottom: 0;
+  margin-top: auto;
+  padding: 8px 0 10px;
+  background: rgb(var(--panel));
   text-align: center;
   font: var(--type-note);
   color: rgb(var(--ink-faint));
@@ -923,8 +930,7 @@ kbd {
   background: rgb(var(--surface));
 }
 .mot.on {
-  background: rgb(var(--surface));
-  box-shadow: var(--raise), inset 0 0 0 1.5px rgb(var(--ink));
+  background: rgb(var(--ink));
 }
 
 /* ---------- Profilering: textile rows and motif library ---------- */
@@ -1531,12 +1537,15 @@ kbd {
   color: rgb(var(--ink));
 }
 .chip-toggle[aria-pressed='true'] {
-  background: rgb(var(--surface));
-  box-shadow: var(--raise), inset 0 0 0 1.5px rgb(var(--ink));
+  background: rgb(var(--ink));
+  color: rgb(var(--canvas));
 }
 .chip-toggle .num {
   font: var(--type-num-sm);
   color: rgb(var(--ink-muted));
+}
+.chip-toggle[aria-pressed='true'] .num {
+  color: rgb(var(--canvas) / 0.7);
 }
 .ph-dot {
   width: 8px;
@@ -1923,6 +1932,15 @@ select.cin {
   border-radius: 2px;
   align-self: center;
 }
+.wo-cut {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 10px;
+  align-items: baseline;
+}
+.wo-cut strong {
+  font-weight: 600;
+}
 .wo-print {
   display: grid;
   grid-template-columns: 40px minmax(0, 1fr) 100px 120px minmax(0, 1.4fr);
@@ -2227,4 +2245,93 @@ select.cin {
     justify-content: center;
     overflow-x: visible;
   }
+}
+
+/* ---------- Engangsteppe drawer (Velg on a fill or a lane) ----------
+   Same levels as the quick picks: ink = laid now, muted fill = hover, no outlines. */
+.cp-view {
+  padding: 12px 16px 0;
+}
+.cp-props {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+  align-content: start;
+}
+.cp-prop {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: rgb(var(--ink));
+  text-align: left;
+  cursor: pointer;
+}
+.cp-prop:hover:not([aria-pressed='true']) {
+  background: var(--well);
+}
+.cp-prop[aria-pressed='true'] {
+  background: rgb(var(--ink));
+  color: rgb(var(--canvas));
+  cursor: default;
+}
+.cp-thumb {
+  width: 100%;
+  height: 56px;
+  margin-bottom: 6px;
+  border-radius: 6px;
+  background: rgb(var(--surface));
+}
+.cp-prop .eyebrow {
+  font-size: 10px;
+}
+.cp-prop-name {
+  font: 500 12.5px var(--font-ui);
+}
+.cp-prop-meta {
+  font: 400 11.5px var(--font-numeric);
+  opacity: 0.7;
+}
+.cut-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cut-list-row {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+.cut-list-n {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--well);
+  font: 600 10.5px var(--font-numeric);
+}
+.cut-list-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.cut-list-size {
+  font: 600 12.5px var(--font-ui);
+}
+.cut-list-note {
+  font: 400 12px var(--font-ui);
+  color: rgb(var(--ink-muted));
+}
+.cut-list-foot {
+  font: var(--type-note);
+  color: rgb(var(--ink-faint));
 }

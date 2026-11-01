@@ -2,7 +2,6 @@
 import type { CalcResult } from '../../calc/calc'
 import { FILL_NAME, textileRows } from '../../calc/production'
 import { resolveGroup } from '../../catalog/groups'
-import { ROLL_END } from '../../domain/floor'
 import { plateName } from '../env'
 import { fmt } from '../format'
 
@@ -31,7 +30,11 @@ export function pickRows(res: CalcResult): PickRow[] {
         l.tiles
           ? l.tiles.map((t) => ({ key: `${l.artnr}|${t.size}`, group: l.group, code: l.artnr, title: `${l.name} ${t.size}`, qty: `${t.qty} stk` }))
           : l.roll
-          ? [{ key: l.artnr + l.name, group: l.group, code: l.artnr, title: `${l.name} · rull ${fmt(l.roll.width, 1)} m`, detail: rollDetail(l.roll), qty: `${fmt(l.roll.lm, 1)} lm` }]
+          ? [
+              { key: l.artnr + l.name, group: l.group, code: l.artnr, title: `${l.name} · rull ${fmt(l.roll.width, 1)} m`, detail: rollDetail(l.roll), qty: `${fmt(l.roll.lm, 1)} lm` },
+              // Tape is part of laying the carpet: picked, not priced
+              { key: `${l.artnr}|teip`, group: l.group, code: '', title: `Teppeteip til ${l.name.toLowerCase()}`, detail: 'omriss og skjøter', qty: `${fmt(Math.ceil(l.roll.tape), 0)} lm` },
+            ]
           : [{ key: l.artnr + l.name, group: l.group, code: l.artnr, title: l.name, qty: `${fmt(l.qty, l.unit === 'stk' ? 0 : 1)} ${l.unit}` }],
       ),
     ...B.lines.map((l) => ({
@@ -56,8 +59,12 @@ export function pickRows(res: CalcResult): PickRow[] {
   ]
 }
 
-/** "2 baner à 5,2 m · 1 bane à 5,2 m kappet til 1 m bredde · svinn 5,8 m²": lengths as cut, with the end allowance. */
+/** "2 × 5,2 m · 1 × 2,7 m delt på langs i 2 × 1 m, lagt etter hverandre · 1 × 5,2 m kappet til 1 m bredde · svinn
+ * 1,4 m²": pieces as cut from the roll, with the end allowance. */
 function rollDetail(r: NonNullable<CalcResult['groups'][number]['lines'][number]['roll']>) {
-  const lanes = r.lanes.map((l) => `${l.qty} ${l.qty === 1 ? 'bane' : 'baner'} à ${fmt(l.length + 2 * ROLL_END, 1)} m${l.cut ? ` kappet til ${fmt(l.width, 1)} m bredde` : ''}`)
-  return [...lanes, `svinn ${fmt(r.waste, 1)} m²`].join(' · ')
+  const pieces = r.pieces.map((x) => {
+    const how = x.parts.length > 1 ? ` delt på langs i ${x.parts.length} × ${fmt(x.parts[0], 1)} m${x.endToEnd ? ', lagt etter hverandre' : ''}` : x.parts[0] < r.width - 1e-9 ? ` kappet til ${fmt(x.parts[0], 1)} m bredde` : ''
+    return `${x.qty} × ${fmt(x.length, 1)} m${how}`
+  })
+  return [...pieces, `svinn ${fmt(r.waste, 1)} m²`].join(' · ')
 }
