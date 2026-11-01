@@ -125,6 +125,13 @@ Systemhøyde fra gulv: 2490 + 50 = 2540 mm.
 
 - Profil **292** (873 080 22), 80 × 20. **Maks 6 m sammenhengende** (`rules.beam.max`).
 - Står mellom stolpene som skinnene: kappelengde = senteravstand − 40.
+- **Deles der en vegg møter den.** En strekning brytes der veggmoduler står i omkretsen, og (Bjørn 1.11.2026) også der
+  enden av en vegg innenfra (innervegg eller romvegg) treffer drageren. Drager og vegg deler stolpen, og hver side er
+  egen lengde, som igjen deles etter 6 m-regelen. Tverrdrager går bare fra 6 m-skjøtene; ved veggenden holder veggen.
+- **Tverrdrager** går fra en 6 m-skjøt inn til motstående vegg eller side. Den går videre forbi en vegg som møter eller
+  krysser den, delt der på veggens stolpe (Bjørn 1.11.2026: den holder den motstående veggen, ellers blir spennet på
+  standveggen for langt). Den stopper bare der en vegg går langs linjen.
+  Eksempel: front 6 m med en innervegg fra midten gir 3 + 3; front 10 m med vegg ved 2 m gir 2 + 4 + 4.
 - **2 × 600 i hver ende.** 292 står 80 høy og 20 tykk, med 9 mm kanal i over- og underkant og fire kamre
   inni. De to 600-koblingene sitter i ytterkamrene, én oppe og én nede, og låser i kanalen på stolpe 94.
 - Alle stolper, også frittstående som bare bærer takdrager, er **94** på 2490 mm med samme fot.
