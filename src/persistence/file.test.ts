@@ -70,7 +70,7 @@ describe('new sketch', () => {
     expect(s.variants.map((v) => v.name)).toEqual(['A']);
     const [v] = s.variants;
     expect([v.objects, v.textiles, v.foils, v.rooms, v.openings]).toEqual([[], [], [], [], []]);
-    expect(v.floor.cells).toEqual({});
+    expect(v.floor.tiles).toEqual([]);
     expect(s.project.fields.every((f) => f.value === '')).toBe(true);
     expect(s.motifs).toEqual([]);
   });

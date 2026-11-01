@@ -48,6 +48,8 @@ export interface Product {
   time?: Time;
   /** Goes in a wall module. A door swings and blocks its swing area; a curtain does not. */
   opening?: 'door' | 'curtain';
+  /** Floor laid as carpet tiles: joints drawn at the tile edges, tiles counted per size for picking. */
+  tiles?: true;
 }
 
 /** Roles the calc needs, mapped to art.nr so the catalog can change without touching calc. */

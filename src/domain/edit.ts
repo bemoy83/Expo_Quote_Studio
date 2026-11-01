@@ -1,5 +1,6 @@
 // Editing operations on a variant. All pure: they return a new variant and never mutate.
-import { CELL, cellKey, moduleKey, parseCellKey, pointAlong, runs, sideEnds, SIDES, wallDirection, wallLength, wallModules } from './grid';
+import { clipTiles } from './floor';
+import { moduleKey, pointAlong, runs, sideEnds, SIDES, wallDirection, wallLength, wallModules } from './grid';
 import type { Opening, Point, Stand, TextileWall, Variant, Wall } from './types';
 import { addRoomGaps, clampRooms, OUTSIDE, roomOf, syncRooms } from './rooms';
 import { builtModules, closedSideAt, isStandWall, standardWalls, standWallSide } from './walls';
@@ -276,37 +277,10 @@ export function setStand(v: Variant, stand: Stand): Variant {
   // Rooms are kept inside the new size and regenerate their sides against the new stand walls.
   const resized = clampRooms({ ...v, stand, walls: stored });
   const next = replaceWalls({ ...v, stand }, [...perimeter, ...inner, ...resized.walls.filter((w) => w.room)]);
-  const nx = Math.round(stand.width / CELL);
-  const ny = Math.round(stand.depth / CELL);
-  const cells = Object.fromEntries(
-    Object.entries(v.floor.cells).filter(([k]) => {
-      const c = parseCellKey(k);
-      return c && c[0] < nx && c[1] < ny;
-    }),
-  );
   const objects = v.objects.map((o) => ({ ...o, x: Math.min(o.x, stand.width), y: Math.min(o.y, stand.depth) }));
   // Drawn takdrager that still fit are kept
   const innerBeams = v.innerBeams?.filter((b) => fits({ id: b.id, from: b.from, to: b.to }));
-  return { ...next, rooms: resized.rooms, floor: { ...v.floor, cells }, objects, ...(innerBeams ? { innerBeams } : {}) };
-}
-
-/** Paint a w × h block of floor cells starting at (i, j). Null erases. */
-export function paintFloor(v: Variant, i: number, j: number, w: number, h: number, product: string | null): Variant {
-  const nx = Math.round(v.stand.width / CELL);
-  const ny = Math.round(v.stand.depth / CELL);
-  const cells = { ...v.floor.cells };
-  let changed = false;
-  for (let a = i; a < Math.min(nx, i + w); a++) {
-    for (let b = j; b < Math.min(ny, j + h); b++) {
-      const k = cellKey(a, b);
-      if (product ? cells[k] !== product : k in cells) {
-        if (product) cells[k] = product;
-        else delete cells[k];
-        changed = true;
-      }
-    }
-  }
-  return changed ? { ...v, floor: { ...v.floor, cells } } : v;
+  return { ...next, rooms: resized.rooms, floor: { ...v.floor, tiles: clipTiles(v.floor.tiles, stand) }, objects, ...(innerBeams ? { innerBeams } : {}) };
 }
 
 /** Set the count of a counted item. Zero removes it. */

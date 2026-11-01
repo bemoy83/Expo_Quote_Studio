@@ -28,7 +28,7 @@ describe('catalog edits', () => {
     e = editRow(e, rowOf('6130', e), { product: 'Dør med kodelås' });
     const c = applyEdits(base, e);
     expect(rowOf('5901', e).variant).toBe('Kongeblå');
-    expect(rowOf('5901', e).product).toBe('Teppefliser 50 × 50');
+    expect(rowOf('5901', e).product).toBe('Teppefliser');
     expect(c.products.find((p) => p.id === '6130')!.name).toBe('Dør med kodelås');
   });
 
