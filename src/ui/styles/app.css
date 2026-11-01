@@ -877,7 +877,7 @@ kbd {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  padding: 12px 20px 10px;
+  padding: 12px 20px 0;
 }
 .wd-svg {
   flex: 1;
@@ -888,6 +888,12 @@ kbd {
   user-select: none;
 }
 .wd-hint {
+  /* Every drawer: the note sits at the bottom, also while the drawer scrolls */
+  position: sticky;
+  bottom: 0;
+  margin-top: auto;
+  padding: 8px 0 10px;
+  background: rgb(var(--panel));
   text-align: center;
   font: var(--type-note);
   color: rgb(var(--ink-faint));
@@ -2245,14 +2251,6 @@ select.cin {
    Same levels as the quick picks: ink = laid now, muted fill = hover, no outlines. */
 .cp-view {
   padding: 12px 16px 0;
-}
-/* The note stays at the bottom of the drawer, also while the proposals scroll */
-.cp-view .wd-hint {
-  position: sticky;
-  bottom: 0;
-  margin-top: auto;
-  padding: 8px 0 10px;
-  background: rgb(var(--panel));
 }
 .cp-props {
   display: grid;
