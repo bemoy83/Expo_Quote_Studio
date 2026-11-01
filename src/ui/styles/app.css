@@ -1232,13 +1232,18 @@ kbd {
 .minimap {
   position: absolute;
   right: 16px;
-  bottom: 12px;
+  top: 12px;
   width: 232px;
   height: 156px;
   border-radius: var(--r-pop);
   background: rgb(var(--panel));
   box-shadow: var(--pop), 0 0 0 1px rgb(var(--border-strong));
   overflow: hidden;
+}
+/* In 3D the view's own buttons hold the top right corner */
+.minimap.low {
+  top: auto;
+  bottom: 12px;
 }
 /* A drawer open below the stage leaves too little room: the mini map would cover the drawing */
 @container (max-height: 420px) {
@@ -1940,5 +1945,124 @@ select.cin {
     margin: 0;
     padding: 0;
     box-shadow: none;
+  }
+}
+
+/* ---------- Tool dock (floating on the drawing surface) ---------- */
+/* Room kept free under the plan so the tools never cover the stand */
+.plan-wrap > .plan-svg {
+  height: calc(100% - 64px);
+}
+.dock {
+  position: absolute;
+  inset: auto 14px 14px 14px;
+  pointer-events: none;
+  z-index: 5;
+}
+.dock-pill {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 14px;
+  background: rgb(var(--panel));
+  box-shadow: var(--pop);
+}
+.dock-undo {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+}
+.dock-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  /* centred on the surface, clear of the undo pill */
+  margin: 0 110px;
+}
+.dock-quick {
+  gap: 6px;
+  padding: 6px;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  animation: dock-in var(--dur) var(--ease);
+}
+@keyframes dock-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+.dock-btn {
+  position: relative;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: rgb(var(--ink));
+  font: var(--type-control);
+  cursor: pointer;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.dock-undo .dock-btn {
+  min-width: 40px;
+}
+.dock-btn:hover:not(:disabled):not([aria-pressed='true']) {
+  background: rgb(var(--sunken));
+}
+.dock-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.dock-btn[aria-pressed='true'] {
+  background: rgb(var(--ink));
+  color: rgb(var(--canvas));
+}
+.dock-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+.dock-brush {
+  padding: 0 14px 0 12px;
+  max-width: 240px;
+}
+.dock-brush-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Colour the brush paints with: wall RAL or floor colour */
+.dock-stripe {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 5px;
+  height: 3px;
+  border-radius: 2px;
+}
+/* Toasts sit above the tools on the sketch page */
+.app:has(.dock) .toast {
+  bottom: 140px;
+}
+/* Narrow drawing surface: the tools sit right of the undo pill, and the mini map gives the plan its room */
+@container (max-width: 640px) {
+  .dock-stack {
+    margin: 0 0 0 100px;
+  }
+  .dock-brush {
+    max-width: 180px;
+  }
+  .minimap {
+    display: none;
   }
 }

@@ -6,7 +6,6 @@ import { Segmented } from '../controls'
 export function GridPicker({ value, allowed, onChange, why }: { value: GridStep; allowed: readonly number[]; onChange: (s: GridStep) => void; why?: string }) {
   return (
     <Segmented<GridStep>
-      onBand
       label="Rutenett"
       value={value}
       onChange={onChange}

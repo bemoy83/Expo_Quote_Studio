@@ -1,4 +1,4 @@
-import { Copy, Eraser, Maximize2, MousePointer2, Paintbrush, Redo2, Trash2, Undo2 } from 'lucide-react'
+import { Copy, Maximize2, Trash2 } from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore } from 'react'
 import { calc, type CalcResult } from '../calc/calc'
 import { r2 } from '../calc/referenceStands'
@@ -34,6 +34,7 @@ import { VariantTabs } from './shell/VariantTabs'
 import { FLOOR_MAIN, FLOOR_OTHER, floorSizeLabel, gridSteps, type Brush, type Highlight, type Tool } from './tools'
 import { longestSide, TILE_FULL, type FloorBrushSize, type RollDir, type TileSize } from '../domain/floor'
 import { GridPicker } from './plan/GridPicker'
+import { ToolDock } from './plan/ToolDock'
 import type { GridStep } from '../domain/snapGrid'
 
 // three.js is only loaded when the 3D view is opened
@@ -219,6 +220,55 @@ export default function App() {
   const brushLabel = describeBrush(brush)
   const freeFrame = selection.freeTextileId ? res.production.free.find((f) => f.textileId === selection.freeTextileId) : undefined
 
+  const quickOptions = (tool !== 'select' && (brush?.kind === 'floor' || (tool === 'brush' && (brush?.kind === 'wall' || brush?.kind === 'textile'))) && (
+    <>
+          {tool === 'brush' && rollBrush && (
+            <Segmented<RollDir>
+              label="Rulleretning"
+              value={roll}
+              onChange={setRollDir}
+              options={[
+                { value: 'x', title: 'Banene går fra venstre til høyre (R snur)', label: <span className="num">↔ Bredden</span> },
+                { value: 'y', title: 'Banene går fra bak til front (R snur)', label: <span className="num">↕ Dybden</span> },
+              ]}
+            />
+          )}
+          {brush?.kind === 'floor' && !(tool === 'brush' && rollBrush) && (
+            <>
+              <Segmented<string>
+                label="Penselstørrelse"
+                value={FLOOR_MAIN.some((s) => s.label === floorSizeLabel(floorSize)) ? floorSizeLabel(floorSize) : 'Andre'}
+                onChange={(l) => setFloorSize(FLOOR_MAIN.find((s) => s.label === l)?.size ?? otherSize)}
+                options={[
+                  ...FLOOR_MAIN.map((s) => ({ value: s.label, title: s.title, label: <span className="num">{s.label}</span> })),
+                  { value: 'Andre', title: 'Mindre fliser: 1 × 0,5, 0,5 × 1 og 0,5 × 0,5', label: 'Andre' },
+                ]}
+              />
+              {floorSize !== 'auto' && FLOOR_OTHER.some((s) => s.label === floorSizeLabel(floorSize)) && (
+                <Segmented<string>
+                  label="Mindre fliser"
+                  value={floorSizeLabel(floorSize)}
+                  onChange={(l) => {
+                    const size = FLOOR_OTHER.find((s) => s.label === l)!.size
+                    setOtherSize(size)
+                    setFloorSize(size)
+                  }}
+                  options={FLOOR_OTHER.map((s) => ({ value: s.label, label: <span className="num">{s.label}</span> }))}
+                />
+              )}
+            </>
+          )}
+          {tool === 'brush' && (brush?.kind === 'wall' || brush?.kind === 'textile') && (
+            <GridPicker
+              value={brush.kind === 'wall' ? (rules.wall.cc as GridStep) : gridStep}
+              allowed={gridSteps(brush, rules)}
+              onChange={setGridStep}
+              why="Systemvegg tegnes i hele meter til Foga-delene for cc 25, 50 og 75 er lagt inn"
+            />
+          )}
+    </>
+  )) || null
+
   return (
     <div className="app">
       <TopNav
@@ -261,81 +311,6 @@ export default function App() {
                   { value: '3d', label: '3D' },
                 ]}
               />
-              <IconButton icon={Undo2} label="Angre (⌘Z)" onBand disabled={!state.past.length} onClick={() => dispatch({ type: 'undo' })} />
-              <IconButton icon={Redo2} label="Gjør om (⇧⌘Z)" onBand disabled={!state.future.length} onClick={() => dispatch({ type: 'redo' })} />
-              {view === 'plan' && <span className="band-sep" />}
-              {view === 'plan' && (
-                <Segmented<Tool>
-                  onBand
-                  label="Verktøy"
-                  value={tool}
-                  onChange={(t) => {
-                    if (t === 'brush' && !brush) pick({ kind: 'wall', ral: plateRal })
-                    else setTool(t)
-                  }}
-                  options={[
-                    { value: 'select', label: <><MousePointer2 size={14} /> Velg</>, kbd: 'V' },
-                    {
-                      value: 'brush',
-                      label: (
-                        <span className="brush-chip">
-                          {brushLabel.color ? <i className="dot" style={{ background: brushLabel.color }} /> : <Paintbrush size={14} />}
-                          {brushLabel.name}
-                        </span>
-                      ),
-                      kbd: 'P',
-                    },
-                    { value: 'erase', label: <><Eraser size={14} /> Tøm</>, kbd: 'E' },
-                  ]}
-                />
-              )}
-              {view === 'plan' && tool === 'brush' && rollBrush && (
-                <Segmented<RollDir>
-                  onBand
-                  label="Rulleretning"
-                  value={roll}
-                  onChange={setRollDir}
-                  options={[
-                    { value: 'x', title: 'Banene går fra venstre til høyre (R snur)', label: <span className="num">↔ Bredden</span> },
-                    { value: 'y', title: 'Banene går fra bak til front (R snur)', label: <span className="num">↕ Dybden</span> },
-                  ]}
-                />
-              )}
-              {view === 'plan' && tool !== 'select' && brush?.kind === 'floor' && !(tool === 'brush' && rollBrush) && (
-                <>
-                  <Segmented<string>
-                    onBand
-                    label="Penselstørrelse"
-                    value={FLOOR_MAIN.some((s) => s.label === floorSizeLabel(floorSize)) ? floorSizeLabel(floorSize) : 'Andre'}
-                    onChange={(l) => setFloorSize(FLOOR_MAIN.find((s) => s.label === l)?.size ?? otherSize)}
-                    options={[
-                      ...FLOOR_MAIN.map((s) => ({ value: s.label, title: s.title, label: <span className="num">{s.label}</span> })),
-                      { value: 'Andre', title: 'Mindre fliser: 1 × 0,5, 0,5 × 1 og 0,5 × 0,5', label: 'Andre' },
-                    ]}
-                  />
-                  {floorSize !== 'auto' && FLOOR_OTHER.some((s) => s.label === floorSizeLabel(floorSize)) && (
-                    <Segmented<string>
-                      onBand
-                      label="Mindre fliser"
-                      value={floorSizeLabel(floorSize)}
-                      onChange={(l) => {
-                        const size = FLOOR_OTHER.find((s) => s.label === l)!.size
-                        setOtherSize(size)
-                        setFloorSize(size)
-                      }}
-                      options={FLOOR_OTHER.map((s) => ({ value: s.label, label: <span className="num">{s.label}</span> }))}
-                    />
-                  )}
-                </>
-              )}
-              {view === 'plan' && tool === 'brush' && (brush?.kind === 'wall' || brush?.kind === 'textile') && (
-                <GridPicker
-                  value={brush.kind === 'wall' ? (rules.wall.cc as GridStep) : gridStep}
-                  allowed={gridSteps(brush, rules)}
-                  onChange={setGridStep}
-                  why="Systemvegg tegnes i hele meter til Foga-delene for cc 25, 50 og 75 er lagt inn"
-                />
-              )}
               <span className="spacer" />
               <VariantTabs variants={sketch.variants} current={current} onSelect={selectVariant} />
               <Button onBand icon={Copy} disabled={sketch.variants.length >= 4} onClick={() => dispatch({ type: 'duplicate' })}>
@@ -424,12 +399,27 @@ export default function App() {
                       onToast={showToast}
                       motifs={motifs}
                     />
-                    <div className="minimap">
+                    <div className="minimap low">
                       <PlanPreview mini v={v} res={res} />
                       <IconButton icon={Maximize2} label="Vis plan" size={14} className="minimap-open" onClick={() => setView('plan')} />
                     </div>
                   </Suspense>
                 )}
+                <ToolDock
+                  tools={view === 'plan'}
+                  tool={tool}
+                  onTool={(t) => {
+                    if (t === 'brush' && !brush) pick({ kind: 'wall', ral: plateRal })
+                    else setTool(t)
+                  }}
+                  brush={brushLabel}
+                  canUndo={state.past.length > 0}
+                  canRedo={state.future.length > 0}
+                  onUndo={() => dispatch({ type: 'undo' })}
+                  onRedo={() => dispatch({ type: 'redo' })}
+                >
+                  {quickOptions}
+                </ToolDock>
               </div>
               {freeFrame && tool === 'select' && (
                 <FreeTextileDrawer
@@ -508,13 +498,13 @@ function hint(tool: Tool, brush: Brush | null, roll = false): string {
         : 'Dra langs rutenettet for innvendig takdrager · en ende på en annen takdrager henger på krok, ellers stolpe med fotplate · tegn en tverrdrager mot en stolpe for å spare fotplaten'
     case 'floor':
       if (roll) return erase ? 'Klikk en bane for å fjerne den' : 'Klikk for en hel bane på ledig gulv, kappet der bare en smalere stripe er ledig · dra på tvers for flere hele baner side om side · R snur rulleretningen · klikk en bane for å bytte farge'
-      return erase ? 'Klikk og dra for å fjerne gulv' : 'Klikk og dra for å tegne gulv · velg penselstørrelse i båndet'
+      return erase ? 'Klikk og dra for å fjerne gulv' : 'Klikk og dra for å tegne gulv · velg penselstørrelse over verktøyene'
     case 'opening':
       return erase ? 'Klikk en åpning for å gjøre den til vegg igjen' : 'Klikk en vegg eller en tom kant for å sette inn åpning med overstykke · klikk en åpning for å bytte fyll'
     case 'textile':
       return erase
         ? 'Klikk en tekstilvegg for å fjerne den'
-        : 'Dra langs en systemvegg for tekstilvegg på veggen, eller dra fritt for frittstående på fotplater · klikk ved en vegg for å fylle den · én rute av gangen, velg rutestørrelse i båndet · start der en frittstående slutter for hjørne'
+        : 'Dra langs en systemvegg for tekstilvegg på veggen, eller dra fritt for frittstående på fotplater · klikk ved en vegg for å fylle den · én rute av gangen, velg rutestørrelse over verktøyene · start der en frittstående slutter for hjørne'
     case 'motif':
       return erase ? 'Klikk en foliedekor for å fjerne den, eller en tekstilvegg for å ta bort motivet' : 'Klikk en tekstilvegg for trykk, eller et veggfelt for foliedekor'
     case 'object':
