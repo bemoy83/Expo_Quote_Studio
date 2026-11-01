@@ -119,6 +119,7 @@ function quickContent(p: QuickPicksProps): ReactNode {
         <QBtn on={is({ kind: 'beam' })} title="Innvendig takdrager · dra langs rutenettet" label="Takdrager" onClick={() => onPick({ kind: 'beam' })}>
           <BeamIcon />
         </QBtn>
+        <Sep />
         <QBtn title="Bakrom 1 × 1 m med dør i et ledig hjørne" label="Legg til bakrom" onClick={p.onAddRoom}>
           <Box size={15} />
         </QBtn>
@@ -139,6 +140,7 @@ function quickContent(p: QuickPicksProps): ReactNode {
           onChange={(id) => onPick({ kind: 'floor', product: floors.find((x) => x.id === id)!.variants[0].artnr })}
           options={floors.map((x) => ({ value: x.id, title: x.name, label: FLOOR_SHORT[x.name] ?? x.name }))}
         />
+        <Sep />
         {(cur?.variants ?? []).slice(0, MAX).map((x) => {
           const b: Brush = { kind: 'floor', product: x.artnr }
           return <Sw key={x.artnr} color={x.color} title={`${cur!.name} ${x.name.toLowerCase()} · ${x.artnr}`} on={is(b)} onClick={() => onPick(b)} />
@@ -157,6 +159,7 @@ function quickContent(p: QuickPicksProps): ReactNode {
         ) : (
           floorSizes
         )}
+        <Sep />
         <QBtn title="Fyll hele standen med denne fargen" label="Fyll" onClick={p.onFill}>
           <PaintBucket size={15} />
         </QBtn>
@@ -184,6 +187,13 @@ function quickContent(p: QuickPicksProps): ReactNode {
               </button>
             )
           })}
+        {brush?.kind === 'textile' && (
+          <>
+            <Sep />
+            <GridPicker value={p.gridStep} allowed={gridSteps(brush, rules)} onChange={p.onGridStep} />
+          </>
+        )}
+        <Sep />
         <label className="q-btn" title="Last opp kundens eget motiv" aria-label="Last opp motiv">
           <Upload size={15} />
           <input
@@ -197,12 +207,6 @@ function quickContent(p: QuickPicksProps): ReactNode {
             }}
           />
         </label>
-        {brush?.kind === 'textile' && (
-          <>
-            <Sep />
-            <GridPicker value={p.gridStep} allowed={gridSteps(brush, rules)} onChange={p.onGridStep} />
-          </>
-        )}
         {more}
       </>
     )
@@ -224,6 +228,7 @@ function quickContent(p: QuickPicksProps): ReactNode {
             </button>
           )
         })}
+      <Sep />
       {more}
     </>
   )
