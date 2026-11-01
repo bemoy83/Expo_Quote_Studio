@@ -2244,7 +2244,15 @@ select.cin {
 /* ---------- Engangsteppe drawer (Velg on a fill or a lane) ----------
    Same levels as the quick picks: ink = laid now, muted fill = hover, no outlines. */
 .cp-view {
-  padding: 12px 16px;
+  padding: 12px 16px 0;
+}
+/* The note stays at the bottom of the drawer, also while the proposals scroll */
+.cp-view .wd-hint {
+  position: sticky;
+  bottom: 0;
+  margin-top: auto;
+  padding: 8px 0 10px;
+  background: rgb(var(--panel));
 }
 .cp-props {
   display: grid;
