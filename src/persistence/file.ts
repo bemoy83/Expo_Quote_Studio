@@ -140,11 +140,12 @@ export function parse(text: string): ParseResult {
     return { ok: false, error: 'Filen har ingen gyldige varianter.' };
   }
   if (!Array.isArray(motifs)) return { ok: false, error: 'Egne motiver er ugyldige.' };
-  // Rooms and free-standing textile walls came after version 1 files were first written: a variant without them has none
+  // Rooms, free-standing textile walls and drawn takdrager came after version 1 files were first written: a variant without them has none
   const vs = (variants as Variant[]).map((x) => ({
     ...x,
     rooms: Array.isArray(x.rooms) ? x.rooms : [],
     freeTextiles: Array.isArray(x.freeTextiles) ? x.freeTextiles : [],
+    innerBeams: Array.isArray(x.innerBeams) ? x.innerBeams : undefined,
   }));
   return { ok: true, sketch: { project: project as unknown as Project, variants: vs, motifs: motifs as Motif[] } };
 }
