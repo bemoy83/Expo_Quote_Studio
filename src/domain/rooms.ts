@@ -13,7 +13,6 @@ import {
   cellsOf,
   contains,
   isHorizontal,
-  isRectOutline,
   matchSides,
   moveSide,
   nearestSide,
@@ -43,11 +42,9 @@ export const roomWallId = (roomId: string, side: number) => `${roomId}.${side}`;
 export const ROOM_LABELS = ['Bakrom', 'Lager', 'Møterom'] as const;
 export const roomName = (r: Room): string => r.label ?? ROOM_LABELS[0];
 
-/** Size for the plan, the panel and the quote: «2 × 3 m», or for other shapes area and outer size «5 m² (3 × 2 m)». */
+/** Size for the plan, the panel and the quote: the floor area, «5 m²», whatever the shape (it tells people more than the outer size). */
 export function roomSize(r: Pick<Room, 'outline'>): string {
-  const b = bounds(r.outline);
-  const outer = `${b.w} × ${b.d} m`;
-  return isRectOutline(r.outline) ? outer : `${area(r.outline)} m² (${outer})`;
+  return `${area(r.outline).toLocaleString('nb-NO', { maximumFractionDigits: 1 })} m²`;
 }
 
 /** True for one of the room's own sides (`<id>.<side>`). */

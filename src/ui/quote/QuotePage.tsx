@@ -66,7 +66,7 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
     ],
     k.beamLm
       ? [`${fmt(k.beamLm)} m takdrager`, k.organiserBeamLm ? 'fra arrangøren' : beamSummary(k)]
-      : ['Uten takdrager', 'ingen åpne sider å avstive'],
+      : ['Uten takdrager', v.noBeams ? 'åpen stand etter ønske' : 'ingen åpne sider å avstive'],
     k.floorTotal ? [floorNames.join(', '), `${fmt(k.floorTotal)} m² ferdig lagt${v.floor.protection ? ' med monteringsbeskyttelse' : ''}`] : ['Hallgulv uten belegg', ''],
   ]
   if (v.rooms.length) {

@@ -95,6 +95,15 @@ export function Stepper({ value, min = 0, max = 99, onChange }: { value: number;
   )
 }
 
+/** On/off switch. */
+export function Switch({ on, onChange, label }: { on: boolean; onChange: (on: boolean) => void; label: string }) {
+  return (
+    <button type="button" role="switch" aria-checked={on} aria-label={label} className="switch" onClick={() => onChange(!on)}>
+      <span className="knob" />
+    </button>
+  )
+}
+
 /** Counter that shows a single + until the item is in use. */
 export function Counter({ value, onChange, label, max = 99 }: { value: number; onChange: (v: number) => void; label: string; max?: number }) {
   return value > 0 ? <Stepper value={value} max={max} onChange={onChange} /> : <IconButton icon={Plus} label={label} onClick={() => onChange(1)} />

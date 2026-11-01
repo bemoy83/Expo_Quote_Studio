@@ -567,6 +567,40 @@ kbd {
 .opt .field.num {
   width: 64px;
 }
+.switch {
+  flex: none;
+  width: 34px;
+  height: 20px;
+  padding: 2px;
+  border: 0;
+  border-radius: 10px;
+  background: rgb(var(--border-strong));
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.switch[aria-checked='true'] {
+  background: rgb(var(--ink));
+}
+.switch .knob {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgb(var(--panel));
+  transition: transform 0.15s;
+}
+.switch[aria-checked='true'] .knob {
+  transform: translateX(14px);
+}
+.num-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.opt .num-stepper .field.num {
+  width: 44px;
+  text-align: center;
+}
 .opt .lbl small {
   display: block;
   font: 400 11.5px var(--font-ui);
@@ -743,6 +777,7 @@ kbd {
   flex: 1;
   min-height: 0;
   position: relative;
+  container-type: size;
 }
 .plan-svg {
   width: 100%;
@@ -1205,7 +1240,14 @@ kbd {
   box-shadow: var(--pop), 0 0 0 1px rgb(var(--border-strong));
   overflow: hidden;
 }
-.minimap .plan-svg {
+/* A drawer open below the stage leaves too little room: the mini map would cover the drawing */
+@container (max-height: 420px) {
+  .minimap {
+    display: none;
+  }
+}
+.minimap .plan-svg,
+.minimap .scene3d-canvas {
   pointer-events: none;
 }
 .minimap .minimap-open {
@@ -1660,22 +1702,23 @@ select.cin {
   letter-spacing: -0.01em;
 }
 .qdoc-summary {
-  display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
-  gap: 36px;
+  /* The sketch gets the full page width; the key facts sit in columns under it */
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
   padding: 28px 0 24px;
   border-bottom: 1px solid var(--g-row);
-  align-items: center;
 }
 .qdoc-plan {
-  max-height: 300px;
+  width: 100%;
+  max-height: 520px;
   pointer-events: none;
 }
 .qdoc-summary dl {
   margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px 28px;
   min-width: 0;
 }
 .qdoc-summary dt {

@@ -5,9 +5,9 @@ import { useEffect, useMemo, useRef, useState, type DragEvent as RDragEvent, typ
 import type { CalcResult } from '../../calc/calc'
 import { mainGroupOf } from '../../catalog/groups'
 import { canMoveWall, doorAllowed, doorSwing, drawOpening, eraseWalls, paintFloor, paintWalls, segmentKeys, setOpening, standWallKeys } from '../../domain/edit'
-import { CELL, parseCellKey, pointAlong, sideLength, sidePoint, wallDirection, wallLength, type Module } from '../../domain/grid'
+import { CELL, openSides, parseCellKey, pointAlong, sideLength, sidePoint, wallDirection, wallLength, type Module } from '../../domain/grid'
 import { addObject, conflicts, footprintBox, moveObject, removeObject } from '../../domain/objects'
-import { addFoil, faceAt, faceSegment, felt, foilAt, foilCenter, freeSpans, removeFoil, removeTextile, sideOf, textileAt, textileOffset, updateTextile, type FaceSide } from '../../domain/decor'
+import { addFoil, faceAt, faceSegment, felt, foilAt, foilCenter, freeSpans, removeFoil, removeTextile, sideOf, textileAt, updateTextile, type FaceSide } from '../../domain/decor'
 import { drawTextile, fillFace, planTextile } from '../../domain/textileBrush'
 import { faceOfPoint, freeStroke, freeTextileAt, moveFreeTextile, removeFreeTextile, runLength, runNormal, updateFace, type FaceKey } from '../../domain/freeTextile'
 import { alongRun, cornerPosts } from '../../calc/freeFrames'
@@ -18,9 +18,10 @@ import { BORDER, BORDER_STRONG, BLOCK, CANVAS, INK, INK_FAINT, INK_MUTED, LAYER_
 import { applyDrop, decorDrag, endDecorDrag, type DecorDrag } from '../dnd'
 import { dragRoom, dragWall, dropObject, dropRoom, roomDrag, type RoomDrag, type WallDrag } from '../drag'
 import { roomAt, roomName, roomSideAt, roomSize, sideIsHorizontal } from '../../domain/rooms'
-import { bounds, insetOutline, isHorizontal, labelPoint, outlineSides } from '../../domain/outline'
+import { insetOutline, isHorizontal, labelRect, outlineSides } from '../../domain/outline'
 import { fmt } from '../format'
 import { idx, place, plateColor, productOf, rules } from '../env'
+import { doorInset } from '../../rules/rules'
 import { findMotif } from '../motifs'
 import type { Brush, FloorSize, Highlight, Tool } from '../tools'
 import { distToSegment, nearestEdge, strokeFrom } from './geometry'
@@ -66,9 +67,24 @@ const LAYER_GROUP: Record<Exclude<Highlight, null | 'objects'>, string> = { wall
 /** Stand walls separate exhibitors and follow the stand type: erasing them is refused. */
 const STAND_WALL_LOCKED = 'Standvegger følger standtypen og kan ikke fjernes'
 
+/**
+ * Line widths in the plan, m. Schematic, not to scale (3D is): a wall and a textile are both drawn 60 mm (both are 40),
+ * and a textile on a wall face sits just outside the wall line so the two never overlap.
+ */
+const PLAN_WALL = 0.06
+const PLAN_TEXTILE = PLAN_WALL
+const PLAN_TEXTILE_OFFSET = PLAN_WALL / 2 + PLAN_TEXTILE / 2 + 0.005
+
 /** Margin around the stand for the aisle and the side labels, m. */
 export const PLAN_MARGIN = 1.3
 const M = PLAN_MARGIN
+/** The aisle in the margin along each side, as x, y, width, height. It runs the whole margin, past the corners. */
+const AISLE_BAND: Record<Side, (W: number, D: number) => [number, number, number, number]> = {
+  front: (W, D) => [-M, D, W + 2 * M, M],
+  back: (W) => [-M, -M, W + 2 * M, M],
+  left: (_, D) => [-M, -M, M, D + 2 * M],
+  right: (W, D) => [W, -M, M, D + 2 * M],
+}
 const SIDE_LABEL: Record<Side, string> = { back: 'Bak', front: 'Front', left: 'Venstre', right: 'Høyre' }
 const WALL = LAYER_COLOR.walls
 const TEXTILE = LAYER_COLOR.textile
@@ -151,6 +167,8 @@ export function PlanView(p: Props) {
   const decorTool = tool !== 'select' && brush?.kind === 'motif'
   /** One textile brush: on a system wall it is mounted there, anywhere else it stands free (domain/textileBrush). */
   const textileTool = tool !== 'select' && brush?.kind === 'textile'
+  /** Snap points show only while a brush snaps to them, at its own grid. */
+  const dotStep = textileTool ? step : wallTool ? rules.wall.cc : null
 
   /** On the stand, or just outside its edge (where its edge walls are drawn). */
   const onStand = (q: P) => q.x > -0.4 && q.y > -0.4 && q.x < W + 0.4 && q.y < D + 0.4
@@ -484,7 +502,7 @@ export function PlanView(p: Props) {
       const b = sidePoint(v.stand, s, t + 1)
       if (standKeys.has(nearestEdge(v.stand, { x: (a[0] + b[0]) / 2, y: (a[1] + b[1]) / 2 }).key)) c++
     }
-    return c === 0 ? 'åpen' : c === n ? 'standvegg' : 'delvis standvegg'
+    return c === 0 ? 'gang' : c === n ? 'standvegg' : 'delvis standvegg'
   }
 
   const floorAreas = res.keyFigures.floor
@@ -511,20 +529,12 @@ export function PlanView(p: Props) {
       role="img"
       aria-label={`Plan for standen, ${W} × ${D} m`}
     >
-      {/* Ground: aisle and stand surface */}
+      {/* Ground: an aisle along every open side, and the stand surface */}
       <g>
-        <rect x={-M} y={D} width={W + 2 * M} height={M} fill="var(--sunken-2)" />
-        {/* With a floor legend in the aisle, the label moves to the right so they never overlap */}
-        <text
-          x={floorIds.length > 1 ? W + M - 0.25 : W / 2}
-          y={D + M * 0.66}
-          textAnchor={floorIds.length > 1 ? 'end' : 'middle'}
-          className="plan-label"
-          fill={INK_FAINT}
-          style={LABEL}
-        >
-          Gang
-        </text>
+        {openSides(v.stand).map((s) => {
+          const r = AISLE_BAND[s](W, D)
+          return <rect key={s} x={r[0]} y={r[1]} width={r[2]} height={r[3]} fill="var(--sunken-2)" />
+        })}
         <rect x={0} y={0} width={W} height={D} fill={SURFACE} />
       </g>
 
@@ -553,9 +563,7 @@ export function PlanView(p: Props) {
         {Array.from({ length: D - 1 }, (_, j) => (
           <line key={`gy${j}`} x1={0} y1={j + 1} x2={W} y2={j + 1} stroke={floorIds.length ? GRID_ON_FLOOR : BORDER} strokeWidth={0.012} />
         ))}
-        {Array.from({ length: (W + 1) * (D + 1) }, (_, n) => (
-          <circle key={`d${n}`} cx={n % (W + 1)} cy={Math.floor(n / (W + 1))} r={0.028} fill={BORDER_STRONG} />
-        ))}
+        {dotStep && <SnapDots W={W} D={D} step={dotStep} />}
       </g>
 
       {/* Walls */}
@@ -564,8 +572,8 @@ export function PlanView(p: Props) {
           const sel = selection.wallId === m.wallId
           return (
             <g key={m.key}>
-              {sel && <Seg a={m.a} b={m.b} stroke={INK} strokeWidth={0.24} />}
-              <Seg a={m.a} b={m.b} stroke={WALL} strokeWidth={0.14} />
+              {sel && <Seg a={m.a} b={m.b} stroke={INK} strokeWidth={PLAN_WALL + 0.08} />}
+              <Seg a={m.a} b={m.b} stroke={WALL} strokeWidth={PLAN_WALL} />
               {m.plate !== v.defaultPlate && (
                 <Seg a={m.a} b={m.b} stroke={plateColor(m.plate)} strokeWidth={0.05} />
               )}
@@ -594,8 +602,8 @@ export function PlanView(p: Props) {
                 const d = (h ? f.foot.across : f.foot.along) / 1000
                 return <rect key={i} x={x - w / 2} y={y - d / 2} width={w} height={d} fill="none" stroke={TEXTILE} strokeOpacity={0.55} strokeWidth={0.015} strokeDasharray=".04 .03" />
               })}
-              {sel && <Seg a={t.from} b={t.to} stroke={INK} strokeWidth={0.16} />}
-              <Seg a={t.from} b={t.to} stroke={TEXTILE} strokeWidth={0.08} />
+              {sel && <Seg a={t.from} b={t.to} stroke={INK} strokeWidth={PLAN_TEXTILE + 0.06} />}
+              <Seg a={t.from} b={t.to} stroke={TEXTILE} strokeWidth={PLAN_TEXTILE} />
               {sel && selection.freeFace && <FaceMark t={t} face={selection.freeFace} />}
               {!p.mini && (
                 <text {...labelAt(t)} textAnchor="middle" style={{ ...MONO, fontSize: '0.17px' }}>
@@ -615,12 +623,12 @@ export function PlanView(p: Props) {
         {v.textiles.map((t) => {
           const w = v.walls.find((x) => x.id === t.wallId)
           if (!w) return null
-          const [a, b] = faceSegment(w, sideOf(v, t), t.from + 0.02, t.from + t.width - 0.02, textileOffset(rules))
+          const [a, b] = faceSegment(w, sideOf(v, t), t.from + 0.02, t.from + t.width - 0.02, PLAN_TEXTILE_OFFSET)
           const sel = selection.textileId === t.id
           return (
             <g key={t.id}>
-              {sel && <Seg a={a} b={b} stroke={INK} strokeWidth={rules.textile.depth + 0.06} />}
-              <Seg a={a} b={b} stroke={TEXTILE} strokeWidth={rules.textile.depth} />
+              {sel && <Seg a={a} b={b} stroke={INK} strokeWidth={PLAN_TEXTILE + 0.06} />}
+              <Seg a={a} b={b} stroke={TEXTILE} strokeWidth={PLAN_TEXTILE} />
             </g>
           )
         })}
@@ -632,7 +640,7 @@ export function PlanView(p: Props) {
           const w = v.walls.find((x) => x.id === f.wallId)
           if (!w) return null
           const c = foilCenter(rules, f)
-          const [a, b] = faceSegment(w, sideOf(v, f), c - f.width / 2, c + f.width / 2, rules.wall.post / 2 + 0.03)
+          const [a, b] = faceSegment(w, sideOf(v, f), c - f.width / 2, c + f.width / 2, PLAN_WALL / 2 + 0.02)
           const sel = selection.foilId === f.id
           return <Seg key={f.id} a={a} b={b} stroke={INK} strokeWidth={sel ? 0.05 : 0.03} strokeDasharray=".06 .04" />
         })}
@@ -684,22 +692,22 @@ export function PlanView(p: Props) {
       {/* Labels */}
       {!p.mini && (
       <g pointerEvents="none">
-        <text x={W / 2} y={-M * 0.52} textAnchor="middle" style={LABEL}>
+        <text x={W / 2} y={-M * 0.36} textAnchor="middle" style={SIDE}>
           {SIDE_LABEL.back} · {sideText('back')}
         </text>
-        <text x={W / 2} y={-M * 0.2} textAnchor="middle" style={MONO}>
+        <text x={W / 2} y={-M * 0.14} textAnchor="middle" style={SIDE_DIM}>
           {W} m
         </text>
-        <text transform={`translate(${-M * 0.42} ${D / 2}) rotate(-90)`} textAnchor="middle" style={LABEL}>
+        <text transform={`translate(${-M * 0.3} ${D / 2}) rotate(-90)`} textAnchor="middle" style={SIDE}>
           {SIDE_LABEL.left} · {sideText('left')}
         </text>
-        <text transform={`translate(${-M * 0.14} ${D / 2}) rotate(-90)`} textAnchor="middle" style={MONO}>
+        <text transform={`translate(${-M * 0.1} ${D / 2}) rotate(-90)`} textAnchor="middle" style={SIDE_DIM}>
           {D} m
         </text>
-        <text transform={`translate(${W + M * 0.5} ${D / 2}) rotate(90)`} textAnchor="middle" style={LABEL}>
+        <text transform={`translate(${W + M * 0.2} ${D / 2}) rotate(90)`} textAnchor="middle" style={SIDE}>
           {SIDE_LABEL.right} · {sideText('right')}
         </text>
-        <text x={W / 2} y={D + M * 0.3} textAnchor="middle" style={LABEL}>
+        <text x={W / 2} y={D + M * 0.22} textAnchor="middle" style={SIDE}>
           {SIDE_LABEL.front} · {sideText('front')}
         </text>
         {floorIds.length > 1 &&
@@ -720,10 +728,10 @@ export function PlanView(p: Props) {
       {/* Interaction preview */}
       <g pointerEvents="none">
         {!p.mini && v.rooms.filter((r) => r.id === selection.roomId).map((r) => <RoomHandles key={r.id} r={r} />)}
-        {hoverWallEdge && <Seg a={hoverWallEdge.a} b={hoverWallEdge.b} stroke={tool === 'erase' ? INK_FAINT : WALL} strokeOpacity={0.6} strokeWidth={0.14} />}
+        {hoverWallEdge && <Seg a={hoverWallEdge.a} b={hoverWallEdge.b} stroke={tool === 'erase' ? INK_FAINT : WALL} strokeOpacity={0.6} strokeWidth={PLAN_WALL} />}
         {stroke && <StrokePreview a={stroke[0]} b={stroke[1]} erase={tool === 'erase'} />}
         {textileStroke && <TextilePreview v={v} line={textileStroke} />}
-        {hoverFree && 'id' in hoverFree && <Seg a={hoverFree.from} b={hoverFree.to} stroke={INK} strokeOpacity={0.45} strokeWidth={0.14} />}
+        {hoverFree && 'id' in hoverFree && <Seg a={hoverFree.from} b={hoverFree.to} stroke={INK} strokeOpacity={0.45} strokeWidth={PLAN_TEXTILE + 0.06} />}
         {hoverFree && !('id' in hoverFree) && <circle cx={hoverFree[0]} cy={hoverFree[1]} r={0.06} fill={TEXTILE} />}
         {hoverModule && <HoverModule m={hoverModule} />}
         {hoverFace && <FacePreview v={v} h={hoverFace} brush={brush!} erase={tool === 'erase'} />}
@@ -759,7 +767,7 @@ function labelAt(t: { from: Point; to: Point }) {
 /** The face shown in the drawer: a thin line on that side. */
 function FaceMark({ t, face }: { t: { from: Point; to: Point }; face: FaceKey }) {
   const [nx, ny] = runNormal(t, face)
-  const o = 0.11
+  const o = PLAN_TEXTILE / 2 + 0.04
   return <Seg a={[t.from[0] + nx * o, t.from[1] + ny * o]} b={[t.to[0] + nx * o, t.to[1] + ny * o]} stroke={INK} strokeWidth={0.03} />
 }
 
@@ -773,10 +781,10 @@ interface TextileLine {
 function TextilePreview({ v, line }: { v: Variant; line: TextileLine }) {
   const plan = planTextile(v, line.a, line.b, line.at)
   if (plan.kind === 'free') return <FreePreview a={line.a} b={line.b} />
-  const [a, b] = faceSegment(plan.wall, plan.s, plan.t0, plan.t1, textileOffset(rules))
+  const [a, b] = faceSegment(plan.wall, plan.s, plan.t0, plan.t1, PLAN_TEXTILE_OFFSET)
   return (
     <g>
-      <Seg a={a} b={b} stroke={TEXTILE} strokeOpacity={0.7} strokeWidth={rules.textile.depth + 0.04} />
+      <Seg a={a} b={b} stroke={TEXTILE} strokeOpacity={0.7} strokeWidth={PLAN_TEXTILE + 0.04} />
       <text x={(a[0] + b[0]) / 2} y={(a[1] + b[1]) / 2 - 0.15} textAnchor="middle" style={{ ...MONO, fontSize: '0.2px', fill: INK }}>
         {fmt(plan.t1 - plan.t0, 2)} m på vegg
       </text>
@@ -788,7 +796,7 @@ function FreePreview({ a, b }: { a: Point; b: Point }) {
   const L = Math.hypot(b[0] - a[0], b[1] - a[1])
   return (
     <g>
-      <Seg a={a} b={b} stroke={TEXTILE} strokeOpacity={0.6} strokeWidth={0.08} />
+      <Seg a={a} b={b} stroke={TEXTILE} strokeOpacity={0.6} strokeWidth={PLAN_TEXTILE} />
       <circle cx={a[0]} cy={a[1]} r={0.06} fill={TEXTILE} />
       <circle cx={b[0]} cy={b[1]} r={0.06} fill={TEXTILE} />
       {L > 0 && (
@@ -825,6 +833,9 @@ const NO_SELECTION: PlanSelection = {}
 
 const LABEL = { font: '500 0.26px var(--font-ui)', fill: INK_MUTED }
 const MONO = { font: '500 0.24px var(--font-numeric)', fill: INK_FAINT }
+/** Side names and stand dimensions around the stand: context, so quieter than the drawing itself. */
+const SIDE = { font: '500 0.17px var(--font-ui)', fill: INK_FAINT }
+const SIDE_DIM = { font: '500 0.15px var(--font-numeric)', fill: INK_FAINT }
 
 function OpeningMark({ v, m, selected }: { v: Variant; m: BuiltModule; selected: boolean }) {
   const o = m.opening!
@@ -836,16 +847,19 @@ function OpeningMark({ v, m, selected }: { v: Variant; m: BuiltModule; selected:
   const b = pointAlong(w, o.module + 1)
   const door = productOf(o.product)?.opening === 'door'
   const r = rules.door.swing
+  // Hinge: the leaf is centred in the opening, not hung on the post centre
+  const k = doorInset(rules)
+  const h: Point = [a[0] + dx * k, a[1] + dy * k]
   return (
     <g>
-      {selected && <Seg a={a} b={b} stroke={INK} strokeOpacity={0.3} strokeWidth={0.24} />}
+      {selected && <Seg a={a} b={b} stroke={INK} strokeOpacity={0.3} strokeWidth={PLAN_WALL + 0.08} />}
       {/* Header panel over the opening */}
       <Seg a={a} b={b} stroke={WALL} strokeOpacity={0.45} strokeWidth={0.05} />
       {door ? (
         <g fill="none" stroke={INK} strokeWidth={0.025}>
-          <line x1={a[0]} y1={a[1]} x2={a[0] + n[0] * r} y2={a[1] + n[1] * r} />
+          <line x1={h[0]} y1={h[1]} x2={h[0] + n[0] * r} y2={h[1] + n[1] * r} />
           <path
-            d={`M${a[0] + dx * r} ${a[1] + dy * r} A${r} ${r} 0 0 ${s === 1 ? 1 : 0} ${a[0] + n[0] * r} ${a[1] + n[1] * r}`}
+            d={`M${h[0] + dx * r} ${h[1] + dy * r} A${r} ${r} 0 0 ${s === 1 ? 1 : 0} ${h[0] + n[0] * r} ${h[1] + n[1] * r}`}
             strokeDasharray=".05 .05"
           />
         </g>
@@ -879,7 +893,7 @@ function StrokePreview({ a, b, erase }: { a: Point; b: Point; erase: boolean }) 
         a={a}
         b={b}
         stroke={erase ? INK_FAINT : `color-mix(in oklab, ${WALL} 60%, transparent)`}
-        strokeWidth={0.14}
+        strokeWidth={PLAN_WALL}
         strokeLinecap="square"
         strokeDasharray={erase ? '.12 .08' : undefined}
       />
@@ -909,19 +923,26 @@ function FacePreview({ v, h, brush, erase }: { v: Variant; h: FaceHit; brush: Br
     span = [f.a, f.b]
   }
   if (!span) return null
-  const [a, b] = faceSegment(h.w, h.s, span[0] + 0.02, span[1] - 0.02, textileOffset(rules))
-  return <Seg a={a} b={b} stroke={brush.kind === 'textile' && !erase ? TEXTILE : INK} strokeOpacity={0.45} strokeWidth={rules.textile.depth + 0.04} />
+  const [a, b] = faceSegment(h.w, h.s, span[0] + 0.02, span[1] - 0.02, PLAN_TEXTILE_OFFSET)
+  return <Seg a={a} b={b} stroke={brush.kind === 'textile' && !erase ? TEXTILE : INK} strokeOpacity={0.45} strokeWidth={PLAN_TEXTILE + 0.04} />
 }
 
 
-/** Room name and size on its floor; a dashed outline when selected. */
+/** The points a wall or textile brush snaps to; whole metres are drawn a little larger. */
+function SnapDots({ W, D, step }: { W: number; D: number; step: number }) {
+  const nx = Math.round(W / step)
+  const ny = Math.round(D / step)
+  return Array.from({ length: (nx + 1) * (ny + 1) }, (_, n) => {
+    const x = (n % (nx + 1)) * step
+    const y = Math.floor(n / (nx + 1)) * step
+    const whole = Number.isInteger(Math.round(x * 1000) / 1000) && Number.isInteger(Math.round(y * 1000) / 1000)
+    return <circle key={n} cx={x} cy={y} r={whole ? 0.028 : 0.018} fill={BORDER_STRONG} />
+  })
+}
+
+/** Room name and floor area on its floor; a dashed outline when selected. */
 function RoomMark({ r, selected }: { r: Room; selected: boolean }) {
-  const [cx, cy] = labelPoint(r.outline)
-  const b = bounds(r.outline)
-  const small = Math.min(b.w, b.d) < 2
-  const size = roomSize(r)
-  const wide = size.length > 10
-  const boxW = (small ? 0.8 : 1.2) * (wide ? 1.6 : 1)
+  const fit = fitRoomLabel(r)
   return (
     <g>
       {selected && (
@@ -935,15 +956,51 @@ function RoomMark({ r, selected }: { r: Room; selected: boolean }) {
           strokeLinejoin="round"
         />
       )}
-      <rect x={cx - boxW / 2} y={cy - (small ? 0.2 : 0.3)} width={boxW} height={small ? 0.44 : 0.6} rx={0.06} fill={CANVAS} fillOpacity={0.85} />
-      <text x={cx} y={cy - (small ? 0.02 : 0.06)} textAnchor="middle" style={{ ...LABEL, fontSize: small ? '0.17px' : '0.22px' }}>
-        {roomName(r)}
-      </text>
-      <text x={cx} y={cy + (small ? 0.18 : 0.22)} textAnchor="middle" style={{ ...MONO, fontSize: small ? '0.15px' : '0.19px' }}>
-        {size}
-      </text>
+      {fit && (
+        <g transform={`translate(${fit.cx} ${fit.cy}) rotate(${fit.turn ? -90 : 0}) scale(${fit.k})`}>
+          <rect x={-fit.w / 2} y={-fit.h / 2} width={fit.w} height={fit.h} rx={0.06} fill={CANVAS} fillOpacity={0.85} />
+          <text y={fit.two ? -0.06 : 0.08} textAnchor="middle" style={{ ...LABEL, fontSize: '0.22px' }}>
+            {roomName(r)}
+          </text>
+          {fit.two && (
+            <text y={0.22} textAnchor="middle" style={{ ...MONO, fontSize: '0.19px' }}>
+              {roomSize(r)}
+            </text>
+          )}
+        </g>
+      )}
     </g>
   )
+}
+
+/** Clearance kept between a room label and the room's wall lines, m. */
+const LABEL_GAP = PLAN_WALL / 2 + 0.06
+/** Smallest scale a room label is drawn at; below it the size line is dropped, then the label. */
+const LABEL_MIN = 0.6
+
+/**
+ * Fits the label box into the room's largest free rectangle, clear of its walls: full size when it fits, else
+ * scaled down, turned along a narrow room when that leaves it larger, and without the size line as a last resort.
+ */
+function fitRoomLabel(r: Room) {
+  const box = labelRect(r.outline)
+  const aw = box.w - 2 * LABEL_GAP
+  const ad = box.d - 2 * LABEL_GAP
+  const name = roomName(r)
+  const size = roomSize(r)
+  const try_ = (two: boolean) => {
+    // Box at scale 1: text width estimated from the character count
+    const w = Math.max(name.length * 0.135, two ? size.length * 0.125 : 0) + 0.28
+    const h = two ? 0.6 : 0.36
+    const flat = Math.min(1, aw / w, ad / h)
+    const turned = Math.min(1, ad / w, aw / h)
+    const turn = turned > flat + 0.05
+    return { w, h, two, turn, k: turn ? turned : flat }
+  }
+  const two = try_(true)
+  const one = two.k >= LABEL_MIN ? two : try_(false)
+  if (one.k < LABEL_MIN * 0.75) return null
+  return { ...one, cx: box.x + box.w / 2, cy: box.y + box.d / 2 }
 }
 
 /** Grips at the middle of each side of the selected room: drag a side to resize. */

@@ -34,7 +34,8 @@ export interface Rules {
   beam: { max: number; height: number; thickness: number };
   /** `grid`: free-standing textile walls are drawn and sized on this grid (the elevation grid), at least `freeMin`, m. */
   textile: { depth: number; minWidth: number; grid: number; freeMin: number; inFrame: InFrameParams };
-  door: { swing: number };
+  /** Door leaf: `swing` = leaf width = swing radius, `height` = clear height (the header panel fills the rest), m. */
+  door: { swing: number; height: number };
   floor: { cell: number };
   /** A quote holds `validDays` from it is sent, but never later than `beforeMount` days before montering. */
   quote: { validDays: number; beforeMount: number };
@@ -60,11 +61,17 @@ export const RULES: Rules = {
     freeMin: 0.25,
     inFrame: { side: 20, air: 10, wallH: 2490, feet: 50, bleed: 20, scale: 10, prof: 40, stag: 1000 },
   },
-  door: { swing: 0.9 },
+  door: { swing: 0.95, height: 2.0 },
   floor: { cell: 0.5 },
   quote: { validDays: 30, beforeMount: 14 },
   vat: 0.25,
 };
+
+/**
+ * From the post centre to the hinge, m. The leaf is hung on the inner face of the post and fills the clear
+ * opening (cc − post), so it is centred and swings clear of the post and the wall it sits in.
+ */
+export const doorInset = (r: Rules) => (r.wall.cc - r.door.swing) / 2;
 
 /** Full wall height including feet (2540 mm). */
 export const wallHeight = (r: Rules) => r.wall.height + r.wall.feet;

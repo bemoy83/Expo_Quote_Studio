@@ -13,7 +13,7 @@ import { fogaPart } from '../foga/parts';
 import { DEFAULT_PRICING, ITEM, type PricingData } from '../pricing/data';
 import { addTime, dgOf, priceLine, type Strategy, type Time, type Transfer, type Use } from '../pricing/model';
 import type { Rules } from '../rules/rules';
-import { layoutBeams, type BeamLayout } from './beams';
+import { variantBeams, type BeamLayout } from './beams';
 import { production, type Production } from './production';
 
 export interface CalcLine {
@@ -176,7 +176,7 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
   const mods = builtModules(v);
   const points = wallPoints(mods);
   const keys = new Set(mods.map((m) => m.key));
-  const beams = layoutBeams(v.stand, keys, points, rules.beam.max);
+  const beams = variantBeams(v, keys, points, rules.beam.max);
   const wallsById = new Map(v.walls.map((w) => [w.id, w]));
   const kindOf = (m: BuiltModule): WallKind => {
     const w = wallsById.get(m.wallId);
