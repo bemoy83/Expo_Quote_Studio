@@ -264,8 +264,7 @@ function WallSection({ v, res, brush, tool, pick, onEdit, onToast, onSelect, sel
         pen={beamPen}
         thumb={
           <svg viewBox="-1 -1 2 2" width="28" height="28" aria-hidden>
-            <path d="M-.8 0 H.8" stroke={INK} strokeWidth=".14" strokeDasharray=".3 .15" />
-            <rect x="-.9" y="-.12" width=".24" height=".24" fill={INK} />
+            <path d="M-.9 0 H.9" stroke={INK} strokeWidth=".14" strokeDasharray=".3 .15" />
           </svg>
         }
         title="Takdrager tilvalg"

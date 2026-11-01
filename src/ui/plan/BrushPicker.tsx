@@ -6,9 +6,9 @@ import { useEffect, useRef, type ReactNode } from 'react'
 import { mainGroupOf, PRODUCT_GROUPS } from '../../catalog/groups'
 import type { Motif } from '../../persistence/file'
 import { catalog, wallPlates } from '../env'
-import { INK } from '../colors'
 import { ObjectThumb, Swatch } from '../panel/ProductRow'
 import type { Brush, PenTool } from '../tools'
+import { BeamIcon } from './QuickPicks'
 
 const HEAD: Record<PenTool, { title: string; sub: string }> = {
   wall: { title: 'Vegg', sub: 'Innervegg, åpning eller takdrager' },
@@ -68,10 +68,7 @@ export function BrushPicker({
               <Swatch color={wallPlate?.color} />
             </Tile>
             <Tile on={is({ kind: 'beam' })} label="Innvendig takdrager" onClick={() => onPick({ kind: 'beam' })}>
-              <svg viewBox="-1 -1 2 2" width="26" height="26" aria-hidden>
-                <path d="M-.8 0 H.8" stroke={INK} strokeWidth=".14" strokeDasharray=".3 .15" />
-                <rect x="-.9" y="-.12" width=".24" height=".24" fill={INK} />
-              </svg>
+              <BeamIcon size={26} />
             </Tile>
             {openings.map((p) => {
               const b: Brush = { kind: 'opening', product: p.variants[0].artnr }

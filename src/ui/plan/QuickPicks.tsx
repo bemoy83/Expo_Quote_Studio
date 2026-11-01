@@ -219,8 +219,7 @@ const Sep = () => <span className="q-sep" aria-hidden />
 export function BeamIcon({ size = 15 }: { size?: number }) {
   return (
     <svg viewBox="-1 -1 2 2" width={size} height={size} aria-hidden>
-      <path d="M-.8 0 H.8" stroke="currentColor" strokeWidth=".16" strokeDasharray=".3 .15" />
-      <rect x="-.95" y="-.15" width=".3" height=".3" fill="currentColor" />
+      <path d="M-.9 0 H.9" stroke="currentColor" strokeWidth=".16" strokeDasharray=".3 .15" />
     </svg>
   )
 }
