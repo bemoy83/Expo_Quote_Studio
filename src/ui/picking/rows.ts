@@ -25,7 +25,12 @@ export function pickRows(res: CalcResult): PickRow[] {
     ...res.groups
       .flatMap((g) => g.lines)
       .filter((l) => !l.foga && !resolveGroup(l.group).subgroup.notPicked)
-      .map((l) => ({ key: l.artnr + l.name, group: l.group, code: l.artnr, title: l.name, qty: `${fmt(l.qty, l.unit === 'stk' ? 0 : 1)} ${l.unit}` })),
+      .flatMap((l) =>
+        // Carpet tiles: one row per size, in pieces
+        l.tiles
+          ? l.tiles.map((t) => ({ key: `${l.artnr}|${t.size}`, group: l.group, code: l.artnr, title: `${l.name} ${t.size}`, qty: `${t.qty} stk` }))
+          : [{ key: l.artnr + l.name, group: l.group, code: l.artnr, title: l.name, qty: `${fmt(l.qty, l.unit === 'stk' ? 0 : 1)} ${l.unit}` }],
+      ),
     ...B.lines.map((l) => ({
       key: `${l.name}|${l.detail}`,
       group: l.group,
