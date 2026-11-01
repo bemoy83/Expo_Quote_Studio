@@ -1,5 +1,6 @@
 // Floating tools on the drawing surface, one icon per tool: Velg · Vegg · Gulv · Profilering · Møbel · Tøm at the
-// bottom, undo and redo on their own pill to the left. Over the active tool: its quick picks. A short stripe under Vegg and Gulv shows the colour they draw with.
+// bottom, undo and redo on their own pill to the left. Over the active tool: its quick picks. A short stripe under
+// Vegg and Gulv shows the colour they draw with.
 import type { LucideIcon } from 'lucide-react'
 import { Armchair, BrickWall, Eraser, Grid2x2, Image, MousePointer2, Redo2, Undo2 } from 'lucide-react'
 import type { ReactNode } from 'react'

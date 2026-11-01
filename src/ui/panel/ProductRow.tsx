@@ -121,4 +121,3 @@ export function ObjectThumb({ product, color }: { product: Product; color?: stri
     </svg>
   )
 }
-

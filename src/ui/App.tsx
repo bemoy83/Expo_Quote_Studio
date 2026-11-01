@@ -247,19 +247,19 @@ export default function App() {
     const product = brush.product
     onEdit((x) => fillFloor(x, product, idx.byArtnr.get(product)?.product.roll))
   }
-  /** Bakrom from the wall tool: 1 × 1 m with a door in a free corner, as in the panel. */
+  /** Bakrom 1 × 1 m with a door in a free corner; from the wall tool's quick picks and the panel. */
   const addRoom = () => {
     const door = catalog.products.find((p) => p.opening === 'door')!.variants[0].artnr
     const next = addDefaultRoom(v, door)
     if (next) onEdit(() => next)
     else showToast('Ingen ledige hjørner til bakrom')
   }
-  /** A customer's own motif, uploaded from the profiling tool: added to the library and taken as the pen. */
-  const uploadMotif = async (f: File) => {
+  /** A customer's own motif into the library. From the profiling tool it also becomes the pen; the panel only adds it. */
+  const uploadMotif = async (f: File, take = true) => {
     try {
       const m = await readMotif(f, motifs.map((x) => x.id))
       dispatch({ type: 'motifs', motifs: [...sketch.motifs, m] })
-      pick({ kind: 'motif', motif: m.id })
+      if (take) pick({ kind: 'motif', motif: m.id })
       showToast(`${m.name} lagt til i grafikkbiblioteket`)
     } catch (e) {
       showToast((e as Error).message)
@@ -276,7 +276,7 @@ export default function App() {
       onPick={(b) => pick(b)}
       onMore={() => active !== 'select' && active !== 'erase' && setTabRaw(PANEL_TAB[active])}
       onAddRoom={addRoom}
-      onUpload={uploadMotif}
+      onUpload={(f) => void uploadMotif(f)}
       floorSize={floorSize}
       onFloorSize={setFloorSize}
       otherSize={otherSize}
@@ -373,7 +373,8 @@ export default function App() {
               onEdit={onEdit}
               onToast={showToast}
               motifs={motifs}
-              onAddMotif={(m) => dispatch({ type: 'motifs', motifs: [...sketch.motifs, m] })}
+              onUpload={(f) => void uploadMotif(f, false)}
+              onAddRoom={addRoom}
               onSelect={(s) => {
                 setTool('select')
                 setSelection(s)
@@ -501,7 +502,6 @@ export default function App() {
     const name = r ? (r.product.variants.length > 1 ? `${r.product.name.split(' ')[0]} ${r.variant.name.toLowerCase()}` : r.product.name) : b.product
     return { name, meta: r ? `${kr(r.variant.price)} kr${b.kind === 'floor' ? '/m²' : ''}` : undefined }
   }
-
 }
 
 /** «…» on the quick picks opens the panel on the tool's tab, where all its options are. */

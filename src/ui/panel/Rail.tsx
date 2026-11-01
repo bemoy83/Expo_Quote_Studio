@@ -5,7 +5,7 @@ import { mainGroupOf, PRODUCT_GROUPS, resolveGroup } from '../../catalog/groups'
 import type { Product } from '../../catalog/types'
 import { setCounted, setStand } from '../../domain/edit'
 import { addObjectAnywhere, removeObjects } from '../../domain/objects'
-import { addDefaultRoom, dissolveRoom, isRoomWallId, removeRoom, ROOM_LABELS, roomName, roomOpenings, roomSize, updateRoom } from '../../domain/rooms'
+import { dissolveRoom, isRoomWallId, removeRoom, ROOM_LABELS, roomName, roomOpenings, roomSize, updateRoom } from '../../domain/rooms'
 import { bounds } from '../../domain/outline'
 import type { StandType, Variant } from '../../domain/types'
 import { fillFloor } from '../../domain/variant'
@@ -13,7 +13,7 @@ import { textileBox } from '../../domain/decor'
 import { wallLabel } from '../../calc/production'
 import type { Motif } from '../../persistence/file'
 import type { PlanSelection } from '../plan/PlanView'
-import { findMotif, readMotif, SAMPLE_MOTIFS } from '../motifs'
+import { findMotif, SAMPLE_MOTIFS } from '../motifs'
 import { decorSource } from '../dnd'
 import { INK, LAYER_COLOR, SUNKEN } from '../colors'
 import { Button, CommitInput, Counter, IconButton, Segmented, Switch } from '../controls'
@@ -37,7 +37,10 @@ export interface RailProps {
   onToast: (t: string) => void
   /** Motif library: samples and the customer's own. */
   motifs: Motif[]
-  onAddMotif: (m: Motif) => void
+  /** Add the customer's own motif to the library (same as upload on the profiling quick picks). */
+  onUpload: (f: File) => void
+  /** Add a 1 × 1 m bakrom in a free corner (same as on the wall tool's quick picks). */
+  onAddRoom: () => void
   /** Open a textile in the wall drawer. */
   onSelect: (s: PlanSelection) => void
   selection?: PlanSelection
@@ -222,7 +225,7 @@ function StandSection({ v, res, onEdit }: RailProps) {
   )
 }
 
-function WallSection({ v, res, brush, tool, pick, onEdit, onToast, onSelect, selection }: RailProps) {
+function WallSection({ v, res, brush, tool, pick, onEdit, onAddRoom, onSelect, selection }: RailProps) {
   const plates = wallPlates()
   const di = Math.max(0, plates.findIndex((p) => p.ral === v.defaultPlate))
   const def = plates[di]
@@ -289,12 +292,7 @@ function WallSection({ v, res, brush, tool, pick, onEdit, onToast, onSelect, sel
           <IconButton
             icon={Box}
             label="Legg til bakrom"
-            onClick={() => {
-              const door = catalog.products.find((p) => p.opening === 'door')!.variants[0].artnr
-              const next = addDefaultRoom(v, door)
-              if (next) onEdit(() => next)
-              else onToast('Ingen ledige hjørner til bakrom')
-            }}
+            onClick={onAddRoom}
           />
         }
       />
@@ -455,21 +453,12 @@ function FloorSection({ v, res, brush, tool, pick, onEdit }: RailProps) {
 const FILL_SHORT = { print: 'trykk', white: 'hvit', reuse: 'kundens' } as const
 
 /** Profilering: textile walls (on a system wall or free-standing, one brush) and the motif library. Counted profiling items follow below. */
-function ProfileSection({ v, res, brush, tool, pick, motifs, onAddMotif, onSelect, onToast }: RailProps) {
+function ProfileSection({ v, res, brush, tool, pick, motifs, onUpload, onSelect }: RailProps) {
   const file = useRef<HTMLInputElement>(null)
   const pen = tool !== 'select' && brush?.kind === 'textile'
   const textile = productOf(catalog.system.textile)?.variants[0]
   const freeFrame = productOf(catalog.system.freeTextile)?.variants[0]
   const k = res.keyFigures
-  const upload = async (f: File) => {
-    try {
-      const m = await readMotif(f, motifs.map((x) => x.id))
-      onAddMotif(m)
-      onToast(`${m.name} lagt til i grafikkbiblioteket`)
-    } catch (e) {
-      onToast((e as Error).message)
-    }
-  }
   return (
     <>
       <div className="panel-sec eyebrow">Tekstilvegg</div>
@@ -534,7 +523,7 @@ function ProfileSection({ v, res, brush, tool, pick, motifs, onAddMotif, onSelec
         hidden
         onChange={(e) => {
           const f = e.target.files?.[0]
-          if (f) void upload(f)
+          if (f) onUpload(f)
           e.target.value = ''
         }}
       />

@@ -44,7 +44,7 @@ export function penToolOf(b: Brush): PenTool {
 /** The tool shown as active in the dock. */
 export const dockToolOf = (tool: Tool, brush: Brush | null): DockTool => (tool === 'brush' && brush ? penToolOf(brush) : tool === 'brush' ? 'select' : tool)
 
-/** Floor brush sizes in the band. 1 × 1 and Auto first; the smaller tiles under «Andre». */
+/** Floor brush sizes on the floor tool's quick picks. 1 × 1 and Auto first; the smaller tiles under «Andre». */
 export const FLOOR_MAIN: { label: string; size: FloorBrushSize; title: string }[] = [
   { label: '1 × 1', size: TILE_FULL, title: 'Flis 100 × 100' },
   { label: 'Auto', size: 'auto', title: '1 × 1 der det er plass, ellers største flis som passer på ledig gulv' },
