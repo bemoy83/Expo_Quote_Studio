@@ -1,6 +1,7 @@
 // Innvendige takdragere: optional beams the customer draws inside the stand (Bjørn 1.11.2026, docs/foga-system.md).
 //   Always the exhibitor's. Same profile, height and 6 m rule as the standard beams.
-//   - An end on a standard (outer) beam, or on another beam's length, hangs there on a hook (krok): no post.
+//   - An end on a standard (outer) beam, or on another beam's length, hangs there on a hook (krok): no post. The hook is
+//     two-way, so beams hanging on both sides of the same point share one hook.
 //   - Where two drawn beams cross, the longer span runs through and the shorter is split there, each side hooked on.
 //     A drawn beam crossing a standard beam is split and hooked the same way; the standard beam is never split.
 //   - Where a wall meets or crosses it (a wall post under it) it is split there and shares the wall's post.
@@ -15,7 +16,7 @@ import { splitLength, type BeamLayout, type BeamSegment } from './beams';
 import type { WallSupport } from './wallSupports';
 
 export interface InnerBeamLayout extends BeamLayout {
-  /** Beam ends hanging on another beam. */
+  /** Hooks: one two-way hook per point where drawn beam ends hang on another beam, whichever sides they come from. */
   hooks: number;
   /** Foot plates under the beams' own free posts. */
   feet: WallSupport[];
@@ -93,7 +94,7 @@ export function layoutInnerBeams(
   const segments: BeamSegment[] = [];
   const posts = new Map<string, Point>();
   const addPost = (p: Point) => posts.set(pointKey(p), p);
-  let hooks = 0;
+  const hookAt = new Set<string>();
   lines.forEach((l, i) => {
     const stops = [l.lo, ...pieces[i].map((b) => b.t), l.hi];
     for (let k = 0; k + 1 < stops.length; k++) {
@@ -107,7 +108,7 @@ export function layoutInnerBeams(
       });
     }
     for (const b of pieces[i]) {
-      if (b.hook) hooks += 2;
+      if (b.hook) hookAt.add(pointKey(pointOn(l, b.t)));
       else addPost(pointOn(l, b.t));
     }
   });
@@ -121,7 +122,7 @@ export function layoutInnerBeams(
     const k = pointKey(p);
     const onBeam = outer.some((o) => inside(o, p)) || lines.some((o, j) => j !== i && inside(o, p));
     const onPost = sharedPost(p) || posts.has(k) || (!onBeam && (endKeys.get(k) ?? 0) > 1);
-    if (!onPost && onBeam) hooks++;
+    if (!onPost && onBeam) hookAt.add(k);
     else addPost(p);
   }
 
@@ -133,7 +134,7 @@ export function layoutInnerBeams(
     if (dirs.size === 1) feet.push({ at: p, orientation: [...dirs][0] });
   }
 
-  return { segments, posts, lm: segments.reduce((a, s) => a + s.length, 0), hooks, feet };
+  return { segments, posts, lm: segments.reduce((a, s) => a + s.length, 0), hooks: hookAt.size, feet };
 }
 
 /** Standard and drawn beams as one layout: what the plan and 3D draw, and what holds a wall. */

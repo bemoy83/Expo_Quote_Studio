@@ -61,13 +61,18 @@ describe('innvendig takdrager', () => {
     expect(l.inner.hooks).toBe(0);
   });
 
-  it('crossing: the longer runs through, the shorter is split and hooked on both sides', () => {
+  it('crossing: the longer runs through, the shorter is split and hangs on one two-way hook', () => {
     const v = variant(ISLAND, [beam('short', [3, 1], [3, 5]), beam('long', [1, 3], [8, 3])], true);
     const l = layout(v);
     // long 7 m: 4 + 3 with a joint post; short 4 m split at y = 3 into 2 + 2
     expect(l.inner.segments.map((s) => s.length)).toEqual([2, 2, 4, 3]);
-    expect(l.inner.hooks).toBe(2);
+    expect(l.inner.hooks).toBe(1);
     expect(has(l.inner.posts, [3, 3])).toBe(false);
+  });
+
+  it('two beams ending on both sides of the same point share one two-way hook', () => {
+    const v = variant(ISLAND, [beam('long', [1, 3], [8, 3]), beam('n', [4, 1], [4, 3]), beam('s', [4, 3], [4, 5]), beam('e', [6, 3], [6, 5])], true);
+    expect(layout(v).inner.hooks).toBe(2);
   });
 
   it('a wall under it splits it on the wall post', () => {
