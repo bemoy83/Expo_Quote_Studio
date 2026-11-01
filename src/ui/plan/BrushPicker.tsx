@@ -40,12 +40,12 @@ export function BrushPicker({
   const floors = catalog.products.filter((p) => mainGroupOf(p.group) === 'gulv' && p.kind === 'surface')
   const objects = catalog.products.filter((p) => p.kind === 'object' && !p.opening)
   const objectGroups = [...new Set(objects.map((p) => mainGroupOf(p.group)))]
-  // A press outside the dock closes it (inside, the tools and quick picks decide)
+  // A press anywhere else closes it (the dock's tool buttons toggle it themselves)
   const box = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const down = (e: PointerEvent) => {
       const t = e.target as Element
-      if (!box.current?.contains(t) && !t.closest('.dock-surface')) onClose()
+      if (!box.current?.contains(t) && !t.closest('.dock-tools')) onClose()
     }
     document.addEventListener('pointerdown', down)
     return () => document.removeEventListener('pointerdown', down)
