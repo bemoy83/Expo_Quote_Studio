@@ -16,27 +16,36 @@ const island = () => createVariant('A', { width: 10, depth: 8, type: 'island' })
 const frames = (v: Variant) => freeFrames(v, RECIPES.freeFrame, RULES.textile.inFrame, 'Firma');
 
 describe('feet and braces', () => {
-  it('at least two from 1 m, evenly spread', () => {
-    expect(supportPoints(1000, S)).toEqual([250, 750]);
-    expect(supportPoints(3000, S)).toEqual([750, 2250]);
+  // Bjørn 1.11.2026: a foot right at each free end, pulled in (at most 1 m) only where the gaps would be over 3 m
+  it('at least two from 1 m, at the ends', () => {
+    expect(supportPoints(1000, S)).toEqual([0, 1000]);
+    expect(supportPoints(3000, S)).toEqual([0, 3000]);
   });
   it('one, in the middle, under 1 m', () => {
     expect(supportPoints(250, S)).toEqual([125]);
     expect(supportPoints(750, S)).toEqual([375]);
   });
-  it('the outer ones at most 1 m in, at most 3 m apart', () => {
-    // Evenly 2500 apart would put the ends 1250 in: held at 1000, gap 3000
+  it('pulled in from the ends only as far as the 3 m gap needs, evenly over the length', () => {
+    expect(supportPoints(4000, S)).toEqual([500, 3500]);
     expect(supportPoints(5000, S)).toEqual([1000, 4000]);
-    // 6 m: two would be 4000 apart, three evenly: 1000 in, 2000 apart
-    expect(supportPoints(6000, S)).toEqual([1000, 3000, 5000]);
+    // 6 m: two would need 1,5 m in each end, so three, at the ends
+    expect(supportPoints(6000, S)).toEqual([0, 3000, 6000]);
+    expect(supportPoints(7000, S)).toEqual([500, 3500, 6500]);
     expect(supportPoints(8000, S)).toEqual([1000, 4000, 7000]);
   });
+  it('with an inset, a foot at a free end stays flush with the frame end', () => {
+    expect(supportPoints(3000, S, undefined, 200)).toEqual([200, 2800]);
+    expect(supportPoints(5000, S, undefined, 200)).toEqual([1000, 4000]);
+    expect(supportPoints(2000, S, { from: true, to: false }, 200)).toEqual([1800]);
+  });
   it('a corner post is a support', () => {
-    // Corner at the from end: the post and one foot make two; half a gap to the free end
-    expect(supportPoints(2000, S, { from: true, to: false })).toEqual([1333]);
-    expect(supportPoints(2000, S, { from: false, to: true })).toEqual([667]);
-    // 5 m from the corner: 4 m to cover, two feet, the last held 1 m in
-    expect(supportPoints(5000, S, { from: true, to: false })).toEqual([2000, 4000]);
+    // Corner at one end: one foot, at the free end
+    expect(supportPoints(2000, S, { from: true, to: false })).toEqual([2000]);
+    expect(supportPoints(2000, S, { from: false, to: true })).toEqual([0]);
+    // 4 m from the corner: pulled 1 m in
+    expect(supportPoints(4000, S, { from: true, to: false })).toEqual([3000]);
+    // 5 m from the corner: two feet, the end one at the end, evenly toward the corner
+    expect(supportPoints(5000, S, { from: true, to: false })).toEqual([2500, 5000]);
     // Posts at both ends: feet only where they would be more than 3 m apart
     expect(supportPoints(3000, S, { from: true, to: true })).toEqual([]);
     expect(supportPoints(4000, S, { from: true, to: true })).toEqual([2000]);
@@ -55,7 +64,7 @@ describe('free-standing frame', () => {
   it('a straight run: two free ends, textile both sides', () => {
     const [f] = frames(draw(island(), [1, 2], [7, 2]));
     // 6000 long, H = 2540. Rails 1 × 6000 is more than 5000: 2 × 3000 each
-    expect(f).toMatchObject({ pos: 'F1', length: 6000, H: 2540, railCuts: [3000, 3000], uprights: 2, supports: [1000, 3000, 5000], braceLength: 2460 });
+    expect(f).toMatchObject({ pos: 'F1', length: 6000, H: 2540, railCuts: [3000, 3000], uprights: 2, supports: [200, 3000, 5800], braceLength: 2460 });
     // Couplings: 2 × 2 corner 617 + 3 braces × 2 × 600 + 2 × 609
     expect(f.couplings).toBe(4 + 6 + 2);
     expect(f.connectors).toEqual({ corner: 4, splice: 2 });
@@ -78,8 +87,8 @@ describe('free-standing frame', () => {
     expect(f1.uprights).toBe(1);
     expect(f1.nCorners).toBe(1);
     expect(f1.profileMm).toBe(2 * 2963 + 2540);
-    // The post is the support at the corner: one foot, half a gap from the free end
-    expect(f1.supports).toEqual([1000]);
+    // The post is the support at the corner: one foot, flush with the free end
+    expect(f1.supports).toEqual([200]);
     // Face A of (1,2) → (4,2) is the left normal (0, 1): the inner face, toward the other run
     expect(f1.faces.map((x) => [x.pos, x.W])).toEqual([
       ['F1A', 2980],
@@ -89,7 +98,7 @@ describe('free-standing frame', () => {
     expect(f2.railStart).toBe(37);
     // Run (4,2) → (4,5): face A is the left normal (−1, 0), toward where the first run comes from: inner
     expect(f2.faces.map((x) => x.W)).toEqual([2980, 3020]);
-    expect(f2.supports).toEqual([2000]);
+    expect(f2.supports).toEqual([2800]);
     // 617 into the post top and bottom, plus at the free end; one brace
     expect(f2.couplings).toBe(2 + 2 + 2);
   });

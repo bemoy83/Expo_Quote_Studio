@@ -12,19 +12,33 @@ export interface WallDrag {
   p0: { x: number; y: number }
   /** The variant when the drag started; every step moves the wall from here. */
   v0: Variant
-  /** Whole metres moved so far. */
-  delta: number
+  /** Whole metres moved so far, sideways and along the wall ("side,along"). */
+  delta: string
   horizontal: boolean
 }
 
-/** Move an inner wall to whole metres under the pointer. One undo step per drag. */
+/** Move an inner wall to whole metres under the pointer, both ways when it stands free, else only sideways. Past the
+ *  stand's edge (or onto a stand wall) it stops at the last place it fits. One undo step per drag. */
 export function dragWall(d: WallDrag, q: { x: number; y: number }, onEdit: Edit, onCheckpoint: () => void) {
-  const delta = Math.round(d.horizontal ? q.y - d.p0.y : q.x - d.p0.x)
-  if (delta === d.delta) return
-  const next = moveWall(d.v0, d.id, delta)
-  if (next === d.v0 && delta !== 0) return
-  if (d.delta === 0) onCheckpoint()
-  d.delta = delta
+  const side = Math.round(d.horizontal ? q.y - d.p0.y : q.x - d.p0.x)
+  const along = Math.round(d.horizontal ? q.x - d.p0.x : q.y - d.p0.y)
+  const toward0 = (n: number) => Array.from({ length: Math.abs(n) + 1 }, (_, i) => Math.sign(n) * (Math.abs(n) - i))
+  // The furthest step toward the pointer that fits, sideways first
+  let next = d.v0
+  let key = '0,0'
+  search: for (const s of toward0(side)) {
+    for (const a of toward0(along)) {
+      const v = moveWall(d.v0, d.id, s, a)
+      if (v !== d.v0) {
+        next = v
+        key = `${s},${a}`
+        break search
+      }
+    }
+  }
+  if (key === d.delta) return
+  if (d.delta === '0,0') onCheckpoint()
+  d.delta = key
   onEdit(() => next, false)
 }
 

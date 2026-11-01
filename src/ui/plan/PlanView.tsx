@@ -1,6 +1,7 @@
 // 2D plan. Explicit layers, bottom to top: ground, floor, grid, walls, openings, textiles, beams and posts,
 // objects, labels, interaction preview. Pointer handling is done on the svg with model coordinates, so the
 // draw order never decides what can be clicked.
+import { RECIPES } from '../../foga/recipes'
 import { useEffect, useMemo, useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent, type SVGProps } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import { mainGroupOf } from '../../catalog/groups'
@@ -345,7 +346,7 @@ export function PlanView(p: Props) {
       // A room's own wall resizes the room; an inner wall moves
       const room = w.room && v.rooms.find((r) => r.id === w.room!.id)
       if (room) startRoomDrag(room, w.room!.side, q, select)
-      else if (canMoveWall(w)) drag.current = { kind: 'wall', id: w.id, p0: q, v0: v, delta: 0, horizontal: w.from[1] === w.to[1], moved: false, select }
+      else if (canMoveWall(w)) drag.current = { kind: 'wall', id: w.id, p0: q, v0: v, delta: '0,0', horizontal: w.from[1] === w.to[1], moved: false, select }
       else drag.current = { kind: 'click', select }
       return
     }
@@ -654,6 +655,13 @@ export function PlanView(p: Props) {
           ))}
         </g>
         <g opacity={(highlight && highlight !== 'walls' && highlight !== 'beams') || off('vegg') ? DIMMED : 1}>
+          {/* Støtteplater under walls that stand free, across the wall */}
+          {res.wallSupports.map(({ at: [x, y], orientation }) => {
+            const { along, across } = RECIPES.wall.support.foot
+            const w = (orientation === 'h' ? along : across) / 1000
+            const d = (orientation === 'h' ? across : along) / 1000
+            return <rect key={`f${x},${y}`} x={x - w / 2} y={y - d / 2} width={w} height={d} fill="none" stroke={INK_MUTED} strokeWidth={0.015} strokeDasharray=".04 .03" />
+          })}
           {res.posts.map((q) => (
             <rect key={`${q[0]},${q[1]}`} x={q[0] - 0.04} y={q[1] - 0.04} width={0.08} height={0.08} fill={INK} />
           ))}

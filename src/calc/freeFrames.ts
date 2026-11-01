@@ -11,9 +11,10 @@
 import { cornerEnds, runDirection, runLength, runNormal, type FaceKey } from '../domain/freeTextile';
 import type { FreeTextile, Point, TextileFill, Variant } from '../domain/types';
 import { fogaPart } from '../foga/parts';
-import type { FootPlate, FreeFrameRecipe } from '../foga/recipes';
+import type { FootPlate, FreeFrameRecipe, SupportRule } from '../foga/recipes';
 import type { InFrameParams } from '../rules/rules';
 import { fullHeight, printFileName } from './fabric';
+import { minSupports, spreadSupports, type Ends } from './supports';
 
 export interface FreeFace {
   face: FaceKey;
@@ -78,38 +79,14 @@ const mm = (m: number) => Math.round(m * 1000);
 /**
  * Where the feet (each with a brace) stand along a run of `len` mm, measured from its `from` end. A corner post at an
  * end is a support there already. The fewest feet that keep at least `min` supports in all from `minFrom` and up (else
- * one), the outer foot at most `maxEnd` in from a free end and no two supports more than `maxGap` apart, evenly spread:
- * a free end gets half a gap, held at `maxEnd` when that is less.
+ * one in the middle), no two supports more than `maxGap` apart. A free end gets a foot right at the end; it is pulled
+ * in, at most `maxEnd`, only where the gaps would otherwise be more than `maxGap`. The rest are spread evenly between
+ * (Bjørn 1.11.2026). `inset`: a foot at a free end stands at least this far in, so the plate does not stick out past
+ * the frame (half the plate).
  */
-export function supportPoints(len: number, s: FreeFrameRecipe['support'], corners: { from: boolean; to: boolean } = { from: false, to: false }): number[] {
-  const nCorners = (corners.from ? 1 : 0) + (corners.to ? 1 : 0);
-  const total = len >= s.minFrom ? s.min : 1;
-  const ceil = (x: number) => Math.max(0, Math.ceil(x - 1e-9));
-  if (nCorners === 2) {
-    const n = Math.max(total - 2, ceil(len / s.maxGap) - 1);
-    return Array.from({ length: n }, (_, i) => Math.round(((i + 1) * len) / (n + 1)));
-  }
-  if (nCorners === 1) {
-    const n = Math.max(total - 1, ceil((len - s.maxEnd) / s.maxGap));
-    if (!n) return [];
-    let gap = len / (n + 0.5);
-    let end = gap / 2;
-    if (end > s.maxEnd) {
-      end = s.maxEnd;
-      gap = (len - end) / n;
-    }
-    // Counted from the corner, then turned to the run's own direction
-    const fromCorner = Array.from({ length: n }, (_, i) => (i + 1) * gap);
-    return fromCorner.map((x) => Math.round(corners.from ? x : len - x)).sort((a, b) => a - b);
-  }
-  const n = Math.max(total, ceil((len - 2 * s.maxEnd) / s.maxGap) + 1);
-  let gap = len / n;
-  let end = gap / 2;
-  if (end > s.maxEnd) {
-    end = s.maxEnd;
-    gap = n > 1 ? (len - 2 * end) / (n - 1) : 0;
-  }
-  return Array.from({ length: n }, (_, i) => Math.round(end + i * gap));
+export function supportPoints(len: number, s: SupportRule, corners: Ends = { from: false, to: false }, inset = 0): number[] {
+  const pull = (need: number, free: number) => Array.from({ length: free }, () => Math.max(inset, need / free));
+  return spreadSupports(len, minSupports(len, s, corners), s, corners, pull).map(Math.round);
 }
 
 /** `len` in the fewest equal pieces of at most `max` (the last takes the rounding). */
@@ -137,7 +114,9 @@ export function freeFrames(v: Variant, r: FreeFrameRecipe, s: InFrameParams, cus
     const rail = length - nCorners * (postLeg - depth / 2);
     const railCuts = splitLength(rail, r.maxRail);
     const corner = { from: !!ends.from, to: !!ends.to };
-    const supports = supportPoints(length, r.support, corner);
+    const foot = length < r.support.minFrom ? r.smallFoot : r.foot;
+    // A foot at a free end stands flush with the frame end, not past it (Bjørn 1.11.2026)
+    const supports = supportPoints(length, r.support, corner, foot.along / 2);
     const face = (f: FaceKey): FreeFace => {
       const n = runNormal(t, f);
       // The other run leaves the corner toward the inner face: that face is shorter, the outer one longer
@@ -177,7 +156,7 @@ export function freeFrames(v: Variant, r: FreeFrameRecipe, s: InFrameParams, cus
       nCorners,
       railCuts,
       railStart: ends.from ? postLeg - depth / 2 : 0,
-      foot: length < r.support.minFrom ? r.smallFoot : r.foot,
+      foot,
       uprights: freeEnds,
       supports,
       braceLength: H - 2 * depth,

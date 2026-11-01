@@ -67,6 +67,7 @@ Hull for 600, 608 og 615B: Ø 10 mm, **28,6 mm fra profilenden**.
 | 730 | 876 730 92 | Fotplate 250 × 300 × 5 mm |
 | 740 | 876 740 92 | Fotplate 400 × 400 × 5 mm |
 | 750 | 876 750 93 | Fotplate 500 × 80 × 5 mm |
+| 795 | 876 745 92 | Firkantet stolpefeste for fotplate, M8 (tres inn i senterkanalen på 94) |
 | 300B / 450B | 876 750 92 / 876 720 92 | Rund Ø 300 / Ø 450 mm |
 | 720 | 876 720 22 | Fot eller hyllebrakett 20 × 10 × 300 mm |
 
@@ -127,6 +128,34 @@ Systemhøyde fra gulv: 2490 + 50 = 2540 mm.
 - **2 × 600 i hver ende.** 292 står 80 høy og 20 tykk, med 9 mm kanal i over- og underkant og fire kamre
   inni. De to 600-koblingene sitter i ytterkamrene, én oppe og én nede, og låser i kanalen på stolpe 94.
 - Alle stolper, også frittstående som bare bærer takdrager, er **94** på 2490 mm med samme fot.
+- Kunden kan velge bort takdragerne for en mer åpen stand (`Variant.noBeams`). Da står veggene fritt og får
+  støtteplater, se under.
+
+### Støtteplater på frittstående systemvegg
+
+Bjørn 1.11.2026. Takdragerrammen holder veggene. En systemvegg uten den står fritt og får støtteplater under stolpene,
+etter samme regel som frittstående tekstilvegg. Det gjelder alle vegger når takdragerne er valgt bort, og innervegger og
+romvegger som takdragerne ikke holder, også når takdragerne er på (`calc/wallSupports.ts`).
+
+- Fotplate **750** (876 750 93, 500 × 80 × 5 mm, grå) under en stolpe, midt under veggen og på tvers av den. Den stikker
+  250 mm ut på hver side, også inn til naboen og ut i gangen. Stolpefestet **795** (876 745 92, M8) er ferdig montert på
+  platen og tres inn i senterkanalen på stolpe 94. Plukkes som én ferdigmontert enhet, «Fotplate 750 med 795».
+- Regelen per rett veggstrekning er den samme som for frittstående tekstilvegg (under), men platene står bare på
+  stolper (cc 1000): en plate i hver fri ende, trukket inn én stolpe (1 m) bare der avstanden ellers ville blitt over
+  3 m. 3 m vegg: to plater, én i hver ende. 4 m: to, den ene 1 m inn. 5 m: to, begge 1 m inn. 6 m: tre, i endene og
+  midt på.
+- **Støtte** er et hjørne, en T eller et kryss med en annen systemvegg (standvegg, innervegg eller romvegg, så et rom
+  holder veggene det står inntil), og en stolpe under en takdrager.
+- Med takdrager er standveggene i takdragerrammen og får ingen plater. Uten takdrager gjelder 3 m-regelen også mellom
+  to hjørner: en bakvegg på 6 m får én plate midt på.
+- Platene er alltid kundens valg og faktureres utstilleren, også under standvegger arrangøren betaler. De står på
+  tilbudet som egen linje **Støtteplate systemvegg** per stk (6115, plassholder, sum av plate og montering), og på
+  plukklisten (under Stolper) og arbeidsordren hos utstilleren.
+- Stolpen over en fotplate plukkes **uten justeringsfot** (700 + M10 sitter også i senterkanalen), som «Stolpe 94 uten
+  fot». Står platen under en stolpe i arrangørens standvegg, kommer stolpen med arrangørens bestilling, og foten skrus
+  ut på stedet.
+- **Senere:** støttevaier i stedet for plater. Et V-oppheng fra taket i hallen ned til toppen av systemveggen, ett punkt
+  på veggen og to i taket på tvers av veggen, etter samme regel som platene. Også vaieren faktureres utstilleren.
 
 ### Dør
 
@@ -167,8 +196,11 @@ systemveggen: den lager ikke rom og kan ikke ha dør (tekstildør med overstykke
   erstatter begge veggenes stående 43TX der. Skinnene festes til stolpen med 617.
 - **Føtter og stag** på samme punkter: fotplate **740** (876 740 92, 400 × 400 × 5) og stående stag **90** med 600 i
   hver ende. En 92LTX i hjørnet teller som støtte, som en fotplate, i begge retninger. Minst 2 støtter (hjørnestolper
-  medregnet) fra 1 m og oppover, ellers 1. Den ytterste foten maks 1000 mm inn fra en fri ende, maks 3000 mm mellom
-  to støtter, jevnt fordelt. Vegger under 1 m står på én liten fotplate **730** (876 730 92, 250 × 300 × 5) midt på.
+  medregnet) fra 1 m og oppover, ellers 1, og maks 3000 mm mellom to støtter. Foten står helst helt ute i en fri ende,
+  og trekkes inn (maks 1000 mm) bare så langt som trengs for å holde 3000 mm mellom føttene. Resten fordeles jevnt
+  over lengden (Bjørn 1.11.2026). En fot i en fri ende står i flukt med rammeenden, ikke forbi den (senter en halv
+  plate inn, 200 mm for 740): 3 m gir føtter 200 mm inn, 4 m 500 mm inn, 6 m tre føtter, 200 mm inn og midt på. Vegger
+  under 1 m står på én liten fotplate **730** (876 730 92, 250 × 300 × 5) midt på.
 - Tegnes en strek i forlengelsen av en vegg, blir de én vegg. Vegger møtes bare ende mot ende i hjørner (ingen T).
 - **Tekstil på begge sider, alltid.** Hver side er trykt, hvit uten grafikk, eller kundens egen duk i samme
   størrelse (bare montering, ingen trykkfil).

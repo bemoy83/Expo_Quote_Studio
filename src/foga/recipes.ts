@@ -12,6 +12,10 @@ export interface WallRecipe {
   railCoupling: { code: string; perEnd: number };
   /** Plate per walled module, ordered per RAL. Size is the order size (lysåpning 960 × 2420 + channel). */
   plate: { code: string; w: number; h: number };
+  /** Støtteplate under a post of a wall that stands free (no takdrager frame), across the wall, by the same rule as
+   *  the free-standing textile wall (Bjørn 1.11.2026). calc/wallSupports.ts. `pin` is mounted on the plate (M8) and
+   *  threads into the post's centre channel: stored mounted, plate + pin is one piece. */
+  support: { foot: FootPlate; pin: string; rule: SupportRule };
 }
 
 export interface FrameRecipe {
@@ -27,13 +31,14 @@ export interface FrameRecipe {
   wallFixing: { code: string; perFrame: number };
 }
 
-/** Frittstående tekstilvegg: a 43TX frame on foot plates, textile on both faces (Bjørn 31.10.2026). */
+/** Foot plate, size along and across the wall it holds, mm. */
 export interface FootPlate {
   code: string;
   along: number;
   across: number;
 }
 
+/** Frittstående tekstilvegg: a 43TX frame on foot plates, textile on both faces (Bjørn 31.10.2026). */
 export interface FreeFrameRecipe {
   /** Frame profile: top and bottom rail, and the upright at a free end. */
   profile: string;
@@ -55,7 +60,16 @@ export interface FreeFrameRecipe {
   maxRail: number;
   /** Feet and braces: evenly spread, at least `min` supports (corner posts count) from `minFrom` mm and up, else
    *  one; the outer foot at most `maxEnd` in from a free end; supports at most `maxGap` apart, mm. */
-  support: { min: number; minFrom: number; maxEnd: number; maxGap: number };
+  support: SupportRule;
+}
+
+/** Evenly spread supports: at least `min` (supported ends count) from `minFrom` mm and up, else one; the outer one at
+ *  most `maxEnd` in from a free end; at most `maxGap` apart, mm. */
+export interface SupportRule {
+  min: number;
+  minFrom: number;
+  maxEnd: number;
+  maxGap: number;
 }
 
 export interface BeamRecipe {
@@ -82,6 +96,9 @@ export interface Recipes {
   door: DoorRecipe;
 }
 
+/** Same rule for a free-standing textile wall and a system wall that stands free (Bjørn 1.11.2026). */
+const SUPPORT: SupportRule = { min: 2, minFrom: 1000, maxEnd: 1000, maxGap: 3000 };
+
 export const RECIPES: Recipes = {
   wall: {
     post: '94',
@@ -93,6 +110,7 @@ export const RECIPES: Recipes = {
     bottomRail: '91',
     railCoupling: { code: '600', perEnd: 1 },
     plate: { code: 'HDF', w: 976, h: 2440 },
+    support: { foot: { code: '750', along: 80, across: 500 }, pin: '795', rule: SUPPORT },
   },
   frame: { profile: '43TX', corner: '617', brace: '90', braceCoupling: { code: '600', perEnd: 1 }, wallFixing: { code: '520', perFrame: 2 } },
   freeFrame: {
@@ -105,7 +123,7 @@ export const RECIPES: Recipes = {
     foot: { code: '740', along: 400, across: 400 },
     smallFoot: { code: '730', along: 250, across: 300 },
     maxRail: 5000,
-    support: { min: 2, minFrom: 1000, maxEnd: 1000, maxGap: 3000 },
+    support: SUPPORT,
   },
   beam: { profile: '292', coupling: { code: '600', perEnd: 2 } },
   door: { leaf: 2000, floorGap: 20, topGap: 10 },

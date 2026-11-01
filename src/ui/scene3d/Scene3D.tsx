@@ -254,7 +254,7 @@ export function Scene3D(p: Props) {
       } else if (hit?.wallId) {
         const w = P.v.walls.find((x) => x.id === hit.wallId)
         const q = onFloor(e)
-        if (w && q && canMoveWall(w)) drag = { kind: 'wall', id: w.id, p0: q, v0: P.v, delta: 0, horizontal: w.from[1] === w.to[1], moved: false }
+        if (w && q && canMoveWall(w)) drag = { kind: 'wall', id: w.id, p0: q, v0: P.v, delta: '0,0', horizontal: w.from[1] === w.to[1], moved: false }
       }
       if (drag.kind !== 'orbit') {
         clearGrip()
