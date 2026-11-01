@@ -2047,6 +2047,10 @@ select.cin {
   height: 3px;
   border-radius: 2px;
 }
+/* A hairline on an idle tool so light colours (RAL 9010) still show; the chosen tool is ink, so it needs none */
+.dock-btn:not([aria-pressed='true']) .dock-stripe {
+  box-shadow: 0 0 0 0.5px rgb(var(--ink) / 0.35);
+}
 /* What Vegg draws when it is not wall: door, curtain or beam */
 .dock-mark {
   position: absolute;
