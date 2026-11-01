@@ -3,7 +3,7 @@
 import { GRID_LABEL, GRID_STEPS, type GridStep } from '../../domain/snapGrid'
 import { Segmented } from '../controls'
 
-export function GridPicker({ value, allowed, onChange, why }: { value: GridStep; allowed: readonly number[]; onChange: (s: GridStep) => void; why?: string }) {
+export function GridPicker({ value, allowed, onChange }: { value: GridStep; allowed: readonly number[]; onChange: (s: GridStep) => void }) {
   return (
     <Segmented<GridStep>
       label="Rutenett"
@@ -11,7 +11,7 @@ export function GridPicker({ value, allowed, onChange, why }: { value: GridStep;
       onChange={onChange}
       options={GRID_STEPS.map((s) => {
         const ok = allowed.includes(s)
-        return { value: s, label: <span className="num">{GRID_LABEL[s]}</span>, disabled: !ok, title: ok ? `Tegn ${GRID_LABEL[s]} av gangen` : why }
+        return { value: s, label: <span className="num">{GRID_LABEL[s]}</span>, disabled: !ok, title: ok ? `Tegn ${GRID_LABEL[s]} av gangen` : 'Ikke for denne penselen ennå' }
       })}
     />
   )

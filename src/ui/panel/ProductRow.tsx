@@ -1,5 +1,9 @@
 import type { ReactNode } from 'react'
-import { SURFACE } from '../colors'
+import { Box } from 'lucide-react'
+import { mainGroupOf } from '../../catalog/groups'
+import type { Product } from '../../catalog/types'
+import { INK, SURFACE } from '../colors'
+import { MENUS } from './menus'
 import type { decorSource } from '../dnd'
 import { fmt } from '../format'
 
@@ -99,4 +103,21 @@ export function Swatch({ color, pattern }: { color?: string; pattern?: 'tiles' |
         ? 'repeating-linear-gradient(0deg,transparent 0 4px,rgb(0 0 0 / .12) 4px 5px),'
         : ''
   return <span className="swatch" style={{ background: tex + (color ?? SURFACE) }} />
+}
+
+/** Drawn footprint of a placed object, or its group's icon. */
+export function ObjectThumb({ product, color }: { product: Product; color?: string }) {
+  const f = product.footprint
+  if (!f) {
+    const m = MENUS.find((x) => x.key === mainGroupOf(product.group))
+    const I = m?.icon ?? Box
+    return <I size={16} />
+  }
+  const s = 26 / Math.max(f.w, f.d, 0.5)
+  const fill = color ?? (product.name.includes('hvit') ? 'oklch(0.96 0.003 90)' : 'oklch(0.24 0.004 250)')
+  return (
+    <svg width="30" height="30" viewBox="-15 -15 30 30" aria-hidden>
+      {f.round ? <circle r={(f.w * s) / 2} fill={fill} stroke={INK} strokeWidth={0.6} /> : <rect x={(-f.w * s) / 2} y={(-f.d * s) / 2} width={f.w * s} height={f.d * s} rx={1.5} fill={fill} stroke={INK} strokeWidth={0.6} />}
+    </svg>
+  )
 }

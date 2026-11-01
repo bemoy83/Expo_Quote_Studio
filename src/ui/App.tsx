@@ -3,7 +3,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useRef, us
 import { calc, type CalcResult } from '../calc/calc'
 import { r2 } from '../calc/referenceStands'
 import { addObject } from '../domain/objects'
-import { removeRoom, roomSize } from '../domain/rooms'
+import { addDefaultRoom, removeRoom, roomSize } from '../domain/rooms'
 import type { StandWallTerms, Variant } from '../domain/types'
 import { customerName, fillFloor, standWallTerms } from '../domain/variant'
 import { newSketch, parse, serialize, type Sketch } from '../persistence/file'
@@ -20,7 +20,7 @@ import { Rail } from './panel/Rail'
 import { PlanPreview, PlanView, type PlanSelection } from './plan/PlanView'
 import { FreeTextileDrawer } from './plan/FreeTextileDrawer'
 import { WallDrawer } from './plan/WallDrawer'
-import { findMotif, motifLibrary } from './motifs'
+import { findMotif, motifLibrary, readMotif } from './motifs'
 import { fitDecor, removeFoil, removeTextile } from '../domain/decor'
 import { fitFreeTextiles, removeFreeTextile } from '../domain/freeTextile'
 import { removeInnerBeam } from '../domain/innerBeams'
@@ -31,10 +31,10 @@ import { QuotePage } from './quote/QuotePage'
 import { TopNav, type Page } from './shell/TopNav'
 import { WorkOrderPage } from './workorder/WorkOrderPage'
 import { VariantTabs } from './shell/VariantTabs'
-import { FLOOR_MAIN, FLOOR_OTHER, floorSizeLabel, gridSteps, type Brush, type Highlight, type Tool } from './tools'
+import { dockToolOf, FLOOR_OTHER, penToolOf, type Brush, type DockTool, type Highlight, type PenTool, type Tool } from './tools'
 import { longestSide, TILE_FULL, type FloorBrushSize, type RollDir, type TileSize } from '../domain/floor'
-import { GridPicker } from './plan/GridPicker'
 import { ToolDock } from './plan/ToolDock'
+import { QuickPicks } from './plan/QuickPicks'
 import type { GridStep } from '../domain/snapGrid'
 
 // three.js is only loaded when the 3D view is opened
@@ -92,6 +92,11 @@ export default function App() {
   const rollBrush = brush?.kind === 'floor' && !!idx.byArtnr.get(brush.product)?.product.roll
   const [gridStep, setGridStep] = useState<GridStep>(1)
   const [highlight, setHighlight] = useState<Highlight>(null)
+  /** The pen each drawing tool last drew with, so switching tools brings it back. */
+  const [pens, setPens] = useState<Partial<Record<PenTool, Brush>>>({})
+  /** Colour the wall tool draws new inner walls with; follows the stand's wall plate until a colour is picked. */
+  const [wallPen, setWallPen] = useState<string | null>(null)
+  const wallRal = wallPen ?? v.defaultPlate
   const [selection, setSelection] = useState<PlanSelection>({})
   const [toast, showToast] = useToast()
   const fileInput = useRef<HTMLInputElement>(null)
@@ -133,12 +138,37 @@ export default function App() {
   /** Choosing a brush always goes to the plan; the brushes draw there. */
   const pick = (b: Brush, t: Tool = 'brush') => {
     setBrush(b)
+    setPens((p) => ({ ...p, [penToolOf(b)]: b }))
+    if (b.kind === 'wall') setWallPen(b.ral)
     setTool(t)
     setView('plan')
     setSelection({})
   }
 
-  // Keyboard: V P E, S (wall brush), G (floor brush), ⌘Z / ⇧⌘Z, Delete for the selected object
+  /** The pen a drawing tool starts with: the one it last drew, else the first in use on the stand. */
+  const penFor = (t: PenTool): Brush => {
+    const last = pens[t]
+    if (last) return last.kind === 'wall' ? { kind: 'wall', ral: wallRal } : last
+    if (t === 'wall') return { kind: 'wall', ral: wallRal }
+    if (t === 'floor') return { kind: 'floor', product: Object.keys(res.keyFigures.floor)[0] ?? '5902' }
+    if (t === 'profile') return { kind: 'textile' }
+    const used = v.objects[0]?.product
+    return { kind: 'object', product: used ?? catalog.products.find((x) => x.kind === 'object' && !x.opening)!.variants[0].artnr }
+  }
+  const active = dockToolOf(tool, brush)
+  /** Click on a dock tool (or its key). The active drawing tool keeps its pen. */
+  const activate = (t: DockTool) => {
+    if (t === active) return
+    if (t === 'select' || t === 'erase') {
+      setTool(t)
+      if (t === 'erase') setView('plan')
+      return
+    }
+    pick(penFor(t))
+  }
+
+  // Keyboard: V S G T M E (dock tools), P (last pen), R (roll direction), ⌘Z / ⇧⌘Z, Delete
+  // for the selected object
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement
@@ -151,20 +181,13 @@ export default function App() {
       }
       if (mod || e.altKey) return
       const k = e.key.toLowerCase()
-      if (k === 'v' || k === 'escape') setTool('select')
+      if (k === 'escape') setTool('select')
       else if (k === 'p' && brush) {
         setTool('brush')
         setView('plan')
-      } else if (k === 'e') {
-        setTool('erase')
-        setView('plan')
-      }
-      else if (k === 'r' && rollBrush) setRollDir(roll === 'x' ? 'y' : 'x')
-      else if (k === 's') pick({ kind: 'wall', ral: v.defaultPlate })
-      else if (k === 'g') {
-        const f = brush?.kind === 'floor' ? brush.product : (Object.keys(res.keyFigures.floor)[0] ?? '5902')
-        pick({ kind: 'floor', product: f })
-      } else if ((k === 'delete' || k === 'backspace') && (selection.textileId || selection.foilId)) {
+      } else if (k === 'r' && rollBrush) setRollDir(roll === 'x' ? 'y' : 'x')
+      else if (DOCK_KEYS[k]) activate(DOCK_KEYS[k])
+      else if ((k === 'delete' || k === 'backspace') && (selection.textileId || selection.foilId)) {
         const { textileId, foilId } = selection
         onEdit((x) => (textileId ? removeTextile(x, textileId) : removeFoil(x, foilId!)))
         setSelection({ wallId: selection.wallId, side: selection.side })
@@ -192,7 +215,6 @@ export default function App() {
 
   const others = sketch.variants.filter((_, i) => i !== current).map((x) => ({ name: x.name, sum: calcFor(x).sum }))
   const k = res.keyFigures
-  const plateRal = v.defaultPlate
 
   const saveFile = () => {
     const name = customerName(sketch.project).replace(/[^A-Za-z0-9æøåÆØÅ]+/g, '') || 'standskisse'
@@ -220,54 +242,53 @@ export default function App() {
   const brushLabel = describeBrush(brush)
   const freeFrame = selection.freeTextileId ? res.production.free.find((f) => f.textileId === selection.freeTextileId) : undefined
 
-  const quickOptions = (tool !== 'select' && (brush?.kind === 'floor' || (tool === 'brush' && (brush?.kind === 'wall' || brush?.kind === 'textile'))) && (
-    <>
-          {tool === 'brush' && rollBrush && (
-            <Segmented<RollDir>
-              label="Rulleretning"
-              value={roll}
-              onChange={setRollDir}
-              options={[
-                { value: 'x', title: 'Banene går fra venstre til høyre (R snur)', label: <span className="num">↔ Bredden</span> },
-                { value: 'y', title: 'Banene går fra bak til front (R snur)', label: <span className="num">↕ Dybden</span> },
-              ]}
-            />
-          )}
-          {brush?.kind === 'floor' && !(tool === 'brush' && rollBrush) && (
-            <>
-              <Segmented<string>
-                label="Penselstørrelse"
-                value={FLOOR_MAIN.some((s) => s.label === floorSizeLabel(floorSize)) ? floorSizeLabel(floorSize) : 'Andre'}
-                onChange={(l) => setFloorSize(FLOOR_MAIN.find((s) => s.label === l)?.size ?? otherSize)}
-                options={[
-                  ...FLOOR_MAIN.map((s) => ({ value: s.label, title: s.title, label: <span className="num">{s.label}</span> })),
-                  { value: 'Andre', title: 'Mindre fliser: 1 × 0,5, 0,5 × 1 og 0,5 × 0,5', label: 'Andre' },
-                ]}
-              />
-              {floorSize !== 'auto' && FLOOR_OTHER.some((s) => s.label === floorSizeLabel(floorSize)) && (
-                <Segmented<string>
-                  label="Mindre fliser"
-                  value={floorSizeLabel(floorSize)}
-                  onChange={(l) => {
-                    const size = FLOOR_OTHER.find((s) => s.label === l)!.size
-                    setOtherSize(size)
-                    setFloorSize(size)
-                  }}
-                  options={FLOOR_OTHER.map((s) => ({ value: s.label, label: <span className="num">{s.label}</span> }))}
-                />
-              )}
-            </>
-          )}
-          {tool === 'brush' && (brush?.kind === 'wall' || brush?.kind === 'textile') && (
-            <GridPicker
-              value={brush.kind === 'wall' ? (rules.wall.cc as GridStep) : gridStep}
-              allowed={gridSteps(brush, rules)}
-              onChange={setGridStep}
-              why="Systemvegg tegnes i hele meter til Foga-delene for cc 25, 50 og 75 er lagt inn"
-            />
-          )}
-    </>
-  )) || null
+  const fillWithPen = () => {
+    if (brush?.kind !== 'floor') return
+    const product = brush.product
+    onEdit((x) => fillFloor(x, product, idx.byArtnr.get(product)?.product.roll))
+  }
+  /** Bakrom 1 × 1 m with a door in a free corner; from the wall tool's quick picks and the panel. */
+  const addRoom = () => {
+    const door = catalog.products.find((p) => p.opening === 'door')!.variants[0].artnr
+    const next = addDefaultRoom(v, door)
+    if (next) onEdit(() => next)
+    else showToast('Ingen ledige hjørner til bakrom')
+  }
+  /** A customer's own motif into the library. From the profiling tool it also becomes the pen; the panel only adds it. */
+  const uploadMotif = async (f: File, take = true) => {
+    try {
+      const m = await readMotif(f, motifs.map((x) => x.id))
+      dispatch({ type: 'motifs', motifs: [...sketch.motifs, m] })
+      if (take) pick({ kind: 'motif', motif: m.id })
+      showToast(`${m.name} lagt til i grafikkbiblioteket`)
+    } catch (e) {
+      showToast((e as Error).message)
+    }
+  }
+  const quick = (
+    <QuickPicks
+      tool={active}
+      brush={brush}
+      name={brushLabel.name}
+      meta={brushLabel.meta}
+      wallRal={wallRal}
+      motifs={motifs}
+      onPick={(b) => pick(b)}
+      onMore={() => active !== 'select' && active !== 'erase' && setTabRaw(PANEL_TAB[active])}
+      onAddRoom={addRoom}
+      onUpload={(f) => void uploadMotif(f)}
+      floorSize={floorSize}
+      onFloorSize={setFloorSize}
+      otherSize={otherSize}
+      onOtherSize={setOtherSize}
+      roll={roll}
+      onRoll={setRollDir}
+      gridStep={gridStep}
+      onGridStep={setGridStep}
+      onFill={fillWithPen}
+    />
+  )
+  const floorPen = pens.floor ?? (brush?.kind === 'floor' ? brush : null)
 
   return (
     <div className="app">
@@ -352,7 +373,8 @@ export default function App() {
               onEdit={onEdit}
               onToast={showToast}
               motifs={motifs}
-              onAddMotif={(m) => dispatch({ type: 'motifs', motifs: [...sketch.motifs, m] })}
+              onUpload={(f) => void uploadMotif(f, false)}
+              onAddRoom={addRoom}
               onSelect={(s) => {
                 setTool('select')
                 setSelection(s)
@@ -407,18 +429,15 @@ export default function App() {
                 )}
                 <ToolDock
                   tools={view === 'plan'}
-                  tool={tool}
-                  onTool={(t) => {
-                    if (t === 'brush' && !brush) pick({ kind: 'wall', ral: plateRal })
-                    else setTool(t)
-                  }}
-                  brush={brushLabel}
+                  active={active}
+                  onTool={activate}
+                  stripes={{ wall: plateColor(wallRal), floor: floorPen?.kind === 'floor' ? idx.byArtnr.get(floorPen.product)?.variant.color : undefined }}
                   canUndo={state.past.length > 0}
                   canRedo={state.future.length > 0}
                   onUndo={() => dispatch({ type: 'undo' })}
                   onRedo={() => dispatch({ type: 'redo' })}
                 >
-                  {quickOptions}
+                  {quick}
                 </ToolDock>
               </div>
               {freeFrame && tool === 'select' && (
@@ -472,17 +491,23 @@ export default function App() {
     </div>
   )
 
-  function describeBrush(b: Brush | null): { name: string; color?: string } {
+  /** Name of what the pen draws, and a short line under it for the quick picks. */
+  function describeBrush(b: Brush | null): { name: string; meta?: string } {
     if (!b) return { name: 'Pensel' }
-    if (b.kind === 'wall') return { name: `Vegg RAL ${b.ral}`, color: plateColor(b.ral) }
-    if (b.kind === 'textile') return { name: 'Tekstilvegg' }
-    if (b.kind === 'beam') return { name: 'Innvendig takdrager' }
-    if (b.kind === 'motif') return { name: findMotif(motifs, b.motif)?.name ?? 'Motiv' }
+    if (b.kind === 'wall') return { name: 'Innervegg', meta: `RAL ${b.ral}` }
+    if (b.kind === 'textile') return { name: 'Tekstilvegg', meta: 'vegg eller fritt' }
+    if (b.kind === 'beam') return { name: 'Takdrager', meta: 'innvendig' }
+    if (b.kind === 'motif') return { name: findMotif(motifs, b.motif)?.name ?? 'Motiv', meta: 'trykk eller folie' }
     const r = idx.byArtnr.get(b.product)
     const name = r ? (r.product.variants.length > 1 ? `${r.product.name.split(' ')[0]} ${r.variant.name.toLowerCase()}` : r.product.name) : b.product
-    return { name, color: r?.variant.color }
+    return { name, meta: r ? `${kr(r.variant.price)} kr${b.kind === 'floor' ? '/m²' : ''}` : undefined }
   }
 }
+
+/** «…» on the quick picks opens the panel on the tool's tab, where all its options are. */
+const PANEL_TAB: Record<PenTool, string> = { wall: 'vegg', floor: 'gulv', profile: 'prof', object: 'mob' }
+
+const DOCK_KEYS: Record<string, DockTool> = { v: 'select', s: 'wall', g: 'floor', t: 'profile', m: 'object', e: 'erase' }
 
 const HINT_3D = 'Dra for å rotere · rull for å zoome · dra møbler, en innervegg eller grafikk for å flytte · dra et rom i veggen eller taket, toppkanten av en romvegg endrer størrelsen · dra grafikk eller tekstilvegg fra Profilering til en vegg'
 
