@@ -9,10 +9,10 @@ import { runDirection } from '../../domain/freeTextile'
 import { FURNITURE_WHITE } from '../../catalog/defaultCatalog'
 import { foilCenter, sideOf, textileBox, textileOffset } from '../../domain/decor'
 import { doorSwing } from '../../domain/edit'
-import { CELL, parseCellKey, pointAlong, pointKey, wallDirection, wallLength } from '../../domain/grid'
+import { CELL, pointAlong, pointKey, wallDirection, wallLength } from '../../domain/grid'
 import { conflicts } from '../../domain/objects'
 import { insetOutline, outlineSides } from '../../domain/outline'
-import type { Point, Variant } from '../../domain/types'
+import type { FloorTile, Point, Variant } from '../../domain/types'
 import { builtModules, wallPoints, type BuiltModule } from '../../domain/walls'
 import type { Motif } from '../../persistence/file'
 import { doorInset, wallHeight } from '../../rules/rules'
@@ -36,6 +36,8 @@ const DOOR = '#d9d6cd'
 const CURTAIN = '#3a3c41'
 const FABRIC = '#cfc7e6'
 const STAND_FLOOR = '#e3e0d8'
+/** Gap between carpet tiles, m: the joint shows the stand surface. */
+const JOINT = 0.012
 /** Grey foot plates (750), darker than the floor so they show. */
 const FOOT_PLATE = '#3d4045'
 const SELECT = '#6aaecb'
@@ -157,32 +159,30 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
   base.rotation.x = -Math.PI / 2
   add(base, { layer: 'floor' })
 
-  // Floor cells, one instanced mesh per product
-  const byProduct = new Map<string, [number, number][]>()
-  for (const [key, a] of Object.entries(v.floor.cells)) {
-    const c = parseCellKey(key)
-    if (!c) continue
-    const list = byProduct.get(a) ?? []
-    list.push(c)
-    byProduct.set(a, list)
-  }
-  const cellGeo = new THREE.PlaneGeometry(CELL - 0.006, CELL - 0.006).rotateX(-Math.PI / 2)
+  // Floor tiles, one instanced mesh per product. Carpet tiles leave a joint at their edges; rolled floor is seamless.
+  const byProduct = new Map<string, FloorTile[]>()
+  for (const t of v.floor.tiles) byProduct.set(t.product, [...(byProduct.get(t.product) ?? []), t])
+  const tileGeo = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2)
   const tmp = new THREE.Object3D()
-  for (const [a, cells] of byProduct) {
-    const color = idx.byArtnr.get(a)?.variant.color ?? NO_COLOR
-    const inst = new THREE.InstancedMesh(cellGeo, mat('floor', color, { roughness: 1 }), cells.length)
-    cells.forEach(([i, j], n) => {
-      tmp.position.copy(at([(i + 0.5) * CELL, (j + 0.5) * CELL], 0.003))
+  for (const [a, tiles] of byProduct) {
+    const hit = idx.byArtnr.get(a)
+    const joint = hit?.product.tiles ? JOINT : 0
+    const inst = new THREE.InstancedMesh(tileGeo, mat('floor', hit?.variant.color ?? NO_COLOR, { roughness: 1 }), tiles.length)
+    tiles.forEach((t, n) => {
+      tmp.position.copy(at([(t.i + t.w / 2) * CELL, (t.j + t.h / 2) * CELL], 0.003))
+      tmp.scale.set(t.w * CELL - joint, 1, t.h * CELL - joint)
       tmp.updateMatrix()
       inst.setMatrixAt(n, tmp.matrix)
     })
     inst.receiveShadow = true
     add(inst, { layer: 'floor' })
   }
-  // 1 m grid, faint
+  // 1 m grid, faint, on a stand without floor: a laid floor shows its own joints
   const grid: number[] = []
-  for (let x = 1; x < W; x++) grid.push(x - W / 2, 0.005, -D / 2, x - W / 2, 0.005, D / 2)
-  for (let y = 1; y < D; y++) grid.push(-W / 2, 0.005, y - D / 2, W / 2, 0.005, y - D / 2)
+  if (!v.floor.tiles.length) {
+    for (let x = 1; x < W; x++) grid.push(x - W / 2, 0.005, -D / 2, x - W / 2, 0.005, D / 2)
+    for (let y = 1; y < D; y++) grid.push(-W / 2, 0.005, y - D / 2, W / 2, 0.005, y - D / 2)
+  }
   if (grid.length) {
     const g = new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(grid, 3))
     add(new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: '#000', transparent: true, opacity: 0.08 })), { layer: 'floor' })
