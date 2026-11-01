@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyFloor, cutTiles, floorAction, tileAreas, tilesFromCells, type FloorTouch } from './floor';
+import { applyFloor, cutTiles, floorAction, lanesOf, rollUsage, tileAreas, tilesFromCells, type FloorTouch, type RollBrush } from './floor';
 import type { Variant } from './types';
 import { createVariant, fillFloor } from './variant';
 
@@ -87,5 +87,70 @@ describe('floor tiles', () => {
     const cells: Record<string, string> = {};
     for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) cells[`${i},${j}`] = A;
     expect(tilesFromCells(cells).map(({ i, j, w, h }) => [i, j, w, h])).toEqual([[0, 0, 2, 2], [2, 0, 1, 2]]);
+  });
+});
+
+describe('rolled floor in lanes', () => {
+  const v0 = createVariant('A', { width: 5, depth: 3, type: 'row' }); // 10 × 6 cells
+  const ROLL: RollBrush = { roll: 'x', width: 4 };
+  const lanes = (v: Variant) => v.floor.tiles.map(({ i, j, w, h, roll, product }) => [i, j, w, h, roll, product]).sort((a, b) => +a[1]! - +b[1]! || +a[0]! - +b[0]!);
+  const touch = (v: Variant, x: number, y: number, t: Partial<FloorTouch> = {}) => {
+    const a = floorAction(v, { x, y, size: ROLL, erase: false, product: A, ...t });
+    return applyFloor(v, a, t.product ?? A, 'x');
+  };
+
+  it('fill lays lanes along the longest side, the last one cut to what is left', () => {
+    expect(lanes(fillFloor(v0, A, 2))).toEqual([[0, 0, 10, 4, 'x', A], [0, 4, 10, 2, 'x', A]]);
+    const deep = createVariant('A', { width: 3, depth: 5, type: 'row' });
+    expect(lanes(fillFloor(deep, A, 2))).toEqual([[0, 0, 4, 10, 'y', A], [4, 0, 2, 10, 'y', A]]);
+  });
+
+  it('counts running metres with 10 cm at each end, and the strip cut off as waste', () => {
+    const v = fillFloor(v0, A, 2);
+    const u = rollUsage(v.floor.tiles, A, 2);
+    expect(u.lanes.map((l) => [l.n, l.length, l.width, l.cut])).toEqual([[1, 5, 2, false], [2, 5, 1, true]]);
+    expect(u.lm).toBeCloseTo(10.4);
+    expect(u.waste).toBeCloseTo(10.4 * 2 - 15);
+  });
+
+  it('a click lays a whole lane on free floor, and a narrower cut lane where only a strip is free', () => {
+    let v = touch(v0, 3, 1.2);
+    expect(lanes(v)).toEqual([[0, 0, 10, 4, 'x', A]]);
+    v = touch(v, 3, 5);
+    expect(lanes(v)).toEqual([[0, 0, 10, 4, 'x', A], [0, 4, 10, 2, 'x', A]]);
+  });
+
+  it('a drag lays the same whole lane as a click; dragging along does not shorten it', () => {
+    const v = touch(v0, 7.5, 2.2, { from: { x: 2.5, y: 2.2 } });
+    expect(lanes(v)).toEqual(lanes(touch(v0, 2.5, 2.2)));
+    expect(lanes(v)).toEqual([[0, 0, 10, 4, 'x', A]]);
+  });
+
+  it('a drag across lays whole lanes side by side in the same direction, lined up with the first, cut at the edge', () => {
+    expect(lanes(touch(v0, 9.5, 5.5, { from: { x: 0.5, y: 0.5 } }))).toEqual([[0, 0, 10, 4, 'x', A], [0, 4, 10, 2, 'x', A]]);
+    // Started at the front and dragged to the back: the lanes keep lining up with the first
+    expect(lanes(touch(v0, 6.5, 0.5, { from: { x: 2.5, y: 5.5 } }))).toEqual([[0, 0, 10, 2, 'x', A], [0, 2, 10, 4, 'x', A]]);
+  });
+
+  it('a drag that leaves the stand keeps its lanes, as if the pointer stopped at the edge', () => {
+    expect(lanes(touch(v0, 4, 9, { from: { x: 0.5, y: 0.5 } }))).toEqual([[0, 0, 10, 4, 'x', A], [0, 4, 10, 2, 'x', A]]);
+    expect(lanes(touch(v0, -3, -2, { from: { x: 2.5, y: 2.2 } }))).toEqual([[0, 0, 10, 4, 'x', A]]);
+  });
+
+  it('a click on a lane of another colour recolours it; the eraser takes the whole lane', () => {
+    const v = fillFloor(v0, A, 2);
+    expect(lanes(touch(v, 3, 1, { product: B }))[0]).toEqual([0, 0, 10, 4, 'x', B]);
+    expect(lanes(touch(v, 3, 1, { erase: true }))).toEqual([[0, 4, 10, 2, 'x', A]]);
+  });
+
+  it('a tile laid over a lane splits it, and what is left across stays a narrower lane', () => {
+    const v = fillFloor(v0, A, 2);
+    const cut = cutTiles(v.floor.tiles, { i: 4, j: 0, w: 2, h: 2 }).filter((t) => t.j < 4);
+    expect(cut.map(({ i, j, w, h, roll }) => [i, j, w, h, roll]).sort((a, b) => +a[0]! - +b[0]! || +a[1]! - +b[1]!)).toEqual([
+      [0, 0, 4, 4, 'x'],
+      [4, 2, 2, 2, 'x'],
+      [6, 0, 4, 4, 'x'],
+    ]);
+    expect(lanesOf(cut, A, 2).map((l) => l.n)).toEqual([1, 2, 3]);
   });
 });

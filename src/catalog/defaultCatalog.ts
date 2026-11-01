@@ -122,6 +122,8 @@ const products: Product[] = [
     kind: 'surface',
     unit: 'm²',
     group: 'gulv.belegg',
+    roll: 2,
+    dim: 'rull 2 m',
     variants: [
       ['5920', 'Grå', '#A3A6A9'],
       ['5921', 'Sort', '#2B2D2F'],

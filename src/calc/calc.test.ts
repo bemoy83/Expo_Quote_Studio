@@ -246,6 +246,14 @@ describe('floor', () => {
     expect(of('5930')).toBeUndefined();
     expect(qty(res, S.floorProtection)).toBe(0);
   });
+  it('engangsteppe: m² laid on the quote, running metres of 2 m roll with 10 cm at each end, the cut strip as waste', () => {
+    const res = run(fillFloor(r1(), '5920', 2)); // 3 × 3 m: a 2 m lane and one cut to 1 m
+    expect(qty(res, '5920')).toBe(9);
+    const roll = lines(res).find((l) => l.artnr === '5920')!.roll!;
+    expect(roll.lanes).toEqual([{ length: 3, width: 2, cut: false, qty: 1 }, { length: 3, width: 1, cut: true, qty: 1 }]);
+    expect(roll.lm).toBeCloseTo(6.4);
+    expect(roll.waste).toBeCloseTo(6.4 * 2 - 9);
+  });
 });
 
 describe('price as sum of articles (example price list, pricing/data.ts)', () => {

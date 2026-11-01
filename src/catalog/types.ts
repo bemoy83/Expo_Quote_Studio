@@ -50,6 +50,8 @@ export interface Product {
   opening?: 'door' | 'curtain';
   /** Floor laid as carpet tiles: joints drawn at the tile edges, tiles counted per size for picking. */
   tiles?: true;
+  /** Floor laid from a roll this wide, m, in lanes (baner): a joint between lanes, picked in running metres of roll. */
+  roll?: number;
 }
 
 /** Roles the calc needs, mapped to art.nr so the catalog can change without touching calc. */

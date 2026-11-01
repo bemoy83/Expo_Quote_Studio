@@ -23,9 +23,9 @@ export function createVariant(name: VariantName, stand: Stand): Variant {
   };
 }
 
-/** Lay the whole stand with one product ("Fyll hele standen"). */
-export function fillFloor(v: Variant, product: string): Variant {
-  return { ...v, floor: { ...v.floor, tiles: fillTiles(v.stand, product) } };
+/** Lay the whole stand with one product ("Fyll hele standen"). `roll`: roll width, m, for floor laid in lanes. */
+export function fillFloor(v: Variant, product: string, roll?: number): Variant {
+  return { ...v, floor: { ...v.floor, tiles: fillTiles(v.stand, product, roll) } };
 }
 
 export const FIXED_PROJECT_FIELDS = [

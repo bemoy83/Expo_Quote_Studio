@@ -404,7 +404,7 @@ function FloorSection({ v, res, brush, tool, pick, onEdit }: RailProps) {
             }
             action={
               <>
-                <IconButton icon={PaintBucket} label={`Fyll hele standen med ${cur.name.toLowerCase()}`} onClick={() => onEdit((x) => fillFloor(x, cur.artnr))} />
+                <IconButton icon={PaintBucket} label={`Fyll hele standen med ${cur.name.toLowerCase()}`} onClick={() => onEdit((x) => fillFloor(x, cur.artnr, p.roll))} />
                 <IconButton icon={Paintbrush} label={`Tegn ${p.name.toLowerCase()} i plan`} pressed={active} onClick={() => pick({ kind: 'floor', product: cur.artnr })} />
               </>
             }
@@ -448,7 +448,7 @@ function FloorSection({ v, res, brush, tool, pick, onEdit }: RailProps) {
           />
         </div>
       )}
-      <p className="panel-note">Fyll legger hele standen med 1 × 1. Penselen legger fliser hvor som helst i 0,5-rutenettet: 1 × 1 som standard, Auto tar største flis som passer på ledig gulv, og under Andre ligger 1 × 0,5, 0,5 × 1 og 0,5 × 0,5. Flere gulvtyper kan stå på samme stand.</p>
+      <p className="panel-note">Fyll legger hele standen med 1 × 1. Penselen legger fliser hvor som helst i 0,5-rutenettet: 1 × 1 som standard, Auto tar største flis som passer på ledig gulv, og under Andre ligger 1 × 0,5, 0,5 × 1 og 0,5 × 0,5. Engangsteppe legges i baner fra 2 m rull langs lengste side, siste bane kappet på langs; R snur retningen. Teppet går under bakrom og vegger. Flere gulvtyper kan stå på samme stand.</p>
     </>
   )
 }

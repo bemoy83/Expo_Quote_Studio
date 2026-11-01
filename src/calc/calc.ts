@@ -2,7 +2,7 @@ import { groupItems, resolveGroup } from '../catalog/groups';
 import { displayName, indexCatalog } from '../catalog/lookup';
 import type { Catalog, Unit } from '../catalog/types';
 import { openSides, pointKey } from '../domain/grid';
-import { tileAreas, tileCounts } from '../domain/floor';
+import { rollUsage, tileAreas, tileCounts } from '../domain/floor';
 import type { Payer, Point, StandWallTerms, TextileFill, Variant } from '../domain/types';
 import { DEFAULT_STAND_WALLS } from '../domain/variant';
 import { builtModules, wallKind, wallPoints, type BuiltModule, type WallKind } from '../domain/walls';
@@ -51,6 +51,9 @@ export interface CalcLine {
   quote?: { key: string; name: string; lead: boolean };
   /** Carpet tiles: pieces per tile size, largest first. The picking list counts these instead of m². */
   tiles?: { size: string; qty: number }[];
+  /** Rolled floor in lanes: running metres of roll (with the end allowance), waste in m², and the lanes as cut. The
+   *  picking list counts the metres instead of m². */
+  roll?: { width: number; lm: number; waste: number; lanes: { length: number; width: number; cut: boolean; qty: number }[] };
 }
 
 /** One main group of the product grouping, lines in subgroup order. */
@@ -396,13 +399,17 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
     line(sys.foilFull, foilFull, { meta: `${foils.filter((f) => f.full).length} felt · ${plateSize}` }),
   );
 
-  // Floor: m² laid per product. Waste is ours and not counted. Carpet tiles are also counted per size for picking.
+  // Floor: m² laid per product. Waste is ours and not counted. Carpet tiles are also counted per size for picking,
+  // rolled floor in running metres of roll.
   const floor = tileAreas(v.floor.tiles);
   const floorTotal = Object.values(floor).reduce((a, b) => a + b, 0);
   add(
     ...Object.entries(floor).map(([a, m2]) => {
-      const tiles = idx.byArtnr.get(a)?.product.tiles ? tileCounts(v.floor.tiles.filter((t) => t.product === a)) : undefined;
-      return line(a, m2, { meta: `${a} · ferdig lagt`, ...(tiles ? { tiles } : {}) });
+      const p = idx.byArtnr.get(a)?.product;
+      const tiles = p?.tiles ? tileCounts(v.floor.tiles.filter((t) => t.product === a)) : undefined;
+      const roll = p?.roll ? rollLine(v.floor.tiles, a, p.roll) : undefined;
+      const meta = roll ? `${a} · ${roll.lanes.reduce((n, l) => n + l.qty, 0)} baner · ${fmt1(roll.lm)} lm rull` : `${a} · ferdig lagt`;
+      return line(a, m2, { meta, ...(tiles ? { tiles } : {}), ...(roll ? { roll } : {}) });
     }),
     line(sys.floorProtection, v.floor.protection ? floorTotal : 0),
   );
@@ -488,4 +495,24 @@ function countBy(items: string[]): Map<string, number> {
   const m = new Map<string, number>();
   for (const i of items) m.set(i, (m.get(i) ?? 0) + 1);
   return m;
+}
+
+const fmt1 = (n: number) => (Math.round(n * 10) / 10).toLocaleString('nb-NO');
+
+/** A rolled product's lanes grouped by size as cut, longest and widest first. */
+function rollLine(tiles: Variant['floor']['tiles'], product: string, roll: number): NonNullable<CalcLine['roll']> {
+  const u = rollUsage(tiles, product, roll);
+  const sizes = new Map<string, { length: number; width: number; cut: boolean; qty: number }>();
+  for (const l of u.lanes) {
+    const k = `${l.length}|${l.width}`;
+    const s = sizes.get(k) ?? { length: l.length, width: l.width, cut: l.cut, qty: 0 };
+    s.qty++;
+    sizes.set(k, s);
+  }
+  return {
+    width: roll,
+    lm: u.lm,
+    waste: u.waste,
+    lanes: [...sizes.values()].sort((a, b) => b.width - a.width || b.length - a.length),
+  };
 }

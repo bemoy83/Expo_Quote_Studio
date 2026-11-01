@@ -13,7 +13,7 @@ import { drawTextile, fillFace, planTextile } from '../../domain/textileBrush'
 import { faceOfPoint, freeStroke, freeTextileAt, moveFreeTextile, removeFreeTextile, runLength, runNormal, updateFace, type FaceKey } from '../../domain/freeTextile'
 import { alongRun, cornerPosts } from '../../calc/freeFrames'
 import type { Motif } from '../../persistence/file'
-import type { Point, Room, Side, Variant, Wall } from '../../domain/types'
+import type { FloorTile, Point, Room, Side, Variant, Wall } from '../../domain/types'
 import { builtModules, type BuiltModule } from '../../domain/walls'
 import { BORDER, BORDER_STRONG, BLOCK, CANVAS, INK, INK_FAINT, INK_MUTED, jointColor, LAYER_COLOR, SURFACE } from '../colors'
 import { applyDrop, decorDrag, endDecorDrag, type DecorDrag } from '../dnd'
@@ -26,7 +26,7 @@ import { idx, place, plateColor, productOf, rules } from '../env'
 import { doorInset } from '../../rules/rules'
 import { findMotif } from '../motifs'
 import type { Brush, Highlight, Tool } from '../tools'
-import { applyFloor, floorAction, TILE_FULL, type FloorAction, type FloorBrushSize } from '../../domain/floor'
+import { applyFloor, floorAction, lanesLaid, lanesOf, TILE_FULL, type FloorAction, type FloorBrushSize, type RollDir } from '../../domain/floor'
 import { distToSegment, nearestEdge, strokeFrom } from './geometry'
 
 export interface PlanSelection {
@@ -50,6 +50,8 @@ interface Props {
   tool: Tool
   brush: Brush | null
   floorSize: FloorBrushSize
+  /** Direction lanes of rolled floor run when the brush lays them. */
+  rollDir?: RollDir
   /** Cell size of the drawing grid for the textile brush, m (domain/snapGrid). */
   gridStep?: number
   highlight: Highlight
@@ -109,6 +111,8 @@ type Drag =
   | { kind: 'stroke'; p0: P; moved: boolean }
   /** A floor stroke: the tiles after the first line up with it (`anchor`). */
   | { kind: 'floor'; last: string | null; anchor: { i: number; j: number } | null }
+  /** A stroke of rolled floor from `from`: whole lanes, laid on release (`rollPending` until then). */
+  | { kind: 'roll'; from: P; moved: boolean }
   | { kind: 'click'; select: PlanSelection }
   | { kind: 'object'; id: string; dx: number; dy: number; start: P; moved: boolean; select: PlanSelection }
   | ({ kind: 'wall'; moved: boolean; select: PlanSelection } & WallDrag)
@@ -141,6 +145,8 @@ export function PlanView(p: Props) {
   const svg = useRef<SVGSVGElement>(null)
   const drag = useRef<Drag | null>(null)
   const [hover, setHover] = useState<P | null>(null)
+  /** What the roll stroke in progress will lay on release: the preview shows it, the floor is untouched until then. */
+  const [rollPending, setRollPending] = useState<FloorAction | null>(null)
   const [stroke, setStroke] = useState<[Point, Point] | null>(null)
   /** Textile stroke being drawn, with where it started (picks the wall face when it lies on a wall). */
   const [textileStroke, setTextileStroke] = useState<TextileLine | null>(null)
@@ -258,10 +264,15 @@ export function PlanView(p: Props) {
       return q.x >= b.x0 && q.x <= b.x1 && q.y >= b.y0 && q.y <= b.y1
     })
 
-  const floorTouch = (q: P, anchor: { i: number; j: number } | null): FloorAction =>
+  // Rolled floor (engangsteppe) is laid in lanes one roll wide
+  const rollWidth = brush?.kind === 'floor' ? idx.byArtnr.get(brush.product)?.product.roll : undefined
+  const dir = p.rollDir ?? 'x'
+  const brushSize = rollWidth ? { roll: dir, width: Math.round(rollWidth / CELL) } : floorSize
+  const floorTouch = (q: P, anchor: { i: number; j: number } | null, from: P | null = null): FloorAction =>
     brush?.kind === 'floor'
-      ? floorAction(v, { x: q.x / CELL, y: q.y / CELL, size: floorSize, erase: tool === 'erase', product: brush.product, anchor })
+      ? floorAction(v, { x: q.x / CELL, y: q.y / CELL, size: brushSize, erase: tool === 'erase', product: brush.product, anchor, from })
       : { kind: 'none' }
+  const laneAction = (d: { from: P }, q: P | null) => floorTouch(q ?? d.from, null, q && { x: d.from.x / CELL, y: d.from.y / CELL })
 
   const paintFloorAt = (q: P) => {
     const d = drag.current
@@ -279,6 +290,12 @@ export function PlanView(p: Props) {
     if (e.button !== 0) return
     const q = toModel(e)
     svg.current!.setPointerCapture(e.pointerId)
+    if (floorTool && rollWidth && tool === 'brush') {
+      const d = { kind: 'roll' as const, from: q, moved: false }
+      drag.current = d
+      setRollPending(laneAction(d, null))
+      return
+    }
     if (floorTool) {
       p.onCheckpoint()
       drag.current = { kind: 'floor', last: null, anchor: null }
@@ -378,6 +395,11 @@ export function PlanView(p: Props) {
     const d = drag.current
     if (!d) return
     if (d.kind === 'floor') paintFloorAt(q)
+    else if (d.kind === 'roll') {
+      if (!d.moved && Math.hypot(q.x - d.from.x, q.y - d.from.y) < 0.25) return
+      d.moved = true
+      setRollPending(laneAction(d, q))
+    }
     else if (d.kind === 'textile') setTextileStroke(textileLine(d.p0, q))
     else if (d.kind === 'freeMove') {
       if (!d.moved && Math.hypot(q.x - d.p0.x, q.y - d.p0.y) < 0.15) return
@@ -410,7 +432,14 @@ export function PlanView(p: Props) {
     const d = drag.current
     drag.current = null
     if (!d) return
-    if (d.kind === 'stroke') {
+    if (d.kind === 'roll') {
+      const a = rollPending
+      setRollPending(null)
+      if (a && a.kind !== 'none' && brush?.kind === 'floor') {
+        const product = brush.product
+        p.onEdit((x) => applyFloor(x, a, product, dir))
+      }
+    } else if (d.kind === 'stroke') {
       const [a, b] = d.moved ? strokeFrom(v.stand, d.p0, toModel(e), rules.wall.cc) : (() => {
         const m = nearestEdge(v.stand, d.p0)
         return [m.a, m.b] as [Point, Point]
@@ -512,11 +541,20 @@ export function PlanView(p: Props) {
     return roomAt(v, hover.x, hover.y) ? 'move' : 'default'
   }
 
+  // Lanes of rolled floor: numbered per product, with the roll direction
+  const rollLanes = [...new Set(v.floor.tiles.filter((t) => t.roll).map((t) => t.product))].flatMap((a) => {
+    const hit = idx.byArtnr.get(a)
+    return hit?.product.roll ? lanesOf(v.floor.tiles, a, hit.product.roll).map((l) => ({ ...l, color: jointColor(hit.variant.color) })) : []
+  })
+
   // Hover previews
   const hoverEdge = openingTool && hover ? (moduleAt(hover, 0.4) ?? (tool !== 'erase' && onStand(hover) ? nearestEdge(v.stand, hover) : null)) : null
   const hoverModule = hoverEdge && (tool === 'erase' || doorAllowed(v, hoverEdge.a, hoverEdge.b)) ? hoverEdge : null
   const hoverAction = floorTool && hover && !drag.current ? floorTouch(hover, null) : null
-  const hoverFloor = hoverAction && hoverAction.kind !== 'none' ? hoverAction : null
+  // Roll brush: the lanes as they will be laid, from the hover or the stroke in progress
+  const rollTouch = rollWidth && tool === 'brush' ? (rollPending ?? hoverAction) : null
+  const rollPreview = rollTouch && brush?.kind === 'floor' ? lanesLaid(rollTouch, brush.product, dir) : []
+  const hoverFloor = hoverAction && hoverAction.kind !== 'none' && !rollPreview.length ? hoverAction : null
   // Textile brush: next to a wall the click target is that face; elsewhere the grid node a stroke starts from
   const textileFace = textileTool && hover && !textileStroke ? faceHit(hover, 0.2) : null
   const hoverFace = (decorTool && hover ? faceHit(hover) : null) ?? textileFace
@@ -550,6 +588,7 @@ export function PlanView(p: Props) {
       onPointerCancel={() => {
         drag.current = null
         setStroke(null)
+        setRollPending(null)
       }}
       onPointerLeave={() => setHover(null)}
       onDragOver={onDragOver}
@@ -590,11 +629,14 @@ export function PlanView(p: Props) {
               width={t.w * CELL}
               height={t.h * CELL}
               fill={hit.variant.color}
-              stroke={hit.product.tiles ? jointColor(hit.variant.color) : hit.variant.color}
-              strokeWidth={hit.product.tiles ? JOINT_WIDTH : 0.004}
+              stroke={hit.product.tiles || t.roll ? jointColor(hit.variant.color) : hit.variant.color}
+              strokeWidth={hit.product.tiles || t.roll ? JOINT_WIDTH : 0.004}
             />
           )
         })}
+        {rollLanes.map(({ n, tile: t, color }) => (
+          <LaneMark key={`lane${t.i},${t.j}`} n={n} x={(t.i + t.w / 2) * CELL} y={(t.j + t.h / 2) * CELL} dir={t.roll!} length={(t.roll === 'x' ? t.w : t.h) * CELL} color={color} />
+        ))}
       </g>
 
       {/* Drawing grids: every half metre while painting floor, snap dots for straight runs */}
@@ -790,6 +832,7 @@ export function PlanView(p: Props) {
         {hoverModule && <HoverModule m={hoverModule} />}
         {hoverFace && <FacePreview v={v} h={hoverFace} brush={brush!} erase={tool === 'erase'} />}
         {dropHover && <FacePreview v={v} h={dropHover.h} brush={dropHover.d} erase={false} />}
+        {rollPreview.length > 0 && <RollPreview tiles={rollPreview} color={idx.byArtnr.get(rollPreview[0].product)?.variant.color} roll={rollWidth!} />}
         {hoverFloor && (
           <rect
             x={hoverFloor.rect.i * CELL}
@@ -809,6 +852,43 @@ export function PlanView(p: Props) {
 }
 
 const noop = () => {}
+
+/** Lanes a roll brush will lay: each with its joints, the roll direction and its width, cut lanes dashed. */
+function RollPreview({ tiles, color, roll }: { tiles: FloorTile[]; color: string | undefined; roll: number }) {
+  const mark = jointColor(color)
+  return (
+    <g pointerEvents="none">
+      {tiles.map((t) => {
+        const width = (t.roll === 'x' ? t.h : t.w) * CELL
+        const cut = width < roll - 1e-9
+        return (
+          <g key={`${t.i},${t.j}`}>
+            <rect x={t.i * CELL} y={t.j * CELL} width={t.w * CELL} height={t.h * CELL} fill={color} fillOpacity={0.8} stroke={INK} strokeWidth={0.03} strokeDasharray={cut ? '.12 .08' : undefined} />
+            <LaneMark n={cut ? `${fmt(width)} m kappet` : `${fmt(width)} m`} x={(t.i + t.w / 2) * CELL} y={(t.j + t.h / 2) * CELL} dir={t.roll!} length={(t.roll === 'x' ? t.w : t.h) * CELL} color={mark} />
+          </g>
+        )
+      })}
+    </g>
+  )
+}
+
+/** Lane number and an arrow along the roll direction, in the middle of a lane of rolled floor. */
+function LaneMark({ n, x, y, dir, length, color }: { n: number | string; x: number; y: number; dir: RollDir; length: number; color: string }) {
+  const half = Math.min(0.45, length / 2 - 0.15)
+  return (
+    <g transform={`translate(${x} ${y})`} pointerEvents="none">
+      {half > 0.1 && (
+        <g transform={dir === 'y' ? 'rotate(90)' : undefined} stroke={color} strokeWidth={0.03} fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <line x1={-half} y1={0.2} x2={half} y2={0.2} />
+          <polyline points={`${half - 0.1},0.12 ${half},0.2 ${half - 0.1},0.28`} />
+        </g>
+      )}
+      <text x={dir === 'y' ? 0.12 : 0} y={dir === 'y' ? 0.08 : -0.02} textAnchor={dir === 'y' ? 'start' : 'middle'} style={{ font: '600 0.24px var(--font-numeric)', fill: color }}>
+        {n}
+      </text>
+    </g>
+  )
+}
 
 /** Label beside a run, on its face B side. */
 function labelAt(t: { from: Point; to: Point }) {
