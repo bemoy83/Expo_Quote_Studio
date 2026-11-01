@@ -30,7 +30,7 @@ const sameRect = (a: Rect, b: Rect) => a.i === b.i && a.j === b.j && a.w === b.w
 export const covers = (t: Rect, i: number, j: number) => i >= t.i && i < t.i + t.w && j >= t.j && j < t.j + t.h;
 
 /** The tile covering cell (i, j). */
-export const tileAt = (tiles: readonly FloorTile[], i: number, j: number) => tiles.find((t) => covers(t, i, j));
+const tileAt = (tiles: readonly FloorTile[], i: number, j: number) => tiles.find((t) => covers(t, i, j));
 
 /** Cover a set of cells with as few tiles of the allowed sizes as a row-by-row sweep finds. */
 export function tileCells(cells: Iterable<[number, number]>, product: string): FloorTile[] {
@@ -423,10 +423,13 @@ export function lanesLaid(a: FloorAction, product: string, roll: RollDir): Floor
 }
 
 /** A lane given another colour leaves its fill and the piece it shared: it is cut from another roll. */
-function recolored(t: FloorTile, product: string): FloorTile {
+/** A lane on its own: out of its fill and of the roll piece it shared. */
+export function loose(t: FloorTile): FloorTile {
   const { fill: _f, split: _s, ...rest } = t;
-  return { ...rest, product };
+  return rest;
 }
+
+const recolored = (t: FloorTile, product: string): FloorTile => ({ ...loose(t), product });
 
 /** Apply a brush touch. `roll`: the lane's direction when the brush lays rolled floor. */
 export function applyFloor(v: Variant, a: FloorAction, product: string, roll?: RollDir): Variant {

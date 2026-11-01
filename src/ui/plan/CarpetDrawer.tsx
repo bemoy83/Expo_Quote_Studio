@@ -12,6 +12,7 @@ import { idx, rules } from '../env'
 import { fmt, kr } from '../format'
 import type { PlanSelection } from './PlanView'
 import { Dim } from './drawerParts'
+import { Hatched } from './Hatched'
 import { CUT_FOOT, cutRows } from '../cutList'
 
 interface Props {
@@ -177,14 +178,8 @@ function LaneView({ t, roll }: { t: FloorTile; roll: number }) {
   const pad = 0.4
   return (
     <svg className="wd-svg" viewBox={`${-pad} ${-pad} ${L + 2 * pad} ${roll + 2 * pad}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label={`Bane ${fmt(L, 2)} m`}>
-      <defs>
-        <pattern id="cp-hatch-d" patternUnits="userSpaceOnUse" width={0.12} height={0.12} patternTransform="rotate(135)">
-          <rect width={0.12} height={0.12} fill="rgb(var(--ink) / .06)" />
-          <line x1={0} y1={0} x2={0} y2={0.12} stroke="rgb(var(--ink) / .45)" strokeWidth={0.025} />
-        </pattern>
-      </defs>
       <rect x={0} y={0} width={L} height={w} fill={color} />
-      {w < roll - 1e-9 && <rect x={0} y={w} width={L} height={roll - w} fill="url(#cp-hatch-d)" />}
+      {w < roll - 1e-9 && <Hatched x={0} y={w} width={L} height={roll - w} />}
       <text x={L / 2} y={w / 2} textAnchor="middle" dominantBaseline="middle" style={{ font: '600 0.2px var(--font-numeric)', fill: jointColor(color) }}>
         {fmt(L, 2)} m →
       </text>

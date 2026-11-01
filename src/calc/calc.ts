@@ -3,7 +3,7 @@ import { displayName, indexCatalog } from '../catalog/lookup';
 import type { Catalog, Unit } from '../catalog/types';
 import { openSides, pointKey } from '../domain/grid';
 import { carpetMetrics } from '../domain/carpet';
-import { lanesOf, rollUsage, tileAreas, tileCounts } from '../domain/floor';
+import { rollUsage, tileAreas, tileCounts } from '../domain/floor';
 import type { Payer, Point, StandWallTerms, TextileFill, Variant } from '../domain/types';
 import { DEFAULT_STAND_WALLS } from '../domain/variant';
 import { builtModules, wallKind, wallPoints, type BuiltModule, type WallKind } from '../domain/walls';
@@ -533,6 +533,6 @@ function rollLine(tiles: Variant['floor']['tiles'], product: string, roll: numbe
     waste: u.waste,
     lanes: [...sizes.values()].sort((a, b) => b.width - a.width || b.length - a.length),
     pieces: [...pieces.values()].sort((a, b) => a.parts.length - b.parts.length || b.length - a.length),
-    tape: carpetMetrics(lanesOf(tiles, product, roll).map((l) => l.tile), roll, tiles).tape,
+    tape: carpetMetrics(tiles.filter((t) => t.roll && t.product === product), roll, tiles).tape,
   };
 }

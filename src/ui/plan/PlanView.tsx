@@ -30,6 +30,7 @@ import { across, applyFloor, floorAction, lanesLaid, lanesOf, standCells, TILE_F
 import { fillCarpet, fillProposalsFor, fillTilesOf, laneAt } from '../../domain/carpet'
 import type { RollMode } from '../tools'
 import { distToSegment, nearestEdge, strokeFrom } from './geometry'
+import { Hatched } from './Hatched'
 
 export interface PlanSelection {
   wallId?: string
@@ -155,6 +156,9 @@ export function PlanView(p: Props) {
   const svg = useRef<SVGSVGElement>(null)
   const drag = useRef<Drag | null>(null)
   const [hover, setHover] = useState<P | null>(null)
+  // The drag under way as of the last pointer move, for rendering (hover previews pause, the cursor grabs): the ref
+  // itself is only read in the handlers
+  const [dragging, setDragging] = useState<Drag | null>(null)
   /** What the roll stroke in progress will lay on release: the preview shows it, the floor is untouched until then. */
   const [rollPending, setRollPending] = useState<FloorAction | null>(null)
   /** Fyll area being dragged, in cells. */
@@ -170,10 +174,15 @@ export function PlanView(p: Props) {
   /** Edges carrying a stand wall: locked, and the only ones the side labels count (an inner wall leaves a side open). */
   const standKeys = useMemo(() => standWallKeys(v), [v])
 
-  useEffect(() => {
+  // A new tool or pen drops whatever stroke was under way
+  const [penNow, setPenNow] = useState({ tool, brush })
+  if (penNow.tool !== tool || penNow.brush !== brush) {
+    setPenNow({ tool, brush })
     setStroke(null)
     setTextileStroke(null)
     setFillRect(null)
+  }
+  useEffect(() => {
     drag.current = null
   }, [tool, brush])
 
@@ -429,6 +438,7 @@ export function PlanView(p: Props) {
     const q = toModel(e)
     setHover(q)
     const d = drag.current
+    setDragging(d)
     if (!d) return
     if (d.kind === 'floor') paintFloorAt(q)
     else if (d.kind === 'carpetFill') {
@@ -472,6 +482,7 @@ export function PlanView(p: Props) {
   const onUp = (e: RPointerEvent<SVGSVGElement>) => {
     const d = drag.current
     drag.current = null
+    setDragging(null)
     if (!d) return
     if (d.kind === 'carpetFill') {
       const rect = d.moved ? rectOf(d.from, cellOf(toModel(e))) : undefined
@@ -574,7 +585,7 @@ export function PlanView(p: Props) {
     (highlight && highlight !== layer) || (layer !== 'objects' && off(LAYER_GROUP[layer])) ? DIMMED : 1
   const cursor = tool !== 'select' ? 'crosshair' : roomCursor()
   function roomCursor() {
-    const d = drag.current
+    const d = dragging
     if (d?.kind === 'room') return d.mode === 'move' ? 'grabbing' : d.horizontal ? 'ns-resize' : 'ew-resize'
     if (!hover || p.mini) return 'default'
     const e = roomEdgeAt(hover)
@@ -598,7 +609,7 @@ export function PlanView(p: Props) {
   // Hover previews
   const hoverEdge = openingTool && hover ? (moduleAt(hover, 0.4) ?? (tool !== 'erase' && onStand(hover) ? nearestEdge(v.stand, hover) : null)) : null
   const hoverModule = hoverEdge && (tool === 'erase' || doorAllowed(v, hoverEdge.a, hoverEdge.b)) ? hoverEdge : null
-  const hoverAction = floorTool && hover && !drag.current ? floorTouch(hover, null) : null
+  const hoverAction = floorTool && hover && !dragging ? floorTouch(hover, null) : null
   // Roll brush: the lanes as they will be laid, from the hover or the stroke in progress
   const rollTouch = rollWidth && tool === 'brush' && !carpetFill ? (rollPending ?? hoverAction) : null
   const rollPreview = rollTouch && brush?.kind === 'floor' ? lanesLaid(rollTouch, brush.product, dir) : []
@@ -607,20 +618,14 @@ export function PlanView(p: Props) {
   const fillProduct = brush?.kind === 'floor' ? brush.product : ''
   const hoverOnStand = !!hover && hover.x >= 0 && hover.y >= 0 && hover.x < W && hover.y < D
   const fillKey = fillRect ? `${fillRect.i},${fillRect.j},${fillRect.w},${fillRect.h}` : carpetFill && hoverOnStand ? 'stand' : ''
+  // Only the floor, the stand and the area change the proposal, so moving the pointer inside the stand reuses it
   const fillPreview = useMemo(
     () => (carpetFill && fillKey && rollWidth ? (fillProposalsFor(v, fillProduct, rollWidth, rules.carpet, fillRect ?? undefined)[0] ?? null) : null),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [carpetFill, fillKey, fillProduct, rollWidth, v.floor.tiles, v.stand],
+    [carpetFill, fillKey, fillProduct, rollWidth, v, fillRect],
   )
   // The chosen engangsteppe (Velg): its lanes, outlined while its drawer is open
-  const selLanes = tool !== 'select' || p.mini ? [] : selection.fill ? fillTilesOf(v, selection.fill) : selection.lane ? v.floor.tiles.filter((t) => t.roll && t.i === selection.lane!.i && t.j === selection.lane!.j) : []
-  const selBox = selLanes.length
-    ? selLanes.reduce<Rect>((r, t) => {
-        const i = Math.min(r.i, t.i)
-        const j = Math.min(r.j, t.j)
-        return { i, j, w: Math.max(r.i + r.w, t.i + t.w) - i, h: Math.max(r.j + r.h, t.j + t.h) - j }
-      }, selLanes[0])
-    : null
+  const selLane = tool === 'select' && !p.mini && selection.lane ? laneAt(v, selection.lane.i, selection.lane.j) : undefined
+  const selLanes = tool !== 'select' || p.mini ? [] : selection.fill ? fillTilesOf(v, selection.fill) : selLane ? [selLane] : []
   // Textile brush: next to a wall the click target is that face; elsewhere the grid node a stroke starts from
   const textileFace = textileTool && hover && !textileStroke ? faceHit(hover, 0.2) : null
   const hoverFace = (decorTool && hover ? faceHit(hover) : null) ?? textileFace
@@ -653,6 +658,7 @@ export function PlanView(p: Props) {
       onPointerUp={onUp}
       onPointerCancel={() => {
         drag.current = null
+        setDragging(null)
         setStroke(null)
         setRollPending(null)
         setFillRect(null)
@@ -904,13 +910,9 @@ export function PlanView(p: Props) {
         {fillRect && (
           <rect x={fillRect.i * CELL} y={fillRect.j * CELL} width={fillRect.w * CELL} height={fillRect.h * CELL} fill="none" stroke={INK} strokeWidth={0.03} strokeDasharray=".08 .06" />
         )}
-        {selBox && (
+        {selLanes.length > 0 && (
           <g>
-            {selection.lane &&
-              selLanes.map((t) => {
-                const roll = idx.byArtnr.get(t.product)?.product.roll
-                return roll ? <Offcut key="off" t={t} roll={roll} stand={standCells(v.stand)} /> : null
-              })}
+            {selLane && <Offcut t={selLane} roll={idx.byArtnr.get(selLane.product)?.product.roll ?? 2} stand={standCells(v.stand)} />}
             {selLanes.map((t) => (
               <rect key={`${t.i},${t.j}`} x={t.i * CELL} y={t.j * CELL} width={t.w * CELL} height={t.h * CELL} fill={INK} fillOpacity={0.06} stroke={INK} strokeWidth={0.025} strokeDasharray=".1 .06" />
             ))}
@@ -966,17 +968,7 @@ function Offcut({ t, roll, stand }: { t: FloorTile; roll: number; stand: { nx: n
   const n = t.roll === 'x' ? stand.ny : stand.nx
   const start = c.start + c.len >= n || c.start > 0 ? c.start + c.len : c.start - rest
   const r = t.roll === 'x' ? { x: t.i, y: start, w: t.w, h: rest } : { x: start, y: t.j, w: rest, h: t.h }
-  return (
-    <g pointerEvents="none">
-      <defs>
-        <pattern id="cp-hatch" patternUnits="userSpaceOnUse" width={0.12} height={0.12} patternTransform="rotate(135)">
-          <rect width={0.12} height={0.12} fill="rgb(var(--ink) / .06)" />
-          <line x1={0} y1={0} x2={0} y2={0.12} stroke="rgb(var(--ink) / .45)" strokeWidth={0.025} />
-        </pattern>
-      </defs>
-      <rect x={r.x * CELL} y={r.y * CELL} width={r.w * CELL} height={r.h * CELL} fill="url(#cp-hatch)" />
-    </g>
-  )
+  return <Hatched x={r.x * CELL} y={r.y * CELL} width={r.w * CELL} height={r.h * CELL} />
 }
 
 /** Lane number and an arrow along the roll direction, in the middle of a lane of rolled floor. */

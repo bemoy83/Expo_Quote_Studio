@@ -8,11 +8,14 @@ import {
   across,
   along,
   cellsIn,
+  covers,
   cutTiles,
   laneRect,
   layLanes,
   lanesOf,
+  loose,
   rollPieces,
+  rollUsage,
   ROLL_END,
   standCellList,
   standCells,
@@ -24,7 +27,7 @@ import type { FloorTile, Stand, Variant } from './types';
 type Cell = [number, number];
 
 /** Where the narrow rest lands when the area is not a whole number of roll widths across. */
-export type Edge = 'start' | 'end';
+type Edge = 'start' | 'end';
 
 /** Lengths in lm: joints between lanes, the area's outline, every cut. Tape = outline + seams. */
 export interface CarpetMetrics {
@@ -38,7 +41,6 @@ export interface Proposal {
   /** Stable key: direction, edge, split. */
   key: string;
   name: string;
-  dir: RollDir;
   tiles: FloorTile[];
   /** Running metres from the roll, with the end allowance. */
   lm: number;
@@ -86,16 +88,8 @@ export function carpetMetrics(tiles: readonly FloorTile[], roll: number, around:
   return { seams, outline, cut, tape: outline + seams };
 }
 
-/** Running metres, laid and waste m² of a set of lanes of one roll width. */
-function usage(tiles: readonly FloorTile[], roll: number) {
-  const products = [...new Set(tiles.map((t) => t.product))];
-  const lm = products.reduce((a, p) => a + rollPieces(lanesOf(tiles, p, roll)).reduce((s, x) => s + x.length, 0), 0);
-  const laid = tiles.reduce((a, t) => a + t.w * t.h * CELL * CELL, 0);
-  return { lm, laid, waste: lm * roll - laid };
-}
-
 /** Internal cost of laying: material from the roll, tape, and the minutes of laying, cutting, seaming and taping. */
-export function carpetCost(m: CarpetMetrics, lm: number, laid: number, roll: number, r: CarpetRates): number {
+function carpetCost(m: CarpetMetrics, lm: number, laid: number, roll: number, r: CarpetRates): number {
   const minutes = laid * r.minLay + m.cut * r.minCut + m.seams * r.minSeam + m.tape * r.minTape;
   return lm * roll * r.material + m.tape * r.tapeMaterial + (minutes / 60) * r.hour;
 }
@@ -136,21 +130,29 @@ export function layouts(cells: readonly Cell[], product: string, roll: number, f
           .join('|');
         if (seen.has(sig)) continue;
         seen.add(sig);
-        const u = usage(tiles, roll);
+        const { lm, laid, waste } = rollUsage(tiles, product, roll);
         const m = carpetMetrics(tiles, roll);
         const rest = (c1 - c0) % B !== 0;
         out.push({
           key: `${dir}${edge === 'start' ? 's' : 'e'}${split ? '2' : ''}`,
           name: proposalName(dir, edge, rest, how),
-          dir,
           tiles,
-          ...u,
+          lm,
+          laid,
+          waste,
           m,
-          cost: carpetCost(m, u.lm, u.laid, roll, r),
+          cost: carpetCost(m, lm, laid, roll, r),
         });
       }
+  return out.sort(cheaper);
+}
+
+/** Cheapest first; within 50 øre, fewest seams, then fewest pieces from the roll. */
+function cheaper(a: Proposal, b: Proposal): number {
   const pieces = (p: Proposal) => new Set(p.tiles.map((t, n) => t.split ?? `#${n}`)).size;
-  return out.sort((a, b) => (Math.abs(a.cost - b.cost) > 0.5 ? a.cost - b.cost : Math.abs(a.m.seams - b.m.seams) > 0.01 ? a.m.seams - b.m.seams : pieces(a) - pieces(b)));
+  if (Math.abs(a.cost - b.cost) > 0.5) return a.cost - b.cost;
+  if (Math.abs(a.m.seams - b.m.seams) > 0.01) return a.m.seams - b.m.seams;
+  return pieces(a) - pieces(b);
 }
 
 /**
@@ -211,7 +213,7 @@ export function offered(list: readonly Proposal[], n = 3, keep?: Proposal): Prop
 }
 
 /** A fill id not in use: f1, f2, … */
-export function newFillId(tiles: readonly FloorTile[]): string {
+function newFillId(tiles: readonly FloorTile[]): string {
   const used = new Set(tiles.map((t) => t.fill));
   let n = 1;
   while (used.has(`f${n}`)) n++;
@@ -251,9 +253,10 @@ export function fillProposals(v: Variant, fill: string, roll: number, r: CarpetR
 
 /** The proposal a fill is laid as now, if it is one of them. */
 export function currentProposal(v: Variant, fill: string, list: readonly Proposal[]): Proposal | undefined {
-  const sig = (ts: readonly FloorTile[], all = false) =>
+  // Split ids differ between a proposal and the floor; only whether a lane is split counts
+  const sig = (ts: readonly FloorTile[]) =>
     ts
-      .map((t) => `${t.i},${t.j},${t.w},${t.h},${all ? '' : t.split ? 's' : ''}`)
+      .map((t) => `${t.i},${t.j},${t.w},${t.h},${t.split ? 's' : ''}`)
       .sort()
       .join('|');
   const now = sig(fillTilesOf(v, fill));
@@ -275,23 +278,14 @@ export const removeFill = (v: Variant, fill: string): Variant => ({ ...v, floor:
 const same = (a: FloorTile, b: { i: number; j: number }) => a.i === b.i && a.j === b.j;
 
 /** The rolled lane covering cell (i, j). */
-export const laneAt = (v: Variant, i: number, j: number) =>
-  v.floor.tiles.find((t) => t.roll && i >= t.i && i < t.i + t.w && j >= t.j && j < t.j + t.h);
+export const laneAt = (v: Variant, i: number, j: number) => v.floor.tiles.find((t) => t.roll && covers(t, i, j));
 
-/** Put a lane back in place of `old`, over whatever floor lies there (it wins), inside the stand. */
+/** Put a lane back in place of `old`, over whatever floor lies there (it wins), cut off at the stand edge. */
 function replaceLane(v: Variant, old: FloorTile, next: FloorTile): { v: Variant; lane: FloorTile } {
   const { nx, ny } = standCells(v.stand);
-  const i = Math.max(0, Math.min(next.i, nx - 1));
-  const j = Math.max(0, Math.min(next.j, ny - 1));
-  const lane: FloorTile = { ...next, i, j, w: Math.min(next.w, nx - i), h: Math.min(next.h, ny - j) };
+  const lane: FloorTile = { ...next, w: Math.min(next.w, nx - next.i), h: Math.min(next.h, ny - next.j) };
   const rest = cutTiles(v.floor.tiles.filter((t) => !same(t, old)), lane);
   return { v: { ...v, floor: { ...v.floor, tiles: [...rest, lane] } }, lane };
-}
-
-/** The lane on its own: it leaves its fill and the piece it shared. */
-function alone(t: FloorTile): FloorTile {
-  const { fill: _f, split: _s, ...rest } = t;
-  return rest;
 }
 
 /** Turn a lane 90° about its middle: same length and width, the other direction, kept inside the stand. */
@@ -300,7 +294,7 @@ export function rotateLane(v: Variant, lane: { i: number; j: number }): { v: Var
   if (!t) return null;
   const ci = t.i + t.w / 2;
   const cj = t.j + t.h / 2;
-  const next: FloorTile = { ...alone(t), roll: t.roll === 'x' ? 'y' : 'x', w: t.h, h: t.w, i: Math.round(ci - t.h / 2), j: Math.round(cj - t.w / 2) };
+  const next: FloorTile = { ...loose(t), roll: t.roll === 'x' ? 'y' : 'x', w: t.h, h: t.w, i: Math.round(ci - t.h / 2), j: Math.round(cj - t.w / 2) };
   const { nx, ny } = standCells(v.stand);
   next.i = Math.max(0, Math.min(next.i, nx - next.w));
   next.j = Math.max(0, Math.min(next.j, ny - next.h));
@@ -318,7 +312,7 @@ export function resizeLane(v: Variant, lane: { i: number; j: number }, cells: nu
   const len = Math.max(1, Math.min(n, a.len + cells));
   if (len === a.len) return null;
   const start = a.start + len > n ? n - len : a.start;
-  return replaceLane(v, t, { ...alone(t), ...laneRect(t.roll!, { start, len }, across(t)) });
+  return replaceLane(v, t, { ...loose(t), ...laneRect(t.roll!, { start, len }, across(t)) });
 }
 
 /** Take one lane off the floor. */
