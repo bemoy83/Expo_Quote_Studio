@@ -2,7 +2,7 @@
 // objects, labels, interaction preview. Pointer handling is done on the svg with model coordinates, so the
 // draw order never decides what can be clicked.
 import { RECIPES } from '../../foga/recipes'
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent, type SVGProps } from 'react'
+import { useEffect, useMemo, useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent, type SVGProps } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import { mainGroupOf } from '../../catalog/groups'
 import { canMoveWall, doorAllowed, doorSwing, drawOpening, eraseWalls, paintWalls, segmentKeys, setOpening, standWallKeys } from '../../domain/edit'
@@ -28,7 +28,6 @@ import { findMotif } from '../motifs'
 import type { Brush, Highlight, Tool } from '../tools'
 import { across, applyFloor, floorAction, lanesLaid, lanesOf, standCells, TILE_FULL, type FloorAction, type FloorBrushSize, type Rect, type RollDir } from '../../domain/floor'
 import { fillCarpet, fillProposalsFor, fillTilesOf, laneAt } from '../../domain/carpet'
-import { CarpetMenu } from './CarpetMenu'
 import type { RollMode } from '../tools'
 import { distToSegment, nearestEdge, strokeFrom } from './geometry'
 
@@ -160,9 +159,6 @@ export function PlanView(p: Props) {
   const [rollPending, setRollPending] = useState<FloorAction | null>(null)
   /** Fyll area being dragged, in cells. */
   const [fillRect, setFillRect] = useState<Rect | null>(null)
-  /** The chosen engangsteppe on screen, for its menu: px in the plan. */
-  const [carpetBox, setCarpetBox] = useState<{ at: { x: number; y: number; w: number; h: number }; box: { w: number; h: number } } | null>(null)
-  const carpetSel = useRef<SVGRectElement>(null)
   const [stroke, setStroke] = useState<[Point, Point] | null>(null)
   /** Textile stroke being drawn, with where it started (picks the wall face when it lies on a wall). */
   const [textileStroke, setTextileStroke] = useState<TextileLine | null>(null)
@@ -616,7 +612,7 @@ export function PlanView(p: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [carpetFill, fillKey, fillProduct, rollWidth, v.floor.tiles, v.stand],
   )
-  // The chosen engangsteppe (Velg): its lanes, and the box around them for the menu
+  // The chosen engangsteppe (Velg): its lanes, outlined while its drawer is open
   const selLanes = tool !== 'select' || p.mini ? [] : selection.fill ? fillTilesOf(v, selection.fill) : selection.lane ? v.floor.tiles.filter((t) => t.roll && t.i === selection.lane!.i && t.j === selection.lane!.j) : []
   const selBox = selLanes.length
     ? selLanes.reduce<Rect>((r, t) => {
@@ -625,21 +621,6 @@ export function PlanView(p: Props) {
         return { i, j, w: Math.max(r.i + r.w, t.i + t.w) - i, h: Math.max(r.j + r.h, t.j + t.h) - j }
       }, selLanes[0])
     : null
-  const selKey = selBox ? `${selBox.i},${selBox.j},${selBox.w},${selBox.h}` : ''
-  useLayoutEffect(() => {
-    const el = carpetSel.current
-    const host = svg.current?.parentElement
-    if (!el || !host || !selKey) return setCarpetBox(null)
-    const measure = () => {
-      const a = el.getBoundingClientRect()
-      const h = host.getBoundingClientRect()
-      setCarpetBox({ at: { x: a.left - h.left, y: a.top - h.top, w: a.width, h: a.height }, box: { w: h.width, h: h.height } })
-    }
-    measure()
-    const ro = new ResizeObserver(measure)
-    ro.observe(host)
-    return () => ro.disconnect()
-  }, [selKey, W, D])
   // Textile brush: next to a wall the click target is that face; elsewhere the grid node a stroke starts from
   const textileFace = textileTool && hover && !textileStroke ? faceHit(hover, 0.2) : null
   const hoverFace = (decorTool && hover ? faceHit(hover) : null) ?? textileFace
@@ -661,7 +642,6 @@ export function PlanView(p: Props) {
   const floorIds = Object.keys(floorAreas)
 
   return (
-    <>
     <svg
       ref={svg}
       className="plan-svg"
@@ -934,7 +914,6 @@ export function PlanView(p: Props) {
             {selLanes.map((t) => (
               <rect key={`${t.i},${t.j}`} x={t.i * CELL} y={t.j * CELL} width={t.w * CELL} height={t.h * CELL} fill={INK} fillOpacity={0.06} stroke={INK} strokeWidth={0.025} strokeDasharray=".1 .06" />
             ))}
-            <rect ref={carpetSel} x={selBox.i * CELL} y={selBox.j * CELL} width={selBox.w * CELL} height={selBox.h * CELL} fill="none" />
           </g>
         )}
         {hoverFloor && (
@@ -952,10 +931,6 @@ export function PlanView(p: Props) {
         )}
       </g>
     </svg>
-    {carpetBox && selBox && !p.mini && (
-      <CarpetMenu v={v} selection={selection} at={carpetBox.at} box={carpetBox.box} onEdit={(fn) => p.onEdit(fn)} onSelect={p.onSelect} />
-    )}
-    </>
   )
 }
 

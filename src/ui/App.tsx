@@ -33,6 +33,7 @@ import { WorkOrderPage } from './workorder/WorkOrderPage'
 import { VariantTabs } from './shell/VariantTabs'
 import { dockToolOf, FLOOR_OTHER, penToolOf, type Brush, type DockTool, type Highlight, type PenTool, type RollMode, type Tool } from './tools'
 import { removeFill, removeLane, rotateLane } from '../domain/carpet'
+import { CarpetDrawer } from './plan/CarpetDrawer'
 import { longestSide, TILE_FULL, type FloorBrushSize, type RollDir, type TileSize } from '../domain/floor'
 import { ToolDock } from './plan/ToolDock'
 import { QuickPicks } from './plan/QuickPicks'
@@ -484,6 +485,9 @@ export default function App() {
                   onToast={showToast}
                   onClose={() => setSelection({})}
                 />
+              )}
+              {(selection.lane || selection.fill) && tool === 'select' && view === 'plan' && (
+                <CarpetDrawer v={v} selection={selection} onSelect={setSelection} onEdit={(fn) => onEdit(fn)} onClose={() => setSelection({})} />
               )}
               {selection.wallId && tool === 'select' && (
                 <WallDrawer
