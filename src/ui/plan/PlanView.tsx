@@ -17,7 +17,8 @@ import type { Point, Room, Side, Variant, Wall } from '../../domain/types'
 import { builtModules, type BuiltModule } from '../../domain/walls'
 import { BORDER, BORDER_STRONG, BLOCK, CANVAS, INK, INK_FAINT, INK_MUTED, LAYER_COLOR, SURFACE } from '../colors'
 import { applyDrop, decorDrag, endDecorDrag, type DecorDrag } from '../dnd'
-import { dragRoom, dragWall, dropObject, dropRoom, roomDrag, type RoomDrag, type WallDrag } from '../drag'
+import { drawInnerBeam, eraseInnerBeams, innerBeamAt, type Run } from '../../domain/innerBeams'
+import { dragInnerBeam, dragRoom, dragWall, dropObject, dropRoom, roomDrag, type RoomDrag, type WallDrag } from '../drag'
 import { roomAt, roomName, roomSideAt, roomSize, sideIsHorizontal } from '../../domain/rooms'
 import { insetOutline, isHorizontal, labelRect, outlineSides } from '../../domain/outline'
 import { fmt } from '../format'
@@ -38,6 +39,8 @@ export interface PlanSelection {
   /** A frittstående tekstilvegg, and the face shown in its drawer. */
   freeTextileId?: string
   freeFace?: FaceKey
+  /** An innvendig takdrager. */
+  beamId?: string
 }
 
 interface Props {
@@ -107,6 +110,7 @@ type Drag =
   | { kind: 'click'; select: PlanSelection }
   | { kind: 'object'; id: string; dx: number; dy: number; start: P; moved: boolean; select: PlanSelection }
   | ({ kind: 'wall'; moved: boolean; select: PlanSelection } & WallDrag)
+  | ({ kind: 'beam'; moved: boolean } & WallDrag)
   | ({ kind: 'room'; select: PlanSelection | null } & RoomDrag)
   | { kind: 'textile'; p0: P }
   | { kind: 'freeMove'; id: string; p0: P; v0: Variant; moved: boolean; select: PlanSelection }
@@ -168,8 +172,12 @@ export function PlanView(p: Props) {
   const decorTool = tool !== 'select' && brush?.kind === 'motif'
   /** One textile brush: on a system wall it is mounted there, anywhere else it stands free (domain/textileBrush). */
   const textileTool = tool !== 'select' && brush?.kind === 'textile'
+  /** Innvendig takdrager, drawn on the wall grid like a wall. */
+  const beamTool = tool !== 'select' && brush?.kind === 'beam'
+  /** Standard beams: a drawn one may not lie along them. */
+  const standardRuns: Run[] = useMemo(() => res.beams.segments.filter((s) => !s.inner), [res])
   /** Snap points show only while a brush snaps to them, at its own grid. */
-  const dotStep = textileTool ? step : wallTool ? rules.wall.cc : null
+  const dotStep = textileTool ? step : wallTool || beamTool ? rules.wall.cc : null
 
   /** On the stand, or just outside its edge (where its edge walls are drawn). */
   const onStand = (q: P) => q.x > -0.4 && q.y > -0.4 && q.x < W + 0.4 && q.y < D + 0.4
@@ -185,6 +193,8 @@ export function PlanView(p: Props) {
     }
     return best
   }
+  /** A drawn takdrager under the pointer, unless a wall is closer (a beam can end on a wall). */
+  const beamAt = (q: P) => (moduleAt(q, 0.12) ? undefined : innerBeamAt(v, q))
 
   /** The wall face under the pointer. */
   const faceHit = (q: P, within = 0.4): FaceHit | null => {
@@ -276,7 +286,7 @@ export function PlanView(p: Props) {
       paintFloorAt(q)
       return
     }
-    if (wallTool) {
+    if (wallTool || beamTool) {
       drag.current = { kind: 'stroke', p0: q, moved: false }
       const e0 = nearestEdge(v.stand, q)
       setStroke([e0.a, e0.b])
@@ -337,6 +347,11 @@ export function PlanView(p: Props) {
       drag.current = { kind: 'object', id: o.id, dx: q.x - o.x, dy: q.y - o.y, start: { x: o.x, y: o.y }, moved: false, select: { objectId: o.id } }
       return
     }
+    const ib = beamAt(q)
+    if (ib) {
+      drag.current = { kind: 'beam', id: ib.id, p0: q, v0: v, delta: '0,0', horizontal: ib.from[1] === ib.to[1], moved: false }
+      return
+    }
     const m = moduleAt(q)
     if (m) {
       const w = v.walls.find((x) => x.id === m.wallId)!
@@ -385,6 +400,10 @@ export function PlanView(p: Props) {
       if (!d.moved && Math.hypot(q.x - d.p0.x, q.y - d.p0.y) < 0.1) return
       d.moved = true
       dragWall(d, q, p.onEdit, p.onCheckpoint)
+    } else if (d.kind === 'beam') {
+      if (!d.moved && Math.hypot(q.x - d.p0.x, q.y - d.p0.y) < 0.1) return
+      d.moved = true
+      dragInnerBeam(d, q, standardRuns, p.onEdit, p.onCheckpoint)
     } else if (d.kind === 'room') dragRoom(d, q, p.onEdit, p.onCheckpoint)
   }
 
@@ -398,10 +417,16 @@ export function PlanView(p: Props) {
         return [m.a, m.b] as [Point, Point]
       })()
       setStroke(null)
-      if (tool === 'erase') {
+      if (beamTool && tool === 'erase') p.onEdit((x) => eraseInnerBeams(x, a, b))
+      else if (beamTool) {
+        const r = drawInnerBeam(v, a, b, standardRuns)
+        if ('error' in r) return p.onToast(r.error)
+        p.onEdit(() => r.v)
+      } else if (tool === 'erase') {
+        // The plain eraser takes drawn takdrager on the stroke too
         const keys = segmentKeys(a, b)
         if (keys.some((k) => standKeys.has(k))) p.onToast(STAND_WALL_LOCKED)
-        p.onEdit((x) => eraseWalls(x, keys))
+        p.onEdit((x) => eraseInnerBeams(eraseWalls(x, keys), a, b))
       } else if (brush?.kind === 'wall') p.onEdit((x) => paintWalls(x, a, b, brush.ral))
     } else if (d.kind === 'textile') {
       const [a, b] = freeStroke(v, rules, d.p0, toModel(e), step)
@@ -427,6 +452,8 @@ export function PlanView(p: Props) {
       p.onSelect(d.select)
     } else if (d.kind === 'wall') {
       if (!d.moved) p.onSelect(d.select)
+    } else if (d.kind === 'beam') {
+      if (!d.moved) p.onSelect({ beamId: d.id })
     } else if (d.kind === 'room') {
       dropRoom(d, p.onEdit)
       // A room moved by its floor stays selected; a resized side opens the drawer only on a plain click
@@ -476,9 +503,10 @@ export function PlanView(p: Props) {
     if (!hover || p.mini) return 'default'
     const e = roomEdgeAt(hover)
     if (e) return sideIsHorizontal(e.room, e.side) ? 'ns-resize' : 'ew-resize'
-    if (d?.kind === 'wall' || d?.kind === 'freeMove') return 'grabbing'
+    if (d?.kind === 'wall' || d?.kind === 'beam' || d?.kind === 'freeMove') return 'grabbing'
     if (freeTextileAt(v, hover, 0.15)) return 'move'
     if (objectAt(hover)) return 'default'
+    if (beamAt(hover)) return 'move'
     const m = moduleAt(hover)
     const w = m && v.walls.find((x) => x.id === m.wallId)
     if (w) return canMoveWall(w) ? 'move' : 'default'
@@ -492,7 +520,7 @@ export function PlanView(p: Props) {
   // Textile brush: next to a wall the click target is that face; elsewhere the grid node a stroke starts from
   const textileFace = textileTool && hover && !textileStroke ? faceHit(hover, 0.2) : null
   const hoverFace = (decorTool && hover ? faceHit(hover) : null) ?? textileFace
-  const hoverWallEdge = wallTool && hover && !stroke && onStand(hover) ? nearestEdge(v.stand, hover) : null
+  const hoverWallEdge = (wallTool || beamTool) && hover && !stroke && onStand(hover) ? nearestEdge(v.stand, hover) : null
   const hoverFree = textileTool && !textileFace && hover && !textileStroke && onStand(hover) ? (tool === 'erase' ? (freeTextileAt(v, hover) ?? null) : freeStroke(v, rules, hover, hover, step)[0]) : null
 
   const sideText = (s: Side) => {
@@ -650,8 +678,11 @@ export function PlanView(p: Props) {
       {/* Beams and posts */}
       <g pointerEvents="none">
         <g opacity={dim('beams')}>
+          {(v.innerBeams ?? []).filter((b) => b.id === selection.beamId).map((b) => (
+            <Seg key={b.id} a={b.from} b={b.to} stroke={INK} strokeWidth={0.12} strokeOpacity={0.35} />
+          ))}
           {res.beams.segments.map((s, i) => (
-            <Seg key={i} a={s.from} b={s.to} stroke={INK_MUTED} strokeWidth={0.05} strokeDasharray=".16 .08" />
+            <Seg key={i} a={s.from} b={s.to} stroke={s.inner ? INK : INK_MUTED} strokeWidth={0.05} strokeDasharray=".16 .08" />
           ))}
         </g>
         <g opacity={(highlight && highlight !== 'walls' && highlight !== 'beams') || off('vegg') ? DIMMED : 1}>
@@ -736,8 +767,8 @@ export function PlanView(p: Props) {
       {/* Interaction preview */}
       <g pointerEvents="none">
         {!p.mini && v.rooms.filter((r) => r.id === selection.roomId).map((r) => <RoomHandles key={r.id} r={r} />)}
-        {hoverWallEdge && <Seg a={hoverWallEdge.a} b={hoverWallEdge.b} stroke={tool === 'erase' ? INK_FAINT : WALL} strokeOpacity={0.6} strokeWidth={PLAN_WALL} />}
-        {stroke && <StrokePreview a={stroke[0]} b={stroke[1]} erase={tool === 'erase'} />}
+        {hoverWallEdge && <Seg a={hoverWallEdge.a} b={hoverWallEdge.b} stroke={tool === 'erase' ? INK_FAINT : beamTool ? INK : WALL} strokeOpacity={0.6} strokeWidth={PLAN_WALL} strokeDasharray={beamTool ? '.16 .08' : undefined} />}
+        {stroke && <StrokePreview a={stroke[0]} b={stroke[1]} erase={tool === 'erase'} beam={beamTool} />}
         {textileStroke && <TextilePreview v={v} line={textileStroke} />}
         {hoverFree && 'id' in hoverFree && <Seg a={hoverFree.from} b={hoverFree.to} stroke={INK} strokeOpacity={0.45} strokeWidth={PLAN_TEXTILE + 0.06} />}
         {hoverFree && !('id' in hoverFree) && <circle cx={hoverFree[0]} cy={hoverFree[1]} r={0.06} fill={TEXTILE} />}
@@ -890,7 +921,7 @@ function curtainPath(a: Point, b: Point, n: Point): string {
   return `M${pts.join(' L')}`
 }
 
-function StrokePreview({ a, b, erase }: { a: Point; b: Point; erase: boolean }) {
+function StrokePreview({ a, b, erase, beam }: { a: Point; b: Point; erase: boolean; beam?: boolean }) {
   const L = Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1])
   const mx = (a[0] + b[0]) / 2
   const my = (a[1] + b[1]) / 2
@@ -900,10 +931,10 @@ function StrokePreview({ a, b, erase }: { a: Point; b: Point; erase: boolean }) 
       <Seg
         a={a}
         b={b}
-        stroke={erase ? INK_FAINT : `color-mix(in oklab, ${WALL} 60%, transparent)`}
+        stroke={erase ? INK_FAINT : `color-mix(in oklab, ${beam ? INK : WALL} 60%, transparent)`}
         strokeWidth={PLAN_WALL}
         strokeLinecap="square"
-        strokeDasharray={erase ? '.12 .08' : undefined}
+        strokeDasharray={erase ? '.12 .08' : beam ? '.16 .08' : undefined}
       />
       {[a, b].map((q, i) => (
         <circle key={i} cx={q[0]} cy={q[1]} r={0.07} fill={INK} />

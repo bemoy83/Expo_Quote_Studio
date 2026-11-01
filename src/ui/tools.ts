@@ -8,6 +8,8 @@ export type Tool = 'select' | 'brush' | 'erase';
 /** What the brush draws. The product chosen in the panel decides it ("produkt styrer pensel"). */
 export type Brush =
   | { kind: 'wall'; ral: string }
+  /** Innvendig takdrager: a straight run on the 1 m grid inside the stand (domain/innerBeams.ts). */
+  | { kind: 'beam' }
   | { kind: 'floor'; product: string }
   | { kind: 'opening'; product: string }
   | { kind: 'object'; product: string }
@@ -37,6 +39,6 @@ export type Highlight = 'walls' | 'beams' | 'openings' | 'textile' | 'foil' | 'f
  * the Foga recipe has the parts for cc 25, 50 and 75. */
 export function gridSteps(brush: Brush | null, rules: Rules): readonly GridStep[] {
   if (brush?.kind === 'textile') return GRID_STEPS
-  if (brush?.kind === 'wall') return GRID_STEPS.filter((s) => Math.abs(s - rules.wall.cc) < 1e-9)
+  if (brush?.kind === 'wall' || brush?.kind === 'beam') return GRID_STEPS.filter((s) => Math.abs(s - rules.wall.cc) < 1e-9)
   return []
 }

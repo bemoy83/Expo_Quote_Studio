@@ -23,6 +23,7 @@ import { WallDrawer } from './plan/WallDrawer'
 import { findMotif, motifLibrary } from './motifs'
 import { fitDecor, removeFoil, removeTextile } from '../domain/decor'
 import { fitFreeTextiles, removeFreeTextile } from '../domain/freeTextile'
+import { removeInnerBeam } from '../domain/innerBeams'
 import { newlyClosedRooms, wallsToRoom } from '../domain/enclosures'
 import { PickingPage } from './picking/PickingPage'
 import { ProductionPage } from './production/ProductionPage'
@@ -161,6 +162,10 @@ export default function App() {
       } else if ((k === 'delete' || k === 'backspace') && selection.freeTextileId) {
         const id = selection.freeTextileId
         onEdit((x) => removeFreeTextile(x, id))
+        setSelection({})
+      } else if ((k === 'delete' || k === 'backspace') && selection.beamId) {
+        const id = selection.beamId
+        onEdit((x) => removeInnerBeam(x, id))
         setSelection({})
       } else if ((k === 'delete' || k === 'backspace') && selection.roomId) {
         const id = selection.roomId
@@ -442,6 +447,7 @@ export default function App() {
     if (!b) return { name: 'Pensel' }
     if (b.kind === 'wall') return { name: `Vegg RAL ${b.ral}`, color: plateColor(b.ral) }
     if (b.kind === 'textile') return { name: 'Tekstilvegg' }
+    if (b.kind === 'beam') return { name: 'Innvendig takdrager' }
     if (b.kind === 'motif') return { name: findMotif(motifs, b.motif)?.name ?? 'Motiv' }
     const r = idx.byArtnr.get(b.product)
     const name = r ? (r.product.variants.length > 1 ? `${r.product.name.split(' ')[0]} ${r.variant.name.toLowerCase()}` : r.product.name) : b.product
@@ -452,11 +458,15 @@ export default function App() {
 const HINT_3D = 'Dra for å rotere · rull for å zoome · dra møbler, en innervegg eller grafikk for å flytte · dra et rom i veggen eller taket, toppkanten av en romvegg endrer størrelsen · dra grafikk eller tekstilvegg fra Profilering til en vegg'
 
 function hint(tool: Tool, brush: Brush | null): string {
-  if (tool === 'select') return 'Klikk en vegg for å endre den · dra en innervegg eller møbler for å flytte · dra gulvet i et rom for å flytte rommet, en romvegg for å endre størrelsen · Delete fjerner valgt møbel eller rom'
+  if (tool === 'select') return 'Klikk en vegg for å endre den · dra en innervegg, innvendig takdrager eller møbler for å flytte · dra gulvet i et rom for å flytte rommet, en romvegg for å endre størrelsen · Delete fjerner valgt møbel, takdrager eller rom'
   const erase = tool === 'erase'
   switch (brush?.kind ?? 'wall') {
     case 'wall':
       return erase ? 'Klikk en veggmodul eller dra langs rutenettet for å fjerne vegg · standvegger kan ikke fjernes' : 'Klikk en kant eller dra langs rutenettet for å tegne vegg i hele meter'
+    case 'beam':
+      return erase
+        ? 'Klikk eller dra langs en innvendig takdrager for å fjerne den'
+        : 'Dra langs rutenettet for innvendig takdrager · en ende på en annen takdrager henger på krok, ellers stolpe med fotplate · tegn en tverrdrager mot en stolpe for å spare fotplaten'
     case 'floor':
       return erase ? 'Klikk og dra for å fjerne gulv' : 'Klikk og dra for å tegne gulv · velg penselstørrelse i båndet'
     case 'opening':

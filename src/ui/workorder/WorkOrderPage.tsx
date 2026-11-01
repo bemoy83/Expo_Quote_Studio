@@ -119,7 +119,7 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf }: 
                   {v.stand.width} × {v.stand.depth} m
                 </dt>
                 <dd>
-                  {TYPE_NAME[v.stand.type]} · {fmt(k.wallLm - k.organiserWallLm)} lm vegg{k.organiserWallLm ? ` (+ ${fmt(k.organiserWallLm)} lm standvegg fra arrangør)` : ''} · {v.noBeams ? 'uten takdrager' : `${fmt(k.beamLm - k.organiserBeamLm)} m takdrager`} · {res.foga.posts} stolper
+                  {TYPE_NAME[v.stand.type]} · {fmt(k.wallLm - k.organiserWallLm)} lm vegg{k.organiserWallLm ? ` (+ ${fmt(k.organiserWallLm)} lm standvegg fra arrangør)` : ''} · {k.beamLm - k.organiserBeamLm ? `${fmt(k.beamLm - k.organiserBeamLm)} m takdrager` : 'uten takdrager'} · {res.foga.posts} stolper
                 </dd>
               </div>
               <div>

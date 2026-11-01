@@ -1,5 +1,6 @@
 // Drag steps shared by the plan and the 3D view, so both move walls and furniture the same way.
 import { moveWall } from '../domain/edit'
+import { moveInnerBeam, type Run } from '../domain/innerBeams'
 import { settleAll, settleObject } from '../domain/objects'
 import { moveRoom, resizeRoom, sideIsHorizontal } from '../domain/rooms'
 import type { Variant } from '../domain/types'
@@ -20,15 +21,24 @@ export interface WallDrag {
 /** Move an inner wall to whole metres under the pointer, both ways when it stands free, else only sideways. Past the
  *  stand's edge (or onto a stand wall) it stops at the last place it fits. One undo step per drag. */
 export function dragWall(d: WallDrag, q: { x: number; y: number }, onEdit: Edit, onCheckpoint: () => void) {
+  dragStep(d, q, (v, s, a) => moveWall(v, d.id, s, a), onEdit, onCheckpoint)
+}
+
+/** Move a drawn takdrager the same way, both ways; it stops at the last place it fits (domain/innerBeams.ts). */
+export function dragInnerBeam(d: WallDrag, q: { x: number; y: number }, standard: readonly Run[], onEdit: Edit, onCheckpoint: () => void) {
+  dragStep(d, q, (v, s, a) => moveInnerBeam(v, d.id, s, a, standard), onEdit, onCheckpoint)
+}
+
+/** The furthest whole-metre step toward the pointer that `move` accepts (it returns v when not), sideways first. */
+function dragStep(d: WallDrag, q: { x: number; y: number }, move: (v: Variant, side: number, along: number) => Variant, onEdit: Edit, onCheckpoint: () => void) {
   const side = Math.round(d.horizontal ? q.y - d.p0.y : q.x - d.p0.x)
   const along = Math.round(d.horizontal ? q.x - d.p0.x : q.y - d.p0.y)
   const toward0 = (n: number) => Array.from({ length: Math.abs(n) + 1 }, (_, i) => Math.sign(n) * (Math.abs(n) - i))
-  // The furthest step toward the pointer that fits, sideways first
   let next = d.v0
   let key = '0,0'
   search: for (const s of toward0(side)) {
     for (const a of toward0(along)) {
-      const v = moveWall(d.v0, d.id, s, a)
+      const v = move(d.v0, s, a)
       if (v !== d.v0) {
         next = v
         key = `${s},${a}`
