@@ -1,7 +1,7 @@
 import { groupItems, resolveGroup } from '../catalog/groups';
 import { displayName, indexCatalog } from '../catalog/lookup';
 import type { Catalog, Unit } from '../catalog/types';
-import { CELL, openSides, parseCellKey } from '../domain/grid';
+import { CELL, openSides, parseCellKey, pointKey } from '../domain/grid';
 import type { Payer, Point, StandWallTerms, TextileFill, Variant } from '../domain/types';
 import { DEFAULT_STAND_WALLS } from '../domain/variant';
 import { builtModules, wallKind, wallPoints, type BuiltModule, type WallKind } from '../domain/walls';
@@ -217,7 +217,7 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
   const wallFeet = wallSupports(mods, beams, RECIPES.wall.support.rule, (m) => framed && kindOf(m) === 'stand');
   const prod = production(v, rules.textile.inFrame, '');
   // Foga structure of what the exhibitor orders: posts, walled modules, headers and beam lengths are counted from it
-  const foga = structureOf({ mods: ours, posts: ourPoints.size + (organiserBeams ? 0 : beamPosts), beams: ourBeams, production: prod, swaps, wallFeet: wallFeet.length });
+  const foga = structureOf({ mods: ours, posts: ourPoints.size + (organiserBeams ? 0 : beamPosts), beams: ourBeams, production: prod, swaps, wallFeet: wallFeet.length, barePosts: wallFeet.filter((f) => ourPoints.has(pointKey(f.at))).length });
   const headers = foga.modules.filter((m) => m.opening).length;
   const beamLengths = beamSpecs(beams);
   const beamLm = beamLengths.reduce((a, b) => a + b.lengthMm, 0) / 1000;

@@ -55,6 +55,12 @@ describe('stand walls', () => {
     expect(res.bom.lines.find((b) => b.name === 'Fotplate 750 med 795')).toMatchObject({ qty: 2, preassembled: true, detail: '1 × 750 (876 750 93) · 1 × 795 (876 745 92)' });
     expect(res.keyFigures.wallSupports).toBe(2);
   });
+  it('a post on a plate is picked without the adjustable foot', () => {
+    const res = calc({ ...row(3, 3), noBeams: true }, RULES, DEFAULT_CATALOG, EXHIBITOR);
+    const post = (name: string) => res.bom.lines.find((b) => b.name === name)?.qty;
+    expect(post('Stolpe 94 uten fot')).toBe(2);
+    expect(post('Stolpe 94 med justeringsfot')).toBe(8);
+  });
 });
 
 describe('inner walls and rooms', () => {

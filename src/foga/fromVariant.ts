@@ -16,8 +16,9 @@ export interface Derived {
   production: Production;
   /** Plates swapped into stand walls the organiser builds. */
   swaps?: string[];
-  /** Støtteplater under free-standing system walls. */
+  /** Støtteplater under free-standing system walls, and how many of them stand under a post in `posts`. */
   wallFeet?: number;
+  barePosts?: number;
 }
 
 /** Takdrager lengths, post centre to post centre, mm. */
@@ -37,6 +38,7 @@ export function structureOf(d: Derived): FogaStructure {
       : {}),
     ...(d.swaps?.length ? { swaps: d.swaps } : {}),
     ...(d.wallFeet ? { wallFeet: d.wallFeet } : {}),
+    ...(d.barePosts ? { barePosts: d.barePosts } : {}),
   };
 }
 

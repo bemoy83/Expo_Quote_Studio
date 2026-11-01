@@ -149,8 +149,9 @@ romvegger som takdragerne ikke holder, også når takdragerne er på (`calc/wall
 - Platene er alltid kundens valg og faktureres utstilleren, også under standvegger arrangøren betaler. De står på
   tilbudet som egen linje **Støtteplate systemvegg** per stk (6115, plassholder, sum av plate og montering), og på
   plukklisten (under Stolper) og arbeidsordren hos utstilleren.
-- Ikke avklart: om stolpen over en fotplate skal plukkes uten justeringsfot (700 + M10, også i senterkanalen). Den
-  plukkes foreløpig som før.
+- Stolpen over en fotplate plukkes **uten justeringsfot** (700 + M10 sitter også i senterkanalen), som «Stolpe 94 uten
+  fot». Står platen under en stolpe i arrangørens standvegg, kommer stolpen med arrangørens bestilling, og foten skrus
+  ut på stedet.
 - **Senere:** støttevaier i stedet for plater. Et V-oppheng fra taket i hallen ned til toppen av systemveggen, ett punkt
   på veggen og to i taket på tvers av veggen, etter samme regel som platene. Også vaieren faktureres utstilleren.
 

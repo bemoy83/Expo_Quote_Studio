@@ -93,7 +93,9 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   const addPlate = (group: BomGroup, ral: string, h: number, note: string) =>
     put(group, `${ral}|${h}|${note}`, { artnr: '', name: fogaPart(plate.code).name, detail: `${plate.w} × ${h} mm${note}`, preassembled: false, ral }, 1, h);
 
-  // Stolper: wall and takdrager alike, stored with the foot mounted
+  // Stolper: wall and takdrager alike, stored with the foot mounted. A post on a støtteplate has the plate's pin in its
+  // centre channel instead, so it is picked without the foot.
+  const bare = s.barePosts ?? 0;
   put(
     BOM_GROUP.posts,
     'post',
@@ -103,8 +105,9 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
       detail: [`${r.wall.post} × ${z.postLength} mm`, ...r.wall.feet.map((f) => `${f.qty} × ${f.code} (${fogaPart(f.code).artnr})`)].join(' · '),
       preassembled: true,
     },
-    s.posts,
+    s.posts - bare,
   );
+  put(BOM_GROUP.posts, 'post-bare', { artnr: '', name: `Stolpe ${r.wall.post} uten fot`, detail: `${r.wall.post} × ${z.postLength} mm · til fotplate`, preassembled: true }, bare);
 
   // Støtteplater under the posts of walls that stand free: the plate with its pin (M8) mounted, one piece, threaded
   // into the post's centre channel on site

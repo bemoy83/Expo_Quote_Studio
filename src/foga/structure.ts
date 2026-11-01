@@ -52,6 +52,8 @@ export interface FogaStructure {
   cornerPosts?: { qty: number; H: number };
   /** Støtteplater under the posts of system walls that stand free (calc/wallSupports.ts). */
   wallFeet?: number;
+  /** Of `posts`, those standing on a støtteplate: picked without the adjustable foot (Bjørn 1.11.2026). */
+  barePosts?: number;
   /** Plates (RAL) picked to swap into a stand wall the organiser builds: plate only, the wall is not in `modules`. */
   swaps?: string[];
 }
