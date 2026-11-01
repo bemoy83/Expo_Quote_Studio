@@ -54,9 +54,8 @@ export function ToolDock({
               aria-label={`Pensel: ${brush.name}`}
               onClick={() => onTool('brush')}
             >
-              <Paintbrush size={19} />
+              {brush.color ? <i className="dock-dot" style={{ background: brush.color }} /> : <Paintbrush size={19} />}
               <span className="dock-brush-name">{brush.name}</span>
-              {brush.color && <i className="dock-stripe" style={{ background: brush.color }} />}
             </button>
             <button type="button" className="dock-btn" aria-pressed={tool === 'erase'} title="Tøm (E)" aria-label="Tøm" onClick={() => onTool('erase')}>
               <Eraser size={19} />

@@ -2041,14 +2041,13 @@ select.cin {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* Colour the brush paints with: wall RAL or floor colour */
-.dock-stripe {
-  position: absolute;
-  left: 14px;
-  right: 14px;
-  bottom: 5px;
-  height: 3px;
-  border-radius: 2px;
+/* Colour the brush paints with (wall RAL, floor colour); the ring keeps white and dark colours visible on the ink button */
+.dock-dot {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1.5px rgb(var(--canvas) / 0.9), 0 0 0 2.5px rgb(var(--ink) / 0.25);
 }
 /* Toasts sit above the tools on the sketch page */
 .app:has(.dock) .toast {
