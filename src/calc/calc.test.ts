@@ -2,7 +2,7 @@
 // not copied from the mockup's calc. Each case shows the arithmetic.
 import { describe, expect, it } from 'vitest';
 import { CURTAIN, DEFAULT_CATALOG, DOOR } from '../catalog/defaultCatalog';
-import type { Variant } from '../domain/types';
+import type { Point, Variant } from '../domain/types';
 import { createVariant, fillFloor } from '../domain/variant';
 import { addRoom, RECT_SIDE } from '../domain/rooms';
 import { DEFAULT_PRICING } from '../pricing/data';
@@ -169,6 +169,11 @@ describe('rooms build only the walls that are missing', () => {
 });
 
 describe('beams', () => {
+  /** A row stand with one inner wall from `from` to `to`. */
+  const rowWithWall = (width: number, depth: number, from: Point, to: Point): Variant => {
+    const v = createVariant('A', { width, depth, type: 'row' });
+    return { ...v, walls: [...v.walls, { id: 'iw', from, to }] };
+  };
   it('cross beam from a joint runs to the facing wall', () => {
     // Row 8 × 4: front 8 → 4 + 4, joint at (4,4). Cross beam to back wall (4,0): 4 m.
     const res = run(createVariant('A', { width: 8, depth: 4, type: 'row' }));
@@ -177,10 +182,34 @@ describe('beams', () => {
     // Walls 9 + 4 + 4 = 17 posts, plus the joint.
     expect(res.keyFigures.posts).toBe(18);
   });
-  it('cross beam stops at an inner wall', () => {
-    const v = createVariant('A', { width: 8, depth: 4, type: 'row' });
-    const res = run({ ...v, walls: [...v.walls, { id: 'iw', from: [3, 2], to: [5, 2] }] });
-    expect(res.keyFigures.beamLm).toBe(10);
+  it('cross beam runs on across an inner wall, split on its post', () => {
+    const res = run(rowWithWall(8, 4, [3, 2], [5, 2]));
+    expect(res.beams.segments.filter((s) => s.cross).map((s) => s.length)).toEqual([2, 2]);
+    expect(res.keyFigures.beamLm).toBe(12);
+  });
+  it('cross beam runs on past a wall ending on its line, split there', () => {
+    // Row 8 × 4, cross beam (4,4) → (4,0). Inner wall (2,2)–(4,2) ends on it: 2 + 2 on the wall's post, still 12 m.
+    const res = run(rowWithWall(8, 4, [2, 2], [4, 2]));
+    expect(res.beams.segments.filter((s) => s.cross).map((s) => s.length)).toEqual([2, 2]);
+    expect(res.keyFigures).toMatchObject({ beamLm: 12, beamLengths: 4, beamPosts: 1 });
+  });
+  it('cross beam stops where a wall runs along its line', () => {
+    const res = run(rowWithWall(8, 4, [4, 2], [4, 1]));
+    expect(res.beams.segments.filter((s) => s.cross).map((s) => s.length)).toEqual([2]);
+  });
+  it('a wall ending under a beam splits it there and shares the post', () => {
+    // Row 6 × 3, inner wall from the back wall to the front: front 6 → 3 + 3 at (3,3), on the wall's own post.
+    const res = run(rowWithWall(6, 3, [3, 1], [3, 3]));
+    expect(res.beams.segments.map((s) => s.length)).toEqual([3, 3]);
+    expect(res.keyFigures).toMatchObject({ beamLm: 6, beamLengths: 2, beamPosts: 0 });
+    // The beam holds the wall's end: only the other, free end gets a plate.
+    expect(res.wallSupports).toHaveLength(1);
+  });
+  it('each side of a wall end is split by the 6 m rule on its own', () => {
+    // Row 10 × 3, inner wall at x = 2: 2 + 8, and 8 → 4 + 4 with a joint at (6,3) and a 3 m cross beam to the back.
+    const res = run(rowWithWall(10, 3, [2, 0], [2, 3]));
+    expect(res.beams.segments.filter((s) => !s.cross).map((s) => s.length)).toEqual([2, 4, 4]);
+    expect(res.keyFigures).toMatchObject({ beamLm: 13, beamLengths: 4, beamPosts: 1 });
   });
   it('a free end gets a post, an end against a wall does not', () => {
     // Corner 6 × 3 open right: front 6 + right 3, one free corner.
