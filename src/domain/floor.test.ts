@@ -120,17 +120,16 @@ describe('rolled floor in lanes', () => {
     expect(lanes(v)).toEqual([[0, 0, 10, 4, 'x', A], [0, 4, 10, 2, 'x', A]]);
   });
 
-  it('a drag lays the lane from where it started to the pointer', () => {
+  it('a drag lays the same whole lane as a click; dragging along does not shorten it', () => {
     const v = touch(v0, 7.5, 2.2, { from: { x: 2.5, y: 2.2 } });
-    expect(lanes(v)).toEqual([[2, 0, 6, 4, 'x', A]]);
+    expect(lanes(v)).toEqual(lanes(touch(v0, 2.5, 2.2)));
+    expect(lanes(v)).toEqual([[0, 0, 10, 4, 'x', A]]);
   });
 
-  it('a drag across lays more lanes side by side in the same direction, whole roll widths cut at the edge', () => {
-    const v = touch(v0, 9.5, 5.5, { from: { x: 0.5, y: 0.5 } });
-    expect(lanes(v)).toEqual([[0, 0, 10, 4, 'x', A], [0, 4, 10, 2, 'x', A]]);
-    // Started in the narrow strip at the front and dragged to the back: the lanes keep lining up with the first
-    const up = touch(v0, 6.5, 0.5, { from: { x: 2.5, y: 5.5 } });
-    expect(lanes(up)).toEqual([[2, 0, 5, 2, 'x', A], [2, 2, 5, 4, 'x', A]]);
+  it('a drag across lays whole lanes side by side in the same direction, lined up with the first, cut at the edge', () => {
+    expect(lanes(touch(v0, 9.5, 5.5, { from: { x: 0.5, y: 0.5 } }))).toEqual([[0, 0, 10, 4, 'x', A], [0, 4, 10, 2, 'x', A]]);
+    // Started at the front and dragged to the back: the lanes keep lining up with the first
+    expect(lanes(touch(v0, 6.5, 0.5, { from: { x: 2.5, y: 5.5 } }))).toEqual([[0, 0, 10, 2, 'x', A], [0, 2, 10, 4, 'x', A]]);
   });
 
   it('a click on a lane of another colour recolours it; the eraser takes the whole lane', () => {

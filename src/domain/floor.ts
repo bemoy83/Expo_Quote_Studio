@@ -232,8 +232,8 @@ const isRoll = (s: FloorBrushSize | RollBrush): s is RollBrush => typeof s === '
 
 /** What a brush touch does. `anchor` is the first tile of a stroke; the rest of the stroke lines up with it. */
 export type FloorAction =
-  /** `band`: rolled floor, laid as lanes one roll wide across from this start (several lanes side by side). */
-  | { kind: 'place'; rect: Rect; band?: Span }
+  /** `lanes`: rolled floor, several whole lanes side by side; `rect` is then the box around them. */
+  | { kind: 'place'; rect: Rect; lanes?: Rect[] }
   | { kind: 'recolor'; rect: Rect }
   | { kind: 'erase'; rect: Rect }
   | { kind: 'none' };
@@ -341,34 +341,47 @@ function rollAction(tiles: readonly FloorTile[], s: { nx: number; ny: number }, 
     return { start: lo, len: hi - lo + 1 };
   };
 
+  // A whole lane for span c across, through position a along: as long as the free floor runs, or the whole stand
+  // when it starts on laid floor
+  const laneThrough = (a: number, c: Span): Rect => {
+    const rowFree = (x: number) => Array.from({ length: c.len }, (_, k) => c.start + k).every((y) => cellFree(x, y));
+    if (!rowFree(a)) return laneRect(dir, { start: 0, len: na }, c);
+    let a0 = a;
+    let a1 = a;
+    while (a0 - 1 >= 0 && rowFree(a0 - 1)) a0--;
+    while (a1 + 1 < na && rowFree(a1 + 1)) a1++;
+    return laneRect(dir, { start: a0, len: a1 - a0 + 1 }, c);
+  };
+
   const p = pick(t.x, t.y);
   if (t.from) {
+    // A stroke lays the lane a click at its start would, and, dragged across, the whole lanes beside it: lined up with
+    // the first, one roll wide, cut at the stand edge. Dragging along changes nothing: a lane is always whole.
     const f = pick(t.from.x, t.from.y);
     const c = acrossAt(f.a, f.c, f.pc);
-    const a0 = Math.max(0, Math.min(f.a, p.a));
-    const a1 = Math.min(na - 1, Math.max(f.a, p.a));
-    // Dragged across, the stroke lays more lanes beside the first, whole roll widths (cut at the stand edge)
     const pc = Math.max(0, Math.min(nc - 1, p.c));
-    const lo = pc < c.start ? Math.max(0, c.start - Math.ceil((c.start - pc) / b.width) * b.width) : c.start;
-    const hi = pc >= c.start + c.len ? Math.min(nc, c.start + Math.ceil((pc - c.start + 1) / b.width) * b.width) : c.start + c.len;
-    return { kind: 'place', rect: laneRect(dir, { start: a0, len: a1 - a0 + 1 }, { start: lo, len: hi - lo }), band: { start: c.start, len: b.width } };
+    const lanes: Rect[] = [laneThrough(f.a, c)];
+    for (let k = c.start - b.width; pc < k + b.width && k + b.width > 0; k -= b.width) {
+      const lo = Math.max(0, k);
+      lanes.unshift(laneThrough(f.a, { start: lo, len: k + b.width - lo }));
+    }
+    for (let k = c.start + c.len; pc >= k && k < nc; k += b.width) lanes.push(laneThrough(f.a, { start: k, len: Math.min(b.width, nc - k) }));
+    const box = lanes.reduce((r, l) => {
+      const i = Math.min(r.i, l.i);
+      const j = Math.min(r.j, l.j);
+      return { i, j, w: Math.max(r.i + r.w, l.i + l.w) - i, h: Math.max(r.j + r.h, l.j + l.h) - j };
+    });
+    return { kind: 'place', rect: box, lanes };
   }
   if (under?.roll) return under.product === t.product ? { kind: 'none' } : { kind: 'recolor', rect: under };
-  const c = acrossAt(p.a, p.c, p.pc);
-  const rowFree = (a: number) => Array.from({ length: c.len }, (_, k) => c.start + k).every((x) => cellFree(a, x));
-  if (!rowFree(p.a)) return { kind: 'place', rect: laneRect(dir, { start: 0, len: na }, c) };
-  let a0 = p.a;
-  let a1 = p.a;
-  while (a0 - 1 >= 0 && rowFree(a0 - 1)) a0--;
-  while (a1 + 1 < na && rowFree(a1 + 1)) a1++;
-  return { kind: 'place', rect: laneRect(dir, { start: a0, len: a1 - a0 + 1 }, c) };
+  return { kind: 'place', rect: laneThrough(p.a, acrossAt(p.a, p.c, p.pc)) };
 }
 
 /** The lanes a roll brush touch lays, for the preview: exactly what `applyFloor` adds. */
 export function lanesLaid(a: FloorAction, product: string, roll: RollDir): FloorTile[] {
   if (a.kind === 'recolor') return [{ ...a.rect, product, roll }];
   if (a.kind !== 'place') return [];
-  return a.band ? layLanes(cellsIn(a.rect), product, roll, a.band) : [{ ...a.rect, product, roll }];
+  return (a.lanes ?? [a.rect]).map((r) => ({ ...r, product, roll }));
 }
 
 /** Apply a brush touch. `roll`: the lane's direction when the brush lays rolled floor. */
@@ -377,6 +390,9 @@ export function applyFloor(v: Variant, a: FloorAction, product: string, roll?: R
   const tiles =
     a.kind === 'recolor'
       ? v.floor.tiles.map((t) => (sameRect(t, a.rect) ? { ...t, product } : t))
-      : [...cutTiles(v.floor.tiles, a.rect), ...(a.kind !== 'place' ? [] : roll ? lanesLaid(a, product, roll) : [{ ...a.rect, product }])];
+      : [
+          ...(a.kind === 'place' && a.lanes ? a.lanes.reduce<FloorTile[]>(cutTiles, v.floor.tiles) : cutTiles(v.floor.tiles, a.rect)),
+          ...(a.kind !== 'place' ? [] : roll ? lanesLaid(a, product, roll) : [{ ...a.rect, product }]),
+        ];
   return { ...v, floor: { ...v.floor, tiles } };
 }

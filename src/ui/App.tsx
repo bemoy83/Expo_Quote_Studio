@@ -507,7 +507,7 @@ function hint(tool: Tool, brush: Brush | null, roll = false): string {
         ? 'Klikk eller dra langs en innvendig takdrager for å fjerne den'
         : 'Dra langs rutenettet for innvendig takdrager · en ende på en annen takdrager henger på krok, ellers stolpe med fotplate · tegn en tverrdrager mot en stolpe for å spare fotplaten'
     case 'floor':
-      if (roll) return erase ? 'Klikk en bane for å fjerne den' : 'Klikk for en hel bane på ledig gulv, kappet der bare en smalere stripe er ledig · dra langs for en kortere bane, på tvers for flere baner side om side · R snur rulleretningen · klikk en bane for å bytte farge'
+      if (roll) return erase ? 'Klikk en bane for å fjerne den' : 'Klikk for en hel bane på ledig gulv, kappet der bare en smalere stripe er ledig · dra på tvers for flere hele baner side om side · R snur rulleretningen · klikk en bane for å bytte farge'
       return erase ? 'Klikk og dra for å fjerne gulv' : 'Klikk og dra for å tegne gulv · velg penselstørrelse i båndet'
     case 'opening':
       return erase ? 'Klikk en åpning for å gjøre den til vegg igjen' : 'Klikk en vegg eller en tom kant for å sette inn åpning med overstykke · klikk en åpning for å bytte fyll'
