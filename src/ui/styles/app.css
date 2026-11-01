@@ -2168,8 +2168,8 @@ select.cin {
   background: var(--well-hover);
 }
 .picker-tile[aria-pressed='true'] {
-  background: rgb(var(--surface));
-  box-shadow: var(--raise), inset 0 0 0 1.5px rgb(var(--ink));
+  background: rgb(var(--ink));
+  color: rgb(var(--canvas));
 }
 .picker-thumb {
   height: 28px;
@@ -2239,8 +2239,7 @@ select.cin {
   display: block;
 }
 .picker-motif[aria-pressed='true'] {
-  background: rgb(var(--surface));
-  box-shadow: var(--raise), inset 0 0 0 1.5px rgb(var(--ink));
+  background: rgb(var(--ink));
 }
 .picker-thumb .swatch {
   display: block;
@@ -2350,6 +2349,10 @@ select.cin {
 }
 .q-motif[aria-pressed='true'],
 .q-obj[aria-pressed='true'] {
-  background: rgb(var(--surface));
-  box-shadow: inset 0 0 0 1.5px rgb(var(--ink));
+  background: rgb(var(--ink));
+}
+/* Chosen = ink, inverted: drawn furniture keeps its fill, its outline turns light */
+.q-obj[aria-pressed='true'] svg *,
+.picker-tile[aria-pressed='true'] .picker-thumb svg * {
+  stroke: rgb(var(--canvas));
 }
