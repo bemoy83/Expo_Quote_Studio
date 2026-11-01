@@ -31,7 +31,8 @@ import { QuotePage } from './quote/QuotePage'
 import { TopNav, type Page } from './shell/TopNav'
 import { WorkOrderPage } from './workorder/WorkOrderPage'
 import { VariantTabs } from './shell/VariantTabs'
-import { FLOOR_SIZES, gridSteps, type Brush, type FloorSize, type Highlight, type Tool } from './tools'
+import { FLOOR_MAIN, FLOOR_OTHER, floorSizeLabel, gridSteps, type Brush, type Highlight, type Tool } from './tools'
+import { TILE_FULL, type FloorBrushSize, type TileSize } from '../domain/floor'
 import { GridPicker } from './plan/GridPicker'
 import type { GridStep } from '../domain/snapGrid'
 
@@ -81,7 +82,9 @@ export default function App() {
   const [tab, setTabRaw] = useState('stand')
   const [tool, setTool] = useState<Tool>('select')
   const [brush, setBrush] = useState<Brush | null>(null)
-  const [floorSize, setFloorSize] = useState<FloorSize>(FLOOR_SIZES[0].size)
+  const [floorSize, setFloorSize] = useState<FloorBrushSize>(TILE_FULL)
+  /** Last of the smaller tile sizes, so «Andre» comes back to it. */
+  const [otherSize, setOtherSize] = useState<TileSize>(FLOOR_OTHER[0].size)
   const [gridStep, setGridStep] = useState<GridStep>(1)
   const [highlight, setHighlight] = useState<Highlight>(null)
   const [selection, setSelection] = useState<PlanSelection>({})
@@ -282,13 +285,31 @@ export default function App() {
                 />
               )}
               {view === 'plan' && tool !== 'select' && brush?.kind === 'floor' && (
-                <Segmented<string>
-                  onBand
-                  label="Penselstørrelse"
-                  value={FLOOR_SIZES.find((s) => s.size.w === floorSize.w && s.size.h === floorSize.h)!.label}
-                  onChange={(l) => setFloorSize(FLOOR_SIZES.find((s) => s.label === l)!.size)}
-                  options={FLOOR_SIZES.map((s) => ({ value: s.label, label: <span className="num">{s.label}</span> }))}
-                />
+                <>
+                  <Segmented<string>
+                    onBand
+                    label="Penselstørrelse"
+                    value={FLOOR_MAIN.some((s) => s.label === floorSizeLabel(floorSize)) ? floorSizeLabel(floorSize) : 'Andre'}
+                    onChange={(l) => setFloorSize(FLOOR_MAIN.find((s) => s.label === l)?.size ?? otherSize)}
+                    options={[
+                      ...FLOOR_MAIN.map((s) => ({ value: s.label, title: s.title, label: <span className="num">{s.label}</span> })),
+                      { value: 'Andre', title: 'Mindre fliser: 1 × 0,5, 0,5 × 1 og 0,5 × 0,5', label: 'Andre' },
+                    ]}
+                  />
+                  {floorSize !== 'auto' && FLOOR_OTHER.some((s) => s.label === floorSizeLabel(floorSize)) && (
+                    <Segmented<string>
+                      onBand
+                      label="Mindre fliser"
+                      value={floorSizeLabel(floorSize)}
+                      onChange={(l) => {
+                        const size = FLOOR_OTHER.find((s) => s.label === l)!.size
+                        setOtherSize(size)
+                        setFloorSize(size)
+                      }}
+                      options={FLOOR_OTHER.map((s) => ({ value: s.label, label: <span className="num">{s.label}</span> }))}
+                    />
+                  )}
+                </>
               )}
               {view === 'plan' && tool === 'brush' && (brush?.kind === 'wall' || brush?.kind === 'textile') && (
                 <GridPicker
