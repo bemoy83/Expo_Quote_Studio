@@ -2046,10 +2046,6 @@ select.cin {
   margin-left: -8px;
   height: 3px;
   border-radius: 2px;
-  box-shadow: 0 0 0 1px rgb(var(--ink) / 0.15);
-}
-.dock-btn[aria-pressed='true'] .dock-stripe {
-  box-shadow: 0 0 0 1px rgb(var(--canvas) / 0.6);
 }
 /* What Vegg draws when it is not wall: door, curtain or beam */
 .dock-mark {
