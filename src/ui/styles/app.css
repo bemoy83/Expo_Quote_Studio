@@ -2356,3 +2356,9 @@ select.cin {
 .picker-tile[aria-pressed='true'] .picker-thumb svg * {
   stroke: rgb(var(--canvas));
 }
+/* Drawn furniture in the dock: a firmer outline, so light and dark pieces both read */
+.q-obj svg *,
+.picker-thumb svg circle,
+.picker-thumb svg rect {
+  stroke-width: 1.4;
+}
