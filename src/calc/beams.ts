@@ -43,10 +43,8 @@ export function variantBeams(v: Variant, moduleKeys: ReadonlySet<string>, wallPo
 
 /**
  * Takdrager along the open parts of the perimeter. A perimeter edge with a wall module (an opening included) is closed.
- * A wall ending under a run splits it there. Posts go at every joint and every run end; ends resting on a wall share
- * the wall's post.
- * From every joint a cross beam runs inward to the opposite side, or to a wall running along its line. A wall meeting or
- * crossing it splits it there.
+ * Posts go at every joint and every run end; ends resting on a wall share the wall's post. From every joint a cross beam
+ * runs inward to the opposite side, or to a wall running along its line. A wall meeting or crossing any run splits it.
  */
 export function layoutBeams(
   stand: Stand,
@@ -58,7 +56,9 @@ export function layoutBeams(
   const posts = new Map<string, Point>();
   const joints: { side: Side; at: Point }[] = [];
   const addPost = (p: Point) => posts.set(pointKey(p), p);
+  const wall = (a: Point, b: Point) => moduleKeys.has(makeModule(a, b).key);
 
+  /** One length from `from` to `to`, split by the max length. Returns the joints in between. */
   const pushSplit = (from: Point, to: Point, side: Side, cross: boolean): Point[] => {
     const total = Math.abs(to[0] - from[0]) + Math.abs(to[1] - from[1]);
     const inner: Point[] = [];
@@ -73,9 +73,28 @@ export function layoutBeams(
     return inner;
   };
 
+  /**
+   * A run along the grid line `at(t)`, t from `from` to `to`. A wall meeting or crossing the run breaks it: beam and wall
+   * share that post, and each side is its own length, split by the max. Posts at every break and joint; returns the joints.
+   */
+  const layRun = (at: (t: number) => Point, from: number, to: number, side: Side, cross: boolean): Point[] => {
+    const out: Point[] = [];
+    let a = from;
+    for (let t = from + 1; t <= to; t++) {
+      if (t < to && !wallPoints.has(pointKey(at(t)))) continue;
+      out.push(...pushSplit(at(a), at(t), side, cross));
+      addPost(at(a));
+      addPost(at(t));
+      a = t;
+    }
+    out.forEach(addPost);
+    return out;
+  };
+
   for (const side of SIDES) {
     const n = sideLength(stand, side);
-    const closed = (t: number) => moduleKeys.has(makeModule(sidePoint(stand, side, t), sidePoint(stand, side, t + 1)).key);
+    const at = (t: number) => sidePoint(stand, side, t);
+    const closed = (t: number) => wall(at(t), at(t + 1));
     let i = 0;
     while (i < n) {
       if (closed(i)) {
@@ -84,51 +103,25 @@ export function layoutBeams(
       }
       let e = i;
       while (e < n && !closed(e)) e++;
-      // A wall ending under the run (an inner or room wall meeting it from inside) breaks it: beam and wall share
-      // that post, and each side is its own length. Only the 6 m joints get a cross beam; a wall already holds these.
-      const breaks = [i];
-      for (let t = i + 1; t < e; t++) if (wallPoints.has(pointKey(sidePoint(stand, side, t)))) breaks.push(t);
-      breaks.push(e);
-      for (let q = 1; q < breaks.length; q++) {
-        const from = sidePoint(stand, side, breaks[q - 1]);
-        const to = sidePoint(stand, side, breaks[q]);
-        for (const j of pushSplit(from, to, side, false)) {
-          addPost(j);
-          joints.push({ side, at: j });
-        }
-        addPost(from);
-        addPost(to);
-      }
+      // Only the max-length joints get a cross beam; at a wall the wall holds the beam.
+      for (const j of layRun(at, i, e, side, false)) joints.push({ side, at: j });
       i = e;
     }
   }
 
-  // Cross beams run on past a wall that meets or crosses them (they hold the facing wall, which would otherwise span too
-  // far): split there on the wall's post. They stop only where a wall runs along their line.
-  const wall = (a: Point, b: Point) => moduleKeys.has(makeModule(a, b).key);
+  // Cross beams hold the facing wall, which would otherwise span too far: they run on past walls meeting or crossing
+  // them, and stop only where a wall runs along their line.
   const seen = new Set<string>();
-  for (const { side, at } of joints) {
+  for (const { side, at: from } of joints) {
     const [dx, dy] = inward(side);
-    const pt = (t: number): Point => [at[0] + dx * t, at[1] + dy * t];
+    const at = (t: number): Point => [from[0] + dx * t, from[1] + dy * t];
     const reach = side === 'back' || side === 'front' ? stand.depth : stand.width;
-    let stop = reach;
-    const breaks = [0];
-    for (let t = 1; t <= reach; t++) {
-      if (wall(pt(t - 1), pt(t))) {
-        stop = t - 1;
-        break;
-      }
-      if (t < reach && wallPoints.has(pointKey(pt(t)))) breaks.push(t);
-    }
-    if (stop === 0) continue;
-    const stops = [...breaks.filter((t) => t < stop), stop];
-    const key = [pointKey(at), pointKey(pt(stop))].sort().join('|');
-    if (seen.has(key)) continue;
+    let stop = 0;
+    while (stop < reach && !wall(at(stop), at(stop + 1))) stop++;
+    const key = [pointKey(from), pointKey(at(stop))].sort().join('|');
+    if (stop === 0 || seen.has(key)) continue;
     seen.add(key);
-    for (let q = 1; q < stops.length; q++) {
-      for (const j of pushSplit(pt(stops[q - 1]), pt(stops[q]), side, true)) addPost(j);
-      addPost(pt(stops[q]));
-    }
+    layRun(at, 0, stop, side, true);
   }
 
   return { segments, posts, lm: segments.reduce((a, s) => a + s.length, 0) };
