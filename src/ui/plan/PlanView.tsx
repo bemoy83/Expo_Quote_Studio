@@ -346,7 +346,7 @@ export function PlanView(p: Props) {
       // A room's own wall resizes the room; an inner wall moves
       const room = w.room && v.rooms.find((r) => r.id === w.room!.id)
       if (room) startRoomDrag(room, w.room!.side, q, select)
-      else if (canMoveWall(w)) drag.current = { kind: 'wall', id: w.id, p0: q, v0: v, delta: 0, horizontal: w.from[1] === w.to[1], moved: false, select }
+      else if (canMoveWall(w)) drag.current = { kind: 'wall', id: w.id, p0: q, v0: v, delta: '0,0', horizontal: w.from[1] === w.to[1], moved: false, select }
       else drag.current = { kind: 'click', select }
       return
     }

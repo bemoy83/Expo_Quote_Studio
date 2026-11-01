@@ -22,7 +22,7 @@ hva slags vegg det er.
 | | Standvegg | Innervegg | Romvegg |
 | --- | --- | --- | --- |
 | Kommer fra | Standtype | Tegnes | Rommet |
-| Flytte | Nei | Ja, i hele meter, helt ut til kanten, men ikke inn på en standvegg | Via rommet (dra siden eller rommet) |
+| Flytte | Nei | Ja, i hele meter, helt ut til kanten, men ikke inn på en standvegg. Frittstående: i begge retninger. Står den inntil en annen innervegg: bare til siden, så skjøten ikke dras fra hverandre | Via rommet (dra siden eller rommet) |
 | Fjerne | Nei | Ja | Siden kan åpnes |
 | Dør eller forheng | Nei | Ja | Ja |
 | Plate-farge | Ja | Ja | Ja (per rom) |

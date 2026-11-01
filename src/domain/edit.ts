@@ -340,22 +340,33 @@ export function isPerimeterWall(stand: Stand, w: Wall): boolean {
   );
 }
 
+/** True when an end of one wall lies on the other (corner, T or end to end). */
+function touches(a: Wall, b: Wall): boolean {
+  const on = (p: Point, w: Wall) =>
+    p[0] >= Math.min(w.from[0], w.to[0]) && p[0] <= Math.max(w.from[0], w.to[0]) && p[1] >= Math.min(w.from[1], w.to[1]) && p[1] <= Math.max(w.from[1], w.to[1]);
+  return on(a.from, b) || on(a.to, b) || on(b.from, a) || on(b.to, a);
+}
+
 /** Walls the user can drag sideways: inner walls, also on the stand's edge. Not stand walls, not room sides. */
 export const canMoveWall = (w: Wall) => !w.room && !isStandWall(w);
 
 /**
- * Move an inner wall sideways by `delta` whole metres (along its normal axis: y for horizontal walls, x for vertical).
- * Perpendicular drawn walls ending on it stretch or shrink with it, so walls drawn around an area resize like a room.
+ * Move an inner wall sideways by `delta` whole metres (along its normal axis: y for horizontal walls, x for vertical),
+ * and `along` whole metres in its own direction. Perpendicular drawn walls ending on it stretch or shrink with it
+ * sideways, so walls drawn around an area resize like a room. It moves along its length only while no other inner wall
+ * touches it, so a joint is never pulled apart (Bjørn 1.11.2026: a free-standing wall moves both ways).
  * Its openings, textiles and foils move with it. It may go all the way out to the stand's edge and stays an inner
  * wall there. Refused (returns v) for stand walls, room walls (see rooms.ts), moves outside the stand and moves onto a
  * stand wall.
  */
-export function moveWall(v: Variant, wallId: string, delta: number): Variant {
+export function moveWall(v: Variant, wallId: string, delta: number, along = 0): Variant {
   const w = v.walls.find((x) => x.id === wallId);
-  if (!w || !delta || !canMoveWall(w)) return v;
+  if (!w || (!delta && !along) || !canMoveWall(w)) return v;
   const horizontal = w.from[1] === w.to[1];
+  if (along && v.walls.some((o) => o.id !== w.id && canMoveWall(o) && touches(w, o))) return v;
   const shift = (p: Point): Point => (horizontal ? [p[0], p[1] + delta] : [p[0] + delta, p[1]]);
-  const moved: Wall = { ...w, from: shift(w.from), to: shift(w.to) };
+  const slide = (p: Point): Point => (horizontal ? [p[0] + along, p[1]] : [p[0], p[1] + along]);
+  const moved: Wall = { ...w, from: slide(shift(w.from)), to: slide(shift(w.to)) };
   const inside = (p: Point) => p[0] >= 0 && p[1] >= 0 && p[0] <= v.stand.width && p[1] <= v.stand.depth;
   if (!inside(moved.from) || !inside(moved.to)) return v;
   const locked = standWallKeys(v);

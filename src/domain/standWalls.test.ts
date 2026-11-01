@@ -28,6 +28,20 @@ describe('stand walls and inner walls', () => {
     expect(moveWall(v, id, -1).walls.find((x) => x.id === id)!.from).toEqual([1, 3]);
   });
 
+  it('a free-standing inner wall moves both ways; one joined to another only sideways', () => {
+    let v = paintWalls(row(), [1, 2], [3, 2]);
+    const id = inner(v)[0].id;
+    const at = (x: Variant) => x.walls.find((w) => w.id === id)!;
+    expect(at(moveWall(v, id, 0, 2))).toMatchObject({ from: [3, 2], to: [5, 2] });
+    expect(at(moveWall(v, id, -1, 1))).toMatchObject({ from: [2, 1], to: [4, 1] });
+    // Not past the stand's edge
+    expect(moveWall(v, id, 0, 4)).toBe(v);
+    // A second inner wall at its end: along the length would pull the corner apart
+    v = paintWalls(v, [3, 2], [3, 3]);
+    expect(moveWall(v, id, 0, 1)).toBe(v);
+    expect(at(moveWall(v, id, 1))).toMatchObject({ from: [1, 3], to: [3, 3] });
+  });
+
   it('an inner wall can not be moved onto a stand wall', () => {
     let v = paintWalls(row(), [4, 1], [4, 3]);
     const id = inner(v)[0].id;

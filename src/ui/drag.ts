@@ -12,19 +12,27 @@ export interface WallDrag {
   p0: { x: number; y: number }
   /** The variant when the drag started; every step moves the wall from here. */
   v0: Variant
-  /** Whole metres moved so far. */
-  delta: number
+  /** Whole metres moved so far, sideways and along the wall ("side,along"). */
+  delta: string
   horizontal: boolean
 }
 
-/** Move an inner wall to whole metres under the pointer. One undo step per drag. */
+/** Move an inner wall to whole metres under the pointer, both ways when it stands free, else only sideways. One undo
+ *  step per drag. */
 export function dragWall(d: WallDrag, q: { x: number; y: number }, onEdit: Edit, onCheckpoint: () => void) {
-  const delta = Math.round(d.horizontal ? q.y - d.p0.y : q.x - d.p0.x)
-  if (delta === d.delta) return
-  const next = moveWall(d.v0, d.id, delta)
-  if (next === d.v0 && delta !== 0) return
-  if (d.delta === 0) onCheckpoint()
-  d.delta = delta
+  const side = Math.round(d.horizontal ? q.y - d.p0.y : q.x - d.p0.x)
+  const along = Math.round(d.horizontal ? q.x - d.p0.x : q.y - d.p0.y)
+  let next = moveWall(d.v0, d.id, side, along)
+  let key = `${side},${along}`
+  // Joined to another wall: it only moves sideways
+  if (next === d.v0 && along) {
+    next = moveWall(d.v0, d.id, side)
+    key = `${side},0`
+  }
+  if (key === d.delta) return
+  if (next === d.v0 && key !== '0,0') return
+  if (d.delta === '0,0') onCheckpoint()
+  d.delta = key
   onEdit(() => next, false)
 }
 
