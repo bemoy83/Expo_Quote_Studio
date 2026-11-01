@@ -278,9 +278,13 @@ function slot(anchor: { i: number; j: number }, ci: number, cj: number, { w, h }
 /** Decide what a brush touch at the pointer does. Pure, so the plan can preview it. */
 export function floorAction(v: Variant, t: FloorTouch): FloorAction {
   const s = standCells(v.stand);
-  const ci = Math.floor(t.x);
-  const cj = Math.floor(t.y);
+  // A roll stroke that leaves the stand goes on as if the pointer stopped at the edge
+  const stroke = isRoll(t.size) && !!t.from;
+  const clamp = (x: number, n: number) => (stroke ? Math.max(0, Math.min(n - 1, x)) : x);
+  const ci = clamp(Math.floor(t.x), s.nx);
+  const cj = clamp(Math.floor(t.y), s.ny);
   if (ci < 0 || cj < 0 || ci >= s.nx || cj >= s.ny) return { kind: 'none' };
+  if (stroke && (t.from!.x < 0 || t.from!.y < 0 || t.from!.x >= s.nx || t.from!.y >= s.ny)) return { kind: 'none' };
   const tiles = v.floor.tiles;
   const under = tileAt(tiles, ci, cj);
 

@@ -588,6 +588,7 @@ export function PlanView(p: Props) {
       onPointerCancel={() => {
         drag.current = null
         setStroke(null)
+        setRollPending(null)
       }}
       onPointerLeave={() => setHover(null)}
       onDragOver={onDragOver}

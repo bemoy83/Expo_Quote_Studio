@@ -132,6 +132,11 @@ describe('rolled floor in lanes', () => {
     expect(lanes(touch(v0, 6.5, 0.5, { from: { x: 2.5, y: 5.5 } }))).toEqual([[0, 0, 10, 2, 'x', A], [0, 2, 10, 4, 'x', A]]);
   });
 
+  it('a drag that leaves the stand keeps its lanes, as if the pointer stopped at the edge', () => {
+    expect(lanes(touch(v0, 4, 9, { from: { x: 0.5, y: 0.5 } }))).toEqual([[0, 0, 10, 4, 'x', A], [0, 4, 10, 2, 'x', A]]);
+    expect(lanes(touch(v0, -3, -2, { from: { x: 2.5, y: 2.2 } }))).toEqual([[0, 0, 10, 4, 'x', A]]);
+  });
+
   it('a click on a lane of another colour recolours it; the eraser takes the whole lane', () => {
     const v = fillFloor(v0, A, 2);
     expect(lanes(touch(v, 3, 1, { product: B }))[0]).toEqual([0, 0, 10, 4, 'x', B]);
