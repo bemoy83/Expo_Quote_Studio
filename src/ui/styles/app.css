@@ -287,7 +287,8 @@ kbd {
   box-sizing: border-box;
   border-radius: var(--r-pop);
   background: rgb(var(--panel));
-  box-shadow: var(--pop), 0 0 0 1px rgb(var(--border-strong));
+  /* No outlines on cards or buttons: the shadow alone lifts it */
+  box-shadow: var(--pop);
   color: rgb(var(--ink));
 }
 
@@ -923,8 +924,7 @@ kbd {
   background: rgb(var(--surface));
 }
 .mot.on {
-  background: rgb(var(--surface));
-  box-shadow: var(--raise), inset 0 0 0 1.5px rgb(var(--ink));
+  background: rgb(var(--ink));
 }
 
 /* ---------- Profilering: textile rows and motif library ---------- */
@@ -1531,12 +1531,15 @@ kbd {
   color: rgb(var(--ink));
 }
 .chip-toggle[aria-pressed='true'] {
-  background: rgb(var(--surface));
-  box-shadow: var(--raise), inset 0 0 0 1.5px rgb(var(--ink));
+  background: rgb(var(--ink));
+  color: rgb(var(--canvas));
 }
 .chip-toggle .num {
   font: var(--type-num-sm);
   color: rgb(var(--ink-muted));
+}
+.chip-toggle[aria-pressed='true'] .num {
+  color: rgb(var(--canvas) / 0.7);
 }
 .ph-dot {
   width: 8px;
@@ -2258,8 +2261,6 @@ select.cin {
   cursor: default;
 }
 .cp-card {
-  /* No outline on cards and buttons in this app: the shadow alone lifts it */
-  box-shadow: var(--pop);
   padding: 10px;
   display: flex;
   flex-direction: column;
