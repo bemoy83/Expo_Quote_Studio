@@ -15,7 +15,7 @@ import { alongRun, cornerPosts } from '../../calc/freeFrames'
 import type { Motif } from '../../persistence/file'
 import type { Point, Room, Side, Variant, Wall } from '../../domain/types'
 import { builtModules, type BuiltModule } from '../../domain/walls'
-import { BORDER, BORDER_STRONG, BLOCK, CANVAS, INK, INK_FAINT, INK_MUTED, LAYER_COLOR, SURFACE } from '../colors'
+import { BORDER, BORDER_STRONG, BLOCK, CANVAS, INK, INK_FAINT, INK_MUTED, jointColor, LAYER_COLOR, SURFACE } from '../colors'
 import { applyDrop, decorDrag, endDecorDrag, type DecorDrag } from '../dnd'
 import { drawInnerBeam, eraseInnerBeams, innerBeamAt, type Run } from '../../domain/innerBeams'
 import { dragInnerBeam, dragRoom, dragWall, dropObject, dropRoom, roomDrag, type RoomDrag, type WallDrag } from '../drag'
@@ -94,8 +94,8 @@ const SIDE_LABEL: Record<Side, string> = { back: 'Bak', front: 'Front', left: 'V
 const WALL = LAYER_COLOR.walls
 const TEXTILE = LAYER_COLOR.textile
 
-/** Joints between carpet tiles: dark enough to read on any floor colour. */
-const JOINT = 'rgb(0 0 0 / .18)'
+/** Joints between carpet tiles, m: wide enough to read in the small plan on the quote and the work order. */
+const JOINT_WIDTH = 0.025
 /** Half-metre lines while painting floor. */
 const GRID_FINE = 'rgb(0 0 0 / .1)'
 /** Opacity of layers outside the hovered calc group. */
@@ -590,8 +590,8 @@ export function PlanView(p: Props) {
               width={t.w * CELL}
               height={t.h * CELL}
               fill={hit.variant.color}
-              stroke={hit.product.tiles ? JOINT : hit.variant.color}
-              strokeWidth={hit.product.tiles ? 0.012 : 0.004}
+              stroke={hit.product.tiles ? jointColor(hit.variant.color) : hit.variant.color}
+              strokeWidth={hit.product.tiles ? JOINT_WIDTH : 0.004}
             />
           )
         })}
