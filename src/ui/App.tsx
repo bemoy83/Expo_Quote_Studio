@@ -3,7 +3,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useRef, us
 import { calc, type CalcResult } from '../calc/calc'
 import { r2 } from '../calc/referenceStands'
 import { addObject } from '../domain/objects'
-import { removeRoom, roomSize } from '../domain/rooms'
+import { addDefaultRoom, removeRoom, roomSize } from '../domain/rooms'
 import type { StandWallTerms, Variant } from '../domain/types'
 import { customerName, fillFloor, standWallTerms } from '../domain/variant'
 import { newSketch, parse, serialize, type Sketch } from '../persistence/file'
@@ -20,7 +20,7 @@ import { Rail } from './panel/Rail'
 import { PlanPreview, PlanView, type PlanSelection } from './plan/PlanView'
 import { FreeTextileDrawer } from './plan/FreeTextileDrawer'
 import { WallDrawer } from './plan/WallDrawer'
-import { findMotif, motifLibrary } from './motifs'
+import { findMotif, motifLibrary, readMotif } from './motifs'
 import { fitDecor, removeFoil, removeTextile } from '../domain/decor'
 import { fitFreeTextiles, removeFreeTextile } from '../domain/freeTextile'
 import { removeInnerBeam } from '../domain/innerBeams'
@@ -35,7 +35,6 @@ import { dockToolOf, FLOOR_OTHER, penToolOf, type Brush, type DockTool, type Hig
 import { longestSide, TILE_FULL, type FloorBrushSize, type RollDir, type TileSize } from '../domain/floor'
 import { ToolDock } from './plan/ToolDock'
 import { QuickPicks } from './plan/QuickPicks'
-import { BrushPicker } from './plan/BrushPicker'
 import type { GridStep } from '../domain/snapGrid'
 
 // three.js is only loaded when the 3D view is opened
@@ -82,7 +81,7 @@ export default function App() {
   const [page, setPage] = useState<Page>('skisse')
   const [view, setView] = useState<'plan' | '3d'>('plan')
   const [tab, setTabRaw] = useState('stand')
-  const [tool, setToolRaw] = useState<Tool>('select')
+  const [tool, setTool] = useState<Tool>('select')
   const [brush, setBrush] = useState<Brush | null>(null)
   const [floorSize, setFloorSize] = useState<FloorBrushSize>(TILE_FULL)
   /** Last of the smaller tile sizes, so «Andre» comes back to it. */
@@ -93,17 +92,11 @@ export default function App() {
   const rollBrush = brush?.kind === 'floor' && !!idx.byArtnr.get(brush.product)?.product.roll
   const [gridStep, setGridStep] = useState<GridStep>(1)
   const [highlight, setHighlight] = useState<Highlight>(null)
-  /** «Alle valg» over the dock, opened by clicking the active tool. Any change of tool closes it. */
-  const [pickerOpen, setPickerOpen] = useState(false)
   /** The pen each drawing tool last drew with, so switching tools brings it back. */
   const [pens, setPens] = useState<Partial<Record<PenTool, Brush>>>({})
   /** Colour the wall tool draws new inner walls with; follows the stand's wall plate until a colour is picked. */
   const [wallPen, setWallPen] = useState<string | null>(null)
   const wallRal = wallPen ?? v.defaultPlate
-  const setTool = (t: Tool) => {
-    setPickerOpen(false)
-    setToolRaw(t)
-  }
   const [selection, setSelection] = useState<PlanSelection>({})
   const [toast, showToast] = useToast()
   const fileInput = useRef<HTMLInputElement>(null)
@@ -163,20 +156,18 @@ export default function App() {
     return { kind: 'object', product: used ?? catalog.products.find((x) => x.kind === 'object' && !x.opening)!.variants[0].artnr }
   }
   const active = dockToolOf(tool, brush)
-  /** Click on a dock tool (or its key): another tool activates it, the active one opens or closes «Alle valg». */
+  /** Click on a dock tool (or its key). The active drawing tool keeps its pen. */
   const activate = (t: DockTool) => {
-    if (t === active && t !== 'select' && t !== 'erase') return setPickerOpen(!pickerOpen)
+    if (t === active) return
     if (t === 'select' || t === 'erase') {
       setTool(t)
       if (t === 'erase') setView('plan')
       return
     }
-    const keep = pickerOpen
     pick(penFor(t))
-    if (keep) setPickerOpen(true)
   }
 
-  // Keyboard: V S G T M E (dock tools; twice opens «Alle valg»), P (last pen), R (roll direction), ⌘Z / ⇧⌘Z, Delete
+  // Keyboard: V S G T M E (dock tools), P (last pen), R (roll direction), ⌘Z / ⇧⌘Z, Delete
   // for the selected object
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -190,8 +181,7 @@ export default function App() {
       }
       if (mod || e.altKey) return
       const k = e.key.toLowerCase()
-      if (k === 'escape' && pickerOpen) setPickerOpen(false)
-      else if (k === 'escape') setTool('select')
+      if (k === 'escape') setTool('select')
       else if (k === 'p' && brush) {
         setTool('brush')
         setView('plan')
@@ -257,6 +247,24 @@ export default function App() {
     const product = brush.product
     onEdit((x) => fillFloor(x, product, idx.byArtnr.get(product)?.product.roll))
   }
+  /** Bakrom from the wall tool: 1 × 1 m with a door in a free corner, as in the panel. */
+  const addRoom = () => {
+    const door = catalog.products.find((p) => p.opening === 'door')!.variants[0].artnr
+    const next = addDefaultRoom(v, door)
+    if (next) onEdit(() => next)
+    else showToast('Ingen ledige hjørner til bakrom')
+  }
+  /** A customer's own motif, uploaded from the profiling tool: added to the library and taken as the pen. */
+  const uploadMotif = async (f: File) => {
+    try {
+      const m = await readMotif(f, motifs.map((x) => x.id))
+      dispatch({ type: 'motifs', motifs: [...sketch.motifs, m] })
+      pick({ kind: 'motif', motif: m.id })
+      showToast(`${m.name} lagt til i grafikkbiblioteket`)
+    } catch (e) {
+      showToast((e as Error).message)
+    }
+  }
   const quick = (
     <QuickPicks
       tool={active}
@@ -266,7 +274,9 @@ export default function App() {
       wallRal={wallRal}
       motifs={motifs}
       onPick={(b) => pick(b)}
-      onMore={() => setPickerOpen(!pickerOpen)}
+      onMore={() => active !== 'select' && active !== 'erase' && setTabRaw(PANEL_TAB[active])}
+      onAddRoom={addRoom}
+      onUpload={uploadMotif}
       floorSize={floorSize}
       onFloorSize={setFloorSize}
       otherSize={otherSize}
@@ -425,11 +435,6 @@ export default function App() {
                   canRedo={state.future.length > 0}
                   onUndo={() => dispatch({ type: 'undo' })}
                   onRedo={() => dispatch({ type: 'redo' })}
-                  picker={
-                    pickerOpen && active !== 'select' && active !== 'erase' ? (
-                      <BrushPicker tool={active} brush={brush} wallRal={wallRal} motifs={motifs} onPick={(b) => pick(b)} onClose={() => setPickerOpen(false)} />
-                    ) : undefined
-                  }
                 >
                   {quick}
                 </ToolDock>
@@ -498,6 +503,9 @@ export default function App() {
   }
 
 }
+
+/** «…» on the quick picks opens the panel on the tool's tab, where all its options are. */
+const PANEL_TAB: Record<PenTool, string> = { wall: 'vegg', floor: 'gulv', profile: 'prof', object: 'mob' }
 
 const DOCK_KEYS: Record<string, DockTool> = { v: 'select', s: 'wall', g: 'floor', t: 'profile', m: 'object', e: 'erase' }
 

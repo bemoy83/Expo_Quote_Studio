@@ -1,6 +1,7 @@
-// Quick picks over the active tool in the dock. Fixed places, so the hand learns where the colours are; the last button
-// («…») opens all the tool's options. The tool's own settings (floor size or roll direction, drawing grid) sit here too.
-import { Blinds, DoorClosed, Ellipsis, PaintBucket } from 'lucide-react'
+// Quick picks over the active tool in the dock: everything the tool draws, in fixed places so the hand learns where the
+// colours are. The tool's own settings (floor type, size or roll direction, drawing grid) sit here too, and the last
+// button («…») opens the panel on the tool's tab for the rest.
+import { Blinds, Box, DoorClosed, Ellipsis, PaintBucket, Upload } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { mainGroupOf } from '../../catalog/groups'
 import type { RollDir, FloorBrushSize, TileSize } from '../../domain/floor'
@@ -21,7 +22,12 @@ export interface QuickPicksProps {
   wallRal: string
   motifs: Motif[]
   onPick: (b: Brush) => void
+  /** Open the panel on the tool's tab. */
   onMore: () => void
+  /** Add a 1 × 1 m bakrom in a free corner. */
+  onAddRoom: () => void
+  /** Add the customer's own motif to the library. */
+  onUpload: (f: File) => void
   floorSize: FloorBrushSize
   onFloorSize: (s: FloorBrushSize) => void
   otherSize: TileSize
@@ -34,6 +40,11 @@ export interface QuickPicksProps {
 }
 
 const MAX = 8
+/** Motifs on the pill: the newest of the library (the customer's own come last), plus the chosen one. */
+const MOTIFS = 5
+
+/** Short names for the floor types on the pill. */
+const FLOOR_SHORT: Record<string, string> = { Teppefliser: 'Fliser', Engangsteppe: 'Engangs', Vinylgulv: 'Vinyl' }
 
 /** The quick pill over the active tool, or nothing when the tool has none (Velg, and Tøm without a floor brush). */
 export function QuickPicks(p: QuickPicksProps) {
@@ -80,7 +91,7 @@ function quickContent(p: QuickPicksProps): ReactNode {
   if (tool === 'select') return null
 
   const more = (
-    <button type="button" className="q-btn q-more" title="Alle valg" aria-label="Alle valg" onClick={p.onMore}>
+    <button type="button" className="q-btn q-more" title="Alle valg i panelet" aria-label="Alle valg i panelet" onClick={p.onMore}>
       <Ellipsis size={15} />
     </button>
   )
@@ -108,6 +119,9 @@ function quickContent(p: QuickPicksProps): ReactNode {
         <QBtn on={is({ kind: 'beam' })} title="Innvendig takdrager · dra langs rutenettet" label="Takdrager" onClick={() => onPick({ kind: 'beam' })}>
           <BeamIcon />
         </QBtn>
+        <QBtn title="Bakrom 1 × 1 m med dør i et ledig hjørne" label="Legg til bakrom" onClick={p.onAddRoom}>
+          <Box size={15} />
+        </QBtn>
         {more}
       </>
     )
@@ -115,9 +129,16 @@ function quickContent(p: QuickPicksProps): ReactNode {
 
   if (tool === 'floor') {
     const cur = brush?.kind === 'floor' ? idx.byArtnr.get(brush.product)?.product : undefined
+    const floors = catalog.products.filter((x) => mainGroupOf(x.group) === 'gulv' && x.kind === 'surface')
     return (
       <>
         {head}
+        <Segmented<string>
+          label="Gulvtype"
+          value={cur?.id ?? ''}
+          onChange={(id) => onPick({ kind: 'floor', product: floors.find((x) => x.id === id)!.variants[0].artnr })}
+          options={floors.map((x) => ({ value: x.id, title: x.name, label: FLOOR_SHORT[x.name] ?? x.name }))}
+        />
         {(cur?.variants ?? []).slice(0, MAX).map((x) => {
           const b: Brush = { kind: 'floor', product: x.artnr }
           return <Sw key={x.artnr} color={x.color} title={`${cur!.name} ${x.name.toLowerCase()} · ${x.artnr}`} on={is(b)} onClick={() => onPick(b)} />
@@ -153,14 +174,29 @@ function quickContent(p: QuickPicksProps): ReactNode {
           Tekstil
         </QBtn>
         <Sep />
-        {p.motifs.slice(0, 4).map((m) => {
-          const b: Brush = { kind: 'motif', motif: m.id }
-          return (
-            <button key={m.id} type="button" className="q-motif" aria-pressed={is(b)} title={`Motiv: ${m.name}`} onClick={() => onPick(b)}>
-              <img src={m.src} alt={m.name} draggable={false} />
-            </button>
-          )
-        })}
+        {p.motifs
+          .filter((m, i) => i >= p.motifs.length - MOTIFS || (brush?.kind === 'motif' && brush.motif === m.id))
+          .map((m) => {
+            const b: Brush = { kind: 'motif', motif: m.id }
+            return (
+              <button key={m.id} type="button" className="q-motif" aria-pressed={is(b)} title={`Motiv: ${m.name}`} onClick={() => onPick(b)}>
+                <img src={m.src} alt={m.name} draggable={false} />
+              </button>
+            )
+          })}
+        <label className="q-btn" title="Last opp kundens eget motiv" aria-label="Last opp motiv">
+          <Upload size={15} />
+          <input
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={(e) => {
+              const f = e.target.files?.[0]
+              if (f) p.onUpload(f)
+              e.target.value = ''
+            }}
+          />
+        </label>
         {brush?.kind === 'textile' && (
           <>
             <Sep />
