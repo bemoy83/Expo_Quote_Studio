@@ -76,7 +76,7 @@ const ITEMS: PriceItem[] = [
   item(ITEM.splice, '609 skjøtekobling', 'stk', 2, 5),
   item(ITEM.wallFixing, '520 brakett', 'stk', 2, 5),
   item(ITEM.foot('740'), '740 fotplate 400 × 400 mm', 'stk', 8, 18, pvt(0.5, 0.5, 0.5)),
-  item(ITEM.foot('750'), '750 fotplate 500 × 80 mm', 'stk', 6, 14, pvt(0.5, 0.5, 0.5)),
+  item(ITEM.foot('750'), '750 fotplate 500 × 80 mm med 795', 'stk', 6, 14, pvt(0.5, 0.5, 0.5)),
   item(ITEM.foot('730'), '730 fotplate 250 × 300 mm', 'stk', 6, 14, pvt(0.5, 0.5, 0.5)),
   // Textile is sold (the customer keeps it and can bring it back)
   item(ITEM.print, 'Trykt tekstil med silikonkant, per m²', 'm²', 260, 470, undefined, 'salg'),

@@ -106,8 +106,15 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
     s.posts,
   );
 
-  // Støtteplater under the posts of walls that stand free, loose: screwed on where the wall is put up
-  part(BOM_GROUP.posts, r.wall.support.foot.code, s.wallFeet ?? 0);
+  // Støtteplater under the posts of walls that stand free: the plate with its pin (M8) mounted, one piece, threaded
+  // into the post's centre channel on site
+  const sp = r.wall.support;
+  put(
+    BOM_GROUP.posts,
+    'stotteplate',
+    { artnr: '', name: `Fotplate ${sp.foot.code} med ${sp.pin}`, detail: [sp.foot.code, sp.pin].map((c) => `1 × ${c} (${fogaPart(c).artnr})`).join(' · '), preassembled: true },
+    s.wallFeet ?? 0,
+  );
 
   // Skinner: top and bottom rail between the posts with a 600 in each end, for every module. An opening (door or
   // curtain) gets the same rails in its header (overstykke) with a lower plate; the header is listed with the doors.

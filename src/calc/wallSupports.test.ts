@@ -52,7 +52,7 @@ describe('stand walls', () => {
     const res = calc({ ...row(3, 3), noBeams: true }, RULES, DEFAULT_CATALOG, ORGANISER);
     const l = res.groups.flatMap((g) => g.lines).find((x) => x.artnr === DEFAULT_CATALOG.system.wallSupport);
     expect(l).toMatchObject({ qty: 2, payer: 'utstiller', unit: 'stk' });
-    expect(res.bom.lines.find((b) => b.artnr === '876 750 93')?.qty).toBe(2);
+    expect(res.bom.lines.find((b) => b.name === 'Fotplate 750 med 795')).toMatchObject({ qty: 2, preassembled: true, detail: '1 × 750 (876 750 93) · 1 × 795 (876 745 92)' });
     expect(res.keyFigures.wallSupports).toBe(2);
   });
 });

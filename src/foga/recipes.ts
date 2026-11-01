@@ -13,8 +13,9 @@ export interface WallRecipe {
   /** Plate per walled module, ordered per RAL. Size is the order size (lysåpning 960 × 2420 + channel). */
   plate: { code: string; w: number; h: number };
   /** Støtteplate under a post of a wall that stands free (no takdrager frame), across the wall, by the same rule as
-   *  the free-standing textile wall (Bjørn 1.11.2026). calc/wallSupports.ts */
-  support: { foot: FootPlate; rule: SupportRule };
+   *  the free-standing textile wall (Bjørn 1.11.2026). calc/wallSupports.ts. `pin` is mounted on the plate (M8) and
+   *  threads into the post's centre channel: stored mounted, plate + pin is one piece. */
+  support: { foot: FootPlate; pin: string; rule: SupportRule };
 }
 
 export interface FrameRecipe {
@@ -109,7 +110,7 @@ export const RECIPES: Recipes = {
     bottomRail: '91',
     railCoupling: { code: '600', perEnd: 1 },
     plate: { code: 'HDF', w: 976, h: 2440 },
-    support: { foot: { code: '750', along: 80, across: 500 }, rule: SUPPORT },
+    support: { foot: { code: '750', along: 80, across: 500 }, pin: '795', rule: SUPPORT },
   },
   frame: { profile: '43TX', corner: '617', brace: '90', braceCoupling: { code: '600', perEnd: 1 }, wallFixing: { code: '520', perFrame: 2 } },
   freeFrame: {

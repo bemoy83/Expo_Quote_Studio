@@ -67,6 +67,7 @@ Hull for 600, 608 og 615B: Ø 10 mm, **28,6 mm fra profilenden**.
 | 730 | 876 730 92 | Fotplate 250 × 300 × 5 mm |
 | 740 | 876 740 92 | Fotplate 400 × 400 × 5 mm |
 | 750 | 876 750 93 | Fotplate 500 × 80 × 5 mm |
+| 795 | 876 745 92 | Firkantet stolpefeste for fotplate, M8 (tres inn i senterkanalen på 94) |
 | 300B / 450B | 876 750 92 / 876 720 92 | Rund Ø 300 / Ø 450 mm |
 | 720 | 876 720 22 | Fot eller hyllebrakett 20 × 10 × 300 mm |
 
@@ -137,7 +138,8 @@ etter samme regel som frittstående tekstilvegg. Det gjelder alle vegger når ta
 romvegger som takdragerne ikke holder, også når takdragerne er på (`calc/wallSupports.ts`).
 
 - Fotplate **750** (876 750 93, 500 × 80 × 5 mm, grå) under en stolpe, midt under veggen og på tvers av den. Den stikker
-  250 mm ut på hver side, også inn til naboen og ut i gangen.
+  250 mm ut på hver side, også inn til naboen og ut i gangen. Stolpefestet **795** (876 745 92, M8) er ferdig montert på
+  platen og tres inn i senterkanalen på stolpe 94. Plukkes som én ferdigmontert enhet, «Fotplate 750 med 795».
 - Regelen per rett veggstrekning: minst 2 støtter fra 1 m og oppover, den ytterste maks 1000 mm inn fra en fri ende,
   maks 3000 mm mellom to støtter, jevnt fordelt og flyttet til nærmeste stolpe (cc 1000).
 - **Støtte** er et hjørne, en T eller et kryss med en annen systemvegg (standvegg, innervegg eller romvegg, så et rom
@@ -147,7 +149,8 @@ romvegger som takdragerne ikke holder, også når takdragerne er på (`calc/wall
 - Platene er alltid kundens valg og faktureres utstilleren, også under standvegger arrangøren betaler. De står på
   tilbudet som egen linje **Støtteplate systemvegg** per stk (6115, plassholder, sum av plate og montering), og på
   plukklisten (under Stolper) og arbeidsordren hos utstilleren.
-- Hvordan platen festes til stolpen er ikke avklart. Stolpen plukkes som før, med justeringsfot.
+- Ikke avklart: om stolpen over en fotplate skal plukkes uten justeringsfot (700 + M10, også i senterkanalen). Den
+  plukkes foreløpig som før.
 - **Senere:** støttevaier i stedet for plater. Et V-oppheng fra taket i hallen ned til toppen av systemveggen, ett punkt
   på veggen og to i taket på tvers av veggen, etter samme regel som platene. Også vaieren faktureres utstilleren.
 

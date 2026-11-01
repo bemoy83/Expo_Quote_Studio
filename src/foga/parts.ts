@@ -85,6 +85,7 @@ export const FOGA_PARTS: readonly FogaPart[] = [
   part('730', '876 730 92', 'Fotplate 250 × 300 × 5 mm', 'foot'),
   part('740', '876 740 92', 'Fotplate 400 × 400 × 5 mm', 'foot'),
   part('750', '876 750 93', 'Fotplate 500 × 80 × 5 mm', 'foot'),
+  part('795', '876 745 92', 'Firkantet stolpefeste for fotplate, M8', 'foot'),
   // Wall plates: not Foga. Lacquered HDF, ordered per RAL
   { artnr: '', code: 'HDF', name: 'Lakkert HDF-plate 3 mm', kind: 'plate', system: 'other' },
 ];
