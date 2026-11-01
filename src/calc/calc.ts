@@ -1,7 +1,8 @@
 import { groupItems, resolveGroup } from '../catalog/groups';
 import { displayName, indexCatalog } from '../catalog/lookup';
 import type { Catalog, Unit } from '../catalog/types';
-import { CELL, openSides, parseCellKey, pointKey } from '../domain/grid';
+import { openSides, pointKey } from '../domain/grid';
+import { tileAreas, tileCounts } from '../domain/floor';
 import type { Payer, Point, StandWallTerms, TextileFill, Variant } from '../domain/types';
 import { DEFAULT_STAND_WALLS } from '../domain/variant';
 import { builtModules, wallKind, wallPoints, type BuiltModule, type WallKind } from '../domain/walls';
@@ -48,6 +49,8 @@ export interface CalcLine {
   /** Lines with the same key are one line on the quote, named `name`, with the quantity and unit of the `lead` line
    *  (textile walls: frame and textile). */
   quote?: { key: string; name: string; lead: boolean };
+  /** Carpet tiles: pieces per tile size, largest first. The picking list counts these instead of m². */
+  tiles?: { size: string; qty: number }[];
 }
 
 /** One main group of the product grouping, lines in subgroup order. */
@@ -393,11 +396,14 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
     line(sys.foilFull, foilFull, { meta: `${foils.filter((f) => f.full).length} felt · ${plateSize}` }),
   );
 
-  // Floor: cells × 0,25 m² per product. Waste is ours and not counted.
-  const floor = floorAreas(v);
+  // Floor: m² laid per product. Waste is ours and not counted. Carpet tiles are also counted per size for picking.
+  const floor = tileAreas(v.floor.tiles);
   const floorTotal = Object.values(floor).reduce((a, b) => a + b, 0);
   add(
-    ...Object.entries(floor).map(([a, m2]) => line(a, m2, { meta: `${a} · ferdig lagt` })),
+    ...Object.entries(floor).map(([a, m2]) => {
+      const tiles = idx.byArtnr.get(a)?.product.tiles ? tileCounts(v.floor.tiles.filter((t) => t.product === a)) : undefined;
+      return line(a, m2, { meta: `${a} · ferdig lagt`, ...(tiles ? { tiles } : {}) });
+    }),
     line(sys.floorProtection, v.floor.protection ? floorTotal : 0),
   );
 
@@ -475,18 +481,6 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
   };
 }
 
-/** m² per floor product. Cells outside the stand are ignored. */
-export function floorAreas(v: Variant): Record<string, number> {
-  const nx = Math.round(v.stand.width / CELL);
-  const ny = Math.round(v.stand.depth / CELL);
-  const out: Record<string, number> = {};
-  for (const [k, a] of Object.entries(v.floor.cells)) {
-    const c = parseCellKey(k);
-    if (!c || c[0] >= nx || c[1] >= ny || !a) continue;
-    out[a] = (out[a] ?? 0) + CELL * CELL;
-  }
-  return out;
-}
 
 const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 

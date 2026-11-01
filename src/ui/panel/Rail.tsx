@@ -385,6 +385,7 @@ function FloorSection({ v, res, brush, tool, pick, onEdit }: RailProps) {
             meta={
               <>
                 {p.variants.length > 1 && <>{cur.name} · </>}
+                {p.dim && <>{p.dim} · </>}
                 <span className="num">
                   {cur.artnr} · {kr(cur.price)} kr/m²
                 </span>
@@ -417,7 +418,7 @@ function FloorSection({ v, res, brush, tool, pick, onEdit }: RailProps) {
         meta={`Hallgulv · ${fmt(res.keyFigures.area - res.keyFigures.floorTotal)} m² uten belegg`}
         action={
           <>
-            <IconButton icon={Trash2} label="Fjern alt gulv" onClick={() => onEdit((x) => ({ ...x, floor: { ...x.floor, cells: {} } }))} />
+            <IconButton icon={Trash2} label="Fjern alt gulv" onClick={() => onEdit((x) => ({ ...x, floor: { ...x.floor, tiles: [] } }))} />
             <IconButton
               icon={Eraser}
               label="Visk ut gulv i plan"
@@ -447,7 +448,7 @@ function FloorSection({ v, res, brush, tool, pick, onEdit }: RailProps) {
           />
         </div>
       )}
-      <p className="panel-note">Fyll dekker hele standen. Penselen tegner valgt gulv i planen: 1 × 1 som standard, ned til 0,5 × 0,5. Flere gulvtyper kan stå på samme stand.</p>
+      <p className="panel-note">Fyll legger hele standen med 1 × 1. Penselen legger fliser hvor som helst i 0,5-rutenettet: 1 × 1 som standard, Auto tar største flis som passer på ledig gulv, og under Andre ligger 1 × 0,5, 0,5 × 1 og 0,5 × 0,5. Flere gulvtyper kan stå på samme stand.</p>
     </>
   )
 }

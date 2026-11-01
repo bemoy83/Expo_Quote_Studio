@@ -5,8 +5,8 @@ import { RECIPES } from '../../foga/recipes'
 import { useEffect, useMemo, useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent, type SVGProps } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import { mainGroupOf } from '../../catalog/groups'
-import { canMoveWall, doorAllowed, doorSwing, drawOpening, eraseWalls, paintFloor, paintWalls, segmentKeys, setOpening, standWallKeys } from '../../domain/edit'
-import { CELL, openSides, parseCellKey, pointAlong, sideLength, sidePoint, wallDirection, wallLength, type Module } from '../../domain/grid'
+import { canMoveWall, doorAllowed, doorSwing, drawOpening, eraseWalls, paintWalls, segmentKeys, setOpening, standWallKeys } from '../../domain/edit'
+import { CELL, openSides, pointAlong, sideLength, sidePoint, wallDirection, wallLength, type Module } from '../../domain/grid'
 import { addObject, conflicts, footprintBox, moveObject, removeObject } from '../../domain/objects'
 import { addFoil, faceAt, faceSegment, felt, foilAt, foilCenter, freeSpans, removeFoil, removeTextile, sideOf, textileAt, updateTextile, type FaceSide } from '../../domain/decor'
 import { drawTextile, fillFace, planTextile } from '../../domain/textileBrush'
@@ -15,7 +15,7 @@ import { alongRun, cornerPosts } from '../../calc/freeFrames'
 import type { Motif } from '../../persistence/file'
 import type { Point, Room, Side, Variant, Wall } from '../../domain/types'
 import { builtModules, type BuiltModule } from '../../domain/walls'
-import { BORDER, BORDER_STRONG, BLOCK, CANVAS, INK, INK_FAINT, INK_MUTED, LAYER_COLOR, SURFACE } from '../colors'
+import { BORDER, BORDER_STRONG, BLOCK, CANVAS, INK, INK_FAINT, INK_MUTED, jointColor, LAYER_COLOR, SURFACE } from '../colors'
 import { applyDrop, decorDrag, endDecorDrag, type DecorDrag } from '../dnd'
 import { drawInnerBeam, eraseInnerBeams, innerBeamAt, type Run } from '../../domain/innerBeams'
 import { dragInnerBeam, dragRoom, dragWall, dropObject, dropRoom, roomDrag, type RoomDrag, type WallDrag } from '../drag'
@@ -25,7 +25,8 @@ import { fmt } from '../format'
 import { idx, place, plateColor, productOf, rules } from '../env'
 import { doorInset } from '../../rules/rules'
 import { findMotif } from '../motifs'
-import type { Brush, FloorSize, Highlight, Tool } from '../tools'
+import type { Brush, Highlight, Tool } from '../tools'
+import { applyFloor, floorAction, TILE_FULL, type FloorAction, type FloorBrushSize } from '../../domain/floor'
 import { distToSegment, nearestEdge, strokeFrom } from './geometry'
 
 export interface PlanSelection {
@@ -48,7 +49,7 @@ interface Props {
   res: CalcResult
   tool: Tool
   brush: Brush | null
-  floorSize: FloorSize
+  floorSize: FloorBrushSize
   /** Cell size of the drawing grid for the textile brush, m (domain/snapGrid). */
   gridStep?: number
   highlight: Highlight
@@ -93,8 +94,8 @@ const SIDE_LABEL: Record<Side, string> = { back: 'Bak', front: 'Front', left: 'V
 const WALL = LAYER_COLOR.walls
 const TEXTILE = LAYER_COLOR.textile
 
-/** Grid lines over a laid floor: dark enough to read on any floor colour. */
-const GRID_ON_FLOOR = 'rgb(0 0 0 / .14)'
+/** Joints between carpet tiles, m: wide enough to read in the small plan on the quote and the work order. */
+const JOINT_WIDTH = 0.025
 /** Half-metre lines while painting floor. */
 const GRID_FINE = 'rgb(0 0 0 / .1)'
 /** Opacity of layers outside the hovered calc group. */
@@ -106,7 +107,8 @@ const DIMMED = 0.25
  */
 type Drag =
   | { kind: 'stroke'; p0: P; moved: boolean }
-  | { kind: 'floor'; last: string | null }
+  /** A floor stroke: the tiles after the first line up with it (`anchor`). */
+  | { kind: 'floor'; last: string | null; anchor: { i: number; j: number } | null }
   | { kind: 'click'; select: PlanSelection }
   | { kind: 'object'; id: string; dx: number; dy: number; start: P; moved: boolean; select: PlanSelection }
   | ({ kind: 'wall'; moved: boolean; select: PlanSelection } & WallDrag)
@@ -256,24 +258,21 @@ export function PlanView(p: Props) {
       return q.x >= b.x0 && q.x <= b.x1 && q.y >= b.y0 && q.y <= b.y1
     })
 
-  const floorBlock = (q: P) => {
-    if (q.x < 0 || q.y < 0 || q.x >= W || q.y >= D) return null
-    const nx = Math.round(W / CELL)
-    const ny = Math.round(D / CELL)
-    const i = Math.max(0, Math.min(nx - floorSize.w, Math.floor(q.x / CELL / floorSize.w) * floorSize.w))
-    const j = Math.max(0, Math.min(ny - floorSize.h, Math.floor(q.y / CELL / floorSize.h) * floorSize.h))
-    return { i, j }
-  }
+  const floorTouch = (q: P, anchor: { i: number; j: number } | null): FloorAction =>
+    brush?.kind === 'floor'
+      ? floorAction(v, { x: q.x / CELL, y: q.y / CELL, size: floorSize, erase: tool === 'erase', product: brush.product, anchor })
+      : { kind: 'none' }
 
   const paintFloorAt = (q: P) => {
     const d = drag.current
-    const b = floorBlock(q)
-    if (!b || d?.kind !== 'floor') return
-    const k = `${b.i},${b.j}`
+    if (d?.kind !== 'floor' || brush?.kind !== 'floor') return
+    const a = floorTouch(q, d.anchor)
+    if (a.kind === 'none') return
+    const k = `${a.kind}|${a.rect.i},${a.rect.j},${a.rect.w},${a.rect.h}`
     if (d.last === k) return
     d.last = k
-    const product = tool === 'erase' ? null : brush?.kind === 'floor' ? brush.product : null
-    p.onEdit((x) => paintFloor(x, b.i, b.j, floorSize.w, floorSize.h, product), false)
+    if (!d.anchor && a.kind === 'place') d.anchor = { i: a.rect.i, j: a.rect.j }
+    p.onEdit((x) => applyFloor(x, a, brush.product), false)
   }
 
   const onDown = (e: RPointerEvent<SVGSVGElement>) => {
@@ -282,7 +281,7 @@ export function PlanView(p: Props) {
     svg.current!.setPointerCapture(e.pointerId)
     if (floorTool) {
       p.onCheckpoint()
-      drag.current = { kind: 'floor', last: null }
+      drag.current = { kind: 'floor', last: null, anchor: null }
       paintFloorAt(q)
       return
     }
@@ -516,7 +515,8 @@ export function PlanView(p: Props) {
   // Hover previews
   const hoverEdge = openingTool && hover ? (moduleAt(hover, 0.4) ?? (tool !== 'erase' && onStand(hover) ? nearestEdge(v.stand, hover) : null)) : null
   const hoverModule = hoverEdge && (tool === 'erase' || doorAllowed(v, hoverEdge.a, hoverEdge.b)) ? hoverEdge : null
-  const hoverFloor = floorTool && hover && !drag.current ? floorBlock(hover) : null
+  const hoverAction = floorTool && hover && !drag.current ? floorTouch(hover, null) : null
+  const hoverFloor = hoverAction && hoverAction.kind !== 'none' ? hoverAction : null
   // Textile brush: next to a wall the click target is that face; elsewhere the grid node a stroke starts from
   const textileFace = textileTool && hover && !textileStroke ? faceHit(hover, 0.2) : null
   const hoverFace = (decorTool && hover ? faceHit(hover) : null) ?? textileFace
@@ -567,31 +567,46 @@ export function PlanView(p: Props) {
         <rect x={0} y={0} width={W} height={D} fill={SURFACE} />
       </g>
 
-      {/* Floor */}
+      {/* Grid, under the floor: a laid floor shows its own joints */}
+      <g pointerEvents="none">
+        {Array.from({ length: W - 1 }, (_, i) => (
+          <line key={`gx${i}`} x1={i + 1} y1={0} x2={i + 1} y2={D} stroke={BORDER} strokeWidth={0.012} />
+        ))}
+        {Array.from({ length: D - 1 }, (_, j) => (
+          <line key={`gy${j}`} x1={0} y1={j + 1} x2={W} y2={j + 1} stroke={BORDER} strokeWidth={0.012} />
+        ))}
+      </g>
+
+      {/* Floor: carpet tiles with a joint at every tile edge, rolled floor without */}
       <g opacity={dim('floor')} pointerEvents="none">
-        {Object.entries(v.floor.cells).map(([k, a]) => {
-          const c = parseCellKey(k)
-          const col = idx.byArtnr.get(a)?.variant.color
-          return c && col ? <rect key={k} x={c[0] * CELL} y={c[1] * CELL} width={CELL + 0.004} height={CELL + 0.004} fill={col} /> : null
+        {v.floor.tiles.map((t) => {
+          const hit = idx.byArtnr.get(t.product)
+          if (!hit) return null
+          return (
+            <rect
+              key={`${t.i},${t.j}`}
+              x={t.i * CELL}
+              y={t.j * CELL}
+              width={t.w * CELL}
+              height={t.h * CELL}
+              fill={hit.variant.color}
+              stroke={hit.product.tiles ? jointColor(hit.variant.color) : hit.variant.color}
+              strokeWidth={hit.product.tiles ? JOINT_WIDTH : 0.004}
+            />
+          )
         })}
       </g>
 
-      {/* Grid */}
+      {/* Drawing grids: every half metre while painting floor, snap dots for straight runs */}
       <g pointerEvents="none">
         {floorTool &&
-          Array.from({ length: Math.round(W / CELL) - 1 }, (_, i) =>
-            (i + 1) % 2 ? <line key={`hx${i}`} x1={(i + 1) * CELL} y1={0} x2={(i + 1) * CELL} y2={D} stroke={GRID_FINE} strokeWidth={0.008} strokeDasharray=".04 .04" /> : null,
-          )}
+          Array.from({ length: Math.round(W / CELL) - 1 }, (_, i) => (
+            <line key={`hx${i}`} x1={(i + 1) * CELL} y1={0} x2={(i + 1) * CELL} y2={D} stroke={GRID_FINE} strokeWidth={0.008} strokeDasharray=".04 .04" />
+          ))}
         {floorTool &&
-          Array.from({ length: Math.round(D / CELL) - 1 }, (_, j) =>
-            (j + 1) % 2 ? <line key={`hy${j}`} x1={0} y1={(j + 1) * CELL} x2={W} y2={(j + 1) * CELL} stroke={GRID_FINE} strokeWidth={0.008} strokeDasharray=".04 .04" /> : null,
-          )}
-        {Array.from({ length: W - 1 }, (_, i) => (
-          <line key={`gx${i}`} x1={i + 1} y1={0} x2={i + 1} y2={D} stroke={floorIds.length ? GRID_ON_FLOOR : BORDER} strokeWidth={0.012} />
-        ))}
-        {Array.from({ length: D - 1 }, (_, j) => (
-          <line key={`gy${j}`} x1={0} y1={j + 1} x2={W} y2={j + 1} stroke={floorIds.length ? GRID_ON_FLOOR : BORDER} strokeWidth={0.012} />
-        ))}
+          Array.from({ length: Math.round(D / CELL) - 1 }, (_, j) => (
+            <line key={`hy${j}`} x1={0} y1={(j + 1) * CELL} x2={W} y2={(j + 1) * CELL} stroke={GRID_FINE} strokeWidth={0.008} strokeDasharray=".04 .04" />
+          ))}
         {dotStep && <SnapDots W={W} D={D} step={dotStep} />}
       </g>
 
@@ -777,12 +792,12 @@ export function PlanView(p: Props) {
         {dropHover && <FacePreview v={v} h={dropHover.h} brush={dropHover.d} erase={false} />}
         {hoverFloor && (
           <rect
-            x={hoverFloor.i * CELL}
-            y={hoverFloor.j * CELL}
-            width={floorSize.w * CELL}
-            height={floorSize.h * CELL}
+            x={hoverFloor.rect.i * CELL}
+            y={hoverFloor.rect.j * CELL}
+            width={hoverFloor.rect.w * CELL}
+            height={hoverFloor.rect.h * CELL}
             rx={0.02}
-            fill={tool === 'erase' || brush?.kind !== 'floor' ? SURFACE : idx.byArtnr.get(brush.product)?.variant.color}
+            fill={hoverFloor.kind === 'erase' || brush?.kind !== 'floor' ? SURFACE : idx.byArtnr.get(brush.product)?.variant.color}
             fillOpacity={0.75}
             stroke={INK}
             strokeWidth={0.03}
@@ -867,7 +882,7 @@ export function PlanPreview({ v, res, mini, groups }: { v: Variant; res: CalcRes
     />
   )
 }
-const PREVIEW_FLOOR_SIZE: FloorSize = { w: 2, h: 2 }
+const PREVIEW_FLOOR_SIZE: FloorBrushSize = TILE_FULL
 const NO_SELECTION: PlanSelection = {}
 
 const LABEL = { font: '500 0.26px var(--font-ui)', fill: INK_MUTED }

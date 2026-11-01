@@ -4,7 +4,7 @@ import { placeContext } from '../catalog/lookup';
 import { calc } from '../calc/calc';
 import { r2 } from '../calc/referenceStands';
 import { RULES } from '../rules/rules';
-import { doorAllowed, doorSwing, drawOpening, eraseWalls, flipSwing, paintFloor, paintWalls, setOpening, setStand, setWallPlate } from './edit';
+import { doorAllowed, doorSwing, drawOpening, eraseWalls, flipSwing, paintWalls, setOpening, setStand, setWallPlate } from './edit';
 import { moduleKey } from './grid';
 import { addObject, addObjectAnywhere, conflicts, moveObject } from './objects';
 import type { Variant } from './types';
@@ -102,17 +102,6 @@ describe('stand size and type', () => {
     const s = setStand(v, { width: 4, depth: 4, type: 'row' });
     expect(kf(s).floorTotal).toBe(16);
     expect(s.walls.some((w) => w.from[0] === 5)).toBe(false);
-  });
-});
-
-describe('floor', () => {
-  it('brush sizes and erase', () => {
-    let v = createVariant('A', { width: 3, depth: 3, type: 'row' });
-    v = paintFloor(v, 0, 0, 2, 2, '5901'); // 1 × 1 m
-    v = paintFloor(v, 2, 0, 1, 2, '5930'); // 0,5 × 1 m
-    expect(kf(v).floor).toEqual({ '5901': 1, '5930': 0.5 });
-    v = paintFloor(v, 0, 0, 1, 1, null);
-    expect(kf(v).floor['5901']).toBe(0.75);
   });
 });
 

@@ -76,9 +76,19 @@ export interface Opening {
   swing?: 1 | -1;
 }
 
+/** A floor tile in 0,5 m cells: starts at cell (i, j), w × h cells (domain/floor.ts). */
+export interface FloorTile {
+  i: number;
+  j: number;
+  w: number;
+  h: number;
+  /** Floor product's art.nr. */
+  product: string;
+}
+
 export interface Floor {
-  /** 0,5 m cells keyed `i,j` (see cellKey). Value is the floor product's art.nr. */
-  cells: Record<string, string>;
+  /** Laid tiles, never overlapping. Their edges are the joints. */
+  tiles: FloorTile[];
   /** Monteringsplast over the whole floor area. */
   protection: boolean;
 }

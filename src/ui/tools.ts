@@ -1,5 +1,6 @@
 // Tool state of the sketch screen. UI only, never stored in the model.
 import { GRID_STEPS, type GridStep } from '../domain/snapGrid';
+import { TILE_FULL, type FloorBrushSize, type TileSize } from '../domain/floor';
 import type { Rules } from '../rules/rules';
 
 /** Velg · Pensel · Tøm */
@@ -19,18 +20,19 @@ export type Brush =
   /** A motif: on a textile it becomes the print, on a wall panel a foil decal. */
   | { kind: 'motif'; motif: string };
 
-/** Floor brush size in 0,5 m cells. */
-export interface FloorSize {
-  w: number;
-  h: number;
-}
-
-export const FLOOR_SIZES: { label: string; size: FloorSize }[] = [
-  { label: '1 × 1', size: { w: 2, h: 2 } },
+/** Floor brush sizes in the band. 1 × 1 and Auto first; the smaller tiles under «Andre». */
+export const FLOOR_MAIN: { label: string; size: FloorBrushSize; title: string }[] = [
+  { label: '1 × 1', size: TILE_FULL, title: 'Flis 100 × 100' },
+  { label: 'Auto', size: 'auto', title: '1 × 1 der det er plass, ellers største flis som passer på ledig gulv' },
+];
+export const FLOOR_OTHER: { label: string; size: TileSize }[] = [
   { label: '1 × 0,5', size: { w: 2, h: 1 } },
   { label: '0,5 × 1', size: { w: 1, h: 2 } },
   { label: '0,5 × 0,5', size: { w: 1, h: 1 } },
 ];
+
+export const floorSizeLabel = (s: FloorBrushSize) =>
+  s === 'auto' ? 'Auto' : ([...FLOOR_MAIN, ...FLOOR_OTHER].find((x) => x.size !== 'auto' && x.size.w === s.w && x.size.h === s.h)?.label ?? '1 × 1');
 
 /** Calc group hovered in the calc panel; the plan dims everything else. */
 export type Highlight = 'walls' | 'beams' | 'openings' | 'textile' | 'foil' | 'floor' | 'objects' | null;

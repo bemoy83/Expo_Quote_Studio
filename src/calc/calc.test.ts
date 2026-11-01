@@ -221,16 +221,29 @@ describe('beams', () => {
 });
 
 describe('floor', () => {
-  it('fill: cells × 0,25 m², with protection over the total', () => {
+  it('fill: 1 × 1 tiles over the stand, with protection over the total', () => {
     const v = fillFloor(r1(), '5901');
     const res = run({ ...v, floor: { ...v.floor, protection: true } });
     expect(qty(res, '5901')).toBe(9);
     expect(qty(res, S.floorProtection)).toBe(9);
+    expect(lines(res).find((l) => l.artnr === '5901')!.tiles).toEqual([{ size: '100 × 100', qty: 9 }]);
   });
-  it('several floor types side by side, cells outside the stand ignored', () => {
+  it('several floor types side by side; carpet tiles counted per size, a turned tile the same size', () => {
     const v = r1();
-    const res = run({ ...v, floor: { protection: false, cells: { '0,0': '5901', '1,0': '5901', '0,1': '5930', '6,0': '5901' } } });
-    expect(res.keyFigures.floor).toEqual({ '5901': 0.5, '5930': 0.25 });
+    const tiles = [
+      { i: 0, j: 0, w: 2, h: 2, product: '5901' },
+      { i: 2, j: 0, w: 2, h: 1, product: '5901' },
+      { i: 4, j: 0, w: 1, h: 2, product: '5901' },
+      { i: 5, j: 0, w: 1, h: 1, product: '5901' },
+      { i: 0, j: 2, w: 2, h: 2, product: '5902' },
+      { i: 2, j: 2, w: 1, h: 1, product: '5930' },
+    ];
+    const res = run({ ...v, floor: { protection: false, tiles } });
+    expect(res.keyFigures.floor).toEqual({ '5901': 2.25, '5902': 1, '5930': 0.25 });
+    const of = (a: string) => lines(res).find((l) => l.artnr === a)!.tiles;
+    expect(of('5901')).toEqual([{ size: '100 × 100', qty: 1 }, { size: '100 × 50', qty: 2 }, { size: '50 × 50', qty: 1 }]);
+    expect(of('5902')).toEqual([{ size: '100 × 100', qty: 1 }]);
+    expect(of('5930')).toBeUndefined();
     expect(qty(res, S.floorProtection)).toBe(0);
   });
 });

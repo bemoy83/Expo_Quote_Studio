@@ -101,10 +101,12 @@ const products: Product[] = [
   // Floor
   {
     id: 'flis',
-    name: 'Teppefliser 50 × 50',
+    name: 'Teppefliser',
     kind: 'surface',
     unit: 'm²',
     group: 'gulv.belegg',
+    tiles: true,
+    dim: 'flis 100 × 100',
     variants: [
       ['5902', 'Grå', '#A9ACAF'],
       ['5903', 'Mørk grå', '#6E7276'],

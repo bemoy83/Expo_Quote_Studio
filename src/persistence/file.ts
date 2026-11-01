@@ -1,12 +1,13 @@
 // Sketch file: JSON `{ format: 'standskisse', versjon, prosjekt, varianter, egneMotiver }`.
 // Newer versions are refused with an explanation; older versions are migrated step by step.
+import { tilesFromCells } from '../domain/floor';
 import { rectOutline } from '../domain/outline';
 import { RECT_SIDE, roomWalls, roomWallId } from '../domain/rooms';
 import type { Project, Room, Variant } from '../domain/types';
 import { createProject, createVariant } from '../domain/variant';
 
 export const FORMAT = 'standskisse';
-export const VERSION = 2;
+export const VERSION = 3;
 
 /** A customer motif uploaded by the user (image as data URL). */
 export interface Motif {
@@ -48,7 +49,15 @@ export function serialize(s: Sketch): string {
 /** Migrations from version n to n + 1, keyed by n. */
 const MIGRATIONS: Record<number, (f: Record<string, unknown>) => Record<string, unknown>> = {
   1: (f) => ({ ...f, varianter: Array.isArray(f.varianter) ? f.varianter.map(rectRoomsToOutlines) : f.varianter }),
+  2: (f) => ({ ...f, varianter: Array.isArray(f.varianter) ? f.varianter.map(cellsToTiles) : f.varianter }),
 };
+
+/** Version 2 → 3: the floor was one product per 0,5 m cell; now it is tiles, laid 1 × 1 where the cells allow. */
+function cellsToTiles(x: unknown): unknown {
+  if (!isObject(x) || !isObject(x.floor) || !isObject(x.floor.cells)) return x;
+  const { cells, ...floor } = x.floor;
+  return { ...x, floor: { ...floor, tiles: tilesFromCells(cells as Record<string, string>) } };
+}
 
 type Face = keyof typeof RECT_SIDE;
 interface RectRoomV1 {
@@ -162,7 +171,7 @@ function isVariant(x: unknown): boolean {
     typeof depth === 'number' &&
     width > 0 &&
     depth > 0 &&
-    isObject(x.floor.cells) &&
+    Array.isArray(x.floor.tiles) &&
     arrays.every((k) => Array.isArray(x[k]))
   );
 }
