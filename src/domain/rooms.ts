@@ -29,6 +29,7 @@ import {
 } from './outline';
 import type { Opening, PlacedObject, Point, Room, Variant, Wall } from './types';
 import { builtModules } from './walls';
+import { movePanels, prunePanels } from './panels';
 
 /** Side numbers of a rectangular room. */
 export const RECT_SIDE = { back: 0, right: 1, front: 2, left: 3 } as const;
@@ -204,7 +205,7 @@ function reshape(v: Variant, r: Room, outline: Point[], shift?: (i: number) => P
   const room: Room = { ...r, outline };
   if (gaps.length) room.gaps = gaps;
   else delete room.gaps;
-  return syncRooms({
+  const next = syncRooms({
     ...v,
     rooms: v.rooms.map((o) => (o.id === r.id ? room : o)),
     openings: v.openings.flatMap((o) => {
@@ -224,6 +225,24 @@ function reshape(v: Variant, r: Room, outline: Point[], shift?: (i: number) => P
       return m && module >= 0 ? [{ ...f, wallId: roomWallId(r.id, m.side), module }] : [];
     }),
   });
+  return carryPanels(v, next, r.id, (side) => match[side] ?? undefined);
+}
+
+/**
+ * Plates a room's sides own and that are coloured one by one go along to the same place on the side after the room
+ * moved or changed shape (`to`: where side i went and how far its modules shifted). Colours left behind are dropped.
+ */
+function carryPanels(before: Variant, after: Variant, id: string, to: (side: number) => { side: number; offset: number } | undefined): Variant {
+  const moves = new Map<string, string>();
+  for (const m of builtModules(before)) {
+    const side = sideOfWallId(m.wallId, id);
+    if (!before.panels?.[m.key] || side === undefined) continue;
+    const t = to(side);
+    const w = t && after.walls.find((x) => x.id === roomWallId(id, t.side));
+    const at = w && wallModules(w)[m.index + t.offset];
+    if (at) moves.set(m.key, at.key);
+  }
+  return prunePanels(movePanels(after, moves));
 }
 
 /** Add a room (and optionally a door on one of its sides). Null when it does not fit or is not a room shape. */
@@ -296,7 +315,8 @@ export function moveRoomDoors(v: Variant, id: string, dx: number, dy: number): {
   if ((x === b.x && y === b.y) || !fits(v, id, outline)) return same;
   const inside = (o: PlacedObject) => contains(r.outline, o.x, o.y);
   const objects = v.objects.map((o) => (inside(o) ? { ...o, x: o.x + x - b.x, y: o.y + y - b.y } : o));
-  const next = syncRooms({ ...v, rooms: v.rooms.map((o) => (o.id === id ? { ...r, outline } : o)), objects });
+  const moved = syncRooms({ ...v, rooms: v.rooms.map((o) => (o.id === id ? { ...r, outline } : o)), objects });
+  const next = carryPanels(v, moved, id, (side) => ({ side, offset: 0 }));
   const s = settleDoors(next, id);
   return s ? { v: s.v, doorsMoved: s.moved } : same;
 }
@@ -351,7 +371,7 @@ export function clampRooms(v: Variant): Variant {
 }
 
 export function removeRoom(v: Variant, id: string): Variant {
-  return syncRooms({ ...v, rooms: v.rooms.filter((r) => r.id !== id) });
+  return prunePanels(syncRooms({ ...v, rooms: v.rooms.filter((r) => r.id !== id) }));
 }
 
 /** Rename or relabel a room. */

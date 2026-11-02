@@ -7,7 +7,7 @@ import { mainGroupOf } from '../../catalog/groups'
 import type { RollDir, FloorBrushSize, TileSize } from '../../domain/floor'
 import type { GridStep } from '../../domain/snapGrid'
 import type { Motif } from '../../persistence/file'
-import { Segmented } from '../controls'
+import { ImageInput, Segmented } from '../controls'
 import { catalog, idx, rules, wallPlates } from '../env'
 import { ObjectThumb } from '../panel/ProductRow'
 import { FLOOR_MAIN, FLOOR_OTHER, floorSizeLabel, gridSteps, type Brush, type DockTool, type RollMode } from '../tools'
@@ -211,16 +211,7 @@ function quickContent(p: QuickPicksProps): ReactNode {
         <Sep />
         <label className="q-btn" title="Last opp kundens eget motiv" aria-label="Last opp motiv">
           <Upload size={15} />
-          <input
-            type="file"
-            accept="image/*"
-            hidden
-            onChange={(e) => {
-              const f = e.target.files?.[0]
-              if (f) p.onUpload(f)
-              e.target.value = ''
-            }}
-          />
+          <ImageInput onFile={p.onUpload} />
         </label>
         {more}
       </>

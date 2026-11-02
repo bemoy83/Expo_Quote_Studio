@@ -5,6 +5,7 @@ import type { CalcResult } from '../../calc/calc'
 import { quoteGroups } from '../../calc/quoteLines'
 import type { Project, Room, Variant } from '../../domain/types'
 import { roomName, roomOpenings, roomSize } from '../../domain/rooms'
+import { builtModules } from '../../domain/walls'
 import { dateText, DELIVERY_FIELDS, today, validUntil } from '../../domain/delivery'
 import { isFixedField, projectField, standWallTerms } from '../../domain/variant'
 import { Button } from '../controls'
@@ -42,7 +43,7 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
   const inFrame = rules.textile.inFrame
 
   // Summary next to the sketch
-  const plates = [...new Set(v.walls.map((w) => w.plate ?? v.defaultPlate))]
+  const plates = [...new Set(builtModules(v).filter((m) => !m.opening).map((m) => m.plate))]
   const openingNames = Object.entries(
     v.openings.reduce<Record<string, number>>((a, o) => {
       const n = productOf(o.product)?.name.toLowerCase() ?? o.product

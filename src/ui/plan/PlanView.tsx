@@ -16,11 +16,13 @@ import type { Motif } from '../../persistence/file'
 import type { FloorTile, Point, Room, Side, Variant, Wall } from '../../domain/types'
 import { doorHinge } from '../../domain/doors'
 import { builtModules, type BuiltModule } from '../../domain/walls'
+import { RoomLabel } from './RoomLabel'
+import { roomLabelSize } from './roomLabelSize'
 import { BORDER, BORDER_STRONG, BLOCK, CANVAS, INK, INK_FAINT, INK_MUTED, jointColor, LAYER_COLOR, SURFACE } from '../colors'
 import { applyDrop, decorDrag, endDecorDrag, type DecorDrag } from '../dnd'
 import { drawInnerBeam, eraseInnerBeams, innerBeamAt, type Run } from '../../domain/innerBeams'
 import { dragInnerBeam, dragRoom, dragWall, dropObject, dropRoom, roomDrag, type RoomDrag, type WallDrag } from '../drag'
-import { roomAt, roomName, roomSideAt, roomSize, sideIsHorizontal } from '../../domain/rooms'
+import { roomAt, roomSideAt, sideIsHorizontal } from '../../domain/rooms'
 import { insetOutline, isHorizontal, labelRect, outlineSides } from '../../domain/outline'
 import { fmt } from '../format'
 import { idx, place, plateColor, productOf, rules } from '../env'
@@ -1070,7 +1072,6 @@ export function PlanPreview({ v, res, mini, groups }: { v: Variant; res: CalcRes
 const PREVIEW_FLOOR_SIZE: FloorBrushSize = TILE_FULL
 const NO_SELECTION: PlanSelection = {}
 
-const LABEL = { font: '500 0.26px var(--font-ui)', fill: INK_MUTED }
 const MONO = { font: '500 0.24px var(--font-numeric)', fill: INK_FAINT }
 /** Side names and stand dimensions around the stand: context, so quieter than the drawing itself. */
 const SIDE = { font: '500 0.17px var(--font-ui)', fill: INK_FAINT }
@@ -1201,19 +1202,7 @@ function RoomMark({ r, selected }: { r: Room; selected: boolean }) {
           strokeLinejoin="round"
         />
       )}
-      {fit && (
-        <g transform={`translate(${fit.cx} ${fit.cy}) rotate(${fit.turn ? -90 : 0}) scale(${fit.k})`}>
-          <rect x={-fit.w / 2} y={-fit.h / 2} width={fit.w} height={fit.h} rx={0.06} fill={CANVAS} fillOpacity={0.85} />
-          <text y={fit.two ? -0.06 : 0.08} textAnchor="middle" style={{ ...LABEL, fontSize: '0.22px' }}>
-            {roomName(r)}
-          </text>
-          {fit.two && (
-            <text y={0.22} textAnchor="middle" style={{ ...MONO, fontSize: '0.19px' }}>
-              {roomSize(r)}
-            </text>
-          )}
-        </g>
-      )}
+      {fit && <RoomLabel r={r} cx={fit.cx} cy={fit.cy} k={fit.k} two={fit.two} turn={fit.turn} />}
     </g>
   )
 }
@@ -1231,13 +1220,9 @@ function fitRoomLabel(r: Room) {
   const box = labelRect(r.outline)
   const aw = box.w - 2 * LABEL_GAP
   const ad = box.d - 2 * LABEL_GAP
-  const name = roomName(r)
-  const size = roomSize(r)
   /** The label box at scale 1 and the scale it fits at, with the size line (`two`) or without. */
   const measure = (two: boolean) => {
-    // Text width estimated from the character count
-    const w = Math.max(name.length * 0.135, two ? size.length * 0.125 : 0) + 0.28
-    const h = two ? 0.6 : 0.36
+    const { w, h } = roomLabelSize(r, two)
     const flat = Math.min(1, aw / w, ad / h)
     const turned = Math.min(1, ad / w, aw / h)
     const turn = turned > flat + 0.05

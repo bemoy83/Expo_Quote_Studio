@@ -1,24 +1,27 @@
 // Drawer for a frittstående tekstilvegg: one face seen straight on, with the frame, feet, braces, splices and corner
-// posts it is built with. Each face is printed, white or the customer's own textile.
-import { Trash2, X } from 'lucide-react'
+// posts it is built with. Each face is printed, white or the customer's own textile. Laid out like the wall drawer:
+// settings · graphics shelf · the face.
+import { FlipHorizontal2 } from 'lucide-react'
 import type { FreeFrame } from '../../calc/freeFrames'
 import { removeFreeTextile, resizeFreeTextile, updateFace, type FaceKey } from '../../domain/freeTextile'
 import type { Variant } from '../../domain/types'
 import type { Motif } from '../../persistence/file'
-import { ALU, ALU_POST, BORDER_STRONG, FABRIC, FEET, INK, INK_MUTED, LAYER_COLOR } from '../colors'
-import { IconButton, Segmented } from '../controls'
+import { ALU, ALU_POST, BORDER_STRONG, FEET, INK, INK_MUTED, LAYER_COLOR } from '../colors'
+import { IconButton } from '../controls'
 import { rules } from '../env'
 import { count, fmt } from '../format'
 import { findMotif } from '../motifs'
 import type { PlanSelection } from './PlanView'
-import { DIM, TXT } from './drawerText'
-import { Dim, FillPicker, MotifPicker, Print } from './drawerParts'
+import { DIM, elevationBox } from './drawerText'
+import { DrawerHead, DrawerRow, FillPicker, Shelf, SmallDim } from './drawerParts'
+import { Dims, TextileFace } from './elevation'
 
 interface Props {
   v: Variant
   frame: FreeFrame
   selection: PlanSelection
   motifs: Motif[]
+  onUpload: (f: File) => void
   onSelect: (s: PlanSelection) => void
   onEdit: (fn: (v: Variant) => Variant, history?: boolean) => void
   onToast: (text: string) => void
@@ -55,17 +58,12 @@ export function FreeTextileDrawer(p: Props) {
   const fillName = F.fill === 'reuse' ? 'kundens duk' : F.fill === 'white' ? 'hvit duk' : 'trykk'
 
   return (
-    <section className="wall-drawer" aria-label="Frittstående tekstilvegg sett forfra">
+    <section className="wall-drawer drawer3" aria-label="Frittstående tekstilvegg sett forfra">
       <div className="wd-insp">
-        <div className="wd-head">
-          <i className="dot" style={{ background: LAYER_COLOR.textile }} />
-          <h3>Frittstående vegg {f.pos}</h3>
-          <IconButton icon={Trash2} label="Fjern tekstilvegg (Delete)" size={14} onClick={remove} />
-          <IconButton icon={X} label="Lukk" size={14} onClick={p.onClose} />
-        </div>
+        <DrawerHead dot={LAYER_COLOR.textile} title={`Frittstående vegg ${f.pos}`} remove={{ label: 'Fjern tekstilvegg (Delete)', onClick: remove }} onClose={p.onClose} />
         <p className="wd-meta num">
           {[
-            `${fmt(f.length / 1000, 2)} m × ${fmt(H, 2)} m`,
+            `${fmt(H, 2)} m høy`,
             count(f.supports.length, 'fot', 'føtter'),
             f.railCuts.length > 1 ? `skjøtt i ${f.railCuts.length}` : '',
             f.nCorners ? count(f.nCorners, 'hjørne', 'hjørner') : '',
@@ -73,41 +71,36 @@ export function FreeTextileDrawer(p: Props) {
             .filter(Boolean)
             .join(' · ')}
         </p>
-        <Dim label="Lengde" value={f.length / 1000} step={rules.textile.grid} decimals={2} min={rules.textile.minWidth} onChange={setLength} />
-        <div className="eyebrow">Side</div>
-        <Segmented<FaceKey>
-          inWell
-          label="Vis side"
-          value={face}
-          onChange={(x) => p.onSelect({ freeTextileId: t.id, freeFace: x })}
-          options={[
-            { value: 'a', label: 'Side A' },
-            { value: 'b', label: 'Side B' },
-          ]}
-        />
+        <div className="wd-dims">
+          <SmallDim label="Lengde" value={f.length / 1000} decimals={2} onChange={setLength} />
+        </div>
+        <FillPicker value={F.fill} onChange={(fill) => p.onEdit((x) => updateFace(x, t.id, face, { fill, ...(fill === 'print' ? {} : { motif: null }) }))} />
         <p className="wd-meta num">
           Duk {F.W} × {F.H} mm · {fillName}
           {F.fileName ? ` · fil ${F.fileName}` : ''}
         </p>
-        <FillPicker value={F.fill} onChange={(fill) => p.onEdit((x) => updateFace(x, t.id, face, { fill, ...(fill === 'print' ? {} : { motif: null }) }))} />
-        {F.fill === 'print' && <MotifPicker motifs={motifs} value={F.motif ?? undefined} onChange={(mo) => p.onEdit((x) => updateFace(x, t.id, face, { motif: mo }))} />}
-        <p className="panel-note">Tekstil på begge sider. Står på fotplater, og danner ikke rom eller dører i systemveggen.</p>
+        <div className="wd-foot">
+          <DrawerRow label={`Side ${face.toUpperCase()}`}>
+            <IconButton icon={FlipHorizontal2} label={`Vis side ${face === 'a' ? 'B' : 'A'}`} size={15} onClick={() => p.onSelect({ freeTextileId: t.id, freeFace: face === 'a' ? 'b' : 'a' })} />
+          </DrawerRow>
+        </div>
       </div>
 
+      <Shelf
+        label={F.fill === 'print' ? `Trykk side ${face.toUpperCase()} · ${m?.name ?? 'uten motiv'}` : 'Motiv · velg for trykk'}
+        motifs={motifs}
+        value={F.fill === 'print' ? (F.motif ?? null) : undefined}
+        onPick={(mo) => p.onEdit((x) => updateFace(x, t.id, face, { motif: mo, ...(mo ? { fill: 'print' as const } : {}) }))}
+        onUpload={p.onUpload}
+      />
+
       <div className="wd-view">
-        <svg className="wd-svg" viewBox={`${-PAD - 0.25} ${-PAD} ${W + 2 * PAD + 0.25} ${H + PAD + 0.32}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label={`${f.pos} side ${face.toUpperCase()}, ${fmt(W, 2)} m`}>
-          <rect x={0} y={0} width={W} height={H} fill={F.fill === 'white' ? '#fff' : FABRIC} />
-          {m && <Print m={m} x={fr} y={fr} width={Math.max(0, W - 2 * fr)} height={Math.max(0, H - 2 * fr)} />}
-          {!m && (
-            <text x={W / 2} y={H / 2} textAnchor="middle" dominantBaseline="middle" style={TXT}>
-              {F.fill === 'print' ? 'Trykk uten motiv' : F.fill === 'white' ? 'Hvit, uten grafikk' : 'Kundens duk'}
-            </text>
-          )}
+        <svg className="wd-svg" viewBox={elevationBox(W, H, PAD)} preserveAspectRatio="xMidYMid meet" role="img" aria-label={`${f.pos} side ${face.toUpperCase()}, ${fmt(W, 2)} m`}>
+          <TextileFace x={0} y={0} w={W} h={H} m={m} fill={F.fill} empty={F.fill === 'print' ? 'Trykk uten motiv' : F.fill === 'white' ? 'Hvit, uten grafikk' : 'Kundens duk'} />
           {/* Braces behind the textile, at every foot */}
           {f.supports.map((at, i) => (
             <line key={`b${i}`} x1={x(at)} y1={fr} x2={x(at)} y2={H - fr} stroke={ALU} strokeOpacity={0.35} strokeWidth={0.02} strokeDasharray=".05 .04" />
           ))}
-          <rect x={fr / 2} y={fr / 2} width={W - fr} height={H - fr} fill="none" stroke={ALU} strokeWidth={fr} />
           {splices.map((at, i) => (
             <g key={`s${i}`}>
               <line x1={x(at)} y1={0} x2={x(at)} y2={fr} stroke={INK} strokeWidth={0.012} />
@@ -123,23 +116,15 @@ export function FreeTextileDrawer(p: Props) {
           ))}
           <line x1={-PAD} y1={H + 0.03} x2={W + PAD} y2={H + 0.03} stroke={BORDER_STRONG} strokeWidth={0.01} />
 
-          {/* Dimensions */}
-          <line x1={-0.2} y1={0} x2={-0.2} y2={H} stroke={BORDER_STRONG} strokeWidth={0.008} />
-          <text transform={`translate(${-0.26} ${H / 2}) rotate(-90)`} textAnchor="middle" style={DIM}>
-            {f.H} mm
-          </text>
-          <line x1={0} y1={H + 0.14} x2={W} y2={H + 0.14} stroke={BORDER_STRONG} strokeWidth={0.008} />
-          <text x={W / 2} y={H + 0.29} textAnchor="middle" style={DIM}>
-            {F.W} mm · side {face.toUpperCase()}
-          </text>
+          <Dims W={W} H={H} height={`${f.H} mm`} width={`${F.W} mm · side ${face.toUpperCase()}`} />
           {f.supports.map((at, i) => (
             <text key={`ft${i}`} x={x(at)} y={H + 0.12} textAnchor="middle" style={{ ...DIM, fill: INK_MUTED, fontSize: '0.08px' }}>
               {at}
             </text>
           ))}
         </svg>
-        <div className="wd-hint">Dra veggen i planen for å flytte den · tall under veggen er føttenes plass i mm fra enden · Delete fjerner</div>
       </div>
+      <div className="wd-hint">Dra veggen i planen for å flytte den · tallene under er føttenes plass i mm fra enden · Delete fjerner</div>
     </section>
   )
 }

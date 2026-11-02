@@ -92,6 +92,19 @@ utstilleren får:
 - **Nøkkeltall**: standvegg, innervegg og romvegg i lm hver for seg (`standWallLm`, `organiserWallLm`, `innerWallLm`,
   `roomWallLm`, `swapLm`), og takdrager fra arrangøren (`organiserBeamLm`).
 
+## Farge per plate
+
+En vegg har én farge (`Wall.plate`, rommets `Room.plate`, ellers standens `defaultPlate`). Enkeltplater kan få sin egen
+farge i veggskuffen: malerspannet farger hele veggen, malerkosten én og én plate (klikk, eller dra over flere). Fargen
+lagres per modul i `Variant.panels` (domain/panels.ts), nøklet på platens kant i planen:
+
+- Én plate er én HDF-plate, så fargen gjelder begge sider. Skal én side ha noe annet, blir det folie på hele platen.
+- Der en romside står på en standvegg, er platen standveggens, og fargen også.
+- Fargen følger med når en innervegg eller et rom flyttes eller endrer form, og forsvinner når platen fjernes.
+- Hel-vegg-farge tar over: platene på veggen får veggens nye farge.
+- Kalkylen har én linje per farge. En farget plate i en standvegg arrangøren betaler blir platebytte for akkurat den
+  platen (6125-RAL). Plukklisten teller plater per RAL, og overstykket over en dør har platens farge.
+
 ## Unntak som ikke er bygget
 
 Med godkjenning fra nabostanden kan en standvegg i praksis endres. Det er sjelden og ikke verdt å modellere nå, så appen

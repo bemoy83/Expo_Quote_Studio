@@ -16,7 +16,7 @@ import type { PlanSelection } from '../plan/PlanView'
 import { findMotif, SAMPLE_MOTIFS } from '../motifs'
 import { decorSource } from '../dnd'
 import { INK, LAYER_COLOR, SUNKEN } from '../colors'
-import { Button, CommitInput, Counter, IconButton, Segmented, Switch } from '../controls'
+import { Button, CommitInput, Counter, IconButton, ImageInput, Segmented, Switch } from '../controls'
 import { catalog, place, productOf, rules, wallPlates } from '../env'
 import { count, fmt, kr, mm } from '../format'
 import { beamSummary } from '../names'
@@ -533,17 +533,7 @@ function ProfileSection({ v, res, brush, tool, pick, motifs, onUpload, onSelect 
           Last opp
         </Button>
       </div>
-      <input
-        ref={file}
-        type="file"
-        accept="image/*"
-        hidden
-        onChange={(e) => {
-          const f = e.target.files?.[0]
-          if (f) onUpload(f)
-          e.target.value = ''
-        }}
-      />
+      <ImageInput ref={file} onFile={onUpload} />
       <div className="gfx-grid">
         {motifs.map((m) => {
           const on = tool !== 'select' && brush?.kind === 'motif' && brush.motif === m.id
