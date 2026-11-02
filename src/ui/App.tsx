@@ -38,6 +38,8 @@ import { removeFill, removeLane, rotateLane } from '../domain/carpet'
 import { CarpetDrawer } from './plan/CarpetDrawer'
 import { longestSide, TILE_FULL, type FloorBrushSize, type RollDir, type TileSize } from '../domain/floor'
 import { ToolDock } from './plan/ToolDock'
+import { PriceChangePill } from './plan/PriceChangePill'
+import { usePriceChange } from './plan/usePriceChange'
 import { QuickPicks } from './plan/QuickPicks'
 import type { GridStep } from '../domain/snapGrid'
 
@@ -247,6 +249,9 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey)
   })
 
+  /** Sketches opened or started; a new one starts the price change over. */
+  const [loads, setLoads] = useState(0)
+  const change = usePriceChange(res.sum, `${loads}:${current}`)
   const others = sketch.variants.filter((_, i) => i !== current).map((x) => ({ name: x.name, sum: calcFor(x).sum }))
   const k = res.keyFigures
 
@@ -257,6 +262,7 @@ export default function App() {
   /** Replace the whole sketch (Ny, Åpne fil). One undo step, offered in the toast. */
   const load = (next: Sketch, text: string) => {
     dispatch({ type: 'load', sketch: next })
+    setLoads((n) => n + 1)
     setSelection({})
     setTool('select')
     showToast({ text, action: 'Angre', onAction: () => dispatch({ type: 'undo' }) })
@@ -470,6 +476,7 @@ export default function App() {
                     </div>
                   </Suspense>
                 )}
+                {view === 'plan' && change?.at && <PriceChangePill key={change.id} change={change} />}
                 <ToolDock
                   tools={view === 'plan'}
                   active={active}
@@ -479,6 +486,7 @@ export default function App() {
                   canRedo={state.future.length > 0}
                   onUndo={() => dispatch({ type: 'undo' })}
                   onRedo={() => dispatch({ type: 'redo' })}
+                  change={change && !(view === 'plan' && change.at) ? change : null}
                 >
                   {quick}
                 </ToolDock>

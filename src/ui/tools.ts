@@ -71,3 +71,20 @@ export function gridSteps(brush: Brush | null, rules: Rules): readonly GridStep[
   if (brush?.kind === 'wall' || brush?.kind === 'beam') return GRID_STEPS.filter((s) => Math.abs(s - rules.wall.cc) < 1e-9)
   return []
 }
+
+/** A plan layer: the calc groups the plan can dim. */
+export type Layer = Exclude<Highlight, null>
+
+/** Layers that stay at full strength while a pen draws or erases; the rest are toned down so what the pen works on
+ * stands out. Vegg keeps everything on the walls, Profilering keeps the walls it hangs on, Møbel keeps the walls it
+ * must clear. */
+const PEN_LAYERS: Record<PenTool, readonly Layer[]> = {
+  wall: ['walls', 'openings', 'beams', 'textile', 'foil'],
+  floor: ['floor'],
+  profile: ['walls', 'openings', 'textile', 'foil'],
+  object: ['walls', 'openings', 'objects'],
+}
+
+/** Layers kept at full strength for the tool in hand, or null when nothing is toned down (Velg, or Tøm without a pen). */
+export const penLayers = (tool: Tool, brush: Brush | null): ReadonlySet<Layer> | null =>
+  tool === 'select' || !brush ? null : new Set(PEN_LAYERS[penToolOf(brush)])

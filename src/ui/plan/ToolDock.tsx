@@ -1,10 +1,13 @@
 // Floating tools on the drawing surface, one icon per tool: Velg · Vegg · Gulv · Profilering · Møbel · Tøm at the
 // bottom, undo and redo on their own pill to the left. Over the active tool: its quick picks. A short stripe under
-// Vegg and Gulv shows the colour they draw with.
+// Vegg and Gulv shows the colour they draw with. Over the quick picks: the price change of an edit made outside the
+// plan (PriceChangePill).
 import type { LucideIcon } from 'lucide-react'
 import { Armchair, BrickWall, Eraser, Grid2x2, Image, MousePointer2, Redo2, Undo2 } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { DockTool } from '../tools'
+import { PriceChangePill } from './PriceChangePill'
+import type { PriceChange } from './usePriceChange'
 
 interface ToolDef {
   id: DockTool
@@ -31,6 +34,7 @@ export function ToolDock({
   canRedo,
   onUndo,
   onRedo,
+  change,
   children,
 }: {
   /** False in 3D: the tools draw in the plan only, so 3D gets undo and redo alone. */
@@ -43,6 +47,8 @@ export function ToolDock({
   canRedo: boolean
   onUndo: () => void
   onRedo: () => void
+  /** Change in the exhibitor's sum (usePriceChange) when it did not come from drawing in the plan; null hides it. */
+  change: PriceChange | null
   /** The active tool's quick picks (QuickPicks). */
   children?: ReactNode
 }) {
@@ -56,9 +62,10 @@ export function ToolDock({
           <Redo2 size={18} />
         </button>
       </div>
-      {tools && (
-        <div className="dock-stack">
-          {children}
+      <div className="dock-stack">
+        {change && <PriceChangePill key={change.id} change={change} />}
+        {tools && children}
+        {tools && (
           <div className="dock-pill dock-tools" role="toolbar" aria-label="Verktøy">
             {DOCK_TOOLS.map((t) => {
               const on = active === t.id
@@ -79,8 +86,9 @@ export function ToolDock({
               )
             })}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }
+
