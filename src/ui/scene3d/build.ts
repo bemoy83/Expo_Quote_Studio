@@ -8,7 +8,7 @@ import { alongRun } from '../../calc/freeFrames'
 import { runDirection } from '../../domain/freeTextile'
 import { FURNITURE_WHITE } from '../../catalog/defaultCatalog'
 import { foilCenter, sideOf, textileBox, textileOffset } from '../../domain/decor'
-import { coverCrop, cropBand, type Crop } from '../../domain/print'
+import { cropBand, plateCrop, type Crop } from '../../domain/print'
 import { doorSwing } from '../../domain/edit'
 import { doorHinge, doorRal } from '../../domain/doors'
 import { CELL, pointAlong, pointKey, wallDirection, wallLength } from '../../domain/grid'
@@ -362,7 +362,7 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
       along(pointAlong(w, c - f.width / 2), pointAlong(w, c + f.width / 2), f.width, f.height, 0.002, f.y - f.height / 2, print, tag, face)
       continue
     }
-    const crop = f.crop ?? coverCrop(f.width / f.height, m?.ratio ?? 0)
+    const crop = plateCrop(f, m?.ratio ?? 0)
     const y0 = f.y - f.height / 2
     const y1 = f.y + f.height / 2
     const band = (lo: number, hi: number, width: number, off: number) => {

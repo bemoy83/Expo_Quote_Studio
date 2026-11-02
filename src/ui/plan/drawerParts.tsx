@@ -64,12 +64,12 @@ export function PlatePalette({ value, onPick, print }: { value: string; onPick: 
 }
 
 /**
- * A motif filling a box, cropped like the 3D print (or the given part of it). Drawn in its own viewport of the motif's shape: an SVG motif in a
- * plain <image> would letterbox itself inside the box instead of being cropped. The viewport is 100 units high:
- * Chrome leaves out an image under one unit wide (a tall motif, 0.4 × 1, went missing).
+ * A motif filling a box, cropped like the 3D print, or the part `crop` of it (a plate of a stretched print). Drawn in
+ * its own viewport of the motif's shape: an SVG motif in a plain <image> would letterbox itself inside the box instead
+ * of being cropped. The viewport is 100 units high: Chrome leaves out an image under one unit wide (a tall motif,
+ * 0.4 × 1, went missing).
  */
 export function Print({ m, x, y, width, height, crop }: { m: Motif; x: number; y: number; width: number; height: number; crop?: Crop }) {
-  // A plate of a stretched print shows its window of the motif ([left, top, right, bottom] of the image)
   const box = crop ? `${crop[0] * m.ratio * 100} ${crop[1] * 100} ${(crop[2] - crop[0]) * m.ratio * 100} ${(crop[3] - crop[1]) * 100}` : `0 0 ${m.ratio * 100} 100`
   return (
     <svg x={x} y={y} width={width} height={height} viewBox={box} preserveAspectRatio={crop ? 'none' : 'xMidYMid slice'}>

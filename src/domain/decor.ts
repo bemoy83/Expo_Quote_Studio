@@ -309,8 +309,8 @@ export function freeFelts(v: Variant, rules: Rules, wallId: string, s: FaceSide,
 
 export const foilsOn = (v: Variant, wallId: string, s: FaceSide) => v.foils.filter((f) => f.wallId === wallId && sideOf(v, f) === s);
 
-/** A decal kept inside its felt: size limited by the felt with the motif's ratio, centre clamped. */
-function fitFoil(f: Foil, rules: Rules, ratio: number): Foil {
+/** A decal kept inside its felt: size limited by the felt with the motif's ratio, centre clamped. A full foil covers the felt. */
+export function fitFoil(f: Foil, rules: Rules, ratio: number): Foil {
   const fe = felt(rules, f.module);
   if (f.full) return { ...f, width: fe.w, height: fe.h, x: 0, y: r3((fe.y0 + fe.y1) / 2) };
   const r = ratio > 0 ? ratio : f.width && f.height ? f.width / f.height : 1;

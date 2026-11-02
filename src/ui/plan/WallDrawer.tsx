@@ -27,7 +27,7 @@ import {
 } from '../../domain/decor'
 import { eraseWalls, setWallPlate } from '../../domain/edit'
 import { setPanels, wallRal } from '../../domain/panels'
-import { clearPrint, coverCrop, cropBand, fillPlates, printPlate, printsOn, printWall, clearDecor } from '../../domain/print'
+import { clearPrint, cropBand, fillPlates, plateCrop, printPlate, printsOn, printWall, clearDecor } from '../../domain/print'
 import { doorRal } from '../../domain/doors'
 import { OUTSIDE, roomAt, roomName, roomSize } from '../../domain/rooms'
 import { wallLength, wallModules } from '../../domain/grid'
@@ -291,7 +291,7 @@ export function WallDrawer(p: Props) {
   const doorPrint = (f: Foil, x: number, leafX: number) => {
     const m = findMotif(motifs, f.motif)
     if (!m) return undefined
-    const crop = f.crop ?? coverCrop(f.width / f.height, m.ratio)
+    const crop = plateCrop(f, m.ratio)
     const y0 = f.y - f.height / 2
     const y1 = f.y + f.height / 2
     const dh = rules.door.height

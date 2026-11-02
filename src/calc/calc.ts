@@ -1,10 +1,10 @@
-import { stretchedRuns } from '../domain/print';
 import { groupItems, resolveGroup } from '../catalog/groups';
 import { displayName, indexCatalog } from '../catalog/lookup';
 import type { Catalog, Unit } from '../catalog/types';
 import { openSides, pointKey } from '../domain/grid';
 import { carpetMetrics } from '../domain/carpet';
 import { rollUsage, tileAreas, tileCounts } from '../domain/floor';
+import { stretchedRuns } from '../domain/print';
 import type { Payer, Point, StandWallTerms, TextileFill, Variant } from '../domain/types';
 import { DEFAULT_STAND_WALLS } from '../domain/variant';
 import { builtModules, wallKind, wallPoints, type BuiltModule, type WallKind } from '../domain/walls';

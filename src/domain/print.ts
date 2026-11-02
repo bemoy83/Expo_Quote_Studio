@@ -7,7 +7,7 @@
 // bucket also leaves the stretch inside a bakrom that stands against the face; the brush can still print there.
 import type { Rules } from '../rules/rules';
 import { pointAlong, wallLength, wallModules } from './grid';
-import { faceNormal, felt, freeFelts, sideOf, type FaceSide } from './decor';
+import { faceNormal, felt, fitFoil, freeFelts, sideOf, type FaceSide } from './decor';
 import { clearPanels } from './panels';
 import { roomAt } from './rooms';
 import { builtModules } from './walls';
@@ -25,6 +25,9 @@ export function coverCrop(aspect: number, ratio: number): Crop {
   const wh = aspect > r ? r / aspect : 1;
   return [(1 - ww) / 2, (1 - wh) / 2, (1 + ww) / 2, (1 + wh) / 2];
 }
+
+/** The part of the motif a full-plate foil shows: its share of a stretched print, else the whole motif cropped to the plate. */
+export const plateCrop = (f: Foil, ratio: number): Crop => f.crop ?? coverCrop(f.width / f.height, ratio);
 
 /** The part of `crop` on the band from height `lo` to `hi` of a plate whose crop spans `y0` to `y1` (metres). */
 export function cropBand(crop: Crop, y0: number, y1: number, lo: number, hi: number): Crop {
@@ -80,16 +83,10 @@ function strip(v: Variant, w: Wall, s: FaceSide, modules: ReadonlySet<number>, d
   return v.foils.filter((f) => !(f.wallId === w.id && sideOf(v, f) === s && modules.has(f.module) && (decals || f.full)));
 }
 
-/** Fit a full-plate foil to its felt, as decor.ts does for every foil. */
-function fit(rules: Rules, f: Foil): Foil {
-  const fe = felt(rules, f.module);
-  return { ...f, width: fe.w, height: fe.h, x: 0, y: Math.round(((fe.y0 + fe.y1) / 2) * 1000) / 1000 };
-}
-
 /**
  * The paint bucket with «Print»: the motif stretched over every plate of the face that can take it (not inside a
- * bakrom standing against it), replacing the
- * prints and decals there. Clicked again on a face that already carries this print, it takes the print off.
+ * bakrom standing against it), replacing the prints and decals there. Clicked again on a face that already carries
+ * this print, it takes the print off.
  */
 export function printWall(v: Variant, rules: Rules, wallId: string, s: FaceSide, motif: string, ratio: number): Variant {
   const w = v.walls.find((x) => x.id === wallId);
@@ -107,7 +104,7 @@ export function printWall(v: Variant, rules: Rules, wallId: string, s: FaceSide,
   const added = plates.map((i) => {
     const id = nextId(ids, 'f');
     ids.push(id);
-    return fit(rules, { ...plateFoil(id, w, i, s, motif), ...(run ? { run, crop: crops.get(i) } : {}) });
+    return fitFoil({ ...plateFoil(id, w, i, s, motif), ...(run ? { run, crop: crops.get(i) } : {}) }, rules, 0);
   });
   return { ...v, foils: [...kept, ...added] };
 }
@@ -123,7 +120,7 @@ export function printPlate(v: Variant, rules: Rules, wallId: string, module: num
   if (cur?.motif === motif) return { ...v, foils: v.foils.filter((f) => f.id !== cur.id) };
   const kept = strip(v, w, s, new Set([module]), true);
   const id = nextId(kept.map((f) => f.id), 'f');
-  return { ...v, foils: [...kept, fit(rules, plateFoil(id, w, module, s, motif))] };
+  return { ...v, foils: [...kept, fitFoil(plateFoil(id, w, module, s, motif), rules, 0)] };
 }
 
 /** A colour painted on a face (all plates, or the given ones) takes the print off there. Decals stay. */
@@ -136,14 +133,14 @@ export function clearPrint(v: Variant, wallId: string, s: FaceSide, modules?: It
 }
 
 /**
- * The wall drawer's trash with the whole wall chosen: the wall back to plain. Its foil goes from both faces (or face
- * `s` only), prints and decals, and its plates lose their own colours, so they take the wall's again. Textile frames
- * stay: they are things of their own.
+ * The wall drawer's trash with the whole wall chosen: the wall back to plain. Its foil goes from both faces, prints
+ * and decals, and its plates lose their own colours, so they take the wall's again. Textile frames stay: they are
+ * things of their own.
  */
-export function clearDecor(v: Variant, wallId: string, s?: FaceSide): Variant {
+export function clearDecor(v: Variant, wallId: string): Variant {
   const w = v.walls.find((x) => x.id === wallId);
   if (!w) return v;
-  const foils = v.foils.filter((f) => !(f.wallId === w.id && (s === undefined || sideOf(v, f) === s)));
+  const foils = v.foils.filter((f) => f.wallId !== w.id);
   const own = new Set(builtModules(v).filter((m) => m.wallId === w.id).map((m) => m.key));
   const cleared = clearPanels(v, wallModules(w).map((m) => m.key).filter((k) => own.has(k)));
   return foils.length === v.foils.length && cleared === v ? v : { ...cleared, foils };
