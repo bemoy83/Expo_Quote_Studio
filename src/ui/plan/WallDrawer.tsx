@@ -2,7 +2,7 @@
 // Three columns like the door drawer: settings · graphics shelf · the wall. Textile frames and foil decals are placed,
 // moved and resized in the drawing; motifs are clicked onto what is selected or dragged from the shelf onto the wall.
 // Without a selection it edits the wall itself: plate colour, remove wall; a door on it opens the door drawer.
-import { DoorOpen, FlipHorizontal2, MoveHorizontal, Plus, Trash2, X } from 'lucide-react'
+import { DoorOpen, FlipHorizontal2, MoveHorizontal, PaintBucket, Paintbrush, Plus, Trash2, X } from 'lucide-react'
 import { useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent } from 'react'
 import { production, wallLabel } from '../../calc/production'
 import {
@@ -25,6 +25,7 @@ import {
   type FaceSide,
 } from '../../domain/decor'
 import { eraseWalls, setWallPlate } from '../../domain/edit'
+import { setPanels, wallRal } from '../../domain/panels'
 import { doorRal } from '../../domain/doors'
 import { OUTSIDE, roomName, roomSize } from '../../domain/rooms'
 import { wallLength, wallModules } from '../../domain/grid'
@@ -34,7 +35,7 @@ import type { Motif } from '../../persistence/file'
 import { doorInset, wallHeight } from '../../rules/rules'
 import { ALU, ALU_POST, BORDER_STRONG, FABRIC, FEET, INK, INK_FAINT, LAYER_COLOR, SUNKEN } from '../colors'
 import { Button, IconButton, Segmented } from '../controls'
-import { plateColor, productOf, rules, wallPlates } from '../env'
+import { plateColor, plateName, productOf, rules, wallPlates } from '../env'
 import { count, fmt, mm } from '../format'
 import { findMotif } from '../motifs'
 import { DIM, TXT } from './drawerText'
@@ -73,6 +74,9 @@ export function WallDrawer(p: Props) {
   const { v, selection: sel, motifs } = p
   const svg = useRef<SVGSVGElement>(null)
   const [spot, setSpot] = useState<DropSpot | null>(null)
+  /** Colouring: the paint bucket colours the whole wall, the brush one plate at a time in `brush`'s colour. */
+  const [tool, setTool] = useState<'wall' | 'plate'>('wall')
+  const [brush, setBrush] = useState<string | null>(null)
   const w = v.walls.find((x) => x.id === sel.wallId)
   if (!w) return null
   const fs = faces(v, w)
@@ -181,18 +185,50 @@ export function WallDrawer(p: Props) {
   const plates = wallPlates()
   const ral = w.plate ?? v.defaultPlate
   const flip = fs.length > 1 ? fs.find((x) => x !== s) : undefined
+  const painting = tool === 'plate' && !T && !F
+  const paint = brush ?? ral
+  /** The colour a plate has without its own: that of the wall that owns it (a stand wall under a room side). */
+  const base = (key: string) => {
+    const owner = v.walls.find((x) => x.id === built.get(key)?.wallId)
+    return owner ? wallRal(v, owner) : v.defaultPlate
+  }
+  const odd = mods.filter((m) => m && m.plate !== base(m.key)).length
+  /** Brush on a plate: its colour, or the wall's again when it already has the brush's colour. */
+  const paintPlate = (key: string, first: boolean) => {
+    const cur = built.get(key)?.plate
+    const to = first && cur === paint ? base(key) : paint
+    if (!first && cur === to) return
+    if (first) p.onCheckpoint()
+    p.onEdit((x) => setPanels(x, [key], to, base), false)
+  }
+  /** Pointer handlers for a plate in the drawing while the brush is out: click, or press and sweep across plates. */
+  const brushOn = (key: string) =>
+    painting
+      ? {
+          style: { cursor: 'crosshair' },
+          onPointerDown: (e: RPointerEvent) => {
+            e.stopPropagation()
+            if (e.button === 0) paintPlate(key, true)
+          },
+          onPointerEnter: (e: RPointerEvent) => {
+            if (e.buttons === 1) paintPlate(key, false)
+          },
+        }
+      : {}
   const tail = 'dra tekstilvegg eller motiv til veggen, klikk det for å endre'
-  const hint = T
-    ? 'Dra rammen for å flytte · håndtakene endrer størrelsen · klikk et motiv for trykk · Delete fjerner'
-    : F
-      ? F.full
-        ? 'Dra for å flytte til en annen plate · klikk et motiv for å bytte · Delete fjerner'
-        : 'Dra for å flytte innenfor platen · hjørnene endrer størrelsen · klikk et motiv for å bytte · Delete fjerner'
-      : isStandWall(w)
-        ? `Standveggen står fast · ${tail}`
-        : w.room
-          ? `Dra veggen i planen for å endre rommet · ${tail}`
-          : `Dra veggen i planen for å flytte den · ${tail}`
+  const hint = painting
+    ? 'Klikk eller dra over platene for å farge dem · klikk en farget plate igjen for veggens farge'
+    : T
+      ? 'Dra rammen for å flytte · håndtakene endrer størrelsen · klikk et motiv for trykk · Delete fjerner'
+      : F
+        ? F.full
+          ? 'Dra for å flytte til en annen plate · klikk et motiv for å bytte · Delete fjerner'
+          : 'Dra for å flytte innenfor platen · hjørnene endrer størrelsen · klikk et motiv for å bytte · Delete fjerner'
+        : isStandWall(w)
+          ? `Standveggen står fast · ${tail}`
+          : w.room
+            ? `Dra veggen i planen for å endre rommet · ${tail}`
+            : `Dra veggen i planen for å flytte den · ${tail}`
 
   const remove = () => {
     if (T) p.onEdit((x) => removeTextile(x, T.id))
@@ -257,7 +293,7 @@ export function WallDrawer(p: Props) {
             ? `ramme ${mm(piece.W / 1000)} × ${mm(piece.H / 1000)} mm · ${fmt(piece.area)} m² ${piece.fill === 'reuse' ? 'kundens duk' : piece.fill === 'white' ? 'hvit duk' : 'trykk'}`
             : F
               ? `Felt ${F.module + 1} · ${mm(F.width)} × ${mm(F.height)} mm`
-              : [`${L} m`, count(wallModules(w).length - openings.length, 'plate', 'plater'), openings.length && count(openings.length, 'åpning', 'åpninger'), tex.length && count(tex.length, 'tekstilvegg', 'tekstilvegger')]
+              : [`${L} m`, count(wallModules(w).length - openings.length, 'plate', 'plater') + (odd ? ` (${odd} i egen farge)` : ''), openings.length && count(openings.length, 'åpning', 'åpninger'), tex.length && count(tex.length, 'tekstilvegg', 'tekstilvegger')]
                   .filter(Boolean)
                   .join(' · ')}
         </p>
@@ -300,13 +336,17 @@ export function WallDrawer(p: Props) {
 
         {!T && !F && (
           <>
-            <div className="eyebrow">
-              Veggplate · {plates.find((x) => x.ral === ral)?.name} · RAL {ral}
+            <div className="dd-swing">
+              <span className="eyebrow">
+                {painting ? `Plate · ${plateName(paint)} ${paint}` : `Hele veggen · ${plateName(ral)} ${ral}`}
+              </span>
+              <IconButton icon={PaintBucket} label="Farg hele veggen" size={15} pressed={!painting} onClick={() => setTool('wall')} />
+              <IconButton icon={Paintbrush} label="Farg én og én plate" size={15} pressed={painting} onClick={() => setTool('plate')} />
             </div>
             <VariantChips
               chips={plates.map((x) => ({ name: `${x.name} · RAL ${x.ral}`, color: x.color }))}
-              selected={plates.findIndex((x) => x.ral === ral)}
-              onSelect={(i) => p.onEdit((x) => setWallPlate(x, w.id, plates[i].ral!))}
+              selected={plates.findIndex((x) => x.ral === (painting ? paint : ral))}
+              onSelect={(i) => (painting ? setBrush(plates[i].ral!) : p.onEdit((x) => setWallPlate(x, w.id, plates[i].ral!)))}
             />
           </>
         )}
@@ -401,7 +441,7 @@ export function WallDrawer(p: Props) {
                   }}
                 >
                   {/* Header panel over the opening, as in 3D */}
-                  <rect x={x + rules.wall.post / 2} y={z(H)} width={1 - rules.wall.post} height={H - dh} fill={plateColor(m.plate ?? w.plate ?? v.defaultPlate)} />
+                  <rect x={x + rules.wall.post / 2} y={z(H)} width={1 - rules.wall.post} height={H - dh} fill={plateColor(m.plate ?? w.plate ?? v.defaultPlate)} {...brushOn(m.key)} />
                   <rect x={x} y={z(H)} width={1} height={rules.wall.profile.top} fill={ALU} />
                   {door ? (
                     <>
@@ -421,7 +461,7 @@ export function WallDrawer(p: Props) {
             const f = felt(rules, i)
             return (
               <g key={i}>
-                <rect x={spanX(f.a, f.b)} y={z(H)} width={f.w} height={H - rules.wall.feet} fill={plateColor(m?.plate ?? w.plate ?? v.defaultPlate)} />
+                <rect x={spanX(f.a, f.b)} y={z(H)} width={f.w} height={H - rules.wall.feet} fill={plateColor(m?.plate ?? w.plate ?? v.defaultPlate)} {...(m ? brushOn(m.key) : {})} />
                 <rect x={x} y={z(H)} width={1} height={rules.wall.profile.top} fill={ALU} />
                 <rect x={x} y={z(f.y0)} width={1} height={rules.wall.profile.bottom} fill={ALU} />
               </g>
