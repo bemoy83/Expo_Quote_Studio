@@ -13,12 +13,13 @@ import { drawTextile, fillFace, planTextile } from '../../domain/textileBrush'
 import { faceOfPoint, freeStroke, freeTextileAt, moveFreeTextile, removeFreeTextile, runLength, runNormal, updateFace, type FaceKey } from '../../domain/freeTextile'
 import { alongRun, cornerPosts } from '../../calc/freeFrames'
 import type { Motif } from '../../persistence/file'
-import type { FloorTile, Point, Room, Side, Variant, Wall } from '../../domain/types'
+import type { FloorTile, Opening, Point, Room, Side, Variant, Wall } from '../../domain/types'
+import { doorHinge } from '../../domain/doors'
 import { builtModules, type BuiltModule } from '../../domain/walls'
 import { BORDER, BORDER_STRONG, BLOCK, CANVAS, INK, INK_FAINT, INK_MUTED, jointColor, LAYER_COLOR, SURFACE } from '../colors'
 import { applyDrop, decorDrag, endDecorDrag, type DecorDrag } from '../dnd'
 import { drawInnerBeam, eraseInnerBeams, innerBeamAt, type Run } from '../../domain/innerBeams'
-import { dragInnerBeam, dragRoom, dragWall, dropObject, dropRoom, roomDrag, type RoomDrag, type WallDrag } from '../drag'
+import { dragDoor, dragInnerBeam, dragRoom, dragWall, dropObject, dropRoom, roomDrag, type RoomDrag, type WallDrag } from '../drag'
 import { roomAt, roomName, roomSideAt, roomSize, sideIsHorizontal } from '../../domain/rooms'
 import { insetOutline, isHorizontal, labelRect, outlineSides } from '../../domain/outline'
 import { fmt } from '../format'
@@ -45,6 +46,8 @@ export interface PlanSelection {
   freeFace?: FaceKey
   /** An innvendig takdrager. */
   beamId?: string
+  /** A door or curtain: the door drawer. */
+  openingId?: string
   /** A lane of engangsteppe placed on its own: its top left cell. */
   lane?: { i: number; j: number }
   /** Engangsteppe laid by Fyll (domain/carpet.ts). */
@@ -131,6 +134,8 @@ type Drag =
   | ({ kind: 'room'; select: PlanSelection | null } & RoomDrag)
   | { kind: 'textile'; p0: P }
   | { kind: 'freeMove'; id: string; p0: P; v0: Variant; moved: boolean; select: PlanSelection }
+  /** A door or curtain dragged to another wall module (domain/doors.ts); `spot` is the module it is on now. */
+  | { kind: 'door'; id: string; p0: P; v0: Variant; spot: string | null; moved: boolean }
 
 interface P {
   x: number
@@ -222,6 +227,26 @@ export function PlanView(p: Props) {
       }
     }
     return best
+  }
+  /** A door or curtain under the pointer: on its module, or inside the swing of a door leaf. */
+  const openingAt = (q: P): Opening | null => {
+    const m = moduleAt(q, 0.2)
+    if (m?.opening) return m.opening
+    for (const o of v.openings) {
+      const w = v.walls.find((x) => x.id === o.wallId)
+      if (!w || productOf(o.product)?.opening !== 'door') continue
+      const { a, dir } = doorHinge(w, o)
+      const h: P = { x: a[0] + dir[0] * doorInset(rules), y: a[1] + dir[1] * doorInset(rules) }
+      const s = doorSwing(v.stand, w, o)
+      const [dx, dy] = wallDirection(w)
+      const n: Point = [-dy * s, dx * s]
+      const rx = q.x - h.x
+      const ry = q.y - h.y
+      const out = rx * n[0] + ry * n[1]
+      const on = rx * dir[0] + ry * dir[1]
+      if (out > 0 && on > 0 && Math.hypot(rx, ry) < rules.door.swing) return o
+    }
+    return null
   }
   /** A drawn takdrager under the pointer, unless a wall is closer (a beam can end on a wall). */
   const beamAt = (q: P) => (moduleAt(q, 0.12) ? undefined : innerBeamAt(v, q))
@@ -386,7 +411,13 @@ export function PlanView(p: Props) {
       else p.onEdit(() => next)
       return
     }
-    // Select. A side of the selected room comes first, so a side shared with a stand wall can still be dragged.
+    // Select. A door or curtain comes first: a click chooses it, a drag moves it along the walls.
+    const door = openingAt(q)
+    if (door) {
+      drag.current = { kind: 'door', id: door.id, p0: q, v0: v, spot: null, moved: false }
+      return
+    }
+    // A side of the selected room next, so a side shared with a stand wall can still be dragged.
     const selEdge = selection.roomId ? roomEdgeAt(q) : null
     if (selEdge && selEdge.room.id === selection.roomId) {
       startRoomDrag(selEdge.room, selEdge.side, q, null)
@@ -477,6 +508,11 @@ export function PlanView(p: Props) {
       d.moved = true
       dragInnerBeam(d, q, standardRuns, p.onEdit, p.onCheckpoint)
     } else if (d.kind === 'room') dragRoom(d, q, p.onEdit, p.onCheckpoint)
+    else if (d.kind === 'door') {
+      if (!d.moved && Math.hypot(q.x - d.p0.x, q.y - d.p0.y) < 0.15) return
+      d.moved = true
+      dragDoor(d, q, p.onEdit, p.onCheckpoint)
+    }
   }
 
   const onUp = (e: RPointerEvent<SVGSVGElement>) => {
@@ -541,8 +577,9 @@ export function PlanView(p: Props) {
       if (!d.moved) p.onSelect(d.select)
     } else if (d.kind === 'beam') {
       if (!d.moved) p.onSelect({ beamId: d.id })
-    } else if (d.kind === 'room') {
-      dropRoom(d, p.onEdit)
+    } else if (d.kind === 'door') p.onSelect({ openingId: d.id })
+    else if (d.kind === 'room') {
+      dropRoom(d, p.onEdit, p.onToast)
       // A room moved by its floor stays selected; a resized side opens the drawer only on a plain click
       if (d.select && (d.mode === 'move' || !d.moved)) p.onSelect(d.select)
     }
@@ -743,7 +780,7 @@ export function PlanView(p: Props) {
 
       {/* Openings */}
       <g opacity={dim('openings')} pointerEvents="none">
-        {mods.filter((m) => m.opening).map((m) => <OpeningMark key={m.key} v={v} m={m} selected={selection.wallId === m.wallId} />)}
+        {mods.filter((m) => m.opening).map((m) => <OpeningMark key={m.key} v={v} m={m} selected={selection.wallId === m.wallId || selection.openingId === m.opening!.id} />)}
       </g>
 
       {/* Frittstående tekstilvegger: foot plates under the frame, corner posts, the frame */}
@@ -1080,9 +1117,13 @@ function OpeningMark({ v, m, selected }: { v: Variant; m: BuiltModule; selected:
   const b = pointAlong(w, o.module + 1)
   const door = productOf(o.product)?.opening === 'door'
   const r = rules.door.swing
-  // Hinge: the leaf is centred in the opening, not hung on the post centre
+  // Hinge: the leaf is centred in the opening, not hung on the post centre; it hangs on either end of the module
   const k = doorInset(rules)
-  const h: Point = [a[0] + dx * k, a[1] + dy * k]
+  const hg = doorHinge(w, o)
+  const [ex, ey] = hg.dir
+  const h: Point = [hg.a[0] + ex * k, hg.a[1] + ey * k]
+  // The arc runs from the closed leaf (along the wall) to the open one (along n); its turn depends on both
+  const cw = ex * n[1] - ey * n[0] > 0
   return (
     <g>
       {selected && <Seg a={a} b={b} stroke={INK} strokeOpacity={0.3} strokeWidth={PLAN_WALL + 0.08} />}
@@ -1092,7 +1133,7 @@ function OpeningMark({ v, m, selected }: { v: Variant; m: BuiltModule; selected:
         <g fill="none" stroke={INK} strokeWidth={0.025}>
           <line x1={h[0]} y1={h[1]} x2={h[0] + n[0] * r} y2={h[1] + n[1] * r} />
           <path
-            d={`M${h[0] + dx * r} ${h[1] + dy * r} A${r} ${r} 0 0 ${s === 1 ? 1 : 0} ${h[0] + n[0] * r} ${h[1] + n[1] * r}`}
+            d={`M${h[0] + ex * r} ${h[1] + ey * r} A${r} ${r} 0 0 ${cw ? 1 : 0} ${h[0] + n[0] * r} ${h[1] + n[1] * r}`}
             strokeDasharray=".05 .05"
           />
         </g>

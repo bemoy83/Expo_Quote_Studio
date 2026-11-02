@@ -21,7 +21,7 @@ import type { Foil, Point, Room, TextileWall, Variant, Wall } from '../../domain
 import { wallHeight } from '../../rules/rules'
 import { IconButton } from '../controls'
 import { applyDrop, decorDrag, dropSpot, endDecorDrag, type DropSpot, type FaceTarget } from '../dnd'
-import { dragRoom, dragWall, dropObject, dropRoom, roomDrag, type RoomDrag, type WallDrag } from '../drag'
+import { dragDoor, dragRoom, dragWall, dropObject, dropRoom, roomDrag, type DoorDrag, type RoomDrag, type WallDrag } from '../drag'
 import { place, rules } from '../env'
 import { findMotif } from '../motifs'
 import type { Highlight } from '../tools'
@@ -47,6 +47,8 @@ type Drag =
   | ({ kind: 'wall'; moved: boolean } & WallDrag)
   /** A room: moved, or one side dragged. Tracked on a level plane at the height it was grabbed. */
   | ({ kind: 'room'; y: number } & RoomDrag)
+  /** A door or curtain moved along the walls, followed on a level plane at the height it was grabbed. */
+  | ({ kind: 'door'; y: number; moved: boolean } & DoorDrag)
   /** A textile or foil dragged on its face: deltas from where it was grabbed (t along the wall, h up). */
   | { kind: 'decor'; item: { textile: TextileWall } | { foil: Foil }; w: Wall; s: FaceSide; t0: number; h0: number; moved: boolean }
 
@@ -241,6 +243,8 @@ export function Scene3D(p: Props) {
         const o = P.v.objects.find((x) => x.id === hit.objectId)
         const q = onFloor(e)
         if (o && q) drag = { kind: 'object', id: o.id, start: { x: o.x, y: o.y }, off: { x: q.x - o.x, y: q.y - o.y }, moved: false }
+      } else if (hit?.openingId) {
+        drag = { kind: 'door', id: hit.openingId, v0: P.v, spot: null, y: hit.point.y, moved: false }
       } else if (sideAt(hit) || hit?.roomId || P.v.walls.find((x) => x.id === hit?.wallId)?.room) {
         // The top of a room side resizes the room; its roof or its own wall moves it
         const side = sideAt(hit)
@@ -270,7 +274,7 @@ export function Scene3D(p: Props) {
           const side = sideAt(hit)
           if (side) showGrip(side.room, side.side)
           else clearGrip()
-          const movable = hit?.objectId || hit?.textileId || hit?.foilId || hit?.roomId || (w && (w.room || canMoveWall(w)))
+          const movable = hit?.openingId || hit?.objectId || hit?.textileId || hit?.foilId || hit?.roomId || (w && (w.room || canMoveWall(w)))
           renderer.domElement.style.cursor = side ? resizeCursor(side.room, side.side) : movable ? 'move' : hit ? 'pointer' : 'grab'
         }
         return
@@ -292,6 +296,12 @@ export function Scene3D(p: Props) {
       if (drag.kind === 'room') {
         const q = onFloor(e, drag.y)
         if (q) dragRoom(drag, q, P.onEdit, P.onCheckpoint)
+        return
+      }
+      if (drag.kind === 'door') {
+        const q = onFloor(e, drag.y)
+        drag.moved = true
+        if (q) dragDoor(drag, q, P.onEdit, P.onCheckpoint, 0.8)
         return
       }
       const q = onFloor(e)
@@ -317,7 +327,9 @@ export function Scene3D(p: Props) {
       const hit = down.hit
       down = null
       if (d?.kind === 'object' && d.moved) return dropObject(P.v, d.id, d.start, P.onEdit, P.onToast)
-      if (d?.kind === 'room' && d.moved) return dropRoom(d, P.onEdit)
+      if (d?.kind === 'room' && d.moved) return dropRoom(d, P.onEdit, P.onToast)
+      // A door is chosen on release, dragged or not, so the drawer does not open mid-drag
+      if (d?.kind === 'door') return P.onSelect({ openingId: d.id })
       // A frame or decal is selected when let go, so the drawer does not open (and shrink the view) mid-drag
       if (hit?.textileId || hit?.foilId) {
         const deco = P.v.textiles.find((x) => x.id === hit.textileId) ?? P.v.foils.find((x) => x.id === hit.foilId)

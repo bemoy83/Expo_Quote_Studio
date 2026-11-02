@@ -20,6 +20,8 @@ import { Rail } from './panel/Rail'
 import { PlanPreview, PlanView, type PlanSelection } from './plan/PlanView'
 import { FreeTextileDrawer } from './plan/FreeTextileDrawer'
 import { WallDrawer } from './plan/WallDrawer'
+import { DoorDrawer } from './plan/DoorDrawer'
+import { removeOpening } from '../domain/doors'
 import { findMotif, motifLibrary, readMotif } from './motifs'
 import { fitDecor, removeFoil, removeTextile } from '../domain/decor'
 import { fitFreeTextiles, removeFreeTextile } from '../domain/freeTextile'
@@ -197,7 +199,7 @@ export default function App() {
       }
       if (mod || e.altKey) return
       const k = e.key.toLowerCase()
-      if (k === 'escape' && (selection.lane || selection.fill)) setSelection({})
+      if (k === 'escape' && (selection.lane || selection.fill || selection.openingId)) setSelection({})
       else if (k === 'escape') setTool('select')
       else if (k === 'r' && selection.lane && tool === 'select') {
         const r = rotateLane(v, selection.lane)
@@ -230,6 +232,10 @@ export default function App() {
       } else if ((k === 'delete' || k === 'backspace') && selection.roomId) {
         const id = selection.roomId
         onEdit((x) => removeRoom(x, id))
+        setSelection({})
+      } else if ((k === 'delete' || k === 'backspace') && selection.openingId) {
+        const id = selection.openingId
+        onEdit((x) => removeOpening(x, id))
         setSelection({})
       } else if ((k === 'delete' || k === 'backspace') && selection.objectId) {
         const id = selection.objectId
@@ -492,6 +498,9 @@ export default function App() {
               {(selection.lane || selection.fill) && tool === 'select' && view === 'plan' && (
                 <CarpetDrawer v={v} selection={selection} onSelect={setSelection} onEdit={(fn) => onEdit(fn)} onClose={() => setSelection({})} />
               )}
+              {selection.openingId && tool === 'select' && (
+                <DoorDrawer v={v} selection={selection} onSelect={setSelection} onEdit={(fn) => onEdit(fn)} onClose={() => setSelection({})} />
+              )}
               {selection.wallId && tool === 'select' && (
                 <WallDrawer
                   v={v}
@@ -555,10 +564,10 @@ const PANEL_TAB: Record<PenTool, string> = { wall: 'vegg', floor: 'gulv', profil
 
 const DOCK_KEYS: Record<string, DockTool> = { v: 'select', s: 'wall', g: 'floor', t: 'profile', m: 'object', e: 'erase' }
 
-const HINT_3D = 'Dra for å rotere · rull for å zoome · dra møbler, en innervegg eller grafikk for å flytte · dra et rom i veggen eller taket, toppkanten av en romvegg endrer størrelsen · dra grafikk eller tekstilvegg fra Profilering til en vegg'
+const HINT_3D = 'Dra for å rotere · rull for å zoome · dra møbler, en dør, en innervegg eller grafikk for å flytte · dra et rom i veggen eller taket, toppkanten av en romvegg endrer størrelsen · dra grafikk eller tekstilvegg fra Profilering til en vegg'
 
 function hint(tool: Tool, brush: Brush | null, roll: RollMode | false = false): string {
-  if (tool === 'select') return 'Klikk en vegg for å endre den · klikk engangsteppe for legging, snu og lengde · dra en innervegg, innvendig takdrager eller møbler for å flytte · dra gulvet i et rom for å flytte rommet, en romvegg for å endre størrelsen · Delete fjerner valgt møbel, takdrager eller rom'
+  if (tool === 'select') return 'Klikk en vegg eller dør for å endre den · klikk engangsteppe for legging, snu og lengde · dra en dør, innervegg, innvendig takdrager eller møbler for å flytte · dra gulvet i et rom for å flytte rommet, en romvegg for å endre størrelsen · Delete fjerner valgt møbel, dør, takdrager eller rom'
   const erase = tool === 'erase'
   switch (brush?.kind ?? 'wall') {
     case 'wall':

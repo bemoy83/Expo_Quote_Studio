@@ -1,7 +1,7 @@
 // Wall drawer (veggskuff): the selected wall seen straight on, one face at a time, under the plan or 3D view.
 // Textile frames and foil decals are placed, moved and resized here. Without a selection it edits the wall itself:
-// plate colour, door swing, remove wall.
-import { FlipHorizontal2, MoveHorizontal, Plus, Trash2, X } from 'lucide-react'
+// plate colour, remove wall; a door on it opens the door drawer (DoorDrawer).
+import { DoorOpen, MoveHorizontal, Plus, Trash2, X } from 'lucide-react'
 import { useRef, type PointerEvent as RPointerEvent } from 'react'
 import { production, wallLabel } from '../../calc/production'
 import {
@@ -23,14 +23,15 @@ import {
   updateTextile,
   type FaceSide,
 } from '../../domain/decor'
-import { canFlipSwing, eraseWalls, flipSwing, setWallPlate } from '../../domain/edit'
+import { eraseWalls, setWallPlate } from '../../domain/edit'
+import { doorRal } from '../../domain/doors'
 import { OUTSIDE } from '../../domain/rooms'
 import { wallLength, wallModules } from '../../domain/grid'
 import type { Foil, TextileWall, Variant, Wall } from '../../domain/types'
 import { builtModules, isStandWall } from '../../domain/walls'
 import type { Motif } from '../../persistence/file'
 import { doorInset, wallHeight } from '../../rules/rules'
-import { ALU, ALU_POST, BORDER_STRONG, FABRIC, FEET, INK, INK_FAINT, LAYER_COLOR, SUNKEN, SURFACE } from '../colors'
+import { ALU, ALU_POST, BORDER_STRONG, FABRIC, FEET, INK, INK_FAINT, LAYER_COLOR, SUNKEN } from '../colors'
 import { Button, IconButton, Segmented } from '../controls'
 import { plateColor, productOf, rules, wallPlates } from '../env'
 import { count, fmt, mm } from '../format'
@@ -247,9 +248,9 @@ export function WallDrawer(p: Props) {
               Legg til tekstilvegg
             </Button>
             <div className="wd-actions">
-              {canFlipSwing(v.stand, w) && doors.map((d, i) => (
-                <Button key={d.id} variant="ghost" icon={FlipHorizontal2} onClick={() => p.onEdit((x) => flipSwing(x, d.id))}>
-                  Snu dør{doors.length > 1 ? ` ${i + 1}` : ''}
+              {doors.map((d, i) => (
+                <Button key={d.id} variant="ghost" icon={DoorOpen} onClick={() => p.onSelect({ openingId: d.id })}>
+                  Dør{doors.length > 1 ? ` ${i + 1}` : ''}
                 </Button>
               ))}
               {!isStandWall(w) && (
@@ -293,16 +294,28 @@ export function WallDrawer(p: Props) {
               const door = productOf(m.opening.product)?.opening === 'door'
               const { swing, height: dh } = rules.door
               const k = doorInset(rules)
+              const o = m.opening
+              const hinge = o.hinge === -1 ? i + 1 - k : i + k
+              const free = o.hinge === -1 ? i + k : i + 1 - k
               return (
-                <g key={i}>
+                <g
+                  key={i}
+                  className="wd-door"
+                  style={{ cursor: 'pointer' }}
+                  onPointerDown={(e) => {
+                    // The door has a drawer of its own
+                    e.stopPropagation()
+                    p.onSelect({ openingId: o.id })
+                  }}
+                >
                   {/* Header panel over the opening, as in 3D */}
                   <rect x={x + rules.wall.post / 2} y={z(H)} width={1 - rules.wall.post} height={H - dh} fill={plateColor(m.plate ?? w.plate ?? v.defaultPlate)} />
                   <rect x={x} y={z(H)} width={1} height={rules.wall.profile.top} fill={ALU} />
                   {door ? (
                     <>
-                      {/* Leaf centred in the opening, handle at the free edge (hinge at the module start, as in the plan) */}
-                      <rect x={spanX(i + k, i + 1 - k)} y={z(dh)} width={swing} height={dh} fill={SURFACE} stroke={BORDER_STRONG} strokeWidth={0.012} />
-                      <rect x={u(i + 1 - k - 0.08) - 0.05} y={z(1.06)} width={0.1} height={0.02} rx={0.01} fill={INK_FAINT} />
+                      {/* Leaf centred in the opening in its colour, handle at the free edge (hinge end as in the plan) */}
+                      <rect x={spanX(i + k, i + 1 - k)} y={z(dh)} width={swing} height={dh} fill={plateColor(doorRal(v, o))} stroke={BORDER_STRONG} strokeWidth={0.012} />
+                      <rect x={u(free + (hinge < free ? -0.08 : 0.08)) - 0.05} y={z(1.06)} width={0.1} height={0.02} rx={0.01} fill={INK_FAINT} />
                     </>
                   ) : (
                     <rect x={x + 0.04} y={z(dh)} width={0.92} height={dh} fill="none" stroke={BORDER_STRONG} strokeWidth={0.012} strokeDasharray=".05 .04" />
