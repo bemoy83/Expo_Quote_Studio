@@ -9,6 +9,8 @@ export interface PickRow {
   key: string
   group: string
   code: string
+  /** The code is a Foga art.nr (Nobb): for purchasing, not picking, so the work order leaves it out. */
+  nobb?: boolean
   title: string
   /** Foga parts: what the piece is made of, or its cut lengths. */
   detail?: string
@@ -43,6 +45,7 @@ export function pickRows(res: CalcResult): PickRow[] {
       key: `${l.name}|${l.detail}`,
       group: l.group,
       code: l.ral ? `RAL ${l.ral}` : l.artnr,
+      nobb: !l.ral && !!l.artnr,
       title: l.ral ? `${l.name} · ${plateName(l.ral)}` : l.name,
       detail: l.detail,
       note: l.note,

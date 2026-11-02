@@ -177,7 +177,7 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf }: 
                       <span className="wo-box" aria-hidden />
                       <span>
                         {l.title}
-                        {l.code && <span className="faint num"> · {l.code}</span>}
+                        {l.code && !l.nobb && <span className="faint num"> · {l.code}</span>}
                         {brief(l) && <span className="muted num"> · {brief(l)}</span>}
                       </span>
                       <span className="num">{l.qty}</span>
@@ -243,7 +243,8 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf }: 
 }
 
 /** The picker needs the piece, not what it is made of: a pre-assembled unit shows only where it goes, never its
- *  components and their art.nr. Cut lengths, plate sizes and carpet pieces stay. */
+ *  components and their art.nr. Cut lengths, plate sizes and carpet pieces stay. Foga parts are not picked by their
+ *  Nobb number either, so it is left out (Bjørn 2.11.2026). */
 const brief = (l: PickRow) => (l.preassembled ? l.note : l.detail)
 
 function Row({ name, time, steps, total }: { name: string; time: Time; steps: HandlingStep[]; total?: boolean }) {
