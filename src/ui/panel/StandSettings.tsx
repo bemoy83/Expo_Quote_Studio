@@ -1,5 +1,5 @@
-// The stand itself: its size and type, the beams along its open sides, and who pays the stand walls. Shown in the
-// stand chip on the drawing surface and on the panel's Stand tab.
+// The stand itself, in the order the stand chip names it: its type, its size, who pays the stand walls and the beams
+// along its open sides. Shown in the stand chip's popover on the drawing surface and on the panel's Stand tab.
 import type { CalcResult } from '../../calc/calc'
 import { setStand } from '../../domain/edit'
 import type { Payer, StandType, StandWallTerms, Variant } from '../../domain/types'
@@ -36,10 +36,6 @@ export function StandSettings({ v, res, onEdit, terms, onTerms }: StandSettingsP
   )
   return (
     <>
-      <div className="stand-dims">
-        {side('width', 'Bredde')}
-        {side('depth', 'Dybde')}
-      </div>
       <div className="panel-sec eyebrow">Standtype</div>
       <Segmented<StandType>
         inWell
@@ -69,6 +65,10 @@ export function StandSettings({ v, res, onEdit, terms, onTerms }: StandSettingsP
         </div>
       )}
       <p className="panel-note">{TYPE_TEXT[s.type]}</p>
+      <div className="stand-dims">
+        {side('width', 'Bredde')}
+        {side('depth', 'Dybde')}
+      </div>
       {s.type !== 'island' && (
         <>
           <div className="opt">

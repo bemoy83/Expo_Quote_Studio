@@ -10,7 +10,7 @@ import { newSketch, parse, serialize, type Sketch } from '../persistence/file'
 import { KEYS, loadJson, loadSketch, saveJson, saveSketch } from '../persistence/storage'
 import { initState, reduce } from '../state/history'
 import { CalcPanel } from './calc/CalcPanel'
-import { Button, IconButton, Segmented, Toast, useToast } from './controls'
+import { Button, IconButton, Toast, useToast } from './controls'
 import { CatalogPage } from './catalog/CatalogPage'
 import { catalog, getVersion, idx, place, plateColor, productOf, rules, subscribe } from './env'
 import { download } from './download'
@@ -152,7 +152,7 @@ export default function App() {
     setTabRaw(k)
     setTool('select')
   }
-  /** Plan or 3D, from the band or a mini map: always in Velg. The brushes only draw in the plan, and the drawers only
+  /** Plan or 3D, from the stand chip or a mini map: always in Velg. The brushes only draw in the plan, and the drawers only
    *  open in Velg, so a pen carried into 3D would leave a clicked wall without its drawer. */
   const showView = (x: 'plan' | '3d') => {
     setView(x)
@@ -368,17 +368,6 @@ export default function App() {
               <FoldButton open={layout.panel} icons={[PanelLeftClose, PanelLeftOpen]} labels={['Fold inn panelet', 'Vis panelet']} onToggle={(o) => fold('panel', o)} />
               <h1>Standskisse</h1>
               <span className="band-tag">Utkast</span>
-              <span className="band-sep" />
-              <Segmented<'plan' | '3d'>
-                onBand
-                label="Visning"
-                value={view}
-                onChange={showView}
-                options={[
-                  { value: 'plan', label: 'Plan' },
-                  { value: '3d', label: '3D' },
-                ]}
-              />
               <span className="spacer" />
               <VariantTabs variants={sketch.variants} current={current} onSelect={selectVariant} />
               <Button onBand icon={Copy} disabled={sketch.variants.length >= 4} onClick={() => dispatch({ type: 'duplicate' })}>
@@ -481,7 +470,7 @@ export default function App() {
                     </div>
                   </Suspense>
                 )}
-                <StandChip v={v} res={res} onEdit={onEdit} terms={terms} onTerms={setTerms} />
+                <StandChip v={v} res={res} onEdit={onEdit} terms={terms} onTerms={setTerms} view={view} onView={showView} />
                 {view === 'plan' && change?.at && <PriceChangePill key={change.id} change={change} />}
                 <ToolDock
                   tools={view === 'plan'}
