@@ -475,7 +475,7 @@ export default function App() {
                     </div>
                   </Suspense>
                 )}
-                {view === 'plan' && change?.at && <PriceChangePill amount={change.amount} at={change.at} />}
+                {view === 'plan' && change?.at && <PriceChangePill key={change.id} change={change} />}
                 <ToolDock
                   tools={view === 'plan'}
                   active={active}
@@ -485,7 +485,7 @@ export default function App() {
                   canRedo={state.future.length > 0}
                   onUndo={() => dispatch({ type: 'undo' })}
                   onRedo={() => dispatch({ type: 'redo' })}
-                  change={change && !(view === 'plan' && change.at) ? change.amount : null}
+                  change={change && !(view === 'plan' && change.at) ? change : null}
                 >
                   {quick}
                 </ToolDock>

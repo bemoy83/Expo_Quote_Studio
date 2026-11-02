@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 
-/** How long the change stays after the last edit, ms. A drag keeps it open, so one stroke shows as one change. */
-const HOLD = 2600
+/** How long the change stays still after the last edit, ms. A drag keeps it open, so one stroke shows as one change. */
+const HOLD = 1900
+/** Then it floats up and fades, ms (.price-pill.leaving). */
+const LEAVE = 900
 /** A change this soon after the pointer moved in the plan came from drawing there, ms. */
 const FROM_PLAN = 400
 /** Room the pill needs beside the pointer, px. */
@@ -10,6 +12,10 @@ const PILL = { w: 130, h: 44 }
 export interface PriceChange {
   /** Kr, signed. */
   amount: number
+  /** One per pill: a new one pops in, an update during a stroke keeps it. */
+  id: number
+  /** Floating away: the next edit starts a new pill. */
+  leaving: boolean
   /** Where the stroke was, px inside the drawing surface (.plan-wrap); null when the change came from elsewhere
    *  (undo, a drawer, 3D), and the dock shows it. */
   at: { x: number; y: number } | null
@@ -21,6 +27,7 @@ export function usePriceChange(sum: number, scope: string): PriceChange | null {
   const base = useRef({ sum, scope })
   const pointer = useRef<{ x: number; y: number; t: number } | null>(null)
   const [change, setChange] = useState<PriceChange | null>(null)
+  const next = useRef(0)
 
   useEffect(() => {
     const track = (e: PointerEvent) => {
@@ -50,12 +57,17 @@ export function usePriceChange(sum: number, scope: string): PriceChange | null {
     const d = Math.round(sum - base.current.sum)
     const p = pointer.current
     const at = p && performance.now() - p.t < FROM_PLAN ? { x: p.x, y: p.y } : null
-    setChange(d === 0 ? null : { amount: d, at })
-    const t = window.setTimeout(() => {
+    // Back to where the stroke began: the pill keeps its last amount and leaves as usual
+    if (d !== 0) setChange((c) => ({ amount: d, at, id: c && !c.leaving ? c.id : ++next.current, leaving: false }))
+    const float = window.setTimeout(() => {
       base.current = { sum, scope }
-      setChange(null)
+      setChange((c) => c && { ...c, leaving: true })
     }, HOLD)
-    return () => window.clearTimeout(t)
+    const gone = window.setTimeout(() => setChange((c) => (c?.leaving ? null : c)), HOLD + LEAVE)
+    return () => {
+      window.clearTimeout(float)
+      window.clearTimeout(gone)
+    }
   }, [sum, scope])
   return change
 }

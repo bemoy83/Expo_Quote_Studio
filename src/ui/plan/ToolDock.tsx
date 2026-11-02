@@ -6,6 +6,7 @@ import { Armchair, BrickWall, Eraser, Grid2x2, Image, MousePointer2, Redo2, Undo
 import type { ReactNode } from 'react'
 import { signed } from '../format'
 import type { DockTool } from '../tools'
+import type { PriceChange } from './usePriceChange'
 
 interface ToolDef {
   id: DockTool
@@ -45,8 +46,8 @@ export function ToolDock({
   canRedo: boolean
   onUndo: () => void
   onRedo: () => void
-  /** Change in the exhibitor's sum (usePriceChange) when it did not come from drawing in the plan, kr; null hides it. */
-  change: number | null
+  /** Change in the exhibitor's sum (usePriceChange) when it did not come from drawing in the plan; null hides it. */
+  change: PriceChange | null
   /** The active tool's quick picks (QuickPicks). */
   children?: ReactNode
 }) {
@@ -61,7 +62,7 @@ export function ToolDock({
         </button>
       </div>
       <div className="dock-stack">
-        {change !== null && <PriceChangePill amount={change} />}
+        {change && <PriceChangePill key={change.id} change={change} />}
         {tools && children}
         {tools && (
           <div className="dock-pill dock-tools" role="toolbar" aria-label="Verktøy">
@@ -90,12 +91,13 @@ export function ToolDock({
   )
 }
 
-/** What the last stroke changed in the exhibitor's sum, inverted like a toast. `at`: by the pointer, px inside the
- *  drawing surface; else it sits in the dock over the quick picks. */
-export function PriceChangePill({ amount, at }: { amount: number; at?: { x: number; y: number } }) {
+/** What the last stroke changed in the exhibitor's sum, inverted like a toast. It pops in, rests while you draw, then
+ *  floats up and fades like a soap bubble. By the pointer when the change came from drawing in the plan (`at`, px inside
+ *  the drawing surface), else in the dock over the quick picks. */
+export function PriceChangePill({ change: { amount, at, leaving } }: { change: PriceChange }) {
   return (
     <div
-      className={at ? 'price-pill at' : 'price-pill'}
+      className={['price-pill', at && 'at', leaving && 'leaving'].filter(Boolean).join(' ')}
       style={at ? { left: at.x, top: at.y } : undefined}
       role="status"
       title="Endring i utstillers sum, eks. mva."
