@@ -102,7 +102,7 @@ export function PriceChangePill({ change: { amount, at, leaving } }: { change: P
       role="status"
       title="Endring i utstillers sum, eks. mva."
     >
-      {signed(amount)} kr
+      <span>{signed(amount)} kr</span>
     </div>
   )
 }
