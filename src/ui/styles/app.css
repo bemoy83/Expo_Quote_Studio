@@ -875,21 +875,6 @@ kbd {
   flex-wrap: wrap;
   gap: 6px;
 }
-.wd-dim {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  padding: 2px;
-  border-radius: var(--r-track);
-  background: var(--well);
-}
-.wd-dim .field.num {
-  width: 54px;
-  text-align: center;
-}
-.wd-dim .unit {
-  padding: 0 6px 0 2px;
-}
 .wd-view {
   min-width: 0;
   display: flex;
@@ -905,17 +890,18 @@ kbd {
   user-select: none;
 }
 .wd-hint {
-  /* Every drawer: the note sits at the bottom, also while the drawer scrolls */
+  /* Every drawer: the note across the bottom, also while the drawer scrolls */
+  grid-column: 1 / -1;
   position: sticky;
   bottom: 0;
-  margin-top: auto;
-  padding: 8px 0 10px;
+  padding: 6px 20px 10px;
   background: rgb(var(--panel));
   text-align: center;
   font: var(--type-note);
   color: rgb(var(--ink-faint));
 }
 .mot {
+  box-sizing: border-box;
   display: grid;
   place-items: center;
   height: 38px;
@@ -2424,11 +2410,11 @@ select.cin {
   max-height: none;
 }
 .drawer3 > .wd-hint {
-  grid-column: 1 / -1;
   position: static;
-  padding: 6px 20px 10px;
 }
-.dd-map {
+/* The middle part: the door's mini plan or the graphics shelf */
+.wd-mid {
+  min-height: 0;
   padding: 10px 12px 12px;
   border-right: 1px solid var(--g-row);
 }
@@ -2441,12 +2427,12 @@ select.cin {
 .wd-foot .wd-actions:empty {
   display: none;
 }
-.dd-swing {
+.wd-row {
   display: flex;
   align-items: center;
   gap: 2px;
 }
-.dd-swing .eyebrow {
+.wd-row .eyebrow {
   flex: 1;
 }
 .wd-dims {
@@ -2466,12 +2452,10 @@ select.cin {
 }
 .wd-shelf {
   width: 196px;
-  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 10px 12px 0;
-  border-right: 1px solid var(--g-row);
+  padding-bottom: 0;
 }
 .wd-shelf > .eyebrow {
   white-space: nowrap;

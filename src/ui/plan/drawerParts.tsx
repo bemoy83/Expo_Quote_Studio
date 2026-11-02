@@ -1,14 +1,52 @@
 // Controls shared by the drawers (skuffer): wall, free-standing textile wall, door, roll carpet.
-import { Minus, Plus, Upload } from 'lucide-react'
-import { useRef, type PointerEvent as RPointerEvent } from 'react'
+import { Trash2, Upload, X } from 'lucide-react'
+import type { PointerEvent as RPointerEvent, ReactNode } from 'react'
 import type { TextileFill } from '../../domain/types'
 import type { Motif } from '../../persistence/file'
-import { CommitInput, IconButton, Segmented } from '../controls'
+import { CommitInput, IconButton, ImageInput, Segmented } from '../controls'
+import { wallPlates } from '../env'
 import { fmt } from '../format'
 import { decorSource } from '../dnd'
 import { INK } from '../colors'
+import { VariantChips } from '../panel/ProductRow'
 
-const EPS = 1e-6
+/**
+ * The top of every drawer: a dot in the colour of what is chosen, its name, the drawer's own icon buttons (`children`),
+ * then delete when it can be removed and close.
+ */
+export function DrawerHead({ dot, title, remove, onClose, children }: { dot?: string; title: string; remove?: { label: string; onClick: () => void }; onClose: () => void; children?: ReactNode }) {
+  return (
+    <div className="wd-head">
+      <i className="dot" style={{ background: dot }} />
+      <h3>{title}</h3>
+      {children}
+      {remove && <IconButton icon={Trash2} label={remove.label} size={14} onClick={remove.onClick} />}
+      <IconButton icon={X} label="Lukk" size={14} onClick={onClose} />
+    </div>
+  )
+}
+
+/** A setting as one line: what it is now, and the icon buttons that change it. */
+export function DrawerRow({ label, children }: { label: ReactNode; children?: ReactNode }) {
+  return (
+    <div className="wd-row">
+      <span className="eyebrow">{label}</span>
+      {children}
+    </div>
+  )
+}
+
+/** The wall plate colours as dots, for a wall, a plate or a door leaf. */
+export function PlatePalette({ value, onPick }: { value: string; onPick: (ral: string) => void }) {
+  const plates = wallPlates()
+  return (
+    <VariantChips
+      chips={plates.map((x) => ({ name: `${x.name} · RAL ${x.ral}`, color: x.color }))}
+      selected={plates.findIndex((x) => x.ral === value)}
+      onSelect={(i) => onPick(plates[i].ral!)}
+    />
+  )
+}
 
 /**
  * A motif filling a box, cropped like the 3D print. Drawn in its own viewport of the motif's shape: an SVG motif in a
@@ -20,33 +58,6 @@ export function Print({ m, x, y, width, height }: { m: Motif; x: number; y: numb
     <svg x={x} y={y} width={width} height={height} viewBox={`0 0 ${m.ratio * 100} 100`} preserveAspectRatio="xMidYMid slice">
       <image href={m.src} width={m.ratio * 100} height={100} />
     </svg>
-  )
-}
-
-/** A length in metres with − / + and a field you can type in. */
-export function Dim({ label, value, onChange, step = 0.1, min = 0.5, decimals = 1 }: { label: string; value: number; onChange: (n: number) => void; step?: number; min?: number; decimals?: number }) {
-  const nudge = (d: number) => onChange(Math.round((value + d) * 1000) / 1000)
-  return (
-    <div className="opt flush">
-      <span className="lbl">{label}</span>
-      <span className="wd-dim">
-        <IconButton icon={Minus} size={14} label={`${label} −${fmt(step, 2)} m`} disabled={value <= min + EPS} onClick={() => nudge(-step)} />
-        <CommitInput
-          className="field num"
-          aria-label={`${label} i meter`}
-          inputMode="decimal"
-          value={fmt(value, decimals)}
-          selectOnFocus
-          onCommit={(text) => {
-            const n = parseLength(text)
-            if (n === null) return false
-            onChange(n)
-          }}
-        />
-        <IconButton icon={Plus} size={14} label={`${label} +${fmt(step, 2)} m`} onClick={() => nudge(step)} />
-        <span className="num unit">m</span>
-      </span>
-    </div>
   )
 }
 
@@ -114,9 +125,8 @@ export function Shelf({
   onPick?: (id: string | null) => void
   onUpload: (f: File) => void
 }) {
-  const file = useRef<HTMLInputElement>(null)
   return (
-    <div className="wd-shelf">
+    <div className="wd-mid wd-shelf">
       <div className="eyebrow">{label}</div>
       <div className="wd-shelf-grid">
         {textile && (
@@ -146,21 +156,11 @@ export function Shelf({
             </button>
           )
         })}
-        <button type="button" className="mot add" title="Last opp motiv" aria-label="Last opp motiv" onClick={() => file.current?.click()}>
+        <label className="mot add" title="Last opp motiv" aria-label="Last opp motiv">
           <Upload size={15} />
-        </button>
+          <ImageInput onFile={onUpload} />
+        </label>
       </div>
-      <input
-        ref={file}
-        type="file"
-        accept="image/*"
-        hidden
-        onChange={(e) => {
-          const f = e.target.files?.[0]
-          if (f) onUpload(f)
-          e.target.value = ''
-        }}
-      />
     </div>
   )
 }

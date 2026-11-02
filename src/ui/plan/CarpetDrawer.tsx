@@ -1,17 +1,17 @@
 // Drawer for engangsteppe chosen with Velg, laid out like the wall drawer. A fill: the ways to lay it, cheapest first,
 // with their waste, and its cut list. A lane placed by the seller: turn it, its length, its waste, take it off.
 // Ink = what is laid now, muted fill = hover, no outlines.
-import { RotateCw, Trash2, X } from 'lucide-react'
+import { RotateCw } from 'lucide-react'
 import { currentProposal, fillProposals, fillTilesOf, laneWaste, offered, removeFill, removeLane, resizeLane, rotateLane, relayFill, wasteKr, type Proposal } from '../../domain/carpet'
 import { across, along, cellsIn, lanesOf, rollPieces, type RollPiece } from '../../domain/floor'
 import { CELL } from '../../domain/grid'
 import type { FloorTile, Variant } from '../../domain/types'
 import { jointColor } from '../colors'
-import { Button, IconButton } from '../controls'
+import { Button } from '../controls'
 import { idx, rules } from '../env'
 import { fmt, kr } from '../format'
 import type { PlanSelection } from './PlanView'
-import { Dim } from './drawerParts'
+import { DrawerHead, SmallDim } from './drawerParts'
 import { Hatched } from './Hatched'
 import { CUT_FOOT, cutRows } from '../cutList'
 
@@ -49,20 +49,18 @@ function FillDrawer({ v, fill, onEdit, onClose }: Props & { fill: string }) {
   return (
     <section className="wall-drawer" aria-label="Engangsteppe, legging">
       <div className="wd-insp">
-        <div className="wd-head">
-          <i className="dot" style={{ background: colorOf(product) }} />
-          <h3>Engangsteppe {nameOf(product)}</h3>
-          <IconButton
-            icon={Trash2}
-            label="Fjern området (Delete)"
-            size={14}
-            onClick={() => {
+        <DrawerHead
+          dot={colorOf(product)}
+          title={`Engangsteppe ${nameOf(product)}`}
+          remove={{
+            label: 'Fjern området (Delete)',
+            onClick: () => {
               onEdit((x) => removeFill(x, fill))
               onClose()
-            }}
-          />
-          <IconButton icon={X} label="Lukk" size={14} onClick={onClose} />
-        </div>
+            },
+          }}
+          onClose={onClose}
+        />
         <p className="wd-meta num">
           {fmt(laid, 1)} m² lagt · {fmt(lm * roll, 1)} m² fra rull · {wasteText(lm * roll - laid)}
         </p>
@@ -80,10 +78,10 @@ function FillDrawer({ v, fill, onEdit, onClose }: Props & { fill: string }) {
             </button>
           ))}
         </div>
-        <div className="wd-hint">
-          Kunden betaler lagt m². Forslagene er rangert etter intern kost: materiale, teip og arbeid, og satsene er forslag. Velg et forslag for å legge området om · Delete fjerner
-          området · Esc lukker
-        </div>
+      </div>
+      <div className="wd-hint">
+        Kunden betaler lagt m². Forslagene er rangert etter intern kost: materiale, teip og arbeid, og satsene er forslag. Velg et forslag for å legge området om · Delete fjerner
+        området · Esc lukker
       </div>
     </section>
   )
@@ -104,24 +102,24 @@ function LaneDrawer({ v, lane, onSelect, onEdit, onClose }: Props & { lane: { i:
   return (
     <section className="wall-drawer" aria-label="Engangsteppe, bane">
       <div className="wd-insp">
-        <div className="wd-head">
-          <i className="dot" style={{ background: colorOf(t.product) }} />
-          <h3>Bane · {nameOf(t.product)}</h3>
-          <IconButton
-            icon={Trash2}
-            label="Fjern banen (Delete)"
-            size={14}
-            onClick={() => {
+        <DrawerHead
+          dot={colorOf(t.product)}
+          title={`Bane · ${nameOf(t.product)}`}
+          remove={{
+            label: 'Fjern banen (Delete)',
+            onClick: () => {
               onEdit((x) => removeLane(x, lane))
               onClose()
-            }}
-          />
-          <IconButton icon={X} label="Lukk" size={14} onClick={onClose} />
-        </div>
+            },
+          }}
+          onClose={onClose}
+        />
         <p className="wd-meta num">
           {fmt(width, 2)} × {fmt(len, 2)} m lagt · {wasteText(waste)}
         </p>
-        <Dim label="Lengde" value={len} step={CELL} decimals={2} min={CELL} onChange={(n) => move(resizeLane(v, lane, Math.round((n - len) / CELL)))} />
+        <div className="wd-dims">
+          <SmallDim label="Lengde" value={len} decimals={2} onChange={(n) => move(resizeLane(v, lane, Math.round((n - len) / CELL)))} />
+        </div>
         <Button icon={RotateCw} onClick={() => move(rotateLane(v, lane))}>
           Snu banen (R)
         </Button>
@@ -129,8 +127,8 @@ function LaneDrawer({ v, lane, onSelect, onEdit, onClose }: Props & { lane: { i:
       </div>
       <div className="wd-view">
         <LaneView t={t} roll={roll} />
-        <div className="wd-hint">Lengre eller kortere i steg på 0,5 m, i enden borte fra standkanten · R snur · Delete fjerner · Esc lukker</div>
       </div>
+      <div className="wd-hint">Lengre eller kortere i steg på 0,5 m, i enden borte fra standkanten · R snur · Delete fjerner · Esc lukker</div>
     </section>
   )
 }

@@ -2,7 +2,7 @@
 // Three columns like the door drawer: settings · graphics shelf · the wall. Textile frames and foil decals are placed,
 // moved and resized in the drawing; motifs are clicked onto what is selected or dragged from the shelf onto the wall.
 // Without a selection it edits the wall itself: plate colour, remove wall; a door on it opens the door drawer.
-import { DoorOpen, FlipHorizontal2, MoveHorizontal, PaintBucket, Paintbrush, Plus, Trash2, X } from 'lucide-react'
+import { DoorOpen, FlipHorizontal2, MoveHorizontal, PaintBucket, Paintbrush, Plus } from 'lucide-react'
 import { useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent } from 'react'
 import { production, wallLabel } from '../../calc/production'
 import {
@@ -33,17 +33,17 @@ import type { Foil, Room, TextileWall, Variant, Wall } from '../../domain/types'
 import { builtModules, isStandWall } from '../../domain/walls'
 import type { Motif } from '../../persistence/file'
 import { doorInset, wallHeight } from '../../rules/rules'
-import { ALU, ALU_POST, BORDER_STRONG, FABRIC, FEET, INK, INK_FAINT, LAYER_COLOR, SUNKEN } from '../colors'
+import { ALU, BORDER_STRONG, INK, INK_FAINT, LAYER_COLOR, SUNKEN } from '../colors'
 import { Button, IconButton, Segmented } from '../controls'
-import { plateColor, plateName, productOf, rules, wallPlates } from '../env'
+import { plateColor, plateName, productOf, rules } from '../env'
 import { count, fmt, mm } from '../format'
 import { findMotif } from '../motifs'
-import { DIM, TXT } from './drawerText'
+import { TXT, elevationBox } from './drawerText'
 import { RoomLabel } from './RoomLabel'
 import { roomLabelSize } from './roomLabelSize'
-import { FillPicker, Handles, Print, Shelf, SmallDim, type Edge } from './drawerParts'
+import { DrawerHead, DrawerRow, FillPicker, Handles, PlatePalette, Print, Shelf, SmallDim, type Edge } from './drawerParts'
+import { Dims, Opening, Posts, TextileFace } from './elevation'
 import { applyDrop, decorDrag, dropSpot, endDecorDrag, type DropSpot, type FaceTarget } from '../dnd'
-import { VariantChips } from '../panel/ProductRow'
 import type { PlanSelection } from './PlanView'
 
 interface Props {
@@ -209,8 +209,7 @@ export function WallDrawer(p: Props) {
   const piece = T ? production(v, rules.textile.inFrame, '').pieces.find((x) => x.textileId === T.id) : undefined
   const openings = v.openings.filter((o) => o.wallId === w.id)
   const doors = openings.filter((o) => productOf(o.product)?.opening === 'door')
-  const plates = wallPlates()
-  const ral = w.plate ?? v.defaultPlate
+  const ral = wallRal(v, w)
   const flip = fs.length > 1 ? fs.find((x) => x !== s) : undefined
   const painting = tool === 'plate' && !T && !F
   const paint = brush ?? ral
@@ -307,14 +306,12 @@ export function WallDrawer(p: Props) {
   return (
     <section className="wall-drawer drawer3" aria-label="Vegg sett forfra">
       <div className="wd-insp">
-        <div className="wd-head">
-          <i className="dot" style={{ background: T ? LAYER_COLOR.textile : F ? INK_FAINT : LAYER_COLOR.walls }} />
-          <h3>{title}</h3>
-          {(T || F || !isStandWall(w)) && (
-            <IconButton icon={Trash2} label={T ? 'Fjern tekstilvegg (Delete)' : F ? 'Fjern grafikk (Delete)' : w.room ? 'Åpne siden' : 'Fjern veggen'} size={14} onClick={remove} />
-          )}
-          <IconButton icon={X} label="Lukk" size={14} onClick={p.onClose} />
-        </div>
+        <DrawerHead
+          dot={T ? LAYER_COLOR.textile : F ? INK_FAINT : LAYER_COLOR.walls}
+          title={title}
+          remove={T || F || !isStandWall(w) ? { label: T ? 'Fjern tekstilvegg (Delete)' : F ? 'Fjern grafikk (Delete)' : w.room ? 'Åpne siden' : 'Fjern veggen', onClick: remove } : undefined}
+          onClose={p.onClose}
+        />
         <p className="wd-meta num">
           {T && piece
             ? `ramme ${mm(piece.W / 1000)} × ${mm(piece.H / 1000)} mm · ${fmt(piece.area)} m² ${piece.fill === 'reuse' ? 'kundens duk' : piece.fill === 'white' ? 'hvit duk' : 'trykk'}`
@@ -363,23 +360,15 @@ export function WallDrawer(p: Props) {
 
         {!T && !F && (
           <>
-            <div className="dd-swing">
-              <span className="eyebrow">
-                {painting ? `Plate · ${plateName(paint)} ${paint}` : `Hele veggen · ${plateName(ral)} ${ral}`}
-              </span>
+            <DrawerRow label={painting ? `Plate · ${plateName(paint)} ${paint}` : `Hele veggen · ${plateName(ral)} ${ral}`}>
               <IconButton icon={PaintBucket} label="Farg hele veggen" size={15} className="ink" pressed={!painting} onClick={() => setTool('wall')} />
               <IconButton icon={Paintbrush} label="Farg én og én plate" size={15} className="ink" pressed={painting} onClick={() => setTool('plate')} />
-            </div>
-            <VariantChips
-              chips={plates.map((x) => ({ name: `${x.name} · RAL ${x.ral}`, color: x.color }))}
-              selected={plates.findIndex((x) => x.ral === (painting ? paint : ral))}
-              onSelect={(i) => (painting ? setBrush(plates[i].ral!) : p.onEdit((x) => setWallPlate(x, w.id, plates[i].ral!)))}
-            />
+            </DrawerRow>
+            <PlatePalette value={painting ? paint : ral} onPick={(r) => (painting ? setBrush(r) : p.onEdit((x) => setWallPlate(x, w.id, r)))} />
           </>
         )}
         <div className="wd-foot">
-          <div className="dd-swing">
-            <span className="eyebrow">Side · {faceName(w, s).toLowerCase()}</span>
+          <DrawerRow label={`Side · ${faceName(w, s).toLowerCase()}`}>
             {flip !== undefined && (
               <IconButton
                 icon={FlipHorizontal2}
@@ -388,7 +377,7 @@ export function WallDrawer(p: Props) {
                 onClick={() => (T || F ? moveToSide(flip) : p.onSelect({ wallId: w.id, side: flip }))}
               />
             )}
-          </div>
+          </DrawerRow>
           <div className="wd-actions">
             {T && (
               <Button variant="ghost" icon={MoveHorizontal} onClick={() => p.onEdit((x) => fillTextile(x, rules, T.id))}>
@@ -438,7 +427,7 @@ export function WallDrawer(p: Props) {
         <svg
           ref={svg}
           className="wd-svg"
-          viewBox={`${-PAD - 0.25} ${-PAD} ${L + 2 * PAD + 0.25} ${H + PAD + 0.32}`}
+          viewBox={elevationBox(L, H, PAD)}
           preserveAspectRatio="xMidYMid meet"
           onPointerDown={() => select({})}
           onDragOver={onDragOver}
@@ -451,12 +440,9 @@ export function WallDrawer(p: Props) {
           {mods.map((m, i) => {
             const x = spanX(i, i + 1)
             if (m?.opening) {
-              const door = productOf(m.opening.product)?.opening === 'door'
-              const { swing, height: dh } = rules.door
-              const k = doorInset(rules)
               const o = m.opening
-              const hinge = o.hinge === -1 ? i + 1 - k : i + k
-              const free = o.hinge === -1 ? i + k : i + 1 - k
+              const door = productOf(o.product)?.opening === 'door'
+              const k = doorInset(rules)
               return (
                 <g
                   key={i}
@@ -467,18 +453,12 @@ export function WallDrawer(p: Props) {
                     p.onSelect({ openingId: o.id })
                   }}
                 >
-                  {/* Header panel over the opening, as in 3D */}
-                  <rect x={x + rules.wall.post / 2} y={z(H)} width={1 - rules.wall.post} height={H - dh} fill={plateColor(m.plate ?? w.plate ?? v.defaultPlate)} {...brushOn(m.key)} />
-                  <rect x={x} y={z(H)} width={1} height={rules.wall.profile.top} fill={ALU} />
-                  {door ? (
-                    <>
-                      {/* Leaf centred in the opening in its colour, handle at the free edge (hinge end as in the plan) */}
-                      <rect x={spanX(i + k, i + 1 - k)} y={z(dh)} width={swing} height={dh} fill={plateColor(doorRal(v, o))} stroke={BORDER_STRONG} strokeWidth={0.012} />
-                      <rect x={u(free + (hinge < free ? -0.08 : 0.08)) - 0.05} y={z(1.06)} width={0.1} height={0.02} rx={0.01} fill={INK_FAINT} />
-                    </>
-                  ) : (
-                    <rect x={x + 0.04} y={z(dh)} width={0.92} height={dh} fill="none" stroke={BORDER_STRONG} strokeWidth={0.012} strokeDasharray=".05 .04" />
-                  )}
+                  <Opening
+                    x={x}
+                    H={H}
+                    plate={{ fill: plateColor(m.plate), ...brushOn(m.key) }}
+                    door={door ? { color: plateColor(doorRal(v, o)), hinge: u(o.hinge === -1 ? i + 1 - k : i + k), free: u(o.hinge === -1 ? i + k : i + 1 - k) } : undefined}
+                  />
                   <text x={x + 0.5} y={z(1.4)} textAnchor="middle" style={TXT}>
                     {door ? 'dør' : 'forheng'}
                   </text>
@@ -488,18 +468,13 @@ export function WallDrawer(p: Props) {
             const f = felt(rules, i)
             return (
               <g key={i}>
-                <rect x={spanX(f.a, f.b)} y={z(H)} width={f.w} height={H - rules.wall.feet} fill={plateColor(m?.plate ?? w.plate ?? v.defaultPlate)} {...(m ? brushOn(m.key) : {})} />
+                <rect x={spanX(f.a, f.b)} y={z(H)} width={f.w} height={H - rules.wall.feet} fill={plateColor(m?.plate ?? wallRal(v, w))} {...(m ? brushOn(m.key) : {})} />
                 <rect x={x} y={z(H)} width={1} height={rules.wall.profile.top} fill={ALU} />
                 <rect x={x} y={z(f.y0)} width={1} height={rules.wall.profile.bottom} fill={ALU} />
               </g>
             )
           })}
-          {Array.from({ length: L + 1 }, (_, i) => (
-            <g key={`p${i}`}>
-              <rect x={u(i) - rules.wall.post / 2} y={z(H)} width={rules.wall.post} height={H - rules.wall.feet} fill={ALU_POST} />
-              <rect x={u(i) - 0.012} y={z(rules.wall.feet)} width={0.024} height={rules.wall.feet} fill={FEET} />
-            </g>
-          ))}
+          <Posts xs={Array.from({ length: L + 1 }, (_, i) => u(i))} H={H} />
           <line x1={-PAD} y1={H} x2={L + PAD} y2={H} stroke={BORDER_STRONG} strokeWidth={0.01} />
 
           {/* Where a room stands against this face: hatched, with the room's name, for context only */}
@@ -543,19 +518,9 @@ export function WallDrawer(p: Props) {
             const y = z(bottom + height)
             const m = findMotif(motifs, t.motif)
             const on = T?.id === t.id
-            const fr = 0.04
             return (
               <g key={t.id} onPointerDown={(e) => drag(e, 'tmove', t)} style={{ cursor: 'move' }}>
-                <rect x={x} y={y} width={t.width} height={height} fill={FABRIC} />
-                {m && (
-                  <Print m={m} x={x + fr} y={y + fr} width={Math.max(0, t.width - 2 * fr)} height={Math.max(0, height - 2 * fr)} />
-                )}
-                <rect x={x + fr / 2} y={y + fr / 2} width={t.width - fr} height={height - fr} fill="none" stroke={ALU} strokeWidth={fr} />
-                {!m && (
-                  <text x={x + t.width / 2} y={y + height / 2} textAnchor="middle" dominantBaseline="middle" style={TXT}>
-                    Uten motiv
-                  </text>
-                )}
+                <TextileFace x={x} y={y} w={t.width} h={height} m={m} fill={t.fill ?? 'print'} empty="Uten motiv" />
                 {on && <rect x={x - 0.014} y={y - 0.014} width={t.width + 0.028} height={height + 0.028} fill="none" stroke={INK} strokeWidth={0.016} />}
                 {on && <Handles x={x} y={y} w={t.width} h={height} onDown={(e, edge) => drag(e, { edge }, t)} />}
               </g>
@@ -578,18 +543,7 @@ export function WallDrawer(p: Props) {
             />
           )}
 
-          {/* Dimensions */}
-          <line x1={-0.2} y1={0} x2={-0.2} y2={H} stroke={BORDER_STRONG} strokeWidth={0.008} />
-          <text transform={`translate(${-0.26} ${H / 2}) rotate(-90)`} textAnchor="middle" style={DIM}>
-            {mm(H)} mm
-          </text>
-          <line x1={0} y1={H + 0.14} x2={L} y2={H + 0.14} stroke={BORDER_STRONG} strokeWidth={0.008} />
-          {Array.from({ length: L + 1 }, (_, i) => (
-            <line key={`t${i}`} x1={i} y1={H + 0.1} x2={i} y2={H + 0.18} stroke={BORDER_STRONG} strokeWidth={0.008} />
-          ))}
-          <text x={L / 2} y={H + 0.29} textAnchor="middle" style={DIM}>
-            {L} m · {fs.length > 1 ? faceName(w, s).toLowerCase() : 'innsiden'}
-          </text>
+          <Dims W={L} H={H} ticks height={`${mm(H)} mm`} width={`${L} m · ${fs.length > 1 ? faceName(w, s).toLowerCase() : 'innsiden'}`} />
         </svg>
       </div>
       <div className="wd-hint">{hint}</div>

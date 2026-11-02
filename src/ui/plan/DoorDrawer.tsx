@@ -1,20 +1,22 @@
 // Door drawer (dørskuff): a door or curtain chosen in the plan or 3D. Door or curtain, swing, hinge side, leaf colour,
 // back to wall, and a mini plan to move it (DoorMap, from design_handoff_bakrom_dor).
 // Three parts like the wall drawer: settings · mini plan · front view; no outlines, chosen = ink, setting = muted fill.
-import { ArrowLeftRight, FlipHorizontal2, PanelTop, Trash2, X } from 'lucide-react'
+import { ArrowLeftRight, FlipHorizontal2, PanelTop } from 'lucide-react'
 import { sideName, doorRal, flipHinge, openingById, openingRoom, removeOpening, setDoorRal, setOpeningProduct } from '../../domain/doors'
 import { canFlipSwing, doorSwing, flipSwing, isPerimeterWall } from '../../domain/edit'
-import { pointAlong, wallDirection, wallLength } from '../../domain/grid'
+import { pointAlong, wallDirection, wallLength, wallModules } from '../../domain/grid'
 import { OUTSIDE, roomName, roomSize } from '../../domain/rooms'
 import type { Point, Variant } from '../../domain/types'
-import { isStandWall } from '../../domain/walls'
+import { builtModules, isStandWall } from '../../domain/walls'
+import { wallRal } from '../../domain/panels'
 import { doorInset, wallHeight } from '../../rules/rules'
-import { ALU, ALU_POST, BORDER_STRONG, FEET, INK_FAINT, LAYER_COLOR } from '../colors'
+import { ALU, BORDER_STRONG, INK_FAINT, LAYER_COLOR } from '../colors'
 import { IconButton, Segmented } from '../controls'
-import { openingProducts, plateColor, plateName, productOf, rules, wallPlates } from '../env'
+import { openingProducts, plateColor, plateName, productOf, rules } from '../env'
 import { fmt } from '../format'
-import { VariantChips } from '../panel/ProductRow'
 import { TXT } from './drawerText'
+import { DrawerHead, DrawerRow, PlatePalette } from './drawerParts'
+import { Opening, Posts } from './elevation'
 import { DoorMap } from './DoorMap'
 import type { PlanSelection } from './PlanView'
 
@@ -45,7 +47,6 @@ export function DoorDrawer({ v, selection, onSelect, onEdit, onClose }: Props) {
   const n: Point = [-dy * s, dx * s]
   const out: Point = [-dy * OUTSIDE, dx * OUTSIDE]
   const ral = doorRal(v, o)
-  const plates = wallPlates()
 
   const where = room
     ? `${roomName(room)} ${roomSize(room)} · ${sideName(out).toLowerCase()}`
@@ -57,21 +58,20 @@ export function DoorDrawer({ v, selection, onSelect, onEdit, onClose }: Props) {
   return (
     <section className="wall-drawer drawer3" aria-label={door ? 'Dør' : 'Forheng'}>
       <div className="wd-insp">
-        <div className="wd-head">
-          <i className="dot" style={{ background: door ? plateColor(ral) : LAYER_COLOR.walls }} />
-          <h3>{door ? 'Dør' : 'Forheng'}</h3>
-          <IconButton icon={PanelTop} label="Vis veggen" size={14} onClick={() => onSelect({ wallId: w.id })} />
-          <IconButton
-            icon={Trash2}
-            label="Gjør om til vegg (Delete)"
-            size={14}
-            onClick={() => {
+        <DrawerHead
+          dot={door ? plateColor(ral) : LAYER_COLOR.walls}
+          title={door ? 'Dør' : 'Forheng'}
+          remove={{
+            label: 'Gjør om til vegg (Delete)',
+            onClick: () => {
               onEdit((x) => removeOpening(x, o.id))
               onClose()
-            }}
-          />
-          <IconButton icon={X} label="Lukk" size={14} onClick={onClose} />
-        </div>
+            },
+          }}
+          onClose={onClose}
+        >
+          <IconButton icon={PanelTop} label="Vis veggen" size={14} onClick={() => onSelect({ wallId: w.id })} />
+        </DrawerHead>
         <p className="wd-meta num">
           {where} · {door ? `blad ${fmt(rules.door.swing * 100, 0)} × ${fmt(rules.door.height * 100, 0)} cm` : `åpning ${fmt((rules.wall.cc - rules.wall.post) * 1000, 0)} mm`}
         </p>
@@ -88,21 +88,16 @@ export function DoorDrawer({ v, selection, onSelect, onEdit, onClose }: Props) {
               Dørblad · {plateName(ral)} · RAL {ral}
               {o.ral ? '' : ' · som standen'}
             </div>
-            <VariantChips
-              chips={plates.map((x) => ({ name: `${x.name} · RAL ${x.ral}`, color: x.color }))}
-              selected={plates.findIndex((x) => x.ral === ral)}
-              onSelect={(i) => onEdit((x) => setDoorRal(x, o.id, plates[i].ral!))}
-            />
-            <div className="dd-swing">
-              <span className="eyebrow">{swingText}</span>
+            <PlatePalette value={ral} onPick={(r) => onEdit((x) => setDoorRal(x, o.id, r))} />
+            <DrawerRow label={swingText}>
               {canFlipSwing(v.stand, w) && <IconButton icon={FlipHorizontal2} label="Snu slagretning" size={15} onClick={() => onEdit((x) => flipSwing(x, o.id))} />}
               <IconButton icon={ArrowLeftRight} label="Bytt hengselside" size={15} onClick={() => onEdit((x) => flipHinge(x, o.id))} />
-            </div>
+            </DrawerRow>
           </>
         )}
       </div>
       {/* Middle: where it stands, to move it */}
-      <div className="dd-map">
+      <div className="wd-mid">
         <DoorMap v={v} openingId={o.id} onEdit={onEdit} />
       </div>
       <div className="wd-view">
@@ -138,7 +133,9 @@ function DoorView({ v, openingId }: { v: Variant; openingId: string }) {
   const freeT = 1 - hingeT
   const hx = X(hingeT)
   const fx = X(freeT)
-  const plate = plateColor(v.walls.find((x) => x.id === o.wallId)?.plate ?? v.defaultPlate)
+  // The header has the module's own colour when that plate is coloured on its own
+  const key = wallModules(w)[o.module]?.key
+  const plate = plateColor(builtModules(v).find((m) => m.key === key)?.plate ?? wallRal(v, w))
   const post = rules.wall.post
   const PAD = 0.12
   return (
@@ -147,25 +144,11 @@ function DoorView({ v, openingId }: { v: Variant; openingId: string }) {
       {[-0.5, 1].map((x0) => (
         <rect key={x0} x={x0 + (x0 < 0 ? 0 : post / 2)} y={z(H)} width={0.5 - post / 2} height={H - rules.wall.feet} fill={plate} opacity={0.45} />
       ))}
-      {/* Header over the opening */}
-      <rect x={post / 2} y={z(H)} width={1 - post} height={H - dh} fill={plate} />
       <rect x={-0.5} y={z(H)} width={2} height={rules.wall.profile.top} fill={ALU} />
-      {door ? (
-        <>
-          <rect x={Math.min(hx, fx)} y={z(dh)} width={rules.door.swing} height={dh} fill={plateColor(doorRal(v, o))} stroke={BORDER_STRONG} strokeWidth={0.008} />
-          {/* Swing mark: the point of the triangle is the hinge side */}
-          <path d={`M${fx} ${z(dh)} L${hx} ${z(dh / 2)} L${fx} ${z(0)}`} fill="none" stroke={INK_FAINT} strokeWidth={0.01} strokeDasharray=".04 .03" />
-          <rect x={fx + (fx > hx ? -0.13 : 0.03)} y={z(1.06)} width={0.1} height={0.02} rx={0.01} fill={INK_FAINT} />
-        </>
-      ) : (
-        <rect x={0.04} y={z(dh)} width={0.92} height={dh} fill="none" stroke={BORDER_STRONG} strokeWidth={0.012} strokeDasharray=".05 .04" />
-      )}
-      {[0, 1].map((x) => (
-        <g key={x}>
-          <rect x={x - post / 2} y={z(H)} width={post} height={H - rules.wall.feet} fill={ALU_POST} />
-          <rect x={x - 0.012} y={z(rules.wall.feet)} width={0.024} height={rules.wall.feet} fill={FEET} />
-        </g>
-      ))}
+      <Opening x={0} H={H} plate={{ fill: plate }} door={door ? { color: plateColor(doorRal(v, o)), hinge: hx, free: fx } : undefined} />
+      {/* Swing mark: the point of the triangle is the hinge side */}
+      {door && <path d={`M${fx} ${z(dh)} L${hx} ${z(dh / 2)} L${fx} ${z(0)}`} fill="none" stroke={INK_FAINT} strokeWidth={0.01} strokeDasharray=".04 .03" />}
+      <Posts xs={[0, 1]} H={H} />
       <line x1={-0.5} y1={H} x2={1.5} y2={H} stroke={BORDER_STRONG} strokeWidth={0.008} />
       <text x={0.5} y={H + 0.2} textAnchor="middle" style={TXT}>
         {door ? `${fmt(rules.door.swing * 100, 0)} × ${fmt(dh * 100, 0)} cm` : 'forheng'}
