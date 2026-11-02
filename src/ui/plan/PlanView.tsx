@@ -13,13 +13,13 @@ import { drawTextile, fillFace, planTextile } from '../../domain/textileBrush'
 import { faceOfPoint, freeStroke, freeTextileAt, moveFreeTextile, removeFreeTextile, runLength, runNormal, updateFace, type FaceKey } from '../../domain/freeTextile'
 import { alongRun, cornerPosts } from '../../calc/freeFrames'
 import type { Motif } from '../../persistence/file'
-import type { FloorTile, Opening, Point, Room, Side, Variant, Wall } from '../../domain/types'
+import type { FloorTile, Point, Room, Side, Variant, Wall } from '../../domain/types'
 import { doorHinge } from '../../domain/doors'
 import { builtModules, type BuiltModule } from '../../domain/walls'
 import { BORDER, BORDER_STRONG, BLOCK, CANVAS, INK, INK_FAINT, INK_MUTED, jointColor, LAYER_COLOR, SURFACE } from '../colors'
 import { applyDrop, decorDrag, endDecorDrag, type DecorDrag } from '../dnd'
 import { drawInnerBeam, eraseInnerBeams, innerBeamAt, type Run } from '../../domain/innerBeams'
-import { dragDoor, dragInnerBeam, dragRoom, dragWall, dropObject, dropRoom, roomDrag, type RoomDrag, type WallDrag } from '../drag'
+import { dragInnerBeam, dragRoom, dragWall, dropObject, dropRoom, roomDrag, type RoomDrag, type WallDrag } from '../drag'
 import { roomAt, roomName, roomSideAt, roomSize, sideIsHorizontal } from '../../domain/rooms'
 import { insetOutline, isHorizontal, labelRect, outlineSides } from '../../domain/outline'
 import { fmt } from '../format'
@@ -134,8 +134,6 @@ type Drag =
   | ({ kind: 'room'; select: PlanSelection | null } & RoomDrag)
   | { kind: 'textile'; p0: P }
   | { kind: 'freeMove'; id: string; p0: P; v0: Variant; moved: boolean; select: PlanSelection }
-  /** A door or curtain dragged to another wall module (domain/doors.ts); `spot` is the module it is on now. */
-  | { kind: 'door'; id: string; p0: P; v0: Variant; spot: string | null; moved: boolean }
 
 interface P {
   x: number
@@ -227,26 +225,6 @@ export function PlanView(p: Props) {
       }
     }
     return best
-  }
-  /** A door or curtain under the pointer: on its module, or inside the swing of a door leaf. */
-  const openingAt = (q: P): Opening | null => {
-    const m = moduleAt(q, 0.2)
-    if (m?.opening) return m.opening
-    for (const o of v.openings) {
-      const w = v.walls.find((x) => x.id === o.wallId)
-      if (!w || productOf(o.product)?.opening !== 'door') continue
-      const { a, dir } = doorHinge(w, o)
-      const h: P = { x: a[0] + dir[0] * doorInset(rules), y: a[1] + dir[1] * doorInset(rules) }
-      const s = doorSwing(v.stand, w, o)
-      const [dx, dy] = wallDirection(w)
-      const n: Point = [-dy * s, dx * s]
-      const rx = q.x - h.x
-      const ry = q.y - h.y
-      const out = rx * n[0] + ry * n[1]
-      const on = rx * dir[0] + ry * dir[1]
-      if (out > 0 && on > 0 && Math.hypot(rx, ry) < rules.door.swing) return o
-    }
-    return null
   }
   /** A drawn takdrager under the pointer, unless a wall is closer (a beam can end on a wall). */
   const beamAt = (q: P) => (moduleAt(q, 0.12) ? undefined : innerBeamAt(v, q))
@@ -411,16 +389,13 @@ export function PlanView(p: Props) {
       else p.onEdit(() => next)
       return
     }
-    // Select. A door or curtain comes first: a click chooses it, a drag moves it along the walls.
-    const door = openingAt(q)
-    if (door) {
-      drag.current = { kind: 'door', id: door.id, p0: q, v0: v, spot: null, moved: false }
-      return
-    }
-    // A side of the selected room next, so a side shared with a stand wall can still be dragged.
+    // Select. A plain click on a door or curtain chooses it (the door drawer); a drag does what it does on the wall.
+    const door = moduleAt(q)?.opening
+    const doorSelect: PlanSelection | null = door ? { openingId: door.id } : null
+    // A side of the selected room comes first, so a side shared with a stand wall can still be dragged.
     const selEdge = selection.roomId ? roomEdgeAt(q) : null
     if (selEdge && selEdge.room.id === selection.roomId) {
-      startRoomDrag(selEdge.room, selEdge.side, q, null)
+      startRoomDrag(selEdge.room, selEdge.side, q, doorSelect)
       return
     }
     const ft = freeTextileAt(v, q, 0.15)
@@ -443,7 +418,7 @@ export function PlanView(p: Props) {
       const w = v.walls.find((x) => x.id === m.wallId)!
       const h = faceHit(q)
       const tx = h && textileAt(v, w.id, h.s, h.t)
-      const select: PlanSelection = tx ? { wallId: w.id, side: h.s, textileId: tx.id } : { wallId: w.id, side: h?.s }
+      const select: PlanSelection = doorSelect ?? (tx ? { wallId: w.id, side: h.s, textileId: tx.id } : { wallId: w.id, side: h?.s })
       // A room's own wall resizes the room; an inner wall moves
       const room = w.room && v.rooms.find((r) => r.id === w.room!.id)
       if (room) startRoomDrag(room, w.room!.side, q, select)
@@ -508,11 +483,6 @@ export function PlanView(p: Props) {
       d.moved = true
       dragInnerBeam(d, q, standardRuns, p.onEdit, p.onCheckpoint)
     } else if (d.kind === 'room') dragRoom(d, q, p.onEdit, p.onCheckpoint)
-    else if (d.kind === 'door') {
-      if (!d.moved && Math.hypot(q.x - d.p0.x, q.y - d.p0.y) < 0.15) return
-      d.moved = true
-      dragDoor(d, q, p.onEdit, p.onCheckpoint)
-    }
   }
 
   const onUp = (e: RPointerEvent<SVGSVGElement>) => {
@@ -577,8 +547,7 @@ export function PlanView(p: Props) {
       if (!d.moved) p.onSelect(d.select)
     } else if (d.kind === 'beam') {
       if (!d.moved) p.onSelect({ beamId: d.id })
-    } else if (d.kind === 'door') p.onSelect({ openingId: d.id })
-    else if (d.kind === 'room') {
+    } else if (d.kind === 'room') {
       dropRoom(d, p.onEdit, p.onToast)
       // A room moved by its floor stays selected; a resized side opens the drawer only on a plain click
       if (d.select && (d.mode === 'move' || !d.moved)) p.onSelect(d.select)

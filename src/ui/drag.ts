@@ -2,7 +2,6 @@
 import { moveWall } from '../domain/edit'
 import { moveInnerBeam, type Run } from '../domain/innerBeams'
 import { settleAll, settleObject } from '../domain/objects'
-import { moveOpening, openingSpotAt } from '../domain/doors'
 import { moveRoomDoors, resizeRoomDoors, sideIsHorizontal } from '../domain/rooms'
 import type { Variant } from '../domain/types'
 import { place } from './env'
@@ -113,26 +112,4 @@ export function dropRoom(d: RoomDrag, onEdit: Edit, onToast: (text: string) => v
   if (!d.moved) return
   onEdit((x) => settleAll(x, place), false)
   if (d.doorsMoved) onToast('Døren ble flyttet, den kan ikke stå i standveggen')
-}
-
-export interface DoorDrag {
-  id: string
-  /** The variant when the drag started; every step moves the door from here. */
-  v0: Variant
-  /** The module it stands in now. */
-  spot: string | null
-  /** An undo step has been made for this drag. */
-  edited?: boolean
-}
-
-/** Move a door or curtain to the free wall module nearest the pointer (domain/doors.ts). One undo step per drag. */
-export function dragDoor(d: DoorDrag, q: { x: number; y: number }, onEdit: Edit, onCheckpoint: () => void, tol?: number) {
-  const spot = openingSpotAt(d.v0, d.id, q, tol)
-  if (!spot || spot === d.spot) return
-  const next = moveOpening(d.v0, d.id, spot)
-  d.spot = spot
-  if (!d.edited && next === d.v0) return
-  if (!d.edited) onCheckpoint()
-  d.edited = true
-  onEdit(() => next, false)
 }
