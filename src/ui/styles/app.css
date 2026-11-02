@@ -2032,7 +2032,6 @@ select.cin {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 0;
 }
 .stand-pop-head .icon-tile {
   flex: none;
