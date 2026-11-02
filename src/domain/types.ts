@@ -74,6 +74,13 @@ export interface Opening {
    * 1 = left normal (−dy, dx), −1 = the other side. Omitted: into the stand on a perimeter wall, else 1.
    */
   swing?: 1 | -1;
+  /**
+   * Which end of the module the door hangs on: 1 = the end toward the wall's `from`, −1 = the other. Omitted: 1.
+   * Kept on the same world end when the wall is rewritten (as swing).
+   */
+  hinge?: 1 | -1;
+  /** RAL of the door leaf. Omitted: the variant's default plate, so the door follows the stand's colour. */
+  ral?: string;
 }
 
 /** A floor tile in 0,5 m cells: starts at cell (i, j), w × h cells (domain/floor.ts). */

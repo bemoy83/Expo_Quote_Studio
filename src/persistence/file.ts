@@ -104,7 +104,9 @@ function rectRoomsToOutlines(x: unknown): unknown {
       const s = sides.get(o.wallId);
       if (!s) return o;
       const out = { ...o, wallId: s.wallId, module: s.flip ? s.len - 1 - o.module : o.module };
-      return s.flip && o.swing ? { ...out, swing: o.swing === 1 ? (-1 as const) : (1 as const) } : out;
+      if (!s.flip) return out;
+      const { hinge: _h, ...rest } = out;
+      return { ...rest, ...(o.swing ? { swing: o.swing === 1 ? (-1 as const) : (1 as const) } : {}), ...(o.hinge === -1 ? {} : { hinge: -1 as const }) };
     }),
     textiles: v.textiles.map((t) => {
       const s = sides.get(t.wallId);

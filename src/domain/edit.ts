@@ -58,7 +58,7 @@ function reanchor(walls: Wall[], { a, b }: Anchor): { wallId: string; from: numb
 
 /**
  * Replace the walls of a variant and carry openings, textiles and foils over to whichever new wall
- * now covers their position. Things whose wall is gone are dropped. Door swing keeps its world side.
+ * now covers their position. Things whose wall is gone are dropped. Door swing and hinge keep their world side.
  */
 export function replaceWalls(v: Variant, walls: Wall[]): Variant {
   const old = v.walls;
@@ -70,7 +70,9 @@ export function replaceWalls(v: Variant, walls: Wall[]): Variant {
     const oldW = old.find((w) => w.id === o.wallId)!;
     const sameDir = dot(wallDirection(oldW), wallDirection(hit.wall)) > 0;
     const swing = o.swing === undefined ? undefined : sameDir ? o.swing : (-o.swing as 1 | -1);
-    openings.push({ ...o, wallId: hit.wallId, module: Math.round(hit.from), ...(swing === undefined ? {} : { swing }) });
+    const hinge = sameDir ? o.hinge : o.hinge === -1 ? undefined : (-1 as const);
+    const { hinge: _h, ...rest } = o;
+    openings.push({ ...rest, wallId: hit.wallId, module: Math.round(hit.from), ...(swing === undefined ? {} : { swing }), ...(hinge === -1 ? { hinge } : {}) });
   }
   // Textiles and foils keep their world face: the side flips when the new wall runs the other way.
   const faceOn = (x: { wallId: string; side?: 1 | -1 }, hit: { wall: Wall }): 1 | -1 => {

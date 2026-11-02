@@ -4,7 +4,7 @@
 // wall or a drawn wall shares that wall and only the missing modules are built. Doors, textiles and foils on a room
 // side refer to `<id>.<side>` with offsets from the side's start, so they move with the room. Every side runs
 // clockwise round the room, so the room is always on the left of a side and its outside on the right.
-import { pointAlong, runs, wallLength, wallModules } from './grid';
+import { moduleKey, pointAlong, runs, wallLength, wallModules } from './grid';
 import { doorAllowed, nextId, ownPlate, replaceWalls } from './edit';
 import {
   area,
@@ -110,12 +110,52 @@ function fits(v: Variant, id: string, outline: Point[]): boolean {
   return !overlapsRoom(v, outline, id);
 }
 
-/** False when a door or curtain on the room's sides would end up in a stand wall (see doorAllowed). */
-function doorsInside(v: Variant, id: string): boolean {
-  return v.openings.every((o) => {
-    const w = isRoomWallId(o.wallId, id) && v.walls.find((x) => x.id === o.wallId);
-    return !w || doorAllowed(v, pointAlong(w, o.module), pointAlong(w, o.module + 1));
-  });
+/**
+ * Doors and curtains on the room's own sides that ended up in a stand wall, or on a module another opening has, move to
+ * the nearest module of the room where a door may stand (the handoff's rule: the door follows, the drag is not refused).
+ * Null when one of them has nowhere to go. `moved` tells the caller to say so.
+ */
+function settleDoors(v: Variant, id: string): { v: Variant; moved: boolean } | null {
+  const sides = v.walls.filter((w) => w.room?.id === id);
+  const mine = (o: Opening) => isRoomWallId(o.wallId, id);
+  const keyOf = (o: Opening) => {
+    const w = v.walls.find((x) => x.id === o.wallId);
+    return w ? moduleKey(pointAlong(w, o.module), pointAlong(w, o.module + 1)) : '';
+  };
+  const taken = new Set(v.openings.filter((o) => !mine(o)).map(keyOf));
+  const gaps = gapKeys(v);
+  let moved = false;
+  const openings: Opening[] = [];
+  for (const o of v.openings) {
+    if (!mine(o)) {
+      openings.push(o);
+      continue;
+    }
+    const w = sides.find((x) => x.id === o.wallId)!;
+    const a = pointAlong(w, o.module);
+    const b = pointAlong(w, o.module + 1);
+    const key = moduleKey(a, b);
+    if (doorAllowed(v, a, b) && !taken.has(key)) {
+      taken.add(key);
+      openings.push(o);
+      continue;
+    }
+    const mid: Point = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+    let best: { wallId: string; module: number; key: string; d: number } | null = null;
+    for (const s of sides) {
+      wallModules(s).forEach((m, module) => {
+        if (gaps.has(`${s.id}#${module}`) || taken.has(m.key) || !doorAllowed(v, m.a, m.b)) return;
+        const d = Math.hypot((m.a[0] + m.b[0]) / 2 - mid[0], (m.a[1] + m.b[1]) / 2 - mid[1]);
+        if (!best || d < best.d - 1e-9) best = { wallId: s.id, module, key: m.key, d };
+      });
+    }
+    if (!best) return null;
+    const { wallId, module, key: k } = best;
+    taken.add(k);
+    moved = true;
+    openings.push({ ...o, wallId, module });
+  }
+  return { v: moved ? { ...v, openings } : v, moved };
 }
 
 /**
@@ -237,32 +277,46 @@ export function addDefaultRoom(v: Variant, doorProduct: string): Variant | null 
 
 /**
  * Move a room by whole metres, kept inside the stand. Furniture standing in it moves along; doors, textiles and
- * foils on its sides keep their offsets and so move too. Returns v when the room cannot go there.
+ * foils on its sides keep their offsets and so move too; a door that would land in a stand wall moves to the nearest
+ * module of the room where it may stand (settleDoors). Returns v when the room cannot go there.
  */
 export function moveRoom(v: Variant, id: string, dx: number, dy: number): Variant {
+  return moveRoomDoors(v, id, dx, dy).v;
+}
+
+/** As moveRoom, and whether a door had to move to another module to stay out of the stand walls. */
+export function moveRoomDoors(v: Variant, id: string, dx: number, dy: number): { v: Variant; doorsMoved: boolean } {
+  const same = { v, doorsMoved: false };
   const r = v.rooms.find((x) => x.id === id);
-  if (!r) return v;
+  if (!r) return same;
   const b = bounds(r.outline);
   const x = Math.max(0, Math.min(v.stand.width - b.w, b.x + Math.round(dx)));
   const y = Math.max(0, Math.min(v.stand.depth - b.d, b.y + Math.round(dy)));
   const outline = translate(r.outline, x - b.x, y - b.y);
-  if ((x === b.x && y === b.y) || !fits(v, id, outline)) return v;
+  if ((x === b.x && y === b.y) || !fits(v, id, outline)) return same;
   const inside = (o: PlacedObject) => contains(r.outline, o.x, o.y);
   const objects = v.objects.map((o) => (inside(o) ? { ...o, x: o.x + x - b.x, y: o.y + y - b.y } : o));
   const next = syncRooms({ ...v, rooms: v.rooms.map((o) => (o.id === id ? { ...r, outline } : o)), objects });
-  return doorsInside(next, id) ? next : v;
+  const s = settleDoors(next, id);
+  return s ? { v: s.v, doorsMoved: s.moved } : same;
 }
 
 /**
  * Drag one side of a room by `delta` metres across it (+y for a side running left–right, +x for one running back–
  * front); the neighbouring sides stretch and the others stay. A side never shrinks below 1 m: the drag stops there,
- * or where the room would leave the stand, hit another room or put its door in a stand wall. A side dragged flush with the one beyond its
+ * or where the room would leave the stand or hit another room (a door that would land in a stand wall moves, see settleDoors). A side dragged flush with the one beyond its
  * neighbour merges with it (an L becomes a rectangle). Things on the other sides keep their place in the world.
  * Returns v when nothing changes.
  */
 export function resizeRoom(v: Variant, id: string, side: number, delta: number): Variant {
+  return resizeRoomDoors(v, id, side, delta).v;
+}
+
+/** As resizeRoom, and whether a door had to move to another module to stay out of the stand walls. */
+export function resizeRoomDoors(v: Variant, id: string, side: number, delta: number): { v: Variant; doorsMoved: boolean } {
+  const same = { v, doorsMoved: false };
   const r = v.rooms.find((x) => x.id === id);
-  if (!r || side < 0 || side >= r.outline.length) return v;
+  if (!r || side < 0 || side >= r.outline.length) return same;
   const hz = sideIsHorizontal(r, side);
   // The furthest step toward `delta` that gives a valid room
   for (let k = Math.round(delta); k !== 0; k -= Math.sign(k)) {
@@ -270,9 +324,10 @@ export function resizeRoom(v: Variant, id: string, side: number, delta: number):
     const outline = moved && settle(moved);
     if (!outline || !fits(v, id, outline)) continue;
     const next = reshape(v, r, outline, (i) => (i === side ? (hz ? [0, k] : [k, 0]) : [0, 0]));
-    if (doorsInside(next, id)) return next;
+    const s = settleDoors(next, id);
+    if (s) return { v: s.v, doorsMoved: s.moved };
   }
-  return v;
+  return same;
 }
 
 /** Keep every room inside a (new) stand size: moved in where it fits, else cut at the stand's edge. */
