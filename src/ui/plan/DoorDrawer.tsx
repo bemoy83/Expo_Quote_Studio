@@ -1,6 +1,6 @@
 // Door drawer (dørskuff): a door or curtain chosen in the plan or 3D. Door or curtain, swing, hinge side, leaf colour,
 // back to wall, and a mini plan to move it (DoorMap, from design_handoff_bakrom_dor).
-// Laid out like the wall drawer; no outlines, chosen = ink, setting = muted fill.
+// Three parts like the wall drawer: settings · mini plan · front view; no outlines, chosen = ink, setting = muted fill.
 import { ArrowLeftRight, FlipHorizontal2, PanelTop, Trash2, X } from 'lucide-react'
 import { sideName, doorRal, flipHinge, openingById, openingRoom, removeOpening, setDoorRal, setOpeningProduct } from '../../domain/doors'
 import { canFlipSwing, doorSwing, flipSwing, isPerimeterWall } from '../../domain/edit'
@@ -55,11 +55,7 @@ export function DoorDrawer({ v, selection, onSelect, onEdit, onClose }: Props) {
   const swingText = isPerimeterWall(v.stand, w) ? 'Slår inn i standen' : room ? (s === OUTSIDE ? 'Slår ut av rommet' : 'Slår inn i rommet') : `Slår ${toward(n)}`
 
   return (
-    <section className="wall-drawer door-drawer" aria-label={door ? 'Dør' : 'Forheng'}>
-      {/* Three columns side by side: where it stands, what it is, how it looks */}
-      <div className="dd-map">
-        <DoorMap v={v} openingId={o.id} onEdit={onEdit} />
-      </div>
+    <section className="wall-drawer drawer3" aria-label={door ? 'Dør' : 'Forheng'}>
       <div className="wd-insp">
         <div className="wd-head">
           <i className="dot" style={{ background: door ? plateColor(ral) : LAYER_COLOR.walls }} />
@@ -105,10 +101,14 @@ export function DoorDrawer({ v, selection, onSelect, onEdit, onClose }: Props) {
           </>
         )}
       </div>
+      {/* Middle: where it stands, to move it */}
+      <div className="dd-map">
+        <DoorMap v={v} openingId={o.id} onEdit={onEdit} />
+      </div>
       <div className="wd-view">
         <DoorView v={v} openingId={o.id} />
       </div>
-      <div className="wd-hint dd-hint">
+      <div className="wd-hint">
         Klikk ruten utenfor en vegg i miniplanen for å flytte døren{door ? ' · lås og nøkler følger med, overstykket har veggens farge' : ''} · Delete gjør den om til vegg · Esc lukker
       </div>
     </section>
