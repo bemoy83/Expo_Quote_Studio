@@ -21,13 +21,18 @@ export interface PriceChange {
   at: { x: number; y: number } | null
 }
 
-/** The change in the exhibitor's sum since the drawing went quiet: shown while you draw, gone a moment after the last
- *  edit. `scope` starts over without a change (another variant, a sketch opened or started). */
+/** The change in the exhibitor's sum from the last stroke: shown while you draw, gone a moment after the last edit. A
+ *  stroke starts at a press (click or drag); a new press while a pill shows starts a new pill with its own change, so
+ *  quick clicks each get theirs. `scope` starts over without a change (another variant, a sketch opened or started). */
 export function usePriceChange(sum: number, scope: string): PriceChange | null {
   const base = useRef({ sum, scope })
   const pointer = useRef<{ x: number; y: number; t: number } | null>(null)
   const [change, setChange] = useState<PriceChange | null>(null)
   const next = useRef(0)
+  /** Sum at the previous change, when the last press was, and when the sum last changed (performance.now()). */
+  const last = useRef(sum)
+  const pressed = useRef(0)
+  const changed = useRef(0)
 
   useEffect(() => {
     const track = (e: PointerEvent) => {
@@ -40,25 +45,35 @@ export function usePriceChange(sum: number, scope: string): PriceChange | null {
       const y = Math.max(e.clientY - r.top, PILL.h)
       pointer.current = { x, y, t: performance.now() }
     }
+    const press = (e: PointerEvent) => {
+      pressed.current = performance.now()
+      track(e)
+    }
     window.addEventListener('pointermove', track)
-    window.addEventListener('pointerdown', track)
+    window.addEventListener('pointerdown', press)
     return () => {
       window.removeEventListener('pointermove', track)
-      window.removeEventListener('pointerdown', track)
+      window.removeEventListener('pointerdown', press)
     }
   }, [])
 
   useEffect(() => {
+    const before = last.current
+    last.current = sum
     if (base.current.scope !== scope) {
       base.current = { sum, scope }
       setChange(null)
       return
     }
+    const now = performance.now()
+    const fresh = pressed.current > changed.current
+    changed.current = now
+    if (fresh) base.current = { sum: before, scope }
     const d = Math.round(sum - base.current.sum)
     const p = pointer.current
-    const at = p && performance.now() - p.t < FROM_PLAN ? { x: p.x, y: p.y } : null
+    const at = p && now - p.t < FROM_PLAN ? { x: p.x, y: p.y } : null
     // Back to where the stroke began: the pill keeps its last amount and leaves as usual
-    if (d !== 0) setChange((c) => ({ amount: d, at, id: c && !c.leaving ? c.id : ++next.current, leaving: false }))
+    if (d !== 0) setChange((c) => ({ amount: d, at, id: !fresh && c && !c.leaving ? c.id : ++next.current, leaving: false }))
     const float = window.setTimeout(() => {
       base.current = { sum, scope }
       setChange((c) => c && { ...c, leaving: true })
