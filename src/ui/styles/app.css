@@ -190,6 +190,21 @@ kbd {
 .seg.in-well {
   background: var(--well);
 }
+/* Segmented controls in panels and drawers spread their choices evenly over the span (Bjørn 2.11.2026): full width
+   on a line of their own, and as wide as the widest choice each when they share a line with a label (.opt). */
+.seg.in-well {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  width: 100%;
+}
+.opt > .seg.in-well {
+  display: inline-grid;
+  width: auto;
+}
+.seg.in-well > button {
+  justify-content: center;
+}
 .seg > button {
   display: inline-flex;
   align-items: center;
