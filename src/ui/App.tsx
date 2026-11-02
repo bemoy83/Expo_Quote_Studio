@@ -84,8 +84,8 @@ export default function App() {
   const v = sketch.variants[current]
   const terms = standWallTerms(sketch.project)
   const calcFor = useCallback((x: Variant) => calcOf(x, terms), [terms])
-  /** Who pays the stand walls: a project setting, set from the stand chip or the Stand tab. */
-  const setTerms = (patch: Partial<StandWallTerms>) => dispatch({ type: 'project', project: { ...sketch.project, standWalls: { ...terms, ...patch } } })
+  /** Who pays the stand walls and their colour: a project setting, set from the stand chip or the Stand tab. */
+  const setTerms = (patch: Partial<StandWallTerms>) => dispatch({ type: 'standWalls', patch })
   const res = calcFor(v)
   const [page, setPage] = useState<Page>('skisse')
   const [view, setView] = useState<'plan' | '3d'>('plan')
