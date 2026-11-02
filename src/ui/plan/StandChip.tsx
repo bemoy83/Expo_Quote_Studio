@@ -3,7 +3,7 @@
 // the chosen view = muted fill.
 import { ChevronDown, Ruler, X } from 'lucide-react'
 import { FlatChoice, IconButton } from '../controls'
-import { useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { useDismiss } from '../useDismiss'
 import { fmt } from '../format'
 import { TYPE_NAME } from '../names'
@@ -21,11 +21,16 @@ export function StandChip({ view, onView, ...p }: StandSettingsProps & { view: V
   const pop = useRef<HTMLDivElement>(null)
   const close = () => setOpen(false)
   useDismiss(pop, button, close)
+  const chip = useRef<HTMLDivElement>(null)
+  // The popover is as wide as the chip over it, which grows and shrinks with the size it names
+  useLayoutEffect(() => {
+    if (pop.current && chip.current) pop.current.style.width = `${chip.current.offsetWidth}px`
+  })
   const s = p.v.stand
   const k = p.res.keyFigures
   return (
     <>
-      <div className="dock-pill stand-chip">
+      <div ref={chip} className="dock-pill stand-chip">
         <button ref={button} type="button" className="dock-btn" aria-pressed={open} aria-expanded={open} aria-haspopup="dialog" onClick={() => setOpen(!open)}>
           <Ruler size={15} />
           <span className="type">{TYPE_NAME[s.type]}</span>
