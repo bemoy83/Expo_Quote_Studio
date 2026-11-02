@@ -85,6 +85,36 @@ export function Segmented<T extends string | number | boolean>({
   )
 }
 
+/**
+ * A flat choice on a floating surface (a pill or popover): no track, the chosen option has a muted fill, the rest are
+ * muted text. The dock's quick picks and the stand chip use the same language. `tiles` stacks an icon over each label.
+ */
+export function FlatChoice<T extends string | number | boolean>({
+  options,
+  value,
+  onChange,
+  label,
+  tiles,
+  className = '',
+}: {
+  options: { value: T; label: ReactNode; title?: string }[]
+  value: T
+  onChange: (v: T) => void
+  label: string
+  tiles?: boolean
+  className?: string
+}) {
+  return (
+    <div role="radiogroup" aria-label={label} className={['flat-choice', tiles && 'tiles', className].filter(Boolean).join(' ')}>
+      {options.map((o) => (
+        <button key={String(o.value)} type="button" role="radio" aria-checked={o.value === value} title={o.title} onClick={() => onChange(o.value)}>
+          {o.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 /** Parse a typed length: comma or point, units and spaces ignored. Null when it is not a number. */
 function parseLength(text: string): number | null {
   const n = Number(text.replace(',', '.').replace(/[^\d.]/g, ''))
@@ -104,6 +134,7 @@ export function Dim({
   step,
   min = 0,
   max = Infinity,
+  big,
 }: {
   label: string
   value: number
@@ -112,6 +143,8 @@ export function Dim({
   step?: number
   min?: number
   max?: number
+  /** Large number with its unit, the field shown only on hover and focus (the stand's sides). */
+  big?: boolean
 }) {
   /** False, and nothing changes, unless `n` is a new length in range. */
   const set = (n: number | null) => {
@@ -123,6 +156,7 @@ export function Dim({
   const field = (
     <CommitInput
       className="field num"
+      size={big ? 2 : undefined}
       aria-label={`${label} i meter`}
       inputMode="decimal"
       value={fmt(value, decimals)}
@@ -131,12 +165,13 @@ export function Dim({
     />
   )
   return (
-    <label className="dim">
-      <span className="eyebrow">{label}</span>
+    <label className={big ? 'dim big' : 'dim'}>
+      <span className={big ? 'dim-label' : 'eyebrow'}>{label}</span>
       {step ? (
         <span className="dim-step">
           <IconButton icon={Minus} label={`${label}: ${fmt(step)} m mindre`} size={14} disabled={value - step < min} onClick={() => set(value - step)} />
           {field}
+          {big && <span className="dim-unit">m</span>}
           <IconButton icon={Plus} label={`${label}: ${fmt(step)} m mer`} size={14} disabled={value + step > max} onClick={() => set(value + step)} />
         </span>
       ) : (

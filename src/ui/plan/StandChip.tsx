@@ -1,7 +1,8 @@
 // The stand on the drawing surface, top left: one floating pill like the dock. The stand switch names its type and size
 // and opens its settings (StandSettings) in a popover; after a thin line, Plan and 3D choose the view. Open = ink fill,
 // the chosen view = muted fill.
-import { ChevronDown, Ruler } from 'lucide-react'
+import { ChevronDown, Ruler, X } from 'lucide-react'
+import { FlatChoice, IconButton } from '../controls'
 import { useRef, useState } from 'react'
 import { useDismiss } from '../useDismiss'
 import { fmt } from '../format'
@@ -34,21 +35,21 @@ export function StandChip({ view, onView, ...p }: StandSettingsProps & { view: V
           <ChevronDown size={14} />
         </button>
         <span className="q-sep" />
-        <div className="chip-views" role="radiogroup" aria-label="Visning">
-          {VIEWS.map((x) => (
-            <button key={x.value} type="button" role="radio" aria-checked={view === x.value} onClick={() => onView(x.value)}>
-              {x.label}
-            </button>
-          ))}
-        </div>
+        <FlatChoice<View> className="chip-views" label="Visning" value={view} onChange={onView} options={VIEWS} />
       </div>
       {open && (
         <div ref={pop} className="popover stand-pop" role="dialog" aria-label="Stand">
           <div className="stand-pop-head">
-            <span className="title">Stand</span>
-            <span className="num">
-              {fmt(k.area)} m² · {k.openSides} åpne {k.openSides === 1 ? 'side' : 'sider'}
+            <span className="icon-tile">
+              <Ruler size={16} />
             </span>
+            <span className="txt">
+              <span className="title">Stand</span>
+              <span className="num">
+                {fmt(k.area)} m² · {k.openSides} åpne {k.openSides === 1 ? 'side' : 'sider'}
+              </span>
+            </span>
+            <IconButton icon={X} label="Lukk" size={16} onClick={close} />
           </div>
           <StandSettings {...p} />
         </div>
