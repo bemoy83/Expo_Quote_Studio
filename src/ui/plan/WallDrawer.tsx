@@ -2,7 +2,7 @@
 // Three columns like the door drawer: settings · graphics shelf · the wall. Textile frames and foil decals are placed,
 // moved and resized in the drawing; motifs are clicked onto what is selected or dragged from the shelf onto the wall.
 // Without a selection it edits the wall itself: plate colour, remove wall; a door on it opens the door drawer.
-import { DoorOpen, Eraser, FlipHorizontal2, MoveHorizontal, PaintBucket, Paintbrush, Plus } from 'lucide-react'
+import { DoorOpen, FlipHorizontal2, MoveHorizontal, PaintBucket, Paintbrush, Plus } from 'lucide-react'
 import { useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent } from 'react'
 import { production, wallLabel } from '../../calc/production'
 import {
@@ -27,7 +27,7 @@ import {
 } from '../../domain/decor'
 import { eraseWalls, setWallPlate } from '../../domain/edit'
 import { setPanels, wallRal } from '../../domain/panels'
-import { clearPrint, coverCrop, cropBand, fillPlates, printPlate, printsOn, printWall, resetFace } from '../../domain/print'
+import { clearPrint, coverCrop, cropBand, fillPlates, printPlate, printsOn, printWall, clearDecor } from '../../domain/print'
 import { doorRal } from '../../domain/doors'
 import { OUTSIDE, roomAt, roomName, roomSize } from '../../domain/rooms'
 import { wallLength, wallModules } from '../../domain/grid'
@@ -229,6 +229,11 @@ export function WallDrawer(p: Props) {
     return owner ? wallRal(v, owner) : v.defaultPlate
   }
   const odd = mods.filter((m) => m && m.plate !== base(m.key)).length
+  /**
+   * The wall carries decor (foil on either face, or plates in their own colour). With the whole wall chosen the trash
+   * then clears that first; on a plain wall it removes the wall as before (Bjørn 2.11.2026).
+   */
+  const decorated = odd > 0 || v.foils.some((f) => f.wallId === w.id)
   const printedAt = (x: Variant, i: number) => printsOn(x, w.id, s).find((f) => f.module === i)
   /**
    * Brush on a plate: its colour, or the wall's again when it already has the brush's colour. A print on this face of
@@ -369,7 +374,15 @@ export function WallDrawer(p: Props) {
         <DrawerHead
           dot={T ? LAYER_COLOR.textile : F ? INK_FAINT : LAYER_COLOR.walls}
           title={title}
-          remove={T || F || !isStandWall(w) ? { label: T ? 'Fjern tekstilvegg (Delete)' : F ? 'Fjern grafikk (Delete)' : w.room ? 'Åpne siden' : 'Fjern veggen', onClick: remove } : undefined}
+          remove={
+            T || F
+              ? { label: T ? 'Fjern tekstilvegg (Delete)' : 'Fjern grafikk (Delete)', onClick: remove }
+              : decorated
+                ? { label: 'Fjern print, dekaler og platefarger fra hele veggen, begge sider', onClick: () => p.onEdit((x) => clearDecor(x, w.id)) }
+                : !isStandWall(w)
+                  ? { label: w.room ? 'Åpne siden' : 'Fjern veggen', onClick: remove }
+                  : undefined
+          }
           onClose={p.onClose}
         />
         <p className="wd-meta num">
@@ -461,11 +474,6 @@ export function WallDrawer(p: Props) {
             {!T && !F && (
               <Button variant="ghost" icon={Plus} onClick={addFrame}>
                 Tekstilvegg
-              </Button>
-            )}
-            {!T && !F && (foils.length > 0 || odd > 0) && (
-              <Button variant="ghost" icon={Eraser} onClick={() => p.onEdit((x) => resetFace(x, w.id, s))}>
-                Fjern alt
               </Button>
             )}
             {!T &&

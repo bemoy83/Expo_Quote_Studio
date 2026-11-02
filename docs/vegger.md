@@ -122,8 +122,9 @@ siden skuffen viser (domain/print.ts):
   Fargen gjelder fortsatt begge sider, så den andre siden beholder sin print.
 - Platene bak en tekstilramme hoppes over, det samme gjør forheng og plater som tilhører en annen vegg. En dør får
   trykk på overstykket og dørbladet (dørbladet tegnes enkelt til vi har en nøyaktig beskrivelse av det).
-- «Fjern alt» tilbakestiller siden: all folie (print og dekaler) går, og platene får veggens farge igjen.
-  Tekstilrammer blir stående.
+- Med hele veggen valgt tømmer søppelbøtta øverst i skuffen veggen for dekor: all folie (print og dekaler) på begge
+  sider går, og platene får veggens farge igjen. Tekstilrammer blir stående. På en vegg uten dekor fjerner bøtta veggen
+  som før (romvegg: åpner siden).
 - Pris: 8021 per plate. Et motiv strukket over flere plater gir i tillegg én linje 8022 «Tilpasning av trykkfil over
   flere plater» per motiv. Trykklisten i arbeidsordren har én fil per plate, med «2 av 6» for strukne motiv.
 

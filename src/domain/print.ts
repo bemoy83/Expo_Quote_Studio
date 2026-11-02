@@ -136,13 +136,14 @@ export function clearPrint(v: Variant, wallId: string, s: FaceSide, modules?: It
 }
 
 /**
- * «Fjern alt»: the face back to a plain wall. Its foil goes (prints and decals) and its plates lose their own colours,
- * so they take the wall's again. Textile frames stay: they are things of their own.
+ * The wall drawer's trash with the whole wall chosen: the wall back to plain. Its foil goes from both faces (or face
+ * `s` only), prints and decals, and its plates lose their own colours, so they take the wall's again. Textile frames
+ * stay: they are things of their own.
  */
-export function resetFace(v: Variant, wallId: string, s: FaceSide): Variant {
+export function clearDecor(v: Variant, wallId: string, s?: FaceSide): Variant {
   const w = v.walls.find((x) => x.id === wallId);
   if (!w) return v;
-  const foils = v.foils.filter((f) => !(f.wallId === w.id && sideOf(v, f) === s));
+  const foils = v.foils.filter((f) => !(f.wallId === w.id && (s === undefined || sideOf(v, f) === s)));
   const own = new Set(builtModules(v).filter((m) => m.wallId === w.id).map((m) => m.key));
   const cleared = clearPanels(v, wallModules(w).map((m) => m.key).filter((k) => own.has(k)));
   return foils.length === v.foils.length && cleared === v ? v : { ...cleared, foils };
