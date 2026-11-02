@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 
-/** How long the change stays still after the last edit, ms. A drag keeps it open, so one stroke shows as one change. */
+/** How long the pill shows after the last edit before it leaves, ms. A drag keeps it open, so one stroke is one pill. */
 const HOLD = 1000
-/** Then it fades out moving up, ms (.price-pill.leaving). */
+/** Then it speeds up and fades out, ms (.price-pill.leaving). */
 const LEAVE = 350
 /** A change this soon after the pointer moved in the plan came from drawing there, ms. */
 const FROM_PLAN = 400
@@ -12,9 +12,9 @@ const PILL = { w: 130, h: 44 }
 export interface PriceChange {
   /** Kr, signed. */
   amount: number
-  /** One per pill: a new one pops in, an update during a stroke keeps it. */
+  /** One per pill: a new stroke fades in a new one, an update during a stroke keeps it. */
   id: number
-  /** Floating away: the next edit starts a new pill. */
+  /** On its way out: the next edit starts a new pill. */
   leaving: boolean
   /** Where the stroke was, px inside the drawing surface (.plan-wrap); null when the change came from elsewhere
    *  (undo, a drawer, 3D), and the dock shows it. */
@@ -74,13 +74,13 @@ export function usePriceChange(sum: number, scope: string): PriceChange | null {
     const at = p && now - p.t < FROM_PLAN ? { x: p.x, y: p.y } : null
     // Back to where the stroke began: the pill keeps its last amount and leaves as usual
     if (d !== 0) setChange((c) => ({ amount: d, at, id: !fresh && c && !c.leaving ? c.id : ++next.current, leaving: false }))
-    const float = window.setTimeout(() => {
+    const leave = window.setTimeout(() => {
       base.current = { sum, scope }
       setChange((c) => c && { ...c, leaving: true })
     }, HOLD)
     const gone = window.setTimeout(() => setChange((c) => (c?.leaving ? null : c)), HOLD + LEAVE)
     return () => {
-      window.clearTimeout(float)
+      window.clearTimeout(leave)
       window.clearTimeout(gone)
     }
   }, [sum, scope])

@@ -2084,12 +2084,11 @@ select.cin {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .price-pill > span,
-  .price-pill.leaving {
-    animation-duration: 1ms;
+  .price-pill > span {
+    animation: none;
   }
   .price-pill.leaving {
-    opacity: 0;
+    animation-duration: 1ms;
   }
 }
 .dock-stack {
