@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import { Minus, Plus } from 'lucide-react'
+import { fmt } from './format'
 import { useCallback, useEffect, useRef, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type Ref } from 'react'
 
 type BtnProps = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -81,6 +82,67 @@ export function Segmented<T extends string | number | boolean>({
         </button>
       ))}
     </div>
+  )
+}
+
+/** Parse a typed length: comma or point, units and spaces ignored. Null when it is not a number. */
+function parseLength(text: string): number | null {
+  const n = Number(text.replace(',', '.').replace(/[^\d.]/g, ''))
+  return Number.isFinite(n) && text.trim() !== '' ? n : null
+}
+
+/**
+ * A length in metres: a small field with its label above, typed with comma or point. With `step`, − and + beside it
+ * step the length and a typed one snaps to the step; `min` and `max` refuse lengths outside. Used for the stand's
+ * sides and for sizes in the drawers, where the handles in the drawing do the rest.
+ */
+export function Dim({
+  label,
+  value,
+  onChange,
+  decimals = 1,
+  step,
+  min = 0,
+  max = Infinity,
+}: {
+  label: string
+  value: number
+  onChange: (n: number) => void
+  decimals?: number
+  step?: number
+  min?: number
+  max?: number
+}) {
+  /** False, and nothing changes, unless `n` is a new length in range. */
+  const set = (n: number | null) => {
+    if (n === null) return false
+    const x = step ? Math.round(n / step) * step : n
+    if (x < min || x > max || x === value) return false
+    onChange(x)
+  }
+  const field = (
+    <CommitInput
+      className="field num"
+      aria-label={`${label} i meter`}
+      inputMode="decimal"
+      value={fmt(value, decimals)}
+      selectOnFocus
+      onCommit={(text) => set(parseLength(text))}
+    />
+  )
+  return (
+    <label className="dim">
+      <span className="eyebrow">{label}</span>
+      {step ? (
+        <span className="dim-step">
+          <IconButton icon={Minus} label={`${label}: ${fmt(step)} m mindre`} size={14} disabled={value - step < min} onClick={() => set(value - step)} />
+          {field}
+          <IconButton icon={Plus} label={`${label}: ${fmt(step)} m mer`} size={14} disabled={value + step > max} onClick={() => set(value + step)} />
+        </span>
+      ) : (
+        field
+      )}
+    </label>
   )
 }
 

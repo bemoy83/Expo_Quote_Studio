@@ -38,6 +38,7 @@ import { removeFill, removeLane, rotateLane } from '../domain/carpet'
 import { CarpetDrawer } from './plan/CarpetDrawer'
 import { longestSide, TILE_FULL, type FloorBrushSize, type RollDir, type TileSize } from '../domain/floor'
 import { ToolDock } from './plan/ToolDock'
+import { StandChip } from './plan/StandChip'
 import { PriceChangePill } from './plan/PriceChangePill'
 import { usePriceChange } from './plan/usePriceChange'
 import { QuickPicks } from './plan/QuickPicks'
@@ -83,6 +84,8 @@ export default function App() {
   const v = sketch.variants[current]
   const terms = standWallTerms(sketch.project)
   const calcFor = useCallback((x: Variant) => calcOf(x, terms), [terms])
+  /** Who pays the stand walls: a project setting, set from the stand chip or the Stand tab. */
+  const setTerms = (patch: Partial<StandWallTerms>) => dispatch({ type: 'project', project: { ...sketch.project, standWalls: { ...terms, ...patch } } })
   const res = calcFor(v)
   const [page, setPage] = useState<Page>('skisse')
   const [view, setView] = useState<'plan' | '3d'>('plan')
@@ -428,6 +431,8 @@ export default function App() {
                 setSelection(s)
               }}
               selection={selection}
+              terms={terms}
+              onTerms={setTerms}
             />
             <main className="stage">
               <div className="plan-wrap">
@@ -476,6 +481,7 @@ export default function App() {
                     </div>
                   </Suspense>
                 )}
+                <StandChip v={v} res={res} onEdit={onEdit} terms={terms} onTerms={setTerms} />
                 {view === 'plan' && change?.at && <PriceChangePill key={change.id} change={change} />}
                 <ToolDock
                   tools={view === 'plan'}

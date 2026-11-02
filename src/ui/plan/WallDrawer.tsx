@@ -36,14 +36,14 @@ import { builtModules, isStandWall } from '../../domain/walls'
 import type { Motif } from '../../persistence/file'
 import { doorInset, wallHeight } from '../../rules/rules'
 import { ALU, BORDER_STRONG, INK, INK_FAINT, LAYER_COLOR, SUNKEN } from '../colors'
-import { Button, IconButton, Segmented } from '../controls'
+import { Button, Dim, IconButton, Segmented } from '../controls'
 import { plateColor, plateName, productOf, rules } from '../env'
 import { count, fmt, mm } from '../format'
 import { findMotif } from '../motifs'
 import { TXT, elevationBox } from './drawerText'
 import { RoomLabel } from './RoomLabel'
 import { roomLabelSize } from './roomLabelSize'
-import { DrawerHead, DrawerRow, FillPicker, Handles, PlatePalette, PRINT, Print, Shelf, SmallDim, type Edge } from './drawerParts'
+import { DrawerHead, DrawerRow, FillPicker, Handles, PlatePalette, PRINT, Print, Shelf, type Edge } from './drawerParts'
 import { Dims, Opening, Posts, TextileFace } from './elevation'
 import { applyDrop, decorDrag, dropSpot, endDecorDrag, type DropSpot, type FaceTarget } from '../dnd'
 import type { PlanSelection } from './PlanView'
@@ -398,9 +398,9 @@ export function WallDrawer(p: Props) {
         {T && (
           <>
             <div className="wd-dims">
-              <SmallDim label="Bredde" value={T.width} onChange={(n) => p.onEdit((x) => updateTextile(x, rules, T.id, { width: n }))} />
-              <SmallDim label="Høyde" value={textileBox(T, rules).height} decimals={2} onChange={(n) => p.onEdit((x) => updateTextile(x, rules, T.id, { height: n }))} />
-              <SmallDim label="Fra gulv" value={textileBox(T, rules).bottom} onChange={(n) => p.onEdit((x) => updateTextile(x, rules, T.id, { bottom: n }))} />
+              <Dim label="Bredde" value={T.width} onChange={(n) => p.onEdit((x) => updateTextile(x, rules, T.id, { width: n }))} />
+              <Dim label="Høyde" value={textileBox(T, rules).height} decimals={2} onChange={(n) => p.onEdit((x) => updateTextile(x, rules, T.id, { height: n }))} />
+              <Dim label="Fra gulv" value={textileBox(T, rules).bottom} onChange={(n) => p.onEdit((x) => updateTextile(x, rules, T.id, { bottom: n }))} />
             </div>
             <FillPicker value={fill} onChange={(f) => p.onEdit((x) => updateTextile(x, rules, T.id, { fill: f }))} />
           </>
@@ -425,7 +425,7 @@ export function WallDrawer(p: Props) {
               </p>
             ) : (
               <div className="wd-dims">
-                <SmallDim label="Bredde" value={F.width} decimals={2} onChange={(n) => p.onEdit((x) => updateFoil(x, rules, F.id, { width: n }, ratioOf(F.motif)))} />
+                <Dim label="Bredde" value={F.width} decimals={2} onChange={(n) => p.onEdit((x) => updateFoil(x, rules, F.id, { width: n }, ratioOf(F.motif)))} />
               </div>
             )}
           </>

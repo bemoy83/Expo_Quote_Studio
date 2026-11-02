@@ -7,13 +7,13 @@ import { removeFreeTextile, resizeFreeTextile, updateFace, type FaceKey } from '
 import type { Variant } from '../../domain/types'
 import type { Motif } from '../../persistence/file'
 import { ALU, ALU_POST, BORDER_STRONG, FEET, INK, INK_MUTED, LAYER_COLOR } from '../colors'
-import { IconButton } from '../controls'
+import { Dim, IconButton } from '../controls'
 import { rules } from '../env'
 import { count, fmt } from '../format'
 import { findMotif } from '../motifs'
 import type { PlanSelection } from './PlanView'
 import { DIM, elevationBox } from './drawerText'
-import { DrawerHead, DrawerRow, FillPicker, Shelf, SmallDim } from './drawerParts'
+import { DrawerHead, DrawerRow, FillPicker, Shelf } from './drawerParts'
 import { Dims, TextileFace } from './elevation'
 
 interface Props {
@@ -72,7 +72,7 @@ export function FreeTextileDrawer(p: Props) {
             .join(' · ')}
         </p>
         <div className="wd-dims">
-          <SmallDim label="Lengde" value={f.length / 1000} decimals={2} onChange={setLength} />
+          <Dim label="Lengde" value={f.length / 1000} decimals={2} onChange={setLength} />
         </div>
         <FillPicker value={F.fill} onChange={(fill) => p.onEdit((x) => updateFace(x, t.id, face, { fill, ...(fill === 'print' ? {} : { motif: null }) }))} />
         <p className="wd-meta num">

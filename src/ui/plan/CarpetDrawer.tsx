@@ -7,11 +7,11 @@ import { across, along, cellsIn, lanesOf, rollPieces, type RollPiece } from '../
 import { CELL } from '../../domain/grid'
 import type { FloorTile, Variant } from '../../domain/types'
 import { jointColor } from '../colors'
-import { Button } from '../controls'
+import { Button, Dim } from '../controls'
 import { idx, rules } from '../env'
 import { fmt, kr } from '../format'
 import type { PlanSelection } from './PlanView'
-import { DrawerHead, SmallDim } from './drawerParts'
+import { DrawerHead } from './drawerParts'
 import { Hatched } from './Hatched'
 import { CUT_FOOT, cutRows } from '../cutList'
 
@@ -118,7 +118,7 @@ function LaneDrawer({ v, lane, onSelect, onEdit, onClose }: Props & { lane: { i:
           {fmt(width, 2)} × {fmt(len, 2)} m lagt · {wasteText(waste)}
         </p>
         <div className="wd-dims">
-          <SmallDim label="Lengde" value={len} decimals={2} onChange={(n) => move(resizeLane(v, lane, Math.round((n - len) / CELL)))} />
+          <Dim label="Lengde" value={len} decimals={2} onChange={(n) => move(resizeLane(v, lane, Math.round((n - len) / CELL)))} />
         </div>
         <Button icon={RotateCw} onClick={() => move(rotateLane(v, lane))}>
           Snu banen (R)
