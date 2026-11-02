@@ -22,7 +22,7 @@ import { BORDER, BORDER_STRONG, BLOCK, CANVAS, INK, INK_FAINT, INK_MUTED, jointC
 import { applyDrop, decorDrag, endDecorDrag, type DecorDrag } from '../dnd'
 import { drawInnerBeam, eraseInnerBeams, innerBeamAt, type Run } from '../../domain/innerBeams'
 import { dragInnerBeam, dragRoom, dragWall, dropObject, dropRoom, roomDrag, type RoomDrag, type WallDrag } from '../drag'
-import { roomAt, roomSideAt, sideIsHorizontal } from '../../domain/rooms'
+import { OUTSIDE, roomAt, roomSideAt, sideIsHorizontal } from '../../domain/rooms'
 import { insetOutline, isHorizontal, labelRect, outlineSides } from '../../domain/outline'
 import { fmt } from '../format'
 import { idx, place, plateColor, productOf, rules } from '../env'
@@ -420,7 +420,8 @@ export function PlanView(p: Props) {
       const w = v.walls.find((x) => x.id === m.wallId)!
       const h = faceHit(q)
       const tx = h && textileAt(v, w.id, h.s, h.t)
-      const select: PlanSelection = doorSelect ?? (tx ? { wallId: w.id, side: h.s, textileId: tx.id } : { wallId: w.id, side: h?.s })
+      // A room's wall opens on its outside, so print does not land inside the room unnoticed (Bjørn 2.11.2026)
+      const select: PlanSelection = doorSelect ?? (tx ? { wallId: w.id, side: h.s, textileId: tx.id } : { wallId: w.id, side: w.room ? OUTSIDE : h?.s })
       // A room's own wall resizes the room; an inner wall moves
       const room = w.room && v.rooms.find((r) => r.id === w.room!.id)
       if (room) startRoomDrag(room, w.room!.side, q, select)

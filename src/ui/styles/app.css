@@ -2462,17 +2462,20 @@ select.cin {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* The tiles grow to fill the section (Bjørn 2.11.2026); with many motifs they keep 44 px and the grid scrolls */
 .wd-shelf-grid {
+  flex: 1;
   min-height: 0;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-content: start;
+  grid-auto-rows: minmax(44px, 1fr);
+  align-content: stretch;
   gap: 6px;
   overflow-y: auto;
   scrollbar-width: thin;
 }
 .wd-shelf .mot {
-  height: 44px;
+  height: auto;
 }
 .wd-shelf .mot.add {
   color: rgb(var(--ink-muted));
