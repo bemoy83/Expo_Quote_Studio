@@ -437,11 +437,6 @@ kbd {
 }
 
 /* Brush chip in the band toolbar */
-.brush-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-}
 .dot {
   display: inline-block;
   flex: none;
@@ -586,40 +581,6 @@ kbd {
 }
 .opt .field.num {
   width: 64px;
-}
-.switch {
-  flex: none;
-  width: 34px;
-  height: 20px;
-  padding: 2px;
-  border: 0;
-  border-radius: 10px;
-  background: rgb(var(--border-strong));
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.switch[aria-checked='true'] {
-  background: rgb(var(--ink));
-}
-.switch .knob {
-  display: block;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: rgb(var(--panel));
-  transition: transform 0.15s;
-}
-.switch[aria-checked='true'] .knob {
-  transform: translateX(14px);
-}
-.num-stepper {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-}
-.opt .num-stepper .field.num {
-  width: 44px;
-  text-align: center;
 }
 .opt .lbl small {
   display: block;
@@ -1180,13 +1141,6 @@ kbd {
 }
 
 /* Placeholder pages */
-.page-empty {
-  flex: 1;
-  display: grid;
-  place-items: center;
-  color: rgb(var(--ink-muted));
-  font: 400 14px var(--font-ui);
-}
 
 /* Project popover */
 .proj-btn {
