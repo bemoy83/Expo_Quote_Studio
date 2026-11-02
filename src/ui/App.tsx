@@ -145,6 +145,12 @@ export default function App() {
     setTabRaw(k)
     setTool('select')
   }
+  /** Plan or 3D, from the band or a mini map: always in Velg. The brushes only draw in the plan, and the drawers only
+   *  open in Velg, so a pen carried into 3D would leave a clicked wall without its drawer. */
+  const showView = (x: 'plan' | '3d') => {
+    setView(x)
+    setTool('select')
+  }
   /** Choosing a brush always goes to the plan; the brushes draw there. */
   const pick = (b: Brush, t: Tool = 'brush') => {
     setBrush(b)
@@ -352,10 +358,7 @@ export default function App() {
                 onBand
                 label="Visning"
                 value={view}
-                onChange={(x) => {
-                  setView(x)
-                  setTool('select')
-                }}
+                onChange={showView}
                 options={[
                   { value: 'plan', label: 'Plan' },
                   { value: '3d', label: '3D' },
@@ -439,7 +442,7 @@ export default function App() {
                       <Suspense fallback={null}>
                         <Scene3DPreview v={v} res={res} motifs={motifs} />
                       </Suspense>
-                      <IconButton icon={Maximize2} label="Vis 3D" size={14} className="minimap-open" onClick={() => setView('3d')} />
+                      <IconButton icon={Maximize2} label="Vis 3D" size={14} className="minimap-open" onClick={() => showView('3d')} />
                     </div>
                   </>
                 ) : (
@@ -457,7 +460,7 @@ export default function App() {
                     />
                     <div className="minimap low">
                       <PlanPreview mini v={v} res={res} />
-                      <IconButton icon={Maximize2} label="Vis plan" size={14} className="minimap-open" onClick={() => setView('plan')} />
+                      <IconButton icon={Maximize2} label="Vis plan" size={14} className="minimap-open" onClick={() => showView('plan')} />
                     </div>
                   </Suspense>
                 )}
