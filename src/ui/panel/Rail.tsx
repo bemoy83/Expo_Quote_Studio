@@ -1,4 +1,4 @@
-import { Blinds, Box, Check, Ungroup, ChevronRight, DoorClosed, Eraser, PaintBucket, Paintbrush, Search, Trash2, Upload } from 'lucide-react'
+import { Blinds, Box, Ungroup, DoorClosed, Eraser, PaintBucket, Paintbrush, Search, Trash2, Upload } from 'lucide-react'
 import { Fragment, useMemo, useRef, useState } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import { mainGroupOf, PRODUCT_GROUPS, resolveGroup } from '../../catalog/groups'
@@ -7,7 +7,7 @@ import { setCounted } from '../../domain/edit'
 import { addObjectAnywhere, removeObjects } from '../../domain/objects'
 import { dissolveRoom, isRoomWallId, removeRoom, ROOM_LABELS, roomName, roomOpenings, roomSize, updateRoom } from '../../domain/rooms'
 import { bounds } from '../../domain/outline'
-import type { StandWallTerms, Variant } from '../../domain/types'
+import type { Variant } from '../../domain/types'
 import { fillFloor } from '../../domain/variant'
 import { textileBox } from '../../domain/decor'
 import { wallLabel } from '../../calc/production'
@@ -21,7 +21,6 @@ import { catalog, place, productOf, rules, wallPlates } from '../env'
 import { count, fmt, kr, mm } from '../format'
 import type { Brush, Tool } from '../tools'
 import { MENUS } from './menus'
-import { StandSettings } from './StandSettings'
 import { ObjectThumb, ProductRow, Swatch, VariantChips } from './ProductRow'
 
 export interface RailProps {
@@ -47,24 +46,14 @@ export interface RailProps {
   /** Open a textile in the wall drawer. */
   onSelect: (s: PlanSelection) => void
   selection?: PlanSelection
-  /** Who pays the stand walls (from the project), on the Stand tab. */
-  terms: StandWallTerms
-  onTerms: (patch: Partial<StandWallTerms>) => void
 }
 
 
 export function Rail(p: RailProps) {
-  const { v, res, tab, setTab, open, setOpen } = p
+  const { v, tab, setTab, open, setOpen } = p
   const [q, setQ] = useState('')
   const menu = MENUS.find((m) => m.key === tab) ?? MENUS[0]
   const counts = useMemo(() => menuCounts(v), [v])
-  const done: Record<string, boolean> = {
-    stand: true,
-    vegg: res.keyFigures.modules > 0 || v.stand.type === 'island',
-    gulv: res.keyFigures.floorTotal > 0,
-  }
-  const step = MENUS.filter((m) => m.group === 'build').findIndex((m) => m.key === tab)
-  const next = MENUS[MENUS.findIndex((m) => m.key === tab) + 1]
 
   return (
     <aside className="rail">
@@ -86,7 +75,6 @@ export function Rail(p: RailProps) {
                   setOpen(true)
                 }}
               >
-                {done[m.key] && <Check size={11} className="check" />}
                 {counts[m.key] ? <span className="count">{counts[m.key]}</span> : null}
                 <m.icon size={18} />
                 {m.short ?? m.name}
@@ -108,13 +96,7 @@ export function Rail(p: RailProps) {
               <>
                 <div className="panel-head">
                   <h2>{menu.name}</h2>
-                  {step >= 0 && (
-                    <span className="step">
-                      Steg {step + 1} av 3{done[menu.key] ? ' · fullført' : ''}
-                    </span>
-                  )}
                 </div>
-                {tab === 'stand' && <StandSection {...p} />}
                 {tab === 'vegg' && <WallSection {...p} />}
                 {tab === 'gulv' && <FloorSection {...p} />}
                 {tab === 'prof' && <ProfileSection {...p} />}
@@ -122,15 +104,6 @@ export function Rail(p: RailProps) {
               </>
             )}
           </div>
-          {next && (
-            <div className="panel-foot">
-              <span className="spacer">Neste: {next.short ?? next.name}</span>
-              <button type="button" className="btn ghost" onClick={() => setTab(next.key)}>
-                <ChevronRight size={16} />
-                Neste
-              </button>
-            </div>
-          )}
         </div>
       )}
     </aside>
@@ -148,10 +121,6 @@ function menuCounts(v: Variant): Record<string, number> {
   delete out.vegg
   delete out.gulv
   return out
-}
-
-function StandSection(p: RailProps) {
-  return <StandSettings {...p} />
 }
 
 function WallSection({ v, res, brush, tool, pick, onEdit, onAddRoom, onSelect, selection }: RailProps) {

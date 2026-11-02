@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { Armchair, Grid3x3, Image, Library, Lightbulb, Monitor, PanelsTopLeft, Paperclip, Ruler, Sprout, Store, Wrench } from 'lucide-react'
+import { Armchair, Grid3x3, Image, Library, Lightbulb, Monitor, PanelsTopLeft, Paperclip, Sprout, Store, Wrench } from 'lucide-react'
 import { PRODUCT_GROUPS } from '../../catalog/groups'
 
 export interface Menu {
@@ -26,9 +26,8 @@ const LOOK: Record<string, { icon: LucideIcon; short?: string; build?: true }> =
   tjen: { icon: Wrench, short: 'Tjenester' },
 }
 
-/** Build steps first, then equipment menus: the Stand step, then one menu per main group. */
+/** One menu per main group: what is built first, then equipment. The stand itself is set in the stand chip. */
 export const MENUS: Menu[] = [
-  { key: 'stand', name: 'Stand', icon: Ruler, group: 'build' },
   ...PRODUCT_GROUPS.map((g): Menu => {
     const l = LOOK[g.id] ?? { icon: Paperclip }
     return { key: g.id, name: g.name, ...(l.short ? { short: l.short } : {}), icon: l.icon, group: l.build ? 'build' : 'equip' }

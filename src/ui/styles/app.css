@@ -500,12 +500,6 @@ kbd {
   background: rgb(var(--surface));
   box-shadow: var(--raise);
 }
-.strip-btn .check {
-  position: absolute;
-  top: 5px;
-  left: 6px;
-  color: rgb(var(--ink-muted));
-}
 .strip-btn .count {
   position: absolute;
   top: 4px;
@@ -569,16 +563,6 @@ kbd {
   color: rgb(var(--ink-faint));
   text-wrap: pretty;
   margin: 8px 0;
-}
-.panel-foot {
-  flex: none;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  border-top: 1px solid var(--g-row);
-  font: var(--type-small);
-  color: rgb(var(--ink-faint));
 }
 .opt {
   display: flex;
@@ -2108,7 +2092,7 @@ select.cin {
   border-radius: 10px;
 }
 
-/* ---------- Stand settings (stand chip popover and Stand tab) ---------- */
+/* ---------- Stand settings (stand chip popover) ---------- */
 /* Four groups (type, size, stand walls, beams) with air between them */
 .stand-set {
   display: flex;
