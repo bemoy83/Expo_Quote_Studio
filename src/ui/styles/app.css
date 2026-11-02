@@ -153,6 +153,13 @@ kbd {
   color: rgb(var(--ink));
   box-shadow: var(--raise);
 }
+/* A chosen tool (pen, brush, bucket) is ink, as in the dock: clearer than a raised chip on the panel */
+.icon-btn.ink[aria-pressed='true'],
+.icon-btn.ink[aria-pressed='true']:hover:not(:disabled) {
+  background: rgb(var(--ink));
+  color: rgb(var(--surface));
+  box-shadow: none;
+}
 /* Fold toggles for panel (first) and calc (last) sit flush with the band's edges */
 .band-fold:first-child {
   margin: 0 -6px 0 -8px;

@@ -367,8 +367,8 @@ export function WallDrawer(p: Props) {
               <span className="eyebrow">
                 {painting ? `Plate · ${plateName(paint)} ${paint}` : `Hele veggen · ${plateName(ral)} ${ral}`}
               </span>
-              <IconButton icon={PaintBucket} label="Farg hele veggen" size={15} pressed={!painting} onClick={() => setTool('wall')} />
-              <IconButton icon={Paintbrush} label="Farg én og én plate" size={15} pressed={painting} onClick={() => setTool('plate')} />
+              <IconButton icon={PaintBucket} label="Farg hele veggen" size={15} className="ink" pressed={!painting} onClick={() => setTool('wall')} />
+              <IconButton icon={Paintbrush} label="Farg én og én plate" size={15} className="ink" pressed={painting} onClick={() => setTool('plate')} />
             </div>
             <VariantChips
               chips={plates.map((x) => ({ name: `${x.name} · RAL ${x.ral}`, color: x.color }))}
