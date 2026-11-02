@@ -12,12 +12,13 @@ const EPS = 1e-6
 
 /**
  * A motif filling a box, cropped like the 3D print. Drawn in its own viewport of the motif's shape: an SVG motif in a
- * plain <image> would letterbox itself inside the box instead of being cropped.
+ * plain <image> would letterbox itself inside the box instead of being cropped. The viewport is 100 units high:
+ * Chrome leaves out an image under one unit wide (a tall motif, 0.4 × 1, went missing).
  */
 export function Print({ m, x, y, width, height }: { m: Motif; x: number; y: number; width: number; height: number }) {
   return (
-    <svg x={x} y={y} width={width} height={height} viewBox={`0 0 ${m.ratio} 1`} preserveAspectRatio="xMidYMid slice">
-      <image href={m.src} width={m.ratio} height={1} />
+    <svg x={x} y={y} width={width} height={height} viewBox={`0 0 ${m.ratio * 100} 100`} preserveAspectRatio="xMidYMid slice">
+      <image href={m.src} width={m.ratio * 100} height={100} />
     </svg>
   )
 }
