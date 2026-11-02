@@ -777,12 +777,6 @@ kbd {
   touch-action: none;
   user-select: none;
 }
-.stage-hint {
-  flex: none;
-  padding: 8px 16px 12px;
-  font: var(--type-note);
-  color: rgb(var(--ink-faint));
-}
 .stage-empty {
   height: 100%;
   display: grid;
@@ -1942,11 +1936,34 @@ select.cin {
 
 /* ---------- Stand chip (top left of the drawing surface) ---------- */
 /* One pill like the dock: the stand switch (open = ink fill), a thin line, then Plan and 3D (chosen = muted fill) */
-.stand-chip {
+/* Top left of the stage: the chip, the hint under it, up to the mini map (top right in the plan) */
+.stand-top {
   position: absolute;
   top: 12px;
   left: 16px;
+  right: 264px;
   z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  pointer-events: none;
+}
+.stand-top > * {
+  pointer-events: auto;
+}
+.stand-chip {
+  flex: none;
+}
+.chip-hint {
+  max-width: 100%;
+  margin: 0;
+  padding-left: 6px;
+  font: var(--type-note);
+  color: rgb(var(--ink-muted));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .stand-chip > .dock-btn {
   gap: 8px;
