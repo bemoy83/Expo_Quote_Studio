@@ -12,7 +12,7 @@ import { initState, reduce } from '../state/history'
 import { CalcPanel } from './calc/CalcPanel'
 import { Button, IconButton, Toast, useToast } from './controls'
 import { CatalogPage } from './catalog/CatalogPage'
-import { catalog, getVersion, idx, place, plateColor, productOf, rules, subscribe } from './env'
+import { catalog, getVersion, idx, place, plateColor, rules, subscribe } from './env'
 import { download } from './download'
 import { count, fmt, kr, signed } from './format'
 import { frameCount, TYPE_NAME } from './names'
@@ -38,6 +38,7 @@ import { removeFill, removeLane, rotateLane } from '../domain/carpet'
 import { CarpetDrawer } from './plan/CarpetDrawer'
 import { longestSide, TILE_FULL, type FloorBrushSize, type RollDir, type TileSize } from '../domain/floor'
 import { ToolDock } from './plan/ToolDock'
+import { hint, HINT_3D } from './hints'
 import { StandChip } from './plan/StandChip'
 import { PriceChangePill } from './plan/PriceChangePill'
 import { usePriceChange } from './plan/usePriceChange'
@@ -468,7 +469,7 @@ export default function App() {
                     </div>
                   </Suspense>
                 )}
-                <StandChip v={v} res={res} onEdit={onEdit} terms={terms} onTerms={setTerms} view={view} onView={showView} />
+                <StandChip v={v} res={res} onEdit={onEdit} terms={terms} onTerms={setTerms} view={view} onView={showView} hint={view === '3d' ? HINT_3D : hint(tool, brush, rollBrush && rollMode)} />
                 {view === 'plan' && change?.at && <PriceChangePill key={change.id} change={change} />}
                 <ToolDock
                   tools={view === 'plan'}
@@ -516,7 +517,6 @@ export default function App() {
                   onClose={() => setSelection({})}
                 />
               )}
-              <div className="stage-hint">{view === '3d' ? HINT_3D : hint(tool, brush, rollBrush && rollMode)}</div>
             </main>
             {layout.calc && <CalcPanel res={res} name={v.name} onHover={setHighlight} onQuote={() => setPage('tilbud')} />}
           </div>
@@ -567,35 +567,6 @@ const PANEL_TAB: Record<PenTool, string> = { wall: 'vegg', floor: 'gulv', profil
 
 const DOCK_KEYS: Record<string, DockTool> = { v: 'select', s: 'wall', g: 'floor', t: 'profile', m: 'object', e: 'erase' }
 
-const HINT_3D = 'Dra for å rotere · rull for å zoome · klikk en dør for å endre den · dra møbler, en innervegg eller grafikk for å flytte · dra et rom i veggen eller taket, toppkanten av en romvegg endrer størrelsen · dra grafikk eller tekstilvegg fra Profilering til en vegg'
-
-function hint(tool: Tool, brush: Brush | null, roll: RollMode | false = false): string {
-  if (tool === 'select') return 'Klikk en vegg eller dør for å endre den · klikk engangsteppe for legging, snu og lengde · dra en innervegg, innvendig takdrager eller møbler for å flytte · dra gulvet i et rom for å flytte rommet, en romvegg for å endre størrelsen · Delete fjerner valgt møbel, dør, takdrager eller rom'
-  const erase = tool === 'erase'
-  switch (brush?.kind ?? 'wall') {
-    case 'wall':
-      return erase ? 'Klikk en veggmodul eller dra langs rutenettet for å fjerne vegg · standvegger kan ikke fjernes' : 'Klikk en kant eller dra langs rutenettet for å tegne vegg i hele meter'
-    case 'beam':
-      return erase
-        ? 'Klikk eller dra langs en innvendig takdrager for å fjerne den'
-        : 'Dra langs rutenettet for innvendig takdrager · en ende på en annen takdrager henger på krok, ellers stolpe med fotplate · tegn en tverrdrager mot en stolpe for å spare fotplaten'
-    case 'floor':
-      if (roll && erase) return 'Klikk en bane for å fjerne den'
-      if (roll === 'fill') return 'Dra et område for engangsteppe, klikk for hele standen · banene legges slik det koster minst · Velg teppet for andre forslag til legging'
-      if (roll) return 'Klikk for en hel bane på ledig gulv, kappet der bare en smalere stripe er ledig · dra på tvers for flere hele baner side om side · R snur rulleretningen · klikk en bane for å bytte farge · Velg banen for å snu eller endre lengden'
-      return erase ? 'Klikk og dra for å fjerne gulv' : 'Klikk og dra for å tegne gulv · velg penselstørrelse over verktøyene'
-    case 'opening':
-      return erase ? 'Klikk en åpning for å gjøre den til vegg igjen' : 'Klikk en vegg eller en tom kant for å sette inn åpning med overstykke · klikk en åpning for å bytte fyll'
-    case 'textile':
-      return erase
-        ? 'Klikk en tekstilvegg for å fjerne den'
-        : 'Dra langs en systemvegg for tekstilvegg på veggen, eller dra fritt for frittstående på fotplater · klikk ved en vegg for å fylle den · én rute av gangen, velg rutestørrelse over verktøyene · start der en frittstående slutter for hjørne'
-    case 'motif':
-      return erase ? 'Klikk en foliedekor for å fjerne den, eller en tekstilvegg for å ta bort motivet' : 'Klikk en tekstilvegg for trykk, eller et veggfelt for foliedekor'
-    case 'object':
-      return erase ? 'Klikk et møbel for å fjerne det' : `Klikk i planen for å sette ut ${productOf(brush?.kind === 'object' ? brush.product : '')?.name.toLowerCase() ?? 'varen'}`
-  }
-}
 
 /** InFrame frames and free-standing walls. */
 function textileSub(p: CalcResult['production']) {
