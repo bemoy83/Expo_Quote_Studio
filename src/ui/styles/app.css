@@ -2065,7 +2065,7 @@ select.cin {
   max-width: calc(100% - 32px);
   max-height: calc(100% - 80px);
   overflow-y: auto;
-  padding: 18px 18px 20px;
+  padding: 18px 18px 16px;
   animation: dock-in var(--dur) var(--ease);
 }
 /* ---------- Flat choice (FlatChoice): no track, chosen = muted fill ---------- */
@@ -2114,8 +2114,8 @@ select.cin {
 .stand-set {
   display: flex;
   flex-direction: column;
-  gap: 26px;
-  padding-top: 14px;
+  gap: 20px;
+  padding-top: 10px;
 }
 .stand-grp {
   display: flex;

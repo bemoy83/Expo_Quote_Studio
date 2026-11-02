@@ -148,11 +148,7 @@ export function StandSettings({ v, res, onEdit, terms, onTerms }: StandSettingsP
               </div>
             </div>
           )}
-          <p className="panel-note">
-            {terms.payer === 'arrangør'
-              ? 'Arrangøren betaler standveggene og takdragerne langs dem. Annen farge betaler utstilleren.'
-              : 'Utstilleren betaler standveggene og takdragerne langs dem.'}
-          </p>
+          {terms.payer === 'arrangør' && <p className="panel-note">Annen farge belastes utstiller.</p>}
         </section>
       )}
 
