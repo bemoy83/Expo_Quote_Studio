@@ -201,10 +201,11 @@ romvegger som takdragerne ikke holder, også når takdragerne er på (`calc/wall
   tillegg som veggplaten).
 - **Lås og nøkler** følger med alle dører. Dørbladet har **standens farge** (RAL) til en annen velges i dørskuffen;
   overstykket har veggens farge. Kalkylen har én dørlinje per farge.
-- **Dørskuffen** (Bjørn 02.11.2026): klikk døren i plan eller 3D. Dør/forheng, slagretning, hengselside, farge, gjør om
-  til vegg. Døren flyttes ved å dra den langs veggene i plan og 3D (`domain/doors.ts`), aldri inn i en standvegg eller
-  på en annen åpning. Flyttes eller endres et rom slik at døren ville havnet i standveggen, flyttes døren til nærmeste
-  modul på rommet der den kan stå, med beskjed; flyttet nektes bare når rommet ikke har noen slik modul.
+- **Dørskuffen** (Bjørn 02.11.2026): klikk døren i plan eller 3D. Miniplan for å flytte døren (klikk ruten utenfor en
+  modul: alle egne moduler på rommet, eller langs innerveggen; aldri standvegg eller en annen åpning), dør/forheng,
+  slagretning, hengselside, farge, gjør om til vegg (`domain/doors.ts`). Døren dras ikke i plan og 3D; der dras romsidene
+  som før. Flyttes eller endres et rom slik at døren ville havnet i standveggen, flyttes døren til nærmeste modul på
+  rommet der den kan stå, med beskjed; flyttet nektes bare når rommet ikke har noen slik modul.
 
 ### Tekstilramme (43TX)
 

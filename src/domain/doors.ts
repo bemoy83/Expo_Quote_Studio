@@ -1,8 +1,8 @@
-// A door or curtain as a thing of its own: chosen in the plan or 3D, dragged along the walls, edited in the door drawer.
-// Every move goes through moveOpening, so the plan, 3D and undo agree, and a door never lands in a stand wall.
-import { defaultSwing, doorAllowed } from './edit';
-import { moduleKey, pointAlong, wallDirection } from './grid';
-import { roomOf } from './rooms';
+// A door or curtain as a thing of its own: chosen in the plan or 3D, edited and moved in the door drawer (its mini
+// plan). Every move goes through moveOpening, so a door never lands in a stand wall or on another opening.
+import { defaultSwing, doorAllowed, doorSwing } from './edit';
+import { moduleKey, pointAlong, wallDirection, wallModules } from './grid';
+import { OUTSIDE, roomOf } from './rooms';
 import type { Opening, Point, Variant, Wall } from './types';
 import { builtModules, type BuiltModule } from './walls';
 
@@ -28,7 +28,7 @@ export function doorHinge(w: Wall, o: Opening): { a: Point; b: Point; dir: Point
 }
 
 /** A module the opening may move to: built, not in a stand wall, and not holding another opening. */
-function free(v: Variant, o: Opening, m: BuiltModule): boolean {
+function canTake(v: Variant, o: Opening, m: BuiltModule): boolean {
   return (!m.opening || m.opening.id === o.id) && doorAllowed(v, m.a, m.b);
 }
 
@@ -41,7 +41,7 @@ export function moveOpening(v: Variant, id: string, key: string): Variant {
   const o = openingById(v, id);
   const from = o && v.walls.find((w) => w.id === o.wallId);
   const m = builtModules(v).find((x) => x.key === key);
-  if (!o || !from || !m || !free(v, o, m)) return v;
+  if (!o || !from || !m || !canTake(v, o, m)) return v;
   if (m.opening?.id === id) return v;
   const to = v.walls.find((w) => w.id === m.wallId)!;
   const { swing: _s, hinge: _h, ...rest } = o;
@@ -60,29 +60,6 @@ export function moveOpening(v: Variant, id: string, key: string): Variant {
   }
   const next: Opening = { ...rest, wallId: m.wallId, module: m.index, ...(swing === undefined || swing === 1 ? {} : { swing }), ...(hinge === -1 ? { hinge } : {}) };
   return { ...v, openings: v.openings.map((x) => (x.id === id ? next : x)) };
-}
-
-/**
- * Where a dragged opening lands: the free module nearest the point within `tol` metres of it, or null. The module it
- * stands in counts as free, so a small drag keeps it there.
- */
-export function openingSpotAt(v: Variant, id: string, q: { x: number; y: number }, tol = 0.6): string | null {
-  const o = openingById(v, id);
-  if (!o) return null;
-  let best: { key: string; d: number } | null = null;
-  for (const m of builtModules(v)) {
-    if (!free(v, o, m)) continue;
-    const d = distToSegment(q, m.a, m.b);
-    if (d <= tol && (!best || d < best.d)) best = { key: m.key, d };
-  }
-  return best?.key ?? null;
-}
-
-function distToSegment(q: { x: number; y: number }, a: Point, b: Point): number {
-  const vx = b[0] - a[0];
-  const vy = b[1] - a[1];
-  const t = Math.max(0, Math.min(1, ((q.x - a[0]) * vx + (q.y - a[1]) * vy) / (vx * vx + vy * vy)));
-  return Math.hypot(q.x - (a[0] + vx * t), q.y - (a[1] + vy * t));
 }
 
 const update = (v: Variant, id: string, fn: (o: Opening) => Opening): Variant => ({
@@ -117,3 +94,54 @@ export const removeOpening = (v: Variant, id: string): Variant =>
 
 /** The room the opening's wall belongs to, if any. */
 export const openingRoom = (v: Variant, o: Opening) => roomOf(v, v.walls.find((w) => w.id === o.wallId));
+
+/** A module the door can be put in from the door drawer's mini plan, and the way out of the wall its target cell lies. */
+export interface DoorSpot {
+  key: string;
+  a: Point;
+  b: Point;
+  /** Unit normal pointing to the cell that is clicked: out of the room, or to the side the door opens to. */
+  out: Point;
+  /** Index of the module on its wall, counted from the wall's start. */
+  module: number;
+  /** Number of the module as people count it: from the left on a side running across, from the back on one running
+   *  back to front (1 = first). */
+  nth: number;
+  wallId: string;
+  /** The door stands here now. */
+  current: boolean;
+}
+
+/**
+ * Where the door can go from the mini plan: every module of the room's own sides for a door in a room (the handoff's
+ * rule), else every module of its wall. Modules in a stand wall, erased ones and those holding another opening are
+ * left out. The module it stands in is included, marked current.
+ */
+export function doorSpots(v: Variant, id: string): DoorSpot[] {
+  const o = openingById(v, id);
+  const w = o && v.walls.find((x) => x.id === o.wallId);
+  if (!o || !w) return [];
+  const built = new Map(builtModules(v).map((m) => [m.key, m]));
+  const walls = w.room ? v.walls.filter((x) => x.room?.id === w.room!.id) : [w];
+  const s = w.room ? OUTSIDE : doorSwing(v.stand, w, o);
+  const out: DoorSpot[] = [];
+  for (const x of walls) {
+    const [dx, dy] = wallDirection(x);
+    const n: Point = [-dy * s, dx * s];
+    const mods = wallModules(x);
+    const reversed = dx < 0 || dy < 0;
+    mods.forEach((m, module) => {
+      const b = built.get(m.key);
+      if (!b || !canTake(v, o, b)) return;
+      out.push({ key: m.key, a: m.a, b: m.b, out: n, module, nth: reversed ? mods.length - module : module + 1, wallId: x.id, current: b.opening?.id === id });
+    });
+  }
+  return out;
+}
+
+/** The side of a room a direction out of it names. */
+export function sideName([x, y]: Point): string {
+  if (y < -0.5) return 'Bak';
+  if (y > 0.5) return 'Front';
+  return x < 0 ? 'Venstre' : 'Høyre';
+}

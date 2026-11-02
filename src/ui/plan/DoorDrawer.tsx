@@ -1,8 +1,8 @@
 // Door drawer (dørskuff): a door or curtain chosen in the plan or 3D. Door or curtain, swing, hinge side, leaf colour,
-// back to wall. Moving it is done in the plan and 3D, which stay in view: drag it along the walls (domain/doors.ts).
+// back to wall, and a mini plan to move it (DoorMap, from design_handoff_bakrom_dor).
 // Laid out like the wall drawer; no outlines, chosen = ink, setting = muted fill.
 import { ArrowLeftRight, FlipHorizontal2, PanelTop, Trash2, X } from 'lucide-react'
-import { doorRal, flipHinge, openingById, openingRoom, removeOpening, setDoorRal, setOpeningProduct } from '../../domain/doors'
+import { sideName, doorRal, flipHinge, openingById, openingRoom, removeOpening, setDoorRal, setOpeningProduct } from '../../domain/doors'
 import { canFlipSwing, doorSwing, flipSwing, isPerimeterWall } from '../../domain/edit'
 import { pointAlong, wallDirection, wallLength } from '../../domain/grid'
 import { OUTSIDE, roomName, roomSize } from '../../domain/rooms'
@@ -15,6 +15,7 @@ import { openingProducts, plateColor, plateName, productOf, rules, wallPlates } 
 import { fmt } from '../format'
 import { VariantChips } from '../panel/ProductRow'
 import { TXT } from './drawerText'
+import { DoorMap } from './DoorMap'
 import type { PlanSelection } from './PlanView'
 
 interface Props {
@@ -32,13 +33,6 @@ function toward([x, y]: Point): string {
   return x < 0 ? 'mot venstre' : 'mot høyre'
 }
 
-/** The side of a room a direction out of it names. */
-function roomSide([x, y]: Point): string {
-  if (y < -0.5) return 'baksiden'
-  if (y > 0.5) return 'fronten'
-  return x < 0 ? 'venstre side' : 'høyre side'
-}
-
 export function DoorDrawer({ v, selection, onSelect, onEdit, onClose }: Props) {
   const o = openingById(v, selection.openingId)
   const w = o && v.walls.find((x) => x.id === o.wallId)
@@ -54,7 +48,7 @@ export function DoorDrawer({ v, selection, onSelect, onEdit, onClose }: Props) {
   const plates = wallPlates()
 
   const where = room
-    ? `${roomName(room)} ${roomSize(room)} · ${roomSide(out)}`
+    ? `${roomName(room)} ${roomSize(room)} · ${sideName(out).toLowerCase()}`
     : isStandWall(w)
       ? 'Standvegg'
       : `Innervegg ${fmt(wallLength(w), 0)} m`
@@ -80,6 +74,7 @@ export function DoorDrawer({ v, selection, onSelect, onEdit, onClose }: Props) {
         <p className="wd-meta num">
           {where} · {door ? `blad ${fmt(rules.door.swing * 100, 0)} × ${fmt(rules.door.height * 100, 0)} cm` : `åpning ${fmt((rules.wall.cc - rules.wall.post) * 1000, 0)} mm`}
         </p>
+        <DoorMap v={v} openingId={o.id} onEdit={onEdit} />
         <Segmented<string>
           inWell
           label="Type"
@@ -120,7 +115,7 @@ export function DoorDrawer({ v, selection, onSelect, onEdit, onClose }: Props) {
       </div>
       <div className="wd-view">
         <DoorView v={v} openingId={o.id} />
-        <div className="wd-hint">Dra døren langs veggene i planen eller 3D for å flytte den · Delete gjør den om til vegg · Esc lukker</div>
+        <div className="wd-hint">Klikk ruten utenfor en vegg i miniplanen for å flytte døren · Delete gjør den om til vegg · Esc lukker</div>
       </div>
     </section>
   )

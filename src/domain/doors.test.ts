@@ -3,7 +3,7 @@ import { DEFAULT_CATALOG, DOOR } from '../catalog/defaultCatalog';
 import { calc } from '../calc/calc';
 import { RULES } from '../rules/rules';
 import { r2 } from '../calc/referenceStands';
-import { doorHinge, flipHinge, moveOpening, openingSpotAt, removeOpening, setDoorRal, setOpeningProduct } from './doors';
+import { doorHinge, doorSpots, flipHinge, moveOpening, removeOpening, setDoorRal, setOpeningProduct } from './doors';
 import { doorSwing, paintWalls, replaceWalls, setOpening } from './edit';
 import { moduleKey } from './grid';
 import { addRoom, moveRoom, moveRoomDoors, RECT_SIDE, resizeRoomDoors } from './rooms';
@@ -41,12 +41,22 @@ describe('moving a door', () => {
     expect(v.openings).toHaveLength(2);
     expect(moveOpening(v, v.openings[0].id, moduleKey([2, 0], [2, 1]))).toBe(v);
   });
-  it('a drag lands on the nearest free module', () => {
+});
+
+describe('mini plan targets', () => {
+  it('a room door can go to every own module of the room, not the stand walls', () => {
     const v = r2();
-    const id = v.openings[0].id;
-    expect(openingSpotAt(v, id, { x: 0.4, y: 2.1 })).toBe(moduleKey([0, 2], [1, 2]));
-    // Next to the back stand wall only: nothing
-    expect(openingSpotAt(v, id, { x: 4, y: 0.1 })).toBeNull();
+    const spots = doorSpots(v, v.openings[0].id);
+    // R2's room: front 2 + right 2 own modules; back and left are stand walls
+    expect(spots).toHaveLength(4);
+    expect(spots.filter((s) => s.current)).toHaveLength(1);
+    // Each target lies out of the room
+    for (const s of spots) expect(s.out[0] + s.out[1]).toBe(1);
+  });
+  it('a door in an inner wall stays on that wall', () => {
+    let v = paintWalls(row(), [1, 2], [4, 2]);
+    v = setOpening(v, moduleKey([2, 2], [3, 2]), DOOR);
+    expect(doorSpots(v, v.openings[0].id)).toHaveLength(3);
   });
 });
 
