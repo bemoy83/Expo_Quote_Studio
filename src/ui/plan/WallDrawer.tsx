@@ -26,14 +26,14 @@ import {
 } from '../../domain/decor'
 import { eraseWalls, setWallPlate } from '../../domain/edit'
 import { doorRal } from '../../domain/doors'
-import { OUTSIDE } from '../../domain/rooms'
+import { OUTSIDE, roomName, roomSize } from '../../domain/rooms'
 import { wallLength, wallModules } from '../../domain/grid'
 import type { Foil, TextileWall, Variant, Wall } from '../../domain/types'
 import { builtModules, isStandWall } from '../../domain/walls'
 import type { Motif } from '../../persistence/file'
 import { doorInset, wallHeight } from '../../rules/rules'
 import { ALU, ALU_POST, BORDER_STRONG, FABRIC, FEET, INK, INK_FAINT, LAYER_COLOR, SUNKEN } from '../colors'
-import { IconButton, Segmented } from '../controls'
+import { Button, IconButton, Segmented } from '../controls'
 import { plateColor, productOf, rules, wallPlates } from '../env'
 import { count, fmt, mm } from '../format'
 import { findMotif } from '../motifs'
@@ -181,18 +181,18 @@ export function WallDrawer(p: Props) {
   const plates = wallPlates()
   const ral = w.plate ?? v.defaultPlate
   const flip = fs.length > 1 ? fs.find((x) => x !== s) : undefined
-  const tail = 'dra tekstilvegg eller et motiv fra midten til veggen · klikk en ramme eller grafikk for å redigere · Esc lukker'
+  const tail = 'dra tekstilvegg eller motiv til veggen, klikk det for å endre'
   const hint = T
-    ? 'Dra rammen for å flytte · håndtakene på kanter og hjørner endrer størrelsen · klikk et motiv for trykk · Delete fjerner'
+    ? 'Dra rammen for å flytte · håndtakene endrer størrelsen · klikk et motiv for trykk · Delete fjerner'
     : F
       ? F.full
         ? 'Dra for å flytte til en annen plate · klikk et motiv for å bytte · Delete fjerner'
         : 'Dra for å flytte innenfor platen · hjørnene endrer størrelsen · klikk et motiv for å bytte · Delete fjerner'
       : isStandWall(w)
-        ? `Standveggen følger standtypen og kan ikke flyttes eller fjernes · ${tail}`
+        ? `Standveggen står fast · ${tail}`
         : w.room
-          ? `Romvegg: dra den i planen for å endre størrelsen, i 3D for å flytte rommet · ${tail}`
-          : `Innervegg: dra den i planen for å flytte den · ${tail}`
+          ? `Dra veggen i planen for å endre rommet · ${tail}`
+          : `Dra veggen i planen for å flytte den · ${tail}`
 
   const remove = () => {
     if (T) p.onEdit((x) => removeTextile(x, T.id))
@@ -238,24 +238,15 @@ export function WallDrawer(p: Props) {
   }
 
   const fill = T?.fill ?? 'print'
+  const room = w.room && v.rooms.find((r) => r.id === w.room!.id)
+  const title = T ? 'Tekstilvegg' : F ? (F.full ? 'Print på hel plate' : 'Foliedekal') : room ? `${roomName(room)} ${roomSize(room)} · vegg` : label === 'Innervegg' ? 'Innervegg' : `Standvegg · ${label.toLowerCase()}`
   const PAD = 0.18
   return (
     <section className="wall-drawer drawer3" aria-label="Vegg sett forfra">
       <div className="wd-insp">
         <div className="wd-head">
           <i className="dot" style={{ background: T ? LAYER_COLOR.textile : F ? INK_FAINT : LAYER_COLOR.walls }} />
-          <h3>{T ? 'Tekstilvegg' : F ? (F.full ? 'Print på hel plate' : 'Foliedekal') : label === 'Innervegg' ? 'Innervegg' : `Standvegg · ${label.toLowerCase()}`}</h3>
-          {T && <IconButton icon={MoveHorizontal} label="Fyll ledig vegg" size={14} onClick={() => p.onEdit((x) => fillTextile(x, rules, T.id))} />}
-          {!T && !F && <IconButton icon={Plus} label="Legg til tekstilvegg" size={14} onClick={addFrame} />}
-          {!T && !F && doors.map((d, i) => <IconButton key={d.id} icon={DoorOpen} label={`Vis døren${doors.length > 1 ? ` ${i + 1}` : ''}`} size={14} onClick={() => p.onSelect({ openingId: d.id })} />)}
-          {flip !== undefined && (
-            <IconButton
-              icon={FlipHorizontal2}
-              label={T ? 'Flytt rammen til andre siden' : F ? 'Flytt folien til andre siden' : `Vis ${faceName(w, flip).toLowerCase()}`}
-              size={14}
-              onClick={() => (T || F ? moveToSide(flip) : p.onSelect({ wallId: w.id, side: flip }))}
-            />
-          )}
+          <h3>{title}</h3>
           {(T || F || !isStandWall(w)) && (
             <IconButton icon={Trash2} label={T ? 'Fjern tekstilvegg (Delete)' : F ? 'Fjern grafikk (Delete)' : w.room ? 'Åpne siden' : 'Fjern veggen'} size={14} onClick={remove} />
           )}
@@ -269,7 +260,6 @@ export function WallDrawer(p: Props) {
               : [`${L} m`, count(wallModules(w).length - openings.length, 'plate', 'plater'), openings.length && count(openings.length, 'åpning', 'åpninger'), tex.length && count(tex.length, 'tekstilvegg', 'tekstilvegger')]
                   .filter(Boolean)
                   .join(' · ')}
-          {fs.length > 1 ? ` · ${faceName(w, s).toLowerCase()}` : ''}
         </p>
 
         {T && (
@@ -320,6 +310,38 @@ export function WallDrawer(p: Props) {
             />
           </>
         )}
+        <div className="wd-foot">
+          <div className="dd-swing">
+            <span className="eyebrow">Side · {faceName(w, s).toLowerCase()}</span>
+            {flip !== undefined && (
+              <IconButton
+                icon={FlipHorizontal2}
+                label={T ? 'Flytt rammen til andre siden' : F ? 'Flytt folien til andre siden' : `Vis ${faceName(w, flip).toLowerCase()}`}
+                size={15}
+                onClick={() => (T || F ? moveToSide(flip) : p.onSelect({ wallId: w.id, side: flip }))}
+              />
+            )}
+          </div>
+          <div className="wd-actions">
+            {T && (
+              <Button variant="ghost" icon={MoveHorizontal} onClick={() => p.onEdit((x) => fillTextile(x, rules, T.id))}>
+                Fyll ledig vegg
+              </Button>
+            )}
+            {!T && !F && (
+              <Button variant="ghost" icon={Plus} onClick={addFrame}>
+                Tekstilvegg
+              </Button>
+            )}
+            {!T &&
+              !F &&
+              doors.map((d, i) => (
+                <Button key={d.id} variant="ghost" icon={DoorOpen} onClick={() => p.onSelect({ openingId: d.id })}>
+                  Dør{doors.length > 1 ? ` ${i + 1}` : ''}
+                </Button>
+              ))}
+          </div>
+        </div>
       </div>
 
       <Shelf

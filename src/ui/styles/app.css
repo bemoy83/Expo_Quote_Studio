@@ -2425,6 +2425,15 @@ select.cin {
   padding: 10px 12px 12px;
   border-right: 1px solid var(--g-row);
 }
+.wd-foot {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.wd-foot .wd-actions:empty {
+  display: none;
+}
 .dd-swing {
   display: flex;
   align-items: center;

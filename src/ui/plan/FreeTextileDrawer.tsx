@@ -62,12 +62,6 @@ export function FreeTextileDrawer(p: Props) {
         <div className="wd-head">
           <i className="dot" style={{ background: LAYER_COLOR.textile }} />
           <h3>Frittstående vegg {f.pos}</h3>
-          <IconButton
-            icon={FlipHorizontal2}
-            label={`Vis side ${face === 'a' ? 'B' : 'A'}`}
-            size={14}
-            onClick={() => p.onSelect({ freeTextileId: t.id, freeFace: face === 'a' ? 'b' : 'a' })}
-          />
           <IconButton icon={Trash2} label="Fjern tekstilvegg (Delete)" size={14} onClick={remove} />
           <IconButton icon={X} label="Lukk" size={14} onClick={p.onClose} />
         </div>
@@ -77,7 +71,6 @@ export function FreeTextileDrawer(p: Props) {
             count(f.supports.length, 'fot', 'føtter'),
             f.railCuts.length > 1 ? `skjøtt i ${f.railCuts.length}` : '',
             f.nCorners ? count(f.nCorners, 'hjørne', 'hjørner') : '',
-            `side ${face.toUpperCase()}`,
           ]
             .filter(Boolean)
             .join(' · ')}
@@ -90,6 +83,12 @@ export function FreeTextileDrawer(p: Props) {
           Duk {F.W} × {F.H} mm · {fillName}
           {F.fileName ? ` · fil ${F.fileName}` : ''}
         </p>
+        <div className="wd-foot">
+          <div className="dd-swing">
+            <span className="eyebrow">Side {face.toUpperCase()}</span>
+            <IconButton icon={FlipHorizontal2} label={`Vis side ${face === 'a' ? 'B' : 'A'}`} size={15} onClick={() => p.onSelect({ freeTextileId: t.id, freeFace: face === 'a' ? 'b' : 'a' })} />
+          </div>
+        </div>
       </div>
 
       <Shelf
@@ -145,7 +144,7 @@ export function FreeTextileDrawer(p: Props) {
           ))}
         </svg>
       </div>
-      <div className="wd-hint">Tekstil på begge sider, står på fotplater · dra veggen i planen for å flytte den · tallene under er føttenes plass i mm fra enden · Delete fjerner</div>
+      <div className="wd-hint">Dra veggen i planen for å flytte den · tallene under er føttenes plass i mm fra enden · Delete fjerner</div>
     </section>
   )
 }
