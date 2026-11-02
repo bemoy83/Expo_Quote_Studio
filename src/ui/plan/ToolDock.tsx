@@ -91,8 +91,8 @@ export function ToolDock({
   )
 }
 
-/** What the last stroke changed in the exhibitor's sum, inverted like a toast. It pops in, rests while you draw, then
- *  floats up and fades like a soap bubble. By the pointer when the change came from drawing in the plan (`at`, px inside
+/** What the last stroke changed in the exhibitor's sum, inverted like a toast. It fades in moving a little up, rests
+ *  while you draw, then fades out moving on up. By the pointer when the change came from drawing in the plan (`at`, px inside
  *  the drawing surface), else in the dock over the quick picks. */
 export function PriceChangePill({ change: { amount, at, leaving } }: { change: PriceChange }) {
   return (

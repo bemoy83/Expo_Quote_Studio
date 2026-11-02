@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 
 /** How long the change stays still after the last edit, ms. A drag keeps it open, so one stroke shows as one change. */
-const HOLD = 1900
-/** Then it floats up and fades, ms (.price-pill.leaving). */
-const LEAVE = 900
+const HOLD = 2000
+/** Then it fades out moving up, ms (.price-pill.leaving). */
+const LEAVE = 450
 /** A change this soon after the pointer moved in the plan came from drawing there, ms. */
 const FROM_PLAN = 400
 /** Room the pill needs beside the pointer, px. */
