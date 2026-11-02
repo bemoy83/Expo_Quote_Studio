@@ -98,6 +98,7 @@ const products: Product[] = [
   one('8042', 'Montering av kundens tekstil', 'system', 'm²', 'prof.tekstil', 170, { dim: 'duk i samme størrelse', pricing: 'sum' }),
   one('8020', 'Foliedekor, dekal', 'system', 'm²', 'prof.folie', 520),
   one('8021', 'Foliedekor, helt veggfelt 960 × 2420 mm', 'system', 'm²', 'prof.folie', 520),
+  one('8022', 'Tilpasning av trykkfil over flere plater', 'system', 'stk', 'prof.folie', 450, { dim: 'ett motiv, delt per plate' }),
   // Floor
   {
     id: 'flis',
@@ -229,6 +230,7 @@ export const DEFAULT_CATALOG: Catalog = {
     textileFill: { print: '8040', white: '8041', reuse: '8042' },
     foil: '8020',
     foilFull: '8021',
+    printSetup: '8022',
     floorProtection: '5911',
   },
 };

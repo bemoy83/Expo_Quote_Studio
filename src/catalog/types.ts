@@ -73,6 +73,8 @@ export interface SystemParts {
   textileFill: Record<TextileFill, string>;
   foil: string;
   foilFull: string;
+  /** Fitting one motif stretched over several plates and cutting the print file per plate, per motif. */
+  printSetup: string;
   floorProtection: string;
 }
 

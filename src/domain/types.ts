@@ -164,7 +164,7 @@ export interface FreeTextile {
   b?: TextileFace;
 }
 
-/** Foil decor inside a single wall panel (960 × 2420), never across a post. */
+/** Foil decor inside a single wall panel (960 × 2420), never across a post. A print covering the panel may sit on a door. */
 export interface Foil {
   id: string;
   wallId: string;
@@ -180,6 +180,13 @@ export interface Foil {
   x: number;
   y: number;
   motif?: string;
+  /**
+   * Print stretched over several plates (the paint bucket with «Print», domain/print.ts): the id shared by its plates.
+   * Omitted: a decal, or a whole motif on this one plate.
+   */
+  run?: string;
+  /** Part of the motif on this plate, as fractions of the image seen from the face: [left, top, right, bottom]. */
+  crop?: [number, number, number, number];
 }
 
 /** Power, AV, plants: counted, not placed. */

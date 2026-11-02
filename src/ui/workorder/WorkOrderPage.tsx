@@ -5,7 +5,7 @@
 import { Printer } from 'lucide-react'
 import { useState } from 'react'
 import type { CalcResult } from '../../calc/calc'
-import { FILL_NAME, production, textileRows } from '../../calc/production'
+import { FILL_NAME, foilRows, production, textileRows } from '../../calc/production'
 import { groupItems, PRODUCT_GROUPS } from '../../catalog/groups'
 import { dateText, DELIVERY_FIELDS, today } from '../../domain/delivery'
 import type { Project, Variant } from '../../domain/types'
@@ -71,7 +71,7 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf }: 
         return [{ artnr: a, name: `${r.product.name} ${r.variant.name.toLowerCase()}`, rows: cutRows(rollPieces(lanesOf(v.floor.tiles, a, roll)), roll) }]
       })
     : []
-  const prints = shown.has('prof') ? textileRows(production(v, rules.textile.inFrame, customer)) : []
+  const prints = shown.has('prof') ? [...textileRows(production(v, rules.textile.inFrame, customer)), ...foilRows(v, rules.wall.plate, customer)] : []
   const groupName = (id: string) => PRODUCT_GROUPS.find((g) => g.id === id)?.name ?? id
   const missingDates = !DELIVERY_FIELDS.some((d) => project.delivery?.[d.key])
 
@@ -227,9 +227,7 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf }: 
                 <div key={p.pos} className="wo-print qline">
                   <span className="num">{p.pos}</span>
                   <span>{p.where}</span>
-                  <span className="num r">
-                    {p.W} × {p.H}
-                  </span>
+                  <span className="num r">{p.foil ? 'Folie' : `${p.W} × ${p.H}`}</span>
                   <span className="num r">{p.fill === 'reuse' ? '–' : `${p.pw} × ${p.ph}`}</span>
                   <span className="num muted wo-file">{p.fileName ?? FILL_NAME[p.fill]}</span>
                 </div>

@@ -9,6 +9,7 @@ import {
   addTextile,
   faceNormal,
   faces,
+  feltBlocked,
   felt,
   fillTextile,
   foilCenter,
@@ -26,6 +27,7 @@ import {
 } from '../../domain/decor'
 import { eraseWalls, setWallPlate } from '../../domain/edit'
 import { setPanels, wallRal } from '../../domain/panels'
+import { clearPrint, coverCrop, cropBand, printPlate, printPlates, printsOn, printWall } from '../../domain/print'
 import { doorRal } from '../../domain/doors'
 import { OUTSIDE, roomAt, roomName, roomSize } from '../../domain/rooms'
 import { wallLength, wallModules } from '../../domain/grid'
@@ -41,7 +43,7 @@ import { findMotif } from '../motifs'
 import { TXT, elevationBox } from './drawerText'
 import { RoomLabel } from './RoomLabel'
 import { roomLabelSize } from './roomLabelSize'
-import { DrawerHead, DrawerRow, FillPicker, Handles, PlatePalette, Print, Shelf, SmallDim, type Edge } from './drawerParts'
+import { DrawerHead, DrawerRow, FillPicker, Handles, PlatePalette, PRINT, Print, Shelf, SmallDim, type Edge } from './drawerParts'
 import { Dims, Opening, Posts, TextileFace } from './elevation'
 import { applyDrop, decorDrag, dropSpot, endDecorDrag, type DropSpot, type FaceTarget } from '../dnd'
 import type { PlanSelection } from './PlanView'
@@ -100,9 +102,15 @@ export function WallDrawer(p: Props) {
   const { v, selection: sel, motifs } = p
   const svg = useRef<SVGSVGElement>(null)
   const [spot, setSpot] = useState<DropSpot | null>(null)
-  /** Colouring: the paint bucket colours the whole wall, the brush one plate at a time in `brush`'s colour. */
-  const [tool, setTool] = useState<'wall' | 'plate'>('wall')
-  const [brush, setBrush] = useState<string | null>(null)
+  /**
+   * Colouring as in a paint program: pick the paint bucket (the whole face) or the brush (one plate at a time), pick a
+   * colour or «Print», then click the wall. No tool: the drawing selects and moves as usual (Bjørn 2.11.2026).
+   */
+  const [tool, setTool] = useState<'wall' | 'plate' | null>(null)
+  /** What the tools lay on: a plate colour (RAL) or PRINT. Unset: the wall's own colour. */
+  const [paintSel, setPaint] = useState<string | null>(null)
+  /** The motif «Print» lays on, chosen in the graphics shelf. Unset: the first in the library. */
+  const [printSel, setPrintMotif] = useState<string | null>(null)
   const w = v.walls.find((x) => x.id === sel.wallId)
   if (!w) return null
   const fs = faces(v, w)
@@ -211,39 +219,91 @@ export function WallDrawer(p: Props) {
   const doors = openings.filter((o) => productOf(o.product)?.opening === 'door')
   const ral = wallRal(v, w)
   const flip = fs.length > 1 ? fs.find((x) => x !== s) : undefined
-  const painting = tool === 'plate' && !T && !F
-  const paint = brush ?? ral
+  const painting = tool !== null && !T && !F
+  const paint = paintSel ?? ral
+  const pm = findMotif(motifs, printSel ?? undefined) ?? motifs[0]
+  const printing = paint === PRINT
   /** The colour a plate has without its own: that of the wall that owns it (a stand wall under a room side). */
   const base = (key: string) => {
     const owner = v.walls.find((x) => x.id === built.get(key)?.wallId)
     return owner ? wallRal(v, owner) : v.defaultPlate
   }
   const odd = mods.filter((m) => m && m.plate !== base(m.key)).length
-  /** Brush on a plate: its colour, or the wall's again when it already has the brush's colour. */
-  const paintPlate = (key: string, first: boolean) => {
+  const printedAt = (x: Variant, i: number) => printsOn(x, w.id, s).find((f) => f.module === i)
+  /**
+   * Brush on a plate: its colour, or the wall's again when it already has the brush's colour. A print on this face of
+   * the plate comes off (the colour shows again); decals stay.
+   */
+  const paintPlate = (i: number, key: string, first: boolean) => {
     const cur = built.get(key)?.plate
-    const to = first && cur === paint ? base(key) : paint
-    if (!first && cur === to) return
+    const printed = !!printedAt(v, i)
+    const to = first && cur === paint && !printed ? base(key) : paint
+    if (!first && cur === to && !printed) return
     if (first) p.onCheckpoint()
-    p.onEdit((x) => setPanels(x, [key], to, base), false)
+    p.onEdit((x) => clearPrint(setPanels(x, [key], to, base), w.id, s, [i]), false)
   }
-  /** Pointer handlers for a plate in the drawing while the brush is out: click, or press and sweep across plates. */
-  const brushOn = (key: string) =>
+  /** The chosen tool on plate `i` (module key `key`): `first` on press, then for each plate swept over (brush only). */
+  const paintAt = (i: number, key: string, first: boolean) => {
+    if (printing && !pm) {
+      if (first) p.onToast('Last opp et motiv i grafikken først')
+      return
+    }
+    if (tool === 'wall') {
+      if (!first) return
+      if (printing) {
+        if (!printPlates(v, rules, w, s).length) return p.onToast('Ingen plate på denne siden kan ha print')
+        return p.onEdit((x) => printWall(x, rules, w.id, s, pm!.id, pm!.ratio))
+      }
+      return p.onEdit((x) => clearPrint(setWallPlate(x, w.id, paint), w.id, s))
+    }
+    if (!printing) return paintPlate(i, key, first)
+    const why = feltBlocked(v, rules, w.id, i, s, true)
+    if (why) {
+      if (first) p.onToast(why)
+      return
+    }
+    // Sweeping on over a plate that already has the motif leaves it; a click on it takes the motif off
+    if (!first && printedAt(v, i)?.motif === pm!.id) return
+    if (first) p.onCheckpoint()
+    p.onEdit((x) => printPlate(x, rules, w.id, i, s, pm!.id), false)
+  }
+  /** Pointer handlers for a plate (or a door) in the drawing while a tool is out: click, or with the brush press and sweep. */
+  const paintOn = (i: number, key: string) =>
     painting
       ? {
-          style: { cursor: 'crosshair' },
+          style: { cursor: tool === 'wall' ? 'copy' : 'crosshair' },
           onPointerDown: (e: RPointerEvent) => {
             e.stopPropagation()
-            if (e.button === 0) paintPlate(key, true)
+            if (e.button === 0) paintAt(i, key, true)
           },
           onPointerEnter: (e: RPointerEvent) => {
-            if (e.buttons === 1) paintPlate(key, false)
+            if (tool === 'plate' && e.buttons === 1) paintAt(i, key, false)
           },
         }
       : {}
+  const doorModules = new Set(mods.flatMap((m, i) => (m?.opening && productOf(m.opening.product)?.opening === 'door' ? [i] : [])))
+  /** A print over a door: its part of the picture on the header plate, and on the leaf down to the floor. */
+  const doorPrint = (f: Foil, x: number, leafX: number) => {
+    const m = findMotif(motifs, f.motif)
+    if (!m) return undefined
+    const crop = f.crop ?? coverCrop(f.width / f.height, m.ratio)
+    const y0 = f.y - f.height / 2
+    const y1 = f.y + f.height / 2
+    const dh = rules.door.height
+    return {
+      header: <Print m={m} x={x + rules.wall.post / 2} y={z(y1)} width={f.width} height={y1 - dh} crop={cropBand(crop, y0, y1, dh, y1)} />,
+      leaf: <Print m={m} x={leafX} y={z(dh)} width={rules.door.swing} height={dh} crop={cropBand(crop, y0, y1, 0, dh)} />,
+    }
+  }
   const tail = 'dra tekstilvegg eller motiv til veggen, klikk det for å endre'
   const hint = painting
-    ? 'Klikk eller dra over platene for å farge dem · klikk en farget plate igjen for veggens farge'
+    ? tool === 'wall'
+      ? printing
+        ? 'Klikk veggen for å strekke motivet over alle platene på denne siden · klikk igjen for å ta det bort'
+        : 'Klikk veggen for å farge alle platene · print på denne siden går bort, dekaler blir'
+      : printing
+        ? 'Klikk eller dra over platene for å legge motivet på hver plate · klikk en plate med motivet for å ta det bort'
+        : 'Klikk eller dra over platene for å farge dem · klikk en farget plate igjen for veggens farge'
     : T
       ? 'Dra rammen for å flytte · håndtakene endrer størrelsen · klikk et motiv for trykk · Delete fjerner'
       : F
@@ -316,7 +376,7 @@ export function WallDrawer(p: Props) {
           {T && piece
             ? `ramme ${mm(piece.W / 1000)} × ${mm(piece.H / 1000)} mm · ${fmt(piece.area)} m² ${piece.fill === 'reuse' ? 'kundens duk' : piece.fill === 'white' ? 'hvit duk' : 'trykk'}`
             : F
-              ? `Felt ${F.module + 1} · ${mm(F.width)} × ${mm(F.height)} mm`
+              ? `Felt ${F.module + 1} · ${mm(F.width)} × ${mm(F.height)} mm${F.run ? ` · del av print over ${v.foils.filter((x) => x.run === F.run).length} plater` : ''}`
               : [`${L} m`, count(wallModules(w).length - openings.length, 'plate', 'plater') + (odd ? ` (${odd} i egen farge)` : ''), openings.length && count(openings.length, 'åpning', 'åpninger'), tex.length && count(tex.length, 'tekstilvegg', 'tekstilvegger'), ...rooms.map((r) => `${r.b - r.a} m inn mot ${roomName(r.room).toLowerCase()}`)]
                   .filter(Boolean)
                   .join(' · ')}
@@ -360,11 +420,25 @@ export function WallDrawer(p: Props) {
 
         {!T && !F && (
           <>
-            <DrawerRow label={painting ? `Plate · ${plateName(paint)} ${paint}` : `Hele veggen · ${plateName(ral)} ${ral}`}>
-              <IconButton icon={PaintBucket} label="Farg hele veggen" size={15} className="ink" pressed={!painting} onClick={() => setTool('wall')} />
-              <IconButton icon={Paintbrush} label="Farg én og én plate" size={15} className="ink" pressed={painting} onClick={() => setTool('plate')} />
+            <DrawerRow
+              label={
+                painting
+                  ? `${tool === 'wall' ? 'Hele veggen' : 'Plate'} · ${printing ? `print ${pm?.name ?? ''}` : `${plateName(paint)} ${paint}`}`
+                  : `Hele veggen · ${plateName(ral)} ${ral}`
+              }
+            >
+              <IconButton icon={PaintBucket} label="Malerspann: klikk veggen for å farge hele siden" size={15} className="ink" pressed={tool === 'wall'} onClick={() => setTool(tool === 'wall' ? null : 'wall')} />
+              <IconButton icon={Paintbrush} label="Malerkost: klikk én og én plate" size={15} className="ink" pressed={tool === 'plate'} onClick={() => setTool(tool === 'plate' ? null : 'plate')} />
             </DrawerRow>
-            <PlatePalette value={painting ? paint : ral} onPick={(r) => (painting ? setBrush(r) : p.onEdit((x) => setWallPlate(x, w.id, r)))} />
+            <PlatePalette
+              value={painting ? paint : ral}
+              print={{ motif: pm }}
+              onPick={(r) => {
+                setPaint(r)
+                // Picking a colour takes up the paint bucket when no tool is out
+                if (!tool) setTool('wall')
+              }}
+            />
           </>
         )}
         <div className="wd-foot">
@@ -408,17 +482,22 @@ export function WallDrawer(p: Props) {
               : 'Motiv · velg for trykk'
             : F
               ? `Motiv · ${findMotif(motifs, F.motif)?.name ?? 'uten motiv'}`
-              : 'Grafikk · dra til veggen'
+              : printing
+                ? `Print · ${pm?.name ?? 'last opp et motiv'}`
+                : 'Grafikk · dra til veggen'
         }
         motifs={motifs}
         textile={!T && !F}
-        value={T ? (fill === 'print' ? (T.motif ?? null) : undefined) : F ? (F.motif ?? null) : undefined}
+        required={!T && !F && printing}
+        value={T ? (fill === 'print' ? (T.motif ?? null) : undefined) : F ? (F.motif ?? null) : printing ? pm?.id : undefined}
         onPick={
           T
             ? (m) => p.onEdit((x) => updateTextile(x, rules, T.id, { motif: m, ...(m ? { fill: 'print' } : {}) }))
             : F
               ? (m) => p.onEdit((x) => updateFoil(x, rules, F.id, { motif: m }, ratioOf(m ?? undefined)))
-              : undefined
+              : printing
+                ? (m) => m && setPrintMotif(m)
+                : undefined
         }
         onUpload={p.onUpload}
       />
@@ -443,32 +522,42 @@ export function WallDrawer(p: Props) {
               const o = m.opening
               const door = productOf(o.product)?.opening === 'door'
               const k = doorInset(rules)
+              const hinge = u(o.hinge === -1 ? i + 1 - k : i + k)
+              const free = u(o.hinge === -1 ? i + k : i + 1 - k)
+              const fp = door ? foils.find((f) => f.full && f.module === i) : undefined
               return (
                 <g
                   key={i}
                   style={{ cursor: 'pointer' }}
-                  onPointerDown={(e) => {
-                    // The door has a drawer of its own
-                    e.stopPropagation()
-                    p.onSelect({ openingId: o.id })
-                  }}
+                  {...(painting
+                    ? paintOn(i, m.key)
+                    : {
+                        onPointerDown: (e: RPointerEvent) => {
+                          // The door has a drawer of its own
+                          e.stopPropagation()
+                          p.onSelect({ openingId: o.id })
+                        },
+                      })}
                 >
                   <Opening
                     x={x}
                     H={H}
-                    plate={{ fill: plateColor(m.plate), ...brushOn(m.key) }}
-                    door={door ? { color: plateColor(doorRal(v, o)), hinge: u(o.hinge === -1 ? i + 1 - k : i + k), free: u(o.hinge === -1 ? i + k : i + 1 - k) } : undefined}
+                    plate={{ fill: plateColor(m.plate) }}
+                    door={door ? { color: plateColor(doorRal(v, o)), hinge, free } : undefined}
+                    print={fp && doorPrint(fp, x, Math.min(hinge, free))}
                   />
-                  <text x={x + 0.5} y={z(1.4)} textAnchor="middle" style={TXT}>
-                    {door ? 'dør' : 'forheng'}
-                  </text>
+                  {!fp && (
+                    <text x={x + 0.5} y={z(1.4)} textAnchor="middle" style={TXT}>
+                      {door ? 'dør' : 'forheng'}
+                    </text>
+                  )}
                 </g>
               )
             }
             const f = felt(rules, i)
             return (
               <g key={i}>
-                <rect x={spanX(f.a, f.b)} y={z(H)} width={f.w} height={H - rules.wall.feet} fill={plateColor(m?.plate ?? wallRal(v, w))} {...(m ? brushOn(m.key) : {})} />
+                <rect x={spanX(f.a, f.b)} y={z(H)} width={f.w} height={H - rules.wall.feet} fill={plateColor(m?.plate ?? wallRal(v, w))} {...(m ? paintOn(i, m.key) : {})} />
                 <rect x={x} y={z(H)} width={1} height={rules.wall.profile.top} fill={ALU} />
                 <rect x={x} y={z(f.y0)} width={1} height={rules.wall.profile.bottom} fill={ALU} />
               </g>
@@ -477,7 +566,29 @@ export function WallDrawer(p: Props) {
           <Posts xs={Array.from({ length: L + 1 }, (_, i) => u(i))} H={H} />
           <line x1={-PAD} y1={H} x2={L + PAD} y2={H} stroke={BORDER_STRONG} strokeWidth={0.01} />
 
-          {/* Where a room stands against this face: hatched, with the room's name, for context only */}
+          {/* Foil decals */}
+          {foils.map((f) => {
+            if (f.full && doorModules.has(f.module)) return null
+            const c = foilCenter(rules, f)
+            const x = spanX(c - f.width / 2, c + f.width / 2)
+            const m = findMotif(motifs, f.motif)
+            const on = F?.id === f.id
+            return (
+              <g key={f.id} onPointerDown={(e) => drag(e, 'fmove', f)} style={{ cursor: 'move' }} pointerEvents={painting ? 'none' : undefined}>
+                {m && f.full ? (
+                  <Print m={m} x={x} y={z(f.y + f.height / 2)} width={f.width} height={f.height} crop={f.crop} />
+                ) : m ? (
+                  <image href={m.src} x={x} y={z(f.y + f.height / 2)} width={f.width} height={f.height} preserveAspectRatio="none" />
+                ) : (
+                  <rect x={x} y={z(f.y + f.height / 2)} width={f.width} height={f.height} fill={SUNKEN} />
+                )}
+                {on && <rect x={x - 0.012} y={z(f.y + f.height / 2) - 0.012} width={f.width + 0.024} height={f.height + 0.024} fill="none" stroke={INK} strokeWidth={0.014} />}
+                {on && !f.full && <Handles corners x={x} y={z(f.y + f.height / 2)} w={f.width} h={f.height} onDown={(e, edge) => drag(e, { edge }, f)} />}
+              </g>
+            )
+          })}
+
+          {/* Where a room stands against this face: hatched over plates and print, with the room's name, for context only */}
           <defs>
             <pattern id="wd-room-hatch" patternUnits="userSpaceOnUse" width={0.12} height={0.12} patternTransform="rotate(45)">
               <line x1={0} y1={0} x2={0} y2={0.12} stroke={INK_FAINT} strokeWidth={0.02} strokeOpacity={0.55} />
@@ -490,27 +601,6 @@ export function WallDrawer(p: Props) {
             </g>
           ))}
 
-          {/* Foil decals */}
-          {foils.map((f) => {
-            const c = foilCenter(rules, f)
-            const x = spanX(c - f.width / 2, c + f.width / 2)
-            const m = findMotif(motifs, f.motif)
-            const on = F?.id === f.id
-            return (
-              <g key={f.id} onPointerDown={(e) => drag(e, 'fmove', f)} style={{ cursor: 'move' }}>
-                {m && f.full ? (
-                  <Print m={m} x={x} y={z(f.y + f.height / 2)} width={f.width} height={f.height} />
-                ) : m ? (
-                  <image href={m.src} x={x} y={z(f.y + f.height / 2)} width={f.width} height={f.height} preserveAspectRatio="none" />
-                ) : (
-                  <rect x={x} y={z(f.y + f.height / 2)} width={f.width} height={f.height} fill={SUNKEN} />
-                )}
-                {on && <rect x={x - 0.012} y={z(f.y + f.height / 2) - 0.012} width={f.width + 0.024} height={f.height + 0.024} fill="none" stroke={INK} strokeWidth={0.014} />}
-                {on && !f.full && <Handles corners x={x} y={z(f.y + f.height / 2)} w={f.width} h={f.height} onDown={(e, edge) => drag(e, { edge }, f)} />}
-              </g>
-            )
-          })}
-
           {/* Textile frames */}
           {tex.map((t) => {
             const { bottom, height } = textileBox(t, rules)
@@ -519,7 +609,7 @@ export function WallDrawer(p: Props) {
             const m = findMotif(motifs, t.motif)
             const on = T?.id === t.id
             return (
-              <g key={t.id} onPointerDown={(e) => drag(e, 'tmove', t)} style={{ cursor: 'move' }}>
+              <g key={t.id} onPointerDown={(e) => drag(e, 'tmove', t)} style={{ cursor: 'move' }} pointerEvents={painting ? 'none' : undefined}>
                 <TextileFace x={x} y={y} w={t.width} h={height} m={m} fill={t.fill ?? 'print'} empty="Uten motiv" />
                 {on && <rect x={x - 0.014} y={y - 0.014} width={t.width + 0.028} height={height + 0.028} fill="none" stroke={INK} strokeWidth={0.016} />}
                 {on && <Handles x={x} y={y} w={t.width} h={height} onDown={(e, edge) => drag(e, { edge }, t)} />}

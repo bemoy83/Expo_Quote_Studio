@@ -8,6 +8,7 @@ import { alongRun } from '../../calc/freeFrames'
 import { runDirection } from '../../domain/freeTextile'
 import { FURNITURE_WHITE } from '../../catalog/defaultCatalog'
 import { foilCenter, sideOf, textileBox, textileOffset } from '../../domain/decor'
+import { coverCrop, cropBand, type Crop } from '../../domain/print'
 import { doorSwing } from '../../domain/edit'
 import { doorHinge, doorRal } from '../../domain/doors'
 import { CELL, pointAlong, pointKey, wallDirection, wallLength } from '../../domain/grid'
@@ -107,6 +108,16 @@ function printMaterial(m: Motif, aspect: number, onLoad?: () => void, extra: THR
     tex.repeat.set(k, 1)
     tex.offset.set((1 - k) / 2, 0)
   }
+  return new THREE.MeshStandardMaterial({ map: tex, roughness: 0.9, metalness: 0, ...extra })
+}
+
+/** The part `crop` of the motif ([left, top, right, bottom] of the image) on a face: a plate of a stretched print. */
+function cropMaterial(m: Motif, crop: Crop, onLoad?: () => void, extra: THREE.MeshStandardMaterialParameters = {}): THREE.MeshStandardMaterial {
+  const tex = motifTexture(m.src, onLoad)
+  tex.colorSpace = THREE.SRGBColorSpace
+  tex.anisotropy = 4
+  tex.repeat.set(crop[2] - crop[0], crop[3] - crop[1])
+  tex.offset.set(crop[0], 1 - crop[3])
   return new THREE.MeshStandardMaterial({ map: tex, roughness: 0.9, metalness: 0, ...extra })
 }
 
@@ -334,7 +345,8 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
     }
   }
 
-  // Foil decor: a thin print on the wall plate, inside its felt
+  // Foil decor: a thin print on the wall plate, inside its felt. A print over a door covers its header and its leaf.
+  const doorAt = new Set(mods.filter((m) => m.opening && productOf(m.opening.product)?.opening === 'door').map((m) => `${m.opening!.wallId}|${m.opening!.module}`))
   for (const f of v.foils) {
     const w = v.walls.find((x) => x.id === f.wallId)
     if (!w) continue
@@ -342,8 +354,28 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
     const c = foilCenter(rules, f)
     const m = findMotif(opts.motifs, f.motif)
     const glow = sel.foilId === f.id ? { emissive: SELECT, emissiveIntensity: 0.35 } : {}
-    const print = m ? printMaterial(m, f.width / f.height, opts.onLoad, glow) : mat('foil', FABRIC, { roughness: 0.6, ...glow })
-    along(pointAlong(w, c - f.width / 2), pointAlong(w, c + f.width / 2), f.width, f.height, 0.002, f.y - f.height / 2, print, { layer: 'foil', pick: { wallId: w.id, foilId: f.id } }, s * (rules.wall.profile.thickness / 2 + 0.002))
+    const tag: Tag = { layer: 'foil', pick: { wallId: w.id, foilId: f.id } }
+    const blank = mat('foil', FABRIC, { roughness: 0.6, ...glow })
+    const face = s * (rules.wall.profile.thickness / 2 + 0.002)
+    if (!f.full || (!f.crop && !doorAt.has(`${f.wallId}|${f.module}`))) {
+      const print = m ? printMaterial(m, f.width / f.height, opts.onLoad, glow) : blank
+      along(pointAlong(w, c - f.width / 2), pointAlong(w, c + f.width / 2), f.width, f.height, 0.002, f.y - f.height / 2, print, tag, face)
+      continue
+    }
+    const crop = f.crop ?? coverCrop(f.width / f.height, m?.ratio ?? 0)
+    const y0 = f.y - f.height / 2
+    const y1 = f.y + f.height / 2
+    const band = (lo: number, hi: number, width: number, off: number) => {
+      const print = m ? cropMaterial(m, cropBand(crop, y0, y1, lo, hi), opts.onLoad, glow) : blank
+      along(pointAlong(w, c - width / 2), pointAlong(w, c + width / 2), width, hi - lo, 0.002, lo, print, tag, off)
+    }
+    if (!doorAt.has(`${f.wallId}|${f.module}`)) {
+      band(y0, y1, f.width, face)
+      continue
+    }
+    // Door: the header plate above, the leaf (thicker, and down to the floor) below. The picture runs on over both.
+    band(rules.door.height, y1, f.width, face)
+    band(0, rules.door.height - 0.01, rules.door.swing, s * (0.02 + 0.002))
   }
 
   // Rooms: a see-through roof at wall height to grab and move the room. There is no roof product; this is only a
