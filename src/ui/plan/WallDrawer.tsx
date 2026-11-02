@@ -33,12 +33,14 @@ import type { Foil, Room, TextileWall, Variant, Wall } from '../../domain/types'
 import { builtModules, isStandWall } from '../../domain/walls'
 import type { Motif } from '../../persistence/file'
 import { doorInset, wallHeight } from '../../rules/rules'
-import { ALU, ALU_POST, BORDER_STRONG, FABRIC, FEET, INK, INK_FAINT, LAYER_COLOR, SUNKEN, SURFACE } from '../colors'
+import { ALU, ALU_POST, BORDER_STRONG, FABRIC, FEET, INK, INK_FAINT, LAYER_COLOR, SUNKEN } from '../colors'
 import { Button, IconButton, Segmented } from '../controls'
 import { plateColor, plateName, productOf, rules, wallPlates } from '../env'
 import { count, fmt, mm } from '../format'
 import { findMotif } from '../motifs'
 import { DIM, TXT } from './drawerText'
+import { RoomLabel } from './RoomLabel'
+import { roomLabelSize } from './roomLabelSize'
 import { FillPicker, Handles, Print, Shelf, SmallDim, type Edge } from './drawerParts'
 import { applyDrop, decorDrag, dropSpot, endDecorDrag, type DropSpot, type FaceTarget } from '../dnd'
 import { VariantChips } from '../panel/ProductRow'
@@ -509,9 +511,7 @@ export function WallDrawer(p: Props) {
           {rooms.map((r) => (
             <g key={`${r.room.id}${r.a}`} pointerEvents="none">
               <rect x={spanX(r.a, r.b)} y={z(H)} width={r.b - r.a} height={H} fill="url(#wd-room-hatch)" />
-              <text x={spanX(r.a, r.b) + (r.b - r.a) / 2} y={z(H) + 0.32} textAnchor="middle" style={{ ...TXT, font: '600 0.16px var(--font-ui)', fill: INK }} stroke={SURFACE} strokeWidth={0.05} paintOrder="stroke">
-                {roomName(r.room)} {roomSize(r.room)}
-              </text>
+              <RoomLabel r={r.room} cx={spanX(r.a, r.b) + (r.b - r.a) / 2} cy={z(H) + 0.55} k={Math.min(1, (r.b - r.a - 0.1) / roomLabelSize(r.room).w)} />
             </g>
           ))}
 
