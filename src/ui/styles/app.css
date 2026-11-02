@@ -1936,7 +1936,8 @@ select.cin {
 
 /* ---------- Stand chip (top left of the drawing surface) ---------- */
 /* One pill like the dock: the stand switch (open = ink fill), a thin line, then Plan and 3D (chosen = muted fill) */
-/* Top left of the stage: the chip, the hint under it, up to the mini map (top right in the plan) */
+/* Top left of the stage: the chip with the hint after it, up to the mini map (top right in the plan). When the hint
+   does not fit beside the chip, it wraps under it. */
 .stand-top {
   position: absolute;
   top: 12px;
@@ -1944,9 +1945,9 @@ select.cin {
   right: 264px;
   z-index: 6;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
   pointer-events: none;
 }
 .stand-top > * {
@@ -1956,9 +1957,10 @@ select.cin {
   flex: none;
 }
 .chip-hint {
+  flex: none;
   max-width: 100%;
   margin: 0;
-  padding-left: 6px;
+  padding-left: 4px;
   font: var(--type-note);
   color: rgb(var(--ink-muted));
   white-space: nowrap;

@@ -1,6 +1,6 @@
 // The stand on the drawing surface, top left: one floating pill like the dock. The stand switch names its type and size
 // and opens its settings (StandSettings) in a popover; after a thin line, Plan and 3D choose the view. Open = ink fill,
-// the chosen view = muted fill. Under it, a short line on what a click or drag does now (hints.ts).
+// the chosen view = muted fill. After it (under it when narrow), a short line on what a click or drag does now (hints.ts).
 import { ChevronDown, Ruler, X } from 'lucide-react'
 import { FlatChoice, IconButton } from '../controls'
 import { useLayoutEffect, useRef, useState } from 'react'

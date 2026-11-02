@@ -1,9 +1,9 @@
-// What a click or drag does now, under the stand chip: a short line for the eye, the full help on hover (title).
+// What a click or drag does now, after the stand chip (under it when the stage is narrow): a short line for the eye, the full help on hover (title).
 import type { Brush, RollMode, Tool } from './tools'
 import { productOf } from './env'
 
 export interface Hint {
-  /** One short line, shown under the stand chip. */
+  /** One short line, shown after the stand chip. */
   text: string
   /** The whole help, on hover. */
   more: string
