@@ -2,7 +2,7 @@
 import { moveWall } from '../domain/edit'
 import { moveInnerBeam, type Run } from '../domain/innerBeams'
 import { settleAll, settleObject } from '../domain/objects'
-import { moveRoom, resizeRoom, sideIsHorizontal } from '../domain/rooms'
+import { moveRoomDoors, resizeRoomDoors, sideIsHorizontal } from '../domain/rooms'
 import type { Variant } from '../domain/types'
 import { place } from './env'
 
@@ -71,6 +71,8 @@ export interface RoomDrag {
   /** Whole metres applied so far ("dx,dy" or the side's delta). */
   last: string
   moved: boolean
+  /** A door had to move to another module of the room to stay out of the stand walls (said on release). */
+  doorsMoved?: boolean
 }
 
 /** A room drag starting at p0 on the variant v0. */
@@ -95,16 +97,19 @@ export function dragRoom(d: RoomDrag, q: { x: number; y: number }, onEdit: Edit,
   const key = d.mode === 'move' ? `${dx},${dy}` : `${along}`
   if (key === d.last) return
   const zero = d.mode === 'move' ? !dx && !dy : !along
-  const next = d.mode === 'move' ? moveRoom(d.v0, d.id, dx, dy) : resizeRoom(d.v0, d.id, d.mode, along)
+  const r = d.mode === 'move' ? moveRoomDoors(d.v0, d.id, dx, dy) : resizeRoomDoors(d.v0, d.id, d.mode, along)
+  const next = r.v
   if (next === d.v0 && !zero) return
+  d.doorsMoved = r.doorsMoved
   if (!d.moved) onCheckpoint()
   d.moved = true
   d.last = key
   onEdit(() => next, false)
 }
 
-/** End of a room drag: furniture it pushed into is moved clear where possible. */
-export function dropRoom(d: RoomDrag, onEdit: Edit) {
+/** End of a room drag: furniture it pushed into is moved clear where possible, and a door that had to move is told. */
+export function dropRoom(d: RoomDrag, onEdit: Edit, onToast: (text: string) => void) {
   if (!d.moved) return
   onEdit((x) => settleAll(x, place), false)
+  if (d.doorsMoved) onToast('Døren ble flyttet, den kan ikke stå i standveggen')
 }

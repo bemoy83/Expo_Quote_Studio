@@ -266,12 +266,6 @@ describe('L-shaped rooms', () => {
 });
 
 describe('room doors stay inside the stand', () => {
-  it('a room can not be moved or resized so its door lands in a stand wall', () => {
-    // Door in the back of a 2 × 2 room 1 m in front of the back stand wall
-    const v = addRoom(row(), { x: 2, y: 1, w: 2, d: 2 }, { side: RECT_SIDE.back, module: 0, product: DOOR })!;
-    expect(moveRoom(v, 'rom1', 0, -1)).toBe(v);
-    expect(resizeRoom(v, 'rom1', RECT_SIDE.back, -1)).toBe(v);
-  });
   it('toward the aisle it may go, and the door swings into the room', () => {
     // R2's room door is in its front; moved to the open front edge of the stand
     const v = moveRoom(r2(), 'bk', 0, 2);

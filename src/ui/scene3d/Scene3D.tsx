@@ -317,7 +317,7 @@ export function Scene3D(p: Props) {
       const hit = down.hit
       down = null
       if (d?.kind === 'object' && d.moved) return dropObject(P.v, d.id, d.start, P.onEdit, P.onToast)
-      if (d?.kind === 'room' && d.moved) return dropRoom(d, P.onEdit)
+      if (d?.kind === 'room' && d.moved) return dropRoom(d, P.onEdit, P.onToast)
       // A frame or decal is selected when let go, so the drawer does not open (and shrink the view) mid-drag
       if (hit?.textileId || hit?.foilId) {
         const deco = P.v.textiles.find((x) => x.id === hit.textileId) ?? P.v.foils.find((x) => x.id === hit.foilId)
@@ -329,7 +329,8 @@ export function Scene3D(p: Props) {
       else if (hit?.freeTextileId) {
         const t = P.v.freeTextiles.find((x) => x.id === hit.freeTextileId)
         if (t) P.onSelect({ freeTextileId: t.id, freeFace: faceOfPoint(t, toModel(hit.point)) })
-      } else if (hit?.roomId) P.onSelect({ roomId: hit.roomId })
+      } else if (hit?.openingId) P.onSelect({ openingId: hit.openingId })
+      else if (hit?.roomId) P.onSelect({ roomId: hit.roomId })
       else if (hit?.wallId) P.onSelect({ wallId: hit.wallId, side: faceOf(hit)?.s })
       else P.onSelect({})
     }

@@ -9,6 +9,7 @@ import { runDirection } from '../../domain/freeTextile'
 import { FURNITURE_WHITE } from '../../catalog/defaultCatalog'
 import { foilCenter, sideOf, textileBox, textileOffset } from '../../domain/decor'
 import { doorSwing } from '../../domain/edit'
+import { doorHinge, doorRal } from '../../domain/doors'
 import { CELL, pointAlong, pointKey, wallDirection, wallLength } from '../../domain/grid'
 import { conflicts } from '../../domain/objects'
 import { insetOutline, outlineSides } from '../../domain/outline'
@@ -27,13 +28,12 @@ export type Layer = Exclude<Highlight, null>
 export interface Tag {
   layer: Layer
   /** `roomId`: a room's see-through roof, the handle that moves the room. */
-  pick?: { wallId?: string; objectId?: string; textileId?: string; foilId?: string; roomId?: string; freeTextileId?: string }
+  pick?: { wallId?: string; objectId?: string; textileId?: string; foilId?: string; roomId?: string; freeTextileId?: string; openingId?: string }
 }
 
 /** Colours of the build system. Product colours come from the catalog. */
 const ALU = '#9a9da1'
 const BEAM = '#7d8084'
-const DOOR = '#d9d6cd'
 const CURTAIN = '#3a3c41'
 const FABRIC = '#cfc7e6'
 const STAND_FLOOR = '#e3e0d8'
@@ -56,7 +56,7 @@ const NO_COLOR = '#999'
 const ALU_FINISH = { metalness: 0.4, roughness: 0.5 }
 
 export interface BuildOptions {
-  selection?: { wallId?: string; objectId?: string; textileId?: string; foilId?: string; roomId?: string; freeTextileId?: string }
+  selection?: { wallId?: string; objectId?: string; textileId?: string; foilId?: string; roomId?: string; freeTextileId?: string; openingId?: string }
   /** Flat text on the floor (dimensions, area). Needs a canvas, so tests turn it off. */
   labels?: boolean
   /** Motif library for prints on textiles and foils. Without it they are drawn blank. */
@@ -198,7 +198,7 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
   const mods = builtModules(v)
   const sel = opts.selection ?? {}
   for (const m of mods) {
-    const tag: Tag = { layer: m.opening ? 'openings' : 'walls', pick: { wallId: m.wallId } }
+    const tag: Tag = m.opening ? { layer: 'openings', pick: { wallId: m.wallId, openingId: m.opening.id } } : { layer: 'walls', pick: { wallId: m.wallId } }
     const wallTag: Tag = { layer: 'walls', pick: { wallId: m.wallId } }
     const selected = sel.wallId === m.wallId && !sel.textileId && !sel.foilId
     const plate = mat('walls', plateColor(m.plate), selected ? { emissive: SELECT, emissiveIntensity: 0.35 } : {})
@@ -210,7 +210,8 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
       along(m.a, m.b, len - 0.004, H - prof.top - feet - prof.bottom, 0.012, feet + prof.bottom, plate, wallTag)
       continue
     }
-    along(m.a, m.b, len - 0.004, H - prof.top - rules.door.height, 0.012, rules.door.height, plate, wallTag)
+    // The header plate belongs to the door: a click on it chooses the door
+    along(m.a, m.b, len - 0.004, H - prof.top - rules.door.height, 0.012, rules.door.height, plate, tag)
     opening(m, tag)
   }
 
@@ -233,15 +234,18 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
       add(mesh, tag)
       return
     }
-    // Door: closed leaf with a handle, and the swing on the floor
-    along(m.a, m.b, rules.door.swing, rules.door.height - 0.01, 0.04, 0, mat('openings', DOOR), tag)
-    const [dx, dy] = wallDirection(w)
+    // Door: closed leaf in its colour with a handle, and the swing on the floor
+    const chosen = sel.openingId === o.id
+    along(m.a, m.b, rules.door.swing, rules.door.height - 0.01, 0.04, 0, mat('openings', plateColor(doorRal(v, o)), chosen ? { emissive: SELECT, emissiveIntensity: 0.35 } : {}), tag)
+    const [wx, wy] = wallDirection(w)
     const s = doorSwing(v.stand, w, o)
-    const n: Point = [-dy * s, dx * s]
-    // Leaf centred in the opening: hinge just in from a, handle near the free edge (as in the plan)
+    const n: Point = [-wy * s, wx * s]
+    // Leaf centred in the opening: hinge just in from its end of the module, handle near the free edge (as in the plan)
     const k = doorInset(rules)
-    const a = pointAlong(w, o.module + k)
-    const b = pointAlong(w, o.module + 1 - k)
+    const hg = doorHinge(w, o)
+    const [dx, dy] = hg.dir
+    const a: Point = [hg.a[0] + dx * k, hg.a[1] + dy * k]
+    const b: Point = [hg.b[0] - dx * k, hg.b[1] - dy * k]
     const hp: Point = [b[0] - dx * 0.08 + n[0] * 0.04, b[1] - dy * 0.08 + n[1] * 0.04]
     const handle = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.02, 0.02), mat('openings', HANDLE))
     handle.position.copy(at(hp, 1.05))

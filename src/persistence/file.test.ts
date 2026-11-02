@@ -58,7 +58,7 @@ describe('version 1 files', () => {
     if (!res.ok) return;
     const [v] = res.sketch.variants;
     expect(v.rooms[0]).toEqual({ id: 'bk', outline: [[0, 0], [2, 0], [2, 2], [0, 2]], gaps: [{ side: 3, module: 1 }] });
-    expect(v.openings).toEqual([{ id: 'o1', wallId: 'bk.2', module: 0, product: v2.openings[0].product }]);
+    expect(v.openings).toEqual([{ id: 'o1', wallId: 'bk.2', module: 0, product: v2.openings[0].product, hinge: -1 }]);
     expect(v.textiles.at(-1)).toEqual({ id: 't9', wallId: 'bk.2', from: 1, width: 1, side: -1 });
     expect(v.walls.filter((w) => w.room).map((w) => w.id)).toEqual(['bk.0', 'bk.1', 'bk.2', 'bk.3']);
   });

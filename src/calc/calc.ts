@@ -331,12 +331,17 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
     add(beamLine(inner, innerPosts, inner.hooks, 'innvendig'));
   } else add(beamLine(beams, beamPosts, inner.hooks));
 
-  // Door or curtain with header (overstykke), one product each
-  const openingCounts = countBy(mods.flatMap((m) => (m.opening ? [m.opening.product] : [])));
+  // Door or curtain with header (overstykke), one product each; a door per leaf colour (the stand's unless chosen),
+  // lock and keys included
+  const isCurtain = (a: string) => idx.byArtnr.get(a)?.product.opening === 'curtain';
+  const openingCounts = countBy(mods.flatMap((m) => (m.opening ? [`${m.opening.product}|${isCurtain(m.opening.product) ? '' : (m.opening.ral ?? v.defaultPlate)}`] : [])));
   add(
-    ...[...openingCounts].map(([a, n]) => {
-      const leaf = idx.byArtnr.get(a)?.product.opening === 'curtain' ? ITEM.curtain : ITEM.door;
-      return line(a, n, {}, [{ id: leaf, qty: n }, { id: ITEM.headerPlate, qty: n }, ...moduleUses(n)]);
+    ...[...openingCounts].map(([k, n]) => {
+      const [a, ral] = k.split('|');
+      const leaf = isCurtain(a) ? ITEM.curtain : ITEM.door;
+      const l = line(a, n, ral ? { meta: `RAL ${ral}` } : {}, [{ id: leaf, qty: n }, { id: ITEM.headerPlate, qty: n }, ...moduleUses(n)]);
+      const colour = ral && idx.wallByRal.get(ral)?.variant.name;
+      return colour ? { ...l, name: `${l.name} · ${colour.toLowerCase()}` } : l;
     }),
   );
 
