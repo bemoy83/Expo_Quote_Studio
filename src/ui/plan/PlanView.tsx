@@ -28,7 +28,7 @@ import { fmt } from '../format'
 import { idx, place, plateColor, productOf, rules } from '../env'
 import { doorInset } from '../../rules/rules'
 import { findMotif } from '../motifs'
-import type { Brush, Highlight, Tool } from '../tools'
+import { penLayers, type Brush, type Highlight, type Layer, type Tool } from '../tools'
 import { across, applyFloor, floorAction, lanesLaid, lanesOf, standCells, TILE_FULL, type FloorAction, type FloorBrushSize, type Rect, type RollDir } from '../../domain/floor'
 import { fillCarpet, fillProposalsFor, fillTilesOf, laneAt } from '../../domain/carpet'
 import type { RollMode } from '../tools'
@@ -116,6 +116,8 @@ const JOINT_WIDTH = 0.025
 const GRID_FINE = 'rgb(0 0 0 / .1)'
 /** Opacity of layers outside the hovered calc group. */
 const DIMMED = 0.25
+/** Opacity of layers the pen in hand does not work on: lighter than the calc hover, they still give the context. */
+const PEN_DIMMED = 0.45
 
 /**
  * A press in Velg selects on release (`select`), so the wall drawer does not open, and shrink the plan, mid-drag.
@@ -590,8 +592,14 @@ export function PlanView(p: Props) {
   }
 
   const off = (group: string) => !!p.groups && !p.groups.has(group)
-  const dim = (layer: Exclude<Highlight, null>) =>
-    (highlight && highlight !== layer) || (layer !== 'objects' && off(LAYER_GROUP[layer])) ? DIMMED : 1
+  const keep = p.mini ? null : penLayers(tool, brush)
+  /** Opacity of a layer group: the hovered calc group and the shown product groups win, then the pen in hand. */
+  const dim = (...layers: Layer[]) =>
+    (highlight && !layers.includes(highlight)) || layers.every((l) => l !== 'objects' && off(LAYER_GROUP[l]))
+      ? DIMMED
+      : keep && !layers.some((l) => keep.has(l))
+        ? PEN_DIMMED
+        : 1
   const cursor = tool !== 'select' ? 'crosshair' : roomCursor()
   function roomCursor() {
     const d = dragging
@@ -824,7 +832,7 @@ export function PlanView(p: Props) {
             <Seg key={i} a={s.from} b={s.to} stroke={s.inner ? INK : INK_MUTED} strokeWidth={0.05} strokeDasharray=".16 .08" />
           ))}
         </g>
-        <g opacity={(highlight && highlight !== 'walls' && highlight !== 'beams') || off('vegg') ? DIMMED : 1}>
+        <g opacity={dim('walls', 'beams')}>
           {/* Støtteplater under walls that stand free, across the wall */}
           {res.wallSupports.map(({ at: [x, y], orientation }) => {
             const { along, across } = RECIPES.wall.support.foot

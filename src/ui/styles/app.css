@@ -2003,6 +2003,10 @@ select.cin {
 }
 
 /* ---------- Tool dock (floating on the drawing surface) ---------- */
+/* Layers the pen does not work on fade softly when a tool is picked */
+.plan-svg g[opacity] {
+  transition: opacity var(--dur) var(--ease);
+}
 /* Room kept free under the plan so the tools never cover the stand */
 .plan-wrap > .plan-svg {
   height: calc(100% - 64px);
@@ -2027,6 +2031,20 @@ select.cin {
   position: absolute;
   left: 0;
   bottom: 0;
+}
+/* What the last stroke changed in the exhibitor's sum: over the undo pill, gone a moment after the drawing stops */
+.dock-price {
+  position: absolute;
+  left: 0;
+  bottom: 60px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: dock-in var(--dur) var(--ease);
 }
 .dock-stack {
   display: flex;
@@ -2116,6 +2134,9 @@ select.cin {
   /* No room beside the tools: undo and redo go to the top left corner (the mini map is hidden here) */
   .dock-undo {
     bottom: calc(100cqh - 80px);
+  }
+  .dock-price {
+    bottom: calc(100cqh - 124px);
   }
   .minimap {
     display: none;
