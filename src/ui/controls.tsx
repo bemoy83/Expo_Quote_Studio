@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import { Minus, Plus } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type Ref } from 'react'
 
 type BtnProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   icon?: LucideIcon
@@ -159,5 +159,22 @@ export function Toast({ msg }: { msg: ToastMsg | null }) {
       <span>{msg.text}</span>
       {msg.action && <button onClick={msg.onAction}>{msg.action}</button>}
     </div>
+  )
+}
+
+/** A hidden picker for one image file, opened by a surrounding <label> or through `ref`. Picking the same file again works. */
+export function ImageInput({ onFile, ref }: { onFile: (f: File) => void; ref?: Ref<HTMLInputElement> }) {
+  return (
+    <input
+      ref={ref}
+      type="file"
+      accept="image/*"
+      hidden
+      onChange={(e) => {
+        const f = e.target.files?.[0]
+        if (f) onFile(f)
+        e.target.value = ''
+      }}
+    />
   )
 }
