@@ -1,24 +1,26 @@
 // Drawer for a frittstående tekstilvegg: one face seen straight on, with the frame, feet, braces, splices and corner
-// posts it is built with. Each face is printed, white or the customer's own textile.
-import { Trash2, X } from 'lucide-react'
+// posts it is built with. Each face is printed, white or the customer's own textile. Laid out like the wall drawer:
+// settings · graphics shelf · the face.
+import { FlipHorizontal2, Trash2, X } from 'lucide-react'
 import type { FreeFrame } from '../../calc/freeFrames'
 import { removeFreeTextile, resizeFreeTextile, updateFace, type FaceKey } from '../../domain/freeTextile'
 import type { Variant } from '../../domain/types'
 import type { Motif } from '../../persistence/file'
 import { ALU, ALU_POST, BORDER_STRONG, FABRIC, FEET, INK, INK_MUTED, LAYER_COLOR } from '../colors'
-import { IconButton, Segmented } from '../controls'
+import { IconButton } from '../controls'
 import { rules } from '../env'
 import { count, fmt } from '../format'
 import { findMotif } from '../motifs'
 import type { PlanSelection } from './PlanView'
 import { DIM, TXT } from './drawerText'
-import { Dim, FillPicker, MotifPicker, Print } from './drawerParts'
+import { FillPicker, Print, Shelf, SmallDim } from './drawerParts'
 
 interface Props {
   v: Variant
   frame: FreeFrame
   selection: PlanSelection
   motifs: Motif[]
+  onUpload: (f: File) => void
   onSelect: (s: PlanSelection) => void
   onEdit: (fn: (v: Variant) => Variant, history?: boolean) => void
   onToast: (text: string) => void
@@ -55,44 +57,48 @@ export function FreeTextileDrawer(p: Props) {
   const fillName = F.fill === 'reuse' ? 'kundens duk' : F.fill === 'white' ? 'hvit duk' : 'trykk'
 
   return (
-    <section className="wall-drawer" aria-label="Frittstående tekstilvegg sett forfra">
+    <section className="wall-drawer drawer3" aria-label="Frittstående tekstilvegg sett forfra">
       <div className="wd-insp">
         <div className="wd-head">
           <i className="dot" style={{ background: LAYER_COLOR.textile }} />
           <h3>Frittstående vegg {f.pos}</h3>
+          <IconButton
+            icon={FlipHorizontal2}
+            label={`Vis side ${face === 'a' ? 'B' : 'A'}`}
+            size={14}
+            onClick={() => p.onSelect({ freeTextileId: t.id, freeFace: face === 'a' ? 'b' : 'a' })}
+          />
           <IconButton icon={Trash2} label="Fjern tekstilvegg (Delete)" size={14} onClick={remove} />
           <IconButton icon={X} label="Lukk" size={14} onClick={p.onClose} />
         </div>
         <p className="wd-meta num">
           {[
-            `${fmt(f.length / 1000, 2)} m × ${fmt(H, 2)} m`,
+            `${fmt(H, 2)} m høy`,
             count(f.supports.length, 'fot', 'føtter'),
             f.railCuts.length > 1 ? `skjøtt i ${f.railCuts.length}` : '',
             f.nCorners ? count(f.nCorners, 'hjørne', 'hjørner') : '',
+            `side ${face.toUpperCase()}`,
           ]
             .filter(Boolean)
             .join(' · ')}
         </p>
-        <Dim label="Lengde" value={f.length / 1000} step={rules.textile.grid} decimals={2} min={rules.textile.minWidth} onChange={setLength} />
-        <div className="eyebrow">Side</div>
-        <Segmented<FaceKey>
-          inWell
-          label="Vis side"
-          value={face}
-          onChange={(x) => p.onSelect({ freeTextileId: t.id, freeFace: x })}
-          options={[
-            { value: 'a', label: 'Side A' },
-            { value: 'b', label: 'Side B' },
-          ]}
-        />
+        <div className="wd-dims">
+          <SmallDim label="Lengde" value={f.length / 1000} decimals={2} onChange={setLength} />
+        </div>
+        <FillPicker value={F.fill} onChange={(fill) => p.onEdit((x) => updateFace(x, t.id, face, { fill, ...(fill === 'print' ? {} : { motif: null }) }))} />
         <p className="wd-meta num">
           Duk {F.W} × {F.H} mm · {fillName}
           {F.fileName ? ` · fil ${F.fileName}` : ''}
         </p>
-        <FillPicker value={F.fill} onChange={(fill) => p.onEdit((x) => updateFace(x, t.id, face, { fill, ...(fill === 'print' ? {} : { motif: null }) }))} />
-        {F.fill === 'print' && <MotifPicker motifs={motifs} value={F.motif ?? undefined} onChange={(mo) => p.onEdit((x) => updateFace(x, t.id, face, { motif: mo }))} />}
-        <p className="panel-note">Tekstil på begge sider. Står på fotplater, og danner ikke rom eller dører i systemveggen.</p>
       </div>
+
+      <Shelf
+        label={F.fill === 'print' ? `Trykk side ${face.toUpperCase()} · ${m?.name ?? 'uten motiv'}` : 'Motiv · velg for trykk'}
+        motifs={motifs}
+        value={F.fill === 'print' ? (F.motif ?? null) : undefined}
+        onPick={(mo) => p.onEdit((x) => updateFace(x, t.id, face, { motif: mo, ...(mo ? { fill: 'print' as const } : {}) }))}
+        onUpload={p.onUpload}
+      />
 
       <div className="wd-view">
         <svg className="wd-svg" viewBox={`${-PAD - 0.25} ${-PAD} ${W + 2 * PAD + 0.25} ${H + PAD + 0.32}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label={`${f.pos} side ${face.toUpperCase()}, ${fmt(W, 2)} m`}>
@@ -138,8 +144,8 @@ export function FreeTextileDrawer(p: Props) {
             </text>
           ))}
         </svg>
-        <div className="wd-hint">Dra veggen i planen for å flytte den · tall under veggen er føttenes plass i mm fra enden · Delete fjerner</div>
       </div>
+      <div className="wd-hint">Tekstil på begge sider, står på fotplater · dra veggen i planen for å flytte den · tallene under er føttenes plass i mm fra enden · Delete fjerner</div>
     </section>
   )
 }

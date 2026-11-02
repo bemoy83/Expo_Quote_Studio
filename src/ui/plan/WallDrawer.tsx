@@ -1,8 +1,9 @@
 // Wall drawer (veggskuff): the selected wall seen straight on, one face at a time, under the plan or 3D view.
-// Textile frames and foil decals are placed, moved and resized here. Without a selection it edits the wall itself:
-// plate colour, remove wall; a door on it opens the door drawer (DoorDrawer).
-import { DoorOpen, MoveHorizontal, Plus, Trash2, X } from 'lucide-react'
-import { useRef, type PointerEvent as RPointerEvent } from 'react'
+// Three columns like the door drawer: settings · graphics shelf · the wall. Textile frames and foil decals are placed,
+// moved and resized in the drawing; motifs are clicked onto what is selected or dragged from the shelf onto the wall.
+// Without a selection it edits the wall itself: plate colour, remove wall; a door on it opens the door drawer.
+import { DoorOpen, FlipHorizontal2, MoveHorizontal, Plus, Trash2, X } from 'lucide-react'
+import { useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent } from 'react'
 import { production, wallLabel } from '../../calc/production'
 import {
   addTextile,
@@ -32,12 +33,13 @@ import { builtModules, isStandWall } from '../../domain/walls'
 import type { Motif } from '../../persistence/file'
 import { doorInset, wallHeight } from '../../rules/rules'
 import { ALU, ALU_POST, BORDER_STRONG, FABRIC, FEET, INK, INK_FAINT, LAYER_COLOR, SUNKEN } from '../colors'
-import { Button, IconButton, Segmented } from '../controls'
+import { IconButton, Segmented } from '../controls'
 import { plateColor, productOf, rules, wallPlates } from '../env'
 import { count, fmt, mm } from '../format'
 import { findMotif } from '../motifs'
 import { DIM, TXT } from './drawerText'
-import { Dim, FillPicker, MotifPicker, Print } from './drawerParts'
+import { FillPicker, Handles, Print, Shelf, SmallDim, type Edge } from './drawerParts'
+import { applyDrop, decorDrag, dropSpot, endDecorDrag, type DropSpot, type FaceTarget } from '../dnd'
 import { VariantChips } from '../panel/ProductRow'
 import type { PlanSelection } from './PlanView'
 
@@ -45,6 +47,7 @@ interface Props {
   v: Variant
   selection: PlanSelection
   motifs: Motif[]
+  onUpload: (f: File) => void
   onSelect: (s: PlanSelection) => void
   onEdit: (fn: (v: Variant) => Variant, history?: boolean) => void
   onCheckpoint: () => void
@@ -54,8 +57,8 @@ interface Props {
 
 const EPS = 1e-6
 
-/** What a drag in the drawing changes: move, width or height of a frame; move or size of a decal. */
-type DragKind = 'tmove' | 'twidth' | 'theight' | 'fmove' | 'fsize'
+/** What a drag in the drawing changes: move a frame or decal, or the edge or corner of one. */
+type DragKind = 'tmove' | 'fmove' | { edge: Edge }
 
 /** Face names by where the face looks. */
 function faceName(w: Wall, s: FaceSide): string {
@@ -69,6 +72,7 @@ function faceName(w: Wall, s: FaceSide): string {
 export function WallDrawer(p: Props) {
   const { v, selection: sel, motifs } = p
   const svg = useRef<SVGSVGElement>(null)
+  const [spot, setSpot] = useState<DropSpot | null>(null)
   const w = v.walls.find((x) => x.id === sel.wallId)
   if (!w) return null
   const fs = faces(v, w)
@@ -121,25 +125,39 @@ export function WallDrawer(p: Props) {
 
   const applyDrag = (x: Variant, kind: DragKind, item: TextileWall | Foil, du: number, dz: number): Variant => {
     if ('from' in item) {
-      const { height } = textileBox(item, rules)
       if (kind === 'tmove') return moveTextileBy(x, rules, item, du * dir, dz)
-      if (kind === 'theight') return updateTextile(x, rules, item.id, { height: height + dz })
-      // The right edge in the drawing is the wall's end on one face and its start on the other
-      if (dir === 1) return updateTextile(x, rules, item.id, { width: item.width + du })
-      const end = item.from + item.width
-      const sp = freeSpans(x, rules, w.id, s, textilesOn(x, w.id, s, item.id)).find(([a, b]) => item.from >= a - EPS && end <= b + EPS)
-      const from = Math.min(end - rules.textile.minWidth, Math.max(sp?.[0] ?? 0, item.from - du))
-      return updateTextile(x, rules, item.id, { from, width: end - from })
+      return kind === 'fmove' ? x : resizeTextile(x, item, kind.edge, du, dz)
     }
     const r = ratioOf(item.motif)
-    if (kind === 'fsize') return updateFoil(x, rules, item.id, { width: item.width + 2 * du }, r)
-    return moveFoilBy(x, rules, item, du * dir, dz, r)
+    if (kind === 'fmove') return moveFoilBy(x, rules, item, du * dir, dz, r)
+    // A decal keeps its motif's shape and its centre: a corner on the right grows it dragged right, on the left dragged left
+    if (kind === 'tmove') return x
+    return updateFoil(x, rules, item.id, { width: item.width + 2 * (kind.edge.includes('l') ? -du : du) }, r)
   }
 
-  const remove = () => {
-    if (T) p.onEdit((x) => removeTextile(x, T.id))
-    else if (F) p.onEdit((x) => removeFoil(x, F.id))
-    select({})
+  /** Drag one edge or corner of a frame; the opposite edges stay put. Kept within the free stretch of wall it stands on. */
+  const resizeTextile = (x: Variant, t: TextileWall, edge: Edge, du: number, dz: number): Variant => {
+    let a = t.from
+    let b = t.from + t.width
+    // The right edge in the drawing is the wall's end on one face and its start on the other
+    if (edge.includes('r')) {
+      if (dir === 1) b += du
+      else a -= du
+    }
+    if (edge.includes('l')) {
+      if (dir === 1) a += du
+      else b -= du
+    }
+    const sp = freeSpans(x, rules, w.id, s, textilesOn(x, w.id, s, t.id)).find(([p0, p1]) => t.from >= p0 - EPS && t.from + t.width <= p1 + EPS)
+    const min = rules.textile.minWidth
+    if (a !== t.from) a = Math.min(b - min, Math.max(sp?.[0] ?? 0, a))
+    if (b !== t.from + t.width) b = Math.max(a + min, Math.min(sp?.[1] ?? L, b))
+    const box = textileBox(t, rules)
+    let bottom = box.bottom
+    let top = box.bottom + box.height
+    if (edge.includes('t')) top += dz
+    if (edge.includes('b')) bottom = Math.max(0, Math.min(top - min, bottom + dz))
+    return updateTextile(x, rules, t.id, { from: a, width: b - a, bottom, height: top - bottom })
   }
 
   /** With a frame or decal selected, the face control moves it to the other face of the wall. */
@@ -162,56 +180,106 @@ export function WallDrawer(p: Props) {
   const doors = openings.filter((o) => productOf(o.product)?.opening === 'door')
   const plates = wallPlates()
   const ral = w.plate ?? v.defaultPlate
+  const flip = fs.length > 1 ? fs.find((x) => x !== s) : undefined
+  const tail = 'dra tekstilvegg eller et motiv fra midten til veggen · klikk en ramme eller grafikk for å redigere · Esc lukker'
   const hint = T
-    ? 'Dra rammen for å flytte · håndtakene endrer bredde og høyde · Delete fjerner'
+    ? 'Dra rammen for å flytte · håndtakene på kanter og hjørner endrer størrelsen · klikk et motiv for trykk · Delete fjerner'
     : F
       ? F.full
-        ? 'Dra for å flytte til et annet veggfelt · Delete fjerner'
-        : 'Dra for å flytte innenfor veggfeltet · hjørnet endrer størrelse · Delete fjerner'
-      : 'Klikk en ramme eller grafikk for å redigere · grafikk legges på med pensel fra Profilering'
+        ? 'Dra for å flytte til en annen plate · klikk et motiv for å bytte · Delete fjerner'
+        : 'Dra for å flytte innenfor platen · hjørnene endrer størrelsen · klikk et motiv for å bytte · Delete fjerner'
+      : isStandWall(w)
+        ? `Standveggen følger standtypen og kan ikke flyttes eller fjernes · ${tail}`
+        : w.room
+          ? `Romvegg: dra den i planen for å endre størrelsen, i 3D for å flytte rommet · ${tail}`
+          : `Innervegg: dra den i planen for å flytte den · ${tail}`
 
+  const remove = () => {
+    if (T) p.onEdit((x) => removeTextile(x, T.id))
+    else if (F) p.onEdit((x) => removeFoil(x, F.id))
+    else {
+      p.onEdit((x) => eraseWalls(x, wallModules(w).map((m) => m.key)))
+      return p.onClose()
+    }
+    select({})
+  }
+
+  // ---- Dropping a textile frame or motif from the shelf (or the panel) onto the drawing
+  const target = (e: RDragEvent): FaceTarget | null => {
+    const m = svg.current?.getScreenCTM()
+    if (!m) return null
+    const q = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse())
+    const t = s === 1 ? q.x : L - q.x
+    if (t < 0 || t > L) return null
+    return { wallId: w.id, s, t: Math.min(t, L - EPS), y: H - q.y }
+  }
+  const onDragOver = (e: RDragEvent) => {
+    const d = decorDrag(e)
+    if (!d) return
+    e.preventDefault()
+    const h = target(e)
+    const sp = h && dropSpot(v, d, h)
+    e.dataTransfer.dropEffect = sp && !sp.error ? 'copy' : 'none'
+    setSpot(sp ?? null)
+  }
+  const onDrop = (e: RDragEvent) => {
+    const d = decorDrag(e)
+    setSpot(null)
+    endDecorDrag()
+    if (!d) return
+    e.preventDefault()
+    const h = target(e)
+    if (!h) return
+    const r = applyDrop(v, d, h, (id) => ratioOf(id))
+    if ('error' in r) return p.onToast(r.error)
+    p.onEdit(() => r.v)
+    p.onSelect(r.select)
+    if (r.toast) p.onToast(r.toast)
+  }
+
+  const fill = T?.fill ?? 'print'
   const PAD = 0.18
   return (
-    <section className="wall-drawer" aria-label="Vegg sett forfra">
+    <section className="wall-drawer drawer3" aria-label="Vegg sett forfra">
       <div className="wd-insp">
         <div className="wd-head">
           <i className="dot" style={{ background: T ? LAYER_COLOR.textile : F ? INK_FAINT : LAYER_COLOR.walls }} />
-          <h3>{T ? 'Tekstilvegg' : F ? 'Foliedekor' : label === 'Innervegg' ? 'Innervegg' : `Standvegg · ${label.toLowerCase()}`}</h3>
-          {(T || F) && <IconButton icon={Trash2} label={T ? 'Fjern tekstilvegg (Delete)' : 'Fjern grafikk (Delete)'} size={14} onClick={remove} />}
+          <h3>{T ? 'Tekstilvegg' : F ? (F.full ? 'Print på hel plate' : 'Foliedekal') : label === 'Innervegg' ? 'Innervegg' : `Standvegg · ${label.toLowerCase()}`}</h3>
+          {T && <IconButton icon={MoveHorizontal} label="Fyll ledig vegg" size={14} onClick={() => p.onEdit((x) => fillTextile(x, rules, T.id))} />}
+          {!T && !F && <IconButton icon={Plus} label="Legg til tekstilvegg" size={14} onClick={addFrame} />}
+          {!T && !F && doors.map((d, i) => <IconButton key={d.id} icon={DoorOpen} label={`Vis døren${doors.length > 1 ? ` ${i + 1}` : ''}`} size={14} onClick={() => p.onSelect({ openingId: d.id })} />)}
+          {flip !== undefined && (
+            <IconButton
+              icon={FlipHorizontal2}
+              label={T ? 'Flytt rammen til andre siden' : F ? 'Flytt folien til andre siden' : `Vis ${faceName(w, flip).toLowerCase()}`}
+              size={14}
+              onClick={() => (T || F ? moveToSide(flip) : p.onSelect({ wallId: w.id, side: flip }))}
+            />
+          )}
+          {(T || F || !isStandWall(w)) && (
+            <IconButton icon={Trash2} label={T ? 'Fjern tekstilvegg (Delete)' : F ? 'Fjern grafikk (Delete)' : w.room ? 'Åpne siden' : 'Fjern veggen'} size={14} onClick={remove} />
+          )}
           <IconButton icon={X} label="Lukk" size={14} onClick={p.onClose} />
         </div>
         <p className="wd-meta num">
           {T && piece
-            ? `${fmt(T.width)} × ${fmt(textileBox(T, rules).height, 2)} m · ramme ${mm(piece.W / 1000)} × ${mm(piece.H / 1000)} mm · ${fmt(piece.area)} m² ${piece.fill === 'reuse' ? 'kundens duk' : piece.fill === 'white' ? 'hvit duk' : 'trykk'}`
+            ? `ramme ${mm(piece.W / 1000)} × ${mm(piece.H / 1000)} mm · ${fmt(piece.area)} m² ${piece.fill === 'reuse' ? 'kundens duk' : piece.fill === 'white' ? 'hvit duk' : 'trykk'}`
             : F
               ? `Felt ${F.module + 1} · ${mm(F.width)} × ${mm(F.height)} mm`
               : [`${L} m`, count(wallModules(w).length - openings.length, 'plate', 'plater'), openings.length && count(openings.length, 'åpning', 'åpninger'), tex.length && count(tex.length, 'tekstilvegg', 'tekstilvegger')]
                   .filter(Boolean)
                   .join(' · ')}
+          {fs.length > 1 ? ` · ${faceName(w, s).toLowerCase()}` : ''}
         </p>
-        {fs.length > 1 ? (
-          <>
-            {(T || F) && <div className="eyebrow">{T ? 'Rammen står' : 'Folien sitter'}</div>}
-            <Segmented<FaceSide>
-              inWell
-              label={T || F ? 'Flytt til side' : 'Vis side'}
-              value={s}
-              onChange={(side) => (T || F ? moveToSide(side) : p.onSelect({ wallId: w.id, side }))}
-              options={fs.map((x) => ({ value: x, label: faceName(w, x) }))}
-            />
-          </>
-        ) : null}
 
         {T && (
           <>
-            <Dim label="Bredde" value={T.width} onChange={(n) => p.onEdit((x) => updateTextile(x, rules, T.id, { width: n }))} />
-            <Dim label="Høyde" value={textileBox(T, rules).height} decimals={2} onChange={(n) => p.onEdit((x) => updateTextile(x, rules, T.id, { height: n }))} />
-            <Dim label="Fra gulv" value={textileBox(T, rules).bottom} min={0} onChange={(n) => p.onEdit((x) => updateTextile(x, rules, T.id, { bottom: n }))} />
-            <FillPicker value={T.fill ?? 'print'} onChange={(fill) => p.onEdit((x) => updateTextile(x, rules, T.id, { fill }))} />
-            {(T.fill ?? 'print') === 'print' && <MotifPicker motifs={motifs} value={T.motif} onChange={(m) => p.onEdit((x) => updateTextile(x, rules, T.id, { motif: m }))} />}
-            <Button icon={MoveHorizontal} onClick={() => p.onEdit((x) => fillTextile(x, rules, T.id))}>
-              Fyll ledig vegg
-            </Button>
+            <div className="wd-dims">
+              <SmallDim label="Bredde" value={T.width} onChange={(n) => p.onEdit((x) => updateTextile(x, rules, T.id, { width: n }))} />
+              <SmallDim label="Høyde" value={textileBox(T, rules).height} decimals={2} onChange={(n) => p.onEdit((x) => updateTextile(x, rules, T.id, { height: n }))} />
+              <SmallDim label="Fra gulv" value={textileBox(T, rules).bottom} onChange={(n) => p.onEdit((x) => updateTextile(x, rules, T.id, { bottom: n }))} />
+            </div>
+            <FillPicker value={fill} onChange={(f) => p.onEdit((x) => updateTextile(x, rules, T.id, { fill: f }))} />
           </>
         )}
 
@@ -225,12 +293,18 @@ export function WallDrawer(p: Props) {
               onChange={(full) => p.onEdit((x) => updateFoil(x, rules, F.id, { full }, ratioOf(F.motif)))}
               options={[
                 { value: false, label: 'Dekal' },
-                { value: true, label: 'Helt veggfelt' },
+                { value: true, label: 'Hel plate' },
               ]}
             />
-            <p className="panel-note">{F.full ? `Dekker feltet mellom stolpene og profilene, ${rules.wall.plate.width} × ${rules.wall.plate.height} mm.` : 'Ligger innenfor ett veggfelt, aldri over en stolpe.'}</p>
-            {!F.full && <Dim label="Bredde" value={F.width} decimals={2} step={0.05} min={0.1} onChange={(n) => p.onEdit((x) => updateFoil(x, rules, F.id, { width: n }, ratioOf(F.motif)))} />}
-            <MotifPicker motifs={motifs} value={F.motif} onChange={(m) => p.onEdit((x) => updateFoil(x, rules, F.id, { motif: m }, ratioOf(m ?? undefined)))} />
+            {F.full ? (
+              <p className="wd-meta">
+                Dekker platen mellom stolpene, {rules.wall.plate.width} × {rules.wall.plate.height} mm
+              </p>
+            ) : (
+              <div className="wd-dims">
+                <SmallDim label="Bredde" value={F.width} decimals={2} onChange={(n) => p.onEdit((x) => updateFoil(x, rules, F.id, { width: n }, ratioOf(F.motif)))} />
+              </div>
+            )}
           </>
         )}
 
@@ -244,38 +318,32 @@ export function WallDrawer(p: Props) {
               selected={plates.findIndex((x) => x.ral === ral)}
               onSelect={(i) => p.onEdit((x) => setWallPlate(x, w.id, plates[i].ral!))}
             />
-            <Button variant="primary" icon={Plus} onClick={addFrame}>
-              Legg til tekstilvegg
-            </Button>
-            <div className="wd-actions">
-              {doors.map((d, i) => (
-                <Button key={d.id} variant="ghost" icon={DoorOpen} onClick={() => p.onSelect({ openingId: d.id })}>
-                  Dør{doors.length > 1 ? ` ${i + 1}` : ''}
-                </Button>
-              ))}
-              {!isStandWall(w) && (
-                <Button
-                  variant="ghost"
-                  icon={Trash2}
-                  onClick={() => {
-                    p.onEdit((x) => eraseWalls(x, wallModules(w).map((m) => m.key)))
-                    p.onClose()
-                  }}
-                >
-                  {w.room ? 'Åpne siden' : 'Fjern veggen'}
-                </Button>
-              )}
-            </div>
-            {isStandWall(w) ? (
-              <p className="panel-note">Standveggen følger standtypen og skiller standen fra naboene. Den kan ikke flyttes eller fjernes, men kan få farge og profilering.</p>
-            ) : w.room ? (
-              <p className="panel-note">Veggen hører til et rom. Dra den i planen for å endre størrelsen, i 3D for å flytte rommet.</p>
-            ) : (
-              <p className="panel-note">Innervegg. Dra den i planen for å flytte den.</p>
-            )}
           </>
         )}
       </div>
+
+      <Shelf
+        label={
+          T
+            ? fill === 'print'
+              ? `Trykk · ${findMotif(motifs, T.motif)?.name ?? 'uten motiv'}`
+              : 'Motiv · velg for trykk'
+            : F
+              ? `Motiv · ${findMotif(motifs, F.motif)?.name ?? 'uten motiv'}`
+              : 'Grafikk · dra til veggen'
+        }
+        motifs={motifs}
+        textile={!T && !F}
+        value={T ? (fill === 'print' ? (T.motif ?? null) : undefined) : F ? (F.motif ?? null) : undefined}
+        onPick={
+          T
+            ? (m) => p.onEdit((x) => updateTextile(x, rules, T.id, { motif: m, ...(m ? { fill: 'print' } : {}) }))
+            : F
+              ? (m) => p.onEdit((x) => updateFoil(x, rules, F.id, { motif: m }, ratioOf(m ?? undefined)))
+              : undefined
+        }
+        onUpload={p.onUpload}
+      />
 
       <div className="wd-view">
         <svg
@@ -284,6 +352,9 @@ export function WallDrawer(p: Props) {
           viewBox={`${-PAD - 0.25} ${-PAD} ${L + 2 * PAD + 0.25} ${H + PAD + 0.32}`}
           preserveAspectRatio="xMidYMid meet"
           onPointerDown={() => select({})}
+          onDragOver={onDragOver}
+          onDragLeave={() => setSpot(null)}
+          onDrop={onDrop}
           role="img"
           aria-label={`${label}, ${faceName(w, s).toLowerCase()}, ${L} m`}
         >
@@ -358,18 +429,7 @@ export function WallDrawer(p: Props) {
                   <rect x={x} y={z(f.y + f.height / 2)} width={f.width} height={f.height} fill={SUNKEN} />
                 )}
                 {on && <rect x={x - 0.012} y={z(f.y + f.height / 2) - 0.012} width={f.width + 0.024} height={f.height + 0.024} fill="none" stroke={INK} strokeWidth={0.014} />}
-                {on && !f.full && (
-                  <rect
-                    x={x + f.width - 0.04}
-                    y={z(f.y - f.height / 2) - 0.04}
-                    width={0.08}
-                    height={0.08}
-                    rx={0.015}
-                    fill={INK}
-                    style={{ cursor: 'nwse-resize' }}
-                    onPointerDown={(e) => drag(e, 'fsize', f)}
-                  />
-                )}
+                {on && !f.full && <Handles corners x={x} y={z(f.y + f.height / 2)} w={f.width} h={f.height} onDown={(e, edge) => drag(e, { edge }, f)} />}
               </g>
             )
           })}
@@ -395,15 +455,26 @@ export function WallDrawer(p: Props) {
                   </text>
                 )}
                 {on && <rect x={x - 0.014} y={y - 0.014} width={t.width + 0.028} height={height + 0.028} fill="none" stroke={INK} strokeWidth={0.016} />}
-                {on && (
-                  <>
-                    <rect x={x + t.width - 0.035} y={y + height / 2 - 0.1} width={0.07} height={0.2} rx={0.015} fill={INK} style={{ cursor: 'ew-resize' }} onPointerDown={(e) => drag(e, 'twidth', t)} />
-                    <rect x={x + t.width / 2 - 0.1} y={y - 0.035} width={0.2} height={0.07} rx={0.015} fill={INK} style={{ cursor: 'ns-resize' }} onPointerDown={(e) => drag(e, 'theight', t)} />
-                  </>
-                )}
+                {on && <Handles x={x} y={y} w={t.width} h={height} onDown={(e, edge) => drag(e, { edge }, t)} />}
               </g>
             )
           })}
+
+          {/* Where a drop from the shelf would land */}
+          {spot && (
+            <rect
+              x={spanX(spot.from, spot.to)}
+              y={z(spot.y1)}
+              width={spot.to - spot.from}
+              height={spot.y1 - spot.y0}
+              fill={spot.error ? 'none' : INK}
+              fillOpacity={0.12}
+              stroke={spot.error ? INK_FAINT : INK}
+              strokeWidth={0.014}
+              strokeDasharray={spot.error ? '.05 .04' : undefined}
+              pointerEvents="none"
+            />
+          )}
 
           {/* Dimensions */}
           <line x1={-0.2} y1={0} x2={-0.2} y2={H} stroke={BORDER_STRONG} strokeWidth={0.008} />
@@ -418,8 +489,8 @@ export function WallDrawer(p: Props) {
             {L} m · {fs.length > 1 ? faceName(w, s).toLowerCase() : 'innsiden'}
           </text>
         </svg>
-        <div className="wd-hint">{hint}</div>
       </div>
+      <div className="wd-hint">{hint}</div>
     </section>
   )
 }

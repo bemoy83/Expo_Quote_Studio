@@ -489,6 +489,7 @@ export default function App() {
                   frame={freeFrame}
                   selection={selection}
                   motifs={motifs}
+                  onUpload={(f) => void uploadMotif(f, false)}
                   onSelect={setSelection}
                   onEdit={onEdit}
                   onToast={showToast}
@@ -506,6 +507,7 @@ export default function App() {
                   v={v}
                   selection={selection}
                   motifs={motifs}
+                  onUpload={(f) => void uploadMotif(f, false)}
                   onSelect={setSelection}
                   onEdit={onEdit}
                   onCheckpoint={onCheckpoint}
