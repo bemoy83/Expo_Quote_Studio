@@ -3,9 +3,11 @@ import { calc } from '../calc/calc';
 import { foilRows } from '../calc/production';
 import { CURTAIN, DEFAULT_CATALOG, DOOR } from '../catalog/defaultCatalog';
 import { RULES } from '../rules/rules';
-import { addFoil, addTextile, fitDecor, updateFoil } from './decor';
+import { addFoil, addTextile, faces, fitDecor, updateFoil } from './decor';
 import { setWallPlate } from './edit';
-import { clearPrint, printPlate, printPlates, printWall, stretchCrops, stretchedRuns } from './print';
+import { clearPrint, fillPlates, printPlate, printPlates, printWall, resetFace, stretchCrops, stretchedRuns } from './print';
+import { r2 } from '../calc/referenceStands';
+import { wallModules } from './grid';
 import type { Variant } from './types';
 import { createVariant } from './variant';
 
@@ -119,5 +121,29 @@ describe('print over a door', () => {
     let v = opening(row(), 1, DOOR);
     v = printWall(v, RULES, 'side-back', 1, 'logo', 2);
     expect(fitDecor(v, RULES).foils.some((f) => f.module === 1)).toBe(true);
+  });
+});
+
+describe('bucket and reset', () => {
+  it('the bucket leaves the stretch inside a bakrom, the brush can still print there', () => {
+    const v = { ...r2(), textiles: [] };
+    const back = v.walls.find((w) => w.id === 'side-back')!;
+    const s = faces(v, back)[0];
+    const fill = fillPlates(v, RULES, back, s);
+    expect(fill).toEqual([2, 3, 4, 5]);
+    const printed = printWall(v, RULES, 'side-back', s, 'logo', 2);
+    expect(printed.foils.map((f) => f.module).sort()).toEqual([2, 3, 4, 5]);
+    expect(printPlate(v, RULES, 'side-back', 0, s, 'logo').foils).toHaveLength(1);
+  });
+
+  it('«Fjern alt» takes foil and plate colours off the face, textile frames stay', () => {
+    let v = ok(addFoil(row(), RULES, 'side-back', 0, 1, 'small', 1)).v;
+    v = printPlate(v, RULES, 'side-back', 3, 1, 'logo');
+    v = ok(addTextile(v, RULES, 'side-back', 1, 5.5)).v;
+    v = { ...v, panels: Object.fromEntries(wallModules(back(v)).slice(0, 2).map((m) => [m.key, '9005'])) };
+    const r = resetFace(v, 'side-back', 1);
+    expect(r.foils).toHaveLength(0);
+    expect(r.panels).toBeUndefined();
+    expect(r.textiles).toHaveLength(1);
   });
 });

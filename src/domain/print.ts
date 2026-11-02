@@ -3,10 +3,14 @@
 // running on behind the posts and over a door, so it lines up across the joints. The brush puts the whole motif on
 // one plate. A print is foil over the whole plate on one face, over the plate's colour (which is both faces), and it
 // replaces the decals on its plate. A colour painted on a face takes the print off there; decals stay (Bjørn 2.11.2026).
-// Textile frames are skipped; doors take print on leaf and header; curtains and plates of another wall do not.
+// Textile frames are skipped; doors take print on leaf and header; curtains and plates of another wall do not. The
+// bucket also leaves the stretch inside a bakrom that stands against the face; the brush can still print there.
 import type { Rules } from '../rules/rules';
-import { wallLength } from './grid';
-import { felt, freeFelts, sideOf, type FaceSide } from './decor';
+import { pointAlong, wallLength, wallModules } from './grid';
+import { faceNormal, felt, freeFelts, sideOf, type FaceSide } from './decor';
+import { clearPanels } from './panels';
+import { roomAt } from './rooms';
+import { builtModules } from './walls';
 import { nextId } from './edit';
 import type { Foil, Variant, Wall } from './types';
 
@@ -28,8 +32,19 @@ export function cropBand(crop: Crop, y0: number, y1: number, lo: number, hi: num
   return [crop[0], crop[1] + (y1 - hi) * k, crop[2], crop[1] + (y1 - lo) * k];
 }
 
-/** Plates (module indices) of a face that can take print. */
+/** True where another room stands in front of the face at offset t: that stretch is the inside of a bakrom. */
+function otherRoom(v: Variant, w: Wall, s: FaceSide, t: number): boolean {
+  const [x, y] = pointAlong(w, t);
+  const [nx, ny] = faceNormal(w, s);
+  const r = roomAt(v, x + nx * 0.25, y + ny * 0.25);
+  return !!r && r.id !== w.room?.id;
+}
+
+/** Plates (module indices) of a face that can take print (the brush). */
 export const printPlates = (v: Variant, rules: Rules, w: Wall, s: FaceSide): number[] => freeFelts(v, rules, w.id, s, true);
+
+/** Plates the paint bucket fills: those that can take print, except where a bakrom stands against the face (Bjørn 2.11.2026). */
+export const fillPlates = (v: Variant, rules: Rules, w: Wall, s: FaceSide): number[] => printPlates(v, rules, w, s).filter((i) => !otherRoom(v, w, s, i + 0.5));
 
 /** A face's print: the foils covering whole plates on it. */
 export const printsOn = (v: Variant, wallId: string, s: FaceSide): Foil[] => v.foils.filter((f) => f.full && f.wallId === wallId && sideOf(v, f) === s);
@@ -72,13 +87,14 @@ function fit(rules: Rules, f: Foil): Foil {
 }
 
 /**
- * The paint bucket with «Print»: the motif stretched over every plate of the face that can take it, replacing the
+ * The paint bucket with «Print»: the motif stretched over every plate of the face that can take it (not inside a
+ * bakrom standing against it), replacing the
  * prints and decals there. Clicked again on a face that already carries this print, it takes the print off.
  */
 export function printWall(v: Variant, rules: Rules, wallId: string, s: FaceSide, motif: string, ratio: number): Variant {
   const w = v.walls.find((x) => x.id === wallId);
   if (!w) return v;
-  const plates = printPlates(v, rules, w, s);
+  const plates = fillPlates(v, rules, w, s);
   if (!plates.length) return v;
   const on = printsOn(v, w.id, s);
   const same = plates.every((i) => on.some((f) => f.module === i && f.motif === motif && (plates.length === 1 || f.run)));
@@ -117,6 +133,19 @@ export function clearPrint(v: Variant, wallId: string, s: FaceSide, modules?: It
   const set = modules ? new Set(modules) : null;
   const foils = v.foils.filter((f) => !(f.full && f.wallId === w.id && sideOf(v, f) === s && (!set || set.has(f.module))));
   return foils.length === v.foils.length ? v : { ...v, foils };
+}
+
+/**
+ * «Fjern alt»: the face back to a plain wall. Its foil goes (prints and decals) and its plates lose their own colours,
+ * so they take the wall's again. Textile frames stay: they are things of their own.
+ */
+export function resetFace(v: Variant, wallId: string, s: FaceSide): Variant {
+  const w = v.walls.find((x) => x.id === wallId);
+  if (!w) return v;
+  const foils = v.foils.filter((f) => !(f.wallId === w.id && sideOf(v, f) === s));
+  const own = new Set(builtModules(v).filter((m) => m.wallId === w.id).map((m) => m.key));
+  const cleared = clearPanels(v, wallModules(w).map((m) => m.key).filter((k) => own.has(k)));
+  return foils.length === v.foils.length && cleared === v ? v : { ...cleared, foils };
 }
 
 /** Stretched prints that still cover more than one plate: each needs its print file fitted and cut per plate. */

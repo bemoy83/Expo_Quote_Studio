@@ -112,7 +112,8 @@ lagres per modul i `Variant.panels` (domain/panels.ts), nøklet på platens kant
 Siste valg i paletten er «Print». Det legger motivet som er valgt i grafikkhyllen på hele plater som folie (8021), på den
 siden skuffen viser (domain/print.ts):
 
-- Malerspannet strekker ett motiv over alle platene på siden som kan ha print. Motivet dekker hele flaten og sentreres
+- Malerspannet strekker ett motiv over alle platene på siden som kan ha print, men ikke inne i et bakrom som står inn
+  mot siden (kosten kan fortsatt legge print der). Motivet dekker hele flaten og sentreres
   (beskjæres, strekkes aldri), og kuttes per plate. Bildet går videre bak stolpene, så skjøtene ligger på linje.
   Hver plate husker sin del av bildet (`Foil.crop`), og platene i samme motiv deler `Foil.run`.
 - Malerkosten legger hele motivet på én plate, som «Hel plate» i dag.
@@ -121,6 +122,8 @@ siden skuffen viser (domain/print.ts):
   Fargen gjelder fortsatt begge sider, så den andre siden beholder sin print.
 - Platene bak en tekstilramme hoppes over, det samme gjør forheng og plater som tilhører en annen vegg. En dør får
   trykk på overstykket og dørbladet (dørbladet tegnes enkelt til vi har en nøyaktig beskrivelse av det).
+- «Fjern alt» tilbakestiller siden: all folie (print og dekaler) går, og platene får veggens farge igjen.
+  Tekstilrammer blir stående.
 - Pris: 8021 per plate. Et motiv strukket over flere plater gir i tillegg én linje 8022 «Tilpasning av trykkfil over
   flere plater» per motiv. Trykklisten i arbeidsordren har én fil per plate, med «2 av 6» for strukne motiv.
 

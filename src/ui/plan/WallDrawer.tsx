@@ -2,7 +2,7 @@
 // Three columns like the door drawer: settings · graphics shelf · the wall. Textile frames and foil decals are placed,
 // moved and resized in the drawing; motifs are clicked onto what is selected or dragged from the shelf onto the wall.
 // Without a selection it edits the wall itself: plate colour, remove wall; a door on it opens the door drawer.
-import { DoorOpen, FlipHorizontal2, MoveHorizontal, PaintBucket, Paintbrush, Plus } from 'lucide-react'
+import { DoorOpen, Eraser, FlipHorizontal2, MoveHorizontal, PaintBucket, Paintbrush, Plus } from 'lucide-react'
 import { useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent } from 'react'
 import { production, wallLabel } from '../../calc/production'
 import {
@@ -27,7 +27,7 @@ import {
 } from '../../domain/decor'
 import { eraseWalls, setWallPlate } from '../../domain/edit'
 import { setPanels, wallRal } from '../../domain/panels'
-import { clearPrint, coverCrop, cropBand, printPlate, printPlates, printsOn, printWall } from '../../domain/print'
+import { clearPrint, coverCrop, cropBand, fillPlates, printPlate, printsOn, printWall, resetFace } from '../../domain/print'
 import { doorRal } from '../../domain/doors'
 import { OUTSIDE, roomAt, roomName, roomSize } from '../../domain/rooms'
 import { wallLength, wallModules } from '../../domain/grid'
@@ -251,7 +251,7 @@ export function WallDrawer(p: Props) {
     if (tool === 'wall') {
       if (!first) return
       if (printing) {
-        if (!printPlates(v, rules, w, s).length) return p.onToast('Ingen plate på denne siden kan ha print')
+        if (!fillPlates(v, rules, w, s).length) return p.onToast('Ingen plate på denne siden kan ha print')
         return p.onEdit((x) => printWall(x, rules, w.id, s, pm!.id, pm!.ratio))
       }
       return p.onEdit((x) => clearPrint(setWallPlate(x, w.id, paint), w.id, s))
@@ -299,10 +299,10 @@ export function WallDrawer(p: Props) {
   const hint = painting
     ? tool === 'wall'
       ? printing
-        ? 'Klikk veggen for å strekke motivet over alle platene på denne siden · klikk igjen for å ta det bort'
+        ? 'Klikk veggen: motivet strekkes over platene på denne siden, ikke inne i bakrom · klikk én gang til: printen fjernes fra hele siden'
         : 'Klikk veggen for å farge alle platene · print på denne siden går bort, dekaler blir'
       : printing
-        ? 'Klikk eller dra over platene for å legge motivet på hver plate · klikk en plate med motivet for å ta det bort'
+        ? 'Klikk eller dra over platene: hele motivet på hver plate · klikk en plate som har motivet: printen fjernes fra den platen'
         : 'Klikk eller dra over platene for å farge dem · klikk en farget plate igjen for veggens farge'
     : T
       ? 'Dra rammen for å flytte · håndtakene endrer størrelsen · klikk et motiv for trykk · Delete fjerner'
@@ -461,6 +461,11 @@ export function WallDrawer(p: Props) {
             {!T && !F && (
               <Button variant="ghost" icon={Plus} onClick={addFrame}>
                 Tekstilvegg
+              </Button>
+            )}
+            {!T && !F && (foils.length > 0 || odd > 0) && (
+              <Button variant="ghost" icon={Eraser} onClick={() => p.onEdit((x) => resetFace(x, w.id, s))}>
+                Fjern alt
               </Button>
             )}
             {!T &&
