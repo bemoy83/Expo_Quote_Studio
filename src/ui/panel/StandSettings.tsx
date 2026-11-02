@@ -1,6 +1,6 @@
 // The stand itself, in the order the stand chip names it: its type, its size, who pays the stand walls and the beams
 // along its open sides. Flat choices without tracks, like the dock. Shown in the stand chip's popover on the drawing
-// surface and on the panel's Stand tab.
+// surface.
 import type { CalcResult } from '../../calc/calc'
 import { setStand } from '../../domain/edit'
 import type { Payer, StandType, StandWallTerms, Variant } from '../../domain/types'

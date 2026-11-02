@@ -84,12 +84,12 @@ export default function App() {
   const v = sketch.variants[current]
   const terms = standWallTerms(sketch.project)
   const calcFor = useCallback((x: Variant) => calcOf(x, terms), [terms])
-  /** Who pays the stand walls and their colour: a project setting, set from the stand chip or the Stand tab. */
+  /** Who pays the stand walls and their colour: a project setting, set from the stand chip. */
   const setTerms = (patch: Partial<StandWallTerms>) => dispatch({ type: 'standWalls', patch })
   const res = calcFor(v)
   const [page, setPage] = useState<Page>('skisse')
   const [view, setView] = useState<'plan' | '3d'>('plan')
-  const [tab, setTabRaw] = useState('stand')
+  const [tab, setTabRaw] = useState('vegg')
   /** Panel and calc can be folded away for more drawing room; remembered on this machine. */
   const [layout, setLayout] = useState<Layout>(() => ({ ...LAYOUT, ...loadJson<Partial<Layout>>(KEYS.layout, {}) }))
   const fold = (k: keyof Layout, open: boolean) => setLayout((l) => ({ ...l, [k]: open }))
@@ -274,7 +274,7 @@ export default function App() {
     load(newSketch(), 'Nytt tilbud startet')
     setPage('skisse')
     setView('plan')
-    setTabRaw('stand')
+    setTabRaw('vegg')
   }
   const openFile = async (f: File) => {
     const r = parse(await f.text())
@@ -420,8 +420,6 @@ export default function App() {
                 setSelection(s)
               }}
               selection={selection}
-              terms={terms}
-              onTerms={setTerms}
             />
             <main className="stage">
               <div className="plan-wrap">

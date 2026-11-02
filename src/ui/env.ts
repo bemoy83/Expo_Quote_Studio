@@ -3,7 +3,7 @@
 import { DEFAULT_CATALOG } from '../catalog/defaultCatalog'
 import { applyEdits, NO_EDITS, type CatalogEdits } from '../catalog/edits'
 import { indexCatalog, placeContext } from '../catalog/lookup'
-import type { Product, ProductVariant } from '../catalog/types'
+import type { Product } from '../catalog/types'
 import { KEYS, loadJson, saveJson } from '../persistence/storage'
 import { RULES, type InFrameParams, type Rules } from '../rules/rules'
 
@@ -48,7 +48,6 @@ export function setInFrame(p: InFrameParams) {
 
 export const DEFAULT_IN_FRAME = RULES.textile.inFrame
 
-export const variantOf = (artnr: string): ProductVariant | undefined => idx.byArtnr.get(artnr)?.variant
 export const productOf = (artnr: string): Product | undefined => idx.byArtnr.get(artnr)?.product
 
 export const plateColor = (ral: string) => idx.wallByRal.get(ral)?.variant.color ?? '#ddd'

@@ -40,7 +40,7 @@ hva slags vegg det er.
 
 Bygget 31.10.2026. Prosjektet (messen) har innstillingen **Standvegger betales av: Arrangør / Utstiller**, standard
 Arrangør, og **Arrangørens farge**, standard hvit RAL 9010. Den skal senere komme fra prosjektet i OMS, sammen med kjøpt
-areal. Innstillingen står i standbrikken øverst til venstre på tegneflaten og på Stand-fanen (fra 2.11.2026; før i
+areal. Innstillingen står i standbrikken øverst til venstre på tegneflaten (fra 2.11.2026; før i
 «Kunde og prosjekt»). Ny arrangørfarge maler om stander som hadde den gamle fargen (`defaultPlate`), så de
 ikke får platebytte; en stand i en annen farge er utstillerens valg og blir stående. I koden: `Project.standWalls`,
 `standWallTerms` og `setStandWallTerms` (`domain/variant.ts`).
