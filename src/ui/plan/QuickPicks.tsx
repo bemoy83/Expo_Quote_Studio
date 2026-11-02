@@ -249,7 +249,8 @@ function QName({ name, meta }: { name: string; meta?: string }) {
   )
 }
 
-function Sw({ color, title, on, onClick }: { color?: string; title: string; on: boolean; onClick: () => void }) {
+/** A colour as a square swatch, chosen = an ink ring inside it (dock quick picks, stand popover). */
+export function Sw({ color, title, on, onClick }: { color?: string; title: string; on: boolean; onClick: () => void }) {
   return <button type="button" className="q-sw" aria-pressed={on} title={title} aria-label={title} style={{ background: color }} onClick={onClick} />
 }
 

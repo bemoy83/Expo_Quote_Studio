@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import { Minus, Plus } from 'lucide-react'
+import { fmt } from './format'
 import { useCallback, useEffect, useRef, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type Ref } from 'react'
 
 type BtnProps = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -80,6 +81,111 @@ export function Segmented<T extends string | number | boolean>({
           {o.kbd && <kbd>{o.kbd}</kbd>}
         </button>
       ))}
+    </div>
+  )
+}
+
+/**
+ * A flat choice on a floating surface (a pill or popover): no track, the chosen option has a muted fill, the rest are
+ * muted text. The dock's quick picks and the stand chip use the same language. `tiles` stacks an icon over each label.
+ */
+export function FlatChoice<T extends string | number | boolean>({
+  options,
+  value,
+  onChange,
+  label,
+  tiles,
+  className = '',
+}: {
+  options: { value: T; label: ReactNode; title?: string }[]
+  value: T
+  onChange: (v: T) => void
+  label: string
+  tiles?: boolean
+  className?: string
+}) {
+  return (
+    <div role="radiogroup" aria-label={label} className={['flat-choice', tiles && 'tiles', className].filter(Boolean).join(' ')}>
+      {options.map((o) => (
+        <button key={String(o.value)} type="button" role="radio" aria-checked={o.value === value} title={o.title} onClick={() => onChange(o.value)}>
+          {o.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+/** Parse a typed length: comma or point, units and spaces ignored. Null when it is not a number. */
+function parseLength(text: string): number | null {
+  const n = Number(text.replace(',', '.').replace(/[^\d.]/g, ''))
+  return Number.isFinite(n) && text.trim() !== '' ? n : null
+}
+
+/**
+ * A length in metres: a small field with its label above, typed with comma or point. With `step`, − and + beside it
+ * step the length and a typed one snaps to the step; `min` and `max` refuse lengths outside. Used for the stand's
+ * sides and for sizes in the drawers, where the handles in the drawing do the rest.
+ */
+export function Dim({
+  label,
+  value,
+  onChange,
+  decimals = 1,
+  step,
+  min = 0,
+  max = Infinity,
+  big,
+}: {
+  label: string
+  value: number
+  onChange: (n: number) => void
+  decimals?: number
+  step?: number
+  min?: number
+  max?: number
+  /** Large number with its unit, the field shown only on hover and focus (the stand's sides). */
+  big?: boolean
+}) {
+  /** False, and nothing changes, unless `n` is a new length in range. */
+  const set = (n: number | null) => {
+    if (n === null) return false
+    const x = step ? Math.round(n / step) * step : n
+    if (x < min || x > max || x === value) return false
+    onChange(x)
+  }
+  const field = (
+    <CommitInput
+      className="field num"
+      size={big ? 1 : undefined}
+      style={big ? { width: `${fmt(value, decimals).length * 0.62 + 0.1}em` } : undefined}
+      aria-label={`${label} i meter`}
+      inputMode="decimal"
+      value={fmt(value, decimals)}
+      selectOnFocus
+      onCommit={(text) => set(parseLength(text))}
+    />
+  )
+  // Only the field (with its unit when big) is a label: wrapping − and + in it too would light the − on hover
+  const input = big ? (
+    <label className="dim-value">
+      {field}
+      <span className="dim-unit">m</span>
+    </label>
+  ) : (
+    field
+  )
+  return (
+    <div className={big ? 'dim big' : 'dim'}>
+      <span className={big ? 'dim-label' : 'eyebrow'}>{label}</span>
+      {step ? (
+        <span className="dim-step">
+          <IconButton icon={Minus} label={`${label}: ${fmt(step)} m mindre`} size={14} disabled={value - step < min} onClick={() => set(value - step)} />
+          {input}
+          <IconButton icon={Plus} label={`${label}: ${fmt(step)} m mer`} size={14} disabled={value + step > max} onClick={() => set(value + step)} />
+        </span>
+      ) : (
+        input
+      )}
     </div>
   )
 }

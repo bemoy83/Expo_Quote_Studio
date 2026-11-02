@@ -46,3 +46,17 @@ describe('sketch history', () => {
     expect(s.current).toBe(1);
   });
 });
+
+describe('stand-wall terms', () => {
+  it('a new organiser colour repaints stands in the old one, not one the exhibitor chose', () => {
+    const base = newSketch();
+    const own = { ...base.variants[0], name: 'B' as const, defaultPlate: '7016' };
+    let s = initState({ ...base, variants: [base.variants[0], own] });
+    s = reduce(s, { type: 'standWalls', patch: { ral: '9005' } });
+    expect(s.sketch.project.standWalls?.ral).toBe('9005');
+    expect(s.sketch.variants.map((v) => v.defaultPlate)).toEqual(['9005', '7016']);
+    s = reduce(s, { type: 'undo' });
+    expect(s.sketch.variants[0].defaultPlate).toBe('9010');
+  });
+});
+

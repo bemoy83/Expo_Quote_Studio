@@ -31,8 +31,9 @@ export interface Sketch {
   motifs: Motif[];
 }
 
-/** Stand a new sketch starts with: a 6 × 4 m row stand with its standard walls and nothing else. */
-export const NEW_STAND = { width: 6, depth: 4, type: 'row' } as const;
+/** Stand a new sketch starts with: the classic 4 × 3 m corner stand, open to the right, with its standard walls and
+ *  nothing else (Bjørn 2.11.2026). */
+export const NEW_STAND = { width: 4, depth: 3, type: 'corner', cornerSide: 'right' } as const;
 
 /** A new, empty sketch ("Ny"): blank customer fields, one variant, no own motifs. */
 export function newSketch(): Sketch {

@@ -1,13 +1,13 @@
-import { Blinds, Box, Check, Ungroup, ChevronRight, DoorClosed, Eraser, Minus, PaintBucket, Paintbrush, Plus, Search, Trash2, Upload } from 'lucide-react'
+import { Blinds, Box, Check, Ungroup, ChevronRight, DoorClosed, Eraser, PaintBucket, Paintbrush, Search, Trash2, Upload } from 'lucide-react'
 import { Fragment, useMemo, useRef, useState } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import { mainGroupOf, PRODUCT_GROUPS, resolveGroup } from '../../catalog/groups'
 import type { Product } from '../../catalog/types'
-import { setCounted, setStand } from '../../domain/edit'
+import { setCounted } from '../../domain/edit'
 import { addObjectAnywhere, removeObjects } from '../../domain/objects'
 import { dissolveRoom, isRoomWallId, removeRoom, ROOM_LABELS, roomName, roomOpenings, roomSize, updateRoom } from '../../domain/rooms'
 import { bounds } from '../../domain/outline'
-import type { StandType, Variant } from '../../domain/types'
+import type { StandWallTerms, Variant } from '../../domain/types'
 import { fillFloor } from '../../domain/variant'
 import { textileBox } from '../../domain/decor'
 import { wallLabel } from '../../calc/production'
@@ -16,12 +16,12 @@ import type { PlanSelection } from '../plan/PlanView'
 import { findMotif, SAMPLE_MOTIFS } from '../motifs'
 import { decorSource } from '../dnd'
 import { INK, LAYER_COLOR, SUNKEN } from '../colors'
-import { Button, CommitInput, Counter, IconButton, ImageInput, Segmented, Switch } from '../controls'
+import { Button, Counter, IconButton, ImageInput, Segmented } from '../controls'
 import { catalog, place, productOf, rules, wallPlates } from '../env'
 import { count, fmt, kr, mm } from '../format'
-import { beamSummary } from '../names'
 import type { Brush, Tool } from '../tools'
 import { MENUS } from './menus'
+import { StandSettings } from './StandSettings'
 import { ObjectThumb, ProductRow, Swatch, VariantChips } from './ProductRow'
 
 export interface RailProps {
@@ -47,15 +47,11 @@ export interface RailProps {
   /** Open a textile in the wall drawer. */
   onSelect: (s: PlanSelection) => void
   selection?: PlanSelection
+  /** Who pays the stand walls (from the project), on the Stand tab. */
+  terms: StandWallTerms
+  onTerms: (patch: Partial<StandWallTerms>) => void
 }
 
-
-const TYPE_TEXT: Record<StandType, string> = {
-  row: 'Bare fronten er åpen. Lukkede sider får standvegg.',
-  corner: 'Front og én side åpen. Lukkede sider får standvegg.',
-  end: 'Tre sider åpne, standvegg bak.',
-  island: 'Alle sider åpne. Ingen standvegg.',
-}
 
 export function Rail(p: RailProps) {
   const { v, res, tab, setTab, open, setOpen } = p
@@ -154,92 +150,8 @@ function menuCounts(v: Variant): Record<string, number> {
   return out
 }
 
-/** Stand side, whole metres. */
-const SIDE_MIN = 1
-const SIDE_MAX = 40
-
-/** Stand side in whole metres: − and + step a metre, the number can be typed in. */
-function NumField({ value, onChange, label }: { value: number; onChange: (n: number) => void; label: string }) {
-  /** False, and nothing changes, unless `n` is a new side length in range. */
-  const set = (n: number) => {
-    if (!Number.isFinite(n) || n < SIDE_MIN || n > SIDE_MAX || n === value) return false
-    onChange(n)
-  }
-  return (
-    <span className="num-stepper">
-      <IconButton icon={Minus} label={`${label}: 1 m mindre`} size={14} disabled={value <= SIDE_MIN} onClick={() => set(value - 1)} />
-      <CommitInput
-        className="field num"
-        aria-label={label}
-        inputMode="numeric"
-        value={String(value)}
-        selectOnFocus
-        onCommit={(text) => set(Math.round(Number(text.replace(',', '.'))))}
-      />
-      <IconButton icon={Plus} label={`${label}: 1 m mer`} size={14} disabled={value >= SIDE_MAX} onClick={() => set(value + 1)} />
-    </span>
-  )
-}
-
-function StandSection({ v, res, onEdit }: RailProps) {
-  const s = v.stand
-  const k = res.keyFigures
-  return (
-    <>
-      <div className="opt">
-        <span className="lbl">Bredde</span>
-        <NumField label="Bredde i meter" value={s.width} onChange={(n) => onEdit((x) => setStand(x, { ...x.stand, width: n }))} />
-        <span className="num unit">m</span>
-      </div>
-      <div className="opt">
-        <span className="lbl">Dybde</span>
-        <NumField label="Dybde i meter" value={s.depth} onChange={(n) => onEdit((x) => setStand(x, { ...x.stand, depth: n }))} />
-        <span className="num unit">m</span>
-      </div>
-      <div className="panel-sec eyebrow">Standtype</div>
-      <Segmented<StandType>
-        inWell
-        label="Standtype"
-        value={s.type}
-        onChange={(type) => onEdit((x) => setStand(x, { ...x.stand, type }))}
-        options={[
-          { value: 'row', label: 'Rekke' },
-          { value: 'corner', label: 'Hjørne' },
-          { value: 'end', label: 'Ende' },
-          { value: 'island', label: 'Øy' },
-        ]}
-      />
-      {s.type === 'corner' && (
-        <div className="opt flush">
-          <span className="lbl">Åpen mot</span>
-          <Segmented<'left' | 'right'>
-            inWell
-            label="Åpen side"
-            value={s.cornerSide ?? 'right'}
-            onChange={(cornerSide) => onEdit((x) => setStand(x, { ...x.stand, cornerSide }))}
-            options={[
-              { value: 'left', label: 'Venstre' },
-              { value: 'right', label: 'Høyre' },
-            ]}
-          />
-        </div>
-      )}
-      <p className="panel-note">{TYPE_TEXT[s.type]}</p>
-      <div className="opt">
-        <span className="lbl">
-          Takdrager
-          <small className="num">{v.noBeams ? 'Ingen · mer åpen stand' : `${fmt(k.beamLm)} m · ${beamSummary(k)}`}</small>
-        </span>
-        <Switch label="Takdrager" on={!v.noBeams} onChange={(on) => onEdit((x) => ({ ...x, noBeams: on ? undefined : true }))} />
-      </div>
-      {!v.noBeams && (
-        <p className="panel-note">
-          {mm(rules.beam.height)} × {mm(rules.beam.thickness)} mm langs åpne sider, i flukt med veggtopp. Lange drag deles jevnt i hele meter (maks {fmt(rules.beam.max)} m) og
-          skjøtes med stolpe og tverrdrager.
-        </p>
-      )}
-    </>
-  )
+function StandSection(p: RailProps) {
+  return <StandSettings {...p} />
 }
 
 function WallSection({ v, res, brush, tool, pick, onEdit, onAddRoom, onSelect, selection }: RailProps) {

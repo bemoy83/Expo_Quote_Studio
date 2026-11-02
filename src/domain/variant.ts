@@ -43,6 +43,19 @@ export const DEFAULT_STAND_WALLS: StandWallTerms = { payer: 'arrangør', ral: '9
 
 export const standWallTerms = (p: Project): StandWallTerms => p.standWalls ?? DEFAULT_STAND_WALLS;
 
+/** New stand-wall terms for the project. A new organiser colour repaints the stands that were in the old one (their
+ *  `defaultPlate`), so the stand keeps showing what the organiser builds and gets no plate swap. A stand in another
+ *  colour is the exhibitor's choice and stays. */
+export function setStandWallTerms(project: Project, variants: Variant[], patch: Partial<StandWallTerms>): { project: Project; variants: Variant[] } {
+  const old = standWallTerms(project);
+  const terms = { ...old, ...patch };
+  const repaint = terms.ral !== old.ral;
+  return {
+    project: { ...project, standWalls: terms },
+    variants: repaint ? variants.map((v) => (v.defaultPlate === old.ral ? { ...v, defaultPlate: terms.ral } : v)) : variants,
+  };
+}
+
 export function createProject(): Project {
   return { fields: FIXED_PROJECT_FIELDS.map((f) => ({ ...f, value: '' })) };
 }

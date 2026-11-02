@@ -4,9 +4,8 @@ import type { PointerEvent as RPointerEvent, ReactNode } from 'react'
 import type { Crop } from '../../domain/print'
 import type { TextileFill } from '../../domain/types'
 import type { Motif } from '../../persistence/file'
-import { CommitInput, IconButton, ImageInput, Segmented } from '../controls'
+import { IconButton, ImageInput, Segmented } from '../controls'
 import { wallPlates } from '../env'
-import { fmt } from '../format'
 import { decorSource } from '../dnd'
 import { INK } from '../colors'
 import { VariantChips } from '../panel/ProductRow'
@@ -92,33 +91,6 @@ export function FillPicker({ value, onChange }: { value: TextileFill; onChange: 
       <Segmented<TextileFill> inWell label="Tekstil" value={value} onChange={onChange} options={FILLS} />
       {value === 'reuse' && <p className="panel-note">Kunden har duken fra før, i samme størrelse. Bare montering.</p>}
     </>
-  )
-}
-
-/** Parse a typed length: comma or point, units and spaces ignored. Null when it is not a number. */
-function parseLength(text: string): number | null {
-  const n = Number(text.replace(',', '.').replace(/[^\d.]/g, ''))
-  return Number.isFinite(n) && text.trim() !== '' ? n : null
-}
-
-/** A length in metres as a small field with its label above, three to a row. The handles in the drawing do the rest. */
-export function SmallDim({ label, value, onChange, decimals = 1 }: { label: string; value: number; onChange: (n: number) => void; decimals?: number }) {
-  return (
-    <label className="wd-sdim">
-      <span className="eyebrow">{label}</span>
-      <CommitInput
-        className="field num"
-        aria-label={`${label} i meter`}
-        inputMode="decimal"
-        value={fmt(value, decimals)}
-        selectOnFocus
-        onCommit={(text) => {
-          const n = parseLength(text)
-          if (n === null) return false
-          onChange(n)
-        }}
-      />
-    </label>
   )
 }
 

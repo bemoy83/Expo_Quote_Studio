@@ -2002,6 +2002,204 @@ select.cin {
   }
 }
 
+/* ---------- Stand chip (top left of the drawing surface) ---------- */
+/* One pill like the dock: the stand switch (open = ink fill), a thin line, then Plan and 3D (chosen = muted fill) */
+.stand-chip {
+  position: absolute;
+  top: 12px;
+  left: 16px;
+  z-index: 6;
+}
+.stand-chip > .dock-btn {
+  gap: 8px;
+  height: 36px;
+  padding: 0 10px 0 12px;
+  white-space: nowrap;
+}
+.stand-chip .type {
+  font: 600 12.5px var(--font-ui);
+}
+.stand-chip .size {
+  font: 500 12.5px var(--font-numeric);
+  opacity: 0.75;
+}
+.stand-chip .chip-views > button {
+  height: 36px;
+  font-size: 13px;
+}
+/* Popover head: icon tile · «Stand» over area and open sides · close */
+.stand-pop-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.stand-pop-head .icon-tile {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--well);
+}
+.stand-pop-head .txt {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.stand-pop-head .title {
+  font: var(--type-group);
+}
+.stand-pop-head .num {
+  font: 400 12px var(--font-numeric);
+  color: rgb(var(--ink-muted));
+}
+.stand-pop {
+  position: absolute;
+  top: 64px;
+  left: 16px;
+  z-index: 7;
+  /* width: the chip's, set in StandChip */
+  min-width: 300px;
+  max-width: calc(100% - 32px);
+  max-height: calc(100% - 80px);
+  overflow-y: auto;
+  padding: 18px 18px 16px;
+  animation: dock-in var(--dur) var(--ease);
+}
+/* ---------- Flat choice (FlatChoice): no track, chosen = muted fill ---------- */
+.flat-choice {
+  display: flex;
+  gap: 2px;
+}
+.flat-choice > button {
+  min-width: 40px;
+  height: 32px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: rgb(var(--ink-muted));
+  font: 500 12.5px var(--font-ui);
+  cursor: pointer;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.flat-choice > button:hover:not([aria-checked='true']) {
+  color: rgb(var(--ink));
+}
+.flat-choice > button[aria-checked='true'] {
+  background: var(--well);
+  color: rgb(var(--ink));
+  font-weight: 600;
+}
+.flat-choice > button:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+/* Tiles: a small drawing over each label, sharing the width */
+.flat-choice.tiles > button {
+  flex: 1;
+  height: auto;
+  padding: 8px 4px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  border-radius: 10px;
+}
+
+/* ---------- Stand settings (stand chip popover and Stand tab) ---------- */
+/* Four groups (type, size, stand walls, beams) with air between them */
+.stand-set {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-top: 10px;
+}
+.stand-grp {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.stand-grp > .eyebrow {
+  margin-bottom: 2px;
+}
+.stand-grp .panel-note {
+  margin: 0;
+}
+.stand-set .set-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 40px;
+}
+.stand-set .set-row .lbl {
+  min-width: 0;
+  font: var(--type-label);
+}
+.stand-set .set-row .lbl small {
+  display: block;
+  font: 400 11.5px var(--font-numeric);
+  color: rgb(var(--ink-faint));
+}
+.stand-set .set-row.stacked {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+/* Width × depth: big numbers; the field shows only on hover and focus */
+.stand-dims {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 4px;
+  margin: 0;
+}
+.stand-dims .times {
+  padding-bottom: 10px;
+  color: rgb(var(--ink-faint));
+}
+.dim.big {
+  align-items: center;
+  gap: 4px;
+}
+.dim.big .dim-label {
+  font: 400 12.5px var(--font-ui);
+  color: rgb(var(--ink-muted));
+}
+.dim.big .dim-value {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  height: 40px;
+  padding: 0 8px;
+  border-radius: 8px;
+  cursor: text;
+  transition: background var(--dur) var(--ease);
+}
+.dim.big .dim-value:hover,
+.dim.big .dim-value:focus-within {
+  background: var(--well);
+}
+.dim.big .field.num {
+  height: 40px;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  font: 600 26px var(--font-numeric);
+  text-align: right;
+}
+.dim.big .dim-unit {
+  font: 400 12px var(--font-numeric);
+  color: rgb(var(--ink-muted));
+}
+.stand-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
 /* ---------- Tool dock (floating on the drawing surface) ---------- */
 /* Layers the pen does not work on fade softly when a tool is picked */
 .plan-svg g[opacity] {
@@ -2518,15 +2716,22 @@ select.cin {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
 }
-.wd-sdim {
+/* A length in metres (Dim): label above, the field fills the width; with − and + they sit either side of it */
+.dim {
   display: flex;
   flex-direction: column;
   gap: 2px;
   min-width: 0;
 }
-.wd-sdim .field.num {
+.dim .field.num {
   width: 100%;
+  min-width: 0;
   text-align: center;
+}
+.dim-step {
+  display: flex;
+  align-items: center;
+  gap: 2px;
 }
 .wd-shelf {
   width: 196px;

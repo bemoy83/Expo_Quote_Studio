@@ -1,10 +1,10 @@
 import { ChevronDown, Download, FilePlus, FolderOpen, Plus, X } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState, type RefObject } from 'react'
 import { DELIVERY_FIELDS } from '../../domain/delivery'
-import type { Delivery, Payer, Project } from '../../domain/types'
-import { customerName, isFixedField, projectField, standWallTerms } from '../../domain/variant'
+import type { Delivery, Project } from '../../domain/types'
+import { customerName, isFixedField, projectField } from '../../domain/variant'
 import { Button, IconButton } from '../controls'
-import { idx } from '../env'
+import { useDismiss } from '../useDismiss'
 
 export type Page = 'skisse' | 'tilbud' | 'produksjon' | 'plukkliste' | 'arbeidsordre' | 'produkter'
 
@@ -35,6 +35,7 @@ export function TopNav({
   onSave: () => void
 }) {
   const [open, setOpen] = useState(false)
+  const button = useRef<HTMLButtonElement>(null)
   const customer = customerName(project)
   const proj = projectField(project, 'prosjekt')
   return (
@@ -45,11 +46,11 @@ export function TopNav({
           {p.name}
         </button>
       ))}
-      <button type="button" className="btn ghost proj-btn" aria-expanded={open} onClick={() => setOpen(!open)}>
+      <button ref={button} type="button" className="btn ghost proj-btn" aria-expanded={open} onClick={() => setOpen(!open)}>
         {customer ? [customer, proj].filter(Boolean).join(' · ') : 'Legg inn kunde og prosjekt'}
         <ChevronDown size={14} />
       </button>
-      {open && <ProjectPopover project={project} setProject={setProject} onClose={() => setOpen(false)} />}
+      {open && <ProjectPopover project={project} setProject={setProject} button={button} onClose={() => setOpen(false)} />}
       <span className="spacer" />
       <Button icon={FilePlus} onClick={onNew}>
         Ny
@@ -65,25 +66,23 @@ export function TopNav({
   )
 }
 
-function ProjectPopover({ project, setProject, onClose }: { project: Project; setProject: (p: Project) => void; onClose: () => void }) {
+function ProjectPopover({
+  project,
+  setProject,
+  button,
+  onClose,
+}: {
+  project: Project
+  setProject: (p: Project) => void
+  /** The button that opens it: a press there toggles, it does not close-and-reopen. */
+  button: RefObject<HTMLButtonElement | null>
+  onClose: () => void
+}) {
   const ref = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    const down = (e: PointerEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node) && !(e.target as HTMLElement).closest('[aria-expanded]')) onClose()
-    }
-    const key = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
-    window.addEventListener('pointerdown', down)
-    window.addEventListener('keydown', key)
-    return () => {
-      window.removeEventListener('pointerdown', down)
-      window.removeEventListener('keydown', key)
-    }
-  }, [onClose])
+  useDismiss(ref, button, onClose)
   const update = (id: string, patch: { name?: string; value?: string }) =>
     setProject({ ...project, fields: project.fields.map((f) => (f.id === id ? { ...f, ...patch } : f)) })
   const setDate = (key: keyof Delivery, value: string) => setProject({ ...project, delivery: { ...project.delivery, [key]: value || undefined } })
-  const terms = standWallTerms(project)
-  const setTerms = (patch: { payer?: Payer; ral?: string }) => setProject({ ...project, standWalls: { ...terms, ...patch } })
   const add = () => {
     let n = 1
     while (project.fields.some((f) => f.id === `felt${n}`)) n++
@@ -118,32 +117,6 @@ function ProjectPopover({ project, setProject, onClose }: { project: Project; se
           <span />
         </div>
       ))}
-      <div className="pop-title pop-sect">Standvegger</div>
-      <div className="pop-sub">
-        Veggene standtypen gir, og takdragerne som følger dem. Betaler arrangøren, er de ikke på tilbudet, plukklisten eller arbeidsordren. Annen farge enn arrangørens blir platebytte for
-        utstilleren.
-      </div>
-      <div className="row">
-        <label htmlFor="ps-payer">Betales av</label>
-        <select id="ps-payer" className="field" value={terms.payer} onChange={(e) => setTerms({ payer: e.target.value as Payer })}>
-          <option value="arrangør">Arrangør</option>
-          <option value="utstiller">Utstiller</option>
-        </select>
-        <span />
-      </div>
-      {terms.payer === 'arrangør' && (
-        <div className="row">
-          <label htmlFor="ps-ral">Arrangørens farge</label>
-          <select id="ps-ral" className="field" value={terms.ral} onChange={(e) => setTerms({ ral: e.target.value })}>
-            {[...idx.wallByRal.values()].map(({ variant }) => (
-              <option key={variant.ral} value={variant.ral}>
-                {variant.name} · RAL {variant.ral}
-              </option>
-            ))}
-          </select>
-          <span />
-        </div>
-      )}
     </div>
   )
 }

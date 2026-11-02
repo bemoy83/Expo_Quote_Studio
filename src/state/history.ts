@@ -1,5 +1,6 @@
 // Sketch state with undo and redo at model level (snapshots). Pure reducer, no React.
-import type { Project, Variant, VariantName } from '../domain/types';
+import type { Project, StandWallTerms, Variant, VariantName } from '../domain/types';
+import { setStandWallTerms } from '../domain/variant';
 import type { Motif, Sketch } from '../persistence/file';
 
 export interface SketchState {
@@ -20,6 +21,8 @@ export type SketchAction =
   | { type: 'edit'; fn: (v: Variant) => Variant; history?: boolean }
   | { type: 'checkpoint' }
   | { type: 'project'; project: Project }
+  /** Who pays the stand walls and the organiser's colour; a new colour repaints the stands that had the old one. */
+  | { type: 'standWalls'; patch: Partial<StandWallTerms> }
   /** Replace the customer's own motifs. Undoable. */
   | { type: 'motifs'; motifs: Motif[] }
   | { type: 'select'; index: number }
@@ -59,6 +62,8 @@ export function reduce(s: SketchState, a: SketchAction): SketchState {
       return { ...s, past: [...s.past, snap(s)].slice(-LIMIT), future: [] };
     case 'project':
       return commit(s, { sketch: { ...sketch, project: a.project }, current });
+    case 'standWalls':
+      return commit(s, { sketch: { ...sketch, ...setStandWallTerms(sketch.project, sketch.variants, a.patch) }, current });
     case 'motifs':
       return commit(s, { sketch: { ...sketch, motifs: a.motifs }, current });
     case 'select':
