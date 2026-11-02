@@ -568,7 +568,6 @@ const PANEL_TAB: Record<PenTool, string> = { wall: 'vegg', floor: 'gulv', profil
 const DOCK_KEYS: Record<string, DockTool> = { v: 'select', s: 'wall', g: 'floor', t: 'profile', m: 'object', e: 'erase' }
 
 
-
 /** InFrame frames and free-standing walls. */
 function textileSub(p: CalcResult['production']) {
   return [p.pieces.length ? frameCount(p.pieces.length) : '', p.free.length ? `${p.free.length} frittstående` : ''].filter(Boolean).join(' · ')
