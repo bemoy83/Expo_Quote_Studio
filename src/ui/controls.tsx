@@ -156,7 +156,8 @@ export function Dim({
   const field = (
     <CommitInput
       className="field num"
-      size={big ? 2 : undefined}
+      size={big ? 1 : undefined}
+      style={big ? { width: `${fmt(value, decimals).length * 0.62 + 0.1}em` } : undefined}
       aria-label={`${label} i meter`}
       inputMode="decimal"
       value={fmt(value, decimals)}
@@ -164,14 +165,28 @@ export function Dim({
       onCommit={(text) => set(parseLength(text))}
     />
   )
+  if (big)
+    return (
+      <div className="dim big">
+        <span className="dim-label">{label}</span>
+        <span className="dim-step">
+          <IconButton icon={Minus} label={`${label}: ${fmt(step ?? 1)} m mindre`} size={14} disabled={value - (step ?? 1) < min} onClick={() => set(value - (step ?? 1))} />
+          {/* The number and its unit make one field: hover and the click target cover both */}
+          <label className="dim-value">
+            {field}
+            <span className="dim-unit">m</span>
+          </label>
+          <IconButton icon={Plus} label={`${label}: ${fmt(step ?? 1)} m mer`} size={14} disabled={value + (step ?? 1) > max} onClick={() => set(value + (step ?? 1))} />
+        </span>
+      </div>
+    )
   return (
-    <label className={big ? 'dim big' : 'dim'}>
-      <span className={big ? 'dim-label' : 'eyebrow'}>{label}</span>
+    <label className="dim">
+      <span className="eyebrow">{label}</span>
       {step ? (
         <span className="dim-step">
           <IconButton icon={Minus} label={`${label}: ${fmt(step)} m mindre`} size={14} disabled={value - step < min} onClick={() => set(value - step)} />
           {field}
-          {big && <span className="dim-unit">m</span>}
           <IconButton icon={Plus} label={`${label}: ${fmt(step)} m mer`} size={14} disabled={value + step > max} onClick={() => set(value + step)} />
         </span>
       ) : (

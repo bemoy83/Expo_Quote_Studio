@@ -2130,10 +2130,6 @@ select.cin {
   align-items: flex-start;
   gap: 4px;
 }
-.stand-set .chips-dots {
-  padding: 0;
-  background: transparent;
-}
 /* Width × depth: big numbers; the field shows only on hover and focus */
 .stand-dims {
   display: flex;
@@ -2154,27 +2150,36 @@ select.cin {
   font: 400 12.5px var(--font-ui);
   color: rgb(var(--ink-muted));
 }
-.dim.big .field.num {
-  width: 2.2ch;
+.dim.big .dim-value {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
   height: 40px;
-  padding: 0 2px;
+  padding: 0 8px;
   border-radius: 8px;
+  cursor: text;
+  transition: background var(--dur) var(--ease);
+}
+.dim.big .dim-value:hover,
+.dim.big .dim-value:focus-within {
+  background: var(--well);
+}
+.dim.big .field.num {
+  height: 40px;
+  padding: 0;
   background: transparent;
   box-shadow: none;
   font: 600 26px var(--font-numeric);
-  text-align: center;
-  transition: background var(--dur) var(--ease);
-}
-.dim.big .field.num:hover,
-.dim.big .field.num:focus {
-  background: var(--well);
+  text-align: right;
 }
 .dim.big .dim-unit {
-  align-self: flex-end;
-  padding-bottom: 9px;
-  margin-right: 4px;
   font: 400 12px var(--font-numeric);
   color: rgb(var(--ink-muted));
+}
+.stand-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
 /* ---------- Tool dock (floating on the drawing surface) ---------- */

@@ -5,10 +5,10 @@ import type { CalcResult } from '../../calc/calc'
 import { setStand } from '../../domain/edit'
 import type { Payer, StandType, StandWallTerms, Variant } from '../../domain/types'
 import { Dim, FlatChoice } from '../controls'
-import { rules } from '../env'
+import { rules, wallPlates } from '../env'
 import { fmt, mm } from '../format'
 import { beamSummary } from '../names'
-import { PlatePalette } from '../plan/drawerParts'
+import { Sw } from '../plan/QuickPicks'
 
 /** Stand side, whole metres. */
 const SIDE_MIN = 1
@@ -127,7 +127,11 @@ export function StandSettings({ v, res, onEdit, terms, onTerms }: StandSettingsP
           {terms.payer === 'arrangør' && (
             <div className="set-row stacked">
               <span className="lbl">Arrangørens farge</span>
-              <PlatePalette value={terms.ral} onPick={(ral) => onTerms({ ral })} />
+              <div className="stand-swatches">
+                {wallPlates().map((x) => (
+                  <Sw key={x.ral} color={x.color} title={`${x.name} · RAL ${x.ral}`} on={terms.ral === x.ral} onClick={() => onTerms({ ral: x.ral! })} />
+                ))}
+              </div>
             </div>
           )}
           <p className="panel-note">
