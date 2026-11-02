@@ -37,7 +37,7 @@ import { dockToolOf, FLOOR_OTHER, penToolOf, type Brush, type DockTool, type Hig
 import { removeFill, removeLane, rotateLane } from '../domain/carpet'
 import { CarpetDrawer } from './plan/CarpetDrawer'
 import { longestSide, TILE_FULL, type FloorBrushSize, type RollDir, type TileSize } from '../domain/floor'
-import { ToolDock } from './plan/ToolDock'
+import { PriceChangePill, ToolDock } from './plan/ToolDock'
 import { usePriceChange } from './plan/usePriceChange'
 import { QuickPicks } from './plan/QuickPicks'
 import type { GridStep } from '../domain/snapGrid'
@@ -475,6 +475,7 @@ export default function App() {
                     </div>
                   </Suspense>
                 )}
+                {view === 'plan' && change?.at && <PriceChangePill amount={change.amount} at={change.at} />}
                 <ToolDock
                   tools={view === 'plan'}
                   active={active}
@@ -484,7 +485,7 @@ export default function App() {
                   canRedo={state.future.length > 0}
                   onUndo={() => dispatch({ type: 'undo' })}
                   onRedo={() => dispatch({ type: 'redo' })}
-                  change={change}
+                  change={change && !(view === 'plan' && change.at) ? change.amount : null}
                 >
                   {quick}
                 </ToolDock>

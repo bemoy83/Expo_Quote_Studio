@@ -1,6 +1,6 @@
 // Floating tools on the drawing surface, one icon per tool: Velg · Vegg · Gulv · Profilering · Møbel · Tøm at the
 // bottom, undo and redo on their own pill to the left. Over the active tool: its quick picks. A short stripe under
-// Vegg and Gulv shows the colour they draw with. Over undo: what the last stroke changed in the exhibitor's sum.
+// Vegg and Gulv shows the colour they draw with. Over the quick picks: what an edit made outside the plan changed in the exhibitor's sum.
 import type { LucideIcon } from 'lucide-react'
 import { Armchair, BrickWall, Eraser, Grid2x2, Image, MousePointer2, Redo2, Undo2 } from 'lucide-react'
 import type { ReactNode } from 'react'
@@ -45,18 +45,13 @@ export function ToolDock({
   canRedo: boolean
   onUndo: () => void
   onRedo: () => void
-  /** Change in the exhibitor's sum from the last stroke (usePriceChange), kr; null hides it. */
+  /** Change in the exhibitor's sum (usePriceChange) when it did not come from drawing in the plan, kr; null hides it. */
   change: number | null
   /** The active tool's quick picks (QuickPicks). */
   children?: ReactNode
 }) {
   return (
     <div className="dock">
-      {change !== null && (
-        <div key={Math.sign(change)} className="dock-pill dock-price" role="status" title="Endring i utstillers sum fra siste strøk, eks. mva.">
-          {signed(change)} kr
-        </div>
-      )}
       <div className="dock-pill dock-undo">
         <button type="button" className="dock-btn" title="Angre (⌘Z)" aria-label="Angre" disabled={!canUndo} onClick={onUndo}>
           <Undo2 size={18} />
@@ -65,9 +60,10 @@ export function ToolDock({
           <Redo2 size={18} />
         </button>
       </div>
-      {tools && (
-        <div className="dock-stack">
-          {children}
+      <div className="dock-stack">
+        {change !== null && <PriceChangePill amount={change} />}
+        {tools && children}
+        {tools && (
           <div className="dock-pill dock-tools" role="toolbar" aria-label="Verktøy">
             {DOCK_TOOLS.map((t) => {
               const on = active === t.id
@@ -88,8 +84,23 @@ export function ToolDock({
               )
             })}
           </div>
-        </div>
-      )}
+        )}
+      </div>
+    </div>
+  )
+}
+
+/** What the last stroke changed in the exhibitor's sum, inverted like a toast. `at`: by the pointer, px inside the
+ *  drawing surface; else it sits in the dock over the quick picks. */
+export function PriceChangePill({ amount, at }: { amount: number; at?: { x: number; y: number } }) {
+  return (
+    <div
+      className={at ? 'price-pill at' : 'price-pill'}
+      style={at ? { left: at.x, top: at.y } : undefined}
+      role="status"
+      title="Endring i utstillers sum, eks. mva."
+    >
+      {signed(amount)} kr
     </div>
   )
 }

@@ -2032,19 +2032,26 @@ select.cin {
   left: 0;
   bottom: 0;
 }
-/* What the last stroke changed in the exhibitor's sum: over the undo pill, gone a moment after the drawing stops */
-.dock-price {
-  position: absolute;
-  left: 0;
-  bottom: 60px;
+/* What the last stroke changed in the exhibitor's sum, inverted like a toast: by the pointer where the stroke was, or
+   over the quick picks when the change came from elsewhere (undo, a drawer, 3D). Gone a moment after the drawing stops. */
+.price-pill {
+  align-self: center;
   padding: 6px 12px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 600;
+  border-radius: var(--r-pill);
+  background: rgb(var(--ink));
+  color: rgb(var(--canvas));
+  box-shadow: var(--pop);
+  font: 600 13px var(--font-ui);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   pointer-events: none;
   animation: dock-in var(--dur) var(--ease);
+}
+/* Up and to the right of the pointer, clear of the crosshair and the stroke */
+.price-pill.at {
+  position: absolute;
+  z-index: 6;
+  transform: translate(14px, calc(-100% - 10px));
 }
 .dock-stack {
   display: flex;
@@ -2134,9 +2141,6 @@ select.cin {
   /* No room beside the tools: undo and redo go to the top left corner (the mini map is hidden here) */
   .dock-undo {
     bottom: calc(100cqh - 80px);
-  }
-  .dock-price {
-    bottom: calc(100cqh - 124px);
   }
   .minimap {
     display: none;
