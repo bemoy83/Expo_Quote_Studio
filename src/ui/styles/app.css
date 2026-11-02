@@ -2047,10 +2047,10 @@ select.cin {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   pointer-events: none;
-  animation: price-in 280ms var(--ease) both;
+  animation: price-in 220ms var(--ease) both;
 }
 .price-pill.leaving {
-  animation: price-out 450ms ease-in forwards;
+  animation: price-out 350ms ease-in forwards;
 }
 /* Up and to the right of the pointer, clear of the crosshair and the stroke */
 .price-pill.at {
