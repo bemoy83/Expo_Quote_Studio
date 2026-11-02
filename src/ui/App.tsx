@@ -564,10 +564,10 @@ const PANEL_TAB: Record<PenTool, string> = { wall: 'vegg', floor: 'gulv', profil
 
 const DOCK_KEYS: Record<string, DockTool> = { v: 'select', s: 'wall', g: 'floor', t: 'profile', m: 'object', e: 'erase' }
 
-const HINT_3D = 'Dra for å rotere · rull for å zoome · dra møbler, en dør, en innervegg eller grafikk for å flytte · dra et rom i veggen eller taket, toppkanten av en romvegg endrer størrelsen · dra grafikk eller tekstilvegg fra Profilering til en vegg'
+const HINT_3D = 'Dra for å rotere · rull for å zoome · klikk en dør for å endre den · dra møbler, en innervegg eller grafikk for å flytte · dra et rom i veggen eller taket, toppkanten av en romvegg endrer størrelsen · dra grafikk eller tekstilvegg fra Profilering til en vegg'
 
 function hint(tool: Tool, brush: Brush | null, roll: RollMode | false = false): string {
-  if (tool === 'select') return 'Klikk en vegg eller dør for å endre den · klikk engangsteppe for legging, snu og lengde · dra en dør, innervegg, innvendig takdrager eller møbler for å flytte · dra gulvet i et rom for å flytte rommet, en romvegg for å endre størrelsen · Delete fjerner valgt møbel, dør, takdrager eller rom'
+  if (tool === 'select') return 'Klikk en vegg eller dør for å endre den · klikk engangsteppe for legging, snu og lengde · dra en innervegg, innvendig takdrager eller møbler for å flytte · dra gulvet i et rom for å flytte rommet, en romvegg for å endre størrelsen · Delete fjerner valgt møbel, dør, takdrager eller rom'
   const erase = tool === 'erase'
   switch (brush?.kind ?? 'wall') {
     case 'wall':

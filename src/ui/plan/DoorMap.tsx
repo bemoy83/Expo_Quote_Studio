@@ -3,7 +3,7 @@
 // in a room can go to any module of the room's own sides; a door in an inner wall to any module of that wall. Stand walls
 // and modules holding another opening have no target. Hover shows the door where it would land.
 import { useState } from 'react'
-import { doorSpots, moveOpening, sideName, type DoorSpot } from '../../domain/doors'
+import { doorSpots, moveOpening, openingById, openingRoom, sideName, type DoorSpot } from '../../domain/doors'
 import { openSides, sideEnds } from '../../domain/grid'
 import { bounds } from '../../domain/outline'
 import { roomSize } from '../../domain/rooms'
@@ -30,7 +30,8 @@ export function DoorMap({ v, openingId, onEdit }: Props) {
   const px = (m: number) => m * c
   const mods = builtModules(v)
   const spots = doorSpots(v, openingId)
-  const room = v.rooms.find((r) => spots.some((s) => s.wallId.startsWith(`${r.id}.`)))
+  const o = openingById(v, openingId)
+  const room = o && openingRoom(v, o)
   const current = spots.find((s) => s.current)
   const pending = spots.find((s) => s.key === hover)
   const bar = (a: Point, b: Point, stroke: string, width: number, opacity = 1, key?: string) => (

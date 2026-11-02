@@ -1,7 +1,7 @@
 // A door or curtain as a thing of its own: chosen in the plan or 3D, edited and moved in the door drawer (its mini
 // plan). Every move goes through moveOpening, so a door never lands in a stand wall or on another opening.
 import { defaultSwing, doorAllowed, doorSwing } from './edit';
-import { moduleKey, pointAlong, wallDirection, wallModules } from './grid';
+import { pointAlong, wallDirection, wallModules } from './grid';
 import { OUTSIDE, roomOf } from './rooms';
 import type { Opening, Point, Variant, Wall } from './types';
 import { builtModules, type BuiltModule } from './walls';
@@ -9,15 +9,6 @@ import { builtModules, type BuiltModule } from './walls';
 const dot = (a: Point, b: Point) => a[0] * b[0] + a[1] * b[1];
 
 export const openingById = (v: Variant, id: string | undefined): Opening | undefined => (id ? v.openings.find((o) => o.id === id) : undefined);
-
-/** The wall module the opening stands in, or undefined when its wall is gone. */
-export function openingModule(v: Variant, o: Opening): { a: Point; b: Point; key: string; wall: Wall } | undefined {
-  const wall = v.walls.find((w) => w.id === o.wallId);
-  if (!wall) return undefined;
-  const a = pointAlong(wall, o.module);
-  const b = pointAlong(wall, o.module + 1);
-  return { a, b, key: moduleKey(a, b), wall };
-}
 
 /** The end of the module the leaf hangs on (`a`), the other end (`b`) and the direction from hinge to free edge. */
 export function doorHinge(w: Wall, o: Opening): { a: Point; b: Point; dir: Point } {

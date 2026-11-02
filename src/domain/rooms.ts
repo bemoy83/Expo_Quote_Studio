@@ -304,8 +304,9 @@ export function moveRoomDoors(v: Variant, id: string, dx: number, dy: number): {
 /**
  * Drag one side of a room by `delta` metres across it (+y for a side running left–right, +x for one running back–
  * front); the neighbouring sides stretch and the others stay. A side never shrinks below 1 m: the drag stops there,
- * or where the room would leave the stand or hit another room (a door that would land in a stand wall moves, see settleDoors). A side dragged flush with the one beyond its
- * neighbour merges with it (an L becomes a rectangle). Things on the other sides keep their place in the world.
+ * or where the room would leave the stand or hit another room. A door that would land in a stand wall moves (see
+ * settleDoors). A side dragged flush with the one beyond its neighbour merges with it (an L becomes a rectangle).
+ * Things on the other sides keep their place in the world.
  * Returns v when nothing changes.
  */
 export function resizeRoom(v: Variant, id: string, side: number, delta: number): Variant {

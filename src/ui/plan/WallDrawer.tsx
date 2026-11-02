@@ -300,7 +300,6 @@ export function WallDrawer(p: Props) {
               return (
                 <g
                   key={i}
-                  className="wd-door"
                   style={{ cursor: 'pointer' }}
                   onPointerDown={(e) => {
                     // The door has a drawer of its own
