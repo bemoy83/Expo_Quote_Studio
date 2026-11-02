@@ -27,13 +27,13 @@ import {
 import { eraseWalls, setWallPlate } from '../../domain/edit'
 import { setPanels, wallRal } from '../../domain/panels'
 import { doorRal } from '../../domain/doors'
-import { OUTSIDE, roomName, roomSize } from '../../domain/rooms'
+import { OUTSIDE, roomAt, roomName, roomSize } from '../../domain/rooms'
 import { wallLength, wallModules } from '../../domain/grid'
-import type { Foil, TextileWall, Variant, Wall } from '../../domain/types'
+import type { Foil, Room, TextileWall, Variant, Wall } from '../../domain/types'
 import { builtModules, isStandWall } from '../../domain/walls'
 import type { Motif } from '../../persistence/file'
 import { doorInset, wallHeight } from '../../rules/rules'
-import { ALU, ALU_POST, BORDER_STRONG, FABRIC, FEET, INK, INK_FAINT, LAYER_COLOR, SUNKEN } from '../colors'
+import { ALU, ALU_POST, BORDER_STRONG, FABRIC, FEET, INK, INK_FAINT, LAYER_COLOR, SUNKEN, SURFACE } from '../colors'
 import { Button, IconButton, Segmented } from '../controls'
 import { plateColor, plateName, productOf, rules, wallPlates } from '../env'
 import { count, fmt, mm } from '../format'
@@ -60,6 +60,30 @@ const EPS = 1e-6
 
 /** What a drag in the drawing changes: move a frame or decal, or the edge or corner of one. */
 type DragKind = 'tmove' | 'fmove' | { edge: Edge }
+
+/** A room standing against a stretch of a wall face, from module `a` to module `b` (exclusive). */
+interface RoomRun {
+  room: Room
+  a: number
+  b: number
+}
+
+/**
+ * Rooms whose floor lies right in front of this face of the wall, as runs of modules: the wall is (part of) that room's
+ * wall seen from inside. The wall's own room is left out (that is the whole face).
+ */
+function roomsAgainst(v: Variant, w: Wall, s: FaceSide): RoomRun[] {
+  const [nx, ny] = faceNormal(w, s)
+  const runs: RoomRun[] = []
+  wallModules(w).forEach((m, i) => {
+    const r = roomAt(v, (m.a[0] + m.b[0]) / 2 + nx / 2, (m.a[1] + m.b[1]) / 2 + ny / 2)
+    if (!r || r.id === w.room?.id) return
+    const last = runs[runs.length - 1]
+    if (last && last.room.id === r.id && last.b === i) last.b = i + 1
+    else runs.push({ room: r, a: i, b: i + 1 })
+  })
+  return runs
+}
 
 /** Face names by where the face looks. */
 function faceName(w: Wall, s: FaceSide): string {
@@ -95,6 +119,7 @@ export function WallDrawer(p: Props) {
   const F = foils.find((f) => f.id === sel.foilId)
   const built = new Map(builtModules(v).map((m) => [m.key, m]))
   const mods = wallModules(w).map((m) => built.get(m.key))
+  const rooms = roomsAgainst(v, w, s)
   const ratioOf = (id?: string) => findMotif(motifs, id)?.ratio ?? 0
   const label = wallLabel(w)
   const select = (x: Partial<PlanSelection>) => p.onSelect({ wallId: w.id, side: s, ...x })
@@ -293,7 +318,7 @@ export function WallDrawer(p: Props) {
             ? `ramme ${mm(piece.W / 1000)} × ${mm(piece.H / 1000)} mm · ${fmt(piece.area)} m² ${piece.fill === 'reuse' ? 'kundens duk' : piece.fill === 'white' ? 'hvit duk' : 'trykk'}`
             : F
               ? `Felt ${F.module + 1} · ${mm(F.width)} × ${mm(F.height)} mm`
-              : [`${L} m`, count(wallModules(w).length - openings.length, 'plate', 'plater') + (odd ? ` (${odd} i egen farge)` : ''), openings.length && count(openings.length, 'åpning', 'åpninger'), tex.length && count(tex.length, 'tekstilvegg', 'tekstilvegger')]
+              : [`${L} m`, count(wallModules(w).length - openings.length, 'plate', 'plater') + (odd ? ` (${odd} i egen farge)` : ''), openings.length && count(openings.length, 'åpning', 'åpninger'), tex.length && count(tex.length, 'tekstilvegg', 'tekstilvegger'), ...rooms.map((r) => `${r.b - r.a} m inn mot ${roomName(r.room).toLowerCase()}`)]
                   .filter(Boolean)
                   .join(' · ')}
         </p>
@@ -474,6 +499,21 @@ export function WallDrawer(p: Props) {
             </g>
           ))}
           <line x1={-PAD} y1={H} x2={L + PAD} y2={H} stroke={BORDER_STRONG} strokeWidth={0.01} />
+
+          {/* Where a room stands against this face: hatched, with the room's name, for context only */}
+          <defs>
+            <pattern id="wd-room-hatch" patternUnits="userSpaceOnUse" width={0.12} height={0.12} patternTransform="rotate(45)">
+              <line x1={0} y1={0} x2={0} y2={0.12} stroke={INK_FAINT} strokeWidth={0.02} strokeOpacity={0.55} />
+            </pattern>
+          </defs>
+          {rooms.map((r) => (
+            <g key={`${r.room.id}${r.a}`} pointerEvents="none">
+              <rect x={spanX(r.a, r.b)} y={z(H)} width={r.b - r.a} height={H} fill="url(#wd-room-hatch)" />
+              <text x={spanX(r.a, r.b) + (r.b - r.a) / 2} y={z(H) + 0.32} textAnchor="middle" style={{ ...TXT, font: '600 0.16px var(--font-ui)', fill: INK }} stroke={SURFACE} strokeWidth={0.05} paintOrder="stroke">
+                {roomName(r.room)} {roomSize(r.room)}
+              </text>
+            </g>
+          ))}
 
           {/* Foil decals */}
           {foils.map((f) => {
