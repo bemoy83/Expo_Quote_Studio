@@ -12,6 +12,8 @@ export interface PickRow {
   title: string
   /** Foga parts: what the piece is made of, or its cut lengths. */
   detail?: string
+  /** Pre-assembled units: where the piece goes, for the work order that leaves out what it is made of. */
+  note?: string
   preassembled?: boolean
   lm?: number
   qty: string
@@ -43,6 +45,7 @@ export function pickRows(res: CalcResult): PickRow[] {
       code: l.ral ? `RAL ${l.ral}` : l.artnr,
       title: l.ral ? `${l.name} · ${plateName(l.ral)}` : l.name,
       detail: l.detail,
+      note: l.note,
       preassembled: l.preassembled,
       lm: l.lm,
       qty: `${l.qty} stk`,

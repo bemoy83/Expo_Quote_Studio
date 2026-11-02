@@ -84,6 +84,7 @@ describe('tekstilvegger', () => {
       artnr: '',
       name: 'Støttestag 90, 2460 mm, med 600',
       detail: '90 × 2460 mm · 2 × 600 (871 003 92) · til T1 (2), T3',
+      note: 'til T1 (2), T3',
       qty: 3,
       preassembled: true,
     });

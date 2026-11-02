@@ -1900,6 +1900,10 @@ select.cin {
 .proj-pop .pop-sect {
   margin-top: 18px;
 }
+/* The stand line is a sentence, not a date: its own row across the facts, so it does not wrap in a narrow column */
+.qdoc-summary .wo-stand {
+  grid-column: 1 / -1;
+}
 .wo-sec {
   padding: 20px 0 8px;
   border-bottom: 1px solid var(--g-row);

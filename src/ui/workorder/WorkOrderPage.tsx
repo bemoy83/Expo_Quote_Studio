@@ -17,7 +17,7 @@ import { CUT_FOOT, cutRows } from '../cutList'
 import { lanesOf, rollPieces } from '../../domain/floor'
 import { fmt, hours } from '../format'
 import { TYPE_NAME } from '../names'
-import { pickRows } from '../picking/rows'
+import { pickRows, type PickRow } from '../picking/rows'
 import { PLAN_MARGIN, PlanPreview } from '../plan/PlanView'
 import { PageBand } from '../shell/PageBand'
 import { VariantTabs } from '../shell/VariantTabs'
@@ -125,7 +125,7 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf }: 
                   <dd>{dateText(project.delivery?.[d.key]) || 'dato mangler'}</dd>
                 </div>
               ))}
-              <div>
+              <div className="wo-stand">
                 <dt className="num">
                   {v.stand.width} × {v.stand.depth} m
                 </dt>
@@ -178,7 +178,7 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf }: 
                       <span>
                         {l.title}
                         {l.code && <span className="faint num"> · {l.code}</span>}
-                        {l.detail && <span className="muted num"> · {l.detail}</span>}
+                        {brief(l) && <span className="muted num"> · {brief(l)}</span>}
                       </span>
                       <span className="num">{l.qty}</span>
                     </div>
@@ -241,6 +241,10 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf }: 
     </>
   )
 }
+
+/** The picker needs the piece, not what it is made of: a pre-assembled unit shows only where it goes, never its
+ *  components and their art.nr. Cut lengths, plate sizes and carpet pieces stay. */
+const brief = (l: PickRow) => (l.preassembled ? l.note : l.detail)
 
 function Row({ name, time, steps, total }: { name: string; time: Time; steps: HandlingStep[]; total?: boolean }) {
   return (

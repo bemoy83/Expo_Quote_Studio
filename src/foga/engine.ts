@@ -12,6 +12,8 @@ export interface BomLine {
   name: string;
   /** What it is made of, or the cut lengths. */
   detail: string;
+  /** Pre-assembled units: where the piece goes, without what it is made of ('overstykke', 'til fotplate'). */
+  note?: string;
   qty: number;
   /** Stored pre-assembled, picked as one piece. */
   preassembled: boolean;
@@ -78,7 +80,13 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
     put(
       group,
       `${name}|${lengthMm}`,
-      { artnr: '', name: `${name} ${profile}, ${lengthMm} mm, med ${c.code}`, detail: withCouplings(profile, lengthMm, c.code, 2 * c.perEnd) + note, preassembled: true },
+      {
+        artnr: '',
+        name: `${name} ${profile}, ${lengthMm} mm, med ${c.code}`,
+        detail: withCouplings(profile, lengthMm, c.code, 2 * c.perEnd) + note,
+        ...(note && { note: note.replace(/^ · /, '') }),
+        preassembled: true,
+      },
       qty,
       group === BOM_GROUP.beams ? lengthMm : 0,
     );
@@ -107,7 +115,7 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
     },
     s.posts - bare,
   );
-  put(BOM_GROUP.posts, 'post-bare', { artnr: '', name: `Stolpe ${r.wall.post} uten fot`, detail: `${r.wall.post} × ${z.postLength} mm · til fotplate`, preassembled: true }, bare);
+  put(BOM_GROUP.posts, 'post-bare', { artnr: '', name: `Stolpe ${r.wall.post} uten fot`, detail: `${r.wall.post} × ${z.postLength} mm · til fotplate`, note: 'til fotplate', preassembled: true }, bare);
 
   // Støtteplater under the posts of walls that stand free: the plate with its pin (M8) mounted, one piece, threaded
   // into the post's centre channel on site
