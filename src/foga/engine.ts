@@ -12,6 +12,8 @@ export interface BomLine {
   name: string;
   /** What it is made of, or the cut lengths. */
   detail: string;
+  /** Pre-assembled units: where the piece goes, without what it is made of ('overstykke', 'til fotplate'). */
+  note?: string;
   qty: number;
   /** Stored pre-assembled, picked as one piece. */
   preassembled: boolean;
@@ -73,12 +75,18 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   };
   const withCouplings = (profile: string, lengthMm: number, coupling: string, n: number) =>
     `${profile} × ${lengthMm} mm · ${n} × ${coupling} (${fogaPart(coupling).artnr})`;
-  /** A profile with couplings mounted in its ends, picked as one piece. */
+  /** A profile with couplings mounted in its ends, picked as one piece. `note` says where it goes. */
   const unit = (group: BomGroup, name: string, profile: string, lengthMm: number, c: { code: string; perEnd: number }, qty: number, note = '') =>
     put(
       group,
       `${name}|${lengthMm}`,
-      { artnr: '', name: `${name} ${profile}, ${lengthMm} mm, med ${c.code}`, detail: withCouplings(profile, lengthMm, c.code, 2 * c.perEnd) + note, preassembled: true },
+      {
+        artnr: '',
+        name: `${name} ${profile}, ${lengthMm} mm, med ${c.code}`,
+        detail: withCouplings(profile, lengthMm, c.code, 2 * c.perEnd) + (note && ` · ${note}`),
+        ...(note && { note }),
+        preassembled: true,
+      },
       qty,
       group === BOM_GROUP.beams ? lengthMm : 0,
     );
@@ -107,7 +115,7 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
     },
     s.posts - bare,
   );
-  put(BOM_GROUP.posts, 'post-bare', { artnr: '', name: `Stolpe ${r.wall.post} uten fot`, detail: `${r.wall.post} × ${z.postLength} mm · til fotplate`, preassembled: true }, bare);
+  put(BOM_GROUP.posts, 'post-bare', { artnr: '', name: `Stolpe ${r.wall.post} uten fot`, detail: `${r.wall.post} × ${z.postLength} mm · til fotplate`, note: 'til fotplate', preassembled: true }, bare);
 
   // Støtteplater under the posts of walls that stand free: the plate with its pin (M8) mounted, one piece, threaded
   // into the post's centre channel on site
@@ -123,7 +131,7 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   // curtain) gets the same rails in its header (overstykke) with a lower plate; the header is listed with the doors.
   const walled = s.modules.filter((m) => !m.opening);
   const headers = s.modules.filter((m) => m.opening);
-  for (const [group, n, note] of [[BOM_GROUP.rails, walled.length, ''], [BOM_GROUP.header, headers.length, ' · overstykke']] as const) {
+  for (const [group, n, note] of [[BOM_GROUP.rails, walled.length, ''], [BOM_GROUP.header, headers.length, 'overstykke']] as const) {
     unit(group, 'Toppskinne', r.wall.topRail, rail, r.wall.railCoupling, n, note);
     unit(group, 'Bunnskinne', r.wall.bottomRail, rail, r.wall.railCoupling, n, note);
   }
@@ -180,7 +188,7 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
     put(BOM_GROUP.textile, p.code, { artnr: p.artnr, name: `${p.code} · ${p.name}`, detail: `${s.cornerPosts.qty} × ${s.cornerPosts.H} mm`, preassembled: false, lm: (s.cornerPosts.qty * s.cornerPosts.H) / 1000 }, s.cornerPosts.qty);
   }
 
-  for (const [len, b] of braces) unit(BOM_GROUP.textile, 'Støttestag', r.frame.brace, len, r.frame.braceCoupling, b.qty, ` · til ${b.frames.join(', ')}`);
+  for (const [len, b] of braces) unit(BOM_GROUP.textile, 'Støttestag', r.frame.brace, len, r.frame.braceCoupling, b.qty, `til ${b.frames.join(', ')}`);
   // Corner connectors: four per InFrame frame; top and bottom at a free end and into a corner post (same part, 617)
   part(BOM_GROUP.textile, r.frame.corner, 4 * s.frames.length);
   part(BOM_GROUP.textile, r.freeFrame.corner, free.reduce((a, f) => a + f.connectors.corner, 0));

@@ -145,6 +145,12 @@ export default function App() {
     setTabRaw(k)
     setTool('select')
   }
+  /** Plan or 3D, from the band or a mini map: always in Velg. The brushes only draw in the plan, and the drawers only
+   *  open in Velg, so a pen carried into 3D would leave a clicked wall without its drawer. */
+  const showView = (x: 'plan' | '3d') => {
+    setView(x)
+    setTool('select')
+  }
   /** Choosing a brush always goes to the plan; the brushes draw there. */
   const pick = (b: Brush, t: Tool = 'brush') => {
     setBrush(b)
@@ -352,10 +358,7 @@ export default function App() {
                 onBand
                 label="Visning"
                 value={view}
-                onChange={(x) => {
-                  setView(x)
-                  setTool('select')
-                }}
+                onChange={showView}
                 options={[
                   { value: 'plan', label: 'Plan' },
                   { value: '3d', label: '3D' },
@@ -381,7 +384,7 @@ export default function App() {
                 unit="lm"
                 sub={[wallSplit(k), k.openings ? count(k.openings, 'åpning', 'åpninger') : ''].filter(Boolean).join(' · ') || undefined}
               />
-              <Kpi label="Takdrager" value={fmt(k.beamLm)} unit="m" sub={k.organiserBeamLm ? 'fra arrangør' : undefined} />
+              <Kpi label="Takdrager" value={fmt(k.beamLm)} unit="m" sub={beamSplit(k)} />
               {k.textileM2 > 0 && <Kpi label="Tekstilvegg" value={fmt(k.textileM2)} unit="m²" sub={textileSub(res.production)} />}
               <span className="spacer" />
               <Kpi
@@ -439,7 +442,7 @@ export default function App() {
                       <Suspense fallback={null}>
                         <Scene3DPreview v={v} res={res} motifs={motifs} />
                       </Suspense>
-                      <IconButton icon={Maximize2} label="Vis 3D" size={14} className="minimap-open" onClick={() => setView('3d')} />
+                      <IconButton icon={Maximize2} label="Vis 3D" size={14} className="minimap-open" onClick={() => showView('3d')} />
                     </div>
                   </>
                 ) : (
@@ -457,7 +460,7 @@ export default function App() {
                     />
                     <div className="minimap low">
                       <PlanPreview mini v={v} res={res} />
-                      <IconButton icon={Maximize2} label="Vis plan" size={14} className="minimap-open" onClick={() => setView('plan')} />
+                      <IconButton icon={Maximize2} label="Vis plan" size={14} className="minimap-open" onClick={() => showView('plan')} />
                     </div>
                   </Suspense>
                 )}
@@ -591,6 +594,16 @@ function textileSub(p: CalcResult['production']) {
 function wallSplit(k: CalcResult['keyFigures']) {
   if (!k.standWallLm || k.standWallLm === k.wallLm) return k.organiserWallLm ? 'standvegg fra arrangør' : ''
   return `${fmt(k.standWallLm)} standvegg${k.organiserWallLm ? ' fra arrangør' : ''} · ${fmt(k.wallLm - k.standWallLm)} inner`
+}
+
+/** Beams the organiser invoices apart from the customer's own: drawn inner beams, and the standard beams when the
+ *  exhibitor pays them. */
+function beamSplit(k: CalcResult['keyFigures']) {
+  const ours = k.beamLm - k.organiserBeamLm
+  if (k.organiserBeamLm) return `${fmt(k.organiserBeamLm)} fra arrangør${ours > 1e-9 ? ` · ${fmt(ours)} tilvalg` : ''}`
+  if (!k.innerBeamLm) return undefined
+  const standard = k.beamLm - k.innerBeamLm
+  return standard > 1e-9 ? `${fmt(standard)} standard · ${fmt(k.innerBeamLm)} tilvalg` : 'tilvalg'
 }
 
 /** Band toggle for the panel or the calc: muted fill while it is shown. Icons and labels are [shown, folded]. */

@@ -753,6 +753,16 @@ kbd {
   pointer-events: none;
   z-index: 5;
 }
+/* The end dots keep their name inside the row: centred, the first one's would hang out past the panel or drawer edge */
+.vdot:first-child:hover::after {
+  left: 0;
+  transform: none;
+}
+.vdot:last-child:hover::after {
+  left: auto;
+  right: 0;
+  transform: none;
+}
 .chips-text {
   display: flex;
   flex-wrap: wrap;
@@ -1264,9 +1274,19 @@ kbd {
   top: auto;
   bottom: 12px;
 }
-/* A drawer open below the stage leaves too little room: the mini map would cover the drawing */
+/* A drawer open below the stage leaves too little room: the mini map would cover the drawing. In 3D it is the only
+   way back to the plan, so it stays, smaller, in the corner (the 3D view is turned around the stand anyway). */
 @container (max-height: 420px) {
-  .minimap {
+  .minimap:not(.low) {
+    display: none;
+  }
+  .minimap.low {
+    width: 150px;
+    height: 100px;
+  }
+}
+@container (max-height: 220px) {
+  .minimap.low {
     display: none;
   }
 }
@@ -1879,6 +1899,10 @@ select.cin {
 }
 .proj-pop .pop-sect {
   margin-top: 18px;
+}
+/* The stand line is a sentence, not a date: its own row across the facts, so it does not wrap in a narrow column */
+.qdoc-summary .wo-stand {
+  grid-column: 1 / -1;
 }
 .wo-sec {
   padding: 20px 0 8px;

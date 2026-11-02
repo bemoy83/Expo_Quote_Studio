@@ -9,9 +9,13 @@ export interface PickRow {
   key: string
   group: string
   code: string
+  /** The code is a Foga art.nr (Nobb): for purchasing, not picking, so the work order leaves it out. */
+  nobb?: boolean
   title: string
   /** Foga parts: what the piece is made of, or its cut lengths. */
   detail?: string
+  /** Pre-assembled units: where the piece goes, for the work order that leaves out what it is made of. */
+  note?: string
   preassembled?: boolean
   lm?: number
   qty: string
@@ -41,8 +45,10 @@ export function pickRows(res: CalcResult): PickRow[] {
       key: `${l.name}|${l.detail}`,
       group: l.group,
       code: l.ral ? `RAL ${l.ral}` : l.artnr,
+      nobb: !l.ral && !!l.artnr,
       title: l.ral ? `${l.name} · ${plateName(l.ral)}` : l.name,
       detail: l.detail,
+      note: l.note,
       preassembled: l.preassembled,
       lm: l.lm,
       qty: `${l.qty} stk`,
