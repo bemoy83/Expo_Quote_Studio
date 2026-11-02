@@ -2397,9 +2397,43 @@ select.cin {
   fill: rgb(var(--ink-faint));
   pointer-events: none;
 }
-.door-map-note {
-  font: 400 11.5px var(--font-ui);
-  color: rgb(var(--ink-faint));
-  text-wrap: pretty;
-  margin: 0;
+
+/* Door drawer: mini plan · settings · front view side by side, so it needs no scrolling */
+.wall-drawer.door-drawer {
+  grid-template-columns: auto minmax(240px, 280px) minmax(0, 1fr);
+}
+.dd-map {
+  padding: 10px 8px 12px 20px;
+  border-right: 1px solid var(--g-row);
+}
+.door-drawer .wd-insp {
+  gap: 6px;
+  padding-top: 10px;
+}
+.door-drawer .wd-view {
+  padding-bottom: 4px;
+}
+.door-drawer .wd-svg {
+  min-height: 160px;
+  max-height: 220px;
+}
+.dd-hint {
+  grid-column: 1 / -1;
+  padding: 6px 20px 10px;
+}
+.dd-swing {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.dd-swing .eyebrow {
+  flex: 1;
+}
+@media (max-width: 900px) {
+  .wall-drawer.door-drawer {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dd-map {
+    border-right: 0;
+  }
 }

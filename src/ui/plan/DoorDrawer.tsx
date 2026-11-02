@@ -10,7 +10,7 @@ import type { Point, Variant } from '../../domain/types'
 import { isStandWall } from '../../domain/walls'
 import { doorInset, wallHeight } from '../../rules/rules'
 import { ALU, ALU_POST, BORDER_STRONG, FEET, INK_FAINT, LAYER_COLOR } from '../colors'
-import { Button, IconButton, Segmented } from '../controls'
+import { IconButton, Segmented } from '../controls'
 import { openingProducts, plateColor, plateName, productOf, rules, wallPlates } from '../env'
 import { fmt } from '../format'
 import { VariantChips } from '../panel/ProductRow'
@@ -55,11 +55,16 @@ export function DoorDrawer({ v, selection, onSelect, onEdit, onClose }: Props) {
   const swingText = isPerimeterWall(v.stand, w) ? 'Slår inn i standen' : room ? (s === OUTSIDE ? 'Slår ut av rommet' : 'Slår inn i rommet') : `Slår ${toward(n)}`
 
   return (
-    <section className="wall-drawer" aria-label={door ? 'Dør' : 'Forheng'}>
+    <section className="wall-drawer door-drawer" aria-label={door ? 'Dør' : 'Forheng'}>
+      {/* Three columns side by side: where it stands, what it is, how it looks */}
+      <div className="dd-map">
+        <DoorMap v={v} openingId={o.id} onEdit={onEdit} />
+      </div>
       <div className="wd-insp">
         <div className="wd-head">
           <i className="dot" style={{ background: door ? plateColor(ral) : LAYER_COLOR.walls }} />
-          <h3>{product?.name ?? (door ? 'Dør' : 'Forheng')}</h3>
+          <h3>{door ? 'Dør' : 'Forheng'}</h3>
+          <IconButton icon={PanelTop} label="Vis veggen" size={14} onClick={() => onSelect({ wallId: w.id })} />
           <IconButton
             icon={Trash2}
             label="Gjør om til vegg (Delete)"
@@ -74,7 +79,6 @@ export function DoorDrawer({ v, selection, onSelect, onEdit, onClose }: Props) {
         <p className="wd-meta num">
           {where} · {door ? `blad ${fmt(rules.door.swing * 100, 0)} × ${fmt(rules.door.height * 100, 0)} cm` : `åpning ${fmt((rules.wall.cc - rules.wall.post) * 1000, 0)} mm`}
         </p>
-        <DoorMap v={v} openingId={o.id} onEdit={onEdit} />
         <Segmented<string>
           inWell
           label="Type"
@@ -93,29 +97,19 @@ export function DoorDrawer({ v, selection, onSelect, onEdit, onClose }: Props) {
               selected={plates.findIndex((x) => x.ral === ral)}
               onSelect={(i) => onEdit((x) => setDoorRal(x, o.id, plates[i].ral!))}
             />
-            <div className="eyebrow">{swingText}</div>
-            <div className="wd-actions">
-              {canFlipSwing(v.stand, w) && (
-                <Button variant="ghost" icon={FlipHorizontal2} onClick={() => onEdit((x) => flipSwing(x, o.id))}>
-                  Snu slagretning
-                </Button>
-              )}
-              <Button variant="ghost" icon={ArrowLeftRight} onClick={() => onEdit((x) => flipHinge(x, o.id))}>
-                Bytt hengselside
-              </Button>
+            <div className="dd-swing">
+              <span className="eyebrow">{swingText}</span>
+              {canFlipSwing(v.stand, w) && <IconButton icon={FlipHorizontal2} label="Snu slagretning" size={15} onClick={() => onEdit((x) => flipSwing(x, o.id))} />}
+              <IconButton icon={ArrowLeftRight} label="Bytt hengselside" size={15} onClick={() => onEdit((x) => flipHinge(x, o.id))} />
             </div>
-            <p className="panel-note">Lås og nøkler følger med døren. Overstykket har veggens farge.</p>
           </>
         )}
-        <div className="wd-actions">
-          <Button variant="ghost" icon={PanelTop} onClick={() => onSelect({ wallId: w.id })}>
-            Vis veggen
-          </Button>
-        </div>
       </div>
       <div className="wd-view">
         <DoorView v={v} openingId={o.id} />
-        <div className="wd-hint">Klikk ruten utenfor en vegg i miniplanen for å flytte døren · Delete gjør den om til vegg · Esc lukker</div>
+      </div>
+      <div className="wd-hint dd-hint">
+        Klikk ruten utenfor en vegg i miniplanen for å flytte døren{door ? ' · lås og nøkler følger med, overstykket har veggens farge' : ''} · Delete gjør den om til vegg · Esc lukker
       </div>
     </section>
   )

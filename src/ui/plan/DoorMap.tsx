@@ -147,9 +147,6 @@ export function DoorMap({ v, openingId, onEdit }: Props) {
             )
           })}
       </svg>
-      <p className="door-map-note">
-        {spots.length > 1 ? 'Klikk ruten utenfor en vegg for å flytte døren dit.' : 'Ingen annen plass på denne veggen.'} Flytt og endre størrelse på {room ? 'rommet' : 'veggen'} i planen.
-      </p>
     </div>
   )
 }
