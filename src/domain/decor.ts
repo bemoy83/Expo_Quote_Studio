@@ -13,6 +13,7 @@ import { defaultSwing, nextId } from './edit';
 import { OUTSIDE, roomAt } from './rooms';
 import type { Foil, Point, TextileFill, TextileWall, Variant, Wall } from './types';
 import { builtModules, isStandWall } from './walls';
+import { CURTAIN } from '../catalog/defaultCatalog';
 
 export type FaceSide = 1 | -1;
 
@@ -98,16 +99,18 @@ function cut(spans: Span[], t: number): Span[] {
  * Module indices of the wall that decor must keep off: openings (also on an overlapping wall), and modules another
  * wall holds or a room left open (`foreign`). A room side lying on a stand wall leaves those modules to the stand wall.
  */
-export function blockedModules(v: Variant, w: Wall): { openings: Set<number>; foreign: Set<number> } {
+export function blockedModules(v: Variant, w: Wall): { openings: Set<number>; doors: Set<number>; foreign: Set<number> } {
   const built = new Map(builtModules(v).map((m) => [m.key, m]));
   const openings = new Set<number>();
+  const doors = new Set<number>();
   const foreign = new Set<number>();
   wallModules(w).forEach((m, i) => {
     const b = built.get(m.key);
     if (b?.opening) openings.add(i);
+    if (b?.opening && b.opening.product !== CURTAIN) doors.add(i);
     if (b?.wallId !== w.id) foreign.add(i);
   });
-  return { openings, foreign };
+  return { openings, doors, foreign };
 }
 
 /** Module indices of the wall that are openings (also when the opening sits on an overlapping wall). */
@@ -286,27 +289,28 @@ export function textileAt(v: Variant, wallId: string, s: FaceSide, t: number): T
 }
 
 /** Why a felt cannot take foil, or null when it can. */
-export function feltBlocked(v: Variant, rules: Rules, wallId: string, module: number, s: FaceSide): string | null {
+export function feltBlocked(v: Variant, rules: Rules, wallId: string, module: number, s: FaceSide, full = false): string | null {
   const w = v.walls.find((x) => x.id === wallId);
   const blocked = w && blockedModules(v, w);
   if (!w || !blocked || module < 0 || module >= Math.round(wallLength(w)) || blocked.foreign.has(module)) return 'Ingen vegg her';
-  if (blocked.openings.has(module)) return 'Folie kan ikke ligge på en åpning';
+  // A print over the whole plate may cover a door (leaf and header); a decal never sits on an opening
+  if (blocked.openings.has(module) && !(full && blocked.doors.has(module))) return 'Folie kan ikke ligge på en åpning';
   const f = felt(rules, module);
   if (textilesOn(v, wallId, s).some((t) => t.from < f.b - EPS && t.from + t.width > f.a + EPS)) return 'Feltet er dekket av en tekstilvegg';
   return null;
 }
 
-/** Felt indices of a face that can take foil. */
-export function freeFelts(v: Variant, rules: Rules, wallId: string, s: FaceSide): number[] {
+/** Felt indices of a face that can take foil (`full`: a print over the whole plate, which doors take too). */
+export function freeFelts(v: Variant, rules: Rules, wallId: string, s: FaceSide, full = false): number[] {
   const w = v.walls.find((x) => x.id === wallId);
   if (!w) return [];
-  return Array.from({ length: Math.round(wallLength(w)) }, (_, i) => i).filter((i) => !feltBlocked(v, rules, wallId, i, s));
+  return Array.from({ length: Math.round(wallLength(w)) }, (_, i) => i).filter((i) => !feltBlocked(v, rules, wallId, i, s, full));
 }
 
 export const foilsOn = (v: Variant, wallId: string, s: FaceSide) => v.foils.filter((f) => f.wallId === wallId && sideOf(v, f) === s);
 
-/** A decal kept inside its felt: size limited by the felt with the motif's ratio, centre clamped. */
-function fitFoil(f: Foil, rules: Rules, ratio: number): Foil {
+/** A decal kept inside its felt: size limited by the felt with the motif's ratio, centre clamped. A full foil covers the felt. */
+export function fitFoil(f: Foil, rules: Rules, ratio: number): Foil {
   const fe = felt(rules, f.module);
   if (f.full) return { ...f, width: fe.w, height: fe.h, x: 0, y: r3((fe.y0 + fe.y1) / 2) };
   const r = ratio > 0 ? ratio : f.width && f.height ? f.width / f.height : 1;
@@ -334,11 +338,13 @@ export function addFoil(
   motif: string | undefined,
   ratio: number,
 ): { v: Variant; id: string } | { error: string } {
-  const why = feltBlocked(v, rules, wallId, module, s);
+  const onFull = foilsOn(v, wallId, s).some((f) => f.module === module && f.full);
+  const why = feltBlocked(v, rules, wallId, module, s, onFull);
   if (why) return { error: why };
   const full = foilsOn(v, wallId, s).find((f) => f.module === module && f.full);
   if (full) {
-    const { motif: _m, ...rest } = full;
+    // A new motif on a plate of a stretched print makes it a whole motif on that plate
+    const { motif: _m, run: _r, crop: _c, ...rest } = full;
     return { v: { ...v, foils: v.foils.map((f) => (f.id === full.id ? { ...rest, ...(motif ? { motif } : {}) } : f)) }, id: full.id };
   }
   const id = nextId(v.foils.map((f) => f.id), 'f');
@@ -366,11 +372,13 @@ export function updateFoil(v: Variant, rules: Rules, id: string, patch: FoilPatc
   const side = patch.side ?? sideOf(v, f);
   const w = v.walls.find((x) => x.id === f.wallId);
   if (side !== sideOf(v, f) && (!w || !faces(v, w).includes(side))) return v;
-  if ((module !== f.module || side !== sideOf(v, f)) && feltBlocked(v, rules, f.wallId, module, side)) return v;
-  const { motif: _m, ...rest } = f;
+  const full = patch.full ?? f.full;
+  if ((module !== f.module || side !== sideOf(v, f) || full !== f.full) && feltBlocked(v, rules, f.wallId, module, side, full)) return v;
+  const { motif: _m, run: _r, crop: _c, ...rest } = f;
   const motif = patch.motif === undefined ? f.motif : patch.motif ?? undefined;
   const wasFull = f.full;
-  const full = patch.full ?? f.full;
+  // A plate of a stretched print keeps its part of the picture only while it stays where it is
+  const keepRun = f.run && full && module === f.module && side === sideOf(v, f) && motif === f.motif;
   const base: Foil = {
     ...rest,
     side,
@@ -381,6 +389,7 @@ export function updateFoil(v: Variant, rules: Rules, id: string, patch: FoilPatc
     x: patch.x ?? (wasFull && !full ? 0 : f.x),
     y: patch.y ?? (wasFull && !full ? DECAL_Y : f.y),
     ...(motif ? { motif } : {}),
+    ...(keepRun ? { run: f.run, ...(f.crop ? { crop: f.crop } : {}) } : {}),
   };
   const next = fitFoil(base, rules, ratio);
   // A full-felt foil replaces the other foils on that felt.
@@ -468,7 +477,7 @@ export function fitDecor(v: Variant, rules: Rules, ratio: (motif: string | undef
   for (const f of v.foils) {
     const w = v.walls.find((x) => x.id === f.wallId);
     const s = w ? sideOf(v, f) : 1;
-    if (!w || !faces(v, w).includes(s) || feltBlocked(withTex, rules, f.wallId, f.module, s)) {
+    if (!w || !faces(v, w).includes(s) || feltBlocked(withTex, rules, f.wallId, f.module, s, f.full)) {
       changed = true;
       continue;
     }

@@ -95,7 +95,9 @@ utstilleren får:
 ## Farge per plate
 
 En vegg har én farge (`Wall.plate`, rommets `Room.plate`, ellers standens `defaultPlate`). Enkeltplater kan få sin egen
-farge i veggskuffen: malerspannet farger hele veggen, malerkosten én og én plate (klikk, eller dra over flere). Fargen
+farge i veggskuffen. Det virker som i et tegneprogram: velg malerspannet (hele veggen) eller malerkosten (én og én plate),
+velg farge, og klikk veggen. Med kosten kan du også dra over flere plater. Velger du en farge uten verktøy, tar du opp
+malerspannet. Uten verktøy velger og flytter tegningen som før. Fargen
 lagres per modul i `Variant.panels` (domain/panels.ts), nøklet på platens kant i planen:
 
 - Én plate er én HDF-plate, så fargen gjelder begge sider. Skal én side ha noe annet, blir det folie på hele platen.
@@ -104,6 +106,27 @@ lagres per modul i `Variant.panels` (domain/panels.ts), nøklet på platens kant
 - Hel-vegg-farge tar over: platene på veggen får veggens nye farge.
 - Kalkylen har én linje per farge. En farget plate i en standvegg arrangøren betaler blir platebytte for akkurat den
   platen (6125-RAL). Plukklisten teller plater per RAL, og overstykket over en dør har platens farge.
+
+## Print på hele plater
+
+Siste valg i paletten er «Print». Det legger motivet som er valgt i grafikkhyllen på hele plater som folie (8021), på den
+siden skuffen viser (domain/print.ts):
+
+- Malerspannet strekker ett motiv over alle platene på siden som kan ha print, men ikke inne i et bakrom som står inn
+  mot siden (kosten kan fortsatt legge print der). Motivet dekker hele flaten og sentreres
+  (beskjæres, strekkes aldri), og kuttes per plate. Bildet går videre bak stolpene, så skjøtene ligger på linje.
+  Hver plate husker sin del av bildet (`Foil.crop`), og platene i samme motiv deler `Foil.run`.
+- Malerkosten legger hele motivet på én plate, som «Hel plate» i dag.
+- Klikker du igjen med samme motiv, forsvinner det (spannet: hele siden, kosten: platen).
+- Print erstatter dekalene på platen. En farge malt på siden tar bort printen der, men dekalene blir (Bjørn 2.11.2026).
+  Fargen gjelder fortsatt begge sider, så den andre siden beholder sin print.
+- Platene bak en tekstilramme hoppes over, det samme gjør forheng og plater som tilhører en annen vegg. En dør får
+  trykk på overstykket og dørbladet (dørbladet tegnes enkelt til vi har en nøyaktig beskrivelse av det).
+- Med hele veggen valgt tømmer søppelbøtta øverst i skuffen veggen for dekor: all folie (print og dekaler) på begge
+  sider går, og platene får veggens farge igjen. Tekstilrammer blir stående. På en vegg uten dekor fjerner bøtta veggen
+  som før (romvegg: åpner siden).
+- Pris: 8021 per plate. Et motiv strukket over flere plater gir i tillegg én linje 8022 «Tilpasning av trykkfil over
+  flere plater» per motiv. Trykklisten i arbeidsordren har én fil per plate, med «2 av 6» for strukne motiv.
 
 ## Unntak som ikke er bygget
 

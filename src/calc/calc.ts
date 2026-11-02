@@ -4,6 +4,7 @@ import type { Catalog, Unit } from '../catalog/types';
 import { openSides, pointKey } from '../domain/grid';
 import { carpetMetrics } from '../domain/carpet';
 import { rollUsage, tileAreas, tileCounts } from '../domain/floor';
+import { stretchedRuns } from '../domain/print';
 import type { Payer, Point, StandWallTerms, TextileFill, Variant } from '../domain/types';
 import { DEFAULT_STAND_WALLS } from '../domain/variant';
 import { builtModules, wallKind, wallPoints, type BuiltModule, type WallKind } from '../domain/walls';
@@ -413,6 +414,9 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
     line(sys.foil, foilDecal, { meta: 'innenfor ett veggfelt' }),
     line(sys.foilFull, foilFull, { meta: `${foils.filter((f) => f.full).length} felt · ${plateSize}` }),
   );
+  // One motif stretched over several plates (paint bucket with «Print»): the file is fitted and cut per plate
+  const runs = [...stretchedRuns(v).values()];
+  add(line(sys.printSetup, runs.length, { meta: runs.map((r) => `${r.length} plater`).join(' · ') }));
 
   // Floor: m² laid per product. Waste is ours and not counted. Carpet tiles are also counted per size for picking,
   // rolled floor in running metres of roll.

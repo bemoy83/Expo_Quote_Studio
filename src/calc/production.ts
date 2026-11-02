@@ -1,4 +1,4 @@
-import type { TextileFill, TextileWall, Variant, Wall } from '../domain/types';
+import type { Foil, TextileFill, TextileWall, Variant, Wall } from '../domain/types';
 import { standWallSide } from '../domain/walls';
 import { RECIPES } from '../foga/recipes';
 import type { InFrameParams } from '../rules/rules';
@@ -97,6 +97,29 @@ export interface TextileRow {
   ph: number;
   fill: TextileFill;
   fileName: string | null;
+  /** Foil over a whole wall plate: no frame, the print is the plate's size. */
+  foil?: boolean;
+}
+
+/**
+ * Prints over whole wall plates (foil), one file per plate. A motif stretched over several plates says which part of
+ * it each plate is, left to right as seen from the face: «plate 3 av 6».
+ */
+export function foilRows(v: Variant, plate: { width: number; height: number }, customer: string): TextileRow[] {
+  const walls = new Map(v.walls.map((w) => [w.id, w]));
+  const full = v.foils.filter((f) => f.full && walls.has(f.wallId));
+  const runs = new Map<string, Foil[]>();
+  for (const f of full) if (f.run) runs.set(f.run, [...(runs.get(f.run) ?? []), f]);
+  for (const r of runs.values()) r.sort((a, b) => (a.crop?.[0] ?? 0) - (b.crop?.[0] ?? 0));
+  const doors = new Set(v.openings.map((o) => `${o.wallId}|${o.module}`));
+  return full.map((f, i) => {
+    const pos = `F${i + 1}`;
+    const run = f.run ? runs.get(f.run) : undefined;
+    const part = run && run.length > 1 ? ` · ${run.indexOf(f) + 1} av ${run.length}` : '';
+    const door = doors.has(`${f.wallId}|${f.module}`) ? ', dør' : '';
+    const size = { W: plate.width, H: plate.height };
+    return { pos, where: `${wallLabel(walls.get(f.wallId)!)}, plate ${f.module + 1}${door}${part}`, ...size, pw: size.W, ph: size.H, fill: 'print' as const, fileName: printFileName(customer, pos, size), foil: true };
+  });
 }
 
 export const FILL_NAME: Record<TextileFill, string> = { print: 'Trykt tekstil', white: 'Hvit tekstil', reuse: 'Kundens tekstil' };

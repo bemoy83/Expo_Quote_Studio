@@ -1,6 +1,7 @@
 // Controls shared by the drawers (skuffer): wall, free-standing textile wall, door, roll carpet.
 import { Trash2, Upload, X } from 'lucide-react'
 import type { PointerEvent as RPointerEvent, ReactNode } from 'react'
+import type { Crop } from '../../domain/print'
 import type { TextileFill } from '../../domain/types'
 import type { Motif } from '../../persistence/file'
 import { CommitInput, IconButton, ImageInput, Segmented } from '../controls'
@@ -36,26 +37,42 @@ export function DrawerRow({ label, children }: { label: ReactNode; children?: Re
   )
 }
 
-/** The wall plate colours as dots, for a wall, a plate or a door leaf. */
-export function PlatePalette({ value, onPick }: { value: string; onPick: (ral: string) => void }) {
+/** «Print» as the last choice of the palette: the motif chosen in the graphics shelf, foil over whole plates. */
+export const PRINT = 'print'
+
+/**
+ * The wall plate colours as dots, for a wall, a plate or a door leaf. With `print`, a last dot shows the motif chosen
+ * in the graphics shelf and picks `PRINT` (the wall drawer's paint bucket and brush lay it on whole plates).
+ */
+export function PlatePalette({ value, onPick, print }: { value: string; onPick: (ral: string) => void; print?: { motif?: Motif } }) {
   const plates = wallPlates()
+  const chips = plates.map((x) => ({ name: `${x.name} · RAL ${x.ral}`, color: x.color! }))
+  if (print) {
+    const m = print.motif
+    chips.push({
+      name: m ? `Print · ${m.name}` : 'Print · velg motiv i grafikken',
+      color: m ? `center / cover no-repeat url("${m.src}")` : 'repeating-linear-gradient(45deg, #d9d6cf 0 3px, #f3f1ec 3px 6px)',
+    })
+  }
   return (
     <VariantChips
-      chips={plates.map((x) => ({ name: `${x.name} · RAL ${x.ral}`, color: x.color }))}
-      selected={plates.findIndex((x) => x.ral === value)}
-      onSelect={(i) => onPick(plates[i].ral!)}
+      chips={chips}
+      selected={value === PRINT ? plates.length : plates.findIndex((x) => x.ral === value)}
+      onSelect={(i) => onPick(i === plates.length ? PRINT : plates[i].ral!)}
     />
   )
 }
 
 /**
- * A motif filling a box, cropped like the 3D print. Drawn in its own viewport of the motif's shape: an SVG motif in a
- * plain <image> would letterbox itself inside the box instead of being cropped. The viewport is 100 units high:
- * Chrome leaves out an image under one unit wide (a tall motif, 0.4 × 1, went missing).
+ * A motif filling a box, cropped like the 3D print, or the part `crop` of it (a plate of a stretched print). Drawn in
+ * its own viewport of the motif's shape: an SVG motif in a plain <image> would letterbox itself inside the box instead
+ * of being cropped. The viewport is 100 units high: Chrome leaves out an image under one unit wide (a tall motif,
+ * 0.4 × 1, went missing).
  */
-export function Print({ m, x, y, width, height }: { m: Motif; x: number; y: number; width: number; height: number }) {
+export function Print({ m, x, y, width, height, crop }: { m: Motif; x: number; y: number; width: number; height: number; crop?: Crop }) {
+  const box = crop ? `${crop[0] * m.ratio * 100} ${crop[1] * 100} ${(crop[2] - crop[0]) * m.ratio * 100} ${(crop[3] - crop[1]) * 100}` : `0 0 ${m.ratio * 100} 100`
   return (
-    <svg x={x} y={y} width={width} height={height} viewBox={`0 0 ${m.ratio * 100} 100`} preserveAspectRatio="xMidYMid slice">
+    <svg x={x} y={y} width={width} height={height} viewBox={box} preserveAspectRatio={crop ? 'none' : 'xMidYMid slice'}>
       <image href={m.src} width={m.ratio * 100} height={100} />
     </svg>
   )
@@ -115,6 +132,7 @@ export function Shelf({
   motifs,
   value,
   textile,
+  required,
   onPick,
   onUpload,
 }: {
@@ -122,6 +140,8 @@ export function Shelf({
   motifs: Motif[]
   value?: string | null
   textile?: boolean
+  /** A motif must be chosen (print on plates): no «Uten motiv» tile. */
+  required?: boolean
   onPick?: (id: string | null) => void
   onUpload: (f: File) => void
 }) {
@@ -134,7 +154,7 @@ export function Shelf({
             <i className="tex-thumb" />
           </button>
         )}
-        {onPick && (
+        {onPick && !required && (
           <button type="button" className={value === null ? 'mot on' : 'mot'} title="Uten motiv" aria-label="Uten motiv" aria-pressed={value === null} onClick={() => onPick(null)}>
             <span className="none" />
           </button>

@@ -1,6 +1,6 @@
 // Parts of the drawings in the drawers (wall, door, free-standing textile wall), the wall seen straight on.
 // In metres, y down: the top of the wall is y = 0 and the floor y = H.
-import type { SVGProps } from 'react'
+import type { ReactNode, SVGProps } from 'react'
 import type { TextileFill } from '../../domain/types'
 import type { Motif } from '../../persistence/file'
 import { ALU, ALU_POST, BORDER_STRONG, FABRIC, FEET, INK_FAINT } from '../colors'
@@ -26,18 +26,21 @@ export function Posts({ xs, H }: { xs: number[]; H: number }) {
 /**
  * A door or curtain in the module from x to x + 1: the header plate over it (in the wall's colour, `plate` passes on
  * to it), the top profile, and the leaf with its handle at the free edge, or the curtain dashed. `door` gives the leaf's
- * colour and where its hinge and free edges are in the drawing.
+ * colour and where its hinge and free edges are in the drawing. `print`: foil over the door, drawn on the header and
+ * on the leaf (under the handle).
  */
-export function Opening({ x, H, plate, door }: { x: number; H: number; plate: SVGProps<SVGRectElement>; door?: { color: string; hinge: number; free: number } }) {
+export function Opening({ x, H, plate, door, print }: { x: number; H: number; plate: SVGProps<SVGRectElement>; door?: { color: string; hinge: number; free: number }; print?: { header: ReactNode; leaf: ReactNode } }) {
   const { post, profile } = rules.wall
   const dh = rules.door.height
   return (
     <>
       <rect x={x + post / 2} y={0} width={1 - post} height={H - dh} {...plate} />
+      {print?.header}
       <rect x={x} y={0} width={1} height={profile.top} fill={ALU} />
       {door ? (
         <>
           <rect x={Math.min(door.hinge, door.free)} y={H - dh} width={rules.door.swing} height={dh} fill={door.color} stroke={BORDER_STRONG} strokeWidth={0.01} />
+          {print?.leaf}
           <rect x={door.free + (door.free > door.hinge ? -0.13 : 0.03)} y={H - 1.06} width={0.1} height={0.02} rx={0.01} fill={INK_FAINT} />
         </>
       ) : (
