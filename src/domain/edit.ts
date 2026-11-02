@@ -4,6 +4,7 @@ import { moduleKey, pointAlong, runs, sideEnds, SIDES, wallDirection, wallLength
 import type { Opening, Point, Stand, TextileWall, Variant, Wall } from './types';
 import { addRoomGaps, clampRooms, OUTSIDE, roomOf, syncRooms } from './rooms';
 import { builtModules, closedSideAt, isStandWall, standardWalls, standWallSide } from './walls';
+import { clearPanels, movePanels, panelMoves, prunePanels } from './panels';
 
 /** Next free id with the given prefix: `w1`, `w2` … */
 export function nextId(taken: Iterable<string>, prefix: string): string {
@@ -186,25 +187,29 @@ export function eraseWalls(v: Variant, keys: Iterable<string>): Variant {
   }
   let next = changed ? replaceWalls(v, out) : v;
   for (const [id, mods] of roomGaps) next = addRoomGaps(next, id, mods);
-  return next;
+  return prunePanels(next);
 }
 
-/** Set the plate colour of one wall. The default plate clears the override. */
+/** Set the plate colour of one wall (a room's wall: the whole room). The default plate clears the override. */
 export function setWallPlate(v: Variant, wallId: string, ral: string): Variant {
-  const room = roomOf(v, v.walls.find((w) => w.id === wallId));
+  const w = v.walls.find((x) => x.id === wallId);
+  const room = roomOf(v, w);
+  // The whole wall gets one colour: its plates coloured one by one take it too (not a plate another wall owns)
+  const walls = new Set((room ? v.walls.filter((x) => x.room?.id === room.id) : w ? [w] : []).map((x) => x.id));
+  const plain = clearPanels(v, builtModules(v).filter((m) => walls.has(m.wallId)).map((m) => m.key));
   if (room) {
-    const rooms = v.rooms.map((r) => {
+    const rooms = plain.rooms.map((r) => {
       if (r.id !== room.id) return r;
       const { plate: _drop, ...rest } = r;
       return { ...rest, ...ownPlate(v, ral) };
     });
-    return syncRooms({ ...v, rooms });
+    return syncRooms({ ...plain, rooms });
   }
   return {
-    ...v,
-    walls: v.walls.map((w) => {
-      if (w.id !== wallId) return w;
-      const { plate: _drop, ...rest } = w;
+    ...plain,
+    walls: plain.walls.map((x) => {
+      if (x.id !== wallId) return x;
+      const { plate: _drop, ...rest } = x;
       return { ...rest, ...ownPlate(v, ral) };
     }),
   };
@@ -381,10 +386,12 @@ export function moveWall(v: Variant, wallId: string, delta: number, along = 0): 
     },
     [...others, moved],
   );
-  return {
+  const next: Variant = {
     ...rest,
     openings: [...rest.openings, ...carried.openings],
     textiles: [...rest.textiles, ...carried.textiles],
     foils: [...rest.foils, ...carried.foils],
   };
+  // Plates coloured one by one move with the wall
+  return prunePanels(movePanels(next, panelMoves(w, moved)));
 }

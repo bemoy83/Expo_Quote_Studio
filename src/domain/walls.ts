@@ -13,7 +13,8 @@ export interface BuiltModule extends Module {
 
 /**
  * All wall modules of a variant, deduplicated by edge.
- * When two walls cover the same edge the first wall wins (plate and opening). Room walls come last, so a room
+ * When two walls cover the same edge the first wall wins (plate and opening). A plate coloured on its own
+ * (Variant.panels) keeps that colour whichever wall owns it. Room walls come last, so a room
  * side on a stand wall or a drawn wall shares it.
  * An opening on a later, overlapping wall still applies to the shared module.
  */
@@ -32,7 +33,7 @@ export function builtModules(v: Variant): BuiltModule[] {
         if (!existing.opening && opening) existing.opening = opening;
         return;
       }
-      byKey.set(m.key, { ...m, wallId: w.id, index, plate: w.plate ?? v.defaultPlate, opening });
+      byKey.set(m.key, { ...m, wallId: w.id, index, plate: v.panels?.[m.key] ?? w.plate ?? v.defaultPlate, opening });
     });
   }
   return [...byKey.values()];
