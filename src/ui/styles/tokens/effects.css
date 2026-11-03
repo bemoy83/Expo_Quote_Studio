@@ -7,7 +7,7 @@
   --focus-primary:0 0 0 3px rgb(var(--ink) / .25); /* ink button focus */
   --sel-ring:inset 0 0 0 1.5px rgb(var(--accent)); /* selected block */
   --ease:cubic-bezier(.4,0,.2,1); /* @kind other */
-  --hover-amount:4%; /* @kind other */ /* shared hover: this much ink over an element's rest fill (app.css «Shared hover») */
+  --hover-amount:7%; /* @kind other */ /* shared hover: this much ink over an element's rest fill (app.css «Shared hover») */
   --dur:150ms; /* @kind other */
   --dur-slide:200ms; /* @kind other */
 }
