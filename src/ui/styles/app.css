@@ -158,7 +158,7 @@ kbd {
 }
 
 /* ---------- Shared hover ---------- */
-/* One hover for every clickable that is text or an icon on a surface (Bjørn 3.11.2026): a 4 % ink tint
+/* One hover for every clickable that is text or an icon on a surface (Bjørn 3.11.2026): a 7 % ink tint
    (--hover-amount) laid over the element's own rest fill, and the text turns ink. Mixed in sRGB with the rest fill, it
    is the same as laying the tint on top, so it reads the same on paper, on a white pill, on the band's hue, on a well
    chip and in dark mode. A chosen choice (ink, white chip or muted fill) does not react, since clicking it again does
