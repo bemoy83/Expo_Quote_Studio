@@ -107,6 +107,8 @@ export function WallDrawer(p: Props) {
    * colour or «Print», then click the wall. No tool: the drawing selects and moves as usual (Bjørn 2.11.2026).
    */
   const [tool, setTool] = useState<'wall' | 'plate' | null>(null)
+  /** True from a press on a plate until it is let go: the brush sweeps over the plates entered meanwhile. */
+  const sweeping = useRef(false)
   /** What the tools lay on: a plate colour (RAL) or PRINT. Unset: the wall's own colour. */
   const [paintSel, setPaint] = useState<string | null>(null)
   /** The motif «Print» lays on, chosen in the graphics shelf. Unset: the first in the library. */
@@ -272,8 +274,6 @@ export function WallDrawer(p: Props) {
     if (first) p.onCheckpoint()
     p.onEdit((x) => printPlate(x, rules, w.id, i, s, pm!.id), false)
   }
-  /** True from a press on a plate until it is let go: the brush sweeps over the plates entered meanwhile. */
-  const sweeping = useRef(false)
   /** Pointer handlers for a plate (or a door) in the drawing while a tool is out: click, or with the brush press and sweep. */
   const paintOn = (i: number, key: string) =>
     painting
