@@ -86,6 +86,7 @@ interface MotifImage {
  */
 const images = new Map<string, MotifImage>()
 
+/** The motif picture for this source: loading, loaded or failed, started on first ask. */
 function motifImage(src: string): MotifImage {
   const had = images.get(src)
   if (had) return had

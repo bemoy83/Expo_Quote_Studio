@@ -293,8 +293,8 @@ export function WallDrawer(p: Props) {
             window.addEventListener('pointercancel', end)
             // Touch (iPad) holds the pointer on the plate it went down on, so the next plates would never see it
             // enter. Letting go of it makes a sweep with a finger or pen work like one with the mouse.
-            const t = e.target as Element
-            if (t.hasPointerCapture?.(e.pointerId)) t.releasePointerCapture(e.pointerId)
+            const t = e.currentTarget as Element
+            if (t.hasPointerCapture(e.pointerId)) t.releasePointerCapture(e.pointerId)
             if (e.button === 0) paintAt(i, key, true)
           },
           onPointerEnter: (e: RPointerEvent) => {
@@ -558,15 +558,11 @@ export function WallDrawer(p: Props) {
                 <g
                   key={i}
                   style={{ cursor: 'pointer' }}
-                  {...(painting
-                    ? {}
-                    : {
-                        onPointerDown: (e: RPointerEvent) => {
-                          // The door has a drawer of its own
-                          e.stopPropagation()
-                          p.onSelect({ openingId: o.id })
-                        },
-                      })}
+                  onPointerDown={(e) => {
+                    // The door has a drawer of its own (while a tool is out, the plate targets on top take the press)
+                    e.stopPropagation()
+                    p.onSelect({ openingId: o.id })
+                  }}
                 >
                   <Opening
                     x={x}
