@@ -4,7 +4,7 @@ import { placeContext } from '../catalog/lookup';
 import { calc } from '../calc/calc';
 import { r2 } from '../calc/referenceStands';
 import { RULES } from '../rules/rules';
-import { addTextile, faces, fitDecor, freeSpans, updateTextile } from './decor';
+import { fitDecor } from './decor';
 import { eraseWalls, moveWall, paintWalls, setStand, setWallPlate } from './edit';
 import { moduleKey } from './grid';
 import { conflicts } from './objects';
@@ -14,6 +14,8 @@ import type { Variant } from './types';
 import { createVariant } from './variant';
 import { builtModules, defaultSwing } from './walls';
 import { doorSwing } from './doors';
+import { addTextile, freeSpans, updateTextile } from './textile/inFrame';
+import { faces } from './faces';
 
 const kf = (v: Variant) => calc(v, RULES, DEFAULT_CATALOG).keyFigures;
 const ctx = placeContext(RULES, DEFAULT_CATALOG);

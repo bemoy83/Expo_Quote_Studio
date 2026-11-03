@@ -1,5 +1,5 @@
 // Where the supports (foot plates) under a free-standing wall go: the rule shared by the free-standing textile wall
-// (freeFrames.ts, feet anywhere) and a system wall that stands free (wallSupports.ts, plates only under posts).
+// (textile/free.ts, feet anywhere) and a system wall that stands free (wallSupports.ts, plates only under posts).
 // Bjørn 1.11.2026: at least `min` supports from `minFrom`, at most `maxGap` apart, one at each free end, pulled in (at
 // most `maxEnd`) only as far as the gaps need, the rest evenly spread. docs/foga-system.md
 import type { SupportRule } from '../foga/recipes';

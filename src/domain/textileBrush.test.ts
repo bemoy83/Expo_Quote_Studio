@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { RULES } from '../rules/rules';
-import { drawTextile, planTextile } from './textileBrush';
+import { drawTextile, planTextile } from './textile/brush';
 import { createVariant } from './variant';
 
 // 6 × 4 row stand: stand walls at the back (y = 0) and on both sides (x = 0, x = 6)

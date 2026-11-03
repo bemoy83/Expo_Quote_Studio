@@ -7,7 +7,7 @@ import type { PlacedObject, Variant } from './types';
 import { builtModules } from './walls';
 import { doorSwing } from './doors';
 import { nextId } from './ids';
-import { faceSegment, sideOf } from './decor';
+import { faceSegment, sideOf } from './faces';
 
 export interface Box {
   x0: number;

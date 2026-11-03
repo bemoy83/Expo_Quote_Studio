@@ -3,7 +3,7 @@ import { calc } from '../calc/calc';
 import { foilRows } from '../calc/production';
 import { CURTAIN, DEFAULT_CATALOG, DOOR } from '../catalog/defaultCatalog';
 import { RULES } from '../rules/rules';
-import { addFoil, addTextile, faces, fitDecor, updateFoil } from './decor';
+import { addFoil, fitDecor, updateFoil } from './decor';
 import { paintWalls, setWallPlate } from './edit';
 import { setPanels } from './panels';
 import { clearPrint, fillPlates, hiddenPlates, printPlate, printPlates, printWall, clearDecor, stretchCrops, stretchedRuns } from './print';
@@ -11,6 +11,8 @@ import { r2 } from '../calc/referenceStands';
 import { wallModules } from './grid';
 import type { Variant } from './types';
 import { createVariant } from './variant';
+import { addTextile } from './textile/inFrame';
+import { faces } from './faces';
 
 const ok = <T,>(r: T | { error: string } | null): T => {
   if (!r || (typeof r === 'object' && 'error' in r)) throw new Error('expected a result');

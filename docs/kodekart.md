@@ -50,7 +50,7 @@ Tre filer med «support» i navnet, med hver sin jobb:
 - `calc/supports.ts`: den felles regelen (minst to fra 1 m, maks 3 m mellom, en ved hver fri ende)
 - `calc/wallSupports.ts`: fotplater under systemvegg som står fritt (bruker regelen)
 - `calc/supportBeams.ts`: støttedrager, ikke fotplater (hvor en lang standvegg trenger en takdrager)
-- Også: `calc/freeFrames.ts` (fotplater under frittstående tekstil), `calc/innerBeams.ts` (under innvendige takdragere)
+- Også: `calc/textile/free.ts` (fotplater under frittstående tekstil), `calc/innerBeams.ts` (under innvendige takdragere)
 - Linjen: `calc/lines/feet.ts`
 
 ### Teppefliser
@@ -71,17 +71,22 @@ Tre filer med «support» i navnet, med hver sin jobb:
 
 ### Tekstilvegger (43TX)
 
-- InFrame på systemvegg: modell `TextileWall` · `domain/decor.ts` (deles med folie)
-- Frittstående: modell `FreeTextile` · `domain/freeTextile.ts`
-- Penselen for begge: `domain/textileBrush.ts`
-- Kalkyle: `calc/fabric.ts` (InFrame), `calc/freeFrames.ts` (frittstående), `calc/production.ts` · linjene:
-  `calc/textile/lines.ts` (ramme og duk, InFrame og frittstående)
+Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
+
+- InFrame på systemvegg: modell `TextileWall` · `domain/textile/inFrame.ts` (ledige spenn, legge til, endre, flytte)
+- Frittstående: modell `FreeTextile` · `domain/textile/free.ts`
+- Penselen for begge: `domain/textile/brush.ts`
+- Veggflater og felt (deles med folie): `domain/faces.ts` · tekstil holdes gyldig etter andre endringer i
+  `fitDecor` (`domain/decor.ts`)
+- Kalkyle: `calc/textile/inFrame.ts` (rammemål og trykk), `calc/textile/free.ts` (frittstående: skinner, hjørner,
+  fotplater), `calc/textile/common.ts` (full høyde, filnavn) · linjene: `calc/textile/lines.ts` · produksjonsrader:
+  `calc/production.ts` (lager også folierader)
 - Plan, 3D: `PlanView.tsx` · `build.ts`, `Scene3D.tsx`
 - Skuff: `WallDrawer.tsx` (InFrame), `FreeTextileDrawer.tsx` (frittstående)
 
 ### Print, dekal og farge
 
-- Dekal: `Foil` · `domain/decor.ts`
+- Dekal: `Foil` · `domain/decor.ts` (folie og `fitDecor`) · veggflater og felt: `domain/faces.ts`
 - Print med spann og kost: `domain/print.ts`
 - Farge per plate: `domain/panels.ts`
 - Kalkyle: `calc/lines/decor.ts` (folie, print-oppsett) · `calc/lines/swaps.ts` (platebytte) · `calc/production.ts` (`foilRows`)

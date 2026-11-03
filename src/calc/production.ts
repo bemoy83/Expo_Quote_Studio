@@ -2,8 +2,9 @@ import type { Foil, TextileFill, TextileWall, Variant, Wall } from '../domain/ty
 import { standWallSide } from '../domain/walls';
 import { RECIPES } from '../foga/recipes';
 import type { InFrameParams } from '../rules/rules';
-import { framePiece, fullHeight, printFileName, type FramePiece } from './fabric';
-import { cornerPosts, freeFrames, type FreeFrame } from './freeFrames';
+import { framePiece, type FramePiece } from './textile/inFrame';
+import { cornerPosts, freeFrames, type FreeFrame } from './textile/free';
+import { fullHeight, printFileName } from './textile/common';
 
 export interface ProductionPiece extends FramePiece {
   pos: string;

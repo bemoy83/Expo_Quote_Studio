@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { wallLabel } from '../calc/production';
-import { faces } from './decor';
+import { faces } from './faces';
 import { canMoveWall, eraseWalls, moveWall, paintWalls, setStand, splitWall } from './edit';
 import { moduleKey } from './grid';
 import type { Variant } from './types';

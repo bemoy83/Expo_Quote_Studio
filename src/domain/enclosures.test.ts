@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_CATALOG, DOOR } from '../catalog/defaultCatalog';
 import { calc } from '../calc/calc';
 import { RULES } from '../rules/rules';
-import { addTextile } from './decor';
+import { addTextile } from './textile/inFrame';
 import { paintWalls } from './edit';
 import { enclosures, newlyClosedRooms, wallsToRoom } from './enclosures';
 import { moduleKey } from './grid';

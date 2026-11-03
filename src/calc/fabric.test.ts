@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { RULES } from '../rules/rules';
 import { splitBeamLength } from './beams';
-import { framePiece, printFileName } from './fabric';
+import { framePiece } from './textile/inFrame';
+import { printFileName } from './textile/common';
 
 const S = RULES.textile.inFrame;
 

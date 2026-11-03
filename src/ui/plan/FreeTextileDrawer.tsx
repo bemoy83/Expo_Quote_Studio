@@ -2,8 +2,8 @@
 // posts it is built with. Each face is printed, white or the customer's own textile. Laid out like the wall drawer:
 // settings · graphics shelf · the face.
 import { FlipHorizontal2 } from 'lucide-react'
-import type { FreeFrame } from '../../calc/freeFrames'
-import { removeFreeTextile, resizeFreeTextile, updateFace, type FaceKey } from '../../domain/freeTextile'
+import type { FreeFrame } from '../../calc/textile/free'
+import { removeFreeTextile, resizeFreeTextile, updateFace, type FaceKey } from '../../domain/textile/free'
 import type { Variant } from '../../domain/types'
 import type { Motif } from '../../persistence/file'
 import { ALU, ALU_POST, BORDER_STRONG, FEET, INK, INK_MUTED, LAYER_COLOR } from '../colors'

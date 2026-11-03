@@ -9,13 +9,14 @@
 // bucket also leaves the stretch inside a bakrom that stands against the face; the brush can still print there.
 import type { Rules } from '../rules/rules';
 import { pointAlong, wallLength, wallModules } from './grid';
-import { faceNormal, faces, felt, fitFoil, freeFelts, sideOf, type FaceSide } from './decor';
+import { fitFoil, freeFelts } from './decor';
 import { clearPanels } from './panels';
 import { roomAt, roomOf } from './rooms';
 import { builtModules } from './walls';
 import { setWallPlate } from './edit';
 import type { Foil, Variant, Wall } from './types';
 import { nextId } from './ids';
+import { faceNormal, faces, type FaceSide, felt, sideOf } from './faces';
 
 export type Crop = NonNullable<Foil['crop']>;
 

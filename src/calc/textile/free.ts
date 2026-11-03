@@ -8,13 +8,13 @@
 //   Textile on both faces. At a corner the outer face runs half a frame depth further and the inner face half a
 //   frame depth shorter (they meet the corner post on its outside and inside)
 //   Print = face + 2 × bleed, mounted along its whole perimeter (silicone edge pressed into the channel)
-import { cornerEnds, runDirection, runLength, runNormal, type FaceKey } from '../domain/freeTextile';
-import type { FreeTextile, Point, TextileFill, Variant } from '../domain/types';
-import { fogaPart } from '../foga/parts';
-import type { FootPlate, FreeFrameRecipe, SupportRule } from '../foga/recipes';
-import type { InFrameParams } from '../rules/rules';
-import { fullHeight, printFileName } from './fabric';
-import { minSupports, spreadSupports, type Ends } from './supports';
+import { cornerEnds, runDirection, runLength, runNormal, type FaceKey } from '../../domain/textile/free';
+import type { FreeTextile, Point, TextileFill, Variant } from '../../domain/types';
+import { fogaPart } from '../../foga/parts';
+import type { FootPlate, FreeFrameRecipe, SupportRule } from '../../foga/recipes';
+import type { InFrameParams } from '../../rules/rules';
+import { fullHeight, printFileName } from './common';
+import { minSupports, spreadSupports, type Ends } from '../supports';
 
 export interface FreeFace {
   face: FaceKey;

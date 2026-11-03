@@ -1,11 +1,13 @@
 // Drag and drop from the Profilering panel onto a wall, in the plan or the 3D view. What is being dragged is kept
 // here: browsers hide drag data until the drop, but the views need it while hovering to show where it would land.
 import type { DragEvent } from 'react'
-import { addTextile, dropMotif, feltBlocked, felt, freeSpans, fullTextileHeight, textileAt, textileBox, updateFoil, type FaceSide } from '../domain/decor'
+import { dropMotif, feltBlocked, updateFoil } from '../domain/decor'
 import type { Variant } from '../domain/types'
 import type { PlanSelection } from './plan/PlanView'
 import { fmt } from './format'
 import { rules } from './env'
+import { addTextile, freeSpans, fullTextileHeight, textileAt, textileBox } from '../domain/textile/inFrame'
+import { type FaceSide, felt } from '../domain/faces'
 
 /** A textile frame (InFrame) or a motif from the graphics library. */
 export type DecorDrag = { kind: 'textile' } | { kind: 'motif'; motif: string }

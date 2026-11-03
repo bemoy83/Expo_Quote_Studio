@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { RULES } from '../rules/rules';
-import { addFreeTextile, cornerEnds, fitFreeTextiles, moveFreeTextile, updateFace } from './freeTextile';
+import { addFreeTextile, cornerEnds, fitFreeTextiles, moveFreeTextile, updateFace } from './textile/free';
 import type { Point, Variant } from './types';
 import { createVariant } from './variant';
 

@@ -2,26 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_CATALOG, DOOR } from '../catalog/defaultCatalog';
 import { placeContext } from '../catalog/lookup';
 import { RULES } from '../rules/rules';
-import {
-  addFoil,
-  addTextile,
-  dropMotif,
-  faces,
-  fitDecor,
-  foilCenter,
-  freeSpans,
-  moveFoilBy,
-  moveTextileBy,
-  textileBox,
-  updateFoil,
-  updateTextile,
-} from './decor';
+import { addFoil, dropMotif, fitDecor, foilCenter, moveFoilBy, updateFoil } from './decor';
 import { paintWalls, replaceWalls } from './edit';
 import { moduleKey } from './grid';
 import { conflicts } from './objects';
 import type { Point, Variant } from './types';
 import { createVariant } from './variant';
 import { builtModules } from './walls';
+import { addTextile, freeSpans, moveTextileBy, textileBox, updateTextile } from './textile/inFrame';
+import { faces } from './faces';
 
 /** A door in a stand wall: no longer allowed (see opensInside), but older sketches can hold one. */
 const oldDoor = (v: Variant, a: Point, b: Point): Variant => {

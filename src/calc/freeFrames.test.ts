@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { addFreeTextile } from '../domain/freeTextile';
+import { addFreeTextile } from '../domain/textile/free';
 import type { Point, Variant } from '../domain/types';
 import { createVariant } from '../domain/variant';
 import { RECIPES } from '../foga/recipes';
 import { RULES } from '../rules/rules';
-import { freeFrames, splitRail, supportPoints } from './freeFrames';
+import { freeFrames, splitRail, supportPoints } from './textile/free';
 
 const S = RECIPES.freeFrame.support;
 const draw = (v: Variant, a: Point, b: Point) => {

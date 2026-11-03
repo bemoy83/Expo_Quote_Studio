@@ -5,7 +5,8 @@
 //   Print file   = frame + 2 × bleed;  file at `scale` %
 //   Cross braces when W passes the max brace distance; brace length = H − 2 × profile
 //   Profile lm   = 2W + 2H + braces
-import type { InFrameParams } from '../rules/rules';
+import type { InFrameParams } from '../../rules/rules';
+import { fullHeight } from './common';
 
 export interface FramePiece {
   /** Span along the wall, mm. */
@@ -28,8 +29,6 @@ export interface FramePiece {
   /** Aluminium profile including braces, m. */
   lm: number;
 }
-
-export const fullHeight = (s: InFrameParams) => s.wallH + s.feet;
 
 export function framePiece(spanMm: number, s: InFrameParams, heightMm?: number): FramePiece {
   const W = spanMm - s.side - s.air;
@@ -57,10 +56,4 @@ export function framePiece(spanMm: number, s: InFrameParams, heightMm?: number):
     braces,
     lm: (2 * W + 2 * H + (braces ? braces.qty * braces.length : 0)) / 1000,
   };
-}
-
-/** `Kunde_T1_970x2540mm.pdf`. Strips everything but letters and digits from the customer name. */
-export function printFileName(customer: string, pos: string, p: Pick<FramePiece, 'W' | 'H'>): string {
-  const name = (customer || 'Firma').replace(/[^A-Za-z0-9æøåÆØÅ]+/g, '');
-  return `${name}_${pos}_${p.W}x${p.H}mm.pdf`;
 }
