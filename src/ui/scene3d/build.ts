@@ -4,10 +4,10 @@
 import { RECIPES } from '../../foga/recipes'
 import * as THREE from 'three'
 import type { CalcResult } from '../../calc/calc'
-import { alongRun } from '../../calc/freeFrames'
-import { runDirection } from '../../domain/freeTextile'
+import { alongRun } from '../../calc/textile/free'
+import { runDirection } from '../../domain/textile/free'
 import { FURNITURE_WHITE } from '../../catalog/defaultCatalog'
-import { foilCenter, sideOf, textileBox, textileOffset } from '../../domain/decor'
+import { foilCenter } from '../../domain/decor'
 import { cropBand, plateCrop, type Crop } from '../../domain/print'
 import { doorHinge, doorRal, doorSwing } from '../../domain/doors'
 import { CELL, pointAlong, pointKey, wallDirection, wallLength } from '../../domain/grid'
@@ -21,6 +21,8 @@ import { idx, place, plateColor, productOf, rules } from '../env'
 import { shade } from '../colors'
 import { findMotif } from '../motifs'
 import type { Highlight } from '../tools'
+import { sideOf } from '../../domain/faces'
+import { textileBox, textileOffset } from '../../domain/textile/inFrame'
 
 export type Layer = Exclude<Highlight, null>
 

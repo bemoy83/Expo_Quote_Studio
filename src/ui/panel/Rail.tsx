@@ -9,7 +9,7 @@ import { dissolveRoom, isRoomWallId, removeRoom, ROOM_LABELS, roomName, roomOpen
 import { bounds } from '../../domain/outline'
 import type { Variant } from '../../domain/types'
 import { fillFloor } from '../../domain/variant'
-import { textileBox } from '../../domain/decor'
+import { textileBox } from '../../domain/textile/inFrame'
 import { wallLabel } from '../../calc/production'
 import type { Motif } from '../../persistence/file'
 import type { PlanSelection } from '../plan/PlanView'

@@ -2,7 +2,7 @@
 // The assumptions on the right are editable and feed the calc too.
 import { Download } from 'lucide-react'
 import { useMemo } from 'react'
-import { fullHeight } from '../../calc/fabric'
+import { fullHeight } from '../../calc/textile/common'
 import { production, type Production } from '../../calc/production'
 import type { TextileFill, Variant } from '../../domain/types'
 import type { InFrameParams } from '../../rules/rules'

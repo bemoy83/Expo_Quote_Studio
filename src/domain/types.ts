@@ -129,7 +129,7 @@ export interface TextileWall {
   height?: number;
   /** Distance from the floor to the frame, metres. Omitted means on the floor. */
   bottom?: number;
-  /** Wall face, as for door swing: 1 = left normal of from → to, −1 = the other. Omitted: into the stand (see decor.ts). */
+  /** Wall face, as for door swing: 1 = left normal of from → to, −1 = the other. Omitted: into the stand (see faces.ts). */
   side?: 1 | -1;
   motif?: string;
   /** Fills the free span it sits in and grows or shrinks with it ("Fyll veggen"). */
@@ -153,7 +153,7 @@ export interface TextileFace {
  * Frittstående tekstilvegg: a 43TX frame standing on foot plates, textile on both faces, not part of the Foga wall
  * system (no rooms or doors). A straight run on the 0,25 m grid, axis-aligned. A run longer than the max rail length
  * stays one frame with spliced top and bottom rails. Two runs whose ends meet at a right angle share a 92LTX corner
- * post (see freeTextile.ts).
+ * post (see textile/free.ts).
  */
 export interface FreeTextile {
   id: string;

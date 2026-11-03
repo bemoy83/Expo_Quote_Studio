@@ -6,26 +6,7 @@
 import { DoorOpen, FlipHorizontal2, MoveHorizontal, PaintBucket, Paintbrush, Palette, Plus, Repeat2 } from 'lucide-react'
 import { useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent } from 'react'
 import { production, wallLabel } from '../../calc/production'
-import {
-  addTextile,
-  faceNormal,
-  faces,
-  feltBlocked,
-  felt,
-  fillTextile,
-  foilCenter,
-  foilsOn,
-  freeSpans,
-  moveFoilBy,
-  moveTextileBy,
-  removeFoil,
-  removeTextile,
-  textileBox,
-  textilesOn,
-  updateFoil,
-  updateTextile,
-  type FaceSide,
-} from '../../domain/decor'
+import { feltBlocked, foilCenter, foilsOn, moveFoilBy, removeFoil, updateFoil } from '../../domain/decor'
 import { eraseWalls, setWallPlate } from '../../domain/edit'
 import { setPanels, wallRal } from '../../domain/panels'
 import { clearPrint, cropBand, fillPlates, plateCrop, printPlate, printsOn, printWall, clearDecor } from '../../domain/print'
@@ -50,6 +31,8 @@ import { applyDrop, decorDrag, dropSpot, endDecorDrag, type DropSpot, type FaceT
 import { DoorMap } from './DoorMap'
 import { DoorSettings } from './DoorSettings'
 import type { PlanSelection } from './PlanView'
+import { addTextile, fillTextile, freeSpans, moveTextileBy, removeTextile, textileBox, textilesOn, updateTextile } from '../../domain/textile/inFrame'
+import { faceNormal, faces, type FaceSide, felt } from '../../domain/faces'
 
 interface Props {
   v: Variant

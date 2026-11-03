@@ -22,8 +22,8 @@ import { FreeTextileDrawer } from './plan/FreeTextileDrawer'
 import { WallDrawer } from './plan/WallDrawer'
 import { doorFace, removeOpening } from '../domain/doors'
 import { findMotif, motifLibrary, readMotif } from './motifs'
-import { fitDecor, removeFoil, removeTextile } from '../domain/decor'
-import { fitFreeTextiles, removeFreeTextile } from '../domain/freeTextile'
+import { fitDecor, removeFoil } from '../domain/decor'
+import { fitFreeTextiles, removeFreeTextile } from '../domain/textile/free'
 import { removeInnerBeam } from '../domain/innerBeams'
 import { newlyClosedRooms, wallsToRoom } from '../domain/enclosures'
 import { PickingPage } from './picking/PickingPage'
@@ -46,6 +46,7 @@ import { PriceChangePill } from './plan/PriceChangePill'
 import { usePriceChange } from './plan/usePriceChange'
 import { QuickPicks } from './plan/QuickPicks'
 import type { GridStep } from '../domain/snapGrid'
+import { removeTextile } from '../domain/textile/inFrame'
 
 // three.js is only loaded when the 3D view is opened
 const Scene3D = lazy(() => import('./scene3d/Scene3D').then((m) => ({ default: m.Scene3D })))

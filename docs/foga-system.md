@@ -243,7 +243,7 @@ systemveggen: den lager ikke rom og kan ikke ha dør (tekstildør med overstykke
 - **Én tekstilvegg, én pensel** (Bjørn 31.10.2026): tekstilveggen er den samme, forskjellen er bare montering.
   En strek tegnet på en systemveggs linje blir tekstilvegg på veggen (InFrame, festet med 520, på siden streken ble
   startet fra); et klikk ved en vegg fyller den ledige delen. En strek alle andre steder står fritt på fotplater
-  (domain/textileBrush.ts). 25 cm foran en vegg er dermed frittstående.
+  (domain/textile/brush.ts). 25 cm foran en vegg er dermed frittstående.
 - Tegnes med pensel som en rett strek. Den starter i et punkt på **0,25 m-rutenettet** og vokser én rute av gangen
   med rutestørrelsen valgt i båndet: **25, 50, 75 eller 100 cm** (oppriss-rutenettet). Minst 0,25 m. Samme
   tegnerutenett (domain/snapGrid.ts, båndvelgeren GridPicker) brukes av systemveggpenselen, som foreløpig bare har
@@ -273,7 +273,7 @@ Mål i hjørnet er utledet fra tverrsnittet av 92LTX (57 mm, 40 mm ben, 17 mm), 
 - Bena er 40 mm (samme dybde som 43TX) og går 57 mm fra det utvendige hjørnet langs hver vegg. Det utvendige hjørnet
   ligger 20 mm utenfor veggens senterlinje, så **skinnene stopper 37 mm** før hjørnepunktet.
 - Duken går ut til hjørnet: **utvendig duk 20 mm lengre** og **innvendig duk 20 mm kortere** enn veggen per hjørne.
-- Endres i `src/calc/freeFrames.ts` og `src/foga/recipes.ts` når profilen er målt.
+- Endres i `src/calc/textile/free.ts` og `src/foga/recipes.ts` når profilen er målt.
 
 ### Plukkliste
 
@@ -293,7 +293,7 @@ Løse deler er da bare 43TX (gjæret, antall per kappelengde), hjørnekoblinger 
 Frittstående vegger gir i tillegg 43TX for frittstående vegg (skinner og stående per kappelengde), 92LTX per
 hjørne, skjøtekoblinger 609 og fotplater 740 og 730. Hver duk (T1, F1A, F1B …) står som egen linje: trykt, hvit eller kundens.
 
-### Fra fabric.js (fasit for trykk, se `src/calc/fabric.ts`)
+### Fra fabric.js (fasit for trykk, se `src/calc/textile/inFrame.ts`)
 
 - B = spenn − sidefradrag (20) − luft (10); H = 2490 + 50 = 2540.
 - Tverrstag når B > maks stagavstand (1000).
