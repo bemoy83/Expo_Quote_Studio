@@ -15,7 +15,7 @@ Alt avledes fra modellen (`Variant` i `src/domain/types.ts`). Rekkefølgen er al
 | Kalkyle | `src/calc/` | `calc.ts` kjører linjeblokkene per produkt (`lines/*`, `textile/lines.ts`) på felles kontekst (`context.ts`); `summary.ts` gir grupper, margin, nøkkeltall og BOM. Typene i `types.ts` |
 | Stykkliste | `src/foga/` | Foga-strukturen og BOM, grunnlaget for plukklisten |
 | Pris | `src/pricing/` | Prismodell og tidsbruk |
-| Plan | `src/ui/plan/PlanView.tsx` | Tegning og pekerhåndtering for alle produkter |
+| Plan | `src/ui/plan/PlanView.tsx`, `src/ui/plan/layers/` | `PlanView.tsx` har pekerhåndteringen og rekkefølgen på lagene. Hvert produkt tegnes i sitt lag i `layers/`. Felles farger og strektykkelser ligger i `planStyle.ts`, valget i `selection.ts`, og miniplanen for Tilbud og Arbeidsordre i `PlanPreview.tsx` |
 | 3D | `src/ui/scene3d/build.ts`, `build/`, `Scene3D.tsx` | `build.ts` kjører én del per produkt i `build/` på felles kontekst (`build/context.ts`: materialer per lag, farger, `along`); motivteksturer i `build/motifs.ts`. Dra i 3D: `Scene3D.tsx` |
 | Skuffer og panel | `src/ui/plan/*Drawer.tsx`, `src/ui/panel/Rail.tsx` | Innstillinger per produkt. Veggskuffen: `WallDrawer.tsx` velger hva som vises, delene ligger i `plan/wallDrawer/` (se Vegger) |
 | Sider | `src/ui/quote`, `production`, `picking`, `workorder` | Tilbud, Produksjon, Plukkliste, Arbeidsordre |
@@ -33,7 +33,7 @@ Rekkefølgen på linjene i tilbudet er rekkefølgen blokkene kjøres i `calc/cal
   `defaultSwing`, `doorAllowed`, `isPerimeterWall`) · `domain/edit.ts` (tegne, viske, flytte, farge) · `domain/panels.ts` (farge per plate) · `domain/grid.ts` (moduler og nøkler)
 - Kalkyle: `calc/lines/walls.ts` (vegglinjer, arrangørens standvegger) · `calc/lines/swaps.ts` (platebytte) · hvem
   som betaler: `calc/context.ts` · `foga/fromVariant.ts`
-- Plan, 3D, skuff: `PlanView.tsx` · `scene3d/build/walls.ts` (plater og dører), `scene3d/build/frame.ts` (stolper, fotplater) · `WallDrawer.tsx`, `drawerParts.tsx`, `elevation.tsx`
+- Plan, 3D, skuff: `plan/layers/WallLayer.tsx` · `scene3d/build/walls.ts` (plater og dører), `scene3d/build/frame.ts` (stolper, fotplater) · `WallDrawer.tsx`, `drawerParts.tsx`, `elevation.tsx`
 - Veggskuffens deler i `plan/wallDrawer/`: `panels.tsx` (panel for farge og print, tekstil, dekal og dør),
   `WallElevation.tsx` (tegningen og slipp fra hyllen), `drag.ts` (dra og endre størrelse på ramme og dekal), `paint.ts`
   (malerspann og malerkost), `face.ts` (sidens navn og rom inntil)
@@ -44,7 +44,7 @@ Rekkefølgen på linjene i tilbudet er rekkefølgen blokkene kjøres i `calc/cal
 - Innvendige (tegnet av kunden): modell `InnerBeam`, redigering `domain/innerBeams.ts`, utlegg `calc/innerBeams.ts`
 - Støttedrager på lange standvegger: `calc/supportBeams.ts`
 - Linjen og hvem som betaler: `calc/lines/beams.ts` · `calc/context.ts` (`organiserBeams`)
-- Plan og 3D: `PlanView.tsx` · `scene3d/build/frame.ts`
+- Plan og 3D: `plan/layers/BeamLayer.tsx` · `scene3d/build/frame.ts`
 
 ### Fotplater (støtteplater)
 
@@ -61,7 +61,7 @@ Tre filer med «support» i navnet, med hver sin jobb:
 - Modell: `FloorTile` · `domain/floor/tiles.ts` (fliser og celler) · `domain/floor/brush.ts` (penselen: størrelse,
   Auto, viske) · `domain/floor/edit.ts` (kutte fliser og baner)
 - Kalkyle: `calc/lines/floor.ts` (gulvlinjer, `tileCounts`, gulvbeskyttelse)
-- Plan, 3D: `PlanView.tsx` · `scene3d/build/floor.ts`. Ingen skuff, bare panelet (`Rail.tsx`, FloorSection)
+- Plan, 3D: `plan/layers/FloorLayer.tsx` · `scene3d/build/floor.ts`. Ingen skuff, bare panelet (`Rail.tsx`, FloorSection)
 
 ### Engangsteppe
 
@@ -69,7 +69,7 @@ Tre filer med «support» i navnet, med hver sin jobb:
   `domain/floor/rollFill.ts` (Fyll med forslag) · `domain/floor/edit.ts` (snu, forlenge og fjerne én bane) ·
   `domain/floor/brush.ts` (penselen for hele baner)
 - Kalkyle: `calc/lines/floor.ts` (`rollLine`)
-- Plan, 3D: `PlanView.tsx` (RollPreview, Offcut, LaneMark) · `scene3d/build/floor.ts` · skuff `CarpetDrawer.tsx`
+- Plan, 3D: `plan/layers/FloorLayer.tsx` (RollPreview, Offcut, LaneMark) · `scene3d/build/floor.ts` · skuff `CarpetDrawer.tsx`
 - Kappliste: `ui/cutList.ts`, brukt av skuffen og `WorkOrderPage.tsx`
 
 ### Tekstilvegger (43TX)
@@ -84,7 +84,7 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 - Kalkyle: `calc/textile/inFrame.ts` (rammemål og trykk), `calc/textile/free.ts` (frittstående: skinner, hjørner,
   fotplater), `calc/textile/common.ts` (full høyde, filnavn) · linjene: `calc/textile/lines.ts` · produksjonsrader:
   `calc/production.ts` (lager også folierader)
-- Plan, 3D: `PlanView.tsx` · `scene3d/build/textile.ts`, `Scene3D.tsx`
+- Plan, 3D: `plan/layers/TextileLayer.tsx`, forhåndsvisning ved tegning i `plan/layers/Previews.tsx` · `scene3d/build/textile.ts`, `Scene3D.tsx`
 - Skuff: `WallDrawer.tsx` med `plan/wallDrawer/panels.tsx` (`TextilePanel`) og `drag.ts` (InFrame), `FreeTextileDrawer.tsx` (frittstående)
 
 ### Print, dekal og farge
@@ -99,20 +99,20 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 
 - Modell: `Room` · `domain/rooms.ts` · `domain/outline.ts` (L-, U-, T-form) · `domain/enclosures.ts` (frihåndsrom)
 - Kalkyle: ingen egen, rommet gir vegger
-- Plan, 3D: `PlanView.tsx` (RoomMark, håndtak) · `scene3d/build/rooms.ts`, `Scene3D.tsx` · `RoomLabel.tsx`
+- Plan, 3D: `plan/layers/RoomLayer.tsx` (RoomMark, håndtak) · `scene3d/build/rooms.ts`, `Scene3D.tsx` · `RoomLabel.tsx`
 
 ### Dører og forheng
 
 - Modell: `Opening` · `domain/doors.ts` (sette, tegne, flytte, snu, farge) · hvor en dør kan stå og hvilken vei
   den slår som standard: `domain/walls.ts` · `domain/rooms.ts` (dører som følger rommet)
 - Kalkyle: `calc/lines/doors.ts`
-- Plan, 3D, skuff: `PlanView.tsx` (OpeningMark) · `scene3d/build/walls.ts` · `WallDrawer.tsx` (`DoorPanel` i `plan/wallDrawer/panels.tsx`), `DoorMap.tsx`, `DoorSettings.tsx`
+- Plan, 3D, skuff: `plan/layers/WallLayer.tsx` (OpeningMark) · `scene3d/build/walls.ts` · `WallDrawer.tsx` (`DoorPanel` i `plan/wallDrawer/panels.tsx`), `DoorMap.tsx`, `DoorSettings.tsx`
 
 ### Møbler og utstyr
 
 - Møbler: `PlacedObject` · `domain/objects.ts` · tellevarer: `setCounted` i `domain/edit.ts`
 - Kalkyle: `calc/lines/objects.ts` (møbler, tellevarer og løse linjer)
-- 3D: `scene3d/build/objects.ts`
+- Plan, 3D: `plan/layers/ObjectLayer.tsx` · `scene3d/build/objects.ts`
 
 ## Sikkerhetsnett for refaktorering
 

@@ -1,0 +1,36 @@
+// Sizes, colours and text styles of the plan, shared by PlanView and its layers (plan/layers/).
+import type { Side } from '../../domain/types'
+import { INK_FAINT, LAYER_COLOR } from '../colors'
+
+/**
+ * Line widths in the plan, m. Schematic, not to scale (3D is): a wall and a textile are both drawn 60 mm (both are 40),
+ * and a textile on a wall face sits just outside the wall line so the two never overlap.
+ */
+export const PLAN_WALL = 0.06
+export const PLAN_TEXTILE = PLAN_WALL
+export const PLAN_TEXTILE_OFFSET = PLAN_WALL / 2 + PLAN_TEXTILE / 2 + 0.005
+
+/** Margin around the stand for the aisle and the side labels, m. */
+export const PLAN_MARGIN = 1.3
+
+export const WALL = LAYER_COLOR.walls
+
+export const TEXTILE = LAYER_COLOR.textile
+
+/** Joints between carpet tiles, m: wide enough to read in the small plan on the quote and the work order. */
+export const JOINT_WIDTH = 0.025
+
+/** Half-metre lines while painting floor. */
+export const GRID_FINE = 'rgb(0 0 0 / .1)'
+
+/** Opacity of layers outside the hovered calc group. */
+export const DIMMED = 0.25
+
+export const MONO = { font: '500 0.24px var(--font-numeric)', fill: INK_FAINT }
+
+/** Side names and stand dimensions around the stand: context, so quieter than the drawing itself. */
+export const SIDE = { font: '500 0.17px var(--font-ui)', fill: INK_FAINT }
+
+export const SIDE_DIM = { font: '500 0.15px var(--font-numeric)', fill: INK_FAINT }
+
+export const SIDE_LABEL: Record<Side, string> = { back: 'Bak', front: 'Front', left: 'Venstre', right: 'Høyre' }

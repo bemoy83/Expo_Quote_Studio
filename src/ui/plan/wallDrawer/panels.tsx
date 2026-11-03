@@ -12,7 +12,7 @@ import { Button, Dim, IconButton, Segmented } from '../../controls'
 import { plateName, rules } from '../../env'
 import { DoorSettings } from '../DoorSettings'
 import { DrawerRow, FillPicker, PlatePalette } from '../drawerParts'
-import type { PlanSelection } from '../PlanView'
+import { type PlanSelection } from '../selection'
 import { faceName } from './face'
 import type { PaintTool } from './paint'
 

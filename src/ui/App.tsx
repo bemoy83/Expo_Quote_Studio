@@ -17,7 +17,7 @@ import { download } from './download'
 import { count, fmt, kr, signed } from './format'
 import { frameCount, TYPE_NAME } from './names'
 import { Rail } from './panel/Rail'
-import { PlanPreview, PlanView, type PlanSelection } from './plan/PlanView'
+import { PlanView } from './plan/PlanView'
 import { FreeTextileDrawer } from './plan/FreeTextileDrawer'
 import { WallDrawer } from './plan/WallDrawer'
 import { doorFace, removeOpening } from '../domain/doors'
@@ -47,6 +47,8 @@ import { usePriceChange } from './plan/usePriceChange'
 import { QuickPicks } from './plan/QuickPicks'
 import type { GridStep } from '../domain/snapGrid'
 import { removeTextile } from '../domain/textile/inFrame'
+import { PlanPreview } from './plan/PlanPreview'
+import { type PlanSelection } from './plan/selection'
 
 // three.js is only loaded when the 3D view is opened
 const Scene3D = lazy(() => import('./scene3d/Scene3D').then((m) => ({ default: m.Scene3D })))
