@@ -79,7 +79,8 @@ kbd {
   font: var(--type-control);
   white-space: nowrap;
   cursor: pointer;
-  transition: background var(--dur) var(--ease), box-shadow var(--dur) var(--ease), opacity var(--dur) var(--ease);
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease), box-shadow var(--dur) var(--ease),
+    opacity var(--dur) var(--ease);
 }
 .btn:disabled {
   opacity: 0.4;
@@ -105,7 +106,7 @@ kbd {
 }
 .btn.ghost {
   --rest: transparent;
-  background: transparent;
+  background: var(--rest);
   color: rgb(var(--ink-muted));
 }
 
@@ -121,7 +122,6 @@ kbd {
   background: transparent;
   color: rgb(var(--ink-muted));
   cursor: pointer;
-  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
 }
 .icon-btn:disabled {
   opacity: 0.35;
@@ -129,9 +129,6 @@ kbd {
 }
 .icon-btn.on-band {
   color: var(--b-mute);
-}
-.on-band {
-  --hover-text: var(--b-ink);
 }
 .icon-btn[aria-pressed='true'] {
   --rest: rgb(var(--surface));
@@ -161,15 +158,40 @@ kbd {
 }
 
 /* ---------- Shared hover ---------- */
-/* One hover for every clickable that is text or an icon on a surface (Bjørn 3.11.2026): a 4 % ink tint laid over the
-   element's own rest fill, and the text turns ink. Mixed in sRGB with the rest fill, it is the same as laying the tint
-   on top, so it reads the same on paper, on a white pill, on the band's hue, on a well chip and in dark mode. A chosen
-   choice (ink, white chip or muted fill) does not react, since clicking it again does nothing. Filled surfaces state
-   their fill as --rest. Segmented switches (.seg), colour swatches and fields keep their own hover. */
+/* One hover for every clickable that is text or an icon on a surface (Bjørn 3.11.2026): a 4 % ink tint
+   (--hover-amount) laid over the element's own rest fill, and the text turns ink. Mixed in sRGB with the rest fill, it
+   is the same as laying the tint on top, so it reads the same on paper, on a white pill, on the band's hue, on a well
+   chip and in dark mode. A chosen choice (ink, white chip or muted fill) does not react, since clicking it again does
+   nothing. Filled surfaces state their fill as --rest. Segmented switches (.seg), colour swatches and fields keep their
+   own hover. A new clickable joins by its class in both lists below. */
 @property --rest {
   syntax: '<color>';
   inherits: false;
   initial-value: transparent;
+}
+/* All fade in and out alike. Zero specificity, so a component that also fades other things (.btn) keeps its own list */
+:where(
+    .btn,
+    .icon-btn,
+    .navb,
+    .strip-btn,
+    .dock-btn,
+    .flat-choice > button,
+    .q-btn,
+    .q-motif,
+    .q-obj,
+    .cp-prop,
+    .status,
+    .chips-text button,
+    .chip-toggle,
+    .mot,
+    .gfx,
+    .trow,
+    .toast button,
+    .link,
+    .cg-arts
+  ) {
+  transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
 }
 :is(
     .btn:not(.primary),
@@ -197,10 +219,15 @@ kbd {
   background-color: color-mix(in srgb, var(--rest), var(--hover-with, rgb(var(--ink))) var(--hover-amount));
   color: var(--hover-text, rgb(var(--ink)));
 }
+/* On the band hovered text takes the band's ink */
+.on-band {
+  --hover-text: var(--b-ink);
+}
 /* Bare text links have no shape to tint: they only turn ink */
 :is(.link, .cg-arts):hover {
   color: rgb(var(--ink));
 }
+
 .seg {
   display: inline-flex;
   align-items: center;
@@ -372,7 +399,6 @@ kbd {
   cursor: pointer;
   font: 500 14px var(--font-ui);
   color: rgb(var(--ink-muted));
-  transition: color var(--dur) var(--ease), background var(--dur) var(--ease);
 }
 .navb[aria-current='page'] {
   color: rgb(var(--ink));
@@ -510,7 +536,6 @@ kbd {
   gap: 4px;
   color: rgb(var(--ink-muted));
   font: 500 11px var(--font-ui);
-  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
 }
 .strip-btn[aria-current='true'] {
   color: rgb(var(--ink));
@@ -891,7 +916,6 @@ kbd {
   --rest: var(--well);
   background: var(--rest);
   cursor: pointer;
-  transition: background var(--dur) var(--ease);
 }
 .mot img {
   width: 100%;
@@ -2056,7 +2080,6 @@ select.cin {
   color: rgb(var(--ink-muted));
   font: 500 12.5px var(--font-ui);
   cursor: pointer;
-  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
 }
 .flat-choice > button[aria-checked='true'] {
   background: var(--well);
@@ -2301,7 +2324,6 @@ select.cin {
   background: transparent;
   color: rgb(var(--ink));
   cursor: pointer;
-  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
 }
 .dock-undo .dock-btn {
   min-width: 40px;
