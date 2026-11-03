@@ -25,7 +25,7 @@ import { dragRoom, dragWall, dropObject, dropRoom, roomDrag, type RoomDrag, type
 import { place, rules } from '../env'
 import { findMotif } from '../motifs'
 import type { Highlight } from '../tools'
-import type { PlanSelection } from '../plan/PlanView'
+import { type PlanSelection } from '../plan/selection'
 import { build, dispose, type Tag } from './build'
 import { AISLE, CAMERA_Y, HOME, setCamera, type Angle } from './camera'
 import { faceAt, faceNormal, faces, type FaceSide, sideOf } from '../../domain/faces'

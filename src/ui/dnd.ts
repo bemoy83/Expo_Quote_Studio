@@ -3,7 +3,7 @@
 import type { DragEvent } from 'react'
 import { dropMotif, feltBlocked, updateFoil } from '../domain/decor'
 import type { Variant } from '../domain/types'
-import type { PlanSelection } from './plan/PlanView'
+import { type PlanSelection } from './plan/selection'
 import { fmt } from './format'
 import { rules } from './env'
 import { addTextile, freeSpans, fullTextileHeight, textileAt, textileBox } from '../domain/textile/inFrame'

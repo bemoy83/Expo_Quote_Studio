@@ -6,7 +6,7 @@ import { freeSpans, moveTextileBy, textileBox, textilesOn, updateTextile } from 
 import type { Foil, TextileWall, Variant, Wall } from '../../../domain/types'
 import { rules } from '../../env'
 import type { Edge } from '../drawerParts'
-import type { PlanSelection } from '../PlanView'
+import { type PlanSelection } from '../selection'
 
 const EPS = 1e-6
 
