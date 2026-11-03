@@ -48,7 +48,7 @@ export interface PlanSelection {
   freeFace?: FaceKey
   /** An innvendig takdrager. */
   beamId?: string
-  /** A door or curtain: the door drawer. */
+  /** A door or curtain, chosen in the wall drawer of the wall it stands in. */
   openingId?: string
   /** A lane of engangsteppe placed on its own: its top left cell. */
   lane?: { i: number; j: number }
@@ -393,7 +393,7 @@ export function PlanView(p: Props) {
       else p.onEdit(() => next)
       return
     }
-    // Select. A plain click on a door or curtain chooses it (the door drawer); a drag does what it does on the wall.
+    // Select. A plain click on a door or curtain chooses it (the wall drawer with the door); a drag does what it does on the wall.
     const door = moduleAt(q)?.opening
     const doorSelect: PlanSelection | null = door ? { openingId: door.id } : null
     // A side of the selected room comes first, so a side shared with a stand wall can still be dragged.

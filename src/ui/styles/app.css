@@ -2577,7 +2577,7 @@ select.cin {
   color: rgb(var(--ink-faint));
 }
 
-/* Door drawer: mini plan to move the door (DoorMap.tsx). A view only; the targets are the cells outside the walls. */
+/* Door in the wall drawer: mini plan to move the door (DoorMap.tsx). A view only; the targets are the cells outside the walls. */
 .door-map {
   display: flex;
   flex-direction: column;

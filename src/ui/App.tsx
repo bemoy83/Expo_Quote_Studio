@@ -20,7 +20,6 @@ import { Rail } from './panel/Rail'
 import { PlanPreview, PlanView, type PlanSelection } from './plan/PlanView'
 import { FreeTextileDrawer } from './plan/FreeTextileDrawer'
 import { WallDrawer } from './plan/WallDrawer'
-import { DoorDrawer } from './plan/DoorDrawer'
 import { removeOpening } from '../domain/doors'
 import { findMotif, motifLibrary, readMotif } from './motifs'
 import { fitDecor, removeFoil, removeTextile } from '../domain/decor'
@@ -241,8 +240,10 @@ export default function App() {
         setSelection({})
       } else if ((k === 'delete' || k === 'backspace') && selection.openingId) {
         const id = selection.openingId
+        const o = v.openings.find((x) => x.id === id)
         onEdit((x) => removeOpening(x, id))
-        setSelection({})
+        // The wall drawer stays open on the wall the door stood in
+        setSelection(o ? { wallId: o.wallId, side: selection.side } : {})
       } else if ((k === 'delete' || k === 'backspace') && selection.objectId) {
         const id = selection.objectId
         onEdit((x) => ({ ...x, objects: x.objects.filter((o) => o.id !== id) }))
@@ -501,10 +502,7 @@ export default function App() {
               {(selection.lane || selection.fill) && tool === 'select' && view === 'plan' && (
                 <CarpetDrawer v={v} selection={selection} onSelect={setSelection} onEdit={(fn) => onEdit(fn)} onClose={() => setSelection({})} />
               )}
-              {selection.openingId && tool === 'select' && (
-                <DoorDrawer v={v} selection={selection} onSelect={setSelection} onEdit={(fn) => onEdit(fn)} onClose={() => setSelection({})} />
-              )}
-              {selection.wallId && tool === 'select' && (
+              {(selection.wallId || selection.openingId) && tool === 'select' && (
                 <WallDrawer
                   v={v}
                   selection={selection}

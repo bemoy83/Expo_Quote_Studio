@@ -1,5 +1,5 @@
-// A door or curtain as a thing of its own: chosen in the plan or 3D, edited and moved in the door drawer (its mini
-// plan). Every move goes through moveOpening, so a door never lands in a stand wall or on another opening.
+// A door or curtain as a thing of its own: chosen in the plan or 3D, edited and moved in the wall drawer (the mini
+// plan in its middle). Every move goes through moveOpening, so a door never lands in a stand wall or on another opening.
 import { defaultSwing, doorAllowed, doorSwing } from './edit';
 import { pointAlong, wallDirection, wallModules } from './grid';
 import { OUTSIDE, roomOf } from './rooms';
@@ -77,6 +77,9 @@ export const setDoorRal = (v: Variant, id: string, ral: string | null): Variant 
   });
 
 /** RAL of the door leaf: its own, else the stand's. */
+/** The face of its wall a door is first seen from: a room's outside, otherwise the side the leaf swings to. */
+export const doorFace = (v: Variant, w: Wall, o: Opening): 1 | -1 => (w.room ? OUTSIDE : doorSwing(v.stand, w, o));
+
 export const doorRal = (v: Variant, o: Opening): string => o.ral ?? v.defaultPlate;
 
 /** Turn the module back into wall. */
@@ -86,7 +89,7 @@ export const removeOpening = (v: Variant, id: string): Variant =>
 /** The room the opening's wall belongs to, if any. */
 export const openingRoom = (v: Variant, o: Opening) => roomOf(v, v.walls.find((w) => w.id === o.wallId));
 
-/** A module the door can be put in from the door drawer's mini plan, and the way out of the wall its target cell lies. */
+/** A module the door can be put in from the mini plan in the wall drawer, and the way out of the wall its target cell lies. */
 export interface DoorSpot {
   key: string;
   a: Point;
