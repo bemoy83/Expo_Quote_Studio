@@ -1,7 +1,7 @@
 // The quote shows some kalkyle lines as one (Bjørn 31.10.2026): a textile wall's frame (rental) and its textile (sale)
 // are two lines in the kalkyle and one on the quote. Pure.
 import { DEFAULT_PRICING, type PricingData } from '../pricing/data';
-import type { CalcGroup, CalcLine } from './calc';
+import type { CalcGroup, CalcLine } from './types';
 
 /** Lines of one group as the quote shows them: lines sharing a quote key merged at the first one's place. */
 export function quoteLines(lines: CalcLine[], pricing: PricingData = DEFAULT_PRICING): CalcLine[] {
