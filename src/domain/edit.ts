@@ -1,5 +1,5 @@
 // Editing operations on a variant. All pure: they return a new variant and never mutate.
-import { clipTiles } from './floor';
+import { clipTiles } from './floor/edit';
 import { moduleKey, pointAlong, runs, wallDirection, wallLength, wallModules } from './grid';
 import { nextId } from './ids';
 import type { Opening, Point, Stand, TextileWall, Variant, Wall } from './types';

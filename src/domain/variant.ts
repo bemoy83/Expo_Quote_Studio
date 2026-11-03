@@ -1,6 +1,6 @@
 import { RULES, type CarpetRates } from '../rules/rules';
-import { fillCarpet } from './carpet';
-import { fillTiles } from './floor';
+import { fillCarpet } from './floor/rollFill';
+import { fillTiles } from './floor/tiles';
 import type { Project, Stand, StandWallTerms, Variant, VariantName } from './types';
 import { standardWalls } from './walls';
 
@@ -26,7 +26,7 @@ export function createVariant(name: VariantName, stand: Stand): Variant {
 }
 
 /** Lay the whole stand with one product ("Fyll hele standen"). `roll`: roll width, m, for floor laid in lanes. */
-/** Lay the whole stand with one floor: carpet tiles, or rolled floor `roll` m wide the cheapest way (domain/carpet.ts). */
+/** Lay the whole stand with one floor: carpet tiles, or rolled floor `roll` m wide the cheapest way (domain/floor/rollFill.ts). */
 export function fillFloor(v: Variant, product: string, roll?: number, rates: CarpetRates = RULES.carpet): Variant {
   if (roll) return fillCarpet({ ...v, floor: { ...v.floor, tiles: [] } }, product, roll, rates);
   return { ...v, floor: { ...v.floor, tiles: fillTiles(v.stand, product) } };

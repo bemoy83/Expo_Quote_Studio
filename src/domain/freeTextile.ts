@@ -6,7 +6,8 @@
 // that wall instead (textileBrush.ts).
 import type { Rules } from '../rules/rules';
 import type { FreeTextile, Point, TextileFace, Variant } from './types';
-import { nextId } from './ids';import { gridStroke, snapTo } from './snapGrid';
+import { nextId } from './ids';
+import { gridStroke, snapTo } from './snapGrid';
 import { builtModules } from './walls';
 
 /** Face A is side 1 (left normal of from → to), face B side −1. */

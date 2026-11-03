@@ -9,7 +9,7 @@ import { foilRows, production, textileRows } from '../calc/production';
 import { quoteGroups } from '../calc/quoteLines';
 import { DEFAULT_CATALOG } from '../catalog/defaultCatalog';
 import { indexCatalog } from '../catalog/lookup';
-import { lanesOf, rollPieces } from '../domain/floor';
+import { lanesOf, rollPieces } from '../domain/floor/lanes';
 import { customerName, standWallTerms } from '../domain/variant';
 import { parse, serialize } from '../persistence/file';
 import { RULES } from '../rules/rules';

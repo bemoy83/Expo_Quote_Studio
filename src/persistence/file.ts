@@ -1,6 +1,6 @@
 // Sketch file: JSON `{ format: 'standskisse', versjon, prosjekt, varianter, egneMotiver }`.
 // Newer versions are refused with an explanation; older versions are migrated step by step.
-import { tilesFromCells } from '../domain/floor';
+import { tilesFromCells } from '../domain/floor/tiles';
 import { rectOutline } from '../domain/outline';
 import { RECT_SIDE, roomWalls, roomWallId } from '../domain/rooms';
 import type { Project, Room, Variant } from '../domain/types';

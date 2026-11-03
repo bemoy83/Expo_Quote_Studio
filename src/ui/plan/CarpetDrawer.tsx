@@ -2,8 +2,11 @@
 // with their waste, and its cut list. A lane placed by the seller: turn it, its length, its waste, take it off.
 // Ink = what is laid now, muted fill = hover, no outlines.
 import { RotateCw } from 'lucide-react'
-import { currentProposal, fillProposals, fillTilesOf, laneWaste, offered, removeFill, removeLane, resizeLane, rotateLane, relayFill, wasteKr, type Proposal } from '../../domain/carpet'
-import { across, along, cellsIn, lanesOf, rollPieces, type RollPiece } from '../../domain/floor'
+import { currentProposal, fillProposals, fillTilesOf, offered, type Proposal, relayFill, removeFill, wasteKr } from '../../domain/floor/rollFill'
+import { laneWaste } from '../../domain/floor/lanes'
+import { removeLane, resizeLane, rotateLane } from '../../domain/floor/edit'
+import { across, along, lanesOf, type RollPiece, rollPieces } from '../../domain/floor/lanes'
+import { cellsIn } from '../../domain/floor/tiles'
 import { CELL } from '../../domain/grid'
 import type { FloorTile, Variant } from '../../domain/types'
 import { jointColor } from '../colors'

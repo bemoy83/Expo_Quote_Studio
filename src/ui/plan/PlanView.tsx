@@ -29,8 +29,11 @@ import { idx, place, plateColor, productOf, rules } from '../env'
 import { doorInset } from '../../rules/rules'
 import { findMotif } from '../motifs'
 import { penLayers, type Brush, type Highlight, type Layer, type Tool } from '../tools'
-import { across, applyFloor, floorAction, lanesLaid, lanesOf, standCells, TILE_FULL, type FloorAction, type FloorBrushSize, type Rect, type RollDir } from '../../domain/floor'
-import { fillCarpet, fillProposalsFor, fillTilesOf, laneAt } from '../../domain/carpet'
+import { across, lanesOf, type RollDir } from '../../domain/floor/lanes'
+import { applyFloor, floorAction, type FloorAction, type FloorBrushSize, lanesLaid } from '../../domain/floor/brush'
+import { type Rect, standCells, TILE_FULL } from '../../domain/floor/tiles'
+import { fillCarpet, fillProposalsFor, fillTilesOf } from '../../domain/floor/rollFill'
+import { laneAt } from '../../domain/floor/edit'
 import type { RollMode } from '../tools'
 import { distToSegment, nearestEdge, strokeFrom } from './geometry'
 import { Hatched } from './Hatched'
@@ -52,7 +55,7 @@ export interface PlanSelection {
   openingId?: string
   /** A lane of engangsteppe placed on its own: its top left cell. */
   lane?: { i: number; j: number }
-  /** Engangsteppe laid by Fyll (domain/carpet.ts). */
+  /** Engangsteppe laid by Fyll (domain/floor/rollFill.ts). */
   fill?: string
 }
 

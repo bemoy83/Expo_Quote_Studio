@@ -9,7 +9,8 @@
 import type { Rules } from '../rules/rules';
 import { wallHeight } from '../rules/rules';
 import { pointAlong, wallDirection, wallLength, wallModules } from './grid';
-import { nextId } from './ids';import { OUTSIDE, roomAt } from './rooms';
+import { nextId } from './ids';
+import { OUTSIDE, roomAt } from './rooms';
 import type { Foil, Point, TextileFill, TextileWall, Variant, Wall } from './types';
 import { builtModules, defaultSwing, isStandWall } from './walls';
 import { CURTAIN } from '../catalog/defaultCatalog';

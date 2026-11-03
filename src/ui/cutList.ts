@@ -1,6 +1,6 @@
 // Engangsteppe cut list in words, shared by the carpet drawer and the work order: for each piece cut from the roll,
 // how long it is cut and which lanes in the plan it becomes, and how.
-import type { RollPiece } from '../domain/floor'
+import { type RollPiece } from '../domain/floor/lanes'
 import { fmt } from './format'
 
 export interface CutRow {
