@@ -49,9 +49,9 @@ export function structureOf(d: Derived): FogaStructure {
 export function fromVariant(v: Variant, rules: Rules): FogaStructure {
   const mods = builtModules(v);
   const points = wallPoints(mods);
-  const { all: beams, inner } = variantBeams(v, new Set(mods.map((m) => m.key)), points, rules.beam.max);
+  const { all: beams, hooks } = variantBeams(v, mods, points, rules.beam.max);
   const posts = new Set([...points.keys(), ...beams.posts.keys()]).size;
-  return structureOf({ mods, posts, beams, hooks: inner.hooks, production: production(v, rules.textile.inFrame, '') });
+  return structureOf({ mods, posts, beams, hooks, production: production(v, rules.textile.inFrame, '') });
 }
 
 /** Sizes from the rules, mm: post = system wall height without feet (2490), cc 1000. */

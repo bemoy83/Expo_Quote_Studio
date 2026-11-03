@@ -202,8 +202,7 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
   // exhibitor's structure, and only their colour, when it is not the organiser's, is the exhibitor's plate swap.
   const mods = builtModules(v);
   const points = wallPoints(mods);
-  const keys = new Set(mods.map((m) => m.key));
-  const { standard, inner, all: beams } = variantBeams(v, keys, points, rules.beam.max);
+  const { standard, inner, all: beams, support, hooks } = variantBeams(v, mods, points, rules.beam.max);
   const wallsById = new Map(v.walls.map((w) => [w.id, w]));
   const kindOf = (m: BuiltModule): WallKind => {
     const w = wallsById.get(m.wallId);
@@ -244,11 +243,11 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
   // frame. The plates are the customer's choice (no beams), so the exhibitor's even under the organiser's walls.
   // A drawn takdrager's own posts stand on plates too, across the beam, unless a beam drawn the other way meets them.
   const framed = standard.segments.length > 0;
-  const freeWallFeet = wallSupports(mods, beams, RECIPES.wall.support.rule, (m) => framed && kindOf(m) === 'stand');
+  const freeWallFeet = wallSupports(mods, beams, RECIPES.wall.support.rule, (m) => framed && kindOf(m) === 'stand', framed);
   const wallFeet = [...freeWallFeet, ...inner.feet];
   const prod = production(v, rules.textile.inFrame, '');
   // Foga structure of what the exhibitor orders: posts, walled modules, headers and beam lengths are counted from it
-  const foga = structureOf({ mods: ours, posts: ourPoints.size + (organiserBeams ? innerPosts : beamPosts), beams: ourBeams, hooks: inner.hooks, production: prod, swaps, wallFeet: wallFeet.length, barePosts: wallFeet.filter((f) => ourPoints.has(pointKey(f.at))).length + inner.feet.length });
+  const foga = structureOf({ mods: ours, posts: ourPoints.size + (organiserBeams ? innerPosts : beamPosts), beams: ourBeams, hooks, production: prod, swaps, wallFeet: wallFeet.length, barePosts: wallFeet.filter((f) => ourPoints.has(pointKey(f.at))).length + inner.feet.length });
   const headers = foga.modules.filter((m) => m.opening).length;
   const lmOf = (b: BeamLayout) => beamSpecs(b).reduce((a, x) => a + x.lengthMm, 0) / 1000;
   const beamLengths = beamSpecs(beams);
@@ -330,9 +329,9 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
     return line(sys.beam, lm, { ...built, meta: meta.join(' · ') }, uses);
   };
   if (organiserBeams) {
-    organiserLines.push(toOrganiser(beamLine(standard, standardPosts, 0)));
+    organiserLines.push(toOrganiser(beamLine(standard, standardPosts, support.hooks)));
     add(beamLine(inner, innerPosts, inner.hooks, 'innvendig'));
-  } else add(beamLine(beams, beamPosts, inner.hooks));
+  } else add(beamLine(beams, beamPosts, hooks));
 
   // Door or curtain with header (overstykke), one product each; a door per leaf colour (the stand's unless chosen),
   // lock and keys included
@@ -482,7 +481,7 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
       organiserWallLm: theirs.length,
       organiserBeamLm: organiserBeams ? lmOf(standard) : 0,
       innerBeamLm: lmOf(inner),
-      beamHooks: inner.hooks,
+      beamHooks: hooks,
       innerWallLm: walled.filter((m) => kindOf(m) === 'inner').length,
       roomWallLm: walled.filter((m) => kindOf(m) === 'room').length,
       swapLm: swaps.length,

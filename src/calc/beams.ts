@@ -1,6 +1,8 @@
 import { inward, makeModule, pointKey, SIDES, sideLength, sidePoint } from '../domain/grid';
 import type { Point, Side, Stand, Variant } from '../domain/types';
+import { standWallSide, type BuiltModule } from '../domain/walls';
 import { layoutInnerBeams, mergeBeams, type InnerBeamLayout } from './innerBeams';
+import { layoutSupportBeams, NO_SUPPORT_BEAMS, type SupportBeamLayout } from './supportBeams';
 
 const EPS = 1e-9;
 
@@ -13,6 +15,8 @@ export interface BeamSegment {
   cross: boolean;
   /** Drawn by the customer (calc/innerBeams.ts), not derived from the stand. */
   inner?: true;
+  /** Støttedrager holding a long stand wall (calc/supportBeams.ts); also a cross beam. */
+  support?: true;
 }
 
 export interface BeamLayout {
@@ -41,17 +45,29 @@ const lerp = (a: Point, b: Point, t: number): Point => [a[0] + (b[0] - a[0]) * t
 
 export const NO_BEAMS: BeamLayout = { segments: [], posts: new Map(), lm: 0 };
 
-/** The takdrager of a variant. `standard`: none when the customer turned them off, else {@link layoutBeams}. `inner`:
- *  the ones the customer drew (calc/innerBeams.ts). `all`: both. */
+/** The takdrager of a variant. `standard`: none when the customer turned them off, else {@link layoutBeams} and the
+ *  støttedrager holding long stand walls (`support`, calc/supportBeams.ts). `inner`: the ones the customer drew
+ *  (calc/innerBeams.ts). `all`: both. `hooks`: every hook, drawn and støttedrager. */
 export function variantBeams(
   v: Variant,
-  moduleKeys: ReadonlySet<string>,
+  mods: readonly BuiltModule[],
   wallPoints: ReadonlyMap<string, Point>,
   maxLength: number,
-): { standard: BeamLayout; inner: InnerBeamLayout; all: BeamLayout } {
-  const standard = v.noBeams ? NO_BEAMS : layoutBeams(v.stand, moduleKeys, wallPoints, maxLength);
-  const inner = layoutInnerBeams(v.innerBeams ?? [], standard, moduleKeys, wallPoints, maxLength);
-  return { standard, inner, all: mergeBeams(standard, inner) };
+): { standard: BeamLayout; inner: InnerBeamLayout; support: SupportBeamLayout; all: BeamLayout; hooks: number } {
+  const moduleKeys = new Set(mods.map((m) => m.key));
+  const frame = v.noBeams ? NO_BEAMS : layoutBeams(v.stand, moduleKeys, wallPoints, maxLength);
+  const drawn = layoutInnerBeams(v.innerBeams ?? [], frame, moduleKeys, wallPoints, maxLength);
+  const wallsById = new Map(v.walls.map((w) => [w.id, w]));
+  const sideOf = (m: BuiltModule) => {
+    const w = wallsById.get(m.wallId);
+    return w ? standWallSide(w) : null;
+  };
+  const support = frame.segments.length ? layoutSupportBeams(v.stand, mods, sideOf, mergeBeams(frame, drawn), maxLength) : NO_SUPPORT_BEAMS;
+  // A støttedrager meeting a drawn beam's own post holds it, as a drawn cross beam does: no foot plate there
+  const ends = new Set(support.segments.flatMap((s) => [pointKey(s.from), pointKey(s.to)]));
+  const inner = { ...drawn, feet: drawn.feet.filter((f) => !ends.has(pointKey(f.at))) };
+  const standard = mergeBeams(frame, support);
+  return { standard, inner, support, all: mergeBeams(standard, inner), hooks: inner.hooks + support.hooks };
 }
 
 /**

@@ -211,8 +211,8 @@ export function PlanView(p: Props) {
   const textileTool = tool !== 'select' && brush?.kind === 'textile'
   /** Innvendig takdrager, drawn on the wall grid like a wall. */
   const beamTool = tool !== 'select' && brush?.kind === 'beam'
-  /** Standard beams: a drawn one may not lie along them. */
-  const standardRuns: Run[] = useMemo(() => res.beams.segments.filter((s) => !s.inner), [res])
+  /** Standard beams: a drawn one may not lie along them. A støttedrager may be drawn over: the drawn beam replaces it. */
+  const standardRuns: Run[] = useMemo(() => res.beams.segments.filter((s) => !s.inner && !s.support), [res])
   /** Snap points show only while a brush snaps to them, at its own grid. */
   const dotStep = textileTool ? step : wallTool || beamTool ? rules.wall.cc : null
 

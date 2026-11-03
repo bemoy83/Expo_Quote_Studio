@@ -6,6 +6,9 @@
 //   Every point where another system wall meets the run (corner, T or cross: stand, inner and room walls alike) is a
 //   support, and so is a post under a takdrager. With beams on, the stand walls are in the beam frame and need none.
 //   Plates go only under posts (cc 1 m), centred under the wall, across it.
+//   Bjørn 3.11.2026: with takdrager on, a stretch held at both ends that closes four locked sides (its two ends joined
+//   by walls and takdrager some other way round, as a wall from a stand wall to a beam) stands by itself: no plates.
+//   A long stand wall is held by a støttedrager instead (calc/supportBeams.ts).
 import { pointKey } from '../domain/grid';
 import type { Point } from '../domain/types';
 import type { BuiltModule } from '../domain/walls';
@@ -58,22 +61,58 @@ export function wallRuns(mods: readonly BuiltModule[]): Run[] {
 }
 
 /** A takdrager rests on the point: a post it needs, or a wall post its length passes over. */
-const underBeam = (beams: BeamLayout) => {
+export const underBeam = (beams: BeamLayout) => {
   const within = (x: number, a: number, b: number) => x >= Math.min(a, b) - 1e-6 && x <= Math.max(a, b) + 1e-6;
   return (p: Point) => beams.posts.has(pointKey(p)) || beams.segments.some((s) => within(p[0], s.from[0], s.to[0]) && within(p[1], s.from[1], s.to[1]));
 };
 
+/** Whether `a` and `b` are joined by walls and takdrager without the given wall modules: a closed ring with them. */
+function joinedWithout(mods: readonly BuiltModule[], beams: BeamLayout) {
+  const next = new Map<string, Set<string>>();
+  const link = (p: Point, q: Point) => {
+    const [a, b] = [pointKey(p), pointKey(q)];
+    next.set(a, (next.get(a) ?? new Set()).add(b));
+    next.set(b, (next.get(b) ?? new Set()).add(a));
+  };
+  for (const m of mods) link(m.a, m.b);
+  // A beam in metre steps, so an end hanging on its length or a wall under it joins it there
+  for (const s of beams.segments) {
+    const n = Math.max(1, Math.round(s.length));
+    const at = (k: number): Point => [s.from[0] + ((s.to[0] - s.from[0]) * k) / n, s.from[1] + ((s.to[1] - s.from[1]) * k) / n];
+    for (let k = 0; k < n; k++) link(at(k), at(k + 1));
+  }
+  return (a: Point, b: Point, without: readonly BuiltModule[]) => {
+    const cut = new Set(without.flatMap((m) => [`${pointKey(m.a)}|${pointKey(m.b)}`, `${pointKey(m.b)}|${pointKey(m.a)}`]));
+    const goal = pointKey(b);
+    const seen = new Set([pointKey(a)]);
+    const queue = [pointKey(a)];
+    while (queue.length) {
+      const k = queue.pop()!;
+      if (k === goal) return true;
+      for (const n of next.get(k) ?? []) {
+        if (seen.has(n) || cut.has(`${k}|${n}`)) continue;
+        seen.add(n);
+        queue.push(n);
+      }
+    }
+    return false;
+  };
+}
+
 /**
  * Foot plates for every free-standing stretch of system wall. `beams`: the takdrager (none when turned off).
- * `inFrame`: a run the beam frame holds (with beams on, the stand walls), which needs no plates.
+ * `inFrame`: a run the beam frame holds (with beams on, the stand walls), which needs no plates. `framed`: the
+ * takdrager frame is up, so a stretch closing four locked sides needs none either.
  */
 export function wallSupports(
   mods: readonly BuiltModule[],
   beams: BeamLayout,
   rule: SupportRule,
   inFrame: (m: BuiltModule) => boolean,
+  framed = false,
 ): WallSupport[] {
   const runs = wallRuns(mods);
+  const joined = joinedWithout(mods, beams);
   // Points each orientation touches: a point on a run that the other orientation also touches is a corner, T or cross
   const touched = { h: new Set<string>(), v: new Set<string>() };
   for (const r of runs) for (const p of r.points) touched[r.orientation].add(pointKey(p));
@@ -87,7 +126,8 @@ export function wallSupports(
     let start = 0;
     for (let i = 1; i < run.points.length; i++) {
       if (!held[i] && i < run.points.length - 1) continue;
-      for (const k of stretchPosts(i - start, { from: held[start], to: held[i] }, rule)) {
+      const locked = framed && held[start] && held[i] && joined(run.points[start], run.points[i], run.mods.slice(start, i));
+      for (const k of locked ? [] : stretchPosts(i - start, { from: held[start], to: held[i] }, rule)) {
         const p = run.points[start + k];
         out.set(pointKey(p), { at: p, orientation: run.orientation });
       }

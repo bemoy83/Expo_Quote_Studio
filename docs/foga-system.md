@@ -132,6 +132,14 @@ Systemhøyde fra gulv: 2490 + 50 = 2540 mm.
   krysser den, delt der på veggens stolpe (Bjørn 1.11.2026: den holder den motstående veggen, ellers blir spennet på
   standveggen for langt). Den stopper bare der en vegg går langs linjen.
   Eksempel: front 6 m med en innervegg fra midten gir 3 + 3; front 10 m med vegg ved 2 m gir 2 + 4 + 4.
+- **Støttedrager** (Bjørn 3.11.2026, `calc/supportBeams.ts`). Med 6 m fritt spenn har standveggen lite støtte og kan
+  sige. En standvegg med et fritt spenn på 6 m mellom to punkter som holder den (hjørne, T med en vegg, en takdrager som
+  hviler på den) får én støttedrager 3 m fra hjørnet. Den går rett inn fra veggen til det første den møter: en vegg
+  (innervegg, romvegg, standvegg) eller en takdrager (standard eller tegnet). Ligger noe nærmere, blir den kortere. På
+  veggen og på en stolpe deler den stolpen, på lengden av en drager henger den på krok. Den stopper foran en vegg som går
+  langs linjen. 7 m holdes allerede av inndelingen (4 + 3 med tverrdrager i skjøten); et lengre fritt spenn får én per
+  6 m. Den er en standard takdrager: arrangørens når arrangøren betaler standveggene. Uten takdrager blir det
+  fotplater som før. En tegnet drager fra samme stolpe holder veggen der og tar plassen til støttedrageren.
 - **2 × 600 i hver ende.** 292 står 80 høy og 20 tykk, med 9 mm kanal i over- og underkant og fire kamre
   inni. De to 600-koblingene sitter i ytterkamrene, én oppe og én nede, og låser i kanalen på stolpe 94.
 - Alle stolper, også frittstående som bare bærer takdrager, er **94** på 2490 mm med samme fot.
@@ -179,6 +187,10 @@ romvegger som takdragerne ikke holder, også når takdragerne er på (`calc/wall
   midt på.
 - **Støtte** er et hjørne, en T eller et kryss med en annen systemvegg (standvegg, innervegg eller romvegg, så et rom
   holder veggene det står inntil), og en stolpe under en takdrager.
+- **Fire låste sider** (Bjørn 3.11.2026): med takdrager på får en strekning som er holdt i begge ender, og der endene
+  også henger sammen rundt en annen vei med vegger og takdragere (en lukket firkant), ingen plater. Eksempel:
+  hjørnestand 4 × 3, vegg 1 m ut fra bakveggen fra venstre standvegg til takdrageren til høyre. En 4 m innervegg langs
+  en 5 m standvegg med fri ende får plate som før.
 - Med takdrager er standveggene i takdragerrammen og får ingen plater. Uten takdrager gjelder 3 m-regelen også mellom
   to hjørner: en bakvegg på 6 m får én plate midt på.
 - Platene er alltid kundens valg og faktureres utstilleren, også under standvegger arrangøren betaler. De står på
