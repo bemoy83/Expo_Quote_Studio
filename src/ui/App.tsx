@@ -20,7 +20,7 @@ import { Rail } from './panel/Rail'
 import { PlanPreview, PlanView, type PlanSelection } from './plan/PlanView'
 import { FreeTextileDrawer } from './plan/FreeTextileDrawer'
 import { WallDrawer } from './plan/WallDrawer'
-import { removeOpening } from '../domain/doors'
+import { doorFace, removeOpening } from '../domain/doors'
 import { findMotif, motifLibrary, readMotif } from './motifs'
 import { fitDecor, removeFoil, removeTextile } from '../domain/decor'
 import { fitFreeTextiles, removeFreeTextile } from '../domain/freeTextile'
@@ -75,6 +75,13 @@ const calcOf = (v: Variant, terms: StandWallTerms) => {
     calcCache.set(v, r)
   }
   return r
+}
+
+/** The wall a chosen door stands in, on the face its drawer showed: the wall drawer with colour and graphics. */
+function doorWall(v: Variant, sel: PlanSelection): PlanSelection {
+  const o = v.openings.find((x) => x.id === sel.openingId)
+  const w = o && v.walls.find((x) => x.id === o.wallId)
+  return o && w ? { wallId: w.id, side: sel.side ?? doorFace(v, w, o) } : {}
 }
 
 export default function App() {
@@ -204,7 +211,10 @@ export default function App() {
       }
       if (mod || e.altKey) return
       const k = e.key.toLowerCase()
-      if (k === 'escape' && (selection.lane || selection.fill || selection.openingId)) setSelection({})
+      if (k === 'escape' && selection.openingId) {
+        // From the door's settings back to its wall: colour and graphics (the door is part of the wall)
+        setSelection(doorWall(v, selection))
+      } else if (k === 'escape' && (selection.lane || selection.fill)) setSelection({})
       else if (k === 'escape') setTool('select')
       else if (k === 'r' && selection.lane && tool === 'select') {
         const r = rotateLane(v, selection.lane)
@@ -240,10 +250,9 @@ export default function App() {
         setSelection({})
       } else if ((k === 'delete' || k === 'backspace') && selection.openingId) {
         const id = selection.openingId
-        const o = v.openings.find((x) => x.id === id)
         onEdit((x) => removeOpening(x, id))
         // The wall drawer stays open on the wall the door stood in
-        setSelection(o ? { wallId: o.wallId, side: selection.side } : {})
+        setSelection(doorWall(v, selection))
       } else if ((k === 'delete' || k === 'backspace') && selection.objectId) {
         const id = selection.objectId
         onEdit((x) => ({ ...x, objects: x.objects.filter((o) => o.id !== id) }))

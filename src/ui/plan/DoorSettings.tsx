@@ -1,9 +1,10 @@
-// Door settings (dørskuff, now part of the wall drawer): a door or curtain chosen in the plan, 3D or the wall drawing.
-// Door or curtain, leaf colour, swing and hinge side. The wall drawer shows these in its settings column, the mini plan
-// (DoorMap) in the middle to move the door, and the door in its wall in the drawing (Bjørn 3.11.2026).
+// Door settings in the wall drawer: a door or curtain chosen in the plan, 3D or the wall drawing. Door or curtain,
+// swing and hinge side. No colour or graphics here: the door is part of the wall, so the wall's paint bucket and brush
+// colour and print the header and the leaf (Bjørn 3.11.2026). The wall drawer shows these in its settings column, the
+// mini plan (DoorMap) in the middle to move the door, and the door in its wall in the drawing.
 import type { ReactNode } from 'react'
 import { ArrowLeftRight, FlipHorizontal2 } from 'lucide-react'
-import { sideName, doorRal, flipHinge, openingRoom, setDoorRal, setOpeningProduct } from '../../domain/doors'
+import { sideName, doorRal, flipHinge, openingRoom, setOpeningProduct } from '../../domain/doors'
 import { canFlipSwing, doorSwing, flipSwing, isPerimeterWall } from '../../domain/edit'
 import { wallDirection, wallLength } from '../../domain/grid'
 import { OUTSIDE, roomName, roomSize } from '../../domain/rooms'
@@ -11,9 +12,9 @@ import type { Opening, Point, Variant, Wall } from '../../domain/types'
 import { isStandWall } from '../../domain/walls'
 import { LAYER_COLOR } from '../colors'
 import { IconButton, Segmented } from '../controls'
-import { openingProducts, plateColor, plateName, productOf, rules } from '../env'
+import { openingProducts, plateColor, productOf, rules } from '../env'
 import { fmt } from '../format'
-import { DrawerHead, DrawerRow, PlatePalette } from './drawerParts'
+import { DrawerHead, DrawerRow } from './drawerParts'
 
 interface Props {
   v: Variant
@@ -75,17 +76,10 @@ export function DoorSettings({ v, o, w, onEdit, onRemove, onClose, children }: P
         options={openingProducts().map((x) => ({ value: x.variants[0].artnr, label: x.opening === 'door' ? 'Dør' : 'Forheng' }))}
       />
       {door && (
-        <>
-          <div className="eyebrow">
-            Dørblad · {plateName(ral)} · RAL {ral}
-            {o.ral ? '' : ' · som standen'}
-          </div>
-          <PlatePalette value={ral} onPick={(r) => onEdit((x) => setDoorRal(x, o.id, r))} />
-          <DrawerRow label={swingText}>
-            {canFlipSwing(v.stand, w) && <IconButton icon={FlipHorizontal2} label="Snu slagretning" size={15} onClick={() => onEdit((x) => flipSwing(x, o.id))} />}
-            <IconButton icon={ArrowLeftRight} label="Bytt hengselside" size={15} onClick={() => onEdit((x) => flipHinge(x, o.id))} />
-          </DrawerRow>
-        </>
+        <DrawerRow label={swingText}>
+          {canFlipSwing(v.stand, w) && <IconButton icon={FlipHorizontal2} label="Snu slagretning" size={15} onClick={() => onEdit((x) => flipSwing(x, o.id))} />}
+          <IconButton icon={ArrowLeftRight} label="Bytt hengselside" size={15} onClick={() => onEdit((x) => flipHinge(x, o.id))} />
+        </DrawerRow>
       )}
     </>
   )
