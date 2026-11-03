@@ -11,8 +11,8 @@
 import { inward, makeModule, pointKey } from '../domain/grid';
 import type { Point, Side, Stand } from '../domain/types';
 import type { BuiltModule } from '../domain/walls';
-import { splitLength, type BeamLayout, type BeamSegment } from './beams';
-import { underBeam, wallRuns } from './wallSupports';
+import { onSegment, splitLength, type BeamLayout, type BeamSegment } from './beams';
+import { holdsRun, wallRuns } from './wallSupports';
 
 /** A free span of a stand wall from this long, m, gets støttedrager. */
 export const SUPPORT_SPAN = 6;
@@ -24,13 +24,6 @@ export interface SupportBeamLayout extends BeamLayout {
 
 const EPS = 1e-6;
 export const NO_SUPPORT_BEAMS: SupportBeamLayout = { segments: [], posts: new Map(), lm: 0, hooks: 0 };
-
-/** p lies on the segment, ends included. */
-const onSegment = (s: BeamSegment, p: Point) =>
-  p[0] >= Math.min(s.from[0], s.to[0]) - EPS &&
-  p[0] <= Math.max(s.from[0], s.to[0]) + EPS &&
-  p[1] >= Math.min(s.from[1], s.to[1]) - EPS &&
-  p[1] <= Math.max(s.from[1], s.to[1]) + EPS;
 
 /**
  * Points along one run of a stand wall (whole metres from its low end) where it gets a støttedrager: in each free span
@@ -52,22 +45,21 @@ export function supportPoints(len: number, held: (i: number) => boolean, span = 
 }
 
 /**
- * The støttedrager of a stand. `mods`: every built wall module; `sideOf`: the stand side of a stand wall module, null
- * for every other wall; `beams`: the standard and drawn takdrager (they hold the walls and stop the støttedrager).
+ * The støttedrager of a stand. `mods`: every built wall module; `wallPoints`: every wall post; `sideOf`: the stand side
+ * of a stand wall module, null for every other wall; `beams`: the standard and drawn takdrager (they hold the walls and
+ * stop the støttedrager).
  */
 export function layoutSupportBeams(
   stand: Stand,
   mods: readonly BuiltModule[],
+  wallPoints: ReadonlyMap<string, Point>,
   sideOf: (m: BuiltModule) => Side | null,
   beams: BeamLayout,
   maxLength: number,
   span = SUPPORT_SPAN,
 ): SupportBeamLayout {
   const keys = new Set(mods.map((m) => m.key));
-  const points = new Set(mods.flatMap((m) => [pointKey(m.a), pointKey(m.b)]));
-  const touched = { h: new Set<string>(), v: new Set<string>() };
-  for (const r of wallRuns(mods)) for (const p of r.points) touched[r.orientation].add(pointKey(p));
-  const beam = underBeam(beams);
+  const holds = holdsRun(mods, beams);
 
   // Where each støttedrager starts, and which way it runs
   const starts: { at: Point; side: Side }[] = [];
@@ -78,9 +70,7 @@ export function layoutSupportBeams(
   }
   for (const [side, ms] of bySide) {
     for (const run of wallRuns(ms)) {
-      const other = touched[run.orientation === 'h' ? 'v' : 'h'];
-      const held = (i: number) => other.has(pointKey(run.points[i])) || beam(run.points[i]);
-      for (const i of supportPoints(run.points.length - 1, held, span)) starts.push({ at: run.points[i], side });
+      for (const i of supportPoints(run.points.length - 1, (k) => holds(run, run.points[k]), span)) starts.push({ at: run.points[i], side });
     }
   }
 
@@ -99,9 +89,9 @@ export function layoutSupportBeams(
       if (keys.has(makeModule(at(t - 1), at(t)).key)) break;
       stop = t;
       const p = at(t);
-      if (points.has(pointKey(p))) break;
-      const across = beams.segments.filter((s) => onSegment(s, p) && Math.abs((s.to[0] - s.from[0]) * dx + (s.to[1] - s.from[1]) * dy) < EPS);
-      if (across.length) {
+      if (wallPoints.has(pointKey(p))) break;
+      // A beam across its way (not one running along it)
+      if (beams.segments.some((s) => onSegment(s, p) && Math.abs((s.to[0] - s.from[0]) * dx + (s.to[1] - s.from[1]) * dy) < EPS)) {
         hook = !beams.posts.has(pointKey(p));
         break;
       }

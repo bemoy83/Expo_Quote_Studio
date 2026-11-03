@@ -41,6 +41,12 @@ export function splitLength(length: number, max: number): number[] {
   return out;
 }
 
+/** p lies on the beam, its ends included. */
+export const onSegment = (s: BeamSegment, p: Point): boolean => {
+  const within = (x: number, a: number, b: number) => x >= Math.min(a, b) - 1e-6 && x <= Math.max(a, b) + 1e-6;
+  return within(p[0], s.from[0], s.to[0]) && within(p[1], s.from[1], s.to[1]);
+};
+
 const lerp = (a: Point, b: Point, t: number): Point => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
 
 export const NO_BEAMS: BeamLayout = { segments: [], posts: new Map(), lm: 0 };
@@ -55,14 +61,14 @@ export function variantBeams(
   maxLength: number,
 ): { standard: BeamLayout; inner: InnerBeamLayout; support: SupportBeamLayout; all: BeamLayout; hooks: number } {
   const moduleKeys = new Set(mods.map((m) => m.key));
-  const frame = !standardBeamsOn(v) ? NO_BEAMS : layoutBeams(v.stand, moduleKeys, wallPoints, maxLength);
+  const frame = standardBeamsOn(v) ? layoutBeams(v.stand, moduleKeys, wallPoints, maxLength) : NO_BEAMS;
   const drawn = layoutInnerBeams(v.innerBeams ?? [], frame, moduleKeys, wallPoints, maxLength);
   const wallsById = new Map(v.walls.map((w) => [w.id, w]));
   const sideOf = (m: BuiltModule) => {
     const w = wallsById.get(m.wallId);
     return w ? standWallSide(w) : null;
   };
-  const support = frame.segments.length ? layoutSupportBeams(v.stand, mods, sideOf, mergeBeams(frame, drawn), maxLength) : NO_SUPPORT_BEAMS;
+  const support = frame.segments.length ? layoutSupportBeams(v.stand, mods, wallPoints, sideOf, mergeBeams(frame, drawn), maxLength) : NO_SUPPORT_BEAMS;
   // A støttedrager meeting a drawn beam's own post holds it, as a drawn cross beam does: no foot plate there
   const ends = new Set(support.segments.flatMap((s) => [pointKey(s.from), pointKey(s.to)]));
   const inner = { ...drawn, feet: drawn.feet.filter((f) => !ends.has(pointKey(f.at))) };

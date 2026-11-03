@@ -14,7 +14,7 @@ import { pointKey } from '../domain/grid';
 import type { Point } from '../domain/types';
 import type { BuiltModule } from '../domain/walls';
 import type { SupportRule } from '../foga/recipes';
-import type { BeamLayout } from './beams';
+import { onSegment, type BeamLayout } from './beams';
 import { minSupports, spreadSupports, type Ends } from './supports';
 
 export interface WallSupport {
@@ -25,7 +25,7 @@ export interface WallSupport {
 }
 
 /** A straight run of wall modules, post by post from its low end. */
-interface Run {
+export interface Run {
   orientation: 'h' | 'v';
   points: Point[];
   mods: BuiltModule[];
@@ -62,10 +62,18 @@ export function wallRuns(mods: readonly BuiltModule[]): Run[] {
 }
 
 /** A takdrager rests on the point: a post it needs, or a wall post its length passes over. */
-export const underBeam = (beams: BeamLayout) => {
-  const within = (x: number, a: number, b: number) => x >= Math.min(a, b) - 1e-6 && x <= Math.max(a, b) + 1e-6;
-  return (p: Point) => beams.posts.has(pointKey(p)) || beams.segments.some((s) => within(p[0], s.from[0], s.to[0]) && within(p[1], s.from[1], s.to[1]));
-};
+const underBeam = (beams: BeamLayout) => (p: Point) => beams.posts.has(pointKey(p)) || beams.segments.some((s) => onSegment(s, p));
+
+/**
+ * What holds a wall run at each of its posts: another system wall meeting it there (corner, T or cross), or a takdrager
+ * resting on it. Shared by the foot plates and the støttedrager (calc/supportBeams.ts).
+ */
+export function holdsRun(mods: readonly BuiltModule[], beams: BeamLayout): (run: Run, p: Point) => boolean {
+  const touched = { h: new Set<string>(), v: new Set<string>() };
+  for (const r of wallRuns(mods)) for (const p of r.points) touched[r.orientation].add(pointKey(p));
+  const beam = underBeam(beams);
+  return (run, p) => touched[run.orientation === 'h' ? 'v' : 'h'].has(pointKey(p)) || beam(p);
+}
 
 /** Whether `a` and `b` are joined by walls and takdrager without the given wall modules: a closed ring with them. */
 function joinedWithout(mods: readonly BuiltModule[], beams: BeamLayout) {
@@ -112,17 +120,12 @@ export function wallSupports(
   inFrame: (m: BuiltModule) => boolean,
   framed = false,
 ): WallSupport[] {
-  const runs = wallRuns(mods);
   const joined = joinedWithout(mods, beams);
-  // Points each orientation touches: a point on a run that the other orientation also touches is a corner, T or cross
-  const touched = { h: new Set<string>(), v: new Set<string>() };
-  for (const r of runs) for (const p of r.points) touched[r.orientation].add(pointKey(p));
-  const beam = underBeam(beams);
+  const holds = holdsRun(mods, beams);
   const out = new Map<string, WallSupport>();
-  for (const run of runs) {
+  for (const run of wallRuns(mods)) {
     if (run.mods.some(inFrame)) continue;
-    const other = touched[run.orientation === 'h' ? 'v' : 'h'];
-    const held = run.points.map((p) => other.has(pointKey(p)) || beam(p));
+    const held = run.points.map((p) => holds(run, p));
     // Between two supports (or a free end), one stretch at a time
     let start = 0;
     for (let i = 1; i < run.points.length; i++) {
