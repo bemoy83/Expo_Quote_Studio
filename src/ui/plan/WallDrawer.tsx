@@ -279,6 +279,10 @@ export function WallDrawer(p: Props) {
           style: { cursor: tool === 'wall' ? 'copy' : 'crosshair' },
           onPointerDown: (e: RPointerEvent) => {
             e.stopPropagation()
+            // Touch (iPad) holds the pointer on the plate it went down on, so the next plates would never see it
+            // enter. Letting go of it makes a sweep with a finger or pen work like one with the mouse.
+            const t = e.target as Element
+            if (t.hasPointerCapture?.(e.pointerId)) t.releasePointerCapture(e.pointerId)
             if (e.button === 0) paintAt(i, key, true)
           },
           onPointerEnter: (e: RPointerEvent) => {
