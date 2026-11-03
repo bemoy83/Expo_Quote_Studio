@@ -30,7 +30,7 @@ export interface BeamLayout {
  * Split a run into the fewest lengths ≤ max, as even as possible, joints at whole metres.
  * 7 → 4 + 3, 13 → 5 + 4 + 4. A fractional remainder goes on the last length.
  */
-export function splitLength(length: number, max: number): number[] {
+export function splitBeamLength(length: number, max: number): number[] {
   if (length <= EPS) return [];
   const count = Math.ceil(length / max - EPS);
   const whole = Math.floor(length + EPS);
@@ -98,7 +98,7 @@ export function layoutBeams(
     const total = Math.abs(to[0] - from[0]) + Math.abs(to[1] - from[1]);
     const inner: Point[] = [];
     let acc = 0;
-    splitLength(total, maxLength).forEach((len, q) => {
+    splitBeamLength(total, maxLength).forEach((len, q) => {
       const a = lerp(from, to, acc / total);
       const b = lerp(from, to, (acc + len) / total);
       segments.push({ from: a, to: b, length: len, side, cross });

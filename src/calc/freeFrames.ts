@@ -90,7 +90,7 @@ export function supportPoints(len: number, s: SupportRule, corners: Ends = { fro
 }
 
 /** `len` in the fewest equal pieces of at most `max` (the last takes the rounding). */
-export function splitLength(len: number, max: number): number[] {
+export function splitRail(len: number, max: number): number[] {
   const k = Math.max(1, Math.ceil(len / max - 1e-9));
   const piece = Math.round(len / k);
   return Array.from({ length: k }, (_, i) => (i < k - 1 ? piece : len - piece * (k - 1)));
@@ -112,7 +112,7 @@ export function freeFrames(v: Variant, r: FreeFrameRecipe, s: InFrameParams, cus
     // Rails stop where the corner post's leg ends: the leg starts at the outer corner, half a frame depth outside the
     // run's centre line
     const rail = length - nCorners * (postLeg - depth / 2);
-    const railCuts = splitLength(rail, r.maxRail);
+    const railCuts = splitRail(rail, r.maxRail);
     const corner = { from: !!ends.from, to: !!ends.to };
     const foot = length < r.support.minFrom ? r.smallFoot : r.foot;
     // A foot at a free end stands flush with the frame end, not past it (Bjørn 1.11.2026)

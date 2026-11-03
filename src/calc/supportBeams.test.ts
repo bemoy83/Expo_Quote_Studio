@@ -6,7 +6,7 @@ import { createVariant } from '../domain/variant';
 import { standardBeamsOn, withStandardBeams } from '../domain/walls';
 import { RULES } from '../rules/rules';
 import { calc } from './calc';
-import { supportPoints } from './supportBeams';
+import { supportBeamPoints } from './supportBeams';
 
 const EXHIBITOR = { payer: 'utstiller', ral: '9010' } as const;
 const ORGANISER = { payer: 'arrangør', ral: '9010' } as const;
@@ -27,14 +27,14 @@ const beam = (id: string, from: Point, to: Point): InnerBeam => ({ id, from, to 
 describe('free spans on one stand wall', () => {
   const ends = (...at: number[]) => (i: number) => at.includes(i);
   it('one in the middle from 6 m, nothing under', () => {
-    expect(supportPoints(5, ends(0, 5))).toEqual([]);
-    expect(supportPoints(6, ends(0, 6))).toEqual([3]);
-    expect(supportPoints(12, ends(0, 12))).toEqual([4, 8]);
+    expect(supportBeamPoints(5, ends(0, 5))).toEqual([]);
+    expect(supportBeamPoints(6, ends(0, 6))).toEqual([3]);
+    expect(supportBeamPoints(12, ends(0, 12))).toEqual([4, 8]);
   });
   it('each span between held points on its own; a free end is left alone', () => {
-    expect(supportPoints(10, ends(0, 4, 10))).toEqual([7]);
-    expect(supportPoints(7, ends(0, 4, 7))).toEqual([]);
-    expect(supportPoints(8, ends(8))).toEqual([]);
+    expect(supportBeamPoints(10, ends(0, 4, 10))).toEqual([7]);
+    expect(supportBeamPoints(7, ends(0, 4, 7))).toEqual([]);
+    expect(supportBeamPoints(8, ends(8))).toEqual([]);
   });
 });
 

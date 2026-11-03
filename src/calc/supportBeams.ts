@@ -11,7 +11,7 @@
 import { inward, makeModule, pointKey } from '../domain/grid';
 import type { Point, Side, Stand } from '../domain/types';
 import type { BuiltModule } from '../domain/walls';
-import { onSegment, splitLength, type BeamLayout, type BeamSegment } from './beams';
+import { onSegment, splitBeamLength, type BeamLayout, type BeamSegment } from './beams';
 import { holdsRun, wallRuns } from './wallSupports';
 
 /** A free span of a stand wall from this long, m, gets støttedrager. */
@@ -29,7 +29,7 @@ export const NO_SUPPORT_BEAMS: SupportBeamLayout = { segments: [], posts: new Ma
  * Points along one run of a stand wall (whole metres from its low end) where it gets a støttedrager: in each free span
  * of at least `span` m between two held points. A stretch out to a free end is left alone.
  */
-export function supportPoints(len: number, held: (i: number) => boolean, span = SUPPORT_SPAN): number[] {
+export function supportBeamPoints(len: number, held: (i: number) => boolean, span = SUPPORT_SPAN): number[] {
   const out: number[] = [];
   let start = held(0) ? 0 : -1;
   for (let i = 1; i <= len; i++) {
@@ -70,7 +70,7 @@ export function layoutSupportBeams(
   }
   for (const [side, ms] of bySide) {
     for (const run of wallRuns(ms)) {
-      for (const i of supportPoints(run.points.length - 1, (k) => holds(run, run.points[k]), span)) starts.push({ at: run.points[i], side });
+      for (const i of supportBeamPoints(run.points.length - 1, (k) => holds(run, run.points[k]), span)) starts.push({ at: run.points[i], side });
     }
   }
 
@@ -98,7 +98,7 @@ export function layoutSupportBeams(
     }
     if (stop === 0) continue;
     let acc = 0;
-    splitLength(stop, maxLength).forEach((n, q) => {
+    splitBeamLength(stop, maxLength).forEach((n, q) => {
       segments.push({ from: at(acc), to: at(acc + n), length: n, side, cross: true, support: true });
       if (q > 0) addPost(at(acc));
       acc += n;
