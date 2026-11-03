@@ -1,0 +1,87 @@
+{
+  "format": "standskisse",
+  "versjon": 3,
+  "prosjekt": {
+    "fields": [
+      {
+        "id": "kunde",
+        "name": "Kundenavn",
+        "value": "Lang AS"
+      },
+      {
+        "id": "prosjekt",
+        "name": "Prosjekt",
+        "value": ""
+      },
+      {
+        "id": "standnr",
+        "name": "Standnr.",
+        "value": ""
+      }
+    ],
+    "delivery": {
+      "montering": "2026-12-01",
+      "apning": "2026-12-03",
+      "demontering": "2026-12-05"
+    }
+  },
+  "varianter": [
+    {
+      "name": "A",
+      "stand": {
+        "width": 8,
+        "depth": 7,
+        "type": "row"
+      },
+      "defaultPlate": "9010",
+      "walls": [
+        {
+          "id": "side-back",
+          "from": [
+            0,
+            0
+          ],
+          "to": [
+            8,
+            0
+          ]
+        },
+        {
+          "id": "side-left",
+          "from": [
+            0,
+            0
+          ],
+          "to": [
+            0,
+            7
+          ]
+        },
+        {
+          "id": "side-right",
+          "from": [
+            8,
+            0
+          ],
+          "to": [
+            8,
+            7
+          ]
+        }
+      ],
+      "rooms": [],
+      "openings": [],
+      "floor": {
+        "tiles": [],
+        "protection": false
+      },
+      "objects": [],
+      "textiles": [],
+      "freeTextiles": [],
+      "foils": [],
+      "counted": [],
+      "loose": []
+    }
+  ],
+  "egneMotiver": []
+}

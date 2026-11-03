@@ -1,0 +1,218 @@
+{
+  "format": "standskisse",
+  "versjon": 3,
+  "prosjekt": {
+    "fields": [
+      {
+        "id": "kunde",
+        "name": "Kundenavn",
+        "value": "Utstiller AS"
+      },
+      {
+        "id": "prosjekt",
+        "name": "Prosjekt",
+        "value": ""
+      },
+      {
+        "id": "standnr",
+        "name": "Standnr.",
+        "value": ""
+      }
+    ],
+    "delivery": {
+      "montering": "2026-12-01",
+      "apning": "2026-12-03",
+      "demontering": "2026-12-05"
+    },
+    "standWalls": {
+      "payer": "utstiller",
+      "ral": "9010"
+    }
+  },
+  "varianter": [
+    {
+      "name": "A",
+      "stand": {
+        "width": 6,
+        "depth": 4,
+        "type": "corner",
+        "cornerSide": "left"
+      },
+      "defaultPlate": "9010",
+      "walls": [
+        {
+          "id": "side-back",
+          "from": [
+            0,
+            0
+          ],
+          "to": [
+            6,
+            0
+          ],
+          "plate": "7012"
+        },
+        {
+          "id": "side-right",
+          "from": [
+            6,
+            0
+          ],
+          "to": [
+            6,
+            4
+          ]
+        },
+        {
+          "id": "bk.0",
+          "from": [
+            4,
+            0
+          ],
+          "to": [
+            6,
+            0
+          ],
+          "room": {
+            "id": "bk",
+            "side": 0
+          }
+        },
+        {
+          "id": "bk.1",
+          "from": [
+            6,
+            0
+          ],
+          "to": [
+            6,
+            2
+          ],
+          "room": {
+            "id": "bk",
+            "side": 1
+          }
+        },
+        {
+          "id": "bk.2",
+          "from": [
+            6,
+            2
+          ],
+          "to": [
+            4,
+            2
+          ],
+          "room": {
+            "id": "bk",
+            "side": 2
+          }
+        },
+        {
+          "id": "bk.3",
+          "from": [
+            4,
+            2
+          ],
+          "to": [
+            4,
+            0
+          ],
+          "room": {
+            "id": "bk",
+            "side": 3
+          }
+        }
+      ],
+      "rooms": [
+        {
+          "id": "bk",
+          "outline": [
+            [
+              4,
+              0
+            ],
+            [
+              6,
+              0
+            ],
+            [
+              6,
+              2
+            ],
+            [
+              4,
+              2
+            ]
+          ]
+        }
+      ],
+      "openings": [
+        {
+          "id": "o1",
+          "wallId": "bk.3",
+          "module": 1,
+          "product": "6130"
+        }
+      ],
+      "floor": {
+        "tiles": [],
+        "protection": false
+      },
+      "objects": [],
+      "textiles": [],
+      "freeTextiles": [],
+      "foils": [],
+      "counted": [],
+      "loose": []
+    },
+    {
+      "name": "B",
+      "stand": {
+        "width": 6,
+        "depth": 4,
+        "type": "corner",
+        "cornerSide": "left"
+      },
+      "defaultPlate": "9010",
+      "walls": [
+        {
+          "id": "side-back",
+          "from": [
+            0,
+            0
+          ],
+          "to": [
+            6,
+            0
+          ]
+        },
+        {
+          "id": "side-right",
+          "from": [
+            6,
+            0
+          ],
+          "to": [
+            6,
+            4
+          ]
+        }
+      ],
+      "rooms": [],
+      "openings": [],
+      "floor": {
+        "tiles": [],
+        "protection": false
+      },
+      "objects": [],
+      "textiles": [],
+      "freeTextiles": [],
+      "foils": [],
+      "counted": [],
+      "loose": [],
+      "noBeams": true
+    }
+  ],
+  "egneMotiver": []
+}

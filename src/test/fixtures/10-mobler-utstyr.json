@@ -1,0 +1,134 @@
+{
+  "format": "standskisse",
+  "versjon": 3,
+  "prosjekt": {
+    "fields": [
+      {
+        "id": "kunde",
+        "name": "Kundenavn",
+        "value": "Møbel AS"
+      },
+      {
+        "id": "prosjekt",
+        "name": "Prosjekt",
+        "value": ""
+      },
+      {
+        "id": "standnr",
+        "name": "Standnr.",
+        "value": ""
+      },
+      {
+        "id": "x1",
+        "name": "Kontakt",
+        "value": "Kari Nordmann"
+      }
+    ],
+    "delivery": {
+      "montering": "2026-12-01",
+      "apning": "2026-12-03",
+      "demontering": "2026-12-05"
+    }
+  },
+  "varianter": [
+    {
+      "name": "A",
+      "stand": {
+        "width": 4,
+        "depth": 3,
+        "type": "row"
+      },
+      "defaultPlate": "9010",
+      "walls": [
+        {
+          "id": "side-back",
+          "from": [
+            0,
+            0
+          ],
+          "to": [
+            4,
+            0
+          ]
+        },
+        {
+          "id": "side-left",
+          "from": [
+            0,
+            0
+          ],
+          "to": [
+            0,
+            3
+          ]
+        },
+        {
+          "id": "side-right",
+          "from": [
+            4,
+            0
+          ],
+          "to": [
+            4,
+            3
+          ]
+        }
+      ],
+      "rooms": [],
+      "openings": [],
+      "floor": {
+        "tiles": [],
+        "protection": false
+      },
+      "objects": [
+        {
+          "id": "i1",
+          "product": "5276",
+          "x": 1,
+          "y": 1,
+          "rot": 0
+        },
+        {
+          "id": "i2",
+          "product": "5186",
+          "x": 2.5,
+          "y": 1.5,
+          "rot": 0
+        },
+        {
+          "id": "i3",
+          "product": "5296",
+          "x": 3,
+          "y": 2.2,
+          "rot": 0
+        }
+      ],
+      "textiles": [],
+      "freeTextiles": [],
+      "foils": [],
+      "counted": [
+        {
+          "product": "7010",
+          "qty": 2
+        },
+        {
+          "product": "5415",
+          "qty": 1
+        },
+        {
+          "product": "9900",
+          "qty": 3
+        }
+      ],
+      "loose": [
+        {
+          "id": "l1",
+          "name": "Catering",
+          "qty": 1,
+          "price": 2500
+        }
+      ]
+    }
+  ],
+  "egneMotiver": []
+}

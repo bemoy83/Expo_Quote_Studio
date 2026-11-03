@@ -1,0 +1,126 @@
+{
+  "format": "standskisse",
+  "versjon": 3,
+  "prosjekt": {
+    "fields": [
+      {
+        "id": "kunde",
+        "name": "Kundenavn",
+        "value": "Tekstil AS"
+      },
+      {
+        "id": "prosjekt",
+        "name": "Prosjekt",
+        "value": ""
+      },
+      {
+        "id": "standnr",
+        "name": "Standnr.",
+        "value": ""
+      }
+    ],
+    "delivery": {
+      "montering": "2026-12-01",
+      "apning": "2026-12-03",
+      "demontering": "2026-12-05"
+    }
+  },
+  "varianter": [
+    {
+      "name": "A",
+      "stand": {
+        "width": 6,
+        "depth": 5,
+        "type": "corner",
+        "cornerSide": "right"
+      },
+      "defaultPlate": "9010",
+      "walls": [
+        {
+          "id": "side-back",
+          "from": [
+            0,
+            0
+          ],
+          "to": [
+            6,
+            0
+          ]
+        },
+        {
+          "id": "side-left",
+          "from": [
+            0,
+            0
+          ],
+          "to": [
+            0,
+            5
+          ]
+        }
+      ],
+      "rooms": [],
+      "openings": [],
+      "floor": {
+        "tiles": [],
+        "protection": false
+      },
+      "objects": [],
+      "textiles": [
+        {
+          "id": "t1",
+          "wallId": "side-back",
+          "side": 1,
+          "from": 1,
+          "width": 4,
+          "motif": "hoved"
+        },
+        {
+          "id": "t2",
+          "wallId": "side-left",
+          "side": -1,
+          "from": 1,
+          "width": 2,
+          "fill": "white"
+        }
+      ],
+      "freeTextiles": [
+        {
+          "id": "ft1",
+          "from": [
+            3,
+            3
+          ],
+          "to": [
+            5.5,
+            3
+          ],
+          "a": {
+            "motif": "logo"
+          },
+          "b": {
+            "fill": "white"
+          }
+        },
+        {
+          "id": "ft2",
+          "from": [
+            3,
+            3
+          ],
+          "to": [
+            3,
+            4.5
+          ],
+          "a": {
+            "fill": "reuse"
+          }
+        }
+      ],
+      "foils": [],
+      "counted": [],
+      "loose": []
+    }
+  ],
+  "egneMotiver": []
+}

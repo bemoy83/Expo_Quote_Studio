@@ -1,0 +1,188 @@
+{
+  "format": "standskisse",
+  "versjon": 3,
+  "prosjekt": {
+    "fields": [
+      {
+        "id": "kunde",
+        "name": "Kundenavn",
+        "value": "Teppe AS"
+      },
+      {
+        "id": "prosjekt",
+        "name": "Prosjekt",
+        "value": ""
+      },
+      {
+        "id": "standnr",
+        "name": "Standnr.",
+        "value": ""
+      }
+    ],
+    "delivery": {
+      "montering": "2026-12-01",
+      "apning": "2026-12-03",
+      "demontering": "2026-12-05"
+    }
+  },
+  "varianter": [
+    {
+      "name": "A",
+      "stand": {
+        "width": 5,
+        "depth": 3,
+        "type": "end"
+      },
+      "defaultPlate": "9010",
+      "walls": [
+        {
+          "id": "side-back",
+          "from": [
+            0,
+            0
+          ],
+          "to": [
+            5,
+            0
+          ]
+        }
+      ],
+      "rooms": [],
+      "openings": [],
+      "floor": {
+        "tiles": [
+          {
+            "i": 0,
+            "j": 0,
+            "w": 10,
+            "h": 4,
+            "product": "5921",
+            "roll": "x",
+            "fill": "f1"
+          },
+          {
+            "i": 0,
+            "j": 4,
+            "w": 5,
+            "h": 2,
+            "product": "5921",
+            "roll": "x",
+            "fill": "f1",
+            "split": "f1.0"
+          },
+          {
+            "i": 5,
+            "j": 4,
+            "w": 5,
+            "h": 2,
+            "product": "5921",
+            "roll": "x",
+            "fill": "f1",
+            "split": "f1.0"
+          }
+        ],
+        "protection": false
+      },
+      "objects": [],
+      "textiles": [],
+      "freeTextiles": [],
+      "foils": [],
+      "counted": [],
+      "loose": []
+    },
+    {
+      "name": "B",
+      "stand": {
+        "width": 6,
+        "depth": 5,
+        "type": "row"
+      },
+      "defaultPlate": "9010",
+      "walls": [
+        {
+          "id": "side-back",
+          "from": [
+            0,
+            0
+          ],
+          "to": [
+            6,
+            0
+          ]
+        },
+        {
+          "id": "side-left",
+          "from": [
+            0,
+            0
+          ],
+          "to": [
+            0,
+            5
+          ]
+        },
+        {
+          "id": "side-right",
+          "from": [
+            6,
+            0
+          ],
+          "to": [
+            6,
+            5
+          ]
+        }
+      ],
+      "rooms": [],
+      "openings": [],
+      "floor": {
+        "tiles": [
+          {
+            "i": 0,
+            "j": 0,
+            "w": 4,
+            "h": 6,
+            "product": "5922",
+            "roll": "y",
+            "fill": "f1"
+          },
+          {
+            "i": 4,
+            "j": 0,
+            "w": 4,
+            "h": 6,
+            "product": "5922",
+            "roll": "y",
+            "fill": "f1"
+          },
+          {
+            "i": 8,
+            "j": 0,
+            "w": 4,
+            "h": 6,
+            "product": "5922",
+            "roll": "y",
+            "fill": "f1"
+          },
+          {
+            "i": 0,
+            "j": 6,
+            "w": 12,
+            "h": 4,
+            "product": "5920",
+            "roll": "x",
+            "fill": "f2"
+          }
+        ],
+        "protection": false
+      },
+      "objects": [],
+      "textiles": [],
+      "freeTextiles": [],
+      "foils": [],
+      "counted": [],
+      "loose": []
+    }
+  ],
+  "egneMotiver": []
+}
