@@ -3,7 +3,7 @@
 import { type Module } from '../../../domain/grid'
 import { planTextile } from '../../../domain/textile/brush'
 import type { Point, Variant, Wall } from '../../../domain/types'
-import { BORDER_STRONG, CANVAS, INK, INK_FAINT } from '../../colors'
+import { BORDER_STRONG, CANVAS, INK, INK_FAINT, SURFACE } from '../../colors'
 import { fmt } from '../../format'
 import { rules } from '../../env'
 import type { Brush } from '../../tools'
@@ -11,6 +11,7 @@ import { faceSegment, type FaceSide, felt } from '../../../domain/faces'
 import { freeSpans, textileAt } from '../../../domain/textile/inFrame'
 import { MONO, PLAN_TEXTILE, PLAN_TEXTILE_OFFSET, PLAN_WALL, TEXTILE, WALL } from '../planStyle'
 import { Seg } from './Seg'
+import type { EraseMark } from '../pointer/erase'
 
 /** A wall face under the pointer: wall, face, offset along the wall and module index. */
 export interface FaceHit {
@@ -88,18 +89,18 @@ export function StrokePreview({ a, b, erase, beam }: { a: Point; b: Point; erase
 }
 
 /** Where a textile or motif click would land on the hovered wall face. */
-export function FacePreview({ v, h, brush, erase }: { v: Variant; h: FaceHit; brush: Brush; erase: boolean }) {
+export function FacePreview({ v, h, brush }: { v: Variant; h: FaceHit; brush: Brush }) {
   const tx = textileAt(v, h.w.id, h.s, h.t)
   let span: [number, number] | null = null
   if (tx) span = [tx.from, tx.from + tx.width]
-  else if (brush.kind === 'textile' && !erase) span = freeSpans(v, rules, h.w.id, h.s).find(([a, b]) => h.t >= a && h.t <= b) ?? null
+  else if (brush.kind === 'textile') span = freeSpans(v, rules, h.w.id, h.s).find(([a, b]) => h.t >= a && h.t <= b) ?? null
   else if (brush.kind === 'motif') {
     const f = felt(rules, h.module)
     span = [f.a, f.b]
   }
   if (!span) return null
   const [a, b] = faceSegment(h.w, h.s, span[0] + 0.02, span[1] - 0.02, PLAN_TEXTILE_OFFSET)
-  return <Seg a={a} b={b} stroke={brush.kind === 'textile' && !erase ? TEXTILE : INK} strokeOpacity={0.45} strokeWidth={PLAN_TEXTILE + 0.04} />
+  return <Seg a={a} b={b} stroke={brush.kind === 'textile' ? TEXTILE : INK} strokeOpacity={0.45} strokeWidth={PLAN_TEXTILE + 0.04} />
 }
 
 /** True on a whole metre, give or take float noise from stepping in 0.25 m. */
@@ -114,6 +115,22 @@ export function SnapDots({ W, D, step }: { W: number; D: number; step: number })
     const y = Math.floor(n / (nx + 1)) * step
     return <circle key={n} cx={x} cy={y} r={onMetre(x) && onMetre(y) ? 0.028 : 0.018} fill={BORDER_STRONG} />
   })
+}
+
+/** What a Tøm click takes: faded in the surface colour, marked dashed in ink (a line along its middle, a box or room
+ * outlined). */
+export function EraseMarkView({ m }: { m: EraseMark }) {
+  const dash = '.08 .06'
+  if (m.kind === 'seg')
+    return (
+      <g>
+        <Seg a={m.a} b={m.b} stroke={SURFACE} strokeOpacity={0.75} strokeWidth={m.width + 0.04} />
+        <Seg a={m.a} b={m.b} stroke={INK} strokeWidth={0.03} strokeDasharray={dash} />
+      </g>
+    )
+  const common = { fill: SURFACE, fillOpacity: 0.7, stroke: INK, strokeWidth: 0.03, strokeDasharray: dash }
+  if (m.kind === 'box') return <rect x={m.x} y={m.y} width={m.w} height={m.h} rx={0.02} {...common} />
+  return <polygon points={m.points.map((p) => p.join(',')).join(' ')} {...common} />
 }
 
 export function HoverModule({ m }: { m: Module }) {

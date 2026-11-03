@@ -12,7 +12,7 @@ import { freeStroke, freeTextileAt } from '../../domain/textile/free'
 import type { Motif } from '../../persistence/file'
 import type { Side, Variant } from '../../domain/types'
 import { builtModules, doorAllowed, standWallKeys } from '../../domain/walls'
-import { BORDER, INK, INK_FAINT, SURFACE } from '../colors'
+import { BORDER, INK, SURFACE } from '../colors'
 import type { Run } from '../../domain/innerBeams'
 import { roomAt, sideIsHorizontal } from '../../domain/rooms'
 import { idx, place, rules } from '../env'
@@ -25,7 +25,7 @@ import { laneAt } from '../../domain/floor/edit'
 import type { RollMode } from '../tools'
 import { nearestEdge } from './geometry'
 import type { PlanSelection } from './selection'
-import { DIMMED, GRID_FINE, PLAN_MARGIN, PLAN_TEXTILE, PLAN_WALL, TEXTILE, WALL } from './planStyle'
+import { DIMMED, GRID_FINE, PLAN_MARGIN, PLAN_WALL, TEXTILE, WALL } from './planStyle'
 import { Seg } from './layers/Seg'
 import { FloorLayer, Offcut, RollPreview } from './layers/FloorLayer'
 import { WallLayer } from './layers/WallLayer'
@@ -39,7 +39,8 @@ import { planHits } from './pointer/hits'
 import { openingEdge } from './pointer/opening'
 import { pens } from './pointer/pens'
 import { usePlanPointer } from './pointer/usePlanPointer'
-import { FacePreview, HoverModule, SnapDots, StrokePreview, TextilePreview } from './layers/Previews'
+import { EraseMarkView, FacePreview, HoverModule, SnapDots, StrokePreview, TextilePreview } from './layers/Previews'
+import { eraseTargetAt } from './pointer/erase'
 
 interface Props {
   v: Variant
@@ -105,7 +106,7 @@ export function PlanView(p: Props) {
   /** Snap points show only while a brush snaps to them, at its own grid. */
   const dotStep = textileTool ? step : wallTool || beamTool ? rules.wall.cc : null
 
-  const { svg, hover, dragging, rollPending, fillRect, stroke, textileStroke, dropHover, handlers } = usePlanPointer({
+  const { svg, hover, dragging, rollPending, fillRect, stroke, textileStroke, dropHover, eraseMark, handlers } = usePlanPointer({
     v,
     tool,
     brush,
@@ -151,8 +152,8 @@ export function PlanView(p: Props) {
   }
 
   // Hover previews
-  const hoverEdge = openingTool && hover ? openingEdge({ v, tool, hits }, hover) : null
-  const hoverModule = hoverEdge && (tool === 'erase' || doorAllowed(v, hoverEdge.a, hoverEdge.b)) ? hoverEdge : null
+  const hoverEdge = openingTool && hover ? openingEdge({ v, hits }, hover) : null
+  const hoverModule = hoverEdge && doorAllowed(v, hoverEdge.a, hoverEdge.b) ? hoverEdge : null
   const hoverAction = floorTool && hover && !dragging ? floorTouch(hover, null) : null
   // Roll brush: the lanes as they will be laid, from the hover or the stroke in progress
   const rollTouch = rollWidth && tool === 'brush' && !carpetFill ? (rollPending ?? hoverAction) : null
@@ -174,7 +175,11 @@ export function PlanView(p: Props) {
   const textileFace = textileTool && hover && !textileStroke ? faceHit(hover, 0.2) : null
   const hoverFace = (decorTool && hover ? faceHit(hover) : null) ?? textileFace
   const hoverWallEdge = (wallTool || beamTool) && hover && !stroke && onStand(hover) ? nearestEdge(v.stand, hover) : null
-  const hoverFree = textileTool && !textileFace && hover && !textileStroke && onStand(hover) ? (tool === 'erase' ? (freeTextileAt(v, hover) ?? null) : freeStroke(v, rules, hover, hover, step)[0]) : null
+  const hoverFree = textileTool && !textileFace && hover && !textileStroke && onStand(hover) ? freeStroke(v, rules, hover, hover, step)[0] : null
+
+  // Tøm: what a click takes, from the hover (PC) or the press (touch, no hover). A stroke shows its own line.
+  const eraseHover = tool === 'erase' && !p.mini && hover && !dragging && !stroke ? (eraseTargetAt(v, hits, standKeys, hover)?.mark ?? null) : null
+  const eraseShown = eraseMark ?? eraseHover
 
   const sideText = (s: Side) => {
     const n = sideLength(v.stand, s)
@@ -254,14 +259,13 @@ export function PlanView(p: Props) {
       {/* Interaction preview */}
       <g pointerEvents="none">
         {!p.mini && v.rooms.filter((r) => r.id === selection.roomId).map((r) => <RoomHandles key={r.id} r={r} />)}
-        {hoverWallEdge && <Seg a={hoverWallEdge.a} b={hoverWallEdge.b} stroke={tool === 'erase' ? INK_FAINT : beamTool ? INK : WALL} strokeOpacity={0.6} strokeWidth={PLAN_WALL} strokeDasharray={beamTool ? '.16 .08' : undefined} />}
+        {hoverWallEdge && <Seg a={hoverWallEdge.a} b={hoverWallEdge.b} stroke={beamTool ? INK : WALL} strokeOpacity={0.6} strokeWidth={PLAN_WALL} strokeDasharray={beamTool ? '.16 .08' : undefined} />}
         {stroke && <StrokePreview a={stroke[0]} b={stroke[1]} erase={tool === 'erase'} beam={beamTool} />}
         {textileStroke && <TextilePreview v={v} line={textileStroke} />}
-        {hoverFree && 'id' in hoverFree && <Seg a={hoverFree.from} b={hoverFree.to} stroke={INK} strokeOpacity={0.45} strokeWidth={PLAN_TEXTILE + 0.06} />}
-        {hoverFree && !('id' in hoverFree) && <circle cx={hoverFree[0]} cy={hoverFree[1]} r={0.06} fill={TEXTILE} />}
+        {hoverFree && <circle cx={hoverFree[0]} cy={hoverFree[1]} r={0.06} fill={TEXTILE} />}
         {hoverModule && <HoverModule m={hoverModule} />}
-        {hoverFace && <FacePreview v={v} h={hoverFace} brush={brush!} erase={tool === 'erase'} />}
-        {dropHover && <FacePreview v={v} h={dropHover.h} brush={dropHover.d} erase={false} />}
+        {hoverFace && <FacePreview v={v} h={hoverFace} brush={brush!} />}
+        {dropHover && <FacePreview v={v} h={dropHover.h} brush={dropHover.d} />}
         {rollPreview.length > 0 && <RollPreview tiles={rollPreview} color={idx.byArtnr.get(rollPreview[0].product)?.variant.color} roll={rollWidth!} stand={standCells(v.stand)} />}
         {fillPreview && <RollPreview tiles={fillPreview.tiles} color={idx.byArtnr.get(fillProduct)?.variant.color} roll={rollWidth!} />}
         {fillRect && (
@@ -282,12 +286,13 @@ export function PlanView(p: Props) {
             width={hoverFloor.rect.w * CELL}
             height={hoverFloor.rect.h * CELL}
             rx={0.02}
-            fill={hoverFloor.kind === 'erase' || brush?.kind !== 'floor' ? SURFACE : idx.byArtnr.get(brush.product)?.variant.color}
+            fill={brush?.kind !== 'floor' ? SURFACE : idx.byArtnr.get(brush.product)?.variant.color}
             fillOpacity={0.75}
             stroke={INK}
             strokeWidth={0.03}
           />
         )}
+        {eraseShown && <EraseMarkView m={eraseShown} />}
       </g>
     </svg>
   )

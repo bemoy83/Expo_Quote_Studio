@@ -1,18 +1,13 @@
-// Furniture: the object pen places or erases one, Velg drags it (it settles on release) and selects it.
-import { addObject, moveObject, removeObject } from '../../../domain/objects'
+// Furniture: the object pen places one, Velg drags it (it settles on release) and selects it.
+import { addObject, moveObject } from '../../../domain/objects'
 import { place, productOf } from '../../env'
 import { dropObject } from '../../drag'
 import type { DragHandlers, P, PointerCtx } from './types'
 
-/** A click with the object pen: place the product here, or erase the object under the pointer. */
+/** A click with the object pen: place the product here. */
 export function objectClick(c: PointerCtx, q: P) {
   const { v, brush } = c
   if (brush?.kind !== 'object') return
-  if (c.tool === 'erase') {
-    const o = c.hits.objectAt(q)
-    if (o) c.onEdit((x) => removeObject(x, o.id))
-    return
-  }
   const product = brush.product
   const next = addObject(v, place, product, q.x, q.y)
   if (!next) c.onToast(`Ikke plass til ${productOf(product)?.name.toLowerCase() ?? 'varen'} her`)

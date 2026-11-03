@@ -28,7 +28,7 @@ export function floorBrush(v: Variant, { tool, brush, floorSize, rollDir, rollMo
   const brushSize = rollWidth ? { roll: dir, width: Math.round(rollWidth / CELL) } : floorSize
   const floorTouch = (q: P, anchor: { i: number; j: number } | null, from: P | null = null): FloorAction =>
     brush?.kind === 'floor'
-      ? floorAction(v, { x: q.x / CELL, y: q.y / CELL, size: brushSize, erase: tool === 'erase', product: brush.product, anchor, from })
+      ? floorAction(v, { x: q.x / CELL, y: q.y / CELL, size: brushSize, erase: false, product: brush.product, anchor, from })
       : { kind: 'none' }
   const laneAction = (d: { from: P }, q: P | null) => floorTouch(q ?? d.from, null, q && { x: d.from.x / CELL, y: d.from.y / CELL })
   const carpetFill = isCarpetFill(tool, brush, rollMode)

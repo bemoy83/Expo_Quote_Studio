@@ -86,6 +86,6 @@ const PEN_LAYERS: Record<PenTool, readonly Layer[]> = {
   object: ['walls', 'openings', 'objects'],
 }
 
-/** Layers kept at full strength for the tool in hand, or null when nothing is toned down (Velg, or Tøm without a pen). */
+/** Layers kept at full strength for the tool in hand, or null when nothing is toned down (Velg and Tøm). */
 export const penLayers = (tool: Tool, brush: Brush | null): ReadonlySet<Layer> | null =>
-  tool === 'select' || !brush ? null : new Set(PEN_LAYERS[penToolOf(brush)])
+  tool !== 'brush' || !brush ? null : new Set(PEN_LAYERS[penToolOf(brush)])

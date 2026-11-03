@@ -1,8 +1,6 @@
 // The textile brush: a stroke stands free on foot plates, a click next to a system wall fills that face's free part.
-// With the eraser, a click takes the textile wall under it.
 import { drawTextile, fillFace } from '../../../domain/textile/brush'
-import { freeStroke, freeTextileAt, removeFreeTextile, runLength } from '../../../domain/textile/free'
-import { removeTextile, textileAt } from '../../../domain/textile/inFrame'
+import { freeStroke, runLength } from '../../../domain/textile/free'
 import type { Variant } from '../../../domain/types'
 import { fmt } from '../../format'
 import { rules } from '../../env'
@@ -17,14 +15,6 @@ export const textileLine = (v: Variant, step: number, p0: P, q: P): TextileLine 
 
 export function startTextile(c: PointerCtx, q: P): Drag | undefined {
   const { v } = c
-  if (c.tool === 'erase') {
-    const t = freeTextileAt(v, q)
-    if (t) return void c.onEdit((x) => removeFreeTextile(x, t.id))
-    const h = c.hits.faceHit(q)
-    const tx = h && textileAt(v, h.w.id, h.s, h.t)
-    if (tx) return void c.onEdit((x) => removeTextile(x, tx.id))
-    return void c.onToast('Ingen tekstilvegg her')
-  }
   c.setTextileStroke(textileLine(v, c.step, q, q))
   return { kind: 'textile', p0: q }
 }
