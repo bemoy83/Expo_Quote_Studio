@@ -185,6 +185,9 @@ romvegger som takdragerne ikke holder, også når takdragerne er på (`calc/wall
   stolper (cc 1000): en plate i hver fri ende, trukket inn én stolpe (1 m) bare der avstanden ellers ville blitt over
   3 m. 3 m vegg: to plater, én i hver ende. 4 m: to, den ene 1 m inn. 5 m: to, begge 1 m inn. 6 m: tre, i endene og
   midt på.
+- **Ut fra et hjørne eller en T** (Bjørn 3.11.2026): opptil 1 m står veggen av seg selv, så et hjørne på 1 × 1 trenger
+  ingen plate. Over 1 m får den én plate, deretter gjelder 3 m-regelen. Kravet om minst 2 plater gjelder bare en rett
+  vegg som er fri i begge ender. Et hjørne i den andre enden teller som støtte.
 - **Støtte** er et hjørne, en T eller et kryss med en annen systemvegg (standvegg, innervegg eller romvegg, så et rom
   holder veggene det står inntil), og en stolpe under en takdrager.
 - **Fire låste sider** (Bjørn 3.11.2026): med takdrager på får en strekning som er holdt i begge ender, og der endene

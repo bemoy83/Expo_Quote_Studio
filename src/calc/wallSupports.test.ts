@@ -32,7 +32,10 @@ describe('posts on one stretch', () => {
     expect(stretchPosts(8, { from: false, to: false }, RULE)).toEqual([1, 4, 7]);
   });
   it('a corner or T at one end counts as one support', () => {
-    expect(stretchPosts(1, { from: true, to: false }, RULE)).toEqual([1]);
+    // Bjørn 3.11.2026: up to 1 m out from a corner or T it stands by itself; over 1 m one plate, then the 3 m rule
+    expect(stretchPosts(1, { from: true, to: false }, RULE)).toEqual([]);
+    expect(stretchPosts(1, { from: false, to: true }, RULE)).toEqual([]);
+    expect(stretchPosts(2, { from: true, to: false }, RULE)).toEqual([2]);
     expect(stretchPosts(3, { from: true, to: false }, RULE)).toEqual([3]);
     expect(stretchPosts(4, { from: true, to: false }, RULE)).toEqual([3]);
     expect(stretchPosts(4, { from: false, to: true }, RULE)).toEqual([1]);
@@ -75,6 +78,12 @@ describe('inner walls and rooms', () => {
     // The cross beam from the joint in the 8 m sides lands on it at (4,3): a plate at each free end
     expect(feet(withWalls(island, inner('w1', [2, 3], [6, 3])))).toEqual(['2,3', '6,3']);
     expect(feet({ ...withWalls(island, inner('w1', [2, 3], [6, 3])), noBeams: true })).toEqual(['2,3', '5,3']);
+  });
+  it('a 1 × 1 corner stands by itself; a straight 1 m wall still needs two plates (Bjørn 3.11.2026)', () => {
+    const free = { ...island, noBeams: true };
+    expect(feet(withWalls(free, inner('a', [2, 2], [3, 2]), inner('b', [2, 2], [2, 3])))).toEqual([]);
+    expect(feet(withWalls(free, inner('a', [2, 2], [4, 2]), inner('b', [2, 2], [2, 3])))).toEqual(['4,2']);
+    expect(feet(withWalls(free, inner('a', [2, 2], [3, 2])))).toEqual(['2,2', '3,2']);
   });
   it('a wall into another wall (T) is held at that end', () => {
     const row = createVariant('A', { width: 6, depth: 4, type: 'row' });

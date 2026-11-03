@@ -6,6 +6,7 @@
 //   Every point where another system wall meets the run (corner, T or cross: stand, inner and room walls alike) is a
 //   support, and so is a post under a takdrager. With beams on, the stand walls are in the beam frame and need none.
 //   Plates go only under posts (cc 1 m), centred under the wall, across it.
+//   Bjørn 3.11.2026: a stretch held at one end only (out from a corner or T) needs no plate up to 1 m.
 //   Bjørn 3.11.2026: with takdrager on, a stretch held at both ends that closes four locked sides (its two ends joined
 //   by walls and takdrager some other way round, as a wall from a stand wall to a beam) stands by itself: no plates.
 //   A long stand wall is held by a støttedrager instead (calc/supportBeams.ts).
@@ -144,6 +145,9 @@ export function wallSupports(
  */
 export function stretchPosts(len: number, ends: Ends, rule: SupportRule): number[] {
   const mm = len * 1000;
+  // Bjørn 3.11.2026: a stretch out from a corner or T stands by itself up to 1 m (a 1 × 1 corner needs no plate);
+  // only a straight wall free at both ends needs its two plates from 1 m
+  if (ends.from !== ends.to && mm <= rule.minFrom + 1e-6) return [];
   const free = (i: number) => !(i === 0 && ends.from) && !(i === len && ends.to);
   const pull = (need: number, n: number) => {
     const posts = Math.ceil(need / 1000 - 1e-9);
