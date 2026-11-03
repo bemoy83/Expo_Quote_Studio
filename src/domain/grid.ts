@@ -135,3 +135,10 @@ export function parseCellKey(key: string): [number, number] | null {
   const m = /^(\d+),(\d+)$/.exec(key);
   return m ? [Number(m[1]), Number(m[2])] : null;
 }
+
+/** Modules on the straight grid line from a to b (axis-aligned, whole metres). */
+export function segmentKeys(a: Point, b: Point): string[] {
+  const n = Math.round(Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1]));
+  const w: Wall = { id: '', from: a, to: b };
+  return n ? wallModules(w).map((m) => m.key) : [];
+}

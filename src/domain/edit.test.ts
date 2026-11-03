@@ -4,12 +4,13 @@ import { placeContext } from '../catalog/lookup';
 import { calc } from '../calc/calc';
 import { r2 } from '../calc/referenceStands';
 import { RULES } from '../rules/rules';
-import { doorAllowed, doorSwing, drawOpening, eraseWalls, flipSwing, paintWalls, setOpening, setStand, setWallPlate } from './edit';
+import { eraseWalls, paintWalls, setStand, setWallPlate } from './edit';
 import { moduleKey } from './grid';
 import { addObject, addObjectAnywhere, conflicts, moveObject } from './objects';
 import type { Variant } from './types';
 import { createVariant, fillFloor } from './variant';
-import { builtModules } from './walls';
+import { builtModules, doorAllowed } from './walls';
+import { doorSwing, drawOpening, flipSwing, setOpening } from './doors';
 
 const kf = (v: Variant) => calc(v, RULES, DEFAULT_CATALOG).keyFigures;
 const ctx = placeContext(RULES, DEFAULT_CATALOG);

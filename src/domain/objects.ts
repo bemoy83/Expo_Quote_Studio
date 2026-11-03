@@ -5,8 +5,7 @@ import type { Rules } from '../rules/rules';
 import { pointAlong, wallDirection } from './grid';
 import type { PlacedObject, Variant } from './types';
 import { builtModules } from './walls';
-import { doorSwing, nextId } from './edit';
-import { faceSegment, sideOf } from './decor';
+import { doorSwing } from './doors';import { nextId } from './ids';import { faceSegment, sideOf } from './decor';
 
 export interface Box {
   x0: number;

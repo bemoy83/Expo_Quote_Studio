@@ -1,10 +1,11 @@
 // A door or curtain as a thing of its own: chosen in the plan or 3D, edited and moved in the wall drawer (the mini
 // plan in its middle). Every move goes through moveOpening, so a door never lands in a stand wall or on another opening.
-import { defaultSwing, doorAllowed, doorSwing } from './edit';
-import { pointAlong, wallDirection, wallModules } from './grid';
+import { paintWalls } from './edit';
+import { moduleKey, pointAlong, wallDirection, wallModules } from './grid';
+import { nextId } from './ids';
 import { OUTSIDE, roomOf } from './rooms';
-import type { Opening, Point, Variant, Wall } from './types';
-import { builtModules, type BuiltModule } from './walls';
+import type { Opening, Point, Stand, Variant, Wall } from './types';
+import { builtModules, defaultSwing, doorAllowed, isPerimeterWall, type BuiltModule } from './walls';
 
 const dot = (a: Point, b: Point) => a[0] * b[0] + a[1] * b[1];
 
@@ -148,4 +149,47 @@ export function sideName([x, y]: Point): string {
   if (y < -0.5) return 'Bak';
   if (y > 0.5) return 'Front';
   return x < 0 ? 'Venstre' : 'Høyre';
+}
+
+/**
+ * Put a door or curtain in the wall module with this key, replace what is there, or (product null) turn it back into wall.
+ * Returns the variant unchanged when no wall covers the module.
+ */
+export function setOpening(v: Variant, key: string, product: string | null): Variant {
+  const mod = builtModules(v).find((m) => m.key === key);
+  if (!mod) return v;
+  const others = v.openings.filter((o) => o !== mod.opening);
+  if (!product) return mod.opening ? { ...v, openings: others } : v;
+  if (!doorAllowed(v, mod.a, mod.b)) return v;
+  if (mod.opening?.product === product) return v;
+  const id = mod.opening?.id ?? nextId(v.openings.map((o) => o.id), 'o');
+  const swing = mod.opening?.swing ?? defaultSwing(v.stand, v.walls.find((w) => w.id === mod.wallId)!);
+  return { ...v, openings: [...others, { id, wallId: mod.wallId, module: mod.index, product, ...(swing === 1 ? {} : { swing }) }] };
+}
+
+/** Put a door or curtain on the module a–b, drawing the wall module first when there is none. */
+export function drawOpening(v: Variant, a: Point, b: Point, product: string): Variant {
+  if (!doorAllowed(v, a, b)) return v;
+  return setOpening(paintWalls(v, a, b), moduleKey(a, b), product);
+}
+
+/** The side a door swings to. On the stand's edge (toward the aisle) it always swings into the stand. */
+export function doorSwing(stand: Stand, w: Wall, o: Opening): 1 | -1 {
+  return isPerimeterWall(stand, w) ? defaultSwing(stand, w) : (o.swing ?? defaultSwing(stand, w));
+}
+
+/** A door on the stand's edge can not be turned: it swings into the stand. */
+export const canFlipSwing = (stand: Stand, w: Wall) => !isPerimeterWall(stand, w);
+
+/** Flip the swing side of a door. */
+export function flipSwing(v: Variant, openingId: string): Variant {
+  return {
+    ...v,
+    openings: v.openings.map((o) => {
+      const w = v.walls.find((x) => x.id === o.wallId);
+      if (o.id !== openingId || !w || !canFlipSwing(v.stand, w)) return o;
+      const cur = doorSwing(v.stand, w, o);
+      return { ...o, swing: cur === 1 ? -1 : 1 };
+    }),
+  };
 }

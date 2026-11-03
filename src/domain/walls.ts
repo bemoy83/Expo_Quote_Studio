@@ -1,5 +1,5 @@
-import { moduleKey, openSides, pointKey, SIDES, sideEnds, wallModules, type Module } from './grid';
-import { gapKeys } from './rooms';
+import { moduleKey, openSides, pointAlong, pointKey, SIDES, sideEnds, wallDirection, wallLength, wallModules, type Module } from './grid';
+import { gapKeys, OUTSIDE } from './rooms';
 import type { Opening, Point, Side, Stand, Variant, Wall } from './types';
 
 /** A built wall module after merging all walls. Shared edges appear once. */
@@ -92,4 +92,47 @@ export function standardWalls(stand: Stand): Wall[] {
     const [from, to] = sideEnds(stand, s);
     return { id: `side-${s}`, from, to };
   });
+}
+
+const dot = (a: Point, b: Point) => a[0] * b[0] + a[1] * b[1];
+
+/** The module keys these walls cover. */
+export const moduleKeys = (walls: Wall[]) => new Set(walls.flatMap((w) => wallModules(w).map((m) => m.key)));
+
+/** Module keys that carry a stand wall. These are locked: see eraseWalls. */
+export const standWallKeys = (v: Variant): Set<string> => moduleKeys(v.walls.filter(isStandWall));
+
+/**
+ * True when the wall lies on the stand's outer edge. Only geometry: a door there faces the aisle or a neighbour. Whether
+ * a wall is a stand wall or an inner wall is told by isStandWall, never by where it stands.
+ */
+export function isPerimeterWall(stand: Stand, w: Wall): boolean {
+  return (
+    (w.from[1] === w.to[1] && (w.from[1] === 0 || w.from[1] === stand.depth)) ||
+    (w.from[0] === w.to[0] && (w.from[0] === 0 || w.from[0] === stand.width))
+  );
+}
+
+/** Into the stand on a perimeter wall, else to the wall's left. A room door swings out of the room, or in on the perimeter. */
+export function defaultSwing(stand: Stand, w: Wall): 1 | -1 {
+  if (w.room) {
+    return isPerimeterWall(stand, w) ? 1 : OUTSIDE;
+  }
+  const [dx, dy] = wallDirection(w);
+  const n: Point = [-dy, dx];
+  const mid = pointAlong(w, wallLength(w) / 2);
+  const inside: Point = [stand.width / 2 - mid[0], stand.depth / 2 - mid[1]];
+  const onPerimeter = SIDES.some((s) => {
+    const [a, b] = sideEnds(stand, s);
+    return (a[0] === b[0] && w.from[0] === a[0] && w.to[0] === a[0]) || (a[1] === b[1] && w.from[1] === a[1] && w.to[1] === a[1]);
+  });
+  return onPerimeter && dot(n, inside) < 0 ? -1 : 1;
+}
+
+/**
+ * Where a door or curtain may go: anywhere but in the walls the stand type brings (standvegger). An inner wall, a room
+ * side, an empty edge on the floor or an open stand edge toward the aisle are all fine.
+ */
+export function doorAllowed(v: Variant, a: Point, b: Point): boolean {
+  return !standWallKeys(v).has(moduleKey(a, b));
 }

@@ -9,10 +9,9 @@
 import type { Rules } from '../rules/rules';
 import { wallHeight } from '../rules/rules';
 import { pointAlong, wallDirection, wallLength, wallModules } from './grid';
-import { defaultSwing, nextId } from './edit';
-import { OUTSIDE, roomAt } from './rooms';
+import { nextId } from './ids';import { OUTSIDE, roomAt } from './rooms';
 import type { Foil, Point, TextileFill, TextileWall, Variant, Wall } from './types';
-import { builtModules, isStandWall } from './walls';
+import { builtModules, defaultSwing, isStandWall } from './walls';
 import { CURTAIN } from '../catalog/defaultCatalog';
 
 export type FaceSide = 1 | -1;

@@ -5,7 +5,7 @@
 // side refer to `<id>.<side>` with offsets from the side's start, so they move with the room. Every side runs
 // clockwise round the room, so the room is always on the left of a side and its outside on the right.
 import { moduleKey, pointAlong, runs, wallLength, wallModules } from './grid';
-import { doorAllowed, nextId, ownPlate, replaceWalls } from './edit';
+import { ownPlate, replaceWalls } from './edit';
 import {
   area,
   bounds,
@@ -28,8 +28,9 @@ import {
   type Rect,
 } from './outline';
 import type { Opening, PlacedObject, Point, Room, Variant, Wall } from './types';
-import { builtModules } from './walls';
+import { builtModules, doorAllowed } from './walls';
 import { movePanels, prunePanels } from './panels';
+import { nextId } from './ids';
 
 /** Side numbers of a rectangular room. */
 export const RECT_SIDE = { back: 0, right: 1, front: 2, left: 3 } as const;

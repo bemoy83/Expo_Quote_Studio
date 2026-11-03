@@ -3,14 +3,15 @@ import { DEFAULT_CATALOG, DOOR } from '../catalog/defaultCatalog';
 import { calc } from '../calc/calc';
 import { RULES } from '../rules/rules';
 import { addTextile } from './decor';
-import { defaultSwing, drawOpening, paintWalls, setOpening } from './edit';
+import { paintWalls } from './edit';
 import { enclosures, newlyClosedRooms, wallsToRoom } from './enclosures';
 import { moduleKey } from './grid';
 import { bounds, rectOutline } from './outline';
 import { dissolveRoom, moveRoom, RECT_SIDE, roomOpenings, roomWallId } from './rooms';
 import type { Point, Variant } from './types';
 import { createVariant } from './variant';
-import { builtModules } from './walls';
+import { builtModules, defaultSwing } from './walls';
+import { drawOpening, setOpening } from './doors';
 
 const row = (w = 6, d = 4) => createVariant('A', { width: w, depth: d, type: 'row' });
 const kf = (v: Variant) => calc(v, RULES, DEFAULT_CATALOG).keyFigures;
