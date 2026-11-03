@@ -135,6 +135,7 @@ describe('openings', () => {
     const v = createVariant('A', { width: 3, depth: 3, type: 'island' });
     const walled: Variant = {
       ...v,
+      noBeams: false,
       walls: [{ id: 'f', from: [0, 3], to: [3, 3] }],
       openings: [{ id: 'o', wallId: 'f', module: 1, product: DOOR }],
     };
@@ -402,8 +403,13 @@ describe('stand walls the organiser pays (docs/vegger.md)', () => {
     expect(qty(res, DOOR)).toBe(1);
   });
 
-  it('island (open area, no stand walls): the exhibitor pays the takdrager in full', () => {
-    const v = { ...createVariant('A', { width: 8, depth: 3, type: 'island' }), walls: [{ id: 'w1', from: [3, 0] as [number, number], to: [3, 3] as [number, number] }] };
+  it('island: no takdrager by default, they follow the stand walls (Bjørn 3.11.2026)', () => {
+    const v = createVariant('A', { width: 8, depth: 3, type: 'island' });
+    expect(run(v).keyFigures.beamLm).toBe(0);
+    expect(org(v).organiser.lines).toEqual([]);
+  });
+  it('island (open area, no stand walls): the exhibitor pays the takdrager in full when chosen', () => {
+    const v = { ...createVariant('A', { width: 8, depth: 3, type: 'island' }), noBeams: false, walls: [{ id: 'w1', from: [3, 0] as [number, number], to: [3, 3] as [number, number] }] };
     const res = org(v);
     expect(res.organiser.lines).toEqual([]);
     expect(qty(res, S.beam)).toBeGreaterThan(0);

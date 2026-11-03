@@ -56,6 +56,16 @@ export function wallPoints(mods: readonly Module[]): Map<string, Point> {
  */
 export const isStandWall = (w: Wall) => w.id.startsWith('side-');
 
+/** Whether the standard takdrager are up. They follow the stand walls: an island has none, so by default none, and the
+ *  exhibitor pays for them in full if they want them (Bjørn 3.11.2026). Elsewhere on unless turned off. */
+export const standardBeamsOn = (v: Pick<Variant, 'noBeams' | 'stand'>): boolean => (v.noBeams === undefined ? v.stand.type !== 'island' : !v.noBeams);
+
+/** The `noBeams` that turns the standard takdrager on or off: the stand type's default is left out. */
+export const withStandardBeams = (v: Pick<Variant, 'stand'>, on: boolean): boolean | undefined => {
+  const byDefault = v.stand.type !== 'island';
+  return on === byDefault ? undefined : !on;
+};
+
 /** Stand wall (from the stand type), room wall (a side of a room) or inner wall (drawn, tilvalg). docs/vegger.md */
 export type WallKind = 'stand' | 'room' | 'inner';
 export const wallKind = (w: Wall): WallKind => (isStandWall(w) ? 'stand' : w.room ? 'room' : 'inner');

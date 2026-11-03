@@ -4,6 +4,7 @@
 import type { CalcResult } from '../../calc/calc'
 import { setStand } from '../../domain/edit'
 import type { Payer, StandType, StandWallTerms, Variant } from '../../domain/types'
+import { standardBeamsOn, withStandardBeams } from '../../domain/walls'
 import { Dim, FlatChoice } from '../controls'
 import { wallPlates } from '../env'
 import { fmt } from '../format'
@@ -157,12 +158,18 @@ export function StandSettings({ v, res, onEdit, terms, onTerms }: StandSettingsP
         <div className="set-row">
           <span className="lbl">
             Langs åpne sider
-            <small className="num">{v.noBeams ? 'Ingen · mer åpen stand' : `${fmt(k.beamLm)} m · ${beamSummary(k)}`}</small>
+            <small className="num">
+              {!standardBeamsOn(v)
+                ? s.type === 'island'
+                  ? 'Ingen · øy uten standvegger, tilvalg for utstiller'
+                  : 'Ingen · mer åpen stand'
+                : `${fmt(k.beamLm)} m · ${beamSummary(k)}`}
+            </small>
           </span>
           <FlatChoice<boolean>
             label="Takdrager"
-            value={!v.noBeams}
-            onChange={(on) => onEdit((x) => ({ ...x, noBeams: on ? undefined : true }))}
+            value={standardBeamsOn(v)}
+            onChange={(on) => onEdit((x) => ({ ...x, noBeams: withStandardBeams(x, on) }))}
             options={[
               { value: false, label: 'Av' },
               { value: true, label: 'På' },

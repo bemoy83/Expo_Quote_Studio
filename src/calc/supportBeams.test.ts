@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_CATALOG } from '../catalog/defaultCatalog';
 import type { InnerBeam, Point, Stand, Variant } from '../domain/types';
 import { createVariant } from '../domain/variant';
+import { standardBeamsOn, withStandardBeams } from '../domain/walls';
 import { RULES } from '../rules/rules';
 import { calc } from './calc';
 import { supportPoints } from './supportBeams';
@@ -85,5 +86,18 @@ describe('four locked sides', () => {
   });
   it('takdrager turned off: plates as before', () => {
     expect(feet({ ...withWall(corner(4, 3), [0, 1], [4, 1]), noBeams: true }).length).toBeGreaterThan(0);
+  });
+});
+
+describe('standard takdrager on or off', () => {
+  it('follow the stand walls: on by default, except on an island; the toggle stores only a change', () => {
+    const island = createVariant('A', { width: 4, depth: 4, type: 'island' });
+    expect(standardBeamsOn(island)).toBe(false);
+    expect(standardBeamsOn({ ...island, noBeams: false })).toBe(true);
+    expect(withStandardBeams(island, true)).toBe(false);
+    expect(withStandardBeams(island, false)).toBeUndefined();
+    expect(standardBeamsOn(row(4, 3))).toBe(true);
+    expect(withStandardBeams(row(4, 3), false)).toBe(true);
+    expect(withStandardBeams(row(4, 3), true)).toBeUndefined();
   });
 });

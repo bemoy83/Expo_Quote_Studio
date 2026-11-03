@@ -1,6 +1,6 @@
 import { inward, makeModule, pointKey, SIDES, sideLength, sidePoint } from '../domain/grid';
 import type { Point, Side, Stand, Variant } from '../domain/types';
-import { standWallSide, type BuiltModule } from '../domain/walls';
+import { standardBeamsOn, standWallSide, type BuiltModule } from '../domain/walls';
 import { layoutInnerBeams, mergeBeams, type InnerBeamLayout } from './innerBeams';
 import { layoutSupportBeams, NO_SUPPORT_BEAMS, type SupportBeamLayout } from './supportBeams';
 
@@ -55,7 +55,7 @@ export function variantBeams(
   maxLength: number,
 ): { standard: BeamLayout; inner: InnerBeamLayout; support: SupportBeamLayout; all: BeamLayout; hooks: number } {
   const moduleKeys = new Set(mods.map((m) => m.key));
-  const frame = v.noBeams ? NO_BEAMS : layoutBeams(v.stand, moduleKeys, wallPoints, maxLength);
+  const frame = !standardBeamsOn(v) ? NO_BEAMS : layoutBeams(v.stand, moduleKeys, wallPoints, maxLength);
   const drawn = layoutInnerBeams(v.innerBeams ?? [], frame, moduleKeys, wallPoints, maxLength);
   const wallsById = new Map(v.walls.map((w) => [w.id, w]));
   const sideOf = (m: BuiltModule) => {

@@ -143,6 +143,9 @@ Systemhøyde fra gulv: 2490 + 50 = 2540 mm.
 - **2 × 600 i hver ende.** 292 står 80 høy og 20 tykk, med 9 mm kanal i over- og underkant og fire kamre
   inni. De to 600-koblingene sitter i ytterkamrene, én oppe og én nede, og låser i kanalen på stolpe 94.
 - Alle stolper, også frittstående som bare bærer takdrager, er **94** på 2490 mm med samme fot.
+- **Takdragerne følger standveggene** (Bjørn 3.11.2026). En øy har ingen standvegger og får derfor ingen takdrager som
+  standard, uansett hvem som betaler standveggene. Vil utstilleren ha takdrager på øya, slås de på og betales fullt av
+  utstilleren (`standardBeamsOn` i `domain/walls.ts`).
 - Kunden kan velge bort takdragerne for en mer åpen stand (`Variant.noBeams`). Da står veggene fritt og får
   støtteplater, se under.
 

@@ -5,7 +5,7 @@ import type { CalcResult } from '../../calc/calc'
 import { quoteGroups } from '../../calc/quoteLines'
 import type { Project, Room, Variant } from '../../domain/types'
 import { roomName, roomOpenings, roomSize } from '../../domain/rooms'
-import { builtModules } from '../../domain/walls'
+import { builtModules, standardBeamsOn } from '../../domain/walls'
 import { dateText, DELIVERY_FIELDS, today, validUntil } from '../../domain/delivery'
 import { isFixedField, projectField, standWallTerms } from '../../domain/variant'
 import { Button } from '../controls'
@@ -73,7 +73,7 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
             ...(k.innerBeamLm ? [`${fmt(k.innerBeamLm)} m innvendig`] : []),
           ].join(' · '),
         ]
-      : ['Uten takdrager', v.noBeams ? 'åpen stand etter ønske' : 'ingen åpne sider å avstive'],
+      : ['Uten takdrager', !standardBeamsOn(v) ? 'åpen stand etter ønske' : 'ingen åpne sider å avstive'],
     k.floorTotal ? [floorNames.join(', '), `${fmt(k.floorTotal)} m² ferdig lagt${v.floor.protection ? ' med monteringsbeskyttelse' : ''}`] : ['Hallgulv uten belegg', ''],
   ]
   if (v.rooms.length) {

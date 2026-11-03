@@ -16,7 +16,7 @@ export function r2(): Variant {
   return { ...v, textiles: [{ id: 't1', wallId: 'side-back', from: 2, width: 4, motif: 'hoved', fit: true }] };
 }
 
-/** R3 · Island stand 8 × 6 m, beams only. */
+/** R3 · Island stand 8 × 6 m, beams only: an island has none by default, the exhibitor chose them. */
 export function r3(): Variant {
-  return createVariant('A', { width: 8, depth: 6, type: 'island' });
+  return { ...createVariant('A', { width: 8, depth: 6, type: 'island' }), noBeams: false };
 }

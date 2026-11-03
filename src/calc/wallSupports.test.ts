@@ -73,7 +73,7 @@ describe('stand walls', () => {
 });
 
 describe('inner walls and rooms', () => {
-  const island = createVariant('A', { width: 8, depth: 6, type: 'island' });
+  const island = { ...createVariant('A', { width: 8, depth: 6, type: 'island' }), noBeams: false };
   it('a wall standing alone in the stand gets plates even with takdrager', () => {
     // The cross beam from the joint in the 8 m sides lands on it at (4,3): a plate at each free end
     expect(feet(withWalls(island, inner('w1', [2, 3], [6, 3])))).toEqual(['2,3', '6,3']);
