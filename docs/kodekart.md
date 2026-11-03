@@ -17,7 +17,7 @@ Alt avledes fra modellen (`Variant` i `src/domain/types.ts`). Rekkefølgen er al
 | Pris | `src/pricing/` | Prismodell og tidsbruk |
 | Plan | `src/ui/plan/PlanView.tsx` | Tegning og pekerhåndtering for alle produkter |
 | 3D | `src/ui/scene3d/build.ts`, `build/`, `Scene3D.tsx` | `build.ts` kjører én del per produkt i `build/` på felles kontekst (`build/context.ts`: materialer per lag, farger, `along`); motivteksturer i `build/motifs.ts`. Dra i 3D: `Scene3D.tsx` |
-| Skuffer og panel | `src/ui/plan/*Drawer.tsx`, `src/ui/panel/Rail.tsx` | Innstillinger per produkt |
+| Skuffer og panel | `src/ui/plan/*Drawer.tsx`, `src/ui/panel/Rail.tsx` | Innstillinger per produkt. Veggskuffen: `WallDrawer.tsx` velger hva som vises, delene ligger i `plan/wallDrawer/` (se Vegger) |
 | Sider | `src/ui/quote`, `production`, `picking`, `workorder` | Tilbud, Produksjon, Plukkliste, Arbeidsordre |
 | Lagring | `src/persistence/file.ts` | Filformat, versjoner og migrering |
 
@@ -34,6 +34,9 @@ Rekkefølgen på linjene i tilbudet er rekkefølgen blokkene kjøres i `calc/cal
 - Kalkyle: `calc/lines/walls.ts` (vegglinjer, arrangørens standvegger) · `calc/lines/swaps.ts` (platebytte) · hvem
   som betaler: `calc/context.ts` · `foga/fromVariant.ts`
 - Plan, 3D, skuff: `PlanView.tsx` · `scene3d/build/walls.ts` (plater og dører), `scene3d/build/frame.ts` (stolper, fotplater) · `WallDrawer.tsx`, `drawerParts.tsx`, `elevation.tsx`
+- Veggskuffens deler i `plan/wallDrawer/`: `panels.tsx` (panel for farge og print, tekstil, dekal og dør),
+  `WallElevation.tsx` (tegningen og slipp fra hyllen), `drag.ts` (dra og endre størrelse på ramme og dekal), `paint.ts`
+  (malerspann og malerkost), `face.ts` (sidens navn og rom inntil)
 
 ### Takdragere
 
@@ -82,12 +85,12 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
   fotplater), `calc/textile/common.ts` (full høyde, filnavn) · linjene: `calc/textile/lines.ts` · produksjonsrader:
   `calc/production.ts` (lager også folierader)
 - Plan, 3D: `PlanView.tsx` · `scene3d/build/textile.ts`, `Scene3D.tsx`
-- Skuff: `WallDrawer.tsx` (InFrame), `FreeTextileDrawer.tsx` (frittstående)
+- Skuff: `WallDrawer.tsx` med `plan/wallDrawer/panels.tsx` (`TextilePanel`) og `drag.ts` (InFrame), `FreeTextileDrawer.tsx` (frittstående)
 
 ### Print, dekal og farge
 
 - Dekal: `Foil` · `domain/decor.ts` (folie og `fitDecor`) · veggflater og felt: `domain/faces.ts`
-- Print med spann og kost: `domain/print.ts`
+- Print med spann og kost: `domain/print.ts` · i veggskuffen: `plan/wallDrawer/paint.ts`
 - Farge per plate: `domain/panels.ts`
 - Kalkyle: `calc/lines/decor.ts` (folie, print-oppsett) · `calc/lines/swaps.ts` (platebytte) · `calc/production.ts` (`foilRows`)
 - 3D: `scene3d/build/decor.ts` · teksturbuffer for motiver: `scene3d/build/motifs.ts` · motiver `ui/motifs.ts` · dra inn: `ui/dnd.ts`
@@ -103,7 +106,7 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 - Modell: `Opening` · `domain/doors.ts` (sette, tegne, flytte, snu, farge) · hvor en dør kan stå og hvilken vei
   den slår som standard: `domain/walls.ts` · `domain/rooms.ts` (dører som følger rommet)
 - Kalkyle: `calc/lines/doors.ts`
-- Plan, 3D, skuff: `PlanView.tsx` (OpeningMark) · `scene3d/build/walls.ts` · `WallDrawer.tsx`, `DoorMap.tsx`, `DoorSettings.tsx`
+- Plan, 3D, skuff: `PlanView.tsx` (OpeningMark) · `scene3d/build/walls.ts` · `WallDrawer.tsx` (`DoorPanel` i `plan/wallDrawer/panels.tsx`), `DoorMap.tsx`, `DoorSettings.tsx`
 
 ### Møbler og utstyr
 
