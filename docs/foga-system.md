@@ -199,9 +199,11 @@ romvegger som takdragerne ikke holder, også når takdragerne er på (`calc/wall
 - **Overstykke** (over dør, og forenklet også over forheng) = 2490 − 20 − 2000 − 10 = **460 mm**, en liten vegg: toppskinne 92 og bunnskinne 91 (960, med
   600 i hver ende) og HDF-plate. Lysåpning 460 − 40 − 30 = 390, plate 390 + 20 = **976 × 410 mm** (samme
   tillegg som veggplaten).
-- **Lås og nøkler** følger med alle dører. Dørbladet har **standens farge** (RAL) til en annen velges i dørskuffen;
+- **Lås og nøkler** følger med alle dører. Dørbladet har **standens farge** (RAL) til en annen velges for døren i veggskuffen;
   overstykket har veggens farge. Kalkylen har én dørlinje per farge.
-- **Dørskuffen** (Bjørn 02.11.2026): klikk døren i plan eller 3D. Miniplan for å flytte døren (klikk ruten utenfor en
+- **Døren i veggskuffen** (Bjørn 02.11.2026, egen dørskuff slått sammen med veggskuffen 03.11.2026): klikk døren i plan,
+  3D eller i veggtegningen, så åpnes veggskuffen for veggen med døren valgt. Innstillingene står til venstre, miniplanen
+  i midten (i stedet for grafikkhylla) og døren i hele veggen til høyre; klikk veggen for å gå tilbake til den. Miniplan for å flytte døren (klikk ruten utenfor en
   modul: alle egne moduler på rommet, eller langs innerveggen; aldri standvegg eller en annen åpning), dør/forheng,
   slagretning, hengselside, farge, gjør om til vegg (`domain/doors.ts`). Døren dras ikke i plan og 3D; der dras romsidene
   som før. Flyttes eller endres et rom slik at døren ville havnet i standveggen, flyttes døren til nærmeste modul på

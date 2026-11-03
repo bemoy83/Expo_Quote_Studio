@@ -1,4 +1,4 @@
-// Mini plan in the door drawer (from design_handoff_bakrom_dor, BkMap): the whole stand from above, small, where a click
+// Mini plan in the wall drawer with a door chosen (from design_handoff_bakrom_dor, BkMap): the whole stand from above, small, where a click
 // on the cell just outside a wall module puts the chosen door there. Only a view otherwise: nothing here drags. A door
 // in a room can go to any module of the room's own sides; a door in an inner wall to any module of that wall. Stand walls
 // and modules holding another opening have no target. Hover shows the door where it would land.

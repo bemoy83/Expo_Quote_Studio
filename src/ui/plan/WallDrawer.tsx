@@ -1,8 +1,9 @@
 // Wall drawer (veggskuff): the selected wall seen straight on, one face at a time, under the plan or 3D view.
-// Three columns like the door drawer: settings · graphics shelf · the wall. Textile frames and foil decals are placed,
+// Three columns: settings · graphics shelf (or, with a door chosen, its mini plan) · the wall. Textile frames and foil decals are placed,
 // moved and resized in the drawing; motifs are clicked onto what is selected or dragged from the shelf onto the wall.
-// Without a selection it edits the wall itself: plate colour, remove wall; a door on it opens the door drawer.
-import { DoorOpen, FlipHorizontal2, MoveHorizontal, PaintBucket, Paintbrush, Plus } from 'lucide-react'
+// Without a selection it edits the wall itself: plate colour, remove wall. A door or curtain is chosen here too (from the
+// drawing, the plan or 3D): its settings on the left and the mini plan to move it in the middle (Bjørn 3.11.2026).
+import { FlipHorizontal2, MoveHorizontal, PaintBucket, Paintbrush, Plus, Repeat2 } from 'lucide-react'
 import { useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent } from 'react'
 import { production, wallLabel } from '../../calc/production'
 import {
@@ -28,7 +29,7 @@ import {
 import { eraseWalls, setWallPlate } from '../../domain/edit'
 import { setPanels, wallRal } from '../../domain/panels'
 import { clearPrint, cropBand, fillPlates, plateCrop, printPlate, printsOn, printWall, clearDecor } from '../../domain/print'
-import { doorRal } from '../../domain/doors'
+import { doorFace, doorRal, openingById, removeOpening } from '../../domain/doors'
 import { OUTSIDE, roomAt, roomName, roomSize } from '../../domain/rooms'
 import { wallLength, wallModules } from '../../domain/grid'
 import type { Foil, Room, TextileWall, Variant, Wall } from '../../domain/types'
@@ -46,6 +47,8 @@ import { roomLabelSize } from './roomLabelSize'
 import { DrawerHead, DrawerRow, FillPicker, Handles, PlatePalette, PRINT, Print, Shelf, type Edge } from './drawerParts'
 import { Dims, Opening, Posts, TextileFace } from './elevation'
 import { applyDrop, decorDrag, dropSpot, endDecorDrag, type DropSpot, type FaceTarget } from '../dnd'
+import { DoorMap } from './DoorMap'
+import { DoorSettings } from './DoorSettings'
 import type { PlanSelection } from './PlanView'
 
 interface Props {
@@ -113,10 +116,13 @@ export function WallDrawer(p: Props) {
   const [paintSel, setPaint] = useState<string | null>(null)
   /** The motif «Print» lays on, chosen in the graphics shelf. Unset: the first in the library. */
   const [printSel, setPrintMotif] = useState<string | null>(null)
-  const w = v.walls.find((x) => x.id === sel.wallId)
+  /** A chosen door or curtain: the drawer shows its wall, which follows the door when the mini plan moves it. */
+  const O = openingById(v, sel.openingId)
+  const w = v.walls.find((x) => x.id === (O?.wallId ?? sel.wallId))
   if (!w) return null
   const fs = faces(v, w)
-  const s: FaceSide = sel.side && fs.includes(sel.side) ? sel.side : fs[0]
+  const want = sel.side ?? (O && doorFace(v, w, O))
+  const s: FaceSide = want && fs.includes(want) ? want : fs[0]
   const L = wallLength(w)
   const H = wallHeight(rules)
   const dir = s === 1 ? 1 : -1
@@ -135,6 +141,8 @@ export function WallDrawer(p: Props) {
   const ratioOf = (id?: string) => findMotif(motifs, id)?.ratio ?? 0
   const label = wallLabel(w)
   const select = (x: Partial<PlanSelection>) => p.onSelect({ wallId: w.id, side: s, ...x })
+  /** A door is chosen without its wall, so the plan and 3D mark the door and not the whole wall. */
+  const selectDoor = (id: string, side: FaceSide = s) => p.onSelect({ openingId: id, side })
 
   // ---- Dragging in the drawing: move, width, height of a frame; move and size of a decal
   const drag = (e: RPointerEvent, kind: DragKind, item: TextileWall | Foil) => {
@@ -218,10 +226,9 @@ export function WallDrawer(p: Props) {
 
   const piece = T ? production(v, rules.textile.inFrame, '').pieces.find((x) => x.textileId === T.id) : undefined
   const openings = v.openings.filter((o) => o.wallId === w.id)
-  const doors = openings.filter((o) => productOf(o.product)?.opening === 'door')
   const ral = wallRal(v, w)
   const flip = fs.length > 1 ? fs.find((x) => x !== s) : undefined
-  const painting = tool !== null && !T && !F
+  const painting = tool !== null && !T && !F && !O
   const paint = paintSel ?? ral
   const pm = findMotif(motifs, printSel ?? undefined) ?? motifs[0]
   const printing = paint === PRINT
@@ -317,25 +324,27 @@ export function WallDrawer(p: Props) {
     }
   }
   const tail = 'dra tekstilvegg eller motiv til veggen, klikk det for å endre'
-  const hint = painting
-    ? tool === 'wall'
-      ? printing
-        ? 'Klikk veggen: motivet strekkes over platene på denne siden, ikke inne i bakrom · klikk én gang til: printen fjernes fra hele siden'
-        : 'Klikk veggen for å farge alle platene · print på denne siden går bort, dekaler blir'
-      : printing
-        ? 'Klikk eller dra over platene: hele motivet på hver plate · klikk en plate som har motivet: printen fjernes fra den platen'
-        : 'Klikk eller dra over platene for å farge dem · klikk en farget plate igjen for veggens farge'
-    : T
-      ? 'Dra rammen for å flytte · håndtakene endrer størrelsen · klikk et motiv for trykk · Delete fjerner'
-      : F
-        ? F.full
-          ? 'Dra for å flytte til en annen plate · klikk et motiv for å bytte · Delete fjerner'
-          : 'Dra for å flytte innenfor platen · hjørnene endrer størrelsen · klikk et motiv for å bytte · Delete fjerner'
-        : isStandWall(w)
-          ? `Standveggen står fast · ${tail}`
-          : w.room
-            ? `Dra veggen i planen for å endre rommet · ${tail}`
-            : `Dra veggen i planen for å flytte den · ${tail}`
+  const hint = O
+    ? `Klikk en rute i miniplanen for å flytte ${productOf(O.product)?.opening === 'door' ? 'døren' : 'forhenget'} · klikk veggen for å gå tilbake til den · Delete gjør om til vegg`
+    : painting
+      ? tool === 'wall'
+        ? printing
+          ? 'Klikk veggen: motivet strekkes over platene på denne siden, ikke inne i bakrom · klikk én gang til: printen fjernes fra hele siden'
+          : 'Klikk veggen for å farge alle platene · print på denne siden går bort, dekaler blir'
+        : printing
+          ? 'Klikk eller dra over platene: hele motivet på hver plate · klikk en plate som har motivet: printen fjernes fra den platen'
+          : 'Klikk eller dra over platene for å farge dem · klikk en farget plate igjen for veggens farge'
+      : T
+        ? 'Dra rammen for å flytte · håndtakene endrer størrelsen · klikk et motiv for trykk · Delete fjerner'
+        : F
+          ? F.full
+            ? 'Dra for å flytte til en annen plate · klikk et motiv for å bytte · Delete fjerner'
+            : 'Dra for å flytte innenfor platen · hjørnene endrer størrelsen · klikk et motiv for å bytte · Delete fjerner'
+          : isStandWall(w)
+            ? `Standveggen står fast · ${tail}`
+            : w.room
+              ? `Dra veggen i planen for å endre rommet · ${tail}`
+              : `Dra veggen i planen for å flytte den · ${tail}`
 
   const remove = () => {
     if (T) p.onEdit((x) => removeTextile(x, T.id))
@@ -387,122 +396,141 @@ export function WallDrawer(p: Props) {
   return (
     <section className="wall-drawer drawer3" aria-label="Vegg sett forfra">
       <div className="wd-insp">
-        <DrawerHead
-          dot={T ? LAYER_COLOR.textile : F ? INK_FAINT : LAYER_COLOR.walls}
-          title={title}
-          remove={
-            T || F
-              ? { label: T ? 'Fjern tekstilvegg (Delete)' : 'Fjern grafikk (Delete)', onClick: remove }
-              : decorated
-                ? { label: 'Fjern print, dekaler og platefarger fra hele veggen, begge sider', onClick: () => p.onEdit((x) => clearDecor(x, w.id)) }
-                : !isStandWall(w)
-                  ? { label: w.room ? 'Åpne siden' : 'Fjern veggen', onClick: remove }
-                  : undefined
-          }
-          onClose={p.onClose}
-        />
-        <p className="wd-meta num">
-          {T && piece
-            ? `ramme ${mm(piece.W / 1000)} × ${mm(piece.H / 1000)} mm · ${fmt(piece.area)} m² ${piece.fill === 'reuse' ? 'kundens duk' : piece.fill === 'white' ? 'hvit duk' : 'trykk'}`
-            : F
-              ? `Felt ${F.module + 1} · ${mm(F.width)} × ${mm(F.height)} mm${F.run ? ` · del av print over ${v.foils.filter((x) => x.run === F.run).length} plater` : ''}`
-              : [`${L} m`, count(wallModules(w).length - openings.length, 'plate', 'plater') + (odd ? ` (${odd} i egen farge)` : ''), openings.length && count(openings.length, 'åpning', 'åpninger'), tex.length && count(tex.length, 'tekstilvegg', 'tekstilvegger'), ...rooms.map((r) => `${r.b - r.a} m inn mot ${roomName(r.room).toLowerCase()}`)]
-                  .filter(Boolean)
-                  .join(' · ')}
-        </p>
-
-        {T && (
+        {O ? (
+          <DoorSettings
+            v={v}
+            o={O}
+            w={w}
+            onEdit={p.onEdit}
+            onRemove={() => {
+              p.onEdit((x) => removeOpening(x, O.id))
+              select({})
+            }}
+            onClose={p.onClose}
+          >
+            {/* The face switch sits in the header: the door's settings fill the column */}
+            {flip !== undefined && <IconButton icon={Repeat2} label={`Vis ${faceName(w, flip).toLowerCase()}`} size={14} onClick={() => selectDoor(O.id, flip)} />}
+          </DoorSettings>
+        ) : (
           <>
-            <div className="wd-dims">
-              <Dim label="Bredde" value={T.width} onChange={(n) => p.onEdit((x) => updateTextile(x, rules, T.id, { width: n }))} />
-              <Dim label="Høyde" value={textileBox(T, rules).height} decimals={2} onChange={(n) => p.onEdit((x) => updateTextile(x, rules, T.id, { height: n }))} />
-              <Dim label="Fra gulv" value={textileBox(T, rules).bottom} onChange={(n) => p.onEdit((x) => updateTextile(x, rules, T.id, { bottom: n }))} />
-            </div>
-            <FillPicker value={fill} onChange={(f) => p.onEdit((x) => updateTextile(x, rules, T.id, { fill: f }))} />
-          </>
-        )}
-
-        {F && (
-          <>
-            <div className="eyebrow">Dekning</div>
-            <Segmented<boolean>
-              inWell
-              label="Dekning"
-              value={F.full}
-              onChange={(full) => p.onEdit((x) => updateFoil(x, rules, F.id, { full }, ratioOf(F.motif)))}
-              options={[
-                { value: false, label: 'Dekal' },
-                { value: true, label: 'Hel plate' },
-              ]}
-            />
-            {F.full ? (
-              <p className="wd-meta">
-                Dekker platen mellom stolpene, {rules.wall.plate.width} × {rules.wall.plate.height} mm
-              </p>
-            ) : (
-              <div className="wd-dims">
-                <Dim label="Bredde" value={F.width} decimals={2} onChange={(n) => p.onEdit((x) => updateFoil(x, rules, F.id, { width: n }, ratioOf(F.motif)))} />
-              </div>
-            )}
-          </>
-        )}
-
-        {!T && !F && (
-          <>
-            <DrawerRow
-              label={
-                painting
-                  ? `${tool === 'wall' ? 'Hele veggen' : 'Plate'} · ${printing ? `print ${pm?.name ?? ''}` : `${plateName(paint)} ${paint}`}`
-                  : `Hele veggen · ${plateName(ral)} ${ral}`
+            <DrawerHead
+              dot={T ? LAYER_COLOR.textile : F ? INK_FAINT : LAYER_COLOR.walls}
+              title={title}
+              remove={
+                T || F
+                  ? { label: T ? 'Fjern tekstilvegg (Delete)' : 'Fjern grafikk (Delete)', onClick: remove }
+                  : decorated
+                    ? { label: 'Fjern print, dekaler og platefarger fra hele veggen, begge sider', onClick: () => p.onEdit((x) => clearDecor(x, w.id)) }
+                    : !isStandWall(w)
+                      ? { label: w.room ? 'Åpne siden' : 'Fjern veggen', onClick: remove }
+                      : undefined
               }
-            >
-              <IconButton icon={PaintBucket} label="Malerspann: klikk veggen for å farge hele siden" size={15} className="ink" pressed={tool === 'wall'} onClick={() => setTool(tool === 'wall' ? null : 'wall')} />
-              <IconButton icon={Paintbrush} label="Malerkost: klikk én og én plate" size={15} className="ink" pressed={tool === 'plate'} onClick={() => setTool(tool === 'plate' ? null : 'plate')} />
-            </DrawerRow>
-            <PlatePalette
-              value={painting ? paint : ral}
-              print={{ motif: pm }}
-              onPick={(r) => {
-                setPaint(r)
-                // Picking a colour takes up the paint bucket when no tool is out
-                if (!tool) setTool('wall')
-              }}
+              onClose={p.onClose}
             />
+            <p className="wd-meta num">
+              {T && piece
+                ? `ramme ${mm(piece.W / 1000)} × ${mm(piece.H / 1000)} mm · ${fmt(piece.area)} m² ${piece.fill === 'reuse' ? 'kundens duk' : piece.fill === 'white' ? 'hvit duk' : 'trykk'}`
+                : F
+                  ? `Felt ${F.module + 1} · ${mm(F.width)} × ${mm(F.height)} mm${F.run ? ` · del av print over ${v.foils.filter((x) => x.run === F.run).length} plater` : ''}`
+                  : [`${L} m`, count(wallModules(w).length - openings.length, 'plate', 'plater') + (odd ? ` (${odd} i egen farge)` : ''), openings.length && count(openings.length, 'åpning', 'åpninger'), tex.length && count(tex.length, 'tekstilvegg', 'tekstilvegger'), ...rooms.map((r) => `${r.b - r.a} m inn mot ${roomName(r.room).toLowerCase()}`)]
+                      .filter(Boolean)
+                      .join(' · ')}
+            </p>
+
+            {T && (
+              <>
+                <div className="wd-dims">
+                  <Dim label="Bredde" value={T.width} onChange={(n) => p.onEdit((x) => updateTextile(x, rules, T.id, { width: n }))} />
+                  <Dim label="Høyde" value={textileBox(T, rules).height} decimals={2} onChange={(n) => p.onEdit((x) => updateTextile(x, rules, T.id, { height: n }))} />
+                  <Dim label="Fra gulv" value={textileBox(T, rules).bottom} onChange={(n) => p.onEdit((x) => updateTextile(x, rules, T.id, { bottom: n }))} />
+                </div>
+                <FillPicker value={fill} onChange={(f) => p.onEdit((x) => updateTextile(x, rules, T.id, { fill: f }))} />
+              </>
+            )}
+
+            {F && (
+              <>
+                <div className="eyebrow">Dekning</div>
+                <Segmented<boolean>
+                  inWell
+                  label="Dekning"
+                  value={F.full}
+                  onChange={(full) => p.onEdit((x) => updateFoil(x, rules, F.id, { full }, ratioOf(F.motif)))}
+                  options={[
+                    { value: false, label: 'Dekal' },
+                    { value: true, label: 'Hel plate' },
+                  ]}
+                />
+                {F.full ? (
+                  <p className="wd-meta">
+                    Dekker platen mellom stolpene, {rules.wall.plate.width} × {rules.wall.plate.height} mm
+                  </p>
+                ) : (
+                  <div className="wd-dims">
+                    <Dim label="Bredde" value={F.width} decimals={2} onChange={(n) => p.onEdit((x) => updateFoil(x, rules, F.id, { width: n }, ratioOf(F.motif)))} />
+                  </div>
+                )}
+              </>
+            )}
+
+            {!T && !F && (
+              <>
+                <DrawerRow
+                  label={
+                    painting
+                      ? `${tool === 'wall' ? 'Hele veggen' : 'Plate'} · ${printing ? `print ${pm?.name ?? ''}` : `${plateName(paint)} ${paint}`}`
+                      : `Hele veggen · ${plateName(ral)} ${ral}`
+                  }
+                >
+                  <IconButton icon={PaintBucket} label="Malerspann: klikk veggen for å farge hele siden" size={15} className="ink" pressed={tool === 'wall'} onClick={() => setTool(tool === 'wall' ? null : 'wall')} />
+                  <IconButton icon={Paintbrush} label="Malerkost: klikk én og én plate" size={15} className="ink" pressed={tool === 'plate'} onClick={() => setTool(tool === 'plate' ? null : 'plate')} />
+                </DrawerRow>
+                <PlatePalette
+                  value={painting ? paint : ral}
+                  print={{ motif: pm }}
+                  onPick={(r) => {
+                    setPaint(r)
+                    // Picking a colour takes up the paint bucket when no tool is out
+                    if (!tool) setTool('wall')
+                  }}
+                />
+              </>
+            )}
           </>
         )}
-        <div className="wd-foot">
-          <DrawerRow label={`Side · ${faceName(w, s).toLowerCase()}`}>
-            {flip !== undefined && (
-              <IconButton
-                icon={FlipHorizontal2}
-                label={T ? 'Flytt rammen til andre siden' : F ? 'Flytt folien til andre siden' : `Vis ${faceName(w, flip).toLowerCase()}`}
-                size={15}
-                onClick={() => (T || F ? moveToSide(flip) : p.onSelect({ wallId: w.id, side: flip }))}
-              />
-            )}
-          </DrawerRow>
-          <div className="wd-actions">
-            {T && (
-              <Button variant="ghost" icon={MoveHorizontal} onClick={() => p.onEdit((x) => fillTextile(x, rules, T.id))}>
-                Fyll ledig vegg
-              </Button>
-            )}
-            {!T && !F && (
-              <Button variant="ghost" icon={Plus} onClick={addFrame}>
-                Tekstilvegg
-              </Button>
-            )}
-            {!T &&
-              !F &&
-              doors.map((d, i) => (
-                <Button key={d.id} variant="ghost" icon={DoorOpen} onClick={() => p.onSelect({ openingId: d.id })}>
-                  Dør{doors.length > 1 ? ` ${i + 1}` : ''}
+        {!O && (
+          <div className="wd-foot">
+            <DrawerRow label={`Side · ${faceName(w, s).toLowerCase()}`}>
+              {flip !== undefined && (
+                <IconButton
+                  icon={FlipHorizontal2}
+                  label={T ? 'Flytt rammen til andre siden' : F ? 'Flytt folien til andre siden' : `Vis ${faceName(w, flip).toLowerCase()}`}
+                  size={15}
+                  onClick={() => (T || F ? moveToSide(flip) : p.onSelect({ wallId: w.id, side: flip }))}
+                />
+              )}
+            </DrawerRow>
+            <div className="wd-actions">
+              {T && (
+                <Button variant="ghost" icon={MoveHorizontal} onClick={() => p.onEdit((x) => fillTextile(x, rules, T.id))}>
+                  Fyll ledig vegg
                 </Button>
-              ))}
+              )}
+              {!T && !F && (
+                <Button variant="ghost" icon={Plus} onClick={addFrame}>
+                  Tekstilvegg
+                </Button>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
+      {O ? (
+        <div className="wd-mid">
+          <DoorMap v={v} openingId={O.id} onEdit={p.onEdit} />
+        </div>
+      ) : (
       <Shelf
         label={
           T
@@ -530,6 +558,7 @@ export function WallDrawer(p: Props) {
         }
         onUpload={p.onUpload}
       />
+      )}
 
       <div className="wd-view">
         <svg
@@ -559,9 +588,9 @@ export function WallDrawer(p: Props) {
                   key={i}
                   style={{ cursor: 'pointer' }}
                   onPointerDown={(e) => {
-                    // The door has a drawer of its own (while a tool is out, the plate targets on top take the press)
+                    // The door is chosen here, in the wall drawer (while a tool is out, the plate targets on top take the press)
                     e.stopPropagation()
-                    p.onSelect({ openingId: o.id })
+                    selectDoor(o.id)
                   }}
                 >
                   <Opening
@@ -589,6 +618,24 @@ export function WallDrawer(p: Props) {
             )
           })}
           <Posts xs={Array.from({ length: L + 1 }, (_, i) => u(i))} H={H} />
+          {/* The chosen door: marked, with its swing (the point of the triangle is the hinge side) */}
+          {O &&
+            O.wallId === w.id &&
+            (() => {
+              const x = spanX(O.module, O.module + 1)
+              const k = doorInset(rules)
+              const hx = u(O.hinge === -1 ? O.module + 1 - k : O.module + k)
+              const fx = u(O.hinge === -1 ? O.module + k : O.module + 1 - k)
+              const dh = rules.door.height
+              return (
+                <g pointerEvents="none">
+                  {productOf(O.product)?.opening === 'door' && (
+                    <path d={`M${fx} ${z(dh)} L${hx} ${z(dh / 2)} L${fx} ${z(0)}`} fill="none" stroke={INK_FAINT} strokeWidth={0.01} strokeDasharray=".04 .03" />
+                  )}
+                  <rect x={x - 0.012} y={z(H) - 0.012} width={1.024} height={H + 0.012} fill="none" stroke={INK} strokeWidth={0.016} />
+                </g>
+              )
+            })()}
           <line x1={-PAD} y1={H} x2={L + PAD} y2={H} stroke={BORDER_STRONG} strokeWidth={0.01} />
 
           {/* Foil decals */}
