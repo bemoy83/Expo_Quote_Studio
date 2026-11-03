@@ -132,9 +132,20 @@ Systemhøyde fra gulv: 2490 + 50 = 2540 mm.
   krysser den, delt der på veggens stolpe (Bjørn 1.11.2026: den holder den motstående veggen, ellers blir spennet på
   standveggen for langt). Den stopper bare der en vegg går langs linjen.
   Eksempel: front 6 m med en innervegg fra midten gir 3 + 3; front 10 m med vegg ved 2 m gir 2 + 4 + 4.
+- **Støttedrager** (Bjørn 3.11.2026, `calc/supportBeams.ts`). Med 6 m fritt spenn har standveggen lite støtte og kan
+  sige. En standvegg med et fritt spenn på 6 m mellom to punkter som holder den (hjørne, T med en vegg, en takdrager som
+  hviler på den) får én støttedrager 3 m fra hjørnet. Den går rett inn fra veggen til det første den møter: en vegg
+  (innervegg, romvegg, standvegg) eller en takdrager (standard eller tegnet). Ligger noe nærmere, blir den kortere. På
+  veggen og på en stolpe deler den stolpen, på lengden av en drager henger den på krok. Den stopper foran en vegg som går
+  langs linjen. 7 m holdes allerede av inndelingen (4 + 3 med tverrdrager i skjøten); et lengre fritt spenn får én per
+  6 m. Den er en standard takdrager: arrangørens når arrangøren betaler standveggene. Uten takdrager blir det
+  fotplater som før. En tegnet drager fra samme stolpe holder veggen der og tar plassen til støttedrageren.
 - **2 × 600 i hver ende.** 292 står 80 høy og 20 tykk, med 9 mm kanal i over- og underkant og fire kamre
   inni. De to 600-koblingene sitter i ytterkamrene, én oppe og én nede, og låser i kanalen på stolpe 94.
 - Alle stolper, også frittstående som bare bærer takdrager, er **94** på 2490 mm med samme fot.
+- **Takdragerne følger standveggene** (Bjørn 3.11.2026). En øy har ingen standvegger og får derfor ingen takdrager som
+  standard, uansett hvem som betaler standveggene. Vil utstilleren ha takdrager på øya, slås de på og betales fullt av
+  utstilleren (`standardBeamsOn` i `domain/walls.ts`).
 - Kunden kan velge bort takdragerne for en mer åpen stand (`Variant.noBeams`). Da står veggene fritt og får
   støtteplater, se under.
 
@@ -177,8 +188,16 @@ romvegger som takdragerne ikke holder, også når takdragerne er på (`calc/wall
   stolper (cc 1000): en plate i hver fri ende, trukket inn én stolpe (1 m) bare der avstanden ellers ville blitt over
   3 m. 3 m vegg: to plater, én i hver ende. 4 m: to, den ene 1 m inn. 5 m: to, begge 1 m inn. 6 m: tre, i endene og
   midt på.
+- **Ut fra et hjørne eller en T** (Bjørn 3.11.2026): opptil 1 m står veggen av seg selv, så et hjørne på 1 × 1 trenger
+  ingen plate. Over 1 m får den én plate, deretter gjelder 3 m-regelen. Kravet om minst 2 plater gjelder bare en rett
+  vegg som er fri i begge ender. Et hjørne i den andre enden teller som støtte. Det samme gjelder frittstående tekstilvegg ut fra en
+  92LTX-hjørnestolpe.
 - **Støtte** er et hjørne, en T eller et kryss med en annen systemvegg (standvegg, innervegg eller romvegg, så et rom
   holder veggene det står inntil), og en stolpe under en takdrager.
+- **Fire låste sider** (Bjørn 3.11.2026): med takdrager på får en strekning som er holdt i begge ender, og der endene
+  også henger sammen rundt en annen vei med vegger og takdragere (en lukket firkant), ingen plater. Eksempel:
+  hjørnestand 4 × 3, vegg 1 m ut fra bakveggen fra venstre standvegg til takdrageren til høyre. En 4 m innervegg langs
+  en 5 m standvegg med fri ende får plate som før.
 - Med takdrager er standveggene i takdragerrammen og får ingen plater. Uten takdrager gjelder 3 m-regelen også mellom
   to hjørner: en bakvegg på 6 m får én plate midt på.
 - Platene er alltid kundens valg og faktureres utstilleren, også under standvegger arrangøren betaler. De står på
@@ -242,7 +261,8 @@ systemveggen: den lager ikke rom og kan ikke ha dør (tekstildør med overstykke
   og trekkes inn (maks 1000 mm) bare så langt som trengs for å holde 3000 mm mellom føttene. Resten fordeles jevnt
   over lengden (Bjørn 1.11.2026). En fot i en fri ende står i flukt med rammeenden, ikke forbi den (senter en halv
   plate inn, 200 mm for 740): 3 m gir føtter 200 mm inn, 4 m 500 mm inn, 6 m tre føtter, 200 mm inn og midt på. Vegger
-  under 1 m står på én liten fotplate **730** (876 730 92, 250 × 300 × 5) midt på.
+  under 1 m står på én liten fotplate **730** (876 730 92, 250 × 300 × 5) midt på. Ut fra en hjørnestolpe står veggen
+  av seg selv opptil 1 m, uten fot og stag (Bjørn 3.11.2026); et hjørne på 1 × 1 trenger ingen.
 - Tegnes en strek i forlengelsen av en vegg, blir de én vegg. Vegger møtes bare ende mot ende i hjørner (ingen T).
 - **Tekstil på begge sider, alltid.** Hver side er trykt, hvit uten grafikk, eller kundens egen duk i samme
   størrelse (bare montering, ingen trykkfil).

@@ -48,7 +48,7 @@ describe('row stand 3 × 3', () => {
 
 describe('takdrager posts', () => {
   // Island 8 × 3: no walls, beams all round. Every beam post is the same post with foot.
-  const s = fromVariant(createVariant('A', { width: 8, depth: 3, type: 'island' }), RULES);
+  const s = fromVariant({ ...createVariant('A', { width: 8, depth: 3, type: 'island' }), noBeams: false }, RULES);
   const b = bom(s, RECIPES, Z);
   it('free-standing posts are the same post with foot', () => {
     expect(s.posts).toBeGreaterThan(0);

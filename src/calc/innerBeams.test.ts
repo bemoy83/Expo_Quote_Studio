@@ -16,7 +16,7 @@ const beam = (id: string, from: Point, to: Point): InnerBeam => ({ id, from, to 
 const variant = (stand: Stand, innerBeams: InnerBeam[], noBeams = false): Variant => ({ ...createVariant('A', stand), innerBeams, ...(noBeams ? { noBeams } : {}) });
 const layout = (v: Variant) => {
   const mods = builtModules(v);
-  return variantBeams(v, new Set(mods.map((m) => m.key)), wallPoints(mods), RULES.beam.max);
+  return variantBeams(v, mods, wallPoints(mods), RULES.beam.max);
 };
 const lengths = (v: Variant) => layout(v).inner.segments.map((s) => s.length);
 const has = (ps: ReadonlyMap<string, Point>, p: Point) => ps.has(pointKey(p));

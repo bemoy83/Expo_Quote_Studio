@@ -10,6 +10,9 @@ export type Ends = { from: boolean; to: boolean };
 /** The fewest supports a run of `len` mm needs, its held ends (corner, T, beam) not counted. */
 export function minSupports(len: number, s: SupportRule, corners: Ends): number {
   const nCorners = (corners.from ? 1 : 0) + (corners.to ? 1 : 0);
+  // Bjørn 3.11.2026: out from a corner or T it stands by itself up to `minFrom` (a 1 × 1 corner needs nothing); the
+  // `min` supports are for a straight run free at both ends
+  if (nCorners === 1 && len <= s.minFrom + 1e-6) return 0;
   const total = len >= s.minFrom ? s.min : 1;
   const ceil = (x: number) => Math.max(0, Math.ceil(x - 1e-9));
   if (nCorners === 2) return Math.max(total - 2, ceil(len / s.maxGap) - 1);

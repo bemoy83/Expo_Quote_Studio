@@ -135,6 +135,7 @@ describe('openings', () => {
     const v = createVariant('A', { width: 3, depth: 3, type: 'island' });
     const walled: Variant = {
       ...v,
+      noBeams: false,
       walls: [{ id: 'f', from: [0, 3], to: [3, 3] }],
       openings: [{ id: 'o', wallId: 'f', module: 1, product: DOOR }],
     };
@@ -195,15 +196,16 @@ describe('beams', () => {
   });
   it('cross beam stops where a wall runs along its line', () => {
     const res = run(rowWithWall(8, 4, [4, 2], [4, 1]));
-    expect(res.beams.segments.filter((s) => s.cross).map((s) => s.length)).toEqual([2]);
+    expect(res.beams.segments.filter((s) => s.cross && !s.support).map((s) => s.length)).toEqual([2]);
   });
   it('a wall ending under a beam splits it there and shares the post', () => {
-    // Row 6 × 3, inner wall from the back wall to the front: front 6 → 3 + 3 at (3,3), on the wall's own post.
+    // Row 6 × 3, inner wall from 1 m off the back wall to the front: front 6 → 3 + 3 at (3,3), on the wall's own post.
     const res = run(rowWithWall(6, 3, [3, 1], [3, 3]));
-    expect(res.beams.segments.map((s) => s.length)).toEqual([3, 3]);
-    expect(res.keyFigures).toMatchObject({ beamLm: 6, beamLengths: 2, beamPosts: 0 });
-    // The beam holds the wall's end: only the other, free end gets a plate.
-    expect(res.wallSupports).toHaveLength(1);
+    expect(res.beams.segments.filter((s) => !s.support).map((s) => s.length)).toEqual([3, 3]);
+    // The 6 m back wall's støttedrager (3,0) → (3,1) lands on the inner wall's other end, on its post: no plates
+    expect(res.beams.segments.filter((s) => s.support).map((s) => s.length)).toEqual([1]);
+    expect(res.keyFigures).toMatchObject({ beamLm: 7, beamLengths: 3, beamPosts: 0 });
+    expect(res.wallSupports).toHaveLength(0);
   });
   it('each side of a wall end is split by the 6 m rule on its own', () => {
     // Row 10 × 3, inner wall at x = 2: 2 + 8, and 8 → 4 + 4 with a joint at (6,3) and a 3 m cross beam to the back.
@@ -214,7 +216,9 @@ describe('beams', () => {
   it('a free end gets a post, an end against a wall does not', () => {
     // Corner 6 × 3 open right: front 6 + right 3, one free corner.
     const res = run(createVariant('A', { width: 6, depth: 3, type: 'corner', cornerSide: 'right' }));
-    expect(res.keyFigures.beamLm).toBe(9);
+    // 9 m around the open sides, and the 6 m back wall's 3 m støttedrager, hooked on the front beam
+    expect(res.keyFigures.beamLm).toBe(12);
+    expect(res.keyFigures.beamHooks).toBe(1);
     expect(res.keyFigures.beamPosts).toBe(1);
     expect(res.keyFigures.posts).toBe(11);
   });
@@ -399,8 +403,13 @@ describe('stand walls the organiser pays (docs/vegger.md)', () => {
     expect(qty(res, DOOR)).toBe(1);
   });
 
-  it('island (open area, no stand walls): the exhibitor pays the takdrager in full', () => {
-    const v = { ...createVariant('A', { width: 8, depth: 3, type: 'island' }), walls: [{ id: 'w1', from: [3, 0] as [number, number], to: [3, 3] as [number, number] }] };
+  it('island: no takdrager by default, they follow the stand walls (Bjørn 3.11.2026)', () => {
+    const v = createVariant('A', { width: 8, depth: 3, type: 'island' });
+    expect(run(v).keyFigures.beamLm).toBe(0);
+    expect(org(v).organiser.lines).toEqual([]);
+  });
+  it('island (open area, no stand walls): the exhibitor pays the takdrager in full when chosen', () => {
+    const v = { ...createVariant('A', { width: 8, depth: 3, type: 'island' }), noBeams: false, walls: [{ id: 'w1', from: [3, 0] as [number, number], to: [3, 3] as [number, number] }] };
     const res = org(v);
     expect(res.organiser.lines).toEqual([]);
     expect(qty(res, S.beam)).toBeGreaterThan(0);

@@ -227,7 +227,8 @@ export interface Variant {
   foils: Foil[];
   counted: CountedItem[];
   loose: LooseLine[];
-  /** No takdrager: the customer wants a more open stand. Omitted = with takdrager. Only the standard beams. */
+  /** Standard takdrager turned off (true) or on (false); omitted = the stand type's default: they follow the stand
+   *  walls, so on, except on an island, which has none (Bjørn 3.11.2026, {@link standardBeamsOn}). */
   noBeams?: boolean;
   /** Innvendige takdragere the customer draws, always the exhibitor's (calc/innerBeams.ts). Omitted = none. */
   innerBeams?: InnerBeam[];

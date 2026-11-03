@@ -39,6 +39,9 @@ describe('feet and braces', () => {
     expect(supportPoints(2000, S, { from: true, to: false }, 200)).toEqual([1800]);
   });
   it('a corner post is a support', () => {
+    // Up to 1 m out from a corner post it stands by itself (Bjørn 3.11.2026)
+    expect(supportPoints(1000, S, { from: true, to: false })).toEqual([]);
+    expect(supportPoints(750, S, { from: false, to: true })).toEqual([]);
     // Corner at one end: one foot, at the free end
     expect(supportPoints(2000, S, { from: true, to: false })).toEqual([2000]);
     expect(supportPoints(2000, S, { from: false, to: true })).toEqual([0]);
