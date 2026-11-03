@@ -1,0 +1,306 @@
+{
+  "format": "standskisse",
+  "versjon": 3,
+  "prosjekt": {
+    "fields": [
+      {
+        "id": "kunde",
+        "name": "Kundenavn",
+        "value": "Rom AS"
+      },
+      {
+        "id": "prosjekt",
+        "name": "Prosjekt",
+        "value": ""
+      },
+      {
+        "id": "standnr",
+        "name": "Standnr.",
+        "value": ""
+      }
+    ],
+    "delivery": {
+      "montering": "2026-12-01",
+      "apning": "2026-12-03",
+      "demontering": "2026-12-05"
+    }
+  },
+  "varianter": [
+    {
+      "name": "A",
+      "stand": {
+        "width": 8,
+        "depth": 5,
+        "type": "row"
+      },
+      "defaultPlate": "9010",
+      "walls": [
+        {
+          "id": "side-back",
+          "from": [
+            0,
+            0
+          ],
+          "to": [
+            8,
+            0
+          ]
+        },
+        {
+          "id": "side-left",
+          "from": [
+            0,
+            0
+          ],
+          "to": [
+            0,
+            5
+          ]
+        },
+        {
+          "id": "side-right",
+          "from": [
+            8,
+            0
+          ],
+          "to": [
+            8,
+            5
+          ]
+        },
+        {
+          "id": "L.0",
+          "from": [
+            0,
+            0
+          ],
+          "to": [
+            3,
+            0
+          ],
+          "room": {
+            "id": "L",
+            "side": 0
+          }
+        },
+        {
+          "id": "L.1",
+          "from": [
+            3,
+            0
+          ],
+          "to": [
+            3,
+            1
+          ],
+          "room": {
+            "id": "L",
+            "side": 1
+          }
+        },
+        {
+          "id": "L.2",
+          "from": [
+            3,
+            1
+          ],
+          "to": [
+            2,
+            1
+          ],
+          "room": {
+            "id": "L",
+            "side": 2
+          }
+        },
+        {
+          "id": "L.3",
+          "from": [
+            2,
+            1
+          ],
+          "to": [
+            2,
+            3
+          ],
+          "room": {
+            "id": "L",
+            "side": 3
+          }
+        },
+        {
+          "id": "L.4",
+          "from": [
+            2,
+            3
+          ],
+          "to": [
+            0,
+            3
+          ],
+          "room": {
+            "id": "L",
+            "side": 4
+          }
+        },
+        {
+          "id": "L.5",
+          "from": [
+            0,
+            3
+          ],
+          "to": [
+            0,
+            0
+          ],
+          "room": {
+            "id": "L",
+            "side": 5
+          }
+        },
+        {
+          "id": "rom1.0",
+          "from": [
+            6,
+            0
+          ],
+          "to": [
+            8,
+            0
+          ],
+          "room": {
+            "id": "rom1",
+            "side": 0
+          }
+        },
+        {
+          "id": "rom1.1",
+          "from": [
+            8,
+            0
+          ],
+          "to": [
+            8,
+            2
+          ],
+          "room": {
+            "id": "rom1",
+            "side": 1
+          }
+        },
+        {
+          "id": "rom1.2",
+          "from": [
+            8,
+            2
+          ],
+          "to": [
+            6,
+            2
+          ],
+          "room": {
+            "id": "rom1",
+            "side": 2
+          }
+        },
+        {
+          "id": "rom1.3",
+          "from": [
+            6,
+            2
+          ],
+          "to": [
+            6,
+            0
+          ],
+          "room": {
+            "id": "rom1",
+            "side": 3
+          }
+        }
+      ],
+      "rooms": [
+        {
+          "id": "L",
+          "outline": [
+            [
+              0,
+              0
+            ],
+            [
+              3,
+              0
+            ],
+            [
+              3,
+              1
+            ],
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              0,
+              3
+            ]
+          ]
+        },
+        {
+          "id": "rom1",
+          "outline": [
+            [
+              6,
+              0
+            ],
+            [
+              8,
+              0
+            ],
+            [
+              8,
+              2
+            ],
+            [
+              6,
+              2
+            ]
+          ],
+          "label": "Rom"
+        }
+      ],
+      "openings": [
+        {
+          "id": "o1",
+          "wallId": "L.3",
+          "module": 0,
+          "product": "6130",
+          "ral": "5007",
+          "swing": -1
+        },
+        {
+          "id": "o2",
+          "wallId": "rom1.2",
+          "module": 0,
+          "product": "6131",
+          "swing": -1,
+          "hinge": -1
+        }
+      ],
+      "floor": {
+        "tiles": [],
+        "protection": false
+      },
+      "objects": [],
+      "textiles": [],
+      "freeTextiles": [],
+      "foils": [],
+      "counted": [],
+      "loose": []
+    }
+  ],
+  "egneMotiver": []
+}

@@ -1,0 +1,116 @@
+{
+  "format": "standskisse",
+  "versjon": 3,
+  "prosjekt": {
+    "fields": [
+      {
+        "id": "kunde",
+        "name": "Kundenavn",
+        "value": "Fotplate AS"
+      },
+      {
+        "id": "prosjekt",
+        "name": "Prosjekt",
+        "value": ""
+      },
+      {
+        "id": "standnr",
+        "name": "Standnr.",
+        "value": ""
+      }
+    ],
+    "delivery": {
+      "montering": "2026-12-01",
+      "apning": "2026-12-03",
+      "demontering": "2026-12-05"
+    },
+    "standWalls": {
+      "payer": "utstiller",
+      "ral": "9010"
+    }
+  },
+  "varianter": [
+    {
+      "name": "A",
+      "stand": {
+        "width": 5,
+        "depth": 4,
+        "type": "row"
+      },
+      "defaultPlate": "9010",
+      "walls": [
+        {
+          "id": "side-back",
+          "from": [
+            0,
+            0
+          ],
+          "to": [
+            5,
+            0
+          ]
+        },
+        {
+          "id": "side-left",
+          "from": [
+            0,
+            0
+          ],
+          "to": [
+            0,
+            4
+          ]
+        },
+        {
+          "id": "side-right",
+          "from": [
+            5,
+            0
+          ],
+          "to": [
+            5,
+            4
+          ]
+        },
+        {
+          "id": "w1",
+          "from": [
+            2,
+            1
+          ],
+          "to": [
+            2,
+            3
+          ]
+        }
+      ],
+      "rooms": [],
+      "openings": [],
+      "floor": {
+        "tiles": [],
+        "protection": false
+      },
+      "objects": [],
+      "textiles": [],
+      "freeTextiles": [],
+      "foils": [],
+      "counted": [],
+      "loose": [],
+      "noBeams": true,
+      "innerBeams": [
+        {
+          "id": "td1",
+          "from": [
+            0,
+            2
+          ],
+          "to": [
+            2,
+            2
+          ]
+        }
+      ]
+    }
+  ],
+  "egneMotiver": []
+}

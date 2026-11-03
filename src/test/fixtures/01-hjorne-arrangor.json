@@ -1,0 +1,280 @@
+{
+  "format": "standskisse",
+  "versjon": 3,
+  "prosjekt": {
+    "fields": [
+      {
+        "id": "kunde",
+        "name": "Kundenavn",
+        "value": "Hjørne AS"
+      },
+      {
+        "id": "prosjekt",
+        "name": "Prosjekt",
+        "value": ""
+      },
+      {
+        "id": "standnr",
+        "name": "Standnr.",
+        "value": ""
+      }
+    ],
+    "delivery": {
+      "montering": "2026-12-01",
+      "apning": "2026-12-03",
+      "demontering": "2026-12-05"
+    }
+  },
+  "varianter": [
+    {
+      "name": "A",
+      "stand": {
+        "width": 6,
+        "depth": 4,
+        "type": "corner",
+        "cornerSide": "right"
+      },
+      "defaultPlate": "9010",
+      "walls": [
+        {
+          "id": "side-back",
+          "from": [
+            0,
+            0
+          ],
+          "to": [
+            6,
+            0
+          ]
+        },
+        {
+          "id": "side-left",
+          "from": [
+            0,
+            0
+          ],
+          "to": [
+            0,
+            4
+          ],
+          "plate": "5012"
+        },
+        {
+          "id": "w1",
+          "from": [
+            3,
+            0
+          ],
+          "to": [
+            3,
+            2
+          ]
+        },
+        {
+          "id": "w2",
+          "from": [
+            3,
+            2
+          ],
+          "to": [
+            3,
+            3
+          ]
+        }
+      ],
+      "rooms": [],
+      "openings": [
+        {
+          "id": "o1",
+          "wallId": "w2",
+          "module": 0,
+          "product": "6130"
+        }
+      ],
+      "floor": {
+        "tiles": [
+          {
+            "i": 0,
+            "j": 0,
+            "w": 2,
+            "h": 2,
+            "product": "5902"
+          },
+          {
+            "i": 2,
+            "j": 0,
+            "w": 2,
+            "h": 2,
+            "product": "5902"
+          },
+          {
+            "i": 4,
+            "j": 0,
+            "w": 2,
+            "h": 2,
+            "product": "5902"
+          },
+          {
+            "i": 6,
+            "j": 0,
+            "w": 2,
+            "h": 2,
+            "product": "5902"
+          },
+          {
+            "i": 8,
+            "j": 0,
+            "w": 2,
+            "h": 2,
+            "product": "5902"
+          },
+          {
+            "i": 10,
+            "j": 0,
+            "w": 2,
+            "h": 2,
+            "product": "5902"
+          },
+          {
+            "i": 0,
+            "j": 2,
+            "w": 2,
+            "h": 2,
+            "product": "5902"
+          },
+          {
+            "i": 2,
+            "j": 2,
+            "w": 2,
+            "h": 2,
+            "product": "5902"
+          },
+          {
+            "i": 4,
+            "j": 2,
+            "w": 2,
+            "h": 2,
+            "product": "5902"
+          },
+          {
+            "i": 6,
+            "j": 2,
+            "w": 2,
+            "h": 2,
+            "product": "5902"
+          },
+          {
+            "i": 8,
+            "j": 2,
+            "w": 2,
+            "h": 2,
+            "product": "5902"
+          },
+          {
+            "i": 10,
+            "j": 2,
+            "w": 2,
+            "h": 2,
+            "product": "5902"
+          },
+          {
+            "i": 0,
+            "j": 4,
+            "w": 2,
+            "h": 2,
+            "product": "5902"
+          },
+          {
+            "i": 2,
+            "j": 4,
+            "w": 2,
+            "h": 2,
+            "product": "5902"
+          },
+          {
+            "i": 4,
+            "j": 4,
+            "w": 2,
+            "h": 2,
+            "product": "5902"
+          },
+          {
+            "i": 6,
+            "j": 4,
+            "w": 2,
+            "h": 2,
+            "product": "5902"
+          },
+          {
+            "i": 8,
+            "j": 4,
+            "w": 2,
+            "h": 2,
+            "product": "5902"
+          },
+          {
+            "i": 10,
+            "j": 4,
+            "w": 2,
+            "h": 2,
+            "product": "5902"
+          },
+          {
+            "i": 0,
+            "j": 6,
+            "w": 2,
+            "h": 2,
+            "product": "5902"
+          },
+          {
+            "i": 2,
+            "j": 6,
+            "w": 2,
+            "h": 2,
+            "product": "5902"
+          },
+          {
+            "i": 4,
+            "j": 6,
+            "w": 2,
+            "h": 2,
+            "product": "5902"
+          },
+          {
+            "i": 6,
+            "j": 6,
+            "w": 2,
+            "h": 2,
+            "product": "5902"
+          },
+          {
+            "i": 8,
+            "j": 6,
+            "w": 2,
+            "h": 2,
+            "product": "5902"
+          },
+          {
+            "i": 10,
+            "j": 6,
+            "w": 2,
+            "h": 2,
+            "product": "5902"
+          }
+        ],
+        "protection": true
+      },
+      "objects": [],
+      "textiles": [],
+      "freeTextiles": [],
+      "foils": [],
+      "counted": [],
+      "loose": [],
+      "panels": {
+        "h:1:0": "3002",
+        "h:2:0": "3002"
+      }
+    }
+  ],
+  "egneMotiver": []
+}

@@ -1,0 +1,208 @@
+{
+  "format": "standskisse",
+  "versjon": 3,
+  "prosjekt": {
+    "fields": [
+      {
+        "id": "kunde",
+        "name": "Kundenavn",
+        "value": "Dekor AS"
+      },
+      {
+        "id": "prosjekt",
+        "name": "Prosjekt",
+        "value": ""
+      },
+      {
+        "id": "standnr",
+        "name": "Standnr.",
+        "value": ""
+      }
+    ],
+    "delivery": {
+      "montering": "2026-12-01",
+      "apning": "2026-12-03",
+      "demontering": "2026-12-05"
+    },
+    "standWalls": {
+      "payer": "utstiller",
+      "ral": "9010"
+    }
+  },
+  "varianter": [
+    {
+      "name": "A",
+      "stand": {
+        "width": 5,
+        "depth": 3,
+        "type": "corner",
+        "cornerSide": "right"
+      },
+      "defaultPlate": "9010",
+      "walls": [
+        {
+          "id": "side-back",
+          "from": [
+            0,
+            0
+          ],
+          "to": [
+            5,
+            0
+          ]
+        },
+        {
+          "id": "side-left",
+          "from": [
+            0,
+            0
+          ],
+          "to": [
+            0,
+            3
+          ]
+        }
+      ],
+      "rooms": [],
+      "openings": [],
+      "floor": {
+        "tiles": [],
+        "protection": false
+      },
+      "objects": [],
+      "textiles": [],
+      "freeTextiles": [],
+      "foils": [
+        {
+          "id": "f1",
+          "wallId": "side-back",
+          "module": 0,
+          "side": 1,
+          "full": true,
+          "width": 0.96,
+          "height": 2.42,
+          "x": 0,
+          "y": 1.29,
+          "motif": "banner",
+          "run": "p1",
+          "crop": [
+            0,
+            0.4024,
+            0.1935,
+            0.5976
+          ]
+        },
+        {
+          "id": "f2",
+          "wallId": "side-back",
+          "module": 1,
+          "side": 1,
+          "full": true,
+          "width": 0.96,
+          "height": 2.42,
+          "x": 0,
+          "y": 1.29,
+          "motif": "banner",
+          "run": "p1",
+          "crop": [
+            0.2016,
+            0.4024,
+            0.3952,
+            0.5976
+          ]
+        },
+        {
+          "id": "f3",
+          "wallId": "side-back",
+          "module": 2,
+          "side": 1,
+          "full": true,
+          "width": 0.96,
+          "height": 2.42,
+          "x": 0,
+          "y": 1.29,
+          "motif": "banner",
+          "run": "p1",
+          "crop": [
+            0.4032,
+            0.4024,
+            0.5968,
+            0.5976
+          ]
+        },
+        {
+          "id": "f4",
+          "wallId": "side-back",
+          "module": 3,
+          "side": 1,
+          "full": true,
+          "width": 0.96,
+          "height": 2.42,
+          "x": 0,
+          "y": 1.29,
+          "motif": "banner",
+          "run": "p1",
+          "crop": [
+            0.6048,
+            0.4024,
+            0.7984,
+            0.5976
+          ]
+        },
+        {
+          "id": "f5",
+          "wallId": "side-back",
+          "module": 4,
+          "side": 1,
+          "full": true,
+          "width": 0.96,
+          "height": 2.42,
+          "x": 0,
+          "y": 1.29,
+          "motif": "banner",
+          "run": "p1",
+          "crop": [
+            0.8065,
+            0.4024,
+            1,
+            0.5976
+          ]
+        },
+        {
+          "id": "f6",
+          "wallId": "side-left",
+          "module": 1,
+          "side": 1,
+          "full": true,
+          "width": 0.96,
+          "height": 2.42,
+          "x": 0,
+          "y": 1.29,
+          "motif": "prod"
+        },
+        {
+          "id": "f7",
+          "wallId": "side-left",
+          "module": 2,
+          "side": 1,
+          "full": false,
+          "width": 0.768,
+          "height": 0.768,
+          "x": 0,
+          "y": 1.5,
+          "motif": "m1"
+        }
+      ],
+      "counted": [],
+      "loose": []
+    }
+  ],
+  "egneMotiver": [
+    {
+      "id": "m1",
+      "name": "Kundelogo",
+      "ratio": 1,
+      "src": "data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 10 10\"><rect width=\"10\" height=\"10\" fill=\"%23c33\"/></svg>"
+    }
+  ]
+}

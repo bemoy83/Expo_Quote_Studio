@@ -1,0 +1,95 @@
+{
+  "format": "standskisse",
+  "versjon": 3,
+  "prosjekt": {
+    "fields": [
+      {
+        "id": "kunde",
+        "name": "Kundenavn",
+        "value": "Øy AS"
+      },
+      {
+        "id": "prosjekt",
+        "name": "Prosjekt",
+        "value": ""
+      },
+      {
+        "id": "standnr",
+        "name": "Standnr.",
+        "value": ""
+      }
+    ],
+    "delivery": {
+      "montering": "2026-12-01",
+      "apning": "2026-12-03",
+      "demontering": "2026-12-05"
+    }
+  },
+  "varianter": [
+    {
+      "name": "A",
+      "stand": {
+        "width": 8,
+        "depth": 6,
+        "type": "island"
+      },
+      "defaultPlate": "9010",
+      "walls": [],
+      "rooms": [],
+      "openings": [],
+      "floor": {
+        "tiles": [
+          {
+            "i": 0,
+            "j": 0,
+            "w": 16,
+            "h": 4,
+            "product": "5920",
+            "roll": "x",
+            "fill": "f1"
+          },
+          {
+            "i": 0,
+            "j": 4,
+            "w": 16,
+            "h": 4,
+            "product": "5920",
+            "roll": "x",
+            "fill": "f1"
+          },
+          {
+            "i": 0,
+            "j": 8,
+            "w": 16,
+            "h": 4,
+            "product": "5920",
+            "roll": "x",
+            "fill": "f1"
+          }
+        ],
+        "protection": false
+      },
+      "objects": [],
+      "textiles": [],
+      "freeTextiles": [],
+      "foils": [],
+      "counted": [],
+      "loose": [],
+      "noBeams": false,
+      "innerBeams": [
+        {
+          "id": "td1",
+          "from": [
+            0,
+            3
+          ],
+          "to": [
+            8,
+            3
+          ]
+        }
+      ]
+    }
+  ],
+  "egneMotiver": []
+}
