@@ -110,6 +110,8 @@ export function WallDrawer(p: Props) {
    * colour or «Print», then click the wall. No tool: the drawing selects and moves as usual (Bjørn 2.11.2026).
    */
   const [tool, setTool] = useState<'wall' | 'plate' | null>(null)
+  /** True from a press on a plate until it is let go: the brush sweeps over the plates entered meanwhile. */
+  const sweeping = useRef(false)
   /** What the tools lay on: a plate colour (RAL) or PRINT. Unset: the wall's own colour. */
   const [paintSel, setPaint] = useState<string | null>(null)
   /** The motif «Print» lays on, chosen in the graphics shelf. Unset: the first in the library. */
@@ -286,10 +288,24 @@ export function WallDrawer(p: Props) {
           style: { cursor: tool === 'wall' ? 'copy' : 'crosshair' },
           onPointerDown: (e: RPointerEvent) => {
             e.stopPropagation()
+            // A finger enters the plate (with the button down) just before it presses it, so a sweep only counts once
+            // the press has begun: else the brush printed the plate on enter and the press took the print off again.
+            sweeping.current = true
+            const end = () => {
+              sweeping.current = false
+              window.removeEventListener('pointerup', end)
+              window.removeEventListener('pointercancel', end)
+            }
+            window.addEventListener('pointerup', end)
+            window.addEventListener('pointercancel', end)
+            // Touch (iPad) holds the pointer on the plate it went down on, so the next plates would never see it
+            // enter. Letting go of it makes a sweep with a finger or pen work like one with the mouse.
+            const t = e.currentTarget as Element
+            if (t.hasPointerCapture(e.pointerId)) t.releasePointerCapture(e.pointerId)
             if (e.button === 0) paintAt(i, key, true)
           },
           onPointerEnter: (e: RPointerEvent) => {
-            if (tool === 'plate' && e.buttons === 1) paintAt(i, key, false)
+            if (tool === 'plate' && sweeping.current && e.buttons === 1) paintAt(i, key, false)
           },
         }
       : {}
@@ -311,24 +327,24 @@ export function WallDrawer(p: Props) {
   const hint = O
     ? `Klikk en rute i miniplanen for å flytte ${productOf(O.product)?.opening === 'door' ? 'døren' : 'forhenget'} · klikk veggen for å gå tilbake til den · Delete gjør om til vegg`
     : painting
-    ? tool === 'wall'
-      ? printing
-        ? 'Klikk veggen: motivet strekkes over platene på denne siden, ikke inne i bakrom · klikk én gang til: printen fjernes fra hele siden'
-        : 'Klikk veggen for å farge alle platene · print på denne siden går bort, dekaler blir'
-      : printing
-        ? 'Klikk eller dra over platene: hele motivet på hver plate · klikk en plate som har motivet: printen fjernes fra den platen'
-        : 'Klikk eller dra over platene for å farge dem · klikk en farget plate igjen for veggens farge'
-    : T
-      ? 'Dra rammen for å flytte · håndtakene endrer størrelsen · klikk et motiv for trykk · Delete fjerner'
-      : F
-        ? F.full
-          ? 'Dra for å flytte til en annen plate · klikk et motiv for å bytte · Delete fjerner'
-          : 'Dra for å flytte innenfor platen · hjørnene endrer størrelsen · klikk et motiv for å bytte · Delete fjerner'
-        : isStandWall(w)
-          ? `Standveggen står fast · ${tail}`
-          : w.room
-            ? `Dra veggen i planen for å endre rommet · ${tail}`
-            : `Dra veggen i planen for å flytte den · ${tail}`
+      ? tool === 'wall'
+        ? printing
+          ? 'Klikk veggen: motivet strekkes over platene på denne siden, ikke inne i bakrom · klikk én gang til: printen fjernes fra hele siden'
+          : 'Klikk veggen for å farge alle platene · print på denne siden går bort, dekaler blir'
+        : printing
+          ? 'Klikk eller dra over platene: hele motivet på hver plate · klikk en plate som har motivet: printen fjernes fra den platen'
+          : 'Klikk eller dra over platene for å farge dem · klikk en farget plate igjen for veggens farge'
+      : T
+        ? 'Dra rammen for å flytte · håndtakene endrer størrelsen · klikk et motiv for trykk · Delete fjerner'
+        : F
+          ? F.full
+            ? 'Dra for å flytte til en annen plate · klikk et motiv for å bytte · Delete fjerner'
+            : 'Dra for å flytte innenfor platen · hjørnene endrer størrelsen · klikk et motiv for å bytte · Delete fjerner'
+          : isStandWall(w)
+            ? `Standveggen står fast · ${tail}`
+            : w.room
+              ? `Dra veggen i planen for å endre rommet · ${tail}`
+              : `Dra veggen i planen for å flytte den · ${tail}`
 
   const remove = () => {
     if (T) p.onEdit((x) => removeTextile(x, T.id))
@@ -397,116 +413,116 @@ export function WallDrawer(p: Props) {
           </DoorSettings>
         ) : (
           <>
-          <DrawerHead
-            dot={T ? LAYER_COLOR.textile : F ? INK_FAINT : LAYER_COLOR.walls}
-            title={title}
-            remove={
-              T || F
-                ? { label: T ? 'Fjern tekstilvegg (Delete)' : 'Fjern grafikk (Delete)', onClick: remove }
-                : decorated
-                  ? { label: 'Fjern print, dekaler og platefarger fra hele veggen, begge sider', onClick: () => p.onEdit((x) => clearDecor(x, w.id)) }
-                  : !isStandWall(w)
-                    ? { label: w.room ? 'Åpne siden' : 'Fjern veggen', onClick: remove }
-                    : undefined
-            }
-            onClose={p.onClose}
-          />
-          <p className="wd-meta num">
-            {T && piece
-              ? `ramme ${mm(piece.W / 1000)} × ${mm(piece.H / 1000)} mm · ${fmt(piece.area)} m² ${piece.fill === 'reuse' ? 'kundens duk' : piece.fill === 'white' ? 'hvit duk' : 'trykk'}`
-              : F
-                ? `Felt ${F.module + 1} · ${mm(F.width)} × ${mm(F.height)} mm${F.run ? ` · del av print over ${v.foils.filter((x) => x.run === F.run).length} plater` : ''}`
-                : [`${L} m`, count(wallModules(w).length - openings.length, 'plate', 'plater') + (odd ? ` (${odd} i egen farge)` : ''), openings.length && count(openings.length, 'åpning', 'åpninger'), tex.length && count(tex.length, 'tekstilvegg', 'tekstilvegger'), ...rooms.map((r) => `${r.b - r.a} m inn mot ${roomName(r.room).toLowerCase()}`)]
-                    .filter(Boolean)
-                    .join(' · ')}
-          </p>
+            <DrawerHead
+              dot={T ? LAYER_COLOR.textile : F ? INK_FAINT : LAYER_COLOR.walls}
+              title={title}
+              remove={
+                T || F
+                  ? { label: T ? 'Fjern tekstilvegg (Delete)' : 'Fjern grafikk (Delete)', onClick: remove }
+                  : decorated
+                    ? { label: 'Fjern print, dekaler og platefarger fra hele veggen, begge sider', onClick: () => p.onEdit((x) => clearDecor(x, w.id)) }
+                    : !isStandWall(w)
+                      ? { label: w.room ? 'Åpne siden' : 'Fjern veggen', onClick: remove }
+                      : undefined
+              }
+              onClose={p.onClose}
+            />
+            <p className="wd-meta num">
+              {T && piece
+                ? `ramme ${mm(piece.W / 1000)} × ${mm(piece.H / 1000)} mm · ${fmt(piece.area)} m² ${piece.fill === 'reuse' ? 'kundens duk' : piece.fill === 'white' ? 'hvit duk' : 'trykk'}`
+                : F
+                  ? `Felt ${F.module + 1} · ${mm(F.width)} × ${mm(F.height)} mm${F.run ? ` · del av print over ${v.foils.filter((x) => x.run === F.run).length} plater` : ''}`
+                  : [`${L} m`, count(wallModules(w).length - openings.length, 'plate', 'plater') + (odd ? ` (${odd} i egen farge)` : ''), openings.length && count(openings.length, 'åpning', 'åpninger'), tex.length && count(tex.length, 'tekstilvegg', 'tekstilvegger'), ...rooms.map((r) => `${r.b - r.a} m inn mot ${roomName(r.room).toLowerCase()}`)]
+                      .filter(Boolean)
+                      .join(' · ')}
+            </p>
 
-          {T && (
-            <>
-              <div className="wd-dims">
-                <Dim label="Bredde" value={T.width} onChange={(n) => p.onEdit((x) => updateTextile(x, rules, T.id, { width: n }))} />
-                <Dim label="Høyde" value={textileBox(T, rules).height} decimals={2} onChange={(n) => p.onEdit((x) => updateTextile(x, rules, T.id, { height: n }))} />
-                <Dim label="Fra gulv" value={textileBox(T, rules).bottom} onChange={(n) => p.onEdit((x) => updateTextile(x, rules, T.id, { bottom: n }))} />
-              </div>
-              <FillPicker value={fill} onChange={(f) => p.onEdit((x) => updateTextile(x, rules, T.id, { fill: f }))} />
-            </>
-          )}
-
-          {F && (
-            <>
-              <div className="eyebrow">Dekning</div>
-              <Segmented<boolean>
-                inWell
-                label="Dekning"
-                value={F.full}
-                onChange={(full) => p.onEdit((x) => updateFoil(x, rules, F.id, { full }, ratioOf(F.motif)))}
-                options={[
-                  { value: false, label: 'Dekal' },
-                  { value: true, label: 'Hel plate' },
-                ]}
-              />
-              {F.full ? (
-                <p className="wd-meta">
-                  Dekker platen mellom stolpene, {rules.wall.plate.width} × {rules.wall.plate.height} mm
-                </p>
-              ) : (
+            {T && (
+              <>
                 <div className="wd-dims">
-                  <Dim label="Bredde" value={F.width} decimals={2} onChange={(n) => p.onEdit((x) => updateFoil(x, rules, F.id, { width: n }, ratioOf(F.motif)))} />
+                  <Dim label="Bredde" value={T.width} onChange={(n) => p.onEdit((x) => updateTextile(x, rules, T.id, { width: n }))} />
+                  <Dim label="Høyde" value={textileBox(T, rules).height} decimals={2} onChange={(n) => p.onEdit((x) => updateTextile(x, rules, T.id, { height: n }))} />
+                  <Dim label="Fra gulv" value={textileBox(T, rules).bottom} onChange={(n) => p.onEdit((x) => updateTextile(x, rules, T.id, { bottom: n }))} />
                 </div>
-              )}
-            </>
-          )}
+                <FillPicker value={fill} onChange={(f) => p.onEdit((x) => updateTextile(x, rules, T.id, { fill: f }))} />
+              </>
+            )}
 
-          {!T && !F && (
-            <>
-              <DrawerRow
-                label={
-                  painting
-                    ? `${tool === 'wall' ? 'Hele veggen' : 'Plate'} · ${printing ? `print ${pm?.name ?? ''}` : `${plateName(paint)} ${paint}`}`
-                    : `Hele veggen · ${plateName(ral)} ${ral}`
-                }
-              >
-                <IconButton icon={PaintBucket} label="Malerspann: klikk veggen for å farge hele siden" size={15} className="ink" pressed={tool === 'wall'} onClick={() => setTool(tool === 'wall' ? null : 'wall')} />
-                <IconButton icon={Paintbrush} label="Malerkost: klikk én og én plate" size={15} className="ink" pressed={tool === 'plate'} onClick={() => setTool(tool === 'plate' ? null : 'plate')} />
-              </DrawerRow>
-              <PlatePalette
-                value={painting ? paint : ral}
-                print={{ motif: pm }}
-                onPick={(r) => {
-                  setPaint(r)
-                  // Picking a colour takes up the paint bucket when no tool is out
-                  if (!tool) setTool('wall')
-                }}
-              />
-            </>
-          )}
+            {F && (
+              <>
+                <div className="eyebrow">Dekning</div>
+                <Segmented<boolean>
+                  inWell
+                  label="Dekning"
+                  value={F.full}
+                  onChange={(full) => p.onEdit((x) => updateFoil(x, rules, F.id, { full }, ratioOf(F.motif)))}
+                  options={[
+                    { value: false, label: 'Dekal' },
+                    { value: true, label: 'Hel plate' },
+                  ]}
+                />
+                {F.full ? (
+                  <p className="wd-meta">
+                    Dekker platen mellom stolpene, {rules.wall.plate.width} × {rules.wall.plate.height} mm
+                  </p>
+                ) : (
+                  <div className="wd-dims">
+                    <Dim label="Bredde" value={F.width} decimals={2} onChange={(n) => p.onEdit((x) => updateFoil(x, rules, F.id, { width: n }, ratioOf(F.motif)))} />
+                  </div>
+                )}
+              </>
+            )}
+
+            {!T && !F && (
+              <>
+                <DrawerRow
+                  label={
+                    painting
+                      ? `${tool === 'wall' ? 'Hele veggen' : 'Plate'} · ${printing ? `print ${pm?.name ?? ''}` : `${plateName(paint)} ${paint}`}`
+                      : `Hele veggen · ${plateName(ral)} ${ral}`
+                  }
+                >
+                  <IconButton icon={PaintBucket} label="Malerspann: klikk veggen for å farge hele siden" size={15} className="ink" pressed={tool === 'wall'} onClick={() => setTool(tool === 'wall' ? null : 'wall')} />
+                  <IconButton icon={Paintbrush} label="Malerkost: klikk én og én plate" size={15} className="ink" pressed={tool === 'plate'} onClick={() => setTool(tool === 'plate' ? null : 'plate')} />
+                </DrawerRow>
+                <PlatePalette
+                  value={painting ? paint : ral}
+                  print={{ motif: pm }}
+                  onPick={(r) => {
+                    setPaint(r)
+                    // Picking a colour takes up the paint bucket when no tool is out
+                    if (!tool) setTool('wall')
+                  }}
+                />
+              </>
+            )}
           </>
         )}
         {!O && (
-        <div className="wd-foot">
-          <DrawerRow label={`Side · ${faceName(w, s).toLowerCase()}`}>
-            {flip !== undefined && (
-              <IconButton
-                icon={FlipHorizontal2}
-                label={T ? 'Flytt rammen til andre siden' : F ? 'Flytt folien til andre siden' : `Vis ${faceName(w, flip).toLowerCase()}`}
-                size={15}
-                onClick={() => (T || F ? moveToSide(flip) : p.onSelect({ wallId: w.id, side: flip }))}
-              />
-            )}
-          </DrawerRow>
-          <div className="wd-actions">
-            {T && (
-              <Button variant="ghost" icon={MoveHorizontal} onClick={() => p.onEdit((x) => fillTextile(x, rules, T.id))}>
-                Fyll ledig vegg
-              </Button>
-            )}
-            {!T && !F && (
-              <Button variant="ghost" icon={Plus} onClick={addFrame}>
-                Tekstilvegg
-              </Button>
-            )}
+          <div className="wd-foot">
+            <DrawerRow label={`Side · ${faceName(w, s).toLowerCase()}`}>
+              {flip !== undefined && (
+                <IconButton
+                  icon={FlipHorizontal2}
+                  label={T ? 'Flytt rammen til andre siden' : F ? 'Flytt folien til andre siden' : `Vis ${faceName(w, flip).toLowerCase()}`}
+                  size={15}
+                  onClick={() => (T || F ? moveToSide(flip) : p.onSelect({ wallId: w.id, side: flip }))}
+                />
+              )}
+            </DrawerRow>
+            <div className="wd-actions">
+              {T && (
+                <Button variant="ghost" icon={MoveHorizontal} onClick={() => p.onEdit((x) => fillTextile(x, rules, T.id))}>
+                  Fyll ledig vegg
+                </Button>
+              )}
+              {!T && !F && (
+                <Button variant="ghost" icon={Plus} onClick={addFrame}>
+                  Tekstilvegg
+                </Button>
+              )}
+            </div>
           </div>
-        </div>
         )}
       </div>
 
@@ -571,15 +587,11 @@ export function WallDrawer(p: Props) {
                 <g
                   key={i}
                   style={{ cursor: 'pointer' }}
-                  {...(painting
-                    ? paintOn(i, m.key)
-                    : {
-                        onPointerDown: (e: RPointerEvent) => {
-                          // The door is chosen here, in the wall drawer
-                          e.stopPropagation()
-                          selectDoor(o.id)
-                        },
-                      })}
+                  onPointerDown={(e) => {
+                    // The door is chosen here, in the wall drawer (while a tool is out, the plate targets on top take the press)
+                    e.stopPropagation()
+                    selectDoor(o.id)
+                  }}
                 >
                   <Opening
                     x={x}
@@ -599,7 +611,7 @@ export function WallDrawer(p: Props) {
             const f = felt(rules, i)
             return (
               <g key={i}>
-                <rect x={spanX(f.a, f.b)} y={z(H)} width={f.w} height={H - rules.wall.feet} fill={plateColor(m?.plate ?? wallRal(v, w))} {...(m ? paintOn(i, m.key) : {})} />
+                <rect x={spanX(f.a, f.b)} y={z(H)} width={f.w} height={H - rules.wall.feet} fill={plateColor(m?.plate ?? wallRal(v, w))} />
                 <rect x={x} y={z(H)} width={1} height={rules.wall.profile.top} fill={ALU} />
                 <rect x={x} y={z(f.y0)} width={1} height={rules.wall.profile.bottom} fill={ALU} />
               </g>
@@ -676,6 +688,16 @@ export function WallDrawer(p: Props) {
               </g>
             )
           })}
+
+          {/* While a tool is out: one clear target per plate (a door: its whole module) over everything drawn, so a
+              print, decal or textile on a plate never takes the tap. */}
+          {painting &&
+            mods.map((m, i) => {
+              if (!m) return null
+              const f = felt(rules, i)
+              const box = m.opening ? { x: spanX(i, i + 1), w: 1, y: z(H), h: H } : { x: spanX(f.a, f.b), w: f.w, y: z(H), h: H - rules.wall.feet }
+              return <rect key={`hit${i}`} x={box.x} y={box.y} width={box.w} height={box.h} fill="transparent" {...paintOn(i, m.key)} />
+            })}
 
           {/* Where a drop from the shelf would land */}
           {spot && (

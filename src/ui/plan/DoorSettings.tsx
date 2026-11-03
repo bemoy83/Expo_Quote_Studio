@@ -53,40 +53,40 @@ export function DoorSettings({ v, o, w, onEdit, onRemove, onClose, children }: P
 
   return (
     <>
-        <DrawerHead
-          dot={door ? plateColor(ral) : LAYER_COLOR.walls}
-          title={door ? 'Dør' : 'Forheng'}
-          remove={{
-            label: 'Gjør om til vegg (Delete)',
-            onClick: onRemove,
-          }}
-          onClose={onClose}
-        >
-          {children}
-        </DrawerHead>
-        <p className="wd-meta num">
-          {where} · {door ? `blad ${fmt(rules.door.swing * 100, 0)} × ${fmt(rules.door.height * 100, 0)} cm` : `åpning ${fmt((rules.wall.cc - rules.wall.post) * 1000, 0)} mm`}
-        </p>
-        <Segmented<string>
-          inWell
-          label="Type"
-          value={o.product}
-          onChange={(a) => onEdit((x) => setOpeningProduct(x, o.id, a))}
-          options={openingProducts().map((x) => ({ value: x.variants[0].artnr, label: x.opening === 'door' ? 'Dør' : 'Forheng' }))}
-        />
-        {door && (
-          <>
-            <div className="eyebrow">
-              Dørblad · {plateName(ral)} · RAL {ral}
-              {o.ral ? '' : ' · som standen'}
-            </div>
-            <PlatePalette value={ral} onPick={(r) => onEdit((x) => setDoorRal(x, o.id, r))} />
-            <DrawerRow label={swingText}>
-              {canFlipSwing(v.stand, w) && <IconButton icon={FlipHorizontal2} label="Snu slagretning" size={15} onClick={() => onEdit((x) => flipSwing(x, o.id))} />}
-              <IconButton icon={ArrowLeftRight} label="Bytt hengselside" size={15} onClick={() => onEdit((x) => flipHinge(x, o.id))} />
-            </DrawerRow>
-          </>
-        )}
+      <DrawerHead
+        dot={door ? plateColor(ral) : LAYER_COLOR.walls}
+        title={door ? 'Dør' : 'Forheng'}
+        remove={{
+          label: 'Gjør om til vegg (Delete)',
+          onClick: onRemove,
+        }}
+        onClose={onClose}
+      >
+        {children}
+      </DrawerHead>
+      <p className="wd-meta num">
+        {where} · {door ? `blad ${fmt(rules.door.swing * 100, 0)} × ${fmt(rules.door.height * 100, 0)} cm` : `åpning ${fmt((rules.wall.cc - rules.wall.post) * 1000, 0)} mm`}
+      </p>
+      <Segmented<string>
+        inWell
+        label="Type"
+        value={o.product}
+        onChange={(a) => onEdit((x) => setOpeningProduct(x, o.id, a))}
+        options={openingProducts().map((x) => ({ value: x.variants[0].artnr, label: x.opening === 'door' ? 'Dør' : 'Forheng' }))}
+      />
+      {door && (
+        <>
+          <div className="eyebrow">
+            Dørblad · {plateName(ral)} · RAL {ral}
+            {o.ral ? '' : ' · som standen'}
+          </div>
+          <PlatePalette value={ral} onPick={(r) => onEdit((x) => setDoorRal(x, o.id, r))} />
+          <DrawerRow label={swingText}>
+            {canFlipSwing(v.stand, w) && <IconButton icon={FlipHorizontal2} label="Snu slagretning" size={15} onClick={() => onEdit((x) => flipSwing(x, o.id))} />}
+            <IconButton icon={ArrowLeftRight} label="Bytt hengselside" size={15} onClick={() => onEdit((x) => flipHinge(x, o.id))} />
+          </DrawerRow>
+        </>
+      )}
     </>
   )
 }

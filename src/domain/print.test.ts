@@ -4,8 +4,9 @@ import { foilRows } from '../calc/production';
 import { CURTAIN, DEFAULT_CATALOG, DOOR } from '../catalog/defaultCatalog';
 import { RULES } from '../rules/rules';
 import { addFoil, addTextile, faces, fitDecor, updateFoil } from './decor';
-import { setWallPlate } from './edit';
-import { clearPrint, fillPlates, printPlate, printPlates, printWall, clearDecor, stretchCrops, stretchedRuns } from './print';
+import { paintWalls, setWallPlate } from './edit';
+import { setPanels } from './panels';
+import { clearPrint, fillPlates, hiddenPlates, printPlate, printPlates, printWall, clearDecor, stretchCrops, stretchedRuns } from './print';
 import { r2 } from '../calc/referenceStands';
 import { wallModules } from './grid';
 import type { Variant } from './types';
@@ -145,5 +146,49 @@ describe('bucket and reset', () => {
     expect(r.foils).toHaveLength(0);
     expect(r.panels).toBeUndefined();
     expect(r.textiles).toHaveLength(1);
+  });
+});
+
+describe('the last stroke wins between colour and print (Bjørn 3.11.2026)', () => {
+  const keys = (v: Variant) => wallModules(back(v)).map((m) => m.key);
+  const plain = (v: Variant) => () => v.defaultPlate;
+
+  it('print on a plate takes its own colour away, a colour takes the print off again', () => {
+    let v = setPanels(row(), keys(row()).slice(2, 4), '3020', plain(row()));
+    v = printPlate(v, RULES, 'side-back', 2, 1, 'logo');
+    expect(v.panels).toEqual({ [keys(v)[3]]: '3020' });
+    v = printWall(v, RULES, 'side-back', 1, 'logo', 2);
+    expect(v.panels).toBeUndefined();
+    v = clearPrint(setPanels(v, [keys(v)[0]], '3020', plain(v)), 'side-back', 1, [0]);
+    expect(v.panels).toEqual({ [keys(v)[0]]: '3020' });
+    expect(v.foils.map((f) => f.module)).not.toContain(0);
+  });
+
+  it('the bucket print over a coloured stand wall: the wall\'s colour goes, so no plate swap', () => {
+    let v = setWallPlate(row(), 'side-back', '3020');
+    expect(qty(v, '6125-3020')).toBeCloseTo(6 * RULES.wall.cc, 3);
+    v = printPlate(v, RULES, 'side-back', 0, 1, 'logo');
+    expect(back(v).plate).toBe('3020');
+    expect(qty(v, '6125-3020')).toBeCloseTo(5 * RULES.wall.cc, 3);
+    v = printWall(v, RULES, 'side-back', 1, 'logo', 2);
+    expect(back(v).plate).toBeUndefined();
+    expect(qty(v, '6125-3020')).toBe(0);
+    expect(qty(v, '8021')).toBeCloseTo(6 * 0.96 * 2.42, 1);
+  });
+
+  it('the stand colour under a print is the organiser\'s plate: no swap', () => {
+    const v = printWall({ ...row(), defaultPlate: '9005' }, RULES, 'side-back', 1, 'logo', 2);
+    expect(qty(v, '6125-9005')).toBeCloseTo(6 * RULES.wall.cc, 3);
+  });
+
+  it('an inner wall keeps its colour until both faces are printed', () => {
+    let v = paintWalls(row(), [0, 1], [3, 1], '3020');
+    const w = v.walls.find((x) => x.id !== 'side-back' && !['side-left', 'side-right'].includes(x.id) && x.plate === '3020')!;
+    v = printWall(v, RULES, w.id, 1, 'logo', 2);
+    expect(hiddenPlates(v).size).toBe(0);
+    expect(v.walls.find((x) => x.id === w.id)!.plate).toBe('3020');
+    v = printWall(v, RULES, w.id, -1, 'logo', 2);
+    expect(hiddenPlates(v).size).toBe(3);
+    expect(v.walls.find((x) => x.id === w.id)!.plate).toBeUndefined();
   });
 });

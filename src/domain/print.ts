@@ -2,16 +2,18 @@
 // The paint bucket stretches one motif over every plate of the face that can take it: one picture, cut per plate,
 // running on behind the posts and over a door, so it lines up across the joints. The brush puts the whole motif on
 // one plate. A print is foil over the whole plate on one face, over the plate's colour (which is both faces), and it
-// replaces the decals on its plate. A colour painted on a face takes the print off there; decals stay (Bjørn 2.11.2026).
+// replaces the decals on its plate. The last stroke wins (Bjørn 3.11.2026): a colour painted on a face takes the print
+// off there (decals stay), and a print that leaves a plate's colour showing nowhere takes that colour away (see
+// `hiddenPlates`), so the plate is neither priced nor picked in a colour no one sees.
 // Textile frames are skipped; doors take print on leaf and header; curtains and plates of another wall do not. The
 // bucket also leaves the stretch inside a bakrom that stands against the face; the brush can still print there.
 import type { Rules } from '../rules/rules';
 import { pointAlong, wallLength, wallModules } from './grid';
-import { faceNormal, felt, fitFoil, freeFelts, sideOf, type FaceSide } from './decor';
+import { faceNormal, faces, felt, fitFoil, freeFelts, sideOf, type FaceSide } from './decor';
 import { clearPanels } from './panels';
-import { roomAt } from './rooms';
+import { roomAt, roomOf } from './rooms';
 import { builtModules } from './walls';
-import { nextId } from './edit';
+import { nextId, setWallPlate } from './edit';
 import type { Foil, Variant, Wall } from './types';
 
 export type Crop = NonNullable<Foil['crop']>;
@@ -106,7 +108,7 @@ export function printWall(v: Variant, rules: Rules, wallId: string, s: FaceSide,
     ids.push(id);
     return fitFoil({ ...plateFoil(id, w, i, s, motif), ...(run ? { run, crop: crops.get(i) } : {}) }, rules, 0);
   });
-  return { ...v, foils: [...kept, ...added] };
+  return uncolourHidden({ ...v, foils: [...kept, ...added] }, w.id);
 }
 
 /**
@@ -120,7 +122,39 @@ export function printPlate(v: Variant, rules: Rules, wallId: string, module: num
   if (cur?.motif === motif) return { ...v, foils: v.foils.filter((f) => f.id !== cur.id) };
   const kept = strip(v, w, s, new Set([module]), true);
   const id = nextId(kept.map((f) => f.id), 'f');
-  return { ...v, foils: [...kept, fitFoil(plateFoil(id, w, module, s, motif), rules, 0)] };
+  return uncolourHidden({ ...v, foils: [...kept, fitFoil(plateFoil(id, w, module, s, motif), rules, 0)] }, w.id);
+}
+
+/**
+ * Plates (module keys) whose colour shows nowhere: every face that can carry decor is printed over the whole plate. A
+ * stand wall has one such face (the other is the neighbour's or the aisle's), an inner or room wall two. Doors and
+ * curtains are not plates.
+ */
+export function hiddenPlates(v: Variant): Set<string> {
+  const printed = new Set(v.foils.filter((f) => f.full).map((f) => `${f.wallId}:${f.module}:${sideOf(v, f)}`));
+  const byId = new Map(v.walls.map((w) => [w.id, w]));
+  const out = new Set<string>();
+  for (const m of builtModules(v)) {
+    const w = byId.get(m.wallId);
+    if (w && !m.opening && faces(v, w).every((s) => printed.has(`${w.id}:${m.index}:${s}`))) out.add(m.key);
+  }
+  return out;
+}
+
+/**
+ * Print over a colour: the plates of this wall that the print now hides lose their own colour, and when it hides all
+ * of the wall (a room: all of the room) the wall's own colour goes too. They take the stand's colour again.
+ */
+function uncolourHidden(v: Variant, wallId: string): Variant {
+  const w = v.walls.find((x) => x.id === wallId);
+  if (!w) return v;
+  const hidden = hiddenPlates(v);
+  const room = roomOf(v, w);
+  const walls = new Set((room ? v.walls.filter((x) => x.room?.id === room.id) : [w]).map((x) => x.id));
+  const own = builtModules(v).filter((m) => walls.has(m.wallId) && !m.opening);
+  const next = clearPanels(v, own.filter((m) => hidden.has(m.key)).map((m) => m.key));
+  const coloured = (room ? room.plate : w.plate) !== undefined;
+  return coloured && own.length && own.every((m) => hidden.has(m.key)) ? setWallPlate(next, w.id, next.defaultPlate) : next;
 }
 
 /** A colour painted on a face (all plates, or the given ones) takes the print off there. Decals stay. */
