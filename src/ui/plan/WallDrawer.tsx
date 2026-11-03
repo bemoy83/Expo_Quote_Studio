@@ -327,7 +327,8 @@ export function WallDrawer(p: Props) {
           },
         }
       : {}
-  const doorModules = new Set(mods.flatMap((m, i) => (m?.opening && productOf(m.opening.product)?.opening === 'door' ? [i] : [])))
+  /** Modules of this wall holding a door (not a curtain): a leaf for the brush, a header and leaf for a print. */
+  const doorModules = new Set(doors.map((d) => d.module))
   /** A print over a door: its part of the picture on the header plate, and on the leaf down to the floor. */
   const doorPrint = (f: Foil, x: number, leafX: number) => {
     const m = findMotif(motifs, f.motif)
@@ -343,7 +344,7 @@ export function WallDrawer(p: Props) {
   }
   const tail = 'dra tekstilvegg eller motiv til veggen, klikk det for å endre'
   const hint = O
-    ? `Klikk en rute i miniplanen for å flytte ${productOf(O.product)?.opening === 'door' ? 'døren' : 'forhenget'} · «Farge og grafikk» eller Esc gir paletten · Delete gjør om til vegg`
+    ? `Klikk en rute i miniplanen for å flytte ${doorModules.has(O.module) ? 'døren' : 'forhenget'} · «Farge og grafikk» eller Esc gir paletten · Delete gjør om til vegg`
     : painting
       ? tool === 'wall'
         ? printing
@@ -666,7 +667,7 @@ export function WallDrawer(p: Props) {
               const dh = rules.door.height
               return (
                 <g pointerEvents="none">
-                  {productOf(O.product)?.opening === 'door' && (
+                  {doorModules.has(O.module) && (
                     <path d={`M${fx} ${z(dh)} L${hx} ${z(dh / 2)} L${fx} ${z(0)}`} fill="none" stroke={INK_FAINT} strokeWidth={0.01} strokeDasharray=".04 .03" />
                   )}
                   <rect x={x - 0.012} y={z(H) - 0.012} width={1.024} height={H + 0.012} fill="none" stroke={INK} strokeWidth={0.016} />
