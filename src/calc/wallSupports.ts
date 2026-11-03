@@ -145,9 +145,8 @@ export function wallSupports(
  */
 export function stretchPosts(len: number, ends: Ends, rule: SupportRule): number[] {
   const mm = len * 1000;
-  // Bjørn 3.11.2026: a stretch out from a corner or T stands by itself up to 1 m (a 1 × 1 corner needs no plate);
-  // only a straight wall free at both ends needs its two plates from 1 m
-  if (ends.from !== ends.to && mm <= rule.minFrom + 1e-6) return [];
+  // Out from a corner or T up to 1 m: it stands by itself (supports.ts)
+  if (minSupports(mm, rule, ends) === 0) return [];
   const free = (i: number) => !(i === 0 && ends.from) && !(i === len && ends.to);
   const pull = (need: number, n: number) => {
     const posts = Math.ceil(need / 1000 - 1e-9);

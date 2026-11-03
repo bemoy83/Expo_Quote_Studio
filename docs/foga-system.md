@@ -187,7 +187,8 @@ romvegger som takdragerne ikke holder, også når takdragerne er på (`calc/wall
   midt på.
 - **Ut fra et hjørne eller en T** (Bjørn 3.11.2026): opptil 1 m står veggen av seg selv, så et hjørne på 1 × 1 trenger
   ingen plate. Over 1 m får den én plate, deretter gjelder 3 m-regelen. Kravet om minst 2 plater gjelder bare en rett
-  vegg som er fri i begge ender. Et hjørne i den andre enden teller som støtte.
+  vegg som er fri i begge ender. Et hjørne i den andre enden teller som støtte. Det samme gjelder frittstående tekstilvegg ut fra en
+  92LTX-hjørnestolpe.
 - **Støtte** er et hjørne, en T eller et kryss med en annen systemvegg (standvegg, innervegg eller romvegg, så et rom
   holder veggene det står inntil), og en stolpe under en takdrager.
 - **Fire låste sider** (Bjørn 3.11.2026): med takdrager på får en strekning som er holdt i begge ender, og der endene
@@ -257,7 +258,8 @@ systemveggen: den lager ikke rom og kan ikke ha dør (tekstildør med overstykke
   og trekkes inn (maks 1000 mm) bare så langt som trengs for å holde 3000 mm mellom føttene. Resten fordeles jevnt
   over lengden (Bjørn 1.11.2026). En fot i en fri ende står i flukt med rammeenden, ikke forbi den (senter en halv
   plate inn, 200 mm for 740): 3 m gir føtter 200 mm inn, 4 m 500 mm inn, 6 m tre føtter, 200 mm inn og midt på. Vegger
-  under 1 m står på én liten fotplate **730** (876 730 92, 250 × 300 × 5) midt på.
+  under 1 m står på én liten fotplate **730** (876 730 92, 250 × 300 × 5) midt på. Ut fra en hjørnestolpe står veggen
+  av seg selv opptil 1 m, uten fot og stag (Bjørn 3.11.2026); et hjørne på 1 × 1 trenger ingen.
 - Tegnes en strek i forlengelsen av en vegg, blir de én vegg. Vegger møtes bare ende mot ende i hjørner (ingen T).
 - **Tekstil på begge sider, alltid.** Hver side er trykt, hvit uten grafikk, eller kundens egen duk i samme
   størrelse (bare montering, ingen trykkfil).
