@@ -76,10 +76,20 @@ export const setDoorRal = (v: Variant, id: string, ral: string | null): Variant 
     return !ral || ral === v.defaultPlate ? rest : { ...rest, ral };
   });
 
-/** RAL of the door leaf: its own, else the stand's. */
+/**
+ * The paint bucket on a wall colours the door leaves in it too: the door is part of the wall (Bjørn 3.11.2026). A room
+ * wall takes the whole room, as setWallPlate does.
+ */
+export function paintDoors(v: Variant, wallId: string, ral: string): Variant {
+  const room = roomOf(v, v.walls.find((w) => w.id === wallId));
+  const walls = new Set(room ? v.walls.filter((w) => w.room?.id === room.id).map((w) => w.id) : [wallId]);
+  return v.openings.filter((o) => walls.has(o.wallId)).reduce((x, o) => setDoorRal(x, o.id, ral), v);
+}
+
 /** The face of its wall a door is first seen from: a room's outside, otherwise the side the leaf swings to. */
 export const doorFace = (v: Variant, w: Wall, o: Opening): 1 | -1 => (w.room ? OUTSIDE : doorSwing(v.stand, w, o));
 
+/** RAL of the door leaf: its own, else the stand's. */
 export const doorRal = (v: Variant, o: Opening): string => o.ral ?? v.defaultPlate;
 
 /** Turn the module back into wall. */

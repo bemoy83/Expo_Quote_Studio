@@ -3,7 +3,7 @@ import { DEFAULT_CATALOG, DOOR } from '../catalog/defaultCatalog';
 import { calc } from '../calc/calc';
 import { RULES } from '../rules/rules';
 import { r2 } from '../calc/referenceStands';
-import { doorHinge, doorSpots, flipHinge, moveOpening, removeOpening, setDoorRal, setOpeningProduct } from './doors';
+import { doorHinge, doorRal, doorSpots, flipHinge, moveOpening, paintDoors, removeOpening, setDoorRal, setOpeningProduct } from './doors';
 import { doorSwing, paintWalls, replaceWalls, setOpening } from './edit';
 import { moduleKey } from './grid';
 import { addRoom, moveRoom, moveRoomDoors, RECT_SIDE, resizeRoomDoors } from './rooms';
@@ -113,5 +113,20 @@ describe('a room moved or resized takes its door along', () => {
   it('a plain move says nothing moved', () => {
     expect(moveRoomDoors(r2(), 'bk', 0, 1).doorsMoved).toBe(false);
     expect(moveRoom(r2(), 'bk', 0, 1)).not.toBe(r2());
+  });
+});
+
+describe('the door is part of the wall', () => {
+  it('takes the colour of the paint bucket on its wall, for a room every side', () => {
+    const v = r2();
+    const o = v.openings[0];
+    const painted = paintDoors(v, o.wallId, '5010');
+    expect(doorRal(painted, painted.openings[0])).toBe('5010');
+    // Back to the stand colour: stored as nothing, so the door follows the stand again
+    const back = paintDoors(painted, o.wallId, v.defaultPlate);
+    expect(back.openings[0].ral).toBeUndefined();
+    // Another wall of the same room colours the door too
+    const other = v.walls.find((w) => w.room?.id === v.walls.find((x) => x.id === o.wallId)!.room?.id && w.id !== o.wallId)!;
+    expect(doorRal(paintDoors(v, other.id, '3020'), paintDoors(v, other.id, '3020').openings[0])).toBe('3020');
   });
 });

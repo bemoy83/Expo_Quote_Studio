@@ -3,7 +3,7 @@
 // moved and resized in the drawing; motifs are clicked onto what is selected or dragged from the shelf onto the wall.
 // Without a selection it edits the wall itself: plate colour, remove wall. A door or curtain is chosen here too (from the
 // drawing, the plan or 3D): its settings on the left and the mini plan to move it in the middle (Bjørn 3.11.2026).
-import { FlipHorizontal2, MoveHorizontal, PaintBucket, Paintbrush, PanelTop, Plus, Repeat2 } from 'lucide-react'
+import { FlipHorizontal2, MoveHorizontal, PaintBucket, Paintbrush, Plus, Repeat2 } from 'lucide-react'
 import { useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent } from 'react'
 import { production, wallLabel } from '../../calc/production'
 import {
@@ -29,7 +29,7 @@ import {
 import { eraseWalls, setWallPlate } from '../../domain/edit'
 import { setPanels, wallRal } from '../../domain/panels'
 import { clearPrint, cropBand, fillPlates, plateCrop, printPlate, printsOn, printWall, clearDecor } from '../../domain/print'
-import { doorFace, doorRal, openingById, removeOpening } from '../../domain/doors'
+import { doorFace, doorRal, openingById, paintDoors, removeOpening, setDoorRal } from '../../domain/doors'
 import { OUTSIDE, roomAt, roomName, roomSize } from '../../domain/rooms'
 import { wallLength, wallModules } from '../../domain/grid'
 import type { Foil, Room, TextileWall, Variant, Wall } from '../../domain/types'
@@ -256,8 +256,25 @@ export function WallDrawer(p: Props) {
     if (first) p.onCheckpoint()
     p.onEdit((x) => clearPrint(setPanels(x, [key], to, base), w.id, s, [i]), false)
   }
-  /** The chosen tool on plate `i` (module key `key`): `first` on press, then for each plate swept over (brush only). */
-  const paintAt = (i: number, key: string, first: boolean) => {
+  /**
+   * Brush on a door leaf: as on a plate, the leaf has a colour of its own; the header above it is a plate. A print on the
+   * door (header and leaf as one picture) comes off.
+   */
+  const paintLeaf = (i: number, key: string, first: boolean) => {
+    const o = mods[i]?.opening
+    if (!o) return
+    const printed = !!printedAt(v, i)
+    const cur = doorRal(v, o)
+    const to = first && cur === paint && !printed ? base(key) : paint
+    if (!first && cur === to && !printed) return
+    if (first) p.onCheckpoint()
+    p.onEdit((x) => clearPrint(setDoorRal(x, o.id, to), w.id, s, [i]), false)
+  }
+  /**
+   * The chosen tool on plate `i` (module key `key`): `first` on press, then for each plate swept over (brush only).
+   * `leaf`: the door leaf of a door module, which the brush colours on its own.
+   */
+  const paintAt = (i: number, key: string, first: boolean, leaf = false) => {
     if (printing && !pm) {
       if (first) p.onToast('Last opp et motiv i grafikken først')
       return
@@ -268,9 +285,9 @@ export function WallDrawer(p: Props) {
         if (!fillPlates(v, rules, w, s).length) return p.onToast('Ingen plate på denne siden kan ha print')
         return p.onEdit((x) => printWall(x, rules, w.id, s, pm!.id, pm!.ratio))
       }
-      return p.onEdit((x) => clearPrint(setWallPlate(x, w.id, paint), w.id, s))
+      return p.onEdit((x) => clearPrint(paintDoors(setWallPlate(x, w.id, paint), w.id, paint), w.id, s))
     }
-    if (!printing) return paintPlate(i, key, first)
+    if (!printing) return leaf ? paintLeaf(i, key, first) : paintPlate(i, key, first)
     const why = feltBlocked(v, rules, w.id, i, s, true)
     if (why) {
       if (first) p.onToast(why)
@@ -282,7 +299,7 @@ export function WallDrawer(p: Props) {
     p.onEdit((x) => printPlate(x, rules, w.id, i, s, pm!.id), false)
   }
   /** Pointer handlers for a plate (or a door) in the drawing while a tool is out: click, or with the brush press and sweep. */
-  const paintOn = (i: number, key: string) =>
+  const paintOn = (i: number, key: string, leaf = false) =>
     painting
       ? {
           style: { cursor: tool === 'wall' ? 'copy' : 'crosshair' },
@@ -302,10 +319,10 @@ export function WallDrawer(p: Props) {
             // enter. Letting go of it makes a sweep with a finger or pen work like one with the mouse.
             const t = e.currentTarget as Element
             if (t.hasPointerCapture(e.pointerId)) t.releasePointerCapture(e.pointerId)
-            if (e.button === 0) paintAt(i, key, true)
+            if (e.button === 0) paintAt(i, key, true, leaf)
           },
           onPointerEnter: (e: RPointerEvent) => {
-            if (tool === 'plate' && sweeping.current && e.buttons === 1) paintAt(i, key, false)
+            if (tool === 'plate' && sweeping.current && e.buttons === 1) paintAt(i, key, false, leaf)
           },
         }
       : {}
@@ -325,7 +342,7 @@ export function WallDrawer(p: Props) {
   }
   const tail = 'dra tekstilvegg eller motiv til veggen, klikk det for å endre'
   const hint = O
-    ? `Klikk en rute i miniplanen for å flytte ${productOf(O.product)?.opening === 'door' ? 'døren' : 'forhenget'} · veggikonet øverst viser hele veggen · Delete gjør om til vegg`
+    ? `Klikk en rute i miniplanen for å flytte ${productOf(O.product)?.opening === 'door' ? 'døren' : 'forhenget'} · klikk døren igjen for farge og grafikk · Delete gjør om til vegg`
     : painting
       ? tool === 'wall'
         ? printing
@@ -408,9 +425,9 @@ export function WallDrawer(p: Props) {
             }}
             onClose={p.onClose}
           >
-            {/* Back to the wall (a 1 × 1 room's side is only the door, so the drawing has little else to click) and the
-                face switch sit in the header: the door's settings fill the column (Bjørn 3.11.2026) */}
-            <IconButton icon={PanelTop} label="Vis hele veggen" size={14} onClick={() => select({})} />
+            {/* Colour and graphics for the door are the wall's (a 1 × 1 room's side is only the door, so this is the way
+                there) and the face switch sit in the header: the door's settings fill the column (Bjørn 3.11.2026) */}
+            <IconButton icon={PaintBucket} label="Farge og grafikk (Esc)" size={14} onClick={() => select({})} />
             {flip !== undefined && <IconButton icon={Repeat2} label={`Vis ${faceName(w, flip).toLowerCase()}`} size={14} onClick={() => selectDoor(O.id, flip)} />}
           </DoorSettings>
         ) : (
@@ -590,9 +607,11 @@ export function WallDrawer(p: Props) {
                   key={i}
                   style={{ cursor: 'pointer' }}
                   onPointerDown={(e) => {
-                    // The door is chosen here, in the wall drawer (while a tool is out, the plate targets on top take the press)
+                    // The door is chosen here, in the wall drawer; chosen, a click takes colour and graphics back (while a tool
+                    // is out, the plate targets on top take the press)
                     e.stopPropagation()
-                    selectDoor(o.id)
+                    if (O?.id === o.id) select({})
+                    else selectDoor(o.id)
                   }}
                 >
                   <Opening
@@ -697,8 +716,17 @@ export function WallDrawer(p: Props) {
             mods.map((m, i) => {
               if (!m) return null
               const f = felt(rules, i)
-              const box = m.opening ? { x: spanX(i, i + 1), w: 1, y: z(H), h: H } : { x: spanX(f.a, f.b), w: f.w, y: z(H), h: H - rules.wall.feet }
-              return <rect key={`hit${i}`} x={box.x} y={box.y} width={box.w} height={box.h} fill="transparent" {...paintOn(i, m.key)} />
+              if (m.opening) {
+                // A door is part of the wall: the header is a plate, the leaf below it one more for the brush
+                const dh = rules.door.height
+                return (
+                  <g key={`hit${i}`}>
+                    <rect x={spanX(i, i + 1)} y={z(H)} width={1} height={H - dh} fill="transparent" {...paintOn(i, m.key)} />
+                    <rect x={spanX(i, i + 1)} y={z(dh)} width={1} height={dh} fill="transparent" {...(doorModules.has(i) ? paintOn(i, m.key, true) : {})} />
+                  </g>
+                )
+              }
+              return <rect key={`hit${i}`} x={spanX(f.a, f.b)} y={z(H)} width={f.w} height={H - rules.wall.feet} fill="transparent" {...paintOn(i, m.key)} />
             })}
 
           {/* Where a drop from the shelf would land */}
