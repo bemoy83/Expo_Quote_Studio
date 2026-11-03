@@ -73,16 +73,13 @@ kbd {
   padding: 0 11px;
   border: 0;
   border-radius: var(--r-ctl);
-  background: rgb(var(--sunken));
+  --rest: rgb(var(--sunken));
+  background: var(--rest);
   color: rgb(var(--ink));
   font: var(--type-control);
   white-space: nowrap;
   cursor: pointer;
   transition: background var(--dur) var(--ease), box-shadow var(--dur) var(--ease), opacity var(--dur) var(--ease);
-}
-.btn:hover:not(:disabled) {
-  background: rgb(var(--surface));
-  box-shadow: var(--raise);
 }
 .btn:disabled {
   opacity: 0.4;
@@ -102,21 +99,14 @@ kbd {
   box-shadow: var(--focus-primary);
 }
 .btn.on-band {
-  background: color-mix(in oklab, rgb(var(--surface)) 55%, transparent);
+  --rest: color-mix(in oklab, rgb(var(--surface)) 55%, transparent);
+  background: var(--rest);
   color: var(--b-ink);
 }
-.btn.on-band:hover:not(:disabled) {
-  background: color-mix(in oklab, rgb(var(--surface)) 80%, transparent);
-  box-shadow: none;
-}
 .btn.ghost {
+  --rest: transparent;
   background: transparent;
   color: rgb(var(--ink-muted));
-}
-.btn.ghost:hover:not(:disabled) {
-  background: rgb(var(--sunken));
-  color: rgb(var(--ink));
-  box-shadow: none;
 }
 
 .icon-btn {
@@ -133,10 +123,6 @@ kbd {
   cursor: pointer;
   transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
 }
-.icon-btn:hover:not(:disabled) {
-  background: rgb(var(--sunken));
-  color: rgb(var(--ink));
-}
 .icon-btn:disabled {
   opacity: 0.35;
   cursor: default;
@@ -144,18 +130,17 @@ kbd {
 .icon-btn.on-band {
   color: var(--b-mute);
 }
-.icon-btn.on-band:hover:not(:disabled) {
-  background: color-mix(in oklab, rgb(var(--surface)) 35%, transparent);
-  color: var(--b-ink);
+.on-band {
+  --hover-text: var(--b-ink);
 }
 .icon-btn[aria-pressed='true'] {
-  background: rgb(var(--surface));
+  --rest: rgb(var(--surface));
+  background: var(--rest);
   color: rgb(var(--ink));
   box-shadow: var(--raise);
 }
 /* A chosen tool (pen, brush, bucket) is ink, as in the dock: clearer than a raised chip on the panel */
-.icon-btn.ink[aria-pressed='true'],
-.icon-btn.ink[aria-pressed='true']:hover:not(:disabled) {
+.icon-btn.ink[aria-pressed='true'] {
   background: rgb(var(--ink));
   color: rgb(var(--surface));
   box-shadow: none;
@@ -169,11 +154,53 @@ kbd {
 }
 /* On the band a setting that is on gets the band's muted track fill, not a raised chip */
 .icon-btn.on-band[aria-pressed='true'] {
-  background: var(--b-track);
+  --rest: var(--b-track);
+  background: var(--rest);
   color: var(--b-ink);
   box-shadow: none;
 }
 
+/* ---------- Shared hover ---------- */
+/* One hover for every clickable that is text or an icon on a surface (Bjørn 3.11.2026): a 4 % ink tint laid over the
+   element's own rest fill, and the text turns ink. Mixed in sRGB with the rest fill, it is the same as laying the tint
+   on top, so it reads the same on paper, on a white pill, on the band's hue, on a well chip and in dark mode. A chosen
+   choice (ink, white chip or muted fill) does not react, since clicking it again does nothing. Filled surfaces state
+   their fill as --rest. Segmented switches (.seg), colour swatches and fields keep their own hover. */
+@property --rest {
+  syntax: '<color>';
+  inherits: false;
+  initial-value: transparent;
+}
+:is(
+    .btn:not(.primary),
+    .navb,
+    .strip-btn,
+    .dock-btn,
+    .flat-choice > button,
+    .q-btn,
+    .q-motif,
+    .q-obj,
+    .cp-prop,
+    .status,
+    .chips-text button,
+    .chip-toggle,
+    .mot,
+    .gfx,
+    .trow,
+    .toast button
+  ):hover:not(:disabled):not([aria-pressed='true']):not([aria-checked='true']):not([aria-current='page']):not(
+    [aria-current='true']
+  ):not(.on),
+/* An icon toggle (fold the panel, draw with this pen) flips back when clicked again, so it hovers when on too; an ink one
+   keeps its ink */
+.icon-btn:hover:not(:disabled):not(.ink[aria-pressed='true']) {
+  background-color: color-mix(in srgb, var(--rest), var(--hover-with, rgb(var(--ink))) var(--hover-amount));
+  color: var(--hover-text, rgb(var(--ink)));
+}
+/* Bare text links have no shape to tint: they only turn ink */
+:is(.link, .cg-arts):hover {
+  color: rgb(var(--ink));
+}
 .seg {
   display: inline-flex;
   align-items: center;
@@ -293,8 +320,12 @@ kbd {
   padding: 0 10px;
   border: 0;
   border-radius: var(--r-pill);
-  background: rgb(var(--canvas) / 0.14);
+  --rest: rgb(var(--canvas) / 0.14);
+  background: var(--rest);
   color: rgb(var(--canvas));
+  /* on the ink toast the hover tints with the paper colour */
+  --hover-with: rgb(var(--canvas));
+  --hover-text: rgb(var(--canvas));
   font: 600 12.5px var(--font-ui);
   cursor: pointer;
 }
@@ -342,10 +373,6 @@ kbd {
   font: 500 14px var(--font-ui);
   color: rgb(var(--ink-muted));
   transition: color var(--dur) var(--ease), background var(--dur) var(--ease);
-}
-.navb:hover {
-  color: rgb(var(--ink));
-  background: rgb(var(--surface) / 0.5);
 }
 .navb[aria-current='page'] {
   color: rgb(var(--ink));
@@ -484,10 +511,6 @@ kbd {
   color: rgb(var(--ink-muted));
   font: 500 11px var(--font-ui);
   transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
-}
-.strip-btn:hover {
-  color: rgb(var(--ink));
-  background: rgb(var(--surface) / 0.5);
 }
 .strip-btn[aria-current='true'] {
   color: rgb(var(--ink));
@@ -745,7 +768,8 @@ kbd {
   border-radius: var(--r-sm);
   cursor: pointer;
   font: 500 11.5px var(--font-ui);
-  background: var(--well);
+  --rest: var(--well);
+  background: var(--rest);
 }
 .chips-text button[aria-pressed='true'] {
   background: rgb(var(--surface));
@@ -864,7 +888,8 @@ kbd {
   overflow: hidden;
   border: 0;
   border-radius: var(--r-sm);
-  background: var(--well);
+  --rest: var(--well);
+  background: var(--rest);
   cursor: pointer;
   transition: background var(--dur) var(--ease);
 }
@@ -908,9 +933,6 @@ kbd {
   text-align: left;
   font: 500 12.5px var(--font-ui);
   color: rgb(var(--ink));
-}
-.trow:hover {
-  background: var(--row-hover);
 }
 .trow .name {
   flex: 1;
@@ -1077,9 +1099,6 @@ kbd {
   font: 500 12px var(--font-ui);
   color: rgb(var(--ink-muted));
   cursor: pointer;
-}
-.cg-arts:hover {
-  color: rgb(var(--ink));
 }
 .cl.art {
   margin-top: 3px;
@@ -1483,7 +1502,8 @@ kbd {
   border: 0;
   border-radius: var(--r-ctl);
   cursor: pointer;
-  background: var(--well);
+  --rest: var(--well);
+  background: var(--rest);
   font: var(--type-label);
   color: rgb(var(--ink));
 }
@@ -1609,9 +1629,6 @@ select.cin {
 .status.ph {
   font-weight: 500;
   color: rgb(var(--ink));
-}
-.status:hover {
-  background: var(--well);
 }
 
 /* Tilbud: A4 document */
@@ -2041,9 +2058,6 @@ select.cin {
   cursor: pointer;
   transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
 }
-.flat-choice > button:hover:not([aria-checked='true']) {
-  color: rgb(var(--ink));
-}
 .flat-choice > button[aria-checked='true'] {
   background: var(--well);
   color: rgb(var(--ink));
@@ -2292,9 +2306,6 @@ select.cin {
 .dock-undo .dock-btn {
   min-width: 40px;
 }
-.dock-btn:hover:not(:disabled):not([aria-pressed='true']) {
-  background: rgb(var(--sunken));
-}
 .dock-btn:disabled {
   opacity: 0.35;
   cursor: default;
@@ -2410,12 +2421,6 @@ select.cin {
   white-space: nowrap;
   cursor: pointer;
 }
-.q-btn:hover:not([aria-pressed='true']),
-.q-motif:hover:not([aria-pressed='true']),
-.q-obj:hover:not([aria-pressed='true']) {
-  background: var(--well);
-  color: rgb(var(--ink));
-}
 .q-btn[aria-pressed='true'] {
   background: rgb(var(--ink));
   color: rgb(var(--canvas));
@@ -2510,9 +2515,6 @@ select.cin {
   color: rgb(var(--ink));
   text-align: left;
   cursor: pointer;
-}
-.cp-prop:hover:not([aria-pressed='true']) {
-  background: var(--well);
 }
 .cp-prop[aria-pressed='true'] {
   background: rgb(var(--ink));
