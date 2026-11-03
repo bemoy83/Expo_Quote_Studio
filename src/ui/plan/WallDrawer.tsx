@@ -272,6 +272,8 @@ export function WallDrawer(p: Props) {
     if (first) p.onCheckpoint()
     p.onEdit((x) => printPlate(x, rules, w.id, i, s, pm!.id), false)
   }
+  /** True from a press on a plate until it is let go: the brush sweeps over the plates entered meanwhile. */
+  const sweeping = useRef(false)
   /** Pointer handlers for a plate (or a door) in the drawing while a tool is out: click, or with the brush press and sweep. */
   const paintOn = (i: number, key: string) =>
     painting
@@ -279,6 +281,16 @@ export function WallDrawer(p: Props) {
           style: { cursor: tool === 'wall' ? 'copy' : 'crosshair' },
           onPointerDown: (e: RPointerEvent) => {
             e.stopPropagation()
+            // A finger enters the plate (with the button down) just before it presses it, so a sweep only counts once
+            // the press has begun: else the brush printed the plate on enter and the press took the print off again.
+            sweeping.current = true
+            const end = () => {
+              sweeping.current = false
+              window.removeEventListener('pointerup', end)
+              window.removeEventListener('pointercancel', end)
+            }
+            window.addEventListener('pointerup', end)
+            window.addEventListener('pointercancel', end)
             // Touch (iPad) holds the pointer on the plate it went down on, so the next plates would never see it
             // enter. Letting go of it makes a sweep with a finger or pen work like one with the mouse.
             const t = e.target as Element
@@ -286,7 +298,7 @@ export function WallDrawer(p: Props) {
             if (e.button === 0) paintAt(i, key, true)
           },
           onPointerEnter: (e: RPointerEvent) => {
-            if (tool === 'plate' && e.buttons === 1) paintAt(i, key, false)
+            if (tool === 'plate' && sweeping.current && e.buttons === 1) paintAt(i, key, false)
           },
         }
       : {}
@@ -547,7 +559,7 @@ export function WallDrawer(p: Props) {
                   key={i}
                   style={{ cursor: 'pointer' }}
                   {...(painting
-                    ? paintOn(i, m.key)
+                    ? {}
                     : {
                         onPointerDown: (e: RPointerEvent) => {
                           // The door has a drawer of its own
@@ -574,7 +586,7 @@ export function WallDrawer(p: Props) {
             const f = felt(rules, i)
             return (
               <g key={i}>
-                <rect x={spanX(f.a, f.b)} y={z(H)} width={f.w} height={H - rules.wall.feet} fill={plateColor(m?.plate ?? wallRal(v, w))} {...(m ? paintOn(i, m.key) : {})} />
+                <rect x={spanX(f.a, f.b)} y={z(H)} width={f.w} height={H - rules.wall.feet} fill={plateColor(m?.plate ?? wallRal(v, w))} />
                 <rect x={x} y={z(H)} width={1} height={rules.wall.profile.top} fill={ALU} />
                 <rect x={x} y={z(f.y0)} width={1} height={rules.wall.profile.bottom} fill={ALU} />
               </g>
@@ -633,6 +645,16 @@ export function WallDrawer(p: Props) {
               </g>
             )
           })}
+
+          {/* While a tool is out: one clear target per plate (a door: its whole module) over everything drawn, so a
+              print, decal or textile on a plate never takes the tap. */}
+          {painting &&
+            mods.map((m, i) => {
+              if (!m) return null
+              const f = felt(rules, i)
+              const box = m.opening ? { x: spanX(i, i + 1), w: 1, y: z(H), h: H } : { x: spanX(f.a, f.b), w: f.w, y: z(H), h: H - rules.wall.feet }
+              return <rect key={`hit${i}`} x={box.x} y={box.y} width={box.w} height={box.h} fill="transparent" {...paintOn(i, m.key)} />
+            })}
 
           {/* Where a drop from the shelf would land */}
           {spot && (
