@@ -123,6 +123,12 @@ siden skuffen viser (domain/print.ts):
 - Klikker du igjen med samme motiv, forsvinner det (spannet: hele siden, kosten: platen).
 - Print erstatter dekalene på platen. En farge malt på siden tar bort printen der, men dekalene blir (Bjørn 2.11.2026).
   Fargen gjelder fortsatt begge sider, så den andre siden beholder sin print.
+- Siste strøk vinner (Bjørn 3.11.2026). Print over en farge tar fargen bort der den ikke lenger synes: en plate der alle
+  sidene som kan ha dekor er printet (standvegg: innsiden, innervegg og romvegg: begge sider) mister sin egen farge, og
+  er hele veggen (rommet) dekket, går veggens farge også. Platen får standens farge igjen. En innervegg printet på én
+  side beholder fargen, for den synes på den andre. Angre tar fargen tilbake; ingen dialog.
+- Platebytte (6125) regnes ikke for en standveggplate som er printet: det er arrangørens plate med print på, også når
+  standens farge er en annen enn arrangørens. Slik betales platen aldri både som farge og som print.
 - Platene bak en tekstilramme hoppes over, det samme gjør forheng og plater som tilhører en annen vegg. En dør får
   trykk på overstykket og dørbladet (dørbladet tegnes enkelt til vi har en nøyaktig beskrivelse av det).
 - Med hele veggen valgt tømmer søppelbøtta øverst i skuffen veggen for dekor: all folie (print og dekaler) på begge

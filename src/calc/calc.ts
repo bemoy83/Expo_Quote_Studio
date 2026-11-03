@@ -4,7 +4,7 @@ import type { Catalog, Unit } from '../catalog/types';
 import { openSides, pointKey } from '../domain/grid';
 import { carpetMetrics } from '../domain/carpet';
 import { rollUsage, tileAreas, tileCounts } from '../domain/floor';
-import { stretchedRuns } from '../domain/print';
+import { hiddenPlates, stretchedRuns } from '../domain/print';
 import type { Payer, Point, StandWallTerms, TextileFill, Variant } from '../domain/types';
 import { DEFAULT_STAND_WALLS } from '../domain/variant';
 import { builtModules, wallKind, wallPoints, type BuiltModule, type WallKind } from '../domain/walls';
@@ -230,7 +230,9 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
   const standardPosts = ownPosts(standard);
   const innerPosts = ownPosts(inner);
   const beamPosts = standardPosts + innerPosts;
-  const swaps = theirs.filter((m) => m.plate !== standWalls.ral).map((m) => m.plate);
+  // A plate printed over is the organiser's plate with the print on it: no swap, whatever colour it once had
+  const hidden = hiddenPlates(v);
+  const swaps = theirs.filter((m) => m.plate !== standWalls.ral && !hidden.has(m.key)).map((m) => m.plate);
   // Takdrager follow the stand walls (docs/vegger.md). Every beam the app lays out today is a standard beam, derived from
   // and supporting the stand walls, so the organiser pays them, with their own posts, when it pays the stand walls. Open
   // area without stand walls (island) gets no beams from the organiser: the exhibitor pays them in full. Beams the
