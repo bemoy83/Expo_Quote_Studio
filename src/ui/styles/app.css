@@ -162,8 +162,8 @@ kbd {
    (--hover-amount) laid over the element's own rest fill, and the text turns ink. Mixed in sRGB with the rest fill, it
    is the same as laying the tint on top, so it reads the same on paper, on a white pill, on the band's hue, on a well
    chip and in dark mode. A chosen choice (ink, white chip or muted fill) does not react, since clicking it again does
-   nothing. Filled surfaces state their fill as --rest. Segmented switches (.seg), colour swatches and fields keep their
-   own hover. A new clickable joins by its class in both lists below. */
+   nothing. Filled surfaces state their fill as --rest. Segmented switches (.seg, except the flat ones in the dock
+   palettes), colour swatches and fields keep their own hover. A new clickable joins by its class in both lists below. */
 @property --rest {
   syntax: '<color>';
   inherits: false;
@@ -177,6 +177,7 @@ kbd {
     .strip-btn,
     .dock-btn,
     .flat-choice > button,
+    .dock-quick .seg > button,
     .q-btn,
     .q-motif,
     .q-obj,
@@ -199,6 +200,7 @@ kbd {
     .strip-btn,
     .dock-btn,
     .flat-choice > button,
+    .dock-quick .seg > button,
     .q-btn,
     .q-motif,
     .q-obj,
@@ -210,9 +212,9 @@ kbd {
     .gfx,
     .trow,
     .toast button
-  ):hover:not(:disabled):not([aria-pressed='true']):not([aria-checked='true']):not([aria-current='page']):not(
-    [aria-current='true']
-  ):not(.on),
+  ):hover:not(:disabled):not([aria-pressed='true']):not([aria-checked='true']):not([aria-selected='true']):not(
+    [aria-current='page']
+  ):not([aria-current='true']):not(.on),
 /* An icon toggle (fold the panel, draw with this pen) flips back when clicked again, so it hovers when on too; an ink one
    keeps its ink */
 .icon-btn:hover:not(:disabled):not(.ink[aria-pressed='true']) {
@@ -2386,9 +2388,6 @@ select.cin {
   height: 30px;
   padding: 0 9px;
   border-radius: 8px;
-}
-.dock-quick .seg > button:hover:not([aria-selected='true']):not(:disabled) {
-  background: var(--well);
 }
 .dock-quick .seg > button[aria-selected='true'] {
   background: var(--well-hover);
