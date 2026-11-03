@@ -13,8 +13,9 @@ import { faceNormal, faces, felt, fitFoil, freeFelts, sideOf, type FaceSide } fr
 import { clearPanels } from './panels';
 import { roomAt, roomOf } from './rooms';
 import { builtModules } from './walls';
-import { nextId, setWallPlate } from './edit';
+import { setWallPlate } from './edit';
 import type { Foil, Variant, Wall } from './types';
+import { nextId } from './ids';
 
 export type Crop = NonNullable<Foil['crop']>;
 

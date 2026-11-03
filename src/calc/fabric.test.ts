@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { RULES } from '../rules/rules';
-import { splitLength } from './beams';
+import { splitBeamLength } from './beams';
 import { framePiece, printFileName } from './fabric';
 
 const S = RULES.textile.inFrame;
@@ -40,6 +40,6 @@ describe('beam split', () => {
     [12, [6, 6]],
     [13, [5, 4, 4]],
   ])('%d m → %j', (L, parts) => {
-    expect(splitLength(L, RULES.beam.max)).toEqual(parts);
+    expect(splitBeamLength(L, RULES.beam.max)).toEqual(parts);
   });
 });

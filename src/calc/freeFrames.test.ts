@@ -4,7 +4,7 @@ import type { Point, Variant } from '../domain/types';
 import { createVariant } from '../domain/variant';
 import { RECIPES } from '../foga/recipes';
 import { RULES } from '../rules/rules';
-import { freeFrames, splitLength, supportPoints } from './freeFrames';
+import { freeFrames, splitRail, supportPoints } from './freeFrames';
 
 const S = RECIPES.freeFrame.support;
 const draw = (v: Variant, a: Point, b: Point) => {
@@ -57,9 +57,9 @@ describe('feet and braces', () => {
 
 describe('rails', () => {
   it('spliced in equal pieces past 5 m', () => {
-    expect(splitLength(5000, 5000)).toEqual([5000]);
-    expect(splitLength(7000, 5000)).toEqual([3500, 3500]);
-    expect(splitLength(10250, 5000)).toEqual([3417, 3417, 3416]);
+    expect(splitRail(5000, 5000)).toEqual([5000]);
+    expect(splitRail(7000, 5000)).toEqual([3500, 3500]);
+    expect(splitRail(10250, 5000)).toEqual([3417, 3417, 3416]);
   });
 });
 

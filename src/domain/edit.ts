@@ -1,27 +1,13 @@
 // Editing operations on a variant. All pure: they return a new variant and never mutate.
-import { clipTiles } from './floor';
-import { moduleKey, pointAlong, runs, sideEnds, SIDES, wallDirection, wallLength, wallModules } from './grid';
+import { clipTiles } from './floor/edit';
+import { moduleKey, pointAlong, runs, wallDirection, wallLength, wallModules } from './grid';
+import { nextId } from './ids';
 import type { Opening, Point, Stand, TextileWall, Variant, Wall } from './types';
-import { addRoomGaps, clampRooms, OUTSIDE, roomOf, syncRooms } from './rooms';
-import { builtModules, closedSideAt, isStandWall, standardWalls, standWallSide } from './walls';
+import { addRoomGaps, clampRooms, roomOf, syncRooms } from './rooms';
+import { builtModules, closedSideAt, defaultSwing, isStandWall, moduleKeys, standardWalls, standWallKeys, standWallSide } from './walls';
 import { clearPanels, movePanels, panelMoves, prunePanels } from './panels';
 
-/** Next free id with the given prefix: `w1`, `w2` … */
-export function nextId(taken: Iterable<string>, prefix: string): string {
-  const used = new Set(taken);
-  let n = 1;
-  while (used.has(`${prefix}${n}`)) n++;
-  return `${prefix}${n}`;
-}
-
 const EPS = 1e-9;
-
-/** Modules on the straight grid line from a to b (axis-aligned, whole metres). */
-export function segmentKeys(a: Point, b: Point): string[] {
-  const n = Math.round(Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1]));
-  const w: Wall = { id: '', from: a, to: b };
-  return n ? wallModules(w).map((m) => m.key) : [];
-}
 
 /** Where an opening, textile or foil sits, independent of which wall carries it. */
 interface Anchor {
@@ -151,11 +137,6 @@ export function splitWall(w: Wall, keep: (module: number) => boolean, taken: str
   });
 }
 
-const moduleKeys = (walls: Wall[]) => new Set(walls.flatMap((w) => wallModules(w).map((m) => m.key)));
-
-/** Module keys that carry a stand wall. These are locked: see eraseWalls. */
-export const standWallKeys = (v: Variant): Set<string> => moduleKeys(v.walls.filter(isStandWall));
-
 /**
  * Remove wall modules (by key). Walls are split where a module is taken out. Stand walls are locked: they separate
  * exhibitors sharing the hall and change only with the stand type, so their modules are skipped (also a room side
@@ -215,57 +196,6 @@ export function setWallPlate(v: Variant, wallId: string, ral: string): Variant {
   };
 }
 
-/**
- * Put a door or curtain in the wall module with this key, replace what is there, or (product null) turn it back into wall.
- * Returns the variant unchanged when no wall covers the module.
- */
-export function setOpening(v: Variant, key: string, product: string | null): Variant {
-  const mod = builtModules(v).find((m) => m.key === key);
-  if (!mod) return v;
-  const others = v.openings.filter((o) => o !== mod.opening);
-  if (!product) return mod.opening ? { ...v, openings: others } : v;
-  if (!doorAllowed(v, mod.a, mod.b)) return v;
-  if (mod.opening?.product === product) return v;
-  const id = mod.opening?.id ?? nextId(v.openings.map((o) => o.id), 'o');
-  const swing = mod.opening?.swing ?? defaultSwing(v.stand, v.walls.find((w) => w.id === mod.wallId)!);
-  return { ...v, openings: [...others, { id, wallId: mod.wallId, module: mod.index, product, ...(swing === 1 ? {} : { swing }) }] };
-}
-
-/** Put a door or curtain on the module a–b, drawing the wall module first when there is none. */
-export function drawOpening(v: Variant, a: Point, b: Point, product: string): Variant {
-  if (!doorAllowed(v, a, b)) return v;
-  return setOpening(paintWalls(v, a, b), moduleKey(a, b), product);
-}
-
-/** Into the stand on a perimeter wall, else to the wall's left. A room door swings out of the room, or in on the perimeter. */
-export function defaultSwing(stand: Stand, w: Wall): 1 | -1 {
-  if (w.room) {
-    return isPerimeterWall(stand, w) ? 1 : OUTSIDE;
-  }
-  const [dx, dy] = wallDirection(w);
-  const n: Point = [-dy, dx];
-  const mid = pointAlong(w, wallLength(w) / 2);
-  const inside: Point = [stand.width / 2 - mid[0], stand.depth / 2 - mid[1]];
-  const onPerimeter = SIDES.some((s) => {
-    const [a, b] = sideEnds(stand, s);
-    return (a[0] === b[0] && w.from[0] === a[0] && w.to[0] === a[0]) || (a[1] === b[1] && w.from[1] === a[1] && w.to[1] === a[1]);
-  });
-  return onPerimeter && dot(n, inside) < 0 ? -1 : 1;
-}
-
-/** Flip the swing side of a door. */
-export function flipSwing(v: Variant, openingId: string): Variant {
-  return {
-    ...v,
-    openings: v.openings.map((o) => {
-      const w = v.walls.find((x) => x.id === o.wallId);
-      if (o.id !== openingId || !w || !canFlipSwing(v.stand, w)) return o;
-      const cur = doorSwing(v.stand, w, o);
-      return { ...o, swing: cur === 1 ? -1 : 1 };
-    }),
-  };
-}
-
 /** Change size or type. Stand walls follow the new type; inner walls that still fit are kept. */
 export function setStand(v: Variant, stand: Stand): Variant {
   const fits = (w: Wall) =>
@@ -294,33 +224,6 @@ export function setStand(v: Variant, stand: Stand): Variant {
 export function setCounted(v: Variant, product: string, qty: number): Variant {
   const rest = v.counted.filter((c) => c.product !== product);
   return { ...v, counted: qty > 0 ? [...rest, { product, qty }] : rest };
-}
-
-/**
- * Where a door or curtain may go: anywhere but in the walls the stand type brings (standvegger). An inner wall, a room
- * side, an empty edge on the floor or an open stand edge toward the aisle are all fine.
- */
-export function doorAllowed(v: Variant, a: Point, b: Point): boolean {
-  return !standWallKeys(v).has(moduleKey(a, b));
-}
-
-/** The side a door swings to. On the stand's edge (toward the aisle) it always swings into the stand. */
-export function doorSwing(stand: Stand, w: Wall, o: Opening): 1 | -1 {
-  return isPerimeterWall(stand, w) ? defaultSwing(stand, w) : (o.swing ?? defaultSwing(stand, w));
-}
-
-/** A door on the stand's edge can not be turned: it swings into the stand. */
-export const canFlipSwing = (stand: Stand, w: Wall) => !isPerimeterWall(stand, w);
-
-/**
- * True when the wall lies on the stand's outer edge. Only geometry: a door there faces the aisle or a neighbour. Whether
- * a wall is a stand wall or an inner wall is told by isStandWall, never by where it stands.
- */
-export function isPerimeterWall(stand: Stand, w: Wall): boolean {
-  return (
-    (w.from[1] === w.to[1] && (w.from[1] === 0 || w.from[1] === stand.depth)) ||
-    (w.from[0] === w.to[0] && (w.from[0] === 0 || w.from[0] === stand.width))
-  );
 }
 
 /** True when an end of one wall lies on the other (corner, T or end to end). */

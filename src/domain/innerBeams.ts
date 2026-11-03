@@ -1,6 +1,7 @@
 // Editing innvendige takdragere: drawn straight on the 1 m grid inside the stand, never along a wall or on top of
 // another beam. Layout, posts, hooks and foot plates: calc/innerBeams.ts.
-import { nextId, segmentKeys as keys } from './edit';
+import { nextId } from './ids';
+import { segmentKeys as keys } from './grid';
 import type { InnerBeam, Point, Variant } from './types';
 import { builtModules } from './walls';
 

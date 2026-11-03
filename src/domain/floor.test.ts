@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { applyFloor, cutTiles, floorAction, lanesOf, rollUsage, tileAreas, tilesFromCells, type FloorTouch, type RollBrush } from './floor';
+import { applyFloor, floorAction, type FloorTouch, type RollBrush } from './floor/brush';
+import { cutTiles } from './floor/edit';
+import { lanesOf, rollUsage } from './floor/lanes';
+import { tileAreas, tilesFromCells } from './floor/tiles';
 import type { Variant } from './types';
 import { createVariant, fillFloor } from './variant';
 

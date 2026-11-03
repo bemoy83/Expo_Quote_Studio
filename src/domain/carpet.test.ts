@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { RULES } from '../rules/rules';
-import { carpetMetrics, fillCarpet, fillProposals, layouts, offered, relayFill, removeFill, resizeLane, rotateLane } from './carpet';
-import { applyFloor, cutTiles, rollUsage, tileAreas } from './floor';
+import { carpetMetrics, fillCarpet, fillProposals, layouts, offered, relayFill, removeFill } from './floor/rollFill';
+import { resizeLane, rotateLane } from './floor/edit';
+import { applyFloor } from './floor/brush';
+import { cutTiles } from './floor/edit';
+import { rollUsage } from './floor/lanes';
+import { tileAreas } from './floor/tiles';
 import type { FloorTile, Variant } from './types';
 import { createVariant } from './variant';
 

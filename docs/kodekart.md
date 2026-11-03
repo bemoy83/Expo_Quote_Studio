@@ -10,7 +10,7 @@ Alt avledes fra modellen (`Variant` i `src/domain/types.ts`). Rekkefølgen er al
 
 | Lag | Mappe | Hva |
 | --- | --- | --- |
-| Modell og redigering | `src/domain/` | Datatypene og rene funksjoner som endrer en variant |
+| Modell og redigering | `src/domain/` | Datatypene og rene funksjoner som endrer en variant. Id-er: `ids.ts` |
 | Regler | `src/rules/rules.ts`, `src/foga/recipes.ts` | Mål, rutenett, oppskrifter og støtteregler |
 | Kalkyle | `src/calc/` | L1-linjer, støtte og fotplater, takdragere, produksjon |
 | Stykkliste | `src/foga/` | Foga-strukturen og BOM, grunnlaget for plukklisten |
@@ -25,8 +25,8 @@ Alt avledes fra modellen (`Variant` i `src/domain/types.ts`). Rekkefølgen er al
 
 ### Vegger (standvegg, innervegg, romvegg)
 
-- Modell: `Wall` · `domain/walls.ts` (bygde moduler, standvegg, standardtakdrager av/på) · `domain/edit.ts` (tegne,
-  viske, flytte, farge) · `domain/panels.ts` (farge per plate) · `domain/grid.ts` (moduler og nøkler)
+- Modell: `Wall` · `domain/walls.ts` (bygde moduler, standvegg, standardtakdrager av/på, vegggeometri som
+  `defaultSwing`, `doorAllowed`, `isPerimeterWall`) · `domain/edit.ts` (tegne, viske, flytte, farge) · `domain/panels.ts` (farge per plate) · `domain/grid.ts` (moduler og nøkler)
 - Kalkyle: `calc/calc.ts` (vegglinjer, platebytte, arrangørens standvegger) · `foga/fromVariant.ts`
 - Plan, 3D, skuff: `PlanView.tsx` · `build.ts` · `WallDrawer.tsx`, `drawerParts.tsx`, `elevation.tsx`
 
@@ -49,14 +49,16 @@ Tre filer med «support» i navnet, med hver sin jobb:
 
 ### Teppefliser
 
-- Modell: `FloorTile` · `domain/floor.ts` (fliser, Auto, kutt, penselhandling)
+- Modell: `FloorTile` · `domain/floor/tiles.ts` (fliser og celler) · `domain/floor/brush.ts` (penselen: størrelse,
+  Auto, viske) · `domain/floor/edit.ts` (kutte fliser og baner)
 - Kalkyle: `calc/calc.ts` (gulvseksjon, `tileCounts`)
 - Plan, 3D: `PlanView.tsx` · `build.ts`. Ingen skuff, bare panelet (`Rail.tsx`, FloorSection)
 
 ### Engangsteppe
 
-- Modell: `FloorTile` med `roll`, `fill`, `split` · `domain/floor.ts` (baner, `rollPieces`, `rollUsage`) ·
-  `domain/carpet.ts` (Fyll med forslag, og baneredigering)
+- Modell: `FloorTile` med `roll`, `fill`, `split` · `domain/floor/lanes.ts` (baner, `rollPieces`, `rollUsage`) ·
+  `domain/floor/rollFill.ts` (Fyll med forslag) · `domain/floor/edit.ts` (snu, forlenge og fjerne én bane) ·
+  `domain/floor/brush.ts` (penselen for hele baner)
 - Kalkyle: `calc/calc.ts` (`rollLine`)
 - Plan: `PlanView.tsx` (RollPreview, Offcut, LaneMark) · skuff `CarpetDrawer.tsx`
 - Kappliste: `ui/cutList.ts`, brukt av skuffen og `WorkOrderPage.tsx`
@@ -86,8 +88,8 @@ Tre filer med «support» i navnet, med hver sin jobb:
 
 ### Dører og forheng
 
-- Modell: `Opening` · `domain/doors.ts` og `domain/edit.ts` (setOpening, drawOpening, swing) · `domain/rooms.ts`
-  (dører som følger rommet)
+- Modell: `Opening` · `domain/doors.ts` (sette, tegne, flytte, snu, farge) · hvor en dør kan stå og hvilken vei
+  den slår som standard: `domain/walls.ts` · `domain/rooms.ts` (dører som følger rommet)
 - Kalkyle: `calc/calc.ts`
 - Plan, skuff: `PlanView.tsx` (OpeningMark) · `WallDrawer.tsx`, `DoorMap.tsx`, `DoorSettings.tsx`
 

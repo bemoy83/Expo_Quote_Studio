@@ -6,7 +6,7 @@
 // that wall instead (textileBrush.ts).
 import type { Rules } from '../rules/rules';
 import type { FreeTextile, Point, TextileFace, Variant } from './types';
-import { nextId } from './edit';
+import { nextId } from './ids';
 import { gridStroke, snapTo } from './snapGrid';
 import { builtModules } from './walls';
 

@@ -5,14 +5,15 @@ import { calc } from '../calc/calc';
 import { r2 } from '../calc/referenceStands';
 import { RULES } from '../rules/rules';
 import { addTextile, faces, fitDecor, freeSpans, updateTextile } from './decor';
-import { defaultSwing, doorSwing, eraseWalls, moveWall, paintWalls, setStand, setWallPlate } from './edit';
+import { eraseWalls, moveWall, paintWalls, setStand, setWallPlate } from './edit';
 import { moduleKey } from './grid';
 import { conflicts } from './objects';
 import { bounds, rectOutline } from './outline';
 import { addDefaultRoom, addRoom, dissolveRoom, moveRoom, RECT_SIDE, removeRoom, resizeRoom, roomAt, roomSideAt, roomSize, roomWallId } from './rooms';
 import type { Variant } from './types';
 import { createVariant } from './variant';
-import { builtModules } from './walls';
+import { builtModules, defaultSwing } from './walls';
+import { doorSwing } from './doors';
 
 const kf = (v: Variant) => calc(v, RULES, DEFAULT_CATALOG).keyFigures;
 const ctx = placeContext(RULES, DEFAULT_CATALOG);

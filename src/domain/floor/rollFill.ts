@@ -2,27 +2,12 @@
 // Each proposal is a set of ordinary lanes (FloorTile with `roll`), so what the plan shows is what is laid and picked.
 // The lanes of one fill share a `fill` id, so the fill can be laid another way later. Proposals are ranked by the
 // internal cost (rules.carpet): material from the roll, tape and work. The customer always pays laid m² only.
-import type { CarpetRates } from '../rules/rules';
-import { CELL, cellKey } from './grid';
-import {
-  across,
-  along,
-  cellsIn,
-  covers,
-  cutTiles,
-  laneRect,
-  layLanes,
-  lanesOf,
-  loose,
-  rollPieces,
-  rollUsage,
-  ROLL_END,
-  standCellList,
-  standCells,
-  type Rect,
-  type RollDir,
-} from './floor';
-import type { FloorTile, Stand, Variant } from './types';
+import type { CarpetRates } from '../../rules/rules';
+import { CELL, cellKey } from '../grid';
+import type { FloorTile, Stand, Variant } from '../types';
+import { cutTiles } from './edit';
+import { across, along, laneRect, lanesOf, layLanes, rollPieces, rollUsage, ROLL_END, type RollDir } from './lanes';
+import { cellsIn, standCellList, standCells, type Rect } from './tiles';
 
 type Cell = [number, number];
 
@@ -272,57 +257,3 @@ export function relayFill(v: Variant, fill: string, key: string, roll: number, r
 
 /** Take a fill off the floor. */
 export const removeFill = (v: Variant, fill: string): Variant => ({ ...v, floor: { ...v.floor, tiles: v.floor.tiles.filter((t) => t.fill !== fill) } });
-
-// --- One lane, placed by the seller -------------------------------------------------------------------------------
-
-const same = (a: FloorTile, b: { i: number; j: number }) => a.i === b.i && a.j === b.j;
-
-/** The rolled lane covering cell (i, j). */
-export const laneAt = (v: Variant, i: number, j: number) => v.floor.tiles.find((t) => t.roll && covers(t, i, j));
-
-/** Put a lane back in place of `old`, over whatever floor lies there (it wins), cut off at the stand edge. */
-function replaceLane(v: Variant, old: FloorTile, next: FloorTile): { v: Variant; lane: FloorTile } {
-  const { nx, ny } = standCells(v.stand);
-  const lane: FloorTile = { ...next, w: Math.min(next.w, nx - next.i), h: Math.min(next.h, ny - next.j) };
-  const rest = cutTiles(v.floor.tiles.filter((t) => !same(t, old)), lane);
-  return { v: { ...v, floor: { ...v.floor, tiles: [...rest, lane] } }, lane };
-}
-
-/** Turn a lane 90° about its middle: same length and width, the other direction, kept inside the stand. */
-export function rotateLane(v: Variant, lane: { i: number; j: number }): { v: Variant; lane: FloorTile } | null {
-  const t = v.floor.tiles.find((x) => x.roll && same(x, lane));
-  if (!t) return null;
-  const ci = t.i + t.w / 2;
-  const cj = t.j + t.h / 2;
-  const next: FloorTile = { ...loose(t), roll: t.roll === 'x' ? 'y' : 'x', w: t.h, h: t.w, i: Math.round(ci - t.h / 2), j: Math.round(cj - t.w / 2) };
-  const { nx, ny } = standCells(v.stand);
-  next.i = Math.max(0, Math.min(next.i, nx - next.w));
-  next.j = Math.max(0, Math.min(next.j, ny - next.h));
-  return replaceLane(v, t, next);
-}
-
-/** Make a lane `cells` longer (or shorter, negative), at its far end, or at its near end when the far end is at the
- * stand edge. At least one cell, inside the stand. */
-export function resizeLane(v: Variant, lane: { i: number; j: number }, cells: number): { v: Variant; lane: FloorTile } | null {
-  const t = v.floor.tiles.find((x) => x.roll && same(x, lane));
-  if (!t) return null;
-  const { nx, ny } = standCells(v.stand);
-  const a = along(t);
-  const n = t.roll === 'x' ? nx : ny;
-  const len = Math.max(1, Math.min(n, a.len + cells));
-  if (len === a.len) return null;
-  const start = a.start + len > n ? n - len : a.start;
-  return replaceLane(v, t, { ...loose(t), ...laneRect(t.roll!, { start, len }, across(t)) });
-}
-
-/** Take one lane off the floor. */
-export const removeLane = (v: Variant, lane: { i: number; j: number }): Variant => ({
-  ...v,
-  floor: { ...v.floor, tiles: v.floor.tiles.filter((t) => !(t.roll && same(t, lane))) },
-});
-
-/** Waste of one lane on its own: the rest of the roll width, and the end allowance. */
-export function laneWaste(t: FloorTile, roll: number): number {
-  const len = along(t).len * CELL;
-  return (len + 2 * ROLL_END) * roll - len * across(t).len * CELL;
-}

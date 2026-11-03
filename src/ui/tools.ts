@@ -1,9 +1,10 @@
 // Tool state of the sketch screen. UI only, never stored in the model.
 import { GRID_STEPS, type GridStep } from '../domain/snapGrid';
-import { TILE_FULL, type FloorBrushSize, type TileSize } from '../domain/floor';
+import { TILE_FULL, type TileSize } from '../domain/floor/tiles';
+import { type FloorBrushSize } from '../domain/floor/brush';
 import type { Rules } from '../rules/rules';
 
-/** Engangsteppe: Fyll marks an area the engine lays (domain/carpet.ts), Bane places one lane. */
+/** Engangsteppe: Fyll marks an area the engine lays (domain/floor/rollFill.ts), Bane places one lane. */
 export type RollMode = 'fill' | 'lane'
 
 /** Velg · Pensel · Tøm */

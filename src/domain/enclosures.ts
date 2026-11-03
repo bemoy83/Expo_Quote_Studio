@@ -4,11 +4,12 @@
 // apart into closed areas. Detection does not care about shape: any area bounded by one loop (a rectangle, an L,
 // a U …) becomes a room with that outline; an area with a hole does not.
 import { wallDirection, wallModules } from './grid';
-import { canMoveWall, defaultSwing, nextId, ownPlate, replaceWalls, splitWall } from './edit';
+import { canMoveWall, ownPlate, replaceWalls, splitWall } from './edit';
 import { cellId, cellRim, cellSides, outlineOf, outlineSides, rimKeys, type Cell } from './outline';
 import { overlapsRoom, roomWalls, syncRooms } from './rooms';
 import type { Point, Room, Variant } from './types';
-import { builtModules, type BuiltModule } from './walls';
+import { type BuiltModule, builtModules, defaultSwing } from './walls';
+import { nextId } from './ids';
 
 export interface Enclosure {
   /** Cells `i,j` (back-left corner in metres), sorted: the same area always has the same key. */

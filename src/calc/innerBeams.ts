@@ -12,7 +12,7 @@
 //     or under a standard beam are not this beam's.
 import { makeModule, pointKey } from '../domain/grid';
 import type { InnerBeam, Point } from '../domain/types';
-import { splitLength, type BeamLayout, type BeamSegment } from './beams';
+import { splitBeamLength, type BeamLayout, type BeamSegment } from './beams';
 import type { WallSupport } from './wallSupports';
 
 export interface InnerBeamLayout extends BeamLayout {
@@ -99,7 +99,7 @@ export function layoutInnerBeams(
     const stops = [l.lo, ...pieces[i].map((b) => b.t), l.hi];
     for (let k = 0; k + 1 < stops.length; k++) {
       const a = stops[k];
-      const parts = splitLength(stops[k + 1] - a, maxLength);
+      const parts = splitBeamLength(stops[k + 1] - a, maxLength);
       let at = a;
       parts.forEach((n, q) => {
         segments.push({ from: pointOn(l, at), to: pointOn(l, at + n), length: n, side: 'back', cross: false, inner: true });

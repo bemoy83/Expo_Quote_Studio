@@ -5,8 +5,8 @@ import { RECIPES } from '../../foga/recipes'
 import { useEffect, useMemo, useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent, type SVGProps } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import { mainGroupOf } from '../../catalog/groups'
-import { canMoveWall, doorAllowed, doorSwing, drawOpening, eraseWalls, paintWalls, segmentKeys, setOpening, standWallKeys } from '../../domain/edit'
-import { CELL, openSides, pointAlong, sideLength, sidePoint, wallDirection, wallLength, type Module } from '../../domain/grid'
+import { canMoveWall, eraseWalls, paintWalls } from '../../domain/edit'
+import { CELL, type Module, openSides, pointAlong, segmentKeys, sideLength, sidePoint, wallDirection, wallLength } from '../../domain/grid'
 import { addObject, conflicts, footprintBox, moveObject, removeObject } from '../../domain/objects'
 import { addFoil, faceAt, faceSegment, felt, foilAt, foilCenter, freeSpans, removeFoil, removeTextile, sideOf, textileAt, updateTextile, type FaceSide } from '../../domain/decor'
 import { drawTextile, fillFace, planTextile } from '../../domain/textileBrush'
@@ -14,8 +14,8 @@ import { faceOfPoint, freeStroke, freeTextileAt, moveFreeTextile, removeFreeText
 import { alongRun, cornerPosts } from '../../calc/freeFrames'
 import type { Motif } from '../../persistence/file'
 import type { FloorTile, Point, Room, Side, Variant, Wall } from '../../domain/types'
-import { doorHinge } from '../../domain/doors'
-import { builtModules, type BuiltModule } from '../../domain/walls'
+import { doorHinge, doorSwing, drawOpening, setOpening } from '../../domain/doors'
+import { type BuiltModule, builtModules, doorAllowed, standWallKeys } from '../../domain/walls'
 import { RoomLabel } from './RoomLabel'
 import { roomLabelSize } from './roomLabelSize'
 import { BORDER, BORDER_STRONG, BLOCK, CANVAS, INK, INK_FAINT, INK_MUTED, jointColor, LAYER_COLOR, SURFACE } from '../colors'
@@ -29,8 +29,11 @@ import { idx, place, plateColor, productOf, rules } from '../env'
 import { doorInset } from '../../rules/rules'
 import { findMotif } from '../motifs'
 import { penLayers, type Brush, type Highlight, type Layer, type Tool } from '../tools'
-import { across, applyFloor, floorAction, lanesLaid, lanesOf, standCells, TILE_FULL, type FloorAction, type FloorBrushSize, type Rect, type RollDir } from '../../domain/floor'
-import { fillCarpet, fillProposalsFor, fillTilesOf, laneAt } from '../../domain/carpet'
+import { across, lanesOf, type RollDir } from '../../domain/floor/lanes'
+import { applyFloor, floorAction, type FloorAction, type FloorBrushSize, lanesLaid } from '../../domain/floor/brush'
+import { type Rect, standCells, TILE_FULL } from '../../domain/floor/tiles'
+import { fillCarpet, fillProposalsFor, fillTilesOf } from '../../domain/floor/rollFill'
+import { laneAt } from '../../domain/floor/edit'
 import type { RollMode } from '../tools'
 import { distToSegment, nearestEdge, strokeFrom } from './geometry'
 import { Hatched } from './Hatched'
@@ -52,7 +55,7 @@ export interface PlanSelection {
   openingId?: string
   /** A lane of engangsteppe placed on its own: its top left cell. */
   lane?: { i: number; j: number }
-  /** Engangsteppe laid by Fyll (domain/carpet.ts). */
+  /** Engangsteppe laid by Fyll (domain/floor/rollFill.ts). */
   fill?: string
 }
 
