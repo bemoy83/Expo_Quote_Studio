@@ -3,7 +3,7 @@
 // moved and resized in the drawing; motifs are clicked onto what is selected or dragged from the shelf onto the wall.
 // Without a selection it edits the wall itself: plate colour, remove wall. A door or curtain is chosen here too (from the
 // drawing, the plan or 3D): its settings on the left and the mini plan to move it in the middle (Bjørn 3.11.2026).
-import { FlipHorizontal2, MoveHorizontal, PaintBucket, Paintbrush, Plus, Repeat2 } from 'lucide-react'
+import { DoorOpen, FlipHorizontal2, MoveHorizontal, PaintBucket, Paintbrush, Palette, Plus, Repeat2 } from 'lucide-react'
 import { useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent } from 'react'
 import { production, wallLabel } from '../../calc/production'
 import {
@@ -226,6 +226,7 @@ export function WallDrawer(p: Props) {
 
   const piece = T ? production(v, rules.textile.inFrame, '').pieces.find((x) => x.textileId === T.id) : undefined
   const openings = v.openings.filter((o) => o.wallId === w.id)
+  const doors = openings.filter((o) => productOf(o.product)?.opening === 'door')
   const ral = wallRal(v, w)
   const flip = fs.length > 1 ? fs.find((x) => x !== s) : undefined
   const painting = tool !== null && !T && !F && !O
@@ -342,7 +343,7 @@ export function WallDrawer(p: Props) {
   }
   const tail = 'dra tekstilvegg eller motiv til veggen, klikk det for å endre'
   const hint = O
-    ? `Klikk en rute i miniplanen for å flytte ${productOf(O.product)?.opening === 'door' ? 'døren' : 'forhenget'} · klikk døren igjen for farge og grafikk · Delete gjør om til vegg`
+    ? `Klikk en rute i miniplanen for å flytte ${productOf(O.product)?.opening === 'door' ? 'døren' : 'forhenget'} · «Farge og grafikk» eller Esc gir paletten · Delete gjør om til vegg`
     : painting
       ? tool === 'wall'
         ? printing
@@ -414,22 +415,30 @@ export function WallDrawer(p: Props) {
     <section className="wall-drawer drawer3" aria-label="Vegg sett forfra">
       <div className="wd-insp">
         {O ? (
-          <DoorSettings
-            v={v}
-            o={O}
-            w={w}
-            onEdit={p.onEdit}
-            onRemove={() => {
-              p.onEdit((x) => removeOpening(x, O.id))
-              select({})
-            }}
-            onClose={p.onClose}
-          >
-            {/* Colour and graphics for the door are the wall's (a 1 × 1 room's side is only the door, so this is the way
-                there) and the face switch sit in the header: the door's settings fill the column (Bjørn 3.11.2026) */}
-            <IconButton icon={PaintBucket} label="Farge og grafikk (Esc)" size={14} onClick={() => select({})} />
-            {flip !== undefined && <IconButton icon={Repeat2} label={`Vis ${faceName(w, flip).toLowerCase()}`} size={14} onClick={() => selectDoor(O.id, flip)} />}
-          </DoorSettings>
+          <>
+            <DoorSettings
+              v={v}
+              o={O}
+              w={w}
+              onEdit={p.onEdit}
+              onRemove={() => {
+                p.onEdit((x) => removeOpening(x, O.id))
+                select({})
+              }}
+              onClose={p.onClose}
+            >
+              {flip !== undefined && <IconButton icon={Repeat2} label={`Vis ${faceName(w, flip).toLowerCase()}`} size={14} onClick={() => selectDoor(O.id, flip)} />}
+            </DoorSettings>
+            {/* The way back to the palette: colour and graphics for the door are the wall's, and a 1 × 1 room's side is
+                only the door, so the drawing has nothing else to click (Bjørn 3.11.2026) */}
+            <div className="wd-foot">
+              <div className="wd-actions">
+                <Button variant="ghost" icon={Palette} onClick={() => select({})}>
+                  Farge og grafikk
+                </Button>
+              </div>
+            </div>
+          </>
         ) : (
           <>
             <DrawerHead
@@ -540,6 +549,13 @@ export function WallDrawer(p: Props) {
                   Tekstilvegg
                 </Button>
               )}
+              {!T &&
+                !F &&
+                doors.map((d, i) => (
+                  <Button key={d.id} variant="ghost" icon={DoorOpen} onClick={() => selectDoor(d.id)}>
+                    Dør{doors.length > 1 ? ` ${i + 1}` : ''}
+                  </Button>
+                ))}
             </div>
           </div>
         )}
