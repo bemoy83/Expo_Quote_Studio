@@ -3,7 +3,7 @@
 // moved and resized in the drawing; motifs are clicked onto what is selected or dragged from the shelf onto the wall.
 // Without a selection it edits the wall itself: plate colour, remove wall. A door or curtain is chosen here too (from the
 // drawing, the plan or 3D): its settings on the left and the mini plan to move it in the middle (Bjørn 3.11.2026).
-import { FlipHorizontal2, MoveHorizontal, PaintBucket, Paintbrush, Plus, Repeat2 } from 'lucide-react'
+import { FlipHorizontal2, MoveHorizontal, PaintBucket, Paintbrush, PanelTop, Plus, Repeat2 } from 'lucide-react'
 import { useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent } from 'react'
 import { production, wallLabel } from '../../calc/production'
 import {
@@ -325,7 +325,7 @@ export function WallDrawer(p: Props) {
   }
   const tail = 'dra tekstilvegg eller motiv til veggen, klikk det for å endre'
   const hint = O
-    ? `Klikk en rute i miniplanen for å flytte ${productOf(O.product)?.opening === 'door' ? 'døren' : 'forhenget'} · klikk veggen for å gå tilbake til den · Delete gjør om til vegg`
+    ? `Klikk en rute i miniplanen for å flytte ${productOf(O.product)?.opening === 'door' ? 'døren' : 'forhenget'} · veggikonet øverst viser hele veggen · Delete gjør om til vegg`
     : painting
       ? tool === 'wall'
         ? printing
@@ -408,7 +408,9 @@ export function WallDrawer(p: Props) {
             }}
             onClose={p.onClose}
           >
-            {/* The face switch sits in the header: the door's settings fill the column */}
+            {/* Back to the wall (a 1 × 1 room's side is only the door, so the drawing has little else to click) and the
+                face switch sit in the header: the door's settings fill the column (Bjørn 3.11.2026) */}
+            <IconButton icon={PanelTop} label="Vis hele veggen" size={14} onClick={() => select({})} />
             {flip !== undefined && <IconButton icon={Repeat2} label={`Vis ${faceName(w, flip).toLowerCase()}`} size={14} onClick={() => selectDoor(O.id, flip)} />}
           </DoorSettings>
         ) : (

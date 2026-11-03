@@ -203,7 +203,7 @@ romvegger som takdragerne ikke holder, også når takdragerne er på (`calc/wall
   overstykket har veggens farge. Kalkylen har én dørlinje per farge.
 - **Døren i veggskuffen** (Bjørn 02.11.2026, egen dørskuff slått sammen med veggskuffen 03.11.2026): klikk døren i plan,
   3D eller i veggtegningen, så åpnes veggskuffen for veggen med døren valgt. Innstillingene står til venstre, miniplanen
-  i midten (i stedet for grafikkhylla) og døren i hele veggen til høyre; klikk veggen for å gå tilbake til den. Miniplan for å flytte døren (klikk ruten utenfor en
+  i midten (i stedet for grafikkhylla) og døren i hele veggen til høyre; klikk utenfor døren i tegningen eller veggikonet i toppen for å gå tilbake til veggen. Miniplan for å flytte døren (klikk ruten utenfor en
   modul: alle egne moduler på rommet, eller langs innerveggen; aldri standvegg eller en annen åpning), dør/forheng,
   slagretning, hengselside, farge, gjør om til vegg (`domain/doors.ts`). Døren dras ikke i plan og 3D; der dras romsidene
   som før. Flyttes eller endres et rom slik at døren ville havnet i standveggen, flyttes døren til nærmeste modul på
