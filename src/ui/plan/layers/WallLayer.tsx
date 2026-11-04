@@ -10,16 +10,24 @@ import type { Layer } from '../../tools'
 import type { PlanSelection } from '../selection'
 import { PLAN_WALL, WALL } from '../planStyle'
 import { Seg } from './Seg'
+import { GONE, useErasing } from './erasing'
 
 /** Walls (a selected wall outlined, a plate in its own colour inside the line) and openings. */
 export function WallLayer({ v, mods, selection, dim }: { v: Variant; mods: BuiltModule[]; selection: PlanSelection; dim: (...layers: Layer[]) => number }) {
+  const { gone, hatch } = useErasing()
+  /** A wall module about to be erased, on its own or with its room. */
+  const goneWall = (m: BuiltModule) => {
+    const room = v.walls.find((w) => w.id === m.wallId)?.room
+    return gone('wall', m.key) || (!!room && gone('room', room.id))
+  }
   return (
     <>
       <g opacity={dim('walls')} pointerEvents="none">
         {mods.filter((m) => !m.opening).map((m) => {
           const sel = selection.wallId === m.wallId
+          const g = goneWall(m)
           return (
-            <g key={m.key}>
+            <g key={m.key} opacity={g ? GONE : undefined}>
               {sel && <Seg a={m.a} b={m.b} stroke={INK} strokeWidth={PLAN_WALL + 0.08} />}
               <Seg a={m.a} b={m.b} stroke={WALL} strokeWidth={PLAN_WALL} />
               {m.plate !== v.defaultPlate && (
@@ -28,11 +36,22 @@ export function WallLayer({ v, mods, selection, dim }: { v: Variant; mods: Built
             </g>
           )
         })}
+        {mods.filter((m) => !m.opening && goneWall(m)).map((m) => <Seg key={m.key} a={m.a} b={m.b} stroke={hatch} strokeWidth={PLAN_WALL} />)}
       </g>
 
       {/* Openings */}
       <g opacity={dim('openings')} pointerEvents="none">
-        {mods.filter((m) => m.opening).map((m) => <OpeningMark key={m.key} v={v} m={m} selected={selection.wallId === m.wallId || selection.openingId === m.opening!.id} />)}
+        {mods.filter((m) => m.opening).map((m) => {
+          const g = gone('door', m.opening!.id) || goneWall(m)
+          return (
+            <g key={m.key}>
+              <g opacity={g ? GONE : undefined}>
+                <OpeningMark v={v} m={m} selected={selection.wallId === m.wallId || selection.openingId === m.opening!.id} />
+              </g>
+              {g && <Seg a={m.a} b={m.b} stroke={hatch} strokeWidth={PLAN_WALL} />}
+            </g>
+          )
+        })}
       </g>
     </>
   )

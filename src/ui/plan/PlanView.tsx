@@ -39,8 +39,9 @@ import { planHits } from './pointer/hits'
 import { openingEdge } from './pointer/opening'
 import { pens } from './pointer/pens'
 import { usePlanPointer } from './pointer/usePlanPointer'
-import { EraseMarkView, FacePreview, HoverModule, SnapDots, StrokePreview, TextilePreview } from './layers/Previews'
-import { eraseTargetAt } from './pointer/erase'
+import { FacePreview, HoverModule, SnapDots, StrokePreview, TextilePreview } from './layers/Previews'
+import { eraseTargetAt, type Erasing } from './pointer/erase'
+import { ErasingProvider } from './layers/ErasingProvider'
 
 interface Props {
   v: Variant
@@ -106,7 +107,7 @@ export function PlanView(p: Props) {
   /** Snap points show only while a brush snaps to them, at its own grid. */
   const dotStep = textileTool ? step : wallTool || beamTool ? rules.wall.cc : null
 
-  const { svg, hover, dragging, rollPending, fillRect, stroke, textileStroke, dropHover, eraseMark, handlers } = usePlanPointer({
+  const { svg, hover, dragging, rollPending, fillRect, stroke, textileStroke, dropHover, erasing, handlers } = usePlanPointer({
     v,
     tool,
     brush,
@@ -177,9 +178,10 @@ export function PlanView(p: Props) {
   const hoverWallEdge = (wallTool || beamTool) && hover && !stroke && onStand(hover) ? nearestEdge(v.stand, hover) : null
   const hoverFree = textileTool && !textileFace && hover && !textileStroke && onStand(hover) ? freeStroke(v, rules, hover, hover, step)[0] : null
 
-  // Tøm: what a click takes, from the hover (PC) or the press (touch, no hover). A stroke shows its own line.
-  const eraseHover = tool === 'erase' && !p.mini && hover && !dragging && !stroke ? (eraseTargetAt(v, hits, standKeys, hover)?.mark ?? null) : null
-  const eraseShown = eraseMark ?? eraseHover
+  // Tøm: what a click takes, from the hover (PC) or the press (touch, no hover), dimmed and hatched in its own layer.
+  // A stroke along walls shows its own line.
+  const hoverTarget = tool === 'erase' && !p.mini && hover && !dragging && !stroke ? eraseTargetAt(v, hits, standKeys, hover) : null
+  const erasingShown: Erasing | null = erasing ?? (hoverTarget && hoverTarget.group !== 'locked' ? { group: hoverTarget.group, id: hoverTarget.id } : null)
 
   const sideText = (s: Side) => {
     const n = sideLength(v.stand, s)
@@ -222,6 +224,7 @@ export function PlanView(p: Props) {
         ))}
       </g>
 
+      <ErasingProvider erasing={erasingShown}>
       {/* Floor: carpet tiles with a joint at every tile edge, rolled floor without */}
       <FloorLayer v={v} dim={dim} />
 
@@ -252,6 +255,8 @@ export function PlanView(p: Props) {
 
       {/* Rooms: name and size over the floor and furniture, the selected one outlined */}
       {!p.mini && <RoomLayer v={v} selection={selection} />}
+
+      </ErasingProvider>
 
       {/* Labels */}
       {!p.mini && <Labels W={W} D={D} sideText={sideText} floorAreas={res.keyFigures.floor} />}
@@ -292,7 +297,6 @@ export function PlanView(p: Props) {
             strokeWidth={0.03}
           />
         )}
-        {eraseShown && <EraseMarkView m={eraseShown} />}
       </g>
     </svg>
   )

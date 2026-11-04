@@ -10,7 +10,7 @@ import type { RoomDrag, WallDrag } from '../../drag'
 import type { Brush, Tool } from '../../tools'
 import type { TextileLine } from '../layers/Previews'
 import type { PlanSelection } from '../selection'
-import type { EraseMark, EraseTarget } from './erase'
+import type { Erasing, EraseTarget } from './erase'
 import type { FloorBrush } from './floorBrush'
 import type { PlanHits } from './hits'
 import type { Pens } from './pens'
@@ -72,7 +72,7 @@ export interface PointerCtx {
   setRollPending: Dispatch<SetStateAction<FloorAction | null>>
   setFillRect: Dispatch<SetStateAction<Rect | null>>
   /** What a Tøm press will take on release (touch has no hover to show it). */
-  setEraseMark: Dispatch<SetStateAction<EraseMark | null>>
+  setErasing: Dispatch<SetStateAction<Erasing | null>>
 }
 
 /** A drag kind's steps: each pointer move while it is under way, and the release. */

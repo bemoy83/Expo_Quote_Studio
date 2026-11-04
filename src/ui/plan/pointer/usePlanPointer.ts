@@ -12,7 +12,7 @@ import { beam } from './beam'
 import { carpetFill, startCarpetFill } from './carpetFill'
 import { click } from './click'
 import { decorClick, ratioOf } from './decor'
-import { erase, startErase, type EraseMark } from './erase'
+import { erase, startErase, type Erasing } from './erase'
 import { floor, startFloor } from './floor'
 import { freeMove } from './freeMove'
 import { object, objectClick } from './object'
@@ -29,7 +29,7 @@ const DRAGS: { [K in Drag['kind']]: DragHandlers<K> } = { stroke, floor, roll, c
 const handlersOf = (d: Drag) => DRAGS[d.kind] as DragHandlers<Drag['kind']>
 
 /** What the plan passes in: the context without the previews' setters and state, which the hook owns. */
-export type PlanPointerInput = Omit<PointerCtx, 'rollPending' | 'setStroke' | 'setTextileStroke' | 'setRollPending' | 'setFillRect' | 'setEraseMark'> & {
+export type PlanPointerInput = Omit<PointerCtx, 'rollPending' | 'setStroke' | 'setTextileStroke' | 'setRollPending' | 'setFillRect' | 'setErasing'> & {
   /** Small overview: no drag and drop. */
   mini?: boolean
 }
@@ -52,7 +52,7 @@ export function usePlanPointer(input: PlanPointerInput) {
   /** A frame or motif dragged from Profilering, over a wall face. */
   const [dropHover, setDropHover] = useState<{ h: FaceHit; d: DecorDrag } | null>(null)
   /** What a Tøm press takes on release. */
-  const [eraseMark, setEraseMark] = useState<EraseMark | null>(null)
+  const [erasing, setErasing] = useState<Erasing | null>(null)
 
   // A new tool or pen drops whatever stroke was under way
   const [penNow, setPenNow] = useState({ tool, brush })
@@ -61,7 +61,7 @@ export function usePlanPointer(input: PlanPointerInput) {
     setStroke(null)
     setTextileStroke(null)
     setFillRect(null)
-    setEraseMark(null)
+    setErasing(null)
   }
   useEffect(() => {
     drag.current = null
@@ -76,7 +76,7 @@ export function usePlanPointer(input: PlanPointerInput) {
     return { x: m.x, y: m.y }
   }
 
-  const c: PointerCtx = { ...input, rollPending, setStroke, setTextileStroke, setRollPending, setFillRect, setEraseMark }
+  const c: PointerCtx = { ...input, rollPending, setStroke, setTextileStroke, setRollPending, setFillRect, setErasing }
 
   /** The drag a press starts, or nothing for a pen that acts on the click alone. */
   const press = (q: P): Drag | undefined => {
@@ -123,7 +123,7 @@ export function usePlanPointer(input: PlanPointerInput) {
     setStroke(null)
     setRollPending(null)
     setFillRect(null)
-    setEraseMark(null)
+    setErasing(null)
   }
 
   // Drag and drop from Profilering: the same as a click with the textile or motif brush
@@ -167,7 +167,7 @@ export function usePlanPointer(input: PlanPointerInput) {
     stroke: strokeLine,
     textileStroke,
     dropHover,
-    eraseMark,
+    erasing,
     handlers: {
       onPointerDown,
       onPointerMove,
