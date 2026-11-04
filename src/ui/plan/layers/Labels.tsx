@@ -19,7 +19,7 @@ export function Labels({ W, D, sideText, totals }: { W: number; D: number; sideT
   const off = (s: Side) => Math.min(M - 0.08, sizePx(sc, totals.has(s) ? NAME_PAST_TOTAL : NAME_CLOSE))
   return (
     <g pointerEvents="none">
-      <text x={W / 2} y={-off('back')} textAnchor="middle" style={SIDE}>
+      <text x={W / 2} y={-Math.min(off('back'), M - 0.2)} textAnchor="middle" style={SIDE}>
         {SIDE_LABEL.back} · {sideText('back')}
       </text>
       <text transform={`translate(${-off('left')} ${D / 2}) rotate(-90)`} textAnchor="middle" style={SIDE}>
