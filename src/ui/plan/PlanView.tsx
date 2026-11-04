@@ -34,6 +34,8 @@ import { BeamLayer } from './layers/BeamLayer'
 import { ObjectLayer } from './layers/ObjectLayer'
 import { RoomHandles, RoomLayer } from './layers/RoomLayer'
 import { Labels } from './layers/Labels'
+import { DimLayer } from './layers/DimLayer'
+import { totalSides } from './dims'
 import { floorBrush, isCarpetFill, rollWidthOf } from './pointer/floorBrush'
 import { planHits } from './pointer/hits'
 import { openingEdge } from './pointer/opening'
@@ -194,6 +196,8 @@ export function PlanView(p: Props) {
   const pxPerM = usePxPerMetre(svg, vb.w, vb.h)
   const scale = useMemo(() => planScale(pxPerM, { doc: p.doc, mini: p.mini }), [pxPerM, p.doc, p.mini])
 
+  const totals = useMemo(() => new Set(totalSides(v)), [v])
+
   const sideText = (s: Side) => {
     const n = sideLength(v.stand, s)
     let c = 0
@@ -271,7 +275,10 @@ export function PlanView(p: Props) {
       </ErasingProvider>
 
       {/* Labels */}
-      {!p.mini && <Labels W={W} D={D} sideText={sideText} floorAreas={res.keyFigures.floor} />}
+      {!p.mini && <Labels W={W} D={D} sideText={sideText} floorAreas={res.keyFigures.floor} totals={totals} />}
+
+      {/* Dimension chains in millimetres: totals, placement rows, module chain of the selected wall */}
+      {!p.mini && <DimLayer v={v} selection={selection} />}
 
       {/* Interaction preview */}
       <g pointerEvents="none">
