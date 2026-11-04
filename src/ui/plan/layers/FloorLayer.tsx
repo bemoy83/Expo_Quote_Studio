@@ -133,7 +133,7 @@ export function Offcut({ t, roll, stand }: { t: FloorTile; roll: number; stand: 
 }
 
 /** Lane number and an arrow along the roll direction, in the middle of a lane of rolled floor. */
-export function LaneMark({ n, x, y, dir, length, color }: { n: number | string; x: number; y: number; dir: RollDir; length: number; color: string }) {
+function LaneMark({ n, x, y, dir, length, color }: { n: number | string; x: number; y: number; dir: RollDir; length: number; color: string }) {
   const half = Math.min(0.45, length / 2 - 0.15)
   return (
     <g transform={`translate(${x} ${y})`} pointerEvents="none">

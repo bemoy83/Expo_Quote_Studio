@@ -3,7 +3,7 @@
 // on (calc/positions.ts): beside its wall face, in front of a door, on a piece of furniture. Plates in a row that share
 // an article (a plate swap, full-plate print) get one chip for the row.
 import type { CalcResult } from '../../../calc/calc'
-import { positions, type Positioned } from '../../../calc/positions'
+import { positionsOf, type Positioned } from '../../../calc/positions'
 import { foilCenter } from '../../../domain/decor'
 import { defaultFace, faceNormal, sideOf } from '../../../domain/faces'
 import { pointAlong } from '../../../domain/grid'
@@ -13,7 +13,7 @@ import { builtModules } from '../../../domain/walls'
 import { INK, SURFACE } from '../../colors'
 import { catalog, rules } from '../../env'
 import type { Layer } from '../../tools'
-import { linePx, sizePx, usePlanScale } from '../planScale'
+import { linePx, sizePx, usePlanScale, type PlanScale } from '../planScale'
 import { printBand, printOffset, textileOffset, textileWidth, wallWidth } from '../planStyle'
 
 /** Chip size and its gap to what it marks, screen px. */
@@ -36,12 +36,10 @@ interface Chip {
 }
 
 /** Where each number stands. */
-function chips(v: Variant, res: CalcResult, px: (n: number) => number, ww: number, tw: number, band: number, printOff: number, textOff: number): Chip[] {
-  const p = positions(
-    v,
-    res.groups.flatMap((g) => g.lines),
-    catalog,
-  )
+function chips(v: Variant, res: CalcResult, sc: PlanScale): Chip[] {
+  const p = positionsOf(v, res, catalog)
+  const px = (n: number) => sizePx(sc, n)
+  const [ww, tw, band, printOff, textOff] = [wallWidth(sc), textileWidth(sc), printBand(sc), printOffset(sc), textileOffset(sc)]
   const half = px(CHIP) / 2 + px(GAP)
   const wallOf = (id: string) => v.walls.find((w) => w.id === id)
   const mods = new Map(builtModules(v).map((m) => [m.key, m]))
@@ -125,7 +123,7 @@ function chips(v: Variant, res: CalcResult, px: (n: number) => number, ww: numbe
 export function PosLayer({ v, res, dim }: { v: Variant; res: CalcResult; dim: (...layers: Layer[]) => number }) {
   const sc = usePlanScale()
   const px = (n: number) => sizePx(sc, n)
-  const all = chips(v, res, px, wallWidth(sc), textileWidth(sc), printBand(sc), printOffset(sc), textileOffset(sc))
+  const all = chips(v, res, sc)
   const s = px(CHIP)
   return (
     <g pointerEvents="none">

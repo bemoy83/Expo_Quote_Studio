@@ -7,7 +7,7 @@ import { indexCatalog } from '../catalog/lookup';
 import { hiddenPlates } from '../domain/print';
 import type { Variant } from '../domain/types';
 import { builtModules, isStandWall } from '../domain/walls';
-import type { CalcLine } from './types';
+import type { CalcLine, CalcResult } from './types';
 
 /** A drawn thing with a number: what it is, its id in the variant, and its article. */
 export interface Positioned {
@@ -88,3 +88,11 @@ export function positions(v: Variant, lines: CalcLine[], catalog: Catalog): Posi
     },
   };
 }
+
+/** Numbers for a calculated variant, from all its lines (the kalkyle's: the quote's lines carry the same articles). */
+export const positionsOf = (v: Variant, res: Pick<CalcResult, 'groups'>, catalog: Catalog): Positions =>
+  positions(
+    v,
+    res.groups.flatMap((g) => g.lines),
+    catalog,
+  );

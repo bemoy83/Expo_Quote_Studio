@@ -2,7 +2,7 @@
 import { lazy, Suspense, useState } from 'react'
 import { Printer } from 'lucide-react'
 import type { CalcResult } from '../../calc/calc'
-import { positions } from '../../calc/positions'
+import { positionsOf } from '../../calc/positions'
 import { quoteGroups } from '../../calc/quoteLines'
 import type { Project, Room, Variant } from '../../domain/types'
 import type { Motif } from '../../persistence/file'
@@ -46,7 +46,7 @@ export function QuotePage({ project, variants, current, onSelect, calcOf, motifs
   const groups = quoteGroups(res.groups)
   const lines = groups.flatMap((g) => g.lines)
   // Position numbers: the article each drawn thing is priced on (calc/positions.ts)
-  const pos = positions(v, lines, catalog)
+  const pos = positionsOf(v, res, catalog)
   const placeholders = lines.filter((l) => l.placeholder).length
   const labourLines = lines.some((l) => l.group === 'tjen.montering')
   const inFrame = rules.textile.inFrame
