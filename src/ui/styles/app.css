@@ -2736,6 +2736,23 @@ select.cin {
   min-height: 0;
   max-height: none;
 }
+/* The wall drawing: a box that takes the room left, the svg laid over it (its size never follows its view box) */
+.wd-fit {
+  position: relative;
+  flex: 1;
+  min-height: 200px;
+}
+.drawer3 .wd-fit {
+  min-height: 0;
+}
+.wd-fit > .wd-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+}
 .drawer3 > .wd-hint {
   position: static;
 }

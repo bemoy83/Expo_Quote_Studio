@@ -38,9 +38,9 @@ function Inner({ sc, c }: { sc: PlanScale; c: InnerChain }) {
 
 /**
  * One chain along `axis` at the fixed coordinate `at`, through the positions `ts`. Numbers stand on the `dir` side of
- * the line; a number that does not fit between its marks is left out.
+ * the line; a number that does not fit between its marks is left out. `suffix` follows each number («2 490 vegg»).
  */
-function Chain({ sc, axis, at, ts, dir }: { sc: PlanScale; axis: 'x' | 'y'; at: number; ts: number[]; dir: 1 | -1 }) {
+export function Chain({ sc, axis, at, ts, dir, suffix }: { sc: PlanScale; axis: 'x' | 'y'; at: number; ts: number[]; dir: 1 | -1; suffix?: string }) {
   if (ts.length < 2) return null
   const P = (t: number, o = 0): [number, number] => (axis === 'x' ? [t, at + o] : [at + o, t])
   const k = sizePx(sc, 2.5)
@@ -64,9 +64,11 @@ function Chain({ sc, axis, at, ts, dir }: { sc: PlanScale; axis: 'x' | 'y'; at: 
       })}
       {ts.slice(1).map((t, i) => {
         const len = t - ts[i]
-        const text = mm(len)
-        // Fits: the number and a little air between the marks
-        if (len < sizePx(sc, text.length * DIM_FONT * 0.62 + 8)) return null
+        // Fits: the number and a little air between the marks; with a suffix, the number alone when that is all that fits
+        const fits = (t: string) => len >= sizePx(sc, t.length * DIM_FONT * 0.62 + 8)
+        const long = suffix ? `${mm(len)} ${suffix}` : mm(len)
+        const text = fits(long) ? long : fits(mm(len)) ? mm(len) : null
+        if (!text) return null
         const mid = (t + ts[i]) / 2
         // Baseline: just off the line on the dir side, glyphs growing away from it
         const off = dir < 0 ? -gap : gap + fs * 0.78
