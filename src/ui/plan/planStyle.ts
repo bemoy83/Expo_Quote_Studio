@@ -1,15 +1,10 @@
 // Sizes, colours and text styles of the plan, shared by PlanView and its layers (plan/layers/).
 import type { Side } from '../../domain/types'
 import { INK_FAINT, LAYER_COLOR } from '../colors'
-import { linePx, type PlanScale } from './planScale'
+import { linePx, sizePx, type PlanScale } from './planScale'
 
-/**
- * Line widths in the plan, m. Schematic, not to scale (3D is): a wall and a textile are both drawn 60 mm (both are 40),
- * and a textile on a wall face sits just outside the wall line so the two never overlap.
- */
+/** Nominal wall width in model metres, for gaps around labels (the line itself is drawn in screen pixels). */
 export const PLAN_WALL = 0.06
-export const PLAN_TEXTILE = PLAN_WALL
-export const PLAN_TEXTILE_OFFSET = PLAN_WALL / 2 + PLAN_TEXTILE / 2 + 0.005
 
 /** Narrowest a wall is drawn, m: the post profile. */
 const WALL_MIN = 0.04
@@ -24,6 +19,31 @@ export const wallCore = (s: PlanScale) => wallWidth(s) - linePx(s, 2)
 /** The header panel over a door or curtain: a thin RAL line with ink edges. */
 export const headerWidth = (s: PlanScale) => linePx(s, 3)
 export const headerCore = (s: PlanScale) => linePx(s, 2)
+
+/**
+ * A textile wall (InFrame and free-standing): an ink frame of 5 px, the orange fill of 3,2 px on top and, in full
+ * detail, ink cross dashes like fabric stretched in a frame. An InFrame frame sits just outside the wall line.
+ */
+export const textileWidth = (s: PlanScale) => Math.max(WALL_MIN, linePx(s, 5))
+export const textileFill = (s: PlanScale) => linePx(s, 3.2)
+export const textileOffset = (s: PlanScale) => wallWidth(s) / 2 + textileWidth(s) / 2 + sizePx(s, 1)
+
+/** Print and decals: a band of 2,4 px just outside the wall line, on the printed face only. */
+export const printBand = (s: PlanScale) => linePx(s, 2.4)
+export const printOffset = (s: PlanScale) => wallWidth(s) / 2 + printBand(s) / 2
+
+/** A takdrager in full detail: a body at least 3,6 px wide with two dashed edges. */
+export const beamBody = (s: PlanScale, thickness: number) => Math.max(thickness, linePx(s, 3.6))
+/** Dashes of takdragere, as on hall maps: 6 px line, 3 px gap. */
+export const beamDash = (s: PlanScale) => `${sizePx(s, 6)} ${sizePx(s, 3)}`
+
+/** Foot plates under free walls and textile walls: a thin dashed outline. */
+export const footStroke = (s: PlanScale) => linePx(s, 0.75)
+export const footDash = (s: PlanScale) => `${sizePx(s, 2.5)} ${sizePx(s, 1.5)}`
+
+/** A selected line: a soft ink halo 8 px wider than the line. */
+export const haloWidth = (s: PlanScale, w: number) => w + linePx(s, 8)
+export const HALO_OPACITY = 0.22
 
 /** A post: a white square with an ink edge, a little wider than the wall. */
 export const postSize = (s: PlanScale) => Math.max(WALL_MIN, wallWidth(s) + linePx(s, 1.5))

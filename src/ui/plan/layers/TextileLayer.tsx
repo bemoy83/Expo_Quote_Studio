@@ -1,26 +1,51 @@
 // Textile walls and foil decor in the plan: free-standing frames with their foot plates and corner posts, InFrame
-// frames in front of their wall face, and a dashed mark where a decal or print sits.
+// frames in front of their wall face, and a raster band on the face that carries a decal or print
+// (docs/arbeidstegning.md: orange with cross dashes for textile, green with raster dots for print).
+import { useId } from 'react'
 import type { CalcResult } from '../../../calc/calc'
 import { foilCenter } from '../../../domain/decor'
 import { runNormal, type FaceKey } from '../../../domain/textile/free'
 import { alongRun, cornerPosts } from '../../../calc/textile/free'
 import type { Point, Variant } from '../../../domain/types'
-import { INK, INK_MUTED } from '../../colors'
+import { INK, INK_MUTED, SURFACE } from '../../colors'
 import { fmt } from '../../format'
 import { rules } from '../../env'
 import type { Layer } from '../../tools'
 import { faceSegment, sideOf } from '../../../domain/faces'
 import type { PlanSelection } from '../selection'
-import { MONO, PLAN_TEXTILE, PLAN_TEXTILE_OFFSET, PLAN_WALL, TEXTILE } from '../planStyle'
+import { linePx, sizePx, usePlanScale, type PlanScale } from '../planScale'
+import {
+  footDash,
+  footStroke,
+  HALO_OPACITY,
+  haloWidth,
+  MONO,
+  postSize,
+  printBand,
+  printOffset,
+  textileFill,
+  textileOffset,
+  textileWidth,
+  TUSJ_PRINT,
+  TUSJ_TEXTILE,
+} from '../planStyle'
 import { Seg } from './Seg'
 import { GONE, useErasing } from './erasing'
 
-/** Frittstående tekstilvegger, textile walls on a wall face, and foil decor marks. */
+/** Frittstående tekstilvegger, textile walls on a wall face, and the print and decal bands. */
 export function TextileLayer({ v, res, selection, mini, dim }: { v: Variant; res: CalcResult; selection: PlanSelection; mini?: boolean; dim: (...layers: Layer[]) => number }) {
   // Tøm: a textile wall about to go is dimmed and hatched; a motif about to go only hatched, on its face
   const { gone, hatch } = useErasing()
+  const sc = usePlanScale()
+  const tw = textileWidth(sc)
+  const raster = `raster${useId().replace(/:/g, '')}`
+  const ps = postSize(sc)
   return (
     <>
+      <defs>
+        <RasterPattern id={raster} sc={sc} />
+      </defs>
+
       {/* Frittstående tekstilvegger: foot plates under the frame, corner posts, the frame */}
       <g opacity={dim('textile')} pointerEvents="none">
         {res.production.free.map((f) => {
@@ -36,13 +61,13 @@ export function TextileLayer({ v, res, selection, mini, dim }: { v: Variant; res
                 const h = t.from[1] === t.to[1]
                 const w = (h ? f.foot.along : f.foot.across) / 1000
                 const d = (h ? f.foot.across : f.foot.along) / 1000
-                return <rect key={i} x={x - w / 2} y={y - d / 2} width={w} height={d} fill="none" stroke={TEXTILE} strokeOpacity={0.55} strokeWidth={0.015} strokeDasharray=".04 .03" />
+                return <rect key={i} x={x - w / 2} y={y - d / 2} width={w} height={d} fill="none" stroke={INK_MUTED} strokeWidth={footStroke(sc)} strokeDasharray={footDash(sc)} />
               })}
-              {sel && <Seg a={t.from} b={t.to} stroke={INK} strokeWidth={PLAN_TEXTILE + 0.06} />}
-              <Seg a={t.from} b={t.to} stroke={TEXTILE} strokeWidth={PLAN_TEXTILE} />
-              {sel && selection.freeFace && <FaceMark t={t} face={selection.freeFace} />}
-              {g && <Seg a={t.from} b={t.to} stroke={hatch} strokeWidth={PLAN_TEXTILE} />}
-              {motif && <FaceMark t={t} face={motif} stroke={hatch} width={0.1} />}
+              {sel && <Seg a={t.from} b={t.to} stroke={INK} strokeOpacity={HALO_OPACITY} strokeWidth={haloWidth(sc, tw)} />}
+              <TextileStroke a={t.from} b={t.to} sc={sc} />
+              {sel && selection.freeFace && <FaceMark t={t} face={selection.freeFace} sc={sc} />}
+              {g && <Seg a={t.from} b={t.to} stroke={hatch} strokeWidth={tw} />}
+              {motif && <FaceMark t={t} face={motif} stroke={hatch} width={linePx(sc, 4)} sc={sc} />}
               {!mini && (
                 <text {...labelAt(t)} textAnchor="middle" style={{ ...MONO, fontSize: '0.17px' }}>
                   {f.pos} · {fmt(f.length / 1000, 2)} m
@@ -51,8 +76,9 @@ export function TextileLayer({ v, res, selection, mini, dim }: { v: Variant; res
             </g>
           )
         })}
+        {/* 92LTX corner posts: white squares with an ink edge, like the system wall posts */}
         {cornerPosts(v).map(([x, y]) => (
-          <rect key={`${x},${y}`} x={x - 0.06} y={y - 0.06} width={0.12} height={0.12} fill={INK_MUTED} />
+          <rect key={`${x},${y}`} x={x - ps / 2} y={y - ps / 2} width={ps} height={ps} fill={SURFACE} stroke={INK} strokeWidth={linePx(sc, 1)} />
         ))}
       </g>
 
@@ -61,39 +87,69 @@ export function TextileLayer({ v, res, selection, mini, dim }: { v: Variant; res
         {v.textiles.map((t) => {
           const w = v.walls.find((x) => x.id === t.wallId)
           if (!w) return null
-          const [a, b] = faceSegment(w, sideOf(v, t), t.from + 0.02, t.from + t.width - 0.02, PLAN_TEXTILE_OFFSET)
+          const [a, b] = faceSegment(w, sideOf(v, t), t.from + 0.02, t.from + t.width - 0.02, textileOffset(sc))
           const sel = selection.textileId === t.id
           const g = gone('textile', t.id)
           return (
             <g key={t.id}>
               <g opacity={g ? GONE : undefined}>
-                {sel && <Seg a={a} b={b} stroke={INK} strokeWidth={PLAN_TEXTILE + 0.06} />}
-                <Seg a={a} b={b} stroke={TEXTILE} strokeWidth={PLAN_TEXTILE} />
+                {sel && <Seg a={a} b={b} stroke={INK} strokeOpacity={HALO_OPACITY} strokeWidth={haloWidth(sc, tw)} />}
+                <TextileStroke a={a} b={b} sc={sc} />
               </g>
-              {(g || gone('graphic', `${t.id}.motif`)) && <Seg a={a} b={b} stroke={hatch} strokeWidth={PLAN_TEXTILE} />}
+              {(g || gone('graphic', `${t.id}.motif`)) && <Seg a={a} b={b} stroke={hatch} strokeWidth={tw} />}
             </g>
           )
         })}
       </g>
 
-      {/* Foil decor: a dashed mark on its face, as wide as the decal */}
+      {/* Print and decals: a green raster band on the printed face, as wide as the decal (the whole plate when full) */}
       <g opacity={dim('foil')} pointerEvents="none">
         {v.foils.map((f) => {
           const w = v.walls.find((x) => x.id === f.wallId)
           if (!w) return null
           const c = foilCenter(rules, f)
-          const [a, b] = faceSegment(w, sideOf(v, f), c - f.width / 2, c + f.width / 2, PLAN_WALL / 2 + 0.02)
+          const [from, to] = f.full ? [f.module, f.module + 1] : [c - f.width / 2, c + f.width / 2]
+          const band = printBand(sc)
+          const [a, b] = faceSegment(w, sideOf(v, f), from, to, printOffset(sc))
           const sel = selection.foilId === f.id
           const g = gone('graphic', f.id)
           return (
             <g key={f.id}>
-              <Seg a={a} b={b} stroke={INK} strokeWidth={sel ? 0.05 : 0.03} strokeDasharray=".06 .04" opacity={g ? GONE : undefined} />
-              {g && <Seg a={a} b={b} stroke={hatch} strokeWidth={0.1} />}
+              <g opacity={g ? GONE : undefined}>
+                {sel && <Seg a={a} b={b} stroke={INK} strokeOpacity={HALO_OPACITY} strokeWidth={haloWidth(sc, band)} />}
+                <Seg a={a} b={b} stroke={`url(#${raster})`} strokeWidth={band} />
+              </g>
+              {g && <Seg a={a} b={b} stroke={hatch} strokeWidth={linePx(sc, 4)} />}
             </g>
           )
         })}
       </g>
     </>
+  )
+}
+
+/** A textile wall: ink frame, orange fill, and in full detail ink cross dashes. */
+export function TextileStroke({ a, b, sc, opacity }: { a: Point; b: Point; sc: PlanScale; opacity?: number }) {
+  const fill = textileFill(sc)
+  return (
+    <g opacity={opacity}>
+      <Seg a={a} b={b} stroke={INK} strokeWidth={textileWidth(sc)} />
+      <Seg a={a} b={b} stroke={TUSJ_TEXTILE} strokeWidth={fill} />
+      {sc.detail === 'full' && (
+        <Seg a={a} b={b} stroke={INK} strokeOpacity={0.5} strokeWidth={fill} strokeDasharray={`${sizePx(sc, 0.5)} ${sizePx(sc, 4)}`} />
+      )}
+    </g>
+  )
+}
+
+/** Green with ink raster dots, 2,4 × 2,4 px: print and decals. */
+function RasterPattern({ id, sc }: { id: string; sc: PlanScale }) {
+  const cell = sizePx(sc, 2.4)
+  return (
+    <pattern id={id} patternUnits="userSpaceOnUse" width={cell} height={cell}>
+      <rect width={cell} height={cell} fill={TUSJ_PRINT} />
+      <circle cx={cell / 2} cy={cell / 2} r={sizePx(sc, 0.62)} fill={INK} fillOpacity={0.75} />
+    </pattern>
   )
 }
 
@@ -106,8 +162,9 @@ function labelAt(t: { from: Point; to: Point }) {
 }
 
 /** The face shown in the drawer: a thin line on that side. */
-function FaceMark({ t, face, stroke = INK, width = 0.03 }: { t: { from: Point; to: Point }; face: FaceKey; stroke?: string; width?: number }) {
+function FaceMark({ t, face, sc, stroke = INK, width }: { t: { from: Point; to: Point }; face: FaceKey; sc: PlanScale; stroke?: string; width?: number }) {
   const [nx, ny] = runNormal(t, face)
-  const o = PLAN_TEXTILE / 2 + 0.01 + width
-  return <Seg a={[t.from[0] + nx * o, t.from[1] + ny * o]} b={[t.to[0] + nx * o, t.to[1] + ny * o]} stroke={stroke} strokeWidth={width} />
+  const wd = width ?? linePx(sc, 1.5)
+  const o = textileWidth(sc) / 2 + sizePx(sc, 1.5) + wd / 2
+  return <Seg a={[t.from[0] + nx * o, t.from[1] + ny * o]} b={[t.to[0] + nx * o, t.to[1] + ny * o]} stroke={stroke} strokeWidth={wd} />
 }

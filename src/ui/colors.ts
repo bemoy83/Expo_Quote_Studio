@@ -15,11 +15,14 @@ export const ALU_POST = 'var(--alu-post)'
 export const FEET = 'var(--feet)'
 export const FABRIC = 'var(--fabric)'
 
-/** One colour per build layer, shared by the plan and the calc panel. */
+/**
+ * One colour per build layer, shared by the plan, the drawers and the calc panel. The working drawing
+ * (docs/arbeidstegning.md): system walls and openings in ink, textile in its orange marker colour.
+ */
 export const LAYER_COLOR = {
-  walls: 'var(--line-sky)',
-  textile: 'var(--line-violet)',
-  openings: 'var(--line-slate)',
+  walls: INK,
+  textile: 'var(--tusj-tekstil)',
+  openings: INK,
 } as const
 
 const rgbOf = (hex: string): number[] | null => {
