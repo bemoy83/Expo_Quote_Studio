@@ -9,10 +9,21 @@ import type { Layer } from '../../tools'
 import { across, lanesOf, type RollDir } from '../../../domain/floor/lanes'
 import { Hatched } from '../Hatched'
 import { JOINT_WIDTH } from '../planStyle'
+import { linePx, usePlanScale } from '../planScale'
 import { GONE_FILL, useErasing } from './erasing'
 
-/** Floor: carpet tiles with a joint at every tile edge, rolled floor without, and lane numbers on rolled floor. */
-export function FloorLayer({ v, dim }: { v: Variant; dim: (...layers: Layer[]) => number }) {
+/** Fill opacity of the muted floor (docs/arbeidstegning.md): a layer that is just visible while drawing something else. */
+const MUTED_FILL = 0.18
+/** Rolled floor (engangsteppe) a little stronger, so a thin carpet still reads. */
+const MUTED_FILL_ROLL = 0.22
+
+/**
+ * Floor. Full: carpet tiles with a joint at every tile edge, rolled floor in lanes with numbers. Muted (the default
+ * while drawing something else, and on the quote): a faint fill without joints, one area per product with a thin
+ * outline.
+ */
+export function FloorLayer({ v, dim, full }: { v: Variant; dim: (...layers: Layer[]) => number; full: boolean }) {
+  if (!full) return <MutedFloor v={v} dim={dim} />
   // Lanes of rolled floor: numbered per product, with the roll direction
   const rollLanes = [...new Set(v.floor.tiles.filter((t) => t.roll).map((t) => t.product))].flatMap((a) => {
     const hit = idx.byArtnr.get(a)
@@ -46,6 +57,62 @@ export function FloorLayer({ v, dim }: { v: Variant; dim: (...layers: Layer[]) =
       ))}
     </g>
   )
+}
+
+/** The floor as a muted layer: each product one faint area with a thin outline, no joints or lane numbers. */
+function MutedFloor({ v, dim }: { v: Variant; dim: (...layers: Layer[]) => number }) {
+  const sc = usePlanScale()
+  const { gone, hatch } = useErasing()
+  const goneTile = v.floor.tiles.find((t) => gone('floor', `${t.i},${t.j},${t.w},${t.h}`))
+  const products = [...new Set(v.floor.tiles.map((t) => t.product))]
+  return (
+    <g opacity={dim('floor')} pointerEvents="none">
+      {products.map((a) => {
+        const hit = idx.byArtnr.get(a)
+        if (!hit) return null
+        const tiles = v.floor.tiles.filter((t) => t.product === a)
+        const op = tiles.some((t) => t.roll) ? MUTED_FILL_ROLL : MUTED_FILL
+        return (
+          <g key={a}>
+            {tiles.map((t) => (
+              <rect
+                key={`${t.i},${t.j}`}
+                x={t.i * CELL}
+                y={t.j * CELL}
+                width={t.w * CELL}
+                height={t.h * CELL}
+                fill={hit.variant.color}
+                fillOpacity={t === goneTile ? GONE_FILL : op}
+              />
+            ))}
+            <path d={outlinePath(v.floor.tiles, a)} fill="none" stroke={jointColor(hit.variant.color)} strokeOpacity={0.6} strokeWidth={linePx(sc, 0.75)} />
+          </g>
+        )
+      })}
+      {goneTile && <rect x={goneTile.i * CELL} y={goneTile.j * CELL} width={goneTile.w * CELL} height={goneTile.h * CELL} fill={hatch} />}
+    </g>
+  )
+}
+
+/** The outline of all floor of one product: every cell edge with another product (or none) on the other side. */
+export function outlinePath(tiles: FloorTile[], product: string): string {
+  const owner = new Map<string, string>()
+  for (const t of tiles) for (let i = t.i; i < t.i + t.w; i++) for (let j = t.j; j < t.j + t.h; j++) owner.set(`${i},${j}`, t.product)
+  const mine = (i: number, j: number) => owner.get(`${i},${j}`) === product
+  const d: string[] = []
+  for (const [key, p] of owner) {
+    if (p !== product) continue
+    const [i, j] = key.split(',').map(Number)
+    const x0 = i * CELL
+    const y0 = j * CELL
+    const x1 = x0 + CELL
+    const y1 = y0 + CELL
+    if (!mine(i, j - 1)) d.push(`M${x0} ${y0}H${x1}`)
+    if (!mine(i, j + 1)) d.push(`M${x0} ${y1}H${x1}`)
+    if (!mine(i - 1, j)) d.push(`M${x0} ${y0}V${y1}`)
+    if (!mine(i + 1, j)) d.push(`M${x1} ${y0}V${y1}`)
+  }
+  return d.join('')
 }
 
 /** Lanes a roll brush will lay: each with its joints, the roll direction and its width, cut lanes dashed. With

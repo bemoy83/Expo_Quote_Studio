@@ -70,6 +70,9 @@ interface Props {
   groups?: ReadonlySet<string>
   /** Drawn on the quote or the work order: lines 1,5 times as wide, so they survive printing. */
   doc?: boolean
+  /** The floor in full colour with joints (the work order with floor shown). While drawing, the floor pen or the floor
+   * group hovered in the calc or a chosen lane does it; otherwise the floor is a muted layer. */
+  floorFull?: boolean
 }
 
 /** Main group of each plan layer. Objects go by their own product. */
@@ -235,7 +238,7 @@ export function PlanView(p: Props) {
 
       <ErasingProvider erasing={erasingShown}>
       {/* Floor: carpet tiles with a joint at every tile edge, rolled floor without */}
-      <FloorLayer v={v} dim={dim} />
+      <FloorLayer v={v} dim={dim} full={!!p.floorFull || floorTool || highlight === 'floor' || !!selection.lane || !!selection.fill} />
 
       {/* Drawing grids: every half metre while painting floor, snap dots for straight runs */}
       <g pointerEvents="none">
