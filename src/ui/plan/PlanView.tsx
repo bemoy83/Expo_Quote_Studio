@@ -12,7 +12,7 @@ import { freeStroke, freeTextileAt } from '../../domain/textile/free'
 import type { Motif } from '../../persistence/file'
 import type { Side, Variant } from '../../domain/types'
 import { builtModules, doorAllowed, standWallKeys } from '../../domain/walls'
-import { BORDER, INK, SURFACE } from '../colors'
+import { INK, SURFACE } from '../colors'
 import type { Run } from '../../domain/innerBeams'
 import { roomAt, sideIsHorizontal } from '../../domain/rooms'
 import { idx, place, rules } from '../env'
@@ -25,7 +25,7 @@ import { laneAt } from '../../domain/floor/edit'
 import type { RollMode } from '../tools'
 import { nearestEdge } from './geometry'
 import type { PlanSelection } from './selection'
-import { DIMMED, GRID_FINE, PLAN_MARGIN, PLAN_WALL, TEXTILE, WALL } from './planStyle'
+import { DIMMED, GRID, GRID_FINE, GRID_PX, PLAN_MARGIN, PLAN_WALL, TEXTILE, WALL } from './planStyle'
 import { Seg } from './layers/Seg'
 import { FloorLayer, Offcut, RollPreview } from './layers/FloorLayer'
 import { WallLayer } from './layers/WallLayer'
@@ -42,6 +42,7 @@ import { usePlanPointer } from './pointer/usePlanPointer'
 import { FacePreview, HoverModule, SnapDots, StrokePreview, TextilePreview } from './layers/Previews'
 import { eraseTargetAt, type Erasing } from './pointer/erase'
 import { ErasingProvider } from './layers/ErasingProvider'
+import { linePx, planScale, PlanScaleContext, usePxPerMetre } from './planScale'
 
 interface Props {
   v: Variant
@@ -67,6 +68,8 @@ interface Props {
   motifs?: Motif[]
   /** Main groups (catalog/groups.ts) to show at full strength; the rest are dimmed. All when left out. */
   groups?: ReadonlySet<string>
+  /** Drawn on the quote or the work order: lines 1,5 times as wide, so they survive printing. */
+  doc?: boolean
 }
 
 /** Main group of each plan layer. Objects go by their own product. */
@@ -183,6 +186,11 @@ export function PlanView(p: Props) {
   const hoverTarget = tool === 'erase' && !p.mini && hover && !dragging && !stroke ? eraseTargetAt(v, hits, standKeys, hover) : null
   const erasingShown: Erasing | null = erasing ?? (hoverTarget && hoverTarget.group !== 'locked' ? { group: hoverTarget.group, id: hoverTarget.id } : null)
 
+  // Line widths in screen pixels (planScale.ts): measure how many pixels a metre takes
+  const vb = p.mini ? { x: -0.4, y: -0.4, w: W + 0.8, h: D + 0.8 } : { x: -M, y: -M, w: W + 2 * M, h: D + 2 * M }
+  const pxPerM = usePxPerMetre(svg, vb.w, vb.h)
+  const scale = useMemo(() => planScale(pxPerM, { doc: p.doc, mini: p.mini }), [pxPerM, p.doc, p.mini])
+
   const sideText = (s: Side) => {
     const n = sideLength(v.stand, s)
     let c = 0
@@ -198,13 +206,14 @@ export function PlanView(p: Props) {
     <svg
       ref={svg}
       className="plan-svg"
-      viewBox={p.mini ? `-0.4 -0.4 ${W + 0.8} ${D + 0.8}` : `${-M} ${-M} ${W + 2 * M} ${D + 2 * M}`}
+      viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`}
       preserveAspectRatio="xMidYMid meet"
       style={{ cursor }}
       {...handlers}
       role="img"
       aria-label={`Plan for standen, ${W} × ${D} m`}
     >
+      <PlanScaleContext.Provider value={scale}>
       {/* Ground: an aisle along every open side, and the stand surface */}
       <g>
         {openSides(v.stand).map((s) => {
@@ -214,13 +223,13 @@ export function PlanView(p: Props) {
         <rect x={0} y={0} width={W} height={D} fill={SURFACE} />
       </g>
 
-      {/* Grid, under the floor: a laid floor shows its own joints */}
-      <g pointerEvents="none">
+      {/* Grid, under the floor: a laid floor shows its own joints. Metre lines in faint ink, a hairline */}
+      <g pointerEvents="none" stroke={GRID} strokeWidth={linePx(scale, GRID_PX)}>
         {Array.from({ length: W - 1 }, (_, i) => (
-          <line key={`gx${i}`} x1={i + 1} y1={0} x2={i + 1} y2={D} stroke={BORDER} strokeWidth={0.012} />
+          <line key={`gx${i}`} x1={i + 1} y1={0} x2={i + 1} y2={D} />
         ))}
         {Array.from({ length: D - 1 }, (_, j) => (
-          <line key={`gy${j}`} x1={0} y1={j + 1} x2={W} y2={j + 1} stroke={BORDER} strokeWidth={0.012} />
+          <line key={`gy${j}`} x1={0} y1={j + 1} x2={W} y2={j + 1} />
         ))}
       </g>
 
@@ -298,6 +307,7 @@ export function PlanView(p: Props) {
           />
         )}
       </g>
+      </PlanScaleContext.Provider>
     </svg>
   )
 }
