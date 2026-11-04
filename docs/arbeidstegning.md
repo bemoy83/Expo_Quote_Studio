@@ -68,9 +68,10 @@ Svar fra Bjørn står i **fet**. Der det står «forslag», gjelder det til Bjø
   `PlanView` måler px per meter (ResizeObserver på svg-en) og gir lagene `u` (meter per skjermpiksel) og
   `detail: 'full' | 'compact'` (compact under 55 px/m) gjennom en kontekst. Miniplanen i 3D (`mini`) er alltid compact.
   Tilbudets plan blir compact av seg selv ved vanlig A4-bredde.
-- **A5 · Modulkjede på innervegg.** Mockupen legger kjeden på motsatt side av veggpillen. Appen har ingen pille, men
-  en veggskuff med valgt side (`selection.side`). Forslag: kjeden går på siden som vises i skuffen, så planen og
-  veggrisset viser samme side.
+- **A5 · Modulkjede på innervegg.** I mockupen står kjeden på motsatt side av veggpillen. **Pillen kommer i et senere
+  steg (Bjørn 4.11.2026): brukeren skal gjøre det meste rett på kanvas, uten å åpne skuffen.** Kjeden får derfor en
+  fast regel nå: den står på siden mot standens midtpunkt. Pillen legges senere på den andre siden, så de aldri
+  kolliderer. Kjeden skal ikke følge skuffens valgte side.
 
 ## Planen
 
@@ -147,7 +148,7 @@ Målhierarkiet:
 | --- | --- |
 | Ingenting valgt | Totalmål på hver lukket side, og en plasseringsrad (kjede fra hjørnet til hvert innvendig veggfeste, rom og frittstående element langs siden) |
 | Valgt standvegg | Veggens modulkjede (1 000 per modul) **erstatter plasseringsraden** på den siden, utenfor veggen. Totalen står |
-| Valgt innervegg eller romvegg | Modulkjede tett på veggen, på siden som vises i skuffen (A5) |
+| Valgt innervegg eller romvegg | Modulkjede tett på veggen, på siden mot standens midtpunkt (A5) |
 | Valgt frittstående element | Fri lengde over elementet, som `2 350` på bilde 1 |
 | Compact (A4) | Ingen modulkjede. Totalmål og plasseringsrad står |
 
@@ -208,9 +209,12 @@ Arbeidsordren bruker samme `PlanPreview` og får planendringene automatisk.
 
 ## Rekkefølge
 
-Én PR per punkt, i denne rekkefølgen. Hver PR kjører `scripts/shots.mjs` mot `main`, og avvikene skal være de
-ventede. Kalkyle- og fil-snapshots (`src/test/fixtures.test.ts`) skal ikke endres i PR 1–7. Kjør aldri `vitest -u`
-for å få dem grønne.
+Bjørn 4.11.2026: **planskissen først.** Veggrisset og tilbudet kommer etterpå, og veggpillen er en egen bestilling.
+
+Én PR per punkt. Hver PR kjører `scripts/shots.mjs` mot `main`, og avvikene skal være de ventede. Kalkyle- og
+fil-snapshots (`src/test/fixtures.test.ts`) skal ikke endres. Kjør aldri `vitest -u` for å få dem grønne.
+
+### Fase 1 · planskissen
 
 1. **Skala og stil:** `u` og `detail` fra `PlanView` (A4), tokens og `planStyle.ts`, rutenett og gangfelt uten tekst.
 2. **Vegger og stolper:** RAL på streken, hvite stolper, dørstreker, ingen yttergrense under takdrager.
@@ -218,9 +222,20 @@ for å få dem grønne.
 4. **Gulvlaget:** dempet og aktivt.
 5. **Mål:** `DimLayer` med hierarkiet over.
 6. **Tegnforklaring og tegningshode** i gangfeltet. Romtekst uten boks.
-7. **Veggrisset:** kjeder, høyder og henvisningslinjer.
-8. **Posisjoner:** `calc/positions.ts` med tester, `Pos.` i tilbudet, innstillingen og pekerbrikken i planen.
-9. **Tilbudet:** 3D-bilde og dokumentmodus for planen. Sjekk utskrift til PDF.
+
+Fase 1 endrer også planen på Tilbud og Arbeidsordre, fordi begge bruker `PlanPreview`. Det er ventet.
+
+### Fase 2 · dokumentene
+
+7. **Posisjoner:** `calc/positions.ts` med tester, `Pos.` i tilbudet, innstillingen og pekerbrikken i planen.
+8. **Tilbudet:** 3D-bilde og dokumentmodus for planen. Sjekk utskrift til PDF.
+9. **Veggrisset:** kjeder, høyder og henvisningslinjer. Det kan bli endret når pillen tar over mye av skuffen, så
+   det kommer sist.
+
+### Senere · veggpillen (egen bestilling)
+
+Verktøylinje ved valgt vegg på kanvas, så det meste kan gjøres uten skuff. Den legges på motsatt side av modulkjeden
+(A5) og skal aldri dekke et mål.
 
 Når en PR er inne, oppdateres [kodekart.md](kodekart.md) med nye filer.
 
