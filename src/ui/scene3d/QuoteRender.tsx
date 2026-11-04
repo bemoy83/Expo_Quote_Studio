@@ -5,13 +5,15 @@
 import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import type { CalcResult } from '../../calc/calc'
-import { positions } from '../../calc/positions'
+import { positionsOf } from '../../calc/positions'
 import { pointAlong } from '../../domain/grid'
 import type { Point, Variant } from '../../domain/types'
 import type { Motif } from '../../persistence/file'
 import { catalog, rules } from '../env'
 import { build, dispose } from './build'
 import { HOME } from './camera'
+import { addLights, aimSun } from './lights'
+import { useElementSize } from '../useElementSize'
 
 /** Picture size in CSS px is the box's; drawn at twice that for print. */
 const SCALE = 2
@@ -29,20 +31,11 @@ export function QuoteRender({ v, res, motifs }: { v: Variant; res: CalcResult; m
   const box = useRef<HTMLDivElement>(null)
   const [shot, setShot] = useState<Shot | null>(null)
   // Drawn for the box's size, and again when it changes (the page settling, a narrow window)
-  const [size, setSize] = useState<[number, number]>([0, 0])
-  useEffect(() => {
-    const el = box.current!
-    const ro = new ResizeObserver(() => {
-      const w = Math.round(el.clientWidth)
-      const h = Math.round(el.clientHeight)
-      setSize((s) => (s[0] === w && s[1] === h ? s : [w, h]))
-    })
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [])
+  const size = useElementSize(box, true)
+  const w = size?.w ?? 0
+  const h = size?.h ?? 0
 
   useEffect(() => {
-    const [w, h] = size
     if (!w || !h) return
     let live = true
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true })
@@ -53,18 +46,8 @@ export function QuoteRender({ v, res, motifs }: { v: Variant; res: CalcResult; m
     renderer.shadowMap.type = THREE.PCFSoftShadowMap
     const scene = new THREE.Scene()
     const camera = new THREE.PerspectiveCamera(30, w / h, 0.1, 200)
-    scene.add(new THREE.HemisphereLight('#ffffff', '#d6d2c8', 1.9))
     const { width: W, depth: D } = v.stand
-    const sun = new THREE.DirectionalLight('#ffffff', 1.5)
-    sun.castShadow = true
-    sun.shadow.mapSize.set(2048, 2048)
-    sun.shadow.bias = -0.0004
-    sun.shadow.radius = 4
-    sun.position.set(-W * 0.4, 9, D * 0.9 + 4)
-    const r = Math.max(W, D)
-    Object.assign(sun.shadow.camera, { left: -r, bottom: -r, right: r, top: r })
-    sun.shadow.camera.updateProjectionMatrix()
-    scene.add(sun, sun.target)
+    aimSun(addLights(scene, true), W, D)
 
     let timer: ReturnType<typeof setTimeout> | undefined
     const take = () => {
@@ -92,7 +75,7 @@ export function QuoteRender({ v, res, motifs }: { v: Variant; res: CalcResult; m
       renderer.dispose()
       renderer.forceContextLoss()
     }
-  }, [v, res, motifs, size])
+  }, [v, res, motifs, w, h])
 
   return (
     <div ref={box} className="qdoc-render">
@@ -108,11 +91,7 @@ export function QuoteRender({ v, res, motifs }: { v: Variant; res: CalcResult; m
 
 /** Where the numbers of the textile walls stand in the plan: the middle of each frame. */
 function textileChips(v: Variant, res: CalcResult): { pos: number; p: Point }[] {
-  const p = positions(
-    v,
-    res.groups.flatMap((g) => g.lines),
-    catalog,
-  )
+  const p = positionsOf(v, res, catalog)
   return p.items.flatMap((i) => {
     if (i.kind === 'textile') {
       const t = v.textiles.find((x) => x.id === i.id)!

@@ -8,6 +8,7 @@ import type { Variant } from '../../domain/types'
 import type { Motif } from '../../persistence/file'
 import { build, dispose } from './build'
 import { HOME, setCamera } from './camera'
+import { addLights } from './lights'
 
 /** Least time between two rebuilds, ms. */
 const THROTTLE = 200
@@ -30,10 +31,8 @@ export function Scene3DPreview({ v, res, motifs }: { v: Variant; res: CalcResult
     el.appendChild(renderer.domElement)
     const scene = new THREE.Scene()
     const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 200)
-    scene.add(new THREE.HemisphereLight('#ffffff', '#d6d2c8', 1.9))
-    const sun = new THREE.DirectionalLight('#ffffff', 1.5)
-    sun.position.set(-2, 9, 6)
-    scene.add(sun)
+    // No shadows in the thumbnail, the sun fixed
+    addLights(scene, false).position.set(-2, 9, 6)
     view.current = { renderer, scene, camera, content: null }
     const render = () => renderer.render(scene, camera)
     const resize = () => {
