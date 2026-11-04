@@ -31,9 +31,7 @@ export type Erasing = Pick<EraseTarget, 'group' | 'id'>
 export function eraseTargetAt(v: Variant, hits: PlanHits, standKeys: ReadonlySet<string>, q: P): EraseTarget | null {
   // Furniture: exact footprint, so it wins over a wall it stands against
   const o = hits.objectAt(q)
-  if (o) {
-    return { group: 'object', id: o.id, erase: (x) => removeObject(x, o.id) }
-  }
+  if (o) return { group: 'object', id: o.id, erase: (x) => removeObject(x, o.id) }
   // Free-standing textile wall: the motif on the face clicked first, then the wall
   const ft = freeTextileAt(v, q, 0.15)
   if (ft) {

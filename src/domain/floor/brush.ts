@@ -29,7 +29,7 @@ export interface FloorTouch {
   x: number;
   y: number;
   size: FloorBrushSize | RollBrush;
-  erase: boolean;
+  erase?: boolean;
   /** Product painted. Ignored when erasing. */
   product: string;
   anchor?: { i: number; j: number } | null;
