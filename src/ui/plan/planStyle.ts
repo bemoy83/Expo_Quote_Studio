@@ -80,6 +80,5 @@ export const MONO = { font: '500 0.24px var(--font-numeric)', fill: INK_FAINT }
 /** Side names and stand dimensions around the stand: context, so quieter than the drawing itself. */
 export const SIDE = { font: '500 0.17px var(--font-ui)', fill: INK_FAINT }
 
-export const SIDE_DIM = { font: '500 0.15px var(--font-numeric)', fill: INK_FAINT }
 
 export const SIDE_LABEL: Record<Side, string> = { back: 'Bak', front: 'Front', left: 'Venstre', right: 'Høyre' }
