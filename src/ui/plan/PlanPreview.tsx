@@ -6,11 +6,12 @@ import type { Variant } from '../../domain/types'
 import { PlanView } from './PlanView'
 import type { PlanSelection } from './selection'
 
-/** Read-only plan: the quote's sketch and the 3D view's mini map. */
+/** Read-only plan: the quote's sketch and the 3D view's mini map. Outside the mini map it is a document (wider lines). */
 export function PlanPreview({ v, res, mini, groups }: { v: Variant; res: CalcResult; mini?: boolean; groups?: ReadonlySet<string> }) {
   return (
     <PlanView
       mini={mini}
+      doc={!mini}
       groups={groups}
       v={v}
       res={res}

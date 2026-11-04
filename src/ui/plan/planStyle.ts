@@ -20,6 +20,17 @@ export const TEXTILE = LAYER_COLOR.textile
 /** Joints between carpet tiles, m: wide enough to read in the small plan on the quote and the work order. */
 export const JOINT_WIDTH = 0.025
 
+/** Metre grid: faint ink, a hairline of GRID_PX screen pixels (planScale.ts). */
+export const GRID = 'rgb(var(--ink) / .1)'
+export const GRID_PX = 0.5
+
+/** Marker colours of the working drawing (docs/arbeidstegning.md): orange for textile, green for print and decals. */
+export const TUSJ_TEXTILE = 'var(--tusj-tekstil)'
+export const TUSJ_PRINT = 'var(--tusj-trykk)'
+
+/** Reserved for a snekret (carpentry) wall, which is not in the model yet: diagonal hatch at 45°, no colour. */
+export const SNEKRET_HATCH = { angle: 45, colour: null } as const
+
 /** Half-metre lines while painting floor. */
 export const GRID_FINE = 'rgb(0 0 0 / .1)'
 
