@@ -61,7 +61,7 @@ export function Legend({ v, res, doc }: { v: Variant; res: CalcResult; doc: bool
   const { width: W, depth: D } = v.stand
   const px = (n: number) => sizePx(sc, n)
   // The aisle in front: the legend never leaves it
-  const top = D + px(PAD)
+  let top = D + px(PAD)
   const bottom = D + M - px(PAD / 2)
   const right = W + M - px(PAD)
   const all = legendRows(v, res, doc)
@@ -69,6 +69,8 @@ export function Legend({ v, res, doc }: { v: Variant; res: CalcResult; doc: bool
   const textWidth = (r: Row) => ('text' in r ? r.text.length * (r.kind === 'eyebrow' ? EYEBROW * 0.75 : TEXT * 0.56) : 0) + (r.kind === 'eyebrow' || r.kind === 'head' ? 0 : 15)
   const col = Math.max(...all.map(textWidth))
   const x0 = Math.max(-M + px(PAD), right - px(col))
+  // Under the side name «Front · …» (Labels.tsx, about 1,2 m wide round the middle) when the column reaches it
+  if (x0 < W / 2 + 0.75) top = Math.max(top, D + px(14) + 0.22)
   // Rows that fit; a lone eyebrow at the end is dropped with its rows
   const fit: Row[] = []
   let y = top

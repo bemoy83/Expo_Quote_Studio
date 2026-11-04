@@ -1,10 +1,11 @@
 // Tilbud: an A4 document built from the calc. Printing from the browser gives the PDF.
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { Printer } from 'lucide-react'
 import type { CalcResult } from '../../calc/calc'
 import { positions } from '../../calc/positions'
 import { quoteGroups } from '../../calc/quoteLines'
 import type { Project, Room, Variant } from '../../domain/types'
+import type { Motif } from '../../persistence/file'
 import { roomName, roomOpenings, roomSize } from '../../domain/rooms'
 import { builtModules, standardBeamsOn } from '../../domain/walls'
 import { dateText, DELIVERY_FIELDS, today, validUntil } from '../../domain/delivery'
@@ -18,15 +19,19 @@ import { PlanPreview } from '../plan/PlanPreview'
 import { PageBand } from '../shell/PageBand'
 import { VariantTabs } from '../shell/VariantTabs'
 
+// three.js stays in its own chunk, loaded when the quote opens
+const QuoteRender = lazy(() => import('../scene3d/QuoteRender').then((m) => ({ default: m.QuoteRender })))
+
 interface Props {
   project: Project
   variants: Variant[]
   current: number
   onSelect: (i: number) => void
   calcOf: (v: Variant) => CalcResult
+  motifs: Motif[]
 }
 
-export function QuotePage({ project, variants, current, onSelect, calcOf }: Props) {
+export function QuotePage({ project, variants, current, onSelect, calcOf, motifs }: Props) {
   const v = variants[current]
   const res = calcOf(v)
   const k = res.keyFigures
@@ -141,6 +146,10 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
               <span className="faint">Veiledende · ikke bindende</span>
             </div>
           </header>
+
+          <Suspense fallback={<div className="qdoc-render" />}>
+            <QuoteRender v={v} res={res} motifs={motifs} />
+          </Suspense>
 
           <section className="qdoc-summary">
             <div className="qdoc-plan" style={{ aspectRatio: `${v.stand.width + 2 * PLAN_MARGIN} / ${v.stand.depth + 2 * PLAN_MARGIN}` }}>

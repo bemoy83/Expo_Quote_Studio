@@ -535,7 +535,7 @@ export default function App() {
           </div>
         </>
       ) : page === 'tilbud' ? (
-        <QuotePage project={sketch.project} variants={sketch.variants} current={current} onSelect={selectVariant} calcOf={calcFor} />
+        <QuotePage project={sketch.project} variants={sketch.variants} current={current} onSelect={selectVariant} calcOf={calcFor} motifs={motifs} />
       ) : page === 'produksjon' ? (
         <ProductionPage
           variants={sketch.variants}
