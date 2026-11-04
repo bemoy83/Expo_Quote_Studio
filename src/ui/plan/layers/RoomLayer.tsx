@@ -39,7 +39,7 @@ function RoomMark({ r, selected }: { r: Room; selected: boolean }) {
           strokeLinejoin="round"
         />
       )}
-      {fit && <RoomLabel r={r} cx={fit.cx} cy={fit.cy} k={fit.k} two={fit.two} turn={fit.turn} />}
+      {fit && <RoomLabel r={r} cx={fit.cx} cy={fit.cy} k={fit.k} two={fit.two} turn={fit.turn} box={false} />}
     </g>
   )
 }

@@ -143,7 +143,7 @@ export function TextileStroke({ a, b, sc, opacity }: { a: Point; b: Point; sc: P
 }
 
 /** Green with ink raster dots, 2,4 × 2,4 px: print and decals. */
-function RasterPattern({ id, sc }: { id: string; sc: PlanScale }) {
+export function RasterPattern({ id, sc }: { id: string; sc: PlanScale }) {
   const cell = sizePx(sc, 2.4)
   return (
     <pattern id={id} patternUnits="userSpaceOnUse" width={cell} height={cell}>

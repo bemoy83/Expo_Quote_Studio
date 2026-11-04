@@ -2201,9 +2201,11 @@ select.cin {
 .plan-svg g[opacity] {
   transition: opacity var(--dur) var(--ease);
 }
-/* Room kept free under the plan so the tools never cover the stand */
+/* Room kept free under the plan so the tools never cover the stand, and over it for the stand chip, so it never
+   covers the dimensions along the back */
 .plan-wrap > .plan-svg {
-  height: calc(100% - 64px);
+  height: calc(100% - 64px - 48px);
+  margin-top: 48px;
 }
 .dock {
   position: absolute;
