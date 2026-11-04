@@ -36,6 +36,7 @@ import { RoomHandles, RoomLayer } from './layers/RoomLayer'
 import { Labels } from './layers/Labels'
 import { DimLayer } from './layers/DimLayer'
 import { Legend } from './layers/Legend'
+import { PosLayer } from './layers/PosLayer'
 import { totalSides } from './dims'
 import { floorBrush, isCarpetFill, rollWidthOf } from './pointer/floorBrush'
 import { planHits } from './pointer/hits'
@@ -76,6 +77,8 @@ interface Props {
   /** The floor in full colour with joints (the work order with floor shown). While drawing, the floor pen or the floor
    * group hovered in the calc or a chosen lane does it; otherwise the floor is a muted layer. */
   floorFull?: boolean
+  /** Position numbers (the quote's and the work order's small plan; never on the drawing surface). */
+  positions?: boolean
 }
 
 /** Main group of each plan layer. Objects go by their own product. */
@@ -280,6 +283,7 @@ export function PlanView(p: Props) {
 
       {/* Dimension chains in millimetres: totals, placement rows, module chain of the selected wall */}
       {!p.mini && <DimLayer v={v} selection={selection} />}
+      {p.positions && <PosLayer v={v} res={res} dim={dim} />}
 
       {/* Legend and drawing head in the front aisle: always on the documents; while drawing only with Velg, when no
           quick picks float over the bottom of the plan */}
