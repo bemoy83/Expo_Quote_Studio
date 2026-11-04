@@ -1,6 +1,7 @@
 // What the wall drawing measures (docs/arbeidstegning.md, «Veggrisset»), pure: the placement row over the wall, the
 // height row to the right, the leader texts over it, and the room each of them takes round the wall, in screen px.
 // The drawing is in metres with y down: the wall top is y = 0, the floor y = H.
+import { textPx } from '../planScale'
 
 /** A textile frame or a print on the face, as drawn: x from left to right, heights above the floor, m. */
 export interface ElevationItem {
@@ -56,7 +57,7 @@ export function leaders(items: ElevationItem[], H: number, u: number): Leader[] 
     .map((it) => {
       const x = (it.x0 + it.x1) / 2
       // Text from just right of the line, about 0,6 em a letter
-      const width = (it.text.length * LEADER_FONT * 0.62 + 8) * u
+      const width = (textPx(it.text, LEADER_FONT) + 8) * u
       let level = 0
       while (ends[level] !== undefined && ends[level] > x) level++
       ends[level] = x + width

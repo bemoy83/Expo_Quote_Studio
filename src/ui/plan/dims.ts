@@ -5,12 +5,23 @@ import type { Point, Side, Variant, Wall } from '../../domain/types'
 import { isStandWall } from '../../domain/walls'
 import { runNormal } from '../../domain/textile/free'
 import type { PlanSelection } from './selection'
+import { sizePx, type PlanScale } from './planScale'
+import { PLAN_MARGIN } from './planStyle'
 
 const EPS = 1e-6
 
 /** Distance of the rows from the stand edge, screen px: the placement or module row, then the total. */
 export const DIM_NEAR = 9
 export const DIM_TOTAL = 27
+
+/** Distance of a side name from the stand edge, screen px: outside the total where the side has one, else close. */
+const NAME_PAST_TOTAL = DIM_TOTAL + 22
+const NAME_CLOSE = 14
+/** The front side name stands this far below its line, m (its text hangs under the line, the others above). */
+export const FRONT_NAME_DROP = 0.12
+
+/** How far out a side name stands, m: past the total row when there is one, but never past the margin. */
+export const sideNameOffset = (sc: PlanScale, total: boolean) => Math.min(PLAN_MARGIN - 0.08, sizePx(sc, total ? NAME_PAST_TOTAL : NAME_CLOSE))
 
 /** Millimetres with a space every thousand: 6 000. */
 export const mm = (m: number) => Math.round(m * 1000).toLocaleString('nb-NO')
