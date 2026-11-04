@@ -7,7 +7,7 @@ import { idx, productOf } from '../../env'
 import type { Layer, Tool } from '../../tools'
 import type { PlanSelection } from '../selection'
 import { DIMMED } from '../planStyle'
-import { GONE, useErasing } from './erasing'
+import { GONE_FILL, useErasing } from './erasing'
 
 /** Furniture by its footprint; one that collides is outlined in red. */
 export function ObjectLayer(props: {
@@ -34,7 +34,7 @@ export function ObjectLayer(props: {
         const stroke = isBad ? BLOCK : INK
         const sw = isBad ? 0.06 : sel ? 0.05 : 0.018
         const g = gone('object', o.id)
-        const op = g ? GONE : off(mainGroupOf(productOf(o.product)?.group)) ? DIMMED : undefined
+        const op = off(mainGroupOf(productOf(o.product)?.group)) ? DIMMED : undefined
         const shape = (fill: string, props: object) =>
           f.round ? (
             <circle cx={o.x} cy={o.y} r={f.w / 2} fill={fill} {...props} />
@@ -43,7 +43,7 @@ export function ObjectLayer(props: {
           )
         return (
           <g key={o.id}>
-            {shape(col, { stroke, strokeWidth: sw, opacity: op, style: { cursor: tool === 'select' && f.round ? 'move' : undefined } })}
+            {shape(col, { stroke, strokeWidth: sw, opacity: op, fillOpacity: g ? GONE_FILL : undefined, style: { cursor: tool === 'select' && f.round ? 'move' : undefined } })}
             {g && shape(hatch, {})}
           </g>
         )

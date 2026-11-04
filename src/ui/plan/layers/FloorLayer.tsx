@@ -9,7 +9,7 @@ import type { Layer } from '../../tools'
 import { across, lanesOf, type RollDir } from '../../../domain/floor/lanes'
 import { Hatched } from '../Hatched'
 import { JOINT_WIDTH } from '../planStyle'
-import { GONE, useErasing } from './erasing'
+import { GONE_FILL, useErasing } from './erasing'
 
 /** Floor: carpet tiles with a joint at every tile edge, rolled floor without, and lane numbers on rolled floor. */
 export function FloorLayer({ v, dim }: { v: Variant; dim: (...layers: Layer[]) => number }) {
@@ -29,7 +29,7 @@ export function FloorLayer({ v, dim }: { v: Variant; dim: (...layers: Layer[]) =
         return (
           <rect
             key={`${t.i},${t.j}`}
-            opacity={t === goneTile ? GONE : undefined}
+            fillOpacity={t === goneTile ? GONE_FILL : undefined}
             x={t.i * CELL}
             y={t.j * CELL}
             width={t.w * CELL}

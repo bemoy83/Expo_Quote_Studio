@@ -4,8 +4,11 @@
 import { createContext, useContext } from 'react'
 import type { Erasing } from '../pointer/erase'
 
-/** Opacity of a thing about to be erased. */
+/** Opacity of a line about to be erased (wall, door, beam, textile). */
 export const GONE = 0.35
+/** Fill opacity of a shape about to be erased (furniture, floor): see-through, its outline kept, so it does not read
+ * as a grey solid. */
+export const GONE_FILL = 0.12
 
 export interface ErasingCtx {
   gone: (group: Erasing['group'], id: string) => boolean
