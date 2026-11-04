@@ -35,6 +35,7 @@ import { ObjectLayer } from './layers/ObjectLayer'
 import { RoomHandles, RoomLayer } from './layers/RoomLayer'
 import { Labels } from './layers/Labels'
 import { DimLayer } from './layers/DimLayer'
+import { Legend } from './layers/Legend'
 import { totalSides } from './dims'
 import { floorBrush, isCarpetFill, rollWidthOf } from './pointer/floorBrush'
 import { planHits } from './pointer/hits'
@@ -275,10 +276,14 @@ export function PlanView(p: Props) {
       </ErasingProvider>
 
       {/* Labels */}
-      {!p.mini && <Labels W={W} D={D} sideText={sideText} floorAreas={res.keyFigures.floor} totals={totals} />}
+      {!p.mini && <Labels W={W} D={D} sideText={sideText} totals={totals} />}
 
       {/* Dimension chains in millimetres: totals, placement rows, module chain of the selected wall */}
       {!p.mini && <DimLayer v={v} selection={selection} />}
+
+      {/* Legend and drawing head in the front aisle: always on the documents; while drawing only with Velg, when no
+          quick picks float over the bottom of the plan */}
+      {!p.mini && (p.doc || tool === 'select') && <Legend v={v} res={res} doc={!!p.doc} />}
 
       {/* Interaction preview */}
       <g pointerEvents="none">
