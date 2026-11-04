@@ -1,7 +1,7 @@
 // The drawing in the wall drawer: the chosen face of the wall seen straight on, with plates, doors, decals, rooms
 // against it and textile frames. Frames and decals are moved and resized here, motifs and frames dropped from the shelf,
 // and while a paint tool is out each plate is a target for it.
-import { useEffect, useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent } from 'react'
+import { useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent } from 'react'
 import { foilCenter } from '../../../domain/decor'
 import { doorRal } from '../../../domain/doors'
 import { felt, type FaceSide } from '../../../domain/faces'
@@ -27,6 +27,7 @@ import { faceName, type RoomRun } from './face'
 import { ElevationDims } from './ElevationDims'
 import { frame, mergePrints, type ElevationItem } from './elevationMeasure'
 import { planScale } from '../planScale'
+import { useElementSize } from '../../useElementSize'
 import type { PaintTool } from './paint'
 
 const EPS = 1e-6
@@ -78,19 +79,7 @@ export function WallElevation(p: Props) {
   // The drawing's size on screen: the margins for the dimensions are screen px (ElevationDims). Measured on a box the
   // svg fills, never on the svg, whose size would follow the view box it gets from the measure (a loop in Safari).
   const box = useRef<HTMLDivElement>(null)
-  const [size, setSize] = useState<{ w: number; h: number } | null>(null)
-  useEffect(() => {
-    const el = box.current
-    if (!el || typeof ResizeObserver === 'undefined') return
-    const ro = new ResizeObserver(() => {
-      const r = el.getBoundingClientRect()
-      const w = Math.round(r.width)
-      const h = Math.round(r.height)
-      setSize((o) => (o && o.w === w && o.h === h ? o : { w, h }))
-    })
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [])
+  const size = useElementSize(box, true)
   // Textile and print on this face, for the placement and height rows and the leaders
   const items: ElevationItem[] = mergePrints([
     ...tex.map((t) => {

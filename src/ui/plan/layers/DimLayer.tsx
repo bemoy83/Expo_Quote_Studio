@@ -3,7 +3,7 @@
 import type { Variant } from '../../../domain/types'
 import { INK_MUTED } from '../../colors'
 import type { PlanSelection } from '../selection'
-import { linePx, sizePx, usePlanScale, type PlanScale } from '../planScale'
+import { linePx, sizePx, textPx, usePlanScale, type PlanScale } from '../planScale'
 import { DIM_NEAR, DIM_TOTAL, mm, planDims, sideLine, type InnerChain } from '../dims'
 import { textileWidth, wallWidth } from '../planStyle'
 
@@ -65,7 +65,7 @@ export function Chain({ sc, axis, at, ts, dir, suffix }: { sc: PlanScale; axis: 
       {ts.slice(1).map((t, i) => {
         const len = t - ts[i]
         // Fits: the number and a little air between the marks; with a suffix, the number alone when that is all that fits
-        const fits = (t: string) => len >= sizePx(sc, t.length * DIM_FONT * 0.62 + 8)
+        const fits = (t: string) => len >= sizePx(sc, textPx(t, DIM_FONT) + 8)
         const long = suffix ? `${mm(len)} ${suffix}` : mm(len)
         const text = fits(long) ? long : fits(mm(len)) ? mm(len) : null
         if (!text) return null

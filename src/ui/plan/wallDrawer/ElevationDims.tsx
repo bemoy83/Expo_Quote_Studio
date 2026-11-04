@@ -7,9 +7,12 @@ import type { FaceSide } from '../../../domain/faces'
 import { rules } from '../../env'
 import { INK_MUTED } from '../../colors'
 import { Chain } from '../layers/DimLayer'
-import { sizePx, type PlanScale } from '../planScale'
+import { EM, sizePx, textPx, type PlanScale } from '../planScale'
 import { LEADER_FONT, LEADER_LINE, NEAR, TOTAL, row, type ElevationItem, type Leader } from './elevationMeasure'
 import { elevationHeading } from './face'
+
+/** Heading size, screen px. */
+const HEAD_FONT = 11.5
 
 export function ElevationDims({ w, s, name, L, H, items, leaders, top, width, sc }: { w: Wall; s: FaceSide; name: string; L: number; H: number; items: ElevationItem[]; leaders: Leader[]; top: number; width: number; sc: PlanScale }) {
   const px = (n: number) => sizePx(sc, n)
@@ -24,10 +27,10 @@ export function ElevationDims({ w, s, name, L, H, items, leaders, top, width, sc
   const mono = { font: `500 ${px(LEADER_FONT)}px var(--font-numeric)`, fill: INK_MUTED }
   // The heading as wide as the drawing allows: the ends alone on a narrow wall (the drawer's title names the wall)
   const ends = `← ${head.left}\u00a0\u00a0\u00a0${head.right} →`
-  const full = px((head.title.length + 3) * 11.5 * 0.55 + ends.length * LEADER_FONT * 0.62) < width - px(12)
+  const full = px(textPx(`${head.title} · `, HEAD_FONT, EM.head) + textPx(ends, LEADER_FONT)) < width - px(12)
   return (
     <g pointerEvents="none">
-      <text x={L / 2} y={top + px(14)} textAnchor="middle" style={{ font: `500 ${px(11.5)}px var(--font-ui)`, fill: INK_MUTED }}>
+      <text x={L / 2} y={top + px(14)} textAnchor="middle" style={{ font: `500 ${px(HEAD_FONT)}px var(--font-ui)`, fill: INK_MUTED }}>
         {full && `${head.title} · `}
         <tspan style={mono}>{ends}</tspan>
       </text>

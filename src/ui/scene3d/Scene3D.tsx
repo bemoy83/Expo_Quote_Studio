@@ -28,6 +28,7 @@ import type { Highlight } from '../tools'
 import { type PlanSelection } from '../plan/selection'
 import { build, dispose, type Tag } from './build'
 import { AISLE, CAMERA_Y, HOME, setCamera, type Angle } from './camera'
+import { addLights, aimSun } from './lights'
 import { faceAt, faceNormal, faces, type FaceSide, sideOf } from '../../domain/faces'
 import { moveTextileBy, textileOffset } from '../../domain/textile/inFrame'
 
@@ -90,13 +91,7 @@ export function Scene3D(p: Props) {
     el.appendChild(renderer.domElement)
     const scene = new THREE.Scene()
     const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 200)
-    scene.add(new THREE.HemisphereLight('#ffffff', '#d6d2c8', 1.9))
-    const sun = new THREE.DirectionalLight('#ffffff', 1.5)
-    sun.castShadow = true
-    sun.shadow.mapSize.set(2048, 2048)
-    sun.shadow.bias = -0.0004
-    sun.shadow.radius = 4
-    scene.add(sun, sun.target)
+    const sun = addLights(scene, true)
     const controls = new OrbitControls(camera, renderer.domElement)
     controls.minPolarAngle = 5 * deg
     controls.maxPolarAngle = 86 * deg
@@ -432,12 +427,7 @@ export function Scene3D(p: Props) {
   useEffect(() => {
     const v = view.current
     if (!v) return
-    const r = Math.max(W, D)
-    v.sun.position.set(-W * 0.4, 9, D * 0.9 + 4)
-    const sc = v.sun.shadow.camera
-    sc.left = sc.bottom = -r
-    sc.right = sc.top = r
-    sc.updateProjectionMatrix()
+    aimSun(v.sun, W, D)
     aim(v, W, D, HOME)
   }, [W, D])
 

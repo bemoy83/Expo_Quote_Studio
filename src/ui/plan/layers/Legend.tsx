@@ -7,8 +7,9 @@ import type { Variant } from '../../../domain/types'
 import { INK, INK_FAINT, INK_MUTED, SURFACE } from '../../colors'
 import { fmt } from '../../format'
 import { idx, productOf, rules } from '../../env'
-import { linePx, sizePx, usePlanScale } from '../planScale'
+import { EM, linePx, sizePx, textPx, usePlanScale } from '../planScale'
 import { beamBody, PLAN_MARGIN } from '../planStyle'
+import { FRONT_NAME_DROP, sideNameOffset } from '../dims'
 import { BeamStroke } from './BeamLayer'
 import { RasterPattern, TextileStroke } from './TextileLayer'
 
@@ -66,11 +67,11 @@ export function Legend({ v, res, doc }: { v: Variant; res: CalcResult; doc: bool
   const right = W + M - px(PAD)
   const all = legendRows(v, res, doc)
   // As wide as its longest row (a rough measure of the text), right-aligned in the aisle
-  const textWidth = (r: Row) => ('text' in r ? r.text.length * (r.kind === 'eyebrow' ? EYEBROW * 0.75 : TEXT * 0.56) : 0) + (r.kind === 'eyebrow' || r.kind === 'head' ? 0 : 15)
+  const textWidth = (r: Row) => ('text' in r ? (r.kind === 'eyebrow' ? textPx(r.text, EYEBROW, EM.caps) : textPx(r.text, TEXT, EM.ui)) : 0) + (r.kind === 'eyebrow' || r.kind === 'head' ? 0 : 15)
   const col = Math.max(...all.map(textWidth))
   const x0 = Math.max(-M + px(PAD), right - px(col))
   // Under the side name «Front · …» (Labels.tsx, about 1,2 m wide round the middle) when the column reaches it
-  if (x0 < W / 2 + 0.75) top = Math.max(top, D + px(14) + 0.22)
+  if (x0 < W / 2 + 0.75) top = Math.max(top, D + sideNameOffset(sc, false) + FRONT_NAME_DROP + 0.1)
   // Rows that fit; a lone eyebrow at the end is dropped with its rows
   const fit: Row[] = []
   let y = top

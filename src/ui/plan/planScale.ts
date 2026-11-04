@@ -2,9 +2,10 @@
 // measures how many pixels a metre takes and hands the layers `u` (metres per pixel), `lw` (1.5 on the quote and the
 // work order, so lines survive printing) and the detail level. Below DETAIL_MIN px per metre, and always in the 3D
 // view's mini map, details fall away (cross dashes on textile, module chains, the takdrager body).
-import { createContext, useContext, useEffect, useState, type RefObject } from 'react'
+import { createContext, useContext, type RefObject } from 'react'
+import { useElementSize } from '../useElementSize'
 
-export type Detail = 'full' | 'compact'
+type Detail = 'full' | 'compact'
 
 export interface PlanScale {
   /** Metres per screen pixel. */
@@ -15,12 +16,12 @@ export interface PlanScale {
 }
 
 /** Pixels per metre below which the plan is drawn compact. */
-export const DETAIL_MIN = 55
+const DETAIL_MIN = 55
 
 /** Before the first measurement: a plan of about this many pixels per metre. */
 const FIRST_PX_PER_M = 80
 
-export const DOC_LW = 1.5
+const DOC_LW = 1.5
 
 export const PlanScaleContext = createContext<PlanScale>({ u: 1 / FIRST_PX_PER_M, lw: 1, detail: 'full' })
 
@@ -32,24 +33,18 @@ export const linePx = (s: PlanScale, px: number) => px * s.u * s.lw
 /** A size of `px` screen pixels, in metres, not widened on the documents (gaps, offsets, text). */
 export const sizePx = (s: PlanScale, px: number) => px * s.u
 
+/** Width per letter, in em: the numeric (mono) font, the UI font, its heading weight in the wall drawing, and small capitals with letter spacing. */
+export const EM = { mono: 0.62, ui: 0.56, head: 0.55, caps: 0.75 } as const
+
+/** Rough width of a one-line text in screen px, to see whether it fits before drawing it. */
+export const textPx = (text: string, font: number, em: number = EM.mono) => text.length * font * em
+
 /**
  * Pixels per metre of an svg drawn with `preserveAspectRatio="xMidYMid meet"` over a viewBox `vbW` × `vbH` m.
  * Follows the svg's size as it changes.
  */
 export function usePxPerMetre(svg: RefObject<SVGSVGElement | null>, vbW: number, vbH: number): number {
-  const [size, setSize] = useState<{ w: number; h: number } | null>(null)
-  useEffect(() => {
-    const el = svg.current
-    if (!el || typeof ResizeObserver === 'undefined') return
-    const measure = () => {
-      const r = el.getBoundingClientRect()
-      setSize((s) => (s && s.w === r.width && s.h === r.height ? s : { w: r.width, h: r.height }))
-    }
-    measure()
-    const ro = new ResizeObserver(measure)
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [svg])
+  const size = useElementSize(svg)
   if (!size || size.w <= 0 || size.h <= 0) return FIRST_PX_PER_M
   return Math.min(size.w / vbW, size.h / vbH)
 }
