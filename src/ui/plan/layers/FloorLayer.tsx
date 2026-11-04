@@ -9,10 +9,26 @@ import type { Layer } from '../../tools'
 import { across, lanesOf, type RollDir } from '../../../domain/floor/lanes'
 import { Hatched } from '../Hatched'
 import { JOINT_WIDTH } from '../planStyle'
+import { linePx, usePlanScale } from '../planScale'
+import { outlinePath } from '../floorOutline'
 import { GONE_FILL, useErasing } from './erasing'
 
-/** Floor: carpet tiles with a joint at every tile edge, rolled floor without, and lane numbers on rolled floor. */
-export function FloorLayer({ v, dim }: { v: Variant; dim: (...layers: Layer[]) => number }) {
+/** Fill opacity of the muted floor (docs/arbeidstegning.md): a layer that is just visible while drawing something else. */
+const MUTED_FILL = 0.18
+/** Rolled floor (engangsteppe) a little stronger, so a thin carpet still reads. */
+const MUTED_FILL_ROLL = 0.22
+
+/**
+ * Floor. Full: carpet tiles with a joint at every tile edge, rolled floor in lanes with numbers. Muted (the default
+ * while drawing something else, and on the quote): a faint fill without joints, one area per product with a thin
+ * outline.
+ */
+export function FloorLayer({ v, dim, full }: { v: Variant; dim: (...layers: Layer[]) => number; full: boolean }) {
+  return full ? <FullFloor v={v} dim={dim} /> : <MutedFloor v={v} dim={dim} />
+}
+
+/** The floor in full colour: tiles with their joints, lanes with number and roll direction. */
+function FullFloor({ v, dim }: { v: Variant; dim: (...layers: Layer[]) => number }) {
   // Lanes of rolled floor: numbered per product, with the roll direction
   const rollLanes = [...new Set(v.floor.tiles.filter((t) => t.roll).map((t) => t.product))].flatMap((a) => {
     const hit = idx.byArtnr.get(a)
@@ -44,6 +60,41 @@ export function FloorLayer({ v, dim }: { v: Variant; dim: (...layers: Layer[]) =
       {rollLanes.map(({ n, tile: t, color }) => (
         <LaneMark key={`lane${t.i},${t.j}`} n={n} x={(t.i + t.w / 2) * CELL} y={(t.j + t.h / 2) * CELL} dir={t.roll!} length={(t.roll === 'x' ? t.w : t.h) * CELL} color={color} />
       ))}
+    </g>
+  )
+}
+
+/** The floor as a muted layer: each product one faint area with a thin outline, no joints or lane numbers. */
+function MutedFloor({ v, dim }: { v: Variant; dim: (...layers: Layer[]) => number }) {
+  const sc = usePlanScale()
+  const { gone, hatch } = useErasing()
+  const goneTile = v.floor.tiles.find((t) => gone('floor', `${t.i},${t.j},${t.w},${t.h}`))
+  const products = [...new Set(v.floor.tiles.map((t) => t.product))]
+  return (
+    <g opacity={dim('floor')} pointerEvents="none">
+      {products.map((a) => {
+        const hit = idx.byArtnr.get(a)
+        if (!hit) return null
+        const tiles = v.floor.tiles.filter((t) => t.product === a)
+        const op = tiles.some((t) => t.roll) ? MUTED_FILL_ROLL : MUTED_FILL
+        return (
+          <g key={a}>
+            {tiles.map((t) => (
+              <rect
+                key={`${t.i},${t.j}`}
+                x={t.i * CELL}
+                y={t.j * CELL}
+                width={t.w * CELL}
+                height={t.h * CELL}
+                fill={hit.variant.color}
+                fillOpacity={t === goneTile ? GONE_FILL : op}
+              />
+            ))}
+            <path d={outlinePath(v.floor.tiles, a)} fill="none" stroke={jointColor(hit.variant.color)} strokeOpacity={0.6} strokeWidth={linePx(sc, 0.75)} />
+          </g>
+        )
+      })}
+      {goneTile && <rect x={goneTile.i * CELL} y={goneTile.j * CELL} width={goneTile.w * CELL} height={goneTile.h * CELL} fill={hatch} />}
     </g>
   )
 }
