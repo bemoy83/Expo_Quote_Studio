@@ -9,7 +9,8 @@ import { rules } from '../../env'
 import type { Brush } from '../../tools'
 import { faceSegment, type FaceSide, felt } from '../../../domain/faces'
 import { freeSpans, textileAt } from '../../../domain/textile/inFrame'
-import { MONO, PLAN_TEXTILE, PLAN_TEXTILE_OFFSET, PLAN_WALL, TEXTILE, WALL } from '../planStyle'
+import { MONO, TEXTILE, textileOffset, textileWidth, wallWidth, WALL } from '../planStyle'
+import { linePx, usePlanScale } from '../planScale'
 import { Seg } from './Seg'
 
 /** A wall face under the pointer: wall, face, offset along the wall and module index. */
@@ -28,12 +29,13 @@ export interface TextileLine {
 
 /** The stroke being drawn: on a wall it shows the frame on the face it lands on, elsewhere a free-standing run. */
 export function TextilePreview({ v, line }: { v: Variant; line: TextileLine }) {
+  const sc = usePlanScale()
   const plan = planTextile(v, line.a, line.b, line.at)
   if (plan.kind === 'free') return <FreePreview a={line.a} b={line.b} />
-  const [a, b] = faceSegment(plan.wall, plan.s, plan.t0, plan.t1, PLAN_TEXTILE_OFFSET)
+  const [a, b] = faceSegment(plan.wall, plan.s, plan.t0, plan.t1, textileOffset(sc))
   return (
     <g>
-      <Seg a={a} b={b} stroke={TEXTILE} strokeOpacity={0.7} strokeWidth={PLAN_TEXTILE + 0.04} />
+      <Seg a={a} b={b} stroke={TEXTILE} strokeOpacity={0.7} strokeWidth={textileWidth(sc) + linePx(sc, 3)} />
       <text x={(a[0] + b[0]) / 2} y={(a[1] + b[1]) / 2 - 0.15} textAnchor="middle" style={{ ...MONO, fontSize: '0.2px', fill: INK }}>
         {fmt(plan.t1 - plan.t0, 2)} m på vegg
       </text>
@@ -43,9 +45,10 @@ export function TextilePreview({ v, line }: { v: Variant; line: TextileLine }) {
 
 function FreePreview({ a, b }: { a: Point; b: Point }) {
   const L = Math.hypot(b[0] - a[0], b[1] - a[1])
+  const sc = usePlanScale()
   return (
     <g>
-      <Seg a={a} b={b} stroke={TEXTILE} strokeOpacity={0.6} strokeWidth={PLAN_TEXTILE} />
+      <Seg a={a} b={b} stroke={TEXTILE} strokeOpacity={0.6} strokeWidth={textileWidth(sc)} />
       <circle cx={a[0]} cy={a[1]} r={0.06} fill={TEXTILE} />
       <circle cx={b[0]} cy={b[1]} r={0.06} fill={TEXTILE} />
       {L > 0 && (
@@ -62,13 +65,14 @@ export function StrokePreview({ a, b, erase, beam }: { a: Point; b: Point; erase
   const mx = (a[0] + b[0]) / 2
   const my = (a[1] + b[1]) / 2
   const hz = a[1] === b[1]
+  const sc = usePlanScale()
   return (
     <g>
       <Seg
         a={a}
         b={b}
         stroke={erase ? INK_FAINT : `color-mix(in oklab, ${beam ? INK : WALL} 60%, transparent)`}
-        strokeWidth={PLAN_WALL}
+        strokeWidth={wallWidth(sc)}
         strokeLinecap="square"
         strokeDasharray={erase ? '.12 .08' : beam ? '.16 .08' : undefined}
       />
@@ -89,6 +93,7 @@ export function StrokePreview({ a, b, erase, beam }: { a: Point; b: Point; erase
 
 /** Where a textile or motif click would land on the hovered wall face. */
 export function FacePreview({ v, h, brush }: { v: Variant; h: FaceHit; brush: Brush }) {
+  const sc = usePlanScale()
   const tx = textileAt(v, h.w.id, h.s, h.t)
   let span: [number, number] | null = null
   if (tx) span = [tx.from, tx.from + tx.width]
@@ -98,8 +103,8 @@ export function FacePreview({ v, h, brush }: { v: Variant; h: FaceHit; brush: Br
     span = [f.a, f.b]
   }
   if (!span) return null
-  const [a, b] = faceSegment(h.w, h.s, span[0] + 0.02, span[1] - 0.02, PLAN_TEXTILE_OFFSET)
-  return <Seg a={a} b={b} stroke={brush.kind === 'textile' ? TEXTILE : INK} strokeOpacity={0.45} strokeWidth={PLAN_TEXTILE + 0.04} />
+  const [a, b] = faceSegment(h.w, h.s, span[0] + 0.02, span[1] - 0.02, textileOffset(sc))
+  return <Seg a={a} b={b} stroke={brush.kind === 'textile' ? TEXTILE : INK} strokeOpacity={0.45} strokeWidth={textileWidth(sc) + linePx(sc, 3)} />
 }
 
 /** True on a whole metre, give or take float noise from stepping in 0.25 m. */
