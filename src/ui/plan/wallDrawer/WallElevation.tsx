@@ -1,7 +1,7 @@
 // The drawing in the wall drawer: the chosen face of the wall seen straight on, with plates, doors, decals, rooms
 // against it and textile frames. Frames and decals are moved and resized here, motifs and frames dropped from the shelf,
 // and while a paint tool is out each plate is a target for it.
-import { useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent } from 'react'
+import { useEffect, useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent } from 'react'
 import { foilCenter } from '../../../domain/decor'
 import { doorRal } from '../../../domain/doors'
 import { felt, type FaceSide } from '../../../domain/faces'
@@ -15,20 +15,21 @@ import { doorInset } from '../../../rules/rules'
 import { ALU, BORDER_STRONG, INK, INK_FAINT, SUNKEN } from '../../colors'
 import { applyDrop, decorDrag, dropSpot, endDecorDrag, type DropSpot, type FaceTarget } from '../../dnd'
 import { plateColor, productOf, rules } from '../../env'
-import { mm } from '../../format'
 import { findMotif } from '../../motifs'
 import { Handles, Print } from '../drawerParts'
-import { TXT, elevationBox } from '../drawerText'
-import { Dims, Opening as OpeningView, Posts, TextileFace } from '../elevation'
+import { TXT } from '../drawerText'
+import { Opening as OpeningView, Posts, TextileFace } from '../elevation'
 import { type PlanSelection } from '../selection'
 import { RoomLabel } from '../RoomLabel'
 import { roomLabelSize } from '../roomLabelSize'
 import { useDecorDrag } from './drag'
 import { faceName, type RoomRun } from './face'
+import { ElevationDims } from './ElevationDims'
+import { frame, mergePrints, type ElevationItem } from './elevationDims'
+import { planScale } from '../planScale'
 import type { PaintTool } from './paint'
 
 const EPS = 1e-6
-const PAD = 0.18
 
 interface Props {
   v: Variant
@@ -63,7 +64,7 @@ interface Props {
 }
 
 export function WallElevation(p: Props) {
-  const { v, w, s, fs, L, H, mods, tex, foils, rooms, T, F, O, motifs, label, painting, tool, paintAt, doorModules, ratioOf, select, selectDoor } = p
+  const { v, w, s, L, H, mods, tex, foils, rooms, T, F, O, motifs, label, painting, tool, paintAt, doorModules, ratioOf, select, selectDoor } = p
   const svg = useRef<SVGSVGElement>(null)
   const [spot, setSpot] = useState<DropSpot | null>(null)
   /** True from a press on a plate until it is let go: the brush sweeps over the plates entered meanwhile. */
@@ -73,6 +74,37 @@ export function WallElevation(p: Props) {
   const spanX = (a: number, b: number) => Math.min(u(a), u(b))
   const z = (h: number) => H - h
   const drag = useDecorDrag({ svg, w, s, L, select, ratioOf, onEdit: p.onEdit, onCheckpoint: p.onCheckpoint })
+
+  // The svg's size on screen: the margins for the dimensions are screen px (ElevationDims)
+  const [size, setSize] = useState<{ w: number; h: number } | null>(null)
+  useEffect(() => {
+    const el = svg.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(() => {
+      const r = el.getBoundingClientRect()
+      setSize((o) => (o && o.w === r.width && o.h === r.height ? o : { w: r.width, h: r.height }))
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+  // Textile and print on this face, for the placement and height rows and the leaders
+  const items: ElevationItem[] = mergePrints([
+    ...tex.map((t) => {
+      const { bottom, height } = textileBox(t, rules)
+      const x0 = spanX(t.from, t.from + t.width)
+      return { text: 'Tekstil', x0, x1: x0 + t.width, bottom, top: bottom + height }
+    }),
+    ...foils
+      .filter((f) => !(f.full && doorModules.has(f.module)))
+      .map((f) => {
+        const c = foilCenter(rules, f)
+        const x0 = spanX(c - f.width / 2, c + f.width / 2)
+        return { text: f.full ? 'Print' : 'Dekal', x0, x1: x0 + f.width, bottom: f.y - f.height / 2, top: f.y + f.height / 2 }
+      }),
+  ])
+  const name = w.room ? 'Romvegg' : label
+  const fr = frame(size, L, H, items)
+  const sc = planScale(1 / fr.u, {})
 
   /** Pointer handlers for a plate (or a door) in the drawing while a tool is out: click, or with the brush press and sweep. */
   const paintOn = (i: number, key: string, leaf = false) =>
@@ -154,7 +186,7 @@ export function WallElevation(p: Props) {
       <svg
         ref={svg}
         className="wd-svg"
-        viewBox={elevationBox(L, H, PAD)}
+        viewBox={fr.viewBox}
         preserveAspectRatio="xMidYMid meet"
         onPointerDown={() => select({})}
         onDragOver={onDragOver}
@@ -228,7 +260,7 @@ export function WallElevation(p: Props) {
               </g>
             )
           })()}
-        <line x1={-PAD} y1={H} x2={L + PAD} y2={H} stroke={BORDER_STRONG} strokeWidth={0.01} />
+        <line x1={-0.12} y1={H} x2={L + 0.12} y2={H} stroke={BORDER_STRONG} strokeWidth={0.01} />
 
         {/* Foil decals */}
         {foils.map((f) => {
@@ -252,15 +284,11 @@ export function WallElevation(p: Props) {
           )
         })}
 
-        {/* Where a room stands against this face: hatched over plates and print, with the room's name, for context only */}
-        <defs>
-          <pattern id="wd-room-hatch" patternUnits="userSpaceOnUse" width={0.12} height={0.12} patternTransform="rotate(45)">
-            <line x1={0} y1={0} x2={0} y2={0.12} stroke={INK_FAINT} strokeWidth={0.02} strokeOpacity={0.55} />
-          </pattern>
-        </defs>
+        {/* Where a room stands against this face: a sunken surface over plates and print, with the room's name, for context
+            only (hatching is kept for snekret vegg and Tøm) */}
         {rooms.map((r) => (
           <g key={`${r.room.id}${r.a}`} pointerEvents="none">
-            <rect x={spanX(r.a, r.b)} y={z(H)} width={r.b - r.a} height={H} fill="url(#wd-room-hatch)" />
+            <rect x={spanX(r.a, r.b)} y={z(H)} width={r.b - r.a} height={H} fill={SUNKEN} fillOpacity={0.72} />
             <RoomLabel r={r.room} cx={spanX(r.a, r.b) + (r.b - r.a) / 2} cy={z(H) + 0.55} k={Math.min(1, (r.b - r.a - 0.1) / roomLabelSize(r.room).w)} />
           </g>
         ))}
@@ -316,7 +344,7 @@ export function WallElevation(p: Props) {
           />
         )}
 
-        <Dims W={L} H={H} ticks height={`${mm(H)} mm`} width={`${L} m · ${fs.length > 1 ? faceName(w, s).toLowerCase() : 'innsiden'}`} />
+        <ElevationDims w={w} s={s} name={name} L={L} H={H} items={items} leaders={fr.leaders} top={fr.top} width={fr.width} sc={sc} />
       </svg>
     </div>
   )

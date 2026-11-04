@@ -35,7 +35,7 @@ Rekkefølgen på linjene i tilbudet er rekkefølgen blokkene kjøres i `calc/cal
   som betaler: `calc/context.ts` · `foga/fromVariant.ts`
 - Plan, 3D, skuff: `plan/layers/WallLayer.tsx`, tegne/viske `plan/pointer/stroke.ts`, dra `pointer/wall.ts` · `scene3d/build/walls.ts` (plater og dører), `scene3d/build/frame.ts` (stolper, fotplater) · `WallDrawer.tsx`, `drawerParts.tsx`, `elevation.tsx`
 - Veggskuffens deler i `plan/wallDrawer/`: `panels.tsx` (panel for farge og print, tekstil, dekal og dør),
-  `WallElevation.tsx` (tegningen og slipp fra hyllen), `drag.ts` (dra og endre størrelse på ramme og dekal), `paint.ts`
+  `WallElevation.tsx` (tegningen og slipp fra hyllen), `ElevationDims.tsx` og `elevationDims.ts` (veggrisset: overskrift, modulkjede, høyder, plasseringsrad og henvisningslinjer, med tester), `drag.ts` (dra og endre størrelse på ramme og dekal), `paint.ts`
   (malerspann og malerkost), `face.ts` (sidens navn og rom inntil)
 
 ### Takdragere
