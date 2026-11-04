@@ -2,7 +2,9 @@
 import { RECIPES } from '../../../foga/recipes'
 import type { CalcResult } from '../../../calc/calc'
 import type { InnerBeam, Point, Variant } from '../../../domain/types'
-import { INK, INK_MUTED } from '../../colors'
+import { INK, INK_MUTED, SURFACE } from '../../colors'
+import { linePx, usePlanScale } from '../planScale'
+import { postSize } from '../planStyle'
 import type { Layer } from '../../tools'
 import type { PlanSelection } from '../selection'
 import { Seg } from './Seg'
@@ -12,6 +14,8 @@ import { GONE, useErasing } from './erasing'
 export function BeamLayer({ v, res, selection, dim }: { v: Variant; res: CalcResult; selection: PlanSelection; dim: (...layers: Layer[]) => number }) {
   const { gone, hatch } = useErasing()
   const goneBeam = (v.innerBeams ?? []).find((b) => gone('beam', b.id))
+  const sc = usePlanScale()
+  const ps = postSize(sc)
   return (
     <g pointerEvents="none">
       <g opacity={dim('beams')}>
@@ -31,8 +35,9 @@ export function BeamLayer({ v, res, selection, dim }: { v: Variant; res: CalcRes
           const d = (orientation === 'h' ? across : along) / 1000
           return <rect key={`f${x},${y}`} x={x - w / 2} y={y - d / 2} width={w} height={d} fill="none" stroke={INK_MUTED} strokeWidth={0.015} strokeDasharray=".04 .03" />
         })}
+        {/* Posts: white squares with an ink edge, over the wall ends */}
         {res.posts.map((q) => (
-          <rect key={`${q[0]},${q[1]}`} x={q[0] - 0.04} y={q[1] - 0.04} width={0.08} height={0.08} fill={INK} />
+          <rect key={`${q[0]},${q[1]}`} x={q[0] - ps / 2} y={q[1] - ps / 2} width={ps} height={ps} fill={SURFACE} stroke={INK} strokeWidth={linePx(sc, 1)} />
         ))}
       </g>
     </g>

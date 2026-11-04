@@ -1,6 +1,7 @@
 // Sizes, colours and text styles of the plan, shared by PlanView and its layers (plan/layers/).
 import type { Side } from '../../domain/types'
 import { INK_FAINT, LAYER_COLOR } from '../colors'
+import { linePx, type PlanScale } from './planScale'
 
 /**
  * Line widths in the plan, m. Schematic, not to scale (3D is): a wall and a textile are both drawn 60 mm (both are 40),
@@ -9,6 +10,23 @@ import { INK_FAINT, LAYER_COLOR } from '../colors'
 export const PLAN_WALL = 0.06
 export const PLAN_TEXTILE = PLAN_WALL
 export const PLAN_TEXTILE_OFFSET = PLAN_WALL / 2 + PLAN_TEXTILE / 2 + 0.005
+
+/** Narrowest a wall is drawn, m: the post profile. */
+const WALL_MIN = 0.04
+
+/**
+ * A system wall in the working drawing: an ink line of 5 screen pixels with a 3 px core in the plate's RAL, so a thin
+ * ink edge shows on each side. Never thinner than the post profile.
+ */
+export const wallWidth = (s: PlanScale) => Math.max(WALL_MIN, linePx(s, 5))
+export const wallCore = (s: PlanScale) => wallWidth(s) - linePx(s, 2)
+
+/** The header panel over a door or curtain: a thin RAL line with ink edges. */
+export const headerWidth = (s: PlanScale) => linePx(s, 3)
+export const headerCore = (s: PlanScale) => linePx(s, 2)
+
+/** A post: a white square with an ink edge, a little wider than the wall. */
+export const postSize = (s: PlanScale) => Math.max(WALL_MIN, wallWidth(s) + linePx(s, 1.5))
 
 /** Margin around the stand for the aisle and the side labels, m. */
 export const PLAN_MARGIN = 1.3
