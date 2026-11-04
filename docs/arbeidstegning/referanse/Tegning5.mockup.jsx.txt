@@ -1,0 +1,642 @@
+(function(){const TF0=TexFrame;const Ctx=React.createContext(null);window.PosCtx5=Ctx;
+  window.TexFrame=function(props){const m=React.useContext(Ctx);const n=m&&props.alu?m[props.t.id]:null;if(!n)return React.createElement(TF0,props);
+    return <TF0 {...props}>{props.children}<span style={{position:'absolute',right:8,top:8,zIndex:3,width:20,height:20,boxSizing:'border-box',display:'grid',placeItems:'center',borderRadius:3,background:'rgb(var(--surface))',border:'1.5px solid rgb(var(--ink))',font:'700 11.5px var(--font-numeric)',color:'rgb(var(--ink))'}}>{n}</span></TF0>;};})();
+// v5: arbeidstegning. Erstatter PlanView og Elevation på denne siden. Svart-hvitt, strekhierarki, posisjonsnummer.
+// Tusj: gjennomsiktig markering oppå tegningen, som tusj på papir. Bare for tegningen, ikke grensesnittet.
+window.TUSJ5={tex:'oklch(0.81 0.12 55)',sys:'oklch(0.86 0.09 158)'};
+// Eksempel: snekret vegg, bare for å vise tegnemåten. Mål i meter fra bakre venstre hjørne.
+window.SNEK5={x0:3,x1:5.35,y:1.3,t:.1,ral:'7038'};
+// Felles posisjonsliste for plan, oppriss og forklaring: tekstilvegger, grafikk, åpninger, møbler.
+window.POS5=(st,S,lib)=>{const keys=new Set(S.map(w=>w.key));const out=[];const fmm=v=>String(Math.round(v*1000)).replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+  st.tex.filter(t=>keys.has(t.s)).forEach(t=>out.push({kind:'tex',o:t,type:'Tekstilvegg',name:'Tekstilvegg '+fmm(t.w)+' × '+fmm(t.h)}));
+  const def=(st.plate&&st.plate.def)||'9010';S.forEach(w=>{const own=st.plate&&st.plate.w&&st.plate.w[w.key];if(!own||own===def)return;const P=SM.PLATES.find(p=>p.id===own)||{n:'',id:own};const n=w.mods.filter((m,i)=>m&&w.door!==i).length;out.push({kind:'plate',o:w,type:'Veggplate RAL '+P.id,name:'Veggplate '+P.n.toLowerCase()+' RAL '+P.id+' · '+(w.name||'').toLowerCase()+' · '+n+(n===1?' modul':' moduler')});});
+  if(window.__snek5){const k=window.SNEK5;if(k.x1<=st.W&&k.y<st.D){const P=SM.PLATES.find(p=>p.id===k.ral)||{n:'',id:k.ral};out.push({kind:'snek',o:k,type:'Snekret vegg',name:'Snekret vegg '+fmm(k.x1-k.x0)+' × '+fmm(k.t)+' · malt '+P.n.toLowerCase()+' RAL '+P.id});}}
+  st.gfx.filter(g=>keys.has(g.s)&&g.w!=null).forEach(g=>{const l=(lib||[]).find(x=>x.id===g.lib);const t=g.full?'Helt trykt plate':'Dekal';out.push({kind:'gfx',o:g,type:t,name:t+(l?' · '+l.n:'')});});
+  S.filter(w=>w.door!=null).forEach(w=>out.push({kind:'door',o:w,type:st.bk&&st.bk.open==='forheng'?'Forheng':'Dør med lås',name:st.bk&&st.bk.open==='forheng'?'Forheng':'Dør med lås'}));
+  st.items.forEach(it=>{const I=SM.ITEM(it.p);if(I)out.push({kind:'item',o:it,I,name:I.n});});
+  // Felt for lister: gruppe, kort tekst og mål for seg
+  const def2=(st.plate&&st.plate.def)||'9010';
+  out.forEach(it=>{const o=it.o;
+    if(it.kind==='tex'){const l=(lib||[]).find(x=>x.id===o.motif);it.grp='Vegger og tilvalg';it.label='Tekstilvegg'+(l?' · '+l.n:'');it.dim=fmm(o.w)+' × '+fmm(o.h);}
+    else if(it.kind==='plate'){const id=st.plate.w[o.key];const P=SM.PLATES.find(p=>p.id===id)||{n:'',id};const n=o.mods.filter((m,i)=>m&&o.door!==i).length;it.grp='Vegger og tilvalg';it.label='Veggplate '+P.n.toLowerCase()+' RAL '+P.id+' · '+(o.name||'').toLowerCase();it.dim=n+(n===1?' modul':' moduler');}
+    else if(it.kind==='snek'){const P=SM.PLATES.find(p=>p.id===o.ral)||{n:'',id:o.ral};it.grp='Vegger og tilvalg';it.label='Snekret vegg · malt RAL '+P.id;it.dim=fmm(o.x1-o.x0)+' × '+fmm(o.t);}
+    else if(it.kind==='gfx'){const l=(lib||[]).find(x=>x.id===o.lib);it.grp='Vegger og tilvalg';it.label=it.type+(l?' · '+l.n:'');it.dim=fmm(o.w)+' × '+fmm(SM.gfxH(o,lib));}
+    else if(it.kind==='door'){const w=o;it.grp='Åpninger';it.label=it.type;it.dim=fmm(SM.cut(w,w.door+1)-SM.cut(w,w.door));}
+    else{it.grp='Møbler';it.label=it.I.n;it.dim=it.I.w&&it.I.d?fmm(it.I.w)+' × '+fmm(it.I.d):(it.I.dim||'');}});
+  // Ett nummer per artikkel: samme artikkel får samme nummer overalt
+  out.forEach(it=>{const o=it.o;it.art=it.kind==='tex'?'tex':it.kind==='plate'?'plate:'+st.plate.w[o.key]:it.kind==='snek'?'snek':it.kind==='gfx'?(o.full?'sys:foilFull':'sys:foil'):it.kind==='door'?(st.bk&&st.bk.open==='forheng'?'sys:curtain':'sys:door'):'item:'+o.p;
+    it.lines=it.art==='tex'?['sys:tex','sys:alu']:it.art==='sys:door'||it.art==='sys:curtain'?[it.art,'sys:over']:it.art==='snek'?[]:[it.art];});
+  const idx={};let c=0;out.forEach(it=>{if(!(it.art in idx))idx[it.art]=++c;it.n=idx[it.art];});
+  return out;};
+window.ART5=(st,S,lib)=>{const m={};window.POS5(st,S,lib).forEach(it=>it.lines.forEach(k=>{(m[k]=m[k]||[]);if(!m[k].includes(it.n))m[k].push(it.n);}));return m;};
+(function(){
+const {useState:usePS,useRef:usePR,useEffect:usePE}=React;
+const dirOf=w=>{const r=w.a*Math.PI/180;return [Math.round(Math.cos(r)),Math.round(Math.sin(r))];};
+const ptAt=(w,l)=>{const [dx,dy]=dirOf(w);return [w.x+dx*l,w.y+dy*l];};
+function wallAtEdge(S,e){if(e.side!=='I')return S.find(w=>w.key===e.side);const mx=(e.x1+e.x2)/2,my=(e.y1+e.y2)/2;
+  return S.find(w=>{if(w.kind!=='int')return false;const [ax,ay]=ptAt(w,0),[bx,by]=ptAt(w,w.len);const x0=Math.min(ax,bx),x1=Math.max(ax,bx),y0=Math.min(ay,by),y1=Math.max(ay,by);return mx>=x0&&mx<=x1&&my>=y0&&my<=y1&&(x0===x1?Math.abs(mx-x0)<1e-6:Math.abs(my-y0)<1e-6);});}
+function ItemTops({it,on,ghost,bad,tech,u,lw}){const sk=bad?'var(--over-fill)':tech&&!on?'rgb(var(--ink-muted))':'rgb(var(--ink))',sw=tech?(bad?2.5:on?1.75:.75)*u*(lw||1):bad?.06:on?.05:.018;return SM.prims(it).filter(q=>q.t==='top').map((q,i)=>q.round?<circle key={i} cx={q.x} cy={q.y} r={q.w/2} fill={tech&&!ghost?'rgb(var(--surface))':q.c} opacity={ghost?.55:1} stroke={sk} strokeWidth={sw} pointerEvents="none"></circle>:<rect key={i} x={q.x-q.w/2} y={q.y-q.d/2} width={q.w} height={q.d} rx=".03" fill={tech&&!ghost?'rgb(var(--surface))':q.c} opacity={ghost?.55:1} stroke={sk} strokeWidth={sw} pointerEvents="none"></rect>);}
+// Felles flyttemanipulator: pil = låst akse, flik = fri flytting. Mål i px via u.
+function Manip({at,sx=1,sy=-1,u,act,onStart,onHov}){const [h,setH]=usePS(null);const ink='rgb(var(--ink))',srf='rgb(var(--surface))';const [cx,cy]=at;const hov=id=>{setH(id);onHov&&onHov(id);};const sh='drop-shadow(0 1px 1.5px rgb(0 0 0 / .2))';
+  const arrow=(id,dx,dy)=>{const a=11*u,L=36*u,hl=9*u,hw=6*u,sw=2*u;const nx=-dy,ny=dx;const P=(t,n)=>`${cx+dx*t+nx*n} ${cy+dy*t+ny*n}`;const on=act===id||(!act&&h===id);
+    return <g key={id}><path d={`M${P(a,-sw)}L${P(L-hl,-sw)}L${P(L-hl,-hw)}L${P(L,0)}L${P(L-hl,hw)}L${P(L-hl,sw)}L${P(a,sw)}Z`} fill={on?ink:srf} stroke={ink} strokeWidth={u} strokeLinejoin="round" style={{filter:on?'none':sh,transition:'fill 150ms cubic-bezier(.4,0,.2,1)'}} pointerEvents="none"></path><line x1={cx+dx*a} y1={cy+dy*a} x2={cx+dx*(L+3*u)} y2={cy+dy*(L+3*u)} stroke="transparent" strokeWidth={18*u} style={{cursor:dx?'ew-resize':'ns-resize'}} onPointerEnter={()=>hov(id)} onPointerLeave={()=>hov(null)} onPointerDown={e=>{if(e.button===0)onStart(e,id);}}></line></g>;};
+  const tx=cx+sx*25*u,ty=cy+sy*25*u,ts=12*u,th=20*u;const tOn=act==='f'||(!act&&h==='f');
+  return <g>{(!act||act==='x')&&arrow('x',sx,0)}{(!act||act==='y')&&arrow('y',0,sy)}{(!act||act==='f')&&<g><rect x={tx-ts/2} y={ty-ts/2} width={ts} height={ts} rx={3*u} fill={tOn?ink:srf} stroke={ink} strokeWidth={u} style={{filter:tOn?'none':sh,transition:'fill 150ms cubic-bezier(.4,0,.2,1)'}} pointerEvents="none"></rect><rect x={tx-th/2} y={ty-th/2} width={th} height={th} fill="transparent" style={{cursor:'move'}} onPointerEnter={()=>hov('f')} onPointerLeave={()=>hov(null)} onPointerDown={e=>{if(e.button===0)onStart(e,'f');}}></rect></g>}
+    <circle cx={cx} cy={cy} r={4.5*u} fill={srf} stroke={ink} strokeWidth={u} pointerEvents="none"></circle><circle cx={cx} cy={cy} r={1.5*u} fill={ink} pointerEvents="none"></circle></g>;}
+function PlanView({manip,mvMode,bkSel,onBkSel,tech,title,lw,noDate,grips,gs,grid,kontur=true,onIwMove,onIwDrag,under,st,S,lib,brush,fb,onFloor,onDoorAt,onPaint,onBkMove,onBkResize,hl,sel,selTex,onSel,selItem,onSelItem,onItemMove,onAddItem,dragItem}){
+  const [gh,setGh]=usePS(null);usePE(()=>{if(!dragItem)setGh(null);},[dragItem]);const fl=SM.floorOf(st);
+  const svg=usePR(null);const painting=usePR(false);const [hov,setHov]=usePS(null);const drag=usePR(null);
+  const {W,D}=st;const M=1.3;const Mb=M;const [hp5,setHp5]=usePS(null);const [rk,setRk]=usePS(0);const [sz,setSz]=usePS(null);const k=sz&&sz.w>0?Math.min(sz.w/(W+2*M),sz.h/(D+M+Mb)):40;const u=1/k;const uL=u*(lw||1);
+  usePE(()=>{const el=svg.current;if(!el)return;let t=0,raf=0;const ro=new ResizeObserver(()=>{const r=el.getBoundingClientRect();setSz({w:r.width,h:r.height});cancelAnimationFrame(raf);clearTimeout(t);setHov(null);setDraw(null);raf=requestAnimationFrame(()=>{el.style.transform='translateZ(0) scale(1.0001)';t=setTimeout(()=>{el.style.transform='translateZ(0)';setRk(k=>k+1);},60);});});ro.observe(el);return ()=>{ro.disconnect();clearTimeout(t);cancelAnimationFrame(raf);};},[]);
+  usePE(()=>{const up=()=>{const d=drag.current;if(d&&d.iw){if(!d.moved)onSel(d.cur);onIwDrag&&onIwDrag(false);}if(d&&(d.bk||d.item)){if(d.bk&&!d.moved)setBkOn(true);onIwDrag&&onIwDrag(false);}painting.current=false;drag.current=null;setRz(null);setBkm(false);setIwd(null);setMv(null);};window.addEventListener('pointerup',up);return ()=>window.removeEventListener('pointerup',up);},[]);
+  const toM=e=>{const p=svg.current.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(svg.current.getScreenCTM().inverse());};
+  const [draw,setDraw]=usePS(null);const [hb,setHb]=usePS(false);const [bkm,setBkm]=usePS(false);const [ih,setIh]=usePS(null);const [iwd,setIwd]=usePS(null);const [he,setHe]=usePS(null);const drawR=usePR(null);const [rz,setRz]=usePS(null);const bkOn=!!bkSel;const setBkOn=v=>{onBkSel&&onBkSel(v);};const [mv,setMv]=usePS(null);usePE(()=>{if(sel||selItem)setBkOn(false);},[sel,selItem]);
+  const clampN=(x,y)=>[Math.max(0,Math.min(W,Math.round(x))),Math.max(0,Math.min(D,Math.round(y)))];
+  const nW=Math.ceil(W-1e-9),nD=Math.ceil(D-1e-9);const sl=(v,L)=>{const c=Math.max(0,Math.min(Math.round(v),Math.floor(L+1e-9)));return Math.abs(v-L)<Math.abs(v-c)?L:c;};
+  const gp=L=>{const a=[...Array(Math.floor(L+1e-9)+1).keys()];if(L-Math.floor(L+1e-9)>1e-9)a.push(L);return a;};
+  const nearEdge=p=>{const x=Math.max(0,Math.min(W,p.x)),y=Math.max(0,Math.min(D,p.y));const hy=sl(y,D),vx=sl(x,W);
+    const i=Math.max(0,Math.min(nW-1,Math.floor(x))),j=Math.max(0,Math.min(nD-1,Math.floor(y)));
+    return Math.abs(y-hy)<=Math.abs(x-vx)?{a:[i,hy],b:[Math.min(i+1,W),hy]}:{a:[vx,j],b:[vx,Math.min(j+1,D)]};};
+  const q4=v=>Math.round(v*4)/4;const lim=(hz,c)=>hz?(c===0||c===D?W:Math.floor(W+1e-9)):(c===0||c===W?D:Math.floor(D+1e-9));
+  const segFine=(p0,p)=>{const dx=p.x-p0.x,dy=p.y-p0.y;if(Math.abs(dx)>=Math.abs(dy)){const y=sl(p0.y,D),L=lim(true,y);const c=v=>Math.max(0,Math.min(L,q4(v)));return {a:[c(p0.x),y],b:[c(p.x),y],fine:true};}const x=sl(p0.x,W),L=lim(false,x);const c=v=>Math.max(0,Math.min(L,q4(v)));return {a:[x,c(p0.y)],b:[x,c(p.y)],fine:true};};
+  const ptFine=p=>{const e=nearEdge(p);const hz=e.a[1]===e.b[1];if(hz){const y=e.a[1],L=lim(true,y);const x=Math.max(0,Math.min(L,q4(p.x)));return {a:[x,y],b:[x,y],fine:true};}const x=e.a[0],L=lim(false,x);const y=Math.max(0,Math.min(L,q4(p.y)));return {a:[x,y],b:[x,y],fine:true};};
+  // ⇧ midt i draget: start beholder metersnappet fra segFrom, bare enden får 0,25 m.
+  const segFineD=(d,p)=>{if(d.fine0)return segFine(d.p0,p);const s=segFrom(d.p0,p);const hz=s.a[1]===s.b[1];const L=lim(hz,hz?s.a[1]:s.a[0]);const c=v=>Math.max(0,Math.min(L,q4(v)));return hz?{a:s.a,b:[c(p.x),s.a[1]],fine:true}:{a:s.a,b:[s.a[0],c(p.y)],fine:true};};
+  const segDesc=sg=>{const hz=sg.a[1]===sg.b[1];const c=hz?sg.a[1]:sg.a[0];const lo=Math.min(hz?sg.a[0]:sg.a[1],hz?sg.b[0]:sg.b[1]),hi=Math.max(hz?sg.a[0]:sg.a[1],hz?sg.b[0]:sg.b[1]);if(hi-lo<1e-9)return null;return {o:hz?(c===0?'B':c===D?'F':'h'):(c===0?'L':c===W?'R':'v'),c,a:lo,b:hi};};
+  // Start from the module under the pointer (not the nearest node), then extend in the drag direction.
+  const segFrom=(p0,p)=>{const e0=nearEdge(p0);const e0h=e0.a[1]===e0.b[1];const dx=p.x-p0.x,dy=p.y-p0.y;
+    const cl=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
+    if(Math.abs(dx)>=Math.abs(dy)){const y=e0h?e0.a[1]:sl(p0.y,D);const i=e0h?e0.a[0]:cl(Math.floor(p0.x),0,nW-1);
+      return dx>=0?{a:[i,y],b:[cl(Math.max(i+1,sl(p.x,W)),0,W),y]}:{a:[Math.min(i+1,W),y],b:[cl(Math.min(i,sl(p.x,W)),0,W),y]};}
+    const x=!e0h?e0.a[0]:sl(p0.x,W);const j=!e0h?e0.a[1]:cl(Math.floor(p0.y),0,nD-1);
+    return dy>=0?{a:[x,j],b:[x,cl(Math.max(j+1,sl(p.y,D)),0,D)]}:{a:[x,Math.min(j+1,D)],b:[x,cl(Math.min(j,sl(p.y,D)),0,D)]};};
+  const keysOf=({a,b})=>{const out=[];if(a[1]===b[1]){const y=a[1];for(let i=Math.min(a[0],b[0]);i<Math.max(a[0],b[0]);i++){const q=y===0?'B:'+i:y===D?'F:'+i:i+1<=W+1e-9?'h:'+i+':'+y:null;if(q)out.push(q);}}
+    else{const x=a[0];for(let j=Math.min(a[1],b[1]);j<Math.max(a[1],b[1]);j++){const q=x===0?'L:'+j:x===W?'R:'+j:j+1<=D+1e-9?'v:'+x+':'+j:null;if(q)out.push(q);}}return out;};
+  const paintOn=brush==='mv'||brush==='erase';const flOn=brush==='gulv'&&!!onFloor;const FG=SM.FG;const [fh,setFhv]=usePS(null);const [dh,setDh]=usePS(null);const drOn=brush==='door'||brush==='doorx';const flLast=usePR(null);
+  const flAt=pt=>{const bw=Math.round((fb?fb.w:1)/FG),bh=Math.round((fb?fb.h:1)/FG);const nx=Math.round(W/FG),ny=Math.round(D/FG);if(pt.x<0||pt.y<0||pt.x>=W||pt.y>=D)return null;
+    const i=Math.min(nx-bw,Math.floor(pt.x/FG/bw)*bw),j=Math.min(ny-bh,Math.floor(pt.y/FG/bh)*bh);return {i:Math.max(0,i),j:Math.max(0,j),w:bw,h:bh};};
+  const flPaint=pt=>{const a=flAt(pt);if(!a)return;const k=a.i+','+a.j;if(flLast.current===k)return;flLast.current=k;onFloor(a.i,a.j,a.w,a.h,fb?fb.id:null);};
+  const onDown=e=>{if(flOn&&e.button===0){e.preventDefault();svg.current.setPointerCapture(e.pointerId);painting.current=true;flLast.current=null;flPaint(toM(e));return;}if(brush==='sel'){onSelItem(null);setBkOn(false);}if(!paintOn||e.button!==0)return;e.preventDefault();const p=toM(e);svg.current.setPointerCapture(e.pointerId);drawR.current={p0:p,moved:false,fine:e.shiftKey&&brush==='mv',fine0:e.shiftKey&&brush==='mv'};setDraw(nearEdge(p));};
+  const onMove=e=>{const p=toM(e);if(flOn){const a=flAt(p);setFhv(h=>a&&h&&h.i===a.i&&h.j===a.j?h:a);if(painting.current)flPaint(p);return;}if(drag.current!=null){const d=drag.current;if(d.iw){const w0=d.iw;let dx=p.x-d.p0.x,dy=p.y-d.p0.y;if(!d.moved&&Math.hypot(dx,dy)*k<4)return;
+      if(!d.go){d.go=true;onIwDrag&&onIwDrag(true);}if(d.lock==='x')dy=0;if(d.lock==='y')dx=0;
+      const fine=e.shiftKey;const al=v=>fine?Math.round(v*4)/4:Math.round(v);const FW=Math.floor(W+1e-9),FD=Math.floor(D+1e-9);
+      let nx,ny;if(w0.hz){nx=Math.max(0,Math.min(FW-w0.len,al(w0.x+dx)));ny=Math.max(1,Math.min(Math.ceil(D-1e-9)-1,Math.round(w0.y+dy)));}
+      else{nx=Math.max(1,Math.min(Math.ceil(W-1e-9)-1,Math.round(w0.x+dx)));ny=Math.max(0,Math.min(FD-w0.len,al(w0.y+dy)));}
+      nx=Math.round(nx*1000)/1000;ny=Math.round(ny*1000)/1000;
+      if(nx!==d.cx||ny!==d.cy){const nk=w0.hz?'h:'+nx+':'+ny:'v:'+nx+':'+ny;const ok=onIwMove&&onIwMove(d.cur,nx,ny,!d.moved);if(ok!==false){d.cur=nk;d.cx=nx;d.cy=ny;d.moved=true;}}
+      setIwd({key:d.cur,lock:d.lock,fine,ox:w0.x,oy:w0.y,len:w0.len,hz:w0.hz});return;}
+    if(d.item){let dx=p.x-d.p0.x,dy=p.y-d.p0.y;if(!d.moved&&Math.hypot(dx,dy)*k<4)return;if(d.lock==='x')dy=0;if(d.lock==='y')dx=0;onItemMove(d.item,d.ox+dx,d.oy+dy,!d.moved);if(!d.moved){d.moved=true;onIwDrag&&onIwDrag(true);setMv({kind:'item',id:d.item,lock:d.lock,ox:d.ox,oy:d.oy});}return;}if(d.edge){onBkResize(SM.bkResize(st,d.b0,d.edge,p.x-d.p0.x,p.y-d.p0.y));setRz(d.edge);}else if(d.bk){let dx=p.x-d.p0.x,dy=p.y-d.p0.y;if(!d.moved&&Math.hypot(dx,dy)*k<4)return;if(d.lock==='x')dy=0;if(d.lock==='y')dx=0;onBkMove(Math.round((d.ox+dx)*2)/2,Math.round((d.oy+dy)*2)/2,!d.moved);if(!d.moved){d.moved=true;onIwDrag&&onIwDrag(true);setMv({kind:'bk',lock:d.lock,ox:d.ox,oy:d.oy});}}return;}
+    if(!paintOn)return;const d=drawR.current;
+    if(d){if(!d.moved&&Math.hypot(p.x-d.p0.x,p.y-d.p0.y)>.35)d.moved=true;d.fine=e.shiftKey&&brush==='mv';setDraw(d.moved?(d.fine?segFineD(d,p):segFrom(d.p0,p)):(d.fine?ptFine(d.p0):nearEdge(d.p0)));}
+    else setDraw(p.x>-.4&&p.x<W+.4&&p.y>-.4&&p.y<D+.4?(e.shiftKey&&brush==='mv'?ptFine(p):nearEdge(p)):null);};
+  const onUp=e=>{if(flOn){painting.current=false;flLast.current=null;return;}const d=drawR.current;if(!d)return;drawR.current=null;if(d.fine&&d.moved){const sg=segFineD(d,toM(e));const sd=segDesc(sg);if(sd)onPaint([],sd);setDraw(null);return;}const sg=d.moved?segFrom(d.p0,toM(e)):nearEdge(d.p0);const ks=keysOf(sg);if(ks.length)onPaint(ks);setDraw(null);};
+  const E=SM.edges(st);const bk=st.bk.on?SM.clampBk(st):null;const keys=new Set(S.map(w=>w.key));
+  const gk=new Set(st.gfx.map(g=>g.s));const bad=SM.itemConflicts(st);
+  const dim=k=>hl&&hl!=='work'&&hl!==k;
+  const bc=brush==='erase'?'rgb(var(--ink-faint))':brush==='mv'?SM.C.mv:null;
+  const lab={font:tech?`500 ${11*u}px var(--font-ui)`:'500 .15px var(--font-ui)',fill:'rgb(var(--ink-muted))'};const mono={font:tech?`500 ${10.5*u}px var(--font-numeric)`:'500 .14px var(--font-numeric)',fill:tech?'rgb(var(--ink-muted))':'rgb(var(--ink-faint))'};
+  const sideTxt=k=>{const n=SM.sideN(k,W,D);let c=0;for(let i=0;i<n;i++)if(SM.closedAt(st,k,i))c++;return c===0?'åpen':c===n?'standvegg':'delvis standvegg';};
+  const wfm=window.__wf5||'tusj';const wT=Math.max(SM.SYS.pillar,tech&&wfm==='strek'?5*u:4.5*uL);const T0=.07;const axOn=tech&&grid==='akser'&&k>=18;
+  const techFoot=tech&&(()=>{const nice=[1,2,5,10].find(v=>v*k>=48)||10;if(axOn&&M*k<34)return null;const y=D+T0+15*u,h=3*u;const fd=new Date();const dt=String(fd.getDate()).padStart(2,'0')+'.'+String(fd.getMonth()+1).padStart(2,'0')+'.'+fd.getFullYear();
+    return <g pointerEvents="none">{Array.from({length:nice>2?5:nice*2},(_,i)=>{const sw=nice/(nice>2?5:nice*2);return <rect key={i} x={i*sw} y={y-h} width={sw} height={h} fill={i%2?'rgb(var(--surface))':'rgb(var(--ink))'} stroke="rgb(var(--ink))" strokeWidth={.6*uL}></rect>;})}<text x={nice+4*u} y={y} style={mono}>{nice} m</text>
+      {(()=>{const t=[title,noDate?null:dt].filter(Boolean).join('  ·  ');const tw=t.length*6.4,sw=nice*k+40;return W*k-sw>=tw?<text x={W} y={y} textAnchor="end" style={mono}>{t}</text>:!noDate&&W*k-sw>=74?<text x={W} y={y} textAnchor="end" style={mono}>{dt}</text>:null;})()}</g>;})();
+  const techDims=tech&&(()=>{const T=.07,ink='rgb(var(--ink-muted))';
+    const fmm=v=>String(Math.round(v*1000)).replace(/\B(?=(\d{3})+(?!\d))/g,'\u2009');
+    const axisPts=(key,ax)=>{const L=ax==='x'?W:D;const s=new Set([0,L]);const add=p=>s.add(+(ax==='x'?p[0]:p[1]).toFixed(3));const w=S.find(x=>x.key===key);
+      if(w){w.mods.forEach((m,i)=>{if(m){add(ptAt(w,SM.cut(w,i)));add(ptAt(w,SM.cut(w,i+1)));}});if(w.door!=null){add(ptAt(w,SM.cut(w,w.door)));add(ptAt(w,SM.cut(w,w.door+1)));}}
+      if(bk){if(ax==='x'){s.add(bk.x);s.add(bk.x+bk.w);}else{s.add(bk.y);s.add(bk.y+bk.d);}}return [...s].filter(v=>v>=0&&v<=L).sort((a,b)=>a-b);};
+    const row=(pts,r,hz,key,lb)=>{const o=T+r*u,e0=T+3*u,ext=o+3*u,tk=2.5*u;const at=(a,b)=>hz?[a,b]:[b,a];const ln=(p,q,w,i)=><line key={i} x1={p[0]} y1={p[1]} x2={q[0]} y2={q[1]} stroke={ink} strokeWidth={w*uL}></line>;
+      return <g key={key}>{pts.map((v,i)=><g key={i}>{ln(at(v,-e0),at(v,-ext),.6,'e')}{ln(at(v-tk,-o+tk),at(v+tk,-o-tk),1.1,'t')}</g>)}{ln(at(pts[0],-o),at(pts[pts.length-1],-o),.75,'m')}
+        {pts.slice(1).map((b,i)=>{const a=pts[i];const nar=(b-a)*k<30;const m=(a+b)/2;const oo=o+(nar?12:3)*u;return hz?<text key={'x'+i} x={m} y={-oo} textAnchor="middle" style={mono}>{lb&&<tspan style={lab}>{lb+'  ·  '}</tspan>}{fmm(b-a)}</text>:<text key={'x'+i} transform={`translate(${-oo} ${m}) rotate(-90)`} textAnchor="middle" style={mono}>{lb&&<tspan style={lab}>{lb+'  ·  '}</tspan>}{fmm(b-a)}</text>;})}</g>;};
+    // Plasseringsmål: alt som står fritt (bakrom, dør, innervegger, vegg-ender) målt fra nullpunktet i bakre venstre hjørne.
+    const placePts=ax=>{const L=ax==='x'?W:D;const s=new Set();const add=v=>{v=Math.round(v*1000)/1000;if(v>1e-6&&v<L-1e-6)s.add(v);};
+      if(bk){if(ax==='x'){add(bk.x);add(bk.x+bk.w);}else{add(bk.y);add(bk.y+bk.d);}}
+      S.forEach(w=>{const [dx,dy]=dirOf(w);const hzW=dy===0;const p0=ptAt(w,0),p1=ptAt(w,w.len);
+        if(w.kind==='bk'){if(w.door!=null&&hzW===(ax==='x')){const a=ptAt(w,SM.cut(w,w.door)),b=ptAt(w,SM.cut(w,w.door+1));add(ax==='x'?a[0]:a[1]);add(ax==='x'?b[0]:b[1]);}return;}
+        if(w.kind==='int'){if(hzW){if(ax==='x'){add(p0[0]);add(p1[0]);}else add(p0[1]);}else{if(ax==='x')add(p0[0]);else{add(p0[1]);add(p1[1]);}}return;}
+        if(hzW===(ax==='x'))SM.runs(w).forEach(([a,b])=>{const q=ptAt(w,SM.cut(w,a)),r=ptAt(w,SM.cut(w,b));add(ax==='x'?q[0]:q[1]);add(ax==='x'?r[0]:r[1]);});});
+      return [...s].sort((a,b)=>a-b);};
+    const run=(pts,r,hz,key)=>{const o=T+r*u,e0=T+3*u,tk=2.5*u;const at=(a,b)=>hz?[a,b]:[b,a];const ln=(p,q,w,i)=><line key={i} x1={p[0]} y1={p[1]} x2={q[0]} y2={q[1]} stroke={ink} strokeWidth={w*uL}></line>;
+      const lastL=[-1e9,-1e9];const lbs=pts.map(v=>{const t=fmm(v),half=t.length*3.1*u;let st=v-half>=lastL[0]+3*u?0:v-half>=lastL[1]+3*u?1:0;lastL[st]=v+half;return {v,t,st};});
+      const o0=at(0,-o);
+      return <g key={key}><circle cx={o0[0]} cy={o0[1]} r={2.2*u} fill="rgb(var(--canvas))" stroke={ink} strokeWidth={.9*uL}></circle>{ln(at(0,-e0),at(0,-o+2.2*u),.6,'e0')}
+        {ln(at(2.2*u,-o),at(pts[pts.length-1],-o),.75,'m')}
+        {pts.map((v,i)=><g key={i}>{ln(at(v,-e0),at(v,-o-3*u),.6,'e')}{ln(at(v-tk,-o+tk),at(v+tk,-o-tk),1.1,'t')}</g>)}
+        {lbs.map(({v,t,st},i)=>{const d=o+(st?13:3)*u;return hz?<text key={'x'+i} x={v} y={-d} textAnchor="middle" style={mono}>{t}</text>:<text key={'x'+i} transform={`translate(${-d} ${v}) rotate(-90)`} textAnchor="middle" style={mono}>{t}</text>;})}</g>;};
+    const full=(M-T)*k>=46;
+    const side=(key,hz)=>{const L=hz?W:D;const c=placePts(hz?'x':'y');const ch=full&&c.length>0;const cp=[0,...c,L];const out=[];
+      const t=`${key==='B'?'Bak':'Venstre'} · ${sideTxt(key)}`;const nar=ch&&cp.slice(1).some((b,i)=>(b-cp[i])*k<30);if(ch&&dimK!==key)out.push(row(cp,9,hz,'c'));out.push(row([0,L],ch?(nar?38:27):8,hz,'t',full?null:t));const lr=T+(ch?(nar?52:41):31)*u;
+      if(full)out.push(hz?<text key="l" x={W/2} y={-lr} textAnchor="middle" style={lab}>{t}</text>:<text key="l" transform={`translate(${-lr} ${D/2}) rotate(-90)`} textAnchor="middle" style={lab}>{t}</text>);return <g key={key}>{out}</g>;};
+    const dimK=sel&&!draw&&k>=55?(()=>{const w=S.find(x=>x.key===sel);return w&&w.kind==='per'&&(w.key==='B'||w.key==='L')?w.key:null;})():null;
+    const dimSt=k2=>({opacity:1,transition:'opacity 150ms cubic-bezier(.4,0,.2,1)'});
+    return <g pointerEvents="none"><g style={dimSt('B')}>{side('B',true)}</g><g style={dimSt('L')}>{side('L',false)}</g>
+      <text transform={`translate(${W+T+(axOn?30:16)*u} ${D/2}) rotate(-90)`} textAnchor="middle" style={lab}>Høyre · {sideTxt('R')}</text>
+      <text x={axOn?-T-10*u:W/2} y={D+(axOn?16:T/u+14)*u} textAnchor={axOn?'end':'middle'} style={lab}>Front · {sideTxt('F')}</text></g>;})();
+  const selChain=tech&&sel&&!selTex&&!draw&&(()=>{const w=S.find(x=>x.key===sel);if(!w||(manip&&mvMode&&w.kind==='int'))return null;if(k<55)return null;const sg=w.kind==='per'?-1:1;const [dx,dy]=dirOf(w);const nx=-dy*sg,ny=dx*sg;const ink='rgb(var(--ink-muted))';const hzW=dy===0;
+    const fm=v=>String(Math.round(v*1000)).replace(/\B(?=(\d{3})+(?!\d))/g,'\u2009');const set=new Set();w.mods.forEach((m,i)=>{if(m){set.add(SM.cut(w,i));set.add(SM.cut(w,i+1));}});const pts=[...set].sort((a,b)=>a-b);if(pts.length<2)return null;
+    const o0=sg<0?T0+3*u:wT/2+2*u,o=sg<0?T0+9*u:wT/2+12*u,tk=2.5*u;const at=(l,d)=>{const p=ptAt(w,l);return [p[0]+nx*d,p[1]+ny*d];};const ln=(p,q,sw,key)=><line key={key} x1={p[0]} y1={p[1]} x2={q[0]} y2={q[1]} stroke={ink} strokeWidth={sw*uL}></line>;
+    return <g pointerEvents="none">{pts.map((l,i)=>{const p=at(l,o);return <g key={i}>{ln(at(l,o0),at(l,o+3*u),.6,'e')}{ln([p[0]-tk,p[1]+tk],[p[0]+tk,p[1]-tk],1.1,'t')}</g>;})}{ln(at(pts[0],o),at(pts[pts.length-1],o),.75,'m')}
+      {pts.slice(1).map((b,i)=>{const a=pts[i];const nar=(b-a)*k<30;const c=at((a+b)/2,o+(nar?19:8)*u);return <text key={'x'+i} x={c[0]} y={c[1]} textAnchor="middle" dominantBaseline="central" transform={hzW?undefined:`rotate(-90 ${c[0]} ${c[1]})`} style={{...mono,fill:'rgb(var(--ink))'}}>{fm(b-a)}</text>;})}</g>;})();
+  const techGfx=tech&&<g pointerEvents="none">{st.gfx.map((g,i)=>{const w=S.find(x=>x.key===g.s);if(!w||g.w==null)return null;const [dx,dy]=dirOf(w);const nx=-dy,ny=dx;const o=wT/2+4*u;const p=ptAt(w,g.x),q=ptAt(w,g.x+g.w);const tk=3*u;
+    return <g key={i} stroke="rgb(var(--ink))" strokeWidth={1.25*uL} style={{opacity:dim('gfx')?.25:1}}><line x1={p[0]+nx*o} y1={p[1]+ny*o} x2={q[0]+nx*o} y2={q[1]+ny*o}></line><line x1={p[0]+nx*(o-tk)} y1={p[1]+ny*(o-tk)} x2={p[0]+nx*(o+tk)} y2={p[1]+ny*(o+tk)}></line><line x1={q[0]+nx*(o-tk)} y1={q[1]+ny*(o-tk)} x2={q[0]+nx*(o+tk)} y2={q[1]+ny*(o+tk)}></line></g>;})}</g>;
+  const techPos=tech&&!draw&&(()=>{const ink='rgb(var(--ink))';const L5=window.POS5(st,S,lib);const pts=[];
+    L5.forEach((it,i)=>{let x,y;const own=it.kind==='tex'||it.kind==='gfx'?it.o.s:it.kind==='door'?it.o.key:null;if(sel&&!selTex&&own===sel)return;
+      if(it.kind==='tex'){const t=it.o,w=S.find(z=>z.key===t.s);const [dx,dy]=dirOf(w);const nx=-dy,ny=dx;const o=Math.max(.11,wT/2+5*u)+11*u;const m=ptAt(w,t.x+t.w/2);x=m[0]+nx*o;y=m[1]+ny*o;}
+      else if(it.kind==='snek'){const k=it.o;x=(k.x0+k.x1)/2;y=k.y+k.t/2+11*u;}
+      else if(it.kind==='plate'){pts.push({pw:it.o,n:it.n,it});return;}
+      else if(it.kind==='gfx'){const g=it.o,w=S.find(z=>z.key===g.s);const [dx,dy]=dirOf(w);const nx=-dy,ny=dx;const o=wT/2+15*u;const m=ptAt(w,g.x+g.w/2);x=m[0]+nx*o;y=m[1]+ny*o;}
+      else if(it.kind==='door'){const w=it.o;const [dx,dy]=dirOf(w);const [nx,ny]=w.swing||[-dy,dx];const h0=ptAt(w,SM.cut(w,w.door));const f=st.bk&&st.bk.open==='forheng';x=h0[0]+dx*.5+nx*(f?.3:.42);y=h0[1]+dy*.5+ny*(f?.3:.42);}
+      else{const I=it.I,o=it.o;x=o.x+I.w/2+4*u;y=o.y-I.d/2-4*u;}
+      pts.push({x:Math.max(6*u,Math.min(W-6*u,x)),y:Math.max(6*u,Math.min(D-6*u,y)),n:it.n,it});});
+    // Veggplate: nummeret står ved den modulen som ligger lengst unna de andre numrene.
+    pts.forEach(q=>{if(!q.pw)return;const w=q.pw;const [dx,dy]=dirOf(w);const nx=-dy,ny=dx;const o=wT/2+(st.tex.some(t=>t.s===w.key)?26:13)*u;const fixed=pts.filter(z=>!z.pw&&z.x!=null);let best=null;
+      w.mods.forEach((m,i)=>{if(!m||w.door===i)return;const c=ptAt(w,(SM.cut(w,i)+SM.cut(w,i+1))/2);const x=c[0]+nx*o,y=c[1]+ny*o;const d=fixed.length?Math.min(...fixed.map(z=>Math.hypot(z.x-x,z.y-y))):1;if(!best||d>best.d)best={x,y,d};});
+      if(best){q.x=Math.max(6*u,Math.min(W-6*u,best.x));q.y=Math.max(6*u,Math.min(D-6*u,best.y));}});
+    const s=5.5*u;const fs={font:`600 ${7.5*u}px var(--font-numeric)`,fill:ink};const tag=(x,y,n,key,on)=><g key={key} transform={`translate(${x} ${y})`}><rect x={-s} y={-s} width={2*s} height={2*s} rx={1.5*u} fill={on?ink:'rgb(var(--surface))'} stroke={ink} strokeWidth={.8*uL}></rect><text y={2.7*u} textAnchor="middle" style={on?{...fs,fill:'rgb(var(--canvas))'}:fs}>{n}</text></g>;
+    // Tegnforklaring i gangfeltet: gulv først, så posisjoner. Brytes på linjer; det som ikke får plass samles i «+ n til».
+    const lf={font:`400 ${9.5*u}px var(--font-ui)`,fill:'rgb(var(--ink-muted))'};const lm={font:`500 ${9.5*u}px var(--font-numeric)`,fill:'rgb(var(--ink-muted))'};const cw=4.8*u;const nice=[1,2,5,10].find(v=>v*k>=48)||10;const fd=new Date();const dt=String(fd.getDate()).padStart(2,'0')+'.'+String(fd.getMonth()+1).padStart(2,'0')+'.'+fd.getFullYear();const tt=[title,noDate?null:dt].filter(Boolean).join('  ·  ');
+    const fl=Object.entries(SM.floorAreas(st)).map(([id,a])=>{const f=SM.FLOORS.find(z=>z.id===id);return f?{sw:f.c,t:f.n+' · '+SM.fmt(a)+' m²'}:null;}).filter(Boolean);
+    // Gangfeltet: posisjoner i spalter til venstre · tegnforklaring og tegningshode i én spalte til høyre
+    const X0=-M+.25,X1=W+M-.25,y0=D+T0+30*u,lh=11.5*u,yMax=D+Mb-3*u;const cwn=5.6*u;
+    const eye={font:`600 ${7.5*u}px var(--font-ui)`,letterSpacing:'.06em',fill:'rgb(var(--ink-faint))'};
+    const bm=SM.beams(st);const leg=noDate?[]:[...fl,...(bm.lm?[{beam:1,t:'Takdrager · '+SM.fmt(bm.lm)+' m'}]:[])];
+    const barW=nice+8*u+String(nice).length*6*u+12*u;
+    const rW=Math.max(barW,tt.length*5.8*u,...leg.map(e=>15*u+e.t.length*cw),60*u);const RX=X1-rW;
+    const L6=[];const grps=[];L6.forEach(it=>{let g=grps.find(z=>z.g===it.grp);if(!g){g={g:it.grp,r:[]};grps.push(g);}g.r.push(it);});
+    const nrow=Math.max(1,Math.floor((yMax-(y0+12*u))/lh)+1);
+    // Pakk spalter, gi hver spalte sin egen bredde, skjul det som ikke får plass
+    const cols=[];let cur=[],row=0;grps.forEach(g=>{if(row>0&&row+2>nrow){cols.push(cur);cur=[];row=0;}cur.push({h:g.g});row++;g.r.forEach(it=>{if(row>=nrow){cols.push(cur);cur=[];row=0;}cur.push({it});row++;});});if(cur.length)cols.push(cur);
+    const wOf=c=>Math.max(...c.map(e=>e.h?e.h.length*cw*1.1:15*u+e.it.label.length*cw+14*u+(e.it.dim||'').length*cwn));
+    const lim=RX-18*u;let px=X0,full=false,hidden=0;const placed=[];cols.forEach(c=>{const w=wOf(c);if(full||px+w>lim+1e-9){full=true;hidden+=c.filter(e=>e.it).length;return;}placed.push({c,x:px,w});px+=w+18*u;});
+    const cy=r=>y0+12*u+r*lh;
+    // Høyre spalte: tegnforklaring, så tegningshode
+    const rows=[];if(leg.length){rows.push({eye:'TEGNFORKLARING'});leg.forEach(e=>rows.push({e}));}if(!noDate){rows.push({eye:'TEGNING'});if(tt)rows.push({tt});}rows.push({bar:1});
+    const ry=i=>i===0?y0:cy(i-1);
+    const hn=hp5&&hp5.n;const tip=hn&&(()=>{const all=L5.filter(z=>z.n===hn);const it=all[0];const same=all.every(z=>z.dim===it.dim);const a=it.label+(it.dim&&same?'  ·  '+it.dim:'');const b=all.length>1?all.length+' stk i tegningen'+(same?'':' · ulike mål'):it.grp;const cwid=Math.max(a.length*6.2,b.length*5.6)+18;const x=Math.max(cwid*u/2+4*u,Math.min(W-cwid*u/2-4*u,hp5.x)),y=hp5.y-22*u;return <g transform={`translate(${x} ${y})`}><rect x={-cwid*u/2} y={-15*u} width={cwid*u} height={30*u} rx={5*u} fill="rgb(var(--ink))"></rect><text y={-2.5*u} textAnchor="middle" style={{font:`600 ${11*u}px var(--font-ui)`,fill:'rgb(var(--canvas))'}}>{hn+'  '+a}</text><text y={10.5*u} textAnchor="middle" style={{font:`500 ${9*u}px var(--font-ui)`,fill:'rgb(var(--canvas) / .72)'}}>{b}</text></g>;})();
+    return <g pointerEvents="none">{(noDate||window.__pos5show)&&pts.filter(q=>q.x!=null).map((q,i)=><g key={'p'+i} pointerEvents="all" style={{cursor:'default'}} onPointerEnter={()=>setHp5({n:q.n,x:q.x,y:q.y})} onPointerLeave={()=>setHp5(null)}>{tag(q.x,q.y,q.n,'p'+i,hn===q.n)}</g>)}{(noDate||window.__pos5show)&&tip}
+      {placed.length>0&&<g><text x={X0} y={y0} style={eye}>POSISJONER</text>{placed.map((p,pi)=>p.c.map((c,ri)=>{const x=p.x,y=cy(ri);if(c.h)return <text key={pi+'-'+ri} x={x} y={y} style={{...lf,fontWeight:600,fill:'rgb(var(--ink))'}}>{c.h}</text>;const it=c.it;
+        return <g key={pi+'-'+ri}>{tag(x+4.5*u,y-3.5*u,it.n,'t')}<text x={x+15*u} y={y} style={lf}>{it.label}</text>{it.dim&&<text x={x+p.w} y={y} textAnchor="end" style={lm}>{it.dim}</text>}</g>;}))}
+        {hidden>0&&<text x={lim} y={y0} textAnchor="end" style={lf}>+ {hidden} til</text>}</g>}
+      <g>{rows.map((r,i)=>{const y=ry(i);if(i>0&&y>yMax+1e-9)return null;if(r.eye&&i+1<rows.length&&ry(i+1)>yMax+1e-9)return null;
+        if(r.eye)return <text key={i} x={RX} y={i===0?y0:y-1*u} style={eye}>{r.eye}</text>;
+        if(r.e){const e=r.e;return <g key={i}>{e.sw&&<rect x={RX} y={y-7.5*u} width={8*u} height={8*u} rx={1.5*u} fill={e.sw} stroke="rgb(var(--ink) / .35)" strokeWidth={.5*uL}></rect>}{e.beam&&<g>{k>=55&&<rect x={RX} y={y-6.5*u} width={10*u} height={3.6*u} fill="rgb(var(--ink) / .09)"></rect>}{(k<55?[y-4.7*u]:[y-6.5*u,y-2.9*u]).map((yy,k)=><line key={k} x1={RX} y1={yy} x2={RX+10*u} y2={yy} stroke="rgb(var(--ink))" strokeWidth={.8*uL} strokeDasharray={`${3*u} ${1.6*u}`}></line>)}</g>}<text x={RX+15*u} y={y} style={lf}>{e.t}</text></g>;}
+        if(r.tt)return <text key={i} x={RX} y={y} style={lm}>{r.tt}</text>;
+        const nn=nice>2?5:nice*2,sw=nice/nn;return <g key={i}>{Array.from({length:nn},(_,k2)=><rect key={k2} x={RX+k2*sw} y={y-5.5*u} width={sw} height={3*u} fill={k2%2?'rgb(var(--surface))':'rgb(var(--ink))'} stroke="rgb(var(--ink))" strokeWidth={.6*uL}></rect>)}<text x={RX+nice+4*u} y={y} style={lm}>{nice} m</text></g>;})}</g>
+    </g>;})();
+  const bkSh=!!manip&&brush==='sel'&&!!bk&&!selItem&&bkOn;
+  const fmD=v=>(v>0?'+':'−')+String(Math.round(Math.abs(v)*1000)).replace(/\B(?=(\d{3})+(?!\d))/g,'\u2009');
+  const manipG=manip&&brush==='sel'&&(()=>{const ink='rgb(var(--ink))';const out=[];const dash=`${4*u} ${3*u}`;
+    const guide=(o,lock)=>lock?<line key="gd" x1={lock==='x'?0:o[0]} y1={lock==='x'?o[1]:0} x2={lock==='x'?W:o[0]} y2={lock==='x'?o[1]:D} stroke={ink} strokeWidth={uL} strokeDasharray={dash} opacity=".5" pointerEvents="none"></line>:null;
+    const tag=(c,dx,dy,sy)=>{const t=[Math.abs(dx)>1e-6?'x '+fmD(dx):null,Math.abs(dy)>1e-6?'y '+fmD(dy):null].filter(Boolean).join('  ·  ');if(!t)return null;const tw=(t.length*6.6+14)*u;return <g key="tg" transform={`translate(${c[0]} ${c[1]-sy*36*u})`} pointerEvents="none"><rect x={-tw/2} y={-10*u} width={tw} height={19*u} rx={5*u} fill={ink}></rect><text y={4*u} textAnchor="middle" style={{font:`600 ${11*u}px var(--font-numeric)`,fill:'rgb(var(--canvas))'}}>{t}</text></g>;};
+    const go=(kind,id,ox,oy,iid)=>(ev,h)=>{ev.preventDefault();ev.stopPropagation();const lock=h==='f'?null:h;drag.current=kind==='bk'?{bk:true,p0:toM(ev),ox,oy,lock,moved:false}:{item:iid,p0:toM(ev),ox,oy,lock,moved:false};setMv({kind,id:iid,lock,ox,oy});};
+    if(bk&&(bkSh||(mv&&mv.kind==='bk'))){const c=[bk.x+bk.w/2,bk.y+bk.d/2];const m=mv&&mv.kind==='bk'?mv:null;
+      if(m){out.push(<rect key="bg" x={m.ox} y={m.oy} width={bk.w} height={bk.d} fill="none" stroke="rgb(var(--ink) / .45)" strokeWidth={uL} strokeDasharray={dash} pointerEvents="none"></rect>);out.push(guide([m.ox+bk.w/2,m.oy+bk.d/2],m.lock));out.push(tag(c,bk.x-m.ox,bk.y-m.oy,-1));}
+      if(bkSh&&mvMode)out.push(<Manip key="bm" at={c} sx={1} sy={-1} u={u} act={m?(m.lock||'f'):null} onStart={go('bk',null,bk.x,bk.y)}></Manip>);}
+    const it=selItem&&st.items.find(i=>i.id===selItem);
+    if(it&&SM.ITEM(it.p)){const c=[it.x,it.y];const m=mv&&mv.kind==='item'&&mv.id===it.id?mv:null;
+      if(m){out.push(<g key="ig" pointerEvents="none" opacity=".45"><ItemTops it={{...it,x:m.ox,y:m.oy}} ghost tech={tech} u={u} lw={lw}></ItemTops></g>);out.push(guide([m.ox,m.oy],m.lock));out.push(tag(c,it.x-m.ox,it.y-m.oy,1));}
+      if(mvMode)out.push(<Manip key="im" at={c} sx={1} sy={1} u={u} act={m?(m.lock||'f'):null} onStart={go('item',null,it.x,it.y,it.id)}></Manip>);}
+    return <g>{out}</g>;})();
+  return <svg ref={svg} viewBox={`${-M} ${-M} ${W+2*M} ${D+M+Mb}`} preserveAspectRatio="xMidYMid meet" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={()=>{drawR.current=null;setDraw(null);}} onPointerLeave={()=>{setHov(null);setFhv(null);if(!drawR.current)setDraw(null);}}
+    onDragOver={e=>{if(!dragItem||dragItem.kind!=='item')return;e.preventDefault();const p=toM(e);setGh(g=>g&&Math.abs(g.x-p.x)<.02&&Math.abs(g.y-p.y)<.02?g:{x:p.x,y:p.y});}} onDragLeave={e=>{if(!e.currentTarget.contains(e.relatedTarget))setGh(null);}}
+    onDrop={e=>{if(!dragItem||dragItem.kind!=='item')return;e.preventDefault();const p=toM(e);setGh(null);onAddItem(dragItem.p,p.x,p.y);}} data-rk={rk} style={{overflow:'visible',width:'100%',height:'100%',display:'block',transform:'translateZ(0)',backfaceVisibility:'hidden',touchAction:'none',userSelect:'none',cursor:paintOn||flOn?'crosshair':'default'}}>
+    <rect x={-M} y={D} width={W+2*M} height={Mb} fill="var(--sunken-2)"></rect>
+    {!tech&&<text x={W/2} y={tech?D+M-5*u:D+M*.66} textAnchor="middle" style={{...lab,fill:'rgb(var(--ink-faint))'}}>Gang</text>}
+    <rect x="0" y="0" width={W} height={D} style={{fill:'rgb(var(--surface))'}}></rect>
+    {tech?(()=>{const on=flOn||hl==='floor';const eng=id=>window.CP&&CP.isEng(id);const cells=Object.entries(SM.floorCells(st)).filter(([,id])=>!eng(id));if(!cells.length)return null;
+      const fc=id=>(SM.FLOORS.find(z=>z.id===id)||{c:'#999'}).c;
+      if(on)return <g style={{pointerEvents:'none'}}>{cells.map(([kk,id])=>{const [i,j]=kk.split(',').map(Number);return <rect key={'fc'+kk} x={i*FG} y={j*FG} width={FG} height={FG} fill={fc(id)} stroke="rgb(0 0 0 / .14)" strokeWidth={.5*uL}></rect>;})}</g>;
+      const by={};cells.forEach(([kk,id])=>{const [i,j]=kk.split(',').map(Number);(by[id]=by[id]||[]).push(`M${i*FG} ${j*FG}h${FG}v${FG}h${-FG}z`);});
+      const own=Object.fromEntries(cells);const nx=Math.round(W/FG),ny=Math.round(D/FG);let ed='';
+      cells.forEach(([kk,id])=>{const [i,j]=kk.split(',').map(Number);[[1,0],[0,1],[-1,0],[0,-1]].forEach(([a,b])=>{const ni=i+a,nj=j+b;if(ni<0||nj<0||ni>=nx||nj>=ny)return;const o=own[ni+','+nj];if(o===id)return;if(o&&(a<0||b<0))return;
+        const x=a>0?(i+1)*FG:a<0?i*FG:i*FG,y=b>0?(j+1)*FG:b<0?j*FG:j*FG;ed+=a?`M${x} ${j*FG}v${FG}`:`M${i*FG} ${y}h${FG}`;});});
+      return <g style={{pointerEvents:'none'}}>{Object.entries(by).map(([id,a])=><path key={id} d={a.join('')} fill={fc(id)} fillOpacity=".18"></path>)}{ed&&<path d={ed} fill="none" stroke="rgb(var(--ink-muted))" strokeWidth={.7*uL}></path>}</g>;})():Object.entries(SM.floorCells(st)).map(([k,id])=>{const [i,j]=k.split(',').map(Number);const f=SM.FLOORS.find(z=>z.id===id);return f?<rect key={'fc'+k} x={i*FG} y={j*FG} width={FG+.004} height={FG+.004} fill={f.c} fillOpacity={tech?.32:1} style={{pointerEvents:'none'}}></rect>:null;})}
+    {tech?<g style={{opacity:flOn||hl==='floor'?1:.22}}>{under}</g>:under}
+    {flOn&&<g style={{pointerEvents:'none'}}>{Array.from({length:Math.round(W/FG)-1},(_,i)=>(i+1)%2?<line key={'hx'+i} x1={(i+1)*FG} y1="0" x2={(i+1)*FG} y2={D} stroke="rgb(0 0 0 / .1)" strokeWidth=".008" strokeDasharray=".04 .04"></line>:null)}{Array.from({length:Math.round(D/FG)-1},(_,j)=>(j+1)%2?<line key={'hy'+j} x1="0" y1={(j+1)*FG} x2={W} y2={(j+1)*FG} stroke="rgb(0 0 0 / .1)" strokeWidth=".008" strokeDasharray=".04 .04"></line>:null)}</g>}
+    {(()=>{const ax=tech&&grid==='akser';if(!ax)return null;const a=2.5*u,c='rgb(var(--ink) / .32)';const out=[];for(let i=1;i<W;i++)for(let j=1;j<D;j++)out.push(<path key={i+','+j} d={`M${i-a} ${j}H${i+a}M${i} ${j-a}V${j+a}`} stroke={c} strokeWidth={.75*uL} fill="none"></path>);
+      const L=n=>{let t='';n++;while(n>0){const m=(n-1)%26;t=String.fromCharCode(65+m)+t;n=Math.floor((n-1)/26);}return t;};const r=5.5*u,o=13*u,ok=k>=2*r*k+4;const fs={font:`600 ${7.5*u}px var(--font-numeric)`,fill:'rgb(var(--ink-muted))'};
+      const bub=(x,y,t,key)=><g key={key}><circle cx={x} cy={y} r={r} fill="rgb(var(--canvas))" stroke="rgb(var(--ink-muted))" strokeWidth={.75*uL}></circle><text x={x} y={y+2.6*u} textAnchor="middle" style={fs}>{t}</text></g>;
+      return <g pointerEvents="none">{out}{k>=18&&<>{gp(W).map((i,n)=><g key={'ax'+i}><line x1={i} y1={D+T0} x2={i} y2={D+o-r} stroke="rgb(var(--ink-muted))" strokeWidth={.5*uL} strokeDasharray={`${2*u} ${1.5*u}`}></line>{bub(i,D+o,L(n),'b')}</g>)}{gp(D).map((j,n)=><g key={'ay'+j}><line x1={W+T0} y1={j} x2={W+o-r} y2={j} stroke="rgb(var(--ink-muted))" strokeWidth={.5*uL} strokeDasharray={`${2*u} ${1.5*u}`}></line>{bub(W+o,j,String(n+1),'b')}</g>)}</>}</g>;})()}
+    {!(tech&&grid==='akser')&&Array.from({length:nW-1},(_,i)=><line key={'gx'+i} x1={i+1} y1="0" x2={i+1} y2={D} stroke={tech?'rgb(var(--ink) / .1)':fl?'rgb(0 0 0 / .14)':'rgb(var(--border))'} strokeWidth={tech?.5*uL:.012}></line>)}
+    {!(tech&&grid==='akser')&&Array.from({length:nD-1},(_,j)=><line key={'gy'+j} x1="0" y1={j+1} x2={W} y2={j+1} stroke={tech?'rgb(var(--ink) / .1)':fl?'rgb(0 0 0 / .14)':'rgb(var(--border))'} strokeWidth={tech?.5*uL:.012}></line>)}
+    {(paintOn||drOn)&&(tech?(()=>{const g=3.5*u;const d=gp(W).flatMap(x=>gp(D).map(y=>`M${x-g} ${y}H${x+g}M${x} ${y-g}V${y+g}`)).join('');return <g pointerEvents="none"><path d={d} stroke="rgb(var(--ink) / .55)" strokeWidth={.9*uL} fill="none"></path></g>;})():gp(W).flatMap(x=>gp(D).map(y=><circle key={'d'+x+','+y} cx={x} cy={y} r=".028" fill="rgb(var(--border-strong))"></circle>)))}
+    {tech&&(()=>{const bm=SM.beams(st).segs;const E=1e-6;let d='';
+      [[0,0,W,0],[W,0,W,D],[W,D,0,D],[0,D,0,0]].forEach(([x1,y1,x2,y2])=>{const hz=Math.abs(y1-y2)<E;const c=hz?y1:x1;const a0=Math.min(hz?x1:y1,hz?x2:y2),a1=Math.max(hz?x1:y1,hz?x2:y2);
+        const cov=bm.filter(g=>hz?(Math.abs(g.y1-c)<E&&Math.abs(g.y2-c)<E):(Math.abs(g.x1-c)<E&&Math.abs(g.x2-c)<E)).map(g=>hz?[Math.min(g.x1,g.x2),Math.max(g.x1,g.x2)]:[Math.min(g.y1,g.y2),Math.max(g.y1,g.y2)]).sort((p,q)=>p[0]-q[0]);
+        let s0=a0;cov.forEach(([p0,q0])=>{if(p0>s0+E)d+=hz?`M${s0} ${c}H${p0}`:`M${c} ${s0}V${p0}`;s0=Math.max(s0,q0);});if(a1>s0+E)d+=hz?`M${s0} ${c}H${a1}`:`M${c} ${s0}V${a1}`;});
+      return d?<path d={d} fill="none" stroke="rgb(var(--ink-muted))" strokeWidth={.9*uL} strokeDasharray={`${12*u} ${3*u} ${2*u} ${3*u}`} pointerEvents="none"></path>:null;})()}
+    {bk&&<g style={{opacity:dim('bk')?.3:1}}>
+      <rect x={bk.x} y={bk.y} width={bk.w} height={bk.d} style={{fill:'rgb(var(--ink) / .06)',cursor:brush==='sel'?'move':'default',pointerEvents:brush==='gulv'||drOn?'none':undefined}} onPointerEnter={()=>setHb(true)} onPointerLeave={()=>setHb(false)} onPointerDown={e=>{if(brush!=='sel')return;e.stopPropagation();const p=toM(e);drag.current={bk:true,p0:p,ox:bk.x,oy:bk.y,lock:null,moved:false};if(manip){onSel&&onSel(null);onSelItem&&onSelItem(null);}setBkm(true);}}></rect>
+      {!tech&&(()=>{const big=bk.w>=2&&bk.d>=1;const tw=tech?Math.min((big?74:56)*u,bk.w-.1):big?1.1:Math.min(.78,bk.w-.14),th=tech?30*u:.44;const cx=bk.x+bk.w/2,cy=bk.y+bk.d/2;return <g style={{pointerEvents:'none',opacity:(grips&&gs==='mal'&&(he||rz))||(bkSh&&mvMode)?0:1,transition:'opacity 150ms'}}><rect x={cx-tw/2} y={cy-th/2} width={tw} height={th} rx=".05" style={{fill:'rgb(var(--surface) / .9)'}}></rect><text x={cx} y={tech?cy-2*u:cy-.03} textAnchor="middle" style={{...lab,fill:'rgb(var(--ink))'}}>Bakrom</text><text x={cx} y={tech?cy+11*u:cy+.15} textAnchor="middle" style={{...mono,fill:'rgb(var(--ink-muted))'}}>{big?`${bk.w} × ${bk.d} m`:`${SM.fmt(bk.w*bk.d)} m²`}</text></g>;})()}{tech&&(()=>{const cx=bk.x+bk.w/2,cy=bk.y+bk.d/2;const pw=bk.w*k,ph=bk.d*k;if(pw<44||ph<18)return null;const two=pw>=70&&ph>=36;return <g style={{pointerEvents:'none',opacity:(grips&&gs==='mal'&&(he||rz))||(bkSh&&mvMode)?0:1,transition:'opacity 150ms'}}><text x={cx} y={two?cy-2*u:cy+3.5*u} textAnchor="middle" style={{...lab,fill:'rgb(var(--ink))'}}>Bakrom</text>{two&&<text x={cx} y={cy+11*u} textAnchor="middle" style={mono}>{`${SM.fmt(bk.w)} × ${SM.fmt(bk.d)} m`}</text>}</g>;})()}
+
+    </g>}
+    {st.items.map(it=>{const P=SM.ITEM(it.p);if(!P)return null;return <g key={it.id} style={{opacity:dim('item')?.3:1,transition:'opacity 150ms',cursor:brush==='sel'?'move':'default'}} onPointerDown={e=>{if(brush!=='sel'||e.button!==0)return;e.stopPropagation();e.preventDefault();const p=toM(e);drag.current={item:it.id,p0:p,ox:it.x,oy:it.y,lock:null,moved:false};onSelItem(it.id);}}>
+      <rect x={it.x-P.w/2} y={it.y-P.d/2} width={P.w} height={P.d} fill="transparent" style={{pointerEvents:brush==='sel'?'all':'none'}}></rect>
+      <ItemTops it={it} on={selItem===it.id} bad={bad.has(it.id)} tech={tech} u={u} lw={lw}></ItemTops></g>;})}
+    {gh&&dragItem&&dragItem.kind==='item'&&<g pointerEvents="none"><ItemTops it={SM.placeItem(st,{p:dragItem.p,x:gh.x,y:gh.y},null,Math.max(W,D))||SM.clampItem(st,{p:dragItem.p,x:gh.x,y:gh.y})} ghost></ItemTops></g>}
+    {tech&&(()=>{const L5=window.POS5(st,S,lib);const segs=[];const mods=(w,i)=>[SM.cut(w,i),SM.cut(w,i+1)];
+      L5.forEach(it=>{if(it.kind==='plate'&&wfm!=='strek'){const w=it.o;SM.runs(w).forEach(([a,b])=>segs.push([w,SM.cut(w,a),SM.cut(w,b)]));}
+        else if(it.kind==='gfx'){const g=it.o,w=S.find(z=>z.key===g.s);if(!w)return;let m=g.m;if(m==null){m=0;while(m<w.mods.length-1&&SM.cut(w,m+1)<=g.x+1e-6)m++;}const [a,b]=g.full?mods(w,m):[g.x,g.x+g.w];segs.push([w,a,b,1]);}});
+      return <g pointerEvents="none" style={{opacity:dim('mv')?.3:1}}><defs><pattern id="raster5" patternUnits="userSpaceOnUse" width={2.4*u} height={2.4*u}><circle cx={1.2*u} cy={1.2*u} r={.62*u} fill="rgb(var(--ink) / .75)"></circle></pattern></defs>{segs.map(([w,a,b,sd],i)=>{if(sd&&(window.__tr5||'raster')==='raster'){const [dx,dy]=dirOf(w);const nx=-dy,ny=dx,o0=wT/2,o1=wT/2+4.8*u;const p=ptAt(w,a),q=ptAt(w,b);const pts=[[p[0]+nx*o0,p[1]+ny*o0],[q[0]+nx*o0,q[1]+ny*o0],[q[0]+nx*o1,q[1]+ny*o1],[p[0]+nx*o1,p[1]+ny*o1]].map(v=>v.join(',')).join(' ');return <g key={i}><polygon points={pts} fill={window.TUSJ5.sys}></polygon><polygon points={pts} fill="url(#raster5)"></polygon><polygon points={pts} fill="none" stroke="rgb(var(--ink))" strokeWidth={.8*uL}></polygon></g>;}let p=ptAt(w,a),q=ptAt(w,b),sw=wT+10*u;if(sd){const [dx,dy]=dirOf(w);const nx=-dy,ny=dx,o=wT/2+2.6*u;p=[p[0]+nx*o,p[1]+ny*o];q=[q[0]+nx*o,q[1]+ny*o];sw=5.2*u;}return <line key={i} x1={p[0]} y1={p[1]} x2={q[0]} y2={q[1]} stroke={window.TUSJ5.sys} strokeWidth={sw}></line>;})}</g>;})()}
+    {S.map(w=>{const [dx,dy]=dirOf(w);const [nx,ny]=w.swing||[-dy,dx];const on=sel===w.key&&!selTex;const segs=[];
+      SM.runs(w).forEach(([a,b])=>{if(w.door!=null&&w.door>=a&&w.door<b){if(w.door>a)segs.push([a,w.door]);if(w.door+1<b)segs.push([w.door+1,b]);}else segs.push([a,b]);});
+      const h0=w.door!=null?ptAt(w,SM.cut(w,w.door)):null;const col=w.kind==='bk'?SM.C.bk:SM.C.mv;
+      return <g key={w.key} style={{opacity:dim(w.kind==='bk'?'bk':'mv')&&!(hl==='gfx'&&gk.has(w.key))?.25:1,transition:'opacity 150ms'}}>
+        {segs.map(([a,b],i)=>{const p=ptAt(w,SM.cut(w,a)),q=ptAt(w,SM.cut(w,b));return <g key={i}>{on&&<line x1={p[0]} y1={p[1]} x2={q[0]} y2={q[1]} stroke={tech?'rgb(var(--ink) / .22)':'rgb(var(--ink))'} strokeWidth={tech?wT+8*uL:.24}></line>}<line x1={p[0]} y1={p[1]} x2={q[0]} y2={q[1]} style={{stroke:tech?'rgb(var(--ink))':col}} strokeWidth={tech?wT:.14}></line>{tech&&(wfm==='strek'||w.kind!=='per')&&<line x1={p[0]} y1={p[1]} x2={q[0]} y2={q[1]} stroke={wfm==='strek'?SM.plateOf(st,w.key).c:'rgb(var(--surface))'} strokeWidth={wT-(wfm==='strek'?2*u:2.4*uL)}></line>}{!tech&&gk.has(w.key)&&<line x1={p[0]} y1={p[1]} x2={q[0]} y2={q[1]} stroke="rgb(var(--ink))" strokeWidth=".03" strokeDasharray=".12 .1"></line>}</g>;})}
+        {h0&&tech&&st.bk&&st.bk.open==='forheng'?<path d={Array.from({length:9},(_,i)=>{const t=.06+i*.88/8,a=(i%2?1:-1)*.05+.09;return (i?'L':'M')+(h0[0]+dx*t+nx*a)+' '+(h0[1]+dy*t+ny*a);}).join('')} fill="none" stroke="rgb(var(--ink))" strokeWidth={1.2*uL} strokeLinejoin="round"></path>:h0&&<g fill="none" stroke="rgb(var(--ink))" strokeWidth=".025"><line x1={h0[0]} y1={h0[1]} x2={h0[0]+nx*.9} y2={h0[1]+ny*.9} strokeWidth={tech?1.4*uL:undefined}></line><path d={`M${h0[0]+dx*.9} ${h0[1]+dy*.9} A.9 .9 0 0 1 ${h0[0]+nx*.9} ${h0[1]+ny*.9}`} strokeWidth={tech?.6*uL:undefined} strokeDasharray={tech?null:'.05 .05'}></path></g>}
+        {brush==='sel'&&w.kind==='bk'&&(()=>{const p=ptAt(w,0),q=ptAt(w,w.len);return <line x1={p[0]} y1={p[1]} x2={q[0]} y2={q[1]} stroke="transparent" strokeWidth=".4" style={{cursor:'pointer'}} onClick={()=>onSel(w.key)}></line>;})()}
+      </g>;})}
+    {tech&&window.__snek5&&(()=>{const k=window.SNEK5;if(k.x1>W||k.y>=D)return null;const ink='rgb(var(--ink))',mu='rgb(var(--ink-muted))';const P=SM.PLATES.find(p=>p.id===k.ral)||{c:'#ccc'};
+      const tt=Math.max(k.t,wT*2.2);const y0=k.y-tt/2,L=k.x1-k.x0,o=k.y-k.t/2-9*u,tk=2.5*u;const fmm=v=>String(Math.round(v*1000)).replace(/\B(?=(\d{3})+(?!\d))/g,'\u2009');
+      return <g pointerEvents="none" style={{opacity:dim('mv')?.3:1}}><defs><pattern id="snek5" patternUnits="userSpaceOnUse" width={3.2*u} height={3.2*u} patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2={3.2*u} stroke="rgb(var(--ink) / .6)" strokeWidth={.8*uL}></line></pattern></defs>
+        <rect x={k.x0} y={y0} width={L} height={tt} fill={P.c}></rect><rect x={k.x0} y={y0} width={L} height={tt} fill="url(#snek5)"></rect><rect x={k.x0} y={y0} width={L} height={tt} fill="none" stroke={ink} strokeWidth={1.3*uL}></rect>
+        <line x1={k.x0} y1={y0-2*u} x2={k.x0} y2={o-3*u} stroke={mu} strokeWidth={.6*uL}></line><line x1={k.x1} y1={y0-2*u} x2={k.x1} y2={o-3*u} stroke={mu} strokeWidth={.6*uL}></line>
+        <line x1={k.x0} y1={o} x2={k.x1} y2={o} stroke={mu} strokeWidth={.75*uL}></line>{[k.x0,k.x1].map((x,i)=><line key={i} x1={x-tk} y1={o+tk} x2={x+tk} y2={o-tk} stroke={mu} strokeWidth={1.1*uL}></line>)}
+        <text x={(k.x0+k.x1)/2} y={o-3*u} textAnchor="middle" style={mono}>{fmm(L)}</text></g>;})()}
+    {(()=>{const fr=SM.frame(st,S);const ps=tech?Math.max(SM.SYS.pillar,wT+1.5*u):SM.SYS.pillar*2;return <g pointerEvents="none">{fr.pillars.map((q,i)=><rect key={i} x={q.x-ps/2} y={q.y-ps/2} width={ps} height={ps} fill={tech?'rgb(var(--surface))':'rgb(var(--ink))'} stroke={tech?'rgb(var(--ink))':'none'} strokeWidth={tech?1*uL:0} style={{opacity:dim(q.src==='beam'?'beam':'mv')?.25:1,transition:'opacity 150ms'}}></rect>)}</g>;})()}
+    {(()=>{const bm=SM.beams(st);if(!bm.segs.length)return null;
+      return <g pointerEvents="none" style={{opacity:dim('beam')?.25:1,transition:'opacity 150ms'}}>
+        {bm.segs.map((g,i)=>{if(!tech)return <line key={i} x1={g.x1} y1={g.y1} x2={g.x2} y2={g.y2} stroke="rgb(var(--ink-muted))" strokeWidth={.05} strokeDasharray=".16 .08"></line>;if(k<55)return <line key={i} x1={g.x1} y1={g.y1} x2={g.x2} y2={g.y2} stroke="rgb(var(--ink))" strokeWidth={1*uL} strokeDasharray={`${6*u} ${3*u}`}></line>;const bw=Math.max(SM.SYS.beam.t,3.6*uL);const hz=Math.abs(g.y1-g.y2)<1e-6;const ox=hz?0:bw/2,oy=hz?bw/2:0;const da=`${6*u} ${3*u}`;return <g key={i}><line x1={g.x1} y1={g.y1} x2={g.x2} y2={g.y2} stroke="rgb(var(--surface))" strokeWidth={bw}></line><line x1={g.x1} y1={g.y1} x2={g.x2} y2={g.y2} stroke="rgb(var(--ink) / .09)" strokeWidth={bw}></line><line x1={g.x1-ox} y1={g.y1-oy} x2={g.x2-ox} y2={g.y2-oy} stroke="rgb(var(--ink))" strokeWidth={.8*uL} strokeDasharray={da}></line><line x1={g.x1+ox} y1={g.y1+oy} x2={g.x2+ox} y2={g.y2+oy} stroke="rgb(var(--ink))" strokeWidth={.8*uL} strokeDasharray={da}></line></g>;})}
+        
+      </g>;})()}
+    {st.tex.filter(t=>keys.has(t.s)).map(t=>{const w=S.find(x=>x.key===t.s);const [dx,dy]=dirOf(w);const nx=-dy,ny=dx;const o=tech?Math.max(.11,wT/2+5*u):.07+.02+.02;const p=ptAt(w,t.x),q=ptAt(w,t.x+t.w);const on=selTex===t.id;
+      return <g key={t.id} style={{opacity:dim('tex')?.25:1,transition:'opacity 150ms',cursor:brush==='sel'?'pointer':'default'}} onClick={()=>brush==='sel'&&onSel(t.s,t.id)}>
+        {on&&<line x1={p[0]+nx*o} y1={p[1]+ny*o} x2={q[0]+nx*o} y2={q[1]+ny*o} stroke={tech?'rgb(var(--ink) / .22)':'rgb(var(--ink))'} strokeWidth={tech?11*u:.17}></line>}
+        {tech?<g pointerEvents="none"><line x1={p[0]+nx*o} y1={p[1]+ny*o} x2={q[0]+nx*o} y2={q[1]+ny*o} stroke="rgb(var(--ink))" strokeWidth={5*u}></line><line x1={p[0]+nx*o} y1={p[1]+ny*o} x2={q[0]+nx*o} y2={q[1]+ny*o} stroke={window.TUSJ5.tex} strokeWidth={3.2*u}></line>{k>=55&&<line x1={p[0]+nx*o} y1={p[1]+ny*o} x2={q[0]+nx*o} y2={q[1]+ny*o} stroke="rgb(var(--ink) / .5)" strokeWidth={3.2*u} strokeDasharray={`${.5*u} ${4*u}`}></line>}</g>:<line x1={p[0]+nx*o} y1={p[1]+ny*o} x2={q[0]+nx*o} y2={q[1]+ny*o} style={{stroke:SM.C.tex}} strokeWidth=".06"></line>}
+        <line x1={p[0]+nx*o} y1={p[1]+ny*o} x2={q[0]+nx*o} y2={q[1]+ny*o} stroke="transparent" strokeWidth=".3" style={{pointerEvents:brush==='sel'?'stroke':'none'}}></line>
+      </g>;})}
+    {brush==='sel'&&E.map(e=>{const isH=hov===e.key;const w=wallAtEdge(S,e);if(!w)return null;
+      return <g key={e.key}>
+        {isH&&bc&&<line x1={e.x1} y1={e.y1} x2={e.x2} y2={e.y2} style={{stroke:`color-mix(in oklab,${bc} 45%,transparent)`}} strokeWidth=".14" pointerEvents="none"></line>}
+        <line x1={e.x1} y1={e.y1} x2={e.x2} y2={e.y2} stroke="transparent" strokeWidth=".3" style={{cursor:brush==='sel'?'pointer':'crosshair'}}
+          onPointerDown={ev=>{ev.preventDefault();onSel(w.key);}}></line>
+      </g>;})}
+    {draw&&paintOn&&tech&&(()=>{const A=draw.a,B=draw.b;const hz=Math.abs(A[1]-B[1])<1e-9;const ink='rgb(var(--ink))';const er=brush==='erase';const fine=!!draw.fine;
+      const s0=hz?A[0]:A[1],s1=hz?B[0]:B[1];const L=Math.abs(s1-s0);const dir=s1>=s0?1:-1;const P=v=>hz?[v,A[1]]:[A[0],v];const fm=v=>String(Math.round(v*1000)).replace(/\B(?=(\d{3})+(?!\d))/g,'\u2009');
+      const cline=hz?A[1]:A[0];const LL=lim(hz,cline);const out=hz?(A[1]<=D/2?-1:1):(A[0]<=W/2?-1:1);const nx=hz?0:out,ny=hz?out:0;const ps=Math.max(SM.SYS.pillar,wT+1.5*u);
+      const tks=fine?Array.from({length:Math.floor(LL*4+1e-9)+1},(_,i)=>i/4):[];
+      const cs=[0];{let v=0;while(v+1<L-1e-9){v+=1;cs.push(v);}if(L>1e-9)cs.push(L);}const pos=cs.map(c=>s0+dir*c);
+      const nF=Math.floor(L+1e-9),rem=Math.round((L-nF)*1000)/1000;const sub=[nF?nF+' × 1000':null,rem>1e-9?fm(rem):null].filter(Boolean).join(' + ');
+      const o0=wT/2+3*u,o=wT/2+16*u;const at=(v,d)=>{const p=P(v);return [p[0]+nx*d,p[1]+ny*d];};
+      const ln=(p,q,w,k,c)=><line key={k} x1={p[0]} y1={p[1]} x2={q[0]} y2={q[1]} stroke={c||ink} strokeWidth={w*uL}></line>;
+      const t45=(v,k)=>{const p=at(v,o),t=3*u;return ln([p[0]-t,p[1]+t],[p[0]+t,p[1]-t],1.2,k);};
+      const main=L>1e-9?(er?'− ':'')+fm(L):'⇧ 25 cm';const sub2=L>1e-9&&!er?(sub+(fine?'':(sub?'  ·  ':'')+'⇧ 25 cm')):null;
+      const cw=Math.max(main.length*6.9,sub2?sub2.length*5.6:0)+14;const chh=sub2?30:18;
+      const mid=(s0+s1)/2;const cp=L>1e-9?at(mid,o+(chh/2+6)*u):at(s0,wT/2+(chh/2+10)*u);
+      return <g pointerEvents="none">
+        {tks.map(v=>{const p=P(v);return <g key={'q'+v}><line x1={p[0]-(hz?0:2.5*u)} y1={p[1]-(hz?2.5*u:0)} x2={p[0]+(hz?0:2.5*u)} y2={p[1]+(hz?2.5*u:0)} stroke="none"></line><line x1={p[0]-(hz?0:2.5*u)} y1={p[1]-(hz?2.5*u:0)} x2={p[0]+(hz?0:2.5*u)} y2={p[1]+(hz?2.5*u:0)} stroke="rgb(var(--ink) / .55)" strokeWidth={(v%1?.7:.9)*uL}></line></g>;})}
+        {L>1e-9&&<line x1={A[0]} y1={A[1]} x2={B[0]} y2={B[1]} style={{stroke:er?'rgb(var(--ink-faint))':SM.C.mv}} strokeOpacity={er?1:.6} strokeWidth={wT} strokeDasharray={er?`${4*u} ${3*u}`:null}></line>}
+        {!er&&pos.map((v,i)=>{const p=P(v);return <rect key={'s'+i} x={p[0]-ps/2} y={p[1]-ps/2} width={ps} height={ps} fill={ink}></rect>;})}
+        {L<=1e-9&&(()=>{const p=P(s0);return <rect x={p[0]-ps/2} y={p[1]-ps/2} width={ps} height={ps} fill="none" stroke={ink} strokeWidth={uL}></rect>;})()}
+        {L>1e-9&&<g>{[s0,s1].map((v,i)=>ln(at(v,o0),at(v,o+3*u),.6,'e'+i))}{ln(at(s0,o),at(s1,o),.75,'m')}{t45(s0,'a')}{t45(s1,'b')}{!er&&pos.slice(1,-1).map((v,i)=>ln(at(v,o-2*u),at(v,o+2*u),.6,'i'+i))}</g>}
+        <g transform={`translate(${cp[0]} ${cp[1]})`}><rect x={-cw*u/2} y={-chh*u/2} width={cw*u} height={chh*u} rx={5*u} fill={ink}></rect>
+          <text y={(sub2?-2.5:4)*u} textAnchor="middle" style={{font:`600 ${11*u}px var(--font-numeric)`,fill:'rgb(var(--canvas))'}}>{main}</text>
+          {sub2&&<text y={10.5*u} textAnchor="middle" style={{font:`500 ${9*u}px var(--font-numeric)`,fill:'rgb(var(--canvas) / .72)'}}>{sub2}</text>}</g>
+      </g>;})()}
+    {draw&&paintOn&&!tech&&(()=>{const L=Math.abs(draw.b[0]-draw.a[0])+Math.abs(draw.b[1]-draw.a[1]);if(!L)return <circle cx={draw.a[0]} cy={draw.a[1]} r=".09" style={{fill:bc}} pointerEvents="none"></circle>;const mx=(draw.a[0]+draw.b[0])/2,my=(draw.a[1]+draw.b[1])/2;const hz=draw.a[1]===draw.b[1];
+      return <g pointerEvents="none"><line x1={draw.a[0]} y1={draw.a[1]} x2={draw.b[0]} y2={draw.b[1]} style={{stroke:brush==='erase'?'rgb(var(--ink-faint))':`color-mix(in oklab,${SM.C.mv} 60%,transparent)`}} strokeWidth=".14" strokeLinecap="square" strokeDasharray={brush==='erase'?'.12 .08':null}></line>
+        {[draw.a,draw.b].map((n,i)=><circle key={i} cx={n[0]} cy={n[1]} r=".07" fill="rgb(var(--ink))"></circle>)}
+        {drawR.current?.moved&&<g transform={`translate(${mx+(hz?0:.32)} ${my+(hz?-.26:0)})`}><rect x="-.34" y="-.17" width=".68" height=".3" rx=".06" fill="rgb(var(--ink))"></rect><text y=".06" textAnchor="middle" style={{font:'600 .19px var(--font-numeric)',fill:'rgb(var(--canvas))'}}>{L} m</text></g>}
+      </g>;})()}
+    {techDims}{selChain}{techPos}
+    {tech&&grips&&brush==='sel'&&!draw&&(()=>{const ink='rgb(var(--ink))',srf='rgb(var(--surface))';const E6=1e-6;
+      const fm=v=>String(Math.round(v*1000)).replace(/\B(?=(\d{3})+(?!\d))/g,'\u2009');
+      const segsOf=w=>{const o=[];w.mods.forEach((m,i)=>{if(m){const a=ptAt(w,SM.cut(w,i)),b=ptAt(w,SM.cut(w,i+1));o.push([a,b]);}});return o;};
+      const onSeg=(pt,[a,b])=>Math.abs((b[0]-a[0])*(pt[1]-a[1])-(b[1]-a[1])*(pt[0]-a[0]))<1e-4&&pt[0]>=Math.min(a[0],b[0])-E6&&pt[0]<=Math.max(a[0],b[0])+E6&&pt[1]>=Math.min(a[1],b[1])-E6&&pt[1]<=Math.max(a[1],b[1])+E6;
+      const chip=(cx,cy,a,b,key)=>{const cw=Math.max(a.length*6.9,b.length*5.6)+16,chh=30;const mx=(cw/2+4)*u,my=(chh/2+4)*u;cx=Math.max(mx,Math.min(W-mx,cx));cy=Math.max(my,Math.min(D-my,cy));return <g key={key} transform={`translate(${cx} ${cy})`}><rect x={-cw*u/2} y={-chh*u/2} width={cw*u} height={chh*u} rx={5*u} fill={ink}></rect><text y={-2.5*u} textAnchor="middle" style={{font:`600 ${11*u}px var(--font-numeric)`,fill:'rgb(var(--canvas))'}}>{a}</text><text y={10.5*u} textAnchor="middle" style={{font:`500 ${9*u}px var(--font-numeric)`,fill:'rgb(var(--canvas) / .72)'}}>{b}</text></g>;};
+      const cwOf=(a,b)=>(Math.max(a.length*6.9,b.length*5.6)+16)*u;
+      const ln=(p,q,w,key,ex)=><line key={key} x1={p[0]} y1={p[1]} x2={q[0]} y2={q[1]} stroke={ink} strokeWidth={w*uL} {...(ex||{})}></line>;
+      const t45=(p,key)=>{const t=4*u;return ln([p[0]-t,p[1]+t],[p[0]+t,p[1]-t],1.4,key);};
+      const nm={B:'bakvegg',F:'front',L:'venstre vegg',R:'høyre vegg'};
+      return <g>{S.filter(w=>w.kind==='int').map(w=>{const p=ptAt(w,0),q=ptAt(w,w.len);const hz=Math.abs(p[1]-q[1])<E6;const others=S.filter(o=>o!==w);const oSegs=others.flatMap(o=>segsOf(o).map(sg=>({sg,o})));
+        const free=pt=>!oSegs.some(({sg})=>onSeg(pt,sg));const ends=[['a',p],['b',q]].filter(([,pt])=>free(pt));
+        const c=hz?p[1]:p[0],lo=hz?Math.min(p[0],q[0]):Math.min(p[1],q[1]),hi=hz?Math.max(p[0],q[0]):Math.max(p[1],q[1]),mid=(lo+hi)/2;
+        // nærmeste parallelle vegg som overlapper midtpunktet, ellers standkanten
+        const par=sgn=>{let best=sgn<0?0:(hz?D:W),lab=sgn<0?(hz?'bakkant':'venstre kant'):(hz?'gang':'høyre kant'),wall=false;oSegs.forEach(({sg:[a,b],o})=>{const sh=Math.abs(a[1]-b[1])<E6;if(sh!==hz)return;const cc=hz?a[1]:a[0];const l2=hz?Math.min(a[0],b[0]):Math.min(a[1],b[1]),h2=hz?Math.max(a[0],b[0]):Math.max(a[1],b[1]);if(mid<l2-E6||mid>h2+E6)return;if(sgn<0?(cc<c-E6&&cc>best-E6):(cc>c+E6&&cc<best+E6)){best=cc;wall=true;lab=o.kind==='per'?nm[o.key]:o.kind==='bk'?'bakrom':'innervegg';}});return {v:best,lab,wall,d:Math.abs(c-best)};};
+        const pl=par(-1),pr=par(1);const pick=(a,b)=>a.wall!==b.wall?(a.wall?a:b):(b.d<a.d-E6?b:a);const tg=pick(pl,pr);
+        // fra fri ende: nærmeste vegg på tvers i retningen enden peker
+        const gap=(pt,sgn)=>{const e=hz?pt[0]:pt[1];let best=sgn<0?0:(hz?W:D),lab=sgn<0?(hz?'venstre kant':'bakkant'):(hz?'høyre kant':'gang'),wall=false;oSegs.forEach(({sg:[a,b],o})=>{const sh=Math.abs(a[1]-b[1])<E6;if(sh===hz)return;const cc=hz?a[0]:a[1];const l2=hz?Math.min(a[1],b[1]):Math.min(a[0],b[0]),h2=hz?Math.max(a[1],b[1]):Math.max(a[0],b[0]);if(c<l2-E6||c>h2+E6)return;if(sgn<0?(cc<e-E6&&cc>best-E6):(cc>e+E6&&cc<best+E6)){best=cc;wall=true;lab=o.kind==='per'?nm[o.key]:o.kind==='bk'?'bakrom':'innervegg';}});return {v:best,lab,wall,d:Math.abs(e-best)};};
+        const dg=iwd&&iwd.key===w.key;const on=dg||(ih&&ih.w===w.key&&!iwd);const g=dg?'m':on?ih.g:null;const P=v=>hz?[v,c]:[c,v];
+        const ivStart=(ev,id)=>{ev.preventDefault();ev.stopPropagation();if(!onIwMove){onSel(w.key);return;}const lock=id==='x'||id==='y'?id:null;drag.current={iw:{x:w.x,y:w.y,len:w.len,hz},p0:toM(ev),cur:w.key,cx:w.x,cy:w.y,moved:false,lock};setIwd({key:w.key,lock,fine:false,ox:w.x,oy:w.y,len:w.len,hz});};
+        const gl=(id,pt)=>{const act=g===id;return <g key={'gl'+id} pointerEvents="none">{!act&&t45(pt,'t')}<circle cx={pt[0]} cy={pt[1]} r={2*u} fill={act?ink:srf} stroke={ink} strokeWidth={uL}></circle></g>;};
+        let dims=null;
+        if(g==='m'){const a=P(mid),b=hz?[mid,tg.v]:[tg.v,mid];
+          // langs veggen: fra enden med kortest avstand til vegg (ekte vegg foretrekkes) til den veggen/kanten
+          const ga=gap(p,-1),gb=gap(q,1);const ae=ga.wall!==gb.wall?(ga.wall?['a',ga]:['b',gb]):(gb.d<ga.d-E6?['b',gb]:['a',ga]);const ep=ae[0]==='a'?p:q,eg=ae[1];const eb=hz?[eg.v,c]:[c,eg.v];
+          const t=(hz?'↕ ':'↔ ')+fm(tg.d)+'   '+(hz?'↔ ':'↕ ')+fm(eg.d);const dxm=dg?Math.round((w.x-iwd.ox)*1000)/1000:0,dym=dg?Math.round((w.y-iwd.oy)*1000)/1000:0;const sg2=v=>(v>0?'+':'−')+fm(Math.abs(v));
+          const sb=dg&&(dxm||dym)?[dxm?'x '+sg2(dxm):null,dym?'y '+sg2(dym):null].filter(Boolean).join('  ·  ')+(iwd.fine?'  ·  25 cm':''):dg?'⇧ 25 cm':'til '+tg.lab+' · '+eg.lab;
+          const cm=[(a[0]+b[0])/2,(a[1]+b[1])/2];const cp=hz?[cm[0]+cwOf(t,sb)/2+8*u,cm[1]]:[cm[0],cm[1]-21*u];
+          dims=<g pointerEvents="none">{ln(a,b,.8,'d')}{t45(b,'tb')}{eg.d>E6&&<>{ln(ep,eb,.8,'g')}{t45(ep,'ta2')}{t45(eb,'tb2')}</>}{chip(cp[0],cp[1],t,sb,'c')}</g>;}
+        else if(g==='a'||g==='b'){const pt=g==='a'?p:q;const other=g==='a'?q:p;const sgn=hz?Math.sign(pt[0]-other[0]):Math.sign(pt[1]-other[1]);const gp2=gap(pt,sgn);
+          const side=hz?(c<=D/2?-1:1):(c<=W/2?-1:1);const o=16*u*side;const A=hz?[lo,c+o]:[c+o,lo],B=hz?[hi,c+o]:[c+o,hi];const ex=(v)=>hz?ln([v,c+3*u*side],[v,c+o+3*u*side],.6,'e'+v):ln([c+3*u*side,v],[c+o+3*u*side,v],.6,'e'+v);
+          const end=hz?[gp2.v,c]:[c,gp2.v];const t=fm(w.len),sb=gp2.d>E6?'luke '+fm(gp2.d)+' til '+gp2.lab:'inntil '+gp2.lab;const cw=cwOf(t,sb);const cp=hz?[mid,c-side*(15+10)*u]:[c-side*(cw/2+12*u),mid];/* chip mot standens midte, mållinje mot nærmeste kant */
+          dims=<g pointerEvents="none">{ex(lo)}{ex(hi)}{ln(A,B,.8,'l')}{t45(A,'ta')}{t45(B,'tb')}{gp2.d>E6&&ln(pt,end,.8,'g',{strokeDasharray:`${3*u} ${2*u}`})}{chip(cp[0],cp[1],t,sb,'c')}</g>;}
+        const ghost=dg&&(Math.abs(iwd.ox-w.x)>1e-6||Math.abs(iwd.oy-w.y)>1e-6)&&(()=>{const a=[iwd.ox,iwd.oy],b=hz?[iwd.ox+iwd.len,iwd.oy]:[iwd.ox,iwd.oy+iwd.len];
+          const gl2=iwd.lock&&(()=>{const m=hz?[iwd.ox+iwd.len/2,iwd.oy]:[iwd.ox,iwd.oy+iwd.len/2];return iwd.lock==='x'?ln([0,m[1]],[W,m[1]],.6,'lk',{strokeDasharray:`${4*u} ${3*u}`,opacity:.5}):ln([m[0],0],[m[0],D],.6,'lk',{strokeDasharray:`${4*u} ${3*u}`,opacity:.5});})();
+          return <g pointerEvents="none">{gl2}<line x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke="rgb(var(--ink) / .3)" strokeWidth={wT*.7} strokeDasharray={`${4*u} ${3*u}`}></line></g>;})();
+        return <g key={'ig'+w.key}>{ghost}
+          {on&&kontur&&<line x1={p[0]} y1={p[1]} x2={q[0]} y2={q[1]} stroke={ink} strokeOpacity=".12" strokeWidth={8*u} pointerEvents="none"></line>}
+          <line x1={p[0]} y1={p[1]} x2={q[0]} y2={q[1]} stroke="transparent" strokeWidth={Math.max(.3,14*u)} style={{cursor:'pointer'}} onPointerEnter={()=>{if(!iwd)setIh({w:w.key,g:null});}} onPointerLeave={()=>{if(!iwd)setIh(null);}} onPointerDown={ev=>{if(ev.button===0)ivStart(ev,'f');}}></line>
+          {on&&dims}
+          {manip&&mvMode&&sel===w.key&&!selTex&&<Manip at={P(mid)} sx={hz?1:(c>=tg.v?1:-1)} sy={hz?(c>=tg.v?1:-1):1} u={u} act={dg?(iwd.lock||'f'):null} onStart={ivStart} onHov={id=>{if(!iwd)setIh(id?{w:w.key,g:'m'}:null);}}></Manip>}
+          
+        </g>;})}</g>;})()}{!tech&&<>
+    <text x={W/2} y={-M*.52} textAnchor="middle" style={lab}>Bak · {sideTxt('B')}</text>
+    <text x={W/2} y={-M*.2} textAnchor="middle" style={mono}>{SM.fmt(W)} m</text>
+    <text transform={`translate(${-M*.42} ${D/2}) rotate(-90)`} textAnchor="middle" style={lab}>Venstre · {sideTxt('L')}</text>
+    <text transform={`translate(${-M*.14} ${D/2}) rotate(-90)`} textAnchor="middle" style={mono}>{SM.fmt(D)} m</text>
+    <text transform={`translate(${W+M*.5} ${D/2}) rotate(90)`} textAnchor="middle" style={lab}>Høyre · {sideTxt('R')}</text>
+    <text x={W/2} y={D+M*.3} textAnchor="middle" style={lab}>Front · {sideTxt('F')}</text>
+    </>}
+  {bk&&grips&&brush==='sel'&&(()=>{const F=[['B',bk.x,bk.y,bk.x+bk.w,bk.y,'ns-resize'],['F',bk.x,bk.y+bk.d,bk.x+bk.w,bk.y+bk.d,'ns-resize'],['L',bk.x,bk.y,bk.x,bk.y+bk.d,'ew-resize'],['R',bk.x+bk.w,bk.y,bk.x+bk.w,bk.y+bk.d,'ew-resize']];
+      const onP=f=>(f==='B'&&bk.y===0)||(f==='F'&&bk.y+bk.d===D)||(f==='L'&&bk.x===0)||(f==='R'&&bk.x+bk.w===W);
+      const d0=drag.current&&drag.current.edge?drag.current.b0:null;const any=hb||he||rz;const ink='rgb(var(--ink))';
+      return <g>
+        {rz&&d0&&gs!=='mal'&&(()=>{const hz=rz==='B'||rz==='F';const v=rz==='B'?bk.y:rz==='F'?bk.y+bk.d:rz==='L'?bk.x:bk.x+bk.w;const n0=hz?d0.d:d0.w,n1=hz?bk.d:bk.w;
+          const [gx,gy]=hz?[bk.x+bk.w/2,v]:[v,bk.y+bk.d/2];const lx=gx+(hz?0:(rz==='R'?1:-1)*34*u),ly=gy+(hz?(rz==='F'?1:-1)*20*u:0);const t=n0===n1?n1+' m':n0+' → '+n1+' m';const tw=(t.length*6.6+14)*u;
+          return <g pointerEvents="none"><line x1={hz?0:v} y1={hz?v:0} x2={hz?W:v} y2={hz?v:D} stroke={ink} strokeWidth={uL} strokeDasharray={`${4*u} ${3*u}`} opacity=".5"></line>
+            <rect x={bk.x} y={bk.y} width={bk.w} height={bk.d} fill="none" stroke={ink} strokeWidth={1.25*uL}></rect>
+            <g transform={`translate(${lx} ${ly})`}><rect x={-tw/2} y={-10*u} width={tw} height={19*u} rx={5*u} fill={ink}></rect><text y={4*u} textAnchor="middle" style={{font:`600 ${11*u}px var(--font-numeric)`,fill:'rgb(var(--canvas))'}}>{t}</text></g></g>;})()}
+        {F.map(([f,x1,y1,x2,y2,cur])=>{if(onP(f))return null;const hz=y1===y2;const L=hz?x2-x1:y2-y1;const df=bk.doorFace===f?bk.door:null;
+          let c=L/2;if(df!=null&&df>=0&&df<L){const s1=df,s2=L-df-1;c=s1>=s2?s1/2:df+1+s2/2;if(Math.max(s1,s2)<.5)c=L/2;}
+          const gx=hz?x1+c:x1,gy=hz?y1:y1+c;const act=he===f||rz===f;const op=rz&&rz!==f?0:act?1:any?.55:0;
+          const gl=20*u,gw=9*u;const [rw,rh]=hz?[gl,gw]:[gw,gl];
+          return <g key={f}>
+            {kontur&&act&&!rz&&<line x1={x1} y1={y1} x2={x2} y2={y2} stroke={ink} strokeWidth={3*uL} strokeOpacity=".35" pointerEvents="none"></line>}
+            <g pointerEvents="none" style={{opacity:op,transition:'opacity 150ms cubic-bezier(.4,0,.2,1)'}}>
+              {(!gs||gs==='pille')&&<><rect x={gx-rw/2} y={gy-rh/2} width={rw} height={rh} rx={gw/2} fill={act?ink:'rgb(var(--surface))'} stroke={ink} strokeWidth={uL} style={{filter:act?'none':'drop-shadow(0 1px 1.5px rgb(0 0 0 / .18))'}}></rect>
+              {[-1.6,1.6].map(o=><line key={o} x1={hz?gx-4.5*u:gx+o*u} y1={hz?gy+o*u:gy-4.5*u} x2={hz?gx+4.5*u:gx+o*u} y2={hz?gy+o*u:gy+4.5*u} stroke={act?'rgb(var(--surface))':ink} strokeWidth={1.1*u} strokeLinecap="round"></line>)}</>}
+              {gs==='cad'&&<rect x={gx-3.75*u} y={gy-3.75*u} width={7.5*u} height={7.5*u} fill={act?ink:'rgb(var(--surface))'} stroke={ink} strokeWidth={1.25*uL}></rect>}
+              {gs==='pil'&&(()=>{const nx=hz?0:1,ny=hz?1:0,h=8*u,a=3.6*u,b=2.6*u;const tri=sg=>{const tx=gx+nx*h*sg,ty=gy+ny*h*sg;return `M${tx} ${ty}L${tx-nx*a*sg+ny*b} ${ty-ny*a*sg+nx*b}L${tx-nx*a*sg-ny*b} ${ty-ny*a*sg-nx*b}Z`;};
+                return <><line x1={gx-nx*h} y1={gy-ny*h} x2={gx+nx*h} y2={gy+ny*h} stroke="rgb(var(--surface))" strokeWidth={4.5*u} strokeLinecap="round"></line><line x1={gx-nx*(h-a)} y1={gy-ny*(h-a)} x2={gx+nx*(h-a)} y2={gy+ny*(h-a)} stroke={ink} strokeWidth={(act?1.5:1)*uL}></line><path d={tri(1)+tri(-1)} fill={ink}></path><circle cx={gx} cy={gy} r={(act?2.4:1.8)*u} fill={act?ink:'rgb(var(--surface))'} stroke={ink} strokeWidth={uL}></circle></>;})()}
+              {gs==='mal'&&(()=>{const nx=hz?0:1,ny=hz?1:0;const opp=f==='B'?bk.y+bk.d:f==='F'?bk.y:f==='L'?bk.x+bk.w:bk.x;const n=hz?bk.d:bk.w;const t=4*u;
+                const P=(v)=>hz?[gx,v]:[v,gy];const p0=P(hz?gy:gx),p1=P(opp);const tick=(p,k)=><line key={k} x1={p[0]-t} y1={p[1]+t} x2={p[0]+t} y2={p[1]-t} stroke={ink} strokeWidth={1.4*uL}></line>;
+                const mx=(p0[0]+p1[0])/2,my=(p0[1]+p1[1])/2;const fmm2=v=>String(Math.round(v*1000)).replace(/\B(?=(\d{3})+(?!\d))/g,'\u2009');const txt=String(Math.round(n*1000)).replace(/\B(?=(\d{3})+(?!\d))/g,'\u2009');
+                return <>{act&&<><line x1={p0[0]} y1={p0[1]} x2={p1[0]} y2={p1[1]} stroke={ink} strokeWidth={.8*uL}></line>{tick(p1,'b')}
+                  {(()=>{const n0=d0?(hz?d0.d:d0.w):n;const dl=Math.round((n-n0)*1000)/1000;const sub=rz===f&&d0?(Math.abs(dl)<1e-9?'dra for å endre':'fra '+fmm2(n0)+'  ·  '+(dl>0?'+':'−')+fmm2(Math.abs(dl))):(hz?'↕ dra for å endre':'↔ dra for å endre');const cw=Math.max(txt.length*6.9,sub.length*5.6)+16,chh=30;
+                    const cx0=hz?mx+6*u+cw*u/2:mx,cy0=hz?my:my-4*u-chh*u/2;return <g transform={`translate(${cx0} ${cy0})`}><rect x={-cw*u/2} y={-chh*u/2} width={cw*u} height={chh*u} rx={5*u} fill={ink}></rect><text y={-2.5*u} textAnchor="middle" style={{font:`600 ${11*u}px var(--font-numeric)`,fill:'rgb(var(--canvas))'}}>{txt}</text><text y={10.5*u} textAnchor="middle" style={{font:`500 ${9*u}px var(--font-numeric)`,fill:'rgb(var(--canvas) / .72)'}}>{sub}</text></g>;})()}</>}
+                  {tick(p0,'a')}<circle cx={gx} cy={gy} r={2*u} fill={act?ink:'rgb(var(--surface))'} stroke={ink} strokeWidth={uL}></circle></>;})()}
+            </g>
+            <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="transparent" strokeWidth={Math.max(.26,16*u)} style={{cursor:cur}} onPointerEnter={()=>{setHe(f);setHb(true);}} onPointerLeave={()=>{setHe(null);setHb(false);}} onPointerDown={e=>{e.stopPropagation();e.preventDefault();const p=toM(e);drag.current={edge:f,p0:p,b0:{x:bk.x,y:bk.y,w:bk.w,d:bk.d}};setRz(f);}}></line>
+          </g>;})}
+      </g>;})()}
+  {bk&&!grips&&!noDate&&<g>{brush==='sel'&&[['B',bk.x,bk.y,bk.x+bk.w,bk.y,'ns-resize'],['F',bk.x,bk.y+bk.d,bk.x+bk.w,bk.y+bk.d,'ns-resize'],['L',bk.x,bk.y,bk.x,bk.y+bk.d,'ew-resize'],['R',bk.x+bk.w,bk.y,bk.x+bk.w,bk.y+bk.d,'ew-resize']].map(([f,x1,y1,x2,y2,cur])=>{const hz=y1===y2;const i=.18;
+        return <g key={f} className={'bkedge-p'+(rz===f?' on':'')}><line x1={x1+(hz?i:0)} y1={y1+(hz?0:i)} x2={x2-(hz?i:0)} y2={y2-(hz?0:i)} className="vis" stroke="rgb(var(--ink))" strokeWidth=".06" strokeLinecap="round" pointerEvents="none"></line>
+          <line x1={x1+(hz?i:0)} y1={y1+(hz?0:i)} x2={x2-(hz?i:0)} y2={y2-(hz?0:i)} stroke="transparent" strokeWidth=".26" style={{cursor:cur}} onPointerDown={e=>{e.stopPropagation();e.preventDefault();const p=toM(e);drag.current={edge:f,p0:p,b0:{x:bk.x,y:bk.y,w:bk.w,d:bk.d}};}}></line></g>;})}</g>}{drOn&&S.filter(w=>w.kind==='bk').map(w=>Array.from({length:Math.round(w.len)},(_,i)=>{if(w.mods&&!w.mods[i])return null;const a0=ptAt(w,i+.08),b0=ptAt(w,i+.92);const kk=w.key+':'+i;const on=dh===kk;return <g key={kk}>{on&&<line x1={a0[0]} y1={a0[1]} x2={b0[0]} y2={b0[1]} stroke="rgb(var(--ink))" strokeWidth=".16" strokeOpacity=".35" pointerEvents="none"></line>}<line x1={a0[0]} y1={a0[1]} x2={b0[0]} y2={b0[1]} stroke="transparent" strokeWidth=".4" style={{cursor:'pointer'}} onPointerEnter={()=>setDh(kk)} onPointerLeave={()=>setDh(null)} onClick={()=>onDoorAt&&onDoorAt(w.key.split(':')[1],i,brush==='doorx')}></line></g>;}))}{(()=>{const ids=Object.keys(SM.floorAreas(st));if(ids.length<2||tech)return null;return <g style={{pointerEvents:'none'}}>{ids.map((id,n)=>{const f=SM.FLOORS.find(z=>z.id===id);if(!f)return null;const y=D+.62+n*.3;return <g key={id}><rect x={W+.25} y={y-.17} width=".2" height=".2" rx=".03" fill={f.c}></rect><text x={W+.52} y={y} style={{...mono,fontSize:tech?10.5*u+'px':'.19px',textAnchor:'start'}}>{f.n+' · '+SM.fmt(SM.floorAreas(st)[id])+' m²'}</text></g>;})}</g>;})()}{flOn&&fh&&<rect x={fh.i*FG} y={fh.j*FG} width={fh.w*FG} height={fh.h*FG} rx=".02" style={{pointerEvents:'none',fill:fb&&fb.id?((SM.FLOORS.find(z=>z.id===fb.id)||{}).c||'none'):'rgb(var(--surface))',fillOpacity:.75,stroke:'rgb(var(--ink))',strokeWidth:.03}}></rect>}{manipG}</svg>;
+}
+window.PlanView=PlanView;
+
+})();
+(function(){
+function ElevDims({w,st,lib,H,px}){
+  const ink='rgb(var(--ink-muted))';const mono={font:'500 10.5px var(--font-numeric)',fill:ink};
+  const fmm=v=>String(Math.round(v*1000)).replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+  const X=m=>m*px,Y=v=>(H-v)*px;const L=w.len;const feet=SM.SYS.feet;
+  const ln=(p,q,sw,k)=><line key={k} x1={p[0]} y1={p[1]} x2={q[0]} y2={q[1]} stroke={ink} strokeWidth={sw}></line>;
+  // Kjedemål. hz: langs veggen på høyde o (px). Ellers: høyder på x = o. Tallet står midt mellom hakkene.
+  const chain=(pts,o,e0,hz,key,lbl)=>{pts=[...new Set(pts.map(v=>Math.round(v*1000)/1000))].sort((a,b)=>a-b);if(pts.length<2)return null;const tk=3;const sd=o>e0?1:-1;const P=(v,c)=>hz?[X(v),c]:[c,Y(v)];
+    return <g key={key}>{pts.map((v,i)=><g key={i}>{ln(P(v,e0),P(v,o+sd*4),.6,'e')}{ln(hz?[X(v)-tk,o+tk]:[o-tk,Y(v)+tk],hz?[X(v)+tk,o-tk]:[o+tk,Y(v)-tk],1.1,'t')}</g>)}
+      {ln(P(pts[0],o),P(pts[pts.length-1],o),.75,'m')}
+      {pts.slice(1).map((b,i)=>{const a=pts[i];const len=hz?X(b)-X(a):Y(a)-Y(b);const t=(lbl&&lbl(a,b))||fmm(b-a);if(len<Math.max(26,t.length*6.3+6))return null;const m=(a+b)/2;
+        return hz?<text key={'x'+i} x={X(m)} y={o+(sd>0?13:-4)} textAnchor="middle" style={mono}>{t}</text>:<text key={'x'+i} transform={`translate(${o+(sd>0?11:-4)} ${Y(m)}) rotate(-90)`} textAnchor="middle" style={mono}>{t}</text>;})}</g>;};
+  const mods=[0,L];w.mods.forEach((m,i)=>{if(m)mods.push(SM.cut(w,i),SM.cut(w,i+1));});if(w.door!=null)mods.push(SM.cut(w,w.door),SM.cut(w,w.door+1));
+  const S=SM.walls(st);const L5=window.POS5(st,S,lib);
+  const objs=[];L5.forEach((it,i)=>{if(it.kind==='tex'&&it.o.s===w.key){const t=it.o;objs.push({n:it.n,x:t.x,w:t.w,b:t.b,h:t.h,tex:1,ty:it.type});}
+    else if(it.kind==='gfx'&&it.o.s===w.key){const g=it.o;const h=SM.gfxH(g,lib);objs.push({n:it.n,x:g.x,w:g.w,b:H-g.y-h,h,ty:it.type});}
+    else if(it.kind==='plate'&&it.o.key===w.key){objs.push({n:it.n,x:0,w:L,b:0,h:H,plate:1,ty:it.type});}
+    else if(it.kind==='door'&&it.o.key===w.key){const a=SM.cut(w,w.door);objs.push({n:it.n,x:a,w:SM.cut(w,w.door+1)-a,b:0,h:2.0,door:true,ty:it.type});}});
+  const place=objs.filter(o=>!o.door&&!o.plate);
+  const tg=(o,i)=>{const lab=o.ty||'';const cw=24+lab.length*6.2;const ow=X(o.w);const inside=!o.door&&ow>=cw+12;
+    const x=o.door?X(o.x)+ow/2-cw/2:X(o.x)+(inside?6:0);const y=o.plate?Y(SM.SYS.feet)-26:o.door?Y(o.h/2)-9:inside?Y(o.b+o.h)+6:Y(o.b+o.h)-24;const ink='rgb(var(--ink))';
+    return <g key={'tg'+i} transform={`translate(${x} ${y})`}><rect width={cw} height="18" rx="3" fill="rgb(var(--surface))" stroke={ink} strokeWidth="1"></rect><line x1="18" y1="0" x2="18" y2="18" stroke={ink} strokeWidth="1"></line><text x="9" y="13" textAnchor="middle" style={{font:'700 10.5px var(--font-numeric)',fill:ink}}>{o.n}</text><text x="24" y="13" style={{font:'500 11px var(--font-ui)',fill:ink}}>{lab}</text></g>;};
+  return <svg width={L*px} height={H*px} style={{position:'absolute',left:0,top:0,overflow:'visible',pointerEvents:'none'}}>
+    {chain(mods,H*px+16,H*px+4,true,'hc')}{chain([0,L],H*px+34,H*px+4,true,'ht')}
+    {place.length>0&&chain([0,L,...place.flatMap(o=>[o.x,o.x+o.w])],-18,-4,true,'hp')}
+    {chain([0,feet,H],-16,-4,false,'vc',(a,b)=>b-a>.2?fmm(b-a)+' vegg':null)}{chain([0,H],-38,-4,false,'vt',(a,b)=>fmm(b-a)+' med føtter')}
+    {place.length>0&&chain([0,H,...place.flatMap(o=>[o.b,o.b+o.h])],L*px+18,L*px+4,false,'vp')}
+    {(()=>{const ink='rgb(var(--ink-muted))';const sh=!!window.__pos5show;
+      const Ls=objs.map(o=>{const xm=o.plate?X(Math.min(.3,L/2)):o.door?X(o.x+o.w/2):X(o.x)+Math.min(12,X(o.w)/2);const yo=o.plate?Y(H-.06):o.door?Y(o.h):Y(o.b+o.h);const t=(sh?o.n+'  ':'')+(o.ty||'');return {xm,yo,t,w:t.length*6.3+10};}).sort((a,b)=>a.xm-b.xm);
+      const base=place.length>0?-42:-22;const lv=[];Ls.forEach(l=>{let k=0;while(lv[k]!=null&&lv[k]>l.xm-2)k++;lv[k]=l.xm+l.w+8;l.y=base-k*13;});
+      return Ls.map((l,i)=><g key={'ld'+i}><circle cx={l.xm} cy={l.yo} r="1.6" fill={ink}></circle><line x1={l.xm} y1={l.yo} x2={l.xm} y2={l.y} stroke={ink} strokeWidth=".6"></line><line x1={l.xm} y1={l.y} x2={l.xm+6} y2={l.y} stroke={ink} strokeWidth=".6"></line><text x={l.xm+8} y={l.y+3.5} style={mono}>{l.t}</text></g>);})()}
+  </svg>;}
+function Elevation({tech,w,st,lib,selTex,setSelTex,onTex,onGfx,onDrop,onAddTex,onClose,dragItem,onPlate,column}){
+  const [eh,setEh]=useSS(null);useSE(()=>{if(!dragItem)setEh(null);},[dragItem]);
+  const box=useSR(null);const outer=useSR(null);const [cw,setCw]=useSS(600);const [dw,setDw]=useSS(900);const [mh,setMh]=useSS(600);const insp=useSR(null);const [ih,setIh]=useSS(0);const [pick,setPick]=useSS(null);
+  useSE(()=>{const m=outer.current&&outer.current.parentElement;const ro=new ResizeObserver(()=>{if(box.current)setCw(box.current.clientWidth);if(outer.current)setDw(outer.current.clientWidth);if(m)setMh(m.clientHeight);if(insp.current)setIh(insp.current.offsetHeight);});ro.observe(box.current);ro.observe(outer.current);m&&ro.observe(m);insp.current&&ro.observe(insp.current);return ()=>ro.disconnect();},[]);
+  const H=SM.H;const stackE=dw<760;const budget=Math.max(90,Math.min(T?236:196,mh*.62-(stackE?ih:0)-64));const px=Math.max(20,Math.min((cw-(tech?136:40))/w.len,(budget-(tech?54:0))/H));
+  const tex=st.tex.filter(t=>t.s===w.key);const gfx=st.gfx.filter(g=>g.s===w.key);
+  const T=tex.find(t=>t.id===selTex);const G=gfx.find(g=>g.id===pick);
+  const fitT=n=>{n.w=Math.max(.5,Math.min(w.len,snap(n.w)));n.h=Math.max(.5,Math.min(H,snap(n.h)));n.x=Math.max(0,Math.min(w.len-n.w,snap(n.x)));n.b=Math.max(0,Math.min(H-n.h,snap(n.b)));return n;};
+  const upT=(n,keepFit)=>onTex(st.tex.map(x=>x.id===n.id?fitT({...n,fit:keepFit?n.fit:false}):x));
+  const start=(e,obj,mode,isT)=>{e.stopPropagation();e.preventDefault();if(isT){setSelTex(obj.id);setPick(null);}else{setPick(obj.id);setSelTex(null);}const o={x:e.clientX,y:e.clientY};
+    const mv=ev=>{const dx=(ev.clientX-o.x)/px,dy=(ev.clientY-o.y)/px;let n={...obj};
+      if(isT){if(mode==='move'){n.x+=dx;n.b-=dy;}else if(mode==='w')n.w+=dx;else if(mode==='h')n.h-=dy;upT(n,mode==='h');}
+      else{if(mode==='move'){n.x+=dx;n.y+=dy;}else if(!n.full){n.w=Math.max(.1,n.w+dx);}const f=SM.fitGfx(st,w,n);if(f)onGfx(st.gfx.map(x=>x.id===n.id?f:x));}};
+    const up=()=>{window.removeEventListener('pointermove',mv);window.removeEventListener('pointerup',up);};
+    window.addEventListener('pointermove',mv);window.addEventListener('pointerup',up);};
+  useSE(()=>{const k=e=>{if(!(e.key==='Delete'||e.key==='Backspace')||document.activeElement.tagName==='INPUT')return;if(T){onTex(st.tex.filter(t=>t.id!==T.id));setSelTex(null);}else if(G){onGfx(st.gfx.filter(g=>g.id!==G.id));setPick(null);}};window.addEventListener('keydown',k);return ()=>window.removeEventListener('keydown',k);},[T,G,st]);
+  const {IconButton,Button}=window.ExpoPlannerDesignSystem_a2c64a;
+  const Dim=({label,v,on,min,max})=><div style={{display:'flex',alignItems:'center',gap:8,minHeight:36}}><span style={{flex:1,font:'500 13px var(--font-ui)'}}>{label}</span><span style={{display:'inline-flex',alignItems:'center',gap:2,padding:2,borderRadius:'var(--r-track)',background:'var(--well)'}}><IconButton icon="minus" size={14} label={label+' −0,5 m'} disabled={v<=min} onClick={()=>on(-.5)}></IconButton><span style={{minWidth:52,textAlign:'center',font:'600 13px var(--font-numeric)'}}>{SM.fmt1(v)} m</span><IconButton icon="plus" size={14} label={label+' +0,5 m'} disabled={v>=max} onClick={()=>on(.5)}></IconButton></span></div>;
+  const dropHere=e=>{e.preventDefault();const d=getDrop(e);if(!d)return;const r=e.currentTarget.getBoundingClientRect();onDrop(w,d,(e.clientX-r.left)/px,(e.clientY-r.top)/px);};
+  const setFull=v=>{const n=SM.fitGfx(st,w,{...G,full:v,...(v?{}:{w:SM.felt(0).w*.8,h:SM.felt(0).w*.8/(G.r||1),y:.6})},G.r);if(n)onGfx(st.gfx.map(x=>x.id===G.id?n:x));};
+  const {Segmented:SegE}=window.ExpoPlannerDesignSystem_a2c64a;
+  const hint=T?'Dra rammen for å flytte · håndtakene endrer bredde og høyde':G?(G.full?'Dra for å flytte til et annet veggfelt':'Dra for å flytte innenfor et veggfelt · hjørnet endrer størrelse'):'Klikk en ramme eller grafikk for å redigere';
+  const stack=dw<760;const eyebrow={font:'var(--type-eyebrow)',letterSpacing:'var(--tracking-eyebrow)',textTransform:'uppercase',color:'rgb(var(--ink-faint))'};
+  const mod=w.mods.filter((m,i)=>m&&w.door!==i).length;
+  return <div ref={outer} style={{flex:'none',maxHeight:column?'none':'min(64%,560px)',overflowY:column?'visible':'auto',scrollbarWidth:'thin',position:'relative',background:column?'transparent':'rgb(var(--panel))',borderTop:column?'none':'1px solid rgb(var(--border-strong))',display:'grid',gridTemplateColumns:stack?'minmax(0,1fr)':'minmax(244px,284px) minmax(0,1fr)'}}>
+    <div ref={insp} style={{padding:stack?'12px 88px 12px 20px':'14px 20px 16px 24px',borderRight:stack?'none':'1px solid var(--g-row)',borderBottom:stack?'1px solid var(--g-row)':'none',display:'flex',flexDirection:stack?'row':'column',flexWrap:stack?'wrap':'nowrap',alignItems:stack?'flex-start':'stretch',columnGap:24,rowGap:12,minWidth:0}}>
+      <div style={{minWidth:0,flex:stack?'1 1 180px':'none'}}>
+        <div style={{display:'flex',alignItems:'center',gap:8}}><i style={{width:8,height:8,borderRadius:'50%',flex:'none',background:T?SM.C.tex:G?'rgb(var(--ink-faint))':w.kind==='bk'?SM.C.bk:SM.C.mv}}></i><span style={{font:'var(--type-group)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{T?'Tekstilvegg':G?'Foliedekor':w.name}</span></div>
+        <div style={{font:'var(--type-meta)',color:'rgb(var(--ink-muted))',marginTop:3,textWrap:'pretty'}}>{T?`På ${w.name.toLowerCase()} · 40 mm alu${T.fit?' · fyller ledig vegg':''}`:G?`På ${w.name.toLowerCase()} · felt ${(G.m??0)+1} · ${Math.round(G.w*1000)} × ${Math.round(SM.gfxH(G,lib)*1000)} mm`:`Standvegg · ${mod} × ${SM.fmt(H)} m${w.door!=null?' + 1 åpning':''}${tex.length?` · ${tex.length} tekstilvegg${tex.length>1?'er':''}`:''}`}</div>
+      </div>
+      {T&&<>
+        <div style={{display:'flex',flexDirection:'column',flex:stack?'0 1 220px':'none',minWidth:stack?200:0,marginTop:stack?-4:0}}>
+          <Dim label="Bredde" v={T.w} min={.5} max={w.len} on={d=>upT({...T,w:T.w+d})}></Dim>
+          <Dim label="Høyde" v={T.h} min={.5} max={H} on={d=>upT({...T,h:T.h+d},true)}></Dim>
+        </div>
+        <div style={{flex:stack?'1 1 260px':'none',minWidth:0}}>
+          <div style={{display:'flex',alignItems:'baseline',gap:6,marginBottom:6}}><span style={eyebrow}>Motiv</span><span style={{font:'500 12px var(--font-ui)',color:'rgb(var(--ink-muted))',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{T.motif?(lib.find(x=>x.id===T.motif)||{n:''}).n:'Uten motiv'}</span></div>
+          <div style={{display:'grid',gridTemplateColumns:stack?'repeat(auto-fill,48px)':'repeat(auto-fill,minmax(48px,1fr))',gap:6}}>
+          {[null,...lib].map(l=>{const id=l?l.id:null;const on=(T.motif||null)===id;
+            return <button key={id||'none'} type="button" title={l?l.n:'Uten motiv'} aria-label={l?l.n:'Uten motiv'} aria-pressed={on} onClick={()=>upT({...T,motif:id},true)} className="mot"
+              style={{display:'grid',placeItems:'center',height:38,padding:0,border:0,borderRadius:'var(--r-tile)',cursor:'pointer',background:on?'rgb(var(--surface))':'var(--well)',boxShadow:on?'var(--raise),inset 0 0 0 1.5px rgb(var(--ink))':'none',transition:'background 150ms'}}>
+              <span style={{width:38,height:28,display:'grid',placeItems:'center',overflow:'hidden',borderRadius:3,background:l?'transparent':'rgb(var(--surface))',boxShadow:l?'none':`inset 0 0 0 2px ${ALU2}`}}>{l?<GfxArt l={l} style={{width:l.ratio>=38/28?'100%':'auto',height:l.ratio>=38/28?'auto':'100%',aspectRatio:String(l.ratio),maxWidth:'100%',maxHeight:'100%'}}></GfxArt>:null}</span>
+            </button>;})}
+          </div>
+        </div>
+        {!T.fit&&<div style={{display:'flex',gap:8,flexWrap:'wrap',marginTop:stack?0:'auto',alignSelf:stack?'flex-end':'auto'}}><Button icon="move-horizontal" onClick={()=>upT({...T,fit:true},true)}>Fyll ledig vegg</Button></div>}
+      </>}
+      {G&&<div style={{display:'flex',flexDirection:'column',gap:6,flex:stack?'0 1 260px':'none'}}>
+        <span style={eyebrow}>Dekning</span>
+        <SegE value={!!G.full} onChange={setFull} options={[{value:false,label:'Dekal'},{value:true,label:'Helt veggfelt'}]}></SegE>
+        <span style={{font:'400 12px var(--font-ui)',color:'rgb(var(--ink-faint))',textWrap:'pretty'}}>{G.full?'Dekker feltet mellom stolpene og profilene, 960 × 2420 mm.':'Ligger innenfor ett veggfelt, aldri over en stolpe.'}</span>
+      </div>}
+      {!T&&!G&&<div style={{display:'flex',flexDirection:'column',gap:6,flex:stack?'0 1 240px':'none'}}>
+        <div style={{display:'flex',alignItems:'baseline',gap:6}}><span style={eyebrow}>Veggplate</span><span style={{font:'500 12px var(--font-ui)',color:'rgb(var(--ink-muted))'}}>{SM.plateOf(st,w.key).n} · RAL {SM.plateOf(st,w.key).id}</span></div>
+        <PlateSwatches value={(st.plate&&st.plate.w&&st.plate.w[w.key])||null} inherit={SM.PLATES.find(p=>p.id===((st.plate&&st.plate.def)||'9010'))} onChange={id=>onPlate&&onPlate(w.key,id)}></PlateSwatches>
+      </div>}
+      {!T&&!G&&<div style={{display:'flex',flexDirection:'column',gap:8,flex:stack?'0 1 260px':'none'}}>
+        <Button variant="primary" icon="plus" onClick={()=>onAddTex(w)} style={{justifyContent:'center'}}>Legg til tekstilvegg</Button>
+        <span style={{font:'400 12px var(--font-ui)',color:'rgb(var(--ink-faint))',textWrap:'pretty'}}>Eller dra tekstilvegg og grafikk fra panelet til venstre rett på veggen.</span>
+      </div>}
+    </div>
+    <div style={{position:'absolute',top:10,right:12,display:'flex',gap:2,zIndex:2}}>
+      {(T||G)&&<IconButton icon="trash-2" className="del" label={T?'Fjern tekstilvegg (Delete)':'Fjern grafikk (Delete)'} onClick={()=>{if(T){onTex(st.tex.filter(t=>t.id!==T.id));setSelTex(null);}else{onGfx(st.gfx.filter(g=>g.id!==G.id));setPick(null);}}}></IconButton>}
+      <IconButton icon="x" label="Lukk" onClick={onClose}></IconButton>
+    </div>
+    <div style={{minWidth:0,display:'flex',flexDirection:'column',padding:stack?'10px 20px 8px':'16px 88px 12px 28px'}}>
+      {tech&&(()=>{const a=ptAt(w,0),b=ptAt(w,w.len);const hz=Math.abs(a[1]-b[1])<1e-6;const fmm=v=>String(Math.round(v*1000)).replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+        const nm=p=>hz?(p[0]<1e-6?'venstre side':p[0]>st.W-1e-6?'høyre side':'x '+fmm(p[0])):(p[1]<1e-6?'bakkant':p[1]>st.D-1e-6?'front':'y '+fmm(p[1]));
+        return <div style={{textAlign:'center',font:'500 11.5px var(--font-ui)',color:'rgb(var(--ink-muted))',marginBottom:2}}>{w.name} · sett innenfra · <span className="num">← {nm(a)}</span>{'\u2003'}<span className="num">{nm(b)} →</span></div>;})()}
+      <div ref={box} style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',minHeight:H*px+(tech?126:26)}}>
+      <div style={{position:'relative',paddingLeft:tech?66:30,paddingRight:tech?60:0,paddingTop:tech?64:0,paddingBottom:tech?46:22}}>
+      {!tech&&<><span style={{position:'absolute',left:0,top:0,height:H*px,display:'flex',alignItems:'center'}}><span style={{position:'absolute',left:12,top:0,bottom:0,borderLeft:'1px solid rgb(var(--border-strong))'}}></span><span style={{position:'relative',transform:'rotate(-90deg)',transformOrigin:'center',font:'500 10.5px var(--font-numeric)',color:'rgb(var(--ink-faint))',background:'rgb(var(--panel))',padding:'0 3px',whiteSpace:'nowrap',marginLeft:-4}}>{SM.fmt1(H)} m</span></span>
+      <div style={{position:'absolute',left:30,right:0,bottom:0,height:16}}>{(w.cuts||Array.from({length:w.len+1},(_,i)=>i)).map((v,i)=><span key={i} style={{position:'absolute',left:v*px,top:0,height:5,borderLeft:'1px solid rgb(var(--border-strong))'}}></span>)}<span style={{position:'absolute',left:0,right:0,top:2,borderTop:'1px solid rgb(var(--border-strong))'}}></span><span style={{position:'absolute',left:'50%',top:-3,transform:'translateX(-50%)',padding:'0 4px',background:'rgb(var(--panel))',font:'500 10.5px var(--font-numeric)',color:'rgb(var(--ink-faint))'}}>{w.len} m</span></div>
+      </>}
+      <div style={{position:'relative',width:w.len*px,height:H*px}} onClick={()=>{setPick(null);setSelTex(null);}} onDragOver={e=>{if(!dragItem||dragItem.kind==='item')return;e.preventDefault();const r=e.currentTarget.getBoundingClientRect();const ox=r1((e.clientX-r.left)/px),oy=r1((e.clientY-r.top)/px);setEh(h=>h&&!h.texId&&h.ox===ox&&h.oy===oy?h:{ox,oy});}} onDragLeave={e=>{if(!e.currentTarget.contains(e.relatedTarget))setEh(null);}} onDrop={e=>{setEh(null);dropHere(e);}}>
+        {w.mods.map((c,i)=>!c&&<div key={'o'+i} style={{position:'absolute',left:SM.cut(w,i)*px,top:0,width:(SM.cut(w,i+1)-SM.cut(w,i))*px,height:H*px,boxSizing:'border-box',border:'1px dashed rgb(var(--border-strong))',display:'grid',placeItems:'center',font:'400 11px var(--font-ui)',color:'rgb(var(--ink-faint))'}}>{w.kind==='bk'?'standvegg':'åpen'}</div>)}
+        {SM.runsM(w).map(([a,b])=><div key={a} style={{position:'absolute',left:a*px,top:0,width:(b-a)*px,height:(H-SM.SYS.feet)*px,background:SM.plateOf(st,w.key).c,boxShadow:'0 0 0 1px rgb(var(--border))'}}>{w.door!=null&&SM.cut(w,w.door)>=a&&SM.cut(w,w.door)<b&&<Door w={{door:SM.cut(w,w.door)-a}} px={px}></Door>}</div>)}
+        {w.kind!=='bk'&&SM.covered(st,w).map(([a,b])=><div key={'c'+a} style={{position:'absolute',left:a*px,top:0,width:(b-a)*px,height:H*px,background:'rgb(var(--sunken) / .85)',display:'grid',placeItems:'center',font:'500 12px var(--font-ui)',color:'rgb(var(--ink-muted))',pointerEvents:'none'}}><span style={{position:'relative',zIndex:1,padding:'1px 6px',borderRadius:4,background:'rgb(var(--sunken))'}}>Bakrom</span></div>)}
+        {SM.runs(w).flatMap(([a,b])=>Array.from({length:b-a+1},(_,k)=>a+k)).map(p=><i key={'st'+p} style={{position:'absolute',left:(SM.cut(w,p)-SM.SYS.pillar/2)*px,top:0,width:Math.max(2,SM.SYS.pillar*px),height:(H-SM.SYS.feet)*px,background:ALU2,pointerEvents:'none'}}></i>)}
+        {SM.runs(w).flatMap(([a,b])=>Array.from({length:b-a+1},(_,k)=>a+k)).map(p=><i key={'ft'+p} style={{position:'absolute',left:SM.cut(w,p)*px-Math.max(1.5,.012*px),bottom:0,width:Math.max(3,.024*px),height:SM.SYS.feet*px,background:'#17171a',pointerEvents:'none'}}></i>)}
+        {SM.runs(w).flatMap(([a,b])=>Array.from({length:b-a},(_,k)=>a+k)).map(m=><React.Fragment key={'rl'+m}><i style={{position:'absolute',left:SM.cut(w,m)*px,width:(SM.cut(w,m+1)-SM.cut(w,m))*px,top:0,height:Math.max(1.5,SM.SYS.rail.top*px),background:ALU,pointerEvents:'none'}}></i>{w.door!==m&&<i style={{position:'absolute',left:SM.cut(w,m)*px,width:(SM.cut(w,m+1)-SM.cut(w,m))*px,bottom:SM.SYS.feet*px,height:Math.max(1.5,SM.SYS.rail.bot*px),background:ALU,pointerEvents:'none'}}></i>}</React.Fragment>)}
+        {gfx.map(g=>{const on=g.id===pick;return <div key={g.id} onPointerDown={e=>start(e,g,'move',false)} onClick={e=>e.stopPropagation()} style={{position:'absolute',left:g.x*px,top:g.y*px,width:g.w*px,height:SM.gfxH(g,lib)*px,cursor:'move',outline:on?'1.5px solid rgb(var(--ink))':'none',outlineOffset:1}}>
+          <GfxArt l={lib.find(x=>x.id===g.lib)} style={{width:'100%',height:'100%'}}></GfxArt>
+          {on&&!g.full&&<i onPointerDown={e=>start(e,g,'size',false)} style={{position:'absolute',right:-5,bottom:-5,width:10,height:10,borderRadius:2,background:'rgb(var(--ink))',cursor:'nwse-resize'}}></i>}</div>;})}
+        {tex.map(t=>{const on=t.id===selTex;return <TexFrame key={t.id} t={t} lib={lib} px={px} onPointerDown={e=>start(e,t,'move',true)} onClick={e=>e.stopPropagation()}
+          onDrop={e=>{e.preventDefault();e.stopPropagation();setEh(null);const d=getDrop(e);if(d)onDrop(w,d,t.x+t.w/2,H/2,t.id);}} onDragOver={e=>{if(!dragItem||dragItem.kind==='item')return;e.preventDefault();e.stopPropagation();if(dragItem.kind==='gfx')setEh(h=>h&&h.texId===t.id?h:{texId:t.id});}}
+          style={{cursor:'move',outline:on?'1.5px solid rgb(var(--ink))':'none',filter:eh&&eh.texId===t.id?'brightness(.9)':'none',outlineOffset:1,boxShadow:t.motif?`2px 3px 0 ${ALU3},0 4px 10px rgb(0 0 0 / .14)`:'none'}}>
+          {!t.motif&&<span style={{position:'absolute',inset:0,display:'grid',placeItems:'center',font:'500 12px var(--font-ui)',color:'rgb(var(--ink-muted))',pointerEvents:'none'}}>Slipp motiv</span>}
+          {on&&<><i onPointerDown={e=>start(e,t,'w',true)} style={{position:'absolute',right:-6,top:'50%',marginTop:-10,width:8,height:20,borderRadius:2,background:'rgb(var(--ink))',cursor:'ew-resize'}}></i><i onPointerDown={e=>start(e,t,'h',true)} style={{position:'absolute',top:-6,left:'50%',marginLeft:-10,width:20,height:8,borderRadius:2,background:'rgb(var(--ink))',cursor:'ns-resize'}}></i></>}
+        </TexFrame>;})}
+        {tech&&<ElevDims w={w} st={st} lib={lib} H={H} px={px} sel={G||T||null} isT={!!T} tex={tex} gfx={gfx}></ElevDims>}
+        {eh&&!eh.texId&&<i style={{position:'absolute',inset:0,background:'rgb(var(--ink) / .05)',pointerEvents:'none'}}></i>}
+        {eh&&!eh.texId&&(()=>{const g=SM.dropPreview(st,lib,w,dragItem,eh.ox,eh.oy);return g&&g.kind==='none'?<NoDrop msg={g.msg}></NoDrop>:<Ghost g={g} px={px} top={g=>(H-g.b-g.h)*px}></Ghost>;})()}
+      </div>
+      </div>
+      </div>
+      <div style={{marginTop:6,textAlign:'center',font:'400 12px var(--font-ui)',color:'rgb(var(--ink-faint))'}}>{dragItem?(eh?(eh.texId?'Slipp for å trykke motivet på rammen':'Slipp for å legge på veggen'):'Dra over veggen'):hint}</div>
+    </div>
+  </div>;}
+window.Elevation=Elevation;
+})();
+(function(){
+// Tilbud-side: dokumentforhåndsvisning, skrives ut via nettleseren.
+const {useState:useQS}=React;
+const {Button:QButton,IconButton:QIconButton,Segmented:QSegmented,Icon:QIcon}=window.ExpoPlannerDesignSystem_a2c64a;
+const qkr=n=>SM.fmt(Math.round(n),0);
+const qT={muted:{font:'400 12px var(--font-ui)',color:'rgb(var(--ink-muted))'},faint:{font:'400 12px var(--font-ui)',color:'rgb(var(--ink-faint))'},eye:{font:'var(--type-eyebrow)',letterSpacing:'var(--tracking-eyebrow)',textTransform:'uppercase',color:'rgb(var(--ink-faint))'}};
+// Tilbud som dokument: plan, linjer per gruppe, forutsetninger. Skrives ut via nettleseren.
+function QuoteDoc({vars,ci,setCur,lib,proj}){const cust=pjVal(proj,'kunde'),pnm=pjVal(proj,'prosjekt'),snr=pjVal(proj,'stand'),xtra=pjExtra(proj);const RU=SM.RULES;
+  const v=vars[ci];if(!v)return <div style={{padding:40,...qT.muted}}>Lag en standskisse først.</div>;const st=v.st;const c=SM.calc(st,lib);const S=c.S;
+  const fab=SM.fabric.build(st,SM.fabric.load());const date=new Date().toLocaleDateString('nb-NO',{day:'numeric',month:'long',year:'numeric'});
+  const ph=c.G.reduce((a,g)=>a+g.lines.filter(l=>l.ph).length,0);const pre=c.G.some(g=>g.lines.some(l=>l.prelim));const noop=()=>{};
+  const bk=st.bk.on?SM.clampBk(st):null;const plate=SM.plateOf(st,'');
+  const facts=[[`${SM.fmt(st.W)} × ${SM.fmt(st.D)} m`,`${SM.fmt(c.area,2)} m² · ${SM.TYPES[st.type]}`],[`${SM.fmt(c.wallLm)} lm standvegg`,`veggplate ${plate.n.toLowerCase()} RAL ${plate.id}${bk?` · bakrom ${bk.w} × ${bk.d} m med ${(st.bk.open||'dor')==='dor'?'dør':'forheng'}`:''}`],
+    [st.beam!==false&&c.bm.lm?`${SM.fmt(c.bm.lm)} m takdrager`:'Uten takdrager',st.beam!==false&&c.bm.lm?`${c.bm.segs.length} ${c.bm.segs.length===1?'lengde':'lengder'} · ${c.bm.posts.length} ${c.bm.posts.length===1?'stolpe':'stolper'}`:'ingen avstivning på åpne sider'],
+    [c.floorA?Object.keys(SM.floorAreas(st)).map(id=>(SM.FLOORS.find(f=>f.id===id)||{n:id}).n).join(', '):'Hallgulv uten belegg',c.floorA?`${SM.fmt(c.floorA)} m² ferdig lagt`:'']];
+  const Row=({l,r,strong})=><div style={{display:'flex',alignItems:'baseline',gap:12,padding:'4px 0',borderTop:'1px solid var(--g-row)',font:strong?'600 13px var(--font-ui)':'400 13px var(--font-ui)'}}><span style={{flex:1,minWidth:0}}>{l}</span><span className="num" style={{font:strong?'600 13px var(--font-numeric)':'400 13px var(--font-numeric)',whiteSpace:'nowrap'}}>{r}</span></div>;
+  return <div style={{flex:1,minHeight:0,overflowY:'auto',overflowX:'hidden',background:'var(--sunken,rgb(var(--sunken)))'}}>
+    <div style={{display:'flex',alignItems:'center',gap:10,maxWidth:860,margin:'0 auto',padding:'14px 24px 0'}}>
+      <span style={{flex:1,...qT.muted}}>Forhåndsvisning · utskrift gir PDF{!cust&&<span style={{color:'var(--over)'}}> · kundenavn mangler, legg inn under prosjektinfo øverst</span>}</span>
+      {vars.length>1&&<QSegmented value={ci} onChange={setCur} options={vars.map((x,i)=>({value:i,label:'Variant '+x.name}))}></QSegmented>}
+      <QButton icon="printer" onClick={()=>window.print()}>Skriv ut</QButton></div>
+    <article className="qdoc" style={{maxWidth:794,minHeight:1000,boxSizing:'border-box',margin:'12px auto 48px',padding:'64px clamp(28px,7vw,72px) 72px',background:'rgb(var(--surface))',boxShadow:'0 1px 2px rgb(0 0 0 / .08),0 0 0 1px rgb(0 0 0 / .05)',color:'rgb(var(--ink))',display:'flex',flexDirection:'column'}}>
+      <header style={{display:'grid',gridTemplateColumns:'minmax(0,1fr) auto',gap:24,alignItems:'end',paddingBottom:18,borderBottom:'1px solid rgb(var(--ink))'}}>
+        <div><div style={qT.eye}>Tilbud · standbygg · variant {v.name}</div><h1 style={{margin:'10px 0 0',font:'700 30px/1.05 var(--font-ui)',letterSpacing:'-.025em',color:cust?'inherit':'rgb(var(--ink-faint))'}}>{cust||'Kundenavn'}</h1>{(pnm||snr)&&<div style={{...qT.muted,marginTop:8}}>{[pnm,snr&&'stand '+snr].filter(Boolean).join(' · ')}</div>}{xtra.length>0&&<div style={{...qT.muted,marginTop:4,display:'flex',flexWrap:'wrap',columnGap:14,rowGap:2}}>{xtra.map(f=><span key={f.id}><span style={{color:'rgb(var(--ink-faint))'}}>{f.n}</span> {f.v}</span>)}</div>}</div>
+        <div style={{textAlign:'right',display:'flex',flexDirection:'column',gap:3}}><div style={{font:'700 15px var(--font-ui)',letterSpacing:'-.01em'}}>Expo Planner</div><div className="num" style={qT.muted}>{date}</div><div style={qT.faint}>Veiledende · ikke bindende</div></div>
+      </header>
+      <section style={{display:'flex',flexDirection:'column',gap:24,padding:'28px 0 24px',borderBottom:'1px solid var(--g-row)'}}><div className="q3d" style={{position:'relative',height:340,borderRadius:8,overflow:'hidden',background:'rgb(var(--canvas))',pointerEvents:'none'}}><window.PosCtx5.Provider value={(()=>{const m={};window.POS5(st,S,lib).forEach((it,i)=>{if(it.kind==='tex')m[it.o.id]=it.n;});return m;})()}><Stage3D mini floorTop={window.cp3d?cp3d(st):null} st={st} S={S} lib={lib} sel={null} selTex={null} onSel={noop} onDrop={noop} onBkMove={noop} onBkResize={noop} dragItem={null} selItem={null} onSelItem={noop} onItemMove={noop} onAddItem={noop}></Stage3D></window.PosCtx5.Provider></div><div style={{display:'grid',gridTemplateColumns:'minmax(0,1.35fr) minmax(0,1fr)',gap:36,alignItems:'center'}}>
+        <div className="qplan" style={{aspectRatio:`${st.W+2.6}/${st.D+2.6}`,maxHeight:340,pointerEvents:'none'}}><PlanView tech lw={1.5} noDate st={st} S={S} lib={lib} brush="sel" onPaint={noop} onBkMove={noop} onBkResize={noop} hl={null} sel={null} selTex={null} onSel={noop} selItem={null} onSelItem={noop} onItemMove={noop} onAddItem={noop} dragItem={null}></PlanView></div>
+        <dl style={{margin:0,display:'flex',flexDirection:'column',gap:12,alignSelf:'center',minWidth:0}}>{facts.map(([a,b],i)=><div key={i}><dt className="num" style={{font:'600 13px var(--font-numeric)',textWrap:'pretty'}}>{a}</dt>{b&&<dd style={{margin:'2px 0 0',...qT.muted,textWrap:'pretty'}}>{b}</dd>}</div>)}</dl></div>
+      </section>
+      <section style={{padding:'20px 0 8px',flex:1}}>{(window.__art5q=window.ART5(st,S,lib),null)}
+        <div className="qgrid" style={{...qT.eye,padding:'0 0 6px'}}><span><span style={{display:'inline-block',width:34}}>Pos.</span>Post</span><span style={{textAlign:'right'}}>Antall</span><span style={{textAlign:'right'}}>Á pris</span><span style={{textAlign:'right'}}>Sum</span></div>
+        {c.G.map(g=><div key={g.k} style={{padding:'8px 0 4px'}}><div className="qgrid" style={{padding:'6px 0',borderTop:'1px solid var(--g-top)',font:'600 13px var(--font-ui)'}}><span>{g.n}</span><span></span><span></span><span className="num" style={{textAlign:'right',font:'600 13px var(--font-numeric)'}}>{qkr(g.sum)}</span></div>
+          {g.lines.map((l,i)=><div key={i} className="qgrid" style={{padding:'3px 0',font:'400 12.5px var(--font-ui)',color:'rgb(var(--ink-body))'}}><span style={{minWidth:0,display:'flex',alignItems:'baseline'}}><span style={{flex:'none',width:34,paddingLeft:2,display:'inline-flex',gap:2}}>{(window.__art5q||{})[l.c]&&(window.__art5q[l.c]).map(n=><span key={n} className='num' style={{display:'inline-grid',placeItems:'center',minWidth:15,height:15,boxSizing:'border-box',border:'1px solid rgb(var(--ink))',borderRadius:3,font:'600 9.5px var(--font-numeric)',color:'rgb(var(--ink))',transform:'translateY(-1px)'}}>{n}</span>)}</span><span style={{minWidth:0}}>{l.n}{l.ph&&<span style={{color:'var(--over)'}}> *</span>}{l.prelim&&<span style={{color:'var(--over)'}}> †</span>}</span></span><span className="num" style={{textAlign:'right',color:'rgb(var(--ink-muted))'}}>{SM.fmt(l.q)} {l.u}</span><span className="num" style={{textAlign:'right',color:'rgb(var(--ink-muted))'}}>{qkr(l.p)}</span><span className="num" style={{textAlign:'right'}}>{qkr(l.sum)}</span></div>)}</div>)}
+        <div style={{marginTop:16,borderTop:'1px solid rgb(var(--ink))'}}><Row l="Sum eks. mva." r={qkr(c.sum)+' kr'}></Row><Row l="Mva. 25 %" r={qkr(c.sum*.25)+' kr'}></Row><div style={{display:'flex',alignItems:'baseline',gap:12,padding:'10px 0 0',borderTop:'1px solid var(--g-row)'}}><span style={{flex:1,font:'600 14px var(--font-ui)'}}>Sum inkl. mva.</span><span className="num" style={{font:'700 22px var(--font-numeric)',letterSpacing:'-.02em'}}>{qkr(c.sum*1.25)}</span><span style={{font:'500 13px var(--font-numeric)',color:'rgb(var(--ink-muted))'}}>kr</span></div></div>
+        {ph>0&&<div style={{...qT.faint,marginTop:8}}>* {ph} {ph===1?'linje har plassholderpris':'linjer har plassholderpris'} og må bekreftes før tilbudet sendes.</div>}{pre&&<div style={{...qT.faint,marginTop:ph>0?2:8}}>† Monteringstid er beregnet med foreløpige satser og bekreftes av produksjon.</div>}
+      </section>
+      <section style={{padding:'18px 0 0',marginTop:24,borderTop:'1px solid var(--g-row)',display:'grid',gridTemplateColumns:'110px minmax(0,1fr)',gap:16}}>
+        <div style={qT.eye}>Forutsetninger</div>
+        <ul style={{margin:0,paddingLeft:0,listStyle:'none',font:'400 11.5px/1.55 var(--font-ui)',color:'rgb(var(--ink-muted))',display:'flex',flexDirection:'column',gap:4}}>
+          <li>Standvegger i systemprofil {SM.fmt(RU.vegg.stolpe*1000,0)} × {SM.fmt(RU.vegg.stolpe*1000,0)} mm, cc {SM.fmt(RU.vegg.cc*1000,0)}, høyde {SM.fmt(RU.vegg.hoyde*1000,0)} mm på justerbare føtter. Plater {SM.fmt(RU.vegg.profil.lengde*1000,0)} × {SM.fmt((RU.vegg.hoyde-RU.vegg.profil.topp-RU.vegg.profil.bunn)*1000,0)} mm.</li>
+          {st.beam!==false&&c.bm.lm>0&&<li>Takdrager 80 × 20 mm langs åpne sider, hele lengder inntil {SM.fmt(RU.takdrager.maks)} m, skjøtt med stolpe og tverrdrager.</li>}
+          {fab.tex.length>0&&<li>Tekstilvegger i InFrame montert utenpå standvegg: {fab.tex.map(p=>`${p.W} × ${p.H} mm`).join(', ')}. Trykkfil leveres i {SM.fabric.load().scale} % med {SM.fabric.load().bleed} mm bleed i full størrelse.</li>}
+          {c.floorA>0&&<li>Gulv ferdig lagt{st.floor.protect?' med monteringsbeskyttelse':''}.</li>}
+          {(st.loose||[]).length>0&&<li>Løse linjer uten pris avtales separat: {(st.loose||[]).filter(l=>!l.p).map(l=>l.n).join(', ')||'ingen'}.</li>}
+          <li>Montering og demontering er beregnet ut fra omfang{pre?' med foreløpige satser':''}. Strøm og lys bestilles via hallens leverandør der det kreves.</li>
+        </ul>
+      </section>
+    </article>
+  </div>;}
+window.QuoteDoc=QuoteDoc;
+
+})();
+// Veggpille: står utenfor modulmålet til valgt vegg.
+(function(){
+// v4-forslag: flytende pille for valgt vegg og tekstilvegg. Samme mønster som MiniBar3 for møbler.
+// Pillen dekker de vanligste valgene (farge, tekstil, motiv, grafikk, fjern). Opprisset (skuffen) åpnes bare for mål, plassering og dekning.
+const {Icon:WBI}=window.ExpoPlannerDesignSystem_a2c64a;
+const wbB={width:30,height:30,flex:'none',border:0,borderRadius:7,cursor:'pointer',display:'grid',placeItems:'center',background:'transparent',color:'rgb(var(--ink))'};
+const wbSep=<i style={{width:1,height:20,flex:'none',background:'rgb(var(--border-strong))'}}></i>;
+function WBBtn({icon,label,title,on,onClick,cls='mb2'}){return <button type="button" className={on?undefined:cls} aria-pressed={!!on} title={title||label} onClick={onClick} style={{...wbB,width:label?'auto':30,padding:label?'0 9px 0 7px':0,display:'inline-flex',alignItems:'center',justifyContent:'center',gap:6,font:'500 12px var(--font-ui)',whiteSpace:'nowrap',background:on?'rgb(var(--ink))':'transparent',color:on?'rgb(var(--canvas))':'rgb(var(--ink))'}}><WBI name={icon} size={15}></WBI>{label}</button>;}
+function WBMot({l,on,onClick}){return <button type="button" title={l?l.n:'Uten motiv'} aria-label={l?l.n:'Uten motiv'} aria-pressed={on} onClick={onClick} className="mot" style={{flex:'none',display:'grid',placeItems:'center',width:40,height:30,padding:0,border:0,borderRadius:'var(--r-tile)',cursor:'pointer',background:on?'rgb(var(--surface))':'var(--well)',boxShadow:on?'var(--raise),inset 0 0 0 1.5px rgb(var(--ink))':'none'}}>
+  <span style={{width:32,height:22,display:'grid',placeItems:'center',overflow:'hidden',borderRadius:3,background:l?'transparent':'rgb(var(--surface))',boxShadow:l?'none':`inset 0 0 0 2px ${typeof ALU2!=='undefined'?ALU2:'#b9bcbf'}`}}>{l&&<GfxArt l={l} style={{width:l.ratio>=32/22?'100%':'auto',height:l.ratio>=32/22?'auto':'100%',aspectRatio:String(l.ratio),maxWidth:'100%',maxHeight:'100%'}}></GfxArt>}</span></button>;}
+function WBName({dot,n,sub,onBack}){return <div style={{flex:'none',display:'flex',alignItems:'center',gap:6,padding:onBack?'0 6px 0 0':'0 6px 0 8px',minWidth:0}}>
+  {onBack&&<button type="button" className="mb2" title="Tilbake til veggen" onClick={onBack} style={wbB}><WBI name="chevron-left" size={15}></WBI></button>}
+  <i style={{width:8,height:8,borderRadius:'50%',flex:'none',background:dot}}></i>
+  <span style={{display:'flex',flexDirection:'column',gap:1,minWidth:0}}><span style={{font:'500 12px var(--font-ui)',whiteSpace:'nowrap'}}>{n}</span>{sub&&<span className="num" style={{font:'400 11px var(--font-numeric)',color:'rgb(var(--ink-muted))',whiteSpace:'nowrap'}}>{sub}</span>}</span></div>;}
+function wallKeys(w){if(w.kind==='per')return Array.from({length:Math.ceil(w.len-1e-9)},(_,i)=>w.key+':'+i);const [o,i,j]=w.key.split(':');const s0=o==='h'?+i:+j,c=o==='h'?j:i;const out=[];for(let k=Math.floor(s0+1e-9);k<Math.ceil(s0+w.len-1e-9);k++)out.push(o==='h'?`h:${k}:${c}`:`v:${c}:${k}`);return out;}
+// Bakromspalett: samme mønster som vegg- og møbelpillen. Foreløpig navn, mål og Flytt; flere valg kommer her.
+function BkBar({b,x,y,onMove}){return <div onPointerDown={e=>e.stopPropagation()} style={{position:'absolute',left:x,top:Math.max(4,y),transform:'translate(-50%,calc(-100% - 10px))',zIndex:25,display:'flex',alignItems:'center',gap:2,padding:3,borderRadius:10,background:'rgb(var(--panel))',boxShadow:'var(--pop)',whiteSpace:'nowrap'}}><WBName dot={SM.C.bk} n="Bakrom" sub={`${SM.fmt(b.w)} × ${SM.fmt(b.d)} m`}></WBName>{wbSep}<WBBtn icon="move" title="Flytt (F)" onClick={onMove}></WBBtn></div>;}
+function WallBar({w,st,set,lib,selTex,xf,psz,onSel,onAddTex,onAddGfx,onOpen,onErase,onClose,onMove}){
+  const ref=React.useRef(null);const [sz,setSz]=React.useState({w:0,h:0});const [pop,setPop]=React.useState(null);
+  React.useLayoutEffect(()=>{const el=ref.current;if(!el)return;const f=()=>setSz(s=>s.w===el.offsetWidth&&s.h===el.offsetHeight?s:{w:el.offsetWidth,h:el.offsetHeight});f();const ro=new ResizeObserver(f);ro.observe(el);return ()=>ro.disconnect();},[]);
+  React.useEffect(()=>setPop(null),[w.key,selTex]);
+  const tex=st.tex.filter(t=>t.s===w.key);const gfx=st.gfx.filter(g=>g.s===w.key);const T=tex.find(t=>t.id===selTex);
+  // plassering: vannrett vegg → over/under midten, utenfor standen når det er plass. Loddrett vegg → ved siden av, inn mot standen.
+  const [ax,ay]=ptAt(w,0),[bx,by]=ptAt(w,w.len);const horiz=Math.abs(ay-by)<.01;const G=26;let left,top,side;
+  if(horiz){const x=xf.x((ax+bx)/2),y=xf.y(ay);const dd=dirOf(w)[0];const free=dd>0?'above':'below';/* modulmålet tegnes på motsatt side av free */const g=s2=>s2===free?(w.kind==='per'&&ay<1e-6&&s2==='above'?70:26):46;side=free;if(side==='above'&&y-g('above')-sz.h<4)side='below';if(side==='below'&&y+g('below')+sz.h>psz.h-4)side='above';left=x-sz.w/2;top=side==='above'?y-g('above')-sz.h:y+g('below');}
+  else{const G=48;// loddrett vegg: pillen står på innsiden, forbi modulkjeden
+    const x=xf.x(ax),y0=xf.y(Math.min(ay,by)),y1=xf.y(Math.max(ay,by));const fitL=x-G-sz.w>=4,fitR=x+G+sz.w<=psz.w-4;const inL=ax>=st.W/2;
+    if((inL&&fitL)||(!inL&&!fitR&&fitL)){left=x-G-sz.w;top=(y0+y1)/2-sz.h/2;side='above';}else if(fitR){left=x+G;top=(y0+y1)/2-sz.h/2;side='above';}
+    else{left=x-sz.w/2;side=y0-G-sz.h>=4?'above':'below';top=side==='above'?y0-G-sz.h:y1+G;}}
+  left=Math.max(4,Math.min(psz.w-sz.w-4,left));top=Math.max(4,Math.min(psz.h-sz.h-4,top));
+  const [popH,setPopH]=React.useState(220);const popRef=React.useCallback(el=>{if(el&&el.offsetHeight!==popH)setPopH(el.offsetHeight);},[popH]);
+  const upRoom=top-8-4,dnRoom=psz.h-(top+sz.h)-8-4;const popUp=upRoom>=popH||(dnRoom<popH&&upRoom>=dnRoom);
+  const popX=Math.max(4,Math.min(psz.w-268-4,left+sz.w/2-134))-left;
+  const popPos={...(popUp?{bottom:'calc(100% + 8px)'}:{top:'calc(100% + 8px)'}),left:popX,maxHeight:Math.max(120,popUp?upRoom:dnRoom),overflowY:'auto'};
+  const ownP=st.plate&&st.plate.w&&st.plate.w[w.key];const P=SM.plateOf(st,w.key);const def=plateCur(st);
+  const setPlate=id=>{const pl=st.plate||{def:'9010',w:{}};const m={...(pl.w||{})};if(id&&id!==(pl.def||'9010'))m[w.key]=id;else delete m[w.key];set({...st,plate:{...pl,w:m}},'Veggplate');};
+  const upT=n=>set({...st,tex:st.tex.map(x=>x.id===n.id?n:x)},'Tekstilvegg');
+  const delT=()=>{set({...st,tex:st.tex.filter(t=>t.id!==T.id)},'Fjernet tekstilvegg');onSel(w.key,null);};
+  const inline=lib.slice(0,4);const motOn=T&&T.motif;const motIn=!motOn||inline.some(l=>l.id===T.motif);
+  const libGrid=(cur,pickF,withNone)=><div ref={popRef} onPointerDown={e=>e.stopPropagation()} className="pal2" style={{position:'absolute',...popPos,width:268,boxSizing:'border-box',padding:10,borderRadius:12,background:'rgb(var(--panel))',boxShadow:'var(--pop)',zIndex:2}}>
+    <div style={{font:'var(--type-eyebrow)',letterSpacing:'var(--tracking-eyebrow)',textTransform:'uppercase',color:'rgb(var(--ink-faint))',padding:'2px 2px 8px'}}>{withNone?'Motiv':'Legg grafikk på veggen'}</div>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,40px)',gap:6}}>{(withNone?[null,...lib]:lib).map(l=><WBMot key={l?l.id:'none'} l={l} on={cur===(l?l.id:null)} onClick={()=>{pickF(l?l.id:null);setPop(null);}}></WBMot>)}</div>
+    <div style={{font:'400 12px var(--font-ui)',color:'rgb(var(--ink-faint))',marginTop:8,textWrap:'pretty'}}>{withNone?'Nye motiv lastes opp i katalogen.':'Plasseres midt på veggen som dekal. Flytt og endre i opprisset.'}</div></div>;
+  let body;
+  if(T){body=<>
+    <WBName onBack={()=>onSel(w.key,null)} dot={SM.C.tex} n="Tekstilvegg" sub={`${SM.fmt1(T.w)} × ${SM.fmt1(T.h)} m`}></WBName>{wbSep}
+    <div style={{display:'flex',gap:4,padding:'0 4px'}}>{[null,...inline].map(l=><WBMot key={l?l.id:'none'} l={l} on={(T.motif||null)===(l?l.id:null)} onClick={()=>upT({...T,motif:l?l.id:null})}></WBMot>)}
+      {!motIn&&<WBMot l={lib.find(l=>l.id===T.motif)} on onClick={()=>{}}></WBMot>}
+      {lib.length>inline.length&&<WBBtn icon="ellipsis" title="Alle motiv" on={pop==='mot'} onClick={()=>setPop(p=>p==='mot'?null:'mot')}></WBBtn>}</div>
+    {!T.fit&&<>{wbSep}<WBBtn icon="move-horizontal" label="Fyll ledig vegg" onClick={()=>upT({...T,fit:true})}></WBBtn></>}
+    {wbSep}<WBBtn icon="panel-bottom-open" title="Mål og plassering i oppriss" onClick={onOpen}></WBBtn>
+    <WBBtn icon="trash-2" cls="mb2 del" title="Fjern tekstilvegg (Delete)" onClick={delT}></WBBtn>
+    {pop==='mot'&&libGrid(T.motif||null,id=>upT({...T,motif:id}),true)}</>;}
+  else{body=<>
+    <WBName dot={w.kind==='bk'?SM.C.bk:SM.C.mv} n={w.name} sub={`${SM.fmt(w.len)} m${ownP?' · egen farge':''}`}></WBName>{wbSep}
+    <div style={{display:'flex',alignItems:'center',gap:6,padding:'0 6px'}}>{SM.PLATES.slice(0,8).map(p=><QSw key={p.id} c={p.c} on={p.id===P.id} title={`${p.n} · RAL ${p.id}${p.id===def.id?' · som standen':''}`} w={22} h={22} onClick={()=>setPlate(p.id)}></QSw>)}
+      {ownP&&<WBBtn icon="undo-2" title={`Som standen · ${def.n}`} onClick={()=>setPlate(null)}></WBBtn>}</div>{wbSep}
+    {tex.length?<WBBtn icon="square-pen" label="Tekstilvegg" title="Velg tekstilveggen" onClick={()=>onSel(w.key,tex[0].id)}></WBBtn>:<WBBtn icon="plus" label="Tekstilvegg" title="Legg tekstilvegg på ledig flate" onClick={()=>onAddTex(w)}></WBBtn>}
+    <WBBtn icon="image-plus" label={gfx.length?`Grafikk · ${gfx.length}`:'Grafikk'} title="Legg grafikk på veggen" on={pop==='gfx'} onClick={()=>setPop(p=>p==='gfx'?null:'gfx')}></WBBtn>
+    {w.kind==='bk'&&w.door!=null&&<>{wbSep}<FlatSeg value={st.bk.open||'dor'} onChange={id=>set({...st,bk:{...st.bk,open:id}},id==='forheng'?'Forheng':'Dør med lås')} options={[{value:'dor',label:<WBI name="door-closed" size={15}></WBI>},{value:'forheng',label:<WBI name="blinds" size={15}></WBI>}]}></FlatSeg></>}
+    {wbSep}{onMove&&<WBBtn icon="move" title="Flytt (F)" onClick={onMove}></WBBtn>}<WBBtn icon="panel-bottom-open" title="Oppriss: mål, plassering og dekning" onClick={onOpen}></WBBtn>
+    {w.kind!=='bk'&&<WBBtn icon="trash-2" cls="mb2 del" title="Fjern veggen" onClick={()=>{onErase(wallKeys(w));onClose();}}></WBBtn>}
+    {pop==='gfx'&&libGrid(null,id=>onAddGfx(w,id),false)}</>;}
+  return <div ref={ref} onPointerDown={e=>e.stopPropagation()} style={{position:'absolute',left,top,zIndex:25,display:'flex',alignItems:'center',gap:2,padding:3,borderRadius:10,background:'rgb(var(--panel))',boxShadow:'var(--pop)',whiteSpace:'nowrap',visibility:sz.w?'visible':'hidden'}}>{body}</div>;}
+window.WallBar=WallBar;
+
+})();
