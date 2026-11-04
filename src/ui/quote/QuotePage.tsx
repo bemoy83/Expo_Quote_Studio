@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { Printer } from 'lucide-react'
 import type { CalcResult } from '../../calc/calc'
+import { positions } from '../../calc/positions'
 import { quoteGroups } from '../../calc/quoteLines'
 import type { Project, Room, Variant } from '../../domain/types'
 import { roomName, roomOpenings, roomSize } from '../../domain/rooms'
@@ -9,7 +10,7 @@ import { builtModules, standardBeamsOn } from '../../domain/walls'
 import { dateText, DELIVERY_FIELDS, today, validUntil } from '../../domain/delivery'
 import { isFixedField, projectField, standWallTerms } from '../../domain/variant'
 import { Button } from '../controls'
-import { idx, plateName, productOf, rules } from '../env'
+import { catalog, idx, plateName, productOf, rules } from '../env'
 import { count, fmt, kr, mm } from '../format'
 import { beamSummary, capitalise, frameCount, fromOrganiser, TYPE_NAME } from '../names'
 import { PLAN_MARGIN } from '../plan/planStyle'
@@ -39,6 +40,8 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
   const delivery = DELIVERY_FIELDS.filter((d) => project.delivery?.[d.key]).map((d) => `${d.name} ${dateText(project.delivery?.[d.key])}`)
   const groups = quoteGroups(res.groups)
   const lines = groups.flatMap((g) => g.lines)
+  // Position numbers: the article each drawn thing is priced on (calc/positions.ts)
+  const pos = positions(v, lines, catalog)
   const placeholders = lines.filter((l) => l.placeholder).length
   const labourLines = lines.some((l) => l.group === 'tjen.montering')
   const inFrame = rules.textile.inFrame
@@ -141,7 +144,7 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
 
           <section className="qdoc-summary">
             <div className="qdoc-plan" style={{ aspectRatio: `${v.stand.width + 2 * PLAN_MARGIN} / ${v.stand.depth + 2 * PLAN_MARGIN}` }}>
-              <PlanPreview v={v} res={res} />
+              <PlanPreview v={v} res={res} positions />
             </div>
             <dl>
               {facts.map(([a, b], i) => (
@@ -155,6 +158,7 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
 
           <section className="qdoc-lines">
             <div className="qgrid eyebrow">
+              <span>Pos.</span>
               <span>Post</span>
               <span>Antall</span>
               <span>Á pris</span>
@@ -163,13 +167,18 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
             {groups.map((g) => (
               <div key={g.id} className="qgroup">
                 <div className="qgrid qgroup-head">
-                  <span>{g.name}</span>
+                  <span className="qhead-name">{g.name}</span>
                   <span />
                   <span />
                   <span className="num">{kr(g.sum)}</span>
                 </div>
                 {g.lines.map((l, i) => (
                   <div key={l.artnr + l.name + i} className="qgrid qline">
+                    <span className="qpos">
+                      {pos.ofLine(l).map((n) => (
+                        <PosChip key={n} n={n} />
+                      ))}
+                    </span>
                     <span>
                       {l.name}
                       {l.placeholder && <span className="mark"> *</span>}
@@ -241,4 +250,9 @@ export function QuotePage({ project, variants, current, onSelect, calcOf }: Prop
       </div>
     </>
   )
+}
+
+/** A position number: a small ink-edged square, as on the drawing. */
+function PosChip({ n }: { n: number }) {
+  return <span className="pos-chip num">{n}</span>
 }

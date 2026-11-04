@@ -4,6 +4,7 @@ import { footprintBox } from '../../../domain/objects'
 import type { Variant } from '../../../domain/types'
 import { BLOCK, INK } from '../../colors'
 import { idx, productOf } from '../../env'
+import { linePx, usePlanScale } from '../planScale'
 import type { Layer, Tool } from '../../tools'
 import type { PlanSelection } from '../selection'
 import { DIMMED } from '../planStyle'
@@ -22,6 +23,7 @@ export function ObjectLayer(props: {
 }) {
   const { v, selection, tool, bad, dim, off } = props
   const { gone, hatch } = useErasing()
+  const sc = usePlanScale()
   return (
     <g opacity={dim('objects')}>
       {v.objects.map((o) => {
@@ -32,7 +34,8 @@ export function ObjectLayer(props: {
         const isBad = bad.has(o.id)
         const sel = selection.objectId === o.id
         const stroke = isBad ? BLOCK : INK
-        const sw = isBad ? 0.06 : sel ? 0.05 : 0.018
+        // A thin ink edge round the furniture's own colour (Bjørn 04.11.2026), heavier when chosen or colliding
+        const sw = isBad ? Math.max(0.06, linePx(sc, 2)) : sel ? Math.max(0.05, linePx(sc, 1.8)) : linePx(sc, 0.75)
         const g = gone('object', o.id)
         const op = off(mainGroupOf(productOf(o.product)?.group)) ? DIMMED : undefined
         const shape = (fill: string, props: object) =>
