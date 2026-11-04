@@ -10,6 +10,7 @@ import { across, lanesOf, type RollDir } from '../../../domain/floor/lanes'
 import { Hatched } from '../Hatched'
 import { JOINT_WIDTH } from '../planStyle'
 import { linePx, usePlanScale } from '../planScale'
+import { outlinePath } from '../floorOutline'
 import { GONE_FILL, useErasing } from './erasing'
 
 /** Fill opacity of the muted floor (docs/arbeidstegning.md): a layer that is just visible while drawing something else. */
@@ -23,7 +24,11 @@ const MUTED_FILL_ROLL = 0.22
  * outline.
  */
 export function FloorLayer({ v, dim, full }: { v: Variant; dim: (...layers: Layer[]) => number; full: boolean }) {
-  if (!full) return <MutedFloor v={v} dim={dim} />
+  return full ? <FullFloor v={v} dim={dim} /> : <MutedFloor v={v} dim={dim} />
+}
+
+/** The floor in full colour: tiles with their joints, lanes with number and roll direction. */
+function FullFloor({ v, dim }: { v: Variant; dim: (...layers: Layer[]) => number }) {
   // Lanes of rolled floor: numbered per product, with the roll direction
   const rollLanes = [...new Set(v.floor.tiles.filter((t) => t.roll).map((t) => t.product))].flatMap((a) => {
     const hit = idx.byArtnr.get(a)
@@ -92,27 +97,6 @@ function MutedFloor({ v, dim }: { v: Variant; dim: (...layers: Layer[]) => numbe
       {goneTile && <rect x={goneTile.i * CELL} y={goneTile.j * CELL} width={goneTile.w * CELL} height={goneTile.h * CELL} fill={hatch} />}
     </g>
   )
-}
-
-/** The outline of all floor of one product: every cell edge with another product (or none) on the other side. */
-export function outlinePath(tiles: FloorTile[], product: string): string {
-  const owner = new Map<string, string>()
-  for (const t of tiles) for (let i = t.i; i < t.i + t.w; i++) for (let j = t.j; j < t.j + t.h; j++) owner.set(`${i},${j}`, t.product)
-  const mine = (i: number, j: number) => owner.get(`${i},${j}`) === product
-  const d: string[] = []
-  for (const [key, p] of owner) {
-    if (p !== product) continue
-    const [i, j] = key.split(',').map(Number)
-    const x0 = i * CELL
-    const y0 = j * CELL
-    const x1 = x0 + CELL
-    const y1 = y0 + CELL
-    if (!mine(i, j - 1)) d.push(`M${x0} ${y0}H${x1}`)
-    if (!mine(i, j + 1)) d.push(`M${x0} ${y1}H${x1}`)
-    if (!mine(i - 1, j)) d.push(`M${x0} ${y0}V${y1}`)
-    if (!mine(i + 1, j)) d.push(`M${x1} ${y0}V${y1}`)
-  }
-  return d.join('')
 }
 
 /** Lanes a roll brush will lay: each with its joints, the roll direction and its width, cut lanes dashed. With
