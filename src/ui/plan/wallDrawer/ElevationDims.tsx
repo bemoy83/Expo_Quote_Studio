@@ -1,14 +1,14 @@
 // Dimensions on the wall drawing (docs/arbeidstegning.md, «Veggrisset»): the heading with where each end points, the
 // module chain and total under the wall, the wall heights to the left, and for textile and print a placement row over
 // the wall, a height row to the right and hairline leaders up to their product type. Chains are drawn as in the plan
-// (DimLayer's Chain); sizes are screen px through the drawing's scale. What is measured: elevationDims.ts.
+// (DimLayer's Chain); sizes are screen px through the drawing's scale. What is measured: elevationMeasure.ts.
 import type { Wall } from '../../../domain/types'
 import type { FaceSide } from '../../../domain/faces'
 import { rules } from '../../env'
 import { INK_MUTED } from '../../colors'
 import { Chain } from '../layers/DimLayer'
 import { sizePx, type PlanScale } from '../planScale'
-import { LEADER_FONT, LEADER_LINE, NEAR, TOTAL, row, type ElevationItem, type Leader } from './elevationDims'
+import { LEADER_FONT, LEADER_LINE, NEAR, TOTAL, row, type ElevationItem, type Leader } from './elevationMeasure'
 import { elevationHeading } from './face'
 
 export function ElevationDims({ w, s, name, L, H, items, leaders, top, width, sc }: { w: Wall; s: FaceSide; name: string; L: number; H: number; items: ElevationItem[]; leaders: Leader[]; top: number; width: number; sc: PlanScale }) {

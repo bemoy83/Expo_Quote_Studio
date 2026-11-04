@@ -25,7 +25,7 @@ import { roomLabelSize } from '../roomLabelSize'
 import { useDecorDrag } from './drag'
 import { faceName, type RoomRun } from './face'
 import { ElevationDims } from './ElevationDims'
-import { frame, mergePrints, type ElevationItem } from './elevationDims'
+import { frame, mergePrints, type ElevationItem } from './elevationMeasure'
 import { planScale } from '../planScale'
 import type { PaintTool } from './paint'
 

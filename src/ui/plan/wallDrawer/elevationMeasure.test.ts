@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createVariant } from '../../../domain/variant'
 import { isStandWall } from '../../../domain/walls'
-import { leaders, row } from './elevationDims'
+import { leaders, row } from './elevationMeasure'
 import { elevationHeading } from './face'
 
 describe('wall drawing dimensions', () => {
