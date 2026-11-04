@@ -9,6 +9,7 @@ import type { Layer } from '../../tools'
 import { across, lanesOf, type RollDir } from '../../../domain/floor/lanes'
 import { Hatched } from '../Hatched'
 import { JOINT_WIDTH } from '../planStyle'
+import { GONE_FILL, useErasing } from './erasing'
 
 /** Floor: carpet tiles with a joint at every tile edge, rolled floor without, and lane numbers on rolled floor. */
 export function FloorLayer({ v, dim }: { v: Variant; dim: (...layers: Layer[]) => number }) {
@@ -17,6 +18,9 @@ export function FloorLayer({ v, dim }: { v: Variant; dim: (...layers: Layer[]) =
     const hit = idx.byArtnr.get(a)
     return hit?.product.roll ? lanesOf(v.floor.tiles, a, hit.product.roll).map((l) => ({ ...l, color: jointColor(hit.variant.color) })) : []
   })
+  // Tøm: the tile or lane about to go is dimmed and hatched
+  const { gone, hatch } = useErasing()
+  const goneTile = v.floor.tiles.find((t) => gone('floor', `${t.i},${t.j},${t.w},${t.h}`))
   return (
     <g opacity={dim('floor')} pointerEvents="none">
       {v.floor.tiles.map((t) => {
@@ -25,6 +29,7 @@ export function FloorLayer({ v, dim }: { v: Variant; dim: (...layers: Layer[]) =
         return (
           <rect
             key={`${t.i},${t.j}`}
+            fillOpacity={t === goneTile ? GONE_FILL : undefined}
             x={t.i * CELL}
             y={t.j * CELL}
             width={t.w * CELL}
@@ -35,6 +40,7 @@ export function FloorLayer({ v, dim }: { v: Variant; dim: (...layers: Layer[]) =
           />
         )
       })}
+      {goneTile && <rect x={goneTile.i * CELL} y={goneTile.j * CELL} width={goneTile.w * CELL} height={goneTile.h * CELL} fill={hatch} />}
       {rollLanes.map(({ n, tile: t, color }) => (
         <LaneMark key={`lane${t.i},${t.j}`} n={n} x={(t.i + t.w / 2) * CELL} y={(t.j + t.h / 2) * CELL} dir={t.roll!} length={(t.roll === 'x' ? t.w : t.h) * CELL} color={color} />
       ))}

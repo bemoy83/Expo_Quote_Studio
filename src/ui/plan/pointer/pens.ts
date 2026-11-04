@@ -1,10 +1,10 @@
-// Which kind of pen is in hand. Velg holds none of them.
+// Which kind of pen is in hand. Velg and Tøm hold none of them: Tøm takes whatever lies under the pointer (erase.ts).
 import type { Brush, Tool } from '../../tools'
 
 export function pens(tool: Tool, brush: Brush | null) {
-  const pen = tool !== 'select'
+  const pen = tool === 'brush'
   return {
-    wallTool: pen && (brush?.kind === 'wall' || (tool === 'erase' && !brush)),
+    wallTool: pen && (brush?.kind === 'wall'),
     floorTool: pen && brush?.kind === 'floor',
     openingTool: pen && brush?.kind === 'opening',
     objectTool: pen && brush?.kind === 'object',

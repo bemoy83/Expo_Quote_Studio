@@ -88,18 +88,18 @@ export function StrokePreview({ a, b, erase, beam }: { a: Point; b: Point; erase
 }
 
 /** Where a textile or motif click would land on the hovered wall face. */
-export function FacePreview({ v, h, brush, erase }: { v: Variant; h: FaceHit; brush: Brush; erase: boolean }) {
+export function FacePreview({ v, h, brush }: { v: Variant; h: FaceHit; brush: Brush }) {
   const tx = textileAt(v, h.w.id, h.s, h.t)
   let span: [number, number] | null = null
   if (tx) span = [tx.from, tx.from + tx.width]
-  else if (brush.kind === 'textile' && !erase) span = freeSpans(v, rules, h.w.id, h.s).find(([a, b]) => h.t >= a && h.t <= b) ?? null
+  else if (brush.kind === 'textile') span = freeSpans(v, rules, h.w.id, h.s).find(([a, b]) => h.t >= a && h.t <= b) ?? null
   else if (brush.kind === 'motif') {
     const f = felt(rules, h.module)
     span = [f.a, f.b]
   }
   if (!span) return null
   const [a, b] = faceSegment(h.w, h.s, span[0] + 0.02, span[1] - 0.02, PLAN_TEXTILE_OFFSET)
-  return <Seg a={a} b={b} stroke={brush.kind === 'textile' && !erase ? TEXTILE : INK} strokeOpacity={0.45} strokeWidth={PLAN_TEXTILE + 0.04} />
+  return <Seg a={a} b={b} stroke={brush.kind === 'textile' ? TEXTILE : INK} strokeOpacity={0.45} strokeWidth={PLAN_TEXTILE + 0.04} />
 }
 
 /** True on a whole metre, give or take float noise from stepping in 0.25 m. */

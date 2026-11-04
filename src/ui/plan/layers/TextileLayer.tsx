@@ -13,9 +13,12 @@ import { faceSegment, sideOf } from '../../../domain/faces'
 import type { PlanSelection } from '../selection'
 import { MONO, PLAN_TEXTILE, PLAN_TEXTILE_OFFSET, PLAN_WALL, TEXTILE } from '../planStyle'
 import { Seg } from './Seg'
+import { GONE, useErasing } from './erasing'
 
 /** Frittstående tekstilvegger, textile walls on a wall face, and foil decor marks. */
 export function TextileLayer({ v, res, selection, mini, dim }: { v: Variant; res: CalcResult; selection: PlanSelection; mini?: boolean; dim: (...layers: Layer[]) => number }) {
+  // Tøm: a textile wall about to go is dimmed and hatched; a motif about to go only hatched, on its face
+  const { gone, hatch } = useErasing()
   return (
     <>
       {/* Frittstående tekstilvegger: foot plates under the frame, corner posts, the frame */}
@@ -24,8 +27,10 @@ export function TextileLayer({ v, res, selection, mini, dim }: { v: Variant; res
           const t = v.freeTextiles.find((x) => x.id === f.textileId)
           if (!t) return null
           const sel = selection.freeTextileId === t.id
+          const g = gone('textile', t.id)
+          const motif = (['a', 'b'] as const).find((k) => gone('graphic', `${t.id}.${k}`))
           return (
-            <g key={t.id}>
+            <g key={t.id} opacity={g ? GONE : undefined}>
               {f.supports.map((at, i) => {
                 const [x, y] = alongRun(t, at)
                 const h = t.from[1] === t.to[1]
@@ -36,6 +41,8 @@ export function TextileLayer({ v, res, selection, mini, dim }: { v: Variant; res
               {sel && <Seg a={t.from} b={t.to} stroke={INK} strokeWidth={PLAN_TEXTILE + 0.06} />}
               <Seg a={t.from} b={t.to} stroke={TEXTILE} strokeWidth={PLAN_TEXTILE} />
               {sel && selection.freeFace && <FaceMark t={t} face={selection.freeFace} />}
+              {g && <Seg a={t.from} b={t.to} stroke={hatch} strokeWidth={PLAN_TEXTILE} />}
+              {motif && <FaceMark t={t} face={motif} stroke={hatch} width={0.1} />}
               {!mini && (
                 <text {...labelAt(t)} textAnchor="middle" style={{ ...MONO, fontSize: '0.17px' }}>
                   {f.pos} · {fmt(f.length / 1000, 2)} m
@@ -56,10 +63,14 @@ export function TextileLayer({ v, res, selection, mini, dim }: { v: Variant; res
           if (!w) return null
           const [a, b] = faceSegment(w, sideOf(v, t), t.from + 0.02, t.from + t.width - 0.02, PLAN_TEXTILE_OFFSET)
           const sel = selection.textileId === t.id
+          const g = gone('textile', t.id)
           return (
             <g key={t.id}>
-              {sel && <Seg a={a} b={b} stroke={INK} strokeWidth={PLAN_TEXTILE + 0.06} />}
-              <Seg a={a} b={b} stroke={TEXTILE} strokeWidth={PLAN_TEXTILE} />
+              <g opacity={g ? GONE : undefined}>
+                {sel && <Seg a={a} b={b} stroke={INK} strokeWidth={PLAN_TEXTILE + 0.06} />}
+                <Seg a={a} b={b} stroke={TEXTILE} strokeWidth={PLAN_TEXTILE} />
+              </g>
+              {(g || gone('graphic', `${t.id}.motif`)) && <Seg a={a} b={b} stroke={hatch} strokeWidth={PLAN_TEXTILE} />}
             </g>
           )
         })}
@@ -73,7 +84,13 @@ export function TextileLayer({ v, res, selection, mini, dim }: { v: Variant; res
           const c = foilCenter(rules, f)
           const [a, b] = faceSegment(w, sideOf(v, f), c - f.width / 2, c + f.width / 2, PLAN_WALL / 2 + 0.02)
           const sel = selection.foilId === f.id
-          return <Seg key={f.id} a={a} b={b} stroke={INK} strokeWidth={sel ? 0.05 : 0.03} strokeDasharray=".06 .04" />
+          const g = gone('graphic', f.id)
+          return (
+            <g key={f.id}>
+              <Seg a={a} b={b} stroke={INK} strokeWidth={sel ? 0.05 : 0.03} strokeDasharray=".06 .04" opacity={g ? GONE : undefined} />
+              {g && <Seg a={a} b={b} stroke={hatch} strokeWidth={0.1} />}
+            </g>
+          )
         })}
       </g>
     </>
@@ -89,8 +106,8 @@ function labelAt(t: { from: Point; to: Point }) {
 }
 
 /** The face shown in the drawer: a thin line on that side. */
-function FaceMark({ t, face }: { t: { from: Point; to: Point }; face: FaceKey }) {
+function FaceMark({ t, face, stroke = INK, width = 0.03 }: { t: { from: Point; to: Point }; face: FaceKey; stroke?: string; width?: number }) {
   const [nx, ny] = runNormal(t, face)
-  const o = PLAN_TEXTILE / 2 + 0.04
-  return <Seg a={[t.from[0] + nx * o, t.from[1] + ny * o]} b={[t.to[0] + nx * o, t.to[1] + ny * o]} stroke={INK} strokeWidth={0.03} />
+  const o = PLAN_TEXTILE / 2 + 0.01 + width
+  return <Seg a={[t.from[0] + nx * o, t.from[1] + ny * o]} b={[t.to[0] + nx * o, t.to[1] + ny * o]} stroke={stroke} strokeWidth={width} />
 }

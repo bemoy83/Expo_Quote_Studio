@@ -50,7 +50,7 @@ const MOTIFS = 5
 /** Short names for the floor types on the pill. */
 const FLOOR_SHORT: Record<string, string> = { Teppefliser: 'Fliser', Engangsteppe: 'Engangs', Vinylgulv: 'Vinyl' }
 
-/** The quick pill over the active tool, or nothing when the tool has none (Velg, and Tøm without a floor brush). */
+/** The quick pill over the active tool, or nothing when the tool has none (Velg and Tøm). */
 export function QuickPicks(p: QuickPicksProps) {
   const content = quickContent(p)
   return content ? (
@@ -91,8 +91,7 @@ function quickContent(p: QuickPicksProps): ReactNode {
     </>
   )
 
-  if (tool === 'erase') return brush?.kind === 'floor' && !rollBrush ? floorSizes : null
-  if (tool === 'select') return null
+  if (tool === 'select' || tool === 'erase') return null
 
   const more = (
     <button type="button" className="q-btn q-more" title="Alle valg i panelet" aria-label="Alle valg i panelet" onClick={p.onMore}>

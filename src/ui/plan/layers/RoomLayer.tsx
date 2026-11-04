@@ -6,13 +6,18 @@ import { CANVAS, INK } from '../../colors'
 import { insetOutline, isHorizontal, labelRect, outlineSides } from '../../../domain/outline'
 import type { PlanSelection } from '../selection'
 import { PLAN_WALL } from '../planStyle'
+import { GONE, useErasing } from './erasing'
 
 /** Room names and sizes over the floor and furniture, the selected room outlined. */
 export function RoomLayer({ v, selection }: { v: Variant; selection: PlanSelection }) {
+  // Tøm: a room about to go has its label dimmed here, its walls hatched in the wall layer
+  const { gone } = useErasing()
   return (
     <g pointerEvents="none">
       {v.rooms.map((r) => (
-        <RoomMark key={r.id} r={r} selected={selection.roomId === r.id} />
+        <g key={r.id} opacity={gone('room', r.id) ? GONE : undefined}>
+          <RoomMark r={r} selected={selection.roomId === r.id} />
+        </g>
       ))}
     </g>
   )

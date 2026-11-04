@@ -10,6 +10,7 @@ import type { RoomDrag, WallDrag } from '../../drag'
 import type { Brush, Tool } from '../../tools'
 import type { TextileLine } from '../layers/Previews'
 import type { PlanSelection } from '../selection'
+import type { Erasing, EraseTarget } from './erase'
 import type { FloorBrush } from './floorBrush'
 import type { PlanHits } from './hits'
 import type { Pens } from './pens'
@@ -24,7 +25,8 @@ export interface P {
  * A wall dragged away is not selected; furniture and rooms are.
  */
 export type Drag =
-  | { kind: 'stroke'; p0: P; moved: boolean }
+  /** A straight stroke on the wall grid. `beamId`: Tøm pressed on a drawn takdrager, so a click takes all of it. */
+  | { kind: 'stroke'; p0: P; moved: boolean; beamId?: string }
   /** A floor stroke: the tiles after the first line up with it (`anchor`). */
   | { kind: 'floor'; last: string | null; anchor: { i: number; j: number } | null }
   /** A stroke of rolled floor from `from`: whole lanes, laid on release (`rollPending` until then). */
@@ -38,6 +40,8 @@ export type Drag =
   | ({ kind: 'room'; select: PlanSelection | null } & RoomDrag)
   | { kind: 'textile'; p0: P }
   | { kind: 'freeMove'; id: string; p0: P; v0: Variant; moved: boolean; select: PlanSelection }
+  /** Tøm on anything but walls and drawn beams: the first thing pressed, then more of its kind as the pointer passes. */
+  | { kind: 'erase'; first: EraseTarget; p0: P; moved: boolean; done: Set<string> }
 
 export type Edit = (fn: (v: Variant) => Variant, history?: boolean) => void
 
@@ -67,6 +71,8 @@ export interface PointerCtx {
   setTextileStroke: Dispatch<SetStateAction<TextileLine | null>>
   setRollPending: Dispatch<SetStateAction<FloorAction | null>>
   setFillRect: Dispatch<SetStateAction<Rect | null>>
+  /** What a Tøm press will take on release (touch has no hover to show it). */
+  setErasing: Dispatch<SetStateAction<Erasing | null>>
 }
 
 /** A drag kind's steps: each pointer move while it is under way, and the release. */
