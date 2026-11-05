@@ -98,6 +98,8 @@ export function usePlanPointer(input: PlanPointerInput) {
     svg.current!.setPointerCapture(e.pointerId)
     const d = press(q)
     if (d) drag.current = d
+    // Held without moving counts as dragging too: Fyll shows its proposal while pressed
+    setDragging(d ?? null)
   }
 
   const onPointerMove = (e: RPointerEvent<SVGSVGElement>) => {
