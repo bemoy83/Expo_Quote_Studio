@@ -414,13 +414,12 @@ export function Scene3D(p: Props) {
     const onLoad = () => view.current === v && v.render()
     const g = build(p.v, p.res, { selection: p.selection, labels: true, motifs: p.motifs, onLoad })
     if (p.highlight) dimExcept(g, p.highlight)
-    if (v.content) {
-      v.scene.remove(v.content)
-      dispose(v.content)
-    }
+    const old = v.content
+    if (old) v.scene.remove(old)
     v.content = g
     v.scene.add(g)
     v.render()
+    if (old) dispose(old)
   }, [p.v, p.res, p.selection, p.highlight, p.motifs])
 
   // Camera and sun follow the stand size

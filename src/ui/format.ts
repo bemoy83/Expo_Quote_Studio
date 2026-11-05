@@ -1,7 +1,16 @@
 // Norwegian number format: decimal comma, thin-space thousands, real minus.
+// One formatter per number of decimals: toLocaleString with options builds a new one on every call, which showed up
+// when the band, panel and calc are drawn again on each move of a drag.
+const formats = new Map<number, Intl.NumberFormat>()
+const numberFormat = (decimals: number) => {
+  let f = formats.get(decimals)
+  if (!f) formats.set(decimals, (f = new Intl.NumberFormat('nb-NO', { maximumFractionDigits: decimals, minimumFractionDigits: 0 })))
+  return f
+}
+
 export function fmt(n: number, decimals = 1): string {
-  return n
-    .toLocaleString('nb-NO', { maximumFractionDigits: decimals, minimumFractionDigits: 0 })
+  return numberFormat(decimals)
+    .format(n)
     .replace(/\s/g, ' ')
     .replace('-', '−');
 }
