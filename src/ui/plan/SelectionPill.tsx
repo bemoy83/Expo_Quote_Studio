@@ -19,12 +19,16 @@ import { addTextile, fillTextile, textileBox, textilesOn, updateTextile } from '
 import type { Variant, Wall } from '../../domain/types'
 import { isStandWall } from '../../domain/walls'
 import type { Motif } from '../../persistence/file'
-import { idx, openingProducts, productOf, rules, wallPlates } from '../env'
+import { setObjectProduct } from '../../domain/objects'
+import { updateFace } from '../../domain/textile/free'
+import { idx, openingProducts, place, productOf, rules, wallPlates } from '../env'
+import { objectFamily } from '../objectFamily'
 import { fmt, mm } from '../format'
 import { findMotif } from '../motifs'
 import { placePill, type PillPlace } from './pillAnchor'
 import { QBtn, QName, Sep, Sw } from './QuickPicks'
 import { deleteSelection, type PlanSelection } from './selection'
+import { turnFree, turnObject } from './turn'
 
 type Edit = (fn: (v: Variant) => Variant, history?: boolean) => void
 
@@ -166,12 +170,59 @@ function content(p: PillActions, graphics: boolean, setGraphics: (b: boolean) =>
     if (!o) return null
     const f = idx.byArtnr.get(o.product)
     const fp = f?.product.footprint
-    return { name: f?.product.name ?? 'Møbel', meta: fp ? `${mm(fp.w)} × ${mm(fp.d)}` : undefined, remove: del }
+    const family = objectFamily(o.product)
+    const name = family.find((x) => x.artnr === o.product)?.name ?? f?.product.name ?? 'Møbel'
+    return {
+      name,
+      meta: fp ? `${fp.round ? `ø ${mm(fp.w)}` : `${mm(fp.w)} × ${mm(fp.d)}`}${o.rot ? ` · ${o.rot}°` : ''}` : undefined,
+      body: (
+        <>
+          {family.length > 1 &&
+            family.map((x) => (
+              <Sw
+                key={x.artnr}
+                color={x.color}
+                title={x.name}
+                on={x.artnr === o.product}
+                onClick={() => {
+                  if (x.artnr === o.product) return
+                  const next = setObjectProduct(v, place, o.id, x.artnr)
+                  if (!next) return p.onToast(`Ikke plass til ${x.name.toLowerCase()} her`)
+                  onEdit(() => next)
+                }}
+              />
+            ))}
+          {family.length > 1 && fp && !fp.round && <Sep />}
+          {fp && !fp.round && (
+            <QBtn title="Roter 90° (R)" label="Roter" onClick={() => turnObject(p, o.id)}>
+              <RotateCw size={15} />
+            </QBtn>
+          )}
+        </>
+      ),
+      remove: del,
+    }
   }
   if (sel.freeTextileId) {
+    const t = v.freeTextiles.find((x) => x.id === sel.freeTextileId)
     const frame = p.res.production.free.find((x) => x.textileId === sel.freeTextileId)
-    if (!frame) return null
-    return { name: 'Frittstående tekstilvegg', meta: `${frame.pos} · ${fmt(frame.length, 0)} × ${fmt(frame.H, 0)}`, more: true, remove: del }
+    if (!t || !frame) return null
+    const face = sel.freeFace ?? 'a'
+    return {
+      name: 'Frittstående tekstilvegg',
+      meta: `${frame.pos} · ${fmt(frame.length, 0)} × ${fmt(frame.H, 0)} · side ${face.toUpperCase()}`,
+      body: (
+        <>
+          <Motifs motifs={motifs} value={t[face]?.fill ? undefined : (t[face]?.motif ?? null)} onPick={(m) => onEdit((x) => updateFace(x, t.id, face, { motif: m }))} />
+          <Sep />
+          <QBtn title="Roter 90° om midten (R)" label="Roter" onClick={() => turnFree(p, t.id)}>
+            <RotateCw size={15} />
+          </QBtn>
+        </>
+      ),
+      more: true,
+      remove: del,
+    }
   }
 
   // A wall, or a door, frame or decal on it: they open in the wall drawer

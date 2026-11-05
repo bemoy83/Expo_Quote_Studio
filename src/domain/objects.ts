@@ -192,3 +192,35 @@ export function settleAll(v: Variant, ctx: PlaceContext): Variant {
   }
   return out;
 }
+
+/**
+ * Turn an object a quarter turn (rot 0, 90, 180, 270), settled as after a drag: moved to the nearest free spot within
+ * 1 m when it collides. Null when it does not fit turned.
+ */
+export function rotateObject(v: Variant, ctx: PlaceContext, id: string): Variant | null {
+  const o = v.objects.find((x) => x.id === id);
+  const f = o && ctx.footprint(o.product);
+  if (!o || !f) return null;
+  const rot = (o.rot + 90) % 360;
+  if (!fitsStand(v, footprintBox({ x: 0, y: 0, rot }, f))) return null;
+  const turned = clampInto(v, { ...o, rot }, f);
+  const r = settleObject({ ...v, objects: v.objects.map((x) => (x.id === id ? turned : x)) }, ctx, id, turned);
+  return r.ok ? r.v : null;
+}
+
+/**
+ * Swap an object for another variant of the same product (a colour), keeping its place and turn; settled as after a
+ * drag when the new one is larger. Null when it does not fit.
+ */
+export function setObjectProduct(v: Variant, ctx: PlaceContext, id: string, product: string): Variant | null {
+  const o = v.objects.find((x) => x.id === id);
+  const f = ctx.footprint(product);
+  if (!o || !f) return null;
+  if (!fitsStand(v, footprintBox({ x: 0, y: 0, rot: o.rot }, f))) return null;
+  const swapped = clampInto(v, { ...o, product }, f);
+  const r = settleObject({ ...v, objects: v.objects.map((x) => (x.id === id ? swapped : x)) }, ctx, id, swapped);
+  return r.ok ? r.v : null;
+}
+
+/** The footprint is no wider or deeper than the stand. */
+const fitsStand = (v: Variant, b: Omit<Box, 'kind'>) => b.x1 - b.x0 <= v.stand.width + 1e-9 && b.y1 - b.y0 <= v.stand.depth + 1e-9;

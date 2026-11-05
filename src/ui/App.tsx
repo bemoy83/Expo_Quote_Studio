@@ -153,6 +153,7 @@ export default function App() {
     setSelection,
     drawerOpen,
     onEdit,
+    onToast: showToast,
     undo: () => dispatch({ type: 'undo' }),
     redo: () => dispatch({ type: 'redo' }),
     toPlan: () => setView('plan'),

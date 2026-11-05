@@ -1,9 +1,10 @@
-// Keyboard on the sketch screen: V S G T M E (dock tools), P (last pen), R (turn a lane, or the roll direction of the
-// pen), Escape, ⌘Z / ⇧⌘Z, and Delete or Backspace on the selection (plan/selection.ts says what goes).
+// Keyboard on the sketch screen: V S G T M E (dock tools), P (last pen), R (turn a lane, furniture or a frittstående
+// tekstilvegg, or the roll direction of the pen), Escape, ⌘Z / ⇧⌘Z, and Delete or Backspace on the selection (plan/selection.ts says what goes).
 import { useEffect } from 'react'
 import { rotateLane } from '../domain/floor/edit'
 import type { Variant } from '../domain/types'
 import { deleteSelection, doorWall, type PlanSelection } from './plan/selection'
+import { turnFree, turnObject } from './plan/turn'
 import type { DockTool } from './tools'
 import type { Tools } from './useTools'
 
@@ -17,6 +18,7 @@ interface Shortcuts {
   /** The drawer is open on the selection. */
   drawerOpen: boolean
   onEdit: (fn: (v: Variant) => Variant) => void
+  onToast: (text: string) => void
   undo: () => void
   redo: () => void
   /** P takes the last pen up again, in the plan. */
@@ -52,7 +54,9 @@ export function useShortcuts(s: Shortcuts) {
           onEdit(() => r.v)
           setSelection({ lane: { i: r.lane.i, j: r.lane.j } })
         }
-      } else if (k === 'p' && tools.brush) {
+      } else if (k === 'r' && selection.objectId && tools.tool === 'select') turnObject({ v, onEdit, onToast: s.onToast }, selection.objectId)
+      else if (k === 'r' && selection.freeTextileId && tools.tool === 'select') turnFree({ v, onEdit, onToast: s.onToast }, selection.freeTextileId)
+      else if (k === 'p' && tools.brush) {
         tools.setTool('brush')
         s.toPlan()
       } else if (k === 'r' && tools.rollBrush) tools.setRollDir(tools.roll === 'x' ? 'y' : 'x')
