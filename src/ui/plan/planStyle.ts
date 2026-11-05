@@ -76,8 +76,11 @@ export const DOOR_AIM = { width: 1.4, dash: 4, gap: 3, halo: 3.5 } as const
 /** Snap dots: faint ink, larger on whole metres. */
 export const SNAP_DOT = { metre: 1.2, other: 0.8, fill: 'rgb(var(--ink) / .3)' } as const
 
-/** Invalid: grey ink in the symbol's width with a 45° hatch over it. */
-export const INVALID = { fill: 'rgb(var(--ink) / .3)', line: 'rgb(var(--ink) / .55)', lineWidth: 0.8, spacing: 3.2 } as const
+/** The one 45° hatch of the plan for what will not be there: an invalid target, and what Tøm is about to take. */
+export const HATCH = { line: 'rgb(var(--ink) / .55)', lineWidth: 0.8, spacing: 3.2 } as const
+
+/** Invalid: grey ink in the symbol's width with the hatch over it. */
+export const INVALID = { fill: 'rgb(var(--ink) / .3)' } as const
 
 /** The dark measure pill while dragging out a length, set this far outside the stroke. */
 export const PILL = { height: 18, radius: 5, font: 10.5, pad: 7, gap: 6 } as const

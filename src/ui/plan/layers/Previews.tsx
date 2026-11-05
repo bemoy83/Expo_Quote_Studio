@@ -5,7 +5,7 @@ import { useId, type ReactNode, type SVGProps } from 'react'
 import type { Point, Wall } from '../../../domain/types'
 import { CANVAS, INK, INK_FAINT, SURFACE } from '../../colors'
 import { type FaceSide } from '../../../domain/faces'
-import { AIM, aimDash, INVALID, PHANTOM, PILL, RING, SNAP_DOT, textileWidth, wallWidth } from '../planStyle'
+import { AIM, aimDash, HATCH, INVALID, PHANTOM, PILL, RING, SNAP_DOT, textileWidth, wallWidth } from '../planStyle'
 import { linePx, sizePx, usePlanScale } from '../planScale'
 import { mm } from '../dims'
 import { pillCentre, pillWidth } from '../pillPlace'
@@ -83,14 +83,15 @@ export function AimRect({ x, y, width, height, halo }: { x: number; y: number; w
   )
 }
 
-/** The 45° hatch of an invalid target, with its own pattern id so several plans on the page never share one. */
-function InvalidPattern({ id }: { id: string }) {
+/** The plan's 45° hatch (HATCH), in screen pixels so it reads the same at every zoom: an invalid target and Tøm share it.
+ * Each use has its own pattern id, so several plans on the page never share one. */
+export function HatchPattern({ id }: { id: string }) {
   const sc = usePlanScale()
-  const d = sizePx(sc, INVALID.spacing)
+  const d = sizePx(sc, HATCH.spacing)
   return (
     <defs>
       <pattern id={id} patternUnits="userSpaceOnUse" width={d} height={d} patternTransform="rotate(45)">
-        <line x1={0} y1={0} x2={0} y2={d} stroke={INVALID.line} strokeWidth={linePx(sc, INVALID.lineWidth)} />
+        <line x1={0} y1={0} x2={0} y2={d} stroke={HATCH.line} strokeWidth={linePx(sc, HATCH.lineWidth)} />
       </pattern>
     </defs>
   )
@@ -103,7 +104,7 @@ export function InvalidSeg({ a, b, width }: { a: Point; b: Point; width: number 
   const id = usePatternId()
   return (
     <g>
-      <InvalidPattern id={id} />
+      <HatchPattern id={id} />
       <Seg a={a} b={b} stroke={INVALID.fill} strokeWidth={width} />
       <Seg a={a} b={b} stroke={`url(#${id})`} strokeWidth={width} />
     </g>
@@ -118,7 +119,7 @@ export function InvalidShape(p: ({ kind: 'rect' } & SVGProps<SVGRectElement>) | 
     kind === 'rect' ? <rect {...(shape as SVGProps<SVGRectElement>)} fill={fill} /> : <circle {...(shape as SVGProps<SVGCircleElement>)} fill={fill} />
   return (
     <g>
-      <InvalidPattern id={id} />
+      <HatchPattern id={id} />
       {draw(INVALID.fill)}
       {draw(`url(#${id})`)}
     </g>
