@@ -1,6 +1,6 @@
 // Floor previews (docs/forhandsvisning.md): carpet tiles paint while dragging, so the floor itself is the phantom and
 // only the measures of the area painted so far are added; engangsteppe lanes and Fyll show their proposal only while
-// pressed. Plain functions, so PlanView can decide what to draw from the pointer state.
+// pressed. Plain functions, so PreviewLayer can decide what to draw from the pointer state.
 import type { ReactNode } from 'react'
 import { CELL } from '../../../domain/grid'
 import { TILE_FULL, type Rect } from '../../../domain/floor/tiles'

@@ -195,3 +195,5 @@ export function usePlanPointer(input: PlanPointerInput) {
     },
   }
 }
+
+export type PlanPointer = ReturnType<typeof usePlanPointer>

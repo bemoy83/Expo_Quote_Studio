@@ -21,6 +21,8 @@ import { OpeningMark } from './WallLayer'
 import { Seg } from './Seg'
 import type { Phantom } from './strokePhantoms'
 
+const DOOR_IN_STAND_WALL = 'Dører og forheng kan ikke stå i standveggen'
+
 /** Door or curtain, hovering: one dashed line along the module's centre line with a light edge under it, so it shows on
  * the wall; hatched in a stand wall. */
 export function doorAim(sc: PlanScale, v: Variant, e: Module): Phantom {
@@ -50,38 +52,29 @@ export function doorHeld(sc: PlanScale, v: Variant, e: Module, product: string, 
   return { el, hint: door ? 'Dra mot siden døren skal slå · slipp for å sette inn · Esc avbryter' : null }
 }
 
-const DOOR_IN_STAND_WALL = 'Dører og forheng kan ikke stå i standveggen'
-
-/** Motif: the textile face it prints or the panel field it gets as a decal; a band of print while pressed. */
+/** Motif: the textile face it prints or the panel field it gets as a decal (aim), the print as a release stores it while
+ * pressed (phantom), hatched where foil cannot go. */
 export function motifPreview(sc: PlanScale, v: Variant, hits: PlanHits, q: { x: number; y: number }, motif: string, ratio: number, pressed: boolean): Phantom | null {
+  const show = ([a, b]: [Point, Point], band: number): Phantom => ({ el: pressed ? <RasterBand a={a} b={b} width={band} /> : <AimSeg a={a} b={b} />, hint: null })
   const ft = freeTextileAt(v, q, 0.15)
-  let seg: [Point, Point]
-  let band: number
   if (ft) {
     const [nx, ny] = runNormal(ft, faceOfPoint(ft, q))
     const o = textileWidth(sc) / 2 + sizePx(sc, 1.5)
-    seg = [[ft.from[0] + nx * o, ft.from[1] + ny * o], [ft.to[0] + nx * o, ft.to[1] + ny * o]]
-    band = linePx(sc, 2.4)
-  } else {
-    const h = hits.faceHit(q)
-    if (!h) return null
-    const tx = textileAt(v, h.w.id, h.s, h.t)
-    if (tx) {
-      seg = faceSegment(h.w, h.s, tx.from, tx.from + tx.width, textileOffset(sc))
-      band = textileFill(sc)
-    } else {
-      // Aim at the plate; the phantom is the foil the click stores (a decal as wide as its motif fits, or the whole plate)
-      const f = felt(rules, h.module)
-      const plate = faceSegment(h.w, h.s, f.a, f.b, printOffset(sc))
-      const r = addFoil(v, rules, h.w.id, h.module, h.s, motif, ratio)
-      if ('error' in r) return { el: <InvalidSeg a={plate[0]} b={plate[1]} width={printBand(sc)} />, hint: r.error }
-      if (!pressed) return { el: <AimSeg a={plate[0]} b={plate[1]} />, hint: null }
-      const [from, to] = foilSpan(rules, r.v.foils.find((x) => x.id === r.id)!)
-      seg = faceSegment(h.w, h.s, from, to, printOffset(sc))
-      band = printBand(sc)
-    }
+    return show([[ft.from[0] + nx * o, ft.from[1] + ny * o], [ft.to[0] + nx * o, ft.to[1] + ny * o]], linePx(sc, 2.4))
   }
-  return { el: pressed ? <RasterBand a={seg[0]} b={seg[1]} width={band} /> : <AimSeg a={seg[0]} b={seg[1]} />, hint: null }
+  const h = hits.faceHit(q)
+  if (!h) return null
+  const tx = textileAt(v, h.w.id, h.s, h.t)
+  if (tx) return show(faceSegment(h.w, h.s, tx.from, tx.from + tx.width, textileOffset(sc)), textileFill(sc))
+  // A wall panel: aim at the plate, the phantom is the foil the click stores (a decal as wide as its motif fits, or the
+  // whole plate under a print)
+  const f = felt(rules, h.module)
+  const plate = faceSegment(h.w, h.s, f.a, f.b, printOffset(sc))
+  const r = addFoil(v, rules, h.w.id, h.module, h.s, motif, ratio)
+  if ('error' in r) return { el: <InvalidSeg a={plate[0]} b={plate[1]} width={printBand(sc)} />, hint: r.error }
+  if (!pressed) return show(plate, 0)
+  const [from, to] = foilSpan(rules, r.v.foils.find((x) => x.id === r.id)!)
+  return show(faceSegment(h.w, h.s, from, to, printOffset(sc)), printBand(sc))
 }
 
 /** Furniture: a dashed footprint where it actually lands (moved off walls), in its colour while pressed. */
