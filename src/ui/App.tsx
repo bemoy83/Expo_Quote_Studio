@@ -1,55 +1,44 @@
-import { Copy, Maximize2, type LucideIcon, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Trash2 } from 'lucide-react'
+import { Maximize2 } from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore } from 'react'
-import { calc, type CalcResult } from '../calc/calc'
 import { r2 } from '../calc/referenceStands'
+import { fitDecor } from '../domain/decor'
+import { newlyClosedRooms, wallsToRoom } from '../domain/enclosures'
 import { addObject } from '../domain/objects'
-import { addDefaultRoom, removeRoom, roomSize } from '../domain/rooms'
+import { addDefaultRoom, roomSize } from '../domain/rooms'
+import { fitFreeTextiles } from '../domain/textile/free'
 import type { StandWallTerms, Variant } from '../domain/types'
 import { customerName, fillFloor, standWallTerms } from '../domain/variant'
 import { newSketch, parse, serialize, type Sketch } from '../persistence/file'
 import { KEYS, loadJson, loadSketch, saveJson, saveSketch } from '../persistence/storage'
 import { initState, reduce } from '../state/history'
 import { CalcPanel } from './calc/CalcPanel'
-import { Button, IconButton, Toast } from './controls'
-import { useToast } from './useToast'
+import { calcOf } from './calcCache'
 import { CatalogPage } from './catalog/CatalogPage'
-import { catalog, getVersion, idx, place, plateColor, rules, subscribe } from './env'
+import { IconButton, Toast } from './controls'
 import { download } from './download'
-import { count, fmt, kr, signed } from './format'
-import { frameCount, TYPE_NAME } from './names'
-import { Rail } from './panel/Rail'
-import { PlanView } from './plan/PlanView'
-import { FreeTextileDrawer } from './plan/FreeTextileDrawer'
-import { WallDrawer } from './plan/WallDrawer'
-import { doorFace, removeOpening } from '../domain/doors'
+import { catalog, getVersion, idx, place, plateColor, rules, subscribe } from './env'
+import { hint, HINT_3D } from './hints'
 import { findMotif, motifLibrary, readMotif } from './motifs'
-import { fitDecor, removeFoil } from '../domain/decor'
-import { fitFreeTextiles, removeFreeTextile } from '../domain/textile/free'
-import { removeInnerBeam } from '../domain/innerBeams'
-import { newlyClosedRooms, wallsToRoom } from '../domain/enclosures'
+import { Rail } from './panel/Rail'
 import { PickingPage } from './picking/PickingPage'
+import { Drawers } from './plan/Drawers'
+import { PlanPreview } from './plan/PlanPreview'
+import { PlanView } from './plan/PlanView'
+import { PriceChangePill } from './plan/PriceChangePill'
+import { QuickPicks } from './plan/QuickPicks'
+import { type PlanSelection } from './plan/selection'
+import { StandChip } from './plan/StandChip'
+import { ToolDock } from './plan/ToolDock'
+import { usePriceChange } from './plan/usePriceChange'
 import { ProductionPage } from './production/ProductionPage'
 import { QuotePage } from './quote/QuotePage'
+import { SketchBand, type Layout } from './shell/SketchBand'
 import { TopNav, type Page } from './shell/TopNav'
+import type { Highlight, PenTool } from './tools'
+import { useShortcuts } from './useShortcuts'
+import { useToast } from './useToast'
+import { useTools } from './useTools'
 import { WorkOrderPage } from './workorder/WorkOrderPage'
-import { VariantTabs } from './shell/VariantTabs'
-import { dockToolOf, FLOOR_OTHER, penToolOf, type Brush, type DockTool, type Highlight, type PenTool, type RollMode, type Tool } from './tools'
-import { removeFill } from '../domain/floor/rollFill'
-import { removeLane, rotateLane } from '../domain/floor/edit'
-import { CarpetDrawer } from './plan/CarpetDrawer'
-import { longestSide, type RollDir } from '../domain/floor/lanes'
-import { TILE_FULL, type TileSize } from '../domain/floor/tiles'
-import { type FloorBrushSize } from '../domain/floor/brush'
-import { ToolDock } from './plan/ToolDock'
-import { hint, HINT_3D } from './hints'
-import { StandChip } from './plan/StandChip'
-import { PriceChangePill } from './plan/PriceChangePill'
-import { usePriceChange } from './plan/usePriceChange'
-import { QuickPicks } from './plan/QuickPicks'
-import type { GridStep } from '../domain/snapGrid'
-import { removeTextile } from '../domain/textile/inFrame'
-import { PlanPreview } from './plan/PlanPreview'
-import { type PlanSelection } from './plan/selection'
 
 // three.js is only loaded when the 3D view is opened
 const Scene3D = lazy(() => import('./scene3d/Scene3D').then((m) => ({ default: m.Scene3D })))
@@ -62,33 +51,6 @@ function exampleSketch(): Sketch {
   v = addObject(v, place, '5186', 3.3, 2.7) ?? v
   v = addObject(v, place, '5186', 4.7, 2.7) ?? v
   return { ...newSketch(), variants: [v] }
-}
-
-// calc is pure; cache per variant object so unchanged variants are not recalculated.
-// A new catalog or new rules (product list, production assumptions) start a fresh cache, and so do new stand-wall terms
-// (the project says who pays the stand walls).
-let calcCache = new WeakMap<Variant, CalcResult>()
-let cacheVersion = getVersion()
-let cacheTerms: StandWallTerms | null = null
-const calcOf = (v: Variant, terms: StandWallTerms) => {
-  if (cacheVersion !== getVersion() || cacheTerms !== terms) {
-    calcCache = new WeakMap()
-    cacheVersion = getVersion()
-    cacheTerms = terms
-  }
-  let r = calcCache.get(v)
-  if (!r) {
-    r = calc(v, rules, catalog, terms)
-    calcCache.set(v, r)
-  }
-  return r
-}
-
-/** The wall a chosen door stands in, on the face its drawer showed: the wall drawer with colour and graphics. */
-function doorWall(v: Variant, sel: PlanSelection): PlanSelection {
-  const o = v.openings.find((x) => x.id === sel.openingId)
-  const w = o && v.walls.find((x) => x.id === o.wallId)
-  return o && w ? { wallId: w.id, side: sel.side ?? doorFace(v, w, o) } : {}
 }
 
 export default function App() {
@@ -110,24 +72,7 @@ export default function App() {
   useEffect(() => {
     saveJson(KEYS.layout, layout)
   }, [layout])
-  const [tool, setTool] = useState<Tool>('select')
-  const [brush, setBrush] = useState<Brush | null>(null)
-  const [floorSize, setFloorSize] = useState<FloorBrushSize>(TILE_FULL)
-  /** Last of the smaller tile sizes, so «Andre» comes back to it. */
-  const [otherSize, setOtherSize] = useState<TileSize>(FLOOR_OTHER[0].size)
-  /** Roll direction of rolled floor; null follows the stand's longest side. */
-  const [rollDir, setRollDir] = useState<RollDir | null>(null)
-  /** Engangsteppe: Fyll (an area the engine lays) or Bane (one lane). */
-  const [rollMode, setRollMode] = useState<RollMode>('fill')
-  const roll = rollDir ?? longestSide(v.stand)
-  const rollBrush = brush?.kind === 'floor' && !!idx.byArtnr.get(brush.product)?.product.roll
-  const [gridStep, setGridStep] = useState<GridStep>(1)
   const [highlight, setHighlight] = useState<Highlight>(null)
-  /** The pen each drawing tool last drew with, so switching tools brings it back. */
-  const [pens, setPens] = useState<Partial<Record<PenTool, Brush>>>({})
-  /** Colour the wall tool draws new inner walls with; follows the stand's wall plate until a colour is picked. */
-  const [wallPen, setWallPen] = useState<string | null>(null)
-  const wallRal = wallPen ?? v.defaultPlate
   const [selection, setSelection] = useState<PlanSelection>({})
   const [toast, showToast] = useToast()
   const fileInput = useRef<HTMLInputElement>(null)
@@ -138,6 +83,17 @@ export default function App() {
   }, [sketch])
 
   const motifs = useMemo(() => motifLibrary(sketch.motifs), [sketch.motifs])
+  const tools = useTools({
+    v,
+    res,
+    motifs,
+    onPick: () => {
+      setView('plan')
+      setSelection({})
+    },
+    onErase: () => setView('plan'),
+  })
+  const { tool, setTool, brush, active, pick } = tools
   const vRef = useRef(v)
   useEffect(() => {
     vRef.current = v
@@ -172,110 +128,22 @@ export default function App() {
     setView(x)
     setTool('select')
   }
-  /** Choosing a brush always goes to the plan; the brushes draw there. */
-  const pick = (b: Brush, t: Tool = 'brush') => {
-    setBrush(b)
-    setPens((p) => ({ ...p, [penToolOf(b)]: b }))
-    if (b.kind === 'wall') setWallPen(b.ral)
-    setTool(t)
-    setView('plan')
-    setSelection({})
-  }
 
-  /** The pen a drawing tool starts with: the one it last drew, else the first in use on the stand. */
-  const penFor = (t: PenTool): Brush => {
-    const last = pens[t]
-    if (last) return last.kind === 'wall' ? { kind: 'wall', ral: wallRal } : last
-    if (t === 'wall') return { kind: 'wall', ral: wallRal }
-    if (t === 'floor') return { kind: 'floor', product: Object.keys(res.keyFigures.floor)[0] ?? '5902' }
-    if (t === 'profile') return { kind: 'textile' }
-    const used = v.objects[0]?.product
-    return { kind: 'object', product: used ?? catalog.products.find((x) => x.kind === 'object' && !x.opening)!.variants[0].artnr }
-  }
-  const active = dockToolOf(tool, brush)
-  /** Click on a dock tool (or its key). The active drawing tool keeps its pen. */
-  const activate = (t: DockTool) => {
-    if (t === active) return
-    if (t === 'select' || t === 'erase') {
-      setTool(t)
-      if (t === 'erase') setView('plan')
-      return
-    }
-    pick(penFor(t))
-  }
-
-  // Keyboard: V S G T M E (dock tools), P (last pen), R (roll direction), ⌘Z / ⇧⌘Z, Delete
-  // for the selected object
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const t = e.target as HTMLElement
-      if (t.closest('input, textarea, select')) return
-      const mod = e.metaKey || e.ctrlKey
-      if (mod && e.key.toLowerCase() === 'z') {
-        e.preventDefault()
-        dispatch({ type: e.shiftKey ? 'redo' : 'undo' })
-        return
-      }
-      if (mod || e.altKey) return
-      const k = e.key.toLowerCase()
-      if (k === 'escape' && selection.openingId) {
-        // From the door's settings back to its wall: colour and graphics (the door is part of the wall)
-        setSelection(doorWall(v, selection))
-      } else if (k === 'escape' && (selection.lane || selection.fill)) setSelection({})
-      else if (k === 'escape') setTool('select')
-      else if (k === 'r' && selection.lane && tool === 'select') {
-        const r = rotateLane(v, selection.lane)
-        if (r) {
-          onEdit(() => r.v)
-          setSelection({ lane: { i: r.lane.i, j: r.lane.j } })
-        }
-      } else if ((k === 'delete' || k === 'backspace') && (selection.lane || selection.fill)) {
-        const { lane, fill } = selection
-        onEdit((x) => (fill ? removeFill(x, fill) : removeLane(x, lane!)))
-        setSelection({})
-      }
-      else if (k === 'p' && brush) {
-        setTool('brush')
-        setView('plan')
-      } else if (k === 'r' && rollBrush) setRollDir(roll === 'x' ? 'y' : 'x')
-      else if (DOCK_KEYS[k]) activate(DOCK_KEYS[k])
-      else if ((k === 'delete' || k === 'backspace') && (selection.textileId || selection.foilId)) {
-        const { textileId, foilId } = selection
-        onEdit((x) => (textileId ? removeTextile(x, textileId) : removeFoil(x, foilId!)))
-        setSelection({ wallId: selection.wallId, side: selection.side })
-      } else if ((k === 'delete' || k === 'backspace') && selection.freeTextileId) {
-        const id = selection.freeTextileId
-        onEdit((x) => removeFreeTextile(x, id))
-        setSelection({})
-      } else if ((k === 'delete' || k === 'backspace') && selection.beamId) {
-        const id = selection.beamId
-        onEdit((x) => removeInnerBeam(x, id))
-        setSelection({})
-      } else if ((k === 'delete' || k === 'backspace') && selection.roomId) {
-        const id = selection.roomId
-        onEdit((x) => removeRoom(x, id))
-        setSelection({})
-      } else if ((k === 'delete' || k === 'backspace') && selection.openingId) {
-        const id = selection.openingId
-        onEdit((x) => removeOpening(x, id))
-        // The wall drawer stays open on the wall the door stood in
-        setSelection(doorWall(v, selection))
-      } else if ((k === 'delete' || k === 'backspace') && selection.objectId) {
-        const id = selection.objectId
-        onEdit((x) => ({ ...x, objects: x.objects.filter((o) => o.id !== id) }))
-        setSelection({})
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+  useShortcuts({
+    v,
+    tools,
+    selection,
+    setSelection,
+    onEdit,
+    undo: () => dispatch({ type: 'undo' }),
+    redo: () => dispatch({ type: 'redo' }),
+    toPlan: () => setView('plan'),
   })
 
   /** Sketches opened or started; a new one starts the price change over. */
   const [loads, setLoads] = useState(0)
   const change = usePriceChange(res.sum, `${loads}:${current}`)
   const others = sketch.variants.filter((_, i) => i !== current).map((x) => ({ name: x.name, sum: calcFor(x).sum }))
-  const k = res.keyFigures
-
   const saveFile = () => {
     const name = customerName(sketch.project).replace(/[^A-Za-z0-9æøåÆØÅ]+/g, '') || 'standskisse'
     download(serialize(sketch), 'application/json', `${name}.standskisse.json`)
@@ -300,8 +168,7 @@ export default function App() {
     load(r.sketch, `Åpnet ${f.name}`)
   }
 
-  const brushLabel = describeBrush(brush)
-  const freeFrame = selection.freeTextileId ? res.production.free.find((f) => f.textileId === selection.freeTextileId) : undefined
+  const brushLabel = tools.describeBrush()
 
   const fillWithPen = () => {
     if (brush?.kind !== 'floor') return
@@ -332,7 +199,7 @@ export default function App() {
       brush={brush}
       name={brushLabel.name}
       meta={brushLabel.meta}
-      wallRal={wallRal}
+      wallRal={tools.wallRal}
       motifs={motifs}
       onPick={(b) => pick(b)}
       onMore={() => {
@@ -342,21 +209,19 @@ export default function App() {
       }}
       onAddRoom={addRoom}
       onUpload={(f) => void uploadMotif(f)}
-      floorSize={floorSize}
-      onFloorSize={setFloorSize}
-      otherSize={otherSize}
-      onOtherSize={setOtherSize}
-      roll={roll}
-      onRoll={setRollDir}
-      rollMode={rollMode}
-      onRollMode={setRollMode}
-      gridStep={gridStep}
-      onGridStep={setGridStep}
+      floorSize={tools.floorSize}
+      onFloorSize={tools.setFloorSize}
+      otherSize={tools.otherSize}
+      onOtherSize={tools.setOtherSize}
+      roll={tools.roll}
+      onRoll={tools.setRollDir}
+      rollMode={tools.rollMode}
+      onRollMode={tools.setRollMode}
+      gridStep={tools.gridStep}
+      onGridStep={tools.setGridStep}
       onFill={fillWithPen}
     />
   )
-  const floorPen = pens.floor ?? (brush?.kind === 'floor' ? brush : null)
-
   return (
     <div className="app">
       <TopNav
@@ -381,42 +246,17 @@ export default function App() {
       />
       {page === 'skisse' ? (
         <>
-          <div className="band" data-band="eple">
-            <div className="band-head">
-              <FoldButton open={layout.panel} icons={[PanelLeftClose, PanelLeftOpen]} labels={['Fold inn panelet', 'Vis panelet']} onToggle={(o) => fold('panel', o)} />
-              <h1>Standskisse</h1>
-              <span className="band-tag">Utkast</span>
-              <span className="spacer" />
-              <VariantTabs variants={sketch.variants} current={current} onSelect={selectVariant} />
-              <Button onBand icon={Copy} disabled={sketch.variants.length >= 4} onClick={() => dispatch({ type: 'duplicate' })}>
-                Ny variant
-              </Button>
-              {sketch.variants.length > 1 && (
-                <IconButton icon={Trash2} label={`Slett variant ${v.name}`} onBand onClick={() => dispatch({ type: 'remove', index: current })} />
-              )}
-              <span className="band-sep" />
-              <FoldButton open={layout.calc} icons={[PanelRightClose, PanelRightOpen]} labels={['Skjul kalkylen', 'Vis kalkylen']} onToggle={(o) => fold('calc', o)} />
-            </div>
-            <div className="kpis">
-              <Kpi label="Areal" value={fmt(k.area)} unit="m²" sub={`${v.stand.width} × ${v.stand.depth} m`} />
-              <Kpi label="Åpne sider" value={String(k.openSides)} sub={TYPE_NAME[v.stand.type]} />
-              <Kpi
-                label="Vegg"
-                value={fmt(k.wallLm)}
-                unit="lm"
-                sub={[wallSplit(k), k.openings ? count(k.openings, 'åpning', 'åpninger') : ''].filter(Boolean).join(' · ') || undefined}
-              />
-              <Kpi label="Takdrager" value={fmt(k.beamLm)} unit="m" sub={beamSplit(k)} />
-              {k.textileM2 > 0 && <Kpi label="Tekstilvegg" value={fmt(k.textileM2)} unit="m²" sub={textileSub(res.production)} />}
-              <span className="spacer" />
-              <Kpi
-                label="Veiledende sum"
-                value={kr(res.sum)}
-                unit="kr"
-                sub={['eks. mva.', ...others.map((o) => `${o.name} ${signed(o.sum - res.sum)}`)].join(' · ')}
-              />
-            </div>
-          </div>
+          <SketchBand
+            variants={sketch.variants}
+            current={current}
+            res={res}
+            others={others}
+            layout={layout}
+            fold={fold}
+            onSelect={selectVariant}
+            onDuplicate={() => dispatch({ type: 'duplicate' })}
+            onRemove={() => dispatch({ type: 'remove', index: current })}
+          />
           <div className="workspace">
             <Rail
               v={v}
@@ -448,10 +288,10 @@ export default function App() {
                       res={res}
                       tool={tool}
                       brush={brush}
-                      floorSize={floorSize}
-                      rollDir={roll}
-                      rollMode={rollMode}
-                      gridStep={gridStep}
+                      floorSize={tools.floorSize}
+                      rollDir={tools.roll}
+                      rollMode={tools.rollMode}
+                      gridStep={tools.gridStep}
                       highlight={highlight}
                       selection={selection}
                       onSelect={setSelection}
@@ -486,13 +326,13 @@ export default function App() {
                     </div>
                   </Suspense>
                 )}
-                <StandChip v={v} res={res} onEdit={onEdit} terms={terms} onTerms={setTerms} view={view} onView={showView} hint={view === '3d' ? HINT_3D : hint(tool, brush, rollBrush && rollMode)} />
+                <StandChip v={v} res={res} onEdit={onEdit} terms={terms} onTerms={setTerms} view={view} onView={showView} hint={view === '3d' ? HINT_3D : hint(tool, brush, tools.rollBrush && tools.rollMode)} />
                 {view === 'plan' && change?.at && <PriceChangePill key={change.id} change={change} />}
                 <ToolDock
                   tools={view === 'plan'}
                   active={active}
-                  onTool={activate}
-                  stripes={{ wall: plateColor(wallRal), floor: floorPen?.kind === 'floor' ? idx.byArtnr.get(floorPen.product)?.variant.color : undefined }}
+                  onTool={tools.activate}
+                  stripes={{ wall: plateColor(tools.wallRal), floor: tools.floorPen?.kind === 'floor' ? idx.byArtnr.get(tools.floorPen.product)?.variant.color : undefined }}
                   canUndo={state.past.length > 0}
                   canRedo={state.future.length > 0}
                   onUndo={() => dispatch({ type: 'undo' })}
@@ -502,33 +342,18 @@ export default function App() {
                   {quick}
                 </ToolDock>
               </div>
-              {freeFrame && tool === 'select' && (
-                <FreeTextileDrawer
+              {tool === 'select' && (
+                <Drawers
                   v={v}
-                  frame={freeFrame}
+                  res={res}
+                  view={view}
                   selection={selection}
-                  motifs={motifs}
-                  onUpload={(f) => void uploadMotif(f, false)}
-                  onSelect={setSelection}
-                  onEdit={onEdit}
-                  onToast={showToast}
-                  onClose={() => setSelection({})}
-                />
-              )}
-              {(selection.lane || selection.fill) && tool === 'select' && view === 'plan' && (
-                <CarpetDrawer v={v} selection={selection} onSelect={setSelection} onEdit={(fn) => onEdit(fn)} onClose={() => setSelection({})} />
-              )}
-              {(selection.wallId || selection.openingId) && tool === 'select' && (
-                <WallDrawer
-                  v={v}
-                  selection={selection}
-                  motifs={motifs}
-                  onUpload={(f) => void uploadMotif(f, false)}
                   onSelect={setSelection}
                   onEdit={onEdit}
                   onCheckpoint={onCheckpoint}
                   onToast={showToast}
-                  onClose={() => setSelection({})}
+                  motifs={motifs}
+                  onUpload={(f) => void uploadMotif(f, false)}
                 />
               )}
             </main>
@@ -556,66 +381,9 @@ export default function App() {
       <Toast msg={toast} />
     </div>
   )
-
-  /** Name of what the pen draws, and a short line under it for the quick picks. */
-  function describeBrush(b: Brush | null): { name: string; meta?: string } {
-    if (!b) return { name: 'Pensel' }
-    if (b.kind === 'wall') return { name: 'Innervegg', meta: `RAL ${b.ral}` }
-    if (b.kind === 'textile') return { name: 'Tekstilvegg', meta: 'vegg eller fritt' }
-    if (b.kind === 'beam') return { name: 'Takdrager', meta: 'innvendig' }
-    if (b.kind === 'motif') return { name: findMotif(motifs, b.motif)?.name ?? 'Motiv', meta: 'trykk eller folie' }
-    const r = idx.byArtnr.get(b.product)
-    const name = r ? (r.product.variants.length > 1 ? `${r.product.name.split(' ')[0]} ${r.variant.name.toLowerCase()}` : r.product.name) : b.product
-    return { name, meta: r ? `${kr(r.variant.price)} kr${b.kind === 'floor' ? '/m²' : ''}` : undefined }
-  }
 }
 
-interface Layout {
-  panel: boolean
-  calc: boolean
-}
 const LAYOUT: Layout = { panel: true, calc: true }
 
 /** «…» on the quick picks opens the panel on the tool's tab, where all its options are. */
 const PANEL_TAB: Record<PenTool, string> = { wall: 'vegg', floor: 'gulv', profile: 'prof', object: 'mob' }
-
-const DOCK_KEYS: Record<string, DockTool> = { v: 'select', s: 'wall', g: 'floor', t: 'profile', m: 'object', e: 'erase' }
-
-
-/** InFrame frames and free-standing walls. */
-function textileSub(p: CalcResult['production']) {
-  return [p.pieces.length ? frameCount(p.pieces.length) : '', p.free.length ? `${p.free.length} frittstående` : ''].filter(Boolean).join(' · ')
-}
-
-/** Stand walls apart from inner and room walls, and who pays them. */
-function wallSplit(k: CalcResult['keyFigures']) {
-  if (!k.standWallLm || k.standWallLm === k.wallLm) return k.organiserWallLm ? 'standvegg fra arrangør' : ''
-  return `${fmt(k.standWallLm)} standvegg${k.organiserWallLm ? ' fra arrangør' : ''} · ${fmt(k.wallLm - k.standWallLm)} inner`
-}
-
-/** Beams the organiser invoices apart from the customer's own: drawn inner beams, and the standard beams when the
- *  exhibitor pays them. */
-function beamSplit(k: CalcResult['keyFigures']) {
-  const ours = k.beamLm - k.organiserBeamLm
-  if (k.organiserBeamLm) return `${fmt(k.organiserBeamLm)} fra arrangør${ours > 1e-9 ? ` · ${fmt(ours)} tilvalg` : ''}`
-  if (!k.innerBeamLm) return undefined
-  const standard = k.beamLm - k.innerBeamLm
-  return standard > 1e-9 ? `${fmt(standard)} standard · ${fmt(k.innerBeamLm)} tilvalg` : 'tilvalg'
-}
-
-/** Band toggle for the panel or the calc: muted fill while it is shown. Icons and labels are [shown, folded]. */
-function FoldButton({ open, icons, labels, onToggle }: { open: boolean; icons: [LucideIcon, LucideIcon]; labels: [string, string]; onToggle: (open: boolean) => void }) {
-  const i = open ? 0 : 1
-  return <IconButton icon={icons[i]} label={labels[i]} onBand pressed={open} className="band-fold" onClick={() => onToggle(!open)} />
-}
-
-function Kpi({ label, value, unit, sub }: { label: string; value: string; unit?: string; sub?: string }) {
-  return (
-    <span className="kpi">
-      <span className="label">{label}</span>
-      <span className="value num">{value}</span>
-      {unit && <span className="unit">{unit}</span>}
-      {sub && <span className="sub">{sub}</span>}
-    </span>
-  )
-}
