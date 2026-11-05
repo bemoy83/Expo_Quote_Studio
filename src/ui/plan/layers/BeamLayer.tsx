@@ -4,7 +4,7 @@ import type { CalcResult } from '../../../calc/calc'
 import type { InnerBeam, Point, Variant } from '../../../domain/types'
 import { INK, INK_MUTED, SURFACE } from '../../colors'
 import { linePx, usePlanScale } from '../planScale'
-import { beamBody, beamDash, footDash, footStroke, HALO_OPACITY, haloWidth, postSize } from '../planStyle'
+import { BEAM_FILL, beamBody, beamDash, footDash, footStroke, HALO_OPACITY, haloWidth, postSize } from '../planStyle'
 import { rules } from '../../env'
 import type { Point as P } from '../../../domain/types'
 import type { Layer } from '../../tools'
@@ -72,7 +72,7 @@ export function BeamStroke({ a, b, body }: { a: P; b: P; body: number }) {
   return (
     <g>
       <Seg a={a} b={b} stroke={SURFACE} strokeWidth={body} />
-      <Seg a={a} b={b} stroke={INK} strokeOpacity={0.09} strokeWidth={body} />
+      <Seg a={a} b={b} stroke={INK} strokeOpacity={BEAM_FILL} strokeWidth={body} />
       <Seg a={[a[0] - ox, a[1] - oy]} b={[b[0] - ox, b[1] - oy]} stroke={INK} strokeWidth={edge} strokeDasharray={dash} />
       <Seg a={[a[0] + ox, a[1] + oy]} b={[b[0] + ox, b[1] + oy]} stroke={INK} strokeWidth={edge} strokeDasharray={dash} />
     </g>
