@@ -1,6 +1,9 @@
-// The door and curtain pen: a click on a wall module sets its opening; on an empty edge it draws its own wall.
+// The door and curtain pen: a door or curtain in the wall module under the pointer; on an empty edge it draws its own
+// wall. A door also turns the way the pointer is dragged before release (place.ts, domain/doors.ts placeOpening).
+import type { Module } from '../../../domain/grid'
 import { doorAllowed } from '../../../domain/walls'
-import { drawOpening, setOpening } from '../../../domain/doors'
+import { placeOpening } from '../../../domain/doors'
+import { productOf } from '../../env'
 import { nearestEdge } from '../geometry'
 import type { P, PointerCtx } from './types'
 
@@ -9,14 +12,14 @@ export function openingEdge(c: Pick<PointerCtx, 'v' | 'hits'>, q: P) {
   return c.hits.moduleAt(q, 0.4) ?? (c.hits.onStand(q) ? nearestEdge(c.v.stand, q) : null)
 }
 
-export function openingClick(c: PointerCtx, q: P) {
-  const { v, brush } = c
+/** A door, not a curtain: it has a swing side and a hinge end. */
+export const isDoor = (product: string) => productOf(product)?.opening === 'door'
+
+/** Put the pen's door or curtain in module e, a door turned toward the pointer at q (null: the defaults). */
+export function openingAt(c: PointerCtx, e: Module, q: P | null) {
+  const { brush } = c
   if (brush?.kind !== 'opening') return
-  const m = c.hits.moduleAt(q, 0.4)
-  const e = openingEdge(c, q)
-  if (!e) return
-  if (!doorAllowed(v, e.a, e.b)) c.onToast('Dører og forheng kan ikke stå i standveggen')
-  else if (m) c.onEdit((x) => setOpening(x, m.key, brush.product))
-  // No wall there: the door or curtain draws its own wall module
-  else c.onEdit((x) => drawOpening(x, e.a, e.b, brush.product))
+  if (!doorAllowed(c.v, e.a, e.b)) return c.onToast('Dører og forheng kan ikke stå i standveggen')
+  const product = brush.product
+  c.onEdit((x) => placeOpening(x, e.a, e.b, product, isDoor(product), q))
 }
