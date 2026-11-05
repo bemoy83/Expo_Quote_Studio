@@ -20,7 +20,7 @@ const LAYER: Record<string, Highlight> = {
   prof: 'textile',
   tjen: null,
 }
-export const layerOf = (id: string): Highlight => (id in LAYER ? LAYER[id] : id.includes('.') ? layerOf(id.split('.')[0]) : 'objects')
+const layerOf = (id: string): Highlight => (id in LAYER ? LAYER[id] : id.includes('.') ? layerOf(id.split('.')[0]) : 'objects')
 
 const DOT: Partial<Record<string, string>> = LAYER_COLOR
 

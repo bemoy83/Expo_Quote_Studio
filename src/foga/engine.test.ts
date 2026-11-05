@@ -14,7 +14,7 @@ import type { FogaStructure } from './structure';
 const Z = bomSizes(RULES);
 const empty: FogaStructure = { posts: 0, modules: [], beams: [], frames: [] };
 type Key = keyof typeof BOM_GROUP;
-const group = (b: Bom, id: Key) => b.lines.filter((l) => l.group === BOM_GROUP[id]).map(({ group: _, ...l }) => l);
+const group = (b: Bom, id: Key) => b.lines.filter((l) => l.group === BOM_GROUP[id]).map((l) => ({ ...l, group: undefined }));
 const line = (b: Bom, id: Key, name: string) => group(b, id).find((l) => l.name.startsWith(name));
 const subgroups = (b: Bom) => [...new Set(b.lines.map((l) => l.group))];
 
