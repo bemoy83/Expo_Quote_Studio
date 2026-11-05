@@ -64,3 +64,22 @@ export function ElevationDims({ w, s, name, L, H, items, leaders, top, width, sc
     </g>
   )
 }
+
+/**
+ * Dimensions on the drawing of a free-standing textile wall, as on the wall drawing: the heading, where the feet stand
+ * and the whole length under it, the frame's height to the left.
+ */
+export function FreeElevationDims({ title, W, H, feet, top, sc }: { title: string; W: number; H: number; feet: number[]; top: number; sc: PlanScale }) {
+  const px = (n: number) => sizePx(sc, n)
+  const along = row([0, W], feet)
+  return (
+    <g pointerEvents="none">
+      <text x={W / 2} y={top + px(14)} textAnchor="middle" style={{ font: `500 ${px(HEAD_FONT)}px var(--font-ui)`, fill: INK_MUTED }}>
+        {title}
+      </text>
+      {along.length > 2 && <Chain sc={sc} axis="x" at={H + px(NEAR)} ts={along} dir={1} />}
+      <Chain sc={sc} axis="x" at={H + px(TOTAL)} ts={[0, W]} dir={1} />
+      <Chain sc={sc} axis="y" at={-px(NEAR)} ts={[0, H]} dir={-1} suffix="ramme" />
+    </g>
+  )
+}
