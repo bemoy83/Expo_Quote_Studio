@@ -1,5 +1,6 @@
-// Waste drawn hatched: the strip of roll cut off a lane narrower than the roll. Each one has its own pattern id, so
-// several plans on the page (plan, mini plan, work order) never share one.
+// Waste drawn hatched in the carpet drawer: the strip of roll cut off a lane narrower than the roll (the plan uses its
+// own screen-pixel hatch, Offcut in layers/FloorLayer.tsx). Each one has its own pattern id, so
+// several drawings on the page never share one.
 import { useId } from 'react'
 
 export function Hatched({ x, y, width, height }: { x: number; y: number; width: number; height: number }) {

@@ -164,7 +164,10 @@ export function PreviewLayer(p: Props) {
         <g>
           {selLane && <Offcut t={selLane} roll={idx.byArtnr.get(selLane.product)?.product.roll ?? 2} stand={standCells(v.stand)} />}
           {selLanes.map((t) => (
-            <rect key={`${t.i},${t.j}`} x={t.i * CELL} y={t.j * CELL} width={t.w * CELL} height={t.h * CELL} fill={INK} fillOpacity={0.06} stroke={INK} strokeWidth={0.025} strokeDasharray=".1 .06" />
+            <g key={`${t.i},${t.j}`}>
+              <rect x={t.i * CELL} y={t.j * CELL} width={t.w * CELL} height={t.h * CELL} fill={INK} fillOpacity={0.06} />
+              <AimRect x={t.i * CELL} y={t.j * CELL} width={t.w * CELL} height={t.h * CELL} halo />
+            </g>
           ))}
         </g>
       )}

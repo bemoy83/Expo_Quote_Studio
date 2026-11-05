@@ -92,8 +92,16 @@ export const WALL = LAYER_COLOR.walls
 
 export const TEXTILE = LAYER_COLOR.textile
 
-/** Joints between carpet tiles, m: wide enough to read in the small plan on the quote and the work order. */
-export const JOINT_WIDTH = 0.025
+/**
+ * Floor in full colour (docs/arbeidstegning.md, Gulv): a joint is a hairline of 1 px in a strong shade of the floor's
+ * own colour (`jointColor`), only where two tiles or lanes meet, so the floor's edge is drawn by the walls and the stand
+ * outline alone. Thinner than every ink line on the floor, so the construction stays on top.
+ */
+export const JOINT_PX = 1
+export const jointWidth = (s: PlanScale) => linePx(s, JOINT_PX)
+
+/** Lane number and roll arrow on rolled floor, px: number in the numeric font, arrow as long as the lane allows. */
+export const LANE_MARK = { font: 12, arrow: 40, stroke: 1.2, head: 4, gap: 4 } as const
 
 /** Metre grid: faint ink, a hairline of GRID_PX screen pixels (planScale.ts). */
 export const GRID = 'rgb(var(--ink) / .1)'
@@ -106,8 +114,8 @@ export const TUSJ_PRINT = 'var(--tusj-trykk)'
 /** Reserved for a snekret (carpentry) wall, which is not in the model yet: diagonal hatch at 45°, no colour. */
 export const SNEKRET_HATCH = { angle: 45, colour: null } as const
 
-/** Half-metre lines while painting floor. */
-export const GRID_FINE = 'rgb(0 0 0 / .1)'
+/** Half-metre lines while painting floor: a dotted ink hairline like the metre grid, in screen pixels. */
+export const GRID_FINE = { stroke: 'rgb(var(--ink) / .14)', width: 0.5, dash: 2, gap: 3 } as const
 
 /** Opacity of layers outside the hovered calc group. */
 export const DIMMED = 0.25
