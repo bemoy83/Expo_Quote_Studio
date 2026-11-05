@@ -3,7 +3,7 @@
 // draw order never decides what can be clicked. Each product's layer is drawn in plan/layers/ (FloorLayer, WallLayer,
 // TextileLayer, BeamLayer, ObjectLayer, RoomLayer, Labels, Previews), and the pointer handling lives in plan/pointer/
 // (usePlanPointer, one file per drag kind). This file puts them together with the cursor and the hover previews.
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import { canMoveWall } from '../../domain/edit'
 import { CELL, openSides, sideLength, sidePoint } from '../../domain/grid'
@@ -25,8 +25,7 @@ import { laneAt } from '../../domain/floor/edit'
 import type { RollMode } from '../tools'
 import { nearestEdge } from './geometry'
 import type { PlanSelection } from './selection'
-import { DIMMED, GRID, GRID_FINE, GRID_PX, PLAN_MARGIN, TEXTILE, beamDash, wallWidth } from './planStyle'
-import { Seg } from './layers/Seg'
+import { DIMMED, GRID, GRID_FINE, GRID_PX, PLAN_MARGIN, beamBody, textileOffset, wallWidth } from './planStyle'
 import { FloorLayer, Offcut, RollPreview } from './layers/FloorLayer'
 import { WallLayer } from './layers/WallLayer'
 import { TextileLayer } from './layers/TextileLayer'
@@ -43,7 +42,10 @@ import { planHits } from './pointer/hits'
 import { openingEdge } from './pointer/opening'
 import { pens } from './pointer/pens'
 import { usePlanPointer } from './pointer/usePlanPointer'
-import { FacePreview, HoverModule, SnapDots, StrokePreview, TextilePreview } from './layers/Previews'
+import { AimBox, AimSeg, EraseStroke, FacePreview, HoverModule, Ring, SnapDots } from './layers/Previews'
+import { beamPhantom, dropPhantom, textilePhantom, wallPhantom, type Phantom } from './layers/strokePhantoms'
+import { faceSegment } from '../../domain/faces'
+import { fillFace } from '../../domain/textile/brush'
 import { eraseTargetAt, type Erasing } from './pointer/erase'
 import { ErasingProvider } from './layers/ErasingProvider'
 import { linePx, planScale, PlanScaleContext, usePxPerMetre } from './planScale'
@@ -79,6 +81,8 @@ interface Props {
   floorFull?: boolean
   /** Position numbers (the quote's and the work order's small plan; never on the drawing surface). */
   positions?: boolean
+  /** Why what the pointer aims at cannot be stored (or that it is already there), for the hint line; null when it can. */
+  onHint?: (text: string | null) => void
 }
 
 /** Main group of each plan layer. Objects go by their own product. */
@@ -200,6 +204,29 @@ export function PlanView(p: Props) {
   const pxPerM = usePxPerMetre(svg, vb.w, vb.h)
   const scale = useMemo(() => planScale(pxPerM, { doc: p.doc, mini: p.mini }), [pxPerM, p.doc, p.mini])
 
+  // Phantoms while pressed or dragging (docs/forhandsvisning.md): what a release stores, or why it stores nothing
+  const centre: [number, number] = [W / 2, D / 2]
+  const phantom: Phantom | null =
+    stroke && tool !== 'erase' && wallTool
+      ? wallPhantom(scale, { v, a: stroke[0], b: stroke[1], ral: brush?.kind === 'wall' ? brush.ral : undefined, centre })
+      : stroke && tool !== 'erase' && beamTool
+        ? beamPhantom(scale, { v, a: stroke[0], b: stroke[1], standard: standardRuns, centre })
+        : textileStroke
+          ? textilePhantom(scale, { v, line: textileStroke, face: faceHit(textileStroke.at), centre })
+          : dropHover
+            ? dropPhantom(scale, { v, h: dropHover.h, d: dropHover.d, centre })
+            : null
+  // Aim of the textile brush next to a wall: the free part of the face a click fills, or why there is none
+  const textileAim = textileFace ? fillFace(v, rules, textileFace.w.id, textileFace.s, textileFace.t) : null
+  const textileAimSeg = textileAim && 'mounted' in textileAim ? (() => {
+    const t = textileAim.v.textiles.find((x) => x.id === textileAim.mounted.id)!
+    return faceSegment(textileFace!.w, textileFace!.s, t.from, t.from + t.width, textileOffset(scale))
+  })() : null
+  const planHint = p.mini ? null : (phantom?.hint ?? (textileAim && 'error' in textileAim ? textileAim.error : null))
+  const onHint = p.onHint
+  useEffect(() => onHint?.(planHint), [onHint, planHint])
+  useEffect(() => () => onHint?.(null), [onHint])
+
   const totals = useMemo(() => new Set(totalSides(v)), [v])
 
   const sideText = (s: Side) => {
@@ -292,13 +319,13 @@ export function PlanView(p: Props) {
       {/* Interaction preview */}
       <g pointerEvents="none">
         {!p.mini && v.rooms.filter((r) => r.id === selection.roomId).map((r) => <RoomHandles key={r.id} r={r} />)}
-        {hoverWallEdge && <Seg a={hoverWallEdge.a} b={hoverWallEdge.b} stroke={INK} strokeOpacity={0.45} strokeWidth={wallWidth(scale)} strokeDasharray={beamTool ? beamDash(scale) : undefined} />}
-        {stroke && <StrokePreview a={stroke[0]} b={stroke[1]} erase={tool === 'erase'} beam={beamTool} centre={[W / 2, D / 2]} cc={rules.wall.cc} />}
-        {textileStroke && <TextilePreview v={v} line={textileStroke} />}
-        {hoverFree && <circle cx={hoverFree[0]} cy={hoverFree[1]} r={0.06} fill={TEXTILE} />}
+        {hoverWallEdge && <AimBox a={hoverWallEdge.a} b={hoverWallEdge.b} width={beamTool ? beamBody(scale, rules.beam.thickness) : wallWidth(scale)} />}
+        {stroke && tool === 'erase' && <EraseStroke a={stroke[0]} b={stroke[1]} centre={centre} />}
+        {phantom?.el}
+        {hoverFree && <Ring at={hoverFree} />}
+        {textileAimSeg && <AimSeg a={textileAimSeg[0]} b={textileAimSeg[1]} />}
         {hoverModule && <HoverModule m={hoverModule} />}
-        {hoverFace && <FacePreview v={v} h={hoverFace} brush={brush!} />}
-        {dropHover && <FacePreview v={v} h={dropHover.h} brush={dropHover.d} />}
+        {hoverFace && !textileFace && <FacePreview v={v} h={hoverFace} />}
         {rollPreview.length > 0 && <RollPreview tiles={rollPreview} color={idx.byArtnr.get(rollPreview[0].product)?.variant.color} roll={rollWidth!} stand={standCells(v.stand)} />}
         {fillPreview && <RollPreview tiles={fillPreview.tiles} color={idx.byArtnr.get(fillProduct)?.variant.color} roll={rollWidth!} />}
         {fillRect && (

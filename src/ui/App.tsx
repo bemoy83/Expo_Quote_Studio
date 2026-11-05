@@ -65,6 +65,8 @@ export default function App() {
   const res = calcFor(v)
   const [page, setPage] = useState<Page>('skisse')
   const [view, setView] = useState<'plan' | '3d'>('plan')
+  /** Why what the plan's pointer aims at cannot be stored, shown in the hint line instead of the tool's help. */
+  const [planHint, setPlanHint] = useState<string | null>(null)
   const [tab, setTabRaw] = useState('vegg')
   /** Panel and calc can be folded away for more drawing room; remembered on this machine. */
   const [layout, setLayout] = useState<Layout>(() => ({ ...LAYOUT, ...loadJson<Partial<Layout>>(KEYS.layout, {}) }))
@@ -299,6 +301,7 @@ export default function App() {
                       onCheckpoint={onCheckpoint}
                       onToast={showToast}
                       motifs={motifs}
+                      onHint={setPlanHint}
                     />
                     <div className="minimap">
                       <Suspense fallback={null}>
@@ -326,7 +329,7 @@ export default function App() {
                     </div>
                   </Suspense>
                 )}
-                <StandChip v={v} res={res} onEdit={onEdit} terms={terms} onTerms={setTerms} view={view} onView={showView} hint={view === '3d' ? HINT_3D : hint(tool, brush, tools.rollBrush && tools.rollMode)} />
+                <StandChip v={v} res={res} onEdit={onEdit} terms={terms} onTerms={setTerms} view={view} onView={showView} hint={view === '3d' ? HINT_3D : planHint ? { text: planHint, more: planHint } : hint(tool, brush, tools.rollBrush && tools.rollMode)} />
                 {view === 'plan' && change?.at && <PriceChangePill key={change.id} change={change} />}
                 <ToolDock
                   tools={view === 'plan'}

@@ -1,21 +1,19 @@
-// Previews while drawing in the plan: the stroke of a wall, beam or textile, where a textile or motif lands on a
-// wall face, the snap dots and the module a door would go in. The shared parts of the preview grammar (aim, phantom,
+// Previews while drawing in the plan: Tøm's stroke, where a motif lands on a wall face, the snap dots and the module a
+// door would go in. The phantoms of the stroke tools are in Phantoms.tsx. The shared parts of the preview grammar (aim, phantom,
 // invalid; docs/forhandsvisning.md) are here too: ring, dashed aim outline, invalid hatch and the measure pill.
-import { useId, type SVGProps } from 'react'
+import { useId, type ReactNode, type SVGProps } from 'react'
 import { type Module } from '../../../domain/grid'
-import { planTextile } from '../../../domain/textile/brush'
 import type { Point, Variant, Wall } from '../../../domain/types'
 import { CANVAS, INK, INK_FAINT, SURFACE } from '../../colors'
-import { fmt } from '../../format'
 import { rules } from '../../env'
-import type { Brush } from '../../tools'
 import { faceSegment, type FaceSide, felt } from '../../../domain/faces'
-import { freeSpans, textileAt } from '../../../domain/textile/inFrame'
-import { AIM, aimDash, INVALID, MONO, PILL, RING, SNAP_DOT, TEXTILE, textileOffset, textileWidth, wallWidth, WALL } from '../planStyle'
+import { textileAt } from '../../../domain/textile/inFrame'
+import { AIM, aimDash, INVALID, PHANTOM, PILL, RING, SNAP_DOT, textileOffset, textileWidth, wallWidth } from '../planStyle'
 import { linePx, sizePx, usePlanScale } from '../planScale'
 import { mm } from '../dims'
 import { pillCentre, pillWidth } from '../pillPlace'
 import { Seg } from './Seg'
+import { RasterPattern, TextileStroke } from './TextileLayer'
 
 /** A wall face under the pointer: wall, face, offset along the wall and module index. */
 export interface FaceHit {
@@ -31,78 +29,30 @@ export interface TextileLine {
   at: { x: number; y: number }
 }
 
-/** The stroke being drawn: on a wall it shows the frame on the face it lands on, elsewhere a free-standing run. */
-export function TextilePreview({ v, line }: { v: Variant; line: TextileLine }) {
-  const sc = usePlanScale()
-  const plan = planTextile(v, line.a, line.b, line.at)
-  if (plan.kind === 'free') return <FreePreview a={line.a} b={line.b} />
-  const [a, b] = faceSegment(plan.wall, plan.s, plan.t0, plan.t1, textileOffset(sc))
-  return (
-    <g>
-      <Seg a={a} b={b} stroke={TEXTILE} strokeOpacity={0.7} strokeWidth={textileWidth(sc) + linePx(sc, 3)} />
-      <text x={(a[0] + b[0]) / 2} y={(a[1] + b[1]) / 2 - 0.15} textAnchor="middle" style={{ ...MONO, fontSize: '0.2px', fill: INK }}>
-        {fmt(plan.t1 - plan.t0, 2)} m på vegg
-      </text>
-    </g>
-  )
-}
-
-function FreePreview({ a, b }: { a: Point; b: Point }) {
-  const L = Math.hypot(b[0] - a[0], b[1] - a[1])
-  const sc = usePlanScale()
-  return (
-    <g>
-      <Seg a={a} b={b} stroke={TEXTILE} strokeOpacity={0.6} strokeWidth={textileWidth(sc)} />
-      <circle cx={a[0]} cy={a[1]} r={0.06} fill={TEXTILE} />
-      <circle cx={b[0]} cy={b[1]} r={0.06} fill={TEXTILE} />
-      {L > 0 && (
-        <text x={(a[0] + b[0]) / 2} y={(a[1] + b[1]) / 2 - 0.15} textAnchor="middle" style={{ ...MONO, fontSize: '0.2px', fill: INK }}>
-          {fmt(L, 2)} m
-        </text>
-      )}
-    </g>
-  )
-}
-
-/** The wall or beam stroke being dragged, or the run Tøm sweeps over. `centre` is the stand's middle: the pill goes on
- * the side away from it. */
-export function StrokePreview({ a, b, erase, beam, centre, cc }: { a: Point; b: Point; erase: boolean; beam?: boolean; centre: Point; cc: number }) {
+/** The run Tøm sweeps over along walls or takdragere. `centre` is the stand's middle: the pill goes on the side away
+ * from it. Wall and takdrager strokes draw their phantom instead (Phantoms.tsx). */
+export function EraseStroke({ a, b, centre }: { a: Point; b: Point; centre: Point }) {
   const L = Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1])
   const sc = usePlanScale()
   const w = wallWidth(sc)
-  const modules = Math.round(L / cc)
-  const text = erase || beam ? mm(L) : `${mm(L)} · ${modules} ${modules === 1 ? 'modul' : 'moduler'}`
   return (
     <g>
-      <Seg
-        a={a}
-        b={b}
-        stroke={erase ? INK_FAINT : `color-mix(in oklab, ${beam ? INK : WALL} 60%, transparent)`}
-        strokeWidth={w}
-        strokeLinecap="square"
-        strokeDasharray={erase ? '.12 .08' : beam ? '.16 .08' : undefined}
-      />
+      <Seg a={a} b={b} stroke={INK_FAINT} strokeWidth={w} strokeLinecap="square" strokeDasharray=".12 .08" />
       <Ring at={a} />
       <Ring at={b} />
-      {L > 0 && <MeasurePill a={a} b={b} centre={centre} stroke={w} text={text} />}
+      {L > 0 && <MeasurePill a={a} b={b} centre={centre} stroke={w} text={mm(L)} />}
     </g>
   )
 }
 
-/** Where a textile or motif click would land on the hovered wall face. */
-export function FacePreview({ v, h, brush }: { v: Variant; h: FaceHit; brush: Brush }) {
+/** Where a motif click would land on the hovered wall face: the textile it prints, or the wall panel's field. */
+export function FacePreview({ v, h }: { v: Variant; h: FaceHit }) {
   const sc = usePlanScale()
   const tx = textileAt(v, h.w.id, h.s, h.t)
-  let span: [number, number] | null = null
-  if (tx) span = [tx.from, tx.from + tx.width]
-  else if (brush.kind === 'textile') span = freeSpans(v, rules, h.w.id, h.s).find(([a, b]) => h.t >= a && h.t <= b) ?? null
-  else if (brush.kind === 'motif') {
-    const f = felt(rules, h.module)
-    span = [f.a, f.b]
-  }
-  if (!span) return null
+  const f = felt(rules, h.module)
+  const span: [number, number] = tx ? [tx.from, tx.from + tx.width] : [f.a, f.b]
   const [a, b] = faceSegment(h.w, h.s, span[0] + 0.02, span[1] - 0.02, textileOffset(sc))
-  return <Seg a={a} b={b} stroke={brush.kind === 'textile' ? TEXTILE : INK} strokeOpacity={0.45} strokeWidth={textileWidth(sc) + linePx(sc, 3)} />
+  return <Seg a={a} b={b} stroke={INK} strokeOpacity={0.45} strokeWidth={textileWidth(sc) + linePx(sc, 3)} />
 }
 
 /** True on a whole metre, give or take float noise from stepping in 0.25 m. */
@@ -132,6 +82,18 @@ export function Ring({ at }: { at: Point }) {
 export function AimSeg({ a, b }: { a: Point; b: Point }) {
   const sc = usePlanScale()
   return <Seg a={a} b={b} stroke={INK} strokeWidth={linePx(sc, AIM.width)} strokeDasharray={aimDash(sc)} />
+}
+
+/** The aim around a stretch of line drawn `width` m wide (the module a wall or takdrager click lays): a dashed box
+ * 2 px outside the line. */
+export function AimBox({ a, b, width }: { a: Point; b: Point; width: number }) {
+  const sc = usePlanScale()
+  const h = width / 2 + sizePx(sc, 2)
+  const x0 = Math.min(a[0], b[0])
+  const y0 = Math.min(a[1], b[1])
+  const hz = a[1] === b[1]
+  const len = Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1])
+  return hz ? <AimRect x={x0} y={y0 - h} width={len} height={2 * h} /> : <AimRect x={x0 - h} y={y0} width={2 * h} height={len} />
 }
 
 /** The aim around an area (floor brush, furniture footprint). `halo` lays a light edge under it, for a dark floor. */
@@ -214,4 +176,34 @@ export function PillAt({ at, text }: { at: Point; text: string }) {
 
 export function HoverModule({ m }: { m: Module }) {
   return <Seg a={m.a} b={m.b} stroke={INK} strokeOpacity={0.35} strokeWidth={0.18} />
+}
+
+/** A textile run at phantom strength, with rings and the pill; `under` is drawn first (foot plates). */
+export function TextileRun({ a, b, centre, text, under }: { a: Point; b: Point; centre: Point; text: string; under?: ReactNode }) {
+  const sc = usePlanScale()
+  return (
+    <g>
+      <g opacity={PHANTOM.area}>
+        {under}
+        <TextileStroke a={a} b={b} sc={sc} />
+      </g>
+      <Ring at={a} />
+      <Ring at={b} />
+      <MeasurePill a={a} b={b} centre={centre} stroke={textileWidth(sc)} text={text} />
+    </g>
+  )
+}
+
+/** Print or decal band in green raster, at phantom strength. */
+export function RasterBand({ a, b, width }: { a: Point; b: Point; width: number }) {
+  const sc = usePlanScale()
+  const raster = `band${useId().replace(/:/g, '')}`
+  return (
+    <g opacity={PHANTOM.line}>
+      <defs>
+        <RasterPattern id={raster} sc={sc} />
+      </defs>
+      <Seg a={a} b={b} stroke={`url(#${raster})`} strokeWidth={width} />
+    </g>
+  )
 }
