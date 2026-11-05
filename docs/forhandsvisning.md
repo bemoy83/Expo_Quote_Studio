@@ -116,6 +116,43 @@ Vegg, takdrager, tekstil og engangsteppe lagrer allerede ved slipp. Teppeflis ma
 Endringen er i pekerhåndteringen. Kjør derfor pekerbeviset (`scripts/pointer-replay.mjs`) mot `main`. Den eneste
 ventede forskjellen er at dør, dekal og møbel havner i skissen ved slipp i stedet for ved trykk.
 
+## Dør: sikte og retning før slipp
+
+Bjørn 5.11.2026, etter #77–#80.
+
+**Sikte.** Én stiplet linje i modulens senterlinje, ikke to parallelle linjer som i dag (`doorPreview` i
+`plan/layers/placePhantoms.tsx`). Den må synes oppå veggen:
+
+- en lys kant under (`--surface`, 3,5 px), og blekk 1,4 px oppå, strek 4 px og luft 3 px
+- samme linje på en tom kant, der døren lager sin egen modul (`drawOpening`)
+- i standvegg som i dag: skravert, med hint
+
+**Retning mens man holder inne.** Pekeren styrer begge retningene, og fantomet følger med:
+
+| Retning | Styres av | I modellen |
+| --- | --- | --- |
+| Slagside | siden av veggen pekeren er på | `Opening.swing` |
+| Hengsel | halvdelen av modulen pekeren er i: hengslet sitter i den enden man er nærmest | `Opening.hinge` (`doorHinge`) |
+
+- Rett etter trykket er pekeren på veggen, og fantomet viser standardretningen (`defaultSwing`, hengsel `1`).
+  Retningen bestemmes først når pekeren er minst 0,15 m fra veggens senterlinje, så et rent klikk gir standarden som
+  i dag.
+- **På standens ytterkant** slår døren alltid inn i standen (`doorSwing`). Der styrer pekeren bare hengslet.
+- **Forheng** har ingen retning. Det følger regelen for dør og dekal: dra bort avbryter.
+- Hintlinjen mens man holder inne: «Dra mot siden døren skal slå · slipp for å sette inn · Esc avbryter».
+
+**Når avbrytes det?** I dag avbrytes døren så snart pekeren forlater modulen (`placeKey` bruker `moduleAt(q, 0.4)`).
+Det blir for trangt når man skal dra ut til siden for å velge slagside. Nytt område: modulens lengde, og
+`rules.door.swing` (0,95 m) til hver side av veggen, altså området bladet kan slå i. Utenfor området forsvinner
+fantomet, og et slipp avbryter. Esc avbryter som før.
+
+**Lagring.** Ved slipp settes døren som i dag (`setOpening` / `drawOpening`), med `swing` og `hinge` fra pekeren.
+Standardverdiene lagres ikke (samme regel som i `setOpening`: `swing` bare når den er `-1`, `hinge` bare når den er
+`-1`).
+
+**Pekerbeviset** får tre nye steg: trykk og dra til motsatt side av standardsiden, slipp (lagret med `swing -1`). Trykk
+i den andre halvdelen og dra ut, slipp (lagret med `hinge -1`). Trykk og dra 1,2 m ut, slipp (ingen endring).
+
 ## Rekkefølge
 
 Én PR per punkt. Kalkyle- og fil-snapshots skal ikke endres. `scripts/shots.mjs` mot `main` viser de ventede
@@ -140,5 +177,7 @@ avvikene.
 
    Et vanlig klikk dekkes allerede. Skriptet trenger et hjelpesteg for trykk og hold (`mouse.down`, flytt, så
    `Escape` eller `mouse.up`), ved siden av `press` og `drag`.
+
+6. **Dør:** én stiplet linje som sikte, og retning fra pekeren før slipp (se «Dør: sikte og retning før slipp»).
 
 Når en PR er inne, oppdateres [kodekart.md](kodekart.md).
