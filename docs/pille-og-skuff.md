@@ -96,6 +96,16 @@ samme produkt og beholder plass og `rot`. Er den nye varianten større, kjøres 
 ### Når den åpnes
 
 - **Mer** i pillen, eller **dobbeltklikk** på objektet.
+- **Dobbeltklikk må ikke få pillen til å blinke** (Bjørn 5.11.2026). Et dobbeltklikk er to klikk. Uten et grep ville
+  det første vist pillen og det andre lukket den (klikkreglene) før skuffen åpnes. Derfor:
+  - Pillen vises med en **liten forsinkelse på 200 ms** etter et klikk som velger. Kommer et nytt klikk innen da, vises
+    den ikke.
+  - Et nytt klikk på det samme objektet lukker pillen først **etter 200 ms**, så et dobbeltklikk ikke lukker den
+    først.
+  - `dblclick` åpner skuffen i detalj og kansellerer det som venter. Var pillen allerede synlig, skjules den uten
+    animasjon idet skuffen kommer.
+  - Til sammen: enkeltklikk gir pillen etter 200 ms, og dobbeltklikk gir skuffen uten at pillen er innom. Verdien 200
+    ms legges som en konstant ved klikkreglene.
 - Skuffen åpnes ikke lenger av et vanlig valg. `Drawers.tsx` må styres av en egen tilstand, for eksempel
   `drawer: 'closed' | 'compact' | 'detail'` i `App.tsx`, ikke av `selection` alene.
 
@@ -146,6 +156,7 @@ I dag hopper `paintWalls` over moduler som finnes, så et klikk med veggverktøy
   Det er ventet og forklares i PR-en. Nye steg:
   - klikk, klikk igjen og klikk utenfor på vegg, møbel og frittstående tekstil
   - Mer: skuffen åpnes i detalj
+  - dobbeltklikk på en vegg: skuffen åpnes i detalj, og pillen er aldri synlig underveis
   - mens skuffen er åpen: klikk på en annen vegg (bytter), klikk på et møbel (lukker og viser pillen), klikk på tomt
     gulv (lukker)
   - veggverktøyet: klikk på en plate som finnes, og dra over tre plater
