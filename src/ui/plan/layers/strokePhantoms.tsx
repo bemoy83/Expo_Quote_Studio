@@ -71,6 +71,34 @@ export function wallPhantom(sc: PlanScale, { v, a, b, ral, centre }: { v: Varian
   return { el, hint: mods.length ? null : 'Veggen finnes allerede' }
 }
 
+/**
+ * Plates being coloured with the wall pen (pointer/plates.ts): the wall symbol in the new colour over them and the pill
+ * «3 plater · RAL 5007». Nothing to colour (only doors): the hint says so.
+ */
+export function platesPhantom(sc: PlanScale, { mods, ral, centre }: { mods: Module[]; ral: string; centre: Point }): Phantom {
+  if (!mods.length) return { el: null, hint: 'Dører farges i veggskuffen' }
+  const w = wallWidth(sc)
+  const a = mods[0].a
+  const b = mods[mods.length - 1].b
+  const ends = [a, b, mods[0].b, mods[mods.length - 1].a]
+  const lo: Point = [Math.min(...ends.map((p) => p[0])), Math.min(...ends.map((p) => p[1]))]
+  const hi: Point = [Math.max(...ends.map((p) => p[0])), Math.max(...ends.map((p) => p[1]))]
+  const el = (
+    <g>
+      <g opacity={PHANTOM.area}>
+        {mods.map((m) => (
+          <g key={m.key}>
+            <Seg a={m.a} b={m.b} stroke={INK} strokeWidth={w} />
+            <Seg a={m.a} b={m.b} stroke={plateColor(ral)} strokeWidth={wallCore(sc)} />
+          </g>
+        ))}
+      </g>
+      <MeasurePill a={lo} b={hi} centre={centre} stroke={w} text={`${mods.length} ${mods.length === 1 ? 'plate' : 'plater'} · RAL ${ral}`} />
+    </g>
+  )
+  return { el, hint: null }
+}
+
 /** Drawn takdrager being dragged: the takdrager symbol, rings and the pill; hatched with the reason when it cannot be drawn. */
 export function beamPhantom(sc: PlanScale, { v, a, b, standard, centre }: { v: Variant; a: Point; b: Point; standard: readonly Run[]; centre: Point }): Phantom {
   const body = beamBody(sc, rules.beam.thickness)

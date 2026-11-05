@@ -326,6 +326,14 @@ await dbl(4.5, 3); await record('regel dobbeltklikk frittstående')
 await press(1.5, 2); await record('regel skuff åpen klikk tomt gulv')
 await close()
 
+// The wall pen on walls that stand: a click colours one plate, a drag along the wall several, Esc cancels the drag
+await open('01-hjorne-arrangor')
+await tool('Vegg'); await page.locator('.q-sw').nth(2).click()
+await press(1.5, 0); await record('vegg farger plate')
+await drag(0.5, 0, 2.5, 0); await record('vegg dra farger plater')
+await page.locator('.q-sw').nth(3).click(); await hold(0.5, 0, 2.5, 0, 'escape'); await record('vegg dra farger plater Esc avbryter')
+await close()
+
 writeFileSync(args[1], JSON.stringify(out, null, 1) + '\n')
 console.log(`${out.length} steg skrevet til ${args[1]}`)
 await browser.close(); server.close()

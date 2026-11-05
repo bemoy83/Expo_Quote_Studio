@@ -126,6 +126,7 @@ export function PlanView(p: Props) {
     selection,
     pens: pen,
     hits,
+    mods,
     floor: fb,
     step,
     standardRuns,
@@ -285,7 +286,7 @@ export function PlanView(p: Props) {
       {!p.mini && (p.doc || tool === 'select') && <Legend v={v} res={res} doc={!!p.doc} />}
 
       {/* Interaction preview: aim, phantom and hint of the pen in hand, room handles, the chosen lanes */}
-      <PreviewLayer v={v} tool={tool} brush={brush} selection={selection} pen={pen} hits={hits} floor={fb} floorSize={p.floorSize} rollMode={p.rollMode}
+      <PreviewLayer v={v} tool={tool} brush={brush} selection={selection} pen={pen} hits={hits} mods={mods} floor={fb} floorSize={p.floorSize} rollMode={p.rollMode}
         step={step} standardRuns={standardRuns} pointer={pointer} motifs={p.motifs} mini={p.mini} onHint={p.onHint} />
       </PlanScaleContext.Provider>
     </svg>

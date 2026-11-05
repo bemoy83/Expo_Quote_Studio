@@ -13,6 +13,7 @@ import type { Run } from '../../../domain/innerBeams'
 import { fillFace } from '../../../domain/textile/brush'
 import { freeStroke } from '../../../domain/textile/free'
 import type { Variant } from '../../../domain/types'
+import type { BuiltModule } from '../../../domain/walls'
 import type { Motif } from '../../../persistence/file'
 import { INK } from '../../colors'
 import { idx, rules } from '../../env'
@@ -25,6 +26,7 @@ import type { PlanHits } from '../pointer/hits'
 import { openingEdge } from '../pointer/opening'
 import type { Pens } from '../pointer/pens'
 import { placeHolds } from '../pointer/place'
+import { plateAt, platesAlong } from '../pointer/plates'
 import type { PlanPointer } from '../pointer/usePlanPointer'
 import type { PlanSelection } from '../selection'
 import { Offcut, RollPreview } from './FloorLayer'
@@ -32,7 +34,7 @@ import { lanePill, tileArea, tileAreaMeasures } from './floorPhantoms'
 import { doorAim, doorHeld, motifPreview, objectPreview } from './placePhantoms'
 import { AimRect, AimSeg, EraseStroke, Ring } from './Previews'
 import { RoomHandles } from './RoomLayer'
-import { beamPhantom, dropPhantom, textilePhantom, wallPhantom, type Phantom } from './strokePhantoms'
+import { beamPhantom, dropPhantom, platesPhantom, textilePhantom, wallPhantom, type Phantom } from './strokePhantoms'
 
 interface Props {
   v: Variant
@@ -41,6 +43,8 @@ interface Props {
   selection: PlanSelection
   pen: Pens
   hits: PlanHits
+  /** The wall modules as built. */
+  mods: BuiltModule[]
   floor: FloorBrush
   floorSize: FloorBrushSize
   rollMode?: RollMode
@@ -65,9 +69,16 @@ export function PreviewLayer(p: Props) {
   const rollWidth = rollWidthOf(brush)
   const carpetFill = isCarpetFill(tool, brush, p.rollMode)
 
+  // The wall pen over a plate that stands aims at that plate (a click colours it); held, the plates along the wall
+  // that a release colours
+  const wallRal = brush?.kind === 'wall' ? brush.ral : null
+  const plateAim = wallTool && wallRal && hover && !dragging && !mini ? plateAt(p.mods, hover) : null
+  const platesHeld = dragging?.kind === 'plates' && !dragging.as && wallRal ? dragging : null
+  const platesKeys = platesHeld ? new Set(platesAlong(v, p.mods, platesHeld.wallId, platesHeld.i0, platesHeld.moved && hover ? hover : platesHeld.p0)) : null
+
   // Wall and takdrager aim at a point: the grid node nearest the pointer (a press shows the module it lays)
   const wallNode: [number, number] | null =
-    (wallTool || beamTool) && hover && !stroke && onStand(hover) ? [Math.max(0, Math.min(W, Math.round(hover.x))), Math.max(0, Math.min(D, Math.round(hover.y)))] : null
+    (wallTool || beamTool) && hover && !stroke && !plateAim && !platesHeld && onStand(hover) ? [Math.max(0, Math.min(W, Math.round(hover.x))), Math.max(0, Math.min(D, Math.round(hover.y)))] : null
 
   // Textile brush: next to a wall the click target is the free part of that face (or why there is none); elsewhere
   // the grid node a stroke starts from
@@ -81,7 +92,9 @@ export function PreviewLayer(p: Props) {
 
   // Stroke tools pressed or dragging: what a release stores, or why it stores nothing
   const phantom: Phantom | null =
-    stroke && tool !== 'erase' && wallTool
+    platesKeys && wallRal
+      ? platesPhantom(sc, { mods: p.mods.filter((m) => platesKeys.has(m.key)), ral: wallRal, centre })
+      : stroke && tool !== 'erase' && wallTool
       ? wallPhantom(sc, { v, a: stroke[0], b: stroke[1], ral: brush?.kind === 'wall' ? brush.ral : undefined, centre })
       : stroke && tool !== 'erase' && beamTool
         ? beamPhantom(sc, { v, a: stroke[0], b: stroke[1], standard: p.standardRuns, centre })
@@ -148,6 +161,7 @@ export function PreviewLayer(p: Props) {
     <g pointerEvents="none">
       {!mini && v.rooms.filter((r) => r.id === selection.roomId).map((r) => <RoomHandles key={r.id} r={r} />)}
       {wallNode && <Ring at={wallNode} />}
+      {plateAim && <AimSeg a={plateAim.a} b={plateAim.b} />}
       {stroke && tool === 'erase' && <EraseStroke a={stroke[0]} b={stroke[1]} centre={centre} />}
       {phantom?.el}
       {freeNode && <Ring at={freeNode} />}
