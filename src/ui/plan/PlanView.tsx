@@ -1,58 +1,47 @@
 // 2D plan. Explicit layers, bottom to top: ground, floor, grid, walls, openings, textiles, beams and posts,
 // objects, labels, interaction preview. Pointer handling is done on the svg with model coordinates, so the
 // draw order never decides what can be clicked. Each product's layer is drawn in plan/layers/ (FloorLayer, WallLayer,
-// TextileLayer, BeamLayer, ObjectLayer, RoomLayer, Labels, Previews), and the pointer handling lives in plan/pointer/
-// (usePlanPointer, one file per drag kind). This file puts them together with the cursor and the hover previews.
-import { useEffect, useMemo } from 'react'
+// TextileLayer, BeamLayer, ObjectLayer, RoomLayer, Labels, PreviewLayer), and the pointer handling lives in plan/pointer/
+// (usePlanPointer, one file per drag kind). This file puts them together with the cursor.
+import { useMemo } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import { canMoveWall } from '../../domain/edit'
+import type { FloorBrushSize } from '../../domain/floor/brush'
+import type { RollDir } from '../../domain/floor/lanes'
 import { CELL, openSides, sideLength, sidePoint } from '../../domain/grid'
+import type { Run } from '../../domain/innerBeams'
 import { conflicts } from '../../domain/objects'
-import { freeStroke, freeTextileAt } from '../../domain/textile/free'
-import type { Motif } from '../../persistence/file'
+import { roomAt, sideIsHorizontal } from '../../domain/rooms'
+import { freeTextileAt } from '../../domain/textile/free'
 import type { Side, Variant } from '../../domain/types'
 import { builtModules, standWallKeys } from '../../domain/walls'
-import { INK, SURFACE } from '../colors'
-import type { Run } from '../../domain/innerBeams'
-import { roomAt, sideIsHorizontal } from '../../domain/rooms'
-import { idx, place, rules } from '../env'
-import { penLayers, type Brush, type Highlight, type Layer, type Tool } from '../tools'
-import type { RollDir } from '../../domain/floor/lanes'
-import { type FloorBrushSize, lanesLaid } from '../../domain/floor/brush'
-import { standCells } from '../../domain/floor/tiles'
-import { fillProposalsFor, fillTilesOf } from '../../domain/floor/rollFill'
-import { laneAt } from '../../domain/floor/edit'
-import type { RollMode } from '../tools'
-import { nearestEdge } from './geometry'
-import type { PlanSelection } from './selection'
-import { DIMMED, GRID, GRID_FINE, GRID_PX, PLAN_MARGIN, textileOffset } from './planStyle'
-import { FloorLayer, Offcut, RollPreview } from './layers/FloorLayer'
-import { WallLayer } from './layers/WallLayer'
-import { TextileLayer } from './layers/TextileLayer'
-import { BeamLayer } from './layers/BeamLayer'
-import { ObjectLayer } from './layers/ObjectLayer'
-import { RoomHandles, RoomLayer } from './layers/RoomLayer'
-import { Labels } from './layers/Labels'
-import { DimLayer } from './layers/DimLayer'
-import { Legend } from './layers/Legend'
-import { PosLayer } from './layers/PosLayer'
+import type { Motif } from '../../persistence/file'
+import { SURFACE } from '../colors'
+import { place, rules } from '../env'
+import { penLayers, type Brush, type Highlight, type Layer, type RollMode, type Tool } from '../tools'
 import { totalSides } from './dims'
-import { floorBrush, isCarpetFill, rollWidthOf } from './pointer/floorBrush'
+import { nearestEdge } from './geometry'
+import { BeamLayer } from './layers/BeamLayer'
+import { DimLayer } from './layers/DimLayer'
+import { ErasingProvider } from './layers/ErasingProvider'
+import { FloorLayer } from './layers/FloorLayer'
+import { Labels } from './layers/Labels'
+import { Legend } from './layers/Legend'
+import { ObjectLayer } from './layers/ObjectLayer'
+import { PosLayer } from './layers/PosLayer'
+import { PreviewLayer } from './layers/PreviewLayer'
+import { SnapDots } from './layers/Previews'
+import { RoomLayer } from './layers/RoomLayer'
+import { TextileLayer } from './layers/TextileLayer'
+import { WallLayer } from './layers/WallLayer'
+import { linePx, planScale, PlanScaleContext, usePxPerMetre } from './planScale'
+import { DIMMED, GRID, GRID_FINE, GRID_PX, PLAN_MARGIN } from './planStyle'
+import { eraseTargetAt, type Erasing } from './pointer/erase'
+import { floorBrush } from './pointer/floorBrush'
 import { planHits } from './pointer/hits'
-import { openingEdge } from './pointer/opening'
 import { pens } from './pointer/pens'
 import { usePlanPointer } from './pointer/usePlanPointer'
-import { AimRect, AimSeg, EraseStroke, Ring, SnapDots } from './layers/Previews'
-import { doorAim, doorHeld, motifPreview, objectPreview } from './layers/placePhantoms'
-import { placeHolds } from './pointer/place'
-import { ratioOf } from './pointer/decor'
-import { lanePill, tileArea, tileAreaMeasures } from './layers/floorPhantoms'
-import { beamPhantom, dropPhantom, textilePhantom, wallPhantom, type Phantom } from './layers/strokePhantoms'
-import { faceSegment } from '../../domain/faces'
-import { fillFace } from '../../domain/textile/brush'
-import { eraseTargetAt, type Erasing } from './pointer/erase'
-import { ErasingProvider } from './layers/ErasingProvider'
-import { linePx, planScale, PlanScaleContext, usePxPerMetre } from './planScale'
+import type { PlanSelection } from './selection'
 
 interface Props {
   v: Variant
@@ -117,17 +106,14 @@ export function PlanView(p: Props) {
   const standardRuns: Run[] = useMemo(() => res.beams.segments.filter((s) => !s.inner && !s.support), [res])
 
   const pen = pens(tool, brush)
-  const { wallTool, floorTool, openingTool, decorTool, textileTool, beamTool } = pen
+  const { wallTool, floorTool, textileTool, beamTool } = pen
   const hits = planHits(v, mods, selection)
-  const { onStand, moduleAt, beamAt, faceHit, roomEdgeAt, objectAt } = hits
+  const { moduleAt, beamAt, roomEdgeAt, objectAt } = hits
   const fb = floorBrush(v, { tool, brush, floorSize: p.floorSize, rollDir: p.rollDir, rollMode: p.rollMode })
-  const { dir, floorTouch } = fb
-  const rollWidth = rollWidthOf(brush)
-  const carpetFill = isCarpetFill(tool, brush, p.rollMode)
   /** Snap points show only while a brush snaps to them, at its own grid. */
   const dotStep = textileTool ? step : wallTool || beamTool ? rules.wall.cc : null
 
-  const { svg, hover, dragging, rollPending, fillRect, stroke, textileStroke, dropHover, erasing, handlers } = usePlanPointer({
+  const pointer = usePlanPointer({
     v,
     tool,
     brush,
@@ -145,6 +131,7 @@ export function PlanView(p: Props) {
     onToast: p.onToast,
     onSelect: p.onSelect,
   })
+  const { svg, hover, dragging, stroke, erasing, handlers } = pointer
 
   const off = (group: string) => !!p.groups && !p.groups.has(group)
   const keep = p.mini ? null : penLayers(tool, brush)
@@ -172,43 +159,6 @@ export function PlanView(p: Props) {
     return roomAt(v, hover.x, hover.y) ? 'move' : 'default'
   }
 
-  // Hover previews
-  const hoverEdge = openingTool && hover ? openingEdge({ v, hits }, hover) : null
-  const hoverAction = floorTool && hover && !dragging ? floorTouch(hover, null) : null
-  // Roll brush: the lanes as they will be laid, from the hover or the stroke in progress
-  // Bane: the lanes only while pressed; the hover aims with a ring in the cell
-  const rollTouch = rollWidth && tool === 'brush' && !carpetFill ? rollPending : null
-  const rollAim = rollWidth && tool === 'brush' && !carpetFill && !rollPending && hoverAction && hoverAction.kind !== 'none' && hover
-    ? ([(Math.floor(hover.x / CELL) + 0.5) * CELL, (Math.floor(hover.y / CELL) + 0.5) * CELL] as [number, number])
-    : null
-  const rollPreview = rollTouch && brush?.kind === 'floor' ? lanesLaid(rollTouch, brush.product, dir) : []
-  const hoverFloor = hoverAction && hoverAction.kind !== 'none' && !rollWidth && !carpetFill ? hoverAction : null
-  // Carpet tiles: the area painted so far in this stroke, measured
-  const tileDrag = dragging?.kind === 'floor' && dragging.anchor && hover && !rollWidth && brush?.kind === 'floor'
-    ? tileArea(dragging.anchor, hover, p.floorSize, standCells(v.stand))
-    : null
-  // Fyll: the cheapest way to lay the area being dragged, or the whole stand that a click fills
-  const fillProduct = brush?.kind === 'floor' ? brush.product : ''
-  const hoverOnStand = !!hover && hover.x >= 0 && hover.y >= 0 && hover.x < W && hover.y < D
-  // Only while pressed or dragging: the hover aims at the stand with a dashed outline
-  const fillHeld = dragging?.kind === 'carpetFill'
-  const fillKey = fillRect ? `${fillRect.i},${fillRect.j},${fillRect.w},${fillRect.h}` : carpetFill && fillHeld && hoverOnStand ? 'stand' : ''
-  const fillAim = carpetFill && !fillHeld && hoverOnStand && !p.mini
-  // Only the floor, the stand and the area change the proposal, so moving the pointer inside the stand reuses it
-  const fillPreview = useMemo(
-    () => (carpetFill && fillKey && rollWidth ? (fillProposalsFor(v, fillProduct, rollWidth, rules.carpet, fillRect ?? undefined)[0] ?? null) : null),
-    [carpetFill, fillKey, fillProduct, rollWidth, v, fillRect],
-  )
-  // The chosen engangsteppe (Velg): its lanes, outlined while its drawer is open
-  const selLane = tool === 'select' && !p.mini && selection.lane ? laneAt(v, selection.lane.i, selection.lane.j) : undefined
-  const selLanes = tool !== 'select' || p.mini ? [] : selection.fill ? fillTilesOf(v, selection.fill) : selLane ? [selLane] : []
-  // Textile brush: next to a wall the click target is that face; elsewhere the grid node a stroke starts from
-  const textileFace = textileTool && hover && !textileStroke ? faceHit(hover, 0.2) : null
-  // Wall and takdrager aim at a point: the grid node nearest the pointer (a press shows the module it lays)
-  const hoverWallNode: [number, number] | null =
-    (wallTool || beamTool) && hover && !stroke && onStand(hover) ? [Math.max(0, Math.min(W, Math.round(hover.x))), Math.max(0, Math.min(D, Math.round(hover.y)))] : null
-  const hoverFree = textileTool && !textileFace && hover && !textileStroke && onStand(hover) ? freeStroke(v, rules, hover, hover, step)[0] : null
-
   // Tøm: what a click takes, from the hover (PC) or the press (touch, no hover), dimmed and hatched in its own layer.
   // A stroke along walls shows its own line.
   const hoverTarget = tool === 'erase' && !p.mini && hover && !dragging && !stroke ? eraseTargetAt(v, hits, standKeys, hover) : null
@@ -218,46 +168,6 @@ export function PlanView(p: Props) {
   const vb = p.mini ? { x: -0.4, y: -0.4, w: W + 0.8, h: D + 0.8 } : { x: -M, y: -M, w: W + 2 * M, h: D + 2 * M }
   const pxPerM = usePxPerMetre(svg, vb.w, vb.h)
   const scale = useMemo(() => planScale(pxPerM, { doc: p.doc, mini: p.mini }), [pxPerM, p.doc, p.mini])
-
-  // Phantoms while pressed or dragging (docs/forhandsvisning.md): what a release stores, or why it stores nothing
-  const centre: [number, number] = [W / 2, D / 2]
-  const phantom: Phantom | null =
-    stroke && tool !== 'erase' && wallTool
-      ? wallPhantom(scale, { v, a: stroke[0], b: stroke[1], ral: brush?.kind === 'wall' ? brush.ral : undefined, centre })
-      : stroke && tool !== 'erase' && beamTool
-        ? beamPhantom(scale, { v, a: stroke[0], b: stroke[1], standard: standardRuns, centre })
-        : textileStroke
-          ? textilePhantom(scale, { v, line: textileStroke, face: faceHit(textileStroke.at), centre })
-          : dropHover
-            ? dropPhantom(scale, { v, h: dropHover.h, d: dropHover.d, centre })
-            : null
-  // Aim of the textile brush next to a wall: the free part of the face a click fills, or why there is none
-  const textileAim = textileFace ? fillFace(v, rules, textileFace.w.id, textileFace.s, textileFace.t) : null
-  const textileAimSeg = textileAim && 'mounted' in textileAim ? (() => {
-    const t = textileAim.v.textiles.find((x) => x.id === textileAim.mounted.id)!
-    return faceSegment(textileFace!.w, textileFace!.s, t.from, t.from + t.width, textileOffset(scale))
-  })() : null
-  // Door, motif and furniture: aim while hovering, the phantom while pressed over the target the press hit
-  // (pointer/place.ts); dragged off it, the aim of the new target shows and a release stores nothing. A door pressed
-  // follows the pointer out to the side it is to swing to
-  const placing = dragging?.kind === 'place' ? dragging : null
-  const held = (what: 'opening' | 'decor' | 'object') => !!placing && placing.what === what && !!hover && placeHolds({ v, hits, brush }, placing, hover)
-  const placePreview =
-    p.mini || !hover
-      ? null
-      : brush?.kind === 'opening' && placing?.what === 'opening' && placing.module
-        ? doorHeld(scale, v, placing.module, brush.product, !!placing.door, hover, held('opening'))
-        : hoverEdge && brush?.kind === 'opening' && !placing
-          ? doorAim(scale, v, hoverEdge)
-        : decorTool && brush?.kind === 'motif'
-          ? motifPreview(scale, v, hits, hover, brush.motif, ratioOf(p.motifs)(brush.motif), held('decor'))
-          : pen.objectTool && brush?.kind === 'object' && onStand(hover)
-            ? objectPreview(scale, v, brush.product, hover, held('object'))
-            : null
-  const planHint = p.mini ? null : (phantom?.hint ?? placePreview?.hint ?? (textileAim && 'error' in textileAim ? textileAim.error : null))
-  const onHint = p.onHint
-  useEffect(() => onHint?.(planHint), [onHint, planHint])
-  useEffect(() => () => onHint?.(null), [onHint])
 
   const totals = useMemo(() => new Set(totalSides(v)), [v])
 
@@ -348,32 +258,9 @@ export function PlanView(p: Props) {
           quick picks float over the bottom of the plan */}
       {!p.mini && (p.doc || tool === 'select') && <Legend v={v} res={res} doc={!!p.doc} />}
 
-      {/* Interaction preview */}
-      <g pointerEvents="none">
-        {!p.mini && v.rooms.filter((r) => r.id === selection.roomId).map((r) => <RoomHandles key={r.id} r={r} />)}
-        {hoverWallNode && <Ring at={hoverWallNode} />}
-        {stroke && tool === 'erase' && <EraseStroke a={stroke[0]} b={stroke[1]} centre={centre} />}
-        {phantom?.el}
-        {hoverFree && <Ring at={hoverFree} />}
-        {textileAimSeg && <AimSeg a={textileAimSeg[0]} b={textileAimSeg[1]} />}
-        {placePreview?.el}
-        {rollPreview.length > 0 && <RollPreview tiles={rollPreview} color={idx.byArtnr.get(rollPreview[0].product)?.variant.color} roll={rollWidth!} stand={standCells(v.stand)} />}
-        {rollPreview.length > 0 && lanePill(rollPreview, rollWidth!, centre)}
-        {rollAim && <Ring at={rollAim} />}
-        {fillPreview && <RollPreview tiles={fillPreview.tiles} color={idx.byArtnr.get(fillProduct)?.variant.color} roll={rollWidth!} />}
-        {fillRect && <AimRect x={fillRect.i * CELL} y={fillRect.j * CELL} width={fillRect.w * CELL} height={fillRect.h * CELL} halo />}
-        {fillAim && <AimRect x={0} y={0} width={W} height={D} halo />}
-        {tileDrag && brush?.kind === 'floor' && tileAreaMeasures(v, tileDrag, brush.product, centre)}
-        {selLanes.length > 0 && (
-          <g>
-            {selLane && <Offcut t={selLane} roll={idx.byArtnr.get(selLane.product)?.product.roll ?? 2} stand={standCells(v.stand)} />}
-            {selLanes.map((t) => (
-              <rect key={`${t.i},${t.j}`} x={t.i * CELL} y={t.j * CELL} width={t.w * CELL} height={t.h * CELL} fill={INK} fillOpacity={0.06} stroke={INK} strokeWidth={0.025} strokeDasharray=".1 .06" />
-            ))}
-          </g>
-        )}
-        {hoverFloor && <AimRect x={hoverFloor.rect.i * CELL} y={hoverFloor.rect.j * CELL} width={hoverFloor.rect.w * CELL} height={hoverFloor.rect.h * CELL} halo />}
-      </g>
+      {/* Interaction preview: aim, phantom and hint of the pen in hand, room handles, the chosen lanes */}
+      <PreviewLayer v={v} tool={tool} brush={brush} selection={selection} pen={pen} hits={hits} floor={fb} floorSize={p.floorSize} rollMode={p.rollMode}
+        step={step} standardRuns={standardRuns} pointer={pointer} motifs={p.motifs} mini={p.mini} onHint={p.onHint} />
       </PlanScaleContext.Provider>
     </svg>
   )

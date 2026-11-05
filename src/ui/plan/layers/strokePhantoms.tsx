@@ -1,8 +1,9 @@
 // Phantoms of the stroke tools (docs/forhandsvisning.md): while pressed or dragging, the product's own symbol from the
 // working drawing at reduced strength, with rings at the ends and the length in a dark pill. Each one works out what a
 // release would actually store (the same domain call the pointer makes), so the phantom is what you get, and a reason it
-// cannot be stored comes back for the hint line. The aim before a press (rings, dashed outlines) is drawn by PlanView
-// with the parts in Previews.tsx. Plain functions, not components: PlanView needs the hint as well as the drawing.
+// cannot be stored comes back for the hint line. The aim before a press (rings, dashed outlines) is drawn by
+// PreviewLayer with the parts in Previews.tsx. Plain functions, not components: PreviewLayer needs the hint as well as
+// the drawing.
 import type { ReactNode } from 'react'
 import { RECIPES } from '../../../foga/recipes'
 import { freeFrames, alongRun } from '../../../calc/textile/free'
@@ -33,7 +34,7 @@ export interface Phantom {
 const TICK = 3.5
 
 /** The modules of the stroke a→b that are not built yet: a stroke over walls that exist only adds the rest. */
-export function newModules(v: Variant, a: Point, b: Point): Module[] {
+function newModules(v: Variant, a: Point, b: Point): Module[] {
   const n = Math.round(Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1]))
   if (!n) return []
   const built = new Set(builtModules(v).map((m) => m.key))
