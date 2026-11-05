@@ -17,6 +17,7 @@ import { floor, startFloor } from './floor'
 import { freeMove } from './freeMove'
 import { object } from './object'
 import { placeDrag, startPlace } from './place'
+import { plateAt, plates, startPlates } from './plates'
 import { roll, startRoll } from './roll'
 import { room } from './room'
 import { selectAt, startSelect } from './select'
@@ -25,7 +26,7 @@ import { startTextile, textile } from './textile'
 import type { Drag, DragHandlers, P, PointerCtx } from './types'
 import { wall } from './wall'
 
-const DRAGS: { [K in Drag['kind']]: DragHandlers<K> } = { stroke, floor, roll, carpetFill, click, object, wall, beam, room, textile, freeMove, erase, place: placeDrag }
+const DRAGS: { [K in Drag['kind']]: DragHandlers<K> } = { stroke, plates, floor, roll, carpetFill, click, object, wall, beam, room, textile, freeMove, erase, place: placeDrag }
 const handlersOf = (d: Drag) => DRAGS[d.kind] as DragHandlers<Drag['kind']>
 
 /** What the plan passes in: the context without the previews' setters and state, which the hook owns. */
@@ -75,15 +76,16 @@ export function usePlanPointer(input: PlanPointerInput) {
   useEffect(() => {
     drag.current = null
   }, [tool, brush])
-  // Esc cancels a door, decal or furniture pressed but not yet released. Registered once, before useShortcuts (which
+  // Esc cancels a door, decal or furniture pressed but not yet released, and plates being coloured with the wall pen. Registered once, before useShortcuts (which
   // registers again on every render), so it runs first
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape' || drag.current?.kind !== 'place') return
+      if (e.key !== 'Escape' || (drag.current?.kind !== 'place' && drag.current?.kind !== 'plates')) return
       // Only the press is cancelled: the pen stays in hand (useShortcuts would put it down on Esc)
       e.stopImmediatePropagation()
       drag.current = null
       setDragging(null)
+      setStroke(null)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -106,6 +108,10 @@ export function usePlanPointer(input: PlanPointerInput) {
     if (fb.carpetFill) return startCarpetFill(c, q)
     if (pens.floorTool && fb.rollWidth && tool === 'brush') return startRoll(c, q)
     if (pens.floorTool) return startFloor(c, q)
+    if (pens.wallTool && brush?.kind === 'wall') {
+      const m = plateAt(input.mods, q)
+      if (m) return startPlates(m, q)
+    }
     if (pens.wallTool || pens.beamTool) return startStroke(c, q)
     if (pens.openingTool) return startPlace(c, 'opening', q)
     if (pens.decorTool) return startPlace(c, 'decor', q)

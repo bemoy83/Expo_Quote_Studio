@@ -4,6 +4,7 @@ import type { Dispatch, SetStateAction } from 'react'
 import type { FloorAction } from '../../../domain/floor/brush'
 import type { Rect } from '../../../domain/floor/tiles'
 import type { Module } from '../../../domain/grid'
+import type { BuiltModule } from '../../../domain/walls'
 import type { Run } from '../../../domain/innerBeams'
 import type { Point, Variant } from '../../../domain/types'
 import type { Motif } from '../../../persistence/file'
@@ -45,6 +46,9 @@ export type Drag =
   /** Door, decal or furniture pressed: shown until release, stored on release over the same target (place.ts). */
   /** `module`: the door's module, pressed; `door`: a door (not a curtain), turned by where the pointer is dragged. */
   | { kind: 'place'; what: 'opening' | 'decor' | 'object'; key: string; module?: Module; door?: boolean }
+  /** The wall pen pressed on a plate that stands: colours plates along that wall on release (plates.ts). `as`: the drag
+   *  turned across the wall, so it draws a new wall as a stroke. */
+  | { kind: 'plates'; wallId: string; i0: number; p0: P; moved: boolean; as?: Extract<Drag, { kind: 'stroke' }> }
   /** Tøm on anything but walls and drawn beams: the first thing pressed, then more of its kind as the pointer passes. */
   | { kind: 'erase'; first: EraseTarget; p0: P; moved: boolean; done: Set<string> }
 
@@ -58,6 +62,8 @@ export interface PointerCtx {
   selection: PlanSelection
   pens: Pens
   hits: PlanHits
+  /** The wall modules as built. */
+  mods: BuiltModule[]
   floor: FloorBrush
   /** Cell size of the textile brush's drawing grid, m. */
   step: number

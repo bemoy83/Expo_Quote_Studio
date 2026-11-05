@@ -29,7 +29,10 @@ export function hint(tool: Tool, brush: Brush | null, roll: RollMode | false = f
     )
   switch (brush?.kind ?? 'wall') {
     case 'wall':
-      return h('Klikk en kant eller dra langs rutenettet', 'Klikk en kant eller dra langs rutenettet for å tegne vegg i hele meter')
+      return h(
+        'Klikk en vegg for å farge den · dra for flere plater · klikk en tom kant for ny vegg',
+        'Klikk en vegg for å farge platen · dra langs veggen for flere plater · klikk en tom kant eller dra langs rutenettet for å tegne vegg i hele meter · Esc avbryter',
+      )
     case 'beam':
       return h(
         'Dra langs rutenettet for takdrager',
