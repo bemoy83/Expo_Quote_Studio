@@ -1,0 +1,197 @@
+// v6 · forhåndsvisning av tegneverktøy. Felles grammatikk (sikte · fantom · ugyldig, ringer i endepunkt, levende
+// mållinje) og produktets eget symbol fra arbeidstegningen som fantom. «Dagens app» viser stilen i Expo Quote Studio
+// til sammenligning. Bare forhåndsvisning: ingenting lagres når du slipper.
+(()=>{
+const OM6=1.3;
+const INK='rgb(var(--ink))',INKA=a=>`rgb(var(--ink) / ${a})`,SURF='rgb(var(--surface))';
+const TEX='oklch(0.81 0.12 55)',TRK='oklch(0.86 0.09 158)';
+const OLD_WALL='oklch(0.68 0.1 235)',OLD_TEX='oklch(0.6 0.16 295)';
+const TOOLS6=[
+  {k:'wall',n:'Innervegg',hint:'Dra fra et punkt for å tegne innervegg · snapper til hele meter'},
+  {k:'beam',n:'Takdrager',hint:'Dra for å tegne innvendig takdrager'},
+  {k:'tex',n:'Tekstil på vegg',hint:'Pek på en veggside · dra langs veggen for å sette rammen'},
+  {k:'free',n:'Frittstående',hint:'Dra for frittstående tekstilvegg · halvmeter'},
+  {k:'gfx',n:'Dekal',hint:'Pek på en veggside · feltet som treffes vises'},
+  {k:'door',n:'Dør',hint:'Pek på en modul i innervegg eller bakrom'},
+  {k:'tile',n:'Teppeflis',hint:'Klikk for én flis · dra over et område'},
+  {k:'eng',n:'Engangsteppe',hint:'Dra for en bane · retningen følger draget'},
+  {k:'item',n:'Møbel',hint:'Pek for å plassere ståbord med to barkrakker'},
+];
+const fmm=v=>Math.round(v*1000).toLocaleString('nb-NO').replace(/ |,/g,' ');
+const fm=v=>(Math.round(v*100)/100).toLocaleString('nb-NO');
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+/** Valg av verktøy for forhåndsvisning, over verktøylinjen. */
+function Chooser6({v,set}){
+  return <div style={{position:'absolute',left:0,right:0,bottom:96,display:'flex',justifyContent:'center',pointerEvents:'none',zIndex:6}}>
+    <div style={{pointerEvents:'auto',display:'flex',alignItems:'center',gap:2,padding:4,borderRadius:12,background:'rgb(var(--panel))',boxShadow:'var(--pop)',maxWidth:'calc(100% - 32px)',overflowX:'auto'}}>
+      <span style={{font:'600 10.5px var(--font-ui)',letterSpacing:'.06em',color:'rgb(var(--ink-faint))',padding:'0 8px 0 6px',whiteSpace:'nowrap'}}>FORHÅNDSVIS</span>
+      {[{k:null,n:'Av'},...TOOLS6].map(t=>{const on=v===t.k;return <button key={t.n} type="button" aria-pressed={on} onClick={()=>set(t.k)} className={on?undefined:'tb2'}
+        style={{flex:'none',height:30,padding:'0 10px',border:0,borderRadius:8,cursor:'pointer',font:(on?'600':'500')+' 12px var(--font-ui)',whiteSpace:'nowrap',background:on?'rgb(var(--ink))':'transparent',color:on?'rgb(var(--canvas))':'rgb(var(--ink))'}}>{t.n}</button>;})}
+    </div></div>;}
+
+/** Nærmeste veggside til p: vegg, avstand langs (t), side (+1 normalen, -1 motsatt) og modul. */
+function faceAt(S,p,maxD){let best=null;
+  S.forEach(w=>{const [dx,dy]=dirOf(w);const ox=p.x-w.x,oy=p.y-w.y;const t=ox*dx+oy*dy;if(t<-.05||t>w.len+.05)return;const c=ox*-dy+oy*dx;const d=Math.abs(c);
+    if(d<=maxD&&(!best||d<best.d)){const cuts=w.cuts&&w.cuts.length>1?w.cuts:Array.from({length:Math.round(w.len)+1},(_,i)=>i);let m=0;for(let i=0;i<cuts.length-1;i++)if(t>=cuts[i]-1e-9)m=i;
+      best={w,d,t:clamp(t,0,w.len),side:c>=0?1:-1,m,a:cuts[m],b:cuts[m+1]};}});
+  return best;}
+const PT=(w,t,n)=>{const [dx,dy]=dirOf(w);return [w.x+dx*t+-dy*n,w.y+dy*t+dx*n];};
+
+function Fantom6({st,S,kind,xf,setHint}){
+  const cfg=window.__f6||{a:.4,a2:.6,stil:'v6',mal:'linje'};const A=cfg.a,A2=cfg.a2==null?cfg.a:cfg.a2,old=cfg.stil==='app';
+  const svg=React.useRef(null);const [hp,setHp]=React.useState(null);const [dr,setDr]=React.useState(null);
+  const {W,D}=st;const u=1/xf.s;const wT=5*u;const fOn=!!dr||cfg.vis==='peking';const DASH=`${3*u} ${2.5*u}`;
+  const def=TOOLS6.find(t=>t.k===kind);
+  const toM=e=>{const p=svg.current.createSVGPoint();p.x=e.clientX;p.y=e.clientY;const q=p.matrixTransform(svg.current.getScreenCTM().inverse());return {x:q.x,y:q.y};};
+  const step=kind==='free'||kind==='tile'||kind==='eng'?.5:1;
+  const snap=p=>({x:clamp(Math.round(p.x/step)*step,0,W),y:clamp(Math.round(p.y/step)*step,0,D)});
+  const down=e=>{if(e.button!==0)return;e.preventDefault();svg.current.setPointerCapture(e.pointerId);const p=toM(e);setHp(p);setDr({a:p});};
+  const move=e=>{const p=toM(e);setHp(h=>h&&Math.abs(h.x-p.x)<.004&&Math.abs(h.y-p.y)<.004?h:p);};
+  const up=()=>setDr(null);
+
+  // ---------- felles byggesteiner ----------
+  const ring=(p,k)=><circle key={k} cx={p[0]} cy={p[1]} r={3.2*u} fill={SURF} stroke={INK} strokeWidth={1.1*u}></circle>;
+  const hatchId='f6hatch';
+  /** Mållinje parallelt med a→b, forskjøvet o langs normalen n, med endemerker og tekst. Som målene i tegningen. */
+  const dimLine=(a,b,n,o,txt,k)=>{const A1=[a[0]+n[0]*o,a[1]+n[1]*o],B1=[b[0]+n[0]*o,b[1]+n[1]*o];const hz=Math.abs(a[1]-b[1])<1e-9;const mx=(A1[0]+B1[0])/2,my=(A1[1]+B1[1])/2;const tk=2.6*u;
+    const tx=hz?{x:mx,y:my+(n[1]<0?-3.5*u:9.5*u)}:{x:mx+(n[0]<0?-3.5*u:3.5*u),y:my};
+    if(cfg.mal==='pille'){const w=(txt.length*6.1+14)*u;const cx=(a[0]+b[0])/2+n[0]*(o+6*u),cy=(a[1]+b[1])/2+n[1]*(o+6*u);
+      return <g key={k} transform={`translate(${cx} ${cy})`}><rect x={-w/2} y={-9*u} width={w} height={18*u} rx={5*u} fill={INK}></rect><text y={3.6*u} textAnchor="middle" style={{font:`600 ${10.5*u}px var(--font-numeric)`,fill:'rgb(var(--canvas))'}}>{txt}</text></g>;}
+    return <g key={k}>
+      <line x1={a[0]+n[0]*1.5*u} y1={a[1]+n[1]*1.5*u} x2={A1[0]+n[0]*3*u} y2={A1[1]+n[1]*3*u} stroke={INKA(.4)} strokeWidth={.5*u}></line>
+      <line x1={b[0]+n[0]*1.5*u} y1={b[1]+n[1]*1.5*u} x2={B1[0]+n[0]*3*u} y2={B1[1]+n[1]*3*u} stroke={INKA(.4)} strokeWidth={.5*u}></line>
+      <line x1={A1[0]} y1={A1[1]} x2={B1[0]} y2={B1[1]} stroke={INKA(.8)} strokeWidth={.6*u}></line>
+      {[A1,B1].map((q,i)=><line key={i} x1={q[0]-tk} y1={q[1]+tk} x2={q[0]+tk} y2={q[1]-tk} stroke={INK} strokeWidth={.8*u}></line>)}
+      <text x={tx.x} y={tx.y} textAnchor={hz?'middle':n[0]<0?'end':'start'} dominantBaseline={hz?undefined:'middle'} style={{font:`500 ${9.5*u}px var(--font-numeric)`,fill:INK,paintOrder:'stroke',stroke:SURF,strokeWidth:3*u,strokeLinejoin:'round'}}>{txt}</text></g>;};
+  /** Normal som peker mot standens midtpunkt (målet legges motsatt). */
+  const inward=(a,b)=>{const hz=Math.abs(a[1]-b[1])<1e-9;const mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2;return hz?[0,my<D/2?1:-1]:[mx<W/2?1:-1,0];};
+  const away=(a,b)=>{const n=inward(a,b);return [-n[0],-n[1]];};
+  const seg=(a,b,p)=><line x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} {...p}></line>;
+  const bad=(a,b,w)=><g>{seg(a,b,{stroke:INKA(.3),strokeWidth:w})}{seg(a,b,{stroke:`url(#${hatchId})`,strokeWidth:w})}</g>;
+
+  // ---------- hva verktøyet treffer ----------
+  let out=null,hint=def?def.hint:'',dots=null;
+  const H=hp,inStand=H&&H.x>=0&&H.y>=0&&H.x<=W&&H.y<=D;
+  const pk=!dr&&cfg.vis==='peking'&&!old;
+  const line=()=>{if(pk&&H&&inStand){const a=snap(H);const d=a.x+1<=W?1:-1;return {a:[a.x,a.y],b:[a.x+d,a.y],L:1,hz:true,stub:1};}if(!dr||!H)return null;const a=snap(dr.a),b0=snap(H);const hz=Math.abs(b0.x-a.x)>=Math.abs(b0.y-a.y);const b=hz?{x:b0.x,y:a.y}:{x:a.x,y:b0.y};return {a:[a.x,a.y],b:[b.x,b.y],L:Math.abs(b.x-a.x)+Math.abs(b.y-a.y),hz};};
+  const onPerimeter=(a,b)=>{const hz=Math.abs(a[1]-b[1])<1e-9;const c=hz?a[1]:a[0];const edge=hz?(c<1e-9?'B':Math.abs(c-D)<1e-9?'F':null):(c<1e-9?'L':Math.abs(c-W)<1e-9?'R':null);return edge&&S.some(w=>w.kind==='per'&&w.key===edge);};
+
+  if(kind==='wall'||kind==='beam'||kind==='free'){
+    dots=[];for(let x=0;x<=W+1e-9;x+=step)for(let y=0;y<=D+1e-9;y+=step)dots.push([x,y]);
+    const ln=line();
+    if(!ln&&inStand){const s=snap(H);out=<g>{ring([s.x,s.y],'h')}</g>;}
+    if(ln&&ln.L>0){const {a,b,L}=ln;const n=away(a,b);const isBad=kind==='wall'&&onPerimeter(a,b);
+      if(isBad)hint='Ugyldig · en innervegg kan ikke ligge oppå en standvegg';
+      const mods=Math.round(L);
+      const txt=kind==='wall'?`${fmm(L)} · ${mods} ${mods===1?'modul':'moduler'}`:fmm(L);
+      if(old){const col=kind==='wall'?OLD_WALL:kind==='beam'?INK:OLD_TEX;
+        out=<g>{seg(a,b,{stroke:col,strokeOpacity:.6,strokeWidth:kind==='free'?.06:.06,strokeLinecap:'square',strokeDasharray:kind==='beam'?'.16 .08':undefined})}
+          {[a,b].map((q,i)=><circle key={i} cx={q[0]} cy={q[1]} r={kind==='free'?.06:.07} fill={kind==='free'?OLD_TEX:INK}></circle>)}
+          {kind==='free'?<text x={(a[0]+b[0])/2} y={(a[1]+b[1])/2-.15} textAnchor="middle" style={{font:'500 .2px var(--font-numeric)',fill:INK}}>{fm(L)} m</text>
+            :L>1&&<g transform={`translate(${(a[0]+b[0])/2+(ln.hz?0:.32)} ${(a[1]+b[1])/2+(ln.hz?-.26:0)})`}><rect x={-.34} y={-.17} width={.68} height={.3} rx={.06} fill={INK}></rect><text y={.06} textAnchor="middle" style={{font:'600 .19px var(--font-numeric)',fill:'rgb(var(--canvas))'}}>{fm(L)} m</text></g>}</g>;}
+      else{let body;
+        if(isBad)body=bad(a,b,wT);
+        else if(kind==='wall'){const pc=(SM.PLATES.find(p=>p.id===((st.plate&&st.plate.def)||'9010'))||{c:'#F1EEE4'}).c;const [dx,dy]=ln.hz?[1,0]:[0,1];const s0=Math.min(ln.hz?a[0]:a[1],ln.hz?b[0]:b[1]);
+          body=<g>{seg(a,b,{stroke:INK,strokeWidth:wT})}{seg(a,b,{stroke:pc,strokeWidth:wT-2*u})}
+            {Array.from({length:mods+1},(_,i)=>{const p=ln.hz?[s0+i,a[1]]:[a[0],s0+i];return <line key={i} x1={p[0]-dy*4.5*u} y1={p[1]-dx*4.5*u} x2={p[0]+dy*4.5*u} y2={p[1]+dx*4.5*u} stroke={INK} strokeWidth={.9*u}></line>;})}</g>;}
+        else if(kind==='beam'){const bw=Math.max(.02,3.6*u);const nx=ln.hz?0:1,ny=ln.hz?1:0;const e1=[[a[0]-nx*bw/2,a[1]-ny*bw/2],[b[0]-nx*bw/2,b[1]-ny*bw/2]],e2=[[a[0]+nx*bw/2,a[1]+ny*bw/2],[b[0]+nx*bw/2,b[1]+ny*bw/2]];
+          const bf=window.__bf6;body=<g>{seg(a,b,{stroke:SURF,strokeWidth:bw})}{seg(a,b,{stroke:INKA(bf==='en'?.2:bf==='to'?.28:.09),strokeWidth:bw})}{seg(e1[0],e1[1],{stroke:INK,strokeWidth:.7*u,strokeDasharray:`${4*u} ${2.5*u}`})}{seg(e2[0],e2[1],{stroke:INK,strokeWidth:.7*u,strokeDasharray:`${4*u} ${2.5*u}`})}</g>;}
+        else{const ft=[];const nS=Math.max(1,Math.ceil(L/3));for(let i=0;i<=nS;i++)ft.push(i/nS);const nx=ln.hz?0:1,ny=ln.hz?1:0;
+          body=<g>{ft.map((f,i)=>{const c=[a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f];const fa=.5,fc=.36;const w=ln.hz?fa:fc,h=ln.hz?fc:fa;return <rect key={i} x={c[0]-w/2} y={c[1]-h/2} width={w} height={h} fill="none" stroke={INKA(.5)} strokeWidth={.6*u} strokeDasharray={`${2.5*u} ${2*u}`}></rect>;})}
+            {seg(a,b,{stroke:INK,strokeWidth:5*u})}{seg(a,b,{stroke:TEX,strokeWidth:3.2*u})}{seg(a,b,{stroke:INKA(.5),strokeWidth:3.2*u,strokeDasharray:`${.5*u} ${4*u}`})}</g>;}
+        out=<g><g opacity={isBad?1:kind==='beam'?A2:A}>{body}</g>{!isBad&&!ln.stub&&dimLine(a,b,n,12*u,txt,'d')}{ring(a,'a')}{!ln.stub&&ring(b,'b')}</g>;}}
+  }
+  else if(kind==='tex'||kind==='gfx'||kind==='door'){
+    const f=H&&faceAt(S,H,.45);
+    if(f){const {w,side}=f;const o=wT/2+(kind==='gfx'?1.6*u:3*u);
+      if(kind==='tex'){let t0,t1;
+        if(pk){t0=0;t1=w.len;}
+        if(dr){const g=faceAt([w],dr.a,1);const s=v=>clamp(Math.round(v*2)/2,0,w.len);t0=Math.min(s(g?g.t:f.t),s(f.t));t1=Math.max(s(g?g.t:f.t),s(f.t));}
+        const pa=PT(w,t0||0,o*side),pb=PT(w,t1||0,o*side);
+        const sa=PT(w,0,o*side),sb=PT(w,w.len,o*side);
+        const nrm=(()=>{const [dx,dy]=dirOf(w);return [-dy*side,dx*side];})();
+        if(old)out=<g>{dr&&t1>t0?<g>{seg(pa,pb,{stroke:OLD_TEX,strokeOpacity:.7,strokeWidth:.1})}<text x={(pa[0]+pb[0])/2} y={(pa[1]+pb[1])/2-.15} textAnchor="middle" style={{font:'500 .2px var(--font-numeric)',fill:INK}}>{fm(t1-t0)} m på vegg</text></g>:seg(sa,sb,{stroke:OLD_TEX,strokeOpacity:.45,strokeWidth:.1})}</g>;
+        else out=<g>{!((dr||pk)&&t1>t0)?seg(sa,sb,{stroke:INKA(.55),strokeWidth:.8*u,strokeDasharray:`${3*u} ${2.5*u}`}):
+          <g><g opacity={A}>{seg(pa,pb,{stroke:INK,strokeWidth:5*u})}{seg(pa,pb,{stroke:TEX,strokeWidth:3.2*u})}{seg(pa,pb,{stroke:INKA(.5),strokeWidth:3.2*u,strokeDasharray:`${.5*u} ${4*u}`})}</g>
+            {dimLine(pa,pb,nrm,10*u,fmm(t1-t0)+' på vegg','d')}{ring(pa,'a')}{ring(pb,'b')}</g>}</g>;}
+      else if(kind==='gfx'){const pa=PT(w,f.a+.04,o*side),pb=PT(w,f.b-.04,o*side);
+        out=old?seg(pa,pb,{stroke:INK,strokeOpacity:.45,strokeWidth:.1}):!fOn?seg(pa,pb,{stroke:INKA(.6),strokeWidth:.8*u,strokeDasharray:DASH}):<g opacity={Math.min(1,A+.15)}>{seg(pa,pb,{stroke:TRK,strokeWidth:2.4*u})}{seg(pa,pb,{stroke:'url(#f6raster)',strokeWidth:2.4*u})}</g>;}
+      else{const ok=w.kind!=='per';if(!ok)hint='Ugyldig · standvegg kan ikke ha dør';
+        const ma=PT(w,f.a,0),mb=PT(w,f.b,0);
+        if(old)out=seg(ma,mb,{stroke:INK,strokeOpacity:.35,strokeWidth:.18});
+        else if(!ok)out=bad(ma,mb,wT);
+        else if(!fOn){const q=wT/2+2*u;out=<g>{seg(PT(w,f.a,q),PT(w,f.b,q),{stroke:INKA(.6),strokeWidth:.8*u,strokeDasharray:DASH})}{seg(PT(w,f.a,-q),PT(w,f.b,-q),{stroke:INKA(.6),strokeWidth:.8*u,strokeDasharray:DASH})}</g>;}
+        else{const r=Math.min(.9,f.b-f.a-.06);const h=PT(w,f.a+.03,0),e=PT(w,f.a+.03+r,0),o2=PT(w,f.a+.03,r*side);
+          out=<g><g opacity={A2}>{seg(ma,mb,{stroke:SURF,strokeWidth:wT+u})}{seg(ma,mb,{stroke:INKA(.45),strokeWidth:.8*u})}
+            {seg(h,o2,{stroke:INK,strokeWidth:1.1*u})}<path d={`M${e[0]} ${e[1]} A${r} ${r} 0 0 ${side>0?(w.a===0||w.a===90?1:0):(w.a===0||w.a===90?0:1)} ${o2[0]} ${o2[1]}`} fill="none" stroke={INK} strokeWidth={.7*u} strokeDasharray={`${3*u} ${2.5*u}`}></path></g></g>;}}}
+  }
+  else if(kind==='tile'||kind==='eng'){
+    const cur=SM.floorOf(st);const fl=(SM.FLOORS.find(x=>x.g===(kind==='tile'?'flis':'eng')&&(!cur||x.id!==cur.id))||{c:'#888'}).c;
+    const cell=p=>({x:clamp(Math.floor(p.x/.5)*.5,0,W-.5),y:clamp(Math.floor(p.y/.5)*.5,0,D-.5)});
+    if(kind==='tile'&&inStand){let x0,y0,x1,y1;
+      if(dr){const a=cell(dr.a),b=cell(H);x0=Math.min(a.x,b.x);y0=Math.min(a.y,b.y);x1=Math.max(a.x,b.x)+.5;y1=Math.max(a.y,b.y)+.5;}
+      else{const c=cell(H);x0=clamp(c.x,0,W-1);y0=clamp(c.y,0,D-1);x1=x0+1;y1=y0+1;}
+      const ts=[];for(let x=x0;x<x1-1e-9;x+=1)for(let y=y0;y<y1-1e-9;y+=1)ts.push([x,y,Math.min(1,x1-x),Math.min(1,y1-y)]);
+      const area=(x1-x0)*(y1-y0);
+      if(old)out=<rect x={x0} y={y0} width={x1-x0} height={y1-y0} rx={.02} fill={fl} fillOpacity={.75} stroke={INK} strokeWidth={.03}></rect>;
+      else if(!fOn)out=<g><rect x={x0} y={y0} width={x1-x0} height={y1-y0} fill="none" stroke={SURF} strokeOpacity={.8} strokeWidth={2.4*u}></rect><rect x={x0} y={y0} width={x1-x0} height={y1-y0} fill="none" stroke={INK} strokeWidth={.8*u} strokeDasharray={DASH}></rect></g>;
+      else out=<g><g opacity={A}>{ts.map((t,i)=><rect key={i} x={t[0]} y={t[1]} width={t[2]} height={t[3]} fill={fl} stroke={INKA(.55)} strokeWidth={.8*u}></rect>)}</g>
+        <rect x={x0} y={y0} width={x1-x0} height={y1-y0} fill="none" stroke={INK} strokeWidth={.8*u}></rect>
+        {dr&&dimLine([x0,y0],[x1,y0],[0,-1],8*u,fmm(x1-x0),'w')}{dr&&dimLine([x0,y0],[x0,y1],[-1,0],8*u,fmm(y1-y0),'h')}
+        {dr&&<text x={(x0+x1)/2} y={(y0+y1)/2} textAnchor="middle" dominantBaseline="middle" style={{font:`600 ${10*u}px var(--font-numeric)`,fill:INK,paintOrder:'stroke',stroke:SURF,strokeWidth:3*u}}>{ts.length} {ts.length===1?'flis':'fliser'} · {fm(area)} m²</text>}</g>;}
+    if(kind==='eng'){if(!dr&&!pk&&inStand){const c=cell(H);out=<g>{ring([c.x+.25,c.y+.25],'h')}</g>;}
+      if((dr||pk&&inStand)&&H){const a=cell(dr?dr.a:H),b=dr?cell(H):{x:Math.min(cell(H).x+.5,W-.5),y:cell(H).y};const hz=Math.abs(b.x-a.x)>=Math.abs(b.y-a.y);const s0=hz?Math.min(a.x,b.x):Math.min(a.y,b.y),s1=(hz?Math.max(a.x,b.x):Math.max(a.y,b.y))+.5;
+        const c0=hz?a.y:a.x;const lim=hz?D:W;const lw=2;const cw=Math.min(lw,lim-c0);
+        const r=hz?{x:s0,y:c0,w:s1-s0,h:lw}:{x:c0,y:s0,w:lw,h:s1-s0};const L=s1-s0;
+        const off=lw-cw;const offR=off>1e-9?(hz?{x:s0,y:c0+cw,w:L,h:off}:{x:c0+cw,y:s0,w:off,h:L}):null;
+        const arrows=[];for(let t=s0+.5;t<s1-.2;t+=1)arrows.push(t);
+        if(old)out=<rect x={r.x} y={r.y} width={r.w} height={r.h} fill={fl} fillOpacity={.75} stroke={INK} strokeWidth={.03}></rect>;
+        else out=<g><g opacity={A}><rect x={r.x} y={r.y} width={hz?r.w:cw} height={hz?cw:r.h} fill={fl}></rect></g>
+          {offR&&<rect x={offR.x} y={offR.y} width={offR.w} height={offR.h} fill={`url(#${hatchId})`} stroke={INKA(.35)} strokeWidth={.6*u}></rect>}
+          <rect x={r.x} y={r.y} width={r.w} height={r.h} fill="none" stroke={INK} strokeWidth={.8*u} strokeDasharray={`${4*u} ${2.5*u}`}></rect>
+          {arrows.map((t,i)=>{const cx=hz?t:c0+Math.min(lw,cw)/2,cy=hz?c0+Math.min(lw,cw)/2:t;const s=4*u;const sg=hz?(b.x>=a.x?1:-1):(b.y>=a.y?1:-1);return <path key={i} d={hz?`M${cx-s*sg} ${cy-s} L${cx} ${cy} L${cx-s*sg} ${cy+s}`:`M${cx-s} ${cy-s*sg} L${cx} ${cy} L${cx+s} ${cy-s*sg}`} fill="none" stroke={INKA(.7)} strokeWidth={.8*u}></path>;})}
+          {dr&&dimLine(hz?[r.x,r.y]:[r.x,r.y],hz?[r.x+r.w,r.y]:[r.x,r.y+r.h],hz?[0,-1]:[-1,0],8*u,fmm(L)+' · bane 2 m'+(offR?' · kapp '+fmm(off):''),'d')}</g>;
+        if(offR)hint='Banen er bredere enn plassen · kappet skraveres';}}
+  }
+  else if(kind==='item'&&inStand){const P=SM.ITEM('5276-1');const x=clamp(H.x,P.w/2,W-P.w/2),y=clamp(H.y,P.d/2,D-P.d/2);
+    const r={x0:x-P.w/2,y0:y-P.d/2,x1:x+P.w/2,y1:y+P.d/2};
+    const hitWall=S.some(w=>{const a=PT(w,0,0),b=PT(w,w.len,0);const x0=Math.min(a[0],b[0])-.03,x1=Math.max(a[0],b[0])+.03,y0=Math.min(a[1],b[1])-.03,y1=Math.max(a[1],b[1])+.03;return r.x0<x1&&r.x1>x0&&r.y0<y1&&r.y1>y0;});
+    const hitItem=(st.items||[]).some(it=>{const Q=SM.ITEM(it.p);return Q&&r.x0<it.x+Q.w/2&&r.x1>it.x-Q.w/2&&r.y0<it.y+Q.d/2&&r.y1>it.y-Q.d/2;});
+    const isBad=hitWall||hitItem;if(isBad)hint='Ugyldig · '+(hitWall?'kolliderer med vegg':'kolliderer med et annet møbel');
+    const parts=(P.parts||[[P.id,0,0]]).map(([id,dx,dy])=>({Q:SM.ITEM(id),x:x+dx,y:y+dy}));
+    if(old)out=<g opacity={.55}>{parts.map((p,i)=>p.Q.sq?<rect key={i} x={p.x-p.Q.w/2} y={p.y-p.Q.d/2} width={p.Q.w} height={p.Q.d} fill={p.Q.top} stroke={INK} strokeWidth=".02"></rect>:<circle key={i} cx={p.x} cy={p.y} r={p.Q.w/2} fill={p.Q.top} stroke={INK} strokeWidth=".02"></circle>)}</g>;
+    else out=<g>{parts.map((p,i)=>{const fill=isBad?`url(#${hatchId})`:SURF;const pr=!fOn&&!isBad?{fill:'none',stroke:INK,strokeWidth:.8*u,strokeDasharray:DASH,style:{paintOrder:'stroke'}}:{fill,stroke:isBad?INKA(.45):INK,strokeWidth:.9*u,opacity:isBad?1:Math.min(1,A+.2)};return p.Q.sq?<rect key={i} x={p.x-p.Q.w/2} y={p.y-p.Q.d/2} width={p.Q.w} height={p.Q.d} {...pr}></rect>:<circle key={i} cx={p.x} cy={p.y} r={p.Q.w/2} {...pr}></circle>;})}
+      {!isBad&&fOn&&<rect x={r.x0-3*u} y={r.y0-3*u} width={P.w+6*u} height={P.d+6*u} fill="none" stroke={INKA(.35)} strokeWidth={.6*u} strokeDasharray={`${3*u} ${2.5*u}`}></rect>}</g>;}
+
+
+  // ---------- fantompeker: produktets symbol i et lite merke ved pekeren ----------
+  const tagOn=!old&&cfg.peker!=='sikte'&&H&&!dr&&H.x>-.3&&H.y>-.3&&H.x<W+.3&&H.y<D+.3;
+  const mini=()=>{const L=11*u;const pc=(SM.PLATES.find(p=>p.id===((st.plate&&st.plate.def)||'9010'))||{c:'#F1EEE4'}).c;const fl=SM.FLOORS.find(x=>x.g==='flis'&&(!SM.floorOf(st)||x.id!==SM.floorOf(st).id))||{c:'#888'};const fe=SM.FLOORS.find(x=>x.g==='eng'&&(!SM.floorOf(st)||x.id!==SM.floorOf(st).id))||{c:'#999'};
+    const a=[-L,0],b=[L,0];
+    switch(kind){
+      case 'wall':return <g>{seg(a,b,{stroke:INK,strokeWidth:wT})}{seg(a,b,{stroke:pc,strokeWidth:wT-2*u})}{[-L,0,L].map((x,i)=><line key={i} x1={x} y1={-4*u} x2={x} y2={4*u} stroke={INK} strokeWidth={.9*u}></line>)}</g>;
+      case 'beam':return <g>{seg(a,b,{stroke:SURF,strokeWidth:3.6*u})}{seg(a,b,{stroke:INKA(.2),strokeWidth:3.6*u})}{[-1.8,1.8].map((y,i)=><line key={i} x1={-L} y1={y*u} x2={L} y2={y*u} stroke={INK} strokeWidth={.7*u} strokeDasharray={`${4*u} ${2.5*u}`}></line>)}</g>;
+      case 'tex':case 'free':return <g>{kind==='free'&&[-L,L].map((x,i)=><rect key={i} x={x-3*u} y={-4.5*u} width={6*u} height={9*u} fill="none" stroke={INKA(.5)} strokeWidth={.6*u} strokeDasharray={`${2*u} ${1.5*u}`}></rect>)}{seg(a,b,{stroke:INK,strokeWidth:5*u})}{seg(a,b,{stroke:TEX,strokeWidth:3.2*u})}{seg(a,b,{stroke:INKA(.5),strokeWidth:3.2*u,strokeDasharray:`${.5*u} ${3*u}`})}</g>;
+      case 'gfx':return <g>{seg([-L,-3*u],[L,-3*u],{stroke:INK,strokeWidth:3*u})}{seg([-L,1.5*u],[L,1.5*u],{stroke:TRK,strokeWidth:4*u})}{seg([-L,1.5*u],[L,1.5*u],{stroke:'url(#f6raster)',strokeWidth:4*u})}</g>;
+      case 'door':{const rr=9*u;return <g>{seg([-L,4*u],[-L+2*u,4*u],{stroke:INK,strokeWidth:3*u})}{seg([L-2*u,4*u],[L,4*u],{stroke:INK,strokeWidth:3*u})}{seg([-L+3*u,4*u],[-L+3*u,4*u-rr],{stroke:INK,strokeWidth:1.1*u})}<path d={`M${-L+3*u+rr} ${4*u} A${rr} ${rr} 0 0 0 ${-L+3*u} ${4*u-rr}`} fill="none" stroke={INK} strokeWidth={.7*u} strokeDasharray={`${2*u} ${1.6*u}`}></path></g>;}
+      case 'tile':return <g>{[[-L,-5*u],[-L+L,-5*u],[-L,0],[0,0]].slice(0,4).map((q,i)=><rect key={i} x={q[0]} y={q[1]} width={L} height={5*u} fill={fl.c} stroke={INKA(.55)} strokeWidth={.7*u}></rect>)}</g>;
+      case 'eng':return <g><rect x={-L} y={-5*u} width={2*L} height={10*u} fill={fe.c}></rect><rect x={-L} y={-5*u} width={2*L} height={10*u} fill="none" stroke={INK} strokeWidth={.7*u} strokeDasharray={`${3*u} ${2*u}`}></rect><path d={`M${-2*u} ${-3*u} L${1.5*u} 0 L${-2*u} ${3*u}`} fill="none" stroke={INKA(.75)} strokeWidth={.8*u}></path></g>;
+      case 'item':return <g>{[[-7*u,2.5*u],[0,4.5*u],[7*u,2.5*u]].map(([x,rr],i)=><circle key={i} cx={x} cy={0} r={rr} fill={SURF} stroke={INK} strokeWidth={.8*u}></circle>)}</g>;
+      default:return null;}};
+  const tagEl=tagOn&&<g transform={`translate(${H.x+20*u} ${H.y+20*u})`}><rect x={-17*u} y={-10*u} width={34*u} height={20*u} rx={6*u} fill="rgb(var(--panel))" stroke={INKA(.18)} strokeWidth={.8*u}></rect>{mini()}</g>;
+  React.useEffect(()=>{setHint&&setHint(hint);},[hint]);
+  return <svg ref={svg} viewBox={`${-OM6} ${-OM6} ${W+2*OM6} ${D+2*OM6}`} preserveAspectRatio="xMidYMid meet" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} onPointerLeave={()=>{if(!dr)setHp(null);}}
+    style={{position:'absolute',inset:0,width:'100%',height:'100%',zIndex:3,cursor:'crosshair',touchAction:'none',userSelect:'none'}}>
+    <defs>
+      <pattern id={hatchId} patternUnits="userSpaceOnUse" width={3.2*u} height={3.2*u} patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2={3.2*u} stroke={INKA(.55)} strokeWidth={.8*u}></line></pattern>
+      <pattern id="f6raster" patternUnits="userSpaceOnUse" width={2.4*u} height={2.4*u}><circle cx={1.2*u} cy={1.2*u} r={.62*u} fill={INKA(.75)}></circle></pattern>
+    </defs>
+    {dots&&!old&&<g pointerEvents="none">{dots.map((p,i)=><circle key={i} cx={p[0]} cy={p[1]} r={(Number.isInteger(p[0])&&Number.isInteger(p[1])?1.2:.8)*u} fill={INKA(.3)}></circle>)}</g>}
+    {dots&&old&&<g pointerEvents="none">{dots.map((p,i)=><circle key={i} cx={p[0]} cy={p[1]} r={Number.isInteger(p[0])&&Number.isInteger(p[1])?.028:.018} fill="rgb(var(--border-strong))"></circle>)}</g>}
+    <g pointerEvents="none">{out}</g>
+    <g pointerEvents="none" style={{filter:'drop-shadow(0 1px 2px rgb(0 0 0 / .12))'}}>{tagEl}</g>
+  </svg>;}
+
+Object.assign(window,{Fantom6,Chooser6,TOOLS6});
+})();

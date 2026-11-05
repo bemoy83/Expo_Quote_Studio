@@ -2,7 +2,7 @@
 
 Startpunkt for en endring på ett produkt. Oppdateres i hvert trinn av ryddeplanen (november 2026), slik at kartet alltid
 stemmer med koden. Begreper: [vegger.md](vegger.md), Foga-reglene: [foga-system.md](foga-system.md), priser:
-[prismodell.md](prismodell.md), tegnspråket i plan, veggriss og tilbud: [arbeidstegning.md](arbeidstegning.md).
+[prismodell.md](prismodell.md), tegnspråket i plan, veggriss og tilbud: [arbeidstegning.md](arbeidstegning.md), forhåndsvisning mens man tegner: [forhandsvisning.md](forhandsvisning.md).
 
 ## Lagene
 
