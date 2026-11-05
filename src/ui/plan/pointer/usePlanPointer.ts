@@ -1,7 +1,7 @@
 // The plan's pointer handling. A press starts one drag kind (types.ts) chosen by the pen in hand, or for Velg by what
 // lies under the pointer (select.ts); each move and the release go to that kind's own file. Also the hover point,
 // the previews' state and drag and drop from Profilering.
-import { useEffect, useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent } from 'react'
 import type { FloorAction } from '../../../domain/floor/brush'
 import type { Rect } from '../../../domain/floor/tiles'
 import { faceOfPoint, freeTextileAt, updateFace } from '../../../domain/textile/free'
@@ -37,6 +37,12 @@ export type PlanPointerInput = Omit<PointerCtx, 'clickSelect' | 'rollPending' | 
 export function usePlanPointer(input: PlanPointerInput) {
   const { v, tool, brush, hits, pens, floor: fb } = input
   const svg = useRef<SVGSVGElement>(null)
+  /** The plan's element as state too, so the selection pill can be placed from it while rendering. */
+  const [svgEl, setSvgEl] = useState<SVGSVGElement | null>(null)
+  const svgRef = useCallback((el: SVGSVGElement | null) => {
+    svg.current = el
+    setSvgEl(el)
+  }, [])
   const drag = useRef<Drag | null>(null)
   const [hover, setHover] = useState<P | null>(null)
   // The drag under way as of the last pointer move, for rendering (hover previews pause, the cursor grabs): the ref
@@ -184,6 +190,8 @@ export function usePlanPointer(input: PlanPointerInput) {
 
   return {
     svg,
+    svgRef,
+    svgEl,
     hover,
     dragging,
     rollPending,

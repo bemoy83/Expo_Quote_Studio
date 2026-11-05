@@ -3,7 +3,7 @@
 // draw order never decides what can be clicked. Each product's layer is drawn in plan/layers/ (FloorLayer, WallLayer,
 // TextileLayer, BeamLayer, ObjectLayer, RoomLayer, Labels, PreviewLayer), and the pointer handling lives in plan/pointer/
 // (usePlanPointer, one file per drag kind). This file puts them together with the cursor.
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import { canMoveWall } from '../../domain/edit'
 import type { FloorBrushSize } from '../../domain/floor/brush'
@@ -41,7 +41,9 @@ import { floorBrush } from './pointer/floorBrush'
 import { planHits } from './pointer/hits'
 import { pens } from './pointer/pens'
 import { usePlanPointer } from './pointer/usePlanPointer'
-import { selectionKey, type PlanSelection } from './selection'
+import { pillAnchor, type PillPlace } from './pillAnchor'
+import { SelectionPill } from './SelectionPill'
+import { CLICK_MS, selectionKey, type PlanSelection } from './selection'
 
 interface Props {
   v: Variant
@@ -137,7 +139,7 @@ export function PlanView(p: Props) {
     drawerOpen: p.drawerOpen,
     onOpenDrawer: p.onOpenDrawer,
   })
-  const { svg, hover, dragging, stroke, erasing, handlers } = pointer
+  const { svg, svgRef, svgEl, hover, dragging, stroke, erasing, handlers } = pointer
 
   const off = (group: string) => !!p.groups && !p.groups.has(group)
   const keep = p.mini ? null : penLayers(tool, brush)
@@ -177,6 +179,20 @@ export function PlanView(p: Props) {
 
   const totals = useMemo(() => new Set(totalSides(v)), [v])
 
+  // The selection pill (docs/pille-og-skuff.md): CLICK_MS after a click selects, so a double click goes straight to
+  // the drawer; at once when the pill itself selects (a frame from «Tekstilvegg»)
+  const selKey = selectionKey(selection)
+  const [pillKey, setPillKey] = useState('')
+  const pillNow = useRef(false)
+  useEffect(() => {
+    const now = pillNow.current
+    pillNow.current = false
+    const t = window.setTimeout(() => setPillKey(selKey), selKey && !now ? CLICK_MS : 0)
+    return () => window.clearTimeout(t)
+  }, [selKey])
+  const pillShown = !p.mini && !!p.onOpenDrawer && tool === 'select' && !dragging && !p.drawerOpen && !!selKey && pillKey === selKey
+  const pillPlace = pillShown ? placeOf(svgEl, pillAnchor(v, selection)) : null
+
   const sideText = (s: Side) => {
     const n = sideLength(v.stand, s)
     let c = 0
@@ -189,8 +205,9 @@ export function PlanView(p: Props) {
   }
 
   return (
+    <>
     <svg
-      ref={svg}
+      ref={svgRef}
       className="plan-svg"
       viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`}
       preserveAspectRatio="xMidYMid meet"
@@ -272,5 +289,51 @@ export function PlanView(p: Props) {
         step={step} standardRuns={standardRuns} pointer={pointer} motifs={p.motifs} mini={p.mini} onHint={p.onHint} />
       </PlanScaleContext.Provider>
     </svg>
+    {pillPlace && (
+      <SelectionPill
+        place={pillPlace}
+        v={v}
+        res={res}
+        selection={selection}
+        motifs={p.motifs ?? []}
+        onEdit={p.onEdit}
+        onSelect={(s) => {
+          pillNow.current = true
+          p.onSelect(s)
+        }}
+        onOpenDrawer={p.onOpenDrawer!}
+        onToast={p.onToast}
+      />
+    )}
+    </>
   )
+}
+
+/** What floats over the plan, which the pill keeps clear of: the stand chip and hint line, the mini map, the dock. */
+const PILL_AVOID = '.stand-top > *, .minimap, .dock .dock-pill, .price-pill'
+
+/** The anchor's box on screen, px from the corner of the plan's box (where the pill is placed). */
+function placeOf(el: SVGSVGElement | null, anchor: ReturnType<typeof pillAnchor>): PillPlace | null {
+  const m = el?.getScreenCTM()
+  const box = el?.parentElement?.getBoundingClientRect()
+  if (!el || !m || !box || !anchor) return null
+  const at = (x: number, y: number) => {
+    const pt = el.createSVGPoint()
+    pt.x = x
+    pt.y = y
+    const s = pt.matrixTransform(m)
+    return { x: s.x - box.left, y: s.y - box.top }
+  }
+  const a = at(anchor.x0, anchor.y0)
+  const b = at(anchor.x1, anchor.y1)
+  const avoid = [...el.parentElement!.querySelectorAll(PILL_AVOID)].map((x) => {
+    const r = x.getBoundingClientRect()
+    return { left: r.left - box.left, top: r.top - box.top, right: r.right - box.left, bottom: r.bottom - box.top }
+  })
+  return {
+    anchor,
+    box: { left: Math.min(a.x, b.x), top: Math.min(a.y, b.y), right: Math.max(a.x, b.x), bottom: Math.max(a.y, b.y) },
+    size: { w: box.width, h: box.height },
+    avoid,
+  }
 }

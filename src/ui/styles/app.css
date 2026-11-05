@@ -2854,3 +2854,22 @@ select.cin {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* The selection pill over what is selected in Velg (plan/SelectionPill.tsx): like the quick picks, shadow only */
+.sel-pill {
+  position: absolute;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px;
+  max-width: calc(100% - 16px);
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-radius: 10px;
+  background: rgb(var(--panel));
+  box-shadow: var(--pop);
+}
+.sel-pill .q-name {
+  max-width: 220px;
+}
