@@ -1,14 +1,11 @@
-// Previews while drawing in the plan: Tøm's stroke, where a motif lands on a wall face, the snap dots and the module a
-// door would go in. The phantoms of the stroke tools are in Phantoms.tsx. The shared parts of the preview grammar (aim, phantom,
-// invalid; docs/forhandsvisning.md) are here too: ring, dashed aim outline, invalid hatch and the measure pill.
+// The shared parts of the preview grammar while drawing (docs/forhandsvisning.md): ring, dashed aim outline, invalid
+// hatch, the measure pill, a textile run and a print band at phantom strength, plus Tøm's stroke and the snap dots. The
+// phantoms themselves are worked out in strokePhantoms.tsx, floorPhantoms.tsx and placePhantoms.tsx.
 import { useId, type ReactNode, type SVGProps } from 'react'
-import { type Module } from '../../../domain/grid'
-import type { Point, Variant, Wall } from '../../../domain/types'
+import type { Point, Wall } from '../../../domain/types'
 import { CANVAS, INK, INK_FAINT, SURFACE } from '../../colors'
-import { rules } from '../../env'
-import { faceSegment, type FaceSide, felt } from '../../../domain/faces'
-import { textileAt } from '../../../domain/textile/inFrame'
-import { AIM, aimDash, INVALID, PHANTOM, PILL, RING, SNAP_DOT, textileOffset, textileWidth, wallWidth } from '../planStyle'
+import { type FaceSide } from '../../../domain/faces'
+import { AIM, aimDash, INVALID, PHANTOM, PILL, RING, SNAP_DOT, textileWidth, wallWidth } from '../planStyle'
 import { linePx, sizePx, usePlanScale } from '../planScale'
 import { mm } from '../dims'
 import { pillCentre, pillWidth } from '../pillPlace'
@@ -43,16 +40,6 @@ export function EraseStroke({ a, b, centre }: { a: Point; b: Point; centre: Poin
       {L > 0 && <MeasurePill a={a} b={b} centre={centre} stroke={w} text={mm(L)} />}
     </g>
   )
-}
-
-/** Where a motif click would land on the hovered wall face: the textile it prints, or the wall panel's field. */
-export function FacePreview({ v, h }: { v: Variant; h: FaceHit }) {
-  const sc = usePlanScale()
-  const tx = textileAt(v, h.w.id, h.s, h.t)
-  const f = felt(rules, h.module)
-  const span: [number, number] = tx ? [tx.from, tx.from + tx.width] : [f.a, f.b]
-  const [a, b] = faceSegment(h.w, h.s, span[0] + 0.02, span[1] - 0.02, textileOffset(sc))
-  return <Seg a={a} b={b} stroke={INK} strokeOpacity={0.45} strokeWidth={textileWidth(sc) + linePx(sc, 3)} />
 }
 
 /** True on a whole metre, give or take float noise from stepping in 0.25 m. */
@@ -174,9 +161,6 @@ export function PillAt({ at, text }: { at: Point; text: string }) {
   )
 }
 
-export function HoverModule({ m }: { m: Module }) {
-  return <Seg a={m.a} b={m.b} stroke={INK} strokeOpacity={0.35} strokeWidth={0.18} />
-}
 
 /** A textile run at phantom strength, with rings and the pill; `under` is drawn first (foot plates). */
 export function TextileRun({ a, b, centre, text, under }: { a: Point; b: Point; centre: Point; text: string; under?: ReactNode }) {

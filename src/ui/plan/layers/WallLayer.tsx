@@ -61,7 +61,7 @@ export function WallLayer({ v, mods, selection, dim }: { v: Variant; mods: Built
   )
 }
 
-function OpeningMark({ v, m, selected }: { v: Variant; m: BuiltModule; selected: boolean }) {
+export function OpeningMark({ v, m, selected }: { v: Variant; m: BuiltModule; selected: boolean }) {
   const o = m.opening!
   const w = v.walls.find((x) => x.id === o.wallId)!
   const [dx, dy] = wallDirection(w)

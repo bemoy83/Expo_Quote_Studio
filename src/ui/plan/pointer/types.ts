@@ -40,6 +40,8 @@ export type Drag =
   | ({ kind: 'room'; select: PlanSelection | null } & RoomDrag)
   | { kind: 'textile'; p0: P }
   | { kind: 'freeMove'; id: string; p0: P; v0: Variant; moved: boolean; select: PlanSelection }
+  /** Door, decal or furniture pressed: shown until release, stored on release over the same target (place.ts). */
+  | { kind: 'place'; what: 'opening' | 'decor' | 'object'; key: string }
   /** Tøm on anything but walls and drawn beams: the first thing pressed, then more of its kind as the pointer passes. */
   | { kind: 'erase'; first: EraseTarget; p0: P; moved: boolean; done: Set<string> }
 
