@@ -43,8 +43,8 @@ import { openingEdge } from './pointer/opening'
 import { pens } from './pointer/pens'
 import { usePlanPointer } from './pointer/usePlanPointer'
 import { AimRect, AimSeg, EraseStroke, Ring, SnapDots } from './layers/Previews'
-import { doorPreview, motifPreview, objectPreview } from './layers/placePhantoms'
-import { placeKey } from './pointer/place'
+import { doorAim, doorHeld, motifPreview, objectPreview } from './layers/placePhantoms'
+import { placeHolds } from './pointer/place'
 import { ratioOf } from './pointer/decor'
 import { lanePill, tileArea, tileAreaMeasures } from './layers/floorPhantoms'
 import { beamPhantom, dropPhantom, textilePhantom, wallPhantom, type Phantom } from './layers/strokePhantoms'
@@ -238,14 +238,17 @@ export function PlanView(p: Props) {
     return faceSegment(textileFace!.w, textileFace!.s, t.from, t.from + t.width, textileOffset(scale))
   })() : null
   // Door, motif and furniture: aim while hovering, the phantom while pressed over the target the press hit
-  // (pointer/place.ts); dragged off it, the aim of the new target shows and a release stores nothing
+  // (pointer/place.ts); dragged off it, the aim of the new target shows and a release stores nothing. A door pressed
+  // follows the pointer out to the side it is to swing to
   const placing = dragging?.kind === 'place' ? dragging : null
-  const held = (what: 'opening' | 'decor' | 'object') => !!placing && placing.what === what && !!hover && placeKey({ v, hits, brush }, what, hover) === placing.key
+  const held = (what: 'opening' | 'decor' | 'object') => !!placing && placing.what === what && !!hover && placeHolds({ v, hits, brush }, placing, hover)
   const placePreview =
     p.mini || !hover
       ? null
-      : hoverEdge && brush?.kind === 'opening'
-        ? doorPreview(scale, v, hoverEdge, !!hits.moduleAt(hover, 0.4), brush.product, held('opening'))
+      : brush?.kind === 'opening' && placing?.what === 'opening' && placing.module
+        ? doorHeld(scale, v, placing.module, brush.product, !!placing.door, hover, held('opening'))
+        : hoverEdge && brush?.kind === 'opening' && !placing
+          ? doorAim(scale, v, hoverEdge)
         : decorTool && brush?.kind === 'motif'
           ? motifPreview(scale, v, hits, hover, brush.motif, ratioOf(p.motifs)(brush.motif), held('decor'))
           : pen.objectTool && brush?.kind === 'object' && onStand(hover)

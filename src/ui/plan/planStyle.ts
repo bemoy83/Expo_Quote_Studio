@@ -69,6 +69,10 @@ export const RING = { r: 3.2, edge: 1.1 } as const
 export const AIM = { width: 0.8, dash: 3, gap: 2.5, halo: 2.4, haloOpacity: 0.8 } as const
 export const aimDash = (s: PlanScale) => `${sizePx(s, AIM.dash)} ${sizePx(s, AIM.gap)}`
 
+/** The aim of the door pen: one dashed ink line on the module's centre line, with a light edge under it so it shows on
+ * the wall. */
+export const DOOR_AIM = { width: 1.4, dash: 4, gap: 3, halo: 3.5 } as const
+
 /** Snap dots: faint ink, larger on whole metres. */
 export const SNAP_DOT = { metre: 1.2, other: 0.8, fill: 'rgb(var(--ink) / .3)' } as const
 

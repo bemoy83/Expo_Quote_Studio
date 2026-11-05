@@ -2,7 +2,7 @@
 // (docs/forhandsvisning.md). Hovering aims (dashed outline of what is hit, or grey and hatched with the reason when it
 // cannot go there); pressed, the phantom shows what the release stores. Each works it out with the same domain call the
 // release makes. Plain functions, like strokePhantoms.tsx.
-import { drawOpening, setOpening } from '../../../domain/doors'
+import { placeOpening } from '../../../domain/doors'
 import { addFoil } from '../../../domain/decor'
 import { faceSegment, felt } from '../../../domain/faces'
 import { addObject, footprintBox } from '../../../domain/objects'
@@ -11,37 +11,46 @@ import { textileAt } from '../../../domain/textile/inFrame'
 import type { Module } from '../../../domain/grid'
 import type { Point, Variant } from '../../../domain/types'
 import { builtModules, doorAllowed } from '../../../domain/walls'
-import { INK } from '../../colors'
+import { INK, SURFACE } from '../../colors'
 import { idx, place, productOf, rules } from '../../env'
 import { linePx, sizePx, type PlanScale } from '../planScale'
-import { aimDash, AIM, PHANTOM, printBand, printOffset, textileFill, textileOffset, textileWidth, wallWidth } from '../planStyle'
+import { aimDash, AIM, DOOR_AIM, PHANTOM, printBand, printOffset, textileFill, textileOffset, textileWidth, wallWidth } from '../planStyle'
 import type { PlanHits } from '../pointer/hits'
 import { AimSeg, InvalidSeg, InvalidShape, RasterBand } from './Previews'
 import { OpeningMark } from './WallLayer'
+import { Seg } from './Seg'
 import type { Phantom } from './strokePhantoms'
 
-/** Door or curtain: aim on both sides of the module, the leaf and its swing while pressed, hatched in a stand wall. */
-export function doorPreview(sc: PlanScale, v: Variant, e: Module, onWall: boolean, product: string, pressed: boolean): Phantom {
-  const w = wallWidth(sc)
-  if (!doorAllowed(v, e.a, e.b)) return { el: <InvalidSeg a={e.a} b={e.b} width={w} />, hint: 'Dører og forheng kan ikke stå i standveggen' }
-  if (!pressed) {
-    const o = w / 2 + sizePx(sc, 2)
-    const hz = e.a[1] === e.b[1]
-    const off = (p: Point, k: number): Point => (hz ? [p[0], p[1] + k] : [p[0] + k, p[1]])
-    return {
-      el: (
-        <g>
-          <AimSeg a={off(e.a, -o)} b={off(e.b, -o)} />
-          <AimSeg a={off(e.a, o)} b={off(e.b, o)} />
-        </g>
-      ),
-      hint: null,
-    }
+/** Door or curtain, hovering: one dashed line along the module's centre line with a light edge under it, so it shows on
+ * the wall; hatched in a stand wall. */
+export function doorAim(sc: PlanScale, v: Variant, e: Module): Phantom {
+  if (!doorAllowed(v, e.a, e.b)) return { el: <InvalidSeg a={e.a} b={e.b} width={wallWidth(sc)} />, hint: DOOR_IN_STAND_WALL }
+  const dash = `${sizePx(sc, DOOR_AIM.dash)} ${sizePx(sc, DOOR_AIM.gap)}`
+  return {
+    el: (
+      <g>
+        <Seg a={e.a} b={e.b} stroke={SURFACE} strokeWidth={linePx(sc, DOOR_AIM.halo)} />
+        <Seg a={e.a} b={e.b} stroke={INK} strokeWidth={linePx(sc, DOOR_AIM.width)} strokeDasharray={dash} />
+      </g>
+    ),
+    hint: null,
   }
-  const next = onWall ? setOpening(v, e.key, product) : drawOpening(v, e.a, e.b, product)
-  const m = builtModules(next).find((x) => x.key === e.key && x.opening)
-  return { el: m ? <g opacity={PHANTOM.line}><OpeningMark v={next} m={m} selected={false} /></g> : null, hint: null }
 }
+
+/**
+ * Door or curtain pressed in module e: the leaf and its swing as a release at q would store them (a door turns toward the
+ * pointer, placeOpening). Out of the area the leaf can swing in, nothing: a release there stores nothing.
+ */
+export function doorHeld(sc: PlanScale, v: Variant, e: Module, product: string, door: boolean, q: { x: number; y: number }, holds: boolean): Phantom {
+  if (!doorAllowed(v, e.a, e.b)) return { el: <InvalidSeg a={e.a} b={e.b} width={wallWidth(sc)} />, hint: DOOR_IN_STAND_WALL }
+  if (!holds) return { el: null, hint: null }
+  const next = placeOpening(v, e.a, e.b, product, door, q)
+  const m = builtModules(next).find((x) => x.key === e.key && x.opening)
+  const el = m ? <g opacity={PHANTOM.line}><OpeningMark v={next} m={m} selected={false} /></g> : null
+  return { el, hint: door ? 'Dra mot siden døren skal slå · slipp for å sette inn · Esc avbryter' : null }
+}
+
+const DOOR_IN_STAND_WALL = 'Dører og forheng kan ikke stå i standveggen'
 
 /** Motif: the textile face it prints or the panel field it gets as a decal; a band of print while pressed. */
 export function motifPreview(sc: PlanScale, v: Variant, hits: PlanHits, q: { x: number; y: number }, motif: string, ratio: number, pressed: boolean): Phantom | null {

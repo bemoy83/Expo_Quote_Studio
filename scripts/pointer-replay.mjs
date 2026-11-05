@@ -9,7 +9,7 @@
 // and Bane), the textile brush, motifs, drag and drop from Profilering, and press, hold and release (or Escape) for
 // doors, decals and furniture. After each step it records a hash of the
 // sketch stored in localStorage, the open drawer, the cursor, the pen in the dock, where the last piece of furniture
-// stands, and the toast. Compare checks all but the toast;
+// stands, the last door's swing and hinge, and the toast. Compare checks all but the toast;
 // the toast only depends on timing (it times out), so a toast difference is listed but does not fail.
 import { createServer } from 'node:http'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
@@ -22,7 +22,7 @@ if (cmd === 'compare') {
   let bad = 0
   for (let i = 0; i < Math.max(a.length, b.length); i++) {
     const x = a[i] ?? {}, y = b[i] ?? {}
-    const off = ['step', 'sketch', 'changed', 'drawer', 'cursor', 'pen', 'last'].filter((k) => x[k] !== y[k])
+    const off = ['step', 'sketch', 'changed', 'drawer', 'cursor', 'pen', 'last', 'door'].filter((k) => x[k] !== y[k])
     if (off.length) { bad++; console.log(`AVVIK ${x.step ?? y.step}: ${off.map((k) => `${k} ${x[k]} ≠ ${y[k]}`).join(', ')}`) }
     else if (x.toast !== y.toast) console.log(`(toast ulik i tid) ${x.step}`)
   }
@@ -87,7 +87,10 @@ async function record(step) {
   // The last piece of furniture, to see where a release put it
   const o = JSON.parse(s ?? '{}').varianter?.[0]?.objects?.at(-1)
   const last = o ? `${o.product}@${o.x.toFixed(2)},${o.y.toFixed(2)}` : ''
-  out.push({ step: `${name} ${step}`, sketch: hash(s), changed: s !== prev, drawer, toast, cursor, pen, last })
+  // The last door or curtain: module, swing and hinge as stored (empty = the default)
+  const d = JSON.parse(s ?? '{}').varianter?.[0]?.openings?.at(-1)
+  const door = d ? `${d.wallId}#${d.module} swing ${d.swing ?? ''} hinge ${d.hinge ?? ''}` : ''
+  out.push({ step: `${name} ${step}`, sketch: hash(s), changed: s !== prev, drawer, toast, cursor, pen, last, door })
   prev = s
 }
 const close = () => page.close()
@@ -192,6 +195,13 @@ await tool('Vegg'); await page.locator('.q-btn[aria-label="Dør"]').click()
 await hold(3, 1.5, 5, 3.5); await record('dør trykk dra bort slipp')
 await hold(3, 1.5, 3, 1.5, 'escape'); await record('dør trykk Esc slipp')
 await press(3, 1.5); await record('dør klikk etter Esc')
+await close()
+// A door turns toward the pointer before release: swing side and hinge end; dragged past the leaf's reach, nothing
+await open('01-hjorne-arrangor')
+await tool('Vegg'); await page.locator('.q-btn[aria-label="Dør"]').click()
+await hold(3, 1.3, 3.5, 1.3); await record('dør trykk dra til motsatt side slipp')
+await hold(3, 1.8, 2.5, 1.8); await record('dør trykk i andre halvdel dra ut slipp')
+await hold(3, 1.5, 4.2, 1.5); await record('dør trykk dra 1,2 m ut slipp')
 await close()
 await open('09-dekor')
 await tool('Profilering'); await page.locator('.q-motif').first().click()

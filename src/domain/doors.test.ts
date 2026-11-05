@@ -3,7 +3,7 @@ import { DEFAULT_CATALOG, DOOR } from '../catalog/defaultCatalog';
 import { calc } from '../calc/calc';
 import { RULES } from '../rules/rules';
 import { r2 } from '../calc/referenceStands';
-import { doorHinge, doorRal, doorSpots, doorSwing, flipHinge, moveOpening, paintDoors, removeOpening, setDoorRal, setOpening, setOpeningProduct } from './doors';
+import { doorHinge, doorRal, doorSpots, doorSwing, flipHinge, inDoorArea, moveOpening, paintDoors, placeOpening, removeOpening, setDoorRal, setOpening, setOpeningProduct } from './doors';
 import { paintWalls, replaceWalls } from './edit';
 import { moduleKey } from './grid';
 import { addRoom, moveRoom, moveRoomDoors, RECT_SIDE, resizeRoomDoors } from './rooms';
@@ -128,5 +128,55 @@ describe('the door is part of the wall', () => {
     // Another wall of the same room colours the door too
     const other = v.walls.find((w) => w.room?.id === v.walls.find((x) => x.id === o.wallId)!.room?.id && w.id !== o.wallId)!;
     expect(doorRal(paintDoors(v, other.id, '3020'), paintDoors(v, other.id, '3020').openings[0])).toBe('3020');
+  });
+});
+
+describe('placing a door with the pointer (press shows, release stores)', () => {
+  const inner = () => paintWalls(row(), [3, 1], [3, 3]);
+  const a: [number, number] = [3, 1];
+  const b: [number, number] = [3, 2];
+  const door = (v: Variant) => {
+    const o = v.openings[0];
+    return { o, w: v.walls.find((w) => w.id === o.wallId)! };
+  };
+
+  it('a plain click keeps the defaults, as setOpening', () => {
+    const v = inner();
+    expect(placeOpening(v, a, b, DOOR, true, { x: 3.05, y: 1.5 })).toEqual(setOpening(v, moduleKey(a, b), DOOR));
+  });
+
+  it('swings to the side of the wall the pointer is on and hangs on the end it is nearest', () => {
+    const v = inner();
+    // The wall runs down (+y): its left normal points to −x
+    const left = door(placeOpening(v, a, b, DOOR, true, { x: 2.5, y: 1.3 }));
+    expect(doorSwing(v.stand, left.w, left.o)).toBe(1);
+    expect(left.o.hinge).toBeUndefined();
+    const right = door(placeOpening(v, a, b, DOOR, true, { x: 3.5, y: 1.8 }));
+    expect(doorSwing(v.stand, right.w, right.o)).toBe(-1);
+    expect(right.o.swing).toBe(-1);
+    expect(right.o.hinge).toBe(-1);
+    expect(doorHinge(right.w, right.o).a).toEqual([3, 2]);
+  });
+
+  it('on the stand edge always swings into the stand, the pointer only picks the hinge', () => {
+    const v = row();
+    const e: [[number, number], [number, number]] = [[2, 4], [3, 4]];
+    const outside = door(placeOpening(v, e[0], e[1], DOOR, true, { x: 2.8, y: 4.5 }));
+    const inside = door(placeOpening(v, e[0], e[1], DOOR, true, { x: 2.8, y: 3.5 }));
+    const into = doorSwing(v.stand, inside.w, inside.o);
+    expect(doorSwing(v.stand, outside.w, outside.o)).toBe(into);
+    expect(doorHinge(inside.w, inside.o).a[0]).toBe(3);
+  });
+
+  it('leaves a curtain as setOpening places it', () => {
+    const v = inner();
+    const curtain = DEFAULT_CATALOG.products.find((p) => p.opening === 'curtain')!.id;
+    expect(placeOpening(v, a, b, curtain, false, { x: 3.5, y: 1.8 })).toEqual(setOpening(v, moduleKey(a, b), curtain));
+  });
+
+  it('the swing area is the module length and the leaf width to each side', () => {
+    expect(inDoorArea(a, b, { x: 3.9, y: 1.5 }, 0.95)).toBe(true);
+    expect(inDoorArea(a, b, { x: 4.3, y: 1.5 }, 0.95)).toBe(false);
+    expect(inDoorArea(a, b, { x: 3, y: 2.2 }, 0.95)).toBe(false);
   });
 });

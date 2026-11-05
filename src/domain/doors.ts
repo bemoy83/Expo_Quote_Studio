@@ -193,3 +193,52 @@ export function flipSwing(v: Variant, openingId: string): Variant {
     }),
   };
 }
+
+/** Pointer at least this far from the wall's centre line, m, before it turns the door (a plain click keeps the default). */
+export const DOOR_AIM_MIN = 0.15;
+
+/**
+ * The swing side and hinge end a pointer at q gives the door in module `module` of wall w (docs/forhandsvisning.md,
+ * «Dør: sikte og retning før slipp»): the side of the wall the pointer is on, and the end of the module it is nearest.
+ * Null close to the wall (under DOOR_AIM_MIN): a plain click keeps the defaults. On the stand's edge the door always
+ * swings into the stand, so only the hinge follows the pointer there.
+ */
+export function doorAim(stand: Stand, w: Wall, module: number, q: { x: number; y: number }): { swing: 1 | -1; hinge: 1 | -1 } | null {
+  const [dx, dy] = wallDirection(w);
+  const s = pointAlong(w, module);
+  const across = (q.x - s[0]) * -dy + (q.y - s[1]) * dx;
+  const along = (q.x - s[0]) * dx + (q.y - s[1]) * dy;
+  if (Math.abs(across) < DOOR_AIM_MIN) return null;
+  const swing = isPerimeterWall(stand, w) ? defaultSwing(stand, w) : across > 0 ? 1 : -1;
+  return { swing, hinge: along < 0.5 ? 1 : -1 };
+}
+
+/** Inside the area a door leaf can swing in: the module's length and `reach` m to each side of the wall line. */
+export function inDoorArea(a: Point, b: Point, q: { x: number; y: number }, reach: number): boolean {
+  const x0 = Math.min(a[0], b[0]);
+  const x1 = Math.max(a[0], b[0]);
+  const y0 = Math.min(a[1], b[1]);
+  const y1 = Math.max(a[1], b[1]);
+  return a[1] === b[1] ? q.x >= x0 && q.x <= x1 && Math.abs(q.y - a[1]) <= reach : q.y >= y0 && q.y <= y1 && Math.abs(q.x - a[0]) <= reach;
+}
+
+/**
+ * Put a door or curtain on module a–b (setOpening on a wall, drawOpening on an empty edge) and, for a door, turn it
+ * the way the pointer at q says (doorAim). Defaults are not stored: hinge only when −1, swing only when it is −1 or
+ * differs from the side an omitted swing reads as. On the stand's edge the swing is left as setOpening stored it.
+ */
+export function placeOpening(v: Variant, a: Point, b: Point, product: string, door: boolean, q: { x: number; y: number } | null): Variant {
+  const key = moduleKey(a, b);
+  const onWall = builtModules(v).some((m) => m.key === key);
+  const next = onWall ? setOpening(v, key, product) : drawOpening(v, a, b, product);
+  if (!door || !q) return next;
+  const mod = builtModules(next).find((m) => m.key === key && m.opening);
+  const w = mod && next.walls.find((x) => x.id === mod.wallId);
+  const aim = mod && w ? doorAim(next.stand, w, mod.index, q) : null;
+  if (!mod || !w || !aim) return next;
+  const o = mod.opening!;
+  const { swing: _s, hinge: _h, ...rest } = o;
+  const keepSwing = isPerimeterWall(next.stand, w) ? o.swing : aim.swing === -1 || aim.swing !== defaultSwing(next.stand, w) ? aim.swing : undefined;
+  const turned: Opening = { ...rest, ...(keepSwing === undefined ? {} : { swing: keepSwing }), ...(aim.hinge === -1 ? { hinge: -1 as const } : {}) };
+  return { ...next, openings: next.openings.map((x) => (x.id === o.id ? turned : x)) };
+}
