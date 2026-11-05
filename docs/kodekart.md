@@ -135,8 +135,9 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 
   Første gang: `npx playwright install chromium`.
 - **Pekerbevis:** `scripts/pointer-replay.mjs` spiller av de samme klikkene og dragene i planen på to bygg (vegg, dør,
-  takdrager, rom, møbel, fliser, engangsteppe, tekstilpensel, motiv og dra inn fra Profilering) og sammenligner
-  skissen som lagres, skuffen som åpnes og markøren etter hvert steg. Kjøres for hånd når pekerhåndteringen i
+  takdrager, rom, møbel, fliser, engangsteppe, tekstilpensel, motiv og dra inn fra Profilering, og trykk, hold og
+  slipp eller Esc for dør, dekal og møbel med hjelpesteget `hold`) og sammenligner skissen som lagres, skuffen som
+  åpnes, markøren, pennen i docken og hvor det siste møbelet står etter hvert steg. Kjøres for hånd når pekerhåndteringen i
   `plan/pointer/` endres:
 
   ```sh

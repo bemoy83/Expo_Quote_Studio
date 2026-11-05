@@ -6,8 +6,10 @@
 //
 // Each scenario loads an example sketch from src/test/fixtures, picks tools in the dock and quick picks, and clicks
 // and drags in the plan in model coordinates: walls, doors, inner beams, rooms, furniture, tiles, engangsteppe (Fyll
-// and Bane), the textile brush, motifs, and drag and drop from Profilering. After each step it records a hash of the
-// sketch stored in localStorage, the open drawer, the cursor and the toast. Compare checks sketch, drawer and cursor;
+// and Bane), the textile brush, motifs, drag and drop from Profilering, and press, hold and release (or Escape) for
+// doors, decals and furniture. After each step it records a hash of the
+// sketch stored in localStorage, the open drawer, the cursor, the pen in the dock, where the last piece of furniture
+// stands, and the toast. Compare checks all but the toast;
 // the toast only depends on timing (it times out), so a toast difference is listed but does not fail.
 import { createServer } from 'node:http'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
@@ -20,7 +22,7 @@ if (cmd === 'compare') {
   let bad = 0
   for (let i = 0; i < Math.max(a.length, b.length); i++) {
     const x = a[i] ?? {}, y = b[i] ?? {}
-    const off = ['step', 'sketch', 'changed', 'drawer', 'cursor'].filter((k) => x[k] !== y[k])
+    const off = ['step', 'sketch', 'changed', 'drawer', 'cursor', 'pen', 'last'].filter((k) => x[k] !== y[k])
     if (off.length) { bad++; console.log(`AVVIK ${x.step ?? y.step}: ${off.map((k) => `${k} ${x[k]} ≠ ${y[k]}`).join(', ')}`) }
     else if (x.toast !== y.toast) console.log(`(toast ulik i tid) ${x.step}`)
   }
@@ -66,6 +68,14 @@ async function drag(x0, y0, x1, y1, steps = 10) {
   for (let k = 1; k <= steps; k++) await page.mouse.move(a.x + ((b.x - a.x) * k) / steps, a.y + ((b.y - a.y) * k) / steps)
   await page.mouse.up(); await page.waitForTimeout(250)
 }
+/** Press at x0, y0 and hold while moving to x1, y1; then release, or Escape first and then release. */
+async function hold(x0, y0, x1, y1, end = 'up') {
+  const a = await at(x0, y0), b = await at(x1, y1)
+  await page.mouse.move(a.x, a.y); await page.mouse.down()
+  for (let k = 1; k <= 8; k++) await page.mouse.move(a.x + ((b.x - a.x) * k) / 8, a.y + ((b.y - a.y) * k) / 8)
+  if (end === 'escape') { await page.keyboard.press('Escape'); await page.waitForTimeout(100) }
+  await page.mouse.up(); await page.waitForTimeout(250)
+}
 const tool = async (n) => { await page.locator(`.dock-tools [aria-label="${n}"]`).click(); await page.waitForTimeout(150) }
 async function record(step) {
   await page.waitForTimeout(500)
@@ -73,7 +83,11 @@ async function record(step) {
   const drawer = await page.evaluate(() => [...document.querySelectorAll('section.wall-drawer')].map((e) => e.getAttribute('aria-label') + ':' + (e.querySelector('.wd-head')?.textContent ?? '')).join('|'))
   const toast = await page.evaluate(() => document.querySelector('.toast')?.textContent ?? '')
   const cursor = await page.evaluate(() => document.querySelector('svg.plan-svg').style.cursor)
-  out.push({ step: `${name} ${step}`, sketch: hash(s), changed: s !== prev, drawer, toast, cursor })
+  const pen = await page.evaluate(() => document.querySelector('.dock-tools [aria-pressed=true]')?.getAttribute('aria-label') ?? '')
+  // The last piece of furniture, to see where a release put it
+  const o = JSON.parse(s ?? '{}').varianter?.[0]?.objects?.at(-1)
+  const last = o ? `${o.product}@${o.x.toFixed(2)},${o.y.toFixed(2)}` : ''
+  out.push({ step: `${name} ${step}`, sketch: hash(s), changed: s !== prev, drawer, toast, cursor, pen, last })
   prev = s
 }
 const close = () => page.close()
@@ -169,6 +183,25 @@ await dropOn(page.locator('.gfx-grid .gfx').nth(1), 3.5, 0.15); await record('dr
 await dropOn(page.locator('.gfx-grid .gfx').nth(2), 4, 2); await record('dra motiv tomt')
 await dropOn(page.locator('.pd-row', { hasText: 'Tekstilvegg' }).first(), 0.15, 1.5); await record('dra tekstil inn')
 await tool('Tøm'); await press(1.5, 0.1); await record('visk motiv')
+await close()
+
+// Press shows, release stores (pointer/place.ts, docs/forhandsvisning.md): dragged off the target or Escape stores
+// nothing and keeps the pen; furniture follows the pointer and lands where it is released
+await open('01-hjorne-arrangor')
+await tool('Vegg'); await page.locator('.q-btn[aria-label="Dør"]').click()
+await hold(3, 1.5, 5, 3.5); await record('dør trykk dra bort slipp')
+await hold(3, 1.5, 3, 1.5, 'escape'); await record('dør trykk Esc slipp')
+await press(3, 1.5); await record('dør klikk etter Esc')
+await close()
+await open('09-dekor')
+await tool('Profilering'); await page.locator('.q-motif').first().click()
+await hold(1.5, 0.1, 3, 2); await record('dekal trykk dra bort slipp')
+await hold(1.5, 0.1, 1.5, 0.1, 'escape'); await record('dekal trykk Esc slipp')
+await close()
+await open('10-mobler-utstyr')
+await tool('Møbel'); await page.locator('.q-obj').first().click()
+await hold(3, 0.6, 2, 2.6); await record('møbel trykk flytt slipp')
+await hold(3, 0.6, 3, 0.6, 'escape'); await record('møbel trykk Esc slipp')
 await close()
 
 // Keyboard (useShortcuts): Delete on each kind of selection, Escape from a door, R on a lane, undo and redo, dock keys and P
