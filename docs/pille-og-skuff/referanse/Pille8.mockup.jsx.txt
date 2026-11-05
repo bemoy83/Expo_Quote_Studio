@@ -1,0 +1,57 @@
+// v8 · én pille for alt som velges: navn og mål · farge eller motiv · roter (møbel, frittstående tekstil) · mer i skuffen · fjern.
+// Bygger på pillen fra v5/v6 og delene fra v7. Bare det appen kan i dag, pluss rotering. Ingen flytt-knapp: dra finnes allerede.
+(()=>{
+const {I7,Btn7:Btn,Sw7:Sw,Name7:Name,Pill7,sep7:sep}=window;
+const INK='rgb(var(--ink))',INKA=a=>`rgb(var(--ink) / ${a})`;
+const TEX='var(--tusj-tekstil, oklch(0.81 0.12 55))';
+const fmm=v=>Math.round(v*1000).toLocaleString('nb-NO').replace(/ |,/g,' ');
+
+// ---------- møbler roteres i kvarte omdreininger (appens modell har allerede rot) ----------
+const P0=SM.prims;
+SM.prims=it=>{const r=P0(it);const q=((it.rot||0)%360+360)%360;if(!q)return r;const n=q/90;
+  return r.map(p=>{let x=p.x-it.x,y=p.y-it.y,w=p.w,d=p.d;for(let k=0;k<n;k++){const t=x;x=-y;y=t;const s=w;w=d;d=s;}return {...p,x:it.x+x,y:it.y+y,w,d};});};
+
+window.MiniBar3=function({x,y,P,fam,onVar,onDel}){const it=window.__it8;const rot=(it&&it.rot)||0;
+  return <Pill7 x={x} y={y} yb={y}><Name n={P.n} sub={P.dim+(rot?` · ${rot}°`:'')}></Name>
+    {fam&&fam.vars.length>1&&<>{sep}<div style={{display:'flex',gap:6,padding:'0 6px'}}>{fam.vars.map(v=><Sw key={v.id} c={v.c} on={v.id===P.id} title={v.s} onClick={()=>onVar(v.id)}></Sw>)}</div></>}
+    {sep}<Btn icon="rotate-cw" title="Roter 90° (R)" onClick={()=>window.__rot8&&window.__rot8()}></Btn>
+    {sep}<Btn icon="trash-2" title="Fjern (Delete)" onClick={onDel}></Btn></Pill7>;};
+
+// ---------- frittstående tekstilvegg (eksempel: mockupen har ingen modell for den) ----------
+window.FT8_DEF={x:5.6,y:2.0,len:2,dir:'v',motif:null};
+const ftEnds=f=>f.dir==='h'?[[f.x-f.len/2,f.y],[f.x+f.len/2,f.y]]:[[f.x,f.y-f.len/2],[f.x,f.y+f.len/2]];
+/** Roter 90° om midten, og hold veggen innenfor standen. */
+window.ft8Rotate=(st,f)=>{const n={...f,dir:f.dir==='h'?'v':'h'};const h=n.len/2;
+  if(n.dir==='h')n.x=Math.min(st.W-h,Math.max(h,n.x));else n.y=Math.min(st.D-h,Math.max(h,n.y));return n;};
+function Sel8({st,xf,sel,onSel}){const f=st.ft8===false?null:(st.ft8||window.FT8_DEF);if(!f)return null;
+  const {W,D}=st;const u=1/xf.s;const [a,b]=ftEnds(f);const hz=f.dir==='h';
+  const seg=(p,q,pr,k)=><line key={k} x1={p[0]} y1={p[1]} x2={q[0]} y2={q[1]} {...pr}></line>;
+  const feet=[0,1].map(i=>{const c=i?b:a;const fa=.5,fc=.36;const w=hz?fa:fc,h=hz?fc:fa;return <rect key={i} x={c[0]-w/2} y={c[1]-h/2} width={w} height={h} fill="none" stroke={INKA(.55)} strokeWidth={.75*u} strokeDasharray={`${2.5*u} ${1.5*u}`}></rect>;});
+  return <svg viewBox={`${-1.3} ${-1.3} ${W+2.6} ${D+2.6}`} preserveAspectRatio="xMidYMid meet" style={{position:'absolute',inset:0,width:'100%',height:'100%',zIndex:3,pointerEvents:'none'}}>
+    {feet}
+    {sel&&seg(a,b,{stroke:INK,strokeOpacity:.22,strokeWidth:13*u},'h')}
+    {seg(a,b,{stroke:INK,strokeWidth:5*u},'f')}{seg(a,b,{stroke:TEX,strokeWidth:3.2*u},'t')}{seg(a,b,{stroke:INKA(.5),strokeWidth:3.2*u,strokeDasharray:`${.5*u} ${4*u}`},'x')}
+    <text x={hz?f.x:f.x+.22} y={hz?f.y-.22:f.y} textAnchor={hz?'middle':'start'} dominantBaseline="middle" style={{font:`500 ${9.5*u}px var(--font-numeric)`,fill:'rgb(var(--ink-muted))'}}>T1 · {fmm(f.len)}</text>
+    {seg(a,b,{stroke:'transparent',strokeWidth:14*u,style:{pointerEvents:'stroke',cursor:'pointer'},onPointerDown:e=>{e.stopPropagation();onSel();}},'hit')}
+  </svg>;}
+function FreePill8({st,set,lib,xf,onDel}){const f=st.ft8||window.FT8_DEF;const [a,b]=ftEnds(f);const hz=f.dir==='h';
+  const x=xf.x(f.x),y=xf.y(Math.min(a[1],b[1])),yb=xf.y(Math.max(a[1],b[1]));
+  const inline=(lib||[]).slice(0,4);
+  return <Pill7 x={x} y={y} yb={yb}><Name n="Frittstående tekstilvegg" sub={`T1 · ${fmm(f.len)} × 2 500`}></Name>{sep}
+    <div style={{display:'flex',gap:4,padding:'0 4px'}}>{[null,...inline].map(l=><WBMot key={l?l.id:'none'} l={l} on={(f.motif||null)===(l?l.id:null)} onClick={()=>set({...st,ft8:{...f,motif:l?l.id:null}},'Motiv')}></WBMot>)}</div>
+    {sep}<Btn icon="rotate-cw" title="Roter 90° om midten (R)" onClick={()=>set({...st,ft8:window.ft8Rotate(st,f)},'Roter')}></Btn>
+    {sep}<Btn icon="panel-bottom-open" title="Mer i skuffen: mål, sider og fotplater" onClick={()=>window.__toast8&&window.__toast8('Skuffen for frittstående tekstil finnes i appen, ikke i mockupen')}></Btn>
+    <Btn icon="trash-2" title="Fjern (Delete)" onClick={onDel}></Btn></Pill7>;}
+
+Object.assign(window,{Sel8,FreePill8});
+})();
+
+// ---------- skuffens kant: kompakt eller detalj (dra opp eller ned, eller klikk) ----------
+(()=>{function Handle8({det,set}){const ref=React.useRef(null);
+  const down=e=>{const y0=e.clientY;let moved=false;const mv=ev=>{const dy=ev.clientY-y0;if(Math.abs(dy)>20){moved=true;set(dy<0);}};
+    const up=()=>{window.removeEventListener('pointermove',mv);window.removeEventListener('pointerup',up);if(!moved)set(!det);};
+    window.addEventListener('pointermove',mv);window.addEventListener('pointerup',up);};
+  return <div ref={ref} onPointerDown={down} title={det?'Dra ned eller klikk for kompakt skuff':'Dra opp eller klikk for detalj'} role="separator" aria-orientation="horizontal"
+    style={{flex:'none',height:14,display:'grid',placeItems:'center',cursor:'ns-resize',background:'rgb(var(--panel))',borderTop:'1px solid rgb(var(--border-strong))',touchAction:'none'}}>
+    <span style={{display:'flex',alignItems:'center',gap:8,font:'500 10.5px var(--font-ui)',color:'rgb(var(--ink-faint))'}}><i style={{width:36,height:4,borderRadius:2,background:'rgb(var(--ink) / .25)'}}></i>{det?'Detalj':'Kompakt'}</span></div>;}
+window.Handle8=Handle8;})();

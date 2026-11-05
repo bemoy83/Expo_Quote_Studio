@@ -1,0 +1,121 @@
+// v7 · valgt objekt. Små piller for det som er ett grep (dør, møbel, rom, innvendig takdrager) og veggverktøyet som
+// farger vegg som finnes. Vegg, tekstil, dekal, frittstående tekstil og engangsteppe beholder skuffen.
+// Bare det appen (Expo Quote Studio) kan i dag: ingen dupliser, flytt-knapp eller «plasser flere».
+(()=>{
+const OM7=1.3;
+const INK='rgb(var(--ink))',INKA=a=>`rgb(var(--ink) / ${a})`,SURF='rgb(var(--surface))';
+const IC={
+  'arrow-down-up':'<path d="m3 16 4 4 4-4" /> <path d="M7 20V4" /> <path d="m21 8-4-4-4 4" /> <path d="M17 4v16" />',
+  'arrow-left-right':'<path d="M8 3 4 7l4 4" /> <path d="M4 7h16" /> <path d="m16 21 4-4-4-4" /> <path d="M20 17H4" />',
+  'trash-2':'<path d="M3 6h18" /> <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /> <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /> <line x1="10" x2="10" y1="11" y2="17" /> <line x1="14" x2="14" y1="11" y2="17" />',
+  'door-closed':'<path d="M18 20V6a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14" /> <path d="M2 20h20" /> <path d="M14 12v.01" />',
+  'rotate-cw':'<path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" /> <path d="M21 3v5h-5" />',
+  'panel-bottom-open':'<rect width="18" height="18" x="3" y="3" rx="2" /> <path d="M3 15h18" /> <path d="m9 10 3-3 3 3" />',
+  'blinds':'<path d="M3 3h18" /> <path d="M20 7H8" /> <path d="M20 11H8" /> <path d="M10 19h10" /> <path d="M8 15h12" /> <path d="M4 3v14" /> <circle cx="4" cy="19" r="2" />',
+};
+const I7=({n,s=15})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" dangerouslySetInnerHTML={{__html:IC[n]}}></svg>;
+const fmm=v=>Math.round(v*1000).toLocaleString('nb-NO').replace(/ |,/g,' ');
+
+// ---------- felles pille ----------
+const sep=<i style={{flex:'none',width:1,height:20,background:'rgb(var(--border-strong))'}}></i>;
+function Btn({icon,label,title,on,danger,onClick}){
+  return <button type="button" className="mb2" title={title||label} aria-pressed={on==null?undefined:!!on} onClick={onClick}
+    style={{flex:'none',height:30,minWidth:30,padding:label?'0 9px 0 7px':0,display:'inline-flex',alignItems:'center',justifyContent:'center',gap:6,border:0,borderRadius:7,cursor:'pointer',font:'500 12px var(--font-ui)',
+      background:on?'rgb(var(--ink))':'transparent',color:on?'rgb(var(--canvas))':danger?'rgb(var(--ink))':'rgb(var(--ink))'}}>{icon&&<I7 n={icon}></I7>}{label}</button>;}
+function Sw({c,on,title,onClick}){return <button type="button" title={title} aria-pressed={on} onClick={onClick} style={{flex:'none',width:22,height:22,borderRadius:6,border:on?'2px solid rgb(var(--ink))':'1px solid rgb(var(--ink) / .25)',background:c,cursor:'pointer',padding:0,boxShadow:on?'inset 0 0 0 2px rgb(var(--panel))':'none'}}></button>;}
+function Name({n,sub}){return <span style={{flex:'none',display:'flex',flexDirection:'column',gap:1,padding:'0 8px 0 8px',lineHeight:1.15}}><span style={{font:'500 12px var(--font-ui)',whiteSpace:'nowrap'}}>{n}</span>{sub&&<span className="num" style={{font:'400 11px var(--font-numeric)',color:'rgb(var(--ink-muted))',whiteSpace:'nowrap'}}>{sub}</span>}</span>;}
+/** Pillen over (eller under, ved toppen) et punkt i planen. */
+function Pill7({x,y,yb,children,under}){const below=under||y<64;
+  return <div onPointerDown={e=>e.stopPropagation()} style={{position:'absolute',left:x,top:below?yb:y,transform:below?'translate(-50%,12px)':'translate(-50%,calc(-100% - 12px))',zIndex:25,display:'flex',alignItems:'center',gap:2,padding:3,borderRadius:10,background:'rgb(var(--panel))',boxShadow:'var(--pop)',whiteSpace:'nowrap'}}>{children}</div>;}
+
+// ---------- møbel: navn og mål, fargevariant, fjern (MiniBar3 i v5 hadde også flytt, dupliser og «plasser flere») ----------
+window.MiniBar3=function({x,y,P,fam,onVar,onDel}){
+  return <Pill7 x={x} y={y} yb={y}><Name n={P.n} sub={P.dim}></Name>
+    {fam&&fam.vars.length>1&&<>{sep}<div style={{display:'flex',gap:6,padding:'0 6px'}}>{fam.vars.map(v=><Sw key={v.id} c={v.c} on={v.id===P.id} title={v.s} onClick={()=>onVar(v.id)}></Sw>)}</div></>}
+    {sep}<Btn icon="trash-2" title="Fjern (Delete)" onClick={onDel}></Btn></Pill7>;};
+
+// ---------- rom: navn og mål, fjern ----------
+function RoomPill7({b,x,y,yb,onDel}){return <Pill7 x={x} y={y} yb={yb} under={b.y<1e-6}><Name n="Bakrom" sub={`${SM.fmt(b.w)} × ${SM.fmt(b.d)} m`}></Name>{sep}<Btn icon="trash-2" title="Fjern rommet (Delete)" onClick={onDel}></Btn></Pill7>;}
+
+// ---------- dør: dør eller forheng, snu slag, snu hengsel, farge, fjern (alt finnes i appens DoorPanel) ----------
+function DoorPill7({st,set,x,y,yb,onMore}){const b=st.bk;const cur=b.open==='forheng'?'forheng':'dor';const ral=b.dral7||(st.plate&&st.plate.def)||'9010';
+  const up=(o,w)=>set({...st,bk:{...b,...o}},w);
+  return <Pill7 x={x} y={y} yb={yb}>
+    <Name n={cur==='dor'?'Dør med lås':'Forheng'} sub="bakrom · 960"></Name>{sep}
+    <Btn icon="door-closed" label="Dør" on={cur==='dor'} onClick={()=>up({open:'dor'},'Dør')}></Btn>
+    <Btn icon="blinds" label="Forheng" on={cur==='forheng'} onClick={()=>up({open:'forheng'},'Forheng')}></Btn>
+    {cur==='dor'&&<>{sep}
+      <Btn icon="arrow-down-up" title="Snu slagretning" onClick={()=>up({dsw7:!b.dsw7},'Dør')}></Btn>
+      <Btn icon="arrow-left-right" title="Snu hengsel" onClick={()=>up({dhg7:!b.dhg7},'Dør')}></Btn>
+      {sep}<div style={{display:'flex',gap:6,padding:'0 6px'}}>{SM.PLATES.map(p=><Sw key={p.id} c={p.c} on={p.id===ral} title={`Dørblad ${p.n.toLowerCase()} · RAL ${p.id}`} onClick={()=>up({dral7:p.id},'Dørfarge')}></Sw>)}</div></>}
+    {onMore&&<>{sep}<Btn icon="panel-bottom-open" title="Mer i skuffen: veggriss med døren" onClick={onMore}></Btn></>}
+    {sep}<Btn icon="trash-2" title="Fjern døren (Delete)" onClick={()=>up({door:-1},'Fjern dør')}></Btn>
+  </Pill7>;}
+
+// ---------- innvendig takdrager (eksempel, mockupen har ingen modell for dem): lengde, fjern ----------
+const IB7={x0:2.5,x1:6,y:3.5};
+function BeamPill7({x,y,yb,onDel}){return <Pill7 x={x} y={y} yb={yb}><Name n="Takdrager · innvendig" sub={fmm(IB7.x1-IB7.x0)}></Name>{sep}<Btn icon="trash-2" title="Fjern takdrager (Delete)" onClick={onDel}></Btn></Pill7>;}
+
+/** Dør i bakrommet: vegg, modul, hengsel og retninger som planen tegner den. */
+function doorGeo(st,S){const w=S.find(x=>x.kind==='bk'&&x.door!=null);if(!w)return null;const [dx,dy]=dirOf(w);const [nx,ny]=w.swing||[-dy,dx];
+  const a=SM.cut(w,w.door),b=SM.cut(w,w.door+1);const pa=ptAt(w,a),pb=ptAt(w,b);
+  const F7=window.__dr7||{};const h=F7.hg?pb:pa,d=F7.hg?[-dx,-dy]:[dx,dy],n=F7.sw?[-nx,-ny]:[nx,ny];
+  return {w,pa,pb,h,d,n};}
+
+// ---------- overlegg: treff for dør og takdrager, takdrageren selv, og veggverktøyet som farger moduler ----------
+function Sel7({st,S,set,tool,xf,sel7,onSel7}){
+  const svg=React.useRef(null);const [hov,setHov]=React.useState(null);const [dr,setDr]=React.useState(null);
+  const {W,D}=st;const u=1/xf.s;const wT=5*u;const pm=st.pm7||{};
+  const toM=e=>{const p=svg.current.createSVGPoint();p.x=e.clientX;p.y=e.clientY;const q=p.matrixTransform(svg.current.getScreenCTM().inverse());return {x:q.x,y:q.y};};
+  // Moduler som finnes: vegg, indeks, ende-punkter
+  const mods=[];S.forEach(w=>{(w.mods||[]).forEach((on,m)=>{if(!on||w.door===m)return;const a=ptAt(w,SM.cut(w,m)),b=ptAt(w,SM.cut(w,m+1));mods.push({key:w.key+':'+m,w,m,a,b});});});
+  const colOf=k=>pm[k];const wallRal=w=>(st.plate&&st.plate.w&&st.plate.w[w.key])||(st.plate&&st.plate.def)||'9010';
+  const pc=id=>(SM.PLATES.find(p=>p.id===id)||{c:'#ccc'}).c;
+  const pen=window.__pen7||'9010';
+  const range=()=>{if(!dr||!hov)return [];const A=mods.find(m=>m.key===dr),B=mods.find(m=>m.key===hov&&m.w.key===(A&&A.w.key))||A;if(!A)return [];const lo=Math.min(A.m,B.m),hi=Math.max(A.m,B.m);return mods.filter(m=>m.w.key===A.w.key&&m.m>=lo&&m.m<=hi);};
+  const R=range();
+  React.useEffect(()=>{if(!dr)return;const k=e=>{if(e.key==='Escape'){setDr(null);}};window.addEventListener('keydown',k);return ()=>window.removeEventListener('keydown',k);},[dr]);
+  const up=()=>{if(!dr)return;const rs=range();setDr(null);if(!rs.length)return;const n={...pm};rs.forEach(m=>{if(pen===wallRal(m.w))delete n[m.key];else n[m.key]=pen;});set({...st,pm7:n});};
+  const seg=(a,b,p,k)=><line key={k} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} {...p}></line>;
+  const dg=doorGeo(st,S);const ib=st.ib7!==false;
+  const wallTool=tool==='wall';const selTool=tool==='sel';
+  const bw=Math.max(.02,3.6*u),dash=`${6*u} ${3*u}`;
+  return <svg ref={svg} viewBox={`${-OM7} ${-OM7} ${W+2*OM7} ${D+2*OM7}`} preserveAspectRatio="xMidYMid meet"
+    onPointerMove={e=>{if(!dr)return;const q=toM(e);let best=null,bd=1e9;mods.forEach(m=>{const mx=(m.a[0]+m.b[0])/2,my=(m.a[1]+m.b[1])/2;const d=Math.hypot(q.x-mx,q.y-my);if(d<bd){bd=d;best=m;}});if(best)setHov(best.key);}}
+    onPointerUp={up} style={{position:'absolute',inset:0,width:'100%',height:'100%',zIndex:3,pointerEvents:dr?'all':'none',touchAction:'none'}}>
+    {/* modulfarger fra veggverktøyet */}
+    <g pointerEvents="none">{mods.filter(m=>colOf(m.key)).map(m=>seg(m.a,m.b,{stroke:pc(colOf(m.key)),strokeWidth:wT-2*u},m.key))}</g>
+    {/* innvendig takdrager (eksempel) */}
+    {ib&&<g>
+      {sel7==='beam'&&seg([IB7.x0,IB7.y],[IB7.x1,IB7.y],{stroke:INK,strokeOpacity:.22,strokeWidth:bw+8*u},'h')}
+      {seg([IB7.x0,IB7.y],[IB7.x1,IB7.y],{stroke:SURF,strokeWidth:bw},'s')}{seg([IB7.x0,IB7.y],[IB7.x1,IB7.y],{stroke:INKA(.2),strokeWidth:bw},'f')}
+      {seg([IB7.x0,IB7.y-bw/2],[IB7.x1,IB7.y-bw/2],{stroke:INK,strokeWidth:.8*u,strokeDasharray:dash},'e1')}{seg([IB7.x0,IB7.y+bw/2],[IB7.x1,IB7.y+bw/2],{stroke:INK,strokeWidth:.8*u,strokeDasharray:dash},'e2')}
+      {selTool&&seg([IB7.x0,IB7.y],[IB7.x1,IB7.y],{stroke:'transparent',strokeWidth:14*u,style:{pointerEvents:'stroke',cursor:'pointer'},onPointerDown:e=>{e.stopPropagation();onSel7('beam');}},'hit')}
+    </g>}
+    {/* døren: treff i bladets kvartsirkel */}
+    {dg&&selTool&&(()=>{const {h,d,n}=dg;const r=.92;const pts=[h,[h[0]+d[0]*r,h[1]+d[1]*r],[h[0]+d[0]*r+n[0]*r,h[1]+d[1]*r+n[1]*r],[h[0]+n[0]*r,h[1]+n[1]*r]];
+      return <g>{sel7==='door'&&<polygon points={pts.map(p=>p.join(',')).join(' ')} fill={INKA(.06)} stroke={INKA(.35)} strokeWidth={.8*u} strokeDasharray={`${3*u} ${2.5*u}`} pointerEvents="none"></polygon>}
+        <polygon points={pts.map(p=>p.join(',')).join(' ')} fill="transparent" style={{pointerEvents:'all',cursor:'pointer'}} onPointerDown={e=>{e.stopPropagation();onSel7('door');}}></polygon></g>;})()}
+    {/* veggverktøyet: treff på moduler som finnes */}
+    {wallTool&&<g>{mods.map(m=>seg(m.a,m.b,{stroke:'transparent',strokeWidth:12*u,style:{pointerEvents:'stroke',cursor:'crosshair'},
+        onPointerEnter:()=>{if(!dr)setHov(m.key);},onPointerLeave:()=>{if(!dr)setHov(h=>h===m.key?null:h);},
+        onPointerDown:e=>{e.stopPropagation();e.preventDefault();svg.current.setPointerCapture(e.pointerId);setDr(m.key);setHov(m.key);}},'hit'+m.key))}
+      <g pointerEvents="none">
+        {!dr&&hov&&(()=>{const m=mods.find(x=>x.key===hov);if(!m)return null;return <g>{seg(m.a,m.b,{stroke:SURF,strokeOpacity:.85,strokeWidth:3.5*u},'h1')}{seg(m.a,m.b,{stroke:INK,strokeWidth:1.4*u,strokeDasharray:`${4*u} ${3*u}`},'h2')}</g>;})()}
+        {dr&&<g opacity={.4}>{R.map(m=><g key={m.key}>{seg(m.a,m.b,{stroke:INK,strokeWidth:wT},'a')}{seg(m.a,m.b,{stroke:pc(pen),strokeWidth:wT-2*u},'b')}</g>)}</g>}
+        {dr&&R.length>0&&(()=>{const a=R[0].a,b=R[R.length-1].b;const mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2;const hz=Math.abs(a[1]-b[1])<1e-9;const txt=`${R.length} ${R.length===1?'plate':'plater'} · RAL ${pen}`;const w=(txt.length*6.1+14)*u;
+          const ox=hz?0:(mx<W/2?-1:1)*(w/2+8*u),oy=hz?(my<D/2?-1:1)*16*u:0;
+          return <g transform={`translate(${mx+ox} ${my+oy})`}><rect x={-w/2} y={-9*u} width={w} height={18*u} rx={5*u} fill={INK}></rect><text y={3.6*u} textAnchor="middle" style={{font:`600 ${10.5*u}px var(--font-numeric)`,fill:'rgb(var(--canvas))'}}>{txt}</text></g>;})()}
+      </g></g>}
+  </svg>;}
+
+// ---------- veggverktøyets hurtigvalg: fargen er pennens, ikke hele standens ----------
+const QS0=window.QuickStrip;
+window.QuickStrip=function(p){if(p.tool!=='wall'||!window.__setPen7)return QS0(p);const pen=window.__pen7||'9010';const P=SM.PLATES.find(x=>x.id===pen)||SM.PLATES[0];
+  return <>
+    <QName n={P.n} sub={`RAL ${P.id}`}></QName>
+    <div style={{display:'flex',gap:5}}>{SM.PLATES.slice(0,8).map(x=><QSw key={x.id} c={x.c} on={x.id===pen} title={`${x.n} · RAL ${x.id} · klikk en vegg for å farge den`} onClick={()=>window.__setPen7(x.id)}></QSw>)}</div>
+  </>;};
+
+Object.assign(window,{I7,Btn7:Btn,Sw7:Sw,Name7:Name,Pill7,sep7:sep,Sel7,DoorPill7,RoomPill7,BeamPill7,doorGeo7:doorGeo,IB7});
+})();
