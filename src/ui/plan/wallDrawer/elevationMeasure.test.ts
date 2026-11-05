@@ -10,7 +10,7 @@ describe('wall drawing dimensions', () => {
   })
 
   it('a leader text that would run into the one before goes a line up', () => {
-    const it = (x0: number, x1: number, text = 'Dekal') => ({ text, x0, x1, bottom: 1, top: 2 })
+    const it = (x0: number, x1: number) => ({ kind: 'decal' as const, x0, x1, bottom: 1, top: 2 })
     // 1 cm per px: «Dekal» takes about 0,4 m
     expect(leaders([it(0, 0.2), it(2, 3)], 2.54, 0.01).map((l) => l.level)).toEqual([0, 0])
     expect(leaders([it(0.2, 0.4), it(0, 0.2)], 2.54, 0.01).map((l) => [l.x, l.level])).toEqual([

@@ -5,7 +5,7 @@ import type { TextileFill } from '../../domain/types'
 import type { Motif } from '../../persistence/file'
 import { ALU, ALU_POST, BORDER_STRONG, FABRIC, FEET, INK_FAINT } from '../colors'
 import { rules } from '../env'
-import { DIM, TXT } from './drawerText'
+import { TXT } from './drawerText'
 import { Print } from './drawerParts'
 
 /** System wall posts with their feet, at each x. */
@@ -64,22 +64,5 @@ export function TextileFace({ x, y, w, h, m, fill, empty }: { x: number; y: numb
         </text>
       )}
     </>
-  )
-}
-
-/** Height up the left side and width under the drawing, with a tick at each metre when `ticks`. */
-export function Dims({ W, H, height, width, ticks }: { W: number; H: number; height: string; width: string; ticks?: boolean }) {
-  return (
-    <g pointerEvents="none">
-      <line x1={-0.2} y1={0} x2={-0.2} y2={H} stroke={BORDER_STRONG} strokeWidth={0.008} />
-      <text transform={`translate(${-0.26} ${H / 2}) rotate(-90)`} textAnchor="middle" style={DIM}>
-        {height}
-      </text>
-      <line x1={0} y1={H + 0.14} x2={W} y2={H + 0.14} stroke={BORDER_STRONG} strokeWidth={0.008} />
-      {ticks && Array.from({ length: Math.floor(W) + 1 }, (_, i) => <line key={i} x1={i} y1={H + 0.1} x2={i} y2={H + 0.18} stroke={BORDER_STRONG} strokeWidth={0.008} />)}
-      <text x={W / 2} y={H + 0.29} textAnchor="middle" style={DIM}>
-        {width}
-      </text>
-    </g>
   )
 }

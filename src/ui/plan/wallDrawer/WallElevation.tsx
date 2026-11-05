@@ -25,7 +25,7 @@ import { roomLabelSize } from '../roomLabelSize'
 import { useDecorDrag } from './drag'
 import { faceName, type RoomRun } from './face'
 import { ElevationDims } from './ElevationDims'
-import { frame, mergePrints, type ElevationItem } from './elevationMeasure'
+import { elevationItems, frame } from './elevationMeasure'
 import { planScale } from '../planScale'
 import { useElementSize } from '../../useElementSize'
 import type { PaintTool } from './paint'
@@ -80,21 +80,7 @@ export function WallElevation(p: Props) {
   // svg fills, never on the svg, whose size would follow the view box it gets from the measure (a loop in Safari).
   const box = useRef<HTMLDivElement>(null)
   const size = useElementSize(box, true)
-  // Textile and print on this face, for the placement and height rows and the leaders
-  const items: ElevationItem[] = mergePrints([
-    ...tex.map((t) => {
-      const { bottom, height } = textileBox(t, rules)
-      const x0 = spanX(t.from, t.from + t.width)
-      return { text: 'Tekstil', x0, x1: x0 + t.width, bottom, top: bottom + height }
-    }),
-    ...foils
-      .filter((f) => !(f.full && doorModules.has(f.module)))
-      .map((f) => {
-        const c = foilCenter(rules, f)
-        const x0 = spanX(c - f.width / 2, c + f.width / 2)
-        return { text: f.full ? 'Print' : 'Dekal', x0, x1: x0 + f.width, bottom: f.y - f.height / 2, top: f.y + f.height / 2 }
-      }),
-  ])
+  const items = elevationItems(rules, tex, foils, doorModules, u)
   const name = w.room ? 'Romvegg' : label
   const fr = frame(size, L, H, items)
   const sc = planScale(1 / fr.u, {})

@@ -1,14 +1,15 @@
 // Dimensions on the wall drawing (docs/arbeidstegning.md, «Veggrisset»): the heading with where each end points, the
 // module chain and total under the wall, the wall heights to the left, and for textile and print a placement row over
 // the wall, a height row to the right and hairline leaders up to their product type. Chains are drawn as in the plan
-// (DimLayer's Chain); sizes are screen px through the drawing's scale. What is measured: elevationMeasure.ts.
+// (plan/DimChain.tsx); sizes are screen px through the drawing's scale. What is measured: elevationMeasure.ts.
 import type { Wall } from '../../../domain/types'
 import type { FaceSide } from '../../../domain/faces'
 import { rules } from '../../env'
 import { INK_MUTED } from '../../colors'
-import { Chain } from '../layers/DimLayer'
+import { Chain } from '../DimChain'
 import { EM, sizePx, textPx, type PlanScale } from '../planScale'
-import { LEADER_FONT, LEADER_LINE, NEAR, TOTAL, row, type ElevationItem, type Leader } from './elevationMeasure'
+import { DIM_NEAR as NEAR, DIM_TOTAL as TOTAL } from '../dims'
+import { LEADER_FONT, LEADER_LINE, row, type ElevationItem, type Leader } from './elevationMeasure'
 import { elevationHeading } from './face'
 
 /** Heading size, screen px. */
@@ -60,6 +61,25 @@ export function ElevationDims({ w, s, name, L, H, items, leaders, top, width, sc
           })}
         </>
       )}
+    </g>
+  )
+}
+
+/**
+ * Dimensions on the drawing of a free-standing textile wall, as on the wall drawing: the heading, where the feet stand
+ * and the whole length under it, the frame's height to the left.
+ */
+export function FreeElevationDims({ title, W, H, feet, top, sc }: { title: string; W: number; H: number; feet: number[]; top: number; sc: PlanScale }) {
+  const px = (n: number) => sizePx(sc, n)
+  const along = row([0, W], feet)
+  return (
+    <g pointerEvents="none">
+      <text x={W / 2} y={top + px(14)} textAnchor="middle" style={{ font: `500 ${px(HEAD_FONT)}px var(--font-ui)`, fill: INK_MUTED }}>
+        {title}
+      </text>
+      {along.length > 2 && <Chain sc={sc} axis="x" at={H + px(NEAR)} ts={along} dir={1} />}
+      <Chain sc={sc} axis="x" at={H + px(TOTAL)} ts={[0, W]} dir={1} />
+      <Chain sc={sc} axis="y" at={-px(NEAR)} ts={[0, H]} dir={-1} suffix="ramme" />
     </g>
   )
 }

@@ -1,7 +1,8 @@
 import type { LucideIcon } from 'lucide-react'
 import { Minus, Plus } from 'lucide-react'
 import { fmt } from './format'
-import { useCallback, useEffect, useRef, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type Ref } from 'react'
+import type { ToastMsg } from './useToast'
+import { type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type Ref } from 'react'
 
 type BtnProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   icon?: LucideIcon
@@ -228,25 +229,6 @@ export function CommitInput({ value, onCommit, selectOnFocus, ...rest }: CommitI
       {...rest}
     />
   )
-}
-
-export interface ToastMsg {
-  text: string
-  action?: string
-  onAction?: () => void
-}
-
-/** One toast at a time; a new one replaces the old. */
-export function useToast(): [ToastMsg | null, (m: ToastMsg | string) => void] {
-  const [msg, setMsg] = useState<ToastMsg | null>(null)
-  const t = useRef(0)
-  const show = useCallback((m: ToastMsg | string) => {
-    window.clearTimeout(t.current)
-    setMsg(typeof m === 'string' ? { text: m } : m)
-    t.current = window.setTimeout(() => setMsg(null), 3500)
-  }, [])
-  useEffect(() => () => window.clearTimeout(t.current), [])
-  return [msg, show]
 }
 
 export function Toast({ msg }: { msg: ToastMsg | null }) {
