@@ -7,6 +7,7 @@ import { indexCatalog } from '../catalog/lookup';
 import { hiddenPlates } from '../domain/print';
 import type { Variant } from '../domain/types';
 import { builtModules, isStandWall } from '../domain/walls';
+import { doorKey, openingKey } from './lines/doors';
 import type { CalcLine, CalcResult } from './types';
 
 /** A drawn thing with a number: what it is, its id in the variant, and its article. */
@@ -38,7 +39,7 @@ export function lineKey(catalog: Catalog, l: Pick<CalcLine, 'artnr' | 'meta' | '
   if (parts.includes(sys.freeTextile)) return 'quote:tekstil-fri';
   if (parts.includes(sys.textile)) return 'quote:tekstil-vegg';
   const opening = idx.byArtnr.get(l.artnr)?.product.opening;
-  if (opening) return `${l.artnr}|${opening === 'curtain' ? '' : (l.meta ?? '')}`;
+  if (opening) return doorKey(l.artnr, opening === 'curtain' ? undefined : l.meta);
   return l.artnr;
 }
 
@@ -60,11 +61,7 @@ export function positions(v: Variant, lines: CalcLine[], catalog: Catalog): Posi
   const mods = builtModules(v);
   for (const m of mods) if (stand.has(m.wallId) && !m.opening && !hidden.has(m.key)) drawn.push({ kind: 'swap', id: m.key, key: `${sys.plateSwap}-${m.plate}` });
   for (const f of v.foils) if (walls.has(f.wallId)) drawn.push({ kind: 'foil', id: f.id, key: f.full ? sys.foilFull : sys.foil });
-  for (const m of mods) {
-    if (!m.opening) continue;
-    const curtain = idx.byArtnr.get(m.opening.product)?.product.opening === 'curtain';
-    drawn.push({ kind: 'door', id: m.opening.id, key: `${m.opening.product}|${curtain ? '' : `RAL ${m.opening.ral ?? v.defaultPlate}`}` });
-  }
+  for (const m of mods) if (m.opening) drawn.push({ kind: 'door', id: m.opening.id, key: openingKey(idx, v, m.opening) });
   for (const o of v.objects) drawn.push({ kind: 'object', id: o.id, key: o.product });
 
   // One number per article that has a line, first come first numbered
