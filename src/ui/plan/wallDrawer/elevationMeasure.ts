@@ -1,12 +1,16 @@
 // What the wall drawing measures (docs/arbeidstegning.md, «Veggrisset»), pure: the placement row over the wall, the
 // height row to the right, the leader texts over it, and the room each of them takes round the wall, in screen px.
 // The drawing is in metres with y down: the wall top is y = 0, the floor y = H.
+import { chainPoints, DIM_NEAR as NEAR, DIM_TOTAL as TOTAL } from '../dims'
+import { foilCenter } from '../../../domain/decor'
+import { textileBox } from '../../../domain/textile/inFrame'
+import type { Foil, TextileWall } from '../../../domain/types'
+import type { Rules } from '../../../rules/rules'
 import { textPx } from '../planScale'
 
 /** A textile frame or a print on the face, as drawn: x from left to right, heights above the floor, m. */
 export interface ElevationItem {
-  /** Product type for the leader text: «Tekstil», «Dekal», «Print». */
-  text: string
+  kind: 'textile' | 'decal' | 'print'
   x0: number
   x1: number
   bottom: number
@@ -21,30 +25,51 @@ export interface Leader {
   level: number
 }
 
-/** Px: chains as in the plan (DIM_NEAR, DIM_TOTAL), a leader line of text, the heading. */
-export const NEAR = 9
-export const TOTAL = 27
+/** Px: a leader line of text, the numbers of a chain, the heading. Chains stand as in the plan (DIM_NEAR, DIM_TOTAL). */
 export const LEADER_FONT = 10.5
 export const LEADER_LINE = 13
 const NUMBERS = 14
 const HEAD = 22
+
+/** The leader text of each kind: the product type. */
+const LABEL: Record<ElevationItem['kind'], string> = { textile: 'Tekstil', decal: 'Dekal', print: 'Print' }
+
+/**
+ * Textile and print on the face, for the placement and height rows and the leaders. `x` turns an along-wall offset
+ * into x in the drawing (the face is seen from in front, so it may run backwards). A full-plate print on a door module
+ * is part of the door and not measured.
+ */
+export function elevationItems(rules: Rules, tex: TextileWall[], foils: Foil[], doorModules: Set<number>, x: (t: number) => number): ElevationItem[] {
+  const spanX = (a: number, b: number) => Math.min(x(a), x(b))
+  return mergePrints([
+    ...tex.map((t): ElevationItem => {
+      const { bottom, height } = textileBox(t, rules)
+      const x0 = spanX(t.from, t.from + t.width)
+      return { kind: 'textile', x0, x1: x0 + t.width, bottom, top: bottom + height }
+    }),
+    ...foils
+      .filter((f) => !(f.full && doorModules.has(f.module)))
+      .map((f): ElevationItem => {
+        const c = foilCenter(rules, f)
+        const x0 = spanX(c - f.width / 2, c + f.width / 2)
+        return { kind: f.full ? 'print' : 'decal', x0, x1: x0 + f.width, bottom: f.y - f.height / 2, top: f.y + f.height / 2 }
+      }),
+  ])
+}
 
 /** Prints on plates side by side are one print to measure and name: merged into one item across the posts. */
 export function mergePrints(items: ElevationItem[], gap = 0.1): ElevationItem[] {
   const out: ElevationItem[] = []
   for (const it of [...items].sort((a, b) => a.x0 - b.x0)) {
     const last = out[out.length - 1]
-    if (it.text === 'Print' && last?.text === 'Print' && it.x0 - last.x1 < gap && it.bottom === last.bottom && it.top === last.top) last.x1 = Math.max(last.x1, it.x1)
+    if (it.kind === 'print' && last?.kind === 'print' && it.x0 - last.x1 < gap && it.bottom === last.bottom && it.top === last.top) last.x1 = Math.max(last.x1, it.x1)
     else out.push({ ...it })
   }
   return out
 }
 
 /** Positions along a row: both ends and every edge, sorted, without repeats. */
-export function row(ends: [number, number], edges: number[]): number[] {
-  const all = [...ends, ...edges].map((t) => Math.round(t * 1000) / 1000).sort((a, b) => a - b)
-  return all.filter((t, i) => i === 0 || t - all[i - 1] > 1e-6)
-}
+export const row = (ends: [number, number], edges: number[]): number[] => chainPoints([...ends, ...edges])
 
 /**
  * The leader texts, left to right: one per item, from the middle of its top. A text that would run into the one
@@ -57,11 +82,12 @@ export function leaders(items: ElevationItem[], H: number, u: number): Leader[] 
     .map((it) => {
       const x = (it.x0 + it.x1) / 2
       // Text from just right of the line, about 0,6 em a letter
-      const width = (textPx(it.text, LEADER_FONT) + 8) * u
+      const text = LABEL[it.kind]
+      const width = (textPx(text, LEADER_FONT) + 8) * u
       let level = 0
       while (ends[level] !== undefined && ends[level] > x) level++
       ends[level] = x + width
-      return { text: it.text, x, y: H - it.top, level }
+      return { text, x, y: H - it.top, level }
     })
 }
 
