@@ -3,7 +3,7 @@
 // cannot go there); pressed, the phantom shows what the release stores. Each works it out with the same domain call the
 // release makes. Plain functions, like strokePhantoms.tsx.
 import { placeOpening } from '../../../domain/doors'
-import { addFoil } from '../../../domain/decor'
+import { addFoil, foilSpan } from '../../../domain/decor'
 import { faceSegment, felt } from '../../../domain/faces'
 import { addObject, footprintBox } from '../../../domain/objects'
 import { faceOfPoint, freeTextileAt, runNormal } from '../../../domain/textile/free'
@@ -70,10 +70,14 @@ export function motifPreview(sc: PlanScale, v: Variant, hits: PlanHits, q: { x: 
       seg = faceSegment(h.w, h.s, tx.from, tx.from + tx.width, textileOffset(sc))
       band = textileFill(sc)
     } else {
-      const r = addFoil(v, rules, h.w.id, h.module, h.s, motif, ratio)
-      if ('error' in r) return { el: null, hint: r.error }
+      // Aim at the plate; the phantom is the foil the click stores (a decal as wide as its motif fits, or the whole plate)
       const f = felt(rules, h.module)
-      seg = faceSegment(h.w, h.s, f.a, f.b, printOffset(sc))
+      const plate = faceSegment(h.w, h.s, f.a, f.b, printOffset(sc))
+      const r = addFoil(v, rules, h.w.id, h.module, h.s, motif, ratio)
+      if ('error' in r) return { el: <InvalidSeg a={plate[0]} b={plate[1]} width={printBand(sc)} />, hint: r.error }
+      if (!pressed) return { el: <AimSeg a={plate[0]} b={plate[1]} />, hint: null }
+      const [from, to] = foilSpan(rules, r.v.foils.find((x) => x.id === r.id)!)
+      seg = faceSegment(h.w, h.s, from, to, printOffset(sc))
       band = printBand(sc)
     }
   }
