@@ -67,15 +67,14 @@ export function Scene3DPreview({ v, res, motifs }: { v: Variant; res: CalcResult
       const p = props.current
       const onLoad = () => view.current === cur && cur.renderer.render(cur.scene, cur.camera)
       const g = build(p.v, p.res, { motifs: p.motifs, onLoad })
-      if (cur.content) {
-        cur.scene.remove(cur.content)
-        dispose(cur.content)
-      }
+      const old = cur.content
+      if (old) cur.scene.remove(old)
       cur.content = g
       cur.scene.add(g)
       const { width: W, depth: D } = p.v.stand
       setCamera(cur.camera, W, D, HOME)
       cur.renderer.render(cur.scene, cur.camera)
+      if (old) dispose(old)
     }
     const wait = THROTTLE - (performance.now() - last.current)
     if (wait <= 0) {
