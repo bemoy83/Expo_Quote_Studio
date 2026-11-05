@@ -50,8 +50,8 @@ export function totalSides(v: Variant): Side[] {
 
 const horizontal = (w: { from: Point; to: Point }) => Math.abs(w.from[1] - w.to[1]) < EPS
 
-/** Sorted, de-duplicated positions. */
-const uniq = (ts: number[]) => [...new Set(ts.map((t) => Math.round(t * 1000) / 1000))].sort((a, b) => a - b)
+/** Positions along a chain: rounded to the millimetre, sorted, each once. */
+export const chainPoints = (ts: number[]) => [...new Set(ts.map((t) => Math.round(t * 1000) / 1000))].sort((a, b) => a - b)
 
 /**
  * The placement row along a side: the corners, and where an inner wall, a room wall or a free-standing textile wall
@@ -69,7 +69,7 @@ export function placementRow(v: Variant, s: Side): number[] {
     const along = line.axis === 'x' ? 0 : 1
     for (const p of [r.from, r.to]) if (Math.abs(p[k] - line.at) < EPS && p[along] > EPS && p[along] < L - EPS) meets.push(p[along])
   }
-  return meets.length ? uniq([0, L, ...meets]) : []
+  return meets.length ? chainPoints([0, L, ...meets]) : []
 }
 
 /** Whether a wall lies along a side. */
@@ -87,7 +87,7 @@ function moduleChain(w: Wall): number[] {
   const b = Math.max(w.from[k], w.to[k])
   const ts: number[] = []
   for (let t = Math.ceil(a - EPS); t <= b + EPS; t++) ts.push(t)
-  return uniq([a, b, ...ts])
+  return chainPoints([a, b, ...ts])
 }
 
 /** A chain drawn beside a wall or run inside the stand. */
@@ -120,7 +120,7 @@ export function planDims(v: Variant, selection: PlanSelection, compact: boolean)
   const stand = wall && isStandWall(wall) && !compact ? wall : undefined
   const sides = totalSides(v).map((side) => {
     const L = sideLength(v.stand, side)
-    const near = stand && onSide(v, stand, side) ? uniq([0, L, ...moduleChain(stand)]) : placementRow(v, side)
+    const near = stand && onSide(v, stand, side) ? chainPoints([0, L, ...moduleChain(stand)]) : placementRow(v, side)
     return { side, near, total: [0, L] }
   })
   let inner: InnerChain | null = null
@@ -137,7 +137,7 @@ export function planDims(v: Variant, selection: PlanSelection, compact: boolean)
     // On face A: its label (F1 · 3,00 m) stands on face B
     const n = runNormal(free, 'a')
     const dir = (hz ? n[1] : n[0]) < 0 ? -1 : 1
-    inner = { axis: hz ? 'x' : 'y', at: hz ? free.from[1] : free.from[0], dir, ts: uniq([free.from[k], free.to[k]]), clear: 'textile' }
+    inner = { axis: hz ? 'x' : 'y', at: hz ? free.from[1] : free.from[0], dir, ts: chainPoints([free.from[k], free.to[k]]), clear: 'textile' }
   }
   return { sides, inner }
 }
