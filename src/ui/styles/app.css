@@ -2873,3 +2873,46 @@ select.cin {
 .sel-pill .q-name {
   max-width: 220px;
 }
+
+/* The drawer in two heights (docs/pille-og-skuff.md): compact as before, detail about 60 % of the stage (at least
+   420 px, and the plan keeps room as a map over it). The drawing inside fills what is left, so it scales with it. */
+.drawer-frame {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-top: 1px solid rgb(var(--border-strong));
+  background: rgb(var(--panel));
+}
+.drawer-frame.compact {
+  height: 284px;
+}
+.drawer-frame.detail {
+  height: min(max(420px, 60%), calc(100% - 140px));
+}
+.drawer-frame > .wall-drawer {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+  max-height: none;
+  border-top: 0;
+}
+.drawer-handle {
+  flex: none;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font: 500 10.5px var(--font-ui);
+  color: rgb(var(--ink-faint));
+  cursor: ns-resize;
+  touch-action: none;
+  user-select: none;
+}
+.drawer-grip {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgb(var(--ink) / 0.25);
+}

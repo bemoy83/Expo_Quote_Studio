@@ -9,9 +9,9 @@
 // and Bane), the textile brush, motifs, drag and drop from Profilering, and press, hold and release (or Escape) for
 // doors, decals and furniture. After each step it records a hash of the
 // sketch stored in localStorage, the open drawer, what is selected (the plan's data-selection), the cursor, the pen in
-// the dock, where the last piece of furniture stands, the last door's swing and hinge, the selection pill, and the
-// toast. Compare checks all but the toast (and the selection and pill only when both runs have them: older builds do
-// not show them);
+// the dock, where the last piece of furniture stands, the last door's swing and hinge, the selection pill, the drawer's
+// height, and the toast. Compare checks all but the toast (and the selection, pill and height only when both runs have
+// them: older builds do not show them);
 // the toast only depends on timing (it times out), so a toast difference is listed but does not fail.
 import { createServer } from 'node:http'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
@@ -24,7 +24,8 @@ if (cmd === 'compare') {
   let bad = 0
   for (let i = 0; i < Math.max(a.length, b.length); i++) {
     const x = a[i] ?? {}, y = b[i] ?? {}
-    const off = ['step', 'sketch', 'changed', 'drawer', 'sel', 'pill', 'cursor', 'pen', 'last', 'door'].filter((k) => x[k] !== y[k] && ((k !== 'sel' && k !== 'pill') || (x[k] != null && y[k] != null)))
+    const late = ['sel', 'pill', 'frame']
+    const off = ['step', 'sketch', 'changed', 'drawer', 'frame', 'sel', 'pill', 'cursor', 'pen', 'last', 'door'].filter((k) => x[k] !== y[k] && (!late.includes(k) || (x[k] != null && y[k] != null)))
     if (off.length) { bad++; console.log(`AVVIK ${x.step ?? y.step}: ${off.map((k) => `${k} ${x[k]} ≠ ${y[k]}`).join(', ')}`) }
     else if (x.toast !== y.toast) console.log(`(toast ulik i tid) ${x.step}`)
   }
@@ -91,6 +92,7 @@ async function record(step) {
   const toast = await page.evaluate(() => document.querySelector('.toast')?.textContent ?? '')
   const cursor = await page.evaluate(() => document.querySelector('svg.plan-svg').style.cursor)
   const sel = await page.evaluate(() => document.querySelector('svg.plan-svg').getAttribute('data-selection'))
+  const frame = await page.evaluate(() => document.querySelector('.drawer-frame')?.className.replace('drawer-frame', '').trim() ?? null)
   const pill = await page.evaluate(() => (document.querySelector('.sel-pill') ? document.querySelector('.sel-pill').getAttribute('aria-label') : null))
   const pen = await page.evaluate(() => document.querySelector('.dock-tools [aria-pressed=true]')?.getAttribute('aria-label') ?? '')
   // The last piece of furniture, to see where a release put it
@@ -99,7 +101,7 @@ async function record(step) {
   // The last door or curtain: module, swing and hinge as stored (empty = the default)
   const d = JSON.parse(s ?? '{}').varianter?.[0]?.openings?.at(-1)
   const door = d ? `${d.wallId}#${d.module} swing ${d.swing ?? ''} hinge ${d.hinge ?? ''}` : ''
-  out.push({ step: `${name} ${step}`, sketch: hash(s), changed: s !== prev, drawer, sel, pill, toast, cursor, pen, last, door })
+  out.push({ step: `${name} ${step}`, sketch: hash(s), changed: s !== prev, drawer, frame, sel, pill, toast, cursor, pen, last, door })
   prev = s
 }
 const close = () => page.close()
@@ -290,6 +292,18 @@ const mer = page.locator('.sel-pill [aria-label="Mer"]'); if (await mer.count())
 await key('Escape'); await page.evaluate(() => { window.__pillSeen = false })
 await dbl(6, 3); await record(`pille dobbeltklikk vegg, pillen sett ${await page.evaluate(() => window.__pillSeen)}`)
 await close()
+// The drawer in two heights: Mer and a double click open it in detail; the edge switches by a click or a drag
+await open('09-dekor')
+await tool('Velg'); await dbl(2.5, 0); await record('skuff dobbeltklikk åpner i detalj')
+const edge = page.locator('.drawer-handle')
+if (await edge.count()) await edge.click(); await page.waitForTimeout(250); await record('skuff klikk kanten gir kompakt')
+if (await edge.count()) { const h = await edge.boundingBox(); await page.mouse.move(h.x + h.width / 2, h.y + 7); await page.mouse.down(); await page.mouse.move(h.x + h.width / 2, h.y - 60, { steps: 5 }); await page.mouse.up() }
+await page.waitForTimeout(250); await record('skuff dra kanten opp gir detalj')
+await press(0, 2.5); await record('skuff klikk annen vegg i kartet bytter, samme høyde')
+await key('Escape'); await press(2.5, 0); await page.waitForTimeout(300)
+const mer2 = page.locator('.sel-pill [aria-label="Mer"]'); if (await mer2.count()) await mer2.click(); await page.waitForTimeout(250); await record('skuff Mer åpner i detalj')
+await close()
+
 // Turning (R and the pill) and swapping a variant of furniture; turning a frittstående tekstilvegg
 await open('10-mobler-utstyr')
 await tool('Velg'); await press(3, 2.2); await key('r'); await record('tast R roterer møbel')

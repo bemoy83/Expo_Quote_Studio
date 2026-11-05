@@ -21,6 +21,7 @@ import { hint, HINT_3D } from './hints'
 import { findMotif, motifLibrary, readMotif } from './motifs'
 import { Rail } from './panel/Rail'
 import { PickingPage } from './picking/PickingPage'
+import { DrawerHandle } from './plan/DrawerHandle'
 import { Drawers } from './plan/Drawers'
 import { PlanPreview } from './plan/PlanPreview'
 import { PlanView } from './plan/PlanView'
@@ -365,18 +366,21 @@ export default function App() {
                 </ToolDock>
               </div>
               {tool === 'select' && drawerOpen && (
-                <Drawers
-                  v={v}
-                  res={res}
-                  view={view}
-                  selection={selection}
-                  onSelect={setSelection}
-                  onEdit={onEdit}
-                  onCheckpoint={onCheckpoint}
-                  onToast={showToast}
-                  motifs={motifs}
-                  onUpload={(f) => void uploadMotif(f, false)}
-                />
+                <div className={`drawer-frame ${drawer}`}>
+                  <DrawerHandle detail={drawer === 'detail'} onChange={(d) => setDrawer(d ? 'detail' : 'compact')} />
+                  <Drawers
+                    v={v}
+                    res={res}
+                    view={view}
+                    selection={selection}
+                    onSelect={setSelection}
+                    onEdit={onEdit}
+                    onCheckpoint={onCheckpoint}
+                    onToast={showToast}
+                    motifs={motifs}
+                    onUpload={(f) => void uploadMotif(f, false)}
+                  />
+                </div>
               )}
             </main>
             {layout.calc && <CalcPanel res={res} name={v.name} onHover={setHighlight} onQuote={() => setPage('tilbud')} />}
