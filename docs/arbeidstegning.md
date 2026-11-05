@@ -132,6 +132,12 @@ Takdragere tegnes stiplet, som på hallkartene.
 - **Full farge med fuger:** når gulvverktøyet er aktivt eller `highlight === 'floor'`. Arbeidsordre filtrert på gulv
   (`groups`) viser også full farge.
 - Bruk den eksisterende `dim`-mekanismen der det går. Dette kommer i tillegg, ikke i stedet.
+- **Fuger** (5.11.2026): hårstrek på 1 px (`JOINT_PX`, 1,5 px på dokumentene) i en sterk nyanse av gulvets egen
+  farge (`jointColor`). Bare der to fliser eller baner møtes, ikke langs gulvets kant: kanten tegnes av vegger og
+  standens omriss. Fugen er tynnere enn alle blekkstreker, så konstruksjonen ligger øverst. 3D som før.
+- **Banemerke** på engangsteppe: nummer 12 px og pil 40 px (kortere på korte baner) i skjermpiksler (`LANE_MARK`).
+- **Valgt bane eller fyll:** svak blekktone med stiplet blekkomriss og lys kant under, som siktet.
+- **Kappet stripe** (svinn) bruker planens skravur (`HATCH`). Halvmeterlinjene under gulvpenselen er prikket blekk 0,5 px.
 
 ### Rom · `layers/RoomLayer.tsx`
 

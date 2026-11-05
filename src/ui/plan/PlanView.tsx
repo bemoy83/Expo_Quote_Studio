@@ -34,7 +34,7 @@ import { SnapDots } from './layers/Previews'
 import { RoomLayer } from './layers/RoomLayer'
 import { TextileLayer } from './layers/TextileLayer'
 import { WallLayer } from './layers/WallLayer'
-import { linePx, planScale, PlanScaleContext, usePxPerMetre } from './planScale'
+import { linePx, planScale, PlanScaleContext, sizePx, usePxPerMetre } from './planScale'
 import { DIMMED, GRID, GRID_FINE, GRID_PX, PLAN_MARGIN } from './planStyle'
 import { eraseTargetAt, type Erasing } from './pointer/erase'
 import { floorBrush } from './pointer/floorBrush'
@@ -219,14 +219,16 @@ export function PlanView(p: Props) {
 
       {/* Drawing grids: every half metre while painting floor, snap dots for straight runs */}
       <g pointerEvents="none">
-        {floorTool &&
-          Array.from({ length: Math.round(W / CELL) - 1 }, (_, i) => (
-            <line key={`hx${i}`} x1={(i + 1) * CELL} y1={0} x2={(i + 1) * CELL} y2={D} stroke={GRID_FINE} strokeWidth={0.008} strokeDasharray=".04 .04" />
-          ))}
-        {floorTool &&
-          Array.from({ length: Math.round(D / CELL) - 1 }, (_, j) => (
-            <line key={`hy${j}`} x1={0} y1={(j + 1) * CELL} x2={W} y2={(j + 1) * CELL} stroke={GRID_FINE} strokeWidth={0.008} strokeDasharray=".04 .04" />
-          ))}
+        {floorTool && (
+          <g stroke={GRID_FINE.stroke} strokeWidth={linePx(scale, GRID_FINE.width)} strokeDasharray={`${sizePx(scale, GRID_FINE.dash)} ${sizePx(scale, GRID_FINE.gap)}`}>
+            {Array.from({ length: Math.round(W / CELL) - 1 }, (_, i) => (
+              <line key={`hx${i}`} x1={(i + 1) * CELL} y1={0} x2={(i + 1) * CELL} y2={D} />
+            ))}
+            {Array.from({ length: Math.round(D / CELL) - 1 }, (_, j) => (
+              <line key={`hy${j}`} x1={0} y1={(j + 1) * CELL} x2={W} y2={(j + 1) * CELL} />
+            ))}
+          </g>
+        )}
         {dotStep && <SnapDots W={W} D={D} step={dotStep} />}
       </g>
 
