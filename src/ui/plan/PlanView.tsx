@@ -3,7 +3,7 @@
 // draw order never decides what can be clicked. Each product's layer is drawn in plan/layers/ (FloorLayer, WallLayer,
 // TextileLayer, BeamLayer, ObjectLayer, RoomLayer, Labels, PreviewLayer), and the pointer handling lives in plan/pointer/
 // (usePlanPointer, one file per drag kind). This file puts them together with the cursor.
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import { canMoveWall } from '../../domain/edit'
 import type { FloorBrushSize } from '../../domain/floor/brush'
@@ -43,7 +43,7 @@ import { pens } from './pointer/pens'
 import { usePlanPointer } from './pointer/usePlanPointer'
 import { pillAnchor, type PillPlace } from './pillAnchor'
 import { SelectionPill } from './SelectionPill'
-import { CLICK_MS, selectionKey, type PlanSelection } from './selection'
+import { selectionKey, type PlanSelection } from './selection'
 
 interface Props {
   v: Variant
@@ -180,18 +180,8 @@ export function PlanView(p: Props) {
 
   const totals = useMemo(() => new Set(totalSides(v)), [v])
 
-  // The selection pill (docs/pille-og-skuff.md): CLICK_MS after a click selects, so a double click goes straight to
-  // the drawer; at once when the pill itself selects (a frame from «Tekstilvegg»)
-  const selKey = selectionKey(selection)
-  const [pillKey, setPillKey] = useState('')
-  const pillNow = useRef(false)
-  useEffect(() => {
-    const now = pillNow.current
-    pillNow.current = false
-    const t = window.setTimeout(() => setPillKey(selKey), selKey && !now ? CLICK_MS : 0)
-    return () => window.clearTimeout(t)
-  }, [selKey])
-  const pillShown = !p.mini && !!p.onOpenDrawer && tool === 'select' && !dragging && !p.drawerOpen && !!selKey && pillKey === selKey
+  // The selection pill (docs/pille-og-skuff.md): as soon as a click selects
+  const pillShown = !p.mini && !!p.onOpenDrawer && tool === 'select' && !dragging && !p.drawerOpen && !!selectionKey(selection)
   const pillPlace = pillShown ? placeOf(svgEl, pillAnchor(v, selection)) : null
 
   const sideText = (s: Side) => {
@@ -298,10 +288,7 @@ export function PlanView(p: Props) {
         selection={selection}
         motifs={p.motifs ?? []}
         onEdit={p.onEdit}
-        onSelect={(s) => {
-          pillNow.current = true
-          p.onSelect(s)
-        }}
+        onSelect={p.onSelect}
         onOpenDrawer={p.onOpenDrawer!}
         onToast={p.onToast}
       />

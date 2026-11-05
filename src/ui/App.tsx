@@ -77,14 +77,14 @@ export default function App() {
   }, [layout])
   const [highlight, setHighlight] = useState<Highlight>(null)
   const [selection, setSelectionRaw] = useState<PlanSelection>({})
-  /** The drawer has its own state: a plain click only selects; Mer and a double click open it (docs/pille-og-skuff.md). */
+  /** The drawer has its own state: a plain click only selects; Mer in the pill opens it (docs/pille-og-skuff.md). */
   const [drawer, setDrawer] = useState<DrawerState>('closed')
   /** Select; the drawer stays open while the selection has one (another wall, a frame on it), else it closes. */
   const setSelection = useCallback((s: PlanSelection) => {
     setSelectionRaw(s)
     if (!hasDrawer(s)) setDrawer('closed')
   }, [])
-  /** Select and open the drawer in detail: a double click, a frame chosen in the panel, a click in 3D. */
+  /** Select and open the drawer in detail: Mer in the pill, a frame chosen in the panel, a click in 3D. */
   const openDrawer = useCallback((s: PlanSelection) => {
     setSelectionRaw(s)
     setDrawer(hasDrawer(s) ? 'detail' : 'closed')

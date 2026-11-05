@@ -1,6 +1,6 @@
 // The selection pill (docs/pille-og-skuff.md): quick grips on what is selected in Velg, over the object on the plan.
 // One build for all: name and size · colour or motif · rotate (where it makes sense) · Mer (the drawer) · remove.
-// Shown CLICK_MS after a click that selects, so a double click goes straight to the drawer; hidden while dragging,
+// Shown as soon as a click selects; hidden while dragging,
 // while the drawer is open, with a pen in hand and in 3D (PlanView decides). Where it stands: pillAnchor.ts.
 import { ArrowLeftRight, Blinds, DoorClosed, FlipHorizontal2, Image as ImageIcon, MoveHorizontal, PanelBottomOpen, RotateCw, Trash2 } from 'lucide-react'
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'

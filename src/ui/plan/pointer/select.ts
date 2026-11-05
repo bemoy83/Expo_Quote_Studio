@@ -45,10 +45,3 @@ export function startSelect(c: PointerCtx, q: P): Drag {
   if (lt) return { kind: 'click', select: lt.fill ? { fill: lt.fill } : { lane: { i: lt.i, j: lt.j } } }
   return { kind: 'click', select: {} }
 }
-
-/** What a click here selects (a double click opens its drawer). */
-export function selectAt(c: PointerCtx, q: P): PlanSelection {
-  const d = startSelect(c, q)
-  if (d.kind === 'beam') return { beamId: d.id }
-  return 'select' in d ? (d.select ?? {}) : {}
-}

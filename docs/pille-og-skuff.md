@@ -32,8 +32,9 @@ Brukeren skal gjøre det meste rett på tegneflaten. **Pillen** gir rask tilgang
 
 | Hva man gjør | Hva som skjer |
 | --- | --- |
-| Klikk på et objekt | Objektet velges og pillen vises. Skuffen åpnes **ikke** |
-| Nytt klikk på samme objekt | Valget fjernes og pillen lukkes |
+| Klikk på et objekt | Objektet velges og pillen vises med en gang. Skuffen åpnes **ikke** |
+| Nytt klikk på samme objekt | Ingenting endres. Valget og pillen blir stående |
+| Dobbeltklikk | Er bare to klikk og gjør det samme som ett. Planen har ikke dobbeltklikk (Bjørn 5.11.2026, se under) |
 | Klikk på et annet objekt | Valget og pillen bytter |
 | Klikk på tomt gulv eller utenfor standen | Valget fjernes |
 | Dra et valgt objekt | Flytter som i dag. Et drag fjerner aldri valget. Et klikk er et trykk og slipp uten flytting (samme grense som `moved` i dra-typene) |
@@ -95,17 +96,11 @@ samme produkt og beholder plass og `rot`. Er den nye varianten større, kjøres 
 
 ### Når den åpnes
 
-- **Mer** i pillen, eller **dobbeltklikk** på objektet.
-- **Dobbeltklikk må ikke få pillen til å blinke** (Bjørn 5.11.2026). Et dobbeltklikk er to klikk. Uten et grep ville
-  det første vist pillen og det andre lukket den (klikkreglene) før skuffen åpnes. Derfor:
-  - Pillen vises med en **liten forsinkelse på 200 ms** etter et klikk som velger. Kommer et nytt klikk innen da, vises
-    den ikke.
-  - Et nytt klikk på det samme objektet lukker pillen først **etter 200 ms**, så et dobbeltklikk ikke lukker den
-    først.
-  - `dblclick` åpner skuffen i detalj og kansellerer det som venter. Var pillen allerede synlig, skjules den uten
-    animasjon idet skuffen kommer.
-  - Til sammen: enkeltklikk gir pillen etter 200 ms, og dobbeltklikk gir skuffen uten at pillen er innom. Verdien 200
-    ms legges som en konstant ved klikkreglene.
+- **Mer** i pillen.
+- **Ikke dobbeltklikk** (Bjørn 5.11.2026). Første utgave hadde dobbeltklikk. For at pillen ikke skulle blinke, ventet
+  den da 200 ms etter klikket, og et nytt klikk slapp valget først etter 200 ms. I bruk føltes pillen treg, og den
+  kom fram selv ved dobbeltklikk. Dobbeltklikk er derfor fjernet. Pillen vises med en gang, et nytt klikk på det samme
+  beholder valget, og det finnes ingen ventetid i klikkreglene.
 - Skuffen åpnes ikke lenger av et vanlig valg. `Drawers.tsx` må styres av en egen tilstand, for eksempel
   `drawer: 'closed' | 'compact' | 'detail'` i `App.tsx`, ikke av `selection` alene.
 
@@ -114,7 +109,7 @@ samme produkt og beholder plass og `rot`. Er den nye varianten større, kjøres 
 | Høyde | Verdi | Når |
 | --- | --- | --- |
 | Kompakt | 270 px (som i dag) | Når man drar kanten ned |
-| Detalj | omtrent 60 % av tegneflaten, minst 420 px | **Mer** og dobbeltklikk åpner alltid her |
+| Detalj | omtrent 60 % av tegneflaten, minst 420 px | **Mer** åpner alltid her |
 
 - **Kanten øverst på skuffen** (14 px) kan dras opp eller ned, eller klikkes for å bytte. Den viser «Detalj» eller
   «Kompakt». Sist brukte høyde kan huskes i `localStorage`, men **Mer** åpner alltid i detalj.
@@ -154,9 +149,9 @@ I dag hopper `paintWalls` over moduler som finnes, så et klikk med veggverktøy
   `setObjectProduct`.
 - **Pekerbeviset** (`scripts/pointer-replay.mjs`): `drawer` endrer seg for alle steg der et klikk før åpnet skuffen.
   Det er ventet og forklares i PR-en. Nye steg:
-  - klikk, klikk igjen og klikk utenfor på vegg, møbel og frittstående tekstil
+  - klikk, klikk igjen (beholder valget) og klikk utenfor på vegg, møbel og frittstående tekstil
   - Mer: skuffen åpnes i detalj
-  - dobbeltklikk på en vegg: skuffen åpnes i detalj, og pillen er aldri synlig underveis
+  - dobbeltklikk på en vegg: velger bare, og pillen vises
   - mens skuffen er åpen: klikk på en annen vegg (bytter), klikk på et møbel (lukker og viser pillen), klikk på tomt
     gulv (lukker)
   - veggverktøyet: klikk på en plate som finnes, og dra over tre plater
@@ -166,8 +161,8 @@ I dag hopper `paintWalls` over moduler som finnes, så et klikk med veggverktøy
 
 Én PR per punkt. Kjør `scripts/shots.mjs` og pekerbeviset mot `main`.
 
-1. **Valg uten skuff:** klikkreglene, og egen tilstand for skuffen (`drawer`). Skuffen åpnes bare med dobbeltklikk
-   inntil pillen finnes.
+1. **Valg uten skuff:** klikkreglene, og egen tilstand for skuffen (`drawer`). Skuffen åpnes fra panelet
+   inntil pillen finnes (dobbeltklikk var her først, og ble fjernet etter PR 5).
 2. **Pillen:** komponent og plassering, innhold for vegg, tekstil, dekal, dør, rom, takdrager og engangsteppe, og
    **Mer**.
 3. **Møbel og frittstående tekstil:** pille med variant (`setObjectProduct`) og rotering (`rot`,

@@ -33,13 +33,8 @@ export interface PlanSelection {
 }
 
 /** How the drawer under the plan stands: closed, or open in one of its two heights (docs/pille-og-skuff.md). A plain
- *  click only selects; Mer and a double click open it. */
+ *  click only selects; Mer in the pill opens it. */
 export type DrawerState = 'closed' | 'compact' | 'detail'
-
-/** A plain click selects; a second click on the same object within this time is a double click (opens the drawer),
- *  and a second click after it lets go of the selection only once this time has passed, so a double click does not
- *  drop it first. */
-export const CLICK_MS = 200
 
 /** The object a selection is about, so a second click on it can be told apart: the face shown does not count. */
 export function selectionKey(s: PlanSelection): string {
