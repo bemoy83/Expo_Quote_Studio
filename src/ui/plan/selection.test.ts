@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { parse } from '../../persistence/file'
 import type { Variant } from '../../domain/types'
-import { deleteSelection, doorWall } from './selection'
+import { deleteSelection, doorWall, hasDrawer, selectionKey } from './selection'
 
 const TEXTS = import.meta.glob<string>('../../test/fixtures/*.json', { query: '?raw', import: 'default', eager: true })
 const variants: Variant[] = Object.values(TEXTS).flatMap((t) => {
@@ -58,5 +58,24 @@ describe('Delete on the selection', () => {
     expect(deleteSelection(room.v, { roomId: room.x.id })!.edit(room.v).rooms.map((r) => r.id)).not.toContain(room.x.id)
     const beam = first((v) => v.innerBeams?.[0])
     expect(deleteSelection(beam.v, { beamId: beam.x.id })!.edit(beam.v).innerBeams?.map((b) => b.id) ?? []).not.toContain(beam.x.id)
+  })
+})
+
+describe('Selection key and drawer', () => {
+  it('names the object, not the face shown', () => {
+    expect(selectionKey({ wallId: 'w', side: 1 })).toBe(selectionKey({ wallId: 'w', side: -1 }))
+    expect(selectionKey({ wallId: 'w', textileId: 't' })).not.toBe(selectionKey({ wallId: 'w' }))
+    expect(selectionKey({})).toBe('')
+  })
+
+  it('walls, doors, free textile walls and engangsteppe in the plan have a drawer; furniture, rooms and beams not', () => {
+    expect(hasDrawer({ wallId: 'w' })).toBe(true)
+    expect(hasDrawer({ openingId: 'd' })).toBe(true)
+    expect(hasDrawer({ freeTextileId: 'f' })).toBe(true)
+    expect(hasDrawer({ fill: 'f' })).toBe(true)
+    expect(hasDrawer({ fill: 'f' }, '3d')).toBe(false)
+    expect(hasDrawer({ objectId: 'o' })).toBe(false)
+    expect(hasDrawer({ roomId: 'r' })).toBe(false)
+    expect(hasDrawer({ beamId: 'b' })).toBe(false)
   })
 })

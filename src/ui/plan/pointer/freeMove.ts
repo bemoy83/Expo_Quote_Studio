@@ -12,6 +12,7 @@ export const freeMove: DragHandlers<'freeMove'> = {
     if (next) c.onEdit(() => next, false)
   },
   up(c, d) {
-    c.onSelect(d.select)
+    if (d.moved) c.onSelect(d.select)
+    else c.clickSelect(d.select)
   },
 }

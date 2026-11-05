@@ -22,8 +22,9 @@ export interface P {
 }
 
 /**
- * A press in Velg selects on release (`select`), so the wall drawer does not open, and shrink the plan, mid-drag.
- * A wall dragged away is not selected; furniture and rooms are.
+ * A press in Velg selects on release (`select`). A plain click goes through `clickSelect` (click.ts: a second click
+ * lets go, a double click opens the drawer); a drag never lets go of the selection. A wall dragged away is not
+ * selected; furniture and rooms are.
  */
 export type Drag =
   /** A straight stroke on the wall grid. `beamId`: Tøm pressed on a drawn takdrager, so a click takes all of it. */
@@ -71,6 +72,12 @@ export interface PointerCtx {
   onCheckpoint: () => void
   onToast: (text: string) => void
   onSelect: (s: PlanSelection) => void
+  /** The drawer is open: a click on the selected object keeps it (the drawer follows the selection). */
+  drawerOpen?: boolean
+  /** Double click: select this and open its drawer in detail. */
+  onOpenDrawer?: (s: PlanSelection) => void
+  /** A plain click (press and release without moving) in Velg: the click rules in click.ts. Owned by the hook. */
+  clickSelect: (s: PlanSelection) => void
   setStroke: Dispatch<SetStateAction<[Point, Point] | null>>
   setTextileStroke: Dispatch<SetStateAction<TextileLine | null>>
   setRollPending: Dispatch<SetStateAction<FloorAction | null>>

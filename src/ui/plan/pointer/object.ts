@@ -24,7 +24,8 @@ export const object: DragHandlers<'object'> = {
     c.onEdit((x) => moveObject(x, place, d.id, q.x - d.dx, q.y - d.dy), false)
   },
   up(c, d) {
-    if (d.moved) dropObject(c.v, d.id, d.start, c.onEdit, c.onToast)
+    if (!d.moved) return c.clickSelect(d.select)
+    dropObject(c.v, d.id, d.start, c.onEdit, c.onToast)
     c.onSelect(d.select)
   },
 }
