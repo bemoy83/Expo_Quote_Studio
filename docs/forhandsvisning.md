@@ -85,7 +85,7 @@ Venstre kolonne er det appen gjør i dag (`PlanView.tsx`, «Interaction preview�
 | Møbel (ingen i dag) | Ingenting før klikket | Stiplet fotavtrykk der møbelet **faktisk** havner (`findSpot` i `domain/objects.ts` flytter det bort fra vegger) | Fotavtrykket i produktets farge med blekkant ved trykk |
 | Dra fra hyllen (`dropHover`) | Som `FacePreview` | | Fantom som tekstil eller dekal over |
 
-Tøm (`erase`) er uendret. Den følger allerede samme grammatikk, med dempet og skravert det som skal bort.
+Tøm (`erase`) følger samme grammatikk, med dempet og skravert det som skal bort. Skravuren er den samme som for ugyldig (`HATCH` i `planStyle.ts`, tegnet av `HatchPattern`), i skjermpiksler, så den ser lik ut ved all zoom.
 
 ### Ugyldig
 
