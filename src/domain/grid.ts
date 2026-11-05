@@ -41,6 +41,12 @@ export function pointAlong(w: Wall, t: number): Point {
   return [w.from[0] + dx * t, w.from[1] + dy * t];
 }
 
+/** How far along the wall a point lies (its foot on the wall), kept within the wall. */
+export function offsetAlong(w: Wall, q: { x: number; y: number }): number {
+  const [dx, dy] = wallDirection(w);
+  return Math.max(0, Math.min(wallLength(w), (q.x - w.from[0]) * dx + (q.y - w.from[1]) * dy));
+}
+
 /** Runs [start, end) of consecutive indices below n where keep(i) holds. */
 export function runs(n: number, keep: (i: number) => boolean): [number, number][] {
   const out: [number, number][] = [];

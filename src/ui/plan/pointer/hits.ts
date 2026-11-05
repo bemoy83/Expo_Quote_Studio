@@ -4,7 +4,7 @@ import { innerBeamAt } from '../../../domain/innerBeams'
 import { footprintBox } from '../../../domain/objects'
 import { roomSideAt } from '../../../domain/rooms'
 import { faceAt } from '../../../domain/faces'
-import { wallDirection, wallLength } from '../../../domain/grid'
+import { offsetAlong, wallLength } from '../../../domain/grid'
 import type { Room, Variant } from '../../../domain/types'
 import type { BuiltModule } from '../../../domain/walls'
 import { productOf } from '../../env'
@@ -37,9 +37,8 @@ export function planHits(v: Variant, mods: BuiltModule[], selection: PlanSelecti
     const m = moduleAt(q, within)
     if (!m) return null
     const w = v.walls.find((x) => x.id === m.wallId)!
-    const [dx, dy] = wallDirection(w)
     const L = wallLength(w)
-    const t = Math.max(0, Math.min(L, (q.x - w.from[0]) * dx + (q.y - w.from[1]) * dy))
+    const t = offsetAlong(w, q)
     return { w, s: faceAt(v, w, q), t, module: Math.min(Math.floor(t), L - 1) }
   }
 

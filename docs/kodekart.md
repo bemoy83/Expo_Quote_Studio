@@ -16,8 +16,9 @@ Alt avledes fra modellen (`Variant` i `src/domain/types.ts`). Rekkefølgen er al
 | Stykkliste | `src/foga/` | Foga-strukturen og BOM, grunnlaget for plukklisten |
 | Pris | `src/pricing/` | Prismodell og tidsbruk |
 | Plan | `src/ui/plan/PlanView.tsx`, `layers/`, `pointer/` | `PlanView.tsx` setter sammen lagene, markøren og forhåndsvisningene. Hvert produkt tegnes i sitt lag i `layers/`. Klikk og dra: `pointer/usePlanPointer.ts` velger dra-type ved trykk (pennen i hånden, eller for Velg det som ligger under pekeren, `pointer/select.ts`), og hver dra-type har sin fil i `pointer/` (`stroke`, `floor`, `roll`, `carpetFill`, `object`, `wall`, `beam`, `room`, `textile`, `freeMove`, `click`), pluss klikkpensler (`opening`, `decor`). Tøm har ingen pensel: `pointer/erase.ts` finner det øverste under pekeren (grafikk før vegg, dør før vegg, møbel før gulv, hele rommet) og visker det; hvert lag demper og skraverer det som skal bort (`layers/erasing.ts`, `ErasingProvider.tsx`); vegg og takdrager går som strek via `stroke`. Treff under pekeren i `pointer/hits.ts`. Felles farger og strektykkelser ligger i `planStyle.ts`. `planScale.ts` gir lagene skalaen på skjermen (`u`, meter per skjermpiksel, `lw` 1,5 på dokumentene og detaljnivå `full`/`compact` under 55 px/m), så strekbredder kan oppgis i skjermpiksler (`linePx`) og tekstbredder anslås (`textPx`). Størrelsen på skjermen måles med `ui/useElementSize.ts`, også for veggrisset og 3D-bildet på tilbudet. Målkjedene: hva som måles i `dims.ts` (totaler, plasseringsrad, modulkjede for valgt vegg, med tester), lagt ut av `layers/DimLayer.tsx`; selve kjeden tegnes av `DimChain.tsx`, som veggrisset også bruker. Tegnforklaring og tegningshode i gangfeltet foran: `layers/Legend.tsx`. Posisjonsnummer (bare i miniplanen på Tilbud og Arbeidsordre, aldri på tegneflaten): `layers/PosLayer.tsx`, numrene fra `calc/positions.ts`, valget i `selection.ts`, og miniplanen for Tilbud og Arbeidsordre i `PlanPreview.tsx` |
-| 3D | `src/ui/scene3d/build.ts`, `build/`, `Scene3D.tsx` | `build.ts` kjører én del per produkt i `build/` på felles kontekst (`build/context.ts`: materialer per lag, farger, `along`); motivteksturer i `build/motifs.ts`. Dra i 3D: `Scene3D.tsx`. Bildet øverst på tilbudet: `QuoteRender.tsx` (tegnet én gang til `<img>` så det skrives ut, numre på tekstilveggene). Lyset (himmel og sol med skygge) er felles for alle tre i `lights.ts` |
-| Skuffer og panel | `src/ui/plan/*Drawer.tsx`, `src/ui/panel/Rail.tsx` | Innstillinger per produkt. Veggskuffen: `WallDrawer.tsx` velger hva som vises, delene ligger i `plan/wallDrawer/` (se Vegger) |
+| 3D | `src/ui/scene3d/build.ts`, `build/`, `Scene3D.tsx`, `pointer/` | `build.ts` kjører én del per produkt i `build/` på felles kontekst (`build/context.ts`: materialer per lag, farger, `along`); motivteksturer i `build/motifs.ts`. Det de tre 3D-bildene deler (renderer, størrelse, bytte av scene der den nye tegnes før den gamle kastes, så shadere og teksturer beholdes): `view.ts`. 3D-visningen `Scene3D.tsx` setter sammen kamera og peker: hva som ligger under pekeren og hvor på gulv eller veggflate i `pointer/hits.ts`, hva et trykk drar og hva et klikk velger i `pointer/drag.ts`, slipp fra Profilering i `drop.ts`, og det som tegnes over scenen (slippflate, lyskant på romside, demping ved hover i kalkylen) i `overlays.ts`. Miniatyren i planen: `Scene3DPreview.tsx`. Bildet øverst på tilbudet: `QuoteRender.tsx` (tegnet én gang til `<img>` så det skrives ut, numre på tekstilveggene). Lyset (himmel og sol med skygge) er felles for alle tre i `lights.ts` |
+| Skjermen | `src/ui/App.tsx` | Setter sammen sidene og Standskisse. Verktøy, penn og penninnstillinger: `useTools.ts`. Tastatur: `useShortcuts.ts`, og hva Delete fjerner i `deleteSelection` (`plan/selection.ts`, med test). Båndet med varianter og nøkkeltall: `shell/SketchBand.tsx`. Skuffene for det som er valgt: `plan/Drawers.tsx`. Kalkylen per variant, bufret: `calcCache.ts` |
+| Skuffer og panel | `src/ui/plan/*Drawer.tsx`, `src/ui/panel/Rail.tsx` | Innstillinger per produkt. Veggskuffen: `WallDrawer.tsx` velger hva som vises, delene ligger i `plan/wallDrawer/` (se Vegger). Panelet: `Rail.tsx` har stripen og fanevalget, hver fane ligger i `panel/sections/` (`WallSection`, `FloorSection`, `ProfileSection`, `EquipSection` med søk) |
 | Sider | `src/ui/quote`, `production`, `picking`, `workorder` | Tilbud, Produksjon, Plukkliste, Arbeidsordre |
 | Lagring | `src/persistence/file.ts` | Filformat, versjoner og migrering |
 
@@ -61,7 +62,7 @@ Tre filer med «support» i navnet, med hver sin jobb:
 - Modell: `FloorTile` · `domain/floor/tiles.ts` (fliser og celler) · `domain/floor/brush.ts` (penselen: størrelse,
   Auto, viske) · `domain/floor/edit.ts` (kutte fliser og baner)
 - Kalkyle: `calc/lines/floor.ts` (gulvlinjer, `tileCounts`, gulvbeskyttelse)
-- Plan, 3D: `plan/layers/FloorLayer.tsx` (omrisset per produkt i `plan/floorOutline.ts`), pensel `plan/pointer/floor.ts` og `floorBrush.ts` · `scene3d/build/floor.ts`. Ingen skuff, bare panelet (`Rail.tsx`, FloorSection)
+- Plan, 3D: `plan/layers/FloorLayer.tsx` (omrisset per produkt i `plan/floorOutline.ts`), pensel `plan/pointer/floor.ts` og `floorBrush.ts` · `scene3d/build/floor.ts`. Ingen skuff, bare panelet (`panel/sections/FloorSection.tsx`)
 
 ### Engangsteppe
 
@@ -84,7 +85,7 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 - Kalkyle: `calc/textile/inFrame.ts` (rammemål og trykk), `calc/textile/free.ts` (frittstående: skinner, hjørner,
   fotplater), `calc/textile/common.ts` (full høyde, filnavn) · linjene: `calc/textile/lines.ts` · produksjonsrader:
   `calc/production.ts` (lager også folierader)
-- Plan, 3D: `plan/layers/TextileLayer.tsx`, forhåndsvisning ved tegning i `plan/layers/Previews.tsx`, pensel `plan/pointer/textile.ts`, flytte frittstående `pointer/freeMove.ts` · `scene3d/build/textile.ts`, `Scene3D.tsx`
+- Plan, 3D: `plan/layers/TextileLayer.tsx`, forhåndsvisning ved tegning i `plan/layers/Previews.tsx`, pensel `plan/pointer/textile.ts`, flytte frittstående `pointer/freeMove.ts` · `scene3d/build/textile.ts`, dra i 3D `scene3d/pointer/drag.ts`
 - Skuff: `WallDrawer.tsx` med `plan/wallDrawer/panels.tsx` (`TextilePanel`) og `drag.ts` (InFrame), `FreeTextileDrawer.tsx` (frittstående)
 
 ### Print, dekal og farge
@@ -99,7 +100,7 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 
 - Modell: `Room` · `domain/rooms.ts` · `domain/outline.ts` (L-, U-, T-form) · `domain/enclosures.ts` (frihåndsrom)
 - Kalkyle: ingen egen, rommet gir vegger
-- Plan, 3D: `plan/layers/RoomLayer.tsx` (RoomMark, håndtak), dra `plan/pointer/room.ts` · `scene3d/build/rooms.ts`, `Scene3D.tsx` · `RoomLabel.tsx`
+- Plan, 3D: `plan/layers/RoomLayer.tsx` (RoomMark, håndtak), dra `plan/pointer/room.ts` · `scene3d/build/rooms.ts`, dra i 3D `scene3d/pointer/drag.ts` · `RoomLabel.tsx`
 
 ### Dører og forheng
 
@@ -143,5 +144,10 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
   node scripts/pointer-replay.mjs run dist shots/ptr-branch.json
   node scripts/pointer-replay.mjs compare shots/ptr-main.json shots/ptr-branch.json
   ```
+
+  Reprisen har også tastatursteg (Delete på hver type, Escape, R, angre og gjør om, verktøytastene).
+- **Pekerbevis i 3D:** `scripts/scene3d-replay.mjs` gjør det samme i 3D-visningen: peker, drar fra og klikker et
+  rutenett av punkter over bildet for fem skisser, og slipper motiver fra Profilering. Kjøres når `Scene3D.tsx`,
+  `scene3d/pointer/` eller `drop.ts` endres, med samme `run` og `compare` som over.
 - **Ny eksempelskisse:** tegn den i appen, «Lagre fil», legg filen i `src/test/fixtures/` og kjør testene (nye
   snapshots skrives da). Gjør det i en egen PR, ikke sammen med en refaktorering.

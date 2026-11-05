@@ -14,6 +14,7 @@ import { build, dispose } from './build'
 import { HOME } from './camera'
 import { addLights, aimSun } from './lights'
 import { useElementSize } from '../useElementSize'
+import { newRenderer } from './view'
 
 /** Picture size in CSS px is the box's; drawn at twice that for print. */
 const SCALE = 2
@@ -38,12 +39,8 @@ export function QuoteRender({ v, res, motifs }: { v: Variant; res: CalcResult; m
   useEffect(() => {
     if (!w || !h) return
     let live = true
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true })
-    renderer.setPixelRatio(SCALE)
+    const renderer = newRenderer({ shadows: true, pixelRatio: SCALE, preserve: true })
     renderer.setSize(w, h, false)
-    renderer.outputColorSpace = THREE.SRGBColorSpace
-    renderer.shadowMap.enabled = true
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap
     const scene = new THREE.Scene()
     const camera = new THREE.PerspectiveCamera(30, w / h, 0.1, 200)
     const { width: W, depth: D } = v.stand
