@@ -25,7 +25,7 @@ import { laneAt } from '../../domain/floor/edit'
 import type { RollMode } from '../tools'
 import { nearestEdge } from './geometry'
 import type { PlanSelection } from './selection'
-import { DIMMED, GRID, GRID_FINE, GRID_PX, PLAN_MARGIN, beamBody, textileOffset, wallWidth } from './planStyle'
+import { DIMMED, GRID, GRID_FINE, GRID_PX, PLAN_MARGIN, textileOffset } from './planStyle'
 import { FloorLayer, Offcut, RollPreview } from './layers/FloorLayer'
 import { WallLayer } from './layers/WallLayer'
 import { TextileLayer } from './layers/TextileLayer'
@@ -42,7 +42,7 @@ import { planHits } from './pointer/hits'
 import { openingEdge } from './pointer/opening'
 import { pens } from './pointer/pens'
 import { usePlanPointer } from './pointer/usePlanPointer'
-import { AimBox, AimRect, AimSeg, EraseStroke, Ring, SnapDots } from './layers/Previews'
+import { AimRect, AimSeg, EraseStroke, Ring, SnapDots } from './layers/Previews'
 import { doorPreview, motifPreview, objectPreview } from './layers/placePhantoms'
 import { placeKey } from './pointer/place'
 import { ratioOf } from './pointer/decor'
@@ -204,7 +204,9 @@ export function PlanView(p: Props) {
   const selLanes = tool !== 'select' || p.mini ? [] : selection.fill ? fillTilesOf(v, selection.fill) : selLane ? [selLane] : []
   // Textile brush: next to a wall the click target is that face; elsewhere the grid node a stroke starts from
   const textileFace = textileTool && hover && !textileStroke ? faceHit(hover, 0.2) : null
-  const hoverWallEdge = (wallTool || beamTool) && hover && !stroke && onStand(hover) ? nearestEdge(v.stand, hover) : null
+  // Wall and takdrager aim at a point: the grid node nearest the pointer (a press shows the module it lays)
+  const hoverWallNode: [number, number] | null =
+    (wallTool || beamTool) && hover && !stroke && onStand(hover) ? [Math.max(0, Math.min(W, Math.round(hover.x))), Math.max(0, Math.min(D, Math.round(hover.y)))] : null
   const hoverFree = textileTool && !textileFace && hover && !textileStroke && onStand(hover) ? freeStroke(v, rules, hover, hover, step)[0] : null
 
   // Tøm: what a click takes, from the hover (PC) or the press (touch, no hover), dimmed and hatched in its own layer.
@@ -346,7 +348,7 @@ export function PlanView(p: Props) {
       {/* Interaction preview */}
       <g pointerEvents="none">
         {!p.mini && v.rooms.filter((r) => r.id === selection.roomId).map((r) => <RoomHandles key={r.id} r={r} />)}
-        {hoverWallEdge && <AimBox a={hoverWallEdge.a} b={hoverWallEdge.b} width={beamTool ? beamBody(scale, rules.beam.thickness) : wallWidth(scale)} />}
+        {hoverWallNode && <Ring at={hoverWallNode} />}
         {stroke && tool === 'erase' && <EraseStroke a={stroke[0]} b={stroke[1]} centre={centre} />}
         {phantom?.el}
         {hoverFree && <Ring at={hoverFree} />}

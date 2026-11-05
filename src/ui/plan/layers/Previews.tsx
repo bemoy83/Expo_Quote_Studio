@@ -71,18 +71,6 @@ export function AimSeg({ a, b }: { a: Point; b: Point }) {
   return <Seg a={a} b={b} stroke={INK} strokeWidth={linePx(sc, AIM.width)} strokeDasharray={aimDash(sc)} />
 }
 
-/** The aim around a stretch of line drawn `width` m wide (the module a wall or takdrager click lays): a dashed box
- * 2 px outside the line. */
-export function AimBox({ a, b, width }: { a: Point; b: Point; width: number }) {
-  const sc = usePlanScale()
-  const h = width / 2 + sizePx(sc, 2)
-  const x0 = Math.min(a[0], b[0])
-  const y0 = Math.min(a[1], b[1])
-  const hz = a[1] === b[1]
-  const len = Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1])
-  return hz ? <AimRect x={x0} y={y0 - h} width={len} height={2 * h} /> : <AimRect x={x0 - h} y={y0} width={2 * h} height={len} />
-}
-
 /** The aim around an area (floor brush, furniture footprint). `halo` lays a light edge under it, for a dark floor. */
 export function AimRect({ x, y, width, height, halo }: { x: number; y: number; width: number; height: number; halo?: boolean }) {
   const sc = usePlanScale()
