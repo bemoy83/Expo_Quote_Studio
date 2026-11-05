@@ -26,7 +26,7 @@ import { PlanPreview } from './plan/PlanPreview'
 import { PlanView } from './plan/PlanView'
 import { PriceChangePill } from './plan/PriceChangePill'
 import { QuickPicks } from './plan/QuickPicks'
-import { type PlanSelection } from './plan/selection'
+import { hasDrawer, type DrawerState, type PlanSelection } from './plan/selection'
 import { StandChip } from './plan/StandChip'
 import { ToolDock } from './plan/ToolDock'
 import { usePriceChange } from './plan/usePriceChange'
@@ -75,7 +75,22 @@ export default function App() {
     saveJson(KEYS.layout, layout)
   }, [layout])
   const [highlight, setHighlight] = useState<Highlight>(null)
-  const [selection, setSelection] = useState<PlanSelection>({})
+  const [selection, setSelectionRaw] = useState<PlanSelection>({})
+  /** The drawer has its own state: a plain click only selects; Mer and a double click open it (docs/pille-og-skuff.md). */
+  const [drawer, setDrawer] = useState<DrawerState>('closed')
+  /** Select; the drawer stays open while the selection has one (another wall, a frame on it), else it closes. */
+  const setSelection = useCallback((s: PlanSelection) => {
+    setSelectionRaw(s)
+    if (!hasDrawer(s)) setDrawer('closed')
+  }, [])
+  /** Select and open the drawer in detail: a double click, a frame chosen in the panel, a click in 3D. */
+  const openDrawer = useCallback((s: PlanSelection) => {
+    setSelectionRaw(s)
+    setDrawer(hasDrawer(s) ? 'detail' : 'closed')
+  }, [])
+  /** 3D keeps the drawer on a plain click for now (no pill there). */
+  const select3d = useCallback((s: PlanSelection) => (hasDrawer(s, '3d') ? openDrawer(s) : setSelection(s)), [openDrawer, setSelection])
+  const drawerOpen = drawer !== 'closed' && hasDrawer(selection, view)
   const [toast, showToast] = useToast()
   const fileInput = useRef<HTMLInputElement>(null)
 
@@ -136,6 +151,7 @@ export default function App() {
     tools,
     selection,
     setSelection,
+    drawerOpen,
     onEdit,
     undo: () => dispatch({ type: 'undo' }),
     redo: () => dispatch({ type: 'redo' }),
@@ -277,7 +293,7 @@ export default function App() {
               onAddRoom={addRoom}
               onSelect={(s) => {
                 setTool('select')
-                setSelection(s)
+                openDrawer(s)
               }}
               selection={selection}
             />
@@ -297,6 +313,8 @@ export default function App() {
                       highlight={highlight}
                       selection={selection}
                       onSelect={setSelection}
+                      drawerOpen={drawerOpen}
+                      onOpenDrawer={openDrawer}
                       onEdit={onEdit}
                       onCheckpoint={onCheckpoint}
                       onToast={showToast}
@@ -317,7 +335,7 @@ export default function App() {
                       res={res}
                       highlight={highlight}
                       selection={selection}
-                      onSelect={setSelection}
+                      onSelect={select3d}
                       onEdit={onEdit}
                       onCheckpoint={onCheckpoint}
                       onToast={showToast}
@@ -345,7 +363,7 @@ export default function App() {
                   {quick}
                 </ToolDock>
               </div>
-              {tool === 'select' && (
+              {tool === 'select' && drawerOpen && (
                 <Drawers
                   v={v}
                   res={res}

@@ -10,7 +10,7 @@ import { applyDrop, decorDrag, endDecorDrag, type DecorDrag } from '../../dnd'
 import type { FaceHit, TextileLine } from '../layers/Previews'
 import { beam } from './beam'
 import { carpetFill, startCarpetFill } from './carpetFill'
-import { click } from './click'
+import { click, clickRules } from './click'
 import { ratioOf } from './decor'
 import { erase, startErase, type Erasing } from './erase'
 import { floor, startFloor } from './floor'
@@ -19,7 +19,7 @@ import { object } from './object'
 import { placeDrag, startPlace } from './place'
 import { roll, startRoll } from './roll'
 import { room } from './room'
-import { startSelect } from './select'
+import { selectAt, startSelect } from './select'
 import { startStroke, stroke } from './stroke'
 import { startTextile, textile } from './textile'
 import type { Drag, DragHandlers, P, PointerCtx } from './types'
@@ -29,7 +29,7 @@ const DRAGS: { [K in Drag['kind']]: DragHandlers<K> } = { stroke, floor, roll, c
 const handlersOf = (d: Drag) => DRAGS[d.kind] as DragHandlers<Drag['kind']>
 
 /** What the plan passes in: the context without the previews' setters and state, which the hook owns. */
-export type PlanPointerInput = Omit<PointerCtx, 'rollPending' | 'setStroke' | 'setTextileStroke' | 'setRollPending' | 'setFillRect' | 'setErasing'> & {
+export type PlanPointerInput = Omit<PointerCtx, 'clickSelect' | 'rollPending' | 'setStroke' | 'setTextileStroke' | 'setRollPending' | 'setFillRect' | 'setErasing'> & {
   /** Small overview: no drag and drop. */
   mini?: boolean
 }
@@ -53,6 +53,9 @@ export function usePlanPointer(input: PlanPointerInput) {
   const [dropHover, setDropHover] = useState<{ h: FaceHit; d: DecorDrag } | null>(null)
   /** What a Tøm press takes on release. */
   const [erasing, setErasing] = useState<Erasing | null>(null)
+  /** The click rules' timing (a second click, a double click), kept across renders. */
+  const [clicks] = useState(clickRules)
+  useEffect(() => clicks.cancel, [clicks])
 
   // A new tool or pen drops whatever stroke was under way
   const [penNow, setPenNow] = useState({ tool, brush })
@@ -89,7 +92,7 @@ export function usePlanPointer(input: PlanPointerInput) {
     return { x: m.x, y: m.y }
   }
 
-  const c: PointerCtx = { ...input, rollPending, setStroke, setTextileStroke, setRollPending, setFillRect, setErasing }
+  const c: PointerCtx = { ...input, clickSelect: (s) => clicks.click(input, s), rollPending, setStroke, setTextileStroke, setRollPending, setFillRect, setErasing }
 
   /** The drag a press starts, or nothing for a pen that acts on the click alone. */
   const press = (q: P): Drag | undefined => {
@@ -130,6 +133,12 @@ export function usePlanPointer(input: PlanPointerInput) {
     setDragging(null)
     if (!d) return
     handlersOf(d).up?.(c, d, toModel(e))
+  }
+
+  /** The browser's double click (a slower second click than the click rules' own): Velg opens the drawer. */
+  const onDoubleClick = (e: { clientX: number; clientY: number }) => {
+    if (input.mini || tool !== 'select') return
+    clicks.double(input, selectAt(c, toModel(e)))
   }
 
   const onPointerCancel = () => {
@@ -188,6 +197,7 @@ export function usePlanPointer(input: PlanPointerInput) {
       onPointerMove,
       onPointerUp,
       onPointerCancel,
+      onDoubleClick,
       onPointerLeave: () => setHover(null),
       onDragOver,
       onDragLeave: () => setDropHover(null),

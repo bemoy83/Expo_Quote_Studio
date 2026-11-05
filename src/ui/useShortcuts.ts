@@ -14,6 +14,8 @@ interface Shortcuts {
   tools: Tools
   selection: PlanSelection
   setSelection: (s: PlanSelection) => void
+  /** The drawer is open on the selection. */
+  drawerOpen: boolean
   onEdit: (fn: (v: Variant) => Variant) => void
   undo: () => void
   redo: () => void
@@ -38,10 +40,11 @@ export function useShortcuts(s: Shortcuts) {
       if (mod || e.altKey) return
       const k = e.key.toLowerCase()
       const del = k === 'delete' || k === 'backspace'
-      if (k === 'escape' && selection.openingId) {
+      const selected = tools.tool === 'select' && Object.keys(selection).length > 0
+      if (k === 'escape' && selection.openingId && s.drawerOpen) {
         // From the door's settings back to its wall: colour and graphics (the door is part of the wall)
         setSelection(doorWall(v, selection))
-      } else if (k === 'escape' && (selection.lane || selection.fill)) setSelection({})
+      } else if (k === 'escape' && selected) setSelection({})
       else if (k === 'escape') tools.setTool('select')
       else if (k === 'r' && selection.lane && tools.tool === 'select') {
         const r = rotateLane(v, selection.lane)
@@ -58,7 +61,8 @@ export function useShortcuts(s: Shortcuts) {
         const d = deleteSelection(v, selection)
         if (d) {
           onEdit(d.edit)
-          setSelection(d.select)
+          // The drawer stays on the wall a removed frame, decal or door was on; without it nothing stays selected
+          setSelection(s.drawerOpen ? d.select : {})
         }
       }
     }

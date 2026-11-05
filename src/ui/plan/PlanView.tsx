@@ -41,7 +41,7 @@ import { floorBrush } from './pointer/floorBrush'
 import { planHits } from './pointer/hits'
 import { pens } from './pointer/pens'
 import { usePlanPointer } from './pointer/usePlanPointer'
-import type { PlanSelection } from './selection'
+import { selectionKey, type PlanSelection } from './selection'
 
 interface Props {
   v: Variant
@@ -58,6 +58,10 @@ interface Props {
   highlight: Highlight
   selection: PlanSelection
   onSelect: (s: PlanSelection) => void
+  /** The drawer under the plan is open (it follows the selection). */
+  drawerOpen?: boolean
+  /** Double click in Velg: select and open the drawer. */
+  onOpenDrawer?: (s: PlanSelection) => void
   onEdit: (fn: (v: Variant) => Variant, history?: boolean) => void
   onCheckpoint: () => void
   onToast: (text: string) => void
@@ -130,6 +134,8 @@ export function PlanView(p: Props) {
     onCheckpoint: p.onCheckpoint,
     onToast: p.onToast,
     onSelect: p.onSelect,
+    drawerOpen: p.drawerOpen,
+    onOpenDrawer: p.onOpenDrawer,
   })
   const { svg, hover, dragging, stroke, erasing, handlers } = pointer
 
@@ -189,6 +195,7 @@ export function PlanView(p: Props) {
       viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`}
       preserveAspectRatio="xMidYMid meet"
       style={{ cursor }}
+      data-selection={p.mini ? undefined : selectionKey(selection)}
       {...handlers}
       role="img"
       aria-label={`Plan for standen, ${W} × ${D} m`}

@@ -32,6 +32,36 @@ export interface PlanSelection {
   fill?: string
 }
 
+/** How the drawer under the plan stands: closed, or open in one of its two heights (docs/pille-og-skuff.md). A plain
+ *  click only selects; Mer and a double click open it. */
+export type DrawerState = 'closed' | 'compact' | 'detail'
+
+/** A plain click selects; a second click on the same object within this time is a double click (opens the drawer),
+ *  and a second click after it lets go of the selection only once this time has passed, so a double click does not
+ *  drop it first. */
+export const CLICK_MS = 200
+
+/** The object a selection is about, so a second click on it can be told apart: the face shown does not count. */
+export function selectionKey(s: PlanSelection): string {
+  if (s.fill) return `fill:${s.fill}`
+  if (s.lane) return `lane:${s.lane.i},${s.lane.j}`
+  if (s.textileId) return `textile:${s.textileId}`
+  if (s.foilId) return `foil:${s.foilId}`
+  if (s.freeTextileId) return `free:${s.freeTextileId}`
+  if (s.beamId) return `beam:${s.beamId}`
+  if (s.openingId) return `opening:${s.openingId}`
+  if (s.objectId) return `object:${s.objectId}`
+  if (s.roomId) return `room:${s.roomId}`
+  if (s.wallId) return `wall:${s.wallId}`
+  return ''
+}
+
+/** Whether the selection has a drawer: a wall with its doors, frames and decals, a free-standing textile wall, or
+ *  engangsteppe (only under the plan). Furniture, rooms and drawn takdragere have none. */
+export function hasDrawer(s: PlanSelection, view: 'plan' | '3d' = 'plan'): boolean {
+  return !!(s.wallId || s.openingId || s.freeTextileId || ((s.lane || s.fill) && view === 'plan'))
+}
+
 /** The wall a chosen door stands in, on the face its drawer showed: the wall drawer with colour and graphics. */
 export function doorWall(v: Variant, sel: PlanSelection): PlanSelection {
   const o = v.openings.find((x) => x.id === sel.openingId)

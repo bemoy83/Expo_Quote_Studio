@@ -14,7 +14,9 @@ export const room: DragHandlers<'room'> = {
   },
   up(c, d) {
     dropRoom(d, c.onEdit, c.onToast)
-    // A room moved by its floor stays selected; a resized side opens the drawer only on a plain click
-    if (d.select && (d.mode === 'move' || !d.moved)) c.onSelect(d.select)
+    // A room moved by its floor stays selected; a resized side selects only on a plain click
+    if (!d.select) return
+    if (!d.moved) c.clickSelect(d.select)
+    else if (d.mode === 'move') c.onSelect(d.select)
   },
 }

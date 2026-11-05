@@ -9,6 +9,6 @@ export const wall: DragHandlers<'wall'> = {
     dragWall(d, q, c.onEdit, c.onCheckpoint)
   },
   up(c, d) {
-    if (!d.moved) c.onSelect(d.select)
+    if (!d.moved) c.clickSelect(d.select)
   },
 }
