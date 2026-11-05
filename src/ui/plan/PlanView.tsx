@@ -293,7 +293,7 @@ export function PlanView(p: Props) {
       <g pointerEvents="none">
         {!p.mini && v.rooms.filter((r) => r.id === selection.roomId).map((r) => <RoomHandles key={r.id} r={r} />)}
         {hoverWallEdge && <Seg a={hoverWallEdge.a} b={hoverWallEdge.b} stroke={INK} strokeOpacity={0.45} strokeWidth={wallWidth(scale)} strokeDasharray={beamTool ? beamDash(scale) : undefined} />}
-        {stroke && <StrokePreview a={stroke[0]} b={stroke[1]} erase={tool === 'erase'} beam={beamTool} />}
+        {stroke && <StrokePreview a={stroke[0]} b={stroke[1]} erase={tool === 'erase'} beam={beamTool} centre={[W / 2, D / 2]} cc={rules.wall.cc} />}
         {textileStroke && <TextilePreview v={v} line={textileStroke} />}
         {hoverFree && <circle cx={hoverFree[0]} cy={hoverFree[1]} r={0.06} fill={TEXTILE} />}
         {hoverModule && <HoverModule m={hoverModule} />}

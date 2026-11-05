@@ -34,6 +34,8 @@ export const printOffset = (s: PlanScale) => wallWidth(s) / 2 + printBand(s) / 2
 
 /** A takdrager in full detail: a body at least 3,6 px wide with two dashed edges. */
 export const beamBody = (s: PlanScale, thickness: number) => Math.max(thickness, linePx(s, 3.6))
+/** Grey fill of a takdrager body (Bjørn 5.11.2026: 20 % ink, was 9 %). */
+export const BEAM_FILL = 0.2
 /** Dashes of takdragere, as on hall maps: 6 px line, 3 px gap. */
 export const beamDash = (s: PlanScale) => `${sizePx(s, 6)} ${sizePx(s, 3)}`
 
@@ -47,6 +49,34 @@ export const HALO_OPACITY = 0.22
 
 /** A post: a white square with an ink edge, a little wider than the wall. */
 export const postSize = (s: PlanScale) => Math.max(WALL_MIN, wallWidth(s) + linePx(s, 1.5))
+
+/**
+ * Previews while drawing (docs/forhandsvisning.md): aim (sikte) shows only what is hit, a ring or a dashed ink
+ * outline; phantom (fantom) shows the product's own symbol at reduced strength while pressed or dragging; invalid is
+ * grey and hatched. All sizes in screen pixels.
+ */
+export const PHANTOM = {
+  /** Walls and areas: inner wall, textile, free-standing textile, carpet tiles, roll carpet. */
+  area: 0.4,
+  /** Thin lines: takdrager, door, decal, furniture. */
+  line: 0.6,
+} as const
+
+/** The ring at an end point or snap point: surface fill with an ink edge. */
+export const RING = { r: 3.2, edge: 1.1 } as const
+
+/** The dashed ink outline of the aim, and the light edge under it on a dark floor. */
+export const AIM = { width: 0.8, dash: 3, gap: 2.5, halo: 2.4, haloOpacity: 0.8 } as const
+export const aimDash = (s: PlanScale) => `${sizePx(s, AIM.dash)} ${sizePx(s, AIM.gap)}`
+
+/** Snap dots: faint ink, larger on whole metres. */
+export const SNAP_DOT = { metre: 1.2, other: 0.8, fill: 'rgb(var(--ink) / .3)' } as const
+
+/** Invalid: grey ink in the symbol's width with a 45° hatch over it. */
+export const INVALID = { fill: 'rgb(var(--ink) / .3)', line: 'rgb(var(--ink) / .55)', lineWidth: 0.8, spacing: 3.2 } as const
+
+/** The dark measure pill while dragging out a length, set this far outside the stroke. */
+export const PILL = { height: 18, radius: 5, font: 10.5, pad: 7, gap: 6 } as const
 
 /** Margin around the stand for the aisle and the side labels, m. */
 export const PLAN_MARGIN = 1.3
