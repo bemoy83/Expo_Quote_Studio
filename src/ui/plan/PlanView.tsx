@@ -42,7 +42,8 @@ import { planHits } from './pointer/hits'
 import { openingEdge } from './pointer/opening'
 import { pens } from './pointer/pens'
 import { usePlanPointer } from './pointer/usePlanPointer'
-import { AimBox, AimSeg, EraseStroke, FacePreview, HoverModule, Ring, SnapDots } from './layers/Previews'
+import { AimBox, AimRect, AimSeg, EraseStroke, FacePreview, HoverModule, Ring, SnapDots } from './layers/Previews'
+import { lanePill, tileArea, tileAreaMeasures } from './layers/floorPhantoms'
 import { beamPhantom, dropPhantom, textilePhantom, wallPhantom, type Phantom } from './layers/strokePhantoms'
 import { faceSegment } from '../../domain/faces'
 import { fillFace } from '../../domain/textile/brush'
@@ -173,13 +174,24 @@ export function PlanView(p: Props) {
   const hoverModule = hoverEdge && doorAllowed(v, hoverEdge.a, hoverEdge.b) ? hoverEdge : null
   const hoverAction = floorTool && hover && !dragging ? floorTouch(hover, null) : null
   // Roll brush: the lanes as they will be laid, from the hover or the stroke in progress
-  const rollTouch = rollWidth && tool === 'brush' && !carpetFill ? (rollPending ?? hoverAction) : null
+  // Bane: the lanes only while pressed; the hover aims with a ring in the cell
+  const rollTouch = rollWidth && tool === 'brush' && !carpetFill ? rollPending : null
+  const rollAim = rollWidth && tool === 'brush' && !carpetFill && !rollPending && hoverAction && hoverAction.kind !== 'none' && hover
+    ? ([(Math.floor(hover.x / CELL) + 0.5) * CELL, (Math.floor(hover.y / CELL) + 0.5) * CELL] as [number, number])
+    : null
   const rollPreview = rollTouch && brush?.kind === 'floor' ? lanesLaid(rollTouch, brush.product, dir) : []
-  const hoverFloor = hoverAction && hoverAction.kind !== 'none' && !rollPreview.length && !carpetFill ? hoverAction : null
+  const hoverFloor = hoverAction && hoverAction.kind !== 'none' && !rollWidth && !carpetFill ? hoverAction : null
+  // Carpet tiles: the area painted so far in this stroke, measured
+  const tileDrag = dragging?.kind === 'floor' && dragging.anchor && hover && !rollWidth && brush?.kind === 'floor'
+    ? tileArea(dragging.anchor, hover, p.floorSize, standCells(v.stand))
+    : null
   // Fyll: the cheapest way to lay the area being dragged, or the whole stand that a click fills
   const fillProduct = brush?.kind === 'floor' ? brush.product : ''
   const hoverOnStand = !!hover && hover.x >= 0 && hover.y >= 0 && hover.x < W && hover.y < D
-  const fillKey = fillRect ? `${fillRect.i},${fillRect.j},${fillRect.w},${fillRect.h}` : carpetFill && hoverOnStand ? 'stand' : ''
+  // Only while pressed or dragging: the hover aims at the stand with a dashed outline
+  const fillHeld = dragging?.kind === 'carpetFill'
+  const fillKey = fillRect ? `${fillRect.i},${fillRect.j},${fillRect.w},${fillRect.h}` : carpetFill && fillHeld && hoverOnStand ? 'stand' : ''
+  const fillAim = carpetFill && !fillHeld && hoverOnStand && !p.mini
   // Only the floor, the stand and the area change the proposal, so moving the pointer inside the stand reuses it
   const fillPreview = useMemo(
     () => (carpetFill && fillKey && rollWidth ? (fillProposalsFor(v, fillProduct, rollWidth, rules.carpet, fillRect ?? undefined)[0] ?? null) : null),
@@ -327,10 +339,12 @@ export function PlanView(p: Props) {
         {hoverModule && <HoverModule m={hoverModule} />}
         {hoverFace && !textileFace && <FacePreview v={v} h={hoverFace} />}
         {rollPreview.length > 0 && <RollPreview tiles={rollPreview} color={idx.byArtnr.get(rollPreview[0].product)?.variant.color} roll={rollWidth!} stand={standCells(v.stand)} />}
+        {rollPreview.length > 0 && lanePill(rollPreview, rollWidth!, centre)}
+        {rollAim && <Ring at={rollAim} />}
         {fillPreview && <RollPreview tiles={fillPreview.tiles} color={idx.byArtnr.get(fillProduct)?.variant.color} roll={rollWidth!} />}
-        {fillRect && (
-          <rect x={fillRect.i * CELL} y={fillRect.j * CELL} width={fillRect.w * CELL} height={fillRect.h * CELL} fill="none" stroke={INK} strokeWidth={0.03} strokeDasharray=".08 .06" />
-        )}
+        {fillRect && <AimRect x={fillRect.i * CELL} y={fillRect.j * CELL} width={fillRect.w * CELL} height={fillRect.h * CELL} halo />}
+        {fillAim && <AimRect x={0} y={0} width={W} height={D} halo />}
+        {tileDrag && brush?.kind === 'floor' && tileAreaMeasures(v, tileDrag, brush.product, centre)}
         {selLanes.length > 0 && (
           <g>
             {selLane && <Offcut t={selLane} roll={idx.byArtnr.get(selLane.product)?.product.roll ?? 2} stand={standCells(v.stand)} />}
@@ -339,19 +353,7 @@ export function PlanView(p: Props) {
             ))}
           </g>
         )}
-        {hoverFloor && (
-          <rect
-            x={hoverFloor.rect.i * CELL}
-            y={hoverFloor.rect.j * CELL}
-            width={hoverFloor.rect.w * CELL}
-            height={hoverFloor.rect.h * CELL}
-            rx={0.02}
-            fill={brush?.kind !== 'floor' ? SURFACE : idx.byArtnr.get(brush.product)?.variant.color}
-            fillOpacity={0.75}
-            stroke={INK}
-            strokeWidth={0.03}
-          />
-        )}
+        {hoverFloor && <AimRect x={hoverFloor.rect.i * CELL} y={hoverFloor.rect.j * CELL} width={hoverFloor.rect.w * CELL} height={hoverFloor.rect.h * CELL} halo />}
       </g>
       </PlanScaleContext.Provider>
     </svg>
