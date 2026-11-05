@@ -11,12 +11,12 @@ import type { FaceHit, TextileLine } from '../layers/Previews'
 import { beam } from './beam'
 import { carpetFill, startCarpetFill } from './carpetFill'
 import { click } from './click'
-import { decorClick, ratioOf } from './decor'
+import { ratioOf } from './decor'
 import { erase, startErase, type Erasing } from './erase'
 import { floor, startFloor } from './floor'
 import { freeMove } from './freeMove'
-import { object, objectClick } from './object'
-import { openingClick } from './opening'
+import { object } from './object'
+import { placeDrag, startPlace } from './place'
 import { roll, startRoll } from './roll'
 import { room } from './room'
 import { startSelect } from './select'
@@ -25,7 +25,7 @@ import { startTextile, textile } from './textile'
 import type { Drag, DragHandlers, P, PointerCtx } from './types'
 import { wall } from './wall'
 
-const DRAGS: { [K in Drag['kind']]: DragHandlers<K> } = { stroke, floor, roll, carpetFill, click, object, wall, beam, room, textile, freeMove, erase }
+const DRAGS: { [K in Drag['kind']]: DragHandlers<K> } = { stroke, floor, roll, carpetFill, click, object, wall, beam, room, textile, freeMove, erase, place: placeDrag }
 const handlersOf = (d: Drag) => DRAGS[d.kind] as DragHandlers<Drag['kind']>
 
 /** What the plan passes in: the context without the previews' setters and state, which the hook owns. */
@@ -66,6 +66,19 @@ export function usePlanPointer(input: PlanPointerInput) {
   useEffect(() => {
     drag.current = null
   }, [tool, brush])
+  // Esc cancels a door, decal or furniture pressed but not yet released. Registered once, before useShortcuts (which
+  // registers again on every render), so it runs first
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || drag.current?.kind !== 'place') return
+      // Only the press is cancelled: the pen stays in hand (useShortcuts would put it down on Esc)
+      e.stopImmediatePropagation()
+      drag.current = null
+      setDragging(null)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   const toModel = (e: { clientX: number; clientY: number }): P => {
     const el = svg.current!
@@ -85,10 +98,10 @@ export function usePlanPointer(input: PlanPointerInput) {
     if (pens.floorTool && fb.rollWidth && tool === 'brush') return startRoll(c, q)
     if (pens.floorTool) return startFloor(c, q)
     if (pens.wallTool || pens.beamTool) return startStroke(c, q)
-    if (pens.openingTool) return void openingClick(c, q)
-    if (pens.decorTool) return void decorClick(c, q)
+    if (pens.openingTool) return startPlace(c, 'opening', q)
+    if (pens.decorTool) return startPlace(c, 'decor', q)
     if (pens.textileTool) return startTextile(c, q)
-    if (pens.objectTool) return void objectClick(c, q)
+    if (pens.objectTool) return startPlace(c, 'object', q)
     return startSelect(c, q)
   }
 

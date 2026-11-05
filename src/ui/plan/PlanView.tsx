@@ -11,7 +11,7 @@ import { conflicts } from '../../domain/objects'
 import { freeStroke, freeTextileAt } from '../../domain/textile/free'
 import type { Motif } from '../../persistence/file'
 import type { Side, Variant } from '../../domain/types'
-import { builtModules, doorAllowed, standWallKeys } from '../../domain/walls'
+import { builtModules, standWallKeys } from '../../domain/walls'
 import { INK, SURFACE } from '../colors'
 import type { Run } from '../../domain/innerBeams'
 import { roomAt, sideIsHorizontal } from '../../domain/rooms'
@@ -42,7 +42,10 @@ import { planHits } from './pointer/hits'
 import { openingEdge } from './pointer/opening'
 import { pens } from './pointer/pens'
 import { usePlanPointer } from './pointer/usePlanPointer'
-import { AimBox, AimRect, AimSeg, EraseStroke, FacePreview, HoverModule, Ring, SnapDots } from './layers/Previews'
+import { AimBox, AimRect, AimSeg, EraseStroke, Ring, SnapDots } from './layers/Previews'
+import { doorPreview, motifPreview, objectPreview } from './layers/placePhantoms'
+import { placeKey } from './pointer/place'
+import { ratioOf } from './pointer/decor'
 import { lanePill, tileArea, tileAreaMeasures } from './layers/floorPhantoms'
 import { beamPhantom, dropPhantom, textilePhantom, wallPhantom, type Phantom } from './layers/strokePhantoms'
 import { faceSegment } from '../../domain/faces'
@@ -171,7 +174,6 @@ export function PlanView(p: Props) {
 
   // Hover previews
   const hoverEdge = openingTool && hover ? openingEdge({ v, hits }, hover) : null
-  const hoverModule = hoverEdge && doorAllowed(v, hoverEdge.a, hoverEdge.b) ? hoverEdge : null
   const hoverAction = floorTool && hover && !dragging ? floorTouch(hover, null) : null
   // Roll brush: the lanes as they will be laid, from the hover or the stroke in progress
   // Bane: the lanes only while pressed; the hover aims with a ring in the cell
@@ -202,7 +204,6 @@ export function PlanView(p: Props) {
   const selLanes = tool !== 'select' || p.mini ? [] : selection.fill ? fillTilesOf(v, selection.fill) : selLane ? [selLane] : []
   // Textile brush: next to a wall the click target is that face; elsewhere the grid node a stroke starts from
   const textileFace = textileTool && hover && !textileStroke ? faceHit(hover, 0.2) : null
-  const hoverFace = (decorTool && hover ? faceHit(hover) : null) ?? textileFace
   const hoverWallEdge = (wallTool || beamTool) && hover && !stroke && onStand(hover) ? nearestEdge(v.stand, hover) : null
   const hoverFree = textileTool && !textileFace && hover && !textileStroke && onStand(hover) ? freeStroke(v, rules, hover, hover, step)[0] : null
 
@@ -234,7 +235,21 @@ export function PlanView(p: Props) {
     const t = textileAim.v.textiles.find((x) => x.id === textileAim.mounted.id)!
     return faceSegment(textileFace!.w, textileFace!.s, t.from, t.from + t.width, textileOffset(scale))
   })() : null
-  const planHint = p.mini ? null : (phantom?.hint ?? (textileAim && 'error' in textileAim ? textileAim.error : null))
+  // Door, motif and furniture: aim while hovering, the phantom while pressed over the target the press hit
+  // (pointer/place.ts); dragged off it, the aim of the new target shows and a release stores nothing
+  const placing = dragging?.kind === 'place' ? dragging : null
+  const held = (what: 'opening' | 'decor' | 'object') => !!placing && placing.what === what && !!hover && placeKey({ v, hits, brush }, what, hover) === placing.key
+  const placePreview =
+    p.mini || !hover
+      ? null
+      : hoverEdge && brush?.kind === 'opening'
+        ? doorPreview(scale, v, hoverEdge, !!hits.moduleAt(hover, 0.4), brush.product, held('opening'))
+        : decorTool && brush?.kind === 'motif'
+          ? motifPreview(scale, v, hits, hover, brush.motif, ratioOf(p.motifs)(brush.motif), held('decor'))
+          : pen.objectTool && brush?.kind === 'object' && onStand(hover)
+            ? objectPreview(scale, v, brush.product, hover, held('object'))
+            : null
+  const planHint = p.mini ? null : (phantom?.hint ?? placePreview?.hint ?? (textileAim && 'error' in textileAim ? textileAim.error : null))
   const onHint = p.onHint
   useEffect(() => onHint?.(planHint), [onHint, planHint])
   useEffect(() => () => onHint?.(null), [onHint])
@@ -336,8 +351,7 @@ export function PlanView(p: Props) {
         {phantom?.el}
         {hoverFree && <Ring at={hoverFree} />}
         {textileAimSeg && <AimSeg a={textileAimSeg[0]} b={textileAimSeg[1]} />}
-        {hoverModule && <HoverModule m={hoverModule} />}
-        {hoverFace && !textileFace && <FacePreview v={v} h={hoverFace} />}
+        {placePreview?.el}
         {rollPreview.length > 0 && <RollPreview tiles={rollPreview} color={idx.byArtnr.get(rollPreview[0].product)?.variant.color} roll={rollWidth!} stand={standCells(v.stand)} />}
         {rollPreview.length > 0 && lanePill(rollPreview, rollWidth!, centre)}
         {rollAim && <Ring at={rollAim} />}
