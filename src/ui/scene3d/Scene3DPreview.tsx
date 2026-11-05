@@ -9,6 +9,7 @@ import type { Motif } from '../../persistence/file'
 import { build, dispose } from './build'
 import { HOME, setCamera } from './camera'
 import { addLights } from './lights'
+import { fitToElement, newRenderer, swapContent } from './view'
 
 /** Least time between two rebuilds, ms. */
 const THROTTLE = 200
@@ -25,30 +26,16 @@ export function Scene3DPreview({ v, res, motifs }: { v: Variant; res: CalcResult
 
   useEffect(() => {
     const el = host.current!
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
-    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio))
-    renderer.outputColorSpace = THREE.SRGBColorSpace
+    const renderer = newRenderer({ shadows: false })
     el.appendChild(renderer.domElement)
     const scene = new THREE.Scene()
     const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 200)
     // No shadows in the thumbnail, the sun fixed
     addLights(scene, false).position.set(-2, 9, 6)
     view.current = { renderer, scene, camera, content: null }
-    const render = () => renderer.render(scene, camera)
-    const resize = () => {
-      const w = el.clientWidth
-      const h = el.clientHeight
-      if (!w || !h) return
-      renderer.setSize(w, h)
-      camera.aspect = w / h
-      camera.updateProjectionMatrix()
-      render()
-    }
-    const ro = new ResizeObserver(resize)
-    ro.observe(el)
-    resize()
+    const unfit = fitToElement(el, renderer, camera, () => renderer.render(scene, camera))
     return () => {
-      ro.disconnect()
+      unfit()
       const cur = view.current
       if (cur?.content) dispose(cur.content)
       renderer.dispose()
@@ -67,14 +54,9 @@ export function Scene3DPreview({ v, res, motifs }: { v: Variant; res: CalcResult
       const p = props.current
       const onLoad = () => view.current === cur && cur.renderer.render(cur.scene, cur.camera)
       const g = build(p.v, p.res, { motifs: p.motifs, onLoad })
-      const old = cur.content
-      if (old) cur.scene.remove(old)
-      cur.content = g
-      cur.scene.add(g)
       const { width: W, depth: D } = p.v.stand
       setCamera(cur.camera, W, D, HOME)
-      cur.renderer.render(cur.scene, cur.camera)
-      if (old) dispose(old)
+      cur.content = swapContent(cur.scene, cur.content, g, () => cur.renderer.render(cur.scene, cur.camera))
     }
     const wait = THROTTLE - (performance.now() - last.current)
     if (wait <= 0) {
