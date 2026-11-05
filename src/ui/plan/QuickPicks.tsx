@@ -241,7 +241,7 @@ function quickContent(p: QuickPicksProps): ReactNode {
   )
 }
 
-function QName({ name, meta }: { name: string; meta?: string }) {
+export function QName({ name, meta }: { name: string; meta?: string }) {
   return (
     <span className="q-name">
       <span className="q-name-main">{name}</span>
@@ -255,7 +255,7 @@ export function Sw({ color, title, on, onClick }: { color?: string; title: strin
   return <button type="button" className="q-sw" aria-pressed={on} title={title} aria-label={title} style={{ background: color }} onClick={onClick} />
 }
 
-function QBtn({ on, title, label, onClick, children }: { on?: boolean; title: string; label?: string; onClick: () => void; children: ReactNode }) {
+export function QBtn({ on, title, label, onClick, children }: { on?: boolean; title: string; label?: string; onClick: () => void; children: ReactNode }) {
   return (
     <button type="button" className="q-btn" aria-pressed={on} title={title} aria-label={label} onClick={onClick}>
       {children}
@@ -263,7 +263,7 @@ function QBtn({ on, title, label, onClick, children }: { on?: boolean; title: st
   )
 }
 
-const Sep = () => <span className="q-sep" aria-hidden />
+export const Sep = () => <span className="q-sep" aria-hidden />
 
 export function BeamIcon({ size = 15 }: { size?: number }) {
   return (

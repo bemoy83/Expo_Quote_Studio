@@ -9,8 +9,9 @@
 // and Bane), the textile brush, motifs, drag and drop from Profilering, and press, hold and release (or Escape) for
 // doors, decals and furniture. After each step it records a hash of the
 // sketch stored in localStorage, the open drawer, what is selected (the plan's data-selection), the cursor, the pen in
-// the dock, where the last piece of furniture stands, the last door's swing and hinge, and the toast. Compare checks all
-// but the toast (and the selection only when both runs have it: older builds do not show it);
+// the dock, where the last piece of furniture stands, the last door's swing and hinge, the selection pill, and the
+// toast. Compare checks all but the toast (and the selection and pill only when both runs have them: older builds do
+// not show them);
 // the toast only depends on timing (it times out), so a toast difference is listed but does not fail.
 import { createServer } from 'node:http'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
@@ -23,7 +24,7 @@ if (cmd === 'compare') {
   let bad = 0
   for (let i = 0; i < Math.max(a.length, b.length); i++) {
     const x = a[i] ?? {}, y = b[i] ?? {}
-    const off = ['step', 'sketch', 'changed', 'drawer', 'sel', 'cursor', 'pen', 'last', 'door'].filter((k) => x[k] !== y[k] && (k !== 'sel' || (x.sel != null && y.sel != null)))
+    const off = ['step', 'sketch', 'changed', 'drawer', 'sel', 'pill', 'cursor', 'pen', 'last', 'door'].filter((k) => x[k] !== y[k] && ((k !== 'sel' && k !== 'pill') || (x[k] != null && y[k] != null)))
     if (off.length) { bad++; console.log(`AVVIK ${x.step ?? y.step}: ${off.map((k) => `${k} ${x[k]} ≠ ${y[k]}`).join(', ')}`) }
     else if (x.toast !== y.toast) console.log(`(toast ulik i tid) ${x.step}`)
   }
@@ -55,6 +56,11 @@ async function open(fixture) {
   name = fixture
   const text = readFileSync(join(repo, 'src/test/fixtures', fixture + '.json'), 'utf8')
   await page.addInitScript((s) => { if (!sessionStorage.getItem('r')) { localStorage.clear(); localStorage.setItem('expo-quote-studio.sketch', s); sessionStorage.setItem('r', '1') } }, text)
+  // Whether the selection pill was on screen at any moment since the flag was last cleared (a double click must not show it)
+  await page.addInitScript(() => {
+    window.__pillSeen = false
+    new MutationObserver(() => { if (document.querySelector('.sel-pill')) window.__pillSeen = true }).observe(document, { childList: true, subtree: true })
+  })
   await page.goto(url)
   await page.getByRole('radio', { name: 'Plan' }).click()
   await page.locator('svg.plan-svg').first().waitFor()
@@ -85,6 +91,7 @@ async function record(step) {
   const toast = await page.evaluate(() => document.querySelector('.toast')?.textContent ?? '')
   const cursor = await page.evaluate(() => document.querySelector('svg.plan-svg').style.cursor)
   const sel = await page.evaluate(() => document.querySelector('svg.plan-svg').getAttribute('data-selection'))
+  const pill = await page.evaluate(() => (document.querySelector('.sel-pill') ? document.querySelector('.sel-pill').getAttribute('aria-label') : null))
   const pen = await page.evaluate(() => document.querySelector('.dock-tools [aria-pressed=true]')?.getAttribute('aria-label') ?? '')
   // The last piece of furniture, to see where a release put it
   const o = JSON.parse(s ?? '{}').varianter?.[0]?.objects?.at(-1)
@@ -92,7 +99,7 @@ async function record(step) {
   // The last door or curtain: module, swing and hinge as stored (empty = the default)
   const d = JSON.parse(s ?? '{}').varianter?.[0]?.openings?.at(-1)
   const door = d ? `${d.wallId}#${d.module} swing ${d.swing ?? ''} hinge ${d.hinge ?? ''}` : ''
-  out.push({ step: `${name} ${step}`, sketch: hash(s), changed: s !== prev, drawer, sel, toast, cursor, pen, last, door })
+  out.push({ step: `${name} ${step}`, sketch: hash(s), changed: s !== prev, drawer, sel, pill, toast, cursor, pen, last, door })
   prev = s
 }
 const close = () => page.close()
@@ -275,6 +282,13 @@ await press(6, 3); await record('regel skuff åpen klikk annen vegg')
 await press(6, 3); await record('regel skuff åpen klikk samme vegg')
 await press(1.5, 3.5); await record('regel skuff åpen klikk tomt gulv')
 await dbl(2, 0); await key('Escape'); await record('regel skuff åpen Esc')
+await close()
+// The pill: Mer opens the drawer; a double click never shows the pill on the way
+await open('02-hjorne-utstiller')
+await tool('Velg'); await press(2, 0); await page.waitForTimeout(300); await record('pille vegg')
+const mer = page.locator('.sel-pill [aria-label="Mer"]'); if (await mer.count()) await mer.click(); await page.waitForTimeout(250); await record('pille Mer åpner skuffen')
+await key('Escape'); await page.evaluate(() => { window.__pillSeen = false })
+await dbl(6, 3); await record(`pille dobbeltklikk vegg, pillen sett ${await page.evaluate(() => window.__pillSeen)}`)
 await close()
 await open('10-mobler-utstyr')
 await tool('Velg'); await dbl(2.5, 1.5); await record('regel dobbeltklikk møbel')
