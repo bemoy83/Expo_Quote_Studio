@@ -21,7 +21,7 @@ const NO_MOTION = '*,*::before,*::after{transition:none!important;animation:none
 // The 3D view rasterises motifs once and shows them grey until then; give it time after the canvas appears
 const SETTLE_3D = 1500;
 
-/** Plan double clicks (model metres) that open a drawer in Velg, per fixture: [name, x, y]. */
+/** Plan clicks (model metres) whose pill Mer opens a drawer in Velg, per fixture: [name, x, y]. */
 const DRAWERS = {
   '01-hjorne-arrangor': [['vegg', 1.5, 0], ['innervegg', 3, 1.5], ['dor', 3, 2.5]],
   '02-hjorne-utstiller': [['romvegg', 4, 1.5]],
@@ -92,7 +92,9 @@ async function shoot(dist, out) {
             const s = p.matrixTransform(svg.getScreenCTM());
             return { x: s.x, y: s.y };
           }, [x, y]);
-          await page.mouse.dblclick(at.x, at.y);
+          await page.mouse.click(at.x, at.y);
+          await page.waitForTimeout(150);
+          await page.locator('.sel-pill [aria-label="Mer"]').click();
           await page.waitForTimeout(400);
           await snap(`${vName}-skuff-${drawer}`);
           await page.locator('.wd-head').getByRole('button', { name: 'Lukk' }).first().click();
