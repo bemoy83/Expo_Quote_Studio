@@ -105,8 +105,11 @@ Dør, dekal og møbel lagrer i dag **ved trykk** (`openingClick`, `decorClick`, 
 `pointer/usePlanPointer.ts`). De skal få en egen dra-type (forslag `place`, egen fil i `pointer/`):
 
 - **Trykk:** fantomet vises.
-- **Slipp:** lagres, hvis pekeren fortsatt treffer det samme (modul, felt eller plass).
+- **Slipp:** lagres, hvis pekeren fortsatt treffer det samme (modul eller felt).
 - **Drar bort eller trykker Esc:** avbrutt, ingenting lagres.
+- **Unntak, møbel** (Bjørn 5.11.2026): et møbel har ingen fast modul eller felt. Drar man mens man holder inne, velger
+  man plassen, og møbelet settes der man slipper (eller nærmeste ledige plass, `findSpot`). Bare Esc avbryter. Slik
+  er det bygget i #77.
 
 Vegg, takdrager, tekstil og engangsteppe lagrer allerede ved slipp. Teppeflis maler fortsatt mens man drar.
 
@@ -122,5 +125,20 @@ avvikene.
 2. **Strekverktøyene:** innervegg, takdrager, tekstil på vegg og frittstående tekstil, og dra fra hyllen.
 3. **Gulv:** sikte for teppeflis, og Bane og Fyll bare ved trykk.
 4. **Trykk viser, slipp lagrer:** dør, dekal og møbel, med ugyldig ved peking. Kjør pekerbeviset.
+
+5. **Pekerbeviset dekker trykk og slipp** (Bjørn 5.11.2026). Nye steg i `scripts/pointer-replay.mjs`, kjørt mot
+   `main` før og etter:
+
+   | Verktøy | Steg | Ventet |
+   | --- | --- | --- |
+   | Dør | trykk, dra bort, slipp | ingen endring |
+   | Dør | trykk, Esc, slipp | ingen endring, pennen fortsatt i hånden |
+   | Dekal | trykk, dra bort, slipp | ingen endring |
+   | Dekal | trykk, Esc, slipp | ingen endring |
+   | Møbel | trykk, dra til et nytt sted, slipp | lagret der man slapp (eller nærmeste ledige plass) |
+   | Møbel | trykk, Esc, slipp | ingen endring |
+
+   Et vanlig klikk dekkes allerede. Skriptet trenger et hjelpesteg for trykk og hold (`mouse.down`, flytt, så
+   `Escape` eller `mouse.up`), ved siden av `press` og `drag`.
 
 Når en PR er inne, oppdateres [kodekart.md](kodekart.md).
