@@ -214,3 +214,34 @@ export function resizeFreeTextile(v: Variant, rules: Rules, id: string, length: 
   if (blocked(v, rules, run, v.freeTextiles.filter((x) => x.id !== id))) return null;
   return { ...v, freeTextiles: v.freeTextiles.map((x) => (x.id === id ? run : x)) };
 }
+
+/**
+ * Turn a run a quarter turn (clockwise in the plan) about its middle, on the drawing grid, moved back inside the stand
+ * where it would stick out. Faces A and B turn with it. Checked by the same rules as drawing one; the error says why
+ * when it cannot stand there.
+ */
+export function rotateFreeTextile(v: Variant, rules: Rules, id: string): { v: Variant } | { error: string } {
+  const t = v.freeTextiles.find((x) => x.id === id);
+  if (!t) return { error: 'Tekstilveggen finnes ikke' };
+  const g = rules.textile.grid;
+  const cx = (t.from[0] + t.to[0]) / 2;
+  const cy = (t.from[1] + t.to[1]) / 2;
+  const turn = (p: Point): Point => [cx - (p[1] - cy), cy + (p[0] - cx)];
+  let from = turn(t.from);
+  let to = turn(t.to);
+  // On the grid: the whole run moves by what its `from` end is off it
+  const sx = snapTo(from[0], g) - from[0];
+  const sy = snapTo(from[1], g) - from[1];
+  from = [from[0] + sx, from[1] + sy];
+  to = [to[0] + sx, to[1] + sy];
+  const lo = (i: 0 | 1) => Math.min(from[i], to[i]);
+  const hi = (i: 0 | 1) => Math.max(from[i], to[i]);
+  if (hi(0) - lo(0) > v.stand.width + EPS || hi(1) - lo(1) > v.stand.depth + EPS) return { error: 'Tekstilveggen er for lang til å snus på standen' };
+  // Back inside the stand
+  const dx = lo(0) < 0 ? -lo(0) : hi(0) > v.stand.width ? v.stand.width - hi(0) : 0;
+  const dy = lo(1) < 0 ? -lo(1) : hi(1) > v.stand.depth ? v.stand.depth - hi(1) : 0;
+  const run: FreeTextile = { ...t, from: [from[0] + dx, from[1] + dy], to: [to[0] + dx, to[1] + dy] };
+  const why = blocked(v, rules, run, v.freeTextiles.filter((x) => x.id !== id));
+  if (why) return { error: why };
+  return { v: { ...v, freeTextiles: v.freeTextiles.map((x) => (x.id === id ? run : x)) } };
+}

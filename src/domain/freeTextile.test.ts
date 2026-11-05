@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { RULES } from '../rules/rules';
-import { addFreeTextile, cornerEnds, fitFreeTextiles, moveFreeTextile, updateFace } from './textile/free';
+import { addFreeTextile, cornerEnds, fitFreeTextiles, moveFreeTextile, rotateFreeTextile, updateFace } from './textile/free';
 import type { Point, Variant } from './types';
 import { createVariant } from './variant';
 
@@ -74,5 +74,30 @@ describe('frittstående tekstilvegg', () => {
     const v = draw(base(), [1, 2], [3, 2]);
     const walled = { ...v, walls: [...v.walls, { id: 'w1', from: [2, 1] as Point, to: [2, 3] as Point }] };
     expect(fitFreeTextiles(walled, RULES).freeTextiles).toHaveLength(0);
+  });
+});
+
+describe('turning a frittstående tekstilvegg', () => {
+  const turn = (v: Variant): Variant => {
+    const r = rotateFreeTextile(v, RULES, v.freeTextiles[0].id);
+    if ('error' in r) throw new Error(r.error);
+    return r.v;
+  };
+  it('turns a quarter turn about its middle, faces with it, and four turns bring it back', () => {
+    const v = updateFace(draw(base(), [2, 2], [4, 2]), 'ft1', 'a', { motif: 'logo' });
+    const once = turn(v);
+    expect(once.freeTextiles[0]).toMatchObject({ from: [3, 1], to: [3, 3], a: { motif: 'logo' } });
+    expect(turn(turn(turn(once))).freeTextiles[0]).toMatchObject({ from: [2, 2], to: [4, 2] });
+  });
+  it('stays on the drawing grid and inside the stand', () => {
+    // 2,5 m long near the back: turned it would reach y −0,75, so it is moved inside
+    const t = turn(draw(base(), [1, 0.5], [3.5, 0.5])).freeTextiles[0];
+    expect(Math.min(t.from[1], t.to[1])).toBeGreaterThanOrEqual(0);
+    for (const p of [t.from, t.to]) for (const c of p) expect(Math.abs(c / RULES.textile.grid - Math.round(c / RULES.textile.grid))).toBeLessThan(1e-9);
+  });
+  it('says why when it cannot stand turned', () => {
+    // 5 m long on a 4 m deep stand
+    const r = rotateFreeTextile(draw(base(), [0.5, 2], [5.5, 2]), RULES, 'ft1');
+    expect('error' in r && r.error).toBeTruthy();
   });
 });
