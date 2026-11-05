@@ -18,6 +18,13 @@ const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n
 /** Centre of a foil along the wall, metres from the wall start. */
 export const foilCenter = (rules: Rules, f: Foil) => felt(rules, f.module).center + f.x;
 
+/** Where a foil runs along its wall: the whole module when full, else its width about its centre. */
+export function foilSpan(rules: Rules, f: Foil): [number, number] {
+  if (f.full) return [f.module, f.module + 1];
+  const c = foilCenter(rules, f);
+  return [c - f.width / 2, c + f.width / 2];
+}
+
 /** Why a felt cannot take foil, or null when it can. */
 export function feltBlocked(v: Variant, rules: Rules, wallId: string, module: number, s: FaceSide, full = false): string | null {
   const w = v.walls.find((x) => x.id === wallId);

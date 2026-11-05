@@ -3,7 +3,7 @@
 // (docs/arbeidstegning.md: orange with cross dashes for textile, green with raster dots for print).
 import { useId } from 'react'
 import type { CalcResult } from '../../../calc/calc'
-import { foilCenter } from '../../../domain/decor'
+import { foilSpan } from '../../../domain/decor'
 import { runNormal, type FaceKey } from '../../../domain/textile/free'
 import { alongRun, cornerPosts } from '../../../calc/textile/free'
 import type { Point, Variant } from '../../../domain/types'
@@ -107,8 +107,7 @@ export function TextileLayer({ v, res, selection, mini, dim }: { v: Variant; res
         {v.foils.map((f) => {
           const w = v.walls.find((x) => x.id === f.wallId)
           if (!w) return null
-          const c = foilCenter(rules, f)
-          const [from, to] = f.full ? [f.module, f.module + 1] : [c - f.width / 2, c + f.width / 2]
+          const [from, to] = foilSpan(rules, f)
           const band = printBand(sc)
           const [a, b] = faceSegment(w, sideOf(v, f), from, to, printOffset(sc))
           const sel = selection.foilId === f.id
