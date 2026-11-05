@@ -45,6 +45,13 @@ export function penToolOf(b: Brush): PenTool {
   }
 }
 
+/** The pen is out (not Velg) and draws this kind; with `id`, this product or motif too. */
+export function penOn(tool: Tool, brush: Brush | null, kind: Brush['kind'], id?: string): boolean {
+  if (tool === 'select' || brush?.kind !== kind) return false
+  if (id === undefined) return true
+  return ('product' in brush ? brush.product : 'motif' in brush ? brush.motif : undefined) === id
+}
+
 /** The tool shown as active in the dock. */
 export const dockToolOf = (tool: Tool, brush: Brush | null): DockTool => (tool === 'brush' && brush ? penToolOf(brush) : tool === 'brush' ? 'select' : tool)
 
