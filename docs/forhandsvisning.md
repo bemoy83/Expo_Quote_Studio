@@ -73,8 +73,8 @@ Venstre kolonne er det appen gjør i dag (`PlanView.tsx`, «Interaction preview�
 
 | Verktøy | I dag | Sikte | Fantom |
 | --- | --- | --- | --- |
-| Innervegg (`StrokePreview`, `hoverWallEdge`) | Kanten ved pekeren i blekk 45 % i full veggbredde. Ved drag blekk 60 %, svarte prikker, pille i meter | Stiplet omriss av modulen et klikk legger | Veggsymbolet: blekk med kjerne i penselens RAL (`wallWidth`/`wallCore`), et tverrmerke per modul (7 px), ringer i endene, pille |
-| Takdrager (samme) | Som over, stiplet | Som innervegg | `BeamStroke` med fyll, ringer, pille |
+| Innervegg (`StrokePreview`, `hoverWallEdge`) | Kanten ved pekeren i blekk 45 % i full veggbredde. Ved drag blekk 60 %, svarte prikker, pille i meter | Ring i nærmeste rutepunkt (Bjørn 5.11.2026: siktet er et punkt; modulen vises ved trykk) | Veggsymbolet: blekk med kjerne i penselens RAL (`wallWidth`/`wallCore`), et tverrmerke per modul (7 px), ringer i endene, pille |
+| Takdrager (samme) | Som over, stiplet | Ring, som innervegg | `BeamStroke` med fyll, ringer, pille |
 | Tekstil på vegg (`FacePreview`, `TextilePreview`) | Fyller ledig spenn i lilla 45 % ved peking. Ved drag 70 % og løs tekst | Stiplet omriss langs veggsiden som treffes, i `textileOffset` | `TextileStroke` med tverrstreker, ringer, pille `… på vegg` |
 | Frittstående tekstil (`FreePreview`, `hoverFree`) | Prikk i tekstilfarge. Ved drag 60 % og prikker | Ring i festepunktet | `TextileStroke`, fotplatene stiplet (`footStroke`/`footDash`) der kalkylen setter dem, ringer, pille |
 | Dekal og motiv (`FacePreview`) | Blekk 45 % langs feltet | Stiplet omriss av feltet, i `printOffset`, på siden som treffes | Rasterbåndet (`RasterPattern`) ved trykk |
