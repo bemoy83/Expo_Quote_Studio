@@ -55,9 +55,18 @@ describe('textile walls', () => {
   it('never overlaps another textile on the same face', () => {
     let v = ok(addTextile(row(), RULES, 'side-back', 1, 1)).v;
     v = updateTextile(v, RULES, 't1', { width: 2 });
-    const b = ok(addTextile(v, RULES, 'side-back', 1, 1));
+    // A pointer over the first textile finds no free span there; the drawer button takes the nearest
+    expect(addTextile(v, RULES, 'side-back', 1, 1)).toBeNull();
+    const b = ok(addTextile(v, RULES, 'side-back', 1, 1, true));
     expect(b.v.textiles[1]).toMatchObject({ from: 2, width: 4 });
-    expect(addTextile(b.v, RULES, 'side-back', 1, 1)).toBeNull();
+    expect(addTextile(b.v, RULES, 'side-back', 1, 1, true)).toBeNull();
+  });
+
+  it('a click fills only the free span under the pointer', () => {
+    let v = ok(addTextile(row(), RULES, 'side-back', 1, 1)).v;
+    v = updateTextile(v, RULES, 't1', { width: 2 });
+    expect(addTextile(v, RULES, 'side-back', 1, 1.5)).toBeNull();
+    expect(ok(addTextile(v, RULES, 'side-back', 1, 3)).v.textiles[1]).toMatchObject({ from: 2, width: 4 });
   });
 
   it('moves keep the width, resizes clip, all in 0,1 m steps with a minimum width', () => {

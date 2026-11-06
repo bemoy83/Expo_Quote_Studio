@@ -19,6 +19,10 @@
 > - **Motiv:** selve motivet vises aldri i planen. Det som forhåndsvises er det som lander i planen: dekalen på et
 >   veggfelt (også på frittstående systemvegg). Trykk på tekstil er en del av tekstilveggen og tegnes ikke, så der
 >   vises ingenting (Bjørn 6.11.2026).
+> - **Tekstilvegg viser bare det som er ledig** (Bjørn 6.11.2026). På vegg legges den i det ledige feltet streken
+>   treffer mest av, og et klikk eller slipp fyller bare det ledige feltet pekeren står i, aldri nærmeste felt bak et
+>   T-kryss eller en annen tekstilvegg (`addTextile`; knappene i skuff og pille tar fortsatt nærmeste). Frittstående stopper der den møter en systemvegg eller en annen tekstilvegg, regnet fra der streken
+>   startet (`drawTextile` i `domain/textile/brush.ts`), og forhåndsvisningen viser det samme.
 > - **Der et klikk ikke gjør noe, vises ingenting.** Gir funksjonen en feil, vises skravuren der det ville landet, og
 >   grunnen står i hintlinjen. Målpillen vises som før mens man drar. Tøm er uendret.
 > - **Nettbrett:** uten peking vises det samme mens man holder inne, og slipp lagrer som før.

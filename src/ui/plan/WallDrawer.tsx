@@ -89,7 +89,7 @@ export function WallDrawer(p: Props) {
   }
 
   const addFrame = () => {
-    const r = addTextile(v, rules, w.id, s, L / 2)
+    const r = addTextile(v, rules, w.id, s, L / 2, true)
     if (!r) return p.onToast('Ingen ledig veggflate på denne siden')
     p.onEdit(() => r.v)
     select({ textileId: r.id })

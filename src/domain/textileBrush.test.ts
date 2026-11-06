@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { RULES } from '../rules/rules';
 import { drawTextile, planTextile } from './textile/brush';
+import { paintWalls } from './edit';
 import { createVariant } from './variant';
 
 // 6 × 4 row stand: stand walls at the back (y = 0) and on both sides (x = 0, x = 6)
@@ -36,5 +37,14 @@ describe('one textile brush', () => {
   it('a stroke on a wall shorter than a mounted frame can be is refused', () => {
     const r = drawTextile(base(), RULES, [1, 0], [1.25, 0], { x: 1, y: 0.1 });
     expect(r).toHaveProperty('error');
+  });
+
+  it('a free stroke through a system wall stops where it meets the wall: only what is free is laid', () => {
+    const v = paintWalls(base(), [3, 1], [3, 3]);
+    const r = drawTextile(v, RULES, [1, 2], [5, 2], { x: 1, y: 2 });
+    if (!('free' in r)) throw new Error('expected free');
+    const t = r.v.freeTextiles[0];
+    expect(t.from).toEqual([1, 2]);
+    expect(t.to).toEqual([3, 2]);
   });
 });

@@ -1,6 +1,7 @@
 // What the plan's dimension lines measure (docs/arbeidstegning.md, «Mål»): pure geometry, drawn by layers/DimLayer.tsx.
 // Positions are metres along a side or a wall; the layer turns them into chains in millimetres.
-import { openSides, sideLength } from '../../domain/grid'
+import { faceNormal, sideOf } from '../../domain/faces'
+import { openSides, pointAlong, sideLength } from '../../domain/grid'
 import type { Point, Side, Variant, Wall } from '../../domain/types'
 import { isStandWall } from '../../domain/walls'
 import { runNormal } from '../../domain/textile/free'
@@ -98,8 +99,9 @@ export interface InnerChain {
   /** Which way from the line the chain stands: −1 or +1. */
   dir: 1 | -1
   ts: number[]
-  /** How far out from the line the run's own drawing reaches, m, so the chain clears it. */
-  clear: 'wall' | 'textile'
+  /** How far out from the line the run's own drawing reaches, m, so the chain clears it: a textile on a wall face
+   *  (`mounted`) stands in front of the wall. */
+  clear: 'wall' | 'textile' | 'mounted'
 }
 
 export interface Dims {
@@ -116,7 +118,9 @@ export interface Dims {
  * detail there are no module chains.
  */
 export function planDims(v: Variant, selection: PlanSelection, compact: boolean): Dims {
-  const wall = selection.wallId ? v.walls.find((w) => w.id === selection.wallId) : undefined
+  // A selected textile wall on a wall face is measured on its own, not as the wall it hangs on (Bjørn 6.11.2026)
+  const mounted = selection.textileId ? v.textiles.find((t) => t.id === selection.textileId) : undefined
+  const wall = !mounted && selection.wallId ? v.walls.find((w) => w.id === selection.wallId) : undefined
   const stand = wall && isStandWall(wall) && !compact ? wall : undefined
   const sides = totalSides(v).map((side) => {
     const L = sideLength(v.stand, side)
@@ -138,6 +142,15 @@ export function planDims(v: Variant, selection: PlanSelection, compact: boolean)
     const n = runNormal(free, 'a')
     const dir = (hz ? n[1] : n[0]) < 0 ? -1 : 1
     inner = { axis: hz ? 'x' : 'y', at: hz ? free.from[1] : free.from[0], dir, ts: chainPoints([free.from[k], free.to[k]]), clear: 'textile' }
+  }
+  const on = mounted && v.walls.find((w) => w.id === mounted.wallId)
+  if (mounted && on) {
+    const hz = horizontal(on)
+    const k = hz ? 0 : 1
+    const n = faceNormal(on, sideOf(v, mounted))
+    const along = (t: number) => pointAlong(on, t)[k]
+    const ends = [on.from[k], on.to[k], along(mounted.from), along(mounted.from + mounted.width)]
+    inner = { axis: hz ? 'x' : 'y', at: hz ? on.from[1] : on.from[0], dir: (hz ? n[1] : n[0]) < 0 ? -1 : 1, ts: chainPoints(ends), clear: 'mounted' }
   }
   return { sides, inner }
 }
