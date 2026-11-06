@@ -11,7 +11,7 @@ import { findMotif } from '../../motifs'
 import { sideOf } from '../../../domain/faces'
 import { textileBox, textileOffset } from '../../../domain/textile/inFrame'
 import { printMaterial } from './motifs'
-import { ALU, ALU_FINISH, FABRIC, SELECT, type BuildContext, type Tag } from './context'
+import { ALU, ALU_FINISH, SELECT, type BuildContext, type Tag } from './context'
 import { CAP_92LTX, CAP_THICKNESS, CORNER_92LTX, OUTLINES, mitredProfile, unitProfile } from './profiles'
 
 export function buildTextile(c: BuildContext) {
@@ -30,17 +30,15 @@ export function buildTextile(c: BuildContext) {
     const { bottom, height } = textileBox(t, rules)
     const h = Math.min(height, H - bottom)
     const glow = sel.textileId === t.id ? { emissive: SELECT, emissiveIntensity: 0.35 } : {}
-    const fabric = mat('textile', FABRIC, { roughness: 1, ...glow })
     const alu = mat('textile', ALU, { ...ALU_FINISH, ...glow })
-    const m = findMotif(opts.motifs, t.motif)
-    const print = m ? printMaterial(m, (to - from) / h, opts.onLoad, glow) : fabric
+    const m = t.fill === 'white' || t.fill === 'reuse' ? undefined : findMotif(opts.motifs, t.motif)
+    const print = m ? printMaterial(m, (to - from) / h, opts.onLoad, glow) : t.fill === 'white' ? white(glow) : placeholder(glow)
     const fw = to - from - 0.02
     const g = frame(pointAlong(w, from), pointAlong(w, to), off)
     const tag: Tag = { layer: 'textile', pick: { wallId: w.id, textileId: t.id } }
     profiles(g, fw, h, bottom, { from: true, to: true }, -fw / 2, fw / 2, alu, tag)
-    const [front, back] = s === 1 ? [print, fabric] : [fabric, print]
-    textile(g, -fw / 2, fw, h, bottom, front, 1, tag)
-    textile(g, -fw / 2, fw, h, bottom, back, -1, tag)
+    // One textile, on the face out from the wall
+    textile(g, -fw / 2, fw, h, bottom, print, s === 1 ? 1 : -1, tag)
     // Upright braces (90) evenly spread inside the frame
     const n = res.production.pieces.find((p) => p.textileId === t.id)?.braces?.qty ?? 0
     for (let i = 1; i <= n; i++) brace(g, -fw / 2 + (fw * i) / (n + 1), h, bottom, alu, tag)
@@ -57,7 +55,7 @@ export function buildTextile(c: BuildContext) {
     const face = (x: (typeof f.faces)[number]) => {
       const m = x.fill === 'print' ? findMotif(opts.motifs, x.motif ?? undefined) : undefined
       if (m) return printMaterial(m, L / h, opts.onLoad, glow)
-      return mat('textile', x.fill === 'white' ? '#ffffff' : FABRIC, { roughness: 1, ...glow })
+      return x.fill === 'white' ? white(glow) : placeholder(glow)
     }
     const foot = rules.wall.feet / 10
     const tag: Tag = { layer: 'textile', pick: { freeTextileId: t.id } }
@@ -77,6 +75,15 @@ export function buildTextile(c: BuildContext) {
   }
 
   cornerPosts(c)
+
+  function white(glow: THREE.MeshStandardMaterialParameters) {
+    return mat('textile', '#ffffff', { roughness: 1, ...glow })
+  }
+  /** A print not chosen yet, or the customer's own textile: the frame stands naked (Bjørn 6.11.2026; a see-through
+   *  sheet looks like clear plexi, which the system can hold too). The face is still there to click, just not drawn. */
+  function placeholder(glow: THREE.MeshStandardMaterialParameters) {
+    return mat('textile', '#ffffff', { visible: false, ...glow })
+  }
 
   /** A group along a → b, centred on it, `off` along the left normal: local x along the run, +z toward face A. */
   function frame(a: Point, b: Point, off: number) {
@@ -121,6 +128,8 @@ export function buildTextile(c: BuildContext) {
     mesh.position.set(x + w / 2, y0 + h / 2, side * (depth / 2 + 0.0005))
     if (side === -1) mesh.rotation.y = Math.PI
     add(mesh, tag, g)
+    // A naked face casts no shadow
+    if (!m.visible) mesh.castShadow = false
   }
 }
 
