@@ -29,8 +29,13 @@ export function buildFrame(c: BuildContext) {
     along(a, b, 2 * half, 0.012, foot.along / 1000, 0, mat('walls', FOOT_PLATE, ALU_FINISH), { layer: 'walls' })
   }
 
-  // Beams (takdrager), top flush with the walls
+  // Beams (takdrager) in 292, top flush with the walls, cut between the posts (centres − 40)
   for (const s of res.beams.segments) {
-    along(s.from, s.to, s.length, rules.beam.height, rules.beam.thickness, H - rules.beam.height, mat('beams', BEAM, ALU_FINISH), { layer: 'beams' })
+    const [a, b] = [s.from, s.to]
+    const mesh = new THREE.Mesh(unitProfile('292'), mat('beams', BEAM, ALU_FINISH))
+    mesh.scale.x = Math.max(0.001, Math.hypot(b[0] - a[0], b[1] - a[1]) - rules.wall.post)
+    mesh.position.copy(at([(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], H - rules.beam.height / 2))
+    mesh.rotation.y = Math.atan2(-(b[1] - a[1]), b[0] - a[0])
+    add(mesh, { layer: 'beams' })
   }
 }

@@ -8,12 +8,6 @@ import { builtModules } from '../../domain/walls'
 import { catalog, place, rules } from '../env'
 import { build, type Tag } from './build'
 
-/** Size of a box mesh, or null for anything else. */
-const box = (o: THREE.Object3D) => {
-  const g = (o as THREE.Mesh).geometry as THREE.BoxGeometry | undefined
-  return g?.type === 'BoxGeometry' ? g.parameters : null
-}
-
 const meshes = (g: THREE.Object3D) => {
   const out: THREE.Object3D[] = []
   g.traverse((o) => {
@@ -32,7 +26,7 @@ describe('3D scene from the model', () => {
   it('draws one post per calc post and one beam per beam length', () => {
     const posts = all.filter((o) => (o as THREE.Mesh).geometry?.name === 'foga-94')
     expect(posts).toHaveLength(res.posts.length)
-    const beams = layer('beams').filter((o) => box(o)?.height === rules.beam.height)
+    const beams = layer('beams').filter((o) => (o as THREE.Mesh).geometry?.name === 'foga-292')
     expect(beams).toHaveLength(res.beams.segments.length)
   })
 
@@ -55,9 +49,11 @@ describe('3D scene from the model', () => {
     expect((foils[0].userData as Tag).pick?.wallId).toBe('side-left')
   })
 
-  it('a 43TX frame (four profiles, textile on both faces) per textile wall, and floor tiles are instanced per product, carpet tiles over a joint bed', () => {
+  it('a 43TX frame (four profiles, textile on both faces, a 90 per brace) per textile wall, and floor tiles are instanced per product, carpet tiles over a joint bed', () => {
     const textile = layer('textile')
-    expect(textile).toHaveLength(6 * v.textiles.length)
+    const braces = res.production.pieces.reduce((a, p) => a + (p.braces?.qty ?? 0), 0)
+    expect(textile).toHaveLength(6 * v.textiles.length + braces)
+    expect(textile.filter((o) => (o as THREE.Mesh).geometry?.name === 'foga-90')).toHaveLength(braces)
     expect(textile.filter((o) => (o as THREE.Mesh).geometry.type === 'PlaneGeometry')).toHaveLength(2 * v.textiles.length)
     const inst = layer('floor').filter((o) => (o as THREE.InstancedMesh).isInstancedMesh) as THREE.InstancedMesh[]
     // Carpet tiles: the tiles over a bed in the joint shade
