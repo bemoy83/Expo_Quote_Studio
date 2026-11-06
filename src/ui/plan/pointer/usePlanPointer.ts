@@ -10,7 +10,7 @@ import { applyDrop, decorDrag, endDecorDrag, type DecorDrag } from '../../dnd'
 import type { FaceHit, TextileLine } from '../layers/Previews'
 import { beam } from './beam'
 import { carpetFill, startCarpetFill } from './carpetFill'
-import { click } from './click'
+import { click, clickSelection } from './click'
 import { ratioOf } from './decor'
 import { erase, startErase, type Erasing } from './erase'
 import { floor, startFloor } from './floor'
@@ -97,7 +97,7 @@ export function usePlanPointer(input: PlanPointerInput) {
     return { x: m.x, y: m.y }
   }
 
-  const c: PointerCtx = { ...input, clickSelect: input.onSelect, rollPending, setStroke, setTextileStroke, setRollPending, setFillRect, setErasing }
+  const c: PointerCtx = { ...input, clickSelect: (s) => input.onSelect(clickSelection(input.selection, s, input.drawerOpen)), rollPending, setStroke, setTextileStroke, setRollPending, setFillRect, setErasing }
 
   /** The drag a press starts, or nothing for a pen that acts on the click alone. */
   const press = (q: P): Drag | undefined => {
