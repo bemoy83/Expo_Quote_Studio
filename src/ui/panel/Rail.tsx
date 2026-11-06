@@ -57,7 +57,7 @@ export function Rail(p: RailProps) {
                 type="button"
                 className="strip-btn"
                 aria-current={open && m.key === tab}
-                title={open && m.key === tab ? 'Fold inn panelet' : undefined}
+                title={open && m.key === tab ? `${m.name} · fold inn panelet` : `${m.name} · åpne i panelet`}
                 onClick={() => {
                   // Like a tab bar: another group opens the panel on it, the open group folds the panel away.
                   if (open && m.key === tab) return setOpen(false)
