@@ -59,7 +59,7 @@ export function NameTip() {
     let pressed: Element | null = null
     /** The finger held a button long enough: its pill shows and the click that follows is swallowed. */
     let held = false
-    let touch: { el: Element; x: number; y: number } | null = null
+    let touch: { x: number; y: number } | null = null
     /** Under the mouse, waiting for it to stand still. */
     let pending: Element | null = null
 
@@ -118,15 +118,14 @@ export function NameTip() {
     }
     const down = (e: PointerEvent) => {
       held = false
-      if (e.pointerType !== 'touch') {
-        pressed = targetOf(e.target)
-        pending = null
-        hide()
-        return
-      }
       hide()
       const el = targetOf(e.target)
-      touch = el ? { el, x: e.clientX, y: e.clientY } : null
+      if (e.pointerType !== 'touch') {
+        pressed = el
+        pending = null
+        return
+      }
+      touch = el ? { x: e.clientX, y: e.clientY } : null
       if (el)
         timer = window.setTimeout(() => {
           held = true
