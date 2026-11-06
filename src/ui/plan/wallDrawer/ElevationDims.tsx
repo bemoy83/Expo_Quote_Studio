@@ -22,7 +22,11 @@ export function ElevationDims({ w, s, name, L, H, items, leaders, top, width, sc
   const modules = Array.from({ length: Math.round(L) + 1 }, (_, i) => i)
   const wall = rules.wall.height
   const decor = items.length > 0
-  const along = row([0, L], items.flatMap((i) => [i.x0, i.x1]))
+  // Physical ends (Bjørn 6.11.2026): the outside of the end posts, half a post past the centres the wall is drawn
+  // between, so the row over the wall adds up to the total (6 040 for a 6 000 c/c wall)
+  const half = rules.wall.post / 2
+  const outer: [number, number] = [-half, L + half]
+  const along = row(outer, items.flatMap((i) => [i.x0, i.x1]))
   const heights = row([0, H], items.flatMap((i) => [H - i.top, H - i.bottom]))
   const rowY = -px(NEAR)
   const textY = (l: Leader) => rowY - px(NEAR + 14) - l.level * px(LEADER_LINE)
@@ -37,9 +41,9 @@ export function ElevationDims({ w, s, name, L, H, items, leaders, top, width, sc
         <tspan style={mono}>{ends}</tspan>
       </text>
 
-      {/* Under: one module a metre (the wall chosen), and the whole wall */}
-      {!decor && modules.length > 2 && <Chain sc={sc} axis="x" at={H + px(NEAR)} ts={modules} dir={1} />}
-      <Chain sc={sc} axis="x" at={H + px(decor ? NEAR : TOTAL)} ts={[0, L]} dir={1} />
+      {/* Under: one module a metre centre to centre of the posts (the wall chosen), and the whole wall, physical */}
+      {!decor && modules.length > 2 && <Chain sc={sc} axis="x" at={H + px(NEAR)} ts={modules} dir={1} suffix="c/c" />}
+      <Chain sc={sc} axis="x" at={H + px(decor ? NEAR : TOTAL)} ts={outer} dir={1} />
       {/* Left: the wall, and with its feet (the wall chosen) */}
       {!decor && <Chain sc={sc} axis="y" at={-px(NEAR)} ts={[0, wall]} dir={-1} suffix="vegg" />}
       {!decor && <Chain sc={sc} axis="y" at={-px(TOTAL)} ts={[0, H]} dir={-1} suffix="med føtter" />}

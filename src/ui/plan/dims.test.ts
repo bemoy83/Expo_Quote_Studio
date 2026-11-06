@@ -52,8 +52,8 @@ describe('plan dimensions', () => {
     const x = { ...v, textiles: [t] }
     const d = planDims(x, { wallId: back.id, textileId: 't1' }, false)
     expect(d.inner).toMatchObject({ axis: 'x', at: 0, dir: 1, clear: 'mounted' })
-    // The frame: 2 000 span − 30 = 1 970, centred
-    expect(d.inner!.ts).toEqual([...new Set([back.from[0], back.to[0], 1.015, 2.985])].sort((a, b) => a - b))
+    // The frame: 2 000 span − 30 = 1 970, centred; the wall from the outside of its end posts
+    expect(d.inner!.ts).toEqual([...new Set([Math.min(back.from[0], back.to[0]) - 0.02, Math.max(back.from[0], back.to[0]) + 0.02, 1.015, 2.985])].sort((a, b) => a - b))
     // The wall's module chain is not shown
     expect(d.sides.find((s) => s.side === 'back')!.near).not.toEqual([0, 1, 2, 3, 4, 5, 6])
   })
