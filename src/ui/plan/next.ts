@@ -4,14 +4,13 @@
 // The key changes only when the target does (edge, module, cell, tile, spot), so the next variant and its calc are
 // worked out again only then.
 import { freeFrames } from '../../calc/textile/free'
-import { paintWalls } from '../../domain/edit'
 import { addFoil } from '../../domain/decor'
 import { DOOR_AIM_MIN, placeOpening } from '../../domain/doors'
+import { paintWalls } from '../../domain/edit'
 import { faceSegment, felt, sideOf } from '../../domain/faces'
 import { applyFloor, type FloorAction } from '../../domain/floor/brush'
-import type { Rect } from '../../domain/floor/tiles'
 import { fillCarpet } from '../../domain/floor/rollFill'
-import { builtModules, doorAllowed, type BuiltModule } from '../../domain/walls'
+import type { Rect } from '../../domain/floor/tiles'
 import { wallModules, type Module } from '../../domain/grid'
 import { drawInnerBeam, type Run } from '../../domain/innerBeams'
 import { addObject, footprintBox } from '../../domain/objects'
@@ -19,6 +18,7 @@ import { drawTextile, fillFace, type TextileResult } from '../../domain/textile/
 import { faceOfPoint, freeTextileAt, updateFace } from '../../domain/textile/free'
 import { textileAt, updateTextile } from '../../domain/textile/inFrame'
 import type { Point, Variant } from '../../domain/types'
+import { builtModules, doorAllowed, type BuiltModule } from '../../domain/walls'
 import { RECIPES } from '../../foga/recipes'
 import type { Motif } from '../../persistence/file'
 import { applyDrop, type DecorDrag } from '../dnd'
@@ -26,9 +26,8 @@ import { place, productOf, rules } from '../env'
 import type { Brush, Tool } from '../tools'
 import { mm } from './dims'
 import { nearestEdge } from './geometry'
-import { conflicts } from '../../domain/objects'
-import type { CalcResult } from '../../calc/calc'
-import { changedAreas, unchanged, type Areas, type Box, type PlanState } from './nextArea'
+import type { FaceHit, TextileLine } from './layers/Previews'
+import type { Box } from './nextArea'
 import type { PlanScale } from './planScale'
 import { beamBody, PHANTOM, printBand, textileWidth, wallWidth } from './planStyle'
 import { ratioOf } from './pointer/decor'
@@ -39,7 +38,6 @@ import type { Pens } from './pointer/pens'
 import { placeHolds, placeKey } from './pointer/place'
 import { paintPlates, plateAt, platesAlong } from './pointer/plates'
 import type { Drag, P } from './pointer/types'
-import type { FaceHit, TextileLine } from './layers/Previews'
 
 /** The symbol's width a hatched invalid target or a measure pill goes by. */
 export type Width = 'wall' | 'beam' | 'textile' | 'print'
@@ -335,43 +333,4 @@ function fillTarget(p: NextInput, product: string, rect: Rect | undefined): Next
   return target(`fill:${product}:${rect ? `${rect.i},${rect.j},${rect.w},${rect.h}` : 'stand'}`, () =>
     area({ edit: (x) => fillCarpet(x, product, roll, rules.carpet, rect), hint: null }),
   )
-}
-
-/** What an edit would store (App's onEdit without storing it) and its calc. */
-export interface Preview {
-  result: (fn: (v: Variant) => Variant) => Variant
-  calc: (v: Variant) => CalcResult
-}
-
-/** What the pen would store, and the next variant as the plan draws it with where it differs (null: nothing changes). */
-export interface NextState {
-  outcome: NextOutcome
-  scene: (PlanState & { areas: Areas }) | null
-}
-
-/** The last next state worked out per sketch: moving the pointer within the same target reuses it. */
-const cache = new WeakMap<Variant, { key: string; res: CalcResult; preview: Preview; value: NextState }>()
-
-/** The next state for the target over the sketch `base`, worked out again only when the target or the sketch changes. */
-export function nextOf(t: NextTarget, base: PlanState, preview: Preview): NextState {
-  const c = cache.get(base.v)
-  if (c && c.key === t.key && c.res === base.res && c.preview === preview) return c.value
-  const value = nextStateOf(t.outcome(), base, preview)
-  cache.set(base.v, { key: t.key, res: base.res, preview, value })
-  return value
-}
-
-function nextStateOf(outcome: NextOutcome, base: PlanState, preview: Preview): NextState {
-  const { v, res } = base
-  if (!outcome.edit) return { outcome, scene: null }
-  const nv = preview.result(outcome.edit)
-  if (nv === v) return { outcome, scene: null }
-  const scene: PlanState = { v: nv, res: onlyObjects(v, nv) ? res : preview.calc(nv), mods: builtModules(nv), bad: conflicts(nv, place) }
-  const areas = changedAreas(base, scene)
-  return { outcome, scene: unchanged(areas) ? null : { ...scene, areas } }
-}
-
-/** Only the furniture differs: the calc's frame (beams, posts, foot plates, free-standing textile) is the same. */
-function onlyObjects(a: Variant, b: Variant): boolean {
-  return (Object.keys(b) as (keyof Variant)[]).every((k) => k === 'objects' || a[k] === b[k])
 }
