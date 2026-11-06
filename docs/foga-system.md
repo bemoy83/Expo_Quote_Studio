@@ -317,7 +317,11 @@ Slik henger det sammen:
   før, så klikk og velg i 3D virker som i dag.
 - Kost målt på eksempelskissene: 6 × flere trekanter for rammen (største eksempel, 03-rom, 1 438 → 8 542), uendret
   byggetid, ca. 4 kB gzip mer i 3D-bunten. Godt innenfor det en iPad tåler.
-- Mangler STL for 292 (takdrager), 90 (stag) og 600/617; de vises som bokser til de kommer.
+- Trinn 1 (PR #105): stolpe 94, skinnene 92 og 91, platen 3 mm i kanalene.
+- Trinn 2: tekstilrammene er fire 43TX-profiler, gjæret i hjørnene (`mitredProfile`), med duken over begge flatene.
+  Frittstående vegger som møtes får 92LTX med endelokk (7 mm) under og over; skinnene stopper ved benet. Hver
+  92LTX lages for seg (snudd etter de to veggene), de gjærede bitene også, og frigjøres med resten av scenen.
+- Mangler STL for 292 (takdrager), 90 (stag) og 600/617; de vises som bokser eller ikke i det hele tatt.
 
 ### Plukkliste
 

@@ -31,3 +31,32 @@ export function unitProfile(name: ProfileName, flipY = false): THREE.BufferGeome
   return g
 }
 
+
+/**
+ * `len` m of a frame profile, its outer edge (profile y = 0) toward local −y. A mitred end is cut at 45°: the outer
+ * edge keeps the full length, the inner edge is a profile depth shorter, so two pieces meet in a frame corner. A
+ * square end butts against something (a 92LTX leg). Its own geometry: free it with the build.
+ */
+export function mitredProfile(name: ProfileName, len: number, mitre: { from: boolean; to: boolean }): THREE.BufferGeometry {
+  const g = unitProfile(name).clone()
+  g.userData = {}
+  const pos = g.attributes.position
+  g.computeBoundingBox()
+  const outer = g.boundingBox!.min.y
+  for (let i = 0; i < pos.count; i++) {
+    const end = pos.getX(i) > 0 ? 'to' : 'from'
+    const d = pos.getY(i) - outer
+    pos.setX(i, (end === 'to' ? 1 : -1) * (len / 2 - (mitre[end] ? d : 0)))
+  }
+  g.computeVertexNormals()
+  g.computeBoundingBox()
+  g.computeBoundingSphere()
+  return g
+}
+
+/** End cap 876 900 92 under and over a 92LTX, in the same coordinates as OUTLINES['92LTX'], mm. 7 mm thick. */
+export const CAP_92LTX = [[0, 0], [16, 0], [16, 15.5], [31.5, 15.5], [31.5, 31], [47, 31], [47, 47], [9.5, 47], [0, 37.5]] as const
+export const CAP_THICKNESS = 0.007
+/** The corner point (where the two runs' centre lines meet) in OUTLINES['92LTX'] coordinates, mm. From the corner
+ *  example: the legs run toward +x and −y, the outer corner is toward −x, +y. */
+export const CORNER_92LTX: readonly [number, number] = [19.9, 36.9]
