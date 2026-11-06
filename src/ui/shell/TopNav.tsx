@@ -61,13 +61,13 @@ export function TopNav({
       {open && <ProjectPopover project={project} setProject={setProject} button={button} onClose={() => setOpen(false)} />}
       <IconButton icon={THEME[theme].icon} label={`${THEME[theme].label} · klikk for å bytte`} onClick={() => setTheme(nextTheme(theme))} />
       <span className="spacer" />
-      <Button icon={FilePlus} onClick={onNew}>
+      <Button icon={FilePlus} title="Ny skisse" onClick={onNew}>
         Ny
       </Button>
-      <Button icon={FolderOpen} onClick={onOpen}>
+      <Button icon={FolderOpen} title="Åpne fil" onClick={onOpen}>
         Åpne fil
       </Button>
-      <Button icon={Download} onClick={onSave}>
+      <Button icon={Download} title="Lagre fil" onClick={onSave}>
         Lagre fil
       </Button>
       <span className="poc">Proof of concept · intern bruk</span>

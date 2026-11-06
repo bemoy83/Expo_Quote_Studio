@@ -406,6 +406,30 @@ kbd {
   font: var(--type-text);
   color: rgb(var(--ink-faint));
   margin-left: 8px;
+  white-space: nowrap;
+}
+/* Narrower screens (iPad landscape is 1180): the top bar keeps every control on screen.
+   First the label goes and the menu tightens, then Ny, Åpne fil and Lagre fil keep only their icon. */
+@media (max-width: 1499px) {
+  .topnav .brand {
+    margin-right: 12px;
+    white-space: nowrap;
+  }
+  .topnav .poc {
+    display: none;
+  }
+  .navb {
+    padding: 7px 8px;
+  }
+}
+@media (max-width: 1279px) {
+  .topnav > .btn:not(.proj-btn) {
+    width: var(--ctl-h);
+    padding: 0;
+    justify-content: center;
+    gap: 0;
+    font-size: 0;
+  }
 }
 
 .band {
