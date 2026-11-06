@@ -17,6 +17,8 @@ export interface BeamSegment {
   inner?: true;
   /** Støttedrager holding a long stand wall (calc/supportBeams.ts); also a cross beam. */
   support?: true;
+  /** Lifted one beam height over a textile wall (calc/beamLift.ts). */
+  lifted?: true;
 }
 
 export interface BeamLayout {

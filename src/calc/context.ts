@@ -16,6 +16,7 @@ import type { FogaStructure } from '../foga/structure';
 import { ITEM, type PricingData } from '../pricing/data';
 import { priceLine, type Use } from '../pricing/model';
 import type { Rules } from '../rules/rules';
+import { liftBeams, type BeamLift } from './beamLift';
 import { variantBeams, type BeamLayout } from './beams';
 import type { InnerBeamLayout } from './innerBeams';
 import { production, type Production } from './production';
@@ -50,6 +51,8 @@ export interface CalcContext {
   /** Every post on the sketch: wall posts, then the posts only the standard takdrager need, then the drawn ones'. */
   allPosts: Map<string, Point>;
   beams: { standard: BeamLayout; inner: InnerBeamLayout; all: BeamLayout; support: SupportBeamLayout; hooks: number };
+  /** Takdrager lifted over textile walls, and the posts and hook points that takes (calc/beamLift.ts). */
+  lift: BeamLift;
   standardPosts: number;
   innerPosts: number;
   beamPosts: number;
@@ -116,6 +119,7 @@ export function calcContext(v: Variant, rules: Rules, catalog: Catalog, standWal
   const mods = builtModules(v);
   const points = wallPoints(mods);
   const { standard, inner, all, support, hooks } = variantBeams(v, mods, points, rules.beam.max);
+  const lift = liftBeams(v, rules, all, points);
   const wallsById = new Map(v.walls.map((w) => [w.id, w]));
   const kindOf = (m: BuiltModule): WallKind => {
     const w = wallsById.get(m.wallId);
@@ -160,7 +164,7 @@ export function calcContext(v: Variant, rules: Rules, catalog: Catalog, standWal
   const wallFeet = [...freeWallFeet, ...inner.feet];
   const prod = production(v, rules.textile.inFrame, '');
   // Foga structure of what the exhibitor orders: posts, walled modules, headers and beam lengths are counted from it
-  const foga = structureOf({ mods: ours, posts: ourPoints.size + (organiserBeams ? innerPosts : beamPosts), beams: ourBeams, hooks, production: prod, swaps, wallFeet: wallFeet.length, barePosts: wallFeet.filter((f) => ourPoints.has(pointKey(f.at))).length + inner.feet.length });
+  const foga = structureOf({ mods: ours, posts: ourPoints.size + (organiserBeams ? innerPosts : beamPosts), beams: ourBeams, hooks, lift: { posts: lift.posts.length, hooks: lift.hooks.length }, production: prod, swaps, wallFeet: wallFeet.length, barePosts: wallFeet.filter((f) => ourPoints.has(pointKey(f.at))).length + inner.feet.length });
   // Wall posts are shared between modules: each module (door and curtain included) carries an equal share of the
   // posts of its builder
   const share = (nPosts: number, nMods: number) => (nMods ? nPosts / nMods : 0);
@@ -192,6 +196,7 @@ export function calcContext(v: Variant, rules: Rules, catalog: Catalog, standWal
     ourPoints,
     allPosts,
     beams: { standard, inner, all, support, hooks },
+    lift,
     standardPosts,
     innerPosts,
     beamPosts,

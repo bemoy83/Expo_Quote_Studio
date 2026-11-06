@@ -47,6 +47,9 @@ export interface FogaStructure {
   beams: BeamSpec[];
   /** Ends of drawn (innvendige) takdrager hanging on another beam on a hook. */
   beamHooks?: number;
+  /** Takdrager lifted over a textile wall (calc/beamLift.ts): posts extended under them, and hook points between a
+   *  lifted beam and one that is not. */
+  beamLift?: { posts: number; hooks: number };
   frames: FrameSpec[];
   /** Frittstående tekstilvegger. */
   freeFrames?: FreeFrameSpec[];

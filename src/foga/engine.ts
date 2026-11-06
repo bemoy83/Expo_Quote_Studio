@@ -143,6 +143,18 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   for (const b of s.beams) unit(BOM_GROUP.beams, 'Takdrager', r.beam.profile, between(b.lengthMm), r.beam.coupling, 1);
   // A drawn takdrager's end hanging on another beam: one hook per end
   part(BOM_GROUP.beams, r.beam.hook, s.beamHooks ?? 0);
+  // Lifted over a textile wall: a piece of 94 on top of each post under the beam (609 down into the post), and at a hook
+  // point between a lifted beam and one that is not, the same piece coupled to the other beam with a 600
+  const lift = r.beam.lift;
+  const liftPiece = (key: string, coupling: string, note: string, qty: number) =>
+    put(
+      BOM_GROUP.beams,
+      key,
+      { artnr: '', name: `Skjøt ${lift.profile}, ${lift.length} mm, med ${coupling}`, detail: `${lift.profile} × ${lift.length} mm · 1 × ${coupling} (${fogaPart(coupling).artnr}) · ${note}`, note, preassembled: true },
+      qty,
+    );
+  liftPiece('lift-post', lift.post, 'på stolpe, takdrager over tekstilvegg', s.beamLift?.posts ?? 0);
+  liftPiece('lift-hook', lift.hook, 'ved krok, takdrager over tekstilvegg', s.beamLift?.hooks ?? 0);
 
   // Tekstilvegger: 43TX cut mitred 2W + 2H (loose), 4 × 617, 2 × 520, and upright braces in 90 with a 600 in each
   // end, stored pre-assembled; the brace line names the frames it belongs to

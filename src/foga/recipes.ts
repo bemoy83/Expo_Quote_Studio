@@ -83,6 +83,10 @@ export interface BeamRecipe {
   coupling: { code: string; perEnd: number };
   /** A drawn (innvendig) beam's end hanging on another beam (Bjørn 1.11.2026), one per end. Placeholder part. */
   hook: string;
+  /** Lifting a beam over a textile wall (Bjørn 6.11.2026, calc/beamLift.ts): a piece of `profile` `length` mm on top of
+   *  every post the lifted beam rests on, with `post` down into the post, and at a hook point between a lifted beam and
+   *  one that is not, the same piece with `hook` into the other beam. */
+  lift: { profile: string; length: number; post: string; hook: string };
 }
 
 /** Opening module (door or curtain): above it a header (overstykke). The Foga door (292 frame, lock 410) is picked as one unit. */
@@ -131,6 +135,6 @@ export const RECIPES: Recipes = {
     maxRail: 5000,
     support: SUPPORT,
   },
-  beam: { profile: '292', coupling: { code: '600', perEnd: 2 }, hook: 'KROK' },
+  beam: { profile: '292', coupling: { code: '600', perEnd: 2 }, hook: 'KROK', lift: { profile: '94', length: 80, post: '609', hook: '600' } },
   door: { leaf: 2000, floorGap: 20, topGap: 10 },
 };

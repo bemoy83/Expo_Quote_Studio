@@ -124,6 +124,9 @@ export interface CalcResult {
   margin: Margin;
   keyFigures: KeyFigures;
   beams: BeamLayout;
+  /** Takdrager lifted over textile walls (calc/beamLift.ts; the lengths are `lifted` in `beams`): the posts extended
+   *  under them, and the hook points between a lifted beam and one that is not. Only when there are any. */
+  lift?: { posts: Point[]; hooks: Point[] };
   posts: Point[];
   /** Støtteplater under free-standing system walls and drawn takdrager's own posts: always the exhibitor's, also under
    *  the organiser's stand walls. */

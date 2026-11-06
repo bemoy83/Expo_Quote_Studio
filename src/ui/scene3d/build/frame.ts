@@ -48,14 +48,33 @@ export function buildFrame(c: BuildContext) {
     add(pin, { layer: 'walls' })
   }
 
-  // Beams (takdrager) in 292, top flush with the walls, cut between the posts (centres − 40)
+  // Beams (takdrager) in 292, top flush with the walls, cut between the posts (centres − 40). A beam lifted over a
+  // textile wall (calc/beamLift.ts) is one piece of 94 higher
+  const lift = RECIPES.beam.lift.length / 1000
   for (const s of res.beams.segments) {
     const [a, b] = [s.from, s.to]
     const mesh = new THREE.Mesh(unitProfile('292'), mat('beams', BEAM, ALU_FINISH))
     mesh.scale.x = Math.max(0.001, Math.hypot(b[0] - a[0], b[1] - a[1]) - rules.wall.post)
-    mesh.position.copy(at([(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], H - rules.beam.height / 2))
+    mesh.position.copy(at([(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], H - rules.beam.height / 2 + (s.lifted ? lift : 0)))
     mesh.rotation.y = Math.atan2(-(b[1] - a[1]), b[0] - a[0])
     add(mesh, { layer: 'beams' })
+  }
+  // The 94 pieces that lift them: on top of each post under a lifted beam, and at a hook point between a lifted beam and
+  // one that is not, at the level of the beam hanging there
+  if (res.lift) {
+    const piece = (p: Point, bottom: number, layer: 'walls' | 'beams') => {
+      const mesh = new THREE.Mesh(unitProfile('94'), mat(layer, ALU, ALU_FINISH))
+      mesh.scale.x = lift
+      mesh.rotation.z = Math.PI / 2
+      mesh.position.copy(at(p, bottom + lift / 2))
+      add(mesh, { layer })
+    }
+    for (const p of res.lift.posts) piece(p, H, wallPts.has(pointKey(p)) ? 'walls' : 'beams')
+    for (const p of res.lift.hooks) {
+      const k = pointKey(p)
+      const hanging = res.beams.segments.filter((s) => pointKey(s.from) === k || pointKey(s.to) === k)
+      piece(p, hanging.some((s) => s.lifted) ? H : H - rules.beam.height, 'beams')
+    }
   }
 }
 

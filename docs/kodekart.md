@@ -44,6 +44,7 @@ Rekkefølgen på linjene i tilbudet er rekkefølgen blokkene kjøres i `calc/cal
 - Standard: `calc/beams.ts` (`variantBeams` setter sammen alle tre)
 - Innvendige (tegnet av kunden): modell `InnerBeam`, redigering `domain/innerBeams.ts`, utlegg `calc/innerBeams.ts`
 - Støttedrager på lange standvegger: `calc/supportBeams.ts`
+- Hevet over tekstilvegg (skjøtet stolpe og krok): `calc/beamLift.ts`, linjen `beamLiftLines` i `calc/lines/beams.ts`, 3D i `scene3d/build/frame.ts`
 - Linjen og hvem som betaler: `calc/lines/beams.ts` · `calc/context.ts` (`organiserBeams`)
 - Plan og 3D: `plan/layers/BeamLayer.tsx`, tegne `plan/pointer/stroke.ts`, dra `pointer/beam.ts` · `scene3d/build/frame.ts`
 

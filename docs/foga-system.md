@@ -175,6 +175,30 @@ Bjørn 1.11.2026. Kunden kan tegne egne takdragere inne på standen med en egen 
 - **Tilbud:** takdrager per meter med egne stolper og kroker i prisen, i samme linje som standard takdrager. Betaler
   arrangøren standard takdragerne, får de tegnede en egen linje «innvendig». Fotplatene ligger i linjen Støtteplate.
 
+### Takdrager over tekstilvegg
+
+Bjørn 6.11.2026. En takdrager kan ikke kobles på en tekstilvegg. InFrame er bare navnet på tekstilveggen når den står
+mot en systemvegg: den er bygget i samme 43TX, så konflikten er den samme som for frittstående tekstilvegg. Der en
+takdrager kommer i konflikt med en tekstilramme, viker drageren: stolpene skjøtes opp, og drageren går klar over
+(`calc/beamLift.ts`).
+
+- **Konflikt** er bare fysisk: drageren (292, 20 bred, mellom stolpenes sider) og rammen (43TX, 40 dyp) tar samme plass
+  i plan, og rammen når opp til dragerens underkant. Typisk en tverrdrager eller tegnet drager over en frittstående
+  tekstilvegg, eller en drager som hviler på en veggstolpe der InFrame står på den siden drageren kommer fra. En
+  InFrame-ramme som slutter ved stolpen, eller står på veggens andre side, er ikke i veien. Innsyn teller ikke.
+- **Hele løpet** heves, ikke bare lengden over tekstilveggen: alle lengder i samme rette linje som møtes ende mot ende.
+  Det gjelder alle dragere, standard, støttedrager og tegnede.
+- **Skjøt på stolpe:** hver stolpe det hevede løpet hviler på, også en veggstolpe, får **94 × 80 mm med 609** ned i
+  stolpen. Drageren ligger da 80 mm høyere, med underkanten i høyde med rammens topp (2540).
+- **Skjøt ved krok:** der en hevet drager henger på en som ikke er hevet (eller omvendt), står det samme stykket 94 × 80
+  med **600** (871 003 92, kobling med justerbart hode) mot den andre drageren, i høyden til drageren som henger der.
+  Koblingene passer innvendig i alle Flex-profiler. Henger begge på samme nivå, er det en vanlig krok.
+- **Tilbud:** egen linje «Skjøt takdrager over tekstilvegg» per stykke (plassholder 6111), fordi en drager senere kan
+  skjøtes høyere og koste mer. Alltid utstillerens, også når arrangøren betaler standard takdragerne: det er
+  utstillerens tekstilvegg som krever det.
+- **Plukkliste og arbeidsordre:** «Skjøt 94, 80 mm, med 609» og «… med 600» under Takdrager, plukket som ferdige stykker.
+- **3D:** hevet drager og skjøtestykkene vises.
+
 ### Støtteplater på frittstående systemvegg
 
 Bjørn 1.11.2026. Takdragerrammen holder veggene. En systemvegg uten den står fritt og får støtteplater under stolpene,
