@@ -177,11 +177,14 @@ Overskrifter i små versaler 7,5 px. En rad som ikke får plass, faller bort, al
 Veggskuffens tegning blir arbeidstegning for én vegg. Se bilde 3.
 
 - **Overskrift:** «Venstre · sett innenfra · ← front   bakkant →». Navnet på siden og retningen til hver ende.
-- **Under veggen:** modulkjede (1 000 per modul) og totalen under den. Erstatter `Dims` i dag.
-- **Over veggen:** plasseringsrad for tekstil og grafikk, med avstand fra kant og bredde.
-- **Til høyre:** høyderad for tekstil og grafikk (bunn, høyde, rest til topp).
-- **Til venstre:** to høyder: «2 490 vegg» og «2 540 med føtter».
-- **Henvisningslinjer:** ingen merkelapp eller farge i veggrisset. Hvert objekt får en prikk på toppen og en
+- **Målene følger det skuffen er åpnet for** (Bjørn 6.11.2026), som planen:
+  - **Veggen:** modulkjede (1 000 per modul) og totalen under, og til venstre to høyder: «2 490 vegg» og
+    «2 540 med føtter». Ingen plasseringsrad for tekstil og grafikk.
+  - **Tekstilramme, dekal eller print:** over veggen plasseringsraden fra hver veggende og bredden (tekstil med
+    rammens fysiske bredde, 3 970 i et felt på 4 000), til høyre høyderaden (bunn, høyde, rest til topp), og
+    veggens total under. Ingen modulkjede og ingen vegghøyder. Print over flere plater måles som ett.
+  - Modulmålene skal gås opp med Bjørn etterpå.
+- **Henvisningslinjer:** ingen merkelapp eller farge i veggrisset. Det valgte objektet får en prikk på toppen og en
   hårstrek (0,6 px, `--ink-muted`) opp til en tekst i målskriften (mono 10,5 px): produkttypen, med nummeret foran
   når «Vis posisjoner» er på. Tekstene står på én linje over plasseringsraden. Linjene forskyves 13 px om de
   overlapper.

@@ -1,6 +1,7 @@
-// Dimensions on the wall drawing (docs/arbeidstegning.md, «Veggrisset»): the heading with where each end points, the
-// module chain and total under the wall, the wall heights to the left, and for textile and print a placement row over
-// the wall, a height row to the right and hairline leaders up to their product type. Chains are drawn as in the plan
+// Dimensions on the wall drawing (docs/arbeidstegning.md, «Veggrisset»): the heading with where each end points and
+// the wall's total under it, and what the drawer is open for (Bjørn 6.11.2026). The wall: its module chain and its
+// heights to the left. A textile frame, decal or print (`items`): its placement row over the wall from each end, its
+// height row to the right and a hairline leader up to its product type; no module chain or wall heights. Chains are drawn as in the plan
 // (plan/DimChain.tsx); sizes are screen px through the drawing's scale. What is measured: elevationMeasure.ts.
 import type { Wall } from '../../../domain/types'
 import type { FaceSide } from '../../../domain/faces'
@@ -36,12 +37,12 @@ export function ElevationDims({ w, s, name, L, H, items, leaders, top, width, sc
         <tspan style={mono}>{ends}</tspan>
       </text>
 
-      {/* Under: one module a metre, and the whole wall */}
-      {modules.length > 2 && <Chain sc={sc} axis="x" at={H + px(NEAR)} ts={modules} dir={1} />}
-      <Chain sc={sc} axis="x" at={H + px(TOTAL)} ts={[0, L]} dir={1} />
-      {/* Left: the wall, and with its feet */}
-      <Chain sc={sc} axis="y" at={-px(NEAR)} ts={[0, wall]} dir={-1} suffix="vegg" />
-      <Chain sc={sc} axis="y" at={-px(TOTAL)} ts={[0, H]} dir={-1} suffix="med føtter" />
+      {/* Under: one module a metre (the wall chosen), and the whole wall */}
+      {!decor && modules.length > 2 && <Chain sc={sc} axis="x" at={H + px(NEAR)} ts={modules} dir={1} />}
+      <Chain sc={sc} axis="x" at={H + px(decor ? NEAR : TOTAL)} ts={[0, L]} dir={1} />
+      {/* Left: the wall, and with its feet (the wall chosen) */}
+      {!decor && <Chain sc={sc} axis="y" at={-px(NEAR)} ts={[0, wall]} dir={-1} suffix="vegg" />}
+      {!decor && <Chain sc={sc} axis="y" at={-px(TOTAL)} ts={[0, H]} dir={-1} suffix="med føtter" />}
 
       {decor && (
         <>

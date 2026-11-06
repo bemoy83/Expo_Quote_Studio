@@ -80,7 +80,13 @@ export function WallElevation(p: Props) {
   // svg fills, never on the svg, whose size would follow the view box it gets from the measure (a loop in Safari).
   const box = useRef<HTMLDivElement>(null)
   const size = useElementSize(box, true)
-  const items = elevationItems(rules, tex, foils, doorModules, u)
+  // Measured is what the drawer is open for (Bjørn 6.11.2026): a selected textile frame, or a selected decal or print
+  // (a print over several plates as one), with its own dimensions; with the wall itself chosen, the wall's
+  const items = T
+    ? elevationItems(rules, [T], [], doorModules, u)
+    : F
+      ? elevationItems(rules, [], F.run ? foils.filter((x) => x.run === F.run) : [F], doorModules, u)
+      : []
   const name = w.room ? 'Romvegg' : label
   const fr = frame(size, L, H, items)
   const sc = planScale(1 / fr.u, {})

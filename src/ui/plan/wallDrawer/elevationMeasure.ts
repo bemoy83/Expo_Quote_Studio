@@ -98,10 +98,11 @@ export function leaders(items: ElevationItem[], H: number, u: number): Leader[] 
 export function margins(items: ElevationItem[], levels: number): { left: number; right: number; top: number; bottom: number } {
   const decor = items.length > 0
   return {
-    left: TOTAL + NUMBERS + 4,
+    // With a frame, decal or print measured, the wall heights and the module chain are left out
+    left: decor ? 10 : TOTAL + NUMBERS + 4,
     right: decor ? NEAR + NUMBERS + 4 : 10,
     top: HEAD + (decor ? NEAR + NUMBERS + levels * LEADER_LINE + 6 : 10),
-    bottom: TOTAL + NUMBERS + 2,
+    bottom: (decor ? NEAR : TOTAL) + NUMBERS + 2,
   }
 }
 
