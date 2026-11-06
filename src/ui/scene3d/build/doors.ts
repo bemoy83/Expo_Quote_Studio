@@ -79,7 +79,7 @@ export function buildOpening(c: BuildContext, m: BuiltModule, tag: Tag) {
     barrel.position.set(hinge * W / 2, y, s * (DEPTH / 2 + 0.004))
     add(barrel, tag, g)
   }
-  // Lock 410 on the free stile: black rosette and knob, the same on both faces
+  // Lock 410 on the free stile: black rosette against the leaf and a knob widening outward, the same on both faces
   const black = mat('openings', LOCK, { roughness: 0.6 })
   const lx = -hinge * (W / 2 - FACE / 2)
   const ly = RECIPES.door.lock.height / 1000
@@ -88,7 +88,7 @@ export function buildOpening(c: BuildContext, m: BuiltModule, tag: Tag) {
     rosette.rotation.x = (side * Math.PI) / 2
     rosette.position.set(lx, ly, side * (DEPTH / 2 + 0.003))
     add(rosette, tag, g)
-    const knob = new THREE.Mesh(shared('lock-knob', () => new THREE.CylinderGeometry(0.015, 0.02, 0.035, 24)), black)
+    const knob = new THREE.Mesh(shared('lock-knob', () => new THREE.CylinderGeometry(0.02, 0.015, 0.035, 24)), black)
     knob.rotation.x = (side * Math.PI) / 2
     knob.position.set(lx, ly, side * (DEPTH / 2 + 0.006 + 0.0175))
     add(knob, tag, g)
