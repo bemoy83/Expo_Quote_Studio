@@ -2,6 +2,7 @@
 // order is started until it is signed off as delivered (A to B), the picking list, the stand sketch and the print list.
 // It can be filtered by product group, so carpet goes to the carpet layer and the stand to the stand builders. It shows the requirement to
 // the OMS in practice: everything here comes from the drawing and the price list. Background: docs/prismodell.md.
+// Byggeregel P4 (docs/byggeregler.md).
 import { Printer } from 'lucide-react'
 import { useState } from 'react'
 import type { CalcResult } from '../../calc/calc'

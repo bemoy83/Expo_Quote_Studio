@@ -2,6 +2,7 @@
 // meeting that face, never over another textile on the same face. Width and offset in 0,1 m steps, at least
 // `rules.textile.minWidth`. Where they may sit, and the edits that place them. fitDecor (domain/decor.ts) keeps them
 // valid after other edits.
+// Byggeregel X4 (docs/byggeregler.md).
 import type { Rules } from '../../rules/rules';
 import { wallHeight } from '../../rules/rules';
 import { blockedModules, faceNormal, faces, sideOf, type FaceSide } from '../faces';

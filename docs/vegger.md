@@ -1,6 +1,7 @@
 # Vegger: standvegg, innervegg og romvegg
 
-Låst av Bjørn 31.10.2026. Begrepene brukes likt i appen, koden og samtaler.
+Låst av Bjørn 31.10.2026. Begrepene brukes likt i appen, koden og samtaler. Byggereglene for veggene (V6, V7, S1–S8,
+D3) og hvem som bygger (B1, B2) står nummerert i [byggeregler.md](byggeregler.md).
 
 ## Begreper
 

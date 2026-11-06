@@ -1,4 +1,5 @@
-// Build rules as data. Approved by the owner 30.10.2026 (F2). Change values here, never in calc code.
+// Build rules as data. Approved by the owner 30.10.2026 (F2). Change values here, never in calc code. The rules
+// themselves, numbered, are in docs/byggeregler.md.
 // Lengths in metres unless the field says mm.
 
 export interface InFrameParams {
@@ -46,12 +47,14 @@ export interface Rules {
     /** Wall plate size, mm. */
     plate: { width: number; height: number };
   };
-  beam: { max: number; height: number; thickness: number };
+  /** `max`: longest beam length (byggeregel T2); `supportSpan`: a free stand-wall span this long gets a støttedrager (T7). */
+  beam: { max: number; height: number; thickness: number; supportSpan: number };
   /** `grid`: free-standing textile walls are drawn and sized on this grid (the elevation grid), at least `freeMin`, m. */
   textile: { depth: number; minWidth: number; grid: number; freeMin: number; inFrame: InFrameParams };
   /** Door leaf: `swing` = leaf width = swing radius, `height` = clear height (the header panel fills the rest), m. */
   door: { swing: number; height: number };
-  floor: { cell: number };
+  /** `cell`: the floor grid (byggeregel G1); `rollEnd`: extra roll length at each end of a lane (G3). */
+  floor: { cell: number; rollEnd: number };
   /** Engangsteppe: internal cost, used only to rank the ways to lay a fill and to show the waste in kr. Never in the
    * sum: the customer pays laid m². `status` 'forslag': proposed rates, not yet approved. */
   carpet: CarpetRates;
@@ -71,7 +74,7 @@ export const RULES: Rules = {
     profile: { length: 0.96, top: 0.04, bottom: 0.03, thickness: 0.02 },
     plate: { width: 960, height: 2420 },
   },
-  beam: { max: 6, height: 0.08, thickness: 0.02 },
+  beam: { max: 6, height: 0.08, thickness: 0.02, supportSpan: 6 },
   textile: {
     depth: 0.04,
     minWidth: 0.5,
@@ -80,7 +83,7 @@ export const RULES: Rules = {
     inFrame: { side: 20, air: 10, wallH: 2490, feet: 50, bleed: 20, scale: 10, prof: 40, stag: 1000 },
   },
   door: { swing: 0.95, height: 2.0 },
-  floor: { cell: 0.5 },
+  floor: { cell: 0.5, rollEnd: 0.1 },
   carpet: { status: 'forslag', material: 38, tapeMaterial: 3, hour: 650, minLay: 1.5, minCut: 0.5, minSeam: 1.5, minTape: 0.6 },
   quote: { validDays: 30, beforeMount: 14 },
   vat: 0.25,

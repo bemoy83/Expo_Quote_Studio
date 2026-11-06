@@ -1,6 +1,7 @@
 // One textile wall, two ways to stand (Bjørn 31.10.2026): the textile brush decides by where it is drawn. A stroke on
 // a system wall's line is mounted on that wall (InFrame: on the face the stroke was started from, fixed with 520). A
 // stroke anywhere else stands free on foot plates (free.ts). A click on a wall face fills its free part.
+// Byggeregel X1 (docs/byggeregler.md).
 import type { Rules } from '../../rules/rules';
 import { addTextile, addTextileSpan } from './inFrame';
 import { faceAt, type FaceSide } from '../faces';

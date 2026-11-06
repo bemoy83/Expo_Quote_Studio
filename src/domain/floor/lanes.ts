@@ -1,6 +1,8 @@
 // Rolled floor (engangsteppe, vinyl): lanes one roll wide at most, as FloorTile with `roll`. The pieces cut from the
 // roll and the running metres used, and editing one lane the seller placed. Laid by the brush (brush.ts) or by Fyll
 // (rollFill.ts).
+// Byggeregler G3, G5 (docs/byggeregler.md).
+import { RULES } from '../../rules/rules';
 import { CELL, cellKey } from '../grid';
 import type { FloorTile, Stand } from '../types';
 import type { Rect } from './tiles';
@@ -8,7 +10,7 @@ import type { Rect } from './tiles';
 export type RollDir = 'x' | 'y';
 
 /** Extra length at each end of a lane, m: the roll is cut a little long and trimmed on site. */
-export const ROLL_END = 0.1;
+export const ROLL_END = RULES.floor.rollEnd;
 
 /** Lanes run along the stand's longest side by default: fewest joints. */
 export const longestSide = (s: Stand): RollDir => (s.width >= s.depth ? 'x' : 'y');

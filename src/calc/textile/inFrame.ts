@@ -5,6 +5,7 @@
 //   Print file   = frame + 2 × bleed;  file at `scale` %
 //   Cross braces when W passes the max brace distance; brace length = H − 2 × profile
 //   Profile lm   = 2W + 2H + braces
+// Byggeregler X2, X3 (docs/byggeregler.md).
 import type { InFrameParams } from '../../rules/rules';
 import { fullHeight } from './common';
 

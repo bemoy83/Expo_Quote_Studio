@@ -1,15 +1,5 @@
-// Innvendige takdragere: optional beams the customer draws inside the stand (Bjørn 1.11.2026, docs/foga-system.md).
-//   Always the exhibitor's. Same profile, height and 6 m rule as the standard beams.
-//   - An end on a standard (outer) beam, or on another beam's length, hangs there on a hook (krok): no post. The hook is
-//     two-way, so beams hanging on both sides of the same point share one hook.
-//   - Where two drawn beams cross, the longer span runs through and the shorter is split there, each side hooked on.
-//     A drawn beam crossing a standard beam is split and hooked the same way; the standard beam is never split.
-//   - Where a wall meets or crosses it (a wall post under it) it is split there and shares the wall's post.
-//   - Where a wall (inner wall, room side, door, stand wall) runs along it, the wall wins: that piece is not built and
-//     the beam stops on the wall's posts. The drawn beam stays in the sketch and comes back when the wall moves away.
-//   - Posts at free ends and at the 6 m joints. A beam post has no wall to hold it: it stands on a foot plate across the
-//     beam, unless a beam drawn the other way meets it there (a drawn cross beam replaces the plate). Posts in a wall
-//     or under a standard beam are not this beam's.
+// Innvendige takdragere: the beams the customer draws inside the stand, laid out against the standard beams and the
+// walls: hooks, crossings, walls along them, own posts and foot plates. Byggeregler T8–T12 (docs/byggeregler.md).
 import { makeModule, pointKey } from '../domain/grid';
 import type { InnerBeam, Point } from '../domain/types';
 import { splitBeamLength, type BeamLayout, type BeamSegment } from './beams';

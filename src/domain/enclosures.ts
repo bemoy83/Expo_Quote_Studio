@@ -3,6 +3,7 @@
 // included) stands between them. Everything reachable from an open edge of the stand is the stand; the rest falls
 // apart into closed areas. Detection does not care about shape: any area bounded by one loop (a rectangle, an L,
 // a U …) becomes a room with that outline; an area with a hole does not.
+// Byggeregel R3 (docs/byggeregler.md).
 import { wallDirection, wallModules } from './grid';
 import { canMoveWall, ownPlate, replaceWalls, splitWall } from './edit';
 import { cellId, cellRim, cellSides, outlineOf, outlineSides, rimKeys, type Cell } from './outline';

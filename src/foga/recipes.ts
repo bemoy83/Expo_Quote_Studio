@@ -1,4 +1,5 @@
 // How each element is built from parts, as confirmed by Bjørn 31.10.2026. Background and sources: docs/foga-system.md.
+// Byggeregel D1 (docs/byggeregler.md).
 
 export interface WallRecipe {
   /** Post profile for every wall post (end, straight, corner, T, cross). Cut to the wall height without feet. */

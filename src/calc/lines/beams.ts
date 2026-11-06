@@ -1,5 +1,6 @@
 // Takdrager per metre, its own posts and hooks included in the price. The standard ones are the organiser's when they
 // follow its stand walls: then the drawn ones are a line of their own, so the customer sees what they pay for.
+// Byggeregel B2 (docs/byggeregler.md).
 import { beamSpecs } from '../../foga/fromVariant';
 import { ITEM } from '../../pricing/data';
 import type { Use } from '../../pricing/model';

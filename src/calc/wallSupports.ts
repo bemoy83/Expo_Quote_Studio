@@ -1,15 +1,6 @@
-// Støtteplater: foot plates under a system wall that stands free (Bjørn 1.11.2026, docs/foga-system.md).
-//   A system wall is held by the takdrager frame. Without it (beams turned off, or an inner wall the beams don't reach)
-//   it stands free and gets foot plates on its posts by the same rule as a free-standing textile wall (calc/supports.ts):
-//   at least 2 supports from 1 m, at most 3 m apart, a plate at each free end, pulled in (at most 1 m) only where a gap
-//   would otherwise be over 3 m.
-//   Every point where another system wall meets the run (corner, T or cross: stand, inner and room walls alike) is a
-//   support, and so is a post under a takdrager. With beams on, the stand walls are in the beam frame and need none.
-//   Plates go only under posts (cc 1 m), centred under the wall, across it.
-//   Bjørn 3.11.2026: a stretch held at one end only (out from a corner or T) needs no plate up to 1 m.
-//   Bjørn 3.11.2026: with takdrager on, a stretch held at both ends that closes four locked sides (its two ends joined
-//   by walls and takdrager some other way round, as a wall from a stand wall to a beam) stands by itself: no plates.
-//   A long stand wall is held by a støttedrager instead (calc/supportBeams.ts).
+// Støtteplater: foot plates under a system wall that stands free, by the shared support rule (calc/supports.ts) on
+// the wall's posts. The rules are byggeregler S1–S3, S5–S7 (docs/byggeregler.md); a long stand wall is held by a
+// støttedrager instead (calc/supportBeams.ts).
 import { pointKey } from '../domain/grid';
 import type { Point } from '../domain/types';
 import type { BuiltModule } from '../domain/walls';

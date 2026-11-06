@@ -1,6 +1,7 @@
 // Foga engine: structure + recipes → parts list (deleliste), each line in a subgroup of the product grouping. Pure: no prices, no loose goods.
 // Pre-assembled units (post with feet, rails and beams and textile braces with their couplings) are one piece each;
 // loose profiles are counted per cut length; plates per RAL and size.
+// Byggeregler V2–V5, S8, T1, D2, P1, P2 (docs/byggeregler.md).
 import { resolveGroup } from '../catalog/groups';
 import { fogaPart } from './parts';
 import type { Recipes } from './recipes';

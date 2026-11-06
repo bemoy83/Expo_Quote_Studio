@@ -4,6 +4,7 @@
 // corner i to corner i + 1, so the room is on the left (side 1) of every side and its outside on the right (−1).
 // The 1 m cells inside an outline and the outline around a set of cells convert both ways; every change to an
 // outline goes through the cells, so a shape that is not a single loop without holes is refused.
+// Byggeregel R2 (docs/byggeregler.md).
 import { moduleKey, wallModules } from './grid';
 import type { Point } from './types';
 

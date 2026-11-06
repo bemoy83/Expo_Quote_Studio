@@ -4,6 +4,7 @@
 // wall or a drawn wall shares that wall and only the missing modules are built. Doors, textiles and foils on a room
 // side refer to `<id>.<side>` with offsets from the side's start, so they move with the room. Every side runs
 // clockwise round the room, so the room is always on the left of a side and its outside on the right.
+// Byggeregler R1, R2, R4 (docs/byggeregler.md).
 import { moduleKey, pointAlong, runs, wallLength, wallModules } from './grid';
 import { ownPlate, replaceWalls } from './edit';
 import {

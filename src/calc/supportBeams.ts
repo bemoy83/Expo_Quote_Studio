@@ -1,21 +1,14 @@
-// Støttedrager: a takdrager that holds a long stand wall from sagging (Bjørn 3.11.2026, docs/foga-system.md).
-//   With takdrager on, the stand walls stand in the beam frame. A stand wall that spans 6 m free, between two points
-//   that hold it (a corner, a T with any wall, a takdrager resting on it), sags in the middle: it gets one støttedrager
-//   3 m from the corner. Over 6 m the beam layout's own joints and cross beams normally break the span first; a longer
-//   free span gets one per 6 m, evenly spread on whole metres.
-//   The støttedrager runs straight in from the wall to the nearest thing it meets: a wall (inner, room or stand wall)
-//   or a takdrager (standard or drawn). On the wall it shares the wall's post, on a beam's post it shares that post,
-//   on a beam's length it hangs on a hook. It stops before a wall running along its line.
-//   It belongs to the stand walls, so it is a standard takdrager: the organiser's when it pays the stand walls.
-//   With takdrager turned off there is nothing to hang it on: the walls get foot plates as before (calc/wallSupports.ts).
+// Støttedrager: a takdrager that holds a long stand wall from sagging, byggeregel T7 (docs/byggeregler.md). With
+// takdrager turned off there is nothing to hang it on, and the walls get foot plates (calc/wallSupports.ts).
 import { inward, makeModule, pointKey } from '../domain/grid';
+import { RULES } from '../rules/rules';
 import type { Point, Side, Stand } from '../domain/types';
 import type { BuiltModule } from '../domain/walls';
 import { onSegment, splitBeamLength, type BeamLayout, type BeamSegment } from './beams';
 import { holdsRun, wallRuns } from './wallSupports';
 
 /** A free span of a stand wall from this long, m, gets støttedrager. */
-export const SUPPORT_SPAN = 6;
+export const SUPPORT_SPAN = RULES.beam.supportSpan;
 
 export interface SupportBeamLayout extends BeamLayout {
   /** Støttedrager ends hanging on a beam's length. */

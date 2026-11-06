@@ -1,3 +1,4 @@
+import { RULES } from '../rules/rules';
 import type { Point, Side, Stand, Wall } from './types';
 
 const EPS = 1e-9;
@@ -133,7 +134,7 @@ export function openSides(stand: Stand): Side[] {
 }
 
 /** Floor cell size in metres. */
-export const CELL = 0.5;
+export const CELL = RULES.floor.cell;
 
 export const cellKey = (i: number, j: number) => `${i},${j}`;
 

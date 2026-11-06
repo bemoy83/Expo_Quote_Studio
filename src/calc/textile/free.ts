@@ -8,6 +8,7 @@
 //   Textile on both faces. At a corner the outer face runs half a frame depth further and the inner face half a
 //   frame depth shorter (they meet the corner post on its outside and inside)
 //   Print = face + 2 × bleed, mounted along its whole perimeter (silicone edge pressed into the channel)
+// Byggeregler X6–X8 (docs/byggeregler.md).
 import { cornerEnds, runDirection, runLength, runNormal, type FaceKey } from '../../domain/textile/free';
 import type { FreeTextile, Point, TextileFill, Variant } from '../../domain/types';
 import { fogaPart } from '../../foga/parts';
