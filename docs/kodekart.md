@@ -1,7 +1,7 @@
 # Kodekart: hvor koden for hvert produkt ligger
 
 Startpunkt for en endring på ett produkt. Oppdateres i hvert trinn av ryddeplanen (november 2026), slik at kartet alltid
-stemmer med koden. Begreper: [vegger.md](vegger.md), Foga-reglene: [foga-system.md](foga-system.md), priser:
+stemmer med koden. Begreper: [vegger.md](vegger.md), byggereglene nummerert: [byggeregler.md](byggeregler.md) (koden viser til nummeret, `src/test/byggeregler.test.ts` holder dem i takt), Foga-bakgrunn: [foga-system.md](foga-system.md), priser:
 [prismodell.md](prismodell.md), tegnspråket i plan, veggriss og tilbud: [arbeidstegning.md](arbeidstegning.md), forhåndsvisning mens man tegner: [forhandsvisning.md](forhandsvisning.md), pille og skuff for valgt objekt: [pille-og-skuff.md](pille-og-skuff.md).
 
 ## Lagene

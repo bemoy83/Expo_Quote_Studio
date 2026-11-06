@@ -7,7 +7,8 @@ Alt som bygges i en stand er Foga System (Bjørn, 31.10.2026). **Flex** brukes t
 Kilde: *Foga System Designer's Guide* versjon 01.07 (PDF fra Bjørn, 80 sider). Nyere utgave:
 <https://issuu.com/fogasystem/docs/designersguide_2024_ver01>. Artikkelnumre under er Fogas egne.
 
-Koden for dette ligger i `src/foga/` (se nederst).
+Koden for dette ligger i `src/foga/` (se nederst). Selve byggereglene står nummerert, én gang, i
+[byggeregler.md](byggeregler.md); her er bakgrunnen, målene og hvorfor.
 
 ## 1. Grunnprinsippet: én kanal for alt
 
@@ -106,7 +107,9 @@ Bue: minste radius 600 mm for TX-profiler (81TX «hard way» 1500), 400 mm for F
 
 ## 3. Slik bygger vi (bekreftet av Bjørn 31.10.2026)
 
-### Veggmodul (cc 1000)
+Bakgrunn og detaljer for reglene i [byggeregler.md](byggeregler.md). Nummeret i hver overskrift viser til regelen der.
+
+### Veggmodul (cc 1000) · V1–V5
 
 | Del | Hva | Mål / antall |
 | --- | --- | --- |
@@ -121,7 +124,7 @@ Lysåpning i veggfeltet er 960 × 2420 mm: 2490 − 40 (92) − 30 (91) = 2420, 
 Platen er 16 mm bredere og 20 mm høyere enn lysåpningen og står i kanalene.
 Systemhøyde fra gulv: 2490 + 50 = 2540 mm.
 
-### Takdrager
+### Takdrager · T1–T7
 
 - Profil **292** (873 080 22), 80 × 20. **Maks 6 m sammenhengende** (`rules.beam.max`).
 - Står mellom stolpene som skinnene: kappelengde = senteravstand − 40.
@@ -149,7 +152,7 @@ Systemhøyde fra gulv: 2490 + 50 = 2540 mm.
 - Kunden kan velge bort takdragerne for en mer åpen stand (`Variant.noBeams`). Da står veggene fritt og får
   støtteplater, se under.
 
-### Innvendig takdrager (tilvalg)
+### Innvendig takdrager (tilvalg) · T8–T12
 
 Bjørn 1.11.2026. Kunden kan tegne egne takdragere inne på standen med en egen pensel (`Variant.innerBeams`,
 `calc/innerBeams.ts`). Samme profil 292, høyde og 6 m-regel som standard takdrager, og alltid utstillerens.
@@ -175,7 +178,7 @@ Bjørn 1.11.2026. Kunden kan tegne egne takdragere inne på standen med en egen 
 - **Tilbud:** takdrager per meter med egne stolper og kroker i prisen, i samme linje som standard takdrager. Betaler
   arrangøren standard takdragerne, får de tegnede en egen linje «innvendig». Fotplatene ligger i linjen Støtteplate.
 
-### Takdrager over tekstilvegg
+### Takdrager over tekstilvegg · T13, T14
 
 Bjørn 6.11.2026. En takdrager kan ikke kobles på en tekstilvegg. InFrame er bare navnet på tekstilveggen når den står
 mot en systemvegg: den er bygget i samme 43TX, så konflikten er den samme som for frittstående tekstilvegg. Der en
@@ -199,7 +202,7 @@ takdrager kommer i konflikt med en tekstilramme, viker drageren: stolpene skjøt
 - **Plukkliste og arbeidsordre:** «Skjøt 94, 80 mm, med 609» og «… med 600» under Takdrager, plukket som ferdige stykker.
 - **3D:** hevet drager og skjøtestykkene vises.
 
-### Støtteplater på frittstående systemvegg
+### Støtteplater på frittstående systemvegg · S1–S8
 
 Bjørn 1.11.2026. Takdragerrammen holder veggene. En systemvegg uten den står fritt og får støtteplater under stolpene,
 etter samme regel som frittstående tekstilvegg. Det gjelder alle vegger når takdragerne er valgt bort, og innervegger og
@@ -233,7 +236,7 @@ romvegger som takdragerne ikke holder, også når takdragerne er på (`calc/wall
 - **Senere:** støttevaier i stedet for plater. Et V-oppheng fra taket i hallen ned til toppen av systemveggen, ett punkt
   på veggen og to i taket på tvers av veggen, etter samme regel som platene. Også vaieren faktureres utstilleren.
 
-### Dør
+### Dør · D1–D4
 
 - Fogas ferdige dør: karm i **292** med ferdig montert lås **410** (876 410 94). Plukkes som **1 stk dørblad**,
   ferdig montert.
@@ -252,14 +255,14 @@ romvegger som takdragerne ikke holder, også når takdragerne er på (`calc/wall
   som før. Flyttes eller endres et rom slik at døren ville havnet i standveggen, flyttes døren til nærmeste modul på
   rommet der den kan stå, med beskjed; flyttet nektes bare når rommet ikke har noen slik modul.
 
-### Tekstilramme (43TX)
+### Tekstilramme (43TX) · X2–X4
 
 - Ramme i **43TX**, gjæret, 2 × B + 2 × H, 4 × **617** i hjørnene (Bjørn 31.10.2026: samme kobling i alle hjørner).
 - Tverrstag: stående stag i profil **90** (873 040 22, 20 × 20), lengde H − 2 × 40, **600 i hver ende**.
 - Rammen festes til veggen med **2 × 520** (876 520 22) per ramme, låst med bevel nut **503** i profilsystemet:
   én side i 43TX, den andre i veggstolpen 94. Ifølge guiden leveres 520 med skrue og 503.
 
-### Frittstående tekstilvegg (43TX)
+### Frittstående tekstilvegg (43TX) · X1, X5–X8
 
 Bjørn 31.10.2026. En 43TX-ramme som står alene på fotplater, med tekstil på begge sider. Den er ikke en del av
 systemveggen: den lager ikke rom og kan ikke ha dør (tekstildør med overstykke kommer senere).
@@ -336,7 +339,7 @@ Slik henger det sammen:
   Med lokk oppe og nede kappes 92LTX **14 mm kortere** enn rammehøyden (2540 → 2526, `cornerPostCap` i
   `src/foga/recipes.ts`). Endelokkene plukkes ikke (Bjørn 6.11.2026).
 
-### 3D-visning med ekte profiler (forslag 6.11.2026)
+### 3D-visning med ekte profiler (bygget 6.11.2026)
 
 - Omrisset (bare ytterkonturen, uten indre kamre som aldri synes) ekstruderes én gang per profil til 1 m med
   `THREE.ExtrudeGeometry`, og hver del er en mesh som deler geometrien og strekkes i lengden. Samme antall mesher som
@@ -356,7 +359,7 @@ Slik henger det sammen:
 - Stolper over fotplate 750 står på stolpefeste 795 (Bjørn 6.11.2026, bilde): en firkantpinne 16 × 16 fra platen opp i
   midtrøret. Platen er 5 mm.
 
-### Plukkliste
+### Plukkliste · P1–P4
 
 Plukklisten er en **deleliste gruppert etter den felles produktgrupperingen** (`src/catalog/groups.ts`), samme
 hovedgrupper og rekkefølge som panelet, kalkylen og tilbudet. Foga-delene ligger under Vegger og bakrom (Veggplater,
@@ -385,7 +388,8 @@ hjørne, skjøtekoblinger 609 og fotplater 740 og 730. Hver duk (T1, F1A, F1B �
 - To tekstilrammer på systemvegg kobles ikke til hverandre. Hver ramme monteres på systemveggen med 2 × 520.
 - To frittstående vegger kobles bare i hjørner, med felles 92LTX.
 - Forheng får samme overstykke som dør (forenklet).
-- Alle spørsmål til Bjørn er besvart per 31.10.2026. Nye regler legges inn i `src/foga/recipes.ts` og her.
+- Nye regler skrives først i [byggeregler.md](byggeregler.md), med verdiene i `src/rules/rules.ts` eller
+  `src/foga/recipes.ts`; bakgrunnen kan stå her.
 
 ## 4. Slik er koden delt
 

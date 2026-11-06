@@ -1,5 +1,6 @@
 // A door or curtain as a thing of its own: chosen in the plan or 3D, edited and moved in the wall drawer (the mini
 // plan in its middle). Every move goes through moveOpening, so a door never lands in a stand wall or on another opening.
+// Byggeregler D3, D4 (docs/byggeregler.md).
 import { paintWalls } from './edit';
 import { moduleKey, pointAlong, wallDirection, wallModules } from './grid';
 import { nextId } from './ids';

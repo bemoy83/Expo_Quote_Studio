@@ -2,6 +2,7 @@
 // 0,5 × 0,5 m) and can start at any cell, so a 1 × 1 fits right after a 0,5 stripe. Tiles never overlap; the
 // joints shown in plan and 3D are the tile edges. Rolled products (engangsteppe, vinyl) use the same tiles, drawn
 // without joints: their lanes are in lanes.ts, the brush that lays both in brush.ts.
+// Byggeregel G1 (docs/byggeregler.md).
 import { CELL, cellKey, parseCellKey } from '../grid';
 import type { FloorTile, Stand } from '../types';
 

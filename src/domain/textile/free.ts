@@ -4,6 +4,7 @@
 // only meet end to end at a right angle, where they share a 92LTX corner post. It is not part of the Foga wall system:
 // it never closes a room or carries a door, and it may not cross a system wall. A stroke along one becomes a textile on
 // that wall instead (brush.ts).
+// Byggeregler X5, X7 (docs/byggeregler.md).
 import type { Rules } from '../../rules/rules';
 import type { FreeTextile, Point, TextileFace, Variant } from '../types';
 import { nextId } from '../ids';

@@ -1,3 +1,4 @@
+// Byggeregler T2–T5, T12 (docs/byggeregler.md).
 import { inward, makeModule, pointKey, SIDES, sideLength, sidePoint } from '../domain/grid';
 import type { Point, Side, Stand, Variant } from '../domain/types';
 import { standardBeamsOn, standWallSide, type BuiltModule } from '../domain/walls';

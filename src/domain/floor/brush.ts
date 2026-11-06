@@ -1,5 +1,6 @@
 // The floor brush: what a touch or stroke with a tile size, Auto or a roll does to the floor (floorAction), the lanes
 // it lays for the preview, and applying it (applyFloor).
+// Byggeregel G2 (docs/byggeregler.md).
 import type { FloorTile, Variant } from '../types';
 import { cutTiles } from './edit';
 import { laneRect, loose, type RollDir, type Span } from './lanes';

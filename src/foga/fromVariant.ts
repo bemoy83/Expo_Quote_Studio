@@ -1,5 +1,6 @@
 // Stand sketch → Foga structure. Built from the same derivations as calc (built modules, beam layout, InFrame
 // sizes); calc passes its own so the quote, the picking list and the parts list count from one structure.
+// Byggeregel P3 (docs/byggeregler.md).
 import { liftBeams } from '../calc/beamLift';
 import { variantBeams, type BeamLayout } from '../calc/beams';
 import { production, type Production } from '../calc/production';

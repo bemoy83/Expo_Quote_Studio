@@ -1,4 +1,5 @@
 // Editing operations on a variant. All pure: they return a new variant and never mutate.
+// Byggeregel V7 (docs/byggeregler.md).
 import { clipTiles } from './floor/edit';
 import { moduleKey, pointAlong, runs, wallDirection, wallLength, wallModules } from './grid';
 import { nextId } from './ids';

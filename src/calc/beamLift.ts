@@ -1,12 +1,6 @@
-// Takdrager over tekstilvegger (Bjørn 6.11.2026, docs/foga-system.md). A takdrager cannot be fastened to a 43TX textile
-// wall, InFrame or free-standing. Where a beam would run into one, the beam gives way: its whole run (the straight line
-// of lengths it is part of) is lifted one beam height, so it passes clear over the textile frame.
-//   - Every post the lifted run rests on, a wall post included, is extended with a piece of 94, 80 mm, with a 609 down
-//     into the post.
-//   - A hook point where a lifted beam meets one that is not (an end hanging on a cross beam, either way) gets a piece of
-//     94, 80 mm, with a 600 into the other beam, at the level of the beam that hangs there.
-//   - Only a physical clash counts: the beam's own volume against the frame's. A frame lower than the beam's underside
-//     does not lift it.
+// Takdrager over tekstilvegger: which beams are lifted over a 43TX frame, the posts extended under them and the hook
+// points between levels. Byggeregler T13, T14 (docs/byggeregler.md). A clash is the beam's own box (between the
+// posts' faces, its width across) overlapping a frame's box in plan, for a frame that reaches the beam's underside.
 import { pointKey } from '../domain/grid';
 import { sideOf } from '../domain/faces';
 import { textileBox, textileOffset } from '../domain/textile/inFrame';

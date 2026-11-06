@@ -1,6 +1,7 @@
 // What every block of quote lines shares (calc.ts runs the blocks in calc/lines/ and calc/textile/lines.ts): the
 // catalog and prices, `line()` that prices one line, and what is built: wall modules, posts, takdrager, foot plates,
 // textile production and the Foga structure, split by who pays.
+// Byggeregler B1, B2 (docs/byggeregler.md).
 import { resolveGroup } from '../catalog/groups';
 import { displayName, indexCatalog, type CatalogIndex } from '../catalog/lookup';
 import type { Catalog } from '../catalog/types';
