@@ -327,6 +327,8 @@ Slik henger det sammen:
   skinnene (InFrame: jevnt fordelt, frittstående: ved hver fot). Stagene ligger mellom dukene og synes bare når
   tekstillaget er dempet.
 - Koblingene (600, 617, 609) vises ikke.
+- Justeringsfoten under stolpene (Bjørn 6.11.2026, bilde): settskrue M10 × 65 (896 232 95) med svart gummifot,
+  Ø 40 nede og Ø 28 oppe, 6 mm høy, og en sekskant (17 mm) på toppen. Skruen går opp i midtrøret. Innsats 700 vises ikke. Stolper over en fotplate har ingen fot, som i plukklisten.
 
 ### Plukkliste
 
