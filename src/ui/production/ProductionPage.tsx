@@ -37,7 +37,7 @@ interface Props {
 export function ProductionPage({ variants, current, onSelect, customer, motifName, onToast }: Props) {
   const v = variants[current]
   const s = rules.textile.inFrame
-  const P = useMemo(() => production(v, s, customer), [v, s, customer])
+  const P = useMemo(() => production(v, rules, customer), [v, customer])
   const n = (x: number) => fmt(x, 0)
   const nPieces = P.pieces.length
   const nFree = P.free.length

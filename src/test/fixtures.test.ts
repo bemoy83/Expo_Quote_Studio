@@ -52,7 +52,7 @@ describe.each(FILES.map((f) => [f.replace('./fixtures/', ''), f]))('%s', (_name,
       expect(pickRows(res)).toMatchSnapshot();
     });
     it('production: textile and print rows', () => {
-      const p = production(v, RULES.textile.inFrame, customer);
+      const p = production(v, RULES, customer);
       expect({ production: p, textile: textileRows(p), foil: foilRows(v, RULES.wall.plate, customer) }).toMatchSnapshot();
     });
     it('engangsteppe cut list', () => {

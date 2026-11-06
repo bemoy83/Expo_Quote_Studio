@@ -2,14 +2,12 @@
 // points between levels. Byggeregler T13, T14 (docs/byggeregler.md). A clash is the beam's own box (between the
 // posts' faces, its width across) overlapping a frame's box in plan, for a frame that reaches the beam's underside.
 import { pointKey } from '../domain/grid';
-import { sideOf } from '../domain/faces';
-import { textileBox, textileOffset } from '../domain/textile/inFrame';
 import { runDirection } from '../domain/textile/free';
 import type { Point, Variant } from '../domain/types';
 import { wallHeight, type Rules } from '../rules/rules';
 import type { BeamLayout, BeamSegment } from './beams';
 import { onSegment } from './beams';
-import { frameInset } from './textile/inFrame';
+import { boxOf, overlaps, placement, type Box } from './textile/placement';
 
 export interface BeamLift {
   /** The lifted lengths (the same objects as in the layout). */
@@ -22,53 +20,23 @@ export interface BeamLift {
 
 export const NO_LIFT: BeamLift = { segments: new Set(), posts: [], hooks: [] };
 
-interface Box {
-  x0: number;
-  x1: number;
-  y0: number;
-  y1: number;
-}
-
-/** Overlap by more than a hair: touching is no clash. */
-const HAIR = 1e-4;
 const EPS = 1e-6;
-const overlaps = (a: Box, b: Box) => Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0) > HAIR && Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0) > HAIR;
 
-/** The box around a straight piece from a to b, `t0`..`t1` across it (along its left normal). Pieces are axis-aligned. */
-function boxOf(a: Point, b: Point, t0: number, t1: number): Box {
-  const L = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
-  const n: Point = [-(b[1] - a[1]) / L, (b[0] - a[0]) / L];
-  const xs = [a[0] + n[0] * t0, a[0] + n[0] * t1, b[0] + n[0] * t0, b[0] + n[0] * t1];
-  const ys = [a[1] + n[1] * t0, a[1] + n[1] * t1, b[1] + n[1] * t0, b[1] + n[1] * t1];
-  return { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) };
-}
-
-/** Plan footprints of the textile frames that reach up into the beams (InFrame on a wall face, and free-standing). */
+/** Plan footprints of the textile frames that reach up into the beams, where they stand (calc/textile/placement.ts). */
 export function textileFootprints(v: Variant, rules: Rules): Box[] {
   const depth = rules.textile.depth;
   const underside = wallHeight(rules) - rules.beam.height;
-  const out: Box[] = [];
-  const inset = frameInset(rules.textile.inFrame) / 1000;
-  for (const t of v.textiles) {
-    const w = v.walls.find((x) => x.id === t.wallId);
-    if (!w) continue;
-    const { bottom, height } = textileBox(t, rules);
-    if (bottom + height <= underside + EPS) continue;
-    const L = Math.hypot(w.to[0] - w.from[0], w.to[1] - w.from[1]) || 1;
-    const d: Point = [(w.to[0] - w.from[0]) / L, (w.to[1] - w.from[1]) / L];
-    const at = (s: number): Point => [w.from[0] + d[0] * s, w.from[1] + d[1] * s];
-    const s = sideOf(v, t);
-    const mid = textileOffset(rules);
-    const [t0, t1] = [s * (mid - depth / 2), s * (mid + depth / 2)];
-    out.push(boxOf(at(t.from + inset), at(t.from + t.width - inset), Math.min(t0, t1), Math.max(t0, t1)));
-  }
+  const { frames, trims } = placement(v, rules);
+  const out = frames.filter((f) => f.top > underside + EPS).map((f) => f.box);
   // Free-standing frames are full height
   for (const t of v.freeTextiles) {
     const [dx, dy] = runDirection(t);
-    const ext = depth / 2;
-    // A 92LTX corner reaches a little past the run's end: let the box run half a frame depth further at both ends
-    const a: Point = [t.from[0] - dx * ext, t.from[1] - dy * ext];
-    const b: Point = [t.to[0] + dx * ext, t.to[1] + dy * ext];
+    const trim = trims.get(t.id);
+    // A 92LTX corner reaches a little past the run's end: let the box run half a frame depth further at a free end
+    const a0 = trim?.from ? trim.from : -depth / 2;
+    const b0 = trim?.to ? trim.to : -depth / 2;
+    const a: Point = [t.from[0] + dx * a0, t.from[1] + dy * a0];
+    const b: Point = [t.to[0] - dx * b0, t.to[1] - dy * b0];
     out.push(boxOf(a, b, -depth / 2, depth / 2));
   }
   return out;
