@@ -26,15 +26,12 @@ describe('3D scene from the model', () => {
   it('draws one post per calc post and one beam per beam length', () => {
     const posts = all.filter((o) => (o as THREE.Mesh).geometry?.name === 'foga-94')
     expect(posts).toHaveLength(res.posts.length)
-    // An adjustable foot (pad, hex, screw) under every post that does not stand on a foot plate
-    const pads = all.filter((o) => {
-      const g = (o as THREE.Mesh).geometry as THREE.CylinderGeometry | undefined
-      return g?.type === 'CylinderGeometry' && g.parameters.radiusBottom === 0.02 && g.parameters.height === 0.006
-    })
-    expect(pads).toHaveLength(res.posts.length - res.wallSupports.length)
+    // An adjustable foot (pad with its hex, and the screw) under every post that does not stand on a foot plate
+    const named = (n: string) => all.filter((o) => (o as THREE.Mesh).geometry?.name === n)
+    expect(named('foot-pad')).toHaveLength(res.posts.length - res.wallSupports.length)
+    expect(named('foot-screw')).toHaveLength(res.posts.length - res.wallSupports.length)
     // ...and a 795 pin from every foot plate up into its post
-    const pins = all.filter((o) => (o as THREE.Mesh).geometry?.type === 'BoxGeometry' && ((o as THREE.Mesh).geometry as THREE.BoxGeometry).parameters.width === 0.016)
-    expect(pins).toHaveLength(res.wallSupports.length)
+    expect(named('foot-pin')).toHaveLength(res.wallSupports.length)
     const beams = layer('beams').filter((o) => (o as THREE.Mesh).geometry?.name === 'foga-292')
     expect(beams).toHaveLength(res.beams.segments.length)
   })

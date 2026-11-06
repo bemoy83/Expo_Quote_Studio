@@ -30,6 +30,8 @@ export const JOINT = 0.006
 /** Grey foot plates (750), darker than the floor so they show. */
 export const FOOT_PLATE = '#3d4045'
 export const SELECT = '#6aaecb'
+/** The blue glow of a chosen part, mixed into its material. */
+export const selectGlow = (on: boolean): THREE.MeshStandardMaterialParameters => (on ? { emissive: SELECT, emissiveIntensity: 0.35 } : {})
 export const CONFLICT = '#d24b3f'
 export const GROUND = '#ebe9e3'
 /** Floor shown around the stand on every side, m: just enough to anchor it, not to suggest aisles. */

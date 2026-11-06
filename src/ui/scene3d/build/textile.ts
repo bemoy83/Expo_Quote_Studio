@@ -11,8 +11,8 @@ import { findMotif } from '../../motifs'
 import { sideOf } from '../../../domain/faces'
 import { textileBox, textileOffset } from '../../../domain/textile/inFrame'
 import { printMaterial } from './motifs'
-import { ALU, ALU_FINISH, SELECT, type BuildContext, type Tag } from './context'
-import { CAP_92LTX, CAP_THICKNESS, CORNER_92LTX, OUTLINES, mitredProfile, unitProfile } from './profiles'
+import { ALU, ALU_FINISH, selectGlow, type BuildContext, type Tag } from './context'
+import { CAP_92LTX, CAP_THICKNESS, CORNER_92LTX, OUTLINES, mitredProfile, shared, unitProfile } from './profiles'
 
 export function buildTextile(c: BuildContext) {
   const { v, res, opts, H, at, mat, add, along, sel } = c
@@ -29,7 +29,7 @@ export function buildTextile(c: BuildContext) {
     const off = s * (textileOffset(rules) + 0.005)
     const { bottom, height } = textileBox(t, rules)
     const h = Math.min(height, H - bottom)
-    const glow = sel.textileId === t.id ? { emissive: SELECT, emissiveIntensity: 0.35 } : {}
+    const glow = selectGlow(sel.textileId === t.id)
     const alu = mat('textile', ALU, { ...ALU_FINISH, ...glow })
     const m = t.fill === 'white' || t.fill === 'reuse' ? undefined : findMotif(opts.motifs, t.motif)
     const print = m ? printMaterial(m, (to - from) / h, opts.onLoad, glow) : t.fill === 'white' ? white(glow) : placeholder(glow)
@@ -48,7 +48,7 @@ export function buildTextile(c: BuildContext) {
   for (const f of res.production.free) {
     const t = v.freeTextiles.find((x) => x.id === f.textileId)
     if (!t) continue
-    const glow = sel.freeTextileId === t.id ? { emissive: SELECT, emissiveIntensity: 0.35 } : {}
+    const glow = selectGlow(sel.freeTextileId === t.id)
     const alu = mat('textile', ALU, { ...ALU_FINISH, ...glow })
     const L = f.length / 1000
     const h = f.H / 1000
@@ -154,28 +154,34 @@ function cornerPosts(c: BuildContext) {
       done.add(key)
       // The legs run along +x and −y of the outline; turn it so they follow the two runs, never mirrored
       const [a, b] = a0[0] * b0[1] - a0[1] * b0[0] < 0 ? [a0, b0] : [b0, a0]
-      const plan = (q: readonly number[]): THREE.Vector2 => {
-        const ox = (q[0] - CORNER_92LTX[0]) / 1000
-        const oy = (q[1] - CORNER_92LTX[1]) / 1000
-        // Shape (x, y) → world (x, −z) after turning it upright, and plan y is world z
-        return new THREE.Vector2(a[0] * ox - b[0] * oy, -(a[1] * ox - b[1] * oy))
-      }
-      const glow = c.sel.freeTextileId === t.id ? { emissive: SELECT, emissiveIntensity: 0.35 } : {}
-      const m = mat('textile', ALU, { ...ALU_FINISH, ...glow })
+      const m = mat('textile', ALU, { ...ALU_FINISH, ...selectGlow(c.sel.freeTextileId === t.id) })
       const h = f.H / 1000
-      const upright = (outline: readonly (readonly number[])[], y: number, len: number) => {
-        let pts = outline.map(plan)
-        if (THREE.ShapeUtils.isClockWise(pts)) pts = pts.reverse()
-        const geo = new THREE.ExtrudeGeometry(new THREE.Shape(pts), { depth: len, bevelEnabled: false })
-        geo.rotateX(-Math.PI / 2)
-        const mesh = new THREE.Mesh(geo, m)
+      const upright = (part: 'post' | 'cap', y: number, len: number) => {
+        const mesh = new THREE.Mesh(cornerGeometry(part, a, b), m)
+        mesh.scale.y = len
         mesh.position.copy(at(p, y))
         add(mesh, { layer: 'textile', pick: { freeTextileId: t.id } }, root)
       }
       // Cap on the floor, the post on it, and a cap on top
-      upright(CAP_92LTX, foot, CAP_THICKNESS)
-      upright(OUTLINES['92LTX'], foot + CAP_THICKNESS, h - 2 * CAP_THICKNESS)
-      upright(CAP_92LTX, foot + h - CAP_THICKNESS, CAP_THICKNESS)
+      upright('cap', foot, CAP_THICKNESS)
+      upright('post', foot + CAP_THICKNESS, h - 2 * CAP_THICKNESS)
+      upright('cap', foot + h - CAP_THICKNESS, CAP_THICKNESS)
     }
   }
+}
+
+/** 1 m of 92LTX (or its end cap) standing up from y = 0, turned so its legs run along the plan directions a and b.
+ *  Shared for the session: a corner only turns a few ways, so the outline is triangulated once per way. */
+function cornerGeometry(part: 'post' | 'cap', a: readonly number[], b: readonly number[]) {
+  return shared(`92LTX-${part}-${a.map((x) => x.toFixed(3))}-${b.map((x) => x.toFixed(3))}`, () => {
+    const plan = (q: readonly number[]): THREE.Vector2 => {
+      const ox = (q[0] - CORNER_92LTX[0]) / 1000
+      const oy = (q[1] - CORNER_92LTX[1]) / 1000
+      // Shape (x, y) → world (x, −z) after turning it upright, and plan y is world z
+      return new THREE.Vector2(a[0] * ox - b[0] * oy, -(a[1] * ox - b[1] * oy))
+    }
+    let pts = (part === 'cap' ? CAP_92LTX : OUTLINES['92LTX']).map(plan)
+    if (THREE.ShapeUtils.isClockWise(pts)) pts = pts.reverse()
+    return new THREE.ExtrudeGeometry(new THREE.Shape(pts), { depth: 1, bevelEnabled: false }).rotateX(-Math.PI / 2)
+  })
 }

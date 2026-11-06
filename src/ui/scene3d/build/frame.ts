@@ -1,11 +1,12 @@
 // The frame: posts (from the calc, so plan, 3D and quote agree), støtteplater under free walls, and takdragere.
 import * as THREE from 'three'
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { RECIPES } from '../../../foga/recipes'
 import { pointKey } from '../../../domain/grid'
 import type { Point } from '../../../domain/types'
 import { wallPoints } from '../../../domain/walls'
 import { rules } from '../../env'
-import { unitProfile } from './profiles'
+import { shared, unitProfile } from './profiles'
 import { ALU, ALU_FINISH, BEAM, FOOT_PLATE, type BuildContext } from './context'
 
 export function buildFrame(c: BuildContext) {
@@ -25,15 +26,10 @@ export function buildFrame(c: BuildContext) {
     if (onPlate.has(pointKey(p))) continue
     // Adjustable foot (M10 × 65): a tapered rubber pad with a hex on top, the screw up into the post's centre tube
     // (the 700 insert is not drawn)
-    const g = footGeometry()
-    const rubber = mat(layer, FOOT_PAD, { roughness: 0.9 })
-    const pad = new THREE.Mesh(g.pad, rubber)
-    pad.position.copy(at(p, FOOT.pad / 2))
+    const pad = new THREE.Mesh(footPad(), mat(layer, FOOT_PAD, { roughness: 0.9 }))
+    pad.position.copy(at(p))
     add(pad, { layer })
-    const hex = new THREE.Mesh(g.hex, rubber)
-    hex.position.copy(at(p, FOOT.pad + FOOT.hex / 2))
-    add(hex, { layer })
-    const screw = new THREE.Mesh(g.screw, mat(layer, SCREW, { metalness: 0.15, roughness: 0.35 }))
+    const screw = new THREE.Mesh(screwGeometry(), mat(layer, SCREW, { metalness: 0.15, roughness: 0.35 }))
     screw.scale.y = Math.max(0.001, c.feet - FOOT.pad - FOOT.hex)
     screw.position.copy(at(p, FOOT.pad + FOOT.hex + screw.scale.y / 2))
     add(screw, { layer })
@@ -68,28 +64,23 @@ export function buildFrame(c: BuildContext) {
 const FOOT = { pad: 0.006, padBottom: 0.02, padTop: 0.014, hex: 0.006, hexRadius: 0.0098, screwRadius: 0.005 }
 const FOOT_PAD = '#1f2023'
 const SCREW = '#d4d7db'
-let footGeo: { pad: THREE.BufferGeometry; hex: THREE.BufferGeometry; screw: THREE.BufferGeometry } | null = null
-/** Shared for the whole session, like the Foga profiles (the screw is 1 m and scaled to what shows). */
-function footGeometry() {
-  if (!footGeo) {
-    const pad = new THREE.CylinderGeometry(FOOT.padTop, FOOT.padBottom, FOOT.pad, 24)
-    const hex = new THREE.CylinderGeometry(FOOT.hexRadius, FOOT.hexRadius, FOOT.hex, 6)
-    const screw = new THREE.CylinderGeometry(FOOT.screwRadius, FOOT.screwRadius, 1, 12)
-    for (const g of [pad, hex, screw]) g.userData.shared = true
-    footGeo = { pad, hex, screw }
-  }
-  return footGeo
-}
-
 /** Foot plate 750 is 5 mm, m. */
 const PLATE = 0.005
-let pinGeo: THREE.BufferGeometry | null = null
-/** Post mount 795 (Bjørn 6.11.2026, photo): a square bar that fits the 17 × 17 centre tube of post 94, 1 m scaled to
- *  what shows between the plate and the post. Shared for the session. */
-function pinGeometry() {
-  if (!pinGeo) {
-    pinGeo = new THREE.BoxGeometry(0.016, 1, 0.016)
-    pinGeo.userData.shared = true
-  }
-  return pinGeo
+/** Post mount 795 (Bjørn 6.11.2026, photo): a square bar that fits the 17 × 17 centre tube of post 94, m. */
+const PIN = 0.016
+
+/** Pad and hex as one piece (one rubber), standing on y = 0. */
+function footPad() {
+  return shared('foot-pad', () => {
+    const pad = new THREE.CylinderGeometry(FOOT.padTop, FOOT.padBottom, FOOT.pad, 24).translate(0, FOOT.pad / 2, 0)
+    const hex = new THREE.CylinderGeometry(FOOT.hexRadius, FOOT.hexRadius, FOOT.hex, 6).translate(0, FOOT.pad + FOOT.hex / 2, 0)
+    const g = mergeGeometries([pad, hex])
+    pad.dispose()
+    hex.dispose()
+    return g
+  })
 }
+
+/** The screw and the 795 pin are 1 m upright and scaled to what shows. */
+const screwGeometry = () => shared('foot-screw', () => new THREE.CylinderGeometry(FOOT.screwRadius, FOOT.screwRadius, 1, 12))
+const pinGeometry = () => shared('foot-pin', () => new THREE.BoxGeometry(PIN, 1, PIN))
