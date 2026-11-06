@@ -1,5 +1,6 @@
 // Stand sketch → Foga structure. Built from the same derivations as calc (built modules, beam layout, InFrame
 // sizes); calc passes its own so the quote, the picking list and the parts list count from one structure.
+import { liftBeams } from '../calc/beamLift';
 import { variantBeams, type BeamLayout } from '../calc/beams';
 import { production, type Production } from '../calc/production';
 import type { Variant } from '../domain/types';
@@ -15,6 +16,8 @@ export interface Derived {
   beams: BeamLayout;
   /** Ends of drawn takdrager hanging on another beam. */
   hooks?: number;
+  /** Takdrager lifted over a textile wall: posts extended and mixed-level hook points. */
+  lift?: { posts: number; hooks: number };
   production: Production;
   /** Plates swapped into stand walls the organiser builds. */
   swaps?: string[];
@@ -39,6 +42,7 @@ export function structureOf(d: Derived): FogaStructure {
         }
       : {}),
     ...(d.hooks ? { beamHooks: d.hooks } : {}),
+    ...(d.lift && d.lift.posts + d.lift.hooks ? { beamLift: d.lift } : {}),
     ...(d.swaps?.length ? { swaps: d.swaps } : {}),
     ...(d.wallFeet ? { wallFeet: d.wallFeet } : {}),
     ...(d.barePosts ? { barePosts: d.barePosts } : {}),
@@ -51,7 +55,8 @@ export function fromVariant(v: Variant, rules: Rules): FogaStructure {
   const points = wallPoints(mods);
   const { all: beams, hooks } = variantBeams(v, mods, points, rules.beam.max);
   const posts = new Set([...points.keys(), ...beams.posts.keys()]).size;
-  return structureOf({ mods, posts, beams, hooks, production: production(v, rules.textile.inFrame, '') });
+  const lift = liftBeams(v, rules, beams, points);
+  return structureOf({ mods, posts, beams, hooks, lift: { posts: lift.posts.length, hooks: lift.hooks.length }, production: production(v, rules.textile.inFrame, '') });
 }
 
 /** Sizes from the rules, mm: post = system wall height without feet (2490), cc 1000. */

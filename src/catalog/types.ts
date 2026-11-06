@@ -65,6 +65,8 @@ export interface SystemParts {
   wallSupport: string;
   /** Takdrager per metre, posts included. */
   beam: string;
+  /** Lifting a takdrager over a textile wall, per extended post or hook point. */
+  beamLift: string;
   /** InFrame textile frame on a system wall (rental), price per m² of B × H, sold per piece. */
   textile: string;
   /** Free-standing textile wall frame (rental), per metre. */

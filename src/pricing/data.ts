@@ -45,6 +45,8 @@ export const ITEM = {
   beamPost: 'montering-takdragerstolpe',
   /** A drawn takdrager's end hung on another beam: the hook and hanging it. Placeholder. */
   beamHook: 'krok-takdrager',
+  /** A post or hook point extended with 94 × 80 so a takdrager passes over a textile wall (Bjørn 6.11.2026). */
+  beamLift: 'skjot-takdrager',
   frame: 'handtering-ramme',
   /** Free-standing frame, up and down, per coupling (Bjørn 31.10.2026). */
   frameCoupling: 'montering-ramme-kobling',
@@ -90,6 +92,7 @@ const ITEMS: PriceItem[] = [
   item(ITEM.beamLm, 'Montering takdrager per meter', 'm', 98, 175, onSite(6, 3)),
   item(ITEM.beamPost, 'Montering takdragerstolpe', 'stk', 163, 295, onSite(9, 6)),
   item(ITEM.beamHook, 'Krok for takdrager, med montering', 'stk', 25, 45, { ...pvt(0.5, 0.5, 0.5), ...onSite(2, 1) }),
+  item(ITEM.beamLift, 'Skjøt 94 × 80 mm med kobling, med montering', 'stk', 30, 55, { ...pvt(0.5, 0.5, 0.5), ...onSite(3, 2) }),
   item(ITEM.frame, 'Håndtering av løse rammedeler per ramme', 'stk', 80, 140, pvt(3, 2, 2)),
   item(ITEM.frameCoupling, 'Montering ramme per kobling', 'stk', 35, 60, onSite(2, 1)),
   item(ITEM.textileEdge, 'Montering tekstil per meter omkrets', 'm', 70, 120, onSite(4, 2)),

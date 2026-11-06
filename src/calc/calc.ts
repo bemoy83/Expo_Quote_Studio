@@ -7,7 +7,7 @@ import { DEFAULT_STAND_WALLS } from '../domain/variant';
 import { DEFAULT_PRICING, type PricingData } from '../pricing/data';
 import type { Rules } from '../rules/rules';
 import { calcContext } from './context';
-import { beamLines } from './lines/beams';
+import { beamLiftLines, beamLines } from './lines/beams';
 import { decorLines } from './lines/decor';
 import { doorLines } from './lines/doors';
 import { footLines } from './lines/feet';
@@ -34,6 +34,7 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
     ...footLines(c),
     ...swapLines(c),
     ...beams.lines,
+    ...beamLiftLines(c),
     ...doorLines(c),
     ...inFrameFrameLines(c),
     ...inFrameTextileLines(c),

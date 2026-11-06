@@ -5435,6 +5435,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
           0,
         ],
         "length": 5,
+        "lifted": true,
         "side": "back",
         "support": true,
         "to": [
@@ -5452,6 +5453,24 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         "group": "vegg.takdrager",
         "name": "KROK · Krok, takdrager på takdrager (art.nr. mangler)",
         "preassembled": false,
+        "qty": 1,
+      },
+      {
+        "artnr": "",
+        "detail": "94 × 80 mm · 1 × 609 (871 037 92) · på stolpe, takdrager over tekstilvegg",
+        "group": "vegg.takdrager",
+        "name": "Skjøt 94, 80 mm, med 609",
+        "note": "på stolpe, takdrager over tekstilvegg",
+        "preassembled": true,
+        "qty": 1,
+      },
+      {
+        "artnr": "",
+        "detail": "94 × 80 mm · 1 × 600 (871 003 92) · ved krok, takdrager over tekstilvegg",
+        "group": "vegg.takdrager",
+        "name": "Skjøt 94, 80 mm, med 600",
+        "note": "ved krok, takdrager over tekstilvegg",
+        "preassembled": true,
         "qty": 1,
       },
       {
@@ -5518,6 +5537,10 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
   },
   "foga": {
     "beamHooks": 1,
+    "beamLift": {
+      "hooks": 1,
+      "posts": 1,
+    },
     "beams": [],
     "cornerPosts": {
       "H": 2526,
@@ -5579,6 +5602,38 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
     "posts": 0,
   },
   "groups": [
+    {
+      "cost": 60,
+      "id": "vegg",
+      "lines": [
+        {
+          "artnr": "6111",
+          "cost": 60,
+          "dg": 0.45454545454545453,
+          "foga": true,
+          "group": "vegg.takdrager",
+          "meta": "1 stolpe + 1 krok skjøtet opp",
+          "name": "Skjøt takdrager over tekstilvegg",
+          "payer": "utstiller",
+          "placeholder": false,
+          "price": 55,
+          "qty": 2,
+          "strategy": "sum",
+          "sum": 110,
+          "time": {
+            "demontering": 4,
+            "montering": 6,
+            "plukk": 1,
+            "transport": 1,
+            "vask": 1,
+          },
+          "transfer": "leie",
+          "unit": "stk",
+        },
+      ],
+      "name": "Vegger og bakrom",
+      "sum": 110,
+    },
     {
       "cost": 12288.819999999998,
       "id": "prof",
@@ -5825,20 +5880,34 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
     "swapLm": 0,
     "textileM2": 32.5596,
     "time": {
-      "demontering": 128.72,
-      "montering": 257.44,
-      "plukk": 16,
-      "transport": 12,
-      "vask": 12,
+      "demontering": 132.72,
+      "montering": 263.44,
+      "plukk": 17,
+      "transport": 13,
+      "vask": 13,
     },
     "wallLm": 11,
     "wallSupports": 0,
   },
+  "lift": {
+    "hooks": [
+      [
+        3,
+        5,
+      ],
+    ],
+    "posts": [
+      [
+        3,
+        0,
+      ],
+    ],
+  },
   "margin": {
-    "cost": 12288.819999999998,
-    "db": 9779.38,
-    "dg": 0.44314352779112026,
-    "sum": 22068.199999999997,
+    "cost": 12348.819999999998,
+    "db": 9829.38,
+    "dg": 0.4432000793572066,
+    "sum": 22178.199999999997,
     "unknown": 0,
   },
   "organiser": {
@@ -6166,7 +6235,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
       },
     ],
   },
-  "sum": 22068.199999999997,
+  "sum": 22178.199999999997,
   "wallSupports": [],
 }
 `;
@@ -6186,6 +6255,30 @@ exports[`08-tekstil.json > variant A > picking list 1`] = `
     "preassembled": false,
     "qty": "1 stk",
     "title": "KROK · Krok, takdrager på takdrager (art.nr. mangler)",
+  },
+  {
+    "code": "",
+    "detail": "94 × 80 mm · 1 × 609 (871 037 92) · på stolpe, takdrager over tekstilvegg",
+    "group": "vegg.takdrager",
+    "key": "Skjøt 94, 80 mm, med 609|94 × 80 mm · 1 × 609 (871 037 92) · på stolpe, takdrager over tekstilvegg",
+    "lm": undefined,
+    "nobb": false,
+    "note": "på stolpe, takdrager over tekstilvegg",
+    "preassembled": true,
+    "qty": "1 stk",
+    "title": "Skjøt 94, 80 mm, med 609",
+  },
+  {
+    "code": "",
+    "detail": "94 × 80 mm · 1 × 600 (871 003 92) · ved krok, takdrager over tekstilvegg",
+    "group": "vegg.takdrager",
+    "key": "Skjøt 94, 80 mm, med 600|94 × 80 mm · 1 × 600 (871 003 92) · ved krok, takdrager over tekstilvegg",
+    "lm": undefined,
+    "nobb": false,
+    "note": "ved krok, takdrager over tekstilvegg",
+    "preassembled": true,
+    "qty": "1 stk",
+    "title": "Skjøt 94, 80 mm, med 600",
   },
   {
     "code": "873 805 22",
@@ -6609,6 +6702,38 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
 
 exports[`08-tekstil.json > variant A > quote lines 1`] = `
 [
+  {
+    "cost": 60,
+    "id": "vegg",
+    "lines": [
+      {
+        "artnr": "6111",
+        "cost": 60,
+        "dg": 0.45454545454545453,
+        "foga": true,
+        "group": "vegg.takdrager",
+        "meta": "1 stolpe + 1 krok skjøtet opp",
+        "name": "Skjøt takdrager over tekstilvegg",
+        "payer": "utstiller",
+        "placeholder": false,
+        "price": 55,
+        "qty": 2,
+        "strategy": "sum",
+        "sum": 110,
+        "time": {
+          "demontering": 4,
+          "montering": 6,
+          "plukk": 1,
+          "transport": 1,
+          "vask": 1,
+        },
+        "transfer": "leie",
+        "unit": "stk",
+      },
+    ],
+    "name": "Vegger og bakrom",
+    "sum": 110,
+  },
   {
     "cost": 12288.819999999998,
     "id": "prof",
