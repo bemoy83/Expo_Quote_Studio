@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { paintWalls } from '../../domain/edit'
 import { createVariant } from '../../domain/variant'
+import { faceAt } from '../../domain/faces'
 import { isStandWall } from '../../domain/walls'
 import { mm, placementRow, planDims, totalSides } from './dims'
 
@@ -43,5 +44,16 @@ describe('plan dimensions', () => {
   it('writes millimetres with a space every thousand', () => {
     expect(mm(6).replace(/\s/g, ' ')).toBe('6 000')
     expect(mm(2.35).replace(/\s/g, ' ')).toBe('2 350')
+  })
+  it('a selected textile on a wall face is measured on its own, in front of that face', () => {
+    const v = corner()
+    const back = v.walls.find((w) => w.from[1] === 0 && w.to[1] === 0)!
+    const t = { id: 't1', wallId: back.id, side: faceAt(v, back, { x: 1, y: 0.5 }), from: 1, width: 2 }
+    const x = { ...v, textiles: [t] }
+    const d = planDims(x, { wallId: back.id, textileId: 't1' }, false)
+    expect(d.inner).toMatchObject({ axis: 'x', at: 0, dir: 1, clear: 'mounted' })
+    expect(d.inner!.ts).toEqual([...new Set([back.from[0], back.to[0], 1, 3])].sort((a, b) => a - b))
+    // The wall's module chain is not shown
+    expect(d.sides.find((s) => s.side === 'back')!.near).not.toEqual([0, 1, 2, 3, 4, 5, 6])
   })
 })

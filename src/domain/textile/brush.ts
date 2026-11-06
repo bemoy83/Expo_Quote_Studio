@@ -47,8 +47,29 @@ export function drawTextile(v: Variant, rules: Rules, a: Point, b: Point, at: { 
     return 'error' in r ? r : { v: r.v, mounted: { id: r.id } };
   }
   const r = addFreeTextile(v, rules, a, b);
-  return 'error' in r ? r : { v: r.v, free: { id: r.id } };
+  if (!('error' in r)) return { v: r.v, free: { id: r.id } };
+  // Stopped by a system wall or another textile wall: as far as it can stand from where the stroke started
+  const s = shortest(v, rules, a, b);
+  return s ?? r;
 }
+
+/**
+ * The longest free-standing run from a toward b that can stand, in steps of the textile grid (Bjørn 6.11.2026: the
+ * brush shows and lays only what is free). Null when no part of it can.
+ */
+function shortest(v: Variant, rules: Rules, a: Point, b: Point): TextileResult | null {
+  const L = Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1]);
+  const step = rules.textile.grid;
+  const ux = (b[0] - a[0]) / L;
+  const uy = (b[1] - a[1]) / L;
+  for (let d = Math.round((L - step) / step) * step; d >= rules.textile.freeMin - EPS; d -= step) {
+    const r = addFreeTextile(v, rules, a, [r3(a[0] + ux * d), r3(a[1] + uy * d)]);
+    if (!('error' in r)) return { v: r.v, free: { id: r.id } };
+  }
+  return null;
+}
+
+const r3 = (x: number) => Math.round(x * 1000) / 1000;
 
 /** A click on a wall face: a mounted textile filling its free part. */
 export function fillFace(v: Variant, rules: Rules, wallId: string, s: FaceSide, t: number): TextileResult {

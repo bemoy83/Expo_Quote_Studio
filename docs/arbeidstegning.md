@@ -156,6 +156,7 @@ Målhierarkiet:
 | Valgt standvegg | Veggens modulkjede (1 000 per modul) **erstatter plasseringsraden** på den siden, utenfor veggen. Totalen står |
 | Valgt innervegg eller romvegg | Modulkjede tett på veggen, på siden mot standens midtpunkt (A5) |
 | Valgt frittstående element | Fri lengde over elementet, som `2 350` på bilde 1 |
+| Valgt tekstilvegg på vegg | Egen kjede foran siden den henger på: fra veggens ende, tekstilveggens bredde, til den andre enden. Veggens modulkjede vises ikke (Bjørn 6.11.2026) |
 | Compact (A4) | Ingen modulkjede. Totalmål og plasseringsrad står |
 
 Andre sider dempes ikke når en vegg er valgt.
