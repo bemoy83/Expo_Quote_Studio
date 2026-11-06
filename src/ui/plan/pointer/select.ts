@@ -25,7 +25,7 @@ export function startSelect(c: PointerCtx, q: P): Drag {
   const o = hits.objectAt(q)
   if (o) return { kind: 'object', id: o.id, dx: q.x - o.x, dy: q.y - o.y, start: { x: o.x, y: o.y }, moved: false, select: { objectId: o.id } }
   const ib = hits.beamAt(q)
-  if (ib) return { kind: 'beam', id: ib.id, p0: q, v0: v, delta: '0,0', horizontal: ib.from[1] === ib.to[1], moved: false }
+  if (ib) return { kind: 'beam', id: ib.id, p0: q, v0: v, delta: '0,0', horizontal: ib.from[1] === ib.to[1], moved: false, select: { beamId: ib.id } }
   const m = hits.moduleAt(q)
   if (m) {
     const w = v.walls.find((x) => x.id === m.wallId)!

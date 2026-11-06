@@ -39,7 +39,7 @@ export type Drag =
   | { kind: 'click'; select: PlanSelection }
   | { kind: 'object'; id: string; dx: number; dy: number; start: P; moved: boolean; select: PlanSelection }
   | ({ kind: 'wall'; moved: boolean; select: PlanSelection } & WallDrag)
-  | ({ kind: 'beam'; moved: boolean } & WallDrag)
+  | ({ kind: 'beam'; moved: boolean; select: PlanSelection } & WallDrag)
   | ({ kind: 'room'; select: PlanSelection | null } & RoomDrag)
   | { kind: 'textile'; p0: P }
   | { kind: 'freeMove'; id: string; p0: P; v0: Variant; moved: boolean; select: PlanSelection }

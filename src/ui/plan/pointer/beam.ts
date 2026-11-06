@@ -9,6 +9,6 @@ export const beam: DragHandlers<'beam'> = {
     dragInnerBeam(d, q, c.standardRuns, c.onEdit, c.onCheckpoint)
   },
   up(c, d) {
-    if (!d.moved) c.clickSelect({ beamId: d.id })
+    if (!d.moved) c.clickSelect(d.select)
   },
 }
