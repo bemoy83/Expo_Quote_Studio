@@ -72,15 +72,7 @@ export interface NextOutcome {
   hint: string | null
   invalid?: Invalid
   pill?: Pill
-  /**
-   * A motif printed on a textile: the plan draws no print on textile, so the face that gets it is shown as a print band
-   * at preview strength while hovering or pressed (a decal on a wall panel shows through the plan's own layer).
-   */
-  print?: PrintMark
 }
-
-/** The textile face a motif prints: an InFrame textile, or one face of a free-standing one. */
-export type PrintMark = { textileId: string } | { freeId: string; face: 'a' | 'b' }
 
 export interface NextTarget {
   /** Changes only when the target does. */
@@ -139,9 +131,7 @@ function targetOf(p: NextInput): NextTarget | null {
     return target(`drop:${JSON.stringify(d)}:${h.w.id}:${h.s}:${Math.round(h.t * 20)}`, () => {
       const r = applyDrop(v, d, { wallId: h.w.id, s: h.s, t: h.t }, ratioOf(p.motifs))
       const make = d.kind === 'textile' ? area : line
-      if ('error' in r) return make({ hint: r.error })
-      const tx = d.kind === 'motif' ? textileAt(v, h.w.id, h.s, h.t) : undefined
-      return make({ edit: () => r.v, hint: null, print: tx ? { textileId: tx.id } : undefined })
+      return 'error' in r ? make({ hint: r.error }) : make({ edit: () => r.v, hint: null })
     })
   }
 
@@ -307,11 +297,11 @@ function decorTarget(p: NextInput, q: P): NextTarget | null {
     const ft = freeTextileAt(v, q, 0.15)
     if (ft) {
       const face = faceOfPoint(ft, q)
-      return line({ edit: (x) => updateFace(x, ft.id, face, { motif }), hint: null, print: { freeId: ft.id, face } })
+      return line({ edit: (x) => updateFace(x, ft.id, face, { motif }), hint: null })
     }
     const h = hits.faceHit(q)!
     const tx = textileAt(v, h.w.id, h.s, h.t)
-    if (tx) return line({ edit: (x) => updateTextile(x, rules, tx.id, { motif }), hint: null, print: { textileId: tx.id } })
+    if (tx) return line({ edit: (x) => updateTextile(x, rules, tx.id, { motif }), hint: null })
     const r = addFoil(v, rules, h.w.id, h.module, h.s, motif, ratioOf(p.motifs)(motif))
     if ('error' in r) {
       const f = felt(rules, h.module)

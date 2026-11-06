@@ -16,9 +16,9 @@
 >   møbel) styrke. `plan/nextArea.ts` finner per lag hva som er forskjellig: neste variant klippes til området rundt
 >   det (`clipPath`), og det som står der nå skjules (`mask`), så resten av planen ikke tegnes dobbelt. Konsekvenser
 >   kommer med: stolper, fotplater, delte takdragere, og møbler som kommer i konflikt med en ny vegg.
-> - **Motiv:** selve motivet vises aldri i planen. En dekal på veggfelt vises som det grønne båndet planen tegner for
->   dekaler. Planen tegner ikke trykk på tekstil, så på tekstil på vegg og på frittstående tekstil viser
->   forhåndsvisningen det grønne trykkbåndet dempet foran siden som får motivet (Bjørn 6.11.2026).
+> - **Motiv:** selve motivet vises aldri i planen. Det som forhåndsvises er det som lander i planen: dekalen på et
+>   veggfelt (også på frittstående systemvegg). Trykk på tekstil er en del av tekstilveggen og tegnes ikke, så der
+>   vises ingenting (Bjørn 6.11.2026).
 > - **Der et klikk ikke gjør noe, vises ingenting.** Gir funksjonen en feil, vises skravuren der det ville landet, og
 >   grunnen står i hintlinjen. Målpillen vises som før mens man drar. Tøm er uendret.
 > - **Nettbrett:** uten peking vises det samme mens man holder inne, og slipp lagrer som før.
