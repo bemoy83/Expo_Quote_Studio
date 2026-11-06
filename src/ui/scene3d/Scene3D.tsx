@@ -183,10 +183,10 @@ export function Scene3D(p: Props) {
     <div className="scene3d">
       <div ref={host} className="scene3d-canvas" />
       <div className="scene3d-tools">
-        <IconButton icon={RotateCcw} label="Roter venstre" onClick={() => turn(-45)} />
-        <IconButton icon={RotateCw} label="Roter høyre" onClick={() => turn(45)} />
-        <IconButton icon={ScanEye} label="Sett fra gangen" onClick={() => view.current && aim(view.current, W, D, AISLE)} />
-        <IconButton icon={House} label="Nullstill" onClick={() => view.current && aim(view.current, W, D, HOME)} />
+        <IconButton icon={RotateCcw} label="Roter venstre" title="Roter venstre · 45° rundt standen" onClick={() => turn(-45)} />
+        <IconButton icon={RotateCw} label="Roter høyre" title="Roter høyre · 45° rundt standen" onClick={() => turn(45)} />
+        <IconButton icon={ScanEye} label="Sett fra gangen" title="Sett fra gangen · slik en besøkende ser standen" onClick={() => view.current && aim(view.current, W, D, AISLE)} />
+        <IconButton icon={House} label="Nullstill" title="Nullstill · tilbake til startvinkelen" onClick={() => view.current && aim(view.current, W, D, HOME)} />
       </div>
     </div>
   )

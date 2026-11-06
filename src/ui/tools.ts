@@ -58,7 +58,7 @@ export const dockToolOf = (tool: Tool, brush: Brush | null): DockTool => (tool =
 /** Floor brush sizes on the floor tool's quick picks. 1 × 1 and Auto first; the smaller tiles under «Andre». */
 export const FLOOR_MAIN: { label: string; size: FloorBrushSize; title: string }[] = [
   { label: '1 × 1', size: TILE_FULL, title: 'Flis 100 × 100' },
-  { label: 'Auto', size: 'auto', title: '1 × 1 der det er plass, ellers største flis som passer på ledig gulv' },
+  { label: 'Auto', size: 'auto', title: 'Auto · 1 × 1 der det er plass, ellers største flis som passer på ledig gulv' },
 ];
 export const FLOOR_OTHER: { label: string; size: TileSize }[] = [
   { label: '1 × 0,5', size: { w: 2, h: 1 } },

@@ -73,7 +73,7 @@ function quickContent(p: QuickPicksProps): ReactNode {
         onChange={(l) => p.onFloorSize(FLOOR_MAIN.find((s) => s.label === l)?.size ?? p.otherSize)}
         options={[
           ...FLOOR_MAIN.map((s) => ({ value: s.label, title: s.title, label: <span className="num">{s.label}</span> })),
-          { value: 'Andre', title: 'Mindre fliser: 1 × 0,5, 0,5 × 1 og 0,5 × 0,5', label: 'Andre' },
+          { value: 'Andre', title: 'Andre størrelser · 1 × 0,5, 0,5 × 1 og 0,5 × 0,5', label: 'Andre' },
         ]}
       />
       {p.floorSize !== 'auto' && FLOOR_OTHER.some((s) => s.label === floorSizeLabel(p.floorSize)) && (
@@ -156,8 +156,8 @@ function quickContent(p: QuickPicksProps): ReactNode {
               value={p.rollMode}
               onChange={p.onRollMode}
               options={[
-                { value: 'fill', title: 'Dra et område, banene legges slik det koster minst', label: 'Fyll' },
-                { value: 'lane', title: 'Legg én hel bane av gangen', label: 'Bane' },
+                { value: 'fill', title: 'Fyll · dra et område, banene legges slik det koster minst', label: 'Fyll' },
+                { value: 'lane', title: 'Bane · legg én hel bane av gangen', label: 'Bane' },
               ]}
             />
             {p.rollMode === 'lane' && (
@@ -166,8 +166,8 @@ function quickContent(p: QuickPicksProps): ReactNode {
                 value={p.roll}
                 onChange={p.onRoll}
                 options={[
-                  { value: 'x', title: 'Banene går fra venstre til høyre (R snur)', label: <span className="num">↔ Bredden</span> },
-                  { value: 'y', title: 'Banene går fra bak til front (R snur)', label: <span className="num">↕ Dybden</span> },
+                  { value: 'x', title: 'Bredden · banene går fra venstre til høyre (R)', label: <span className="num">↔ Bredden</span> },
+                  { value: 'y', title: 'Dybden · banene går fra bak til front (R)', label: <span className="num">↕ Dybden</span> },
                 ]}
               />
             )}

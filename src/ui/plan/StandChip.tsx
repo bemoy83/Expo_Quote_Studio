@@ -69,7 +69,7 @@ export function StandChip({ view, onView, hint, ...p }: StandSettingsProps & { v
                 {fmt(k.area)} m² · {k.openSides} åpne {k.openSides === 1 ? 'side' : 'sider'}
               </span>
             </span>
-            <IconButton icon={X} label="Lukk" size={16} onClick={close} />
+            <IconButton icon={X} label="Lukk" title="Lukk (Esc)" size={16} onClick={close} />
           </div>
           <StandSettings {...p} />
         </div>

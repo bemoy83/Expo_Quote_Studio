@@ -21,7 +21,7 @@ export function DrawerHead({ dot, title, remove, onClose, children }: { dot?: st
       <h3>{title}</h3>
       {children}
       {remove && <IconButton icon={Trash2} label={remove.label} size={14} onClick={remove.onClick} />}
-      <IconButton icon={X} label="Lukk" size={14} onClick={onClose} />
+      <IconButton icon={X} label="Lukk" title="Lukk skuffen" size={14} onClick={onClose} />
     </div>
   )
 }

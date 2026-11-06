@@ -17,6 +17,7 @@ import { download } from './download'
 import { catalog, getVersion, idx, place, plateColor, rules, subscribe } from './env'
 import { hint, HINT_3D } from './hints'
 import { findMotif, motifLibrary, readMotif } from './motifs'
+import { NameTip } from './NameTip'
 import { Rail } from './panel/Rail'
 import { PickingPage } from './picking/PickingPage'
 import { DrawerHandle } from './plan/DrawerHandle'
@@ -406,6 +407,7 @@ export default function App() {
         <CatalogPage onToast={showToast} />
       )}
       <Toast msg={toast} />
+      <NameTip />
     </div>
   )
 }

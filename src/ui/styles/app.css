@@ -42,6 +42,10 @@ select {
   font: inherit;
   color: inherit;
 }
+/* Holding a button shows its name pill (NameTip), not the tablet's own callout */
+button {
+  -webkit-touch-callout: none;
+}
 kbd {
   font: var(--type-kbd);
   padding: 0;
@@ -754,31 +758,6 @@ kbd {
 .vdot[aria-pressed='true'] {
   background: rgb(var(--surface));
   box-shadow: var(--raise);
-}
-.vdot:hover::after {
-  content: attr(data-tip);
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 6px);
-  transform: translateX(-50%);
-  white-space: nowrap;
-  padding: 4px 8px;
-  border-radius: var(--r-sm);
-  background: rgb(var(--ink));
-  color: rgb(var(--canvas));
-  font: 500 11.5px var(--font-ui);
-  pointer-events: none;
-  z-index: 5;
-}
-/* The end dots keep their name inside the row: centred, the first one's would hang out past the panel or drawer edge */
-.vdot:first-child:hover::after {
-  left: 0;
-  transform: none;
-}
-.vdot:last-child:hover::after {
-  left: auto;
-  right: 0;
-  transform: none;
 }
 .chips-text {
   display: flex;
@@ -2915,4 +2894,52 @@ select.cin {
   height: 4px;
   border-radius: 2px;
   background: rgb(var(--ink) / 0.25);
+}
+
+/* Name pill over icon buttons (NameTip.tsx): dark like the measure pills, the shortcut as a key cap by the name, the
+   explanation under it in fainter text. Placed by script; it never takes the pointer. The key cap's thin edge is
+   Bjørn's own choice (6.11.2026), an exception to «no edge lines». */
+.name-tip {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 280px;
+  width: max-content;
+  box-sizing: border-box;
+  padding: 5px 9px 6px;
+  border-radius: var(--r-pill);
+  background: rgb(var(--ink));
+  color: rgb(var(--canvas));
+  font: 500 12px/1.35 var(--font-ui);
+  box-shadow: var(--pop);
+  pointer-events: none;
+}
+.nt-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.nt-key {
+  flex: none;
+  min-width: 10px;
+  padding: 1px 4px;
+  border: 1px solid rgb(var(--canvas) / 0.35);
+  border-radius: 4px;
+  font: 500 10.5px/1.3 var(--font-numeric);
+  text-align: center;
+  color: inherit;
+}
+.nt-more {
+  font-weight: 400;
+  color: rgb(var(--canvas) / 0.7);
+}
+@media print {
+  .name-tip {
+    display: none;
+  }
 }

@@ -12,17 +12,19 @@ import type { PriceChange } from './usePriceChange'
 interface ToolDef {
   id: DockTool
   name: string
+  /** What it does, under the name in the name pill. */
+  more: string
   key: string
   icon: LucideIcon
 }
 
 const DOCK_TOOLS: ToolDef[] = [
-  { id: 'select', name: 'Velg', key: 'V', icon: MousePointer2 },
-  { id: 'wall', name: 'Vegg', key: 'S', icon: BrickWall },
-  { id: 'floor', name: 'Gulv', key: 'G', icon: Grid2x2 },
-  { id: 'profile', name: 'Profilering', key: 'T', icon: Image },
-  { id: 'object', name: 'Møbel', key: 'M', icon: Armchair },
-  { id: 'erase', name: 'Tøm', key: 'E', icon: Eraser },
+  { id: 'select', name: 'Velg', more: 'velg, flytt og endre det som står i planen', key: 'V', icon: MousePointer2 },
+  { id: 'wall', name: 'Vegg', more: 'innervegger, dører, takdragere og bakrom', key: 'S', icon: BrickWall },
+  { id: 'floor', name: 'Gulv', more: 'teppefliser og engangsteppe', key: 'G', icon: Grid2x2 },
+  { id: 'profile', name: 'Profilering', more: 'tekstilvegger, print og motiver', key: 'T', icon: Image },
+  { id: 'object', name: 'Møbel', more: 'plasser møbler på standen', key: 'M', icon: Armchair },
+  { id: 'erase', name: 'Tøm', more: 'fjern det du peker på', key: 'E', icon: Eraser },
 ]
 
 export function ToolDock({
@@ -55,10 +57,10 @@ export function ToolDock({
   return (
     <div className="dock">
       <div className="dock-pill dock-undo">
-        <button type="button" className="dock-btn" title="Angre (⌘Z)" aria-label="Angre" disabled={!canUndo} onClick={onUndo}>
+        <button type="button" className="dock-btn" title="Angre · siste endring (⌘Z)" aria-label="Angre" disabled={!canUndo} onClick={onUndo}>
           <Undo2 size={18} />
         </button>
-        <button type="button" className="dock-btn" title="Gjør om (⇧⌘Z)" aria-label="Gjør om" disabled={!canRedo} onClick={onRedo}>
+        <button type="button" className="dock-btn" title="Gjør om · det du angret (⇧⌘Z)" aria-label="Gjør om" disabled={!canRedo} onClick={onRedo}>
           <Redo2 size={18} />
         </button>
       </div>
@@ -77,7 +79,7 @@ export function ToolDock({
                   className="dock-btn"
                   aria-pressed={on}
                   aria-label={t.name}
-                  title={`${t.name} (${t.key})`}
+                  title={`${t.name} · ${t.more} (${t.key})`}
                   onClick={() => onTool(t.id)}
                 >
                   <t.icon size={19} />
