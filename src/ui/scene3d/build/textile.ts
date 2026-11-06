@@ -12,7 +12,7 @@ import { sideOf } from '../../../domain/faces'
 import { textileBox, textileOffset } from '../../../domain/textile/inFrame'
 import { printMaterial } from './motifs'
 import { ALU, ALU_FINISH, FABRIC, SELECT, type BuildContext, type Tag } from './context'
-import { CAP_92LTX, CAP_THICKNESS, CORNER_92LTX, OUTLINES, mitredProfile } from './profiles'
+import { CAP_92LTX, CAP_THICKNESS, CORNER_92LTX, OUTLINES, mitredProfile, unitProfile } from './profiles'
 
 export function buildTextile(c: BuildContext) {
   const { v, res, opts, H, at, mat, add, along, sel } = c
@@ -41,6 +41,9 @@ export function buildTextile(c: BuildContext) {
     const [front, back] = s === 1 ? [print, fabric] : [fabric, print]
     textile(g, -fw / 2, fw, h, bottom, front, 1, tag)
     textile(g, -fw / 2, fw, h, bottom, back, -1, tag)
+    // Upright braces (90) evenly spread inside the frame
+    const n = res.production.pieces.find((p) => p.textileId === t.id)?.braces?.qty ?? 0
+    for (let i = 1; i <= n; i++) brace(g, -fw / 2 + (fw * i) / (n + 1), h, bottom, alu, tag)
   }
 
   // Frittstående tekstilvegger: a frame with textile on both faces (face A toward side 1), on foot plates
@@ -64,6 +67,7 @@ export function buildTextile(c: BuildContext) {
     const railTo = railFrom + f.railCuts.reduce((a, x) => a + x, 0) / 1000
     profiles(g, L, h, foot, { from: !f.corners.from, to: !f.corners.to }, railFrom, railTo, alu, tag)
     f.faces.forEach((x, i) => textile(g, -L / 2 + x.start / 1000, x.W / 1000, h, foot, face(x), i === 0 ? 1 : -1, tag))
+    for (const at of f.supports) brace(g, -L / 2 + at / 1000, h, foot, alu, tag)
     for (const at of f.supports) {
       const [x, y] = alongRun(t, at)
       const [dx, dy] = runDirection(t)
@@ -100,6 +104,15 @@ export function buildTextile(c: BuildContext) {
     // Outer edge (local −y) turned outward: at the from end toward −x, at the to end toward +x
     if (up.from) piece(h, { from: true, to: true }, -L / 2 + d, y0 + h / 2, -Math.PI / 2)
     if (up.to) piece(h, { from: true, to: true }, L / 2 - d, y0 + h / 2, Math.PI / 2)
+  }
+
+  /** Upright brace (90) at x inside the frame, between the rails, in the middle of the frame depth. */
+  function brace(g: THREE.Group, x: number, h: number, y0: number, m: THREE.Material, tag: Tag) {
+    const mesh = new THREE.Mesh(unitProfile('90'), m)
+    mesh.scale.x = h - 2 * depth
+    mesh.rotation.z = Math.PI / 2
+    mesh.position.set(x, y0 + h / 2, 0)
+    add(mesh, tag, g)
   }
 
   /** Textile over one face (side 1: face A, +z), `w` long from x, just outside the frame. */
@@ -150,6 +163,7 @@ function cornerPosts(c: BuildContext) {
         mesh.position.copy(at(p, y))
         add(mesh, { layer: 'textile', pick: { freeTextileId: t.id } }, root)
       }
+      // Cap on the floor, the post on it, and a cap on top
       upright(CAP_92LTX, foot, CAP_THICKNESS)
       upright(OUTLINES['92LTX'], foot + CAP_THICKNESS, h - 2 * CAP_THICKNESS)
       upright(CAP_92LTX, foot + h - CAP_THICKNESS, CAP_THICKNESS)

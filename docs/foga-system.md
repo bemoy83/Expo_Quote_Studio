@@ -140,8 +140,8 @@ Systemhøyde fra gulv: 2490 + 50 = 2540 mm.
   langs linjen. 7 m holdes allerede av inndelingen (4 + 3 med tverrdrager i skjøten); et lengre fritt spenn får én per
   6 m. Den er en standard takdrager: arrangørens når arrangøren betaler standveggene. Uten takdrager blir det
   fotplater som før. En tegnet drager fra samme stolpe holder veggen der og tar plassen til støttedrageren.
-- **2 × 600 i hver ende.** 292 står 80 høy og 20 tykk, med 9 mm kanal i over- og underkant og fire kamre
-  inni. De to 600-koblingene sitter i ytterkamrene, én oppe og én nede, og låser i kanalen på stolpe 94.
+- **2 × 600 i hver ende.** 292 står 80 høy og 20 tykk, med 9 mm kanal i over- og underkant og tre lukkede
+  kamre inni (målt 6.11.2026). De to 600-koblingene sitter i ytterkamrene, én oppe og én nede, og låser i kanalen på stolpe 94.
 - Alle stolper, også frittstående som bare bærer takdrager, er **94** på 2490 mm med samme fot.
 - **Takdragerne følger standveggene** (Bjørn 3.11.2026). En øy har ingen standvegger og får derfor ingen takdrager som
   standard, uansett hvem som betaler standveggene. Vil utstilleren ha takdrager på øya, slås de på og betales fullt av
@@ -291,9 +291,11 @@ innvendig (der koblinger og fotinnsats sitter). Kanalene ligger midt på en 20 m
 | 94 stolpe | 873 062 22 | 40 × 40 | Én Flex-kanal på hver av de fire sidene. Midtrør 17 × 17 (innsats 700 for foten) |
 | 92 toppskinne | 873 051 22 | 20 × 40 | Kanal i begge kortender: ned mot platen, opp. Midtrør og to kamre |
 | 91 bunnskinne | 873 042 22 | 20 × 30 | Én kanal, opp mot platen. Midtrør over kanalen |
+| 292 takdrager | 873 080 22 | 20 × 80 | Kanal i over- og underkant. Tre kamre 17 × 17 over hverandre (de to ytterste tar 600-koblingene) |
+| 90 stag | 873 040 22 | 20 × 20 | Firkantrør uten kanal, midtrør 17 × 17 for 600 |
 | 43TX | 873 805 22 | 40 × 40 | Ytterst (mot rammens utside) en 1,5 mm flens med **tekstilspor på begge flater** (4 mm åpning, 14 mm dypt, 1,5–5,5 mm fra ytterkanten): silikonlisten trykkes inn fra hver side, dukene står 40 mm fra hverandre. Flex-kanal på begge flater (senter 20 mm inn) og på innerkanten (mot rammens midte). Midtrør + to små kamre |
 | 92LTX | 873 809 22 | 57 × 57 | To ben, 20 mm brede, som ender i en Flex-kanal mot hver vegg. Utvendig hjørne avfaset med **tre 45°-spor** der duken svinger rundt hjørnet. Flere kanaler og kamre innvendig |
-| Endelokk | 876 900 92 | 47 × 47 × 7 | L-formet plate med fas, to skruehull (Ø ca. 3,8). Under og over 92LTX |
+| Endelokk | 876 900 92 | 57 × 57 × 7 | Plate over hele fotavtrykket til 92LTX, to skruehull (Ø ca. 3,8). Under og over 92LTX. STL-en er tegnet i tre lag, men det er én del (Bjørn 6.11.2026); appen viser den som én plate |
 
 Slik henger det sammen:
 
@@ -321,7 +323,10 @@ Slik henger det sammen:
 - Trinn 2: tekstilrammene er fire 43TX-profiler, gjæret i hjørnene (`mitredProfile`), med duken over begge flatene.
   Frittstående vegger som møtes får 92LTX med endelokk (7 mm) under og over; skinnene stopper ved benet. Hver
   92LTX lages for seg (snudd etter de to veggene), de gjærede bitene også, og frigjøres med resten av scenen.
-- Mangler STL for 292 (takdrager), 90 (stag) og 600/617; de vises som bokser eller ikke i det hele tatt.
+- Trinn 3: takdrager i 292, kappet mellom stolpene (senteravstand − 40), og stående stag i 90 midt i rammen mellom
+  skinnene (InFrame: jevnt fordelt, frittstående: ved hver fot). Stagene ligger mellom dukene og synes bare når
+  tekstillaget er dempet.
+- Koblingene (600, 617, 609) vises ikke.
 
 ### Plukkliste
 
