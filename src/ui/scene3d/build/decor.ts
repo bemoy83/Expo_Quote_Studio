@@ -1,7 +1,7 @@
 // Foil decor and stretched print on the wall plates, over the door leaf and header where a print covers a door.
 import { foilCenter } from '../../../domain/decor'
-import { doorLevels } from '../../../domain/doors'
-import { cropBand, plateCrop } from '../../../domain/print'
+import { doorWindows } from '../../../domain/doors'
+import { cropWindow, plateCrop } from '../../../domain/print'
 import { pointAlong } from '../../../domain/grid'
 import { productOf, rules } from '../../env'
 import { findMotif } from '../../motifs'
@@ -31,17 +31,20 @@ export function buildDecor(c: BuildContext) {
     const crop = plateCrop(f, m?.ratio ?? 0)
     const y0 = f.y - f.height / 2
     const y1 = f.y + f.height / 2
+    const box = { x0: -f.width / 2, x1: f.width / 2, y0, y1 }
     const band = (lo: number, hi: number, width: number, off: number) => {
-      const print = m ? cropMaterial(m, cropBand(crop, y0, y1, lo, hi), opts.onLoad, glow) : blank
+      const win = { x0: -width / 2, x1: width / 2, y0: lo, y1: hi }
+      const print = m ? cropMaterial(m, cropWindow(crop, box, win), opts.onLoad, glow) : blank
       along(pointAlong(w, c - width / 2), pointAlong(w, c + width / 2), width, hi - lo, 0.002, lo, print, tag, off)
     }
     if (!doorAt.has(`${f.wallId}|${f.module}`)) {
       band(y0, y1, f.width, face)
       continue
     }
-    // Door: the header plate above, the leaf (its 292 frame face) below. The picture runs on over both.
-    const lv = doorLevels(rules)
-    band(lv.header, y1, f.width, face)
-    band(lv.leaf, lv.top, rules.door.swing, s * (0.01 + 0.002))
+    // Door: the picture shows through the header plate between its rails and the leaf plate inside its 292 frame
+    // (lysåpning); rails and frame hide their strip of it. The leaf plate sits in the middle of the 20 mm frame.
+    const { header, leaf } = doorWindows(rules)
+    band(header.y0, header.y1, header.w, face)
+    band(leaf.y0, leaf.y1, leaf.w, s * (0.0015 + 0.001))
   }
 }

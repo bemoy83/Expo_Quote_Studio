@@ -3,7 +3,7 @@ import { DEFAULT_CATALOG, DOOR } from '../catalog/defaultCatalog';
 import { calc } from '../calc/calc';
 import { RULES, wallHeight } from '../rules/rules';
 import { r2 } from '../calc/referenceStands';
-import { doorHinge, doorLevels, doorRal, doorSpots, doorSwing, flipHinge, inDoorArea, moveOpening, paintDoors, placeOpening, removeOpening, setDoorRal, setOpening, setOpeningProduct } from './doors';
+import { doorHinge, doorLevels, doorRal, doorWindows, doorSpots, doorSwing, flipHinge, inDoorArea, moveOpening, paintDoors, placeOpening, removeOpening, setDoorRal, setOpening, setOpeningProduct } from './doors';
 import { paintWalls, replaceWalls } from './edit';
 import { moduleKey } from './grid';
 import { addRoom, moveRoom, moveRoomDoors, RECT_SIDE, resizeRoomDoors } from './rooms';
@@ -188,5 +188,17 @@ describe('doorLevels (Byggeregel D2)', () => {
     expect(lv.top).toBeCloseTo(2.07);
     expect(lv.header).toBeCloseTo(2.08);
     expect(wallHeight(RULES) - lv.header).toBeCloseTo(0.46);
+  });
+});
+
+describe('doorWindows (Byggeregler D2, D5)', () => {
+  it('print shows through the header between 91 and 92 (960 × 390) and the leaf inside its 292 frame (790 × 1840)', () => {
+    const { header, leaf, frame } = doorWindows(RULES);
+    expect(frame).toBeCloseTo(0.08);
+    expect(header.w).toBeCloseTo(0.96);
+    expect(header.y1 - header.y0).toBeCloseTo(0.39);
+    expect(leaf.w).toBeCloseTo(0.79);
+    expect(leaf.y1 - leaf.y0).toBeCloseTo(1.84);
+    expect(leaf.y0).toBeCloseTo(0.15);
   });
 });

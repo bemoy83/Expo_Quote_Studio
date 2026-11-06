@@ -1,7 +1,7 @@
 // Parts of the drawings in the drawers (wall, door, free-standing textile wall), the wall seen straight on.
 // In metres, y down: the top of the wall is y = 0 and the floor y = H.
 import type { ReactNode, SVGProps } from 'react'
-import { doorLevels } from '../../domain/doors'
+import { doorLevels, doorWindows } from '../../domain/doors'
 import type { TextileFill } from '../../domain/types'
 import { RECIPES } from '../../foga/recipes'
 import type { Motif } from '../../persistence/file'
@@ -35,6 +35,7 @@ export function Posts({ xs, H }: { xs: number[]; H: number }) {
 export function Opening({ x, H, plate, door, print }: { x: number; H: number; plate: SVGProps<SVGRectElement>; door?: { color: string; hinge: number; free: number }; print?: { header: ReactNode; leaf: ReactNode } }) {
   const { post, profile } = rules.wall
   const lv = doorLevels(rules)
+  const { leaf: win, frame } = doorWindows(rules)
   const z = (h: number) => H - h
   const bottom = door ? profile.bottom : profile.top
   const left = door && Math.min(door.hinge, door.free)
@@ -48,9 +49,9 @@ export function Opening({ x, H, plate, door, print }: { x: number; H: number; pl
       {door && left !== undefined ? (
         <>
           <rect x={left} y={z(lv.top)} width={rules.door.swing} height={leafH} fill={ALU} />
-          <rect x={left + LEAF_FRAME} y={z(lv.top) + LEAF_FRAME} width={rules.door.swing - 2 * LEAF_FRAME} height={leafH - 2 * LEAF_FRAME} fill={door.color} />
+          <rect x={left + frame} y={z(win.y1)} width={win.w} height={win.y1 - win.y0} fill={door.color} />
           {print?.leaf}
-          <circle cx={door.free + (door.free > door.hinge ? -1 : 1) * LEAF_FRAME / 2} cy={z(RECIPES.door.lock.height / 1000)} r={0.028} fill={LOCK} />
+          <circle cx={door.free + (door.free > door.hinge ? -1 : 1) * frame / 2} cy={z(RECIPES.door.lock.height / 1000)} r={0.028} fill={LOCK} />
         </>
       ) : (
         <rect x={x + 0.04} y={z(lv.header)} width={0.92} height={lv.header - 0.02} fill="none" stroke={BORDER_STRONG} strokeWidth={0.012} strokeDasharray=".05 .04" />
@@ -59,8 +60,6 @@ export function Opening({ x, H, plate, door, print }: { x: number; H: number; pl
   )
 }
 
-/** The leaf's 292 frame seen from the front, m. */
-const LEAF_FRAME = 0.08
 /** Lock 410's black rosette. */
 const LOCK = '#1d1e20'
 

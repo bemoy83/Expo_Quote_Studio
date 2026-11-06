@@ -6,7 +6,7 @@ import { RULES } from '../rules/rules';
 import { addFoil, fitDecor, updateFoil } from './decor';
 import { paintWalls, setWallPlate } from './edit';
 import { setPanels } from './panels';
-import { clearPrint, fillPlates, hiddenPlates, printPlate, printPlates, printWall, clearDecor, stretchCrops, stretchedRuns } from './print';
+import { clearDecor, clearPrint, cropWindow, fillPlates, hiddenPlates, printPlate, printPlates, printWall, stretchCrops, stretchedRuns } from './print';
 import { r2 } from '../calc/referenceStands';
 import { wallModules } from './grid';
 import type { Variant } from './types';
@@ -192,5 +192,12 @@ describe('the last stroke wins between colour and print (Bjørn 3.11.2026)', () 
     v = printWall(v, RULES, w.id, -1, 'logo', 2);
     expect(hiddenPlates(v).size).toBe(3);
     expect(v.walls.find((x) => x.id === w.id)!.plate).toBeUndefined();
+  });
+});
+
+describe('cropWindow', () => {
+  it('a window in the middle of the box shows the same share of the picture', () => {
+    const c = cropWindow([0, 0, 1, 1], { x0: -0.5, x1: 0.5, y0: 0, y1: 2 }, { x0: -0.25, x1: 0.25, y0: 0.5, y1: 1.5 });
+    expect(c).toEqual([0.25, 0.25, 0.75, 0.75]);
   });
 });

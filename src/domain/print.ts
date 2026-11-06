@@ -33,10 +33,14 @@ export function coverCrop(aspect: number, ratio: number): Crop {
 /** The part of the motif a full-plate foil shows: its share of a stretched print, else the whole motif cropped to the plate. */
 export const plateCrop = (f: Foil, ratio: number): Crop => f.crop ?? coverCrop(f.width / f.height, ratio);
 
-/** The part of `crop` on the band from height `lo` to `hi` of a plate whose crop spans `y0` to `y1` (metres). */
-export function cropBand(crop: Crop, y0: number, y1: number, lo: number, hi: number): Crop {
-  const k = (crop[3] - crop[1]) / (y1 - y0);
-  return [crop[0], crop[1] + (y1 - hi) * k, crop[2], crop[1] + (y1 - lo) * k];
+/**
+ * The part of `crop` (the picture over the box x0…x1, y0…y1, x left to right as seen from the face, y up) that shows
+ * through a window inside the box.
+ */
+export function cropWindow(crop: Crop, box: { x0: number; x1: number; y0: number; y1: number }, win: { x0: number; x1: number; y0: number; y1: number }): Crop {
+  const kx = (crop[2] - crop[0]) / (box.x1 - box.x0);
+  const ky = (crop[3] - crop[1]) / (box.y1 - box.y0);
+  return [crop[0] + (win.x0 - box.x0) * kx, crop[1] + (box.y1 - win.y1) * ky, crop[0] + (win.x1 - box.x0) * kx, crop[1] + (box.y1 - win.y0) * ky];
 }
 
 /** True where another room stands in front of the face at offset t: that stretch is the inside of a bakrom. */

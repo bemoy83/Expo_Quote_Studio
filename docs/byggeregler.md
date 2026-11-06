@@ -140,8 +140,10 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   høyde (2000), liggerne sitter mellom dem. Én veggplate (samme HDF som i veggen) i kanalene, og bare platen har
   dørfargen; rammen er alu. To hengsler 403, ett nær toppen og ett nær bunnen (150 inn). Lås 410 med sort rosett og
   vrider på den frie stolpen; utsiden tegnes og settes likt på innsiden (innvendig er det egentlig en smal stålvrider).
+  Print over døren vises bare i lysåpningene: på overstykket mellom 91 og 92 (960 × 390) og på dørbladet innenfor
+  292-rammen (790 × 1840); rammen og skinnene dekker sin stripe av bildet, som stolpene mellom veggplatene.
   Gjelder 3D og veggtegningen i skuffen; døren plukkes fortsatt som én enhet (D1).
-  *Bjørn 6.11.2026 · `RECIPES.door` · kode `src/ui/scene3d/build/doors.ts`, `src/ui/plan/elevation.tsx` · test `src/ui/scene3d/build.test.ts`*
+  *Bjørn 6.11.2026 · `RECIPES.door` · kode `src/ui/scene3d/build/doors.ts`, `src/ui/plan/elevation.tsx`, `src/domain/doors.ts` · test `src/ui/scene3d/build.test.ts`, `src/domain/doors.test.ts`*
 
 ## R · Rom
 
