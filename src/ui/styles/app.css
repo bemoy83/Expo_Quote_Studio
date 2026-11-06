@@ -5,22 +5,12 @@
 @import './tokens/typography.css';
 @import './tokens/spacing.css';
 @import './tokens/effects.css';
+@import './tokens/dark.css';
 
 /* Stand sketch page band */
 [data-band='eple'] {
   --bh: 128;
   --bc: 0.13;
-}
-
-/* Build system hardware as drawn in 2D (wall drawer, thumbnails). The 3D view has its own lit colours. */
-:root {
-  --alu: #b9bcc0; /* profiles and textile frames */
-  --alu-post: #8d9095;
-  --alu-light: #e1e3e6; /* lit and shaded edge of a frame thumbnail */
-  --alu-shade: #a6a9ad;
-  --alu-thumb: #c9ccd0;
-  --feet: #2a2b2e;
-  --fabric: color-mix(in oklab, var(--line-violet) 14%, rgb(var(--surface)));
 }
 
 html,
@@ -416,6 +406,30 @@ kbd {
   font: var(--type-text);
   color: rgb(var(--ink-faint));
   margin-left: 8px;
+  white-space: nowrap;
+}
+/* Narrower screens (iPad landscape is 1180): the top bar keeps every control on screen.
+   First the label goes and the menu tightens, then Ny, Åpne fil and Lagre fil keep only their icon. */
+@media (max-width: 1499px) {
+  .topnav .brand {
+    margin-right: 12px;
+    white-space: nowrap;
+  }
+  .topnav .poc {
+    display: none;
+  }
+  .navb {
+    padding: 7px 8px;
+  }
+}
+@media (max-width: 1279px) {
+  .topnav > .btn:not(.proj-btn) {
+    width: var(--ctl-h);
+    padding: 0;
+    justify-content: center;
+    gap: 0;
+    font-size: 0;
+  }
 }
 
 .band {

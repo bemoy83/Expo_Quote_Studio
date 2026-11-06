@@ -1,12 +1,19 @@
-import { ChevronDown, Download, FilePlus, FolderOpen, Plus, X } from 'lucide-react'
+import { ChevronDown, Download, FilePlus, FolderOpen, Monitor, Moon, Plus, Sun, X } from 'lucide-react'
 import { useRef, useState, type RefObject } from 'react'
 import { DELIVERY_FIELDS } from '../../domain/delivery'
 import type { Delivery, Project } from '../../domain/types'
 import { customerName, isFixedField, projectField } from '../../domain/variant'
 import { Button, IconButton } from '../controls'
+import { nextTheme, useTheme } from '../theme'
 import { useDismiss } from '../useDismiss'
 
 export type Page = 'skisse' | 'tilbud' | 'produksjon' | 'plukkliste' | 'arbeidsordre' | 'produkter'
+
+const THEME = {
+  system: { icon: Monitor, label: 'Tema: som systemet' },
+  light: { icon: Sun, label: 'Tema: lyst' },
+  dark: { icon: Moon, label: 'Tema: mørkt' },
+} as const
 
 const PAGES: { key: Page; name: string }[] = [
   { key: 'skisse', name: 'Standskisse' },
@@ -35,6 +42,7 @@ export function TopNav({
   onSave: () => void
 }) {
   const [open, setOpen] = useState(false)
+  const [theme, setTheme] = useTheme()
   const button = useRef<HTMLButtonElement>(null)
   const customer = customerName(project)
   const proj = projectField(project, 'prosjekt')
@@ -51,14 +59,15 @@ export function TopNav({
         <ChevronDown size={14} />
       </button>
       {open && <ProjectPopover project={project} setProject={setProject} button={button} onClose={() => setOpen(false)} />}
+      <IconButton icon={THEME[theme].icon} label={`${THEME[theme].label} · klikk for å bytte`} onClick={() => setTheme(nextTheme(theme))} />
       <span className="spacer" />
-      <Button icon={FilePlus} onClick={onNew}>
+      <Button icon={FilePlus} title="Ny skisse" onClick={onNew}>
         Ny
       </Button>
-      <Button icon={FolderOpen} onClick={onOpen}>
+      <Button icon={FolderOpen} title="Åpne fil" onClick={onOpen}>
         Åpne fil
       </Button>
-      <Button icon={Download} onClick={onSave}>
+      <Button icon={Download} title="Lagre fil" onClick={onSave}>
         Lagre fil
       </Button>
       <span className="poc">Proof of concept · intern bruk</span>

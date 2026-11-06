@@ -1,0 +1,68 @@
+/* Mørk modus · flat. Bare fargeverdier: samme struktur, ingen nye klasser. Utskrift er alltid lys.
+   html[data-theme] settes av temabryteren (ui/theme.ts), og av index.html før første tegning: lys, mørk eller som systemet. */
+@media screen {
+  :root[data-theme='dark'] {
+    color-scheme: dark;
+    /* Nøytraler: varm grafitt, fire flater i tydelige trinn */
+    --canvas: 20 20 19;        /* #141413 side, rutenett */
+    --panel: 27 27 25;         /* #1b1b19 paneler, popovere */
+    --surface: 35 35 33;       /* #232321 hevet, valgt segment, standgulv i planen */
+    --sunken: 14 14 13;        /* #0e0e0d spor, brønner */
+    --border: 46 46 43;        /* #2e2e2b hårstrek */
+    --border-strong: 68 67 63; /* #44433f gruppelinje, kant på popover */
+    --ink: 236 234 228;        /* #eceae4 */
+    --ink-muted: 166 163 156;
+    --ink-faint: 124 122 116;
+    --ink-body: color-mix(in srgb, rgb(var(--ink)) 62%, rgb(var(--ink-muted)));
+    --sunken-2: color-mix(in srgb, rgb(var(--panel)) 60%, rgb(var(--surface))); /* gangen i planen: litt lysere enn siden */
+    --action-bg: 56 40 22;
+    /* Status, løftet for mørk bunn */
+    --pos: #6fd087; --over: #f2b54f; --neg: #f97770;
+    --committed: 111 208 135; --draft: 242 181 79; --danger: 249 119 112;
+    --al-block: #e08a70;
+    --over-fill: oklch(0.74 0.12 80);
+    /* Flat: nivåer med kanter, skygge bare der noe svever */
+    --raise: 0 0 0 1px rgb(var(--border-strong));
+    --pop: 0 0 0 1px rgb(var(--border-strong)), 0 12px 32px rgb(0 0 0 / .5);
+    --slide: -1px 0 0 rgb(var(--border-strong)), -20px 0 40px rgb(0 0 0 / .45);
+    --recess-shade: none;
+    /* Byggesystemet i 2D: lysere metall, synlige føtter */
+    --alu: #8f9297; --alu-post: #a9acb1; --alu-light: #bfc2c6; --alu-shade: #6c6f74; --alu-thumb: #9b9ea3; --feet: #7b7e83;
+    --fabric: color-mix(in oklab, var(--line-violet) 24%, rgb(var(--surface)));
+    /* Kategorifarger: litt mørkere, så de ikke lyser */
+    --line-blue: oklch(0.68 0.06 250); --line-teal: oklch(0.68 0.06 175); --line-green: oklch(0.68 0.06 115);
+    --line-amber: oklch(0.7 0.06 78); --line-rose: oklch(0.68 0.06 40); --line-violet: oklch(0.66 0.06 285);
+    --line-sky: oklch(0.68 0.06 212); --line-plum: oklch(0.66 0.06 0); --line-slate: oklch(0.62 0.01 90);
+    /* Tusj: samme farge, litt dypere så de ikke gløder */
+    --tusj-tekstil: oklch(0.74 0.13 55);
+    --tusj-trykk: oklch(0.78 0.1 158);
+  }
+  /* Sidebåndet: samme kulør, mørk tone */
+  [data-theme='dark'] [data-band] {
+    --b-band: oklch(0.29 calc(var(--bc) * .42) var(--bh));
+    --b-line: oklch(0.42 calc(var(--bc) * .6) var(--bh));
+    --b-track: oklch(0.35 calc(var(--bc) * .5) var(--bh));
+    --b-ink: oklch(0.94 calc(var(--bc) * .2) var(--bh));
+    --b-mute: oklch(0.76 calc(var(--bc) * .32) var(--bh));
+    --b-recess: color-mix(in oklab, var(--b-band) 78%, #000);
+  }
+  /* Dokumentene er papir: tilbud og arbeidsordre beholder lyse fargeverdier på arket */
+  [data-theme='dark'] .qdoc {
+    color-scheme: light;
+    --canvas: 242 240 235; --panel: 250 249 246; --surface: 255 255 255; --sunken: 231 228 221;
+    --border: 220 216 207; --border-strong: 196 191 180;
+    --ink: 23 22 19; --ink-muted: 91 89 83; --ink-faint: 119 116 108;
+    --ink-body: color-mix(in srgb, rgb(var(--ink)) 45%, rgb(var(--ink-muted)));
+    --pos: #287c42; --over: #8f5e0a; --neg: #c53637; --al-block: #d27f66;
+    --alu: #b9bcc0; --alu-post: #8d9095; --feet: #2a2b2e;
+    --tusj-tekstil: oklch(0.81 0.12 55); --tusj-trykk: oklch(0.86 0.09 158);
+    --line-violet: oklch(0.75 0.055 285);
+    /* Avledede verdier regnes ut i :root, så de deklareres på nytt på arket */
+    --accent: var(--ink); --al-on: rgb(var(--ink)); --bar-tick: rgb(var(--ink));
+    --sunken-2: color-mix(in srgb, rgb(var(--sunken)) 50%, rgb(var(--canvas)));
+    --fabric: color-mix(in oklab, var(--line-violet) 14%, rgb(var(--surface)));
+    --g-col: rgb(var(--border) / .55); --g-row: rgb(var(--border) / .40); --g-phase: rgb(var(--border) / .50); --g-top: rgb(var(--border-strong));
+    --sec: color-mix(in oklab, rgb(var(--canvas)) 96%, rgb(var(--ink)));
+    box-shadow: 0 0 0 1px rgb(68 67 63);
+  }
+}
