@@ -32,6 +32,9 @@ describe('3D scene from the model', () => {
       return g?.type === 'CylinderGeometry' && g.parameters.radiusBottom === 0.02 && g.parameters.height === 0.006
     })
     expect(pads).toHaveLength(res.posts.length - res.wallSupports.length)
+    // ...and a 795 pin from every foot plate up into its post
+    const pins = all.filter((o) => (o as THREE.Mesh).geometry?.type === 'BoxGeometry' && ((o as THREE.Mesh).geometry as THREE.BoxGeometry).parameters.width === 0.016)
+    expect(pins).toHaveLength(res.wallSupports.length)
     const beams = layer('beams').filter((o) => (o as THREE.Mesh).geometry?.name === 'foga-292')
     expect(beams).toHaveLength(res.beams.segments.length)
   })

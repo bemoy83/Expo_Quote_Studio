@@ -44,7 +44,12 @@ export function buildFrame(c: BuildContext) {
   for (const { at: [x, y], orientation } of res.wallSupports) {
     const half = foot.across / 2000
     const [a, b]: [Point, Point] = orientation === 'h' ? [[x, y - half], [x, y + half]] : [[x - half, y], [x + half, y]]
-    along(a, b, 2 * half, 0.012, foot.along / 1000, 0, mat('walls', FOOT_PLATE, ALU_FINISH), { layer: 'walls' })
+    along(a, b, 2 * half, PLATE, foot.along / 1000, 0, mat('walls', FOOT_PLATE, ALU_FINISH), { layer: 'walls' })
+    // Post mount 795: a square pin on the plate, up into the post's centre tube (the post has no adjustable foot here)
+    const pin = new THREE.Mesh(pinGeometry(), mat('walls', ALU, ALU_FINISH))
+    pin.scale.y = Math.max(0.001, c.feet - PLATE)
+    pin.position.copy(at([x, y], PLATE + pin.scale.y / 2))
+    add(pin, { layer: 'walls' })
   }
 
   // Beams (takdrager) in 292, top flush with the walls, cut between the posts (centres − 40)
@@ -74,4 +79,17 @@ function footGeometry() {
     footGeo = { pad, hex, screw }
   }
   return footGeo
+}
+
+/** Foot plate 750 is 5 mm, m. */
+const PLATE = 0.005
+let pinGeo: THREE.BufferGeometry | null = null
+/** Post mount 795 (Bjørn 6.11.2026, photo): a square bar that fits the 17 × 17 centre tube of post 94, 1 m scaled to
+ *  what shows between the plate and the post. Shared for the session. */
+function pinGeometry() {
+  if (!pinGeo) {
+    pinGeo = new THREE.BoxGeometry(0.016, 1, 0.016)
+    pinGeo.userData.shared = true
+  }
+  return pinGeo
 }

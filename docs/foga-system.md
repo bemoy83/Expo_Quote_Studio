@@ -329,6 +329,8 @@ Slik henger det sammen:
 - Koblingene (600, 617, 609) vises ikke.
 - Justeringsfoten under stolpene (Bjørn 6.11.2026, bilde): settskrue M10 × 65 (896 232 95) med svart gummifot,
   Ø 40 nede og Ø 28 oppe, 6 mm høy, og en sekskant (17 mm) på toppen. Skruen går opp i midtrøret. Innsats 700 vises ikke. Stolper over en fotplate har ingen fot, som i plukklisten.
+- Stolper over fotplate 750 står på stolpefeste 795 (Bjørn 6.11.2026, bilde): en firkantpinne 16 × 16 fra platen opp i
+  midtrøret. Platen er 5 mm.
 
 ### Plukkliste
 
