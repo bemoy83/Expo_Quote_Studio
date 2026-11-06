@@ -71,7 +71,8 @@ export function production(v: Variant, s: InFrameParams, customer: string): Prod
     });
   });
   const free = freeFrames(v, RECIPES.freeFrame, s, customer);
-  const posts = { qty: cornerPosts(v).length, H: fullHeight(s) };
+  // The 92LTX stands on an end cap and has one on top, so it is cut shorter than the frame
+  const posts = { qty: cornerPosts(v).length, H: fullHeight(s) - 2 * RECIPES.freeFrame.cornerPostCap };
   return {
     pieces,
     free,

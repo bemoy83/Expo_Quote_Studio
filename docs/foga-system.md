@@ -307,8 +307,8 @@ Slik henger det sammen:
   utvendige hjørnet langs hver vegg. Det utvendige hjørnet ligger 20 mm utenfor veggens senterlinje, så skinnene
   stopper **37 mm** før hjørnepunktet (målt: 37,0). Flatene på 92LTX ligger i flukt med flatene på 43TX.
 - **Endelokket** ligger under 92LTX på gulvet (7 mm), og 92LTX står på det. Skinnen 43TX står på gulvet ved siden av.
-  Med lokk oppe og nede er 92LTX altså 14 mm kortere enn rammehøyden. Appen kapper i dag 92LTX i full høyde og
-  plukker ikke endelokk (spørsmål til Bjørn).
+  Med lokk oppe og nede kappes 92LTX **14 mm kortere** enn rammehøyden (2540 → 2526, `cornerPostCap` i
+  `src/foga/recipes.ts`). Endelokkene plukkes ikke (Bjørn 6.11.2026).
 
 ### 3D-visning med ekte profiler (forslag 6.11.2026)
 
