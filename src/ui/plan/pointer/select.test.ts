@@ -36,3 +36,12 @@ describe('Velg on a wall with a textile wall', () => {
     expect(picked(sketch('08-tekstil'), 3, -0.1)).toMatchObject({ wallId: 'side-back' });
   });
 });
+
+describe('Velg tells what a press selects (the plan marks it before the click)', () => {
+  it('a drawn takdrager', () => {
+    expect(picked(sketch('04-oy-takdrager'), 4, 3)).toEqual({ beamId: 'td1' });
+  });
+  it('engangsteppe laid by Fyll is chosen as a whole', () => {
+    expect(picked(sketch('07-engangsteppe'), 1, 1)).toEqual({ fill: 'f1' });
+  });
+});

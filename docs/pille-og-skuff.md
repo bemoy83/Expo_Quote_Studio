@@ -37,7 +37,7 @@ Brukeren skal gjøre det meste rett på tegneflaten. **Pillen** gir rask tilgang
 | Dobbeltklikk | Er bare to klikk og gjør det samme som ett. Planen har ikke dobbeltklikk (Bjørn 5.11.2026, se under) |
 | Klikk på et annet objekt | Valget og pillen bytter |
 | Klikk på en vegg med tekstilvegg | Midten av veggen (veggen slik den er tegnet, minst 10 skjermpunkter bred) velger veggen, stripen utenfor hver side velger tekstilen der, bare på tekstilens egen side: bak en standvegg velges veggen (`hits.onWallBand`, `inFrontOf`, Bjørn 6.11.2026) |
-| Pek (PC) eller hold (iPad) i Velg | Det et klikk ville valgt får en svak skygge av blekk i sin egen bredde (`layers/PickLayer.tsx`), ikke det som alt er valgt |
+| Pek (PC) eller hold (iPad) i Velg | Det et klikk ville valgt får en svak skygge av blekk i sin egen bredde (`layers/PickLayer.tsx`), ikke det som alt er valgt: vegg, tekstil, frittstående tekstil, dør og forheng (feltet), innvendig takdrager, møbel, rom og engangsteppe (banen eller hele fyllet) |
 | Klikk på tomt gulv eller utenfor standen | Valget fjernes |
 | Dra et valgt objekt | Flytter som i dag. Et drag fjerner aldri valget. Et klikk er et trykk og slipp uten flytting (samme grense som `moved` i dra-typene) |
 | Esc | Fjerner valget |

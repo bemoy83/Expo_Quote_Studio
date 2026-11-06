@@ -315,7 +315,7 @@ export function PlanView(p: Props) {
       {!p.mini && (p.doc || tool === 'select') && <Legend v={v} res={res} doc={!!p.doc} />}
 
       {/* Velg: what a click would select, faintly */}
-      {!p.mini && tool === 'select' && <PickLayer v={v} picked={pointer.picked} selection={selection} />}
+      {!p.mini && tool === 'select' && <PickLayer v={v} mods={mods} picked={pointer.picked} selection={selection} />}
 
       {/* Interaction preview: measure pill, invalid hatch and hint of the pen in hand, Tøm, room handles, the chosen lanes */}
       <PreviewLayer v={v} tool={tool} brush={brush} selection={selection} floorSize={p.floorSize} rollDir={fb.dir} pointer={pointer} next={next?.outcome ?? null} mini={p.mini} onHint={p.onHint} />
