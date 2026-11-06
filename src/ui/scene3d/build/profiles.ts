@@ -56,16 +56,9 @@ export function mitredProfile(name: ProfileName, len: number, mitre: { from: boo
   return g
 }
 
-/**
- * End cap 876 900 92 under (and, turned over, on top of) a 92LTX, 7 mm, in the same coordinates as OUTLINES['92LTX'],
- * mm. Three layers from the floor up: a 1.5 mm plate over the post's footprint, a 4 mm stepped plug, and a 1.5 mm plate
- * in the post's own outline (with the corner slots) that the post stands on. Screw holes left out.
- */
-export const CAP_92LTX: readonly { from: number; to: number; outline: readonly (readonly number[])[] }[] = [
-  { from: 0, to: 1.5, outline: [[0, 0], [39.8, 0], [39.8, 11.5], [40.2, 13.7], [41.4, 15.5], [43.2, 16.7], [45.4, 17], [56.9, 17], [56.9, 56.9], [9.5, 56.9], [0, 47.4]] },
-  { from: 1.5, to: 5.5, outline: [[9.8, 0], [25.9, 0], [25.9, 15.5], [41.4, 15.5], [41.4, 31], [56.9, 31], [56.9, 47], [19.4, 47], [9.8, 37.5]] },
-  { from: 5.5, to: 7, outline: [[0, 0], [39.8, 0], [39.8, 11.5], [40.2, 13.7], [41.4, 15.5], [43.2, 16.7], [45.4, 17], [56.9, 17], [56.9, 56.9], [9.5, 56.9], [8, 55.5], [17.9, 45.6], [11.3, 38.9], [1.4, 48.8], [0, 47.4]] },
-]
+/** End cap 876 900 92 under (and, turned over, on top of) a 92LTX, in the same coordinates as OUTLINES['92LTX'], mm:
+ *  one 7 mm plate over the post's footprint (Bjørn 6.11.2026: the layers in the STL are only how it was drawn). */
+export const CAP_92LTX = [[0, 0], [39.8, 0], [39.8, 11.5], [40.2, 13.7], [41.4, 15.5], [43.2, 16.7], [45.4, 17], [56.9, 17], [56.9, 56.9], [9.5, 56.9], [0, 47.4]] as const
 export const CAP_THICKNESS = 0.007
 /** The corner point (where the two runs' centre lines meet) in OUTLINES['92LTX'] coordinates, mm. From the corner
  *  example: the legs run toward +x and −y, the outer corner is toward −x, +y. */
