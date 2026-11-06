@@ -8,7 +8,7 @@ import { wallDirection } from '../../../domain/grid'
 import type { BuiltModule } from '../../../domain/walls'
 import { RECIPES } from '../../../foga/recipes'
 import { plateColor, productOf, rules } from '../../env'
-import { shared, unitProfile } from './profiles'
+import { profile, shared, unitProfile } from './profiles'
 import { ALU, ALU_FINISH, CHROME, CURTAIN, INK, LOCK, selectGlow, type BuildContext, type Tag } from './context'
 
 /** Heights in the opening, m from the floor: leaf bottom and top, header bottom (2490 post on its foot, D2). */
@@ -55,7 +55,7 @@ export function buildOpening(c: BuildContext, m: BuiltModule, tag: Tag) {
   const W = rules.door.swing
   const H = lv.top - lv.leaf
   const piece = (len: number, x: number, y: number, upright: boolean) => {
-    const mesh = new THREE.Mesh(unitProfile(RECIPES.door.frame as '292'), alu)
+    const mesh = new THREE.Mesh(unitProfile(profile(RECIPES.door.frame)), alu)
     mesh.scale.x = len
     if (upright) mesh.rotation.z = Math.PI / 2
     mesh.position.set(x, y, 0)
