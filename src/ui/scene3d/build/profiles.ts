@@ -14,6 +14,12 @@ export const OUTLINES = {
 
 export type ProfileName = keyof typeof OUTLINES
 
+/** A recipe's profile code (recipes.ts) as one we can draw; a code without an outline here is a bug. */
+export function profile(code: string): ProfileName {
+  if (!(code in OUTLINES)) throw new Error(`No 3D outline for profile ${code}`)
+  return code as ProfileName
+}
+
 const cache = new Map<string, THREE.BufferGeometry>()
 /** A geometry made once and kept for the whole session: the Foga profiles, the adjustable foot, the corner posts.
  *  Marked so dispose() in build.ts leaves it alone. */
