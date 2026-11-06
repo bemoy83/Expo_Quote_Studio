@@ -519,7 +519,7 @@ exports[`01-hjorne-arrangor.json > variant A > calculation 1`] = `
   "production": {
     "area": 0,
     "cornerPosts": {
-      "H": 2540,
+      "H": 2526,
       "qty": 0,
     },
     "free": [],
@@ -706,7 +706,7 @@ exports[`01-hjorne-arrangor.json > variant A > production: textile and print row
   "production": {
     "area": 0,
     "cornerPosts": {
-      "H": 2540,
+      "H": 2526,
       "qty": 0,
     },
     "free": [],
@@ -1349,7 +1349,7 @@ exports[`02-hjorne-utstiller.json > variant A > calculation 1`] = `
   "production": {
     "area": 0,
     "cornerPosts": {
-      "H": 2540,
+      "H": 2526,
       "qty": 0,
     },
     "free": [],
@@ -1502,7 +1502,7 @@ exports[`02-hjorne-utstiller.json > variant A > production: textile and print ro
   "production": {
     "area": 0,
     "cornerPosts": {
-      "H": 2540,
+      "H": 2526,
       "qty": 0,
     },
     "free": [],
@@ -1906,7 +1906,7 @@ exports[`02-hjorne-utstiller.json > variant B > calculation 1`] = `
   "production": {
     "area": 0,
     "cornerPosts": {
-      "H": 2540,
+      "H": 2526,
       "qty": 0,
     },
     "free": [],
@@ -2026,7 +2026,7 @@ exports[`02-hjorne-utstiller.json > variant B > production: textile and print ro
   "production": {
     "area": 0,
     "cornerPosts": {
-      "H": 2540,
+      "H": 2526,
       "qty": 0,
     },
     "free": [],
@@ -2562,7 +2562,7 @@ exports[`03-rom.json > variant A > calculation 1`] = `
   "production": {
     "area": 0,
     "cornerPosts": {
-      "H": 2540,
+      "H": 2526,
       "qty": 0,
     },
     "free": [],
@@ -2686,7 +2686,7 @@ exports[`03-rom.json > variant A > production: textile and print rows 1`] = `
   "production": {
     "area": 0,
     "cornerPosts": {
-      "H": 2540,
+      "H": 2526,
       "qty": 0,
     },
     "free": [],
@@ -3166,7 +3166,7 @@ exports[`04-oy-takdrager.json > variant A > calculation 1`] = `
   "production": {
     "area": 0,
     "cornerPosts": {
-      "H": 2540,
+      "H": 2526,
       "qty": 0,
     },
     "free": [],
@@ -3276,7 +3276,7 @@ exports[`04-oy-takdrager.json > variant A > production: textile and print rows 1
   "production": {
     "area": 0,
     "cornerPosts": {
-      "H": 2540,
+      "H": 2526,
       "qty": 0,
     },
     "free": [],
@@ -3768,7 +3768,7 @@ exports[`05-takdrager-av.json > variant A > calculation 1`] = `
   "production": {
     "area": 0,
     "cornerPosts": {
-      "H": 2540,
+      "H": 2526,
       "qty": 0,
     },
     "free": [],
@@ -3900,7 +3900,7 @@ exports[`05-takdrager-av.json > variant A > production: textile and print rows 1
   "production": {
     "area": 0,
     "cornerPosts": {
-      "H": 2540,
+      "H": 2526,
       "qty": 0,
     },
     "free": [],
@@ -4349,7 +4349,7 @@ exports[`06-stottedrager.json > variant A > calculation 1`] = `
   "production": {
     "area": 0,
     "cornerPosts": {
-      "H": 2540,
+      "H": 2526,
       "qty": 0,
     },
     "free": [],
@@ -4387,7 +4387,7 @@ exports[`06-stottedrager.json > variant A > production: textile and print rows 1
   "production": {
     "area": 0,
     "cornerPosts": {
-      "H": 2540,
+      "H": 2526,
       "qty": 0,
     },
     "free": [],
@@ -4677,7 +4677,7 @@ exports[`07-engangsteppe.json > variant A > calculation 1`] = `
   "production": {
     "area": 0,
     "cornerPosts": {
-      "H": 2540,
+      "H": 2526,
       "qty": 0,
     },
     "free": [],
@@ -4735,7 +4735,7 @@ exports[`07-engangsteppe.json > variant A > production: textile and print rows 1
   "production": {
     "area": 0,
     "cornerPosts": {
-      "H": 2540,
+      "H": 2526,
       "qty": 0,
     },
     "free": [],
@@ -5161,7 +5161,7 @@ exports[`07-engangsteppe.json > variant B > calculation 1`] = `
   "production": {
     "area": 0,
     "cornerPosts": {
-      "H": 2540,
+      "H": 2526,
       "qty": 0,
     },
     "free": [],
@@ -5260,7 +5260,7 @@ exports[`07-engangsteppe.json > variant B > production: textile and print rows 1
   "production": {
     "area": 0,
     "cornerPosts": {
-      "H": 2540,
+      "H": 2526,
       "qty": 0,
     },
     "free": [],
@@ -5474,9 +5474,9 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
       },
       {
         "artnr": "873 809 22",
-        "detail": "1 × 2540 mm",
+        "detail": "1 × 2526 mm",
         "group": "prof.tekstil",
-        "lm": 2.54,
+        "lm": 2.526,
         "name": "92LTX · Tekstilprofil, hjørne",
         "preassembled": false,
         "qty": 1,
@@ -5520,7 +5520,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
     "beamHooks": 1,
     "beams": [],
     "cornerPosts": {
-      "H": 2540,
+      "H": 2526,
       "qty": 1,
     },
     "frames": [
@@ -5580,7 +5580,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
   },
   "groups": [
     {
-      "cost": 12288.918,
+      "cost": 12288.819999999998,
       "id": "prof",
       "lines": [
         {
@@ -5691,8 +5691,8 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         },
         {
           "artnr": "8010",
-          "cost": 707.348,
-          "dg": 0.4592140672782875,
+          "cost": 707.25,
+          "dg": 0.4592889908256881,
           "foga": true,
           "group": "prof.tekstil",
           "meta": "2 vegger · h 2540 mm · 1 hjørne",
@@ -5835,9 +5835,9 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
     "wallSupports": 0,
   },
   "margin": {
-    "cost": 12288.918,
-    "db": 9779.281999999997,
-    "dg": 0.44313908701208066,
+    "cost": 12288.819999999998,
+    "db": 9779.38,
+    "dg": 0.44314352779112026,
     "sum": 22068.199999999997,
     "unknown": 0,
   },
@@ -5952,7 +5952,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
   "production": {
     "area": 32.5596,
     "cornerPosts": {
-      "H": 2540,
+      "H": 2526,
       "qty": 1,
     },
     "free": [
@@ -6092,7 +6092,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
       },
     ],
     "freeLm": 4,
-    "lm": 52.272,
+    "lm": 52.257999999999996,
     "pieces": [
       {
         "H": 2540,
@@ -6213,10 +6213,10 @@ exports[`08-tekstil.json > variant A > picking list 1`] = `
   },
   {
     "code": "873 809 22",
-    "detail": "1 × 2540 mm",
+    "detail": "1 × 2526 mm",
     "group": "prof.tekstil",
-    "key": "92LTX · Tekstilprofil, hjørne|1 × 2540 mm",
-    "lm": 2.54,
+    "key": "92LTX · Tekstilprofil, hjørne|1 × 2526 mm",
+    "lm": 2.526,
     "nobb": true,
     "note": undefined,
     "preassembled": false,
@@ -6328,7 +6328,7 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
   "production": {
     "area": 32.5596,
     "cornerPosts": {
-      "H": 2540,
+      "H": 2526,
       "qty": 1,
     },
     "free": [
@@ -6468,7 +6468,7 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
       },
     ],
     "freeLm": 4,
-    "lm": 52.272,
+    "lm": 52.257999999999996,
     "pieces": [
       {
         "H": 2540,
@@ -6610,7 +6610,7 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
 exports[`08-tekstil.json > variant A > quote lines 1`] = `
 [
   {
-    "cost": 12288.918,
+    "cost": 12288.819999999998,
     "id": "prof",
     "lines": [
       {
@@ -6639,8 +6639,8 @@ exports[`08-tekstil.json > variant A > quote lines 1`] = `
       },
       {
         "artnr": "8010+8040+8041+8042",
-        "cost": 6950.499999999999,
-        "dg": 0.44031533345143586,
+        "cost": 6950.401999999999,
+        "dg": 0.4403232248401592,
         "foga": true,
         "group": "prof.tekstil",
         "meta": undefined,
@@ -7030,7 +7030,7 @@ exports[`09-dekor.json > variant A > calculation 1`] = `
   "production": {
     "area": 0,
     "cornerPosts": {
-      "H": 2540,
+      "H": 2526,
       "qty": 0,
     },
     "free": [],
@@ -7216,7 +7216,7 @@ exports[`09-dekor.json > variant A > production: textile and print rows 1`] = `
   "production": {
     "area": 0,
     "cornerPosts": {
-      "H": 2540,
+      "H": 2526,
       "qty": 0,
     },
     "free": [],
@@ -7702,7 +7702,7 @@ exports[`10-mobler-utstyr.json > variant A > calculation 1`] = `
   "production": {
     "area": 0,
     "cornerPosts": {
-      "H": 2540,
+      "H": 2526,
       "qty": 0,
     },
     "free": [],
@@ -7763,7 +7763,7 @@ exports[`10-mobler-utstyr.json > variant A > production: textile and print rows 
   "production": {
     "area": 0,
     "cornerPosts": {
-      "H": 2540,
+      "H": 2526,
       "qty": 0,
     },
     "free": [],

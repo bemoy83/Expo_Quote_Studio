@@ -47,6 +47,9 @@ export interface FreeFrameRecipe {
   /** Shared upright where two runs meet at a right angle. It replaces both runs' 43TX uprights there, and is a
    *  support in both runs like a foot. */
   cornerPost: string;
+  /** End cap under and over the corner post (876 900 92), mm thick: the post is cut this much shorter at each end.
+   *  The caps are not picked (Bjørn 6.11.2026). */
+  cornerPostCap: number;
   /** Joins a top or bottom rail in its length, one per splice. */
   splice: string;
   /** Upright brace and its couplings, one at every foot. */
@@ -119,6 +122,7 @@ export const RECIPES: Recipes = {
     profile: '43TX',
     corner: '617',
     cornerPost: '92LTX',
+    cornerPostCap: 7,
     splice: '609',
     brace: '90',
     braceCoupling: { code: '600', perEnd: 1 },

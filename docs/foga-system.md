@@ -268,12 +268,60 @@ systemveggen: den lager ikke rom og kan ikke ha dør (tekstildør med overstykke
   størrelse (bare montering, ingen trykkfil).
 - Duk = synlig flate + 2 × bleed, montert langs hele omkretsen (silikonlisten trykkes ned i kanalen).
 
-Mål i hjørnet er utledet fra tverrsnittet av 92LTX (57 mm, 40 mm ben, 17 mm), ikke målt på fysisk profil:
+Mål i hjørnet er målt på Bjørns hjørneeksempel (STL, 6.11.2026, se «Tverrsnitt» under) og stemmer med det vi
+hadde utledet:
 
 - Bena er 40 mm (samme dybde som 43TX) og går 57 mm fra det utvendige hjørnet langs hver vegg. Det utvendige hjørnet
   ligger 20 mm utenfor veggens senterlinje, så **skinnene stopper 37 mm** før hjørnepunktet.
 - Duken går ut til hjørnet: **utvendig duk 20 mm lengre** og **innvendig duk 20 mm kortere** enn veggen per hjørne.
-- Endres i `src/calc/textile/free.ts` og `src/foga/recipes.ts` når profilen er målt.
+- Ligger i `src/calc/textile/free.ts` og `src/foga/recipes.ts`.
+
+### Tverrsnitt (målt fra STL, 6.11.2026)
+
+Bjørn sendte 100 mm utsnitt fra Shapr3D (STL, enhet cm, uten koblinger) av 94, 91, 92, 43TX, 92LTX, endelokket for
+92LTX og et komplett hjørne. Tverrsnittene er målt der, og omrisset ligger som data i koden (ikke STL-ene).
+
+![Tverrsnitt](foga-system/tverrsnitt.svg)
+
+Felles for alle: gods **1,5 mm**, Flex-kanal **9 mm åpning, 10 mm dyp** med **3 mm lepper**, og et **midtrør 17 × 17**
+innvendig (der koblinger og fotinnsats sitter). Kanalene ligger midt på en 20 mm-side, så de havner i 20 mm-rasteret.
+
+| Profil | Art.nr | Ytre mål | Kanaler og kamre |
+| --- | --- | --- | --- |
+| 94 stolpe | 873 062 22 | 40 × 40 | Én Flex-kanal på hver av de fire sidene. Midtrør 17 × 17 (innsats 700 for foten) |
+| 92 toppskinne | 873 051 22 | 20 × 40 | Kanal i begge kortender: ned mot platen, opp. Midtrør og to kamre |
+| 91 bunnskinne | 873 042 22 | 20 × 30 | Én kanal, opp mot platen. Midtrør over kanalen |
+| 43TX | 873 805 22 | 40 × 40 | Ytterst (mot rammens utside) en 1,5 mm flens med **tekstilspor på begge flater** (4 mm åpning, 14 mm dypt, 1,5–5,5 mm fra ytterkanten): silikonlisten trykkes inn fra hver side, dukene står 40 mm fra hverandre. Flex-kanal på begge flater (senter 20 mm inn) og på innerkanten (mot rammens midte). Midtrør + to små kamre |
+| 92LTX | 873 809 22 | 57 × 57 | To ben, 20 mm brede, som ender i en Flex-kanal mot hver vegg. Utvendig hjørne avfaset med **tre 45°-spor** der duken svinger rundt hjørnet. Flere kanaler og kamre innvendig |
+| Endelokk | 876 900 92 | 47 × 47 × 7 | L-formet plate med fas, to skruehull (Ø ca. 3,8). Under og over 92LTX |
+
+Slik henger det sammen:
+
+- **Systemvegg:** 91 og 92 ligger mellom stolpene 94 med kanalene mot platen; 94 har kanal mot platen på begge sider.
+  HDF-platen (3 mm) står i kanalene rundt hele feltet: 2440 i en lysåpning på 2420 gir 10 mm inn i 91 og 92 (hele
+  kanaldybden), 976 i 960 gir 8 mm inn i hver stolpe. Koblingen 600 sitter i enden av skinnen og låser i stolpens
+  kanal. Foten (700 + M10 × 65) sitter i stolpens midtrør.
+- **43TX-ramme:** rammens utside er flensen med tekstilsporene, innsiden (mot rammens midte) har en Flex-kanal for stag
+  90. Kanalene på flatene brukes av 520 mot stolpe 94 (InFrame). Hjørnene er gjæret med 617 i midtrøret.
+- **Hjørne med 92LTX** (hjørneeksempelet): 43TX-skinnene går helt inn til benet på 92LTX, som står **57 mm** ut fra det
+  utvendige hjørnet langs hver vegg. Det utvendige hjørnet ligger 20 mm utenfor veggens senterlinje, så skinnene
+  stopper **37 mm** før hjørnepunktet (målt: 37,0). Flatene på 92LTX ligger i flukt med flatene på 43TX.
+- **Endelokket** ligger under 92LTX på gulvet (7 mm), og 92LTX står på det. Skinnen 43TX står på gulvet ved siden av.
+  Med lokk oppe og nede kappes 92LTX **14 mm kortere** enn rammehøyden (2540 → 2526, `cornerPostCap` i
+  `src/foga/recipes.ts`). Endelokkene plukkes ikke (Bjørn 6.11.2026).
+
+### 3D-visning med ekte profiler (forslag 6.11.2026)
+
+- Omrisset (bare ytterkonturen, uten indre kamre som aldri synes) ekstruderes én gang per profil til 1 m med
+  `THREE.ExtrudeGeometry`, og hver del er en mesh som deler geometrien og strekkes i lengden. Samme antall mesher som
+  før, så klikk og velg i 3D virker som i dag.
+- Kost målt på eksempelskissene: 6 × flere trekanter for rammen (største eksempel, 03-rom, 1 438 → 8 542), uendret
+  byggetid, ca. 4 kB gzip mer i 3D-bunten. Godt innenfor det en iPad tåler.
+- Trinn 1 (PR #105): stolpe 94, skinnene 92 og 91, platen 3 mm i kanalene.
+- Trinn 2: tekstilrammene er fire 43TX-profiler, gjæret i hjørnene (`mitredProfile`), med duken over begge flatene.
+  Frittstående vegger som møtes får 92LTX med endelokk (7 mm) under og over; skinnene stopper ved benet. Hver
+  92LTX lages for seg (snudd etter de to veggene), de gjærede bitene også, og frigjøres med resten av scenen.
+- Mangler STL for 292 (takdrager), 90 (stag) og 600/617; de vises som bokser eller ikke i det hele tatt.
 
 ### Plukkliste
 
