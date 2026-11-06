@@ -6,7 +6,7 @@ import { productOf, rules } from '../../env'
 import { findMotif } from '../../motifs'
 import { sideOf } from '../../../domain/faces'
 import { cropMaterial, printMaterial } from './motifs'
-import { FABRIC, SELECT, type BuildContext, type Tag } from './context'
+import { FABRIC, selectGlow, type BuildContext, type Tag } from './context'
 
 export function buildDecor(c: BuildContext) {
   const { v, opts, mat, along, mods, sel } = c
@@ -18,7 +18,7 @@ export function buildDecor(c: BuildContext) {
     const s = sideOf(v, f)
     const c = foilCenter(rules, f)
     const m = findMotif(opts.motifs, f.motif)
-    const glow = sel.foilId === f.id ? { emissive: SELECT, emissiveIntensity: 0.35 } : {}
+    const glow = selectGlow(sel.foilId === f.id)
     const tag: Tag = { layer: 'foil', pick: { wallId: w.id, foilId: f.id } }
     const blank = mat('foil', FABRIC, { roughness: 0.6, ...glow })
     const face = s * (rules.wall.profile.thickness / 2 + 0.002)

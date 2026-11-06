@@ -7,7 +7,7 @@ import type { BuiltModule } from '../../../domain/walls'
 import { doorInset } from '../../../rules/rules'
 import { plateColor, productOf, rules } from '../../env'
 import { unitProfile } from './profiles'
-import { ALU, ALU_FINISH, CURTAIN, HANDLE, INK, SELECT, type BuildContext, type Tag } from './context'
+import { ALU, ALU_FINISH, CURTAIN, HANDLE, INK, selectGlow, type BuildContext, type Tag } from './context'
 
 export function buildWalls(c: BuildContext) {
   const { v, H, post, feet, prof, at, mat, add, along, mods, sel } = c
@@ -16,7 +16,7 @@ export function buildWalls(c: BuildContext) {
     const tag: Tag = m.opening ? { layer: 'openings', pick: { wallId: m.wallId, openingId: m.opening.id } } : { layer: 'walls', pick: { wallId: m.wallId } }
     const wallTag: Tag = { layer: 'walls', pick: { wallId: m.wallId } }
     const selected = sel.wallId === m.wallId && !sel.textileId && !sel.foilId
-    const plate = mat('walls', plateColor(m.plate), selected ? { emissive: SELECT, emissiveIntensity: 0.35 } : {})
+    const plate = mat('walls', plateColor(m.plate), selectGlow(selected))
     const frame = mat('walls', ALU, ALU_FINISH)
     const len = rules.wall.cc - post
     rail(m.a, m.b, len, '92', H - prof.top / 2, frame, wallTag)
@@ -59,7 +59,7 @@ export function buildWalls(c: BuildContext) {
     }
     // Door: closed leaf in its colour with a handle, and the swing on the floor
     const chosen = sel.openingId === o.id
-    along(m.a, m.b, rules.door.swing, rules.door.height - 0.01, 0.04, 0, mat('openings', plateColor(doorRal(v, o)), chosen ? { emissive: SELECT, emissiveIntensity: 0.35 } : {}), tag)
+    along(m.a, m.b, rules.door.swing, rules.door.height - 0.01, 0.04, 0, mat('openings', plateColor(doorRal(v, o)), selectGlow(chosen)), tag)
     const [wx, wy] = wallDirection(w)
     const s = doorSwing(v.stand, w, o)
     const n: Point = [-wy * s, wx * s]

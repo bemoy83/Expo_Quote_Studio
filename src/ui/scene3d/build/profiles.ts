@@ -13,26 +13,35 @@ export const OUTLINES = {
 } as const
 
 export type ProfileName = keyof typeof OUTLINES
+
 const cache = new Map<string, THREE.BufferGeometry>()
-/** 1 m of profile along local x, centred; profile x → across (z), profile y → up. flipY turns the channel side over. */
-export function unitProfile(name: ProfileName, flipY = false): THREE.BufferGeometry {
-  const key = `${name}${flipY}`
+/** A geometry made once and kept for the whole session: the Foga profiles, the adjustable foot, the corner posts.
+ *  Marked so dispose() in build.ts leaves it alone. */
+export function shared(key: string, make: () => THREE.BufferGeometry): THREE.BufferGeometry {
   let g = cache.get(key)
-  if (g) return g
-  const pts = OUTLINES[name] as readonly (readonly number[])[]
-  const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1])
-  const cx = (Math.min(...xs) + Math.max(...xs)) / 2, cy = (Math.min(...ys) + Math.max(...ys)) / 2
-  let v = pts.map(([x, y]) => new THREE.Vector2((x - cx) / 1000, ((flipY ? cy - y : y - cy)) / 1000))
-  if (flipY) v = v.reverse()
-  g = new THREE.ExtrudeGeometry(new THREE.Shape(v), { depth: 1, bevelEnabled: false })
-  g.name = `foga-${name}`
-  g.userData.shared = true
-  g.translate(0, 0, -0.5)
-  g.rotateY(Math.PI / 2)
-  cache.set(key, g)
+  if (!g) {
+    g = make()
+    g.name ||= key
+    g.userData.shared = true
+    cache.set(key, g)
+  }
   return g
 }
 
+/** 1 m of profile along local x, centred; profile x → across (z), profile y → up. flipY turns the channel side over. */
+export function unitProfile(name: ProfileName, flipY = false): THREE.BufferGeometry {
+  return shared(flipY ? `foga-${name}-flip` : `foga-${name}`, () => {
+    const pts = OUTLINES[name] as readonly (readonly number[])[]
+    const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1])
+    const cx = (Math.min(...xs) + Math.max(...xs)) / 2, cy = (Math.min(...ys) + Math.max(...ys)) / 2
+    let v = pts.map(([x, y]) => new THREE.Vector2((x - cx) / 1000, (flipY ? cy - y : y - cy) / 1000))
+    if (flipY) v = v.reverse()
+    const g = new THREE.ExtrudeGeometry(new THREE.Shape(v), { depth: 1, bevelEnabled: false })
+    g.translate(0, 0, -0.5)
+    g.rotateY(Math.PI / 2)
+    return g
+  })
+}
 
 /**
  * `len` m of a frame profile, its outer edge (profile y = 0) toward local −y. A mitred end is cut at 45°: the outer
