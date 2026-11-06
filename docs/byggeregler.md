@@ -126,15 +126,22 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   950 bredt, sentrert i lysåpningen og hengslet på innsiden av stolpen. Lås og nøkler følger alltid med.
   *Bjørn 31.10.2026 og 1.11.2026 · `RECIPES.door`, `rules.door` · kode `src/foga/recipes.ts` · test `src/domain/doors.test.ts`*
 - **D2 Overstykke.** 20 mm luft under bladet og 10 mm over, regnet fra stolpen på 2490 uten fot: overstykket er
-  2490 − 20 − 2000 − 10 = 460, med toppskinne 92 og bunnskinne 91 (960 med 600) og HDF 976 × 410. Forheng får samme
-  overstykke (forenklet).
-  *Bjørn 31.10.2026 · `RECIPES.door` · kode `src/foga/engine.ts` · test `src/calc/calc.test.ts`*
+  2490 − 20 − 2000 − 10 = 460, med toppskinne 92 og bunnskinne 91 (960 med 600) og HDF 976 × 410, bygd som en
+  veggmodul (91 med kanalen opp). Forheng får samme overstykke, men med **92 i bunn**: forhenget henger i en glider i
+  sporet (Bjørn 6.11.2026), så platen blir 460 − 40 − 40 + 20 = 976 × 400.
+  *Bjørn 31.10.2026 og 6.11.2026 · `RECIPES.door` · kode `src/foga/engine.ts`, `src/ui/scene3d/build/walls.ts` · test `src/calc/calc.test.ts`, `src/foga/engine.test.ts`*
 - **D3 Hvor den kan stå.** Aldri i en standvegg. Lov i innervegg, romside, på tom gulvkant og mot åpne sider; mot gangen
   slår bladet alltid inn i standen. En åpning er aldri veggmeter, men teller som vegg for takdragerne.
   *Bjørn 31.10.2026 · kode `src/domain/walls.ts`, `src/domain/doors.ts` · test `src/domain/edit.test.ts`*
 - **D4 Døren følger rommet.** Flyttes eller endres et rom slik at døren ville havnet i en standvegg, flyttes døren til
   nærmeste modul på rommet der den kan stå. Flyttet nektes bare når rommet ikke har noen slik modul.
   *Bjørn 2.11.2026 · kode `src/domain/doors.ts` · test `src/domain/doors.test.ts`*
+- **D5 Dørbladets oppbygning.** Rammen er 292 med 80 synlig forfra, så bladet er 20 tykt. Stående profiler går i full
+  høyde (2000), liggerne sitter mellom dem. Én veggplate (samme HDF som i veggen) i kanalene, og bare platen har
+  dørfargen; rammen er alu. To hengsler 403, ett nær toppen og ett nær bunnen (150 inn). Lås 410 med sort rosett og
+  vrider på den frie stolpen; utsiden tegnes og settes likt på innsiden (innvendig er det egentlig en smal stålvrider).
+  Gjelder 3D; døren plukkes fortsatt som én enhet (D1).
+  *Bjørn 6.11.2026 · `RECIPES.door` · kode `src/ui/scene3d/build/doors.ts` · test `src/ui/scene3d/build.test.ts`*
 
 ## R · Rom
 

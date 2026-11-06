@@ -25,6 +25,8 @@ export interface Derived {
   /** Støtteplater under free-standing system walls, and how many of them stand under a post in `posts`. */
   wallFeet?: number;
   barePosts?: number;
+  /** Whether an opening's product is a curtain (catalog); without it every opening counts as a door. */
+  curtain?: (product: string) => boolean;
 }
 
 /** Takdrager lengths, post centre to post centre, mm. */
@@ -33,7 +35,7 @@ export const beamSpecs = (b: BeamLayout): BeamSpec[] => b.segments.map((s) => ({
 export function structureOf(d: Derived): FogaStructure {
   return {
     posts: d.posts,
-    modules: d.mods.map((m) => ({ plate: m.plate, opening: !!m.opening })),
+    modules: d.mods.map((m) => ({ plate: m.plate, opening: !!m.opening, ...(m.opening && d.curtain?.(m.opening.product) && { curtain: true }) })),
     beams: beamSpecs(d.beams),
     frames: d.production.pieces.map((p) => ({ pos: p.pos, W: p.W, H: p.H, braces: p.braces })),
     ...(d.production.free.length

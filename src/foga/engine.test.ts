@@ -104,4 +104,16 @@ describe('openings', () => {
       expect.objectContaining({ name: 'Bunnskinne 91, 960 mm, med 600', qty: 1 }),
     ]);
   });
+
+  it('a curtain header has 92 at the bottom for the glider, and a plate of 460 − 40 − 40 + 20 = 400 (D2)', () => {
+    const s = { ...empty, modules: [{ plate: '9010', opening: true }, { plate: '9010', opening: true, curtain: true }] };
+    const b = bom(s, RECIPES, Z);
+    expect(group(b, 'header')).toEqual([
+      expect.objectContaining({ detail: '976 × 410 mm · overstykke', qty: 1 }),
+      expect.objectContaining({ detail: '976 × 400 mm · overstykke', qty: 1 }),
+      expect.objectContaining({ name: 'Toppskinne 92, 960 mm, med 600', qty: 2 }),
+      expect.objectContaining({ name: 'Bunnskinne 91, 960 mm, med 600', qty: 1 }),
+      expect.objectContaining({ name: 'Bunnskinne 92, 960 mm, med 600', qty: 1 }),
+    ]);
+  });
 });

@@ -7,6 +7,8 @@ export interface ModuleSpec {
   plate: string;
   /** A door or curtain: the module gets a header instead of a full wall. */
   opening: boolean;
+  /** The opening is a curtain: its header has 92 at the bottom for the glider (Byggeregel D2). */
+  curtain?: boolean;
 }
 
 /** One length of takdrager, post centre to post centre. */
