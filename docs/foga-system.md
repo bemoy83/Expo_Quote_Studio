@@ -295,7 +295,7 @@ innvendig (der koblinger og fotinnsats sitter). Kanalene ligger midt på en 20 m
 | 90 stag | 873 040 22 | 20 × 20 | Firkantrør uten kanal, midtrør 17 × 17 for 600 |
 | 43TX | 873 805 22 | 40 × 40 | Ytterst (mot rammens utside) en 1,5 mm flens med **tekstilspor på begge flater** (4 mm åpning, 14 mm dypt, 1,5–5,5 mm fra ytterkanten): silikonlisten trykkes inn fra hver side, dukene står 40 mm fra hverandre. Flex-kanal på begge flater (senter 20 mm inn) og på innerkanten (mot rammens midte). Midtrør + to små kamre |
 | 92LTX | 873 809 22 | 57 × 57 | To ben, 20 mm brede, som ender i en Flex-kanal mot hver vegg. Utvendig hjørne avfaset med **tre 45°-spor** der duken svinger rundt hjørnet. Flere kanaler og kamre innvendig |
-| Endelokk | 876 900 92 | 47 × 47 × 7 | L-formet plate med fas, to skruehull (Ø ca. 3,8). Under og over 92LTX |
+| Endelokk | 876 900 92 | 57 × 57 × 7 | Tre lag: 1,5 mm plate over hele fotavtrykket, 4 mm trappeformet plugg (47 × 47, to skruehull Ø ca. 3,8) og 1,5 mm plate i 92LTX-omrisset med hjørnesporene. Under og over 92LTX |
 
 Slik henger det sammen:
 

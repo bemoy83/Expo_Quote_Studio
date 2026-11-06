@@ -163,9 +163,12 @@ function cornerPosts(c: BuildContext) {
         mesh.position.copy(at(p, y))
         add(mesh, { layer: 'textile', pick: { freeTextileId: t.id } }, root)
       }
-      upright(CAP_92LTX, foot, CAP_THICKNESS)
+      // Cap on the floor, the post on it, and the same cap turned over on top
+      for (const l of CAP_92LTX) {
+        upright(l.outline, foot + l.from / 1000, (l.to - l.from) / 1000)
+        upright(l.outline, foot + h - l.to / 1000, (l.to - l.from) / 1000)
+      }
       upright(OUTLINES['92LTX'], foot + CAP_THICKNESS, h - 2 * CAP_THICKNESS)
-      upright(CAP_92LTX, foot + h - CAP_THICKNESS, CAP_THICKNESS)
     }
   }
 }
