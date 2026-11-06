@@ -8,7 +8,8 @@ import { OUTSIDE, roomOf } from './rooms';
 import type { Opening, Point, Stand, Variant, Wall } from './types';
 import { builtModules, defaultSwing, doorAllowed, isPerimeterWall, type BuiltModule } from './walls';
 import { RECIPES } from '../foga/recipes';
-import type { Rules } from '../rules/rules';
+import { fogaPart } from '../foga/parts';
+import { wallHeight, type Rules } from '../rules/rules';
 
 const dot = (a: Point, b: Point) => a[0] * b[0] + a[1] * b[1];
 
@@ -254,4 +255,27 @@ export function doorLevels(r: Rules) {
   const d = RECIPES.door;
   const leaf = r.wall.feet + d.floorGap / 1000;
   return { leaf, top: leaf + d.leaf / 1000, header: leaf + (d.leaf + d.topGap) / 1000 };
+}
+
+/** A window in an opening module, m: `w` wide centred on the module, from `y0` to `y1` above the floor. */
+export interface DoorWindow {
+  w: number;
+  y0: number;
+  y1: number;
+}
+
+/**
+ * Where the plates of a door show (lysåpning), Byggeregler D2, D5: the header plate between its top rail 92 and
+ * bottom rail 91, and the leaf plate inside its 292 frame (80 seen from the front). A print over the door shows only
+ * there; the frame and rails hide their strip of the picture, as the posts do between wall plates.
+ */
+export function doorWindows(r: Rules): { header: DoorWindow; leaf: DoorWindow; frame: number } {
+  const lv = doorLevels(r);
+  const { top, bottom } = r.wall.profile;
+  const frame = Math.max(...(fogaPart(RECIPES.door.frame).section ?? [0])) / 1000;
+  return {
+    header: { w: r.wall.cc - r.wall.post, y0: lv.header + bottom, y1: wallHeight(r) - top },
+    leaf: { w: r.door.swing - 2 * frame, y0: lv.leaf + frame, y1: lv.top - frame },
+    frame,
+  };
 }

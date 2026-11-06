@@ -3,9 +3,9 @@
 // and while a paint tool is out each plate is a target for it.
 import { useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent } from 'react'
 import { foilCenter } from '../../../domain/decor'
-import { doorLevels, doorRal } from '../../../domain/doors'
+import { doorLevels, doorRal, doorWindows } from '../../../domain/doors'
 import { felt, type FaceSide } from '../../../domain/faces'
-import { cropBand, plateCrop } from '../../../domain/print'
+import { cropWindow, plateCrop } from '../../../domain/print'
 import { textileBox } from '../../../domain/textile/inFrame'
 import type { Foil, Opening, TextileWall, Variant, Wall } from '../../../domain/types'
 import { wallRal } from '../../../domain/panels'
@@ -123,17 +123,22 @@ export function WallElevation(p: Props) {
           },
         }
       : {}
-  /** A print over a door: its part of the picture on the header plate, and on the leaf down to the floor. */
+  /** A print over a door: its part of the picture on the header plate and on the leaf plate. */
   const doorPrint = (f: Foil, x: number, leafX: number) => {
     const m = findMotif(motifs, f.motif)
     if (!m) return undefined
     const crop = plateCrop(f, m.ratio)
     const y0 = f.y - f.height / 2
     const y1 = f.y + f.height / 2
-    const lv = doorLevels(rules)
+    // Only through the plates' lysåpning: the header between its rails, the leaf inside its 292 frame (D2, D5)
+    const { header, leaf, frame } = doorWindows(rules)
+    const box = { x0: -f.width / 2, x1: f.width / 2, y0, y1 }
+    const part = (wi: { w: number; y0: number; y1: number }, left: number) => (
+      <Print m={m} x={left} y={z(wi.y1)} width={wi.w} height={wi.y1 - wi.y0} crop={cropWindow(crop, box, { x0: -wi.w / 2, x1: wi.w / 2, y0: wi.y0, y1: wi.y1 })} />
+    )
     return {
-      header: <Print m={m} x={x + rules.wall.post / 2} y={z(y1)} width={f.width} height={y1 - lv.header} crop={cropBand(crop, y0, y1, lv.header, y1)} />,
-      leaf: <Print m={m} x={leafX} y={z(lv.top)} width={rules.door.swing} height={lv.top - lv.leaf} crop={cropBand(crop, y0, y1, lv.leaf, lv.top)} />,
+      header: part(header, x + rules.wall.post / 2),
+      leaf: part(leaf, leafX + frame),
     }
   }
 

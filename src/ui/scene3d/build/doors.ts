@@ -3,7 +3,7 @@
 // lock 410 the same on both sides. A curtain hangs from the glider in the header's bottom rail.
 // Byggeregler D2, D5 (docs/byggeregler.md).
 import * as THREE from 'three'
-import { doorHinge, doorLevels, doorRal, doorSwing } from '../../../domain/doors'
+import { doorHinge, doorLevels, doorRal, doorSwing, doorWindows } from '../../../domain/doors'
 import { wallDirection } from '../../../domain/grid'
 import type { BuiltModule } from '../../../domain/walls'
 import { RECIPES } from '../../../foga/recipes'
@@ -11,8 +11,7 @@ import { plateColor, productOf, rules } from '../../env'
 import { profile, shared, unitProfile } from './profiles'
 import { ALU, ALU_FINISH, CHROME, CURTAIN, INK, LOCK, selectGlow, type BuildContext, type Tag } from './context'
 
-/** The 292 seen from the front (80) and its depth (20), m. */
-const FACE = 0.08
+/** The 292's depth across the leaf, m (its 80 face is `doorWindows().frame`). */
 const DEPTH = 0.02
 /** How far the plate goes into the channel on each side, m (as in the wall). */
 const IN_CHANNEL = 0.008
@@ -47,6 +46,7 @@ export function buildOpening(c: BuildContext, m: BuiltModule, tag: Tag) {
   const alu = mat('openings', ALU, { ...ALU_FINISH, ...glow })
   const W = rules.door.swing
   const H = lv.top - lv.leaf
+  const { leaf: win, frame: FACE } = doorWindows(rules)
   const piece = (len: number, x: number, y: number, upright: boolean) => {
     const mesh = new THREE.Mesh(unitProfile(profile(RECIPES.door.frame)), alu)
     mesh.scale.x = len
@@ -57,8 +57,8 @@ export function buildOpening(c: BuildContext, m: BuiltModule, tag: Tag) {
   // Stiles full height, rails between them
   for (const x of [-1, 1]) piece(H, x * (W / 2 - FACE / 2), lv.leaf + H / 2, true)
   for (const y of [lv.leaf + FACE / 2, lv.top - FACE / 2]) piece(W - 2 * FACE, 0, y, false)
-  const plate = new THREE.Mesh(new THREE.BoxGeometry(W - 2 * FACE + 2 * IN_CHANNEL, H - 2 * FACE + 2 * IN_CHANNEL, 0.003), mat('openings', plateColor(doorRal(v, o)), glow))
-  plate.position.y = lv.leaf + H / 2
+  const plate = new THREE.Mesh(new THREE.BoxGeometry(win.w + 2 * IN_CHANNEL, win.y1 - win.y0 + 2 * IN_CHANNEL, 0.003), mat('openings', plateColor(doorRal(v, o)), glow))
+  plate.position.y = (win.y0 + win.y1) / 2
   add(plate, tag, g)
 
   // Hinge side and swing side in the local frame: the hinge sits at the leaf edge toward `hinge`, swing toward `s`
