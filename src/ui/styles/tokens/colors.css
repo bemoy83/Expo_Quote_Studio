@@ -74,6 +74,13 @@
 [data-band="skifer"]{--bh:255 /* @kind other */;--bc:.03 /* @kind other */}
 [data-band="sand"]{--bh:85 /* @kind other */;--bc:.025 /* @kind other */}
 
-
-/* Dark — neutrals mirrored from the app theme */
-.dark{--canvas:15 15 14 /* @kind color */;--panel:23 23 21 /* @kind color */;--surface:31 31 28 /* @kind color */;--sunken:10 10 9 /* @kind color */;--border:38 38 35 /* @kind color */;--border-strong:58 57 53 /* @kind color */;--ink:243 242 238 /* @kind color */;--ink-muted:166 164 157 /* @kind color */;--ink-faint:123 122 115 /* @kind color */;--action-bg:48 30 16 /* @kind color */;--ink-body:color-mix(in srgb,rgb(var(--ink)) 60%,rgb(var(--ink-muted)));--sunken-2:color-mix(in srgb,rgb(var(--sunken)) 50%,rgb(var(--panel)));--pos:#6fd087;--over:#f2b54f;--neg:#f97770;--al-block:rgb(var(--danger));--committed:111 208 135 /* @kind color */;--draft:242 181 79 /* @kind color */;--danger:249 119 112 /* @kind color */}
+/* Build system hardware as drawn in 2D (wall drawer, thumbnails). The 3D view has its own lit colours. */
+:root {
+  --alu: #b9bcc0; /* profiles and textile frames */
+  --alu-post: #8d9095;
+  --alu-light: #e1e3e6; /* lit and shaded edge of a frame thumbnail */
+  --alu-shade: #a6a9ad;
+  --alu-thumb: #c9ccd0;
+  --feet: #2a2b2e;
+  --fabric: color-mix(in oklab, var(--line-violet) 14%, rgb(var(--surface)));
+}
