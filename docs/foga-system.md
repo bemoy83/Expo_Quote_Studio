@@ -255,14 +255,17 @@ romvegger som takdragerne ikke holder, også når takdragerne er på (`calc/wall
   som før. Flyttes eller endres et rom slik at døren ville havnet i standveggen, flyttes døren til nærmeste modul på
   rommet der den kan stå, med beskjed; flyttet nektes bare når rommet ikke har noen slik modul.
 
-### Tekstilramme (43TX) · X2–X4
+### Tekstilramme (43TX) · X2–X4, X10
 
 - Ramme i **43TX**, gjæret, 2 × B + 2 × H, 4 × **617** i hjørnene (Bjørn 31.10.2026: samme kobling i alle hjørner).
 - Tverrstag: stående stag i profil **90** (873 040 22, 20 × 20), lengde H − 2 × 40, **600 i hver ende**.
 - Rammen festes til veggen med **2 × 520** (876 520 22) per ramme, låst med bevel nut **503** i profilsystemet:
   én side i 43TX, den andre i veggstolpen 94. Ifølge guiden leveres 520 med skrue og 503.
+- **Innvendig hjørne** (Bjørn 6.11.2026): to rammer overlapper aldri. Rammen på den lengste veggen står (like lange:
+  den langs x), den andre beholder standardlengden og flyttes 40 mm bort fra hjørnet, og rammene etter den på samme
+  side så langt de ellers ville kollidert (calc/textile/placement.ts). Går den forbi en stolpe, heves drageren der.
 
-### Frittstående tekstilvegg (43TX) · X1, X5–X8
+### Frittstående tekstilvegg (43TX) · X1, X5–X8, X11
 
 Bjørn 31.10.2026. En 43TX-ramme som står alene på fotplater, med tekstil på begge sider. Den er ikke en del av
 systemveggen: den lager ikke rom og kan ikke ha dør (tekstildør med overstykke kommer senere).
@@ -274,7 +277,7 @@ systemveggen: den lager ikke rom og kan ikke ha dør (tekstildør med overstykke
 - Tegnes med pensel som en rett strek. Den starter i et punkt på **0,25 m-rutenettet** og vokser én rute av gangen
   med rutestørrelsen valgt i båndet: **25, 50, 75 eller 100 cm** (oppriss-rutenettet). Minst 0,25 m. Samme
   tegnerutenett (domain/snapGrid.ts, båndvelgeren GridPicker) brukes av systemveggpenselen, som foreløpig bare har
-  1 m (cc 1000); 25, 50 og 75 cm åpnes når Foga-oppskriften har delene for de cc-ene. Kan stå hvor som helst på standen, men ikke langs eller gjennom en systemvegg (helt inntil er lov).
+  1 m (cc 1000); 25, 50 og 75 cm åpnes når Foga-oppskriften har delene for de cc-ene. Kan stå hvor som helst på standen, men ikke langs eller gjennom en systemvegg (helt inntil er lov). Ender den mot en systemvegg med tekstilramme på den siden, stopper den ved rammens front, 60 mm fra veggens senterlinje (X11).
 - Høyde **2540** (som systemveggen med føtter). Høye vegger kommer senere.
 - **Topp- og bunnskinne** i 43TX går hele rammen. Over **5000 mm** skjøtes de i like lange stykker med **609**
   (871 037 92) i hver skjøt; rammen er fortsatt ett rektangel, ikke to rygg i rygg.

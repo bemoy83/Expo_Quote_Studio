@@ -24,7 +24,8 @@ export function buildTextile(c: BuildContext) {
     if (!w) continue
     const L = wallLength(w)
     // Where it stands: moved in an inner corner (byggeregel X10), past the wall's end within tolerance
-    const shift = (res.production.pieces.find((p) => p.textileId === t.id)?.shift ?? 0) / 1000
+    const piece = res.production.pieces.find((p) => p.textileId === t.id)
+    const shift = (piece?.shift ?? 0) / 1000
     const from = Math.max(0, Math.min(L, t.from)) + shift
     const to = Math.max(from, Math.min(L, t.from + t.width) + shift)
     const s = sideOf(v, t)
@@ -42,7 +43,7 @@ export function buildTextile(c: BuildContext) {
     // One textile, on the face out from the wall
     textile(g, -fw / 2, fw, h, bottom, print, s === 1 ? 1 : -1, tag)
     // Upright braces (90) evenly spread inside the frame
-    const n = res.production.pieces.find((p) => p.textileId === t.id)?.braces?.qty ?? 0
+    const n = piece?.braces?.qty ?? 0
     for (let i = 1; i <= n; i++) brace(g, -fw / 2 + (fw * i) / (n + 1), h, bottom, alu, tag)
   }
 
