@@ -2,6 +2,7 @@ import type * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import { calc } from '../../calc/calc'
 import { r2 } from '../../calc/referenceStands'
+import { setOpeningProduct } from '../../domain/doors'
 import { addObject } from '../../domain/objects'
 import { fillFloor } from '../../domain/variant'
 import { builtModules } from '../../domain/walls'
@@ -65,5 +66,24 @@ describe('3D scene from the model', () => {
     // Carpet tiles: the tiles over a bed in the joint shade
     expect(inst).toHaveLength(2)
     expect(inst.map((m) => m.count)).toEqual([v.floor.tiles.length, v.floor.tiles.length])
+  })
+
+  it('the door leaf is a 292 frame with one plate, two hinges and the lock on both faces; the header has 91 at the bottom, 92 over a curtain (D2, D5)', () => {
+    const named = (list: THREE.Object3D[], n: string) => list.filter((o) => (o as THREE.Mesh).geometry?.name === n)
+    const door = layer('openings')
+    expect(v.openings).toHaveLength(1)
+    expect(named(door, 'foga-292')).toHaveLength(4)
+    expect(named(door, 'door-hinge')).toHaveLength(2)
+    expect(named(door, 'lock-knob')).toHaveLength(2)
+    expect(named(door, 'lock-rosette')).toHaveLength(2)
+    const mods = builtModules(v).length
+    expect(named(all, 'foga-91-flip')).toHaveLength(mods)
+    expect(named(all, 'foga-92')).toHaveLength(mods)
+    // A curtain instead: no leaf, and the header's bottom rail is a 92 for the glider
+    const cv = setOpeningProduct(v, v.openings[0].id, '6131')
+    const c = meshes(build(cv, calc(cv, rules, catalog)))
+    expect(named(c, 'foga-292').filter((o) => (o.userData as Tag).layer === 'openings')).toHaveLength(0)
+    expect(named(c, 'foga-91-flip')).toHaveLength(mods - 1)
+    expect(named(c, 'foga-92')).toHaveLength(mods + 1)
   })
 })

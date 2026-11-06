@@ -36,7 +36,8 @@ export const CONFLICT = '#d24b3f'
 export const GROUND = '#ebe9e3'
 /** Floor shown around the stand on every side, m: just enough to anchor it, not to suggest aisles. */
 export const GROUND_MARGIN = 1
-export const HANDLE = '#55575b'
+/** Lock 410: black rosette and knob. */
+export const LOCK = '#1d1e20'
 export const CHROME = '#a4a6aa'
 /** --ink, for lines and text drawn on the floor. */
 export const INK = '#171613'

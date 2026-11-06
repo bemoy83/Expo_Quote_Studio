@@ -1,5 +1,5 @@
 // How each element is built from parts, as confirmed by Bjørn 31.10.2026. Background and sources: docs/foga-system.md.
-// Byggeregel D1 (docs/byggeregler.md).
+// Byggeregler D1, D5 (docs/byggeregler.md).
 
 export interface WallRecipe {
   /** Post profile for every wall post (end, straight, corner, T, cross). Cut to the wall height without feet. */
@@ -96,6 +96,13 @@ export interface DoorRecipe {
   leaf: number;
   floorGap: number;
   topGap: number;
+  /** Header bottom rail over a curtain: 92 instead of 91, its channel holds the curtain glider (Byggeregel D2). */
+  curtainBottomRail: string;
+  /** The leaf as drawn in 3D (Byggeregel D5): 292 frame (stiles full height, rails between), hinges 403 a little in
+   *  from top and bottom, lock 410 at handle height, mm. */
+  frame: string;
+  hinge: { code: string; fromEnd: number };
+  lock: { code: string; height: number };
 }
 
 export interface Recipes {
@@ -137,5 +144,5 @@ export const RECIPES: Recipes = {
     support: SUPPORT,
   },
   beam: { profile: '292', coupling: { code: '600', perEnd: 2 }, hook: 'KROK', lift: { profile: '94', length: 80, post: '609', hook: '600' } },
-  door: { leaf: 2000, floorGap: 20, topGap: 10 },
+  door: { leaf: 2000, floorGap: 20, topGap: 10, curtainBottomRail: '92', frame: '292', hinge: { code: '403', fromEnd: 150 }, lock: { code: '410', height: 1000 } },
 };

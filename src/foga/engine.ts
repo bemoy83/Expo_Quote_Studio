@@ -5,7 +5,7 @@
 import { resolveGroup } from '../catalog/groups';
 import { fogaPart } from './parts';
 import type { Recipes } from './recipes';
-import type { FogaStructure } from './structure';
+import type { FogaStructure, ModuleSpec } from './structure';
 
 export interface BomLine {
   /** Foga art.nr, or empty for a pre-assembled unit and for plates (not Foga). */
@@ -80,7 +80,7 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   const unit = (group: BomGroup, name: string, profile: string, lengthMm: number, c: { code: string; perEnd: number }, qty: number, note = '') =>
     put(
       group,
-      `${name}|${lengthMm}`,
+      `${name}|${profile}|${lengthMm}`,
       {
         artnr: '',
         name: `${name} ${profile}, ${lengthMm} mm, med ${c.code}`,
@@ -130,15 +130,20 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
 
   // Skinner: top and bottom rail between the posts with a 600 in each end, for every module. An opening (door or
   // curtain) gets the same rails in its header (overstykke) with a lower plate; the header is listed with the doors.
+  // A curtain's header has 92 at the bottom too: the glider runs in its channel.
   const walled = s.modules.filter((m) => !m.opening);
   const headers = s.modules.filter((m) => m.opening);
-  for (const [group, n, note] of [[BOM_GROUP.rails, walled.length, ''], [BOM_GROUP.header, headers.length, 'overstykke']] as const) {
-    unit(group, 'Toppskinne', r.wall.topRail, rail, r.wall.railCoupling, n, note);
-    unit(group, 'Bunnskinne', r.wall.bottomRail, rail, r.wall.railCoupling, n, note);
+  const bottomRail = (m: ModuleSpec) => (m.curtain ? r.door.curtainBottomRail : r.wall.bottomRail);
+  unit(BOM_GROUP.rails, 'Toppskinne', r.wall.topRail, rail, r.wall.railCoupling, walled.length);
+  unit(BOM_GROUP.rails, 'Bunnskinne', r.wall.bottomRail, rail, r.wall.railCoupling, walled.length);
+  for (const m of headers) {
+    unit(BOM_GROUP.header, 'Toppskinne', r.wall.topRail, rail, r.wall.railCoupling, 1, 'overstykke');
+    unit(BOM_GROUP.header, 'Bunnskinne', bottomRail(m), rail, r.wall.railCoupling, 1, 'overstykke');
   }
   for (const m of walled) addPlate(BOM_GROUP.plates, m.plate, plate.h, '');
   for (const ral of s.swaps ?? []) addPlate(BOM_GROUP.plates, ral, plate.h, ' · platebytte i standvegg');
-  for (const m of headers) addPlate(BOM_GROUP.header, m.plate, header - railsH + plateExtra, ' · overstykke');
+  const headerRails = (m: ModuleSpec) => railHeight(r.wall.topRail) + railHeight(bottomRail(m));
+  for (const m of headers) addPlate(BOM_GROUP.header, m.plate, header - headerRails(m) + plateExtra, ' · overstykke');
 
   // Takdrager: 292 between the posts with two 600 in each end, one piece per length
   for (const b of s.beams) unit(BOM_GROUP.beams, 'Takdrager', r.beam.profile, between(b.lengthMm), r.beam.coupling, 1);

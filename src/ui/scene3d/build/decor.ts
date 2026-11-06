@@ -6,6 +6,7 @@ import { productOf, rules } from '../../env'
 import { findMotif } from '../../motifs'
 import { sideOf } from '../../../domain/faces'
 import { cropMaterial, printMaterial } from './motifs'
+import { doorLevels } from './doors'
 import { FABRIC, selectGlow, type BuildContext, type Tag } from './context'
 
 export function buildDecor(c: BuildContext) {
@@ -38,8 +39,9 @@ export function buildDecor(c: BuildContext) {
       band(y0, y1, f.width, face)
       continue
     }
-    // Door: the header plate above, the leaf (thicker, and down to the floor) below. The picture runs on over both.
-    band(rules.door.height, y1, f.width, face)
-    band(0, rules.door.height - 0.01, rules.door.swing, s * (0.02 + 0.002))
+    // Door: the header plate above, the leaf (its 292 frame face) below. The picture runs on over both.
+    const lv = doorLevels()
+    band(lv.header, y1, f.width, face)
+    band(lv.leaf, lv.top, rules.door.swing, s * (0.01 + 0.002))
   }
 }

@@ -244,7 +244,9 @@ romvegger som takdragerne ikke holder, også når takdragerne er på (`calc/wall
   stolpe 94 på 2490, uten fot).
 - **Overstykke** (over dør, og forenklet også over forheng) = 2490 − 20 − 2000 − 10 = **460 mm**, en liten vegg: toppskinne 92 og bunnskinne 91 (960, med
   600 i hver ende) og HDF-plate. Lysåpning 460 − 40 − 30 = 390, plate 390 + 20 = **976 × 410 mm** (samme
-  tillegg som veggplaten).
+  tillegg som veggplaten). Over et forheng er bunnskinnen 92 (glideren går i sporet), så platen blir 976 × 400.
+- **Dørbladet** er en ramme i 292 (80 forfra, 20 tykk), stående i full høyde og liggere imellom, én veggplate i
+  dørfargen, to hengsler 403 og lås 410 (byggeregel D5).
 - **Lås og nøkler** følger med alle dører. Dørbladet har **standens farge** (RAL) til veggen farges: døren er en del av veggen, så malerspannet farger plater, overstykke og dørblad, og malerkosten tar overstykket og bladet hver for seg (Bjørn 03.11.2026);
   overstykket har veggens farge. Kalkylen har én dørlinje per farge.
 - **Døren i veggskuffen** (Bjørn 02.11.2026, egen dørskuff slått sammen med veggskuffen 03.11.2026): klikk døren i plan,
@@ -390,7 +392,7 @@ hjørne, skjøtekoblinger 609 og fotplater 740 og 730. Hver duk (T1, F1A, F1B �
 
 - To tekstilrammer på systemvegg kobles ikke til hverandre. Hver ramme monteres på systemveggen med 2 × 520.
 - To frittstående vegger kobles bare i hjørner, med felles 92LTX.
-- Forheng får samme overstykke som dør (forenklet).
+- Forheng får samme overstykke som dør, men med 92 i bunn for glideren (byggeregel D2).
 - Nye regler skrives først i [byggeregler.md](byggeregler.md), med verdiene i `src/rules/rules.ts` eller
   `src/foga/recipes.ts`; bakgrunnen kan stå her.
 
