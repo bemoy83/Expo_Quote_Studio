@@ -43,7 +43,7 @@ function cut(spans: Span[], t: number): Span[] {
 }
 
 /** Offsets along w where another wall meets this face (a T-junction or a crossing). The frame must stop there. */
-function junctions(v: Variant, w: Wall, s: FaceSide, ends = false): number[] {
+function junctions(v: Variant, w: Wall, s: FaceSide): number[] {
   const n = faceNormal(w, s);
   const [dx, dy] = wallDirection(w);
   const L = wallLength(w);
@@ -57,25 +57,11 @@ function junctions(v: Variant, w: Wall, s: FaceSide, ends = false): number[] {
       const py = p[1] - w.from[1];
       if (Math.abs(px * dy - py * dx) > EPS) continue;
       const t = px * dx + py * dy;
-      if (ends ? t < -EPS || t > L + EPS : t <= EPS || t >= L - EPS) continue;
+      if (t <= EPS || t >= L - EPS) continue;
       if ((q[0] - p[0]) * n[0] + (q[1] - p[1]) * n[1] > EPS) out.push(t);
     }
   }
   return out;
-}
-
-/**
- * Where a fitter measures a frame or print on a face from (Bjørn 6.11.2026): the inner corner nearest each side, where
- * a wall meets the face (the post's face, half a post from its centre), or at a free wall end the post's outside.
- * Offsets along the wall, m: [left reference, right reference] for the stretch from–to.
- */
-export function measureFrom(v: Variant, rules: Rules, w: Wall, s: FaceSide, from: number, to: number): [number, number] {
-  const half = rules.wall.post / 2;
-  const L = wallLength(w);
-  const cs = junctions(v, w, s, true);
-  const left = cs.filter((c) => c <= from + EPS);
-  const right = cs.filter((c) => c >= to - EPS);
-  return [left.length ? Math.max(...left) + half : -half, right.length ? Math.min(...right) - half : L + half];
 }
 
 /**
