@@ -1,12 +1,12 @@
 // Foil decor and stretched print on the wall plates, over the door leaf and header where a print covers a door.
 import { foilCenter } from '../../../domain/decor'
+import { doorLevels } from '../../../domain/doors'
 import { cropBand, plateCrop } from '../../../domain/print'
 import { pointAlong } from '../../../domain/grid'
 import { productOf, rules } from '../../env'
 import { findMotif } from '../../motifs'
 import { sideOf } from '../../../domain/faces'
 import { cropMaterial, printMaterial } from './motifs'
-import { doorLevels } from './doors'
 import { FABRIC, selectGlow, type BuildContext, type Tag } from './context'
 
 export function buildDecor(c: BuildContext) {
@@ -40,7 +40,7 @@ export function buildDecor(c: BuildContext) {
       continue
     }
     // Door: the header plate above, the leaf (its 292 frame face) below. The picture runs on over both.
-    const lv = doorLevels()
+    const lv = doorLevels(rules)
     band(lv.header, y1, f.width, face)
     band(lv.leaf, lv.top, rules.door.swing, s * (0.01 + 0.002))
   }

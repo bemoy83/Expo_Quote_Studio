@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_CATALOG, DOOR } from '../catalog/defaultCatalog';
 import { calc } from '../calc/calc';
-import { RULES } from '../rules/rules';
+import { RULES, wallHeight } from '../rules/rules';
 import { r2 } from '../calc/referenceStands';
-import { doorHinge, doorRal, doorSpots, doorSwing, flipHinge, inDoorArea, moveOpening, paintDoors, placeOpening, removeOpening, setDoorRal, setOpening, setOpeningProduct } from './doors';
+import { doorHinge, doorLevels, doorRal, doorSpots, doorSwing, flipHinge, inDoorArea, moveOpening, paintDoors, placeOpening, removeOpening, setDoorRal, setOpening, setOpeningProduct } from './doors';
 import { paintWalls, replaceWalls } from './edit';
 import { moduleKey } from './grid';
 import { addRoom, moveRoom, moveRoomDoors, RECT_SIDE, resizeRoomDoors } from './rooms';
@@ -178,5 +178,15 @@ describe('placing a door with the pointer (press shows, release stores)', () => 
     expect(inDoorArea(a, b, { x: 3.9, y: 1.5 }, 0.95)).toBe(true);
     expect(inDoorArea(a, b, { x: 4.3, y: 1.5 }, 0.95)).toBe(false);
     expect(inDoorArea(a, b, { x: 3, y: 2.2 }, 0.95)).toBe(false);
+  });
+});
+
+describe('doorLevels (Byggeregel D2)', () => {
+  it('leaf 20 mm over the post end (on its 50 mm foot), 2000 high, header 10 mm above it, 460 up to the wall top', () => {
+    const lv = doorLevels(RULES);
+    expect(lv.leaf).toBeCloseTo(0.07);
+    expect(lv.top).toBeCloseTo(2.07);
+    expect(lv.header).toBeCloseTo(2.08);
+    expect(wallHeight(RULES) - lv.header).toBeCloseTo(0.46);
   });
 });

@@ -7,6 +7,8 @@ import { nextId } from './ids';
 import { OUTSIDE, roomOf } from './rooms';
 import type { Opening, Point, Stand, Variant, Wall } from './types';
 import { builtModules, defaultSwing, doorAllowed, isPerimeterWall, type BuiltModule } from './walls';
+import { RECIPES } from '../foga/recipes';
+import type { Rules } from '../rules/rules';
 
 const dot = (a: Point, b: Point) => a[0] * b[0] + a[1] * b[1];
 
@@ -242,4 +244,14 @@ export function placeOpening(v: Variant, a: Point, b: Point, product: string, do
   const keepSwing = isPerimeterWall(next.stand, w) ? o.swing : aim.swing === -1 || aim.swing !== defaultSwing(next.stand, w) ? aim.swing : undefined;
   const turned: Opening = { ...rest, ...(keepSwing === undefined ? {} : { swing: keepSwing }), ...(aim.hinge === -1 ? { hinge: -1 as const } : {}) };
   return { ...next, openings: next.openings.map((x) => (x.id === o.id ? turned : x)) };
+}
+
+/**
+ * Heights in an opening module, m from the floor (Byggeregel D2): the leaf stands 20 mm over the end of the post (on its
+ * foot), and the header starts 10 mm over the leaf. The plan's wall drawing and the 3D view both draw from these.
+ */
+export function doorLevels(r: Rules) {
+  const d = RECIPES.door;
+  const leaf = r.wall.feet + d.floorGap / 1000;
+  return { leaf, top: leaf + d.leaf / 1000, header: leaf + (d.leaf + d.topGap) / 1000 };
 }

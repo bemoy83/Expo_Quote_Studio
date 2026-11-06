@@ -3,7 +3,7 @@
 // and while a paint tool is out each plate is a target for it.
 import { useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent } from 'react'
 import { foilCenter } from '../../../domain/decor'
-import { doorRal } from '../../../domain/doors'
+import { doorLevels, doorRal } from '../../../domain/doors'
 import { felt, type FaceSide } from '../../../domain/faces'
 import { cropBand, plateCrop } from '../../../domain/print'
 import { textileBox } from '../../../domain/textile/inFrame'
@@ -130,10 +130,10 @@ export function WallElevation(p: Props) {
     const crop = plateCrop(f, m.ratio)
     const y0 = f.y - f.height / 2
     const y1 = f.y + f.height / 2
-    const dh = rules.door.height
+    const lv = doorLevels(rules)
     return {
-      header: <Print m={m} x={x + rules.wall.post / 2} y={z(y1)} width={f.width} height={y1 - dh} crop={cropBand(crop, y0, y1, dh, y1)} />,
-      leaf: <Print m={m} x={leafX} y={z(dh)} width={rules.door.swing} height={dh} crop={cropBand(crop, y0, y1, 0, dh)} />,
+      header: <Print m={m} x={x + rules.wall.post / 2} y={z(y1)} width={f.width} height={y1 - lv.header} crop={cropBand(crop, y0, y1, lv.header, y1)} />,
+      leaf: <Print m={m} x={leafX} y={z(lv.top)} width={rules.door.swing} height={lv.top - lv.leaf} crop={cropBand(crop, y0, y1, lv.leaf, lv.top)} />,
     }
   }
 
@@ -240,11 +240,11 @@ export function WallElevation(p: Props) {
               const k = doorInset(rules)
               const hx = u(O.hinge === -1 ? O.module + 1 - k : O.module + k)
               const fx = u(O.hinge === -1 ? O.module + k : O.module + 1 - k)
-              const dh = rules.door.height
+              const lv = doorLevels(rules)
               return (
                 <g pointerEvents="none">
                   {doorModules.has(O.module) && (
-                    <path d={`M${fx} ${z(dh)} L${hx} ${z(dh / 2)} L${fx} ${z(0)}`} fill="none" stroke={INK_FAINT} strokeWidth={0.01} strokeDasharray=".04 .03" />
+                    <path d={`M${fx} ${z(lv.top)} L${hx} ${z((lv.top + lv.leaf) / 2)} L${fx} ${z(lv.leaf)}`} fill="none" stroke={INK_FAINT} strokeWidth={0.01} strokeDasharray=".04 .03" />
                   )}
                   <rect x={x - 0.012} y={z(H) - 0.012} width={1.024} height={H + 0.012} fill="none" stroke={INK} strokeWidth={0.016} />
                 </g>
@@ -307,11 +307,11 @@ export function WallElevation(p: Props) {
               const f = felt(rules, i)
               if (m.opening) {
                 // A door is part of the wall: the header is a plate, the leaf below it one more for the brush
-                const dh = rules.door.height
+                const lv = doorLevels(rules)
                 return (
                   <g key={`hit${i}`}>
-                    <rect x={spanX(i, i + 1)} y={z(H)} width={1} height={H - dh} fill="transparent" {...paintOn(i, m.key)} />
-                    <rect x={spanX(i, i + 1)} y={z(dh)} width={1} height={dh} fill="transparent" {...(doorModules.has(i) ? paintOn(i, m.key, true) : {})} />
+                    <rect x={spanX(i, i + 1)} y={z(H)} width={1} height={H - lv.header} fill="transparent" {...paintOn(i, m.key)} />
+                    <rect x={spanX(i, i + 1)} y={z(lv.header)} width={1} height={lv.header} fill="transparent" {...(doorModules.has(i) ? paintOn(i, m.key, true) : {})} />
                   </g>
                 )
               }

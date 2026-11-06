@@ -4,7 +4,8 @@ import * as THREE from 'three'
 import type { Point } from '../../../domain/types'
 import { RECIPES } from '../../../foga/recipes'
 import { plateColor, productOf, rules } from '../../env'
-import { buildOpening, doorLevels } from './doors'
+import { doorLevels } from '../../../domain/doors'
+import { buildOpening } from './doors'
 import { profile, unitProfile } from './profiles'
 import { ALU, ALU_FINISH, selectGlow, type BuildContext, type Tag } from './context'
 
@@ -26,7 +27,7 @@ export function buildWalls(c: BuildContext) {
     }
     // Header (overstykke): a small wall over the opening, 91 at the bottom, or 92 over a curtain for its glider. Its
     // plate belongs to the door: a click on it chooses the door.
-    const hb = doorLevels().header
+    const hb = doorLevels(rules).header
     const curtain = productOf(m.opening.product)?.opening !== 'door'
     const bottom = curtain ? RECIPES.door.curtainBottomRail : RECIPES.wall.bottomRail
     const bh = curtain ? prof.top : prof.bottom
