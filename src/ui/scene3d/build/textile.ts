@@ -14,9 +14,6 @@ import { printMaterial } from './motifs'
 import { ALU, ALU_FINISH, SELECT, type BuildContext, type Tag } from './context'
 import { CAP_92LTX, CAP_THICKNESS, CORNER_92LTX, OUTLINES, mitredProfile, unitProfile } from './profiles'
 
-/** How much of a not-yet-chosen textile shows. */
-const PLACEHOLDER_OPACITY = 0.15
-
 export function buildTextile(c: BuildContext) {
   const { v, res, opts, H, at, mat, add, along, sel } = c
   const depth = rules.textile.depth
@@ -82,10 +79,10 @@ export function buildTextile(c: BuildContext) {
   function white(glow: THREE.MeshStandardMaterialParameters) {
     return mat('textile', '#ffffff', { roughness: 1, ...glow })
   }
-  /** A print not chosen yet, or the customer's own textile: a faint sheet, so the frame shows and it does not read as
-   *  a chosen colour (Bjørn 6.11.2026). */
+  /** A print not chosen yet, or the customer's own textile: the frame stands naked (Bjørn 6.11.2026; a see-through
+   *  sheet looks like clear plexi, which the system can hold too). The face is still there to click, just not drawn. */
   function placeholder(glow: THREE.MeshStandardMaterialParameters) {
-    return mat('textile', '#ffffff', { roughness: 1, transparent: true, opacity: PLACEHOLDER_OPACITY, depthWrite: false, ...glow })
+    return mat('textile', '#ffffff', { visible: false, ...glow })
   }
 
   /** A group along a → b, centred on it, `off` along the left normal: local x along the run, +z toward face A. */
@@ -131,8 +128,8 @@ export function buildTextile(c: BuildContext) {
     mesh.position.set(x + w / 2, y0 + h / 2, side * (depth / 2 + 0.0005))
     if (side === -1) mesh.rotation.y = Math.PI
     add(mesh, tag, g)
-    // A faint sheet casts no shadow
-    if (m.transparent) mesh.castShadow = false
+    // A naked face casts no shadow
+    if (!m.visible) mesh.castShadow = false
   }
 }
 
