@@ -1,6 +1,7 @@
 // Velg: what a press grabs. The first hit wins: a side of the selected room, a free-standing textile wall, furniture, a
 // drawn takdrager, a wall, a room's floor, a lane of engangsteppe, else empty floor. Each selects on release.
 import { canMoveWall } from '../../../domain/edit'
+import { inFrontOf } from '../../../domain/faces'
 import { CELL } from '../../../domain/grid'
 import { laneAt } from '../../../domain/floor/edit'
 import { OUTSIDE, roomAt } from '../../../domain/rooms'
@@ -29,8 +30,9 @@ export function startSelect(c: PointerCtx, q: P): Drag {
   if (m) {
     const w = v.walls.find((x) => x.id === m.wallId)!
     const h = hits.faceHit(q)
-    // A textile wall on the face toward the pointer is picked outside the wall's own band (hits.onWallBand)
-    const tx = h && !hits.onWallBand(q, m) ? textileAt(v, w.id, h.s, h.t) : undefined
+    // A textile wall is picked outside the wall's own band (hits.onWallBand), on its own side only: behind a stand wall
+    // (its outside has no face) the wall is picked
+    const tx = h && !hits.onWallBand(q, m) && inFrontOf(w, h.s, q) ? textileAt(v, w.id, h.s, h.t) : undefined
     // A room's wall opens on its outside, so print does not land inside the room unnoticed (Bjørn 2.11.2026)
     const select: PlanSelection = doorSelect ?? (tx && h ? { wallId: w.id, side: h.s, textileId: tx.id } : { wallId: w.id, side: w.room ? OUTSIDE : h?.s })
     // A room's own wall resizes the room; an inner wall moves

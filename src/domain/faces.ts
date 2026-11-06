@@ -37,6 +37,12 @@ export function faceNormal(w: Wall, s: FaceSide): Point {
   return [-dy * s, dx * s];
 }
 
+/** Whether the point lies on the side face `s` looks toward (behind a stand wall it does not, though faceAt gives its face). */
+export function inFrontOf(w: Wall, s: FaceSide, p: { x: number; y: number }): boolean {
+  const n = faceNormal(w, s);
+  return (p.x - w.from[0]) * n[0] + (p.y - w.from[1]) * n[1] >= 0;
+}
+
 /** Which face of the wall the point lies in front of. */
 export function faceAt(v: Variant, w: Wall, p: { x: number; y: number }): FaceSide {
   const n = faceNormal(w, 1);
