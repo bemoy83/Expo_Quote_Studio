@@ -17,6 +17,7 @@ i [foga-system.md](foga-system.md), veggbegrepene i [vegger.md](vegger.md), pris
   filene finnes, og at koden ikke viser til et nummer som ikke står her.
 
 Formen er: **Nummer Navn.** Regelen. *Kilde · verdier · kode · test.*
+Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» etter kilden, med hva som mangler.
 
 ## V · Systemvegg
 
@@ -178,6 +179,15 @@ Formen er: **Nummer Navn.** Regelen. *Kilde · verdier · kode · test.*
 - **X8 Føtter og stag.** Fotplate 740 og stående stag 90 på samme punkter, etter S3 og S4; en 92LTX teller som støtte.
   En fot i en fri ende står i flukt med rammeenden (200 mm inn for 740), resten jevnt fordelt. Under 1 m: én 730 midt på.
   *Bjørn 1.11.2026 og 3.11.2026 · `RECIPES.freeFrame.support` · kode `src/calc/textile/free.ts`, `src/calc/supports.ts` · test `src/calc/freeFrames.test.ts`*
+
+- **X9 Standardlengder (veiledende).** Fordi systemveggene på messer er standardisert, har 43TX standardlengder som
+  passer på veggene: cc − 30, det vil si 970, 1970, 2970 og så videre (X2). I tillegg finnes noen andre, som 470, og
+  lengder for rammer som henger utenpå én enkelt vegg, med bruttomål over cc (for eksempel 1040). Standardlengder ligger
+  på lager og plukkes bare; andre lengder må kappes og skal koste mer. En skjøtt lengde er som regel én standardlengde
+  pluss ett kapp. Rammer på systemvegg bruker standardlengdene (X2). Frittstående tegnes fritt som før (X5), men appen
+  kan foreslå en standardlengde for å spare penger. Mot en 92LTX kappes skinnen fortsatt (X7), til den får egen
+  standard. Standard høyde er 2540; rammer kan skjøtes til om lag 5 m høyde.
+  *Bjørn 6.11.2026 · ikke bygget: forslag om standardlengde, pris for kapp, andre standardlengder · kode `src/calc/textile/inFrame.ts` · test `src/calc/fabric.test.ts`*
 
 ## G · Gulv
 
