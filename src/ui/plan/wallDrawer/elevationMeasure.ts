@@ -18,6 +18,18 @@ export interface ElevationItem {
   top: number
 }
 
+/**
+ * Lysmål (Bjørn 6.11.2026): what shows of each plate, between the posts' lips and the rails, for plate fields starting
+ * at `fields` (x, m). `along`: the edges of each field (960 apart, 40 between); `heights`: the visible top, the
+ * visible bottom and the floor, y down in a drawing H high.
+ */
+export function lysmal(rules: Rules, fields: number[], H: number): { along: number[]; heights: number[] } {
+  const { cc, feet, height, profile } = rules.wall
+  const lip = (cc - profile.length) / 2
+  const along = [...new Set(fields.flatMap((x) => [x + lip, x + cc - lip]))].sort((a, b) => a - b)
+  return { along, heights: [H - (feet + height - profile.top), H - (feet + profile.bottom), H] }
+}
+
 /** A leader text: its dot on the item's top, and the line of text it stands on (0 = lowest). */
 export interface Leader {
   text: string

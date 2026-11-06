@@ -1,7 +1,7 @@
 // What the plan's dimension lines measure (docs/arbeidstegning.md, «Mål»): pure geometry, drawn by layers/DimLayer.tsx.
 // Positions are metres along a side or a wall; the layer turns them into chains in millimetres.
 import { faceNormal, sideOf } from '../../domain/faces'
-import { openSides, pointAlong, sideLength } from '../../domain/grid'
+import { openSides, pointAlong, sideLength, wallLength } from '../../domain/grid'
 import type { Point, Side, Variant, Wall } from '../../domain/types'
 import { isStandWall } from '../../domain/walls'
 import { runNormal } from '../../domain/textile/free'
@@ -153,7 +153,9 @@ export function planDims(v: Variant, selection: PlanSelection, compact: boolean)
     const along = (t: number) => pointAlong(on, t)[k]
     // The physical frame, as in calc and production (970 in a 1 000 span), not the span it fills
     const inset = frameInset(rules.textile.inFrame) / 1000
-    const ends = [on.from[k], on.to[k], along(mounted.from + inset), along(mounted.from + mounted.width - inset)]
+    // From the outside of the end posts, as on the wall drawing (Bjørn 6.11.2026)
+    const half = rules.wall.post / 2
+    const ends = [along(-half), along(wallLength(on) + half), along(mounted.from + inset), along(mounted.from + mounted.width - inset)]
     inner = { axis: hz ? 'x' : 'y', at: hz ? on.from[1] : on.from[0], dir: (hz ? n[1] : n[0]) < 0 ? -1 : 1, ts: chainPoints(ends), clear: 'mounted' }
   }
   return { sides, inner }

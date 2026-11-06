@@ -290,6 +290,7 @@ export function WallDrawer(p: Props) {
         motifs={motifs}
         label={label}
         painting={painting}
+        printing={printing}
         tool={tool}
         paintAt={paintAt}
         doorModules={doorModules}

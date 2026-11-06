@@ -180,10 +180,19 @@ Veggskuffens tegning blir arbeidstegning for én vegg. Se bilde 3.
 - **Målene følger det skuffen er åpnet for** (Bjørn 6.11.2026), som planen:
   - **Veggen:** modulkjede (1 000 per modul) og totalen under, og til venstre to høyder: «2 490 vegg» og
     «2 540 med føtter». Ingen plasseringsrad for tekstil og grafikk.
+  - **Veggen med print lagt på** (malerspann eller malerkost med print valgt, Bjørn 6.11.2026): lysmål i stedet for
+    modulkjede og vegghøyder. Under hvert felt den synlige platen, 960 (1 000 c/c minus stolpens 40), og totalen
+    under. Til venstre 2 420 synlig høyde (2 490 minus topprofil 40 og bunnprofil 30) og 2 500 fra gulv; 80 fra
+    gulv til synlig kant står når det får plass. Dørmoduler har ikke eget felt. Tallene kommer fra
+    `rules.wall` (stolpe 94: platen synlig fra leppenes utside, 20 fra stolpesenter).
   - **Tekstilramme, dekal eller print:** over veggen plasseringsraden fra hver veggende og bredden (tekstil med
     rammens fysiske bredde, 3 970 i et felt på 4 000), til høyre høyderaden (bunn, høyde, rest til topp), og
     veggens total under. Ingen modulkjede og ingen vegghøyder. Print over flere plater måles som ett.
-  - Modulmålene skal gås opp med Bjørn etterpå.
+  - **Modulmål** (Bjørn 6.11.2026): en modul er 1 000 senter til senter stolpe, og veggene i et løp deler stolper.
+    Modulkjeden står derfor merket «c/c». Totalen er fysisk, fra utsiden av endestolpene: 4 000 c/c er 4 040.
+    Plasseringsraden over veggen regnes fra de samme utsidene, så den går opp i totalen (1 035 + 3 970 + 1 035 =
+    6 040). Valgt tekstilvegg i planen måles likt. Senere kanskje: fra innvendig hjørne der en vegg møter, slik
+    montøren måler.
 - **Henvisningslinjer:** ingen merkelapp eller farge i veggrisset. Det valgte objektet får en prikk på toppen og en
   hårstrek (0,6 px, `--ink-muted`) opp til en tekst i målskriften (mono 10,5 px): produkttypen, med nummeret foran
   når «Vis posisjoner» er på. Tekstene står på én linje over plasseringsraden. Linjene forskyves 13 px om de

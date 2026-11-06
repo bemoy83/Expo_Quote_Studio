@@ -2,10 +2,17 @@ import { describe, expect, it } from 'vitest'
 import { createVariant } from '../../../domain/variant'
 import { isStandWall } from '../../../domain/walls'
 import { RULES } from '../../../rules/rules'
-import { elevationItems, leaders, row } from './elevationMeasure'
+import { elevationItems, leaders, lysmal, row } from './elevationMeasure'
 import { elevationHeading } from './face'
 
 describe('wall drawing dimensions', () => {
+  it('lysmål: 960 per plate between the posts, 2 420 high, 80 and 2 500 over the floor', () => {
+    const r = (n: number) => Math.round(n * 1000)
+    const { along, heights } = lysmal(RULES, [0, 1, 3], 2.54)
+    expect(along.map(r)).toEqual([20, 980, 1020, 1980, 3020, 3980])
+    expect(heights.map((h) => r(2.54 - h))).toEqual([2500, 80, 0])
+  })
+
   it('a row runs through both ends and every edge, once each', () => {
     expect(row([0, 4], [0.3, 1.7, 1.7, 4])).toEqual([0, 0.3, 1.7, 4])
   })
