@@ -5,6 +5,8 @@ import { openSides, pointAlong, sideLength } from '../../domain/grid'
 import type { Point, Side, Variant, Wall } from '../../domain/types'
 import { isStandWall } from '../../domain/walls'
 import { runNormal } from '../../domain/textile/free'
+import { frameInset } from '../../calc/textile/inFrame'
+import { rules } from '../env'
 import type { PlanSelection } from './selection'
 import { sizePx, type PlanScale } from './planScale'
 import { PLAN_MARGIN } from './planStyle'
@@ -149,7 +151,9 @@ export function planDims(v: Variant, selection: PlanSelection, compact: boolean)
     const k = hz ? 0 : 1
     const n = faceNormal(on, sideOf(v, mounted))
     const along = (t: number) => pointAlong(on, t)[k]
-    const ends = [on.from[k], on.to[k], along(mounted.from), along(mounted.from + mounted.width)]
+    // The physical frame, as in calc and production (970 in a 1 000 span), not the span it fills
+    const inset = frameInset(rules.textile.inFrame) / 1000
+    const ends = [on.from[k], on.to[k], along(mounted.from + inset), along(mounted.from + mounted.width - inset)]
     inner = { axis: hz ? 'x' : 'y', at: hz ? on.from[1] : on.from[0], dir: (hz ? n[1] : n[0]) < 0 ? -1 : 1, ts: chainPoints(ends), clear: 'mounted' }
   }
   return { sides, inner }

@@ -30,6 +30,9 @@ export interface FramePiece {
   lm: number;
 }
 
+/** From each end of the span to the frame's edge, mm: the frame sits centred in its span (W = span − side − air). */
+export const frameInset = (s: InFrameParams) => (s.side + s.air) / 2;
+
 export function framePiece(spanMm: number, s: InFrameParams, heightMm?: number): FramePiece {
   const W = spanMm - s.side - s.air;
   const H = heightMm ?? fullHeight(s);
