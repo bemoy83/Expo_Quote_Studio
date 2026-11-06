@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { createVariant } from '../../../domain/variant'
 import { isStandWall } from '../../../domain/walls'
-import { leaders, row } from './elevationMeasure'
+import { RULES } from '../../../rules/rules'
+import { elevationItems, leaders, row } from './elevationMeasure'
 import { elevationHeading } from './face'
 
 describe('wall drawing dimensions', () => {
@@ -25,5 +26,11 @@ describe('wall drawing dimensions', () => {
     const h = elevationHeading(left, 1, 'Venstre')
     expect(h.title).toBe('Venstre · sett innenfra')
     expect([h.left, h.right].sort()).toEqual(['bakkant', 'front'])
+  })
+
+  it('a textile frame is measured at its physical width, as in production', () => {
+    const [t] = elevationItems(RULES, [{ id: 't1', wallId: 'w', side: 1, from: 1, width: 4 }], [], new Set(), (x) => x)
+    expect(t.x0).toBeCloseTo(1.015)
+    expect(t.x1 - t.x0).toBeCloseTo(3.97)
   })
 })

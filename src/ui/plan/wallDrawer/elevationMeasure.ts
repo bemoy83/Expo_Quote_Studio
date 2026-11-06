@@ -2,6 +2,7 @@
 // height row to the right, the leader texts over it, and the room each of them takes round the wall, in screen px.
 // The drawing is in metres with y down: the wall top is y = 0, the floor y = H.
 import { chainPoints, DIM_NEAR as NEAR, DIM_TOTAL as TOTAL } from '../dims'
+import { frameInset } from '../../../calc/textile/inFrame'
 import { foilCenter } from '../../../domain/decor'
 import { textileBox } from '../../../domain/textile/inFrame'
 import type { Foil, TextileWall } from '../../../domain/types'
@@ -35,7 +36,7 @@ const HEAD = 22
 const LABEL: Record<ElevationItem['kind'], string> = { textile: 'Tekstil', decal: 'Dekal', print: 'Print' }
 
 /**
- * Textile and print on the face, for the placement and height rows and the leaders. `x` turns an along-wall offset
+ * Textile frames (their physical width) and print on the face, for the placement and height rows and the leaders. `x` turns an along-wall offset
  * into x in the drawing (the face is seen from in front, so it may run backwards). A full-plate print on a door module
  * is part of the door and not measured.
  */
@@ -44,8 +45,10 @@ export function elevationItems(rules: Rules, tex: TextileWall[], foils: Foil[], 
   return mergePrints([
     ...tex.map((t): ElevationItem => {
       const { bottom, height } = textileBox(t, rules)
-      const x0 = spanX(t.from, t.from + t.width)
-      return { kind: 'textile', x0, x1: x0 + t.width, bottom, top: bottom + height }
+      // The physical frame, as on the plan and in calc and production (970 in a 1 000 span), not the span it fills
+      const inset = frameInset(rules.textile.inFrame) / 1000
+      const x0 = spanX(t.from + inset, t.from + t.width - inset)
+      return { kind: 'textile', x0, x1: x0 + t.width - 2 * inset, bottom, top: bottom + height }
     }),
     ...foils
       .filter((f) => !(f.full && doorModules.has(f.module)))
