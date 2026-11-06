@@ -36,6 +36,8 @@ Brukeren skal gjøre det meste rett på tegneflaten. **Pillen** gir rask tilgang
 | Nytt klikk på samme objekt | Valget fjernes, og pillen lukkes med en gang (Bjørn 6.11.2026). Med skuffen åpen blir valget stående |
 | Dobbeltklikk | Er bare to klikk og gjør det samme som ett. Planen har ikke dobbeltklikk (Bjørn 5.11.2026, se under) |
 | Klikk på et annet objekt | Valget og pillen bytter |
+| Klikk på en vegg med tekstilvegg | Midten av veggen (veggen slik den er tegnet, minst 10 skjermpunkter bred) velger veggen, stripen utenfor hver side velger tekstilen der (`hits.onWallBand`, Bjørn 6.11.2026) |
+| Pek (PC) eller hold (iPad) i Velg | Det et klikk ville valgt får en svak skygge av blekk i sin egen bredde (`layers/PickLayer.tsx`), ikke det som alt er valgt |
 | Klikk på tomt gulv eller utenfor standen | Valget fjernes |
 | Dra et valgt objekt | Flytter som i dag. Et drag fjerner aldri valget. Et klikk er et trykk og slipp uten flytting (samme grense som `moved` i dra-typene) |
 | Esc | Fjerner valget |
@@ -62,9 +64,9 @@ Kolonnen «Finnes» sier hvor funksjonen ligger i dag. **Ny** betyr at den må l
 
 | Valg | Navn og mål | Farge eller motiv | Roter | Mer | Fjern | Finnes |
 | --- | --- | --- | --- | --- | --- | --- |
-| Vegg (innervegg, romvegg) | «Innervegg · 3 m» | RAL for hele veggen. «Tekstilvegg» velger veggens tekstil, eller legger til på ledig flate. «Grafikk» åpner motivlisten | – | Veggskuff | ✓ | `setWallPlate` (`domain/edit.ts`), `addTextile`/`fillTextile`, `ColourPanel` |
+| Vegg (innervegg, romvegg) | «Innervegg · 3 m» | Med tekstilvegg på veggen først et valg Vegg · Tekstil mot … per side (`layerSwitch`), som bytter mellom veggen og tekstilene. RAL for hele veggen. «Tekstilvegg» legger til på ledig flate når siden ikke har noen. «Grafikk» åpner motivlisten | – | Veggskuff | ✓ | `setWallPlate` (`domain/edit.ts`), `addTextile`/`fillTextile`, `ColourPanel` |
 | Standvegg | «Bak · standvegg · 6 m» | Som over (platebytte) | – | Veggskuff | – (låst) | som over |
-| Tekstil på vegg | «Tekstilvegg · 4,00 × 2,50 m» | Motiv, og «Fyll ledig vegg» når den ikke fyller | – | Veggskuff på tekstilen | ✓ | `updateTextile` (`domain/textile/inFrame.ts`), `TextilePanel` |
+| Tekstil på vegg | «Tekstilvegg · 4,00 × 2,50 m» | Valget Vegg · Tekstil mot … som over, motiv, og «Fyll ledig vegg» når den ikke fyller | – | Veggskuff på tekstilen | ✓ | `updateTextile` (`domain/textile/inFrame.ts`), `TextilePanel` |
 | Dekal | «Dekal · 1,40 m» | Motiv | – | Veggskuff på dekalen | ✓ | `updateFoil`, `FoilPanel` |
 | Frittstående tekstil | «T1 · 2 000 × 2 500» | Motiv på siden som ble klikket (`freeFace`) | **Ny:** 90° om midten | `FreeTextileDrawer` | ✓ | `updateFace` (`domain/textile/free.ts`) |
 | Dør, forheng | «Dør med lås · 960» | Dør eller forheng, snu slag, snu hengsel (bare dør), farge på dørbladet | – | Veggskuff med døren | ✓ | `DoorPanel` (`plan/wallDrawer/panels.tsx`) med `flipSwing` og snu hengsel og farge i `domain/doors.ts` |

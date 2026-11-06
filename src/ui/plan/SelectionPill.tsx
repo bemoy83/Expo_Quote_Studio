@@ -9,14 +9,14 @@ import { wallLabel } from '../../calc/production'
 import { updateFoil } from '../../domain/decor'
 import { canFlipSwing, doorFace, doorRal, flipHinge, flipSwing, openingRoom, setDoorRal, setOpeningProduct, paintDoors } from '../../domain/doors'
 import { eraseWalls, setWallPlate } from '../../domain/edit'
-import { faces, type FaceSide } from '../../domain/faces'
+import { faces, sideOf, type FaceSide } from '../../domain/faces'
 import { rotateLane } from '../../domain/floor/edit'
 import { CELL, wallLength, wallModules } from '../../domain/grid'
 import { wallRal } from '../../domain/panels'
 import { clearPrint, fillPlates, printWall } from '../../domain/print'
 import { roomName, roomSize } from '../../domain/rooms'
 import { addTextile, fillTextile, textileBox, textilesOn, updateTextile } from '../../domain/textile/inFrame'
-import type { Variant, Wall } from '../../domain/types'
+import type { TextileWall, Variant, Wall } from '../../domain/types'
 import { isStandWall } from '../../domain/walls'
 import type { Motif } from '../../persistence/file'
 import { setObjectProduct } from '../../domain/objects'
@@ -27,6 +27,8 @@ import { fmt, mm } from '../format'
 import { findMotif } from '../motifs'
 import { placePill, type PillPlace } from './pillAnchor'
 import { QBtn, QName, Sep, Sw } from './QuickPicks'
+import { Segmented } from '../controls'
+import { faceName } from './wallDrawer/face'
 import { deleteSelection, type PlanSelection } from './selection'
 import { turnFree, turnObject } from './turn'
 
@@ -275,6 +277,7 @@ function content(p: PillActions, graphics: boolean, setGraphics: (b: boolean) =>
   }
 
   const T = sel.textileId ? v.textiles.find((x) => x.id === sel.textileId) : undefined
+  const sw = layerSwitch(v, w, sel, T, onSelect)
   if (T) {
     const filled = fillTextile(v, rules, T.id)
     const fills = filled.textiles.find((x) => x.id === T.id)?.width === T.width
@@ -284,6 +287,7 @@ function content(p: PillActions, graphics: boolean, setGraphics: (b: boolean) =>
       meta: `${fmt(T.width, 2)} × ${fmt(textileBox(T, rules).height, 2)} m`,
       body: (
         <>
+          {sw}
           <Motifs motifs={motifs} value={motif} onPick={(m) => onEdit((x) => updateTextile(x, rules, T.id, { motif: m, fill: 'print' }))} />
           {!fills && (
             <>
@@ -320,7 +324,6 @@ function content(p: PillActions, graphics: boolean, setGraphics: (b: boolean) =>
   const tex = textilesOn(v, w.id, s)
   const ral = wallRal(v, w)
   const textile = () => {
-    if (tex.length) return onSelect({ wallId: w.id, side: s, textileId: tex[0].id })
     const r = addTextile(v, rules, w.id, s, L / 2, true)
     if (!r) return p.onToast('Ingen ledig veggflate på denne siden')
     onEdit(() => r.v)
@@ -343,12 +346,16 @@ function content(p: PillActions, graphics: boolean, setGraphics: (b: boolean) =>
       </>
     ) : (
       <>
+        {sw}
         <Colours value={ral} title={(n) => `Hele veggen ${n}`} onPick={(r) => onEdit((x) => clearPrint(paintDoors(setWallPlate(x, w.id, r), w.id, r), w.id, s))} />
         <Sep />
-        <QBtn title={tex.length ? 'Velg veggens tekstilvegg' : 'Legg til tekstilvegg på ledig flate'} onClick={textile}>
-          <i className="tex-thumb q-tex" />
-          Tekstilvegg
-        </QBtn>
+        {/* With textile walls on the wall the switch picks them; the button adds one on a face without */}
+        {!tex.length && (
+          <QBtn title="Legg til tekstilvegg på ledig flate" onClick={textile}>
+            <i className="tex-thumb q-tex" />
+            Tekstilvegg
+          </QBtn>
+        )}
         <QBtn title="Grafikk: print over hele siden" onClick={() => setGraphics(true)}>
           <ImageIcon size={15} />
           Grafikk
@@ -364,6 +371,39 @@ function content(p: PillActions, graphics: boolean, setGraphics: (b: boolean) =>
         },
     removeLabel: stand ? undefined : w.room ? 'Åpne siden' : 'Fjern veggen',
   }
+}
+
+/**
+ * On a wall with textile walls on it: Vegg · the textile on each face (Bjørn 6.11.2026), so a click that took the wall
+ * for the textile, or the other way round, is put right in one tap. Per face the textile over the selected one's middle,
+ * else the face's first. Nothing on a wall without textile walls.
+ */
+function layerSwitch(v: Variant, w: Wall, sel: PlanSelection, T: TextileWall | undefined, onSelect: (s: PlanSelection) => void): ReactNode {
+  const mid = T ? T.from + T.width / 2 : null
+  const onFace = faces(v, w).flatMap((s) => {
+    const on = textilesOn(v, w.id, s)
+    const t = (mid !== null && on.find((x) => x.from <= mid && x.from + x.width >= mid)) || on[0]
+    return t ? [{ s, t }] : []
+  })
+  if (!onFace.length) return null
+  const side = T ? sideOf(v, T) : sel.side
+  return (
+    <>
+      <Segmented<string>
+        label="Vegg eller tekstilvegg"
+        value={T ? T.id : ''}
+        onChange={(id) => {
+          const x = onFace.find((f) => f.t.id === id)
+          onSelect(x ? { wallId: w.id, side: x.s, textileId: x.t.id } : { wallId: w.id, side })
+        }}
+        options={[
+          { value: '', label: 'Vegg', title: 'Velg veggen' },
+          ...onFace.map(({ s, t }) => ({ value: t.id, label: `Tekstil ${faceName(w, s).toLowerCase()}`, title: `Velg tekstilveggen ${faceName(w, s).toLowerCase()}` })),
+        ]}
+      />
+      <Sep />
+    </>
+  )
 }
 
 const variantName = (a: string) => idx.byArtnr.get(a)?.variant.name.toLowerCase() ?? a

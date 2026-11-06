@@ -185,9 +185,15 @@ export function usePlanPointer(input: PlanPointerInput) {
     if (r.toast) input.onToast(r.toast)
   }
 
+  // Velg: what a click would select (the plan marks it faintly): from the hover, or on touch from the press held
+  const held = dragging && 'select' in dragging && !('moved' in dragging && dragging.moved) ? dragging.select : null
+  const hovered = !dragging && hover && tool === 'select' && !input.mini ? startSelect(c, hover) : null
+  const picked = tool !== 'select' || input.mini ? null : (held ?? (hovered && 'select' in hovered ? hovered.select : null))
+
   return {
     svg,
     svgRef,
+    picked,
     svgEl,
     hover,
     dragging,

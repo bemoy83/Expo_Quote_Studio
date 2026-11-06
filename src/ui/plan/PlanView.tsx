@@ -30,6 +30,7 @@ import { Legend } from './layers/Legend'
 import { ObjectLayer } from './layers/ObjectLayer'
 import { PosLayer } from './layers/PosLayer'
 import { NextDefs } from './layers/NextDefs'
+import { PickLayer } from './layers/PickLayer'
 import { PreviewLayer } from './layers/PreviewLayer'
 import { SnapDots } from './layers/Previews'
 import { RoomLayer } from './layers/RoomLayer'
@@ -38,7 +39,7 @@ import { WallLayer } from './layers/WallLayer'
 import { nextTarget } from './next'
 import { nextOf, type Preview } from './nextState'
 import type { AreaLayer, PlanState } from './nextArea'
-import { linePx, planScale, PlanScaleContext, sizePx, usePxPerMetre } from './planScale'
+import { linePx, planScale, PlanScaleContext, sizePx, usePxPerMetre, type PlanScale } from './planScale'
 import { DIMMED, GRID, GRID_FINE, GRID_PX, PLAN_MARGIN } from './planStyle'
 import { eraseTargetAt, type Erasing } from './pointer/erase'
 import { floorBrush } from './pointer/floorBrush'
@@ -120,7 +121,9 @@ export function PlanView(p: Props) {
 
   const pen = pens(tool, brush)
   const { wallTool, floorTool, textileTool, beamTool } = pen
-  const hits = planHits(v, mods, selection)
+  // The scale is worked out further down, from the svg the pointer hook gives; the hit tests read it when called
+  let scaleNow: PlanScale | undefined
+  const hits = planHits(v, mods, selection, () => scaleNow)
   const { moduleAt, beamAt, roomEdgeAt, objectAt } = hits
   const fb = floorBrush(v, { tool, brush, floorSize: p.floorSize, rollDir: p.rollDir, rollMode: p.rollMode })
   /** Snap points show only while a brush snaps to them, at its own grid. */
@@ -210,6 +213,7 @@ export function PlanView(p: Props) {
   const vb = p.mini ? { x: -0.4, y: -0.4, w: W + 0.8, h: D + 0.8 } : { x: -M, y: -M, w: W + 2 * M, h: D + 2 * M }
   const pxPerM = usePxPerMetre(svg, vb.w, vb.h)
   const scale = useMemo(() => planScale(pxPerM, { doc: p.doc, mini: p.mini }), [pxPerM, p.doc, p.mini])
+  scaleNow = scale
 
   const totals = useMemo(() => new Set(totalSides(v)), [v])
 
@@ -309,6 +313,9 @@ export function PlanView(p: Props) {
       {/* Legend and drawing head in the front aisle: always on the documents; while drawing only with Velg, when no
           quick picks float over the bottom of the plan */}
       {!p.mini && (p.doc || tool === 'select') && <Legend v={v} res={res} doc={!!p.doc} />}
+
+      {/* Velg: what a click would select, faintly */}
+      {!p.mini && tool === 'select' && <PickLayer v={v} picked={pointer.picked} selection={selection} />}
 
       {/* Interaction preview: measure pill, invalid hatch and hint of the pen in hand, Tøm, room handles, the chosen lanes */}
       <PreviewLayer v={v} tool={tool} brush={brush} selection={selection} floorSize={p.floorSize} rollDir={fb.dir} pointer={pointer} next={next?.outcome ?? null} mini={p.mini} onHint={p.onHint} />
