@@ -50,6 +50,8 @@ interface Props {
   motifs: Motif[]
   label: string
   painting: boolean
+  /** The tools lay print: the drawing measures the plates' lysmål. */
+  printing: boolean
   tool: PaintTool
   /** The chosen tool on plate `i`: `first` on press, then for each plate swept over (brush only). */
   paintAt: (i: number, key: string, first: boolean, leaf?: boolean) => void
@@ -65,7 +67,7 @@ interface Props {
 }
 
 export function WallElevation(p: Props) {
-  const { v, w, s, L, H, mods, tex, foils, rooms, T, F, O, motifs, label, painting, tool, paintAt, doorModules, ratioOf, select, selectDoor } = p
+  const { v, w, s, L, H, mods, tex, foils, rooms, T, F, O, motifs, label, painting, printing, tool, paintAt, doorModules, ratioOf, select, selectDoor } = p
   const svg = useRef<SVGSVGElement>(null)
   const [spot, setSpot] = useState<DropSpot | null>(null)
   /** True from a press on a plate until it is let go: the brush sweeps over the plates entered meanwhile. */
@@ -87,6 +89,8 @@ export function WallElevation(p: Props) {
     : F
       ? elevationItems(rules, [], F.run ? foils.filter((x) => x.run === F.run) : [F], doorModules, u)
       : []
+  // Print laid on the wall: where each plate field starts (the door modules have none of their own)
+  const fields = painting && printing ? mods.map((_, i) => i).filter((i) => !doorModules.has(i)).map((i) => spanX(i, i + 1)) : undefined
   const name = w.room ? 'Romvegg' : label
   const fr = frame(size, L, H, items)
   const sc = planScale(1 / fr.u, {})
@@ -330,7 +334,7 @@ export function WallElevation(p: Props) {
             />
           )}
 
-          <ElevationDims w={w} s={s} name={name} L={L} H={H} items={items} leaders={fr.leaders} top={fr.top} width={fr.width} sc={sc} />
+          <ElevationDims w={w} s={s} name={name} L={L} H={H} items={items} leaders={fr.leaders} top={fr.top} width={fr.width} sc={sc} fields={fields} />
         </svg>
       </div>
     </div>

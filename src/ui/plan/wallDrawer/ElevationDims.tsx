@@ -1,6 +1,6 @@
 // Dimensions on the wall drawing (docs/arbeidstegning.md, «Veggrisset»): the heading with where each end points and
 // the wall's total under it, and what the drawer is open for (Bjørn 6.11.2026). The wall: its module chain and its
-// heights to the left. A textile frame, decal or print (`items`): its placement row over the wall from each end, its
+// heights to the left; while print is laid on it, its lysmål instead. A textile frame, decal or print (`items`): its placement row over the wall from each end, its
 // height row to the right and a hairline leader up to its product type; no module chain or wall heights. Chains are drawn as in the plan
 // (plan/DimChain.tsx); sizes are screen px through the drawing's scale. What is measured: elevationMeasure.ts.
 import type { Wall } from '../../../domain/types'
@@ -10,13 +10,13 @@ import { INK_MUTED } from '../../colors'
 import { Chain } from '../DimChain'
 import { EM, sizePx, textPx, type PlanScale } from '../planScale'
 import { DIM_NEAR as NEAR, DIM_TOTAL as TOTAL } from '../dims'
-import { LEADER_FONT, LEADER_LINE, row, type ElevationItem, type Leader } from './elevationMeasure'
+import { LEADER_FONT, LEADER_LINE, lysmal, row, type ElevationItem, type Leader } from './elevationMeasure'
 import { elevationHeading } from './face'
 
 /** Heading size, screen px. */
 const HEAD_FONT = 11.5
 
-export function ElevationDims({ w, s, name, L, H, items, leaders, top, width, sc }: { w: Wall; s: FaceSide; name: string; L: number; H: number; items: ElevationItem[]; leaders: Leader[]; top: number; width: number; sc: PlanScale }) {
+export function ElevationDims({ w, s, name, L, H, items, leaders, top, width, sc, fields }: { w: Wall; s: FaceSide; name: string; L: number; H: number; items: ElevationItem[]; leaders: Leader[]; top: number; width: number; sc: PlanScale; fields?: number[] }) {
   const px = (n: number) => sizePx(sc, n)
   const head = elevationHeading(w, s, name)
   const modules = Array.from({ length: Math.round(L) + 1 }, (_, i) => i)
@@ -28,6 +28,10 @@ export function ElevationDims({ w, s, name, L, H, items, leaders, top, width, sc
   const outer: [number, number] = [-half, L + half]
   const along = row(outer, items.flatMap((i) => [i.x0, i.x1]))
   const heights = row([0, H], items.flatMap((i) => [H - i.top, H - i.bottom]))
+  // Lysmål (Bjørn 6.11.2026), while print is laid on the wall: what shows of each plate between the posts' lips and
+  // the rails, 960 × 2 420, standing 80 and 2 500 over the floor
+  const lys = !decor && fields !== undefined
+  const lm = lysmal(rules, fields ?? [], H)
   const rowY = -px(NEAR)
   const textY = (l: Leader) => rowY - px(NEAR + 14) - l.level * px(LEADER_LINE)
   const mono = { font: `500 ${px(LEADER_FONT)}px var(--font-numeric)`, fill: INK_MUTED }
@@ -42,11 +46,14 @@ export function ElevationDims({ w, s, name, L, H, items, leaders, top, width, sc
       </text>
 
       {/* Under: one module a metre centre to centre of the posts (the wall chosen), and the whole wall, physical */}
-      {!decor && modules.length > 2 && <Chain sc={sc} axis="x" at={H + px(NEAR)} ts={modules} dir={1} suffix="c/c" />}
+      {lys && <Chain sc={sc} axis="x" at={H + px(NEAR)} ts={lm.along} dir={1} suffix="lys" />}
+      {!decor && !lys && modules.length > 2 && <Chain sc={sc} axis="x" at={H + px(NEAR)} ts={modules} dir={1} suffix="c/c" />}
       <Chain sc={sc} axis="x" at={H + px(decor ? NEAR : TOTAL)} ts={outer} dir={1} />
       {/* Left: the wall, and with its feet (the wall chosen) */}
-      {!decor && <Chain sc={sc} axis="y" at={-px(NEAR)} ts={[0, wall]} dir={-1} suffix="vegg" />}
-      {!decor && <Chain sc={sc} axis="y" at={-px(TOTAL)} ts={[0, H]} dir={-1} suffix="med føtter" />}
+      {lys && <Chain sc={sc} axis="y" at={-px(NEAR)} ts={lm.heights} dir={-1} />}
+      {lys && <Chain sc={sc} axis="y" at={-px(TOTAL)} ts={[lm.heights[0], H]} dir={-1} suffix="fra gulv" />}
+      {!decor && !lys && <Chain sc={sc} axis="y" at={-px(NEAR)} ts={[0, wall]} dir={-1} suffix="vegg" />}
+      {!decor && !lys && <Chain sc={sc} axis="y" at={-px(TOTAL)} ts={[0, H]} dir={-1} suffix="med føtter" />}
 
       {decor && (
         <>

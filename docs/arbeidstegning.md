@@ -180,6 +180,11 @@ Veggskuffens tegning blir arbeidstegning for én vegg. Se bilde 3.
 - **Målene følger det skuffen er åpnet for** (Bjørn 6.11.2026), som planen:
   - **Veggen:** modulkjede (1 000 per modul) og totalen under, og til venstre to høyder: «2 490 vegg» og
     «2 540 med føtter». Ingen plasseringsrad for tekstil og grafikk.
+  - **Veggen med print lagt på** (malerspann eller malerkost med print valgt, Bjørn 6.11.2026): lysmål i stedet for
+    modulkjede og vegghøyder. Under hvert felt den synlige platen, 960 (1 000 c/c minus stolpens 40), og totalen
+    under. Til venstre 2 420 synlig høyde (2 490 minus topprofil 40 og bunnprofil 30) og 2 500 fra gulv; 80 fra
+    gulv til synlig kant står når det får plass. Dørmoduler har ikke eget felt. Tallene kommer fra
+    `rules.wall` (stolpe 94: platen synlig fra leppenes utside, 20 fra stolpesenter).
   - **Tekstilramme, dekal eller print:** over veggen plasseringsraden fra hver veggende og bredden (tekstil med
     rammens fysiske bredde, 3 970 i et felt på 4 000), til høyre høyderaden (bunn, høyde, rest til topp), og
     veggens total under. Ingen modulkjede og ingen vegghøyder. Print over flere plater måles som ett.
