@@ -3,7 +3,7 @@
 import { faceNormal, sideOf } from '../../domain/faces'
 import { openSides, pointAlong, sideLength, wallLength } from '../../domain/grid'
 import type { Point, Side, Variant, Wall } from '../../domain/types'
-import { isStandWall } from '../../domain/walls'
+import { isStandWall, physicalEnds } from '../../domain/walls'
 import { runNormal } from '../../domain/textile/free'
 import { frameInset } from '../../calc/textile/inFrame'
 import { rules } from '../env'
@@ -141,22 +141,21 @@ export function planDims(v: Variant, selection: PlanSelection, compact: boolean)
     const hz = horizontal(free)
     const k = hz ? 0 : 1
     // On face A: its label (F1 · 3,00 m) stands on face B
-    const n = runNormal(free, 'a')
-    const dir = (hz ? n[1] : n[0]) < 0 ? -1 : 1
-    inner = { axis: hz ? 'x' : 'y', at: hz ? free.from[1] : free.from[0], dir, ts: chainPoints([free.from[k], free.to[k]]), clear: 'textile' }
+    inner = { axis: hz ? 'x' : 'y', at: hz ? free.from[1] : free.from[0], dir: toward(runNormal(free, 'a'), hz), ts: chainPoints([free.from[k], free.to[k]]), clear: 'textile' }
   }
   const on = mounted && v.walls.find((w) => w.id === mounted.wallId)
   if (mounted && on) {
     const hz = horizontal(on)
     const k = hz ? 0 : 1
-    const n = faceNormal(on, sideOf(v, mounted))
     const along = (t: number) => pointAlong(on, t)[k]
     // The physical frame, as in calc and production (970 in a 1 000 span), not the span it fills
     const inset = frameInset(rules.textile.inFrame) / 1000
-    // From the outside of the end posts, as on the wall drawing (Bjørn 6.11.2026)
-    const half = rules.wall.post / 2
-    const ends = [along(-half), along(wallLength(on) + half), along(mounted.from + inset), along(mounted.from + mounted.width - inset)]
-    inner = { axis: hz ? 'x' : 'y', at: hz ? on.from[1] : on.from[0], dir: (hz ? n[1] : n[0]) < 0 ? -1 : 1, ts: chainPoints(ends), clear: 'mounted' }
+    // From the outside of the end posts, as on the wall drawing
+    const ends = [...physicalEnds(rules, wallLength(on)), mounted.from + inset, mounted.from + mounted.width - inset].map(along)
+    inner = { axis: hz ? 'x' : 'y', at: hz ? on.from[1] : on.from[0], dir: toward(faceNormal(on, sideOf(v, mounted)), hz), ts: chainPoints(ends), clear: 'mounted' }
   }
   return { sides, inner }
 }
+
+/** Which way from a run's line its chain stands: the side its normal `n` points to, across the run. */
+const toward = (n: Point, hz: boolean): 1 | -1 => ((hz ? n[1] : n[0]) < 0 ? -1 : 1)

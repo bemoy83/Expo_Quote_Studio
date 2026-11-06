@@ -49,7 +49,7 @@ export function drawTextile(v: Variant, rules: Rules, a: Point, b: Point, at: { 
   const r = addFreeTextile(v, rules, a, b);
   if (!('error' in r)) return { v: r.v, free: { id: r.id } };
   // Stopped by a system wall or another textile wall: as far as it can stand from where the stroke started
-  const s = shortest(v, rules, a, b);
+  const s = longestFree(v, rules, a, b);
   return s ?? r;
 }
 
@@ -57,7 +57,7 @@ export function drawTextile(v: Variant, rules: Rules, a: Point, b: Point, at: { 
  * The longest free-standing run from a toward b that can stand, in steps of the textile grid (Bjørn 6.11.2026: the
  * brush shows and lays only what is free). Null when no part of it can.
  */
-function shortest(v: Variant, rules: Rules, a: Point, b: Point): TextileResult | null {
+function longestFree(v: Variant, rules: Rules, a: Point, b: Point): TextileResult | null {
   const L = Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1]);
   const step = rules.textile.grid;
   const ux = (b[0] - a[0]) / L;
