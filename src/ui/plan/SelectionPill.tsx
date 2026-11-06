@@ -321,7 +321,7 @@ function content(p: PillActions, graphics: boolean, setGraphics: (b: boolean) =>
   const ral = wallRal(v, w)
   const textile = () => {
     if (tex.length) return onSelect({ wallId: w.id, side: s, textileId: tex[0].id })
-    const r = addTextile(v, rules, w.id, s, L / 2)
+    const r = addTextile(v, rules, w.id, s, L / 2, true)
     if (!r) return p.onToast('Ingen ledig veggflate på denne siden')
     onEdit(() => r.v)
     onSelect({ wallId: w.id, side: s, textileId: r.id })

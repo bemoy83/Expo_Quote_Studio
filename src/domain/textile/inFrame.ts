@@ -97,9 +97,13 @@ export function spanFor(spans: Span[], t: number): Span | null {
   return best;
 }
 
-/** Add a textile on a face, filling the free span at offset `at` (or the nearest free span) and following it. Null when the face is full. */
-export function addTextile(v: Variant, rules: Rules, wallId: string, s: FaceSide, at: number): { v: Variant; id: string } | null {
-  const sp = spanFor(freeSpans(v, rules, wallId, s), at);
+/**
+ * Add a textile on a face, filling the free span at offset `at` and following it. With `near` it takes the nearest free
+ * span when `at` is not in one (drawer and pill buttons); a pointer only fills the span it is over. Null when there is none.
+ */
+export function addTextile(v: Variant, rules: Rules, wallId: string, s: FaceSide, at: number, near = false): { v: Variant; id: string } | null {
+  const spans = freeSpans(v, rules, wallId, s);
+  const sp = near ? spanFor(spans, at) : (spans.find((x) => at >= x[0] - 1e-6 && at <= x[1] + 1e-6) ?? null);
   if (!sp) return null;
   const id = nextId(v.textiles.map((t) => t.id), 't');
   const t: TextileWall = { id, wallId, side: s, from: r1(sp[0]), width: r1(sp[1] - sp[0]), fit: true };
