@@ -8,12 +8,21 @@ import { offsetAlong, wallLength } from '../../../domain/grid'
 import type { Room, Variant } from '../../../domain/types'
 import type { BuiltModule } from '../../../domain/walls'
 import { productOf } from '../../env'
+import { sizePx, type PlanScale } from '../planScale'
+import { wallWidth } from '../planStyle'
 import { distToSegment } from '../geometry'
 import type { FaceHit } from '../layers/Previews'
 import type { PlanSelection } from '../selection'
 import type { P } from './types'
 
-export function planHits(v: Variant, mods: BuiltModule[], selection: PlanSelection) {
+/** Half the wall's own band across its line in Velg, screen px at least: wide enough for a finger between two textiles. */
+const WALL_BAND_PX = 5
+
+/**
+ * `scale`: the plan's scale as of this render, for the bands measured in screen px. A getter, as the plan learns its
+ * scale only after the pointer hook has given it its svg.
+ */
+export function planHits(v: Variant, mods: BuiltModule[], selection: PlanSelection, scale?: () => PlanScale | undefined) {
   const { width: W, depth: D } = v.stand
   /** On the stand, or just outside its edge (where its edge walls are drawn). */
   const onStand = (q: P) => q.x > -0.4 && q.y > -0.4 && q.x < W + 0.4 && q.y < D + 0.4
@@ -42,6 +51,16 @@ export function planHits(v: Variant, mods: BuiltModule[], selection: PlanSelecti
     return { w, s: faceAt(v, w, q), t, module: Math.min(Math.floor(t), L - 1) }
   }
 
+  /**
+   * On the wall's own band (Velg, Bjørn 6.11.2026): across a wall with textile walls on its faces the middle picks the
+   * wall and the strip outside each face the textile there. The band is the wall as drawn, at least 2 × WALL_BAND_PX.
+   */
+  const onWallBand = (q: P, m: BuiltModule) => {
+    const sc = scale?.()
+    const half = sc ? Math.max(wallWidth(sc) / 2 + sizePx(sc, 1), sizePx(sc, WALL_BAND_PX)) : 0.05
+    return distToSegment(q, m.a, m.b) <= half
+  }
+
   /** The side of a room under the pointer: its own walls always, any side of the selected room. */
   const roomEdgeAt = (q: P): { room: Room; side: number } | null => {
     const m = moduleAt(q, 0.2)
@@ -62,7 +81,7 @@ export function planHits(v: Variant, mods: BuiltModule[], selection: PlanSelecti
       return q.x >= b.x0 && q.x <= b.x1 && q.y >= b.y0 && q.y <= b.y1
     })
 
-  return { onStand, moduleAt, beamAt, faceHit, roomEdgeAt, objectAt }
+  return { onStand, moduleAt, beamAt, faceHit, onWallBand, roomEdgeAt, objectAt }
 }
 
 export type PlanHits = ReturnType<typeof planHits>

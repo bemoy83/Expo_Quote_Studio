@@ -29,9 +29,10 @@ export function startSelect(c: PointerCtx, q: P): Drag {
   if (m) {
     const w = v.walls.find((x) => x.id === m.wallId)!
     const h = hits.faceHit(q)
-    const tx = h && textileAt(v, w.id, h.s, h.t)
+    // A textile wall on the face toward the pointer is picked outside the wall's own band (hits.onWallBand)
+    const tx = h && !hits.onWallBand(q, m) ? textileAt(v, w.id, h.s, h.t) : undefined
     // A room's wall opens on its outside, so print does not land inside the room unnoticed (Bjørn 2.11.2026)
-    const select: PlanSelection = doorSelect ?? (tx ? { wallId: w.id, side: h.s, textileId: tx.id } : { wallId: w.id, side: w.room ? OUTSIDE : h?.s })
+    const select: PlanSelection = doorSelect ?? (tx && h ? { wallId: w.id, side: h.s, textileId: tx.id } : { wallId: w.id, side: w.room ? OUTSIDE : h?.s })
     // A room's own wall resizes the room; an inner wall moves
     const room = w.room && v.rooms.find((r) => r.id === w.room!.id)
     if (room) return startRoom(c, room, w.room!.side, q, select)
