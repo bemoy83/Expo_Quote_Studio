@@ -1,7 +1,8 @@
 import type { Foil, TextileFill, TextileWall, Variant, Wall } from '../domain/types';
 import { standWallSide } from '../domain/walls';
 import { RECIPES } from '../foga/recipes';
-import type { InFrameParams } from '../rules/rules';
+import type { InFrameParams, Rules } from '../rules/rules';
+import { freeTrims, placeFrames } from './textile/placement';
 import { framePiece, type FramePiece } from './textile/inFrame';
 import { cornerPosts, freeFrames, type FreeFrame } from './textile/free';
 import { fullHeight, printFileName } from './textile/common';
@@ -12,6 +13,9 @@ export interface ProductionPiece extends FramePiece {
   wall: string;
   /** Offset along the wall, mm. */
   at: number;
+  /** Moved along the wall in an inner corner so it does not overlap another frame, mm, from → to positive
+   *  (byggeregel X10). Only when moved. */
+  shift?: number;
   fill: TextileFill;
   motif: string | null;
   /** Print file name, for a printed textile only. */
@@ -50,9 +54,12 @@ export function textileHeightMm(t: TextileWall, s: InFrameParams): number | unde
   return h < fullHeight(s) ? h : undefined;
 }
 
-export function production(v: Variant, s: InFrameParams, customer: string): Production {
+export function production(v: Variant, rules: Rules, customer: string): Production {
+  const s = rules.textile.inFrame;
   const walls = new Map(v.walls.map((w) => [w.id, w]));
   const pieces: ProductionPiece[] = [];
+  const placed = placeFrames(v, rules);
+  const shiftOf = new Map(placed.map((f) => [f.t.id, f.shift]));
   v.textiles.forEach((t) => {
     const w = walls.get(t.wallId);
     if (!w) return;
@@ -65,12 +72,14 @@ export function production(v: Variant, s: InFrameParams, customer: string): Prod
       textileId: t.id,
       wall: wallLabel(w),
       at: mm(t.from),
+      ...(shiftOf.get(t.id) ? { shift: mm(shiftOf.get(t.id)!) } : {}),
       fill,
       motif: fill === 'print' ? (t.motif ?? null) : null,
       fileName: fill === 'print' ? printFileName(customer, pos, p) : null,
     });
   });
-  const free = freeFrames(v, RECIPES.freeFrame, s, customer);
+  // Free-standing runs stop at a frame on the wall they end at (byggeregel X11)
+  const free = freeFrames(v, RECIPES.freeFrame, s, customer, freeTrims(v, rules, placed));
   // The 92LTX stands on an end cap and has one on top, so it is cut shorter than the frame
   const posts = { qty: cornerPosts(v).length, H: fullHeight(s) - 2 * RECIPES.freeFrame.cornerPostCap };
   return {

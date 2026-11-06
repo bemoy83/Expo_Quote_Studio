@@ -57,7 +57,7 @@ export function TextileLayer({ v, res, selection, mini, dim }: { v: Variant; res
           return (
             <g key={t.id} opacity={g ? GONE : undefined}>
               {f.supports.map((at, i) => {
-                const [x, y] = alongRun(t, at)
+                const [x, y] = alongRun(t, at, f)
                 const h = t.from[1] === t.to[1]
                 const w = (h ? f.foot.along : f.foot.across) / 1000
                 const d = (h ? f.foot.across : f.foot.along) / 1000
@@ -87,7 +87,9 @@ export function TextileLayer({ v, res, selection, mini, dim }: { v: Variant; res
         {v.textiles.map((t) => {
           const w = v.walls.find((x) => x.id === t.wallId)
           if (!w) return null
-          const [a, b] = faceSegment(w, sideOf(v, t), t.from + 0.02, t.from + t.width - 0.02, textileOffset(sc))
+          // Where it stands: moved in an inner corner (byggeregel X10)
+          const shift = (res.production.pieces.find((p) => p.textileId === t.id)?.shift ?? 0) / 1000
+          const [a, b] = faceSegment(w, sideOf(v, t), t.from + shift + 0.02, t.from + shift + t.width - 0.02, textileOffset(sc))
           const sel = selection.textileId === t.id
           const g = gone('textile', t.id)
           return (

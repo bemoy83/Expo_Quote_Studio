@@ -23,8 +23,10 @@ export function buildTextile(c: BuildContext) {
     const w = v.walls.find((x) => x.id === t.wallId)
     if (!w) continue
     const L = wallLength(w)
-    const from = Math.max(0, Math.min(L, t.from))
-    const to = Math.max(from, Math.min(L, t.from + t.width))
+    // Where it stands: moved in an inner corner (byggeregel X10), past the wall's end within tolerance
+    const shift = (res.production.pieces.find((p) => p.textileId === t.id)?.shift ?? 0) / 1000
+    const from = Math.max(0, Math.min(L, t.from)) + shift
+    const to = Math.max(from, Math.min(L, t.from + t.width) + shift)
     const s = sideOf(v, t)
     const off = s * (textileOffset(rules) + 0.005)
     const { bottom, height } = textileBox(t, rules)
@@ -59,7 +61,7 @@ export function buildTextile(c: BuildContext) {
     }
     const foot = rules.wall.feet / 10
     const tag: Tag = { layer: 'textile', pick: { freeTextileId: t.id } }
-    const g = frame(t.from, t.to, 0)
+    const g = frame(alongRun(t, 0, f), alongRun(t, f.length, f), 0)
     // Rails run between the uprights at free ends, or stop at a corner post's leg
     const railFrom = -L / 2 + f.railStart / 1000
     const railTo = railFrom + f.railCuts.reduce((a, x) => a + x, 0) / 1000
@@ -67,7 +69,7 @@ export function buildTextile(c: BuildContext) {
     f.faces.forEach((x, i) => textile(g, -L / 2 + x.start / 1000, x.W / 1000, h, foot, face(x), i === 0 ? 1 : -1, tag))
     for (const at of f.supports) brace(g, -L / 2 + at / 1000, h, foot, alu, tag)
     for (const at of f.supports) {
-      const [x, y] = alongRun(t, at)
+      const [x, y] = alongRun(t, at, f)
       const [dx, dy] = runDirection(t)
       const half = f.foot.along / 2000
       along([x - dx * half, y - dy * half], [x + dx * half, y + dy * half], 2 * half, foot, f.foot.across / 1000, 0, mat('textile', ALU, ALU_FINISH), { layer: 'textile' })

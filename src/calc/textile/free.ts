@@ -8,7 +8,8 @@
 //   Textile on both faces. At a corner the outer face runs half a frame depth further and the inner face half a
 //   frame depth shorter (they meet the corner post on its outside and inside)
 //   Print = face + 2 × bleed, mounted along its whole perimeter (silicone edge pressed into the channel)
-// Byggeregler X6–X8 (docs/byggeregler.md).
+//   A run that ends at a wall with a frame on that face stops at the frame's face (`trims`, calc/textile/placement.ts)
+// Byggeregler X6–X8, X11 (docs/byggeregler.md).
 import { cornerEnds, runDirection, runLength, runNormal, type FaceKey } from '../../domain/textile/free';
 import type { FreeTextile, Point, TextileFill, Variant } from '../../domain/types';
 import { fogaPart } from '../../foga/parts';
@@ -48,8 +49,12 @@ export interface FreeFrame {
   /** F1, F2 … */
   pos: string;
   textileId: string;
-  /** Run length, centre of the frame end or corner to the other, mm. */
+  /** Run length, centre of the frame end or corner to the other, mm. Shorter than the drawn run where it stops at a
+   *  frame on a wall (X11). */
   length: number;
+  /** Where the frame starts, mm from the drawn run's `from` end, when it stops short there (X11). Positions below are
+   *  from the frame's start. */
+  start?: number;
   H: number;
   /** Ends at a 92LTX corner post. */
   corners: { from: boolean; to: boolean };
@@ -97,7 +102,7 @@ export function splitRail(len: number, max: number): number[] {
   return Array.from({ length: k }, (_, i) => (i < k - 1 ? piece : len - piece * (k - 1)));
 }
 
-export function freeFrames(v: Variant, r: FreeFrameRecipe, s: InFrameParams, customer: string): FreeFrame[] {
+export function freeFrames(v: Variant, r: FreeFrameRecipe, s: InFrameParams, customer: string, trims: ReadonlyMap<string, { from: number; to: number }> = new Map()): FreeFrame[] {
   const corners = cornerEnds(v);
   const depth = fogaPart(r.profile).section?.[0] ?? 40;
   // The corner post's legs reach this far along each run from the outer corner (92LTX: 57), so the rails stop there
@@ -108,7 +113,8 @@ export function freeFrames(v: Variant, r: FreeFrameRecipe, s: InFrameParams, cus
   return v.freeTextiles.map((t, i) => {
     const pos = `F${i + 1}`;
     const ends = corners.get(t.id) ?? {};
-    const length = mm(runLength(t));
+    const trim = trims.get(t.id);
+    const length = mm(runLength(t) - (trim ? trim.from + trim.to : 0));
     const nCorners = (ends.from ? 1 : 0) + (ends.to ? 1 : 0);
     // Rails stop where the corner post's leg ends: the leg starts at the outer corner, half a frame depth outside the
     // run's centre line
@@ -152,6 +158,7 @@ export function freeFrames(v: Variant, r: FreeFrameRecipe, s: InFrameParams, cus
       pos,
       textileId: t.id,
       length,
+      ...(trim?.from ? { start: mm(trim.from) } : {}),
       H,
       corners: corner,
       nCorners,
@@ -181,8 +188,9 @@ export function cornerPosts(v: Variant): Point[] {
   return [...out.values()];
 }
 
-/** Plan position of a point `at` mm along the run from its `from` end. */
-export function alongRun(t: FreeTextile, at: number): Point {
+/** Plan position of a point `at` mm along the run from its `from` end; with `f`, from the frame's own start. */
+export function alongRun(t: FreeTextile, at: number, f?: Pick<FreeFrame, 'start'>): Point {
+  at += f?.start ?? 0;
   const [dx, dy] = runDirection(t);
   return [t.from[0] + (dx * at) / 1000, t.from[1] + (dy * at) / 1000];
 }

@@ -95,7 +95,7 @@ export function WallDrawer(p: Props) {
     select({ textileId: r.id })
   }
 
-  const piece = T ? production(v, rules.textile.inFrame, '').pieces.find((x) => x.textileId === T.id) : undefined
+  const piece = T ? production(v, rules, '').pieces.find((x) => x.textileId === T.id) : undefined
   const openings = v.openings.filter((o) => o.wallId === w.id)
   const doors = openings.filter((o) => productOf(o.product)?.opening === 'door')
   const ral = wallRal(v, w)
