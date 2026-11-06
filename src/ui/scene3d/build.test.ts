@@ -30,7 +30,7 @@ describe('3D scene from the model', () => {
   const layer = (l: Tag['layer']) => all.filter((o) => (o.userData as Tag).layer === l)
 
   it('draws one post per calc post and one beam per beam length', () => {
-    const posts = all.filter((o) => box(o)?.width === rules.wall.post)
+    const posts = all.filter((o) => (o as THREE.Mesh).geometry?.name === 'foga-94')
     expect(posts).toHaveLength(res.posts.length)
     const beams = layer('beams').filter((o) => box(o)?.height === rules.beam.height)
     expect(beams).toHaveLength(res.beams.segments.length)

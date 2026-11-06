@@ -6,6 +6,7 @@ import type { Point } from '../../../domain/types'
 import type { BuiltModule } from '../../../domain/walls'
 import { doorInset } from '../../../rules/rules'
 import { plateColor, productOf, rules } from '../../env'
+import { unitProfile } from './profiles'
 import { ALU, ALU_FINISH, CURTAIN, HANDLE, INK, SELECT, type BuildContext, type Tag } from './context'
 
 export function buildWalls(c: BuildContext) {
@@ -18,15 +19,23 @@ export function buildWalls(c: BuildContext) {
     const plate = mat('walls', plateColor(m.plate), selected ? { emissive: SELECT, emissiveIntensity: 0.35 } : {})
     const frame = mat('walls', ALU, ALU_FINISH)
     const len = rules.wall.cc - post
-    along(m.a, m.b, len, prof.top, prof.thickness, H - prof.top, frame, wallTag)
+    rail(m.a, m.b, len, '92', H - prof.top / 2, frame, wallTag)
     if (!m.opening) {
-      along(m.a, m.b, len, prof.bottom, prof.thickness, feet, frame, wallTag)
-      along(m.a, m.b, len - 0.004, H - prof.top - feet - prof.bottom, 0.012, feet + prof.bottom, plate, wallTag)
+      rail(m.a, m.b, len, '91', feet + prof.bottom / 2, frame, wallTag, true)
+      along(m.a, m.b, len + 0.016, H - prof.top - feet - prof.bottom + 0.02, 0.003, feet + prof.bottom - 0.01, plate, wallTag)
       continue
     }
     // The header plate belongs to the door: a click on it chooses the door
     along(m.a, m.b, len - 0.004, H - prof.top - rules.door.height, 0.012, rules.door.height, plate, tag)
     opening(m, tag)
+  }
+
+  function rail(a: Point, b: Point, len: number, name: '92' | '91', y: number, m: THREE.Material, tag: Tag, flip = false) {
+    const mesh = new THREE.Mesh(unitProfile(name, flip), m)
+    mesh.scale.x = len
+    mesh.position.copy(at([(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], y))
+    mesh.rotation.y = Math.atan2(-(b[1] - a[1]), b[0] - a[0])
+    add(mesh, tag)
   }
 
   function opening(m: BuiltModule, tag: Tag) {

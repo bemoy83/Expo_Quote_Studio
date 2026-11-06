@@ -35,7 +35,8 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
 export function dispose(root: THREE.Object3D) {
   root.traverse((o) => {
     const m = o as THREE.Mesh
-    m.geometry?.dispose()
+    // Shared Foga profiles live for the whole session (build/profiles.ts)
+    if (!m.geometry?.userData.shared) m.geometry?.dispose()
     const ms = Array.isArray(m.material) ? m.material : m.material ? [m.material] : []
     for (const x of ms) {
       ;(x as THREE.MeshBasicMaterial).map?.dispose()
