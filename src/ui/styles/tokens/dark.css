@@ -1,6 +1,7 @@
-/* Mørk modus · flat. Bare fargeverdier: samme struktur, ingen nye klasser. Følger operativsystemet. Utskrift er alltid lys. */
-@media screen and (prefers-color-scheme: dark) {
-  :root {
+/* Mørk modus · flat. Bare fargeverdier: samme struktur, ingen nye klasser. Utskrift er alltid lys.
+   html[data-theme] settes av temabryteren (ui/theme.ts), og av index.html før første tegning: lys, mørk eller som systemet. */
+@media screen {
+  :root[data-theme='dark'] {
     color-scheme: dark;
     /* Nøytraler: varm grafitt, fire flater i tydelige trinn */
     --canvas: 20 20 19;        /* #141413 side, rutenett */
@@ -37,7 +38,7 @@
     --tusj-trykk: oklch(0.78 0.1 158);
   }
   /* Sidebåndet: samme kulør, mørk tone */
-  [data-band] {
+  [data-theme='dark'] [data-band] {
     --b-band: oklch(0.29 calc(var(--bc) * .42) var(--bh));
     --b-line: oklch(0.42 calc(var(--bc) * .6) var(--bh));
     --b-track: oklch(0.35 calc(var(--bc) * .5) var(--bh));
@@ -46,7 +47,7 @@
     --b-recess: color-mix(in oklab, var(--b-band) 78%, #000);
   }
   /* Dokumentene er papir: tilbud og arbeidsordre beholder lyse fargeverdier på arket */
-  .qdoc {
+  [data-theme='dark'] .qdoc {
     color-scheme: light;
     --canvas: 242 240 235; --panel: 250 249 246; --surface: 255 255 255; --sunken: 231 228 221;
     --border: 220 216 207; --border-strong: 196 191 180;

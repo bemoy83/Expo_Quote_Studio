@@ -6,6 +6,7 @@ export const KEYS = {
   catalog: 'expo-quote-studio.catalog',
   inFrame: 'expo-quote-studio.inframe',
   layout: 'expo-quote-studio.layout',
+  theme: 'expo-quote-studio.theme',
 } as const;
 
 function read(key: string): string | null {
@@ -45,3 +46,13 @@ export function loadJson<T>(key: string, fallback: T): T {
 }
 
 export const saveJson = (key: string, value: unknown) => write(key, JSON.stringify(value));
+
+/** Light or dark, or follow the system. index.html reads the same key before the first paint. */
+export type Theme = 'system' | 'light' | 'dark';
+
+export function loadTheme(): Theme {
+  const t = read(KEYS.theme);
+  return t === 'light' || t === 'dark' ? t : 'system';
+}
+
+export const saveTheme = (t: Theme) => write(KEYS.theme, t);
