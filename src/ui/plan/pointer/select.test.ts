@@ -31,4 +31,8 @@ describe('Velg on a wall with a textile wall', () => {
   it('outside the wall on the textile face picks the textile', () => {
     expect(picked(sketch('08-tekstil'), 3, 0.1)).toMatchObject({ wallId: 'side-back', textileId: 't1' });
   });
+  it('behind the wall, away from the textile face, picks the wall', () => {
+    expect(picked(sketch('08-tekstil'), 3, -0.1)?.textileId).toBeUndefined();
+    expect(picked(sketch('08-tekstil'), 3, -0.1)).toMatchObject({ wallId: 'side-back' });
+  });
 });
