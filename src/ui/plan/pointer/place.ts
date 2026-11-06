@@ -1,6 +1,7 @@
-// Doors, decals and furniture: press shows, release stores (docs/forhandsvisning.md). The press shows the phantom; the
-// release stores it if the pointer still hits the same target (module, panel field or textile face, or a spot for the
-// furniture; a door may be dragged out to where its leaf swings, which turns it); dragging away or Esc cancels. The store itself is the click each pen had before (opening.ts, decor.ts,
+// Doors, decals and furniture: release stores (docs/forhandsvisning.md). The plan already shows the result dimmed while
+// hovering and pressed (plan/next.ts); the release stores it if the pointer still hits the same target (module, panel
+// field or textile face, or a spot for the furniture; a door may be dragged out to where its leaf swings, which turns
+// it); dragging away or Esc cancels. The store itself is the click each pen had before (opening.ts, decor.ts,
 // object.ts), so a release on an invalid target still gives its toast as a fallback.
 import { addObject } from '../../../domain/objects'
 import { faceOfPoint, freeTextileAt } from '../../../domain/textile/free'

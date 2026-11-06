@@ -1,6 +1,6 @@
-// Floor previews (docs/forhandsvisning.md): carpet tiles paint while dragging, so the floor itself is the phantom and
-// only the measures of the area painted so far are added; engangsteppe lanes and Fyll show their proposal only while
-// pressed. Plain functions, so PreviewLayer can decide what to draw from the pointer state.
+// Measure pills of the floor pen (docs/forhandsvisning.md): carpet tiles paint while dragging, so the floor itself shows
+// the stroke and only the measures of the area painted so far are added; engangsteppe lanes being dragged get their
+// length and roll width. The floor itself is drawn by FloorLayer, dimmed, from the next variant (PlanView).
 import type { ReactNode } from 'react'
 import { CELL } from '../../../domain/grid'
 import { TILE_FULL, type Rect } from '../../../domain/floor/tiles'
@@ -8,7 +8,7 @@ import type { FloorBrushSize } from '../../../domain/floor/brush'
 import type { FloorTile, Point, Variant } from '../../../domain/types'
 import { count, fmt } from '../../format'
 import { mm } from '../dims'
-import { AimRect, MeasurePill, PillAt } from './Previews'
+import { MeasurePill, PillAt } from './Previews'
 
 const inside = (t: Rect, r: Rect) => t.i >= r.i && t.j >= r.j && t.i + t.w <= r.i + r.w && t.j + t.h <= r.j + r.h
 
@@ -30,7 +30,7 @@ export function tileArea(anchor: { i: number; j: number }, q: { x: number; y: nu
   return { i: i0, j: j0, w: i1 - i0, h: j1 - j0 }
 }
 
-/** Measures of a carpet tile area: its outline, width and depth on two sides, and how many tiles of the product lie in it. */
+/** Measures of a carpet tile area: width and depth on two sides, and how many tiles of the product lie in it. */
 export function tileAreaMeasures(v: Variant, r: Rect, product: string, centre: Point): ReactNode {
   const x0 = r.i * CELL
   const y0 = r.j * CELL
@@ -43,7 +43,6 @@ export function tileAreaMeasures(v: Variant, r: Rect, product: string, centre: P
   const xSide = Math.abs(x0 - centre[0]) >= Math.abs(x1 - centre[0]) ? x0 : x1
   return (
     <g>
-      <AimRect x={x0} y={y0} width={x1 - x0} height={y1 - y0} halo />
       <MeasurePill a={[x0, yTop]} b={[x1, yTop]} centre={centre} stroke={0} text={mm(x1 - x0)} />
       <MeasurePill a={[xSide, y0]} b={[xSide, y1]} centre={centre} stroke={0} text={mm(y1 - y0)} />
       <PillAt at={[(x0 + x1) / 2, (y0 + y1) / 2]} text={`${count(laid.length, 'flis', 'fliser')} · ${fmt(area, 2)} m²`} />

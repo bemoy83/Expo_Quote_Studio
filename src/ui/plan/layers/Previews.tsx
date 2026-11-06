@@ -1,16 +1,15 @@
-// The shared parts of the preview grammar while drawing (docs/forhandsvisning.md): ring, dashed aim outline, invalid
-// hatch, the measure pill, a textile run and a print band at phantom strength, plus Tøm's stroke and the snap dots. The
-// phantoms themselves are worked out in strokePhantoms.tsx, floorPhantoms.tsx and placePhantoms.tsx.
-import { useId, type ReactNode, type SVGProps } from 'react'
+// The shared parts of the preview while drawing (docs/forhandsvisning.md): the invalid hatch, the measure pill, Tøm's
+// stroke with its rings, the dashed outline of the chosen engangsteppe lanes, and the snap dots. What the pen would
+// store is not drawn here: PlanView draws the next variant through the plan's own layers, dimmed (next.ts, nextArea.ts).
+import { useId, type SVGProps } from 'react'
 import type { Point, Wall } from '../../../domain/types'
 import { CANVAS, INK, INK_FAINT, SURFACE } from '../../colors'
 import { type FaceSide } from '../../../domain/faces'
-import { AIM, aimDash, HATCH, INVALID, PHANTOM, PILL, RING, SNAP_DOT, textileWidth, wallWidth } from '../planStyle'
+import { AIM, aimDash, HATCH, INVALID, PILL, RING, SNAP_DOT, wallWidth } from '../planStyle'
 import { linePx, sizePx, usePlanScale } from '../planScale'
 import { mm } from '../dims'
 import { pillCentre, pillWidth } from '../pillPlace'
 import { Seg } from './Seg'
-import { RasterPattern, TextileStroke } from './TextileLayer'
 
 /** A wall face under the pointer: wall, face, offset along the wall and module index. */
 export interface FaceHit {
@@ -27,7 +26,7 @@ export interface TextileLine {
 }
 
 /** The run Tøm sweeps over along walls or takdragere. `centre` is the stand's middle: the pill goes on the side away
- * from it. Wall and takdrager strokes draw their phantom instead (Phantoms.tsx). */
+ * from it. Wall and takdrager strokes show the next variant instead (next.ts). */
 export function EraseStroke({ a, b, centre }: { a: Point; b: Point; centre: Point }) {
   const L = Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1])
   const sc = usePlanScale()
@@ -65,13 +64,7 @@ export function Ring({ at }: { at: Point }) {
   return <circle cx={at[0]} cy={at[1]} r={sizePx(sc, RING.r)} fill={SURFACE} stroke={INK} strokeWidth={linePx(sc, RING.edge)} />
 }
 
-/** The aim along a line: a dashed ink outline. */
-export function AimSeg({ a, b }: { a: Point; b: Point }) {
-  const sc = usePlanScale()
-  return <Seg a={a} b={b} stroke={INK} strokeWidth={linePx(sc, AIM.width)} strokeDasharray={aimDash(sc)} />
-}
-
-/** The aim around an area (floor brush, furniture footprint). `halo` lays a light edge under it, for a dark floor. */
+/** A dashed ink outline around an area (the chosen engangsteppe lanes). `halo` lays a light edge under it, for a dark floor. */
 export function AimRect({ x, y, width, height, halo }: { x: number; y: number; width: number; height: number; halo?: boolean }) {
   const sc = usePlanScale()
   const r = { x, y, width, height, fill: 'none' }
@@ -146,37 +139,6 @@ export function PillAt({ at, text }: { at: Point; text: string }) {
       <text y={sizePx(sc, PILL.font * 0.35)} textAnchor="middle" style={{ font: `600 ${sizePx(sc, PILL.font)}px var(--font-numeric)`, fill: CANVAS }}>
         {text}
       </text>
-    </g>
-  )
-}
-
-
-/** A textile run at phantom strength, with rings and the pill; `under` is drawn first (foot plates). */
-export function TextileRun({ a, b, centre, text, under }: { a: Point; b: Point; centre: Point; text: string; under?: ReactNode }) {
-  const sc = usePlanScale()
-  return (
-    <g>
-      <g opacity={PHANTOM.area}>
-        {under}
-        <TextileStroke a={a} b={b} sc={sc} />
-      </g>
-      <Ring at={a} />
-      <Ring at={b} />
-      <MeasurePill a={a} b={b} centre={centre} stroke={textileWidth(sc)} text={text} />
-    </g>
-  )
-}
-
-/** Print or decal band in green raster, at phantom strength. */
-export function RasterBand({ a, b, width }: { a: Point; b: Point; width: number }) {
-  const sc = usePlanScale()
-  const raster = `band${useId().replace(/:/g, '')}`
-  return (
-    <g opacity={PHANTOM.line}>
-      <defs>
-        <RasterPattern id={raster} sc={sc} />
-      </defs>
-      <Seg a={a} b={b} stroke={`url(#${raster})`} strokeWidth={width} />
     </g>
   )
 }

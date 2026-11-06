@@ -3,7 +3,7 @@
 // draw order never decides what can be clicked. Each product's layer is drawn in plan/layers/ (FloorLayer, WallLayer,
 // TextileLayer, BeamLayer, ObjectLayer, RoomLayer, Labels, PreviewLayer), and the pointer handling lives in plan/pointer/
 // (usePlanPointer, one file per drag kind). This file puts them together with the cursor.
-import { useMemo } from 'react'
+import { useId, useMemo, type ReactNode } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import { canMoveWall } from '../../domain/edit'
 import type { FloorBrushSize } from '../../domain/floor/brush'
@@ -29,11 +29,15 @@ import { Labels } from './layers/Labels'
 import { Legend } from './layers/Legend'
 import { ObjectLayer } from './layers/ObjectLayer'
 import { PosLayer } from './layers/PosLayer'
+import { NextDefs } from './layers/NextDefs'
 import { PreviewLayer } from './layers/PreviewLayer'
 import { SnapDots } from './layers/Previews'
 import { RoomLayer } from './layers/RoomLayer'
 import { TextileLayer } from './layers/TextileLayer'
 import { WallLayer } from './layers/WallLayer'
+import { nextTarget } from './next'
+import { nextOf, type Preview } from './nextState'
+import type { AreaLayer, PlanState } from './nextArea'
 import { linePx, planScale, PlanScaleContext, sizePx, usePxPerMetre } from './planScale'
 import { DIMMED, GRID, GRID_FINE, GRID_PX, PLAN_MARGIN } from './planStyle'
 import { eraseTargetAt, type Erasing } from './pointer/erase'
@@ -82,6 +86,9 @@ interface Props {
   positions?: boolean
   /** Why what the pointer aims at cannot be stored (or that it is already there), for the hint line; null when it can. */
   onHint?: (text: string | null) => void
+  /** What an edit would store (App's onEdit without storing it) and its calc: the plan shows it dimmed before the click.
+   *  Left out on the read-only plans. */
+  preview?: Preview
 }
 
 /** Main group of each plan layer. Objects go by their own product. */
@@ -141,6 +148,32 @@ export function PlanView(p: Props) {
     onOpenDrawer: p.onOpenDrawer,
   })
   const { svg, svgRef, svgEl, hover, dragging, stroke, erasing, handlers } = pointer
+
+  // What the pen would store at the pointer (docs/forhandsvisning.md): worked out again only when the target changes,
+  // then drawn through the layers below, dimmed, where the plan changes (nextArea.ts)
+  const base: PlanState = { v, res, mods, bad }
+  const target = p.mini || !p.preview ? null : nextTarget({ v, tool, brush, pens: pen, hits, mods, floor: fb, standardRuns, motifs: p.motifs, ...pointer })
+  const next = target && p.preview ? nextOf(target, base, p.preview) : null
+  const ghost = next?.scene ?? null
+  const ids = `next${useId().replace(/:/g, '')}`
+  /**
+   * One plan layer as it is, and over it, where the next variant differs, the same layer drawn from the next variant at
+   * preview strength; the old things there are hidden, so nothing is drawn twice.
+   */
+  const twin = (layer: AreaLayer, draw: (s: PlanState) => ReactNode) => {
+    const a = ghost?.areas[layer]
+    const on = !!a && a.clip.length > 0
+    return (
+      <>
+        <g mask={on && a.mask.length ? `url(#${ids}-m-${layer})` : undefined}>{draw(base)}</g>
+        {on && (
+          <g clipPath={`url(#${ids}-c-${layer})`} opacity={next!.outcome.strength}>
+            {draw(ghost!)}
+          </g>
+        )}
+      </>
+    )
+  }
 
   const off = (group: string) => !!p.groups && !p.groups.has(group)
   const keep = p.mini ? null : penLayers(tool, brush)
@@ -228,9 +261,11 @@ export function PlanView(p: Props) {
         ))}
       </g>
 
+      {ghost && <NextDefs id={ids} areas={ghost.areas} />}
+
       <ErasingProvider erasing={erasingShown}>
       {/* Floor: carpet tiles with a joint at every tile edge, rolled floor without */}
-      <FloorLayer v={v} dim={dim} full={!!p.floorFull || floorTool || highlight === 'floor' || !!selection.lane || !!selection.fill} />
+      {twin('floor', (s) => <FloorLayer v={s.v} dim={dim} full={!!p.floorFull || floorTool || highlight === 'floor' || !!selection.lane || !!selection.fill} />)}
 
       {/* Drawing grids: every half metre while painting floor, snap dots for straight runs */}
       <g pointerEvents="none">
@@ -248,19 +283,19 @@ export function PlanView(p: Props) {
       </g>
 
       {/* Walls and openings */}
-      <WallLayer v={v} mods={mods} selection={selection} dim={dim} />
+      {twin('walls', (s) => <WallLayer v={s.v} mods={s.mods} selection={selection} dim={dim} />)}
 
       {/* Free-standing textile walls, textile walls on a wall face, foil decor */}
-      <TextileLayer v={v} res={res} selection={selection} mini={p.mini} dim={dim} />
+      {twin('textile', (s) => <TextileLayer v={s.v} res={s.res} selection={selection} mini={p.mini} dim={dim} />)}
 
       {/* Beams and posts */}
-      <BeamLayer v={v} res={res} selection={selection} dim={dim} />
+      {twin('beams', (s) => <BeamLayer v={s.v} res={s.res} selection={selection} dim={dim} />)}
 
       {/* Objects */}
-      <ObjectLayer v={v} selection={selection} tool={tool} bad={bad} dim={dim} off={off} />
+      {twin('objects', (s) => <ObjectLayer v={s.v} selection={selection} tool={tool} bad={s.bad} dim={dim} off={off} />)}
 
       {/* Rooms: name and size over the floor and furniture, the selected one outlined */}
-      {!p.mini && <RoomLayer v={v} selection={selection} />}
+      {!p.mini && twin('rooms', (s) => <RoomLayer v={s.v} selection={selection} />)}
 
       </ErasingProvider>
 
@@ -275,9 +310,8 @@ export function PlanView(p: Props) {
           quick picks float over the bottom of the plan */}
       {!p.mini && (p.doc || tool === 'select') && <Legend v={v} res={res} doc={!!p.doc} />}
 
-      {/* Interaction preview: aim, phantom and hint of the pen in hand, room handles, the chosen lanes */}
-      <PreviewLayer v={v} tool={tool} brush={brush} selection={selection} pen={pen} hits={hits} mods={mods} floor={fb} floorSize={p.floorSize} rollMode={p.rollMode}
-        step={step} standardRuns={standardRuns} pointer={pointer} motifs={p.motifs} mini={p.mini} onHint={p.onHint} />
+      {/* Interaction preview: measure pill, invalid hatch and hint of the pen in hand, Tøm, room handles, the chosen lanes */}
+      <PreviewLayer v={v} tool={tool} brush={brush} selection={selection} floorSize={p.floorSize} rollDir={fb.dir} pointer={pointer} next={next?.outcome ?? null} mini={p.mini} onHint={p.onHint} />
       </PlanScaleContext.Provider>
     </svg>
     {pillPlace && (

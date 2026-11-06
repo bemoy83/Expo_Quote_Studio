@@ -1,178 +1,79 @@
-// The interaction layer on top of the plan (docs/forhandsvisning.md): what the pen in hand aims at while hovering, the
-// phantom of what a release stores while pressed or dragging, and why it would store nothing (for the hint line). It
-// reads the pointer state from usePlanPointer and draws with the phantoms in strokePhantoms.tsx, floorPhantoms.tsx and
-// placePhantoms.tsx. The selected room's handles and the chosen engangsteppe's lanes are drawn here too.
-import { useEffect, useMemo } from 'react'
+// The interaction layer on top of the plan (docs/forhandsvisning.md). What the pen in hand would store is drawn by
+// PlanView itself: the next variant through the plan's own layers, dimmed (next.ts, nextArea.ts). This layer adds what
+// is not part of the drawing: the measure pill of what is being dragged out, where it would land grey and hatched when
+// it cannot be stored, Tøm's stroke, the selected room's handles and the chosen engangsteppe's lanes. The reason nothing
+// would be stored goes to the hint line.
+import { useEffect } from 'react'
 import { CELL } from '../../../domain/grid'
-import { faceSegment } from '../../../domain/faces'
 import { lanesLaid, type FloorBrushSize } from '../../../domain/floor/brush'
+import type { RollDir } from '../../../domain/floor/lanes'
 import { laneAt } from '../../../domain/floor/edit'
-import { fillProposalsFor, fillTilesOf } from '../../../domain/floor/rollFill'
+import { fillTilesOf } from '../../../domain/floor/rollFill'
 import { standCells } from '../../../domain/floor/tiles'
-import type { Run } from '../../../domain/innerBeams'
-import { fillFace } from '../../../domain/textile/brush'
-import { freeStroke } from '../../../domain/textile/free'
 import type { Variant } from '../../../domain/types'
-import type { BuiltModule } from '../../../domain/walls'
-import type { Motif } from '../../../persistence/file'
 import { INK } from '../../colors'
-import { idx, rules } from '../../env'
-import type { Brush, RollMode, Tool } from '../../tools'
+import { idx } from '../../env'
+import type { Brush, Tool } from '../../tools'
+import { widthOf, type NextOutcome } from '../next'
 import { usePlanScale } from '../planScale'
-import { textileOffset } from '../planStyle'
-import { ratioOf } from '../pointer/decor'
-import { isCarpetFill, rollWidthOf, type FloorBrush } from '../pointer/floorBrush'
-import type { PlanHits } from '../pointer/hits'
-import { openingEdge } from '../pointer/opening'
-import type { Pens } from '../pointer/pens'
-import { placeHolds } from '../pointer/place'
-import { plateAt, platesAlong } from '../pointer/plates'
+import { rollWidthOf } from '../pointer/floorBrush'
 import type { PlanPointer } from '../pointer/usePlanPointer'
 import type { PlanSelection } from '../selection'
-import { Offcut, RollPreview } from './FloorLayer'
-import { lanePill, tileArea, tileAreaMeasures } from './floorPhantoms'
-import { doorAim, doorHeld, motifPreview, objectPreview } from './placePhantoms'
-import { AimRect, AimSeg, EraseStroke, Ring } from './Previews'
+import { Offcut } from './FloorLayer'
+import { lanePill, tileArea, tileAreaMeasures } from './measures'
+import { AimRect, EraseStroke, InvalidSeg, InvalidShape, MeasurePill } from './Previews'
 import { RoomHandles } from './RoomLayer'
-import { beamPhantom, dropPhantom, platesPhantom, textilePhantom, wallPhantom, type Phantom } from './strokePhantoms'
 
 interface Props {
   v: Variant
   tool: Tool
   brush: Brush | null
   selection: PlanSelection
-  pen: Pens
-  hits: PlanHits
-  /** The wall modules as built. */
-  mods: BuiltModule[]
-  floor: FloorBrush
   floorSize: FloorBrushSize
-  rollMode?: RollMode
-  /** Cell size of the textile brush's drawing grid, m. */
-  step: number
-  /** Standard beams, which a drawn takdrager may not lie along. */
-  standardRuns: Run[]
-  pointer: Pick<PlanPointer, 'hover' | 'dragging' | 'rollPending' | 'fillRect' | 'stroke' | 'textileStroke' | 'dropHover'>
-  motifs?: Motif[]
+  /** Direction lanes of rolled floor run when the brush lays them. */
+  rollDir: RollDir
+  pointer: Pick<PlanPointer, 'hover' | 'dragging' | 'rollPending' | 'stroke'>
+  /** What the pen would store at the pointer (next.ts). */
+  next: NextOutcome | null
   mini?: boolean
   onHint?: (text: string | null) => void
 }
 
 export function PreviewLayer(p: Props) {
-  const { v, tool, brush, selection, pen, hits, mini } = p
-  const { hover, dragging, rollPending, fillRect, stroke, textileStroke, dropHover } = p.pointer
-  const { wallTool, floorTool, openingTool, decorTool, textileTool, beamTool, objectTool } = pen
-  const { onStand, faceHit } = hits
+  const { v, tool, brush, selection, mini, next } = p
+  const { hover, dragging, rollPending, stroke } = p.pointer
   const sc = usePlanScale()
   const { width: W, depth: D } = v.stand
   const centre: [number, number] = [W / 2, D / 2]
   const rollWidth = rollWidthOf(brush)
-  const carpetFill = isCarpetFill(tool, brush, p.rollMode)
 
-  // The wall pen over a plate that stands aims at that plate (a click colours it); held, the plates along the wall
-  // that a release colours
-  const wallRal = brush?.kind === 'wall' ? brush.ral : null
-  const plateAim = wallTool && wallRal && hover && !dragging && !mini ? plateAt(p.mods, hover) : null
-  const platesHeld = dragging?.kind === 'plates' && !dragging.as && wallRal ? dragging : null
-  const platesKeys = platesHeld ? new Set(platesAlong(v, p.mods, platesHeld.wallId, platesHeld.i0, platesHeld.moved && hover ? hover : platesHeld.p0)) : null
-
-  // Wall and takdrager aim at a point: the grid node nearest the pointer (a press shows the module it lays)
-  const wallNode: [number, number] | null =
-    (wallTool || beamTool) && hover && !stroke && !plateAim && !platesHeld && onStand(hover) ? [Math.max(0, Math.min(W, Math.round(hover.x))), Math.max(0, Math.min(D, Math.round(hover.y)))] : null
-
-  // Textile brush: next to a wall the click target is the free part of that face (or why there is none); elsewhere
-  // the grid node a stroke starts from
-  const textileFace = textileTool && hover && !textileStroke ? faceHit(hover, 0.2) : null
-  const textileAim = textileFace ? fillFace(v, rules, textileFace.w.id, textileFace.s, textileFace.t) : null
-  const textileAimSeg = textileAim && 'mounted' in textileAim ? (() => {
-    const t = textileAim.v.textiles.find((x) => x.id === textileAim.mounted.id)!
-    return faceSegment(textileFace!.w, textileFace!.s, t.from, t.from + t.width, textileOffset(sc))
-  })() : null
-  const freeNode = textileTool && !textileFace && hover && !textileStroke && onStand(hover) ? freeStroke(v, rules, hover, hover, p.step)[0] : null
-
-  // Stroke tools pressed or dragging: what a release stores, or why it stores nothing
-  const phantom: Phantom | null =
-    platesKeys && wallRal
-      ? platesPhantom(sc, { mods: p.mods.filter((m) => platesKeys.has(m.key)), ral: wallRal, centre })
-      : stroke && tool !== 'erase' && wallTool
-      ? wallPhantom(sc, { v, a: stroke[0], b: stroke[1], ral: brush?.kind === 'wall' ? brush.ral : undefined, centre })
-      : stroke && tool !== 'erase' && beamTool
-        ? beamPhantom(sc, { v, a: stroke[0], b: stroke[1], standard: p.standardRuns, centre })
-        : textileStroke
-          ? textilePhantom(sc, { v, line: textileStroke, face: faceHit(textileStroke.at), centre })
-          : dropHover
-            ? dropPhantom(sc, { v, h: dropHover.h, d: dropHover.d, centre })
-            : null
-
-  // Door, motif and furniture: aim while hovering, the phantom while pressed over the target the press hit
-  // (pointer/place.ts); dragged off it, the aim of the new target shows and a release stores nothing. A door pressed
-  // follows the pointer out to the side it is to swing to
-  const placing = dragging?.kind === 'place' ? dragging : null
-  const held = (what: 'opening' | 'decor' | 'object') => !!placing && placing.what === what && !!hover && placeHolds({ v, hits, brush }, placing, hover)
-  const doorEdge = openingTool && hover && !placing ? openingEdge({ v, hits }, hover) : null
-  const placed: Phantom | null =
-    mini || !hover
-      ? null
-      : brush?.kind === 'opening' && placing?.what === 'opening' && placing.module
-        ? doorHeld(sc, v, placing.module, brush.product, !!placing.door, hover, held('opening'))
-        : brush?.kind === 'opening' && doorEdge
-          ? doorAim(sc, v, doorEdge)
-          : decorTool && brush?.kind === 'motif'
-            ? motifPreview(sc, v, hits, hover, brush.motif, ratioOf(p.motifs)(brush.motif), held('decor'))
-            : objectTool && brush?.kind === 'object' && onStand(hover)
-              ? objectPreview(sc, v, brush.product, hover, held('object'))
-              : null
-
-  // Floor: carpet tiles paint while dragging, so only the area painted so far is measured
-  const hoverAction = floorTool && hover && !dragging ? p.floor.floorTouch(hover, null) : null
-  const hoverFloor = hoverAction && hoverAction.kind !== 'none' && !rollWidth && !carpetFill ? hoverAction : null
+  // Carpet tiles paint while dragging, so only the area painted so far is measured
   const tileDrag = dragging?.kind === 'floor' && dragging.anchor && hover && !rollWidth && brush?.kind === 'floor'
     ? tileArea(dragging.anchor, hover, p.floorSize, standCells(v.stand))
     : null
-  // Bane: the lanes as they will be laid only while pressed; the hover aims with a ring in the cell
-  const lanes = rollWidth && tool === 'brush' && !carpetFill
-  const rollPreview = lanes && rollPending && brush?.kind === 'floor' ? lanesLaid(rollPending, brush.product, p.floor.dir) : []
-  const rollAim = lanes && !rollPending && hoverAction && hoverAction.kind !== 'none' && hover
-    ? ([(Math.floor(hover.x / CELL) + 0.5) * CELL, (Math.floor(hover.y / CELL) + 0.5) * CELL] as [number, number])
-    : null
-  // Fyll: the cheapest way to lay the area being dragged, or the whole stand that a click fills. Only while pressed or
-  // dragging; the hover aims at the stand with a dashed outline
-  const fillProduct = brush?.kind === 'floor' ? brush.product : ''
-  const hoverOnStand = !!hover && hover.x >= 0 && hover.y >= 0 && hover.x < W && hover.y < D
-  const fillHeld = dragging?.kind === 'carpetFill'
-  const fillKey = fillRect ? `${fillRect.i},${fillRect.j},${fillRect.w},${fillRect.h}` : carpetFill && fillHeld && hoverOnStand ? 'stand' : ''
-  const fillAim = carpetFill && !fillHeld && hoverOnStand && !mini
-  // Only the floor, the stand and the area change the proposal, so moving the pointer inside the stand reuses it
-  const fillPreview = useMemo(
-    () => (carpetFill && fillKey && rollWidth ? (fillProposalsFor(v, fillProduct, rollWidth, rules.carpet, fillRect ?? undefined)[0] ?? null) : null),
-    [carpetFill, fillKey, fillProduct, rollWidth, v, fillRect],
-  )
+  // Bane: the lanes being dragged out
+  const lanes = rollPending && brush?.kind === 'floor' && rollWidth ? lanesLaid(rollPending, brush.product, p.rollDir) : []
 
   // The chosen engangsteppe (Velg): its lanes, outlined while its drawer is open
   const selLane = tool === 'select' && !mini && selection.lane ? laneAt(v, selection.lane.i, selection.lane.j) : undefined
   const selLanes = tool !== 'select' || mini ? [] : selection.fill ? fillTilesOf(v, selection.fill) : selLane ? [selLane] : []
 
-  const hint = mini ? null : (phantom?.hint ?? placed?.hint ?? (textileAim && 'error' in textileAim ? textileAim.error : null))
+  const hint = mini ? null : (next?.hint ?? null)
   const onHint = p.onHint
   useEffect(() => onHint?.(hint), [onHint, hint])
   useEffect(() => () => onHint?.(null), [onHint])
 
+  const bad = !mini ? next?.invalid : undefined
+  const pill = !mini ? next?.pill : undefined
   return (
     <g pointerEvents="none">
       {!mini && v.rooms.filter((r) => r.id === selection.roomId).map((r) => <RoomHandles key={r.id} r={r} />)}
-      {wallNode && <Ring at={wallNode} />}
-      {plateAim && <AimSeg a={plateAim.a} b={plateAim.b} />}
       {stroke && tool === 'erase' && <EraseStroke a={stroke[0]} b={stroke[1]} centre={centre} />}
-      {phantom?.el}
-      {freeNode && <Ring at={freeNode} />}
-      {textileAimSeg && <AimSeg a={textileAimSeg[0]} b={textileAimSeg[1]} />}
-      {placed?.el}
-      {rollPreview.length > 0 && <RollPreview tiles={rollPreview} color={idx.byArtnr.get(rollPreview[0].product)?.variant.color} roll={rollWidth!} stand={standCells(v.stand)} />}
-      {rollPreview.length > 0 && lanePill(rollPreview, rollWidth!, centre)}
-      {rollAim && <Ring at={rollAim} />}
-      {fillPreview && <RollPreview tiles={fillPreview.tiles} color={idx.byArtnr.get(fillProduct)?.variant.color} roll={rollWidth!} />}
-      {fillRect && <AimRect x={fillRect.i * CELL} y={fillRect.j * CELL} width={fillRect.w * CELL} height={fillRect.h * CELL} halo />}
-      {fillAim && <AimRect x={0} y={0} width={W} height={D} halo />}
+      {bad && 'seg' in bad && <InvalidSeg a={bad.seg[0]} b={bad.seg[1]} width={widthOf(sc, bad.width)} />}
+      {bad && 'rect' in bad && <InvalidShape kind="rect" x={bad.rect.x0} y={bad.rect.y0} width={bad.rect.x1 - bad.rect.x0} height={bad.rect.y1 - bad.rect.y0} />}
+      {bad && 'circle' in bad && <InvalidShape kind="circle" {...bad.circle} />}
+      {pill && <MeasurePill a={pill.a} b={pill.b} centre={centre} stroke={widthOf(sc, pill.width)} text={pill.text} />}
+      {lanes.length > 0 && lanePill(lanes, rollWidth!, centre)}
       {tileDrag && brush?.kind === 'floor' && tileAreaMeasures(v, tileDrag, brush.product, centre)}
       {selLanes.length > 0 && (
         <g>
@@ -185,7 +86,6 @@ export function PreviewLayer(p: Props) {
           ))}
         </g>
       )}
-      {hoverFloor && <AimRect x={hoverFloor.rect.i * CELL} y={hoverFloor.rect.j * CELL} width={hoverFloor.rect.w * CELL} height={hoverFloor.rect.h * CELL} halo />}
     </g>
   )
 }
