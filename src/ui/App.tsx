@@ -1,11 +1,8 @@
 import { Maximize2 } from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore } from 'react'
 import { r2 } from '../calc/referenceStands'
-import { fitDecor } from '../domain/decor'
-import { newlyClosedRooms, wallsToRoom } from '../domain/enclosures'
 import { addObject } from '../domain/objects'
 import { addDefaultRoom, roomSize } from '../domain/rooms'
-import { fitFreeTextiles } from '../domain/textile/free'
 import type { StandWallTerms, Variant } from '../domain/types'
 import { customerName, fillFloor, standWallTerms } from '../domain/variant'
 import { newSketch, parse, serialize, type Sketch } from '../persistence/file'
@@ -13,6 +10,7 @@ import { KEYS, loadJson, loadSketch, saveJson, saveSketch } from '../persistence
 import { initState, reduce } from '../state/history'
 import { CalcPanel } from './calc/CalcPanel'
 import { calcOf } from './calcCache'
+import { closeRooms, editResult, ratioFor, roomsFrom, settle } from './edits'
 import { CatalogPage } from './catalog/CatalogPage'
 import { IconButton, Toast } from './controls'
 import { download } from './download'
@@ -120,18 +118,20 @@ export default function App() {
   // An edit that walls in an area with a door turns it into a room (frihåndsrom), as its own undo step.
   const onEdit = useCallback(
     (fn: (v: Variant) => Variant, history = true) => {
-      const ratio = (id: string | undefined) => findMotif(motifs, id)?.ratio ?? 0
-      const apply = (x: Variant) => fitFreeTextiles(fitDecor(fn(x), rules, ratio), rules)
+      const ratio = ratioFor(motifs)
+      const apply = (x: Variant) => settle(fn(x), ratio)
       dispatch({ type: 'edit', fn: apply, history })
       if (!history) return
-      const areas = newlyClosedRooms(vRef.current, apply(vRef.current))
-      if (!areas.length) return
-      dispatch({ type: 'edit', fn: (x) => fitDecor(areas.reduce((y, o) => wallsToRoom(y, o) ?? y, x), rules, ratio) })
+      const areas = closeRooms(vRef.current, apply(vRef.current), ratio)?.areas
+      if (!areas) return
+      dispatch({ type: 'edit', fn: (x) => roomsFrom(x, areas, ratio) })
       const size = areas.map((outline) => roomSize({ outline })).join(' og ')
       showToast({ text: `Gjort om til rom ${size}`, action: 'Angre', onAction: () => dispatch({ type: 'undo' }) })
     },
     [motifs, showToast],
   )
+  /** What an edit on the sketch shown would store, and its calc: the plan shows it dimmed before the click. */
+  const preview = useMemo(() => ({ result: (fn: (x: Variant) => Variant) => editResult(v, fn, motifs), calc: calcFor }), [v, motifs, calcFor])
   const onCheckpoint = useCallback(() => dispatch({ type: 'checkpoint' }), [])
   const selectVariant = (index: number) => dispatch({ type: 'select', index })
 
@@ -322,6 +322,7 @@ export default function App() {
                       onToast={showToast}
                       motifs={motifs}
                       onHint={setPlanHint}
+                      preview={preview}
                     />
                     <div className="minimap">
                       <Suspense fallback={null}>

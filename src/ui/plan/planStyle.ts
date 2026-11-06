@@ -51,9 +51,8 @@ export const HALO_OPACITY = 0.22
 export const postSize = (s: PlanScale) => Math.max(WALL_MIN, wallWidth(s) + linePx(s, 1.5))
 
 /**
- * Previews while drawing (docs/forhandsvisning.md): aim (sikte) shows only what is hit, a ring or a dashed ink
- * outline; phantom (fantom) shows the product's own symbol at reduced strength while pressed or dragging; invalid is
- * grey and hatched. All sizes in screen pixels.
+ * Previews while drawing (docs/forhandsvisning.md): what a click or release would store, drawn by the plan's own
+ * layers at this strength, already while hovering (plan/next.ts); invalid is grey and hatched. Sizes in screen pixels.
  */
 export const PHANTOM = {
   /** Walls and areas: inner wall, textile, free-standing textile, carpet tiles, roll carpet. */
@@ -62,16 +61,12 @@ export const PHANTOM = {
   line: 0.6,
 } as const
 
-/** The ring at an end point or snap point: surface fill with an ink edge. */
+/** The ring at the ends of Tøm's stroke: surface fill with an ink edge. */
 export const RING = { r: 3.2, edge: 1.1 } as const
 
-/** The dashed ink outline of the aim, and the light edge under it on a dark floor. */
+/** The dashed ink outline around the chosen engangsteppe lanes, and the light edge under it on a dark floor. */
 export const AIM = { width: 0.8, dash: 3, gap: 2.5, halo: 2.4, haloOpacity: 0.8 } as const
 export const aimDash = (s: PlanScale) => `${sizePx(s, AIM.dash)} ${sizePx(s, AIM.gap)}`
-
-/** The aim of the door pen: one dashed ink line on the module's centre line, with a light edge under it so it shows on
- * the wall. */
-export const DOOR_AIM = { width: 1.4, dash: 4, gap: 3, halo: 3.5 } as const
 
 /** Snap dots: faint ink, larger on whole metres. */
 export const SNAP_DOT = { metre: 1.2, other: 0.8, fill: 'rgb(var(--ink) / .3)' } as const

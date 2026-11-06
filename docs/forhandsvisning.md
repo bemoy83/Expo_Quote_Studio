@@ -1,5 +1,25 @@
 # Forhåndsvisning: sikte og fantom mens man tegner
 
+> **Endret av Bjørn 5.11.2026: siktet er erstattet av en dempet visning av resultatet.** Allerede når pekeren står over
+> planen vises det et klikk eller slipp ville lagret, ikke bare mens man holder inne. Man ser hva man tegner før man
+> tegner. Ringer, stiplede omriss og egne fantomsymboler er borte. Tabellene under beskriver det som var bygget før
+> endringen, og gjelder bare der de ikke strider mot dette avsnittet.
+>
+> - **Samme funksjon som lagrer.** `plan/next.ts` finner målet under pekeren (kant, modul, rute, flis eller plass) og
+>   kjører den samme redigeringen som klikket eller slippet i `plan/pointer/` (`paintWalls`, `drawInnerBeam`,
+>   `fillFace`/`drawTextile`, `addFoil`/`updateTextile`/`updateFace`, `placeOpening`, `addObject`, `applyFloor`,
+>   `fillCarpet`, `applyDrop`), gjennom det samme som App lagrer med (`ui/edits.ts`: tilpasset dekor og tekstil, rom
+>   av lukkede områder). Ingenting lagres og ingen historikk skrives før slipp. Neste variant og kalkylen regnes ut bare
+>   når målet endrer seg.
+> - **Tegnet gjennom de vanlige lagene.** `PlanView` tegner hvert lag (gulv, vegger, tekstil, takdragere og stolper,
+>   møbler, rom) en gang til fra neste variant, med 40 % (vegg, tekstil, gulv) eller 60 % (takdrager, dør, dekal,
+>   møbel) styrke. `plan/nextArea.ts` finner per lag hva som er forskjellig: neste variant klippes til området rundt
+>   det (`clipPath`), og det som står der nå skjules (`mask`), så resten av planen ikke tegnes dobbelt. Konsekvenser
+>   kommer med: stolper, fotplater, delte takdragere, og møbler som kommer i konflikt med en ny vegg.
+> - **Der et klikk ikke gjør noe, vises ingenting.** Gir funksjonen en feil, vises skravuren der det ville landet, og
+>   grunnen står i hintlinjen. Målpillen vises som før mens man drar. Tøm er uendret.
+> - **Nettbrett:** uten peking vises det samme mens man holder inne, og slipp lagrer som før.
+
 Låst av Bjørn 5.11.2026. Bestilling til implementering, oppfølger til [arbeidstegning.md](arbeidstegning.md) (fase 1 og
 2 er bygget, #58–#72). Hvor koden ligger: [kodekart.md](kodekart.md).
 
