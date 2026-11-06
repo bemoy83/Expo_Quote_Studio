@@ -24,7 +24,7 @@ export interface P {
 
 /**
  * A press in Velg selects on release (`select`). A plain click goes through `clickSelect` (click.ts: selects what lies
- * under it, empty floor lets go); a drag never lets go of the selection. A wall dragged away is not
+ * under it, a second click on it or empty floor lets go); a drag never lets go of the selection. A wall dragged away is not
  * selected; furniture and rooms are.
  */
 export type Drag =

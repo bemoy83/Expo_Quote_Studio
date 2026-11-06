@@ -33,7 +33,7 @@ Brukeren skal gjøre det meste rett på tegneflaten. **Pillen** gir rask tilgang
 | Hva man gjør | Hva som skjer |
 | --- | --- |
 | Klikk på et objekt | Objektet velges og pillen vises med en gang. Skuffen åpnes **ikke** |
-| Nytt klikk på samme objekt | Ingenting endres. Valget og pillen blir stående |
+| Nytt klikk på samme objekt | Valget fjernes, og pillen lukkes med en gang (Bjørn 6.11.2026). Med skuffen åpen blir valget stående |
 | Dobbeltklikk | Er bare to klikk og gjør det samme som ett. Planen har ikke dobbeltklikk (Bjørn 5.11.2026, se under) |
 | Klikk på et annet objekt | Valget og pillen bytter |
 | Klikk på tomt gulv eller utenfor standen | Valget fjernes |
@@ -99,8 +99,9 @@ samme produkt og beholder plass og `rot`. Er den nye varianten større, kjøres 
 - **Mer** i pillen.
 - **Ikke dobbeltklikk** (Bjørn 5.11.2026). Første utgave hadde dobbeltklikk. For at pillen ikke skulle blinke, ventet
   den da 200 ms etter klikket, og et nytt klikk slapp valget først etter 200 ms. I bruk føltes pillen treg, og den
-  kom fram selv ved dobbeltklikk. Dobbeltklikk er derfor fjernet. Pillen vises med en gang, et nytt klikk på det samme
-  beholder valget, og det finnes ingen ventetid i klikkreglene.
+  kom fram selv ved dobbeltklikk. Dobbeltklikk er derfor fjernet. Pillen vises med en gang, og det finnes ingen ventetid i klikkreglene.
+  Først beholdt et nytt klikk på det samme valget. 6.11.2026 ville Bjørn ha tilbake at et nytt klikk lukker pillen.
+  Uten dobbeltklikk trengs ingen ventetid for det, men et raskt dobbeltklikk blir nå velg og slipp.
 - Skuffen åpnes ikke lenger av et vanlig valg. `Drawers.tsx` må styres av en egen tilstand, for eksempel
   `drawer: 'closed' | 'compact' | 'detail'` i `App.tsx`, ikke av `selection` alene.
 
