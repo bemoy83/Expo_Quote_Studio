@@ -3,20 +3,13 @@
 // lock 410 the same on both sides. A curtain hangs from the glider in the header's bottom rail.
 // Byggeregler D2, D5 (docs/byggeregler.md).
 import * as THREE from 'three'
-import { doorHinge, doorRal, doorSwing } from '../../../domain/doors'
+import { doorHinge, doorLevels, doorRal, doorSwing } from '../../../domain/doors'
 import { wallDirection } from '../../../domain/grid'
 import type { BuiltModule } from '../../../domain/walls'
 import { RECIPES } from '../../../foga/recipes'
 import { plateColor, productOf, rules } from '../../env'
 import { profile, shared, unitProfile } from './profiles'
 import { ALU, ALU_FINISH, CHROME, CURTAIN, INK, LOCK, selectGlow, type BuildContext, type Tag } from './context'
-
-/** Heights in the opening, m from the floor: leaf bottom and top, header bottom (2490 post on its foot, D2). */
-export function doorLevels() {
-  const d = RECIPES.door
-  const leaf = rules.wall.feet + d.floorGap / 1000
-  return { leaf, top: leaf + d.leaf / 1000, header: leaf + (d.leaf + d.topGap) / 1000 }
-}
 
 /** The 292 seen from the front (80) and its depth (20), m. */
 const FACE = 0.08
@@ -29,7 +22,7 @@ export function buildOpening(c: BuildContext, m: BuiltModule, tag: Tag) {
   const o = m.opening!
   const w = v.walls.find((x) => x.id === o.wallId)
   if (!w) return
-  const lv = doorLevels()
+  const lv = doorLevels(rules)
   // Local frame of the opening: x along the wall, z its left normal, origin on the floor at the module centre
   const [wx, wy] = wallDirection(w)
   const g = new THREE.Group()

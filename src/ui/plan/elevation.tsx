@@ -1,9 +1,11 @@
 // Parts of the drawings in the drawers (wall, door, free-standing textile wall), the wall seen straight on.
 // In metres, y down: the top of the wall is y = 0 and the floor y = H.
 import type { ReactNode, SVGProps } from 'react'
+import { doorLevels } from '../../domain/doors'
 import type { TextileFill } from '../../domain/types'
+import { RECIPES } from '../../foga/recipes'
 import type { Motif } from '../../persistence/file'
-import { ALU, ALU_POST, BORDER_STRONG, FABRIC, FEET, INK_FAINT } from '../colors'
+import { ALU, ALU_POST, BORDER_STRONG, FABRIC, FEET } from '../colors'
 import { rules } from '../env'
 import { TXT } from './drawerText'
 import { Print } from './drawerParts'
@@ -24,31 +26,43 @@ export function Posts({ xs, H }: { xs: number[]; H: number }) {
 }
 
 /**
- * A door or curtain in the module from x to x + 1: the header plate over it (in the wall's colour, `plate` passes on
- * to it), the top profile, and the leaf with its handle at the free edge, or the curtain dashed. `door` gives the leaf's
- * colour and where its hinge and free edges are in the drawing. `print`: foil over the door, drawn on the header and
- * on the leaf (under the handle).
+ * A door or curtain in the module from x to x + 1 (Byggeregler D2, D5), at the heights of D2: the header over it (a small wall,
+ * plate in the wall's colour, `plate` passes on to it, between the top profile and a bottom rail: 91 over a door, 92 over
+ * a curtain for its glider), and the leaf as built (D5): a 292 frame with the plate in the leaf's colour and the lock
+ * on the free stile, or the curtain dashed. `door` gives the leaf's colour and where its hinge and free edges are in the
+ * drawing. `print`: foil over the door, drawn on the header and on the leaf.
  */
 export function Opening({ x, H, plate, door, print }: { x: number; H: number; plate: SVGProps<SVGRectElement>; door?: { color: string; hinge: number; free: number }; print?: { header: ReactNode; leaf: ReactNode } }) {
   const { post, profile } = rules.wall
-  const dh = rules.door.height
+  const lv = doorLevels(rules)
+  const z = (h: number) => H - h
+  const bottom = door ? profile.bottom : profile.top
+  const left = door && Math.min(door.hinge, door.free)
+  const leafH = lv.top - lv.leaf
   return (
     <>
-      <rect x={x + post / 2} y={0} width={1 - post} height={H - dh} {...plate} />
+      <rect x={x + post / 2} y={0} width={1 - post} height={z(lv.header)} {...plate} />
       {print?.header}
       <rect x={x} y={0} width={1} height={profile.top} fill={ALU} />
-      {door ? (
+      <rect x={x} y={z(lv.header + bottom)} width={1} height={bottom} fill={ALU} />
+      {door && left !== undefined ? (
         <>
-          <rect x={Math.min(door.hinge, door.free)} y={H - dh} width={rules.door.swing} height={dh} fill={door.color} stroke={BORDER_STRONG} strokeWidth={0.01} />
+          <rect x={left} y={z(lv.top)} width={rules.door.swing} height={leafH} fill={ALU} />
+          <rect x={left + LEAF_FRAME} y={z(lv.top) + LEAF_FRAME} width={rules.door.swing - 2 * LEAF_FRAME} height={leafH - 2 * LEAF_FRAME} fill={door.color} />
           {print?.leaf}
-          <rect x={door.free + (door.free > door.hinge ? -0.13 : 0.03)} y={H - 1.06} width={0.1} height={0.02} rx={0.01} fill={INK_FAINT} />
+          <circle cx={door.free + (door.free > door.hinge ? -1 : 1) * LEAF_FRAME / 2} cy={z(RECIPES.door.lock.height / 1000)} r={0.028} fill={LOCK} />
         </>
       ) : (
-        <rect x={x + 0.04} y={H - dh} width={0.92} height={dh} fill="none" stroke={BORDER_STRONG} strokeWidth={0.012} strokeDasharray=".05 .04" />
+        <rect x={x + 0.04} y={z(lv.header)} width={0.92} height={lv.header - 0.02} fill="none" stroke={BORDER_STRONG} strokeWidth={0.012} strokeDasharray=".05 .04" />
       )}
     </>
   )
 }
+
+/** The leaf's 292 frame seen from the front, m. */
+const LEAF_FRAME = 0.08
+/** Lock 410's black rosette. */
+const LOCK = '#1d1e20'
 
 /** A textile in its aluminium frame: the print cropped inside the frame, or a note when it has no motif. */
 export function TextileFace({ x, y, w, h, m, fill, empty }: { x: number; y: number; w: number; h: number; m?: Motif; fill: TextileFill; empty: string }) {
