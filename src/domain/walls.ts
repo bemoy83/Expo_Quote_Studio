@@ -1,6 +1,16 @@
 import { moduleKey, openSides, pointAlong, pointKey, SIDES, sideEnds, wallDirection, wallLength, wallModules, type Module } from './grid';
 import { gapKeys, OUTSIDE } from './rooms';
+import type { Rules } from '../rules/rules';
 import type { Opening, Point, Side, Stand, Variant, Wall } from './types';
+
+/**
+ * A wall's physical ends along it, m: the outside of its end posts, half a post past the post centres it is laid
+ * between, so a 4 000 c/c wall is 4 040 (Bjørn 6.11.2026).
+ */
+export function physicalEnds(rules: Rules, L: number): [number, number] {
+  const half = rules.wall.post / 2;
+  return [-half, L + half];
+}
 
 /** A built wall module after merging all walls. Shared edges appear once. */
 export interface BuiltModule extends Module {

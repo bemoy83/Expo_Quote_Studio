@@ -1,7 +1,6 @@
-// Velg: what a click would select, marked faintly under the pointer (on touch while the press is held), so a wall can be
-// told from the textile walls on its faces before the click (Bjørn 6.11.2026). A shade of ink over the thing itself, its own width,
-// so the wall's mark never covers the textile beside it;
-// nothing for what is already selected.
+// Velg: what a click would select, marked faintly under the pointer (on touch while the press is held), so a wall can
+// be told from the textile walls on its faces before the click (Bjørn 6.11.2026). A shade of ink over the thing
+// itself, at its own width, so the wall's mark never covers the textile beside it; nothing for what is already selected.
 import { faceSegment, sideOf } from '../../../domain/faces'
 import { laneAt } from '../../../domain/floor/edit'
 import { fillTilesOf } from '../../../domain/floor/rollFill'
