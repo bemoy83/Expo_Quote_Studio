@@ -258,4 +258,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 
 Bestemt eller nevnt, men ikke i koden: støttevaier fra hallens tak i stedet for fotplater (samme regel som S3), tekstildør
 med overstykke, høye tekstilvegger, systemvegg på cc 250, 500 og 750 (delene finnes), og endring av standvegg med
-nabogodkjenning.
+nabogodkjenning. Tekstilramme (Bjørn 7.11.2026): stående stag maks 2 m fra hverandre, også mellom føttene på frittstående,
+fordi duken trekker mest på midten (i dag hver 1 m, X2); ett stag 100–200 mm fra hver side av en skjøt, så det virker
+som rammeside når lange motiver monteres i seksjoner; skjøten med 4 × 604 i sporet (plassbesparende, kan skyves fram i en
+bås) eller 2 × 609 (krever plass til å tre profilen inn).
