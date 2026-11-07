@@ -5,7 +5,7 @@ import type { InFrameParams, Rules } from '../rules/rules';
 import { freeTrims, placeFrames } from './textile/placement';
 import { framePiece, type FramePiece } from './textile/inFrame';
 import { cornerPosts, freeFrames, type FreeFrame, type HeldEnds } from './textile/free';
-import { fullHeight, printFileName } from './textile/common';
+import { fullHeight, partsLm, printFileName } from './textile/common';
 
 export interface ProductionPiece extends FramePiece {
   pos: string;
@@ -23,7 +23,7 @@ export interface ProductionPiece extends FramePiece {
 }
 
 export interface Production {
-  /** InFrame frames on system walls. */
+  /** Frames on system walls. */
   pieces: ProductionPiece[];
   /** Frittstående tekstilvegger, each with textile on both faces. */
   free: FreeFrame[];
@@ -80,9 +80,9 @@ export function production(v: Variant, rules: Rules, customer: string): Producti
   });
   // Free-standing runs stop at a frame on the wall they end at (byggeregel X11)
   const trims = freeTrims(v, rules, placed);
-  const free = freeFrames(v, RECIPES.freeFrame, s, customer, trims, heldEnds(v, trims));
+  const free = freeFrames(v, RECIPES.textileFrame, s, customer, trims, heldEnds(v, trims));
   // The 92LTX stands on an end cap and has one on top, so it is cut shorter than the frame
-  const posts = { qty: cornerPosts(v).length, H: fullHeight(s) - 2 * RECIPES.freeFrame.cornerPostCap };
+  const posts = { qty: cornerPosts(v).length, H: fullHeight(s) - 2 * RECIPES.textileFrame.feet.cornerPostCap };
   return {
     pieces,
     free,
@@ -93,7 +93,7 @@ export function production(v: Variant, rules: Rules, customer: string): Producti
       free.flatMap((f) => f.faces).filter((x) => x.fill !== 'reuse').reduce((a, x) => a + x.printArea, 0),
     lm:
       pieces.reduce((a, p) => a + p.lm, 0) +
-      free.reduce((a, f) => a + (f.profileMm + f.braces.length * f.braceLength) / 1000, 0) +
+      free.reduce((a, f) => a + partsLm(f.parts), 0) +
       (posts.qty * posts.H) / 1000,
   };
 }

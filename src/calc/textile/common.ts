@@ -1,8 +1,34 @@
 // What the textile frame is whatever it is mounted on (on a wall with 520, or on foot plates; Bjørn 7.11.2026: one
-// product): the full frame height, the rails spliced past maxRail, the upright braces, and the print file name (also
-// used by the Produksjon page).
+// product): the full frame height, the rails spliced past maxRail, the upright braces, the parts it is built of
+// (counted once, here), and the print file name (also used by the Produksjon page).
+import type { TextileFrameRecipe } from '../../foga/recipes';
+import type { FrameParts } from '../../foga/structure';
 import type { InFrameParams } from '../../rules/rules';
 import type { FramePiece } from './inFrame';
+
+export type { FrameParts };
+
+/** How a frame is mounted: on a system wall with 520, or free-standing on foot plates. */
+export type FrameMount = 'vegg' | 'fotplater';
+
+/** The frame's parts from its rails (each cut length once per rail), its sides or uprights, braces and loose parts. */
+export function frameParts(r: TextileFrameRecipe, railCuts: readonly number[], sides: { qty: number; length: number }, braces: FrameParts['braces'], loose: readonly (readonly [string, number])[]): FrameParts {
+  const cuts = new Map<number, number>();
+  const add = (len: number, qty: number) => qty && cuts.set(len, (cuts.get(len) ?? 0) + qty);
+  for (const c of railCuts) add(c, 2);
+  add(sides.length, sides.qty);
+  const kept = loose.filter(([, q]) => q > 0);
+  const connectors = new Set([r.corner, r.splice.thread, r.splice.slide.code]);
+  return {
+    cuts: [...cuts],
+    braces,
+    loose: kept,
+    couplings: kept.filter(([c]) => connectors.has(c)).reduce((a, [, q]) => a + q, 0) + braces.qty * 2 * r.braceCoupling.perEnd,
+  };
+}
+
+/** Frame profile in the frame, braces included, m. */
+export const partsLm = (p: FrameParts) => (p.cuts.reduce((a, [l, q]) => a + l * q, 0) + p.braces.qty * p.braces.length) / 1000;
 
 export const fullHeight = (s: InFrameParams) => s.wallH + s.feet;
 

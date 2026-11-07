@@ -5,10 +5,12 @@
 import { displayName } from '../../catalog/lookup';
 import type { TextileFill } from '../../domain/types';
 import { RECIPES } from '../../foga/recipes';
+import type { FrameParts } from '../../foga/structure';
 import { ITEM } from '../../pricing/data';
 import type { Use } from '../../pricing/model';
 import { count, type CalcContext } from '../context';
 import type { CalcLine } from '../types';
+import type { FrameMount } from './common';
 
 const quote = { key: 'tekstil', name: 'Tekstilvegg' };
 /**
@@ -27,62 +29,56 @@ function textileLines(c: CalcContext, faces: { W: number; H: number; pw: number;
   });
 }
 
-type Mount = 'vegg' | 'fotplater';
-const MOUNT_NAME: Record<Mount, string> = { vegg: 'på vegg', fotplater: 'på fotplater' };
+const MOUNT_NAME: Record<FrameMount, string> = { vegg: 'på vegg', fotplater: 'på fotplater' };
+
+/** The price item of each loose frame part, by Foga code. */
+const LOOSE_ITEM: Readonly<Record<string, string>> = {
+  [RECIPES.textileFrame.corner]: ITEM.corner,
+  [RECIPES.textileFrame.splice.thread]: ITEM.splice,
+  [RECIPES.textileFrame.splice.slide.code]: ITEM.spliceSlide,
+  [RECIPES.textileFrame.wall.fixing.code]: ITEM.wallFixing,
+  [RECIPES.textileFrame.feet.foot.code]: ITEM.foot(RECIPES.textileFrame.feet.foot.code),
+  [RECIPES.textileFrame.feet.smallFoot.code]: ITEM.foot(RECIPES.textileFrame.feet.smallFoot.code),
+};
 
 /** One frame: what it is built of and the work, at full quantities. */
 interface FrameBuild {
   W: number;
   H: number;
-  mount: Mount;
+  mount: FrameMount;
   uses: Use[];
 }
 
+/** A frame's parts as price items: the frame profile per metre, the loose parts, braces per metre and per piece, a
+ *  mounting per coupling and the handling of the frame. */
+function frameUses(p: FrameParts): Use[] {
+  return [
+    { id: ITEM.frameProfileM, qty: p.cuts.reduce((a, [l, q]) => a + l * q, 0) / 1000 },
+    ...p.loose.map(([code, qty]) => ({ id: LOOSE_ITEM[code] ?? code, qty })),
+    { id: ITEM.braceM, qty: (p.braces.qty * p.braces.length) / 1000 },
+    { id: ITEM.bracePiece, qty: p.braces.qty },
+    { id: ITEM.frameCoupling, qty: p.couplings },
+    { id: ITEM.frame, qty: 1 },
+  ];
+}
+
 /**
- * Textile frames per piece by size B × H and mounting. The frame is the same either way: 43TX, 617 in the corners,
- * braces, rail splices, mounting per coupling and handling. On a wall it is fixed with 520; on foot plates it stands on
- * 740 or 730, and where two meet they share a 92LTX (half to each). Fast price: m² rate × B × H.
+ * Textile frames per piece by size B × H and mounting. The frame is the same either way (its parts,
+ * calc/textile/common.ts); on foot plates two frames that meet share a 92LTX (half to each). Fast price: m² rate × B × H.
  */
 export function frameLines(c: CalcContext): CalcLine[] {
   const { prod, sys, idx } = c;
-  const onWall: FrameBuild[] = prod.pieces.map((p) => {
-    const braces = p.braces?.qty ?? 0;
-    return {
-      W: p.W,
-      H: p.H,
-      mount: 'vegg',
-      uses: [
-        { id: ITEM.frameProfileM, qty: (2 * p.W + 2 * p.H) / 1000 },
-        { id: ITEM.corner, qty: 4 },
-        { id: ITEM.splice, qty: p.splices },
-        { id: ITEM.wallFixing, qty: RECIPES.frame.wallFixing.perFrame },
-        { id: ITEM.braceM, qty: (braces * (p.braces?.length ?? 0)) / 1000 },
-        { id: ITEM.bracePiece, qty: braces },
-        // Put together like on foot plates: the 617 in each corner, the splice connectors and both ends of every brace
-        { id: ITEM.frameCoupling, qty: 4 + p.splices + 2 * braces },
-        { id: ITEM.frame, qty: 1 },
-      ],
-    };
-  });
-  const thread = RECIPES.freeFrame.splice.thread;
-  const onFeet: FrameBuild[] = prod.free.map((f) => ({
-    W: f.length,
-    H: f.H,
-    mount: 'fotplater',
-    uses: [
-      { id: ITEM.frameProfileM, qty: f.profileMm / 1000 },
-      { id: ITEM.cornerPostM, qty: (f.nCorners * prod.cornerPosts.H) / 2 / 1000 },
-      { id: ITEM.foot(f.foot.code), qty: f.supports.length },
-      { id: ITEM.corner, qty: f.connectors.corner },
-      { id: f.spliceCode === thread ? ITEM.splice : ITEM.spliceSlide, qty: f.connectors.splice },
-      { id: ITEM.braceM, qty: (f.braces.length * f.braceLength) / 1000 },
-      { id: ITEM.bracePiece, qty: f.braces.length },
-      { id: ITEM.frameCoupling, qty: f.couplings },
-      { id: ITEM.frame, qty: 1 },
-    ],
-  }));
+  const builds: FrameBuild[] = [
+    ...prod.pieces.map((p) => ({ W: p.W, H: p.H, mount: p.mount, uses: frameUses(p.parts) })),
+    ...prod.free.map((f) => ({
+      W: f.length,
+      H: f.H,
+      mount: f.mount,
+      uses: [...frameUses(f.parts), { id: ITEM.cornerPostM, qty: (f.nCorners * prod.cornerPosts.H) / 2 / 1000 }],
+    })),
+  ];
   const groups = new Map<string, FrameBuild[]>();
-  for (const f of [...onWall, ...onFeet]) {
+  for (const f of builds) {
     const k = `${f.W}×${f.H}|${f.mount}`;
     groups.set(k, [...(groups.get(k) ?? []), f]);
   }

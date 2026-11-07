@@ -171,7 +171,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 - **X2 Ramme på systemvegg.** Bredde = spenn − 20 − 10 (sentrert i spennet), høyde 2540 eller tekstilens egen. 43TX gjæret,
   2B + 2H, 617 i alle fire hjørner, festet med 2 × 520 (med 503) til stolpe 94. Stående stag i 90 maks 2000 fra hverandre
   (rammesidene teller), lengde H − 80, med 600 i hver ende: duken trekker mest på midten.
-  *Bjørn 31.10.2026 (fabric.js er fasit), stag 2 m 7.11.2026 · `rules.textile.inFrame`, `RECIPES.frame` · kode `src/calc/textile/inFrame.ts` · test `src/calc/fabric.test.ts`*
+  *Bjørn 31.10.2026 (fabric.js er fasit), stag 2 m 7.11.2026 · `rules.textile.inFrame`, `RECIPES.textileFrame` · kode `src/calc/textile/inFrame.ts` · test `src/calc/fabric.test.ts`*
 - **X3 Trykkfil.** Ramme + 2 × bleed (20), levert i 10 %.
   *Bjørn 31.10.2026 · `rules.textile.inFrame` · kode `src/calc/textile/inFrame.ts` · test `src/calc/fabric.test.ts`*
 - **X4 Plass på veggen.** InFrame står aldri over en åpning og overlapper ikke en annen på samme side. Standvegg har bare
@@ -185,17 +185,17 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   skjøt (tres inn, krever plass i enden), eller 4 × 604 i sporet når begge ender er holdt av en vegg, en ramme på vegg
   eller en 92LTX, så profilen ikke kan tres. Stående 43TX i hver fri ende, 617 i hvert hjørne. En ramme på
   systemvegg settes sammen før den henges opp, så den skjøtes med 609.
-  *Bjørn 31.10.2026, skjøt 7.11.2026 · `RECIPES.freeFrame` · kode `src/calc/textile/free.ts`, `src/calc/textile/inFrame.ts` · test `src/calc/freeFrames.test.ts`, `src/calc/fabric.test.ts`*
+  *Bjørn 31.10.2026, skjøt 7.11.2026 · `RECIPES.textileFrame` · kode `src/calc/textile/free.ts`, `src/calc/textile/inFrame.ts` · test `src/calc/freeFrames.test.ts`, `src/calc/fabric.test.ts`*
 - **X7 Hjørne.** To frittstående vegger møtes bare ende mot ende i rett vinkel (ingen T) og deler en 92LTX, kappet
   2526 (endelokk 7 mm under og over, ikke plukket). Skinnene stopper 37 mm før hjørnepunktet; utvendig duk er 20 mm
   lengre og innvendig 20 mm kortere per hjørne. En strek i forlengelsen blir samme vegg.
-  *Bjørn 31.10.2026 og 6.11.2026 · `RECIPES.freeFrame` · kode `src/calc/textile/free.ts`, `src/domain/textile/free.ts` · test `src/calc/freeFrames.test.ts`*
+  *Bjørn 31.10.2026 og 6.11.2026 · `RECIPES.textileFrame` · kode `src/calc/textile/free.ts`, `src/domain/textile/free.ts` · test `src/calc/freeFrames.test.ts`*
 - **X8 Føtter og stag.** Fotplate 740 under bunnskinnen etter S3 og S4; en 92LTX teller som støtte. Stagene er rammens
   egne (som X2) og står uavhengig av føttene: en fotplate har ikke stag.
   En fot i en fri ende står i flukt med rammeenden (200 mm inn for 740), resten jevnt fordelt. Under 1 m: én 730 midt på.
   Ett stag 150 mm (100–200) fra hver side av en skinneskjøt, så det virker som rammeside når lange motiver monteres i
   seksjoner. Ellers jevnt fordelt, så ingen stående (rammeende, 92LTX, stag) står mer enn 2000 fra hverandre.
-  *Bjørn 1.11.2026, 3.11.2026 og 7.11.2026 · `RECIPES.freeFrame.maxBrace`, `spliceBrace` · `RECIPES.freeFrame.support` · kode `src/calc/textile/free.ts`, `src/calc/supports.ts` · test `src/calc/freeFrames.test.ts`*
+  *Bjørn 1.11.2026, 3.11.2026 og 7.11.2026 · `rules.textile.inFrame.stag`, `RECIPES.textileFrame.spliceBrace` · `RECIPES.textileFrame.feet.support` · kode `src/calc/textile/free.ts`, `src/calc/supports.ts` · test `src/calc/freeFrames.test.ts`*
 
 - **X9 Standardlengder (veiledende).** Fordi systemveggene på messer er standardisert, har 43TX standardlengder som
   passer på veggene: cc − 30, det vil si 970, 1970, 2970 og så videre (X2). I tillegg finnes noen andre, som 470, og

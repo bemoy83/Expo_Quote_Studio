@@ -19,19 +19,6 @@ export interface WallRecipe {
   support: { foot: FootPlate; pin: string; rule: SupportRule };
 }
 
-export interface FrameRecipe {
-  /** Frame profile, cut mitred to outer size (2W + 2H). */
-  profile: string;
-  /** Corner coupling, one per corner (4 per frame). */
-  corner: string;
-  /** Upright cross brace profile, length H − 2 × frame profile. */
-  brace: string;
-  /** Coupling at each end of a brace. */
-  braceCoupling: { code: string; perEnd: number };
-  /** Brackets fixing the frame to the wall post (one side in 43TX, the other in 94). Supplied with screw and 503. */
-  wallFixing: { code: string; perFrame: number };
-}
-
 /** Foot plate, size along and across the wall it holds, mm. */
 export interface FootPlate {
   code: string;
@@ -39,37 +26,46 @@ export interface FootPlate {
   across: number;
 }
 
-/** Frittstående tekstilvegg: a 43TX frame on foot plates, textile on both faces (Bjørn 31.10.2026). */
-export interface FreeFrameRecipe {
-  /** Frame profile: top and bottom rail, and the upright at a free end. */
+/**
+ * Textile frame (43TX), one product whatever it is mounted on (Bjørn 7.11.2026): the frame is the same, only the
+ * mounting differs, on a system wall with 520 or free-standing on foot plates. A later mounting (a cube) or a deeper
+ * frame for LED is a new mounting or a new recipe of the same shape. Byggeregler X1–X8 (docs/byggeregler.md).
+ */
+export interface TextileFrameRecipe {
+  /** Frame profile: top and bottom rail, the sides on a wall, the uprights at free ends on foot plates. Cut mitred. */
   profile: string;
-  /** In-channel connector in every frame corner, and where a rail meets the corner post. */
+  /** In-channel connector in every frame corner, and where a rail meets a corner post (4 per frame on a wall). */
   corner: string;
-  /** Shared upright where two runs meet at a right angle. It replaces both runs' 43TX uprights there, and is a
-   *  support in both runs like a foot. */
-  cornerPost: string;
-  /** End cap under and over the corner post (876 900 92), mm thick: the post is cut this much shorter at each end.
-   *  The caps are not picked (Bjørn 6.11.2026). */
-  cornerPostCap: number;
   /** Joins a top or bottom rail in its length (Bjørn 7.11.2026). `thread`: one per rail and splice (609), the profile
    *  threaded onto it, so it needs room at a free end. `slide`: `perRail` in the channel (604), slid along from the
    *  splice, so it fits a frame held at both ends (a span between walls, corner posts). */
   splice: { thread: string; slide: { code: string; perRail: number } };
-  /** Upright brace and its couplings: at most `rules.textile.inFrame.stag` mm apart (the textile pulls most in the
-   *  middle), and one `spliceBrace` mm from each side of a splice, as a frame side while long motifs go up in sections
-   *  (Bjørn 7.11.2026: 100–200 mm). Not at the feet. The same in a frame on a wall. */
+  /** Longest top or bottom rail before it is spliced in its length (the frame stays one rectangle), mm. */
+  maxRail: number;
+  /** Upright brace, length H − 2 × frame profile, and its couplings: at most `rules.textile.inFrame.stag` mm apart (the
+   *  textile pulls most in the middle), and one `spliceBrace` mm from each side of a splice, as a frame side while long
+   *  motifs go up in sections (Bjørn 7.11.2026: 100–200 mm). Not at the feet. Stored mounted, brace + couplings. */
   brace: string;
   spliceBrace: number;
   braceCoupling: { code: string; perEnd: number };
-  /** Foot plate under the frame, one per support, size along and across the run in mm. `smallFoot` on a frame
-   *  shorter than `support.minFrom`. */
-  foot: FootPlate;
-  smallFoot: FootPlate;
-  /** Longest top or bottom rail before it is spliced in its length (the frame stays one rectangle), mm. */
-  maxRail: number;
-  /** Feet: evenly spread, at least `min` supports (corner posts count) from `minFrom` mm and up, else
-   *  one; the outer foot at most `maxEnd` in from a free end; supports at most `maxGap` apart, mm. */
-  support: SupportRule;
+  /** On a system wall: brackets fixing the frame to the wall post (one side in 43TX, the other in 94). Supplied with
+   *  screw and 503. */
+  wall: { fixing: { code: string; perFrame: number } };
+  /** Free-standing on foot plates, textile on both faces (Bjørn 31.10.2026). */
+  feet: {
+    /** Shared upright where two runs meet at a right angle. It replaces both runs' uprights there, and is a support
+     *  in both runs like a foot. */
+    cornerPost: string;
+    /** End cap under and over the corner post (876 900 92), mm thick: the post is cut this much shorter at each end.
+     *  The caps are not picked (Bjørn 6.11.2026). */
+    cornerPostCap: number;
+    /** Foot plate under the frame, one per support. `smallFoot` on a frame shorter than `support.minFrom`. */
+    foot: FootPlate;
+    smallFoot: FootPlate;
+    /** Feet: evenly spread, at least `min` supports (corner posts count) from `minFrom` mm and up, else one; the outer
+     *  foot at most `maxEnd` in from a free end; supports at most `maxGap` apart, mm. */
+    support: SupportRule;
+  };
 }
 
 /** Evenly spread supports: at least `min` (supported ends count) from `minFrom` mm and up, else one; the outer one at
@@ -112,8 +108,7 @@ export interface DoorRecipe {
 
 export interface Recipes {
   wall: WallRecipe;
-  frame: FrameRecipe;
-  freeFrame: FreeFrameRecipe;
+  textileFrame: TextileFrameRecipe;
   beam: BeamRecipe;
   door: DoorRecipe;
 }
@@ -134,20 +129,22 @@ export const RECIPES: Recipes = {
     plate: { code: 'HDF', w: 976, h: 2440 },
     support: { foot: { code: '750', along: 80, across: 500 }, pin: '795', rule: SUPPORT },
   },
-  frame: { profile: '43TX', corner: '617', brace: '90', braceCoupling: { code: '600', perEnd: 1 }, wallFixing: { code: '520', perFrame: 2 } },
-  freeFrame: {
+  textileFrame: {
     profile: '43TX',
     corner: '617',
-    cornerPost: '92LTX',
-    cornerPostCap: 7,
     splice: { thread: '609', slide: { code: '604', perRail: 2 } },
+    maxRail: 5000,
     brace: '90',
     spliceBrace: 150,
     braceCoupling: { code: '600', perEnd: 1 },
-    foot: { code: '740', along: 400, across: 400 },
-    smallFoot: { code: '730', along: 250, across: 300 },
-    maxRail: 5000,
-    support: SUPPORT,
+    wall: { fixing: { code: '520', perFrame: 2 } },
+    feet: {
+      cornerPost: '92LTX',
+      cornerPostCap: 7,
+      foot: { code: '740', along: 400, across: 400 },
+      smallFoot: { code: '730', along: 250, across: 300 },
+      support: SUPPORT,
+    },
   },
   beam: { profile: '292', coupling: { code: '600', perEnd: 2 }, hook: 'KROK', lift: { profile: '94', length: 80, post: '609', hook: '600' } },
   door: { leaf: 2000, floorGap: 20, topGap: 10, curtainBottomRail: '92', frame: '292', hinge: { code: '403', fromEnd: 150 }, lock: { code: '410', height: 1000 } },

@@ -16,10 +16,10 @@
 import { cornerEnds, runDirection, runLength, runNormal, type FaceKey } from '../../domain/textile/free';
 import type { FreeTextile, Point, TextileFill, Variant } from '../../domain/types';
 import { fogaPart } from '../../foga/parts';
-import type { FootPlate, FreeFrameRecipe, SupportRule } from '../../foga/recipes';
+import type { FootPlate, SupportRule, TextileFrameRecipe } from '../../foga/recipes';
 import type { InFrameParams } from '../../rules/rules';
 import { minSupports, spreadSupports, type Ends } from '../supports';
-import { bracePoints, fullHeight, printFileName, splitRail } from './common';
+import { bracePoints, frameParts, fullHeight, printFileName, splitRail, type FrameParts } from './common';
 
 export { bracePoints, splitRail };
 
@@ -83,13 +83,11 @@ export interface FreeFrame {
   /** The connector in every rail splice: 609 threaded on, or 604 in the channel when both ends are held. */
   spliceCode: string;
   faces: [FreeFace, FreeFace];
-  /** 43TX in all, rails and uprights, mm. */
-  profileMm: number;
-  /** 617 top and bottom at every free end and into every corner post; the splice connector (`spliceCode`) top and
-   *  bottom in every rail splice. */
-  connectors: { corner: number; splice: number };
-  /** Couplings to mount and dismount: the 617 and splice connectors (609 or 604) and both ends of every brace. */
-  couplings: number;
+  mount: 'fotplater';
+  /** What it is built of: 43TX rails and uprights, 617 top and bottom at every free end and into every corner post,
+   *  the splice connector (`spliceCode`) top and bottom in every rail splice, a foot plate at every support, braces.
+   *  The corner posts are shared and counted in calc/production.ts. */
+  parts: FrameParts;
 }
 
 const mm = (m: number) => Math.round(m * 1000);
@@ -112,16 +110,17 @@ export type HeldEnds = ReadonlyMap<string, { from: boolean; to: boolean }>;
 
 export function freeFrames(
   v: Variant,
-  r: FreeFrameRecipe,
+  r: TextileFrameRecipe,
   s: InFrameParams,
   customer: string,
   trims: ReadonlyMap<string, { from: number; to: number }> = new Map(),
   held: HeldEnds = new Map(),
 ): FreeFrame[] {
   const corners = cornerEnds(v);
+  const f = r.feet;
   const depth = fogaPart(r.profile).section?.[0] ?? 40;
   // The corner post's legs reach this far along each run from the outer corner (92LTX: 57), so the rails stop there
-  const postLeg = fogaPart(r.cornerPost).section?.[0] ?? depth;
+  const postLeg = fogaPart(f.cornerPost).section?.[0] ?? depth;
   const H = fullHeight(s);
   const k = s.scale / 100;
   const r1 = (x: number) => Math.round(x * k * 10) / 10;
@@ -136,24 +135,24 @@ export function freeFrames(
     const rail = length - nCorners * (postLeg - depth / 2);
     const railCuts = splitRail(rail, r.maxRail);
     const corner = { from: !!ends.from, to: !!ends.to };
-    const foot = length < r.support.minFrom ? r.smallFoot : r.foot;
+    const foot = length < f.support.minFrom ? f.smallFoot : f.foot;
     // Splices along the run, from the `from` end
     const railStart = ends.from ? postLeg - depth / 2 : 0;
     const splices = railCuts.slice(0, -1).map((_, j) => railStart + railCuts.slice(0, j + 1).reduce((a, x) => a + x, 0));
     // A foot at a free end stands flush with the frame end, not past it (Bjørn 1.11.2026)
-    const supports = supportPoints(length, r.support, corner, foot.along / 2);
-    const face = (f: FaceKey): FreeFace => {
-      const n = runNormal(t, f);
+    const supports = supportPoints(length, f.support, corner, foot.along / 2);
+    const face = (side: FaceKey): FreeFace => {
+      const n = runNormal(t, side);
       // The other run leaves the corner toward the inner face: that face is shorter, the outer one longer
       const at = (away: Point | undefined) => (away ? (away[0] * n[0] + away[1] * n[1] > 0 ? -depth / 2 : depth / 2) : 0);
       const W = length + at(ends.from) + at(ends.to);
       const pw = W + 2 * s.bleed;
       const ph = H + 2 * s.bleed;
-      const tf = t[f];
+      const tf = t[side];
       const fill = tf?.fill ?? 'print';
-      const fpos = `${pos}${f.toUpperCase()}`;
+      const fpos = `${pos}${side.toUpperCase()}`;
       return {
-        face: f,
+        face: side,
         pos: fpos,
         W,
         H,
@@ -176,7 +175,12 @@ export function freeFrames(
     const bothHeld = (corner.from || !!h?.from) && (corner.to || !!h?.to);
     const spliceCode = bothHeld ? r.splice.slide.code : r.splice.thread;
     const perSplice = 2 * (bothHeld ? r.splice.slide.perRail : 1);
-    const connectors = { corner: 2 * (freeEnds + nCorners), splice: perSplice * splices.length };
+    const braceLength = H - 2 * s.prof;
+    const parts = frameParts(r, railCuts, { qty: freeEnds, length: H }, { qty: braces.length, length: braceLength }, [
+      [r.corner, 2 * (freeEnds + nCorners)],
+      [spliceCode, perSplice * splices.length],
+      [foot.code, supports.length],
+    ]);
     return {
       pos,
       textileId: t.id,
@@ -191,12 +195,11 @@ export function freeFrames(
       uprights: freeEnds,
       supports,
       braces,
-      braceLength: H - 2 * depth,
+      braceLength,
       spliceCode,
       faces: [face('a'), face('b')],
-      profileMm: 2 * rail + freeEnds * H,
-      connectors,
-      couplings: connectors.corner + connectors.splice + braces.length * 2 * r.braceCoupling.perEnd,
+      mount: 'fotplater',
+      parts,
     };
   });
 }
