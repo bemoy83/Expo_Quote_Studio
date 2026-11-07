@@ -72,6 +72,8 @@ export interface OrderCost {
   cost?: number;
   baseYear?: number;
   personMinutes?: number;
+  /** Only on an order that has this: `trykk` = printed textile. Else on every order. */
+  when?: 'trykk';
 }
 
 export function orderCost(items: readonly OrderCost[], year: number, p: CostParams, overtime = 0): number {

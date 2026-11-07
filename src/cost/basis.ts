@@ -137,7 +137,15 @@ function orderCosts(x: unknown): OrderCost[] {
     const at = `ordrekost ${i + 1}`;
     if (!isObj(o) || !isStr(o.id) || !isStr(o.name)) return fail(`${at} mangler id eller navn.`);
     for (const k of ['cost', 'baseYear', 'personMinutes']) if (o[k] !== undefined && !isNum(o[k])) return fail(`${at}: ${k} må være et tall.`);
-    return { id: o.id, name: o.name, cost: o.cost as number | undefined, baseYear: o.baseYear as number | undefined, personMinutes: o.personMinutes as number | undefined };
+    if (o.when !== undefined && o.when !== 'trykk') return fail(`${at}: when kan bare være "trykk".`);
+    return {
+      id: o.id,
+      name: o.name,
+      cost: o.cost as number | undefined,
+      baseYear: o.baseYear as number | undefined,
+      personMinutes: o.personMinutes as number | undefined,
+      ...(o.when ? { when: 'trykk' as const } : {}),
+    };
   });
 }
 

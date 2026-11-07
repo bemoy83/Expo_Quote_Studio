@@ -51,7 +51,9 @@ describe('cost buckets', () => {
   it('owned: wear over the lifetime per group, interest on the average tied up, loss per job', () => {
     // profile: 2 years × 7 uses = 14 uses (calibrated 7.11.2026). (150 / 2 + 75 × 0,05) / 7 + 150 × 0,01
     expect(ownedPerUse(150, 'profile', P)).toBeCloseTo(12.75);
-    expect(fogaPartPerUse('43TX', 2022, P)).toBeCloseTo(12.75);
+    // frame (43TX, 92LTX, 90): 2 years × 2 = 4 uses, as in Bjørn's calculator. (150 / 2 + 3,75) / 2 + 1,5
+    expect(ownedPerUse(150, 'frame', P)).toBeCloseTo(40.875);
+    expect(fogaPartPerUse('43TX', 2022, P)).toBeCloseTo(40.875);
     // coupling: 25 uses
     expect(ownedPerUse(100, 'coupling', P)).toBeCloseTo((50 + 2.5) / 12.5 + 1);
     expect(fogaPartPerUse('92LL', 2022, P)).toBeUndefined();
@@ -77,7 +79,7 @@ describe('cost buckets', () => {
     expect(boughtCost(100, P)).toBeCloseTo(105);
   });
   it('per order: once per quote, kroner indexed and minutes as labour', () => {
-    expect(orderCost(ORDER_COSTS, 2022, P)).toBeCloseTo(500 + (40 / 60) * 391.4);
+    expect(orderCost(ORDER_COSTS, 2022, P)).toBeCloseTo(400 + (40 / 60) * 391.4);
   });
   it('height: one limit at 3,0 m for lift and slower montering', () => {
     expect(needsLift(3000, P)).toBe(false);

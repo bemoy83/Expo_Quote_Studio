@@ -111,6 +111,18 @@ per kobling (617 og begge ender av hvert stag) og montering av duk per meter omk
 (type 3): trykk på Blackback som standard, hvit duk, og kundens egen duk bare montert. Tidene for tekstil er ikke
 kalibrert ennå.
 
+Rammeprofilene (43TX, 92LTX og stag 90) har egen slitasje, gruppen `frame`: 4 bruk, som i Bjørns kalkulator. De
+kappes til mål for jobben og brukes sjeldnere om igjen enn veggens standardlengder. Eksempeltall som må sjekkes mot
+lageret (Bjørn 7.11.2026).
+
+## Ordrekost
+
+Startkost trykk (400 kr, 2022), administrasjon og vareplukk (20 personminutter) og varelevering ut og inn (20
+personminutter) kommer én gang per tilbud, ikke per ramme eller linje: tre motiver får én oppstart, én vareplukk og
+én levering (Bjørn 7.11.2026). Startkost trykk bare når tilbudet har trykt tekstil. De ligger i kalkylens kost
+(`margin.order`) og senker DG, men ingen linje på tilbudet bærer dem; katalogen dekker dem i dag med 10 % påslag for
+administrasjon. Verdiene ligger i kostgrunnlaget (`ordrekost`, med `when: "trykk"`).
+
 ## Tallene
 
 Alle i `src/cost/params.ts`. Bjørn = bekreftet, forslag = startverdi til OMS har historikk, eksempel = Bjørn ba om

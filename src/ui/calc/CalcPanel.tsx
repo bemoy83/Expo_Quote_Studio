@@ -95,6 +95,11 @@ export function CalcPanel({ res, name, onHover, onQuote }: { res: CalcResult; na
           Internt: kost {kr(res.margin.cost)} · DB {kr(res.margin.db)} · DG {pct(res.margin.dg)}
           {res.margin.unknown > 0 && <span className="ph"> · {res.margin.unknown} {res.margin.unknown === 1 ? 'linje' : 'linjer'} uten kost</span>}
         </div>
+        {res.margin.order.length > 0 && (
+          <div className="inkl num margin">
+            Ordrekost i kosten: {res.margin.order.map((o) => `${o.name.toLowerCase()} ${kr(o.cost)}`).join(' · ')}
+          </div>
+        )}
         <IndirectLine cost={res.margin.cost} sum={res.margin.sum} />
         {!!(t.montering || t.demontering) && (
           <div className="inkl num">

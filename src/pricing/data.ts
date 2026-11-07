@@ -3,7 +3,8 @@
 // target (src/cost/items.ts, docs/kostmodell.md); the rest keep the example numbers here (Bjørn 31.10.2026: example
 // prices for now). Change numbers here or in the kostgrunnlag, never in calc code.
 import { EXAMPLE_BASIS, type CostBasis } from '../cost/basis';
-import { costItems, type ItemRecipe } from '../cost/items';
+import { basisYear, costItems, type ItemRecipe } from '../cost/items';
+import { orderCost } from '../cost/model';
 import { RULES } from '../rules/rules';
 import type { PriceItem, PriceList, Time, Transfer } from './model';
 
@@ -152,6 +153,8 @@ export interface PricingData {
   /** By product id, or by the quote key of lines the quote shows as one: what the quote tells the customer when it is
    *  part rental, part sale. */
   terms: Record<string, string>;
+  /** Cost once per quote (kostgrunnlag `ordrekost`), in kr for the basis year: in the kalkyle's cost, not in a price. */
+  orderCosts: readonly { id: string; name: string; cost: number; when?: 'trykk' }[];
 }
 
 /**
@@ -174,9 +177,13 @@ const calibrated = (x: PriceItem): PriceItem => {
 const EXAMPLE_ITEMS: PriceList = new Map(ITEMS.map((x) => [x.id, calibrated(x)]));
 
 /** The price items with the costed ones from this kostgrunnlag. */
-export const pricingFrom = (b: CostBasis): PricingData => ({ ...DEFAULT_TERMS, items: costItems(EXAMPLE_ITEMS, ITEM_RECIPES, b) });
+export const pricingFrom = (b: CostBasis): PricingData => ({
+  ...DEFAULT_TERMS,
+  items: costItems(EXAMPLE_ITEMS, ITEM_RECIPES, b),
+  orderCosts: b.orderCosts.map((o) => ({ id: o.id, name: o.name, cost: orderCost([o], basisYear(b), b.params), ...(o.when ? { when: o.when } : {}) })),
+});
 
-const DEFAULT_TERMS: Omit<PricingData, 'items'> = {
+const DEFAULT_TERMS: Omit<PricingData, 'items' | 'orderCosts'> = {
   terms: { tekstil: 'Leie av ramme, kjøp av tekstil', '8040': 'Kjøp av tekstil, montering inkludert', '8041': 'Kjøp av tekstil, montering inkludert' },
 };
 

@@ -116,6 +116,9 @@ export interface Margin {
   dg: number;
   /** Lines without cost data: their price is the catalog price and they are not in the margin. */
   unknown: number;
+  /** Costs once per quote (start of print, admin and picking, delivery), in `cost`: not a price, the quote's lines
+   *  carry none of it (docs/kostmodell.md). */
+  order: { id: string; name: string; cost: number }[];
 }
 
 export interface CalcResult {
