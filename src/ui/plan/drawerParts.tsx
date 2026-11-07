@@ -95,7 +95,7 @@ export function FillPicker({ value, onChange }: { value: TextileFill; onChange: 
 }
 
 /**
- * The drawer's graphics shelf: the motif library as tiles you click to put on what is selected, or drag onto the
+ * The drawer's graphics shelf, under the settings (detail height only): the motif library as tiles you click to put on what is selected, or drag onto the
  * wall drawing (or the plan and 3D). `value` is the selected item's motif: undefined when nothing that takes a motif is
  * selected, null for none. A textile-frame tile to drag comes first when `textile`, an upload tile last.
  */

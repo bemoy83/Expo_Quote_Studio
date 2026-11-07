@@ -1,6 +1,6 @@
 // Drawer for a frittstående tekstilvegg: one face seen straight on, with the frame, feet, braces, splices and corner
 // posts it is built with. Each face is printed, white or the customer's own textile. Laid out like the wall drawer:
-// settings · graphics shelf · the face.
+// settings with the graphics shelf under them · the face.
 import { FlipHorizontal2 } from 'lucide-react'
 import { useRef } from 'react'
 import type { FreeFrame } from '../../calc/textile/free'

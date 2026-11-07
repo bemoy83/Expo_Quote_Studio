@@ -1,5 +1,6 @@
 // Wall drawer (veggskuff): the selected wall seen straight on, one face at a time, under the plan or 3D view.
-// Three columns: settings · graphics shelf (or, with a door chosen, its mini plan) · the wall. Textile frames and foil decals are placed,
+// Two sections (Bjørn 7.11.2026): settings on the left, with the graphics shelf (or, with a door chosen, its mini plan) under
+// them in the detail height, and the wall on the right. Textile frames and foil decals are placed,
 // moved and resized in the drawing; motifs are clicked onto what is selected or dragged from the shelf onto the wall.
 // Without a selection it edits the wall itself: plate colour, remove wall. A door or curtain is chosen here too (from the
 // drawing, the plan or 3D): its settings on the left and the mini plan to move it in the middle (Bjørn 3.11.2026).
@@ -170,7 +171,9 @@ export function WallDrawer(p: Props) {
     <section className="wall-drawer drawer3" aria-label="Vegg sett forfra">
       <div className="wd-insp">
         {O ? (
-          <DoorPanel v={v} O={O} w={w} flip={flip} select={select} selectDoor={selectDoor} onEdit={p.onEdit} onClose={p.onClose} />
+          <DoorPanel v={v} O={O} w={w} flip={flip} select={select} selectDoor={selectDoor} onEdit={p.onEdit} onClose={p.onClose}>
+            <DoorMap v={v} openingId={O.id} onEdit={p.onEdit} />
+          </DoorPanel>
         ) : (
           <>
             <DrawerHead
@@ -204,40 +207,35 @@ export function WallDrawer(p: Props) {
             {!T && !F && <ColourPanel painting={painting} tool={tool} setTool={setTool} printing={printing} pm={pm} paint={paint} ral={ral} setPaint={setPaint} />}
           </>
         )}
-      {O ? (
-        <div className="wd-sec">
-          <DoorMap v={v} openingId={O.id} onEdit={p.onEdit} />
-        </div>
-      ) : (
-      <Shelf
-        label={
-          T
-            ? fill === 'print'
-              ? `Trykk · ${findMotif(motifs, T.motif)?.name ?? 'uten motiv'}`
-              : 'Motiv · velg for trykk'
-            : F
-              ? `Motiv · ${findMotif(motifs, F.motif)?.name ?? 'uten motiv'}`
-              : printing
-                ? `Print · ${pm?.name ?? 'last opp et motiv'}`
-                : 'Grafikk · dra til veggen'
-        }
-        motifs={motifs}
-        textile={!T && !F}
-        required={!T && !F && printing}
-        value={T ? (fill === 'print' ? (T.motif ?? null) : undefined) : F ? (F.motif ?? null) : printing ? pm?.id : undefined}
-        onPick={
-          T
-            ? (m) => p.onEdit((x) => updateTextile(x, rules, T.id, { motif: m, ...(m ? { fill: 'print' } : {}) }))
-            : F
-              ? (m) => p.onEdit((x) => updateFoil(x, rules, F.id, { motif: m }, ratioOf(m ?? undefined)))
-              : printing
-                ? (m) => m && setPrintMotif(m)
-                : undefined
-        }
-        onUpload={p.onUpload}
-      />
-      )}
-
+        {!O && (
+          <Shelf
+            label={
+              T
+                ? fill === 'print'
+                  ? `Trykk · ${findMotif(motifs, T.motif)?.name ?? 'uten motiv'}`
+                  : 'Motiv · velg for trykk'
+                : F
+                  ? `Motiv · ${findMotif(motifs, F.motif)?.name ?? 'uten motiv'}`
+                  : printing
+                    ? `Print · ${pm?.name ?? 'last opp et motiv'}`
+                    : 'Grafikk · dra til veggen'
+            }
+            motifs={motifs}
+            textile={!T && !F}
+            required={!T && !F && printing}
+            value={T ? (fill === 'print' ? (T.motif ?? null) : undefined) : F ? (F.motif ?? null) : printing ? pm?.id : undefined}
+            onPick={
+              T
+                ? (m) => p.onEdit((x) => updateTextile(x, rules, T.id, { motif: m, ...(m ? { fill: 'print' } : {}) }))
+                : F
+                  ? (m) => p.onEdit((x) => updateFoil(x, rules, F.id, { motif: m }, ratioOf(m ?? undefined)))
+                  : printing
+                    ? (m) => m && setPrintMotif(m)
+                    : undefined
+            }
+            onUpload={p.onUpload}
+          />
+        )}
         {!O && (
           <div className="wd-foot">
             <DrawerRow label={`Side · ${faceName(w, s).toLowerCase()}`}>

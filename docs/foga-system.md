@@ -250,8 +250,8 @@ romvegger som takdragerne ikke holder, også når takdragerne er på (`calc/wall
 - **Lås og nøkler** følger med alle dører. Dørbladet har **standens farge** (RAL) til veggen farges: døren er en del av veggen, så malerspannet farger plater, overstykke og dørblad, og malerkosten tar overstykket og bladet hver for seg (Bjørn 03.11.2026);
   overstykket har veggens farge. Kalkylen har én dørlinje per farge.
 - **Døren i veggskuffen** (Bjørn 02.11.2026, egen dørskuff slått sammen med veggskuffen 03.11.2026): klikk døren i plan,
-  3D eller i veggtegningen, så åpnes veggskuffen for veggen med døren valgt. Innstillingene står til venstre, miniplanen
-  i midten (i stedet for grafikkhylla) og døren i hele veggen til høyre; dørinnstillingene har ingen fargepalett eller grafikk; knappen «Farge og grafikk» nederst (eller Esc, eller klikk døren igjen) gir paletten, og knappen «Dør» ved veggen går tilbake til døren. Miniplan for å flytte døren (klikk ruten utenfor en
+  3D eller i veggtegningen, så åpnes veggskuffen for veggen med døren valgt. Innstillingene står til venstre med miniplanen
+  under (i detaljhøyden, der grafikkhylla ellers står) og døren i hele veggen til høyre; dørinnstillingene har ingen fargepalett eller grafikk; knappen «Farge og grafikk» nederst (eller Esc, eller klikk døren igjen) gir paletten, og knappen «Dør» ved veggen går tilbake til døren. Miniplan for å flytte døren (klikk ruten utenfor en
   modul: alle egne moduler på rommet, eller langs innerveggen; aldri standvegg eller en annen åpning), dør/forheng,
   slagretning, hengselside, farge, gjør om til vegg (`domain/doors.ts`). Døren dras ikke i plan og 3D; der dras romsidene
   som før. Flyttes eller endres et rom slik at døren ville havnet i standveggen, flyttes døren til nærmeste modul på

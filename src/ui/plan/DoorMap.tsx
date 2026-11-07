@@ -57,7 +57,7 @@ export function DoorMap({ v, openingId, onEdit }: Props) {
         <span>Plassering</span>
         <span className="door-map-where num">{current ? `${room ? `${sideName(current.out)} · ` : ''}modul ${current.nth}` : ''}</span>
       </div>
-      <svg width={W * c + 2 * P} height={D * c + 2 * P} viewBox={`${-P} ${-P} ${W * c + 2 * P} ${D * c + 2 * P}`} role="group" aria-label="Miniplan, flytt døren">
+      <svg style={{ maxWidth: W * c + 2 * P, maxHeight: D * c + 2 * P }} viewBox={`${-P} ${-P} ${W * c + 2 * P} ${D * c + 2 * P}`} role="group" aria-label="Miniplan, flytt døren">
         <rect x={0} y={0} width={W * c} height={D * c} fill={SURFACE} />
         {Array.from({ length: W - 1 }, (_, i) => bar([i + 1, 0], [i + 1, D], BORDER, 1, 1, `gx${i}`))}
         {Array.from({ length: D - 1 }, (_, j) => bar([0, j + 1], [W, j + 1], BORDER, 1, 1, `gy${j}`))}

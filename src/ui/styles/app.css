@@ -2734,6 +2734,8 @@ select.cin {
 
 /* Door in the wall drawer: mini plan to move the door (DoorMap.tsx). A view only; the targets are the cells outside the walls. */
 .door-map {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -2750,7 +2752,11 @@ select.cin {
   font: 400 12px var(--font-ui);
   color: rgb(var(--ink-muted));
 }
+/* Its natural size at most (DoorMap sets the max), smaller when the settings column has less height */
 .door-map svg {
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
   align-self: center;
   overflow: visible;
 }
@@ -2773,12 +2779,12 @@ select.cin {
   pointer-events: none;
 }
 
-/* Three-part drawers (door, wall, free-standing textile wall): settings · mini plan or graphics shelf · the drawing,
-   one fixed height with no scrolling, the help line across the bottom. The shelf narrows on narrow screens so the
-   drawing keeps its width. */
+/* Two-part drawers (wall with its doors, free-standing textile wall), Bjørn 7.11.2026: settings · the drawing, one fixed
+   height with no scrolling, the help line across the bottom. Under the settings, the graphics shelf or the door's
+   mini plan fills what is left of the column; the compact drawer leaves them out, so the drawing keeps the width. */
 .wall-drawer.drawer3 {
   container-type: inline-size;
-  grid-template-columns: minmax(230px, 270px) auto minmax(0, 1fr);
+  grid-template-columns: minmax(260px, 310px) minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr) auto;
   height: 270px;
   max-height: none;
@@ -2817,11 +2823,17 @@ select.cin {
 .drawer3 > .wd-hint {
   position: static;
 }
-/* The middle part: the door's mini plan or the graphics shelf */
-.wd-mid {
+/* Under the settings: the graphics shelf or the door's mini plan, only in the detail height */
+.wd-sec {
+  flex: 1;
   min-height: 0;
-  padding: 10px 12px 12px;
-  border-right: 1px solid var(--g-row);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 6px;
+}
+.drawer-frame.compact .wd-sec {
+  display: none;
 }
 .wd-foot {
   margin-top: auto;
@@ -2862,26 +2874,19 @@ select.cin {
   align-items: center;
   gap: 2px;
 }
-.wd-shelf {
-  width: 196px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding-bottom: 0;
-}
 .wd-shelf > .eyebrow {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-/* The tiles grow to fill the section (Bjørn 2.11.2026); with many motifs they keep 44 px and the grid scrolls */
+/* Four tiles across; with many motifs the grid scrolls */
 .wd-shelf-grid {
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  grid-auto-rows: minmax(44px, 1fr);
-  align-content: stretch;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: 54px;
+  align-content: start;
   gap: 6px;
   overflow-y: auto;
   scrollbar-width: thin;
@@ -2894,26 +2899,6 @@ select.cin {
 }
 .wd-shelf .mot[draggable='true'] {
   cursor: grab;
-}
-@container (max-width: 900px) {
-  .wd-shelf {
-    width: 116px;
-  }
-  .wd-shelf-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-@container (max-width: 680px) {
-  .wd-shelf {
-    width: 64px;
-    padding-inline: 8px;
-  }
-  .wd-shelf > .eyebrow {
-    display: none;
-  }
-  .wd-shelf-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 
 /* The selection pill over what is selected in Velg (plan/SelectionPill.tsx): like the quick picks, shadow only */
@@ -3026,61 +3011,3 @@ select.cin {
   }
 }
 
-/* PROTOTYPE two sections: settings (with the graphics or mini plan in it) · the drawing */
-.wall-drawer.drawer3 {
-  grid-template-columns: minmax(260px, 310px) minmax(0, 1fr);
-}
-.drawer3 .wd-insp > .wd-foot {
-  order: 2;
-}
-.wd-sec {
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding-top: 6px;
-}
-.wd-shelf {
-  width: auto;
-  flex: 1;
-}
-.wd-shelf-grid {
-  flex: 1;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  grid-auto-rows: 54px;
-  align-content: start;
-}
-.drawer-frame.compact .wd-shelf {
-  flex: none;
-}
-.drawer-frame.compact .wd-shelf-grid {
-  flex: none;
-  grid-template-columns: none;
-  grid-auto-flow: column;
-  grid-auto-columns: 46px;
-  grid-auto-rows: 40px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding-bottom: 2px;
-}
-@container (max-width: 900px) {
-  .wd-shelf { width: auto; }
-  .wd-shelf-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-}
-@container (max-width: 680px) {
-  .wd-shelf { width: auto; padding-inline: 0; }
-  .wd-shelf > .eyebrow { display: block; }
-  .wd-shelf-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-}
-.drawer-frame.compact .wd-foot {
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-}
-.drawer-frame.compact .wd-foot .wd-row {
-  flex: 1;
-  min-width: 0;
-}
-.drawer-frame.compact .wd-foot .btn {
-  height: 30px;
-}
