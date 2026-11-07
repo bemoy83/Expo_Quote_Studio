@@ -85,6 +85,10 @@ samme indeks, så DG holder når selgeren gir rabatt (Bjørn 7.11.2026). Påslag
 
 ## Prisartikler fra motoren
 
+Pris på tilbudet (Bjørn 7.11.2026): alt i katalogen selges til fast stk-pris fra OMS. For dem gir motoren bare kost,
+DG og estimert tid i kalkylen. Motoren setter pris bare på det katalogen ikke dekker, tilpassede størrelser fra
+tegningen (sum-produkter, se [prismodell.md](prismodell.md)).
+
 Kalkylen bygger linjene av prisartikler (`src/pricing/data.ts`). En prisartikkel med oppskrift får kost og pris fra
 motoren (`src/cost/items.ts`): oppskriften sier hvilke Foga-deler (i listens enhet, meter eller stk) og egne innkjøp
 artikkelen består av, og artikkelens egne minutter per håndteringssteg er personminuttene.
@@ -146,7 +150,8 @@ minutter per meter vegg og 2 per meter takdrager.
 Før kalibreringen ga appen, med ekte Foga-priser, 3,3 ganger prisen og 3,4 ganger tiden. Etter: tidene for vegg- og
 takdragerartiklene er skalert (0,34 og 0,15, `TIME_FACTOR` i `src/pricing/data.ts`, fordelingen på stegene beholdt), og
 bruk i levetiden er 14 for profiler og plater og 25 for koblinger (var 4 og 10 i Bjørns kalkulator). Da treffer appen
-alle tre innen 3 % på pris (DG 70 %) og tid. Tidene sjekkes i `src/calc/calc.test.ts`; prisene sjekkes utenfor repoet,
+alle tre innen 3 % på tid, og kosten gir DG 70 % på dagens pris (prisen er nå OMS-prisen, 765 kr per meter vegg og
+121 per meter takdrager). Tidene sjekkes i `src/calc/calc.test.ts`; prisene sjekkes utenfor repoet,
 fordi den ekte prislisten ikke publiseres.
 
 ## Åpent

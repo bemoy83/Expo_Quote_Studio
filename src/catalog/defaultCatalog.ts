@@ -41,6 +41,9 @@ const PLATES: [ral: string, name: string, color: string][] = [
   ['3002', 'Rød', '#9B2423'],
 ];
 
+// Price (Bjørn 7.11.2026): everything in the catalog (standard deliveries: Foga walls, doors, curtains, takdrager) is
+// sold at its fixed stk price from the OMS ('fast'); the cost engine gives only cost, DG and time in the kalkyle, from
+// what is drawn. Only what the catalog does not cover, custom sizes from the drawing, is priced as a sum ('sum').
 // Two levels (Bjørn 31.10.2026). Level 1 is what the customer buys: one line on the quote, with the sales price.
 // Level 2 (article: true) is what the montør picks; the picking list counts it from the drawing. A level 1 product is
 // a nominal bundle of articles (wall: plate, 2 posts, top and bottom rail per metre), never shown on the quote.
@@ -53,8 +56,9 @@ const products: Product[] = [
     unit: 'lm',
     group: 'vegg.vegger',
     dim: '1 × 2,5 m per meter',
-    pricing: 'sum',
-    variants: PLATES.map(([ral, name, color]) => ({ artnr: `6120-${ral}`, name, ral, color, price: 870, placeholder: true })),
+    pricing: 'fast',
+    // 765 kr per m is what a wall sells for today (Bjørn 7.11.2026)
+    variants: PLATES.map(([ral, name, color]) => ({ artnr: `6120-${ral}`, name, ral, color, price: 765 })),
   },
   // Coloured plate in a stand wall the organiser pays: the exhibitor pays the plate and swapping it (docs/vegger.md).
   // Art.nr 6125 is a placeholder.
@@ -65,18 +69,19 @@ const products: Product[] = [
     unit: 'lm',
     group: 'vegg.vegger',
     dim: 'plate i RAL med montering og demontering',
-    pricing: 'sum',
+    pricing: 'fast',
     variants: PLATES.map(([ral, name, color]) => ({ artnr: `6125-${ral}`, name, ral, color, price: 400, placeholder: true })),
   },
   // Foot plate under a post of a system wall that stands free (no takdrager): always the exhibitor's (Bjørn 1.11.2026).
   // Art.nr 6115 is a placeholder.
-  one('6115', 'Støtteplate systemvegg', 'system', 'stk', 'vegg.vegger', 120, { dim: '500 × 80 mm under stolpe, montert', pricing: 'sum' }),
-  one('6110', 'Takdrager 80 × 20 mm', 'system', 'lm', 'vegg.takdrager', 420, { dim: 'stolper inkludert', pricing: 'sum' }),
+  one('6115', 'Støtteplate systemvegg', 'system', 'stk', 'vegg.vegger', 120, { dim: '500 × 80 mm under stolpe, montert', pricing: 'fast' }),
+  // 121 kr per m: what Bjørn's three priced stands give for takdrager (7.11.2026), still a placeholder
+  one('6110', 'Takdrager 80 × 20 mm', 'system', 'lm', 'vegg.takdrager', 121, { dim: 'stolper inkludert', pricing: 'fast' }),
   // A takdrager lifted over a textile wall: the post (or hook point) extended with 94 (Bjørn 6.11.2026). Own line: a beam
   // can be lifted higher later and cost more. Art.nr 6111 is a placeholder.
-  one('6111', 'Skjøt takdrager over tekstilvegg', 'system', 'stk', 'vegg.takdrager', 90, { dim: '94 × 80 mm på stolpe eller ved krok, montert', pricing: 'sum' }),
-  one('6130', 'Dør med overstykke', 'object', 'stk', 'vegg.dorer', 2620, { opening: 'door', pricing: 'sum' }),
-  one('6131', 'Forheng med overstykke', 'object', 'stk', 'vegg.dorer', 870, { dim: 'i åpning 960 mm', opening: 'curtain', pricing: 'sum' }),
+  one('6111', 'Skjøt takdrager over tekstilvegg', 'system', 'stk', 'vegg.takdrager', 90, { dim: '94 × 80 mm på stolpe eller ved krok, montert', pricing: 'fast' }),
+  one('6130', 'Dør med overstykke', 'object', 'stk', 'vegg.dorer', 2620, { opening: 'door', pricing: 'fast' }),
+  one('6131', 'Forheng med overstykke', 'object', 'stk', 'vegg.dorer', 870, { dim: 'i åpning 960 mm', opening: 'curtain', pricing: 'fast' }),
   // Vegger: level 2 articles
   {
     id: '6290',

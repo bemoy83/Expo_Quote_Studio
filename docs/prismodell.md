@@ -9,8 +9,8 @@ henter. Kostmodellen for det som prosjekteres og bygges eier appen selv: kostmot
 [kostmodell.md](kostmodell.md). Tidligere (31.10.2026) skulle OMS regne all kost og appen bare få ferdige tall; Bjørn
 endret det 7.11.2026. For et produkt som prises som sum av artikler legger appen sammen det som faktisk er tegnet.
 
-Alle tall i appen i dag er eksempeltall. Systemvegg og takdrager prises fra kostmotoren og kostgrunnlaget (7.11.2026),
-resten fra `src/pricing/data.ts` og `src/catalog/defaultCatalog.ts`.
+Alle tall i appen i dag er eksempeltall, unntatt veggprisen 765 kr per meter (Bjørn 7.11.2026). Kost og tid for
+systemvegg og takdrager kommer fra kostmotoren og kostgrunnlaget, prisene fra `src/catalog/defaultCatalog.ts`.
 
 ## 1. Tre nivåer
 
@@ -54,19 +54,20 @@ egen linje. Arbeidstimer selges bare som egen tjeneste når selve produktet er a
 eget utstyr (henge en hylle fra IKEA på veggen). I appen heter den «Arbeidstimer, hjelp med kundens eget utstyr».
 
 ### Prisstrategi per produkt
-- **Sum** (standard for alt som bygges): prisen er summen av det som faktisk bygges, altså artikler, bestanddeler
-  plukket direkte og montering, hver med kost fra kostmotoren og pris fra DG-målet.
-- **Fast**: produktet har én pris per enhet fra OMS. Kalkylen viser likevel kost og DG.
+Bestemt 7.11.2026 (Bjørn): **alt som finnes i katalogen og nettbutikken selges til fast stk-pris fra OMS**, også Foga-
+vegger, dører, forheng og takdragere. Tilbudet avviker aldri fra OMS. Kostmotoren regner kost, DG og estimert
+arbeidstid for det som faktisk er tegnet, og viser det bare i kalkylen.
 
-Med sum følger prisen tegningen. Stolper som deles mellom naboer telles én gang, en tekstilramme prises etter sin
-størrelse og en frittstående tekstilvegg etter føtter, stag, skjøter og hjørner, og en takdrager etter sine lengder og egne stolper. Derfor kan prisen per meter variere litt fra stand til
-stand. Bjørn 31.10.2026: slik skal det være, prisen følger tegningen. Naboelementer deler stolper, og hver modul
-(også dør og forheng) bærer en lik andel av veggstolpene. Uten tegning, for eksempel 10 vegger lagt i en handlekurv,
-prises hvert element frittstående med to stolper. Kanskje skal vegger bare kunne bestilles tegnet, men da må
-plantegningen åpnes for kunden. Mangler en artikkelpris, faller linjen tilbake til produktets egen pris og kalkylen viser at kosten mangler.
+- **Fast** (alt i katalogen): én pris per enhet fra OMS, for eksempel 765 kr per meter vegg. Kalkylen viser kost og
+  DG fra det som er bygget: stolper som deles mellom naboer telles én gang i kosten, men prisen per meter er den samme.
+- **Sum** (bare det katalogen ikke dekker): tilpassede størrelser fra standtegningen, for eksempel en tekstilramme i
+  egne mål eller et spesialkapp. Prisen er summen av det som bygges, med kost fra kostmotoren og pris fra DG-målet.
+
+Tidligere (31.10.2026) skulle veggprisen følge tegningen, som sum av artikler. Det gjelder ikke lenger. Mangler en
+artikkel i prislisten, står linjen med sin pris og uten kost, og kalkylen teller den opp.
 
 ### Veiledende pris
-Appen foreslår pris fra direkte kost og DG-mål. Fast pris per stk kommer fra OMS.
+Fast pris per stk kommer fra OMS. For sum-produkter (tilpassede mål) foreslår appen pris fra direkte kost og DG-mål:
 
 `veiledende pris = direkte kost / (1 − DG-mål)`
 
