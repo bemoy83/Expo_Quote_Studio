@@ -132,7 +132,7 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf }: 
                   {v.stand.width} × {v.stand.depth} m
                 </dt>
                 <dd>
-                  {TYPE_NAME[v.stand.type]} · {standScope(k, res.foga.posts)}
+                  {TYPE_NAME[v.stand.type]} · {standScope(k)}
                 </dd>
               </div>
               <div>

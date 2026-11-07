@@ -4,8 +4,8 @@ import { count, fmt } from './format'
 
 export const TYPE_NAME = { row: 'Rekkestand', corner: 'Hjørnestand', end: 'Endestand', island: 'Øystand' } as const
 
-/** '2 lengder · 3 stolper' */
-export const beamSummary = (k: Pick<KeyFigures, 'beamLengths' | 'beamPosts'>) => `${count(k.beamLengths, 'lengde', 'lengder')} · ${count(k.beamPosts, 'stolpe', 'stolper')}`
+/** '2 lengder'. Posts are part of the takdrager, like the wall's: only the picking list counts them. */
+export const beamSummary = (k: Pick<KeyFigures, 'beamLengths'>) => count(k.beamLengths, 'lengde', 'lengder')
 
 /** What the organiser delivers, '' when nothing: 'standvegger 10 lm i hvit og takdrager 10 m'. */
 export function fromOrganiser(k: Pick<KeyFigures, 'organiserWallLm' | 'organiserBeamLm'>, colour: string) {
@@ -14,16 +14,12 @@ export function fromOrganiser(k: Pick<KeyFigures, 'organiserWallLm' | 'organiser
 }
 
 /** Work order stand line: what the exhibitor builds, then what the organiser delivers:
- *  '1 lm vegg · 1 stolpe · fra arrangør: 8 lm standvegg, 8 m takdrager'. `posts` are the exhibitor's own (walls and
- *  own takdrager), so they sit with the own part. 'uten takdrager' only when there are none at all. */
-export function standScope(k: Pick<KeyFigures, 'wallLm' | 'organiserWallLm' | 'beamLm' | 'organiserBeamLm'>, posts: number) {
+ *  '1 lm vegg · fra arrangør: 8 lm standvegg, 8 m takdrager'. Posts are part of the wall and the takdrager, never a
+ *  separate item in text: only the picking list counts them. 'uten takdrager' only when there are none at all. */
+export function standScope(k: Pick<KeyFigures, 'wallLm' | 'organiserWallLm' | 'beamLm' | 'organiserBeamLm'>) {
   const some = (n: number) => n > 1e-9
   const ownBeam = k.beamLm - k.organiserBeamLm
-  const own = [
-    `${fmt(k.wallLm - k.organiserWallLm)} lm vegg`,
-    ...(some(ownBeam) ? [`${fmt(ownBeam)} m takdrager`] : some(k.beamLm) ? [] : ['uten takdrager']),
-    count(posts, 'stolpe', 'stolper'),
-  ]
+  const own = [`${fmt(k.wallLm - k.organiserWallLm)} lm vegg`, ...(some(ownBeam) ? [`${fmt(ownBeam)} m takdrager`] : some(k.beamLm) ? [] : ['uten takdrager'])]
   const theirs = [
     ...(some(k.organiserWallLm) ? [`${fmt(k.organiserWallLm)} lm standvegg`] : []),
     ...(some(k.organiserBeamLm) ? [`${fmt(k.organiserBeamLm)} m takdrager`] : []),
