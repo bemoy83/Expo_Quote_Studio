@@ -4,9 +4,10 @@ Bjørns arbeidsplass skal bygge et nytt OMS fra bunnen av (31.10.2026). Dette do
 ønsker, slik at den kan brukes som kravspec. Expo Quote Studio er referansen for hva appen trenger fra OMS, og
 `src/pricing/` viser appens side av modellen i kode.
 
-**Ansvarsdeling.** OMS eier produktene, grupperingen og hele kostmodellen, og regner ut ferdige tall. Appen regner
-ikke ut kostpris eller påslag. Den får kost og pris per enhet fra OMS og gjør bare én ting selv: for et produkt som
-prises som sum av artikler legger den sammen de ferdige artikkelprisene for det som faktisk er tegnet.
+**Ansvarsdeling (endret 7.11.2026).** OMS eier produktene og grupperingen, og har standardiserte stk-priser som appen
+henter. Kostmodellen for det som prosjekteres og bygges eier appen selv: kostmotoren i `src/cost/`, beskrevet i
+[kostmodell.md](kostmodell.md). Tidligere (31.10.2026) skulle OMS regne all kost og appen bare få ferdige tall; Bjørn
+endret det 7.11.2026. For et produkt som prises som sum av artikler legger appen sammen det som faktisk er tegnet.
 
 Alle tall i appen i dag er eksempeltall (`src/pricing/data.ts`, og kost i `src/catalog/defaultCatalog.ts`).
 
