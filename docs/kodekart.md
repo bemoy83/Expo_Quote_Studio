@@ -27,6 +27,15 @@ Alt avledes fra modellen (`Variant` i `src/domain/types.ts`). Rekkefølgen er al
 er bygget (moduler, stolper, takdragere, fotplater, produksjon) og hvem som betaler, ligger i `calc/context.ts`.
 Rekkefølgen på linjene i tilbudet er rekkefølgen blokkene kjøres i `calc/calc.ts`.
 
+**Ny Foga-del eller ny tekstilvariant (LED, kube):** delen i `foga/parts.ts` (art.nr, snitt og slitasjegruppe
+`kind`; LED og trafo får egen gruppe når levetiden er kjent). Byggereglene i oppskriften (`foga/recipes.ts`): en
+dypere LED-ramme er en egen `TextileFrameRecipe` med samme form, en kube er en ny montering ved siden av `wall` og
+`feet`. Rammens deler telles i `calc/textile/common.ts` (`frameParts`), så plukklisten og kalkylen følger med. I
+kalkylen trenger hver løs del en prisartikkel med oppskrift i `pricing/data.ts` (`ITEM`, `ITEMS`, `ITEM_RECIPES`) og
+en plass i `LOOSE_ITEM` i `calc/textile/lines.ts`; det motoren ikke finner en pris for, beholder eksempeltallene og
+merkes i kalkylen. Kjøpt til jobben (Samba-duk) legges i egne innkjøp (`cost/own-list.ts`, ekte priser bare i
+kostgrunnlaget). Regel og kilde føres i `docs/byggeregler.md`.
+
 ## Per produkt
 
 ### Vegger (standvegg, innervegg, romvegg)
