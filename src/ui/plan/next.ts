@@ -22,7 +22,7 @@ import { builtModules, doorAllowed, type BuiltModule } from '../../domain/walls'
 import { RECIPES } from '../../foga/recipes'
 import type { Motif } from '../../persistence/file'
 import { applyDrop, type DecorDrag } from '../dnd'
-import { place, productOf, rules } from '../env'
+import { place, pricing, productOf, rules } from '../env'
 import type { Brush, Tool } from '../tools'
 import { mm } from './dims'
 import { nearestEdge } from './geometry'
@@ -262,7 +262,7 @@ function textilePill(r: Exclude<TextileResult, { error: string }>): Pill {
     return { a, b, width: 'textile', text: `${mm(t.width)} på vegg` }
   }
   const t = r.v.freeTextiles.find((x) => x.id === r.free.id)!
-  const f = freeFrames(r.v, RECIPES.freeFrame, rules.textile.inFrame, '').find((x) => x.textileId === t.id)
+  const f = freeFrames(r.v, RECIPES.textileFrame, rules.textile.inFrame, '').find((x) => x.textileId === t.id)
   return { a: t.from, b: t.to, width: 'textile', text: mm(f ? f.length / 1000 : 0) }
 }
 
@@ -331,6 +331,6 @@ function fillTarget(p: NextInput, product: string, rect: Rect | undefined): Next
   const roll = p.floor.rollWidth
   if (!roll) return null
   return target(`fill:${product}:${rect ? `${rect.i},${rect.j},${rect.w},${rect.h}` : 'stand'}`, () =>
-    area({ edit: (x) => fillCarpet(x, product, roll, rules.carpet, rect), hint: null }),
+    area({ edit: (x) => fillCarpet(x, product, roll, pricing.carpet, rect), hint: null }),
   )
 }

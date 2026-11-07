@@ -59,6 +59,8 @@ export interface CatalogRow {
   kind: Product['kind'];
   /** Priced as the sum of its articles: the price here is only used when an article price is missing. */
   sum: boolean;
+  /** Level 2 article: picked, never sold, so it has no price (types.ts). */
+  article: boolean;
 }
 
 export function catalogRows(c: Catalog, e: CatalogEdits): CatalogRow[] {
@@ -71,10 +73,11 @@ export function catalogRows(c: Catalog, e: CatalogEdits): CatalogRow[] {
       unit: p.unit,
       group: p.group,
       price: v.price,
-      placeholder: !!v.placeholder,
+      placeholder: !p.article && !!v.placeholder,
       added: added.has(p.id),
       kind: p.kind,
       sum: p.pricing === 'sum',
+      article: !!p.article,
     })),
   );
 }
@@ -151,7 +154,7 @@ export function toCSV(rows: CatalogRow[]): string {
   const out = [['Varenr', 'Navn', 'Enhet', 'Gruppe', 'Undergruppe', 'Pris', 'Status']];
   for (const r of rows) {
     const g = resolveGroup(r.group);
-    out.push([r.artnr, r.variant ? `${r.product} ${r.variant}` : r.product, r.unit, g.group.name, g.subgroup.name, num(r.price), r.placeholder ? 'Plassholder' : 'Bekreftet']);
+    out.push([r.artnr, r.variant ? `${r.product} ${r.variant}` : r.product, r.unit, g.group.name, g.subgroup.name, r.article ? '' : num(r.price), r.article ? 'Artikkel' : r.placeholder ? 'Plassholder' : 'Bekreftet']);
   }
   return toCsvText(out);
 }
@@ -234,7 +237,10 @@ export function importTable(base: Catalog, e: CatalogEdits, table: string[][]): 
     const name = ci.name >= 0 ? (r[ci.name] ?? '').trim() : '';
     const c = applyEdits(base, edits);
     const row = catalogRows(c, edits).find((x) => x.artnr === artnr);
-    if (row) {
+    if (row?.article) {
+      // An article has no price: a price in the file is ignored
+      skipped++;
+    } else if (row) {
       edits = editRow(edits, row, { price, placeholder: false, ...(name && row.added ? { product: name } : {}) });
       updated++;
     } else {

@@ -7,7 +7,7 @@ import { PlanView } from './PlanView'
 import type { PlanSelection } from './selection'
 
 /** Read-only plan: the quote's sketch and the 3D view's mini map. Outside the mini map it is a document (wider lines). */
-export function PlanPreview(p: { v: Variant; res: CalcResult; mini?: boolean; groups?: ReadonlySet<string>; floorFull?: boolean; positions?: boolean }) {
+export function PlanPreview(p: { v: Variant; res: CalcResult; mini?: boolean; groups?: ReadonlySet<string>; floorFull?: boolean; positions?: boolean; textileLabels?: boolean }) {
   const { v, res, mini, groups, floorFull } = p
   return (
     <PlanView
@@ -15,6 +15,7 @@ export function PlanPreview(p: { v: Variant; res: CalcResult; mini?: boolean; gr
       doc={!mini}
       floorFull={floorFull}
       positions={p.positions}
+      textileLabels={p.textileLabels}
       groups={groups}
       v={v}
       res={res}

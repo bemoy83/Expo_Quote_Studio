@@ -67,10 +67,8 @@ export interface SystemParts {
   beam: string;
   /** Lifting a takdrager over a textile wall, per extended post or hook point. */
   beamLift: string;
-  /** InFrame textile frame on a system wall (rental), price per m² of B × H, sold per piece. */
+  /** Textile frame (rental), on a system wall or on foot plates: one product, price per m² of B × H, sold per piece. */
   textile: string;
-  /** Free-standing textile wall frame (rental), per metre. */
-  freeTextile: string;
   /** Textile per m² of visible face, by what it is: printed, white, or the customer's own (mounting only). */
   textileFill: Record<TextileFill, string>;
   foil: string;

@@ -4,11 +4,14 @@ Bjørns arbeidsplass skal bygge et nytt OMS fra bunnen av (31.10.2026). Dette do
 ønsker, slik at den kan brukes som kravspec. Expo Quote Studio er referansen for hva appen trenger fra OMS, og
 `src/pricing/` viser appens side av modellen i kode.
 
-**Ansvarsdeling.** OMS eier produktene, grupperingen og hele kostmodellen, og regner ut ferdige tall. Appen regner
-ikke ut kostpris eller påslag. Den får kost og pris per enhet fra OMS og gjør bare én ting selv: for et produkt som
-prises som sum av artikler legger den sammen de ferdige artikkelprisene for det som faktisk er tegnet.
+**Ansvarsdeling (endret 7.11.2026).** OMS eier produktene og grupperingen, og har standardiserte stk-priser som appen
+henter. Kostmodellen for det som prosjekteres og bygges eier appen selv: kostmotoren i `src/cost/`, beskrevet i
+[kostmodell.md](kostmodell.md). Tidligere (31.10.2026) skulle OMS regne all kost og appen bare få ferdige tall; Bjørn
+endret det 7.11.2026. For et produkt som prises som sum av artikler legger appen sammen det som faktisk er tegnet.
 
-Alle tall i appen i dag er eksempeltall (`src/pricing/data.ts`, og kost i `src/catalog/defaultCatalog.ts`).
+Alle tall i appen i dag er eksempeltall, unntatt veggprisen 765 kr per meter (Bjørn 7.11.2026). Kost og tid for
+systemvegg, takdrager og tekstilvegg kommer fra kostmotoren og kostgrunnlaget. Prisen på katalogprodukter kommer fra
+`src/catalog/defaultCatalog.ts`; tekstilveggen prises av motoren.
 
 ## 1. Tre nivåer
 
@@ -18,26 +21,25 @@ Alle tall i appen i dag er eksempeltall (`src/pricing/data.ts`, og kost i `src/c
 | 2 Artikkel | Det montøren plukker | Stolpe 94 med fot, toppskinne 92 960 mm | Sum av nivå 3 + håndtering |
 | 3 Bestanddel | Det en artikkel er laget av | 94 × 2490 mm, 700, M10 × 65 | Kostpris per enhet |
 
-Der det ikke finnes en artikkel, plukkes bestanddelene direkte (tekstilvegg: 43TX, 617, 609, 520, 92LTX, 740, 730). De får da kost og pris
-som en artikkel.
+Der det ikke finnes en artikkel, plukkes bestanddelene direkte (tekstilvegg: 43TX, 92LTX, 617, 609, 604, 520, 740, 730; stag 90 med 600 er
+en ferdig enhet). De får da kost og pris som en artikkel.
 
-## 2. Kostpris per bestanddel (nivå 3), i OMS
+## 2. Kost per bestanddel (nivå 3), fra kostmotoren
 
-- Kostpris er **per enhet** og er ulik fra del til del: profiler per meter, plater og trykk per m², resten per stk.
-- En profil kappet til en **standardlengde** som gjenbrukes i sortimentet koster bare den kappede lengden.
-- En profil tilpasset et **mål utenfor sortimentet** (på forespørsel) trenger en egen pris eller et påslag.
-  Ikke bygget ennå; se åpne spørsmål.
-- Kostgrunnlaget er ett av to:
-  - **Kjøp**: kjøpt inn til jobben (trykk, folie, innleid tjeneste). Hele prisen er kost.
-  - **Eie**: eid og gjenbrukt (profiler, plater, møbler). Anbefalt formel:
-    `kost per bruk = (innkjøp / levetid i år + lagerkost per år) / antall bruk per år`.
-    Uten lagerkost er dette det samme som innkjøp / totalt antall bruk.
+Kost regnes i appens kostmotor, og reglene står i [kostmodell.md](kostmodell.md). Kort fortalt:
 
-## 3. Artikkel (nivå 2), i OMS
+- Kost er **direkte kost per enhet**: profiler per meter, plater og trykk per m², resten per stk. Indirekte kost er ett
+  påslag i prosent, vist som egen linje i kalkylen.
+- **Eie** (profiler, plater, koblinger): innkjøp fordelt på levetid og bruk per år per artikkelgruppe, rente og tap per
+  jobb. **Kjøp** (trykk, folie): innkjøp med svinn.
+- En profil kappet til en **standardlengde** koster bare den kappede lengden. En profil kappet til et **mål utenfor
+  sortimentet** er spesialkapp med egen regel (byggeregel X9).
+
+## 3. Artikkel (nivå 2)
 
 `kost artikkel = sum av bestanddeler × mengde + håndtering`
 
-`håndtering = sum av tid per steg × timepris montør`
+`håndtering = personminutter per steg × timekost`, regnet i kostmotoren.
 
 Stegene er **plukk, vask, transport og forhåndsmontering**. Ferdigmonterte enheter (stolpe med fot, skinner og
 takdrager med koblinger) lagres montert, så forhåndsmontering per bruk er normalt null.
@@ -53,21 +55,26 @@ egen linje. Arbeidstimer selges bare som egen tjeneste når selve produktet er a
 eget utstyr (henge en hylle fra IKEA på veggen). I appen heter den «Arbeidstimer, hjelp med kundens eget utstyr».
 
 ### Prisstrategi per produkt
-- **Sum** (standard for alt som bygges): prisen er summen av det som faktisk bygges, altså artikler, bestanddeler
-  plukket direkte og montering, hver med ferdig pris fra OMS.
-- **Fast**: produktet har én pris per enhet fra OMS. Kalkylen viser likevel kost og DG.
+Bestemt 7.11.2026 (Bjørn): **alt som finnes i katalogen og nettbutikken selges til fast stk-pris fra OMS**, også Foga-
+vegger, dører, forheng og takdragere. Tilbudet avviker aldri fra OMS. Kostmotoren regner kost, DG og estimert
+arbeidstid for det som faktisk er tegnet, og viser det bare i kalkylen.
 
-Med sum følger prisen tegningen. Stolper som deles mellom naboer telles én gang, en tekstilramme prises etter sin
-størrelse og en frittstående tekstilvegg etter føtter, stag, skjøter og hjørner, og en takdrager etter sine lengder og egne stolper. Derfor kan prisen per meter variere litt fra stand til
-stand. Bjørn 31.10.2026: slik skal det være, prisen følger tegningen. Naboelementer deler stolper, og hver modul
-(også dør og forheng) bærer en lik andel av veggstolpene. Uten tegning, for eksempel 10 vegger lagt i en handlekurv,
-prises hvert element frittstående med to stolper. Kanskje skal vegger bare kunne bestilles tegnet, men da må
-plantegningen åpnes for kunden. Mangler en artikkelpris, faller linjen tilbake til produktets egen pris og kalkylen viser at kosten mangler.
+- **Fast** (alt i katalogen): én pris per enhet fra OMS, for eksempel 765 kr per meter vegg. Kalkylen viser kost og
+  DG fra det som er bygget: stolper som deles mellom naboer telles én gang i kosten, men prisen per meter er den samme.
+- **Sum** (bare det katalogen ikke dekker): tilpassede størrelser fra standtegningen, for eksempel en tekstilramme i
+  egne mål eller et spesialkapp. Prisen er summen av det som bygges, med kost fra kostmotoren og pris fra DG-målet.
+
+Tidligere (31.10.2026) skulle veggprisen følge tegningen, som sum av artikler. Det gjelder ikke lenger. Mangler en
+artikkel i prislisten, står linjen med sin pris og uten kost, og kalkylen teller den opp.
 
 ### Veiledende pris
-OMS setter pris per artikkel. Anbefalt modell:
+Fast pris per stk kommer fra OMS. For sum-produkter (tilpassede mål) foreslår appen pris fra direkte kost og DG-mål:
 
-`veiledende pris = kost / (1 − DG-mål)`
+`veiledende pris = direkte kost × (1 + indirekte) / (1 − DG-mål)`
+
+Den indirekte kosten (eksempel 10 %, administrasjon) ligger inne i prisen, ikke som eget gebyr; katalogen er regnet
+slik (Bjørn 7.11.2026). Ordrekost (startkost trykk, administrasjon, levering) er kost én gang per tilbud og ligger
+ikke i noen pris ([kostmodell.md](kostmodell.md)).
 
 - Mål for dekningsgrad (DG) settes **per hovedgruppe** og kan overstyres **per produkt**. Et Foga-produkt som
   prosjekteres og bygges kan ha et annet mål enn en stol som kjøpes inn, lagres og flyttes.
@@ -75,14 +82,14 @@ OMS setter pris per artikkel. Anbefalt modell:
 
 ### Tid per håndteringssteg
 Tid lagres i minutter per steg: **plukk, vask, transport, forhåndsmontering, montering og demontering**. Demontering har
-egen tid (Bjørn 31.10.2026). Tid er både kost (minutter × timepris, regnet i OMS) og plan på arbeidsordren, så den følger
+egen tid (Bjørn 31.10.2026). Tid er både kost (personminutter × timekost, regnet i kostmotoren) og plan på arbeidsordren, så den følger
 hver artikkel og hvert produkt som egen størrelse, også når kronene er regnet ut på forhånd. I appen er det `time` på
 `PriceItem` (sum-produkter) og på produktet (faste produkter).
 
 ## 5. Kalkyle og tilbud
 
 - **Kalkylen** (internt) viser per linje: pris, kost, DG og strategi (sum eller fast). Den viser også DG per gruppe,
-  og kost, DB og DG for hele standen. Linjer uten kost står uten margin og telles opp. Selgeren trenger margin fordi
+  og kost, DB og DG for hele standen, og indirekte kost som egen linje med det som er igjen etter den. Linjer uten kost står uten margin og telles opp. Selgeren trenger margin fordi
   det kan bli gitt rabatt.
 - **Gyldighet**: tilbudet gjelder 30 dager fra det sendes, men aldri lenger enn 14 dager før montering
   (`rules.quote`). Datoene for montering, åpning og demontering ligger på prosjektet. De er plassholdere i appen og
@@ -98,8 +105,9 @@ hver artikkel og hvert produkt som egen størrelse, også når kronene er regnet
 - **Tilbudet** viser aldri kost, DB eller DG. Er et produkt dels leie og dels kjøp, får linjen en tekst til kunden,
   for eksempel «Leie av ramme, kjøp av tekstil».
 - **Flere linjer, én i tilbudet.** Tekstilvegger er to linjer i kalkylen, ramme (leie) og tekstil (salg), og én linje
-  i tilbudet med summen av begge (Bjørn 31.10.2026). Kunden kan ha duken fra før: da er tekstillinjen bare
-  montering.
+  i tilbudet med summen av begge (Bjørn 31.10.2026). Én tilbudslinje per rammestørrelse, «Tekstilvegg 3970 × 2540
+  mm», med egen pris (Bjørn 7.11.2026: like priser for ulike størrelser ser rart ut). Kunden kan ha duken fra før: da
+  er tekstillinjen bare montering.
 
 ## 6. Hva appen trenger fra OMS
 
@@ -108,7 +116,7 @@ hver artikkel og hvert produkt som egen størrelse, også når kronene er regnet
 | Produkter, varianter, grupper | Salgsprodukt | Panel, kalkyle, tilbud, plukkliste |
 | Strategi (sum eller fast) | Salgsprodukt | Hvordan linjen prises |
 | Pris og kost per enhet | Salgsprodukt (fast) | Pris og margin |
-| Pris, kost, timer og leie/salg per enhet | Artikkel, bestanddel plukket direkte, monteringsledd | Sum-produkter |
+| Leie/salg per enhet (kost og tid regner appen) | Artikkel, bestanddel plukket direkte, monteringsledd | Sum-produkter |
 | Kundetekst ved leie og kjøp | Salgsprodukt | Tilbudet |
 | Hvem betaler standveggene, arrangørens farge | Prosjekt (messe) | Fakturamottaker, platebytte |
 
@@ -130,15 +138,15 @@ dokumentet «Expo Quote Studio i OMS: hele modellen».
   også til plukklisten. Ikke noe vi bygger nå.
 - **Lagerstatus** vises mens det tegnes, men kommer senere fra OMS og følger prosjektet.
 - **Gyldighet**: prisen låses når tilbudet sendes og gjelder 30 dager. Tiden igjen til prosjektet styrer også.
-- **Spesialmål**: fast påslag per kapp, til vi lager en motor som regner det selv. Motoren kommer i et eget løp
-  senere, sammen med disker, podier og snekkervegger.
+- **Spesialmål**: fast påslag per kapp, til motoren regner det selv. Endret 7.11.2026: kostmotoren har egen regel for
+  spesialkapp (kostmodell.md).
 - **DG-mål**: eksempeltallene brukes til ekte tall finnes.
-- **Lagerkost** i eie-formelen er per enhet og år.
+- **Lagerkost** i eie-formelen er per enhet og år. Endret 7.11.2026: lager er indirekte kost, i påslaget.
 - **Tid**: demontering har egen tid ved siden av montering. Montørene rapporterer faktisk tid per produktgruppe, og
   etterkalkylen i OMS forbedrer tidene.
 - **Takdrager** i standardlengder 1–6 m og **støttestag** per meter stemmer. 0,5 m takdrager finnes som særtilfelle,
   utenfor standardlengdene.
-- **Veggpris** følger tegningen (se kapittel 4).
+- **Veggpris** følger tegningen. Endret 7.11.2026: veggen selges til fast OMS-pris per meter (kapittel 4).
 
 ## 9. Åpent
 

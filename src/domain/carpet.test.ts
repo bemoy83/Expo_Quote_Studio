@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { RULES } from '../rules/rules';
+import { DEFAULT_PRICING } from '../pricing/data';
 import { carpetMetrics, fillCarpet, fillProposals, layouts, offered, relayFill, removeFill } from './floor/rollFill';
 import { resizeLane, rotateLane } from './floor/edit';
 import { applyFloor } from './floor/brush';
@@ -11,7 +11,7 @@ import { createVariant } from './variant';
 
 const A = '5920';
 const B = '5921';
-const R = RULES.carpet;
+const R = DEFAULT_PRICING.carpet;
 const box = (t: FloorTile) => [t.i, t.j, t.w, t.h, t.roll];
 const sorted = (ts: readonly FloorTile[]) => ts.map(box).sort((a, b) => +a[1]! - +b[1]! || +a[0]! - +b[0]!);
 const stand = (width: number, depth: number) => createVariant('A', { width, depth, type: 'row' });

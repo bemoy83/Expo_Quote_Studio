@@ -1,86 +1,109 @@
-// Textile walls on the quote: the frame (rental) and the textile (sale) are two lines here and one on the quote
-// (`quote`). InFrame on system walls first (frames by size, then textile), then free-standing (frame per metre, then
-// textile on both sides). What is built comes from calc/production.ts.
+// Textile walls on the quote: one product whatever it is mounted on (Bjørn 7.11.2026: the frame is the same, on a
+// system wall with 520 or on foot plates). The frame (rental) and the textile (sale) are two kinds of line here and one
+// line per frame size on the quote (`quote`), each with its own price: frames by size and mounting, then the textile
+// by size and fill. What is built comes from calc/production.ts.
 import { displayName } from '../../catalog/lookup';
 import type { TextileFill } from '../../domain/types';
 import { RECIPES } from '../../foga/recipes';
+import type { FrameParts } from '../../foga/structure';
 import { ITEM } from '../../pricing/data';
 import type { Use } from '../../pricing/model';
 import { count, type CalcContext } from '../context';
 import type { CalcLine } from '../types';
+import type { FrameMount } from './common';
 
-const inFrameQuote = { key: 'tekstil-vegg', name: 'Tekstilvegg på systemvegg' };
-const freeQuote = { key: 'tekstil-fri', name: 'Tekstilvegg frittstående' };
-
+/** One quote line per frame size: frame and textile of that size, with its own price (Bjørn 7.11.2026). */
+const quoteOf = (size: string, lead: boolean) => ({ key: `tekstil:${size}`, name: `Tekstilvegg ${size}`, lead });
+const sizeOf = (W: number, H: number) => `${W} × ${H} mm`;
+type Face = { W: number; H: number; pw: number; ph: number; fill: TextileFill };
 /**
- * Textile per m² of visible face, by fill. Printed and white: the textile incl. bleed; all: pressed in along the whole
+ * Textile of one frame size per m² of visible face, by fill. Printed and white: the textile incl. bleed; all: pressed in along the whole
  * perimeter. The customer's own textile is only mounted.
  */
-function textileLines(c: CalcContext, faces: { W: number; H: number; pw: number; ph: number; fill: TextileFill }[], meta: string, quote: CalcLine['quote']): CalcLine[] {
+function textileLines(c: CalcContext, faces: Face[], size: string): CalcLine[] {
   return (['print', 'white', 'reuse'] as const).map((fill) => {
     const fs = faces.filter((f) => f.fill === fill);
     const uses: Use[] = [
       ...(fill === 'reuse' ? [] : [{ id: fill === 'print' ? ITEM.print : ITEM.white, qty: fs.reduce((a, f) => a + (f.pw * f.ph) / 1e6, 0) }]),
       { id: ITEM.textileEdge, qty: fs.reduce((a, f) => a + (2 * (f.W + f.H)) / 1000, 0) },
     ];
-    const n = fs.length;
-    return c.line(c.sys.textileFill[fill], fs.reduce((a, f) => a + (f.W * f.H) / 1e6, 0), { ...c.built, meta: `${meta} · ${n} ${n === 1 ? 'duk' : 'duker'}`, quote }, uses);
+    const meta = `${count(fs.length, 'duk', 'duker')} · ${size}`;
+    return c.line(c.sys.textileFill[fill], fs.reduce((a, f) => a + (f.W * f.H) / 1e6, 0), { ...c.built, meta, quote: quoteOf(size, false) }, uses);
   });
 }
 
-/**
- * InFrame frame per piece by size B × H: the loose frame parts (43TX at 2W + 2H, 617, 520), braces and handling. Fast
- * price: m² rate × B × H.
- */
-export function inFrameFrameLines(c: CalcContext): CalcLine[] {
-  const { prod, sys, idx } = c;
-  const bySize = new Map<string, typeof prod.pieces>();
-  for (const p of prod.pieces) bySize.set(`${p.W}×${p.H}`, [...(bySize.get(`${p.W}×${p.H}`) ?? []), p]);
-  const textile = idx.byArtnr.get(sys.textile);
-  return [...bySize].map(([size, pieces]) => {
-    const [W, H] = size.split('×').map(Number);
-    const n = pieces.length;
-    const uses: Use[] = [
-      { id: ITEM.frameProfileM, qty: (n * (2 * W + 2 * H)) / 1000 },
-      { id: ITEM.corner, qty: 4 * n },
-      { id: ITEM.wallFixing, qty: RECIPES.frame.wallFixing.perFrame * n },
-      { id: ITEM.braceM, qty: pieces.reduce((a, p) => a + ((p.braces?.qty ?? 0) * (p.braces?.length ?? 0)) / 1000, 0) },
-      { id: ITEM.bracePiece, qty: pieces.reduce((a, p) => a + (p.braces?.qty ?? 0), 0) },
-      { id: ITEM.frame, qty: n },
-    ];
-    const fast = Math.round((textile?.variant.price ?? 0) * ((W * H) / 1e6));
-    const name = `${textile ? displayName(textile) : sys.textile}, ${W} × ${H} mm`;
-    return { ...c.line(sys.textile, n, { ...c.built, quote: { ...inFrameQuote, lead: true } }, uses, fast), name, unit: 'stk' as const };
-  });
+const MOUNT_NAME: Record<FrameMount, string> = { vegg: 'på vegg', fotplater: 'på fotplater' };
+
+/** The price item of each loose frame part, by Foga code. */
+const LOOSE_ITEM: Readonly<Record<string, string>> = {
+  [RECIPES.textileFrame.corner]: ITEM.corner,
+  [RECIPES.textileFrame.splice.thread]: ITEM.splice,
+  [RECIPES.textileFrame.splice.slide.code]: ITEM.spliceSlide,
+  [RECIPES.textileFrame.wall.fixing.code]: ITEM.wallFixing,
+  [RECIPES.textileFrame.feet.foot.code]: ITEM.foot(RECIPES.textileFrame.feet.foot.code),
+  [RECIPES.textileFrame.feet.smallFoot.code]: ITEM.foot(RECIPES.textileFrame.feet.smallFoot.code),
+};
+
+/** One frame: what it is built of and the work, at full quantities. */
+interface FrameBuild {
+  W: number;
+  H: number;
+  mount: FrameMount;
+  textileId: string;
+  uses: Use[];
 }
 
-export function inFrameTextileLines(c: CalcContext): CalcLine[] {
-  return textileLines(c, c.prod.pieces, 'på systemvegg', { ...inFrameQuote, lead: false });
-}
-
-/**
- * Frittstående per metre: 43TX rails and free-end uprights, 92LTX corner posts, a foot plate and a brace at every
- * support, 617 corner and 609 splice connectors, mounting per coupling and handling per frame.
- */
-export function freeFrameLines(c: CalcContext): CalcLine[] {
-  const { prod } = c;
-  const free = prod.free;
-  const supports = free.reduce((a, f) => a + f.supports.length, 0);
-  const freeUses: Use[] = [
-    { id: ITEM.frameProfileM, qty: free.reduce((a, f) => a + f.profileMm, 0) / 1000 },
-    { id: ITEM.cornerPostM, qty: (prod.cornerPosts.qty * prod.cornerPosts.H) / 1000 },
-    ...[...new Set(free.map((f) => f.foot.code))].map((code) => ({ id: ITEM.foot(code), qty: free.filter((f) => f.foot.code === code).reduce((a, f) => a + f.supports.length, 0) })),
-    { id: ITEM.corner, qty: free.reduce((a, f) => a + f.connectors.corner, 0) },
-    { id: ITEM.splice, qty: free.reduce((a, f) => a + f.connectors.splice, 0) },
-    { id: ITEM.braceM, qty: free.reduce((a, f) => a + f.supports.length * f.braceLength, 0) / 1000 },
-    { id: ITEM.bracePiece, qty: supports },
-    { id: ITEM.frameCoupling, qty: free.reduce((a, f) => a + f.couplings, 0) },
-    { id: ITEM.frame, qty: free.length },
+/** A frame's parts as price items: the frame profile per metre, the loose parts, braces per metre and per piece, a
+ *  mounting per coupling and the handling of the frame. */
+function frameUses(p: FrameParts): Use[] {
+  return [
+    { id: ITEM.frameProfileM, qty: p.cuts.reduce((a, [l, q]) => a + l * q, 0) / 1000 },
+    ...p.loose.map(([code, qty]) => ({ id: LOOSE_ITEM[code] ?? code, qty })),
+    { id: ITEM.braceM, qty: (p.braces.qty * p.braces.length) / 1000 },
+    { id: ITEM.bracePiece, qty: p.braces.qty },
+    { id: ITEM.frameCoupling, qty: p.couplings },
+    { id: ITEM.frame, qty: 1 },
   ];
-  const freeMeta = [count(free.length, 'vegg', 'vegger'), `h ${free[0]?.H ?? 0} mm`, ...(prod.cornerPosts.qty ? [count(prod.cornerPosts.qty, 'hjørne', 'hjørner')] : [])];
-  return [c.line(c.sys.freeTextile, prod.freeLm, { ...c.built, meta: freeMeta.join(' · '), quote: { ...freeQuote, lead: true } }, freeUses)];
 }
 
-export function freeTextileLines(c: CalcContext): CalcLine[] {
-  return textileLines(c, c.prod.free.flatMap((f) => f.faces), 'frittstående, begge sider', { ...freeQuote, lead: false });
+/**
+ * Textile frames per piece by size B × H and mounting. The frame is the same either way (its parts,
+ * calc/textile/common.ts); on foot plates two frames that meet share a 92LTX (half to each). Fast price: m² rate × B × H.
+ */
+export function frameLines(c: CalcContext): CalcLine[] {
+  const { prod, sys, idx } = c;
+  const builds: FrameBuild[] = [
+    ...prod.pieces.map((p) => ({ W: p.W, H: p.H, mount: p.mount, textileId: p.textileId, uses: frameUses(p.parts) })),
+    ...prod.free.map((f) => ({
+      W: f.length,
+      H: f.H,
+      mount: f.mount,
+      textileId: f.textileId,
+      uses: [...frameUses(f.parts), { id: ITEM.cornerPostM, qty: (f.nCorners * prod.cornerPosts.H) / 2 / 1000 }],
+    })),
+  ];
+  const groups = new Map<string, FrameBuild[]>();
+  for (const f of builds) {
+    const k = `${f.W}×${f.H}|${f.mount}`;
+    groups.set(k, [...(groups.get(k) ?? []), f]);
+  }
+  const textile = idx.byArtnr.get(sys.textile);
+  return [...groups.values()].map((fs) => {
+    const { W, H, mount } = fs[0];
+    const uses = new Map<string, number>();
+    for (const u of fs.flatMap((f) => f.uses)) if (u.qty) uses.set(u.id, (uses.get(u.id) ?? 0) + u.qty);
+    const fast = Math.round((textile?.variant.price ?? 0) * ((W * H) / 1e6));
+    const name = `${textile ? displayName(textile) : sys.textile}, ${W} × ${H} mm, ${MOUNT_NAME[mount]}`;
+    const line = c.line(sys.textile, fs.length, { ...c.built, quote: quoteOf(sizeOf(W, H), true) }, [...uses].map(([id, qty]) => ({ id, qty })), fast);
+    return { ...line, name, unit: 'stk' as const, drawn: [...new Set(fs.map((f) => f.textileId))] };
+  });
+}
+
+/** The textile on every frame, per frame size like the frames: one face on a wall, both on foot plates. */
+export function textileWallLines(c: CalcContext): CalcLine[] {
+  const bySize = new Map<string, Face[]>();
+  const add = (size: string, faces: Face[]) => bySize.set(size, [...(bySize.get(size) ?? []), ...faces]);
+  for (const p of c.prod.pieces) add(sizeOf(p.W, p.H), [p]);
+  for (const f of c.prod.free) add(sizeOf(f.length, f.H), f.faces);
+  return [...bySize].flatMap(([size, faces]) => textileLines(c, faces, size));
 }

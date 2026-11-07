@@ -6,6 +6,8 @@
 //   Tekstilvegg → TextileWall · Frittstående tekstilvegg → FreeTextile · Foliedekor → Foil · Tellevare → CountedItem · Variant → Variant
 //   Prosjekt → Project · Produkt → Product (see catalog)
 
+import type { CostBasisRef } from '../cost/basis';
+
 export type Point = readonly [x: number, y: number];
 
 /** rekke · hjørne · ende · øy */
@@ -264,4 +266,6 @@ export interface Project {
   delivery?: Delivery;
   /** Missing: DEFAULT_STAND_WALLS (domain/variant.ts). */
   standWalls?: StandWallTerms;
+  /** The kostgrunnlag the quote was last saved with, so it shows what its cost was calculated with. */
+  costBasis?: CostBasisRef;
 }

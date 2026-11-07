@@ -4,7 +4,8 @@
 /** `other`: not from Foga, but part of the wall system (HDF plates). */
 export type FogaSystem = 'flex' | 'fabric' | 'other';
 
-export type PartKind = 'profile' | 'coupling' | 'foot' | 'accessory' | 'plate';
+/** `frame`: the textile frame's profiles (43TX, 92LTX, brace 90), cut to size for the job, so they wear out sooner. */
+export type PartKind = 'profile' | 'frame' | 'coupling' | 'foot' | 'accessory' | 'plate';
 
 export interface FogaPart {
   /** Foga art.nr, e.g. "873 805 22". */
@@ -41,7 +42,7 @@ export const FOGA_PARTS: readonly FogaPart[] = [
   profile('92L', '873 050 22', 'Stolpe eller skinne, 90° hjørne', 'flex', [30, 30]),
   profile('92R', '873 054 22', 'Stolpe eller skinne, 90° hjørne med hyllestøtte', 'flex', [30, 30]),
   profile('92LL', '873 048 22', 'Stolpe eller skinne, dobbelt 90° hjørne', 'flex', [60, 30]),
-  profile('90', '873 040 22', 'Stolpe eller skinne, firkant', 'flex', [20, 20]),
+  { ...profile('90', '873 040 22', 'Stolpe eller skinne, firkant', 'flex', [20, 20]), kind: 'frame' },
   profile('91', '873 042 22', 'Stolpe eller skinne', 'flex', [20, 30]),
   profile('94', '873 062 22', 'Stolpe eller skinne, fire kanaler', 'flex', [40, 40]),
   profile('66', '873 032 22', 'Stolpe, seksvei', 'flex', [40, 40]),
@@ -52,13 +53,13 @@ export const FOGA_PARTS: readonly FogaPart[] = [
   profile('101', '873 090 22', 'Terskelskinne, én kanal', 'flex', [20, 40]),
   profile('292', '873 080 22', 'Stolpe eller skinne', 'flex', [80, 20]),
   // Fabric profiles
-  profile('43TX', '873 805 22', 'Tekstilprofil', 'fabric', [40, 40]),
+  { ...profile('43TX', '873 805 22', 'Tekstilprofil', 'fabric', [40, 40]), kind: 'frame' },
   profile('92TX', '873 808 22', 'Tekstilprofil', 'fabric', [40, 40]),
   profile('03TX', '873 803 22', 'Tekstilprofil, enkeltsidig', 'fabric', [30, 40]),
   profile('01TX', '873 801 22', 'Tekstilprofil, veggmontert', 'fabric', [15.5, 25.5]),
   profile('60BTX', '873 813 22', 'Tekstilprofil, 60 mm', 'fabric', [60, 65.5]),
   profile('80TX', '873 810 22', 'Tekstilprofil, 80 mm for baklys', 'fabric', [80, 40]),
-  profile('92LTX', '873 809 22', 'Tekstilprofil, hjørne', 'fabric', [57, 57]),
+  { ...profile('92LTX', '873 809 22', 'Tekstilprofil, hjørne', 'fabric', [57, 57]), kind: 'frame' },
   // Couplings and connectors
   part('600', '871 003 92', 'Kobling med justerbart hode'),
   part('604', '871 031 92', 'Forlenger i kanal'),

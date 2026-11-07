@@ -16,8 +16,8 @@ import { Button } from '../controls'
 import { idx, rules } from '../env'
 import { CUT_FOOT, cutRows } from '../cutList'
 import { lanesOf, rollPieces } from '../../domain/floor/lanes'
-import { fmt, hours } from '../format'
-import { TYPE_NAME } from '../names'
+import { hours } from '../format'
+import { standScope, TYPE_NAME } from '../names'
 import { pickRows, type PickRow } from '../picking/rows'
 import { PLAN_MARGIN } from '../plan/planStyle'
 import { PlanPreview } from '../plan/PlanPreview'
@@ -118,7 +118,7 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf }: 
 
           <section className="qdoc-summary">
             <div className="qdoc-plan" style={{ aspectRatio: `${v.stand.width + 2 * PLAN_MARGIN} / ${v.stand.depth + 2 * PLAN_MARGIN}` }}>
-              <PlanPreview v={v} res={res} groups={filtered ? shown : undefined} floorFull={shown.has('gulv')} positions />
+              <PlanPreview v={v} res={res} groups={filtered ? shown : undefined} floorFull={shown.has('gulv')} positions textileLabels />
             </div>
             <dl>
               {DELIVERY_FIELDS.map((d) => (
@@ -132,7 +132,7 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf }: 
                   {v.stand.width} × {v.stand.depth} m
                 </dt>
                 <dd>
-                  {TYPE_NAME[v.stand.type]} · {fmt(k.wallLm - k.organiserWallLm)} lm vegg{k.organiserWallLm ? ` (+ ${fmt(k.organiserWallLm)} lm standvegg fra arrangør)` : ''} · {k.beamLm - k.organiserBeamLm ? `${fmt(k.beamLm - k.organiserBeamLm)} m takdrager` : 'uten takdrager'} · {res.foga.posts} stolper
+                  {TYPE_NAME[v.stand.type]} · {standScope(k)}
                 </dd>
               </div>
               <div>

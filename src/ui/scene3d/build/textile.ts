@@ -42,9 +42,9 @@ export function buildTextile(c: BuildContext) {
     profiles(g, fw, h, bottom, { from: true, to: true }, -fw / 2, fw / 2, alu, tag)
     // One textile, on the face out from the wall
     textile(g, -fw / 2, fw, h, bottom, print, s === 1 ? 1 : -1, tag)
-    // Upright braces (90) evenly spread inside the frame
-    const n = piece?.braces?.qty ?? 0
-    for (let i = 1; i <= n; i++) brace(g, -fw / 2 + (fw * i) / (n + 1), h, bottom, alu, tag)
+    // Upright braces (90) where the calc puts them, as on foot plates: by a splice and at most 2 m apart
+    const W = piece?.W ?? fw * 1000
+    for (const at of piece?.braceAt ?? []) brace(g, -fw / 2 + (fw * at) / W, h, bottom, alu, tag)
   }
 
   // Frittstående tekstilvegger: a frame with textile on both faces (face A toward side 1), on foot plates
@@ -68,7 +68,7 @@ export function buildTextile(c: BuildContext) {
     const railTo = railFrom + f.railCuts.reduce((a, x) => a + x, 0) / 1000
     profiles(g, L, h, foot, { from: !f.corners.from, to: !f.corners.to }, railFrom, railTo, alu, tag)
     f.faces.forEach((x, i) => textile(g, -L / 2 + x.start / 1000, x.W / 1000, h, foot, face(x), i === 0 ? 1 : -1, tag))
-    for (const at of f.supports) brace(g, -L / 2 + at / 1000, h, foot, alu, tag)
+    for (const at of f.braces) brace(g, -L / 2 + at / 1000, h, foot, alu, tag)
     for (const at of f.supports) {
       const [x, y] = alongRun(t, at, f)
       const [dx, dy] = runDirection(t)

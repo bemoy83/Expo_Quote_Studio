@@ -6,6 +6,7 @@
 import { describe, expect, it } from 'vitest';
 import { createVariant } from '../domain/variant';
 import { RULES } from '../rules/rules';
+import { frameParts } from '../calc/textile/common';
 import { BOM_GROUP, bom, type Bom } from './engine';
 import { bomSizes, fromVariant } from './fromVariant';
 import { RECIPES } from './recipes';
@@ -62,7 +63,16 @@ describe('takdrager posts', () => {
 });
 
 describe('tekstilvegger', () => {
-  const frame = { pos: 'T1', W: 970, H: 2540, braces: null };
+  /** A frame on a wall: rails in these cuts, two sides, 4 × 617, 609 top and bottom per splice, 2 × 520. */
+  const onWall = (pos: string, railCuts: number[], braces = { qty: 0, length: 0 }) => ({
+    pos,
+    parts: frameParts(RECIPES.textileFrame, railCuts, { qty: 2, length: 2540 }, braces, [
+      ['617', 4],
+      ['609', 2 * (railCuts.length - 1)],
+      ['520', 2],
+    ]),
+  });
+  const frame = onWall('T1', [970]);
 
   it('43TX 2W + 2H mitred, 4 × 617, 2 × 520', () => {
     const b = bom({ ...empty, frames: [frame] }, RECIPES, Z);
@@ -71,13 +81,20 @@ describe('tekstilvegger', () => {
     expect(line(b, 'textile', '43TX')?.lm).toBeCloseTo(7.02);
     expect(line(b, 'textile', '617')?.qty).toBe(4);
     expect(line(b, 'textile', '520')?.qty).toBe(2);
+    expect(line(b, 'textile', '609')).toBeUndefined();
+  });
+
+  it('a frame on a wall past 5 m is spliced like on foot plates: 609 top and bottom', () => {
+    const b = bom({ ...empty, frames: [onWall('T1', [2985, 2985])] }, RECIPES, Z);
+    expect(line(b, 'textile', '43TX')).toMatchObject({ detail: '4 × 2985 · 2 × 2540 mm', qty: 6 });
+    expect(line(b, 'textile', '609')?.qty).toBe(2);
   });
 
   it('braces in 90 with a 600 in each end are pre-assembled and name their frames', () => {
     const frames = [
-      { ...frame, pos: 'T1', W: 2970, braces: { qty: 2, length: 2460 } },
-      { ...frame, pos: 'T2' },
-      { ...frame, pos: 'T3', W: 1970, braces: { qty: 1, length: 2460 } },
+      onWall('T1', [2970], { qty: 2, length: 2460 }),
+      onWall('T2', [970]),
+      onWall('T3', [1970], { qty: 1, length: 2460 }),
     ];
     const b = bom({ ...empty, frames }, RECIPES, Z);
     expect(line(b, 'textile', 'Støttestag')).toEqual({

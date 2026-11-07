@@ -1,4 +1,5 @@
 // All localStorage access goes through here. One key per kind of data.
+import { parseBasis, serializeBasis, type CostBasis } from '../cost/basis';
 import { parse, serialize, type Sketch } from './file';
 
 export const KEYS = {
@@ -7,6 +8,10 @@ export const KEYS = {
   inFrame: 'expo-quote-studio.inframe',
   layout: 'expo-quote-studio.layout',
   theme: 'expo-quote-studio.theme',
+  /** The kostgrunnlag loaded from a file. Only in this browser; never sent anywhere. */
+  costBasis: 'expo-quote-studio.kostgrunnlag',
+  /** Saved versions of the kostgrunnlag, with the basis each replaced. Only in this browser, like the basis. */
+  costHistory: 'expo-quote-studio.kostgrunnlag-historikk',
 } as const;
 
 function read(key: string): string | null {
@@ -23,6 +28,14 @@ function write(key: string, value: string): boolean {
     return true;
   } catch {
     return false;
+  }
+}
+
+function remove(key: string) {
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    // nothing stored, or storage blocked: either way it is gone
   }
 }
 
@@ -56,3 +69,20 @@ export function loadTheme(): Theme {
 }
 
 export const saveTheme = (t: Theme) => write(KEYS.theme, t);
+
+/** The kostgrunnlag kept in this browser, or null for the example. */
+export function loadCostBasis(): CostBasis | null {
+  const text = read(KEYS.costBasis);
+  if (!text) return null;
+  const r = parseBasis(text);
+  return r.ok ? r.basis : null;
+}
+
+/** Keep a kostgrunnlag in this browser, or null to go back to the example. False when the browser would not store it. */
+export function saveCostBasis(b: CostBasis | null): boolean {
+  if (!b) {
+    remove(KEYS.costBasis);
+    return true;
+  }
+  return write(KEYS.costBasis, serializeBasis(b));
+}

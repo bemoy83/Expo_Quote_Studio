@@ -16,30 +16,27 @@ export interface BeamSpec {
   lengthMm: number;
 }
 
-/** One textile frame (InFrame). Sizes as produced, mm. */
-export interface FrameSpec {
-  /** Production position, T1, T2 … */
-  pos: string;
-  W: number;
-  H: number;
-  braces: { qty: number; length: number } | null;
+/**
+ * What one textile frame is built of, counted once (calc/textile/common.ts): the picking list (engine.ts) and the
+ * kalkyle (calc/textile/lines.ts) both read it. A corner post shared by two free-standing frames is not here
+ * (calc/production.ts counts them).
+ */
+export interface FrameParts {
+  /** Frame profile pieces by cut length: top and bottom rails, the sides or the uprights at free ends, mm. */
+  cuts: readonly (readonly [length: number, qty: number])[];
+  /** Upright braces, each stored with its couplings. */
+  braces: { qty: number; length: number };
+  /** Loose parts by Foga code: corner and splice connectors, wall brackets, foot plates. */
+  loose: readonly (readonly [code: string, qty: number])[];
+  /** Couplings to put together and take apart on site: the corner and splice connectors and both ends of every brace. */
+  couplings: number;
 }
 
-/** One frittstående tekstilvegg run. Sizes as built, mm. */
-export interface FreeFrameSpec {
-  /** Production position, F1, F2 … */
+/** One textile frame, on a system wall or on foot plates (one product, Bjørn 7.11.2026). Sizes as built, mm. */
+export interface FrameSpec {
+  /** Production position: T1, T2 … on a wall, F1, F2 … on foot plates. */
   pos: string;
-  H: number;
-  /** Cut lengths of the top rail, and the same again for the bottom rail. */
-  railCuts: number[];
-  /** 43TX uprights at the free ends, H long. */
-  uprights: number;
-  /** 617 connectors (free ends and into corner posts) and 609 rail splices. */
-  connectors: { corner: number; splice: number };
-  /** Feet, each with an upright brace above it, and the foot plate code. */
-  supports: number;
-  foot: string;
-  braceLength: number;
+  parts: FrameParts;
 }
 
 export interface FogaStructure {
@@ -52,9 +49,8 @@ export interface FogaStructure {
   /** Takdrager lifted over a textile wall (calc/beamLift.ts): posts extended under them, and hook points between a
    *  lifted beam and one that is not. */
   beamLift?: { posts: number; hooks: number };
+  /** Textile frames, on walls and on foot plates. */
   frames: FrameSpec[];
-  /** Frittstående tekstilvegger. */
-  freeFrames?: FreeFrameSpec[];
   /** 92LTX corner posts shared by two free-standing runs, each `H` long. */
   cornerPosts?: { qty: number; H: number };
   /** Støtteplater under the posts of system walls that stand free (calc/wallSupports.ts), and of drawn takdrager. */

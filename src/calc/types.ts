@@ -3,7 +3,7 @@ import type { Unit } from '../catalog/types';
 import type { Payer, Point } from '../domain/types';
 import type { Bom } from '../foga/engine';
 import type { FogaStructure } from '../foga/structure';
-import type { Strategy, Time, Transfer } from '../pricing/model';
+import type { Strategy, Time, Transfer, Use } from '../pricing/model';
 import type { BeamLayout } from './beams';
 import type { Production } from './production';
 import type { WallSupport } from './wallSupports';
@@ -34,11 +34,17 @@ export interface CalcLine {
   terms?: string;
   /** Minutes per handling step for the whole line (from the OMS price list or the product). */
   time: Time;
+  /** The price items the line is built of, all of it (not per unit): what its cost, and a sum product's price, is the
+   *  sum of. Internal, for «Slik er det regnet» in the kalkyle. */
+  uses?: Use[];
   /** Who the line is invoiced to. Only stand walls and the takdrager that follow them can go to the organiser. */
   payer: Payer;
   /** Lines with the same key are one line on the quote, named `name`, with the quantity and unit of the `lead` line
-   *  (textile walls: frame and textile). */
+   *  (textile walls: frame and textile of one frame size). */
   quote?: { key: string; name: string; lead: boolean };
+  /** Ids of the drawn things this line prices, where a drawn thing's article is not its product alone (textile walls:
+   *  one quote line per frame size). Position numbers follow them (calc/positions.ts). */
+  drawn?: string[];
   /** Carpet tiles: pieces per tile size, largest first. The picking list counts these instead of m². */
   tiles?: { size: string; qty: number }[];
   /** Rolled floor in lanes: running metres of roll (with the end allowance), waste in m², and the lanes as cut. The
@@ -116,6 +122,9 @@ export interface Margin {
   dg: number;
   /** Lines without cost data: their price is the catalog price and they are not in the margin. */
   unknown: number;
+  /** Costs once per quote (start of print, admin and picking, delivery), in `cost`: not a price, the quote's lines
+   *  carry none of it (docs/kostmodell.md). */
+  order: { id: string; name: string; cost: number }[];
 }
 
 export interface CalcResult {

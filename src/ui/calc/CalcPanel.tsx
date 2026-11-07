@@ -5,7 +5,9 @@ import { groupItems, mainGroupOf } from '../../catalog/groups'
 import type { BomLine } from '../../foga/engine'
 import { LAYER_COLOR } from '../colors'
 import { Button } from '../controls'
-import { rules } from '../env'
+import { margins } from '../../cost/model'
+import { costBasis, pricing, rules } from '../env'
+import { LineTrace } from './Trace'
 import { fmt, hours, kr } from '../format'
 import type { Highlight } from '../tools'
 
@@ -38,7 +40,13 @@ export function CalcPanel({ res, name, onHover, onQuote }: { res: CalcResult; na
         <div className="spacer">
           <h2>Veiledende kalkyle</h2>
           <div className="sub">
-            Eksempelpriser fra OMS{placeholders ? <span className="ph"> · {placeholders} plassholderpriser</span> : null}
+            {costBasis.version === 'eksempel' ? 'Eksempelpriser' : `Kostgrunnlag ${costBasis.version}`} · {pricing.code}{placeholders ? <span className="ph"> · {placeholders} plassholderpriser</span> : null}
+            {pricing.missing.length ? (
+              <span className="ph">
+                {' '}
+                · uten kost i kostgrunnlaget: {pricing.missing.map((m) => (m.parts.length ? `${m.name} (mangler ${m.parts.join(', ')})` : `${m.name} (ingen oppskrift)`)).join(', ')}
+              </span>
+            ) : null}
           </div>
         </div>
         <span className="band-tag">
@@ -94,6 +102,12 @@ export function CalcPanel({ res, name, onHover, onQuote }: { res: CalcResult; na
           Internt: kost {kr(res.margin.cost)} · DB {kr(res.margin.db)} · DG {pct(res.margin.dg)}
           {res.margin.unknown > 0 && <span className="ph"> · {res.margin.unknown} {res.margin.unknown === 1 ? 'linje' : 'linjer'} uten kost</span>}
         </div>
+        {res.margin.order.length > 0 && (
+          <div className="inkl num margin">
+            Ordrekost i kosten: {res.margin.order.map((o) => `${o.name.toLowerCase()} ${kr(o.cost)}`).join(' · ')}
+          </div>
+        )}
+        <IndirectLine cost={res.margin.cost} sum={res.margin.sum} />
         {!!(t.montering || t.demontering) && (
           <div className="inkl num">
             Montering ca. {hours(t.montering ?? 0)} t · demontering ca. {hours(t.demontering ?? 0)} t, inngår i prisene
@@ -107,22 +121,41 @@ export function CalcPanel({ res, name, onHover, onQuote }: { res: CalcResult; na
   )
 }
 
+/** A kalkyle line; tapped, it opens «Slik er det regnet» under it. */
 function Line({ l, onHover }: { l: CalcLine; onHover: (h: Highlight) => void }) {
+  const [open, setOpen] = useState(false)
+  const toggle = () => setOpen((o) => !o)
   return (
-    <div className="cl" onMouseEnter={() => onHover(layerOf(l.group))}>
-      <span className="n">{l.name}</span>
-      <span className="s">{kr(l.sum)}</span>
-      <span className="meta">
-        {fmt(l.qty)} {l.unit} × {kr(l.price)}
-        {l.meta ? ` · ${l.meta}` : ''}
-        {l.placeholder && <span className="ph"> · plassholder</span>}
-      </span>
-      <span className="meta cost">
-        {l.strategy === 'sum' ? 'sum av artikler' : 'fast pris'}
-        {l.cost === null ? <span className="ph"> · kost mangler</span> : ` · kost ${kr(l.cost)} · DG ${pct(l.dg ?? 0)}`}
-        {l.terms ? ` · ${l.terms}` : ''}
-      </span>
-    </div>
+    <>
+      <div
+        className="cl tap"
+        role="button"
+        tabIndex={0}
+        aria-expanded={open}
+        title="Slik er det regnet"
+        onClick={toggle}
+        onKeyDown={(e) => {
+          if (e.key !== 'Enter' && e.key !== ' ') return
+          e.preventDefault()
+          toggle()
+        }}
+        onMouseEnter={() => onHover(layerOf(l.group))}
+      >
+        <span className="n">{l.name}</span>
+        <span className="s">{kr(l.sum)}</span>
+        <span className="meta">
+          {fmt(l.qty)} {l.unit} × {kr(l.price)}
+          {l.meta ? ` · ${l.meta}` : ''}
+          {l.placeholder && <span className="ph"> · plassholder</span>}
+        </span>
+        <span className="meta cost">
+          {l.strategy === 'sum' ? 'sum av artikler' : 'fast pris'}
+          {l.cost === null ? <span className="ph"> · kost mangler</span> : ` · kost ${kr(l.cost)} · DG ${pct(l.dg ?? 0)}`}
+          {l.terms ? ` · ${l.terms}` : ''}
+        </span>
+      </div>
+      {open && <LineTrace l={l} />}
+    </>
   )
 }
 
@@ -163,5 +196,18 @@ function Articles({ lines, open, onToggle }: { lines: BomLine[]; open: boolean; 
           )),
         )}
     </>
+  )
+}
+
+/** Indirect cost as its own line under the margin: DG is on direct cost, this is what is left after admin, premises
+ *  and vans (docs/kostmodell.md). Says so when the kostgrunnlag is example numbers. */
+function IndirectLine({ cost, sum }: { cost: number; sum: number }) {
+  const m = margins(cost, sum, costBasis.params)
+  const example = costBasis.version === 'eksempel'
+  return (
+    <div className="inkl num margin">
+      Indirekte kost {pct(costBasis.params.indirect)} {kr(m.indirect)} · igjen {kr(m.afterIndirect)}
+      {example && <span className="ph"> · eksempeltall</span>}
+    </div>
   )
 }

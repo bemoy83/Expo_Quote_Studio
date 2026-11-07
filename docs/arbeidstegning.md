@@ -60,7 +60,10 @@ Svar fra Bjørn står i **fet**. Der det står «forslag», gjelder det til Bjø
   (`calc/production.ts`). De står i trykkfilnavn og på Produksjon og Arbeidsordre. Posisjonsnummer i v5 er noe annet:
   **ett nummer per artikkel**. Samme artikkel får samme nummer overalt, og nummeret står ved prislinjen. Forslag:
   behold `T`/`F` som de er (de er produksjonens nøkler), og innfør artikkelnummeret som `Pos.` bare på tilbudet. Om
-  arbeidsordrens plan skal vise `Pos.` eller `T`/`F`, avgjør Bjørn.
+  arbeidsordrens plan skal vise `Pos.` eller `T`/`F`, avgjør Bjørn. **Bjørn 7.11.2026: arbeidsordrens plan viser
+  merkelappene tekstilene er merket med, `T1`, `T2` … på veggflate og `F1A`/`F1B` på hver side av en frittstående,
+  så skissen viser hvilken duk som skal hvor. Tilbudet beholder `Pos.` Frittstående har ingen egen løpstekst
+  («F1 · 2,5 m») i planen.**
 - **A3 · Snekret vegg** har ingen modell, pris, 3D eller veggriss. Den er utenfor denne bestillingen. Reserver bare
   mønsteret (skravur, ingen farge) i `planStyle.ts`, så det ikke blir brukt til noe annet.
 - **A4 · Liten skala.** Appen tegner i meter med faste strekbredder (`PLAN_WALL = 0.06`), så strekene vokser og krymper
@@ -106,7 +109,8 @@ Gjelder både InFrame (`v.textiles`) og frittstående (`res.production.free`):
 3. tverrstreker oppå fyllet: blekk 50 %, 3,2 px bred strek, `strokeDasharray` 0,5 px strek og 4 px luft. **Bare i
    full detalj.**
 
-Teksten ved frittstående vegg (`T1 · 3,00 m`) beholdes.
+Frittstående vegg har ingen egen tekst i planen (Bjørn 7.11.2026: ingen særbehandling). På arbeidsordren står
+merkelappene `F1A`/`F1B` på hver side, se A2.
 
 ### Print og dekal · `layers/TextileLayer.tsx` (folie) og `domain/print.ts`
 

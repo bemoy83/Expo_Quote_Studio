@@ -9,6 +9,15 @@ const base = DEFAULT_CATALOG;
 const rowOf = (artnr: string, e = NO_EDITS) => catalogRows(applyEdits(base, e), e).find((r) => r.artnr === artnr)!;
 
 describe('catalog edits', () => {
+  it('a level 2 article has no price, no placeholder status, and the import leaves it alone', () => {
+    const plate = rowOf('6290-9010');
+    expect(plate).toMatchObject({ article: true, price: 0, placeholder: false });
+    expect(rowOf('6120-9010').article).toBe(false);
+    expect(toCSV([plate])).toContain('6290-9010;Veggplate Hvit;stk;Vegger og bakrom;Veggplater;;Artikkel');
+    const r = importTable(base, NO_EDITS, parseTable('varenr;pris\n6290-9010;330'));
+    expect(r).toMatchObject({ updated: 0, skipped: 1 });
+  });
+
   it('no edits gives the same products', () => {
     expect(applyEdits(base, NO_EDITS).products).toEqual(base.products);
   });

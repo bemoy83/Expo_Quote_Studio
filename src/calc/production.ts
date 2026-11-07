@@ -4,8 +4,8 @@ import { RECIPES } from '../foga/recipes';
 import type { InFrameParams, Rules } from '../rules/rules';
 import { freeTrims, placeFrames } from './textile/placement';
 import { framePiece, type FramePiece } from './textile/inFrame';
-import { cornerPosts, freeFrames, type FreeFrame } from './textile/free';
-import { fullHeight, printFileName } from './textile/common';
+import { cornerPosts, freeFrames, type FreeFrame, type HeldEnds } from './textile/free';
+import { fullHeight, partsLm, printFileName } from './textile/common';
 
 export interface ProductionPiece extends FramePiece {
   pos: string;
@@ -23,7 +23,7 @@ export interface ProductionPiece extends FramePiece {
 }
 
 export interface Production {
-  /** InFrame frames on system walls. */
+  /** Frames on system walls. */
   pieces: ProductionPiece[];
   /** Frittstående tekstilvegger, each with textile on both faces. */
   free: FreeFrame[];
@@ -79,9 +79,10 @@ export function production(v: Variant, rules: Rules, customer: string): Producti
     });
   });
   // Free-standing runs stop at a frame on the wall they end at (byggeregel X11)
-  const free = freeFrames(v, RECIPES.freeFrame, s, customer, freeTrims(v, rules, placed));
+  const trims = freeTrims(v, rules, placed);
+  const free = freeFrames(v, RECIPES.textileFrame, s, customer, trims, heldEnds(v, trims));
   // The 92LTX stands on an end cap and has one on top, so it is cut shorter than the frame
-  const posts = { qty: cornerPosts(v).length, H: fullHeight(s) - 2 * RECIPES.freeFrame.cornerPostCap };
+  const posts = { qty: cornerPosts(v).length, H: fullHeight(s) - 2 * RECIPES.textileFrame.feet.cornerPostCap };
   return {
     pieces,
     free,
@@ -92,7 +93,7 @@ export function production(v: Variant, rules: Rules, customer: string): Producti
       free.flatMap((f) => f.faces).filter((x) => x.fill !== 'reuse').reduce((a, x) => a + x.printArea, 0),
     lm:
       pieces.reduce((a, p) => a + p.lm, 0) +
-      free.reduce((a, f) => a + (f.profileMm + f.supports.length * f.braceLength) / 1000, 0) +
+      free.reduce((a, f) => a + partsLm(f.parts), 0) +
       (posts.qty * posts.H) / 1000,
   };
 }
@@ -140,4 +141,26 @@ export function textileRows(P: Production): TextileRow[] {
     ...P.pieces.map((p) => ({ pos: p.pos, where: p.wall, W: p.W, H: p.H, pw: p.pw, ph: p.ph, fill: p.fill, fileName: p.fileName })),
     ...P.free.flatMap((f) => f.faces.map((x) => ({ pos: x.pos, where: `Frittstående ${f.pos}, side ${x.face.toUpperCase()}`, W: x.W, H: x.H, pw: x.pw, ph: x.ph, fill: x.fill, fileName: x.fileName }))),
   ];
+}
+
+/** A point on a wall line, ends included. */
+function onWall(w: Wall, p: readonly [number, number]): boolean {
+  const [ax, ay] = w.from;
+  const [bx, by] = w.to;
+  const len = Math.hypot(bx - ax, by - ay);
+  if (!len) return false;
+  const cross = ((bx - ax) * (p[1] - ay) - (by - ay) * (p[0] - ax)) / len;
+  const along = ((bx - ax) * (p[0] - ax) + (by - ay) * (p[1] - ay)) / len;
+  return Math.abs(cross) < 1e-6 && along > -1e-6 && along < len + 1e-6;
+}
+
+/** Ends of free-standing runs that stand against a wall or a frame on it: a splice there has no room to be threaded. */
+function heldEnds(v: Variant, trims: ReadonlyMap<string, { from: number; to: number }>): HeldEnds {
+  const out = new Map<string, { from: boolean; to: boolean }>();
+  for (const t of v.freeTextiles) {
+    const trim = trims.get(t.id);
+    const at = (p: readonly [number, number], cut = 0) => cut > 0 || v.walls.some((w) => onWall(w, p));
+    out.set(t.id, { from: at(t.from, trim?.from), to: at(t.to, trim?.to) });
+  }
+  return out;
 }

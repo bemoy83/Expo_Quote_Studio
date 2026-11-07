@@ -1,6 +1,6 @@
 // Fyll with rolled floor: drag an area (a click fills the stand), the engine lays it the cheapest way on release.
 import { fillCarpet } from '../../../domain/floor/rollFill'
-import { rules } from '../../env'
+import { pricing } from '../../env'
 import { rectOf } from './floorBrush'
 import type { DragHandlers, Drag, P, PointerCtx } from './types'
 
@@ -23,7 +23,7 @@ export const carpetFill: DragHandlers<'carpetFill'> = {
     c.setFillRect(null)
     if (brush?.kind === 'floor' && rollWidth) {
       const product = brush.product
-      c.onEdit((x) => fillCarpet(x, product, rollWidth, rules.carpet, rect))
+      c.onEdit((x) => fillCarpet(x, product, rollWidth, pricing.carpet, rect))
     }
   },
 }
