@@ -59,13 +59,13 @@ describe('braces', () => {
   const R = RECIPES.freeFrame;
   // Not at the feet: a foot plate has no brace (Bjørn 7.11.2026)
   it('evenly, so no two uprights are more than 2 m apart', () => {
-    expect(bracePoints(2000, [], R)).toEqual([]);
-    expect(bracePoints(3000, [], R)).toEqual([1500]);
-    expect(bracePoints(4000, [], R)).toEqual([2000]);
-    expect(bracePoints(4500, [], R)).toEqual([1500, 3000]);
+    expect(bracePoints(2000, [], 2000, R.spliceBrace)).toEqual([]);
+    expect(bracePoints(3000, [], 2000, R.spliceBrace)).toEqual([1500]);
+    expect(bracePoints(4000, [], 2000, R.spliceBrace)).toEqual([2000]);
+    expect(bracePoints(4500, [], 2000, R.spliceBrace)).toEqual([1500, 3000]);
   });
   it('one 150 mm each side of a splice', () => {
-    expect(bracePoints(7000, [3500], R)).toEqual([1675, 3350, 3650, 5325]);
+    expect(bracePoints(7000, [3500], 2000, R.spliceBrace)).toEqual([1675, 3350, 3650, 5325]);
   });
 });
 

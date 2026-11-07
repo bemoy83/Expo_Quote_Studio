@@ -428,9 +428,9 @@ setter sammen Foga-stykklisten og kalkylelinjene som ikke er bygget av Foga-dele
   de faktiske artiklene fra tegningen, så naboelementer deler stolpe. Bundlen vises aldri i tilbudet.
 - Salgsprodukter i dag: vegg per meter og RAL, **dør med overstykke** og **forheng med overstykke** (en åpning er aldri
   veggmeter), **takdrager per meter** (stolper som bare bærer takdrager ligger i prisen), og tekstilvegg, ett produkt
-  uansett montering (Bjørn 7.11.2026), som to linjer (Bjørn 31.10.2026): **ramme** (leie) og **tekstil** (salg). I
-  katalogen er rammen i dag likevel to artikler: på systemvegg per stk etter størrelse B × H (8000), på fotplater per
-  løpemeter (8010, med 92LTX og fotplater). Tekstil per m² synlig
+  uansett montering (Bjørn 7.11.2026), som to linjer (Bjørn 31.10.2026): **ramme** (leie) og **tekstil** (salg). Rammen
+  (8000) selges per stk etter størrelse B × H og montering, på vegg (med 520) eller på fotplater (med fotplater og
+  halv 92LTX per hjørne). Tekstil per m² synlig
   flate: trykt, hvit eller kundens egen (bare montering), med montering per meter omkrets. To linjer i kalkylen, én
   linje i tilbudet. Gulv, møbler og resten er allerede salgsprodukter.
 - Der det ikke finnes en artikkel, plukkes bestanddelene direkte (tekstilvegg: 43TX, 617, 609, 520, 92LTX, 740, 730).

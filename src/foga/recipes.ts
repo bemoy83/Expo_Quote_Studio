@@ -55,11 +55,10 @@ export interface FreeFrameRecipe {
    *  threaded onto it, so it needs room at a free end. `slide`: `perRail` in the channel (604), slid along from the
    *  splice, so it fits a frame held at both ends (a span between walls, corner posts). */
   splice: { thread: string; slide: { code: string; perRail: number } };
-  /** Upright brace and its couplings: at every foot, at most `maxBrace` mm apart (the textile pulls most in the middle),
-   *  and one `spliceBrace` mm from each side of a splice, as a frame side while long motifs go up in sections (Bjørn
-   *  7.11.2026: 100–200 mm). */
+  /** Upright brace and its couplings: at most `rules.textile.inFrame.stag` mm apart (the textile pulls most in the
+   *  middle), and one `spliceBrace` mm from each side of a splice, as a frame side while long motifs go up in sections
+   *  (Bjørn 7.11.2026: 100–200 mm). Not at the feet. The same in a frame on a wall. */
   brace: string;
-  maxBrace: number;
   spliceBrace: number;
   braceCoupling: { code: string; perEnd: number };
   /** Foot plate under the frame, one per support, size along and across the run in mm. `smallFoot` on a frame
@@ -143,7 +142,6 @@ export const RECIPES: Recipes = {
     cornerPostCap: 7,
     splice: { thread: '609', slide: { code: '604', perRail: 2 } },
     brace: '90',
-    maxBrace: 2000,
     spliceBrace: 150,
     braceCoupling: { code: '600', perEnd: 1 },
     foot: { code: '740', along: 400, across: 400 },

@@ -42,9 +42,9 @@ export function buildTextile(c: BuildContext) {
     profiles(g, fw, h, bottom, { from: true, to: true }, -fw / 2, fw / 2, alu, tag)
     // One textile, on the face out from the wall
     textile(g, -fw / 2, fw, h, bottom, print, s === 1 ? 1 : -1, tag)
-    // Upright braces (90) evenly spread inside the frame
-    const n = piece?.braces?.qty ?? 0
-    for (let i = 1; i <= n; i++) brace(g, -fw / 2 + (fw * i) / (n + 1), h, bottom, alu, tag)
+    // Upright braces (90) where the calc puts them, as on foot plates: by a splice and at most 2 m apart
+    const W = piece?.W ?? fw * 1000
+    for (const at of piece?.braceAt ?? []) brace(g, -fw / 2 + (fw * at) / W, h, bottom, alu, tag)
   }
 
   // Frittstående tekstilvegger: a frame with textile on both faces (face A toward side 1), on foot plates

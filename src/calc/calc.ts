@@ -16,7 +16,7 @@ import { looseLines, objectLines } from './lines/objects';
 import { swapLines } from './lines/swaps';
 import { organiserWallLines, wallLines } from './lines/walls';
 import { summary } from './summary';
-import { freeFrameLines, freeTextileLines, inFrameFrameLines, inFrameTextileLines } from './textile/lines';
+import { frameLines, textileWallLines } from './textile/lines';
 import type { CalcLine, CalcResult } from './types';
 
 export type { CalcGroup, CalcLine, CalcResult, KeyFigures, Margin } from './types';
@@ -36,10 +36,8 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
     ...beams.lines,
     ...beamLiftLines(c),
     ...doorLines(c),
-    ...inFrameFrameLines(c),
-    ...inFrameTextileLines(c),
-    ...freeFrameLines(c),
-    ...freeTextileLines(c),
+    ...frameLines(c),
+    ...textileWallLines(c),
     ...decorLines(c),
     ...floorLines(c),
     ...objectLines(c),

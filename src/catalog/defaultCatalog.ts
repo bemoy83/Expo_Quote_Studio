@@ -97,10 +97,9 @@ const products: Product[] = [
   one('6102', 'Toppprofil 960 × 40 mm', 'system', 'stk', 'vegg.skinner', 95, { article: true }),
   one('6103', 'Bunnprofil 960 × 30 mm', 'system', 'stk', 'vegg.skinner', 85, { article: true }),
   // Profilering. Textile walls: the frame (rental) and the textile (sale, the customer can bring it back) are two lines
-  // in the kalkyle and one on the quote (Bjørn 31.10.2026). InFrame frame per piece by size (price per m² of B × H),
-  // free-standing frame per metre, textile per m² of visible face.
-  one('8000', 'Tekstilramme på systemvegg, leie', 'system', 'm²', 'prof.tekstil', 450, { pricing: 'sum' }),
-  one('8010', 'Tekstilvegg frittstående, leie av ramme', 'system', 'lm', 'prof.tekstil', 1100, { dim: 'h 2,54 m, føtter og stag', pricing: 'sum' }),
+  // in the kalkyle and one on the quote (Bjørn 31.10.2026). One frame whatever it is mounted on, on a wall with 520
+  // or on foot plates (Bjørn 7.11.2026), per piece by size (price per m² of B × H); textile per m² of visible face.
+  one('8000', 'Tekstilramme, leie', 'system', 'm²', 'prof.tekstil', 450, { dim: 'på vegg eller fotplater', pricing: 'sum' }),
   one('8040', 'Tekstil med trykk', 'system', 'm²', 'prof.tekstil', 650, { dim: 'silikonkant, montert', pricing: 'sum' }),
   one('8041', 'Tekstil hvit', 'system', 'm²', 'prof.tekstil', 420, { dim: 'uten grafikk, montert', pricing: 'sum' }),
   one('8042', 'Montering av kundens tekstil', 'system', 'm²', 'prof.tekstil', 170, { dim: 'duk i samme størrelse', pricing: 'sum' }),
@@ -235,7 +234,6 @@ export const DEFAULT_CATALOG: Catalog = {
     beam: '6110',
     beamLift: '6111',
     textile: '8000',
-    freeTextile: '8010',
     textileFill: { print: '8040', white: '8041', reuse: '8042' },
     foil: '8020',
     foilFull: '8021',

@@ -16,12 +16,16 @@ export interface BeamSpec {
   lengthMm: number;
 }
 
-/** One textile frame (InFrame). Sizes as produced, mm. */
+/** One textile frame on a system wall (InFrame). Sizes as produced, mm. */
 export interface FrameSpec {
   /** Production position, T1, T2 … */
   pos: string;
   W: number;
   H: number;
+  /** Top rail cut lengths, and the same for the bottom: one piece unless spliced. */
+  railCuts: number[];
+  /** 609 splice connectors in all. */
+  splices: number;
   braces: { qty: number; length: number } | null;
 }
 

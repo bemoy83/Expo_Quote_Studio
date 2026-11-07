@@ -1,6 +1,7 @@
-// Textile walls on the quote: the frame (rental) and the textile (sale) are two lines here and one on the quote
-// (`quote`). InFrame on system walls first (frames by size, then textile), then free-standing (frame per metre, then
-// textile on both sides). What is built comes from calc/production.ts.
+// Textile walls on the quote: one product whatever it is mounted on (Bjørn 7.11.2026: the frame is the same, on a
+// system wall with 520 or on foot plates). The frame (rental) and the textile (sale) are two kinds of line here and one
+// line on the quote (`quote`): frames by size and mounting, then the textile by fill. What is built comes from
+// calc/production.ts.
 import { displayName } from '../../catalog/lookup';
 import type { TextileFill } from '../../domain/types';
 import { RECIPES } from '../../foga/recipes';
@@ -9,14 +10,12 @@ import type { Use } from '../../pricing/model';
 import { count, type CalcContext } from '../context';
 import type { CalcLine } from '../types';
 
-const inFrameQuote = { key: 'tekstil-vegg', name: 'Tekstilvegg på systemvegg' };
-const freeQuote = { key: 'tekstil-fri', name: 'Tekstilvegg frittstående' };
-
+const quote = { key: 'tekstil', name: 'Tekstilvegg' };
 /**
  * Textile per m² of visible face, by fill. Printed and white: the textile incl. bleed; all: pressed in along the whole
  * perimeter. The customer's own textile is only mounted.
  */
-function textileLines(c: CalcContext, faces: { W: number; H: number; pw: number; ph: number; fill: TextileFill }[], meta: string, quote: CalcLine['quote']): CalcLine[] {
+function textileLines(c: CalcContext, faces: { W: number; H: number; pw: number; ph: number; fill: TextileFill }[], quote: CalcLine['quote']): CalcLine[] {
   return (['print', 'white', 'reuse'] as const).map((fill) => {
     const fs = faces.filter((f) => f.fill === fill);
     const uses: Use[] = [
@@ -24,68 +23,82 @@ function textileLines(c: CalcContext, faces: { W: number; H: number; pw: number;
       { id: ITEM.textileEdge, qty: fs.reduce((a, f) => a + (2 * (f.W + f.H)) / 1000, 0) },
     ];
     const n = fs.length;
-    return c.line(c.sys.textileFill[fill], fs.reduce((a, f) => a + (f.W * f.H) / 1e6, 0), { ...c.built, meta: `${meta} · ${n} ${n === 1 ? 'duk' : 'duker'}`, quote }, uses);
+    return c.line(c.sys.textileFill[fill], fs.reduce((a, f) => a + (f.W * f.H) / 1e6, 0), { ...c.built, meta: count(n, 'duk', 'duker'), quote }, uses);
   });
 }
 
+type Mount = 'vegg' | 'fotplater';
+const MOUNT_NAME: Record<Mount, string> = { vegg: 'på vegg', fotplater: 'på fotplater' };
+
+/** One frame: what it is built of and the work, at full quantities. */
+interface FrameBuild {
+  W: number;
+  H: number;
+  mount: Mount;
+  uses: Use[];
+}
+
 /**
- * InFrame frame per piece by size B × H: the loose frame parts (43TX at 2W + 2H, 617, 520), braces, mounting per
- * coupling and handling. Fast
- * price: m² rate × B × H.
+ * Textile frames per piece by size B × H and mounting. The frame is the same either way: 43TX, 617 in the corners,
+ * braces, rail splices, mounting per coupling and handling. On a wall it is fixed with 520; on foot plates it stands on
+ * 740 or 730, and where two meet they share a 92LTX (half to each). Fast price: m² rate × B × H.
  */
-export function inFrameFrameLines(c: CalcContext): CalcLine[] {
+export function frameLines(c: CalcContext): CalcLine[] {
   const { prod, sys, idx } = c;
-  const bySize = new Map<string, typeof prod.pieces>();
-  for (const p of prod.pieces) bySize.set(`${p.W}×${p.H}`, [...(bySize.get(`${p.W}×${p.H}`) ?? []), p]);
+  const onWall: FrameBuild[] = prod.pieces.map((p) => {
+    const braces = p.braces?.qty ?? 0;
+    return {
+      W: p.W,
+      H: p.H,
+      mount: 'vegg',
+      uses: [
+        { id: ITEM.frameProfileM, qty: (2 * p.W + 2 * p.H) / 1000 },
+        { id: ITEM.corner, qty: 4 },
+        { id: ITEM.splice, qty: p.splices },
+        { id: ITEM.wallFixing, qty: RECIPES.frame.wallFixing.perFrame },
+        { id: ITEM.braceM, qty: (braces * (p.braces?.length ?? 0)) / 1000 },
+        { id: ITEM.bracePiece, qty: braces },
+        // Put together like on foot plates: the 617 in each corner, the splice connectors and both ends of every brace
+        { id: ITEM.frameCoupling, qty: 4 + p.splices + 2 * braces },
+        { id: ITEM.frame, qty: 1 },
+      ],
+    };
+  });
+  const thread = RECIPES.freeFrame.splice.thread;
+  const onFeet: FrameBuild[] = prod.free.map((f) => ({
+    W: f.length,
+    H: f.H,
+    mount: 'fotplater',
+    uses: [
+      { id: ITEM.frameProfileM, qty: f.profileMm / 1000 },
+      { id: ITEM.cornerPostM, qty: (f.nCorners * prod.cornerPosts.H) / 2 / 1000 },
+      { id: ITEM.foot(f.foot.code), qty: f.supports.length },
+      { id: ITEM.corner, qty: f.connectors.corner },
+      { id: f.spliceCode === thread ? ITEM.splice : ITEM.spliceSlide, qty: f.connectors.splice },
+      { id: ITEM.braceM, qty: (f.braces.length * f.braceLength) / 1000 },
+      { id: ITEM.bracePiece, qty: f.braces.length },
+      { id: ITEM.frameCoupling, qty: f.couplings },
+      { id: ITEM.frame, qty: 1 },
+    ],
+  }));
+  const groups = new Map<string, FrameBuild[]>();
+  for (const f of [...onWall, ...onFeet]) {
+    const k = `${f.W}×${f.H}|${f.mount}`;
+    groups.set(k, [...(groups.get(k) ?? []), f]);
+  }
   const textile = idx.byArtnr.get(sys.textile);
-  return [...bySize].map(([size, pieces]) => {
-    const [W, H] = size.split('×').map(Number);
-    const n = pieces.length;
-    const uses: Use[] = [
-      { id: ITEM.frameProfileM, qty: (n * (2 * W + 2 * H)) / 1000 },
-      { id: ITEM.corner, qty: 4 * n },
-      { id: ITEM.wallFixing, qty: RECIPES.frame.wallFixing.perFrame * n },
-      { id: ITEM.braceM, qty: pieces.reduce((a, p) => a + ((p.braces?.qty ?? 0) * (p.braces?.length ?? 0)) / 1000, 0) },
-      { id: ITEM.bracePiece, qty: pieces.reduce((a, p) => a + (p.braces?.qty ?? 0), 0) },
-      // Put together on site like the free-standing frame: a 617 in each corner and both ends of every brace
-      { id: ITEM.frameCoupling, qty: pieces.reduce((a, p) => a + 4 + 2 * (p.braces?.qty ?? 0), 0) },
-      { id: ITEM.frame, qty: n },
-    ];
+  return [...groups.values()].map((fs) => {
+    const { W, H, mount } = fs[0];
+    const uses = new Map<string, number>();
+    for (const u of fs.flatMap((f) => f.uses)) if (u.qty) uses.set(u.id, (uses.get(u.id) ?? 0) + u.qty);
     const fast = Math.round((textile?.variant.price ?? 0) * ((W * H) / 1e6));
-    const name = `${textile ? displayName(textile) : sys.textile}, ${W} × ${H} mm`;
-    return { ...c.line(sys.textile, n, { ...c.built, quote: { ...inFrameQuote, lead: true } }, uses, fast), name, unit: 'stk' as const };
+    const name = `${textile ? displayName(textile) : sys.textile}, ${W} × ${H} mm, ${MOUNT_NAME[mount]}`;
+    const line = c.line(sys.textile, fs.length, { ...c.built, quote: { ...quote, lead: true } }, [...uses].map(([id, qty]) => ({ id, qty })), fast);
+    return { ...line, name, unit: 'stk' as const };
   });
 }
 
-export function inFrameTextileLines(c: CalcContext): CalcLine[] {
-  return textileLines(c, c.prod.pieces, 'på systemvegg', { ...inFrameQuote, lead: false });
-}
-
-/**
- * Frittstående per metre: 43TX rails and free-end uprights, 92LTX corner posts, a foot plate at every support, the
- * upright braces, 617 corner and 609 or 604 splice connectors, mounting per coupling and handling per frame.
- */
-export function freeFrameLines(c: CalcContext): CalcLine[] {
-  const { prod } = c;
-  const free = prod.free;
-  const braces = free.reduce((a, f) => a + f.braces.length, 0);
-  const splices = (code: string) => free.filter((f) => f.spliceCode === code).reduce((a, f) => a + f.connectors.splice, 0);
-  const freeUses: Use[] = [
-    { id: ITEM.frameProfileM, qty: free.reduce((a, f) => a + f.profileMm, 0) / 1000 },
-    { id: ITEM.cornerPostM, qty: (prod.cornerPosts.qty * prod.cornerPosts.H) / 1000 },
-    ...[...new Set(free.map((f) => f.foot.code))].map((code) => ({ id: ITEM.foot(code), qty: free.filter((f) => f.foot.code === code).reduce((a, f) => a + f.supports.length, 0) })),
-    { id: ITEM.corner, qty: free.reduce((a, f) => a + f.connectors.corner, 0) },
-    { id: ITEM.splice, qty: splices(RECIPES.freeFrame.splice.thread) },
-    { id: ITEM.spliceSlide, qty: splices(RECIPES.freeFrame.splice.slide.code) },
-    { id: ITEM.braceM, qty: free.reduce((a, f) => a + f.braces.length * f.braceLength, 0) / 1000 },
-    { id: ITEM.bracePiece, qty: braces },
-    { id: ITEM.frameCoupling, qty: free.reduce((a, f) => a + f.couplings, 0) },
-    { id: ITEM.frame, qty: free.length },
-  ];
-  const freeMeta = [count(free.length, 'vegg', 'vegger'), `h ${free[0]?.H ?? 0} mm`, ...(prod.cornerPosts.qty ? [count(prod.cornerPosts.qty, 'hjørne', 'hjørner')] : [])];
-  return [c.line(c.sys.freeTextile, prod.freeLm, { ...c.built, meta: freeMeta.join(' · '), quote: { ...freeQuote, lead: true } }, freeUses)];
-}
-
-export function freeTextileLines(c: CalcContext): CalcLine[] {
-  return textileLines(c, c.prod.free.flatMap((f) => f.faces), 'frittstående, begge sider', { ...freeQuote, lead: false });
+/** The textile on every frame: one face on a wall, both on foot plates. */
+export function textileWallLines(c: CalcContext): CalcLine[] {
+  return textileLines(c, [...c.prod.pieces, ...c.prod.free.flatMap((f) => f.faces)], { ...quote, lead: false });
 }

@@ -183,9 +183,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   *Bjørn 31.10.2026 · `rules.textile` · kode `src/domain/textile/free.ts` · test `src/domain/freeTextile.test.ts`*
 - **X6 Skinner.** Gjelder rammen uansett montering. Topp- og bunnskinne går hele rammen; over 5000 skjøtes de i like stykker. Skjøten er 2 × 609 per
   skjøt (tres inn, krever plass i enden), eller 4 × 604 i sporet når begge ender er holdt av en vegg, en ramme på vegg
-  eller en 92LTX, så profilen ikke kan tres. Stående 43TX i hver fri ende, 617 i hvert hjørne. I koden skjøtes i dag
-  bare rammer på fotplater; en ramme på systemvegg over 5000 er ikke skjøtt ennå.
-  *Bjørn 31.10.2026, skjøt 7.11.2026 · `RECIPES.freeFrame` · kode `src/calc/textile/free.ts` · test `src/calc/freeFrames.test.ts`*
+  eller en 92LTX, så profilen ikke kan tres. Stående 43TX i hver fri ende, 617 i hvert hjørne. En ramme på
+  systemvegg settes sammen før den henges opp, så den skjøtes med 609.
+  *Bjørn 31.10.2026, skjøt 7.11.2026 · `RECIPES.freeFrame` · kode `src/calc/textile/free.ts`, `src/calc/textile/inFrame.ts` · test `src/calc/freeFrames.test.ts`, `src/calc/fabric.test.ts`*
 - **X7 Hjørne.** To frittstående vegger møtes bare ende mot ende i rett vinkel (ingen T) og deler en 92LTX, kappet
   2526 (endelokk 7 mm under og over, ikke plukket). Skinnene stopper 37 mm før hjørnepunktet; utvendig duk er 20 mm
   lengre og innvendig 20 mm kortere per hjørne. En strek i forlengelsen blir samme vegg.

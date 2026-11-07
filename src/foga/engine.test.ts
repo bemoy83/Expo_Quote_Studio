@@ -62,7 +62,7 @@ describe('takdrager posts', () => {
 });
 
 describe('tekstilvegger', () => {
-  const frame = { pos: 'T1', W: 970, H: 2540, braces: null };
+  const frame = { pos: 'T1', W: 970, H: 2540, railCuts: [970], splices: 0, braces: null };
 
   it('43TX 2W + 2H mitred, 4 × 617, 2 × 520', () => {
     const b = bom({ ...empty, frames: [frame] }, RECIPES, Z);
@@ -71,13 +71,20 @@ describe('tekstilvegger', () => {
     expect(line(b, 'textile', '43TX')?.lm).toBeCloseTo(7.02);
     expect(line(b, 'textile', '617')?.qty).toBe(4);
     expect(line(b, 'textile', '520')?.qty).toBe(2);
+    expect(line(b, 'textile', '609')).toBeUndefined();
+  });
+
+  it('a frame on a wall past 5 m is spliced like on foot plates: 609 top and bottom', () => {
+    const b = bom({ ...empty, frames: [{ ...frame, W: 5970, railCuts: [2985, 2985], splices: 2 }] }, RECIPES, Z);
+    expect(line(b, 'textile', '43TX')).toMatchObject({ detail: '4 × 2985 · 2 × 2540 mm', qty: 6 });
+    expect(line(b, 'textile', '609')?.qty).toBe(2);
   });
 
   it('braces in 90 with a 600 in each end are pre-assembled and name their frames', () => {
     const frames = [
-      { ...frame, pos: 'T1', W: 2970, braces: { qty: 2, length: 2460 } },
+      { ...frame, pos: 'T1', W: 2970, railCuts: [2970], braces: { qty: 2, length: 2460 } },
       { ...frame, pos: 'T2' },
-      { ...frame, pos: 'T3', W: 1970, braces: { qty: 1, length: 2460 } },
+      { ...frame, pos: 'T3', W: 1970, railCuts: [1970], braces: { qty: 1, length: 2460 } },
     ];
     const b = bom({ ...empty, frames }, RECIPES, Z);
     expect(line(b, 'textile', 'Støttestag')).toEqual({
