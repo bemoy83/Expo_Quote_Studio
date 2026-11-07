@@ -83,7 +83,7 @@ const products: Product[] = [
   one('6130', 'Dør med overstykke', 'object', 'stk', 'vegg.dorer', 2620, { opening: 'door', pricing: 'fast' }),
   one('6131', 'Forheng med overstykke', 'object', 'stk', 'vegg.dorer', 870, { dim: 'i åpning 960 mm', opening: 'curtain', pricing: 'fast' }),
   // Vegger: level 2 articles. No price: an article is never sold on its own, and the kalkyle takes its cost from the
-  // cost engine (pricing/data.ts). The product list shows them as «Artikkel · plukkes, selges ikke» (Bjørn 7.11.2026).
+  // cost engine (pricing/data.ts), and the names are the same as there and on the picking list. The product list shows them as «Artikkel · plukkes, selges ikke» (Bjørn 7.11.2026).
   {
     id: '6290',
     name: 'Veggplate',
@@ -94,9 +94,9 @@ const products: Product[] = [
     dim: '976 × 2440 mm',
     variants: PLATES.map(([ral, name, color]) => ({ artnr: `6290-${ral}`, name, ral, color, price: 0 })),
   },
-  one('6101', 'Stolpe 40 × 40 mm, 2,5 m', 'system', 'stk', 'vegg.stolper', 0, { article: true }),
-  one('6102', 'Toppprofil 960 × 40 mm', 'system', 'stk', 'vegg.skinner', 0, { article: true }),
-  one('6103', 'Bunnprofil 960 × 30 mm', 'system', 'stk', 'vegg.skinner', 0, { article: true }),
+  one('6101', 'Stolpe 94 med justeringsfot', 'system', 'stk', 'vegg.stolper', 0, { article: true }),
+  one('6102', 'Toppskinne 92, 960 mm, med 600', 'system', 'stk', 'vegg.skinner', 0, { article: true }),
+  one('6103', 'Bunnskinne 91, 960 mm, med 600', 'system', 'stk', 'vegg.skinner', 0, { article: true }),
   // Profilering. Textile walls: the frame (rental) and the textile (sale, the customer can bring it back) are two lines
   // in the kalkyle and one on the quote (Bjørn 31.10.2026). One frame whatever it is mounted on, on a wall with 520
   // or on foot plates (Bjørn 7.11.2026), per piece by size (price per m² of B × H); textile per m² of visible face.
