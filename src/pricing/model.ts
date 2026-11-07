@@ -2,6 +2,7 @@
 // app fixed per-piece prices for catalog products; cost (and price for what the catalog does not cover) comes from the
 // app's own cost engine (src/cost, Bjørn 7.11.2026). A product priced as a sum adds up what is actually drawn; the
 // margin is shown internally only. docs/prismodell.md, docs/kostmodell.md.
+import type { ItemTrace } from '../cost/items';
 
 /** Leie: comes back after the fair (frame, posts, furniture). Salg: the customer keeps it or it is used up (print, foil). */
 export type Transfer = 'leie' | 'salg';
@@ -43,6 +44,8 @@ export interface PriceItem {
   transfer?: Transfer;
   /** Minutes per unit and handling step. */
   time?: Time;
+  /** How the cost engine got `cost` and `price` («Slik er det regnet», src/cost/items.ts). */
+  trace?: ItemTrace;
 }
 
 export type PriceList = ReadonlyMap<string, PriceItem>;

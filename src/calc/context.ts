@@ -111,6 +111,8 @@ export function calcContext(v: Variant, rules: Rules, catalog: Catalog, standWal
       transfer: p.transfer,
       ...(p.transfer === 'blandet' ? { terms: pricing.terms[hit?.product.id ?? ''] ?? 'Delvis leie, delvis kjøp' } : {}),
       time: p.time,
+      // What it is built of, for «Slik er det regnet» in the kalkyle
+      ...(uses?.length ? { uses: uses.filter((u) => u.qty > 0) } : {}),
       payer: 'utstiller',
       ...extra,
     };

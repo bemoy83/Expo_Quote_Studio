@@ -203,6 +203,28 @@ exports[`01-hjorne-arrangor.json > variant A > calculation 1`] = `
           },
           "transfer": "leie",
           "unit": "lm",
+          "uses": [
+            {
+              "id": "veggplate",
+              "qty": 2,
+            },
+            {
+              "id": "skinne-92-960",
+              "qty": 2,
+            },
+            {
+              "id": "skinne-91-960",
+              "qty": 2,
+            },
+            {
+              "id": "stolpe-94",
+              "qty": 2,
+            },
+            {
+              "id": "montering-modul",
+              "qty": 2,
+            },
+          ],
         },
         {
           "artnr": "6115",
@@ -227,6 +249,16 @@ exports[`01-hjorne-arrangor.json > variant A > calculation 1`] = `
           },
           "transfer": "leie",
           "unit": "stk",
+          "uses": [
+            {
+              "id": "fotplate-750",
+              "qty": 1,
+            },
+            {
+              "id": "montering-stotteplate",
+              "qty": 1,
+            },
+          ],
         },
         {
           "artnr": "6125-3002",
@@ -251,6 +283,16 @@ exports[`01-hjorne-arrangor.json > variant A > calculation 1`] = `
           },
           "transfer": "leie",
           "unit": "lm",
+          "uses": [
+            {
+              "id": "veggplate",
+              "qty": 2,
+            },
+            {
+              "id": "platebytte",
+              "qty": 2,
+            },
+          ],
         },
         {
           "artnr": "6125-5012",
@@ -275,6 +317,16 @@ exports[`01-hjorne-arrangor.json > variant A > calculation 1`] = `
           },
           "transfer": "leie",
           "unit": "lm",
+          "uses": [
+            {
+              "id": "veggplate",
+              "qty": 4,
+            },
+            {
+              "id": "platebytte",
+              "qty": 4,
+            },
+          ],
         },
         {
           "artnr": "6130",
@@ -298,6 +350,32 @@ exports[`01-hjorne-arrangor.json > variant A > calculation 1`] = `
           },
           "transfer": "leie",
           "unit": "stk",
+          "uses": [
+            {
+              "id": "dor",
+              "qty": 1,
+            },
+            {
+              "id": "veggplate-overstykke",
+              "qty": 1,
+            },
+            {
+              "id": "skinne-92-960",
+              "qty": 1,
+            },
+            {
+              "id": "skinne-91-960",
+              "qty": 1,
+            },
+            {
+              "id": "stolpe-94",
+              "qty": 1,
+            },
+            {
+              "id": "montering-modul",
+              "qty": 1,
+            },
+          ],
         },
       ],
       "name": "Vegger og bakrom",
@@ -438,6 +516,28 @@ exports[`01-hjorne-arrangor.json > variant A > calculation 1`] = `
         },
         "transfer": "leie",
         "unit": "lm",
+        "uses": [
+          {
+            "id": "veggplate",
+            "qty": 10,
+          },
+          {
+            "id": "skinne-92-960",
+            "qty": 10,
+          },
+          {
+            "id": "skinne-91-960",
+            "qty": 10,
+          },
+          {
+            "id": "stolpe-94",
+            "qty": 11,
+          },
+          {
+            "id": "montering-modul",
+            "qty": 10,
+          },
+        ],
       },
       {
         "artnr": "6110",
@@ -462,6 +562,28 @@ exports[`01-hjorne-arrangor.json > variant A > calculation 1`] = `
         },
         "transfer": "leie",
         "unit": "lm",
+        "uses": [
+          {
+            "id": "takdrager-292-3960",
+            "qty": 1,
+          },
+          {
+            "id": "takdrager-292-5960",
+            "qty": 1,
+          },
+          {
+            "id": "stolpe-94",
+            "qty": 1,
+          },
+          {
+            "id": "montering-takdrager",
+            "qty": 10,
+          },
+          {
+            "id": "montering-takdragerstolpe",
+            "qty": 1,
+          },
+        ],
       },
     ],
     "sum": 8860,
@@ -759,6 +881,28 @@ exports[`01-hjorne-arrangor.json > variant A > quote lines 1`] = `
         },
         "transfer": "leie",
         "unit": "lm",
+        "uses": [
+          {
+            "id": "veggplate",
+            "qty": 2,
+          },
+          {
+            "id": "skinne-92-960",
+            "qty": 2,
+          },
+          {
+            "id": "skinne-91-960",
+            "qty": 2,
+          },
+          {
+            "id": "stolpe-94",
+            "qty": 2,
+          },
+          {
+            "id": "montering-modul",
+            "qty": 2,
+          },
+        ],
       },
       {
         "artnr": "6115",
@@ -783,6 +927,16 @@ exports[`01-hjorne-arrangor.json > variant A > quote lines 1`] = `
         },
         "transfer": "leie",
         "unit": "stk",
+        "uses": [
+          {
+            "id": "fotplate-750",
+            "qty": 1,
+          },
+          {
+            "id": "montering-stotteplate",
+            "qty": 1,
+          },
+        ],
       },
       {
         "artnr": "6125-3002",
@@ -807,6 +961,16 @@ exports[`01-hjorne-arrangor.json > variant A > quote lines 1`] = `
         },
         "transfer": "leie",
         "unit": "lm",
+        "uses": [
+          {
+            "id": "veggplate",
+            "qty": 2,
+          },
+          {
+            "id": "platebytte",
+            "qty": 2,
+          },
+        ],
       },
       {
         "artnr": "6125-5012",
@@ -831,6 +995,16 @@ exports[`01-hjorne-arrangor.json > variant A > quote lines 1`] = `
         },
         "transfer": "leie",
         "unit": "lm",
+        "uses": [
+          {
+            "id": "veggplate",
+            "qty": 4,
+          },
+          {
+            "id": "platebytte",
+            "qty": 4,
+          },
+        ],
       },
       {
         "artnr": "6130",
@@ -854,6 +1028,32 @@ exports[`01-hjorne-arrangor.json > variant A > quote lines 1`] = `
         },
         "transfer": "leie",
         "unit": "stk",
+        "uses": [
+          {
+            "id": "dor",
+            "qty": 1,
+          },
+          {
+            "id": "veggplate-overstykke",
+            "qty": 1,
+          },
+          {
+            "id": "skinne-92-960",
+            "qty": 1,
+          },
+          {
+            "id": "skinne-91-960",
+            "qty": 1,
+          },
+          {
+            "id": "stolpe-94",
+            "qty": 1,
+          },
+          {
+            "id": "montering-modul",
+            "qty": 1,
+          },
+        ],
       },
     ],
     "name": "Vegger og bakrom",
@@ -1152,6 +1352,28 @@ exports[`02-hjorne-utstiller.json > variant A > calculation 1`] = `
           },
           "transfer": "leie",
           "unit": "lm",
+          "uses": [
+            {
+              "id": "veggplate",
+              "qty": 6,
+            },
+            {
+              "id": "skinne-92-960",
+              "qty": 6,
+            },
+            {
+              "id": "skinne-91-960",
+              "qty": 6,
+            },
+            {
+              "id": "stolpe-94",
+              "qty": 6,
+            },
+            {
+              "id": "montering-modul",
+              "qty": 6,
+            },
+          ],
         },
         {
           "artnr": "6120-9010",
@@ -1176,6 +1398,28 @@ exports[`02-hjorne-utstiller.json > variant A > calculation 1`] = `
           },
           "transfer": "leie",
           "unit": "lm",
+          "uses": [
+            {
+              "id": "veggplate",
+              "qty": 4,
+            },
+            {
+              "id": "skinne-92-960",
+              "qty": 4,
+            },
+            {
+              "id": "skinne-91-960",
+              "qty": 4,
+            },
+            {
+              "id": "stolpe-94",
+              "qty": 4,
+            },
+            {
+              "id": "montering-modul",
+              "qty": 4,
+            },
+          ],
         },
         {
           "artnr": "6120-9010",
@@ -1200,6 +1444,28 @@ exports[`02-hjorne-utstiller.json > variant A > calculation 1`] = `
           },
           "transfer": "leie",
           "unit": "lm",
+          "uses": [
+            {
+              "id": "veggplate",
+              "qty": 3,
+            },
+            {
+              "id": "skinne-92-960",
+              "qty": 3,
+            },
+            {
+              "id": "skinne-91-960",
+              "qty": 3,
+            },
+            {
+              "id": "stolpe-94",
+              "qty": 3,
+            },
+            {
+              "id": "montering-modul",
+              "qty": 3,
+            },
+          ],
         },
         {
           "artnr": "6110",
@@ -1224,6 +1490,28 @@ exports[`02-hjorne-utstiller.json > variant A > calculation 1`] = `
           },
           "transfer": "leie",
           "unit": "lm",
+          "uses": [
+            {
+              "id": "takdrager-292-3960",
+              "qty": 1,
+            },
+            {
+              "id": "takdrager-292-5960",
+              "qty": 1,
+            },
+            {
+              "id": "stolpe-94",
+              "qty": 1,
+            },
+            {
+              "id": "montering-takdrager",
+              "qty": 10,
+            },
+            {
+              "id": "montering-takdragerstolpe",
+              "qty": 1,
+            },
+          ],
         },
         {
           "artnr": "6130",
@@ -1247,6 +1535,32 @@ exports[`02-hjorne-utstiller.json > variant A > calculation 1`] = `
           },
           "transfer": "leie",
           "unit": "stk",
+          "uses": [
+            {
+              "id": "dor",
+              "qty": 1,
+            },
+            {
+              "id": "veggplate-overstykke",
+              "qty": 1,
+            },
+            {
+              "id": "skinne-92-960",
+              "qty": 1,
+            },
+            {
+              "id": "skinne-91-960",
+              "qty": 1,
+            },
+            {
+              "id": "stolpe-94",
+              "qty": 1,
+            },
+            {
+              "id": "montering-modul",
+              "qty": 1,
+            },
+          ],
         },
       ],
       "name": "Vegger og bakrom",
@@ -1567,6 +1881,28 @@ exports[`02-hjorne-utstiller.json > variant A > quote lines 1`] = `
         },
         "transfer": "leie",
         "unit": "lm",
+        "uses": [
+          {
+            "id": "veggplate",
+            "qty": 6,
+          },
+          {
+            "id": "skinne-92-960",
+            "qty": 6,
+          },
+          {
+            "id": "skinne-91-960",
+            "qty": 6,
+          },
+          {
+            "id": "stolpe-94",
+            "qty": 6,
+          },
+          {
+            "id": "montering-modul",
+            "qty": 6,
+          },
+        ],
       },
       {
         "artnr": "6120-9010",
@@ -1591,6 +1927,28 @@ exports[`02-hjorne-utstiller.json > variant A > quote lines 1`] = `
         },
         "transfer": "leie",
         "unit": "lm",
+        "uses": [
+          {
+            "id": "veggplate",
+            "qty": 4,
+          },
+          {
+            "id": "skinne-92-960",
+            "qty": 4,
+          },
+          {
+            "id": "skinne-91-960",
+            "qty": 4,
+          },
+          {
+            "id": "stolpe-94",
+            "qty": 4,
+          },
+          {
+            "id": "montering-modul",
+            "qty": 4,
+          },
+        ],
       },
       {
         "artnr": "6120-9010",
@@ -1615,6 +1973,28 @@ exports[`02-hjorne-utstiller.json > variant A > quote lines 1`] = `
         },
         "transfer": "leie",
         "unit": "lm",
+        "uses": [
+          {
+            "id": "veggplate",
+            "qty": 3,
+          },
+          {
+            "id": "skinne-92-960",
+            "qty": 3,
+          },
+          {
+            "id": "skinne-91-960",
+            "qty": 3,
+          },
+          {
+            "id": "stolpe-94",
+            "qty": 3,
+          },
+          {
+            "id": "montering-modul",
+            "qty": 3,
+          },
+        ],
       },
       {
         "artnr": "6110",
@@ -1639,6 +2019,28 @@ exports[`02-hjorne-utstiller.json > variant A > quote lines 1`] = `
         },
         "transfer": "leie",
         "unit": "lm",
+        "uses": [
+          {
+            "id": "takdrager-292-3960",
+            "qty": 1,
+          },
+          {
+            "id": "takdrager-292-5960",
+            "qty": 1,
+          },
+          {
+            "id": "stolpe-94",
+            "qty": 1,
+          },
+          {
+            "id": "montering-takdrager",
+            "qty": 10,
+          },
+          {
+            "id": "montering-takdragerstolpe",
+            "qty": 1,
+          },
+        ],
       },
       {
         "artnr": "6130",
@@ -1662,6 +2064,32 @@ exports[`02-hjorne-utstiller.json > variant A > quote lines 1`] = `
         },
         "transfer": "leie",
         "unit": "stk",
+        "uses": [
+          {
+            "id": "dor",
+            "qty": 1,
+          },
+          {
+            "id": "veggplate-overstykke",
+            "qty": 1,
+          },
+          {
+            "id": "skinne-92-960",
+            "qty": 1,
+          },
+          {
+            "id": "skinne-91-960",
+            "qty": 1,
+          },
+          {
+            "id": "stolpe-94",
+            "qty": 1,
+          },
+          {
+            "id": "montering-modul",
+            "qty": 1,
+          },
+        ],
       },
     ],
     "name": "Vegger og bakrom",
@@ -1808,6 +2236,28 @@ exports[`02-hjorne-utstiller.json > variant B > calculation 1`] = `
           },
           "transfer": "leie",
           "unit": "lm",
+          "uses": [
+            {
+              "id": "veggplate",
+              "qty": 10,
+            },
+            {
+              "id": "skinne-92-960",
+              "qty": 10,
+            },
+            {
+              "id": "skinne-91-960",
+              "qty": 10,
+            },
+            {
+              "id": "stolpe-94",
+              "qty": 11,
+            },
+            {
+              "id": "montering-modul",
+              "qty": 10,
+            },
+          ],
         },
         {
           "artnr": "6115",
@@ -1832,6 +2282,16 @@ exports[`02-hjorne-utstiller.json > variant B > calculation 1`] = `
           },
           "transfer": "leie",
           "unit": "stk",
+          "uses": [
+            {
+              "id": "fotplate-750",
+              "qty": 3,
+            },
+            {
+              "id": "montering-stotteplate",
+              "qty": 3,
+            },
+          ],
         },
       ],
       "name": "Vegger og bakrom",
@@ -2103,6 +2563,28 @@ exports[`02-hjorne-utstiller.json > variant B > quote lines 1`] = `
         },
         "transfer": "leie",
         "unit": "lm",
+        "uses": [
+          {
+            "id": "veggplate",
+            "qty": 10,
+          },
+          {
+            "id": "skinne-92-960",
+            "qty": 10,
+          },
+          {
+            "id": "skinne-91-960",
+            "qty": 10,
+          },
+          {
+            "id": "stolpe-94",
+            "qty": 11,
+          },
+          {
+            "id": "montering-modul",
+            "qty": 10,
+          },
+        ],
       },
       {
         "artnr": "6115",
@@ -2127,6 +2609,16 @@ exports[`02-hjorne-utstiller.json > variant B > quote lines 1`] = `
         },
         "transfer": "leie",
         "unit": "stk",
+        "uses": [
+          {
+            "id": "fotplate-750",
+            "qty": 3,
+          },
+          {
+            "id": "montering-stotteplate",
+            "qty": 3,
+          },
+        ],
       },
     ],
     "name": "Vegger og bakrom",
@@ -2357,6 +2849,28 @@ exports[`03-rom.json > variant A > calculation 1`] = `
           },
           "transfer": "leie",
           "unit": "lm",
+          "uses": [
+            {
+              "id": "veggplate",
+              "qty": 8,
+            },
+            {
+              "id": "skinne-92-960",
+              "qty": 8,
+            },
+            {
+              "id": "skinne-91-960",
+              "qty": 8,
+            },
+            {
+              "id": "stolpe-94",
+              "qty": 6.4,
+            },
+            {
+              "id": "montering-modul",
+              "qty": 8,
+            },
+          ],
         },
         {
           "artnr": "6130",
@@ -2380,6 +2894,32 @@ exports[`03-rom.json > variant A > calculation 1`] = `
           },
           "transfer": "leie",
           "unit": "stk",
+          "uses": [
+            {
+              "id": "dor",
+              "qty": 1,
+            },
+            {
+              "id": "veggplate-overstykke",
+              "qty": 1,
+            },
+            {
+              "id": "skinne-92-960",
+              "qty": 1,
+            },
+            {
+              "id": "skinne-91-960",
+              "qty": 1,
+            },
+            {
+              "id": "stolpe-94",
+              "qty": 0.8,
+            },
+            {
+              "id": "montering-modul",
+              "qty": 1,
+            },
+          ],
         },
         {
           "artnr": "6131",
@@ -2402,6 +2942,32 @@ exports[`03-rom.json > variant A > calculation 1`] = `
           },
           "transfer": "leie",
           "unit": "stk",
+          "uses": [
+            {
+              "id": "forheng",
+              "qty": 1,
+            },
+            {
+              "id": "veggplate-overstykke",
+              "qty": 1,
+            },
+            {
+              "id": "skinne-92-960",
+              "qty": 1,
+            },
+            {
+              "id": "skinne-91-960",
+              "qty": 1,
+            },
+            {
+              "id": "stolpe-94",
+              "qty": 0.8,
+            },
+            {
+              "id": "montering-modul",
+              "qty": 1,
+            },
+          ],
         },
       ],
       "name": "Vegger og bakrom",
@@ -2484,6 +3050,28 @@ exports[`03-rom.json > variant A > calculation 1`] = `
         },
         "transfer": "leie",
         "unit": "lm",
+        "uses": [
+          {
+            "id": "veggplate",
+            "qty": 18,
+          },
+          {
+            "id": "skinne-92-960",
+            "qty": 18,
+          },
+          {
+            "id": "skinne-91-960",
+            "qty": 18,
+          },
+          {
+            "id": "stolpe-94",
+            "qty": 19,
+          },
+          {
+            "id": "montering-modul",
+            "qty": 18,
+          },
+        ],
       },
       {
         "artnr": "6110",
@@ -2508,6 +3096,32 @@ exports[`03-rom.json > variant A > calculation 1`] = `
         },
         "transfer": "leie",
         "unit": "lm",
+        "uses": [
+          {
+            "id": "takdrager-292-3960",
+            "qty": 1,
+          },
+          {
+            "id": "takdrager-292-3960",
+            "qty": 1,
+          },
+          {
+            "id": "takdrager-292-4960",
+            "qty": 1,
+          },
+          {
+            "id": "stolpe-94",
+            "qty": 1,
+          },
+          {
+            "id": "montering-takdrager",
+            "qty": 13,
+          },
+          {
+            "id": "montering-takdragerstolpe",
+            "qty": 1,
+          },
+        ],
       },
     ],
     "sum": 15343,
@@ -2818,6 +3432,28 @@ exports[`03-rom.json > variant A > quote lines 1`] = `
         },
         "transfer": "leie",
         "unit": "lm",
+        "uses": [
+          {
+            "id": "veggplate",
+            "qty": 8,
+          },
+          {
+            "id": "skinne-92-960",
+            "qty": 8,
+          },
+          {
+            "id": "skinne-91-960",
+            "qty": 8,
+          },
+          {
+            "id": "stolpe-94",
+            "qty": 6.4,
+          },
+          {
+            "id": "montering-modul",
+            "qty": 8,
+          },
+        ],
       },
       {
         "artnr": "6130",
@@ -2841,6 +3477,32 @@ exports[`03-rom.json > variant A > quote lines 1`] = `
         },
         "transfer": "leie",
         "unit": "stk",
+        "uses": [
+          {
+            "id": "dor",
+            "qty": 1,
+          },
+          {
+            "id": "veggplate-overstykke",
+            "qty": 1,
+          },
+          {
+            "id": "skinne-92-960",
+            "qty": 1,
+          },
+          {
+            "id": "skinne-91-960",
+            "qty": 1,
+          },
+          {
+            "id": "stolpe-94",
+            "qty": 0.8,
+          },
+          {
+            "id": "montering-modul",
+            "qty": 1,
+          },
+        ],
       },
       {
         "artnr": "6131",
@@ -2863,6 +3525,32 @@ exports[`03-rom.json > variant A > quote lines 1`] = `
         },
         "transfer": "leie",
         "unit": "stk",
+        "uses": [
+          {
+            "id": "forheng",
+            "qty": 1,
+          },
+          {
+            "id": "veggplate-overstykke",
+            "qty": 1,
+          },
+          {
+            "id": "skinne-92-960",
+            "qty": 1,
+          },
+          {
+            "id": "skinne-91-960",
+            "qty": 1,
+          },
+          {
+            "id": "stolpe-94",
+            "qty": 0.8,
+          },
+          {
+            "id": "montering-modul",
+            "qty": 1,
+          },
+        ],
       },
     ],
     "name": "Vegger og bakrom",
@@ -3122,6 +3810,60 @@ exports[`04-oy-takdrager.json > variant A > calculation 1`] = `
           },
           "transfer": "leie",
           "unit": "lm",
+          "uses": [
+            {
+              "id": "takdrager-292-3960",
+              "qty": 1,
+            },
+            {
+              "id": "takdrager-292-3960",
+              "qty": 1,
+            },
+            {
+              "id": "takdrager-292-5960",
+              "qty": 1,
+            },
+            {
+              "id": "takdrager-292-5960",
+              "qty": 1,
+            },
+            {
+              "id": "takdrager-292-3960",
+              "qty": 1,
+            },
+            {
+              "id": "takdrager-292-3960",
+              "qty": 1,
+            },
+            {
+              "id": "takdrager-292-5960",
+              "qty": 1,
+            },
+            {
+              "id": "takdrager-292-3960",
+              "qty": 1,
+            },
+            {
+              "id": "takdrager-292-3960",
+              "qty": 1,
+            },
+            {
+              "id": "stolpe-94",
+              "qty": 6,
+            },
+            {
+              "id": "montering-takdrager",
+              "qty": 42,
+            },
+            {
+              "id": "montering-takdragerstolpe",
+              "qty": 6,
+            },
+            {
+              "id": "krok-takdrager",
+              "qty": 3,
+            },
+          ],
         },
       ],
       "name": "Vegger og bakrom",
@@ -3420,6 +4162,60 @@ exports[`04-oy-takdrager.json > variant A > quote lines 1`] = `
         },
         "transfer": "leie",
         "unit": "lm",
+        "uses": [
+          {
+            "id": "takdrager-292-3960",
+            "qty": 1,
+          },
+          {
+            "id": "takdrager-292-3960",
+            "qty": 1,
+          },
+          {
+            "id": "takdrager-292-5960",
+            "qty": 1,
+          },
+          {
+            "id": "takdrager-292-5960",
+            "qty": 1,
+          },
+          {
+            "id": "takdrager-292-3960",
+            "qty": 1,
+          },
+          {
+            "id": "takdrager-292-3960",
+            "qty": 1,
+          },
+          {
+            "id": "takdrager-292-5960",
+            "qty": 1,
+          },
+          {
+            "id": "takdrager-292-3960",
+            "qty": 1,
+          },
+          {
+            "id": "takdrager-292-3960",
+            "qty": 1,
+          },
+          {
+            "id": "stolpe-94",
+            "qty": 6,
+          },
+          {
+            "id": "montering-takdrager",
+            "qty": 42,
+          },
+          {
+            "id": "montering-takdragerstolpe",
+            "qty": 6,
+          },
+          {
+            "id": "krok-takdrager",
+            "qty": 3,
+          },
+        ],
       },
     ],
     "name": "Vegger og bakrom",
@@ -3677,6 +4473,28 @@ exports[`05-takdrager-av.json > variant A > calculation 1`] = `
           },
           "transfer": "leie",
           "unit": "lm",
+          "uses": [
+            {
+              "id": "veggplate",
+              "qty": 13,
+            },
+            {
+              "id": "skinne-92-960",
+              "qty": 13,
+            },
+            {
+              "id": "skinne-91-960",
+              "qty": 13,
+            },
+            {
+              "id": "stolpe-94",
+              "qty": 14.733333333333333,
+            },
+            {
+              "id": "montering-modul",
+              "qty": 13,
+            },
+          ],
         },
         {
           "artnr": "6120-9010",
@@ -3701,6 +4519,28 @@ exports[`05-takdrager-av.json > variant A > calculation 1`] = `
           },
           "transfer": "leie",
           "unit": "lm",
+          "uses": [
+            {
+              "id": "veggplate",
+              "qty": 2,
+            },
+            {
+              "id": "skinne-92-960",
+              "qty": 2,
+            },
+            {
+              "id": "skinne-91-960",
+              "qty": 2,
+            },
+            {
+              "id": "stolpe-94",
+              "qty": 2.2666666666666666,
+            },
+            {
+              "id": "montering-modul",
+              "qty": 2,
+            },
+          ],
         },
         {
           "artnr": "6115",
@@ -3725,6 +4565,16 @@ exports[`05-takdrager-av.json > variant A > calculation 1`] = `
           },
           "transfer": "leie",
           "unit": "stk",
+          "uses": [
+            {
+              "id": "fotplate-750",
+              "qty": 3,
+            },
+            {
+              "id": "montering-stotteplate",
+              "qty": 3,
+            },
+          ],
         },
         {
           "artnr": "6110",
@@ -3749,6 +4599,16 @@ exports[`05-takdrager-av.json > variant A > calculation 1`] = `
           },
           "transfer": "leie",
           "unit": "lm",
+          "uses": [
+            {
+              "id": "takdrager-292-1960",
+              "qty": 1,
+            },
+            {
+              "id": "montering-takdrager",
+              "qty": 2,
+            },
+          ],
         },
       ],
       "name": "Vegger og bakrom",
@@ -4056,6 +4916,28 @@ exports[`05-takdrager-av.json > variant A > quote lines 1`] = `
         },
         "transfer": "leie",
         "unit": "lm",
+        "uses": [
+          {
+            "id": "veggplate",
+            "qty": 13,
+          },
+          {
+            "id": "skinne-92-960",
+            "qty": 13,
+          },
+          {
+            "id": "skinne-91-960",
+            "qty": 13,
+          },
+          {
+            "id": "stolpe-94",
+            "qty": 14.733333333333333,
+          },
+          {
+            "id": "montering-modul",
+            "qty": 13,
+          },
+        ],
       },
       {
         "artnr": "6120-9010",
@@ -4080,6 +4962,28 @@ exports[`05-takdrager-av.json > variant A > quote lines 1`] = `
         },
         "transfer": "leie",
         "unit": "lm",
+        "uses": [
+          {
+            "id": "veggplate",
+            "qty": 2,
+          },
+          {
+            "id": "skinne-92-960",
+            "qty": 2,
+          },
+          {
+            "id": "skinne-91-960",
+            "qty": 2,
+          },
+          {
+            "id": "stolpe-94",
+            "qty": 2.2666666666666666,
+          },
+          {
+            "id": "montering-modul",
+            "qty": 2,
+          },
+        ],
       },
       {
         "artnr": "6115",
@@ -4104,6 +5008,16 @@ exports[`05-takdrager-av.json > variant A > quote lines 1`] = `
         },
         "transfer": "leie",
         "unit": "stk",
+        "uses": [
+          {
+            "id": "fotplate-750",
+            "qty": 3,
+          },
+          {
+            "id": "montering-stotteplate",
+            "qty": 3,
+          },
+        ],
       },
       {
         "artnr": "6110",
@@ -4128,6 +5042,16 @@ exports[`05-takdrager-av.json > variant A > quote lines 1`] = `
         },
         "transfer": "leie",
         "unit": "lm",
+        "uses": [
+          {
+            "id": "takdrager-292-1960",
+            "qty": 1,
+          },
+          {
+            "id": "montering-takdrager",
+            "qty": 2,
+          },
+        ],
       },
     ],
     "name": "Vegger og bakrom",
@@ -4332,6 +5256,28 @@ exports[`06-stottedrager.json > variant A > calculation 1`] = `
         },
         "transfer": "leie",
         "unit": "lm",
+        "uses": [
+          {
+            "id": "veggplate",
+            "qty": 22,
+          },
+          {
+            "id": "skinne-92-960",
+            "qty": 22,
+          },
+          {
+            "id": "skinne-91-960",
+            "qty": 22,
+          },
+          {
+            "id": "stolpe-94",
+            "qty": 23,
+          },
+          {
+            "id": "montering-modul",
+            "qty": 22,
+          },
+        ],
       },
       {
         "artnr": "6110",
@@ -4356,6 +5302,48 @@ exports[`06-stottedrager.json > variant A > calculation 1`] = `
         },
         "transfer": "leie",
         "unit": "lm",
+        "uses": [
+          {
+            "id": "takdrager-292-3960",
+            "qty": 1,
+          },
+          {
+            "id": "takdrager-292-3960",
+            "qty": 1,
+          },
+          {
+            "id": "takdrager-292-3960",
+            "qty": 1,
+          },
+          {
+            "id": "takdrager-292-2960",
+            "qty": 1,
+          },
+          {
+            "id": "takdrager-292-3960",
+            "qty": 1,
+          },
+          {
+            "id": "takdrager-292-3960",
+            "qty": 1,
+          },
+          {
+            "id": "stolpe-94",
+            "qty": 2,
+          },
+          {
+            "id": "montering-takdrager",
+            "qty": 23,
+          },
+          {
+            "id": "montering-takdragerstolpe",
+            "qty": 2,
+          },
+          {
+            "id": "krok-takdrager",
+            "qty": 2,
+          },
+        ],
       },
     ],
     "sum": 19613,
@@ -4740,6 +5728,28 @@ exports[`07-engangsteppe.json > variant A > calculation 1`] = `
         },
         "transfer": "leie",
         "unit": "lm",
+        "uses": [
+          {
+            "id": "veggplate",
+            "qty": 5,
+          },
+          {
+            "id": "skinne-92-960",
+            "qty": 5,
+          },
+          {
+            "id": "skinne-91-960",
+            "qty": 5,
+          },
+          {
+            "id": "stolpe-94",
+            "qty": 6,
+          },
+          {
+            "id": "montering-modul",
+            "qty": 5,
+          },
+        ],
       },
       {
         "artnr": "6110",
@@ -4764,6 +5774,32 @@ exports[`07-engangsteppe.json > variant A > calculation 1`] = `
         },
         "transfer": "leie",
         "unit": "lm",
+        "uses": [
+          {
+            "id": "takdrager-292-2960",
+            "qty": 1,
+          },
+          {
+            "id": "takdrager-292-2960",
+            "qty": 1,
+          },
+          {
+            "id": "takdrager-292-4960",
+            "qty": 1,
+          },
+          {
+            "id": "stolpe-94",
+            "qty": 2,
+          },
+          {
+            "id": "montering-takdrager",
+            "qty": 11,
+          },
+          {
+            "id": "montering-takdragerstolpe",
+            "qty": 2,
+          },
+        ],
       },
     ],
     "sum": 5156,
@@ -5200,6 +6236,28 @@ exports[`07-engangsteppe.json > variant B > calculation 1`] = `
         },
         "transfer": "leie",
         "unit": "lm",
+        "uses": [
+          {
+            "id": "veggplate",
+            "qty": 16,
+          },
+          {
+            "id": "skinne-92-960",
+            "qty": 16,
+          },
+          {
+            "id": "skinne-91-960",
+            "qty": 16,
+          },
+          {
+            "id": "stolpe-94",
+            "qty": 17,
+          },
+          {
+            "id": "montering-modul",
+            "qty": 16,
+          },
+        ],
       },
       {
         "artnr": "6110",
@@ -5224,6 +6282,24 @@ exports[`07-engangsteppe.json > variant B > calculation 1`] = `
         },
         "transfer": "leie",
         "unit": "lm",
+        "uses": [
+          {
+            "id": "takdrager-292-5960",
+            "qty": 1,
+          },
+          {
+            "id": "takdrager-292-4960",
+            "qty": 1,
+          },
+          {
+            "id": "montering-takdrager",
+            "qty": 11,
+          },
+          {
+            "id": "krok-takdrager",
+            "qty": 1,
+          },
+        ],
       },
     ],
     "sum": 13571,
@@ -5830,6 +6906,12 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
           },
           "transfer": "leie",
           "unit": "stk",
+          "uses": [
+            {
+              "id": "skjot-takdrager",
+              "qty": 2,
+            },
+          ],
         },
       ],
       "name": "Vegger og bakrom",
@@ -5869,6 +6951,36 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
           },
           "transfer": "leie",
           "unit": "stk",
+          "uses": [
+            {
+              "id": "43TX",
+              "qty": 13.02,
+            },
+            {
+              "id": "617",
+              "qty": 4,
+            },
+            {
+              "id": "520",
+              "qty": 2,
+            },
+            {
+              "id": "stag-90-m",
+              "qty": 2.46,
+            },
+            {
+              "id": "stag-90-stk",
+              "qty": 1,
+            },
+            {
+              "id": "montering-ramme-kobling",
+              "qty": 6,
+            },
+            {
+              "id": "handtering-ramme",
+              "qty": 1,
+            },
+          ],
         },
         {
           "artnr": "8000",
@@ -5900,6 +7012,28 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
           },
           "transfer": "leie",
           "unit": "stk",
+          "uses": [
+            {
+              "id": "43TX",
+              "qty": 9.02,
+            },
+            {
+              "id": "617",
+              "qty": 4,
+            },
+            {
+              "id": "520",
+              "qty": 2,
+            },
+            {
+              "id": "montering-ramme-kobling",
+              "qty": 4,
+            },
+            {
+              "id": "handtering-ramme",
+              "qty": 1,
+            },
+          ],
         },
         {
           "artnr": "8000",
@@ -5931,6 +7065,40 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
           },
           "transfer": "leie",
           "unit": "stk",
+          "uses": [
+            {
+              "id": "43TX",
+              "qty": 7.466,
+            },
+            {
+              "id": "617",
+              "qty": 4,
+            },
+            {
+              "id": "fotplate-740",
+              "qty": 1,
+            },
+            {
+              "id": "stag-90-m",
+              "qty": 2.46,
+            },
+            {
+              "id": "stag-90-stk",
+              "qty": 1,
+            },
+            {
+              "id": "montering-ramme-kobling",
+              "qty": 6,
+            },
+            {
+              "id": "handtering-ramme",
+              "qty": 1,
+            },
+            {
+              "id": "92LTX",
+              "qty": 1.263,
+            },
+          ],
         },
         {
           "artnr": "8000",
@@ -5962,6 +7130,32 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
           },
           "transfer": "leie",
           "unit": "stk",
+          "uses": [
+            {
+              "id": "43TX",
+              "qty": 5.466,
+            },
+            {
+              "id": "617",
+              "qty": 4,
+            },
+            {
+              "id": "fotplate-740",
+              "qty": 1,
+            },
+            {
+              "id": "montering-ramme-kobling",
+              "qty": 4,
+            },
+            {
+              "id": "handtering-ramme",
+              "qty": 1,
+            },
+            {
+              "id": "92LTX",
+              "qty": 1.263,
+            },
+          ],
         },
         {
           "artnr": "8040",
@@ -5989,6 +7183,16 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
           },
           "transfer": "blandet",
           "unit": "m²",
+          "uses": [
+            {
+              "id": "trykk",
+              "qty": 10.3458,
+            },
+            {
+              "id": "montering-tekstil-omkrets",
+              "qty": 13.02,
+            },
+          ],
         },
         {
           "artnr": "8041",
@@ -6016,6 +7220,16 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
           },
           "transfer": "blandet",
           "unit": "m²",
+          "uses": [
+            {
+              "id": "tekstil-hvit",
+              "qty": 5.1858,
+            },
+            {
+              "id": "montering-tekstil-omkrets",
+              "qty": 9.02,
+            },
+          ],
         },
         {
           "artnr": "8040",
@@ -6043,6 +7257,16 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
           },
           "transfer": "blandet",
           "unit": "m²",
+          "uses": [
+            {
+              "id": "trykk",
+              "qty": 6.5016,
+            },
+            {
+              "id": "montering-tekstil-omkrets",
+              "qty": 10.04,
+            },
+          ],
         },
         {
           "artnr": "8041",
@@ -6070,6 +7294,16 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
           },
           "transfer": "blandet",
           "unit": "m²",
+          "uses": [
+            {
+              "id": "tekstil-hvit",
+              "qty": 6.6048,
+            },
+            {
+              "id": "montering-tekstil-omkrets",
+              "qty": 10.12,
+            },
+          ],
         },
         {
           "artnr": "8040",
@@ -6097,6 +7331,16 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
           },
           "transfer": "blandet",
           "unit": "m²",
+          "uses": [
+            {
+              "id": "trykk",
+              "qty": 3.9216,
+            },
+            {
+              "id": "montering-tekstil-omkrets",
+              "qty": 8.04,
+            },
+          ],
         },
         {
           "artnr": "8042",
@@ -6123,6 +7367,12 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
           },
           "transfer": "leie",
           "unit": "m²",
+          "uses": [
+            {
+              "id": "montering-tekstil-omkrets",
+              "qty": 8.12,
+            },
+          ],
         },
       ],
       "name": "Profilering",
@@ -6224,6 +7474,28 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         },
         "transfer": "leie",
         "unit": "lm",
+        "uses": [
+          {
+            "id": "veggplate",
+            "qty": 11,
+          },
+          {
+            "id": "skinne-92-960",
+            "qty": 11,
+          },
+          {
+            "id": "skinne-91-960",
+            "qty": 11,
+          },
+          {
+            "id": "stolpe-94",
+            "qty": 12,
+          },
+          {
+            "id": "montering-modul",
+            "qty": 11,
+          },
+        ],
       },
       {
         "artnr": "6110",
@@ -6248,6 +7520,36 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         },
         "transfer": "leie",
         "unit": "lm",
+        "uses": [
+          {
+            "id": "takdrager-292-4960",
+            "qty": 1,
+          },
+          {
+            "id": "takdrager-292-5960",
+            "qty": 1,
+          },
+          {
+            "id": "takdrager-292-4960",
+            "qty": 1,
+          },
+          {
+            "id": "stolpe-94",
+            "qty": 1,
+          },
+          {
+            "id": "montering-takdrager",
+            "qty": 16,
+          },
+          {
+            "id": "montering-takdragerstolpe",
+            "qty": 1,
+          },
+          {
+            "id": "krok-takdrager",
+            "qty": 1,
+          },
+        ],
       },
     ],
     "sum": 10351,
@@ -7231,6 +8533,12 @@ exports[`08-tekstil.json > variant A > quote lines 1`] = `
         },
         "transfer": "leie",
         "unit": "stk",
+        "uses": [
+          {
+            "id": "skjot-takdrager",
+            "qty": 2,
+          },
+        ],
       },
     ],
     "name": "Vegger og bakrom",
@@ -7272,6 +8580,36 @@ exports[`08-tekstil.json > variant A > quote lines 1`] = `
         },
         "transfer": "leie",
         "unit": "stk",
+        "uses": [
+          {
+            "id": "43TX",
+            "qty": 13.02,
+          },
+          {
+            "id": "617",
+            "qty": 4,
+          },
+          {
+            "id": "520",
+            "qty": 2,
+          },
+          {
+            "id": "stag-90-m",
+            "qty": 2.46,
+          },
+          {
+            "id": "stag-90-stk",
+            "qty": 1,
+          },
+          {
+            "id": "montering-ramme-kobling",
+            "qty": 6,
+          },
+          {
+            "id": "handtering-ramme",
+            "qty": 1,
+          },
+        ],
       },
       {
         "artnr": "8000+8041",
@@ -7305,6 +8643,28 @@ exports[`08-tekstil.json > variant A > quote lines 1`] = `
         },
         "transfer": "leie",
         "unit": "stk",
+        "uses": [
+          {
+            "id": "43TX",
+            "qty": 9.02,
+          },
+          {
+            "id": "617",
+            "qty": 4,
+          },
+          {
+            "id": "520",
+            "qty": 2,
+          },
+          {
+            "id": "montering-ramme-kobling",
+            "qty": 4,
+          },
+          {
+            "id": "handtering-ramme",
+            "qty": 1,
+          },
+        ],
       },
       {
         "artnr": "8000+8040+8041",
@@ -7338,6 +8698,40 @@ exports[`08-tekstil.json > variant A > quote lines 1`] = `
         },
         "transfer": "leie",
         "unit": "stk",
+        "uses": [
+          {
+            "id": "43TX",
+            "qty": 7.466,
+          },
+          {
+            "id": "617",
+            "qty": 4,
+          },
+          {
+            "id": "fotplate-740",
+            "qty": 1,
+          },
+          {
+            "id": "stag-90-m",
+            "qty": 2.46,
+          },
+          {
+            "id": "stag-90-stk",
+            "qty": 1,
+          },
+          {
+            "id": "montering-ramme-kobling",
+            "qty": 6,
+          },
+          {
+            "id": "handtering-ramme",
+            "qty": 1,
+          },
+          {
+            "id": "92LTX",
+            "qty": 1.263,
+          },
+        ],
       },
       {
         "artnr": "8000+8040+8042",
@@ -7371,6 +8765,32 @@ exports[`08-tekstil.json > variant A > quote lines 1`] = `
         },
         "transfer": "leie",
         "unit": "stk",
+        "uses": [
+          {
+            "id": "43TX",
+            "qty": 5.466,
+          },
+          {
+            "id": "617",
+            "qty": 4,
+          },
+          {
+            "id": "fotplate-740",
+            "qty": 1,
+          },
+          {
+            "id": "montering-ramme-kobling",
+            "qty": 4,
+          },
+          {
+            "id": "handtering-ramme",
+            "qty": 1,
+          },
+          {
+            "id": "92LTX",
+            "qty": 1.263,
+          },
+        ],
       },
     ],
     "name": "Profilering",
@@ -7553,6 +8973,28 @@ exports[`09-dekor.json > variant A > calculation 1`] = `
           },
           "transfer": "leie",
           "unit": "lm",
+          "uses": [
+            {
+              "id": "veggplate",
+              "qty": 8,
+            },
+            {
+              "id": "skinne-92-960",
+              "qty": 8,
+            },
+            {
+              "id": "skinne-91-960",
+              "qty": 8,
+            },
+            {
+              "id": "stolpe-94",
+              "qty": 9,
+            },
+            {
+              "id": "montering-modul",
+              "qty": 8,
+            },
+          ],
         },
         {
           "artnr": "6110",
@@ -7577,6 +9019,28 @@ exports[`09-dekor.json > variant A > calculation 1`] = `
           },
           "transfer": "leie",
           "unit": "lm",
+          "uses": [
+            {
+              "id": "takdrager-292-2960",
+              "qty": 1,
+            },
+            {
+              "id": "takdrager-292-4960",
+              "qty": 1,
+            },
+            {
+              "id": "stolpe-94",
+              "qty": 1,
+            },
+            {
+              "id": "montering-takdrager",
+              "qty": 8,
+            },
+            {
+              "id": "montering-takdragerstolpe",
+              "qty": 1,
+            },
+          ],
         },
       ],
       "name": "Vegger og bakrom",
@@ -7978,6 +9442,28 @@ exports[`09-dekor.json > variant A > quote lines 1`] = `
         },
         "transfer": "leie",
         "unit": "lm",
+        "uses": [
+          {
+            "id": "veggplate",
+            "qty": 8,
+          },
+          {
+            "id": "skinne-92-960",
+            "qty": 8,
+          },
+          {
+            "id": "skinne-91-960",
+            "qty": 8,
+          },
+          {
+            "id": "stolpe-94",
+            "qty": 9,
+          },
+          {
+            "id": "montering-modul",
+            "qty": 8,
+          },
+        ],
       },
       {
         "artnr": "6110",
@@ -8002,6 +9488,28 @@ exports[`09-dekor.json > variant A > quote lines 1`] = `
         },
         "transfer": "leie",
         "unit": "lm",
+        "uses": [
+          {
+            "id": "takdrager-292-2960",
+            "qty": 1,
+          },
+          {
+            "id": "takdrager-292-4960",
+            "qty": 1,
+          },
+          {
+            "id": "stolpe-94",
+            "qty": 1,
+          },
+          {
+            "id": "montering-takdrager",
+            "qty": 8,
+          },
+          {
+            "id": "montering-takdragerstolpe",
+            "qty": 1,
+          },
+        ],
       },
     ],
     "name": "Vegger og bakrom",
@@ -8358,6 +9866,28 @@ exports[`10-mobler-utstyr.json > variant A > calculation 1`] = `
         },
         "transfer": "leie",
         "unit": "lm",
+        "uses": [
+          {
+            "id": "veggplate",
+            "qty": 10,
+          },
+          {
+            "id": "skinne-92-960",
+            "qty": 10,
+          },
+          {
+            "id": "skinne-91-960",
+            "qty": 10,
+          },
+          {
+            "id": "stolpe-94",
+            "qty": 11,
+          },
+          {
+            "id": "montering-modul",
+            "qty": 10,
+          },
+        ],
       },
       {
         "artnr": "6110",
@@ -8382,6 +9912,16 @@ exports[`10-mobler-utstyr.json > variant A > calculation 1`] = `
         },
         "transfer": "leie",
         "unit": "lm",
+        "uses": [
+          {
+            "id": "takdrager-292-3960",
+            "qty": 1,
+          },
+          {
+            "id": "montering-takdrager",
+            "qty": 4,
+          },
+        ],
       },
     ],
     "sum": 8134,

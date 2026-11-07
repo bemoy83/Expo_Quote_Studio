@@ -3,7 +3,7 @@ import type { Unit } from '../catalog/types';
 import type { Payer, Point } from '../domain/types';
 import type { Bom } from '../foga/engine';
 import type { FogaStructure } from '../foga/structure';
-import type { Strategy, Time, Transfer } from '../pricing/model';
+import type { Strategy, Time, Transfer, Use } from '../pricing/model';
 import type { BeamLayout } from './beams';
 import type { Production } from './production';
 import type { WallSupport } from './wallSupports';
@@ -34,6 +34,9 @@ export interface CalcLine {
   terms?: string;
   /** Minutes per handling step for the whole line (from the OMS price list or the product). */
   time: Time;
+  /** The price items the line is built of, all of it (not per unit): what its cost, and a sum product's price, is the
+   *  sum of. Internal, for «Slik er det regnet» in the kalkyle. */
+  uses?: Use[];
   /** Who the line is invoiced to. Only stand walls and the takdrager that follow them can go to the organiser. */
   payer: Payer;
   /** Lines with the same key are one line on the quote, named `name`, with the quantity and unit of the `lead` line
