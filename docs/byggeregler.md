@@ -186,11 +186,11 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   2526 (endelokk 7 mm under og over, ikke plukket). Skinnene stopper 37 mm før hjørnepunktet; utvendig duk er 20 mm
   lengre og innvendig 20 mm kortere per hjørne. En strek i forlengelsen blir samme vegg.
   *Bjørn 31.10.2026 og 6.11.2026 · `RECIPES.freeFrame` · kode `src/calc/textile/free.ts`, `src/domain/textile/free.ts` · test `src/calc/freeFrames.test.ts`*
-- **X8 Føtter og stag.** Fotplate 740 og stående stag 90 på samme punkter, etter S3 og S4; en 92LTX teller som støtte.
+- **X8 Føtter og stag.** Fotplate 740 under bunnskinnen etter S3 og S4; en 92LTX teller som støtte. Stående stag 90
+  står uavhengig av føttene: en fotplate har ikke stag.
   En fot i en fri ende står i flukt med rammeenden (200 mm inn for 740), resten jevnt fordelt. Under 1 m: én 730 midt på.
   Ett stag 150 mm (100–200) fra hver side av en skinneskjøt, så det virker som rammeside når lange motiver monteres i
-  seksjoner; en fot nær skjøten flyttes under et av dem. Mellom stagene fylles det inn så ingen står mer enn 2000 fra
-  hverandre, også mellom føttene.
+  seksjoner. Ellers jevnt fordelt, så ingen stående (rammeende, 92LTX, stag) står mer enn 2000 fra hverandre.
   *Bjørn 1.11.2026, 3.11.2026 og 7.11.2026 · `RECIPES.freeFrame.maxBrace`, `spliceBrace` · `RECIPES.freeFrame.support` · kode `src/calc/textile/free.ts`, `src/calc/supports.ts` · test `src/calc/freeFrames.test.ts`*
 
 - **X9 Standardlengder (veiledende).** Fordi systemveggene på messer er standardisert, har 43TX standardlengder som

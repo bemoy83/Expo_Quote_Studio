@@ -57,16 +57,15 @@ describe('feet and braces', () => {
 
 describe('braces', () => {
   const R = RECIPES.freeFrame;
-  it('at the feet, and filled in so none are more than 2 m apart', () => {
-    expect(bracePoints(2000, [200, 1800], [], R)).toEqual([200, 1800]);
-    expect(bracePoints(3000, [200, 2800], [], R)).toEqual([200, 1500, 2800]);
-    expect(bracePoints(5000, [1000, 4000], [], R)).toEqual([1000, 2500, 4000]);
-    // Posts at both ends and no feet: from the posts
-    expect(bracePoints(4000, [], [], R)).toEqual([2000]);
-    expect(bracePoints(4500, [], [], R)).toEqual([1500, 3000]);
+  // Not at the feet: a foot plate has no brace (Bjørn 7.11.2026)
+  it('evenly, so no two uprights are more than 2 m apart', () => {
+    expect(bracePoints(2000, [], R)).toEqual([]);
+    expect(bracePoints(3000, [], R)).toEqual([1500]);
+    expect(bracePoints(4000, [], R)).toEqual([2000]);
+    expect(bracePoints(4500, [], R)).toEqual([1500, 3000]);
   });
   it('one 150 mm each side of a splice', () => {
-    expect(bracePoints(7000, [500, 3350, 6500], [3500], R)).toEqual([500, 1925, 3350, 3650, 5075, 6500]);
+    expect(bracePoints(7000, [3500], R)).toEqual([1675, 3350, 3650, 5325]);
   });
 });
 
@@ -82,14 +81,14 @@ describe('free-standing frame', () => {
   it('a straight run: two free ends, textile both sides', () => {
     const [f] = frames(draw(island(), [1, 2], [7, 2]));
     // 6000 long, H = 2540. Rails 1 × 6000 is more than 5000: 2 × 3000 each
-    expect(f).toMatchObject({ pos: 'F1', length: 6000, H: 2540, railCuts: [3000, 3000], uprights: 2, supports: [200, 3150, 5800], braceLength: 2460 });
-    // The splice at 3000 gets a brace 150 each side; the middle foot moves under one of them, so not three braces there.
-    // Between, braces fill so none are more than 2 m apart (Bjørn 7.11.2026)
-    expect(f.braces).toEqual([200, 1525, 2850, 3150, 4475, 5800]);
+    expect(f).toMatchObject({ pos: 'F1', length: 6000, H: 2540, railCuts: [3000, 3000], uprights: 2, supports: [200, 3000, 5800], braceLength: 2460 });
+    // The splice at 3000 gets a brace 150 each side; between, braces so none are more than 2 m apart. The feet get
+    // none (Bjørn 7.11.2026)
+    expect(f.braces).toEqual([1425, 2850, 3150, 4575]);
     // Both ends free: the splice is threaded with 609
     expect(f.spliceCode).toBe('609');
-    // Couplings: 2 × 2 corner 617 + 6 braces × 2 × 600 + 2 × 609
-    expect(f.couplings).toBe(4 + 12 + 2);
+    // Couplings: 2 × 2 corner 617 + 4 braces × 2 × 600 + 2 × 609
+    expect(f.couplings).toBe(4 + 8 + 2);
     expect(f.connectors).toEqual({ corner: 4, splice: 2 });
     expect(f.profileMm).toBe(2 * 6000 + 2 * 2540);
     expect(f.faces.map((x) => [x.pos, x.W, x.pw, x.ph, x.fill])).toEqual([
@@ -123,8 +122,8 @@ describe('free-standing frame', () => {
     expect(f1.profileMm).toBe(2 * 2963 + 2540);
     // The post is the support at the corner: one foot, flush with the free end
     expect(f1.supports).toEqual([200]);
-    // 2,8 m from the foot to the corner post: one more brace between
-    expect(f1.braces).toEqual([200, 1600]);
+    // 3 m from the free end to the corner post: one brace between
+    expect(f1.braces).toEqual([1500]);
     // Face A of (1,2) → (4,2) is the left normal (0, 1): the inner face, toward the other run
     expect(f1.faces.map((x) => [x.pos, x.W])).toEqual([
       ['F1A', 2980],
@@ -135,9 +134,9 @@ describe('free-standing frame', () => {
     // Run (4,2) → (4,5): face A is the left normal (−1, 0), toward where the first run comes from: inner
     expect(f2.faces.map((x) => x.W)).toEqual([2980, 3020]);
     expect(f2.supports).toEqual([2800]);
-    expect(f2.braces).toEqual([1400, 2800]);
-    // 617 into the post top and bottom, plus at the free end; two braces
-    expect(f2.couplings).toBe(2 + 2 + 4);
+    expect(f2.braces).toEqual([1500]);
+    // 617 into the post top and bottom, plus at the free end; one brace
+    expect(f2.couplings).toBe(2 + 2 + 2);
   });
   it('a short wall stands on one small foot plate', () => {
     const [f] = frames(draw(island(), [1, 2], [1.5, 2]));

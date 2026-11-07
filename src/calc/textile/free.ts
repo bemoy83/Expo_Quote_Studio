@@ -5,9 +5,9 @@
 //   on, or with 604 in the channel where the frame is held at both ends and there is no room to thread (Bjørn 7.11.2026)
 //   Upright 43TX at a free end (617 top and bottom); at a corner a 92LTX post shared with the other run instead, the
 //   rails joined to it with 617
-//   Feet at supportPoints, with an upright brace (90, 600 each end) at each; more braces so no two uprights are more
-//   than maxBrace (2000) apart, and one spliceBrace (150) from each side of a splice (Bjørn 7.11.2026). A corner post
-//   counts as a support
+//   Feet at supportPoints, under the bottom rail; a corner post counts as a support. Upright braces (90, 600 each end)
+//   stand apart from the feet: one spliceBrace (150) from each side of a splice, and more so no two uprights are more
+//   than maxBrace (2000) apart (Bjørn 7.11.2026: a foot plate has no brace)
 //   Textile on both faces. At a corner the outer face runs half a frame depth further and the inner face half a
 //   frame depth shorter (they meet the corner post on its outside and inside)
 //   Print = face + 2 × bleed, mounted along its whole perimeter (silicone edge pressed into the channel)
@@ -71,11 +71,11 @@ export interface FreeFrame {
   foot: FootPlate;
   /** 43TX uprights at the free ends, each H long. */
   uprights: number;
-  /** Where the feet stand, each with a brace, mm from the `from` end. Corner posts are supports too, but not in this
+  /** Where the feet stand, mm from the `from` end. Corner posts are supports too, but not in this
    *  list. */
   supports: number[];
-  /** Where the upright braces stand, mm from the `from` end: at every foot, by every splice, and between so none are
-   *  more than `maxBrace` apart. */
+  /** Where the upright braces stand, mm from the `from` end: by every splice, and between so none are more than
+   *  `maxBrace` apart. Not tied to the feet. */
   braces: number[];
   braceLength: number;
   /** The connector in every rail splice: 609 threaded on, or 604 in the channel when both ends are held. */
@@ -113,11 +113,11 @@ export function splitRail(len: number, max: number): number[] {
 }
 
 /**
- * Upright braces along a run of `len` mm: at every foot, `spliceBrace` from each side of every splice, and more evenly
- * between so no two uprights (the frame ends, a corner post, a brace) are more than `maxBrace` apart.
+ * Upright braces along a run of `len` mm: `spliceBrace` from each side of every splice, and more evenly between so no
+ * two uprights (the frame ends, a corner post, a brace) are more than `maxBrace` apart. The feet do not get one.
  */
-export function bracePoints(len: number, feet: readonly number[], splices: readonly number[], r: Pick<FreeFrameRecipe, 'maxBrace' | 'spliceBrace'>): number[] {
-  const fixed = [...feet, ...splices.flatMap((x) => [x - r.spliceBrace, x + r.spliceBrace])].filter((x) => x > 0 && x < len);
+export function bracePoints(len: number, splices: readonly number[], r: Pick<FreeFrameRecipe, 'maxBrace' | 'spliceBrace'>): number[] {
+  const fixed = splices.flatMap((x) => [x - r.spliceBrace, x + r.spliceBrace]).filter((x) => x > 0 && x < len);
   const posts = [0, ...[...new Set(fixed.map(Math.round))].sort((a, b) => a - b), len];
   const out: number[] = [];
   for (let i = 0; i < posts.length - 1; i++) {
@@ -162,12 +162,8 @@ export function freeFrames(
     // Splices along the run, from the `from` end
     const railStart = ends.from ? postLeg - depth / 2 : 0;
     const splices = railCuts.slice(0, -1).map((_, j) => railStart + railCuts.slice(0, j + 1).reduce((a, x) => a + x, 0));
-    // A foot at a free end stands flush with the frame end, not past it (Bjørn 1.11.2026). A foot that lands on a splice
-    // moves under the brace beside it, so the splice does not get three braces
-    const supports = supportPoints(length, r.support, corner, foot.along / 2).map((x) => {
-      const near = splices.find((sp) => Math.abs(x - sp) < 2 * r.spliceBrace);
-      return near === undefined ? x : near + (x < near ? -r.spliceBrace : r.spliceBrace);
-    });
+    // A foot at a free end stands flush with the frame end, not past it (Bjørn 1.11.2026)
+    const supports = supportPoints(length, r.support, corner, foot.along / 2);
     const face = (f: FaceKey): FreeFace => {
       const n = runNormal(t, f);
       // The other run leaves the corner toward the inner face: that face is shorter, the outer one longer
@@ -197,7 +193,7 @@ export function freeFrames(
       };
     };
     const freeEnds = 2 - nCorners;
-    const braces = bracePoints(length, supports, splices, r);
+    const braces = bracePoints(length, splices, r);
     const h = held.get(t.id);
     const bothHeld = (corner.from || !!h?.from) && (corner.to || !!h?.to);
     const spliceCode = bothHeld ? r.splice.slide.code : r.splice.thread;
