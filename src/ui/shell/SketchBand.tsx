@@ -6,6 +6,7 @@ import type { Variant } from '../../domain/types'
 import { Button, IconButton } from '../controls'
 import { count, fmt, kr, signed } from '../format'
 import { frameCount, TYPE_NAME } from '../names'
+import { KeyFigures } from './KeyFigures'
 import { VariantTabs } from './VariantTabs'
 
 /** Panel and calc can be folded away for more drawing room. */
@@ -45,20 +46,28 @@ export function SketchBand({ variants, current, res, others, layout, fold, onSel
         <span className="band-sep" />
         <FoldButton open={layout.calc} icons={[PanelRightClose, PanelRightOpen]} labels={['Skjul kalkylen', 'Vis kalkylen']} onToggle={(o) => fold('calc', o)} />
       </div>
-      <div className="kpis">
-        <Kpi label="Areal" value={fmt(k.area)} unit="m²" sub={`${v.stand.width} × ${v.stand.depth} m`} />
-        <Kpi label="Åpne sider" value={String(k.openSides)} sub={TYPE_NAME[v.stand.type]} />
-        <Kpi
-          label="Vegg"
-          value={fmt(k.wallLm)}
-          unit="lm"
-          sub={[wallSplit(k), k.openings ? count(k.openings, 'åpning', 'åpninger') : ''].filter(Boolean).join(' · ') || undefined}
-        />
-        <Kpi label="Takdrager" value={fmt(k.beamLm)} unit="m" sub={beamSplit(k)} />
-        {k.textileM2 > 0 && <Kpi label="Tekstilvegg" value={fmt(k.textileM2)} unit="m²" sub={textileSub(res.production)} />}
-        <span className="spacer" />
-        <Kpi label="Veiledende sum" value={kr(res.sum)} unit="kr" sub={['eks. mva.', ...others.map((o) => `${o.name} ${signed(o.sum - res.sum)}`)].join(' · ')} />
-      </div>
+      <KeyFigures
+        figures={[
+          { label: 'Areal', value: fmt(k.area), unit: 'm²', sub: `${v.stand.width} × ${v.stand.depth} m` },
+          { label: 'Åpne sider', value: String(k.openSides), sub: TYPE_NAME[v.stand.type] },
+          {
+            label: 'Vegg',
+            value: fmt(k.wallLm),
+            unit: 'lm',
+            sub: [wallSplit(k), k.openings ? count(k.openings, 'åpning', 'åpninger') : ''].filter(Boolean).join(' · ') || undefined,
+          },
+          { label: 'Takdrager', value: fmt(k.beamLm), unit: 'm', sub: beamSplit(k) },
+          ...(k.textileM2 > 0 ? [{ label: 'Tekstilvegg', value: fmt(k.textileM2), unit: 'm²', sub: textileSub(res.production) }] : []),
+          {
+            label: 'Veiledende sum',
+            value: kr(res.sum),
+            unit: 'kr',
+            sub: ['eks. mva.', ...others.map((o) => `${o.name} ${signed(o.sum - res.sum)}`)].join(' · '),
+            short: 'eks. mva.',
+            end: true,
+          },
+        ]}
+      />
     </div>
   )
 }
@@ -88,15 +97,4 @@ function beamSplit(k: CalcResult['keyFigures']) {
 function FoldButton({ open, icons, labels, onToggle }: { open: boolean; icons: [LucideIcon, LucideIcon]; labels: [string, string]; onToggle: (open: boolean) => void }) {
   const i = open ? 0 : 1
   return <IconButton icon={icons[i]} label={labels[i]} onBand pressed={open} className="band-fold" onClick={() => onToggle(!open)} />
-}
-
-function Kpi({ label, value, unit, sub }: { label: string; value: string; unit?: string; sub?: string }) {
-  return (
-    <span className="kpi">
-      <span className="label">{label}</span>
-      <span className="value num">{value}</span>
-      {unit && <span className="unit">{unit}</span>}
-      {sub && <span className="sub">{sub}</span>}
-    </span>
-  )
 }
