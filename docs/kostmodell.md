@@ -215,6 +215,21 @@ alle tre innen 3 % på tid, og kosten gir DG 70 % på dagens pris (prisen er nå
 121 per meter takdrager). Tidene sjekkes i `src/calc/calc.test.ts`; prisene sjekkes utenfor repoet,
 fordi den ekte prislisten ikke publiseres.
 
+Fanen Referanser på siden Kostgrunnlag regner de tre standene og frittstående tekstilvegger på 3 til 6 m med
+kostgrunnlaget i bruk (`src/calc/referenceSet.ts`): pris, kost, DG og timer. Med endringer som ikke er lagret, viser den
+tallene med endringene og forskjellen fra nå, så et nytt tall kan sjekkes mot kalibreringen før det lagres som ny
+versjon.
+
+## Redigering og versjoner
+
+Et tall endres ved å trykke på det på siden Kostgrunnlag: ny verdi, status og kilde. Endringene samles og lagres
+sammen som en ny versjon med foreslått navn (`2026-11 A` blir `2026-11 B`, ny måned begynner på A) og en kommentar.
+Endringen går samme vei som en innlastet fil (`withValues` i `src/cost/fields.ts`: skrives inn i filen og leses på
+nytt), så det som lagres er det samme som «Last ned» gir. En prisliste kan limes inn fra et regneark, én vare per linje
+med varenr først og pris sist; ukjente varenr hoppes over. Historikken (`src/cost/history.ts`) har gammel og ny verdi
+for hvert tall, ligger bare i nettleseren som kostgrunnlaget, kan lastes ned, og «Tilbake til forrige versjon» bruker
+grunnlaget den nyeste versjonen erstattet.
+
 ## Åpent
 
 - Når kostgrunnlaget kan hentes fra OMS i stedet for fra fil.

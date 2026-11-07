@@ -118,12 +118,15 @@ export function PendingBar({
   current,
   onSave,
   onDiscard,
+  onEffect,
 }: {
   count: number
   version: string
   current: string
   onSave: (version: string, comment: string) => void
   onDiscard: () => void
+  /** Show what the changes do to the reference stands. */
+  onEffect?: () => void
 }) {
   const [name, setName] = useState(version)
   const [comment, setComment] = useState('')
@@ -138,6 +141,7 @@ export function PendingBar({
         <input className="cin" value={name} onChange={(e) => setName(e.target.value)} aria-invalid={same || !name.trim()} />
       </label>
       <input className="cin kg-comment" value={comment} placeholder="Kommentar: hva og hvorfor" onChange={(e) => setComment(e.target.value)} aria-label="Kommentar" />
+      {onEffect && <Button onClick={onEffect}>Se virkning</Button>}
       <Button onClick={onDiscard}>Forkast</Button>
       <Button variant="primary" icon={Check} disabled={same || !name.trim()} title={same ? 'En endring lagres som en ny versjon med nytt navn' : undefined} onClick={() => onSave(name.trim(), comment.trim())}>
         Lagre versjon

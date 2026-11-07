@@ -3368,3 +3368,32 @@ select.cin {
     max-height: 70vh;
   }
 }
+
+/* Reference stands before and after a change */
+.kg-ref {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) repeat(4, minmax(72px, 1fr));
+  gap: 12px;
+  align-items: baseline;
+}
+.kg-fig {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+.kg-delta {
+  font: var(--type-num-sm);
+  color: rgb(var(--ink-muted));
+}
+.kg-delta.same {
+  color: rgb(var(--ink-faint));
+}
+@media (max-width: 760px) {
+  .kg-ref {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .kg-ref > :first-child {
+    grid-column: 1 / -1;
+  }
+}

@@ -12,17 +12,20 @@ import { CostBasisCard } from '../catalog/CostBasisCard'
 import { entryFor, nextVersion, type HistoryEntry } from '../../cost/history'
 import { Button, Segmented } from '../controls'
 import { download } from '../download'
-import { costBasis, costHistory, pricing, revertBasis, rules, saveBasisVersion } from '../env'
-import { fmt } from '../format'
+import { catalog, costBasis, costHistory, pricing, revertBasis, rules, saveBasisVersion } from '../env'
+import { REFERENCE_CASES, referenceFigures, type ReferenceFigures } from '../../calc/referenceSet'
+import { pricingFrom, type PricingData } from '../../pricing/data'
+import type { FieldNote } from '../../cost/basis'
+import { fmt, kr } from '../format'
 import { PageBand } from '../shell/PageBand'
 import type { ToastMsg } from '../useToast'
 import { FieldSheet, PasteSheet, PendingBar, type Pending } from './Edit'
 import { today } from './link'
 import { FORMULAS, RULE_ROWS } from './rows'
 
-type Tab = FieldTab | 'regler' | 'formler' | 'historikk'
+type Tab = FieldTab | 'regler' | 'formler' | 'referanser' | 'historikk'
 
-const TABS: { value: Tab; label: string }[] = [...FIELD_TABS.map((t) => ({ value: t.id as Tab, label: t.name })), { value: 'regler', label: 'Regler' }, { value: 'formler', label: 'Formler' }, { value: 'historikk', label: 'Historikk' }]
+const TABS: { value: Tab; label: string }[] = [...FIELD_TABS.map((t) => ({ value: t.id as Tab, label: t.name })), { value: 'regler', label: 'Regler' }, { value: 'formler', label: 'Formler' }, { value: 'referanser', label: 'Referanser' }, { value: 'historikk', label: 'Historikk' }]
 
 const INTRO: Record<Tab, string> = {
   innkjop: 'Innpriser fra prislistene motoren slår opp i, med valuta, frakt og materialindeksen som flytter dem til kostgrunnlagets år (regel 1).',
@@ -34,6 +37,7 @@ const INTRO: Record<Tab, string> = {
   oppskrifter: 'Hvor mye av hver del en prisartikkel bruker, i leverandørens enhet. En del uten pris gir artikkelen ingen kost.',
   regler: 'Byggereglene kostgrunnlaget bygger på (docs/byggeregler.md). De styrer mengdene, ikke prisene. Tekstilrammen endres på Produksjon.',
   formler: 'Slik blir tallene til kost og pris. Regel 2 og 6 er med i kostgrunnlaget, men kalkylen bruker dem ikke ennå.',
+  referanser: 'De tre standene kalibreringen bygger på og frittstående tekstilvegger på 3 til 6 m, regnet med kostgrunnlaget i bruk. Med endringer som ikke er lagret, vises de før og etter, så du ser hva et tall gjør før du lagrer det.',
   historikk: 'Versjonene som er lagret her, med gammel og ny verdi for hvert tall. Historikken ligger bare i denne nettleseren, som kostgrunnlaget.',
 }
 
@@ -87,10 +91,7 @@ export function CostBasisPage({ focus, onToast }: { focus: string | null; onToas
     })
 
   const save = (version: string, comment: string) => {
-    const changes = [...pending].flatMap(([path, p]) => {
-      const field = fields.find((f) => f.path === path)
-      return field ? [{ field, value: p.value, note: p.note }] : []
-    })
+    const changes = changesOf(pending, fields)
     const b = costBasis
     const r = withValues(b, changes, { version, date: today(), ...(b.version === 'eksempel' ? { source: 'Kostgrunnlag-siden' } : {}) })
     if (!r.ok) return onToast(r.error)
@@ -128,14 +129,16 @@ export function CostBasisPage({ focus, onToast }: { focus: string | null; onToas
           </div>
           <div className="cat-tools">
             <p className="page-intro">{INTRO[tab]}</p>
-            {tab !== 'regler' && tab !== 'formler' && tab !== 'historikk' && (
+            {!['regler', 'formler', 'referanser', 'historikk'].includes(tab) && (
               <button type="button" className="chip-toggle" aria-pressed={onlyExample} onClick={() => setOnlyExample(!onlyExample)}>
                 <i className="ph-dot" />
                 Bare eksempeltall <span className="num">{count(tab)}</span>
               </button>
             )}
           </div>
-          {tab === 'historikk' ? (
+          {tab === 'referanser' ? (
+            <References changes={changesOf(pending, fields)} />
+          ) : tab === 'historikk' ? (
             <History entries={costHistory} onToast={onToast} />
           ) : tab === 'regler' ? (
             <Rules />
@@ -169,6 +172,7 @@ export function CostBasisPage({ focus, onToast }: { focus: string | null; onToas
               version={nextVersion(costBasis.version, today(), costHistory.map((e) => e.version))}
               current={costBasis.version}
               onSave={save}
+              onEffect={tab === 'referanser' ? undefined : () => setTab('referanser')}
               onDiscard={() => {
                 setPending(new Map())
                 setSheet(null)
@@ -206,6 +210,75 @@ export function CostBasisPage({ focus, onToast }: { focus: string | null; onToas
           onClose={() => setSheet(null)}
         />
       )}
+    </>
+  )
+}
+
+/** The changes waiting, against the fields of the basis in use. A path the basis no longer has is left out. */
+function changesOf(pending: ReadonlyMap<string, Pending>, fields: readonly Field[]): { field: Field; value: number; note?: FieldNote }[] {
+  return [...pending].flatMap(([path, p]) => {
+    const field = fields.find((f) => f.path === path)
+    return field ? [{ field, value: p.value, note: p.note }] : []
+  })
+}
+
+const pctText = (x: number) => `${fmt(x * 100, 1)} %`
+const FIGURES: { key: keyof Omit<ReferenceFigures, 'unknown'>; name: string; text: (x: number) => string; delta: (a: number, b: number) => string }[] = [
+  { key: 'price', name: 'Pris', text: kr, delta: (a, b) => `${b >= a ? '+' : '−'}${kr(Math.abs(b - a))}` },
+  { key: 'cost', name: 'Kost', text: kr, delta: (a, b) => `${b >= a ? '+' : '−'}${kr(Math.abs(b - a))}` },
+  { key: 'dg', name: 'DG', text: pctText, delta: (a, b) => `${b >= a ? '+' : '−'}${fmt(Math.abs(b - a) * 100, 1)} pp` },
+  { key: 'hours', name: 'Timer', text: (x) => fmt(x, 2), delta: (a, b) => `${b >= a ? '+' : '−'}${fmt(Math.abs(b - a), 2)}` },
+]
+
+/** The reference cases with the basis in use, and with the changes not saved yet when there are any. */
+function References({ changes }: { changes: { field: Field; value: number; note?: FieldNote }[] }) {
+  let after: PricingData | null = null
+  let error = ''
+  if (changes.length) {
+    const r = withValues(costBasis, changes, { version: 'endring', date: today() })
+    if (r.ok) after = pricingFrom(r.basis)
+    else error = r.error
+  }
+  return (
+    <>
+      {error && <div className="tbl-empty ph">Endringene gir ikke et gyldig kostgrunnlag: {error}</div>}
+      <div className="kg-ref tbl-head">
+        <span>{after ? `Med ${changes.length} ${changes.length === 1 ? 'endring' : 'endringer'}, mot nå` : 'Referanse'}</span>
+        {FIGURES.map((f) => (
+          <span key={f.key} className="r">
+            {f.name}
+          </span>
+        ))}
+      </div>
+      {REFERENCE_CASES.map((c) => {
+        const now = referenceFigures(c, rules, catalog, pricing)
+        const then = after && referenceFigures(c, rules, catalog, after)
+        return (
+          <div key={c.id} className="kg-ref kg-row tbl-row">
+            <span className="n">
+              {c.name}
+              {c.target && <span className="kg-src"> · mål {c.target}</span>}
+              {now.unknown > 0 && <span className="ph"> · {now.unknown} uten kost</span>}
+            </span>
+            {FIGURES.map((f) => (
+              <span key={f.key} className="r num kg-fig">
+                {then ? (
+                  <>
+                    <span>{f.text(then[f.key])}</span>
+                    {Math.abs(then[f.key] - now[f.key]) < 1e-9 ? <span className="kg-delta same">uendret</span> : <span className="kg-delta">{f.delta(now[f.key], then[f.key])}</span>}
+                  </>
+                ) : (
+                  f.text(now[f.key])
+                )}
+              </span>
+            ))}
+          </div>
+        )
+      })}
+      <p className="page-intro kg-foot">
+        Utstilleren betaler vegger og takdrager. Pris er summen eks. mva. (standardleveranser med fast pris fra katalogen, tekstil priset av motoren), kost er direkte kost med ordrekost, timer er
+        personminutter over alle steg.
+      </p>
     </>
   )
 }
