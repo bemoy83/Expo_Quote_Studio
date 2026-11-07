@@ -13,7 +13,7 @@ export interface RuleRow {
   use: string
 }
 
-export function RULE_ROWS(r: Rules): RuleRow[] {
+export function ruleRows(r: Rules): RuleRow[] {
   const f = r.textile.inFrame
   return [
     { group: 'Systemvegg', label: 'Modul, senteravstand mellom stolper', value: `${mm(r.wall.cc)} mm`, id: 'V1', use: 'Antall moduler, stolper og skinner per meter vegg' },

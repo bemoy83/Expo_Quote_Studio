@@ -2,21 +2,15 @@
 // waiting to be saved as a new version. Nothing changes the calc until the version is saved. docs/kostmodell.md.
 import { Check, RotateCcw, X } from 'lucide-react'
 import { useState } from 'react'
-import { FIELD_STATUSES, type FieldNote, type FieldStatus } from '../../cost/basis'
+import { FIELD_STATUSES, type FieldStatus } from '../../cost/basis'
 import type { Field } from '../../cost/fields'
 import { parseNumber, readPastedList } from '../../cost/history'
 import { Button, IconButton, Segmented } from '../controls'
-import { today } from './link'
 import { fmt } from '../format'
-
-export interface Pending {
-  value: number
-  note?: FieldNote
-}
+import { today, type Pending } from './text'
 
 /** The number as it is typed in the sheet: shares in %. */
 const typed = (f: Pick<Field, 'unit'>, v: number) => fmt(f.unit === '%' ? v * 100 : v, 6).replace(/ /g, '')
-const unitText = (u: string) => (u === '%' ? '%' : u)
 
 /** One number: its new value, status and source. */
 export function FieldSheet({ f, pending, onApply, onUndo, onClose }: { f: Field; pending?: Pending; onApply: (p: Pending) => void; onUndo: () => void; onClose: () => void }) {
@@ -48,11 +42,11 @@ export function FieldSheet({ f, pending, onApply, onUndo, onClose }: { f: Field;
             onKeyDown={(e) => e.key === 'Enter' && apply()}
             aria-invalid={value === null}
           />
-          <span className="muted">{unitText(f.unit)}</span>
+          <span className="muted">{f.unit}</span>
         </span>
       </label>
       <p className="kg-was">
-        Nå {typed(f, f.value)} {unitText(f.unit)} · {f.status} · {f.source} · {f.date}
+        Nå {typed(f, f.value)} {f.unit} · {f.status} · {f.source} · {f.date}
         {f.unused ? ' · ikke i bruk i kalkylen ennå' : ''}
       </p>
       <div className="kg-field">
