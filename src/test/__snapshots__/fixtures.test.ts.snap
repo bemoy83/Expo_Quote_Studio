@@ -7154,11 +7154,17 @@ exports[`08-tekstil.json > variant A > quote lines 1`] = `
       {
         "artnr": "8000+8000+8000+8000+8040+8041+8042",
         "cost": 11221.97202,
+        "details": [
+          "1 stk 3970 × 2540 mm",
+          "1 stk 1970 × 2540 mm",
+          "1 stk 2500 × 2540 mm",
+          "1 stk 1500 × 2540 mm",
+        ],
         "dg": 0.5810993269650717,
         "foga": true,
         "group": "prof.tekstil",
         "meta": undefined,
-        "name": "Tekstilvegg: 1 stk 3970 × 2540 mm, 1 stk 1970 × 2540 mm, 1 stk 2500 × 2540 mm, 1 stk 1500 × 2540 mm",
+        "name": "Tekstilvegg",
         "payer": "utstiller",
         "placeholder": false,
         "price": 6697.275000000001,

@@ -1960,6 +1960,9 @@ select.cin {
 .qline .num {
   font: 400 12.5px var(--font-numeric);
 }
+.qline .qdetail {
+  display: block;
+}
 .qline .mark,
 .qdoc .foot .mark {
   color: var(--over);

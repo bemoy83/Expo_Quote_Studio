@@ -33,7 +33,8 @@ export function quoteLines(lines: CalcLine[], pricing: PricingData = DEFAULT_PRI
     const cost = known ? parts.reduce((a, p) => a + p.cost!, 0) : null;
     return {
       ...parts[0],
-      name: withSizes(l.quote!.name, lead),
+      name: l.quote!.name,
+      ...(sizes(lead).length && { details: sizes(lead) }),
       qty,
       unit: lead[0]?.unit ?? 'stk',
       price: qty ? sum / qty : sum,
@@ -49,13 +50,11 @@ export function quoteLines(lines: CalcLine[], pricing: PricingData = DEFAULT_PRI
   });
 }
 
-/** 'Tekstilvegg 2960 × 2460 mm', or with several sizes 'Tekstilvegg: 2 stk 2960 × 2460 mm, 1 stk 1960 × 2460 mm'. */
-function withSizes(name: string, lead: CalcLine[]): string {
-  const sizes = new Map<string, number>();
-  for (const p of lead) if (p.quote?.size) sizes.set(p.quote.size, (sizes.get(p.quote.size) ?? 0) + p.qty);
-  if (!sizes.size) return name;
-  if (sizes.size === 1) return `${name} ${[...sizes.keys()][0]}`;
-  return `${name}: ${[...sizes].map(([s, n]) => `${n} stk ${s}`).join(', ')}`;
+/** One row per size of the lead lines, in order: '2 stk 3970 × 2540 mm'. */
+function sizes(lead: CalcLine[]): string[] {
+  const n = new Map<string, number>();
+  for (const p of lead) if (p.quote?.size) n.set(p.quote.size, (n.get(p.quote.size) ?? 0) + p.qty);
+  return [...n].map(([s, q]) => `${q} stk ${s}`);
 }
 
 /** The groups as the quote shows them. */
