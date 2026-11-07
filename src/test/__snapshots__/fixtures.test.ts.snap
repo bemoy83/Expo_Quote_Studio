@@ -5679,63 +5679,124 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
     },
     "frames": [
       {
-        "H": 2540,
-        "W": 3970,
-        "braces": {
-          "length": 2460,
-          "qty": 1,
+        "parts": {
+          "braces": {
+            "length": 2460,
+            "qty": 1,
+          },
+          "couplings": 6,
+          "cuts": [
+            [
+              3970,
+              2,
+            ],
+            [
+              2540,
+              2,
+            ],
+          ],
+          "loose": [
+            [
+              "617",
+              4,
+            ],
+            [
+              "520",
+              2,
+            ],
+          ],
         },
         "pos": "T1",
-        "railCuts": [
-          3970,
-        ],
-        "splices": 0,
       },
       {
-        "H": 2540,
-        "W": 1970,
-        "braces": null,
+        "parts": {
+          "braces": {
+            "length": 0,
+            "qty": 0,
+          },
+          "couplings": 4,
+          "cuts": [
+            [
+              1970,
+              2,
+            ],
+            [
+              2540,
+              2,
+            ],
+          ],
+          "loose": [
+            [
+              "617",
+              4,
+            ],
+            [
+              "520",
+              2,
+            ],
+          ],
+        },
         "pos": "T2",
-        "railCuts": [
-          1970,
-        ],
-        "splices": 0,
       },
-    ],
-    "freeFrames": [
       {
-        "H": 2540,
-        "braceLength": 2460,
-        "braces": 1,
-        "connectors": {
-          "corner": 4,
-          "splice": 0,
+        "parts": {
+          "braces": {
+            "length": 2460,
+            "qty": 1,
+          },
+          "couplings": 6,
+          "cuts": [
+            [
+              2463,
+              2,
+            ],
+            [
+              2540,
+              1,
+            ],
+          ],
+          "loose": [
+            [
+              "617",
+              4,
+            ],
+            [
+              "740",
+              1,
+            ],
+          ],
         },
-        "foot": "740",
         "pos": "F1",
-        "railCuts": [
-          2463,
-        ],
-        "splice": "609",
-        "supports": 1,
-        "uprights": 1,
       },
       {
-        "H": 2540,
-        "braceLength": 2460,
-        "braces": 0,
-        "connectors": {
-          "corner": 4,
-          "splice": 0,
+        "parts": {
+          "braces": {
+            "length": 2460,
+            "qty": 0,
+          },
+          "couplings": 4,
+          "cuts": [
+            [
+              1463,
+              2,
+            ],
+            [
+              2540,
+              1,
+            ],
+          ],
+          "loose": [
+            [
+              "617",
+              4,
+            ],
+            [
+              "740",
+              1,
+            ],
+          ],
         },
-        "foot": "740",
         "pos": "F2",
-        "railCuts": [
-          1463,
-        ],
-        "splice": "609",
-        "supports": 1,
-        "uprights": 1,
       },
     ],
     "modules": [],
@@ -5836,7 +5897,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         },
         {
           "artnr": "8000",
-          "cost": 808.5194100000001,
+          "cost": 808.5194099999999,
           "dg": 0.7428373377862596,
           "foga": true,
           "group": "prof.tekstil",
@@ -5864,7 +5925,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         },
         {
           "artnr": "8000",
-          "cost": 597.41921,
+          "cost": 597.4192099999999,
           "dg": 0.7418240233362143,
           "foga": true,
           "group": "prof.tekstil",
@@ -6165,15 +6226,10 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         "braces": [
           1250,
         ],
-        "connectors": {
-          "corner": 4,
-          "splice": 0,
-        },
         "corners": {
           "from": true,
           "to": false,
         },
-        "couplings": 6,
         "faces": [
           {
             "H": 2540,
@@ -6216,9 +6272,36 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
           "code": "740",
         },
         "length": 2500,
+        "mount": "fotplater",
         "nCorners": 1,
+        "parts": {
+          "braces": {
+            "length": 2460,
+            "qty": 1,
+          },
+          "couplings": 6,
+          "cuts": [
+            [
+              2463,
+              2,
+            ],
+            [
+              2540,
+              1,
+            ],
+          ],
+          "loose": [
+            [
+              "617",
+              4,
+            ],
+            [
+              "740",
+              1,
+            ],
+          ],
+        },
         "pos": "F1",
-        "profileMm": 7466,
         "railCuts": [
           2463,
         ],
@@ -6234,15 +6317,10 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         "H": 2540,
         "braceLength": 2460,
         "braces": [],
-        "connectors": {
-          "corner": 4,
-          "splice": 0,
-        },
         "corners": {
           "from": true,
           "to": false,
         },
-        "couplings": 4,
         "faces": [
           {
             "H": 2540,
@@ -6285,9 +6363,36 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
           "code": "740",
         },
         "length": 1500,
+        "mount": "fotplater",
         "nCorners": 1,
+        "parts": {
+          "braces": {
+            "length": 2460,
+            "qty": 0,
+          },
+          "couplings": 4,
+          "cuts": [
+            [
+              1463,
+              2,
+            ],
+            [
+              2540,
+              1,
+            ],
+          ],
+          "loose": [
+            [
+              "617",
+              4,
+            ],
+            [
+              "740",
+              1,
+            ],
+          ],
+        },
         "pos": "F2",
-        "profileMm": 5466,
         "railCuts": [
           1463,
         ],
@@ -6322,6 +6427,34 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         "fw": 401,
         "lm": 15.48,
         "motif": "hoved",
+        "mount": "vegg",
+        "parts": {
+          "braces": {
+            "length": 2460,
+            "qty": 1,
+          },
+          "couplings": 6,
+          "cuts": [
+            [
+              3970,
+              2,
+            ],
+            [
+              2540,
+              2,
+            ],
+          ],
+          "loose": [
+            [
+              "617",
+              4,
+            ],
+            [
+              "520",
+              2,
+            ],
+          ],
+        },
         "ph": 2580,
         "pos": "T1",
         "profiles": [
@@ -6341,7 +6474,6 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
           3970,
         ],
         "span": 4000,
-        "splices": 0,
         "textileId": "t1",
         "wall": "Bak",
       },
@@ -6359,6 +6491,34 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         "fw": 201,
         "lm": 9.02,
         "motif": null,
+        "mount": "vegg",
+        "parts": {
+          "braces": {
+            "length": 0,
+            "qty": 0,
+          },
+          "couplings": 4,
+          "cuts": [
+            [
+              1970,
+              2,
+            ],
+            [
+              2540,
+              2,
+            ],
+          ],
+          "loose": [
+            [
+              "617",
+              4,
+            ],
+            [
+              "520",
+              2,
+            ],
+          ],
+        },
         "ph": 2580,
         "pos": "T2",
         "profiles": [
@@ -6378,7 +6538,6 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
           1970,
         ],
         "span": 2000,
-        "splices": 0,
         "textileId": "t2",
         "wall": "Venstre",
       },
@@ -6568,15 +6727,10 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
         "braces": [
           1250,
         ],
-        "connectors": {
-          "corner": 4,
-          "splice": 0,
-        },
         "corners": {
           "from": true,
           "to": false,
         },
-        "couplings": 6,
         "faces": [
           {
             "H": 2540,
@@ -6619,9 +6773,36 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
           "code": "740",
         },
         "length": 2500,
+        "mount": "fotplater",
         "nCorners": 1,
+        "parts": {
+          "braces": {
+            "length": 2460,
+            "qty": 1,
+          },
+          "couplings": 6,
+          "cuts": [
+            [
+              2463,
+              2,
+            ],
+            [
+              2540,
+              1,
+            ],
+          ],
+          "loose": [
+            [
+              "617",
+              4,
+            ],
+            [
+              "740",
+              1,
+            ],
+          ],
+        },
         "pos": "F1",
-        "profileMm": 7466,
         "railCuts": [
           2463,
         ],
@@ -6637,15 +6818,10 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
         "H": 2540,
         "braceLength": 2460,
         "braces": [],
-        "connectors": {
-          "corner": 4,
-          "splice": 0,
-        },
         "corners": {
           "from": true,
           "to": false,
         },
-        "couplings": 4,
         "faces": [
           {
             "H": 2540,
@@ -6688,9 +6864,36 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
           "code": "740",
         },
         "length": 1500,
+        "mount": "fotplater",
         "nCorners": 1,
+        "parts": {
+          "braces": {
+            "length": 2460,
+            "qty": 0,
+          },
+          "couplings": 4,
+          "cuts": [
+            [
+              1463,
+              2,
+            ],
+            [
+              2540,
+              1,
+            ],
+          ],
+          "loose": [
+            [
+              "617",
+              4,
+            ],
+            [
+              "740",
+              1,
+            ],
+          ],
+        },
         "pos": "F2",
-        "profileMm": 5466,
         "railCuts": [
           1463,
         ],
@@ -6725,6 +6928,34 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
         "fw": 401,
         "lm": 15.48,
         "motif": "hoved",
+        "mount": "vegg",
+        "parts": {
+          "braces": {
+            "length": 2460,
+            "qty": 1,
+          },
+          "couplings": 6,
+          "cuts": [
+            [
+              3970,
+              2,
+            ],
+            [
+              2540,
+              2,
+            ],
+          ],
+          "loose": [
+            [
+              "617",
+              4,
+            ],
+            [
+              "520",
+              2,
+            ],
+          ],
+        },
         "ph": 2580,
         "pos": "T1",
         "profiles": [
@@ -6744,7 +6975,6 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
           3970,
         ],
         "span": 4000,
-        "splices": 0,
         "textileId": "t1",
         "wall": "Bak",
       },
@@ -6762,6 +6992,34 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
         "fw": 201,
         "lm": 9.02,
         "motif": null,
+        "mount": "vegg",
+        "parts": {
+          "braces": {
+            "length": 0,
+            "qty": 0,
+          },
+          "couplings": 4,
+          "cuts": [
+            [
+              1970,
+              2,
+            ],
+            [
+              2540,
+              2,
+            ],
+          ],
+          "loose": [
+            [
+              "617",
+              4,
+            ],
+            [
+              "520",
+              2,
+            ],
+          ],
+        },
         "ph": 2580,
         "pos": "T2",
         "profiles": [
@@ -6781,7 +7039,6 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
           1970,
         ],
         "span": 2000,
-        "splices": 0,
         "textileId": "t2",
         "wall": "Venstre",
       },

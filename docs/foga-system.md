@@ -381,9 +381,9 @@ linjer (Andre tjenester) plukkes ikke. Ferdigmonterte enheter plukkes som stk (l
   til (T1, T3 …)
 - Dørblad
 
-Løse deler er da bare 43TX (gjæret, antall per kappelengde), hjørnekoblinger 617 og braketter 520, alle under Tekstilvegger.
-Frittstående vegger gir i tillegg 43TX for frittstående vegg (skinner og stående per kappelengde), 92LTX per
-hjørne, skjøtekoblinger 609 og fotplater 740 og 730. Hver duk (T1, F1A, F1B …) står som egen linje: trykt, hvit eller kundens.
+Løse deler er da bare 43TX (én linje per kappelengde, for rammer på vegg og på fotplater), hjørnekoblinger 617,
+skjøtekoblinger 609 eller 604 og braketter 520, alle under Tekstilvegger. På fotplater kommer 92LTX per hjørne og
+fotplater 740 og 730 i tillegg. Hver duk (T1, F1A, F1B …) står som egen linje: trykt, hvit eller kundens.
 
 ### Fra fabric.js (fasit for trykk, se `src/calc/textile/inFrame.ts`)
 
@@ -433,7 +433,7 @@ setter sammen Foga-stykklisten og kalkylelinjene som ikke er bygget av Foga-dele
   halv 92LTX per hjørne). Tekstil per m² synlig
   flate: trykt, hvit eller kundens egen (bare montering), med montering per meter omkrets. To linjer i kalkylen, én
   linje i tilbudet. Gulv, møbler og resten er allerede salgsprodukter.
-- Der det ikke finnes en artikkel, plukkes bestanddelene direkte (tekstilvegg: 43TX, 617, 609, 520, 92LTX, 740, 730).
+- Der det ikke finnes en artikkel, plukkes bestanddelene direkte (tekstilvegg: 43TX, 92LTX, 617, 609, 604, 520, 740, 730).
 
 ## 6. Mål og prisfilosofi (Bjørn 31.10.2026)
 

@@ -22,9 +22,15 @@ describe('InFrame frame piece', () => {
   });
   it('past 5 m the rails are spliced with 609 and braced by the splice, as on foot plates (one product)', () => {
     const p = framePiece(6000, S);
-    expect(p).toMatchObject({ W: 5970, railCuts: [2985, 2985], splices: 2, braces: { qty: 4, length: 2460 } });
+    expect(p).toMatchObject({ W: 5970, railCuts: [2985, 2985], braces: { qty: 4, length: 2460 } });
+    expect(p.parts.loose).toEqual([
+      ['617', 4],
+      ['609', 2],
+      ['520', 2],
+    ]);
     expect(p.braceAt).toEqual([1418, 2835, 3135, 4553]);
-    expect(framePiece(4000, S)).toMatchObject({ railCuts: [3970], splices: 0, braceAt: [1985] });
+    expect(framePiece(4000, S)).toMatchObject({ railCuts: [3970], braceAt: [1985] });
+    expect(framePiece(4000, S).parts.loose.map(([c]) => c)).toEqual(['617', '520']);
   });
   it('a lower textile wall uses its own height', () => {
     const p = framePiece(3000, S, 1500);

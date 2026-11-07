@@ -6,14 +6,14 @@ import { RECIPES } from '../foga/recipes';
 import { RULES } from '../rules/rules';
 import { bracePoints, freeFrames, splitRail, supportPoints } from './textile/free';
 
-const S = RECIPES.freeFrame.support;
+const S = RECIPES.textileFrame.feet.support;
 const draw = (v: Variant, a: Point, b: Point) => {
   const r = addFreeTextile(v, RULES, a, b);
   if ('error' in r) throw new Error(r.error);
   return r.v;
 };
 const island = () => createVariant('A', { width: 10, depth: 8, type: 'island' });
-const frames = (v: Variant) => freeFrames(v, RECIPES.freeFrame, RULES.textile.inFrame, 'Firma');
+const frames = (v: Variant) => freeFrames(v, RECIPES.textileFrame, RULES.textile.inFrame, 'Firma');
 
 describe('feet and braces', () => {
   // Bjørn 1.11.2026: a foot right at each free end, pulled in (at most 1 m) only where the gaps would be over 3 m
@@ -56,7 +56,7 @@ describe('feet and braces', () => {
 });
 
 describe('braces', () => {
-  const R = RECIPES.freeFrame;
+  const R = RECIPES.textileFrame;
   // Not at the feet: a foot plate has no brace (Bjørn 7.11.2026)
   it('evenly, so no two uprights are more than 2 m apart', () => {
     expect(bracePoints(2000, [], 2000, R.spliceBrace)).toEqual([]);
@@ -88,9 +88,18 @@ describe('free-standing frame', () => {
     // Both ends free: the splice is threaded with 609
     expect(f.spliceCode).toBe('609');
     // Couplings: 2 × 2 corner 617 + 4 braces × 2 × 600 + 2 × 609
-    expect(f.couplings).toBe(4 + 8 + 2);
-    expect(f.connectors).toEqual({ corner: 4, splice: 2 });
-    expect(f.profileMm).toBe(2 * 6000 + 2 * 2540);
+    expect(f.parts.couplings).toBe(4 + 8 + 2);
+    expect(f.parts.loose).toEqual([
+      ['617', 4],
+      ['609', 2],
+      ['740', 3],
+    ]);
+    // 43TX: rails 2 × 2 × 3000 and the two uprights
+    expect(f.parts.cuts).toEqual([
+      [3000, 4],
+      [2540, 2],
+    ]);
+    expect(f.parts.braces).toEqual({ qty: 4, length: 2460 });
     expect(f.faces.map((x) => [x.pos, x.W, x.pw, x.ph, x.fill])).toEqual([
       ['F1A', 6000, 6040, 2580, 'print'],
       ['F1B', 6000, 6040, 2580, 'print'],
@@ -101,12 +110,12 @@ describe('free-standing frame', () => {
   it('a splice between held ends is a 604 in the channel, not a threaded 609', () => {
     const v = draw(island(), [1, 2], [7, 2]);
     const id = v.freeTextiles[0].id;
-    const [f] = freeFrames(v, RECIPES.freeFrame, RULES.textile.inFrame, 'Firma', new Map(), new Map([[id, { from: true, to: true }]]));
+    const [f] = freeFrames(v, RECIPES.textileFrame, RULES.textile.inFrame, 'Firma', new Map(), new Map([[id, { from: true, to: true }]]));
     expect(f.spliceCode).toBe('604');
     // Two 604 in each of the two rails
-    expect(f.connectors.splice).toBe(4);
+    expect(f.parts.loose).toContainEqual(['604', 4]);
     // Held at one end only: still 609
-    const [g] = freeFrames(v, RECIPES.freeFrame, RULES.textile.inFrame, 'Firma', new Map(), new Map([[id, { from: true, to: false }]]));
+    const [g] = freeFrames(v, RECIPES.textileFrame, RULES.textile.inFrame, 'Firma', new Map(), new Map([[id, { from: true, to: false }]]));
     expect(g.spliceCode).toBe('609');
   });
   it('a corner: shared post, outer face longer, inner face shorter', () => {
@@ -119,7 +128,10 @@ describe('free-standing frame', () => {
     expect(f1.railCuts).toEqual([2963]);
     expect(f1.uprights).toBe(1);
     expect(f1.nCorners).toBe(1);
-    expect(f1.profileMm).toBe(2 * 2963 + 2540);
+    expect(f1.parts.cuts).toEqual([
+      [2963, 2],
+      [2540, 1],
+    ]);
     // The post is the support at the corner: one foot, flush with the free end
     expect(f1.supports).toEqual([200]);
     // 3 m from the free end to the corner post: one brace between
@@ -136,7 +148,7 @@ describe('free-standing frame', () => {
     expect(f2.supports).toEqual([2800]);
     expect(f2.braces).toEqual([1500]);
     // 617 into the post top and bottom, plus at the free end; one brace
-    expect(f2.couplings).toBe(2 + 2 + 2);
+    expect(f2.parts.couplings).toBe(2 + 2 + 2);
   });
   it('a short wall stands on one small foot plate', () => {
     const [f] = frames(draw(island(), [1, 2], [1.5, 2]));

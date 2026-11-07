@@ -1,6 +1,7 @@
-// Price model, app side. The OMS owns the cost model (cost per part, depreciation, handling, target DG) and hands
-// the app finished numbers: cost and price per unit. The app only sums what is actually drawn for a product priced
-// as a sum of its articles, and shows the margin internally. Full model for the OMS: docs/prismodell.md.
+// Price model: how a quote line gets its price, cost and time from the price items it is built of. The OMS hands the
+// app fixed per-piece prices for catalog products; cost (and price for what the catalog does not cover) comes from the
+// app's own cost engine (src/cost, Bjørn 7.11.2026). A product priced as a sum adds up what is actually drawn; the
+// margin is shown internally only. docs/prismodell.md, docs/kostmodell.md.
 
 /** Leie: comes back after the fair (frame, posts, furniture). Salg: the customer keeps it or it is used up (print, foil). */
 export type Transfer = 'leie' | 'salg';
@@ -28,8 +29,8 @@ export function addTime(a: Time, b: Time | undefined, times = 1): Time {
 export type Strategy = 'fast' | 'sum';
 
 /**
- * A level 2 article, a level 3 part that is picked directly, or a handling item (montering on site), with finished
- * numbers from the OMS. Internal: never a line on the quote.
+ * A level 2 article, a level 3 part that is picked directly, or a handling item (montering on site), with cost and
+ * price per unit (src/pricing/data.ts, costed by src/cost/items.ts). Internal: never a line on the quote.
  */
 export interface PriceItem {
   id: string;

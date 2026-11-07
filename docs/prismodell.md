@@ -10,7 +10,8 @@ henter. Kostmodellen for det som prosjekteres og bygges eier appen selv: kostmot
 endret det 7.11.2026. For et produkt som prises som sum av artikler legger appen sammen det som faktisk er tegnet.
 
 Alle tall i appen i dag er eksempeltall, unntatt veggprisen 765 kr per meter (Bjørn 7.11.2026). Kost og tid for
-systemvegg og takdrager kommer fra kostmotoren og kostgrunnlaget, prisene fra `src/catalog/defaultCatalog.ts`.
+systemvegg, takdrager og tekstilvegg kommer fra kostmotoren og kostgrunnlaget. Prisen på katalogprodukter kommer fra
+`src/catalog/defaultCatalog.ts`; tekstilveggen prises av motoren.
 
 ## 1. Tre nivåer
 
@@ -20,8 +21,8 @@ systemvegg og takdrager kommer fra kostmotoren og kostgrunnlaget, prisene fra `s
 | 2 Artikkel | Det montøren plukker | Stolpe 94 med fot, toppskinne 92 960 mm | Sum av nivå 3 + håndtering |
 | 3 Bestanddel | Det en artikkel er laget av | 94 × 2490 mm, 700, M10 × 65 | Kostpris per enhet |
 
-Der det ikke finnes en artikkel, plukkes bestanddelene direkte (tekstilvegg: 43TX, 617, 609, 520, 92LTX, 740, 730). De får da kost og pris
-som en artikkel.
+Der det ikke finnes en artikkel, plukkes bestanddelene direkte (tekstilvegg: 43TX, 92LTX, 617, 609, 604, 520, 740, 730; stag 90 med 600 er
+en ferdig enhet). De får da kost og pris som en artikkel.
 
 ## 2. Kost per bestanddel (nivå 3), fra kostmotoren
 
@@ -69,7 +70,11 @@ artikkel i prislisten, står linjen med sin pris og uten kost, og kalkylen telle
 ### Veiledende pris
 Fast pris per stk kommer fra OMS. For sum-produkter (tilpassede mål) foreslår appen pris fra direkte kost og DG-mål:
 
-`veiledende pris = direkte kost / (1 − DG-mål)`
+`veiledende pris = direkte kost × (1 + indirekte) / (1 − DG-mål)`
+
+Den indirekte kosten (eksempel 10 %, administrasjon) ligger inne i prisen, ikke som eget gebyr; katalogen er regnet
+slik (Bjørn 7.11.2026). Ordrekost (startkost trykk, administrasjon, levering) er kost én gang per tilbud og ligger
+ikke i noen pris ([kostmodell.md](kostmodell.md)).
 
 - Mål for dekningsgrad (DG) settes **per hovedgruppe** og kan overstyres **per produkt**. Et Foga-produkt som
   prosjekteres og bygges kan ha et annet mål enn en stol som kjøpes inn, lagres og flyttes.
@@ -140,7 +145,7 @@ dokumentet «Expo Quote Studio i OMS: hele modellen».
   etterkalkylen i OMS forbedrer tidene.
 - **Takdrager** i standardlengder 1–6 m og **støttestag** per meter stemmer. 0,5 m takdrager finnes som særtilfelle,
   utenfor standardlengdene.
-- **Veggpris** følger tegningen (se kapittel 4).
+- **Veggpris** følger tegningen. Endret 7.11.2026: veggen selges til fast OMS-pris per meter (kapittel 4).
 
 ## 9. Åpent
 

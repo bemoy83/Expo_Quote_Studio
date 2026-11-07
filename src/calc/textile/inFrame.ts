@@ -9,9 +9,9 @@
 // top and bottom rail are spliced with 609 (the frame is put together before it goes on the wall, so there is room to
 // thread), with a brace 150 from each side of the splice.
 // Byggeregler X2, X3, X6, X9 (docs/byggeregler.md): the frame widths are the 43TX standard lengths, cc − 30.
-import { RECIPES, type FreeFrameRecipe } from '../../foga/recipes';
+import { RECIPES, type TextileFrameRecipe } from '../../foga/recipes';
 import type { InFrameParams } from '../../rules/rules';
-import { bracePoints, fullHeight, splitRail } from './common';
+import { bracePoints, frameParts, fullHeight, partsLm, splitRail, type FrameParts } from './common';
 
 export interface FramePiece {
   /** Span along the wall, mm. */
@@ -32,19 +32,21 @@ export interface FramePiece {
   profiles: { name: string; qty: number; length: number }[];
   /** Top rail cut lengths, and the same again for the bottom rail: one piece unless spliced. */
   railCuts: number[];
-  /** Splice connectors in all, top and bottom (609, one per rail and splice). */
-  splices: number;
   braces: { qty: number; length: number } | null;
   /** Where the braces stand, mm from the frame's left edge. */
   braceAt: number[];
   /** Aluminium profile including braces, m. */
   lm: number;
+  mount: 'vegg';
+  /** What it is built of: 43TX, 617 in the corners, 609 in every splice (put together before it goes on the wall),
+   *  520 to the posts, braces. */
+  parts: FrameParts;
 }
 
 /** From each end of the span to the frame's edge, mm: the frame sits centred in its span (W = span − side − air). */
 export const frameInset = (s: InFrameParams) => (s.side + s.air) / 2;
 
-export function framePiece(spanMm: number, s: InFrameParams, heightMm?: number, r: FreeFrameRecipe = RECIPES.freeFrame): FramePiece {
+export function framePiece(spanMm: number, s: InFrameParams, heightMm?: number, r: TextileFrameRecipe = RECIPES.textileFrame): FramePiece {
   const W = spanMm - s.side - s.air;
   const H = heightMm ?? fullHeight(s);
   const pw = W + 2 * s.bleed;
@@ -56,6 +58,11 @@ export function framePiece(spanMm: number, s: InFrameParams, heightMm?: number, 
   const k = s.scale / 100;
   const r1 = (v: number) => Math.round(v * k * 10) / 10;
   const braces = n ? { qty: n, length: Math.max(0, H - 2 * s.prof) } : null;
+  const parts = frameParts(r, railCuts, { qty: 2, length: H }, braces ?? { qty: 0, length: 0 }, [
+    [r.corner, 4],
+    [r.splice.thread, 2 * at.length],
+    [r.wall.fixing.code, r.wall.fixing.perFrame],
+  ]);
   return {
     span: spanMm,
     W,
@@ -71,9 +78,10 @@ export function framePiece(spanMm: number, s: InFrameParams, heightMm?: number, 
       { name: 'Side', qty: 2, length: H },
     ],
     railCuts,
-    splices: 2 * at.length,
     braces,
     braceAt,
-    lm: (2 * W + 2 * H + (braces ? braces.qty * braces.length : 0)) / 1000,
+    lm: partsLm(parts),
+    mount: 'vegg',
+    parts,
   };
 }

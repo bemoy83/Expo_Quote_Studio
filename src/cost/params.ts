@@ -51,7 +51,8 @@ export interface CostParams {
     wageShare: number;
   };
   /** Indirect cost (admin, premises, storage, vans, management) as one share of direct cost, shown as its own line in
-   *  the kalkyle. DG is counted on direct cost (Bjørn 7.11.2026). Eksempeltall. */
+   *  the kalkyle, where DG is counted on direct cost (Bjørn 7.11.2026). What the engine prices carries it in the price
+   *  (cost × (1 + indirect) / (1 − DG target)); OMS prices are used as they are. Eksempeltall. */
   indirect: number;
   /** DG target per kind of price item: rented equipment, work, and what is sold. From Bjørn's calculator, as DG: markup
    *  300 % = 75 %, 125 % = 56 %, 30 % = 23 %. Eksempeltall until set per group. */
@@ -85,12 +86,14 @@ const LABOUR_INDEX: IndexSeries = { 2023: 0.1, 2024: 0.067, 2025: 0.06, 2026: 0.
 
 /** Calibrated 7.11.2026 against three stands Bjørn priced (what is sold today: 765 kr per m wall), with the real
  *  Foga list and the times in pricing/data.ts: profiles and plates 14 uses in their lifetime, couplings, feet and
- *  accessories 25. His calculator had 4 and 10, which made a wall about three times today's price. Replaced every
- *  second year (Bjørn 7.11.2026). docs/kostmodell.md. */
+ *  accessories 25. His calculator had 4 and 10, which made a wall about three times today's price. Textile frame
+ *  profiles 4, calibrated against the catalog's textile walls. Replaced every second year (Bjørn 7.11.2026).
+ *  docs/kostmodell.md. */
 const OWNED_GROUPS: Record<PartKind, OwnedGroup> = {
   profile: { lifetimeYears: 2, usesPerYear: 7 },
-  // Textile frame profiles: 4 uses, as in Bjørn's calculator (slitasjefaktor 4 for 43TX and 90). Cut to size for the
-  // job, so fewer reuses than the wall's standard lengths. Example number, to be checked against the stock
+  // Textile frame profiles (43TX, 92LTX, 90): 4 uses, as in Bjørn's calculator (slitasjefaktor 4 for 43TX and 90). Cut
+  // to size for the job, so fewer reuses than the wall's standard lengths. Example number, to be checked against the
+  // stock (Bjørn 7.11.2026)
   frame: { lifetimeYears: 2, usesPerYear: 2 },
   plate: { lifetimeYears: 2, usesPerYear: 7 },
   coupling: { lifetimeYears: 2, usesPerYear: 12.5 },

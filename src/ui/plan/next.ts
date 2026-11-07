@@ -262,7 +262,7 @@ function textilePill(r: Exclude<TextileResult, { error: string }>): Pill {
     return { a, b, width: 'textile', text: `${mm(t.width)} på vegg` }
   }
   const t = r.v.freeTextiles.find((x) => x.id === r.free.id)!
-  const f = freeFrames(r.v, RECIPES.freeFrame, rules.textile.inFrame, '').find((x) => x.textileId === t.id)
+  const f = freeFrames(r.v, RECIPES.textileFrame, rules.textile.inFrame, '').find((x) => x.textileId === t.id)
   return { a: t.from, b: t.to, width: 'textile', text: mm(f ? f.length / 1000 : 0) }
 }
 

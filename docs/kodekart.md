@@ -27,6 +27,15 @@ Alt avledes fra modellen (`Variant` i `src/domain/types.ts`). Rekkefølgen er al
 er bygget (moduler, stolper, takdragere, fotplater, produksjon) og hvem som betaler, ligger i `calc/context.ts`.
 Rekkefølgen på linjene i tilbudet er rekkefølgen blokkene kjøres i `calc/calc.ts`.
 
+**Ny Foga-del eller ny tekstilvariant (LED, kube):** delen i `foga/parts.ts` (art.nr, snitt og slitasjegruppe
+`kind`; LED og trafo får egen gruppe når levetiden er kjent). Byggereglene i oppskriften (`foga/recipes.ts`): en
+dypere LED-ramme er en egen `TextileFrameRecipe` med samme form, en kube er en ny montering ved siden av `wall` og
+`feet`. Rammens deler telles i `calc/textile/common.ts` (`frameParts`), så plukklisten og kalkylen følger med. I
+kalkylen trenger hver løs del en prisartikkel med oppskrift i `pricing/data.ts` (`ITEM`, `ITEMS`, `ITEM_RECIPES`) og
+en plass i `LOOSE_ITEM` i `calc/textile/lines.ts`; det motoren ikke finner en pris for, beholder eksempeltallene og
+merkes i kalkylen. Kjøpt til jobben (Samba-duk) legges i egne innkjøp (`cost/own-list.ts`, ekte priser bare i
+kostgrunnlaget). Regel og kilde føres i `docs/byggeregler.md`.
+
 ## Per produkt
 
 ### Vegger (standvegg, innervegg, romvegg)
@@ -85,7 +94,7 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 - Veggflater og felt (deles med folie): `domain/faces.ts` · tekstil holdes gyldig etter andre endringer i
   `fitDecor` (`domain/decor.ts`)
 - Kalkyle: `calc/textile/inFrame.ts` (rammemål og trykk), `calc/textile/free.ts` (frittstående: skinner, hjørner,
-  fotplater, stag `bracePoints`, skjøt 609 eller 604), holdte ender i `heldEnds` (`calc/production.ts`), `calc/textile/common.ts` (full høyde, filnavn) · linjene: `calc/textile/lines.ts`, kost og pris fra motoren via `ITEM_RECIPES` (`pricing/data.ts`) · produksjonsrader:
+  fotplater, stag `bracePoints`, skjøt 609 eller 604), holdte ender i `heldEnds` (`calc/production.ts`), `calc/textile/common.ts` (full høyde, filnavn, og `FrameParts`: hva én ramme er bygget av, telt én gang og lest av både plukklisten i `foga/engine.ts` og kalkylen i `calc/textile/lines.ts`; oppskriften `RECIPES.textileFrame` har monteringene `wall` og `feet`) · linjene: `calc/textile/lines.ts`, kost og pris fra motoren via `ITEM_RECIPES` (`pricing/data.ts`) · produksjonsrader:
   `calc/production.ts` (lager også folierader)
 - Plan, 3D: `plan/layers/TextileLayer.tsx`, pensel `plan/pointer/textile.ts`, flytte frittstående `pointer/freeMove.ts` · `scene3d/build/textile.ts`, dra i 3D `scene3d/pointer/drag.ts`
 - Skuff: `WallDrawer.tsx` med `plan/wallDrawer/panels.tsx` (`TextilePanel`) og `drag.ts` (InFrame), `FreeTextileDrawer.tsx` (frittstående)

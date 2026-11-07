@@ -499,7 +499,7 @@ describe('frittstående tekstilvegg mellom to vegger', () => {
     const tx = res.bom.lines.filter((l) => l.group === 'prof.tekstil');
     expect(tx.find((l) => l.artnr === '871 037 92')).toBeUndefined();
     expect(qty(res, S.textile)).toBe(1);
-    expect(f.connectors.splice).toBe(4);
+    expect(f.parts.loose).toContainEqual(['604', 4]);
   });
 });
 

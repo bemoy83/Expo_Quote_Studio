@@ -63,7 +63,7 @@ describe('rammer i et innvendig hjørne (X10)', () => {
 describe('frittstående mot ramme (X11)', () => {
   // Row stand 6 × 4: back wall (0,0)–(6,0); a free-standing run from the back wall into the stand
   const run = free('f1', [3, 0], [3, 2]);
-  const frames = (v: Variant) => freeFrames(v, RECIPES.freeFrame, RULES.textile.inFrame, '', freeTrims(v, RULES, placeFrames(v, RULES)));
+  const frames = (v: Variant) => freeFrames(v, RECIPES.textileFrame, RULES.textile.inFrame, '', freeTrims(v, RULES, placeFrames(v, RULES)));
 
   it('stops at the frame’s face, 60 mm from the wall line, and is that much shorter', () => {
     const v = variant(ROW, { freeTextiles: [run], textiles: [frame('t1', 'side-back', 2, 2)] });
