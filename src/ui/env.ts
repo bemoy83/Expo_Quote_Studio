@@ -5,6 +5,7 @@ import { applyEdits, NO_EDITS, type CatalogEdits } from '../catalog/edits'
 import { indexCatalog, placeContext } from '../catalog/lookup'
 import type { Product } from '../catalog/types'
 import { EXAMPLE_BASIS, type CostBasis } from '../cost/basis'
+import { pricingFrom } from '../pricing/data'
 import { KEYS, loadCostBasis, loadJson, saveCostBasis, saveJson } from '../persistence/storage'
 import { RULES, type InFrameParams, type Rules } from '../rules/rules'
 
@@ -21,6 +22,8 @@ export let idx = indexCatalog(catalog)
 export let place = placeContext(rules, catalog)
 /** The kostgrunnlag the cost engine runs on: a file loaded in this browser, else the example. */
 export let costBasis: CostBasis = loadCostBasis() ?? EXAMPLE_BASIS
+/** The price items, with wall and takdrager costed from the kostgrunnlag. */
+export let pricing = pricingFrom(costBasis)
 
 let version = 0
 const listeners = new Set<() => void>()
@@ -53,6 +56,7 @@ export function setInFrame(p: InFrameParams) {
  *  until the page is reloaded. */
 export function setCostBasis(b: CostBasis | null): boolean {
   costBasis = b ?? EXAMPLE_BASIS
+  pricing = pricingFrom(costBasis)
   const kept = saveCostBasis(b)
   changed()
   return kept

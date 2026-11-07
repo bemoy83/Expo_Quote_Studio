@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { basisLabel, basisRef, EXAMPLE_BASIS, parseBasis, serializeBasis, supplierList, usesExample } from './basis';
 import { EXAMPLE_LIST } from './example-list';
+import { EXAMPLE_OWN_LIST } from './own-list';
 import { DEFAULT_COST_PARAMS as P, ORDER_COSTS } from './params';
 
 const file = (x: Record<string, unknown>) => JSON.stringify({ format: 'kostgrunnlag', versjon: 1, kostversjon: '2026-11 A', dato: '2026-11-07', ...x });
@@ -16,7 +17,7 @@ describe('kostgrunnlag', () => {
   it('a full file round-trips and uses no example numbers', () => {
     const b = { ...EXAMPLE_BASIS, version: '2026-11 A', fromExample: [] };
     const r = parseBasis(serializeBasis(b));
-    expect(r.ok && r.basis).toEqual({ ...b, lists: [EXAMPLE_LIST] });
+    expect(r.ok && r.basis).toEqual(b);
     expect(r.ok && usesExample(r.basis)).toBe(false);
     expect(r.ok && basisRef(r.basis)).toEqual({ version: '2026-11 A', date: '2026-11-07', example: false });
     expect(r.ok && basisLabel(r.basis)).toBe('2026-11 A, 7.11.2026');
@@ -37,6 +38,9 @@ describe('kostgrunnlag', () => {
     expect(b.fromExample).toContain('parametere.materialIndex');
     expect(b.fromExample).toContain('ordrekost');
     expect(b.fromExample).not.toContain('prisliste');
+    expect(b.fromExample).not.toContain('prisliste Foga');
+    expect(b.fromExample).toContain('prisliste Egne innkjøp');
+    expect(supplierList(b, 'Egne innkjøp')).toBe(EXAMPLE_OWN_LIST);
     expect(b.fromExample).not.toContain('parametere.indirect');
     // stored or downloaded, it still says what is example numbers
     const again = parseBasis(serializeBasis(b));

@@ -9,7 +9,8 @@ henter. Kostmodellen for det som prosjekteres og bygges eier appen selv: kostmot
 [kostmodell.md](kostmodell.md). Tidligere (31.10.2026) skulle OMS regne all kost og appen bare få ferdige tall; Bjørn
 endret det 7.11.2026. For et produkt som prises som sum av artikler legger appen sammen det som faktisk er tegnet.
 
-Alle tall i appen i dag er eksempeltall (`src/pricing/data.ts`, og kost i `src/catalog/defaultCatalog.ts`).
+Alle tall i appen i dag er eksempeltall. Systemvegg og takdrager prises fra kostmotoren og kostgrunnlaget (7.11.2026),
+resten fra `src/pricing/data.ts` og `src/catalog/defaultCatalog.ts`.
 
 ## 1. Tre nivåer
 

@@ -5,6 +5,7 @@
 // File: JSON `{ format: 'kostgrunnlag', versjon, kostversjon, dato, kilde, parametere, ordrekost, prislister, fraEksempel }`.
 // Kostmodell: docs/kostmodell.md.
 import { EXAMPLE_LIST } from './example-list';
+import { EXAMPLE_OWN_LIST } from './own-list';
 import type { OrderCost } from './model';
 import { DEFAULT_COST_PARAMS, ORDER_COSTS, type CostParams } from './params';
 import type { Currency, SupplierItem, SupplierList } from './prices';
@@ -39,16 +40,20 @@ export const EXAMPLE_BASIS: CostBasis = {
   source: 'Eksempeltall i appen',
   params: DEFAULT_COST_PARAMS,
   orderCosts: ORDER_COSTS,
-  lists: [EXAMPLE_LIST],
+  lists: [EXAMPLE_LIST, EXAMPLE_OWN_LIST],
   fromExample: ['prisliste', 'parametere', 'ordrekost'],
 };
+
+const EXAMPLE_LISTS = [EXAMPLE_LIST, EXAMPLE_OWN_LIST];
+const supplierIs = (l: SupplierList, supplier: string) => l.supplier.startsWith(supplier);
 
 export const usesExample = (b: CostBasis) => b.fromExample.length > 0;
 
 export const basisRef = (b: CostBasis): CostBasisRef => ({ version: b.version, date: b.date, example: usesExample(b) });
 
-/** The basis' list from this supplier, else the example list. */
-export const supplierList = (b: CostBasis, supplier = 'Foga'): SupplierList => b.lists.find((l) => l.supplier === supplier) ?? EXAMPLE_LIST;
+/** The basis' list from this supplier ("Foga", "Egne innkjøp"; the name starts with it), else the example's. */
+export const supplierList = (b: CostBasis, supplier = 'Foga'): SupplierList =>
+  b.lists.find((l) => supplierIs(l, supplier)) ?? EXAMPLE_LISTS.find((l) => supplierIs(l, supplier)) ?? EXAMPLE_LIST;
 
 /** "2026-11 A, 7.11.2026" and whether it is example numbers, for the screen. */
 export function basisLabel(b: CostBasis | CostBasisRef): string {
@@ -186,7 +191,12 @@ export function parseBasis(text: string): BasisResult {
   try {
     const params = mergeParams(DEFAULT_COST_PARAMS as unknown as Obj, data.parametere, 'parametere', fromExample) as unknown as CostParams;
     if (data.ordrekost === undefined) fromExample.push('ordrekost');
+    const lists = data.prislister === undefined ? EXAMPLE_LISTS : supplierLists(data.prislister);
     if (data.prislister === undefined) fromExample.push('prisliste');
+    else for (const ex of EXAMPLE_LISTS) {
+      const name = ex.supplier.replace(/ \(.*\)$/, '');
+      if (!lists.some((l) => supplierIs(l, name))) fromExample.push(`prisliste ${name}`);
+    }
     return {
       ok: true,
       basis: {
@@ -195,7 +205,7 @@ export function parseBasis(text: string): BasisResult {
         source: isStr(data.kilde) ? data.kilde : '',
         params,
         orderCosts: data.ordrekost === undefined ? ORDER_COSTS : orderCosts(data.ordrekost),
-        lists: data.prislister === undefined ? [EXAMPLE_LIST] : supplierLists(data.prislister),
+        lists,
         fromExample: [...new Set(fromExample)],
       },
     };

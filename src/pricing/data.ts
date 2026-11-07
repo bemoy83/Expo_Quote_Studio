@@ -1,6 +1,10 @@
-// Example price list (Bjørn 31.10.2026: example prices for now). In the real setup the OMS computes these from its
-// cost model (docs/prismodell.md) and the app only reads them. Every number here is made up.
-// Change numbers here, never in calc code.
+// The price items the calc builds lines from: name, unit, time per handling step, and cost and price. Items with a
+// recipe below (system wall and takdrager, kostmotor trinn 3) get cost from the cost engine and price from the DG
+// target (src/cost/items.ts, docs/kostmodell.md); the rest keep the example numbers here (Bjørn 31.10.2026: example
+// prices for now). Change numbers here or in the kostgrunnlag, never in calc code.
+import { EXAMPLE_BASIS, type CostBasis } from '../cost/basis';
+import { costItems, type ItemRecipe } from '../cost/items';
+import { RULES } from '../rules/rules';
 import type { PriceItem, PriceList, Time, Transfer } from './model';
 
 const item = (id: string, name: string, unit: PriceItem['unit'], cost: number, price: number, time?: Time, transfer: Transfer = 'leie'): PriceItem => ({
@@ -98,6 +102,33 @@ const ITEMS: PriceItem[] = [
   item(ITEM.textileEdge, 'Montering tekstil per meter omkrets', 'm', 70, 120, onSite(4, 2)),
 ];
 
+const POST_M = RULES.wall.height;
+/** A rail of one module: profile cut to cc − post width, with a 600 in each end. */
+const rail = (code: string): ItemRecipe => ({ parts: [[code, 0.96], ['600', 2]], dg: 'utleie' });
+const work: ItemRecipe = { dg: 'arbeid' };
+
+/** What each costed item is made of, per unit. Foga parts by code in the list's unit (m or stk), own purchases by
+ *  art.nr (src/cost/own-list.ts). Time is the item's own, above, as person-minutes. */
+export const ITEM_RECIPES: Readonly<Record<string, ItemRecipe>> = {
+  [ITEM.post]: { parts: [['94', POST_M], ['700', 1], ['M10x65', 1]], dg: 'utleie' },
+  [ITEM.rail('92', 960)]: rail('92'),
+  [ITEM.rail('91', 960)]: rail('91'),
+  [ITEM.plate]: { own: [['HDF-976x2440', 1, 'plate']], dg: 'utleie' },
+  // The header over a door or curtain is cut from a plate: about a fifth of it
+  [ITEM.headerPlate]: { own: [['HDF-976x2440', 0.2, 'plate']], dg: 'utleie' },
+  [ITEM.door]: { own: [['DOR-292-410', 1, 'accessory']], dg: 'utleie' },
+  [ITEM.curtain]: { own: [['FORHENG', 1, 'accessory']], dg: 'utleie' },
+  ...Object.fromEntries([1, 2, 3, 4, 5, 6].map((m): [string, ItemRecipe] => [ITEM.beam(m * 1000 - 40), { parts: [['292', m - 0.04], ['600', 4]], dg: 'utleie' }])),
+  [ITEM.foot('750')]: { parts: [['750', 1], ['795', 1]], dg: 'utleie' },
+  [ITEM.beamHook]: { own: [['KROK', 1, 'accessory']], dg: 'utleie' },
+  [ITEM.beamLift]: { parts: [['94', 0.08], ['609', 1]], dg: 'utleie' },
+  [ITEM.module]: work,
+  [ITEM.wallFootMount]: work,
+  [ITEM.plateSwap]: work,
+  [ITEM.beamLm]: work,
+  [ITEM.beamPost]: work,
+};
+
 export interface PricingData {
   items: PriceList;
   /** By product id, or by the quote key of lines the quote shows as one: what the quote tells the customer when it is
@@ -105,7 +136,14 @@ export interface PricingData {
   terms: Record<string, string>;
 }
 
-export const DEFAULT_PRICING: PricingData = {
-  items: new Map(ITEMS.map((x) => [x.id, x])),
+const EXAMPLE_ITEMS: PriceList = new Map(ITEMS.map((x) => [x.id, x]));
+
+/** The price items with the costed ones from this kostgrunnlag. */
+export const pricingFrom = (b: CostBasis): PricingData => ({ ...DEFAULT_TERMS, items: costItems(EXAMPLE_ITEMS, ITEM_RECIPES, b) });
+
+const DEFAULT_TERMS: Omit<PricingData, 'items'> = {
   terms: { tekstil: 'Leie av ramme, kjøp av tekstil', '8040': 'Kjøp av tekstil, montering inkludert', '8041': 'Kjøp av tekstil, montering inkludert' },
 };
+
+/** Costed from the example kostgrunnlag. The calc's default, and what the fasit tests run on. */
+export const DEFAULT_PRICING: PricingData = pricingFrom(EXAMPLE_BASIS);

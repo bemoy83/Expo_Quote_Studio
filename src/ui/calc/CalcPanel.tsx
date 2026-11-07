@@ -5,7 +5,8 @@ import { groupItems, mainGroupOf } from '../../catalog/groups'
 import type { BomLine } from '../../foga/engine'
 import { LAYER_COLOR } from '../colors'
 import { Button } from '../controls'
-import { rules } from '../env'
+import { margins } from '../../cost/model'
+import { costBasis, rules } from '../env'
 import { fmt, hours, kr } from '../format'
 import type { Highlight } from '../tools'
 
@@ -38,7 +39,7 @@ export function CalcPanel({ res, name, onHover, onQuote }: { res: CalcResult; na
         <div className="spacer">
           <h2>Veiledende kalkyle</h2>
           <div className="sub">
-            Eksempelpriser fra OMS{placeholders ? <span className="ph"> · {placeholders} plassholderpriser</span> : null}
+            {costBasis.version === 'eksempel' ? 'Eksempelpriser' : `Kostgrunnlag ${costBasis.version}`}{placeholders ? <span className="ph"> · {placeholders} plassholderpriser</span> : null}
           </div>
         </div>
         <span className="band-tag">
@@ -94,6 +95,7 @@ export function CalcPanel({ res, name, onHover, onQuote }: { res: CalcResult; na
           Internt: kost {kr(res.margin.cost)} · DB {kr(res.margin.db)} · DG {pct(res.margin.dg)}
           {res.margin.unknown > 0 && <span className="ph"> · {res.margin.unknown} {res.margin.unknown === 1 ? 'linje' : 'linjer'} uten kost</span>}
         </div>
+        <IndirectLine cost={res.margin.cost} sum={res.margin.sum} />
         {!!(t.montering || t.demontering) && (
           <div className="inkl num">
             Montering ca. {hours(t.montering ?? 0)} t · demontering ca. {hours(t.demontering ?? 0)} t, inngår i prisene
@@ -163,5 +165,18 @@ function Articles({ lines, open, onToggle }: { lines: BomLine[]; open: boolean; 
           )),
         )}
     </>
+  )
+}
+
+/** Indirect cost as its own line under the margin: DG is on direct cost, this is what is left after admin, premises
+ *  and vans (docs/kostmodell.md). Says so when the kostgrunnlag is example numbers. */
+function IndirectLine({ cost, sum }: { cost: number; sum: number }) {
+  const m = margins(cost, sum, costBasis.params)
+  const example = costBasis.version === 'eksempel'
+  return (
+    <div className="inkl num margin">
+      Indirekte kost {pct(costBasis.params.indirect)} {kr(m.indirect)} · igjen {kr(m.afterIndirect)}
+      {example && <span className="ph"> · eksempeltall</span>}
+    </div>
   )
 }

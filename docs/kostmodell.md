@@ -8,7 +8,8 @@ appen kan hente».
 
 Koden: `src/cost/` (`model.ts` reglene, `params.ts` tallene, `prices.ts` og `example-list.ts` leverandørens prisliste,
 `basis.ts` kostgrunnlaget som fil),
-tester i `src/cost/model.test.ts`. Motoren er ikke koblet til kalkylen ennå; det skjer produkt for produkt.
+tester i `src/cost/*.test.ts`. Motoren kobles til kalkylen produkt for produkt: systemvegg og takdrager først
+(trinn 3, under).
 
 ## Kostgrunnlaget
 
@@ -82,6 +83,22 @@ Lønnsindeksen er egen, fordi lønn følger tariff og ikke materialpriser.
 samme indeks, så DG holder når selgeren gir rabatt (Bjørn 7.11.2026). Påslag gjøres om til DG med
 `DG = påslag / (1 + påslag)`: 300 % er 75 %, 30 % er 23 %.
 
+## Prisartikler fra motoren
+
+Kalkylen bygger linjene av prisartikler (`src/pricing/data.ts`). En prisartikkel med oppskrift får kost og pris fra
+motoren (`src/cost/items.ts`): oppskriften sier hvilke Foga-deler (i listens enhet, meter eller stk) og egne innkjøp
+artikkelen består av, og artikkelens egne minutter per håndteringssteg er personminuttene.
+
+`direkte kost = sum av deler × kost per bruk + personminutter / 60 × timekost`, `pris = direkte kost / (1 − DG-mål)`
+
+Kosten regnes for året i kostgrunnlagets dato, så samme kostgrunnlag gir samme priser; nytt år er ny versjon. Mangler
+kostgrunnlaget pris på en del, beholder artikkelen eksempeltallene.
+
+Med oppskrift i dag (trinn 3): stolpe 94 med fot, topp- og bunnskinne, HDF-plate og overstykke, dør, forheng,
+takdrager i alle lengder, fotplate 750 med 795, krok og skjøt over tekstilvegg (utleie), og montering per modul,
+støtteplate, platebytte, takdrager per meter og takdragerstolpe (arbeid). Tekstil har eksempeltall til trinn 5.
+Plater, dører, forheng og krok er egne innkjøp utenfor Foga, i en egen eksempelliste (`src/cost/own-list.ts`).
+
 ## Tallene
 
 Alle i `src/cost/params.ts`. Bjørn = bekreftet, forslag = startverdi til OMS har historikk, eksempel = Bjørn ba om
@@ -94,6 +111,7 @@ eksempeltall til ekte tall finnes (7.11.2026). Motoren skal kunne få nye tall f
 | Rente på snittet av bundet kapital | 5 % per år | forslag |
 | Tap per jobb | 1 % av innkjøp | forslag |
 | Indirekte kost | 10 % av direkte kost | eksempel |
+| DG-mål: utleie / arbeid / salg | 75 % / 56 % / 23 %, påslagene 300 % / 125 % / 30 % i Bjørns kalkulator | eksempel |
 | Timelønn med sosiale kostnader | 391,40 kr, 2022 | Bjørn |
 | Fakturerbar andel | 100 % | forslag |
 | Overtidstillegg | 100 % | Bjørn |
