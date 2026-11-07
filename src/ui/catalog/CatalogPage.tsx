@@ -1,6 +1,6 @@
 // Produktliste: every product and variant with art.nr, name, unit and price (level 2 articles have none). The calc takes prices and names
 // from here. Built-in products take a new name, price and status; added products can be edited fully.
-import { Check, Download, Plus, RotateCcw, Search, Trash2, Upload } from 'lucide-react'
+import { ArrowRight, Check, Download, Plus, RotateCcw, Search, Trash2, Upload } from 'lucide-react'
 import { Fragment, useRef, useState } from 'react'
 import { addProduct, artnrFree, catalogRows, editRow, importTable, NO_EDITS, parsePrice, parseTable, removeProduct, toCSV, UNITS, type CatalogRow } from '../../catalog/edits'
 import { groupItems, PRODUCT_GROUPS, resolveGroup } from '../../catalog/groups'
@@ -8,10 +8,10 @@ import type { Unit } from '../../catalog/types'
 import { Button, CommitInput, IconButton } from '../controls'
 import type { ToastMsg } from '../useToast'
 import { download } from '../download'
-import { catalog, edits, setCatalogEdits } from '../env'
+import { basisLabel } from '../../cost/basis'
+import { catalog, costBasis, edits, pricing, setCatalogEdits } from '../env'
 import { fmt } from '../format'
 import { PageBand } from '../shell/PageBand'
-import { CostBasisCard } from './CostBasisCard'
 
 type Toast = (t: ToastMsg | string) => void
 
@@ -21,7 +21,7 @@ const groupText = (id: string) => {
   return `${g.group.name} ${g.subgroup.name}`
 }
 
-export function CatalogPage({ onToast }: { onToast: Toast }) {
+export function CatalogPage({ onToast, onBasis }: { onToast: Toast; onBasis: () => void }) {
   const [q, setQ] = useState('')
   const [only, setOnly] = useState(false)
   const file = useRef<HTMLInputElement>(null)
@@ -93,7 +93,21 @@ export function CatalogPage({ onToast }: { onToast: Toast }) {
       </PageBand>
       <div className="page-scroll">
         <div className="page-narrow">
-          <CostBasisCard onToast={onToast} />
+          <section className="basis-card" aria-label="Kostgrunnlag">
+            <div className="basis-text">
+              <span className="basis-title">
+                Kostgrunnlag
+                {costBasis.fromExample.length ? <i className="ph-dot" /> : null}
+                <span className="num">
+                  {basisLabel(costBasis)} · {pricing.code}
+                </span>
+              </span>
+              <span className="page-intro">Kost, tider og oppskrifter kalkylen regner med ligger på egen side, med kilde og status for hvert tall.</span>
+            </div>
+            <Button icon={ArrowRight} onClick={onBasis}>
+              Åpne kostgrunnlag
+            </Button>
+          </section>
           <div className="cat-tools">
             <p className="page-intro">
               Kalkylen henter pris og navn herfra. Import leser CSV med kolonnene varenr og pris; navn, enhet og gruppe er valgfrie. Kjente varenr får ny pris, nye varenr legges til.

@@ -14,8 +14,15 @@ kalkylen produkt for produkt: i dag systemvegg, takdrager og tekstilvegg (under)
 
 Alt motoren regner med, prislister, parametere og ordrekost, er data i én fil: kostgrunnlaget (`src/cost/basis.ts`),
 med egen versjon og dato (Bjørn 7.11.2026). Appen har et eksempelgrunnlag med oppdiktede priser. Det ekte lastes inn
-på Produktliste-siden og lagres bare i nettleseren, så innprisene aldri publiseres; senere hentes det fra OMS. Det
-filen ikke har, hentes fra eksempelet, og kortet på Produktliste sier hva. Nettleseren og «Last ned» holder bare
+på siden Kostgrunnlag og lagres bare i nettleseren, så innprisene aldri publiseres; appen styrer alle tall selv, og en
+framtidig OMS er bare en kilde den kan lese prislister og salgspriser fra. Det filen ikke har, hentes fra eksempelet,
+og siden sier hva.
+
+Siden Kostgrunnlag viser hvert tall med sti, verdi, status (Bjørn, kalibrert, forslag, eksempel), kilde og dato, i faner
+for innkjøp, avskrivning, arbeid og tider, ordrekost, påslag og DG, katalog og oppskrifter, med byggereglene og formlene
+ved siden av (`src/cost/fields.ts`). Eksempeltall har en prikk og kan filtreres fram; tall regel 2 og 6 har, men kalkylen
+ikke bruker ennå, er merket «ikke i bruk». Status, kilde og dato for egne tall står i filen under `merknader`, per sti.
+En sti i «Slik er det regnet» er en lenke til radene den peker på. Nettleseren og «Last ned» holder bare
 eierens egne tall; resten fylles fra appens gjeldende eksempeltall hver gang grunnlaget leses, så et nytt eksempeltall
 i appen når fram i stedet for å fryses fra appversjonen som lastet filen. Et grunnlag lagret på den gamle måten (alt
 skrevet ut, med `fraEksempel`) gir fra seg det `fraEksempel` peker på når det leses.

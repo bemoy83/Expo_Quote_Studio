@@ -3107,3 +3107,124 @@ select.cin {
 .trace .meta.ph {
   color: var(--over);
 }
+/* A kostgrunnlag path as a link: «Slik er det regnet» and the formulas */
+.kg-link {
+  display: inline;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: rgb(var(--ink-faint) / 0.5);
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.kg-link:hover {
+  color: rgb(var(--ink));
+}
+
+/* Kostgrunnlag page */
+.kg-tabs {
+  overflow-x: auto;
+  padding: 4px 0 8px;
+  scrollbar-width: none;
+}
+.kg-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(96px, 140px) 104px minmax(0, 0.8fr);
+  gap: 12px;
+  align-items: baseline;
+}
+.kg-row {
+  font: var(--type-note);
+  color: rgb(var(--ink));
+}
+.kg-row .n {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.kg-row.lit {
+  background: color-mix(in oklab, var(--over-fill) 35%, transparent);
+  border-radius: var(--r-sm);
+}
+.kg-row .num {
+  font: var(--type-num);
+}
+.kg-src {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: rgb(var(--ink-muted));
+}
+.kg-status {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  background: var(--well);
+  font: 500 11.5px var(--font-ui);
+  color: rgb(var(--ink-muted));
+}
+.kg-status.s-Bjørn {
+  color: rgb(var(--ink));
+}
+.kg-unused {
+  margin-left: 8px;
+  padding: 1px 6px;
+  border-radius: var(--r-pill);
+  background: var(--well);
+  font: 500 11px var(--font-ui);
+  color: rgb(var(--ink-faint));
+  white-space: nowrap;
+}
+.kg-peruse {
+  margin-bottom: 12px;
+}
+.kg-peruse-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+  padding: 0 8px;
+}
+.kg-peruse-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  border-radius: var(--r-ctl);
+  background: var(--well);
+  font: var(--type-note);
+}
+.kg-peruse-cell .num {
+  font: var(--type-num);
+}
+.kg-formula {
+  border-top: 1px solid var(--g-top);
+  padding-bottom: 8px;
+}
+.kg-formula code {
+  display: block;
+  margin: 0 8px 6px;
+  font: 400 12.5px/1.5 var(--font-numeric);
+  color: rgb(var(--ink));
+  overflow-wrap: anywhere;
+}
+.kg-formula .page-intro {
+  padding: 0 8px;
+}
+.kg-foot {
+  padding-top: 12px;
+}
+@media (max-width: 760px) {
+  .kg-grid {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .kg-grid > :nth-child(n + 3) {
+    grid-column: 1 / -1;
+  }
+  .tbl-head.kg-grid > :nth-child(n + 3) {
+    display: none;
+  }
+}

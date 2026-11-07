@@ -22,6 +22,19 @@ export const BASIS_FORMAT = 'kostgrunnlag';
 export const BASIS_FILE_VERSION = 2;
 const READS = [1, 2];
 
+/** Who set a number: Bjørn (confirmed), kalibrert (fitted to real jobs), forslag (a starting value), eksempel. */
+export type FieldStatus = 'Bjørn' | 'kalibrert' | 'forslag' | 'eksempel';
+export const FIELD_STATUSES: readonly FieldStatus[] = ['Bjørn', 'kalibrert', 'forslag', 'eksempel'];
+
+/** Where one number came from, kept beside it (file `merknader`, by the number's path, e.g. "parametere.indirect"). */
+export interface FieldNote {
+  status?: FieldStatus;
+  /** Free text: "Megaprint faktura okt. 2026". */
+  kilde?: string;
+  /** When it was last set, YYYY-MM-DD. */
+  dato?: string;
+}
+
 /** Catalog products without a recipe: cost as a share of the sales price, and minutes per step, by group prefix. */
 export interface CatalogRates {
   cost: Readonly<Record<string, number>>;
@@ -43,6 +56,8 @@ export interface CostBasis {
   /** What each price item is made of, by price item id. */
   recipes: Readonly<Record<string, ItemRecipe>>;
   catalog: CatalogRates;
+  /** Status, source and date per number, where the owner has given them. */
+  notes: Readonly<Record<string, FieldNote>>;
   /** What is taken from the example ("prisliste", "parametere.owned.interest", "tider.stolpe-94"). Empty when nothing is. */
   fromExample: readonly string[];
 }
@@ -66,6 +81,7 @@ export const EXAMPLE_BASIS: CostBasis = {
   times: EXAMPLE_TIMES,
   recipes: EXAMPLE_RECIPES,
   catalog: EXAMPLE_CATALOG,
+  notes: {},
   fromExample: ['prisliste', 'parametere', 'ordrekost', 'tider', 'oppskrifter', 'katalog'],
 };
 
@@ -124,6 +140,7 @@ export function serializeBasis(b: CostBasis): string {
       tider: without(b.times, 'tider', b.fromExample),
       oppskrifter: without(b.recipes, 'oppskrifter', b.fromExample),
       katalog: without({ kost: b.catalog.cost, tider: b.catalog.time }, 'katalog', b.fromExample),
+      merknader: Object.keys(b.notes).length ? b.notes : undefined,
     },
     null,
     2,
@@ -341,6 +358,24 @@ function catalogRates(x: unknown, fromExample: string[]): CatalogRates {
   return { cost, time };
 }
 
+function readNotes(x: unknown): Record<string, FieldNote> {
+  if (x === undefined) return {};
+  if (!isObj(x)) return fail('merknader må være et objekt med en merknad per tall.');
+  return Object.fromEntries(
+    Object.entries(x).map(([path, n]) => {
+      if (!isObj(n)) return fail(`merknader.${path} må være et objekt.`);
+      if (n.status !== undefined && !FIELD_STATUSES.includes(n.status as FieldStatus)) return fail(`merknader.${path}: status må være ${FIELD_STATUSES.join(', ')}.`);
+      if (n.dato !== undefined && (typeof n.dato !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(n.dato))) return fail(`merknader.${path}: dato må være ÅÅÅÅ-MM-DD.`);
+      const note: FieldNote = {
+        ...(n.status ? { status: n.status as FieldStatus } : {}),
+        ...(isStr(n.kilde) ? { kilde: n.kilde } : {}),
+        ...(n.dato ? { dato: n.dato as string } : {}),
+      };
+      return [path, note];
+    }),
+  );
+}
+
 /** Read a kostgrunnlag file. What it leaves out comes from the example and is listed in `fromExample`. */
 export function parseBasis(text: string): BasisResult {
   let data: unknown;
@@ -388,6 +423,7 @@ export function parseBasis(text: string): BasisResult {
         times: byItem(f.tider, 'tider', EXAMPLE_TIMES, readTime, fromExample),
         recipes: byItem(f.oppskrifter, 'oppskrifter', EXAMPLE_RECIPES, readRecipe, fromExample),
         catalog: catalogRates(f.katalog, fromExample),
+        notes: readNotes(data.merknader),
         fromExample: [...new Set(fromExample)],
       },
     };

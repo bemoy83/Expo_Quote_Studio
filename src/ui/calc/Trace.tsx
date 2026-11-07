@@ -1,10 +1,12 @@
 // «Slik er det regnet»: a kalkyle line opened up. Every number comes from what the cost engine returned with the cost
 // (PriceItem.trace, src/cost/items.ts), never from a text that describes it, so the explanation cannot drift from the
 // sum. Where a number lives in the kostgrunnlag is named after it. docs/kostmodell.md.
+import { Fragment } from 'react'
 import type { CalcLine } from '../../calc/types'
 import type { TraceHow, TraceRow } from '../../cost/items'
 import { catalogOwn } from '../../pricing/data'
 import { fmt, kr } from '../format'
+import { showInBasis } from '../costbasis/link'
 import { idx, pricing } from '../env'
 
 const pct = (x: number) => `${fmt(x * 100, 1)} %`
@@ -26,7 +28,16 @@ function Row({ r }: { r: TraceRow }) {
       <span className="meta">
         {fmt(r.qty, 3)} {r.unit} × {k2(r.each)} kr · {howText(r.how)}
       </span>
-      <span className="from">{r.from.join(' · ')}</span>
+      <span className="from">
+        {r.from.map((p, i) => (
+          <Fragment key={p}>
+            {i > 0 && ' · '}
+            <button type="button" className="kg-link" onClick={() => showInBasis(p)}>
+              {p}
+            </button>
+          </Fragment>
+        ))}
+      </span>
     </div>
   )
 }
@@ -68,9 +79,14 @@ export function LineTrace({ l }: { l: CalcLine }) {
                 ))}
                 {l.strategy === 'sum' && (
                   <span className="meta formula">
-                    pris = {k2(t.direct)} × (1 + indirekte {pct(t.indirect)}) / (1 − DG-mål {DG_NAME[t.dgGroup]} {pct(t.dg)}) = {k2(t.price)} ·
-                    parametere.indirect · parametere.dg.
-                    {t.dgGroup}
+                    pris = {k2(t.direct)} × (1 + indirekte {pct(t.indirect)}) / (1 − DG-mål {DG_NAME[t.dgGroup]} {pct(t.dg)}) = {k2(t.price)} ·{' '}
+                    <button type="button" className="kg-link" onClick={() => showInBasis('parametere.indirect')}>
+                      parametere.indirect
+                    </button>
+                    {' · '}
+                    <button type="button" className="kg-link" onClick={() => showInBasis(`parametere.dg.${t.dgGroup}`)}>
+                      parametere.dg.{t.dgGroup}
+                    </button>
                   </span>
                 )}
               </>

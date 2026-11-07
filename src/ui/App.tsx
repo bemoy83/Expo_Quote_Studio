@@ -13,6 +13,8 @@ import { CalcPanel } from './calc/CalcPanel'
 import { calcOf } from './calcCache'
 import { closeRooms, editResult, ratioFor, roomsFrom, settle } from './edits'
 import { CatalogPage } from './catalog/CatalogPage'
+import { CostBasisPage } from './costbasis/CostBasisPage'
+import { BASIS_EVENT } from './costbasis/link'
 import { IconButton, Toast } from './controls'
 import { download } from './download'
 import { catalog, costBasis, getVersion, idx, place, plateColor, pricing, subscribe } from './env'
@@ -65,6 +67,16 @@ export default function App() {
   const setTerms = (patch: Partial<StandWallTerms>) => dispatch({ type: 'standWalls', patch })
   const res = calcFor(v)
   const [page, setPage] = useState<Page>('skisse')
+  // A kostgrunnlag path from «Slik er det regnet»: the page opens on it. `n` makes the same path a new request.
+  const [basisFocus, setBasisFocus] = useState<{ path: string; n: number } | null>(null)
+  useEffect(() => {
+    const on = (e: Event) => {
+      setBasisFocus((f) => ({ path: (e as CustomEvent<string>).detail, n: (f?.n ?? 0) + 1 }))
+      setPage('kostgrunnlag')
+    }
+    window.addEventListener(BASIS_EVENT, on)
+    return () => window.removeEventListener(BASIS_EVENT, on)
+  }, [])
   const [view, setView] = useState<'plan' | '3d'>('plan')
   /** Why what the plan's pointer aims at cannot be stored, shown in the hint line instead of the tool's help. */
   const [planHint, setPlanHint] = useState<string | null>(null)
@@ -410,8 +422,10 @@ export default function App() {
         <PickingPage project={sketch.project} variants={sketch.variants} current={current} onSelect={selectVariant} calcOf={calcFor} />
       ) : page === 'arbeidsordre' ? (
         <WorkOrderPage project={sketch.project} variants={sketch.variants} current={current} onSelect={selectVariant} calcOf={calcFor} />
+      ) : page === 'kostgrunnlag' ? (
+        <CostBasisPage key={basisFocus?.n ?? 0} focus={basisFocus?.path ?? null} onToast={showToast} />
       ) : (
-        <CatalogPage onToast={showToast} />
+        <CatalogPage onToast={showToast} onBasis={() => setPage('kostgrunnlag')} />
       )}
       <Toast msg={toast} />
       <NameTip />
