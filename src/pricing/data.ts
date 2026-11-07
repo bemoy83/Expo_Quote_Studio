@@ -136,7 +136,24 @@ export interface PricingData {
   terms: Record<string, string>;
 }
 
-const EXAMPLE_ITEMS: PriceList = new Map(ITEMS.map((x) => [x.id, x]));
+/**
+ * Time calibrated against three stands Bjørn priced (7.11.2026: corner 4 × 3, row 5 × 3, corner 7 × 4, the exhibitor
+ * paying walls and takdrager). His estimate is person-hours for the whole goods journey, montering and demontering
+ * included: about 14 minutes per metre of wall and 2 per metre of takdrager. The times above keep their split over the
+ * steps and are scaled by this, wall items and takdrager items each by their own factor (docs/kostmodell.md).
+ */
+const TIME_FACTOR = { wall: 0.34, beam: 0.15 } as const;
+const WALL_ITEMS: readonly string[] = [ITEM.post, ITEM.rail('92', 960), ITEM.rail('91', 960), ITEM.plate, ITEM.headerPlate, ITEM.door, ITEM.curtain, ITEM.module, ITEM.wallFootMount, ITEM.plateSwap, ITEM.foot('750')];
+const BEAM_ITEMS: readonly string[] = [...beams.map((b) => b.id), ITEM.beamLm, ITEM.beamPost, ITEM.beamHook, ITEM.beamLift];
+
+const scaleTime = (t: Time | undefined, k: number): Time | undefined =>
+  t && Object.fromEntries(Object.entries(t).map(([step, m]) => [step, Math.round((m ?? 0) * k * 100) / 100]));
+const calibrated = (x: PriceItem): PriceItem => {
+  const k = WALL_ITEMS.includes(x.id) ? TIME_FACTOR.wall : BEAM_ITEMS.includes(x.id) ? TIME_FACTOR.beam : 1;
+  return k === 1 ? x : { ...x, time: scaleTime(x.time, k) };
+};
+
+const EXAMPLE_ITEMS: PriceList = new Map(ITEMS.map((x) => [x.id, calibrated(x)]));
 
 /** The price items with the costed ones from this kostgrunnlag. */
 export const pricingFrom = (b: CostBasis): PricingData => ({ ...DEFAULT_TERMS, items: costItems(EXAMPLE_ITEMS, ITEM_RECIPES, b) });

@@ -49,18 +49,18 @@ describe('cost buckets', () => {
     expect(purchaseCost(FOGA, 'nope', 2026, P)).toBeUndefined();
   });
   it('owned: wear over the lifetime per group, interest on the average tied up, loss per job', () => {
-    // profile: 2 years × 2 uses = 4 uses, as in Bjørn's calculator. (150 / 2 + 75 × 0,05) / 2 + 150 × 0,01
-    expect(ownedPerUse(150, 'profile', P)).toBeCloseTo(40.875);
-    expect(fogaPartPerUse('43TX', 2022, P)).toBeCloseTo(40.875);
-    // coupling: 10 uses
-    expect(ownedPerUse(100, 'coupling', P)).toBeCloseTo((50 + 2.5) / 5 + 1);
+    // profile: 2 years × 7 uses = 14 uses (calibrated 7.11.2026). (150 / 2 + 75 × 0,05) / 7 + 150 × 0,01
+    expect(ownedPerUse(150, 'profile', P)).toBeCloseTo(12.75);
+    expect(fogaPartPerUse('43TX', 2022, P)).toBeCloseTo(12.75);
+    // coupling: 25 uses
+    expect(ownedPerUse(100, 'coupling', P)).toBeCloseTo((50 + 2.5) / 12.5 + 1);
     expect(fogaPartPerUse('92LL', 2022, P)).toBeUndefined();
     expect(fogaPartPerUse('nope', 2022, P)).toBeUndefined();
   });
   it('owned, without interest and loss: purchase over the uses in a lifetime', () => {
     const q = with_({ owned: { ...P.owned, interest: 0, lossPerUse: 0 } });
-    expect(ownedPerUse(150, 'profile', q)).toBeCloseTo(150 / 4);
-    expect(ownedPerUse(150, 'foot', q)).toBeCloseTo(150 / 10);
+    expect(ownedPerUse(150, 'profile', q)).toBeCloseTo(150 / 14);
+    expect(ownedPerUse(150, 'foot', q)).toBeCloseTo(150 / 25);
   });
   it('labour: person-minutes at the indexed hourly cost, overtime only on its share', () => {
     expect(hourlyCost(2022, P)).toBeCloseTo(391.4);

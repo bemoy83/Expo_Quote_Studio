@@ -85,6 +85,10 @@ samme indeks, så DG holder når selgeren gir rabatt (Bjørn 7.11.2026). Påslag
 
 ## Prisartikler fra motoren
 
+Pris på tilbudet (Bjørn 7.11.2026): alt i katalogen selges til fast stk-pris fra OMS. For dem gir motoren bare kost,
+DG og estimert tid i kalkylen. Motoren setter pris bare på det katalogen ikke dekker, tilpassede størrelser fra
+tegningen (sum-produkter, se [prismodell.md](prismodell.md)).
+
 Kalkylen bygger linjene av prisartikler (`src/pricing/data.ts`). En prisartikkel med oppskrift får kost og pris fra
 motoren (`src/cost/items.ts`): oppskriften sier hvilke Foga-deler (i listens enhet, meter eller stk) og egne innkjøp
 artikkelen består av, og artikkelens egne minutter per håndteringssteg er personminuttene.
@@ -107,7 +111,7 @@ eksempeltall til ekte tall finnes (7.11.2026). Motoren skal kunne få nye tall f
 | Tall | Verdi | Kilde |
 | --- | --- | --- |
 | Levetid, eid utstyr | 2 år | Bjørn |
-| Bruk per år: profiler og plater / koblinger, føtter og tilbehør | 2 / 5, altså 4 og 10 bruk i levetiden som i Bjørns kalkulator | eksempel |
+| Bruk per år: profiler og plater / koblinger, føtter og tilbehør | 7 / 12,5, altså 14 og 25 bruk i levetiden | kalibrert 7.11.2026 |
 | Rente på snittet av bundet kapital | 5 % per år | forslag |
 | Tap per jobb | 1 % av innkjøp | forslag |
 | Indirekte kost | 10 % av direkte kost | eksempel |
@@ -126,8 +130,29 @@ eksempeltall til ekte tall finnes (7.11.2026). Motoren skal kunne få nye tall f
 | Startkost trykk | 500 kr, 2022, per tilbud | Bjørn |
 | Administrasjon, transport | 20 personminutter hver, per tilbud | Bjørns kalkulator |
 
-Eksempel med eksempelprisen 150 kr per m profil, byttet hvert andre år og ute 2 ganger i året: 1 m koster
-(150 / 2 + 75 × 0,05) / 2 + 150 × 0,01 = 40,88 kr per bruk.
+Eksempel med eksempelprisen 150 kr per m profil, byttet hvert andre år og ute 7 ganger i året: 1 m koster
+(150 / 2 + 75 × 0,05) / 7 + 150 × 0,01 = 12,75 kr per bruk.
+
+## Kalibrering
+
+7.11.2026 mot tre stander Bjørn har priset, der utstilleren betaler vegger og takdragere. Prisen er det som selges i
+dag, og timene er persontimer for hele varereisen, montering og demontering inkludert:
+
+| Stand | Vegg / takdrager | Pris | Timer |
+| --- | --- | --- | --- |
+| Hjørne 4 × 3 | 7 / 7 m | 6 202 | 1,84 |
+| Rekke 5 × 3 | 11 / 5 m | 9 020 | 2,69 |
+| Hjørne 7 × 4 | 11 / 15 m | 10 230 | 3,03 |
+
+Prisene er nøyaktig 765 kr per meter vegg og 121 kr per meter takdrager, uten fast del per stand. Tiden er omtrent 14
+minutter per meter vegg og 2 per meter takdrager.
+
+Før kalibreringen ga appen, med ekte Foga-priser, 3,3 ganger prisen og 3,4 ganger tiden. Etter: tidene for vegg- og
+takdragerartiklene er skalert (0,34 og 0,15, `TIME_FACTOR` i `src/pricing/data.ts`, fordelingen på stegene beholdt), og
+bruk i levetiden er 14 for profiler og plater og 25 for koblinger (var 4 og 10 i Bjørns kalkulator). Da treffer appen
+alle tre innen 3 % på tid, og kosten gir DG 70 % på dagens pris (prisen er nå OMS-prisen, 765 kr per meter vegg og
+121 per meter takdrager). Tidene sjekkes i `src/calc/calc.test.ts`; prisene sjekkes utenfor repoet,
+fordi den ekte prislisten ikke publiseres.
 
 ## Åpent
 
