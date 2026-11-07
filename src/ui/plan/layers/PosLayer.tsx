@@ -30,14 +30,17 @@ const LAYER: Record<Positioned['kind'], Layer> = {
 }
 
 interface Chip {
-  pos: number
+  label: string
   at: Point
   layer: Layer
 }
 
-/** Where each number stands. */
-function chips(v: Variant, res: CalcResult, sc: PlanScale): Chip[] {
+/** Where each number stands. With `textileLabels` (the work order) a textile wall on a wall face shows its frame label
+ *  (T1, T2 …, as in the textile list and the wall drawing) instead of its quote number, and a free-standing one none:
+ *  its F label already stands on the run. */
+function chips(v: Variant, res: CalcResult, sc: PlanScale, textileLabels: boolean): Chip[] {
   const p = positionsOf(v, res, catalog)
+  const frameLabel = new Map(res.production.pieces.map((x) => [x.textileId, x.pos]))
   const px = (n: number) => sizePx(sc, n)
   const [ww, tw, band, printOff, textOff] = [wallWidth(sc), textileWidth(sc), printBand(sc), printOffset(sc), textileOffset(sc)]
   const half = px(CHIP) / 2 + px(GAP)
@@ -65,16 +68,18 @@ function chips(v: Variant, res: CalcResult, sc: PlanScale): Chip[] {
       case 'textile': {
         const t = v.textiles.find((x) => x.id === i.id)!
         const at = faceAt(t.wallId, sideOf(v, t), t.from + t.width / 2, textOff + tw / 2 + half)
-        if (at) out.push({ pos: i.pos, at, layer })
+        const label = textileLabels ? frameLabel.get(t.id) : String(i.pos)
+        if (at && label) out.push({ label, at, layer })
         break
       }
       case 'freeTextile': {
+        if (textileLabels) break
         const t = v.freeTextiles.find((x) => x.id === i.id)!
         const [nx, ny] = runNormal(t, 'a')
         // A quarter along on face A: clear of the T/F label in the middle of face B
         const o = tw / 2 + half
         const q = (a: number, b: number) => a + (b - a) / 4
-        out.push({ pos: i.pos, at: [q(t.from[0], t.to[0]) + nx * o, q(t.from[1], t.to[1]) + ny * o], layer })
+        out.push({ label: String(i.pos), at: [q(t.from[0], t.to[0]) + nx * o, q(t.from[1], t.to[1]) + ny * o], layer })
         break
       }
       case 'swap': {
@@ -90,7 +95,7 @@ function chips(v: Variant, res: CalcResult, sc: PlanScale): Chip[] {
         if (f.full) row(f.wallId, side, f.module, f.module + 1, i.pos, layer, off)
         else {
           const at = faceAt(f.wallId, side, foilCenter(rules, f), off)
-          if (at) out.push({ pos: i.pos, at, layer })
+          if (at) out.push({ label: String(i.pos), at, layer })
         }
         break
       }
@@ -100,12 +105,12 @@ function chips(v: Variant, res: CalcResult, sc: PlanScale): Chip[] {
         const w = wallOf(o.wallId)
         if (!w) break
         const at = faceAt(o.wallId, o.swing ?? defaultFace(v, w), o.module + 0.5, Math.min(0.45, ww / 2 + half + px(10)))
-        if (at) out.push({ pos: i.pos, at, layer })
+        if (at) out.push({ label: String(i.pos), at, layer })
         break
       }
       case 'object': {
         const o = v.objects.find((x) => x.id === i.id)!
-        out.push({ pos: i.pos, at: [o.x, o.y], layer })
+        out.push({ label: String(i.pos), at: [o.x, o.y], layer })
         break
       }
     }
@@ -114,24 +119,26 @@ function chips(v: Variant, res: CalcResult, sc: PlanScale): Chip[] {
     // The middle plate of the row (left of the middle when even), so the chip never sits on a post
     const mid = r.from + Math.floor((r.to - r.from - 1) / 2) + 0.5
     const at = faceAt(r.wallId, r.side, mid, r.off)
-    if (at) out.push({ pos: r.pos, at, layer: r.layer })
+    if (at) out.push({ label: String(r.pos), at, layer: r.layer })
   }
   return out
 }
 
 /** The numbers, as small ink-edged squares like the chips in the quote's Pos. column. */
-export function PosLayer({ v, res, dim }: { v: Variant; res: CalcResult; dim: (...layers: Layer[]) => number }) {
+export function PosLayer({ v, res, dim, textileLabels = false }: { v: Variant; res: CalcResult; dim: (...layers: Layer[]) => number; textileLabels?: boolean }) {
   const sc = usePlanScale()
   const px = (n: number) => sizePx(sc, n)
-  const all = chips(v, res, sc)
+  const all = chips(v, res, sc, textileLabels)
   const s = px(CHIP)
+  // Wider for each character past the first (T12, 10)
+  const w = (c: Chip) => s + px(5.5) * (c.label.length - 1)
   return (
     <g pointerEvents="none">
       {all.map((c, n) => (
         <g key={n} opacity={dim(c.layer)}>
-          <rect x={c.at[0] - s / 2} y={c.at[1] - s / 2} width={s} height={s} rx={px(2)} fill={SURFACE} stroke={INK} strokeWidth={linePx(sc, 0.8)} />
+          <rect x={c.at[0] - w(c) / 2} y={c.at[1] - s / 2} width={w(c)} height={s} rx={px(2)} fill={SURFACE} stroke={INK} strokeWidth={linePx(sc, 0.8)} />
           <text x={c.at[0]} y={c.at[1] + px(3.3)} textAnchor="middle" style={{ font: `500 ${px(9)}px var(--font-numeric)`, fill: INK }}>
-            {c.pos}
+            {c.label}
           </text>
         </g>
       ))}

@@ -85,6 +85,8 @@ interface Props {
   floorFull?: boolean
   /** Position numbers (the quote's and the work order's small plan; never on the drawing surface). */
   positions?: boolean
+  /** Work order: textile walls on a wall face show their frame label (T1 …) instead of the quote number. */
+  textileLabels?: boolean
   /** Why what the pointer aims at cannot be stored (or that it is already there), for the hint line; null when it can. */
   onHint?: (text: string | null) => void
   /** What an edit would store (App's onEdit without storing it) and its calc: the plan shows it dimmed before the click.
@@ -308,7 +310,7 @@ export function PlanView(p: Props) {
 
       {/* Dimension chains in millimetres: totals, placement rows, module chain of the selected wall */}
       {!p.mini && <DimLayer v={v} selection={selection} />}
-      {p.positions && <PosLayer v={v} res={res} dim={dim} />}
+      {p.positions && <PosLayer v={v} res={res} dim={dim} textileLabels={p.textileLabels} />}
 
       {/* Legend and drawing head in the front aisle: always on the documents; while drawing only with Velg, when no
           quick picks float over the bottom of the plan */}
