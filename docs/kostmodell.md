@@ -41,6 +41,10 @@ med annen kode, sier appen fra. Nye tall for kalibrering er en ny fil med ny ver
 }
 ```
 
+Engangsteppet rangerer leggeforslagene etter intern kost (materiale, teip og minutter, `parametere.carpet`), med
+arbeidet til montørens timekost for kostgrunnlagets år, samme sats som alt annet montøren gjør (Bjørn 7.11.2026; den
+egne satsen 650 kr/t er borte). Kunden betaler alltid lagte m².
+
 `tider` er personminutter per enhet og håndteringssteg per prisartikkel, og `oppskrifter` hva artikkelen er laget av;
 begge per prisartikkel-id (`src/pricing/items.ts`), og det filen ikke har for en artikkel, hentes fra eksempelet.
 `katalog` gjelder katalogprodukter uten oppskrift (møbler, gulv, folie, tjenester): kost som andel av salgsprisen og

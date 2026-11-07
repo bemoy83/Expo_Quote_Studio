@@ -15,7 +15,7 @@ import { closeRooms, editResult, ratioFor, roomsFrom, settle } from './edits'
 import { CatalogPage } from './catalog/CatalogPage'
 import { IconButton, Toast } from './controls'
 import { download } from './download'
-import { catalog, costBasis, getVersion, idx, place, plateColor, pricing, rules, subscribe } from './env'
+import { catalog, costBasis, getVersion, idx, place, plateColor, pricing, subscribe } from './env'
 import { hint, HINT_3D } from './hints'
 import { findMotif, motifLibrary, readMotif } from './motifs'
 import { NameTip } from './NameTip'
@@ -201,7 +201,7 @@ export default function App() {
   const fillWithPen = () => {
     if (brush?.kind !== 'floor') return
     const product = brush.product
-    onEdit((x) => fillFloor(x, product, idx.byArtnr.get(product)?.product.roll, rules.carpet))
+    onEdit((x) => fillFloor(x, product, idx.byArtnr.get(product)?.product.roll, pricing.carpet))
   }
   /** Bakrom 1 × 1 m with a door in a free corner; from the wall tool's quick picks and the panel. */
   const addRoom = () => {

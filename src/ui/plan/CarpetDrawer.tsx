@@ -11,7 +11,7 @@ import { CELL } from '../../domain/grid'
 import type { FloorTile, Variant } from '../../domain/types'
 import { jointColor } from '../colors'
 import { Button, Dim } from '../controls'
-import { idx, rules } from '../env'
+import { idx, pricing } from '../env'
 import { fmt, kr } from '../format'
 import { type PlanSelection } from './selection'
 import { DrawerHead } from './drawerParts'
@@ -29,7 +29,7 @@ interface Props {
 const nameOf = (a: string) => idx.byArtnr.get(a)?.variant.name.toLowerCase() ?? a
 const colorOf = (a: string) => idx.byArtnr.get(a)?.variant.color
 const rollOf = (a: string) => idx.byArtnr.get(a)?.product.roll ?? 2
-const wasteText = (m2: number) => (m2 > 0.005 ? `svinn ${fmt(m2, 1)} m² · ${kr(wasteKr(m2, rules.carpet))} kr` : 'uten svinn')
+const wasteText = (m2: number) => (m2 > 0.005 ? `svinn ${fmt(m2, 1)} m² · ${kr(wasteKr(m2, pricing.carpet))} kr` : 'uten svinn')
 
 export function CarpetDrawer(p: Props) {
   if (p.selection.fill) return <FillDrawer {...p} fill={p.selection.fill} />
@@ -42,7 +42,7 @@ function FillDrawer({ v, fill, onEdit, onClose }: Props & { fill: string }) {
   if (!own.length) return null
   const product = own[0].product
   const roll = rollOf(product)
-  const all = fillProposals(v, fill, roll, rules.carpet)
+  const all = fillProposals(v, fill, roll, pricing.carpet)
   const now = currentProposal(v, fill, all)
   const list = offered(all, 4, now)
   const laid = own.reduce((a, t) => a + t.w * t.h * CELL * CELL, 0)
@@ -73,7 +73,7 @@ function FillDrawer({ v, fill, onEdit, onClose }: Props & { fill: string }) {
       <div className="wd-view cp-view">
         <div className="cp-props">
           {list.map((x) => (
-            <button key={x.key} type="button" className="cp-prop" aria-pressed={x === now} onClick={() => x !== now && onEdit((y) => relayFill(y, fill, x.key, roll, rules.carpet))}>
+            <button key={x.key} type="button" className="cp-prop" aria-pressed={x === now} onClick={() => x !== now && onEdit((y) => relayFill(y, fill, x.key, roll, pricing.carpet))}>
               <Thumb p={x} color={colorOf(product)} />
               {x === all[0] && <span className="eyebrow">Lavest kost</span>}
               <span className="cp-prop-name">{x.name}</span>
