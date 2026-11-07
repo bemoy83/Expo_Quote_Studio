@@ -18,10 +18,10 @@ import type { FreeTextile, Point, TextileFill, Variant } from '../../domain/type
 import { fogaPart } from '../../foga/parts';
 import type { FootPlate, FreeFrameRecipe, SupportRule } from '../../foga/recipes';
 import type { InFrameParams } from '../../rules/rules';
+import { minSupports, spreadSupports, type Ends } from '../supports';
 import { bracePoints, fullHeight, printFileName, splitRail } from './common';
 
 export { bracePoints, splitRail };
-import { minSupports, spreadSupports, type Ends } from '../supports';
 
 export interface FreeFace {
   face: FaceKey;
@@ -88,14 +88,14 @@ export interface FreeFrame {
   /** 617 top and bottom at every free end and into every corner post; the splice connector (`spliceCode`) top and
    *  bottom in every rail splice. */
   connectors: { corner: number; splice: number };
-  /** Couplings to mount and dismount: the 617 and 609 connectors and both ends of every brace. */
+  /** Couplings to mount and dismount: the 617 and splice connectors (609 or 604) and both ends of every brace. */
   couplings: number;
 }
 
 const mm = (m: number) => Math.round(m * 1000);
 
 /**
- * Where the feet (each with a brace) stand along a run of `len` mm, measured from its `from` end. A corner post at an
+ * Where the feet stand along a run of `len` mm, measured from its `from` end. A corner post at an
  * end is a support there already. The fewest feet that keep at least `min` supports in all from `minFrom` and up (else
  * one in the middle), no two supports more than `maxGap` apart. A free end gets a foot right at the end; it is pulled
  * in, at most `maxEnd`, only where the gaps would otherwise be more than `maxGap`. The rest are spread evenly between

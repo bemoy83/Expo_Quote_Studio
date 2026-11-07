@@ -7,9 +7,8 @@ etter hvert når de er gode. Bakgrunn og stresstest: dokumentet «Tekstilvegg-ka
 appen kan hente».
 
 Koden: `src/cost/` (`model.ts` reglene, `params.ts` tallene, `prices.ts` og `example-list.ts` leverandørens prisliste,
-`basis.ts` kostgrunnlaget som fil),
-tester i `src/cost/*.test.ts`. Motoren kobles til kalkylen produkt for produkt: systemvegg og takdrager først
-(trinn 3, under).
+`basis.ts` kostgrunnlaget som fil, `items.ts` prisartiklene), tester i `src/cost/*.test.ts`. Motoren kobles til
+kalkylen produkt for produkt: i dag systemvegg, takdrager og tekstilvegg (under).
 
 ## Kostgrunnlaget
 
@@ -25,7 +24,7 @@ ny versjon, uten ny kode.
   "format": "kostgrunnlag", "versjon": 1,
   "kostversjon": "2026-11 A", "dato": "2026-11-07", "kilde": "Bjørn",
   "parametere": { "indirect": 0.1, "owned": { "interest": 0.05 } },
-  "ordrekost": [{ "id": "startkost-trykk", "name": "Startkost trykk", "cost": 500, "baseYear": 2022 }],
+  "ordrekost": [{ "id": "startkost-trykk", "name": "Startkost trykk", "cost": 400, "baseYear": 2022, "when": "trykk" }],
   "prislister": [{ "supplier": "Foga", "name": "Prislista A", "date": "2022-06", "currency": "SEK",
                    "items": [{ "artnr": "873 805 22", "name": "43TX", "group": "Fabric", "pack": 50, "unit": "m",
                                "price": 0, "broken": 0 }] }]
@@ -66,12 +65,15 @@ DG regnes på direkte kost, og kalkylen viser hva som er igjen etter indirekte k
 | 5 | Per ordre: startkost trykk, administrasjon, transport | fast, én gang per tilbud |
 | 6 | Høyde: over 3,0 m, der 5-trinns stige ikke rekker | lift per dag som egen kost, og monteringsminutter × faktor |
 
+Regel 2 (spesialkapp) og 6 (høyde) finnes i `model.ts` med tester, men kalkylen bruker dem ikke ennå: tekstilrammer
+kappes alltid til mål og har i stedet egen slitasje (gruppen `frame`, under), og appen tegner ikke over 3,0 m ennå.
+
 `timekost = timelønn med sosiale kostnader × lønnsindeks fra basisåret / fakturerbar andel`
 
 Personminutter: to montører i 3 minutter er 6 personminutter. Bemanningen er synlig, uten skjulte faktorer.
 
-Eid utstyr: slitasjen er levetiden, med levetid og bruk per år per artikkelgruppe (profiler, plater, koblinger, føtter,
-tilbehør). Renten regnes på snittet av det som er bundet, halve innkjøpet, fordi verdien går mot null over levetiden.
+Eid utstyr: slitasjen er levetiden, med levetid og bruk per år per artikkelgruppe (profiler, tekstilrammens profiler,
+plater, koblinger, føtter, tilbehør). Renten regnes på snittet av det som er bundet, halve innkjøpet, fordi verdien går mot null over levetiden.
 Svinn er bare det som går tapt eller ødelegges på én jobb. Lager er indirekte kost.
 
 Overtidstillegget betales på lønnen, ikke på sosiale kostnader, så det ganges med lønnsandelen av timekosten.
@@ -134,6 +136,7 @@ eksempeltall til ekte tall finnes (7.11.2026). Motoren skal kunne få nye tall f
 | --- | --- | --- |
 | Levetid, eid utstyr | 2 år | Bjørn |
 | Bruk per år: profiler og plater / koblinger, føtter og tilbehør | 7 / 12,5, altså 14 og 25 bruk i levetiden | kalibrert 7.11.2026 |
+| Bruk per år: tekstilrammens profiler (43TX, 92LTX, 90) | 2, altså 4 bruk i levetiden | Bjørns kalkulator, kalibrert 7.11.2026 |
 | Rente på snittet av bundet kapital | 5 % per år | forslag |
 | Tap per jobb | 1 % av innkjøp | forslag |
 | Indirekte kost | 10 % av direkte kost | eksempel |
@@ -149,7 +152,7 @@ eksempeltall til ekte tall finnes (7.11.2026). Motoren skal kunne få nye tall f
 | Spesialkapp: gjenbruk / svinn / kappetid | 25 % / 10 % / 5 personminutter | forslag |
 | Kjøpt til jobben: svinn | 5 % | forslag |
 | Høyde: grense / faktor / lift per dag | 3 000 mm / 1,25 / ikke kjent | Bjørn / forslag / ikke kjent |
-| Startkost trykk | 500 kr, 2022, per tilbud | Bjørn |
+| Startkost trykk | 400 kr, 2022, per tilbud med trykt tekstil | Bjørns kalkulator |
 | Administrasjon, transport | 20 personminutter hver, per tilbud | Bjørns kalkulator |
 
 Eksempel med eksempelprisen 150 kr per m profil, byttet hvert andre år og ute 7 ganger i året: 1 m koster

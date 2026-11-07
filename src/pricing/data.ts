@@ -1,7 +1,8 @@
 // The price items the calc builds lines from: name, unit, time per handling step, and cost and price. Items with a
-// recipe below (system wall and takdrager, kostmotor trinn 3) get cost from the cost engine and price from the DG
-// target (src/cost/items.ts, docs/kostmodell.md); the rest keep the example numbers here (Bjørn 31.10.2026: example
-// prices for now). Change numbers here or in the kostgrunnlag, never in calc code.
+// recipe below (system wall, takdrager and textile frame parts, textile and work) get cost from the cost engine and
+// price from the DG target (src/cost/items.ts, docs/kostmodell.md); the rest keep the example numbers here. The price
+// is only used by sum-priced products (textile walls); catalog products keep their OMS price and use the cost. Change
+// numbers here or in the kostgrunnlag, never in calc code.
 import { EXAMPLE_BASIS, type CostBasis } from '../cost/basis';
 import { basisYear, costItems, type ItemRecipe } from '../cost/items';
 import { orderCost } from '../cost/model';

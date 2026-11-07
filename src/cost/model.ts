@@ -7,8 +7,9 @@
 //   5 Per order               fixed, once per quote
 //   6 Height                  lift per day, and montering minutes above the limit × factor
 // Indirect cost (admin, premises, storage, vans) is one share of direct cost, its own line, never inside the rules.
-// Price from direct cost: cost / (1 − DG target). Cost and price follow the same index, so DG holds when a discount is
-// given (Bjørn 7.11.2026). The app owns this engine; the OMS only hands over fixed per-piece prices (Bjørn 7.11.2026).
+// Price for what the engine prices: direct cost × (1 + indirect) / (1 − DG target) (src/cost/items.ts). Cost and price
+// follow the same index, so DG holds when a discount is given. The app owns this engine; the OMS only hands over fixed
+// per-piece prices (Bjørn 7.11.2026). Rules 2 and 6 are here and tested, not yet used by the calc.
 import { FOGA_PARTS, type PartKind } from '../foga/parts';
 import type { CostParams, IndexSeries } from './params';
 import { FOGA, supplierItem, type SupplierList } from './prices';

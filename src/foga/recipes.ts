@@ -67,7 +67,7 @@ export interface FreeFrameRecipe {
   smallFoot: FootPlate;
   /** Longest top or bottom rail before it is spliced in its length (the frame stays one rectangle), mm. */
   maxRail: number;
-  /** Feet and braces: evenly spread, at least `min` supports (corner posts count) from `minFrom` mm and up, else
+  /** Feet: evenly spread, at least `min` supports (corner posts count) from `minFrom` mm and up, else
    *  one; the outer foot at most `maxEnd` in from a free end; supports at most `maxGap` apart, mm. */
   support: SupportRule;
 }
