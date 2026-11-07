@@ -269,7 +269,8 @@ romvegger som takdragerne ikke holder, også når takdragerne er på (`calc/wall
 
 ### Frittstående tekstilvegg (43TX) · X1, X5–X8, X11
 
-Bjørn 31.10.2026. En 43TX-ramme som står alene på fotplater, med tekstil på begge sider. Den er ikke en del av
+Bjørn 31.10.2026 og 7.11.2026. Frittstående er samme tekstilvegg som InFrame, montert på fotplater i stedet for på
+en systemvegg: samme 43TX-ramme, samme stag, skjøt og duk, men med tekstil på begge sider. Den er ikke en del av
 systemveggen: den lager ikke rom og kan ikke ha dør (tekstildør med overstykke kommer senere).
 
 - **Én tekstilvegg, én pensel** (Bjørn 31.10.2026): tekstilveggen er den samme, forskjellen er bare montering.
@@ -281,20 +282,22 @@ systemveggen: den lager ikke rom og kan ikke ha dør (tekstildør med overstykke
   tegnerutenett (domain/snapGrid.ts, båndvelgeren GridPicker) brukes av systemveggpenselen, som foreløpig bare har
   1 m (cc 1000); 25, 50 og 75 cm åpnes når Foga-oppskriften har delene for de cc-ene. Kan stå hvor som helst på standen, men ikke langs eller gjennom en systemvegg (helt inntil er lov). Ender den mot en systemvegg med tekstilramme på den siden, stopper den ved rammens front, 60 mm fra veggens senterlinje (X11).
 - Høyde **2540** (som systemveggen med føtter). Høye vegger kommer senere.
-- **Topp- og bunnskinne** i 43TX går hele rammen. Over **5000 mm** skjøtes de i like lange stykker med **609**
-  (871 037 92) i hver skjøt; rammen er fortsatt ett rektangel, ikke to rygg i rygg.
+- **Topp- og bunnskinne** i 43TX går hele rammen. Over **5000 mm** skjøtes de i like lange stykker; rammen er
+  fortsatt ett rektangel, ikke to rygg i rygg. Skjøten er 2 × **609** (871 037 92), eller 4 × **604** i sporet når
+  begge ender er holdt og profilen ikke kan tres (X6), med ett stag 150 mm fra hver side.
 - **Stående 43TX** i hver fri ende. **617** (871 045 92, kobling i kanal) i alle hjørner, også 43TX-hjørner på
   rammer på systemvegg, så det bare plukkes én type hjørnekobling.
 - **Hjørne**: to vegger som møtes ende mot ende i rett vinkel deler en **92LTX** hjørnestolpe (873 809 22), som
   erstatter begge veggenes stående 43TX der. Skinnene festes til stolpen med 617.
-- **Føtter og stag** på samme punkter: fotplate **740** (876 740 92, 400 × 400 × 5) og stående stag **90** med 600 i
-  hver ende. En 92LTX i hjørnet teller som støtte, som en fotplate, i begge retninger. Minst 2 støtter (hjørnestolper
+- **Stag** som i rammen på systemvegg: stående **90** med 600 i hver ende, maks 2000 mm mellom to stående, og ved
+  hver skjøt (X8). En fotplate har ikke stag (Bjørn 7.11.2026).
+- **Føtter**: fotplate **740** (876 740 92, 400 × 400 × 5) under bunnskinnen. En 92LTX i hjørnet teller som støtte, som en fotplate, i begge retninger. Minst 2 støtter (hjørnestolper
   medregnet) fra 1 m og oppover, ellers 1, og maks 3000 mm mellom to støtter. Foten står helst helt ute i en fri ende,
   og trekkes inn (maks 1000 mm) bare så langt som trengs for å holde 3000 mm mellom føttene. Resten fordeles jevnt
   over lengden (Bjørn 1.11.2026). En fot i en fri ende står i flukt med rammeenden, ikke forbi den (senter en halv
   plate inn, 200 mm for 740): 3 m gir føtter 200 mm inn, 4 m 500 mm inn, 6 m tre føtter, 200 mm inn og midt på. Vegger
   under 1 m står på én liten fotplate **730** (876 730 92, 250 × 300 × 5) midt på. Ut fra en hjørnestolpe står veggen
-  av seg selv opptil 1 m, uten fot og stag (Bjørn 3.11.2026); et hjørne på 1 × 1 trenger ingen.
+  av seg selv opptil 1 m, uten fot (Bjørn 3.11.2026); et hjørne på 1 × 1 trenger ingen.
 - Tegnes en strek i forlengelsen av en vegg, blir de én vegg. Vegger møtes bare ende mot ende i hjørner (ingen T).
 - **Tekstil på begge sider, alltid.** Hver side er trykt, hvit uten grafikk, eller kundens egen duk i samme
   størrelse (bare montering, ingen trykkfil).
@@ -356,7 +359,7 @@ Slik henger det sammen:
   Frittstående vegger som møtes får 92LTX med endelokk (7 mm) under og over; skinnene stopper ved benet. Hver
   92LTX lages for seg (snudd etter de to veggene), de gjærede bitene også, og frigjøres med resten av scenen.
 - Trinn 3: takdrager i 292, kappet mellom stolpene (senteravstand − 40), og stående stag i 90 midt i rammen mellom
-  skinnene (InFrame: jevnt fordelt, frittstående: ved hver fot). Stagene ligger mellom dukene og synes bare når
+  skinnene, maks 2 m fra hverandre og ved skjøtene, likt for begge monteringene. Stagene ligger mellom dukene og synes bare når
   tekstillaget er dempet.
 - Koblingene (600, 617, 609) vises ikke.
 - Justeringsfoten under stolpene (Bjørn 6.11.2026, bilde): settskrue M10 × 65 (896 232 95) med svart gummifot,
@@ -385,7 +388,7 @@ hjørne, skjøtekoblinger 609 og fotplater 740 og 730. Hver duk (T1, F1A, F1B �
 ### Fra fabric.js (fasit for trykk, se `src/calc/textile/inFrame.ts`)
 
 - B = spenn − sidefradrag (20) − luft (10); H = 2490 + 50 = 2540.
-- Tverrstag når B > maks stagavstand (1000).
+- Tverrstag når B > maks stagavstand. fabric.js hadde 1000; fra 7.11.2026 er det 2000 (X2).
 - Trykkfil = ramme + 2 × bleed.
 
 ### Avgrensninger
@@ -424,9 +427,10 @@ setter sammen Foga-stykklisten og kalkylelinjene som ikke er bygget av Foga-dele
 - Et salgsprodukt er en nominell bundle (vegg: 1 plate, 2 stolper, topp- og bunnskinne per meter). Plukklisten teller
   de faktiske artiklene fra tegningen, så naboelementer deler stolpe. Bundlen vises aldri i tilbudet.
 - Salgsprodukter i dag: vegg per meter og RAL, **dør med overstykke** og **forheng med overstykke** (en åpning er aldri
-  veggmeter), **takdrager per meter** (stolper som bare bærer takdrager ligger i prisen), og tekstilvegger som to
-  produkter (Bjørn 31.10.2026): **ramme** (leie) og **tekstil** (salg). Ramme på systemvegg per stk etter størrelse
-  B × H, frittstående ramme per løpemeter (43TX, 92LTX, stag, fotplater, montering per kobling). Tekstil per m² synlig
+  veggmeter), **takdrager per meter** (stolper som bare bærer takdrager ligger i prisen), og tekstilvegg, ett produkt
+  uansett montering (Bjørn 7.11.2026), som to linjer (Bjørn 31.10.2026): **ramme** (leie) og **tekstil** (salg). Rammen
+  (8000) selges per stk etter størrelse B × H og montering, på vegg (med 520) eller på fotplater (med fotplater og
+  halv 92LTX per hjørne). Tekstil per m² synlig
   flate: trykt, hvit eller kundens egen (bare montering), med montering per meter omkrets. To linjer i kalkylen, én
   linje i tilbudet. Gulv, møbler og resten er allerede salgsprodukter.
 - Der det ikke finnes en artikkel, plukkes bestanddelene direkte (tekstilvegg: 43TX, 617, 609, 520, 92LTX, 740, 730).

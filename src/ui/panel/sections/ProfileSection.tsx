@@ -19,7 +19,6 @@ export function ProfileSection({ v, res, brush, tool, pick, motifs, onUpload, on
   const file = useRef<HTMLInputElement>(null)
   const pen = penOn(tool, brush, 'textile')
   const textile = productOf(catalog.system.textile)?.variants[0]
-  const freeFrame = productOf(catalog.system.freeTextile)?.variants[0]
   const k = res.keyFigures
   return (
     <>
@@ -32,8 +31,8 @@ export function ProfileSection({ v, res, brush, tool, pick, motifs, onUpload, on
         title="Tekstilvegg"
         meta={
           <>
-            Tegnet på en systemvegg monteres den på veggen, ellers står den fritt på fotplater med tekstil på begge sider · leie av ramme{' '}
-            <span className="num">{kr(textile?.price ?? 0)} kr/m²</span> på vegg, <span className="num">{kr(freeFrame?.price ?? 0)} kr/lm</span> frittstående + tekstil per m²
+            Samme ramme: tegnet på en systemvegg monteres den på veggen, ellers står den på fotplater med tekstil på begge sider · leie av ramme{' '}
+            <span className="num">{kr(textile?.price ?? 0)} kr/m²</span> + tekstil per m²
           </>
         }
         result={

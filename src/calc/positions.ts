@@ -36,8 +36,7 @@ export function lineKey(catalog: Catalog, l: Pick<CalcLine, 'artnr' | 'meta' | '
   const sys = catalog.system;
   const parts = l.artnr.split('+');
   if (l.quote?.key) return `quote:${l.quote.key}`;
-  if (parts.includes(sys.freeTextile)) return 'quote:tekstil-fri';
-  if (parts.includes(sys.textile)) return 'quote:tekstil-vegg';
+  if (parts.includes(sys.textile)) return 'quote:tekstil';
   const opening = idx.byArtnr.get(l.artnr)?.product.opening;
   if (opening) return doorKey(l.artnr, opening === 'curtain' ? undefined : l.meta);
   return l.artnr;
@@ -54,8 +53,8 @@ export function positions(v: Variant, lines: CalcLine[], catalog: Catalog): Posi
   // Drawn things in drawing order, each with its article
   const drawn: Omit<Positioned, 'pos'>[] = [];
   const walls = new Set(v.walls.map((w) => w.id));
-  for (const t of v.textiles) if (walls.has(t.wallId)) drawn.push({ kind: 'textile', id: t.id, key: 'quote:tekstil-vegg' });
-  for (const t of v.freeTextiles) drawn.push({ kind: 'freeTextile', id: t.id, key: 'quote:tekstil-fri' });
+  for (const t of v.textiles) if (walls.has(t.wallId)) drawn.push({ kind: 'textile', id: t.id, key: 'quote:tekstil' });
+  for (const t of v.freeTextiles) drawn.push({ kind: 'freeTextile', id: t.id, key: 'quote:tekstil' });
   const hidden = hiddenPlates(v);
   const stand = new Set(v.walls.filter(isStandWall).map((w) => w.id));
   const mods = builtModules(v);

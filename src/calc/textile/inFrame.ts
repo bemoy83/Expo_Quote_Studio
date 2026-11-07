@@ -3,11 +3,15 @@
 //   Frame width  W = span − side deduction − air            (cc 1000 → 1000 − 20 − 10 = 970)
 //   Frame height H = system wall + feet = 2540, or the textile wall's own height when lower
 //   Print file   = frame + 2 × bleed;  file at `scale` %
-//   Cross braces when W passes the max brace distance; brace length = H − 2 × profile
+//   Upright braces at most `stag` apart; brace length = H − 2 × profile
 //   Profile lm   = 2W + 2H + braces
-// Byggeregler X2, X3, X9 (docs/byggeregler.md): the frame widths are the 43TX standard lengths, cc − 30.
+// The same frame as on foot plates (Bjørn 7.11.2026: one product, only the mounting differs): past maxRail (5000) the
+// top and bottom rail are spliced with 609 (the frame is put together before it goes on the wall, so there is room to
+// thread), with a brace 150 from each side of the splice.
+// Byggeregler X2, X3, X6, X9 (docs/byggeregler.md): the frame widths are the 43TX standard lengths, cc − 30.
+import { RECIPES, type FreeFrameRecipe } from '../../foga/recipes';
 import type { InFrameParams } from '../../rules/rules';
-import { fullHeight } from './common';
+import { bracePoints, fullHeight, splitRail } from './common';
 
 export interface FramePiece {
   /** Span along the wall, mm. */
@@ -26,7 +30,13 @@ export interface FramePiece {
   /** Print area including bleed, m². */
   area: number;
   profiles: { name: string; qty: number; length: number }[];
+  /** Top rail cut lengths, and the same again for the bottom rail: one piece unless spliced. */
+  railCuts: number[];
+  /** Splice connectors in all, top and bottom (609, one per rail and splice). */
+  splices: number;
   braces: { qty: number; length: number } | null;
+  /** Where the braces stand, mm from the frame's left edge. */
+  braceAt: number[];
   /** Aluminium profile including braces, m. */
   lm: number;
 }
@@ -34,12 +44,15 @@ export interface FramePiece {
 /** From each end of the span to the frame's edge, mm: the frame sits centred in its span (W = span − side − air). */
 export const frameInset = (s: InFrameParams) => (s.side + s.air) / 2;
 
-export function framePiece(spanMm: number, s: InFrameParams, heightMm?: number): FramePiece {
+export function framePiece(spanMm: number, s: InFrameParams, heightMm?: number, r: FreeFrameRecipe = RECIPES.freeFrame): FramePiece {
   const W = spanMm - s.side - s.air;
   const H = heightMm ?? fullHeight(s);
   const pw = W + 2 * s.bleed;
   const ph = H + 2 * s.bleed;
-  const n = Math.max(0, Math.ceil(W / s.stag - 1e-9) - 1);
+  const railCuts = splitRail(W, r.maxRail);
+  const at = railCuts.slice(0, -1).map((_, j) => railCuts.slice(0, j + 1).reduce((a, x) => a + x, 0));
+  const braceAt = bracePoints(W, at, s.stag, r.spliceBrace);
+  const n = braceAt.length;
   const k = s.scale / 100;
   const r1 = (v: number) => Math.round(v * k * 10) / 10;
   const braces = n ? { qty: n, length: Math.max(0, H - 2 * s.prof) } : null;
@@ -54,10 +67,13 @@ export function framePiece(spanMm: number, s: InFrameParams, heightMm?: number):
     fb: r1(s.bleed),
     area: (pw * ph) / 1e6,
     profiles: [
-      { name: 'Topp/bunn', qty: 2, length: W },
+      ...[...new Set(railCuts)].map((length) => ({ name: 'Topp/bunn', qty: 2 * railCuts.filter((x) => x === length).length, length })),
       { name: 'Side', qty: 2, length: H },
     ],
+    railCuts,
+    splices: 2 * at.length,
     braces,
+    braceAt,
     lm: (2 * W + 2 * H + (braces ? braces.qty * braces.length : 0)) / 1000,
   };
 }

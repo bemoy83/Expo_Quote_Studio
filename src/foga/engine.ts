@@ -162,44 +162,36 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   liftPiece('lift-post', lift.post, 'på stolpe, takdrager over tekstilvegg', s.beamLift?.posts ?? 0);
   liftPiece('lift-hook', lift.hook, 'ved krok, takdrager over tekstilvegg', s.beamLift?.hooks ?? 0);
 
-  // Tekstilvegger: 43TX cut mitred 2W + 2H (loose), 4 × 617, 2 × 520, and upright braces in 90 with a 600 in each
-  // end, stored pre-assembled; the brace line names the frames it belongs to
-  const frameCuts = new Map<number, number>();
+  // Tekstilvegger, one frame on a wall or on foot plates (Bjørn 7.11.2026): 43TX per cut length in one line, the top
+  // and bottom rail (spliced when long) and the sides (on a wall) or the uprights at free ends (on foot plates); a
+  // 92LTX post per corner, 617, 520 on a wall, a foot plate at every support, and the upright braces in 90 with a 600
+  // in each end, stored pre-assembled; the brace line names the frames it belongs to
+  const cuts = new Map<number, number>();
+  const addCut = (len: number, qty: number) => qty && cuts.set(len, (cuts.get(len) ?? 0) + qty);
   const braces = new Map<number, { qty: number; frames: string[] }>();
+  const addBraces = (pos: string, len: number, qty: number) => {
+    if (!qty) return;
+    const b = braces.get(len) ?? { qty: 0, frames: [] };
+    b.qty += qty;
+    b.frames.push(qty > 1 ? `${pos} (${qty})` : pos);
+    braces.set(len, b);
+  };
   for (const f of s.frames) {
-    frameCuts.set(f.W, (frameCuts.get(f.W) ?? 0) + 2);
-    frameCuts.set(f.H, (frameCuts.get(f.H) ?? 0) + 2);
-    if (!f.braces) continue;
-    const b = braces.get(f.braces.length) ?? { qty: 0, frames: [] };
-    b.qty += f.braces.qty;
-    b.frames.push(f.braces.qty > 1 ? `${f.pos} (${f.braces.qty})` : f.pos);
-    braces.set(f.braces.length, b);
+    for (const c of f.railCuts) addCut(c, 2);
+    addCut(f.H, 2);
+    if (f.braces) addBraces(f.pos, f.braces.length, f.braces.qty);
   }
-  if (frameCuts.size) {
-    const p = fogaPart(r.frame.profile);
-    const pieces = [...frameCuts.values()].reduce((a, b) => a + b, 0);
-    const lm = [...frameCuts].reduce((a, [len, qty]) => a + (len * qty) / 1000, 0);
-    put(BOM_GROUP.textile, p.code, { artnr: p.artnr, name: `${p.code} · ${p.name}, gjæret`, detail: mmList(frameCuts), preassembled: false, lm }, pieces);
-  }
-
-  // Frittstående: top and bottom rail (spliced with 609 when long) and the uprights at free ends in 43TX, a 92LTX post per
-  // corner, a foot plate at every support, and the upright braces (at every foot, between and by splices)
   const free = s.freeFrames ?? [];
-  const freeCuts = new Map<number, number>();
-  const addCut = (len: number, qty: number) => qty && freeCuts.set(len, (freeCuts.get(len) ?? 0) + qty);
   for (const f of free) {
     for (const c of f.railCuts) addCut(c, 2);
     addCut(f.H, f.uprights);
-    const b = braces.get(f.braceLength) ?? { qty: 0, frames: [] };
-    b.qty += f.braces;
-    b.frames.push(f.braces > 1 ? `${f.pos} (${f.braces})` : f.pos);
-    braces.set(f.braceLength, b);
+    addBraces(f.pos, f.braceLength, f.braces);
   }
-  if (freeCuts.size) {
-    const p = fogaPart(r.freeFrame.profile);
-    const pieces = [...freeCuts.values()].reduce((a, b) => a + b, 0);
-    const lm = [...freeCuts].reduce((a, [len, qty]) => a + (len * qty) / 1000, 0);
-    put(BOM_GROUP.textile, `${p.code}|fri`, { artnr: p.artnr, name: `${p.code} · ${p.name}, frittstående vegg`, detail: mmList(freeCuts), preassembled: false, lm }, pieces);
+  if (cuts.size) {
+    const p = fogaPart(r.frame.profile);
+    const pieces = [...cuts.values()].reduce((a, b) => a + b, 0);
+    const lm = [...cuts].reduce((a, [len, qty]) => a + (len * qty) / 1000, 0);
+    put(BOM_GROUP.textile, p.code, { artnr: p.artnr, name: `${p.code} · ${p.name}`, detail: mmList(cuts), preassembled: false, lm }, pieces);
   }
   if (s.cornerPosts?.qty) {
     const p = fogaPart(r.freeFrame.cornerPost);
@@ -210,7 +202,9 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   // Corner connectors: four per InFrame frame; top and bottom at a free end and into a corner post (same part, 617)
   part(BOM_GROUP.textile, r.frame.corner, 4 * s.frames.length);
   part(BOM_GROUP.textile, r.freeFrame.corner, free.reduce((a, f) => a + f.connectors.corner, 0));
-  for (const code of new Set(free.map((f) => f.splice))) part(BOM_GROUP.textile, code, free.filter((f) => f.splice === code).reduce((a, f) => a + f.connectors.splice, 0));
+  const splices = new Map<string, number>([[r.freeFrame.splice.thread, s.frames.reduce((a, f) => a + f.splices, 0)]]);
+  for (const f of free) splices.set(f.splice, (splices.get(f.splice) ?? 0) + f.connectors.splice);
+  for (const [code, qty] of splices) part(BOM_GROUP.textile, code, qty);
   part(BOM_GROUP.textile, r.frame.wallFixing.code, r.frame.wallFixing.perFrame * s.frames.length);
   for (const code of new Set(free.map((f) => f.foot))) part(BOM_GROUP.textile, code, free.filter((f) => f.foot === code).reduce((a, f) => a + f.supports, 0));
 

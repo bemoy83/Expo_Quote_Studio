@@ -18,7 +18,9 @@ import type { FreeTextile, Point, TextileFill, Variant } from '../../domain/type
 import { fogaPart } from '../../foga/parts';
 import type { FootPlate, FreeFrameRecipe, SupportRule } from '../../foga/recipes';
 import type { InFrameParams } from '../../rules/rules';
-import { fullHeight, printFileName } from './common';
+import { bracePoints, fullHeight, printFileName, splitRail } from './common';
+
+export { bracePoints, splitRail };
 import { minSupports, spreadSupports, type Ends } from '../supports';
 
 export interface FreeFace {
@@ -105,30 +107,6 @@ export function supportPoints(len: number, s: SupportRule, corners: Ends = { fro
   return spreadSupports(len, minSupports(len, s, corners), s, corners, pull).map(Math.round);
 }
 
-/** `len` in the fewest equal pieces of at most `max` (the last takes the rounding). */
-export function splitRail(len: number, max: number): number[] {
-  const k = Math.max(1, Math.ceil(len / max - 1e-9));
-  const piece = Math.round(len / k);
-  return Array.from({ length: k }, (_, i) => (i < k - 1 ? piece : len - piece * (k - 1)));
-}
-
-/**
- * Upright braces along a run of `len` mm: `spliceBrace` from each side of every splice, and more evenly between so no
- * two uprights (the frame ends, a corner post, a brace) are more than `maxBrace` apart. The feet do not get one.
- */
-export function bracePoints(len: number, splices: readonly number[], r: Pick<FreeFrameRecipe, 'maxBrace' | 'spliceBrace'>): number[] {
-  const fixed = splices.flatMap((x) => [x - r.spliceBrace, x + r.spliceBrace]).filter((x) => x > 0 && x < len);
-  const posts = [0, ...[...new Set(fixed.map(Math.round))].sort((a, b) => a - b), len];
-  const out: number[] = [];
-  for (let i = 0; i < posts.length - 1; i++) {
-    const [a, b] = [posts[i], posts[i + 1]];
-    const n = Math.max(0, Math.ceil((b - a) / r.maxBrace - 1e-9) - 1);
-    for (let k = 1; k <= n; k++) out.push(Math.round(a + ((b - a) * k) / (n + 1)));
-    if (i + 1 < posts.length - 1) out.push(b);
-  }
-  return out;
-}
-
 /** Which ends of each run are held (a corner post, a wall or a frame on a wall), so a splice there cannot be threaded. */
 export type HeldEnds = ReadonlyMap<string, { from: boolean; to: boolean }>;
 
@@ -193,7 +171,7 @@ export function freeFrames(
       };
     };
     const freeEnds = 2 - nCorners;
-    const braces = bracePoints(length, splices, r);
+    const braces = bracePoints(length, splices, s.stag, r.spliceBrace);
     const h = held.get(t.id);
     const bothHeld = (corner.from || !!h?.from) && (corner.to || !!h?.to);
     const spliceCode = bothHeld ? r.splice.slide.code : r.splice.thread;

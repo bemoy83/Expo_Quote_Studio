@@ -46,7 +46,8 @@ describe('position numbers', () => {
     const v = { ...textile.v, objects: furniture.v.objects }
     const r = calc(v, RULES, DEFAULT_CATALOG)
     const p = positions(v, r.groups.flatMap((g) => g.lines), DEFAULT_CATALOG)
-    expect(p.items.map((i) => `${i.pos} ${i.kind}`)).toEqual(['1 textile', '1 textile', '2 freeTextile', '2 freeTextile', '3 object', '4 object', '5 object'])
+    expect(p.items.map((i) => `${i.pos} ${i.kind}`)).toEqual(['1 textile', '1 textile', '1 freeTextile', '1 freeTextile', '2 object', '3 object', '4 object'])
+    // Textile on a wall and on foot plates is one product, one quote line, one number (Bjørn 7.11.2026)
     // Swaps before doors; two plates with the same colour are one article
     const arr = positions(find('01-hjorne').v, find('01-hjorne').r.groups.flatMap((g) => g.lines), DEFAULT_CATALOG)
     expect(arr.items.map((i) => `${i.pos} ${i.kind}`)).toEqual(['1 swap', '1 swap', '2 swap', '2 swap', '2 swap', '2 swap', '3 door'])
@@ -58,8 +59,8 @@ describe('position numbers', () => {
 
   it('a merged textile line on the quote goes by its quote key', () => {
     const sys = DEFAULT_CATALOG.system
-    expect(lineKey(DEFAULT_CATALOG, { artnr: `${sys.textile}+${Object.values(sys.textileFill)[0]}` })).toBe('quote:tekstil-vegg')
-    expect(lineKey(DEFAULT_CATALOG, { artnr: `${sys.freeTextile}+x` })).toBe('quote:tekstil-fri')
-    expect(lineKey(DEFAULT_CATALOG, { artnr: sys.textile, quote: { key: 'tekstil-vegg', name: '', lead: true } })).toBe('quote:tekstil-vegg')
+    // One product, on a wall or on foot plates (Bjørn 7.11.2026)
+    expect(lineKey(DEFAULT_CATALOG, { artnr: `${sys.textile}+${Object.values(sys.textileFill)[0]}` })).toBe('quote:tekstil')
+    expect(lineKey(DEFAULT_CATALOG, { artnr: sys.textile, quote: { key: 'tekstil', name: '', lead: true } })).toBe('quote:tekstil')
   })
 })

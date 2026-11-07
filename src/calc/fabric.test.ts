@@ -20,6 +20,12 @@ describe('InFrame frame piece', () => {
     expect(framePiece(4000, S).braces).toEqual({ qty: 1, length: 2460 });
     expect(framePiece(5000, S).braces).toEqual({ qty: 2, length: 2460 });
   });
+  it('past 5 m the rails are spliced with 609 and braced by the splice, as on foot plates (one product)', () => {
+    const p = framePiece(6000, S);
+    expect(p).toMatchObject({ W: 5970, railCuts: [2985, 2985], splices: 2, braces: { qty: 4, length: 2460 } });
+    expect(p.braceAt).toEqual([1418, 2835, 3135, 4553]);
+    expect(framePiece(4000, S)).toMatchObject({ railCuts: [3970], splices: 0, braceAt: [1985] });
+  });
   it('a lower textile wall uses its own height', () => {
     const p = framePiece(3000, S, 1500);
     expect(p).toMatchObject({ H: 1500, ph: 1540, braces: { qty: 1, length: 1420 } });
