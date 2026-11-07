@@ -44,6 +44,8 @@ export interface Field {
   rule?: number;
   /** In the kostgrunnlag, not used by the calc yet. */
   unused?: boolean;
+  /** A price in a supplier's list: which list and article. */
+  list?: { supplier: string; artnr: string };
   /** Writes `v` into a kostgrunnlag file (the shape serializeBasis writes), as the owner's number. */
   put: (file: Obj, v: number) => void;
 }
@@ -190,6 +192,7 @@ export function basisFields(b: CostBasis): Field[] {
           value: it.price,
           unit: `${list.currency}/${it.unit}`,
           rule: 1,
+          list: { supplier: list.supplier, artnr: it.artnr },
           put: (file, v) => putListPrice(file, b, list, it.artnr, v),
         },
         !example,
