@@ -7,7 +7,7 @@ import { positionsOf, type Positioned } from '../../../calc/positions'
 import { foilCenter } from '../../../domain/decor'
 import { defaultFace, faceNormal, sideOf } from '../../../domain/faces'
 import { pointAlong } from '../../../domain/grid'
-import { runNormal } from '../../../domain/textile/free'
+import { runNormal, type FaceKey } from '../../../domain/textile/free'
 import type { Point, Variant } from '../../../domain/types'
 import { builtModules } from '../../../domain/walls'
 import { INK, SURFACE } from '../../colors'
@@ -75,20 +75,15 @@ function chips(v: Variant, res: CalcResult, sc: PlanScale, textileLabels: boolea
       }
       case 'freeTextile': {
         const t = v.freeTextiles.find((x) => x.id === i.id)!
-        if (textileLabels) {
-          // The work order: each face's textile label (F1A, F1B), at the middle of that face, as the textiles are marked
-          const faces = freeFaces.get(t.id) ?? []
-          for (const f of faces) {
-            const [nx, ny] = runNormal(t, f.face)
-            const o = tw / 2 + half
-            out.push({ label: f.pos, at: [(t.from[0] + t.to[0]) / 2 + nx * o, (t.from[1] + t.to[1]) / 2 + ny * o], layer })
-          }
-          break
+        // At the middle of a face, like a textile wall's chip beside its wall face
+        const beside = (face: FaceKey): Point => {
+          const [nx, ny] = runNormal(t, face)
+          const o = tw / 2 + half
+          return [(t.from[0] + t.to[0]) / 2 + nx * o, (t.from[1] + t.to[1]) / 2 + ny * o]
         }
-        const [nx, ny] = runNormal(t, 'a')
-        // At the middle of face A, like a textile wall's number beside its wall face
-        const o = tw / 2 + half
-        out.push({ label: String(i.pos), at: [(t.from[0] + t.to[0]) / 2 + nx * o, (t.from[1] + t.to[1]) / 2 + ny * o], layer })
+        // The work order: each face's textile label (F1A, F1B), as the textiles are marked; the quote: the number on A
+        if (textileLabels) for (const f of freeFaces.get(t.id) ?? []) out.push({ label: f.pos, at: beside(f.face), layer })
+        else out.push({ label: String(i.pos), at: beside('a'), layer })
         break
       }
       case 'swap': {

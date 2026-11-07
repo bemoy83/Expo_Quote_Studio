@@ -109,7 +109,8 @@ Gjelder både InFrame (`v.textiles`) og frittstående (`res.production.free`):
 3. tverrstreker oppå fyllet: blekk 50 %, 3,2 px bred strek, `strokeDasharray` 0,5 px strek og 4 px luft. **Bare i
    full detalj.**
 
-Teksten ved frittstående vegg (`T1 · 3,00 m`) beholdes.
+Frittstående vegg har ingen egen tekst i planen (Bjørn 7.11.2026: ingen særbehandling). På arbeidsordren står
+merkelappene `F1A`/`F1B` på hver side, se A2.
 
 ### Print og dekal · `layers/TextileLayer.tsx` (folie) og `domain/print.ts`
 

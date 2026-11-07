@@ -37,7 +37,7 @@ export interface CalcLine {
   /** Who the line is invoiced to. Only stand walls and the takdrager that follow them can go to the organiser. */
   payer: Payer;
   /** Lines with the same key are one line on the quote, named `name`, with the quantity and unit of the `lead` line
-   *  (textile walls: frame and textile). */
+   *  (textile walls: frame and textile of one frame size). */
   quote?: { key: string; name: string; lead: boolean };
   /** Ids of the drawn things this line prices, where a drawn thing's article is not its product alone (textile walls:
    *  one quote line per frame size). Position numbers follow them (calc/positions.ts). */

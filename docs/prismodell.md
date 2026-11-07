@@ -105,8 +105,9 @@ hver artikkel og hvert produkt som egen størrelse, også når kronene er regnet
 - **Tilbudet** viser aldri kost, DB eller DG. Er et produkt dels leie og dels kjøp, får linjen en tekst til kunden,
   for eksempel «Leie av ramme, kjøp av tekstil».
 - **Flere linjer, én i tilbudet.** Tekstilvegger er to linjer i kalkylen, ramme (leie) og tekstil (salg), og én linje
-  i tilbudet med summen av begge (Bjørn 31.10.2026). Kunden kan ha duken fra før: da er tekstillinjen bare
-  montering.
+  i tilbudet med summen av begge (Bjørn 31.10.2026). Én tilbudslinje per rammestørrelse, «Tekstilvegg 3970 × 2540
+  mm», med egen pris (Bjørn 7.11.2026: like priser for ulike størrelser ser rart ut). Kunden kan ha duken fra før: da
+  er tekstillinjen bare montering.
 
 ## 6. Hva appen trenger fra OMS
 

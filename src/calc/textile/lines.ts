@@ -1,7 +1,7 @@
 // Textile walls on the quote: one product whatever it is mounted on (Bjørn 7.11.2026: the frame is the same, on a
 // system wall with 520 or on foot plates). The frame (rental) and the textile (sale) are two kinds of line here and one
-// line per frame size on the quote (`quote`): frames by size and mounting, then the textile by size and fill. What is built comes from
-// calc/production.ts.
+// line per frame size on the quote (`quote`), each with its own price: frames by size and mounting, then the textile
+// by size and fill. What is built comes from calc/production.ts.
 import { displayName } from '../../catalog/lookup';
 import type { TextileFill } from '../../domain/types';
 import { RECIPES } from '../../foga/recipes';
@@ -15,11 +15,11 @@ import type { FrameMount } from './common';
 /** One quote line per frame size: frame and textile of that size, with its own price (Bjørn 7.11.2026). */
 const quoteOf = (size: string, lead: boolean) => ({ key: `tekstil:${size}`, name: `Tekstilvegg ${size}`, lead });
 const sizeOf = (W: number, H: number) => `${W} × ${H} mm`;
+type Face = { W: number; H: number; pw: number; ph: number; fill: TextileFill };
 /**
- * Textile per m² of visible face, by fill. Printed and white: the textile incl. bleed; all: pressed in along the whole
+ * Textile of one frame size per m² of visible face, by fill. Printed and white: the textile incl. bleed; all: pressed in along the whole
  * perimeter. The customer's own textile is only mounted.
  */
-type Face = { W: number; H: number; pw: number; ph: number; fill: TextileFill };
 function textileLines(c: CalcContext, faces: Face[], size: string): CalcLine[] {
   return (['print', 'white', 'reuse'] as const).map((fill) => {
     const fs = faces.filter((f) => f.fill === fill);
