@@ -8,6 +8,7 @@ import {
   hourlyCost,
   indexFactor,
   labourCost,
+  margins,
   needsLift,
   orderCost,
   ownedPerUse,
@@ -47,17 +48,25 @@ describe('cost buckets', () => {
     expect(purchaseCost(FOGA, '87380522', 2022, with_({ rates: { NOK: 1, SEK: 0.9 }, freightShare: 0.1 }), { broken: true })).toBeCloseTo(195 * 0.9 * 1.1);
     expect(purchaseCost(FOGA, 'nope', 2026, P)).toBeUndefined();
   });
-  it('owned: replaced every second year, 10 uses a year', () => {
-    // (150 / 2 + 150 × 0,10) / 10
-    expect(ownedPerUse(150, P)).toBeCloseTo(9);
-    expect(fogaPartPerUse('43TX', 2022, P)).toBeCloseTo(9);
+  it('owned: wear over the lifetime per group, interest on the average tied up, loss per job', () => {
+    // profile: 2 years × 2 uses = 4 uses, as in Bjørn's calculator. (150 / 2 + 75 × 0,05) / 2 + 150 × 0,01
+    expect(ownedPerUse(150, 'profile', P)).toBeCloseTo(40.875);
+    expect(fogaPartPerUse('43TX', 2022, P)).toBeCloseTo(40.875);
+    // coupling: 10 uses
+    expect(ownedPerUse(100, 'coupling', P)).toBeCloseTo((50 + 2.5) / 5 + 1);
     expect(fogaPartPerUse('92LL', 2022, P)).toBeUndefined();
+    expect(fogaPartPerUse('nope', 2022, P)).toBeUndefined();
+  });
+  it('owned, without interest and loss: purchase over the uses in a lifetime', () => {
+    const q = with_({ owned: { ...P.owned, interest: 0, lossPerUse: 0 } });
+    expect(ownedPerUse(150, 'profile', q)).toBeCloseTo(150 / 4);
+    expect(ownedPerUse(150, 'foot', q)).toBeCloseTo(150 / 10);
   });
   it('labour: person-minutes at the indexed hourly cost, overtime only on its share', () => {
     expect(hourlyCost(2022, P)).toBeCloseTo(391.4);
     expect(labourCost(60, 2026, P)).toBeCloseTo(391.4 * indexFactor(P.labourIndex, 2022, 2026));
-    // half of 60 minutes on 100 % overtime
-    expect(labourCost(60, 2022, P, 0.5)).toBeCloseTo(391.4 * 1.5);
+    // half of 60 minutes on 100 % overtime, paid on the wage, 80 % of the rate
+    expect(labourCost(60, 2022, P, 0.5)).toBeCloseTo(391.4 * (1 + 0.5 * 0.8));
     expect(hourlyCost(2022, with_({ labour: { ...P.labour, billableShare: 0.8 } }))).toBeCloseTo(489.25);
   });
   it('special cut: the cut piece less expected reuse, plus the cut', () => {
@@ -79,6 +88,10 @@ describe('cost buckets', () => {
 });
 
 describe('price', () => {
+  it('kalkyle: DG on direct cost, indirect cost as its own line', () => {
+    expect(margins(40, 100, P)).toEqual({ direct: 40, price: 100, db: 60, dg: 0.6, indirect: 4, afterIndirect: 56 });
+    expect(margins(0, 0, P).dg).toBe(0);
+  });
   it('price from DG target, and markup as DG', () => {
     expect(priceAtDg(40, 0.6)).toBeCloseTo(100);
     expect(dgOfMarkup(3)).toBeCloseTo(0.75);

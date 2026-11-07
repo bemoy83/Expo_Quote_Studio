@@ -1,14 +1,15 @@
-// The cost engine: what a thing costs us, in NOK eks. mva., for the year asked for. Six kinds of cost, one rule each
-// (docs/kostmodell.md):
-//   1 Owned and rented out    (purchase / lifetime + purchase × (interest + damage) + storage) / uses per year
+// The cost engine: what a thing costs us directly, in NOK eks. mva., for the year asked for. Six kinds of direct cost,
+// one rule each (docs/kostmodell.md):
+//   1 Owned and rented out    (purchase / lifetime + purchase / 2 × interest) / uses per year + purchase × loss per use
 //   2 Special cut             material in the cut length × (1 + waste) × (1 − reuse) + cutting time
 //   3 Bought for the job      purchase × (1 + waste)
-//   4 Labour                  person-minutes × hourly cost / 60, overtime on the share that falls on overtime
+//   4 Labour                  person-minutes × hourly cost / 60, overtime surcharge on the wage part of its share
 //   5 Per order               fixed, once per quote
 //   6 Height                  lift per day, and montering minutes above the limit × factor
-// Price from cost: cost / (1 − DG target). Cost and price follow the same index, so DG holds when a discount is given
-// (Bjørn 7.11.2026). The app owns this engine; the OMS only hands over fixed per-piece prices (Bjørn 7.11.2026).
-import { FOGA_PARTS } from '../foga/parts';
+// Indirect cost (admin, premises, storage, vans) is one share of direct cost, its own line, never inside the rules.
+// Price from direct cost: cost / (1 − DG target). Cost and price follow the same index, so DG holds when a discount is
+// given (Bjørn 7.11.2026). The app owns this engine; the OMS only hands over fixed per-piece prices (Bjørn 7.11.2026).
+import { FOGA_PARTS, type PartKind } from '../foga/parts';
 import type { CostParams, IndexSeries } from './params';
 import { FOGA, supplierItem, type SupplierList } from './prices';
 
@@ -34,10 +35,12 @@ export function purchaseCost(list: SupplierList, artnr: string, year: number, p:
   return price * p.rates[list.currency] * indexFactor(p.materialIndex, yearOf(list.date), year) * (1 + p.freightShare);
 }
 
-/** 1 Owned equipment, cost of one use. */
-export function ownedPerUse(purchase: number, p: CostParams): number {
+/** 1 Owned equipment, cost of one use: wear over the lifetime, interest on the average tied up, and what is lost on
+ *  the job. */
+export function ownedPerUse(purchase: number, kind: PartKind, p: CostParams): number {
   const o = p.owned;
-  return (purchase / o.lifetimeYears + purchase * (o.interest + o.damage) + o.storagePerYear) / o.usesPerYear;
+  const g = o.groups[kind];
+  return (purchase / g.lifetimeYears + (purchase / 2) * o.interest) / g.usesPerYear + purchase * o.lossPerUse;
 }
 
 /** 4 Labour: the hourly cost in `year`, before overtime. */
@@ -45,9 +48,11 @@ export function hourlyCost(year: number, p: CostParams): number {
   return (p.labour.baseRate * indexFactor(p.labourIndex, p.labour.baseYear, year)) / p.labour.billableShare;
 }
 
-/** 4 Labour: person-minutes (2 montører × 3 min = 6), with `overtime` the share of them that falls on overtime. */
+/** 4 Labour: person-minutes (2 montører × 3 min = 6), with `overtime` the share of them that falls on overtime. The
+ *  surcharge is paid on the wage, not on the social costs. */
 export function labourCost(personMinutes: number, year: number, p: CostParams, overtime = 0): number {
-  return (personMinutes / 60) * hourlyCost(year, p) * (1 + overtime * p.labour.overtimeSurcharge);
+  const l = p.labour;
+  return (personMinutes / 60) * hourlyCost(year, p) * (1 + overtime * l.overtimeSurcharge * l.wageShare);
 }
 
 /** 2 A profile cut to a length outside the range: the cut piece, less what is expected to be used again, and the cut. */
@@ -82,7 +87,17 @@ export const heightMinutes = (minutes: number, topMm: number, p: CostParams) => 
 /** 6 Height: a lift is needed when anything reaches above the limit. */
 export const needsLift = (topMm: number, p: CostParams) => topMm > p.height.limit;
 
-/** Suggested price from cost and a DG target (0,6 = 60 %). */
+/** Indirect cost on top of a direct cost: its own line in the kalkyle. */
+export const indirectCost = (direct: number, p: CostParams) => direct * p.indirect;
+
+/** The kalkyle for a price: DB and DG on direct cost, then indirect cost and what is left after it. */
+export function margins(direct: number, price: number, p: CostParams) {
+  const db = price - direct;
+  const indirect = indirectCost(direct, p);
+  return { direct, price, db, dg: price ? db / price : 0, indirect, afterIndirect: db - indirect };
+}
+
+/** Suggested price from direct cost and a DG target (0,6 = 60 %). */
 export function priceAtDg(cost: number, dg: number): number {
   if (dg >= 1) throw new Error(`DG target must be below 100 %, got ${dg}`);
   return cost / (1 - dg);
@@ -97,6 +112,7 @@ export const dgOfMarkup = (markup: number) => markup / (1 + markup);
  */
 export function fogaPartPerUse(code: string, year: number, p: CostParams, list: SupplierList = FOGA): number | undefined {
   const part = FOGA_PARTS.find((x) => x.code === code);
-  const buy = part && purchaseCost(list, part.artnr, year, p);
-  return buy === undefined ? undefined : ownedPerUse(buy, p);
+  if (!part) return undefined;
+  const buy = purchaseCost(list, part.artnr, year, p);
+  return buy === undefined ? undefined : ownedPerUse(buy, part.kind, p);
 }

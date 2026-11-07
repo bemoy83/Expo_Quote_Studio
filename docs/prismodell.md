@@ -22,23 +22,22 @@ Alle tall i appen i dag er eksempeltall (`src/pricing/data.ts`, og kost i `src/c
 Der det ikke finnes en artikkel, plukkes bestanddelene direkte (tekstilvegg: 43TX, 617, 609, 520, 92LTX, 740, 730). De får da kost og pris
 som en artikkel.
 
-## 2. Kostpris per bestanddel (nivå 3), i OMS
+## 2. Kost per bestanddel (nivå 3), fra kostmotoren
 
-- Kostpris er **per enhet** og er ulik fra del til del: profiler per meter, plater og trykk per m², resten per stk.
-- En profil kappet til en **standardlengde** som gjenbrukes i sortimentet koster bare den kappede lengden.
-- En profil tilpasset et **mål utenfor sortimentet** (på forespørsel) trenger en egen pris eller et påslag.
-  Ikke bygget ennå; se åpne spørsmål.
-- Kostgrunnlaget er ett av to:
-  - **Kjøp**: kjøpt inn til jobben (trykk, folie, innleid tjeneste). Hele prisen er kost.
-  - **Eie**: eid og gjenbrukt (profiler, plater, møbler). Anbefalt formel:
-    `kost per bruk = (innkjøp / levetid i år + lagerkost per år) / antall bruk per år`.
-    Uten lagerkost er dette det samme som innkjøp / totalt antall bruk.
+Kost regnes i appens kostmotor, og reglene står i [kostmodell.md](kostmodell.md). Kort fortalt:
 
-## 3. Artikkel (nivå 2), i OMS
+- Kost er **direkte kost per enhet**: profiler per meter, plater og trykk per m², resten per stk. Indirekte kost er ett
+  påslag i prosent, vist som egen linje i kalkylen.
+- **Eie** (profiler, plater, koblinger): innkjøp fordelt på levetid og bruk per år per artikkelgruppe, rente og tap per
+  jobb. **Kjøp** (trykk, folie): innkjøp med svinn.
+- En profil kappet til en **standardlengde** koster bare den kappede lengden. En profil kappet til et **mål utenfor
+  sortimentet** er spesialkapp med egen regel (byggeregel X9).
+
+## 3. Artikkel (nivå 2)
 
 `kost artikkel = sum av bestanddeler × mengde + håndtering`
 
-`håndtering = sum av tid per steg × timepris montør`
+`håndtering = personminutter per steg × timekost`, regnet i kostmotoren.
 
 Stegene er **plukk, vask, transport og forhåndsmontering**. Ferdigmonterte enheter (stolpe med fot, skinner og
 takdrager med koblinger) lagres montert, så forhåndsmontering per bruk er normalt null.
@@ -55,7 +54,7 @@ eget utstyr (henge en hylle fra IKEA på veggen). I appen heter den «Arbeidstim
 
 ### Prisstrategi per produkt
 - **Sum** (standard for alt som bygges): prisen er summen av det som faktisk bygges, altså artikler, bestanddeler
-  plukket direkte og montering, hver med ferdig pris fra OMS.
+  plukket direkte og montering, hver med kost fra kostmotoren og pris fra DG-målet.
 - **Fast**: produktet har én pris per enhet fra OMS. Kalkylen viser likevel kost og DG.
 
 Med sum følger prisen tegningen. Stolper som deles mellom naboer telles én gang, en tekstilramme prises etter sin
@@ -66,9 +65,9 @@ prises hvert element frittstående med to stolper. Kanskje skal vegger bare kunn
 plantegningen åpnes for kunden. Mangler en artikkelpris, faller linjen tilbake til produktets egen pris og kalkylen viser at kosten mangler.
 
 ### Veiledende pris
-OMS setter pris per artikkel. Anbefalt modell:
+Appen foreslår pris fra direkte kost og DG-mål. Fast pris per stk kommer fra OMS.
 
-`veiledende pris = kost / (1 − DG-mål)`
+`veiledende pris = direkte kost / (1 − DG-mål)`
 
 - Mål for dekningsgrad (DG) settes **per hovedgruppe** og kan overstyres **per produkt**. Et Foga-produkt som
   prosjekteres og bygges kan ha et annet mål enn en stol som kjøpes inn, lagres og flyttes.
@@ -76,14 +75,14 @@ OMS setter pris per artikkel. Anbefalt modell:
 
 ### Tid per håndteringssteg
 Tid lagres i minutter per steg: **plukk, vask, transport, forhåndsmontering, montering og demontering**. Demontering har
-egen tid (Bjørn 31.10.2026). Tid er både kost (minutter × timepris, regnet i OMS) og plan på arbeidsordren, så den følger
+egen tid (Bjørn 31.10.2026). Tid er både kost (personminutter × timekost, regnet i kostmotoren) og plan på arbeidsordren, så den følger
 hver artikkel og hvert produkt som egen størrelse, også når kronene er regnet ut på forhånd. I appen er det `time` på
 `PriceItem` (sum-produkter) og på produktet (faste produkter).
 
 ## 5. Kalkyle og tilbud
 
 - **Kalkylen** (internt) viser per linje: pris, kost, DG og strategi (sum eller fast). Den viser også DG per gruppe,
-  og kost, DB og DG for hele standen. Linjer uten kost står uten margin og telles opp. Selgeren trenger margin fordi
+  og kost, DB og DG for hele standen, og indirekte kost som egen linje med det som er igjen etter den. Linjer uten kost står uten margin og telles opp. Selgeren trenger margin fordi
   det kan bli gitt rabatt.
 - **Gyldighet**: tilbudet gjelder 30 dager fra det sendes, men aldri lenger enn 14 dager før montering
   (`rules.quote`). Datoene for montering, åpning og demontering ligger på prosjektet. De er plassholdere i appen og
@@ -109,7 +108,7 @@ hver artikkel og hvert produkt som egen størrelse, også når kronene er regnet
 | Produkter, varianter, grupper | Salgsprodukt | Panel, kalkyle, tilbud, plukkliste |
 | Strategi (sum eller fast) | Salgsprodukt | Hvordan linjen prises |
 | Pris og kost per enhet | Salgsprodukt (fast) | Pris og margin |
-| Pris, kost, timer og leie/salg per enhet | Artikkel, bestanddel plukket direkte, monteringsledd | Sum-produkter |
+| Leie/salg per enhet (kost og tid regner appen) | Artikkel, bestanddel plukket direkte, monteringsledd | Sum-produkter |
 | Kundetekst ved leie og kjøp | Salgsprodukt | Tilbudet |
 | Hvem betaler standveggene, arrangørens farge | Prosjekt (messe) | Fakturamottaker, platebytte |
 
@@ -131,10 +130,10 @@ dokumentet «Expo Quote Studio i OMS: hele modellen».
   også til plukklisten. Ikke noe vi bygger nå.
 - **Lagerstatus** vises mens det tegnes, men kommer senere fra OMS og følger prosjektet.
 - **Gyldighet**: prisen låses når tilbudet sendes og gjelder 30 dager. Tiden igjen til prosjektet styrer også.
-- **Spesialmål**: fast påslag per kapp, til vi lager en motor som regner det selv. Motoren kommer i et eget løp
-  senere, sammen med disker, podier og snekkervegger.
+- **Spesialmål**: fast påslag per kapp, til motoren regner det selv. Endret 7.11.2026: kostmotoren har egen regel for
+  spesialkapp (kostmodell.md).
 - **DG-mål**: eksempeltallene brukes til ekte tall finnes.
-- **Lagerkost** i eie-formelen er per enhet og år.
+- **Lagerkost** i eie-formelen er per enhet og år. Endret 7.11.2026: lager er indirekte kost, i påslaget.
 - **Tid**: demontering har egen tid ved siden av montering. Montørene rapporterer faktisk tid per produktgruppe, og
   etterkalkylen i OMS forbedrer tidene.
 - **Takdrager** i standardlengder 1–6 m og **støttestag** per meter stemmer. 0,5 m takdrager finnes som særtilfelle,
