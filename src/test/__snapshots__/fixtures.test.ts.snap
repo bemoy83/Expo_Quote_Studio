@@ -5781,13 +5781,13 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         {
           "artnr": "8000",
           "cost": 979.5182,
-          "dg": 0.7234561829474873,
+          "dg": 0.7485836242299795,
           "foga": true,
           "group": "prof.tekstil",
           "name": "Tekstilramme, leie, 3970 × 2540 mm, på vegg",
           "payer": "utstiller",
           "placeholder": false,
-          "price": 3542,
+          "price": 3896,
           "qty": 1,
           "quote": {
             "key": "tekstil",
@@ -5795,7 +5795,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
             "name": "Tekstilvegg",
           },
           "strategy": "sum",
-          "sum": 3542,
+          "sum": 3896,
           "time": {
             "demontering": 6,
             "montering": 12,
@@ -5809,13 +5809,13 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         {
           "artnr": "8000",
           "cost": 660.6179999999999,
-          "dg": 0.7197208315655494,
+          "dg": 0.7451319444444444,
           "foga": true,
           "group": "prof.tekstil",
           "name": "Tekstilramme, leie, 1970 × 2540 mm, på vegg",
           "payer": "utstiller",
           "placeholder": false,
-          "price": 2357,
+          "price": 2592,
           "qty": 1,
           "quote": {
             "key": "tekstil",
@@ -5823,7 +5823,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
             "name": "Tekstilvegg",
           },
           "strategy": "sum",
-          "sum": 2357,
+          "sum": 2592,
           "time": {
             "demontering": 4,
             "montering": 8,
@@ -5837,13 +5837,13 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         {
           "artnr": "8000",
           "cost": 808.5194100000001,
-          "dg": 0.7171030755773269,
+          "dg": 0.7428373377862596,
           "foga": true,
           "group": "prof.tekstil",
           "name": "Tekstilramme, leie, 2500 × 2540 mm, på fotplater",
           "payer": "utstiller",
           "placeholder": false,
-          "price": 2858,
+          "price": 3144,
           "qty": 1,
           "quote": {
             "key": "tekstil",
@@ -5851,7 +5851,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
             "name": "Tekstilvegg",
           },
           "strategy": "sum",
-          "sum": 2858,
+          "sum": 3144,
           "time": {
             "demontering": 6,
             "montering": 12,
@@ -5865,13 +5865,13 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         {
           "artnr": "8000",
           "cost": 597.41921,
-          "dg": 0.7160555085551331,
+          "dg": 0.7418240233362143,
           "foga": true,
           "group": "prof.tekstil",
           "name": "Tekstilramme, leie, 1500 × 2540 mm, på fotplater",
           "payer": "utstiller",
           "placeholder": false,
-          "price": 2104,
+          "price": 2314,
           "qty": 1,
           "quote": {
             "key": "tekstil",
@@ -5879,7 +5879,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
             "name": "Tekstilvegg",
           },
           "strategy": "sum",
-          "sum": 2104,
+          "sum": 2314,
           "time": {
             "demontering": 4,
             "montering": 8,
@@ -5893,14 +5893,14 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         {
           "artnr": "8040",
           "cost": 5530.723,
-          "dg": 0.36598998097072255,
+          "dg": 0.42314392398594036,
           "foga": true,
           "group": "prof.tekstil",
           "meta": "3 duker",
           "name": "Tekstil med trykk",
           "payer": "utstiller",
           "placeholder": false,
-          "price": 434,
+          "price": 477,
           "qty": 20.1,
           "quote": {
             "key": "tekstil",
@@ -5908,7 +5908,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
             "name": "Tekstilvegg",
           },
           "strategy": "sum",
-          "sum": 8723.400000000001,
+          "sum": 9587.7,
           "terms": "Kjøp av tekstil, montering inkludert",
           "time": {
             "demontering": 62.199999999999996,
@@ -5920,14 +5920,14 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         {
           "artnr": "8041",
           "cost": 2226.0198,
-          "dg": 0.4188544799498747,
+          "dg": 0.4722570412517781,
           "foga": true,
           "group": "prof.tekstil",
           "meta": "2 duker",
           "name": "Tekstil hvit",
           "payer": "utstiller",
           "placeholder": false,
-          "price": 336,
+          "price": 370,
           "qty": 11.4,
           "quote": {
             "key": "tekstil",
@@ -5935,7 +5935,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
             "name": "Tekstilvegg",
           },
           "strategy": "sum",
-          "sum": 3830.4,
+          "sum": 4218,
           "terms": "Kjøp av tekstil, montering inkludert",
           "time": {
             "demontering": 38.28,
@@ -5947,14 +5947,14 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         {
           "artnr": "8042",
           "cost": 419.15439999999995,
-          "dg": 0.5558864166136894,
+          "dg": 0.5959568151147099,
           "foga": true,
           "group": "prof.tekstil",
           "meta": "1 duk",
           "name": "Montering av kundens tekstil",
           "payer": "utstiller",
           "placeholder": false,
-          "price": 242,
+          "price": 266,
           "qty": 3.9,
           "quote": {
             "key": "tekstil",
@@ -5962,7 +5962,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
             "name": "Tekstilvegg",
           },
           "strategy": "sum",
-          "sum": 943.8,
+          "sum": 1037.3999999999999,
           "time": {
             "demontering": 16.24,
             "montering": 32.48,
@@ -5972,7 +5972,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         },
       ],
       "name": "Profilering",
-      "sum": 24358.600000000002,
+      "sum": 26789.100000000002,
     },
   ],
   "keyFigures": {
@@ -6022,8 +6022,8 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
   },
   "margin": {
     "cost": 12115.850622565333,
-    "db": 12422.74937743467,
-    "dg": 0.5062533876192883,
+    "db": 14853.24937743467,
+    "dg": 0.5507506508350174,
     "order": [
       {
         "cost": 527.5077279999999,
@@ -6041,7 +6041,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         "name": "Varelevering ut og inn",
       },
     ],
-    "sum": 24538.600000000002,
+    "sum": 26969.100000000002,
     "unknown": 0,
   },
   "organiser": {
@@ -6384,7 +6384,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
       },
     ],
   },
-  "sum": 24538.600000000002,
+  "sum": 26969.100000000002,
   "wallSupports": [],
 }
 `;
@@ -6893,18 +6893,18 @@ exports[`08-tekstil.json > variant A > quote lines 1`] = `
       {
         "artnr": "8000+8000+8000+8000+8040+8041+8042",
         "cost": 11221.97202,
-        "dg": 0.5393014368641876,
+        "dg": 0.5810993269650717,
         "foga": true,
         "group": "prof.tekstil",
         "meta": undefined,
         "name": "Tekstilvegg",
         "payer": "utstiller",
         "placeholder": false,
-        "price": 6089.650000000001,
+        "price": 6697.275000000001,
         "qty": 4,
         "quote": undefined,
         "strategy": "sum",
-        "sum": 24358.600000000002,
+        "sum": 26789.100000000002,
         "terms": "Leie av ramme, kjøp av tekstil",
         "time": {
           "demontering": 6,
@@ -6918,7 +6918,7 @@ exports[`08-tekstil.json > variant A > quote lines 1`] = `
       },
     ],
     "name": "Profilering",
-    "sum": 24358.600000000002,
+    "sum": 26789.100000000002,
   },
 ]
 `;

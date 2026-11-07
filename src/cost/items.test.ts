@@ -18,12 +18,13 @@ describe('price items from the cost engine', () => {
     expect(c.material).toBeCloseTo(material);
     expect(c.labour).toBeCloseTo(labourCost(6, year, P));
     expect(c.item.cost).toBeCloseTo(material + c.labour, 2);
-    expect(c.item.price).toBeCloseTo((material + c.labour) / (1 - 0.75), 1);
+    // Indirect cost (10 %) on top, then the DG target
+    expect(c.item.price).toBeCloseTo(((material + c.labour) * 1.1) / (1 - 0.75), 1);
   });
   it('work only: labour at the arbeid DG', () => {
     const c = costItem(base, { dg: 'arbeid' }, B);
     expect(c.item.cost).toBeCloseTo(labourCost(6, year, P), 2);
-    expect((c.item.price - c.item.cost) / c.item.price).toBeCloseTo(1.25 / 2.25, 3);
+    expect(c.item.price).toBeCloseTo((c.item.cost * 1.1) / (1 - 1.25 / 2.25), 1);
   });
   it('a part the kostgrunnlag has no price for keeps the example numbers, and says which', () => {
     const c = costItem(base, { parts: [['92LL', 1]], own: [['NOPE', 1, 'plate']], dg: 'utleie' }, B);

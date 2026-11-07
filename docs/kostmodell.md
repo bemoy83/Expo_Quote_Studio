@@ -79,8 +79,10 @@ Lønnsindeksen er egen, fordi lønn følger tariff og ikke materialpriser.
 
 ## Pris
 
-`veiledende pris = direkte kost / (1 − DG-mål)`, med DG-mål per gruppe (se [prismodell.md](prismodell.md)). Kost og pris følger
-samme indeks, så DG holder når selgeren gir rabatt (Bjørn 7.11.2026). Påslag gjøres om til DG med
+`veiledende pris = direkte kost × (1 + indirekte) / (1 − DG-mål)`, med DG-mål per gruppe (se [prismodell.md](prismodell.md)). Kost og pris følger
+samme indeks, så DG holder når selgeren gir rabatt (Bjørn 7.11.2026). Den indirekte kosten (10 %, administrasjon) ligger
+inne i prisen på det motoren priser, ikke som eget gebyr på tilbudet: katalogen er regnet slik, kalkulatoren uten fast
+del pluss 10 % (Bjørn 7.11.2026). Katalogvarer med OMS-pris får ikke påslaget, de har det allerede. Påslag gjøres om til DG med
 `DG = påslag / (1 + påslag)`: 300 % er 75 %, 30 % er 23 %.
 
 ## Prisartikler fra motoren
@@ -93,7 +95,7 @@ Kalkylen bygger linjene av prisartikler (`src/pricing/data.ts`). En prisartikkel
 motoren (`src/cost/items.ts`): oppskriften sier hvilke Foga-deler (i listens enhet, meter eller stk) og egne innkjøp
 artikkelen består av, og artikkelens egne minutter per håndteringssteg er personminuttene.
 
-`direkte kost = sum av deler × kost per bruk + personminutter / 60 × timekost`, `pris = direkte kost / (1 − DG-mål)`
+`direkte kost = sum av deler × kost per bruk + personminutter / 60 × timekost`, `pris = direkte kost × (1 + indirekte) / (1 − DG-mål)`
 
 Kosten regnes for året i kostgrunnlagets dato, så samme kostgrunnlag gir samme priser; nytt år er ny versjon. Mangler
 kostgrunnlaget pris på en del, beholder artikkelen eksempeltallene.
