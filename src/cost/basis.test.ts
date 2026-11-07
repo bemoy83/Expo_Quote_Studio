@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { basisLabel, basisRef, EXAMPLE_BASIS, parseBasis, serializeBasis, supplierList, usesExample } from './basis';
+import { basisLabel, basisRef, basisTemplate, EXAMPLE_BASIS, parseBasis, sameBasis, serializeBasis, supplierList, usesExample } from './basis';
 import { EXAMPLE_LIST } from './example-list';
 import { EXAMPLE_OWN_LIST } from './own-list';
 import { DEFAULT_COST_PARAMS as P, ORDER_COSTS } from './params';
@@ -19,8 +19,9 @@ describe('kostgrunnlag', () => {
     const r = parseBasis(serializeBasis(b));
     expect(r.ok && r.basis).toEqual(b);
     expect(r.ok && usesExample(r.basis)).toBe(false);
-    expect(r.ok && basisRef(r.basis)).toEqual({ version: '2026-11 A', date: '2026-11-07', example: false });
+    expect(r.ok && basisRef(r.basis, 'a3f9')).toEqual({ version: '2026-11 A', date: '2026-11-07', example: false, code: 'a3f9' });
     expect(r.ok && basisLabel(r.basis)).toBe('2026-11 A, 7.11.2026');
+    expect(r.ok && basisLabel(basisRef(r.basis, 'a3f9'), true)).toBe('2026-11 A, 7.11.2026 · a3f9');
   });
 
   it('takes what the file leaves out from the example, and says what', () => {
@@ -46,6 +47,51 @@ describe('kostgrunnlag', () => {
     // stored or downloaded, it still says what is example numbers
     const again = parseBasis(serializeBasis(b));
     expect(again.ok && again.basis.fromExample).toEqual(b.fromExample);
+  });
+
+  it('stores only the own numbers, so the example in use fills the rest when read again', () => {
+    const r = parseBasis(file({ parametere: { indirect: 0.15, owned: { interest: 0.07 } }, prislister: [list] }));
+    if (!r.ok) throw new Error(r.error);
+    const stored = JSON.parse(serializeBasis(r.basis));
+    expect(stored.parametere).toEqual({ indirect: 0.15, owned: { interest: 0.07 } });
+    expect(stored.ordrekost).toBeUndefined();
+    expect(stored.prislister).toHaveLength(1);
+    expect(stored.fraEksempel).toBeUndefined();
+    // A file with no lists of its own does not store the example lists either
+    const bare = parseBasis(file({}));
+    expect(bare.ok && JSON.parse(serializeBasis(bare.basis)).prislister).toBeUndefined();
+  });
+
+  it('a basis stored the old way (everything written out) gives up what it marked as example numbers', () => {
+    // As the browser stored it before: the example's numbers frozen from the app version that loaded it
+    const frozen = { ...P, indirect: 0.5, owned: { ...P.owned, interest: 0.09 } };
+    const old = file({ parametere: frozen, ordrekost: [{ id: 'x', name: 'Gammel', cost: 1 }], prislister: [list], fraEksempel: ['parametere.indirect', 'ordrekost', 'prisliste Egne innkjøp'] });
+    const r = parseBasis(old);
+    if (!r.ok) throw new Error(r.error);
+    expect(r.basis.params.indirect).toBe(P.indirect);
+    expect(r.basis.params.owned.interest).toBe(0.09);
+    expect(r.basis.orderCosts).toBe(ORDER_COSTS);
+    expect(r.basis.fromExample).toEqual(['parametere.indirect', 'ordrekost', 'prisliste Egne innkjøp']);
+    // Everything marked, the whole part goes
+    const all = parseBasis(file({ parametere: frozen, prislister: [EXAMPLE_LIST, EXAMPLE_OWN_LIST], fraEksempel: ['parametere', 'prisliste', 'ordrekost'] }));
+    expect(all.ok && all.basis.params).toBe(P);
+    expect(all.ok && supplierList(all.basis)).toBe(EXAMPLE_LIST);
+  });
+
+  it('the template writes every number out, to fill in', () => {
+    const t = JSON.parse(basisTemplate());
+    expect(t.parametere.indirect).toBe(P.indirect);
+    expect(t.prislister).toHaveLength(2);
+    const r = parseBasis(basisTemplate());
+    expect(r.ok && r.basis.fromExample).toEqual([]);
+  });
+
+  it('same basis: same version and, when both have one, same code', () => {
+    const a = { version: '2026-11 A', date: '2026-11-07', example: false, code: 'a3f9' };
+    expect(sameBasis(a, { ...a })).toBe(true);
+    expect(sameBasis(a, { ...a, code: '0b12' })).toBe(false);
+    expect(sameBasis(a, { ...a, version: '2026-11 B' })).toBe(false);
+    expect(sameBasis({ ...a, code: undefined }, a)).toBe(true);
   });
 
   it('refuses what it cannot read, with a reason', () => {

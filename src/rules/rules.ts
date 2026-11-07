@@ -97,3 +97,18 @@ export const doorInset = (r: Rules) => (r.wall.cc - r.door.swing) / 2;
 
 /** Full wall height including feet (2540 mm). */
 export const wallHeight = (r: Rules) => r.wall.height + r.wall.feet;
+
+/** Defaults the app has had before. A stored value equal to one is the old default, not a choice, so it gives way to
+ *  today's (stag 1000 → 2000 in #131). */
+const OLD_IN_FRAME: Partial<Record<keyof InFrameParams, readonly number[]>> = { stag: [1000] };
+/** Only the assumptions set on Produksjon: the rest follow the app's current defaults, so a new default reaches a
+ *  browser that has stored assumptions (it did not before: the whole set was stored and frozen). */
+export function ownInFrame(p: Partial<InFrameParams> | null, stored = false): Partial<InFrameParams> {
+  const def = RULES.textile.inFrame;
+  if (!p || typeof p !== 'object') return {};
+  return Object.fromEntries(
+    (Object.keys(def) as (keyof InFrameParams)[])
+      .filter((k) => typeof p[k] === 'number' && p[k] !== def[k] && !(stored && OLD_IN_FRAME[k]?.includes(p[k]!)))
+      .map((k) => [k, p[k]]),
+  );
+}

@@ -5,7 +5,7 @@ import { addObject } from '../domain/objects'
 import { addDefaultRoom, roomSize } from '../domain/rooms'
 import type { StandWallTerms, Variant } from '../domain/types'
 import { customerName, fillFloor, standWallTerms } from '../domain/variant'
-import { basisLabel, basisRef } from '../cost/basis'
+import { basisLabel, basisRef, sameBasis } from '../cost/basis'
 import { newSketch, parse, serialize, type Sketch } from '../persistence/file'
 import { KEYS, loadJson, loadSketch, saveJson, saveSketch } from '../persistence/storage'
 import { initState, reduce } from '../state/history'
@@ -15,7 +15,7 @@ import { closeRooms, editResult, ratioFor, roomsFrom, settle } from './edits'
 import { CatalogPage } from './catalog/CatalogPage'
 import { IconButton, Toast } from './controls'
 import { download } from './download'
-import { catalog, costBasis, getVersion, idx, place, plateColor, rules, subscribe } from './env'
+import { catalog, costBasis, getVersion, idx, place, plateColor, pricing, rules, subscribe } from './env'
 import { hint, HINT_3D } from './hints'
 import { findMotif, motifLibrary, readMotif } from './motifs'
 import { NameTip } from './NameTip'
@@ -169,7 +169,7 @@ export default function App() {
   const saveFile = () => {
     const name = customerName(sketch.project).replace(/[^A-Za-z0-9æøåÆØÅ]+/g, '') || 'standskisse'
     // The file remembers which kostgrunnlag the quote was calculated with
-    const project = { ...sketch.project, costBasis: basisRef(costBasis) }
+    const project = { ...sketch.project, costBasis: basisRef(costBasis, pricing.code) }
     download(serialize({ ...sketch, project }), 'application/json', `${name}.standskisse.json`)
   }
   /** Replace the whole sketch (Ny, Åpne fil). One undo step, offered in the toast. */
@@ -190,7 +190,9 @@ export default function App() {
     const r = parse(await f.text())
     if (!r.ok) return showToast(r.error)
     const was = r.sketch.project.costBasis
-    const other = was && was.version !== costBasis.version ? ` · regnet med kostgrunnlag ${basisLabel(was)}, nå ${basisLabel(costBasis)}` : ''
+    const now = basisRef(costBasis, pricing.code)
+    // Same name with other numbers counts too: the code says the content differs
+    const other = was && !sameBasis(was, now) ? ` · regnet med kostgrunnlag ${basisLabel(was, true)}, nå ${basisLabel(now, true)}` : ''
     load(r.sketch, `Åpnet ${f.name}${other}`)
   }
 

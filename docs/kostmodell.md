@@ -15,9 +15,16 @@ kalkylen produkt for produkt: i dag systemvegg, takdrager og tekstilvegg (under)
 Alt motoren regner med, prislister, parametere og ordrekost, er data i én fil: kostgrunnlaget (`src/cost/basis.ts`),
 med egen versjon og dato (Bjørn 7.11.2026). Appen har et eksempelgrunnlag med oppdiktede priser. Det ekte lastes inn
 på Produktliste-siden og lagres bare i nettleseren, så innprisene aldri publiseres; senere hentes det fra OMS. Det
-filen ikke har, hentes fra eksempelet, og kortet på Produktliste sier hva. Lagrer man tilbudet, husker filen hvilket
-kostgrunnlag det ble regnet med, og åpnes det med et annet, sier appen fra. Nye tall for kalibrering er en ny fil med
-ny versjon, uten ny kode.
+filen ikke har, hentes fra eksempelet, og kortet på Produktliste sier hva. Nettleseren og «Last ned» holder bare
+eierens egne tall; resten fylles fra appens gjeldende eksempeltall hver gang grunnlaget leses, så et nytt eksempeltall
+i appen når fram i stedet for å fryses fra appversjonen som lastet filen. Et grunnlag lagret på den gamle måten (alt
+skrevet ut, med `fraEksempel`) gir fra seg det `fraEksempel` peker på når det leses.
+
+Ved versjonsnavnet står en kode på fire tegn, for eksempel `a3f9`: et fingeravtrykk av alt kalkylen regner med, egne
+tall og eksempeltall, prislistene som faktisk brukes og prisartiklene de gir (`code` fra `pricingFrom` i `src/pricing/data.ts`,
+Bjørn 7.11.2026). Samme versjonsnavn med annen kode betyr andre tall, også når det er en appoppdatering som har endret
+et eksempeltall. Lagrer man tilbudet, husker filen versjon og kode, og åpnes det med et annet grunnlag eller samme navn
+med annen kode, sier appen fra. Nye tall for kalibrering er en ny fil med ny versjon, uten ny kode.
 
 ```json
 {
@@ -31,7 +38,8 @@ ny versjon, uten ny kode.
 }
 ```
 
-`parametere` har samme navn som `CostParams` i `params.ts`; «Last ned mal» gir hele eksempelet som utgangspunkt.
+`parametere` har samme navn som `CostParams` i `params.ts`; «Last ned mal» gir hele eksempelet skrevet ut som
+utgangspunkt. Antakelsene for InFrame på Produksjon lagres på samme måte: bare det som er endret fra appens standard.
 
 ## Innkjøp
 

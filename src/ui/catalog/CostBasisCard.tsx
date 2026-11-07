@@ -2,10 +2,10 @@
 // browser (it holds purchase prices, which are never published). docs/kostmodell.md.
 import { Download, RotateCcw, Upload } from 'lucide-react'
 import { useRef } from 'react'
-import { basisLabel, parseBasis, serializeBasis, usesExample } from '../../cost/basis'
+import { basisLabel, basisTemplate, parseBasis, serializeBasis, usesExample } from '../../cost/basis'
 import { Button } from '../controls'
 import { download } from '../download'
-import { costBasis, setCostBasis } from '../env'
+import { costBasis, pricing, setCostBasis } from '../env'
 import type { ToastMsg } from '../useToast'
 
 /** "parametere.owned.interest" → "owned.interest"; a whole part by its name. */
@@ -34,7 +34,9 @@ export function CostBasisCard({ onToast }: { onToast: (t: ToastMsg | string) => 
         <span className="basis-title">
           Kostgrunnlag
           {example || partly ? <i className="ph-dot" /> : null}
-          <span className="num">{basisLabel(b)}</span>
+          <span className="num">
+            {basisLabel(b)} · {pricing.code}
+          </span>
         </span>
         <span className="page-intro">
           {example
@@ -47,7 +49,14 @@ export function CostBasisCard({ onToast }: { onToast: (t: ToastMsg | string) => 
       <Button icon={Upload} onClick={() => file.current?.click()}>
         Last inn
       </Button>
-      <Button icon={Download} onClick={() => download(serializeBasis(b), 'application/json', example ? 'kostgrunnlag-mal.json' : `kostgrunnlag-${b.version}.json`)}>
+      <Button
+        icon={Download}
+        onClick={() =>
+          example
+            ? download(basisTemplate(), 'application/json', 'kostgrunnlag-mal.json')
+            : download(serializeBasis(b), 'application/json', `kostgrunnlag-${b.version.replace(/\s+/g, '-')}-${pricing.code}.json`)
+        }
+      >
         {example ? 'Last ned mal' : 'Last ned'}
       </Button>
       {!example && (

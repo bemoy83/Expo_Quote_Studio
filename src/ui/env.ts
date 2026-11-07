@@ -7,7 +7,7 @@ import type { Product } from '../catalog/types'
 import { EXAMPLE_BASIS, type CostBasis } from '../cost/basis'
 import { pricingFrom } from '../pricing/data'
 import { KEYS, loadCostBasis, loadJson, saveCostBasis, saveJson } from '../persistence/storage'
-import { RULES, type InFrameParams, type Rules } from '../rules/rules'
+import { ownInFrame, RULES, type InFrameParams, type Rules } from '../rules/rules'
 
 const loadEdits = (): CatalogEdits => {
   const e = loadJson<CatalogEdits>(KEYS.catalog, NO_EDITS)
@@ -16,7 +16,7 @@ const loadEdits = (): CatalogEdits => {
 const withInFrame = (p: Partial<InFrameParams>): Rules => ({ ...RULES, textile: { ...RULES.textile, inFrame: { ...RULES.textile.inFrame, ...p } } })
 
 export let edits: CatalogEdits = loadEdits()
-export let rules: Rules = withInFrame(loadJson<Partial<InFrameParams>>(KEYS.inFrame, {}))
+export let rules: Rules = withInFrame(ownInFrame(loadJson<Partial<InFrameParams>>(KEYS.inFrame, {}), true))
 export let catalog = applyEdits(DEFAULT_CATALOG, edits)
 export let idx = indexCatalog(catalog)
 export let place = placeContext(rules, catalog)
@@ -48,7 +48,7 @@ export function setCatalogEdits(e: CatalogEdits) {
 
 export function setInFrame(p: InFrameParams) {
   rules = withInFrame(p)
-  saveJson(KEYS.inFrame, p)
+  saveJson(KEYS.inFrame, ownInFrame(p))
   changed()
 }
 

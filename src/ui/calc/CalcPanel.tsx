@@ -6,7 +6,7 @@ import type { BomLine } from '../../foga/engine'
 import { LAYER_COLOR } from '../colors'
 import { Button } from '../controls'
 import { margins } from '../../cost/model'
-import { costBasis, rules } from '../env'
+import { costBasis, pricing, rules } from '../env'
 import { fmt, hours, kr } from '../format'
 import type { Highlight } from '../tools'
 
@@ -39,7 +39,7 @@ export function CalcPanel({ res, name, onHover, onQuote }: { res: CalcResult; na
         <div className="spacer">
           <h2>Veiledende kalkyle</h2>
           <div className="sub">
-            {costBasis.version === 'eksempel' ? 'Eksempelpriser' : `Kostgrunnlag ${costBasis.version}`}{placeholders ? <span className="ph"> · {placeholders} plassholderpriser</span> : null}
+            {costBasis.version === 'eksempel' ? 'Eksempelpriser' : `Kostgrunnlag ${costBasis.version}`} · {pricing.code}{placeholders ? <span className="ph"> · {placeholders} plassholderpriser</span> : null}
           </div>
         </div>
         <span className="band-tag">

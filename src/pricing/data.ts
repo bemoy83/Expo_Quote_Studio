@@ -3,9 +3,11 @@
 // price from the DG target (src/cost/items.ts, docs/kostmodell.md); the rest keep the example numbers here. The price
 // is only used by sum-priced products (textile walls); catalog products keep their OMS price and use the cost. Change
 // numbers here or in the kostgrunnlag, never in calc code.
-import { EXAMPLE_BASIS, type CostBasis } from '../cost/basis';
+import { EXAMPLE_BASIS, supplierList, type CostBasis } from '../cost/basis';
+import { fingerprint } from '../cost/fingerprint';
 import { basisYear, costItems, type ItemRecipe } from '../cost/items';
 import { orderCost } from '../cost/model';
+import { OWN_SUPPLIER } from '../cost/own-list';
 import { RULES } from '../rules/rules';
 import type { PriceItem, PriceList, Time, Transfer } from './model';
 
@@ -156,6 +158,9 @@ export interface PricingData {
   terms: Record<string, string>;
   /** Cost once per quote (kostgrunnlag `ordrekost`), in kr for the basis year: in the kalkyle's cost, not in a price. */
   orderCosts: readonly { id: string; name: string; cost: number; when?: 'trykk' }[];
+  /** Fingerprint of everything the calc runs on: the kostgrunnlag as used (own numbers and example numbers alike) and
+   *  the price items it gives. Shown beside the basis' version and kept on the quote (Bjørn 7.11.2026). */
+  code: string;
 }
 
 /**
@@ -178,13 +183,15 @@ const calibrated = (x: PriceItem): PriceItem => {
 const EXAMPLE_ITEMS: PriceList = new Map(ITEMS.map((x) => [x.id, calibrated(x)]));
 
 /** The price items with the costed ones from this kostgrunnlag. */
-export const pricingFrom = (b: CostBasis): PricingData => ({
-  ...DEFAULT_TERMS,
-  items: costItems(EXAMPLE_ITEMS, ITEM_RECIPES, b),
-  orderCosts: b.orderCosts.map((o) => ({ id: o.id, name: o.name, cost: orderCost([o], basisYear(b), b.params), ...(o.when ? { when: o.when } : {}) })),
-});
+export function pricingFrom(b: CostBasis): PricingData {
+  const items = costItems(EXAMPLE_ITEMS, ITEM_RECIPES, b);
+  const orderCosts = b.orderCosts.map((o) => ({ id: o.id, name: o.name, cost: orderCost([o], basisYear(b), b.params), ...(o.when ? { when: o.when } : {}) }));
+  // The lists the engine looks up, so an example list filling in for a missing one counts too
+  const used = { date: b.date, params: b.params, orderCosts: b.orderCosts, lists: [supplierList(b, 'Foga'), supplierList(b, OWN_SUPPLIER)], items, terms: DEFAULT_TERMS };
+  return { ...DEFAULT_TERMS, items, orderCosts, code: fingerprint(used) };
+}
 
-const DEFAULT_TERMS: Omit<PricingData, 'items' | 'orderCosts'> = {
+const DEFAULT_TERMS: Omit<PricingData, 'items' | 'orderCosts' | 'code'> = {
   terms: { tekstil: 'Leie av ramme, kjøp av tekstil', '8040': 'Kjøp av tekstil, montering inkludert', '8041': 'Kjøp av tekstil, montering inkludert' },
 };
 

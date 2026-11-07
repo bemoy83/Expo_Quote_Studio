@@ -1,8 +1,10 @@
 // Kostgrunnlag: everything the cost engine runs on, as one dated and versioned file. The price lists, the parameters
 // and the per-order costs. The app ships with an example basis (made-up prices, example numbers); the real one is a
 // file loaded in the browser and kept there, later fetched from the OMS (Bjørn 7.11.2026). It is never published.
-// What the file leaves out is taken from the example, and the basis says so, so the app can show it.
-// File: JSON `{ format: 'kostgrunnlag', versjon, kostversjon, dato, kilde, parametere, ordrekost, prislister, fraEksempel }`.
+// What the file leaves out is taken from the example, and the basis says so, so the app can show it. The browser and a
+// downloaded file keep only the owner's own numbers: the rest is filled from the app's current example every time it is
+// read, so a new example number reaches a stored basis instead of being frozen at the app version that loaded it.
+// File: JSON `{ format: 'kostgrunnlag', versjon, kostversjon, dato, kilde, parametere, ordrekost, prislister }`.
 // Kostmodell: docs/kostmodell.md.
 import { EXAMPLE_LIST } from './example-list';
 import { EXAMPLE_OWN_LIST, OWN_SUPPLIER } from './own-list';
@@ -32,6 +34,8 @@ export interface CostBasisRef {
   version: string;
   date: string;
   example: boolean;
+  /** Fingerprint of everything the calc ran on (`PricingData.code`, src/pricing/data.ts). Missing in older files. */
+  code?: string;
 }
 
 export const EXAMPLE_BASIS: CostBasis = {
@@ -50,19 +54,41 @@ const supplierIs = (l: SupplierList, supplier: string) => l.supplier.startsWith(
 
 export const usesExample = (b: CostBasis) => b.fromExample.length > 0;
 
-export const basisRef = (b: CostBasis): CostBasisRef => ({ version: b.version, date: b.date, example: usesExample(b) });
+export const basisRef = (b: CostBasis, code: string): CostBasisRef => ({ version: b.version, date: b.date, example: usesExample(b), code });
+
+/** Same version and same numbers. A ref without a code (older file) is judged by its version alone. */
+export const sameBasis = (a: CostBasisRef, b: CostBasisRef) => a.version === b.version && (!a.code || !b.code || a.code === b.code);
 
 /** The basis' list from this supplier ("Foga", "Egne innkjøp"; the name starts with it), else the example's. */
 export const supplierList = (b: CostBasis, supplier = 'Foga'): SupplierList =>
   b.lists.find((l) => supplierIs(l, supplier)) ?? EXAMPLE_LISTS.find((l) => supplierIs(l, supplier)) ?? EXAMPLE_LIST;
 
-/** "2026-11 A, 7.11.2026" and whether it is example numbers, for the screen. */
-export function basisLabel(b: CostBasis | CostBasisRef): string {
+/** "2026-11 A, 7.11.2026" and whether it is example numbers, for the screen; with `withCode` its fingerprint after,
+ *  "2026-11 A, 7.11.2026 · a3f9", where a ref has one. */
+export function basisLabel(b: CostBasis | CostBasisRef, withCode = false): string {
   const [y, m, d] = b.date.split('-').map(Number);
   const when = d ? `${d}.${m}.${y}` : b.date;
-  return b.version === 'eksempel' ? 'Eksempeltall' : `${b.version}, ${when}`;
+  const label = b.version === 'eksempel' ? 'Eksempeltall' : `${b.version}, ${when}`;
+  const code = withCode && 'code' in b ? b.code : undefined;
+  return code ? `${label} · ${code}` : label;
 }
 
+/** A copy of `x` without the parts at these paths ("parametere.owned.interest"; `root` is the first segment). */
+function without(x: unknown, root: string, paths: readonly string[]): unknown {
+  if (paths.includes(root) || x === undefined) return undefined;
+  const at = paths.filter((p) => p.startsWith(`${root}.`)).map((p) => p.slice(root.length + 1).split('.'));
+  if (!at.length || !isObj(x)) return x;
+  const copy = structuredClone(x);
+  for (const keys of at) {
+    let o: unknown = copy;
+    for (const k of keys.slice(0, -1)) o = isObj(o) ? o[k] : undefined;
+    if (isObj(o)) delete o[keys[keys.length - 1]];
+  }
+  return copy;
+}
+
+/** The basis as a file with only its owner's numbers: what is example numbers is left out, and is filled from the
+ *  app's example again when read. For the browser and for "Last ned". */
 export function serializeBasis(b: CostBasis): string {
   return JSON.stringify(
     {
@@ -71,12 +97,20 @@ export function serializeBasis(b: CostBasis): string {
       kostversjon: b.version,
       dato: b.date,
       kilde: b.source,
-      parametere: b.params,
-      ordrekost: b.orderCosts,
-      prislister: b.lists,
-      // Written out so a downloaded basis still says what in it is example numbers
-      fraEksempel: b.fromExample,
+      parametere: without(b.params, 'parametere', b.fromExample),
+      ordrekost: b.fromExample.includes('ordrekost') ? undefined : b.orderCosts,
+      prislister: b.fromExample.includes('prisliste') ? undefined : b.lists,
     },
+    null,
+    2,
+  );
+}
+
+/** A file with every number written out, to fill in: the example's parameters and order costs and both example lists. */
+export function basisTemplate(): string {
+  const b = EXAMPLE_BASIS;
+  return JSON.stringify(
+    { format: BASIS_FORMAT, versjon: BASIS_FILE_VERSION, kostversjon: '2026-11 A', dato: b.date, kilde: '', parametere: b.params, ordrekost: b.orderCosts, prislister: b.lists },
     null,
     2,
   );
@@ -196,12 +230,21 @@ export function parseBasis(text: string): BasisResult {
   if (!isStr(data.kostversjon)) return { ok: false, error: 'Kostgrunnlaget mangler kostversjon (for eksempel "2026-11 A").' };
   if (data.kostversjon === EXAMPLE_BASIS.version) return { ok: false, error: '«eksempel» er appens egne tall; gi kostgrunnlaget en annen kostversjon.' };
   if (typeof data.dato !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(data.dato)) return { ok: false, error: 'dato må være ÅÅÅÅ-MM-DD.' };
-  const fromExample: string[] = Array.isArray(data.fraEksempel) ? data.fraEksempel.filter(isStr) : [];
+  // A basis stored before the browser kept only own numbers wrote everything out, with `fraEksempel` saying which were
+  // example numbers. Those are dropped here, so they come from the current example like the rest
+  const old: string[] = Array.isArray(data.fraEksempel) ? data.fraEksempel.filter(isStr) : [];
+  const f: Obj = {
+    ...data,
+    parametere: without(data.parametere, 'parametere', old),
+    ordrekost: old.includes('ordrekost') ? undefined : data.ordrekost,
+    prislister: old.includes('prisliste') ? undefined : data.prislister,
+  };
+  const fromExample: string[] = [];
   try {
-    const params = mergeParams(DEFAULT_COST_PARAMS as unknown as Obj, data.parametere, 'parametere', fromExample) as unknown as CostParams;
-    if (data.ordrekost === undefined) fromExample.push('ordrekost');
-    const lists = data.prislister === undefined ? EXAMPLE_LISTS : supplierLists(data.prislister);
-    if (data.prislister === undefined) fromExample.push('prisliste');
+    const params = mergeParams(DEFAULT_COST_PARAMS as unknown as Obj, f.parametere, 'parametere', fromExample) as unknown as CostParams;
+    if (f.ordrekost === undefined) fromExample.push('ordrekost');
+    const lists = f.prislister === undefined ? EXAMPLE_LISTS : supplierLists(f.prislister);
+    if (f.prislister === undefined) fromExample.push('prisliste');
     // By the names the engine looks the lists up by (`supplierList`), so a list named just "Foga" counts
     else for (const name of SUPPLIERS) if (!lists.some((l) => supplierIs(l, name))) fromExample.push(`prisliste ${name}`);
     return {
@@ -211,7 +254,7 @@ export function parseBasis(text: string): BasisResult {
         date: data.dato,
         source: isStr(data.kilde) ? data.kilde : '',
         params,
-        orderCosts: data.ordrekost === undefined ? ORDER_COSTS : orderCosts(data.ordrekost),
+        orderCosts: f.ordrekost === undefined ? ORDER_COSTS : orderCosts(f.ordrekost),
         lists,
         fromExample: [...new Set(fromExample)],
       },
