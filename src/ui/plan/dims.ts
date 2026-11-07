@@ -140,7 +140,7 @@ export function planDims(v: Variant, selection: PlanSelection, compact: boolean)
   if (free) {
     const hz = horizontal(free)
     const k = hz ? 0 : 1
-    // On face A: its label (F1 · 3,00 m) stands on face B
+    // On face A, where the selected run's dimension chain has always stood
     inner = { axis: hz ? 'x' : 'y', at: hz ? free.from[1] : free.from[0], dir: toward(runNormal(free, 'a'), hz), ts: chainPoints([free.from[k], free.to[k]]), clear: 'textile' }
   }
   const on = mounted && v.walls.find((w) => w.id === mounted.wallId)

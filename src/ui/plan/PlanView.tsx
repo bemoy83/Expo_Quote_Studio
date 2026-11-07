@@ -292,7 +292,7 @@ export function PlanView(p: Props) {
       {twin('walls', (s) => <WallLayer v={s.v} mods={s.mods} selection={selection} dim={dim} />)}
 
       {/* Free-standing textile walls, textile walls on a wall face, foil decor */}
-      {twin('textile', (s) => <TextileLayer v={s.v} res={s.res} selection={selection} mini={p.mini} noRunLabel={p.positions && p.textileLabels} dim={dim} />)}
+      {twin('textile', (s) => <TextileLayer v={s.v} res={s.res} selection={selection} dim={dim} />)}
 
       {/* Beams and posts */}
       {twin('beams', (s) => <BeamLayer v={s.v} res={s.res} selection={selection} dim={dim} />)}

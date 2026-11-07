@@ -8,7 +8,6 @@ import { runNormal, type FaceKey } from '../../../domain/textile/free'
 import { alongRun, cornerPosts } from '../../../calc/textile/free'
 import type { Point, Variant } from '../../../domain/types'
 import { INK, INK_MUTED, SURFACE } from '../../colors'
-import { fmt } from '../../format'
 import { rules } from '../../env'
 import type { Layer } from '../../tools'
 import { faceSegment, sideOf } from '../../../domain/faces'
@@ -19,7 +18,6 @@ import {
   footStroke,
   HALO_OPACITY,
   haloWidth,
-  MONO,
   postSize,
   printBand,
   printOffset,
@@ -33,8 +31,7 @@ import { Seg } from './Seg'
 import { GONE, useErasing } from './erasing'
 
 /** Frittstående tekstilvegger, textile walls on a wall face, and the print and decal bands. */
-/** `noRunLabel`: the work order, where each face carries its textile label instead (PosLayer). */
-export function TextileLayer({ v, res, selection, mini, noRunLabel, dim }: { v: Variant; res: CalcResult; selection: PlanSelection; mini?: boolean; noRunLabel?: boolean; dim: (...layers: Layer[]) => number }) {
+export function TextileLayer({ v, res, selection, dim }: { v: Variant; res: CalcResult; selection: PlanSelection; dim: (...layers: Layer[]) => number }) {
   // Tøm: a textile wall about to go is dimmed and hatched; a motif about to go only hatched, on its face
   const { gone, hatch } = useErasing()
   const sc = usePlanScale()
@@ -69,11 +66,6 @@ export function TextileLayer({ v, res, selection, mini, noRunLabel, dim }: { v: 
               {sel && selection.freeFace && <FaceMark t={t} face={selection.freeFace} sc={sc} />}
               {g && <Seg a={t.from} b={t.to} stroke={hatch} strokeWidth={tw} />}
               {motif && <FaceMark t={t} face={motif} stroke={hatch} width={linePx(sc, 4)} sc={sc} />}
-              {!mini && !noRunLabel && (
-                <text {...labelAt(t)} textAnchor="middle" style={{ ...MONO, fontSize: '0.17px' }}>
-                  {f.pos} · {fmt(f.length / 1000, 2)} m
-                </text>
-              )}
             </g>
           )
         })}
@@ -156,13 +148,6 @@ export function RasterPattern({ id, sc }: { id: string; sc: PlanScale }) {
 }
 
 /** Label beside a run, on its face B side. */
-function labelAt(t: { from: Point; to: Point }) {
-  const [nx, ny] = runNormal(t, 'b')
-  const horizontal = t.from[1] === t.to[1]
-  const off = horizontal ? 0.3 : 0.22
-  return { x: (t.from[0] + t.to[0]) / 2 + nx * off, y: (t.from[1] + t.to[1]) / 2 + ny * off + (horizontal ? 0.06 : 0) }
-}
-
 /** The face shown in the drawer: a thin line on that side. */
 function FaceMark({ t, face, sc, stroke = INK, width }: { t: { from: Point; to: Point }; face: FaceKey; sc: PlanScale; stroke?: string; width?: number }) {
   const [nx, ny] = runNormal(t, face)

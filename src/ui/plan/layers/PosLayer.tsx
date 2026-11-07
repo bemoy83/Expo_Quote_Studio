@@ -86,10 +86,9 @@ function chips(v: Variant, res: CalcResult, sc: PlanScale, textileLabels: boolea
           break
         }
         const [nx, ny] = runNormal(t, 'a')
-        // A quarter along on face A: clear of the T/F label in the middle of face B
+        // At the middle of face A, like a textile wall's number beside its wall face
         const o = tw / 2 + half
-        const q = (a: number, b: number) => a + (b - a) / 4
-        out.push({ label: String(i.pos), at: [q(t.from[0], t.to[0]) + nx * o, q(t.from[1], t.to[1]) + ny * o], layer })
+        out.push({ label: String(i.pos), at: [(t.from[0] + t.to[0]) / 2 + nx * o, (t.from[1] + t.to[1]) / 2 + ny * o], layer })
         break
       }
       case 'swap': {
