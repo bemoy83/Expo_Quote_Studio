@@ -44,7 +44,8 @@ export function quoteLines(lines: CalcLine[], pricing: PricingData = DEFAULT_PRI
       cost,
       dg: cost === null || !sum ? null : (sum - cost) / sum,
       terms,
-      quote: undefined,
+      // Kept: the merged line is the article its parts are (calc/positions.ts)
+      quote: { ...l.quote!, lead: true },
     };
   });
 }

@@ -29,14 +29,11 @@ export interface Positions {
 }
 
 /**
- * The article a quote or kalkyle line is: textile walls by their quote key (frame and textile are one line on the
- * quote), a door by product and leaf colour (one line each), anything else by its article number.
+ * The article a quote or kalkyle line is: textile walls by their quote key (frame and textile of one size are one line
+ * on the quote), a door by product and leaf colour (one line each), anything else by its article number.
  */
 export function lineKey(catalog: Catalog, l: Pick<CalcLine, 'artnr' | 'meta' | 'quote'>, idx = indexCatalog(catalog)): string {
-  const sys = catalog.system;
-  const parts = l.artnr.split('+');
   if (l.quote?.key) return `quote:${l.quote.key}`;
-  if (parts.includes(sys.textile)) return 'quote:tekstil';
   const opening = idx.byArtnr.get(l.artnr)?.product.opening;
   if (opening) return doorKey(l.artnr, opening === 'curtain' ? undefined : l.meta);
   return l.artnr;
@@ -53,8 +50,11 @@ export function positions(v: Variant, lines: CalcLine[], catalog: Catalog): Posi
   // Drawn things in drawing order, each with its article
   const drawn: Omit<Positioned, 'pos'>[] = [];
   const walls = new Set(v.walls.map((w) => w.id));
-  for (const t of v.textiles) if (walls.has(t.wallId)) drawn.push({ kind: 'textile', id: t.id, key: 'quote:tekstil' });
-  for (const t of v.freeTextiles) drawn.push({ kind: 'freeTextile', id: t.id, key: 'quote:tekstil' });
+  // A textile wall's article is its frame size: the first frame drawn for it (a run with corners can have several)
+  const textileKey = new Map<string, string>();
+  for (const l of lines) for (const id of l.drawn ?? []) if (!textileKey.has(id)) textileKey.set(id, keyOf(l));
+  for (const t of v.textiles) if (walls.has(t.wallId) && textileKey.has(t.id)) drawn.push({ kind: 'textile', id: t.id, key: textileKey.get(t.id)! });
+  for (const t of v.freeTextiles) if (textileKey.has(t.id)) drawn.push({ kind: 'freeTextile', id: t.id, key: textileKey.get(t.id)! });
   const hidden = hiddenPlates(v);
   const stand = new Set(v.walls.filter(isStandWall).map((w) => w.id));
   const mods = builtModules(v);
