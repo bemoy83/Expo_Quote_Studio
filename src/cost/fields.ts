@@ -5,9 +5,9 @@
 import { FOGA_PARTS, type PartKind } from '../foga/parts';
 import { ITEM_DEFS } from '../pricing/items';
 import { HANDLING_STEPS, type HandlingStep } from '../pricing/model';
-import { EXAMPLE_BASIS, parseBasis, serializeBasis, type BasisResult, type CostBasis, type FieldNote, type FieldStatus } from './basis';
+import { EXAMPLE_BASIS, parseBasis, serializeBasis, supplierList, type BasisResult, type CostBasis, type FieldNote, type FieldStatus } from './basis';
 import { EXAMPLE_LIST } from './example-list';
-import { EXAMPLE_OWN_LIST } from './own-list';
+import { EXAMPLE_OWN_LIST, OWN_SUPPLIER } from './own-list';
 import type { CostParams } from './params';
 import type { SupplierList } from './prices';
 
@@ -310,12 +310,11 @@ function partText(key: 'parts' | 'own' | 'bought', code: string, itemUnit: strin
   return { label: part ? `${code} ${part.name}` : code, unit: part && (part.kind === 'profile' || part.kind === 'frame') ? 'm' : 'stk' };
 }
 
-/** The Foga list and the own list the engine looks up (the example's where the basis has none). */
+/** The Foga list and the own list the engine looks up (supplierList: the example's where the basis has none), then any
+ *  other list the basis holds. */
 function usedLists(b: CostBasis): SupplierList[] {
-  const lists = [...b.lists];
-  if (!lists.some((l) => l.supplier.startsWith('Foga'))) lists.unshift(EXAMPLE_LIST);
-  if (!lists.some((l) => l.supplier.startsWith('Egne innkjøp'))) lists.push(EXAMPLE_OWN_LIST);
-  return lists;
+  const used = [supplierList(b, 'Foga'), supplierList(b, OWN_SUPPLIER)];
+  return [...used, ...b.lists.filter((l) => !used.includes(l))];
 }
 
 function valueAt(o: unknown, key: string): number {
