@@ -53,6 +53,9 @@ export interface CostParams {
   /** Indirect cost (admin, premises, storage, vans, management) as one share of direct cost, shown as its own line in
    *  the kalkyle. DG is counted on direct cost (Bjørn 7.11.2026). Eksempeltall. */
   indirect: number;
+  /** DG target per kind of price item: rented equipment, work, and what is sold. From Bjørn's calculator, as DG: markup
+   *  300 % = 75 %, 125 % = 56 %, 30 % = 23 %. Eksempeltall until set per group. */
+  dg: Readonly<Record<DgGroup, number>>;
   height: {
     /** Above this, mm, a 5-step ladder does not reach and a lift is needed (Bjørn 7.11.2026). */
     limit: number;
@@ -69,6 +72,9 @@ export interface OwnedGroup {
   /** Times it goes out a year. */
   usesPerYear: number;
 }
+
+/** What a price item is, for its DG target. */
+export type DgGroup = 'utleie' | 'arbeid' | 'salg';
 
 const index = (from: number, to: number, rate: number) => Object.fromEntries(Array.from({ length: to - from + 1 }, (_, i) => [from + i, rate]));
 
@@ -97,6 +103,7 @@ export const DEFAULT_COST_PARAMS: CostParams = {
   boughtWaste: 0.05,
   labour: { baseRate: 391.4, baseYear: 2022, billableShare: 1, overtimeSurcharge: 1, wageShare: 0.8 },
   indirect: 0.1,
+  dg: { utleie: 3 / 4, arbeid: 1.25 / 2.25, salg: 0.3 / 1.3 },
   height: { limit: 3000, factor: 1.25, liftPerDay: 0 },
 };
 
