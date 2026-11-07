@@ -6,20 +6,44 @@ motoren. Bjørns tekstilvegg-kalkulator er gått gjennom og stresstestet, men f�
 etter hvert når de er gode. Bakgrunn og stresstest: dokumentet «Tekstilvegg-kalkulatoren: hva den regner, og hva
 appen kan hente».
 
-Koden: `src/cost/` (`model.ts` reglene, `params.ts` tallene, `prices.ts` og `example-list.ts` leverandørens prisliste),
+Koden: `src/cost/` (`model.ts` reglene, `params.ts` tallene, `prices.ts` og `example-list.ts` leverandørens prisliste,
+`basis.ts` kostgrunnlaget som fil),
 tester i `src/cost/model.test.ts`. Motoren er ikke koblet til kalkylen ennå; det skjer produkt for produkt.
+
+## Kostgrunnlaget
+
+Alt motoren regner med, prislister, parametere og ordrekost, er data i én fil: kostgrunnlaget (`src/cost/basis.ts`),
+med egen versjon og dato (Bjørn 7.11.2026). Appen har et eksempelgrunnlag med oppdiktede priser. Det ekte lastes inn
+på Produktliste-siden og lagres bare i nettleseren, så innprisene aldri publiseres; senere hentes det fra OMS. Det
+filen ikke har, hentes fra eksempelet, og kortet på Produktliste sier hva. Lagrer man tilbudet, husker filen hvilket
+kostgrunnlag det ble regnet med, og åpnes det med et annet, sier appen fra. Nye tall for kalibrering er en ny fil med
+ny versjon, uten ny kode.
+
+```json
+{
+  "format": "kostgrunnlag", "versjon": 1,
+  "kostversjon": "2026-11 A", "dato": "2026-11-07", "kilde": "Bjørn",
+  "parametere": { "indirect": 0.1, "owned": { "interest": 0.05 } },
+  "ordrekost": [{ "id": "startkost-trykk", "name": "Startkost trykk", "cost": 500, "baseYear": 2022 }],
+  "prislister": [{ "supplier": "Foga", "name": "Prislista A", "date": "2022-06", "currency": "SEK",
+                   "items": [{ "artnr": "873 805 22", "name": "43TX", "group": "Fabric", "pack": 50, "unit": "m",
+                               "price": 0, "broken": 0 }] }]
+}
+```
+
+`parametere` har samme navn som `CostParams` i `params.ts`; «Last ned mal» gir hele eksempelet som utgangspunkt.
 
 ## Innkjøp
 
 Prislisten lagres slik leverandøren trykker den: valuta, pakke, pris ved hel og brutt pakke, og dato. Foga Prislista A
 juni 2022 (SEK) er innkjøpsprisene våre og **publiseres ikke** (Bjørn 7.11.2026): repoet og nettsiden er åpne. I appen
 ligger en eksempelliste med oppdiktede priser for delene appen bygger med (`src/cost/example-list.ts`), med Fogas
-ekte art.nr. Den ekte listen skal komme fra OMS. Av appens 47 Foga-deler finnes alle unntatt 92LL i Fogas liste, og
+ekte art.nr. Den ekte listen lastes inn som kostgrunnlag (under), senere fra OMS. Av appens 47 Foga-deler finnes alle unntatt 92LL i Fogas liste, og
 krok har ikke art.nr. ennå.
 
 `innkjøp i år = listepris × kurs × materialindeks fra listens dato × (1 + frakt)`
 
-Kost regnes uten moms. Kommer en ny prisliste, legges den inn som egen fil, og indeksen starter fra dens dato.
+Kost regnes uten moms. Kommer en ny prisliste, legges den i et nytt kostgrunnlag, og indeksen starter fra listens dato.
 
 ## Direkte og indirekte kost
 
@@ -89,7 +113,7 @@ Eksempel med eksempelprisen 150 kr per m profil, byttet hvert andre år og ute 2
 
 ## Åpent
 
-- Hvordan den ekte prislisten kommer inn uten å publiseres (fra OMS).
+- Når kostgrunnlaget kan hentes fra OMS i stedet for fra fil.
 - Riktig kurs SEK–NOK og frakt per bestilling.
 - Bruk per år per artikkel, fra OMS når historikken finnes.
 - Pris på lift.

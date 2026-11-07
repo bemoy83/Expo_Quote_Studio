@@ -1569,6 +1569,38 @@ kbd {
 }
 
 /* Produktliste */
+.basis-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 4px 0 16px;
+  padding: 12px 16px;
+  border-radius: var(--r-ctl);
+  background: var(--well);
+}
+.basis-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 360px;
+  min-width: 0;
+}
+.basis-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: var(--type-label);
+  color: rgb(var(--ink));
+}
+.basis-title .num {
+  font: var(--type-num-sm);
+  color: rgb(var(--ink-muted));
+}
+.basis-text .page-intro {
+  padding: 0;
+  overflow-wrap: anywhere;
+}
 .cat-tools {
   display: flex;
   flex-wrap: wrap;
