@@ -11,6 +11,7 @@ import { download } from '../download'
 import { catalog, edits, setCatalogEdits } from '../env'
 import { fmt } from '../format'
 import { PageBand } from '../shell/PageBand'
+import { CostBasisCard } from './CostBasisCard'
 
 type Toast = (t: ToastMsg | string) => void
 
@@ -92,6 +93,7 @@ export function CatalogPage({ onToast }: { onToast: Toast }) {
       </PageBand>
       <div className="page-scroll">
         <div className="page-narrow">
+          <CostBasisCard onToast={onToast} />
           <div className="cat-tools">
             <p className="page-intro">
               Kalkylen henter pris og navn herfra. Import leser CSV med kolonnene varenr og pris; navn, enhet og gruppe er valgfrie. Kjente varenr får ny pris, nye varenr legges til.
