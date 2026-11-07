@@ -21,20 +21,6 @@ export interface InFrameParams {
   stag: number;
 }
 
-export interface CarpetRates {
-  status: 'forslag' | 'godkjent';
-  /** kr per m² taken from the roll. */
-  material: number;
-  /** kr per lm tape. */
-  tapeMaterial: number;
-  /** kr per hour of work. */
-  hour: number;
-  /** Minutes per m² laid, per lm cut, per lm seam and per lm tape. */
-  minLay: number;
-  minCut: number;
-  minSeam: number;
-  minTape: number;
-}
 
 export interface Rules {
   approved: string;
@@ -55,9 +41,6 @@ export interface Rules {
   door: { swing: number; height: number };
   /** `cell`: the floor grid (byggeregel G1); `rollEnd`: extra roll length at each end of a lane (G3). */
   floor: { cell: number; rollEnd: number };
-  /** Engangsteppe: internal cost, used only to rank the ways to lay a fill and to show the waste in kr. Never in the
-   * sum: the customer pays laid m². `status` 'forslag': proposed rates, not yet approved. */
-  carpet: CarpetRates;
   /** A quote holds `validDays` from it is sent, but never later than `beforeMount` days before montering. */
   quote: { validDays: number; beforeMount: number };
   /** VAT used for the inkl. mva. figure. Prices are always eks. mva. */
@@ -84,7 +67,6 @@ export const RULES: Rules = {
   },
   door: { swing: 0.95, height: 2.0 },
   floor: { cell: 0.5, rollEnd: 0.1 },
-  carpet: { status: 'forslag', material: 38, tapeMaterial: 3, hour: 650, minLay: 1.5, minCut: 0.5, minSeam: 1.5, minTape: 0.6 },
   quote: { validDays: 30, beforeMount: 14 },
   vat: 0.25,
 };
@@ -97,3 +79,18 @@ export const doorInset = (r: Rules) => (r.wall.cc - r.door.swing) / 2;
 
 /** Full wall height including feet (2540 mm). */
 export const wallHeight = (r: Rules) => r.wall.height + r.wall.feet;
+
+/** Defaults the app has had before. A stored value equal to one is the old default, not a choice, so it gives way to
+ *  today's (stag 1000 → 2000 in #131). */
+const OLD_IN_FRAME: Partial<Record<keyof InFrameParams, readonly number[]>> = { stag: [1000] };
+/** Only the assumptions set on Produksjon: the rest follow the app's current defaults, so a new default reaches a
+ *  browser that has stored assumptions (it did not before: the whole set was stored and frozen). */
+export function ownInFrame(p: Partial<InFrameParams> | null, stored = false): Partial<InFrameParams> {
+  const def = RULES.textile.inFrame;
+  if (!p || typeof p !== 'object') return {};
+  return Object.fromEntries(
+    (Object.keys(def) as (keyof InFrameParams)[])
+      .filter((k) => typeof p[k] === 'number' && p[k] !== def[k] && !(stored && OLD_IN_FRAME[k]?.includes(p[k]!)))
+      .map((k) => [k, p[k]]),
+  );
+}

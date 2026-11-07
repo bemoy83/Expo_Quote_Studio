@@ -6,7 +6,8 @@ import type { BomLine } from '../../foga/engine'
 import { LAYER_COLOR } from '../colors'
 import { Button } from '../controls'
 import { margins } from '../../cost/model'
-import { costBasis, rules } from '../env'
+import { costBasis, pricing, rules } from '../env'
+import { LineTrace } from './Trace'
 import { fmt, hours, kr } from '../format'
 import type { Highlight } from '../tools'
 
@@ -39,7 +40,13 @@ export function CalcPanel({ res, name, onHover, onQuote }: { res: CalcResult; na
         <div className="spacer">
           <h2>Veiledende kalkyle</h2>
           <div className="sub">
-            {costBasis.version === 'eksempel' ? 'Eksempelpriser' : `Kostgrunnlag ${costBasis.version}`}{placeholders ? <span className="ph"> · {placeholders} plassholderpriser</span> : null}
+            {costBasis.version === 'eksempel' ? 'Eksempelpriser' : `Kostgrunnlag ${costBasis.version}`} · {pricing.code}{placeholders ? <span className="ph"> · {placeholders} plassholderpriser</span> : null}
+            {pricing.missing.length ? (
+              <span className="ph">
+                {' '}
+                · uten kost i kostgrunnlaget: {pricing.missing.map((m) => (m.parts.length ? `${m.name} (mangler ${m.parts.join(', ')})` : `${m.name} (ingen oppskrift)`)).join(', ')}
+              </span>
+            ) : null}
           </div>
         </div>
         <span className="band-tag">
@@ -114,22 +121,41 @@ export function CalcPanel({ res, name, onHover, onQuote }: { res: CalcResult; na
   )
 }
 
+/** A kalkyle line; tapped, it opens «Slik er det regnet» under it. */
 function Line({ l, onHover }: { l: CalcLine; onHover: (h: Highlight) => void }) {
+  const [open, setOpen] = useState(false)
+  const toggle = () => setOpen((o) => !o)
   return (
-    <div className="cl" onMouseEnter={() => onHover(layerOf(l.group))}>
-      <span className="n">{l.name}</span>
-      <span className="s">{kr(l.sum)}</span>
-      <span className="meta">
-        {fmt(l.qty)} {l.unit} × {kr(l.price)}
-        {l.meta ? ` · ${l.meta}` : ''}
-        {l.placeholder && <span className="ph"> · plassholder</span>}
-      </span>
-      <span className="meta cost">
-        {l.strategy === 'sum' ? 'sum av artikler' : 'fast pris'}
-        {l.cost === null ? <span className="ph"> · kost mangler</span> : ` · kost ${kr(l.cost)} · DG ${pct(l.dg ?? 0)}`}
-        {l.terms ? ` · ${l.terms}` : ''}
-      </span>
-    </div>
+    <>
+      <div
+        className="cl tap"
+        role="button"
+        tabIndex={0}
+        aria-expanded={open}
+        title="Slik er det regnet"
+        onClick={toggle}
+        onKeyDown={(e) => {
+          if (e.key !== 'Enter' && e.key !== ' ') return
+          e.preventDefault()
+          toggle()
+        }}
+        onMouseEnter={() => onHover(layerOf(l.group))}
+      >
+        <span className="n">{l.name}</span>
+        <span className="s">{kr(l.sum)}</span>
+        <span className="meta">
+          {fmt(l.qty)} {l.unit} × {kr(l.price)}
+          {l.meta ? ` · ${l.meta}` : ''}
+          {l.placeholder && <span className="ph"> · plassholder</span>}
+        </span>
+        <span className="meta cost">
+          {l.strategy === 'sum' ? 'sum av artikler' : 'fast pris'}
+          {l.cost === null ? <span className="ph"> · kost mangler</span> : ` · kost ${kr(l.cost)} · DG ${pct(l.dg ?? 0)}`}
+          {l.terms ? ` · ${l.terms}` : ''}
+        </span>
+      </div>
+      {open && <LineTrace l={l} />}
+    </>
   )
 }
 

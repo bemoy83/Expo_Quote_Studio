@@ -57,6 +57,10 @@ export interface CostParams {
   /** DG target per kind of price item: rented equipment, work, and what is sold. From Bjørn's calculator, as DG: markup
    *  300 % = 75 %, 125 % = 56 %, 30 % = 23 %. Eksempeltall until set per group. */
   dg: Readonly<Record<DgGroup, number>>;
+  /** Engangsteppe (roll carpet): internal cost, used only to rank the ways to lay a fill and to show the waste in kr.
+   *  Never in the sum: the customer pays laid m². The work is at the montør's hourly cost, the same as for Foga, textile
+   *  and furniture (Bjørn 7.11.2026: the same montør lays it). Forslag. */
+  carpet: CarpetParams;
   height: {
     /** Above this, mm, a 5-step ladder does not reach and a lift is needed (Bjørn 7.11.2026). */
     limit: number;
@@ -65,6 +69,24 @@ export interface CostParams {
     /** Lift rental per day, kr. Not known yet. */
     liftPerDay: number;
   };
+}
+
+export interface CarpetParams {
+  /** kr per m² taken from the roll. */
+  material: number;
+  /** kr per lm tape. */
+  tapeMaterial: number;
+  /** Minutes per m² laid, per lm cut, per lm seam and per lm tape. */
+  minLay: number;
+  minCut: number;
+  minSeam: number;
+  minTape: number;
+}
+
+/** The carpet rates with the montør's hourly cost for the basis year (pricing/data.ts `pricingFrom`). */
+export interface CarpetRates extends CarpetParams {
+  /** kr per hour of work. */
+  hour: number;
 }
 
 export interface OwnedGroup {
@@ -112,6 +134,7 @@ export const DEFAULT_COST_PARAMS: CostParams = {
   labour: { baseRate: 391.4, baseYear: 2022, billableShare: 1, overtimeSurcharge: 1, wageShare: 0.8 },
   indirect: 0.1,
   dg: { utleie: 3 / 4, arbeid: 1.25 / 2.25, salg: 0.3 / 1.3 },
+  carpet: { material: 38, tapeMaterial: 3, minLay: 1.5, minCut: 0.5, minSeam: 1.5, minTape: 0.6 },
   height: { limit: 3000, factor: 1.25, liftPerDay: 0 },
 };
 

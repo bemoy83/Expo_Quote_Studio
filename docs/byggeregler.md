@@ -232,8 +232,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   plukklisten har løpemeter fra rullen og teip langs omriss og skjøter.
   *Bjørn 1.11.2026 · `rules.floor.rollEnd`, katalogens `roll` · kode `src/domain/floor/lanes.ts` · test `src/domain/floor.test.ts`*
 - **G4 Fyll.** Fyll foreslår hvordan rullen kappes og legges over et område, rangert etter intern kost (materiale, teip,
-  arbeid; satsene er forslag). Deling på langs finnes bare som forslag fra Fyll.
-  *Bjørn 1.11.2026 · `rules.carpet` · kode `src/domain/floor/rollFill.ts` · test `src/domain/carpet.test.ts`*
+  arbeid; satsene er forslag). Arbeidet regnes med montørens timekost, samme som for Foga, tekstil og møbler (Bjørn
+  7.11.2026). Deling på langs finnes bare som forslag fra Fyll.
+  *Bjørn 1.11.2026 · kostgrunnlaget `parametere.carpet`, timekost fra `parametere.labour` (`pricing.carpet`) · kode `src/domain/floor/rollFill.ts` · test `src/domain/carpet.test.ts`*
 - **G5 Under rom og vegger.** Gulvet legges under rom og vegger.
   *Bjørn 1.11.2026 · kode `src/domain/floor/lanes.ts` · test `src/domain/floor.test.ts`*
 

@@ -1,7 +1,6 @@
 // Supplier price lists, kept exactly as the supplier prints them (currency, pack, full and broken pack price, date).
 // The cost engine (model.ts) turns them into cost in NOK for the year asked for; nothing else reads the raw prices.
 // Kostmodell: docs/kostmodell.md.
-import { EXAMPLE_LIST } from './example-list';
 
 export type Currency = 'NOK' | 'SEK';
 
@@ -29,9 +28,6 @@ export interface SupplierList {
   currency: Currency;
   items: readonly SupplierItem[];
 }
-
-/** The Foga list in use: made-up example prices until the real list comes from the OMS (it is not published). */
-export const FOGA: SupplierList = EXAMPLE_LIST;
 
 /** "873 805 22" and "87380522" are the same article. */
 export const normArtnr = (artnr: string) => artnr.replace(/\s+/g, '');

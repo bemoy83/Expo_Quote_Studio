@@ -14,24 +14,52 @@ kalkylen produkt for produkt: i dag systemvegg, takdrager og tekstilvegg (under)
 
 Alt motoren regner med, prislister, parametere og ordrekost, er data i én fil: kostgrunnlaget (`src/cost/basis.ts`),
 med egen versjon og dato (Bjørn 7.11.2026). Appen har et eksempelgrunnlag med oppdiktede priser. Det ekte lastes inn
-på Produktliste-siden og lagres bare i nettleseren, så innprisene aldri publiseres; senere hentes det fra OMS. Det
-filen ikke har, hentes fra eksempelet, og kortet på Produktliste sier hva. Lagrer man tilbudet, husker filen hvilket
-kostgrunnlag det ble regnet med, og åpnes det med et annet, sier appen fra. Nye tall for kalibrering er en ny fil med
-ny versjon, uten ny kode.
+på siden Kostgrunnlag og lagres bare i nettleseren, så innprisene aldri publiseres; appen styrer alle tall selv, og en
+framtidig OMS er bare en kilde den kan lese prislister og salgspriser fra. Det filen ikke har, hentes fra eksempelet,
+og siden sier hva.
+
+Siden Kostgrunnlag viser hvert tall med sti, verdi, status (Bjørn, kalibrert, forslag, eksempel), kilde og dato, i faner
+for innkjøp, avskrivning, arbeid og tider, ordrekost, påslag og DG, katalog og oppskrifter, med byggereglene og formlene
+ved siden av (`src/cost/fields.ts`). Eksempeltall har en prikk og kan filtreres fram; tall regel 2 og 6 har, men kalkylen
+ikke bruker ennå, er merket «ikke i bruk». Status, kilde og dato for egne tall står i filen under `merknader`, per sti.
+En sti i «Slik er det regnet» er en lenke til radene den peker på. Nettleseren og «Last ned» holder bare
+eierens egne tall; resten fylles fra appens gjeldende eksempeltall hver gang grunnlaget leses, så et nytt eksempeltall
+i appen når fram i stedet for å fryses fra appversjonen som lastet filen. Et grunnlag lagret på den gamle måten (alt
+skrevet ut, med `fraEksempel`) gir fra seg det `fraEksempel` peker på når det leses.
+
+Ved versjonsnavnet står en kode på fire tegn, for eksempel `a3f9`: et fingeravtrykk av alt kalkylen regner med, egne
+tall og eksempeltall, prislistene som faktisk brukes og prisartiklene de gir (`code` fra `pricingFrom` i `src/pricing/data.ts`,
+Bjørn 7.11.2026). Samme versjonsnavn med annen kode betyr andre tall, også når det er en appoppdatering som har endret
+et eksempeltall. Lagrer man tilbudet, husker filen versjon og kode, og åpnes det med et annet grunnlag eller samme navn
+med annen kode, sier appen fra. Nye tall for kalibrering er en ny fil med ny versjon, uten ny kode.
 
 ```json
 {
-  "format": "kostgrunnlag", "versjon": 1,
+  "format": "kostgrunnlag", "versjon": 2,
   "kostversjon": "2026-11 A", "dato": "2026-11-07", "kilde": "Bjørn",
   "parametere": { "indirect": 0.1, "owned": { "interest": 0.05 } },
   "ordrekost": [{ "id": "startkost-trykk", "name": "Startkost trykk", "cost": 400, "baseYear": 2022, "when": "trykk" }],
   "prislister": [{ "supplier": "Foga", "name": "Prislista A", "date": "2022-06", "currency": "SEK",
                    "items": [{ "artnr": "873 805 22", "name": "43TX", "group": "Fabric", "pack": 50, "unit": "m",
-                               "price": 0, "broken": 0 }] }]
+                               "price": 0, "broken": 0 }] }],
+  "tider": { "stolpe-94": { "plukk": 0.34, "vask": 0.34, "transport": 0.34 } },
+  "oppskrifter": { "veggplate": { "own": [["HDF-976x2440", 1, "plate"]], "dg": "utleie" } },
+  "katalog": { "kost": { "mob.": 0.55 }, "tider": { "mob.": { "plukk": 1, "montering": 1 } } }
 }
 ```
 
-`parametere` har samme navn som `CostParams` i `params.ts`; «Last ned mal» gir hele eksempelet som utgangspunkt.
+Engangsteppet rangerer leggeforslagene etter intern kost (materiale, teip og minutter, `parametere.carpet`), med
+arbeidet til montørens timekost for kostgrunnlagets år, samme sats som alt annet montøren gjør (Bjørn 7.11.2026; den
+egne satsen 650 kr/t er borte). Kunden betaler alltid lagte m².
+
+`tider` er personminutter per enhet og håndteringssteg per prisartikkel, og `oppskrifter` hva artikkelen er laget av;
+begge per prisartikkel-id (`src/pricing/items.ts`), og det filen ikke har for en artikkel, hentes fra eksempelet.
+`katalog` gjelder katalogprodukter uten oppskrift (møbler, gulv, folie, tjenester): kost som andel av salgsprisen og
+minutter per steg, per gruppeprefiks, til OMS gir dem per produkt; et produkts egen kost eller tid går foran. Filversjon
+1 (uten disse) leses fortsatt.
+
+`parametere` har samme navn som `CostParams` i `params.ts`; «Last ned mal» gir hele eksempelet skrevet ut som
+utgangspunkt. Antakelsene for InFrame på Produksjon lagres på samme måte: bare det som er endret fra appens standard.
 
 ## Innkjøp
 
@@ -93,14 +121,21 @@ Pris på tilbudet (Bjørn 7.11.2026): alt i katalogen selges til fast stk-pris f
 DG og estimert tid i kalkylen. Motoren setter pris bare på det katalogen ikke dekker, tilpassede størrelser fra
 tegningen (sum-produkter, se [prismodell.md](prismodell.md)).
 
-Kalkylen bygger linjene av prisartikler (`src/pricing/data.ts`). En prisartikkel med oppskrift får kost og pris fra
-motoren (`src/cost/items.ts`): oppskriften sier hvilke Foga-deler (i listens enhet, meter eller stk) og egne innkjøp
-artikkelen består av, og artikkelens egne minutter per håndteringssteg er personminuttene.
+Kalkylen bygger linjene av prisartikler (`src/pricing/items.ts`). Hver prisartikkel får kost og pris fra motoren
+(`src/cost/items.ts`): oppskriften i kostgrunnlaget sier hvilke Foga-deler (i listens enhet, meter eller stk) og egne
+innkjøp artikkelen består av, og minuttene per håndteringssteg i kostgrunnlaget er personminuttene.
 
 `direkte kost = sum av deler × kost per bruk + personminutter / 60 × timekost`, `pris = direkte kost × (1 + indirekte) / (1 − DG-mål)`
 
+«Slik er det regnet»: motoren returnerer regnestykket sammen med kosten (`PriceItem.trace`: én rad per del og arbeid,
+mengde × kost per enhet, tallene som ble brukt og hvor i kostgrunnlaget de står), og kalkylelinjen husker hvilke
+prisartikler den er bygget av (`CalcLine.uses`). Trykker man på en linje i kalkylen, vises det (`ui/calc/Trace.tsx`).
+Det er samme kode som regner kosten, ikke en tekst om den; en test sjekker at radene summerer til kosten og formelen
+gir prisen. Katalogprodukter uten oppskrift viser kost som andel av salgsprisen og gruppen den kommer fra.
+
 Kosten regnes for året i kostgrunnlagets dato, så samme kostgrunnlag gir samme priser; nytt år er ny versjon. Mangler
-kostgrunnlaget pris på en del, beholder artikkelen eksempeltallene.
+kostgrunnlaget pris på en del, eller artikkelen oppskrift, får den ingen kost: den er ute av prislisten, linjer som
+bruker den står med «kost mangler», og kalkylen sier øverst hvilke artikler det gjelder. Ingen tall står i stedet.
 
 Med oppskrift i dag (trinn 3): stolpe 94 med fot, topp- og bunnskinne, HDF-plate og overstykke, dør, forheng,
 takdrager i alle lengder, fotplate 750 med 795, krok og skjøt over tekstilvegg (utleie), og montering per modul,
@@ -173,11 +208,27 @@ Prisene er nøyaktig 765 kr per meter vegg og 121 kr per meter takdrager, uten f
 minutter per meter vegg og 2 per meter takdrager.
 
 Før kalibreringen ga appen, med ekte Foga-priser, 3,3 ganger prisen og 3,4 ganger tiden. Etter: tidene for vegg- og
-takdragerartiklene er skalert (0,34 og 0,15, `TIME_FACTOR` i `src/pricing/data.ts`, fordelingen på stegene beholdt), og
+takdragerartiklene er skalert med 0,34 og 0,15 (fordelingen på stegene beholdt, og de skalerte tallene er det som står i
+eksempeltidene i `src/pricing/items.ts`, så tallet som vises er tallet som brukes), og
 bruk i levetiden er 14 for profiler og plater og 25 for koblinger (var 4 og 10 i Bjørns kalkulator). Da treffer appen
 alle tre innen 3 % på tid, og kosten gir DG 70 % på dagens pris (prisen er nå OMS-prisen, 765 kr per meter vegg og
 121 per meter takdrager). Tidene sjekkes i `src/calc/calc.test.ts`; prisene sjekkes utenfor repoet,
 fordi den ekte prislisten ikke publiseres.
+
+Fanen Referanser på siden Kostgrunnlag regner de tre standene og frittstående tekstilvegger på 3 til 6 m med
+kostgrunnlaget i bruk (`src/calc/referenceSet.ts`): pris, kost, DG og timer. Med endringer som ikke er lagret, viser den
+tallene med endringene og forskjellen fra nå, så et nytt tall kan sjekkes mot kalibreringen før det lagres som ny
+versjon.
+
+## Redigering og versjoner
+
+Et tall endres ved å trykke på det på siden Kostgrunnlag: ny verdi, status og kilde. Endringene samles og lagres
+sammen som en ny versjon med foreslått navn (`2026-11 A` blir `2026-11 B`, ny måned begynner på A) og en kommentar.
+Endringen går samme vei som en innlastet fil (`withValues` i `src/cost/fields.ts`: skrives inn i filen og leses på
+nytt), så det som lagres er det samme som «Last ned» gir. En prisliste kan limes inn fra et regneark, én vare per linje
+med varenr først og pris sist; ukjente varenr hoppes over. Historikken (`src/cost/history.ts`) har gammel og ny verdi
+for hvert tall, ligger bare i nettleseren som kostgrunnlaget, kan lastes ned, og «Tilbake til forrige versjon» bruker
+grunnlaget den nyeste versjonen erstattet.
 
 ## Åpent
 

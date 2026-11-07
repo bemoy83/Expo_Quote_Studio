@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { mainGroupOf } from '../../../catalog/groups'
 import { fillFloor } from '../../../domain/variant'
 import { IconButton, Segmented } from '../../controls'
-import { catalog, productOf, rules } from '../../env'
+import { catalog, pricing, productOf } from '../../env'
 import { fmt, kr } from '../../format'
 import { ProductRow, Swatch, VariantChips } from '../ProductRow'
 import type { RailProps } from '../Rail'
@@ -53,7 +53,7 @@ export function FloorSection({ v, res, brush, tool, pick, onEdit }: RailProps) {
             }
             action={
               <>
-                <IconButton icon={PaintBucket} label={`Fyll hele standen med ${cur.name.toLowerCase()}`} onClick={() => onEdit((x) => fillFloor(x, cur.artnr, p.roll, rules.carpet))} />
+                <IconButton icon={PaintBucket} label={`Fyll hele standen med ${cur.name.toLowerCase()}`} onClick={() => onEdit((x) => fillFloor(x, cur.artnr, p.roll, pricing.carpet))} />
                 <IconButton icon={Paintbrush} label={`Tegn ${p.name.toLowerCase()} i plan`} pressed={active} onClick={() => pick({ kind: 'floor', product: cur.artnr })} />
               </>
             }

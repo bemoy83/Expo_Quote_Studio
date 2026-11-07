@@ -10,6 +10,8 @@ export const KEYS = {
   theme: 'expo-quote-studio.theme',
   /** The kostgrunnlag loaded from a file. Only in this browser; never sent anywhere. */
   costBasis: 'expo-quote-studio.kostgrunnlag',
+  /** Saved versions of the kostgrunnlag, with the basis each replaced. Only in this browser, like the basis. */
+  costHistory: 'expo-quote-studio.kostgrunnlag-historikk',
 } as const;
 
 function read(key: string): string | null {

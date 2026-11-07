@@ -4,10 +4,11 @@ import { DEFAULT_CATALOG } from '../catalog/defaultCatalog'
 import { applyEdits, NO_EDITS, type CatalogEdits } from '../catalog/edits'
 import { indexCatalog, placeContext } from '../catalog/lookup'
 import type { Product } from '../catalog/types'
-import { EXAMPLE_BASIS, type CostBasis } from '../cost/basis'
+import { EXAMPLE_BASIS, parseBasis, serializeBasis, type CostBasis } from '../cost/basis'
+import { readHistory, withEntry, type HistoryEntry } from '../cost/history'
 import { pricingFrom } from '../pricing/data'
 import { KEYS, loadCostBasis, loadJson, saveCostBasis, saveJson } from '../persistence/storage'
-import { RULES, type InFrameParams, type Rules } from '../rules/rules'
+import { ownInFrame, RULES, type InFrameParams, type Rules } from '../rules/rules'
 
 const loadEdits = (): CatalogEdits => {
   const e = loadJson<CatalogEdits>(KEYS.catalog, NO_EDITS)
@@ -16,7 +17,7 @@ const loadEdits = (): CatalogEdits => {
 const withInFrame = (p: Partial<InFrameParams>): Rules => ({ ...RULES, textile: { ...RULES.textile, inFrame: { ...RULES.textile.inFrame, ...p } } })
 
 export let edits: CatalogEdits = loadEdits()
-export let rules: Rules = withInFrame(loadJson<Partial<InFrameParams>>(KEYS.inFrame, {}))
+export let rules: Rules = withInFrame(ownInFrame(loadJson<Partial<InFrameParams>>(KEYS.inFrame, {}), true))
 export let catalog = applyEdits(DEFAULT_CATALOG, edits)
 export let idx = indexCatalog(catalog)
 export let place = placeContext(rules, catalog)
@@ -48,7 +49,7 @@ export function setCatalogEdits(e: CatalogEdits) {
 
 export function setInFrame(p: InFrameParams) {
   rules = withInFrame(p)
-  saveJson(KEYS.inFrame, p)
+  saveJson(KEYS.inFrame, ownInFrame(p))
   changed()
 }
 
@@ -60,6 +61,34 @@ export function setCostBasis(b: CostBasis | null): boolean {
   const kept = saveCostBasis(b)
   changed()
   return kept
+}
+
+/** Saved versions of the kostgrunnlag, newest first (cost/history.ts). */
+export let costHistory: HistoryEntry[] = readHistory(loadJson<unknown>(KEYS.costHistory, []))
+
+const keepEntry = (e: HistoryEntry) => {
+  costHistory = withEntry(costHistory, e)
+  saveJson(KEYS.costHistory, costHistory)
+}
+
+/** Use `b`, made from the basis in use by the changes in `entry`, and keep the entry. False as for setCostBasis. */
+export function saveBasisVersion(b: CostBasis, entry: HistoryEntry): boolean {
+  keepEntry(entry)
+  return setCostBasis(b)
+}
+
+/** Back to the basis the newest saved version replaced; kept in the history as a version of its own. An error text
+ *  when there is none, or it cannot be read. */
+export function revertBasis(at: string): string | null {
+  const last = costHistory[0]
+  if (!last) return 'Ingen tidligere versjon'
+  const read = last.before === null ? null : parseBasis(last.before)
+  if (read && !read.ok) return read.error
+  const back = read ? read.basis : null
+  const now = costBasis
+  keepEntry({ at, version: back?.version ?? 'eksempel', from: now.version, comment: `Tilbake til ${back ? back.version : 'eksempeltall'}`, changes: [], before: now === EXAMPLE_BASIS ? null : serializeBasis(now) })
+  setCostBasis(back)
+  return null
 }
 
 export const DEFAULT_IN_FRAME = RULES.textile.inFrame

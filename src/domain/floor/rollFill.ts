@@ -3,7 +3,7 @@
 // The lanes of one fill share a `fill` id, so the fill can be laid another way later. Proposals are ranked by the
 // internal cost (rules.carpet): material from the roll, tape and work. The customer always pays laid m² only.
 // Byggeregel G4 (docs/byggeregler.md).
-import type { CarpetRates } from '../../rules/rules';
+import type { CarpetRates } from '../../cost/params';
 import { CELL, cellKey } from '../grid';
 import type { FloorTile, Stand, Variant } from '../types';
 import { cutTiles } from './edit';
