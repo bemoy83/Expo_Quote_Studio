@@ -85,7 +85,7 @@ interface Props {
   floorFull?: boolean
   /** Position numbers (the quote's and the work order's small plan; never on the drawing surface). */
   positions?: boolean
-  /** Work order: textile walls on a wall face show their frame label (T1 …) instead of the quote number. */
+  /** Work order: textile walls show their textile labels (T1, F1A, F1B …) instead of the quote number. */
   textileLabels?: boolean
   /** Why what the pointer aims at cannot be stored (or that it is already there), for the hint line; null when it can. */
   onHint?: (text: string | null) => void
@@ -292,7 +292,7 @@ export function PlanView(p: Props) {
       {twin('walls', (s) => <WallLayer v={s.v} mods={s.mods} selection={selection} dim={dim} />)}
 
       {/* Free-standing textile walls, textile walls on a wall face, foil decor */}
-      {twin('textile', (s) => <TextileLayer v={s.v} res={s.res} selection={selection} mini={p.mini} dim={dim} />)}
+      {twin('textile', (s) => <TextileLayer v={s.v} res={s.res} selection={selection} mini={p.mini} noRunLabel={p.positions && p.textileLabels} dim={dim} />)}
 
       {/* Beams and posts */}
       {twin('beams', (s) => <BeamLayer v={s.v} res={s.res} selection={selection} dim={dim} />)}

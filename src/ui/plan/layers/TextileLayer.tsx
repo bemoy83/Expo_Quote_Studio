@@ -33,7 +33,8 @@ import { Seg } from './Seg'
 import { GONE, useErasing } from './erasing'
 
 /** Frittstående tekstilvegger, textile walls on a wall face, and the print and decal bands. */
-export function TextileLayer({ v, res, selection, mini, dim }: { v: Variant; res: CalcResult; selection: PlanSelection; mini?: boolean; dim: (...layers: Layer[]) => number }) {
+/** `noRunLabel`: the work order, where each face carries its textile label instead (PosLayer). */
+export function TextileLayer({ v, res, selection, mini, noRunLabel, dim }: { v: Variant; res: CalcResult; selection: PlanSelection; mini?: boolean; noRunLabel?: boolean; dim: (...layers: Layer[]) => number }) {
   // Tøm: a textile wall about to go is dimmed and hatched; a motif about to go only hatched, on its face
   const { gone, hatch } = useErasing()
   const sc = usePlanScale()
@@ -68,7 +69,7 @@ export function TextileLayer({ v, res, selection, mini, dim }: { v: Variant; res
               {sel && selection.freeFace && <FaceMark t={t} face={selection.freeFace} sc={sc} />}
               {g && <Seg a={t.from} b={t.to} stroke={hatch} strokeWidth={tw} />}
               {motif && <FaceMark t={t} face={motif} stroke={hatch} width={linePx(sc, 4)} sc={sc} />}
-              {!mini && (
+              {!mini && !noRunLabel && (
                 <text {...labelAt(t)} textAnchor="middle" style={{ ...MONO, fontSize: '0.17px' }}>
                   {f.pos} · {fmt(f.length / 1000, 2)} m
                 </text>

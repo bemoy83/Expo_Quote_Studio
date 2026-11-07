@@ -35,12 +35,13 @@ interface Chip {
   layer: Layer
 }
 
-/** Where each number stands. With `textileLabels` (the work order) a textile wall on a wall face shows its frame label
- *  (T1, T2 …, as in the textile list and the wall drawing) instead of its quote number, and a free-standing one none:
- *  its F label already stands on the run. */
+/** Where each number stands. With `textileLabels` (the work order) textile walls show the labels their textiles are
+ *  marked with instead of the quote number: T1, T2 … on a wall face, F1A and F1B on the two faces of a free-standing
+ *  one (Bjørn 7.11.2026: the sketch shows which textile goes where). */
 function chips(v: Variant, res: CalcResult, sc: PlanScale, textileLabels: boolean): Chip[] {
   const p = positionsOf(v, res, catalog)
   const frameLabel = new Map(res.production.pieces.map((x) => [x.textileId, x.pos]))
+  const freeFaces = new Map(res.production.free.map((f) => [f.textileId, f.faces]))
   const px = (n: number) => sizePx(sc, n)
   const [ww, tw, band, printOff, textOff] = [wallWidth(sc), textileWidth(sc), printBand(sc), printOffset(sc), textileOffset(sc)]
   const half = px(CHIP) / 2 + px(GAP)
@@ -73,8 +74,17 @@ function chips(v: Variant, res: CalcResult, sc: PlanScale, textileLabels: boolea
         break
       }
       case 'freeTextile': {
-        if (textileLabels) break
         const t = v.freeTextiles.find((x) => x.id === i.id)!
+        if (textileLabels) {
+          // The work order: each face's textile label (F1A, F1B), at the middle of that face, as the textiles are marked
+          const faces = freeFaces.get(t.id) ?? []
+          for (const f of faces) {
+            const [nx, ny] = runNormal(t, f.face)
+            const o = tw / 2 + half
+            out.push({ label: f.pos, at: [(t.from[0] + t.to[0]) / 2 + nx * o, (t.from[1] + t.to[1]) / 2 + ny * o], layer })
+          }
+          break
+        }
         const [nx, ny] = runNormal(t, 'a')
         // A quarter along on face A: clear of the T/F label in the middle of face B
         const o = tw / 2 + half
