@@ -1,6 +1,7 @@
 // The numbers the cost engine runs on. One place, so they can be checked and changed without touching the rules.
 // Marked per number: Bjørn = confirmed by Bjørn; forslag = a starting value until OMS has history. Kostmodell:
 // docs/kostmodell.md.
+import type { PartKind } from '../foga/parts';
 import type { Currency } from './prices';
 
 /** Yearly change from the year before, e.g. 2023: 0,10 = 10 % up from 2022. */
@@ -16,18 +17,16 @@ export interface CostParams {
   materialIndex: IndexSeries;
   /** The montør's hourly cost moves with this from `labour.baseYear`. */
   labourIndex: IndexSeries;
-  /** Owned equipment that is rented out. */
+  /** Owned equipment that is rented out. Storage and upkeep are indirect cost (`indirect`), not counted here. */
   owned: {
-    /** Years before it is replaced. Bjørn 7.11.2026: say every second year. */
-    lifetimeYears: number;
-    /** Times it goes out a year. Forslag, until OMS has history. */
-    usesPerYear: number;
-    /** Interest on the money tied up, a share of the purchase price per year. Forslag. */
+    /** Lifetime and use per article group (Foga part kind). Eksempeltall (Bjørn 7.11.2026); OMS gives real ones
+     *  later. Uses per year = metres (or pieces) out per year / metres in stock. */
+    groups: Readonly<Record<PartKind, OwnedGroup>>;
+    /** Interest a year on the money tied up. Charged on the average, half the purchase price, since the value falls
+     *  to nothing over the lifetime. Forslag. */
     interest: number;
-    /** Damage and loss, a share of the purchase price per year. Forslag. */
-    damage: number;
-    /** Storage and upkeep per unit and year, kr. Forslag: not known yet. */
-    storagePerYear: number;
+    /** Share of the purchase price lost or broken beyond repair on one job. Wear is the lifetime. Forslag. */
+    lossPerUse: number;
   };
   /** A profile cut to a length outside the range (byggeregel X9). */
   cut: {
@@ -46,9 +45,14 @@ export interface CostParams {
     baseYear: number;
     /** Share of paid hours that can be billed. 1 = the rate already covers it. Forslag. */
     billableShare: number;
-    /** Overtime surcharge on the hours that fall on overtime. Bjørn 7.11.2026: 100 %. */
+    /** Overtime surcharge on the hours that fall on overtime, on the wage. Bjørn 7.11.2026: 100 %. */
     overtimeSurcharge: number;
+    /** Share of `baseRate` that is wage; the surcharge is not paid on the rest (social costs). Forslag. */
+    wageShare: number;
   };
+  /** Indirect cost (admin, premises, storage, vans, management) as one share of direct cost, shown as its own line in
+   *  the kalkyle. DG is counted on direct cost (Bjørn 7.11.2026). Eksempeltall. */
+  indirect: number;
   height: {
     /** Above this, mm, a 5-step ladder does not reach and a lift is needed (Bjørn 7.11.2026). */
     limit: number;
@@ -59,20 +63,40 @@ export interface CostParams {
   };
 }
 
+export interface OwnedGroup {
+  /** Years before it is replaced. */
+  lifetimeYears: number;
+  /** Times it goes out a year. */
+  usesPerYear: number;
+}
+
 const index = (from: number, to: number, rate: number) => Object.fromEntries(Array.from({ length: to - from + 1 }, (_, i) => [from + i, rate]));
 
-/** Bjørn's index from his calculator: 2023 +10 %, 2024 +6,7 %, 2025 and 2026 +6 %, then +5 % a year. */
-const BJORN_INDEX: IndexSeries = { 2023: 0.1, 2024: 0.067, 2025: 0.06, 2026: 0.06, ...index(2027, 2035, 0.05) };
+/** Bjørn's index from his calculator: 2023 +10 %, 2024 +6,7 %, 2025 and 2026 +6 %, then +5 % a year. Material. */
+const MATERIAL_INDEX: IndexSeries = { 2023: 0.1, 2024: 0.067, 2025: 0.06, 2026: 0.06, ...index(2027, 2035, 0.05) };
+/** Wages move on their own (tariff). Same numbers as material until real ones are set. Eksempeltall. */
+const LABOUR_INDEX: IndexSeries = { 2023: 0.1, 2024: 0.067, 2025: 0.06, 2026: 0.06, ...index(2027, 2035, 0.05) };
+
+/** Eksempeltall, chosen so the number of uses in a lifetime matches Bjørn's calculator: profiles and plates 4,
+ *  couplings, feet and accessories 10. Replaced every second year (Bjørn 7.11.2026). */
+const OWNED_GROUPS: Record<PartKind, OwnedGroup> = {
+  profile: { lifetimeYears: 2, usesPerYear: 2 },
+  plate: { lifetimeYears: 2, usesPerYear: 2 },
+  coupling: { lifetimeYears: 2, usesPerYear: 5 },
+  foot: { lifetimeYears: 2, usesPerYear: 5 },
+  accessory: { lifetimeYears: 2, usesPerYear: 5 },
+};
 
 export const DEFAULT_COST_PARAMS: CostParams = {
   rates: { NOK: 1, SEK: 1 },
   freightShare: 0,
-  materialIndex: BJORN_INDEX,
-  labourIndex: BJORN_INDEX,
-  owned: { lifetimeYears: 2, usesPerYear: 10, interest: 0.05, damage: 0.05, storagePerYear: 0 },
+  materialIndex: MATERIAL_INDEX,
+  labourIndex: LABOUR_INDEX,
+  owned: { groups: OWNED_GROUPS, interest: 0.05, lossPerUse: 0.01 },
   cut: { reuse: 0.25, waste: 0.1, minutes: 5 },
   boughtWaste: 0.05,
-  labour: { baseRate: 391.4, baseYear: 2022, billableShare: 1, overtimeSurcharge: 1 },
+  labour: { baseRate: 391.4, baseYear: 2022, billableShare: 1, overtimeSurcharge: 1, wageShare: 0.8 },
+  indirect: 0.1,
   height: { limit: 3000, factor: 1.25, liftPerDay: 0 },
 };
 
