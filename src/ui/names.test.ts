@@ -2,14 +2,14 @@ import { describe, expect, it } from 'vitest'
 import { standScope } from './names'
 
 describe('standScope', () => {
-  it('names organiser beams instead of saying uten takdrager', () => {
+  it('keeps own posts with own walls and names organiser beams instead of uten takdrager', () => {
     expect(standScope({ wallLm: 9, organiserWallLm: 8, beamLm: 8, organiserBeamLm: 8 }, 1)).toBe(
-      '1 lm vegg (+ 8 lm standvegg fra arrangør) · 8 m takdrager fra arrangør · 1 stolpe',
+      '1 lm vegg · 1 stolpe · fra arrangør: 8 lm standvegg, 8 m takdrager',
     )
   })
   it('splits own and organiser beams', () => {
     expect(standScope({ wallLm: 9, organiserWallLm: 8, beamLm: 11, organiserBeamLm: 8 }, 3)).toBe(
-      '1 lm vegg (+ 8 lm standvegg fra arrangør) · 3 m takdrager (+ 8 m fra arrangør) · 3 stolper',
+      '1 lm vegg · 3 m takdrager · 3 stolper · fra arrangør: 8 lm standvegg, 8 m takdrager',
     )
   })
   it('says uten takdrager only when there are none', () => {

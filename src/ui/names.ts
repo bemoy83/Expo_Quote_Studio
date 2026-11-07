@@ -13,19 +13,22 @@ export function fromOrganiser(k: Pick<KeyFigures, 'organiserWallLm' | 'organiser
   return `standvegger ${fmt(k.organiserWallLm)} lm i ${colour.toLowerCase()}${k.organiserBeamLm ? ` og takdrager ${fmt(k.organiserBeamLm)} m` : ''}`
 }
 
-/** Work order stand line: '1 lm vegg (+ 8 lm standvegg fra arrangør) · 8 m takdrager fra arrangør · 1 stolpe'.
- *  Organiser-supplied walls and beams are named as such; 'uten takdrager' only when there are none at all. */
+/** Work order stand line: what the exhibitor builds, then what the organiser delivers:
+ *  '1 lm vegg · 1 stolpe · fra arrangør: 8 lm standvegg, 8 m takdrager'. `posts` are the exhibitor's own (walls and
+ *  own takdrager), so they sit with the own part. 'uten takdrager' only when there are none at all. */
 export function standScope(k: Pick<KeyFigures, 'wallLm' | 'organiserWallLm' | 'beamLm' | 'organiserBeamLm'>, posts: number) {
-  const ownWall = k.wallLm - k.organiserWallLm
+  const some = (n: number) => n > 1e-9
   const ownBeam = k.beamLm - k.organiserBeamLm
-  const wall = `${fmt(ownWall)} lm vegg${k.organiserWallLm > 1e-9 ? ` (+ ${fmt(k.organiserWallLm)} lm standvegg fra arrangør)` : ''}`
-  const beam =
-    k.beamLm <= 1e-9
-      ? 'uten takdrager'
-      : ownBeam <= 1e-9
-        ? `${fmt(k.organiserBeamLm)} m takdrager fra arrangør`
-        : `${fmt(ownBeam)} m takdrager${k.organiserBeamLm > 1e-9 ? ` (+ ${fmt(k.organiserBeamLm)} m fra arrangør)` : ''}`
-  return [wall, beam, count(posts, 'stolpe', 'stolper')].join(' · ')
+  const own = [
+    `${fmt(k.wallLm - k.organiserWallLm)} lm vegg`,
+    ...(some(ownBeam) ? [`${fmt(ownBeam)} m takdrager`] : some(k.beamLm) ? [] : ['uten takdrager']),
+    count(posts, 'stolpe', 'stolper'),
+  ]
+  const theirs = [
+    ...(some(k.organiserWallLm) ? [`${fmt(k.organiserWallLm)} lm standvegg`] : []),
+    ...(some(k.organiserBeamLm) ? [`${fmt(k.organiserBeamLm)} m takdrager`] : []),
+  ]
+  return [...own, ...(theirs.length ? [`fra arrangør: ${theirs.join(', ')}`] : [])].join(' · ')
 }
 
 export const capitalise = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
