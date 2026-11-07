@@ -71,11 +71,40 @@ describe('kostgrunnlag', () => {
     expect(r.basis.params.indirect).toBe(P.indirect);
     expect(r.basis.params.owned.interest).toBe(0.09);
     expect(r.basis.orderCosts).toBe(ORDER_COSTS);
-    expect(r.basis.fromExample).toEqual(['parametere.indirect', 'ordrekost', 'prisliste Egne innkjøp']);
+    expect(r.basis.fromExample).toEqual(['parametere.indirect', 'ordrekost', 'prisliste Egne innkjøp', 'tider', 'oppskrifter', 'katalog']);
     // Everything marked, the whole part goes
     const all = parseBasis(file({ parametere: frozen, prislister: [EXAMPLE_LIST, EXAMPLE_OWN_LIST], fraEksempel: ['parametere', 'prisliste', 'ordrekost'] }));
     expect(all.ok && all.basis.params).toBe(P);
     expect(all.ok && supplierList(all.basis)).toBe(EXAMPLE_LIST);
+  });
+
+  it('times, recipes and catalog rates: per item from the file, the rest from the example, noted', () => {
+    const r = parseBasis(
+      file({
+        versjon: 2,
+        tider: { 'stolpe-94': { plukk: 1, montering: 2 } },
+        oppskrifter: { veggplate: { own: [['HDF-976x2440', 1, 'plate']], dg: 'salg' } },
+        katalog: { kost: { 'mob.': 0.4 } },
+      }),
+    );
+    if (!r.ok) throw new Error(r.error);
+    const b = r.basis;
+    expect(b.times['stolpe-94']).toEqual({ plukk: 1, montering: 2 });
+    expect(b.times['montering-modul']).toBe(EXAMPLE_BASIS.times['montering-modul']);
+    expect(b.recipes.veggplate.dg).toBe('salg');
+    expect(b.catalog.cost).toEqual({ 'mob.': 0.4 });
+    expect(b.catalog.time).toBe(EXAMPLE_BASIS.catalog.time);
+    expect(b.fromExample).toContain('tider.montering-modul');
+    expect(b.fromExample).not.toContain('tider.stolpe-94');
+    expect(b.fromExample).toContain('katalog.tider');
+    expect(b.fromExample).not.toContain('katalog.kost');
+    // Stored, only the own ones are written
+    const stored = JSON.parse(serializeBasis(b));
+    expect(stored.tider).toEqual({ 'stolpe-94': { plukk: 1, montering: 2 } });
+    expect(Object.keys(stored.oppskrifter)).toEqual(['veggplate']);
+    expect(stored.katalog).toEqual({ kost: { 'mob.': 0.4 } });
+    const again = parseBasis(serializeBasis(b));
+    expect(again.ok && again.basis).toEqual(b);
   });
 
   it('the template writes every number out, to fill in', () => {
@@ -101,7 +130,12 @@ describe('kostgrunnlag', () => {
     };
     expect(err('nei')).toMatch(/JSON/);
     expect(err(JSON.stringify({ format: 'standskisse' }))).toMatch(/ikke et kostgrunnlag/);
-    expect(err(file({ versjon: 2 }))).toMatch(/filversjon 2/);
+    expect(err(file({ versjon: 3 }))).toMatch(/filversjon 3/);
+    expect(err(file({ tider: { 'stolpe-95': { plukk: 1 } } }))).toMatch(/stolpe-95 er ikke en prisartikkel/);
+    expect(err(file({ tider: { 'stolpe-94': { lunsj: 1 } } }))).toMatch(/lunsj er ikke et steg/);
+    expect(err(file({ oppskrifter: { 'stolpe-94': { parts: [['94X', 1]], dg: 'utleie' } } }))).toMatch(/94X er ikke en Foga-del/);
+    expect(err(file({ oppskrifter: { 'stolpe-94': { parts: [['94', 1]], dg: 'gratis' } } }))).toMatch(/dg må være/);
+    expect(err(file({ katalog: { kost: { 'mob.': 1.5 } } }))).toMatch(/andel mellom 0 og 1/);
     expect(err(file({ kostversjon: '' }))).toMatch(/kostversjon/);
     expect(err(file({ kostversjon: 'eksempel' }))).toMatch(/eksempel/);
     expect(err(file({ dato: '7.11.2026' }))).toMatch(/ÅÅÅÅ-MM-DD/);

@@ -14,7 +14,7 @@ import type { BomSizes } from '../foga/engine';
 import { fogaPart } from '../foga/parts';
 import { RECIPES } from '../foga/recipes';
 import type { FogaStructure } from '../foga/structure';
-import { ITEM, type PricingData } from '../pricing/data';
+import { catalogOwn, ITEM, type PricingData } from '../pricing/data';
 import { priceLine, type Use } from '../pricing/model';
 import type { Rules } from '../rules/rules';
 import { liftBeams, type BeamLift } from './beamLift';
@@ -85,8 +85,9 @@ export function calcContext(v: Variant, rules: Rules, catalog: Catalog, standWal
   const line: CalcContext['line'] = (artnr, qty, extra = {}, uses = null, own) => {
     const hit = idx.byArtnr.get(artnr);
     const q = hit?.product.unit === 'stk' ? qty : r1(qty);
-    const cost = hit?.variant.cost;
-    const t = hit?.product.time;
+    const o = hit ? catalogOwn(pricing, hit.product, hit.variant) : {};
+    const cost = o.cost;
+    const t = o.time;
     const p = priceLine(
       q,
       hit?.product.pricing ?? 'fast',

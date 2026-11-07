@@ -1,19 +1,32 @@
-// Kostgrunnlag: everything the cost engine runs on, as one dated and versioned file. The price lists, the parameters
-// and the per-order costs. The app ships with an example basis (made-up prices, example numbers); the real one is a
+// Kostgrunnlag: everything the cost engine runs on, as one dated and versioned file. The price lists, the parameters,
+// the per-order costs, the minutes and recipe of every price item, and what catalog products without a recipe cost and
+// take. Rules (how a drawing becomes quantities) stay in code; every number they price with is here. The app ships with an example basis (made-up prices, example numbers); the real one is a
 // file loaded in the browser and kept there, later fetched from the OMS (Bjørn 7.11.2026). It is never published.
 // What the file leaves out is taken from the example, and the basis says so, so the app can show it. The browser and a
 // downloaded file keep only the owner's own numbers: the rest is filled from the app's current example every time it is
 // read, so a new example number reaches a stored basis instead of being frozen at the app version that loaded it.
-// File: JSON `{ format: 'kostgrunnlag', versjon, kostversjon, dato, kilde, parametere, ordrekost, prislister }`.
+// File: JSON `{ format: 'kostgrunnlag', versjon, kostversjon, dato, kilde, parametere, ordrekost, prislister, tider,
+// oppskrifter, katalog }`. Version 1 files (no tider, oppskrifter, katalog) are read too.
 // Kostmodell: docs/kostmodell.md.
+import { FOGA_PARTS, type PartKind } from '../foga/parts';
+import { EXAMPLE_CATALOG, EXAMPLE_RECIPES, EXAMPLE_TIMES, ITEM_DEFS } from '../pricing/items';
+import { HANDLING_STEPS, type Time } from '../pricing/model';
 import { EXAMPLE_LIST } from './example-list';
+import type { ItemRecipe } from './items';
 import { EXAMPLE_OWN_LIST, OWN_SUPPLIER } from './own-list';
 import type { OrderCost } from './model';
-import { DEFAULT_COST_PARAMS, ORDER_COSTS, type CostParams } from './params';
+import { DEFAULT_COST_PARAMS, ORDER_COSTS, type CostParams, type DgGroup } from './params';
 import type { Currency, SupplierItem, SupplierList } from './prices';
 
 export const BASIS_FORMAT = 'kostgrunnlag';
-export const BASIS_FILE_VERSION = 1;
+export const BASIS_FILE_VERSION = 2;
+const READS = [1, 2];
+
+/** Catalog products without a recipe: cost as a share of the sales price, and minutes per step, by group prefix. */
+export interface CatalogRates {
+  cost: Readonly<Record<string, number>>;
+  time: Readonly<Record<string, Time>>;
+}
 
 export interface CostBasis {
   /** The basis' own version, as its owner names it ("2026-11 A"). A quote remembers it. */
@@ -25,7 +38,12 @@ export interface CostBasis {
   params: CostParams;
   orderCosts: readonly OrderCost[];
   lists: readonly SupplierList[];
-  /** What is taken from the example ("prisliste", "parametere.owned.interest"). Empty when nothing is. */
+  /** Person-minutes per unit and handling step, by price item id. */
+  times: Readonly<Record<string, Time>>;
+  /** What each price item is made of, by price item id. */
+  recipes: Readonly<Record<string, ItemRecipe>>;
+  catalog: CatalogRates;
+  /** What is taken from the example ("prisliste", "parametere.owned.interest", "tider.stolpe-94"). Empty when nothing is. */
   fromExample: readonly string[];
 }
 
@@ -45,7 +63,10 @@ export const EXAMPLE_BASIS: CostBasis = {
   params: DEFAULT_COST_PARAMS,
   orderCosts: ORDER_COSTS,
   lists: [EXAMPLE_LIST, EXAMPLE_OWN_LIST],
-  fromExample: ['prisliste', 'parametere', 'ordrekost'],
+  times: EXAMPLE_TIMES,
+  recipes: EXAMPLE_RECIPES,
+  catalog: EXAMPLE_CATALOG,
+  fromExample: ['prisliste', 'parametere', 'ordrekost', 'tider', 'oppskrifter', 'katalog'],
 };
 
 const EXAMPLE_LISTS = [EXAMPLE_LIST, EXAMPLE_OWN_LIST];
@@ -100,6 +121,9 @@ export function serializeBasis(b: CostBasis): string {
       parametere: without(b.params, 'parametere', b.fromExample),
       ordrekost: b.fromExample.includes('ordrekost') ? undefined : b.orderCosts,
       prislister: b.fromExample.includes('prisliste') ? undefined : b.lists,
+      tider: without(b.times, 'tider', b.fromExample),
+      oppskrifter: without(b.recipes, 'oppskrifter', b.fromExample),
+      katalog: without({ kost: b.catalog.cost, tider: b.catalog.time }, 'katalog', b.fromExample),
     },
     null,
     2,
@@ -110,7 +134,19 @@ export function serializeBasis(b: CostBasis): string {
 export function basisTemplate(): string {
   const b = EXAMPLE_BASIS;
   return JSON.stringify(
-    { format: BASIS_FORMAT, versjon: BASIS_FILE_VERSION, kostversjon: '2026-11 A', dato: b.date, kilde: '', parametere: b.params, ordrekost: b.orderCosts, prislister: b.lists },
+    {
+      format: BASIS_FORMAT,
+      versjon: BASIS_FILE_VERSION,
+      kostversjon: '2026-11 A',
+      dato: b.date,
+      kilde: '',
+      parametere: b.params,
+      ordrekost: b.orderCosts,
+      prislister: b.lists,
+      tider: b.times,
+      oppskrifter: b.recipes,
+      katalog: { kost: b.catalog.cost, tider: b.catalog.time },
+    },
     null,
     2,
   );
@@ -215,6 +251,96 @@ function supplierLists(x: unknown): SupplierList[] {
   });
 }
 
+const STEPS: readonly string[] = HANDLING_STEPS;
+const ITEM_IDS = new Set(ITEM_DEFS.map((d) => d.id));
+const PART_CODES = new Set(FOGA_PARTS.map((p) => p.code));
+const KINDS: readonly PartKind[] = ['profile', 'frame', 'coupling', 'foot', 'accessory', 'plate'];
+const DG_GROUPS: readonly DgGroup[] = ['utleie', 'arbeid', 'salg'];
+const isQty = (x: unknown): x is number => isNum(x) && x >= 0;
+
+/** Minutes per handling step: { "plukk": 0.34, "montering": 6 }. */
+function readTime(x: unknown, at: string): Time {
+  if (!isObj(x)) return fail(`${at} må være minutter per steg, for eksempel { "plukk": 1 }.`);
+  const out: Time = {};
+  for (const [k, v] of Object.entries(x)) {
+    if (!STEPS.includes(k)) return fail(`${at}: ${k} er ikke et steg (${STEPS.join(', ')}).`);
+    if (!isQty(v)) return fail(`${at}.${k} må være minutter, et tall.`);
+    out[k as keyof Time] = v;
+  }
+  return out;
+}
+
+/** A recipe: { "parts": [["94", 2.49]], "own": [["HDF-976x2440", 1, "plate"]], "bought": [["TRYKK-BLACKBACK", 1]], "dg": "utleie" }. */
+function readRecipe(x: unknown, at: string): ItemRecipe {
+  if (!isObj(x)) return fail(`${at} må være en oppskrift.`);
+  if (!DG_GROUPS.includes(x.dg as DgGroup)) return fail(`${at}: dg må være ${DG_GROUPS.join(', ')}.`);
+  const rows = (key: string, n: number): unknown[][] => {
+    const v = x[key];
+    if (v === undefined) return [];
+    if (!Array.isArray(v) || !v.every((r) => Array.isArray(r) && r.length === n)) return fail(`${at}.${key} må være en liste med [${n === 3 ? 'art.nr, mengde, gruppe' : 'kode, mengde'}].`);
+    return v as unknown[][];
+  };
+  const parts = rows('parts', 2).map(([code, qty]): readonly [string, number] => {
+    if (!isStr(code) || !PART_CODES.has(code)) return fail(`${at}.parts: ${String(code)} er ikke en Foga-del appen kjenner.`);
+    if (!isQty(qty)) return fail(`${at}.parts: mengden for ${code} må være et tall.`);
+    return [code, qty];
+  });
+  const own = rows('own', 3).map(([artnr, qty, kind]): readonly [string, number, PartKind] => {
+    if (!isStr(artnr) || !isQty(qty)) return fail(`${at}.own: art.nr og mengde mangler.`);
+    if (!KINDS.includes(kind as PartKind)) return fail(`${at}.own: gruppen for ${artnr} må være ${KINDS.join(', ')}.`);
+    return [artnr, qty, kind as PartKind];
+  });
+  const bought = rows('bought', 2).map(([artnr, qty]): readonly [string, number] => {
+    if (!isStr(artnr) || !isQty(qty)) return fail(`${at}.bought: art.nr og mengde mangler.`);
+    return [artnr, qty];
+  });
+  return { ...(parts.length ? { parts } : {}), ...(own.length ? { own } : {}), ...(bought.length ? { bought } : {}), dg: x.dg as DgGroup };
+}
+
+/** Per price item: the file's entry where it has one, else the example's, noted. A file without the part at all takes
+ *  the example's whole. An id that is not a price item is refused, so a typo does not go unnoticed. */
+function byItem<T>(x: unknown, key: string, example: Readonly<Record<string, T>>, read: (v: unknown, at: string) => T, fromExample: string[]): Readonly<Record<string, T>> {
+  if (x === undefined) {
+    fromExample.push(key);
+    return example;
+  }
+  if (!isObj(x)) return fail(`${key} må være et objekt med prisartikler.`);
+  const out: Record<string, T> = {};
+  for (const [id, v] of Object.entries(x)) {
+    if (!ITEM_IDS.has(id)) return fail(`${key}: ${id} er ikke en prisartikkel.`);
+    out[id] = read(v, `${key}.${id}`);
+  }
+  for (const [id, v] of Object.entries(example)) {
+    if (id in out) continue;
+    out[id] = v;
+    fromExample.push(`${key}.${id}`);
+  }
+  return out;
+}
+
+/** katalog: { kost: { "mob.": 0.55 }, tider: { "mob.": { "plukk": 1 } } }, each given whole or taken from the example. */
+function catalogRates(x: unknown, fromExample: string[]): CatalogRates {
+  if (x === undefined) {
+    fromExample.push('katalog');
+    return EXAMPLE_CATALOG;
+  }
+  if (!isObj(x)) return fail('katalog må være et objekt.');
+  let cost = EXAMPLE_CATALOG.cost;
+  if (x.kost === undefined) fromExample.push('katalog.kost');
+  else {
+    if (!isObj(x.kost)) return fail('katalog.kost må være andel av salgsprisen per gruppe, for eksempel { "mob.": 0.55 }.');
+    for (const [g, v] of Object.entries(x.kost)) if (!isNum(v) || v < 0 || v > 1) return fail(`katalog.kost.${g} må være en andel mellom 0 og 1.`);
+    cost = x.kost as Record<string, number>;
+  }
+  let time = EXAMPLE_CATALOG.time;
+  if (x.tider === undefined) fromExample.push('katalog.tider');
+  else {
+    if (!isObj(x.tider)) return fail('katalog.tider må være minutter per steg per gruppe.');
+    time = Object.fromEntries(Object.entries(x.tider).map(([g, v]) => [g, readTime(v, `katalog.tider.${g}`)]));
+  }
+  return { cost, time };
+}
+
 /** Read a kostgrunnlag file. What it leaves out comes from the example and is listed in `fromExample`. */
 export function parseBasis(text: string): BasisResult {
   let data: unknown;
@@ -224,8 +350,8 @@ export function parseBasis(text: string): BasisResult {
     return { ok: false, error: 'Filen er ikke gyldig JSON.' };
   }
   if (!isObj(data) || data.format !== BASIS_FORMAT) return { ok: false, error: 'Filen er ikke et kostgrunnlag.' };
-  if (data.versjon !== BASIS_FILE_VERSION) {
-    return { ok: false, error: `Kostgrunnlaget har filversjon ${String(data.versjon)}; appen leser versjon ${BASIS_FILE_VERSION}.` };
+  if (!READS.includes(data.versjon as number)) {
+    return { ok: false, error: `Kostgrunnlaget har filversjon ${String(data.versjon)}; appen leser versjon ${READS.join(' og ')}.` };
   }
   if (!isStr(data.kostversjon)) return { ok: false, error: 'Kostgrunnlaget mangler kostversjon (for eksempel "2026-11 A").' };
   if (data.kostversjon === EXAMPLE_BASIS.version) return { ok: false, error: '«eksempel» er appens egne tall; gi kostgrunnlaget en annen kostversjon.' };
@@ -238,6 +364,9 @@ export function parseBasis(text: string): BasisResult {
     parametere: without(data.parametere, 'parametere', old),
     ordrekost: old.includes('ordrekost') ? undefined : data.ordrekost,
     prislister: old.includes('prisliste') ? undefined : data.prislister,
+    tider: without(data.tider, 'tider', old),
+    oppskrifter: without(data.oppskrifter, 'oppskrifter', old),
+    katalog: without(data.katalog, 'katalog', old),
   };
   const fromExample: string[] = [];
   try {
@@ -256,6 +385,9 @@ export function parseBasis(text: string): BasisResult {
         params,
         orderCosts: f.ordrekost === undefined ? ORDER_COSTS : orderCosts(f.ordrekost),
         lists,
+        times: byItem(f.tider, 'tider', EXAMPLE_TIMES, readTime, fromExample),
+        recipes: byItem(f.oppskrifter, 'oppskrifter', EXAMPLE_RECIPES, readRecipe, fromExample),
+        catalog: catalogRates(f.katalog, fromExample),
         fromExample: [...new Set(fromExample)],
       },
     };

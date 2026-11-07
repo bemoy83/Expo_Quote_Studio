@@ -1,8 +1,10 @@
+import { EXAMPLE_LIST } from './example-list';
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_PRICING, ITEM, ITEM_RECIPES } from '../pricing/data';
+import { DEFAULT_PRICING, ITEM } from '../pricing/data';
+import { EXAMPLE_RECIPES as ITEM_RECIPES, ITEM_DEFS } from '../pricing/items';
 import type { PriceItem } from '../pricing/model';
 import { EXAMPLE_BASIS as B, supplierList } from './basis';
-import { basisYear, costItem } from './items';
+import { basisYear, costItem, costItems } from './items';
 import { fogaPartPerUse, labourCost, purchaseCost } from './model';
 import { OWN_SUPPLIER } from './own-list';
 
@@ -13,7 +15,7 @@ const year = basisYear(B);
 describe('price items from the cost engine', () => {
   it('cost = parts per use + person-minutes, price from the DG target of the group', () => {
     const c = costItem(base, { parts: [['94', 2.49], ['700', 1]], dg: 'utleie' }, B);
-    const material = fogaPartPerUse('94', year, P)! * 2.49 + fogaPartPerUse('700', year, P)!;
+    const material = fogaPartPerUse('94', year, P, EXAMPLE_LIST)! * 2.49 + fogaPartPerUse('700', year, P, EXAMPLE_LIST)!;
     expect(c.missing).toEqual([]);
     expect(c.material).toBeCloseTo(material);
     expect(c.labour).toBeCloseTo(labourCost(6, year, P));
@@ -26,10 +28,24 @@ describe('price items from the cost engine', () => {
     expect(c.item.cost).toBeCloseTo(labourCost(6, year, P), 2);
     expect(c.item.price).toBeCloseTo((c.item.cost * 1.1) / (1 - 1.25 / 2.25), 1);
   });
-  it('a part the kostgrunnlag has no price for keeps the example numbers, and says which', () => {
+  it('a part the kostgrunnlag has no price for says which', () => {
     const c = costItem(base, { parts: [['92LL', 1]], own: [['NOPE', 1, 'plate']], dg: 'utleie' }, B);
     expect(c.missing).toEqual(['92LL', 'NOPE']);
-    expect(c.item).toBe(base);
+  });
+  it('an item that cannot be costed is left out and named, never given a number to stand in', () => {
+    const recipes = { ...B.recipes, [ITEM.post]: { parts: [['92LL', 1]], dg: 'utleie' } } as typeof B.recipes;
+    const { [ITEM.module]: _gone, ...rest } = recipes;
+    const r = costItems(ITEM_DEFS, { ...B, recipes: rest });
+    expect(r.items.has(ITEM.post)).toBe(false);
+    expect(r.items.has(ITEM.module)).toBe(false);
+    expect(r.missing).toEqual([
+      { id: ITEM.post, name: 'Stolpe 94 med justeringsfot', parts: ['92LL'] },
+      { id: ITEM.module, name: 'Montering per veggmodul', parts: [] },
+    ]);
+  });
+  it('the example basis costs every price item', () => {
+    expect(DEFAULT_PRICING.missing).toEqual([]);
+    expect(DEFAULT_PRICING.items.size).toBe(ITEM_DEFS.length);
   });
   it('every wall and takdrager item is costed from the example basis', () => {
     for (const [id, r] of Object.entries(ITEM_RECIPES)) {

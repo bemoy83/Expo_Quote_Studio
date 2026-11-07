@@ -40,6 +40,12 @@ export function CalcPanel({ res, name, onHover, onQuote }: { res: CalcResult; na
           <h2>Veiledende kalkyle</h2>
           <div className="sub">
             {costBasis.version === 'eksempel' ? 'Eksempelpriser' : `Kostgrunnlag ${costBasis.version}`} · {pricing.code}{placeholders ? <span className="ph"> · {placeholders} plassholderpriser</span> : null}
+            {pricing.missing.length ? (
+              <span className="ph">
+                {' '}
+                · uten kost i kostgrunnlaget: {pricing.missing.map((m) => (m.parts.length ? `${m.name} (mangler ${m.parts.join(', ')})` : `${m.name} (ingen oppskrift)`)).join(', ')}
+              </span>
+            ) : null}
           </div>
         </div>
         <span className="band-tag">

@@ -1,3 +1,4 @@
+import { EXAMPLE_LIST } from './example-list';
 import { describe, expect, it } from 'vitest';
 import { FOGA_PARTS } from '../foga/parts';
 import {
@@ -17,7 +18,8 @@ import {
   specialCutCost,
 } from './model';
 import { DEFAULT_COST_PARAMS as P, ORDER_COSTS, type CostParams } from './params';
-import { FOGA, supplierItem } from './prices';
+import { supplierItem } from './prices';
+const FOGA = EXAMPLE_LIST;
 
 const with_ = (patch: Partial<CostParams>): CostParams => ({ ...P, ...patch });
 
@@ -53,11 +55,11 @@ describe('cost buckets', () => {
     expect(ownedPerUse(150, 'profile', P)).toBeCloseTo(12.75);
     // frame (43TX, 92LTX, 90): 2 years × 2 = 4 uses, as in Bjørn's calculator. (150 / 2 + 3,75) / 2 + 1,5
     expect(ownedPerUse(150, 'frame', P)).toBeCloseTo(40.875);
-    expect(fogaPartPerUse('43TX', 2022, P)).toBeCloseTo(40.875);
+    expect(fogaPartPerUse('43TX', 2022, P, EXAMPLE_LIST)).toBeCloseTo(40.875);
     // coupling: 25 uses
     expect(ownedPerUse(100, 'coupling', P)).toBeCloseTo((50 + 2.5) / 12.5 + 1);
-    expect(fogaPartPerUse('92LL', 2022, P)).toBeUndefined();
-    expect(fogaPartPerUse('nope', 2022, P)).toBeUndefined();
+    expect(fogaPartPerUse('92LL', 2022, P, EXAMPLE_LIST)).toBeUndefined();
+    expect(fogaPartPerUse('nope', 2022, P, EXAMPLE_LIST)).toBeUndefined();
   });
   it('owned, without interest and loss: purchase over the uses in a lifetime', () => {
     const q = with_({ owned: { ...P.owned, interest: 0, lossPerUse: 0 } });
@@ -102,8 +104,8 @@ describe('price', () => {
   });
   it('a discount keeps the same DG in every year, because cost and price move together', () => {
     const dg = (y: number) => {
-      const cost = fogaPartPerUse('617', y, P)!;
-      const price = priceAtDg(fogaPartPerUse('617', 2022, P)!, 0.75) * indexFactor(P.materialIndex, 2022, y);
+      const cost = fogaPartPerUse('617', y, P, EXAMPLE_LIST)!;
+      const price = priceAtDg(fogaPartPerUse('617', 2022, P, EXAMPLE_LIST)!, 0.75) * indexFactor(P.materialIndex, 2022, y);
       return (price * 0.9 - cost) / (price * 0.9);
     };
     expect(dg(2026)).toBeCloseTo(dg(2022), 10);

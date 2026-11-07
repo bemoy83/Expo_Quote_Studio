@@ -1,8 +1,10 @@
-// The price items of the kalkyle, costed by the engine: each item that has a recipe (Foga parts and own purchases,
-// in the supplier's unit, plus its person-minutes) gets its direct cost from the kostgrunnlag and its price from the
-// DG target of its group. Items without a recipe keep their example numbers. docs/kostmodell.md.
+// The price items of the kalkyle, costed by the engine: each item's recipe (Foga parts and own purchases, in the
+// supplier's unit) and person-minutes come from the kostgrunnlag; it gets its direct cost from them and its price from
+// the DG target of its group. An item without a recipe, or with a part the price lists do not have, gets no cost at
+// all: it is listed as missing, never given a number to stand in. docs/kostmodell.md.
 import { FOGA_PARTS, type PartKind } from '../foga/parts';
-import { HANDLING_STEPS, type PriceItem, type PriceList } from '../pricing/model';
+import type { ItemDef } from '../pricing/items';
+import { HANDLING_STEPS, type PriceItem, type PriceList, type Time } from '../pricing/model';
 import { supplierList, type CostBasis } from './basis';
 import { boughtCost, labourCost, ownedPerUse, priceAtDg, purchaseCost } from './model';
 import { OWN_SUPPLIER } from './own-list';
@@ -23,7 +25,7 @@ export interface CostedItem {
   /** Direct cost per unit split up: equipment and material, and work. */
   material: number;
   labour: number;
-  /** Parts the kostgrunnlag has no price for: the item keeps its example numbers. */
+  /** Parts the kostgrunnlag has no price for: the item has no cost. */
   missing: string[];
 }
 
@@ -33,6 +35,7 @@ const round2 = (x: number) => Math.round(x * 100) / 100;
 export const basisYear = (b: CostBasis) => Number(b.date.slice(0, 4));
 
 export function costItem(base: PriceItem, r: ItemRecipe, b: CostBasis): CostedItem {
+  // `base` brings name, unit and time; cost and price are set here
   const year = basisYear(b);
   const p = b.params;
   const missing: string[] = [];
@@ -62,12 +65,29 @@ export function costItem(base: PriceItem, r: ItemRecipe, b: CostBasis): CostedIt
   return { item: { ...base, cost: round2(cost), price: round2(priceAtDg(cost * (1 + p.indirect), p.dg[r.dg])) }, material, labour, missing };
 }
 
-/** The price list with every item that has a recipe costed from the kostgrunnlag. */
-export function costItems(base: PriceList, recipes: Readonly<Record<string, ItemRecipe>>, b: CostBasis): PriceList {
-  const out = new Map(base);
-  for (const [id, r] of Object.entries(recipes)) {
-    const it = base.get(id);
-    if (it) out.set(id, costItem(it, r, b).item);
+/** A price item that could not be costed: no recipe, or parts the price lists lack. */
+export interface MissingItem {
+  id: string;
+  name: string;
+  /** Part codes or art.nr without a price; empty when the item has no recipe. */
+  parts: string[];
+}
+
+/** Every price item costed from the kostgrunnlag. What cannot be costed is left out of the list, so a line that uses it
+ *  is incomplete (pricing/model.ts `sumItems`), and named in `missing`. */
+export function costItems(defs: readonly ItemDef[], b: CostBasis): { items: PriceList; missing: MissingItem[] } {
+  const items = new Map<string, PriceItem>();
+  const missing: MissingItem[] = [];
+  for (const d of defs) {
+    const r = b.recipes[d.id];
+    const time: Time | undefined = b.times[d.id];
+    if (!r) {
+      missing.push({ id: d.id, name: d.name, parts: [] });
+      continue;
+    }
+    const c = costItem({ ...d, cost: 0, price: 0, ...(time ? { time } : {}) }, r, b);
+    if (c.missing.length) missing.push({ id: d.id, name: d.name, parts: c.missing });
+    else items.set(d.id, c.item);
   }
-  return out;
+  return { items, missing };
 }

@@ -28,15 +28,24 @@ med annen kode, sier appen fra. Nye tall for kalibrering er en ny fil med ny ver
 
 ```json
 {
-  "format": "kostgrunnlag", "versjon": 1,
+  "format": "kostgrunnlag", "versjon": 2,
   "kostversjon": "2026-11 A", "dato": "2026-11-07", "kilde": "Bjørn",
   "parametere": { "indirect": 0.1, "owned": { "interest": 0.05 } },
   "ordrekost": [{ "id": "startkost-trykk", "name": "Startkost trykk", "cost": 400, "baseYear": 2022, "when": "trykk" }],
   "prislister": [{ "supplier": "Foga", "name": "Prislista A", "date": "2022-06", "currency": "SEK",
                    "items": [{ "artnr": "873 805 22", "name": "43TX", "group": "Fabric", "pack": 50, "unit": "m",
-                               "price": 0, "broken": 0 }] }]
+                               "price": 0, "broken": 0 }] }],
+  "tider": { "stolpe-94": { "plukk": 0.34, "vask": 0.34, "transport": 0.34 } },
+  "oppskrifter": { "veggplate": { "own": [["HDF-976x2440", 1, "plate"]], "dg": "utleie" } },
+  "katalog": { "kost": { "mob.": 0.55 }, "tider": { "mob.": { "plukk": 1, "montering": 1 } } }
 }
 ```
+
+`tider` er personminutter per enhet og håndteringssteg per prisartikkel, og `oppskrifter` hva artikkelen er laget av;
+begge per prisartikkel-id (`src/pricing/items.ts`), og det filen ikke har for en artikkel, hentes fra eksempelet.
+`katalog` gjelder katalogprodukter uten oppskrift (møbler, gulv, folie, tjenester): kost som andel av salgsprisen og
+minutter per steg, per gruppeprefiks, til OMS gir dem per produkt; et produkts egen kost eller tid går foran. Filversjon
+1 (uten disse) leses fortsatt.
 
 `parametere` har samme navn som `CostParams` i `params.ts`; «Last ned mal» gir hele eksempelet skrevet ut som
 utgangspunkt. Antakelsene for InFrame på Produksjon lagres på samme måte: bare det som er endret fra appens standard.
@@ -101,14 +110,15 @@ Pris på tilbudet (Bjørn 7.11.2026): alt i katalogen selges til fast stk-pris f
 DG og estimert tid i kalkylen. Motoren setter pris bare på det katalogen ikke dekker, tilpassede størrelser fra
 tegningen (sum-produkter, se [prismodell.md](prismodell.md)).
 
-Kalkylen bygger linjene av prisartikler (`src/pricing/data.ts`). En prisartikkel med oppskrift får kost og pris fra
-motoren (`src/cost/items.ts`): oppskriften sier hvilke Foga-deler (i listens enhet, meter eller stk) og egne innkjøp
-artikkelen består av, og artikkelens egne minutter per håndteringssteg er personminuttene.
+Kalkylen bygger linjene av prisartikler (`src/pricing/items.ts`). Hver prisartikkel får kost og pris fra motoren
+(`src/cost/items.ts`): oppskriften i kostgrunnlaget sier hvilke Foga-deler (i listens enhet, meter eller stk) og egne
+innkjøp artikkelen består av, og minuttene per håndteringssteg i kostgrunnlaget er personminuttene.
 
 `direkte kost = sum av deler × kost per bruk + personminutter / 60 × timekost`, `pris = direkte kost × (1 + indirekte) / (1 − DG-mål)`
 
 Kosten regnes for året i kostgrunnlagets dato, så samme kostgrunnlag gir samme priser; nytt år er ny versjon. Mangler
-kostgrunnlaget pris på en del, beholder artikkelen eksempeltallene.
+kostgrunnlaget pris på en del, eller artikkelen oppskrift, får den ingen kost: den er ute av prislisten, linjer som
+bruker den står med «kost mangler», og kalkylen sier øverst hvilke artikler det gjelder. Ingen tall står i stedet.
 
 Med oppskrift i dag (trinn 3): stolpe 94 med fot, topp- og bunnskinne, HDF-plate og overstykke, dør, forheng,
 takdrager i alle lengder, fotplate 750 med 795, krok og skjøt over tekstilvegg (utleie), og montering per modul,
@@ -181,7 +191,8 @@ Prisene er nøyaktig 765 kr per meter vegg og 121 kr per meter takdrager, uten f
 minutter per meter vegg og 2 per meter takdrager.
 
 Før kalibreringen ga appen, med ekte Foga-priser, 3,3 ganger prisen og 3,4 ganger tiden. Etter: tidene for vegg- og
-takdragerartiklene er skalert (0,34 og 0,15, `TIME_FACTOR` i `src/pricing/data.ts`, fordelingen på stegene beholdt), og
+takdragerartiklene er skalert med 0,34 og 0,15 (fordelingen på stegene beholdt, og de skalerte tallene er det som står i
+eksempeltidene i `src/pricing/items.ts`, så tallet som vises er tallet som brukes), og
 bruk i levetiden er 14 for profiler og plater og 25 for koblinger (var 4 og 10 i Bjørns kalkulator). Da treffer appen
 alle tre innen 3 % på tid, og kosten gir DG 70 % på dagens pris (prisen er nå OMS-prisen, 765 kr per meter vegg og
 121 per meter takdrager). Tidene sjekkes i `src/calc/calc.test.ts`; prisene sjekkes utenfor repoet,

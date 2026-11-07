@@ -12,7 +12,7 @@
 // per-piece prices (Bjørn 7.11.2026). Rules 2 and 6 are here and tested, not yet used by the calc.
 import { FOGA_PARTS, type PartKind } from '../foga/parts';
 import type { CostParams, IndexSeries } from './params';
-import { FOGA, supplierItem, type SupplierList } from './prices';
+import { supplierItem, type SupplierList } from './prices';
 
 /** Growth from the end of `from` to `to`: the product of every year's change after `from` up to and incl. `to`.
  *  A year missing from the series counts as no change. */
@@ -113,7 +113,7 @@ export const dgOfMarkup = (markup: number) => markup / (1 + markup);
  * Cost of one use of a Foga part we own, per its unit in the list (m or stk), by Foga code ("43TX", "617"). Undefined
  * when the part is not in the list (92LL, the hook).
  */
-export function fogaPartPerUse(code: string, year: number, p: CostParams, list: SupplierList = FOGA): number | undefined {
+export function fogaPartPerUse(code: string, year: number, p: CostParams, list: SupplierList): number | undefined {
   const part = FOGA_PARTS.find((x) => x.code === code);
   if (!part) return undefined;
   const buy = purchaseCost(list, part.artnr, year, p);
