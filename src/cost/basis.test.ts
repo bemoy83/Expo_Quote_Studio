@@ -39,6 +39,7 @@ describe('kostgrunnlag', () => {
     expect(b.fromExample).toContain('ordrekost');
     expect(b.fromExample).not.toContain('prisliste');
     expect(b.fromExample).not.toContain('prisliste Foga');
+    expect(b.fromExample.filter((x) => x.startsWith('prisliste'))).toEqual(['prisliste Egne innkjøp']);
     expect(b.fromExample).toContain('prisliste Egne innkjøp');
     expect(supplierList(b, 'Egne innkjøp')).toBe(EXAMPLE_OWN_LIST);
     expect(b.fromExample).not.toContain('parametere.indirect');

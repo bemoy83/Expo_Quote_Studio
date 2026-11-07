@@ -5,7 +5,7 @@
 // File: JSON `{ format: 'kostgrunnlag', versjon, kostversjon, dato, kilde, parametere, ordrekost, prislister, fraEksempel }`.
 // Kostmodell: docs/kostmodell.md.
 import { EXAMPLE_LIST } from './example-list';
-import { EXAMPLE_OWN_LIST } from './own-list';
+import { EXAMPLE_OWN_LIST, OWN_SUPPLIER } from './own-list';
 import type { OrderCost } from './model';
 import { DEFAULT_COST_PARAMS, ORDER_COSTS, type CostParams } from './params';
 import type { Currency, SupplierItem, SupplierList } from './prices';
@@ -45,6 +45,7 @@ export const EXAMPLE_BASIS: CostBasis = {
 };
 
 const EXAMPLE_LISTS = [EXAMPLE_LIST, EXAMPLE_OWN_LIST];
+const SUPPLIERS = ['Foga', OWN_SUPPLIER] as const;
 const supplierIs = (l: SupplierList, supplier: string) => l.supplier.startsWith(supplier);
 
 export const usesExample = (b: CostBasis) => b.fromExample.length > 0;
@@ -201,10 +202,8 @@ export function parseBasis(text: string): BasisResult {
     if (data.ordrekost === undefined) fromExample.push('ordrekost');
     const lists = data.prislister === undefined ? EXAMPLE_LISTS : supplierLists(data.prislister);
     if (data.prislister === undefined) fromExample.push('prisliste');
-    else for (const ex of EXAMPLE_LISTS) {
-      const name = ex.supplier.replace(/ \(.*\)$/, '');
-      if (!lists.some((l) => supplierIs(l, name))) fromExample.push(`prisliste ${name}`);
-    }
+    // By the names the engine looks the lists up by (`supplierList`), so a list named just "Foga" counts
+    else for (const name of SUPPLIERS) if (!lists.some((l) => supplierIs(l, name))) fromExample.push(`prisliste ${name}`);
     return {
       ok: true,
       basis: {
