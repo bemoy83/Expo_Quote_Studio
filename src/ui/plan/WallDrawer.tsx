@@ -5,7 +5,8 @@
 // Without a selection it edits the wall itself: plate colour, remove wall. A door or curtain is chosen here too (from the
 // drawing, the plan or 3D): its settings on the left and the mini plan to move it in the middle (Bjørn 3.11.2026).
 // The parts are in wallDrawer/: the settings panels (panels.tsx), the drawing (WallElevation.tsx), dragging in it
-// (drag.ts), the paint bucket and brush (paint.ts) and the face's name and rooms (face.ts). This file picks what to show.
+// (drag.ts), the paint bucket and brush (paint.ts), the face's name and rooms (face.ts) and the drawer's words (text.ts).
+// This file picks what to show.
 import { DoorOpen, FlipHorizontal2, MoveHorizontal, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { production, wallLabel } from '../../calc/production'
@@ -14,7 +15,6 @@ import { eraseWalls } from '../../domain/edit'
 import { wallRal } from '../../domain/panels'
 import { clearDecor } from '../../domain/print'
 import { doorFace, openingById } from '../../domain/doors'
-import { roomName, roomSize } from '../../domain/rooms'
 import { wallLength, wallModules } from '../../domain/grid'
 import type { Variant } from '../../domain/types'
 import { builtModules, isStandWall } from '../../domain/walls'
@@ -23,16 +23,16 @@ import { wallHeight } from '../../rules/rules'
 import { INK_FAINT, LAYER_COLOR } from '../colors'
 import { Button, IconButton } from '../controls'
 import { productOf, rules } from '../env'
-import { count, fmt, mm } from '../format'
 import { findMotif } from '../motifs'
-import { DrawerHead, DrawerRow, Shelf } from './drawerParts'
+import { DrawerHead, DrawerRow } from './drawerParts'
 import { DoorMap } from './DoorMap'
 import { type PlanSelection } from './selection'
 import { addTextile, fillTextile, removeTextile, textilesOn, updateTextile } from '../../domain/textile/inFrame'
 import { faces, type FaceSide } from '../../domain/faces'
 import { faceName, roomsAgainst } from './wallDrawer/face'
 import { wallPaint, type PaintTool } from './wallDrawer/paint'
-import { ColourPanel, DoorPanel, FoilPanel, TextilePanel } from './wallDrawer/panels'
+import { ColourPanel, DoorPanel, FoilPanel, TextilePanel, WallShelf } from './wallDrawer/panels'
+import { wallHint, wallMeta, wallTitle } from './wallDrawer/text'
 import { WallElevation } from './wallDrawer/WallElevation'
 
 interface Props {
@@ -131,28 +131,7 @@ export function WallDrawer(p: Props) {
   })
   /** Modules of this wall holding a door (not a curtain): a leaf for the brush, a header and leaf for a print. */
   const doorModules = new Set(doors.map((d) => d.module))
-  const tail = 'dra tekstilvegg eller motiv til veggen, klikk det for å endre'
-  const hint = O
-    ? `Klikk en rute i miniplanen for å flytte ${doorModules.has(O.module) ? 'døren' : 'forhenget'} · «Farge og grafikk» eller Esc gir paletten · Delete gjør om til vegg`
-    : painting
-      ? tool === 'wall'
-        ? printing
-          ? 'Klikk veggen: motivet strekkes over platene på denne siden, ikke inne i bakrom · klikk én gang til: printen fjernes fra hele siden'
-          : 'Klikk veggen for å farge alle platene · print på denne siden går bort, dekaler blir'
-        : printing
-          ? 'Klikk eller dra over platene: hele motivet på hver plate · klikk en plate som har motivet: printen fjernes fra den platen'
-          : 'Klikk eller dra over platene for å farge dem · klikk en farget plate igjen for veggens farge'
-      : T
-        ? 'Dra rammen for å flytte · håndtakene endrer størrelsen · klikk et motiv for trykk · Delete fjerner'
-        : F
-          ? F.full
-            ? 'Dra for å flytte til en annen plate · klikk et motiv for å bytte · Delete fjerner'
-            : 'Dra for å flytte innenfor platen · hjørnene endrer størrelsen · klikk et motiv for å bytte · Delete fjerner'
-          : isStandWall(w)
-            ? `Standveggen står fast · ${tail}`
-            : w.room
-              ? `Dra veggen i planen for å endre rommet · ${tail}`
-              : `Dra veggen i planen for å flytte den · ${tail}`
+  const hint = wallHint({ O, door: !!O && doorModules.has(O.module), painting, tool, printing, T, F, w })
 
   const remove = () => {
     if (T) p.onEdit((x) => removeTextile(x, T.id))
@@ -164,11 +143,9 @@ export function WallDrawer(p: Props) {
     select({})
   }
 
-  const fill = T?.fill ?? 'print'
-  const room = w.room && v.rooms.find((r) => r.id === w.room!.id)
-  const title = T ? 'Tekstilvegg' : F ? (F.full ? 'Print på hel plate' : 'Foliedekal') : room ? `${roomName(room)} ${roomSize(room)} · vegg` : label === 'Innervegg' ? 'Innervegg' : `Standvegg · ${label.toLowerCase()}`
+  const title = wallTitle(v, w, T, F)
   return (
-    <section className="wall-drawer drawer3" aria-label="Vegg sett forfra">
+    <section className="wall-drawer drawer2" aria-label="Vegg sett forfra">
       <div className="wd-insp">
         {O ? (
           <DoorPanel v={v} O={O} w={w} flip={flip} select={select} selectDoor={selectDoor} onEdit={p.onEdit} onClose={p.onClose}>
@@ -191,51 +168,17 @@ export function WallDrawer(p: Props) {
               onClose={p.onClose}
             />
             <p className="wd-meta num">
-              {T && piece
-                ? `ramme ${mm(piece.W / 1000)} × ${mm(piece.H / 1000)} mm · ${fmt(piece.area)} m² ${piece.fill === 'reuse' ? 'kundens duk' : piece.fill === 'white' ? 'hvit duk' : 'trykk'}`
-                : F
-                  ? `Felt ${F.module + 1} · ${mm(F.width)} × ${mm(F.height)} mm${F.run ? ` · del av print over ${v.foils.filter((x) => x.run === F.run).length} plater` : ''}`
-                  : [`${L} m`, count(wallModules(w).length - openings.length, 'plate', 'plater') + (odd ? ` (${odd} i egen farge)` : ''), openings.length && count(openings.length, 'åpning', 'åpninger'), tex.length && count(tex.length, 'tekstilvegg', 'tekstilvegger'), ...rooms.map((r) => `${r.b - r.a} m inn mot ${roomName(r.room).toLowerCase()}`)]
-                      .filter(Boolean)
-                      .join(' · ')}
+              {wallMeta(v, w, { L, T, F, piece, openings, odd, tex, rooms })}
             </p>
 
-            {T && <TextilePanel T={T} fill={fill} onEdit={p.onEdit} />}
+            {T && <TextilePanel T={T} onEdit={p.onEdit} />}
 
             {F && <FoilPanel F={F} ratioOf={ratioOf} onEdit={p.onEdit} />}
 
             {!T && !F && <ColourPanel painting={painting} tool={tool} setTool={setTool} printing={printing} pm={pm} paint={paint} ral={ral} setPaint={setPaint} />}
           </>
         )}
-        {!O && (
-          <Shelf
-            label={
-              T
-                ? fill === 'print'
-                  ? `Trykk · ${findMotif(motifs, T.motif)?.name ?? 'uten motiv'}`
-                  : 'Motiv · velg for trykk'
-                : F
-                  ? `Motiv · ${findMotif(motifs, F.motif)?.name ?? 'uten motiv'}`
-                  : printing
-                    ? `Print · ${pm?.name ?? 'last opp et motiv'}`
-                    : 'Grafikk · dra til veggen'
-            }
-            motifs={motifs}
-            textile={!T && !F}
-            required={!T && !F && printing}
-            value={T ? (fill === 'print' ? (T.motif ?? null) : undefined) : F ? (F.motif ?? null) : printing ? pm?.id : undefined}
-            onPick={
-              T
-                ? (m) => p.onEdit((x) => updateTextile(x, rules, T.id, { motif: m, ...(m ? { fill: 'print' } : {}) }))
-                : F
-                  ? (m) => p.onEdit((x) => updateFoil(x, rules, F.id, { motif: m }, ratioOf(m ?? undefined)))
-                  : printing
-                    ? (m) => m && setPrintMotif(m)
-                    : undefined
-            }
-            onUpload={p.onUpload}
-          />
-        )}
+        {!O && <WallShelf T={T} F={F} printing={printing} pm={pm} motifs={motifs} ratioOf={ratioOf} setPrintMotif={setPrintMotif} onEdit={p.onEdit} onUpload={p.onUpload} />}
         {!O && (
           <div className="wd-foot">
             <DrawerRow label={`Side · ${faceName(w, s).toLowerCase()}`}>
