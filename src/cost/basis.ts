@@ -5,7 +5,7 @@
 // File: JSON `{ format: 'kostgrunnlag', versjon, kostversjon, dato, kilde, parametere, ordrekost, prislister, fraEksempel }`.
 // Kostmodell: docs/kostmodell.md.
 import { EXAMPLE_LIST } from './example-list';
-import { EXAMPLE_OWN_LIST } from './own-list';
+import { EXAMPLE_OWN_LIST, OWN_SUPPLIER } from './own-list';
 import type { OrderCost } from './model';
 import { DEFAULT_COST_PARAMS, ORDER_COSTS, type CostParams } from './params';
 import type { Currency, SupplierItem, SupplierList } from './prices';
@@ -45,6 +45,7 @@ export const EXAMPLE_BASIS: CostBasis = {
 };
 
 const EXAMPLE_LISTS = [EXAMPLE_LIST, EXAMPLE_OWN_LIST];
+const SUPPLIERS = ['Foga', OWN_SUPPLIER] as const;
 const supplierIs = (l: SupplierList, supplier: string) => l.supplier.startsWith(supplier);
 
 export const usesExample = (b: CostBasis) => b.fromExample.length > 0;
@@ -137,7 +138,15 @@ function orderCosts(x: unknown): OrderCost[] {
     const at = `ordrekost ${i + 1}`;
     if (!isObj(o) || !isStr(o.id) || !isStr(o.name)) return fail(`${at} mangler id eller navn.`);
     for (const k of ['cost', 'baseYear', 'personMinutes']) if (o[k] !== undefined && !isNum(o[k])) return fail(`${at}: ${k} må være et tall.`);
-    return { id: o.id, name: o.name, cost: o.cost as number | undefined, baseYear: o.baseYear as number | undefined, personMinutes: o.personMinutes as number | undefined };
+    if (o.when !== undefined && o.when !== 'trykk') return fail(`${at}: when kan bare være "trykk".`);
+    return {
+      id: o.id,
+      name: o.name,
+      cost: o.cost as number | undefined,
+      baseYear: o.baseYear as number | undefined,
+      personMinutes: o.personMinutes as number | undefined,
+      ...(o.when ? { when: 'trykk' as const } : {}),
+    };
   });
 }
 
@@ -193,10 +202,8 @@ export function parseBasis(text: string): BasisResult {
     if (data.ordrekost === undefined) fromExample.push('ordrekost');
     const lists = data.prislister === undefined ? EXAMPLE_LISTS : supplierLists(data.prislister);
     if (data.prislister === undefined) fromExample.push('prisliste');
-    else for (const ex of EXAMPLE_LISTS) {
-      const name = ex.supplier.replace(/ \(.*\)$/, '');
-      if (!lists.some((l) => supplierIs(l, name))) fromExample.push(`prisliste ${name}`);
-    }
+    // By the names the engine looks the lists up by (`supplierList`), so a list named just "Foga" counts
+    else for (const name of SUPPLIERS) if (!lists.some((l) => supplierIs(l, name))) fromExample.push(`prisliste ${name}`);
     return {
       ok: true,
       basis: {

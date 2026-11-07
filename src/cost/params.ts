@@ -89,6 +89,9 @@ const LABOUR_INDEX: IndexSeries = { 2023: 0.1, 2024: 0.067, 2025: 0.06, 2026: 0.
  *  second year (Bjørn 7.11.2026). docs/kostmodell.md. */
 const OWNED_GROUPS: Record<PartKind, OwnedGroup> = {
   profile: { lifetimeYears: 2, usesPerYear: 7 },
+  // Textile frame profiles: 4 uses, as in Bjørn's calculator (slitasjefaktor 4 for 43TX and 90). Cut to size for the
+  // job, so fewer reuses than the wall's standard lengths. Example number, to be checked against the stock
+  frame: { lifetimeYears: 2, usesPerYear: 2 },
   plate: { lifetimeYears: 2, usesPerYear: 7 },
   coupling: { lifetimeYears: 2, usesPerYear: 12.5 },
   foot: { lifetimeYears: 2, usesPerYear: 12.5 },
@@ -112,7 +115,8 @@ export const DEFAULT_COST_PARAMS: CostParams = {
 /** Per-order costs from Bjørn's calculator, counted once per quote (Bjørn 7.11.2026): start-up for printed textile,
  *  and admin/picking and delivery out and in at 10 minutes for two. */
 export const ORDER_COSTS = [
-  { id: 'startkost-trykk', name: 'Startkost trykk, per ordre', cost: 500, baseYear: 2022 },
+  // Bjørn's calculator (7.11.2026): Megaprint start 400 kr (2022), 10 min × 2 men each for admin and delivery
+  { id: 'startkost-trykk', name: 'Startkost trykk', cost: 400, baseYear: 2022, when: 'trykk' },
   { id: 'administrasjon', name: 'Administrasjon og vareplukk', personMinutes: 20 },
   { id: 'transport', name: 'Varelevering ut og inn', personMinutes: 20 },
 ] as const;

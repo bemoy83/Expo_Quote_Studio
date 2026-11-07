@@ -79,8 +79,10 @@ Lønnsindeksen er egen, fordi lønn følger tariff og ikke materialpriser.
 
 ## Pris
 
-`veiledende pris = direkte kost / (1 − DG-mål)`, med DG-mål per gruppe (se [prismodell.md](prismodell.md)). Kost og pris følger
-samme indeks, så DG holder når selgeren gir rabatt (Bjørn 7.11.2026). Påslag gjøres om til DG med
+`veiledende pris = direkte kost × (1 + indirekte) / (1 − DG-mål)`, med DG-mål per gruppe (se [prismodell.md](prismodell.md)). Kost og pris følger
+samme indeks, så DG holder når selgeren gir rabatt (Bjørn 7.11.2026). Den indirekte kosten (10 %, administrasjon) ligger
+inne i prisen på det motoren priser, ikke som eget gebyr på tilbudet: katalogen er regnet slik, kalkulatoren uten fast
+del pluss 10 % (Bjørn 7.11.2026). Katalogvarer med OMS-pris får ikke påslaget, de har det allerede. Påslag gjøres om til DG med
 `DG = påslag / (1 + påslag)`: 300 % er 75 %, 30 % er 23 %.
 
 ## Prisartikler fra motoren
@@ -93,7 +95,7 @@ Kalkylen bygger linjene av prisartikler (`src/pricing/data.ts`). En prisartikkel
 motoren (`src/cost/items.ts`): oppskriften sier hvilke Foga-deler (i listens enhet, meter eller stk) og egne innkjøp
 artikkelen består av, og artikkelens egne minutter per håndteringssteg er personminuttene.
 
-`direkte kost = sum av deler × kost per bruk + personminutter / 60 × timekost`, `pris = direkte kost / (1 − DG-mål)`
+`direkte kost = sum av deler × kost per bruk + personminutter / 60 × timekost`, `pris = direkte kost × (1 + indirekte) / (1 − DG-mål)`
 
 Kosten regnes for året i kostgrunnlagets dato, så samme kostgrunnlag gir samme priser; nytt år er ny versjon. Mangler
 kostgrunnlaget pris på en del, beholder artikkelen eksempeltallene.
@@ -110,6 +112,18 @@ målet motoren kalibreres mot, innenfor en toleranse. Rammedelene er utleie: 43T
 per kobling (617 og begge ender av hvert stag) og montering av duk per meter omkrets. Duken kjøpes til jobben, med svinn
 (type 3): trykk på Blackback som standard, hvit duk, og kundens egen duk bare montert. Tidene for tekstil er ikke
 kalibrert ennå.
+
+Rammeprofilene (43TX, 92LTX og stag 90) har egen slitasje, gruppen `frame`: 4 bruk, som i Bjørns kalkulator. De
+kappes til mål for jobben og brukes sjeldnere om igjen enn veggens standardlengder. Eksempeltall som må sjekkes mot
+lageret (Bjørn 7.11.2026).
+
+## Ordrekost
+
+Startkost trykk (400 kr, 2022), administrasjon og vareplukk (20 personminutter) og varelevering ut og inn (20
+personminutter) kommer én gang per tilbud, ikke per ramme eller linje: tre motiver får én oppstart, én vareplukk og
+én levering (Bjørn 7.11.2026). Startkost trykk bare når tilbudet har trykt tekstil. De ligger i kalkylens kost
+(`margin.order`) og senker DG, men ingen linje på tilbudet bærer dem; katalogen dekker dem i dag med 10 % påslag for
+administrasjon. Verdiene ligger i kostgrunnlaget (`ordrekost`, med `when: "trykk"`).
 
 ## Tallene
 

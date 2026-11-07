@@ -478,6 +478,18 @@ describe('stand walls the organiser pays (docs/vegger.md)', () => {
   });
 });
 
+describe('ordrekost', () => {
+  it('once per quote in the kalkyle cost, not in a price; start of print only with printed textile', () => {
+    const ids = (v: Variant) => run(v).margin.order.map((o) => o.id);
+    expect(ids(r1())).toEqual(['administrasjon', 'transport']);
+    expect(ids(r2())).toEqual(['startkost-trykk', 'administrasjon', 'transport']);
+    const res = run(r2());
+    const lineCost = lines(res).reduce((a, l) => a + (l.cost ?? 0), 0);
+    expect(res.margin.cost).toBeCloseTo(lineCost + res.margin.order.reduce((a, o) => a + o.cost, 0));
+    expect(res.sum).toBeCloseTo(lines(res).reduce((a, l) => a + l.sum, 0));
+  });
+});
+
 describe('frittstående tekstilvegg mellom to vegger', () => {
   it('the splice has no room to be threaded: 604 in the channel', () => {
     const v = createVariant('A', { width: 8, depth: 3, type: 'row' });

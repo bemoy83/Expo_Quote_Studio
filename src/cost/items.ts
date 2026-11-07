@@ -57,7 +57,9 @@ export function costItem(base: PriceItem, r: ItemRecipe, b: CostBasis): CostedIt
   const labour = labourCost(minutes, year, p);
   if (missing.length) return { item: base, material, labour, missing };
   const cost = material + labour;
-  return { item: { ...base, cost: round2(cost), price: round2(priceAtDg(cost, p.dg[r.dg])) }, material, labour, missing };
+  // The price carries the indirect cost on top (admin, premises, vans; Bjørn 7.11.2026: catalog = calculator + 10 %
+  // administration), so the DG target is met after it. Only for what the engine prices: an OMS price is used as is.
+  return { item: { ...base, cost: round2(cost), price: round2(priceAtDg(cost * (1 + p.indirect), p.dg[r.dg])) }, material, labour, missing };
 }
 
 /** The price list with every item that has a recipe costed from the kostgrunnlag. */
