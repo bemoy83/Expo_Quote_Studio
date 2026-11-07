@@ -185,7 +185,8 @@ kbd {
     .toast button,
     .link,
     .cg-arts,
-    .kpis.short
+    .kpis.short,
+    .cl.tap
   ) {
   transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
 }
@@ -207,7 +208,8 @@ kbd {
     .gfx,
     .trow,
     .toast button,
-    .kpis.short
+    .kpis.short,
+    .cl.tap
   ):hover:not(:disabled):not([aria-pressed='true']):not([aria-checked='true']):not([aria-selected='true']):not(
     [aria-current='page']
   ):not([aria-current='true']):not(.on),
@@ -3051,3 +3053,57 @@ select.cin {
   }
 }
 
+
+/* «Slik er det regnet» under a kalkyle line (ui/calc/Trace.tsx) */
+.cl.tap {
+  cursor: pointer;
+  border-radius: 6px;
+}
+.trace {
+  margin: 4px 0 8px 16px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: color-mix(in srgb, transparent, rgb(var(--ink)) 4%);
+  display: grid;
+  gap: 6px;
+}
+.trace .tr-head {
+  font: 600 11px var(--font-ui);
+  color: rgb(var(--ink-muted));
+}
+.trace .tr-item,
+.trace .tr-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: 12px;
+}
+.trace .tr-row {
+  grid-column: 1 / -1;
+  margin-top: 4px;
+  padding-left: 12px;
+}
+.trace .n {
+  font: 400 12px var(--font-ui);
+}
+.trace .tr-row .n {
+  color: rgb(var(--ink-muted));
+}
+.trace .s {
+  font: 400 12px var(--font-numeric);
+  text-align: right;
+}
+.trace .meta,
+.trace .from {
+  grid-column: 1 / -1;
+  overflow-wrap: anywhere;
+  font: 400 11px var(--font-numeric);
+  color: rgb(var(--ink-faint));
+  text-wrap: pretty;
+}
+.trace .from {
+  font-family: var(--font-ui);
+  opacity: 0.8;
+}
+.trace .meta.ph {
+  color: var(--over);
+}

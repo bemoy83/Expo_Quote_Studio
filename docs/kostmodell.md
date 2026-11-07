@@ -120,6 +120,12 @@ innkjøp artikkelen består av, og minuttene per håndteringssteg i kostgrunnlag
 
 `direkte kost = sum av deler × kost per bruk + personminutter / 60 × timekost`, `pris = direkte kost × (1 + indirekte) / (1 − DG-mål)`
 
+«Slik er det regnet»: motoren returnerer regnestykket sammen med kosten (`PriceItem.trace`: én rad per del og arbeid,
+mengde × kost per enhet, tallene som ble brukt og hvor i kostgrunnlaget de står), og kalkylelinjen husker hvilke
+prisartikler den er bygget av (`CalcLine.uses`). Trykker man på en linje i kalkylen, vises det (`ui/calc/Trace.tsx`).
+Det er samme kode som regner kosten, ikke en tekst om den; en test sjekker at radene summerer til kosten og formelen
+gir prisen. Katalogprodukter uten oppskrift viser kost som andel av salgsprisen og gruppen den kommer fra.
+
 Kosten regnes for året i kostgrunnlagets dato, så samme kostgrunnlag gir samme priser; nytt år er ny versjon. Mangler
 kostgrunnlaget pris på en del, eller artikkelen oppskrift, får den ingen kost: den er ute av prislisten, linjer som
 bruker den står med «kost mangler», og kalkylen sier øverst hvilke artikler det gjelder. Ingen tall står i stedet.
