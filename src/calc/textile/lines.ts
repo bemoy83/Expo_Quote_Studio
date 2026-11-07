@@ -1,6 +1,6 @@
 // Textile walls on the quote: one product whatever it is mounted on (Bjørn 7.11.2026: the frame is the same, on a
 // system wall with 520 or on foot plates). The frame (rental) and the textile (sale) are two kinds of line here and one
-// line on the quote (`quote`): frames by size and mounting, then the textile by fill. What is built comes from
+// line per frame size on the quote (`quote`): frames by size and mounting, then the textile by size and fill. What is built comes from
 // calc/production.ts.
 import { displayName } from '../../catalog/lookup';
 import type { TextileFill } from '../../domain/types';
@@ -12,20 +12,23 @@ import { count, type CalcContext } from '../context';
 import type { CalcLine } from '../types';
 import type { FrameMount } from './common';
 
-const quote = { key: 'tekstil', name: 'Tekstilvegg' };
+/** One quote line per frame size: frame and textile of that size, with its own price (Bjørn 7.11.2026). */
+const quoteOf = (size: string, lead: boolean) => ({ key: `tekstil:${size}`, name: `Tekstilvegg ${size}`, lead });
+const sizeOf = (W: number, H: number) => `${W} × ${H} mm`;
 /**
  * Textile per m² of visible face, by fill. Printed and white: the textile incl. bleed; all: pressed in along the whole
  * perimeter. The customer's own textile is only mounted.
  */
-function textileLines(c: CalcContext, faces: { W: number; H: number; pw: number; ph: number; fill: TextileFill }[], quote: CalcLine['quote']): CalcLine[] {
+type Face = { W: number; H: number; pw: number; ph: number; fill: TextileFill };
+function textileLines(c: CalcContext, faces: Face[], size: string): CalcLine[] {
   return (['print', 'white', 'reuse'] as const).map((fill) => {
     const fs = faces.filter((f) => f.fill === fill);
     const uses: Use[] = [
       ...(fill === 'reuse' ? [] : [{ id: fill === 'print' ? ITEM.print : ITEM.white, qty: fs.reduce((a, f) => a + (f.pw * f.ph) / 1e6, 0) }]),
       { id: ITEM.textileEdge, qty: fs.reduce((a, f) => a + (2 * (f.W + f.H)) / 1000, 0) },
     ];
-    const n = fs.length;
-    return c.line(c.sys.textileFill[fill], fs.reduce((a, f) => a + (f.W * f.H) / 1e6, 0), { ...c.built, meta: count(n, 'duk', 'duker'), quote }, uses);
+    const meta = `${count(fs.length, 'duk', 'duker')} · ${size}`;
+    return c.line(c.sys.textileFill[fill], fs.reduce((a, f) => a + (f.W * f.H) / 1e6, 0), { ...c.built, meta, quote: quoteOf(size, false) }, uses);
   });
 }
 
@@ -46,6 +49,7 @@ interface FrameBuild {
   W: number;
   H: number;
   mount: FrameMount;
+  textileId: string;
   uses: Use[];
 }
 
@@ -69,11 +73,12 @@ function frameUses(p: FrameParts): Use[] {
 export function frameLines(c: CalcContext): CalcLine[] {
   const { prod, sys, idx } = c;
   const builds: FrameBuild[] = [
-    ...prod.pieces.map((p) => ({ W: p.W, H: p.H, mount: p.mount, uses: frameUses(p.parts) })),
+    ...prod.pieces.map((p) => ({ W: p.W, H: p.H, mount: p.mount, textileId: p.textileId, uses: frameUses(p.parts) })),
     ...prod.free.map((f) => ({
       W: f.length,
       H: f.H,
       mount: f.mount,
+      textileId: f.textileId,
       uses: [...frameUses(f.parts), { id: ITEM.cornerPostM, qty: (f.nCorners * prod.cornerPosts.H) / 2 / 1000 }],
     })),
   ];
@@ -89,12 +94,16 @@ export function frameLines(c: CalcContext): CalcLine[] {
     for (const u of fs.flatMap((f) => f.uses)) if (u.qty) uses.set(u.id, (uses.get(u.id) ?? 0) + u.qty);
     const fast = Math.round((textile?.variant.price ?? 0) * ((W * H) / 1e6));
     const name = `${textile ? displayName(textile) : sys.textile}, ${W} × ${H} mm, ${MOUNT_NAME[mount]}`;
-    const line = c.line(sys.textile, fs.length, { ...c.built, quote: { ...quote, lead: true, size: `${W} × ${H} mm` } }, [...uses].map(([id, qty]) => ({ id, qty })), fast);
-    return { ...line, name, unit: 'stk' as const };
+    const line = c.line(sys.textile, fs.length, { ...c.built, quote: quoteOf(sizeOf(W, H), true) }, [...uses].map(([id, qty]) => ({ id, qty })), fast);
+    return { ...line, name, unit: 'stk' as const, drawn: [...new Set(fs.map((f) => f.textileId))] };
   });
 }
 
-/** The textile on every frame: one face on a wall, both on foot plates. */
+/** The textile on every frame, per frame size like the frames: one face on a wall, both on foot plates. */
 export function textileWallLines(c: CalcContext): CalcLine[] {
-  return textileLines(c, [...c.prod.pieces, ...c.prod.free.flatMap((f) => f.faces)], { ...quote, lead: false });
+  const bySize = new Map<string, Face[]>();
+  const add = (size: string, faces: Face[]) => bySize.set(size, [...(bySize.get(size) ?? []), ...faces]);
+  for (const p of c.prod.pieces) add(sizeOf(p.W, p.H), [p]);
+  for (const f of c.prod.free) add(sizeOf(f.length, f.H), f.faces);
+  return [...bySize].flatMap(([size, faces]) => textileLines(c, faces, size));
 }

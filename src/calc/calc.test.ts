@@ -116,7 +116,7 @@ describe('R2 · corner stand 6 × 4, backroom 2 × 2, textile wall 4 m', () => {
     const print = lines(res).find((x) => x.artnr === S.textileFill.print)!;
     expect(print).toMatchObject({ qty: 10.1, unit: 'm²', price: Math.round(sumOf(textile, 'price') / 10.1), strategy: 'sum' });
     const [q] = quoteLines(res.groups.find((g) => g.id === 'prof')!.lines);
-    expect(q).toMatchObject({ name: 'Tekstilvegg', details: ['1 stk 3970 × 2540 mm'], qty: 1, unit: 'stk', sum: frame.sum + print.sum, terms: 'Leie av ramme, kjøp av tekstil' });
+    expect(q).toMatchObject({ name: 'Tekstilvegg 3970 × 2540 mm', qty: 1, unit: 'stk', sum: frame.sum + print.sum, terms: 'Leie av ramme, kjøp av tekstil' });
   });
   it("the customer's own textile is only mounted", () => {
     const v = r2();
@@ -513,7 +513,7 @@ describe('frittstående tekstilvegg', () => {
     expect(qty(res, S.textileFill.print)).toBeCloseTo(15.2);
     expect(qty(res, S.textileFill.white)).toBeCloseTo(15.2);
     const [q] = quoteLines(res.groups.find((g) => g.id === 'prof')!.lines);
-    expect(q).toMatchObject({ name: 'Tekstilvegg', details: ['1 stk 6000 × 2540 mm'], qty: 1, unit: 'stk' });
+    expect(q).toMatchObject({ name: 'Tekstilvegg 6000 × 2540 mm', qty: 1, unit: 'stk' });
   });
   it('picking list', () => {
     const tx = res.bom.lines.filter((l) => l.group === 'prof.tekstil');

@@ -192,11 +192,6 @@ export function QuotePage({ project, variants, current, onSelect, calcOf, motifs
                       {l.name}
                       {l.placeholder && <span className="mark"> *</span>}
                       {l.terms && <span className="muted"> · {l.terms}</span>}
-                      {l.details?.map((d) => (
-                        <span key={d} className="qdetail num muted">
-                          {d}
-                        </span>
-                      ))}
                     </span>
                     <span className="num muted">
                       {fmt(l.qty)} {l.unit}

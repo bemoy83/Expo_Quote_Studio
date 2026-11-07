@@ -34,7 +34,6 @@ export function quoteLines(lines: CalcLine[], pricing: PricingData = DEFAULT_PRI
     return {
       ...parts[0],
       name: l.quote!.name,
-      ...(sizes(lead).length && { details: sizes(lead) }),
       qty,
       unit: lead[0]?.unit ?? 'stk',
       price: qty ? sum / qty : sum,
@@ -45,16 +44,10 @@ export function quoteLines(lines: CalcLine[], pricing: PricingData = DEFAULT_PRI
       cost,
       dg: cost === null || !sum ? null : (sum - cost) / sum,
       terms,
-      quote: undefined,
+      // Kept: the merged line is the article its parts are (calc/positions.ts)
+      quote: { ...l.quote!, lead: true },
     };
   });
-}
-
-/** One row per size of the lead lines, in order: '2 stk 3970 × 2540 mm'. */
-function sizes(lead: CalcLine[]): string[] {
-  const n = new Map<string, number>();
-  for (const p of lead) if (p.quote?.size) n.set(p.quote.size, (n.get(p.quote.size) ?? 0) + p.qty);
-  return [...n].map(([s, q]) => `${q} stk ${s}`);
 }
 
 /** The groups as the quote shows them. */

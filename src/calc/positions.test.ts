@@ -46,8 +46,8 @@ describe('position numbers', () => {
     const v = { ...textile.v, objects: furniture.v.objects }
     const r = calc(v, RULES, DEFAULT_CATALOG)
     const p = positions(v, r.groups.flatMap((g) => g.lines), DEFAULT_CATALOG)
-    expect(p.items.map((i) => `${i.pos} ${i.kind}`)).toEqual(['1 textile', '1 textile', '1 freeTextile', '1 freeTextile', '2 object', '3 object', '4 object'])
-    // Textile on a wall and on foot plates is one product, one quote line, one number (Bjørn 7.11.2026)
+    expect(p.items.map((i) => `${i.pos} ${i.kind}`)).toEqual(['1 textile', '2 textile', '3 freeTextile', '4 freeTextile', '5 object', '6 object', '7 object'])
+    // Textile on a wall and on foot plates is one product, but each frame size its own quote line and number (Bjørn 7.11.2026)
     // Swaps before doors; two plates with the same colour are one article
     const arr = positions(find('01-hjorne').v, find('01-hjorne').r.groups.flatMap((g) => g.lines), DEFAULT_CATALOG)
     expect(arr.items.map((i) => `${i.pos} ${i.kind}`)).toEqual(['1 swap', '1 swap', '2 swap', '2 swap', '2 swap', '2 swap', '3 door'])
@@ -57,10 +57,11 @@ describe('position numbers', () => {
     expect(positions(room.v, room.r.groups.flatMap((g) => g.lines), DEFAULT_CATALOG).items.map((i) => i.pos)).toEqual([1, 2])
   })
 
-  it('a merged textile line on the quote goes by its quote key', () => {
+  it('a merged textile line on the quote goes by its quote key, one per frame size', () => {
     const sys = DEFAULT_CATALOG.system
-    // One product, on a wall or on foot plates (Bjørn 7.11.2026)
-    expect(lineKey(DEFAULT_CATALOG, { artnr: `${sys.textile}+${Object.values(sys.textileFill)[0]}` })).toBe('quote:tekstil')
-    expect(lineKey(DEFAULT_CATALOG, { artnr: sys.textile, quote: { key: 'tekstil', name: '', lead: true } })).toBe('quote:tekstil')
+    // One product, on a wall or on foot plates (Bjørn 7.11.2026); the merged quote line keeps its key
+    const key = 'tekstil:3970 × 2540 mm'
+    expect(lineKey(DEFAULT_CATALOG, { artnr: sys.textile, quote: { key, name: '', lead: true } })).toBe(`quote:${key}`)
+    expect(lineKey(DEFAULT_CATALOG, { artnr: `${sys.textile}+${Object.values(sys.textileFill)[0]}`, quote: { key, name: '', lead: true } })).toBe(`quote:${key}`)
   })
 })
