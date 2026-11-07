@@ -154,7 +154,7 @@ function supplierLists(x: unknown): SupplierList[] {
     const items = l.items.map((it, j): SupplierItem => {
       const row = `${at}, artikkel ${j + 1}`;
       if (!isObj(it) || !isStr(it.artnr)) return fail(`${row} mangler art.nr.`);
-      if (it.unit !== 'm' && it.unit !== 'stk') return fail(`${row} (${it.artnr}): enhet må være m eller stk.`);
+      if (it.unit !== 'm' && it.unit !== 'm²' && it.unit !== 'stk') return fail(`${row} (${it.artnr}): enhet må være m, m² eller stk.`);
       if (!isNum(it.price) || it.price < 0) return fail(`${row} (${it.artnr}): pris må være et tall.`);
       const broken = it.broken === undefined ? it.price : it.broken;
       if (!isNum(broken)) return fail(`${row} (${it.artnr}): brutt pakke må være et tall.`);

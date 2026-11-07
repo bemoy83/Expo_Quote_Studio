@@ -34,11 +34,14 @@ export interface FreeFrameSpec {
   railCuts: number[];
   /** 43TX uprights at the free ends, H long. */
   uprights: number;
-  /** 617 connectors (free ends and into corner posts) and 609 rail splices. */
+  /** 617 connectors (free ends and into corner posts) and rail splice connectors (`splice`: 609 or 604). */
   connectors: { corner: number; splice: number };
-  /** Feet, each with an upright brace above it, and the foot plate code. */
+  splice: string;
+  /** Feet and the foot plate code. */
   supports: number;
   foot: string;
+  /** Upright braces: one at every foot, and more between and by splices. */
+  braces: number;
   braceLength: number;
 }
 

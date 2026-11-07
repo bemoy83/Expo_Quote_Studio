@@ -29,7 +29,8 @@ function textileLines(c: CalcContext, faces: { W: number; H: number; pw: number;
 }
 
 /**
- * InFrame frame per piece by size B × H: the loose frame parts (43TX at 2W + 2H, 617, 520), braces and handling. Fast
+ * InFrame frame per piece by size B × H: the loose frame parts (43TX at 2W + 2H, 617, 520), braces, mounting per
+ * coupling and handling. Fast
  * price: m² rate × B × H.
  */
 export function inFrameFrameLines(c: CalcContext): CalcLine[] {
@@ -46,6 +47,8 @@ export function inFrameFrameLines(c: CalcContext): CalcLine[] {
       { id: ITEM.wallFixing, qty: RECIPES.frame.wallFixing.perFrame * n },
       { id: ITEM.braceM, qty: pieces.reduce((a, p) => a + ((p.braces?.qty ?? 0) * (p.braces?.length ?? 0)) / 1000, 0) },
       { id: ITEM.bracePiece, qty: pieces.reduce((a, p) => a + (p.braces?.qty ?? 0), 0) },
+      // Put together on site like the free-standing frame: a 617 in each corner and both ends of every brace
+      { id: ITEM.frameCoupling, qty: pieces.reduce((a, p) => a + 4 + 2 * (p.braces?.qty ?? 0), 0) },
       { id: ITEM.frame, qty: n },
     ];
     const fast = Math.round((textile?.variant.price ?? 0) * ((W * H) / 1e6));
@@ -59,21 +62,23 @@ export function inFrameTextileLines(c: CalcContext): CalcLine[] {
 }
 
 /**
- * Frittstående per metre: 43TX rails and free-end uprights, 92LTX corner posts, a foot plate and a brace at every
- * support, 617 corner and 609 splice connectors, mounting per coupling and handling per frame.
+ * Frittstående per metre: 43TX rails and free-end uprights, 92LTX corner posts, a foot plate at every support, the
+ * upright braces, 617 corner and 609 or 604 splice connectors, mounting per coupling and handling per frame.
  */
 export function freeFrameLines(c: CalcContext): CalcLine[] {
   const { prod } = c;
   const free = prod.free;
-  const supports = free.reduce((a, f) => a + f.supports.length, 0);
+  const braces = free.reduce((a, f) => a + f.braces.length, 0);
+  const splices = (code: string) => free.filter((f) => f.spliceCode === code).reduce((a, f) => a + f.connectors.splice, 0);
   const freeUses: Use[] = [
     { id: ITEM.frameProfileM, qty: free.reduce((a, f) => a + f.profileMm, 0) / 1000 },
     { id: ITEM.cornerPostM, qty: (prod.cornerPosts.qty * prod.cornerPosts.H) / 1000 },
     ...[...new Set(free.map((f) => f.foot.code))].map((code) => ({ id: ITEM.foot(code), qty: free.filter((f) => f.foot.code === code).reduce((a, f) => a + f.supports.length, 0) })),
     { id: ITEM.corner, qty: free.reduce((a, f) => a + f.connectors.corner, 0) },
-    { id: ITEM.splice, qty: free.reduce((a, f) => a + f.connectors.splice, 0) },
-    { id: ITEM.braceM, qty: free.reduce((a, f) => a + f.supports.length * f.braceLength, 0) / 1000 },
-    { id: ITEM.bracePiece, qty: supports },
+    { id: ITEM.splice, qty: splices(RECIPES.freeFrame.splice.thread) },
+    { id: ITEM.spliceSlide, qty: splices(RECIPES.freeFrame.splice.slide.code) },
+    { id: ITEM.braceM, qty: free.reduce((a, f) => a + f.braces.length * f.braceLength, 0) / 1000 },
+    { id: ITEM.bracePiece, qty: braces },
     { id: ITEM.frameCoupling, qty: free.reduce((a, f) => a + f.couplings, 0) },
     { id: ITEM.frame, qty: free.length },
   ];

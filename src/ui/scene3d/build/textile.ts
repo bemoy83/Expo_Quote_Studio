@@ -68,7 +68,7 @@ export function buildTextile(c: BuildContext) {
     const railTo = railFrom + f.railCuts.reduce((a, x) => a + x, 0) / 1000
     profiles(g, L, h, foot, { from: !f.corners.from, to: !f.corners.to }, railFrom, railTo, alu, tag)
     f.faces.forEach((x, i) => textile(g, -L / 2 + x.start / 1000, x.W / 1000, h, foot, face(x), i === 0 ? 1 : -1, tag))
-    for (const at of f.supports) brace(g, -L / 2 + at / 1000, h, foot, alu, tag)
+    for (const at of f.braces) brace(g, -L / 2 + at / 1000, h, foot, alu, tag)
     for (const at of f.supports) {
       const [x, y] = alongRun(t, at, f)
       const [dx, dy] = runDirection(t)
