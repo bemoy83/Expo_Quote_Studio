@@ -83,14 +83,16 @@ const MATERIAL_INDEX: IndexSeries = { 2023: 0.1, 2024: 0.067, 2025: 0.06, 2026: 
 /** Wages move on their own (tariff). Same numbers as material until real ones are set. Eksempeltall. */
 const LABOUR_INDEX: IndexSeries = { 2023: 0.1, 2024: 0.067, 2025: 0.06, 2026: 0.06, ...index(2027, 2035, 0.05) };
 
-/** Eksempeltall, chosen so the number of uses in a lifetime matches Bjørn's calculator: profiles and plates 4,
- *  couplings, feet and accessories 10. Replaced every second year (Bjørn 7.11.2026). */
+/** Calibrated 7.11.2026 against three stands Bjørn priced (what is sold today: 765 kr per m wall), with the real
+ *  Foga list and the times in pricing/data.ts: profiles and plates 14 uses in their lifetime, couplings, feet and
+ *  accessories 25. His calculator had 4 and 10, which made a wall about three times today's price. Replaced every
+ *  second year (Bjørn 7.11.2026). docs/kostmodell.md. */
 const OWNED_GROUPS: Record<PartKind, OwnedGroup> = {
-  profile: { lifetimeYears: 2, usesPerYear: 2 },
-  plate: { lifetimeYears: 2, usesPerYear: 2 },
-  coupling: { lifetimeYears: 2, usesPerYear: 5 },
-  foot: { lifetimeYears: 2, usesPerYear: 5 },
-  accessory: { lifetimeYears: 2, usesPerYear: 5 },
+  profile: { lifetimeYears: 2, usesPerYear: 7 },
+  plate: { lifetimeYears: 2, usesPerYear: 7 },
+  coupling: { lifetimeYears: 2, usesPerYear: 12.5 },
+  foot: { lifetimeYears: 2, usesPerYear: 12.5 },
+  accessory: { lifetimeYears: 2, usesPerYear: 12.5 },
 };
 
 export const DEFAULT_COST_PARAMS: CostParams = {

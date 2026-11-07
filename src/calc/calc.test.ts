@@ -284,6 +284,22 @@ describe('floor', () => {
   });
 });
 
+describe('calibrated against three stands Bjørn priced (7.11.2026)', () => {
+  // Exhibitor pays walls and takdrager. His estimate: person-hours for the whole goods journey, montering and
+  // demontering included. Prices are checked with the real Foga list outside the repo (it is not published).
+  const stands: [Variant['stand'], number, number, number][] = [
+    [{ width: 4, depth: 3, type: 'corner', cornerSide: 'right' }, 7, 7, 1.84],
+    [{ width: 5, depth: 3, type: 'row' }, 11, 5, 2.69],
+    [{ width: 7, depth: 4, type: 'corner', cornerSide: 'right' }, 11, 15, 3.03],
+  ];
+  it.each(stands)('%o: his metres, and his hours within 3 %', (stand, wallLm, beamLm, hours) => {
+    const r = run(createVariant('A', stand));
+    expect(r.keyFigures).toMatchObject({ wallLm, beamLm });
+    const minutes = lines(r).reduce((a, l) => a + Object.values(l.time).reduce((b, m) => b + (m ?? 0), 0), 0);
+    expect(Math.abs(minutes / 60 / hours - 1)).toBeLessThan(0.03);
+  });
+});
+
 describe('price as sum of articles (example price list, pricing/data.ts)', () => {
   const res = run(r1());
   it('wall per metre = plates, rails, its share of the posts and montering', () => {
@@ -321,9 +337,11 @@ describe('price as sum of articles (example price list, pricing/data.ts)', () =>
     expect(lines(r).find((x) => x.artnr === '6120-9010')).toMatchObject({ price: 870, cost: null, strategy: 'fast', placeholder: true });
   });
   it('handling time per step is in the prices, not a line', () => {
-    // plukk: posts 10 + rails 18 × 0,5 + plates 9 + beam 1 = 29 · vask 10 + 9 + 27 + 1 = 47 · transport 29
-    // montering 9 × 18 + 3 × 6 = 180 · demontering 9 × 12 + 3 × 3 = 117
-    expect(res.keyFigures.time).toEqual({ plukk: 29, vask: 47, transport: 29, montering: 180, demontering: 117 });
+    // The wall's and the takdrager's items, each with its minutes per step (calibrated, pricing/data.ts)
+    const uses: [string, number][] = [...R1_WALL, [ITEM.beam(2960), 1], [ITEM.beamLm, 3]];
+    for (const step of ['plukk', 'vask', 'transport', 'montering', 'demontering'] as const) {
+      expect(res.keyFigures.time[step], step).toBeCloseTo(uses.reduce((a, [id, n]) => a + (item(id).time?.[step] ?? 0) * n, 0));
+    }
     expect(qty(res, '9900')).toBe(0);
   });
   it('Arbeidstimer (customer\'s own equipment) counted in the panel goes under Andre tjenester', () => {
