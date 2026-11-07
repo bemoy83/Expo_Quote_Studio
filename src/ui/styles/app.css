@@ -477,6 +477,81 @@ kbd {
   box-shadow: var(--recess-shade);
   border-bottom: 1px solid var(--b-line);
 }
+/* The key figures: full row when it fits on one line, else the short row that opens the detail card (KeyFigures.tsx) */
+.kpis-wrap {
+  position: relative;
+}
+.kpis-probe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: max-content;
+  flex-wrap: nowrap;
+  visibility: hidden;
+  pointer-events: none;
+}
+.kpis.short {
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.kpis.short:hover,
+.kpis.short[aria-expanded='true'] {
+  background: color-mix(in oklab, var(--b-recess), var(--b-ink) 4%);
+}
+.kpis.short:focus-visible {
+  outline: 2px solid var(--b-ink);
+  outline-offset: -2px;
+}
+.kpis-more {
+  align-self: center;
+  margin-left: -24px;
+  color: var(--b-mute);
+  transition: transform var(--dur) var(--ease);
+}
+.kpis-more.up {
+  transform: rotate(180deg);
+}
+.kpi-pop {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 16px;
+  z-index: 50;
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  gap: 9px 14px;
+  align-items: baseline;
+  max-width: min(560px, calc(100vw - 32px));
+  padding: 14px 18px;
+}
+.kpi-pop-row {
+  display: contents;
+}
+.kpi-pop .label {
+  font: var(--type-eyebrow);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: rgb(var(--ink-muted));
+}
+.kpi-pop .fig {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 5px;
+  white-space: nowrap;
+}
+.kpi-pop .value {
+  font: 600 16px/1 var(--font-numeric);
+  letter-spacing: -0.02em;
+}
+.kpi-pop .unit,
+.kpi-pop .sub {
+  font: var(--type-note);
+  color: rgb(var(--ink-muted));
+}
+.kpi-pop .unit {
+  font: var(--type-kpi-unit);
+}
 .kpi {
   display: inline-flex;
   align-items: baseline;
