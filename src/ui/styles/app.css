@@ -3025,3 +3025,62 @@ select.cin {
     display: none;
   }
 }
+
+/* PROTOTYPE two sections: settings (with the graphics or mini plan in it) · the drawing */
+.wall-drawer.drawer3 {
+  grid-template-columns: minmax(260px, 310px) minmax(0, 1fr);
+}
+.drawer3 .wd-insp > .wd-foot {
+  order: 2;
+}
+.wd-sec {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 6px;
+}
+.wd-shelf {
+  width: auto;
+  flex: 1;
+}
+.wd-shelf-grid {
+  flex: 1;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: 54px;
+  align-content: start;
+}
+.drawer-frame.compact .wd-shelf {
+  flex: none;
+}
+.drawer-frame.compact .wd-shelf-grid {
+  flex: none;
+  grid-template-columns: none;
+  grid-auto-flow: column;
+  grid-auto-columns: 46px;
+  grid-auto-rows: 40px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 2px;
+}
+@container (max-width: 900px) {
+  .wd-shelf { width: auto; }
+  .wd-shelf-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@container (max-width: 680px) {
+  .wd-shelf { width: auto; padding-inline: 0; }
+  .wd-shelf > .eyebrow { display: block; }
+  .wd-shelf-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+.drawer-frame.compact .wd-foot {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+.drawer-frame.compact .wd-foot .wd-row {
+  flex: 1;
+  min-width: 0;
+}
+.drawer-frame.compact .wd-foot .btn {
+  height: 30px;
+}

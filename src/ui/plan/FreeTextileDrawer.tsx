@@ -90,20 +90,20 @@ export function FreeTextileDrawer(p: Props) {
           Duk {F.W} × {F.H} mm · {fillName}
           {F.fileName ? ` · fil ${F.fileName}` : ''}
         </p>
+        <Shelf
+          label={F.fill === 'print' ? `Trykk side ${face.toUpperCase()} · ${m?.name ?? 'uten motiv'}` : 'Motiv · velg for trykk'}
+          motifs={motifs}
+          value={F.fill === 'print' ? (F.motif ?? null) : undefined}
+          onPick={(mo) => p.onEdit((x) => updateFace(x, t.id, face, { motif: mo, ...(mo ? { fill: 'print' as const } : {}) }))}
+          onUpload={p.onUpload}
+        />
+
         <div className="wd-foot">
           <DrawerRow label={`Side ${face.toUpperCase()}`}>
             <IconButton icon={FlipHorizontal2} label={`Vis side ${face === 'a' ? 'B' : 'A'}`} size={15} onClick={() => p.onSelect({ freeTextileId: t.id, freeFace: face === 'a' ? 'b' : 'a' })} />
           </DrawerRow>
         </div>
       </div>
-
-      <Shelf
-        label={F.fill === 'print' ? `Trykk side ${face.toUpperCase()} · ${m?.name ?? 'uten motiv'}` : 'Motiv · velg for trykk'}
-        motifs={motifs}
-        value={F.fill === 'print' ? (F.motif ?? null) : undefined}
-        onPick={(mo) => p.onEdit((x) => updateFace(x, t.id, face, { motif: mo, ...(mo ? { fill: 'print' as const } : {}) }))}
-        onUpload={p.onUpload}
-      />
 
       <div className="wd-view">
         <div ref={box} className="wd-fit">

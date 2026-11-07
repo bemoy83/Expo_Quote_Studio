@@ -118,7 +118,7 @@ export function Shelf({
   onUpload: (f: File) => void
 }) {
   return (
-    <div className="wd-mid wd-shelf">
+    <div className="wd-sec wd-shelf">
       <div className="eyebrow">{label}</div>
       <div className="wd-shelf-grid">
         {textile && (

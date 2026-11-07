@@ -204,6 +204,40 @@ export function WallDrawer(p: Props) {
             {!T && !F && <ColourPanel painting={painting} tool={tool} setTool={setTool} printing={printing} pm={pm} paint={paint} ral={ral} setPaint={setPaint} />}
           </>
         )}
+      {O ? (
+        <div className="wd-sec">
+          <DoorMap v={v} openingId={O.id} onEdit={p.onEdit} />
+        </div>
+      ) : (
+      <Shelf
+        label={
+          T
+            ? fill === 'print'
+              ? `Trykk · ${findMotif(motifs, T.motif)?.name ?? 'uten motiv'}`
+              : 'Motiv · velg for trykk'
+            : F
+              ? `Motiv · ${findMotif(motifs, F.motif)?.name ?? 'uten motiv'}`
+              : printing
+                ? `Print · ${pm?.name ?? 'last opp et motiv'}`
+                : 'Grafikk · dra til veggen'
+        }
+        motifs={motifs}
+        textile={!T && !F}
+        required={!T && !F && printing}
+        value={T ? (fill === 'print' ? (T.motif ?? null) : undefined) : F ? (F.motif ?? null) : printing ? pm?.id : undefined}
+        onPick={
+          T
+            ? (m) => p.onEdit((x) => updateTextile(x, rules, T.id, { motif: m, ...(m ? { fill: 'print' } : {}) }))
+            : F
+              ? (m) => p.onEdit((x) => updateFoil(x, rules, F.id, { motif: m }, ratioOf(m ?? undefined)))
+              : printing
+                ? (m) => m && setPrintMotif(m)
+                : undefined
+        }
+        onUpload={p.onUpload}
+      />
+      )}
+
         {!O && (
           <div className="wd-foot">
             <DrawerRow label={`Side · ${faceName(w, s).toLowerCase()}`}>
@@ -238,40 +272,6 @@ export function WallDrawer(p: Props) {
           </div>
         )}
       </div>
-
-      {O ? (
-        <div className="wd-mid">
-          <DoorMap v={v} openingId={O.id} onEdit={p.onEdit} />
-        </div>
-      ) : (
-      <Shelf
-        label={
-          T
-            ? fill === 'print'
-              ? `Trykk · ${findMotif(motifs, T.motif)?.name ?? 'uten motiv'}`
-              : 'Motiv · velg for trykk'
-            : F
-              ? `Motiv · ${findMotif(motifs, F.motif)?.name ?? 'uten motiv'}`
-              : printing
-                ? `Print · ${pm?.name ?? 'last opp et motiv'}`
-                : 'Grafikk · dra til veggen'
-        }
-        motifs={motifs}
-        textile={!T && !F}
-        required={!T && !F && printing}
-        value={T ? (fill === 'print' ? (T.motif ?? null) : undefined) : F ? (F.motif ?? null) : printing ? pm?.id : undefined}
-        onPick={
-          T
-            ? (m) => p.onEdit((x) => updateTextile(x, rules, T.id, { motif: m, ...(m ? { fill: 'print' } : {}) }))
-            : F
-              ? (m) => p.onEdit((x) => updateFoil(x, rules, F.id, { motif: m }, ratioOf(m ?? undefined)))
-              : printing
-                ? (m) => m && setPrintMotif(m)
-                : undefined
-        }
-        onUpload={p.onUpload}
-      />
-      )}
 
       <WallElevation
         v={v}
