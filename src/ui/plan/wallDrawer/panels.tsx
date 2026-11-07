@@ -1,4 +1,4 @@
-// The settings column of the wall drawer: one panel for what is chosen. A textile frame, a decal or print, a door, or
+// The settings column of the wall drawer: one panel for what is chosen, and the graphics shelf under it. A textile frame, a decal or print, a door, or
 // nothing (the wall itself: colour and print with the paint bucket and brush).
 import { PaintBucket, Paintbrush, Palette, Repeat2 } from 'lucide-react'
 import type { Dispatch, ReactNode, SetStateAction } from 'react'
@@ -6,12 +6,13 @@ import { updateFoil } from '../../../domain/decor'
 import { removeOpening } from '../../../domain/doors'
 import type { FaceSide } from '../../../domain/faces'
 import { textileBox, updateTextile } from '../../../domain/textile/inFrame'
-import type { Foil, Opening, TextileFill, TextileWall, Variant, Wall } from '../../../domain/types'
+import type { Foil, Opening, TextileWall, Variant, Wall } from '../../../domain/types'
 import type { Motif } from '../../../persistence/file'
 import { Button, Dim, IconButton, Segmented } from '../../controls'
 import { plateName, rules } from '../../env'
 import { DoorSettings } from '../DoorSettings'
-import { DrawerRow, FillPicker, PlatePalette } from '../drawerParts'
+import { DrawerRow, FillPicker, PlatePalette, Shelf } from '../drawerParts'
+import { findMotif } from '../../motifs'
 import { type PlanSelection } from '../selection'
 import { faceName } from './face'
 import type { PaintTool } from './paint'
@@ -19,7 +20,7 @@ import type { PaintTool } from './paint'
 type Edit = (fn: (v: Variant) => Variant, history?: boolean) => void
 
 /** A chosen textile frame: its size and what fills it. */
-export function TextilePanel({ T, fill, onEdit }: { T: TextileWall; fill: TextileFill; onEdit: Edit }) {
+export function TextilePanel({ T, onEdit }: { T: TextileWall; onEdit: Edit }) {
   return (
     <>
       <div className="wd-dims">
@@ -27,7 +28,7 @@ export function TextilePanel({ T, fill, onEdit }: { T: TextileWall; fill: Textil
         <Dim label="Høyde" value={textileBox(T, rules).height} decimals={2} onChange={(n) => onEdit((x) => updateTextile(x, rules, T.id, { height: n }))} />
         <Dim label="Fra gulv" value={textileBox(T, rules).bottom} onChange={(n) => onEdit((x) => updateTextile(x, rules, T.id, { bottom: n }))} />
       </div>
-      <FillPicker value={fill} onChange={(f) => onEdit((x) => updateTextile(x, rules, T.id, { fill: f }))} />
+      <FillPicker value={T.fill ?? 'print'} onChange={(f) => onEdit((x) => updateTextile(x, rules, T.id, { fill: f }))} />
     </>
   )
 }
@@ -58,6 +59,43 @@ export function FoilPanel({ F, ratioOf, onEdit }: { F: Foil; ratioOf: (id?: stri
       )}
     </>
   )
+}
+
+/**
+ * The graphics shelf under the settings: a motif for the chosen frame or decal, the motif «Print» lays on, or (nothing
+ * chosen) motifs and a textile frame to drag onto the wall.
+ */
+export function WallShelf(props: {
+  T?: TextileWall
+  F?: Foil
+  printing: boolean
+  pm: Motif | undefined
+  motifs: Motif[]
+  ratioOf: (id?: string) => number
+  setPrintMotif: (id: string) => void
+  onEdit: Edit
+  onUpload: (f: File) => void
+}) {
+  const { T, F, printing, pm, motifs, ratioOf, setPrintMotif, onEdit, onUpload } = props
+  const printed = (T?.fill ?? 'print') === 'print'
+  const label = T
+    ? printed
+      ? `Trykk · ${findMotif(motifs, T.motif)?.name ?? 'uten motiv'}`
+      : 'Motiv · velg for trykk'
+    : F
+      ? `Motiv · ${findMotif(motifs, F.motif)?.name ?? 'uten motiv'}`
+      : printing
+        ? `Print · ${pm?.name ?? 'last opp et motiv'}`
+        : 'Grafikk · dra til veggen'
+  const value = T ? (printed ? (T.motif ?? null) : undefined) : F ? (F.motif ?? null) : printing ? pm?.id : undefined
+  const onPick = T
+    ? (m: string | null) => onEdit((x) => updateTextile(x, rules, T.id, { motif: m, ...(m ? { fill: 'print' } : {}) }))
+    : F
+      ? (m: string | null) => onEdit((x) => updateFoil(x, rules, F.id, { motif: m }, ratioOf(m ?? undefined)))
+      : printing
+        ? (m: string | null) => m && setPrintMotif(m)
+        : undefined
+  return <Shelf label={label} motifs={motifs} textile={!T && !F} required={!T && !F && printing} value={value} onPick={onPick} onUpload={onUpload} />
 }
 
 /** The wall itself: the paint bucket and the brush, and the palette (a colour or «Print»). */

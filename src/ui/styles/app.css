@@ -900,16 +900,14 @@ kbd {
   font: var(--type-text);
   color: rgb(var(--ink-muted));
 }
-/* ---------- Wall drawer (veggskuff) ---------- */
+/* ---------- Drawers (skuffer): always inside .drawer-frame, which gives the height ---------- */
 .wall-drawer {
-  flex: none;
-  max-height: min(56%, 480px);
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   scrollbar-width: thin;
   display: grid;
   grid-template-columns: minmax(250px, 290px) minmax(0, 1fr);
-  border-top: 1px solid rgb(var(--border-strong));
-  background: rgb(var(--panel));
 }
 .wd-insp {
   display: flex;
@@ -2826,24 +2824,21 @@ select.cin {
 /* Two-part drawers (wall with its doors, free-standing textile wall), Bjørn 7.11.2026: settings · the drawing, one fixed
    height with no scrolling, the help line across the bottom. Under the settings, the graphics shelf or the door's
    mini plan fills what is left of the column; the compact drawer leaves them out, so the drawing keeps the width. */
-.wall-drawer.drawer3 {
-  container-type: inline-size;
+.wall-drawer.drawer2 {
   grid-template-columns: minmax(260px, 310px) minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr) auto;
-  height: 270px;
-  max-height: none;
   overflow: hidden;
 }
-.drawer3 .wd-insp {
+.drawer2 .wd-insp {
   gap: 6px;
   padding-top: 10px;
   overflow: hidden;
 }
-.drawer3 .wd-view {
+.drawer2 .wd-view {
   min-height: 0;
   padding-bottom: 4px;
 }
-.drawer3 .wd-svg {
+.drawer2 .wd-svg {
   min-height: 0;
   max-height: none;
 }
@@ -2853,7 +2848,7 @@ select.cin {
   flex: 1;
   min-height: 200px;
 }
-.drawer3 .wd-fit {
+.drawer2 .wd-fit {
   min-height: 0;
 }
 .wd-fit > .wd-svg {
@@ -2864,7 +2859,7 @@ select.cin {
   min-height: 0;
   max-height: none;
 }
-.drawer3 > .wd-hint {
+.drawer2 > .wd-hint {
   position: static;
 }
 /* Under the settings: the graphics shelf or the door's mini plan, only in the detail height */
@@ -2975,17 +2970,11 @@ select.cin {
   background: rgb(var(--panel));
 }
 .drawer-frame.compact {
+  /* 270 px of drawer under the 14 px edge */
   height: 284px;
 }
 .drawer-frame.detail {
   height: min(max(420px, 60%), calc(100% - 140px));
-}
-.drawer-frame > .wall-drawer {
-  flex: 1;
-  min-height: 0;
-  height: auto;
-  max-height: none;
-  border-top: 0;
 }
 .drawer-handle {
   flex: none;

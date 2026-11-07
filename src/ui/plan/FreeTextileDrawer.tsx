@@ -69,7 +69,7 @@ export function FreeTextileDrawer(p: Props) {
   const fillName = F.fill === 'reuse' ? 'kundens duk' : F.fill === 'white' ? 'hvit duk' : 'trykk'
 
   return (
-    <section className="wall-drawer drawer3" aria-label="Frittstående tekstilvegg sett forfra">
+    <section className="wall-drawer drawer2" aria-label="Frittstående tekstilvegg sett forfra">
       <div className="wd-insp">
         <DrawerHead dot={LAYER_COLOR.textile} title={`Frittstående vegg ${f.pos}`} remove={{ label: 'Fjern tekstilvegg (Delete)', onClick: remove }} onClose={p.onClose} />
         <p className="wd-meta num">
