@@ -48,7 +48,7 @@
   /* Sidebåndet: samme kulør, mørk tone */
   [data-theme='dark'] [data-band] {
     --b-band: oklch(0.29 calc(var(--bc) * .42) var(--bh));
-    --b-line: oklch(0.42 calc(var(--bc) * .6) var(--bh));
+    --b-line: oklch(0.2 calc(var(--bc) * .4) var(--bh)); /* delelinje: et trinn mørkere enn båndet og nisjen, som i lys modus */
     --b-track: oklch(0.35 calc(var(--bc) * .5) var(--bh));
     --b-ink: oklch(0.94 calc(var(--bc) * .2) var(--bh));
     --b-mute: oklch(0.76 calc(var(--bc) * .32) var(--bh));
