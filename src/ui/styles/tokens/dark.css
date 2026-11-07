@@ -21,10 +21,11 @@
     --committed: 111 208 135; --draft: 242 181 79; --danger: 249 119 112;
     --al-block: #e08a70;
     --over-fill: oklch(0.74 0.12 80);
-    /* Flat: nivåer med kanter, skygge bare der noe svever */
-    --raise: 0 0 0 1px rgb(var(--border-strong));
-    --pop: 0 0 0 1px rgb(var(--border-strong)), 0 12px 32px rgb(0 0 0 / .5);
-    --slide: -1px 0 0 rgb(var(--border-strong)), -20px 0 40px rgb(0 0 0 / .45);
+    /* Ingen kantlinjer (Bjørn 7.11.2026): nivåer med lyshet. Det som svever er lysere enn det under, med dyp skygge;
+       et valgt valg er lysere enn sporet sitt */
+    --raise: 0 1px 2px rgb(0 0 0 / .45);
+    --pop: 0 16px 40px rgb(0 0 0 / .6), 0 2px 6px rgb(0 0 0 / .45);
+    --slide: -20px 0 40px rgb(0 0 0 / .55);
     --recess-shade: none;
     /* Byggesystemet i 2D: lysere metall, synlige føtter */
     --alu: #8f9297; --alu-post: #a9acb1; --alu-light: #bfc2c6; --alu-shade: #6c6f74; --alu-thumb: #9b9ea3; --feet: #7b7e83;
@@ -36,6 +37,13 @@
     /* Tusj: samme farge, litt dypere så de ikke gløder */
     --tusj-tekstil: oklch(0.74 0.13 55);
     --tusj-trykk: oklch(0.78 0.1 158);
+  }
+  /* Det som svever (popovere, pillene, kartet) løftes med lyshet, og et valgt valg inni blir lysere enn det igjen */
+  :root[data-theme='dark'] :is(.popover, .dock-pill, .sel-pill, .minimap) {
+    --panel: 40 40 37;  /* #282825 */
+    --surface: 56 56 52; /* #383834 valgt segment inni */
+    --well: color-mix(in oklab, rgb(var(--panel)) 88%, rgb(var(--ink)));
+    --well-hover: color-mix(in oklab, rgb(var(--panel)) 83%, rgb(var(--ink)));
   }
   /* Sidebåndet: samme kulør, mørk tone */
   [data-theme='dark'] [data-band] {

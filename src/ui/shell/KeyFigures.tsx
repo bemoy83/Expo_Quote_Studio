@@ -57,7 +57,7 @@ export function KeyFigures({ figures }: { figures: Figure[] }) {
           tabIndex={0}
           aria-expanded={open}
           aria-haspopup="dialog"
-          title="Vis detaljer"
+          title={open ? 'Skjul detaljer' : 'Vis detaljer'}
           onClick={() => setOpen(!open)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
