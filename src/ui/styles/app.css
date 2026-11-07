@@ -1749,6 +1749,14 @@ select.cin {
   font-weight: 500;
   color: rgb(var(--ink));
 }
+/* Level 2 article: no price and no status, one note across both columns */
+.art-note {
+  grid-column: span 2;
+  padding: 0 8px;
+  font: var(--type-note);
+  color: rgb(var(--ink-faint));
+  text-align: right;
+}
 
 /* Tilbud: A4 document */
 .doc-note {

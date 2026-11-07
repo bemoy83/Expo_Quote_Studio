@@ -1,4 +1,4 @@
-// Produktliste: every product and variant with art.nr, name, unit and price. The calc takes prices and names
+// Produktliste: every product and variant with art.nr, name, unit and price (level 2 articles have none). The calc takes prices and names
 // from here. Built-in products take a new name, price and status; added products can be edited fully.
 import { Check, Download, Plus, RotateCcw, Search, Trash2, Upload } from 'lucide-react'
 import { Fragment, useRef, useState } from 'react'
@@ -185,31 +185,39 @@ export function CatalogPage({ onToast }: { onToast: Toast }) {
                       ) : (
                         <span className="num cell-ro">{r.unit}</span>
                       )}
-                      <span className="price-cell" title={r.sum ? 'Sum av artikler. Prisen her brukes bare hvis en artikkelpris mangler.' : undefined}>
-                        {r.sum && <span className="faint">sum ·</span>}
-                        <CommitInput
-                          className="cin num"
-                          inputMode="decimal"
-                          value={priceText(r.price)}
-                          aria-label="Pris"
-                          selectOnFocus
-                          onCommit={(text) => {
-                            const x = parsePrice(text)
-                            if (x === null || x === r.price) return false
-                            update(r, { price: x, placeholder: false })
-                          }}
-                        />
-                        <span className="faint num">kr</span>
-                      </span>
-                      <button
-                        type="button"
-                        className={'status' + (r.placeholder ? ' ph' : '')}
-                        title={r.placeholder ? 'Marker som bekreftet' : 'Marker som plassholder'}
-                        onClick={() => update(r, { placeholder: !r.placeholder })}
-                      >
-                        {r.placeholder ? <i className="ph-dot" /> : <Check size={14} />}
-                        {r.placeholder ? 'Plassholder' : 'Bekreftet'}
-                      </button>
+                      {r.article ? (
+                        <span className="art-note" title="Det montøren plukker. Kunden kjøper vareslaget over, så artikkelen har ingen pris.">
+                          Artikkel · plukkes, selges ikke
+                        </span>
+                      ) : (
+                        <>
+                          <span className="price-cell" title={r.sum ? 'Sum av artikler. Prisen her brukes bare hvis en artikkelpris mangler.' : undefined}>
+                            {r.sum && <span className="faint">sum ·</span>}
+                            <CommitInput
+                              className="cin num"
+                              inputMode="decimal"
+                              value={priceText(r.price)}
+                              aria-label="Pris"
+                              selectOnFocus
+                              onCommit={(text) => {
+                                const x = parsePrice(text)
+                                if (x === null || x === r.price) return false
+                                update(r, { price: x, placeholder: false })
+                              }}
+                            />
+                            <span className="faint num">kr</span>
+                          </span>
+                          <button
+                            type="button"
+                            className={'status' + (r.placeholder ? ' ph' : '')}
+                            title={r.placeholder ? 'Marker som bekreftet' : 'Marker som plassholder'}
+                            onClick={() => update(r, { placeholder: !r.placeholder })}
+                          >
+                            {r.placeholder ? <i className="ph-dot" /> : <Check size={14} />}
+                            {r.placeholder ? 'Plassholder' : 'Bekreftet'}
+                          </button>
+                        </>
+                      )}
                       {r.added ? (
                         <IconButton
                           icon={Trash2}

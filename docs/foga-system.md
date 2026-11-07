@@ -423,6 +423,9 @@ setter sammen Foga-stykklisten og kalkylelinjene som ikke er bygget av Foga-dele
 | 2 Artikkel | Det montøren plukker | 6290-9010 veggplate, stolpe 94 med fot, topp- og bunnskinne | Plukkliste, og under hver gruppe i kalkylen |
 | 3 Bestanddel | Det en artikkel er laget av | Stolpe = 94 × 2490 + 700 + M10 × 65 | Innkjøp og kostpris (senere) |
 
+- En artikkel har ingen pris i produktlisten (Bjørn 7.11.2026). Den selges aldri alene, og kalkylen tar kosten fra
+  kostmotoren (pricing/data.ts). Produktlisten viser den som «Artikkel · plukkes, selges ikke», uten prisfelt og
+  status, eksporten gir tom pris, og importen hopper over den.
 - Kost og pris per nivå, og prisstrategi (fast eller sum av artikler): se [prismodell.md](prismodell.md).
 - Et salgsprodukt er en nominell bundle (vegg: 1 plate, 2 stolper, topp- og bunnskinne per meter). Plukklisten teller
   de faktiske artiklene fra tegningen, så naboelementer deler stolpe. Bundlen vises aldri i tilbudet.
