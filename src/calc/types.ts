@@ -38,7 +38,7 @@ export interface CalcLine {
   payer: Payer;
   /** Lines with the same key are one line on the quote, named `name`, with the quantity and unit of the `lead` line
    *  (textile walls: frame and textile). */
-  quote?: { key: string; name: string; lead: boolean };
+  quote?: { key: string; name: string; lead: boolean; size?: string };
   /** Carpet tiles: pieces per tile size, largest first. The picking list counts these instead of m². */
   tiles?: { size: string; qty: number }[];
   /** Rolled floor in lanes: running metres of roll (with the end allowance), waste in m², and the lanes as cut. The

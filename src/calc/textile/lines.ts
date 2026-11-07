@@ -89,7 +89,7 @@ export function frameLines(c: CalcContext): CalcLine[] {
     for (const u of fs.flatMap((f) => f.uses)) if (u.qty) uses.set(u.id, (uses.get(u.id) ?? 0) + u.qty);
     const fast = Math.round((textile?.variant.price ?? 0) * ((W * H) / 1e6));
     const name = `${textile ? displayName(textile) : sys.textile}, ${W} × ${H} mm, ${MOUNT_NAME[mount]}`;
-    const line = c.line(sys.textile, fs.length, { ...c.built, quote: { ...quote, lead: true } }, [...uses].map(([id, qty]) => ({ id, qty })), fast);
+    const line = c.line(sys.textile, fs.length, { ...c.built, quote: { ...quote, lead: true, size: `${W} × ${H} mm` } }, [...uses].map(([id, qty]) => ({ id, qty })), fast);
     return { ...line, name, unit: 'stk' as const };
   });
 }
