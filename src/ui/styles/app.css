@@ -184,7 +184,8 @@ kbd {
     .trow,
     .toast button,
     .link,
-    .cg-arts
+    .cg-arts,
+    .kpis.short
   ) {
   transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
 }
@@ -205,7 +206,8 @@ kbd {
     .mot,
     .gfx,
     .trow,
-    .toast button
+    .toast button,
+    .kpis.short
   ):hover:not(:disabled):not([aria-pressed='true']):not([aria-checked='true']):not([aria-selected='true']):not(
     [aria-current='page']
   ):not([aria-current='true']):not(.on),
@@ -490,14 +492,17 @@ kbd {
   visibility: hidden;
   pointer-events: none;
 }
+/* The short row is one button: shared hover over its recess, and the same tint while its card is open */
 .kpis.short {
+  --rest: var(--b-recess);
+  --hover-text: var(--b-ink);
+  column-gap: 28px;
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
-.kpis.short:hover,
 .kpis.short[aria-expanded='true'] {
-  background: color-mix(in oklab, var(--b-recess), var(--b-ink) 4%);
+  background-color: color-mix(in srgb, var(--rest), rgb(var(--ink)) var(--hover-amount));
 }
 .kpis.short:focus-visible {
   outline: 2px solid var(--b-ink);
@@ -505,7 +510,7 @@ kbd {
 }
 .kpis-more {
   align-self: center;
-  margin-left: -24px;
+  margin-left: -16px;
   color: var(--b-mute);
   transition: transform var(--dur) var(--ease);
 }
@@ -527,10 +532,7 @@ kbd {
 .kpi-pop-row {
   display: contents;
 }
-.kpi-pop .label {
-  font: var(--type-eyebrow);
-  letter-spacing: var(--tracking-eyebrow);
-  text-transform: uppercase;
+.kpi-pop :is(.label, .unit, .sub) {
   color: rgb(var(--ink-muted));
 }
 .kpi-pop .fig {
@@ -540,42 +542,33 @@ kbd {
   gap: 5px;
   white-space: nowrap;
 }
-.kpi-pop .value {
-  font: 600 16px/1 var(--font-numeric);
-  letter-spacing: -0.02em;
-}
-.kpi-pop .unit,
-.kpi-pop .sub {
-  font: var(--type-note);
-  color: rgb(var(--ink-muted));
-}
-.kpi-pop .unit {
-  font: var(--type-kpi-unit);
-}
 .kpi {
   display: inline-flex;
   align-items: baseline;
   gap: 6px;
   white-space: nowrap;
 }
-.kpi .label {
+/* Label, value, unit and detail look the same in the row and in the card; only the muted colour differs */
+:is(.kpi, .kpi-pop) .label {
   font: var(--type-eyebrow);
   letter-spacing: var(--tracking-eyebrow);
   text-transform: uppercase;
-  color: var(--b-mute);
-  margin-right: 2px;
 }
-.kpi .value {
+:is(.kpi, .kpi-pop) .value {
   font: 600 17px/1 var(--font-numeric);
   letter-spacing: -0.02em;
 }
-.kpi .unit {
+:is(.kpi, .kpi-pop) .unit {
   font: var(--type-kpi-unit);
+}
+:is(.kpi, .kpi-pop) .sub {
+  font: var(--type-note);
+}
+.kpi :is(.label, .unit, .sub) {
   color: var(--b-mute);
 }
-.kpi .sub {
-  font: var(--type-note);
-  color: var(--b-mute);
+.kpi .label {
+  margin-right: 2px;
 }
 
 .workspace {
