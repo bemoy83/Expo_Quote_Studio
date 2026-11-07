@@ -17,7 +17,7 @@ export interface InFrameParams {
   scale: number;
   /** Frame profile width, subtracted from brace length, mm. */
   prof: number;
-  /** Max distance between cross braces, mm. */
+  /** Max distance between upright braces, mm. Bjørn 7.11.2026: 2000, the textile pulls most in the middle (X2). */
   stag: number;
 }
 
@@ -80,7 +80,7 @@ export const RULES: Rules = {
     minWidth: 0.5,
     grid: 0.25,
     freeMin: 0.25,
-    inFrame: { side: 20, air: 10, wallH: 2490, feet: 50, bleed: 20, scale: 10, prof: 40, stag: 1000 },
+    inFrame: { side: 20, air: 10, wallH: 2490, feet: 50, bleed: 20, scale: 10, prof: 40, stag: 2000 },
   },
   door: { swing: 0.95, height: 2.0 },
   floor: { cell: 0.5, rollEnd: 0.1 },

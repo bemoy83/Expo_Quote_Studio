@@ -183,7 +183,7 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   }
 
   // Frittstående: top and bottom rail (spliced with 609 when long) and the uprights at free ends in 43TX, a 92LTX post per
-  // corner, and at every support a foot plate with an upright brace above it
+  // corner, a foot plate at every support, and the upright braces (at every foot, between and by splices)
   const free = s.freeFrames ?? [];
   const freeCuts = new Map<number, number>();
   const addCut = (len: number, qty: number) => qty && freeCuts.set(len, (freeCuts.get(len) ?? 0) + qty);
@@ -191,8 +191,8 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
     for (const c of f.railCuts) addCut(c, 2);
     addCut(f.H, f.uprights);
     const b = braces.get(f.braceLength) ?? { qty: 0, frames: [] };
-    b.qty += f.supports;
-    b.frames.push(f.supports > 1 ? `${f.pos} (${f.supports})` : f.pos);
+    b.qty += f.braces;
+    b.frames.push(f.braces > 1 ? `${f.pos} (${f.braces})` : f.pos);
     braces.set(f.braceLength, b);
   }
   if (freeCuts.size) {
@@ -210,7 +210,7 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   // Corner connectors: four per InFrame frame; top and bottom at a free end and into a corner post (same part, 617)
   part(BOM_GROUP.textile, r.frame.corner, 4 * s.frames.length);
   part(BOM_GROUP.textile, r.freeFrame.corner, free.reduce((a, f) => a + f.connectors.corner, 0));
-  part(BOM_GROUP.textile, r.freeFrame.splice, free.reduce((a, f) => a + f.connectors.splice, 0));
+  for (const code of new Set(free.map((f) => f.splice))) part(BOM_GROUP.textile, code, free.filter((f) => f.splice === code).reduce((a, f) => a + f.connectors.splice, 0));
   part(BOM_GROUP.textile, r.frame.wallFixing.code, r.frame.wallFixing.perFrame * s.frames.length);
   for (const code of new Set(free.map((f) => f.foot))) part(BOM_GROUP.textile, code, free.filter((f) => f.foot === code).reduce((a, f) => a + f.supports, 0));
 

@@ -1,14 +1,20 @@
-// Example list of what we buy outside Foga and own (plates, door leaves, curtains, hooks), with MADE-UP prices, so the
+// Example list of what we buy outside Foga (plates, door leaves, curtains, hooks we own; printed textile bought for
+// the job), with MADE-UP prices, so the
 // cost engine runs. The real numbers come in the kostgrunnlag file (src/cost/basis.ts), never in the repo.
 import type { SupplierItem, SupplierList } from './prices';
 
-type Row = [artnr: string, name: string, group: string, unit: 'm' | 'stk', price: number];
+type Row = [artnr: string, name: string, group: string, unit: 'm' | 'm²' | 'stk', price: number];
 
 const ROWS: Row[] = [
   ['HDF-976x2440', 'Lakkert HDF-plate 3 mm, 976 × 2440 mm', 'Plater', 'stk', 450],
   ['DOR-292-410', 'Dør med 292-ramme, hengsler 403 og lås 410, ferdig montert', 'Dører', 'stk', 2500],
   ['FORHENG', 'Forheng med glidere', 'Dører', 'stk', 900],
   ['KROK', 'Krok for takdrager', 'Takdrager', 'stk', 60],
+  // Textile with silicone edge, per m² incl. bleed. Blackback is the default for print (Bjørn 7.11.2026); Samba goes in
+  // front of LED, which the app does not draw yet
+  ['TRYKK-BLACKBACK', 'Trykt tekstil Blackback med silikonkant', 'Tekstil', 'm²', 180],
+  ['TRYKK-SAMBA', 'Trykt tekstil Samba med silikonkant', 'Tekstil', 'm²', 160],
+  ['TEKSTIL-HVIT', 'Hvit tekstil med silikonkant', 'Tekstil', 'm²', 100],
 ];
 
 export const OWN_SUPPLIER = 'Egne innkjøp';

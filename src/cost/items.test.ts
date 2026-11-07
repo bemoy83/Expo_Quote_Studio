@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_PRICING, ITEM, ITEM_RECIPES } from '../pricing/data';
 import type { PriceItem } from '../pricing/model';
-import { EXAMPLE_BASIS as B } from './basis';
+import { EXAMPLE_BASIS as B, supplierList } from './basis';
 import { basisYear, costItem } from './items';
-import { fogaPartPerUse, labourCost } from './model';
+import { fogaPartPerUse, labourCost, purchaseCost } from './model';
+import { OWN_SUPPLIER } from './own-list';
 
 const base: PriceItem = { id: 'x', name: 'x', unit: 'stk', cost: 1, price: 2, time: { plukk: 1, montering: 5 } };
 const P = B.params;
@@ -35,7 +36,11 @@ describe('price items from the cost engine', () => {
       expect(it, id).toBeDefined();
       expect(costItem(it!, r, B).missing, id).toEqual([]);
     }
-    // Textile items are not costed yet (trinn 5): example numbers
-    expect(DEFAULT_PRICING.items.get(ITEM.frameProfileM)).toMatchObject({ cost: 4, price: 10 });
+  });
+  it('printed textile is bought for the job: purchase with waste, at the salg DG', () => {
+    const c = costItem(base, ITEM_RECIPES[ITEM.print], B);
+    const buy = purchaseCost(supplierList(B, OWN_SUPPLIER), 'TRYKK-BLACKBACK', year, P)!;
+    expect(c.material).toBeCloseTo(buy * (1 + P.boughtWaste));
+    expect(DEFAULT_PRICING.items.get(ITEM.print)!.cost).toBeCloseTo(c.material, 2);
   });
 });

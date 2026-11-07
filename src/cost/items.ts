@@ -4,7 +4,7 @@
 import { FOGA_PARTS, type PartKind } from '../foga/parts';
 import { HANDLING_STEPS, type PriceItem, type PriceList } from '../pricing/model';
 import { supplierList, type CostBasis } from './basis';
-import { labourCost, ownedPerUse, priceAtDg, purchaseCost } from './model';
+import { boughtCost, labourCost, ownedPerUse, priceAtDg, purchaseCost } from './model';
 import { OWN_SUPPLIER } from './own-list';
 import type { DgGroup } from './params';
 
@@ -13,12 +13,14 @@ export interface ItemRecipe {
   parts?: readonly (readonly [code: string, qty: number])[];
   /** Own purchases outside Foga by art.nr, with the group whose lifetime they have. Owned and rented out. */
   own?: readonly (readonly [artnr: string, qty: number, kind: PartKind])[];
+  /** Bought for the job (printed textile), by art.nr in the own list, with waste on top. */
+  bought?: readonly (readonly [artnr: string, qty: number])[];
   dg: DgGroup;
 }
 
 export interface CostedItem {
   item: PriceItem;
-  /** Direct cost per unit split up: equipment and work. */
+  /** Direct cost per unit split up: equipment and material, and work. */
   material: number;
   labour: number;
   /** Parts the kostgrunnlag has no price for: the item keeps its example numbers. */
@@ -45,6 +47,11 @@ export function costItem(base: PriceItem, r: ItemRecipe, b: CostBasis): CostedIt
     const buy = purchaseCost(supplierList(b, OWN_SUPPLIER), artnr, year, p);
     if (buy === undefined) missing.push(artnr);
     else material += ownedPerUse(buy, kind, p) * qty;
+  }
+  for (const [artnr, qty] of r.bought ?? []) {
+    const buy = purchaseCost(supplierList(b, OWN_SUPPLIER), artnr, year, p);
+    if (buy === undefined) missing.push(artnr);
+    else material += boughtCost(buy, p) * qty;
   }
   const minutes = HANDLING_STEPS.reduce((a, s) => a + (base.time?.[s] ?? 0), 0);
   const labour = labourCost(minutes, year, p);

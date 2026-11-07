@@ -119,7 +119,7 @@ export function ProductionPage({ variants, current, onSelect, customer, motifNam
                       <span className="sub">{fillText(x.fill, x.motif)}</span>
                       {i === 0 && (
                         <span className="num meta">
-                          Skinner 2 × ({f.railCuts.map(n).join(' + ')}){f.uprights ? ` · stående ${f.uprights} × ${n(f.H)}` : ''} · stag {f.supports.length} × {n(f.braceLength)} · {count(f.supports.length, 'fotplate', 'fotplater')}
+                          Skinner 2 × ({f.railCuts.map(n).join(' + ')}){f.uprights ? ` · stående ${f.uprights} × ${n(f.H)}` : ''} · stag {f.braces.length} × {n(f.braceLength)} · {count(f.supports.length, 'fotplate', 'fotplater')}
                         </span>
                       )}
                       <span className="num meta">{x.fileName ? `Fil ${s.scale} %: ${fmt(x.fw, 1)} × ${fmt(x.fh, 1)} mm inkl. ${fmt(s.bleed * (s.scale / 100), 1)} mm bleed · ${x.fileName}` : 'Ingen trykkfil'}</span>
@@ -239,7 +239,7 @@ function productionCsv(P: Production, s: InFrameParams): string {
         x.fileName ?? '',
         c(x.fill === 'reuse' ? 0 : x.printArea),
         '',
-        x.face === 'a' ? `${f.supports.length} × ${f.braceLength}` : '',
+        x.face === 'a' ? `${f.braces.length} × ${f.braceLength}` : '',
       ])
   return toCsvText(rows)
 }

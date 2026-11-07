@@ -14,11 +14,14 @@ describe('InFrame frame piece', () => {
     expect(p.area).toBeCloseTo(1.01 * 2.58);
   });
   it('braces when the width passes the max brace distance', () => {
-    expect(framePiece(2000, S).braces).toEqual({ qty: 1, length: 2460 });
-    expect(framePiece(3000, S).braces).toEqual({ qty: 2, length: 2460 });
+    // At most 2 m between braces, the frame sides count as braces (Bjørn 7.11.2026)
+    expect(framePiece(2000, S).braces).toBeNull();
+    expect(framePiece(3000, S).braces).toEqual({ qty: 1, length: 2460 });
+    expect(framePiece(4000, S).braces).toEqual({ qty: 1, length: 2460 });
+    expect(framePiece(5000, S).braces).toEqual({ qty: 2, length: 2460 });
   });
   it('a lower textile wall uses its own height', () => {
-    const p = framePiece(2000, S, 1500);
+    const p = framePiece(3000, S, 1500);
     expect(p).toMatchObject({ H: 1500, ph: 1540, braces: { qty: 1, length: 1420 } });
   });
   it('file size at scale with bleed', () => {

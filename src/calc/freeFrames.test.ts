@@ -4,7 +4,7 @@ import type { Point, Variant } from '../domain/types';
 import { createVariant } from '../domain/variant';
 import { RECIPES } from '../foga/recipes';
 import { RULES } from '../rules/rules';
-import { freeFrames, splitRail, supportPoints } from './textile/free';
+import { bracePoints, freeFrames, splitRail, supportPoints } from './textile/free';
 
 const S = RECIPES.freeFrame.support;
 const draw = (v: Variant, a: Point, b: Point) => {
@@ -55,6 +55,20 @@ describe('feet and braces', () => {
   });
 });
 
+describe('braces', () => {
+  const R = RECIPES.freeFrame;
+  // Not at the feet: a foot plate has no brace (Bjørn 7.11.2026)
+  it('evenly, so no two uprights are more than 2 m apart', () => {
+    expect(bracePoints(2000, [], R)).toEqual([]);
+    expect(bracePoints(3000, [], R)).toEqual([1500]);
+    expect(bracePoints(4000, [], R)).toEqual([2000]);
+    expect(bracePoints(4500, [], R)).toEqual([1500, 3000]);
+  });
+  it('one 150 mm each side of a splice', () => {
+    expect(bracePoints(7000, [3500], R)).toEqual([1675, 3350, 3650, 5325]);
+  });
+});
+
 describe('rails', () => {
   it('spliced in equal pieces past 5 m', () => {
     expect(splitRail(5000, 5000)).toEqual([5000]);
@@ -68,8 +82,13 @@ describe('free-standing frame', () => {
     const [f] = frames(draw(island(), [1, 2], [7, 2]));
     // 6000 long, H = 2540. Rails 1 × 6000 is more than 5000: 2 × 3000 each
     expect(f).toMatchObject({ pos: 'F1', length: 6000, H: 2540, railCuts: [3000, 3000], uprights: 2, supports: [200, 3000, 5800], braceLength: 2460 });
-    // Couplings: 2 × 2 corner 617 + 3 braces × 2 × 600 + 2 × 609
-    expect(f.couplings).toBe(4 + 6 + 2);
+    // The splice at 3000 gets a brace 150 each side; between, braces so none are more than 2 m apart. The feet get
+    // none (Bjørn 7.11.2026)
+    expect(f.braces).toEqual([1425, 2850, 3150, 4575]);
+    // Both ends free: the splice is threaded with 609
+    expect(f.spliceCode).toBe('609');
+    // Couplings: 2 × 2 corner 617 + 4 braces × 2 × 600 + 2 × 609
+    expect(f.couplings).toBe(4 + 8 + 2);
     expect(f.connectors).toEqual({ corner: 4, splice: 2 });
     expect(f.profileMm).toBe(2 * 6000 + 2 * 2540);
     expect(f.faces.map((x) => [x.pos, x.W, x.pw, x.ph, x.fill])).toEqual([
@@ -78,6 +97,17 @@ describe('free-standing frame', () => {
     ]);
     expect(f.faces[0].fileName).toBe('Firma_F1A_6000x2540mm.pdf');
     expect(f.faces[0].perimeter).toBeCloseTo(2 * (6 + 2.54));
+  });
+  it('a splice between held ends is a 604 in the channel, not a threaded 609', () => {
+    const v = draw(island(), [1, 2], [7, 2]);
+    const id = v.freeTextiles[0].id;
+    const [f] = freeFrames(v, RECIPES.freeFrame, RULES.textile.inFrame, 'Firma', new Map(), new Map([[id, { from: true, to: true }]]));
+    expect(f.spliceCode).toBe('604');
+    // Two 604 in each of the two rails
+    expect(f.connectors.splice).toBe(4);
+    // Held at one end only: still 609
+    const [g] = freeFrames(v, RECIPES.freeFrame, RULES.textile.inFrame, 'Firma', new Map(), new Map([[id, { from: true, to: false }]]));
+    expect(g.spliceCode).toBe('609');
   });
   it('a corner: shared post, outer face longer, inner face shorter', () => {
     // L: (1,2) → (4,2) then (4,2) → (4,5). The second run leaves the corner toward +y.
@@ -92,6 +122,8 @@ describe('free-standing frame', () => {
     expect(f1.profileMm).toBe(2 * 2963 + 2540);
     // The post is the support at the corner: one foot, flush with the free end
     expect(f1.supports).toEqual([200]);
+    // 3 m from the free end to the corner post: one brace between
+    expect(f1.braces).toEqual([1500]);
     // Face A of (1,2) → (4,2) is the left normal (0, 1): the inner face, toward the other run
     expect(f1.faces.map((x) => [x.pos, x.W])).toEqual([
       ['F1A', 2980],
@@ -102,6 +134,7 @@ describe('free-standing frame', () => {
     // Run (4,2) → (4,5): face A is the left normal (−1, 0), toward where the first run comes from: inner
     expect(f2.faces.map((x) => x.W)).toEqual([2980, 3020]);
     expect(f2.supports).toEqual([2800]);
+    expect(f2.braces).toEqual([1500]);
     // 617 into the post top and bottom, plus at the free end; one brace
     expect(f2.couplings).toBe(2 + 2 + 2);
   });

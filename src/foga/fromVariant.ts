@@ -40,7 +40,7 @@ export function structureOf(d: Derived): FogaStructure {
     frames: d.production.pieces.map((p) => ({ pos: p.pos, W: p.W, H: p.H, braces: p.braces })),
     ...(d.production.free.length
       ? {
-          freeFrames: d.production.free.map((f) => ({ pos: f.pos, H: f.H, railCuts: f.railCuts, uprights: f.uprights, connectors: f.connectors, supports: f.supports.length, foot: f.foot.code, braceLength: f.braceLength })),
+          freeFrames: d.production.free.map((f) => ({ pos: f.pos, H: f.H, railCuts: f.railCuts, uprights: f.uprights, connectors: f.connectors, splice: f.spliceCode, supports: f.supports.length, braces: f.braces.length, foot: f.foot.code, braceLength: f.braceLength })),
           cornerPosts: d.production.cornerPosts,
         }
       : {}),

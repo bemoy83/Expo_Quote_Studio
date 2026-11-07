@@ -13,8 +13,8 @@ export interface SupplierItem {
   group: string;
   /** Pack size, in `unit`. */
   pack: number;
-  /** Profiles per metre, the rest per piece. */
-  unit: 'm' | 'stk';
+  /** Profiles per metre, textile per m², the rest per piece. */
+  unit: 'm' | 'm²' | 'stk';
   /** Price per unit when buying whole packs. */
   price: number;
   /** Price per unit from a broken pack. */

@@ -100,8 +100,16 @@ kostgrunnlaget pris på en del, beholder artikkelen eksempeltallene.
 
 Med oppskrift i dag (trinn 3): stolpe 94 med fot, topp- og bunnskinne, HDF-plate og overstykke, dør, forheng,
 takdrager i alle lengder, fotplate 750 med 795, krok og skjøt over tekstilvegg (utleie), og montering per modul,
-støtteplate, platebytte, takdrager per meter og takdragerstolpe (arbeid). Tekstil har eksempeltall til trinn 5.
-Plater, dører, forheng og krok er egne innkjøp utenfor Foga, i en egen eksempelliste (`src/cost/own-list.ts`).
+støtteplate, platebytte, takdrager per meter og takdragerstolpe (arbeid). Plater, dører, forheng og krok er egne
+innkjøp utenfor Foga, i en egen eksempelliste (`src/cost/own-list.ts`).
+
+Tekstilvegg (trinn 5) prises helt av motoren, også der katalogen har fastpris: som salgsverktøy skal standen kunne
+tilpasses kundens ønske uten regler for å kombinere katalogprodukter (Bjørn 7.11.2026). Katalogens fastpriser blir
+målet motoren kalibreres mot, innenfor en toleranse. Rammedelene er utleie: 43TX og 92LTX per meter, 617, 609, 604,
+520 med 503, stag 90 per meter og per stk med 2 × 600, fotplate 740 og 730. Arbeidet er håndtering per ramme, montering
+per kobling (617 og begge ender av hvert stag) og montering av duk per meter omkrets. Duken kjøpes til jobben, med svinn
+(type 3): trykk på Blackback som standard, hvit duk, og kundens egen duk bare montert. Tidene for tekstil er ikke
+kalibrert ennå.
 
 ## Tallene
 

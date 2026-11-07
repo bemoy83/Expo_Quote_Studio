@@ -85,7 +85,7 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 - Veggflater og felt (deles med folie): `domain/faces.ts` · tekstil holdes gyldig etter andre endringer i
   `fitDecor` (`domain/decor.ts`)
 - Kalkyle: `calc/textile/inFrame.ts` (rammemål og trykk), `calc/textile/free.ts` (frittstående: skinner, hjørner,
-  fotplater), `calc/textile/common.ts` (full høyde, filnavn) · linjene: `calc/textile/lines.ts` · produksjonsrader:
+  fotplater, stag `bracePoints`, skjøt 609 eller 604), holdte ender i `heldEnds` (`calc/production.ts`), `calc/textile/common.ts` (full høyde, filnavn) · linjene: `calc/textile/lines.ts`, kost og pris fra motoren via `ITEM_RECIPES` (`pricing/data.ts`) · produksjonsrader:
   `calc/production.ts` (lager også folierader)
 - Plan, 3D: `plan/layers/TextileLayer.tsx`, pensel `plan/pointer/textile.ts`, flytte frittstående `pointer/freeMove.ts` · `scene3d/build/textile.ts`, dra i 3D `scene3d/pointer/drag.ts`
 - Skuff: `WallDrawer.tsx` med `plan/wallDrawer/panels.tsx` (`TextilePanel`) og `drag.ts` (InFrame), `FreeTextileDrawer.tsx` (frittstående)

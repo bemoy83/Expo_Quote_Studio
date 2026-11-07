@@ -76,6 +76,7 @@ export function FreeTextileDrawer(p: Props) {
           {[
             `${fmt(H, 2)} m høy`,
             count(f.supports.length, 'fot', 'føtter'),
+            count(f.braces.length, 'stag', 'stag'),
             f.railCuts.length > 1 ? `skjøtt i ${f.railCuts.length}` : '',
             f.nCorners ? count(f.nCorners, 'hjørne', 'hjørner') : '',
           ]
@@ -109,8 +110,8 @@ export function FreeTextileDrawer(p: Props) {
         <div ref={box} className="wd-fit">
           <svg className="wd-svg" viewBox={view.viewBox} preserveAspectRatio="xMidYMid meet" role="img" aria-label={`${f.pos} side ${face.toUpperCase()}, ${fmt(W, 2)} m`}>
             <TextileFace x={0} y={0} w={W} h={H} m={m} fill={F.fill} empty={F.fill === 'print' ? 'Trykk uten motiv' : F.fill === 'white' ? 'Hvit, uten grafikk' : 'Kundens duk'} />
-            {/* Braces behind the textile, at every foot */}
-            {f.supports.map((at, i) => (
+            {/* Braces behind the textile, by the splices and at most 2 m apart (not at the feet) */}
+            {f.braces.map((at, i) => (
               <line key={`b${i}`} x1={x(at)} y1={fr} x2={x(at)} y2={H - fr} stroke={ALU} strokeOpacity={0.35} strokeWidth={0.02} strokeDasharray=".05 .04" />
             ))}
             {splices.map((at, i) => (
