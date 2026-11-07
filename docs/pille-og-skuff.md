@@ -117,7 +117,11 @@ samme produkt og beholder plass og `rot`. Er den nye varianten større, kjøres 
 - **Kanten øverst på skuffen** (14 px) kan dras opp eller ned, eller klikkes for å bytte. Den viser «Detalj» eller
   «Kompakt». Sist brukte høyde kan huskes i `localStorage`, men **Mer** åpner alltid i detalj.
 - **Veggrisset fyller skuffen.** Skalaen følger høyden (`elevationBox` / `wd-fit`), så detalj gir omtrent dobbelt så
-  stor tegning. Innstillingene står til venstre som i dag.
+  stor tegning. Innstillingene står til venstre.
+- **To deler** (Bjørn 7.11.2026): innstillinger til venstre og veggrisset til høyre. Grafikkhylla, eller miniplanen når
+  en dør er valgt, står under innstillingene og fyller resten av kolonnen. Før var de en egen kolonne i midten, og på
+  iPad med begge sidepanelene åpne ble veggrisset bare rundt 160 px bredt. **Kompakt** viser ikke hylla eller
+  miniplanen (de får ikke plass i 270 px ved siden av farger, side og knapper). De kommer fram når skuffen dras opp.
 - **Planen blir et kart over skuffen,** med valgt vegg markert. Den krymper, og regelen for liten skala (`planScale.ts`,
   `detail: 'compact'`) gir et enklere kart av seg selv.
 

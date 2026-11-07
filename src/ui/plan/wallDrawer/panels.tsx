@@ -1,7 +1,7 @@
 // The settings column of the wall drawer: one panel for what is chosen. A textile frame, a decal or print, a door, or
 // nothing (the wall itself: colour and print with the paint bucket and brush).
 import { PaintBucket, Paintbrush, Palette, Repeat2 } from 'lucide-react'
-import type { Dispatch, SetStateAction } from 'react'
+import type { Dispatch, ReactNode, SetStateAction } from 'react'
 import { updateFoil } from '../../../domain/decor'
 import { removeOpening } from '../../../domain/doors'
 import type { FaceSide } from '../../../domain/faces'
@@ -97,7 +97,7 @@ export function ColourPanel(props: {
   )
 }
 
-/** A chosen door or curtain: its settings, and the way back to colour and graphics. */
+/** A chosen door or curtain: its settings, the mini plan to move it (`children`), and the way back to colour and graphics. */
 export function DoorPanel(props: {
   v: Variant
   O: Opening
@@ -107,8 +107,9 @@ export function DoorPanel(props: {
   selectDoor: (id: string, side?: FaceSide) => void
   onEdit: Edit
   onClose: () => void
+  children?: ReactNode
 }) {
-  const { v, O, w, flip, select, selectDoor, onEdit, onClose } = props
+  const { v, O, w, flip, select, selectDoor, onEdit, onClose, children } = props
   return (
     <>
       <DoorSettings
@@ -124,6 +125,7 @@ export function DoorPanel(props: {
       >
         {flip !== undefined && <IconButton icon={Repeat2} label={`Vis ${faceName(w, flip).toLowerCase()}`} size={14} onClick={() => selectDoor(O.id, flip)} />}
       </DoorSettings>
+      <div className="wd-sec">{children}</div>
       {/* The way back to the palette: colour and graphics for the door are the wall's, and a 1 × 1 room's side is
           only the door, so the drawing has nothing else to click (Bjørn 3.11.2026) */}
       <div className="wd-foot">
