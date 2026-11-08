@@ -116,6 +116,24 @@ export function FlatChoice<T extends string | number | boolean>({
   )
 }
 
+/**
+ * A section of settings (Bjørn 8.11.2026), in the drawers and the stand chip alike: one title in the app's muted capitals,
+ * with what it is set to when its content does not show it («HELE VEGGEN · HVIT 9010»), its icon buttons on the same
+ * line, then the content straight on the surface. Sections are parted by air. Only four kinds of text: the surface's
+ * title, section titles, muted body text and numbers.
+ */
+export function Section({ title, aside, tools, className, children }: { title: string; aside?: string; tools?: ReactNode; className?: string; children?: ReactNode }) {
+  return (
+    <section className={className ? `set-sec ${className}` : 'set-sec'}>
+      <div className="set-sec-head">
+        <h4>{aside ? `${title} · ${aside}` : title}</h4>
+        {tools && <span className="set-tools">{tools}</span>}
+      </div>
+      {children}
+    </section>
+  )
+}
+
 /** Parse a typed length: comma or point, units and spaces ignored. Null when it is not a number. */
 function parseLength(text: string): number | null {
   const n = Number(text.replace(',', '.').replace(/[^\d.]/g, ''))

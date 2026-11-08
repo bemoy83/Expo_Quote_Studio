@@ -36,6 +36,8 @@
     /* Tusj: samme farge, litt dypere så de ikke gløder */
     --tusj-tekstil: oklch(0.74 0.13 55);
     --tusj-trykk: oklch(0.78 0.1 158);
+    /* Valgt i et flatt valg (FlatChoice): tydelig lysere enn hover, ellers for lav kontrast (Bjørn 8.11.2026) */
+    --chosen: color-mix(in oklab, rgb(var(--panel)) 76%, rgb(var(--ink)));
   }
   /* Det som svever (popovere, pillene, kartet) løftes med lyshet, og et valgt valg inni blir lysere enn det igjen */
   :root[data-theme='dark'] :is(.popover, .dock-pill, .sel-pill, .minimap) {
@@ -43,6 +45,7 @@
     --surface: 56 56 52; /* #383834 valgt segment inni */
     --well: color-mix(in oklab, rgb(var(--panel)) 88%, rgb(var(--ink)));
     --well-hover: color-mix(in oklab, rgb(var(--panel)) 83%, rgb(var(--ink)));
+    --chosen: color-mix(in oklab, rgb(var(--panel)) 76%, rgb(var(--ink)));
   }
   /* Sidebåndet: samme kulør, mørk tone */
   [data-theme='dark'] [data-band] {

@@ -14,4 +14,8 @@
   --zone:var(--sec);
   --well:color-mix(in oklab,var(--zone) 93%,rgb(var(--ink)));
   --well-hover:color-mix(in oklab,var(--zone) 88%,rgb(var(--ink)));
+  /* The chosen item of a choice laid straight on a surface (FlatChoice, the palette pill's text choices): one token
+     everywhere. Tools you draw with stay ink.
+     Dark mode raises it (tokens/dark.css) */
+  --chosen:var(--well);
 }

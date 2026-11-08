@@ -4,11 +4,11 @@ import type { PointerEvent as RPointerEvent, ReactNode } from 'react'
 import type { Crop } from '../../domain/print'
 import type { TextileFill } from '../../domain/types'
 import type { Motif } from '../../persistence/file'
-import { IconButton, ImageInput, Segmented } from '../controls'
+import { FlatChoice, IconButton, ImageInput, Section } from '../controls'
 import { wallPlates } from '../env'
 import { decorSource } from '../dnd'
 import { INK } from '../colors'
-import { VariantChips } from '../panel/ProductRow'
+import { Sw } from './QuickPicks'
 
 /**
  * The top of every drawer: a dot in the colour of what is chosen, its name, the drawer's own icon buttons (`children`),
@@ -26,16 +26,6 @@ export function DrawerHead({ dot, title, remove, onClose, children }: { dot?: st
   )
 }
 
-/** A setting as one line: what it is now, and the icon buttons that change it. */
-export function DrawerRow({ label, children }: { label: ReactNode; children?: ReactNode }) {
-  return (
-    <div className="wd-row">
-      <span className="eyebrow">{label}</span>
-      {children}
-    </div>
-  )
-}
-
 /** «Print» as the last choice of the palette: the motif chosen in the graphics shelf, foil over whole plates. */
 export const PRINT = 'print'
 
@@ -44,21 +34,22 @@ export const PRINT = 'print'
  * in the graphics shelf and picks `PRINT` (the wall drawer's paint bucket and brush lay it on whole plates).
  */
 export function PlatePalette({ value, onPick, print }: { value: string; onPick: (ral: string) => void; print?: { motif?: Motif } }) {
-  const plates = wallPlates()
-  const chips = plates.map((x) => ({ name: `${x.name} · RAL ${x.ral}`, color: x.color! }))
-  if (print) {
-    const m = print.motif
-    chips.push({
-      name: m ? `Print · ${m.name}` : 'Print · velg motiv i grafikken',
-      color: m ? `center / cover no-repeat url("${m.src}")` : 'repeating-linear-gradient(45deg, #d9d6cf 0 3px, #f3f1ec 3px 6px)',
-    })
-  }
+  // Square swatches as in the stand settings and the dock, no track (flat drawer, Bjørn 8.11.2026)
+  const m = print?.motif
   return (
-    <VariantChips
-      chips={chips}
-      selected={value === PRINT ? plates.length : plates.findIndex((x) => x.ral === value)}
-      onSelect={(i) => onPick(i === plates.length ? PRINT : plates[i].ral!)}
-    />
+    <div className="stand-swatches">
+      {wallPlates().map((x) => (
+        <Sw key={x.ral} color={x.color} title={`${x.name} · RAL ${x.ral}`} on={value === x.ral} onClick={() => onPick(x.ral!)} />
+      ))}
+      {print && (
+        <Sw
+          color={m ? `center / cover no-repeat url("${m.src}")` : 'repeating-linear-gradient(45deg, #d9d6cf 0 3px, #f3f1ec 3px 6px)'}
+          title={m ? `Print · ${m.name}` : 'Print · velg motiv i grafikken'}
+          on={value === PRINT}
+          onClick={() => onPick(PRINT)}
+        />
+      )}
+    </div>
   )
 }
 
@@ -83,14 +74,13 @@ const FILLS: { value: TextileFill; label: string }[] = [
   { value: 'reuse', label: 'Kundens' },
 ]
 
-/** Printed, white without graphics, or the customer's own textile of the same size (only mounted). */
-export function FillPicker({ value, onChange }: { value: TextileFill; onChange: (f: TextileFill) => void }) {
+/** Printed, white without graphics, or the customer's own textile of the same size (only mounted). `note`: a line under it. */
+export function FillPicker({ value, onChange, aside, note }: { value: TextileFill; onChange: (f: TextileFill) => void; aside?: string; note?: ReactNode }) {
   return (
-    <>
-      <div className="eyebrow">Tekstil</div>
-      <Segmented<TextileFill> inWell label="Tekstil" value={value} onChange={onChange} options={FILLS} />
-      {value === 'reuse' && <p className="panel-note">Kunden har duken fra før, i samme størrelse. Bare montering.</p>}
-    </>
+    <Section title="Duk" aside={aside}>
+      <FlatChoice<TextileFill> label="Duk" value={value} onChange={onChange} options={FILLS} />
+      {value === 'reuse' ? <p className="set-note">Kunden har duken fra før, i samme størrelse. Bare montering.</p> : note && <p className="set-note">{note}</p>}
+    </Section>
   )
 }
 
@@ -100,7 +90,8 @@ export function FillPicker({ value, onChange }: { value: TextileFill; onChange: 
  * selected, null for none. A textile-frame tile to drag comes first when `textile`, an upload tile last.
  */
 export function Shelf({
-  label,
+  title,
+  aside,
   motifs,
   value,
   textile,
@@ -108,7 +99,8 @@ export function Shelf({
   onPick,
   onUpload,
 }: {
-  label: string
+  title: string
+  aside?: string
   motifs: Motif[]
   value?: string | null
   textile?: boolean
@@ -118,8 +110,7 @@ export function Shelf({
   onUpload: (f: File) => void
 }) {
   return (
-    <div className="wd-sec wd-shelf">
-      <div className="eyebrow">{label}</div>
+    <Section title={title} aside={aside} className="wd-sec">
       <div className="wd-shelf-grid">
         {textile && (
           <button type="button" className="mot" title="Tekstilvegg · dra til veggen" aria-label="Tekstilvegg, dra til veggen" {...decorSource({ kind: 'textile' })}>
@@ -153,7 +144,7 @@ export function Shelf({
           <ImageInput onFile={onUpload} />
         </label>
       </div>
-    </div>
+    </Section>
   )
 }
 

@@ -8,10 +8,10 @@ import type { FaceSide } from '../../../domain/faces'
 import { textileBox, updateTextile } from '../../../domain/textile/inFrame'
 import type { Foil, Opening, TextileWall, Variant, Wall } from '../../../domain/types'
 import type { Motif } from '../../../persistence/file'
-import { Button, Dim, IconButton, Segmented } from '../../controls'
+import { Button, Dim, FlatChoice, IconButton, Section } from '../../controls'
 import { plateName, rules } from '../../env'
 import { DoorSettings } from '../DoorSettings'
-import { DrawerRow, FillPicker, PlatePalette, Shelf } from '../drawerParts'
+import { FillPicker, PlatePalette, Shelf } from '../drawerParts'
 import { findMotif } from '../../motifs'
 import { type PlanSelection } from '../selection'
 import { faceName } from './face'
@@ -23,11 +23,13 @@ type Edit = (fn: (v: Variant) => Variant, history?: boolean) => void
 export function TextilePanel({ T, onEdit }: { T: TextileWall; onEdit: Edit }) {
   return (
     <>
-      <div className="wd-dims">
-        <Dim label="Bredde" value={T.width} onChange={(n) => onEdit((x) => updateTextile(x, rules, T.id, { width: n }))} />
-        <Dim label="Høyde" value={textileBox(T, rules).height} decimals={2} onChange={(n) => onEdit((x) => updateTextile(x, rules, T.id, { height: n }))} />
-        <Dim label="Fra gulv" value={textileBox(T, rules).bottom} onChange={(n) => onEdit((x) => updateTextile(x, rules, T.id, { bottom: n }))} />
-      </div>
+      <Section title="Mål">
+        <div className="wd-dims">
+        <Dim big label="Bredde" value={T.width} onChange={(n) => onEdit((x) => updateTextile(x, rules, T.id, { width: n }))} />
+        <Dim big label="Høyde" value={textileBox(T, rules).height} decimals={2} onChange={(n) => onEdit((x) => updateTextile(x, rules, T.id, { height: n }))} />
+        <Dim big label="Fra gulv" value={textileBox(T, rules).bottom} onChange={(n) => onEdit((x) => updateTextile(x, rules, T.id, { bottom: n }))} />
+        </div>
+      </Section>
       <FillPicker value={T.fill ?? 'print'} onChange={(f) => onEdit((x) => updateTextile(x, rules, T.id, { fill: f }))} />
     </>
   )
@@ -37,25 +39,28 @@ export function TextilePanel({ T, onEdit }: { T: TextileWall; onEdit: Edit }) {
 export function FoilPanel({ F, ratioOf, onEdit }: { F: Foil; ratioOf: (id?: string) => number; onEdit: Edit }) {
   return (
     <>
-      <div className="eyebrow">Dekning</div>
-      <Segmented<boolean>
-        inWell
-        label="Dekning"
-        value={F.full}
-        onChange={(full) => onEdit((x) => updateFoil(x, rules, F.id, { full }, ratioOf(F.motif)))}
-        options={[
-          { value: false, label: 'Dekal' },
-          { value: true, label: 'Hel plate' },
-        ]}
-      />
-      {F.full ? (
-        <p className="wd-meta">
-          Dekker platen mellom stolpene, {rules.wall.plate.width} × {rules.wall.plate.height} mm
-        </p>
-      ) : (
-        <div className="wd-dims">
-          <Dim label="Bredde" value={F.width} decimals={2} onChange={(n) => onEdit((x) => updateFoil(x, rules, F.id, { width: n }, ratioOf(F.motif)))} />
-        </div>
+      <Section title="Dekning">
+        <FlatChoice<boolean>
+          label="Dekning"
+          value={F.full}
+          onChange={(full) => onEdit((x) => updateFoil(x, rules, F.id, { full }, ratioOf(F.motif)))}
+          options={[
+            { value: false, label: 'Dekal' },
+            { value: true, label: 'Hel plate' },
+          ]}
+        />
+        {F.full && (
+          <p className="set-note">
+            Dekker platen mellom stolpene, {rules.wall.plate.width} × {rules.wall.plate.height} mm
+          </p>
+        )}
+      </Section>
+      {!F.full && (
+        <Section title="Mål">
+          <div className="wd-dims">
+            <Dim big label="Bredde" value={F.width} decimals={2} onChange={(n) => onEdit((x) => updateFoil(x, rules, F.id, { width: n }, ratioOf(F.motif)))} />
+          </div>
+        </Section>
       )}
     </>
   )
@@ -78,15 +83,16 @@ export function WallShelf(props: {
 }) {
   const { T, F, printing, pm, motifs, ratioOf, setPrintMotif, onEdit, onUpload } = props
   const printed = (T?.fill ?? 'print') === 'print'
-  const label = T
+  // Title and what is chosen now: one section like the others (Bjørn 8.11.2026)
+  const [title, aside] = T
     ? printed
-      ? `Trykk · ${findMotif(motifs, T.motif)?.name ?? 'uten motiv'}`
-      : 'Motiv · velg for trykk'
+      ? ['Motiv', findMotif(motifs, T.motif)?.name ?? 'ikke valgt']
+      : ['Motiv', 'velg for trykk']
     : F
-      ? `Motiv · ${findMotif(motifs, F.motif)?.name ?? 'uten motiv'}`
+      ? ['Motiv', findMotif(motifs, F.motif)?.name ?? 'ikke valgt']
       : printing
-        ? `Print · ${pm?.name ?? 'last opp et motiv'}`
-        : 'Grafikk · dra til veggen'
+        ? ['Print', pm?.name ?? 'last opp et motiv']
+        : ['Grafikk', 'dra til veggen']
   const value = T ? (printed ? (T.motif ?? null) : undefined) : F ? (F.motif ?? null) : printing ? pm?.id : undefined
   const onPick = T
     ? (m: string | null) => onEdit((x) => updateTextile(x, rules, T.id, { motif: m, ...(m ? { fill: 'print' } : {}) }))
@@ -95,7 +101,7 @@ export function WallShelf(props: {
       : printing
         ? (m: string | null) => m && setPrintMotif(m)
         : undefined
-  return <Shelf label={label} motifs={motifs} textile={!T && !F} required={!T && !F && printing} value={value} onPick={onPick} onUpload={onUpload} />
+  return <Shelf title={title} aside={aside} motifs={motifs} textile={!T && !F} required={!T && !F && printing} value={value} onPick={onPick} onUpload={onUpload} />
 }
 
 /** The wall itself: the paint bucket and the brush, and the palette (a colour or «Print»). */
@@ -111,17 +117,16 @@ export function ColourPanel(props: {
 }) {
   const { painting, tool, setTool, printing, pm, paint, ral, setPaint } = props
   return (
-    <>
-      <DrawerRow
-        label={
-          painting
-            ? `${tool === 'wall' ? 'Hele veggen' : 'Plate'} · ${printing ? `print ${pm?.name ?? ''}` : `${plateName(paint)} ${paint}`}`
-            : `Hele veggen · ${plateName(ral)} ${ral}`
-        }
-      >
+    <Section
+      title={painting && tool === 'plate' ? 'Plate' : 'Hele veggen'}
+      aside={painting ? (printing ? `print ${pm?.name ?? ''}` : `${plateName(paint)} ${paint}`) : `${plateName(ral)} ${ral}`}
+      tools={
+        <>
         <IconButton icon={PaintBucket} label="Malerspann: klikk veggen for å farge hele siden" size={15} className="ink" pressed={tool === 'wall'} onClick={() => setTool(tool === 'wall' ? null : 'wall')} />
         <IconButton icon={Paintbrush} label="Malerkost: klikk én og én plate" size={15} className="ink" pressed={tool === 'plate'} onClick={() => setTool(tool === 'plate' ? null : 'plate')} />
-      </DrawerRow>
+        </>
+      }
+    >
       <PlatePalette
         value={painting ? paint : ral}
         print={{ motif: pm }}
@@ -131,7 +136,7 @@ export function ColourPanel(props: {
           if (!tool) setTool('wall')
         }}
       />
-    </>
+    </Section>
   )
 }
 

@@ -21,10 +21,10 @@ import { builtModules, isStandWall } from '../../domain/walls'
 import type { Motif } from '../../persistence/file'
 import { wallHeight } from '../../rules/rules'
 import { INK_FAINT, LAYER_COLOR } from '../colors'
-import { Button, IconButton } from '../controls'
+import { Button, IconButton, Section } from '../controls'
 import { productOf, rules } from '../env'
 import { findMotif } from '../motifs'
-import { DrawerHead, DrawerRow } from './drawerParts'
+import { DrawerHead} from './drawerParts'
 import { DoorMap } from './DoorMap'
 import { type PlanSelection } from './selection'
 import { addTextile, fillTextile, removeTextile, textilesOn, updateTextile } from '../../domain/textile/inFrame'
@@ -184,16 +184,20 @@ export function WallDrawer(p: Props) {
         {!O && <WallShelf T={T} F={F} printing={printing} pm={pm} motifs={motifs} ratioOf={ratioOf} setPrintMotif={setPrintMotif} onEdit={p.onEdit} onUpload={p.onUpload} />}
         {!O && (
           <div className="wd-foot">
-            <DrawerRow label={`Side · ${faceName(w, s).toLowerCase()}`}>
-              {flip !== undefined && (
-                <IconButton
-                  icon={FlipHorizontal2}
-                  label={T ? 'Flytt rammen til andre siden' : F ? 'Flytt folien til andre siden' : `Vis ${faceName(w, flip).toLowerCase()}`}
-                  size={15}
-                  onClick={() => (T || F ? moveToSide(flip) : p.onSelect({ wallId: w.id, side: flip }))}
-                />
-              )}
-            </DrawerRow>
+            <Section
+              title="Side"
+              aside={faceName(w, s).toLowerCase()}
+              tools={
+                flip !== undefined && (
+                  <IconButton
+                    icon={FlipHorizontal2}
+                    label={T ? 'Flytt rammen til andre siden' : F ? 'Flytt folien til andre siden' : `Vis ${faceName(w, flip).toLowerCase()}`}
+                    size={15}
+                    onClick={() => (T || F ? moveToSide(flip) : p.onSelect({ wallId: w.id, side: flip }))}
+                  />
+                )
+              }
+            />
             <div className="wd-actions">
               {T && (
                 <Button variant="ghost" icon={MoveHorizontal} onClick={() => p.onEdit((x) => fillTextile(x, rules, T.id))}>

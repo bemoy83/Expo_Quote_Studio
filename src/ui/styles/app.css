@@ -2208,7 +2208,8 @@ select.cin {
   cursor: pointer;
 }
 .flat-choice > button[aria-checked='true'] {
-  background: var(--well);
+  /* The chosen item: a fill clearly above the hover tint (dark mode raises it, tokens/dark.css) */
+  background: var(--chosen);
   color: rgb(var(--ink));
   font-weight: 600;
 }
@@ -2228,45 +2229,60 @@ select.cin {
   border-radius: 10px;
 }
 
-/* ---------- Stand settings (stand chip popover) ---------- */
-/* Four groups (type, size, stand walls, beams) with air between them */
+/* ---------- Settings sections (controls.tsx Section): the stand chip and the drawers ---------- */
+/* Bjørn 8.11.2026: content straight on the surface, no tracks or sunken fields. A section is a title in the app's muted
+   capitals, with what it is set to when the content does not show it («HELE VEGGEN · HVIT 9010»), its icon buttons on
+   the right, then its content. Only four kinds of text: the surface's title, section titles, muted body text (field
+   labels, notes) and numbers. Sections are parted by air. */
+.set-sec {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.set-sec-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+  min-width: 0;
+}
+.set-sec-head h4 {
+  min-width: 0;
+  margin: 0;
+  font: var(--type-eyebrow);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: rgb(var(--ink-faint));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.set-tools {
+  margin-left: auto;
+  display: flex;
+  gap: 2px;
+}
+.set-note {
+  margin: 0;
+  font: 400 13px var(--font-ui);
+  color: rgb(var(--ink-muted));
+}
+/* A choice's text lines up with the title over it; its chosen fill reaches out into the margin */
+.set-sec > .flat-choice:not(.tiles) {
+  margin-left: -10px;
+}
+.set-sec .stand-swatches .q-sw {
+  width: 28px;
+  height: 28px;
+}
+
+/* The stand chip's popover: type, size, stand walls, beams */
 .stand-set {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
   padding-top: 10px;
-}
-.stand-grp {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.stand-grp > .eyebrow {
-  margin-bottom: 2px;
-}
-.stand-grp .panel-note {
-  margin: 0;
-}
-.stand-set .set-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  min-height: 40px;
-}
-.stand-set .set-row .lbl {
-  min-width: 0;
-  font: var(--type-label);
-}
-.stand-set .set-row .lbl small {
-  display: block;
-  font: 400 11.5px var(--font-numeric);
-  color: rgb(var(--ink-faint));
-}
-.stand-set .set-row.stacked {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
 }
 /* Width × depth: big numbers; the field shows only on hover and focus */
 .stand-dims {
@@ -2517,7 +2533,9 @@ select.cin {
 }
 /* Chosen = one step darker than a well: clearly firmer than the shared hover tint */
 .dock-quick .seg > button[aria-selected='true'] {
-  background: var(--well-hover);
+  /* Same chosen fill as every flat choice on a surface (stand chip, drawer): --chosen */
+  background: var(--chosen);
+  color: rgb(var(--ink));
   box-shadow: none;
 }
 .q-name {
@@ -2570,6 +2588,7 @@ select.cin {
   cursor: pointer;
 }
 .q-btn[aria-pressed='true'] {
+  /* A tool you draw with (door, curtain, beam): ink, like the dock's tools; --chosen is for settings (Bjørn 8.11.2026) */
   background: rgb(var(--ink));
   color: rgb(var(--canvas));
 }
@@ -2736,17 +2755,6 @@ select.cin {
   gap: 6px;
   padding: 6px 0 2px;
 }
-.door-map-head {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  font: 500 13px var(--font-ui);
-}
-.door-map-where {
-  margin-left: auto;
-  font: 400 12px var(--font-ui);
-  color: rgb(var(--ink-muted));
-}
 /* Its natural size at most (DoorMap sets the max), smaller when the settings column has less height */
 .door-map svg {
   flex: 1 1 0;
@@ -2836,14 +2844,6 @@ select.cin {
 .wd-foot .wd-actions:empty {
   display: none;
 }
-.wd-row {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-}
-.wd-row .eyebrow {
-  flex: 1;
-}
 .wd-dims {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2866,11 +2866,6 @@ select.cin {
   align-items: center;
   gap: 2px;
 }
-.wd-shelf > .eyebrow {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
 /* Four tiles across; with many motifs the grid scrolls */
 .wd-shelf-grid {
   flex: 1;
@@ -2883,13 +2878,51 @@ select.cin {
   overflow-y: auto;
   scrollbar-width: thin;
 }
-.wd-shelf .mot {
-  height: auto;
+
+/* Flat drawer settings (Bjørn 8.11.2026): sections as in the stand chip (Section, «Settings sections» above), lengths
+   as numbers with their unit, the field shown on hover and focus. */
+.wd-insp {
+  gap: 16px;
 }
-.wd-shelf .mot.add {
+.wd-insp .wd-meta {
+  margin: -12px 0 0;
+}
+.wd-dims {
+  gap: 2px;
+}
+.wd-insp .dim.big {
+  align-items: flex-start;
+  gap: 0;
+}
+.wd-insp .dim.big .dim-label {
+  font: 400 13px var(--font-ui);
   color: rgb(var(--ink-muted));
 }
-.wd-shelf .mot[draggable='true'] {
+.wd-insp .dim.big .dim-value {
+  height: 32px;
+  margin-left: -6px;
+  padding: 0 6px;
+}
+.wd-insp .dim.big .field.num {
+  height: 32px;
+  font-size: 20px;
+  text-align: left;
+}
+.wd-shelf-grid .mot {
+  --rest: transparent;
+  height: auto;
+  transition: background var(--dur) var(--ease);
+}
+.wd-shelf-grid .mot:hover {
+  background: var(--well);
+}
+.wd-shelf-grid .mot.on {
+  background: rgb(var(--ink));
+}
+.wd-shelf-grid .mot.add {
+  color: rgb(var(--ink-muted));
+}
+.wd-shelf-grid .mot[draggable='true'] {
   cursor: grab;
 }
 

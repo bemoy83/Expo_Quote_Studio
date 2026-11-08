@@ -121,7 +121,7 @@ function LaneDrawer({ v, lane, onSelect, onEdit, onClose }: Props & { lane: { i:
           {fmt(width, 2)} × {fmt(len, 2)} m lagt · {wasteText(waste)}
         </p>
         <div className="wd-dims">
-          <Dim label="Lengde" value={len} decimals={2} onChange={(n) => move(resizeLane(v, lane, Math.round((n - len) / CELL)))} />
+          <Dim big label="Lengde" value={len} decimals={2} onChange={(n) => move(resizeLane(v, lane, Math.round((n - len) / CELL)))} />
         </div>
         <Button icon={RotateCw} onClick={() => move(rotateLane(v, lane))}>
           Snu banen (R)

@@ -1,11 +1,12 @@
 // The stand itself, in the order the stand chip names it: its type, its size, who pays the stand walls and the beams
-// along its open sides. Flat choices without tracks, like the dock. Shown in the stand chip's popover on the drawing
-// surface.
+// along its open sides. Sections as in the drawers (controls.tsx Section, Bjørn 8.11.2026): a title in muted capitals
+// over each choice, with what it is set to when the choice does not show it, flat choices without tracks. Shown in the
+// stand chip's popover on the drawing surface.
 import type { CalcResult } from '../../calc/calc'
 import { setStand } from '../../domain/edit'
 import type { Payer, StandType, StandWallTerms, Variant } from '../../domain/types'
 import { standardBeamsOn, withStandardBeams } from '../../domain/walls'
-import { Dim, FlatChoice } from '../controls'
+import { Dim, FlatChoice, Section } from '../controls'
 import { wallPlates } from '../env'
 import { fmt } from '../format'
 import { beamSummary } from '../names'
@@ -77,10 +78,11 @@ export function StandSettings({ v, res, onEdit, terms, onTerms }: StandSettingsP
       onChange={(n) => onEdit((x) => setStand(x, { ...x.stand, [key]: n }))}
     />
   )
+  const beams = standardBeamsOn(v)
+  const plate = wallPlates().find((x) => x.ral === terms.ral)
   return (
     <div className="stand-set">
-      <section className="stand-grp">
-        <div className="eyebrow">Standtype</div>
+      <Section title="Standtype">
         <FlatChoice<StandType>
           tiles
           label="Standtype"
@@ -96,25 +98,24 @@ export function StandSettings({ v, res, onEdit, terms, onTerms }: StandSettingsP
             ),
           }))}
         />
-        {s.type === 'corner' && (
-          <div className="set-row">
-            <span className="lbl">Åpen mot</span>
-            <FlatChoice<'left' | 'right'>
-              label="Åpen side"
-              value={s.cornerSide ?? 'right'}
-              onChange={(cornerSide) => onEdit((x) => setStand(x, { ...x.stand, cornerSide }))}
-              options={[
-                { value: 'left', label: 'Venstre' },
-                { value: 'right', label: 'Høyre' },
-              ]}
-            />
-          </div>
-        )}
-        <p className="panel-note">{TYPE_TEXT[s.type]}</p>
-      </section>
+        <p className="set-note">{TYPE_TEXT[s.type]}</p>
+      </Section>
 
-      <section className="stand-grp">
-        <div className="eyebrow">Mål</div>
+      {s.type === 'corner' && (
+        <Section title="Åpen mot">
+          <FlatChoice<'left' | 'right'>
+            label="Åpen side"
+            value={s.cornerSide ?? 'right'}
+            onChange={(cornerSide) => onEdit((x) => setStand(x, { ...x.stand, cornerSide }))}
+            options={[
+              { value: 'left', label: 'Venstre' },
+              { value: 'right', label: 'Høyre' },
+            ]}
+          />
+        </Section>
+      )}
+
+      <Section title="Mål">
         <div className="stand-dims">
           {side('width', 'Bredde')}
           <span className="times" aria-hidden>
@@ -122,61 +123,48 @@ export function StandSettings({ v, res, onEdit, terms, onTerms }: StandSettingsP
           </span>
           {side('depth', 'Dybde')}
         </div>
-      </section>
+      </Section>
 
       {s.type !== 'island' && (
-        <section className="stand-grp">
-          <div className="eyebrow">Standvegger</div>
-          <div className="set-row">
-            <span className="lbl">Betales av</span>
-            <FlatChoice<Payer>
-              label="Standvegger betales av"
-              value={terms.payer}
-              onChange={(payer) => onTerms({ payer })}
-              options={[
-                { value: 'arrangør', label: 'Arrangør' },
-                { value: 'utstiller', label: 'Utstiller' },
-              ]}
-            />
-          </div>
-          {terms.payer === 'arrangør' && (
-            <div className="set-row stacked">
-              <span className="lbl">Arrangørens farge</span>
-              <div className="stand-swatches">
-                {wallPlates().map((x) => (
-                  <Sw key={x.ral} color={x.color} title={`${x.name} · RAL ${x.ral}`} on={terms.ral === x.ral} onClick={() => onTerms({ ral: x.ral! })} />
-                ))}
-              </div>
-            </div>
-          )}
-          {terms.payer === 'arrangør' && <p className="panel-note">Annen farge belastes utstiller.</p>}
-        </section>
-      )}
-
-      <section className="stand-grp">
-        <div className="eyebrow">Takdrager</div>
-        <div className="set-row">
-          <span className="lbl">
-            Langs åpne sider
-            <small className="num">
-              {!standardBeamsOn(v)
-                ? s.type === 'island'
-                  ? 'Ingen · øy uten standvegger, tilvalg for utstiller'
-                  : 'Ingen · mer åpen stand'
-                : `${fmt(k.beamLm)} m · ${beamSummary(k)}`}
-            </small>
-          </span>
-          <FlatChoice<boolean>
-            label="Takdrager"
-            value={standardBeamsOn(v)}
-            onChange={(on) => onEdit((x) => ({ ...x, noBeams: withStandardBeams(x, on) }))}
+        <Section title="Standvegger betales av">
+          <FlatChoice<Payer>
+            label="Standvegger betales av"
+            value={terms.payer}
+            onChange={(payer) => onTerms({ payer })}
             options={[
-              { value: false, label: 'Av' },
-              { value: true, label: 'På' },
+              { value: 'arrangør', label: 'Arrangør' },
+              { value: 'utstiller', label: 'Utstiller' },
             ]}
           />
-        </div>
-      </section>
+        </Section>
+      )}
+
+      {s.type !== 'island' && terms.payer === 'arrangør' && (
+        <Section title="Arrangørens farge" aside={plate ? `${plate.name} ${plate.ral}` : undefined}>
+          <div className="stand-swatches">
+            {wallPlates().map((x) => (
+              <Sw key={x.ral} color={x.color} title={`${x.name} · RAL ${x.ral}`} on={terms.ral === x.ral} onClick={() => onTerms({ ral: x.ral! })} />
+            ))}
+          </div>
+          <p className="set-note">Annen farge belastes utstiller.</p>
+        </Section>
+      )}
+
+      <Section title="Takdrager langs åpne sider">
+        <FlatChoice<boolean>
+          label="Takdrager"
+          value={beams}
+          onChange={(on) => onEdit((x) => ({ ...x, noBeams: withStandardBeams(x, on) }))}
+          options={[
+            { value: false, label: 'Av' },
+            { value: true, label: 'På' },
+          ]}
+        />
+        {/* Lengths stay out of the title: capitals would turn m into M */}
+        <p className="set-note">
+          {!beams ? (s.type === 'island' ? 'Øy uten standvegger: tilvalg for utstiller.' : 'Ingen takdrager: mer åpen stand.') : `${fmt(k.beamLm)} m · ${beamSummary(k)}`}
+        </p>
+      </Section>
     </div>
   )
 }
