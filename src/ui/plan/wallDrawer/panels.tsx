@@ -98,7 +98,7 @@ export function WallShelf(props: {
     : printing
       ? (m: string | null) => m && setPrintMotif(m)
       : undefined
-  return <Shelf title={title} aside={aside} motifs={motifs} required={!F && printing} value={value} onPick={onPick} onUpload={onUpload} />
+  return <Shelf title={title} aside={aside} motifs={motifs} value={value} onPick={onPick} onUpload={onUpload} />
 }
 
 /** The wall itself: the paint bucket and the brush, and the palette (a colour or «Print»). */

@@ -111,10 +111,11 @@ function UploadButton({ onUpload }: { onUpload: (f: File) => void }) {
 
 /**
  * The motif library as small tiles: click to put one on what is selected, or drag onto the wall drawing (or the plan and
- * 3D). `value` undefined: nothing that takes a motif is selected; null: none. An empty library offers one wide upload
+ * 3D). Print files only: no «Uten motiv» tile, as no motif is not a print (Bjørn 8.11.2026); «Kun ramme» may come later
+ * as its own switch. An empty library offers one wide upload
  * button, as the drawer is empty while the seller draws.
  */
-function MotifGrid({ motifs, value, required, onPick, onUpload }: { motifs: Motif[]; value?: string | null; required?: boolean; onPick?: (id: string | null) => void; onUpload: (f: File) => void }) {
+function MotifGrid({ motifs, value, onPick, onUpload }: { motifs: Motif[]; value?: string | null; onPick?: (id: string | null) => void; onUpload: (f: File) => void }) {
   if (!motifs.length)
     return (
       <label className="btn ghost wd-upload">
@@ -125,11 +126,6 @@ function MotifGrid({ motifs, value, required, onPick, onUpload }: { motifs: Moti
     )
   return (
     <div className="wd-shelf-grid">
-      {onPick && !required && (
-        <button type="button" className={value === null ? 'mot on' : 'mot'} title="Uten motiv" aria-label="Uten motiv" aria-pressed={value === null} onClick={() => onPick(null)}>
-          <span className="none" />
-        </button>
-      )}
       {motifs.map((m) => {
         const on = value === m.id
         return (
@@ -155,19 +151,17 @@ function MotifGrid({ motifs, value, required, onPick, onUpload }: { motifs: Moti
  * The drawer's graphics, under the settings (detail height only): print files only, upload fixed in the title row.
  * Textile frames are not graphics: they are added with «Tekstilvegg» at the foot of the drawer.
  */
-export function Shelf({ title, aside, motifs, value, required, onPick, onUpload }: {
+export function Shelf({ title, aside, motifs, value, onPick, onUpload }: {
   title: string
   aside?: string
   motifs: Motif[]
   value?: string | null
-  /** A motif must be chosen (print on plates): no «Uten motiv» tile. */
-  required?: boolean
   onPick?: (id: string | null) => void
   onUpload: (f: File) => void
 }) {
   return (
     <Section title={title} aside={aside} className="wd-sec" tools={motifs.length > 0 && <UploadButton onUpload={onUpload} />}>
-      <MotifGrid motifs={motifs} value={value} required={required} onPick={onPick} onUpload={onUpload} />
+      <MotifGrid motifs={motifs} value={value} onPick={onPick} onUpload={onUpload} />
     </Section>
   )
 }
