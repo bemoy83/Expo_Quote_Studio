@@ -1,12 +1,14 @@
-// Velg in the 3D view, as in the plan: a press picks what to drag (decor on its face, furniture, a room, an inner wall),
-// a move drags it, a release drops it or, without moving, selects what was pressed. Anything else orbits the camera.
+// Velg in the 3D view, as in the plan: a press picks what to drag (decor or a shelf on its face, furniture, a room, an
+// inner wall), a move drags it, a release drops it or, without moving, selects what was pressed. Anything else orbits
+// the camera.
 import { moveFoilBy } from '../../../domain/decor'
 import { canMoveWall } from '../../../domain/edit'
 import { sideOf, type FaceSide } from '../../../domain/faces'
 import { moveObject } from '../../../domain/objects'
 import { faceOfPoint } from '../../../domain/textile/free'
 import { moveTextileBy } from '../../../domain/textile/inFrame'
-import type { Foil, TextileWall, Variant, Wall } from '../../../domain/types'
+import { shelfHeight, shelvesOf, updateShelf } from '../../../domain/shelves'
+import type { Foil, Shelf, TextileWall, Variant, Wall } from '../../../domain/types'
 import { dragRoom, dragWall, dropObject, dropRoom, roomDrag, type RoomDrag, type WallDrag } from '../../drag'
 import { place, rules } from '../../env'
 import { findMotif } from '../../motifs'
@@ -32,6 +34,8 @@ export type Drag =
   | ({ kind: 'room'; y: number } & RoomDrag)
   /** A textile or foil dragged on its face: deltas from where it was grabbed (t along the wall, h up). */
   | { kind: 'decor'; item: { textile: TextileWall } | { foil: Foil }; w: Wall; s: FaceSide; t0: number; h0: number; moved: boolean }
+  /** A shelf dragged on its face: up and down in 50 mm steps, sideways felt by felt (as in the wall drawer). */
+  | { kind: 'shelf'; shelf: Shelf; w: Wall; s: FaceSide; t0: number; h0: number; moved: boolean }
 
 /** Pointer moves under this many px are a click. */
 export const CLICK_PX = 4
@@ -40,6 +44,13 @@ export const CLICK_PX = 4
 export function startDrag(P: PointerProps, hits: SceneHits, hit: Hit | null, e: PointerEvent): Drag {
   const deco = hit?.textileId ? P.v.textiles.find((x) => x.id === hit.textileId) : hit?.foilId ? P.v.foils.find((x) => x.id === hit.foilId) : undefined
   const w = deco && P.v.walls.find((x) => x.id === deco.wallId)
+  const sh = hit?.shelfId ? shelvesOf(P.v).find((x) => x.id === hit.shelfId) : undefined
+  const sw = sh && P.v.walls.find((x) => x.id === sh.wallId)
+  if (sh && sw) {
+    const s = sideOf(P.v, sh)
+    const q = hits.onFace(e, sw, s)
+    if (q) return { kind: 'shelf', shelf: sh, w: sw, s, t0: q.t, h0: q.h, moved: false }
+  }
   if (deco && w) {
     const s = sideOf(P.v, deco)
     const q = hits.onFace(e, w, s)
@@ -79,6 +90,22 @@ export function moveDrag(P: PointerProps, hits: SceneHits, drag: Exclude<Drag, {
     else P.onEdit((x) => moveFoilBy(x, rules, item.foil, dt, dh, findMotif(P.motifs, item.foil.motif)?.ratio ?? 0), false)
     return
   }
+  if (drag.kind === 'shelf') {
+    const f = hits.onFace(e, drag.w, drag.s)
+    if (!f) return
+    if (!drag.moved) P.onCheckpoint()
+    drag.moved = true
+    const { shelf } = drag
+    const module = shelf.module + Math.round(f.t - drag.t0)
+    const y = shelfHeight(rules, shelf.y + f.h - drag.h0)
+    P.onEdit((x) => {
+      const both = updateShelf(x, rules, shelf.id, { module, y })
+      if (both !== x) return both
+      const up = updateShelf(x, rules, shelf.id, { y })
+      return up !== x ? up : updateShelf(x, rules, shelf.id, { module })
+    }, false)
+    return
+  }
   if (drag.kind === 'room') {
     const q = hits.onFloor(e, drag.y)
     if (q) dragRoom(drag, q, P.onEdit, P.onCheckpoint)
@@ -101,6 +128,11 @@ export function moveDrag(P: PointerProps, hits: SceneHits, drag: Exclude<Drag, {
 export function endDrag(P: PointerProps, hits: SceneHits, d: Drag | null, hit: Hit | null, click: boolean) {
   if (d?.kind === 'object' && d.moved) return dropObject(P.v, d.id, d.start, P.onEdit, P.onToast)
   if (d?.kind === 'room' && d.moved) return dropRoom(d, P.onEdit, P.onToast)
+  if (hit?.shelfId) {
+    const f = shelvesOf(P.v).find((x) => x.id === hit.shelfId)
+    if (f) P.onSelect({ wallId: f.wallId, side: sideOf(P.v, f), shelfId: f.id })
+    return
+  }
   // A frame or decal is selected when let go, so the drawer does not open (and shrink the view) mid-drag
   if (hit?.textileId || hit?.foilId) {
     const deco = P.v.textiles.find((x) => x.id === hit.textileId) ?? P.v.foils.find((x) => x.id === hit.foilId)
@@ -121,6 +153,6 @@ export function endDrag(P: PointerProps, hits: SceneHits, d: Drag | null, hit: H
 /** The cursor over what is under the pointer while nothing is pressed. */
 export function hoverCursor(v: Variant, hit: Hit | null, resizing: string | null) {
   const w = hit?.wallId ? v.walls.find((x) => x.id === hit.wallId) : undefined
-  const movable = hit?.objectId || hit?.textileId || hit?.foilId || hit?.roomId || (w && (w.room || canMoveWall(w)))
+  const movable = hit?.objectId || hit?.textileId || hit?.foilId || hit?.shelfId || hit?.roomId || (w && (w.room || canMoveWall(w)))
   return resizing ?? (movable ? 'move' : hit ? 'pointer' : 'grab')
 }
