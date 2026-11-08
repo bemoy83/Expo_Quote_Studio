@@ -61,6 +61,24 @@ const mmList = (cuts: Map<number, number>) =>
     .map(([len, qty]) => `${qty} × ${len}`)
     .join(' · ') + ' mm';
 
+/** 43TX cut lengths. Every end is mitred except at a rail splice and where a rail meets a 92LTX corner post: there it
+ *  is cut straight, so those pieces are named apart (Bjørn 8.11.2026): «… mm · 2 × 2463 og 2 × 1463 har én butt ende,
+ *  resten gjæret». */
+function cutDetail(cuts: Map<number, number>, butt: Map<string, number>): string {
+  if (!butt.size) return mmList(cuts);
+  const byEnds = [1, 2].flatMap((n) => {
+    const list = [...butt]
+      .filter(([k]) => +k.split('|')[1] === n)
+      .map(([k, qty]) => [+k.split('|')[0], qty] as const)
+      .sort(([a], [b]) => b - a)
+      .map(([len, qty]) => `${qty} × ${len}`);
+    if (!list.length) return [];
+    const and = list.length > 1 ? `${list.slice(0, -1).join(', ')} og ${list[list.length - 1]}` : list[0];
+    return [`${and} har ${n === 1 ? 'én butt ende' : 'to butte ender'}`];
+  });
+  return `${mmList(cuts)} · ${byEnds.join(' · ')}, resten gjæret`;
+}
+
 export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   const lines = new Map<string, { line: BomLine; size: number }>();
   /** Add to a line, merged by key within its group. `size` (mm) orders lines in the group, largest first. */
@@ -160,7 +178,7 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
       qty,
     );
   liftPiece('lift-post', lift.post, 'på stolpe, takdrager over tekstilvegg', s.beamLift?.posts ?? 0);
-  liftPiece('lift-hook', lift.hook, 'ved krok, takdrager over tekstilvegg', s.beamLift?.hooks ?? 0);
+  liftPiece('lift-hook', lift.hook, 'oppå tverrgående takdrager, takdrager over tekstilvegg', s.beamLift?.hooks ?? 0);
 
   // Tekstilvegger, one frame on a wall or on foot plates (Bjørn 7.11.2026), each counted once in its parts
   // (calc/textile/common.ts): 43TX per cut length in one line, a 92LTX post per corner, the upright braces in 90 with
@@ -168,10 +186,12 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   // 617, the splice connectors (609, 604), 520 on a wall and the foot plates
   const tf = r.textileFrame;
   const cuts = new Map<number, number>();
+  const butt = new Map<string, number>();
   const braces = new Map<number, { qty: number; frames: string[] }>();
   const loose = new Map<string, number>();
   for (const { pos, parts } of s.frames) {
     for (const [len, qty] of parts.cuts) cuts.set(len, (cuts.get(len) ?? 0) + qty);
+    for (const [len, ends, qty] of parts.butt ?? []) butt.set(`${len}|${ends}`, (butt.get(`${len}|${ends}`) ?? 0) + qty);
     const { qty, length } = parts.braces;
     if (qty) {
       const b = braces.get(length) ?? { qty: 0, frames: [] };
@@ -185,7 +205,7 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
     const p = fogaPart(tf.profile);
     const pieces = [...cuts.values()].reduce((a, b) => a + b, 0);
     const lm = [...cuts].reduce((a, [len, qty]) => a + (len * qty) / 1000, 0);
-    put(BOM_GROUP.textile, p.code, { artnr: p.artnr, name: `${p.code} · ${p.name}`, detail: mmList(cuts), preassembled: false, lm }, pieces);
+    put(BOM_GROUP.textile, p.code, { artnr: p.artnr, name: `${p.code} · ${p.name}`, detail: cutDetail(cuts, butt), preassembled: false, lm }, pieces);
   }
   if (s.cornerPosts?.qty) {
     const p = fogaPart(tf.feet.cornerPost);

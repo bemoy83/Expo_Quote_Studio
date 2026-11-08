@@ -1,8 +1,9 @@
 // Tilbud: an A4 document built from the calc. Printing from the browser gives the PDF.
 import { lazy, Suspense, useState } from 'react'
-import { Printer } from 'lucide-react'
+import { Download, Printer } from 'lucide-react'
 import type { CalcResult } from '../../calc/calc'
 import { positionsOf } from '../../calc/positions'
+import { printFiles } from '../../calc/production'
 import { quoteGroups } from '../../calc/quoteLines'
 import type { Project, Room, Variant } from '../../domain/types'
 import type { Motif } from '../../persistence/file'
@@ -11,6 +12,7 @@ import { builtModules, standardBeamsOn } from '../../domain/walls'
 import { dateText, DELIVERY_FIELDS, today, validUntil } from '../../domain/delivery'
 import { isFixedField, projectField, standWallTerms } from '../../domain/variant'
 import { Button } from '../controls'
+import { download } from '../download'
 import { catalog, idx, plateName, productOf, rules } from '../env'
 import { count, fmt, kr, mm } from '../format'
 import { beamSummary, capitalise, frameCount, fromOrganiser, TYPE_NAME } from '../names'
@@ -18,6 +20,7 @@ import { PLAN_MARGIN } from '../plan/planStyle'
 import { PlanPreview } from '../plan/PlanPreview'
 import { PageBand } from '../shell/PageBand'
 import { VariantTabs } from '../shell/VariantTabs'
+import { printCsv } from './printCsv'
 
 // three.js stays in its own chunk, loaded when the quote opens
 const QuoteRender = lazy(() => import('../scene3d/QuoteRender').then((m) => ({ default: m.QuoteRender })))
@@ -96,6 +99,7 @@ export function QuotePage({ project, variants, current, onSelect, calcOf, motifs
     ])
   }
   const P = res.production
+  const files = printFiles(P)
   if (P.pieces.length || P.free.length) {
     facts.push([
       `${fmt(k.textileM2)} m² tekstil`,
@@ -111,6 +115,11 @@ export function QuotePage({ project, variants, current, onSelect, calcOf, motifs
     <>
       <PageBand title="Tilbud" meta={`Variant ${v.name} · ${kr(res.sum)} kr eks. mva.`}>
         {variants.length > 1 && <VariantTabs variants={variants} current={current} onSelect={onSelect} />}
+        {(P.pieces.length > 0 || P.free.length > 0) && (
+          <Button onBand icon={Download} onClick={() => download(printCsv(P, inFrame), 'text/csv;charset=utf-8', `trykkliste-variant-${v.name}.csv`)}>
+            Trykkliste
+          </Button>
+        )}
         <Button onBand icon={Printer} onClick={() => window.print()}>
           Skriv ut
         </Button>
@@ -225,6 +234,37 @@ export function QuotePage({ project, variants, current, onSelect, calcOf, motifs
             )}
           </section>
 
+          {files.length > 0 && (
+            <section className="qdoc-terms qdoc-files">
+              <div className="eyebrow">Trykkfiler</div>
+              <div>
+                <p className="lead">
+                  Lever én PDF per tekstil i {inFrame.scale} % av full størrelse, med {inFrame.bleed} mm bleed på hver side i full størrelse, og med filnavnet under.
+                </p>
+                <div className="qfile eyebrow">
+                  <span>Pos</span>
+                  <span>Vegg</span>
+                  <span className="r">Tekstil B × H</span>
+                  <span className="r">Fil {inFrame.scale} %</span>
+                  <span>Filnavn</span>
+                </div>
+                {files.map((f) => (
+                  <div key={f.pos} className="qfile qline">
+                    <span className="num">{f.pos}</span>
+                    <span>{f.where}</span>
+                    <span className="num r">
+                      {fmt(f.W, 0)} × {fmt(f.H, 0)}
+                    </span>
+                    <span className="num r">
+                      {fmt(f.fw ?? 0, 1)} × {fmt(f.fh ?? 0, 1)}
+                    </span>
+                    <span className="num muted qfile-name">{f.fileName}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
           <section className="qdoc-terms">
             <div className="eyebrow">Forutsetninger</div>
             <ul>
@@ -238,10 +278,16 @@ export function QuotePage({ project, variants, current, onSelect, calcOf, motifs
                   {k.innerBeamLm > 0 && ' Innvendige takdragere henger på krok i andre takdragere, ellers på stolpe med fotplate.'}
                 </li>
               )}
-              {res.production.pieces.length > 0 && (
+              {P.pieces.length > 0 && (
                 <li>
-                  Tekstilvegger i InFrame montert utenpå standvegg: {res.production.pieces.map((p) => `${fmt(p.W, 0)} × ${fmt(p.H, 0)} mm`).join(', ')}. Trykkfil leveres i{' '}
-                  {inFrame.scale} % med {inFrame.bleed} mm bleed i full størrelse.
+                  Tekstilvegger i InFrame montert utenpå standvegg: {P.pieces.map((p) => `${fmt(p.W, 0)} × ${fmt(p.H, 0)} mm`).join(', ')}.
+                  {files.length > 0 && ' Trykkfilene leveres som beskrevet over.'}
+                </li>
+              )}
+              {P.free.length > 0 && (
+                <li>
+                  Frittstående tekstilvegger på fotplater, tekstil på begge sider: {P.free.map((f) => `${fmt(f.length, 0)} × ${fmt(f.H, 0)} mm`).join(', ')}.
+                  {files.length > 0 && P.pieces.length === 0 && ' Trykkfilene leveres som beskrevet over.'}
                 </li>
               )}
               {k.floorTotal > 0 && <li>Gulv ferdig lagt{v.floor.protection ? ' med monteringsbeskyttelse' : ''}.</li>}

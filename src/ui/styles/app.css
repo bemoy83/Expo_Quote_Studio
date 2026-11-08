@@ -1339,7 +1339,7 @@ kbd {
   right: 6px;
 }
 
-/* Pages: Tilbud, Produksjon, Produktliste */
+/* Pages: Tilbud, Produktliste, Kostgrunnlag */
 .band-meta {
   font: var(--type-label);
   opacity: 0.75;
@@ -1369,19 +1369,6 @@ kbd {
 }
 .doc-scroll {
   background: rgb(var(--sunken));
-}
-.page-cols {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 12px 24px 48px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 32px;
-  align-items: flex-start;
-}
-.page-main {
-  flex: 1 1 620px;
-  min-width: 0;
 }
 .page-narrow {
   max-width: 1080px;
@@ -1444,15 +1431,6 @@ kbd {
   font: var(--type-note);
   color: rgb(var(--ink-muted));
 }
-.tbl-sum {
-  padding: 12px 8px;
-  border-top: 1px solid var(--g-top);
-  align-items: baseline;
-  font: var(--type-num);
-}
-.tbl-sum .title {
-  font: 700 14px var(--font-ui);
-}
 .cellstack {
   min-width: 0;
   display: flex;
@@ -1472,38 +1450,7 @@ kbd {
   overflow-wrap: anywhere;
 }
 
-/* Plukkliste */
-.pick-grid {
-  display: grid;
-  grid-template-columns: 96px minmax(0, 1fr) 96px;
-  gap: 12px;
-  align-items: start;
-}
 
-/* Produksjon */
-.prod-grid {
-  display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) 44px 124px 148px 64px;
-  gap: 12px;
-  align-items: start;
-}
-.page-side {
-  flex: 1 1 260px;
-  max-width: 340px;
-  min-width: 0;
-  position: sticky;
-  top: 12px;
-}
-.side-head {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  padding: 8px 0 10px;
-  font: 700 14px var(--font-ui);
-}
-.side-head span {
-  flex: 1;
-}
 .link {
   border: 0;
   background: none;
@@ -1513,22 +1460,15 @@ kbd {
   color: rgb(var(--ink-muted));
   text-decoration: underline;
 }
-.assume {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 96px;
-  gap: 10px;
-  align-items: center;
-  padding: 8px 0;
-  border-top: 1px solid var(--g-row);
+.kg-head-action > span:first-child {
+  flex: 1;
 }
-.assume .name {
-  display: block;
-  font: var(--type-label);
+.tbl-sec > .formulas {
+  padding-left: 8px;
 }
-.assume .help {
-  display: block;
-  font: 400 11.5px var(--font-ui);
-  color: rgb(var(--ink-faint));
+.kg-row .unit-field {
+  max-width: 128px;
+  margin-left: auto;
 }
 .unit-field {
   display: flex;
@@ -1561,13 +1501,6 @@ kbd {
   border-top: 1px solid var(--g-row);
   font: 400 12px/1.6 var(--font-numeric);
   color: rgb(var(--ink-muted));
-}
-.side-note {
-  margin: 0;
-  padding-top: 10px;
-  border-top: 1px solid var(--g-row);
-  font: 400 12px/1.5 var(--font-ui);
-  color: rgb(var(--ink-faint));
 }
 
 /* Produktliste */
@@ -2030,6 +1963,26 @@ select.cin {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+/* Tilbud: the print files the customer delivers, laid out like the terms */
+.qdoc-files .lead {
+  margin: 0 0 6px;
+  font: 400 11.5px/1.55 var(--font-ui);
+  color: rgb(var(--ink-muted));
+}
+.qfile {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 96px 104px minmax(0, 1.3fr);
+  gap: 10px;
+}
+.qfile.qline > span:first-child {
+  padding-left: 0;
+}
+.qfile .r {
+  text-align: right;
+}
+.qfile-name {
+  overflow-wrap: anywhere;
 }
 
 @page {

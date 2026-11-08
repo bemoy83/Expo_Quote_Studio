@@ -7,7 +7,7 @@ import { Button, IconButton } from '../controls'
 import { nextTheme, useTheme } from '../theme'
 import { useDismiss } from '../useDismiss'
 
-export type Page = 'skisse' | 'tilbud' | 'produksjon' | 'plukkliste' | 'arbeidsordre' | 'produkter' | 'kostgrunnlag'
+export type Page = 'skisse' | 'tilbud' | 'arbeidsordre' | 'produkter' | 'kostgrunnlag'
 
 const THEME = {
   system: { icon: Monitor, label: 'Tema: som systemet' },
@@ -18,8 +18,6 @@ const THEME = {
 const PAGES: { key: Page; name: string }[] = [
   { key: 'skisse', name: 'Standskisse' },
   { key: 'tilbud', name: 'Tilbud' },
-  { key: 'produksjon', name: 'Produksjon' },
-  { key: 'plukkliste', name: 'Plukkliste' },
   { key: 'arbeidsordre', name: 'Arbeidsordre' },
   { key: 'produkter', name: 'Produktliste' },
   { key: 'kostgrunnlag', name: 'Kostgrunnlag' },

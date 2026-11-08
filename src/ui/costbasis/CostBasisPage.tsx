@@ -32,7 +32,7 @@ const INTRO: Record<Tab, string> = {
   paslag: 'Indirekte kost og DG-mål per gruppe. Gjelder bare det motoren priser; katalogvarer med fast pris (OMS) brukes som de er.',
   katalog: 'Katalogvarer uten oppskrift: kost som andel av salgsprisen og minutter per enhet, per gruppe, til OMS gir dem per produkt.',
   oppskrifter: 'Hvor mye av hver del en prisartikkel bruker, i leverandørens enhet. En del uten pris gir artikkelen ingen kost.',
-  regler: 'Byggereglene kostgrunnlaget bygger på (docs/byggeregler.md). De styrer mengdene, ikke prisene. Tekstilrammen endres på Produksjon.',
+  regler: 'Byggereglene kostgrunnlaget bygger på (docs/byggeregler.md). De styrer mengdene, ikke prisene. Tekstilrammen kan endres her og gjelder både kalkylen og trykkfilmålene på tilbudet.',
   formler: 'Slik blir tallene til kost og pris. Regel 2 og 6 er med i kostgrunnlaget, men kalkylen bruker dem ikke ennå.',
   referanser: 'De tre standene kalibreringen bygger på og frittstående tekstilvegger på 3 til 6 m, regnet med kostgrunnlaget i bruk. Med endringer som ikke er lagret, vises de før og etter, så du ser hva et tall gjør før du lagrer det.',
   historikk: 'Versjonene som er lagret her, med gammel og ny verdi for hvert tall. Historikken ligger bare i denne nettleseren, som kostgrunnlaget.',
@@ -129,7 +129,7 @@ export function CostBasisPage({ focus, onToast }: { focus: string | null; onToas
           ) : tab === 'historikk' ? (
             <History entries={costHistory} onToast={onToast} />
           ) : tab === 'regler' ? (
-            <Rules />
+            <Rules onToast={onToast} />
           ) : tab === 'formler' ? (
             <Formulas fields={fields} onRule={(r) => setTab(r)} />
           ) : (

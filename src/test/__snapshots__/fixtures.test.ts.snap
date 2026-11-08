@@ -6682,16 +6682,16 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
       },
       {
         "artnr": "",
-        "detail": "94 × 80 mm · 1 × 600 (871 003 92) · ved krok, takdrager over tekstilvegg",
+        "detail": "94 × 80 mm · 1 × 600 (871 003 92) · oppå tverrgående takdrager, takdrager over tekstilvegg",
         "group": "vegg.takdrager",
         "name": "Skjøt 94, 80 mm, med 600",
-        "note": "ved krok, takdrager over tekstilvegg",
+        "note": "oppå tverrgående takdrager, takdrager over tekstilvegg",
         "preassembled": true,
         "qty": 1,
       },
       {
         "artnr": "873 805 22",
-        "detail": "2 × 3970 · 6 × 2540 · 2 × 2463 · 2 × 1970 · 2 × 1463 mm",
+        "detail": "2 × 3970 · 6 × 2540 · 2 × 2463 · 2 × 1970 · 2 × 1463 mm · 2 × 2463 og 2 × 1463 har én butt ende, resten gjæret",
         "group": "prof.tekstil",
         "lm": 34.972,
         "name": "43TX · Tekstilprofil",
@@ -6820,6 +6820,13 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
             "length": 2460,
             "qty": 1,
           },
+          "butt": [
+            [
+              2463,
+              1,
+              2,
+            ],
+          ],
           "couplings": 6,
           "cuts": [
             [
@@ -6850,6 +6857,13 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
             "length": 2460,
             "qty": 0,
           },
+          "butt": [
+            [
+              1463,
+              1,
+              2,
+            ],
+          ],
           "couplings": 4,
           "cuts": [
             [
@@ -7674,6 +7688,13 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
             "length": 2460,
             "qty": 1,
           },
+          "butt": [
+            [
+              2463,
+              1,
+              2,
+            ],
+          ],
           "couplings": 6,
           "cuts": [
             [
@@ -7765,6 +7786,13 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
             "length": 2460,
             "qty": 0,
           },
+          "butt": [
+            [
+              1463,
+              1,
+              2,
+            ],
+          ],
           "couplings": 4,
           "cuts": [
             [
@@ -7815,7 +7843,6 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
           "length": 2460,
           "qty": 1,
         },
-        "fb": 2,
         "fh": 258,
         "fileName": "Firma_T1_3970x2540mm.pdf",
         "fill": "print",
@@ -7852,18 +7879,6 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         },
         "ph": 2580,
         "pos": "T1",
-        "profiles": [
-          {
-            "length": 3970,
-            "name": "Topp/bunn",
-            "qty": 2,
-          },
-          {
-            "length": 2540,
-            "name": "Side",
-            "qty": 2,
-          },
-        ],
         "pw": 4010,
         "railCuts": [
           3970,
@@ -7879,7 +7894,6 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         "at": 1000,
         "braceAt": [],
         "braces": null,
-        "fb": 2,
         "fh": 258,
         "fileName": null,
         "fill": "white",
@@ -7916,18 +7930,6 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         },
         "ph": 2580,
         "pos": "T2",
-        "profiles": [
-          {
-            "length": 1970,
-            "name": "Topp/bunn",
-            "qty": 2,
-          },
-          {
-            "length": 2540,
-            "name": "Side",
-            "qty": 2,
-          },
-        ],
         "pw": 2010,
         "railCuts": [
           1970,
@@ -7973,21 +7975,21 @@ exports[`08-tekstil.json > variant A > picking list 1`] = `
   },
   {
     "code": "",
-    "detail": "94 × 80 mm · 1 × 600 (871 003 92) · ved krok, takdrager over tekstilvegg",
+    "detail": "94 × 80 mm · 1 × 600 (871 003 92) · oppå tverrgående takdrager, takdrager over tekstilvegg",
     "group": "vegg.takdrager",
-    "key": "Skjøt 94, 80 mm, med 600|94 × 80 mm · 1 × 600 (871 003 92) · ved krok, takdrager over tekstilvegg",
+    "key": "Skjøt 94, 80 mm, med 600|94 × 80 mm · 1 × 600 (871 003 92) · oppå tverrgående takdrager, takdrager over tekstilvegg",
     "lm": undefined,
     "nobb": false,
-    "note": "ved krok, takdrager over tekstilvegg",
+    "note": "oppå tverrgående takdrager, takdrager over tekstilvegg",
     "preassembled": true,
     "qty": "1 stk",
     "title": "Skjøt 94, 80 mm, med 600",
   },
   {
     "code": "873 805 22",
-    "detail": "2 × 3970 · 6 × 2540 · 2 × 2463 · 2 × 1970 · 2 × 1463 mm",
+    "detail": "2 × 3970 · 6 × 2540 · 2 × 2463 · 2 × 1970 · 2 × 1463 mm · 2 × 2463 og 2 × 1463 har én butt ende, resten gjæret",
     "group": "prof.tekstil",
-    "key": "43TX · Tekstilprofil|2 × 3970 · 6 × 2540 · 2 × 2463 · 2 × 1970 · 2 × 1463 mm",
+    "key": "43TX · Tekstilprofil|2 × 3970 · 6 × 2540 · 2 × 2463 · 2 × 1970 · 2 × 1463 mm · 2 × 2463 og 2 × 1463 har én butt ende, resten gjæret",
     "lm": 34.972,
     "nobb": true,
     "note": undefined,
@@ -8175,6 +8177,13 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
             "length": 2460,
             "qty": 1,
           },
+          "butt": [
+            [
+              2463,
+              1,
+              2,
+            ],
+          ],
           "couplings": 6,
           "cuts": [
             [
@@ -8266,6 +8275,13 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
             "length": 2460,
             "qty": 0,
           },
+          "butt": [
+            [
+              1463,
+              1,
+              2,
+            ],
+          ],
           "couplings": 4,
           "cuts": [
             [
@@ -8316,7 +8332,6 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
           "length": 2460,
           "qty": 1,
         },
-        "fb": 2,
         "fh": 258,
         "fileName": "TekstilAS_T1_3970x2540mm.pdf",
         "fill": "print",
@@ -8353,18 +8368,6 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
         },
         "ph": 2580,
         "pos": "T1",
-        "profiles": [
-          {
-            "length": 3970,
-            "name": "Topp/bunn",
-            "qty": 2,
-          },
-          {
-            "length": 2540,
-            "name": "Side",
-            "qty": 2,
-          },
-        ],
         "pw": 4010,
         "railCuts": [
           3970,
@@ -8380,7 +8383,6 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
         "at": 1000,
         "braceAt": [],
         "braces": null,
-        "fb": 2,
         "fh": 258,
         "fileName": null,
         "fill": "white",
@@ -8417,18 +8419,6 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
         },
         "ph": 2580,
         "pos": "T2",
-        "profiles": [
-          {
-            "length": 1970,
-            "name": "Topp/bunn",
-            "qty": 2,
-          },
-          {
-            "length": 2540,
-            "name": "Side",
-            "qty": 2,
-          },
-        ],
         "pw": 2010,
         "railCuts": [
           1970,
@@ -8443,8 +8433,10 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
     {
       "H": 2540,
       "W": 3970,
+      "fh": 258,
       "fileName": "TekstilAS_T1_3970x2540mm.pdf",
       "fill": "print",
+      "fw": 401,
       "ph": 2580,
       "pos": "T1",
       "pw": 4010,
@@ -8453,8 +8445,10 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
     {
       "H": 2540,
       "W": 1970,
+      "fh": 258,
       "fileName": null,
       "fill": "white",
+      "fw": 201,
       "ph": 2580,
       "pos": "T2",
       "pw": 2010,
@@ -8463,8 +8457,10 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
     {
       "H": 2540,
       "W": 2480,
+      "fh": 258,
       "fileName": "TekstilAS_F1A_2480x2540mm.pdf",
       "fill": "print",
+      "fw": 252,
       "ph": 2580,
       "pos": "F1A",
       "pw": 2520,
@@ -8473,8 +8469,10 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
     {
       "H": 2540,
       "W": 2520,
+      "fh": 258,
       "fileName": null,
       "fill": "white",
+      "fw": 256,
       "ph": 2580,
       "pos": "F1B",
       "pw": 2560,
@@ -8483,8 +8481,10 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
     {
       "H": 2540,
       "W": 1520,
+      "fh": 258,
       "fileName": null,
       "fill": "reuse",
+      "fw": 156,
       "ph": 2580,
       "pos": "F2A",
       "pw": 1560,
@@ -8493,8 +8493,10 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
     {
       "H": 2540,
       "W": 1480,
+      "fh": 258,
       "fileName": "TekstilAS_F2B_1480x2540mm.pdf",
       "fill": "print",
+      "fw": 152,
       "ph": 2580,
       "pos": "F2B",
       "pw": 1520,

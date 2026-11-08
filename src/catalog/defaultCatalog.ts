@@ -78,7 +78,7 @@ const products: Product[] = [
   one('6110', 'Takdrager 80 × 20 mm', 'system', 'lm', 'vegg.takdrager', 121, { dim: 'stolper inkludert', pricing: 'fast' }),
   // A takdrager lifted over a textile wall: the post (or hook point) extended with 94 (Bjørn 6.11.2026). Own line: a beam
   // can be lifted higher later and cost more. Art.nr 6111 is a placeholder.
-  one('6111', 'Skjøt takdrager over tekstilvegg', 'system', 'stk', 'vegg.takdrager', 90, { dim: '94 × 80 mm på stolpe eller ved krok, montert', pricing: 'fast' }),
+  one('6111', 'Skjøt takdrager over tekstilvegg', 'system', 'stk', 'vegg.takdrager', 90, { dim: '94 × 80 mm på stolpe eller oppå tverrgående takdrager, montert', pricing: 'fast' }),
   one('6130', 'Dør med overstykke', 'object', 'stk', 'vegg.dorer', 2620, { opening: 'door', pricing: 'fast' }),
   one('6131', 'Forheng med overstykke', 'object', 'stk', 'vegg.dorer', 870, { dim: 'i åpning 960 mm', opening: 'curtain', pricing: 'fast' }),
   // Vegger: level 2 articles. No price: an article is never sold on its own, and the kalkyle takes its cost from the

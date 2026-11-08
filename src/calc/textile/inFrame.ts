@@ -11,7 +11,7 @@
 // Byggeregler X2, X3, X6, X9 (docs/byggeregler.md): the frame widths are the 43TX standard lengths, cc − 30.
 import { RECIPES, type TextileFrameRecipe } from '../../foga/recipes';
 import type { InFrameParams } from '../../rules/rules';
-import { bracePoints, frameParts, fullHeight, partsLm, splitRail, type FrameParts } from './common';
+import { bracePoints, buttEnds, frameParts, fullHeight, partsLm, splitRail, type FrameParts } from './common';
 
 export interface FramePiece {
   /** Span along the wall, mm. */
@@ -25,11 +25,8 @@ export interface FramePiece {
   /** File size at scale, mm, one decimal. */
   fw: number;
   fh: number;
-  /** Bleed at file scale, mm. */
-  fb: number;
   /** Print area including bleed, m². */
   area: number;
-  profiles: { name: string; qty: number; length: number }[];
   /** Top rail cut lengths, and the same again for the bottom rail: one piece unless spliced. */
   railCuts: number[];
   braces: { qty: number; length: number } | null;
@@ -62,7 +59,7 @@ export function framePiece(spanMm: number, s: InFrameParams, heightMm?: number, 
     [r.corner, 4],
     [r.splice.thread, 2 * at.length],
     [r.wall.fixing.code, r.wall.fixing.perFrame],
-  ]);
+  ], buttEnds(railCuts));
   return {
     span: spanMm,
     W,
@@ -71,12 +68,7 @@ export function framePiece(spanMm: number, s: InFrameParams, heightMm?: number, 
     ph,
     fw: r1(pw),
     fh: r1(ph),
-    fb: r1(s.bleed),
     area: (pw * ph) / 1e6,
-    profiles: [
-      ...[...new Set(railCuts)].map((length) => ({ name: 'Topp/bunn', qty: 2 * railCuts.filter((x) => x === length).length, length })),
-      { name: 'Side', qty: 2, length: H },
-    ],
     railCuts,
     braces,
     braceAt,

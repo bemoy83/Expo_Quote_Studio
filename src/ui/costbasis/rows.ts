@@ -14,7 +14,6 @@ export interface RuleRow {
 }
 
 export function ruleRows(r: Rules): RuleRow[] {
-  const f = r.textile.inFrame
   return [
     { group: 'Systemvegg', label: 'Modul, senteravstand mellom stolper', value: `${mm(r.wall.cc)} mm`, id: 'V1', use: 'Antall moduler, stolper og skinner per meter vegg' },
     { group: 'Systemvegg', label: 'Stolpe, høyde uten fot', value: `${mm(r.wall.height)} mm`, id: 'V2', use: 'Stolpelengde i plukklisten' },
@@ -22,10 +21,6 @@ export function ruleRows(r: Rules): RuleRow[] {
     { group: 'Systemvegg', label: 'Veggplate, lysåpning', value: `${r.wall.plate.width} × ${r.wall.plate.height} mm`, id: 'V5', use: 'Én plate per modul' },
     { group: 'Takdrager', label: 'Lengste takdrager i én lengde', value: `${fmt(r.beam.max)} m`, id: 'T1 · T2', use: 'Deling og skjøter, takdragerstolper' },
     { group: 'Takdrager', label: 'Fritt spenn som gir støttedrager', value: `${fmt(r.beam.supportSpan)} m`, id: 'T7', use: 'Støttedrager på lange standvegger' },
-    { group: 'Tekstilvegg (endres på Produksjon)', label: 'Fradrag for vegg eller drager, begge sider', value: `${f.side} mm`, id: 'X2', use: 'Rammens bredde i spennet' },
-    { group: 'Tekstilvegg (endres på Produksjon)', label: 'Monteringsluft i bredden', value: `${f.air} mm`, id: 'X2', use: 'Rammens bredde i spennet' },
-    { group: 'Tekstilvegg (endres på Produksjon)', label: 'Bleed per side på trykkfilen', value: `${f.bleed} mm`, id: 'X3', use: 'Trykkfilens mål, m² trykk' },
-    { group: 'Tekstilvegg (endres på Produksjon)', label: 'Største avstand mellom stag', value: `${f.stag} mm`, id: 'X8', use: 'Antall stag i rammen' },
     { group: 'Gulv', label: 'Rutenett for teppefliser', value: `${fmt(r.floor.cell)} m`, id: 'G1', use: 'Fliser per m²' },
     { group: 'Gulv', label: 'Ekstra i hver ende av en rull', value: `${fmt(r.floor.rollEnd)} m`, id: 'G3', use: 'Meter fra rullen' },
     { group: 'Tilbud', label: 'Tilbudet gjelder', value: `${r.quote.validDays} dager`, id: 'Tilbud', use: 'Gyldig til-dato' },

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { RULES } from '../rules/rules';
 import { splitBeamLength } from './beams';
 import { framePiece } from './textile/inFrame';
-import { printFileName } from './textile/common';
+import { buttEnds, printFileName } from './textile/common';
 
 const S = RULES.textile.inFrame;
 
@@ -38,13 +38,33 @@ describe('InFrame frame piece', () => {
   });
   it('file size at scale with bleed', () => {
     const p = framePiece(1000, S);
-    expect([p.fw, p.fh, p.fb]).toEqual([101, 258, 2]);
+    expect([p.fw, p.fh]).toEqual([101, 258]);
     const p14 = framePiece(1000, { ...S, bleed: 14 });
-    expect([p14.fw, p14.fh, p14.fb]).toEqual([99.8, 256.8, 1.4]);
+    expect([p14.fw, p14.fh]).toEqual([99.8, 256.8]);
   });
   it('file name', () => {
     expect(printFileName('Nordlys AS', 'T1', framePiece(1000, S))).toBe('NordlysAS_T1_970x2540mm.pdf');
     expect(printFileName('', 'T2', framePiece(1000, S))).toBe('Firma_T2_970x2540mm.pdf');
+  });
+});
+
+describe('butt ends (Bjørn 8.11.2026)', () => {
+  it('mitred frame corners, butt at a splice and at a 92LTX', () => {
+    expect(buttEnds([3970])).toEqual([]);
+    expect(buttEnds([3000, 3000])).toEqual([
+      [3000, 1, 2],
+      [3000, 1, 2],
+    ]);
+    expect(buttEnds([2000, 2000, 2000])).toEqual([
+      [2000, 1, 2],
+      [2000, 2, 2],
+      [2000, 1, 2],
+    ]);
+    expect(buttEnds([2963], { from: false, to: true })).toEqual([[2963, 1, 2]]);
+    expect(buttEnds([2463, 2463], { from: true, to: false })).toEqual([
+      [2463, 2, 2],
+      [2463, 1, 2],
+    ]);
   });
 });
 

@@ -193,8 +193,9 @@ takdrager kommer i konflikt med en tekstilramme, viker drageren: stolpene skjøt
   Det gjelder alle dragere, standard, støttedrager og tegnede.
 - **Skjøt på stolpe:** hver stolpe det hevede løpet hviler på, også en veggstolpe, får **94 × 80 mm med 609** ned i
   stolpen. Drageren ligger da 80 mm høyere, med underkanten i høyde med rammens topp (2540).
-- **Skjøt ved krok:** der en hevet drager henger på en som ikke er hevet (eller omvendt), står det samme stykket 94 × 80
-  med **600** (871 003 92, kobling med justerbart hode) mot den andre drageren, i høyden til drageren som henger der.
+- **Skjøt oppå tverrgående drager:** der en hevet drager møter en som ikke er hevet (eller omvendt), brukes ikke
+  kroken. Det samme stykket 94 × 80 med **600** (871 003 92, kobling med justerbart hode) monteres oppå den tverrgående
+  drageren (Bjørn 8.11.2026).
   Koblingene passer innvendig i alle Flex-profiler. Henger begge på samme nivå, er det en vanlig krok.
 - **Tilbud:** egen linje «Skjøt takdrager over tekstilvegg» per stykke (plassholder 6111), fordi en drager senere kan
   skjøtes høyere og koste mer. Alltid utstillerens, også når arrangøren betaler standard takdragerne: det er
@@ -369,7 +370,7 @@ Slik henger det sammen:
 
 ### Plukkliste · P1–P4
 
-Plukklisten er en **deleliste gruppert etter den felles produktgrupperingen** (`src/catalog/groups.ts`), samme
+Plukklisten står på arbeidsordren (egen side fjernet 8.11.2026) og er en **deleliste gruppert etter den felles produktgrupperingen** (`src/catalog/groups.ts`), samme
 hovedgrupper og rekkefølge som panelet, kalkylen og tilbudet. Foga-delene ligger under Vegger og bakrom (Veggplater,
 Stolper, Skinner, Takdrager, Dører og forheng med overstykket) og Profilering → Tekstilvegger. Montering og løse
 linjer (Andre tjenester) plukkes ikke. Ferdigmonterte enheter plukkes som stk (lagres ferdig montert):
@@ -381,7 +382,8 @@ linjer (Andre tjenester) plukkes ikke. Ferdigmonterte enheter plukkes som stk (l
   til (T1, T3 …)
 - Dørblad
 
-Løse deler er da bare 43TX (én linje per kappelengde, for rammer på vegg og på fotplater), hjørnekoblinger 617,
+Løse deler er da bare 43TX (én linje med alle kappelengder, for rammer på vegg og på fotplater; lengder som møter
+en 92LTX eller en skinneskjøt har butt ende der, resten er gjæret, X7), hjørnekoblinger 617,
 skjøtekoblinger 609 eller 604 og braketter 520, alle under Tekstilvegger. På fotplater kommer 92LTX per hjørne og
 fotplater 740 og 730 i tillegg. Hver duk (T1, F1A, F1B …) står som egen linje: trykt, hvit eller kundens.
 

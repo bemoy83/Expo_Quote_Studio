@@ -19,7 +19,7 @@ import { fogaPart } from '../../foga/parts';
 import type { FootPlate, SupportRule, TextileFrameRecipe } from '../../foga/recipes';
 import type { InFrameParams } from '../../rules/rules';
 import { minSupports, spreadSupports, type Ends } from '../supports';
-import { bracePoints, frameParts, fullHeight, printFileName, splitRail, type FrameParts } from './common';
+import { bracePoints, buttEnds, frameParts, fullHeight, printFileName, splitRail, type FrameParts } from './common';
 
 export { bracePoints, splitRail };
 
@@ -176,11 +176,19 @@ export function freeFrames(
     const spliceCode = bothHeld ? r.splice.slide.code : r.splice.thread;
     const perSplice = 2 * (bothHeld ? r.splice.slide.perRail : 1);
     const braceLength = H - 2 * s.prof;
-    const parts = frameParts(r, railCuts, { qty: freeEnds, length: H }, { qty: braces.length, length: braceLength }, [
-      [r.corner, 2 * (freeEnds + nCorners)],
-      [spliceCode, perSplice * splices.length],
-      [foot.code, supports.length],
-    ]);
+    const butt = buttEnds(railCuts, corner);
+    const parts = frameParts(
+      r,
+      railCuts,
+      { qty: freeEnds, length: H },
+      { qty: braces.length, length: braceLength },
+      [
+        [r.corner, 2 * (freeEnds + nCorners)],
+        [spliceCode, perSplice * splices.length],
+        [foot.code, supports.length],
+      ],
+      butt,
+    );
     return {
       pos,
       textileId: t.id,

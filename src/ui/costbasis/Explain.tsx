@@ -5,6 +5,7 @@ import { ownedPerUse } from '../../cost/model'
 import type { PartKind } from '../../foga/parts'
 import { costBasis, pricing, rules } from '../env'
 import { fmt } from '../format'
+import { InFrameRules } from './InFrame'
 import { FORMULAS, ruleRows } from './rows'
 
 const KIND_SHORT: Record<PartKind, string> = { profile: 'Profiler', frame: 'Tekstilrammer', plate: 'Plater', coupling: 'Koblinger', foot: 'Føtter og fotplater', accessory: 'Tilbehør' }
@@ -27,7 +28,7 @@ export function PerUse() {
   )
 }
 
-export function Rules() {
+export function Rules({ onToast }: { onToast: (t: string) => void }) {
   const rows = ruleRows(rules)
   return (
     <>
@@ -52,6 +53,7 @@ export function Rules() {
             ))}
         </section>
       ))}
+      <InFrameRules onToast={onToast} />
       <p className="page-intro kg-foot">Regler godkjent {rules.approved}. Kostgrunnlagets kode {pricing.code} er regnet over tallene, ikke over reglene.</p>
     </>
   )
