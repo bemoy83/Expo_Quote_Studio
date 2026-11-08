@@ -82,5 +82,4 @@
   --alu-shade: #a6a9ad;
   --alu-thumb: #c9ccd0;
   --feet: #2a2b2e;
-  --fabric: color-mix(in oklab, var(--line-violet) 14%, rgb(var(--surface)));
 }

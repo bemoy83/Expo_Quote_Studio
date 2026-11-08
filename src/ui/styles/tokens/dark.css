@@ -29,7 +29,6 @@
     --recess-shade: none;
     /* Byggesystemet i 2D: lysere metall, synlige føtter */
     --alu: #8f9297; --alu-post: #a9acb1; --alu-light: #bfc2c6; --alu-shade: #6c6f74; --alu-thumb: #9b9ea3; --feet: #7b7e83;
-    --fabric: color-mix(in oklab, var(--line-violet) 24%, rgb(var(--surface)));
     /* Kategorifarger: litt mørkere, så de ikke lyser */
     --line-blue: oklch(0.68 0.06 250); --line-teal: oklch(0.68 0.06 175); --line-green: oklch(0.68 0.06 115);
     --line-amber: oklch(0.7 0.06 78); --line-rose: oklch(0.68 0.06 40); --line-violet: oklch(0.66 0.06 285);
@@ -68,7 +67,6 @@
     /* Avledede verdier regnes ut i :root, så de deklareres på nytt på arket */
     --accent: var(--ink); --al-on: rgb(var(--ink)); --bar-tick: rgb(var(--ink));
     --sunken-2: color-mix(in srgb, rgb(var(--sunken)) 50%, rgb(var(--canvas)));
-    --fabric: color-mix(in oklab, var(--line-violet) 14%, rgb(var(--surface)));
     --g-col: rgb(var(--border) / .55); --g-row: rgb(var(--border) / .40); --g-phase: rgb(var(--border) / .50); --g-top: rgb(var(--border-strong));
     --sec: color-mix(in oklab, rgb(var(--canvas)) 96%, rgb(var(--ink)));
     box-shadow: 0 0 0 1px rgb(68 67 63);

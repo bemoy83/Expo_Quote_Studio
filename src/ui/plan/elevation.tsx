@@ -5,7 +5,7 @@ import { doorLevels, doorWindows } from '../../domain/doors'
 import type { TextileFill } from '../../domain/types'
 import { RECIPES } from '../../foga/recipes'
 import type { Motif } from '../../persistence/file'
-import { ALU, ALU_POST, BORDER_STRONG, FABRIC, FEET, INK, INK_MUTED, SURFACE } from '../colors'
+import { ALU, ALU_POST, BORDER_STRONG, FEET, INK, INK_MUTED, LAYER_COLOR, SURFACE } from '../colors'
 import { NOTE_ICON, NOTE_PILL, noteAngle, textileNote, type TextileNote } from '../textileNote'
 import { EM, textPx } from './planScale'
 import { rules } from '../env'
@@ -74,7 +74,8 @@ export function TextileFace({ x, y, w, h, m, fill, u, braces = [], splices = [] 
   const note = textileNote(fill, !!m)
   return (
     <>
-      <rect x={x} y={y} width={w} height={h} fill={fill === 'white' ? '#fff' : FABRIC} />
+      {/* The textile in the plan's orange (Bjørn 8.11.2026), so the drawing and the plan read as the same thing */}
+      <rect x={x} y={y} width={w} height={h} fill={fill === 'white' ? '#fff' : LAYER_COLOR.textile} />
       {m && <Print m={m} x={x + fr} y={y + fr} width={Math.max(0, w - 2 * fr)} height={Math.max(0, h - 2 * fr)} />}
       {note && <NoteMark x={x + fr} y={y + fr} w={w - 2 * fr} h={h - 2 * fr} note={note} u={u} />}
       {braces.map((bx) => (

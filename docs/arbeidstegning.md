@@ -202,7 +202,7 @@ Veggskuffens tegning blir arbeidstegning for én vegg. Se bilde 3.
   når «Vis posisjoner» er på. Tekstene står på én linje over plasseringsraden. Linjene forskyves 13 px om de
   overlapper.
 - Rommet bak veggen («Bakrom») står i en `--sunken` flate som i dag.
-- **Tekstilrammen slik den bygges** (Bjørn 8.11.2026, `TextileFace` i `plan/elevation.tsx`, mål i
+- **Tekstilrammen slik den bygges** (Bjørn 8.11.2026, i planens oransje tekstilfarge, også flisen i hyllen, `TextileFace` i `plan/elevation.tsx`, mål i
   `wallDrawer/elevationMeasure.ts`): samme tegning på vegg og på fotplater. Rammen tegnes i fysisk mål (970 i et
   1 000-spenn) og der den står, også når den er flyttet 40 mm i et innvendig hjørne (X10). 43TX er en 40 mm kant,
   stagene (X8) stiplede stående bak duken, og en skinneskjøt (X6) et merke tvers over topp- og bunnskinnen. Valgt

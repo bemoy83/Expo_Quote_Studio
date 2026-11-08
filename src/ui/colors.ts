@@ -13,7 +13,6 @@ export const BLOCK = 'var(--al-block)'
 export const ALU = 'var(--alu)'
 export const ALU_POST = 'var(--alu-post)'
 export const FEET = 'var(--feet)'
-export const FABRIC = 'var(--fabric)'
 
 /**
  * One colour per build layer, shared by the plan, the drawers and the calc panel. The working drawing
