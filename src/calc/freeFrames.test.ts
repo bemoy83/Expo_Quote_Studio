@@ -132,6 +132,8 @@ describe('free-standing frame', () => {
       [2963, 2],
       [2540, 1],
     ]);
+    // Both rails are cut straight at the corner post, mitred at the free end (Bjørn 8.11.2026)
+    expect(f1.parts.butt).toEqual([[2963, 1, 2]]);
     // The post is the support at the corner: one foot, flush with the free end
     expect(f1.supports).toEqual([200]);
     // 3 m from the free end to the corner post: one brace between

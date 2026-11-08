@@ -176,11 +176,23 @@ export function freeFrames(
     const spliceCode = bothHeld ? r.splice.slide.code : r.splice.thread;
     const perSplice = 2 * (bothHeld ? r.splice.slide.perRail : 1);
     const braceLength = H - 2 * s.prof;
-    const parts = frameParts(r, railCuts, { qty: freeEnds, length: H }, { qty: braces.length, length: braceLength }, [
-      [r.corner, 2 * (freeEnds + nCorners)],
-      [spliceCode, perSplice * splices.length],
-      [foot.code, supports.length],
-    ]);
+    // A rail piece ending at a corner post is cut straight there (butt), every other end mitred (Bjørn 8.11.2026)
+    const butt = railCuts.flatMap((len, j) => {
+      const ends = (j === 0 && corner.from ? 1 : 0) + (j === railCuts.length - 1 && corner.to ? 1 : 0);
+      return ends ? [[len, ends, 2] as const] : [];
+    });
+    const parts = frameParts(
+      r,
+      railCuts,
+      { qty: freeEnds, length: H },
+      { qty: braces.length, length: braceLength },
+      [
+        [r.corner, 2 * (freeEnds + nCorners)],
+        [spliceCode, perSplice * splices.length],
+        [foot.code, supports.length],
+      ],
+      butt,
+    );
     return {
       pos,
       textileId: t.id,

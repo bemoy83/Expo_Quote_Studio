@@ -6691,7 +6691,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
       },
       {
         "artnr": "873 805 22",
-        "detail": "2 × 3970 · 6 × 2540 · 2 × 2463 · 2 × 1970 · 2 × 1463 mm",
+        "detail": "2 × 3970 · 6 × 2540 · 2 × 2463 · 2 × 1970 · 2 × 1463 mm · 2 × 2463 og 2 × 1463 har én butt ende mot 92LTX, resten gjæret",
         "group": "prof.tekstil",
         "lm": 34.972,
         "name": "43TX · Tekstilprofil",
@@ -6820,6 +6820,13 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
             "length": 2460,
             "qty": 1,
           },
+          "butt": [
+            [
+              2463,
+              1,
+              2,
+            ],
+          ],
           "couplings": 6,
           "cuts": [
             [
@@ -6850,6 +6857,13 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
             "length": 2460,
             "qty": 0,
           },
+          "butt": [
+            [
+              1463,
+              1,
+              2,
+            ],
+          ],
           "couplings": 4,
           "cuts": [
             [
@@ -7674,6 +7688,13 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
             "length": 2460,
             "qty": 1,
           },
+          "butt": [
+            [
+              2463,
+              1,
+              2,
+            ],
+          ],
           "couplings": 6,
           "cuts": [
             [
@@ -7765,6 +7786,13 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
             "length": 2460,
             "qty": 0,
           },
+          "butt": [
+            [
+              1463,
+              1,
+              2,
+            ],
+          ],
           "couplings": 4,
           "cuts": [
             [
@@ -7985,9 +8013,9 @@ exports[`08-tekstil.json > variant A > picking list 1`] = `
   },
   {
     "code": "873 805 22",
-    "detail": "2 × 3970 · 6 × 2540 · 2 × 2463 · 2 × 1970 · 2 × 1463 mm",
+    "detail": "2 × 3970 · 6 × 2540 · 2 × 2463 · 2 × 1970 · 2 × 1463 mm · 2 × 2463 og 2 × 1463 har én butt ende mot 92LTX, resten gjæret",
     "group": "prof.tekstil",
-    "key": "43TX · Tekstilprofil|2 × 3970 · 6 × 2540 · 2 × 2463 · 2 × 1970 · 2 × 1463 mm",
+    "key": "43TX · Tekstilprofil|2 × 3970 · 6 × 2540 · 2 × 2463 · 2 × 1970 · 2 × 1463 mm · 2 × 2463 og 2 × 1463 har én butt ende mot 92LTX, resten gjæret",
     "lm": 34.972,
     "nobb": true,
     "note": undefined,
@@ -8175,6 +8203,13 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
             "length": 2460,
             "qty": 1,
           },
+          "butt": [
+            [
+              2463,
+              1,
+              2,
+            ],
+          ],
           "couplings": 6,
           "cuts": [
             [
@@ -8266,6 +8301,13 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
             "length": 2460,
             "qty": 0,
           },
+          "butt": [
+            [
+              1463,
+              1,
+              2,
+            ],
+          ],
           "couplings": 4,
           "cuts": [
             [

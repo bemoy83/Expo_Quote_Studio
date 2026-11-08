@@ -1,6 +1,6 @@
 // What the textile frame is whatever it is mounted on (on a wall with 520, or on foot plates; Bjørn 7.11.2026: one
 // product): the full frame height, the rails spliced past maxRail, the upright braces, the parts it is built of
-// (counted once, here), and the print file name (also used by the Produksjon page).
+// (counted once, here), and the print file name (also on the quote and the work order).
 import type { TextileFrameRecipe } from '../../foga/recipes';
 import type { FrameParts } from '../../foga/structure';
 import type { InFrameParams } from '../../rules/rules';
@@ -12,7 +12,7 @@ export type { FrameParts };
 export type FrameMount = 'vegg' | 'fotplater';
 
 /** The frame's parts from its rails (each cut length once per rail), its sides or uprights, braces and loose parts. */
-export function frameParts(r: TextileFrameRecipe, railCuts: readonly number[], sides: { qty: number; length: number }, braces: FrameParts['braces'], loose: readonly (readonly [string, number])[]): FrameParts {
+export function frameParts(r: TextileFrameRecipe, railCuts: readonly number[], sides: { qty: number; length: number }, braces: FrameParts['braces'], loose: readonly (readonly [string, number])[], butt: NonNullable<FrameParts['butt']> = []): FrameParts {
   const cuts = new Map<number, number>();
   const add = (len: number, qty: number) => qty && cuts.set(len, (cuts.get(len) ?? 0) + qty);
   for (const c of railCuts) add(c, 2);
@@ -21,6 +21,7 @@ export function frameParts(r: TextileFrameRecipe, railCuts: readonly number[], s
   const connectors = new Set([r.corner, r.splice.thread, r.splice.slide.code]);
   return {
     cuts: [...cuts],
+    ...(butt.length ? { butt } : {}),
     braces,
     loose: kept,
     couplings: kept.filter(([c]) => connectors.has(c)).reduce((a, [, q]) => a + q, 0) + braces.qty * 2 * r.braceCoupling.perEnd,
