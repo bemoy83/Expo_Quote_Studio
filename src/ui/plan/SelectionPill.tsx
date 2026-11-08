@@ -87,6 +87,7 @@ export function SelectionPill(p: PillActions & { place: PillPlace }) {
       {c.more && (
         <QBtn title="Mer i skuffen" label="Mer" onClick={() => p.onOpenDrawer(p.selection)}>
           <PanelBottomOpen size={15} />
+          Detaljer
         </QBtn>
       )}
       {c.remove && (
@@ -373,8 +374,8 @@ function content(p: PillActions, graphics: boolean, setGraphics: (b: boolean) =>
 }
 
 /**
- * On a wall with textile walls on it: one icon that steps wall → the textile on each face → wall (Bjørn 8.11.2026, like
- * a door's swing), so a click that took the wall for the textile, or the other way round, is put right in one tap. The
+ * On a wall with textile walls on it: one button, icon and where it goes («Tekstil», «Vegg»), that steps wall → the
+ * textile on each face → wall (Bjørn 8.11.2026), so a click that took the wall for the textile, or the other way round, is put right in one tap. The
  * pill's name says which is chosen. Per face the textile over the selected one's middle, else the face's first. Nothing
  * on a wall without textile walls.
  */
@@ -392,10 +393,13 @@ function layerSwitch(v: Variant, w: Wall, sel: PlanSelection, T: TextileWall | u
   const at = T ? steps.findIndex((x) => x.textileId === T.id) : 0
   const next = steps[(Math.max(0, at) + 1) % steps.length]
   const title = next.textileId ? `Velg tekstilveggen ${faceName(w, next.side!).toLowerCase()}` : 'Velg veggen'
+  // Names where a tap goes, with an icon and text like «Fyll ledig vegg» (Bjørn 8.11.2026)
+  const text = next.textileId ? (onFace.length > 1 ? `Tekstil ${faceName(w, next.side!).toLowerCase()}` : 'Tekstil') : 'Vegg'
   return (
     <>
       <QBtn title={title} label={title} onClick={() => onSelect(next)}>
-        <Layers size={16} />
+        <Layers size={15} />
+        {text}
       </QBtn>
       <Sep />
     </>
