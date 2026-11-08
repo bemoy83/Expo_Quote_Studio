@@ -85,7 +85,7 @@ export function SelectionPill(p: PillActions & { place: PillPlace }) {
       )}
       {(c.more || c.remove) && <Sep />}
       {c.more && (
-        <QBtn title="Mer i skuffen" label="Mer" onClick={() => p.onOpenDrawer(p.selection)}>
+        <QBtn title="Detaljer · åpne skuffen med alle innstillinger og veggrisset" label="Detaljer" onClick={() => p.onOpenDrawer(p.selection)}>
           <PanelBottomOpen size={15} />
           Detaljer
         </QBtn>
