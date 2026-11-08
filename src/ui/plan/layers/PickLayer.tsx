@@ -6,6 +6,7 @@ import { laneAt } from '../../../domain/floor/edit'
 import { fillTilesOf } from '../../../domain/floor/rollFill'
 import { CELL } from '../../../domain/grid'
 import { footprintBox } from '../../../domain/objects'
+import { shelfBox, shelvesOf } from '../../../domain/shelves'
 import type { BuiltModule } from '../../../domain/walls'
 import type { ReactNode } from 'react'
 import type { Point, Variant } from '../../../domain/types'
@@ -46,6 +47,9 @@ export function PickLayer({ v, mods, picked, selection }: { v: Variant; mods: Bu
     }
     const ft = picked.freeTextileId ? v.freeTextiles.find((x) => x.id === picked.freeTextileId) : undefined
     if (ft) return band(ft.from, ft.to, textileWidth(sc))
+    const sh = picked.shelfId ? shelvesOf(v).find((x) => x.id === picked.shelfId) : undefined
+    const sb = sh && shelfBox(v, rules, sh)
+    if (sb) return <rect x={sb.x0} y={sb.y0} width={sb.x1 - sb.x0} height={sb.y1 - sb.y0} fill={INK} fillOpacity={PICK_OPACITY} />
     const o = picked.objectId ? v.objects.find((x) => x.id === picked.objectId) : undefined
     const f = o && productOf(o.product)?.footprint
     if (o && f) {

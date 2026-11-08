@@ -8,6 +8,7 @@ import { foilSpan } from '../../domain/decor'
 import { faceSegment, sideOf } from '../../domain/faces'
 import { CELL } from '../../domain/grid'
 import { footprintBox } from '../../domain/objects'
+import { shelfBox, shelvesOf } from '../../domain/shelves'
 import type { Point, Variant } from '../../domain/types'
 import type { BuiltModule } from '../../domain/walls'
 import { RECIPES } from '../../foga/recipes'
@@ -36,7 +37,7 @@ export interface LayerArea {
   clip: Box[]
 }
 
-export const AREA_LAYERS = ['floor', 'walls', 'textile', 'beams', 'objects', 'rooms'] as const
+export const AREA_LAYERS = ['floor', 'walls', 'textile', 'shelves', 'beams', 'objects', 'rooms'] as const
 export type AreaLayer = (typeof AREA_LAYERS)[number]
 export type Areas = Record<AreaLayer, LayerArea>
 
@@ -105,6 +106,11 @@ export function changedAreas(a: PlanState, b: PlanState): Areas {
     diff(cornerPosts(a.v), cornerPosts(b.v), pt, pt, (p) => pointBox(p, POST_PAD)),
   )
 
+  // Shelves by their board; one more in a stacked felt changes the count drawn there
+  const shelfOf = (s: PlanState) => shelvesOf(s.v).map((f) => ({ f, box: shelfBox(s.v, rules, f) }))
+  const pad = (bx: Box | null) => bx && { x0: bx.x0 - 0.05, y0: bx.y0 - 0.05, x1: bx.x1 + 0.05, y1: bx.y1 + 0.05 }
+  const shelves = diff(shelfOf(a), shelfOf(b), (x) => x.f.id, (x) => [x.f, x.box], (x) => pad(x.box))
+
   const foot = RECIPES.wall.support.foot
   const beams = join(
     diff(a.res.beams.segments, b.res.beams.segments, (s) => `${pt(s.from)}-${pt(s.to)}`, (s) => s, (s) => segBox(s.from, s.to, LINE_PAD)),
@@ -136,7 +142,7 @@ export function changedAreas(a: PlanState, b: PlanState): Areas {
   }
   const rooms = diff(a.v.rooms, b.v.rooms, (r) => r.id, (r) => [r.outline, r.label], roomBox)
 
-  return { floor, walls, textile, beams, objects, rooms }
+  return { floor, walls, textile, shelves, beams, objects, rooms }
 }
 
 /**

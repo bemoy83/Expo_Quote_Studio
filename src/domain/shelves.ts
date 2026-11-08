@@ -4,7 +4,7 @@
 // Byggeregler H1, H2, H4, H5, H6 (docs/byggeregler.md). Values: rules.shelf (m), RECIPES.shelf (parts, mm).
 import type { Rules } from '../rules/rules';
 import { blockedModules, faceNormal, faces, sideOf, type FaceSide } from './faces';
-import { pointKey, wallLength, wallModules } from './grid';
+import { pointAlong, pointKey, wallLength, wallModules } from './grid';
 import { nextId } from './ids';
 import { textilesOn } from './textile/inFrame';
 import type { Point, Shelf, Variant, Wall } from './types';
@@ -22,6 +22,16 @@ export const shelvesIn = (v: Variant, wallId: string, module: number, s: FaceSid
   shelvesOn(v, wallId, s)
     .filter((x) => x.module === module && x.id !== skipId)
     .sort((a, b) => a.y - b.y);
+
+/** Shelves by felt (wall, face, module), each lowest first. */
+export function shelfStacks(v: Variant): Shelf[][] {
+  const by = new Map<string, Shelf[]>();
+  for (const f of shelvesOf(v)) {
+    const k = `${f.wallId}|${sideOf(v, f)}|${f.module}`;
+    by.set(k, [...(by.get(k) ?? []), f]);
+  }
+  return [...by.values()].map((xs) => xs.sort((a, b) => a.y - b.y));
+}
 
 /** A height snapped to the step and kept within lowest and highest (H4). */
 export function shelfHeight(rules: Rules, y: number): number {
@@ -193,4 +203,19 @@ export function shelfBrackets(v: Variant): { boards: number; end: number; twin: 
   }
   const counts = [...at.values()];
   return { boards, end: counts.filter((c) => c === 1).length, twin: counts.filter((c) => c >= 2).length };
+}
+
+/** A shelf's board in the plan, an axis-aligned box in metres: the board's width centred in its module, from the wall's
+ *  face (half a post out from the line) to its depth in front of it. Null when its wall is gone. */
+export function shelfBox(v: Variant, rules: Rules, f: Shelf): { x0: number; y0: number; x1: number; y1: number } | null {
+  const w = v.walls.find((x) => x.id === f.wallId);
+  if (!w) return null;
+  const n = faceNormal(w, sideOf(v, f));
+  const inset = (rules.wall.cc - rules.shelf.board.width) / 2;
+  const near = rules.wall.post / 2;
+  const far = near + rules.shelf.board.depth;
+  const ps = [pointAlong(w, f.module + inset), pointAlong(w, f.module + 1 - inset)].flatMap((p) => [near, far].map((o) => [p[0] + n[0] * o, p[1] + n[1] * o]));
+  const xs = ps.map((p) => p[0]);
+  const ys = ps.map((p) => p[1]);
+  return { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };
 }

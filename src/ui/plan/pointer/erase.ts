@@ -1,5 +1,5 @@
-// Tøm: erase whatever lies on top under the pointer, no pen needed. The smallest thing goes first: graphics before the
-// wall or textile wall they sit on, a door before its wall, furniture before the floor. A room goes as a whole. Stand
+// Tøm: erase whatever lies on top under the pointer, no pen needed. The smallest thing goes first: a shelf or graphics
+// before the wall or textile wall they sit on, a door before its wall, furniture before the floor. A room goes as a whole. Stand
 // walls are locked. A drag erases more of the same kind as the first thing it touched: walls and drawn beams along a
 // straight line on the grid (stroke.ts), anything else as the pointer passes over it. The hover (PC) or the press
 // (touch) marks what a click takes, by dimming and hatching it in its own layer (layers/erasing.ts); the release takes it.
@@ -9,6 +9,7 @@ import { CELL } from '../../../domain/grid'
 import { removeInnerBeam } from '../../../domain/innerBeams'
 import { removeObject } from '../../../domain/objects'
 import { removeRoom, roomAt } from '../../../domain/rooms'
+import { removeShelf } from '../../../domain/shelves'
 import { faceOfPoint, freeTextileAt, removeFreeTextile, updateFace } from '../../../domain/textile/free'
 import { removeTextile, textileAt, updateTextile } from '../../../domain/textile/inFrame'
 import { tileAt } from '../../../domain/floor/tiles'
@@ -20,7 +21,7 @@ import type { Drag, DragHandlers, P, PointerCtx } from './types'
 
 /** What lies on top under the pointer. `group` is what a drag goes on erasing; `id` tells the things apart. */
 export interface EraseTarget {
-  group: 'object' | 'graphic' | 'textile' | 'door' | 'room' | 'floor' | 'wall' | 'beam' | 'locked'
+  group: 'object' | 'shelf' | 'graphic' | 'textile' | 'door' | 'room' | 'floor' | 'wall' | 'beam' | 'locked'
   id: string
   erase: (v: Variant) => Variant
 }
@@ -32,6 +33,9 @@ export function eraseTargetAt(v: Variant, hits: PlanHits, standKeys: ReadonlySet
   // Furniture: exact footprint, so it wins over a wall it stands against
   const o = hits.objectAt(q)
   if (o) return { group: 'object', id: o.id, erase: (x) => removeObject(x, o.id) }
+  // A shelf, before the wall and the print behind it
+  const sh = hits.shelfAt(q)
+  if (sh) return { group: 'shelf', id: sh.id, erase: (x) => removeShelf(x, sh.id) }
   // Free-standing textile wall: the motif on the face clicked first, then the wall
   const ft = freeTextileAt(v, q, 0.15)
   if (ft) {

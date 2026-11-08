@@ -7,13 +7,14 @@ import { freeFrames } from '../../calc/textile/free'
 import { addFoil } from '../../domain/decor'
 import { DOOR_AIM_MIN, placeOpening } from '../../domain/doors'
 import { paintWalls } from '../../domain/edit'
-import { faceSegment, felt, sideOf } from '../../domain/faces'
+import { faceSegment, felt, sideOf, type FaceSide } from '../../domain/faces'
 import { applyFloor, type FloorAction } from '../../domain/floor/brush'
 import { fillCarpet } from '../../domain/floor/rollFill'
 import type { Rect } from '../../domain/floor/tiles'
 import { wallModules, type Module } from '../../domain/grid'
 import { drawInnerBeam, type Run } from '../../domain/innerBeams'
 import { addObject, footprintBox } from '../../domain/objects'
+import { addShelf, addShelfRow } from '../../domain/shelves'
 import { drawTextile, fillFace, type TextileResult } from '../../domain/textile/brush'
 import { faceOfPoint, freeTextileAt, updateFace } from '../../domain/textile/free'
 import { textileAt, updateTextile } from '../../domain/textile/inFrame'
@@ -198,6 +199,9 @@ function targetOf(p: NextInput): NextTarget | null {
     return null
   }
 
+  // Shelves pressed: the felts from the press to the pointer along the same face
+  if (dragging?.kind === 'shelf') return shelfTarget(v, dragging.wallId, dragging.s, dragging.m0, dragging.m1, true)
+
   // Floor
   const product = brush?.kind === 'floor' ? brush.product : null
   if (p.rollPending && product) {
@@ -237,6 +241,10 @@ function targetOf(p: NextInput): NextTarget | null {
     return e ? doorTarget(v, e, brush.product, null, false) : null
   }
   if (pens.objectTool && hits.onStand(hover)) return objectTarget(v, brush, hover)
+  if (pens.shelfTool) {
+    const h = hits.faceHit(hover)
+    return h ? shelfTarget(v, h.w.id, h.s, h.module, h.module, false) : null
+  }
   if (pens.floorTool && product) {
     if (p.floor.carpetFill) return onStandFloor(v, hover) ? fillTarget(p, product, undefined) : null
     const a = p.floor.rollWidth ? p.floor.laneAction({ from: hover }, null) : p.floor.floorTouch(hover, null)
@@ -324,6 +332,30 @@ function objectTarget(v: Variant, brush: Brush | null, q: P): NextTarget | null 
     return target(key, () => line({ hint: `Ikke plass til ${productOf(product)?.name.toLowerCase() ?? 'varen'} her`, invalid }))
   }
   return target(`obj:${product}:${o.x},${o.y}`, () => line({ edit: () => next, hint: null }))
+}
+
+/**
+ * Shelves from module m0 to m1 on a face at the start height: one in a free felt, a row over a drag (felts that cannot
+ * take one are skipped, H2). Over one felt that cannot, hatched with the reason; over one that has shelves, the hint
+ * that a click selects them.
+ */
+function shelfTarget(v: Variant, wallId: string, s: FaceSide, m0: number, m1: number, pressed: boolean): NextTarget {
+  return target(`shelf:${wallId}:${s}:${m0}:${m1}`, () => {
+    const w = v.walls.find((x) => x.id === wallId)!
+    const y = rules.shelf.start
+    const seg = (a: number, b: number) => faceSegment(w, s, Math.min(a, b), Math.max(a, b) + 1, 0)
+    if (m0 === m1) {
+      const r = addShelf(v, rules, wallId, m0, s, y)
+      if ('error' in r) return line({ hint: r.error, invalid: { seg: seg(m0, m0), width: 'print' } })
+      if (r.existing) return line({ hint: 'Feltet har hylle · klikk for å velge den' })
+      return line({ edit: () => r.v, hint: null })
+    }
+    const r = addShelfRow(v, rules, wallId, m0, m1, s, y)
+    if (!r.ids.length) return line({ hint: 'Ingen av feltene kan ta hylle her', invalid: { seg: seg(m0, m1), width: 'print' } })
+    const [a, b] = seg(m0, m1)
+    const text = `${r.ids.length} ${r.ids.length === 1 ? 'hylle' : 'hyller'} · ${mm(y)}`
+    return line({ edit: () => r.v, hint: null, pill: pressed ? { a, b, width: 'print', text } : undefined })
+  })
 }
 
 /** Fyll: the area being dragged, or the whole stand a click fills, laid the cheapest way. */

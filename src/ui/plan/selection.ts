@@ -1,4 +1,4 @@
-// What is selected in the plan (and 3D): one wall, room, object, frame, decal, door, beam or lane, and the wall face shown.
+// What is selected in the plan (and 3D): one wall, room, object, frame, decal, shelf, door, beam or lane, and the wall face shown.
 import { removeFoil } from '../../domain/decor'
 import { doorFace, removeOpening } from '../../domain/doors'
 import type { FaceSide } from '../../domain/faces'
@@ -7,6 +7,7 @@ import { removeFill } from '../../domain/floor/rollFill'
 import { removeInnerBeam } from '../../domain/innerBeams'
 import { removeObject } from '../../domain/objects'
 import { removeRoom } from '../../domain/rooms'
+import { removeShelf } from '../../domain/shelves'
 import { removeFreeTextile, type FaceKey } from '../../domain/textile/free'
 import { removeTextile } from '../../domain/textile/inFrame'
 import type { Variant } from '../../domain/types'
@@ -24,6 +25,8 @@ export interface PlanSelection {
   freeFace?: FaceKey
   /** An innvendig takdrager. */
   beamId?: string
+  /** A shelf (hylle 6311), chosen in the wall drawer of its wall, on its face. */
+  shelfId?: string
   /** A door or curtain, chosen in the wall drawer of the wall it stands in. */
   openingId?: string
   /** A lane of engangsteppe placed on its own: its top left cell. */
@@ -42,6 +45,7 @@ export function selectionKey(s: PlanSelection): string {
   if (s.lane) return `lane:${s.lane.i},${s.lane.j}`
   if (s.textileId) return `textile:${s.textileId}`
   if (s.foilId) return `foil:${s.foilId}`
+  if (s.shelfId) return `shelf:${s.shelfId}`
   if (s.freeTextileId) return `free:${s.freeTextileId}`
   if (s.beamId) return `beam:${s.beamId}`
   if (s.openingId) return `opening:${s.openingId}`
@@ -66,12 +70,13 @@ export function doorWall(v: Variant, sel: PlanSelection): PlanSelection {
 
 /** Delete (or Backspace) on the selection: what it removes, and what is selected after. Null when nothing is removed. */
 export function deleteSelection(v: Variant, sel: PlanSelection): { edit: (v: Variant) => Variant; select: PlanSelection } | null {
-  const { lane, fill, textileId, foilId, freeTextileId, beamId, roomId, openingId, objectId } = sel
+  const { lane, fill, textileId, foilId, shelfId, freeTextileId, beamId, roomId, openingId, objectId } = sel
   if (fill) return { edit: (x) => removeFill(x, fill), select: {} }
   if (lane) return { edit: (x) => removeLane(x, lane), select: {} }
   // A frame or decal: the wall drawer stays on its face
   if (textileId) return { edit: (x) => removeTextile(x, textileId), select: { wallId: sel.wallId, side: sel.side } }
   if (foilId) return { edit: (x) => removeFoil(x, foilId), select: { wallId: sel.wallId, side: sel.side } }
+  if (shelfId) return { edit: (x) => removeShelf(x, shelfId), select: { wallId: sel.wallId, side: sel.side } }
   if (freeTextileId) return { edit: (x) => removeFreeTextile(x, freeTextileId), select: {} }
   if (beamId) return { edit: (x) => removeInnerBeam(x, beamId), select: {} }
   if (roomId) return { edit: (x) => removeRoom(x, roomId), select: {} }

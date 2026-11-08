@@ -20,13 +20,14 @@ import { placeDrag, startPlace } from './place'
 import { plateAt, plates, startPlates } from './plates'
 import { roll, startRoll } from './roll'
 import { room } from './room'
+import { shelf, startShelf } from './shelf'
 import { startSelect } from './select'
 import { startStroke, stroke } from './stroke'
 import { startTextile, textile } from './textile'
 import type { Drag, DragHandlers, P, PointerCtx } from './types'
 import { wall } from './wall'
 
-const DRAGS: { [K in Drag['kind']]: DragHandlers<K> } = { stroke, plates, floor, roll, carpetFill, click, object, wall, beam, room, textile, freeMove, erase, place: placeDrag }
+const DRAGS: { [K in Drag['kind']]: DragHandlers<K> } = { stroke, plates, floor, roll, carpetFill, click, object, wall, beam, room, textile, freeMove, erase, shelf, place: placeDrag }
 const handlersOf = (d: Drag) => DRAGS[d.kind] as DragHandlers<Drag['kind']>
 
 /** What the plan passes in: the context without the previews' setters and state, which the hook owns. */
@@ -114,6 +115,7 @@ export function usePlanPointer(input: PlanPointerInput) {
     if (pens.decorTool) return startPlace(c, 'decor', q)
     if (pens.textileTool) return startTextile(c, q)
     if (pens.objectTool) return startPlace(c, 'object', q)
+    if (pens.shelfTool) return startShelf(c, q)
     return startSelect(c, q)
   }
 

@@ -3,6 +3,7 @@
 // chain (arbeidstegning.md A5); on a stand edge it clears the totals and the side name outside. Pure, in model
 // metres and screen pixels, so it can be tested without a plan; SelectionPill.tsx turns it into a place on screen.
 import { footprintBox } from '../../domain/objects'
+import { shelfBox, shelvesOf } from '../../domain/shelves'
 import { CELL, pointAlong } from '../../domain/grid'
 import type { Point, Variant, Wall } from '../../domain/types'
 import { isPerimeterWall } from '../../domain/walls'
@@ -76,6 +77,11 @@ export function pillAnchor(v: Variant, sel: PlanSelection): PillAnchor | null {
     const o = v.openings.find((x) => x.id === sel.openingId)
     const w = o && v.walls.find((x) => x.id === o.wallId)
     return o && w ? wallAnchor(v, w, o.module * place.rules.wall.cc, (o.module + 1) * place.rules.wall.cc) : null
+  }
+  if (sel.shelfId) {
+    const f = shelvesOf(v).find((x) => x.id === sel.shelfId)
+    const b = f && shelfBox(v, place.rules, f)
+    return b ? over(v, b) : null
   }
   if (sel.wallId) {
     const w = v.walls.find((x) => x.id === sel.wallId)

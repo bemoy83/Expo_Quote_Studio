@@ -13,6 +13,8 @@ export function pens(tool: Tool, brush: Brush | null) {
     textileTool: pen && brush?.kind === 'textile',
     /** Innvendig takdrager, drawn on the wall grid like a wall. */
     beamTool: pen && brush?.kind === 'beam',
+    /** Hylle: in a wall module, on the face clicked; a drag along the wall lays a row. */
+    shelfTool: pen && brush?.kind === 'shelf',
   }
 }
 

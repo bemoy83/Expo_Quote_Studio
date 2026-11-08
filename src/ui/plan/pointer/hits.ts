@@ -1,13 +1,14 @@
-// What lies under the pointer, in model coordinates: wall modules, faces, drawn beams, room sides and furniture. Shared
+// What lies under the pointer, in model coordinates: wall modules, faces, drawn beams, room sides, furniture and shelves. Shared
 // by the pointer handlers and the plan's cursor and hover previews.
 import { innerBeamAt } from '../../../domain/innerBeams'
 import { footprintBox } from '../../../domain/objects'
 import { roomSideAt } from '../../../domain/rooms'
+import { shelfBox, shelvesOf } from '../../../domain/shelves'
 import { faceAt } from '../../../domain/faces'
 import { offsetAlong, wallLength } from '../../../domain/grid'
 import type { Room, Variant } from '../../../domain/types'
 import type { BuiltModule } from '../../../domain/walls'
-import { productOf } from '../../env'
+import { productOf, rules } from '../../env'
 import { sizePx, type PlanScale } from '../planScale'
 import { wallWidth } from '../planStyle'
 import { distToSegment } from '../geometry'
@@ -81,7 +82,16 @@ export function planHits(v: Variant, mods: BuiltModule[], selection: PlanSelecti
       return q.x >= b.x0 && q.x <= b.x1 && q.y >= b.y0 && q.y <= b.y1
     })
 
-  return { onStand, moduleAt, beamAt, faceHit, onWallBand, roomEdgeAt, objectAt }
+  /** A shelf under the pointer, by its board; of shelves stacked in one felt, the lowest (the drawer has the rest). */
+  const shelfAt = (q: P) =>
+    shelvesOf(v)
+      .filter((f) => {
+        const b = shelfBox(v, rules, f)
+        return !!b && q.x >= b.x0 && q.x <= b.x1 && q.y >= b.y0 && q.y <= b.y1
+      })
+      .sort((a, b) => a.y - b.y)[0]
+
+  return { onStand, moduleAt, beamAt, faceHit, onWallBand, roomEdgeAt, objectAt, shelfAt }
 }
 
 export type PlanHits = ReturnType<typeof planHits>

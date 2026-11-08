@@ -3,6 +3,7 @@
 import type { Dispatch, SetStateAction } from 'react'
 import type { FloorAction } from '../../../domain/floor/brush'
 import type { Rect } from '../../../domain/floor/tiles'
+import type { FaceSide } from '../../../domain/faces'
 import type { Module } from '../../../domain/grid'
 import type { BuiltModule } from '../../../domain/walls'
 import type { Run } from '../../../domain/innerBeams'
@@ -49,6 +50,8 @@ export type Drag =
   /** The wall pen pressed on a plate that stands: colours plates along that wall on release (plates.ts). `as`: the drag
    *  turned across the wall, so it draws a new wall as a stroke. */
   | { kind: 'plates'; wallId: string; i0: number; p0: P; moved: boolean; as?: Extract<Drag, { kind: 'stroke' }> }
+  /** The shelf pen pressed on a wall face: module `m0` to `m1` on that face, laid on release (shelf.ts). */
+  | { kind: 'shelf'; wallId: string; s: FaceSide; m0: number; m1: number }
   /** Tøm on anything but walls and drawn beams: the first thing pressed, then more of its kind as the pointer passes. */
   | { kind: 'erase'; first: EraseTarget; p0: P; moved: boolean; done: Set<string> }
 

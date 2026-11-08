@@ -2,7 +2,7 @@
 // One build for all: name and size · colour or motif · rotate (where it makes sense) · Mer (the drawer) · remove.
 // Shown as soon as a click selects; hidden while dragging,
 // while the drawer is open, with a pen in hand and in 3D (PlanView decides). Where it stands: pillAnchor.ts.
-import { ArrowLeftRight, Blinds, DoorClosed, FlipHorizontal2, Image as ImageIcon, Layers, MoveHorizontal, PanelBottomOpen, RotateCw, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowLeftRight, ArrowUp, Blinds, DoorClosed, FlipHorizontal2, Image as ImageIcon, Layers, MoveHorizontal, PanelBottomOpen, Plus, RotateCw, Trash2 } from 'lucide-react'
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import { wallLabel } from '../../calc/production'
@@ -15,6 +15,7 @@ import { CELL, wallLength, wallModules } from '../../domain/grid'
 import { wallRal } from '../../domain/panels'
 import { clearPrint, fillPlates, printWall } from '../../domain/print'
 import { roomName, roomSize } from '../../domain/rooms'
+import { addShelfAbove, shelvesIn, shelvesOf, updateShelf } from '../../domain/shelves'
 import { addTextile, fillTextile, textileBox, textilesOn, updateTextile } from '../../domain/textile/inFrame'
 import type { TextileWall, Variant, Wall } from '../../domain/types'
 import { isStandWall } from '../../domain/walls'
@@ -311,6 +312,49 @@ function content(p: PillActions, graphics: boolean, setGraphics: (b: boolean) =>
       name: F.full ? 'Print' : 'Dekal',
       meta: F.full ? 'hel plate' : `${fmt(F.width, 2)} m`,
       body: <Motifs motifs={motifs} value={F.motif ?? null} onPick={(m) => m && onEdit((x) => updateFoil(x, rules, F.id, { motif: m }, ratioOf(m)))} />,
+      more: true,
+      remove: del,
+    }
+  }
+
+  const H = sel.shelfId ? shelvesOf(v).find((x) => x.id === sel.shelfId) : undefined
+  if (H) {
+    const stack = shelvesIn(v, H.wallId, H.module, sideOf(v, H))
+    const move = (dy: number) => {
+      const next = updateShelf(v, rules, H.id, { y: H.y + dy })
+      if (next === v) return p.onToast(dy > 0 ? 'Hyllen kan ikke gå høyere her' : 'Hyllen kan ikke gå lavere her')
+      onEdit(() => next)
+    }
+    const step = rules.shelf.step
+    return {
+      name: 'Hylle',
+      meta: `${mm(H.y)} mm fra gulvet${stack.length > 1 ? ` · ${stack.indexOf(H) + 1} av ${stack.length}` : ''}`,
+      body: (
+        <>
+          <QBtn title={`Senk ${mm(step)} mm`} label="Senk" onClick={() => move(-step)}>
+            <ArrowDown size={15} />
+            Ned
+          </QBtn>
+          <QBtn title={`Hev ${mm(step)} mm`} label="Hev" onClick={() => move(step)}>
+            <ArrowUp size={15} />
+            Opp
+          </QBtn>
+          <Sep />
+          <QBtn
+            title="Legg til en hylle til i samme felt"
+            label="Hylle til"
+            onClick={() => {
+              const r = addShelfAbove(v, rules, H.id)
+              if ('error' in r) return p.onToast(r.error)
+              onEdit(() => r.v)
+              onSelect({ wallId: w.id, side: s, shelfId: r.id })
+            }}
+          >
+            <Plus size={15} />
+            Hylle til
+          </QBtn>
+        </>
+      ),
       more: true,
       remove: del,
     }
