@@ -1,6 +1,6 @@
 // Shelves (hylle 6311, Byggeregler H1–H3): a white board in its wall module, its top at the shelf's height, lying into
-// the inner corner of the posts on a bracket in each post's face channel. The brackets are 91F (one flange, toward the
-// board) or 91FF (a flange each way, between two boards at one height), drawn from Bjørn's STL outlines, 290 mm out
+// the inner corner of the posts on a bracket in each post's face channel. The brackets are 91F (one flange, turned away
+// from the board as mounted, Bjørn 8.11.2026) or 91FF (a flange each way, between two boards at one height), drawn from Bjørn's STL outlines, 290 mm out
 // from the post's face; the 600 coupling sits inside the post and is not drawn.
 import * as THREE from 'three'
 import { faceNormal, sideOf } from '../../../domain/faces'
@@ -54,9 +54,11 @@ export function buildShelves(c: BuildContext) {
     mesh.scale.x = out
     // Local x along the face normal; the profile's x (across, local z) along the wall
     mesh.rotation.y = Math.atan2(-b.n[1], b.n[0])
-    // Local −z, where the flange of a 91F is, lies along (n.y, −n.x): turn it over when the board is the other way
+    // Local −z, where the flange of a 91F is, lies along (n.y, −n.x): turn it over when it would face the wrong way
     const flangeWay: Point = [b.n[1], -b.n[0]]
-    const want: Point = [b.dir[0] * b.dirs[0], b.dir[1] * b.dirs[0]]
+    // Mirrored as Bjørn mounts them (8.11.2026): the flange of an end bracket turns away from its board
+    const board: Point = [b.dir[0] * b.dirs[0], b.dir[1] * b.dirs[0]]
+    const want: Point = [-board[0], -board[1]]
     const toward = flangeWay[0] * want[0] + flangeWay[1] * want[1] > 0 ? 1 : -1
     if (!twin && toward < 0) mesh.scale.z = -1
     // A 91F's body is 7,5 mm off its outline's middle, away from the flange: the body sits on the post's centre

@@ -35,17 +35,17 @@ describe('shelves in 3D', () => {
     expect(named('foga-91FF')).toHaveLength(1)
   })
 
-  it('the brackets stand out 290 mm from the post face, under the board, with the flange toward the board', () => {
+  it('the brackets stand out 290 mm from the post face, under the board, with the end flanges turned away from the board', () => {
     for (const m of [...named('foga-91F'), ...named('foga-91FF')]) {
       const b = box(m)
       expect([r(b.min.z + 1.5), r(b.max.z + 1.5)]).toEqual([20, 310])
       // 30 high, the board's underside on its flange 10,5 over its bottom: the bracket's top 1,5 over the board's top
       expect([Math.round(b.min.y * 10000), Math.round(b.max.y * 10000)]).toEqual([14715, 15015])
     }
-    // The end brackets at x = 1 and 3 (−2 and 0 in the world) has its flange toward the board, to +x: its body on the post
+    // The end brackets at x = 1 and 3 (−2 and 0 in the world) turn their flanges away from the boards (mirrored, Bjørn 8.11.2026): the body on the post
     const left = named('foga-91F').map(box).find((b) => b.min.x < -1.9)!
-    expect([r(left.min.x + 2), r(left.max.x + 2)]).toEqual([-10, 25])
+    expect([r(left.min.x + 2), r(left.max.x + 2)]).toEqual([-25, 10])
     const right = named('foga-91F').map(box).find((b) => b.min.x > -0.1)!
-    expect([r(right.min.x), r(right.max.x)]).toEqual([-25, 10])
+    expect([r(right.min.x), r(right.max.x)]).toEqual([-10, 25])
   })
 })
