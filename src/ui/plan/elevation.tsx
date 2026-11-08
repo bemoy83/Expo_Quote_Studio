@@ -126,3 +126,25 @@ function NoteMark({ x, y, w, h, note, u }: { x: number; y: number; w: number; h:
     </g>
   )
 }
+
+/**
+ * A shelf seen from in front (Byggeregler H1–H3): the board, 976 wide and 18 thick with its top at the shelf's height,
+ * between its posts, and the bracket in each post's face channel just under it. `x` is the board's left edge, `H` the
+ * drawing's floor; `u` metres per screen px keeps the board visible on a small drawing.
+ */
+export function ShelfFront({ x, y, H, u, on, ...rest }: { x: number; y: number; H: number; u: number; on?: boolean } & SVGProps<SVGGElement>) {
+  const { thickness, width } = rules.shelf.board
+  const t = Math.max(thickness, 3 * u)
+  const z = H - y
+  const inset = (rules.wall.cc - width) / 2
+  const bracket = 0.03
+  return (
+    <g {...rest}>
+      {[x - inset, x + width + inset].map((px) => (
+        <rect key={px} x={px - rules.wall.post / 2} y={z} width={rules.wall.post} height={bracket} fill={ALU} stroke={INK_MUTED} strokeWidth={0.6 * u} />
+      ))}
+      <rect x={x} y={z} width={width} height={t} fill={SURFACE} stroke={INK} strokeWidth={(on ? 1.8 : 0.8) * u} />
+      {on && <rect x={x - 0.012} y={z - 0.012} width={width + 0.024} height={t + 0.024} fill="none" stroke={INK} strokeWidth={0.014} />}
+    </g>
+  )
+}

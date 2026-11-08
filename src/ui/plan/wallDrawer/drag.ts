@@ -1,9 +1,10 @@
-// Dragging in the wall drawer's drawing: move a textile frame or a decal, or drag the edge or corner of one.
+// Dragging in the wall drawer's drawing: move a textile frame or a decal, or drag the edge or corner of one; move a shelf.
 import type { PointerEvent as RPointerEvent, RefObject } from 'react'
 import { moveFoilBy, updateFoil } from '../../../domain/decor'
 import type { FaceSide } from '../../../domain/faces'
 import { freeSpans, moveTextileBy, textileBox, textilesOn, updateTextile } from '../../../domain/textile/inFrame'
-import type { Foil, TextileWall, Variant, Wall } from '../../../domain/types'
+import { shelfHeight, updateShelf } from '../../../domain/shelves'
+import type { Foil, Shelf, TextileWall, Variant, Wall } from '../../../domain/types'
 import { rules } from '../../env'
 import type { Edge } from '../drawerParts'
 import { type PlanSelection } from '../selection'
@@ -92,4 +93,46 @@ export function useDecorDrag({ svg, w, s, L, select, ratioOf, onEdit, onCheckpoi
   }
 
   return drag
+}
+
+/**
+ * Drag a shelf in the drawing: up and down in steps of 50 mm (H4; the shelves beside it stand on the same steps, so it
+ * meets their height), and sideways felt by felt. A step it may not take (too close to another shelf, a felt that cannot
+ * take one) is left out and the shelf stays where it last could stand.
+ */
+export function useShelfDrag({ svg, s, select, onEdit, onCheckpoint }: Pick<DragDeps, 'svg' | 's' | 'select' | 'onEdit' | 'onCheckpoint'>) {
+  const dir = s === 1 ? 1 : -1
+  return (e: RPointerEvent, f: Shelf) => {
+    e.stopPropagation()
+    if (e.button !== 0) return
+    const scale = svg.current?.getScreenCTM()?.a ?? 1
+    const x0 = e.clientX
+    const y0 = e.clientY
+    let moved = false
+    select({ shelfId: f.id })
+    const onMove = (ev: PointerEvent) => {
+      const du = (ev.clientX - x0) / scale
+      const dz = -(ev.clientY - y0) / scale
+      if (!moved) {
+        if (Math.hypot(du, dz) * scale < 3) return
+        moved = true
+        onCheckpoint()
+      }
+      const module = f.module + Math.round(du * dir)
+      const y = shelfHeight(rules, f.y + dz)
+      onEdit((x) => {
+        const both = updateShelf(x, rules, f.id, { module, y })
+        if (both !== x) return both
+        // Only the height, or only the felt, when the two together cannot be
+        const up = updateShelf(x, rules, f.id, { y })
+        return up !== x ? up : updateShelf(x, rules, f.id, { module })
+      }, false)
+    }
+    const onUp = () => {
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onUp)
+    }
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup', onUp)
+  }
 }
