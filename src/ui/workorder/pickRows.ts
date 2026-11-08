@@ -1,4 +1,4 @@
-// The rows of the picking list, shared by Plukkliste and Arbeidsordre.
+// The rows of the picking list on Arbeidsordre: calc lines that are picked, the Foga parts and each textile.
 import type { CalcResult } from '../../calc/calc'
 import { FILL_NAME, textileRows } from '../../calc/production'
 import { resolveGroup } from '../../catalog/groups'

@@ -172,7 +172,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   2B + 2H, 617 i alle fire hjørner, festet med 2 × 520 (med 503) til stolpe 94. Stående stag i 90 maks 2000 fra hverandre
   (rammesidene teller), lengde H − 80, med 600 i hver ende: duken trekker mest på midten.
   *Bjørn 31.10.2026 (fabric.js er fasit), stag 2 m 7.11.2026 · `rules.textile.inFrame`, `RECIPES.textileFrame` · kode `src/calc/textile/inFrame.ts` · test `src/calc/fabric.test.ts`*
-- **X3 Trykkfil.** Ramme + 2 × bleed (20), levert i 10 %.
+- **X3 Trykkfil.** Ramme + 2 × bleed (20), levert i 10 %. Tilbudet lister trykkfilene kunden leverer, med filmål og
+  filnavn, og trykklisten kan lastes ned som CSV der. Bleed, filskala og de andre målene for rammen endres under Regler på
+  Kostgrunnlag og gjelder også kalkylen.
   *Bjørn 31.10.2026 · `rules.textile.inFrame` · kode `src/calc/textile/inFrame.ts` · test `src/calc/fabric.test.ts`*
 - **X4 Plass på veggen.** InFrame står aldri over en åpning og overlapper ikke en annen på samme side. Standvegg har bare
   innsiden, innervegg og romvegg begge. To InFrame-rammer kobles ikke sammen.
@@ -188,8 +190,10 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   *Bjørn 31.10.2026, skjøt 7.11.2026 · `RECIPES.textileFrame` · kode `src/calc/textile/free.ts`, `src/calc/textile/inFrame.ts` · test `src/calc/freeFrames.test.ts`, `src/calc/fabric.test.ts`*
 - **X7 Hjørne.** To frittstående vegger møtes bare ende mot ende i rett vinkel (ingen T) og deler en 92LTX, kappet
   2526 (endelokk 7 mm under og over, ikke plukket). Skinnene stopper 37 mm før hjørnepunktet; utvendig duk er 20 mm
-  lengre og innvendig 20 mm kortere per hjørne. En strek i forlengelsen blir samme vegg.
-  *Bjørn 31.10.2026 og 6.11.2026 · `RECIPES.textileFrame` · kode `src/calc/textile/free.ts`, `src/domain/textile/free.ts` · test `src/calc/freeFrames.test.ts`*
+  lengre og innvendig 20 mm kortere per hjørne. En strek i forlengelsen blir samme vegg. 43TX er ellers gjæret i
+  begge ender; en skinne som møter en 92LTX kappes butt mot den og gjæret i den andre enden. Plukklisten på
+  arbeidsordren sier hvilke lengder som har butt ende.
+  *Bjørn 31.10.2026, 6.11.2026 og 8.11.2026 · `RECIPES.textileFrame` · kode `src/calc/textile/free.ts`, `src/domain/textile/free.ts` · test `src/calc/freeFrames.test.ts`*
 - **X8 Føtter og stag.** Fotplate 740 under bunnskinnen etter S3 og S4; en 92LTX teller som støtte. Stagene er rammens
   egne (som X2) og står uavhengig av føttene: en fotplate har ikke stag.
   En fot i en fri ende står i flukt med rammeenden (200 mm inn for 740), resten jevnt fordelt. Under 1 m: én 730 midt på.
@@ -250,7 +254,8 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   regner med per meter.
   *Bjørn 31.10.2026 · kode `src/foga/fromVariant.ts` · test `src/calc/calc.test.ts`*
 - **P4 Arbeidsordre.** Arbeidsordren er plukklisten montøren får: uten art.nr. for Foga-deler og uten bestanddelene i
-  ferdige enheter.
+  ferdige enheter. Den egne siden Plukkliste er fjernet (Bjørn 8.11.2026); en samlet plukkliste for et helt
+  arrangement hører til OMS senere.
   *Bjørn 2.11.2026 · kode `src/ui/workorder/WorkOrderPage.tsx` · test `src/foga/engine.test.ts`*
 
 ## B · Hvem bygger

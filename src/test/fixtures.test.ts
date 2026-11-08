@@ -14,7 +14,7 @@ import { customerName, standWallTerms } from '../domain/variant';
 import { parse, serialize } from '../persistence/file';
 import { RULES } from '../rules/rules';
 import { cutRows } from '../ui/cutList';
-import { pickRows } from '../ui/picking/rows';
+import { pickRows } from '../ui/workorder/pickRows';
 
 const TEXTS = import.meta.glob<string>('./fixtures/*.json', { query: '?raw', import: 'default', eager: true });
 const FILES = Object.keys(TEXTS).sort();

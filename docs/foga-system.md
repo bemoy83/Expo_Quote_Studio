@@ -369,7 +369,7 @@ Slik henger det sammen:
 
 ### Plukkliste · P1–P4
 
-Plukklisten er en **deleliste gruppert etter den felles produktgrupperingen** (`src/catalog/groups.ts`), samme
+Plukklisten står på arbeidsordren (egen side fjernet 8.11.2026) og er en **deleliste gruppert etter den felles produktgrupperingen** (`src/catalog/groups.ts`), samme
 hovedgrupper og rekkefølge som panelet, kalkylen og tilbudet. Foga-delene ligger under Vegger og bakrom (Veggplater,
 Stolper, Skinner, Takdrager, Dører og forheng med overstykket) og Profilering → Tekstilvegger. Montering og løse
 linjer (Andre tjenester) plukkes ikke. Ferdigmonterte enheter plukkes som stk (lagres ferdig montert):
@@ -381,7 +381,8 @@ linjer (Andre tjenester) plukkes ikke. Ferdigmonterte enheter plukkes som stk (l
   til (T1, T3 …)
 - Dørblad
 
-Løse deler er da bare 43TX (én linje per kappelengde, for rammer på vegg og på fotplater), hjørnekoblinger 617,
+Løse deler er da bare 43TX (én linje med alle kappelengder, for rammer på vegg og på fotplater; lengder som møter
+en 92LTX har butt ende der, resten er gjæret, X7), hjørnekoblinger 617,
 skjøtekoblinger 609 eller 604 og braketter 520, alle under Tekstilvegger. På fotplater kommer 92LTX per hjørne og
 fotplater 740 og 730 i tillegg. Hver duk (T1, F1A, F1B …) står som egen linje: trykt, hvit eller kundens.
 

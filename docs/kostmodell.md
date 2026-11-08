@@ -59,7 +59,7 @@ minutter per steg, per gruppeprefiks, til OMS gir dem per produkt; et produkts e
 1 (uten disse) leses fortsatt.
 
 `parametere` har samme navn som `CostParams` i `params.ts`; «Last ned mal» gir hele eksempelet skrevet ut som
-utgangspunkt. Antakelsene for InFrame på Produksjon lagres på samme måte: bare det som er endret fra appens standard.
+utgangspunkt. Antakelsene for tekstilrammen (InFrame), som endres under Regler på Kostgrunnlag, lagres på samme måte: bare det som er endret fra appens standard.
 
 ## Innkjøp
 

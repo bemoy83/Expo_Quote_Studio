@@ -5,7 +5,7 @@
 //
 // Typical run: build main into dist-main (git worktree), build the branch into dist, shoot both, compare.
 // Each example sketch in src/test/fixtures is put in localStorage the way the app saves it, then the script takes the
-// plan, the 3D view, the drawers listed below, Tilbud, Produksjon, Plukkliste and Arbeidsordre for every variant.
+// plan, the 3D view, the drawers listed below, Tilbud and Arbeidsordre for every variant.
 // Transitions are turned off and the 3D view waits for its motifs, so two runs of the same build give the same pictures.
 // Needs Chromium for Playwright: `npx playwright install chromium` once (or CHROMIUM=/path/to/chrome).
 import { createServer } from 'node:http';
@@ -31,7 +31,7 @@ const DRAWERS = {
   '08-tekstil': [['inframe', 3, 0.08], ['frittstaende', 4.5, 3]],
   '09-dekor': [['print', 2.5, 0], ['dekal', 0, 2.5]],
 };
-const PAGES = ['Tilbud', 'Produksjon', 'Plukkliste', 'Arbeidsordre'];
+const PAGES = ['Tilbud', 'Arbeidsordre'];
 
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.png': 'image/png', '.json': 'application/json' };
 

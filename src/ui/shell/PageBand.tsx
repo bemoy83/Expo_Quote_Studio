@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-/** Band at the top of Tilbud, Produksjon and Produktliste: title, short status and actions. */
+/** Band at the top of Tilbud, Arbeidsordre, Produktliste and Kostgrunnlag: title, short status and actions. */
 export function PageBand({ title, meta, children }: { title: string; meta?: string; children?: ReactNode }) {
   return (
     <div className="band no-print" data-band="eple">

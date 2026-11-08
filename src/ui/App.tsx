@@ -19,10 +19,9 @@ import { IconButton, Toast } from './controls'
 import { download } from './download'
 import { catalog, costBasis, getVersion, idx, place, plateColor, pricing, subscribe } from './env'
 import { hint, HINT_3D } from './hints'
-import { findMotif, motifLibrary, readMotif } from './motifs'
+import { motifLibrary, readMotif } from './motifs'
 import { NameTip } from './NameTip'
 import { Rail } from './panel/Rail'
-import { PickingPage } from './picking/PickingPage'
 import { DrawerHandle } from './plan/DrawerHandle'
 import { Drawers } from './plan/Drawers'
 import { PlanPreview } from './plan/PlanPreview'
@@ -33,7 +32,6 @@ import { hasDrawer, type DrawerState, type PlanSelection } from './plan/selectio
 import { StandChip } from './plan/StandChip'
 import { ToolDock } from './plan/ToolDock'
 import { usePriceChange } from './plan/usePriceChange'
-import { ProductionPage } from './production/ProductionPage'
 import { QuotePage } from './quote/QuotePage'
 import { SketchBand, type Layout } from './shell/SketchBand'
 import { TopNav, type Page } from './shell/TopNav'
@@ -409,17 +407,6 @@ export default function App() {
         </>
       ) : page === 'tilbud' ? (
         <QuotePage project={sketch.project} variants={sketch.variants} current={current} onSelect={selectVariant} calcOf={calcFor} motifs={motifs} />
-      ) : page === 'produksjon' ? (
-        <ProductionPage
-          variants={sketch.variants}
-          current={current}
-          onSelect={selectVariant}
-          customer={customerName(sketch.project)}
-          motifName={(id) => findMotif(motifs, id)?.name}
-          onToast={showToast}
-        />
-      ) : page === 'plukkliste' ? (
-        <PickingPage project={sketch.project} variants={sketch.variants} current={current} onSelect={selectVariant} calcOf={calcFor} />
       ) : page === 'arbeidsordre' ? (
         <WorkOrderPage project={sketch.project} variants={sketch.variants} current={current} onSelect={selectVariant} calcOf={calcFor} />
       ) : page === 'kostgrunnlag' ? (
