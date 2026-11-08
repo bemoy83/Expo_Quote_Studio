@@ -256,7 +256,7 @@ export function QuotePage({ project, variants, current, onSelect, calcOf, motifs
                       {fmt(f.W, 0)} × {fmt(f.H, 0)}
                     </span>
                     <span className="num r">
-                      {fmt(f.fw, 1)} × {fmt(f.fh, 1)}
+                      {fmt(f.fw ?? 0, 1)} × {fmt(f.fh ?? 0, 1)}
                     </span>
                     <span className="num muted qfile-name">{f.fileName}</span>
                   </div>

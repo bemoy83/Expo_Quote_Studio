@@ -107,6 +107,9 @@ export interface TextileRow {
   H: number;
   pw: number;
   ph: number;
+  /** File size at scale, mm, one decimal: textiles only. */
+  fw?: number;
+  fh?: number;
   fill: TextileFill;
   fileName: string | null;
   /** Foil over a whole wall plate: no frame, the print is the plate's size. */
@@ -134,38 +137,15 @@ export function foilRows(v: Variant, plate: { width: number; height: number }, c
   });
 }
 
-/** A print file the customer delivers: every printed textile, frames on walls and faces of free-standing ones. The file
- *  size is at the agreed scale (rules.textile.inFrame.scale), including bleed. Shown on the quote. */
-export interface PrintFile {
-  pos: string;
-  where: string;
-  /** Visible textile, mm. */
-  W: number;
-  H: number;
-  /** Print including bleed, full size, mm. */
-  pw: number;
-  ph: number;
-  /** File size at scale, mm, one decimal. */
-  fw: number;
-  fh: number;
-  fileName: string;
-}
-
-export function printFiles(P: Production): PrintFile[] {
-  const out: PrintFile[] = [];
-  for (const p of P.pieces) if (p.fileName) out.push({ pos: p.pos, where: p.wall, W: p.W, H: p.H, pw: p.pw, ph: p.ph, fw: p.fw, fh: p.fh, fileName: p.fileName });
-  for (const f of P.free)
-    for (const x of f.faces)
-      if (x.fileName) out.push({ pos: x.pos, where: `Frittstående ${f.pos}, side ${x.face.toUpperCase()}`, W: x.W, H: x.H, pw: x.pw, ph: x.ph, fw: x.fw, fh: x.fh, fileName: x.fileName });
-  return out;
-}
+/** The rows with a print file the customer delivers (printed textiles), for the quote. */
+export const printFiles = (P: Production): TextileRow[] => textileRows(P).filter((r) => r.fileName);
 
 export const FILL_NAME: Record<TextileFill, string> = { print: 'Trykt tekstil', white: 'Hvit tekstil', reuse: 'Kundens tekstil' };
 
 export function textileRows(P: Production): TextileRow[] {
   return [
-    ...P.pieces.map((p) => ({ pos: p.pos, where: p.wall, W: p.W, H: p.H, pw: p.pw, ph: p.ph, fill: p.fill, fileName: p.fileName })),
-    ...P.free.flatMap((f) => f.faces.map((x) => ({ pos: x.pos, where: `Frittstående ${f.pos}, side ${x.face.toUpperCase()}`, W: x.W, H: x.H, pw: x.pw, ph: x.ph, fill: x.fill, fileName: x.fileName }))),
+    ...P.pieces.map((p) => ({ pos: p.pos, where: p.wall, W: p.W, H: p.H, pw: p.pw, ph: p.ph, fw: p.fw, fh: p.fh, fill: p.fill, fileName: p.fileName })),
+    ...P.free.flatMap((f) => f.faces.map((x) => ({ pos: x.pos, where: `Frittstående ${f.pos}, side ${x.face.toUpperCase()}`, W: x.W, H: x.H, pw: x.pw, ph: x.ph, fw: x.fw, fh: x.fh, fill: x.fill, fileName: x.fileName }))),
   ];
 }
 

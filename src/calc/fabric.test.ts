@@ -38,9 +38,9 @@ describe('InFrame frame piece', () => {
   });
   it('file size at scale with bleed', () => {
     const p = framePiece(1000, S);
-    expect([p.fw, p.fh, p.fb]).toEqual([101, 258, 2]);
+    expect([p.fw, p.fh]).toEqual([101, 258]);
     const p14 = framePiece(1000, { ...S, bleed: 14 });
-    expect([p14.fw, p14.fh, p14.fb]).toEqual([99.8, 256.8, 1.4]);
+    expect([p14.fw, p14.fh]).toEqual([99.8, 256.8]);
   });
   it('file name', () => {
     expect(printFileName('Nordlys AS', 'T1', framePiece(1000, S))).toBe('NordlysAS_T1_970x2540mm.pdf');

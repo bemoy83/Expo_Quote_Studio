@@ -25,11 +25,8 @@ export interface FramePiece {
   /** File size at scale, mm, one decimal. */
   fw: number;
   fh: number;
-  /** Bleed at file scale, mm. */
-  fb: number;
   /** Print area including bleed, m². */
   area: number;
-  profiles: { name: string; qty: number; length: number }[];
   /** Top rail cut lengths, and the same again for the bottom rail: one piece unless spliced. */
   railCuts: number[];
   braces: { qty: number; length: number } | null;
@@ -71,12 +68,7 @@ export function framePiece(spanMm: number, s: InFrameParams, heightMm?: number, 
     ph,
     fw: r1(pw),
     fh: r1(ph),
-    fb: r1(s.bleed),
     area: (pw * ph) / 1e6,
-    profiles: [
-      ...[...new Set(railCuts)].map((length) => ({ name: 'Topp/bunn', qty: 2 * railCuts.filter((x) => x === length).length, length })),
-      { name: 'Side', qty: 2, length: H },
-    ],
     railCuts,
     braces,
     braceAt,
