@@ -143,6 +143,7 @@ export function leaders(items: ElevationItem[], H: number, u: number): Leader[] 
 /** Room round the wall for the chains, the leaders and the heading, px. */
 export function margins(items: ElevationItem[], levels: number, opts: FrameOpts = {}): { left: number; right: number; top: number; bottom: number } {
   const decor = items.length > 0
+  const named = (opts.labels ?? []).length > 0
   // A frame's brace chain under it pushes the whole length one row down; a chain over a free-standing frame needs a row
   const under = items.some((i) => i.uprights)
   const over = opts.chainOver ? NEAR + NUMBERS : 0
@@ -150,14 +151,19 @@ export function margins(items: ElevationItem[], levels: number, opts: FrameOpts 
     // With a frame, decal or print measured, the wall heights and the module chain are left out
     left: decor ? 10 : TOTAL + NUMBERS + 4,
     right: decor ? NEAR + NUMBERS + 4 : 10,
-    top: HEAD + over + (decor ? NEAR + NUMBERS + levels * LEADER_LINE + 6 : 10),
+    top: HEAD + over + (decor ? NEAR + NUMBERS + 6 : named ? NEAR + 6 : 10) + (named ? levels * LEADER_LINE : 0),
     bottom: (decor && !under ? NEAR : TOTAL) + NUMBERS + 2,
   }
 }
 
-/** `chainOver`: a chain stands over the drawing (the braces of a free-standing frame). */
+/**
+ * `chainOver`: a chain stands over the drawing (the braces of a free-standing frame). `labels`: what gets a leader with
+ * its name. Not what the drawer is open for, whose title names it (Bjørn 8.11.2026), but the textile frames on a wall
+ * when the wall is chosen.
+ */
 export interface FrameOpts {
   chainOver?: boolean
+  labels?: ElevationItem[]
 }
 
 /**
@@ -171,10 +177,11 @@ export function frame(size: { w: number; h: number } | null, L: number, H: numbe
     return { m, k }
   }
   let { m, k } = fit(1)
-  const levels = Math.max(1, ...leaders(items, H, 1 / k).map((l) => l.level + 1))
-  ;({ m, k } = fit(items.length ? levels : 0))
+  const labels = opts.labels ?? []
+  const levels = Math.max(1, ...leaders(labels, H, 1 / k).map((l) => l.level + 1))
+  ;({ m, k } = fit(labels.length ? levels : 0))
   const u = 1 / k
-  const ls = leaders(items, H, u)
+  const ls = leaders(labels, H, u)
   // Centred in the svg like preserveAspectRatio meet would, with the margins kept
   const vbW = size ? size.w * u : L + (m.left + m.right) * u
   const vbH = size ? size.h * u : H + (m.top + m.bottom) * u
