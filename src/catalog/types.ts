@@ -76,6 +76,8 @@ export interface SystemParts {
   /** Fitting one motif stretched over several plates and cutting the print file per plate, per motif. */
   printSetup: string;
   floorProtection: string;
+  /** Shelf in a wall module, per piece (Byggeregel H1). */
+  shelf: string;
 }
 
 export interface Catalog {

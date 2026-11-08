@@ -82,7 +82,12 @@ export function replaceWalls(v: Variant, walls: Wall[]): Variant {
     const flipped = side !== (f.side ?? defaultSwing(v.stand, old.find((w) => w.id === f.wallId)!));
     return [{ ...f, wallId: hit.wallId, module: Math.round(hit.from), side, x: flipped ? -f.x : f.x }];
   });
-  return { ...v, walls, openings: dedupeOpenings(walls, openings), textiles, foils };
+  const shelves = v.shelves?.flatMap((f) => {
+    const at = locate(old, f.wallId, f.module, f.module + 1);
+    const hit = at && reanchor(walls, at);
+    return hit ? [{ ...f, wallId: hit.wallId, module: Math.round(hit.from), side: faceOn(f, hit) }] : [];
+  });
+  return { ...v, walls, openings: dedupeOpenings(walls, openings), textiles, foils, ...(shelves ? { shelves } : {}) };
 }
 
 const dot = (a: Point, b: Point) => a[0] * b[0] + a[1] * b[1];
@@ -280,6 +285,7 @@ export function moveWall(v: Variant, wallId: string, delta: number, along = 0): 
     openings: v.openings.filter((o) => keep(o.wallId)),
     textiles: v.textiles.filter((t) => keep(t.wallId)),
     foils: v.foils.filter((f) => keep(f.wallId)),
+    shelves: v.shelves?.filter((f) => keep(f.wallId)),
   };
   const rest = replaceWalls(
     {
@@ -287,6 +293,7 @@ export function moveWall(v: Variant, wallId: string, delta: number, along = 0): 
       openings: v.openings.filter((o) => !keep(o.wallId)),
       textiles: v.textiles.filter((t) => !keep(t.wallId)),
       foils: v.foils.filter((f) => !keep(f.wallId)),
+      ...(v.shelves ? { shelves: v.shelves.filter((f) => !keep(f.wallId)) } : {}),
     },
     [...others, moved],
   );
@@ -295,6 +302,7 @@ export function moveWall(v: Variant, wallId: string, delta: number, along = 0): 
     openings: [...rest.openings, ...carried.openings],
     textiles: [...rest.textiles, ...carried.textiles],
     foils: [...rest.foils, ...carried.foils],
+    ...(v.shelves ? { shelves: [...(rest.shelves ?? []), ...(carried.shelves ?? [])] } : {}),
   };
   // Plates coloured one by one move with the wall
   return prunePanels(movePanels(next, panelMoves(w, moved)));

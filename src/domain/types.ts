@@ -191,6 +191,20 @@ export interface Foil {
   crop?: [number, number, number, number];
 }
 
+/**
+ * A shelf (hylle 6311): one board in one wall module, on brackets in the posts' face channels (byggeregler H1–H6,
+ * domain/shelves.ts). Shelves side by side at the same height are a row and share the bracket between them.
+ */
+export interface Shelf {
+  id: string;
+  wallId: string;
+  module: number;
+  /** Wall face, as for textiles and foils. */
+  side?: 1 | -1;
+  /** Top of the board above the floor, metres. */
+  y: number;
+}
+
 /** Power, AV, plants: counted, not placed. */
 export interface CountedItem {
   product: string;
@@ -234,6 +248,8 @@ export interface Variant {
   noBeams?: boolean;
   /** Innvendige takdragere the customer draws, always the exhibitor's (calc/innerBeams.ts). Omitted = none. */
   innerBeams?: InnerBeam[];
+  /** Shelves on wall faces (domain/shelves.ts). Omitted = none. */
+  shelves?: Shelf[];
 }
 
 export interface ProjectField {

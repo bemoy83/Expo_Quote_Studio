@@ -120,6 +120,18 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 - Kalkyle: `calc/lines/doors.ts` (også `openingKey`, artikkelen en dør går på, som posisjonsnummerene bruker)
 - Plan, 3D, skuff: `plan/layers/WallLayer.tsx` (OpeningMark), pensel `plan/pointer/opening.ts` · `scene3d/build/walls.ts` · `WallDrawer.tsx` (`DoorPanel` i `plan/wallDrawer/panels.tsx`), `DoorMap.tsx`, `DoorSettings.tsx`
 
+### Hyller
+
+- Modell: `Shelf` (vegg, side, felt, høyde over gulv) · `domain/shelves.ts` (hvor en hylle kan stå `shelfBlocked`,
+  legge til `addShelf` og `addShelfRow`, en til over `addShelfAbove`, flytte `updateShelf`, `fitShelves` etter hver
+  redigering i `ui/edits.ts`, knektene `shelfBrackets`) · verdiene i `rules.shelf` og `RECIPES.shelf`, reglene H1–H7 i
+  [byggeregler.md](byggeregler.md). Hyllene følger veggen i `replaceWalls` og `moveWall` (`domain/edit.ts`) og rommet
+  i `domain/rooms.ts`
+- Kalkyle: `calc/lines/shelves.ts` (6311, fast pris per hylle, kost fra knektene, platene, monteringen og vareplukk én
+  gang per ordre, prisartiklene i `pricing/items.ts`) · plukklisten: `shelves` i `foga/structure.ts`, linjene i
+  `foga/engine.ts` (gruppen Hyller)
+- Plan, skuff, 3D og arbeidsordre: kommer i de neste trinnene
+
 ### Møbler og utstyr
 
 - Møbler: `PlacedObject` · `domain/objects.ts` · tellevarer: `setCounted` i `domain/edit.ts`

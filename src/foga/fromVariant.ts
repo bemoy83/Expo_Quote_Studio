@@ -4,6 +4,7 @@
 import { liftBeams } from '../calc/beamLift';
 import { variantBeams, type BeamLayout } from '../calc/beams';
 import { production, type Production } from '../calc/production';
+import { shelfBrackets } from '../domain/shelves';
 import type { Variant } from '../domain/types';
 import { builtModules, wallPoints, type BuiltModule } from '../domain/walls';
 import type { Rules } from '../rules/rules';
@@ -27,6 +28,8 @@ export interface Derived {
   barePosts?: number;
   /** Whether an opening's product is a curtain (catalog); without it every opening counts as a door. */
   curtain?: (product: string) => boolean;
+  /** Shelves and their brackets (domain/shelves.ts). */
+  shelves?: { boards: number; end: number; twin: number };
 }
 
 /** Takdrager lengths, post centre to post centre, mm. */
@@ -44,6 +47,7 @@ export function structureOf(d: Derived): FogaStructure {
     ...(d.swaps?.length ? { swaps: d.swaps } : {}),
     ...(d.wallFeet ? { wallFeet: d.wallFeet } : {}),
     ...(d.barePosts ? { barePosts: d.barePosts } : {}),
+    ...(d.shelves?.boards ? { shelves: d.shelves } : {}),
   };
 }
 
@@ -54,7 +58,7 @@ export function fromVariant(v: Variant, rules: Rules): FogaStructure {
   const { all: beams, hooks } = variantBeams(v, mods, points, rules.beam.max);
   const posts = new Set([...points.keys(), ...beams.posts.keys()]).size;
   const lift = liftBeams(v, rules, beams, points);
-  return structureOf({ mods, posts, beams, hooks, lift: { posts: lift.posts.length, hooks: lift.hooks.length }, production: production(v, rules, '') });
+  return structureOf({ mods, posts, beams, hooks, lift: { posts: lift.posts.length, hooks: lift.hooks.length }, production: production(v, rules, ''), shelves: shelfBrackets(v) });
 }
 
 /** Sizes from the rules, mm: post = system wall height without feet (2490), cc 1000. */

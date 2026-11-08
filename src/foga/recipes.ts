@@ -106,11 +106,26 @@ export interface DoorRecipe {
   lock: { code: string; height: number };
 }
 
+/**
+ * Shelf (hylle 6311), Byggeregler H1–H3 (docs/byggeregler.md): a board in one wall module on two brackets in the face
+ * channels of its posts. The bracket at the end of a row is `end` (one flange), between two boards at the same height
+ * `twin` (flanges both sides, carries both). Each bracket is cut `bracket` mm and fixed with `coupling` into the post.
+ * The board is not Foga (bought elsewhere), mm.
+ */
+export interface ShelfRecipe {
+  end: string;
+  twin: string;
+  bracket: number;
+  coupling: { code: string; perBracket: number };
+  board: { code: string; w: number; d: number; t: number };
+}
+
 export interface Recipes {
   wall: WallRecipe;
   textileFrame: TextileFrameRecipe;
   beam: BeamRecipe;
   door: DoorRecipe;
+  shelf: ShelfRecipe;
 }
 
 /** Same rule for a free-standing textile wall and a system wall that stands free (Bjørn 1.11.2026). */
@@ -148,4 +163,6 @@ export const RECIPES: Recipes = {
   },
   beam: { profile: '292', coupling: { code: '600', perEnd: 2 }, hook: 'KROK', lift: { profile: '94', length: 80, post: '609', hook: '600' } },
   door: { leaf: 2000, floorGap: 20, topGap: 10, curtainBottomRail: '92', frame: '292', hinge: { code: '403', fromEnd: 150 }, lock: { code: '410', height: 1000 } },
+  // Bjørn 8.11.2026: 91F at the ends, 91FF between, 290 mm, one 600 into the post; board 18 × 300 × 976 into the post's inner corner
+  shelf: { end: '91F', twin: '91FF', bracket: 290, coupling: { code: '600', perBracket: 1 }, board: { code: 'HYLLEPLATE', w: 976, d: 300, t: 18 } },
 };

@@ -7,7 +7,7 @@ i [foga-system.md](foga-system.md), veggbegrepene i [vegger.md](vegger.md), pris
 ## Slik brukes registeret
 
 - **Nummeret er regelens navn.** Bokstaven er området (V vegg, S støtte, T takdrager, D dør, R rom, X tekstil, G gulv,
-  P plukk, B hvem bygger). Et nummer brukes aldri om igjen: en regel som faller bort, blir stående som «utgått».
+  P plukk, B hvem bygger, H hylle). Et nummer brukes aldri om igjen: en regel som faller bort, blir stående som «utgått».
 - **Én kilde per regel.** Regelen står her. Koden viser til nummeret («Byggeregel T7») i stedet for å gjenta teksten,
   og foga-system.md forklarer bakgrunnen.
 - **Verdier er data.** Mål, avstander og antall står i `src/rules/rules.ts` (mål i meter) og `src/foga/recipes.ts`
@@ -241,6 +241,34 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   *Bjørn 1.11.2026 · kostgrunnlaget `parametere.carpet`, timekost fra `parametere.labour` (`pricing.carpet`) · kode `src/domain/floor/rollFill.ts` · test `src/domain/carpet.test.ts`*
 - **G5 Under rom og vegger.** Gulvet legges under rom og vegger.
   *Bjørn 1.11.2026 · kode `src/domain/floor/lanes.ts` · test `src/domain/floor.test.ts`*
+
+## H · Hylle
+
+- **H1 Hylle i veggfelt.** Rett hylle 6311, d 30 cm: én hylleplate melamin hvit 18 × 300 × 976 i ett veggfelt mellom to
+  stolper 94 (1000 c/c), på en side av veggen som kan ta dekor. Platen ligger inn i det innvendige hjørnet på stolpen og
+  kjøpes ikke hos Foga. Hyller tegnes med eget verktøy og flere kan stå over hverandre i samme felt.
+  *Bjørn 8.11.2026 · `RECIPES.shelf.board`, `rules.shelf.board` · kode `src/domain/shelves.ts`, `src/foga/recipes.ts` · test `src/domain/shelves.test.ts`*
+- **H2 Knekter i rad.** Hver hylle står på én knekt i hver av sine to stolper. Står to hyller i nabofelt på samme side og
+  i samme høyde, deler de én 91FF (dobbel flens) i stolpen mellom seg; alle andre knekter er 91F (én flens). En rad på
+  n hyller er n plater, 2 × 91F og (n − 1) × 91FF.
+  *Bjørn 8.11.2026 · `RECIPES.shelf.end`, `twin` · kode `src/domain/shelves.ts`, `src/foga/engine.ts`, `src/calc/lines/shelves.ts` · test `src/calc/shelves.test.ts`*
+- **H3 Knekt.** 91F (873 043 22) og 91FF (873 044 22) kappes 290 mm og festes med én 600 inn i stolpens kanal. Plukkes
+  som ferdig enhet, knekt med 600.
+  *Bjørn 8.11.2026 · `RECIPES.shelf.bracket`, `coupling` · kode `src/foga/engine.ts`, `src/foga/recipes.ts` · test `src/calc/shelves.test.ts`*
+- **H4 Høyde.** Hyllens høyde er overkant plate fra gulv, i trinn på 50 mm, fra 100 til 2000 mm, så naboen ikke ser varer
+  over veggen. En ny hylle får 1500 mm.
+  *Bjørn 8.11.2026 · `rules.shelf.min`, `max`, `step`, `start` · kode `src/domain/shelves.ts` · test `src/domain/shelves.test.ts`*
+- **H5 Lysmål.** Minst 100 mm lysmål mellom hyller over hverandre i samme felt, fra overkant nedre plate til underkant
+  øvre. Veggrisset viser lysmålet, så kunden ser om utstyret får plass.
+  *Bjørn 8.11.2026 · `rules.shelf.gap` · kode `src/domain/shelves.ts` · test `src/domain/shelves.test.ts`*
+- **H6 Hvor hyller kan stå.** Ikke i dørfelt eller åpning, ikke der en tekstilvegg dekker feltet eller holder stolpen,
+  ikke på frittstående tekstil (43TX er ikke 94). Begge stolpene må ha ledig kanal mot hyllens side: ikke der en annen
+  vegg går ut fra stolpen mot den siden (hjørne og T). Foran print og dekal er lov. Hylle i hjørne kommer senere.
+  *Bjørn 8.11.2026 · kode `src/domain/shelves.ts` · test `src/domain/shelves.test.ts`*
+- **H7 Pris per hylle.** Samme pris per hylle alene og i rad, som systemvegg (fast katalogpris; kostmotoren gir kost og
+  tid). Montering 3 min per hylle, vareplukk 10 min én gang per ordre med hyller. Stolpene er en del av veggen: bare
+  plukklisten bryter ut knekter, 600 og plater.
+  *Bjørn 8.11.2026 · `EXAMPLE_TIMES` (`montering-hylle`, `vareplukk-hyller`) · kode `src/calc/lines/shelves.ts` · test `src/calc/shelves.test.ts`*
 
 ## P · Plukkliste og arbeidsordre
 

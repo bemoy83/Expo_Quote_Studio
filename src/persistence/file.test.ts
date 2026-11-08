@@ -26,6 +26,17 @@ describe('sketch file', () => {
     const res = parse(JSON.stringify(f));
     expect(res.ok && res.sketch.variants.map((v) => v.freeTextiles)).toEqual([[], []]);
   });
+  it('«Hylle 1 m» (6180) from before the drawn shelf is kept as a loose line at its price', () => {
+    const f = JSON.parse(serialize(sketch()));
+    f.varianter[0].counted = [{ product: '6180-1', qty: 2 }, { product: '5280', qty: 1 }, { product: '6180-2', qty: 1 }];
+    const res = parse(JSON.stringify(f));
+    const v = res.ok ? res.sketch.variants[0] : null;
+    expect(v?.counted).toEqual([{ product: '5280', qty: 1 }]);
+    expect(v?.loose).toEqual([
+      { id: 'l1', name: 'Hylle 1 m, rett', qty: 2, price: 290 },
+      { id: 'l2', name: 'Hylle 1 m, skrå', qty: 1, price: 290 },
+    ]);
+  });
   it('refuses a newer version with an explanation', () => {
     const f = JSON.parse(serialize(sketch()));
     const res = parse(JSON.stringify({ ...f, versjon: VERSION + 1 }));

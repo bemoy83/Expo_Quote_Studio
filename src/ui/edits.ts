@@ -3,6 +3,7 @@
 // before the click, so the two never differ.
 import { fitDecor } from '../domain/decor'
 import { newlyClosedRooms, wallsToRoom } from '../domain/enclosures'
+import { fitShelves } from '../domain/shelves'
 import { fitFreeTextiles } from '../domain/textile/free'
 import type { Point, Variant } from '../domain/types'
 import type { Motif } from '../persistence/file'
@@ -12,8 +13,8 @@ import { findMotif } from './motifs'
 /** A decal's width over height, by motif; 0 for an unknown motif. */
 export const ratioFor = (motifs: Motif[] | undefined) => (id: string | undefined) => findMotif(motifs, id)?.ratio ?? 0
 
-/** The change with decor and free-standing textile fitted to it. */
-export const settle = (x: Variant, ratio: (id: string | undefined) => number) => fitFreeTextiles(fitDecor(x, rules, ratio), rules)
+/** The change with decor, free-standing textile and shelves fitted to it. */
+export const settle = (x: Variant, ratio: (id: string | undefined) => number) => fitShelves(fitFreeTextiles(fitDecor(x, rules, ratio), rules), rules)
 
 /** Areas the walls of `after` close that `before` did not, made into rooms (null when there are none). */
 export function closeRooms(before: Variant, after: Variant, ratio: (id: string | undefined) => number): { v: Variant; areas: Point[][] } | null {
@@ -21,9 +22,9 @@ export function closeRooms(before: Variant, after: Variant, ratio: (id: string |
   return areas.length ? { v: roomsFrom(after, areas, ratio), areas } : null
 }
 
-/** The areas made into rooms on x, decor fitted again. */
+/** The areas made into rooms on x, decor and shelves fitted again. */
 export const roomsFrom = (x: Variant, areas: Point[][], ratio: (id: string | undefined) => number) =>
-  fitDecor(areas.reduce((y, o) => wallsToRoom(y, o) ?? y, x), rules, ratio)
+  fitShelves(fitDecor(areas.reduce((y, o) => wallsToRoom(y, o) ?? y, x), rules, ratio), rules)
 
 /** What onEdit with history stores for `fn` on v. */
 export function editResult(v: Variant, fn: (v: Variant) => Variant, motifs: Motif[] | undefined): Variant {

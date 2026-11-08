@@ -41,6 +41,14 @@ export const ITEM = {
   frameCoupling: 'montering-ramme-kobling',
   /** Textile pressed into the frame along its whole perimeter, up and down. */
   textileEdge: 'montering-tekstil-omkrets',
+  /** Shelf brackets with their 600, at a row's end (91F) and between two boards (91FF), and the board (Byggeregler H2, H3). */
+  shelfEnd: 'hylleknekt-91F',
+  shelfTwin: 'hylleknekt-91FF',
+  shelfBoard: 'hylleplate',
+  /** Putting up one shelf (Bjørn 8.11.2026: 3 min). */
+  shelfMount: 'montering-hylle',
+  /** Picking shelves for an order, once whatever the number (Bjørn 8.11.2026: 10 min per product type). */
+  shelfPick: 'vareplukk-hyller',
 } as const;
 
 /** A price item without its numbers: the kostgrunnlag gives its time, and the cost engine its cost and price. */
@@ -89,6 +97,12 @@ export const ITEM_DEFS: readonly ItemDef[] = [
   def(ITEM.frame, 'Håndtering av løse rammedeler per ramme', 'stk'),
   def(ITEM.frameCoupling, 'Montering ramme per kobling', 'stk'),
   def(ITEM.textileEdge, 'Montering tekstil per meter omkrets', 'm'),
+  // Shelves: brackets and board picked, the work per shelf and the picking once per order
+  def(ITEM.shelfEnd, 'Hylleknekt 91F, 290 mm, med 600', 'stk'),
+  def(ITEM.shelfTwin, 'Hylleknekt 91FF, 290 mm, med 600', 'stk'),
+  def(ITEM.shelfBoard, 'Hylleplate melamin hvit 18 × 300 × 976 mm', 'stk'),
+  def(ITEM.shelfMount, 'Montering per hylle', 'stk'),
+  def(ITEM.shelfPick, 'Vareplukk hyller, per ordre', 'stk'),
 ];
 
 /** Minutes per handling step. Picking, washing and transport of one article; on site up (montering) and down (demontering). */
@@ -125,6 +139,9 @@ export const EXAMPLE_TIMES: Readonly<Record<string, Time>> = {
   [ITEM.frame]: pvt(3, 2, 2),
   [ITEM.frameCoupling]: onSite(2, 1),
   [ITEM.textileEdge]: onSite(4, 2),
+  // Bjørn 8.11.2026: 3 min direct montering per shelf, picking 10 min for the product type; demontering is an example
+  [ITEM.shelfMount]: onSite(3, 1.5),
+  [ITEM.shelfPick]: { plukk: 10 },
 };
 
 const POST_M = RULES.wall.height;
@@ -168,6 +185,11 @@ export const EXAMPLE_RECIPES: Readonly<Record<string, ItemRecipe>> = {
   [ITEM.plateSwap]: work,
   [ITEM.beamLm]: work,
   [ITEM.beamPost]: work,
+  [ITEM.shelfEnd]: { parts: [['91F', 0.29], ['600', 1]], dg: 'utleie' },
+  [ITEM.shelfTwin]: { parts: [['91FF', 0.29], ['600', 1]], dg: 'utleie' },
+  [ITEM.shelfBoard]: { own: [['HYLLEPLATE-976x300', 1, 'plate']], dg: 'utleie' },
+  [ITEM.shelfMount]: work,
+  [ITEM.shelfPick]: work,
 };
 
 /** Catalog products without a recipe here (furniture, floor, foil, services): what they cost and take, per subgroup
