@@ -4,13 +4,15 @@
 import * as THREE from 'three'
 import { alongRun } from '../../../calc/textile/free'
 import { cornerEnds, runDirection } from '../../../domain/textile/free'
-import type { Point } from '../../../domain/types'
+import type { Point, TextileFill } from '../../../domain/types'
 import { pointAlong, wallLength } from '../../../domain/grid'
 import { rules } from '../../env'
 import { findMotif } from '../../motifs'
 import { sideOf } from '../../../domain/faces'
 import { textileBox, textileOffset } from '../../../domain/textile/inFrame'
 import { printMaterial } from './motifs'
+import { noteMaterial } from './note'
+import { textileNote } from '../../textileNote'
 import { ALU, ALU_FINISH, selectGlow, type BuildContext, type Tag } from './context'
 import { CAP_92LTX, CAP_THICKNESS, CORNER_92LTX, OUTLINES, mitredProfile, shared, unitProfile } from './profiles'
 
@@ -34,9 +36,10 @@ export function buildTextile(c: BuildContext) {
     const h = Math.min(height, H - bottom)
     const glow = selectGlow(sel.textileId === t.id)
     const alu = mat('textile', ALU, { ...ALU_FINISH, ...glow })
-    const m = t.fill === 'white' || t.fill === 'reuse' ? undefined : findMotif(opts.motifs, t.motif)
-    const print = m ? printMaterial(m, (to - from) / h, opts.onLoad, glow) : t.fill === 'white' ? white(glow) : placeholder(glow)
+    const fill = t.fill ?? 'print'
+    const m = fill === 'print' ? findMotif(opts.motifs, t.motif) : undefined
     const fw = to - from - 0.02
+    const print = m ? printMaterial(m, (to - from) / h, opts.onLoad, glow) : fill === 'white' ? white(glow) : bare(fill, fw, h, glow)
     const g = frame(pointAlong(w, from), pointAlong(w, to), off)
     const tag: Tag = { layer: 'textile', pick: { wallId: w.id, textileId: t.id } }
     profiles(g, fw, h, bottom, { from: true, to: true }, -fw / 2, fw / 2, alu, tag)
@@ -58,7 +61,7 @@ export function buildTextile(c: BuildContext) {
     const face = (x: (typeof f.faces)[number]) => {
       const m = x.fill === 'print' ? findMotif(opts.motifs, x.motif ?? undefined) : undefined
       if (m) return printMaterial(m, L / h, opts.onLoad, glow)
-      return x.fill === 'white' ? white(glow) : placeholder(glow)
+      return x.fill === 'white' ? white(glow) : bare(x.fill, x.W / 1000, h, glow)
     }
     const foot = rules.wall.feet / 10
     const tag: Tag = { layer: 'textile', pick: { freeTextileId: t.id } }
@@ -82,10 +85,12 @@ export function buildTextile(c: BuildContext) {
   function white(glow: THREE.MeshStandardMaterialParameters) {
     return mat('textile', '#ffffff', { roughness: 1, ...glow })
   }
-  /** A print not chosen yet, or the customer's own textile: the frame stands naked (Bjørn 6.11.2026; a see-through
-   *  sheet looks like clear plexi, which the system can hold too). The face is still there to click, just not drawn. */
-  function placeholder(glow: THREE.MeshStandardMaterialParameters) {
-    return mat('textile', '#ffffff', { visible: false, ...glow })
+  /** A print not chosen yet, or the customer's own textile: the frame stands bare (Bjørn 6.11.2026; a tinted sheet
+   *  looks like clear plexi, which the system can hold too), with only the note on a see-through face `w` × `h` m
+   *  (Bjørn 8.11.2026: no solid fill, it must not look like a motif is chosen). The face is there to click. */
+  function bare(fill: TextileFill, w: number, h: number, glow: THREE.MeshStandardMaterialParameters) {
+    const note = textileNote(fill, false)
+    return note ? noteMaterial(note, w, h, glow) : mat('textile', '#ffffff', { visible: false, ...glow })
   }
 
   /** A group along a → b, centred on it, `off` along the left normal: local x along the run, +z toward face A. */
@@ -131,8 +136,8 @@ export function buildTextile(c: BuildContext) {
     mesh.position.set(x + w / 2, y0 + h / 2, side * (depth / 2 + 0.0005))
     if (side === -1) mesh.rotation.y = Math.PI
     add(mesh, tag, g)
-    // A naked face casts no shadow
-    if (!m.visible) mesh.castShadow = false
+    // A bare face casts no shadow
+    if (!m.visible || m.transparent) mesh.castShadow = false
   }
 }
 

@@ -96,7 +96,10 @@ export function WallDrawer(p: Props) {
     select({ textileId: r.id })
   }
 
-  const piece = T ? production(v, rules, '').pieces.find((x) => x.textileId === T.id) : undefined
+  // The frames on walls as built: size, braces, rail splices and the move in an inner corner, for the text and the drawing
+  const pieces = production(v, rules, '').pieces
+  const pieceOf = (id: string) => pieces.find((x) => x.textileId === id)
+  const piece = T ? pieceOf(T.id) : undefined
   const openings = v.openings.filter((o) => o.wallId === w.id)
   const doors = openings.filter((o) => productOf(o.product)?.opening === 'door')
   const ral = wallRal(v, w)
@@ -223,6 +226,7 @@ export function WallDrawer(p: Props) {
         H={H}
         mods={mods}
         tex={tex}
+        pieceOf={pieceOf}
         foils={foils}
         rooms={rooms}
         T={T}

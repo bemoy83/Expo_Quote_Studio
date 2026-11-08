@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { createVariant } from '../../../domain/variant'
 import { isStandWall } from '../../../domain/walls'
 import { RULES } from '../../../rules/rules'
-import { elevationItems, leaders, lysmal, row } from './elevationMeasure'
+import { framePiece } from '../../../calc/textile/inFrame'
+import { textileNote } from '../../textileNote'
+import { elevationItems, leaders, lysmal, row, textileLabel } from './elevationMeasure'
 import { elevationHeading } from './face'
 
 describe('wall drawing dimensions', () => {
@@ -39,5 +41,22 @@ describe('wall drawing dimensions', () => {
     const [t] = elevationItems(RULES, [{ id: 't1', wallId: 'w', side: 1, from: 1, width: 4 }], [], new Set(), (x) => x)
     expect(t.x0).toBeCloseTo(1.015)
     expect(t.x1 - t.x0).toBeCloseTo(3.97)
+  })
+
+  it('a spliced frame is drawn as built: braces, the splice, moved in a corner (X10), and named in the leader', () => {
+    const p = { ...framePiece(6000, RULES.textile.inFrame), shift: 40 }
+    const [t] = elevationItems(RULES, [{ id: 't1', wallId: 'w', side: 1, from: 1, width: 6 }], [], new Set(), (x) => x, () => p)
+    const r = (n: number) => Math.round(n * 1000)
+    expect(r(t.x0)).toBe(1055)
+    // Between the uprights: none more than 2 000 apart, 150 each side of the splice
+    expect(t.uprights!.map((x) => r(x - t.x0))).toEqual([0, 1418, 2835, 3135, 4553, 5970])
+    expect(textileLabel(p)).toBe('Tekstil 5\u00a0970 × 2\u00a0540')
+  })
+
+  it('the note on a textile: a print without motif, the customer\'s own, never on white or a chosen motif', () => {
+    expect(textileNote('print', false)?.text).toBe('Husk valg av motiv')
+    expect(textileNote('reuse', false)?.text).toBe('Kundens egen duk')
+    expect(textileNote('white', false)).toBeNull()
+    expect(textileNote('print', true)).toBeNull()
   })
 })

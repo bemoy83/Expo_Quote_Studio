@@ -1,7 +1,8 @@
 // What the wall drawing measures (docs/arbeidstegning.md, «Veggrisset»), pure: the placement row over the wall, the
-// height row to the right, the leader texts over it, and the room each of them takes round the wall, in screen px.
+// height row to the right, the brace chain under it, the leader texts over it, and the room each of them takes round the wall, in screen px.
 // The drawing is in metres with y down: the wall top is y = 0, the floor y = H.
-import { chainPoints, DIM_NEAR as NEAR, DIM_TOTAL as TOTAL } from '../dims'
+import { chainPoints, DIM_NEAR as NEAR, DIM_TOTAL as TOTAL, mm } from '../dims'
+import type { ProductionPiece } from '../../../calc/production'
 import { frameInset } from '../../../calc/textile/inFrame'
 import { foilCenter } from '../../../domain/decor'
 import { textileBox } from '../../../domain/textile/inFrame'
@@ -16,6 +17,10 @@ export interface ElevationItem {
   x1: number
   bottom: number
   top: number
+  /** A textile frame: x of its uprights left to right (the frame sides and the braces between), for the brace chain. */
+  uprights?: number[]
+  /** The leader text, when it says more than the product type. */
+  label?: string
 }
 
 /**
@@ -47,20 +52,49 @@ const HEAD = 22
 /** The leader text of each kind: the product type. */
 const LABEL: Record<ElevationItem['kind'], string> = { textile: 'Tekstil', decal: 'Dekal', print: 'Print' }
 
+/** What the drawing takes from production for a frame on a wall: its size, rails, braces, print and its move in an inner
+ *  corner (byggeregel X10). */
+export type FrameFacts = Pick<ProductionPiece, 'W' | 'H' | 'railCuts' | 'braceAt' | 'shift'>
+
+/** A frame on a wall as built, x in the drawing: the physical frame (970 in a 1 000 span, moved where X10 moves it), the
+ *  braces and the rail splices. Without production facts, the frame as the span gives it, with no braces. */
+export function textileDrawing(rules: Rules, t: TextileWall, p: FrameFacts | undefined, x: (t: number) => number): { x0: number; x1: number; braces: number[]; splices: number[] } {
+  const inset = frameInset(rules.textile.inFrame) / 1000
+  const a = t.from + inset + (p?.shift ?? 0) / 1000
+  const W = p ? p.W / 1000 : t.width - 2 * inset
+  const at = (d: number) => x(a + d / 1000)
+  const cuts = p?.railCuts ?? []
+  return {
+    x0: Math.min(x(a), x(a + W)),
+    x1: Math.max(x(a), x(a + W)),
+    braces: (p?.braceAt ?? []).map(at),
+    splices: cuts.slice(0, -1).map((_, j) => at(cuts.slice(0, j + 1).reduce((s, c) => s + c, 0))),
+  }
+}
+
+/** «Tekstil 5 970 × 2 540»: the frame as built. The print file, braces and splice are in the drawer's text (text.ts). */
+export const textileLabel = (p: Pick<FrameFacts, 'W' | 'H'>): string => `Tekstil ${mm(p.W / 1000)} × ${mm(p.H / 1000)}`
+
 /**
- * Textile frames (their physical width) and print on the face, for the placement and height rows and the leaders. `x` turns an along-wall offset
- * into x in the drawing (the face is seen from in front, so it may run backwards). A full-plate print on a door module
- * is part of the door and not measured.
+ * Textile frames (as built, textileDrawing) and print on the face, for the placement and height rows, the brace chain
+ * and the leaders. `x` turns an along-wall offset into x in the drawing (the face is seen from in front, so it may run
+ * backwards). A full-plate print on a door module is part of the door and not measured.
  */
-export function elevationItems(rules: Rules, tex: TextileWall[], foils: Foil[], doorModules: Set<number>, x: (t: number) => number): ElevationItem[] {
+export function elevationItems(rules: Rules, tex: TextileWall[], foils: Foil[], doorModules: Set<number>, x: (t: number) => number, facts: (id: string) => FrameFacts | undefined = () => undefined): ElevationItem[] {
   const spanX = (a: number, b: number) => Math.min(x(a), x(b))
   return mergePrints([
     ...tex.map((t): ElevationItem => {
       const { bottom, height } = textileBox(t, rules)
-      // The physical frame, as on the plan and in calc and production (970 in a 1 000 span), not the span it fills
-      const inset = frameInset(rules.textile.inFrame) / 1000
-      const x0 = spanX(t.from + inset, t.from + t.width - inset)
-      return { kind: 'textile', x0, x1: x0 + t.width - 2 * inset, bottom, top: bottom + height }
+      const p = facts(t.id)
+      const d = textileDrawing(rules, t, p, x)
+      return {
+        kind: 'textile',
+        x0: d.x0,
+        x1: d.x1,
+        bottom,
+        top: bottom + height,
+        ...(p ? { uprights: [d.x0, ...d.braces, d.x1].sort((a, b) => a - b), label: textileLabel(p) } : {}),
+      }
     }),
     ...foils
       .filter((f) => !(f.full && doorModules.has(f.module)))
@@ -97,7 +131,7 @@ export function leaders(items: ElevationItem[], H: number, u: number): Leader[] 
     .map((it) => {
       const x = (it.x0 + it.x1) / 2
       // Text from just right of the line, about 0,6 em a letter
-      const text = LABEL[it.kind]
+      const text = it.label ?? LABEL[it.kind]
       const width = (textPx(text, LEADER_FONT) + 8) * u
       let level = 0
       while (ends[level] !== undefined && ends[level] > x) level++
@@ -107,24 +141,32 @@ export function leaders(items: ElevationItem[], H: number, u: number): Leader[] 
 }
 
 /** Room round the wall for the chains, the leaders and the heading, px. */
-export function margins(items: ElevationItem[], levels: number): { left: number; right: number; top: number; bottom: number } {
+export function margins(items: ElevationItem[], levels: number, opts: FrameOpts = {}): { left: number; right: number; top: number; bottom: number } {
   const decor = items.length > 0
+  // A frame's brace chain under it pushes the whole length one row down; a chain over a free-standing frame needs a row
+  const under = items.some((i) => i.uprights)
+  const over = opts.chainOver ? NEAR + NUMBERS : 0
   return {
     // With a frame, decal or print measured, the wall heights and the module chain are left out
     left: decor ? 10 : TOTAL + NUMBERS + 4,
     right: decor ? NEAR + NUMBERS + 4 : 10,
-    top: HEAD + (decor ? NEAR + NUMBERS + levels * LEADER_LINE + 6 : 10),
-    bottom: (decor ? NEAR : TOTAL) + NUMBERS + 2,
+    top: HEAD + over + (decor ? NEAR + NUMBERS + levels * LEADER_LINE + 6 : 10),
+    bottom: (decor && !under ? NEAR : TOTAL) + NUMBERS + 2,
   }
+}
+
+/** `chainOver`: a chain stands over the drawing (the braces of a free-standing frame). */
+export interface FrameOpts {
+  chainOver?: boolean
 }
 
 /**
  * The drawing's view box and scale for an svg of `size` px: the wall L × H m with the margins round it. The leader
  * lines decide the top margin and depend on the scale, so it is worked out twice.
  */
-export function frame(size: { w: number; h: number } | null, L: number, H: number, items: ElevationItem[]) {
+export function frame(size: { w: number; h: number } | null, L: number, H: number, items: ElevationItem[], opts: FrameOpts = {}) {
   const fit = (levels: number) => {
-    const m = margins(items, levels)
+    const m = margins(items, levels, opts)
     const k = size ? Math.max(20, Math.min((size.w - m.left - m.right) / L, (size.h - m.top - m.bottom) / H)) : 60
     return { m, k }
   }
@@ -138,5 +180,5 @@ export function frame(size: { w: number; h: number } | null, L: number, H: numbe
   const vbH = size ? size.h * u : H + (m.top + m.bottom) * u
   const x0 = -m.left * u - (vbW - L - (m.left + m.right) * u) / 2
   const y0 = -m.top * u - (vbH - H - (m.top + m.bottom) * u) / 2
-  return { viewBox: `${x0} ${y0} ${vbW} ${vbH}`, u, leaders: ls, top: y0, width: vbW }
+  return { viewBox: `${x0} ${y0} ${vbW} ${vbH}`, u, leaders: ls, top: y0, width: vbW, right: x0 + vbW }
 }
