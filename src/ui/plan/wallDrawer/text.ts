@@ -4,6 +4,7 @@ import { wallModules } from '../../../domain/grid'
 import { roomName, roomSize } from '../../../domain/rooms'
 import type { Foil, Opening, TextileWall, Variant, Wall } from '../../../domain/types'
 import { isStandWall } from '../../../domain/walls'
+import { RECIPES } from '../../../foga/recipes'
 import { count, fmt, mm } from '../../format'
 import type { RoomRun } from './face'
 import type { PaintTool } from './paint'
@@ -25,7 +26,19 @@ export function wallMeta(
   x: { L: number; T?: TextileWall; F?: Foil; piece?: ProductionPiece; openings: Opening[]; odd: number; tex: TextileWall[]; rooms: RoomRun[] },
 ): string {
   const { L, T, F, piece, openings, odd, tex, rooms } = x
-  if (T && piece) return `ramme ${mm(piece.W / 1000)} × ${mm(piece.H / 1000)} mm · ${fmt(piece.area)} m² ${piece.fill === 'reuse' ? 'kundens duk' : piece.fill === 'white' ? 'hvit duk' : 'trykk'}`
+  if (T && piece) {
+    // The frame as built (Bjørn 8.11.2026): its size, the print file, the braces and the rail splice
+    const k = (n: number) => mm(n / 1000)
+    return [
+      `ramme ${k(piece.W)} × ${k(piece.H)} mm`,
+      piece.fill === 'print' ? `fil ${k(piece.pw)} × ${k(piece.ph)}` : '',
+      `${fmt(piece.area)} m² ${piece.fill === 'reuse' ? 'kundens duk' : piece.fill === 'white' ? 'hvit duk' : 'trykk'}`,
+      piece.braceAt.length ? count(piece.braceAt.length, 'stag', 'stag') : '',
+      piece.railCuts.length > 1 ? `skjøt ${RECIPES.textileFrame.splice.thread}` : '',
+    ]
+      .filter(Boolean)
+      .join(' · ')
+  }
   if (F) return `Felt ${F.module + 1} · ${mm(F.width)} × ${mm(F.height)} mm${F.run ? ` · del av print over ${v.foils.filter((y) => y.run === F.run).length} plater` : ''}`
   return [
     `${L} m`,

@@ -46,7 +46,7 @@ kostgrunnlaget). Regel og kilde føres i `docs/byggeregler.md`.
   som betaler: `calc/context.ts` · `foga/fromVariant.ts`
 - Plan, 3D, skuff: `plan/layers/WallLayer.tsx`, tegne/viske `plan/pointer/stroke.ts`, dra `pointer/wall.ts`, farge plater på vegg som står med veggpennen `pointer/plates.ts` (klikk én plate, dra langs veggen flere; forhåndsvisning via `plan/next.ts`; tester i `plates.test.ts`) · `scene3d/build/walls.ts` (plater og dører), `scene3d/build/frame.ts` (stolper, justeringsfot, fotplater med 795) · `WallDrawer.tsx`, `drawerParts.tsx`, `elevation.tsx`
 - Veggskuffens deler i `plan/wallDrawer/`: `panels.tsx` (panel for farge og print, tekstil, dekal og dør),
-  `WallElevation.tsx` (tegningen og slipp fra hyllen), `ElevationDims.tsx` og `elevationMeasure.ts` (veggrisset: tekstil og print på siden, overskrift, modulkjede, høyder, plasseringsrad og henvisningslinjer, med tester; kjedene med `plan/DimChain.tsx`), `drag.ts` (dra og endre størrelse på ramme og dekal), `paint.ts`
+  `WallElevation.tsx` (tegningen og slipp fra hyllen), `ElevationDims.tsx` og `elevationMeasure.ts` (veggrisset: tekstil og print på siden, overskrift, modulkjede, høyder, plasseringsrad, stagkjede og henvisningslinjer, tekstilrammen slik den bygges i `textileDrawing`, med tester; kjedene med `plan/DimChain.tsx`; selve rammen med stag, skjøt og notat før motiv: `TextileFace` i `plan/elevation.tsx`, teksten i `ui/textileNote.ts`, i 3D `scene3d/build/note.ts`), `drag.ts` (dra og endre størrelse på ramme og dekal), `paint.ts`
   (malerspann og malerkost), `face.ts` (sidens navn og rom inntil)
 
 ### Takdragere

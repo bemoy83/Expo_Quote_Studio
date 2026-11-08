@@ -7,7 +7,7 @@ import type { FreeFrame } from '../../calc/textile/free'
 import { removeFreeTextile, resizeFreeTextile, updateFace, type FaceKey } from '../../domain/textile/free'
 import type { Variant } from '../../domain/types'
 import type { Motif } from '../../persistence/file'
-import { ALU, ALU_POST, BORDER_STRONG, FEET, INK, LAYER_COLOR } from '../colors'
+import { ALU_POST, BORDER_STRONG, FEET, LAYER_COLOR } from '../colors'
 import { Dim, IconButton } from '../controls'
 import { rules } from '../env'
 import { count, fmt } from '../format'
@@ -57,15 +57,15 @@ export function FreeTextileDrawer(p: Props) {
   const H = f.H / 1000
   // Seen from face A, from → to runs left to right; from face B it is mirrored
   const x = (atMm: number) => (face === 'a' ? (atMm - F.start) / 1000 : W - (atMm - F.start) / 1000)
-  const fr = 0.04
   // Splices along the rails, from the frame start (the corner post's face when `from` is a corner)
   const splices = f.railCuts.slice(0, -1).reduce<number[]>((a, c) => [...a, (a[a.length - 1] ?? f.railStart) + c], [])
   const cornerAt = [f.corners.from ? x(0) : null, f.corners.to ? x(f.length) : null].filter((c): c is number => c !== null)
   const PAD = 0.18
-  const view = frame(size, W, H, [])
+  const view = frame(size, W, H, [], { chainOver: true })
   const sc = planScale(1 / view.u, {})
   // Where the feet stand along the face, for the chain under it
   const feet = f.supports.map(x).filter((t) => t > 1e-6 && t < W - 1e-6)
+  const braces = f.braces.map(x)
   const fillName = F.fill === 'reuse' ? 'kundens duk' : F.fill === 'white' ? 'hvit duk' : 'trykk'
 
   return (
@@ -109,17 +109,8 @@ export function FreeTextileDrawer(p: Props) {
       <div className="wd-view">
         <div ref={box} className="wd-fit">
           <svg className="wd-svg" viewBox={view.viewBox} preserveAspectRatio="xMidYMid meet" role="img" aria-label={`${f.pos} side ${face.toUpperCase()}, ${fmt(W, 2)} m`}>
-            <TextileFace x={0} y={0} w={W} h={H} m={m} fill={F.fill} empty={F.fill === 'print' ? 'Trykk uten motiv' : F.fill === 'white' ? 'Hvit, uten grafikk' : 'Kundens duk'} />
-            {/* Braces behind the textile, by the splices and at most 2 m apart (not at the feet) */}
-            {f.braces.map((at, i) => (
-              <line key={`b${i}`} x1={x(at)} y1={fr} x2={x(at)} y2={H - fr} stroke={ALU} strokeOpacity={0.35} strokeWidth={0.02} strokeDasharray=".05 .04" />
-            ))}
-            {splices.map((at, i) => (
-              <g key={`s${i}`}>
-                <line x1={x(at)} y1={0} x2={x(at)} y2={fr} stroke={INK} strokeWidth={0.012} />
-                <line x1={x(at)} y1={H - fr} x2={x(at)} y2={H} stroke={INK} strokeWidth={0.012} />
-              </g>
-            ))}
+            {/* Braces behind the textile, by the splices and at most 2 m apart (not at the feet), and the rail splices */}
+            <TextileFace x={0} y={0} w={W} h={H} m={m} fill={F.fill} u={view.u} braces={braces} splices={splices.map(x)} />
             {cornerAt.map((cx, i) => (
               <rect key={`c${i}`} x={Math.min(Math.max(cx - 0.03, 0), W - 0.06)} y={0} width={0.06} height={H} fill={ALU_POST} />
             ))}
@@ -129,7 +120,7 @@ export function FreeTextileDrawer(p: Props) {
             ))}
             <line x1={-PAD} y1={H + 0.03} x2={W + PAD} y2={H + 0.03} stroke={BORDER_STRONG} strokeWidth={0.01} />
 
-            <FreeElevationDims title={`${f.pos} · side ${face.toUpperCase()}`} W={W} H={H} feet={feet} top={view.top} sc={sc} />
+            <FreeElevationDims title={`${f.pos} · side ${face.toUpperCase()}`} W={W} H={H} feet={feet} braces={braces} top={view.top} sc={sc} />
           </svg>
         </div>
       </div>

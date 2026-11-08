@@ -25,7 +25,7 @@ import { roomLabelSize } from '../roomLabelSize'
 import { useDecorDrag } from './drag'
 import { faceName, type RoomRun } from './face'
 import { ElevationDims } from './ElevationDims'
-import { elevationItems, frame } from './elevationMeasure'
+import { elevationItems, frame, textileDrawing, type FrameFacts } from './elevationMeasure'
 import { planScale } from '../planScale'
 import { useElementSize } from '../../useElementSize'
 import type { PaintTool } from './paint'
@@ -42,6 +42,8 @@ interface Props {
   H: number
   mods: (BuiltModule | undefined)[]
   tex: TextileWall[]
+  /** A frame's production facts (size, braces, splices, X10 move), by textile id. */
+  pieceOf: (id: string) => FrameFacts | undefined
   foils: Foil[]
   rooms: RoomRun[]
   T: TextileWall | undefined
@@ -67,7 +69,7 @@ interface Props {
 }
 
 export function WallElevation(p: Props) {
-  const { v, w, s, L, H, mods, tex, foils, rooms, T, F, O, motifs, label, painting, printing, tool, paintAt, doorModules, ratioOf, select, selectDoor } = p
+  const { v, w, s, L, H, mods, tex, pieceOf, foils, rooms, T, F, O, motifs, label, painting, printing, tool, paintAt, doorModules, ratioOf, select, selectDoor } = p
   const svg = useRef<SVGSVGElement>(null)
   const [spot, setSpot] = useState<DropSpot | null>(null)
   /** True from a press on a plate until it is let go: the brush sweeps over the plates entered meanwhile. */
@@ -85,7 +87,7 @@ export function WallElevation(p: Props) {
   // Measured is what the drawer is open for (Bjørn 6.11.2026): a selected textile frame, or a selected decal or print
   // (a print over several plates as one), with its own dimensions; with the wall itself chosen, the wall's
   const items = T
-    ? elevationItems(rules, [T], [], doorModules, u)
+    ? elevationItems(rules, [T], [], doorModules, u, pieceOf)
     : F
       ? elevationItems(rules, [], F.run ? foils.filter((x) => x.run === F.run) : [F], doorModules, u)
       : []
@@ -288,18 +290,21 @@ export function WallElevation(p: Props) {
             </g>
           ))}
 
-          {/* Textile frames */}
+          {/* Textile frames, as built: the physical frame with its braces and rail splices, where it stands (X10) */}
           {tex.map((t) => {
             const { bottom, height } = textileBox(t, rules)
-            const x = spanX(t.from, t.from + t.width)
+            const d = textileDrawing(rules, t, pieceOf(t.id), u)
+            const x = d.x0
+            const tw = d.x1 - d.x0
             const y = z(bottom + height)
-            const m = findMotif(motifs, t.motif)
+            const fill = t.fill ?? 'print'
+            const m = fill === 'print' ? findMotif(motifs, t.motif) : undefined
             const on = T?.id === t.id
             return (
               <g key={t.id} onPointerDown={(e) => drag(e, 'tmove', t)} style={{ cursor: 'move' }} pointerEvents={painting ? 'none' : undefined}>
-                <TextileFace x={x} y={y} w={t.width} h={height} m={m} fill={t.fill ?? 'print'} empty="Uten motiv" />
-                {on && <rect x={x - 0.014} y={y - 0.014} width={t.width + 0.028} height={height + 0.028} fill="none" stroke={INK} strokeWidth={0.016} />}
-                {on && <Handles x={x} y={y} w={t.width} h={height} onDown={(e, edge) => drag(e, { edge }, t)} />}
+                <TextileFace x={x} y={y} w={tw} h={height} m={m} fill={fill} u={fr.u} braces={d.braces} splices={d.splices} />
+                {on && <rect x={x - 0.014} y={y - 0.014} width={tw + 0.028} height={height + 0.028} fill="none" stroke={INK} strokeWidth={0.016} />}
+                {on && <Handles x={x} y={y} w={tw} h={height} onDown={(e, edge) => drag(e, { edge }, t)} />}
               </g>
             )
           })}
@@ -339,7 +344,7 @@ export function WallElevation(p: Props) {
             />
           )}
 
-          <ElevationDims w={w} s={s} name={name} L={L} H={H} items={items} leaders={fr.leaders} top={fr.top} width={fr.width} sc={sc} fields={fields} />
+          <ElevationDims w={w} s={s} name={name} L={L} H={H} items={items} leaders={fr.leaders} top={fr.top} width={fr.width} right={fr.right} sc={sc} fields={fields} />
         </svg>
       </div>
     </div>

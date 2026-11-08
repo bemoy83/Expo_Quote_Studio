@@ -1007,7 +1007,7 @@ kbd {
   border: 2.5px solid var(--alu-thumb);
   border-top-color: var(--alu-light);
   border-bottom-color: var(--alu-shade);
-  background: var(--fabric);
+  background: var(--tusj-tekstil);
 }
 .trow {
   display: flex;
