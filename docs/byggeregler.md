@@ -269,6 +269,10 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   tid). Montering 3 min per hylle, vareplukk 10 min én gang per ordre med hyller. Stolpene er en del av veggen: bare
   plukklisten bryter ut knekter, 600 og plater.
   *Bjørn 8.11.2026 · `EXAMPLE_TIMES` (`montering-hylle`, `vareplukk-hyller`) · kode `src/calc/lines/shelves.ts` · test `src/calc/shelves.test.ts`*
+- **H8 Veggriss med hyller.** Arbeidsordren har et veggriss for hver veggside med hyller: hyllene målsatt fra gulv
+  (overkant plate) og lysmålet mellom hyller over hverandre, med modulkjeden c/c under veggen. Veggskuffen viser det
+  samme. Tilbudet viser hyller bare i 3D, uten veggriss.
+  *Bjørn 8.11.2026 · kode `src/ui/workorder/ShelfElevation.tsx`, `src/ui/plan/wallDrawer/elevationMeasure.ts`, `src/domain/shelves.ts` · test `src/ui/plan/wallDrawer/elevationMeasure.test.ts`, `src/domain/shelves.test.ts`*
 
 ## P · Plukkliste og arbeidsordre
 

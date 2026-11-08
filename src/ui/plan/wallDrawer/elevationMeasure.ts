@@ -200,7 +200,7 @@ export interface ShelfChain {
   ts: number[]
 }
 
-/** The height chains of the shelves on a face, one per felt. `x` turns an along-wall offset into x in the drawing. */
+/** The height chains of the shelves on a face, one per felt (Byggeregler H5, H8). `x` turns an along-wall offset into x in the drawing. */
 export function shelfChains(rules: Rules, stacks: Shelf[][], x: (t: number) => number): ShelfChain[] {
   const t = rules.shelf.board.thickness
   return stacks.map((st) => {

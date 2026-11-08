@@ -61,7 +61,7 @@ describe('wall drawing dimensions', () => {
   })
 })
 
-describe('shelves on the wall drawing (Byggeregler H4, H5)', () => {
+describe('shelves on the wall drawing (Byggeregler H4, H5, H8)', () => {
   it('a felt reads from the floor to the lowest board, then the lysmål up to each board over it', () => {
     const f = (id: string, y: number) => ({ id, wallId: 'w', module: 2, y })
     const [c] = shelfChains(RULES, [[f('h1', 1), f('h2', 1.5)]], (t) => t)

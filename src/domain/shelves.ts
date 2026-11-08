@@ -1,7 +1,7 @@
 // Shelves (hylle 6311): one board in one wall module, on a bracket in the face channel of each of its two posts, at a
 // height (top of the board) above the floor. Where a shelf may sit, the edits that place, move and stack it, fitShelves
 // that keeps them valid after any edit, and the brackets a set of shelves takes (end or twin).
-// Byggeregler H1, H2, H4, H5, H6 (docs/byggeregler.md). Values: rules.shelf (m), RECIPES.shelf (parts, mm).
+// Byggeregler H1, H2, H4, H5, H6, H8 (docs/byggeregler.md). Values: rules.shelf (m), RECIPES.shelf (parts, mm).
 import type { Rules } from '../rules/rules';
 import { blockedModules, faceNormal, faces, sideOf, type FaceSide } from './faces';
 import { pointAlong, pointKey, wallLength, wallModules } from './grid';
@@ -218,4 +218,13 @@ export function shelfBox(v: Variant, rules: Rules, f: Shelf): { x0: number; y0: 
   const xs = ps.map((p) => p[0]);
   const ys = ps.map((p) => p[1]);
   return { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };
+}
+
+/** The wall faces that carry shelves, in the order the walls are drawn, each with its shelves (the work order's
+ *  «Veggriss med hyller», H8). */
+export function shelfFaces(v: Variant): { wallId: string; s: FaceSide; shelves: Shelf[] }[] {
+  return v.walls.flatMap((w) => ([1, -1] as const).flatMap((s) => {
+    const on = shelvesOn(v, w.id, s);
+    return on.length ? [{ wallId: w.id, s, shelves: on }] : [];
+  }));
 }

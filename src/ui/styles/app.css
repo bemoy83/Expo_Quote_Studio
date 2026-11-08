@@ -2001,6 +2001,20 @@ select.cin {
   border-bottom: 1px solid var(--g-row);
   break-inside: avoid-page;
 }
+/* Veggriss med hyller: one wall face a drawing, each kept whole on a page; the section itself may break between them */
+.wo-sec.wo-shelves {
+  break-inside: auto;
+}
+.wo-elev-box {
+  break-inside: avoid;
+  margin: 4px 0 12px;
+}
+.wo-elev {
+  display: block;
+  width: 100%;
+  max-width: 680px;
+  height: auto;
+}
 .wo-sec > .eyebrow {
   color: rgb(var(--ink-faint));
   margin-bottom: 8px;

@@ -3,7 +3,7 @@ import { DOOR } from '../catalog/defaultCatalog';
 import { RULES } from '../rules/rules';
 import { paintWalls } from './edit';
 import { moduleKey } from './grid';
-import { addShelf, addShelfAbove, addShelfRow, clearBetween, fitShelves, removeShelf, shelfBlocked, shelfBrackets, shelfHeight, shelvesOf, updateShelf } from './shelves';
+import { addShelf, addShelfAbove, addShelfRow, clearBetween, fitShelves, removeShelf, shelfBlocked, shelfBrackets, shelfFaces, shelfHeight, shelvesOf, updateShelf } from './shelves';
 import { addTextile } from './textile/inFrame';
 import type { Point, Variant } from './types';
 import { createVariant } from './variant';
@@ -148,5 +148,18 @@ describe('brackets (Byggeregel H2)', () => {
     const a = ok(addShelf(v0, RULES, inner.id, 1, 1));
     const b = ok(addShelf(a.v, RULES, inner.id, 1, -1));
     expect(shelfBrackets(b.v)).toEqual({ boards: 2, end: 4, twin: 0 });
+  });
+});
+
+describe('the work order\'s wall drawings (Byggeregel H8)', () => {
+  it('one per wall face with shelves, each with its own shelves', () => {
+    const v0 = paintWalls(row(), [1, 2], [5, 2]);
+    const inner = v0.walls.find((w) => w.from[1] === 2 && w.to[1] === 2)!;
+    let v = addShelfRow(v0, RULES, 'side-back', 1, 2, 1).v;
+    v = ok(addShelf(v, RULES, inner.id, 1, -1)).v;
+    expect(shelfFaces(v).map((f) => [f.wallId, f.s, f.shelves.length])).toEqual([
+      ['side-back', 1, 2],
+      [inner.id, -1, 1],
+    ]);
   });
 });
