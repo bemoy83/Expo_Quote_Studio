@@ -7,7 +7,7 @@ import { sideOf, type FaceSide } from '../../../domain/faces'
 import { moveObject } from '../../../domain/objects'
 import { faceOfPoint } from '../../../domain/textile/free'
 import { moveTextileBy } from '../../../domain/textile/inFrame'
-import { shelfHeight, shelvesOf, updateShelf } from '../../../domain/shelves'
+import { dragShelf, shelfHeight, shelvesOf } from '../../../domain/shelves'
 import type { Foil, Shelf, TextileWall, Variant, Wall } from '../../../domain/types'
 import { dragRoom, dragWall, dropObject, dropRoom, roomDrag, type RoomDrag, type WallDrag } from '../../drag'
 import { place, rules } from '../../env'
@@ -98,12 +98,7 @@ export function moveDrag(P: PointerProps, hits: SceneHits, drag: Exclude<Drag, {
     const { shelf } = drag
     const module = shelf.module + Math.round(f.t - drag.t0)
     const y = shelfHeight(rules, shelf.y + f.h - drag.h0)
-    P.onEdit((x) => {
-      const both = updateShelf(x, rules, shelf.id, { module, y })
-      if (both !== x) return both
-      const up = updateShelf(x, rules, shelf.id, { y })
-      return up !== x ? up : updateShelf(x, rules, shelf.id, { module })
-    }, false)
+    P.onEdit((x) => dragShelf(x, rules, shelf.id, module, y), false)
     return
   }
   if (drag.kind === 'room') {

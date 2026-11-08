@@ -3,7 +3,7 @@ import { DOOR } from '../catalog/defaultCatalog';
 import { RULES } from '../rules/rules';
 import { paintWalls } from './edit';
 import { moduleKey } from './grid';
-import { addShelf, addShelfAbove, addShelfRow, clearBetween, fitShelves, removeShelf, shelfBlocked, shelfBrackets, shelfFaces, shelfHeight, shelvesOf, updateShelf } from './shelves';
+import { addShelf, addShelfAbove, addShelfRow, clearBetween, dragShelf, fitShelves, removeShelf, shelfBlocked, shelfBrackets, shelfFaces, shelfHeight, shelvesOf, updateShelf } from './shelves';
 import { addTextile } from './textile/inFrame';
 import type { Point, Variant } from './types';
 import { createVariant } from './variant';
@@ -109,6 +109,13 @@ describe('placing shelves', () => {
     const a = ok(addShelf(row(), RULES, 'side-back', 2, 1));
     expect(shelvesOf(updateShelf(a.v, RULES, a.id, { module: 3 }))[0].module).toBe(3);
     expect(updateShelf(a.v, RULES, a.id, { module: 0 })).toBe(a.v);
+  });
+
+  it('a drag takes the height when the felt cannot take the shelf', () => {
+    const a = ok(addShelf(row(), RULES, 'side-back', 1, 1));
+    // Felt 0 is by the corner post: the shelf stays in felt 1 at the new height
+    expect(shelvesOf(dragShelf(a.v, RULES, a.id, 0, 1.2))[0]).toMatchObject({ module: 1, y: 1.2 });
+    expect(shelvesOf(dragShelf(a.v, RULES, a.id, 2, 1.2))[0]).toMatchObject({ module: 2, y: 1.2 });
   });
 
   it('removes a shelf', () => {

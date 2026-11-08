@@ -228,3 +228,12 @@ export function shelfFaces(v: Variant): { wallId: string; s: FaceSide; shelves: 
     return on.length ? [{ wallId: w.id, s, shelves: on }] : [];
   }));
 }
+
+/** A shelf dragged to felt `module` at height `y`: both when it may stand there, else only the height, else only the
+ *  felt, else where it was (H4–H6). The drawer and the 3D view drag with it. */
+export function dragShelf(v: Variant, rules: Rules, id: string, module: number, y: number): Variant {
+  const both = updateShelf(v, rules, id, { module, y });
+  if (both !== v) return both;
+  const up = updateShelf(v, rules, id, { y });
+  return up !== v ? up : updateShelf(v, rules, id, { module });
+}

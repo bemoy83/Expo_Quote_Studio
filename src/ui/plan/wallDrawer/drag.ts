@@ -3,7 +3,7 @@ import type { PointerEvent as RPointerEvent, RefObject } from 'react'
 import { moveFoilBy, updateFoil } from '../../../domain/decor'
 import type { FaceSide } from '../../../domain/faces'
 import { freeSpans, moveTextileBy, textileBox, textilesOn, updateTextile } from '../../../domain/textile/inFrame'
-import { shelfHeight, updateShelf } from '../../../domain/shelves'
+import { dragShelf, shelfHeight } from '../../../domain/shelves'
 import type { Foil, Shelf, TextileWall, Variant, Wall } from '../../../domain/types'
 import { rules } from '../../env'
 import type { Edge } from '../drawerParts'
@@ -120,13 +120,7 @@ export function useShelfDrag({ svg, s, select, onEdit, onCheckpoint }: Pick<Drag
       }
       const module = f.module + Math.round(du * dir)
       const y = shelfHeight(rules, f.y + dz)
-      onEdit((x) => {
-        const both = updateShelf(x, rules, f.id, { module, y })
-        if (both !== x) return both
-        // Only the height, or only the felt, when the two together cannot be
-        const up = updateShelf(x, rules, f.id, { y })
-        return up !== x ? up : updateShelf(x, rules, f.id, { module })
-      }, false)
+      onEdit((x) => dragShelf(x, rules, f.id, module, y), false)
     }
     const onUp = () => {
       window.removeEventListener('pointermove', onMove)
