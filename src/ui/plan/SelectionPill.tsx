@@ -2,7 +2,7 @@
 // One build for all: name and size · colour or motif · rotate (where it makes sense) · Mer (the drawer) · remove.
 // Shown as soon as a click selects; hidden while dragging,
 // while the drawer is open, with a pen in hand and in 3D (PlanView decides). Where it stands: pillAnchor.ts.
-import { ArrowLeftRight, Blinds, DoorClosed, FlipHorizontal2, Image as ImageIcon, MoveHorizontal, PanelBottomOpen, RotateCw, Trash2 } from 'lucide-react'
+import { ArrowLeftRight, Blinds, DoorClosed, FlipHorizontal2, Image as ImageIcon, Layers, MoveHorizontal, PanelBottomOpen, RotateCw, Trash2 } from 'lucide-react'
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import { wallLabel } from '../../calc/production'
@@ -27,7 +27,6 @@ import { fmt, mm } from '../format'
 import { findMotif } from '../motifs'
 import { placePill, type PillPlace } from './pillAnchor'
 import { QBtn, QName, Sep, Sw } from './QuickPicks'
-import { Segmented } from '../controls'
 import { faceName } from './wallDrawer/face'
 import { deleteSelection, type PlanSelection } from './selection'
 import { turnFree, turnObject } from './turn'
@@ -374,9 +373,10 @@ function content(p: PillActions, graphics: boolean, setGraphics: (b: boolean) =>
 }
 
 /**
- * On a wall with textile walls on it: Vegg · the textile on each face (Bjørn 6.11.2026), so a click that took the wall
- * for the textile, or the other way round, is put right in one tap. Per face the textile over the selected one's middle,
- * else the face's first. Nothing on a wall without textile walls.
+ * On a wall with textile walls on it: one icon that steps wall → the textile on each face → wall (Bjørn 8.11.2026, like
+ * a door's swing), so a click that took the wall for the textile, or the other way round, is put right in one tap. The
+ * pill's name says which is chosen. Per face the textile over the selected one's middle, else the face's first. Nothing
+ * on a wall without textile walls.
  */
 function layerSwitch(v: Variant, w: Wall, sel: PlanSelection, T: TextileWall | undefined, onSelect: (s: PlanSelection) => void): ReactNode {
   const mid = T ? T.from + T.width / 2 : null
@@ -387,20 +387,16 @@ function layerSwitch(v: Variant, w: Wall, sel: PlanSelection, T: TextileWall | u
   })
   if (!onFace.length) return null
   const side = T ? sideOf(v, T) : sel.side
+  // The wall, then each face's textile, round again
+  const steps: PlanSelection[] = [{ wallId: w.id, side }, ...onFace.map(({ s, t }) => ({ wallId: w.id, side: s, textileId: t.id }))]
+  const at = T ? steps.findIndex((x) => x.textileId === T.id) : 0
+  const next = steps[(Math.max(0, at) + 1) % steps.length]
+  const title = next.textileId ? `Velg tekstilveggen ${faceName(w, next.side!).toLowerCase()}` : 'Velg veggen'
   return (
     <>
-      <Segmented<string>
-        label="Vegg eller tekstilvegg"
-        value={T ? T.id : ''}
-        onChange={(id) => {
-          const x = onFace.find((f) => f.t.id === id)
-          onSelect(x ? { wallId: w.id, side: x.s, textileId: x.t.id } : { wallId: w.id, side })
-        }}
-        options={[
-          { value: '', label: 'Vegg', title: 'Velg veggen' },
-          ...onFace.map(({ s, t }) => ({ value: t.id, label: `Tekstil ${faceName(w, s).toLowerCase()}`, title: `Velg tekstilveggen ${faceName(w, s).toLowerCase()}` })),
-        ]}
-      />
+      <QBtn title={title} label={title} onClick={() => onSelect(next)}>
+        <Layers size={16} />
+      </QBtn>
       <Sep />
     </>
   )
