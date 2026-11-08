@@ -10,10 +10,10 @@ import type { Motif } from '../../persistence/file'
 import { ALU_POST, BORDER_STRONG, FEET, LAYER_COLOR } from '../colors'
 import { Dim, IconButton, Section } from '../controls'
 import { rules } from '../env'
-import { count, fmt } from '../format'
+import { count, fmt, mm } from '../format'
 import { findMotif } from '../motifs'
 import { type PlanSelection } from './selection'
-import { DrawerHead, FillPicker, Shelf } from './drawerParts'
+import { DrawerHead, FabricSection } from './drawerParts'
 import { TextileFace } from './elevation'
 import { planScale } from './planScale'
 import { useElementSize } from '../useElementSize'
@@ -75,6 +75,8 @@ export function FreeTextileDrawer(p: Props) {
           {[
             `${fmt(H, 2)} m høy`,
             count(f.supports.length, 'fot', 'føtter'),
+            // The print file of the face shown, as in the wall drawer; its name is on the quote and the work order
+            F.fill === 'print' ? `fil ${mm(F.pw / 1000)} × ${mm(F.ph / 1000)}` : '',
             count(f.braces.length, 'stag', 'stag'),
             f.railCuts.length > 1 ? `skjøtt i ${f.railCuts.length}` : '',
             f.nCorners ? count(f.nCorners, 'hjørne', 'hjørner') : '',
@@ -87,18 +89,12 @@ export function FreeTextileDrawer(p: Props) {
             <Dim big label="Lengde" value={f.length / 1000} decimals={2} onChange={setLength} />
           </div>
         </Section>
-        <FillPicker
+        <FabricSection
           value={F.fill}
-          aside={`side ${face.toUpperCase()}`}
-          note={`${F.W} × ${F.H} mm${F.fileName ? ` · ${F.fileName}` : ''}`}
           onChange={(fill) => p.onEdit((x) => updateFace(x, t.id, face, { fill, ...(fill === 'print' ? {} : { motif: null }) }))}
-        />
-        <Shelf
-          title="Motiv"
-          aside={F.fill === 'print' ? (m?.name ?? 'ikke valgt') : 'velg for trykk'}
           motifs={motifs}
-          value={F.fill === 'print' ? (F.motif ?? null) : undefined}
-          onPick={(mo) => p.onEdit((x) => updateFace(x, t.id, face, { motif: mo, ...(mo ? { fill: 'print' as const } : {}) }))}
+          motif={F.motif}
+          onPick={(mo) => p.onEdit((x) => updateFace(x, t.id, face, { motif: mo }))}
           onUpload={p.onUpload}
         />
 

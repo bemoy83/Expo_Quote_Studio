@@ -11,7 +11,7 @@ import type { Motif } from '../../../persistence/file'
 import { Button, Dim, FlatChoice, IconButton, Section } from '../../controls'
 import { plateName, rules } from '../../env'
 import { DoorSettings } from '../DoorSettings'
-import { FillPicker, PlatePalette, Shelf } from '../drawerParts'
+import { FabricSection, PlatePalette, Shelf } from '../drawerParts'
 import { findMotif } from '../../motifs'
 import { type PlanSelection } from '../selection'
 import { faceName } from './face'
@@ -19,8 +19,8 @@ import type { PaintTool } from './paint'
 
 type Edit = (fn: (v: Variant) => Variant, history?: boolean) => void
 
-/** A chosen textile frame: its size and what fills it. */
-export function TextilePanel({ T, onEdit }: { T: TextileWall; onEdit: Edit }) {
+/** A chosen textile frame: its size, then its fabric and motif in one section. */
+export function TextilePanel({ T, motifs, onEdit, onUpload }: { T: TextileWall; motifs: Motif[]; onEdit: Edit; onUpload: (f: File) => void }) {
   return (
     <>
       <Section title="Mål">
@@ -30,7 +30,14 @@ export function TextilePanel({ T, onEdit }: { T: TextileWall; onEdit: Edit }) {
         <Dim big label="Fra gulv" value={textileBox(T, rules).bottom} onChange={(n) => onEdit((x) => updateTextile(x, rules, T.id, { bottom: n }))} />
         </div>
       </Section>
-      <FillPicker value={T.fill ?? 'print'} onChange={(f) => onEdit((x) => updateTextile(x, rules, T.id, { fill: f }))} />
+      <FabricSection
+        value={T.fill ?? 'print'}
+        onChange={(f) => onEdit((x) => updateTextile(x, rules, T.id, { fill: f }))}
+        motifs={motifs}
+        motif={T.motif}
+        onPick={(m) => onEdit((x) => updateTextile(x, rules, T.id, { motif: m }))}
+        onUpload={onUpload}
+      />
     </>
   )
 }
@@ -67,11 +74,10 @@ export function FoilPanel({ F, ratioOf, onEdit }: { F: Foil; ratioOf: (id?: stri
 }
 
 /**
- * The graphics shelf under the settings: a motif for the chosen frame or decal, the motif «Print» lays on, or (nothing
- * chosen) motifs and a textile frame to drag onto the wall.
+ * The graphics shelf under the settings: a motif for the chosen decal, the motif «Print» lays on, or (nothing chosen)
+ * print files to drag onto the wall. A chosen textile frame has its motifs in its fabric section.
  */
 export function WallShelf(props: {
-  T?: TextileWall
   F?: Foil
   printing: boolean
   pm: Motif | undefined
@@ -81,27 +87,15 @@ export function WallShelf(props: {
   onEdit: Edit
   onUpload: (f: File) => void
 }) {
-  const { T, F, printing, pm, motifs, ratioOf, setPrintMotif, onEdit, onUpload } = props
-  const printed = (T?.fill ?? 'print') === 'print'
-  // Title and what is chosen now: one section like the others (Bjørn 8.11.2026)
-  const [title, aside] = T
-    ? printed
-      ? ['Motiv', findMotif(motifs, T.motif)?.name ?? 'ikke valgt']
-      : ['Motiv', 'velg for trykk']
-    : F
-      ? ['Motiv', findMotif(motifs, F.motif)?.name ?? 'ikke valgt']
-      : printing
-        ? ['Print', pm?.name ?? 'last opp et motiv']
-        : ['Grafikk', 'dra til veggen']
-  const value = T ? (printed ? (T.motif ?? null) : undefined) : F ? (F.motif ?? null) : printing ? pm?.id : undefined
-  const onPick = T
-    ? (m: string | null) => onEdit((x) => updateTextile(x, rules, T.id, { motif: m, ...(m ? { fill: 'print' } : {}) }))
-    : F
-      ? (m: string | null) => onEdit((x) => updateFoil(x, rules, F.id, { motif: m }, ratioOf(m ?? undefined)))
-      : printing
-        ? (m: string | null) => m && setPrintMotif(m)
-        : undefined
-  return <Shelf title={title} aside={aside} motifs={motifs} textile={!T && !F} required={!T && !F && printing} value={value} onPick={onPick} onUpload={onUpload} />
+  const { F, printing, pm, motifs, ratioOf, setPrintMotif, onEdit, onUpload } = props
+  const [title, aside] = F ? ['Motiv', findMotif(motifs, F.motif)?.name ?? 'ikke valgt'] : printing ? ['Print', pm?.name ?? 'last opp et motiv'] : ['Grafikk', 'dra til veggen']
+  const value = F ? (F.motif ?? null) : printing ? pm?.id : undefined
+  const onPick = F
+    ? (m: string) => onEdit((x) => updateFoil(x, rules, F.id, { motif: m }, ratioOf(m)))
+    : printing
+      ? setPrintMotif
+      : undefined
+  return <Shelf title={title} aside={aside} motifs={motifs} value={value} onPick={onPick} onUpload={onUpload} />
 }
 
 /** The wall itself: the paint bucket and the brush, and the palette (a colour or «Print»). */

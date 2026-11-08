@@ -35,7 +35,8 @@ export function ElevationDims({ w, s, name, L, H, items, leaders, top, width, ri
   const lm = lysmal(rules, fields ?? [], H)
   const uprights = items.find((i) => i.uprights)?.uprights
   const rowY = -px(NEAR)
-  const textY = (l: Leader) => rowY - px(NEAR + 14) - l.level * px(LEADER_LINE)
+  // Over the chain over a measured item, or straight over the wall
+  const textY = (l: Leader) => (mode === 'item' ? rowY - px(NEAR + 14) : -px(NEAR)) - l.level * px(LEADER_LINE)
   const mono = { font: `500 ${px(LEADER_FONT)}px var(--font-numeric)`, fill: INK_MUTED }
   // The heading as wide as the drawing allows: the ends alone on a narrow wall (the drawer's title names the wall)
   const ends = `← ${head.left}\u00a0\u00a0\u00a0${head.right} →`
@@ -70,23 +71,24 @@ export function ElevationDims({ w, s, name, L, H, items, leaders, top, width, ri
         <>
           <Chain sc={sc} axis="x" at={rowY} ts={along} dir={-1} />
           <Chain sc={sc} axis="y" at={L + px(NEAR)} ts={heights} dir={1} />
-          {leaders.map((l, i) => {
-            const y = textY(l)
-            // To the left of its line when it would run past the drawing's right edge
-            const flip = l.x + px(6 + textPx(l.text, LEADER_FONT)) > right
-            const d = flip ? -1 : 1
-            return (
-              <g key={i} stroke={INK_MUTED} strokeWidth={px(0.6)}>
-                <circle cx={l.x} cy={l.y} r={px(1.6)} fill={INK_MUTED} stroke="none" />
-                <path d={`M${l.x} ${l.y} V${y - px(3.5)} h${d * px(4)}`} fill="none" />
-                <text x={l.x + d * px(6)} y={y} textAnchor={flip ? 'end' : 'start'} stroke="none" style={mono}>
-                  {l.text}
-                </text>
-              </g>
-            )
-          })}
         </>
       )}
+      {/* Names: the textile frames on the wall when the wall is chosen */}
+      {leaders.map((l, i) => {
+        const y = textY(l)
+        // To the left of its line when it would run past the drawing's right edge
+        const flip = l.x + px(6 + textPx(l.text, LEADER_FONT)) > right
+        const d = flip ? -1 : 1
+        return (
+          <g key={i} stroke={INK_MUTED} strokeWidth={px(0.6)}>
+            <circle cx={l.x} cy={l.y} r={px(1.6)} fill={INK_MUTED} stroke="none" />
+            <path d={`M${l.x} ${l.y} V${y - px(3.5)} h${d * px(4)}`} fill="none" />
+            <text x={l.x + d * px(6)} y={y} textAnchor={flip ? 'end' : 'start'} stroke="none" style={mono}>
+              {l.text}
+            </text>
+          </g>
+        )
+      })}
     </g>
   )
 }

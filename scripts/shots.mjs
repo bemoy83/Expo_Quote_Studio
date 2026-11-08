@@ -94,7 +94,7 @@ async function shoot(dist, out) {
           }, [x, y]);
           await page.mouse.click(at.x, at.y);
           await page.waitForTimeout(150);
-          await page.locator('.sel-pill [aria-label="Mer"]').click();
+          await page.locator('.sel-pill [aria-label="Detaljer"]').click();
           await page.waitForTimeout(400);
           await snap(`${vName}-skuff-${drawer}`);
           await page.locator('.wd-head').getByRole('button', { name: 'Lukk' }).first().click();

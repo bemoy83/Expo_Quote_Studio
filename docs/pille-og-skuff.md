@@ -46,7 +46,8 @@ Brukeren skal gjøre det meste rett på tegneflaten. **Pillen** gir rask tilgang
 
 Én komponent (forslag `plan/SelectionPill.tsx`), med samme oppbygning for alt:
 
-`navn og mål` · farge eller motiv · roter (der det gir mening) · **Mer** (åpner skuffen) · fjern
+`navn og mål` · farge eller motiv · roter (der det gir mening) · **Detaljer** (åpner skuffen) · fjern. Knapper med et
+ikon som ikke sier seg selv har tekst ved siden av (lag, Detaljer, Fyll ledig vegg); papirkurven står alene
 
 - **Plassering:** over objektet, eller under når det ikke er plass over. Den står aldri over et mål eller over selve
   valget. For vegger står den på motsatt side av modulkjeden (`docs/arbeidstegning.md`, A5: kjeden står mot standens
@@ -62,11 +63,11 @@ Brukeren skal gjøre det meste rett på tegneflaten. **Pillen** gir rask tilgang
 
 Kolonnen «Finnes» sier hvor funksjonen ligger i dag. **Ny** betyr at den må lages.
 
-| Valg | Navn og mål | Farge eller motiv | Roter | Mer | Fjern | Finnes |
+| Valg | Navn og mål | Farge eller motiv | Roter | Detaljer | Fjern | Finnes |
 | --- | --- | --- | --- | --- | --- | --- |
-| Vegg (innervegg, romvegg) | «Innervegg · 3 m» | Med tekstilvegg på veggen først et valg Vegg · Tekstil mot … per side (`layerSwitch`), som bytter mellom veggen og tekstilene. RAL for hele veggen. «Tekstilvegg» legger til på ledig flate når siden ikke har noen. «Grafikk» åpner motivlisten | – | Veggskuff | ✓ | `setWallPlate` (`domain/edit.ts`), `addTextile`/`fillTextile`, `ColourPanel` |
+| Vegg (innervegg, romvegg) | «Innervegg · 3 m» | Med tekstilvegg på veggen først en lagknapp (`layerSwitch`) med ikon og hvor den går («Tekstil», «Tekstil mot front», «Vegg»), som går rundt veggen og tekstilen på hver side. RAL for hele veggen. «Tekstilvegg» legger til på ledig flate når siden ikke har noen. «Grafikk» åpner motivlisten | – | Veggskuff | ✓ | `setWallPlate` (`domain/edit.ts`), `addTextile`/`fillTextile`, `ColourPanel` |
 | Standvegg | «Bak · standvegg · 6 m» | Som over (platebytte) | – | Veggskuff | – (låst) | som over |
-| Tekstil på vegg | «Tekstilvegg · 4,00 × 2,50 m» | Valget Vegg · Tekstil mot … som over, motiv, og «Fyll ledig vegg» når den ikke fyller | – | Veggskuff på tekstilen | ✓ | `updateTextile` (`domain/textile/inFrame.ts`), `TextilePanel` |
+| Tekstil på vegg | «Tekstilvegg · 4,00 × 2,50 m» | Lagknappen som over, motiv, og «Fyll ledig vegg» når den ikke fyller | – | Veggskuff på tekstilen | ✓ | `updateTextile` (`domain/textile/inFrame.ts`), `TextilePanel` |
 | Dekal | «Dekal · 1,40 m» | Motiv | – | Veggskuff på dekalen | ✓ | `updateFoil`, `FoilPanel` |
 | Frittstående tekstil | «T1 · 2 000 × 2 500» | Motiv på siden som ble klikket (`freeFace`) | **Ny:** 90° om midten | `FreeTextileDrawer` | ✓ | `updateFace` (`domain/textile/free.ts`) |
 | Dør, forheng | «Dør med lås · 960» | Dør eller forheng, snu slag, snu hengsel (bare dør), farge på dørbladet | – | Veggskuff med døren | ✓ | `DoorPanel` (`plan/wallDrawer/panels.tsx`) med `flipSwing` og snu hengsel og farge i `domain/doors.ts` |
@@ -98,7 +99,7 @@ samme produkt og beholder plass og `rot`. Er den nye varianten større, kjøres 
 
 ### Når den åpnes
 
-- **Mer** i pillen.
+- **Detaljer** i pillen.
 - **Ikke dobbeltklikk** (Bjørn 5.11.2026). Første utgave hadde dobbeltklikk. For at pillen ikke skulle blinke, ventet
   den da 200 ms etter klikket, og et nytt klikk slapp valget først etter 200 ms. I bruk føltes pillen treg, og den
   kom fram selv ved dobbeltklikk. Dobbeltklikk er derfor fjernet. Pillen vises med en gang, og det finnes ingen ventetid i klikkreglene.
@@ -112,14 +113,16 @@ samme produkt og beholder plass og `rot`. Er den nye varianten større, kjøres 
 | Høyde | Verdi | Når |
 | --- | --- | --- |
 | Kompakt | 270 px (som i dag) | Når man drar kanten ned |
-| Detalj | omtrent 60 % av tegneflaten, minst 420 px | **Mer** åpner alltid her |
+| Detalj | omtrent 60 % av tegneflaten, minst 420 px | **Detaljer** åpner alltid her |
 
 - **Kanten øverst på skuffen** (14 px) kan dras opp eller ned, eller klikkes for å bytte. Den viser «Detalj» eller
   «Kompakt». Sist brukte høyde kan huskes i `localStorage`, men **Mer** åpner alltid i detalj.
 - **Veggrisset fyller skuffen.** Skalaen følger høyden (`elevationBox` / `wd-fit`), så detalj gir omtrent dobbelt så
   stor tegning. Innstillingene står til venstre.
 - **To deler** (Bjørn 7.11.2026): innstillinger til venstre og veggrisset til høyre. Grafikkhylla, eller miniplanen når
-  en dør er valgt, står under innstillingene og fyller resten av kolonnen. Før var de en egen kolonne i midten, og på
+  en dør er valgt, står under innstillingene og fyller resten av kolonnen. Grafikk er bare trykkfiler (ingen
+  tekstilflis, ingen «Uten motiv»), små fliser fem i bredden, og last opp står fast i seksjonstittelen; et tomt
+  bibliotek viser én bred «Last opp trykkfil». En valgt tekstil har duk og motiv i én seksjon («DUK · HOVEDMOTIV»). Før var de en egen kolonne i midten, og på
   iPad med begge sidepanelene åpne ble veggrisset bare rundt 160 px bredt. **Kompakt** viser ikke hylla eller
   miniplanen (de får ikke plass i 270 px ved siden av farger, side og knapper). De kommer fram når skuffen dras opp.
 - **Planen blir et kart over skuffen,** med valgt vegg markert. Den krymper, og regelen for liten skala (`planScale.ts`,

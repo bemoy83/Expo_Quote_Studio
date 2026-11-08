@@ -273,7 +273,7 @@ await close()
 async function dbl(x, y) { const a = await at(x, y); await page.mouse.dblclick(a.x, a.y); await page.waitForTimeout(250) }
 async function more(x, y) {
   await press(x, y)
-  const m = page.locator('.sel-pill [aria-label="Mer"]'); if (await m.count()) await m.click(); await page.waitForTimeout(250)
+  const m = page.locator('.sel-pill [aria-label="Detaljer"]'); if (await m.count()) await m.click(); await page.waitForTimeout(250)
 }
 await open('10-mobler-utstyr')
 await tool('Velg'); await press(2.5, 1.5); await record('regel klikk møbel')
@@ -293,7 +293,7 @@ await close()
 // The pill: Mer opens the drawer; a double click only selects, and the pill shows
 await open('02-hjorne-utstiller')
 await tool('Velg'); await press(2, 0); await page.waitForTimeout(300); await record('pille vegg')
-const mer = page.locator('.sel-pill [aria-label="Mer"]'); if (await mer.count()) await mer.click(); await page.waitForTimeout(250); await record('pille Mer åpner skuffen')
+const mer = page.locator('.sel-pill [aria-label="Detaljer"]'); if (await mer.count()) await mer.click(); await page.waitForTimeout(250); await record('pille Mer åpner skuffen')
 await key('Escape'); await page.evaluate(() => { window.__pillSeen = false })
 await dbl(6, 3); await record(`regel dobbeltklikk vegg er to klikk (velg og slipp), pillen sett ${await page.evaluate(() => window.__pillSeen)}`)
 await close()
@@ -306,7 +306,7 @@ if (await edge.count()) { const h = await edge.boundingBox(); await page.mouse.m
 await page.waitForTimeout(250); await record('skuff dra kanten opp gir detalj')
 await press(0, 2.5); await record('skuff klikk annen vegg i kartet bytter, samme høyde')
 await key('Escape'); await press(2.5, 0); await page.waitForTimeout(300)
-const mer2 = page.locator('.sel-pill [aria-label="Mer"]'); if (await mer2.count()) await mer2.click(); await page.waitForTimeout(250); await record('skuff Mer åpner i detalj')
+const mer2 = page.locator('.sel-pill [aria-label="Detaljer"]'); if (await mer2.count()) await mer2.click(); await page.waitForTimeout(250); await record('skuff Mer åpner i detalj')
 await close()
 
 // Turning (R and the pill) and swapping a variant of furniture; turning a frittstående tekstilvegg

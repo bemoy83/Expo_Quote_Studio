@@ -94,7 +94,10 @@ export function WallElevation(p: Props) {
   // Print laid on the wall: where each plate field starts (the door modules have none of their own)
   const fields = painting && printing ? mods.map((_, i) => i).filter((i) => !doorModules.has(i)).map((i) => spanX(i, i + 1)) : undefined
   const name = w.room ? 'Romvegg' : label
-  const fr = frame(size, L, H, items)
+  // Named with a leader: not what the drawer is open for (its title says it), but the textile frames, decals and prints
+  // on the wall when the wall is chosen (a print over several plates as one)
+  const labels = !T && !F && !O && !painting ? elevationItems(rules, tex, foils, doorModules, u, pieceOf) : []
+  const fr = frame(size, L, H, items, { labels })
   const sc = planScale(1 / fr.u, {})
 
   /** Pointer handlers for a plate (or a door) in the drawing while a tool is out: click, or with the brush press and sweep. */
