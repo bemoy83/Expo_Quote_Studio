@@ -8,12 +8,12 @@ import { removeFreeTextile, resizeFreeTextile, updateFace, type FaceKey } from '
 import type { Variant } from '../../domain/types'
 import type { Motif } from '../../persistence/file'
 import { ALU_POST, BORDER_STRONG, FEET, LAYER_COLOR } from '../colors'
-import { Dim, IconButton } from '../controls'
+import { Dim, IconButton, Section } from '../controls'
 import { rules } from '../env'
 import { count, fmt } from '../format'
 import { findMotif } from '../motifs'
 import { type PlanSelection } from './selection'
-import { DrawerHead, DrawerRow, FillPicker, Shelf } from './drawerParts'
+import { DrawerHead, FillPicker, Shelf } from './drawerParts'
 import { TextileFace } from './elevation'
 import { planScale } from './planScale'
 import { useElementSize } from '../useElementSize'
@@ -66,7 +66,6 @@ export function FreeTextileDrawer(p: Props) {
   // Where the feet stand along the face, for the chain under it
   const feet = f.supports.map(x).filter((t) => t > 1e-6 && t < W - 1e-6)
   const braces = f.braces.map(x)
-  const fillName = F.fill === 'reuse' ? 'kundens duk' : F.fill === 'white' ? 'hvit duk' : 'trykk'
 
   return (
     <section className="wall-drawer drawer2" aria-label="Frittstående tekstilvegg sett forfra">
@@ -83,16 +82,20 @@ export function FreeTextileDrawer(p: Props) {
             .filter(Boolean)
             .join(' · ')}
         </p>
-        <div className="wd-dims">
-          <Dim label="Lengde" value={f.length / 1000} decimals={2} onChange={setLength} />
-        </div>
-        <FillPicker value={F.fill} onChange={(fill) => p.onEdit((x) => updateFace(x, t.id, face, { fill, ...(fill === 'print' ? {} : { motif: null }) }))} />
-        <p className="wd-meta num">
-          Duk {F.W} × {F.H} mm · {fillName}
-          {F.fileName ? ` · fil ${F.fileName}` : ''}
-        </p>
+        <Section title="Mål">
+          <div className="wd-dims">
+            <Dim big label="Lengde" value={f.length / 1000} decimals={2} onChange={setLength} />
+          </div>
+        </Section>
+        <FillPicker
+          value={F.fill}
+          aside={`side ${face.toUpperCase()}`}
+          note={`${F.W} × ${F.H} mm${F.fileName ? ` · ${F.fileName}` : ''}`}
+          onChange={(fill) => p.onEdit((x) => updateFace(x, t.id, face, { fill, ...(fill === 'print' ? {} : { motif: null }) }))}
+        />
         <Shelf
-          label={F.fill === 'print' ? `Trykk side ${face.toUpperCase()} · ${m?.name ?? 'uten motiv'}` : 'Motiv · velg for trykk'}
+          title="Motiv"
+          aside={F.fill === 'print' ? (m?.name ?? 'ikke valgt') : 'velg for trykk'}
           motifs={motifs}
           value={F.fill === 'print' ? (F.motif ?? null) : undefined}
           onPick={(mo) => p.onEdit((x) => updateFace(x, t.id, face, { motif: mo, ...(mo ? { fill: 'print' as const } : {}) }))}
@@ -100,9 +103,11 @@ export function FreeTextileDrawer(p: Props) {
         />
 
         <div className="wd-foot">
-          <DrawerRow label={`Side ${face.toUpperCase()}`}>
-            <IconButton icon={FlipHorizontal2} label={`Vis side ${face === 'a' ? 'B' : 'A'}`} size={15} onClick={() => p.onSelect({ freeTextileId: t.id, freeFace: face === 'a' ? 'b' : 'a' })} />
-          </DrawerRow>
+          <Section
+            title="Side"
+            aside={face.toUpperCase()}
+            tools={<IconButton icon={FlipHorizontal2} label={`Vis side ${face === 'a' ? 'B' : 'A'}`} size={15} onClick={() => p.onSelect({ freeTextileId: t.id, freeFace: face === 'a' ? 'b' : 'a' })} />}
+          />
         </div>
       </div>
 

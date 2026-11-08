@@ -10,10 +10,10 @@ import { OUTSIDE, roomName, roomSize } from '../../domain/rooms'
 import type { Opening, Point, Variant, Wall } from '../../domain/types'
 import { isPerimeterWall, isStandWall } from '../../domain/walls'
 import { LAYER_COLOR } from '../colors'
-import { IconButton, Segmented } from '../controls'
+import { FlatChoice, IconButton, Section } from '../controls'
 import { openingProducts, plateColor, productOf, rules } from '../env'
 import { fmt } from '../format'
-import { DrawerHead, DrawerRow } from './drawerParts'
+import { DrawerHead} from './drawerParts'
 
 interface Props {
   v: Variant
@@ -49,7 +49,7 @@ export function DoorSettings({ v, o, w, onEdit, onRemove, onClose, children }: P
     : isStandWall(w)
       ? 'Standvegg'
       : `Innervegg ${fmt(wallLength(w), 0)} m`
-  const swingText = isPerimeterWall(v.stand, w) ? 'Slår inn i standen' : room ? (s === OUTSIDE ? 'Slår ut av rommet' : 'Slår inn i rommet') : `Slår ${toward(n)}`
+  const swing = isPerimeterWall(v.stand, w) ? 'inn i standen' : room ? (s === OUTSIDE ? 'ut av rommet' : 'inn i rommet') : toward(n)
 
   return (
     <>
@@ -67,18 +67,25 @@ export function DoorSettings({ v, o, w, onEdit, onRemove, onClose, children }: P
       <p className="wd-meta num">
         {where} · {door ? `blad ${fmt(rules.door.swing * 100, 0)} × ${fmt(rules.door.height * 100, 0)} cm` : `åpning ${fmt((rules.wall.cc - rules.wall.post) * 1000, 0)} mm`}
       </p>
-      <Segmented<string>
-        inWell
-        label="Type"
-        value={o.product}
-        onChange={(a) => onEdit((x) => setOpeningProduct(x, o.id, a))}
-        options={openingProducts().map((x) => ({ value: x.variants[0].artnr, label: x.opening === 'door' ? 'Dør' : 'Forheng' }))}
-      />
+      <Section title="Type">
+        <FlatChoice<string>
+          label="Type"
+          value={o.product}
+          onChange={(a) => onEdit((x) => setOpeningProduct(x, o.id, a))}
+          options={openingProducts().map((x) => ({ value: x.variants[0].artnr, label: x.opening === 'door' ? 'Dør' : 'Forheng' }))}
+        />
+      </Section>
       {door && (
-        <DrawerRow label={swingText}>
-          {canFlipSwing(v.stand, w) && <IconButton icon={FlipHorizontal2} label="Snu slagretning" size={15} onClick={() => onEdit((x) => flipSwing(x, o.id))} />}
-          <IconButton icon={ArrowLeftRight} label="Bytt hengselside" size={15} onClick={() => onEdit((x) => flipHinge(x, o.id))} />
-        </DrawerRow>
+        <Section
+          title="Slag"
+          aside={swing}
+          tools={
+            <>
+              {canFlipSwing(v.stand, w) && <IconButton icon={FlipHorizontal2} label="Snu slagretning" size={15} onClick={() => onEdit((x) => flipSwing(x, o.id))} />}
+              <IconButton icon={ArrowLeftRight} label="Bytt hengselside" size={15} onClick={() => onEdit((x) => flipHinge(x, o.id))} />
+            </>
+          }
+        />
       )}
     </>
   )

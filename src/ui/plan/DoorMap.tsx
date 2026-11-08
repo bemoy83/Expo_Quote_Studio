@@ -53,9 +53,8 @@ export function DoorMap({ v, openingId, onEdit }: Props) {
 
   return (
     <div className="door-map">
-      <div className="door-map-head">
-        <span>Plassering</span>
-        <span className="door-map-where num">{current ? `${room ? `${sideName(current.out)} · ` : ''}modul ${current.nth}` : ''}</span>
+      <div className="set-sec-head">
+        <h4>{current ? `Plassering · ${room ? `${sideName(current.out)} · ` : ''}modul ${current.nth}` : 'Plassering'}</h4>
       </div>
       <svg style={{ maxWidth: W * c + 2 * P, maxHeight: D * c + 2 * P }} viewBox={`${-P} ${-P} ${W * c + 2 * P} ${D * c + 2 * P}`} role="group" aria-label="Miniplan, flytt døren">
         <rect x={0} y={0} width={W * c} height={D * c} fill={SURFACE} />
