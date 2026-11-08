@@ -2871,8 +2871,9 @@ select.cin {
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  grid-auto-rows: 54px;
+  /* Small tiles so two rows fit under the fabric choice on an iPad (Bjørn 8.11.2026) */
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-auto-rows: 40px;
   align-content: start;
   gap: 6px;
   overflow-y: auto;
@@ -2919,8 +2920,9 @@ select.cin {
 .wd-shelf-grid .mot.on {
   background: rgb(var(--ink));
 }
-.wd-shelf-grid .mot.add {
-  color: rgb(var(--ink-muted));
+.wd-upload {
+  align-self: flex-start;
+  margin-left: -10px;
 }
 .wd-shelf-grid .mot[draggable='true'] {
   cursor: grab;

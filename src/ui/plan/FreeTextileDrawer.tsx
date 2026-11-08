@@ -13,7 +13,7 @@ import { rules } from '../env'
 import { count, fmt } from '../format'
 import { findMotif } from '../motifs'
 import { type PlanSelection } from './selection'
-import { DrawerHead, FillPicker, Shelf } from './drawerParts'
+import { DrawerHead, FabricSection } from './drawerParts'
 import { TextileFace } from './elevation'
 import { planScale } from './planScale'
 import { useElementSize } from '../useElementSize'
@@ -87,18 +87,13 @@ export function FreeTextileDrawer(p: Props) {
             <Dim big label="Lengde" value={f.length / 1000} decimals={2} onChange={setLength} />
           </div>
         </Section>
-        <FillPicker
+        <FabricSection
           value={F.fill}
-          aside={`side ${face.toUpperCase()}`}
           note={`${F.W} × ${F.H} mm${F.fileName ? ` · ${F.fileName}` : ''}`}
           onChange={(fill) => p.onEdit((x) => updateFace(x, t.id, face, { fill, ...(fill === 'print' ? {} : { motif: null }) }))}
-        />
-        <Shelf
-          title="Motiv"
-          aside={F.fill === 'print' ? (m?.name ?? 'ikke valgt') : 'velg for trykk'}
           motifs={motifs}
-          value={F.fill === 'print' ? (F.motif ?? null) : undefined}
-          onPick={(mo) => p.onEdit((x) => updateFace(x, t.id, face, { motif: mo, ...(mo ? { fill: 'print' as const } : {}) }))}
+          motif={F.motif}
+          onPick={(mo) => p.onEdit((x) => updateFace(x, t.id, face, { motif: mo }))}
           onUpload={p.onUpload}
         />
 

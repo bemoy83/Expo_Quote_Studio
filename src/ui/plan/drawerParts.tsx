@@ -74,76 +74,100 @@ const FILLS: { value: TextileFill; label: string }[] = [
   { value: 'reuse', label: 'Kundens' },
 ]
 
-/** Printed, white without graphics, or the customer's own textile of the same size (only mounted). `note`: a line under it. */
-export function FillPicker({ value, onChange, aside, note }: { value: TextileFill; onChange: (f: TextileFill) => void; aside?: string; note?: ReactNode }) {
+/**
+ * A textile's fabric and its motif in one section (Bjørn 8.11.2026): the title names the motif («DUK · HOVEDMOTIV»,
+ * «DUK · MOTIV IKKE VALGT»), upload sits fixed in the title row, then print, white or the customer's own, then the
+ * motifs, only for print. `note`: a line under the choice.
+ */
+export function FabricSection(p: {
+  value: TextileFill
+  onChange: (f: TextileFill) => void
+  note?: ReactNode
+  motifs: Motif[]
+  motif?: string | null
+  onPick: (id: string | null) => void
+  onUpload: (f: File) => void
+}) {
+  const print = p.value === 'print'
+  const name = p.motifs.find((m) => m.id === p.motif)?.name
   return (
-    <Section title="Duk" aside={aside}>
-      <FlatChoice<TextileFill> label="Duk" value={value} onChange={onChange} options={FILLS} />
-      {value === 'reuse' ? <p className="set-note">Kunden har duken fra før, i samme størrelse. Bare montering.</p> : note && <p className="set-note">{note}</p>}
+    <Section title="Duk" aside={print ? (name ?? 'motiv ikke valgt') : undefined} className="wd-sec" tools={<UploadButton onUpload={p.onUpload} />}>
+      <FlatChoice<TextileFill> label="Duk" value={p.value} onChange={p.onChange} options={FILLS} />
+      {p.value === 'reuse' ? <p className="set-note">Kunden har duken fra før, i samme størrelse. Bare montering.</p> : p.note && <p className="set-note">{p.note}</p>}
+      {print && <MotifGrid motifs={p.motifs} value={p.motif ?? null} onPick={p.onPick} onUpload={p.onUpload} />}
     </Section>
   )
 }
 
+/** Upload a print file: an icon fixed in a section's title row, so it never scrolls away with the motifs. */
+function UploadButton({ onUpload }: { onUpload: (f: File) => void }) {
+  return (
+    <label className="icon-btn" title="Last opp trykkfil" aria-label="Last opp trykkfil">
+      <Upload size={15} />
+      <ImageInput onFile={onUpload} />
+    </label>
+  )
+}
+
 /**
- * The drawer's graphics shelf, under the settings (detail height only): the motif library as tiles you click to put on what is selected, or drag onto the
- * wall drawing (or the plan and 3D). `value` is the selected item's motif: undefined when nothing that takes a motif is
- * selected, null for none. A textile-frame tile to drag comes first when `textile`, an upload tile last.
+ * The motif library as small tiles: click to put one on what is selected, or drag onto the wall drawing (or the plan and
+ * 3D). `value` undefined: nothing that takes a motif is selected; null: none. An empty library offers one wide upload
+ * button, as the drawer is empty while the seller draws.
  */
-export function Shelf({
-  title,
-  aside,
-  motifs,
-  value,
-  textile,
-  required,
-  onPick,
-  onUpload,
-}: {
+function MotifGrid({ motifs, value, required, onPick, onUpload }: { motifs: Motif[]; value?: string | null; required?: boolean; onPick?: (id: string | null) => void; onUpload: (f: File) => void }) {
+  if (!motifs.length)
+    return (
+      <label className="btn ghost wd-upload">
+        <Upload size={15} />
+        Last opp trykkfil
+        <ImageInput onFile={onUpload} />
+      </label>
+    )
+  return (
+    <div className="wd-shelf-grid">
+      {onPick && !required && (
+        <button type="button" className={value === null ? 'mot on' : 'mot'} title="Uten motiv" aria-label="Uten motiv" aria-pressed={value === null} onClick={() => onPick(null)}>
+          <span className="none" />
+        </button>
+      )}
+      {motifs.map((m) => {
+        const on = value === m.id
+        return (
+          <button
+            key={m.id}
+            type="button"
+            className={on ? 'mot on' : 'mot'}
+            title={onPick ? m.name : `${m.name} · dra til en plate eller tekstilvegg`}
+            aria-label={m.name}
+            aria-pressed={on}
+            onClick={onPick && (() => onPick(m.id))}
+            {...decorSource({ kind: 'motif', motif: m.id })}
+          >
+            <img src={m.src} alt="" draggable={false} />
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+/**
+ * The drawer's graphics, under the settings (detail height only): print files only, upload fixed in the title row.
+ * Textile frames are not graphics: they are added with «Tekstilvegg» at the foot of the drawer.
+ */
+export function Shelf({ title, aside, motifs, value, required, onPick, onUpload }: {
   title: string
   aside?: string
   motifs: Motif[]
   value?: string | null
-  textile?: boolean
   /** A motif must be chosen (print on plates): no «Uten motiv» tile. */
   required?: boolean
   onPick?: (id: string | null) => void
   onUpload: (f: File) => void
 }) {
   return (
-    <Section title={title} aside={aside} className="wd-sec">
-      <div className="wd-shelf-grid">
-        {textile && (
-          <button type="button" className="mot" title="Tekstilvegg · dra til veggen" aria-label="Tekstilvegg, dra til veggen" {...decorSource({ kind: 'textile' })}>
-            <i className="tex-thumb" />
-          </button>
-        )}
-        {onPick && !required && (
-          <button type="button" className={value === null ? 'mot on' : 'mot'} title="Uten motiv" aria-label="Uten motiv" aria-pressed={value === null} onClick={() => onPick(null)}>
-            <span className="none" />
-          </button>
-        )}
-        {motifs.map((m) => {
-          const on = value === m.id
-          return (
-            <button
-              key={m.id}
-              type="button"
-              className={on ? 'mot on' : 'mot'}
-              title={onPick ? m.name : `${m.name} · dra til en plate eller tekstilvegg`}
-              aria-label={m.name}
-              aria-pressed={on}
-              onClick={onPick && (() => onPick(m.id))}
-              {...decorSource({ kind: 'motif', motif: m.id })}
-            >
-              <img src={m.src} alt="" draggable={false} />
-            </button>
-          )
-        })}
-        <label className="mot add" title="Last opp motiv" aria-label="Last opp motiv">
-          <Upload size={15} />
-          <ImageInput onFile={onUpload} />
-        </label>
-      </div>
+    <Section title={title} aside={aside} className="wd-sec" tools={motifs.length > 0 && <UploadButton onUpload={onUpload} />}>
+      <MotifGrid motifs={motifs} value={value} required={required} onPick={onPick} onUpload={onUpload} />
     </Section>
   )
 }

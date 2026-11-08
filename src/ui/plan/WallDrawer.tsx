@@ -174,7 +174,7 @@ export function WallDrawer(p: Props) {
               {wallMeta(v, w, { L, T, F, piece, openings, odd, tex, rooms })}
             </p>
 
-            {T && <TextilePanel T={T} onEdit={p.onEdit} />}
+            {T && <TextilePanel T={T} motifs={motifs} onEdit={p.onEdit} onUpload={p.onUpload} />}
 
             {F && <FoilPanel F={F} ratioOf={ratioOf} onEdit={p.onEdit} />}
 
