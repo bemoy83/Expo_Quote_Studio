@@ -193,8 +193,9 @@ takdrager kommer i konflikt med en tekstilramme, viker drageren: stolpene skjøt
   Det gjelder alle dragere, standard, støttedrager og tegnede.
 - **Skjøt på stolpe:** hver stolpe det hevede løpet hviler på, også en veggstolpe, får **94 × 80 mm med 609** ned i
   stolpen. Drageren ligger da 80 mm høyere, med underkanten i høyde med rammens topp (2540).
-- **Skjøt ved krok:** der en hevet drager henger på en som ikke er hevet (eller omvendt), står det samme stykket 94 × 80
-  med **600** (871 003 92, kobling med justerbart hode) mot den andre drageren, i høyden til drageren som henger der.
+- **Skjøt oppå tverrgående drager:** der en hevet drager møter en som ikke er hevet (eller omvendt), brukes ikke
+  kroken. Det samme stykket 94 × 80 med **600** (871 003 92, kobling med justerbart hode) monteres oppå den tverrgående
+  drageren (Bjørn 8.11.2026).
   Koblingene passer innvendig i alle Flex-profiler. Henger begge på samme nivå, er det en vanlig krok.
 - **Tilbud:** egen linje «Skjøt takdrager over tekstilvegg» per stykke (plassholder 6111), fordi en drager senere kan
   skjøtes høyere og koste mer. Alltid utstillerens, også når arrangøren betaler standard takdragerne: det er

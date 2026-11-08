@@ -178,7 +178,7 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
       qty,
     );
   liftPiece('lift-post', lift.post, 'på stolpe, takdrager over tekstilvegg', s.beamLift?.posts ?? 0);
-  liftPiece('lift-hook', lift.hook, 'ved krok, takdrager over tekstilvegg', s.beamLift?.hooks ?? 0);
+  liftPiece('lift-hook', lift.hook, 'oppå tverrgående takdrager, takdrager over tekstilvegg', s.beamLift?.hooks ?? 0);
 
   // Tekstilvegger, one frame on a wall or on foot plates (Bjørn 7.11.2026), each counted once in its parts
   // (calc/textile/common.ts): 43TX per cut length in one line, a 92LTX post per corner, the upright braces in 90 with
