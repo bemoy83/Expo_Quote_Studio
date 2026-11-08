@@ -6,7 +6,8 @@ import type { CalcResult } from '../../calc/calc'
 import { setStand } from '../../domain/edit'
 import type { Payer, StandType, StandWallTerms, Variant } from '../../domain/types'
 import { standardBeamsOn, withStandardBeams } from '../../domain/walls'
-import { Dim, FlatChoice, Section } from '../controls'
+import { ArrowLeftRight } from 'lucide-react'
+import { Dim, FlatChoice, IconButton, Section } from '../controls'
 import { wallPlates } from '../env'
 import { fmt } from '../format'
 import { beamSummary } from '../names'
@@ -79,10 +80,26 @@ export function StandSettings({ v, res, onEdit, terms, onTerms }: StandSettingsP
     />
   )
   const beams = standardBeamsOn(v)
+  const open = s.cornerSide ?? 'right'
   const plate = wallPlates().find((x) => x.ral === terms.ral)
   return (
     <div className="stand-set">
-      <Section title="Standtype">
+      {/* A corner stand's open side is a mirror, like a door's swing: named in the title, flipped with one icon */}
+      <Section
+        title="Standtype"
+        aside={s.type === 'corner' ? `åpen mot ${open === 'left' ? 'venstre' : 'høyre'}` : undefined}
+        tools={
+          s.type === 'corner' && (
+            <IconButton
+              icon={ArrowLeftRight}
+              label="Speil hjørnet"
+              title={`Speil hjørnet · åpen mot ${open === 'left' ? 'høyre' : 'venstre'}`}
+              size={15}
+              onClick={() => onEdit((x) => setStand(x, { ...x.stand, cornerSide: open === 'left' ? 'right' : 'left' }))}
+            />
+          )
+        }
+      >
         <FlatChoice<StandType>
           tiles
           label="Standtype"
@@ -100,20 +117,6 @@ export function StandSettings({ v, res, onEdit, terms, onTerms }: StandSettingsP
         />
         <p className="set-note">{TYPE_TEXT[s.type]}</p>
       </Section>
-
-      {s.type === 'corner' && (
-        <Section title="Åpen mot">
-          <FlatChoice<'left' | 'right'>
-            label="Åpen side"
-            value={s.cornerSide ?? 'right'}
-            onChange={(cornerSide) => onEdit((x) => setStand(x, { ...x.stand, cornerSide }))}
-            options={[
-              { value: 'left', label: 'Venstre' },
-              { value: 'right', label: 'Høyre' },
-            ]}
-          />
-        </Section>
-      )}
 
       <Section title="Mål">
         <div className="stand-dims">
