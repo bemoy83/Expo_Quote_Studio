@@ -9,7 +9,7 @@ describe('InFrame assumptions kept in the browser', () => {
   });
   it('a stored old default gives way to today’s', () => {
     expect(ownInFrame({ ...def, stag: 1000, bleed: 14 }, true)).toEqual({ bleed: 14 });
-    // Set on Produksjon now, it is a choice
+    // Set on Kostgrunnlag now, it is a choice
     expect(ownInFrame({ ...def, stag: 1000 })).toEqual({ stag: 1000 });
   });
   it('reads nothing from what is not an object', () => {
