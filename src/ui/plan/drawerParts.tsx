@@ -85,7 +85,7 @@ export function FabricSection(p: {
   note?: ReactNode
   motifs: Motif[]
   motif?: string | null
-  onPick: (id: string | null) => void
+  onPick: (id: string) => void
   onUpload: (f: File) => void
 }) {
   const print = p.value === 'print'
@@ -94,7 +94,7 @@ export function FabricSection(p: {
     <Section title="Duk" aside={print ? (name ?? 'motiv ikke valgt') : undefined} className="wd-sec" tools={<UploadButton onUpload={p.onUpload} />}>
       <FlatChoice<TextileFill> label="Duk" value={p.value} onChange={p.onChange} options={FILLS} />
       {p.value === 'reuse' ? <p className="set-note">Kunden har duken fra før, i samme størrelse. Bare montering.</p> : p.note && <p className="set-note">{p.note}</p>}
-      {print && <MotifGrid motifs={p.motifs} value={p.motif ?? null} onPick={p.onPick} onUpload={p.onUpload} />}
+      {print && <MotifGrid motifs={p.motifs} value={p.motif} onPick={p.onPick} onUpload={p.onUpload} />}
     </Section>
   )
 }
@@ -112,10 +112,9 @@ function UploadButton({ onUpload }: { onUpload: (f: File) => void }) {
 /**
  * The motif library as small tiles: click to put one on what is selected, or drag onto the wall drawing (or the plan and
  * 3D). Print files only: no «Uten motiv» tile, as no motif is not a print (Bjørn 8.11.2026); «Kun ramme» may come later
- * as its own switch. An empty library offers one wide upload
- * button, as the drawer is empty while the seller draws.
+ * as its own switch. An empty library offers one wide upload button, as it is empty while the seller draws.
  */
-function MotifGrid({ motifs, value, onPick, onUpload }: { motifs: Motif[]; value?: string | null; onPick?: (id: string | null) => void; onUpload: (f: File) => void }) {
+function MotifGrid({ motifs, value, onPick, onUpload }: { motifs: Motif[]; value?: string | null; onPick?: (id: string) => void; onUpload: (f: File) => void }) {
   if (!motifs.length)
     return (
       <label className="btn ghost wd-upload">
@@ -156,7 +155,7 @@ export function Shelf({ title, aside, motifs, value, onPick, onUpload }: {
   aside?: string
   motifs: Motif[]
   value?: string | null
-  onPick?: (id: string | null) => void
+  onPick?: (id: string) => void
   onUpload: (f: File) => void
 }) {
   return (

@@ -202,13 +202,16 @@ Veggskuffens tegning blir arbeidstegning for én vegg. Se bilde 3.
   når «Vis posisjoner» er på. Tekstene står på én linje over plasseringsraden. Linjene forskyves 13 px om de
   overlapper.
 - Rommet bak veggen («Bakrom») står i en `--sunken` flate som i dag.
-- **Tekstilrammen slik den bygges** (Bjørn 8.11.2026, i planens oransje tekstilfarge, også flisen i hyllen, `TextileFace` i `plan/elevation.tsx`, mål i
+- **Tekstilrammen slik den bygges** (Bjørn 8.11.2026, i planens oransje tekstilfarge, `TextileFace` i `plan/elevation.tsx`, mål i
   `wallDrawer/elevationMeasure.ts`): samme tegning på vegg og på fotplater. Rammen tegnes i fysisk mål (970 i et
   1 000-spenn) og der den står, også når den er flyttet 40 mm i et innvendig hjørne (X10). 43TX er en 40 mm kant,
   stagene (X8) stiplede stående bak duken, og en skinneskjøt (X6) et merke tvers over topp- og bunnskinnen. Valgt
   ramme får stagkjeden under veggen, avstanden mellom de stående (rammeende, stag) merket «stag», og veggens total
-  under den; henvisningen er «Tekstil 5 970 × 2 540». Skuffens tekst har fil, antall stag og skjøt. Frittstående har
-  stagkjeden over rammen, føttene og hele lengden under.
+  under den. Skuffens tekst har ramme, fil, antall stag og skjøt. Frittstående har stagkjeden over rammen, føttene og
+  hele lengden under.
+- **Henvisninger** (Bjørn 8.11.2026, `labels` i `frame`): det skuffen er åpen for får ingen henvisning, tittelen sier
+  hva det er. Med veggen valgt får hver tekstilramme («Tekstil 5 970 × 2 540»), dekal og print på siden sin
+  henvisning; et print over flere plater er ett.
 - **Notat på duken før motivet er valgt** (Bjørn 8.11.2026, `ui/textileNote.ts`): «Husk valg av motiv» på trykk uten
   motiv, «Kundens egen duk» på kundens duk, ingenting på hvit. Et svakt kryss fra hjørne til hjørne og en pille
   (fast skjermstørrelse, uten kant) langs diagonalen fra nede til venstre, så det passer alle rammestørrelser. I 3D

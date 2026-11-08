@@ -374,10 +374,10 @@ function content(p: PillActions, graphics: boolean, setGraphics: (b: boolean) =>
 }
 
 /**
- * On a wall with textile walls on it: one button, icon and where it goes («Tekstil», «Vegg»), that steps wall → the
- * textile on each face → wall (Bjørn 8.11.2026), so a click that took the wall for the textile, or the other way round, is put right in one tap. The
- * pill's name says which is chosen. Per face the textile over the selected one's middle, else the face's first. Nothing
- * on a wall without textile walls.
+ * On a wall with textile walls on it: one button, its icon and where it goes («Tekstil», «Vegg»), that steps wall → the
+ * textile on each face → wall (Bjørn 8.11.2026), so a click that took the wall for the textile, or the other way round,
+ * is put right in one tap. The pill's name says which is chosen. Per face the textile over the selected one's middle,
+ * else the face's first. Nothing on a wall without textile walls.
  */
 function layerSwitch(v: Variant, w: Wall, sel: PlanSelection, T: TextileWall | undefined, onSelect: (s: PlanSelection) => void): ReactNode {
   const mid = T ? T.from + T.width / 2 : null

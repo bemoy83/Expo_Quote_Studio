@@ -78,7 +78,6 @@ export function FoilPanel({ F, ratioOf, onEdit }: { F: Foil; ratioOf: (id?: stri
  * print files to drag onto the wall. A chosen textile frame has its motifs in its fabric section.
  */
 export function WallShelf(props: {
-  T?: TextileWall
   F?: Foil
   printing: boolean
   pm: Motif | undefined
@@ -88,15 +87,13 @@ export function WallShelf(props: {
   onEdit: Edit
   onUpload: (f: File) => void
 }) {
-  const { T, F, printing, pm, motifs, ratioOf, setPrintMotif, onEdit, onUpload } = props
-  // A textile frame's motif lives in its fabric section (TextilePanel)
-  if (T) return null
+  const { F, printing, pm, motifs, ratioOf, setPrintMotif, onEdit, onUpload } = props
   const [title, aside] = F ? ['Motiv', findMotif(motifs, F.motif)?.name ?? 'ikke valgt'] : printing ? ['Print', pm?.name ?? 'last opp et motiv'] : ['Grafikk', 'dra til veggen']
   const value = F ? (F.motif ?? null) : printing ? pm?.id : undefined
   const onPick = F
-    ? (m: string | null) => onEdit((x) => updateFoil(x, rules, F.id, { motif: m }, ratioOf(m ?? undefined)))
+    ? (m: string) => onEdit((x) => updateFoil(x, rules, F.id, { motif: m }, ratioOf(m)))
     : printing
-      ? (m: string | null) => m && setPrintMotif(m)
+      ? setPrintMotif
       : undefined
   return <Shelf title={title} aside={aside} motifs={motifs} value={value} onPick={onPick} onUpload={onUpload} />
 }
