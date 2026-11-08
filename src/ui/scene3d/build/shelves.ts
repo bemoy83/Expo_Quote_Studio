@@ -1,7 +1,7 @@
 // Shelves (hylle 6311, Byggeregler H1–H3): a white board in its wall module, its top at the shelf's height, lying into
 // the inner corner of the posts on a bracket in each post's face channel. The brackets are 91F (one flange, turned away
-// from the board as mounted, Bjørn 8.11.2026) or 91FF (a flange each way, between two boards at one height), drawn from Bjørn's STL outlines, 290 mm out
-// from the post's face; the 600 coupling sits inside the post and is not drawn.
+// from the board as mounted, Bjørn 8.11.2026) or 91FF (a flange each way, between two boards at one height), drawn
+// from Bjørn's STL outlines, 290 mm out from the post's face; the 600 coupling sits inside the post and is not drawn.
 import * as THREE from 'three'
 import { faceNormal, sideOf } from '../../../domain/faces'
 import { pointAlong, pointKey, wallDirection } from '../../../domain/grid'
