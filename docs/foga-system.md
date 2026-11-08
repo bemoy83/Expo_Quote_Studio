@@ -382,7 +382,7 @@ linjer (Andre tjenester) plukkes ikke. Ferdigmonterte enheter plukkes som stk (l
 - Dørblad
 
 Løse deler er da bare 43TX (én linje med alle kappelengder, for rammer på vegg og på fotplater; lengder som møter
-en 92LTX har butt ende der, resten er gjæret, X7), hjørnekoblinger 617,
+en 92LTX eller en skinneskjøt har butt ende der, resten er gjæret, X7), hjørnekoblinger 617,
 skjøtekoblinger 609 eller 604 og braketter 520, alle under Tekstilvegger. På fotplater kommer 92LTX per hjørne og
 fotplater 740 og 730 i tillegg. Hver duk (T1, F1A, F1B …) står som egen linje: trykt, hvit eller kundens.
 

@@ -28,6 +28,16 @@ export function frameParts(r: TextileFrameRecipe, railCuts: readonly number[], s
   };
 }
 
+/** Rail pieces with butt ends, two rails (top and bottom) each: every end at a splice and every end at a 92LTX corner
+ *  post is cut straight; the frame's own corners are mitred (Bjørn 8.11.2026). */
+export function buttEnds(railCuts: readonly number[], corner: { from: boolean; to: boolean } = { from: false, to: false }): NonNullable<FrameParts['butt']> {
+  const last = railCuts.length - 1;
+  return railCuts.flatMap((len, j) => {
+    const ends = (j > 0 || corner.from ? 1 : 0) + (j < last || corner.to ? 1 : 0);
+    return ends ? [[len, ends, 2] as const] : [];
+  });
+}
+
 /** Frame profile in the frame, braces included, m. */
 export const partsLm = (p: FrameParts) => (p.cuts.reduce((a, [l, q]) => a + l * q, 0) + p.braces.qty * p.braces.length) / 1000;
 

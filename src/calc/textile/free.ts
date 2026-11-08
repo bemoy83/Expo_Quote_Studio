@@ -19,7 +19,7 @@ import { fogaPart } from '../../foga/parts';
 import type { FootPlate, SupportRule, TextileFrameRecipe } from '../../foga/recipes';
 import type { InFrameParams } from '../../rules/rules';
 import { minSupports, spreadSupports, type Ends } from '../supports';
-import { bracePoints, frameParts, fullHeight, printFileName, splitRail, type FrameParts } from './common';
+import { bracePoints, buttEnds, frameParts, fullHeight, printFileName, splitRail, type FrameParts } from './common';
 
 export { bracePoints, splitRail };
 
@@ -176,11 +176,7 @@ export function freeFrames(
     const spliceCode = bothHeld ? r.splice.slide.code : r.splice.thread;
     const perSplice = 2 * (bothHeld ? r.splice.slide.perRail : 1);
     const braceLength = H - 2 * s.prof;
-    // A rail piece ending at a corner post is cut straight there (butt), every other end mitred (Bjørn 8.11.2026)
-    const butt = railCuts.flatMap((len, j) => {
-      const ends = (j === 0 && corner.from ? 1 : 0) + (j === railCuts.length - 1 && corner.to ? 1 : 0);
-      return ends ? [[len, ends, 2] as const] : [];
-    });
+    const butt = buttEnds(railCuts, corner);
     const parts = frameParts(
       r,
       railCuts,

@@ -6691,7 +6691,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
       },
       {
         "artnr": "873 805 22",
-        "detail": "2 × 3970 · 6 × 2540 · 2 × 2463 · 2 × 1970 · 2 × 1463 mm · 2 × 2463 og 2 × 1463 har én butt ende mot 92LTX, resten gjæret",
+        "detail": "2 × 3970 · 6 × 2540 · 2 × 2463 · 2 × 1970 · 2 × 1463 mm · 2 × 2463 og 2 × 1463 har én butt ende, resten gjæret",
         "group": "prof.tekstil",
         "lm": 34.972,
         "name": "43TX · Tekstilprofil",
@@ -8013,9 +8013,9 @@ exports[`08-tekstil.json > variant A > picking list 1`] = `
   },
   {
     "code": "873 805 22",
-    "detail": "2 × 3970 · 6 × 2540 · 2 × 2463 · 2 × 1970 · 2 × 1463 mm · 2 × 2463 og 2 × 1463 har én butt ende mot 92LTX, resten gjæret",
+    "detail": "2 × 3970 · 6 × 2540 · 2 × 2463 · 2 × 1970 · 2 × 1463 mm · 2 × 2463 og 2 × 1463 har én butt ende, resten gjæret",
     "group": "prof.tekstil",
-    "key": "43TX · Tekstilprofil|2 × 3970 · 6 × 2540 · 2 × 2463 · 2 × 1970 · 2 × 1463 mm · 2 × 2463 og 2 × 1463 har én butt ende mot 92LTX, resten gjæret",
+    "key": "43TX · Tekstilprofil|2 × 3970 · 6 × 2540 · 2 × 2463 · 2 × 1970 · 2 × 1463 mm · 2 × 2463 og 2 × 1463 har én butt ende, resten gjæret",
     "lm": 34.972,
     "nobb": true,
     "note": undefined,

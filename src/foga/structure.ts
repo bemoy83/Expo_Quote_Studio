@@ -24,7 +24,7 @@ export interface BeamSpec {
 export interface FrameParts {
   /** Frame profile pieces by cut length: top and bottom rails, the sides or the uprights at free ends, mm. */
   cuts: readonly (readonly [length: number, qty: number])[];
-  /** The pieces among `cuts` with a butt end against a 92LTX corner post, the rest cut mitred (Bjørn 8.11.2026):
+  /** The pieces among `cuts` with a butt end, at a rail splice or a 92LTX corner post; the rest are mitred (Bjørn 8.11.2026):
    *  length, butt ends per piece (1 or 2), qty. */
   butt?: readonly (readonly [length: number, ends: number, qty: number])[];
   /** Upright braces, each stored with its couplings. */

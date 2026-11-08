@@ -11,7 +11,7 @@
 // Byggeregler X2, X3, X6, X9 (docs/byggeregler.md): the frame widths are the 43TX standard lengths, cc − 30.
 import { RECIPES, type TextileFrameRecipe } from '../../foga/recipes';
 import type { InFrameParams } from '../../rules/rules';
-import { bracePoints, frameParts, fullHeight, partsLm, splitRail, type FrameParts } from './common';
+import { bracePoints, buttEnds, frameParts, fullHeight, partsLm, splitRail, type FrameParts } from './common';
 
 export interface FramePiece {
   /** Span along the wall, mm. */
@@ -62,7 +62,7 @@ export function framePiece(spanMm: number, s: InFrameParams, heightMm?: number, 
     [r.corner, 4],
     [r.splice.thread, 2 * at.length],
     [r.wall.fixing.code, r.wall.fixing.perFrame],
-  ]);
+  ], buttEnds(railCuts));
   return {
     span: spanMm,
     W,

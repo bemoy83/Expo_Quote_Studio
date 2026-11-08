@@ -517,7 +517,7 @@ describe('frittstående tekstilvegg', () => {
   });
   it('picking list', () => {
     const tx = res.bom.lines.filter((l) => l.group === 'prof.tekstil');
-    expect(tx.find((l) => l.name.startsWith('43TX'))).toMatchObject({ qty: 6, detail: '4 × 3000 · 2 × 2540 mm' });
+    expect(tx.find((l) => l.name.startsWith('43TX'))).toMatchObject({ qty: 6, detail: '4 × 3000 · 2 × 2540 mm · 4 × 3000 har én butt ende, resten gjæret' });
     // Braces 150 each side of the splice at 3000 and between, at most 2 m apart; none at the feet
     expect(tx.find((l) => l.name.startsWith('Støttestag'))).toMatchObject({ qty: 4 });
     // 617: top and bottom at both free ends · 609: top and bottom splice (both ends free)

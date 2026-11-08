@@ -190,9 +190,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   *Bjørn 31.10.2026, skjøt 7.11.2026 · `RECIPES.textileFrame` · kode `src/calc/textile/free.ts`, `src/calc/textile/inFrame.ts` · test `src/calc/freeFrames.test.ts`, `src/calc/fabric.test.ts`*
 - **X7 Hjørne.** To frittstående vegger møtes bare ende mot ende i rett vinkel (ingen T) og deler en 92LTX, kappet
   2526 (endelokk 7 mm under og over, ikke plukket). Skinnene stopper 37 mm før hjørnepunktet; utvendig duk er 20 mm
-  lengre og innvendig 20 mm kortere per hjørne. En strek i forlengelsen blir samme vegg. 43TX er ellers gjæret i
-  begge ender; en skinne som møter en 92LTX kappes butt mot den og gjæret i den andre enden. Plukklisten på
-  arbeidsordren sier hvilke lengder som har butt ende.
+  lengre og innvendig 20 mm kortere per hjørne. En strek i forlengelsen blir samme vegg. 43TX er gjæret i rammens
+  hjørner; mot en 92LTX og i en skinneskjøt (X6) er enden butt. Plukklisten på arbeidsordren sier hvilke lengder som
+  har butte ender.
   *Bjørn 31.10.2026, 6.11.2026 og 8.11.2026 · `RECIPES.textileFrame` · kode `src/calc/textile/free.ts`, `src/domain/textile/free.ts` · test `src/calc/freeFrames.test.ts`*
 - **X8 Føtter og stag.** Fotplate 740 under bunnskinnen etter S3 og S4; en 92LTX teller som støtte. Stagene er rammens
   egne (som X2) og står uavhengig av føttene: en fotplate har ikke stag.

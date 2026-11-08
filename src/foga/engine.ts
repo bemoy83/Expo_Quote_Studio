@@ -61,9 +61,9 @@ const mmList = (cuts: Map<number, number>) =>
     .map(([len, qty]) => `${qty} × ${len}`)
     .join(' · ') + ' mm';
 
-/** 43TX cut lengths. Every end is mitred except where a rail meets a 92LTX corner post: there it is cut straight, so
- *  those pieces are named apart (Bjørn 8.11.2026): «… mm · 2 × 2463 og 2 × 1463 har én butt ende mot 92LTX, resten
- *  gjæret». */
+/** 43TX cut lengths. Every end is mitred except at a rail splice and where a rail meets a 92LTX corner post: there it
+ *  is cut straight, so those pieces are named apart (Bjørn 8.11.2026): «… mm · 2 × 2463 og 2 × 1463 har én butt ende,
+ *  resten gjæret». */
 function cutDetail(cuts: Map<number, number>, butt: Map<string, number>): string {
   if (!butt.size) return mmList(cuts);
   const byEnds = [1, 2].flatMap((n) => {
@@ -74,7 +74,7 @@ function cutDetail(cuts: Map<number, number>, butt: Map<string, number>): string
       .map(([len, qty]) => `${qty} × ${len}`);
     if (!list.length) return [];
     const and = list.length > 1 ? `${list.slice(0, -1).join(', ')} og ${list[list.length - 1]}` : list[0];
-    return [`${and} har ${n === 1 ? 'én butt ende' : 'to butte ender'} mot 92LTX`];
+    return [`${and} har ${n === 1 ? 'én butt ende' : 'to butte ender'}`];
   });
   return `${mmList(cuts)} · ${byEnds.join(' · ')}, resten gjæret`;
 }
