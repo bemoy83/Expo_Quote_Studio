@@ -35,17 +35,31 @@ describe('shelves in 3D', () => {
     expect(named('foga-91FF')).toHaveLength(1)
   })
 
-  it('the brackets stand out 290 mm from the post face, under the board, with the end flanges turned away from the board', () => {
+  it('the brackets stand out 290 mm from the post face, under the board, with the flange in under the board', () => {
     for (const m of [...named('foga-91F'), ...named('foga-91FF')]) {
       const b = box(m)
       expect([r(b.min.z + 1.5), r(b.max.z + 1.5)]).toEqual([20, 310])
       // 30 high, the board's underside on its flange 10,5 over its bottom: the bracket's top 1,5 over the board's top
       expect([Math.round(b.min.y * 10000), Math.round(b.max.y * 10000)]).toEqual([14715, 15015])
     }
-    // The end brackets at x = 1 and 3 (−2 and 0 in the world) turn their flanges away from the boards (mirrored, Bjørn 8.11.2026): the body on the post
+    // The end brackets at x = 1 and 3 (−2 and 0 in the world) have the body on the post and the flange in under the board (Bjørn 8.11.2026)
     const left = named('foga-91F').map(box).find((b) => b.min.x < -1.9)!
-    expect([r(left.min.x + 2), r(left.max.x + 2)]).toEqual([-25, 10])
+    expect([r(left.min.x + 2), r(left.max.x + 2)]).toEqual([-10, 25])
     const right = named('foga-91F').map(box).find((b) => b.min.x > -0.1)!
-    expect([r(right.min.x), r(right.max.x)]).toEqual([-10, 25])
+    expect([r(right.min.x), r(right.max.x)]).toEqual([-25, 10])
+    // The flange is the thin part: at the end toward the board only flange points, 9–10,5 mm over the bracket's bottom
+    for (const [m, toward] of named('foga-91F').map((m) => [m, box(m).min.x < -1.9 ? 1 : -1] as const)) {
+      const b = box(m)
+      const edge = toward > 0 ? b.max.x : b.min.x
+      const p = m.geometry.attributes.position
+      const v = new THREE.Vector3()
+      const ys: number[] = []
+      for (let i = 0; i < p.count; i++) {
+        v.fromBufferAttribute(p, i).applyMatrix4(m.matrixWorld)
+        if (Math.abs(v.x - edge) < 1e-4) ys.push(Math.round((v.y - b.min.y) * 10000))
+      }
+      expect(Math.min(...ys)).toBe(90)
+      expect(Math.max(...ys)).toBe(105)
+    }
   })
 })

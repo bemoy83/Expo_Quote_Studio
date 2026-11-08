@@ -1,6 +1,6 @@
 // Shelves (hylle 6311, Byggeregler H1–H3): a white board in its wall module, its top at the shelf's height, lying into
-// the inner corner of the posts on a bracket in each post's face channel. The brackets are 91F (one flange, turned away
-// from the board as mounted, Bjørn 8.11.2026) or 91FF (a flange each way, between two boards at one height), drawn
+// the inner corner of the posts on a bracket in each post's face channel. The brackets are 91F (one flange, in under
+// the board, its body on the post's centre) or 91FF (a flange each way, between two boards at one height), drawn
 // from Bjørn's STL outlines, 290 mm out from the post's face; the 600 coupling sits inside the post and is not drawn.
 import * as THREE from 'three'
 import { faceNormal, sideOf } from '../../../domain/faces'
@@ -54,16 +54,17 @@ export function buildShelves(c: BuildContext) {
     mesh.scale.x = out
     // Local x along the face normal; the profile's x (across, local z) along the wall
     mesh.rotation.y = Math.atan2(-b.n[1], b.n[0])
-    // Local −z, where the flange of a 91F is, lies along (n.y, −n.x): turn it over when it would face the wrong way
+    // Local −z lies along (n.y, −n.x): turn the 91F over when its flange would face away from the board
     const flangeWay: Point = [b.n[1], -b.n[0]]
-    // Mirrored as Bjørn mounts them (8.11.2026): the flange of an end bracket turns away from its board
+    // The flange in under the board (Bjørn 8.11.2026). The outline's flange lies on local +z, so the test is turned
     const board: Point = [b.dir[0] * b.dirs[0], b.dir[1] * b.dirs[0]]
     const want: Point = [-board[0], -board[1]]
     const toward = flangeWay[0] * want[0] + flangeWay[1] * want[1] > 0 ? 1 : -1
     if (!twin && toward < 0) mesh.scale.z = -1
-    // A 91F's body is 7,5 mm off its outline's middle, away from the flange: the body sits on the post's centre
+    // A 91F's body is 7,5 mm off its outline's middle, away from the flange: moved toward the board, the body sits on
+    // the post's centre
     const shift = twin ? 0 : 0.0075
-    const mid: Point = [b.p[0] + b.n[0] * (face + out / 2) + want[0] * shift, b.p[1] + b.n[1] * (face + out / 2) + want[1] * shift]
+    const mid: Point = [b.p[0] + b.n[0] * (face + out / 2) + board[0] * shift, b.p[1] + b.n[1] * (face + out / 2) + board[1] * shift]
     mesh.position.copy(at(mid, b.y - t - FLANGE_TOP + BODY / 2))
     add(mesh, { layer: 'objects', pick: { wallId: b.wallId } })
   }
