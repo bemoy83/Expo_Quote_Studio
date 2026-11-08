@@ -1,7 +1,7 @@
 // 3D scene derived from the stand model. No state of its own: build() turns a variant (and its calc) into a
 // three.js group, and the view rebuilds it whenever the model changes.
 // Model → world: x → x, y (toward the aisle) → z, height → y. The stand is centred on the origin.
-// Each product is a part of its own in build/ (floor, walls, frame, textile, decor, rooms, objects, labels) on a shared
+// Each product is a part of its own in build/ (floor, walls, frame, textile, decor, shelves, rooms, objects, labels) on a shared
 // context (build/context.ts); build() runs them in the order the scene is drawn.
 import * as THREE from 'three'
 import type { CalcResult } from '../../calc/calc'
@@ -13,6 +13,7 @@ import { buildFrame } from './build/frame'
 import { labels } from './build/labels'
 import { buildObjects } from './build/objects'
 import { buildRooms } from './build/rooms'
+import { buildShelves } from './build/shelves'
 import { buildTextile } from './build/textile'
 import { buildWalls } from './build/walls'
 
@@ -25,6 +26,7 @@ export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THR
   buildFrame(c)
   buildTextile(c)
   buildDecor(c)
+  buildShelves(c)
   buildRooms(c)
   buildObjects(c)
   if (opts.labels) labels(c.root, v)

@@ -41,6 +41,12 @@ export interface Rules {
   door: { swing: number; height: number };
   /** `cell`: the floor grid (byggeregel G1); `rollEnd`: extra roll length at each end of a lane (G3). */
   floor: { cell: number; rollEnd: number };
+  /**
+   * Shelf (hylle 6311) in one wall module, height = top of the board above the floor (byggeregler H1, H4, H5): `min`
+   * and `max` that height, `step` it snaps to, `gap` the least clear height between two shelves above each other,
+   * `start` a new shelf's height, `board` thickness, depth and width.
+   */
+  shelf: { min: number; max: number; step: number; gap: number; start: number; board: { thickness: number; depth: number; width: number } };
   /** A quote holds `validDays` from it is sent, but never later than `beforeMount` days before montering. */
   quote: { validDays: number; beforeMount: number };
   /** VAT used for the inkl. mva. figure. Prices are always eks. mva. */
@@ -67,6 +73,8 @@ export const RULES: Rules = {
   },
   door: { swing: 0.95, height: 2.0 },
   floor: { cell: 0.5, rollEnd: 0.1 },
+  // Bjørn 8.11.2026: 100 to 2000 mm from the floor (the neighbour must not see goods over the wall), 100 mm clear between
+  shelf: { min: 0.1, max: 2.0, step: 0.05, gap: 0.1, start: 1.5, board: { thickness: 0.018, depth: 0.3, width: 0.976 } },
   quote: { validDays: 30, beforeMount: 14 },
   vat: 0.25,
 };

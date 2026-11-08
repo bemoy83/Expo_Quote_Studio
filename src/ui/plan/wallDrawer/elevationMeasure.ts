@@ -6,7 +6,7 @@ import type { ProductionPiece } from '../../../calc/production'
 import { frameInset } from '../../../calc/textile/inFrame'
 import { foilCenter } from '../../../domain/decor'
 import { textileBox } from '../../../domain/textile/inFrame'
-import type { Foil, TextileWall } from '../../../domain/types'
+import type { Foil, Shelf, TextileWall } from '../../../domain/types'
 import type { Rules } from '../../../rules/rules'
 import { textPx } from '../planScale'
 
@@ -188,4 +188,25 @@ export function frame(size: { w: number; h: number } | null, L: number, H: numbe
   const x0 = -m.left * u - (vbW - L - (m.left + m.right) * u) / 2
   const y0 = -m.top * u - (vbH - H - (m.top + m.bottom) * u) / 2
   return { viewBox: `${x0} ${y0} ${vbW} ${vbH}`, u, leaders: ls, top: y0, width: vbW, right: x0 + vbW }
+}
+
+/** The shelves in one felt, for its height chain: x of the felt's right edge in the drawing and the heights. */
+export interface ShelfChain {
+  /** The felt's edges in the drawing, left to right. */
+  x0: number
+  x1: number
+  /** Heights above the floor, m, the floor first: the lowest board's top, then for each shelf over it the underside of
+   *  its board and its top, so the chain reads from the floor and the lysmål between them (Byggeregler H4, H5). */
+  ts: number[]
+}
+
+/** The height chains of the shelves on a face, one per felt (Byggeregler H5, H8). `x` turns an along-wall offset into x in the drawing. */
+export function shelfChains(rules: Rules, stacks: Shelf[][], x: (t: number) => number): ShelfChain[] {
+  const t = rules.shelf.board.thickness
+  return stacks.map((st) => {
+    const a = x(st[0].module)
+    const b = x(st[0].module + 1)
+    const ts = [0, ...st.flatMap((f, i) => (i === 0 ? [f.y] : [f.y - t, f.y]))]
+    return { x0: Math.min(a, b), x1: Math.max(a, b), ts }
+  })
 }

@@ -1,4 +1,4 @@
-// 2D plan. Explicit layers, bottom to top: ground, floor, grid, walls, openings, textiles, beams and posts,
+// 2D plan. Explicit layers, bottom to top: ground, floor, grid, walls, openings, textiles, shelves, beams and posts,
 // objects, labels, interaction preview. Pointer handling is done on the svg with model coordinates, so the
 // draw order never decides what can be clicked. Each product's layer is drawn in plan/layers/ (FloorLayer, WallLayer,
 // TextileLayer, BeamLayer, ObjectLayer, RoomLayer, Labels, PreviewLayer), and the pointer handling lives in plan/pointer/
@@ -34,6 +34,7 @@ import { PickLayer } from './layers/PickLayer'
 import { PreviewLayer } from './layers/PreviewLayer'
 import { SnapDots } from './layers/Previews'
 import { RoomLayer } from './layers/RoomLayer'
+import { ShelfLayer } from './layers/ShelfLayer'
 import { TextileLayer } from './layers/TextileLayer'
 import { WallLayer } from './layers/WallLayer'
 import { nextTarget } from './next'
@@ -293,6 +294,9 @@ export function PlanView(p: Props) {
 
       {/* Free-standing textile walls, textile walls on a wall face, foil decor */}
       {twin('textile', (s) => <TextileLayer v={s.v} res={s.res} selection={selection} dim={dim} />)}
+
+      {/* Shelves in front of their wall face */}
+      {twin('shelves', (s) => <ShelfLayer v={s.v} selection={selection} dim={dim} />)}
 
       {/* Beams and posts */}
       {twin('beams', (s) => <BeamLayer v={s.v} res={s.res} selection={selection} dim={dim} />)}

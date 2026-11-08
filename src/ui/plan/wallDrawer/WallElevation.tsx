@@ -1,13 +1,15 @@
 // The drawing in the wall drawer: the chosen face of the wall seen straight on, with plates, doors, decals, rooms
-// against it and textile frames. Frames and decals are moved and resized here, motifs and frames dropped from the shelf,
-// and while a paint tool is out each plate is a target for it.
+// against it, textile frames and shelves (hylle 6311). Frames and decals are moved and resized here, shelves moved up,
+// down and sideways, motifs and frames dropped from the graphics shelf, and while a paint tool is out each plate is a
+// target for it.
 import { useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent } from 'react'
 import { foilCenter } from '../../../domain/decor'
 import { doorLevels, doorRal, doorWindows } from '../../../domain/doors'
 import { felt, type FaceSide } from '../../../domain/faces'
 import { cropWindow, plateCrop } from '../../../domain/print'
 import { textileBox } from '../../../domain/textile/inFrame'
-import type { Foil, Opening, TextileWall, Variant, Wall } from '../../../domain/types'
+import { shelfStacks } from '../../../domain/shelves'
+import type { Foil, Opening, Shelf, TextileWall, Variant, Wall } from '../../../domain/types'
 import { wallRal } from '../../../domain/panels'
 import type { BuiltModule } from '../../../domain/walls'
 import type { Motif } from '../../../persistence/file'
@@ -18,14 +20,14 @@ import { plateColor, productOf, rules } from '../../env'
 import { findMotif } from '../../motifs'
 import { Handles, Print } from '../drawerParts'
 import { TXT } from '../drawerText'
-import { Opening as OpeningView, Posts, TextileFace } from '../elevation'
+import { Opening as OpeningView, Posts, ShelfFront, TextileFace } from '../elevation'
 import { type PlanSelection } from '../selection'
 import { RoomLabel } from '../RoomLabel'
 import { roomLabelSize } from '../roomLabelSize'
-import { useDecorDrag } from './drag'
+import { useDecorDrag, useShelfDrag } from './drag'
 import { faceName, type RoomRun } from './face'
 import { ElevationDims } from './ElevationDims'
-import { elevationItems, frame, textileDrawing, type FrameFacts } from './elevationMeasure'
+import { elevationItems, frame, shelfChains, textileDrawing, type FrameFacts } from './elevationMeasure'
 import { planScale } from '../planScale'
 import { useElementSize } from '../../useElementSize'
 import type { PaintTool } from './paint'
@@ -45,10 +47,14 @@ interface Props {
   /** A frame's production facts (size, braces, splices, X10 move), by textile id. */
   pieceOf: (id: string) => FrameFacts | undefined
   foils: Foil[]
+  /** Shelves on the face. */
+  shelves: Shelf[]
   rooms: RoomRun[]
   T: TextileWall | undefined
   F: Foil | undefined
   O: Opening | undefined
+  /** The chosen shelf. */
+  S: Shelf | undefined
   motifs: Motif[]
   label: string
   painting: boolean
@@ -69,7 +75,7 @@ interface Props {
 }
 
 export function WallElevation(p: Props) {
-  const { v, w, s, L, H, mods, tex, pieceOf, foils, rooms, T, F, O, motifs, label, painting, printing, tool, paintAt, doorModules, ratioOf, select, selectDoor } = p
+  const { v, w, s, L, H, mods, tex, pieceOf, foils, shelves, rooms, T, F, O, S, motifs, label, painting, printing, tool, paintAt, doorModules, ratioOf, select, selectDoor } = p
   const svg = useRef<SVGSVGElement>(null)
   const [spot, setSpot] = useState<DropSpot | null>(null)
   /** True from a press on a plate until it is let go: the brush sweeps over the plates entered meanwhile. */
@@ -79,6 +85,7 @@ export function WallElevation(p: Props) {
   const spanX = (a: number, b: number) => Math.min(u(a), u(b))
   const z = (h: number) => H - h
   const drag = useDecorDrag({ svg, w, s, L, select, ratioOf, onEdit: p.onEdit, onCheckpoint: p.onCheckpoint })
+  const shelfDrag = useShelfDrag({ svg, s, select, onEdit: p.onEdit, onCheckpoint: p.onCheckpoint })
 
   // The drawing's size on screen: the margins for the dimensions are screen px (ElevationDims). Measured on a box the
   // svg fills, never on the svg, whose size would follow the view box it gets from the measure (a loop in Safari).
@@ -284,6 +291,24 @@ export function WallElevation(p: Props) {
             )
           })}
 
+          {/* Shelves, over plates and print: dragged up and down, and sideways felt by felt */}
+          {shelves.map((f) => {
+            const inset = (rules.wall.cc - rules.shelf.board.width) / 2
+            return (
+              <ShelfFront
+                key={f.id}
+                x={spanX(f.module + inset, f.module + 1 - inset)}
+                y={f.y}
+                H={H}
+                u={fr.u}
+                on={S?.id === f.id}
+                style={{ cursor: 'move' }}
+                pointerEvents={painting ? 'none' : undefined}
+                onPointerDown={(e) => shelfDrag(e, f)}
+              />
+            )
+          })}
+
           {/* Where a room stands against this face: a sunken surface over plates and print, with the room's name, for context
               only (hatching is kept for snekret vegg and Tøm) */}
           {rooms.map((r) => (
@@ -347,7 +372,7 @@ export function WallElevation(p: Props) {
             />
           )}
 
-          <ElevationDims w={w} s={s} name={name} L={L} H={H} items={items} leaders={fr.leaders} top={fr.top} width={fr.width} right={fr.right} sc={sc} fields={fields} />
+          <ElevationDims w={w} s={s} name={name} L={L} H={H} items={items} leaders={fr.leaders} top={fr.top} width={fr.width} right={fr.right} sc={sc} fields={fields} shelves={shelfChains(rules, shelfStacks({ ...v, shelves }), u)} />
         </svg>
       </div>
     </div>

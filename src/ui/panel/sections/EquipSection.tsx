@@ -5,17 +5,19 @@ import { mainGroupOf, PRODUCT_GROUPS, resolveGroup } from '../../../catalog/grou
 import type { Product } from '../../../catalog/types'
 import { setCounted } from '../../../domain/edit'
 import { addObjectAnywhere, removeObjects } from '../../../domain/objects'
+import { shelvesOf } from '../../../domain/shelves'
 import type { Variant } from '../../../domain/types'
 import { Counter, IconButton } from '../../controls'
 import { catalog, place } from '../../env'
 import { kr } from '../../format'
 import { penOn } from '../../tools'
+import { ShelfIcon } from '../../plan/QuickPicks'
 import { ObjectThumb, ProductRow, VariantChips } from '../ProductRow'
 import type { RailProps } from '../Rail'
 import { variantTotals } from './variantTotals'
 
 export function EquipSection(p: RailProps & { menu: string }) {
-  const products = catalog.products.filter((x) => mainGroupOf(x.group) === p.menu && (x.kind === 'object' || x.kind === 'counted'))
+  const products = catalog.products.filter((x) => mainGroupOf(x.group) === p.menu && (x.kind === 'object' || x.kind === 'counted' || x.id === catalog.system.shelf))
   const subgroups = PRODUCT_GROUPS.find((g) => g.id === p.menu)?.subgroups ?? []
   const many = subgroups.length > 1
   return (
@@ -26,9 +28,7 @@ export function EquipSection(p: RailProps & { menu: string }) {
         return (
           <div key={sg.id}>
             {many && <div className="panel-sec eyebrow">{sg.name}</div>}
-            {list.map((x) => (
-              <CatalogRow key={x.id} {...p} product={x} />
-            ))}
+            {list.map((x) => (x.id === catalog.system.shelf ? <ShelfRow key={x.id} {...p} product={x} /> : <CatalogRow key={x.id} {...p} product={x} />))}
           </div>
         )
       })}
@@ -39,7 +39,7 @@ export function EquipSection(p: RailProps & { menu: string }) {
 export function SearchResults(p: RailProps & { q: string }) {
   const q = p.q.toLowerCase()
   const hits = catalog.products.filter(
-    (x) => (x.kind === 'object' || x.kind === 'counted') && !x.opening && (x.name.toLowerCase().includes(q) || x.variants.some((v) => v.artnr.toLowerCase().includes(q) || v.name.toLowerCase().includes(q))),
+    (x) => (x.kind === 'object' || x.kind === 'counted' || x.id === catalog.system.shelf) && !x.opening && (x.name.toLowerCase().includes(q) || x.variants.some((v) => v.artnr.toLowerCase().includes(q) || v.name.toLowerCase().includes(q))),
   )
   if (!hits.length) return <p className="panel-note">Ingen varer passer «{p.q}».</p>
   return (
@@ -48,10 +48,33 @@ export function SearchResults(p: RailProps & { q: string }) {
         <h2>Søk</h2>
         <span className="step">{hits.length} treff</span>
       </div>
-      {hits.map((x) => (
-        <CatalogRow key={x.id} {...p} product={x} showGroup />
-      ))}
+      {hits.map((x) => (x.id === catalog.system.shelf ? <ShelfRow key={x.id} {...p} product={x} /> : <CatalogRow key={x.id} {...p} product={x} showGroup />))}
     </>
+  )
+}
+
+/** Hylle 6311: drawn on a wall face with its own pen (plan/pointer/shelf.ts), so no counter; the count is what is drawn. */
+function ShelfRow({ v, product, brush, tool, pick }: RailProps & { product: Product }) {
+  const n = shelvesOf(v).length
+  const cur = product.variants[0]
+  const pen = penOn(tool, brush, 'shelf')
+  return (
+    <ProductRow
+      on={n > 0}
+      pen={pen}
+      thumb={<ShelfIcon size={22} />}
+      title={product.name}
+      meta={
+        <>
+          <span className="num">
+            {cur.artnr} · {kr(cur.price)} kr
+          </span>
+          {product.dim && <> · {product.dim}</>} · tegnes på vegg
+        </>
+      }
+      result={n ? `${n} stk · ${kr(n * cur.price)} kr` : null}
+      action={<IconButton icon={Paintbrush} label="Tegn hylle på en vegg" pressed={pen} onClick={() => pick({ kind: 'shelf' })} />}
+    />
   )
 }
 

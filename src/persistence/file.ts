@@ -1,6 +1,8 @@
 // Sketch file: JSON `{ format: 'standskisse', versjon, prosjekt, varianter, egneMotiver }`.
 // Newer versions are refused with an explanation; older versions are migrated step by step.
+import { OLD_SHELF } from '../catalog/defaultCatalog';
 import { tilesFromCells } from '../domain/floor/tiles';
+import { nextId } from '../domain/ids';
 import { rectOutline } from '../domain/outline';
 import { RECT_SIDE, roomWalls, roomWallId } from '../domain/rooms';
 import type { Project, Room, Variant } from '../domain/types';
@@ -158,8 +160,24 @@ export function parse(text: string): ParseResult {
     rooms: Array.isArray(x.rooms) ? x.rooms : [],
     freeTextiles: Array.isArray(x.freeTextiles) ? x.freeTextiles : [],
     innerBeams: Array.isArray(x.innerBeams) ? x.innerBeams : undefined,
-  }));
+    shelves: Array.isArray(x.shelves) ? x.shelves : undefined,
+  })).map(oldShelfToLoose);
   return { ok: true, sketch: { project: project as unknown as Project, variants: vs, motifs: motifs as Motif[] } };
+}
+
+/** «Hylle 1 m» (6180) counted on a sketch made before the drawn shelf 6311 replaced it (Bjørn 8.11.2026): kept as a loose
+ *  line at its price, so the quote is the same, until the shelves are drawn. */
+function oldShelfToLoose(v: Variant): Variant {
+  if (!v.counted.some((c) => c.product.startsWith(OLD_SHELF.prefix))) return v;
+  const old = v.counted.filter((c) => c.product.startsWith(OLD_SHELF.prefix) && c.qty > 0);
+  const ids = v.loose.map((l) => l.id);
+  const loose = old.map((c) => {
+    const id = nextId(ids, 'l');
+    ids.push(id);
+    const variant = OLD_SHELF.variants[Number(c.product.slice(OLD_SHELF.prefix.length)) - 1];
+    return { id, name: `${OLD_SHELF.name}${variant ? `, ${variant.toLowerCase()}` : ''}`, qty: c.qty, price: OLD_SHELF.price };
+  });
+  return { ...v, counted: v.counted.filter((c) => !c.product.startsWith(OLD_SHELF.prefix)), loose: [...v.loose, ...loose] };
 }
 
 const isObject = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null && !Array.isArray(x);

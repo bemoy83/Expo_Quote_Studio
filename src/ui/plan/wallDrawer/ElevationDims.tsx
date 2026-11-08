@@ -4,7 +4,8 @@
 // - the wall with print being laid on it: its lysmål instead, what shows of each plate;
 // - a textile frame, decal or print (`items`): its placement row over the wall from each end, its height row to the
 //   right and a hairline leader up to its product type; a frame also its brace chain under the wall (the distance
-//   between its uprights) and its size in the leader (Bjørn 8.11.2026).
+//   between its uprights) and its size in the leader (Bjørn 8.11.2026);
+// - shelves, always: a height chain in each felt from the floor and the lysmål between boards, and each board's height.
 // Chains are drawn as in the plan (plan/DimChain.tsx); sizes are screen px through the drawing's scale. What is
 // measured: elevationMeasure.ts.
 import type { Wall } from '../../../domain/types'
@@ -14,14 +15,14 @@ import { rules } from '../../env'
 import { INK_MUTED } from '../../colors'
 import { Chain } from '../DimChain'
 import { EM, sizePx, textPx, type PlanScale } from '../planScale'
-import { DIM_NEAR as NEAR, DIM_TOTAL as TOTAL } from '../dims'
-import { LEADER_FONT, LEADER_LINE, lysmal, row, type ElevationItem, type Leader } from './elevationMeasure'
+import { DIM_NEAR as NEAR, DIM_TOTAL as TOTAL, mm } from '../dims'
+import { LEADER_FONT, LEADER_LINE, lysmal, row, type ElevationItem, type Leader, type ShelfChain } from './elevationMeasure'
 import { elevationHeading } from './face'
 
 /** Heading size, screen px. */
 const HEAD_FONT = 11.5
 
-export function ElevationDims({ w, s, name, L, H, items, leaders, top, width, right, sc, fields }: { w: Wall; s: FaceSide; name: string; L: number; H: number; items: ElevationItem[]; leaders: Leader[]; top: number; width: number; /** The drawing's right edge, x: a leader text that would run past it goes to the left of its line. */ right: number; sc: PlanScale; /** Print being laid on the wall: where each plate field starts, for its lysmål. */ fields?: number[] }) {
+export function ElevationDims({ w, s, name, L, H, items, leaders, top, width, right, sc, fields, shelves = [] }: { w: Wall; s: FaceSide; name: string; L: number; H: number; items: ElevationItem[]; leaders: Leader[]; top: number; width: number; /** The drawing's right edge, x: a leader text that would run past it goes to the left of its line. */ right: number; sc: PlanScale; /** Print being laid on the wall: where each plate field starts, for its lysmål. */ fields?: number[]; /** Shelves on the face, a height chain per felt. */ shelves?: ShelfChain[] }) {
   const px = (n: number) => sizePx(sc, n)
   const head = elevationHeading(w, s, name)
   const modules = Array.from({ length: Math.round(L) + 1 }, (_, i) => i)
@@ -73,6 +74,22 @@ export function ElevationDims({ w, s, name, L, H, items, leaders, top, width, ri
           <Chain sc={sc} axis="y" at={L + px(NEAR)} ts={heights} dir={1} />
         </>
       )}
+      {/* Shelves: in each felt from the floor to the lowest board, then the lysmål up to each board over it, and each
+          board's height from the floor over its left end */}
+      {shelves.map((c) => (
+        <g key={c.x0}>
+          <Chain sc={sc} axis="y" at={c.x1 - px(10)} ts={c.ts.map((t) => H - t).reverse()} dir={-1} />
+          {c.ts.map((t, i) =>
+            // A board's top (every other point after the floor), named where the board over it leaves room
+            i % 2 === 1 && (i + 1 >= c.ts.length || c.ts[i + 1] - t >= px(LEADER_FONT + 4)) ? (
+              <text key={t} x={c.x0 + px(8)} y={H - t - px(3)} style={mono}>
+                {mm(t)}
+              </text>
+            ) : null,
+          )}
+        </g>
+      ))}
+
       {/* Names: the textile frames on the wall when the wall is chosen */}
       {leaders.map((l, i) => {
         const y = textY(l)

@@ -44,6 +44,9 @@ export const FOGA_PARTS: readonly FogaPart[] = [
   profile('92LL', '873 048 22', 'Stolpe eller skinne, dobbelt 90° hjørne', 'flex', [60, 30]),
   { ...profile('90', '873 040 22', 'Stolpe eller skinne, firkant', 'flex', [20, 20]), kind: 'frame' },
   profile('91', '873 042 22', 'Stolpe eller skinne', 'flex', [20, 30]),
+  // Shelf brackets: 91 with a 15 mm flange the board rests on, one side (91F) or both (91FF). Measured from Bjørn's STL 8.11.2026
+  profile('91F', '873 043 22', 'Skinne med flens (hylleknekt)', 'flex', [35, 30]),
+  profile('91FF', '873 044 22', 'Skinne med dobbel flens (hylleknekt)', 'flex', [50, 30]),
   profile('94', '873 062 22', 'Stolpe eller skinne, fire kanaler', 'flex', [40, 40]),
   profile('66', '873 032 22', 'Stolpe, seksvei', 'flex', [40, 40]),
   profile('82', '873 033 22', 'Stolpe 135°, hyllestøtte', 'flex', [48, 48]),
@@ -91,6 +94,8 @@ export const FOGA_PARTS: readonly FogaPart[] = [
   part('795', '876 745 92', 'Firkantet stolpefeste for fotplate, M8', 'foot'),
   // Wall plates: not Foga. Lacquered HDF, ordered per RAL
   { artnr: '', code: 'HDF', name: 'Lakkert HDF-plate 3 mm', kind: 'plate', system: 'other' },
+  // Shelf board: not Foga, bought elsewhere (Bjørn 8.11.2026)
+  { artnr: '', code: 'HYLLEPLATE', name: 'Hobbyplate melamin hvit 18 mm', kind: 'plate', system: 'other' },
 ];
 
 const BY_CODE = new Map(FOGA_PARTS.map((p) => [p.code, p]));

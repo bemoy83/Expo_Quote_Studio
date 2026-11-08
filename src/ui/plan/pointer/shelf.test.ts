@@ -1,0 +1,90 @@
+// The shelf pen in the plan, and Velg, Tøm and Delete on a shelf: on a row stand 6 × 3 whose back wall runs from (0,0)
+// to (6,0) with its face toward the stand at y > 0.
+import { describe, expect, it, vi } from 'vitest';
+import { addShelf, shelvesOf } from '../../../domain/shelves';
+import type { Variant } from '../../../domain/types';
+import { createVariant } from '../../../domain/variant';
+import { builtModules, standWallKeys } from '../../../domain/walls';
+import { RULES } from '../../../rules/rules';
+import { planScale } from '../planScale';
+import { deleteSelection } from '../selection';
+import { eraseTargetAt } from './erase';
+import { planHits } from './hits';
+import { startSelect } from './select';
+import { shelf, startShelf } from './shelf';
+import type { PointerCtx } from './types';
+
+const row = (): Variant => createVariant('A', { width: 6, depth: 3, type: 'row' });
+const withShelf = () => {
+  const r = addShelf(row(), RULES, 'side-back', 2, 1);
+  if ('error' in r) throw new Error(r.error);
+  return r;
+};
+const ctx = (v: Variant) => {
+  const c = {
+    v,
+    selection: {},
+    hits: planHits(v, builtModules(v), {}, () => planScale(100, {})),
+    onEdit: vi.fn(),
+    onToast: vi.fn(),
+    onSelect: vi.fn(),
+  };
+  return c as unknown as PointerCtx & typeof c;
+};
+const edited = (c: ReturnType<typeof ctx>) => (c.onEdit.mock.calls.at(-1)![0] as (v: Variant) => Variant)(c.v);
+
+describe('the shelf pen', () => {
+  it('a click in a free felt lays one shelf at 1500 mm', () => {
+    const c = ctx(row());
+    const d = startShelf(c, { x: 2.5, y: 0.2 })!;
+    shelf.up!(c, d as never, { x: 2.5, y: 0.2 });
+    expect(shelvesOf(edited(c))).toMatchObject([{ wallId: 'side-back', module: 2, side: 1, y: 1.5 }]);
+  });
+
+  it('a drag along the wall lays a row, skipping the felts by the corner posts (H6)', () => {
+    const c = ctx(row());
+    const d = startShelf(c, { x: 0.5, y: 0.2 })!;
+    shelf.move!(c, d as never, { x: 3.5, y: 0.25 });
+    shelf.up!(c, d as never, { x: 3.5, y: 0.25 });
+    expect(shelvesOf(edited(c)).map((x) => x.module)).toEqual([1, 2, 3]);
+  });
+
+  it('a click in a felt with a shelf selects it and adds nothing', () => {
+    const { v, id } = withShelf();
+    const c = ctx(v);
+    const d = startShelf(c, { x: 2.5, y: 0.2 })!;
+    shelf.up!(c, d as never, { x: 2.5, y: 0.2 });
+    expect(c.onEdit).not.toHaveBeenCalled();
+    expect(c.onSelect).toHaveBeenCalledWith({ wallId: 'side-back', side: 1, shelfId: id });
+  });
+
+  it('a click by a corner post says why', () => {
+    const c = ctx(row());
+    const d = startShelf(c, { x: 0.5, y: 0.2 })!;
+    shelf.up!(c, d as never, { x: 0.5, y: 0.2 });
+    expect(c.onEdit).not.toHaveBeenCalled();
+    expect(c.onToast.mock.calls[0][0]).toMatch(/kanal/);
+  });
+});
+
+describe('a shelf in Velg, Tøm and Delete', () => {
+  it('Velg on the board picks the shelf on its face', () => {
+    const { v, id } = withShelf();
+    const d = startSelect(ctx(v), { x: 2.5, y: 0.2 });
+    expect('select' in d && d.select).toEqual({ wallId: 'side-back', side: 1, shelfId: id });
+  });
+
+  it('Tøm takes the shelf before the wall behind it', () => {
+    const { v, id } = withShelf();
+    const t = eraseTargetAt(v, ctx(v).hits, standWallKeys(v), { x: 2.5, y: 0.2 })!;
+    expect(t).toMatchObject({ group: 'shelf', id });
+    expect(shelvesOf(t.erase(v))).toEqual([]);
+  });
+
+  it('Delete removes the shelf and keeps its wall drawer', () => {
+    const { v, id } = withShelf();
+    const d = deleteSelection(v, { wallId: 'side-back', side: 1, shelfId: id })!;
+    expect(shelvesOf(d.edit(v))).toEqual([]);
+    expect(d.select).toEqual({ wallId: 'side-back', side: 1 });
+  });
+});

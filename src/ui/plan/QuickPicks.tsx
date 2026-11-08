@@ -236,6 +236,11 @@ function quickContent(p: QuickPicksProps): ReactNode {
           )
         })}
       <Sep />
+      <QBtn on={brush?.kind === 'shelf'} title="Hylle 30 cm i et veggfelt · klikk en vegg, dra for flere" label="Hylle" onClick={() => onPick({ kind: 'shelf' })}>
+        <ShelfIcon />
+        Hylle
+      </QBtn>
+      <Sep />
       {more}
     </>
   )
@@ -264,6 +269,15 @@ export function QBtn({ on, title, label, onClick, children }: { on?: boolean; ti
 }
 
 export const Sep = () => <span className="q-sep" aria-hidden />
+
+/** A shelf on its two brackets, seen from the front. */
+export function ShelfIcon({ size = 15 }: { size?: number }) {
+  return (
+    <svg viewBox="-1 -1 2 2" width={size} height={size} aria-hidden fill="none" stroke="currentColor" strokeWidth=".14" strokeLinecap="round">
+      <path d="M-.85 -.1 H.85 M-.7 -.1 V.45 M.7 -.1 V.45" />
+    </svg>
+  )
+}
 
 export function BeamIcon({ size = 15 }: { size?: number }) {
   return (

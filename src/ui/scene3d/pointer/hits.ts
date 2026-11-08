@@ -47,7 +47,7 @@ export function sceneHits(renderer: THREE.WebGLRenderer, camera: THREE.Perspecti
           roof = { ...t.pick, point: h.point }
           continue
         }
-        if (roof && !(t.pick.objectId || t.pick.textileId || t.pick.foilId || t.pick.freeTextileId)) return roof
+        if (roof && !(t.pick.objectId || t.pick.textileId || t.pick.foilId || t.pick.shelfId || t.pick.freeTextileId)) return roof
         return { ...t.pick, point: h.point }
       }
       if (t.layer || !h.object.userData.label) return roof

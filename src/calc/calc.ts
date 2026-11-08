@@ -14,6 +14,7 @@ import { footLines } from './lines/feet';
 import { floorLines } from './lines/floor';
 import { looseLines, objectLines } from './lines/objects';
 import { swapLines } from './lines/swaps';
+import { shelfLines } from './lines/shelves';
 import { organiserWallLines, wallLines } from './lines/walls';
 import { summary } from './summary';
 import { frameLines, textileWallLines } from './textile/lines';
@@ -39,6 +40,7 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
     ...frameLines(c),
     ...textileWallLines(c),
     ...decorLines(c),
+    ...shelfLines(c),
     ...floorLines(c),
     ...objectLines(c),
     ...looseLines(c),

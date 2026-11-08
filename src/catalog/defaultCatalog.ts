@@ -103,6 +103,12 @@ const products: Product[] = [
   one('8040', 'Tekstil med trykk', 'system', 'm²', 'prof.tekstil', 650, { dim: 'silikonkant, montert', pricing: 'sum' }),
   one('8041', 'Tekstil hvit', 'system', 'm²', 'prof.tekstil', 420, { dim: 'uten grafikk, montert', pricing: 'sum' }),
   one('8042', 'Montering av kundens tekstil', 'system', 'm²', 'prof.tekstil', 170, { dim: 'duk i samme størrelse', pricing: 'sum' }),
+  // Shelf in a wall module, drawn with its own tool (Bjørn 8.11.2026): same price alone or in a row, like a wall.
+  // Brackets and board are on the picking list (Byggeregler H1–H3)
+  {
+    ...one('6311', 'Rett hylle, d:30cm', 'system', 'stk', 'hyll.hyller', 247, { dim: '976 × 300 mm i veggfelt', pricing: 'fast' }),
+    variants: [{ artnr: '6311', name: 'Rett hylle, d:30cm', price: 247 }],
+  },
   one('8020', 'Foliedekor, dekal', 'system', 'm²', 'prof.folie', 520),
   one('8021', 'Foliedekor, helt veggfelt 960 × 2420 mm', 'system', 'm²', 'prof.folie', 520),
   one('8022', 'Tilpasning av trykkfil over flere plater', 'system', 'stk', 'prof.folie', 450, { dim: 'ett motiv, delt per plate' }),
@@ -176,7 +182,6 @@ const products: Product[] = [
   counted('5415', 'Disk 100, høy med lås', 'disk.disker', 1890),
   counted('5420', 'Bardisk, buet', 'disk.disker', 2950),
   counted('5450', 'Podie 50 × 50', 'disk.podier', 380, ['50 cm', '75 cm', '100 cm']),
-  counted('6180', 'Hylle 1 m', 'hyll.hyller', 290, ['Rett', 'Skrå']),
   counted('6185', 'Kleskrok, 5 kroker', 'hyll.heng', 160),
   counted('6186', 'Klesstativ', 'hyll.heng', 340),
   counted('6190', 'Låsbart skap', 'hyll.skap', 1100),
@@ -224,8 +229,13 @@ export const DEFAULT_CATALOG: Catalog = {
     foilFull: '8021',
     printSetup: '8022',
     floorProtection: '5911',
+    shelf: '6311',
   },
 };
+
+/** «Hylle 1 m» (6180, Rett and Skrå) was a counted product until the drawn shelf 6311 replaced it (Bjørn 8.11.2026). A
+ *  sketch that has it keeps it as a loose line at its price then (persistence/file.ts). */
+export const OLD_SHELF = { prefix: '6180-', name: 'Hylle 1 m', price: 290, variants: ['Rett', 'Skrå'] } as const;
 
 export const DOOR = '6130';
 export const CURTAIN = '6131';

@@ -1,7 +1,7 @@
 // Foga engine: structure + recipes → parts list (deleliste), each line in a subgroup of the product grouping. Pure: no prices, no loose goods.
 // Pre-assembled units (post with feet, rails and beams and textile braces with their couplings) are one piece each;
 // loose profiles are counted per cut length; plates per RAL and size.
-// Byggeregler V2–V5, S8, T1, D2, P1, P2 (docs/byggeregler.md).
+// Byggeregler V2–V5, S8, T1, D2, P1, P2, H2, H3 (docs/byggeregler.md).
 import { resolveGroup } from '../catalog/groups';
 import { fogaPart } from './parts';
 import type { Recipes } from './recipes';
@@ -48,6 +48,7 @@ export const BOM_GROUP = {
   /** Header (overstykke) over a door or curtain: its rails and plate. */
   header: 'vegg.dorer',
   textile: 'prof.tekstil',
+  shelves: 'hyll.hyller',
 } as const;
 
 type BomGroup = (typeof BOM_GROUP)[keyof typeof BOM_GROUP];
@@ -215,6 +216,25 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   // Loose parts in a fixed order (connectors, splices, brackets), then the foot plates as they come
   const first = [tf.corner, tf.splice.thread, tf.splice.slide.code, tf.wall.fixing.code];
   for (const code of [...first, ...[...loose.keys()].filter((c) => !first.includes(c))]) part(BOM_GROUP.textile, code, loose.get(code) ?? 0);
+
+  // Hyller (Byggeregler H2, H3): the brackets with their 600 into the post, stored mounted, and the boards (not Foga)
+  const sh = r.shelf;
+  const bracket = (code: string, qty: number, note: string) =>
+    put(
+      BOM_GROUP.shelves,
+      `bracket|${code}`,
+      {
+        artnr: '',
+        name: `Hylleknekt ${code}, ${sh.bracket} mm, med ${sh.coupling.code}`,
+        detail: `${code} × ${sh.bracket} mm · ${sh.coupling.perBracket} × ${sh.coupling.code} (${fogaPart(sh.coupling.code).artnr}) · ${note}`,
+        note,
+        preassembled: true,
+      },
+      qty,
+    );
+  bracket(sh.end, s.shelves?.end ?? 0, 'ende');
+  bracket(sh.twin, s.shelves?.twin ?? 0, 'mellom to hylleplater');
+  put(BOM_GROUP.shelves, 'board', { artnr: '', name: fogaPart(sh.board.code).name, detail: `${sh.board.w} × ${sh.board.d} mm`, preassembled: false }, s.shelves?.boards ?? 0);
 
   // Tree order; inside a subgroup beams longest first, plates tallest first then by RAL, the rest as added
   const order = (l: BomLine) => resolveGroup(l.group).order;

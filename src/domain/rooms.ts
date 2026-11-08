@@ -163,7 +163,7 @@ function settleDoors(v: Variant, id: string): { v: Variant; moved: boolean } | n
 
 /**
  * Rewrite the room walls from `v.rooms`. Things on a room side that is gone are dropped; a door past the end of a
- * shortened side moves to its last module. Textiles and foils are refitted afterwards by fitDecor.
+ * shortened side moves to its last module. Textiles and foils are refitted afterwards by fitDecor, shelves by fitShelves.
  */
 export function syncRooms(v: Variant): Variant {
   const walls = [...v.walls.filter((w) => !w.room), ...v.rooms.flatMap(roomWalls)];
@@ -180,11 +180,12 @@ export function syncRooms(v: Variant): Variant {
     openings.push(module === o.module ? o : { ...o, module });
   }
   const textiles = v.textiles.filter((t) => byId.has(t.wallId));
-  const foils = v.foils.filter((f) => {
+  const onWall = (f: { wallId: string; module: number }) => {
     const w = byId.get(f.wallId);
-    return w && f.module < Math.round(wallLength(w));
-  });
-  return { ...v, walls, openings, textiles, foils };
+    return !!w && f.module < Math.round(wallLength(w));
+  };
+  const foils = v.foils.filter(onWall);
+  return { ...v, walls, openings, textiles, foils, ...(v.shelves ? { shelves: v.shelves.filter(onWall) } : {}) };
 }
 
 /**
@@ -226,6 +227,16 @@ function reshape(v: Variant, r: Room, outline: Point[], shift?: (i: number) => P
       const module = m ? f.module + m.offset : -1;
       return m && module >= 0 ? [{ ...f, wallId: roomWallId(r.id, m.side), module }] : [];
     }),
+    ...(v.shelves
+      ? {
+          shelves: v.shelves.flatMap((f) => {
+            if (!isRoomWallId(f.wallId, r.id)) return [f];
+            const m = onSide(f.wallId);
+            const module = m ? f.module + m.offset : -1;
+            return m && module >= 0 ? [{ ...f, wallId: roomWallId(r.id, m.side), module }] : [];
+          }),
+        }
+      : {}),
   });
   return carryPanels(v, next, r.id, (side) => match[side] ?? undefined);
 }

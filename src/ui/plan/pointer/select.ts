@@ -1,7 +1,7 @@
 // Velg: what a press grabs. The first hit wins: a side of the selected room, a free-standing textile wall, furniture, a
-// drawn takdrager, a wall, a room's floor, a lane of engangsteppe, else empty floor. Each selects on release.
+// shelf, a drawn takdrager, a wall, a room's floor, a lane of engangsteppe, else empty floor. Each selects on release.
 import { canMoveWall } from '../../../domain/edit'
-import { inFrontOf } from '../../../domain/faces'
+import { inFrontOf, sideOf } from '../../../domain/faces'
 import { CELL } from '../../../domain/grid'
 import { laneAt } from '../../../domain/floor/edit'
 import { OUTSIDE, roomAt } from '../../../domain/rooms'
@@ -24,6 +24,12 @@ export function startSelect(c: PointerCtx, q: P): Drag {
   if (ft) return { kind: 'freeMove', id: ft.id, p0: q, v0: v, moved: false, select: { freeTextileId: ft.id, freeFace: faceOfPoint(ft, q) } }
   const o = hits.objectAt(q)
   if (o) return { kind: 'object', id: o.id, dx: q.x - o.x, dy: q.y - o.y, start: { x: o.x, y: o.y }, moved: false, select: { objectId: o.id } }
+  // A shelf on a wall face: the wall drawer on that face, with the shelf chosen
+  const sh = hits.shelfAt(q)
+  if (sh) {
+    const w = v.walls.find((x) => x.id === sh.wallId)
+    if (w) return { kind: 'click', select: { wallId: w.id, side: sideOf(v, sh), shelfId: sh.id } }
+  }
   const ib = hits.beamAt(q)
   if (ib) return { kind: 'beam', id: ib.id, p0: q, v0: v, delta: '0,0', horizontal: ib.from[1] === ib.to[1], moved: false, select: { beamId: ib.id } }
   const m = hits.moduleAt(q)

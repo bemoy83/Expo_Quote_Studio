@@ -1,7 +1,7 @@
 // Wall drawer (veggskuff): the selected wall seen straight on, one face at a time, under the plan or 3D view.
 // Two sections (Bjørn 7.11.2026): settings on the left, with the graphics shelf (or, with a door chosen, its mini plan) under
 // them in the detail height, and the wall on the right. Textile frames and foil decals are placed,
-// moved and resized in the drawing; motifs are clicked onto what is selected or dragged from the shelf onto the wall.
+// moved and resized in the drawing, shelves moved up, down and sideways; motifs are clicked onto what is selected or dragged from the shelf onto the wall.
 // Without a selection it edits the wall itself: plate colour, remove wall. A door or curtain is chosen here too (from the
 // drawing, the plan or 3D): its settings on the left and the mini plan to move it in the middle (Bjørn 3.11.2026).
 // The parts are in wallDrawer/: the settings panels (panels.tsx), the drawing (WallElevation.tsx), dragging in it
@@ -14,6 +14,7 @@ import { foilsOn, removeFoil, updateFoil } from '../../domain/decor'
 import { eraseWalls } from '../../domain/edit'
 import { wallRal } from '../../domain/panels'
 import { clearDecor } from '../../domain/print'
+import { addShelf, removeShelf, shelvesOn, updateShelf } from '../../domain/shelves'
 import { doorFace, openingById } from '../../domain/doors'
 import { wallLength, wallModules } from '../../domain/grid'
 import type { Variant } from '../../domain/types'
@@ -31,7 +32,7 @@ import { addTextile, fillTextile, removeTextile, textilesOn, updateTextile } fro
 import { faces, type FaceSide } from '../../domain/faces'
 import { faceName, roomsAgainst } from './wallDrawer/face'
 import { wallPaint, type PaintTool } from './wallDrawer/paint'
-import { ColourPanel, DoorPanel, FoilPanel, TextilePanel, WallShelf } from './wallDrawer/panels'
+import { ColourPanel, DoorPanel, FoilPanel, ShelfPanel, TextilePanel, WallShelf } from './wallDrawer/panels'
 import { wallHint, wallMeta, wallTitle } from './wallDrawer/text'
 import { WallElevation } from './wallDrawer/WallElevation'
 
@@ -72,6 +73,8 @@ export function WallDrawer(p: Props) {
   const foils = foilsOn(v, w.id, s)
   const T = tex.find((t) => t.id === sel.textileId)
   const F = foils.find((f) => f.id === sel.foilId)
+  const shelves = shelvesOn(v, w.id, s)
+  const S = shelves.find((f) => f.id === sel.shelfId)
   const built = new Map(builtModules(v).map((m) => [m.key, m]))
   const mods = wallModules(w).map((m) => built.get(m.key))
   const rooms = roomsAgainst(v, w, s)
@@ -83,10 +86,22 @@ export function WallDrawer(p: Props) {
 
   /** With a frame or decal selected, the face control moves it to the other face of the wall. */
   const moveToSide = (side: FaceSide) => {
-    const next = T ? updateTextile(v, rules, T.id, { side }) : F ? updateFoil(v, rules, F.id, { side }, ratioOf(F.motif)) : v
-    if (next === v) return p.onToast(T ? 'Ingen ledig veggflate på den siden' : 'Feltet på den siden kan ikke ha folie')
+    const next = T ? updateTextile(v, rules, T.id, { side }) : F ? updateFoil(v, rules, F.id, { side }, ratioOf(F.motif)) : S ? updateShelf(v, rules, S.id, { side }) : v
+    if (next === v) return p.onToast(T ? 'Ingen ledig veggflate på den siden' : F ? 'Feltet på den siden kan ikke ha folie' : 'Feltet på den siden kan ikke ta hylle')
     p.onEdit(() => next)
-    select(T ? { side, textileId: T.id } : { side, foilId: F!.id })
+    select(T ? { side, textileId: T.id } : F ? { side, foilId: F.id } : { side, shelfId: S!.id })
+  }
+
+  /** A shelf in the free felt nearest the middle of the face, at the start height (H4, H6). */
+  const addShelfHere = () => {
+    const order = Array.from({ length: L }, (_, i) => i).sort((a, b) => Math.abs(a + 0.5 - L / 2) - Math.abs(b + 0.5 - L / 2))
+    for (const m of order) {
+      const r = addShelf(v, rules, w.id, m, s)
+      if ('error' in r || r.existing) continue
+      p.onEdit(() => r.v)
+      return select({ shelfId: r.id })
+    }
+    p.onToast('Ingen ledige felt for hylle på denne siden')
   }
 
   const addFrame = () => {
@@ -126,7 +141,7 @@ export function WallDrawer(p: Props) {
     paintSel,
     printSel,
     ral,
-    free: !T && !F && !O,
+    free: !T && !F && !O && !S,
     base,
     onEdit: p.onEdit,
     onCheckpoint: p.onCheckpoint,
@@ -134,11 +149,12 @@ export function WallDrawer(p: Props) {
   })
   /** Modules of this wall holding a door (not a curtain): a leaf for the brush, a header and leaf for a print. */
   const doorModules = new Set(doors.map((d) => d.module))
-  const hint = wallHint({ O, door: !!O && doorModules.has(O.module), painting, tool, printing, T, F, w })
+  const hint = wallHint({ O, door: !!O && doorModules.has(O.module), painting, tool, printing, T, F, S, w })
 
   const remove = () => {
     if (T) p.onEdit((x) => removeTextile(x, T.id))
     else if (F) p.onEdit((x) => removeFoil(x, F.id))
+    else if (S) p.onEdit((x) => removeShelf(x, S.id))
     else {
       p.onEdit((x) => eraseWalls(x, wallModules(w).map((m) => m.key)))
       return p.onClose()
@@ -146,7 +162,7 @@ export function WallDrawer(p: Props) {
     select({})
   }
 
-  const title = wallTitle(v, w, T, F)
+  const title = wallTitle(v, w, T, F, S)
   return (
     <section className="wall-drawer drawer2" aria-label="Vegg sett forfra">
       <div className="wd-insp">
@@ -157,11 +173,11 @@ export function WallDrawer(p: Props) {
         ) : (
           <>
             <DrawerHead
-              dot={T ? LAYER_COLOR.textile : F ? INK_FAINT : LAYER_COLOR.walls}
+              dot={T ? LAYER_COLOR.textile : F || S ? INK_FAINT : LAYER_COLOR.walls}
               title={title}
               remove={
-                T || F
-                  ? { label: T ? 'Fjern tekstilvegg (Delete)' : 'Fjern grafikk (Delete)', onClick: remove }
+                T || F || S
+                  ? { label: T ? 'Fjern tekstilvegg (Delete)' : F ? 'Fjern grafikk (Delete)' : 'Fjern hyllen (Delete)', onClick: remove }
                   : decorated
                     ? { label: 'Fjern print, dekaler og platefarger fra hele veggen, begge sider', onClick: () => p.onEdit((x) => clearDecor(x, w.id)) }
                     : !isStandWall(w)
@@ -171,17 +187,19 @@ export function WallDrawer(p: Props) {
               onClose={p.onClose}
             />
             <p className="wd-meta num">
-              {wallMeta(v, w, { L, T, F, piece, openings, odd, tex, rooms })}
+              {wallMeta(v, w, { L, T, F, S, piece, openings, odd, tex, rooms, shelves })}
             </p>
 
             {T && <TextilePanel T={T} motifs={motifs} onEdit={p.onEdit} onUpload={p.onUpload} />}
 
             {F && <FoilPanel F={F} ratioOf={ratioOf} onEdit={p.onEdit} />}
 
-            {!T && !F && <ColourPanel painting={painting} tool={tool} setTool={setTool} printing={printing} pm={pm} paint={paint} ral={ral} setPaint={setPaint} />}
+            {S && <ShelfPanel v={v} H={S} w={w} s={s} select={select} onEdit={p.onEdit} onToast={p.onToast} />}
+
+            {!T && !F && !S && <ColourPanel painting={painting} tool={tool} setTool={setTool} printing={printing} pm={pm} paint={paint} ral={ral} setPaint={setPaint} />}
           </>
         )}
-        {!O && !T && <WallShelf F={F} printing={printing} pm={pm} motifs={motifs} ratioOf={ratioOf} setPrintMotif={setPrintMotif} onEdit={p.onEdit} onUpload={p.onUpload} />}
+        {!O && !T && !S && <WallShelf F={F} printing={printing} pm={pm} motifs={motifs} ratioOf={ratioOf} setPrintMotif={setPrintMotif} onEdit={p.onEdit} onUpload={p.onUpload} />}
         {!O && (
           <div className="wd-foot">
             <Section
@@ -191,9 +209,9 @@ export function WallDrawer(p: Props) {
                 flip !== undefined && (
                   <IconButton
                     icon={FlipHorizontal2}
-                    label={T ? 'Flytt rammen til andre siden' : F ? 'Flytt folien til andre siden' : `Vis ${faceName(w, flip).toLowerCase()}`}
+                    label={T ? 'Flytt rammen til andre siden' : F ? 'Flytt folien til andre siden' : S ? 'Flytt hyllen til andre siden' : `Vis ${faceName(w, flip).toLowerCase()}`}
                     size={15}
-                    onClick={() => (T || F ? moveToSide(flip) : p.onSelect({ wallId: w.id, side: flip }))}
+                    onClick={() => (T || F || S ? moveToSide(flip) : p.onSelect({ wallId: w.id, side: flip }))}
                   />
                 )
               }
@@ -204,13 +222,19 @@ export function WallDrawer(p: Props) {
                   Fyll ledig vegg
                 </Button>
               )}
-              {!T && !F && (
-                <Button variant="ghost" icon={Plus} onClick={addFrame}>
-                  Tekstilvegg
-                </Button>
+              {!T && !F && !S && (
+                <>
+                  <Button variant="ghost" icon={Plus} onClick={addFrame}>
+                    Tekstilvegg
+                  </Button>
+                  <Button variant="ghost" icon={Plus} onClick={addShelfHere}>
+                    Hylle
+                  </Button>
+                </>
               )}
               {!T &&
                 !F &&
+                !S &&
                 doors.map((d, i) => (
                   <Button key={d.id} variant="ghost" icon={DoorOpen} onClick={() => selectDoor(d.id)}>
                     Dør{doors.length > 1 ? ` ${i + 1}` : ''}
@@ -232,10 +256,12 @@ export function WallDrawer(p: Props) {
         tex={tex}
         pieceOf={pieceOf}
         foils={foils}
+        shelves={shelves}
         rooms={rooms}
         T={T}
         F={F}
         O={O}
+        S={S}
         motifs={motifs}
         label={label}
         painting={painting}

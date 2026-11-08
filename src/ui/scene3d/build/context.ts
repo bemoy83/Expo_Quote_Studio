@@ -16,7 +16,7 @@ export type Layer = Exclude<Highlight, null>
 export interface Tag {
   layer: Layer
   /** `roomId`: a room's see-through roof, the handle that moves the room. */
-  pick?: { wallId?: string; objectId?: string; textileId?: string; foilId?: string; roomId?: string; freeTextileId?: string; openingId?: string }
+  pick?: { wallId?: string; objectId?: string; textileId?: string; foilId?: string; roomId?: string; freeTextileId?: string; openingId?: string; shelfId?: string }
 }
 
 /** Colours of the build system. Product colours come from the catalog. */
@@ -47,7 +47,7 @@ export const NO_COLOR = '#999'
 export const ALU_FINISH = { metalness: 0.4, roughness: 0.5 }
 
 export interface BuildOptions {
-  selection?: { wallId?: string; objectId?: string; textileId?: string; foilId?: string; roomId?: string; freeTextileId?: string; openingId?: string }
+  selection?: { wallId?: string; objectId?: string; textileId?: string; foilId?: string; roomId?: string; freeTextileId?: string; openingId?: string; shelfId?: string }
   /** Flat text on the floor (dimensions, area). Needs a canvas, so tests turn it off. */
   labels?: boolean
   /** Motif library for prints on textiles and foils. Without it they are drawn blank. */

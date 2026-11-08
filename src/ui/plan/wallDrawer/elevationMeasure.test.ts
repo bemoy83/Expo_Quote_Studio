@@ -4,7 +4,7 @@ import { isStandWall } from '../../../domain/walls'
 import { RULES } from '../../../rules/rules'
 import { framePiece } from '../../../calc/textile/inFrame'
 import { textileNote } from '../../textileNote'
-import { elevationItems, leaders, lysmal, row, textileLabel } from './elevationMeasure'
+import { elevationItems, leaders, lysmal, row, shelfChains, textileLabel } from './elevationMeasure'
 import { elevationHeading } from './face'
 
 describe('wall drawing dimensions', () => {
@@ -58,5 +58,20 @@ describe('wall drawing dimensions', () => {
     expect(textileNote('reuse', false)?.text).toBe('Kundens egen duk')
     expect(textileNote('white', false)).toBeNull()
     expect(textileNote('print', true)).toBeNull()
+  })
+})
+
+describe('shelves on the wall drawing (Byggeregler H4, H5, H8)', () => {
+  it('a felt reads from the floor to the lowest board, then the lysmål up to each board over it', () => {
+    const f = (id: string, y: number) => ({ id, wallId: 'w', module: 2, y })
+    const [c] = shelfChains(RULES, [[f('h1', 1), f('h2', 1.5)]], (t) => t)
+    expect(c).toMatchObject({ x0: 2, x1: 3 })
+    // 1 000 from the floor, 482 clear under the upper board (1 500 − 18 − 1 000)
+    expect(c.ts.map((t) => Math.round(t * 1000))).toEqual([0, 1000, 1482, 1500])
+  })
+
+  it('seen from the other face the felt runs the other way', () => {
+    const [c] = shelfChains(RULES, [[{ id: 'h1', wallId: 'w', module: 0, y: 1.5 }]], (t) => 6 - t)
+    expect(c).toMatchObject({ x0: 5, x1: 6 })
   })
 })

@@ -62,4 +62,6 @@ export interface FogaStructure {
   barePosts?: number;
   /** Plates (RAL) picked to swap into a stand wall the organiser builds: plate only, the wall is not in `modules`. */
   swaps?: string[];
+  /** Shelves: boards, and brackets at a row's ends (91F) and between two boards (91FF), Byggeregel H2. */
+  shelves?: { boards: number; end: number; twin: number };
 }

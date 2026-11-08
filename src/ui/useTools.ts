@@ -83,6 +83,7 @@ export function useTools({ v, res, motifs, onPick, onErase }: ToolsInput) {
     if (b.kind === 'wall') return { name: 'Innervegg', meta: `RAL ${b.ral}` }
     if (b.kind === 'textile') return { name: 'Tekstilvegg', meta: 'vegg eller fritt' }
     if (b.kind === 'beam') return { name: 'Takdrager', meta: 'innvendig' }
+    if (b.kind === 'shelf') return { name: 'Hylle', meta: `${kr(idx.byArtnr.get(catalog.system.shelf)?.variant.price ?? 0)} kr` }
     if (b.kind === 'motif') return { name: findMotif(motifs, b.motif)?.name ?? 'Motiv', meta: 'trykk eller folie' }
     const r = idx.byArtnr.get(b.product)
     const name = r ? (r.product.variants.length > 1 ? `${r.product.name.split(' ')[0]} ${r.variant.name.toLowerCase()}` : r.product.name) : b.product

@@ -22,10 +22,12 @@ export type Brush =
    * Drawn on the drawing grid in cells of the chosen grid step; a click next to a wall fills its free part. */
   | { kind: 'textile' }
   /** A motif: on a textile it becomes the print, on a wall panel a foil decal. */
-  | { kind: 'motif'; motif: string };
+  | { kind: 'motif'; motif: string }
+  /** Hylle 6311: one board in a wall module, on the face clicked; a drag along the wall lays a row (domain/shelves.ts). */
+  | { kind: 'shelf' };
 
 /** The drawing tools in the dock. Each one remembers its own brush (pen); the product chosen decides which tool draws it.
- * Openings and inner beams belong to Vegg, motifs to Profilering. */
+ * Openings and inner beams belong to Vegg, motifs to Profilering, shelves to Møbel. */
 export type PenTool = 'wall' | 'floor' | 'profile' | 'object'
 export type DockTool = 'select' | PenTool | 'erase'
 
@@ -41,6 +43,7 @@ export function penToolOf(b: Brush): PenTool {
     case 'motif':
       return 'profile'
     case 'object':
+    case 'shelf':
       return 'object'
   }
 }

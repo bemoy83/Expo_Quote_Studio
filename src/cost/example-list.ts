@@ -9,6 +9,8 @@ type Row = [artnr: string, name: string, group: string, pack: number, unit: 'm' 
 const ROWS: Row[] = [
   ['873 062 22', 'Profil 94', 'Flex', 50, 'm', 100],
   ['873 042 22', 'Profil 91', 'Flex', 100, 'm', 50],
+  ['873 043 22', 'Profil 91F', 'Flex', 50, 'm', 70],
+  ['873 044 22', 'Profil 91FF', 'Flex', 50, 'm', 90],
   ['873 051 22', 'Profil 92', 'Flex', 100, 'm', 60],
   ['873 040 22', 'Profil 90', 'Flex', 100, 'm', 40],
   ['873 080 22', 'Profil 292', 'Flex', 50, 'm', 120],

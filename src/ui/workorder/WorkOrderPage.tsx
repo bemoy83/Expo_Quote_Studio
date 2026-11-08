@@ -1,8 +1,9 @@
 // Arbeidsordre: a prototype of what the OMS will issue once the quote is confirmed. Delivery, expected time from the
-// order is started until it is signed off as delivered (A to B), the picking list, the stand sketch and the print list.
+// order is started until it is signed off as delivered (A to B), the picking list, the stand sketch, the wall drawings
+// with shelves and the print list.
 // It can be filtered by product group, so carpet goes to the carpet layer and the stand to the stand builders. It shows the requirement to
 // the OMS in practice: everything here comes from the drawing and the price list. Background: docs/prismodell.md.
-// Byggeregel P4 (docs/byggeregler.md).
+// Byggeregler P4, H8 (docs/byggeregler.md).
 import { Printer } from 'lucide-react'
 import { useState } from 'react'
 import type { CalcResult } from '../../calc/calc'
@@ -16,9 +17,11 @@ import { Button } from '../controls'
 import { idx, rules } from '../env'
 import { CUT_FOOT, cutRows } from '../cutList'
 import { lanesOf, rollPieces } from '../../domain/floor/lanes'
+import { shelfFaces } from '../../domain/shelves'
 import { hours } from '../format'
 import { standScope, TYPE_NAME } from '../names'
 import { pickRows, type PickRow } from './pickRows'
+import { ShelfElevation } from './ShelfElevation'
 import { PLAN_MARGIN } from '../plan/planStyle'
 import { PlanPreview } from '../plan/PlanPreview'
 import { PageBand } from '../shell/PageBand'
@@ -73,6 +76,8 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf }: 
         return [{ artnr: a, name: `${r.product.name} ${r.variant.name.toLowerCase()}`, rows: cutRows(rollPieces(lanesOf(v.floor.tiles, a, roll)), roll) }]
       })
     : []
+  // Shelves: each wall face with shelves seen straight on, measured from the floor (Byggeregel H8)
+  const shelfWalls = shown.has('hyll') ? shelfFaces(v) : []
   const prints = shown.has('prof') ? [...textileRows(production(v, rules, customer)), ...foilRows(v, rules.wall.plate, customer)] : []
   const groupName = (id: string) => PRODUCT_GROUPS.find((g) => g.id === id)?.name ?? id
   const missingDates = !DELIVERY_FIELDS.some((d) => project.delivery?.[d.key])
@@ -189,6 +194,18 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf }: 
               </div>
             ))}
           </section>
+
+          {shelfWalls.length > 0 && (
+            <section className="wo-sec wo-shelves">
+              <div className="eyebrow">Veggriss med hyller</div>
+              {shelfWalls.map((f) => (
+                <div key={`${f.wallId}${f.s}`} className="wo-elev-box">
+                  <ShelfElevation v={v} wallId={f.wallId} s={f.s} shelves={f.shelves} />
+                </div>
+              ))}
+              <p className="foot">Høyde er overkant hylle fra gulvet. Lysmål er fri høyde mellom hyllene over hverandre.</p>
+            </section>
+          )}
 
           {carpets.length > 0 && (
             <section className="wo-sec">
