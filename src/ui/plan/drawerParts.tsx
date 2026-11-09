@@ -26,12 +26,12 @@ export function DrawerHead({ dot, title, remove, onClose, children }: { dot?: st
   )
 }
 
-/** «Print» as the last choice of the palette: the motif chosen in the graphics shelf, foil over whole plates. */
+/** «Print» as the last choice of the palette: the motif chosen in Profilering, foil over whole plates. */
 export const PRINT = 'print'
 
 /**
  * The wall plate colours as dots, for a wall, a plate or a door leaf. With `print`, a last dot shows the motif chosen
- * in the graphics shelf and picks `PRINT` (the wall drawer's paint bucket and brush lay it on whole plates).
+ * in Profilering and picks `PRINT` (the wall drawer's paint bucket and brush lay it on whole plates).
  */
 export function PlatePalette({ value, onPick, print }: { value: string; onPick: (ral: string) => void; print?: { motif?: Motif } }) {
   // Square swatches as in the stand settings and the dock, no track (flat drawer, Bjørn 8.11.2026)
@@ -147,8 +147,8 @@ function MotifGrid({ motifs, value, onPick, onUpload }: { motifs: Motif[]; value
 }
 
 /**
- * The drawer's graphics, under the settings (detail height only): print files only, upload fixed in the title row.
- * Textile frames are not graphics: they are added with «Tekstilvegg» at the foot of the drawer.
+ * The drawer's motif library, under the settings (detail height only): print files only, upload fixed in the title row.
+ * Buttons above the motifs come in as children (the wall drawer's Profilering: «Dekal», «Tekstilvegg»).
  */
 export function Shelf({ title, aside, motifs, value, onPick, onUpload, children }: {
   title: string

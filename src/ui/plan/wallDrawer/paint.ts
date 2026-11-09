@@ -27,7 +27,7 @@ export interface PaintDeps {
   tool: PaintTool
   /** What the tools lay on: a plate colour (RAL) or PRINT. Unset: the wall's own colour. */
   paintSel: string | null
-  /** The motif «Print» lays on, chosen in the graphics shelf. Unset: the first in the library. */
+  /** The motif «Print» lays on, chosen in the motif library (Profilering). Unset: the first in the library. */
   printSel: string | null
   /** The wall's own colour. */
   ral: string
@@ -78,7 +78,7 @@ export function wallPaint({ v, w, s, built, mods, motifs, tool, paintSel, printS
    */
   const paintAt = (i: number, key: string, first: boolean, leaf = false) => {
     if (printing && !pm) {
-      if (first) onToast('Last opp et motiv i grafikken først')
+      if (first) onToast('Last opp et motiv i Profilering først')
       return
     }
     if (tool === 'wall') {

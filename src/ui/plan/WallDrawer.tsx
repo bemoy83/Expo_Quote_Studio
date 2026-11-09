@@ -1,5 +1,5 @@
 // Wall drawer (veggskuff): the selected wall seen straight on, one face at a time, under the plan or 3D view.
-// Two sections (Bjørn 7.11.2026): settings on the left, with the graphics shelf (or, with a door chosen, its mini plan) under
+// Two sections (Bjørn 7.11.2026): settings on the left, with the motif library (Profilering) (or, with a door chosen, its mini plan) under
 // them in the detail height, and the wall on the right. Textile frames and foil decals are placed,
 // moved and resized in the drawing, shelves moved up, down and sideways; motifs are clicked onto what is selected or dragged from the shelf onto the wall.
 // Without a selection it edits the wall itself: plate colour, remove wall. A door or curtain is chosen here too (from the
@@ -57,9 +57,9 @@ export function WallDrawer(p: Props) {
   const [tool, setTool] = useState<PaintTool>(null)
   /** What the tools lay on: a plate colour (RAL) or PRINT. Unset: the wall's own colour. */
   const [paintSel, setPaint] = useState<string | null>(null)
-  /** The motif «Print» lays on, chosen in the graphics shelf. Unset: the first in the library. */
+  /** The motif «Print» lays on, chosen in Profilering. Unset: the first in the library. */
   const [printSel, setPrintMotif] = useState<string | null>(null)
-  /** The chosen felt's page: colour and graphics, or shelves and hooks. Kept while stepping from felt to felt. */
+  /** The page shown for a felt or the whole wall: colour and profilering, or shelves and hooks. Kept from felt to felt. */
   const [page, setPage] = useState<FeltPage>('decor')
   /** A chosen door or curtain: the drawer shows its wall, which follows the door when the mini plan moves it. */
   const O = openingById(v, sel.openingId)
@@ -155,7 +155,7 @@ export function WallDrawer(p: Props) {
   const hint = wallHint({ O, door: !!O && doorModules.has(O.module), painting, tool, printing, T, F, S, felt: Fe !== undefined ? page : undefined, extras: !T && !F && !S && Fe === undefined && page === 'extras', w })
 
   /**
-   * With a felt chosen the shelf picks the motif for «Print» and «Dekal» in the felt panel, and a print on the felt
+   * With a felt chosen Profilering picks the motif for «Print» and «Dekal», and a print on the felt
    * takes the new motif at once.
    */
   const feltShelf =
@@ -270,8 +270,8 @@ export function WallDrawer(p: Props) {
                   Fyll ledig vegg
                 </Button>
               )}
-              {/* A felt has two pages, switched here as a door's way back to the palette is (Bjørn 9.11.2026); a chosen
-                  shelf goes back to its felt's colour and graphics */}
+              {/* A felt and the whole wall have two pages, switched here as a door's way back to the palette is (Bjørn
+                  9.11.2026); a chosen shelf goes back to its felt's colour and profilering */}
               {!T && !F && !S && (
                 <Button
                   variant="ghost"
@@ -295,10 +295,6 @@ export function WallDrawer(p: Props) {
                 >
                   Farge og profilering
                 </Button>
-              )}
-              {!T && !F && !S && Fe === undefined && (
-                <>
-                </>
               )}
               {!T &&
                 !F &&

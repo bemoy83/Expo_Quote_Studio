@@ -1,4 +1,4 @@
-// The settings column of the wall drawer: one panel for what is chosen, and the graphics shelf under it. A textile frame, a decal or print, a door, or
+// The settings column of the wall drawer: one panel for what is chosen, and the motif library (Profilering) under it. A textile frame, a decal or print, a door, or
 // a shelf, or nothing (the wall itself: colour and print with the paint bucket and brush).
 import { AlignVerticalSpaceAround, ArrowLeft, ArrowRight, Copy, Layers, PaintBucket, Paintbrush, Palette, Plus, Repeat2 } from 'lucide-react'
 import type { Dispatch, ReactNode, SetStateAction } from 'react'
@@ -277,16 +277,15 @@ export function ShelfPanel({ v, H, w, s, sel, select, onEdit, onToast }: { v: Va
   )
 }
 
-/** What a felt shows: its colour and graphics, or what hangs on it (shelves, later hooks), like a door's own page. */
+/** What a felt or the whole wall shows: colour and profilering, or what hangs on it (shelves, later hooks), like a door's own page. */
 export type FeltPage = 'decor' | 'extras'
 
 /**
  * A felt chosen in the drawing (Bjørn 9.11.2026): choose first, then act. Two pages, switched at the foot of the drawer
- * as a door is: «Farge og profilering» (this plate's colour, both faces, or «Print» on this face; the Profilering
- * section under it adds a decal) and
- * «Hyller og heng» (what is fitted to the felt; one row per kind, so more kinds slot in). The paint bucket and brush are
- * on the colour page too: picking one lets the felt go and colours the wall as before, so the whole wall can be filled
- * without leaving the drawer.
+ * as a door is: «Farge og profilering» (this plate's colour, both faces, or «Print» on this face; the Profilering section
+ * under it adds a decal) and «Hyller og heng» (what is fitted to the felt; one section per kind, so more kinds slot in).
+ * The paint bucket and brush are on the colour page too: picking one lets the felt go and colours the wall as before, so
+ * the whole wall can be filled without leaving the drawer.
  */
 export function FeltPanel(props: {
   v: Variant
@@ -347,7 +346,7 @@ export function FeltPanel(props: {
   /** A colour on this plate (the print on this face comes off: the last stroke wins), or the chosen motif over it. */
   const pick = (r: string) => {
     if (r !== PRINT) return onEdit((x) => clearPrint(setPanels(x, [key], r, base), w.id, s, [m]))
-    if (!pm) return onToast('Last opp et motiv i grafikken først')
+    if (!pm) return onToast('Last opp et motiv i Profilering først')
     if (noPrint) return onToast(noPrint)
     if (printed?.motif !== pm.id || printed.run) onEdit((x) => printPlate(x, rules, w.id, m, s, pm.id))
   }
