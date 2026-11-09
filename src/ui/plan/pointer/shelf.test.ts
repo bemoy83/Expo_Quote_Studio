@@ -1,7 +1,7 @@
 // The shelf pen in the plan, and Velg, Tøm and Delete on a shelf: on a row stand 6 × 3 whose back wall runs from (0,0)
 // to (6,0) with its face toward the stand at y > 0.
 import { describe, expect, it, vi } from 'vitest';
-import { addShelf, shelvesOf } from '../../../domain/shelves';
+import { addShelf, addShelfRow, shelvesOf } from '../../../domain/shelves';
 import type { Variant } from '../../../domain/types';
 import { createVariant } from '../../../domain/variant';
 import { builtModules, standWallKeys } from '../../../domain/walls';
@@ -12,6 +12,7 @@ import { eraseTargetAt } from './erase';
 import { planHits } from './hits';
 import { startSelect } from './select';
 import { shelf, startShelf } from './shelf';
+import { shelfMove } from './shelfMove';
 import type { PointerCtx } from './types';
 
 const row = (): Variant => createVariant('A', { width: 6, depth: 3, type: 'row' });
@@ -28,6 +29,7 @@ const ctx = (v: Variant) => {
     onEdit: vi.fn(),
     onToast: vi.fn(),
     onSelect: vi.fn(),
+    onCheckpoint: vi.fn(),
   };
   return c as unknown as PointerCtx & typeof c;
 };
@@ -82,6 +84,19 @@ describe('a shelf in Velg, Tøm and Delete', () => {
     const { v, id } = withShelf();
     const d = startSelect(ctx(v), { x: 2.5, y: 0.2 });
     expect('select' in d && d.select).toEqual({ wallId: 'side-back', side: 1, shelfId: id });
+  });
+
+  it('Velg drags a shelf with its row along the wall, and Alt leaves a copy (Bjørn 9.11.2026)', () => {
+    const v = addShelfRow(row(), RULES, 'side-back', 1, 2, 1, 1.3).v;
+    const c = ctx(v);
+    const d = startSelect(c, { x: 1.5, y: 0.2 }) as Extract<ReturnType<typeof startSelect>, { kind: 'shelfMove' }>;
+    expect(d).toMatchObject({ kind: 'shelfMove', ids: ['h1', 'h2'] });
+    shelfMove.move!(c, d, { x: 3.5, y: 0.2 });
+    expect(shelvesOf(edited(c)).map((x) => x.module)).toEqual([3, 4]);
+    const e = startSelect(c, { x: 1.5, y: 0.2 }) as typeof d;
+    e.copy = true;
+    shelfMove.move!(c, e, { x: 3.5, y: 0.2 });
+    expect(shelvesOf(edited(c)).map((x) => x.module)).toEqual([1, 2, 3, 4]);
   });
 
   it('Tøm takes the shelf before the wall behind it', () => {

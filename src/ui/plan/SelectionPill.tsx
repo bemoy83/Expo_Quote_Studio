@@ -2,7 +2,7 @@
 // One build for all: name and size · colour or motif · rotate (where it makes sense) · Mer (the drawer) · remove.
 // Shown as soon as a click selects; hidden while dragging,
 // while the drawer is open, with a pen in hand and in 3D (PlanView decides). Where it stands: pillAnchor.ts.
-import { ArrowDown, ArrowLeftRight, ArrowUp, Blinds, DoorClosed, FlipHorizontal2, Image as ImageIcon, Layers, MoveHorizontal, MoveVertical, PanelBottomOpen, Plus, RotateCw, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowLeftRight, ArrowUp, Blinds, Copy, DoorClosed, FlipHorizontal2, Image as ImageIcon, Layers, MoveHorizontal, MoveVertical, PanelBottomOpen, Plus, RotateCw, Trash2 } from 'lucide-react'
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import { wallLabel } from '../../calc/production'
@@ -15,7 +15,7 @@ import { CELL, wallLength, wallModules } from '../../domain/grid'
 import { wallRal } from '../../domain/panels'
 import { clearPrint, fillPlates, printWall } from '../../domain/print'
 import { roomName, roomSize } from '../../domain/rooms'
-import { addShelvesAbove, highWarning, moveShelves, offRow, shelfRow, shelvesIn, shelvesOf, tooHigh, type ShelvesMove } from '../../domain/shelves'
+import { addShelvesAbove, copyShelvesNear, highWarning, moveShelves, offRow, shelfRow, shelvesIn, shelvesOf, tooHigh, type ShelvesMove } from '../../domain/shelves'
 import { addTextile, fillTextile, textileBox, textilesOn, updateTextile } from '../../domain/textile/inFrame'
 import type { TextileWall, Variant, Wall } from '../../domain/types'
 import { isStandWall } from '../../domain/walls'
@@ -387,6 +387,19 @@ function content(p: PillActions, graphics: boolean, setGraphics: (b: boolean) =>
           >
             <Plus size={15} />
             {n > 1 ? 'Rad til' : 'Hylle til'}
+          </QBtn>
+          <QBtn
+            title={n > 1 ? 'Kopier raden til nærmeste ledige felt · på desktop også Alt + dra' : 'Kopier hyllen til nærmeste ledige felt · på desktop også Alt + dra'}
+            label="Kopier"
+            onClick={() => {
+              const r = copyShelvesNear(v, rules, ids, s === 1 ? 1 : -1)
+              if (!r) return p.onToast('Ingen ledige felt på denne siden')
+              onEdit(() => r.v)
+              onSelect({ wallId: w.id, side: s, shelfId: r.ids[ids.indexOf(H.id)], shelfOnly: sel.shelfOnly })
+            }}
+          >
+            <Copy size={15} />
+            Kopier
           </QBtn>
           {row > 1 && (
             <QBtn

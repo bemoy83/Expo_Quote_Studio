@@ -3,7 +3,7 @@ import { DOOR } from '../catalog/defaultCatalog';
 import { RULES } from '../rules/rules';
 import { paintWalls } from './edit';
 import { moduleKey } from './grid';
-import { addShelf, addShelfAbove, addShelfRow, addShelvesAbove, clearBetween, dragShelf, dragShelves, fitShelves, highWarning, moveShelves, offRow, penHeight, removeShelf, removeShelves, shelfBlocked, shelfBrackets, shelfFaces, shelfHeight, shelfRow, shelvesOf, spreadShelves, tooHigh, updateShelf } from './shelves';
+import { addShelf, addShelfAbove, copyShelvesNear, feltShelves, placeShelves, addShelfRow, addShelvesAbove, clearBetween, dragShelf, dragShelves, fitShelves, highWarning, moveShelves, offRow, penHeight, removeShelf, removeShelves, shelfBlocked, shelfBrackets, shelfFaces, shelfHeight, shelfRow, shelvesOf, spreadShelves, tooHigh, updateShelf } from './shelves';
 import { addTextile } from './textile/inFrame';
 import type { Point, Variant } from './types';
 import { createVariant } from './variant';
@@ -244,5 +244,44 @@ describe('spreading a felt evenly (Bjørn 9.11.2026)', () => {
   it('nothing to spread with fewer than three', () => {
     const v = ok(addShelf(row(), RULES, 'side-back', 2, 1)).v;
     expect(spreadShelves(v, RULES, ['h1'])).toBeNull();
+  });
+});
+
+describe('moving and copying (Bjørn 9.11.2026)', () => {
+  const twoWalls = () => {
+    // An inner wall from (1,2) to (5,2) beside the back wall; a row of two on the back wall, felts 1–2
+    const v = paintWalls(row(), [1, 2], [5, 2]);
+    return addShelfRow(v, RULES, 'side-back', 1, 2, 1, 1.3).v;
+  };
+
+  it('moves a row onto another wall face, keeping its heights and its order', () => {
+    const v = twoWalls();
+    const inner = v.walls.find((w) => w.from[1] === 2 && w.to[1] === 2)!;
+    const r = placeShelves(v, RULES, ['h1', 'h2'], 'h1', { wallId: inner.id, s: -1, module: 1 })!;
+    expect(shelvesOf(r.v).map((x) => [x.wallId, x.module, x.side, x.y])).toEqual([[inner.id, 1, -1, 1.3], [inner.id, 2, -1, 1.3]]);
+  });
+
+  it('a copy leaves the shelves where they are; none where one of them cannot stand', () => {
+    const v = twoWalls();
+    const r = placeShelves(v, RULES, ['h1', 'h2'], 'h1', { wallId: 'side-back', s: 1, module: 3 }, true)!;
+    expect(shelvesOf(r.v).map((x) => x.module)).toEqual([1, 2, 3, 4]);
+    // Felt 5 is by the corner post (H6)
+    expect(placeShelves(v, RULES, ['h1', 'h2'], 'h1', { wallId: 'side-back', s: 1, module: 4 }, true)).toBeNull();
+    // Onto itself is no move
+    expect(placeShelves(v, RULES, ['h1'], 'h1', { wallId: 'side-back', s: 1, module: 1 })).toBeNull();
+  });
+
+  it('copies to the nearest felts with room, and a whole stacked felt with «Kopier feltet»', () => {
+    let v = ok(addShelf(row(), RULES, 'side-back', 2, 1, 0.5)).v;
+    v = ok(addShelfAbove(v, RULES, 'h1')).v;
+    const all = feltShelves(v, ['h1']);
+    expect(all).toEqual(['h1', 'h2']);
+    const r = copyShelvesNear(v, RULES, all)!;
+    expect(shelvesOf(r.v).filter((x) => x.module === 3).map((x) => x.y)).toEqual([0.5, 0.9]);
+    // Felts 1–4 can take shelves; after three copies the face is full
+    let x = r.v;
+    x = copyShelvesNear(x, RULES, all)!.v;
+    x = copyShelvesNear(x, RULES, all)!.v;
+    expect(copyShelvesNear(x, RULES, all)).toBeNull();
   });
 });

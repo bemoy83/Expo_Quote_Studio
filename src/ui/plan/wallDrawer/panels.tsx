@@ -1,13 +1,13 @@
 // The settings column of the wall drawer: one panel for what is chosen, and the graphics shelf under it. A textile frame, a decal or print, a door, or
 // a shelf, or nothing (the wall itself: colour and print with the paint bucket and brush).
-import { AlignVerticalSpaceAround, ArrowLeft, ArrowRight, Layers, PaintBucket, Paintbrush, Palette, Plus, Repeat2 } from 'lucide-react'
+import { AlignVerticalSpaceAround, ArrowLeft, ArrowRight, Copy, Layers, PaintBucket, Paintbrush, Palette, Plus, Repeat2 } from 'lucide-react'
 import type { Dispatch, ReactNode, SetStateAction } from 'react'
 import { updateFoil } from '../../../domain/decor'
 import { removeOpening } from '../../../domain/doors'
 import type { FaceSide } from '../../../domain/faces'
 import { textileBox, updateTextile } from '../../../domain/textile/inFrame'
 import { wallLength } from '../../../domain/grid'
-import { addShelvesAbove, clearBetween, highWarning, moveShelves, offRow, shelfRow, shelvesIn, shelvesOf, spreadShelves, tooHigh, type ShelvesMove } from '../../../domain/shelves'
+import { addShelvesAbove, clearBetween, copyShelvesNear, feltShelves, highWarning, moveShelves, offRow, shelfRow, shelvesIn, shelvesOf, spreadShelves, tooHigh, type ShelvesMove } from '../../../domain/shelves'
 import type { Foil, Opening, Shelf as Board, TextileWall, Variant, Wall } from '../../../domain/types'
 import type { Motif } from '../../../persistence/file'
 import { Button, Dim, FlatChoice, IconButton, Section } from '../../controls'
@@ -262,6 +262,33 @@ export function ShelfPanel({ v, H, w, s, sel, select, onEdit, onToast }: { v: Va
           >
             {n > 1 ? 'Rad til' : 'Hylle til i feltet'}
           </Button>
+          <Button
+            variant="ghost"
+            icon={Copy}
+            onClick={() => {
+              const r = copyShelvesNear(v, rules, ids, dir)
+              if (!r) return onToast('Ingen ledige felt på denne siden')
+              onEdit(() => r.v)
+              select({ shelfId: r.ids[ids.indexOf(H.id)], shelfOnly: sel.shelfOnly })
+            }}
+          >
+            Kopier
+          </Button>
+          {stack.length > 1 && (
+            <Button
+              variant="ghost"
+              icon={Copy}
+              onClick={() => {
+                const all = feltShelves(v, ids)
+                const r = copyShelvesNear(v, rules, all, dir)
+                if (!r) return onToast('Ingen ledige felt på denne siden')
+                onEdit(() => r.v)
+                select({ shelfId: r.ids[all.indexOf(H.id)], shelfOnly: undefined })
+              }}
+            >
+              Kopier feltet
+            </Button>
+          )}
           {stack.length > 2 && (
             <Button
               variant="ghost"

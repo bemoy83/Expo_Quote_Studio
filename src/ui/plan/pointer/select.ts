@@ -7,7 +7,8 @@ import { laneAt } from '../../../domain/floor/edit'
 import { OUTSIDE, roomAt } from '../../../domain/rooms'
 import { faceOfPoint, freeTextileAt } from '../../../domain/textile/free'
 import { textileAt } from '../../../domain/textile/inFrame'
-import type { PlanSelection } from '../selection'
+import { chosenShelves, type PlanSelection } from '../selection'
+import { shelfRow } from '../../../domain/shelves'
 import { startRoom } from './room'
 import type { Drag, P, PointerCtx } from './types'
 
@@ -24,11 +25,16 @@ export function startSelect(c: PointerCtx, q: P): Drag {
   if (ft) return { kind: 'freeMove', id: ft.id, p0: q, v0: v, moved: false, select: { freeTextileId: ft.id, freeFace: faceOfPoint(ft, q) } }
   const o = hits.objectAt(q)
   if (o) return { kind: 'object', id: o.id, dx: q.x - o.x, dy: q.y - o.y, start: { x: o.x, y: o.y }, moved: false, select: { objectId: o.id } }
-  // A shelf on a wall face: the wall drawer on that face, with the shelf chosen
+  // A shelf on a wall face: the wall drawer on that face, with the shelf and its row chosen. A drag moves them (Alt: copies)
   const sh = hits.shelfAt(q)
   if (sh) {
     const w = v.walls.find((x) => x.id === sh.wallId)
-    if (w) return { kind: 'click', select: { wallId: w.id, side: sideOf(v, sh), shelfId: sh.id } }
+    const chosen = chosenShelves(v, selection)
+    // Pressed on a shelf already chosen: it keeps the choice (its row, or only it); else its row
+    const keep = chosen.includes(sh.id)
+    const ids = keep ? chosen : shelfRow(v, sh.id).map((x) => x.id)
+    const select: PlanSelection = { wallId: sh.wallId, side: sideOf(v, sh), shelfId: sh.id, shelfOnly: keep ? selection.shelfOnly : undefined }
+    if (w) return { kind: 'shelfMove', anchor: sh.id, ids, p0: q, v0: v, moved: false, copy: false, start: select, select }
   }
   const ib = hits.beamAt(q)
   if (ib) return { kind: 'beam', id: ib.id, p0: q, v0: v, delta: '0,0', horizontal: ib.from[1] === ib.to[1], moved: false, select: { beamId: ib.id } }

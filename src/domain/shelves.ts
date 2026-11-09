@@ -254,6 +254,80 @@ export function dragShelves(v: Variant, rules: Rules, id: string, ids: string[],
   return up !== v ? up : moveShelves(v, rules, ids, { dm });
 }
 
+/** Where placeShelves puts the shelf it is anchored on: a felt on a wall face, and how far up or down it goes, m. */
+export interface ShelfPlace {
+  wallId: string;
+  s: FaceSide;
+  module: number;
+  dy?: number;
+}
+
+/**
+ * Move shelves, or copies of them with `copy`, so the shelf `anchorId` lands in `to`: the others keep their place beside
+ * it (felts along the wall, heights), also onto another wall or face (Bjørn 9.11.2026: tools to move and copy). All or
+ * none: null where one cannot stand (H4–H6) or nothing would change. The ids in the order of `ids` (the copies' own).
+ */
+export function placeShelves(v: Variant, rules: Rules, ids: string[], anchorId: string, to: ShelfPlace, copy = false): { v: Variant; ids: string[] } | null {
+  const a = shelvesOf(v).find((x) => x.id === anchorId);
+  const group = ids.map((id) => shelvesOf(v).find((x) => x.id === id)).filter((x): x is Shelf => !!x);
+  if (!a || !group.length) return null;
+  const set = new Set(group.map((x) => x.id));
+  const dy = to.dy ?? 0;
+  const moved = group.map((f) => ({ f, wallId: to.wallId, side: to.s, module: to.module + f.module - a.module, y: shelfHeight(rules, f.y + dy) }));
+  const same = moved.every((m) => m.wallId === m.f.wallId && m.side === sideOf(v, m.f) && m.module === m.f.module && m.y === m.f.y);
+  if (same && !copy) return null;
+  const others = copy ? v : { ...v, shelves: shelvesOf(v).filter((x) => !set.has(x.id)) };
+  for (const m of moved) {
+    if (shelfBlocked(v, m.wallId, m.module, m.side)) return null;
+    if (!fitsIn(others, rules, m.wallId, m.module, m.side, m.y)) return null;
+  }
+  if (!copy) {
+    const at = new Map(moved.map((m) => [m.f.id, m]));
+    const shelves = shelvesOf(v).map((x) => {
+      const m = at.get(x.id);
+      return m ? { ...x, wallId: m.wallId, side: m.side, module: m.module, y: m.y } : x;
+    });
+    return { v: { ...v, shelves }, ids: group.map((x) => x.id) };
+  }
+  let x = v;
+  const added: string[] = [];
+  for (const m of moved) {
+    const id = nextId(shelvesOf(x).map((o) => o.id), 'h');
+    x = { ...x, shelves: [...shelvesOf(x), { id, wallId: m.wallId, module: m.module, side: m.side, y: m.y }] };
+    added.push(id);
+  }
+  return { v: x, ids: added };
+}
+
+/** Copies of the shelves in the nearest felts along their wall face where all of them fit, right first (as seen in
+ *  front of the face, `dir`), then left. Null when there is no room on the face. */
+export function copyShelvesNear(v: Variant, rules: Rules, ids: string[], dir: 1 | -1 = 1): { v: Variant; ids: string[] } | null {
+  const group = ids.map((id) => shelvesOf(v).find((x) => x.id === id)).filter((x): x is Shelf => !!x);
+  if (!group.length) return null;
+  const a = group[0];
+  const w = v.walls.find((x) => x.id === a.wallId);
+  if (!w) return null;
+  const L = Math.round(wallLength(w));
+  const ms = group.map((f) => f.module);
+  const span = Math.max(...ms) - Math.min(...ms) + 1;
+  for (let k = span; k < L; k++) {
+    for (const d of [k * dir, -k * dir]) {
+      const r = placeShelves(v, rules, ids, a.id, { wallId: a.wallId, s: sideOf(v, a), module: a.module + d }, true);
+      if (r) return r;
+    }
+  }
+  return null;
+}
+
+/** Every shelf in the felts of `ids`: a row's felts with all that is stacked in them, for «Kopier feltet». */
+export function feltShelves(v: Variant, ids: string[]): string[] {
+  const keys = new Set(ids.flatMap((id) => {
+    const f = shelvesOf(v).find((x) => x.id === id);
+    return f ? [`${f.wallId}|${sideOf(v, f)}|${f.module}`] : [];
+  }));
+  return shelvesOf(v).filter((f) => keys.has(`${f.wallId}|${sideOf(v, f)}|${f.module}`)).map((f) => f.id);
+}
+
 /**
  * Spread the shelves in the felts of `ids` evenly (Bjørn 9.11.2026): in each felt with three or more, the lowest and the
  * highest stay and those between get the same clear height, on the 50 mm steps. Felts treated alike stay rows. Null

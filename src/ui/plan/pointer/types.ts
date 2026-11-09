@@ -52,6 +52,9 @@ export type Drag =
   | { kind: 'plates'; wallId: string; i0: number; p0: P; moved: boolean; as?: Extract<Drag, { kind: 'stroke' }> }
   /** The shelf pen pressed on a wall face: module `m0` to `m1` on that face, laid on release (shelf.ts). */
   | { kind: 'shelf'; wallId: string; s: FaceSide; m0: number; m1: number }
+  /** Velg on a shelf: drag moves it and the shelves chosen with it (its row) along the wall or onto another wall face,
+   *  with Alt a copy; release selects. */
+  | { kind: 'shelfMove'; anchor: string; ids: string[]; p0: P; v0: Variant; moved: boolean; copy: boolean; start: PlanSelection; select: PlanSelection }
   /** Tøm on anything but walls and drawn beams: the first thing pressed, then more of its kind as the pointer passes. */
   | { kind: 'erase'; first: EraseTarget; p0: P; moved: boolean; done: Set<string> }
 

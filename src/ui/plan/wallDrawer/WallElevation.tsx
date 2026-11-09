@@ -307,7 +307,7 @@ export function WallElevation(p: Props) {
                 style={{ cursor: 'move' }}
                 pointerEvents={painting ? 'none' : undefined}
                 onPointerDown={(e) =>
-                  p.chosen.includes(f.id) ? shelfDrag(e, f, p.chosen, p.shelfOnly) : shelfDrag(e, f, shelfRow(v, f.id).map((x) => x.id))
+                  p.chosen.includes(f.id) ? shelfDrag(e, f, p.chosen, p.shelfOnly, v) : shelfDrag(e, f, shelfRow(v, f.id).map((x) => x.id), undefined, v)
                 }
               />
             )

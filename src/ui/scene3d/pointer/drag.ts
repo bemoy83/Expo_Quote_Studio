@@ -7,7 +7,7 @@ import { sideOf, type FaceSide } from '../../../domain/faces'
 import { moveObject } from '../../../domain/objects'
 import { faceOfPoint } from '../../../domain/textile/free'
 import { moveTextileBy } from '../../../domain/textile/inFrame'
-import { dragShelves, shelfHeight, shelfRow, shelvesOf } from '../../../domain/shelves'
+import { dragShelves, placeShelves, shelfHeight, shelfRow, shelvesOf } from '../../../domain/shelves'
 import type { Foil, Shelf, TextileWall, Variant, Wall } from '../../../domain/types'
 import { dragRoom, dragWall, dropObject, dropRoom, roomDrag, type RoomDrag, type WallDrag } from '../../drag'
 import { place, rules } from '../../env'
@@ -36,7 +36,7 @@ export type Drag =
   /** A textile or foil dragged on its face: deltas from where it was grabbed (t along the wall, h up). */
   | { kind: 'decor'; item: { textile: TextileWall } | { foil: Foil }; w: Wall; s: FaceSide; t0: number; h0: number; moved: boolean }
   /** A shelf dragged on its face: up and down in 50 mm steps, sideways felt by felt (as in the wall drawer). */
-  | { kind: 'shelf'; shelf: Shelf; ids: string[]; w: Wall; s: FaceSide; t0: number; h0: number; moved: boolean }
+  | { kind: 'shelf'; shelf: Shelf; ids: string[]; w: Wall; s: FaceSide; t0: number; h0: number; moved: boolean; copy: Variant | null }
 
 /** Pointer moves under this many px are a click. */
 export const CLICK_PX = 4
@@ -53,7 +53,8 @@ export function startDrag(P: PointerProps, hits: SceneHits, hit: Hit | null, e: 
     // The chosen shelves go with it when it is one of them, else its row (Bjørn 9.11.2026)
     const chosen = chosenShelves(P.v, P.selection)
     const ids = chosen.includes(sh.id) ? chosen : shelfRow(P.v, sh.id).map((x) => x.id)
-    if (q) return { kind: 'shelf', shelf: sh, ids, w: sw, s, t0: q.t, h0: q.h, moved: false }
+    // Alt (Option) held: copies go where it is dragged, and the shelves stay (from the sketch at the press)
+    if (q) return { kind: 'shelf', shelf: sh, ids, w: sw, s, t0: q.t, h0: q.h, moved: false, copy: e.altKey ? P.v : null }
   }
   if (deco && w) {
     const s = sideOf(P.v, deco)
@@ -102,7 +103,14 @@ export function moveDrag(P: PointerProps, hits: SceneHits, drag: Exclude<Drag, {
     const { shelf } = drag
     const module = shelf.module + Math.round(f.t - drag.t0)
     const y = shelfHeight(rules, shelf.y + f.h - drag.h0)
-    P.onEdit((x) => dragShelves(x, rules, shelf.id, drag.ids, module, y), false)
+    if (!drag.copy) {
+      P.onEdit((x) => dragShelves(x, rules, shelf.id, drag.ids, module, y), false)
+      return
+    }
+    const r = placeShelves(drag.copy, rules, drag.ids, shelf.id, { wallId: shelf.wallId, s: drag.s, module, dy: y - shelf.y }, true)
+    if (!r) return
+    P.onEdit(() => r.v, false)
+    P.onSelect({ wallId: shelf.wallId, side: drag.s, shelfId: r.ids[drag.ids.indexOf(shelf.id)], shelfOnly: P.selection.shelfOnly })
     return
   }
   if (drag.kind === 'room') {
@@ -127,6 +135,8 @@ export function moveDrag(P: PointerProps, hits: SceneHits, drag: Exclude<Drag, {
 export function endDrag(P: PointerProps, hits: SceneHits, d: Drag | null, hit: Hit | null, click: boolean) {
   if (d?.kind === 'object' && d.moved) return dropObject(P.v, d.id, d.start, P.onEdit, P.onToast)
   if (d?.kind === 'room' && d.moved) return dropRoom(d, P.onEdit, P.onToast)
+  // A copy dragged out stays chosen (moveDrag chose it)
+  if (d?.kind === 'shelf' && d.moved && d.copy) return
   if (hit?.shelfId) {
     const f = shelvesOf(P.v).find((x) => x.id === hit.shelfId)
     // A shelf already chosen keeps the choice (its row, or only it)
