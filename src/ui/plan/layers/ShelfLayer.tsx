@@ -15,6 +15,8 @@ export function ShelfLayer({ v, selection, dim }: { v: Variant; selection: PlanS
   const { gone, hatch } = useErasing()
   const sc = usePlanScale()
   const chosen = new Set(chosenShelves(v, selection))
+  // A wall chosen on its own shows its dimension chain over the boards: their heights give way (Bjørn 9.11.2026)
+  const wallChosen = selection.wallId && !selection.shelfId && !selection.textileId ? selection.wallId : null
   return (
     <g opacity={dim('objects')} pointerEvents="none">
       {shelfStacks(v).map((stack) => {
@@ -30,7 +32,7 @@ export function ShelfLayer({ v, selection, dim }: { v: Variant; selection: PlanS
             {sel && rect({ fill: 'none', stroke: INK, strokeOpacity: HALO_OPACITY, strokeWidth: linePx(sc, 6) })}
             {rect({ fill: SURFACE, fillOpacity: g ? GONE_FILL : undefined, stroke: INK, strokeWidth: sel ? linePx(sc, 1.8) : linePx(sc, 0.75) })}
             {g && rect({ fill: hatch })}
-            {sc.detail === 'full' && (
+            {sc.detail === 'full' && stack[0].wallId !== wallChosen && (
               <text x={cx} y={cy + sizePx(sc, 3)} textAnchor="middle" style={{ font: `500 ${sizePx(sc, 9)}px var(--font-numeric)`, fill: INK }}>
                 {stack.map((f) => Math.round(f.y * 1000)).join('/')}
               </text>

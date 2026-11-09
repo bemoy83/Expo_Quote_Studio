@@ -5,6 +5,7 @@ import type { PlanSelection } from '../selection'
 import { sizePx, usePlanScale, type PlanScale } from '../planScale'
 import { DIM_NEAR, DIM_TOTAL, planDims, sideLine, type InnerChain } from '../dims'
 import { Chain } from '../DimChain'
+import { rules } from '../../env'
 import { textileOffset, textileWidth, wallWidth } from '../planStyle'
 
 /** All dimension chains for the current selection. */
@@ -29,6 +30,7 @@ export function DimLayer({ v, selection }: { v: Variant; selection: PlanSelectio
 }
 
 function Inner({ sc, c }: { sc: PlanScale; c: InnerChain }) {
-  const half = c.clear === 'wall' ? wallWidth(sc) / 2 : c.clear === 'mounted' ? textileOffset(sc) + textileWidth(sc) / 2 : textileWidth(sc) / 2
+  // A shelf's chain stands beyond its board: half a post out from the line, then the board's depth
+  const half = c.clear === 'shelf' ? rules.wall.post / 2 + rules.shelf.board.depth : c.clear === 'wall' ? wallWidth(sc) / 2 : c.clear === 'mounted' ? textileOffset(sc) + textileWidth(sc) / 2 : textileWidth(sc) / 2
   return <Chain sc={sc} axis={c.axis} at={c.at + c.dir * (half + sizePx(sc, DIM_NEAR))} ts={c.ts} dir={c.dir} />
 }

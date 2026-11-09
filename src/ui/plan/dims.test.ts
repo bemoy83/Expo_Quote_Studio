@@ -4,6 +4,8 @@ import { createVariant } from '../../domain/variant'
 import { faceAt } from '../../domain/faces'
 import { isStandWall } from '../../domain/walls'
 import { mm, placementRow, planDims, totalSides } from './dims'
+import { addShelfRow } from '../../domain/shelves'
+import { RULES } from '../../rules/rules'
 
 describe('plan dimensions', () => {
   const corner = () => createVariant('A', { width: 6, depth: 4, type: 'corner' })
@@ -56,5 +58,19 @@ describe('plan dimensions', () => {
     expect(d.inner!.ts).toEqual([...new Set([Math.min(back.from[0], back.to[0]) - 0.02, Math.max(back.from[0], back.to[0]) + 0.02, 1.015, 2.985])].sort((a, b) => a - b))
     // The wall's module chain is not shown
     expect(d.sides.find((s) => s.side === 'back')!.near).not.toEqual([0, 1, 2, 3, 4, 5, 6])
+  })
+})
+
+describe('dimensions with shelves (Bjørn 9.11.2026)', () => {
+  it('a chosen shelf row gets its own chain beyond the boards; the wall its chain only when chosen itself', () => {
+    const v0 = paintWalls(createVariant('A', { width: 6, depth: 3, type: 'row' }), [1, 2], [5, 2])
+    const inner = v0.walls.find((w) => w.from[1] === 2 && w.to[1] === 2)!
+    const v = addShelfRow(v0, RULES, inner.id, 1, 2, 1, 1.3).v
+    expect(planDims(v, { wallId: inner.id, side: 1 }, false).inner).toMatchObject({ clear: 'wall' })
+    const d = planDims(v, { wallId: inner.id, side: 1, shelfId: 'h1' }, false).inner!
+    expect(d.clear).toBe('shelf')
+    // The wall's outer post faces, and the row's felts 1–2 from post 2 to post 4 (x = 2 … 4)
+    expect(d.ts).toEqual(expect.arrayContaining([2, 4]))
+    expect(d.ts).not.toContain(3)
   })
 })

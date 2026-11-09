@@ -26,7 +26,9 @@ export function startSelect(c: PointerCtx, q: P): Drag {
   const o = hits.objectAt(q)
   if (o) return { kind: 'object', id: o.id, dx: q.x - o.x, dy: q.y - o.y, start: { x: o.x, y: o.y }, moved: false, select: { objectId: o.id } }
   // A shelf on a wall face: the wall drawer on that face, with the shelf and its row chosen. A drag moves them (Alt: copies)
-  const sh = hits.shelfAt(q)
+  // Zones as for a textile wall (Bjørn 9.11.2026): the wall's own band picks the wall, the board in front of it the shelf
+  const band = hits.moduleAt(q)
+  const sh = band && hits.onWallBand(q, band) ? undefined : hits.shelfAt(q)
   if (sh) {
     const w = v.walls.find((x) => x.id === sh.wallId)
     const chosen = chosenShelves(v, selection)

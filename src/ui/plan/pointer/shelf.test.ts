@@ -99,6 +99,12 @@ describe('a shelf in Velg, Tøm and Delete', () => {
     expect(shelvesOf(edited(c)).map((x) => x.module)).toEqual([1, 2, 3, 4]);
   });
 
+  it('Velg on the wall band picks the wall, on the board in front of it the shelf (zones as a textile wall)', () => {
+    const { v, id } = withShelf();
+    expect((startSelect(ctx(v), { x: 2.5, y: 0.01 }) as { select: object }).select).not.toHaveProperty('shelfId');
+    expect((startSelect(ctx(v), { x: 2.5, y: 0.25 }) as { select: object }).select).toMatchObject({ shelfId: id });
+  });
+
   it('Tøm takes the shelf before the wall behind it', () => {
     const { v, id } = withShelf();
     const t = eraseTargetAt(v, ctx(v).hits, standWallKeys(v), { x: 2.5, y: 0.2 })!;

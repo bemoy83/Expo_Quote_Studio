@@ -136,8 +136,10 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 - Plan: penselen `{ kind: 'shelf' }` hører til Møbel (`ui/tools.ts`, hurtigvalget i `plan/QuickPicks.tsx`, raden i
   `panel/sections/EquipSection.tsx`) · klikk og rad `plan/pointer/shelf.ts`, forhåndsvisningen `shelfTarget` i
   `plan/next.ts` · tegnet `plan/layers/ShelfLayer.tsx` (flaten `shelves` i `plan/nextArea.ts`) · treff `shelfAt` i
-  `plan/pointer/hits.ts`, brukt av Velg (`select.ts`, dra og Alt + dra i `shelfMove.ts`) og Tøm (`erase.ts`) · høyden
-  på brettet ved full detalj · valgt som `shelfId` på veggen, med raden
+  `plan/pointer/hits.ts`, brukt av Velg (`select.ts`: veggens bånd velger veggen, brettet foran hyllen; dra og Alt + dra
+  i `shelfMove.ts`) og Tøm (`erase.ts`) · høyden
+  på brettet ved full detalj (viker når veggen selv er valgt) · målkjeden for valgte hyller utenfor brettene
+  (`planDims` i `plan/dims.ts`, veggens kjede bare når veggen selv er valgt) · valgt som `shelfId` på veggen, med raden
   unntatt `shelfOnly` (`chosenShelves` i `plan/selection.ts`, brukt av plan, skuff og 3D), pillen i
   `plan/SelectionPill.tsx` (Ned/Opp, Høyde med hurtigvalgene, Hylle til, Kopier, Bare denne)
 - Skuff: `ShelfPanel` i `plan/wallDrawer/panels.tsx` (stabelen loddrett, Kopier, Kopier feltet, Fordel jevnt), tegnet
