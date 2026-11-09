@@ -36,8 +36,8 @@ export type Drag =
   | ({ kind: 'room'; y: number } & RoomDrag)
   /** A textile or foil dragged on its face: deltas from where it was grabbed (t along the wall, h up). */
   | { kind: 'decor'; item: { textile: TextileWall } | { foil: Foil }; w: Wall; s: FaceSide; t0: number; h0: number; moved: boolean }
-  /** A shelf dragged on its face: up and down in 50 mm steps, sideways felt by felt (as in the wall drawer). */
-  /** `follow`: the shelves were chosen at the press, so the choice goes over to the copies. */
+  /** A shelf dragged on its face: up and down in 50 mm steps, sideways felt by felt (as in the wall drawer). `follow`: the
+   *  shelves were chosen at the press, so the choice goes over to the copies. */
   | { kind: 'shelf'; shelf: Shelf; ids: string[]; w: Wall; s: FaceSide; t0: number; h0: number; moved: boolean; copy: Variant | null; follow: boolean }
 
 /** Pointer moves under this many px are a click. */
