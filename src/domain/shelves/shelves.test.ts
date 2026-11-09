@@ -331,10 +331,13 @@ describe('filling a whole face from the wall drawer (Bjørn 9.11.2026)', () => {
     expect(new Set(second.map((x) => x.module)).size).toBe(2)
     let r: ReturnType<typeof addShelfToFace> = { v, id: '' }
     for (let i = 0; i < 100 && !('error' in r); i++) r = addShelfToFace((v = r.v), RULES, 'side-back', 1)
-    expect(shelvesOf(v)).toHaveLength(n * RULES.shelf.heights.length)
+    // The one order of H4, as in a felt: the quick picks, then 100, then the 400 mm gaps split (Bjørn 9.11.2026)
+    expect(shelvesOf(v)).toHaveLength(n * 11)
+    const one = shelvesOf(v).filter((x) => x.module === shelvesOf(v)[0].module).map((x) => x.y).sort((a, b) => a - b)
+    expect(one).toEqual([0.1, 0.3, 0.5, 0.7, 0.9, 1.1, 1.3, 1.5, 1.7, 1.9, 2.1])
   })
 
-  it('«+ Hyllerad» puts a row in every free felt, the next press the next quick pick, then no room', () => {
+  it('«+ Hyllerad» puts a row in every free felt, the next press the next height in the order of H4, then no room', () => {
     let v = row()
     const n = free(v).length
     const r1 = ok(addShelfRowToFace(v, RULES, 'side-back', 1))
@@ -346,6 +349,11 @@ describe('filling a whole face from the wall drawer (Bjørn 9.11.2026)', () => {
     expect(new Set(shelvesOf(v).map((x) => x.y))).toEqual(new Set([1.3, 1.7]))
     for (let i = 0; i < 3; i++) v = ok(addShelfRowToFace(v, RULES, 'side-back', 1)).v
     expect(new Set(shelvesOf(v).map((x) => x.y))).toEqual(new Set(RULES.shelf.heights))
+    // Then 100, as in a felt, before the gaps are split
+    v = ok(addShelfRowToFace(v, RULES, 'side-back', 1)).v
+    expect(Math.min(...shelvesOf(v).map((x) => x.y))).toBe(RULES.shelf.min)
+    for (let i = 0; i < 5; i++) v = ok(addShelfRowToFace(v, RULES, 'side-back', 1)).v
+    expect(shelvesOf(v)).toHaveLength(n * 11)
     expect('error' in addShelfRowToFace(v, RULES, 'side-back', 1)).toBe(true)
   })
 })

@@ -258,7 +258,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 - **H4 Høyde.** Hyllens høyde er overkant plate fra gulv, i trinn på 50 mm, fra 100 til 2400 mm. Over 2100 mm er lov, men
   med advarsel: varer kan ikke settes synlig over toppen av standveggen. En ny hylle får 1300 mm, eller høyden til en
   hylle ved siden av, så raden fortsetter (H2). Hurtigvalg 500, 900, 1300, 1700 og 2100 mm (100 er laveste mulige, ikke
-  en vanlig plassering). Én til i feltet går til neste hurtigvalg over, så under, så midt i største ledige mellomrom.
+  en vanlig plassering). Hyller legges til i én og samme rekkefølge, i et felt («Hylle til i feltet», Rad til, Shift på
+  hyllepensla) og på hele veggen («+ Hylle», «+ Hyllerad»): neste hurtigvalg over, så under, så 100 mm, så feltet har
+  jevne ca. 400 mm; først deretter midt i største ledige mellomrom.
   *Bjørn 8.11.2026, endret 9.11.2026 · `rules.shelf.min`, `max`, `high`, `step`, `heights`, `start` · kode `src/domain/shelves/model.ts` · test `src/domain/shelves/shelves.test.ts`*
 - **H5 Lysmål.** Minst 100 mm lysmål mellom hyller over hverandre i samme felt, fra overkant nedre plate til underkant
   øvre. Veggrisset viser lysmålet, så kunden ser om utstyret får plass.

@@ -6,7 +6,7 @@ import { sideOf, type FaceSide } from '../faces';
 import { wallLength } from '../grid';
 import { nextId } from '../ids';
 import type { Shelf, Variant } from '../types';
-import { apart, EPS, fitsIn, shelfBlocked, shelfHeight, shelvesIn, shelvesOf, shelvesOn } from './model';
+import { apart, EPS, fillHeights, fitsIn, shelfBlocked, shelfHeight, shelvesIn, shelvesOf, shelvesOn } from './model';
 
 /**
  * Put a shelf in a felt at `y` (default the start height). A felt that already has shelves keeps them: the result is the
@@ -45,8 +45,8 @@ export function addShelfRow(v: Variant, rules: Rules, wallId: string, from: numb
 
 /**
  * One more shelf in the felt of each of `ids` (a row gets a row), all at one height: the next quick pick above, then the
- * next below (Bjørn 9.11.2026), then the lowest (100), else the middle of the widest gap in the felt, as long as every felt keeps the clear height
- * (H5). Null with the reason when there is no room.
+ * next below, then the lowest, then the middle of the widest gap in the felt (fillHeights, H4), as long as every felt
+ * keeps the clear height (H5). Null with the reason when there is no room.
  */
 export function addShelvesAbove(v: Variant, rules: Rules, ids: string[]): { v: Variant; ids: string[] } | { error: string } {
   const group = ids.map((id) => shelvesOf(v).find((x) => x.id === id)).filter((x): x is Shelf => !!x);
@@ -54,17 +54,7 @@ export function addShelvesAbove(v: Variant, rules: Rules, ids: string[]): { v: V
   const f = group[0];
   const sh = rules.shelf;
   const there = shelvesIn(v, f.wallId, f.module, sideOf(v, f));
-  // Gaps in the first felt, from the lowest a shelf may stand to the soft limit
-  const ys = [sh.min - sh.gap - sh.board.thickness, ...there.map((x) => x.y), sh.high + sh.gap + sh.board.thickness];
-  const gaps = ys.slice(1).map((y, i) => ({ mid: (y + ys[i]) / 2, size: y - ys[i] })).sort((a, b) => b.size - a.size);
-  const tries = [
-    ...sh.heights.filter((h) => h > f.y + EPS),
-    ...sh.heights.filter((h) => h < f.y - EPS).reverse(),
-    // The lowest a shelf may stand next, before any gap is split (Bjørn 9.11.2026): 100 under 500 keeps the even
-    // ~400 mm, where the middle of the gap under 500 gave 250
-    sh.min,
-    ...gaps.map((g) => shelfHeight(rules, g.mid)),
-  ];
+  const tries = fillHeights(rules, f.y, there.map((x) => x.y));
   const y = tries.find((t) => t >= sh.min - EPS && group.every((x) => fitsIn(v, rules, x.wallId, x.module, sideOf(v, x), t)));
   if (y === undefined) return { error: 'Ingen plass til flere hyller i feltet' };
   let x = v;
