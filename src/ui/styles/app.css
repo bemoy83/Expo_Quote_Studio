@@ -2223,36 +2223,6 @@ select.cin {
   color: rgb(var(--ink));
   font-weight: 600;
 }
-/* A felt's shelves top to bottom in the wall drawer (ShelfPanel): one row each, the clear height to the one under it */
-.flat-choice.flat-stack {
-  flex-direction: column;
-  align-items: stretch;
-  max-width: 220px;
-}
-.flat-choice.flat-stack > button {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  text-align: left;
-}
-/* The felt's section takes what the drawer has left; its buttons stay on top and the list scrolls under them */
-.set-sec.shelf-felt {
-  flex: 1 1 0;
-}
-.shelf-felt > * {
-  flex-shrink: 0;
-}
-.shelf-felt > .stack-scroll {
-  flex: 1 1 0;
-  min-height: 34px;
-  overflow-y: auto;
-  margin-left: -10px;
-}
-.flat-stack .stack-gap {
-  color: rgb(var(--ink-muted));
-  font-weight: 400;
-}
 .flat-choice > button:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
