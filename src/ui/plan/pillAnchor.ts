@@ -3,7 +3,7 @@
 // chain (arbeidstegning.md A5); on a stand edge it clears the totals and the side name outside. Pure, in model
 // metres and screen pixels, so it can be tested without a plan; SelectionPill.tsx turns it into a place on screen.
 import { footprintBox } from '../../domain/objects'
-import { shelfBox, shelvesOf } from '../../domain/shelves'
+import { shelfBox, shelvesOf } from '../../domain/shelves/model'
 import { CELL, pointAlong } from '../../domain/grid'
 import type { Point, Variant, Wall } from '../../domain/types'
 import { isPerimeterWall } from '../../domain/walls'

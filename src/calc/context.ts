@@ -7,7 +7,7 @@ import { displayName, indexCatalog, type CatalogIndex } from '../catalog/lookup'
 import type { Catalog } from '../catalog/types';
 import { pointKey } from '../domain/grid';
 import { hiddenPlates } from '../domain/print';
-import { shelfBrackets } from '../domain/shelves';
+import { shelfBrackets } from '../domain/shelves/brackets';
 import type { Point, StandWallTerms, Variant } from '../domain/types';
 import { builtModules, wallKind, wallPoints, type BuiltModule, type WallKind } from '../domain/walls';
 import { bomSizes, beamSpecs, structureOf } from '../foga/fromVariant';

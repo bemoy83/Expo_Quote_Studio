@@ -1,15 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { DOOR } from '../catalog/defaultCatalog';
-import { RULES } from '../rules/rules';
-import { paintWalls } from './edit';
-import { moduleKey } from './grid';
-import { addShelf, addShelfRow, addShelfRowToFace, addShelfToFace, addShelfToFelt, addShelvesAbove, clearBetween, copyShelvesNear, dragShelves, feltShelves, fitShelves, highWarning, moveShelves, offRow, penHeight, placeShelves, removeShelves, shelfBlocked, shelfBrackets, shelfFaces, shelfHeight, shelfRow, shelvesOf, spreadShelves, tooHigh } from './shelves';
+import { DOOR } from '../../catalog/defaultCatalog';
+import { RULES } from '../../rules/rules';
+import { paintWalls } from '../edit';
+import { moduleKey } from '../grid';
+import { shelfBrackets } from './brackets';
+import { addShelf, addShelfRow, addShelfToFelt, addShelvesAbove, copyShelvesNear, dragShelves, feltShelves, fitShelves, moveShelves, penHeight, placeShelves, removeShelves, spreadShelves } from './edit';
+import { addShelfRowToFace, addShelfToFace } from './fill';
+import { clearBetween, highWarning, offRow, shelfBlocked, shelfFaces, shelfHeight, shelfRow, shelvesOf, tooHigh } from './model';
 
 const addShelfAbove = (v: Variant, id: string) => addShelvesAbove(v, RULES, [id]);
-import { addTextile } from './textile/inFrame';
-import type { Point, Variant } from './types';
-import { createVariant } from './variant';
-import { builtModules } from './walls';
+import { addTextile } from '../textile/inFrame';
+import type { Point, Variant } from '../types';
+import { createVariant } from '../variant';
+import { builtModules } from '../walls';
 
 /** Row stand 6 × 3: back wall from (0,0) to (6,0), its face toward the stand is 1; side walls in both corners. */
 const row = (): Variant => createVariant('A', { width: 6, depth: 3, type: 'row' });
