@@ -114,15 +114,18 @@ lagres per modul i `Variant.panels` (domain/panels.ts), nøklet på platens kant
 ## Velg et felt
 
 Bjørn 9.11.2026: i veggskuffen velger du først, så handler du. Klikk en plate i veggrisset (uten verktøy) for å velge
-feltet, klikk den igjen for hele veggen. Feltet får én seksjon «FELT n · farge» (`FeltPanel` i
-ui/plan/wallDrawer/panels.tsx):
+feltet, klikk den igjen for hele veggen. Feltet har to sider, byttet med knappen nederst i skuffen slik døren har sin
+vei tilbake til paletten (`FeltPanel` i ui/plan/wallDrawer/panels.tsx):
 
-- Paletten farger bare denne platen (begge sider, det er én plate). «Print» sist i paletten legger hele motivet fra
-  grafikkhyllen på platen, på siden som vises. Siste strøk vinner som med kosten.
-- Grafikkhyllen velger motivet for Print og Dekal. Har feltet print, får printen det nye motivet med en gang.
-- «+ Dekal» legger en dekal midt i feltet med motivet (ikke på et printet felt), «+ Hylle» en hylle (se hyller).
-- ← → bytter felt. Dører er ikke felt: klikk på en dør velger døren.
-- Malerspann og malerkost ligger også i seksjonen. Velger du ett av dem, slipper feltet, og du farger hele veggen eller
+- **Farge og grafikk** (først): «FELT n · farge». Paletten farger bare denne platen (begge sider, det er én plate).
+  «Print» sist i paletten legger hele motivet fra grafikkhyllen på platen, på siden som vises. Siste strøk vinner som med
+  kosten. Grafikkhyllen velger motivet for Print og Dekal; har feltet print, får det nytt motiv med en gang. «+ Dekal»
+  legger en dekal midt i feltet (ikke på et printet felt).
+- **Hyller og heng**: tilbehør som festes i feltet, én seksjon per slag (hyller nå, heng senere). «Hylle til i feltet»
+  legger til og velger hyllen. En valgt hylle har «Farge og grafikk» nederst tilbake til feltet; fjernes hyllen, står
+  du på feltets hyller igjen. Tilbehørssiden er bygget for å skalere: nye slag får en egen seksjon der.
+- ← → bytter felt og beholder siden. Dører er ikke felt: klikk på en dør velger døren.
+- Malerspann og malerkost ligger også på fargesiden. Velger du ett av dem, slipper feltet, og du farger hele veggen eller
   plate for plate som før, uten å gå ut av skuffen.
 - Søppelbøtta med et felt valgt tar bare feltets egen farge og printen på denne siden (`clearFelt` i domain/print.ts).
   Dekaler og hyller fjernes én og én.
