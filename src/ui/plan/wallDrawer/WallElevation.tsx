@@ -1,6 +1,6 @@
 // The drawing in the wall drawer: the chosen face of the wall seen straight on, with plates, doors, decals, rooms
 // against it, textile frames and shelves (hylle 6311). Frames and decals are moved and resized here, shelves moved up,
-// down and sideways, motifs and frames dropped from the graphics shelf, and while a paint tool is out each plate is a
+// down and sideways, motifs and frames dropped from the motif library (Profilering), and while a paint tool is out each plate is a
 // target for it.
 import { useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent } from 'react'
 import { foilCenter } from '../../../domain/decor'

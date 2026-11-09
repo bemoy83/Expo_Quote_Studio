@@ -111,6 +111,35 @@ lagres per modul i `Variant.panels` (domain/panels.ts), nøklet på platens kant
 - Kalkylen har én linje per farge. En farget plate i en standvegg arrangøren betaler blir platebytte for akkurat den
   platen (6125-RAL). Plukklisten teller plater per RAL, og overstykket over en dør har platens farge.
 
+## Velg et felt
+
+Bjørn 9.11.2026: i veggskuffen velger du først, så handler du. Klikk en plate i veggrisset (uten verktøy) for å velge
+feltet, klikk den igjen for hele veggen. Feltet har to sider, byttet med knappen nederst i skuffen slik døren har sin
+vei tilbake til paletten (`FeltPanel` i ui/plan/wallDrawer/panels.tsx):
+
+- **Farge og profilering** (først), med samme ord som skinnen og verktøybrikken (Bjørn 9.11.2026). «FELT n · farge»:
+  paletten er det som dekker platen. En farge gjelder bare denne platen (begge sider, det er én plate); «Print» sist
+  legger hele motivet på platen, på siden som vises. Siste strøk vinner som med kosten. Under ligger seksjonen
+  «PROFILERING» med motivbiblioteket: motivet du velger der brukes av Print og Dekal, og har feltet print, får det nytt
+  motiv med en gang. «+ Dekal» legger en dekal midt i feltet (ikke på et printet felt). Med hele veggen valgt har
+  Profilering «+ Tekstilvegg» og motivene som dras til veggen.
+- **Hyller og heng**: tilbehør som festes i feltet, én seksjon per slag (hyller nå, heng senere). «Hylle til i feltet»
+  legger til og velger hyllen. En valgt hylle har «Farge og profilering» nederst tilbake til feltet; fjernes hyllen, står
+  du på feltets hyller igjen. Tilbehørssiden er bygget for å skalere: nye slag får en egen seksjon der.
+- Hele veggen har de samme to sidene (Bjørn 9.11.2026). «Hyller og heng» med hele veggen valgt fyller veggen med
+  automatisk plassering, slik «Hylle til» gjør i et felt. «+ Hylle» går felt for felt, rad for rad: neste hylle i raden
+  som fylles (1300, så hurtigvalgene over og deretter under), i feltet nærmest midten som har plass (`addShelfToFace`).
+  «+ Hyllerad» legger én hylle i hvert felt som kan ta hylle, i samme høyde: 1300, så hurtigvalgene over og deretter
+  under; den første høyden alle feltene har plass i, ellers den flest har plass i (`addShelfRowToFace`, H2, H5, H6).
+- Å legge til hyller velger ingenting (Bjørn 9.11.2026): du kan trykke videre uten avbrudd, og så trykke en hylle eller
+  rad i veggrisset for å endre den. Gjelder også «Hylle til i feltet».
+- ← → bytter felt og beholder siden. Dører er ikke felt: klikk på en dør velger døren.
+- Malerspann og malerkost ligger også på fargesiden. Velger du ett av dem, slipper feltet, og du farger hele veggen eller
+  plate for plate som før, uten å gå ut av skuffen.
+- Søppelbøtta med et felt valgt tar bare feltets egen farge og printen på denne siden (`clearFelt` i domain/print.ts).
+  Dekaler og hyller fjernes én og én.
+- Ikke bygget (parkert): velge flere felt samtidig, og velge felt ved klikk i planen eller 3D.
+
 ## Print på hele plater
 
 Siste valg i paletten er «Print». Det legger motivet som er valgt i grafikkhyllen på hele plater som folie (8021), på den
