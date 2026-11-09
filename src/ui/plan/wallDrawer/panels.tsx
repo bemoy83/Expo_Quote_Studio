@@ -1,7 +1,7 @@
 // The settings column of the wall drawer: one panel for what is chosen, and the graphics shelf under it. A textile frame, a decal or print, a door, or
 // a shelf, or nothing (the wall itself: colour and print with the paint bucket and brush).
 import { AlignVerticalSpaceAround, ArrowLeft, ArrowRight, Copy, Layers, PaintBucket, Paintbrush, Palette, Plus, Repeat2 } from 'lucide-react'
-import type { Dispatch, ReactNode, SetStateAction } from 'react'
+import { useEffect, useRef, type Dispatch, type ReactNode, type SetStateAction } from 'react'
 import { updateFoil } from '../../../domain/decor'
 import { removeOpening } from '../../../domain/doors'
 import type { FaceSide } from '../../../domain/faces'
@@ -191,6 +191,16 @@ export function ShelfPanel({ v, H, w, s, sel, select, onEdit, onToast }: { v: Va
   const stack = shelvesIn(v, H.wallId, H.module, s)
   const sh = rules.shelf
   const L = Math.round(wallLength(w))
+  // The chosen shelf kept in sight in the felt's list (only that box scrolls, not the drawer around it)
+  const stackBox = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const box = stackBox.current
+    const b = box?.querySelector('[aria-checked="true"]')?.getBoundingClientRect()
+    if (!box || !b) return
+    const r = box.getBoundingClientRect()
+    if (b.top < r.top) box.scrollTop -= r.top - b.top
+    else if (b.bottom > r.bottom) box.scrollTop += b.bottom - r.bottom
+  }, [H.id])
   return (
     <>
       <Section title={n > 1 ? `Hyllerad · ${n} hyller` : 'Hylle'} aside={`${mm(H.y)} mm fra gulv`}>
@@ -204,7 +214,7 @@ export function ShelfPanel({ v, H, w, s, sel, select, onEdit, onToast }: { v: Va
           options={sh.heights.map((h) => ({ value: h, label: <span className="num">{mm(h)}</span> }))}
         />
         <p className="set-note">
-          Overkant hylle · {mm(sh.min)}–{mm(sh.max)} mm i steg på {mm(sh.step)} mm
+          Overkant · {mm(sh.min)}–{mm(sh.max)} mm · steg {mm(sh.step)} mm
           {tooHigh(rules, H.y) && <> · {highWarning(rules)}</>}
           {n === 1 && offRow(v, H.id) && <> · avviker fra raden</>}
         </p>
@@ -218,6 +228,7 @@ export function ShelfPanel({ v, H, w, s, sel, select, onEdit, onToast }: { v: Va
       </Section>
       <Section
         title="Felt"
+        className="shelf-felt"
         aside={`${H.module + 1} av ${L}`}
         tools={
           <>
@@ -226,28 +237,6 @@ export function ShelfPanel({ v, H, w, s, sel, select, onEdit, onToast }: { v: Va
           </>
         }
       >
-        {stack.length > 1 && (
-          // The felt as it stands, top shelf on top, each with the clear height down to the one under it (H5)
-          <FlatChoice<string>
-            label="Hyller i feltet"
-            className="flat-stack"
-            value={H.id}
-            onChange={(id) => select({ shelfId: id, shelfOnly: undefined })}
-            options={[...stack].reverse().map((f) => {
-              const under = stack[stack.indexOf(f) - 1]
-              return {
-                value: f.id,
-                title: `${mm(f.y)} mm fra gulv`,
-                label: (
-                  <>
-                    <span className="num">{mm(f.y)}</span>
-                    <span className="stack-gap num">{under ? `lysmål ${mm(clearBetween(rules, under.y, f.y))}` : 'nederst'}</span>
-                  </>
-                ),
-              }
-            })}
-          />
-        )}
         <div className="wd-actions">
           <Button
             variant="ghost"
@@ -282,6 +271,31 @@ export function ShelfPanel({ v, H, w, s, sel, select, onEdit, onToast }: { v: Va
             </Button>
           )}
         </div>
+        {stack.length > 1 && (
+          // The felt as it stands, top shelf on top, each with the clear height down to the one under it (H5). The
+          // buttons stay above it, and a tall felt scrolls in its own box (Bjørn 9.11.2026)
+          <div className="stack-scroll" ref={stackBox}>
+            <FlatChoice<string>
+              label="Hyller i feltet"
+              className="flat-stack"
+              value={H.id}
+              onChange={(id) => select({ shelfId: id, shelfOnly: undefined })}
+              options={[...stack].reverse().map((f) => {
+                const under = stack[stack.indexOf(f) - 1]
+                return {
+                  value: f.id,
+                  title: `${mm(f.y)} mm fra gulv`,
+                  label: (
+                    <>
+                      <span className="num">{mm(f.y)}</span>
+                      <span className="stack-gap num">{under ? `lysmål ${mm(clearBetween(rules, under.y, f.y))}` : 'nederst'}</span>
+                    </>
+                  ),
+                }
+              })}
+            />
+          </div>
+        )}
       </Section>
     </>
   )

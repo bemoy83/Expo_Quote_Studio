@@ -2236,6 +2236,19 @@ select.cin {
   gap: 12px;
   text-align: left;
 }
+/* The felt's section takes what the drawer has left; its buttons stay on top and the list scrolls under them */
+.set-sec.shelf-felt {
+  flex: 1 1 0;
+}
+.shelf-felt > * {
+  flex-shrink: 0;
+}
+.shelf-felt > .stack-scroll {
+  flex: 1 1 0;
+  min-height: 34px;
+  overflow-y: auto;
+  margin-left: -10px;
+}
 .flat-stack .stack-gap {
   color: rgb(var(--ink-muted));
   font-weight: 400;
@@ -2823,7 +2836,8 @@ select.cin {
 .drawer2 .wd-insp {
   gap: 6px;
   padding-top: 10px;
-  overflow: hidden;
+  /* Scrolls only where the drawer is too low for what is chosen (a tall felt of shelves on a small screen) */
+  overflow: hidden auto;
 }
 .drawer2 .wd-view {
   min-height: 0;
