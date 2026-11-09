@@ -13,7 +13,7 @@ import { production, wallLabel } from '../../calc/production'
 import { foilsOn, removeFoil, updateFoil } from '../../domain/decor'
 import { eraseWalls } from '../../domain/edit'
 import { wallRal } from '../../domain/panels'
-import { clearDecor } from '../../domain/print'
+import { clearDecor, clearFelt, printPlate, printsOn } from '../../domain/print'
 import { addShelf, moveShelves, penHeight, removeShelves, shelvesOn } from '../../domain/shelves'
 import { doorFace, openingById } from '../../domain/doors'
 import { wallLength, wallModules } from '../../domain/grid'
@@ -153,6 +153,22 @@ export function WallDrawer(p: Props) {
   const doorModules = new Set(doors.map((d) => d.module))
   const hint = wallHint({ O, door: !!O && doorModules.has(O.module), painting, tool, printing, T, F, S, felt: Fe !== undefined, w })
 
+  /**
+   * With a felt chosen the shelf picks the motif for «Print» and «Dekal» in the felt panel, and a print on the felt
+   * takes the new motif at once.
+   */
+  const feltShelf =
+    Fe === undefined
+      ? undefined
+      : (id: string) => {
+          setPrintMotif(id)
+          const on = printsOn(v, w.id, s).find((f) => f.module === Fe)
+          if (on && on.motif !== id) p.onEdit((x) => printPlate(x, rules, w.id, Fe, s, id))
+        }
+
+  /** The chosen felt has a colour of its own or a print on this face, which its trash takes off. */
+  const feltDecor = Fe !== undefined && (mods[Fe]!.plate !== base(mods[Fe]!.key) || printsOn(v, w.id, s).some((f) => f.module === Fe))
+
   const remove = () => {
     if (T) p.onEdit((x) => removeTextile(x, T.id))
     else if (F) p.onEdit((x) => removeFoil(x, F.id))
@@ -180,6 +196,10 @@ export function WallDrawer(p: Props) {
               remove={
                 T || F || S
                   ? { label: T ? 'Fjern tekstilvegg (Delete)' : F ? 'Fjern grafikk (Delete)' : 'Fjern hyllen (Delete)', onClick: remove }
+                  : Fe !== undefined
+                    ? feltDecor
+                      ? { label: 'Fjern farge og print fra feltet (dekaler og hyller blir)', onClick: () => p.onEdit((x) => clearFelt(x, w.id, Fe, s)) }
+                      : undefined
                   : decorated
                     ? { label: 'Fjern print, dekaler og platefarger fra hele veggen, begge sider', onClick: () => p.onEdit((x) => clearDecor(x, w.id)) }
                     : !isStandWall(w)
@@ -198,12 +218,14 @@ export function WallDrawer(p: Props) {
 
             {S && <ShelfPanel v={v} H={S} w={w} s={s} sel={sel} select={select} onEdit={p.onEdit} onToast={p.onToast} />}
 
-            {Fe !== undefined && <FeltPanel v={v} w={w} s={s} m={Fe} mods={mods} select={select} onEdit={p.onEdit} onToast={p.onToast} />}
+            {Fe !== undefined && (
+              <FeltPanel v={v} w={w} s={s} m={Fe} mods={mods} motifs={motifs} pm={pm} base={base} twoFaces={fs.length > 1} ratioOf={ratioOf} setTool={setTool} select={select} onEdit={p.onEdit} onToast={p.onToast} />
+            )}
 
             {!T && !F && !S && Fe === undefined && <ColourPanel painting={painting} tool={tool} setTool={setTool} printing={printing} pm={pm} paint={paint} ral={ral} setPaint={setPaint} />}
           </>
         )}
-        {!O && !T && !S && Fe === undefined && <WallShelf F={F} printing={printing} pm={pm} motifs={motifs} ratioOf={ratioOf} setPrintMotif={setPrintMotif} onEdit={p.onEdit} onUpload={p.onUpload} />}
+        {!O && !T && !S && <WallShelf F={F} felt={feltShelf} printing={printing} pm={pm} motifs={motifs} ratioOf={ratioOf} setPrintMotif={setPrintMotif} onEdit={p.onEdit} onUpload={p.onUpload} />}
         {!O && (
           <div className="wd-foot">
             <Section

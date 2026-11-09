@@ -142,7 +142,7 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
   unntatt `shelfOnly` (`chosenShelves` i `plan/selection.ts`, brukt av plan, skuff og 3D), pillen i
   `plan/SelectionPill.tsx` (Ned/Opp, Høyde med hurtigvalgene, Hylle til, Kopier, Bare denne); det pillen og skuffen gjør
   med valgte hyller i `plan/shelfActions.ts`
-- Skuff: `ShelfPanel` i `plan/wallDrawer/panels.tsx` (Hylle til, Kopier, Kopier feltet, Fordel jevnt; hyllene i feltet velges i veggrisset), og et felt valgt ved klikk på en plate i veggrisset (`felt` i `PlanSelection`, `FeltPanel`, `addShelfToFelt`: Hylle til i feltet, ← → bytter felt), tegnet
+- Skuff: `ShelfPanel` i `plan/wallDrawer/panels.tsx` (Hylle til, Kopier, Kopier feltet, Fordel jevnt; hyllene i feltet velges i veggrisset), og et felt valgt ved klikk på en plate i veggrisset (`felt` i `PlanSelection`, `FeltPanel`: platefarge og Print på feltet, Dekal, Hylle (`addShelfToFelt`), ← → bytter felt, spann og kost slipper feltet; søppelbøtta `clearFelt`), tegnet
   `ShelfFront` med usynlig gripeflate (`plan/elevation.tsx`), dra og Alt + dra `useShelfDrag` (`plan/wallDrawer/drag.ts`), høydekjedene `shelfChains` (`elevationMeasure.ts`, tegnet i
   `ElevationDims.tsx`)
 - 3D: `scene3d/build/shelves.ts` (plate med usynlig gripeboks `shelf-grip`, 91F og 91FF fra omrisset i

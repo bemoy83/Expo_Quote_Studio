@@ -2,7 +2,9 @@
 // a shelf, or nothing (the wall itself: colour and print with the paint bucket and brush).
 import { AlignVerticalSpaceAround, ArrowLeft, ArrowRight, Copy, Layers, PaintBucket, Paintbrush, Palette, Plus, Repeat2 } from 'lucide-react'
 import type { Dispatch, ReactNode, SetStateAction } from 'react'
-import { updateFoil } from '../../../domain/decor'
+import { addFoil, feltBlocked, updateFoil } from '../../../domain/decor'
+import { setPanels } from '../../../domain/panels'
+import { clearPrint, printPlate, printsOn } from '../../../domain/print'
 import { removeOpening } from '../../../domain/doors'
 import type { FaceSide } from '../../../domain/faces'
 import { textileBox, updateTextile } from '../../../domain/textile/inFrame'
@@ -14,7 +16,7 @@ import type { Motif } from '../../../persistence/file'
 import { Button, Dim, FlatChoice, IconButton, Section } from '../../controls'
 import { plateName, rules } from '../../env'
 import { DoorSettings } from '../DoorSettings'
-import { FabricSection, PlatePalette, Shelf } from '../drawerParts'
+import { FabricSection, PlatePalette, PRINT, Shelf } from '../drawerParts'
 import { mm } from '../../format'
 import { findMotif } from '../../motifs'
 import { type PlanSelection } from '../selection'
@@ -84,6 +86,8 @@ export function FoilPanel({ F, ratioOf, onEdit }: { F: Foil; ratioOf: (id?: stri
  */
 export function WallShelf(props: {
   F?: Foil
+  /** A felt is chosen: picking a motif sets the one its «Print» and «Dekal» use. */
+  felt?: (id: string) => void
   printing: boolean
   pm: Motif | undefined
   motifs: Motif[]
@@ -92,14 +96,18 @@ export function WallShelf(props: {
   onEdit: Edit
   onUpload: (f: File) => void
 }) {
-  const { F, printing, pm, motifs, ratioOf, setPrintMotif, onEdit, onUpload } = props
-  const [title, aside] = F ? ['Motiv', findMotif(motifs, F.motif)?.name ?? 'ikke valgt'] : printing ? ['Print', pm?.name ?? 'last opp et motiv'] : ['Grafikk', 'dra til veggen']
-  const value = F ? (F.motif ?? null) : printing ? pm?.id : undefined
+  const { F, felt, printing, pm, motifs, ratioOf, setPrintMotif, onEdit, onUpload } = props
+  const [title, aside] = F
+    ? ['Motiv', findMotif(motifs, F.motif)?.name ?? 'ikke valgt']
+    : felt
+      ? ['Motiv', pm?.name ?? 'last opp et motiv']
+      : printing
+        ? ['Print', pm?.name ?? 'last opp et motiv']
+        : ['Grafikk', 'dra til veggen']
+  const value = F ? (F.motif ?? null) : printing || felt ? pm?.id : undefined
   const onPick = F
     ? (m: string) => onEdit((x) => updateFoil(x, rules, F.id, { motif: m }, ratioOf(m)))
-    : printing
-      ? setPrintMotif
-      : undefined
+    : (felt ?? (printing ? setPrintMotif : undefined))
   return <Shelf title={title} aside={aside} motifs={motifs} value={value} onPick={onPick} onUpload={onUpload} />
 }
 
@@ -267,42 +275,92 @@ export function ShelfPanel({ v, H, w, s, sel, select, onEdit, onToast }: { v: Va
 }
 
 /**
- * A felt (one wall module) chosen in the drawing (Bjørn 9.11.2026): what stands in it, the way to the felts beside it,
- * and one more shelf (addShelfToFelt), which is then chosen.
+ * A felt chosen in the drawing (Bjørn 9.11.2026): choose first, then act. Its colour (this plate only, both faces) or
+ * «Print» on this face, a decal, and shelves. The paint bucket and brush are here too: picking one lets the felt go and
+ * colours the wall as before, so the whole wall can be filled without leaving the drawer.
  */
-export function FeltPanel({ v, w, s, m, mods, select, onEdit, onToast }: { v: Variant; w: Wall; s: FaceSide; m: number; mods: (BuiltModule | undefined)[]; select: (x: Partial<PlanSelection>) => void; onEdit: Edit; onToast: (t: string) => void }) {
-  const L = Math.round(wallLength(w))
+export function FeltPanel(props: {
+  v: Variant
+  w: Wall
+  s: FaceSide
+  m: number
+  mods: (BuiltModule | undefined)[]
+  motifs: Motif[]
+  pm: Motif | undefined
+  base: (key: string) => string
+  twoFaces: boolean
+  ratioOf: (id?: string) => number
+  setTool: (t: PaintTool) => void
+  select: (x: Partial<PlanSelection>) => void
+  onEdit: Edit
+  onToast: (t: string) => void
+}) {
+  const { v, w, s, m, mods, motifs, pm, base, twoFaces, ratioOf, setTool, select, onEdit, onToast } = props
+  const key = mods[m]!.key
+  const plate = mods[m]!.plate
+  const printed = printsOn(v, w.id, s).find((f) => f.module === m)
   const n = shelvesIn(v, w.id, m, s).length
   const why = shelfBlocked(v, w.id, m, s)
+  const noDecal = feltBlocked(v, rules, w.id, m, s)
   // Right as the face is seen from in front of it: the modules run the other way on face −1
   const dir = s === 1 ? 1 : -1
   /** The next plate felt that way (doors are no felts). */
   const step = (d: number) => {
     for (let i = m + d; i >= 0 && i < mods.length; i += d) if (mods[i] && !mods[i]!.opening) return select({ felt: i })
   }
-  const add = () => {
+  /** A colour on this plate (the print on this face comes off: the last stroke wins), or the chosen motif over it. */
+  const pick = (r: string) => {
+    if (r !== PRINT) return onEdit((x) => clearPrint(setPanels(x, [key], r, base), w.id, s, [m]))
+    if (!pm) return onToast('Last opp et motiv i grafikken først')
+    const no = feltBlocked(v, rules, w.id, m, s, true)
+    if (no) return onToast(no)
+    if (printed?.motif !== pm.id || printed.run) onEdit((x) => printPlate(x, rules, w.id, m, s, pm.id))
+  }
+  const addDecal = () => {
+    const r = addFoil(v, rules, w.id, m, s, pm?.id, ratioOf(pm?.id))
+    if ('error' in r) return onToast(r.error)
+    onEdit(() => r.v)
+    select({ foilId: r.id })
+  }
+  const addBoard = () => {
     const r = addShelfToFelt(v, rules, w.id, m, s)
     if ('error' in r) return onToast(r.error)
     onEdit(() => r.v)
     select({ shelfId: r.id })
   }
+  /** The bucket or brush: the felt lets go and the wall is coloured as with nothing chosen. */
+  const take = (t: PaintTool) => {
+    setTool(t)
+    select({})
+  }
   return (
-    <Section
-      title="Felt"
-      aside={`${m + 1} av ${L} · ${n ? `${n} ${n > 1 ? 'hyller' : 'hylle'}` : 'ingen hyller'}`}
-      tools={
-        <>
-          <IconButton icon={ArrowLeft} label="Feltet til venstre" size={15} onClick={() => step(-dir)} />
-          <IconButton icon={ArrowRight} label="Feltet til høyre" size={15} onClick={() => step(dir)} />
-        </>
-      }
-    >
-      {why && <p className="set-note">{why}</p>}
-      <div className="wd-actions">
-        <Button variant="ghost" icon={Plus} onClick={add} disabled={!!why}>
-          Hylle til i feltet
-        </Button>
-      </div>
-    </Section>
+    <>
+      <Section
+        title={`Felt ${m + 1}`}
+        aside={printed ? `print ${findMotif(motifs, printed.motif)?.name ?? ''}`.trim() : `${plateName(plate)} ${plate}`}
+        tools={
+          <>
+            <IconButton icon={ArrowLeft} label="Feltet til venstre" size={15} onClick={() => step(-dir)} />
+            <IconButton icon={ArrowRight} label="Feltet til høyre" size={15} onClick={() => step(dir)} />
+            <IconButton icon={PaintBucket} label="Malerspann: klikk veggen for å farge hele siden" size={15} className="ink" onClick={() => take('wall')} />
+            <IconButton icon={Paintbrush} label="Malerkost: klikk én og én plate" size={15} className="ink" onClick={() => take('plate')} />
+          </>
+        }
+      >
+        <PlatePalette value={printed ? PRINT : plate} print={{ motif: pm }} onPick={pick} />
+        {twoFaces && !printed && <p className="set-note">Fargen gjelder platen på begge sider</p>}
+      </Section>
+      <Section title="Grafikk og hyller" aside={n ? `${n} ${n > 1 ? 'hyller' : 'hylle'}` : undefined}>
+        {(noDecal || why) && <p className="set-note">{[...new Set([noDecal, why].filter(Boolean))].join(' · ')}</p>}
+        <div className="wd-actions">
+          <Button variant="ghost" icon={Plus} onClick={addDecal} disabled={!!noDecal || !!printed}>
+            Dekal
+          </Button>
+          <Button variant="ghost" icon={Plus} onClick={addBoard} disabled={!!why}>
+            Hylle
+          </Button>
+        </div>
+      </Section>
+    </>
   )
 }

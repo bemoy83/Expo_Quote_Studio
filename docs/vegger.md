@@ -111,6 +111,23 @@ lagres per modul i `Variant.panels` (domain/panels.ts), nøklet på platens kant
 - Kalkylen har én linje per farge. En farget plate i en standvegg arrangøren betaler blir platebytte for akkurat den
   platen (6125-RAL). Plukklisten teller plater per RAL, og overstykket over en dør har platens farge.
 
+## Velg et felt
+
+Bjørn 9.11.2026: i veggskuffen velger du først, så handler du. Klikk en plate i veggrisset (uten verktøy) for å velge
+feltet, klikk den igjen for hele veggen. Feltet får én seksjon «FELT n · farge» (`FeltPanel` i
+ui/plan/wallDrawer/panels.tsx):
+
+- Paletten farger bare denne platen (begge sider, det er én plate). «Print» sist i paletten legger hele motivet fra
+  grafikkhyllen på platen, på siden som vises. Siste strøk vinner som med kosten.
+- Grafikkhyllen velger motivet for Print og Dekal. Har feltet print, får printen det nye motivet med en gang.
+- «+ Dekal» legger en dekal midt i feltet med motivet (ikke på et printet felt), «+ Hylle» en hylle (se hyller).
+- ← → bytter felt. Dører er ikke felt: klikk på en dør velger døren.
+- Malerspann og malerkost ligger også i seksjonen. Velger du ett av dem, slipper feltet, og du farger hele veggen eller
+  plate for plate som før, uten å gå ut av skuffen.
+- Søppelbøtta med et felt valgt tar bare feltets egen farge og printen på denne siden (`clearFelt` i domain/print.ts).
+  Dekaler og hyller fjernes én og én.
+- Ikke bygget (parkert): velge flere felt samtidig, og velge felt ved klikk i planen eller 3D.
+
 ## Print på hele plater
 
 Siste valg i paletten er «Print». Det legger motivet som er valgt i grafikkhyllen på hele plater som folie (8021), på den
