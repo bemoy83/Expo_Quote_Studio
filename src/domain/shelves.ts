@@ -344,6 +344,59 @@ export function addShelfToFelt(v: Variant, rules: Rules, wallId: string, module:
   return 'error' in r ? r : { v: r.v, id: r.ids[0] };
 }
 
+/** The felts of a face that can take a shelf (H1, H6), nearest the middle of the face first. */
+function shelfFelts(v: Variant, wallId: string, s: FaceSide): number[] {
+  const w = v.walls.find((x) => x.id === wallId);
+  if (!w) return [];
+  const L = Math.round(wallLength(w));
+  return Array.from({ length: L }, (_, i) => i)
+    .filter((m) => !shelfBlocked(v, wallId, m, s))
+    .sort((a, b) => Math.abs(a + 0.5 - L / 2) - Math.abs(b + 0.5 - L / 2) || a - b);
+}
+
+/**
+ * «+ Hylle» for a whole face in the wall drawer (Bjørn 9.11.2026): the free felt nearest the middle at the pen's height
+ * (a neighbour's, else the start height), and when every felt has shelves, one more in the felt nearest the middle that
+ * has room (addShelfToFelt: over the top one, then under). So pressing on fills the wall. The new shelf's id, or why not.
+ */
+export function addShelfToFace(v: Variant, rules: Rules, wallId: string, s: FaceSide): { v: Variant; id: string } | { error: string } {
+  const felts = shelfFelts(v, wallId, s);
+  if (!felts.length) return { error: 'Ingen felt på denne siden kan ta hylle' };
+  const empty = felts.filter((m) => !shelvesIn(v, wallId, m, s).length);
+  for (const m of [...empty, ...felts.filter((x) => !empty.includes(x))]) {
+    const r = addShelfToFelt(v, rules, wallId, m, s);
+    if (!('error' in r)) return r;
+  }
+  return { error: 'Ingen plass til flere hyller på denne siden' };
+}
+
+/**
+ * «+ Hyllerad» for a whole face (Bjørn 9.11.2026): one shelf in every felt that can take one, all at one height. The
+ * start height first, then the quick picks above it and then below it; the first height every such felt has room at
+ * (H5), else the one most felts have room at. So pressing on fills the wall row by row. The new shelves, or why not.
+ */
+export function addShelfRowToFace(v: Variant, rules: Rules, wallId: string, s: FaceSide): { v: Variant; ids: string[] } | { error: string } {
+  const felts = shelfFelts(v, wallId, s);
+  if (!felts.length) return { error: 'Ingen felt på denne siden kan ta hylle' };
+  const sh = rules.shelf;
+  const tries = [sh.start, ...sh.heights.filter((h) => h > sh.start + EPS), ...sh.heights.filter((h) => h < sh.start - EPS).reverse()];
+  let best: { y: number; at: number[] } | null = null;
+  for (const y of tries) {
+    const at = felts.filter((m) => fitsIn(v, rules, wallId, m, s, y));
+    if (at.length > (best?.at.length ?? 0)) best = { y, at };
+    if (at.length === felts.length) break;
+  }
+  if (!best) return { error: 'Ingen plass til flere hyller på denne siden' };
+  let x = v;
+  const ids: string[] = [];
+  for (const m of [...best.at].sort((a, b) => a - b)) {
+    const id = nextId(shelvesOf(x).map((o) => o.id), 'h');
+    x = { ...x, shelves: [...shelvesOf(x), { id, wallId, module: m, side: s, y: shelfHeight(rules, best.y) }] };
+    ids.push(id);
+  }
+  return { v: x, ids };
+}
+
 export function removeShelves(v: Variant, ids: string[]): Variant {
   const set = new Set(ids);
   const shelves = shelvesOf(v).filter((x) => !set.has(x.id));

@@ -14,7 +14,7 @@ import { addFoil, feltBlocked, foilsOn, removeFoil, updateFoil } from '../../dom
 import { eraseWalls } from '../../domain/edit'
 import { wallRal } from '../../domain/panels'
 import { clearDecor, clearFelt, printPlate, printsOn } from '../../domain/print'
-import { addShelf, moveShelves, penHeight, removeShelves, shelvesOn } from '../../domain/shelves'
+import { moveShelves, removeShelves, shelvesOn } from '../../domain/shelves'
 import { doorFace, openingById } from '../../domain/doors'
 import { wallLength, wallModules } from '../../domain/grid'
 import type { Variant } from '../../domain/types'
@@ -94,18 +94,6 @@ export function WallDrawer(p: Props) {
     if (next === v) return p.onToast(T ? 'Ingen ledig veggflate på den siden' : F ? 'Feltet på den siden kan ikke ha folie' : 'Feltet på den siden kan ikke ta hylle')
     p.onEdit(() => next)
     select(T ? { side, textileId: T.id } : F ? { side, foilId: F.id } : { side, shelfId: S!.id, shelfOnly: sel.shelfOnly })
-  }
-
-  /** A shelf in the free felt nearest the middle of the face, at the start height (H4, H6). */
-  const addShelfHere = () => {
-    const order = Array.from({ length: L }, (_, i) => i).sort((a, b) => Math.abs(a + 0.5 - L / 2) - Math.abs(b + 0.5 - L / 2))
-    for (const m of order) {
-      const r = addShelf(v, rules, w.id, m, s, penHeight(v, rules, w.id, s, m, m))
-      if ('error' in r || r.existing) continue
-      p.onEdit(() => r.v)
-      return select({ shelfId: r.id })
-    }
-    p.onToast('Ingen ledige felt for hylle på denne siden')
   }
 
   /** Why the chosen felt takes no decal: blocked (an opening, a textile frame over it) or printed over the whole plate. */
@@ -240,7 +228,7 @@ export function WallDrawer(p: Props) {
               <FeltPanel v={v} w={w} s={s} m={Fe} page={page} mods={mods} motifs={motifs} pm={pm} base={base} twoFaces={fs.length > 1} setTool={setTool} select={select} onEdit={p.onEdit} onToast={p.onToast} />
             )}
 
-            {!T && !F && !S && Fe === undefined && page === 'extras' && <WallExtras v={v} w={w} s={s} select={select} onEdit={p.onEdit} onToast={p.onToast} addOne={addShelfHere} />}
+            {!T && !F && !S && Fe === undefined && page === 'extras' && <WallExtras v={v} w={w} s={s} onEdit={p.onEdit} onToast={p.onToast} />}
 
             {!T && !F && !S && Fe === undefined && page === 'decor' && <ColourPanel painting={painting} tool={tool} setTool={setTool} printing={printing} pm={pm} paint={paint} ral={ral} setPaint={setPaint} />}
           </>

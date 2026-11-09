@@ -9,7 +9,7 @@ import { removeOpening } from '../../../domain/doors'
 import type { FaceSide } from '../../../domain/faces'
 import { textileBox, updateTextile } from '../../../domain/textile/inFrame'
 import { wallLength } from '../../../domain/grid'
-import { addShelfRow, addShelfToFelt, highWarning, penHeight, shelvesOn, offRow, shelfBlocked, shelvesIn, tooHigh } from '../../../domain/shelves'
+import { addShelfRowToFace, addShelfToFace, addShelfToFelt, highWarning, shelvesOn, offRow, shelfBlocked, shelvesIn, tooHigh } from '../../../domain/shelves'
 import type { Foil, Opening, Shelf as Board, TextileWall, Variant, Wall } from '../../../domain/types'
 import type { BuiltModule } from '../../../domain/walls'
 import type { Motif } from '../../../persistence/file'
@@ -327,8 +327,8 @@ export function FeltPanel(props: {
     const addBoard = () => {
       const r = addShelfToFelt(v, rules, w.id, m, s)
       if ('error' in r) return onToast(r.error)
+      // Nothing gets chosen: shelves go on without a break and are tapped to change (Bjørn 9.11.2026)
       onEdit(() => r.v)
-      select({ shelfId: r.id })
     }
     // One section per kind of fitting: shelves now, hooks and rails later
     return (
@@ -376,23 +376,26 @@ export function FeltPanel(props: {
 
 /**
  * The whole wall's «Hyller og heng» (Bjørn 9.11.2026): what is fitted on this face, one section per kind as on a felt.
- * «+ Hylle» puts one in the free felt nearest the middle; «Hyllerad» puts one in every free felt of the face at one
- * height (felts that have shelves or cannot take one are skipped, H2).
+ * «+ Hylle» and «+ Hyllerad» place themselves (addShelfToFace, addShelfRowToFace), so pressing on fills the wall; nothing
+ * gets chosen, so shelves can be added without a break and then tapped to change.
  */
-export function WallExtras({ v, w, s, select, onEdit, onToast, addOne }: { v: Variant; w: Wall; s: FaceSide; select: (x: Partial<PlanSelection>) => void; onEdit: Edit; onToast: (t: string) => void; addOne: () => void }) {
+export function WallExtras({ v, w, s, onEdit, onToast }: { v: Variant; w: Wall; s: FaceSide; onEdit: Edit; onToast: (t: string) => void }) {
   const on = shelvesOn(v, w.id, s)
   const felts = new Set(on.map((x) => x.module)).size
-  const L = Math.round(wallLength(w))
-  const row = () => {
-    const r = addShelfRow(v, rules, w.id, 0, L - 1, s, penHeight(v, rules, w.id, s, 0, L - 1))
-    if (!r.ids.length) return onToast('Ingen ledige felt for hylle på denne siden')
+  const one = () => {
+    const r = addShelfToFace(v, rules, w.id, s)
+    if ('error' in r) return onToast(r.error)
     onEdit(() => r.v)
-    select({ shelfId: r.ids[0] })
+  }
+  const row = () => {
+    const r = addShelfRowToFace(v, rules, w.id, s)
+    if ('error' in r) return onToast(r.error)
+    onEdit(() => r.v)
   }
   return (
     <Section title="Hele veggen · hyller" aside={on.length ? `${on.length} i ${felts} felt` : 'ingen'}>
       <div className="wd-actions">
-        <Button variant="ghost" icon={Plus} onClick={addOne}>
+        <Button variant="ghost" icon={Plus} onClick={one}>
           Hylle
         </Button>
         <Button variant="ghost" icon={Plus} onClick={row}>
