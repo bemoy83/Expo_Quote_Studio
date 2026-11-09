@@ -126,6 +126,9 @@ vei tilbake til paletten (`FeltPanel` i ui/plan/wallDrawer/panels.tsx):
 - **Hyller og heng**: tilbehør som festes i feltet, én seksjon per slag (hyller nå, heng senere). «Hylle til i feltet»
   legger til og velger hyllen. En valgt hylle har «Farge og profilering» nederst tilbake til feltet; fjernes hyllen, står
   du på feltets hyller igjen. Tilbehørssiden er bygget for å skalere: nye slag får en egen seksjon der.
+- Hele veggen har de samme to sidene (Bjørn 9.11.2026). «Hyller og heng» med hele veggen valgt: «+ Hylle» i det ledige
+  feltet nærmest midten, og «+ Hyllerad» i alle ledige felt på siden i én høyde (felt med hyller eller som ikke kan ta
+  hylle hoppes over, H2 og H6). Klikk et felt i veggrisset for feltets hyller; siden beholdes.
 - ← → bytter felt og beholder siden. Dører er ikke felt: klikk på en dør velger døren.
 - Malerspann og malerkost ligger også på fargesiden. Velger du ett av dem, slipper feltet, og du farger hele veggen eller
   plate for plate som før, uten å gå ut av skuffen.

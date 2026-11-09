@@ -32,7 +32,7 @@ import { addTextile, fillTextile, removeTextile, textilesOn, updateTextile } fro
 import { faces, type FaceSide } from '../../domain/faces'
 import { faceName, roomsAgainst } from './wallDrawer/face'
 import { wallPaint, type PaintTool } from './wallDrawer/paint'
-import { ColourPanel, DoorPanel, FeltPanel, type FeltPage, FoilPanel, ShelfPanel, TextilePanel, WallShelf } from './wallDrawer/panels'
+import { ColourPanel, DoorPanel, FeltPanel, type FeltPage, FoilPanel, ShelfPanel, TextilePanel, WallExtras, WallShelf } from './wallDrawer/panels'
 import { wallHint, wallMeta, wallTitle } from './wallDrawer/text'
 import { WallElevation } from './wallDrawer/WallElevation'
 
@@ -164,7 +164,7 @@ export function WallDrawer(p: Props) {
   })
   /** Modules of this wall holding a door (not a curtain): a leaf for the brush, a header and leaf for a print. */
   const doorModules = new Set(doors.map((d) => d.module))
-  const hint = wallHint({ O, door: !!O && doorModules.has(O.module), painting, tool, printing, T, F, S, felt: Fe !== undefined ? page : undefined, w })
+  const hint = wallHint({ O, door: !!O && doorModules.has(O.module), painting, tool, printing, T, F, S, felt: Fe !== undefined ? page : undefined, extras: !T && !F && !S && Fe === undefined && page === 'extras', w })
 
   /**
    * With a felt chosen the shelf picks the motif for «Print» and «Dekal» in the felt panel, and a print on the felt
@@ -240,10 +240,12 @@ export function WallDrawer(p: Props) {
               <FeltPanel v={v} w={w} s={s} m={Fe} page={page} mods={mods} motifs={motifs} pm={pm} base={base} twoFaces={fs.length > 1} setTool={setTool} select={select} onEdit={p.onEdit} onToast={p.onToast} />
             )}
 
-            {!T && !F && !S && Fe === undefined && <ColourPanel painting={painting} tool={tool} setTool={setTool} printing={printing} pm={pm} paint={paint} ral={ral} setPaint={setPaint} />}
+            {!T && !F && !S && Fe === undefined && page === 'extras' && <WallExtras v={v} w={w} s={s} select={select} onEdit={p.onEdit} onToast={p.onToast} addOne={addShelfHere} />}
+
+            {!T && !F && !S && Fe === undefined && page === 'decor' && <ColourPanel painting={painting} tool={tool} setTool={setTool} printing={printing} pm={pm} paint={paint} ral={ral} setPaint={setPaint} />}
           </>
         )}
-        {!O && !T && !S && !(Fe !== undefined && page === 'extras') && (
+        {!O && !T && !S && !(!F && page === 'extras') && (
           <WallShelf F={F} felt={feltShelf} printing={printing} pm={pm} motifs={motifs} ratioOf={ratioOf} setPrintMotif={setPrintMotif} onEdit={p.onEdit} onUpload={p.onUpload}>
             {Fe !== undefined ? (
               <Button variant="ghost" icon={Plus} onClick={addDecal} disabled={!!feltFoil(Fe)}>
@@ -282,8 +284,15 @@ export function WallDrawer(p: Props) {
               )}
               {/* A felt has two pages, switched here as a door's way back to the palette is (Bjørn 9.11.2026); a chosen
                   shelf goes back to its felt's colour and graphics */}
-              {Fe !== undefined && (
-                <Button variant="ghost" icon={page === 'extras' ? Palette : AlignVerticalSpaceAround} onClick={() => setPage(page === 'extras' ? 'decor' : 'extras')}>
+              {!T && !F && !S && (
+                <Button
+                  variant="ghost"
+                  icon={page === 'extras' ? Palette : AlignVerticalSpaceAround}
+                  onClick={() => {
+                    setTool(null)
+                    setPage(page === 'extras' ? 'decor' : 'extras')
+                  }}
+                >
                   {page === 'extras' ? 'Farge og profilering' : 'Hyller og heng'}
                 </Button>
               )}
@@ -301,9 +310,6 @@ export function WallDrawer(p: Props) {
               )}
               {!T && !F && !S && Fe === undefined && (
                 <>
-                  <Button variant="ghost" icon={Plus} onClick={addShelfHere}>
-                    Hylle
-                  </Button>
                 </>
               )}
               {!T &&
