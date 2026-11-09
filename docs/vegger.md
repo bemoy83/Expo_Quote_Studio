@@ -137,9 +137,11 @@ vei tilbake til paletten (`FeltPanel` i ui/plan/wallDrawer/panels.tsx):
   i feltet og på høyden pekeren står på. Musen over et felt viser dempet den hyllen et klikk legger, med høyden i en
   mørk pille og i målkjeden; trykk og dra sideveis gir en rad på én høyde, opp og ned flytter høyden før du slipper.
   Høyden fester seg først til en hylle i nabofeltet innen 60 mm (raden holder sammen, H2), så til de faste høydene
-  innen 40 mm, ellers nærmeste 50 mm (H4). Felt som ikke kan ta hylla (en hylle der fra før,
-  under 100 mm lysmål, dør, tekstil, hjørne) skraveres med grunnen i hintlinjen, og klikket gjør ingenting der.
-  Et felt med hyller fra før får en hylle til i stabelen. Pensla velger ingenting og blir liggende; Esc, et nytt trykk
+  innen 40 mm, ellers nærmeste 50 mm (H4). Felt som ikke kan ta hylla (under 100 mm lysmål,
+  dør, tekstil, hjørne) skraveres med grunnen i hintlinjen, og klikket gjør ingenting der. Et felt med hyller fra
+  før får en hylle til i stabelen. Står pekeren på en hylle som er der, skraveres den som i Tøm, og klikket tar den
+  av igjen, slik malerkosten tar av en farge (Bjørn 9.11.2026): en hylle for mye fjernes uten å legge bort pensla.
+  Bare den ene hyllen går, ikke raden, og et dra som starter på en hylle fjerner bare den. Pensla velger ingenting og blir liggende; Esc, et nytt trykk
   på knappen eller «Farge og profilering» legger den bort. På iPad (ingen hover) vises hylla fra du trykker.
 - Shift på hyllepensla (Bjørn 9.11.2026) gir antall og fordeling i stedet for høyde: Shift-klikk i et felt er «Hylle
   til i feltet» (tomt felt: nabohøyden eller 1300, ellers neste faste høyde over den øverste, så under, så 100 mm; først da deles hullene på midten). Shift-dra opp

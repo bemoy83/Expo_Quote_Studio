@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { RULES } from '../../rules/rules';
 import type { Variant } from '../types';
 import { createVariant } from '../variant';
-import { brushBlocked, brushHeight, paintShelves, spreadFelt, stackFelt } from './brush';
+import { brushBlocked, brushHeight, paintShelves, shelfUnder, spreadFelt, stackFelt } from './brush';
 import { addShelf } from './edit';
 import { shelvesIn, shelvesOf } from './model';
 
@@ -114,5 +114,15 @@ describe('Shift: stacking a felt and spreading it (Bjørn 9.11.2026)', () => {
     expect(ys(r.v, 3)).toEqual([1.3, 1.7]);
     expect(ys(r.v, 4)).toEqual([1.65]);
     expect(r.out.map((x) => x.module)).toEqual([4]);
+  });
+});
+
+describe('a click on a shelf takes it off (Bjørn 9.11.2026)', () => {
+  it('finds the shelf the pointer is on, the nearest within reach', () => {
+    const v = paintShelves(at(row(), 2, 0.9), RULES, 'side-back', 1, 2, 2, 1.3).v;
+    expect(shelfUnder(v, 'side-back', 2, 1, 1.32, 0.05)?.y).toBe(1.3);
+    expect(shelfUnder(v, 'side-back', 2, 1, 0.87, 0.05)?.y).toBe(0.9);
+    expect(shelfUnder(v, 'side-back', 2, 1, 1.1, 0.05)).toBeUndefined();
+    expect(shelfUnder(v, 'side-back', 3, 1, 1.3, 0.05)).toBeUndefined();
   });
 });
