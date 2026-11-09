@@ -354,18 +354,25 @@ function shelfFelts(v: Variant, wallId: string, s: FaceSide): number[] {
     .sort((a, b) => Math.abs(a + 0.5 - L / 2) - Math.abs(b + 0.5 - L / 2) || a - b);
 }
 
+/** The heights a face is filled at, row by row: the start height, then the quick picks above it, then those below. */
+const rowHeights = (rules: Rules) => {
+  const sh = rules.shelf;
+  return [sh.start, ...sh.heights.filter((h) => h > sh.start + EPS), ...sh.heights.filter((h) => h < sh.start - EPS).reverse()];
+};
+
 /**
- * «+ Hylle» for a whole face in the wall drawer (Bjørn 9.11.2026): the free felt nearest the middle at the pen's height
- * (a neighbour's, else the start height), and when every felt has shelves, one more in the felt nearest the middle that
- * has room (addShelfToFelt: over the top one, then under). So pressing on fills the wall. The new shelf's id, or why not.
+ * «+ Hylle» for a whole face in the wall drawer (Bjørn 9.11.2026): felt by felt, row by row. The next shelf of the row
+ * being filled (the start height first, then the quick picks above and below, rowHeights), in the felt nearest the middle
+ * that has room there (H5). So pressing on fills the wall as «+ Hyllerad» does, one shelf at a time. The id, or why not.
  */
 export function addShelfToFace(v: Variant, rules: Rules, wallId: string, s: FaceSide): { v: Variant; id: string } | { error: string } {
   const felts = shelfFelts(v, wallId, s);
   if (!felts.length) return { error: 'Ingen felt på denne siden kan ta hylle' };
-  const empty = felts.filter((m) => !shelvesIn(v, wallId, m, s).length);
-  for (const m of [...empty, ...felts.filter((x) => !empty.includes(x))]) {
-    const r = addShelfToFelt(v, rules, wallId, m, s);
-    if (!('error' in r)) return r;
+  for (const y of rowHeights(rules)) {
+    const m = felts.find((x) => fitsIn(v, rules, wallId, x, s, y));
+    if (m === undefined) continue;
+    const id = nextId(shelvesOf(v).map((o) => o.id), 'h');
+    return { v: { ...v, shelves: [...shelvesOf(v), { id, wallId, module: m, side: s, y: shelfHeight(rules, y) }] }, id };
   }
   return { error: 'Ingen plass til flere hyller på denne siden' };
 }
@@ -378,10 +385,8 @@ export function addShelfToFace(v: Variant, rules: Rules, wallId: string, s: Face
 export function addShelfRowToFace(v: Variant, rules: Rules, wallId: string, s: FaceSide): { v: Variant; ids: string[] } | { error: string } {
   const felts = shelfFelts(v, wallId, s);
   if (!felts.length) return { error: 'Ingen felt på denne siden kan ta hylle' };
-  const sh = rules.shelf;
-  const tries = [sh.start, ...sh.heights.filter((h) => h > sh.start + EPS), ...sh.heights.filter((h) => h < sh.start - EPS).reverse()];
   let best: { y: number; at: number[] } | null = null;
-  for (const y of tries) {
+  for (const y of rowHeights(rules)) {
     const at = felts.filter((m) => fitsIn(v, rules, wallId, m, s, y));
     if (at.length > (best?.at.length ?? 0)) best = { y, at };
     if (at.length === felts.length) break;

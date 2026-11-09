@@ -127,8 +127,8 @@ vei tilbake til paletten (`FeltPanel` i ui/plan/wallDrawer/panels.tsx):
   legger til og velger hyllen. En valgt hylle har «Farge og profilering» nederst tilbake til feltet; fjernes hyllen, står
   du på feltets hyller igjen. Tilbehørssiden er bygget for å skalere: nye slag får en egen seksjon der.
 - Hele veggen har de samme to sidene (Bjørn 9.11.2026). «Hyller og heng» med hele veggen valgt fyller veggen med
-  automatisk plassering, slik «Hylle til» gjør i et felt: «+ Hylle» tar først ledige felt fra midten (nabohyllens høyde,
-  ellers 1300), og når alle felt har hylle, én til over og så under i feltet nærmest midten (`addShelfToFace`).
+  automatisk plassering, slik «Hylle til» gjør i et felt. «+ Hylle» går felt for felt, rad for rad: neste hylle i raden
+  som fylles (1300, så hurtigvalgene over og deretter under), i feltet nærmest midten som har plass (`addShelfToFace`).
   «+ Hyllerad» legger én hylle i hvert felt som kan ta hylle, i samme høyde: 1300, så hurtigvalgene over og deretter
   under; den første høyden alle feltene har plass i, ellers den flest har plass i (`addShelfRowToFace`, H2, H5, H6).
 - Å legge til hyller velger ingenting (Bjørn 9.11.2026): du kan trykke videre uten avbrudd, og så trykke en hylle eller

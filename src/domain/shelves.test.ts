@@ -312,23 +312,23 @@ describe('one more shelf in a felt chosen in the wall drawer (Bjørn 9.11.2026)'
 describe('filling a whole face from the wall drawer (Bjørn 9.11.2026)', () => {
   const free = (v: Variant) => [0, 1, 2, 3, 4, 5].filter((m) => !shelfBlocked(v, 'side-back', m, 1))
 
-  it('«+ Hylle» fills the free felts from the middle, then stacks, until there is no room', () => {
+  it('«+ Hylle» goes felt by felt, row by row, until there is no room', () => {
     let v = row()
     const n = free(v).length
     expect(n).toBeGreaterThan(1)
-    const first = ok(addShelfToFace(v, RULES, 'side-back', 1))
-    v = first.v
-    expect(shelvesOf(v)[0].y).toBe(RULES.shelf.start)
-    for (let i = 1; i < n; i++) v = ok(addShelfToFace(v, RULES, 'side-back', 1)).v
-    // Every free felt has one, all at the start height: a row
+    for (let i = 0; i < n; i++) v = ok(addShelfToFace(v, RULES, 'side-back', 1)).v
+    // The first row: every free felt has one, all at the start height
     expect(new Set(shelvesOf(v).map((x) => x.module)).size).toBe(n)
     expect(shelvesOf(v).every((x) => x.y === RULES.shelf.start)).toBe(true)
-    // Then it stacks instead of saying there is no free felt
+    // The next press starts the next row, and the one after goes on in another felt
     v = ok(addShelfToFace(v, RULES, 'side-back', 1)).v
-    expect(shelvesOf(v)).toHaveLength(n + 1)
+    v = ok(addShelfToFace(v, RULES, 'side-back', 1)).v
+    const second = shelvesOf(v).slice(n)
+    expect(second.every((x) => x.y === 1.7)).toBe(true)
+    expect(new Set(second.map((x) => x.module)).size).toBe(2)
     let r: ReturnType<typeof addShelfToFace> = { v, id: '' }
     for (let i = 0; i < 100 && !('error' in r); i++) r = addShelfToFace((v = r.v), RULES, 'side-back', 1)
-    expect('error' in r).toBe(true)
+    expect(shelvesOf(v)).toHaveLength(n * RULES.shelf.heights.length)
   })
 
   it('«+ Hyllerad» puts a row in every free felt, the next press the next quick pick, then no room', () => {
