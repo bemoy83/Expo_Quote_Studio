@@ -128,11 +128,25 @@ vei tilbake til paletten (`FeltPanel` i ui/plan/wallDrawer/panels.tsx):
   du på feltets hyller igjen. Tilbehørssiden er bygget for å skalere: nye slag får en egen seksjon der.
 - Hele veggen har de samme to sidene (Bjørn 9.11.2026). «Hyller og heng» med hele veggen valgt fyller veggen med
   automatisk plassering, slik «Hylle til» gjør i et felt. «+ Hylle» går felt for felt, rad for rad: neste hylle i raden
-  som fylles (1300, så hurtigvalgene over og deretter under), i feltet nærmest midten som har plass (`addShelfToFace`).
-  «+ Hyllerad» legger én hylle i hvert felt som kan ta hylle, i samme høyde: 1300, så hurtigvalgene over og deretter
-  under; den første høyden alle feltene har plass i, ellers den flest har plass i (`addShelfRowToFace`, H2, H5, H6).
+  som fylles (1300, så samme rekkefølge som i et felt, Byggeregel H4), i feltet nærmest midten som har plass (`addShelfToFace`).
+  «+ Hyllerad» legger én hylle i hvert felt som kan ta hylle, i samme høyde: 1300, så samme rekkefølge som i
+  et felt (H4); den første høyden alle feltene har plass i, ellers den flest har plass i (`addShelfRowToFace`, H2, H5, H6).
 - Å legge til hyller velger ingenting (Bjørn 9.11.2026): du kan trykke videre uten avbrudd, og så trykke en hylle eller
   rad i veggrisset for å endre den. Gjelder også «Hylle til i feltet».
+- Hyllepensel (Bjørn 9.11.2026): penselknappen i hylleseksjonen på «Hyller og heng» legger hyller rett i veggrisset,
+  i feltet og på høyden pekeren står på. Musen over et felt viser dempet den hyllen et klikk legger, med høyden i en
+  mørk pille og i målkjeden; trykk og dra sideveis gir en rad på én høyde, opp og ned flytter høyden før du slipper.
+  Høyden fester seg først til en hylle i nabofeltet innen 60 mm (raden holder sammen, H2), så til de faste høydene
+  innen 40 mm, ellers nærmeste 50 mm (H4). Felt som ikke kan ta hylla (en hylle der fra før,
+  under 100 mm lysmål, dør, tekstil, hjørne) skraveres med grunnen i hintlinjen, og klikket gjør ingenting der.
+  Et felt med hyller fra før får en hylle til i stabelen. Pensla velger ingenting og blir liggende; Esc, et nytt trykk
+  på knappen eller «Farge og profilering» legger den bort. På iPad (ingen hover) vises hylla fra du trykker.
+- Shift på hyllepensla (Bjørn 9.11.2026) gir antall og fordeling i stedet for høyde: Shift-klikk i et felt er «Hylle
+  til i feltet» (tomt felt: nabohøyden eller 1300, ellers neste faste høyde over den øverste, så under, så 100 mm; først da deles hullene på midten). Shift-dra opp
+  legger til én hylle til per ca. 40 skjermpiksler etter samme regel, ned tar dem bort igjen, men aldri under én og
+  aldri hyller som sto der før. Shift-dra sideveis kopierer feltets hyller til feltene du drar over, som «Kopier
+  feltet»; et felt beholder en hylle det alt har på en av høydene, og et felt med hyller for nær får ingen og
+  skraveres. Shift finnes ikke på iPad; der gjelder knappene i skuffen.
 - ← → bytter felt og beholder siden. Dører er ikke felt: klikk på en dør velger døren.
 - Malerspann og malerkost ligger også på fargesiden. Velger du ett av dem, slipper feltet, og du farger hele veggen eller
   plate for plate som før, uten å gå ut av skuffen.

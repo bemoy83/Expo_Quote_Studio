@@ -6,12 +6,20 @@ import type { Rules } from '../../rules/rules';
 import { faceNormal, sideOf, type FaceSide } from '../faces';
 import { fittingBlocked } from '../fittings';
 import { pointAlong } from '../grid';
+import { nextId } from '../ids';
 import type { Shelf, Variant } from '../types';
 
 export const EPS = 1e-6;
 const r3 = (n: number) => Math.round(n * 1000) / 1000;
 
 export const shelvesOf = (v: Variant): Shelf[] => v.shelves ?? [];
+
+/** A new shelf in felt `module` on face `s` at `y` (snapped and kept within H4), with the next free id. No checks: the
+ *  callers have made sure it may stand there (shelfBlocked, fitsIn). */
+export function putShelf(v: Variant, rules: Rules, wallId: string, module: number, s: FaceSide, y: number): { v: Variant; id: string } {
+  const id = nextId(shelvesOf(v).map((x) => x.id), 'h');
+  return { v: { ...v, shelves: [...shelvesOf(v), { id, wallId, module, side: s, y: shelfHeight(rules, y) }] }, id };
+}
 
 export const shelvesOn = (v: Variant, wallId: string, s: FaceSide) => shelvesOf(v).filter((x) => x.wallId === wallId && sideOf(v, x) === s);
 
@@ -47,11 +55,35 @@ export const highWarning = (rules: Rules) =>
 /** Clear height from the top of the lower board to the underside of the upper one, m (H5). */
 export const clearBetween = (rules: Rules, lower: number, upper: number) => r3(upper - rules.shelf.board.thickness - lower);
 
+/** The clear height between shelves as said in a reason (H5): «minst 100 mm lysmål». */
+export const gapNote = (rules: Rules) => `minst ${Math.round(rules.shelf.gap * 1000)} mm lysmål`;
+
 /** Whether two shelves in one felt keep the clear height between them (H5). */
 export const apart = (rules: Rules, a: number, b: number) => clearBetween(rules, Math.min(a, b), Math.max(a, b)) >= rules.shelf.gap - EPS;
 
 /** Why a felt cannot take a shelf, or null when it can (H1, H6): the wall fitting rules. */
 export const shelfBlocked = (v: Variant, wallId: string, module: number, s: FaceSide): string | null => fittingBlocked(v, wallId, module, s, 'Hylle');
+
+/**
+ * The one order shelves are added in (Byggeregel H4, Bjørn 9.11.2026), for a felt («Hylle til i feltet», Rad til, Shift
+ * on the brush) and for a whole face (+ Hylle, + Hyllerad): from height `from` the quick picks above it, then those
+ * below, then the lowest (100), so the felt keeps an even ~400 mm; only then the middle of each gap left between
+ * `there` (the heights taken) and the ends of the usable height, widest first.
+ */
+export function fillHeights(rules: Rules, from: number, there: number[]): number[] {
+  const sh = rules.shelf;
+  const ladder = [...new Set([sh.min, ...sh.heights])].sort((a, b) => a - b);
+  const ys = [sh.min - sh.gap - sh.board.thickness, ...[...there].sort((a, b) => a - b), sh.high + sh.gap + sh.board.thickness];
+  const gaps = ys
+    .slice(1)
+    .map((y, i) => ({ mid: (y + ys[i]) / 2, size: y - ys[i] }))
+    .sort((a, b) => b.size - a.size);
+  return [
+    ...ladder.filter((h) => h > from + EPS),
+    ...ladder.filter((h) => h < from - EPS).reverse(),
+    ...gaps.map((g) => shelfHeight(rules, g.mid)),
+  ];
+}
 
 /** Whether a shelf fits in the felt at height `y` beside the shelves already there (H5). */
 export const fitsIn = (v: Variant, rules: Rules, wallId: string, module: number, s: FaceSide, y: number, skipId?: string) =>

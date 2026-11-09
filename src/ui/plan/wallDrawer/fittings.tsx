@@ -2,12 +2,12 @@
 // For a felt (FeltFittings) and for the whole face (WallFittings) one section per kind of fitting, and the panel of a
 // chosen shelf (ShelfPanel). Shelves are the first kind; heng get a section of their own beside them here, with their
 // domain beside domain/shelves/ (Bjørn 9.11.2026: fastened exactly as shelves, other Foga profile and shape).
-import { AlignVerticalSpaceAround, ArrowLeft, ArrowRight, Copy, Layers, Plus } from 'lucide-react'
+import { AlignVerticalSpaceAround, ArrowLeft, ArrowRight, Copy, Layers, Paintbrush, Plus } from 'lucide-react'
 import type { FaceSide } from '../../../domain/faces'
 import { wallLength } from '../../../domain/grid'
 import { addShelfToFelt } from '../../../domain/shelves/edit'
 import { addShelfRowToFace, addShelfToFace } from '../../../domain/shelves/fill'
-import { highWarning, offRow, shelfBlocked, shelvesIn, shelvesOn, tooHigh } from '../../../domain/shelves/model'
+import { gapNote, highWarning, offRow, shelfBlocked, shelvesIn, shelvesOn, tooHigh } from '../../../domain/shelves/model'
 import type { Shelf as Board, Variant, Wall } from '../../../domain/types'
 import type { BuiltModule } from '../../../domain/walls'
 import { Button, Dim, FlatChoice, IconButton, Section } from '../../controls'
@@ -28,12 +28,20 @@ const added = (onEdit: Edit, onToast: (t: string) => void) => (r: { v: Variant }
   onEdit(() => r.v)
 }
 
+const BRUSH_LABEL = 'Hyllepensel: klikk i veggen der hyllen skal stå, dra for en rad'
+
 /** A felt's «Hyller og heng»: one section per kind of fitting. */
-export function FeltFittings({ v, w, s, m, mods, select, onEdit, onToast }: { v: Variant; w: Wall; s: FaceSide; m: number; mods: (BuiltModule | undefined)[]; select: (x: Partial<PlanSelection>) => void; onEdit: Edit; onToast: (t: string) => void }) {
+export function FeltFittings({ v, w, s, m, mods, onBrush, select, onEdit, onToast }: { v: Variant; w: Wall; s: FaceSide; m: number; mods: (BuiltModule | undefined)[]; /** Take the shelf brush (the felt is let go). */ onBrush: () => void; select: (x: Partial<PlanSelection>) => void; onEdit: Edit; onToast: (t: string) => void }) {
   const n = shelvesIn(v, w.id, m, s).length
   const why = shelfBlocked(v, w.id, m, s)
   return (
-    <Section title={`Felt ${m + 1} · hyller`} aside={n ? `${n} i feltet` : 'ingen'} tools={<FeltArrows m={m} s={s} mods={mods} select={select} />}>
+    <Section title={`Felt ${m + 1} · hyller`} aside={n ? `${n} i feltet` : 'ingen'} tools={
+        <>
+          <IconButton icon={Paintbrush} label={BRUSH_LABEL} size={15} className="ink" onClick={onBrush} />
+          <FeltArrows m={m} s={s} mods={mods} select={select} />
+        </>
+      }
+    >
       {why && <p className="set-note">{why}</p>}
       <div className="wd-actions">
         <Button variant="ghost" icon={Plus} onClick={() => added(onEdit, onToast)(addShelfToFelt(v, rules, w.id, m, s))} disabled={!!why}>
@@ -48,12 +56,16 @@ export function FeltFittings({ v, w, s, m, mods, select, onEdit, onToast }: { v:
  * The whole face's «Hyller og heng»: one section per kind of fitting. «+ Hylle» and «+ Hyllerad» place themselves
  * (addShelfToFace, addShelfRowToFace), so pressing on fills the wall.
  */
-export function WallFittings({ v, w, s, onEdit, onToast }: { v: Variant; w: Wall; s: FaceSide; onEdit: Edit; onToast: (t: string) => void }) {
+export function WallFittings({ v, w, s, brush, onBrush, onEdit, onToast }: { v: Variant; w: Wall; s: FaceSide; /** The shelf brush is out. */ brush: boolean; onBrush: (on: boolean) => void; onEdit: Edit; onToast: (t: string) => void }) {
   const on = shelvesOn(v, w.id, s)
   const felts = new Set(on.map((x) => x.module)).size
   const add = added(onEdit, onToast)
   return (
-    <Section title="Hele veggen · hyller" aside={on.length ? `${on.length} i ${felts} felt` : 'ingen'}>
+    <Section
+      title="Hele veggen · hyller"
+      aside={on.length ? `${on.length} i ${felts} felt` : 'ingen'}
+      tools={<IconButton icon={Paintbrush} label={BRUSH_LABEL} size={15} className="ink" pressed={brush} onClick={() => onBrush(!brush)} />}
+    >
       <div className="wd-actions">
         <Button variant="ghost" icon={Plus} onClick={() => add(addShelfToFace(v, rules, w.id, s))}>
           Hylle
@@ -81,7 +93,7 @@ export function ShelfPanel({ v, H, w, s, sel, select, onEdit, onToast }: { v: Va
     <>
       <Section title={n > 1 ? `Hyllerad · ${n} hyller` : 'Hylle'} aside={`${mm(H.y)} mm fra gulv`}>
         <div className="wd-dims">
-          <Dim big unit="mm" label="Fra gulv" value={H.y} step={sh.step} min={sh.min} max={sh.max} onChange={(y) => move({ y }, `For nær en annen hylle (minst ${mm(sh.gap)} mm lysmål)`)} />
+          <Dim big unit="mm" label="Fra gulv" value={H.y} step={sh.step} min={sh.min} max={sh.max} onChange={(y) => move({ y }, `For nær en annen hylle · ${gapNote(rules)}`)} />
         </div>
         <FlatChoice<number>
           label="Faste høyder"

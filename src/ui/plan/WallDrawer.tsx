@@ -35,7 +35,7 @@ import { faceName, roomsAgainst } from './wallDrawer/face'
 import { wallPaint, type PaintTool } from './wallDrawer/paint'
 import { FeltFittings, type FeltPage, ShelfPanel, WallFittings } from './wallDrawer/fittings'
 import { ColourPanel, DoorPanel, FeltPanel, FoilPanel, TextilePanel, WallShelf } from './wallDrawer/panels'
-import { wallHint, wallMeta, wallTitle } from './wallDrawer/text'
+import { BRUSH_HINT, wallHint, wallMeta, wallTitle } from './wallDrawer/text'
 import { WallElevation } from './wallDrawer/WallElevation'
 
 interface Props {
@@ -63,6 +63,12 @@ export function WallDrawer(p: Props) {
   const [printSel, setPrintMotif] = useState<string | null>(null)
   /** The page shown for a felt or the whole wall: colour and profilering, or shelves and hooks. Kept from felt to felt. */
   const [page, setPage] = useState<FeltPage>('decor')
+  /** The shelf brush (Hyller og heng): shelves are laid in the drawing where it is clicked (Bjørn 9.11.2026). */
+  const [shelfBrush, setShelfBrush] = useState(false)
+  /** The hint line while the shelf brush aims at a felt that takes none, or too high. */
+  const [brushHint, setBrushHint] = useState<string | null>(null)
+  /** Whether something on the wall was chosen at the last render: choosing something puts the brush away. */
+  const [wasChosen, setWasChosen] = useState(false)
   /** A chosen door or curtain: the drawer shows its wall, which follows the door when the mini plan moves it. */
   const O = openingById(v, sel.openingId)
   const w = v.walls.find((x) => x.id === (O?.wallId ?? sel.wallId))
@@ -154,12 +160,26 @@ export function WallDrawer(p: Props) {
   })
   /** Modules of this wall holding a door (not a curtain): a leaf for the brush, a header and leaf for a print. */
   const doorModules = new Set(doors.map((d) => d.module))
-  const hint = wallHint({ O, door: !!O && doorModules.has(O.module), painting, tool, printing, T, F, S, felt: Fe !== undefined ? page : undefined, extras: !T && !F && !S && Fe === undefined && page === 'extras', w })
+  /** The brush is live on the whole wall's «Hyller og heng» with nothing chosen; choosing something puts it away. */
+  const chosen = !!(T || F || S || O) || Fe !== undefined
+  const brushOn = shelfBrush && page === 'extras' && !chosen
+  if (chosen !== wasChosen) {
+    setWasChosen(chosen)
+    if (chosen) setShelfBrush(false)
+  }
+  /** Take the shelf brush: a chosen felt is let go, as the paint tools do. */
+  const takeBrush = (on: boolean) => {
+    setShelfBrush(on)
+    if (on && Fe !== undefined) select({})
+  }
+  const hint0 = wallHint({ O, door: !!O && doorModules.has(O.module), painting, tool, printing, T, F, S, felt: Fe !== undefined ? page : undefined, extras: !T && !F && !S && Fe === undefined && page === 'extras', w })
 
   /**
    * With a felt chosen Profilering picks the motif for «Print» and «Dekal», and a print on the felt
    * takes the new motif at once.
    */
+  const hint = brushOn ? (brushHint ?? BRUSH_HINT) : hint0
+
   const feltShelf =
     Fe === undefined
       ? undefined
@@ -226,13 +246,13 @@ export function WallDrawer(p: Props) {
 
             {S && <ShelfPanel v={v} H={S} w={w} s={s} sel={sel} select={select} onEdit={p.onEdit} onToast={p.onToast} />}
 
-            {Fe !== undefined && page === 'extras' && <FeltFittings v={v} w={w} s={s} m={Fe} mods={mods} select={select} onEdit={p.onEdit} onToast={p.onToast} />}
+            {Fe !== undefined && page === 'extras' && <FeltFittings v={v} w={w} s={s} m={Fe} mods={mods} onBrush={() => takeBrush(true)} select={select} onEdit={p.onEdit} onToast={p.onToast} />}
 
             {Fe !== undefined && page === 'decor' && (
               <FeltPanel v={v} w={w} s={s} m={Fe} mods={mods} motifs={motifs} pm={pm} base={base} twoFaces={fs.length > 1} setTool={setTool} select={select} onEdit={p.onEdit} onToast={p.onToast} />
             )}
 
-            {!T && !F && !S && Fe === undefined && page === 'extras' && <WallFittings v={v} w={w} s={s} onEdit={p.onEdit} onToast={p.onToast} />}
+            {!T && !F && !S && Fe === undefined && page === 'extras' && <WallFittings v={v} w={w} s={s} brush={brushOn} onBrush={takeBrush} onEdit={p.onEdit} onToast={p.onToast} />}
 
             {!T && !F && !S && Fe === undefined && page === 'decor' && <ColourPanel painting={painting} tool={tool} setTool={setTool} printing={printing} pm={pm} paint={paint} ral={ral} setPaint={setPaint} />}
           </>
@@ -282,6 +302,7 @@ export function WallDrawer(p: Props) {
                   icon={page === 'extras' ? Palette : AlignVerticalSpaceAround}
                   onClick={() => {
                     setTool(null)
+                    setShelfBrush(false)
                     setPage(page === 'extras' ? 'decor' : 'extras')
                   }}
                 >
@@ -340,6 +361,9 @@ export function WallDrawer(p: Props) {
         printing={printing}
         tool={tool}
         paintAt={paintAt}
+        shelfBrush={brushOn}
+        onBrushDone={() => setShelfBrush(false)}
+        onBrushHint={setBrushHint}
         doorModules={doorModules}
         ratioOf={ratioOf}
         select={select}
@@ -349,7 +373,8 @@ export function WallDrawer(p: Props) {
         onCheckpoint={p.onCheckpoint}
         onToast={p.onToast}
       />
-      <div className="wd-hint">{hint}</div>
+      {/* With the shelf brush out the hint keeps two lines, so the drawing never moves under the pointer as it changes */}
+      <div className={brushOn ? 'wd-hint steady' : 'wd-hint'}>{hint}</div>
     </section>
   )
 }
