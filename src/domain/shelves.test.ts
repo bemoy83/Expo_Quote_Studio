@@ -3,7 +3,7 @@ import { DOOR } from '../catalog/defaultCatalog';
 import { RULES } from '../rules/rules';
 import { paintWalls } from './edit';
 import { moduleKey } from './grid';
-import { addShelf, addShelfAbove, addShelfRow, clearBetween, dragShelf, fitShelves, removeShelf, shelfBlocked, shelfBrackets, shelfFaces, shelfHeight, shelvesOf, updateShelf } from './shelves';
+import { addShelf, addShelfAbove, addShelfRow, addShelvesAbove, clearBetween, dragShelf, dragShelves, fitShelves, highWarning, moveShelves, offRow, penHeight, removeShelf, removeShelves, shelfBlocked, shelfBrackets, shelfFaces, shelfHeight, shelfRow, shelvesOf, spreadShelves, tooHigh, updateShelf } from './shelves';
 import { addTextile } from './textile/inFrame';
 import type { Point, Variant } from './types';
 import { createVariant } from './variant';
@@ -58,9 +58,9 @@ describe('where a shelf may stand (Byggeregel H6)', () => {
 });
 
 describe('placing shelves', () => {
-  it('a new shelf is 1500 mm from the floor (Byggeregel H4)', () => {
+  it('a new shelf is 1300 mm from the floor (Byggeregel H4)', () => {
     const { v, id } = ok(addShelf(row(), RULES, 'side-back', 2, 1));
-    expect(shelvesOf(v)).toEqual([{ id, wallId: 'side-back', module: 2, side: 1, y: 1.5 }]);
+    expect(shelvesOf(v)).toEqual([{ id, wallId: 'side-back', module: 2, side: 1, y: 1.3 }]);
   });
 
   it('a tap on a felt with shelves gives the shelf there and adds nothing', () => {
@@ -76,33 +76,42 @@ describe('placing shelves', () => {
     expect(shelvesOf(v).map((s) => s.module)).toEqual([1, 2, 3, 4]);
   });
 
-  it('heights snap to 50 mm between 100 and 2000 mm (Byggeregel H4)', () => {
+  it('heights snap to 50 mm between 100 and 2400 mm; over 2100 is allowed with a warning (Byggeregel H4)', () => {
     expect(shelfHeight(RULES, 1.23)).toBe(1.25);
     expect(shelfHeight(RULES, 0)).toBe(0.1);
-    expect(shelfHeight(RULES, 2.4)).toBe(2);
+    expect(shelfHeight(RULES, 3)).toBe(2.4);
+    expect(tooHigh(RULES, 2.1)).toBe(false);
+    expect(tooHigh(RULES, 2.15)).toBe(true);
+    expect(highWarning(RULES)).toMatch(/2100 mm.*standveggen/);
   });
 
   it('keeps 100 mm clear between shelves above each other (Byggeregel H5)', () => {
     const a = ok(addShelf(row(), RULES, 'side-back', 2, 1, 1));
-    // 1000 + 18 + 100 = 1118: the next step up that leaves it is 1150
-    const b = ok(addShelfAbove(a.v, RULES, a.id));
-    expect(shelvesOf(b.v).find((s) => s.id === b.id)!.y).toBe(1.15);
     expect(clearBetween(RULES, 1, 1.15)).toBe(0.132);
+    const b = ok(addShelf({ ...a.v, shelves: [] }, RULES, 'side-back', 2, 1, 1.15));
+    const v = { ...a.v, shelves: [...shelvesOf(a.v), ...shelvesOf(b.v).map((s) => ({ ...s, id: 'h9' }))] };
     // Moving the upper one down to 1100 leaves 82 mm: refused
-    expect(updateShelf(b.v, RULES, b.id, { y: 1.1 })).toBe(b.v);
+    expect(updateShelf(v, RULES, 'h9', { y: 1.1 })).toBe(v);
   });
 
-  it('a full felt takes no more', () => {
-    let v = ok(addShelf(row(), RULES, 'side-back', 2, 1, 0.1)).v;
-    let id = shelvesOf(v)[0].id;
+  it('one more goes to the next quick pick above, then below (Bjørn 9.11.2026)', () => {
+    let v = ok(addShelf(row(), RULES, 'side-back', 2, 1)).v;
+    const ys = () => shelvesOf(v).map((s) => s.y).sort((a, b) => a - b);
+    for (let i = 0; i < 4; i++) v = ok(addShelfAbove(v, RULES, 'h1')).v;
+    expect(ys()).toEqual([0.5, 0.9, 1.3, 1.7, 2.1]);
+  });
+
+  it('past the quick picks it fills the widest gap, until the felt is full', () => {
+    let v = ok(addShelf(row(), RULES, 'side-back', 2, 1)).v;
     for (;;) {
-      const r = addShelfAbove(v, RULES, id);
+      const r = addShelfAbove(v, RULES, 'h1');
       if ('error' in r) break;
       v = r.v;
-      id = r.id;
     }
-    // 100, 250 … 1900 in 150 mm steps: 13 shelves
-    expect(shelvesOf(v)).toHaveLength(13);
+    const ys = shelvesOf(v).map((s) => s.y).sort((a, b) => a - b);
+    expect(ys.length).toBeGreaterThan(5);
+    expect(ys.slice(1).every((y, i) => clearBetween(RULES, ys[i], y) >= RULES.shelf.gap - 1e-9)).toBe(true);
+    expect(Math.max(...ys)).toBeLessThanOrEqual(RULES.shelf.high);
   });
 
   it('moves along the wall to a felt that can take it, not to one that cannot', () => {
@@ -168,5 +177,72 @@ describe('the work order\'s wall drawings (Byggeregel H8)', () => {
       ['side-back', 1, 2],
       [inner.id, -1, 1],
     ]);
+  });
+});
+
+describe('rows (Byggeregel H2, Bjørn 9.11.2026)', () => {
+  // A row of three at 1300 in felts 1–3, and one at 900 in felt 4
+  const rowOf = () => {
+    let v = addShelfRow(row(), RULES, 'side-back', 1, 3, 1, 1.3).v;
+    v = ok(addShelf(v, RULES, 'side-back', 4, 1, 0.9)).v;
+    return v;
+  };
+  const at = (v: Variant) => shelvesOf(v).map((s) => [s.module, s.y]);
+
+  it('a row is the shelves side by side at one height on one face', () => {
+    const v = rowOf();
+    expect(shelfRow(v, 'h2').map((s) => s.module)).toEqual([1, 2, 3]);
+    expect(shelfRow(v, 'h4').map((s) => s.module)).toEqual([4]);
+    // 900 beside 1300 is a level of its own; 1200 beside 1300 is a row that broke
+    expect(offRow(v, 'h4')).toBe(false);
+    expect(offRow(v, 'h2')).toBe(false);
+    expect(offRow(moveShelves(v, RULES, ['h4'], { y: 1.2 }), 'h4')).toBe(true);
+  });
+
+  it('moves as one, all or none', () => {
+    const v = rowOf();
+    const ids = shelfRow(v, 'h1').map((s) => s.id);
+    expect(at(moveShelves(v, RULES, ids, { dy: 0.4 }))).toEqual([[1, 1.7], [2, 1.7], [3, 1.7], [4, 0.9]]);
+    // Two felts on would put the last one in felt 5, by the corner post (H6): refused for the whole row
+    expect(moveShelves(v, RULES, ids, { dm: 2 })).toBe(v);
+    expect(at(moveShelves(v, RULES, ids, { dm: 1 }))).toEqual([[2, 1.3], [3, 1.3], [4, 1.3], [4, 0.9]]);
+  });
+
+  it('a drag takes the row along, the others keeping their place beside the grabbed one', () => {
+    const v = rowOf();
+    const ids = shelfRow(v, 'h1').map((s) => s.id);
+    expect(at(dragShelves(v, RULES, 'h2', ids, 2, 1.0))).toEqual([[1, 1], [2, 1], [3, 1], [4, 0.9]]);
+  });
+
+  it('one more for a row is a row, at one height', () => {
+    const v = rowOf();
+    const r = ok(addShelvesAbove(v, RULES, ['h1', 'h2', 'h3']));
+    expect(r.ids).toHaveLength(3);
+    expect(shelfRow(r.v, r.ids[0]).map((s) => [s.module, s.y])).toEqual([[1, 1.7], [2, 1.7], [3, 1.7]]);
+  });
+
+  it('removes the row', () => {
+    expect(at(removeShelves(rowOf(), ['h1', 'h2', 'h3']))).toEqual([[4, 0.9]]);
+  });
+
+  it('the pen goes on at the height of a shelf beside it, else 1300', () => {
+    const v = rowOf();
+    expect(penHeight(v, RULES, 'side-back', 1, 0, 0)).toBe(1.3);
+    expect(penHeight(v, RULES, 'side-back', -1, 2, 2)).toBe(RULES.shelf.start);
+    expect(penHeight(row(), RULES, 'side-back', 1, 2, 3)).toBe(1.3);
+  });
+});
+
+describe('spreading a felt evenly (Bjørn 9.11.2026)', () => {
+  it('keeps the lowest and highest and gives the ones between the same clear height', () => {
+    let v = ok(addShelf(row(), RULES, 'side-back', 2, 1, 0.5)).v;
+    v = { ...v, shelves: [...shelvesOf(v), { id: 'h2', wallId: 'side-back', module: 2, side: 1, y: 0.7 }, { id: 'h3', wallId: 'side-back', module: 2, side: 1, y: 1.7 }] };
+    const s = spreadShelves(v, RULES, ['h2'])!;
+    expect(shelvesOf(s).map((x) => x.y).sort((a, b) => a - b)).toEqual([0.5, 1.1, 1.7]);
+  });
+
+  it('nothing to spread with fewer than three', () => {
+    const v = ok(addShelf(row(), RULES, 'side-back', 2, 1)).v;
+    expect(spreadShelves(v, RULES, ['h1'])).toBeNull();
   });
 });

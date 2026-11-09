@@ -123,8 +123,10 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 ### Hyller
 
 - Modell: `Shelf` (vegg, side, felt, høyde over gulv) · `domain/shelves.ts` (hvor en hylle kan stå `shelfBlocked`,
-  legge til `addShelf` og `addShelfRow`, en til over `addShelfAbove`, flytte `updateShelf`, `fitShelves` etter hver
-  redigering i `ui/edits.ts`, knektene `shelfBrackets`) · verdiene i `rules.shelf` og `RECIPES.shelf`, reglene H1–H8 i
+  legge til `addShelf` og `addShelfRow` med høyden fra `penHeight`, en til (eller en rad til) `addShelvesAbove`, flytte
+  `updateShelf`, raden `shelfRow` som flyttes, dras og slettes samlet med `moveShelves`, `dragShelves` og
+  `removeShelves`, `spreadShelves` (Fordel jevnt), `tooHigh` og `highWarning` over den myke grensen, `fitShelves` etter
+  hver redigering i `ui/edits.ts`, knektene `shelfBrackets`) · verdiene i `rules.shelf` og `RECIPES.shelf`, reglene H1–H8 i
   [byggeregler.md](byggeregler.md). Hyllene følger veggen i `replaceWalls` og `moveWall` (`domain/edit.ts`) og rommet
   i `domain/rooms.ts`
 - Kalkyle: `calc/lines/shelves.ts` (6311, fast pris per hylle, kost fra knektene, platene, monteringen og vareplukk én
@@ -133,8 +135,9 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 - Plan: penselen `{ kind: 'shelf' }` hører til Møbel (`ui/tools.ts`, hurtigvalget i `plan/QuickPicks.tsx`, raden i
   `panel/sections/EquipSection.tsx`) · klikk og rad `plan/pointer/shelf.ts`, forhåndsvisningen `shelfTarget` i
   `plan/next.ts` · tegnet `plan/layers/ShelfLayer.tsx` (flaten `shelves` i `plan/nextArea.ts`) · treff `shelfAt` i
-  `plan/pointer/hits.ts`, brukt av Velg (`select.ts`) og Tøm (`erase.ts`) · valgt som `shelfId` på veggen
-  (`plan/selection.ts`), pillen i `plan/SelectionPill.tsx`
+  `plan/pointer/hits.ts`, brukt av Velg (`select.ts`) og Tøm (`erase.ts`) · valgt som `shelfId` på veggen, med raden
+  unntatt `shelfOnly` (`chosenShelves` i `plan/selection.ts`, brukt av plan, skuff og 3D), pillen i
+  `plan/SelectionPill.tsx` (Ned/Opp, Høyde med hurtigvalgene, Hylle til, Bare denne)
 - Skuff: `ShelfPanel` i `plan/wallDrawer/panels.tsx`, tegnet `ShelfFront` (`plan/elevation.tsx`), dra
   `useShelfDrag` (`plan/wallDrawer/drag.ts`), høydekjedene `shelfChains` (`elevationMeasure.ts`, tegnet i
   `ElevationDims.tsx`)

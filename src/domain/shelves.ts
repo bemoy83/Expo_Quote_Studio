@@ -1,6 +1,7 @@
 // Shelves (hylle 6311): one board in one wall module, on a bracket in the face channel of each of its two posts, at a
 // height (top of the board) above the floor. Where a shelf may sit, the edits that place, move and stack it, fitShelves
 // that keeps them valid after any edit, and the brackets a set of shelves takes (end or twin).
+// A row (shelves side by side at one height, H2) is moved, raised and removed as one; a single shelf can still leave it.
 // Byggeregler H1, H2, H4, H5, H6, H8 (docs/byggeregler.md). Values: rules.shelf (m), RECIPES.shelf (parts, mm).
 import type { Rules } from '../rules/rules';
 import { blockedModules, faceNormal, faces, sideOf, type FaceSide } from './faces';
@@ -33,12 +34,17 @@ export function shelfStacks(v: Variant): Shelf[][] {
   return [...by.values()].map((xs) => xs.sort((a, b) => a.y - b.y));
 }
 
-/** A height snapped to the step and kept within lowest and highest (H4). */
+/** A height snapped to the step and kept within lowest and highest (H4; above `high` is allowed, with tooHigh's warning). */
 export function shelfHeight(rules: Rules, y: number): number {
   const { min, max, step } = rules.shelf;
   const snapped = Math.round(y / step) * step;
   return r3(Math.max(min, Math.min(max, snapped)));
 }
+
+/** Above the soft limit (H4): goods on the shelf show over the top of the stand wall. Allowed, with this warning. */
+export const tooHigh = (rules: Rules, y: number) => y > rules.shelf.high + EPS;
+export const highWarning = (rules: Rules) =>
+  `Over ${Math.round(rules.shelf.high * 1000)} mm: varer kan ikke settes synlig over toppen av standveggen`;
 
 /** Clear height from the top of the lower board to the underside of the upper one, m (H5). */
 export const clearBetween = (rules: Rules, lower: number, upper: number) => r3(upper - rules.shelf.board.thickness - lower);
@@ -120,19 +126,41 @@ export function addShelfRow(v: Variant, rules: Rules, wallId: string, from: numb
   return { v: x, ids };
 }
 
-/** One more shelf in the felt of `id`: just above the highest one that leaves the clear height, else just below the
- *  lowest (H5). Null with the reason when the felt has no room. */
-export function addShelfAbove(v: Variant, rules: Rules, id: string): { v: Variant; id: string } | { error: string } {
-  const f = shelvesOf(v).find((x) => x.id === id);
-  if (!f) return { error: 'Fant ikke hyllen' };
-  const s = sideOf(v, f);
-  const there = shelvesIn(v, f.wallId, f.module, s);
-  const pitch = Math.ceil((rules.shelf.gap + rules.shelf.board.thickness - EPS) / rules.shelf.step) * rules.shelf.step;
-  const tries = [there[there.length - 1].y + pitch, there[0].y - pitch];
-  const y = tries.map((t) => r3(t)).find((t) => t >= rules.shelf.min - EPS && t <= rules.shelf.max + EPS && fitsIn(v, rules, f.wallId, f.module, s, t));
+/**
+ * One more shelf in the felt of each of `ids` (a row gets a row), all at one height: the next quick pick above, then the
+ * next below (Bjørn 9.11.2026), else the middle of the widest gap in the felt, as long as every felt keeps the clear height
+ * (H5). Null with the reason when there is no room.
+ */
+export function addShelvesAbove(v: Variant, rules: Rules, ids: string[]): { v: Variant; ids: string[] } | { error: string } {
+  const group = ids.map((id) => shelvesOf(v).find((x) => x.id === id)).filter((x): x is Shelf => !!x);
+  if (!group.length) return { error: 'Fant ikke hyllen' };
+  const f = group[0];
+  const sh = rules.shelf;
+  const there = shelvesIn(v, f.wallId, f.module, sideOf(v, f));
+  // Gaps in the first felt, from the lowest a shelf may stand to the soft limit
+  const ys = [sh.min - sh.gap - sh.board.thickness, ...there.map((x) => x.y), sh.high + sh.gap + sh.board.thickness];
+  const gaps = ys.slice(1).map((y, i) => ({ mid: (y + ys[i]) / 2, size: y - ys[i] })).sort((a, b) => b.size - a.size);
+  const tries = [
+    ...sh.heights.filter((h) => h > f.y + EPS),
+    ...sh.heights.filter((h) => h < f.y - EPS).reverse(),
+    ...gaps.map((g) => shelfHeight(rules, g.mid)),
+  ];
+  const y = tries.find((t) => t >= sh.min - EPS && group.every((x) => fitsIn(v, rules, x.wallId, x.module, sideOf(v, x), t)));
   if (y === undefined) return { error: 'Ingen plass til flere hyller i feltet' };
-  const nid = nextId(shelvesOf(v).map((x) => x.id), 'h');
-  return { v: { ...v, shelves: [...shelvesOf(v), { id: nid, wallId: f.wallId, module: f.module, side: s, y: shelfHeight(rules, y) }] }, id: nid };
+  let x = v;
+  const added: string[] = [];
+  for (const g of group) {
+    const nid = nextId(shelvesOf(x).map((o) => o.id), 'h');
+    x = { ...x, shelves: [...shelvesOf(x), { id: nid, wallId: g.wallId, module: g.module, side: sideOf(v, g), y }] };
+    added.push(nid);
+  }
+  return { v: x, ids: added };
+}
+
+/** One more shelf in the felt of `id` (addShelvesAbove for one shelf). */
+export function addShelfAbove(v: Variant, rules: Rules, id: string): { v: Variant; id: string } | { error: string } {
+  const r = addShelvesAbove(v, rules, [id]);
+  return 'error' in r ? r : { v: r.v, id: r.ids[0] };
 }
 
 export interface ShelfPatch {
@@ -154,6 +182,119 @@ export function updateShelf(v: Variant, rules: Rules, id: string, patch: ShelfPa
   if (!fitsIn(v, rules, f.wallId, module, side, y, id)) return v;
   if (module === f.module && side === sideOf(v, f) && y === f.y) return v;
   return { ...v, shelves: shelvesOf(v).map((x) => (x.id === id ? { ...x, module, side, y } : x)) };
+}
+
+/**
+ * The row `id` stands in (H2): it and the shelves beside it, module by module, on the same face at the same height, in
+ * module order. A shelf with no such neighbour is a row of one.
+ */
+export function shelfRow(v: Variant, id: string): Shelf[] {
+  const f = shelvesOf(v).find((x) => x.id === id);
+  if (!f) return [];
+  const s = sideOf(v, f);
+  const at = (m: number) => shelvesOn(v, f.wallId, s).find((x) => x.module === m && Math.abs(x.y - f.y) < EPS);
+  const row = [f];
+  for (let m = f.module - 1, x = at(m); x; x = at(--m)) row.unshift(x);
+  for (let m = f.module + 1, x = at(m); x; x = at(++m)) row.push(x);
+  return row;
+}
+
+/** Close to a row but not in it: how near another height beside it must be to count as a break, m. */
+const NEAR_ROW = 0.2;
+
+/** Whether a shelf beside it on its face stands near its height but not at it (within 200 mm): most likely meant to be
+ *  one row, which is the normal (Bjørn 9.11.2026). A lower shelf under a row is not a break. */
+export function offRow(v: Variant, id: string): boolean {
+  const f = shelvesOf(v).find((x) => x.id === id);
+  if (!f) return false;
+  const s = sideOf(v, f);
+  const beside = shelvesOn(v, f.wallId, s).filter((x) => Math.abs(x.module - f.module) === 1);
+  return !beside.some((x) => Math.abs(x.y - f.y) < EPS) && beside.some((x) => Math.abs(x.y - f.y) <= NEAR_ROW + EPS);
+}
+
+export interface ShelvesMove {
+  /** Height change, m, or a height all of them go to. Snapped and kept within the limits (H4). */
+  dy?: number;
+  y?: number;
+  /** Modules along the wall. */
+  dm?: number;
+  /** To the other face of the wall. */
+  side?: FaceSide;
+}
+
+/** Move shelves together, all or none: refused (the variant unchanged) when one of them cannot stand where it goes
+ *  (H4–H6). The row stays a row. */
+export function moveShelves(v: Variant, rules: Rules, ids: string[], m: ShelvesMove): Variant {
+  const set = new Set(ids);
+  const group = shelvesOf(v).filter((x) => set.has(x.id));
+  if (!group.length) return v;
+  const to = new Map(
+    group.map((f) => [f.id, { module: f.module + (m.dm ?? 0), y: shelfHeight(rules, m.y ?? f.y + (m.dy ?? 0)), side: m.side ?? sideOf(v, f) }]),
+  );
+  const others = { ...v, shelves: shelvesOf(v).filter((x) => !set.has(x.id)) };
+  for (const f of group) {
+    const t = to.get(f.id)!;
+    if ((t.module !== f.module || t.side !== sideOf(v, f)) && shelfBlocked(v, f.wallId, t.module, t.side)) return v;
+    if (!fitsIn(others, rules, f.wallId, t.module, t.side, t.y)) return v;
+  }
+  if (group.every((f) => { const t = to.get(f.id)!; return t.module === f.module && t.y === f.y && t.side === sideOf(v, f); })) return v;
+  return { ...v, shelves: shelvesOf(v).map((x) => (set.has(x.id) ? { ...x, ...to.get(x.id)! } : x)) };
+}
+
+/** Shelves dragged with `id`, which goes to felt `module` at height `y`: both when they may, else only the height, else
+ *  only along the wall, else where they were (dragShelf for a row; the others keep their place relative to `id`). */
+export function dragShelves(v: Variant, rules: Rules, id: string, ids: string[], module: number, y: number): Variant {
+  const f = shelvesOf(v).find((x) => x.id === id);
+  if (!f) return v;
+  const dm = module - f.module;
+  const dy = shelfHeight(rules, y) - f.y;
+  const both = moveShelves(v, rules, ids, { dm, dy });
+  if (both !== v) return both;
+  const up = moveShelves(v, rules, ids, { dy });
+  return up !== v ? up : moveShelves(v, rules, ids, { dm });
+}
+
+/**
+ * Spread the shelves in the felts of `ids` evenly (Bjørn 9.11.2026): in each felt with three or more, the lowest and the
+ * highest stay and those between get the same clear height, on the 50 mm steps. Felts treated alike stay rows. Null
+ * when no felt has three.
+ */
+export function spreadShelves(v: Variant, rules: Rules, ids: string[]): Variant | null {
+  const felts = new Map<string, Shelf[]>();
+  for (const id of ids) {
+    const f = shelvesOf(v).find((x) => x.id === id);
+    if (f) felts.set(`${f.wallId}|${sideOf(v, f)}|${f.module}`, shelvesIn(v, f.wallId, f.module, sideOf(v, f)));
+  }
+  const to = new Map<string, number>();
+  for (const stack of felts.values()) {
+    if (stack.length < 3) continue;
+    const lo = stack[0].y;
+    const hi = stack[stack.length - 1].y;
+    const ys = stack.map((_, i) => shelfHeight(rules, lo + ((hi - lo) * i) / (stack.length - 1)));
+    if (ys.slice(1).every((y, i) => apart(rules, ys[i], y))) stack.forEach((f, i) => to.set(f.id, ys[i]));
+  }
+  if (!to.size) return null;
+  return { ...v, shelves: shelvesOf(v).map((x) => (to.has(x.id) ? { ...x, y: to.get(x.id)! } : x)) };
+}
+
+/**
+ * The height a new shelf from the pen gets in modules `from` to `to` on a face: that of a shelf beside them (or already
+ * in them), so the row goes on at its height (Bjørn 9.11.2026); with several there, the one nearest the start height.
+ * Else the start height (H4).
+ */
+export function penHeight(v: Variant, rules: Rules, wallId: string, s: FaceSide, from: number, to: number): number {
+  const lo = Math.min(from, to) - 1;
+  const hi = Math.max(from, to) + 1;
+  const near = shelvesOn(v, wallId, s)
+    .filter((x) => x.module >= lo && x.module <= hi)
+    .sort((a, b) => Math.abs(a.y - rules.shelf.start) - Math.abs(b.y - rules.shelf.start));
+  return near.length ? near[0].y : rules.shelf.start;
+}
+
+export function removeShelves(v: Variant, ids: string[]): Variant {
+  const set = new Set(ids);
+  const shelves = shelvesOf(v).filter((x) => !set.has(x.id));
+  return shelves.length === shelvesOf(v).length ? v : { ...v, shelves };
 }
 
 export function removeShelf(v: Variant, id: string): Variant {
