@@ -32,7 +32,7 @@ import { addTextile, fillTextile, removeTextile, textilesOn, updateTextile } fro
 import { faces, type FaceSide } from '../../domain/faces'
 import { faceName, roomsAgainst } from './wallDrawer/face'
 import { wallPaint, type PaintTool } from './wallDrawer/paint'
-import { ColourPanel, DoorPanel, FoilPanel, ShelfPanel, TextilePanel, WallShelf } from './wallDrawer/panels'
+import { ColourPanel, DoorPanel, FeltPanel, FoilPanel, ShelfPanel, TextilePanel, WallShelf } from './wallDrawer/panels'
 import { wallHint, wallMeta, wallTitle } from './wallDrawer/text'
 import { WallElevation } from './wallDrawer/WallElevation'
 
@@ -77,6 +77,8 @@ export function WallDrawer(p: Props) {
   const S = shelves.find((f) => f.id === sel.shelfId)
   const built = new Map(builtModules(v).map((m) => [m.key, m]))
   const mods = wallModules(w).map((m) => built.get(m.key))
+  /** A felt chosen in the drawing (a plate, not a door), when nothing on the wall is. */
+  const Fe = !T && !F && !S && !O && sel.felt !== undefined && mods[sel.felt] && !mods[sel.felt]!.opening ? sel.felt : undefined
   const rooms = roomsAgainst(v, w, s)
   const ratioOf = (id?: string) => findMotif(motifs, id)?.ratio ?? 0
   const label = wallLabel(w)
@@ -141,7 +143,7 @@ export function WallDrawer(p: Props) {
     paintSel,
     printSel,
     ral,
-    free: !T && !F && !O && !S,
+    free: !T && !F && !O && !S && Fe === undefined,
     base,
     onEdit: p.onEdit,
     onCheckpoint: p.onCheckpoint,
@@ -149,7 +151,7 @@ export function WallDrawer(p: Props) {
   })
   /** Modules of this wall holding a door (not a curtain): a leaf for the brush, a header and leaf for a print. */
   const doorModules = new Set(doors.map((d) => d.module))
-  const hint = wallHint({ O, door: !!O && doorModules.has(O.module), painting, tool, printing, T, F, S, w })
+  const hint = wallHint({ O, door: !!O && doorModules.has(O.module), painting, tool, printing, T, F, S, felt: Fe !== undefined, w })
 
   const remove = () => {
     if (T) p.onEdit((x) => removeTextile(x, T.id))
@@ -196,10 +198,12 @@ export function WallDrawer(p: Props) {
 
             {S && <ShelfPanel v={v} H={S} w={w} s={s} sel={sel} select={select} onEdit={p.onEdit} onToast={p.onToast} />}
 
-            {!T && !F && !S && <ColourPanel painting={painting} tool={tool} setTool={setTool} printing={printing} pm={pm} paint={paint} ral={ral} setPaint={setPaint} />}
+            {Fe !== undefined && <FeltPanel v={v} w={w} s={s} m={Fe} mods={mods} select={select} onEdit={p.onEdit} onToast={p.onToast} />}
+
+            {!T && !F && !S && Fe === undefined && <ColourPanel painting={painting} tool={tool} setTool={setTool} printing={printing} pm={pm} paint={paint} ral={ral} setPaint={setPaint} />}
           </>
         )}
-        {!O && !T && !S && <WallShelf F={F} printing={printing} pm={pm} motifs={motifs} ratioOf={ratioOf} setPrintMotif={setPrintMotif} onEdit={p.onEdit} onUpload={p.onUpload} />}
+        {!O && !T && !S && Fe === undefined && <WallShelf F={F} printing={printing} pm={pm} motifs={motifs} ratioOf={ratioOf} setPrintMotif={setPrintMotif} onEdit={p.onEdit} onUpload={p.onUpload} />}
         {!O && (
           <div className="wd-foot">
             <Section
@@ -227,9 +231,11 @@ export function WallDrawer(p: Props) {
                   <Button variant="ghost" icon={Plus} onClick={addFrame}>
                     Tekstilvegg
                   </Button>
-                  <Button variant="ghost" icon={Plus} onClick={addShelfHere}>
-                    Hylle
-                  </Button>
+                  {Fe === undefined && (
+                    <Button variant="ghost" icon={Plus} onClick={addShelfHere}>
+                      Hylle
+                    </Button>
+                  )}
                 </>
               )}
               {!T &&
@@ -264,6 +270,7 @@ export function WallDrawer(p: Props) {
         S={S}
         chosen={chosenShelves(v, sel)}
         shelfOnly={sel.shelfOnly}
+        felt={Fe}
         motifs={motifs}
         label={label}
         painting={painting}

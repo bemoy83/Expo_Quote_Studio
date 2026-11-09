@@ -29,6 +29,8 @@ export interface PlanSelection {
    *  at its height), unless `shelfOnly`: then only this one (chosenShelves). */
   shelfId?: string
   shelfOnly?: boolean
+  /** A felt (module) of the wall, chosen in the wall drawer to put shelves in it (Bjørn 9.11.2026). Only with `wallId`. */
+  felt?: number
   /** A door or curtain, chosen in the wall drawer of the wall it stands in. */
   openingId?: string
   /** A lane of engangsteppe placed on its own: its top left cell. */

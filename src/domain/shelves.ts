@@ -329,6 +329,21 @@ export function penHeight(v: Variant, rules: Rules, wallId: string, s: FaceSide,
   return near.length ? near[0].y : rules.shelf.start;
 }
 
+/**
+ * One more shelf in a felt chosen in the wall drawer (Bjørn 9.11.2026): an empty felt gets one at the pen's height
+ * (penHeight: a neighbour's, else the start height), a felt with shelves one more over the top one, then under
+ * (addShelvesAbove). The new shelf's id, or why not (H2–H6).
+ */
+export function addShelfToFelt(v: Variant, rules: Rules, wallId: string, module: number, s: FaceSide): { v: Variant; id: string } | { error: string } {
+  const there = shelvesIn(v, wallId, module, s);
+  if (!there.length) {
+    const r = addShelf(v, rules, wallId, module, s, penHeight(v, rules, wallId, s, module, module));
+    return 'error' in r ? r : { v: r.v, id: r.id };
+  }
+  const r = addShelvesAbove(v, rules, [there[there.length - 1].id]);
+  return 'error' in r ? r : { v: r.v, id: r.ids[0] };
+}
+
 export function removeShelves(v: Variant, ids: string[]): Variant {
   const set = new Set(ids);
   const shelves = shelvesOf(v).filter((x) => !set.has(x.id));

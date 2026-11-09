@@ -7,8 +7,9 @@ import { removeOpening } from '../../../domain/doors'
 import type { FaceSide } from '../../../domain/faces'
 import { textileBox, updateTextile } from '../../../domain/textile/inFrame'
 import { wallLength } from '../../../domain/grid'
-import { highWarning, offRow, shelvesIn, tooHigh } from '../../../domain/shelves'
+import { addShelfToFelt, highWarning, offRow, shelfBlocked, shelvesIn, tooHigh } from '../../../domain/shelves'
 import type { Foil, Opening, Shelf as Board, TextileWall, Variant, Wall } from '../../../domain/types'
+import type { BuiltModule } from '../../../domain/walls'
 import type { Motif } from '../../../persistence/file'
 import { Button, Dim, FlatChoice, IconButton, Section } from '../../controls'
 import { plateName, rules } from '../../env'
@@ -262,5 +263,46 @@ export function ShelfPanel({ v, H, w, s, sel, select, onEdit, onToast }: { v: Va
         </div>
       </Section>
     </>
+  )
+}
+
+/**
+ * A felt (one wall module) chosen in the drawing (Bjørn 9.11.2026): what stands in it, the way to the felts beside it,
+ * and one more shelf (addShelfToFelt), which is then chosen.
+ */
+export function FeltPanel({ v, w, s, m, mods, select, onEdit, onToast }: { v: Variant; w: Wall; s: FaceSide; m: number; mods: (BuiltModule | undefined)[]; select: (x: Partial<PlanSelection>) => void; onEdit: Edit; onToast: (t: string) => void }) {
+  const L = Math.round(wallLength(w))
+  const n = shelvesIn(v, w.id, m, s).length
+  const why = shelfBlocked(v, w.id, m, s)
+  // Right as the face is seen from in front of it: the modules run the other way on face −1
+  const dir = s === 1 ? 1 : -1
+  /** The next plate felt that way (doors are no felts). */
+  const step = (d: number) => {
+    for (let i = m + d; i >= 0 && i < mods.length; i += d) if (mods[i] && !mods[i]!.opening) return select({ felt: i })
+  }
+  const add = () => {
+    const r = addShelfToFelt(v, rules, w.id, m, s)
+    if ('error' in r) return onToast(r.error)
+    onEdit(() => r.v)
+    select({ shelfId: r.id })
+  }
+  return (
+    <Section
+      title="Felt"
+      aside={`${m + 1} av ${L} · ${n ? `${n} ${n > 1 ? 'hyller' : 'hylle'}` : 'ingen hyller'}`}
+      tools={
+        <>
+          <IconButton icon={ArrowLeft} label="Feltet til venstre" size={15} onClick={() => step(-dir)} />
+          <IconButton icon={ArrowRight} label="Feltet til høyre" size={15} onClick={() => step(dir)} />
+        </>
+      }
+    >
+      {why && <p className="set-note">{why}</p>}
+      <div className="wd-actions">
+        <Button variant="ghost" icon={Plus} onClick={add} disabled={!!why}>
+          Hylle til i feltet
+        </Button>
+      </div>
+    </Section>
   )
 }

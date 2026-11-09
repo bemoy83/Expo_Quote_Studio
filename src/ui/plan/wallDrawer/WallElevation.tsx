@@ -57,6 +57,8 @@ interface Props {
   S: Shelf | undefined
   chosen: string[]
   shelfOnly?: boolean
+  /** The chosen felt (module), when the wall's felt and nothing on it is chosen. */
+  felt?: number
   motifs: Motif[]
   label: string
   painting: boolean
@@ -197,7 +199,14 @@ export function WallElevation(p: Props) {
           className="wd-svg"
           viewBox={fr.viewBox}
           preserveAspectRatio="xMidYMid meet"
-          onPointerDown={() => select({})}
+          onPointerDown={(e) => {
+            // A press on a plate (not on what lies on it) chooses its felt, a second press the wall again (Bjørn 9.11.2026)
+            const m = svg.current?.getScreenCTM()
+            const q = m ? new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse()) : null
+            const i = q && q.y >= 0 && q.y <= H ? Math.floor(s === 1 ? q.x : L - q.x) : -1
+            const plate = i >= 0 && i < L && !!mods[i] && !mods[i]!.opening
+            select(plate && p.felt !== i ? { felt: i } : {})
+          }}
           onDragOver={onDragOver}
           onDragLeave={() => setSpot(null)}
           onDrop={onDrop}
@@ -292,6 +301,12 @@ export function WallElevation(p: Props) {
               </g>
             )
           })}
+
+          {/* The chosen felt: a tint over its plate, under the shelves */}
+          {p.felt !== undefined && mods[p.felt] && (() => {
+            const f = felt(rules, p.felt)
+            return <rect x={spanX(f.a, f.b)} y={z(H)} width={f.w} height={H - rules.wall.feet} fill={INK} fillOpacity={0.1} pointerEvents="none" />
+          })()}
 
           {/* Shelves, over plates and print: dragged up and down, and sideways felt by felt */}
           {shelves.map((f) => {

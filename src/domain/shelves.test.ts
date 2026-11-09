@@ -3,7 +3,7 @@ import { DOOR } from '../catalog/defaultCatalog';
 import { RULES } from '../rules/rules';
 import { paintWalls } from './edit';
 import { moduleKey } from './grid';
-import { addShelf, addShelfRow, addShelvesAbove, clearBetween, copyShelvesNear, dragShelves, feltShelves, fitShelves, highWarning, moveShelves, offRow, penHeight, placeShelves, removeShelves, shelfBlocked, shelfBrackets, shelfFaces, shelfHeight, shelfRow, shelvesOf, spreadShelves, tooHigh } from './shelves';
+import { addShelf, addShelfRow, addShelfToFelt, addShelvesAbove, clearBetween, copyShelvesNear, dragShelves, feltShelves, fitShelves, highWarning, moveShelves, offRow, penHeight, placeShelves, removeShelves, shelfBlocked, shelfBrackets, shelfFaces, shelfHeight, shelfRow, shelvesOf, spreadShelves, tooHigh } from './shelves';
 
 const addShelfAbove = (v: Variant, id: string) => addShelvesAbove(v, RULES, [id]);
 import { addTextile } from './textile/inFrame';
@@ -285,5 +285,26 @@ describe('moving and copying (Bjørn 9.11.2026)', () => {
     x = copyShelvesNear(x, RULES, all)!.v;
     x = copyShelvesNear(x, RULES, all)!.v;
     expect(copyShelvesNear(x, RULES, all)).toBeNull();
+  });
+});
+
+describe('one more shelf in a felt chosen in the wall drawer (Bjørn 9.11.2026)', () => {
+  const add = (v: Variant, m: number) => ok(addShelfToFelt(v, RULES, 'side-back', m, 1));
+  const ys = (v: Variant, m: number) => shelvesOf(v).filter((x) => x.module === m).map((x) => x.y).sort((a, b) => a - b);
+
+  it('an empty felt: the start height, then the quick picks over, then under', () => {
+    let v = row();
+    for (let i = 0; i < 5; i++) v = add(v, 2).v;
+    expect(ys(v, 2)).toEqual([0.5, 0.9, 1.3, 1.7, 2.1]);
+  });
+
+  it('an empty felt beside a row goes on at its height', () => {
+    const v = ok(addShelf(row(), RULES, 'side-back', 1, 1, 0.9)).v;
+    const r = add(v, 2);
+    expect(shelvesOf(r.v).find((x) => x.id === r.id)!.y).toBe(0.9);
+  });
+
+  it('a felt that cannot take a shelf says why', () => {
+    expect(addShelfToFelt(row(), RULES, 'side-back', 0, 1)).toHaveProperty('error');
   });
 });

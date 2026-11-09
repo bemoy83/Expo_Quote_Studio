@@ -61,8 +61,8 @@ export function wallMeta(
 const TAIL = 'dra tekstilvegg eller motiv til veggen, klikk det for å endre'
 
 /** The help line: what a click or drag in the drawing does now. */
-export function wallHint(x: { O?: Opening; door: boolean; painting: boolean; tool: PaintTool; printing: boolean; T?: TextileWall; F?: Foil; S?: Shelf; w: Wall }): string {
-  const { O, door, painting, tool, printing, T, F, S, w } = x
+export function wallHint(x: { O?: Opening; door: boolean; painting: boolean; tool: PaintTool; printing: boolean; T?: TextileWall; F?: Foil; S?: Shelf; felt?: boolean; w: Wall }): string {
+  const { O, door, painting, tool, printing, T, F, S, felt, w } = x
   if (O) return `Klikk en rute i miniplanen for å flytte ${door ? 'døren' : 'forhenget'} · «Farge og grafikk» eller Esc gir paletten · Delete gjør om til vegg`
   if (painting && tool === 'wall')
     return printing
@@ -72,6 +72,7 @@ export function wallHint(x: { O?: Opening; door: boolean; painting: boolean; too
     return printing
       ? 'Klikk eller dra over platene: hele motivet på hver plate · klikk en plate som har motivet: printen fjernes fra den platen'
       : 'Klikk eller dra over platene for å farge dem · klikk en farget plate igjen for veggens farge'
+  if (felt) return 'Hylle til i feltet: først på 1300 eller nabohyllens høyde, så over og under · ← → bytter felt · klikk feltet igjen for hele veggen'
   if (S) return 'Dra hyllen opp eller ned i steg på 50 mm, eller til et annet felt · en rad flyttes samlet, «Bare denne» tar én hylle ut · Alt + dra kopierer · minst 100 mm lysmål mellom hyller · Delete fjerner'
   if (T) return 'Dra rammen for å flytte · håndtakene endrer størrelsen · klikk et motiv for trykk · Delete fjerner'
   if (F)
