@@ -1,6 +1,7 @@
 // Velg in the 3D view, as in the plan: a press picks what to drag (decor or a shelf on its face, furniture, a room, an
 // inner wall), a move drags it, a release drops it or, without moving, selects what was pressed. Anything else orbits
-// the camera.
+// the camera. A click is a click, a drag is never one (Bjørn 9.11.2026): letting go after a drag (or an orbit) leaves the
+// selection as it was, so the drawer does not open when something is only moved.
 import { moveFoilBy } from '../../../domain/decor'
 import { canMoveWall } from '../../../domain/edit'
 import { sideOf, type FaceSide } from '../../../domain/faces'
@@ -36,7 +37,8 @@ export type Drag =
   /** A textile or foil dragged on its face: deltas from where it was grabbed (t along the wall, h up). */
   | { kind: 'decor'; item: { textile: TextileWall } | { foil: Foil }; w: Wall; s: FaceSide; t0: number; h0: number; moved: boolean }
   /** A shelf dragged on its face: up and down in 50 mm steps, sideways felt by felt (as in the wall drawer). */
-  | { kind: 'shelf'; shelf: Shelf; ids: string[]; w: Wall; s: FaceSide; t0: number; h0: number; moved: boolean; copy: Variant | null }
+  /** `follow`: the shelves were chosen at the press, so the choice goes over to the copies. */
+  | { kind: 'shelf'; shelf: Shelf; ids: string[]; w: Wall; s: FaceSide; t0: number; h0: number; moved: boolean; copy: Variant | null; follow: boolean }
 
 /** Pointer moves under this many px are a click. */
 export const CLICK_PX = 4
@@ -52,9 +54,10 @@ export function startDrag(P: PointerProps, hits: SceneHits, hit: Hit | null, e: 
     const q = hits.onFace(e, sw, s)
     // The chosen shelves go with it when it is one of them, else its row (Bjørn 9.11.2026)
     const chosen = chosenShelves(P.v, P.selection)
-    const ids = chosen.includes(sh.id) ? chosen : shelfRow(P.v, sh.id).map((x) => x.id)
+    const follow = chosen.includes(sh.id)
+    const ids = follow ? chosen : shelfRow(P.v, sh.id).map((x) => x.id)
     // Alt (Option) held: copies go where it is dragged, and the shelves stay (from the sketch at the press)
-    if (q) return { kind: 'shelf', shelf: sh, ids, w: sw, s, t0: q.t, h0: q.h, moved: false, copy: e.altKey ? P.v : null }
+    if (q) return { kind: 'shelf', shelf: sh, ids, w: sw, s, t0: q.t, h0: q.h, moved: false, copy: e.altKey ? P.v : null, follow }
   }
   if (deco && w) {
     const s = sideOf(P.v, deco)
@@ -110,7 +113,7 @@ export function moveDrag(P: PointerProps, hits: SceneHits, drag: Exclude<Drag, {
     const r = placeShelves(drag.copy, rules, drag.ids, shelf.id, { wallId: shelf.wallId, s: drag.s, module, dy: y - shelf.y }, true)
     if (!r) return
     P.onEdit(() => r.v, false)
-    P.onSelect({ wallId: shelf.wallId, side: drag.s, shelfId: r.ids[drag.ids.indexOf(shelf.id)], shelfOnly: P.selection.shelfOnly })
+    if (drag.follow) P.onSelect({ wallId: shelf.wallId, side: drag.s, shelfId: r.ids[drag.ids.indexOf(shelf.id)], shelfOnly: P.selection.shelfOnly })
     return
   }
   if (drag.kind === 'room') {
@@ -131,12 +134,12 @@ export function moveDrag(P: PointerProps, hits: SceneHits, drag: Exclude<Drag, {
   }
 }
 
-/** The release: drop what was dragged, or select what was pressed. */
+/** The release: drop what was dragged, or select what was pressed. `click`: let go within CLICK_PX of the press. */
 export function endDrag(P: PointerProps, hits: SceneHits, d: Drag | null, hit: Hit | null, click: boolean) {
   if (d?.kind === 'object' && d.moved) return dropObject(P.v, d.id, d.start, P.onEdit, P.onToast)
   if (d?.kind === 'room' && d.moved) return dropRoom(d, P.onEdit, P.onToast)
-  // A copy dragged out stays chosen (moveDrag chose it)
-  if (d?.kind === 'shelf' && d.moved && d.copy) return
+  // A drag (also one that came back to where it started) is not a click: the selection stays
+  if (!click || (d && 'moved' in d && d.moved)) return
   if (hit?.shelfId) {
     const f = shelvesOf(P.v).find((x) => x.id === hit.shelfId)
     // A shelf already chosen keeps the choice (its row, or only it)
@@ -144,13 +147,11 @@ export function endDrag(P: PointerProps, hits: SceneHits, d: Drag | null, hit: H
     if (f) P.onSelect({ wallId: f.wallId, side: sideOf(P.v, f), shelfId: f.id, shelfOnly: keep ? P.selection.shelfOnly : undefined })
     return
   }
-  // A frame or decal is selected when let go, so the drawer does not open (and shrink the view) mid-drag
   if (hit?.textileId || hit?.foilId) {
     const deco = P.v.textiles.find((x) => x.id === hit.textileId) ?? P.v.foils.find((x) => x.id === hit.foilId)
     if (deco) P.onSelect({ wallId: deco.wallId, side: sideOf(P.v, deco), ...(hit.textileId ? { textileId: deco.id } : { foilId: deco.id }) })
     return
   }
-  if (!click) return
   if (hit?.objectId) P.onSelect({ objectId: hit.objectId })
   else if (hit?.freeTextileId) {
     const t = P.v.freeTextiles.find((x) => x.id === hit.freeTextileId)
