@@ -3,7 +3,7 @@ import type { PointerEvent as RPointerEvent, RefObject } from 'react'
 import { moveFoilBy, updateFoil } from '../../../domain/decor'
 import type { FaceSide } from '../../../domain/faces'
 import { freeSpans, moveTextileBy, textileBox, textilesOn, updateTextile } from '../../../domain/textile/inFrame'
-import { dragShelf, shelfHeight } from '../../../domain/shelves'
+import { dragShelves, placeShelves, shelfHeight } from '../../../domain/shelves'
 import type { Foil, Shelf, TextileWall, Variant, Wall } from '../../../domain/types'
 import { rules } from '../../env'
 import type { Edge } from '../drawerParts'
@@ -102,14 +102,17 @@ export function useDecorDrag({ svg, w, s, L, select, ratioOf, onEdit, onCheckpoi
  */
 export function useShelfDrag({ svg, s, select, onEdit, onCheckpoint }: Pick<DragDeps, 'svg' | 's' | 'select' | 'onEdit' | 'onCheckpoint'>) {
   const dir = s === 1 ? 1 : -1
-  return (e: RPointerEvent, f: Shelf) => {
+  /** Drag `f` and the shelves `ids` with it (its row, or only it). With Alt (Option) held, copies go and they stay (`v` is
+   *  the sketch at the press). */
+  return (e: RPointerEvent, f: Shelf, ids: string[], shelfOnly: boolean | undefined, v: Variant) => {
     e.stopPropagation()
     if (e.button !== 0) return
     const scale = svg.current?.getScreenCTM()?.a ?? 1
     const x0 = e.clientX
     const y0 = e.clientY
     let moved = false
-    select({ shelfId: f.id })
+    const copy = e.altKey
+    select({ shelfId: f.id, shelfOnly })
     const onMove = (ev: PointerEvent) => {
       const du = (ev.clientX - x0) / scale
       const dz = -(ev.clientY - y0) / scale
@@ -120,7 +123,12 @@ export function useShelfDrag({ svg, s, select, onEdit, onCheckpoint }: Pick<Drag
       }
       const module = f.module + Math.round(du * dir)
       const y = shelfHeight(rules, f.y + dz)
-      onEdit((x) => dragShelf(x, rules, f.id, module, y), false)
+      if (!copy) return onEdit((x) => dragShelves(x, rules, f.id, ids, module, y), false)
+      // A copy where it goes; where it cannot stand, the last copy that could (or none)
+      const r = placeShelves(v, rules, ids, f.id, { wallId: f.wallId, s, module, dy: y - f.y }, true)
+      if (!r) return
+      onEdit(() => r.v, false)
+      select({ shelfId: r.ids[ids.indexOf(f.id)], shelfOnly })
     }
     const onUp = () => {
       window.removeEventListener('pointermove', onMove)

@@ -7,7 +7,8 @@ import { isStandWall, physicalEnds } from '../../domain/walls'
 import { runNormal } from '../../domain/textile/free'
 import { frameInset } from '../../calc/textile/inFrame'
 import { rules } from '../env'
-import type { PlanSelection } from './selection'
+import { chosenShelves, type PlanSelection } from './selection'
+import { shelvesOf } from '../../domain/shelves'
 import { sizePx, type PlanScale } from './planScale'
 import { PLAN_MARGIN } from './planStyle'
 
@@ -103,7 +104,7 @@ export interface InnerChain {
   ts: number[]
   /** How far out from the line the run's own drawing reaches, m, so the chain clears it: a textile on a wall face
    *  (`mounted`) stands in front of the wall. */
-  clear: 'wall' | 'textile' | 'mounted'
+  clear: 'wall' | 'textile' | 'mounted' | 'shelf'
 }
 
 export interface Dims {
@@ -122,7 +123,9 @@ export interface Dims {
 export function planDims(v: Variant, selection: PlanSelection, compact: boolean): Dims {
   // A selected textile wall on a wall face is measured on its own, not as the wall it hangs on (Bjørn 6.11.2026)
   const mounted = selection.textileId ? v.textiles.find((t) => t.id === selection.textileId) : undefined
-  const wall = !mounted && selection.wallId ? v.walls.find((w) => w.id === selection.wallId) : undefined
+  // So are selected shelves: the wall's own chain shows only when the wall itself is chosen (Bjørn 9.11.2026)
+  const shelf = selection.shelfId ? shelvesOf(v).find((f) => f.id === selection.shelfId) : undefined
+  const wall = !mounted && !shelf && selection.wallId ? v.walls.find((w) => w.id === selection.wallId) : undefined
   const stand = wall && isStandWall(wall) && !compact ? wall : undefined
   const sides = totalSides(v).map((side) => {
     const L = sideLength(v.stand, side)
@@ -153,6 +156,15 @@ export function planDims(v: Variant, selection: PlanSelection, compact: boolean)
     // From the outside of the end posts, as on the wall drawing
     const ends = [...physicalEnds(rules, wallLength(on)), mounted.from + inset, mounted.from + mounted.width - inset].map(along)
     inner = { axis: hz ? 'x' : 'y', at: hz ? on.from[1] : on.from[0], dir: toward(faceNormal(on, sideOf(v, mounted)), hz), ts: chainPoints(ends), clear: 'mounted' }
+  }
+  const under = shelf && v.walls.find((w) => w.id === shelf.wallId)
+  if (shelf && under && !compact) {
+    // The chosen shelves' felts, post to post, from the outside of the wall's end posts, beyond the boards
+    const hz = horizontal(under)
+    const k = hz ? 0 : 1
+    const ms = chosenShelves(v, selection).flatMap((id) => shelvesOf(v).filter((f) => f.id === id).map((f) => f.module))
+    const ends = [...physicalEnds(rules, wallLength(under)), Math.min(...ms), Math.max(...ms) + 1].map((t) => pointAlong(under, t)[k])
+    inner = { axis: hz ? 'x' : 'y', at: hz ? under.from[1] : under.from[0], dir: toward(faceNormal(under, sideOf(v, shelf)), hz), ts: chainPoints(ends), clear: 'shelf' }
   }
   return { sides, inner }
 }

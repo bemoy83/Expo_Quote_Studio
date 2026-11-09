@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import { Minus, Plus } from 'lucide-react'
-import { fmt } from './format'
+import { fmt, mm } from './format'
 import type { ToastMsg } from './useToast'
 import { type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type Ref } from 'react'
 
@@ -154,11 +154,14 @@ export function Dim({
   min = 0,
   max = Infinity,
   big,
+  unit = 'm',
 }: {
   label: string
   value: number
   onChange: (n: number) => void
   decimals?: number
+  /** The value is in metres either way; 'mm' shows and takes it in millimetres (a shelf's height). */
+  unit?: 'm' | 'mm'
   step?: number
   min?: number
   max?: number
@@ -172,23 +175,31 @@ export function Dim({
     if (x < min || x > max || x === value) return false
     onChange(x)
   }
+  const inMm = unit === 'mm'
+  const shown = inMm ? mm(value) : fmt(value, decimals)
+  const parse = (text: string) => {
+    if (!inMm) return parseLength(text)
+    const n = Number(text.replace(/\s/g, '').replace(',', '.'))
+    return Number.isFinite(n) && text.trim() ? n / 1000 : null
+  }
+  const stepText = step ? (inMm ? `${mm(step)} mm` : `${fmt(step)} m`) : ''
   const field = (
     <CommitInput
       className="field num"
       size={big ? 1 : undefined}
-      style={big ? { width: `${fmt(value, decimals).length * 0.62 + 0.1}em` } : undefined}
-      aria-label={`${label} i meter`}
+      style={big ? { width: `${shown.length * 0.62 + 0.1}em` } : undefined}
+      aria-label={`${label} i ${inMm ? 'millimeter' : 'meter'}`}
       inputMode="decimal"
-      value={fmt(value, decimals)}
+      value={shown}
       selectOnFocus
-      onCommit={(text) => set(parseLength(text))}
+      onCommit={(text) => set(parse(text))}
     />
   )
   // Only the field (with its unit when big) is a label: wrapping − and + in it too would light the − on hover
   const input = big ? (
     <label className="dim-value">
       {field}
-      <span className="dim-unit">m</span>
+      <span className="dim-unit">{unit}</span>
     </label>
   ) : (
     field
@@ -198,9 +209,9 @@ export function Dim({
       <span className={big ? 'dim-label' : 'eyebrow'}>{label}</span>
       {step ? (
         <span className="dim-step">
-          <IconButton icon={Minus} label={`${label}: ${fmt(step)} m mindre`} size={14} disabled={value - step < min} onClick={() => set(value - step)} />
+          <IconButton icon={Minus} label={`${label}: ${stepText} mindre`} size={14} disabled={value - step < min} onClick={() => set(value - step)} />
           {input}
-          <IconButton icon={Plus} label={`${label}: ${fmt(step)} m mer`} size={14} disabled={value + step > max} onClick={() => set(value + step)} />
+          <IconButton icon={Plus} label={`${label}: ${stepText} mer`} size={14} disabled={value + step > max} onClick={() => set(value + step)} />
         </span>
       ) : (
         input

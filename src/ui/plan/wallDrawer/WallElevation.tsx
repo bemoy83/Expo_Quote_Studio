@@ -8,7 +8,7 @@ import { doorLevels, doorRal, doorWindows } from '../../../domain/doors'
 import { felt, type FaceSide } from '../../../domain/faces'
 import { cropWindow, plateCrop } from '../../../domain/print'
 import { textileBox } from '../../../domain/textile/inFrame'
-import { shelfStacks } from '../../../domain/shelves'
+import { shelfRow, shelfStacks } from '../../../domain/shelves'
 import type { Foil, Opening, Shelf, TextileWall, Variant, Wall } from '../../../domain/types'
 import { wallRal } from '../../../domain/panels'
 import type { BuiltModule } from '../../../domain/walls'
@@ -53,8 +53,12 @@ interface Props {
   T: TextileWall | undefined
   F: Foil | undefined
   O: Opening | undefined
-  /** The chosen shelf. */
+  /** The chosen shelf, the shelves chosen with it (its row, or only it with `shelfOnly`). */
   S: Shelf | undefined
+  chosen: string[]
+  shelfOnly?: boolean
+  /** The chosen felt (module), when the wall's felt and nothing on it is chosen. */
+  felt?: number
   motifs: Motif[]
   label: string
   painting: boolean
@@ -75,7 +79,7 @@ interface Props {
 }
 
 export function WallElevation(p: Props) {
-  const { v, w, s, L, H, mods, tex, pieceOf, foils, shelves, rooms, T, F, O, S, motifs, label, painting, printing, tool, paintAt, doorModules, ratioOf, select, selectDoor } = p
+  const { v, w, s, L, H, mods, tex, pieceOf, foils, shelves, rooms, T, F, O, motifs, label, painting, printing, tool, paintAt, doorModules, ratioOf, select, selectDoor } = p
   const svg = useRef<SVGSVGElement>(null)
   const [spot, setSpot] = useState<DropSpot | null>(null)
   /** True from a press on a plate until it is let go: the brush sweeps over the plates entered meanwhile. */
@@ -195,7 +199,14 @@ export function WallElevation(p: Props) {
           className="wd-svg"
           viewBox={fr.viewBox}
           preserveAspectRatio="xMidYMid meet"
-          onPointerDown={() => select({})}
+          onPointerDown={(e) => {
+            // A press on a plate (not on what lies on it) chooses its felt, a second press the wall again (Bjørn 9.11.2026)
+            const m = svg.current?.getScreenCTM()
+            const q = m ? new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse()) : null
+            const i = q && q.y >= 0 && q.y <= H ? Math.floor(s === 1 ? q.x : L - q.x) : -1
+            const plate = i >= 0 && i < L && !!mods[i] && !mods[i]!.opening
+            select(plate && p.felt !== i ? { felt: i } : {})
+          }}
           onDragOver={onDragOver}
           onDragLeave={() => setSpot(null)}
           onDrop={onDrop}
@@ -291,9 +302,21 @@ export function WallElevation(p: Props) {
             )
           })}
 
+          {/* The chosen felt: a tint over its plate, under the shelves */}
+          {p.felt !== undefined && mods[p.felt] && (() => {
+            const f = felt(rules, p.felt)
+            return <rect x={spanX(f.a, f.b)} y={z(H)} width={f.w} height={H - rules.wall.feet} fill={INK} fillOpacity={0.1} pointerEvents="none" />
+          })()}
+
           {/* Shelves, over plates and print: dragged up and down, and sideways felt by felt */}
           {shelves.map((f) => {
             const inset = (rules.wall.cc - rules.shelf.board.width) / 2
+            // The grip: 22 px above and below the board, but only half way to the shelf above or below in the felt
+            const half = 22 * fr.u
+            const t = rules.shelf.board.thickness
+            const ys = shelves.filter((o) => o.module === f.module && o.id !== f.id).map((o) => o.y)
+            const below = Math.max(...ys.filter((y) => y < f.y).map((y) => (y + f.y) / 2 - t / 2), f.y - t / 2 - half)
+            const above = Math.min(...ys.filter((y) => y > f.y).map((y) => (y + f.y) / 2 - t / 2), f.y - t / 2 + half)
             return (
               <ShelfFront
                 key={f.id}
@@ -301,10 +324,13 @@ export function WallElevation(p: Props) {
                 y={f.y}
                 H={H}
                 u={fr.u}
-                on={S?.id === f.id}
+                on={p.chosen.includes(f.id)}
+                grip={[below, above]}
                 style={{ cursor: 'move' }}
                 pointerEvents={painting ? 'none' : undefined}
-                onPointerDown={(e) => shelfDrag(e, f)}
+                onPointerDown={(e) =>
+                  p.chosen.includes(f.id) ? shelfDrag(e, f, p.chosen, p.shelfOnly, v) : shelfDrag(e, f, shelfRow(v, f.id).map((x) => x.id), undefined, v)
+                }
               />
             )
           })}

@@ -1,7 +1,8 @@
 // The shelf pen (hylle 6311, docs/byggeregler.md H1–H7): a press on a wall face picks the module there, a drag along
 // the same wall and face stretches a row over more modules, the release lays them at the start height. A click in a
-// felt that already has shelves selects the lowest of them instead (more go on from the drawer).
-import { addShelf, addShelfRow } from '../../../domain/shelves'
+// felt that already has shelves selects the lowest of them instead (more go on from the drawer). New shelves take the
+// height of a shelf beside them, so a row goes on as one row (Byggeregel H2).
+import { addShelf, addShelfRow, penHeight } from '../../../domain/shelves'
 import { mm } from '../../format'
 import { rules } from '../../env'
 import type { Drag, DragHandlers, P, PointerCtx } from './types'
@@ -27,7 +28,8 @@ export const shelf: DragHandlers<'shelf'> = {
     if (m !== null) d.m1 = m
   },
   up(c, d) {
-    const y = rules.shelf.start
+    // The row goes on at the height of a shelf beside it, else the start height (Bjørn 9.11.2026)
+    const y = penHeight(c.v, rules, d.wallId, d.s, d.m0, d.m1)
     if (d.m0 === d.m1) {
       const r = addShelf(c.v, rules, d.wallId, d.m0, d.s, y)
       if ('error' in r) return c.onToast(r.error)

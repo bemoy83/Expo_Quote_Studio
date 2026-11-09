@@ -197,7 +197,7 @@ export function PlanView(p: Props) {
     if (!hover || p.mini) return 'default'
     const e = roomEdgeAt(hover)
     if (e) return sideIsHorizontal(e.room, e.side) ? 'ns-resize' : 'ew-resize'
-    if (d?.kind === 'wall' || d?.kind === 'beam' || d?.kind === 'freeMove') return 'grabbing'
+    if (d?.kind === 'wall' || d?.kind === 'beam' || d?.kind === 'freeMove' || (d?.kind === 'shelfMove' && d.moved)) return d.kind === 'shelfMove' && d.copy ? 'copy' : 'grabbing'
     if (freeTextileAt(v, hover, 0.15)) return 'move'
     if (objectAt(hover)) return 'default'
     if (beamAt(hover)) return 'move'

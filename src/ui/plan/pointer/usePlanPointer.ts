@@ -15,6 +15,7 @@ import { ratioOf } from './decor'
 import { erase, startErase, type Erasing } from './erase'
 import { floor, startFloor } from './floor'
 import { freeMove } from './freeMove'
+import { shelfMove } from './shelfMove'
 import { object } from './object'
 import { placeDrag, startPlace } from './place'
 import { plateAt, plates, startPlates } from './plates'
@@ -27,7 +28,7 @@ import { startTextile, textile } from './textile'
 import type { Drag, DragHandlers, P, PointerCtx } from './types'
 import { wall } from './wall'
 
-const DRAGS: { [K in Drag['kind']]: DragHandlers<K> } = { stroke, plates, floor, roll, carpetFill, click, object, wall, beam, room, textile, freeMove, erase, shelf, place: placeDrag }
+const DRAGS: { [K in Drag['kind']]: DragHandlers<K> } = { stroke, plates, floor, roll, carpetFill, click, object, wall, beam, room, textile, freeMove, erase, shelf, shelfMove, place: placeDrag }
 const handlersOf = (d: Drag) => DRAGS[d.kind] as DragHandlers<Drag['kind']>
 
 /** What the plan passes in: the context without the previews' setters and state, which the hook owns. */
@@ -124,6 +125,8 @@ export function usePlanPointer(input: PlanPointerInput) {
     const q = toModel(e)
     svg.current!.setPointerCapture(e.pointerId)
     const d = press(q)
+    // Alt (Option) held: a shelf dragged leaves a copy where it goes (desktop; the pill's Kopier on touch)
+    if (d?.kind === 'shelfMove') d.copy = e.altKey
     if (d) drag.current = d
     // Held without moving counts as dragging too: Fyll shows its proposal while pressed
     setDragging(d ?? null)

@@ -1,24 +1,26 @@
 // Velg in the 3D view, as in the plan: a press picks what to drag (decor or a shelf on its face, furniture, a room, an
 // inner wall), a move drags it, a release drops it or, without moving, selects what was pressed. Anything else orbits
-// the camera.
+// the camera. A click is a click, a drag is never one (Bjørn 9.11.2026): letting go after a drag (or an orbit) leaves the
+// selection as it was, so the drawer does not open when something is only moved.
 import { moveFoilBy } from '../../../domain/decor'
 import { canMoveWall } from '../../../domain/edit'
 import { sideOf, type FaceSide } from '../../../domain/faces'
 import { moveObject } from '../../../domain/objects'
 import { faceOfPoint } from '../../../domain/textile/free'
 import { moveTextileBy } from '../../../domain/textile/inFrame'
-import { dragShelf, shelfHeight, shelvesOf } from '../../../domain/shelves'
+import { dragShelves, placeShelves, shelfHeight, shelfRow, shelvesOf } from '../../../domain/shelves'
 import type { Foil, Shelf, TextileWall, Variant, Wall } from '../../../domain/types'
 import { dragRoom, dragWall, dropObject, dropRoom, roomDrag, type RoomDrag, type WallDrag } from '../../drag'
 import { place, rules } from '../../env'
 import { findMotif } from '../../motifs'
 import type { Motif } from '../../../persistence/file'
-import type { PlanSelection } from '../../plan/selection'
+import { chosenShelves, type PlanSelection } from '../../plan/selection'
 import type { Hit, SceneHits } from './hits'
 
 /** What the 3D view hands the pointer: the model now, and how to change it. */
 export interface PointerProps {
   v: Variant
+  selection: PlanSelection
   onSelect: (s: PlanSelection) => void
   onEdit: (fn: (v: Variant) => Variant, history?: boolean) => void
   onCheckpoint: () => void
@@ -34,8 +36,9 @@ export type Drag =
   | ({ kind: 'room'; y: number } & RoomDrag)
   /** A textile or foil dragged on its face: deltas from where it was grabbed (t along the wall, h up). */
   | { kind: 'decor'; item: { textile: TextileWall } | { foil: Foil }; w: Wall; s: FaceSide; t0: number; h0: number; moved: boolean }
-  /** A shelf dragged on its face: up and down in 50 mm steps, sideways felt by felt (as in the wall drawer). */
-  | { kind: 'shelf'; shelf: Shelf; w: Wall; s: FaceSide; t0: number; h0: number; moved: boolean }
+  /** A shelf dragged on its face: up and down in 50 mm steps, sideways felt by felt (as in the wall drawer). `follow`: the
+   *  shelves were chosen at the press, so the choice goes over to the copies. */
+  | { kind: 'shelf'; shelf: Shelf; ids: string[]; w: Wall; s: FaceSide; t0: number; h0: number; moved: boolean; copy: Variant | null; follow: boolean }
 
 /** Pointer moves under this many px are a click. */
 export const CLICK_PX = 4
@@ -49,7 +52,12 @@ export function startDrag(P: PointerProps, hits: SceneHits, hit: Hit | null, e: 
   if (sh && sw) {
     const s = sideOf(P.v, sh)
     const q = hits.onFace(e, sw, s)
-    if (q) return { kind: 'shelf', shelf: sh, w: sw, s, t0: q.t, h0: q.h, moved: false }
+    // The chosen shelves go with it when it is one of them, else its row (Bjørn 9.11.2026)
+    const chosen = chosenShelves(P.v, P.selection)
+    const follow = chosen.includes(sh.id)
+    const ids = follow ? chosen : shelfRow(P.v, sh.id).map((x) => x.id)
+    // Alt (Option) held: copies go where it is dragged, and the shelves stay (from the sketch at the press)
+    if (q) return { kind: 'shelf', shelf: sh, ids, w: sw, s, t0: q.t, h0: q.h, moved: false, copy: e.altKey ? P.v : null, follow }
   }
   if (deco && w) {
     const s = sideOf(P.v, deco)
@@ -98,7 +106,14 @@ export function moveDrag(P: PointerProps, hits: SceneHits, drag: Exclude<Drag, {
     const { shelf } = drag
     const module = shelf.module + Math.round(f.t - drag.t0)
     const y = shelfHeight(rules, shelf.y + f.h - drag.h0)
-    P.onEdit((x) => dragShelf(x, rules, shelf.id, module, y), false)
+    if (!drag.copy) {
+      P.onEdit((x) => dragShelves(x, rules, shelf.id, drag.ids, module, y), false)
+      return
+    }
+    const r = placeShelves(drag.copy, rules, drag.ids, shelf.id, { wallId: shelf.wallId, s: drag.s, module, dy: y - shelf.y }, true)
+    if (!r) return
+    P.onEdit(() => r.v, false)
+    if (drag.follow) P.onSelect({ wallId: shelf.wallId, side: drag.s, shelfId: r.ids[drag.ids.indexOf(shelf.id)], shelfOnly: P.selection.shelfOnly })
     return
   }
   if (drag.kind === 'room') {
@@ -119,22 +134,24 @@ export function moveDrag(P: PointerProps, hits: SceneHits, drag: Exclude<Drag, {
   }
 }
 
-/** The release: drop what was dragged, or select what was pressed. */
+/** The release: drop what was dragged, or select what was pressed. `click`: let go within CLICK_PX of the press. */
 export function endDrag(P: PointerProps, hits: SceneHits, d: Drag | null, hit: Hit | null, click: boolean) {
   if (d?.kind === 'object' && d.moved) return dropObject(P.v, d.id, d.start, P.onEdit, P.onToast)
   if (d?.kind === 'room' && d.moved) return dropRoom(d, P.onEdit, P.onToast)
+  // A drag (also one that came back to where it started) is not a click: the selection stays
+  if (!click || (d && 'moved' in d && d.moved)) return
   if (hit?.shelfId) {
     const f = shelvesOf(P.v).find((x) => x.id === hit.shelfId)
-    if (f) P.onSelect({ wallId: f.wallId, side: sideOf(P.v, f), shelfId: f.id })
+    // A shelf already chosen keeps the choice (its row, or only it)
+    const keep = chosenShelves(P.v, P.selection).includes(hit.shelfId)
+    if (f) P.onSelect({ wallId: f.wallId, side: sideOf(P.v, f), shelfId: f.id, shelfOnly: keep ? P.selection.shelfOnly : undefined })
     return
   }
-  // A frame or decal is selected when let go, so the drawer does not open (and shrink the view) mid-drag
   if (hit?.textileId || hit?.foilId) {
     const deco = P.v.textiles.find((x) => x.id === hit.textileId) ?? P.v.foils.find((x) => x.id === hit.foilId)
     if (deco) P.onSelect({ wallId: deco.wallId, side: sideOf(P.v, deco), ...(hit.textileId ? { textileId: deco.id } : { foilId: deco.id }) })
     return
   }
-  if (!click) return
   if (hit?.objectId) P.onSelect({ objectId: hit.objectId })
   else if (hit?.freeTextileId) {
     const t = P.v.freeTextiles.find((x) => x.id === hit.freeTextileId)
