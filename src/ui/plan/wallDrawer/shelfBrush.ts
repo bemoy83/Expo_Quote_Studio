@@ -6,7 +6,7 @@
 // never takes away shelves laid before), sideways the felt is copied to the felts dragged over. Esc: while pressed drops
 // the stroke, else puts the brush away. What is shown is the same edit the release stores (strokeOf). Drawn by
 // BrushPreview.tsx.
-import { useEffect, useRef, useState, type PointerEvent as RPointerEvent, type RefObject } from 'react'
+import { useEffect, useMemo, useRef, useState, type PointerEvent as RPointerEvent, type RefObject } from 'react'
 import { brushHeight, paintShelves, spreadFelt, stackFelt, type BrushResult } from '../../../domain/shelves/brush'
 import { highWarning, shelvesIn, shelvesOn, tooHigh } from '../../../domain/shelves/model'
 import { mm } from '../dims'
@@ -35,7 +35,6 @@ export interface Stroke extends BrushResult {
   y: number
   m0: number
   m1: number
-  pressed: boolean
   /** The pill's text. */
   label: string
   /** Why the stacked felt takes no more. */
@@ -44,7 +43,7 @@ export interface Stroke extends BrushResult {
 
 /** What the brush lays for an aim: at the pointer's height (paintShelves), or with Shift a stack copied sideways. */
 function strokeOf(v: Variant, w: Wall, s: FaceSide, a: Aim): Stroke {
-  const base = { m0: a.m0, m1: a.m1, pressed: a.pressed }
+  const base = { m0: a.m0, m1: a.m1 }
   if (!a.stack) {
     const y = brushHeight(v, rules, w.id, s, a.m0, a.m1, a.raw)
     const r = paintShelves(v, rules, w.id, s, a.m0, a.m1, y)
@@ -89,10 +88,8 @@ export function useShelfBrush({ svg, v, w, s, L, H, on, onEdit, onDone }: Deps) 
     ref.current = a
     setAimState(a)
   }
-  const stroke: Stroke | null = (() => {
-    if (!on || !aim) return null
-    return strokeOf(v, w, s, aim)
-  })()
+  // Worked out again only when the aim or the sketch changes, not on every render of the drawing
+  const stroke = useMemo(() => (on && aim ? strokeOf(v, w, s, aim) : null), [on, aim, v, w, s])
 
   // Esc and Shift while the brush is out. Esc is taken before the app's own (which would close the drawer).
   const off = useRef(onDone)

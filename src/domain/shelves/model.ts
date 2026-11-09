@@ -6,12 +6,20 @@ import type { Rules } from '../../rules/rules';
 import { faceNormal, sideOf, type FaceSide } from '../faces';
 import { fittingBlocked } from '../fittings';
 import { pointAlong } from '../grid';
+import { nextId } from '../ids';
 import type { Shelf, Variant } from '../types';
 
 export const EPS = 1e-6;
 const r3 = (n: number) => Math.round(n * 1000) / 1000;
 
 export const shelvesOf = (v: Variant): Shelf[] => v.shelves ?? [];
+
+/** A new shelf in felt `module` on face `s` at `y` (snapped and kept within H4), with the next free id. No checks: the
+ *  callers have made sure it may stand there (shelfBlocked, fitsIn). */
+export function putShelf(v: Variant, rules: Rules, wallId: string, module: number, s: FaceSide, y: number): { v: Variant; id: string } {
+  const id = nextId(shelvesOf(v).map((x) => x.id), 'h');
+  return { v: { ...v, shelves: [...shelvesOf(v), { id, wallId, module, side: s, y: shelfHeight(rules, y) }] }, id };
+}
 
 export const shelvesOn = (v: Variant, wallId: string, s: FaceSide) => shelvesOf(v).filter((x) => x.wallId === wallId && sideOf(v, x) === s);
 
@@ -46,6 +54,9 @@ export const highWarning = (rules: Rules) =>
 
 /** Clear height from the top of the lower board to the underside of the upper one, m (H5). */
 export const clearBetween = (rules: Rules, lower: number, upper: number) => r3(upper - rules.shelf.board.thickness - lower);
+
+/** The clear height between shelves as said in a reason (H5): «minst 100 mm lysmål». */
+export const gapNote = (rules: Rules) => `minst ${Math.round(rules.shelf.gap * 1000)} mm lysmål`;
 
 /** Whether two shelves in one felt keep the clear height between them (H5). */
 export const apart = (rules: Rules, a: number, b: number) => clearBetween(rules, Math.min(a, b), Math.max(a, b)) >= rules.shelf.gap - EPS;

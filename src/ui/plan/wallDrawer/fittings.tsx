@@ -7,7 +7,7 @@ import type { FaceSide } from '../../../domain/faces'
 import { wallLength } from '../../../domain/grid'
 import { addShelfToFelt } from '../../../domain/shelves/edit'
 import { addShelfRowToFace, addShelfToFace } from '../../../domain/shelves/fill'
-import { highWarning, offRow, shelfBlocked, shelvesIn, shelvesOn, tooHigh } from '../../../domain/shelves/model'
+import { gapNote, highWarning, offRow, shelfBlocked, shelvesIn, shelvesOn, tooHigh } from '../../../domain/shelves/model'
 import type { Shelf as Board, Variant, Wall } from '../../../domain/types'
 import type { BuiltModule } from '../../../domain/walls'
 import { Button, Dim, FlatChoice, IconButton, Section } from '../../controls'
@@ -93,7 +93,7 @@ export function ShelfPanel({ v, H, w, s, sel, select, onEdit, onToast }: { v: Va
     <>
       <Section title={n > 1 ? `Hyllerad · ${n} hyller` : 'Hylle'} aside={`${mm(H.y)} mm fra gulv`}>
         <div className="wd-dims">
-          <Dim big unit="mm" label="Fra gulv" value={H.y} step={sh.step} min={sh.min} max={sh.max} onChange={(y) => move({ y }, `For nær en annen hylle (minst ${mm(sh.gap)} mm lysmål)`)} />
+          <Dim big unit="mm" label="Fra gulv" value={H.y} step={sh.step} min={sh.min} max={sh.max} onChange={(y) => move({ y }, `For nær en annen hylle · ${gapNote(rules)}`)} />
         </div>
         <FlatChoice<number>
           label="Faste høyder"

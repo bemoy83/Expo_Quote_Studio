@@ -3,9 +3,8 @@
 import type { Rules } from '../../rules/rules';
 import type { FaceSide } from '../faces';
 import { fittingFelts } from '../fittings';
-import { nextId } from '../ids';
 import type { Variant } from '../types';
-import { fillHeights, fitsIn, shelfHeight, shelvesOf } from './model';
+import { fillHeights, fitsIn, putShelf } from './model';
 
 /** The heights a face is filled at, row by row: the start height, then the one order of H4 from it (fillHeights), with
  *  the gaps between the ladder's heights split last, as in a felt. */
@@ -26,8 +25,7 @@ export function addShelfToFace(v: Variant, rules: Rules, wallId: string, s: Face
   for (const y of rowHeights(rules)) {
     const m = felts.find((x) => fitsIn(v, rules, wallId, x, s, y));
     if (m === undefined) continue;
-    const id = nextId(shelvesOf(v).map((o) => o.id), 'h');
-    return { v: { ...v, shelves: [...shelvesOf(v), { id, wallId, module: m, side: s, y: shelfHeight(rules, y) }] }, id };
+    return putShelf(v, rules, wallId, m, s, y);
   }
   return { error: 'Ingen plass til flere hyller på denne siden' };
 }
@@ -50,9 +48,9 @@ export function addShelfRowToFace(v: Variant, rules: Rules, wallId: string, s: F
   let x = v;
   const ids: string[] = [];
   for (const m of [...best.at].sort((a, b) => a - b)) {
-    const id = nextId(shelvesOf(x).map((o) => o.id), 'h');
-    x = { ...x, shelves: [...shelvesOf(x), { id, wallId, module: m, side: s, y: shelfHeight(rules, best.y) }] };
-    ids.push(id);
+    const r = putShelf(x, rules, wallId, m, s, best.y);
+    x = r.v;
+    ids.push(r.id);
   }
   return { v: x, ids };
 }

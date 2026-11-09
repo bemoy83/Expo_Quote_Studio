@@ -9,9 +9,8 @@
 import type { Rules } from '../../rules/rules';
 import type { FaceSide } from '../faces';
 import { addShelfToFelt } from './edit';
-import { nextId } from '../ids';
 import type { Variant } from '../types';
-import { EPS, fitsIn, shelfBlocked, shelfHeight, shelvesIn, shelvesOf, shelvesOn } from './model';
+import { EPS, fitsIn, gapNote, putShelf, shelfBlocked, shelfHeight, shelvesIn, shelvesOn } from './model';
 
 /** How far from the pointer a height catches the brush, m: a shelf in a felt beside it, and a quick pick. */
 export const BRUSH_CATCH = { row: 0.06, quick: 0.04 } as const;
@@ -43,7 +42,7 @@ export function brushBlocked(v: Variant, rules: Rules, wallId: string, module: n
   if (why) return why;
   if (fitsIn(v, rules, wallId, module, s, y)) return null;
   const on = shelvesIn(v, wallId, module, s).some((o) => Math.abs(o.y - y) <= rules.shelf.gap / 2 + EPS);
-  return on ? 'Hylle her fra før' : `For nær en annen hylle · minst ${Math.round(rules.shelf.gap * 1000)} mm lysmål`;
+  return on ? 'Hylle her fra før' : `For nær en annen hylle · ${gapNote(rules)}`;
 }
 
 export interface BrushResult {
@@ -69,9 +68,9 @@ export function paintShelves(v: Variant, rules: Rules, wallId: string, s: FaceSi
       out.push({ module: m, why });
       continue;
     }
-    const id = nextId(shelvesOf(x).map((o) => o.id), 'h');
-    x = { ...x, shelves: [...shelvesOf(x), { id, wallId, module: m, side: s, y: h }] };
-    ids.push(id);
+    const r = putShelf(x, rules, wallId, m, s, h);
+    x = r.v;
+    ids.push(r.id);
   }
   return { v: x, ids, out };
 }
@@ -114,13 +113,13 @@ export function spreadFelt(v: Variant, rules: Rules, wallId: string, s: FaceSide
     const have = shelvesIn(x, wallId, m, s).map((o) => o.y);
     const add = ys.filter((y) => !have.some((h) => Math.abs(h - y) < EPS));
     if (!add.every((y) => fitsIn(x, rules, wallId, m, s, y))) {
-      out.push({ module: m, why: `Feltet har hyller som står for nær · minst ${Math.round(rules.shelf.gap * 1000)} mm lysmål` });
+      out.push({ module: m, why: `Feltet har hyller som står for nær · ${gapNote(rules)}` });
       continue;
     }
     for (const y of add) {
-      const id = nextId(shelvesOf(x).map((o) => o.id), 'h');
-      x = { ...x, shelves: [...shelvesOf(x), { id, wallId, module: m, side: s, y }] };
-      ids.push(id);
+      const r = putShelf(x, rules, wallId, m, s, y);
+      x = r.v;
+      ids.push(r.id);
     }
   }
   return { v: x, ids, out };

@@ -4,9 +4,8 @@
 import type { Rules } from '../../rules/rules';
 import { sideOf, type FaceSide } from '../faces';
 import { wallLength } from '../grid';
-import { nextId } from '../ids';
 import type { Shelf, Variant } from '../types';
-import { apart, EPS, fillHeights, fitsIn, shelfBlocked, shelfHeight, shelvesIn, shelvesOf, shelvesOn } from './model';
+import { apart, fillHeights, fitsIn, putShelf, shelfBlocked, shelfHeight, shelvesIn, shelvesOf, shelvesOn } from './model';
 
 /**
  * Put a shelf in a felt at `y` (default the start height). A felt that already has shelves keeps them: the result is the
@@ -25,8 +24,7 @@ export function addShelf(
   if (why) return { error: why };
   const there = shelvesIn(v, wallId, module, s);
   if (there.length) return { v, id: there[0].id, existing: true };
-  const id = nextId(shelvesOf(v).map((x) => x.id), 'h');
-  return { v: { ...v, shelves: [...shelvesOf(v), { id, wallId, module, side: s, y: shelfHeight(rules, y) }] }, id, existing: false };
+  return { ...putShelf(v, rules, wallId, module, s, y), existing: false };
 }
 
 /** A row of shelves at one height over the modules `from` to `to` (either order): felts that are blocked or already have
@@ -52,17 +50,15 @@ export function addShelvesAbove(v: Variant, rules: Rules, ids: string[]): { v: V
   const group = ids.map((id) => shelvesOf(v).find((x) => x.id === id)).filter((x): x is Shelf => !!x);
   if (!group.length) return { error: 'Fant ikke hyllen' };
   const f = group[0];
-  const sh = rules.shelf;
   const there = shelvesIn(v, f.wallId, f.module, sideOf(v, f));
-  const tries = fillHeights(rules, f.y, there.map((x) => x.y));
-  const y = tries.find((t) => t >= sh.min - EPS && group.every((x) => fitsIn(v, rules, x.wallId, x.module, sideOf(v, x), t)));
+  const y = fillHeights(rules, f.y, there.map((x) => x.y)).find((t) => group.every((x) => fitsIn(v, rules, x.wallId, x.module, sideOf(v, x), t)));
   if (y === undefined) return { error: 'Ingen plass til flere hyller i feltet' };
   let x = v;
   const added: string[] = [];
   for (const g of group) {
-    const nid = nextId(shelvesOf(x).map((o) => o.id), 'h');
-    x = { ...x, shelves: [...shelvesOf(x), { id: nid, wallId: g.wallId, module: g.module, side: sideOf(v, g), y }] };
-    added.push(nid);
+    const r = putShelf(x, rules, g.wallId, g.module, sideOf(v, g), y);
+    x = r.v;
+    added.push(r.id);
   }
   return { v: x, ids: added };
 }
@@ -138,9 +134,9 @@ export function placeShelves(v: Variant, rules: Rules, ids: string[], anchorId: 
   let x = v;
   const added: string[] = [];
   for (const m of moved) {
-    const id = nextId(shelvesOf(x).map((o) => o.id), 'h');
-    x = { ...x, shelves: [...shelvesOf(x), { id, wallId: m.wallId, module: m.module, side: m.side, y: m.y }] };
-    added.push(id);
+    const r = putShelf(x, rules, m.wallId, m.module, m.side, m.y);
+    x = r.v;
+    added.push(r.id);
   }
   return { v: x, ids: added };
 }
