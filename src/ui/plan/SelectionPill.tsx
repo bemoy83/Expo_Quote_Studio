@@ -338,8 +338,8 @@ function content(p: PillActions, graphics: boolean, setGraphics: (b: boolean) =>
       name: n > 1 ? 'Hyllerad' : 'Hylle',
       meta: [
         n > 1 ? `${n} hyller` : '',
-        `${mm(H.y)} mm fra gulvet`,
-        stack.length > 1 ? `${stack.indexOf(H) + 1} av ${stack.length} i feltet` : '',
+        `${mm(H.y)} mm`,
+        stack.length > 1 ? `${stack.indexOf(H) + 1} av ${stack.length}` : '',
         n === 1 && offRow(v, H.id) ? 'avviker fra raden' : '',
       ]
         .filter(Boolean)
@@ -362,13 +362,12 @@ function content(p: PillActions, graphics: boolean, setGraphics: (b: boolean) =>
         </>
       ) : (
         <>
+          {/* Up and down explain themselves (arrows), so they go without text to keep the pill short */}
           <QBtn title={`Senk ${mm(step)} mm`} label="Senk" onClick={() => go({ dy: -step }, `${what} kan ikke gå lavere her`)}>
             <ArrowDown size={15} />
-            Ned
           </QBtn>
           <QBtn title={`Hev ${mm(step)} mm`} label="Hev" onClick={() => go({ dy: step }, `${what} kan ikke gå høyere her`)}>
             <ArrowUp size={15} />
-            Opp
           </QBtn>
           <QBtn title="Faste høyder" label="Høyde" onClick={() => setGraphics(true)}>
             <MoveVertical size={15} />

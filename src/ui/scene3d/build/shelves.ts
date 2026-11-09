@@ -19,6 +19,8 @@ export const BOARD = '#f2f1ec'
  *  30 high, the flange top 10,5 over its bottom, so an 18 mm board ends 1,5 under the bracket's top). */
 const BODY = 0.03
 const FLANGE_TOP = 0.0105
+/** Height of the unseen grip around a board, m: the least clear height between two shelves (rules.shelf.gap). */
+const GRIP = 0.1
 
 export function buildShelves(c: BuildContext) {
   const { v, mat, along, add, at, sel } = c
@@ -41,6 +43,13 @@ export function buildShelves(c: BuildContext) {
     const on = chosen.has(f.id)
     const tag: Tag = { layer: 'objects', pick: { wallId: w.id, shelfId: f.id } }
     along(pointAlong(w, f.module + inset), pointAlong(w, f.module + 1 - inset), width, t, depth, f.y - t, mat('objects', BOARD, { roughness: 0.55, ...selectGlow(on) }), tag, s * (inner + depth / 2))
+    // An unseen grip around the thin board, so a finger or the mouse finds it (Bjørn 9.11.2026): GRIP tall, still clear
+    // of the shelf above or below (H5 keeps 100 mm between them)
+    const grip = along(pointAlong(w, f.module + inset), pointAlong(w, f.module + 1 - inset), width, GRIP, depth, f.y - t / 2 - GRIP / 2, mat('objects', BOARD), tag, s * (inner + depth / 2))
+    grip.geometry.name = 'shelf-grip'
+    grip.visible = false
+    grip.castShadow = false
+    grip.receiveShadow = false
     // Its two brackets: at the module's start the board lies ahead along the wall (+1), at its end behind (−1)
     for (const [k, d] of [[f.module, 1], [f.module + 1, -1]] as const) {
       const p = pointAlong(w, k)

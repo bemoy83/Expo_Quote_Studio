@@ -21,8 +21,12 @@ const r = (n: number) => Math.round(n * 1000)
 
 describe('shelves in 3D', () => {
   it('a board per shelf, its top at the shelf height, from the rails out 300 mm, pickable as the shelf', () => {
-    const boards = all.filter((m) => (m.userData as Tag).pick?.shelfId)
+    const boards = all.filter((m) => (m.userData as Tag).pick?.shelfId && m.visible)
     expect(boards).toHaveLength(2)
+    // Each with an unseen grip, 100 mm tall around it, pickable as the shelf
+    const grips = named('shelf-grip')
+    expect(grips.map((m) => [m.visible, (m.userData as Tag).pick?.shelfId])).toEqual([[false, 'h1'], [false, 'h2']])
+    expect(r(box(grips[0]).max.y - box(grips[0]).min.y)).toBe(100)
     const b = box(boards[0])
     expect(r(b.max.y)).toBe(1300)
     expect(r(b.max.y - b.min.y)).toBe(18)

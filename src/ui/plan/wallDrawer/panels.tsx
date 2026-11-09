@@ -237,17 +237,26 @@ export function ShelfPanel({ v, H, w, s, sel, select, onEdit, onToast }: { v: Va
         }
       >
         {stack.length > 1 && (
-          <>
-            <FlatChoice<string>
-              label="Hyller i feltet"
-              value={H.id}
-              onChange={(id) => select({ shelfId: id, shelfOnly: undefined })}
-              options={[...stack].reverse().map((f) => ({ value: f.id, label: <span className="num">{mm(f.y)}</span> }))}
-            />
-            <p className="set-note num">
-              Lysmål {stack.slice(1).map((f, i) => mm(clearBetween(rules, stack[i].y, f.y))).reverse().join(' · ')} mm
-            </p>
-          </>
+          // The felt as it stands, top shelf on top, each with the clear height down to the one under it (H5)
+          <FlatChoice<string>
+            label="Hyller i feltet"
+            className="flat-stack"
+            value={H.id}
+            onChange={(id) => select({ shelfId: id, shelfOnly: undefined })}
+            options={[...stack].reverse().map((f) => {
+              const under = stack[stack.indexOf(f) - 1]
+              return {
+                value: f.id,
+                title: `${mm(f.y)} mm fra gulv`,
+                label: (
+                  <>
+                    <span className="num">{mm(f.y)}</span>
+                    <span className="stack-gap num">{under ? `lysmål ${mm(clearBetween(rules, under.y, f.y))}` : 'nederst'}</span>
+                  </>
+                ),
+              }
+            })}
+          />
         )}
         <div className="wd-actions">
           <Button

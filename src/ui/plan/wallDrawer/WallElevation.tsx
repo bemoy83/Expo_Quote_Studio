@@ -296,6 +296,12 @@ export function WallElevation(p: Props) {
           {/* Shelves, over plates and print: dragged up and down, and sideways felt by felt */}
           {shelves.map((f) => {
             const inset = (rules.wall.cc - rules.shelf.board.width) / 2
+            // The grip: 22 px above and below the board, but only half way to the shelf above or below in the felt
+            const half = 22 * fr.u
+            const t = rules.shelf.board.thickness
+            const ys = shelves.filter((o) => o.module === f.module && o.id !== f.id).map((o) => o.y)
+            const below = Math.max(...ys.filter((y) => y < f.y).map((y) => (y + f.y) / 2 - t / 2), f.y - t / 2 - half)
+            const above = Math.min(...ys.filter((y) => y > f.y).map((y) => (y + f.y) / 2 - t / 2), f.y - t / 2 + half)
             return (
               <ShelfFront
                 key={f.id}
@@ -304,6 +310,7 @@ export function WallElevation(p: Props) {
                 H={H}
                 u={fr.u}
                 on={p.chosen.includes(f.id)}
+                grip={[below, above]}
                 style={{ cursor: 'move' }}
                 pointerEvents={painting ? 'none' : undefined}
                 onPointerDown={(e) =>

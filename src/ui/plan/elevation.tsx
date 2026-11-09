@@ -132,7 +132,11 @@ function NoteMark({ x, y, w, h, note, u }: { x: number; y: number; w: number; h:
  * between its posts, and the bracket in each post's face channel just under it. `x` is the board's left edge, `H` the
  * drawing's floor; `u` metres per screen px keeps the board visible on a small drawing.
  */
-export function ShelfFront({ x, y, H, u, on, ...rest }: { x: number; y: number; H: number; u: number; on?: boolean } & SVGProps<SVGGElement>) {
+/**
+ * A shelf seen from the front. `grip` (heights from the floor, m) is an unseen band to grab it by, taller than the thin
+ * board so a finger finds it (Bjørn 9.11.2026); the wall drawer gives it, the work order does not.
+ */
+export function ShelfFront({ x, y, H, u, on, grip, ...rest }: { x: number; y: number; H: number; u: number; on?: boolean; grip?: [number, number] } & SVGProps<SVGGElement>) {
   const { thickness, width } = rules.shelf.board
   const t = Math.max(thickness, 3 * u)
   const z = H - y
@@ -140,6 +144,7 @@ export function ShelfFront({ x, y, H, u, on, ...rest }: { x: number; y: number; 
   const bracket = 0.03
   return (
     <g {...rest}>
+      {grip && <rect x={x - inset} y={H - grip[1]} width={width + 2 * inset} height={grip[1] - grip[0]} fill="transparent" />}
       {[x - inset, x + width + inset].map((px) => (
         <rect key={px} x={px - rules.wall.post / 2} y={z} width={rules.wall.post} height={bracket} fill={ALU} stroke={INK_MUTED} strokeWidth={0.6 * u} />
       ))}
