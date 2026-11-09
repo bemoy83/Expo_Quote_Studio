@@ -1,7 +1,8 @@
 // The shelf pen in the plan, and Velg, Tøm and Delete on a shelf: on a row stand 6 × 3 whose back wall runs from (0,0)
 // to (6,0) with its face toward the stand at y > 0.
 import { describe, expect, it, vi } from 'vitest';
-import { addShelf, addShelfRow, shelvesOf } from '../../../domain/shelves';
+import { addShelf, addShelfRow } from '../../../domain/shelves/edit';
+import { shelvesOf } from '../../../domain/shelves/model';
 import type { Variant } from '../../../domain/types';
 import { createVariant } from '../../../domain/variant';
 import { builtModules, standWallKeys } from '../../../domain/walls';

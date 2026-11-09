@@ -247,11 +247,11 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 - **H1 Hylle i veggfelt.** Rett hylle 6311, d 30 cm: én hylleplate melamin hvit 18 × 300 × 976 i ett veggfelt mellom to
   stolper 94 (1000 c/c), på en side av veggen som kan ta dekor. Platen ligger inn i det innvendige hjørnet på stolpen og
   kjøpes ikke hos Foga. Hyller tegnes med eget verktøy og flere kan stå over hverandre i samme felt.
-  *Bjørn 8.11.2026 · `RECIPES.shelf.board`, `rules.shelf.board` · kode `src/domain/shelves.ts`, `src/foga/recipes.ts` · test `src/domain/shelves.test.ts`*
+  *Bjørn 8.11.2026 · `RECIPES.shelf.board`, `rules.shelf.board` · kode `src/domain/fittings.ts`, `src/domain/shelves/model.ts`, `src/foga/recipes.ts` · test `src/domain/shelves/shelves.test.ts`*
 - **H2 Knekter i rad.** Hver hylle står på én knekt i hver av sine to stolper. Står to hyller i nabofelt på samme side og
   i samme høyde, deler de én 91FF (dobbel flens) i stolpen mellom seg; alle andre knekter er 91F (én flens). En rad på
   n hyller er n plater, 2 × 91F og (n − 1) × 91FF.
-  *Bjørn 8.11.2026 · `RECIPES.shelf.end`, `twin` · kode `src/domain/shelves.ts`, `src/foga/engine.ts`, `src/calc/lines/shelves.ts` · test `src/calc/shelves.test.ts`*
+  *Bjørn 8.11.2026 · `RECIPES.shelf.end`, `twin` · kode `src/domain/shelves/brackets.ts`, `src/foga/engine.ts`, `src/calc/lines/shelves.ts` · test `src/calc/shelves.test.ts`*
 - **H3 Knekt.** 91F (873 043 22) og 91FF (873 044 22) kappes 290 mm og festes med én 600 inn i stolpens kanal. Plukkes
   som ferdig enhet, knekt med 600.
   *Bjørn 8.11.2026 · `RECIPES.shelf.bracket`, `coupling` · kode `src/foga/engine.ts`, `src/foga/recipes.ts` · test `src/calc/shelves.test.ts`*
@@ -259,14 +259,14 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   med advarsel: varer kan ikke settes synlig over toppen av standveggen. En ny hylle får 1300 mm, eller høyden til en
   hylle ved siden av, så raden fortsetter (H2). Hurtigvalg 500, 900, 1300, 1700 og 2100 mm (100 er laveste mulige, ikke
   en vanlig plassering). Én til i feltet går til neste hurtigvalg over, så under, så midt i største ledige mellomrom.
-  *Bjørn 8.11.2026, endret 9.11.2026 · `rules.shelf.min`, `max`, `high`, `step`, `heights`, `start` · kode `src/domain/shelves.ts` · test `src/domain/shelves.test.ts`*
+  *Bjørn 8.11.2026, endret 9.11.2026 · `rules.shelf.min`, `max`, `high`, `step`, `heights`, `start` · kode `src/domain/shelves/model.ts` · test `src/domain/shelves/shelves.test.ts`*
 - **H5 Lysmål.** Minst 100 mm lysmål mellom hyller over hverandre i samme felt, fra overkant nedre plate til underkant
   øvre. Veggrisset viser lysmålet, så kunden ser om utstyret får plass.
-  *Bjørn 8.11.2026 · `rules.shelf.gap` · kode `src/domain/shelves.ts` · test `src/domain/shelves.test.ts`*
+  *Bjørn 8.11.2026 · `rules.shelf.gap` · kode `src/domain/shelves/model.ts` · test `src/domain/shelves/shelves.test.ts`*
 - **H6 Hvor hyller kan stå.** Ikke i dørfelt eller åpning, ikke der en tekstilvegg dekker feltet eller holder stolpen,
   ikke på frittstående tekstil (43TX er ikke 94). Begge stolpene må ha ledig kanal mot hyllens side: ikke der en annen
   vegg går ut fra stolpen mot den siden (hjørne og T). Foran print og dekal er lov. Hylle i hjørne kommer senere.
-  *Bjørn 8.11.2026 · kode `src/domain/shelves.ts` · test `src/domain/shelves.test.ts`*
+  *Bjørn 8.11.2026 · kode `src/domain/fittings.ts`, `src/domain/shelves/model.ts` · test `src/domain/shelves/shelves.test.ts`*
 - **H7 Pris per hylle.** Samme pris per hylle alene og i rad, som systemvegg (fast katalogpris; kostmotoren gir kost og
   tid). Montering 3 min per hylle, vareplukk 10 min én gang per ordre med hyller. Stolpene er en del av veggen: bare
   plukklisten bryter ut knekter, 600 og plater.
@@ -274,7 +274,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 - **H8 Veggriss med hyller.** Arbeidsordren har et veggriss for hver veggside med hyller: hyllene målsatt fra gulv
   (overkant plate) og lysmålet mellom hyller over hverandre, med modulkjeden c/c under veggen. Veggskuffen viser det
   samme. Tilbudet viser hyller bare i 3D, uten veggriss.
-  *Bjørn 8.11.2026 · kode `src/ui/workorder/ShelfElevation.tsx`, `src/ui/plan/wallDrawer/elevationMeasure.ts`, `src/domain/shelves.ts` · test `src/ui/plan/wallDrawer/elevationMeasure.test.ts`, `src/domain/shelves.test.ts`*
+  *Bjørn 8.11.2026 · kode `src/ui/workorder/ShelfElevation.tsx`, `src/ui/plan/wallDrawer/elevationMeasure.ts`, `src/domain/shelves/model.ts` · test `src/ui/plan/wallDrawer/elevationMeasure.test.ts`, `src/domain/shelves/shelves.test.ts`*
 
 ## P · Plukkliste og arbeidsordre
 

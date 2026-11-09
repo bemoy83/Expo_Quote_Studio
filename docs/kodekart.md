@@ -45,7 +45,7 @@ kostgrunnlaget). Regel og kilde føres i `docs/byggeregler.md`.
 - Kalkyle: `calc/lines/walls.ts` (vegglinjer, arrangørens standvegger) · `calc/lines/swaps.ts` (platebytte) · hvem
   som betaler: `calc/context.ts` · `foga/fromVariant.ts`
 - Plan, 3D, skuff: `plan/layers/WallLayer.tsx`, tegne/viske `plan/pointer/stroke.ts`, dra `pointer/wall.ts`, farge plater på vegg som står med veggpennen `pointer/plates.ts` (klikk én plate, dra langs veggen flere; forhåndsvisning via `plan/next.ts`; tester i `plates.test.ts`) · `scene3d/build/walls.ts` (plater og dører), `scene3d/build/frame.ts` (stolper, justeringsfot, fotplater med 795) · `WallDrawer.tsx`, `drawerParts.tsx`, `elevation.tsx`
-- Veggskuffens deler i `plan/wallDrawer/`: `panels.tsx` (panel for farge og print, tekstil, dekal og dør),
+- Veggskuffens deler i `plan/wallDrawer/`: `panels.tsx` (panel for farge og print, tekstil, dekal, dør og feltets farge), `fittings.tsx` (Hyller og heng, valgt hylle),
   `WallElevation.tsx` (tegningen, slipp fra hyllen og hva som får henvisning), `ElevationDims.tsx` og `elevationMeasure.ts` (veggrisset: tekstil og print på siden, overskrift, modulkjede, høyder, plasseringsrad, stagkjede og henvisningslinjer, tekstilrammen slik den bygges i `textileDrawing`, med tester; kjedene med `plan/DimChain.tsx`; selve rammen med stag, skjøt og notat før motiv: `TextileFace` i `plan/elevation.tsx`, teksten i `ui/textileNote.ts`, i 3D `scene3d/build/note.ts`), `drag.ts` (dra og endre størrelse på ramme og dekal), `paint.ts`
   (malerspann og malerkost), `face.ts` (sidens navn og rom inntil)
 
@@ -122,12 +122,18 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 
 ### Hyller
 
-- Modell: `Shelf` (vegg, side, felt, høyde over gulv) · `domain/shelves.ts` (hvor en hylle kan stå `shelfBlocked`,
-  legge til `addShelf` og `addShelfRow` med høyden fra `penHeight`, en til (eller en rad til) `addShelvesAbove`, raden
-  `shelfRow` som flyttes, dras og slettes samlet med `moveShelves`, `dragShelves` og `removeShelves`, flytte eller kopiere til et felt på en vegg `placeShelves`, kopi i nærmeste ledige felt
-  `copyShelvesNear` (med stabelen: `feltShelves`), `spreadShelves` (Fordel jevnt), `tooHigh` og `highWarning` over den myke grensen, `fitShelves` etter
-  hver redigering i `ui/edits.ts`, knektene `shelfBrackets`) · verdiene i `rules.shelf` og `RECIPES.shelf`, reglene H1–H8 i
-  [byggeregler.md](byggeregler.md). Hyllene følger veggen i `replaceWalls` og `moveWall` (`domain/edit.ts`) og rommet
+- Veggtilbehør (hyller nå, heng senere; festes likt med lås i 94-stolpenes kanal, Bjørn 9.11.2026): `domain/fittings.ts`
+  (hvor tilbehør kan stå `fittingBlocked` H1/H6, stolpene `modulePosts`, feltene fra midten `fittingFelts`). Heng får
+  sin egen mappe ved siden av `domain/shelves/` og bruker de samme reglene.
+- Modell: `Shelf` (vegg, side, felt, høyde over gulv) · `domain/shelves/`: `model.ts` (hyllene på en side og i et felt,
+  høyde og lysmål, `shelfBlocked` = `fittingBlocked` for hylle, raden `shelfRow`, `offRow`, brettet i planen `shelfBox`,
+  sidene med hyller `shelfFaces`), `edit.ts` (legge til `addShelf` og `addShelfRow` med høyden fra `penHeight`, en til
+  (eller en rad til) `addShelvesAbove`, i et felt `addShelfToFelt`, raden flyttes, dras og slettes samlet med `moveShelves`,
+  `dragShelves` og `removeShelves`, flytte eller kopiere til et felt `placeShelves`, kopi i nærmeste ledige felt
+  `copyShelvesNear` (med stabelen: `feltShelves`), `spreadShelves` (Fordel jevnt), `fitShelves` etter hver redigering i
+  `ui/edits.ts`), `fill.ts` (fylle en hel side fra skuffen: `addShelfToFace` felt for felt, rad for rad,
+  `addShelfRowToFace`), `brackets.ts` (knektene `shelfBrackets`) · verdiene i `rules.shelf` og `RECIPES.shelf`, reglene
+  H1–H8 i [byggeregler.md](byggeregler.md). Hyllene følger veggen i `replaceWalls` og `moveWall` (`domain/edit.ts`) og rommet
   i `domain/rooms.ts`
 - Kalkyle: `calc/lines/shelves.ts` (6311, fast pris per hylle, kost fra knektene, platene, monteringen og vareplukk én
   gang per ordre, prisartiklene i `pricing/items.ts`) · plukklisten: `shelves` i `foga/structure.ts`, linjene i
@@ -142,7 +148,7 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
   unntatt `shelfOnly` (`chosenShelves` i `plan/selection.ts`, brukt av plan, skuff og 3D), pillen i
   `plan/SelectionPill.tsx` (Ned/Opp, Høyde med hurtigvalgene, Hylle til, Kopier, Bare denne); det pillen og skuffen gjør
   med valgte hyller i `plan/shelfActions.ts`
-- Skuff: `ShelfPanel` i `plan/wallDrawer/panels.tsx` (Hylle til, Kopier, Kopier feltet, Fordel jevnt; hyllene i feltet velges i veggrisset), og et felt valgt ved klikk på en plate i veggrisset (`felt` i `PlanSelection`, `FeltPanel` med to sider (`FeltPage`): farge og grafikk (platefarge, Print, Dekal) og hyller og heng (`addShelfToFelt`), ← → bytter felt, spann og kost slipper feltet; søppelbøtta `clearFelt`), tegnet
+- Skuff: «Hyller og heng» i `plan/wallDrawer/fittings.tsx` (én seksjon per slag tilbehør: `FeltFittings` for et felt, `WallFittings` for hele siden; heng får sin seksjon her) og `ShelfPanel` der (Hylle til, Kopier, Kopier feltet, Fordel jevnt; hyllene i feltet velges i veggrisset), og et felt valgt ved klikk på en plate i veggrisset (`felt` i `PlanSelection`, `FeltPanel` i `panels.tsx` for siden Farge og profilering (platefarge, Print; Dekal i Profilering), `FeltFittings` for Hyller og heng, byttet med `FeltPage`, ← → bytter felt, spann og kost slipper feltet; søppelbøtta `clearFelt`), tegnet
   `ShelfFront` med usynlig gripeflate (`plan/elevation.tsx`), dra og Alt + dra `useShelfDrag` (`plan/wallDrawer/drag.ts`), høydekjedene `shelfChains` (`elevationMeasure.ts`, tegnet i
   `ElevationDims.tsx`)
 - 3D: `scene3d/build/shelves.ts` (plate med usynlig gripeboks `shelf-grip`, 91F og 91FF fra omrisset i

@@ -4,7 +4,7 @@
 import { liftBeams } from '../calc/beamLift';
 import { variantBeams, type BeamLayout } from '../calc/beams';
 import { production, type Production } from '../calc/production';
-import { shelfBrackets } from '../domain/shelves';
+import { shelfBrackets } from '../domain/shelves/brackets';
 import type { Variant } from '../domain/types';
 import { builtModules, wallPoints, type BuiltModule } from '../domain/walls';
 import type { Rules } from '../rules/rules';
@@ -28,7 +28,7 @@ export interface Derived {
   barePosts?: number;
   /** Whether an opening's product is a curtain (catalog); without it every opening counts as a door. */
   curtain?: (product: string) => boolean;
-  /** Shelves and their brackets (domain/shelves.ts). */
+  /** Shelves and their brackets (domain/shelves/brackets.ts). */
   shelves?: { boards: number; end: number; twin: number };
 }
 

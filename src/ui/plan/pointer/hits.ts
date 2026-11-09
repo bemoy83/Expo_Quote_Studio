@@ -3,7 +3,7 @@
 import { innerBeamAt } from '../../../domain/innerBeams'
 import { footprintBox } from '../../../domain/objects'
 import { roomSideAt } from '../../../domain/rooms'
-import { shelfBox, shelvesOf } from '../../../domain/shelves'
+import { shelfBox, shelvesOf } from '../../../domain/shelves/model'
 import { faceAt } from '../../../domain/faces'
 import { offsetAlong, wallLength } from '../../../domain/grid'
 import type { Room, Variant } from '../../../domain/types'

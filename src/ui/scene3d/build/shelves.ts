@@ -5,7 +5,7 @@
 import * as THREE from 'three'
 import { faceNormal, sideOf } from '../../../domain/faces'
 import { pointAlong, pointKey, wallDirection } from '../../../domain/grid'
-import { shelvesOf } from '../../../domain/shelves'
+import { shelvesOf } from '../../../domain/shelves/model'
 import { chosenShelves } from '../../plan/selection'
 import type { Point } from '../../../domain/types'
 import { RECIPES } from '../../../foga/recipes'

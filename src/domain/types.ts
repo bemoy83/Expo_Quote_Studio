@@ -193,7 +193,7 @@ export interface Foil {
 
 /**
  * A shelf (hylle 6311): one board in one wall module, on brackets in the posts' face channels (byggeregler H1–H6,
- * domain/shelves.ts). Shelves side by side at the same height are a row and share the bracket between them.
+ * domain/shelves/, domain/fittings.ts). Shelves side by side at the same height are a row and share the bracket between them.
  */
 export interface Shelf {
   id: string;
@@ -248,7 +248,7 @@ export interface Variant {
   noBeams?: boolean;
   /** Innvendige takdragere the customer draws, always the exhibitor's (calc/innerBeams.ts). Omitted = none. */
   innerBeams?: InnerBeam[];
-  /** Shelves on wall faces (domain/shelves.ts). Omitted = none. */
+  /** Shelves on wall faces (domain/shelves/). Omitted = none. */
   shelves?: Shelf[];
 }
 

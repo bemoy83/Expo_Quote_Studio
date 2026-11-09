@@ -3,7 +3,7 @@
 // before the click, so the two never differ.
 import { fitDecor } from '../domain/decor'
 import { newlyClosedRooms, wallsToRoom } from '../domain/enclosures'
-import { fitShelves } from '../domain/shelves'
+import { fitShelves } from '../domain/shelves/edit'
 import { fitFreeTextiles } from '../domain/textile/free'
 import type { Point, Variant } from '../domain/types'
 import type { Motif } from '../persistence/file'

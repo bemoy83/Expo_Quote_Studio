@@ -1,7 +1,8 @@
 // What the pill and the wall drawer do with chosen shelves (hylle 6311, Bjørn 9.11.2026): the chosen shelf's row, or
 // only it with `shelfOnly` (chosenShelves). Each action edits the sketch in one step, or tells why it could not.
 import { sideOf, type FaceSide } from '../../domain/faces'
-import { addShelvesAbove, copyShelvesNear, feltShelves, highWarning, moveShelves, shelfRow, shelvesOf, spreadShelves, tooHigh, type ShelvesMove } from '../../domain/shelves'
+import { addShelvesAbove, copyShelvesNear, feltShelves, moveShelves, type ShelvesMove, spreadShelves } from '../../domain/shelves/edit'
+import { highWarning, shelfRow, shelvesOf, tooHigh } from '../../domain/shelves/model'
 import type { Shelf, Variant } from '../../domain/types'
 import { rules } from '../env'
 import { chosenShelves, type PlanSelection } from './selection'

@@ -4,7 +4,7 @@
 // moved and resized in the drawing, shelves moved up, down and sideways; motifs are clicked onto what is selected or dragged from the shelf onto the wall.
 // Without a selection it edits the wall itself: plate colour, remove wall. A door or curtain is chosen here too (from the
 // drawing, the plan or 3D): its settings on the left and the mini plan to move it in the middle (Bjørn 3.11.2026).
-// The parts are in wallDrawer/: the settings panels (panels.tsx), the drawing (WallElevation.tsx), dragging in it
+// The parts are in wallDrawer/: the settings panels (panels.tsx), «Hyller og heng» and a chosen shelf (fittings.tsx), the drawing (WallElevation.tsx), dragging in it
 // (drag.ts), the paint bucket and brush (paint.ts), the face's name and rooms (face.ts) and the drawer's words (text.ts).
 // This file picks what to show.
 import { AlignVerticalSpaceAround, DoorOpen, FlipHorizontal2, MoveHorizontal, Palette, Plus } from 'lucide-react'
@@ -14,7 +14,8 @@ import { addFoil, feltBlocked, foilsOn, removeFoil, updateFoil } from '../../dom
 import { eraseWalls } from '../../domain/edit'
 import { wallRal } from '../../domain/panels'
 import { clearDecor, clearFelt, printPlate, printsOn } from '../../domain/print'
-import { moveShelves, removeShelves, shelvesOn } from '../../domain/shelves'
+import { moveShelves, removeShelves } from '../../domain/shelves/edit'
+import { shelvesOn } from '../../domain/shelves/model'
 import { doorFace, openingById } from '../../domain/doors'
 import { wallLength, wallModules } from '../../domain/grid'
 import type { Variant } from '../../domain/types'
@@ -32,7 +33,8 @@ import { addTextile, fillTextile, removeTextile, textilesOn, updateTextile } fro
 import { faces, type FaceSide } from '../../domain/faces'
 import { faceName, roomsAgainst } from './wallDrawer/face'
 import { wallPaint, type PaintTool } from './wallDrawer/paint'
-import { ColourPanel, DoorPanel, FeltPanel, type FeltPage, FoilPanel, ShelfPanel, TextilePanel, WallExtras, WallShelf } from './wallDrawer/panels'
+import { FeltFittings, type FeltPage, ShelfPanel, WallFittings } from './wallDrawer/fittings'
+import { ColourPanel, DoorPanel, FeltPanel, FoilPanel, TextilePanel, WallShelf } from './wallDrawer/panels'
 import { wallHint, wallMeta, wallTitle } from './wallDrawer/text'
 import { WallElevation } from './wallDrawer/WallElevation'
 
@@ -224,11 +226,13 @@ export function WallDrawer(p: Props) {
 
             {S && <ShelfPanel v={v} H={S} w={w} s={s} sel={sel} select={select} onEdit={p.onEdit} onToast={p.onToast} />}
 
-            {Fe !== undefined && (
-              <FeltPanel v={v} w={w} s={s} m={Fe} page={page} mods={mods} motifs={motifs} pm={pm} base={base} twoFaces={fs.length > 1} setTool={setTool} select={select} onEdit={p.onEdit} onToast={p.onToast} />
+            {Fe !== undefined && page === 'extras' && <FeltFittings v={v} w={w} s={s} m={Fe} mods={mods} select={select} onEdit={p.onEdit} onToast={p.onToast} />}
+
+            {Fe !== undefined && page === 'decor' && (
+              <FeltPanel v={v} w={w} s={s} m={Fe} mods={mods} motifs={motifs} pm={pm} base={base} twoFaces={fs.length > 1} setTool={setTool} select={select} onEdit={p.onEdit} onToast={p.onToast} />
             )}
 
-            {!T && !F && !S && Fe === undefined && page === 'extras' && <WallExtras v={v} w={w} s={s} onEdit={p.onEdit} onToast={p.onToast} />}
+            {!T && !F && !S && Fe === undefined && page === 'extras' && <WallFittings v={v} w={w} s={s} onEdit={p.onEdit} onToast={p.onToast} />}
 
             {!T && !F && !S && Fe === undefined && page === 'decor' && <ColourPanel painting={painting} tool={tool} setTool={setTool} printing={printing} pm={pm} paint={paint} ral={ral} setPaint={setPaint} />}
           </>

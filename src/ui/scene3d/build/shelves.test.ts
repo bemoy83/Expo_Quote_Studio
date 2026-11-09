@@ -3,7 +3,7 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import { calc } from '../../../calc/calc'
-import { addShelfRow } from '../../../domain/shelves'
+import { addShelfRow } from '../../../domain/shelves/edit'
 import { createVariant } from '../../../domain/variant'
 import { catalog, rules } from '../../env'
 import { build, type Tag } from '../build'

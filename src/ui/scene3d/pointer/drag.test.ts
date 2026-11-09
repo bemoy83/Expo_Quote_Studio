@@ -2,7 +2,7 @@
 // shelf, a frame or a decal leaves the selection (and the drawer) as it was.
 import * as THREE from 'three'
 import { describe, expect, it, vi } from 'vitest'
-import { addShelfRow } from '../../../domain/shelves'
+import { addShelfRow } from '../../../domain/shelves/edit'
 import { createVariant } from '../../../domain/variant'
 import { rules } from '../../env'
 import type { PlanSelection } from '../../plan/selection'

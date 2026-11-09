@@ -2,7 +2,7 @@
 // the same wall and face stretches a row over more modules, the release lays them at the start height. A click in a
 // felt that already has shelves selects the lowest of them instead (more go on from the drawer). New shelves take the
 // height of a shelf beside them, so a row goes on as one row (Byggeregel H2).
-import { addShelf, addShelfRow, penHeight } from '../../../domain/shelves'
+import { addShelf, addShelfRow, penHeight } from '../../../domain/shelves/edit'
 import { mm } from '../../format'
 import { rules } from '../../env'
 import type { Drag, DragHandlers, P, PointerCtx } from './types'
