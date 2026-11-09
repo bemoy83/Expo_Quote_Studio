@@ -2,7 +2,7 @@
 // a shelf, or nothing (the wall itself: colour and print with the paint bucket and brush).
 import { AlignVerticalSpaceAround, ArrowLeft, ArrowRight, Copy, Layers, PaintBucket, Paintbrush, Palette, Plus, Repeat2 } from 'lucide-react'
 import type { Dispatch, ReactNode, SetStateAction } from 'react'
-import { addFoil, feltBlocked, updateFoil } from '../../../domain/decor'
+import { feltBlocked, updateFoil } from '../../../domain/decor'
 import { setPanels } from '../../../domain/panels'
 import { clearPrint, printPlate, printsOn } from '../../../domain/print'
 import { removeOpening } from '../../../domain/doors'
@@ -81,8 +81,10 @@ export function FoilPanel({ F, ratioOf, onEdit }: { F: Foil; ratioOf: (id?: stri
 }
 
 /**
- * The graphics shelf under the settings: a motif for the chosen decal, the motif «Print» lays on, or (nothing chosen)
- * print files to drag onto the wall. A chosen textile frame has its motifs in its fabric section.
+ * The Profilering section under the colour (Bjørn 9.11.2026: the same word as in the rail and the tool dock): the motif
+ * library, with what is laid on or beside the plates. With a felt chosen it sets the motif its «Print» and decal use and
+ * adds a decal; with the whole wall it is the print files to drag onto the wall, and a textile wall. A chosen decal picks
+ * its motif here. A chosen textile frame has its motifs in its fabric section.
  */
 export function WallShelf(props: {
   F?: Foil
@@ -95,20 +97,21 @@ export function WallShelf(props: {
   setPrintMotif: (id: string) => void
   onEdit: Edit
   onUpload: (f: File) => void
+  children?: ReactNode
 }) {
-  const { F, felt, printing, pm, motifs, ratioOf, setPrintMotif, onEdit, onUpload } = props
+  const { F, felt, printing, pm, motifs, ratioOf, setPrintMotif, onEdit, onUpload, children } = props
   const [title, aside] = F
     ? ['Motiv', findMotif(motifs, F.motif)?.name ?? 'ikke valgt']
-    : felt
-      ? ['Motiv', pm?.name ?? 'last opp et motiv']
-      : printing
-        ? ['Print', pm?.name ?? 'last opp et motiv']
-        : ['Grafikk', 'dra til veggen']
+    : ['Profilering', felt || printing ? (pm ? `motiv ${pm.name}` : 'last opp et motiv') : 'dra til veggen']
   const value = F ? (F.motif ?? null) : printing || felt ? pm?.id : undefined
   const onPick = F
     ? (m: string) => onEdit((x) => updateFoil(x, rules, F.id, { motif: m }, ratioOf(m)))
     : (felt ?? (printing ? setPrintMotif : undefined))
-  return <Shelf title={title} aside={aside} motifs={motifs} value={value} onPick={onPick} onUpload={onUpload} />
+  return (
+    <Shelf title={title} aside={aside} motifs={motifs} value={value} onPick={onPick} onUpload={onUpload}>
+      {children}
+    </Shelf>
+  )
 }
 
 /** The wall itself: the paint bucket and the brush, and the palette (a colour or «Print»). */
@@ -181,7 +184,7 @@ export function DoorPanel(props: {
       <div className="wd-foot">
         <div className="wd-actions">
           <Button variant="ghost" icon={Palette} onClick={() => select({})}>
-            Farge og grafikk
+            Farge og profilering
           </Button>
         </div>
       </div>
@@ -279,7 +282,8 @@ export type FeltPage = 'decor' | 'extras'
 
 /**
  * A felt chosen in the drawing (Bjørn 9.11.2026): choose first, then act. Two pages, switched at the foot of the drawer
- * as a door is: «Farge og grafikk» (this plate's colour, both faces, or «Print» on this face, and a decal) and
+ * as a door is: «Farge og profilering» (this plate's colour, both faces, or «Print» on this face; the Profilering
+ * section under it adds a decal) and
  * «Hyller og heng» (what is fitted to the felt; one row per kind, so more kinds slot in). The paint bucket and brush are
  * on the colour page too: picking one lets the felt go and colours the wall as before, so the whole wall can be filled
  * without leaving the drawer.
@@ -295,13 +299,12 @@ export function FeltPanel(props: {
   pm: Motif | undefined
   base: (key: string) => string
   twoFaces: boolean
-  ratioOf: (id?: string) => number
   setTool: (t: PaintTool) => void
   select: (x: Partial<PlanSelection>) => void
   onEdit: Edit
   onToast: (t: string) => void
 }) {
-  const { v, w, s, m, page, mods, motifs, pm, base, twoFaces, ratioOf, setTool, select, onEdit, onToast } = props
+  const { v, w, s, m, page, mods, motifs, pm, base, twoFaces, setTool, select, onEdit, onToast } = props
   const key = mods[m]!.key
   const plate = mods[m]!.plate
   const printed = printsOn(v, w.id, s).find((f) => f.module === m)
@@ -340,20 +343,13 @@ export function FeltPanel(props: {
     )
   }
 
-  const noDecal = feltBlocked(v, rules, w.id, m, s)
+  const noPrint = feltBlocked(v, rules, w.id, m, s, true)
   /** A colour on this plate (the print on this face comes off: the last stroke wins), or the chosen motif over it. */
   const pick = (r: string) => {
     if (r !== PRINT) return onEdit((x) => clearPrint(setPanels(x, [key], r, base), w.id, s, [m]))
     if (!pm) return onToast('Last opp et motiv i grafikken først')
-    const no = feltBlocked(v, rules, w.id, m, s, true)
-    if (no) return onToast(no)
+    if (noPrint) return onToast(noPrint)
     if (printed?.motif !== pm.id || printed.run) onEdit((x) => printPlate(x, rules, w.id, m, s, pm.id))
-  }
-  const addDecal = () => {
-    const r = addFoil(v, rules, w.id, m, s, pm?.id, ratioOf(pm?.id))
-    if ('error' in r) return onToast(r.error)
-    onEdit(() => r.v)
-    select({ foilId: r.id })
   }
   /** The bucket or brush: the felt lets go and the wall is coloured as with nothing chosen. */
   const take = (t: PaintTool) => {
@@ -373,12 +369,7 @@ export function FeltPanel(props: {
       }
     >
       <PlatePalette value={printed ? PRINT : plate} print={{ motif: pm }} onPick={pick} />
-      {noDecal ? <p className="set-note">{noDecal}</p> : twoFaces && !printed && <p className="set-note">Fargen gjelder platen på begge sider</p>}
-      <div className="wd-actions">
-        <Button variant="ghost" icon={Plus} onClick={addDecal} disabled={!!noDecal || !!printed}>
-          Dekal
-        </Button>
-      </div>
+      {noPrint ? <p className="set-note">{noPrint}</p> : twoFaces && !printed && <p className="set-note">Fargen gjelder platen på begge sider</p>}
     </Section>
   )
 }

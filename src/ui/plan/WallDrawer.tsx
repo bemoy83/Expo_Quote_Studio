@@ -10,7 +10,7 @@
 import { AlignVerticalSpaceAround, DoorOpen, FlipHorizontal2, MoveHorizontal, Palette, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { production, wallLabel } from '../../calc/production'
-import { foilsOn, removeFoil, updateFoil } from '../../domain/decor'
+import { addFoil, feltBlocked, foilsOn, removeFoil, updateFoil } from '../../domain/decor'
 import { eraseWalls } from '../../domain/edit'
 import { wallRal } from '../../domain/panels'
 import { clearDecor, clearFelt, printPlate, printsOn } from '../../domain/print'
@@ -106,6 +106,17 @@ export function WallDrawer(p: Props) {
       return select({ shelfId: r.id })
     }
     p.onToast('Ingen ledige felt for hylle på denne siden')
+  }
+
+  /** Why the chosen felt takes no decal: blocked (an opening, a textile frame over it) or printed over the whole plate. */
+  const feltFoil = (m: number) => feltBlocked(v, rules, w.id, m, s) ?? (printsOn(v, w.id, s).some((f) => f.module === m) ? 'Feltet har print' : null)
+  /** A decal in the middle of the chosen felt, with the motif chosen in Profilering; it is then chosen. */
+  const addDecal = () => {
+    if (Fe === undefined) return
+    const r = addFoil(v, rules, w.id, Fe, s, pm?.id, ratioOf(pm?.id))
+    if ('error' in r) return p.onToast(r.error)
+    p.onEdit(() => r.v)
+    select({ foilId: r.id })
   }
 
   const addFrame = () => {
@@ -226,13 +237,27 @@ export function WallDrawer(p: Props) {
             {S && <ShelfPanel v={v} H={S} w={w} s={s} sel={sel} select={select} onEdit={p.onEdit} onToast={p.onToast} />}
 
             {Fe !== undefined && (
-              <FeltPanel v={v} w={w} s={s} m={Fe} page={page} mods={mods} motifs={motifs} pm={pm} base={base} twoFaces={fs.length > 1} ratioOf={ratioOf} setTool={setTool} select={select} onEdit={p.onEdit} onToast={p.onToast} />
+              <FeltPanel v={v} w={w} s={s} m={Fe} page={page} mods={mods} motifs={motifs} pm={pm} base={base} twoFaces={fs.length > 1} setTool={setTool} select={select} onEdit={p.onEdit} onToast={p.onToast} />
             )}
 
             {!T && !F && !S && Fe === undefined && <ColourPanel painting={painting} tool={tool} setTool={setTool} printing={printing} pm={pm} paint={paint} ral={ral} setPaint={setPaint} />}
           </>
         )}
-        {!O && !T && !S && !(Fe !== undefined && page === 'extras') && <WallShelf F={F} felt={feltShelf} printing={printing} pm={pm} motifs={motifs} ratioOf={ratioOf} setPrintMotif={setPrintMotif} onEdit={p.onEdit} onUpload={p.onUpload} />}
+        {!O && !T && !S && !(Fe !== undefined && page === 'extras') && (
+          <WallShelf F={F} felt={feltShelf} printing={printing} pm={pm} motifs={motifs} ratioOf={ratioOf} setPrintMotif={setPrintMotif} onEdit={p.onEdit} onUpload={p.onUpload}>
+            {Fe !== undefined ? (
+              <Button variant="ghost" icon={Plus} onClick={addDecal} disabled={!!feltFoil(Fe)}>
+                Dekal
+              </Button>
+            ) : (
+              !F && (
+                <Button variant="ghost" icon={Plus} onClick={addFrame}>
+                  Tekstilvegg
+                </Button>
+              )
+            )}
+          </WallShelf>
+        )}
         {!O && (
           <div className="wd-foot">
             <Section
@@ -259,7 +284,7 @@ export function WallDrawer(p: Props) {
                   shelf goes back to its felt's colour and graphics */}
               {Fe !== undefined && (
                 <Button variant="ghost" icon={page === 'extras' ? Palette : AlignVerticalSpaceAround} onClick={() => setPage(page === 'extras' ? 'decor' : 'extras')}>
-                  {page === 'extras' ? 'Farge og grafikk' : 'Hyller og heng'}
+                  {page === 'extras' ? 'Farge og profilering' : 'Hyller og heng'}
                 </Button>
               )}
               {S && (
@@ -271,14 +296,11 @@ export function WallDrawer(p: Props) {
                     select({ felt: S.module })
                   }}
                 >
-                  Farge og grafikk
+                  Farge og profilering
                 </Button>
               )}
               {!T && !F && !S && Fe === undefined && (
                 <>
-                  <Button variant="ghost" icon={Plus} onClick={addFrame}>
-                    Tekstilvegg
-                  </Button>
                   <Button variant="ghost" icon={Plus} onClick={addShelfHere}>
                     Hylle
                   </Button>

@@ -150,16 +150,19 @@ function MotifGrid({ motifs, value, onPick, onUpload }: { motifs: Motif[]; value
  * The drawer's graphics, under the settings (detail height only): print files only, upload fixed in the title row.
  * Textile frames are not graphics: they are added with «Tekstilvegg» at the foot of the drawer.
  */
-export function Shelf({ title, aside, motifs, value, onPick, onUpload }: {
+export function Shelf({ title, aside, motifs, value, onPick, onUpload, children }: {
   title: string
   aside?: string
   motifs: Motif[]
   value?: string | null
   onPick?: (id: string) => void
   onUpload: (f: File) => void
+  /** Buttons over the motifs (Profilering: add a decal or a textile wall). */
+  children?: ReactNode
 }) {
   return (
     <Section title={title} aside={aside} className="wd-sec" tools={motifs.length > 0 && <UploadButton onUpload={onUpload} />}>
+      {children && <div className="wd-actions">{children}</div>}
       <MotifGrid motifs={motifs} value={value} onPick={onPick} onUpload={onUpload} />
     </Section>
   )

@@ -117,12 +117,14 @@ Bjørn 9.11.2026: i veggskuffen velger du først, så handler du. Klikk en plate
 feltet, klikk den igjen for hele veggen. Feltet har to sider, byttet med knappen nederst i skuffen slik døren har sin
 vei tilbake til paletten (`FeltPanel` i ui/plan/wallDrawer/panels.tsx):
 
-- **Farge og grafikk** (først): «FELT n · farge». Paletten farger bare denne platen (begge sider, det er én plate).
-  «Print» sist i paletten legger hele motivet fra grafikkhyllen på platen, på siden som vises. Siste strøk vinner som med
-  kosten. Grafikkhyllen velger motivet for Print og Dekal; har feltet print, får det nytt motiv med en gang. «+ Dekal»
-  legger en dekal midt i feltet (ikke på et printet felt).
+- **Farge og profilering** (først), med samme ord som skinnen og verktøybrikken (Bjørn 9.11.2026). «FELT n · farge»:
+  paletten er det som dekker platen. En farge gjelder bare denne platen (begge sider, det er én plate); «Print» sist
+  legger hele motivet på platen, på siden som vises. Siste strøk vinner som med kosten. Under ligger seksjonen
+  «PROFILERING» med motivbiblioteket: motivet du velger der brukes av Print og Dekal, og har feltet print, får det nytt
+  motiv med en gang. «+ Dekal» legger en dekal midt i feltet (ikke på et printet felt). Med hele veggen valgt har
+  Profilering «+ Tekstilvegg» og motivene som dras til veggen.
 - **Hyller og heng**: tilbehør som festes i feltet, én seksjon per slag (hyller nå, heng senere). «Hylle til i feltet»
-  legger til og velger hyllen. En valgt hylle har «Farge og grafikk» nederst tilbake til feltet; fjernes hyllen, står
+  legger til og velger hyllen. En valgt hylle har «Farge og profilering» nederst tilbake til feltet; fjernes hyllen, står
   du på feltets hyller igjen. Tilbehørssiden er bygget for å skalere: nye slag får en egen seksjon der.
 - ← → bytter felt og beholder siden. Dører er ikke felt: klikk på en dør velger døren.
 - Malerspann og malerkost ligger også på fargesiden. Velger du ett av dem, slipper feltet, og du farger hele veggen eller
