@@ -186,6 +186,18 @@ export function clearDecor(v: Variant, wallId: string): Variant {
   return foils.length === v.foils.length && cleared === v ? v : { ...cleared, foils };
 }
 
+/**
+ * The wall drawer's trash with one felt chosen (Bjørn 9.11.2026): the plate's own colour and the print on this face go,
+ * so the plate shows its wall's colour again. Decals and shelves stay; they are removed one by one.
+ */
+export function clearFelt(v: Variant, wallId: string, module: number, s: FaceSide): Variant {
+  const w = v.walls.find((x) => x.id === wallId);
+  const key = w && wallModules(w)[module]?.key;
+  if (!w || !key) return v;
+  const own = builtModules(v).some((m) => m.key === key && m.wallId === w.id);
+  return clearPrint(own ? clearPanels(v, [key]) : v, w.id, s, [module]);
+}
+
 /** Stretched prints that still cover more than one plate: each needs its print file fitted and cut per plate. */
 export function stretchedRuns(v: Variant): Map<string, Foil[]> {
   const walls = new Set(v.walls.map((w) => w.id));

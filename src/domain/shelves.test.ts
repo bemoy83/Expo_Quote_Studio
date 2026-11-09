@@ -3,7 +3,7 @@ import { DOOR } from '../catalog/defaultCatalog';
 import { RULES } from '../rules/rules';
 import { paintWalls } from './edit';
 import { moduleKey } from './grid';
-import { addShelf, addShelfRow, addShelfToFelt, addShelvesAbove, clearBetween, copyShelvesNear, dragShelves, feltShelves, fitShelves, highWarning, moveShelves, offRow, penHeight, placeShelves, removeShelves, shelfBlocked, shelfBrackets, shelfFaces, shelfHeight, shelfRow, shelvesOf, spreadShelves, tooHigh } from './shelves';
+import { addShelf, addShelfRow, addShelfRowToFace, addShelfToFace, addShelfToFelt, addShelvesAbove, clearBetween, copyShelvesNear, dragShelves, feltShelves, fitShelves, highWarning, moveShelves, offRow, penHeight, placeShelves, removeShelves, shelfBlocked, shelfBrackets, shelfFaces, shelfHeight, shelfRow, shelvesOf, spreadShelves, tooHigh } from './shelves';
 
 const addShelfAbove = (v: Variant, id: string) => addShelvesAbove(v, RULES, [id]);
 import { addTextile } from './textile/inFrame';
@@ -308,3 +308,41 @@ describe('one more shelf in a felt chosen in the wall drawer (Bjørn 9.11.2026)'
     expect(addShelfToFelt(row(), RULES, 'side-back', 0, 1)).toHaveProperty('error');
   });
 });
+
+describe('filling a whole face from the wall drawer (Bjørn 9.11.2026)', () => {
+  const free = (v: Variant) => [0, 1, 2, 3, 4, 5].filter((m) => !shelfBlocked(v, 'side-back', m, 1))
+
+  it('«+ Hylle» goes felt by felt, row by row, until there is no room', () => {
+    let v = row()
+    const n = free(v).length
+    expect(n).toBeGreaterThan(1)
+    for (let i = 0; i < n; i++) v = ok(addShelfToFace(v, RULES, 'side-back', 1)).v
+    // The first row: every free felt has one, all at the start height
+    expect(new Set(shelvesOf(v).map((x) => x.module)).size).toBe(n)
+    expect(shelvesOf(v).every((x) => x.y === RULES.shelf.start)).toBe(true)
+    // The next press starts the next row, and the one after goes on in another felt
+    v = ok(addShelfToFace(v, RULES, 'side-back', 1)).v
+    v = ok(addShelfToFace(v, RULES, 'side-back', 1)).v
+    const second = shelvesOf(v).slice(n)
+    expect(second.every((x) => x.y === 1.7)).toBe(true)
+    expect(new Set(second.map((x) => x.module)).size).toBe(2)
+    let r: ReturnType<typeof addShelfToFace> = { v, id: '' }
+    for (let i = 0; i < 100 && !('error' in r); i++) r = addShelfToFace((v = r.v), RULES, 'side-back', 1)
+    expect(shelvesOf(v)).toHaveLength(n * RULES.shelf.heights.length)
+  })
+
+  it('«+ Hyllerad» puts a row in every free felt, the next press the next quick pick, then no room', () => {
+    let v = row()
+    const n = free(v).length
+    const r1 = ok(addShelfRowToFace(v, RULES, 'side-back', 1))
+    expect(r1.ids).toHaveLength(n)
+    v = r1.v
+    const r2 = ok(addShelfRowToFace(v, RULES, 'side-back', 1))
+    expect(r2.ids).toHaveLength(n)
+    v = r2.v
+    expect(new Set(shelvesOf(v).map((x) => x.y))).toEqual(new Set([1.3, 1.7]))
+    for (let i = 0; i < 3; i++) v = ok(addShelfRowToFace(v, RULES, 'side-back', 1)).v
+    expect(new Set(shelvesOf(v).map((x) => x.y))).toEqual(new Set(RULES.shelf.heights))
+    expect('error' in addShelfRowToFace(v, RULES, 'side-back', 1)).toBe(true)
+  })
+})

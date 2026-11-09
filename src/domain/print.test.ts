@@ -6,7 +6,7 @@ import { RULES } from '../rules/rules';
 import { addFoil, fitDecor, updateFoil } from './decor';
 import { paintWalls, setWallPlate } from './edit';
 import { setPanels } from './panels';
-import { clearDecor, clearPrint, cropWindow, fillPlates, hiddenPlates, printPlate, printPlates, printWall, stretchCrops, stretchedRuns } from './print';
+import { clearDecor, clearFelt, clearPrint, cropWindow, fillPlates, hiddenPlates, printPlate, printPlates, printWall, stretchCrops, stretchedRuns } from './print';
 import { r2 } from '../calc/referenceStands';
 import { wallModules } from './grid';
 import type { Variant } from './types';
@@ -148,6 +148,24 @@ describe('bucket and reset', () => {
     expect(r.foils).toHaveLength(0);
     expect(r.panels).toBeUndefined();
     expect(r.textiles).toHaveLength(1);
+  });
+});
+
+describe('the trash on one felt (Bjørn 9.11.2026)', () => {
+  it('takes the plate\'s own colour and this face\'s print off, decals and the neighbours stay', () => {
+    const keys = wallModules(back(row())).map((m) => m.key);
+    let v = setPanels(row(), keys.slice(1, 3), '3020', () => row().defaultPlate);
+    v = printPlate(v, RULES, 'side-back', 1, 1, 'logo');
+    v = setPanels(v, [keys[1]], '3020', () => v.defaultPlate);
+    v = ok(addFoil(v, RULES, 'side-back', 2, 1, 'small', 1)).v;
+    v = printPlate(v, RULES, 'side-back', 3, 1, 'logo');
+    const r1 = clearFelt(v, 'side-back', 1, 1);
+    expect(r1.panels).toEqual({ [keys[2]]: '3020' });
+    expect(r1.foils.map((f) => f.module).sort()).toEqual([2, 3]);
+    const r2 = clearFelt(r1, 'side-back', 2, 1);
+    expect(r2.panels).toBeUndefined();
+    expect(r2.foils.filter((f) => !f.full).map((f) => f.module)).toEqual([2]);
+    expect(clearFelt(r2, 'side-back', 0, 1)).toBe(r2);
   });
 });
 
