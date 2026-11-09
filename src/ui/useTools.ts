@@ -61,6 +61,7 @@ export function useTools({ v, res, motifs, onPick, onErase }: ToolsInput) {
     if (t === 'wall') return { kind: 'wall', ral: wallRal }
     if (t === 'floor') return { kind: 'floor', product: Object.keys(res.keyFigures.floor)[0] ?? '5902' }
     if (t === 'profile') return { kind: 'textile' }
+    if (t === 'fitting') return { kind: 'shelf' }
     const used = v.objects[0]?.product
     return { kind: 'object', product: used ?? catalog.products.find((x) => x.kind === 'object' && !x.opening)!.variants[0].artnr }
   }

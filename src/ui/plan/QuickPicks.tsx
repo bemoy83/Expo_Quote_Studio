@@ -219,6 +219,21 @@ function quickContent(p: QuickPicksProps): ReactNode {
     )
   }
 
+  if (tool === 'fitting') {
+    // Hyller: the shelf pen for now; heng (hanging fittings) joins it here later.
+    return (
+      <>
+        {head}
+        <QBtn on={brush?.kind === 'shelf'} title="Hylle 30 cm i et veggfelt · klikk en vegg, dra for flere" label="Hylle" onClick={() => onPick({ kind: 'shelf' })}>
+          <ShelfIcon />
+          Hylle
+        </QBtn>
+        <Sep />
+        {more}
+      </>
+    )
+  }
+
   // Møbel
   const objects = catalog.products.filter((x) => x.kind === 'object' && !x.opening && mainGroupOf(x.group) === 'mob')
   return (
@@ -235,11 +250,6 @@ function quickContent(p: QuickPicksProps): ReactNode {
             </button>
           )
         })}
-      <Sep />
-      <QBtn on={brush?.kind === 'shelf'} title="Hylle 30 cm i et veggfelt · klikk en vegg, dra for flere" label="Hylle" onClick={() => onPick({ kind: 'shelf' })}>
-        <ShelfIcon />
-        Hylle
-      </QBtn>
       <Sep />
       {more}
     </>

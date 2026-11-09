@@ -27,8 +27,9 @@ export type Brush =
   | { kind: 'shelf' };
 
 /** The drawing tools in the dock. Each one remembers its own brush (pen); the product chosen decides which tool draws it.
- * Openings and inner beams belong to Vegg, motifs to Profilering, shelves to Møbel. */
-export type PenTool = 'wall' | 'floor' | 'profile' | 'object'
+ * Openings and inner beams belong to Vegg, motifs to Profilering. Shelves have their own tool, Hyller (Bjørn 9.11.2026:
+ * not under Møbel), where later wall fittings (heng) join them. */
+export type PenTool = 'wall' | 'floor' | 'profile' | 'fitting' | 'object'
 export type DockTool = 'select' | PenTool | 'erase'
 
 export function penToolOf(b: Brush): PenTool {
@@ -42,8 +43,9 @@ export function penToolOf(b: Brush): PenTool {
     case 'textile':
     case 'motif':
       return 'profile'
-    case 'object':
     case 'shelf':
+      return 'fitting'
+    case 'object':
       return 'object'
   }
 }
@@ -87,12 +89,13 @@ export function gridSteps(brush: Brush | null, rules: Rules): readonly GridStep[
 export type Layer = Exclude<Highlight, null>
 
 /** Layers that stay at full strength while a pen draws or erases; the rest are toned down so what the pen works on
- * stands out. Vegg keeps everything on the walls, Profilering keeps the walls it hangs on, Møbel keeps the walls it
- * must clear. */
+ * stands out. Vegg keeps everything on the walls, Profilering and Hyller keep the walls they hang on (and what is on
+ * them), Møbel keeps the walls it must clear. */
 const PEN_LAYERS: Record<PenTool, readonly Layer[]> = {
   wall: ['walls', 'openings', 'beams', 'textile', 'foil'],
   floor: ['floor'],
   profile: ['walls', 'openings', 'textile', 'foil'],
+  fitting: ['walls', 'openings', 'textile', 'foil'],
   object: ['walls', 'openings', 'objects'],
 }
 

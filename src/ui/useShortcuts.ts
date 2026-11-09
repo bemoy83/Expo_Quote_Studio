@@ -1,4 +1,4 @@
-// Keyboard on the sketch screen: V S G T M E (dock tools), P (last pen), R (turn a lane, furniture or a frittstående
+// Keyboard on the sketch screen: V S G T H M E (dock tools), P (last pen), R (turn a lane, furniture or a frittstående
 // tekstilvegg, or the roll direction of the pen), Escape, ⌘Z / ⇧⌘Z, and Delete or Backspace on the selection (plan/selection.ts says what goes).
 import { useEffect } from 'react'
 import { rotateLane } from '../domain/floor/edit'
@@ -8,7 +8,7 @@ import { turnFree, turnObject } from './plan/turn'
 import type { DockTool } from './tools'
 import type { Tools } from './useTools'
 
-const DOCK_KEYS: Record<string, DockTool> = { v: 'select', s: 'wall', g: 'floor', t: 'profile', m: 'object', e: 'erase' }
+const DOCK_KEYS: Record<string, DockTool> = { v: 'select', s: 'wall', g: 'floor', t: 'profile', h: 'fitting', m: 'object', e: 'erase' }
 
 interface Shortcuts {
   v: Variant
