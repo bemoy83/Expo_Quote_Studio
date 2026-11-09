@@ -8,7 +8,7 @@ import { doorLevels, doorRal, doorWindows } from '../../../domain/doors'
 import { felt, type FaceSide } from '../../../domain/faces'
 import { cropWindow, plateCrop } from '../../../domain/print'
 import { textileBox } from '../../../domain/textile/inFrame'
-import { shelfStacks } from '../../../domain/shelves'
+import { shelfRow, shelfStacks } from '../../../domain/shelves'
 import type { Foil, Opening, Shelf, TextileWall, Variant, Wall } from '../../../domain/types'
 import { wallRal } from '../../../domain/panels'
 import type { BuiltModule } from '../../../domain/walls'
@@ -53,8 +53,10 @@ interface Props {
   T: TextileWall | undefined
   F: Foil | undefined
   O: Opening | undefined
-  /** The chosen shelf. */
+  /** The chosen shelf, the shelves chosen with it (its row, or only it with `shelfOnly`). */
   S: Shelf | undefined
+  chosen: string[]
+  shelfOnly?: boolean
   motifs: Motif[]
   label: string
   painting: boolean
@@ -75,7 +77,7 @@ interface Props {
 }
 
 export function WallElevation(p: Props) {
-  const { v, w, s, L, H, mods, tex, pieceOf, foils, shelves, rooms, T, F, O, S, motifs, label, painting, printing, tool, paintAt, doorModules, ratioOf, select, selectDoor } = p
+  const { v, w, s, L, H, mods, tex, pieceOf, foils, shelves, rooms, T, F, O, motifs, label, painting, printing, tool, paintAt, doorModules, ratioOf, select, selectDoor } = p
   const svg = useRef<SVGSVGElement>(null)
   const [spot, setSpot] = useState<DropSpot | null>(null)
   /** True from a press on a plate until it is let go: the brush sweeps over the plates entered meanwhile. */
@@ -301,10 +303,12 @@ export function WallElevation(p: Props) {
                 y={f.y}
                 H={H}
                 u={fr.u}
-                on={S?.id === f.id}
+                on={p.chosen.includes(f.id)}
                 style={{ cursor: 'move' }}
                 pointerEvents={painting ? 'none' : undefined}
-                onPointerDown={(e) => shelfDrag(e, f)}
+                onPointerDown={(e) =>
+                  p.chosen.includes(f.id) ? shelfDrag(e, f, p.chosen, p.shelfOnly) : shelfDrag(e, f, shelfRow(v, f.id).map((x) => x.id))
+                }
               />
             )
           })}

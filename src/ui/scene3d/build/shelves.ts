@@ -5,7 +5,7 @@
 import * as THREE from 'three'
 import { faceNormal, sideOf } from '../../../domain/faces'
 import { pointAlong, pointKey, wallDirection } from '../../../domain/grid'
-import { shelvesOf } from '../../../domain/shelves'
+import { shelfRow, shelvesOf } from '../../../domain/shelves'
 import type { Point } from '../../../domain/types'
 import { RECIPES } from '../../../foga/recipes'
 import { rules } from '../../env'
@@ -31,12 +31,14 @@ export function buildShelves(c: BuildContext) {
   const inset = (rules.wall.cc - width) / 2
   /** The boards meeting at each bracket: post, face and height → the directions along the wall their boards lie in. */
   const brackets = new Map<string, { p: Point; n: Point; y: number; dirs: number[]; wallId: string; dir: Point }>()
+  // The chosen shelf glows with its row, or alone with shelfOnly (plan/selection.ts chosenShelves)
+  const chosen = new Set(!sel.shelfId ? [] : sel.shelfOnly ? [sel.shelfId] : shelfRow(v, sel.shelfId).map((x) => x.id))
   for (const f of shelvesOf(v)) {
     const w = v.walls.find((x) => x.id === f.wallId)
     if (!w) continue
     const s = sideOf(v, f)
     const n = faceNormal(w, s)
-    const on = sel.shelfId === f.id
+    const on = chosen.has(f.id)
     const tag: Tag = { layer: 'objects', pick: { wallId: w.id, shelfId: f.id } }
     along(pointAlong(w, f.module + inset), pointAlong(w, f.module + 1 - inset), width, t, depth, f.y - t, mat('objects', BOARD, { roughness: 0.55, ...selectGlow(on) }), tag, s * (inner + depth / 2))
     // Its two brackets: at the module's start the board lies ahead along the wall (+1), at its end behind (−1)

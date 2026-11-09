@@ -7,7 +7,7 @@ import { removeFill } from '../../domain/floor/rollFill'
 import { removeInnerBeam } from '../../domain/innerBeams'
 import { removeObject } from '../../domain/objects'
 import { removeRoom } from '../../domain/rooms'
-import { removeShelf } from '../../domain/shelves'
+import { removeShelves, shelfRow } from '../../domain/shelves'
 import { removeFreeTextile, type FaceKey } from '../../domain/textile/free'
 import { removeTextile } from '../../domain/textile/inFrame'
 import type { Variant } from '../../domain/types'
@@ -25,8 +25,10 @@ export interface PlanSelection {
   freeFace?: FaceKey
   /** An innvendig takdrager. */
   beamId?: string
-  /** A shelf (hylle 6311), chosen in the wall drawer of its wall, on its face. */
+  /** A shelf (hylle 6311), chosen in the wall drawer of its wall, on its face. With it comes its row (the shelves beside it
+   *  at its height), unless `shelfOnly`: then only this one (chosenShelves). */
   shelfId?: string
+  shelfOnly?: boolean
   /** A door or curtain, chosen in the wall drawer of the wall it stands in. */
   openingId?: string
   /** A lane of engangsteppe placed on its own: its top left cell. */
@@ -76,7 +78,7 @@ export function deleteSelection(v: Variant, sel: PlanSelection): { edit: (v: Var
   // A frame or decal: the wall drawer stays on its face
   if (textileId) return { edit: (x) => removeTextile(x, textileId), select: { wallId: sel.wallId, side: sel.side } }
   if (foilId) return { edit: (x) => removeFoil(x, foilId), select: { wallId: sel.wallId, side: sel.side } }
-  if (shelfId) return { edit: (x) => removeShelf(x, shelfId), select: { wallId: sel.wallId, side: sel.side } }
+  if (shelfId) return { edit: (x) => removeShelves(x, chosenShelves(x, sel)), select: { wallId: sel.wallId, side: sel.side } }
   if (freeTextileId) return { edit: (x) => removeFreeTextile(x, freeTextileId), select: {} }
   if (beamId) return { edit: (x) => removeInnerBeam(x, beamId), select: {} }
   if (roomId) return { edit: (x) => removeRoom(x, roomId), select: {} }
@@ -84,4 +86,10 @@ export function deleteSelection(v: Variant, sel: PlanSelection): { edit: (v: Var
   if (openingId) return { edit: (x) => removeOpening(x, openingId), select: doorWall(v, sel) }
   if (objectId) return { edit: (x) => removeObject(x, objectId), select: {} }
   return null
+}
+
+/** The shelves a selection acts on: the chosen shelf's row, or only that shelf with `shelfOnly` (Bjørn 9.11.2026). */
+export function chosenShelves(v: Variant, sel: PlanSelection): string[] {
+  if (!sel.shelfId) return []
+  return sel.shelfOnly ? [sel.shelfId] : shelfRow(v, sel.shelfId).map((x) => x.id)
 }

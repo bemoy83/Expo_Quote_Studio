@@ -24,7 +24,7 @@ describe('shelves in 3D', () => {
     const boards = all.filter((m) => (m.userData as Tag).pick?.shelfId)
     expect(boards).toHaveLength(2)
     const b = box(boards[0])
-    expect(r(b.max.y)).toBe(1500)
+    expect(r(b.max.y)).toBe(1300)
     expect(r(b.max.y - b.min.y)).toBe(18)
     expect([r(b.min.z + 1.5), r(b.max.z + 1.5)]).toEqual([10, 310])
     expect(r(b.max.x - b.min.x)).toBe(976)
@@ -40,7 +40,7 @@ describe('shelves in 3D', () => {
       const b = box(m)
       expect([r(b.min.z + 1.5), r(b.max.z + 1.5)]).toEqual([20, 310])
       // 30 high, the board's underside on its flange 10,5 over its bottom: the bracket's top 1,5 over the board's top
-      expect([Math.round(b.min.y * 10000), Math.round(b.max.y * 10000)]).toEqual([14715, 15015])
+      expect([Math.round(b.min.y * 10000), Math.round(b.max.y * 10000)]).toEqual([12715, 13015])
     }
     // The end brackets at x = 1 and 3 (−2 and 0 in the world) have the body on the post and the flange in under the board (Bjørn 8.11.2026)
     const left = named('foga-91F').map(box).find((b) => b.min.x < -1.9)!

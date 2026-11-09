@@ -14,7 +14,7 @@ import { foilsOn, removeFoil, updateFoil } from '../../domain/decor'
 import { eraseWalls } from '../../domain/edit'
 import { wallRal } from '../../domain/panels'
 import { clearDecor } from '../../domain/print'
-import { addShelf, removeShelf, shelvesOn, updateShelf } from '../../domain/shelves'
+import { addShelf, moveShelves, penHeight, removeShelves, shelvesOn } from '../../domain/shelves'
 import { doorFace, openingById } from '../../domain/doors'
 import { wallLength, wallModules } from '../../domain/grid'
 import type { Variant } from '../../domain/types'
@@ -27,7 +27,7 @@ import { productOf, rules } from '../env'
 import { findMotif } from '../motifs'
 import { DrawerHead} from './drawerParts'
 import { DoorMap } from './DoorMap'
-import { type PlanSelection } from './selection'
+import { chosenShelves, type PlanSelection } from './selection'
 import { addTextile, fillTextile, removeTextile, textilesOn, updateTextile } from '../../domain/textile/inFrame'
 import { faces, type FaceSide } from '../../domain/faces'
 import { faceName, roomsAgainst } from './wallDrawer/face'
@@ -86,17 +86,17 @@ export function WallDrawer(p: Props) {
 
   /** With a frame or decal selected, the face control moves it to the other face of the wall. */
   const moveToSide = (side: FaceSide) => {
-    const next = T ? updateTextile(v, rules, T.id, { side }) : F ? updateFoil(v, rules, F.id, { side }, ratioOf(F.motif)) : S ? updateShelf(v, rules, S.id, { side }) : v
+    const next = T ? updateTextile(v, rules, T.id, { side }) : F ? updateFoil(v, rules, F.id, { side }, ratioOf(F.motif)) : S ? moveShelves(v, rules, chosenShelves(v, sel), { side }) : v
     if (next === v) return p.onToast(T ? 'Ingen ledig veggflate på den siden' : F ? 'Feltet på den siden kan ikke ha folie' : 'Feltet på den siden kan ikke ta hylle')
     p.onEdit(() => next)
-    select(T ? { side, textileId: T.id } : F ? { side, foilId: F.id } : { side, shelfId: S!.id })
+    select(T ? { side, textileId: T.id } : F ? { side, foilId: F.id } : { side, shelfId: S!.id, shelfOnly: sel.shelfOnly })
   }
 
   /** A shelf in the free felt nearest the middle of the face, at the start height (H4, H6). */
   const addShelfHere = () => {
     const order = Array.from({ length: L }, (_, i) => i).sort((a, b) => Math.abs(a + 0.5 - L / 2) - Math.abs(b + 0.5 - L / 2))
     for (const m of order) {
-      const r = addShelf(v, rules, w.id, m, s)
+      const r = addShelf(v, rules, w.id, m, s, penHeight(v, rules, w.id, s, m, m))
       if ('error' in r || r.existing) continue
       p.onEdit(() => r.v)
       return select({ shelfId: r.id })
@@ -154,7 +154,7 @@ export function WallDrawer(p: Props) {
   const remove = () => {
     if (T) p.onEdit((x) => removeTextile(x, T.id))
     else if (F) p.onEdit((x) => removeFoil(x, F.id))
-    else if (S) p.onEdit((x) => removeShelf(x, S.id))
+    else if (S) p.onEdit((x) => removeShelves(x, chosenShelves(v, sel)))
     else {
       p.onEdit((x) => eraseWalls(x, wallModules(w).map((m) => m.key)))
       return p.onClose()
@@ -194,7 +194,7 @@ export function WallDrawer(p: Props) {
 
             {F && <FoilPanel F={F} ratioOf={ratioOf} onEdit={p.onEdit} />}
 
-            {S && <ShelfPanel v={v} H={S} w={w} s={s} select={select} onEdit={p.onEdit} onToast={p.onToast} />}
+            {S && <ShelfPanel v={v} H={S} w={w} s={s} sel={sel} select={select} onEdit={p.onEdit} onToast={p.onToast} />}
 
             {!T && !F && !S && <ColourPanel painting={painting} tool={tool} setTool={setTool} printing={printing} pm={pm} paint={paint} ral={ral} setPaint={setPaint} />}
           </>
@@ -262,6 +262,8 @@ export function WallDrawer(p: Props) {
         F={F}
         O={O}
         S={S}
+        chosen={chosenShelves(v, sel)}
+        shelfOnly={sel.shelfOnly}
         motifs={motifs}
         label={label}
         painting={painting}

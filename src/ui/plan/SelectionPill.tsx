@@ -2,7 +2,7 @@
 // One build for all: name and size · colour or motif · rotate (where it makes sense) · Mer (the drawer) · remove.
 // Shown as soon as a click selects; hidden while dragging,
 // while the drawer is open, with a pen in hand and in 3D (PlanView decides). Where it stands: pillAnchor.ts.
-import { ArrowDown, ArrowLeftRight, ArrowUp, Blinds, DoorClosed, FlipHorizontal2, Image as ImageIcon, Layers, MoveHorizontal, PanelBottomOpen, Plus, RotateCw, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowLeftRight, ArrowUp, Blinds, DoorClosed, FlipHorizontal2, Image as ImageIcon, Layers, MoveHorizontal, MoveVertical, PanelBottomOpen, Plus, RotateCw, Trash2 } from 'lucide-react'
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import { wallLabel } from '../../calc/production'
@@ -15,7 +15,7 @@ import { CELL, wallLength, wallModules } from '../../domain/grid'
 import { wallRal } from '../../domain/panels'
 import { clearPrint, fillPlates, printWall } from '../../domain/print'
 import { roomName, roomSize } from '../../domain/rooms'
-import { addShelfAbove, shelvesIn, shelvesOf, updateShelf } from '../../domain/shelves'
+import { addShelvesAbove, highWarning, moveShelves, offRow, shelfRow, shelvesIn, shelvesOf, tooHigh, type ShelvesMove } from '../../domain/shelves'
 import { addTextile, fillTextile, textileBox, textilesOn, updateTextile } from '../../domain/textile/inFrame'
 import type { TextileWall, Variant, Wall } from '../../domain/types'
 import { isStandWall } from '../../domain/walls'
@@ -26,10 +26,11 @@ import { idx, openingProducts, place, productOf, rules, wallPlates } from '../en
 import { objectFamily } from '../objectFamily'
 import { fmt, mm } from '../format'
 import { findMotif } from '../motifs'
+import { Segmented } from '../controls'
 import { placePill, type PillPlace } from './pillAnchor'
 import { QBtn, QName, Sep, Sw } from './QuickPicks'
 import { faceName } from './wallDrawer/face'
-import { deleteSelection, type PlanSelection } from './selection'
+import { chosenShelves, deleteSelection, type PlanSelection } from './selection'
 import { turnFree, turnObject } from './turn'
 
 type Edit = (fn: (v: Variant) => Variant, history?: boolean) => void
@@ -319,40 +320,84 @@ function content(p: PillActions, graphics: boolean, setGraphics: (b: boolean) =>
 
   const H = sel.shelfId ? shelvesOf(v).find((x) => x.id === sel.shelfId) : undefined
   if (H) {
+    // The row moves as one; «Bare denne» takes the one shelf out of it (Bjørn 9.11.2026)
+    const ids = chosenShelves(v, sel)
+    const n = ids.length
+    const row = shelfRow(v, H.id).length
     const stack = shelvesIn(v, H.wallId, H.module, sideOf(v, H))
-    const move = (dy: number) => {
-      const next = updateShelf(v, rules, H.id, { y: H.y + dy })
-      if (next === v) return p.onToast(dy > 0 ? 'Hyllen kan ikke gå høyere her' : 'Hyllen kan ikke gå lavere her')
+    const go = (m: ShelvesMove, why: string) => {
+      const next = moveShelves(v, rules, ids, m)
+      if (next === v) return p.onToast(why)
       onEdit(() => next)
+      const y = shelvesOf(next).find((x) => x.id === H.id)!.y
+      if (tooHigh(rules, y)) p.onToast(highWarning(rules))
     }
     const step = rules.shelf.step
+    const what = n > 1 ? 'Raden' : 'Hyllen'
     return {
-      name: 'Hylle',
-      meta: `${mm(H.y)} mm fra gulvet${stack.length > 1 ? ` · ${stack.indexOf(H) + 1} av ${stack.length}` : ''}`,
-      body: (
+      name: n > 1 ? 'Hyllerad' : 'Hylle',
+      meta: [
+        n > 1 ? `${n} hyller` : '',
+        `${mm(H.y)} mm fra gulvet`,
+        stack.length > 1 ? `${stack.indexOf(H) + 1} av ${stack.length} i feltet` : '',
+        n === 1 && offRow(v, H.id) ? 'avviker fra raden' : '',
+      ]
+        .filter(Boolean)
+        .join(' · '),
+      body: graphics ? (
         <>
-          <QBtn title={`Senk ${mm(step)} mm`} label="Senk" onClick={() => move(-step)}>
+          <Segmented<number>
+            label="Høyde fra gulvet"
+            value={H.y}
+            onChange={(y) => {
+              go({ y }, `${what} kan ikke stå på ${mm(y)} her`)
+              setGraphics(false)
+            }}
+            options={rules.shelf.heights.map((h) => ({ value: h, title: `${mm(h)} mm fra gulvet`, label: <span className="num">{mm(h)}</span> }))}
+          />
+          <Sep />
+          <QBtn title="Tilbake til Ned og Opp" label="Tilbake" onClick={() => setGraphics(false)}>
+            Tilbake
+          </QBtn>
+        </>
+      ) : (
+        <>
+          <QBtn title={`Senk ${mm(step)} mm`} label="Senk" onClick={() => go({ dy: -step }, `${what} kan ikke gå lavere her`)}>
             <ArrowDown size={15} />
             Ned
           </QBtn>
-          <QBtn title={`Hev ${mm(step)} mm`} label="Hev" onClick={() => move(step)}>
+          <QBtn title={`Hev ${mm(step)} mm`} label="Hev" onClick={() => go({ dy: step }, `${what} kan ikke gå høyere her`)}>
             <ArrowUp size={15} />
             Opp
           </QBtn>
+          <QBtn title="Faste høyder" label="Høyde" onClick={() => setGraphics(true)}>
+            <MoveVertical size={15} />
+            Høyde
+          </QBtn>
           <Sep />
           <QBtn
-            title="Legg til en hylle til i samme felt"
-            label="Hylle til"
+            title={n > 1 ? 'Legg til en rad til over (eller under)' : 'Legg til en hylle til i samme felt'}
+            label={n > 1 ? 'Rad til' : 'Hylle til'}
             onClick={() => {
-              const r = addShelfAbove(v, rules, H.id)
+              const r = addShelvesAbove(v, rules, ids)
               if ('error' in r) return p.onToast(r.error)
               onEdit(() => r.v)
-              onSelect({ wallId: w.id, side: s, shelfId: r.id })
+              onSelect({ wallId: w.id, side: s, shelfId: r.ids[ids.indexOf(H.id)] ?? r.ids[0] })
             }}
           >
             <Plus size={15} />
-            Hylle til
+            {n > 1 ? 'Rad til' : 'Hylle til'}
           </QBtn>
+          {row > 1 && (
+            <QBtn
+              title={sel.shelfOnly ? 'Velg hele raden' : 'Velg bare denne hyllen'}
+              label={sel.shelfOnly ? 'Hele raden' : 'Bare denne'}
+              onClick={() => onSelect({ wallId: w.id, side: s, shelfId: H.id, shelfOnly: !sel.shelfOnly })}
+            >
+              <Layers size={15} />
+              {sel.shelfOnly ? 'Hele raden' : 'Bare denne'}
+            </QBtn>
+          )}
         </>
       ),
       more: true,

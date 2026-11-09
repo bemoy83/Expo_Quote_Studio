@@ -34,11 +34,21 @@ const ctx = (v: Variant) => {
 const edited = (c: ReturnType<typeof ctx>) => (c.onEdit.mock.calls.at(-1)![0] as (v: Variant) => Variant)(c.v);
 
 describe('the shelf pen', () => {
-  it('a click in a free felt lays one shelf at 1500 mm', () => {
+  it('a click in a free felt lays one shelf at 1300 mm', () => {
     const c = ctx(row());
     const d = startShelf(c, { x: 2.5, y: 0.2 })!;
     shelf.up!(c, d as never, { x: 2.5, y: 0.2 });
-    expect(shelvesOf(edited(c))).toMatchObject([{ wallId: 'side-back', module: 2, side: 1, y: 1.5 }]);
+    expect(shelvesOf(edited(c))).toMatchObject([{ wallId: 'side-back', module: 2, side: 1, y: 1.3 }]);
+  });
+
+  it('a row drawn on from a shelf takes its height, so it stays one row (H2)', () => {
+    const r = addShelf(row(), RULES, 'side-back', 2, 1, 0.9);
+    if ('error' in r) throw new Error(r.error);
+    const c = ctx(r.v);
+    const d = startShelf(c, { x: 3.5, y: 0.2 })!;
+    shelf.move!(c, d as never, { x: 4.5, y: 0.25 });
+    shelf.up!(c, d as never, { x: 4.5, y: 0.25 });
+    expect(shelvesOf(edited(c)).map((x) => [x.module, x.y])).toEqual([[2, 0.9], [3, 0.9], [4, 0.9]]);
   });
 
   it('a drag along the wall lays a row, skipping the felts by the corner posts (H6)', () => {

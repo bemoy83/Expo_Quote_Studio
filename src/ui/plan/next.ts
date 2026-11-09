@@ -14,7 +14,7 @@ import type { Rect } from '../../domain/floor/tiles'
 import { wallModules, type Module } from '../../domain/grid'
 import { drawInnerBeam, type Run } from '../../domain/innerBeams'
 import { addObject, footprintBox } from '../../domain/objects'
-import { addShelf, addShelfRow } from '../../domain/shelves'
+import { addShelf, addShelfRow, penHeight } from '../../domain/shelves'
 import { drawTextile, fillFace, type TextileResult } from '../../domain/textile/brush'
 import { faceOfPoint, freeTextileAt, updateFace } from '../../domain/textile/free'
 import { textileAt, updateTextile } from '../../domain/textile/inFrame'
@@ -342,7 +342,7 @@ function objectTarget(v: Variant, brush: Brush | null, q: P): NextTarget | null 
 function shelfTarget(v: Variant, wallId: string, s: FaceSide, m0: number, m1: number, pressed: boolean): NextTarget {
   return target(`shelf:${wallId}:${s}:${m0}:${m1}`, () => {
     const w = v.walls.find((x) => x.id === wallId)!
-    const y = rules.shelf.start
+    const y = penHeight(v, rules, wallId, s, m0, m1)
     const seg = (a: number, b: number) => faceSegment(w, s, Math.min(a, b), Math.max(a, b) + 1, 0)
     if (m0 === m1) {
       const r = addShelf(v, rules, wallId, m0, s, y)

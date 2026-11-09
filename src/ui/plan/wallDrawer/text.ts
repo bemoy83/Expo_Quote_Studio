@@ -72,7 +72,7 @@ export function wallHint(x: { O?: Opening; door: boolean; painting: boolean; too
     return printing
       ? 'Klikk eller dra over platene: hele motivet på hver plate · klikk en plate som har motivet: printen fjernes fra den platen'
       : 'Klikk eller dra over platene for å farge dem · klikk en farget plate igjen for veggens farge'
-  if (S) return 'Dra hyllen opp eller ned i steg på 50 mm, eller til et annet felt · minst 100 mm lysmål mellom hyller · Delete fjerner'
+  if (S) return 'Dra hyllen opp eller ned i steg på 50 mm, eller til et annet felt · en rad flyttes samlet, «Bare denne» tar én hylle ut · minst 100 mm lysmål mellom hyller · Delete fjerner'
   if (T) return 'Dra rammen for å flytte · håndtakene endrer størrelsen · klikk et motiv for trykk · Delete fjerner'
   if (F)
     return F.full
