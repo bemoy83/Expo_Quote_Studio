@@ -134,7 +134,7 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
   `foga/engine.ts` (gruppen Hyller)
 - Plan: penselen `{ kind: 'shelf' }` hører til Møbel (`ui/tools.ts`, hurtigvalget i `plan/QuickPicks.tsx`, raden i
   `panel/sections/EquipSection.tsx`) · klikk og rad `plan/pointer/shelf.ts`, forhåndsvisningen `shelfTarget` i
-  `plan/next.ts` · tegnet `plan/layers/ShelfLayer.tsx` (flaten `shelves` i `plan/nextArea.ts`) · treff `shelfAt` i
+  `plan/next.ts` · tegnet `plan/layers/ShelfLayer.tsx` (en stabel som ett brett med antallet, ×3; flaten `shelves` i `plan/nextArea.ts`) · treff `shelfAt` i
   `plan/pointer/hits.ts`, brukt av Velg (`select.ts`: veggens bånd velger veggen, brettet foran hyllen; dra og Alt + dra
   i `shelfMove.ts`) og Tøm (`erase.ts`) · høyden
   på brettet ved full detalj (viker når veggen selv er valgt) · målkjeden for valgte hyller utenfor brettene
