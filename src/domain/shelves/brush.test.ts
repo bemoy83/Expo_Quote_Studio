@@ -84,6 +84,14 @@ describe('Shift: stacking a felt and spreading it (Bjørn 9.11.2026)', () => {
     expect(ys(stackFelt(row(), RULES, 'side-back', 1, 2, 4).v, 2)).toEqual([0.9, 1.3, 1.7, 2.1]);
   });
 
+  it('after the quick picks the lowest (100), so the felt keeps ~400 mm, and only then the gaps are split', () => {
+    expect(ys(stackFelt(row(), RULES, 'side-back', 1, 2, 6).v, 2)).toEqual([0.1, 0.5, 0.9, 1.3, 1.7, 2.1]);
+    // The seventh splits a 400 mm gap in the middle
+    const seven = ys(stackFelt(row(), RULES, 'side-back', 1, 2, 7).v, 2);
+    expect(seven).toHaveLength(7);
+    expect(seven.filter((y) => ![0.1, 0.5, 0.9, 1.3, 1.7, 2.1].includes(y)).map((y) => Math.round(y * 1000) % 400)).toEqual([300]);
+  });
+
   it('keeps the shelves the felt had and stops where it is full', () => {
     const r = stackFelt(at(row(), 2, 0.9), RULES, 'side-back', 1, 2, 20);
     expect(ys(r.v, 2)).toContain(0.9);

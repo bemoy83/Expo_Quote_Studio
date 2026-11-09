@@ -142,7 +142,7 @@ vei tilbake til paletten (`FeltPanel` i ui/plan/wallDrawer/panels.tsx):
   Et felt med hyller fra før får en hylle til i stabelen. Pensla velger ingenting og blir liggende; Esc, et nytt trykk
   på knappen eller «Farge og profilering» legger den bort. På iPad (ingen hover) vises hylla fra du trykker.
 - Shift på hyllepensla (Bjørn 9.11.2026) gir antall og fordeling i stedet for høyde: Shift-klikk i et felt er «Hylle
-  til i feltet» (tomt felt: nabohøyden eller 1300, ellers neste faste høyde over den øverste, så under). Shift-dra opp
+  til i feltet» (tomt felt: nabohøyden eller 1300, ellers neste faste høyde over den øverste, så under, så 100 mm; først da deles hullene på midten). Shift-dra opp
   legger til én hylle til per ca. 40 skjermpiksler etter samme regel, ned tar dem bort igjen, men aldri under én og
   aldri hyller som sto der før. Shift-dra sideveis kopierer feltets hyller til feltene du drar over, som «Kopier
   feltet»; et felt beholder en hylle det alt har på en av høydene, og et felt med hyller for nær får ingen og

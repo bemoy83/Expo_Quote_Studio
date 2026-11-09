@@ -45,7 +45,7 @@ export function addShelfRow(v: Variant, rules: Rules, wallId: string, from: numb
 
 /**
  * One more shelf in the felt of each of `ids` (a row gets a row), all at one height: the next quick pick above, then the
- * next below (Bjørn 9.11.2026), else the middle of the widest gap in the felt, as long as every felt keeps the clear height
+ * next below (Bjørn 9.11.2026), then the lowest (100), else the middle of the widest gap in the felt, as long as every felt keeps the clear height
  * (H5). Null with the reason when there is no room.
  */
 export function addShelvesAbove(v: Variant, rules: Rules, ids: string[]): { v: Variant; ids: string[] } | { error: string } {
@@ -60,6 +60,9 @@ export function addShelvesAbove(v: Variant, rules: Rules, ids: string[]): { v: V
   const tries = [
     ...sh.heights.filter((h) => h > f.y + EPS),
     ...sh.heights.filter((h) => h < f.y - EPS).reverse(),
+    // The lowest a shelf may stand next, before any gap is split (Bjørn 9.11.2026): 100 under 500 keeps the even
+    // ~400 mm, where the middle of the gap under 500 gave 250
+    sh.min,
     ...gaps.map((g) => shelfHeight(rules, g.mid)),
   ];
   const y = tries.find((t) => t >= sh.min - EPS && group.every((x) => fitsIn(v, rules, x.wallId, x.module, sideOf(v, x), t)));
