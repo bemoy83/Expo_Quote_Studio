@@ -423,4 +423,4 @@ export default function App() {
 const LAYOUT: Layout = { panel: true, calc: true }
 
 /** «…» on the quick picks opens the panel on the tool's tab, where all its options are. */
-const PANEL_TAB: Record<PenTool, string> = { wall: 'vegg', floor: 'gulv', profile: 'prof', object: 'mob' }
+const PANEL_TAB: Record<PenTool, string> = { wall: 'vegg', floor: 'gulv', profile: 'prof', fitting: 'hyll', object: 'mob' }
