@@ -3,7 +3,7 @@
 // and the shelves stay. Heights are kept. Where they cannot stand (Byggeregler H4–H6) they stay where they last could.
 // A plain click selects as any click does.
 
-import { placeShelves } from '../../../domain/shelves'
+import { placeShelves } from '../../../domain/shelves/edit'
 import { rules } from '../../env'
 import type { DragHandlers } from './types'
 

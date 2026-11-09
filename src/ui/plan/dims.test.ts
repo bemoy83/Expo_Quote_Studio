@@ -4,7 +4,7 @@ import { createVariant } from '../../domain/variant'
 import { faceAt } from '../../domain/faces'
 import { isStandWall } from '../../domain/walls'
 import { mm, placementRow, planDims, totalSides } from './dims'
-import { addShelfRow } from '../../domain/shelves'
+import { addShelfRow } from '../../domain/shelves/edit'
 import { RULES } from '../../rules/rules'
 
 describe('plan dimensions', () => {

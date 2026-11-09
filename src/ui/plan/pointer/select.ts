@@ -8,7 +8,7 @@ import { OUTSIDE, roomAt } from '../../../domain/rooms'
 import { faceOfPoint, freeTextileAt } from '../../../domain/textile/free'
 import { textileAt } from '../../../domain/textile/inFrame'
 import { chosenShelves, type PlanSelection } from '../selection'
-import { shelfRow } from '../../../domain/shelves'
+import { shelfRow } from '../../../domain/shelves/model'
 import { startRoom } from './room'
 import type { Drag, P, PointerCtx } from './types'
 

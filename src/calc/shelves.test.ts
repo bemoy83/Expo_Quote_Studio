@@ -1,7 +1,8 @@
 // Shelves in the kalkyle and on the picking list (Byggeregler H2, H3, H7).
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_CATALOG } from '../catalog/defaultCatalog';
-import { addShelfRow, shelvesOf, moveShelves } from '../domain/shelves';
+import { addShelfRow, moveShelves } from '../domain/shelves/edit';
+import { shelvesOf } from '../domain/shelves/model';
 import { createVariant } from '../domain/variant';
 import { DEFAULT_PRICING, ITEM } from '../pricing/data';
 import { RULES } from '../rules/rules';

@@ -5,7 +5,7 @@ import { mainGroupOf, PRODUCT_GROUPS, resolveGroup } from '../../../catalog/grou
 import type { Product } from '../../../catalog/types'
 import { setCounted } from '../../../domain/edit'
 import { addObjectAnywhere, removeObjects } from '../../../domain/objects'
-import { shelvesOf } from '../../../domain/shelves'
+import { shelvesOf } from '../../../domain/shelves/model'
 import type { Variant } from '../../../domain/types'
 import { Counter, IconButton } from '../../controls'
 import { catalog, place } from '../../env'

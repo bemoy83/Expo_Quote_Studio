@@ -1,7 +1,7 @@
 // Shelves (hylle 6311) in the plan: the board as seen from above, 300 mm deep in front of its wall face, white with a
 // thin ink edge like furniture. Shelves stacked in one felt are drawn once, with their count on the board (×3). Heights
 // were tried there and left out: a full felt says more than fits (Bjørn 9.11.2026); they are in the wall drawing.
-import { shelfBox, shelfStacks } from '../../../domain/shelves'
+import { shelfBox, shelfStacks } from '../../../domain/shelves/model'
 import type { Variant } from '../../../domain/types'
 import { INK, SURFACE } from '../../colors'
 import { rules } from '../../env'

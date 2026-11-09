@@ -8,7 +8,7 @@ import { runNormal } from '../../domain/textile/free'
 import { frameInset } from '../../calc/textile/inFrame'
 import { rules } from '../env'
 import { chosenShelves, type PlanSelection } from './selection'
-import { shelvesOf } from '../../domain/shelves'
+import { shelvesOf } from '../../domain/shelves/model'
 import { sizePx, type PlanScale } from './planScale'
 import { PLAN_MARGIN } from './planStyle'
 
