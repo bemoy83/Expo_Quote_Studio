@@ -93,7 +93,7 @@ const fitsIn = (v: Variant, rules: Rules, wallId: string, module: number, s: Fac
 
 /**
  * Put a shelf in a felt at `y` (default the start height). A felt that already has shelves keeps them: the result is the
- * lowest one there, unchanged (a tap selects it; more go on from the drawer, addShelfAbove). Null with the reason when
+ * lowest one there, unchanged (a tap selects it; more go on from the drawer, addShelvesAbove). Null with the reason when
  * the felt cannot take a shelf.
  */
 export function addShelf(
@@ -157,33 +157,6 @@ export function addShelvesAbove(v: Variant, rules: Rules, ids: string[]): { v: V
   return { v: x, ids: added };
 }
 
-/** One more shelf in the felt of `id` (addShelvesAbove for one shelf). */
-export function addShelfAbove(v: Variant, rules: Rules, id: string): { v: Variant; id: string } | { error: string } {
-  const r = addShelvesAbove(v, rules, [id]);
-  return 'error' in r ? r : { v: r.v, id: r.ids[0] };
-}
-
-export interface ShelfPatch {
-  module?: number;
-  /** Height, snapped to the step and kept within lowest and highest. */
-  y?: number;
-  /** Move to the other face of the wall. */
-  side?: FaceSide;
-}
-
-/** Move a shelf. Refused (the variant unchanged) where the felt cannot take it or another shelf is too close (H5, H6). */
-export function updateShelf(v: Variant, rules: Rules, id: string, patch: ShelfPatch): Variant {
-  const f = shelvesOf(v).find((x) => x.id === id);
-  if (!f) return v;
-  const module = patch.module ?? f.module;
-  const side = patch.side ?? sideOf(v, f);
-  const y = patch.y === undefined ? f.y : shelfHeight(rules, patch.y);
-  if ((module !== f.module || side !== sideOf(v, f)) && shelfBlocked(v, f.wallId, module, side)) return v;
-  if (!fitsIn(v, rules, f.wallId, module, side, y, id)) return v;
-  if (module === f.module && side === sideOf(v, f) && y === f.y) return v;
-  return { ...v, shelves: shelvesOf(v).map((x) => (x.id === id ? { ...x, module, side, y } : x)) };
-}
-
 /**
  * The row `id` stands in (H2): it and the shelves beside it, module by module, on the same face at the same height, in
  * module order. A shelf with no such neighbour is a row of one.
@@ -222,27 +195,18 @@ export interface ShelvesMove {
   side?: FaceSide;
 }
 
-/** Move shelves together, all or none: refused (the variant unchanged) when one of them cannot stand where it goes
- *  (H4–H6). The row stays a row. */
+/** Move shelves together (a row, or one), all or none: refused (the variant unchanged) when one of them cannot stand
+ *  where it goes (H4–H6). They keep their place beside each other, so a row stays a row (placeShelves). */
 export function moveShelves(v: Variant, rules: Rules, ids: string[], m: ShelvesMove): Variant {
-  const set = new Set(ids);
-  const group = shelvesOf(v).filter((x) => set.has(x.id));
-  if (!group.length) return v;
-  const to = new Map(
-    group.map((f) => [f.id, { module: f.module + (m.dm ?? 0), y: shelfHeight(rules, m.y ?? f.y + (m.dy ?? 0)), side: m.side ?? sideOf(v, f) }]),
-  );
-  const others = { ...v, shelves: shelvesOf(v).filter((x) => !set.has(x.id)) };
-  for (const f of group) {
-    const t = to.get(f.id)!;
-    if ((t.module !== f.module || t.side !== sideOf(v, f)) && shelfBlocked(v, f.wallId, t.module, t.side)) return v;
-    if (!fitsIn(others, rules, f.wallId, t.module, t.side, t.y)) return v;
-  }
-  if (group.every((f) => { const t = to.get(f.id)!; return t.module === f.module && t.y === f.y && t.side === sideOf(v, f); })) return v;
-  return { ...v, shelves: shelvesOf(v).map((x) => (set.has(x.id) ? { ...x, ...to.get(x.id)! } : x)) };
+  const a = shelvesOf(v).find((x) => ids.includes(x.id));
+  if (!a) return v;
+  const dy = m.y !== undefined ? shelfHeight(rules, m.y) - a.y : (m.dy ?? 0);
+  const r = placeShelves(v, rules, ids, a.id, { wallId: a.wallId, s: m.side ?? sideOf(v, a), module: a.module + (m.dm ?? 0), dy });
+  return r?.v ?? v;
 }
 
 /** Shelves dragged with `id`, which goes to felt `module` at height `y`: both when they may, else only the height, else
- *  only along the wall, else where they were (dragShelf for a row; the others keep their place relative to `id`). */
+ *  only along the wall, else where they were. The others keep their place beside `id`. The drawer and the 3D view drag with it. */
 export function dragShelves(v: Variant, rules: Rules, id: string, ids: string[], module: number, y: number): Variant {
   const f = shelvesOf(v).find((x) => x.id === id);
   if (!f) return v;
@@ -371,11 +335,6 @@ export function removeShelves(v: Variant, ids: string[]): Variant {
   return shelves.length === shelvesOf(v).length ? v : { ...v, shelves };
 }
 
-export function removeShelf(v: Variant, id: string): Variant {
-  const shelves = shelvesOf(v).filter((x) => x.id !== id);
-  return shelves.length === shelvesOf(v).length ? v : { ...v, shelves };
-}
-
 /**
  * Shelves kept valid after any edit: one whose felt can no longer take a shelf (wall gone or shortened, a door, a
  * textile, a wall built against its post) is removed, a height outside the limits is brought inside, and of two too
@@ -442,13 +401,4 @@ export function shelfFaces(v: Variant): { wallId: string; s: FaceSide; shelves: 
     const on = shelvesOn(v, w.id, s);
     return on.length ? [{ wallId: w.id, s, shelves: on }] : [];
   }));
-}
-
-/** A shelf dragged to felt `module` at height `y`: both when it may stand there, else only the height, else only the
- *  felt, else where it was (H4–H6). The drawer and the 3D view drag with it. */
-export function dragShelf(v: Variant, rules: Rules, id: string, module: number, y: number): Variant {
-  const both = updateShelf(v, rules, id, { module, y });
-  if (both !== v) return both;
-  const up = updateShelf(v, rules, id, { y });
-  return up !== v ? up : updateShelf(v, rules, id, { module });
 }

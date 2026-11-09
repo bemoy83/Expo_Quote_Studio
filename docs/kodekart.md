@@ -123,9 +123,8 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 ### Hyller
 
 - Modell: `Shelf` (vegg, side, felt, høyde over gulv) · `domain/shelves.ts` (hvor en hylle kan stå `shelfBlocked`,
-  legge til `addShelf` og `addShelfRow` med høyden fra `penHeight`, en til (eller en rad til) `addShelvesAbove`, flytte
-  `updateShelf`, raden `shelfRow` som flyttes, dras og slettes samlet med `moveShelves`, `dragShelves` og
-  `removeShelves`, flytte eller kopiere til et felt på en vegg `placeShelves`, kopi i nærmeste ledige felt
+  legge til `addShelf` og `addShelfRow` med høyden fra `penHeight`, en til (eller en rad til) `addShelvesAbove`, raden
+  `shelfRow` som flyttes, dras og slettes samlet med `moveShelves`, `dragShelves` og `removeShelves`, flytte eller kopiere til et felt på en vegg `placeShelves`, kopi i nærmeste ledige felt
   `copyShelvesNear` (med stabelen: `feltShelves`), `spreadShelves` (Fordel jevnt), `tooHigh` og `highWarning` over den myke grensen, `fitShelves` etter
   hver redigering i `ui/edits.ts`, knektene `shelfBrackets`) · verdiene i `rules.shelf` og `RECIPES.shelf`, reglene H1–H8 i
   [byggeregler.md](byggeregler.md). Hyllene følger veggen i `replaceWalls` og `moveWall` (`domain/edit.ts`) og rommet
@@ -141,7 +140,8 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
   på brettet ved full detalj (viker når veggen selv er valgt) · målkjeden for valgte hyller utenfor brettene
   (`planDims` i `plan/dims.ts`, veggens kjede bare når veggen selv er valgt) · valgt som `shelfId` på veggen, med raden
   unntatt `shelfOnly` (`chosenShelves` i `plan/selection.ts`, brukt av plan, skuff og 3D), pillen i
-  `plan/SelectionPill.tsx` (Ned/Opp, Høyde med hurtigvalgene, Hylle til, Kopier, Bare denne)
+  `plan/SelectionPill.tsx` (Ned/Opp, Høyde med hurtigvalgene, Hylle til, Kopier, Bare denne); det pillen og skuffen gjør
+  med valgte hyller i `plan/shelfActions.ts`
 - Skuff: `ShelfPanel` i `plan/wallDrawer/panels.tsx` (stabelen loddrett, Kopier, Kopier feltet, Fordel jevnt), tegnet
   `ShelfFront` med usynlig gripeflate (`plan/elevation.tsx`), dra og Alt + dra `useShelfDrag` (`plan/wallDrawer/drag.ts`), høydekjedene `shelfChains` (`elevationMeasure.ts`, tegnet i
   `ElevationDims.tsx`)

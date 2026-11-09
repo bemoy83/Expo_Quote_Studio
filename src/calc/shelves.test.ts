@@ -1,7 +1,7 @@
 // Shelves in the kalkyle and on the picking list (Byggeregler H2, H3, H7).
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_CATALOG } from '../catalog/defaultCatalog';
-import { addShelfRow, shelvesOf, updateShelf } from '../domain/shelves';
+import { addShelfRow, shelvesOf, moveShelves } from '../domain/shelves';
 import { createVariant } from '../domain/variant';
 import { DEFAULT_PRICING, ITEM } from '../pricing/data';
 import { RULES } from '../rules/rules';
@@ -38,7 +38,7 @@ describe('shelf line (Byggeregel H7)', () => {
 
   it('a shelf moved to another height leaves the row: its brackets become ends', () => {
     const v = threeInARow();
-    const moved = updateShelf(v, RULES, shelvesOf(v)[2].id, { y: 1.2 });
+    const moved = moveShelves(v, RULES, [shelvesOf(v)[2].id], { y: 1.2 });
     const bom = calc(moved, RULES, DEFAULT_CATALOG, EXHIBITOR).bom.lines.filter((l) => l.group === 'hyll.hyller');
     expect(bom.map((l) => l.qty)).toEqual([4, 1, 3]);
   });

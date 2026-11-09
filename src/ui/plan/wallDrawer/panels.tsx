@@ -7,7 +7,7 @@ import { removeOpening } from '../../../domain/doors'
 import type { FaceSide } from '../../../domain/faces'
 import { textileBox, updateTextile } from '../../../domain/textile/inFrame'
 import { wallLength } from '../../../domain/grid'
-import { addShelvesAbove, clearBetween, copyShelvesNear, feltShelves, highWarning, moveShelves, offRow, shelfRow, shelvesIn, shelvesOf, spreadShelves, tooHigh, type ShelvesMove } from '../../../domain/shelves'
+import { clearBetween, highWarning, offRow, shelvesIn, tooHigh } from '../../../domain/shelves'
 import type { Foil, Opening, Shelf as Board, TextileWall, Variant, Wall } from '../../../domain/types'
 import type { Motif } from '../../../persistence/file'
 import { Button, Dim, FlatChoice, IconButton, Section } from '../../controls'
@@ -16,7 +16,8 @@ import { DoorSettings } from '../DoorSettings'
 import { FabricSection, PlatePalette, Shelf } from '../drawerParts'
 import { mm } from '../../format'
 import { findMotif } from '../../motifs'
-import { chosenShelves, type PlanSelection } from '../selection'
+import { type PlanSelection } from '../selection'
+import { shelfActions } from '../shelfActions'
 import { faceName } from './face'
 import type { PaintTool } from './paint'
 
@@ -185,21 +186,10 @@ export function DoorPanel(props: {
  * adds one more (a row gets a row), «Fordel jevnt» spreads a felt's shelves.
  */
 export function ShelfPanel({ v, H, w, s, sel, select, onEdit, onToast }: { v: Variant; H: Board; w: Wall; s: FaceSide; sel: PlanSelection; select: (x: Partial<PlanSelection>) => void; onEdit: Edit; onToast: (t: string) => void }) {
-  const ids = chosenShelves(v, sel)
-  const n = ids.length
-  const row = shelfRow(v, H.id).length
+  const a = shelfActions(v, sel, H, onEdit, onToast, (shelfId, shelfOnly) => select({ shelfId, shelfOnly }))
+  const { n, row, what, dir, move } = a
   const stack = shelvesIn(v, H.wallId, H.module, s)
   const sh = rules.shelf
-  const what = n > 1 ? 'Raden' : 'Hyllen'
-  const move = (m: ShelvesMove, why: string) => {
-    const next = moveShelves(v, rules, ids, m)
-    if (next === v) return onToast(why)
-    onEdit(() => next)
-    const y = shelvesOf(next).find((x) => x.id === H.id)!.y
-    if (tooHigh(rules, y)) onToast(highWarning(rules))
-  }
-  // Left and right as the face is seen from in front of it: the modules run the other way on face −1
-  const dir = s === 1 ? 1 : -1
   const L = Math.round(wallLength(w))
   return (
     <>
@@ -262,24 +252,14 @@ export function ShelfPanel({ v, H, w, s, sel, select, onEdit, onToast }: { v: Va
           <Button
             variant="ghost"
             icon={Plus}
-            onClick={() => {
-              const r = addShelvesAbove(v, rules, ids)
-              if ('error' in r) return onToast(r.error)
-              onEdit(() => r.v)
-              select({ shelfId: r.ids[ids.indexOf(H.id)] ?? r.ids[0], shelfOnly: sel.shelfOnly })
-            }}
+            onClick={a.more}
           >
             {n > 1 ? 'Rad til' : 'Hylle til i feltet'}
           </Button>
           <Button
             variant="ghost"
             icon={Copy}
-            onClick={() => {
-              const r = copyShelvesNear(v, rules, ids, dir)
-              if (!r) return onToast('Ingen ledige felt på denne siden')
-              onEdit(() => r.v)
-              select({ shelfId: r.ids[ids.indexOf(H.id)], shelfOnly: sel.shelfOnly })
-            }}
+            onClick={a.copy}
           >
             Kopier
           </Button>
@@ -287,13 +267,7 @@ export function ShelfPanel({ v, H, w, s, sel, select, onEdit, onToast }: { v: Va
             <Button
               variant="ghost"
               icon={Copy}
-              onClick={() => {
-                const all = feltShelves(v, ids)
-                const r = copyShelvesNear(v, rules, all, dir)
-                if (!r) return onToast('Ingen ledige felt på denne siden')
-                onEdit(() => r.v)
-                select({ shelfId: r.ids[all.indexOf(H.id)], shelfOnly: undefined })
-              }}
+              onClick={a.copyFelt}
             >
               Kopier feltet
             </Button>
@@ -302,11 +276,7 @@ export function ShelfPanel({ v, H, w, s, sel, select, onEdit, onToast }: { v: Va
             <Button
               variant="ghost"
               icon={AlignVerticalSpaceAround}
-              onClick={() => {
-                const next = spreadShelves(v, rules, ids)
-                if (!next) return onToast('Hyllene står allerede jevnt')
-                onEdit(() => next)
-              }}
+              onClick={a.spread}
             >
               Fordel jevnt
             </Button>

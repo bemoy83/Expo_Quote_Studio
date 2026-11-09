@@ -3,7 +3,9 @@ import { DOOR } from '../catalog/defaultCatalog';
 import { RULES } from '../rules/rules';
 import { paintWalls } from './edit';
 import { moduleKey } from './grid';
-import { addShelf, addShelfAbove, copyShelvesNear, feltShelves, placeShelves, addShelfRow, addShelvesAbove, clearBetween, dragShelf, dragShelves, fitShelves, highWarning, moveShelves, offRow, penHeight, removeShelf, removeShelves, shelfBlocked, shelfBrackets, shelfFaces, shelfHeight, shelfRow, shelvesOf, spreadShelves, tooHigh, updateShelf } from './shelves';
+import { addShelf, addShelfRow, addShelvesAbove, clearBetween, copyShelvesNear, dragShelves, feltShelves, fitShelves, highWarning, moveShelves, offRow, penHeight, placeShelves, removeShelves, shelfBlocked, shelfBrackets, shelfFaces, shelfHeight, shelfRow, shelvesOf, spreadShelves, tooHigh } from './shelves';
+
+const addShelfAbove = (v: Variant, id: string) => addShelvesAbove(v, RULES, [id]);
 import { addTextile } from './textile/inFrame';
 import type { Point, Variant } from './types';
 import { createVariant } from './variant';
@@ -91,20 +93,20 @@ describe('placing shelves', () => {
     const b = ok(addShelf({ ...a.v, shelves: [] }, RULES, 'side-back', 2, 1, 1.15));
     const v = { ...a.v, shelves: [...shelvesOf(a.v), ...shelvesOf(b.v).map((s) => ({ ...s, id: 'h9' }))] };
     // Moving the upper one down to 1100 leaves 82 mm: refused
-    expect(updateShelf(v, RULES, 'h9', { y: 1.1 })).toBe(v);
+    expect(moveShelves(v, RULES, ['h9'], { y: 1.1 })).toBe(v);
   });
 
   it('one more goes to the next quick pick above, then below (Bjørn 9.11.2026)', () => {
     let v = ok(addShelf(row(), RULES, 'side-back', 2, 1)).v;
     const ys = () => shelvesOf(v).map((s) => s.y).sort((a, b) => a - b);
-    for (let i = 0; i < 4; i++) v = ok(addShelfAbove(v, RULES, 'h1')).v;
+    for (let i = 0; i < 4; i++) v = ok(addShelfAbove(v, 'h1')).v;
     expect(ys()).toEqual([0.5, 0.9, 1.3, 1.7, 2.1]);
   });
 
   it('past the quick picks it fills the widest gap, until the felt is full', () => {
     let v = ok(addShelf(row(), RULES, 'side-back', 2, 1)).v;
     for (;;) {
-      const r = addShelfAbove(v, RULES, 'h1');
+      const r = addShelfAbove(v, 'h1');
       if ('error' in r) break;
       v = r.v;
     }
@@ -116,20 +118,20 @@ describe('placing shelves', () => {
 
   it('moves along the wall to a felt that can take it, not to one that cannot', () => {
     const a = ok(addShelf(row(), RULES, 'side-back', 2, 1));
-    expect(shelvesOf(updateShelf(a.v, RULES, a.id, { module: 3 }))[0].module).toBe(3);
-    expect(updateShelf(a.v, RULES, a.id, { module: 0 })).toBe(a.v);
+    expect(shelvesOf(moveShelves(a.v, RULES, [a.id], { dm: 1 }))[0].module).toBe(3);
+    expect(moveShelves(a.v, RULES, [a.id], { dm: -2 })).toBe(a.v);
   });
 
   it('a drag takes the height when the felt cannot take the shelf', () => {
     const a = ok(addShelf(row(), RULES, 'side-back', 1, 1));
     // Felt 0 is by the corner post: the shelf stays in felt 1 at the new height
-    expect(shelvesOf(dragShelf(a.v, RULES, a.id, 0, 1.2))[0]).toMatchObject({ module: 1, y: 1.2 });
-    expect(shelvesOf(dragShelf(a.v, RULES, a.id, 2, 1.2))[0]).toMatchObject({ module: 2, y: 1.2 });
+    expect(shelvesOf(dragShelves(a.v, RULES, a.id, [a.id], 0, 1.2))[0]).toMatchObject({ module: 1, y: 1.2 });
+    expect(shelvesOf(dragShelves(a.v, RULES, a.id, [a.id], 2, 1.2))[0]).toMatchObject({ module: 2, y: 1.2 });
   });
 
   it('removes a shelf', () => {
     const a = ok(addShelf(row(), RULES, 'side-back', 2, 1));
-    expect(shelvesOf(removeShelf(a.v, a.id))).toEqual([]);
+    expect(shelvesOf(removeShelves(a.v, [a.id]))).toEqual([]);
   });
 });
 
@@ -154,7 +156,7 @@ describe('brackets (Byggeregel H2)', () => {
 
   it('neighbours at different heights each have their own end brackets', () => {
     let { v } = addShelfRow(row(), RULES, 'side-back', 1, 2, 1);
-    v = updateShelf(v, RULES, shelvesOf(v)[1].id, { y: 1.2 });
+    v = moveShelves(v, RULES, [shelvesOf(v)[1].id], { y: 1.2 });
     expect(shelfBrackets(v)).toEqual({ boards: 2, end: 4, twin: 0 });
   });
 
@@ -273,7 +275,7 @@ describe('moving and copying (Bjørn 9.11.2026)', () => {
 
   it('copies to the nearest felts with room, and a whole stacked felt with «Kopier feltet»', () => {
     let v = ok(addShelf(row(), RULES, 'side-back', 2, 1, 0.5)).v;
-    v = ok(addShelfAbove(v, RULES, 'h1')).v;
+    v = ok(addShelfAbove(v, 'h1')).v;
     const all = feltShelves(v, ['h1']);
     expect(all).toEqual(['h1', 'h2']);
     const r = copyShelvesNear(v, RULES, all)!;

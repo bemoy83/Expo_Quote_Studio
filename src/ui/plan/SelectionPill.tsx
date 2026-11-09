@@ -15,7 +15,7 @@ import { CELL, wallLength, wallModules } from '../../domain/grid'
 import { wallRal } from '../../domain/panels'
 import { clearPrint, fillPlates, printWall } from '../../domain/print'
 import { roomName, roomSize } from '../../domain/rooms'
-import { addShelvesAbove, copyShelvesNear, highWarning, moveShelves, offRow, shelfRow, shelvesIn, shelvesOf, tooHigh, type ShelvesMove } from '../../domain/shelves'
+import { offRow, shelvesIn, shelvesOf } from '../../domain/shelves'
 import { addTextile, fillTextile, textileBox, textilesOn, updateTextile } from '../../domain/textile/inFrame'
 import type { TextileWall, Variant, Wall } from '../../domain/types'
 import { isStandWall } from '../../domain/walls'
@@ -30,7 +30,8 @@ import { Segmented } from '../controls'
 import { placePill, type PillPlace } from './pillAnchor'
 import { QBtn, QName, Sep, Sw } from './QuickPicks'
 import { faceName } from './wallDrawer/face'
-import { chosenShelves, deleteSelection, type PlanSelection } from './selection'
+import { deleteSelection, type PlanSelection } from './selection'
+import { shelfActions } from './shelfActions'
 import { turnFree, turnObject } from './turn'
 
 type Edit = (fn: (v: Variant) => Variant, history?: boolean) => void
@@ -55,7 +56,8 @@ const COLOURS = 8
 export function SelectionPill(p: PillActions & { place: PillPlace }) {
   const ref = useRef<HTMLDivElement>(null)
   const [dims, setDims] = useState({ w: 0, h: 0 })
-  /** «Grafikk» on a wall: the motif list takes the colours' place. */
+  /** The pill's second face: «Grafikk» on a wall (the motif list takes the colours' place), «Høyde» on a shelf (the
+   *  quick picks take Ned/Opp's place). */
   const [graphics, setGraphics] = useState(false)
   const key = JSON.stringify(p.selection)
   const [graphicsFor, setGraphicsFor] = useState(key)
@@ -321,19 +323,11 @@ function content(p: PillActions, graphics: boolean, setGraphics: (b: boolean) =>
   const H = sel.shelfId ? shelvesOf(v).find((x) => x.id === sel.shelfId) : undefined
   if (H) {
     // The row moves as one; «Bare denne» takes the one shelf out of it (Bjørn 9.11.2026)
-    const ids = chosenShelves(v, sel)
-    const n = ids.length
-    const row = shelfRow(v, H.id).length
-    const stack = shelvesIn(v, H.wallId, H.module, sideOf(v, H))
-    const go = (m: ShelvesMove, why: string) => {
-      const next = moveShelves(v, rules, ids, m)
-      if (next === v) return p.onToast(why)
-      onEdit(() => next)
-      const y = shelvesOf(next).find((x) => x.id === H.id)!.y
-      if (tooHigh(rules, y)) p.onToast(highWarning(rules))
-    }
+    const a = shelfActions(v, sel, H, onEdit, p.onToast, (shelfId, shelfOnly) => onSelect({ wallId: w.id, side: s, shelfId, shelfOnly }))
+    const { n, row, what } = a
+    const go = a.move
+    const stack = shelvesIn(v, H.wallId, H.module, s)
     const step = rules.shelf.step
-    const what = n > 1 ? 'Raden' : 'Hyllen'
     return {
       name: n > 1 ? 'Hyllerad' : 'Hylle',
       meta: [
@@ -362,7 +356,7 @@ function content(p: PillActions, graphics: boolean, setGraphics: (b: boolean) =>
         </>
       ) : (
         <>
-          {/* Up and down explain themselves (arrows), so they go without text to keep the pill short */}
+          {/* Up and down explain themselves, so they go without text and the pill fits beside both side panels */}
           <QBtn title={`Senk ${mm(step)} mm`} label="Senk" onClick={() => go({ dy: -step }, `${what} kan ikke gå lavere her`)}>
             <ArrowDown size={15} />
           </QBtn>
@@ -377,12 +371,7 @@ function content(p: PillActions, graphics: boolean, setGraphics: (b: boolean) =>
           <QBtn
             title={n > 1 ? 'Legg til en rad til over (eller under)' : 'Legg til en hylle til i samme felt'}
             label={n > 1 ? 'Rad til' : 'Hylle til'}
-            onClick={() => {
-              const r = addShelvesAbove(v, rules, ids)
-              if ('error' in r) return p.onToast(r.error)
-              onEdit(() => r.v)
-              onSelect({ wallId: w.id, side: s, shelfId: r.ids[ids.indexOf(H.id)] ?? r.ids[0] })
-            }}
+            onClick={a.more}
           >
             <Plus size={15} />
             {n > 1 ? 'Rad til' : 'Hylle til'}
@@ -390,12 +379,7 @@ function content(p: PillActions, graphics: boolean, setGraphics: (b: boolean) =>
           <QBtn
             title={n > 1 ? 'Kopier raden til nærmeste ledige felt · på desktop også Alt + dra' : 'Kopier hyllen til nærmeste ledige felt · på desktop også Alt + dra'}
             label="Kopier"
-            onClick={() => {
-              const r = copyShelvesNear(v, rules, ids, s === 1 ? 1 : -1)
-              if (!r) return p.onToast('Ingen ledige felt på denne siden')
-              onEdit(() => r.v)
-              onSelect({ wallId: w.id, side: s, shelfId: r.ids[ids.indexOf(H.id)], shelfOnly: sel.shelfOnly })
-            }}
+            onClick={a.copy}
           >
             <Copy size={15} />
             Kopier

@@ -5,7 +5,8 @@
 import * as THREE from 'three'
 import { faceNormal, sideOf } from '../../../domain/faces'
 import { pointAlong, pointKey, wallDirection } from '../../../domain/grid'
-import { shelfRow, shelvesOf } from '../../../domain/shelves'
+import { shelvesOf } from '../../../domain/shelves'
+import { chosenShelves } from '../../plan/selection'
 import type { Point } from '../../../domain/types'
 import { RECIPES } from '../../../foga/recipes'
 import { rules } from '../../env'
@@ -33,8 +34,8 @@ export function buildShelves(c: BuildContext) {
   const inset = (rules.wall.cc - width) / 2
   /** The boards meeting at each bracket: post, face and height → the directions along the wall their boards lie in. */
   const brackets = new Map<string, { p: Point; n: Point; y: number; dirs: number[]; wallId: string; dir: Point }>()
-  // The chosen shelf glows with its row, or alone with shelfOnly (plan/selection.ts chosenShelves)
-  const chosen = new Set(!sel.shelfId ? [] : sel.shelfOnly ? [sel.shelfId] : shelfRow(v, sel.shelfId).map((x) => x.id))
+  // The chosen shelf glows with its row, or alone with shelfOnly
+  const chosen = new Set(chosenShelves(v, sel))
   for (const f of shelvesOf(v)) {
     const w = v.walls.find((x) => x.id === f.wallId)
     if (!w) continue

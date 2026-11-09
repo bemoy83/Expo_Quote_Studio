@@ -9,7 +9,7 @@ import { CELL } from '../../../domain/grid'
 import { removeInnerBeam } from '../../../domain/innerBeams'
 import { removeObject } from '../../../domain/objects'
 import { removeRoom, roomAt } from '../../../domain/rooms'
-import { removeShelf } from '../../../domain/shelves'
+import { removeShelves } from '../../../domain/shelves'
 import { faceOfPoint, freeTextileAt, removeFreeTextile, updateFace } from '../../../domain/textile/free'
 import { removeTextile, textileAt, updateTextile } from '../../../domain/textile/inFrame'
 import { tileAt } from '../../../domain/floor/tiles'
@@ -35,7 +35,7 @@ export function eraseTargetAt(v: Variant, hits: PlanHits, standKeys: ReadonlySet
   if (o) return { group: 'object', id: o.id, erase: (x) => removeObject(x, o.id) }
   // A shelf, before the wall and the print behind it
   const sh = hits.shelfAt(q)
-  if (sh) return { group: 'shelf', id: sh.id, erase: (x) => removeShelf(x, sh.id) }
+  if (sh) return { group: 'shelf', id: sh.id, erase: (x) => removeShelves(x, [sh.id]) }
   // Free-standing textile wall: the motif on the face clicked first, then the wall
   const ft = freeTextileAt(v, q, 0.15)
   if (ft) {
