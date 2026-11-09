@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { RULES } from '../../rules/rules';
 import type { Variant } from '../types';
 import { createVariant } from '../variant';
-import { brushBlocked, brushHeight, paintShelves } from './brush';
+import { brushBlocked, brushHeight, paintShelves, spreadFelt, stackFelt } from './brush';
 import { addShelf } from './edit';
 import { shelvesIn, shelvesOf } from './model';
 
@@ -34,12 +34,6 @@ describe('the brush height', () => {
   it('is not caught by a shelf in its own felt', () => {
     const v = at(row(), 2, 1.15);
     expect(brushHeight(v, RULES, 'side-back', 1, 2, 2, 1.2)).toBe(1.2);
-  });
-
-  it('with Shift only goes to the step', () => {
-    expect(brushHeight(row(), RULES, 'side-back', 1, 2, 2, 1.32, true)).toBe(1.3);
-    expect(brushHeight(row(), RULES, 'side-back', 1, 2, 2, 1.28, true)).toBe(1.3);
-    expect(brushHeight(at(row(), 1, 1.15), RULES, 'side-back', 1, 2, 2, 1.2, true)).toBe(1.2);
   });
 
   it('stays within lowest and highest (H4)', () => {
@@ -75,5 +69,42 @@ describe('a brush stroke', () => {
     expect(brushBlocked(v, RULES, 'side-back', 2, 1, 1.2)).toMatch(/For nær/);
     expect(brushBlocked(v, RULES, 'side-back', 2, 1, 1.15)).toBeNull();
     expect(paintShelves(v, RULES, 'side-back', 1, 2, 2, 1.2).ids).toEqual([]);
+  });
+});
+
+describe('Shift: stacking a felt and spreading it (Bjørn 9.11.2026)', () => {
+  const ys = (v: Variant, m: number) => shelvesIn(v, 'side-back', m, 1).map((x) => x.y);
+
+  it('a Shift click is «Hylle til i feltet»: an empty felt gets one at the start height', () => {
+    expect(ys(stackFelt(row(), RULES, 'side-back', 1, 2, 1).v, 2)).toEqual([1.3]);
+  });
+
+  it('dragged up, one more each step: over the top one, then under', () => {
+    expect(ys(stackFelt(row(), RULES, 'side-back', 1, 2, 3).v, 2)).toEqual([1.3, 1.7, 2.1]);
+    expect(ys(stackFelt(row(), RULES, 'side-back', 1, 2, 4).v, 2)).toEqual([0.9, 1.3, 1.7, 2.1]);
+  });
+
+  it('keeps the shelves the felt had and stops where it is full', () => {
+    const r = stackFelt(at(row(), 2, 0.9), RULES, 'side-back', 1, 2, 20);
+    expect(ys(r.v, 2)).toContain(0.9);
+    expect(r.full).toBeTruthy();
+    expect(r.ids.length).toBeGreaterThan(2);
+  });
+
+  it('dragged sideways, the felt is copied to the felts dragged over', () => {
+    const v = stackFelt(row(), RULES, 'side-back', 1, 2, 2).v;
+    const r = spreadFelt(v, RULES, 'side-back', 1, 2, 0, 4);
+    expect(ys(r.v, 1)).toEqual([1.3, 1.7]);
+    expect(ys(r.v, 3)).toEqual([1.3, 1.7]);
+    expect(ys(r.v, 4)).toEqual([1.3, 1.7]);
+    expect(r.out.map((x) => x.module)).toEqual([0]);
+  });
+
+  it('a felt with a shelf at one of the heights keeps it; one with a shelf too close gets none', () => {
+    const v = at(at(stackFelt(row(), RULES, 'side-back', 1, 2, 2).v, 3, 1.3), 4, 1.65);
+    const r = spreadFelt(v, RULES, 'side-back', 1, 2, 2, 4);
+    expect(ys(r.v, 3)).toEqual([1.3, 1.7]);
+    expect(ys(r.v, 4)).toEqual([1.65]);
+    expect(r.out.map((x) => x.module)).toEqual([4]);
   });
 });

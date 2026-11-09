@@ -1,11 +1,14 @@
 // Shelves (hylle 6311): the shelf brush in the wall drawer's drawing (Bjørn 9.11.2026). The drawing knows the height, so
 // the brush lays a shelf in the felt and at the height the pointer is at; dragged sideways it lays a row at one height.
 // The height the pointer gives is caught by a shelf beside it (so a row stays one row, H2), else by a quick pick, else it
-// goes to the nearest step (H4). The catch is kept small so a shelf never lands far from where it was clicked, and Shift
-// turns it off. The preview and the click both use paintShelves, so what is shown dimmed is what is stored.
+// goes to the nearest step (H4). The catch is kept small so a shelf never lands far from where it was clicked. With
+// Shift the brush stacks instead (Bjørn 9.11.2026): more shelves in the felt by the «Hylle til i feltet» rule
+// (stackFelt), and the felt's shelves copied to the felts it is dragged over (spreadFelt). The preview and the release
+// both use these functions, so what is shown dimmed is what is stored.
 // Byggeregler H1, H2, H4, H5, H6 (docs/byggeregler.md).
 import type { Rules } from '../../rules/rules';
 import type { FaceSide } from '../faces';
+import { addShelfToFelt } from './edit';
 import { nextId } from '../ids';
 import type { Variant } from '../types';
 import { EPS, fitsIn, shelfBlocked, shelfHeight, shelvesIn, shelvesOf, shelvesOn } from './model';
@@ -22,11 +25,9 @@ const nearest = (ys: number[], to: number, within: number) =>
 /**
  * The height the brush lays at in modules `m0` (where it was pressed) to `m1` on a face, from the pointer's height `raw`
  * (top of the board, m): that of a shelf in a felt beside them (or in them, past the first) within BRUSH_CATCH.row, else
- * a quick pick within BRUSH_CATCH.quick, else the nearest step, kept within lowest and highest (H4). `free` (Shift): the
- * nearest step only.
+ * a quick pick within BRUSH_CATCH.quick, else the nearest step, kept within lowest and highest (H4).
  */
-export function brushHeight(v: Variant, rules: Rules, wallId: string, s: FaceSide, m0: number, m1: number, raw: number, free = false): number {
-  if (free) return shelfHeight(rules, raw);
+export function brushHeight(v: Variant, rules: Rules, wallId: string, s: FaceSide, m0: number, m1: number, raw: number): number {
   const lo = Math.min(m0, m1) - 1;
   const hi = Math.max(m0, m1) + 1;
   const beside = shelvesOn(v, wallId, s)
@@ -71,6 +72,56 @@ export function paintShelves(v: Variant, rules: Rules, wallId: string, s: FaceSi
     const id = nextId(shelvesOf(x).map((o) => o.id), 'h');
     x = { ...x, shelves: [...shelvesOf(x), { id, wallId, module: m, side: s, y: h }] };
     ids.push(id);
+  }
+  return { v: x, ids, out };
+}
+
+/**
+ * Shift on the brush: `n` more shelves in felt `module`, one by one by the «Hylle til i feltet» rule (addShelfToFelt: an
+ * empty felt one at a neighbour's height or the start height, then the next quick pick above, then below). Stops where
+ * the felt has no more room, with why in `full`.
+ */
+export function stackFelt(v: Variant, rules: Rules, wallId: string, s: FaceSide, module: number, n: number): { v: Variant; ids: string[]; full?: string } {
+  let x = v;
+  const ids: string[] = [];
+  for (let i = 0; i < n; i++) {
+    const r = addShelfToFelt(x, rules, wallId, module, s);
+    if ('error' in r) return { v: x, ids, full: r.error };
+    x = r.v;
+    ids.push(r.id);
+  }
+  return { v: x, ids };
+}
+
+/**
+ * Shift dragged sideways: the shelves of felt `from` copied, at their heights, to each felt from `m0` to `m1` (either
+ * order) but `from`, as «Kopier feltet» does. A felt keeps a shelf it has at one of those heights already; one that
+ * cannot take all the others (blocked, or too close to its own shelves, H5, H6) gets none and is in `out`.
+ */
+export function spreadFelt(v: Variant, rules: Rules, wallId: string, s: FaceSide, from: number, m0: number, m1: number): BrushResult {
+  const ys = shelvesIn(v, wallId, from, s).map((x) => x.y);
+  const ids: string[] = [];
+  const out: BrushResult['out'] = [];
+  let x = v;
+  if (!ys.length) return { v, ids, out };
+  for (let m = Math.min(m0, m1); m <= Math.max(m0, m1); m++) {
+    if (m === from) continue;
+    const blocked = shelfBlocked(x, wallId, m, s);
+    if (blocked) {
+      out.push({ module: m, why: blocked });
+      continue;
+    }
+    const have = shelvesIn(x, wallId, m, s).map((o) => o.y);
+    const add = ys.filter((y) => !have.some((h) => Math.abs(h - y) < EPS));
+    if (!add.every((y) => fitsIn(x, rules, wallId, m, s, y))) {
+      out.push({ module: m, why: `Feltet har hyller som står for nær · minst ${Math.round(rules.shelf.gap * 1000)} mm lysmål` });
+      continue;
+    }
+    for (const y of add) {
+      const id = nextId(shelvesOf(x).map((o) => o.id), 'h');
+      x = { ...x, shelves: [...shelvesOf(x), { id, wallId, module: m, side: s, y }] };
+      ids.push(id);
+    }
   }
   return { v: x, ids, out };
 }

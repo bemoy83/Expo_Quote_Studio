@@ -1,6 +1,5 @@
 // The shelf brush's stroke in the wall drawer's drawing (shelfBrush.ts): the shelves it lays dimmed, felts that take none
 // hatched at that height, and the height in the dark measure pill (docs/forhandsvisning.md).
-import { mm } from '../dims'
 import { ShelfFront } from '../elevation'
 import { rules } from '../../env'
 import { HatchPattern, PillAt } from '../layers/Previews'
@@ -17,7 +16,6 @@ export function BrushPreview({ stroke, sc, H, u, x }: { stroke: Stroke; sc: Plan
   const lo = Math.min(stroke.m0, stroke.m1)
   const hi = Math.max(stroke.m0, stroke.m1)
   const cx = x(lo, hi + 1) + (hi + 1 - lo) / 2
-  const n = stroke.ids.length
   const band = Math.max(thickness, 3 * u) + sizePx(sc, 4)
   return (
     <PlanScaleContext.Provider value={sc}>
@@ -34,7 +32,7 @@ export function BrushPreview({ stroke, sc, H, u, x }: { stroke: Stroke; sc: Plan
             <rect x={x(o.module + inset, o.module + 1 - inset)} y={z - sizePx(sc, 2)} width={width} height={band} fill="url(#shelf-brush-hatch)" />
           </g>
         ))}
-        <PillAt at={[cx, z - sizePx(sc, 14)]} text={n > 1 ? `${n} × ${mm(stroke.y)}` : mm(stroke.y)} />
+        <PillAt at={[cx, z - sizePx(sc, 14)]} text={stroke.label} />
       </g>
     </PlanScaleContext.Provider>
   )

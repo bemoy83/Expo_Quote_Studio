@@ -63,7 +63,7 @@ const TAIL = 'dra tekstilvegg eller motiv til veggen, klikk det for å endre'
 /** The help line: what a click or drag in the drawing does now. */
 /** The hint line while the shelf brush is out (Bjørn 9.11.2026). */
 export const BRUSH_HINT =
-  'Klikk der hyllen skal stå · dra sideveis for en rad, opp og ned for høyden · fester seg til nabohyllen og de faste høydene, Shift: fritt i steg på 50 mm · Esc legger bort pensla'
+  'Klikk der hyllen skal stå · dra sideveis for rad, opp og ned for høyde · Shift: klikk gir en hylle til i feltet, dra opp for flere, sideveis for samme fordeling i flere felt · Esc legger bort pensla'
 
 export function wallHint(x: { O?: Opening; door: boolean; painting: boolean; tool: PaintTool; printing: boolean; T?: TextileWall; F?: Foil; S?: Shelf; felt?: 'decor' | 'extras'; extras?: boolean; w: Wall }): string {
   const { O, door, painting, tool, printing, T, F, S, felt, extras, w } = x
