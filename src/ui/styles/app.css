@@ -2837,6 +2837,11 @@ select.cin {
 .drawer2 > .wd-hint {
   position: static;
 }
+/* The shelf brush's hint changes as it aims: two lines kept, so the drawing stays put under the pointer */
+.drawer2 > .wd-hint.steady {
+  min-height: calc(2lh + 16px);
+  box-sizing: border-box;
+}
 /* Under the settings: the graphics shelf or the door's mini plan, only in the detail height */
 .wd-sec {
   flex: 1;

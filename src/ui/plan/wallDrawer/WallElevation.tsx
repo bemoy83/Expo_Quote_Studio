@@ -2,7 +2,7 @@
 // against it, textile frames and shelves (hylle 6311). Frames and decals are moved and resized here, shelves moved up,
 // down and sideways, motifs and frames dropped from the motif library (Profilering), and while a paint tool is out each plate is a
 // target for it.
-import { useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent } from 'react'
+import { useEffect, useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent } from 'react'
 import { foilCenter } from '../../../domain/decor'
 import { doorLevels, doorRal, doorWindows } from '../../../domain/doors'
 import { felt, type FaceSide } from '../../../domain/faces'
@@ -31,6 +31,8 @@ import { elevationItems, frame, shelfChains, textileDrawing, type FrameFacts } f
 import { planScale } from '../planScale'
 import { useElementSize } from '../../useElementSize'
 import type { PaintTool } from './paint'
+import { BrushPreview } from './BrushPreview'
+import { useShelfBrush } from './shelfBrush'
 
 const EPS = 1e-6
 
@@ -67,6 +69,12 @@ interface Props {
   tool: PaintTool
   /** The chosen tool on plate `i`: `first` on press, then for each plate swept over (brush only). */
   paintAt: (i: number, key: string, first: boolean, leaf?: boolean) => void
+  /** The shelf brush is out (Hyller og heng): the drawing lays shelves where it is clicked. */
+  shelfBrush?: boolean
+  /** Esc with the shelf brush out and nothing pressed. */
+  onBrushDone?: () => void
+  /** What the hint line says while the shelf brush aims (null: its own hint). */
+  onBrushHint?: (text: string | null) => void
   /** Modules of this wall holding a door (not a curtain). */
   doorModules: Set<number>
   ratioOf: (id?: string) => number
@@ -90,6 +98,11 @@ export function WallElevation(p: Props) {
   const z = (h: number) => H - h
   const drag = useDecorDrag({ svg, w, s, L, select, ratioOf, onEdit: p.onEdit, onCheckpoint: p.onCheckpoint })
   const shelfDrag = useShelfDrag({ svg, s, select, onEdit: p.onEdit, onCheckpoint: p.onCheckpoint })
+  const brush = useShelfBrush({ svg, v, w, s, L, H, on: !!p.shelfBrush, onEdit: p.onEdit, onDone: () => p.onBrushDone?.() })
+  const { onBrushHint } = p
+  useEffect(() => onBrushHint?.(brush.hint ?? null), [brush.hint, onBrushHint])
+  /** Nothing in the drawing takes a press while a tool is out: the paint tools' plate targets or the shelf brush take it. */
+  const tooled = painting || !!p.shelfBrush
 
   // The drawing's size on screen: the margins for the dimensions are screen px (ElevationDims). Measured on a box the
   // svg fills, never on the svg, whose size would follow the view box it gets from the measure (a loop in Safari).
@@ -288,7 +301,7 @@ export function WallElevation(p: Props) {
             const m = findMotif(motifs, f.motif)
             const on = F?.id === f.id
             return (
-              <g key={f.id} onPointerDown={(e) => drag(e, 'fmove', f)} style={{ cursor: 'move' }} pointerEvents={painting ? 'none' : undefined}>
+              <g key={f.id} onPointerDown={(e) => drag(e, 'fmove', f)} style={{ cursor: 'move' }} pointerEvents={tooled ? 'none' : undefined}>
                 {m && f.full ? (
                   <Print m={m} x={x} y={z(f.y + f.height / 2)} width={f.width} height={f.height} crop={f.crop} />
                 ) : m ? (
@@ -327,7 +340,7 @@ export function WallElevation(p: Props) {
                 on={p.chosen.includes(f.id)}
                 grip={[below, above]}
                 style={{ cursor: 'move' }}
-                pointerEvents={painting ? 'none' : undefined}
+                pointerEvents={tooled ? 'none' : undefined}
                 onPointerDown={(e) =>
                   p.chosen.includes(f.id) ? shelfDrag(e, f, p.chosen, p.shelfOnly, v) : shelfDrag(e, f, shelfRow(v, f.id).map((x) => x.id), undefined, v)
                 }
@@ -355,7 +368,7 @@ export function WallElevation(p: Props) {
             const m = fill === 'print' ? findMotif(motifs, t.motif) : undefined
             const on = T?.id === t.id
             return (
-              <g key={t.id} onPointerDown={(e) => drag(e, 'tmove', t)} style={{ cursor: 'move' }} pointerEvents={painting ? 'none' : undefined}>
+              <g key={t.id} onPointerDown={(e) => drag(e, 'tmove', t)} style={{ cursor: 'move' }} pointerEvents={tooled ? 'none' : undefined}>
                 <TextileFace x={x} y={y} w={tw} h={height} m={m} fill={fill} u={fr.u} braces={d.braces} splices={d.splices} />
                 {on && <rect x={x - 0.014} y={y - 0.014} width={tw + 0.028} height={height + 0.028} fill="none" stroke={INK} strokeWidth={0.016} />}
                 {on && <Handles x={x} y={y} w={tw} h={height} onDown={(e, edge) => drag(e, { edge }, t)} />}
@@ -382,6 +395,10 @@ export function WallElevation(p: Props) {
               return <rect key={`hit${i}`} x={spanX(f.a, f.b)} y={z(H)} width={f.w} height={H - rules.wall.feet} fill="transparent" {...paintOn(i, m.key)} />
             })}
 
+          {/* The shelf brush: what a click or drag lays, dimmed, and over the whole wall the target that takes the press */}
+          {brush.stroke && <BrushPreview stroke={brush.stroke} sc={sc} H={H} u={fr.u} x={spanX} />}
+          {p.shelfBrush && <rect x={0} y={0} width={L} height={H} fill="transparent" {...brush.handlers} />}
+
           {/* Where a drop from the shelf would land */}
           {spot && (
             <rect
@@ -398,7 +415,7 @@ export function WallElevation(p: Props) {
             />
           )}
 
-          <ElevationDims w={w} s={s} name={name} L={L} H={H} items={items} leaders={fr.leaders} top={fr.top} width={fr.width} right={fr.right} sc={sc} fields={fields} shelves={shelfChains(rules, shelfStacks({ ...v, shelves }), u)} />
+          <ElevationDims w={w} s={s} name={name} L={L} H={H} items={items} leaders={fr.leaders} top={fr.top} width={fr.width} right={fr.right} sc={sc} fields={fields} shelves={shelfChains(rules, shelfStacks({ ...v, shelves: brush.shelves ?? shelves }), u)} />
         </svg>
       </div>
     </div>

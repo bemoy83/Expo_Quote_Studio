@@ -133,6 +133,14 @@ vei tilbake til paletten (`FeltPanel` i ui/plan/wallDrawer/panels.tsx):
   under; den første høyden alle feltene har plass i, ellers den flest har plass i (`addShelfRowToFace`, H2, H5, H6).
 - Å legge til hyller velger ingenting (Bjørn 9.11.2026): du kan trykke videre uten avbrudd, og så trykke en hylle eller
   rad i veggrisset for å endre den. Gjelder også «Hylle til i feltet».
+- Hyllepensel (Bjørn 9.11.2026): penselknappen i hylleseksjonen på «Hyller og heng» legger hyller rett i veggrisset,
+  i feltet og på høyden pekeren står på. Musen over et felt viser dempet den hyllen et klikk legger, med høyden i en
+  mørk pille og i målkjeden; trykk og dra sideveis gir en rad på én høyde, opp og ned flytter høyden før du slipper.
+  Høyden fester seg først til en hylle i nabofeltet innen 60 mm (raden holder sammen, H2), så til de faste høydene
+  innen 40 mm, ellers nærmeste 50 mm (H4). Shift slår festingen av. Felt som ikke kan ta hylla (en hylle der fra før,
+  under 100 mm lysmål, dør, tekstil, hjørne) skraveres med grunnen i hintlinjen, og klikket gjør ingenting der.
+  Et felt med hyller fra før får en hylle til i stabelen. Pensla velger ingenting og blir liggende; Esc, et nytt trykk
+  på knappen eller «Farge og profilering» legger den bort. På iPad (ingen hover) vises hylla fra du trykker.
 - ← → bytter felt og beholder siden. Dører er ikke felt: klikk på en dør velger døren.
 - Malerspann og malerkost ligger også på fargesiden. Velger du ett av dem, slipper feltet, og du farger hele veggen eller
   plate for plate som før, uten å gå ut av skuffen.

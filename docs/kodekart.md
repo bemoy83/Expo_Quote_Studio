@@ -149,7 +149,7 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
   `plan/SelectionPill.tsx` (Ned/Opp, Høyde med hurtigvalgene, Hylle til, Kopier, Bare denne); det pillen og skuffen gjør
   med valgte hyller i `plan/shelfActions.ts`
 - Skuff: «Hyller og heng» i `plan/wallDrawer/fittings.tsx` (én seksjon per slag tilbehør: `FeltFittings` for et felt, `WallFittings` for hele siden; heng får sin seksjon her) og `ShelfPanel` der (Hylle til, Kopier, Kopier feltet, Fordel jevnt; hyllene i feltet velges i veggrisset), og et felt valgt ved klikk på en plate i veggrisset (`felt` i `PlanSelection`, `FeltPanel` i `panels.tsx` for siden Farge og profilering (platefarge, Print; Dekal i Profilering), `FeltFittings` for Hyller og heng, byttet med `FeltPage`, ← → bytter felt, spann og kost slipper feltet; søppelbøtta `clearFelt`), tegnet
-  `ShelfFront` med usynlig gripeflate (`plan/elevation.tsx`), dra og Alt + dra `useShelfDrag` (`plan/wallDrawer/drag.ts`), høydekjedene `shelfChains` (`elevationMeasure.ts`, tegnet i
+  `ShelfFront` med usynlig gripeflate (`plan/elevation.tsx`), hyllepensel i veggrisset `plan/wallDrawer/shelfBrush.ts` (peker) og `BrushPreview.tsx` (dempet hylle, skravur, pille) med høyden og strøket i `domain/shelves/brush.ts` (`brushHeight`, `paintShelves`), dra og Alt + dra `useShelfDrag` (`plan/wallDrawer/drag.ts`), høydekjedene `shelfChains` (`elevationMeasure.ts`, tegnet i
   `ElevationDims.tsx`)
 - 3D: `scene3d/build/shelves.ts` (plate med usynlig gripeboks `shelf-grip`, 91F og 91FF fra omrisset i
   `build/profiles.ts`) · dra og Alt + dra i `scene3d/pointer/drag.ts`
