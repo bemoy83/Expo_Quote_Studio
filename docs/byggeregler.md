@@ -136,12 +136,13 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 - **T16 Hel lengde over et annet nivå.** Hele lengder går foran. En hevet drager (T13) ligger en dragerhøyde over de
   andre, så der en hevet og en ikke hevet drager krysser, deles ingen av dem (unntak fra T10): den hevede ligger løst
   oppå den andre, og det står ikke noe 94 × 80 i krysset. Det gjelder begge veier, også når det er drageren som går
-  gjennom som er hevet. På samme måte går en hevet drager over en systemvegg mellom stolpene uten å deles (T15), og
-  den holder veggen der som en krok gjør. Den deles fortsatt på en stolpe (T4, T14). Løst oppå er nok så lenge den
+  gjennom som er hevet. På samme måte går en hevet drager over en systemvegg mellom stolpene uten å deles (T15). Der
+  holder den ikke veggen: en drager som bare ligger oppå, uten stolpe, krok eller skjøtestykke, er ingen støtte, så
+  veggen får fotplater som uten drageren (S-reglene). Den deles fortsatt på en stolpe (T4, T14). Løst oppå er nok så lenge den
   hele lengden er høyst 6 m (T2) og festet i hver ende til en stolpe, en vegg eller en tverrgående drager; blir den
   lengre, står skjøten i krysset som før, med 94 × 80 oppå. En ende som henger på en drager (T9) er uendret. To hevede
   dragere ligger i samme høyde og følger T10.
-  *Bjørn 10.11.2026 · `rules.beam.max` · kode `src/calc/beamLift.ts`, `src/calc/context.ts`, `src/calc/wallSupports.ts` · test `src/calc/beamLift.test.ts`*
+  *Bjørn 10.11.2026 · `rules.beam.max` · kode `src/calc/beamLift.ts`, `src/calc/context.ts` · test `src/calc/beamLift.test.ts`*
 ## D · Dør og forheng
 
 - **D1 Dør.** Fogas ferdige dør: karm i 292 med lås 410 ferdig montert, plukkes som ett dørblad. Bladet er 2000 høyt og

@@ -162,7 +162,7 @@ describe('takdrager over tekstilvegg', () => {
       expect(lift(v).lift.hooks).toEqual([[6, 5]]);
     });
 
-    it('a lifted beam off the grid passes over a wall between its posts, which it still holds', () => {
+    it('a lifted beam off the grid passes over a wall between its posts, which it does not hold', () => {
       // Inner wall x = 0..3 at y = 2; b1 x = 1,5 crosses it between the posts at x = 1 and x = 2
       const wall = { id: 'w1', from: [0, 2] as Point, to: [3, 2] as Point };
       const base = { ...variant(ROW, { innerBeams: [beam('b1', [1.5, 0], [1.5, 4])] }), walls: [...createVariant('A', ROW).walls, wall] };
@@ -172,8 +172,12 @@ describe('takdrager over tekstilvegg', () => {
       expect(l.walls).toEqual([[1.5, 0]]);
       const run = (x: Variant) => calc(x, RULES, DEFAULT_CATALOG, { payer: 'utstiller', ral: '9010' });
       expect(run(v).hooks.filter((h) => h.at[1] === 2)).toEqual([]);
+      // Lying loose on the wall, not on a post, a hook or a joint piece, it does not hold it: 3 m from the T at x = 0
+      // to a free end takes a plate at the end. Hung on the hook (not lifted), the wall is held at x = 1,5 and the plate
+      // for the last 1,5 m is pulled in one post
       const plates = (x: Variant) => run(x).wallSupports.filter((f) => f.at[1] === 2);
-      expect(plates(v)).toEqual(plates(base));
+      expect(plates(v)).toEqual([{ at: [3, 2], orientation: 'h' }]);
+      expect(plates(base)).toEqual([{ at: [2, 2], orientation: 'h' }]);
     });
   });
 });

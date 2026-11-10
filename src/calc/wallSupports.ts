@@ -68,25 +68,19 @@ export function holdsRun(mods: readonly BuiltModule[], beams: BeamLayout): (run:
 
 /**
  * Where a takdrager hangs on the run between two of its posts, on a hook on the top rail 92 (Byggeregel T15): metres
- * from the run's first post, not whole. Such a hook holds the wall there like a beam on a post (Bjørn 10.11.2026), and so
- * does a lifted beam lying across the wall there (T16).
+ * from the run's first post, not whole. Such a hook holds the wall there like a beam on a post (Bjørn 10.11.2026).
  */
 export function hookHolds(run: Run, beams: BeamLayout): number[] {
   const h = run.orientation === 'h';
   const [line, lo] = h ? [run.points[0][1], run.points[0][0]] : [run.points[0][0], run.points[0][1]];
   const len = run.points.length - 1;
   const out = new Set<number>();
-  const between = (t: number) => t > 1e-6 && t < len - 1e-6 && Math.abs(t - Math.round(t)) > 1e-6;
   for (const s of beams.segments) {
     for (const p of [s.from, s.to]) {
       const [along, across] = h ? [p[0], p[1]] : [p[1], p[0]];
       const t = Math.round((along - lo) * 1000) / 1000;
-      if (Math.abs(across - line) < 1e-6 && between(t)) out.add(t);
+      if (Math.abs(across - line) < 1e-6 && t > 1e-6 && t < len - 1e-6 && Math.abs(t - Math.round(t)) > 1e-6) out.add(t);
     }
-    // A lifted beam passing over the wall between its posts rests on it, as on a hook (Byggeregel T16)
-    const [a, b] = h ? [s.from, s.to] : [[s.from[1], s.from[0]], [s.to[1], s.to[0]]];
-    const t = Math.round((a[0] - lo) * 1000) / 1000;
-    if (Math.abs(a[0] - b[0]) < 1e-6 && Math.min(a[1], b[1]) < line - 1e-6 && Math.max(a[1], b[1]) > line + 1e-6 && between(t)) out.add(t);
   }
   return [...out].sort((a, b) => a - b);
 }
