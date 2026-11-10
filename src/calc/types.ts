@@ -125,7 +125,8 @@ export interface Margin {
   unknown: number;
   /** Costs once per quote (start of print, admin and picking, delivery), in `cost`: not a price, the quote's lines
    *  carry none of it (docs/kostmodell.md). */
-  order: { id: string; name: string; cost: number }[];
+  /** `minutes`: shown on the work order as montering (walking to and from the stand). */
+  order: { id: string; name: string; cost: number; minutes?: number }[];
 }
 
 export interface CalcResult {

@@ -22,7 +22,7 @@ export function summary(c: CalcContext, lines: CalcLine[], organiserLines: CalcL
   const knownSum = known.reduce((a, l) => a + l.sum, 0);
   // Once per quote, not per line or frame (Bjørn 7.11.2026: three motifs get one start, one picking, one delivery)
   const printed = c.prod.pieces.some((p) => p.fill === 'print') || c.prod.free.some((f) => f.faces.some((x) => x.fill === 'print'));
-  const order = lines.length ? c.pricing.orderCosts.filter((o) => o.when !== 'trykk' || printed).map(({ id, name, cost }) => ({ id, name, cost })) : [];
+  const order = lines.length ? c.pricing.orderCosts.filter((o) => o.when !== 'trykk' || printed).map(({ id, name, cost, minutes }) => ({ id, name, cost, ...(minutes ? { minutes } : {}) })) : [];
   const knownCost = known.reduce((a, l) => a + l.cost!, 0) + order.reduce((a, o) => a + o.cost, 0);
   const { floor, floorTotal } = floorAreas(v);
   const foil = foilAreas(c);

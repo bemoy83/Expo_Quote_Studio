@@ -226,6 +226,7 @@ function orderCosts(x: unknown): OrderCost[] {
     if (!isObj(o) || !isStr(o.id) || !isStr(o.name)) return fail(`${at} mangler id eller navn.`);
     for (const k of ['cost', 'baseYear', 'personMinutes']) if (o[k] !== undefined && !isNum(o[k])) return fail(`${at}: ${k} må være et tall.`);
     if (o.when !== undefined && o.when !== 'trykk') return fail(`${at}: when kan bare være "trykk".`);
+    if (o.workOrder !== undefined && typeof o.workOrder !== 'boolean') return fail(`${at}: workOrder må være true eller false.`);
     return {
       id: o.id,
       name: o.name,
@@ -233,6 +234,7 @@ function orderCosts(x: unknown): OrderCost[] {
       baseYear: o.baseYear as number | undefined,
       personMinutes: o.personMinutes as number | undefined,
       ...(o.when ? { when: 'trykk' as const } : {}),
+      ...(o.workOrder ? { workOrder: true } : {}),
     };
   });
 }

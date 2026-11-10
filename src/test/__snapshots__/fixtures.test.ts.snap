@@ -473,9 +473,9 @@ exports[`01-hjorne-arrangor.json > variant A > calculation 1`] = `
     "wallSupports": 1,
   },
   "margin": {
-    "cost": 4012.210874565333,
-    "db": 6977.789125434667,
-    "dg": 0.6349216674644829,
+    "cost": 4184.2663118479995,
+    "db": 6805.7336881520005,
+    "dg": 0.619266031678981,
     "order": [
       {
         "cost": 172.05543728266665,
@@ -484,8 +484,14 @@ exports[`01-hjorne-arrangor.json > variant A > calculation 1`] = `
       },
       {
         "cost": 172.05543728266665,
-        "id": "transport",
-        "name": "Varelevering ut og inn",
+        "id": "gange-montering",
+        "minutes": 20,
+        "name": "Gange til og fra montering",
+      },
+      {
+        "cost": 172.05543728266665,
+        "id": "gange-demontering",
+        "name": "Gange til og fra demontering",
       },
     ],
     "sum": 10990,
@@ -1601,9 +1607,9 @@ exports[`02-hjorne-utstiller.json > variant A > calculation 1`] = `
     "wallSupports": 0,
   },
   "margin": {
-    "cost": 3660.8408745653333,
-    "db": 10114.159125434668,
-    "dg": 0.7342402268918089,
+    "cost": 3832.896311848,
+    "db": 9942.103688152,
+    "dg": 0.7217498140219237,
     "order": [
       {
         "cost": 172.05543728266665,
@@ -1612,8 +1618,14 @@ exports[`02-hjorne-utstiller.json > variant A > calculation 1`] = `
       },
       {
         "cost": 172.05543728266665,
-        "id": "transport",
-        "name": "Varelevering ut og inn",
+        "id": "gange-montering",
+        "minutes": 20,
+        "name": "Gange til og fra montering",
+      },
+      {
+        "cost": 172.05543728266665,
+        "id": "gange-demontering",
+        "name": "Gange til og fra demontering",
       },
     ],
     "sum": 13775,
@@ -2333,9 +2345,9 @@ exports[`02-hjorne-utstiller.json > variant B > calculation 1`] = `
     "wallSupports": 3,
   },
   "margin": {
-    "cost": 2575.400874565333,
-    "db": 5434.599125434666,
-    "dg": 0.6784767946859758,
+    "cost": 2747.456311848,
+    "db": 5262.543688152,
+    "dg": 0.6569967151250936,
     "order": [
       {
         "cost": 172.05543728266665,
@@ -2344,8 +2356,14 @@ exports[`02-hjorne-utstiller.json > variant B > calculation 1`] = `
       },
       {
         "cost": 172.05543728266665,
-        "id": "transport",
-        "name": "Varelevering ut og inn",
+        "id": "gange-montering",
+        "minutes": 20,
+        "name": "Gange til og fra montering",
+      },
+      {
+        "cost": 172.05543728266665,
+        "id": "gange-demontering",
+        "name": "Gange til og fra demontering",
       },
     ],
     "sum": 8010,
@@ -3010,9 +3028,9 @@ exports[`03-rom.json > variant A > calculation 1`] = `
     "wallSupports": 0,
   },
   "margin": {
-    "cost": 2465.890874565333,
-    "db": 7144.109125434667,
-    "dg": 0.7434036550920569,
+    "cost": 2637.946311848,
+    "db": 6972.053688152,
+    "dg": 0.7254998634913632,
     "order": [
       {
         "cost": 172.05543728266665,
@@ -3021,8 +3039,14 @@ exports[`03-rom.json > variant A > calculation 1`] = `
       },
       {
         "cost": 172.05543728266665,
-        "id": "transport",
-        "name": "Varelevering ut og inn",
+        "id": "gange-montering",
+        "minutes": 20,
+        "name": "Gange til og fra montering",
+      },
+      {
+        "cost": 172.05543728266665,
+        "id": "gange-demontering",
+        "name": "Gange til og fra demontering",
       },
     ],
     "sum": 9610,
@@ -4014,9 +4038,9 @@ exports[`04-oy-takdrager.json > variant A > calculation 1`] = `
     "wallSupports": 0,
   },
   "margin": {
-    "cost": 4324.8108745653335,
-    "db": 5317.1891254346665,
-    "dg": 0.5514612243761322,
+    "cost": 4496.866311848,
+    "db": 5145.133688152,
+    "dg": 0.5336168521211367,
     "order": [
       {
         "cost": 172.05543728266665,
@@ -4025,8 +4049,14 @@ exports[`04-oy-takdrager.json > variant A > calculation 1`] = `
       },
       {
         "cost": 172.05543728266665,
-        "id": "transport",
-        "name": "Varelevering ut og inn",
+        "id": "gange-montering",
+        "minutes": 20,
+        "name": "Gange til og fra montering",
+      },
+      {
+        "cost": 172.05543728266665,
+        "id": "gange-demontering",
+        "name": "Gange til og fra demontering",
       },
     ],
     "sum": 9642,
@@ -4711,9 +4741,9 @@ exports[`05-takdrager-av.json > variant A > calculation 1`] = `
     "wallSupports": 3,
   },
   "margin": {
-    "cost": 3700.380874565333,
-    "db": 8376.619125434667,
-    "dg": 0.6936009874500841,
+    "cost": 3872.436311848,
+    "db": 8204.563688152,
+    "dg": 0.6793544496275565,
     "order": [
       {
         "cost": 172.05543728266665,
@@ -4722,8 +4752,14 @@ exports[`05-takdrager-av.json > variant A > calculation 1`] = `
       },
       {
         "cost": 172.05543728266665,
-        "id": "transport",
-        "name": "Varelevering ut og inn",
+        "id": "gange-montering",
+        "minutes": 20,
+        "name": "Gange til og fra montering",
+      },
+      {
+        "cost": 172.05543728266665,
+        "id": "gange-demontering",
+        "name": "Gange til og fra demontering",
       },
     ],
     "sum": 12077,
@@ -5736,9 +5772,9 @@ exports[`07-engangsteppe.json > variant A > calculation 1`] = `
     "wallSupports": 0,
   },
   "margin": {
-    "cost": 1124.1108745653332,
-    "db": 300.88912543466677,
-    "dg": 0.21115026346292404,
+    "cost": 1296.166311848,
+    "db": 128.83368815199992,
+    "dg": 0.0904096057207017,
     "order": [
       {
         "cost": 172.05543728266665,
@@ -5747,8 +5783,14 @@ exports[`07-engangsteppe.json > variant A > calculation 1`] = `
       },
       {
         "cost": 172.05543728266665,
-        "id": "transport",
-        "name": "Varelevering ut og inn",
+        "id": "gange-montering",
+        "minutes": 20,
+        "name": "Gange til og fra montering",
+      },
+      {
+        "cost": 172.05543728266665,
+        "id": "gange-demontering",
+        "name": "Gange til og fra demontering",
       },
     ],
     "sum": 1425,
@@ -6249,9 +6291,9 @@ exports[`07-engangsteppe.json > variant B > calculation 1`] = `
     "wallSupports": 0,
   },
   "margin": {
-    "cost": 1904.1108745653332,
-    "db": 945.8891254346668,
-    "dg": 0.33189092120514624,
+    "cost": 2076.166311848,
+    "db": 773.8336881519999,
+    "dg": 0.2715205923340351,
     "order": [
       {
         "cost": 172.05543728266665,
@@ -6260,8 +6302,14 @@ exports[`07-engangsteppe.json > variant B > calculation 1`] = `
       },
       {
         "cost": 172.05543728266665,
-        "id": "transport",
-        "name": "Varelevering ut og inn",
+        "id": "gange-montering",
+        "minutes": 20,
+        "name": "Gange til og fra montering",
+      },
+      {
+        "cost": 172.05543728266665,
+        "id": "gange-demontering",
+        "name": "Gange til og fra demontering",
       },
     ],
     "sum": 2850,
@@ -7473,9 +7521,9 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
     "walls": [],
   },
   "margin": {
-    "cost": 12115.850622565333,
-    "db": 14855.64937743467,
-    "dg": 0.5507906263068302,
+    "cost": 12287.906059848,
+    "db": 14683.593940152005,
+    "dg": 0.5444114691489907,
     "order": [
       {
         "cost": 527.5077279999999,
@@ -7489,8 +7537,14 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
       },
       {
         "cost": 172.05543728266665,
-        "id": "transport",
-        "name": "Varelevering ut og inn",
+        "id": "gange-montering",
+        "minutes": 20,
+        "name": "Gange til og fra montering",
+      },
+      {
+        "cost": 172.05543728266665,
+        "id": "gange-demontering",
+        "name": "Gange til og fra demontering",
       },
     ],
     "sum": 26971.500000000004,
@@ -9168,9 +9222,9 @@ exports[`09-dekor.json > variant A > calculation 1`] = `
     "wallSupports": 0,
   },
   "margin": {
-    "cost": 6697.7708745653335,
-    "db": 8380.229125434667,
-    "dg": 0.5557918242097538,
+    "cost": 6869.826311848,
+    "db": 8208.173688152001,
+    "dg": 0.5443807990550471,
     "order": [
       {
         "cost": 172.05543728266665,
@@ -9179,8 +9233,14 @@ exports[`09-dekor.json > variant A > calculation 1`] = `
       },
       {
         "cost": 172.05543728266665,
-        "id": "transport",
-        "name": "Varelevering ut og inn",
+        "id": "gange-montering",
+        "minutes": 20,
+        "name": "Gange til og fra montering",
+      },
+      {
+        "cost": 172.05543728266665,
+        "id": "gange-demontering",
+        "name": "Gange til og fra demontering",
       },
     ],
     "sum": 15078,
@@ -9844,9 +9904,9 @@ exports[`10-mobler-utstyr.json > variant A > calculation 1`] = `
     "wallSupports": 0,
   },
   "margin": {
-    "cost": 2354.1108745653332,
-    "db": 1295.8891254346668,
-    "dg": 0.35503811655744294,
+    "cost": 2526.166311848,
+    "db": 1123.833688152,
+    "dg": 0.307899640589589,
     "order": [
       {
         "cost": 172.05543728266665,
@@ -9855,8 +9915,14 @@ exports[`10-mobler-utstyr.json > variant A > calculation 1`] = `
       },
       {
         "cost": 172.05543728266665,
-        "id": "transport",
-        "name": "Varelevering ut og inn",
+        "id": "gange-montering",
+        "minutes": 20,
+        "name": "Gange til og fra montering",
+      },
+      {
+        "cost": 172.05543728266665,
+        "id": "gange-demontering",
+        "name": "Gange til og fra demontering",
       },
     ],
     "sum": 3650,
@@ -10574,9 +10640,9 @@ exports[`11-hyller.json > variant A > calculation 1`] = `
     "wallSupports": 2,
   },
   "margin": {
-    "cost": 1693.0708745653333,
-    "db": 3582.9291254346667,
-    "dg": 0.6790995309770028,
+    "cost": 1865.1263118480001,
+    "db": 3410.873688152,
+    "dg": 0.6464885686413949,
     "order": [
       {
         "cost": 172.05543728266665,
@@ -10585,8 +10651,14 @@ exports[`11-hyller.json > variant A > calculation 1`] = `
       },
       {
         "cost": 172.05543728266665,
-        "id": "transport",
-        "name": "Varelevering ut og inn",
+        "id": "gange-montering",
+        "minutes": 20,
+        "name": "Gange til og fra montering",
+      },
+      {
+        "cost": 172.05543728266665,
+        "id": "gange-demontering",
+        "name": "Gange til og fra demontering",
       },
     ],
     "sum": 5276,
@@ -11480,9 +11552,9 @@ exports[`12-hjornehyller.json > variant A > calculation 1`] = `
     "wallSupports": 1,
   },
   "margin": {
-    "cost": 1250.9808745653334,
-    "db": 2622.0191254346664,
-    "dg": 0.6769995159913933,
+    "cost": 1423.036311848,
+    "db": 2449.963688152,
+    "dg": 0.6325751841342628,
     "order": [
       {
         "cost": 172.05543728266665,
@@ -11491,8 +11563,14 @@ exports[`12-hjornehyller.json > variant A > calculation 1`] = `
       },
       {
         "cost": 172.05543728266665,
-        "id": "transport",
-        "name": "Varelevering ut og inn",
+        "id": "gange-montering",
+        "minutes": 20,
+        "name": "Gange til og fra montering",
+      },
+      {
+        "cost": 172.05543728266665,
+        "id": "gange-demontering",
+        "name": "Gange til og fra demontering",
       },
     ],
     "sum": 3873,

@@ -63,7 +63,10 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf }: 
   const toggle = (id: string) => setHidden((s) => (s.has(id) ? new Set([...s].filter((x) => x !== id)) : new Set([...s, id])))
   const filtered = shown.size < groupIds.length
 
-  const timeRows = allTime.filter((r) => shown.has(r.id) && aToB(r.time) > 0)
+  // Once per order, not per product group: walking to and from the stand at montering (Bjørn 10.11.2026); demontering
+  // is only in the cost
+  const orderTime = res.margin.order.filter((o) => o.minutes).map((o) => ({ id: o.id, name: o.name, time: { montering: o.minutes } as Time }))
+  const timeRows = [...allTime.filter((r) => shown.has(r.id) && aToB(r.time) > 0), ...orderTime]
   const total = timeRows.reduce<Time>((a, r) => addTime(a, r.time), {})
   const steps = A_TO_B.filter((st) => timeRows.some((r) => r.time[st]))
   const tree = allPicks.filter((x) => shown.has(x.group.id))

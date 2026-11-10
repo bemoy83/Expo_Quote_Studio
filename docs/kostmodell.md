@@ -156,9 +156,11 @@ lageret (Bjørn 7.11.2026).
 
 ## Ordrekost
 
-Startkost trykk (400 kr, 2022), administrasjon og vareplukk (20 personminutter) og varelevering ut og inn (20
-personminutter) kommer én gang per tilbud, ikke per ramme eller linje: tre motiver får én oppstart, én vareplukk og
-én levering (Bjørn 7.11.2026). Startkost trykk bare når tilbudet har trykt tekstil. De ligger i kalkylens kost
+Startkost trykk (400 kr, 2022), administrasjon og vareplukk (20 personminutter) og gange til og fra standen kommer
+én gang per tilbud, ikke per ramme eller linje: tre motiver får én oppstart, én vareplukk og én gange (Bjørn
+7.11.2026). Gange er én montør, 10 min til og 10 min fra, ved montering og ved demontering (40 personminutter, Bjørn
+10.11.2026); gangen ved montering står på arbeidsordren som egen linje i tidstabellen (`workOrder: true`), demontering
+bare i kosten. Det er gange, ikke kjøring. Startkost trykk bare når tilbudet har trykt tekstil. De ligger i kalkylens kost
 (`margin.order`) og senker DG, men ingen linje på tilbudet bærer dem; katalogen dekker dem i dag med 10 % påslag for
 administrasjon. Verdiene ligger i kostgrunnlaget (`ordrekost`, med `when: "trykk"`).
 

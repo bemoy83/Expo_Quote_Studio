@@ -20,7 +20,8 @@ export interface PricingData {
    *  part rental, part sale. */
   terms: Record<string, string>;
   /** Cost once per quote (kostgrunnlag `ordrekost`), in kr for the basis year: in the kalkyle's cost, not in a price. */
-  orderCosts: readonly { id: string; name: string; cost: number; when?: 'trykk' }[];
+  /** `minutes`: person-minutes the work order shows as montering (orders costs with `workOrder`). */
+  orderCosts: readonly { id: string; name: string; cost: number; when?: 'trykk'; minutes?: number }[];
   /** Fingerprint of everything the calc runs on: the kostgrunnlag as used (own numbers and example numbers alike) and
    *  the price items it gives. Shown beside the basis' version and kept on the quote (Bjørn 7.11.2026). */
   code: string;
@@ -34,7 +35,7 @@ export interface PricingData {
 /** The price items with the costed ones from this kostgrunnlag. */
 export function pricingFrom(b: CostBasis): PricingData {
   const { items, missing } = costItems(ITEM_DEFS, b);
-  const orderCosts = b.orderCosts.map((o) => ({ id: o.id, name: o.name, cost: orderCost([o], basisYear(b), b.params), ...(o.when ? { when: o.when } : {}) }));
+  const orderCosts = b.orderCosts.map((o) => ({ id: o.id, name: o.name, cost: orderCost([o], basisYear(b), b.params), ...(o.when ? { when: o.when } : {}), ...(o.workOrder && o.personMinutes ? { minutes: o.personMinutes } : {}) }));
   // The lists the engine looks up, so an example list filling in for a missing one counts too
   const used = { date: b.date, params: b.params, orderCosts: b.orderCosts, lists: [supplierList(b, 'Foga'), supplierList(b, OWN_SUPPLIER)], items, missing, catalog: b.catalog, terms: DEFAULT_TERMS };
   const carpet = { ...b.params.carpet, hour: hourlyCost(basisYear(b), b.params) };

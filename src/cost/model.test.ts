@@ -81,7 +81,7 @@ describe('cost buckets', () => {
     expect(boughtCost(100, P)).toBeCloseTo(105);
   });
   it('per order: once per quote, kroner indexed and minutes as labour', () => {
-    expect(orderCost(ORDER_COSTS, 2022, P)).toBeCloseTo(400 + (40 / 60) * 391.4);
+    expect(orderCost(ORDER_COSTS, 2022, P)).toBeCloseTo(400 + (60 / 60) * 391.4);
   });
   it('height: one limit at 3,0 m for lift and slower montering', () => {
     expect(needsLift(3000, P)).toBe(false);
