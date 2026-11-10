@@ -212,8 +212,10 @@ retning i steg på 50 mm, mellom stolpene.
   holdte punkter, platene står fortsatt på stolpene.
 - Bare de innvendige (tegnede) dragerne kan flyttes. Production monterer kroken uansett hvem som betaler.
 - Bæreevne (sterkest ved stolpene, svakest midt i spennet) er ikke med i appen.
-- Plan: Shift + dra på tvers med mållinje til nærmeste stolpe eller krok. Arbeidsordre: mållinjen skal stå på
-  arbeidstegningen så montøren kan måle ut fra nærmeste faste punkt. (Neste steg.)
+- Plan: i Velg flytter Shift + dra en innvendig drager på tvers i 50 mm-steg (`shiftInnerBeam`); slipp på hel meter
+  gir vanlig drager igjen. Mens den flyttes, og når den er valgt, viser planen mållinje fra hver ende til nærmeste
+  stolpe eller krok langs veggen eller drageren den henger på (`calc/beamOffsets.ts`).
+- Arbeidsordre: mållinjen skal stå på arbeidstegningen så montøren kan måle ut fra nærmeste faste punkt. (Neste steg.)
 
 ### Takdrager over tekstilvegg · T13, T14
 

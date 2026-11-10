@@ -1,6 +1,9 @@
 // The frame in the plan: takdragere, posts and the foot plates under walls that stand free.
 import { RECIPES } from '../../../foga/recipes'
 import type { CalcResult } from '../../../calc/calc'
+import { beamOffsets } from '../../../calc/beamOffsets'
+import { mm } from '../dims'
+import { MeasurePill } from './Previews'
 import type { InnerBeam, Point, Variant } from '../../../domain/types'
 import { INK, INK_MUTED, SURFACE } from '../../colors'
 import { linePx, usePlanScale } from '../planScale'
@@ -16,7 +19,7 @@ import { GONE, useErasing } from './erasing'
  * Takdragere dashed as on hall maps (in full detail a light body with two dashed edges, compact one dashed line), the
  * same for standard, støttedrager and drawn ones; støtteplater under free walls; and posts.
  */
-export function BeamLayer({ v, res, selection, dim }: { v: Variant; res: CalcResult; selection: PlanSelection; dim: (...layers: Layer[]) => number }) {
+export function BeamLayer({ v, res, selection, dim, measured }: { v: Variant; res: CalcResult; selection: PlanSelection; dim: (...layers: Layer[]) => number; measured?: string }) {
   const { gone, hatch } = useErasing()
   const goneBeam = (v.innerBeams ?? []).find((b) => gone('beam', b.id))
   const sc = usePlanScale()
@@ -35,6 +38,7 @@ export function BeamLayer({ v, res, selection, dim }: { v: Variant; res: CalcRes
         ))}
         {goneBeam && <Seg a={goneBeam.from} b={goneBeam.to} stroke={hatch} strokeWidth={haloWidth(sc, body)} />}
       </g>
+      {measured && <OffsetMeasures v={v} res={res} id={measured} />}
       <g opacity={dim('walls', 'beams')}>
         {/* Støtteplater under walls that stand free, across the wall */}
         {res.wallSupports.map(({ at: [x, y], orientation }) => {
@@ -75,6 +79,31 @@ export function BeamStroke({ a, b, body }: { a: P; b: P; body: number }) {
       <Seg a={a} b={b} stroke={INK} strokeOpacity={BEAM_FILL} strokeWidth={body} />
       <Seg a={[a[0] - ox, a[1] - oy]} b={[b[0] - ox, b[1] - oy]} stroke={INK} strokeWidth={edge} strokeDasharray={dash} />
       <Seg a={[a[0] + ox, a[1] + oy]} b={[b[0] + ox, b[1] + oy]} stroke={INK} strokeWidth={edge} strokeDasharray={dash} />
+    </g>
+  )
+}
+
+/** Byggeregel T15: from each end of a drawn beam off the grid, along the wall or beam it hangs on, to the nearest post or
+ *  hook, while it is moved or selected (calc/beamOffsets.ts). */
+function OffsetMeasures({ v, res, id }: { v: Variant; res: CalcResult; id: string }) {
+  const sc = usePlanScale()
+  const centre: Point = [v.stand.width / 2, v.stand.depth / 2]
+  const tick = linePx(sc, 4)
+  return (
+    <g>
+      {beamOffsets(v, res, id).map((o) => {
+        const hz = Math.abs(o.from[1] - o.to[1]) < 1e-6
+        const [tx, ty] = hz ? [0, tick] : [tick, 0]
+        return (
+          <g key={`${o.from}`}>
+            <Seg a={o.from} b={o.to} stroke={INK} strokeWidth={linePx(sc, 1)} />
+            {[o.from, o.to].map((p, i) => (
+              <Seg key={i} a={[p[0] - tx, p[1] - ty]} b={[p[0] + tx, p[1] + ty]} stroke={INK} strokeWidth={linePx(sc, 1)} />
+            ))}
+            <MeasurePill a={o.from} b={o.to} centre={centre} stroke={tick} text={mm(o.length)} />
+          </g>
+        )
+      })}
     </g>
   )
 }
