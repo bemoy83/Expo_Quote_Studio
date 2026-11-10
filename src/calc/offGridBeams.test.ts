@@ -14,11 +14,11 @@ const free = (id: string, from: Point, to: Point): FreeTextile => ({ id, from, t
 const variant = (stand: Stand, x: Partial<Variant>): Variant => ({ ...createVariant('A', stand), ...x });
 const run = (v: Variant) => calc(v, RULES, DEFAULT_CATALOG, { payer: 'utstiller', ral: '9010' });
 const inner = (v: Variant) => run(v).beams.segments.filter((s) => s.inner).map((s) => [s.from, s.to, s.length]);
-/** Hooks other than the støttedrager's at x = 3. */
+/** Hooks other than a støttedrager's at x = 3. */
 const hooks = (v: Variant) => run(v).hooks.filter((h) => h.at[0] !== 3).map((h) => [h.at, h.on, h.sides.length]);
 
-// Row 6 × 4: back wall y = 0, side walls x = 0 and x = 6, front open with the standard beam at y = 4, and a støttedrager
-// from the middle of the back wall (x = 3) to it
+// Row 6 × 4: back wall y = 0, side walls x = 0 and x = 6, front open with the standard beam at y = 4. The 6 m back wall
+// gets a støttedrager at x = 3 unless something else holds it
 const ROW: Stand = { width: 6, depth: 4, type: 'row' };
 
 describe('fritt plassert innvendig takdrager', () => {
@@ -32,7 +32,9 @@ describe('fritt plassert innvendig takdrager', () => {
     const res = run(v);
     expect(res.keyFigures.beamPosts).toBe(0);
     expect(res.wallSupports.filter((f) => Math.abs(f.at[0] - 2.35) < 1e-6)).toEqual([]);
-    expect(res.foga.beamHooks).toEqual({ oneWay: 3, twoWay: 0 });
+    // It holds the back wall at x = 2,35, so the 6 m wall needs no støttedrager at x = 3 any more
+    expect(res.beams.segments.filter((s) => s.support)).toEqual([]);
+    expect(res.foga.beamHooks).toEqual({ oneWay: 2, twoWay: 0 });
   });
 
   it('across the stand from side wall to side wall, with a beam on the grid crossing it between whole metres', () => {
@@ -77,16 +79,27 @@ describe('fritt plassert innvendig takdrager', () => {
     const v = variant(ROW, { innerBeams: [beam('b1', [3.5, 0], [3.5, 4])], freeTextiles: [free('f1', [2, 2], [5, 2])] });
     const res = run(v);
     expect(res.lift?.walls).toEqual([[3.5, 0]]);
-    // The støttedrager x = 3 is lifted too: its wall post extended, its end on the front beam a mixed hook point
-    expect(res.lift?.hooks).toEqual([[3, 4], [3.5, 4]]);
+    expect(res.lift?.hooks).toEqual([[3.5, 4]]);
     expect(res.hooks).toEqual([]);
-    expect(res.foga.beamLift).toEqual({ posts: 1, hooks: 2, walls: 1 });
+    expect(res.foga.beamLift).toEqual({ posts: 0, hooks: 1, walls: 1 });
     expect(res.bom.lines.filter((l) => l.name.startsWith('Skjøt')).map((l) => [l.name, l.note, l.qty])).toEqual([
-      ['Skjøt 94, 80 mm, med 609', 'på stolpe, takdrager over tekstilvegg', 1],
-      ['Skjøt 94, 80 mm, med 600', 'oppå tverrgående takdrager, takdrager over tekstilvegg', 2],
+      ['Skjøt 94, 80 mm, med 600', 'oppå tverrgående takdrager, takdrager over tekstilvegg', 1],
       ['Skjøt 94, 80 mm, med 600', 'oppå vegg, takdrager over tekstilvegg', 1],
     ]);
     const line = res.groups.flatMap((g) => g.lines).find((l) => l.artnr === DEFAULT_CATALOG.system.beamLift);
-    expect(line?.meta).toBe('1 stolpe + 2 kroker + 1 oppå vegg skjøtet opp');
+    expect(line?.meta).toBe('1 krok + 1 oppå vegg skjøtet opp');
+  });
+
+  it('a hook holds the wall it hangs on: fewer foot plates on a free-standing wall', () => {
+    // Island 10 × 6, beams off: a free wall x = 1..7 at y = 3 (6 m, free both ends) needs plates every 3 m at most
+    const ISLAND: Stand = { width: 10, depth: 6, type: 'island' };
+    const wall = { id: 'w1', from: [1, 3] as Point, to: [7, 3] as Point };
+    const alone = run({ ...variant(ISLAND, { noBeams: true }), walls: [wall] }).wallSupports.map((f) => f.at[0]);
+    // A drawn beam x = 4,5 from the front of the stand hangs on it between the posts at 4 and 5
+    const hung = run({ ...variant(ISLAND, { noBeams: true, innerBeams: [beam('b1', [4.5, 3], [4.5, 6])] }), walls: [wall] });
+    const plates = hung.wallSupports.filter((f) => f.at[1] === 3).map((f) => f.at[0]);
+    expect(alone).toEqual([1, 4, 7]);
+    // Each side a stretch of 3,5 m with one free end: the end plate pulled in one post to keep 3 m to the hook
+    expect(plates).toEqual([2, 6]);
   });
 });

@@ -208,6 +208,8 @@ retning i steg på 50 mm, mellom stolpene.
 - Mot InFrame (tekstil utenpå veggen) heves den som ellers (T13); da står 94 × 80 med 600 oppå veggen i stedet for
   kroken. Ingenting på platen stopper benet, bare fysiske konflikter som tekstilvegg (senere snekret vegg).
 - En fri ende utenfor rasteret får egen stolpe med fotplate.
+- En drager på krok holder veggen der (Bjørn 10.11.2026): fotplater og støttedrager regnes for strekningene mellom
+  holdte punkter, platene står fortsatt på stolpene.
 - Bare de innvendige (tegnede) dragerne kan flyttes. Production monterer kroken uansett hvem som betaler.
 - Bæreevne (sterkest ved stolpene, svakest midt i spennet) er ikke med i appen.
 - Plan: Shift + dra på tvers med mållinje til nærmeste stolpe eller krok. Arbeidsordre: mållinjen skal stå på
