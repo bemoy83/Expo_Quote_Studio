@@ -154,6 +154,11 @@ Romnavn og mål står uten boks, rett på gulvet. Håndtakene som i dag, men ikk
 
 ### Mål (nytt lag) · `layers/DimLayer.tsx`
 
+**Regel for alle mål (Bjørn 10.11.2026):** et mål som står på tegningen (plan, veggriss, tilbud, arbeidsordre) tegnes
+alltid med målkjeden `Chain` i `plan/DimChain.tsx`: dempet hårstrek, skråstreker og tallet ved siden. Målpillen
+(`MeasurePill`/`PillAt` i `layers/Previews.tsx`) er bare for live-tall mens man tegner eller drar. Ingen egne streker
+eller piller for et nytt mål; hvor kjeden står regnes ut i `plan/dims.ts` eller `wallDrawer/elevationMeasure.ts`.
+
 Planen har i dag bare `6 m` ved siden. Nytt lag med målkjeder i millimeter, tall i `--font-numeric`. Endemerker som
 skråstreker på 2,5 px. Rader utenfor standen: nærmeste rad 9 px fra yttergrensen, totalmål 27 px.
 
