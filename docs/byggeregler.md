@@ -98,8 +98,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   annen takdrager. Samme profil, høyde og deling (T1, T2) som standard.
   *Bjørn 1.11.2026 · kode `src/domain/innerBeams.ts`, `src/calc/innerBeams.ts` · test `src/domain/innerBeams.test.ts`*
 - **T9 Krok.** En ende som treffer en annen takdrager henger på den med krok: ingen stolpe der, og drageren den henger
-  på deles ikke. Kroken er toveis, én per krokpunkt. Art.nr. mangler (plassholder `KROK`).
-  *Bjørn 1.11.2026 · `RECIPES.beam.hook` · kode `src/calc/innerBeams.ts` · test `src/calc/innerBeams.test.ts`*
+  på deles ikke. Én krok per krokpunkt, i 01 som en T over drageren: enveis (ett ben) når dragere henger fra én side,
+  toveis (to ben) fra begge. Festes med M5 maskinskrue i 503. Plukkes hel, uten eget art.nr. og uten kost eller pris.
+  *Bjørn 1.11.2026, 10.11.2026 · `RECIPES.beam.hook` · kode `src/calc/innerBeams.ts`, `src/calc/beamHooks.ts` · test `src/calc/innerBeams.test.ts`, `src/calc/beamHooks.test.ts`*
 - **T10 Kryss.** Der to tegnede takdragere krysser, går det lengste spennet gjennom og det korteste deles og henger på
   krok på hver side. Like lange: den først tegnede går gjennom. En tegnet drager som krysser en standard deles likt.
   *Bjørn 1.11.2026 · kode `src/calc/innerBeams.ts` · test `src/calc/innerBeams.test.ts`*
@@ -282,9 +283,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 
 - **P1 Ferdige enheter.** Det som lagres ferdig montert, plukkes som stk: stolpe 94 med fot eller uten fot, fotplate 750
   med 795, topp- og bunnskinne med 600, takdrager per lengde med 600, støttestag 90 med 600, dørblad og skjøt 94 × 80
-  med 609 eller 600.
+  med 609 eller 600, og krok 01 enveis eller toveis med M5 og 503.
   *Bjørn 31.10.2026 · kode `src/foga/engine.ts` · test `src/foga/engine.test.ts`*
-- **P2 Løse deler.** Uten ferdig enhet plukkes delene: 43TX per kappelengde, 92LTX, 617, 609, 604, 520, 740, 730 og krok.
+- **P2 Løse deler.** Uten ferdig enhet plukkes delene: 43TX per kappelengde, 92LTX, 617, 609, 604, 520, 740 og 730.
   *Bjørn 31.10.2026 · kode `src/foga/engine.ts` · test `src/calc/freeFrames.test.ts`*
 - **P3 Faktisk antall.** Plukklisten teller artiklene i tegningen (moduler som møtes deler stolpe), ikke det salgsproduktet
   regner med per meter.

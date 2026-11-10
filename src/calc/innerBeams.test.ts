@@ -89,8 +89,8 @@ describe('innvendig takdrager', () => {
     expect(beamLines.map((l) => [l.qty, l.meta])).toEqual([[4, 'innvendig · 1 lengde · 1 krok']]);
     expect(res.organiser.lines.find((l) => l.artnr === DEFAULT_CATALOG.system.beam)?.qty).toBe(6);
     expect(res.keyFigures).toMatchObject({ beamLm: 10, organiserBeamLm: 6, innerBeamLm: 4, beamHooks: 1 });
-    expect(res.foga.beamHooks).toBe(1);
-    expect(res.bom.lines.find((l) => l.name.startsWith('KROK'))?.qty).toBe(1);
+    expect(res.foga.beamHooks).toEqual({ oneWay: 1, twoWay: 0 });
+    expect(res.bom.lines.find((l) => l.name === 'Krok 01 enveis')?.qty).toBe(1);
   });
 
   it('calc: free-standing beam posts are included and stand on plates without the foot', () => {

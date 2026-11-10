@@ -438,6 +438,7 @@ exports[`01-hjorne-arrangor.json > variant A > calculation 1`] = `
       "sum": 4320,
     },
   ],
+  "hooks": [],
   "keyFigures": {
     "area": 24,
     "beamHooks": 0,
@@ -1567,6 +1568,7 @@ exports[`02-hjorne-utstiller.json > variant A > calculation 1`] = `
       "sum": 13775,
     },
   ],
+  "hooks": [],
   "keyFigures": {
     "area": 24,
     "beamHooks": 0,
@@ -2298,6 +2300,7 @@ exports[`02-hjorne-utstiller.json > variant B > calculation 1`] = `
       "sum": 8010,
     },
   ],
+  "hooks": [],
   "keyFigures": {
     "area": 24,
     "beamHooks": 0,
@@ -2974,6 +2977,7 @@ exports[`03-rom.json > variant A > calculation 1`] = `
       "sum": 9610,
     },
   ],
+  "hooks": [],
   "keyFigures": {
     "area": 40,
     "beamHooks": 0,
@@ -3739,16 +3743,29 @@ exports[`04-oy-takdrager.json > variant A > calculation 1`] = `
       },
       {
         "artnr": "",
-        "detail": "",
+        "detail": "01 (873 001 22) × 20 mm + 1 × 80 mm · M5 maskinskrue · 1 × 503 (876 503 95)",
         "group": "vegg.takdrager",
-        "name": "KROK · Krok, takdrager på takdrager (art.nr. mangler)",
-        "preassembled": false,
-        "qty": 3,
+        "name": "Krok 01 enveis",
+        "note": "takdrager fra én side",
+        "preassembled": true,
+        "qty": 2,
+      },
+      {
+        "artnr": "",
+        "detail": "01 (873 001 22) × 20 mm + 2 × 80 mm · M5 maskinskrue · 1 × 503 (876 503 95)",
+        "group": "vegg.takdrager",
+        "name": "Krok 01 toveis",
+        "note": "takdrager fra begge sider",
+        "preassembled": true,
+        "qty": 1,
       },
     ],
   },
   "foga": {
-    "beamHooks": 3,
+    "beamHooks": {
+      "oneWay": 2,
+      "twoWay": 1,
+    },
     "beams": [
       {
         "lengthMm": 4000,
@@ -3784,13 +3801,13 @@ exports[`04-oy-takdrager.json > variant A > calculation 1`] = `
   },
   "groups": [
     {
-      "cost": 1511.88,
+      "cost": 1484.7,
       "id": "vegg",
       "lines": [
         {
           "artnr": "6110",
-          "cost": 1511.88,
-          "dg": 0.7025029515938607,
+          "cost": 1484.7,
+          "dg": 0.7078512396694215,
           "foga": true,
           "group": "vegg.takdrager",
           "meta": "9 lengder · 6 stolper inkludert · 3 kroker",
@@ -3802,11 +3819,11 @@ exports[`04-oy-takdrager.json > variant A > calculation 1`] = `
           "strategy": "fast",
           "sum": 5082,
           "time": {
-            "demontering": 24.750000000000004,
-            "montering": 46.800000000000004,
-            "plukk": 3.63,
-            "transport": 3.63,
-            "vask": 3.63,
+            "demontering": 24.300000000000004,
+            "montering": 45.900000000000006,
+            "plukk": 3.3899999999999997,
+            "transport": 3.3899999999999997,
+            "vask": 3.3899999999999997,
           },
           "transfer": "leie",
           "unit": "lm",
@@ -3858,10 +3875,6 @@ exports[`04-oy-takdrager.json > variant A > calculation 1`] = `
             {
               "id": "montering-takdragerstolpe",
               "qty": 6,
-            },
-            {
-              "id": "krok-takdrager",
-              "qty": 3,
             },
           ],
         },
@@ -3925,6 +3938,45 @@ exports[`04-oy-takdrager.json > variant A > calculation 1`] = `
       "sum": 4560,
     },
   ],
+  "hooks": [
+    {
+      "along": "v",
+      "at": [
+        0,
+        3,
+      ],
+      "inner": true,
+      "lifted": false,
+      "sides": [
+        1,
+      ],
+    },
+    {
+      "along": "v",
+      "at": [
+        4,
+        3,
+      ],
+      "inner": true,
+      "lifted": false,
+      "sides": [
+        1,
+        -1,
+      ],
+    },
+    {
+      "along": "v",
+      "at": [
+        8,
+        3,
+      ],
+      "inner": true,
+      "lifted": false,
+      "sides": [
+        -1,
+      ],
+    },
+  ],
   "keyFigures": {
     "area": 48,
     "beamHooks": 3,
@@ -3949,19 +4001,19 @@ exports[`04-oy-takdrager.json > variant A > calculation 1`] = `
     "swapLm": 0,
     "textileM2": 0,
     "time": {
-      "demontering": 168.75,
-      "montering": 334.8,
-      "plukk": 27.63,
-      "transport": 27.63,
-      "vask": 51.63,
+      "demontering": 168.3,
+      "montering": 333.9,
+      "plukk": 27.39,
+      "transport": 27.39,
+      "vask": 51.39,
     },
     "wallLm": 0,
     "wallSupports": 0,
   },
   "margin": {
-    "cost": 4351.990874565334,
-    "db": 5290.009125434666,
-    "dg": 0.5486423071390444,
+    "cost": 4324.8108745653335,
+    "db": 5317.1891254346665,
+    "dg": 0.5514612243761322,
     "order": [
       {
         "cost": 172.05543728266665,
@@ -4102,15 +4154,27 @@ exports[`04-oy-takdrager.json > variant A > picking list 1`] = `
   },
   {
     "code": "",
-    "detail": "",
+    "detail": "01 (873 001 22) × 20 mm + 1 × 80 mm · M5 maskinskrue · 1 × 503 (876 503 95)",
     "group": "vegg.takdrager",
-    "key": "KROK · Krok, takdrager på takdrager (art.nr. mangler)|",
+    "key": "Krok 01 enveis|01 (873 001 22) × 20 mm + 1 × 80 mm · M5 maskinskrue · 1 × 503 (876 503 95)",
     "lm": undefined,
     "nobb": false,
-    "note": undefined,
-    "preassembled": false,
-    "qty": "3 stk",
-    "title": "KROK · Krok, takdrager på takdrager (art.nr. mangler)",
+    "note": "takdrager fra én side",
+    "preassembled": true,
+    "qty": "2 stk",
+    "title": "Krok 01 enveis",
+  },
+  {
+    "code": "",
+    "detail": "01 (873 001 22) × 20 mm + 2 × 80 mm · M5 maskinskrue · 1 × 503 (876 503 95)",
+    "group": "vegg.takdrager",
+    "key": "Krok 01 toveis|01 (873 001 22) × 20 mm + 2 × 80 mm · M5 maskinskrue · 1 × 503 (876 503 95)",
+    "lm": undefined,
+    "nobb": false,
+    "note": "takdrager fra begge sider",
+    "preassembled": true,
+    "qty": "1 stk",
+    "title": "Krok 01 toveis",
   },
 ]
 `;
@@ -4136,13 +4200,13 @@ exports[`04-oy-takdrager.json > variant A > production: textile and print rows 1
 exports[`04-oy-takdrager.json > variant A > quote lines 1`] = `
 [
   {
-    "cost": 1511.88,
+    "cost": 1484.7,
     "id": "vegg",
     "lines": [
       {
         "artnr": "6110",
-        "cost": 1511.88,
-        "dg": 0.7025029515938607,
+        "cost": 1484.7,
+        "dg": 0.7078512396694215,
         "foga": true,
         "group": "vegg.takdrager",
         "meta": "9 lengder · 6 stolper inkludert · 3 kroker",
@@ -4154,11 +4218,11 @@ exports[`04-oy-takdrager.json > variant A > quote lines 1`] = `
         "strategy": "fast",
         "sum": 5082,
         "time": {
-          "demontering": 24.750000000000004,
-          "montering": 46.800000000000004,
-          "plukk": 3.63,
-          "transport": 3.63,
-          "vask": 3.63,
+          "demontering": 24.300000000000004,
+          "montering": 45.900000000000006,
+          "plukk": 3.3899999999999997,
+          "transport": 3.3899999999999997,
+          "vask": 3.3899999999999997,
         },
         "transfer": "leie",
         "unit": "lm",
@@ -4210,10 +4274,6 @@ exports[`04-oy-takdrager.json > variant A > quote lines 1`] = `
           {
             "id": "montering-takdragerstolpe",
             "qty": 6,
-          },
-          {
-            "id": "krok-takdrager",
-            "qty": 3,
           },
         ],
       },
@@ -4615,6 +4675,7 @@ exports[`05-takdrager-av.json > variant A > calculation 1`] = `
       "sum": 12077,
     },
   ],
+  "hooks": [],
   "keyFigures": {
     "area": 20,
     "beamHooks": 0,
@@ -5178,28 +5239,33 @@ exports[`06-stottedrager.json > variant A > calculation 1`] = `
     ],
   },
   "bom": {
-    "lines": [
-      {
-        "artnr": "",
-        "detail": "",
-        "group": "vegg.takdrager",
-        "name": "KROK · Krok, takdrager på takdrager (art.nr. mangler)",
-        "preassembled": false,
-        "qty": 2,
-      },
-    ],
+    "lines": [],
   },
   "foga": {
-    "beamHooks": 2,
     "beams": [],
     "frames": [],
     "modules": [],
     "posts": 0,
   },
   "groups": [],
+  "hooks": [
+    {
+      "along": "v",
+      "at": [
+        4,
+        4,
+      ],
+      "inner": false,
+      "lifted": false,
+      "sides": [
+        1,
+        -1,
+      ],
+    },
+  ],
   "keyFigures": {
     "area": 56,
-    "beamHooks": 2,
+    "beamHooks": 1,
     "beamLengths": 6,
     "beamLm": 23,
     "beamPosts": 2,
@@ -5231,7 +5297,7 @@ exports[`06-stottedrager.json > variant A > calculation 1`] = `
     "unknown": 0,
   },
   "organiser": {
-    "cost": 5326.65,
+    "cost": 5308.53,
     "lines": [
       {
         "artnr": "6120-9010",
@@ -5281,11 +5347,11 @@ exports[`06-stottedrager.json > variant A > calculation 1`] = `
       },
       {
         "artnr": "6110",
-        "cost": 769.16,
-        "dg": 0.7236219906575638,
+        "cost": 751.04,
+        "dg": 0.7301329500538987,
         "foga": true,
         "group": "vegg.takdrager",
-        "meta": "6 lengder · 2 stolper inkludert · 2 kroker",
+        "meta": "6 lengder · 2 stolper inkludert · 1 krok",
         "name": "Takdrager 80 × 20 mm",
         "payer": "arrangør",
         "placeholder": true,
@@ -5294,11 +5360,11 @@ exports[`06-stottedrager.json > variant A > calculation 1`] = `
         "strategy": "fast",
         "sum": 2783,
         "time": {
-          "demontering": 12.450000000000001,
-          "montering": 24,
-          "plukk": 1.74,
-          "transport": 1.74,
-          "vask": 1.74,
+          "demontering": 12.15,
+          "montering": 23.4,
+          "plukk": 1.58,
+          "transport": 1.58,
+          "vask": 1.58,
         },
         "transfer": "leie",
         "unit": "lm",
@@ -5337,10 +5403,6 @@ exports[`06-stottedrager.json > variant A > calculation 1`] = `
           },
           {
             "id": "montering-takdragerstolpe",
-            "qty": 2,
-          },
-          {
-            "id": "krok-takdrager",
             "qty": 2,
           },
         ],
@@ -5468,22 +5530,7 @@ exports[`06-stottedrager.json > variant A > calculation 1`] = `
 
 exports[`06-stottedrager.json > variant A > engangsteppe cut list 1`] = `[]`;
 
-exports[`06-stottedrager.json > variant A > picking list 1`] = `
-[
-  {
-    "code": "",
-    "detail": "",
-    "group": "vegg.takdrager",
-    "key": "KROK · Krok, takdrager på takdrager (art.nr. mangler)|",
-    "lm": undefined,
-    "nobb": false,
-    "note": undefined,
-    "preassembled": false,
-    "qty": "2 stk",
-    "title": "KROK · Krok, takdrager på takdrager (art.nr. mangler)",
-  },
-]
-`;
+exports[`06-stottedrager.json > variant A > picking list 1`] = `[]`;
 
 exports[`06-stottedrager.json > variant A > production: textile and print rows 1`] = `
 {
@@ -5650,6 +5697,7 @@ exports[`07-engangsteppe.json > variant A > calculation 1`] = `
       "sum": 1425,
     },
   ],
+  "hooks": [],
   "keyFigures": {
     "area": 15,
     "beamHooks": 0,
@@ -6035,19 +6083,9 @@ exports[`07-engangsteppe.json > variant B > calculation 1`] = `
     ],
   },
   "bom": {
-    "lines": [
-      {
-        "artnr": "",
-        "detail": "",
-        "group": "vegg.takdrager",
-        "name": "KROK · Krok, takdrager på takdrager (art.nr. mangler)",
-        "preassembled": false,
-        "qty": 1,
-      },
-    ],
+    "lines": [],
   },
   "foga": {
-    "beamHooks": 1,
     "beams": [],
     "frames": [],
     "modules": [],
@@ -6157,6 +6195,20 @@ exports[`07-engangsteppe.json > variant B > calculation 1`] = `
       "sum": 2850,
     },
   ],
+  "hooks": [
+    {
+      "along": "h",
+      "at": [
+        3,
+        5,
+      ],
+      "inner": false,
+      "lifted": false,
+      "sides": [
+        -1,
+      ],
+    },
+  ],
   "keyFigures": {
     "area": 30,
     "beamHooks": 1,
@@ -6211,7 +6263,7 @@ exports[`07-engangsteppe.json > variant B > calculation 1`] = `
     "unknown": 0,
   },
   "organiser": {
-    "cost": 3629.85,
+    "cost": 3620.79,
     "lines": [
       {
         "artnr": "6120-9010",
@@ -6261,8 +6313,8 @@ exports[`07-engangsteppe.json > variant B > calculation 1`] = `
       },
       {
         "artnr": "6110",
-        "cost": 305.12,
-        "dg": 0.7707588279489107,
+        "cost": 296.06,
+        "dg": 0.777565740045079,
         "foga": true,
         "group": "vegg.takdrager",
         "meta": "2 lengder · 1 krok",
@@ -6274,11 +6326,11 @@ exports[`07-engangsteppe.json > variant B > calculation 1`] = `
         "strategy": "fast",
         "sum": 1331,
         "time": {
-          "demontering": 5.1000000000000005,
-          "montering": 10.200000000000001,
-          "plukk": 0.38,
-          "transport": 0.38,
-          "vask": 0.38,
+          "demontering": 4.95,
+          "montering": 9.9,
+          "plukk": 0.3,
+          "transport": 0.3,
+          "vask": 0.3,
         },
         "transfer": "leie",
         "unit": "lm",
@@ -6294,10 +6346,6 @@ exports[`07-engangsteppe.json > variant B > calculation 1`] = `
           {
             "id": "montering-takdrager",
             "qty": 11,
-          },
-          {
-            "id": "krok-takdrager",
-            "qty": 1,
           },
         ],
       },
@@ -6454,18 +6502,6 @@ exports[`07-engangsteppe.json > variant B > picking list 1`] = `
     "key": "5922|teip",
     "qty": "21 lm",
     "title": "Teppeteip til engangsteppe rød",
-  },
-  {
-    "code": "",
-    "detail": "",
-    "group": "vegg.takdrager",
-    "key": "KROK · Krok, takdrager på takdrager (art.nr. mangler)|",
-    "lm": undefined,
-    "nobb": false,
-    "note": undefined,
-    "preassembled": false,
-    "qty": "1 stk",
-    "title": "KROK · Krok, takdrager på takdrager (art.nr. mangler)",
   },
 ]
 `;
@@ -6665,14 +6701,6 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
     "lines": [
       {
         "artnr": "",
-        "detail": "",
-        "group": "vegg.takdrager",
-        "name": "KROK · Krok, takdrager på takdrager (art.nr. mangler)",
-        "preassembled": false,
-        "qty": 1,
-      },
-      {
-        "artnr": "",
         "detail": "94 × 80 mm · 1 × 609 (871 037 92) · på stolpe, takdrager over tekstilvegg",
         "group": "vegg.takdrager",
         "name": "Skjøt 94, 80 mm, med 609",
@@ -6743,7 +6771,6 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
     ],
   },
   "foga": {
-    "beamHooks": 1,
     "beamLift": {
       "hooks": 1,
       "posts": 1,
@@ -7393,9 +7420,10 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
       "sum": 26791.500000000004,
     },
   ],
+  "hooks": [],
   "keyFigures": {
     "area": 30,
-    "beamHooks": 1,
+    "beamHooks": 0,
     "beamLengths": 3,
     "beamLm": 16,
     "beamPosts": 1,
@@ -7463,7 +7491,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
     "unknown": 0,
   },
   "organiser": {
-    "cost": 2794.7799999999997,
+    "cost": 2785.72,
     "lines": [
       {
         "artnr": "6120-9010",
@@ -7513,11 +7541,11 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
       },
       {
         "artnr": "6110",
-        "cost": 497.35,
-        "dg": 0.7431043388429752,
+        "cost": 488.29,
+        "dg": 0.7477840909090909,
         "foga": true,
         "group": "vegg.takdrager",
-        "meta": "3 lengder · 1 stolpe inkludert · 1 krok",
+        "meta": "3 lengder · 1 stolpe inkludert",
         "name": "Takdrager 80 × 20 mm",
         "payer": "arrangør",
         "placeholder": true,
@@ -7526,11 +7554,11 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         "strategy": "fast",
         "sum": 1936,
         "time": {
-          "demontering": 8.25,
-          "montering": 16.05,
-          "plukk": 0.87,
-          "transport": 0.87,
-          "vask": 0.87,
+          "demontering": 8.1,
+          "montering": 15.75,
+          "plukk": 0.79,
+          "transport": 0.79,
+          "vask": 0.79,
         },
         "transfer": "leie",
         "unit": "lm",
@@ -7557,10 +7585,6 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
           },
           {
             "id": "montering-takdragerstolpe",
-            "qty": 1,
-          },
-          {
-            "id": "krok-takdrager",
             "qty": 1,
           },
         ],
@@ -7949,18 +7973,6 @@ exports[`08-tekstil.json > variant A > engangsteppe cut list 1`] = `[]`;
 
 exports[`08-tekstil.json > variant A > picking list 1`] = `
 [
-  {
-    "code": "",
-    "detail": "",
-    "group": "vegg.takdrager",
-    "key": "KROK · Krok, takdrager på takdrager (art.nr. mangler)|",
-    "lm": undefined,
-    "nobb": false,
-    "note": undefined,
-    "preassembled": false,
-    "qty": "1 stk",
-    "title": "KROK · Krok, takdrager på takdrager (art.nr. mangler)",
-  },
   {
     "code": "",
     "detail": "94 × 80 mm · 1 × 609 (871 037 92) · på stolpe, takdrager over tekstilvegg",
@@ -9117,6 +9129,7 @@ exports[`09-dekor.json > variant A > calculation 1`] = `
       "sum": 7990,
     },
   ],
+  "hooks": [],
   "keyFigures": {
     "area": 15,
     "beamHooks": 0,
@@ -9792,6 +9805,7 @@ exports[`10-mobler-utstyr.json > variant A > calculation 1`] = `
       "sum": 4750,
     },
   ],
+  "hooks": [],
   "keyFigures": {
     "area": 12,
     "beamHooks": 0,
@@ -10521,6 +10535,7 @@ exports[`11-hyller.json > variant A > calculation 1`] = `
       "sum": 1976,
     },
   ],
+  "hooks": [],
   "keyFigures": {
     "area": 18,
     "beamHooks": 0,

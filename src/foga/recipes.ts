@@ -83,8 +83,11 @@ export interface BeamRecipe {
   /** Couplings at each end into the post channel. 292 is 80 high: one in the top and one in the bottom chamber.
    *  Stored mounted: each beam length + its couplings is one piece. */
   coupling: { code: string; perEnd: number };
-  /** A drawn (innvendig) beam's end hanging on another beam (Bjørn 1.11.2026), one per end. Placeholder part. */
-  hook: string;
+  /** Hook a beam end hangs on another beam with (Bjørn 10.11.2026, calc/beamHooks.ts): `profile` set as a T over the
+   *  beam, a `top` mm piece lying on it fixed with `screw` into a `nut` in its top channel, and a `leg` mm piece down its
+   *  side per side a beam hangs from, its channel taking that beam's couplings. Picked whole, screw and nut mounted; no
+   *  art.nr. and no cost of its own. */
+  hook: { profile: string; top: number; leg: number; screw: string; nut: string };
   /** Lifting a beam over a textile wall (Bjørn 6.11.2026, calc/beamLift.ts): a piece of `profile` `length` mm on top of
    *  every post the lifted beam rests on, with `post` down into the post, and at a hook point between a lifted beam and
    *  one that is not, the same piece with `hook` into the other beam. */
@@ -161,7 +164,7 @@ export const RECIPES: Recipes = {
       support: SUPPORT,
     },
   },
-  beam: { profile: '292', coupling: { code: '600', perEnd: 2 }, hook: 'KROK', lift: { profile: '94', length: 80, post: '609', hook: '600' } },
+  beam: { profile: '292', coupling: { code: '600', perEnd: 2 }, hook: { profile: '01', top: 20, leg: 80, screw: 'M5 maskinskrue', nut: '503' }, lift: { profile: '94', length: 80, post: '609', hook: '600' } },
   door: { leaf: 2000, floorGap: 20, topGap: 10, curtainBottomRail: '92', frame: '292', hinge: { code: '403', fromEnd: 150 }, lock: { code: '410', height: 1000 } },
   // Bjørn 8.11.2026: 91F at the ends, 91FF between, 290 mm, one 600 into the post; board 18 × 300 × 976 into the post's inner corner
   shelf: { end: '91F', twin: '91FF', bracket: 290, coupling: { code: '600', perBracket: 1 }, board: { code: 'HYLLEPLATE', w: 976, d: 300, t: 18 } },

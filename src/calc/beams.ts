@@ -56,13 +56,13 @@ export const NO_BEAMS: BeamLayout = { segments: [], posts: new Map(), lm: 0 };
 
 /** The takdrager of a variant. `standard`: none when the customer turned them off, else {@link layoutBeams} and the
  *  støttedrager holding long stand walls (`support`, calc/supportBeams.ts). `inner`: the ones the customer drew
- *  (calc/innerBeams.ts). `all`: both. `hooks`: every hook, drawn and støttedrager. */
+ *  (calc/innerBeams.ts). `all`: both. The hooks: calc/beamHooks.ts. */
 export function variantBeams(
   v: Variant,
   mods: readonly BuiltModule[],
   wallPoints: ReadonlyMap<string, Point>,
   maxLength: number,
-): { standard: BeamLayout; inner: InnerBeamLayout; support: SupportBeamLayout; all: BeamLayout; hooks: number } {
+): { standard: BeamLayout; inner: InnerBeamLayout; support: SupportBeamLayout; all: BeamLayout } {
   const moduleKeys = new Set(mods.map((m) => m.key));
   const frame = standardBeamsOn(v) ? layoutBeams(v.stand, moduleKeys, wallPoints, maxLength) : NO_BEAMS;
   const drawn = layoutInnerBeams(v.innerBeams ?? [], frame, moduleKeys, wallPoints, maxLength);
@@ -76,7 +76,7 @@ export function variantBeams(
   const ends = new Set(support.segments.flatMap((s) => [pointKey(s.from), pointKey(s.to)]));
   const inner = { ...drawn, feet: drawn.feet.filter((f) => !ends.has(pointKey(f.at))) };
   const standard = mergeBeams(frame, support);
-  return { standard, inner, support, all: mergeBeams(standard, inner), hooks: inner.hooks + support.hooks };
+  return { standard, inner, support, all: mergeBeams(standard, inner) };
 }
 
 /**

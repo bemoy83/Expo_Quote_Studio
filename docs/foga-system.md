@@ -160,8 +160,8 @@ Bjørn 1.11.2026. Kunden kan tegne egne takdragere inne på standen med en egen 
 - Tegnes rett i hele meter innenfor standen, aldri langs en vegg eller oppå en annen takdrager. Kan flyttes i plan og
   fjernes med Tøm (også bare en del av den) eller Delete.
 - **Krok:** en ende som treffer en annen takdrager (standard eller tegnet) henger på den med krok. Ingen stolpe der, og
-  standarddrageren deles ikke. Kroken er toveis: én krok per krokpunkt, også når
-  dragere henger på begge sider av samme punkt. Plassholder (`KROK`) til art.nr. er bestemt.
+  standarddrageren deles ikke. Én krok per krokpunkt (`calc/beamHooks.ts`): **enveis** når dragere henger fra én side,
+  **toveis** når de henger fra begge sider av samme punkt. Se «Krok i 01» under.
 - **Kryss:** der to tegnede takdragere krysser hverandre går det lengste spennet gjennom, og det korteste deles og henger
   på krok på hver side. Like lange: den først tegnede går gjennom. En tegnet drager som krysser en standard drager deles
   på samme måte.
@@ -175,8 +175,26 @@ Bjørn 1.11.2026. Kunden kan tegne egne takdragere inne på standen med en egen 
 - **Fotplate:** under hver egen stolpe står en fotplate 750 med 795 på tvers av drageren, og stolpen plukkes uten fot.
   Møter en tegnet drager fra den andre retningen stolpen (en tverrdrager), faller platen bort. Stolper i en vegg eller
   under standard takdrager får ingen plate fra drageren.
-- **Tilbud:** takdrager per meter med egne stolper og kroker i prisen, i samme linje som standard takdrager. Betaler
+- **Tilbud:** takdrager per meter med egne stolper i prisen, i samme linje som standard takdrager. Kroken koster ikke noe
+  ekstra for betaleren (Bjørn 10.11.2026); den står bare i plukklisten. Betaler
   arrangøren standard takdragerne, får de tegnede en egen linje «innvendig». Fotplatene ligger i linjen Støtteplate.
+
+### Krok i 01 · T9
+
+Bjørn 10.11.2026, fra STL. Kroken er laget av Flex **01** (873 001 22), en flat skinne 20 × 11,5 med én Flex-kanal og
+lukket rygg. Den settes som en **T over en 20 mm del**: takdrager 292, eller toppskinne 92 på en systemvegg.
+
+- **Topp:** 20 mm 01 ligger oppå drageren med kanalen opp og et Ø6-hull midt i ryggen. En **M5 maskinskrue** går
+  gjennom hullet i en **503** (876 503 95, bevel nut M5) som strammes på tvers i dragerens toppkanal.
+- **Ben:** 80 mm 01 (dragerens høyde) ned langs siden, med kanalen ut mot drageren som henger der. Den hengende
+  dragerens 600 går i benets kanal, som i en stolpe.
+- **Enveis** har ett ben (31,5 × 20 × 91,5 mm), **toveis** ett på hver side (43 × 20 × 91,5). Toppen stikker 11,5 mm
+  over drageren den henger på.
+- **Plukk:** hel, med skrue og mutter montert, som «Krok 01 enveis» / «Krok 01 toveis». Ikke eget art.nr., ingen kost
+  eller pris for betaleren.
+- Der en hevet og en ikke hevet drager møtes (T14), brukes skjøten 94 × 80 i stedet: ingen krok der.
+- Senere (diskuteres først): krok på toppskinne 92 gir et profilspor mellom stolpene, så en takdrager kan ende på en
+  systemvegg uten 94-stolpe.
 
 ### Takdrager over tekstilvegg · T13, T14
 
@@ -327,6 +345,7 @@ innvendig (der koblinger og fotinnsats sitter). Kanalene ligger midt på en 20 m
 | 94 stolpe | 873 062 22 | 40 × 40 | Én Flex-kanal på hver av de fire sidene. Midtrør 17 × 17 (innsats 700 for foten) |
 | 92 toppskinne | 873 051 22 | 20 × 40 | Kanal i begge kortender: ned mot platen, opp. Midtrør og to kamre |
 | 91 bunnskinne | 873 042 22 | 20 × 30 | Én kanal, opp mot platen. Midtrør over kanalen |
+| 01 krok | 873 001 22 | 20 × 11,5 | Én kanal (kammer 17 × 7), lukket flat rygg, uten midtrør. STL 10.11.2026 |
 | 292 takdrager | 873 080 22 | 20 × 80 | Kanal i over- og underkant. Tre kamre 17 × 17 over hverandre (de to ytterste tar 600-koblingene) |
 | 90 stag | 873 040 22 | 20 × 20 | Firkantrør uten kanal, midtrør 17 × 17 for 600 |
 | 43TX | 873 805 22 | 40 × 40 | Ytterst (mot rammens utside) en 1,5 mm flens med **tekstilspor på begge flater** (4 mm åpning, 14 mm dypt, 1,5–5,5 mm fra ytterkanten): silikonlisten trykkes inn fra hver side, dukene står 40 mm fra hverandre. Flex-kanal på begge flater (senter 20 mm inn) og på innerkanten (mot rammens midte). Midtrør + to små kamre |
