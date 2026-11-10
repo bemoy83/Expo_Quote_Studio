@@ -1,5 +1,5 @@
 // Støtteplater: foot plates under a system wall that stands free, by the shared support rule (calc/supports.ts) on
-// the wall's posts. The rules are byggeregler S1–S3, S5–S7 (docs/byggeregler.md); a long stand wall is held by a
+// the wall's posts. The rules are byggeregler S1–S3, S5–S7, T15 (docs/byggeregler.md); a long stand wall is held by a
 // støttedrager instead (calc/supportBeams.ts).
 import { pointKey } from '../domain/grid';
 import type { Point } from '../domain/types';
@@ -66,6 +66,25 @@ export function holdsRun(mods: readonly BuiltModule[], beams: BeamLayout): (run:
   return (run, p) => touched[run.orientation === 'h' ? 'v' : 'h'].has(pointKey(p)) || beam(p);
 }
 
+/**
+ * Where a takdrager hangs on the run between two of its posts, on a hook on the top rail 92 (Byggeregel T15): metres
+ * from the run's first post, not whole. Such a hook holds the wall there like a beam on a post (Bjørn 10.11.2026).
+ */
+export function hookHolds(run: Run, beams: BeamLayout): number[] {
+  const h = run.orientation === 'h';
+  const [line, lo] = h ? [run.points[0][1], run.points[0][0]] : [run.points[0][0], run.points[0][1]];
+  const len = run.points.length - 1;
+  const out = new Set<number>();
+  for (const s of beams.segments) {
+    for (const p of [s.from, s.to]) {
+      const [along, across] = h ? [p[0], p[1]] : [p[1], p[0]];
+      const t = Math.round((along - lo) * 1000) / 1000;
+      if (Math.abs(across - line) < 1e-6 && t > 1e-6 && t < len - 1e-6 && Math.abs(t - Math.round(t)) > 1e-6) out.add(t);
+    }
+  }
+  return [...out].sort((a, b) => a - b);
+}
+
 /** Whether `a` and `b` are joined by walls and takdrager without the given wall modules: a closed ring with them. */
 function joinedWithout(mods: readonly BuiltModule[], beams: BeamLayout) {
   const next = new Map<string, Set<string>>();
@@ -117,6 +136,12 @@ export function wallSupports(
   for (const run of wallRuns(mods)) {
     if (run.mods.some(inFrame)) continue;
     const held = run.points.map((p) => holds(run, p));
+    const hooks = hookHolds(run, beams);
+    if (hooks.length) {
+      // Held between posts too: stretch by stretch between every held point, the plates still on the posts
+      for (const k of heldStretchPosts(held, hooks, rule)) out.set(pointKey(run.points[k]), { at: run.points[k], orientation: run.orientation });
+      continue;
+    }
     // Between two supports (or a free end), one stretch at a time
     let start = 0;
     for (let i = 1; i < run.points.length; i++) {
@@ -151,6 +176,52 @@ export function stretchPosts(len: number, ends: Ends, rule: SupportRule): number
     if (keepsRule(len, at, ends, rule)) return at;
   }
   return Array.from({ length: len + 1 }, (_, i) => i).filter(free);
+}
+
+/**
+ * Plates on a run held at some posts (`held`, by index) and between posts (`hooks`, metres from the first post): each
+ * stretch between two held points, or out to a free end, gets the fewest plates on its posts that keep the rule, as
+ * evenly spread as possible. Returns post indices.
+ */
+export function heldStretchPosts(held: readonly boolean[], hooks: readonly number[], rule: SupportRule): number[] {
+  const len = held.length - 1;
+  const bounds = [...new Set([0, ...held.flatMap((h, i) => (h ? [i] : [])), ...hooks, len])].sort((a, b) => a - b);
+  const isHeld = (t: number) => hooks.includes(t) || (Number.isInteger(t) && held[t]);
+  const out: number[] = [];
+  for (let i = 1; i < bounds.length; i++) {
+    const [a, b] = [bounds[i - 1], bounds[i]];
+    const ends: Ends = { from: isHeld(a), to: isHeld(b) };
+    const posts: number[] = [];
+    for (let k = Math.ceil(a - 1e-9); k <= Math.floor(b + 1e-9); k++) if (!(k === a && ends.from) && !(k === b && ends.to)) posts.push(k);
+    out.push(...bestPosts(a, b, posts, ends, rule));
+  }
+  return [...new Set(out)].sort((x, y) => x - y);
+}
+
+/** The fewest of `posts` (whole metres) between `a` and `b` that keep the rule, the most even among them. */
+function bestPosts(a: number, b: number, posts: number[], ends: Ends, rule: SupportRule): number[] {
+  const len = b - a;
+  const min = minSupports(len * 1000, rule, ends);
+  if (min === 0) return [];
+  const keeps = (at: number[]) => keepsRule(len, at.map((k) => k - a), ends, rule);
+  const gaps = (at: number[]) => {
+    const all = [...(ends.from ? [a] : []), ...at, ...(ends.to ? [b] : [])];
+    return all.slice(1).map((x, i) => x - all[i]);
+  };
+  const score = (at: number[]) => gaps(at).reduce((s, g) => s + g * g, 0);
+  for (let n = min; n <= posts.length; n++) {
+    let best: number[] | null = null;
+    const pick = (from: number, chosen: number[]) => {
+      if (chosen.length === n) {
+        if (keeps(chosen) && (!best || score(chosen) < score(best))) best = [...chosen];
+        return;
+      }
+      for (let i = from; i <= posts.length - (n - chosen.length); i++) pick(i + 1, [...chosen, posts[i]]);
+    };
+    pick(0, []);
+    if (best) return best;
+  }
+  return posts;
 }
 
 function keepsRule(len: number, at: number[], ends: Ends, rule: SupportRule): boolean {

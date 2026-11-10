@@ -16,13 +16,13 @@ const ROW: Stand = { width: 6, depth: 4, type: 'row' };
 describe('kroker', () => {
   it('a beam ending on the front beam hangs on a one-way hook, on the side it comes from', () => {
     const res = run(variant(ROW, [beam('b1', [3, 0], [3, 4])]));
-    expect(res.hooks).toEqual([{ at: [3, 4], along: 'h', sides: [-1], lifted: false, inner: true }]);
+    expect(res.hooks).toEqual([{ at: [3, 4], along: 'h', sides: [-1], lifted: false, inner: true, on: 'beam' }]);
     expect(res.foga.beamHooks).toEqual({ oneWay: 1, twoWay: 0 });
   });
 
   it('a crossing: the shorter split on both sides of the longer hangs on one two-way hook', () => {
     const res = run(variant(ISLAND, [beam('short', [3, 1], [3, 5]), beam('long', [1, 3], [8, 3])], true));
-    expect(res.hooks).toEqual([{ at: [3, 3], along: 'h', sides: [1, -1], lifted: false, inner: true }]);
+    expect(res.hooks).toEqual([{ at: [3, 3], along: 'h', sides: [1, -1], lifted: false, inner: true, on: 'beam' }]);
     expect(res.foga.beamHooks).toEqual({ oneWay: 0, twoWay: 1 });
   });
 

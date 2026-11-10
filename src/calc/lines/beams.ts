@@ -29,9 +29,14 @@ function beamLine(c: CalcContext, b: BeamLayout, posts: number, hooks: number, w
 /** Takdrager lifted over textile walls: one per extended post and per mixed-level hook point. Always the exhibitor's: the
  *  textile wall is. */
 export function beamLiftLines(c: CalcContext): CalcLine[] {
-  const { posts, hooks } = c.lift;
-  const n = posts.length + hooks.length;
-  const meta = [count(posts.length, 'stolpe', 'stolper'), ...(hooks.length ? [count(hooks.length, 'krok', 'kroker')] : [])].join(' + ') + ' skjøtet opp';
+  const { posts, hooks, walls } = c.lift;
+  const n = posts.length + hooks.length + walls.length;
+  const parts = [
+    ...(posts.length || !(hooks.length + walls.length) ? [count(posts.length, 'stolpe', 'stolper')] : []),
+    ...(hooks.length ? [count(hooks.length, 'krok', 'kroker')] : []),
+    ...(walls.length ? [`${walls.length} oppå vegg`] : []),
+  ];
+  const meta = parts.join(' + ') + ' skjøtet opp';
   return [c.line(c.sys.beamLift, n, { ...c.built, meta }, [{ id: ITEM.beamLift, qty: n }])];
 }
 

@@ -54,7 +54,7 @@ kostgrunnlaget). Regel og kilde føres i `docs/byggeregler.md`.
 - Standard: `calc/beams.ts` (`variantBeams` setter sammen alle tre)
 - Innvendige (tegnet av kunden): modell `InnerBeam`, redigering `domain/innerBeams.ts`, utlegg `calc/innerBeams.ts`
 - Støttedrager på lange standvegger: `calc/supportBeams.ts`
-- Kroker i 01, enveis og toveis (der en drager henger på en annen): `calc/beamHooks.ts`, plukk i `foga/engine.ts`, 3D i `scene3d/build/frame.ts`
+- Kroker i 01, enveis og toveis (der en drager henger på en annen, eller på en vegg mellom stolpene, T15): `calc/beamHooks.ts`, plukk i `foga/engine.ts`, 3D i `scene3d/build/frame.ts`
 - Hevet over tekstilvegg (skjøtet stolpe og krok): `calc/beamLift.ts`, linjen `beamLiftLines` i `calc/lines/beams.ts`, 3D i `scene3d/build/frame.ts`
 - Linjen og hvem som betaler: `calc/lines/beams.ts` · `calc/context.ts` (`organiserBeams`)
 - Plan og 3D: `plan/layers/BeamLayer.tsx`, tegne `plan/pointer/stroke.ts`, dra `pointer/beam.ts` · `scene3d/build/frame.ts`

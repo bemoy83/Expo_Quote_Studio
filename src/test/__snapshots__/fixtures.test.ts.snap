@@ -3947,6 +3947,7 @@ exports[`04-oy-takdrager.json > variant A > calculation 1`] = `
       ],
       "inner": true,
       "lifted": false,
+      "on": "beam",
       "sides": [
         1,
       ],
@@ -3959,6 +3960,7 @@ exports[`04-oy-takdrager.json > variant A > calculation 1`] = `
       ],
       "inner": true,
       "lifted": false,
+      "on": "beam",
       "sides": [
         1,
         -1,
@@ -3972,6 +3974,7 @@ exports[`04-oy-takdrager.json > variant A > calculation 1`] = `
       ],
       "inner": true,
       "lifted": false,
+      "on": "beam",
       "sides": [
         -1,
       ],
@@ -5257,6 +5260,7 @@ exports[`06-stottedrager.json > variant A > calculation 1`] = `
       ],
       "inner": false,
       "lifted": false,
+      "on": "beam",
       "sides": [
         1,
         -1,
@@ -6204,6 +6208,7 @@ exports[`07-engangsteppe.json > variant B > calculation 1`] = `
       ],
       "inner": false,
       "lifted": false,
+      "on": "beam",
       "sides": [
         -1,
       ],
@@ -7465,6 +7470,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         0,
       ],
     ],
+    "walls": [],
   },
   "margin": {
     "cost": 12115.850622565333,

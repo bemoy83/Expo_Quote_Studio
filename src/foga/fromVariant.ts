@@ -20,7 +20,7 @@ export interface Derived {
   /** Hooks a takdrager hangs on another beam with, by kind (calc/beamHooks.ts). */
   hooks?: { oneWay: number; twoWay: number };
   /** Takdrager lifted over a textile wall: posts extended and mixed-level hook points. */
-  lift?: { posts: number; hooks: number };
+  lift?: { posts: number; hooks: number; walls?: number };
   production: Production;
   /** Plates swapped into stand walls the organiser builds. */
   swaps?: string[];
@@ -44,7 +44,7 @@ export function structureOf(d: Derived): FogaStructure {
     frames: [...d.production.pieces, ...d.production.free].map((f) => ({ pos: f.pos, parts: f.parts })),
     ...(d.production.cornerPosts.qty ? { cornerPosts: d.production.cornerPosts } : {}),
     ...(d.hooks && d.hooks.oneWay + d.hooks.twoWay ? { beamHooks: d.hooks } : {}),
-    ...(d.lift && d.lift.posts + d.lift.hooks ? { beamLift: d.lift } : {}),
+    ...(d.lift && d.lift.posts + d.lift.hooks + (d.lift.walls ?? 0) ? { beamLift: { posts: d.lift.posts, hooks: d.lift.hooks, ...(d.lift.walls ? { walls: d.lift.walls } : {}) } } : {}),
     ...(d.swaps?.length ? { swaps: d.swaps } : {}),
     ...(d.wallFeet ? { wallFeet: d.wallFeet } : {}),
     ...(d.barePosts ? { barePosts: d.barePosts } : {}),
@@ -60,7 +60,7 @@ export function fromVariant(v: Variant, rules: Rules): FogaStructure {
   const posts = new Set([...points.keys(), ...beams.posts.keys()]).size;
   const lift = liftBeams(v, rules, beams, points);
   const hooks = hookCount(beamHooks(beams, points, lift));
-  return structureOf({ mods, posts, beams, hooks, lift: { posts: lift.posts.length, hooks: lift.hooks.length }, production: production(v, rules, ''), shelves: shelfBrackets(v) });
+  return structureOf({ mods, posts, beams, hooks, lift: { posts: lift.posts.length, hooks: lift.hooks.length, walls: lift.walls.length }, production: production(v, rules, ''), shelves: shelfBrackets(v) });
 }
 
 /** Sizes from the rules, mm: post = system wall height without feet (2490), cc 1000. */

@@ -5,7 +5,7 @@ import { RULES } from '../rules/rules';
 import type { Point, Side, Stand } from '../domain/types';
 import type { BuiltModule } from '../domain/walls';
 import { onSegment, splitBeamLength, type BeamLayout, type BeamSegment } from './beams';
-import { holdsRun, wallRuns } from './wallSupports';
+import { holdsRun, hookHolds, wallRuns } from './wallSupports';
 
 /** A free span of a stand wall from this long, m, gets støttedrager. */
 export const SUPPORT_SPAN = RULES.beam.supportSpan;
@@ -22,15 +22,17 @@ export const NO_SUPPORT_BEAMS: SupportBeamLayout = { segments: [], posts: new Ma
  * Points along one run of a stand wall (whole metres from its low end) where it gets a støttedrager: in each free span
  * of at least `span` m between two held points. A stretch out to a free end is left alone.
  */
-export function supportBeamPoints(len: number, held: (i: number) => boolean, span = SUPPORT_SPAN): number[] {
+export function supportBeamPoints(len: number, held: (i: number) => boolean, span = SUPPORT_SPAN, hooks: readonly number[] = []): number[] {
+  // A takdrager on a hook between two posts holds the wall there too (Byggeregel T15); the støttedrager stays on a post
+  const at = [...new Set([...Array.from({ length: len + 1 }, (_, i) => i).filter(held), ...hooks])].sort((a, b) => a - b);
   const out: number[] = [];
   let start = held(0) ? 0 : -1;
-  for (let i = 1; i <= len; i++) {
-    if (!held(i)) continue;
+  for (const i of at) {
+    if (i === 0) continue;
     const L = i - start;
-    if (start >= 0 && L >= span) {
+    if (start >= 0 && L >= span - EPS) {
       const n = Math.floor(L / span + EPS);
-      for (let k = 1; k <= n; k++) out.push(start + Math.round((k * L) / (n + 1)));
+      for (let k = 1; k <= n; k++) out.push(Math.round(start + (k * L) / (n + 1)));
     }
     start = i;
   }
@@ -63,7 +65,7 @@ export function layoutSupportBeams(
   }
   for (const [side, ms] of bySide) {
     for (const run of wallRuns(ms)) {
-      for (const i of supportBeamPoints(run.points.length - 1, (k) => holds(run, run.points[k]), span)) starts.push({ at: run.points[i], side });
+      for (const i of supportBeamPoints(run.points.length - 1, (k) => holds(run, run.points[k]), span, hookHolds(run, beams))) starts.push({ at: run.points[i], side });
     }
   }
 
@@ -78,8 +80,25 @@ export function layoutSupportBeams(
     // Walk in until a wall or beam: stop on it, or before a wall running along the line
     let stop = 0;
     let hook = false;
+    // A drawn beam off the grid (Byggeregel T15) across its way between two whole metres: it hangs on it there
+    const between = (t: number) => {
+      let best: number | null = null;
+      for (const s of beams.segments) {
+        const across = Math.abs((s.to[0] - s.from[0]) * dx + (s.to[1] - s.from[1]) * dy) < EPS;
+        if (!across) continue;
+        const u = (s.from[0] - from[0]) * dx + (s.from[1] - from[1]) * dy;
+        if (u > t - 1 + EPS && u < t - EPS && onSegment(s, at(u)) && (best === null || u < best)) best = u;
+      }
+      return best;
+    };
     for (let t = 1; t <= reach; t++) {
       if (keys.has(makeModule(at(t - 1), at(t)).key)) break;
+      const u = between(t);
+      if (u !== null) {
+        stop = u;
+        hook = !beams.posts.has(pointKey(at(u)));
+        break;
+      }
       stop = t;
       const p = at(t);
       if (wallPoints.has(pointKey(p))) break;

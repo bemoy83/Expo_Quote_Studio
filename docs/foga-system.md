@@ -193,8 +193,27 @@ lukket rygg. Den settes som en **T over en 20 mm del**: takdrager 292, eller top
 - **Plukk:** hel, med skrue og mutter montert, som «Krok 01 enveis» / «Krok 01 toveis». Ikke eget art.nr., ingen kost
   eller pris for betaleren.
 - Der en hevet og en ikke hevet drager møtes (T14), brukes skjøten 94 × 80 i stedet: ingen krok der.
-- Senere (diskuteres først): krok på toppskinne 92 gir et profilspor mellom stolpene, så en takdrager kan ende på en
-  systemvegg uten 94-stolpe.
+- **På vegg (T15):** kroken settes på samme måte over toppskinne 92 og gir et profilspor mellom stolpene, så en
+  innvendig takdrager som er flyttet ut av meterrasteret kan henge på en systemvegg uten 94-stolpe.
+
+### Fritt plassert innvendig takdrager · T15
+
+Bjørn 10.11.2026. Takdragere bærer, utenom å støtte veggene, som oftest belysning (lamper og lysskinner), og lyset skal
+henge der kunden vil ha det. Dragere ligger i meterrasteret som før, men en tegnet drager kan flyttes på tvers av sin
+retning i steg på 50 mm, mellom stolpene.
+
+- Ved en ledig stolpe går drageren alltid inn i stolpen. Mellom stolpene henger den på krok på toppskinne 92, også
+  over et dørstykke. Den kan også henge på en annen drager hvor som helst.
+- Krysser den en vegg mellom stolpene, deles den der og henger på en toveis krok.
+- Mot InFrame (tekstil utenpå veggen) heves den som ellers (T13); da står 94 × 80 med 600 oppå veggen i stedet for
+  kroken. Ingenting på platen stopper benet, bare fysiske konflikter som tekstilvegg (senere snekret vegg).
+- En fri ende utenfor rasteret får egen stolpe med fotplate.
+- En drager på krok holder veggen der (Bjørn 10.11.2026): fotplater og støttedrager regnes for strekningene mellom
+  holdte punkter, platene står fortsatt på stolpene.
+- Bare de innvendige (tegnede) dragerne kan flyttes. Production monterer kroken uansett hvem som betaler.
+- Bæreevne (sterkest ved stolpene, svakest midt i spennet) er ikke med i appen.
+- Plan: Shift + dra på tvers med mållinje til nærmeste stolpe eller krok. Arbeidsordre: mållinjen skal stå på
+  arbeidstegningen så montøren kan måle ut fra nærmeste faste punkt. (Neste steg.)
 
 ### Takdrager over tekstilvegg · T13, T14
 
