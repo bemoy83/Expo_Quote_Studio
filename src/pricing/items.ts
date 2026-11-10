@@ -51,7 +51,7 @@ export const ITEM = {
   shelfBoardCorner: 'hylleplate-hjorne',
   shelfBoardNarrow: 'hylleplate-hjorne-smal',
   shelfBoardTwoThirds: 'hylleplate-2-3',
-  /** Putting up one shelf (Bjørn 8.11.2026: 3 min). */
+  /** Putting up and taking down one shelf, direct time (Bjørn 10.11.2026: 1,5 min up, 1 min down). */
   shelfMount: 'montering-hylle',
   /** Picking shelves for an order, once whatever the number (Bjørn 8.11.2026: 10 min per product type). */
   shelfPick: 'vareplukk-hyller',
@@ -148,8 +148,9 @@ export const EXAMPLE_TIMES: Readonly<Record<string, Time>> = {
   [ITEM.frame]: pvt(3, 2, 2),
   [ITEM.frameCoupling]: onSite(2, 1),
   [ITEM.textileEdge]: onSite(4, 2),
-  // Bjørn 8.11.2026: 3 min direct montering per shelf, picking 10 min for the product type; demontering is an example
-  [ITEM.shelfMount]: onSite(3, 1.5),
+  // Bjørn 10.11.2026: direct time per shelf 1,5 min up and 1 min down (also in corners); picking 10 min for the product
+  // type and walking per work order are indirect, per order
+  [ITEM.shelfMount]: onSite(1.5, 1),
   [ITEM.shelfPick]: { plukk: 10 },
 };
 

@@ -284,9 +284,10 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   og dekal er lov. Heng står bare mellom stolper med ledig kanal.
   *Bjørn 8.11.2026, endret 10.11.2026 · kode `src/domain/fittings.ts`, `src/domain/shelves/corners.ts` · test `src/domain/shelves/shelves.test.ts`, `src/domain/shelves/corners.test.ts`*
 - **H7 Pris per hylle.** Samme pris per hylle alene og i rad, som systemvegg (fast katalogpris; kostmotoren gir kost og
-  tid). Montering 3 min per hylle, vareplukk 10 min én gang per ordre med hyller. Stolpene er en del av veggen: bare
-  plukklisten bryter ut knekter, 600 og plater.
-  *Bjørn 8.11.2026 · `EXAMPLE_TIMES` (`montering-hylle`, `vareplukk-hyller`) · kode `src/calc/lines/shelves.ts` · test `src/calc/shelves.test.ts`*
+  tid). Direkte tid 1,5 min opp og 1 min ned per hylle, også i hjørner. Indirekte tid per ordre kommer i tillegg:
+  vareplukk 10 min én gang per ordre med hyller, og gange per arbeidsordre (ikke bygget ennå). Stolpene er en del av
+  veggen: bare plukklisten bryter ut knekter, skinner, 600 og plater.
+  *Bjørn 8.11.2026, endret 10.11.2026 · `EXAMPLE_TIMES` (`montering-hylle`, `vareplukk-hyller`) · kode `src/calc/lines/shelves.ts` · test `src/calc/shelves.test.ts`*
 - **H8 Veggriss med hyller.** Arbeidsordren har et veggriss for hver veggside med hyller: hyllene målsatt fra gulv
   (overkant plate) og lysmålet mellom hyller over hverandre, med modulkjeden c/c under veggen. Veggskuffen viser det
   samme. Tilbudet viser hyller bare i 3D, uten veggriss. I et hjørne viser veggrisset 01-skinnene på

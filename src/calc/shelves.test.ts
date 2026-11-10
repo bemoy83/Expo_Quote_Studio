@@ -24,7 +24,8 @@ describe('shelf line (Byggeregel H7)', () => {
   it('costs the brackets as counted, the boards, the work per shelf and the picking once', () => {
     const cost = 2 * item(ITEM.shelfEnd).cost + 2 * item(ITEM.shelfTwin).cost + 3 * item(ITEM.shelfBoard).cost + 3 * item(ITEM.shelfMount).cost + item(ITEM.shelfPick).cost;
     expect(line.cost).toBeCloseTo(cost, 6);
-    expect(line.time.montering).toBe(9);
+    expect(line.time.montering).toBe(4.5);
+    expect(line.time.demontering).toBe(3);
     expect(line.time.plukk).toBe(10);
   });
 
