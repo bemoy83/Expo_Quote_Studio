@@ -16,11 +16,14 @@ function missingText(paths: readonly string[]): string {
   const counts = new Map<string, number>()
   for (const p of paths) {
     const root = p.split('.')[0]
-    if (!PARTS[root]) out.push(p)
+    // A row filled into a saved list (prisliste Egne innkjøp HYLLEPLATE-960x300): counted by list
+    const row = /^(prisliste \S+ \S+) \S/.exec(p)
+    if (row) counts.set(row[1], (counts.get(row[1]) ?? 0) + 1)
+    else if (!PARTS[root]) out.push(p)
     else if (p === root) out.push(`alle ${PARTS[root]}`)
     else counts.set(root, (counts.get(root) ?? 0) + 1)
   }
-  for (const [root, n] of counts) out.push(`${PARTS[root]} (${n})`)
+  for (const [root, n] of counts) out.push(`${PARTS[root] ?? root} (${n})`)
   return out.join(', ')
 }
 

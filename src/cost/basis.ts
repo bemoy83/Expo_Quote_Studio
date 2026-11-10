@@ -91,6 +91,31 @@ const supplierIs = (l: SupplierList, supplier: string) => l.supplier.startsWith(
 
 export const usesExample = (b: CostBasis) => b.fromExample.length > 0;
 
+/** The path of one row in a price list, as fromExample and the Kostgrunnlag page name it. */
+export const listRowPath = (supplier: string, artnr: string) => `prisliste ${supplier} ${artnr}`;
+
+/**
+ * An own-purchases list (Egne innkjøp) saved before the app had some of its articles, with the example's rows for
+ * those filled in, each noted as example numbers (Bjørn 10.11.2026: corner boards were «uten kost» in 2026-11 A). Only
+ * this list: a Foga list is a real price list and keeps what it has.
+ */
+function withExampleRows(lists: readonly SupplierList[], fromExample: string[]): SupplierList[] {
+  return lists.map((l) => {
+    if (!supplierIs(l, OWN_SUPPLIER)) return l;
+    const have = new Set(l.items.map((x) => x.artnr));
+    const add = EXAMPLE_OWN_LIST.items.filter((x) => !have.has(x.artnr));
+    for (const x of add) fromExample.push(listRowPath(l.supplier, x.artnr));
+    return add.length ? { ...l, items: [...l.items, ...add] } : l;
+  });
+}
+
+/** The lists as the owner wrote them: without the rows withExampleRows filled in. */
+const ownRows = (b: CostBasis) =>
+  b.lists.map((l) => {
+    const items = l.items.filter((x) => !b.fromExample.includes(listRowPath(l.supplier, x.artnr)));
+    return items.length === l.items.length ? l : { ...l, items };
+  });
+
 export const basisRef = (b: CostBasis, code: string): CostBasisRef => ({ version: b.version, date: b.date, example: usesExample(b), code });
 
 /** Same version and same numbers. A ref without a code (older file) is judged by its version alone. */
@@ -136,7 +161,7 @@ export function serializeBasis(b: CostBasis): string {
       kilde: b.source,
       parametere: without(b.params, 'parametere', b.fromExample),
       ordrekost: b.fromExample.includes('ordrekost') ? undefined : b.orderCosts,
-      prislister: b.fromExample.includes('prisliste') ? undefined : b.lists,
+      prislister: b.fromExample.includes('prisliste') ? undefined : ownRows(b),
       tider: without(b.times, 'tider', b.fromExample),
       oppskrifter: without(b.recipes, 'oppskrifter', b.fromExample),
       katalog: without({ kost: b.catalog.cost, tider: b.catalog.time }, 'katalog', b.fromExample),
@@ -409,7 +434,7 @@ export function parseBasis(text: string): BasisResult {
   try {
     const params = mergeParams(DEFAULT_COST_PARAMS as unknown as Obj, f.parametere, 'parametere', fromExample) as unknown as CostParams;
     if (f.ordrekost === undefined) fromExample.push('ordrekost');
-    const lists = f.prislister === undefined ? EXAMPLE_LISTS : supplierLists(f.prislister);
+    const lists = f.prislister === undefined ? EXAMPLE_LISTS : withExampleRows(supplierLists(f.prislister), fromExample);
     if (f.prislister === undefined) fromExample.push('prisliste');
     // By the names the engine looks the lists up by (`supplierList`), so a list named just "Foga" counts
     else for (const name of SUPPLIERS) if (!lists.some((l) => supplierIs(l, name))) fromExample.push(`prisliste ${name}`);

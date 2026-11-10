@@ -5,7 +5,7 @@
 import { FOGA_PARTS, type PartKind } from '../foga/parts';
 import { ITEM_DEFS } from '../pricing/items';
 import { HANDLING_STEPS, type HandlingStep } from '../pricing/model';
-import { EXAMPLE_BASIS, parseBasis, serializeBasis, supplierList, type BasisResult, type CostBasis, type FieldNote, type FieldStatus } from './basis';
+import { EXAMPLE_BASIS, listRowPath, parseBasis, serializeBasis, supplierList, type BasisResult, type CostBasis, type FieldNote, type FieldStatus } from './basis';
 import { EXAMPLE_LIST } from './example-list';
 import { EXAMPLE_OWN_LIST, OWN_SUPPLIER } from './own-list';
 import type { CostParams } from './params';
@@ -184,7 +184,7 @@ export function basisFields(b: CostBasis): Field[] {
     const example = isExampleList(list);
     for (const it of list.items) {
       add(
-        `prisliste ${list.supplier} ${it.artnr}`,
+        listRowPath(list.supplier, it.artnr),
         {
           tab: 'innkjop',
           group: `${list.supplier} · ${list.name} · ${list.date} · ${list.currency}`,
@@ -195,7 +195,7 @@ export function basisFields(b: CostBasis): Field[] {
           list: { supplier: list.supplier, artnr: it.artnr },
           put: (file, v) => putListPrice(file, b, list, it.artnr, v),
         },
-        !example,
+        !example && !fromExample(b, listRowPath(list.supplier, it.artnr)),
       );
     }
   }
@@ -325,7 +325,11 @@ function valueAt(o: unknown, key: string): number {
 function putListPrice(file: Obj, b: CostBasis, list: SupplierList, artnr: string, v: number) {
   const lists = (file.prislister as SupplierList[] | undefined) ?? (b.fromExample.includes('prisliste') ? [] : [...b.lists]);
   const i = lists.findIndex((l) => l.supplier === list.supplier);
-  const items = (i >= 0 ? lists[i] : list).items.map((x) => (x.artnr === artnr ? { ...x, price: v, broken: x.broken === x.price ? v : x.broken } : x));
+  const set = (x: SupplierList['items'][number]) => ({ ...x, price: v, broken: x.broken === x.price ? v : x.broken });
+  const base = (i >= 0 ? lists[i] : list).items;
+  // A row filled in from the example (withExampleRows) is not in the file yet: it goes in with the new price
+  const row = list.items.find((x) => x.artnr === artnr);
+  const items = base.some((x) => x.artnr === artnr) ? base.map((x) => (x.artnr === artnr ? set(x) : x)) : row ? [...base, set(row)] : base;
   const next = { ...(i >= 0 ? lists[i] : list), items };
   file.prislister = i >= 0 ? lists.map((l, j) => (j === i ? next : l)) : [...lists, next];
 }

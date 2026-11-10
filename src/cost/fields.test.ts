@@ -31,6 +31,19 @@ describe('kostgrunnlag fields', () => {
     expect(fields.find((f) => f.path === 'tider.stolpe-94.plukk')).toMatchObject({ status: 'kalibrert', value: 0.34 });
   });
 
+  it('a row filled into an older own list is example numbers until given a price, then the owner\'s', () => {
+    const own = { supplier: 'Egne innkjøp', name: 'Egne', date: '2026-11', currency: 'NOK', items: [{ artnr: 'FORHENG', unit: 'stk', price: 1000 }] };
+    const r = parseBasis(JSON.stringify({ format: 'kostgrunnlag', versjon: 2, kostversjon: '2026-11 A', dato: '2026-11-07', prislister: [own] }));
+    if (!r.ok) throw new Error(r.error);
+    const at = (b: typeof B, path: string) => basisFields(b).find((f) => f.path === path)!;
+    expect(at(r.basis, 'prisliste Egne innkjøp FORHENG').own).toBe(true);
+    expect(at(r.basis, 'prisliste Egne innkjøp HYLLEPLATE-960x300')).toMatchObject({ own: false, value: 120 });
+    const next = withValues(r.basis, [{ field: at(r.basis, 'prisliste Egne innkjøp HYLLEPLATE-960x300'), value: 150 }], { version: '2026-11 B', date: '2026-11-10' });
+    if (!next.ok) throw new Error(next.error);
+    expect(at(next.basis, 'prisliste Egne innkjøp HYLLEPLATE-960x300')).toMatchObject({ own: true, value: 150 });
+    expect(at(next.basis, 'prisliste Egne innkjøp HYLLEPLATE-655x300').own).toBe(false);
+  });
+
   it('a new value takes the road of a loaded file: own, noted, and the calc follows', () => {
     const name = { version: '2026-11 B', date: '2026-11-08', source: 'Bjørn' };
     const at = (path: string) => fields.find((f) => f.path === path)!;
