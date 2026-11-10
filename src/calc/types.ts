@@ -85,7 +85,7 @@ export interface KeyFigures {
   organiserBeamLm: number;
   /** Part of beamLm in innvendige takdragere the customer draws: always the exhibitor's. */
   innerBeamLm: number;
-  /** Hooks a takdrager hangs on another beam with, enveis and toveis (calc/beamHooks.ts). */
+  /** Hooks a takdrager hangs on another beam or on a wall's top rail 92 with, enveis and toveis (calc/beamHooks.ts). */
   beamHooks: number;
   /** Part of wallLm in inner walls the exhibitor draws (room walls not included). */
   innerWallLm: number;
@@ -137,7 +137,7 @@ export interface CalcResult {
   /** Takdrager lifted over textile walls (calc/beamLift.ts; the lengths are `lifted` in `beams`): the posts extended
    *  under them, and the hook points between a lifted beam and one that is not. Only when there are any. */
   lift?: { posts: Point[]; hooks: Point[]; walls: Point[] };
-  /** Hooks a takdrager hangs on another beam with (calc/beamHooks.ts), for the 3D view. */
+  /** Hooks a takdrager hangs on another beam or a wall's top rail with (calc/beamHooks.ts): 3D and mållinjer. */
   hooks: BeamHook[];
   posts: Point[];
   /** Støtteplater under free-standing system walls and drawn takdrager's own posts: always the exhibitor's, also under

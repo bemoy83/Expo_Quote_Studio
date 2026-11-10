@@ -136,22 +136,19 @@ export function wallSupports(
   for (const run of wallRuns(mods)) {
     if (run.mods.some(inFrame)) continue;
     const held = run.points.map((p) => holds(run, p));
+    // Held at posts, and between posts by a takdrager on a hook (Byggeregel T15): one stretch at a time between held
+    // points (or out to a free end), the plates always on posts
     const hooks = hookHolds(run, beams);
-    if (hooks.length) {
-      // Held between posts too: stretch by stretch between every held point, the plates still on the posts
-      for (const k of heldStretchPosts(held, hooks, rule)) out.set(pointKey(run.points[k]), { at: run.points[k], orientation: run.orientation });
-      continue;
-    }
-    // Between two supports (or a free end), one stretch at a time
-    let start = 0;
-    for (let i = 1; i < run.points.length; i++) {
-      if (!held[i] && i < run.points.length - 1) continue;
-      const locked = framed && held[start] && held[i] && joined(run.points[start], run.points[i], run.mods.slice(start, i));
-      for (const k of locked ? [] : stretchPosts(i - start, { from: held[start], to: held[i] }, rule)) {
-        const p = run.points[start + k];
-        out.set(pointKey(p), { at: p, orientation: run.orientation });
-      }
-      start = i;
+    const isHeld = (t: number) => (Number.isInteger(t) ? held[t] : hooks.includes(t));
+    const len = run.points.length - 1;
+    const bounds = [...new Set([0, ...held.flatMap((h, i) => (h ? [i] : [])), ...hooks, len])].sort((x, y) => x - y);
+    for (let i = 1; i < bounds.length; i++) {
+      const [a, b] = [bounds[i - 1], bounds[i]];
+      const ends: Ends = { from: isHeld(a), to: isHeld(b) };
+      const whole = Number.isInteger(a) && Number.isInteger(b);
+      const locked = whole && framed && ends.from && ends.to && joined(run.points[a], run.points[b], run.mods.slice(a, b));
+      const posts = locked ? [] : whole ? stretchPosts(b - a, ends, rule).map((k) => a + k) : bestPosts(a, b, ends, rule);
+      for (const k of posts) out.set(pointKey(run.points[k]), { at: run.points[k], orientation: run.orientation });
     }
   }
   return [...out.values()];
@@ -178,29 +175,12 @@ export function stretchPosts(len: number, ends: Ends, rule: SupportRule): number
   return Array.from({ length: len + 1 }, (_, i) => i).filter(free);
 }
 
-/**
- * Plates on a run held at some posts (`held`, by index) and between posts (`hooks`, metres from the first post): each
- * stretch between two held points, or out to a free end, gets the fewest plates on its posts that keep the rule, as
- * evenly spread as possible. Returns post indices.
- */
-export function heldStretchPosts(held: readonly boolean[], hooks: readonly number[], rule: SupportRule): number[] {
-  const len = held.length - 1;
-  const bounds = [...new Set([0, ...held.flatMap((h, i) => (h ? [i] : [])), ...hooks, len])].sort((a, b) => a - b);
-  const isHeld = (t: number) => hooks.includes(t) || (Number.isInteger(t) && held[t]);
-  const out: number[] = [];
-  for (let i = 1; i < bounds.length; i++) {
-    const [a, b] = [bounds[i - 1], bounds[i]];
-    const ends: Ends = { from: isHeld(a), to: isHeld(b) };
-    const posts: number[] = [];
-    for (let k = Math.ceil(a - 1e-9); k <= Math.floor(b + 1e-9); k++) if (!(k === a && ends.from) && !(k === b && ends.to)) posts.push(k);
-    out.push(...bestPosts(a, b, posts, ends, rule));
-  }
-  return [...new Set(out)].sort((x, y) => x - y);
-}
-
-/** The fewest of `posts` (whole metres) between `a` and `b` that keep the rule, the most even among them. */
-function bestPosts(a: number, b: number, posts: number[], ends: Ends, rule: SupportRule): number[] {
+/** A stretch from `a` to `b` (metres from the run's first post) with an end on a hook between posts: the fewest of its
+ *  posts that keep the rule, the most evenly spread. Returns post indices. */
+function bestPosts(a: number, b: number, ends: Ends, rule: SupportRule): number[] {
   const len = b - a;
+  const posts: number[] = [];
+  for (let k = Math.ceil(a - 1e-9); k <= Math.floor(b + 1e-9); k++) if (!(k === a && ends.from) && !(k === b && ends.to)) posts.push(k);
   const min = minSupports(len * 1000, rule, ends);
   if (min === 0) return [];
   const keeps = (at: number[]) => keepsRule(len, at.map((k) => k - a), ends, rule);

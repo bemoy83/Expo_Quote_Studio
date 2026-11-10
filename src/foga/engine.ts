@@ -166,7 +166,8 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
 
   // Takdrager: 292 between the posts with two 600 in each end, one piece per length
   for (const b of s.beams) unit(BOM_GROUP.beams, 'Takdrager', r.beam.profile, between(b.lengthMm), r.beam.coupling, 1);
-  // A takdrager's end hanging on another beam: a hook in 01 with one leg (enveis) or two (toveis), picked whole
+  // A takdrager's end hanging on another beam or a wall's top rail 92 (T15): a hook in 01 with one leg (enveis) or two
+  // (toveis), picked whole
   const hook = r.beam.hook;
   const hookUnit = (key: string, kind: string, legs: number, qty: number) =>
     put(

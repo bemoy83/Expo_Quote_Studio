@@ -17,9 +17,9 @@ export interface Derived {
   /** Wall posts and posts that only carry takdrager. */
   posts: number;
   beams: BeamLayout;
-  /** Hooks a takdrager hangs on another beam with, by kind (calc/beamHooks.ts). */
+  /** Hooks a takdrager hangs on another beam or a wall's top rail with, by kind (calc/beamHooks.ts). */
   hooks?: { oneWay: number; twoWay: number };
-  /** Takdrager lifted over a textile wall: posts extended and mixed-level hook points. */
+  /** Takdrager lifted over a textile wall: posts extended, mixed-level hook points and ends on a wall (T15). */
   lift?: { posts: number; hooks: number; walls?: number };
   production: Production;
   /** Plates swapped into stand walls the organiser builds. */

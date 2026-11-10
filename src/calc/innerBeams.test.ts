@@ -8,6 +8,8 @@ import { drawOpening } from '../domain/doors';
 import { addRoom, moveRoom } from '../domain/rooms';
 import { createVariant } from '../domain/variant';
 import { builtModules, wallPoints } from '../domain/walls';
+import { NO_LIFT } from './beamLift';
+import { beamHooks } from './beamHooks';
 import { RULES } from '../rules/rules';
 import { variantBeams } from './beams';
 import { calc } from './calc';
@@ -18,6 +20,11 @@ const layout = (v: Variant) => {
   const mods = builtModules(v);
   return variantBeams(v, mods, wallPoints(mods), RULES.beam.max);
 };
+/** Hook points a drawn beam hangs on (calc/beamHooks.ts). */
+const hooks = (v: Variant) => {
+  const mods = builtModules(v);
+  return beamHooks(layout(v).all, wallPoints(mods), NO_LIFT).filter((h) => h.inner).length;
+};
 const lengths = (v: Variant) => layout(v).inner.segments.map((s) => s.length);
 const has = (ps: ReadonlyMap<string, Point>, p: Point) => ps.has(pointKey(p));
 
@@ -27,17 +34,19 @@ const ISLAND: Stand = { width: 10, depth: 6, type: 'island' };
 describe('innvendig takdrager', () => {
   it('from the back wall to the front beam: on the wall post, hooked on the front beam', () => {
     // Row 6 × 4: front open → standard front beam 6 m. Drawn x = 3 from the back wall (post) to the front beam.
-    const l = layout(variant(ROW, [beam('b1', [3, 0], [3, 4])]));
+    const v = variant(ROW, [beam('b1', [3, 0], [3, 4])]);
+    const l = layout(v);
     expect(l.inner.segments.map((s) => s.length)).toEqual([4]);
-    expect(l.inner.hooks).toBe(1);
+    expect(hooks(v)).toBe(1);
     expect(l.inner.feet).toEqual([]);
     // The standard beam is not split by it
     expect(l.standard.segments.map((s) => s.length)).toEqual([6]);
   });
 
   it('free-standing: a post with a foot plate across the beam at each end', () => {
-    const l = layout(variant(ISLAND, [beam('b1', [1, 1], [5, 1])], true));
-    expect(l.inner.hooks).toBe(0);
+    const v = variant(ISLAND, [beam('b1', [1, 1], [5, 1])], true);
+    const l = layout(v);
+    expect(hooks(v)).toBe(0);
     expect([...l.inner.posts.values()]).toEqual([[1, 1], [5, 1]]);
     expect(l.inner.feet).toEqual([
       { at: [1, 1], orientation: 'h' },
@@ -54,11 +63,12 @@ describe('innvendig takdrager', () => {
   });
 
   it('a cross beam drawn at the joint takes the place of the foot plate there', () => {
-    const l = layout(variant(ISLAND, [beam('b1', [1, 1], [9, 1]), beam('b2', [5, 1], [5, 4])], true));
+    const v = variant(ISLAND, [beam('b1', [1, 1], [9, 1]), beam('b2', [5, 1], [5, 4])], true);
+    const l = layout(v);
     expect(has(new Map(l.inner.feet.map((f) => [pointKey(f.at), f.at])), [5, 1])).toBe(false);
     // b2's far end is free: post and plate across b2
     expect(l.inner.feet).toContainEqual({ at: [5, 4], orientation: 'v' });
-    expect(l.inner.hooks).toBe(0);
+    expect(hooks(v)).toBe(0);
   });
 
   it('crossing: the longer runs through, the shorter is split and hangs on one two-way hook', () => {
@@ -66,13 +76,13 @@ describe('innvendig takdrager', () => {
     const l = layout(v);
     // long 7 m: 4 + 3 with a joint post; short 4 m split at y = 3 into 2 + 2
     expect(l.inner.segments.map((s) => s.length)).toEqual([2, 2, 4, 3]);
-    expect(l.inner.hooks).toBe(1);
+    expect(hooks(v)).toBe(1);
     expect(has(l.inner.posts, [3, 3])).toBe(false);
   });
 
   it('two beams ending on both sides of the same point share one two-way hook', () => {
     const v = variant(ISLAND, [beam('long', [1, 3], [8, 3]), beam('n', [4, 1], [4, 3]), beam('s', [4, 3], [4, 5]), beam('e', [6, 3], [6, 5])], true);
-    expect(layout(v).inner.hooks).toBe(2);
+    expect(hooks(v)).toBe(2);
   });
 
   it('a wall under it splits it on the wall post', () => {

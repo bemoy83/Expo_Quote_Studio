@@ -7,9 +7,8 @@ import type { InnerBeam, Point } from '../domain/types';
 import { splitBeamLength, type BeamLayout, type BeamSegment } from './beams';
 import type { WallSupport } from './wallSupports';
 
+/** Where drawn beams hang on hooks is read from the layout (calc/beamHooks.ts): an end on no post. */
 export interface InnerBeamLayout extends BeamLayout {
-  /** Hook points: where drawn beams hang on another beam or on a wall between its posts (kinds: calc/beamHooks.ts). */
-  hooks: number;
   /** Foot plates under the beams' own free posts. */
   feet: WallSupport[];
 }
@@ -101,7 +100,6 @@ export function layoutInnerBeams(
   const segments: BeamSegment[] = [];
   const posts = new Map<string, Point>();
   const addPost = (p: Point) => posts.set(pointKey(p), p);
-  const hookAt = new Set<string>();
   lines.forEach((l, i) => {
     const stops = [l.lo, ...pieces[i].map((b) => b.t), l.hi];
     for (let k = 0; k + 1 < stops.length; k++) {
@@ -115,8 +113,7 @@ export function layoutInnerBeams(
       });
     }
     for (const b of pieces[i]) {
-      if (b.hook) hookAt.add(pointKey(pointOn(l, b.t)));
-      else addPost(pointOn(l, b.t));
+      if (!b.hook) addPost(pointOn(l, b.t));
     }
   });
 
@@ -129,8 +126,8 @@ export function layoutInnerBeams(
     const k = pointKey(p);
     const onBeam = onWall(p) || outer.some((o) => inside(o, p)) || lines.some((o, j) => j !== i && inside(o, p));
     const onPost = sharedPost(p) || posts.has(k) || (!onBeam && (endKeys.get(k) ?? 0) > 1);
-    if (!onPost && onBeam) hookAt.add(k);
-    else addPost(p);
+    // On a beam or a wall between its posts and no post there: a hook, no post
+    if (onPost || !onBeam) addPost(p);
   }
 
   // Foot plates: the drawn beams' own posts, held only along one direction
@@ -141,7 +138,7 @@ export function layoutInnerBeams(
     if (dirs.size === 1) feet.push({ at: p, orientation: [...dirs][0] });
   }
 
-  return { segments, posts, lm: segments.reduce((a, s) => a + s.length, 0), hooks: hookAt.size, feet };
+  return { segments, posts, lm: segments.reduce((a, s) => a + s.length, 0), feet };
 }
 
 /** Standard and drawn beams as one layout: what the plan and 3D draw, and what holds a wall. */

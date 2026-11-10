@@ -10,13 +10,11 @@ import { holdsRun, hookHolds, wallRuns } from './wallSupports';
 /** A free span of a stand wall from this long, m, gets støttedrager. */
 export const SUPPORT_SPAN = RULES.beam.supportSpan;
 
-export interface SupportBeamLayout extends BeamLayout {
-  /** Støttedrager ends hanging on a beam's length. */
-  hooks: number;
-}
+/** A støttedrager end on a beam's length hangs on a hook there (calc/beamHooks.ts): no post. */
+export type SupportBeamLayout = BeamLayout;
 
 const EPS = 1e-6;
-export const NO_SUPPORT_BEAMS: SupportBeamLayout = { segments: [], posts: new Map(), lm: 0, hooks: 0 };
+export const NO_SUPPORT_BEAMS: SupportBeamLayout = { segments: [], posts: new Map(), lm: 0 };
 
 /**
  * Points along one run of a stand wall (whole metres from its low end) where it gets a støttedrager: in each free span
@@ -72,7 +70,6 @@ export function layoutSupportBeams(
   const segments: BeamSegment[] = [];
   const posts = new Map<string, Point>();
   const addPost = (p: Point) => posts.set(pointKey(p), p);
-  let hooks = 0;
   for (const { at: from, side } of starts) {
     const [dx, dy] = inward(side);
     const at = (t: number): Point => [from[0] + dx * t, from[1] + dy * t];
@@ -116,8 +113,7 @@ export function layoutSupportBeams(
       acc += n;
     });
     addPost(from);
-    if (hook) hooks++;
-    else addPost(at(stop));
+    if (!hook) addPost(at(stop));
   }
-  return { segments, posts, lm: segments.reduce((a, s) => a + s.length, 0), hooks };
+  return { segments, posts, lm: segments.reduce((a, s) => a + s.length, 0) };
 }
