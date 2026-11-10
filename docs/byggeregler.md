@@ -103,6 +103,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   *Bjørn 1.11.2026, 10.11.2026 · `RECIPES.beam.hook` · kode `src/calc/innerBeams.ts`, `src/calc/beamHooks.ts` · test `src/calc/innerBeams.test.ts`, `src/calc/beamHooks.test.ts`*
 - **T10 Kryss.** Der to tegnede takdragere krysser, går det lengste spennet gjennom og det korteste deles og henger på
   krok på hver side. Like lange: den først tegnede går gjennom. En tegnet drager som krysser en standard deles likt.
+  Ligger de i hver sin høyde, deles ingen av dem (T16).
   *Bjørn 1.11.2026 · kode `src/calc/innerBeams.ts` · test `src/calc/innerBeams.test.ts`*
 - **T11 Vegg langs drageren vinner.** Havner en vegg (innervegg, romside, dør, standvegg) langs en tegnet takdrager,
   bygges ikke den biten. Drageren stopper på veggens stolper, veggen regnes ikke som holdt av den, og drageren kommer
@@ -132,7 +133,16 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   så lenge drageren er valgt); en hel meter setter den tilbake i rasteret. Mållinje fra hver ende til nærmeste stolpe eller krok langs veggen eller drageren den henger på, på
   drageren som flyttes eller er valgt, og på arbeidsordrens plan for alle slike dragere så montøren kan måle ut.
   *Bjørn 10.11.2026 · `RECIPES.beam.hook`, `RECIPES.beam.lift` · kode `src/domain/innerBeams.ts`, `src/calc/innerBeams.ts`, `src/calc/beamHooks.ts`, `src/calc/beamLift.ts`, `src/calc/wallSupports.ts`, `src/calc/supportBeams.ts`, `src/calc/beamOffsets.ts`, `src/ui/workorder/WorkOrderPage.tsx` · test `src/calc/offGridBeams.test.ts`, `src/domain/innerBeams.test.ts`*
-
+- **T16 Hel lengde over et annet nivå.** Hele lengder går foran. En hevet drager (T13) ligger en dragerhøyde over de
+  andre, så der en hevet og en ikke hevet drager krysser, deles ingen av dem (unntak fra T10): den hevede ligger løst
+  oppå den andre, og det står ikke noe 94 × 80 i krysset. Det gjelder begge veier, også når det er drageren som går
+  gjennom som er hevet. På samme måte går en hevet drager over en systemvegg mellom stolpene uten å deles (T15). Der
+  holder den ikke veggen: en drager som bare ligger oppå, uten stolpe, krok eller skjøtestykke, er ingen støtte, så
+  veggen får fotplater som uten drageren (S-reglene). Den deles fortsatt på en stolpe (T4, T14). Løst oppå er nok så lenge den
+  hele lengden er høyst 6 m (T2) og festet i hver ende til en stolpe, en vegg eller en tverrgående drager; blir den
+  lengre, står skjøten i krysset som før, med 94 × 80 oppå. En ende som henger på en drager (T9) er uendret. To hevede
+  dragere ligger i samme høyde og følger T10.
+  *Bjørn 10.11.2026 · `rules.beam.max` · kode `src/calc/beamLift.ts`, `src/calc/context.ts` · test `src/calc/beamLift.test.ts`*
 ## D · Dør og forheng
 
 - **D1 Dør.** Fogas ferdige dør: karm i 292 med lås 410 ferdig montert, plukkes som ett dørblad. Bladet er 2000 høyt og

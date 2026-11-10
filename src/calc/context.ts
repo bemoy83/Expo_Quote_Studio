@@ -18,7 +18,7 @@ import type { FogaStructure } from '../foga/structure';
 import { catalogOwn, ITEM, type PricingData } from '../pricing/data';
 import { priceLine, type Use } from '../pricing/model';
 import type { Rules } from '../rules/rules';
-import { liftBeams, type BeamLift } from './beamLift';
+import { liftBeams, withJoins, type BeamLift } from './beamLift';
 import { beamHooks, hookCount, type BeamHook } from './beamHooks';
 import { variantBeams, type BeamLayout } from './beams';
 import type { InnerBeamLayout } from './innerBeams';
@@ -124,8 +124,13 @@ export function calcContext(v: Variant, rules: Rules, catalog: Catalog, standWal
   // exhibitor's structure, and only their colour, when it is not the organiser's, is the exhibitor's plate swap.
   const mods = builtModules(v);
   const points = wallPoints(mods);
-  const { standard, inner, all, support } = variantBeams(v, mods, points, rules.beam.max);
-  const lift = liftBeams(v, rules, all, points);
+  const laid = variantBeams(v, mods, points, rules.beam.max);
+  const lift = liftBeams(v, rules, laid.all, points);
+  // A lifted beam passing another level is one whole length (Byggeregel T16)
+  const standard = withJoins(laid.standard, lift);
+  const inner = withJoins(laid.inner, lift);
+  const all = withJoins(laid.all, lift);
+  const support = withJoins(laid.support, lift);
   const hooks = beamHooks(all, points, lift);
   const wallsById = new Map(v.walls.map((w) => [w.id, w]));
   const kindOf = (m: BuiltModule): WallKind => {
