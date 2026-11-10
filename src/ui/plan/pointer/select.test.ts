@@ -41,6 +41,13 @@ describe('Velg tells what a press selects (the plan marks it before the click)',
   it('a drawn takdrager', () => {
     expect(picked(sketch('04-oy-takdrager'), 4, 3)).toEqual({ beamId: 'td1' });
   });
+  it('«Fin» on in the pill of the selected takdrager: the drag goes in 50 mm steps and Fin stays on (T15)', () => {
+    const v = sketch('04-oy-takdrager');
+    const hits = planHits(v, builtModules(v), {}, () => planScale(100, {}));
+    const press = (selection: object) => startSelect({ v, selection, hits } as unknown as PointerCtx, { x: 4, y: 3 });
+    expect(press({ beamId: 'td1', beamFine: true })).toMatchObject({ kind: 'beam', fine: true, fineLock: true, select: { beamId: 'td1', beamFine: true } });
+    expect(press({ beamId: 'td1' })).toMatchObject({ kind: 'beam', fine: false, select: { beamId: 'td1' } });
+  });
   it('engangsteppe laid by Fyll is chosen as a whole', () => {
     expect(picked(sketch('07-engangsteppe'), 1, 1)).toEqual({ fill: 'f1' });
   });

@@ -2605,6 +2605,12 @@ select.cin {
   background: rgb(var(--ink));
   color: rgb(var(--canvas));
 }
+/* A setting on the pill (the door's Dør/Forheng, the takdrager's Fin): chosen fill, as every choice on a surface. Only
+   drawing tools get ink (Bjørn 10.11.2026) */
+.q-btn.q-set[aria-pressed='true'] {
+  background: var(--chosen);
+  color: rgb(var(--ink));
+}
 .q-more {
   padding: 0;
   width: 30px;

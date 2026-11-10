@@ -9,9 +9,10 @@ const DIM_FONT = 10
 
 /**
  * One chain along `axis` at the fixed coordinate `at`, through the positions `ts`. Numbers stand on the `dir` side of
- * the line; a number that does not fit between its marks is left out. `suffix` follows each number («2 490 vegg»).
+ * the line; a number that does not fit between its marks is left out, unless `keep` (a single measure the montør needs,
+ * Byggeregel T15). `suffix` follows each number («2 490 vegg»).
  */
-export function Chain({ sc, axis, at, ts, dir, suffix }: { sc: PlanScale; axis: 'x' | 'y'; at: number; ts: number[]; dir: 1 | -1; suffix?: string }) {
+export function Chain({ sc, axis, at, ts, dir, suffix, keep }: { sc: PlanScale; axis: 'x' | 'y'; at: number; ts: number[]; dir: 1 | -1; suffix?: string; keep?: boolean }) {
   if (ts.length < 2) return null
   const P = (t: number, o = 0): [number, number] => (axis === 'x' ? [t, at + o] : [at + o, t])
   const k = sizePx(sc, 2.5)
@@ -38,7 +39,7 @@ export function Chain({ sc, axis, at, ts, dir, suffix }: { sc: PlanScale; axis: 
         // Fits: the number and a little air between the marks; with a suffix, the number alone when that is all that fits
         const fits = (t: string) => len >= sizePx(sc, textPx(t, DIM_FONT) + 8)
         const long = suffix ? `${mm(len)} ${suffix}` : mm(len)
-        const text = fits(long) ? long : fits(mm(len)) ? mm(len) : null
+        const text = fits(long) ? long : fits(mm(len)) || keep ? mm(len) : null
         if (!text) return null
         const mid = (t + ts[i]) / 2
         // Baseline: just off the line on the dir side, glyphs growing away from it

@@ -169,7 +169,26 @@ function content(p: PillActions, graphics: boolean, setGraphics: (b: boolean) =>
   if (sel.beamId) {
     const b = v.innerBeams?.find((x) => x.id === sel.beamId)
     if (!b) return null
-    return { name: 'Takdrager', meta: mm(Math.abs(b.to[0] - b.from[0]) + Math.abs(b.to[1] - b.from[1])), remove: del }
+    // «Fin»: the next drags move it across in 50 mm steps, off the 1 m grid, as Shift + drag on desktop (Byggeregel T15).
+    // Touch has no Shift; it stays on while the beam is selected
+    const Across = b.from[1] === b.to[1] ? MoveVertical : MoveHorizontal
+    return {
+      name: 'Takdrager',
+      meta: mm(Math.abs(b.to[0] - b.from[0]) + Math.abs(b.to[1] - b.from[1])),
+      body: (
+        <QBtn
+          setting
+          on={!!sel.beamFine}
+          title={sel.beamFine ? 'Dra flytter i 50 mm-steg på tvers · trykk for hele meter igjen' : 'Flytt på tvers i 50 mm-steg, utenfor meterrasteret · på desktop også Shift + dra'}
+          label="Fin"
+          onClick={() => onSelect({ beamId: b.id, ...(!sel.beamFine && { beamFine: true }) })}
+        >
+          <Across size={15} />
+          Fin
+        </QBtn>
+      ),
+      remove: del,
+    }
   }
   if (sel.objectId) {
     const o = v.objects.find((x) => x.id === sel.objectId)
@@ -251,7 +270,7 @@ function content(p: PillActions, graphics: boolean, setGraphics: (b: boolean) =>
           {openingProducts().map((x) => {
             const a = x.variants[0].artnr
             return (
-              <QBtn key={x.id} on={o.product === a} title={x.name} label={x.opening === 'door' ? 'Dør' : 'Forheng'} onClick={() => o.product !== a && onEdit((y) => setOpeningProduct(y, o.id, a))}>
+              <QBtn key={x.id} setting on={o.product === a} title={x.name} label={x.opening === 'door' ? 'Dør' : 'Forheng'} onClick={() => o.product !== a && onEdit((y) => setOpeningProduct(y, o.id, a))}>
                 {x.opening === 'door' ? <DoorClosed size={15} /> : <Blinds size={15} />}
                 {x.opening === 'door' ? 'Dør' : 'Forheng'}
               </QBtn>

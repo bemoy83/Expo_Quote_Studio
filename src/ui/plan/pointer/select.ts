@@ -39,7 +39,11 @@ export function startSelect(c: PointerCtx, q: P): Drag {
     if (w) return { kind: 'shelfMove', anchor: sh.id, ids, p0: q, v0: v, moved: false, copy: false, start: select, select }
   }
   const ib = hits.beamAt(q)
-  if (ib) return { kind: 'beam', id: ib.id, p0: q, v0: v, delta: '0,0', horizontal: ib.from[1] === ib.to[1], moved: false, select: { beamId: ib.id } }
+  if (ib) {
+    // «Fin» in the pill stays on for the selected beam: every drag of it goes in 50 mm steps (touch has no Shift)
+    const fineLock = selection.beamId === ib.id && !!selection.beamFine
+    return { kind: 'beam', id: ib.id, p0: q, v0: v, delta: '0,0', horizontal: ib.from[1] === ib.to[1], moved: false, fineLock, fine: fineLock, select: { beamId: ib.id, ...(fineLock && { beamFine: true }) } }
+  }
   const m = hits.moduleAt(q)
   if (m) {
     const w = v.walls.find((x) => x.id === m.wallId)!

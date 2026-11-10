@@ -40,8 +40,8 @@ export type Drag =
   | { kind: 'click'; select: PlanSelection }
   | { kind: 'object'; id: string; dx: number; dy: number; start: P; moved: boolean; select: PlanSelection }
   | ({ kind: 'wall'; moved: boolean; select: PlanSelection } & WallDrag)
-  /** `fine`: Shift held, it moves across in 50 mm steps off the grid (Byggeregel T15). */
-  | ({ kind: 'beam'; moved: boolean; select: PlanSelection; fine?: boolean } & WallDrag)
+  /** `fine`: Shift held or «Fin» on in the pill (`fineLock`), it moves across in 50 mm steps off the grid (Byggeregel T15). */
+  | ({ kind: 'beam'; moved: boolean; select: PlanSelection; fine?: boolean; fineLock?: boolean } & WallDrag)
   | ({ kind: 'room'; select: PlanSelection | null } & RoomDrag)
   | { kind: 'textile'; p0: P }
   | { kind: 'freeMove'; id: string; p0: P; v0: Variant; moved: boolean; select: PlanSelection }
