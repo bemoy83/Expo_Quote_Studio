@@ -128,6 +128,10 @@ Takdragere tegnes stiplet, som på hallkartene.
   får to stiplede kantlinjer.
 - **Compact:** én stiplet linje, som i dag.
 - Innvendig takdrager (tegnet av kunden) som i dag, men samme form som over.
+- **Mållinje for fritt plassert drager (T15):** tynn blekkstrek med endestreker og mål i mm i en pille, fra hver ende
+  av en tegnet drager utenfor meterrasteret til nærmeste stolpe eller krok langs veggen eller drageren den henger på
+  (`calc/beamOffsets.ts`). I tegneflaten på drageren som flyttes eller er valgt; på arbeidsordren for alle
+  (`beamMeasures`), dempet sammen med takdragerne når arbeidsordren er filtrert bort fra dem. Ikke på tilbudet.
 
 ### Gulv · `layers/FloorLayer.tsx`
 
