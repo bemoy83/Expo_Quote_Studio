@@ -1,5 +1,6 @@
 // The shelf brush's stroke in the wall drawer's drawing (shelfBrush.ts): the shelves it lays dimmed, felts that take none
-// hatched at that height, and the height in the dark measure pill (docs/forhandsvisning.md).
+// hatched at that height, and the height in the dark measure pill (docs/forhandsvisning.md). A shelf a click takes off is
+// hatched as Tøm hatches what goes.
 import { ShelfFront } from '../elevation'
 import { rules } from '../../env'
 import { HatchPattern, PillAt } from '../layers/Previews'
@@ -26,10 +27,10 @@ export function BrushPreview({ stroke, sc, H, u, x }: { stroke: Stroke; sc: Plan
             <ShelfFront key={f.id} x={x(f.module + inset, f.module + 1 - inset)} y={f.y} H={H} u={u} />
           ))}
         </g>
-        {stroke.out.map((o) => (
-          <g key={o.module}>
-            <rect x={x(o.module + inset, o.module + 1 - inset)} y={z - sizePx(sc, 2)} width={width} height={band} fill={INVALID.fill} />
-            <rect x={x(o.module + inset, o.module + 1 - inset)} y={z - sizePx(sc, 2)} width={width} height={band} fill="url(#shelf-brush-hatch)" />
+        {[...stroke.out.map((o) => o.module), ...(stroke.removed ? [stroke.removed.module] : [])].map((m) => (
+          <g key={m}>
+            <rect x={x(m + inset, m + 1 - inset)} y={z - sizePx(sc, 2)} width={width} height={band} fill={INVALID.fill} />
+            <rect x={x(m + inset, m + 1 - inset)} y={z - sizePx(sc, 2)} width={width} height={band} fill="url(#shelf-brush-hatch)" />
           </g>
         ))}
         <PillAt at={[cx, z - sizePx(sc, 14)]} text={stroke.label} />

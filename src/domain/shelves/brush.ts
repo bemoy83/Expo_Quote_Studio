@@ -4,12 +4,13 @@
 // goes to the nearest step (H4). The catch is kept small so a shelf never lands far from where it was clicked. With
 // Shift the brush stacks instead (Bjørn 9.11.2026): more shelves in the felt by the «Hylle til i feltet» rule
 // (stackFelt), and the felt's shelves copied to the felts it is dragged over (spreadFelt). The preview and the release
-// both use these functions, so what is shown dimmed is what is stored.
+// both use these functions, so what is shown dimmed is what is stored. A click on a shelf already there takes it off
+// again, as the paint brush takes a colour off a plate (Bjørn 9.11.2026): shelfUnder finds it.
 // Byggeregler H1, H2, H4, H5, H6 (docs/byggeregler.md).
 import type { Rules } from '../../rules/rules';
 import type { FaceSide } from '../faces';
 import { addShelfToFelt } from './edit';
-import type { Variant } from '../types';
+import type { Shelf, Variant } from '../types';
 import { EPS, fitsIn, gapNote, putShelf, shelfBlocked, shelfHeight, shelvesIn, shelvesOn } from './model';
 
 /** How far from the pointer a height catches the brush, m: a shelf in a felt beside it, and a quick pick. */
@@ -43,6 +44,17 @@ export function brushBlocked(v: Variant, rules: Rules, wallId: string, module: n
   if (fitsIn(v, rules, wallId, module, s, y)) return null;
   const on = shelvesIn(v, wallId, module, s).some((o) => Math.abs(o.y - y) <= rules.shelf.gap / 2 + EPS);
   return on ? 'Hylle her fra før' : `For nær en annen hylle · ${gapNote(rules)}`;
+}
+
+/**
+ * The shelf in felt `module` the pointer is on at height `raw`: the nearest within `within` (m) of its board's top, so a
+ * click with the brush takes it off. Undefined where the pointer is on none.
+ */
+export function shelfUnder(v: Variant, wallId: string, module: number, s: FaceSide, raw: number, within: number): Shelf | undefined {
+  return shelvesIn(v, wallId, module, s)
+    .map((f) => ({ f, d: Math.abs(f.y - raw) }))
+    .filter((x) => x.d <= within + EPS)
+    .sort((a, b) => a.d - b.d)[0]?.f;
 }
 
 export interface BrushResult {
