@@ -49,6 +49,23 @@ describe('kostgrunnlag', () => {
     expect(again.ok && again.basis.fromExample).toEqual(b.fromExample);
   });
 
+  it('an own list saved before some articles existed gets the example rows for them, noted as example numbers', () => {
+    const own = { supplier: 'Egne innkjøp', name: 'Egne', date: '2026-11', currency: 'NOK', items: [{ artnr: 'FORHENG', unit: 'stk', price: 1000 }] };
+    const r = parseBasis(file({ prislister: [list, own] }));
+    if (!r.ok) throw new Error(r.error);
+    const items = supplierList(r.basis, 'Egne innkjøp').items;
+    expect(items[0]).toMatchObject({ artnr: 'FORHENG', price: 1000 });
+    expect(items.find((x) => x.artnr === 'HYLLEPLATE-960x300')).toMatchObject({ price: 120 });
+    expect(items).toHaveLength(EXAMPLE_OWN_LIST.items.length);
+    expect(r.basis.fromExample).toContain('prisliste Egne innkjøp HYLLEPLATE-960x300');
+    expect(r.basis.fromExample).not.toContain('prisliste Egne innkjøp FORHENG');
+    // Stored, the filled rows stay out, and come back from the example when read
+    const stored = JSON.parse(serializeBasis(r.basis));
+    expect(stored.prislister[1].items).toEqual([expect.objectContaining({ artnr: 'FORHENG' })]);
+    const again = parseBasis(serializeBasis(r.basis));
+    expect(again.ok && again.basis.fromExample).toEqual(r.basis.fromExample);
+  });
+
   it('stores only the own numbers, so the example in use fills the rest when read again', () => {
     const r = parseBasis(file({ parametere: { indirect: 0.15, owned: { interest: 0.07 } }, prislister: [list] }));
     if (!r.ok) throw new Error(r.error);

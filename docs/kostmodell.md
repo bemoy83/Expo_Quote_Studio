@@ -141,6 +141,10 @@ Med oppskrift i dag (trinn 3): stolpe 94 med fot, topp- og bunnskinne, HDF-plate
 takdrager i alle lengder, fotplate 750 med 795 og skjøt over tekstilvegg (utleie), og montering per modul,
 støtteplate, platebytte, takdrager per meter og takdragerstolpe (arbeid). Plater, dører og forheng er egne
 innkjøp utenfor Foga, i en egen eksempelliste (`src/cost/own-list.ts`).
+Et grunnlag med egen liste over egne innkjøp, lagret før appen fikk en artikkel (hylleplatene i 2026-11 A), får
+eksempelradene for det listen mangler. De vises som eksempeltall på Kostgrunnlag til de får en egen pris, og lagres
+ikke i filen før da (`withExampleRows` i `src/cost/basis.ts`, Bjørn 10.11.2026). Foga-listen er en ekte prisliste og
+fylles ikke.
 
 Tekstilvegg (trinn 5) prises helt av motoren, også der katalogen har fastpris: som salgsverktøy skal standen kunne
 tilpasses kundens ønske uten regler for å kombinere katalogprodukter (Bjørn 7.11.2026). Katalogens fastpriser blir
