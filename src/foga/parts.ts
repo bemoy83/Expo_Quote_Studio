@@ -53,6 +53,8 @@ export const FOGA_PARTS: readonly FogaPart[] = [
   profile('84', '873 037 22', 'Stolpe 135°', 'flex', [33, 48]),
   profile('85', '873 034 22', 'Stolpe 180°', 'flex', [34, 48]),
   profile('88', '873 035 22', 'Stolpe, åttevei', 'flex', [48, 48]),
+  // Single channel, closed back, 20 × 11,5 (Bjørn's STL 10.11.2026): the takdrager hooks are made of it
+  profile('01', '873 001 22', 'Skinne, én kanal', 'flex', [20, 11.5]),
   profile('101', '873 090 22', 'Terskelskinne, én kanal', 'flex', [20, 40]),
   profile('292', '873 080 22', 'Stolpe eller skinne', 'flex', [80, 20]),
   // Fabric profiles
@@ -78,8 +80,6 @@ export const FOGA_PARTS: readonly FogaPart[] = [
   part('618', '871 041 92', 'Parallellkobling'),
   part('625', '871 057 92', 'Vinkelkobling, gjæret'),
   part('540', '871 540 92', 'Hengeklips'),
-  // Placeholder until Bjørn names the Foga part: the hook a drawn takdrager hangs on another beam with
-  part('KROK', '', 'Krok, takdrager på takdrager (art.nr. mangler)'),
   part('CK20', '876 773 22', 'Koblingssett 20, skrue 30 mm og 505', 'accessory', 'fabric'),
   part('CK40', '876 774 22', 'Koblingssett 40, skrue 50 mm og 505', 'accessory', 'fabric'),
   part('CK80', '876 778 22', 'Koblingssett 80, skrue 90 mm og 505', 'accessory', 'fabric'),

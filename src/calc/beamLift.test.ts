@@ -93,6 +93,9 @@ describe('takdrager over tekstilvegg', () => {
     expect(line?.meta).toBe('1 stolpe + 1 krok skjøtet opp');
     expect(res.beams.segments.filter((s) => s.lifted)).toHaveLength(1);
     expect(res.foga.beamLift).toEqual({ posts: 1, hooks: 1 });
+    // The 94 piece takes the hook's place there (Bjørn 8.11.2026): no hook in 01
+    expect(res.hooks).toEqual([]);
+    expect(res.foga.beamHooks).toBeUndefined();
     const parts = bom(res.foga, RECIPES, bomSizes(RULES)).lines.filter((l) => l.name.startsWith('Skjøt'));
     expect(parts.map((l) => [l.name, l.qty])).toEqual([
       ['Skjøt 94, 80 mm, med 609', 1],

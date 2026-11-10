@@ -166,8 +166,23 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
 
   // Takdrager: 292 between the posts with two 600 in each end, one piece per length
   for (const b of s.beams) unit(BOM_GROUP.beams, 'Takdrager', r.beam.profile, between(b.lengthMm), r.beam.coupling, 1);
-  // A drawn takdrager's end hanging on another beam: one hook per end
-  part(BOM_GROUP.beams, r.beam.hook, s.beamHooks ?? 0);
+  // A takdrager's end hanging on another beam: a hook in 01 with one leg (enveis) or two (toveis), picked whole
+  const hook = r.beam.hook;
+  const hookUnit = (key: string, kind: string, legs: number, qty: number) =>
+    put(
+      BOM_GROUP.beams,
+      key,
+      {
+        artnr: '',
+        name: `Krok ${hook.profile} ${kind}`,
+        detail: `${hook.profile} (${fogaPart(hook.profile).artnr}) × ${hook.top} mm + ${legs} × ${hook.leg} mm · ${hook.screw} · 1 × ${hook.nut} (${fogaPart(hook.nut).artnr})`,
+        note: kind === 'enveis' ? 'takdrager fra én side' : 'takdrager fra begge sider',
+        preassembled: true,
+      },
+      qty,
+    );
+  hookUnit('hook-one', 'enveis', 1, s.beamHooks?.oneWay ?? 0);
+  hookUnit('hook-two', 'toveis', 2, s.beamHooks?.twoWay ?? 0);
   // Lifted over a textile wall: a piece of 94 on top of each post under the beam (609 down into the post), and at a hook
   // point between a lifted beam and one that is not, the same piece coupled to the other beam with a 600
   const lift = r.beam.lift;

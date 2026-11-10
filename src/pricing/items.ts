@@ -32,8 +32,6 @@ export const ITEM = {
   plateSwap: 'platebytte',
   beamLm: 'montering-takdrager',
   beamPost: 'montering-takdragerstolpe',
-  /** A drawn takdrager's end hung on another beam: the hook and hanging it. Placeholder. */
-  beamHook: 'krok-takdrager',
   /** A post or hook point extended with 94 × 80 so a takdrager passes over a textile wall (Bjørn 6.11.2026). */
   beamLift: 'skjot-takdrager',
   frame: 'handtering-ramme',
@@ -92,7 +90,6 @@ export const ITEM_DEFS: readonly ItemDef[] = [
   def(ITEM.plateSwap, 'Platebytte i eksisterende vegg', 'stk'),
   def(ITEM.beamLm, 'Montering takdrager per meter', 'm'),
   def(ITEM.beamPost, 'Montering takdragerstolpe', 'stk'),
-  def(ITEM.beamHook, 'Krok for takdrager, med montering', 'stk'),
   def(ITEM.beamLift, 'Skjøt 94 × 80 mm med kobling, med montering', 'stk'),
   def(ITEM.frame, 'Håndtering av løse rammedeler per ramme', 'stk'),
   def(ITEM.frameCoupling, 'Montering ramme per kobling', 'stk'),
@@ -134,7 +131,6 @@ export const EXAMPLE_TIMES: Readonly<Record<string, Time>> = {
   [ITEM.plateSwap]: onSite(2.04, 1.36),
   [ITEM.beamLm]: onSite(0.9, 0.45),
   [ITEM.beamPost]: onSite(1.35, 0.9),
-  [ITEM.beamHook]: { ...pvt(0.08, 0.08, 0.08), ...onSite(0.3, 0.15) },
   [ITEM.beamLift]: { ...pvt(0.08, 0.08, 0.08), ...onSite(0.45, 0.3) },
   [ITEM.frame]: pvt(3, 2, 2),
   [ITEM.frameCoupling]: onSite(2, 1),
@@ -162,7 +158,6 @@ export const EXAMPLE_RECIPES: Readonly<Record<string, ItemRecipe>> = {
   [ITEM.curtain]: { own: [['FORHENG', 1, 'accessory']], dg: 'utleie' },
   ...Object.fromEntries(BEAM_M.map((m): [string, ItemRecipe] => [ITEM.beam(beamLen(m)), { parts: [['292', m - 0.04], ['600', 4]], dg: 'utleie' }])),
   [ITEM.foot('750')]: { parts: [['750', 1], ['795', 1]], dg: 'utleie' },
-  [ITEM.beamHook]: { own: [['KROK', 1, 'accessory']], dg: 'utleie' },
   [ITEM.beamLift]: { parts: [['94', 0.08], ['609', 1]], dg: 'utleie' },
   // Textile walls (kostmotor, tekstil): the frame parts rented out, the textile bought for the job, the work
   [ITEM.frameProfileM]: { parts: [['43TX', 1]], dg: 'utleie' },

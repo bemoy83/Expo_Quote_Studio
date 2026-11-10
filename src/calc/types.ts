@@ -1,4 +1,5 @@
 // What the calculation gives: the quote lines, their groups, the margin, the key figures and the rest of the result.
+import type { BeamHook } from './beamHooks';
 import type { Unit } from '../catalog/types';
 import type { Payer, Point } from '../domain/types';
 import type { Bom } from '../foga/engine';
@@ -84,7 +85,7 @@ export interface KeyFigures {
   organiserBeamLm: number;
   /** Part of beamLm in innvendige takdragere the customer draws: always the exhibitor's. */
   innerBeamLm: number;
-  /** Ends of drawn takdrager hung on another beam. */
+  /** Hooks a takdrager hangs on another beam with, enveis and toveis (calc/beamHooks.ts). */
   beamHooks: number;
   /** Part of wallLm in inner walls the exhibitor draws (room walls not included). */
   innerWallLm: number;
@@ -136,6 +137,8 @@ export interface CalcResult {
   /** Takdrager lifted over textile walls (calc/beamLift.ts; the lengths are `lifted` in `beams`): the posts extended
    *  under them, and the hook points between a lifted beam and one that is not. Only when there are any. */
   lift?: { posts: Point[]; hooks: Point[] };
+  /** Hooks a takdrager hangs on another beam with (calc/beamHooks.ts), for the 3D view. */
+  hooks: BeamHook[];
   posts: Point[];
   /** Støtteplater under free-standing system walls and drawn takdrager's own posts: always the exhibitor's, also under
    *  the organiser's stand walls. */

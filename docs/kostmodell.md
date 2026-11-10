@@ -66,8 +66,8 @@ utgangspunkt. Antakelsene for tekstilrammen (InFrame), som endres under Regler p
 Prislisten lagres slik leverandøren trykker den: valuta, pakke, pris ved hel og brutt pakke, og dato. Foga Prislista A
 juni 2022 (SEK) er innkjøpsprisene våre og **publiseres ikke** (Bjørn 7.11.2026): repoet og nettsiden er åpne. I appen
 ligger en eksempelliste med oppdiktede priser for delene appen bygger med (`src/cost/example-list.ts`), med Fogas
-ekte art.nr. Den ekte listen lastes inn som kostgrunnlag (under), senere fra OMS. Av appens 47 Foga-deler finnes alle unntatt 92LL i Fogas liste, og
-krok har ikke art.nr. ennå.
+ekte art.nr. Den ekte listen lastes inn som kostgrunnlag (under), senere fra OMS. Av appens Foga-deler finnes alle unntatt 92LL i Fogas liste. Kroken i 01
+har ingen kost (Bjørn 10.11.2026).
 
 `innkjøp i år = listepris × kurs × materialindeks fra listens dato × (1 + frakt)`
 
@@ -138,8 +138,8 @@ kostgrunnlaget pris på en del, eller artikkelen oppskrift, får den ingen kost:
 bruker den står med «kost mangler», og kalkylen sier øverst hvilke artikler det gjelder. Ingen tall står i stedet.
 
 Med oppskrift i dag (trinn 3): stolpe 94 med fot, topp- og bunnskinne, HDF-plate og overstykke, dør, forheng,
-takdrager i alle lengder, fotplate 750 med 795, krok og skjøt over tekstilvegg (utleie), og montering per modul,
-støtteplate, platebytte, takdrager per meter og takdragerstolpe (arbeid). Plater, dører, forheng og krok er egne
+takdrager i alle lengder, fotplate 750 med 795 og skjøt over tekstilvegg (utleie), og montering per modul,
+støtteplate, platebytte, takdrager per meter og takdragerstolpe (arbeid). Plater, dører og forheng er egne
 innkjøp utenfor Foga, i en egen eksempelliste (`src/cost/own-list.ts`).
 
 Tekstilvegg (trinn 5) prises helt av motoren, også der katalogen har fastpris: som salgsverktøy skal standen kunne

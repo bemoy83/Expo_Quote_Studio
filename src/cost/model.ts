@@ -111,7 +111,7 @@ export const dgOfMarkup = (markup: number) => markup / (1 + markup);
 
 /**
  * Cost of one use of a Foga part we own, per its unit in the list (m or stk), by Foga code ("43TX", "617"). Undefined
- * when the part is not in the list (92LL, the hook).
+ * when the part is not in the list (92LL).
  */
 export function fogaPartPerUse(code: string, year: number, p: CostParams, list: SupplierList): number | undefined {
   const part = FOGA_PARTS.find((x) => x.code === code);

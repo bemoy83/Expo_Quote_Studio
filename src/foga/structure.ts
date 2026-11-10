@@ -47,8 +47,8 @@ export interface FogaStructure {
   posts: number;
   modules: ModuleSpec[];
   beams: BeamSpec[];
-  /** Ends of drawn (innvendige) takdrager hanging on another beam on a hook. */
-  beamHooks?: number;
+  /** Hooks in Flex 01 a takdrager hangs on another beam with (calc/beamHooks.ts): one leg (enveis) or two (toveis). */
+  beamHooks?: { oneWay: number; twoWay: number };
   /** Takdrager lifted over a textile wall (calc/beamLift.ts): posts extended under them, and hook points between a
    *  lifted beam and one that is not. */
   beamLift?: { posts: number; hooks: number };

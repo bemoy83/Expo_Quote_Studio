@@ -1,4 +1,4 @@
-// Takdrager per metre, its own posts and hooks included in the price. The standard ones are the organiser's when they
+// Takdrager per metre, its own posts included in the price; the hooks are only picked, at no cost (Bjørn 10.11.2026). The standard ones are the organiser's when they
 // follow its stand walls: then the drawn ones are a line of their own, so the customer sees what they pay for.
 // Byggeregel B2 (docs/byggeregler.md).
 import { beamSpecs } from '../../foga/fromVariant';
@@ -22,7 +22,6 @@ function beamLine(c: CalcContext, b: BeamLayout, posts: number, hooks: number, w
     { id: ITEM.post, qty: posts },
     { id: ITEM.beamLm, qty: lm },
     { id: ITEM.beamPost, qty: posts },
-    { id: ITEM.beamHook, qty: hooks },
   ];
   return c.line(c.sys.beam, lm, { ...c.built, meta: meta.join(' · ') }, uses);
 }
@@ -38,7 +37,8 @@ export function beamLiftLines(c: CalcContext): CalcLine[] {
 
 /** The exhibitor's takdrager, and the organiser's when it pays the standard ones. */
 export function beamLines(c: CalcContext): { lines: CalcLine[]; organiser: CalcLine[] } {
-  const { standard, inner, all, support, hooks } = c.beams;
-  if (c.organiserBeams) return { lines: [beamLine(c, inner, c.innerPosts, inner.hooks, 'innvendig')], organiser: [toOrganiser(beamLine(c, standard, c.standardPosts, support.hooks))] };
-  return { lines: [beamLine(c, all, c.beamPosts, hooks)], organiser: [] };
+  const { standard, inner, all, hooks } = c.beams;
+  const drawn = hooks.filter((h) => h.inner).length;
+  if (c.organiserBeams) return { lines: [beamLine(c, inner, c.innerPosts, drawn, 'innvendig')], organiser: [toOrganiser(beamLine(c, standard, c.standardPosts, hooks.length - drawn))] };
+  return { lines: [beamLine(c, all, c.beamPosts, hooks.length)], organiser: [] };
 }

@@ -81,7 +81,7 @@ const EXAMPLE_NOTES: Readonly<Record<string, Required<Pick<FieldNote, 'status' |
 };
 
 /** Wall and takdrager items: their times are calibrated against three stands (7.11.2026); textile frame work too. */
-const CALIBRATED_TIMES = new Set(['stolpe-94', 'skinne-92-960', 'skinne-91-960', 'veggplate', 'veggplate-overstykke', 'dor', 'forheng', 'montering-modul', 'montering-stotteplate', 'platebytte', 'fotplate-750', 'montering-takdrager', 'montering-takdragerstolpe', 'krok-takdrager', 'skjot-takdrager', 'handtering-ramme', 'montering-ramme-kobling', 'montering-tekstil-omkrets', 'stag-90-stk'])
+const CALIBRATED_TIMES = new Set(['stolpe-94', 'skinne-92-960', 'skinne-91-960', 'veggplate', 'veggplate-overstykke', 'dor', 'forheng', 'montering-modul', 'montering-stotteplate', 'platebytte', 'fotplate-750', 'montering-takdrager', 'montering-takdragerstolpe', 'skjot-takdrager', 'handtering-ramme', 'montering-ramme-kobling', 'montering-tekstil-omkrets', 'stag-90-stk'])
 
 function exampleNote(path: string): Required<Pick<FieldNote, 'status' | 'kilde'>> {
   if (path.startsWith('tider.') && CALIBRATED_TIMES.has(path.split('.')[1])) return { status: 'kalibrert', kilde: 'Kalibrert mot tre stander 7.11.2026' };
@@ -100,7 +100,7 @@ const KIND_NAME: Record<PartKind, string> = {
   plate: 'Plater',
   coupling: 'Koblinger',
   foot: 'Føtter og fotplater',
-  accessory: 'Tilbehør (dør, forheng, krok)',
+  accessory: 'Tilbehør (dør, forheng)',
 };
 const STEP_NAME: Record<HandlingStep, string> = {
   plukk: 'plukk',

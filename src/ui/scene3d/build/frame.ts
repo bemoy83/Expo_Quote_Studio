@@ -1,12 +1,13 @@
 // The frame: posts (from the calc, so plan, 3D and quote agree), støtteplater under free walls, and takdragere.
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
+import { fogaPart } from '../../../foga/parts'
 import { RECIPES } from '../../../foga/recipes'
 import { pointKey } from '../../../domain/grid'
 import type { Point } from '../../../domain/types'
 import { wallPoints } from '../../../domain/walls'
 import { rules } from '../../env'
-import { shared, unitProfile } from './profiles'
+import { profile, shared, unitProfile } from './profiles'
 import { ALU, ALU_FINISH, BEAM, FOOT_PLATE, type BuildContext } from './context'
 
 export function buildFrame(c: BuildContext) {
@@ -59,6 +60,32 @@ export function buildFrame(c: BuildContext) {
     mesh.rotation.y = Math.atan2(-(b[1] - a[1]), b[0] - a[0])
     add(mesh, { layer: 'beams' })
   }
+  // Hooks in 01 where a beam hangs on another (calc/beamHooks.ts): set as a T over the beam it hangs on, a 20 mm piece
+  // lying on top with its channel up, and an 80 mm leg down the side each hanging beam comes from, channel out to it
+  const hook = RECIPES.beam.hook
+  const [top, leg] = [hook.top / 1000, hook.leg / 1000]
+  // The leg stands out from the beam by the profile's height (01: 11,5)
+  const [beamHalf, legHalf] = [rules.beam.thickness / 2, (fogaPart(hook.profile).section?.[1] ?? 0) / 2000]
+  for (const h of res.hooks) {
+    const base = H + (h.lifted ? lift : 0)
+    // Across the beam it hangs on: plan y (three z) when that beam runs along x
+    const acrossZ = h.along === 'h'
+    const tab = new THREE.Mesh(unitProfile(profile(hook.profile), true), mat('beams', ALU, ALU_FINISH))
+    tab.scale.x = top
+    if (acrossZ) tab.rotation.y = Math.PI / 2
+    tab.position.copy(at(h.at, base + legHalf))
+    add(tab, { layer: 'beams' })
+    for (const side of h.sides) {
+      const m = new THREE.Mesh(unitProfile(profile(hook.profile)), mat('beams', ALU, ALU_FINISH))
+      m.scale.x = leg
+      // Upright, channel out along +x or −x; turned to ±z when the beam runs along x
+      m.rotation.set(0, acrossZ ? -Math.PI / 2 : 0, (side * Math.PI) / 2)
+      const off = side * (beamHalf + legHalf)
+      m.position.copy(at(acrossZ ? [h.at[0], h.at[1] + off] : [h.at[0] + off, h.at[1]], base - leg / 2))
+      add(m, { layer: 'beams' })
+    }
+  }
+
   // The 94 pieces that lift them: on top of each post under a lifted beam, and at a hook point between a lifted beam and
   // one that is not, at the level of the beam hanging there
   if (res.lift) {

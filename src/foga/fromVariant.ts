@@ -2,6 +2,7 @@
 // sizes); calc passes its own so the quote, the picking list and the parts list count from one structure.
 // Byggeregel P3 (docs/byggeregler.md).
 import { liftBeams } from '../calc/beamLift';
+import { beamHooks, hookCount } from '../calc/beamHooks';
 import { variantBeams, type BeamLayout } from '../calc/beams';
 import { production, type Production } from '../calc/production';
 import { shelfBrackets } from '../domain/shelves/brackets';
@@ -16,8 +17,8 @@ export interface Derived {
   /** Wall posts and posts that only carry takdrager. */
   posts: number;
   beams: BeamLayout;
-  /** Ends of drawn takdrager hanging on another beam. */
-  hooks?: number;
+  /** Hooks a takdrager hangs on another beam with, by kind (calc/beamHooks.ts). */
+  hooks?: { oneWay: number; twoWay: number };
   /** Takdrager lifted over a textile wall: posts extended and mixed-level hook points. */
   lift?: { posts: number; hooks: number };
   production: Production;
@@ -42,7 +43,7 @@ export function structureOf(d: Derived): FogaStructure {
     beams: beamSpecs(d.beams),
     frames: [...d.production.pieces, ...d.production.free].map((f) => ({ pos: f.pos, parts: f.parts })),
     ...(d.production.cornerPosts.qty ? { cornerPosts: d.production.cornerPosts } : {}),
-    ...(d.hooks ? { beamHooks: d.hooks } : {}),
+    ...(d.hooks && d.hooks.oneWay + d.hooks.twoWay ? { beamHooks: d.hooks } : {}),
     ...(d.lift && d.lift.posts + d.lift.hooks ? { beamLift: d.lift } : {}),
     ...(d.swaps?.length ? { swaps: d.swaps } : {}),
     ...(d.wallFeet ? { wallFeet: d.wallFeet } : {}),
@@ -55,9 +56,10 @@ export function structureOf(d: Derived): FogaStructure {
 export function fromVariant(v: Variant, rules: Rules): FogaStructure {
   const mods = builtModules(v);
   const points = wallPoints(mods);
-  const { all: beams, hooks } = variantBeams(v, mods, points, rules.beam.max);
+  const { all: beams } = variantBeams(v, mods, points, rules.beam.max);
   const posts = new Set([...points.keys(), ...beams.posts.keys()]).size;
   const lift = liftBeams(v, rules, beams, points);
+  const hooks = hookCount(beamHooks(beams, points, lift));
   return structureOf({ mods, posts, beams, hooks, lift: { posts: lift.posts.length, hooks: lift.hooks.length }, production: production(v, rules, ''), shelves: shelfBrackets(v) });
 }
 
