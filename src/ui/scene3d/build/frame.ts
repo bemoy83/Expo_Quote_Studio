@@ -97,6 +97,8 @@ export function buildFrame(c: BuildContext) {
       add(mesh, { layer })
     }
     for (const p of res.lift.posts) piece(p, H, wallPts.has(pointKey(p)) ? 'walls' : 'beams')
+    // A lifted beam ending on a wall between its posts (Byggeregel T15): the piece on top of the wall
+    for (const p of res.lift.walls ?? []) piece(p, H, 'beams')
     for (const p of res.lift.hooks) {
       const k = pointKey(p)
       const hanging = res.beams.segments.filter((s) => pointKey(s.from) === k || pointKey(s.to) === k)

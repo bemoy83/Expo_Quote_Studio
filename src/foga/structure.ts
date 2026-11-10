@@ -51,7 +51,7 @@ export interface FogaStructure {
   beamHooks?: { oneWay: number; twoWay: number };
   /** Takdrager lifted over a textile wall (calc/beamLift.ts): posts extended under them, and hook points between a
    *  lifted beam and one that is not. */
-  beamLift?: { posts: number; hooks: number };
+  beamLift?: { posts: number; hooks: number; walls?: number };
   /** Textile frames, on walls and on foot plates. */
   frames: FrameSpec[];
   /** 92LTX corner posts shared by two free-standing runs, each `H` long. */

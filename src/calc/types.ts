@@ -136,7 +136,7 @@ export interface CalcResult {
   beams: BeamLayout;
   /** Takdrager lifted over textile walls (calc/beamLift.ts; the lengths are `lifted` in `beams`): the posts extended
    *  under them, and the hook points between a lifted beam and one that is not. Only when there are any. */
-  lift?: { posts: Point[]; hooks: Point[] };
+  lift?: { posts: Point[]; hooks: Point[]; walls: Point[] };
   /** Hooks a takdrager hangs on another beam with (calc/beamHooks.ts), for the 3D view. */
   hooks: BeamHook[];
   posts: Point[];

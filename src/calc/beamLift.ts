@@ -1,5 +1,5 @@
 // Takdrager over tekstilvegger: which beams are lifted over a 43TX frame, the posts extended under them and the hook
-// points between levels. Byggeregler T13, T14 (docs/byggeregler.md). A clash is the beam's own box (between the
+// points between levels. Byggeregler T13, T14, T15 (docs/byggeregler.md). A clash is the beam's own box (between the
 // posts' faces, its width across) overlapping a frame's box in plan, for a frame that reaches the beam's underside.
 import { pointKey } from '../domain/grid';
 import { runDirection } from '../domain/textile/free';
@@ -16,9 +16,11 @@ export interface BeamLift {
   posts: Point[];
   /** Hook points between a lifted beam and one that is not: one 94 × 80 with a 600 each. */
   hooks: Point[];
+  /** A lifted beam ending on a wall between its posts (Byggeregel T15): the same piece, on top of the wall. */
+  walls: Point[];
 }
 
-export const NO_LIFT: BeamLift = { segments: new Set(), posts: [], hooks: [] };
+export const NO_LIFT: BeamLift = { segments: new Set(), posts: [], hooks: [], walls: [] };
 
 const EPS = 1e-6;
 
@@ -101,11 +103,17 @@ export function liftBeams(v: Variant, rules: Rules, all: BeamLayout, wallPosts: 
       } else hookEnds.set(k, p);
     }
   }
-  // A hook point mixes levels when the beams hanging there and the beam they hang on are not all lifted alike
+  // A hook point mixes levels when the beams hanging there and the beam they hang on are not all lifted alike. With no
+  // beam through it the point is on a wall between its posts, which is never lifted
   const hooks: Point[] = [];
-  for (const p of hookEnds.values()) {
-    const lifted = all.segments.filter((s) => onSegment(s, p)).map((s) => segments.has(s));
-    if (lifted.some(Boolean) && !lifted.every(Boolean)) hooks.push(p);
+  const walls: Point[] = [];
+  for (const [k, p] of hookEnds) {
+    const there = all.segments.filter((s) => onSegment(s, p));
+    const lifted = there.map((s) => segments.has(s));
+    const onWall = there.every((s) => pointKey(s.from) === k || pointKey(s.to) === k);
+    if (onWall) {
+      if (lifted.some(Boolean)) walls.push(p);
+    } else if (lifted.some(Boolean) && !lifted.every(Boolean)) hooks.push(p);
   }
-  return { segments, posts: [...posts.values()], hooks };
+  return { segments, posts: [...posts.values()], hooks, walls };
 }

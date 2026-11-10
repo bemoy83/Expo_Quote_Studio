@@ -195,6 +195,8 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
     );
   liftPiece('lift-post', lift.post, 'på stolpe, takdrager over tekstilvegg', s.beamLift?.posts ?? 0);
   liftPiece('lift-hook', lift.hook, 'oppå tverrgående takdrager, takdrager over tekstilvegg', s.beamLift?.hooks ?? 0);
+  // Byggeregel T15: a lifted beam ending on a wall between its posts, the same piece on top of the wall
+  liftPiece('lift-wall', lift.hook, 'oppå vegg, takdrager over tekstilvegg', s.beamLift?.walls ?? 0);
 
   // Tekstilvegger, one frame on a wall or on foot plates (Bjørn 7.11.2026), each counted once in its parts
   // (calc/textile/common.ts): 43TX per cut length in one line, a 92LTX post per corner, the upright braces in 90 with

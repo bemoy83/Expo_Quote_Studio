@@ -78,8 +78,25 @@ export function layoutSupportBeams(
     // Walk in until a wall or beam: stop on it, or before a wall running along the line
     let stop = 0;
     let hook = false;
+    // A drawn beam off the grid (Byggeregel T15) across its way between two whole metres: it hangs on it there
+    const between = (t: number) => {
+      let best: number | null = null;
+      for (const s of beams.segments) {
+        const across = Math.abs((s.to[0] - s.from[0]) * dx + (s.to[1] - s.from[1]) * dy) < EPS;
+        if (!across) continue;
+        const u = (s.from[0] - from[0]) * dx + (s.from[1] - from[1]) * dy;
+        if (u > t - 1 + EPS && u < t - EPS && onSegment(s, at(u)) && (best === null || u < best)) best = u;
+      }
+      return best;
+    };
     for (let t = 1; t <= reach; t++) {
       if (keys.has(makeModule(at(t - 1), at(t)).key)) break;
+      const u = between(t);
+      if (u !== null) {
+        stop = u;
+        hook = !beams.posts.has(pointKey(at(u)));
+        break;
+      }
       stop = t;
       const p = at(t);
       if (wallPoints.has(pointKey(p))) break;
