@@ -270,9 +270,11 @@ export function Sw({ color, title, on, onClick }: { color?: string; title: strin
   return <button type="button" className="q-sw" aria-pressed={on} title={title} aria-label={title} style={{ background: color }} onClick={onClick} />
 }
 
-export function QBtn({ on, title, label, onClick, children }: { on?: boolean; title: string; label?: string; onClick: () => void; children: ReactNode }) {
+/** A pill button. `on` marks the tool in hand (ink, like the dock); with `setting` it marks a chosen setting instead
+ *  (`--chosen`, like every other choice on a surface). Bjørn 8.11.2026 and 10.11.2026: only drawing tools get ink. */
+export function QBtn({ on, setting, title, label, onClick, children }: { on?: boolean; setting?: boolean; title: string; label?: string; onClick: () => void; children: ReactNode }) {
   return (
-    <button type="button" className="q-btn" aria-pressed={on} title={title} aria-label={label} onClick={onClick}>
+    <button type="button" className={setting ? 'q-btn q-set' : 'q-btn'} aria-pressed={on} title={title} aria-label={label} onClick={onClick}>
       {children}
     </button>
   )

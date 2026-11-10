@@ -177,6 +177,7 @@ function content(p: PillActions, graphics: boolean, setGraphics: (b: boolean) =>
       meta: mm(Math.abs(b.to[0] - b.from[0]) + Math.abs(b.to[1] - b.from[1])),
       body: (
         <QBtn
+          setting
           on={!!sel.beamFine}
           title={sel.beamFine ? 'Dra flytter i 50 mm-steg på tvers · trykk for hele meter igjen' : 'Flytt på tvers i 50 mm-steg, utenfor meterrasteret · på desktop også Shift + dra'}
           label="Fin"
@@ -269,7 +270,7 @@ function content(p: PillActions, graphics: boolean, setGraphics: (b: boolean) =>
           {openingProducts().map((x) => {
             const a = x.variants[0].artnr
             return (
-              <QBtn key={x.id} on={o.product === a} title={x.name} label={x.opening === 'door' ? 'Dør' : 'Forheng'} onClick={() => o.product !== a && onEdit((y) => setOpeningProduct(y, o.id, a))}>
+              <QBtn key={x.id} setting on={o.product === a} title={x.name} label={x.opening === 'door' ? 'Dør' : 'Forheng'} onClick={() => o.product !== a && onEdit((y) => setOpeningProduct(y, o.id, a))}>
                 {x.opening === 'door' ? <DoorClosed size={15} /> : <Blinds size={15} />}
                 {x.opening === 'door' ? 'Dør' : 'Forheng'}
               </QBtn>
