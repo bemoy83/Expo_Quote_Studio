@@ -2,11 +2,11 @@
 import { RECIPES } from '../../../foga/recipes'
 import type { CalcResult } from '../../../calc/calc'
 import { beamOffsets } from '../../../calc/beamOffsets'
-import { mm } from '../dims'
-import { MeasurePill } from './Previews'
+import { DIM_NEAR } from '../dims'
+import { Chain } from '../DimChain'
 import type { InnerBeam, Point, Variant } from '../../../domain/types'
 import { INK, INK_MUTED, SURFACE } from '../../colors'
-import { linePx, usePlanScale } from '../planScale'
+import { linePx, sizePx, usePlanScale } from '../planScale'
 import { BEAM_FILL, beamBody, beamDash, footDash, footStroke, HALO_OPACITY, haloWidth, postSize } from '../planStyle'
 import { rules } from '../../env'
 import type { Point as P } from '../../../domain/types'
@@ -88,34 +88,25 @@ export function BeamStroke({ a, b, body }: { a: P; b: P; body: number }) {
 }
 
 /** Byggeregel T15: from each end of a drawn beam off the grid, along the wall or beam it hangs on, to the nearest post or
- *  hook, while it is moved or selected, and for every one on the work order (calc/beamOffsets.ts). */
+ *  hook, while it is moved or selected, and for every one on the work order (calc/beamOffsets.ts). Drawn as the plan's
+ *  and the wall drawing's own dimension chains (DimChain.tsx, Bjørn 10.11.2026): a muted hairline with slashes and the
+ *  number beside it, just off the wall or beam on the side towards the stand's middle, where it stays clear of the aisle
+ *  and the stand's own measures and inside the work order's plan. */
 function OffsetMeasures({ v, res, id }: { v: Variant; res: CalcResult; id?: string }) {
   const sc = usePlanScale()
   const centre: Point = [v.stand.width / 2, v.stand.depth / 2]
-  const tick = linePx(sc, 4)
+  const clear = beamBody(sc, rules.beam.thickness) / 2 + sizePx(sc, DIM_NEAR)
   return (
     <g>
       {beamOffsets(v, res, id).map((o) => {
         const hz = Math.abs(o.from[1] - o.to[1]) < 1e-6
-        const [tx, ty] = hz ? [0, tick] : [tick, 0]
-        return (
-          <g key={`${o.from}`}>
-            <Seg a={o.from} b={o.to} stroke={INK} strokeWidth={linePx(sc, 1)} />
-            {[o.from, o.to].map((p, i) => (
-              <Seg key={i} a={[p[0] - tx, p[1] - ty]} b={[p[0] + tx, p[1] + ty]} stroke={INK} strokeWidth={linePx(sc, 1)} />
-            ))}
-            {/* Inside, towards the stand's middle: on an outer edge it would sit in the aisle, over the stand's own
-                measures and outside the work order's plan */}
-            <MeasurePill a={o.from} b={o.to} centre={mirror(o, centre)} stroke={tick} text={mm(o.length)} />
-          </g>
-        )
+        const axis = hz ? 'x' : 'y'
+        const k = hz ? 1 : 0
+        const at = o.from[k]
+        const dir: 1 | -1 = centre[k] >= at ? 1 : -1
+        const ts = [o.from[1 - k], o.to[1 - k]].sort((a, b) => a - b)
+        return <Chain key={`${o.from}`} sc={sc} axis={axis} at={at + dir * clear} ts={ts} dir={dir} keep />
       })}
     </g>
   )
-}
-
-/** The stand's middle mirrored over the measure's line, so the pill falls on the side towards it. */
-function mirror(o: { from: Point; to: Point }, c: Point): Point {
-  const hz = Math.abs(o.from[1] - o.to[1]) < 1e-6
-  return hz ? [c[0], 2 * o.from[1] - c[1]] : [2 * o.from[0] - c[0], c[1]]
 }
