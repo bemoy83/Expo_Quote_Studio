@@ -3,7 +3,7 @@
 // with shelves and the print list.
 // It can be filtered by product group, so carpet goes to the carpet layer and the stand to the stand builders. It shows the requirement to
 // the OMS in practice: everything here comes from the drawing and the price list. Background: docs/prismodell.md.
-// Byggeregler P4, H8 (docs/byggeregler.md).
+// The plan carries the mållinjer of drawn beams off the grid (T15). Byggeregler P4, H8, T15 (docs/byggeregler.md).
 import { Printer } from 'lucide-react'
 import { useState } from 'react'
 import type { CalcResult } from '../../calc/calc'
@@ -123,7 +123,7 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf }: 
 
           <section className="qdoc-summary">
             <div className="qdoc-plan" style={{ aspectRatio: `${v.stand.width + 2 * PLAN_MARGIN} / ${v.stand.depth + 2 * PLAN_MARGIN}` }}>
-              <PlanPreview v={v} res={res} groups={filtered ? shown : undefined} floorFull={shown.has('gulv')} positions textileLabels />
+              <PlanPreview v={v} res={res} groups={filtered ? shown : undefined} floorFull={shown.has('gulv')} positions textileLabels beamMeasures />
             </div>
             <dl>
               {DELIVERY_FIELDS.map((d) => (

@@ -88,6 +88,8 @@ interface Props {
   positions?: boolean
   /** Work order: textile walls show their textile labels (T1, F1A, F1B …) instead of the quote number. */
   textileLabels?: boolean
+  /** Work order: the mållinjer of every drawn beam off the grid, so the montør can measure it out (Byggeregel T15). */
+  beamMeasures?: boolean
   /** Why what the pointer aims at cannot be stored (or that it is already there), for the hint line; null when it can. */
   onHint?: (text: string | null) => void
   /** What an edit would store (App's onEdit without storing it) and its calc: the plan shows it dimmed before the click.
@@ -299,7 +301,7 @@ export function PlanView(p: Props) {
       {twin('shelves', (s) => <ShelfLayer v={s.v} selection={selection} dim={dim} />)}
 
       {/* Beams and posts */}
-      {twin('beams', (s) => <BeamLayer v={s.v} res={s.res} selection={selection} dim={dim} measured={p.mini ? undefined : dragging?.kind === 'beam' ? dragging.id : selection.beamId} />)}
+      {twin('beams', (s) => <BeamLayer v={s.v} res={s.res} selection={selection} dim={dim} measured={p.mini ? undefined : dragging?.kind === 'beam' ? dragging.id : (selection.beamId ?? (p.beamMeasures || undefined))} />)}
 
       {/* Objects */}
       {twin('objects', (s) => <ObjectLayer v={s.v} selection={selection} tool={tool} bad={s.bad} dim={dim} off={off} />)}
