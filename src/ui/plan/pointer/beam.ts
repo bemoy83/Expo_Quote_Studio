@@ -1,5 +1,5 @@
-// Velg on a drawn takdrager: drag moves it by whole metres, Shift + drag across it in 50 mm steps off the grid
-// (Byggeregel T15), a plain click selects it.
+// Velg on a drawn takdrager: drag moves it by whole metres, Shift + drag (or «Fin» on in its pill) across it in
+// 50 mm steps off the grid (Byggeregel T15), a plain click selects it.
 import { dragInnerBeam, dragInnerBeamFine } from '../../drag'
 import type { DragHandlers } from './types'
 

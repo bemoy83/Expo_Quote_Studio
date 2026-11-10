@@ -29,8 +29,8 @@ export function dragInnerBeam(d: WallDrag, q: { x: number; y: number }, standard
   dragStep(d, q, (v, s, a) => moveInnerBeam(v, d.id, s, a, standard), onEdit, onCheckpoint)
 }
 
-/** Shift + dra (Byggeregel T15): move a drawn takdrager across its direction in 50 mm steps, off the 1 m grid; a whole
- *  metre puts it back on it. Where it would not fit it stays at the last place it did. */
+/** Shift + dra, or «Fin» on in the pill (Byggeregel T15): move a drawn takdrager across its direction in 50 mm steps,
+ *  off the 1 m grid; a whole metre puts it back on it. Where it would not fit it stays at the last place it did. */
 export function dragInnerBeamFine(d: WallDrag, q: { x: number; y: number }, standard: readonly Run[], onEdit: Edit, onCheckpoint: () => void) {
   const off = d.horizontal ? q.y - d.p0.y : q.x - d.p0.x
   const next = shiftInnerBeam(d.v0, d.id, off, standard)

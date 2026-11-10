@@ -52,7 +52,7 @@ kostgrunnlaget). Regel og kilde føres i `docs/byggeregler.md`.
 ### Takdragere
 
 - Standard: `calc/beams.ts` (`variantBeams` setter sammen alle tre)
-- Innvendige (tegnet av kunden): modell `InnerBeam`, redigering `domain/innerBeams.ts`, utlegg `calc/innerBeams.ts`; Shift + dra utenfor rasteret `shiftInnerBeam` + `dragInnerBeamFine` (`ui/drag.ts`), mållinjer `calc/beamOffsets.ts` (T15)
+- Innvendige (tegnet av kunden): modell `InnerBeam`, redigering `domain/innerBeams.ts`, utlegg `calc/innerBeams.ts`; Shift + dra eller «Fin» i pillen (`PlanSelection.beamFine`) utenfor rasteret `shiftInnerBeam` + `dragInnerBeamFine` (`ui/drag.ts`), mållinjer `calc/beamOffsets.ts` tegnet med `DimChain` i `layers/BeamLayer.tsx`, på arbeidsordren for alle (`beamMeasures`) (T15)
 - Støttedrager på lange standvegger: `calc/supportBeams.ts`
 - Kroker i 01, enveis og toveis (der en drager henger på en annen, eller på en vegg mellom stolpene, T15): `calc/beamHooks.ts`, plukk i `foga/engine.ts`, 3D i `scene3d/build/frame.ts`
 - Hevet over tekstilvegg (skjøtet stolpe og krok): `calc/beamLift.ts`, linjen `beamLiftLines` i `calc/lines/beams.ts`, 3D i `scene3d/build/frame.ts`

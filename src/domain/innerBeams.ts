@@ -97,9 +97,9 @@ export const offGrid = (b: InnerBeam) => {
 };
 
 /**
- * Move a drawn beam `offset` m across its direction (Shift + dra, Byggeregel T15), in steps of FINE_STEP, from where it
- * is: off the 1 m grid, its ends where it meets the walls and beams across it. A whole metre puts it back on the grid.
- * Returns v when it would not fit.
+ * Move a drawn beam `offset` m across its direction (Shift + dra or «Fin» in the pill, Byggeregel T15), in steps of
+ * FINE_STEP, from where it is: off the 1 m grid, its ends where it meets the walls and beams across it. A whole metre
+ * puts it back on the grid. Returns v when it would not fit.
  */
 export function shiftInnerBeam(v: Variant, id: string, offset: number, standard: readonly Run[]): Variant {
   const beams = v.innerBeams ?? [];
