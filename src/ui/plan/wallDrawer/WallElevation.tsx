@@ -326,7 +326,7 @@ export function WallElevation(p: Props) {
           })()}
 
           {/* Shelves, over plates and print: dragged up and down, and sideways felt by felt */}
-          <FaceRails v={v} wallId={w.id} s={s} layout={layout} x={u} H={H} u={fr.u} />
+          <FaceRails wallId={w.id} s={s} layout={layout} x={u} H={H} u={fr.u} />
           {shelves.map((f) => {
             // The grip: 22 px above and below the board, but only half way to the shelf above or below in the felt
             const half = 22 * fr.u

@@ -17,6 +17,7 @@ import { Button } from '../controls'
 import { idx, rules } from '../env'
 import { CUT_FOOT, cutRows } from '../cutList'
 import { lanesOf, rollPieces } from '../../domain/floor/lanes'
+import { cornerLayout } from '../../domain/shelves/corners'
 import { shelfFaces } from '../../domain/shelves/model'
 import { hours } from '../format'
 import { standScope, TYPE_NAME } from '../names'
@@ -81,6 +82,7 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf }: 
     : []
   // Shelves: each wall face with shelves seen straight on, measured from the floor (Byggeregel H8)
   const shelfWalls = shown.has('hyll') ? shelfFaces(v, rules) : []
+  const shelfLayout = cornerLayout(v, rules)
   const prints = shown.has('prof') ? [...textileRows(production(v, rules, customer)), ...foilRows(v, rules.wall.plate, customer)] : []
   const groupName = (id: string) => PRODUCT_GROUPS.find((g) => g.id === id)?.name ?? id
   const missingDates = !DELIVERY_FIELDS.some((d) => project.delivery?.[d.key])
@@ -203,8 +205,8 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf }: 
               <div className="eyebrow">Veggriss med hyller</div>
               {shelfWalls.map((f) => (
                 <div key={`${f.wallId}${f.s}`} className="wo-elev-box">
-                  <ShelfElevation v={v} wallId={f.wallId} s={f.s} shelves={f.shelves} />
-                  <CornerNotes v={v} wallId={f.wallId} s={f.s} />
+                  <ShelfElevation v={v} wallId={f.wallId} s={f.s} shelves={f.shelves} layout={shelfLayout} />
+                  <CornerNotes v={v} wallId={f.wallId} s={f.s} layout={shelfLayout} />
                 </div>
               ))}
               <p className="foot">Høyde er overkant hylle fra gulvet. Lysmål er fri høyde mellom hyllene over hverandre.</p>

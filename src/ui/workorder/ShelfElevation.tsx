@@ -9,7 +9,7 @@ import { RECIPES } from '../../foga/recipes'
 import type { BoardKind } from '../../foga/structure'
 import { wallLength, wallModules } from '../../domain/grid'
 import { wallRal } from '../../domain/panels'
-import { cornerLayout } from '../../domain/shelves/corners'
+import { railsOn, type CornerLayout } from '../../domain/shelves/corners'
 import { shelfStacks, shelvesOf } from '../../domain/shelves/model'
 import type { Shelf, Variant } from '../../domain/types'
 import { builtModules } from '../../domain/walls'
@@ -25,7 +25,7 @@ import { frame, shelfChains } from '../plan/wallDrawer/elevationMeasure'
 /** The drawing's box on the page, px: wide as the work order's column, low enough for two on a page. */
 const SIZE = { w: 680, h: 250 }
 
-export function ShelfElevation({ v, wallId, s, shelves }: { v: Variant; wallId: string; s: FaceSide; shelves: Shelf[] }) {
+export function ShelfElevation({ v, wallId, s, shelves, layout }: { v: Variant; wallId: string; s: FaceSide; shelves: Shelf[]; layout: CornerLayout }) {
   const w = v.walls.find((x) => x.id === wallId)
   if (!w) return null
   const L = wallLength(w)
@@ -37,7 +37,6 @@ export function ShelfElevation({ v, wallId, s, shelves }: { v: Variant; wallId: 
   const mods = wallModules(w).map((m) => built.get(m.key))
   const fr = frame(SIZE, L, H, [])
   const sc = planScale(1 / fr.u, { doc: true })
-  const layout = cornerLayout(v, rules)
   const name = w.room ? 'Romvegg' : wallLabel(w)
   return (
     <svg className="wo-elev" viewBox={fr.viewBox} role="img" aria-label={`${name}, ${shelves.length} hyller`}>
@@ -68,7 +67,7 @@ export function ShelfElevation({ v, wallId, s, shelves }: { v: Variant; wallId: 
       })}
       <Posts xs={Array.from({ length: L + 1 }, (_, i) => u(i))} H={H} />
       <line x1={-0.12} y1={H} x2={L + 0.12} y2={H} stroke={BORDER_STRONG} strokeWidth={0.01} />
-      <FaceRails v={v} wallId={w.id} s={s} layout={layout} x={u} H={H} u={fr.u} />
+      <FaceRails wallId={w.id} s={s} layout={layout} x={u} H={H} u={fr.u} />
       {shelves.map((f) => (
         <ShelfFront key={f.id} {...shelfFront(v, f, layout, spanX)} y={f.y} H={H} u={fr.u} />
       ))}
@@ -87,8 +86,7 @@ const BOARD_NAME = (k: Exclude<BoardKind, 'standard'>) => {
  * wall it meets: each 01 rail hung on the face, its length and where its centre is from the corner post's face, and
  * which shelves get a cut board, by height.
  */
-export function CornerNotes({ v, wallId, s }: { v: Variant; wallId: string; s: FaceSide }) {
-  const layout = cornerLayout(v, rules)
+export function CornerNotes({ v, wallId, s, layout }: { v: Variant; wallId: string; s: FaceSide; layout: CornerLayout }) {
   const mm = (m: number) => Math.round(m * 1000)
   const co = RECIPES.shelf.corner
   type Notes = { other: string; left: boolean; rails: string[]; boards: Map<Exclude<BoardKind, 'standard'>, number[]> }
@@ -108,7 +106,7 @@ export function CornerNotes({ v, wallId, s }: { v: Variant; wallId: string; s: F
     const b = at(c.corner.felt, c.corner.other.wallId).boards
     b.set(c.board, [...(b.get(c.board) ?? []), mm(f.y)])
   }
-  for (const r of layout.rails.filter((x) => x.felt.wallId === wallId && x.felt.s === s)) {
+  for (const r of railsOn(layout, wallId, s)) {
     // The wall across the corner: the one whose shelves the rail carries, or for twins the one with the corner board
     const f = shelvesOf(v).find((x) => x.id === r.carries[0])
     const c = f && layout.shelves.get(f.id)

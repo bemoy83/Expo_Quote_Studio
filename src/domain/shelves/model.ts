@@ -7,7 +7,7 @@ import { faceNormal, sideOf, type FaceSide } from '../faces';
 import { pointAlong } from '../grid';
 import { nextId } from '../ids';
 import type { Shelf, Variant } from '../types';
-import { acrossCorner, cornerLayout, shelfBlocked, shelfSpan } from './corners';
+import { acrossCorner, cornerLayout, railsOn, shelfBlocked, shelfSpan, type CornerLayout } from './corners';
 
 export { shelfBlocked };
 
@@ -122,7 +122,7 @@ export function offRow(v: Variant, id: string): boolean {
 /** A shelf's board in the plan, an axis-aligned box in metres: along the wall as shelfSpan says (between its posts, or
  *  cut for a corner), from its front edge 300 mm in front of the wall's face (half a post out from the line) back by its
  *  depth. Null when its wall is gone. Pass the corner layout when drawing many. */
-export function shelfBox(v: Variant, rules: Rules, f: Shelf, layout?: ReturnType<typeof cornerLayout>): { x0: number; y0: number; x1: number; y1: number } | null {
+export function shelfBox(v: Variant, rules: Rules, f: Shelf, layout?: CornerLayout): { x0: number; y0: number; x1: number; y1: number } | null {
   const w = v.walls.find((x) => x.id === f.wallId);
   if (!w) return null;
   const n = faceNormal(w, sideOf(v, f));
@@ -138,9 +138,9 @@ export function shelfBox(v: Variant, rules: Rules, f: Shelf, layout?: ReturnType
 /** The wall faces that carry shelves, or a 01 rail for a corner shelf on the other wall, in the order the walls are
  *  drawn, each with its shelves (the work order's «Veggriss med hyller», H8). */
 export function shelfFaces(v: Variant, rules?: Rules): { wallId: string; s: FaceSide; shelves: Shelf[] }[] {
-  const rails = rules ? cornerLayout(v, rules).rails : [];
+  const layout = rules ? cornerLayout(v, rules) : { rails: [] };
   return v.walls.flatMap((w) => ([1, -1] as const).flatMap((s) => {
     const on = shelvesOn(v, w.id, s);
-    return on.length || rails.some((r) => r.felt.wallId === w.id && r.felt.s === s) ? [{ wallId: w.id, s, shelves: on }] : [];
+    return on.length || railsOn(layout, w.id, s).length ? [{ wallId: w.id, s, shelves: on }] : [];
   }));
 }

@@ -3,23 +3,21 @@
 // at the end of a wall or in a T. Which board each shelf gets, which rails a corner takes and how long they are, all
 // worked out from the shelves as drawn (like 91FF in brackets.ts). Byggeregler H6, H9, H10, H11, H12 (docs/byggeregler.md).
 // Values: rules.shelf (m), RECIPES.shelf.corner (parts, mm).
+import { fogaPart } from '../../foga/parts';
 import { RECIPES } from '../../foga/recipes';
-import type { Rules } from '../../rules/rules';
-import { wallHeight } from '../../rules/rules';
+import type { BoardKind } from '../../foga/structure';
+import { wallHeight, type Rules } from '../../rules/rules';
 import { faceNormal, faces, sideOf, type FaceSide } from '../faces';
 import { CHANNEL_TAKEN, channelTakers, feltBlocked, modulePosts } from '../fittings';
 import { pointAlong, pointKey } from '../grid';
-import type { BoardKind } from '../../foga/structure';
 import type { Point, Shelf, Variant } from '../types';
-
-export type { BoardKind };
-import { fogaPart } from '../../foga/parts';
 
 const C = RECIPES.shelf.corner;
 const mm = (n: number) => n / 1000;
 const EPS = 1e-6;
-/** The 01 rail's width along the wall it hangs on and how far it stands out from that wall's rails, m. */
-const [RAIL_W, RAIL_T] = fogaPart(C.rail).section!.map(mm);
+/** The 01 rail's width along the wall it hangs on and how far it stands out from that wall's rails, m (drawn in the
+ *  plan, the elevations and 3D). */
+export const [RAIL_W, RAIL_T] = fogaPart(C.rail).section!.map(mm);
 /** Between a corner board's end and the face of the rail it rests by, m (Bjørn's STL). */
 const END_PLAY = mm(4.5);
 /** Between a 2/3 board's end and the rail with the twins, m (Bjørn's STL). */
@@ -35,6 +33,9 @@ export interface CornerFelt {
   s: FaceSide;
   end: 0 | 1;
 }
+
+/** A point `x` m along a corner felt's wall from its corner post's centre, as m from the wall's start. */
+const fromCorner = (f: Pick<CornerFelt, 'module' | 'end'>, x: number) => (f.end === 0 ? f.module + x : f.module + 1 - x);
 
 /** An inner corner seen from one of its two felts: the corner post, and the felt on the other wall that faces it. */
 export interface Corner {
@@ -99,7 +100,6 @@ export function acrossCorner(v: Variant, wallId: string, module: number, s: Face
   return c ? shelvesIn(v, c.other.wallId, c.other.module, c.other.s, skipId) : [];
 }
 
-
 /** A shelf in a corner: the corner it stands in, whether it meets a shelf on the other wall (and which), and its board
  *  along its own wall from the corner post's centre, m. */
 export interface CornerShelf {
@@ -122,6 +122,12 @@ export interface ShelfRail {
   carries: string[];
   bottom: number;
   length: number;
+}
+
+/** Every corner shelf by id with its board, and the 01 rails (cornerLayout). */
+export interface CornerLayout {
+  shelves: Map<string, CornerShelf>;
+  rails: ShelfRail[];
 }
 
 /** From the corner post's centre to a 01 rail's centre along the wall it hangs on, m (H10, H11). */
@@ -161,7 +167,7 @@ const feltKey = (f: Pick<CornerFelt, 'wallId' | 'module' | 's'>) => `${f.wallId}
  * wall (H10). Shelves of one kind on one felt share a rail (H12, Bjørn 10.11.2026: a lone shelf on a twin swings out).
  * A corner board with a rail from the other wall passing behind it is narrow (290).
  */
-export function cornerLayout(v: Variant, rules: Rules): { shelves: Map<string, CornerShelf>; rails: ShelfRail[] } {
+export function cornerLayout(v: Variant, rules: Rules): CornerLayout {
   const shelves = new Map<string, CornerShelf>();
   const rails = new Map<string, ShelfRail>();
   const order = (id: string) => v.walls.findIndex((w) => w.id === id);
@@ -213,22 +219,21 @@ export function shelfSpan(
   v: Variant,
   rules: Rules,
   f: Shelf,
-  layout: { shelves: Map<string, CornerShelf> } = cornerLayout(v, rules),
+  layout: Pick<CornerLayout, 'shelves'> = cornerLayout(v, rules),
 ): { a: number; b: number; depth: number; board: BoardKind; corner: CornerShelf | null } {
   const c = layout.shelves.get(f.id);
   const inset = (rules.wall.cc - rules.shelf.board.width) / 2;
   if (!c) return { a: f.module + inset, b: f.module + 1 - inset, depth: rules.shelf.board.depth, board: 'standard', corner: null };
-  const t = (x: number) => (c.corner.felt.end === 0 ? f.module + x : f.module + 1 - x);
-  const [a, b] = [t(c.from), t(c.to)].sort((p, q) => p - q);
+  const [a, b] = [fromCorner(c.corner.felt, c.from), fromCorner(c.corner.felt, c.to)].sort((p, q) => p - q);
   return { a, b, depth: c.depth, board: c.board, corner: c };
 }
 
 /** A rail's centre along the wall it hangs on, m from that wall's start. */
-export const railT = (r: ShelfRail) => (r.felt.end === 0 ? r.felt.module + r.along : r.felt.module + 1 - r.along);
+export const railT = (r: ShelfRail) => fromCorner(r.felt, r.along);
 
 /** The rails hanging on one face of a wall (H12): drawn on its elevation, and measured on the work order. */
-export const railsOn = (v: Variant, rules: Rules, wallId: string, s: FaceSide) =>
-  cornerLayout(v, rules).rails.filter((r) => r.felt.wallId === wallId && r.felt.s === s);
+export const railsOn = (layout: Pick<CornerLayout, 'rails'>, wallId: string, s: FaceSide) =>
+  layout.rails.filter((r) => r.felt.wallId === wallId && r.felt.s === s);
 
 /** A rail in the plan, an axis-aligned box in metres: 20 mm along its wall, from the rails' face (10 mm behind the
  *  post's face) out by its 11.5 mm. Null when its wall is gone. */
@@ -255,19 +260,13 @@ export function bracketSpans(rules: Rules, f: Shelf, span: ReturnType<typeof she
   const c = span.corner;
   const posts = [f.module, f.module + 1].filter((_, i) => !c || c.corner.felt.end !== i).map((t): [number, number] => [t - half, t + half]);
   if (!c) return posts;
-  const t = (x: number) => (c.corner.felt.end === 0 ? f.module + x : f.module + 1 - x);
-  const out = (len: number): [number, number] => {
-    const from = half - mm(C.behind) + RAIL_T;
-    const [a, b] = [t(from), t(from + len)].sort((p, q) => p - q);
-    return [a, b];
-  };
-  const twin = mm(fogaPart(RECIPES.shelf.twin).section![0]);
-  const end: [number, number] =
-    c.board === 'twoThirds'
-      ? (() => {
-          const at = t(railAlong(rules, 'meet'));
-          return [at - twin / 2, at + twin / 2];
-        })()
-      : out(mm(c.meets ? RECIPES.shelf.bracket : C.short));
-  return [...posts, end];
+  const t = (x: number) => fromCorner(c.corner.felt, x);
+  if (c.board === 'twoThirds') {
+    const at = t(railAlong(rules, 'meet'));
+    const twin = mm(fogaPart(RECIPES.shelf.twin).section![0]);
+    return [...posts, [at - twin / 2, at + twin / 2]];
+  }
+  const from = half - mm(C.behind) + RAIL_T;
+  const [a, b] = [t(from), t(from + mm(c.meets ? RECIPES.shelf.bracket : C.short))].sort((p, q) => p - q);
+  return [...posts, [a, b]];
 }

@@ -5,7 +5,7 @@
 // In an inner corner (Byggeregler H10–H12) the board is cut to fit and its corner end rests on a short 91 or a 91FF
 // standing out from a 01 rail hung on the other wall, from the wall's top down by the rail's standard length.
 import * as THREE from 'three'
-import { cornerLayout, railT, shelfSpan } from '../../../domain/shelves/corners'
+import { cornerLayout, RAIL_T, RAIL_W, railT, shelfSpan } from '../../../domain/shelves/corners'
 import { faceNormal, sideOf } from '../../../domain/faces'
 import { pointAlong, pointKey, wallDirection } from '../../../domain/grid'
 import { shelvesOf } from '../../../domain/shelves/model'
@@ -92,28 +92,27 @@ export function buildShelves(c: BuildContext) {
     add(mesh, { layer: 'objects', pick: { wallId: b.wallId } })
   }
   // Corner rails (H12): 01 on the rails' face, channel out, from the wall's top down by its length, the krok not drawn
-  const rail = RECIPES.shelf.corner
+  const co = r.corner
   const top = wallHeight(rules)
   const back = face - rules.wall.profile.thickness / 2
-  for (const r of layout.rails) {
-    const w = v.walls.find((x) => x.id === r.felt.wallId)
+  for (const rail of layout.rails) {
+    const w = v.walls.find((x) => x.id === rail.felt.wallId)
     if (!w) continue
-    const t0 = railT(r)
-    const [rw, rt] = [0.02, 0.0115]
-    const len = r.length / 1000
-    along(pointAlong(w, t0 - rw / 2), pointAlong(w, t0 + rw / 2), rw, len, rt, top - len, mat('objects', ALU, ALU_FINISH), { layer: 'objects', pick: { wallId: w.id } }, r.felt.s * (back + rt / 2))
+    const t0 = railT(rail)
+    const len = rail.length / 1000
+    along(pointAlong(w, t0 - RAIL_W / 2), pointAlong(w, t0 + RAIL_W / 2), RAIL_W, len, RAIL_T, top - len, mat('objects', ALU, ALU_FINISH), { layer: 'objects', pick: { wallId: w.id } }, rail.felt.s * (back + RAIL_T / 2))
     // The brackets in it: under each shelf it carries, a short 91 (alone) or a 91FF (meeting), out from the rail's face
-    const n = faceNormal(w, r.felt.s)
-    for (const id of r.carries) {
+    const n = faceNormal(w, rail.felt.s)
+    for (const id of rail.carries) {
       const f = shelvesOf(v).find((x) => x.id === id)
       if (!f) continue
-      const meet = r.kind === 'meet'
-      const out = (meet ? RECIPES.shelf.bracket : rail.short) / 1000
-      const mesh = new THREE.Mesh(unitProfile(profile(meet ? RECIPES.shelf.twin : rail.bracket)), mat('objects', ALU, ALU_FINISH))
+      const meet = rail.kind === 'meet'
+      const out = (meet ? r.bracket : co.short) / 1000
+      const mesh = new THREE.Mesh(unitProfile(profile(meet ? r.twin : co.bracket)), mat('objects', ALU, ALU_FINISH))
       mesh.scale.x = out
       mesh.rotation.y = Math.atan2(-n[1], n[0])
       const p = pointAlong(w, t0)
-      const from = back + rt
+      const from = back + RAIL_T
       const at0: Point = [p[0] + n[0] * (from + out / 2), p[1] + n[1] * (from + out / 2)]
       // Alone the board lies on the 91's top; a twin carries it on a flange
       mesh.position.copy(at(at0, meet ? f.y - t - FLANGE_TOP + BODY / 2 : f.y - t - BODY / 2))
