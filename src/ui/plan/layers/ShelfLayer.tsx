@@ -28,7 +28,8 @@ export function ShelfLayer({ v, selection, dim }: { v: Variant; selection: PlanS
       })}
       {shelfStacks(v).map((stack) => {
         // A stack in a corner may mix boards (narrow where a rail passes behind): the plan shows the widest
-        const b = stack.map((f) => shelfBox(v, rules, f, layout)).reduce((m, x) => (!m || (x && (x.x1 - x.x0) * (x.y1 - x.y0) > (m.x1 - m.x0) * (m.y1 - m.y0)) ? x : m), null as ReturnType<typeof shelfBox>)
+        const area = (x: ReturnType<typeof shelfBox>) => (x ? (x.x1 - x.x0) * (x.y1 - x.y0) : -1)
+        const b = stack.map((f) => shelfBox(v, rules, f, layout)).reduce((m, x) => (area(x) > area(m) ? x : m), null)
         if (!b) return null
         const sel = stack.some((f) => chosen.has(f.id))
         const g = stack.some((f) => gone('shelf', f.id))

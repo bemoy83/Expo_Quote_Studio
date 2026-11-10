@@ -2,14 +2,14 @@
 // In metres, y down: the top of the wall is y = 0 and the floor y = H.
 import { useId, type ReactNode, type SVGProps } from 'react'
 import { doorLevels, doorWindows } from '../../domain/doors'
-import { railT, type cornerLayout } from '../../domain/shelves/corners'
-import type { TextileFill, Variant } from '../../domain/types'
+import { RAIL_W, railsOn, railT, type CornerLayout } from '../../domain/shelves/corners'
+import type { TextileFill } from '../../domain/types'
 import { RECIPES } from '../../foga/recipes'
 import type { Motif } from '../../persistence/file'
 import { ALU, ALU_POST, BORDER_STRONG, FEET, INK, INK_MUTED, LAYER_COLOR, SURFACE } from '../colors'
 import { NOTE_ICON, NOTE_PILL, noteAngle, textileNote, type TextileNote } from '../textileNote'
-import { EM, textPx } from './planScale'
 import { wallHeight } from '../../rules/rules'
+import { EM, textPx } from './planScale'
 import { rules } from '../env'
 import { Print } from './drawerParts'
 
@@ -181,20 +181,14 @@ export function ShelfFront({
   )
 }
 
-/** A 01 rail on the face, seen from in front (Byggeregel H12): 20 mm wide from the wall's top down to its foot. */
-export function RailFront({ x, bottom, top, H, u }: { x: number; bottom: number; top: number; H: number; u: number }) {
-  const w = 0.02
-  return <rect x={x - w / 2} y={H - top} width={w} height={top - bottom} fill={ALU} stroke={INK_MUTED} strokeWidth={0.6 * u} pointerEvents="none" />
-}
-
-/** The 01 rails hanging on one face (Byggeregel H12), seen from in front: from the wall's top down to their foot. */
-export function FaceRails({ v, wallId, s, layout, x, H, u }: { v: Variant; wallId: string; s: 1 | -1; layout: ReturnType<typeof cornerLayout>; x: (t: number) => number; H: number; u: number }) {
+/** The 01 rails hanging on one face (Byggeregel H12), seen from in front: 20 mm wide, from the wall's top down by their
+ *  length. */
+export function FaceRails({ wallId, s, layout, x, H, u }: { wallId: string; s: 1 | -1; layout: CornerLayout; x: (t: number) => number; H: number; u: number }) {
   const top = wallHeight(rules)
-  const rails = layout.rails.filter((r) => r.felt.wallId === wallId && r.felt.s === s && v.walls.some((w) => w.id === wallId))
   return (
-    <g>
-      {rails.map((r) => (
-        <RailFront key={r.key} x={x(railT(r))} bottom={top - r.length / 1000} top={top} H={H} u={u} />
+    <g pointerEvents="none">
+      {railsOn(layout, wallId, s).map((r) => (
+        <rect key={r.key} x={x(railT(r)) - RAIL_W / 2} y={H - top} width={RAIL_W} height={r.length / 1000} fill={ALU} stroke={INK_MUTED} strokeWidth={0.6 * u} />
       ))}
     </g>
   )
