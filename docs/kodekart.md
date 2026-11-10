@@ -136,7 +136,10 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
   `addShelfRowToFace`), `corners.ts` (hvor en hylle kan stå `shelfBlocked`, også i innvendige hjørner og T-kryss
   `feltCorner`; hvilken plate hver hjørnehylle får og 01-skinnene `cornerLayout`, skinnelengdene `railLengths`, alt utledet
   av hyllene som er tegnet), `brackets.ts` (knekter, plater og skinner `shelfBrackets`) · verdiene i `rules.shelf` og
-  `RECIPES.shelf` (hjørner: `RECIPES.shelf.corner`), reglene H1–H12 i [byggeregler.md](byggeregler.md). Hyllene følger veggen i `replaceWalls` og `moveWall` (`domain/edit.ts`) og rommet
+  `RECIPES.shelf` (hjørner: `RECIPES.shelf.corner`), reglene H1–H12 i [byggeregler.md](byggeregler.md). Tegnet: platen
+  langs veggen `shelfSpan`, knektene sett forfra `bracketSpans` (`ui/plan/shelfFront.ts`), skinnene `FaceRails` i
+  `ui/plan/elevation.tsx` og `railBox` i planen, 3D i `scene3d/build/shelves.ts`, hjørnene på arbeidsordren `CornerNotes`
+  (`ui/workorder/ShelfElevation.tsx`). Eksempel: `src/test/fixtures/12-hjornehyller.json`. Hyllene følger veggen i `replaceWalls` og `moveWall` (`domain/edit.ts`) og rommet
   i `domain/rooms.ts`
 - Kalkyle: `calc/lines/shelves.ts` (6311, fast pris per hylle, kost fra knektene, platene, monteringen og vareplukk én
   gang per ordre, prisartiklene i `pricing/items.ts`) · plukklisten: `shelves` i `foga/structure.ts`, linjene i

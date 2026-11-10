@@ -31,6 +31,7 @@ const DRAWERS = {
   '08-tekstil': [['inframe', 3, 0.08], ['frittstaende', 4.5, 3]],
   '09-dekor': [['print', 2.5, 0], ['dekal', 0, 2.5]],
   '11-hyller': [['hylle', 4.5, 0.2]],
+  '12-hjornehyller': [['vegg', 1.5, 0], ['innervegg', 3, 1.5]],
 };
 const PAGES = ['Tilbud', 'Arbeidsordre'];
 

@@ -206,3 +206,68 @@ export function cornerLayout(v: Variant, rules: Rules): { shelves: Map<string, C
   }
   return { shelves, rails: out };
 }
+
+/** Where a shelf's board lies along its wall (a to b, m from the wall's start), how deep it is and which board it is:
+ *  between its posts, or in a corner as cornerLayout says (H10, H11, H12). Pass the layout when drawing many. */
+export function shelfSpan(
+  v: Variant,
+  rules: Rules,
+  f: Shelf,
+  layout: { shelves: Map<string, CornerShelf> } = cornerLayout(v, rules),
+): { a: number; b: number; depth: number; board: BoardKind; corner: CornerShelf | null } {
+  const c = layout.shelves.get(f.id);
+  const inset = (rules.wall.cc - rules.shelf.board.width) / 2;
+  if (!c) return { a: f.module + inset, b: f.module + 1 - inset, depth: rules.shelf.board.depth, board: 'standard', corner: null };
+  const t = (x: number) => (c.corner.felt.end === 0 ? f.module + x : f.module + 1 - x);
+  const [a, b] = [t(c.from), t(c.to)].sort((p, q) => p - q);
+  return { a, b, depth: c.depth, board: c.board, corner: c };
+}
+
+/** A rail's centre along the wall it hangs on, m from that wall's start. */
+export const railT = (r: ShelfRail) => (r.felt.end === 0 ? r.felt.module + r.along : r.felt.module + 1 - r.along);
+
+/** The rails hanging on one face of a wall (H12): drawn on its elevation, and measured on the work order. */
+export const railsOn = (v: Variant, rules: Rules, wallId: string, s: FaceSide) =>
+  cornerLayout(v, rules).rails.filter((r) => r.felt.wallId === wallId && r.felt.s === s);
+
+/** A rail in the plan, an axis-aligned box in metres: 20 mm along its wall, from the rails' face (10 mm behind the
+ *  post's face) out by its 11.5 mm. Null when its wall is gone. */
+export function railBox(v: Variant, rules: Rules, r: ShelfRail): { x0: number; y0: number; x1: number; y1: number } | null {
+  const w = v.walls.find((x) => x.id === r.felt.wallId);
+  if (!w) return null;
+  const n = faceNormal(w, r.felt.s);
+  const t = railT(r);
+  const near = rules.wall.post / 2 - mm(C.behind);
+  const ps = [pointAlong(w, t - RAIL_W / 2), pointAlong(w, t + RAIL_W / 2)].flatMap((p) => [near, near + RAIL_T].map((o) => [p[0] + n[0] * o, p[1] + n[1] * o]));
+  const xs = ps.map((p) => p[0]);
+  const ys = ps.map((p) => p[1]);
+  return { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };
+}
+
+/**
+ * The brackets under a shelf as seen from in front, spans along its wall (m from the wall's start): a post's width at
+ * each post that holds one (H2), and at a corner what the board rests on there: the short 91 (80) or the twin (290)
+ * standing out from the rail on the other wall, seen from the side, or for a 2/3 board the twin in its own wall's rail,
+ * seen end on (H10, H11).
+ */
+export function bracketSpans(rules: Rules, f: Shelf, span: ReturnType<typeof shelfSpan>): [number, number][] {
+  const half = rules.wall.post / 2;
+  const c = span.corner;
+  const posts = [f.module, f.module + 1].filter((_, i) => !c || c.corner.felt.end !== i).map((t): [number, number] => [t - half, t + half]);
+  if (!c) return posts;
+  const t = (x: number) => (c.corner.felt.end === 0 ? f.module + x : f.module + 1 - x);
+  const out = (len: number): [number, number] => {
+    const from = half - mm(C.behind) + RAIL_T;
+    const [a, b] = [t(from), t(from + len)].sort((p, q) => p - q);
+    return [a, b];
+  };
+  const twin = mm(fogaPart(RECIPES.shelf.twin).section![0]);
+  const end: [number, number] =
+    c.board === 'twoThirds'
+      ? (() => {
+          const at = t(railAlong(rules, 'meet'));
+          return [at - twin / 2, at + twin / 2];
+        })()
+      : out(mm(c.meets ? RECIPES.shelf.bracket : C.short));
+  return [...posts, end];
+}

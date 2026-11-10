@@ -7,7 +7,7 @@ import { faceNormal, sideOf, type FaceSide } from '../faces';
 import { pointAlong } from '../grid';
 import { nextId } from '../ids';
 import type { Shelf, Variant } from '../types';
-import { acrossCorner, shelfBlocked } from './corners';
+import { acrossCorner, cornerLayout, shelfBlocked, shelfSpan } from './corners';
 
 export { shelfBlocked };
 
@@ -119,26 +119,28 @@ export function offRow(v: Variant, id: string): boolean {
   return !beside.some((x) => Math.abs(x.y - f.y) < EPS) && beside.some((x) => Math.abs(x.y - f.y) <= NEAR_ROW + EPS);
 }
 
-/** A shelf's board in the plan, an axis-aligned box in metres: the board's width centred in its module, from the wall's
- *  face (half a post out from the line) to its depth in front of it. Null when its wall is gone. */
-export function shelfBox(v: Variant, rules: Rules, f: Shelf): { x0: number; y0: number; x1: number; y1: number } | null {
+/** A shelf's board in the plan, an axis-aligned box in metres: along the wall as shelfSpan says (between its posts, or
+ *  cut for a corner), from its front edge 300 mm in front of the wall's face (half a post out from the line) back by its
+ *  depth. Null when its wall is gone. Pass the corner layout when drawing many. */
+export function shelfBox(v: Variant, rules: Rules, f: Shelf, layout?: ReturnType<typeof cornerLayout>): { x0: number; y0: number; x1: number; y1: number } | null {
   const w = v.walls.find((x) => x.id === f.wallId);
   if (!w) return null;
   const n = faceNormal(w, sideOf(v, f));
-  const inset = (rules.wall.cc - rules.shelf.board.width) / 2;
-  const near = rules.wall.post / 2;
-  const far = near + rules.shelf.board.depth;
-  const ps = [pointAlong(w, f.module + inset), pointAlong(w, f.module + 1 - inset)].flatMap((p) => [near, far].map((o) => [p[0] + n[0] * o, p[1] + n[1] * o]));
+  const span = shelfSpan(v, rules, f, layout);
+  const far = rules.wall.post / 2 + rules.shelf.board.depth;
+  const near = far - span.depth;
+  const ps = [pointAlong(w, span.a), pointAlong(w, span.b)].flatMap((p) => [near, far].map((o) => [p[0] + n[0] * o, p[1] + n[1] * o]));
   const xs = ps.map((p) => p[0]);
   const ys = ps.map((p) => p[1]);
   return { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };
 }
 
-/** The wall faces that carry shelves, in the order the walls are drawn, each with its shelves (the work order's
- *  «Veggriss med hyller», H8). */
-export function shelfFaces(v: Variant): { wallId: string; s: FaceSide; shelves: Shelf[] }[] {
+/** The wall faces that carry shelves, or a 01 rail for a corner shelf on the other wall, in the order the walls are
+ *  drawn, each with its shelves (the work order's «Veggriss med hyller», H8). */
+export function shelfFaces(v: Variant, rules?: Rules): { wallId: string; s: FaceSide; shelves: Shelf[] }[] {
+  const rails = rules ? cornerLayout(v, rules).rails : [];
   return v.walls.flatMap((w) => ([1, -1] as const).flatMap((s) => {
     const on = shelvesOn(v, w.id, s);
-    return on.length ? [{ wallId: w.id, s, shelves: on }] : [];
+    return on.length || rails.some((r) => r.felt.wallId === w.id && r.felt.s === s) ? [{ wallId: w.id, s, shelves: on }] : [];
   }));
 }

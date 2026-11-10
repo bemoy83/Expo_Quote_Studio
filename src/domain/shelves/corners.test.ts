@@ -1,4 +1,4 @@
-// Shelves in inner corners: where they may stand, the boards, brackets and 01 rails (Byggeregler H6, H9–H12).
+// Shelves in inner corners: where they may stand, the boards, brackets and 01 rails (Byggeregler H6, H8, H9–H12).
 import { describe, expect, it } from 'vitest';
 import { DOOR } from '../../catalog/defaultCatalog';
 import { RULES } from '../../rules/rules';
@@ -9,7 +9,7 @@ import { shelfBrackets } from './brackets';
 import { cornerLayout, feltCorner, railAlong, railLengths, shelfBlocked } from './corners';
 import { moveShelves } from './edit';
 import { addShelfToFace } from './fill';
-import { fitsIn, putShelf, shelvesOf } from './model';
+import { fitsIn, putShelf, shelfFaces, shelvesOf } from './model';
 
 /** Row stand 6 × 3, walls drawn back, left, right: the back wall's felt 0 stands in the corner with the left wall's felt 0. */
 const row = (): Variant => createVariant('A', { width: 6, depth: 3, type: 'row' });
@@ -144,5 +144,13 @@ describe('01 rails in a corner (Byggeregel H12)', () => {
     expect(shelves.get(shelfAt(v, 'side-back', 1.7).id)).toMatchObject({ board: 'narrow', depth: 0.29 });
     // The back shelf's rail on the left wall ends under 1700, above the left shelf: that board keeps 300
     expect(shelves.get(shelfAt(v, 'side-left', 0.9).id)).toMatchObject({ board: 'corner', depth: 0.3 });
+  });
+});
+
+describe('the work order’s wall faces (Byggeregel H8, H12)', () => {
+  it('a face with only a rail for the other wall’s corner shelf gets its drawing too', () => {
+    const v = corner([], [1.3]);
+    expect(shelfFaces(v, RULES).map((f) => [f.wallId, f.shelves.length])).toEqual([['side-back', 0], ['side-left', 1]]);
+    expect(shelfFaces(v).map((f) => f.wallId)).toEqual(['side-left']);
   });
 });

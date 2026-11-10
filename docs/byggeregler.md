@@ -289,8 +289,11 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   *Bjørn 8.11.2026 · `EXAMPLE_TIMES` (`montering-hylle`, `vareplukk-hyller`) · kode `src/calc/lines/shelves.ts` · test `src/calc/shelves.test.ts`*
 - **H8 Veggriss med hyller.** Arbeidsordren har et veggriss for hver veggside med hyller: hyllene målsatt fra gulv
   (overkant plate) og lysmålet mellom hyller over hverandre, med modulkjeden c/c under veggen. Veggskuffen viser det
-  samme. Tilbudet viser hyller bare i 3D, uten veggriss.
-  *Bjørn 8.11.2026 · kode `src/ui/workorder/ShelfElevation.tsx`, `src/ui/plan/wallDrawer/elevationMeasure.ts`, `src/domain/shelves/model.ts` · test `src/ui/plan/wallDrawer/elevationMeasure.test.ts`, `src/domain/shelves/shelves.test.ts`*
+  samme. Tilbudet viser hyller bare i 3D, uten veggriss. I et hjørne viser veggrisset 01-skinnene på
+  veggen, og under det står hvert hjørne for seg: skinnens lengde, senter fra hjørnestolpen og hva den bærer, og hvilke
+  hyller som får tilpasset plate (H10–H12). En veggside som bare har en skinne for en hjørnehylle på den andre veggen,
+  får også veggriss.
+  *Bjørn 8.11.2026, endret 10.11.2026 · kode `src/ui/workorder/ShelfElevation.tsx`, `src/ui/plan/wallDrawer/elevationMeasure.ts`, `src/domain/shelves/model.ts` · test `src/ui/plan/wallDrawer/elevationMeasure.test.ts`, `src/domain/shelves/shelves.test.ts`, `src/domain/shelves/corners.test.ts`*
 
 - **H9 Hylle i hjørne.** Et innvendig systemhjørne er likt uansett hvor det står: i enden av en vegg eller i et T-kryss
   (der er det to hjørner, ett på hver side av veggen som går ut). Hjørnefeltet er feltet ved hjørnestolpen; stolpens

@@ -2,12 +2,14 @@
 // In metres, y down: the top of the wall is y = 0 and the floor y = H.
 import { useId, type ReactNode, type SVGProps } from 'react'
 import { doorLevels, doorWindows } from '../../domain/doors'
-import type { TextileFill } from '../../domain/types'
+import { railT, type cornerLayout } from '../../domain/shelves/corners'
+import type { TextileFill, Variant } from '../../domain/types'
 import { RECIPES } from '../../foga/recipes'
 import type { Motif } from '../../persistence/file'
 import { ALU, ALU_POST, BORDER_STRONG, FEET, INK, INK_MUTED, LAYER_COLOR, SURFACE } from '../colors'
 import { NOTE_ICON, NOTE_PILL, noteAngle, textileNote, type TextileNote } from '../textileNote'
 import { EM, textPx } from './planScale'
+import { wallHeight } from '../../rules/rules'
 import { rules } from '../env'
 import { Print } from './drawerParts'
 
@@ -136,20 +138,64 @@ function NoteMark({ x, y, w, h, note, u }: { x: number; y: number; w: number; h:
  * A shelf seen from the front. `grip` (heights from the floor, m) is an unseen band to grab it by, taller than the thin
  * board so a finger finds it (Bjørn 9.11.2026); the wall drawer gives it, the work order does not.
  */
-export function ShelfFront({ x, y, H, u, on, grip, ...rest }: { x: number; y: number; H: number; u: number; on?: boolean; grip?: [number, number] } & SVGProps<SVGGElement>) {
-  const { thickness, width } = rules.shelf.board
+export function ShelfFront({
+  x,
+  y,
+  H,
+  u,
+  on,
+  grip,
+  width = rules.shelf.board.width,
+  brackets,
+  ...rest
+}: {
+  x: number
+  y: number
+  H: number
+  u: number
+  on?: boolean
+  grip?: [number, number]
+  /** The board's width, m: a corner board is cut to fit (Byggeregler H10, H11). */
+  width?: number
+  /** The brackets under it as spans in drawing x, m; by default one in each post. */
+  brackets?: [number, number][]
+} & SVGProps<SVGGElement>) {
+  const { thickness } = rules.shelf.board
   const t = Math.max(thickness, 3 * u)
   const z = H - y
-  const inset = (rules.wall.cc - width) / 2
+  const inset = (rules.wall.cc - rules.shelf.board.width) / 2
   const bracket = 0.03
+  const half = rules.wall.post / 2
+  const spans = brackets ?? [x - inset, x + width + inset].map((px): [number, number] => [px - half, px + half])
+  const g0 = Math.min(x, ...spans.map((b) => b[0]))
+  const g1 = Math.max(x + width, ...spans.map((b) => b[1]))
   return (
     <g {...rest}>
-      {grip && <rect x={x - inset} y={H - grip[1]} width={width + 2 * inset} height={grip[1] - grip[0]} fill="transparent" />}
-      {[x - inset, x + width + inset].map((px) => (
-        <rect key={px} x={px - rules.wall.post / 2} y={z} width={rules.wall.post} height={bracket} fill={ALU} stroke={INK_MUTED} strokeWidth={0.6 * u} />
+      {grip && <rect x={g0} y={H - grip[1]} width={g1 - g0} height={grip[1] - grip[0]} fill="transparent" />}
+      {spans.map(([a, b]) => (
+        <rect key={a} x={a} y={z} width={b - a} height={bracket} fill={ALU} stroke={INK_MUTED} strokeWidth={0.6 * u} />
       ))}
       <rect x={x} y={z} width={width} height={t} fill={SURFACE} stroke={INK} strokeWidth={(on ? 1.8 : 0.8) * u} />
       {on && <rect x={x - 0.012} y={z - 0.012} width={width + 0.024} height={t + 0.024} fill="none" stroke={INK} strokeWidth={0.014} />}
+    </g>
+  )
+}
+
+/** A 01 rail on the face, seen from in front (Byggeregel H12): 20 mm wide from the wall's top down to its foot. */
+export function RailFront({ x, bottom, top, H, u }: { x: number; bottom: number; top: number; H: number; u: number }) {
+  const w = 0.02
+  return <rect x={x - w / 2} y={H - top} width={w} height={top - bottom} fill={ALU} stroke={INK_MUTED} strokeWidth={0.6 * u} pointerEvents="none" />
+}
+
+/** The 01 rails hanging on one face (Byggeregel H12), seen from in front: from the wall's top down to their foot. */
+export function FaceRails({ v, wallId, s, layout, x, H, u }: { v: Variant; wallId: string; s: 1 | -1; layout: ReturnType<typeof cornerLayout>; x: (t: number) => number; H: number; u: number }) {
+  const top = wallHeight(rules)
+  const rails = layout.rails.filter((r) => r.felt.wallId === wallId && r.felt.s === s && v.walls.some((w) => w.id === wallId))
+  return (
+    <g>
+      {rails.map((r) => (
+        <RailFront key={r.key} x={x(railT(r))} bottom={top - r.length / 1000} top={top} H={H} u={u} />
+      ))}
     </g>
   )
 }

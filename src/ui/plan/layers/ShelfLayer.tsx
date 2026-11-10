@@ -1,6 +1,8 @@
 // Shelves (hylle 6311) in the plan: the board as seen from above, 300 mm deep in front of its wall face, white with a
 // thin ink edge like furniture. Shelves stacked in one felt are drawn once, with their count on the board (×3). Heights
-// were tried there and left out: a full felt says more than fits (Bjørn 9.11.2026); they are in the wall drawing.
+// were tried there and left out: a full felt says more than fits (Bjørn 9.11.2026); they are in the wall drawing. In a
+// corner the board is cut to fit and the 01 rails it rests on show as small ink bars (Byggeregler H10–H12).
+import { cornerLayout, railBox } from '../../../domain/shelves/corners'
 import { shelfBox, shelfStacks } from '../../../domain/shelves/model'
 import type { Variant } from '../../../domain/types'
 import { INK, SURFACE } from '../../colors'
@@ -17,10 +19,16 @@ export function ShelfLayer({ v, selection, dim }: { v: Variant; selection: PlanS
   const chosen = new Set(chosenShelves(v, selection))
   // A wall chosen on its own shows its dimension chain over the boards: their counts give way (Bjørn 9.11.2026)
   const wallChosen = selection.wallId && !selection.shelfId && !selection.textileId ? selection.wallId : null
+  const layout = cornerLayout(v, rules)
   return (
     <g opacity={dim('objects')} pointerEvents="none">
+      {layout.rails.map((r) => {
+        const b = railBox(v, rules, r)
+        return b && <rect key={r.key} x={b.x0} y={b.y0} width={b.x1 - b.x0} height={b.y1 - b.y0} fill={INK} />
+      })}
       {shelfStacks(v).map((stack) => {
-        const b = shelfBox(v, rules, stack[0])
+        // A stack in a corner may mix boards (narrow where a rail passes behind): the plan shows the widest
+        const b = stack.map((f) => shelfBox(v, rules, f, layout)).reduce((m, x) => (!m || (x && (x.x1 - x.x0) * (x.y1 - x.y0) > (m.x1 - m.x0) * (m.y1 - m.y0)) ? x : m), null as ReturnType<typeof shelfBox>)
         if (!b) return null
         const sel = stack.some((f) => chosen.has(f.id))
         const g = stack.some((f) => gone('shelf', f.id))

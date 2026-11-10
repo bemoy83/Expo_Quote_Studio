@@ -21,7 +21,7 @@ import { shelfFaces } from '../../domain/shelves/model'
 import { hours } from '../format'
 import { standScope, TYPE_NAME } from '../names'
 import { pickRows, type PickRow } from './pickRows'
-import { ShelfElevation } from './ShelfElevation'
+import { CornerNotes, ShelfElevation } from './ShelfElevation'
 import { PLAN_MARGIN } from '../plan/planStyle'
 import { PlanPreview } from '../plan/PlanPreview'
 import { PageBand } from '../shell/PageBand'
@@ -77,7 +77,7 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf }: 
       })
     : []
   // Shelves: each wall face with shelves seen straight on, measured from the floor (Byggeregel H8)
-  const shelfWalls = shown.has('hyll') ? shelfFaces(v) : []
+  const shelfWalls = shown.has('hyll') ? shelfFaces(v, rules) : []
   const prints = shown.has('prof') ? [...textileRows(production(v, rules, customer)), ...foilRows(v, rules.wall.plate, customer)] : []
   const groupName = (id: string) => PRODUCT_GROUPS.find((g) => g.id === id)?.name ?? id
   const missingDates = !DELIVERY_FIELDS.some((d) => project.delivery?.[d.key])
@@ -201,6 +201,7 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf }: 
               {shelfWalls.map((f) => (
                 <div key={`${f.wallId}${f.s}`} className="wo-elev-box">
                   <ShelfElevation v={v} wallId={f.wallId} s={f.s} shelves={f.shelves} />
+                  <CornerNotes v={v} wallId={f.wallId} s={f.s} />
                 </div>
               ))}
               <p className="foot">Høyde er overkant hylle fra gulvet. Lysmål er fri høyde mellom hyllene over hverandre.</p>

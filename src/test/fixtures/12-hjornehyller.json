@@ -1,0 +1,168 @@
+{
+  "format": "standskisse",
+  "versjon": 3,
+  "prosjekt": {
+    "fields": [
+      {
+        "id": "kunde",
+        "name": "Kundenavn",
+        "value": "Hjørne AS"
+      },
+      {
+        "id": "prosjekt",
+        "name": "Prosjekt",
+        "value": ""
+      },
+      {
+        "id": "standnr",
+        "name": "Standnr.",
+        "value": ""
+      },
+      {
+        "id": "x1",
+        "name": "Kontakt",
+        "value": "Kari Nordmann"
+      }
+    ],
+    "delivery": {
+      "montering": "2026-12-01",
+      "apning": "2026-12-03",
+      "demontering": "2026-12-05"
+    }
+  },
+  "varianter": [
+    {
+      "name": "A",
+      "stand": {
+        "width": 6,
+        "depth": 3,
+        "type": "row"
+      },
+      "defaultPlate": "9010",
+      "walls": [
+        {
+          "id": "side-back",
+          "from": [
+            0,
+            0
+          ],
+          "to": [
+            6,
+            0
+          ]
+        },
+        {
+          "id": "side-left",
+          "from": [
+            0,
+            0
+          ],
+          "to": [
+            0,
+            3
+          ]
+        },
+        {
+          "id": "side-right",
+          "from": [
+            6,
+            0
+          ],
+          "to": [
+            6,
+            3
+          ]
+        },
+        {
+          "id": "w1",
+          "from": [
+            3,
+            0
+          ],
+          "to": [
+            3,
+            2
+          ]
+        }
+      ],
+      "rooms": [],
+      "openings": [],
+      "floor": {
+        "tiles": [],
+        "protection": false
+      },
+      "objects": [],
+      "textiles": [],
+      "freeTextiles": [],
+      "foils": [],
+      "counted": [],
+      "loose": [],
+      "shelves": [
+        {
+          "id": "h1",
+          "wallId": "side-back",
+          "module": 0,
+          "side": 1,
+          "y": 1.3
+        },
+        {
+          "id": "h2",
+          "wallId": "side-back",
+          "module": 1,
+          "side": 1,
+          "y": 1.3
+        },
+        {
+          "id": "h3",
+          "wallId": "side-back",
+          "module": 0,
+          "side": 1,
+          "y": 0.5
+        },
+        {
+          "id": "h4",
+          "wallId": "side-left",
+          "module": 0,
+          "side": -1,
+          "y": 1.3
+        },
+        {
+          "id": "h5",
+          "wallId": "side-left",
+          "module": 0,
+          "side": -1,
+          "y": 0.9
+        },
+        {
+          "id": "h6",
+          "wallId": "side-back",
+          "module": 2,
+          "side": 1,
+          "y": 1.7
+        },
+        {
+          "id": "h7",
+          "wallId": "w1",
+          "module": 0,
+          "side": 1,
+          "y": 1.1
+        },
+        {
+          "id": "h8",
+          "wallId": "side-back",
+          "module": 3,
+          "side": 1,
+          "y": 1.7
+        },
+        {
+          "id": "h9",
+          "wallId": "w1",
+          "module": 0,
+          "side": -1,
+          "y": 1.7
+        }
+      ]
+    }
+  ],
+  "egneMotiver": []
+}

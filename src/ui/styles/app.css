@@ -2011,6 +2011,10 @@ select.cin {
   break-inside: avoid;
   margin: 4px 0 12px;
 }
+.wo-corner p {
+  margin: 2px 0 0;
+  color: rgb(var(--ink-muted));
+}
 .wo-elev {
   display: block;
   width: 100%;
