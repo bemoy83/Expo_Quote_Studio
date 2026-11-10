@@ -128,8 +128,8 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   94 × 80 med 600 oppå veggen i stedet for kroken. Bare tegnede dragere flyttes; en ledig stolpe brukes alltid.
   Kroken plukkes av Production uansett hvem som betaler. En drager på krok holder veggen der, som en drager på en
   stolpe: fotplatene (S-reglene) og støttedrageren (T7) regnes for hver strekning mellom holdte punkter, med platene
-  fortsatt på stolpene. I planen flytter Shift + dra i Velg drageren på tvers i 50 mm-steg; en hel meter setter den
-  tilbake i rasteret. Mållinje fra hver ende til nærmeste stolpe eller krok langs veggen eller drageren den henger på, på
+  fortsatt på stolpene. I planen flytter Shift + dra i Velg drageren på tvers i 50 mm-steg (på berøring: «Fin» i pillen, på
+  så lenge drageren er valgt); en hel meter setter den tilbake i rasteret. Mållinje fra hver ende til nærmeste stolpe eller krok langs veggen eller drageren den henger på, på
   drageren som flyttes eller er valgt, og på arbeidsordrens plan for alle slike dragere så montøren kan måle ut.
   *Bjørn 10.11.2026 · `RECIPES.beam.hook`, `RECIPES.beam.lift` · kode `src/domain/innerBeams.ts`, `src/calc/innerBeams.ts`, `src/calc/beamHooks.ts`, `src/calc/beamLift.ts`, `src/calc/wallSupports.ts`, `src/calc/supportBeams.ts`, `src/calc/beamOffsets.ts`, `src/ui/workorder/WorkOrderPage.tsx` · test `src/calc/offGridBeams.test.ts`, `src/domain/innerBeams.test.ts`*
 

@@ -26,6 +26,8 @@ export interface PlanSelection {
   freeFace?: FaceKey
   /** An innvendig takdrager. */
   beamId?: string
+  /** «Fin» on in its pill: a drag moves it across in 50 mm steps, as Shift + drag does on desktop (Byggeregel T15). */
+  beamFine?: boolean
   /** A shelf (hylle 6311), chosen in the wall drawer of its wall, on its face. With it comes its row (the shelves beside it
    *  at its height), unless `shelfOnly`: then only this one (chosenShelves). */
   shelfId?: string
