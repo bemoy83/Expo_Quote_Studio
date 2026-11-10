@@ -27,7 +27,7 @@ export interface BeamLift {
 export const NO_LIFT: BeamLift = { segments: new Set(), posts: [], hooks: [], walls: [], joined: new Map() };
 
 /** A layout with the lengths the lift joined (Byggeregel T16) replaced by the whole lengths. */
-export function withJoins<L extends BeamLayout>(layout: L, lift: BeamLift): L {
+export function withJoins<L extends BeamLayout>(layout: L, lift: Pick<BeamLift, 'joined'>): L {
   if (!lift.joined.size) return layout;
   const segments = [...new Set(layout.segments.map((s) => lift.joined.get(s) ?? s))];
   return { ...layout, segments };
@@ -99,16 +99,15 @@ export function liftBeams(v: Variant, rules: Rules, all: BeamLayout, wallPosts: 
     const box = boxOf(a, b, -t, t);
     return frames.some((f) => overlaps(box, f));
   };
-  const liftedRaw = new Set<BeamSegment>();
+  const raised = new Set<BeamSegment>();
   const runs = runsOf(all.segments);
-  for (const run of runs) if (run.some(clashes)) run.forEach((s) => liftedRaw.add(s));
-  if (!liftedRaw.size) return NO_LIFT;
+  for (const run of runs) if (run.some(clashes)) run.forEach((s) => raised.add(s));
+  if (!raised.size) return NO_LIFT;
 
   const onPost = (k: string) => all.posts.has(k) || wallPosts.has(k);
-  const joined = joinWhole(all.segments, runs, liftedRaw, onPost, rules.beam.max);
-  const joinedAll = withJoins(all, { ...NO_LIFT, joined });
-  const segments = new Set([...liftedRaw].map((s) => joined.get(s) ?? s));
-  return { ...liftPoints(joinedAll, segments, onPost), joined };
+  const joined = joinWhole(all.segments, runs, raised, onPost, rules.beam.max);
+  const segments = new Set([...raised].map((s) => joined.get(s) ?? s));
+  return { ...liftPoints(withJoins(all, { joined }), segments, onPost), joined };
 }
 
 /**

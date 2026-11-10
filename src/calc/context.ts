@@ -127,7 +127,10 @@ export function calcContext(v: Variant, rules: Rules, catalog: Catalog, standWal
   const laid = variantBeams(v, mods, points, rules.beam.max);
   const lift = liftBeams(v, rules, laid.all, points);
   // A lifted beam passing another level is one whole length (Byggeregel T16)
-  const [standard, inner, all, support] = [withJoins(laid.standard, lift), withJoins(laid.inner, lift), withJoins(laid.all, lift), withJoins(laid.support, lift)];
+  const standard = withJoins(laid.standard, lift);
+  const inner = withJoins(laid.inner, lift);
+  const all = withJoins(laid.all, lift);
+  const support = withJoins(laid.support, lift);
   const hooks = beamHooks(all, points, lift);
   const wallsById = new Map(v.walls.map((w) => [w.id, w]));
   const kindOf = (m: BuiltModule): WallKind => {
