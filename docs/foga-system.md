@@ -238,6 +238,10 @@ takdrager kommer i konflikt med en tekstilramme, viker drageren: stolpene skjøt
   kroken. Det samme stykket 94 × 80 med **600** (871 003 92, kobling med justerbart hode) monteres oppå den tverrgående
   drageren (Bjørn 8.11.2026).
   Koblingene passer innvendig i alle Flex-profiler. Henger begge på samme nivå, er det en vanlig krok.
+- **Hel lengde over et annet nivå (T16):** der en hevet drager bare krysser en som ikke er hevet, deles ingen av dem.
+  Den hevede ligger løst oppå, festet i begge ender, så lenge den hele lengden er høyst 6 m; ellers står skjøten i
+  krysset. Det samme over en systemvegg mellom stolpene. Det sparer en lengde, fire 600 og et skjøtestykke per kryss
+  (Bjørn 10.11.2026).
 - **Tilbud:** egen linje «Skjøt takdrager over tekstilvegg» per stykke (plassholder 6111), fordi en drager senere kan
   skjøtes høyere og koste mer. Alltid utstillerens, også når arrangøren betaler standard takdragerne: det er
   utstillerens tekstilvegg som krever det.

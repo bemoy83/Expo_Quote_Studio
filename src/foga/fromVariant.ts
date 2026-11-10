@@ -1,7 +1,7 @@
 // Stand sketch → Foga structure. Built from the same derivations as calc (built modules, beam layout, InFrame
 // sizes); calc passes its own so the quote, the picking list and the parts list count from one structure.
 // Byggeregel P3 (docs/byggeregler.md).
-import { liftBeams } from '../calc/beamLift';
+import { liftBeams, withJoins } from '../calc/beamLift';
 import { beamHooks, hookCount } from '../calc/beamHooks';
 import { variantBeams, type BeamLayout } from '../calc/beams';
 import { production, type Production } from '../calc/production';
@@ -56,9 +56,10 @@ export function structureOf(d: Derived): FogaStructure {
 export function fromVariant(v: Variant, rules: Rules): FogaStructure {
   const mods = builtModules(v);
   const points = wallPoints(mods);
-  const { all: beams } = variantBeams(v, mods, points, rules.beam.max);
-  const posts = new Set([...points.keys(), ...beams.posts.keys()]).size;
-  const lift = liftBeams(v, rules, beams, points);
+  const { all: laid } = variantBeams(v, mods, points, rules.beam.max);
+  const posts = new Set([...points.keys(), ...laid.posts.keys()]).size;
+  const lift = liftBeams(v, rules, laid, points);
+  const beams = withJoins(laid, lift);
   const hooks = hookCount(beamHooks(beams, points, lift));
   return structureOf({ mods, posts, beams, hooks, lift: { posts: lift.posts.length, hooks: lift.hooks.length, walls: lift.walls.length }, production: production(v, rules, ''), shelves: shelfBrackets(v, rules) });
 }
