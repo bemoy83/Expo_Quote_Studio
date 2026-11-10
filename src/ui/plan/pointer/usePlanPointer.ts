@@ -127,6 +127,8 @@ export function usePlanPointer(input: PlanPointerInput) {
     const d = press(q)
     // Alt (Option) held: a shelf dragged leaves a copy where it goes (desktop; the pill's Kopier on touch)
     if (d?.kind === 'shelfMove') d.copy = e.altKey
+    // Shift held: a drawn takdrager moves across in 50 mm steps, off the 1 m grid (Byggeregel T15)
+    if (d?.kind === 'beam') d.fine = e.shiftKey
     if (d) drag.current = d
     // Held without moving counts as dragging too: Fyll shows its proposal while pressed
     setDragging(d ?? null)
@@ -138,6 +140,7 @@ export function usePlanPointer(input: PlanPointerInput) {
     const d = drag.current
     setDragging(d)
     if (!d) return
+    if (d.kind === 'beam') d.fine = e.shiftKey
     handlersOf(d).move?.(c, d, q)
   }
 

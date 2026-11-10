@@ -299,7 +299,7 @@ export function PlanView(p: Props) {
       {twin('shelves', (s) => <ShelfLayer v={s.v} selection={selection} dim={dim} />)}
 
       {/* Beams and posts */}
-      {twin('beams', (s) => <BeamLayer v={s.v} res={s.res} selection={selection} dim={dim} />)}
+      {twin('beams', (s) => <BeamLayer v={s.v} res={s.res} selection={selection} dim={dim} measured={p.mini ? undefined : dragging?.kind === 'beam' ? dragging.id : selection.beamId} />)}
 
       {/* Objects */}
       {twin('objects', (s) => <ObjectLayer v={s.v} selection={selection} tool={tool} bad={s.bad} dim={dim} off={off} />)}

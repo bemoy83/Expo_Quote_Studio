@@ -7,6 +7,7 @@ import { pointKey } from '../domain/grid';
 import type { FreeTextile, InnerBeam, Point, Stand, Variant } from '../domain/types';
 import { createVariant } from '../domain/variant';
 import { RULES } from '../rules/rules';
+import { beamOffsets } from './beamOffsets';
 import { calc } from './calc';
 
 const beam = (id: string, from: Point, to: Point): InnerBeam => ({ id, from, to });
@@ -102,4 +103,16 @@ describe('fritt plassert innvendig takdrager', () => {
     // Each side a stretch of 3,5 m with one free end: the end plate pulled in one post to keep 3 m to the hook
     expect(plates).toEqual([2, 6]);
   });
+
+  it('mållinjer: from each hung end to the nearest post or hook along the wall or beam', () => {
+    const v = variant(ROW, { innerBeams: [beam('b1', [2.35, 0], [2.35, 4])] });
+    expect(beamOffsets(v, run(v))).toEqual([
+      { beamId: 'b1', from: [2.35, 0], to: [2, 0], length: 0.35 },
+      // The front beam has posts only at its ends: from the corner post
+      { beamId: 'b1', from: [2.35, 4], to: [0, 4], length: 2.35 },
+    ]);
+    // On the grid: none
+    expect(beamOffsets(variant(ROW, { innerBeams: [beam('b1', [2, 0], [2, 4])] }), run(variant(ROW, { innerBeams: [beam('b1', [2, 0], [2, 4])] })))).toEqual([]);
+  });
 });
+

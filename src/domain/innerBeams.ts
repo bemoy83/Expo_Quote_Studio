@@ -85,6 +85,35 @@ export function moveInnerBeam(v: Variant, id: string, delta: number, along: numb
   return { ...v, innerBeams: beams.map((y) => (y.id === id ? { ...y, from, to } : y)) };
 }
 
+/** Steps a drawn beam moves in off the grid (Byggeregel T15), m. */
+export const FINE_STEP = 0.05;
+
+const round3 = (x: number) => Math.round(x * 1000) / 1000;
+
+/** The beam lies off the 1 m grid across its direction (Byggeregel T15). */
+export const offGrid = (b: InnerBeam) => {
+  const c = b.from[1] === b.to[1] ? b.from[1] : b.from[0];
+  return Math.abs(c - Math.round(c)) > 1e-6;
+};
+
+/**
+ * Move a drawn beam `offset` m across its direction (Shift + dra, Byggeregel T15), in steps of FINE_STEP, from where it
+ * is: off the 1 m grid, its ends where it meets the walls and beams across it. A whole metre puts it back on the grid.
+ * Returns v when it would not fit.
+ */
+export function shiftInnerBeam(v: Variant, id: string, offset: number, standard: readonly Run[]): Variant {
+  const beams = v.innerBeams ?? [];
+  const x = beams.find((y) => y.id === id);
+  const d = round3(Math.round(offset / FINE_STEP) * FINE_STEP);
+  if (!x || !d) return v;
+  const h = x.from[1] === x.to[1];
+  const shift = ([px, py]: Point): Point => (h ? [px, round3(py + d)] : [round3(px + d), py]);
+  const from = shift(x.from);
+  const to = shift(x.to);
+  if (refusal(v, from, to, standard, beams.filter((y) => y.id !== id))) return v;
+  return { ...v, innerBeams: beams.map((y) => (y.id === id ? { ...y, from, to } : y)) };
+}
+
 /** The drawn beam nearest p within `within` m. */
 export function innerBeamAt(v: Variant, p: { x: number; y: number }, within = 0.15): InnerBeam | undefined {
   let best: InnerBeam | undefined;
