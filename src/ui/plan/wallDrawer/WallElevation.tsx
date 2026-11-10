@@ -2,12 +2,13 @@
 // against it, textile frames and shelves (hylle 6311). Frames and decals are moved and resized here, shelves moved up,
 // down and sideways, motifs and frames dropped from the motif library (Profilering), and while a paint tool is out each plate is a
 // target for it.
-import { useEffect, useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent } from 'react'
 import { foilCenter } from '../../../domain/decor'
 import { doorLevels, doorRal, doorWindows } from '../../../domain/doors'
 import { felt, type FaceSide } from '../../../domain/faces'
 import { cropWindow, plateCrop } from '../../../domain/print'
 import { textileBox } from '../../../domain/textile/inFrame'
+import { cornerLayout } from '../../../domain/shelves/corners'
 import { shelfRow, shelfStacks } from '../../../domain/shelves/model'
 import type { Foil, Opening, Shelf, TextileWall, Variant, Wall } from '../../../domain/types'
 import { wallRal } from '../../../domain/panels'
@@ -20,7 +21,8 @@ import { plateColor, productOf, rules } from '../../env'
 import { findMotif } from '../../motifs'
 import { Handles, Print } from '../drawerParts'
 import { TXT } from '../drawerText'
-import { Opening as OpeningView, Posts, ShelfFront, TextileFace } from '../elevation'
+import { FaceRails, Opening as OpeningView, Posts, ShelfFront, TextileFace } from '../elevation'
+import { shelfFront } from '../shelfFront'
 import { type PlanSelection } from '../selection'
 import { RoomLabel } from '../RoomLabel'
 import { roomLabelSize } from '../roomLabelSize'
@@ -96,6 +98,8 @@ export function WallElevation(p: Props) {
   const u = (t: number) => (s === 1 ? t : L - t)
   const spanX = (a: number, b: number) => Math.min(u(a), u(b))
   const z = (h: number) => H - h
+  // Corner shelves: their boards, brackets and the 01 rails on this face (Byggeregler H10–H12)
+  const layout = useMemo(() => cornerLayout(v, rules), [v])
   const drag = useDecorDrag({ svg, w, s, L, select, ratioOf, onEdit: p.onEdit, onCheckpoint: p.onCheckpoint })
   const shelfDrag = useShelfDrag({ svg, s, select, onEdit: p.onEdit, onCheckpoint: p.onCheckpoint })
   const brush = useShelfBrush({ svg, v, w, s, L, H, on: !!p.shelfBrush, onEdit: p.onEdit, onDone: () => p.onBrushDone?.() })
@@ -322,8 +326,8 @@ export function WallElevation(p: Props) {
           })()}
 
           {/* Shelves, over plates and print: dragged up and down, and sideways felt by felt */}
+          <FaceRails v={v} wallId={w.id} s={s} layout={layout} x={u} H={H} u={fr.u} />
           {shelves.map((f) => {
-            const inset = (rules.wall.cc - rules.shelf.board.width) / 2
             // The grip: 22 px above and below the board, but only half way to the shelf above or below in the felt
             const half = 22 * fr.u
             const t = rules.shelf.board.thickness
@@ -333,7 +337,7 @@ export function WallElevation(p: Props) {
             return (
               <ShelfFront
                 key={f.id}
-                x={spanX(f.module + inset, f.module + 1 - inset)}
+                {...shelfFront(v, f, layout, spanX)}
                 y={f.y}
                 H={H}
                 u={fr.u}

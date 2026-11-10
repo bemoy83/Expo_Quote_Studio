@@ -1,5 +1,6 @@
 // The shelf pen in the plan, and Velg, Tøm and Delete on a shelf: on a row stand 6 × 3 whose back wall runs from (0,0)
 // to (6,0) with its face toward the stand at y > 0.
+import { DOOR } from '../../../catalog/defaultCatalog';
 import { describe, expect, it, vi } from 'vitest';
 import { addShelf, addShelfRow } from '../../../domain/shelves/edit';
 import { shelvesOf } from '../../../domain/shelves/model';
@@ -16,7 +17,14 @@ import { shelf, startShelf } from './shelf';
 import { shelfMove } from './shelfMove';
 import type { PointerCtx } from './types';
 
-const row = (): Variant => createVariant('A', { width: 6, depth: 3, type: 'row' });
+/** Row stand 6 × 3: back wall from (0,0) to (6,0), its face toward the stand is 1; side walls in both corners. A door
+ *  in each side wall's corner module closes the corners: the back wall's felts 0 and 5 cannot take a shelf (the side
+ *  wall cannot carry the 01 rail, Byggeregel H9). Corner shelves themselves: corners.test.ts. */
+const open = (): Variant => createVariant('A', { width: 6, depth: 3, type: 'row' });
+const row = (): Variant => ({
+  ...open(),
+  openings: (['side-left', 'side-right'] as const).map((wallId, i) => ({ id: `o${i + 7}`, wallId, module: 0, product: DOOR })),
+});
 const withShelf = () => {
   const r = addShelf(row(), RULES, 'side-back', 2, 1);
   if ('error' in r) throw new Error(r.error);
@@ -76,7 +84,7 @@ describe('the shelf pen', () => {
     const d = startShelf(c, { x: 0.5, y: 0.2 })!;
     shelf.up!(c, d as never, { x: 0.5, y: 0.2 });
     expect(c.onEdit).not.toHaveBeenCalled();
-    expect(c.onToast.mock.calls[0][0]).toMatch(/kanal/);
+    expect(c.onToast.mock.calls[0][0]).toMatch(/01-skinne/);
   });
 });
 

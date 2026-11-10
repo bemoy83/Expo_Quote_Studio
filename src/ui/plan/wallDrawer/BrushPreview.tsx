@@ -1,7 +1,9 @@
 // The shelf brush's stroke in the wall drawer's drawing (shelfBrush.ts): the shelves it lays dimmed, felts that take none
 // hatched at that height, and the height in the dark measure pill (docs/forhandsvisning.md). A shelf a click takes off is
 // hatched as Tøm hatches what goes.
+import { cornerLayout } from '../../../domain/shelves/corners'
 import { ShelfFront } from '../elevation'
+import { shelfFront } from '../shelfFront'
 import { rules } from '../../env'
 import { HatchPattern, PillAt } from '../layers/Previews'
 import { PlanScaleContext, sizePx, type PlanScale } from '../planScale'
@@ -14,6 +16,7 @@ export function BrushPreview({ stroke, sc, H, u, x }: { stroke: Stroke; sc: Plan
   const inset = (rules.wall.cc - width) / 2
   const z = H - stroke.y
   const added = (stroke.v.shelves ?? []).filter((f) => stroke.ids.includes(f.id))
+  const layout = cornerLayout(stroke.v, rules)
   const lo = Math.min(stroke.m0, stroke.m1)
   const hi = Math.max(stroke.m0, stroke.m1)
   const cx = x(lo, hi + 1) + (hi + 1 - lo) / 2
@@ -24,7 +27,7 @@ export function BrushPreview({ stroke, sc, H, u, x }: { stroke: Stroke; sc: Plan
         <HatchPattern id="shelf-brush-hatch" />
         <g opacity={PHANTOM.line}>
           {added.map((f) => (
-            <ShelfFront key={f.id} x={x(f.module + inset, f.module + 1 - inset)} y={f.y} H={H} u={u} />
+            <ShelfFront key={f.id} {...shelfFront(stroke.v, f, layout, x)} y={f.y} H={H} u={u} />
           ))}
         </g>
         {[...stroke.out.map((o) => o.module), ...(stroke.removed ? [stroke.removed.module] : [])].map((m) => (

@@ -2,6 +2,7 @@
 // number for them (minutes per handling step, what each is made of) is in the kostgrunnlag (src/cost/basis.ts); the
 // examples here are what the app ships with. Kostmodell: docs/kostmodell.md.
 import type { ItemRecipe } from '../cost/items';
+import { railLengths } from '../domain/shelves/corners';
 import { RULES } from '../rules/rules';
 import type { PriceItem, Time } from './model';
 
@@ -43,7 +44,14 @@ export const ITEM = {
   shelfEnd: 'hylleknekt-91F',
   shelfTwin: 'hylleknekt-91FF',
   shelfBoard: 'hylleplate',
-  /** Putting up one shelf (Bjørn 8.11.2026: 3 min). */
+  /** In an inner corner (Byggeregler H10–H12): the short 91 under a lone corner shelf, the 01 rail per standard length
+   *  with its 01-kanal-krok, and the boards cut for the corner. */
+  shelfShort: 'hylleknekt-91-80',
+  shelfRail: (lengthMm: number) => `hylleskinne-01-${lengthMm}`,
+  shelfBoardCorner: 'hylleplate-hjorne',
+  shelfBoardNarrow: 'hylleplate-hjorne-smal',
+  shelfBoardTwoThirds: 'hylleplate-2-3',
+  /** Putting up and taking down one shelf, direct time (Bjørn 10.11.2026: 1,5 min up, 1 min down). */
   shelfMount: 'montering-hylle',
   /** Picking shelves for an order, once whatever the number (Bjørn 8.11.2026: 10 min per product type). */
   shelfPick: 'vareplukk-hyller',
@@ -98,6 +106,11 @@ export const ITEM_DEFS: readonly ItemDef[] = [
   def(ITEM.shelfEnd, 'Hylleknekt 91F, 290 mm, med 600', 'stk'),
   def(ITEM.shelfTwin, 'Hylleknekt 91FF, 290 mm, med 600', 'stk'),
   def(ITEM.shelfBoard, 'Hylleplate melamin hvit 18 × 300 × 976 mm', 'stk'),
+  def(ITEM.shelfShort, 'Hylleknekt 91, 80 mm, med 600', 'stk'),
+  ...railLengths(RULES).map((l) => def(ITEM.shelfRail(l), `Hylleskinne 01, ${l} mm, med 01-kanal-krok`, 'stk')),
+  def(ITEM.shelfBoardCorner, 'Hjørne hylleplate 18 × 300 × 960 mm', 'stk'),
+  def(ITEM.shelfBoardNarrow, 'Hjørne hylleplate, smal, 18 × 290 × 960 mm', 'stk'),
+  def(ITEM.shelfBoardTwoThirds, '2/3 hylleplate 18 × 300 × 655 mm', 'stk'),
   def(ITEM.shelfMount, 'Montering per hylle', 'stk'),
   def(ITEM.shelfPick, 'Vareplukk hyller, per ordre', 'stk'),
 ];
@@ -135,8 +148,9 @@ export const EXAMPLE_TIMES: Readonly<Record<string, Time>> = {
   [ITEM.frame]: pvt(3, 2, 2),
   [ITEM.frameCoupling]: onSite(2, 1),
   [ITEM.textileEdge]: onSite(4, 2),
-  // Bjørn 8.11.2026: 3 min direct montering per shelf, picking 10 min for the product type; demontering is an example
-  [ITEM.shelfMount]: onSite(3, 1.5),
+  // Bjørn 10.11.2026: direct time per shelf 1,5 min up and 1 min down (also in corners); picking 10 min for the product
+  // type and walking per work order are indirect, per order
+  [ITEM.shelfMount]: onSite(1.5, 1),
   [ITEM.shelfPick]: { plukk: 10 },
 };
 
@@ -183,6 +197,11 @@ export const EXAMPLE_RECIPES: Readonly<Record<string, ItemRecipe>> = {
   [ITEM.shelfEnd]: { parts: [['91F', 0.29], ['600', 1]], dg: 'utleie' },
   [ITEM.shelfTwin]: { parts: [['91FF', 0.29], ['600', 1]], dg: 'utleie' },
   [ITEM.shelfBoard]: { own: [['HYLLEPLATE-976x300', 1, 'plate']], dg: 'utleie' },
+  [ITEM.shelfShort]: { parts: [['91', 0.08], ['600', 1]], dg: 'utleie' },
+  ...Object.fromEntries(railLengths(RULES).map((l): [string, ItemRecipe] => [ITEM.shelfRail(l), { parts: [['01', l / 1000]], dg: 'utleie' }])),
+  [ITEM.shelfBoardCorner]: { own: [['HYLLEPLATE-960x300', 1, 'plate']], dg: 'utleie' },
+  [ITEM.shelfBoardNarrow]: { own: [['HYLLEPLATE-960x290', 1, 'plate']], dg: 'utleie' },
+  [ITEM.shelfBoardTwoThirds]: { own: [['HYLLEPLATE-655x300', 1, 'plate']], dg: 'utleie' },
   [ITEM.shelfMount]: work,
   [ITEM.shelfPick]: work,
 };

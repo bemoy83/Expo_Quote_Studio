@@ -138,11 +138,13 @@ export const DEFAULT_COST_PARAMS: CostParams = {
   height: { limit: 3000, factor: 1.25, liftPerDay: 0 },
 };
 
-/** Per-order costs from Bjørn's calculator, counted once per quote (Bjørn 7.11.2026): start-up for printed textile,
- *  and admin/picking and delivery out and in at 10 minutes for two. */
+/** Per-order costs, counted once per quote (Bjørn 7.11.2026): start-up for printed textile, admin/picking at 10 minutes
+ *  for two (Bjørn's calculator), and walking to and from the stand for one montør, 10 minutes each way, at montering
+ *  (on the work order) and at demontering (in the cost only), Bjørn 10.11.2026. */
 export const ORDER_COSTS = [
   // Bjørn's calculator (7.11.2026): Megaprint start 400 kr (2022), 10 min × 2 men each for admin and delivery
   { id: 'startkost-trykk', name: 'Startkost trykk', cost: 400, baseYear: 2022, when: 'trykk' },
   { id: 'administrasjon', name: 'Administrasjon og vareplukk', personMinutes: 20 },
-  { id: 'transport', name: 'Varelevering ut og inn', personMinutes: 20 },
+  { id: 'gange-montering', name: 'Gange til og fra montering', personMinutes: 20, workOrder: true },
+  { id: 'gange-demontering', name: 'Gange til og fra demontering', personMinutes: 20 },
 ] as const;

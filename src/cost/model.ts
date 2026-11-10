@@ -75,6 +75,8 @@ export interface OrderCost {
   personMinutes?: number;
   /** Only on an order that has this: `trykk` = printed textile. Else on every order. */
   when?: 'trykk';
+  /** Shown on the work order as montering time (its person-minutes); else in the cost only. */
+  workOrder?: boolean;
 }
 
 export function orderCost(items: readonly OrderCost[], year: number, p: CostParams, overtime = 0): number {

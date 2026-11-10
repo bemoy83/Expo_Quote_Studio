@@ -63,6 +63,22 @@ export interface FogaStructure {
   barePosts?: number;
   /** Plates (RAL) picked to swap into a stand wall the organiser builds: plate only, the wall is not in `modules`. */
   swaps?: string[];
-  /** Shelves: boards, and brackets at a row's ends (91F) and between two boards (91FF), Byggeregel H2. */
-  shelves?: { boards: number; end: number; twin: number };
+  /** Shelves: boards, and brackets at a row's ends (91F) and between two boards (91FF), Byggeregel H2; in corners short
+   *  91 and 01 rails (Byggeregler H10–H12). */
+  shelves?: ShelfSpec;
+}
+
+/** A shelf board: standard 976 × 300, corner 960 × 300, narrow corner 960 × 290, 2/3 655 × 300 (Byggeregler H10–H12). */
+export type BoardKind = 'standard' | 'corner' | 'narrow' | 'twoThirds';
+
+export interface ShelfSpec {
+  /** All boards, and by kind when any is not standard. */
+  boards: number;
+  kinds?: Partial<Record<BoardKind, number>>;
+  end: number;
+  twin: number;
+  /** Short 91 under a lone corner shelf, in its rail. */
+  short?: number;
+  /** 01 rails by standard length, mm. */
+  rails?: Record<number, number>;
 }

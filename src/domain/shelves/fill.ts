@@ -4,7 +4,7 @@ import type { Rules } from '../../rules/rules';
 import type { FaceSide } from '../faces';
 import { fittingFelts } from '../fittings';
 import type { Variant } from '../types';
-import { fillHeights, fitsIn, putShelf } from './model';
+import { fillHeights, fitsIn, putShelf, shelfBlocked } from './model';
 
 /** The heights a face is filled at, row by row: the start height, then the one order of H4 from it (fillHeights), with
  *  the gaps between the ladder's heights split last, as in a felt. */
@@ -20,7 +20,7 @@ const rowHeights = (rules: Rules) => {
  * that has room there (H5). So pressing on fills the wall as «+ Hyllerad» does, one shelf at a time. The id, or why not.
  */
 export function addShelfToFace(v: Variant, rules: Rules, wallId: string, s: FaceSide): { v: Variant; id: string } | { error: string } {
-  const felts = fittingFelts(v, wallId, s);
+  const felts = fittingFelts(v, wallId, s, shelfBlocked);
   if (!felts.length) return { error: 'Ingen felt på denne siden kan ta hylle' };
   for (const y of rowHeights(rules)) {
     const m = felts.find((x) => fitsIn(v, rules, wallId, x, s, y));
@@ -36,7 +36,7 @@ export function addShelfToFace(v: Variant, rules: Rules, wallId: string, s: Face
  * (H5), else the one most felts have room at. So pressing on fills the wall row by row. The new shelves, or why not.
  */
 export function addShelfRowToFace(v: Variant, rules: Rules, wallId: string, s: FaceSide): { v: Variant; ids: string[] } | { error: string } {
-  const felts = fittingFelts(v, wallId, s);
+  const felts = fittingFelts(v, wallId, s, shelfBlocked);
   if (!felts.length) return { error: 'Ingen felt på denne siden kan ta hylle' };
   let best: { y: number; at: number[] } | null = null;
   for (const y of rowHeights(rules)) {

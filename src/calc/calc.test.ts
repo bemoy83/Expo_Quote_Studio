@@ -481,8 +481,8 @@ describe('stand walls the organiser pays (docs/vegger.md)', () => {
 describe('ordrekost', () => {
   it('once per quote in the kalkyle cost, not in a price; start of print only with printed textile', () => {
     const ids = (v: Variant) => run(v).margin.order.map((o) => o.id);
-    expect(ids(r1())).toEqual(['administrasjon', 'transport']);
-    expect(ids(r2())).toEqual(['startkost-trykk', 'administrasjon', 'transport']);
+    expect(ids(r1())).toEqual(['administrasjon', 'gange-montering', 'gange-demontering']);
+    expect(ids(r2())).toEqual(['startkost-trykk', 'administrasjon', 'gange-montering', 'gange-demontering']);
     const res = run(r2());
     const lineCost = lines(res).reduce((a, l) => a + (l.cost ?? 0), 0);
     expect(res.margin.cost).toBeCloseTo(lineCost + res.margin.order.reduce((a, o) => a + o.cost, 0));
@@ -524,5 +524,13 @@ describe('frittstående tekstilvegg', () => {
     expect(tx.find((l) => l.artnr === '871 045 92')).toMatchObject({ qty: 4 });
     expect(tx.find((l) => l.artnr === '871 037 92')).toMatchObject({ qty: 2 });
     expect(tx.find((l) => l.artnr === '876 740 92')).toMatchObject({ qty: 3 });
+  });
+});
+
+describe('gange til og fra standen (Bjørn 10.11.2026)', () => {
+  it('one montør, 10 min each way: at montering on the work order, at demontering in the cost only', () => {
+    const order = run(r1()).margin.order;
+    expect(order.find((o) => o.id === 'gange-montering')).toMatchObject({ minutes: 20 });
+    expect(order.find((o) => o.id === 'gange-demontering')?.minutes).toBeUndefined();
   });
 });

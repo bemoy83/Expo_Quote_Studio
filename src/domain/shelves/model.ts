@@ -1,13 +1,15 @@
 // Shelves (hylle 6311): one board in one wall module, on a bracket in the face channel of each of its two posts, at a
 // height (top of the board) above the floor. The shelves on a face and in a felt, heights and clear height, where a shelf
 // may sit (the wall fitting rules, domain/fittings.ts), rows, and the board in the plan. The edits are in edit.ts, filling
-// a face in fill.ts, the brackets in brackets.ts. Byggeregler H1, H2, H4, H5, H6, H8 (docs/byggeregler.md). Values: rules.shelf (m), RECIPES.shelf (parts, mm).
+// a face in fill.ts, the brackets in brackets.ts. Byggeregler H1, H2, H4, H5, H6, H8, H9 (docs/byggeregler.md). Values: rules.shelf (m), RECIPES.shelf (parts, mm).
 import type { Rules } from '../../rules/rules';
 import { faceNormal, sideOf, type FaceSide } from '../faces';
-import { fittingBlocked } from '../fittings';
 import { pointAlong } from '../grid';
 import { nextId } from '../ids';
 import type { Shelf, Variant } from '../types';
+import { acrossCorner, cornerLayout, shelfBlocked, shelfSpan } from './corners';
+
+export { shelfBlocked };
 
 export const EPS = 1e-6;
 const r3 = (n: number) => Math.round(n * 1000) / 1000;
@@ -61,8 +63,6 @@ export const gapNote = (rules: Rules) => `minst ${Math.round(rules.shelf.gap * 1
 /** Whether two shelves in one felt keep the clear height between them (H5). */
 export const apart = (rules: Rules, a: number, b: number) => clearBetween(rules, Math.min(a, b), Math.max(a, b)) >= rules.shelf.gap - EPS;
 
-/** Why a felt cannot take a shelf, or null when it can (H1, H6): the wall fitting rules. */
-export const shelfBlocked = (v: Variant, wallId: string, module: number, s: FaceSide): string | null => fittingBlocked(v, wallId, module, s, 'Hylle');
 
 /**
  * The one order shelves are added in (Byggeregel H4, Bjørn 9.11.2026), for a felt («Hylle til i feltet», Rad til, Shift
@@ -85,9 +85,11 @@ export function fillHeights(rules: Rules, from: number, there: number[]): number
   ];
 }
 
-/** Whether a shelf fits in the felt at height `y` beside the shelves already there (H5). */
+/** Whether a shelf fits in the felt at height `y` beside the shelves already there (H5), and in a corner beside those
+ *  on the other wall's felt there: at the same height they meet, else they keep the clear height (H9). */
 export const fitsIn = (v: Variant, rules: Rules, wallId: string, module: number, s: FaceSide, y: number, skipId?: string) =>
-  shelvesIn(v, wallId, module, s, skipId).every((o) => apart(rules, o.y, y));
+  shelvesIn(v, wallId, module, s, skipId).every((o) => apart(rules, o.y, y)) &&
+  acrossCorner(v, wallId, module, s, skipId).every((o) => Math.abs(o.y - y) < EPS || apart(rules, o.y, y));
 
 /**
  * The row `id` stands in (H2): it and the shelves beside it, module by module, on the same face at the same height, in
@@ -117,26 +119,28 @@ export function offRow(v: Variant, id: string): boolean {
   return !beside.some((x) => Math.abs(x.y - f.y) < EPS) && beside.some((x) => Math.abs(x.y - f.y) <= NEAR_ROW + EPS);
 }
 
-/** A shelf's board in the plan, an axis-aligned box in metres: the board's width centred in its module, from the wall's
- *  face (half a post out from the line) to its depth in front of it. Null when its wall is gone. */
-export function shelfBox(v: Variant, rules: Rules, f: Shelf): { x0: number; y0: number; x1: number; y1: number } | null {
+/** A shelf's board in the plan, an axis-aligned box in metres: along the wall as shelfSpan says (between its posts, or
+ *  cut for a corner), from its front edge 300 mm in front of the wall's face (half a post out from the line) back by its
+ *  depth. Null when its wall is gone. Pass the corner layout when drawing many. */
+export function shelfBox(v: Variant, rules: Rules, f: Shelf, layout?: ReturnType<typeof cornerLayout>): { x0: number; y0: number; x1: number; y1: number } | null {
   const w = v.walls.find((x) => x.id === f.wallId);
   if (!w) return null;
   const n = faceNormal(w, sideOf(v, f));
-  const inset = (rules.wall.cc - rules.shelf.board.width) / 2;
-  const near = rules.wall.post / 2;
-  const far = near + rules.shelf.board.depth;
-  const ps = [pointAlong(w, f.module + inset), pointAlong(w, f.module + 1 - inset)].flatMap((p) => [near, far].map((o) => [p[0] + n[0] * o, p[1] + n[1] * o]));
+  const span = shelfSpan(v, rules, f, layout);
+  const far = rules.wall.post / 2 + rules.shelf.board.depth;
+  const near = far - span.depth;
+  const ps = [pointAlong(w, span.a), pointAlong(w, span.b)].flatMap((p) => [near, far].map((o) => [p[0] + n[0] * o, p[1] + n[1] * o]));
   const xs = ps.map((p) => p[0]);
   const ys = ps.map((p) => p[1]);
   return { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };
 }
 
-/** The wall faces that carry shelves, in the order the walls are drawn, each with its shelves (the work order's
- *  «Veggriss med hyller», H8). */
-export function shelfFaces(v: Variant): { wallId: string; s: FaceSide; shelves: Shelf[] }[] {
+/** The wall faces that carry shelves, or a 01 rail for a corner shelf on the other wall, in the order the walls are
+ *  drawn, each with its shelves (the work order's «Veggriss med hyller», H8). */
+export function shelfFaces(v: Variant, rules?: Rules): { wallId: string; s: FaceSide; shelves: Shelf[] }[] {
+  const rails = rules ? cornerLayout(v, rules).rails : [];
   return v.walls.flatMap((w) => ([1, -1] as const).flatMap((s) => {
     const on = shelvesOn(v, w.id, s);
-    return on.length ? [{ wallId: w.id, s, shelves: on }] : [];
+    return on.length || rails.some((r) => r.felt.wallId === w.id && r.felt.s === s) ? [{ wallId: w.id, s, shelves: on }] : [];
   }));
 }
