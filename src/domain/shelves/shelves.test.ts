@@ -14,8 +14,14 @@ import type { Point, Variant } from '../types';
 import { createVariant } from '../variant';
 import { builtModules } from '../walls';
 
-/** Row stand 6 × 3: back wall from (0,0) to (6,0), its face toward the stand is 1; side walls in both corners. */
-const row = (): Variant => createVariant('A', { width: 6, depth: 3, type: 'row' });
+/** Row stand 6 × 3: back wall from (0,0) to (6,0), its face toward the stand is 1; side walls in both corners. A door
+ *  in each side wall's corner module closes the corners: the back wall's felts 0 and 5 cannot take a shelf (the side
+ *  wall cannot carry the 01 rail, Byggeregel H9). Corner shelves themselves: corners.test.ts. */
+const open = (): Variant => createVariant('A', { width: 6, depth: 3, type: 'row' });
+const row = (): Variant => ({
+  ...open(),
+  openings: (['side-left', 'side-right'] as const).map((wallId, i) => ({ id: `o${i + 7}`, wallId, module: 0, product: DOOR })),
+});
 const ok = <T,>(r: T | { error: string }): T => {
   if (typeof r === 'object' && r && 'error' in r) throw new Error(r.error);
   return r as T;
@@ -30,16 +36,15 @@ describe('where a shelf may stand (Byggeregel H6)', () => {
     expect(shelfBlocked(row(), 'side-back', 2, 1)).toBeNull();
   });
 
-  it('not next to a corner post: the side wall leaves it toward the shelf', () => {
-    expect(shelfBlocked(row(), 'side-back', 0, 1)).toMatch(/kanal/);
-    expect(shelfBlocked(row(), 'side-back', 5, 1)).toMatch(/kanal/);
+  it('in a corner only where the other wall can carry the 01 rail (Byggeregel H9)', () => {
+    expect(shelfBlocked(open(), 'side-back', 0, 1)).toBeNull();
+    expect(shelfBlocked(row(), 'side-back', 0, 1)).toMatch(/01-skinne/);
+    expect(shelfBlocked(row(), 'side-back', 5, 1)).toMatch(/01-skinne/);
   });
 
-  it('not next to a T where an inner wall leaves toward the shelf, but on the other face of that wall', () => {
-    const v = paintWalls(row(), [3, 0], [3, 2]);
-    expect(shelfBlocked(v, 'side-back', 2, 1)).toMatch(/kanal/);
-    expect(shelfBlocked(v, 'side-back', 3, 1)).toMatch(/kanal/);
-    expect(shelfBlocked(v, 'side-back', 1, 1)).toBeNull();
+  it('a T is two inner corners: open on both sides of the wall leaving it (Byggeregel H9)', () => {
+    const v = paintWalls(open(), [3, 0], [3, 2]);
+    for (const m of [1, 2, 3]) expect(shelfBlocked(v, 'side-back', m, 1)).toBeNull();
   });
 
   it('not on the outside of a stand wall', () => {
@@ -58,7 +63,7 @@ describe('where a shelf may stand (Byggeregel H6)', () => {
     // The textile fills the whole back wall: every felt is covered
     const v = addTextile(row(), RULES, 'side-back', 1, 2)!.v;
     expect(v.textiles[0]).toMatchObject({ from: 0, width: 6 });
-    for (let m = 0; m < 6; m++) expect(shelfBlocked(v, 'side-back', m, 1)).toMatch(/Tekstil|kanal/);
+    for (let m = 0; m < 6; m++) expect(shelfBlocked(v, 'side-back', m, 1)).toMatch(/Tekstil|01-skinne/);
   });
 });
 
@@ -139,9 +144,15 @@ describe('placing shelves', () => {
 });
 
 describe('fitShelves', () => {
-  it('drops a shelf when a wall is built against its post', () => {
+  it('keeps a shelf when a wall is built against one of its posts: it stands in that corner (Byggeregel H9)', () => {
     const a = ok(addShelf(row(), RULES, 'side-back', 2, 1));
     const v = fitShelves(paintWalls(a.v, [3, 0], [3, 2]), RULES);
+    expect(shelvesOf(v)).toHaveLength(1);
+  });
+
+  it('drops a shelf when walls are built against both its posts', () => {
+    const a = ok(addShelf(row(), RULES, 'side-back', 2, 1));
+    const v = fitShelves(paintWalls(paintWalls(a.v, [3, 0], [3, 2]), [2, 0], [2, 2]), RULES);
     expect(shelvesOf(v)).toEqual([]);
   });
 
@@ -154,13 +165,13 @@ describe('fitShelves', () => {
 describe('brackets (Byggeregel H2)', () => {
   it('a row of three: two end brackets and two twins', () => {
     const { v } = addShelfRow(row(), RULES, 'side-back', 1, 3, 1);
-    expect(shelfBrackets(v)).toEqual({ boards: 3, end: 2, twin: 2 });
+    expect(shelfBrackets(v, RULES)).toEqual({ boards: 3, end: 2, twin: 2 });
   });
 
   it('neighbours at different heights each have their own end brackets', () => {
     let { v } = addShelfRow(row(), RULES, 'side-back', 1, 2, 1);
     v = moveShelves(v, RULES, [shelvesOf(v)[1].id], { y: 1.2 });
-    expect(shelfBrackets(v)).toEqual({ boards: 2, end: 4, twin: 0 });
+    expect(shelfBrackets(v, RULES)).toEqual({ boards: 2, end: 4, twin: 0 });
   });
 
   it('shelves back to back on the two faces of an inner wall share no bracket', () => {
@@ -168,7 +179,7 @@ describe('brackets (Byggeregel H2)', () => {
     const inner = v0.walls.find((w) => w.from[1] === 2 && w.to[1] === 2)!;
     const a = ok(addShelf(v0, RULES, inner.id, 1, 1));
     const b = ok(addShelf(a.v, RULES, inner.id, 1, -1));
-    expect(shelfBrackets(b.v)).toEqual({ boards: 2, end: 4, twin: 0 });
+    expect(shelfBrackets(b.v, RULES)).toEqual({ boards: 2, end: 4, twin: 0 });
   });
 });
 

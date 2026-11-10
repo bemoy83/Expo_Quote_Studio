@@ -1,4 +1,5 @@
 // The shelf brush in the wall drawer's drawing (Bjørn 9.11.2026): where its height lands, and what a stroke lays.
+import { DOOR } from '../../catalog/defaultCatalog';
 import { describe, expect, it } from 'vitest';
 import { RULES } from '../../rules/rules';
 import type { Variant } from '../types';
@@ -7,8 +8,14 @@ import { brushBlocked, brushHeight, paintShelves, shelfUnder, spreadFelt, stackF
 import { addShelf } from './edit';
 import { shelvesIn, shelvesOf } from './model';
 
-/** Row stand 6 × 3: back wall from (0,0) to (6,0), its face toward the stand is 1; felts 1–4 can take shelves. */
-const row = (): Variant => createVariant('A', { width: 6, depth: 3, type: 'row' });
+/** Row stand 6 × 3: back wall from (0,0) to (6,0), its face toward the stand is 1; side walls in both corners. A door
+ *  in each side wall's corner module closes the corners: the back wall's felts 0 and 5 cannot take a shelf (the side
+ *  wall cannot carry the 01 rail, Byggeregel H9). Corner shelves themselves: corners.test.ts. */
+const open = (): Variant => createVariant('A', { width: 6, depth: 3, type: 'row' });
+const row = (): Variant => ({
+  ...open(),
+  openings: (['side-left', 'side-right'] as const).map((wallId, i) => ({ id: `o${i + 7}`, wallId, module: 0, product: DOOR })),
+});
 const at = (v: Variant, m: number, y: number) => {
   const r = addShelf(v, RULES, 'side-back', m, 1, y);
   if ('error' in r) throw new Error(r.error);

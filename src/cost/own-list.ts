@@ -11,6 +11,10 @@ const ROWS: Row[] = [
   ['FORHENG', 'Forheng med glidere', 'Dører', 'stk', 900],
   // Shelf board, not from Foga (Bjørn 8.11.2026): placeholder until the supplier is chosen
   ['HYLLEPLATE-976x300', 'Hobbyplate melamin hvit 18 × 300 × 976 mm', 'Plater', 'stk', 120],
+  // Corner boards (Bjørn 10.11.2026), cut from the same board: placeholders too
+  ['HYLLEPLATE-960x300', 'Hjørne hylleplate, hobbyplate melamin hvit 18 × 300 × 960 mm', 'Plater', 'stk', 120],
+  ['HYLLEPLATE-960x290', 'Hjørne hylleplate smal, hobbyplate melamin hvit 18 × 290 × 960 mm', 'Plater', 'stk', 120],
+  ['HYLLEPLATE-655x300', '2/3 hylleplate, hobbyplate melamin hvit 18 × 300 × 655 mm', 'Plater', 'stk', 90],
   // Textile with silicone edge, per m² incl. bleed. Blackback is the default for print (Bjørn 7.11.2026); Samba goes in
   // front of LED, which the app does not draw yet
   ['TRYKK-BLACKBACK', 'Trykt tekstil Blackback med silikonkant', 'Tekstil', 'm²', 180],

@@ -235,7 +235,7 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   const first = [tf.corner, tf.splice.thread, tf.splice.slide.code, tf.wall.fixing.code];
   for (const code of [...first, ...[...loose.keys()].filter((c) => !first.includes(c))]) part(BOM_GROUP.textile, code, loose.get(code) ?? 0);
 
-  // Hyller (Byggeregler H2, H3): the brackets with their 600 into the post, stored mounted, and the boards (not Foga)
+  // Hyller (Byggeregler H2, H3, H10–H12): the brackets with their 600 into the post, stored mounted, and the boards (not Foga)
   const sh = r.shelf;
   const bracket = (code: string, qty: number, note: string) =>
     put(
@@ -252,7 +252,39 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
     );
   bracket(sh.end, s.shelves?.end ?? 0, 'ende');
   bracket(sh.twin, s.shelves?.twin ?? 0, 'mellom to hylleplater');
-  put(BOM_GROUP.shelves, 'board', { artnr: '', name: fogaPart(sh.board.code).name, detail: `${sh.board.w} × ${sh.board.d} mm`, preassembled: false }, s.shelves?.boards ?? 0);
+  // In inner corners (Byggeregler H10–H12): the short 91 under a lone corner shelf, the 01 rails with their krok
+  const co = sh.corner;
+  put(
+    BOM_GROUP.shelves,
+    'bracket|short',
+    {
+      artnr: '',
+      name: `Hylleknekt ${co.bracket}, ${co.short} mm, med ${sh.coupling.code}`,
+      detail: `${co.bracket} (${fogaPart(co.bracket).artnr}) × ${co.short} mm · ${sh.coupling.perBracket} × ${sh.coupling.code} (${fogaPart(sh.coupling.code).artnr}) · i 01-skinne under hjørnehylle`,
+      note: 'hjørnehylle alene',
+      preassembled: true,
+    },
+    s.shelves?.short ?? 0,
+  );
+  for (const [len, qty] of Object.entries(s.shelves?.rails ?? {}).sort((a, b) => Number(b[0]) - Number(a[0])))
+    put(
+      BOM_GROUP.shelves,
+      `rail|${len}`,
+      {
+        artnr: '',
+        name: `Hylleskinne ${co.rail}, ${len} mm, med ${co.hook}`,
+        detail: `${co.rail} (${fogaPart(co.rail).artnr}) × ${len} mm · 1 × ${co.hook} · henger på toppskinne i hjørnet`,
+        preassembled: true,
+      },
+      qty,
+    );
+  const kinds = s.shelves?.kinds ?? { standard: s.shelves?.boards ?? 0 };
+  const board = fogaPart(sh.board.code).name;
+  put(BOM_GROUP.shelves, 'board', { artnr: '', name: board, detail: `${sh.board.w} × ${sh.board.d} mm`, preassembled: false }, kinds.standard ?? 0);
+  for (const k of ['corner', 'narrow', 'twoThirds'] as const) {
+    const b = co.boards[k];
+    put(BOM_GROUP.shelves, `board|${k}`, { artnr: '', name: b.name, detail: `${b.w} × ${b.d} mm · ${board}`, preassembled: false }, kinds[k] ?? 0);
+  }
 
   // Tree order; inside a subgroup beams longest first, plates tallest first then by RAL, the rest as added
   const order = (l: BomLine) => resolveGroup(l.group).order;

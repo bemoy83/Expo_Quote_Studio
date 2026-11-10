@@ -279,9 +279,10 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   øvre. Veggrisset viser lysmålet, så kunden ser om utstyret får plass.
   *Bjørn 8.11.2026 · `rules.shelf.gap` · kode `src/domain/shelves/model.ts` · test `src/domain/shelves/shelves.test.ts`*
 - **H6 Hvor hyller kan stå.** Ikke i dørfelt eller åpning, ikke der en tekstilvegg dekker feltet eller holder stolpen,
-  ikke på frittstående tekstil (43TX er ikke 94). Begge stolpene må ha ledig kanal mot hyllens side: ikke der en annen
-  vegg går ut fra stolpen mot den siden (hjørne og T). Foran print og dekal er lov. Hylle i hjørne kommer senere.
-  *Bjørn 8.11.2026 · kode `src/domain/fittings.ts`, `src/domain/shelves/model.ts` · test `src/domain/shelves/shelves.test.ts`*
+  ikke på frittstående tekstil (43TX er ikke 94). Hver stolpe må ha ledig kanal mot hyllens side, eller være et
+  innvendig hjørne (H9): går en annen vegg ut fra stolpen mot den siden, står hyllen i hjørnet på 01-skinne. Foran print
+  og dekal er lov. Heng står bare mellom stolper med ledig kanal.
+  *Bjørn 8.11.2026, endret 10.11.2026 · kode `src/domain/fittings.ts`, `src/domain/shelves/corners.ts` · test `src/domain/shelves/shelves.test.ts`, `src/domain/shelves/corners.test.ts`*
 - **H7 Pris per hylle.** Samme pris per hylle alene og i rad, som systemvegg (fast katalogpris; kostmotoren gir kost og
   tid). Montering 3 min per hylle, vareplukk 10 min én gang per ordre med hyller. Stolpene er en del av veggen: bare
   plukklisten bryter ut knekter, 600 og plater.
@@ -290,6 +291,33 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   (overkant plate) og lysmålet mellom hyller over hverandre, med modulkjeden c/c under veggen. Veggskuffen viser det
   samme. Tilbudet viser hyller bare i 3D, uten veggriss.
   *Bjørn 8.11.2026 · kode `src/ui/workorder/ShelfElevation.tsx`, `src/ui/plan/wallDrawer/elevationMeasure.ts`, `src/domain/shelves/model.ts` · test `src/ui/plan/wallDrawer/elevationMeasure.test.ts`, `src/domain/shelves/shelves.test.ts`*
+
+- **H9 Hylle i hjørne.** Et innvendig systemhjørne er likt uansett hvor det står: i enden av en vegg eller i et T-kryss
+  (der er det to hjørner, ett på hver side av veggen som går ut). Hjørnefeltet er feltet ved hjørnestolpen; stolpens
+  kanal mot hyllen brukes av den andre veggen, så hjørneenden av hyllen står på en 01-skinne på den andre veggens
+  hjørnefelt (H12), og det feltet må kunne ta den (ikke åpning eller dør, ikke dekket av tekstil). To hyller i samme høyde
+  i hjørnets to felt møtes (H11), alle andre der står alene (H10). Hyller i de to hjørnefeltene holder lysmålet i H5 også
+  på tvers av hjørnet, ellers treffer platene hverandre. Et felt med hjørne i begge ender (1 m mellom to vegger) kommer
+  senere. Samme artikkel 6311 og pris per hylle som ellers (H7); forskjellene står på plukklisten og arbeidsordren.
+  *Bjørn 10.11.2026 · `RECIPES.shelf.corner` · kode `src/domain/shelves/corners.ts`, `src/domain/shelves/model.ts` · test `src/domain/shelves/corners.test.ts`*
+- **H10 Hjørnehylle alene.** Hjørne hylleplate 960 × 300 på hjørnefeltet. Ved hjørnet ligger platen oppå en 91 kappet
+  80 mm (uten flens) i en 01-skinne på den andre veggen, 200 mm ut fra hjørnestolpen til skinnens senter, med 4,5 mm
+  klaring fra plateenden til skinnen. Skinnen skal stå minst 50 mm innenfor platens forkant, så hyllen ikke skyves av. I
+  den andre enden står en vanlig knekt (H2).
+  *Bjørn 10.11.2026 · `RECIPES.shelf.corner` (`short`, `single`, `boards.corner`) · kode `src/domain/shelves/corners.ts`, `src/domain/shelves/brackets.ts`, `src/foga/engine.ts`, `src/calc/lines/shelves.ts` · test `src/domain/shelves/corners.test.ts`*
+- **H11 Hyller som møtes i hjørnet.** Veggen som er tegnet først får hjørne hylleplate 960 × 300, veggen som er tegnet
+  sist 2/3 hylleplate 655 × 300 og 01-skinnen. Skinnen står rett foran hjørneplatens forkant (1 mm klaring), med en 91FF
+  290 mm: én flens bærer hjørneplatens forkant, den andre enden av 2/3-platen (2 mm klaring). I de ytre stolpene står
+  vanlige knekter (H2).
+  *Bjørn 10.11.2026 · `RECIPES.shelf.corner` (`play`, `boards.twoThirds`) · kode `src/domain/shelves/corners.ts`, `src/domain/shelves/brackets.ts`, `src/calc/lines/shelves.ts` · test `src/domain/shelves/corners.test.ts`*
+- **H12 01-skinne i hjørnet.** 01 (873 001 22) henger fra toppskinnen 92 med en 01-kanal-krok og plukkes som enhet med
+  kroken. Skinnen finnes i én lengde per hurtigvalg i H4 og laveste høyde, fra veggens topp ned under knekten til en
+  hylle der (490, 890, 1290, 1690, 2090 og 2490 mm); den korteste som rekker ned under den laveste knekten den bærer
+  brukes. Alle hyller av samme slag i ett hjørnefelt deler skinne: én for hyller alene og én for hyller som møtes, to når
+  de blandes (en hylle alene på 91FF har ingenting som holder skinnen, så den svinger ut). Går en skinne fra den andre
+  veggen bak en hjørne hylleplate, blir platen smal, 960 × 290: forkanten står der den alltid gjør, og skinnen har nok
+  gi til de 1,5 mm som mangler.
+  *Bjørn 10.11.2026 · `RECIPES.shelf.corner` (`rail`, `hook`, `boards.narrow`), `railLengths` · kode `src/domain/shelves/corners.ts`, `src/domain/shelves/brackets.ts`, `src/foga/engine.ts`, `src/pricing/items.ts` · test `src/domain/shelves/corners.test.ts`, `src/calc/shelves.test.ts`*
 
 ## P · Plukkliste og arbeidsordre
 
