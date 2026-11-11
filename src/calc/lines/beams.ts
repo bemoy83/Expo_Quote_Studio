@@ -4,7 +4,7 @@
 import { beamSpecs } from '../../foga/fromVariant';
 import { ITEM } from '../../pricing/data';
 import type { Use } from '../../pricing/model';
-import type { BeamLayout } from '../beams';
+import type { BeamLayout } from '../beamSegments';
 import { count, toOrganiser, type CalcContext } from '../context';
 import type { CalcLine } from '../types';
 

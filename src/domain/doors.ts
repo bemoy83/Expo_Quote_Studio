@@ -4,7 +4,8 @@
 import { paintWalls } from './edit';
 import { moduleKey, pointAlong, wallDirection, wallModules } from './grid';
 import { nextId } from './ids';
-import { OUTSIDE, roomOf } from './rooms';
+import { roomOf } from './rooms';
+import { OUTSIDE } from './roomKeys';
 import type { Opening, Point, Stand, Variant, Wall } from './types';
 import { builtModules, defaultSwing, doorAllowed, isPerimeterWall, type BuiltModule } from './walls';
 import { RECIPES } from '../foga/recipes';

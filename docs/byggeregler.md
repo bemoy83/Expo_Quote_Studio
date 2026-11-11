@@ -77,7 +77,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   *Bjørn 31.10.2026 og 6.11.2026 · `rules.beam`, `RECIPES.beam` · kode `src/foga/engine.ts` · test `src/foga/engine.test.ts`*
 - **T2 Deling.** En strekning deles i færrest mulige lengder på maks 6 m, så like som mulig, med skjøter i hele meter:
   7 → 4 + 3, 13 → 5 + 4 + 4. Det er stolpe i hver skjøt.
-  *Bjørn 31.10.2026 · `rules.beam.max` · kode `src/calc/beams.ts` · test `src/calc/calc.test.ts`*
+  *Bjørn 31.10.2026 · `rules.beam.max` · kode `src/calc/beamSegments.ts`, `src/calc/beams.ts` · test `src/calc/calc.test.ts`*
 - **T3 Standard takdrager.** Legges langs de åpne sidene av standen. En ende mot en vegg deler veggens stolpe.
   *Bjørn 31.10.2026 · kode `src/calc/beams.ts` · test `src/calc/calc.test.ts`*
 - **T4 Vegg deler drageren.** Der en vegg møter eller krysser en takdrager, også enden av en inner- eller romvegg, deles

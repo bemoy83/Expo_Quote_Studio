@@ -41,7 +41,7 @@ kostgrunnlaget). Regel og kilde føres i `docs/byggeregler.md`.
 ### Vegger (standvegg, innervegg, romvegg)
 
 - Modell: `Wall` · `domain/walls.ts` (bygde moduler, standvegg, standardtakdrager av/på, vegggeometri som
-  `defaultSwing`, `doorAllowed`, `isPerimeterWall`) · `domain/edit.ts` (tegne, viske, flytte, farge) · `domain/panels.ts` (farge per plate) · `domain/grid.ts` (moduler og nøkler)
+  `defaultSwing`, `doorAllowed`, `isPerimeterWall`) · `domain/edit.ts` (tegne, viske, flytte, farge) · `domain/replaceWalls.ts` (nye vegger, dører, tekstil, dekaler og hyller følger med) · `domain/panels.ts` (farge per plate, `ownPlate`) · `domain/grid.ts` (moduler og nøkler)
 - Kalkyle: `calc/lines/walls.ts` (vegglinjer, arrangørens standvegger) · `calc/lines/swaps.ts` (platebytte) · hvem
   som betaler: `calc/context.ts` · `foga/fromVariant.ts`
 - Plan, 3D, skuff: `plan/layers/WallLayer.tsx`, tegne/viske `plan/pointer/stroke.ts`, dra `pointer/wall.ts`, farge plater på vegg som står med veggpennen `pointer/plates.ts` (klikk én plate, dra langs veggen flere; forhåndsvisning via `plan/next.ts`; tester i `plates.test.ts`) · `scene3d/build/walls.ts` (plater og dører), `scene3d/build/frame.ts` (stolper, justeringsfot, fotplater med 795) · `WallDrawer.tsx`, `drawerParts.tsx`, `elevation.tsx`
@@ -51,7 +51,7 @@ kostgrunnlaget). Regel og kilde føres i `docs/byggeregler.md`.
 
 ### Takdragere
 
-- Standard: `calc/beams.ts` (`variantBeams` setter sammen alle tre)
+- Standard: `calc/beams.ts` (`variantBeams` setter sammen alle tre) · felles for alle utleggene: `calc/beamSegments.ts` (`BeamSegment`, `BeamLayout`, deling etter T2 og `onSegment`), så utleggene ikke importerer hverandre
 - Innvendige (tegnet av kunden): modell `InnerBeam`, redigering `domain/innerBeams.ts`, utlegg `calc/innerBeams.ts`; Shift + dra eller «Fin» i pillen (`PlanSelection.beamFine`) utenfor rasteret `shiftInnerBeam` + `dragInnerBeamFine` (`ui/drag.ts`), mållinjer `calc/beamOffsets.ts` tegnet med `DimChain` i `layers/BeamLayer.tsx`, på arbeidsordren for alle (`beamMeasures`) (T15)
 - Støttedrager på lange standvegger: `calc/supportBeams.ts`
 - Kroker i 01, enveis og toveis (der en drager henger på en annen, eller på en vegg mellom stolpene, T15): `calc/beamHooks.ts`, plukk i `foga/engine.ts`, 3D i `scene3d/build/frame.ts`
@@ -110,7 +110,7 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 
 ### Rom
 
-- Modell: `Room` · `domain/rooms.ts` · `domain/outline.ts` (L-, U-, T-form) · `domain/enclosures.ts` (frihåndsrom)
+- Modell: `Room` · `domain/rooms.ts` · `domain/roomKeys.ts` (romveggenes id, viskede moduler og `OUTSIDE`, lest av `walls.ts`) · `domain/outline.ts` (L-, U-, T-form) · `domain/enclosures.ts` (frihåndsrom)
 - Kalkyle: ingen egen, rommet gir vegger
 - Plan, 3D: `plan/layers/RoomLayer.tsx` (RoomMark, håndtak), dra `plan/pointer/room.ts` · `scene3d/build/rooms.ts`, dra i 3D `scene3d/pointer/drag.ts` · `RoomLabel.tsx`
 
@@ -139,7 +139,7 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
   `RECIPES.shelf` (hjørner: `RECIPES.shelf.corner`), reglene H1–H12 i [byggeregler.md](byggeregler.md). Tegnet: platen
   langs veggen `shelfSpan`, knektene sett forfra `bracketSpans` (`ui/plan/shelfFront.ts`), skinnene `FaceRails` i
   `ui/plan/elevation.tsx` og `railBox` i planen, 3D i `scene3d/build/shelves.ts`, hjørnene på arbeidsordren `CornerNotes`
-  (`ui/workorder/ShelfElevation.tsx`). Eksempel: `src/test/fixtures/12-hjornehyller.json`. Hyllene følger veggen i `replaceWalls` og `moveWall` (`domain/edit.ts`) og rommet
+  (`ui/workorder/ShelfElevation.tsx`). Eksempel: `src/test/fixtures/12-hjornehyller.json`. Hyllene følger veggen i `replaceWalls` (`domain/replaceWalls.ts`) og `moveWall` (`domain/edit.ts`) og rommet
   i `domain/rooms.ts`
 - Kalkyle: `calc/lines/shelves.ts` (6311, fast pris per hylle, kost fra knektene, platene, monteringen og vareplukk én
   gang per ordre, prisartiklene i `pricing/items.ts`) · plukklisten: `shelves` i `foga/structure.ts`, linjene i

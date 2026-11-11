@@ -4,7 +4,7 @@
 // hangs on a hook on the top rail 92, and crosses other beams between whole metres.
 import { makeModule, pointKey } from '../domain/grid';
 import type { InnerBeam, Point } from '../domain/types';
-import { splitBeamLength, type BeamLayout, type BeamSegment } from './beams';
+import { splitBeamLength, type BeamLayout, type BeamSegment } from './beamSegments';
 import type { WallSupport } from './wallSupports';
 
 /** Where drawn beams hang on hooks is read from the layout (calc/beamHooks.ts): an end on no post. */

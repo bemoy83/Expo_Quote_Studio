@@ -6,8 +6,8 @@
 import { pointKey } from '../domain/grid';
 import type { Point } from '../domain/types';
 import type { BeamLift } from './beamLift';
-import type { BeamLayout } from './beams';
-import { onSegment } from './beams';
+import type { BeamLayout } from './beamSegments';
+import { onSegment } from './beamSegments';
 
 export interface BeamHook {
   at: Point;

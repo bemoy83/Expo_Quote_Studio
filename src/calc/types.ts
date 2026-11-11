@@ -5,7 +5,7 @@ import type { Payer, Point } from '../domain/types';
 import type { Bom } from '../foga/engine';
 import type { FogaStructure } from '../foga/structure';
 import type { Strategy, Time, Transfer, Use } from '../pricing/model';
-import type { BeamLayout } from './beams';
+import type { BeamLayout } from './beamSegments';
 import type { Production } from './production';
 import type { WallSupport } from './wallSupports';
 

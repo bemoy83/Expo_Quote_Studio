@@ -6,7 +6,9 @@
 // clockwise round the room, so the room is always on the left of a side and its outside on the right.
 // Byggeregler R1, R2, R4 (docs/byggeregler.md).
 import { moduleKey, pointAlong, runs, wallLength, wallModules } from './grid';
-import { ownPlate, replaceWalls } from './edit';
+import { ownPlate } from './panels';
+import { replaceWalls } from './replaceWalls';
+import { gapKeys, roomWallId } from './roomKeys';
 import {
   area,
   bounds,
@@ -35,11 +37,6 @@ import { nextId } from './ids';
 
 /** Side numbers of a rectangular room. */
 export const RECT_SIDE = { back: 0, right: 1, front: 2, left: 3 } as const;
-
-/** The wall face (1 = left normal of from → to) that looks out of a room: the right of every side. */
-export const OUTSIDE = -1 as const;
-
-export const roomWallId = (roomId: string, side: number) => `${roomId}.${side}`;
 
 /** Names offered for a room; the first is the default. A frihåndsrom is called «Rom» until renamed. */
 export const ROOM_LABELS = ['Bakrom', 'Lager', 'Møterom'] as const;
@@ -77,13 +74,6 @@ export function roomWalls(r: Room): Wall[] {
 
 /** True when side `side` of the room runs left–right in the plan. */
 export const sideIsHorizontal = (r: Room, side: number) => isHorizontal(outlineSide(r.outline, side));
-
-/** `<wallId>#<module>` of every erased room module. */
-export function gapKeys(v: Variant): Set<string> {
-  const out = new Set<string>();
-  for (const r of v.rooms ?? []) for (const g of r.gaps ?? []) out.add(`${roomWallId(r.id, g.side)}#${g.module}`);
-  return out;
-}
 
 export const roomOf = (v: Variant, w: Wall | undefined): Room | undefined => (w?.room ? v.rooms.find((r) => r.id === w.room!.id) : undefined);
 
