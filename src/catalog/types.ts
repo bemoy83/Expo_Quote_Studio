@@ -1,5 +1,6 @@
 import type { TextileFill } from '../domain/types';
-import type { Strategy, Time } from '../pricing/model';
+import type { Strategy } from '../pricing/model';
+import type { Time } from '../cost/time';
 
 /** surface: floor, wall (drawn with a brush) · object: placed and drawn · counted: only a quantity · system: build parts the calc derives */
 export type ProductKind = 'surface' | 'object' | 'counted' | 'system';

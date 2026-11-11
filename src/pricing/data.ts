@@ -1,18 +1,18 @@
-// What the calc prices with, from a kostgrunnlag: every price item (pricing/items.ts) costed by the cost engine from its
+// What the calc prices with, from a kostgrunnlag: every price item (cost/itemDefs.ts) costed by the cost engine from its
 // recipe and minutes (src/cost/items.ts, docs/kostmodell.md), the order costs, and the cost and time of catalog products
 // without a recipe. The item price is only used by sum-priced products (textile walls); catalog products keep their
 // OMS price and use the cost. Change numbers in the kostgrunnlag, never in calc code.
 import { EXAMPLE_BASIS, supplierList, type CatalogRates, type CostBasis } from '../cost/basis';
 import { fingerprint } from '../cost/fingerprint';
-import { basisYear, costItems, type MissingItem } from '../cost/items';
+import { basisYear, costItems, type MissingItem, type PriceList } from '../cost/items';
 import { hourlyCost, orderCost } from '../cost/model';
 import type { CarpetRates } from '../cost/params';
 import { OWN_SUPPLIER } from '../cost/own-list';
 import type { Product, ProductVariant } from '../catalog/types';
-import { ITEM_DEFS } from './items';
-import type { PriceList, Time } from './model';
+import { ITEM_DEFS } from '../cost/itemDefs';
+import type { Time } from '../cost/time';
 
-export { ITEM } from './items';
+export { ITEM } from '../cost/itemDefs';
 
 export interface PricingData {
   items: PriceList;

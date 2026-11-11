@@ -213,7 +213,7 @@ const OBJECT_COLORS: Record<string, string> = { '5276': BLACK, '5275': FURNITURE
 for (const p of products) for (const v of p.variants) if (OBJECT_COLORS[v.artnr]) v.color = OBJECT_COLORS[v.artnr];
 
 // Cost and handling time of the products without a recipe (furniture, floor, foil, services) come from the kostgrunnlag
-// (`katalog`, src/pricing/items.ts EXAMPLE_CATALOG) until the OMS gives them per product.
+// (`katalog`, src/cost/itemDefs.ts EXAMPLE_CATALOG) until the OMS gives them per product.
 
 export const DEFAULT_CATALOG: Catalog = {
   products,

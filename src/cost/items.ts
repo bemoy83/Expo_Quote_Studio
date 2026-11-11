@@ -3,13 +3,37 @@
 // the DG target of its group. An item without a recipe, or with a part the price lists do not have, gets no cost at
 // all: it is listed as missing, never given a number to stand in. docs/kostmodell.md.
 import { FOGA_PARTS, type PartKind } from '../foga/parts';
-import type { ItemDef } from '../pricing/items';
-import { HANDLING_STEPS, type PriceItem, type PriceList, type Time } from '../pricing/model';
+import type { ItemDef } from './itemDefs';
 import { supplierList, type CostBasis } from './basis';
 import { boughtCost, labourCost, ownedPerUse, priceAtDg, purchaseCost } from './model';
 import { OWN_SUPPLIER } from './own-list';
 import { supplierItem } from './prices';
+import { HANDLING_STEPS, type Time } from './time';
 import type { DgGroup } from './params';
+
+/** Leie: comes back after the fair (frame, posts, furniture). Salg: the customer keeps it or it is used up (print, foil). */
+export type Transfer = 'leie' | 'salg';
+
+/**
+ * A level 2 article, a level 3 part that is picked directly, or a handling item (montering on site), with cost and
+ * price per unit (src/pricing/data.ts, costed by src/cost/items.ts). Internal: never a line on the quote.
+ */
+export interface PriceItem {
+  id: string;
+  name: string;
+  unit: 'stk' | 'm' | 'm²' | 'lm';
+  /** Cost per unit, kr. */
+  cost: number;
+  /** Sales price per unit eks. mva., kr. */
+  price: number;
+  transfer?: Transfer;
+  /** Minutes per unit and handling step. */
+  time?: Time;
+  /** How the cost engine got `cost` and `price` («Slik er det regnet», src/cost/items.ts). */
+  trace?: ItemTrace;
+}
+
+export type PriceList = ReadonlyMap<string, PriceItem>;
 
 export interface ItemRecipe {
   /** Foga parts by code, in the list's unit: metres for profiles, pieces for the rest. Owned and rented out. */

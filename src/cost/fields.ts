@@ -3,8 +3,8 @@
 // go through `put`, then the file is read again, so an edit takes the same road as a loaded file. A test checks that
 // every parameter the engine has is listed here: a number that is not on the page does not exist. docs/kostmodell.md.
 import { FOGA_PARTS, type PartKind } from '../foga/parts';
-import { ITEM_DEFS } from '../pricing/items';
-import { HANDLING_STEPS, type HandlingStep } from '../pricing/model';
+import { ITEM_DEFS } from './itemDefs';
+import { HANDLING_STEPS, type HandlingStep } from './time';
 import { EXAMPLE_BASIS, listRowPath, parseBasis, serializeBasis, supplierList, type BasisResult, type CostBasis, type FieldNote, type FieldStatus } from './basis';
 import { EXAMPLE_LIST } from './example-list';
 import { EXAMPLE_OWN_LIST, OWN_SUPPLIER } from './own-list';

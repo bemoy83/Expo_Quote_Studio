@@ -333,7 +333,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   de blandes (en hylle alene på 91FF har ingenting som holder skinnen, så den svinger ut). Går en skinne fra den andre
   veggen bak en hjørne hylleplate, blir platen smal, 960 × 290: forkanten står der den alltid gjør, og skinnen har nok
   gi til de 1,5 mm som mangler.
-  *Bjørn 10.11.2026 · `RECIPES.shelf.corner` (`rail`, `hook`, `boards.narrow`), `railLengths` · kode `src/domain/shelves/corners.ts`, `src/domain/shelves/brackets.ts`, `src/foga/engine.ts`, `src/pricing/items.ts` · test `src/domain/shelves/corners.test.ts`, `src/calc/shelves.test.ts`*
+  *Bjørn 10.11.2026 · `RECIPES.shelf.corner` (`rail`, `hook`, `boards.narrow`), `railLengths` · kode `src/domain/shelves/corners.ts`, `src/domain/shelves/brackets.ts`, `src/foga/engine.ts`, `src/cost/itemDefs.ts` · test `src/domain/shelves/corners.test.ts`, `src/calc/shelves.test.ts`*
 
 ## P · Plukkliste og arbeidsordre
 
