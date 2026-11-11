@@ -4,7 +4,7 @@ import { inward, makeModule, pointKey } from '../domain/grid';
 import { RULES } from '../rules/rules';
 import type { Point, Side, Stand } from '../domain/types';
 import type { BuiltModule } from '../domain/walls';
-import { onSegment, splitBeamLength, type BeamLayout, type BeamSegment } from './beams';
+import { onSegment, splitBeamLength, type BeamLayout, type BeamSegment } from './beamSegments';
 import { holdsRun, hookHolds, wallRuns } from './wallSupports';
 
 /** A free span of a stand wall from this long, m, gets støttedrager. */

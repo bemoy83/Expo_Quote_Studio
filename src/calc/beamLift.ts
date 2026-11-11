@@ -7,8 +7,8 @@ import { pointKey } from '../domain/grid';
 import { runDirection } from '../domain/textile/free';
 import type { Point, Variant } from '../domain/types';
 import { wallHeight, type Rules } from '../rules/rules';
-import type { BeamLayout, BeamSegment } from './beams';
-import { onSegment } from './beams';
+import type { BeamLayout, BeamSegment } from './beamSegments';
+import { onSegment } from './beamSegments';
 import { boxOf, overlaps, placement, type Box } from './textile/placement';
 
 export interface BeamLift {

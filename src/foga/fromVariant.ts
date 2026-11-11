@@ -3,7 +3,8 @@
 // Byggeregel P3 (docs/byggeregler.md).
 import { liftBeams, withJoins } from '../calc/beamLift';
 import { beamHooks, hookCount } from '../calc/beamHooks';
-import { variantBeams, type BeamLayout } from '../calc/beams';
+import { variantBeams } from '../calc/beams';
+import type { BeamLayout } from '../calc/beamSegments';
 import { production, type Production } from '../calc/production';
 import { shelfBrackets } from '../domain/shelves/brackets';
 import type { Variant } from '../domain/types';

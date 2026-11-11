@@ -5,7 +5,7 @@ import { pointKey } from '../domain/grid';
 import type { Point } from '../domain/types';
 import type { BuiltModule } from '../domain/walls';
 import type { SupportRule } from '../foga/recipes';
-import { onSegment, type BeamLayout } from './beams';
+import { onSegment, type BeamLayout } from './beamSegments';
 import { minSupports, spreadSupports, type Ends } from './supports';
 
 export interface WallSupport {
