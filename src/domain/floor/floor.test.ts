@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { applyFloor, floorAction, type FloorTouch } from './floor/brush';
-import { cutTiles } from './floor/edit';
-import { lanesOf, rollUsage } from './floor/lanes';
-import { tileAreas, tilesFromCells } from './floor/tiles';
-import type { Variant } from './types';
-import { createVariant, fillFloor } from './variant';
+import { applyFloor, floorAction, type FloorTouch } from './brush';
+import { cutTiles } from './edit';
+import { lanesOf, rollUsage } from './lanes';
+import { tileAreas, tilesFromCells } from './tiles';
+import type { Variant } from '../types';
+import { createVariant, fillFloor } from '../variant';
 
 const A = '5901';
 const B = '5902';
