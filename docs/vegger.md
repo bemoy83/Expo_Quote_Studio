@@ -108,6 +108,9 @@ lagres per modul i `Variant.panels` (domain/panels.ts), nøklet på platens kant
 - Der en romside står på en standvegg, er platen standveggens, og fargen også.
 - Fargen følger med når en innervegg eller et rom flyttes eller endrer form, og forsvinner når platen fjernes.
 - Hel-vegg-farge tar over: platene på veggen får veggens nye farge.
+- «Fyll» i veggpillen i planen (malerspann, Bjørn 11.11.2026) gir alle vegger på standen pennens farge: den blir
+  standens farge (`defaultPlate`), og egne farger på vegger, rom, enkeltplater og dørblad går av (`paintAllWalls`).
+  Siste strøk vinner, så print på hele plater går også; dekaler og tekstilrammer blir stående. Ett angre tar alt tilbake.
 - Kalkylen har én linje per farge. En farget plate i en standvegg arrangøren betaler blir platebytte for akkurat den
   platen (6125-RAL). Plukklisten teller plater per RAL, og overstykket over en dør har platens farge.
 
@@ -120,8 +123,10 @@ vei tilbake til paletten (`FeltPanel` i ui/plan/wallDrawer/panels.tsx):
 - **Farge og profilering** (først), med samme ord som skinnen og verktøybrikken (Bjørn 9.11.2026). «FELT n · farge»:
   paletten er det som dekker platen. En farge gjelder bare denne platen (begge sider, det er én plate); «Print» sist
   legger hele motivet på platen, på siden som vises. Siste strøk vinner som med kosten. Under ligger seksjonen
-  «PROFILERING» med motivbiblioteket: motivet du velger der brukes av Print og Dekal, og har feltet print, får det nytt
-  motiv med en gang. «+ Dekal» legger en dekal midt i feltet (ikke på et printet felt). Med hele veggen valgt har
+  «PROFILERING» med motivbiblioteket: et trykk på et motiv printer platen med en gang, slik et trykk på en farge farger
+  den (Bjørn 11.11.2026); samme motiv igjen gjør ingenting, og et felt som ikke kan ha print sier hvorfor. Motivet blir
+  også det Print og Dekal bruker. «+ Dekal» legger en dekal midt i feltet (ikke på et printet felt) og velger den, så
+  bytter et motiv dekalens motiv. Med hele veggen valgt har
   Profilering «+ Tekstilvegg» og motivene som dras til veggen.
 - **Hyller og heng**: tilbehør som festes i feltet, én seksjon per slag (hyller nå, heng senere). «Hylle til i feltet»
   legger til og velger hyllen. En valgt hylle har «Farge og profilering» nederst tilbake til feltet; fjernes hyllen, står

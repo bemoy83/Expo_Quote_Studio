@@ -174,19 +174,21 @@ export function WallDrawer(p: Props) {
   }
   const hint0 = wallHint({ O, door: !!O && doorModules.has(O.module), painting, tool, printing, T, F, S, felt: Fe !== undefined ? page : undefined, extras: !T && !F && !S && Fe === undefined && page === 'extras', w })
 
-  /**
-   * With a felt chosen Profilering picks the motif for «Print» and «Dekal», and a print on the felt
-   * takes the new motif at once.
-   */
   const hint = brushOn ? (brushHint ?? BRUSH_HINT) : hint0
 
+  /**
+   * With a felt chosen a motif in Profilering prints the plate at once, as a colour in the palette colours it (Bjørn
+   * 11.11.2026), and becomes the one «Print» and «Dekal» use. A felt that cannot take print says why and is left as it is.
+   */
   const feltShelf =
     Fe === undefined
       ? undefined
       : (id: string) => {
           setPrintMotif(id)
+          const no = feltBlocked(v, rules, w.id, Fe, s, true)
+          if (no) return p.onToast(no)
           const on = printsOn(v, w.id, s).find((f) => f.module === Fe)
-          if (on && on.motif !== id) p.onEdit((x) => printPlate(x, rules, w.id, Fe, s, id))
+          if (on?.motif !== id || on.run) p.onEdit((x) => printPlate(x, rules, w.id, Fe, s, id))
         }
 
   /** The chosen felt has a colour of its own or a print on this face, which its trash takes off. */

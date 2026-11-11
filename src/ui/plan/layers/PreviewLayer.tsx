@@ -5,8 +5,7 @@
 // would be stored goes to the hint line.
 import { useEffect } from 'react'
 import { CELL } from '../../../domain/grid'
-import { lanesLaid, type FloorBrushSize } from '../../../domain/floor/brush'
-import type { RollDir } from '../../../domain/floor/lanes'
+import type { FloorBrushSize } from '../../../domain/floor/brush'
 import { laneAt } from '../../../domain/floor/edit'
 import { fillTilesOf } from '../../../domain/floor/rollFill'
 import { standCells } from '../../../domain/floor/tiles'
@@ -20,7 +19,7 @@ import { rollWidthOf } from '../pointer/floorBrush'
 import type { PlanPointer } from '../pointer/usePlanPointer'
 import type { PlanSelection } from '../selection'
 import { Offcut } from './FloorLayer'
-import { lanePill, tileArea, tileAreaMeasures } from './measures'
+import { tileArea, tileAreaMeasures } from './measures'
 import { AimRect, EraseStroke, InvalidSeg, InvalidShape, MeasurePill } from './Previews'
 import { RoomHandles } from './RoomLayer'
 
@@ -30,9 +29,7 @@ interface Props {
   brush: Brush | null
   selection: PlanSelection
   floorSize: FloorBrushSize
-  /** Direction lanes of rolled floor run when the brush lays them. */
-  rollDir: RollDir
-  pointer: Pick<PlanPointer, 'hover' | 'dragging' | 'rollPending' | 'stroke'>
+  pointer: Pick<PlanPointer, 'hover' | 'dragging' | 'stroke'>
   /** What the pen would store at the pointer (next.ts). */
   next: NextOutcome | null
   mini?: boolean
@@ -41,7 +38,7 @@ interface Props {
 
 export function PreviewLayer(p: Props) {
   const { v, tool, brush, selection, mini, next } = p
-  const { hover, dragging, rollPending, stroke } = p.pointer
+  const { hover, dragging, stroke } = p.pointer
   const sc = usePlanScale()
   const { width: W, depth: D } = v.stand
   const centre: [number, number] = [W / 2, D / 2]
@@ -51,8 +48,6 @@ export function PreviewLayer(p: Props) {
   const tileDrag = dragging?.kind === 'floor' && dragging.anchor && hover && !rollWidth && brush?.kind === 'floor'
     ? tileArea(dragging.anchor, hover, p.floorSize, standCells(v.stand))
     : null
-  // Bane: the lanes being dragged out
-  const lanes = rollPending && brush?.kind === 'floor' && rollWidth ? lanesLaid(rollPending, brush.product, p.rollDir) : []
 
   // The chosen engangsteppe (Velg): its lanes, outlined while its drawer is open
   const selLane = tool === 'select' && !mini && selection.lane ? laneAt(v, selection.lane.i, selection.lane.j) : undefined
@@ -73,7 +68,6 @@ export function PreviewLayer(p: Props) {
       {bad && 'rect' in bad && <InvalidShape kind="rect" x={bad.rect.x0} y={bad.rect.y0} width={bad.rect.x1 - bad.rect.x0} height={bad.rect.y1 - bad.rect.y0} />}
       {bad && 'circle' in bad && <InvalidShape kind="circle" {...bad.circle} />}
       {pill && <MeasurePill a={pill.a} b={pill.b} centre={centre} stroke={widthOf(sc, pill.width)} text={pill.text} />}
-      {lanes.length > 0 && lanePill(lanes, rollWidth!, centre)}
       {tileDrag && brush?.kind === 'floor' && tileAreaMeasures(v, tileDrag, brush.product, centre)}
       {selLanes.length > 0 && (
         <g>

@@ -1,10 +1,9 @@
 // Quick picks over the active tool in the dock: everything the tool draws, in fixed places so the hand learns where the
-// colours are. The tool's own settings (floor type, size or roll direction, drawing grid) sit here too, and the last
+// colours are. The tool's own settings (floor type, tile size, drawing grid) sit here too, and the last
 // button («…») opens the panel on the tool's tab for the rest.
-import { Blinds, Box, DoorClosed, Ellipsis, PaintBucket, Upload } from 'lucide-react'
+import { Blinds, Box, DoorClosed, Ellipsis, PaintBucket, Paintbrush, Upload } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { mainGroupOf } from '../../catalog/groups'
-import { type RollDir } from '../../domain/floor/lanes'
 import { type FloorBrushSize } from '../../domain/floor/brush'
 import { type TileSize } from '../../domain/floor/tiles'
 import type { GridStep } from '../../domain/snapGrid'
@@ -12,7 +11,7 @@ import type { Motif } from '../../persistence/file'
 import { ImageInput, Segmented } from '../controls'
 import { catalog, idx, rules, wallPlates } from '../env'
 import { ObjectThumb } from '../panel/ProductRow'
-import { FLOOR_MAIN, FLOOR_OTHER, floorSizeLabel, gridSteps, type Brush, type DockTool, type RollMode } from '../tools'
+import { FLOOR_MAIN, FLOOR_OTHER, floorSizeLabel, gridSteps, type Brush, type DockTool } from '../tools'
 import { GridPicker } from './GridPicker'
 
 export interface QuickPicksProps {
@@ -34,13 +33,11 @@ export interface QuickPicksProps {
   onFloorSize: (s: FloorBrushSize) => void
   otherSize: TileSize
   onOtherSize: (s: TileSize) => void
-  roll: RollDir
-  onRoll: (d: RollDir) => void
-  rollMode: RollMode
-  onRollMode: (m: RollMode) => void
   gridStep: GridStep
   onGridStep: (s: GridStep) => void
   onFill: () => void
+  /** The wall pen's bucket: every wall in the pen's colour. */
+  onFillWalls: () => void
 }
 
 const MAX = 8
@@ -105,11 +102,13 @@ function quickContent(p: QuickPicksProps): ReactNode {
     return (
       <>
         {head}
-        {wallPlates()
-          .slice(0, MAX)
-          .map((x) => (
-            <Sw key={x.ral} color={x.color} title={`Innervegg ${x.name} · RAL ${x.ral}`} on={brush?.kind === 'wall' && brush.ral === x.ral} onClick={() => onPick({ kind: 'wall', ral: x.ral! })} />
-          ))}
+        <Palette
+          swatches={wallPlates()
+            .slice(0, MAX)
+            .map((x) => ({ key: x.ral!, color: x.color, title: `Innervegg ${x.name} · RAL ${x.ral}`, on: brush?.kind === 'wall' && brush.ral === x.ral, onClick: () => onPick({ kind: 'wall', ral: x.ral! }) }))}
+          fill="Fyll alle vegger med denne fargen"
+          onFill={p.onFillWalls}
+        />
         <Sep />
         {openings.map((x) => {
           const b: Brush = { kind: 'opening', product: x.variants[0].artnr }
@@ -144,41 +143,23 @@ function quickContent(p: QuickPicksProps): ReactNode {
           options={floors.map((x) => ({ value: x.id, title: x.name, label: FLOOR_SHORT[x.name] ?? x.name }))}
         />
         <Sep />
-        {(cur?.variants ?? []).slice(0, MAX).map((x) => {
-          const b: Brush = { kind: 'floor', product: x.artnr }
-          return <Sw key={x.artnr} color={x.color} title={`${cur!.name} ${x.name.toLowerCase()} · ${x.artnr}`} on={is(b)} onClick={() => onPick(b)} />
-        })}
+        <Palette
+          swatches={(cur?.variants ?? []).slice(0, MAX).map((x) => {
+            const b: Brush = { kind: 'floor', product: x.artnr }
+            return { key: x.artnr, color: x.color, title: `${cur!.name} ${x.name.toLowerCase()} · ${x.artnr}`, on: is(b), onClick: () => onPick(b) }
+          })}
+          fill="Fyll hele standen med denne fargen"
+          onFill={p.onFill}
+        />
         <Sep />
         {rollBrush ? (
-          <>
-            <Segmented<RollMode>
-              label="Legging"
-              value={p.rollMode}
-              onChange={p.onRollMode}
-              options={[
-                { value: 'fill', title: 'Fyll · dra et område, banene legges slik det koster minst', label: 'Fyll' },
-                { value: 'lane', title: 'Bane · legg én hel bane av gangen', label: 'Bane' },
-              ]}
-            />
-            {p.rollMode === 'lane' && (
-              <Segmented<RollDir>
-                label="Rulleretning"
-                value={p.roll}
-                onChange={p.onRoll}
-                options={[
-                  { value: 'x', title: 'Bredden · banene går fra venstre til høyre (R)', label: <span className="num">↔ Bredden</span> },
-                  { value: 'y', title: 'Dybden · banene går fra bak til front (R)', label: <span className="num">↕ Dybden</span> },
-                ]}
-              />
-            )}
-          </>
+          // Engangsteppe has one pen, the brush: drag an area or click free floor, the engine lays the lanes
+          <QBtn on setting title="Malerkost · dra et område, eller klikk ledig gulv eller en bane" label="Kost" onClick={() => brush && onPick(brush)}>
+            <Paintbrush size={15} />
+          </QBtn>
         ) : (
           floorSizes
         )}
-        <Sep />
-        <QBtn title="Fyll hele standen med denne fargen" label="Fyll" onClick={p.onFill}>
-          <PaintBucket size={15} />
-        </QBtn>
         {more}
       </>
     )
@@ -262,6 +243,23 @@ export function QName({ name, meta }: { name: string; meta?: string }) {
       <span className="q-name-main">{name}</span>
       {meta && <span className="q-name-meta num">{meta}</span>}
     </span>
+  )
+}
+
+/**
+ * The colours of a pen and its paint bucket right after them (Bjørn 11.11.2026): the same row on the wall and the floor
+ * pill, the bucket filling the whole stand with the chosen colour.
+ */
+function Palette({ swatches, fill, onFill }: { swatches: { key: string; color?: string; title: string; on: boolean; onClick: () => void }[]; fill: string; onFill: () => void }) {
+  return (
+    <>
+      {swatches.map(({ key, ...x }) => (
+        <Sw key={key} {...x} />
+      ))}
+      <QBtn title={fill} label="Fyll" onClick={onFill}>
+        <PaintBucket size={15} />
+      </QBtn>
+    </>
   )
 }
 

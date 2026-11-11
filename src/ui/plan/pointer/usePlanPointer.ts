@@ -2,7 +2,6 @@
 // lies under the pointer (select.ts); each move and the release go to that kind's own file. Also the hover point,
 // the previews' state and drag and drop from Profilering.
 import { useCallback, useEffect, useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent } from 'react'
-import type { FloorAction } from '../../../domain/floor/brush'
 import type { Rect } from '../../../domain/floor/tiles'
 import { faceOfPoint, freeTextileAt, updateFace } from '../../../domain/textile/free'
 import type { Point } from '../../../domain/types'
@@ -19,7 +18,6 @@ import { shelfMove } from './shelfMove'
 import { object } from './object'
 import { placeDrag, startPlace } from './place'
 import { plateAt, plates, startPlates } from './plates'
-import { roll, startRoll } from './roll'
 import { room } from './room'
 import { shelf, startShelf } from './shelf'
 import { startSelect } from './select'
@@ -28,11 +26,11 @@ import { startTextile, textile } from './textile'
 import type { Drag, DragHandlers, P, PointerCtx } from './types'
 import { wall } from './wall'
 
-const DRAGS: { [K in Drag['kind']]: DragHandlers<K> } = { stroke, plates, floor, roll, carpetFill, click, object, wall, beam, room, textile, freeMove, erase, shelf, shelfMove, place: placeDrag }
+const DRAGS: { [K in Drag['kind']]: DragHandlers<K> } = { stroke, plates, floor, carpetFill, click, object, wall, beam, room, textile, freeMove, erase, shelf, shelfMove, place: placeDrag }
 const handlersOf = (d: Drag) => DRAGS[d.kind] as DragHandlers<Drag['kind']>
 
 /** What the plan passes in: the context without the previews' setters and state, which the hook owns. */
-export type PlanPointerInput = Omit<PointerCtx, 'clickSelect' | 'rollPending' | 'setStroke' | 'setTextileStroke' | 'setRollPending' | 'setFillRect' | 'setErasing'> & {
+export type PlanPointerInput = Omit<PointerCtx, 'clickSelect' | 'setStroke' | 'setTextileStroke' | 'setFillRect' | 'setErasing'> & {
   /** Small overview: no drag and drop. */
   mini?: boolean
 }
@@ -52,7 +50,6 @@ export function usePlanPointer(input: PlanPointerInput) {
   // itself is only read in the handlers
   const [dragging, setDragging] = useState<Drag | null>(null)
   /** What the roll stroke in progress will lay on release: the preview shows it, the floor is untouched until then. */
-  const [rollPending, setRollPending] = useState<FloorAction | null>(null)
   /** Fyll area being dragged, in cells. */
   const [fillRect, setFillRect] = useState<Rect | null>(null)
   const [strokeLine, setStroke] = useState<[Point, Point] | null>(null)
@@ -99,13 +96,12 @@ export function usePlanPointer(input: PlanPointerInput) {
     return { x: m.x, y: m.y }
   }
 
-  const c: PointerCtx = { ...input, clickSelect: (s) => input.onSelect(clickSelection(input.selection, s, input.drawerOpen)), rollPending, setStroke, setTextileStroke, setRollPending, setFillRect, setErasing }
+  const c: PointerCtx = { ...input, clickSelect: (s) => input.onSelect(clickSelection(input.selection, s, input.drawerOpen)), setStroke, setTextileStroke, setFillRect, setErasing }
 
   /** The drag a press starts, or nothing for a pen that acts on the click alone. */
   const press = (q: P): Drag | undefined => {
     if (tool === 'erase') return startErase(c, q)
     if (fb.carpetFill) return startCarpetFill(c, q)
-    if (pens.floorTool && fb.rollWidth && tool === 'brush') return startRoll(c, q)
     if (pens.floorTool) return startFloor(c, q)
     if (pens.wallTool && brush?.kind === 'wall') {
       const m = plateAt(input.mods, q)
@@ -156,7 +152,6 @@ export function usePlanPointer(input: PlanPointerInput) {
     drag.current = null
     setDragging(null)
     setStroke(null)
-    setRollPending(null)
     setFillRect(null)
     setErasing(null)
   }
@@ -205,7 +200,6 @@ export function usePlanPointer(input: PlanPointerInput) {
     svgEl,
     hover,
     dragging,
-    rollPending,
     fillRect,
     stroke: strokeLine,
     textileStroke,

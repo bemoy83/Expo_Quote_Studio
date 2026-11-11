@@ -177,7 +177,10 @@ Andre sider dempes ikke når en vegg er valgt.
 
 ### Tegnforklaring og tegningshode (nytt) · i gangfeltet foran
 
-En spalte til høyre i gangfeltet foran standen, se bilde 1:
+I det ytre hjørnet av gangfeltet foran standen, som tittelfeltet på en tegning (Bjørn 11.11.2026): tegningshodet
+helt i hjørnet og tegnforklaringen til venstre for det, begge stående på gangfeltets nederkant. Toppen holder seg under
+målkjedene langs fronten (totalraden der fronten har en, ellers plasseringsraden og målet på en valgt artikkel på
+standgrensen). Er gangfeltet for smalt til to spalter, står de over hverandre i én. Se bilde 1:
 
 - `TEGNFORKLARING`: ett gulv per rad med fargeprøve og areal (`res.keyFigures.floor`, flyttet fra `Labels.tsx`), og
   takdrager med strekprøve og løpemeter.

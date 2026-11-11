@@ -1,6 +1,6 @@
-// Legend and drawing head in the aisle in front of the stand (docs/arbeidstegning.md): a column to the right with one
-// row per floor (swatch and area), the textile and print patterns, the takdrager with its running metres, the
-// variant, and a scale bar. Rows that do not fit fall away; nothing is ever drawn outside the aisle.
+// Legend and drawing head in the outer corner of the front aisle (docs/arbeidstegning.md): the keys, one row per floor
+// (swatch and area), the textile and print patterns and the takdrager with its running metres, beside the drawing head
+// with the variant and a scale bar. Rows that do not fit fall away; nothing is ever drawn outside the aisle.
 import { useId } from 'react'
 import type { CalcResult } from '../../../calc/calc'
 import type { Variant } from '../../../domain/types'
@@ -9,13 +9,16 @@ import { fmt } from '../../format'
 import { idx, productOf, rules } from '../../env'
 import { EM, linePx, sizePx, textPx, usePlanScale } from '../planScale'
 import { beamBody, PLAN_MARGIN } from '../planStyle'
-import { FRONT_NAME_DROP, sideNameOffset } from '../dims'
+import { DIM_NEAR, DIM_TOTAL, FRONT_NAME_DROP, sideNameOffset, totalSides } from '../dims'
 import { BeamStroke } from './BeamLayer'
 import { RasterPattern, TextileStroke } from './TextileLayer'
 
-/** Gap from the aisle's right edge and from the stand, row height and type sizes, screen px. */
+/** Gap from the aisle's edges, row height and type sizes, screen px. */
 const PAD = 12
 const ROW = 14
+/** Between the two columns, and from a front chain's line to the legend (past its numbers), screen px. */
+const GAP = 16
+const CHAIN_CLEAR = 18
 const EYEBROW = 7.5
 const TEXT = 9.5
 
@@ -35,10 +38,9 @@ function beamText(k: CalcResult['keyFigures']): string {
 
 const today = () => new Date().toLocaleDateString('nb-NO', { day: '2-digit', month: '2-digit', year: 'numeric' })
 
-/** The rows of the legend, top to bottom. */
-function legendRows(v: Variant, res: CalcResult, doc: boolean): Row[] {
+/** The two blocks of the legend, each top to bottom: the keys (empty when there is nothing to explain) and the drawing head. */
+function legendBlocks(v: Variant, res: CalcResult, doc: boolean): { keys: Row[]; head: Row[] } {
   const k = res.keyFigures
-  const rows: Row[] = []
   const keys: Row[] = []
   for (const [a, m2] of Object.entries(k.floor)) {
     const hit = idx.byArtnr.get(a)
@@ -48,13 +50,24 @@ function legendRows(v: Variant, res: CalcResult, doc: boolean): Row[] {
   if (textiles) keys.push({ kind: 'textile', text: `Tekstilvegg · ${textiles} stk` })
   if (v.foils.length) keys.push({ kind: 'print', text: 'Print og dekal' })
   if (k.beamLm > 1e-9) keys.push({ kind: 'beam', text: beamText(k) })
-  if (keys.length) rows.push({ kind: 'eyebrow', text: 'TEGNFORKLARING' }, ...keys)
-  rows.push({ kind: 'eyebrow', text: 'TEGNING' }, { kind: 'head', text: doc ? `Variant ${v.name}` : `Variant ${v.name} · ${today()}` })
-  rows.push({ kind: 'scale', m: doc ? 2 : 1 })
-  return rows
+  return {
+    keys: keys.length ? [{ kind: 'eyebrow', text: 'TEGNFORKLARING' }, ...keys] : [],
+    head: [{ kind: 'eyebrow', text: 'TEGNING' }, { kind: 'head', text: doc ? `Variant ${v.name}` : `Variant ${v.name} · ${today()}` }, { kind: 'scale', m: doc ? 2 : 1 }],
+  }
 }
 
-/** The legend column at the right of the front aisle. */
+/** One column placed in the aisle: its rows, left edge and top. */
+interface Column {
+  rows: Row[]
+  x0: number
+  top: number
+}
+
+/**
+ * The legend in the outer corner of the front aisle, as a drawing's title block (Bjørn 11.11.2026): the drawing head
+ * in the corner and the keys beside it, both standing on the aisle's bottom edge, so they keep clear of the dimension
+ * chains along the front. Stacked in one column when the aisle is too narrow for two.
+ */
 export function Legend({ v, res, doc }: { v: Variant; res: CalcResult; doc: boolean }) {
   const sc = usePlanScale()
   const ids = useId().replace(/:/g, '')
@@ -62,28 +75,32 @@ export function Legend({ v, res, doc }: { v: Variant; res: CalcResult; doc: bool
   const { width: W, depth: D } = v.stand
   const px = (n: number) => sizePx(sc, n)
   // The aisle in front: the legend never leaves it
-  let top = D + px(PAD)
   const bottom = D + M - px(PAD / 2)
   const right = W + M - px(PAD)
-  const all = legendRows(v, res, doc)
-  // As wide as its longest row (a rough measure of the text), right-aligned in the aisle
-  const textWidth = (r: Row) => ('text' in r ? (r.kind === 'eyebrow' ? textPx(r.text, EYEBROW, EM.caps) : textPx(r.text, TEXT, EM.ui)) : 0) + (r.kind === 'eyebrow' || r.kind === 'head' ? 0 : 15)
-  const col = Math.max(...all.map(textWidth))
-  const x0 = Math.max(-M + px(PAD), right - px(col))
-  // Under the side name «Front · …» (Labels.tsx, about 1,2 m wide round the middle) when the column reaches it
-  if (x0 < W / 2 + 0.75) top = Math.max(top, D + sideNameOffset(sc, false) + FRONT_NAME_DROP + 0.1)
-  // Rows that fit; a lone eyebrow at the end is dropped with its rows
-  const fit: Row[] = []
-  let y = top
-  for (const r of all) {
-    if (y + px(ROW) > bottom + 1e-9) break
-    fit.push(r)
-    y += px(ROW)
+  const left = -M + px(PAD)
+  // Below the chains along the front (dims.ts): the total row where the front has one, else the placement row
+  const below = D + px((totalSides(v).includes('front') ? DIM_TOTAL : DIM_NEAR) + CHAIN_CLEAR)
+  const { keys, head } = legendBlocks(v, res, doc)
+  // As wide as its longest row (a rough measure of the text, the scale bar at its length)
+  const rowWidth = (r: Row) =>
+    r.kind === 'scale' ? r.m / px(1) + 24 : r.kind === 'eyebrow' ? textPx(r.text, EYEBROW, EM.caps) : r.kind === 'head' ? textPx(r.text, TEXT + 1, EM.mono) : textPx(r.text, TEXT, EM.ui) + 15
+  const width = (rows: Row[]) => px(Math.max(0, ...rows.map(rowWidth)))
+  /** A column with its right edge at `x1`, standing on the bottom; rows that do not fit fall away from the end. */
+  const column = (rows: Row[], x1: number): Column => {
+    const x0 = Math.max(left, x1 - width(rows))
+    // Under the side name «Front · …» (Labels.tsx, about 1,2 m wide round the middle) when the column reaches it
+    const top = x0 < W / 2 + 0.75 ? Math.max(below, D + sideNameOffset(sc, false) + FRONT_NAME_DROP + 0.1) : below
+    const fit = rows.slice(0, Math.max(0, Math.floor((bottom - top + 1e-9) / px(ROW))))
+    // A lone eyebrow at the end is dropped with its rows
+    while (fit.length && fit[fit.length - 1].kind === 'eyebrow') fit.pop()
+    return { rows: fit, x0, top: bottom - fit.length * px(ROW) }
   }
-  while (fit.length && fit[fit.length - 1].kind === 'eyebrow') fit.pop()
-  if (!fit.length) return null
+  const headCol = column(head, right)
+  // Side by side when the keys fit to the left of the head, else one column with the keys on top
+  const twoUp = keys.length && headCol.x0 - px(GAP) - width(keys) >= left
+  const cols = !keys.length ? [headCol] : twoUp ? [column(keys, headCol.x0 - px(GAP)), headCol] : [column([...keys, ...head], right)]
+  if (!cols.some((c) => c.rows.length)) return null
   const sw = px(10)
-  const tx = x0 + px(15)
   return (
     <g pointerEvents="none">
       <defs>
@@ -93,7 +110,8 @@ export function Legend({ v, res, doc }: { v: Variant; res: CalcResult; doc: bool
         <RasterPattern id={`raster${ids}`} sc={sc} />
       </defs>
       <g clipPath={`url(#aisle${ids})`}>
-        {fit.map((r, n) => {
+        {cols.flatMap(({ rows, x0, top }, c) => rows.map((r, n) => {
+          const tx = x0 + px(15)
           const base = top + n * px(ROW) + px(ROW) * 0.7
           const mid = base - px(TEXT) * 0.35
           const text = (s: string, style: object) => (
@@ -103,33 +121,33 @@ export function Legend({ v, res, doc }: { v: Variant; res: CalcResult; doc: bool
           )
           switch (r.kind) {
             case 'eyebrow':
-              return <g key={n}>{text(r.text, { font: `600 ${px(EYEBROW)}px var(--font-ui)`, letterSpacing: px(0.6), fill: INK_FAINT })}</g>
+              return <g key={`${c}-${n}`}>{text(r.text, { font: `600 ${px(EYEBROW)}px var(--font-ui)`, letterSpacing: px(0.6), fill: INK_FAINT })}</g>
             case 'head':
-              return <g key={n}>{text(r.text, { font: `500 ${px(TEXT + 1)}px var(--font-numeric)`, fill: INK })}</g>
+              return <g key={`${c}-${n}`}>{text(r.text, { font: `500 ${px(TEXT + 1)}px var(--font-numeric)`, fill: INK })}</g>
             case 'floor':
               return (
-                <g key={n}>
+                <g key={`${c}-${n}`}>
                   <rect x={x0} y={mid - sw / 2} width={sw} height={sw} rx={px(1.5)} fill={r.colour} stroke={INK} strokeOpacity={0.35} strokeWidth={linePx(sc, 0.5)} />
                   {text(r.text, { font: `400 ${px(TEXT)}px var(--font-ui)`, fill: INK_MUTED })}
                 </g>
               )
             case 'textile':
               return (
-                <g key={n}>
+                <g key={`${c}-${n}`}>
                   <TextileStroke a={[x0, mid]} b={[x0 + sw, mid]} sc={sc} />
                   {text(r.text, { font: `400 ${px(TEXT)}px var(--font-ui)`, fill: INK_MUTED })}
                 </g>
               )
             case 'print':
               return (
-                <g key={n}>
+                <g key={`${c}-${n}`}>
                   <rect x={x0} y={mid - px(1.5)} width={sw} height={px(3)} fill={`url(#raster${ids})`} />
                   {text(r.text, { font: `400 ${px(TEXT)}px var(--font-ui)`, fill: INK_MUTED })}
                 </g>
               )
             case 'beam':
               return (
-                <g key={n}>
+                <g key={`${c}-${n}`}>
                   <BeamStroke a={[x0, mid]} b={[x0 + sw, mid]} body={beamBody(sc, rules.beam.thickness)} />
                   {text(r.text, { font: `400 ${px(TEXT)}px var(--font-ui)`, fill: INK_MUTED })}
                 </g>
@@ -139,7 +157,7 @@ export function Legend({ v, res, doc }: { v: Variant; res: CalcResult; doc: bool
               const h = px(3.5)
               const m = x0 + r.m + px(24) <= right ? r.m : 1
               return (
-                <g key={n}>
+                <g key={`${c}-${n}`}>
                   <rect x={x0} y={mid - h / 2} width={m / 2} height={h} fill={INK} />
                   <rect x={x0 + m / 2} y={mid - h / 2} width={m / 2} height={h} fill={SURFACE} stroke={INK} strokeWidth={linePx(sc, 0.6)} />
                   <text x={x0 + m + px(5)} y={base} style={{ font: `500 ${px(TEXT)}px var(--font-numeric)`, fill: INK_MUTED }}>
@@ -149,7 +167,7 @@ export function Legend({ v, res, doc }: { v: Variant; res: CalcResult; doc: bool
               )
             }
           }
-        })}
+        }))}
       </g>
     </g>
   )

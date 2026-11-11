@@ -4,16 +4,13 @@
 // Byggeregler G3, G5 (docs/byggeregler.md).
 import { RULES } from '../../rules/rules';
 import { CELL, cellKey } from '../grid';
-import type { FloorTile, Stand } from '../types';
+import type { FloorTile } from '../types';
 import type { Rect } from './tiles';
 
 export type RollDir = 'x' | 'y';
 
 /** Extra length at each end of a lane, m: the roll is cut a little long and trimmed on site. */
 export const ROLL_END = RULES.floor.rollEnd;
-
-/** Lanes run along the stand's longest side by default: fewest joints. */
-export const longestSide = (s: Stand): RollDir => (s.width >= s.depth ? 'x' : 'y');
 
 export interface Span {
   start: number;

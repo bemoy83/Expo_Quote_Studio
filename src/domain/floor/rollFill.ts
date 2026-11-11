@@ -7,8 +7,8 @@ import type { CarpetRates } from '../../cost/params';
 import { CELL, cellKey } from '../grid';
 import type { FloorTile, Stand, Variant } from '../types';
 import { cutTiles } from './edit';
-import { across, along, laneRect, lanesOf, layLanes, rollPieces, rollUsage, ROLL_END, type RollDir } from './lanes';
-import { cellsIn, standCellList, standCells, type Rect } from './tiles';
+import { across, along, laneRect, lanesOf, layLanes, loose, rollPieces, rollUsage, ROLL_END, type RollDir } from './lanes';
+import { cellsIn, standCellList, standCells, tileAt, type Rect } from './tiles';
 
 type Cell = [number, number];
 
@@ -225,6 +225,22 @@ export function fillCarpet(v: Variant, product: string, roll: number, r: CarpetR
   const { nx, ny } = standCells(v.stand);
   const tiles = cutTiles(v.floor.tiles, rect ?? { i: 0, j: 0, w: nx, h: ny });
   return { ...v, floor: { ...v.floor, tiles: [...tiles, ...best.tiles] } };
+}
+
+/**
+ * A click with the carpet brush (Bjørn 11.11.2026): a lane of another colour takes this colour (out of its fill: it is cut
+ * from another roll); on free floor the free floor is filled the cheapest way, and what is laid stays. A drag fills an
+ * area (fillCarpet), the paint bucket the whole stand.
+ */
+export function carpetClick(v: Variant, product: string, roll: number, r: CarpetRates, [i, j]: Cell): Variant {
+  const under = tileAt(v.floor.tiles, i, j);
+  if (under) {
+    if (!under.roll || under.product === product) return v;
+    return { ...v, floor: { ...v.floor, tiles: v.floor.tiles.map((t) => (t === under ? { ...loose(t), product } : t)) } };
+  }
+  const free = standCellList(v.stand).filter(([a, b]) => !tileAt(v.floor.tiles, a, b));
+  const best = layouts(free, product, roll, newFillId(v.floor.tiles), r)[0];
+  return best ? { ...v, floor: { ...v.floor, tiles: [...v.floor.tiles, ...best.tiles] } } : v;
 }
 
 /** The lanes of a fill. */

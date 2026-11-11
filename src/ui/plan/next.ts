@@ -8,9 +8,9 @@ import { addFoil } from '../../domain/decor'
 import { DOOR_AIM_MIN, placeOpening } from '../../domain/doors'
 import { paintWalls } from '../../domain/edit'
 import { faceSegment, felt, sideOf, type FaceSide } from '../../domain/faces'
-import { applyFloor, type FloorAction } from '../../domain/floor/brush'
-import { fillCarpet } from '../../domain/floor/rollFill'
-import type { Rect } from '../../domain/floor/tiles'
+import { applyFloor } from '../../domain/floor/brush'
+import { carpetClick, fillCarpet } from '../../domain/floor/rollFill'
+import { tileAt, type Rect } from '../../domain/floor/tiles'
 import { wallModules, type Module } from '../../domain/grid'
 import { drawInnerBeam, type Run } from '../../domain/innerBeams'
 import { addObject, footprintBox } from '../../domain/objects'
@@ -93,7 +93,6 @@ export interface NextInput {
   dragging: Drag | null
   stroke: [Point, Point] | null
   textileStroke: TextileLine | null
-  rollPending: FloorAction | null
   fillRect: Rect | null
   dropHover: { h: FaceHit; d: DecorDrag } | null
 }
@@ -116,8 +115,8 @@ function newModules(v: Variant, a: Point, b: Point): Module[] {
 /** The target of the pen in hand and what a click or release there stores; null when there is nothing to show. */
 export function nextTarget(p: NextInput): NextTarget | null {
   const t = targetOf(p)
-  // The same target with another pen (colour, product, lane direction) stores something else
-  return t && { key: `${p.tool}|${JSON.stringify(p.brush)}|${p.floor.dir}|${t.key}`, outcome: t.outcome }
+  // The same target with another pen (colour, product) stores something else
+  return t && { key: `${p.tool}|${JSON.stringify(p.brush)}|${t.key}`, outcome: t.outcome }
 }
 
 function targetOf(p: NextInput): NextTarget | null {
@@ -204,14 +203,9 @@ function targetOf(p: NextInput): NextTarget | null {
 
   // Floor
   const product = brush?.kind === 'floor' ? brush.product : null
-  if (p.rollPending && product) {
-    const a = p.rollPending
-    return a.kind === 'none' ? null : target(`roll:${JSON.stringify(a)}`, () => area({ edit: (x) => applyFloor(x, a, product, p.floor.dir), hint: null }))
-  }
   if (dragging?.kind === 'carpetFill' && product) {
-    const rect = p.fillRect ?? undefined
-    if (!rect && !(hover && onStandFloor(v, hover))) return null
-    return fillTarget(p, product, rect)
+    if (p.fillRect) return fillTarget(p, product, p.fillRect)
+    return hover && onStandFloor(v, hover) ? carpetClickTarget(p, product, hover) : null
   }
   // Carpet tiles paint while dragging: the floor itself shows the stroke
   if (dragging) return null
@@ -246,11 +240,10 @@ function targetOf(p: NextInput): NextTarget | null {
     return h ? shelfTarget(v, h.w.id, h.s, h.module, h.module, false) : null
   }
   if (pens.floorTool && product) {
-    if (p.floor.carpetFill) return onStandFloor(v, hover) ? fillTarget(p, product, undefined) : null
-    const a = p.floor.rollWidth ? p.floor.laneAction({ from: hover }, null) : p.floor.floorTouch(hover, null)
+    if (p.floor.carpetFill) return onStandFloor(v, hover) ? carpetClickTarget(p, product, hover) : null
+    const a = p.floor.floorTouch(hover, null)
     if (a.kind === 'none') return null
-    const dir = p.floor.rollWidth ? p.floor.dir : undefined
-    return target(`floor:${JSON.stringify(a)}`, () => area({ edit: (x) => applyFloor(x, a, product, dir), hint: null }))
+    return target(`floor:${JSON.stringify(a)}`, () => area({ edit: (x) => applyFloor(x, a, product), hint: null }))
   }
   return null
 }
@@ -358,11 +351,21 @@ function shelfTarget(v: Variant, wallId: string, s: FaceSide, m0: number, m1: nu
   })
 }
 
-/** Fyll: the area being dragged, or the whole stand a click fills, laid the cheapest way. */
-function fillTarget(p: NextInput, product: string, rect: Rect | undefined): NextTarget | null {
+/** The carpet brush dragged: the area, laid the cheapest way. */
+function fillTarget(p: NextInput, product: string, rect: Rect): NextTarget | null {
   const roll = p.floor.rollWidth
   if (!roll) return null
-  return target(`fill:${product}:${rect ? `${rect.i},${rect.j},${rect.w},${rect.h}` : 'stand'}`, () =>
-    area({ edit: (x) => fillCarpet(x, product, roll, pricing.carpet, rect), hint: null }),
+  return target(`fill:${product}:${rect.i},${rect.j},${rect.w},${rect.h}`, () => area({ edit: (x) => fillCarpet(x, product, roll, pricing.carpet, rect), hint: null }))
+}
+
+/** What a click with the carpet brush does here: recolour the lane under it, or fill the free floor. */
+function carpetClickTarget(p: NextInput, product: string, q: P): NextTarget | null {
+  const roll = p.floor.rollWidth
+  if (!roll) return null
+  const { i, j } = p.floor.cellOf(q)
+  const under = tileAt(p.v.floor.tiles, i, j)
+  if (under && (!under.roll || under.product === product)) return null
+  return target(`carpet:${product}:${under ? `${under.i},${under.j},${under.w},${under.h}` : 'free'}`, () =>
+    area({ edit: (x) => carpetClick(x, product, roll, pricing.carpet, [i, j]), hint: null }),
   )
 }

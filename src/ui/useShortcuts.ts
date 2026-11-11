@@ -59,8 +59,7 @@ export function useShortcuts(s: Shortcuts) {
       else if (k === 'p' && tools.brush) {
         tools.setTool('brush')
         s.toPlan()
-      } else if (k === 'r' && tools.rollBrush) tools.setRollDir(tools.roll === 'x' ? 'y' : 'x')
-      else if (DOCK_KEYS[k]) tools.activate(DOCK_KEYS[k])
+      } else if (DOCK_KEYS[k]) tools.activate(DOCK_KEYS[k])
       else if (del) {
         const d = deleteSelection(v, selection)
         if (d) {

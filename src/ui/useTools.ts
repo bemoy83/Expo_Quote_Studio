@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import type { CalcResult } from '../calc/calc'
 import { type FloorBrushSize } from '../domain/floor/brush'
-import { longestSide, type RollDir } from '../domain/floor/lanes'
 import { TILE_FULL, type TileSize } from '../domain/floor/tiles'
 import type { GridStep } from '../domain/snapGrid'
 import type { Variant } from '../domain/types'
@@ -11,7 +10,7 @@ import type { Motif } from '../persistence/file'
 import { catalog, idx } from './env'
 import { kr } from './format'
 import { findMotif } from './motifs'
-import { dockToolOf, FLOOR_OTHER, penToolOf, type Brush, type DockTool, type PenTool, type RollMode, type Tool } from './tools'
+import { dockToolOf, FLOOR_OTHER, penToolOf, type Brush, type DockTool, type PenTool, type Tool } from './tools'
 
 interface ToolsInput {
   v: Variant
@@ -29,17 +28,12 @@ export function useTools({ v, res, motifs, onPick, onErase }: ToolsInput) {
   const [floorSize, setFloorSize] = useState<FloorBrushSize>(TILE_FULL)
   /** Last of the smaller tile sizes, so «Andre» comes back to it. */
   const [otherSize, setOtherSize] = useState<TileSize>(FLOOR_OTHER[0].size)
-  /** Roll direction of rolled floor; null follows the stand's longest side. */
-  const [rollDir, setRollDir] = useState<RollDir | null>(null)
-  /** Engangsteppe: Fyll (an area the engine lays) or Bane (one lane). */
-  const [rollMode, setRollMode] = useState<RollMode>('fill')
   const [gridStep, setGridStep] = useState<GridStep>(1)
   /** The pen each drawing tool last drew with, so switching tools brings it back. */
   const [pens, setPens] = useState<Partial<Record<PenTool, Brush>>>({})
   /** Colour the wall tool draws new inner walls with; follows the stand's wall plate until a colour is picked. */
   const [wallPen, setWallPen] = useState<string | null>(null)
 
-  const roll = rollDir ?? longestSide(v.stand)
   const rollBrush = brush?.kind === 'floor' && !!idx.byArtnr.get(brush.product)?.product.roll
   const wallRal = wallPen ?? v.defaultPlate
   const active = dockToolOf(tool, brush)
@@ -105,11 +99,7 @@ export function useTools({ v, res, motifs, onPick, onErase }: ToolsInput) {
     setFloorSize,
     otherSize,
     setOtherSize,
-    roll,
     rollBrush,
-    setRollDir,
-    rollMode,
-    setRollMode,
     gridStep,
     setGridStep,
   }
