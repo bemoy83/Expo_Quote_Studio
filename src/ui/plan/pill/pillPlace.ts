@@ -1,8 +1,8 @@
 // Where the measure pill of a stroke goes (docs/forhandsvisning.md): beside the middle of the stroke, on the side away
 // from the stand's centre, so it never covers the stand. Pure, so it can be tested without a plan.
-import type { Point } from '../../domain/types'
-import { EM, sizePx, textPx, type PlanScale } from './planScale'
-import { PILL } from './planStyle'
+import type { Point } from '../../../domain/types'
+import { EM, sizePx, textPx, type PlanScale } from '../planScale'
+import { PILL } from '../planStyle'
 
 /** Unit normal of a straight stroke a→b pointing away from the centre. A stroke through the centre goes up or left. */
 export function awayFrom(a: Point, b: Point, centre: Point): Point {

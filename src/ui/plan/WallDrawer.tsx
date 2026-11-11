@@ -16,7 +16,6 @@ import { wallRal } from '../../domain/panels'
 import { clearDecor, clearFelt, printPlate, printsOn } from '../../domain/print'
 import { moveShelves, removeShelves } from '../../domain/shelves/edit'
 import { shelvesOn } from '../../domain/shelves/model'
-import { doorFace, openingById } from '../../domain/doors'
 import { wallLength, wallModules } from '../../domain/grid'
 import type { Motif, Variant } from '../../domain/types'
 import { builtModules, isStandWall, wallLabel } from '../../domain/walls'
@@ -27,7 +26,7 @@ import { productOf, rules } from '../env'
 import { findMotif } from '../motifs'
 import { DrawerHead} from './drawerParts'
 import { DoorMap } from './DoorMap'
-import { chosenShelves, type PlanSelection } from './selection'
+import { chosen, chosenShelves, isOnWall, type PlanSelection } from './selection'
 import { addTextile, fillTextile, removeTextile, textilesOn, updateTextile } from '../../domain/textile/inFrame'
 import { faces, type FaceSide } from '../../domain/faces'
 import { faceName, roomsAgainst } from './wallDrawer/face'
@@ -68,26 +67,26 @@ export function WallDrawer(p: Props) {
   const [brushHint, setBrushHint] = useState<string | null>(null)
   /** Whether something on the wall was chosen at the last render: choosing something puts the brush away. */
   const [wasChosen, setWasChosen] = useState(false)
-  /** A chosen door or curtain: the drawer shows its wall, which follows the door when the mini plan moves it. */
-  const O = openingById(v, sel.openingId)
-  const w = v.walls.find((x) => x.id === (O?.wallId ?? sel.wallId))
-  if (!w) return null
+  /** The wall and face shown, and what on it is chosen. A chosen door or curtain: the drawer shows its wall, which follows
+   *  the door when the mini plan moves it. */
+  const c = chosen(v, sel)
+  if (!isOnWall(c)) return null
+  const { wall: w, side: s } = c
+  const O = c.kind === 'opening' ? c.opening : undefined
   const fs = faces(v, w)
-  const want = sel.side ?? (O && doorFace(v, w, O))
-  const s: FaceSide = want && fs.includes(want) ? want : fs[0]
   const L = wallLength(w)
   const H = wallHeight(rules)
 
   const tex = textilesOn(v, w.id, s)
   const foils = foilsOn(v, w.id, s)
-  const T = tex.find((t) => t.id === sel.textileId)
-  const F = foils.find((f) => f.id === sel.foilId)
+  const T = c.kind === 'textile' ? c.textile : undefined
+  const F = c.kind === 'foil' ? c.foil : undefined
   const shelves = shelvesOn(v, w.id, s)
-  const S = shelves.find((f) => f.id === sel.shelfId)
+  const S = c.kind === 'shelf' ? c.shelf : undefined
   const built = new Map(builtModules(v).map((m) => [m.key, m]))
   const mods = wallModules(w).map((m) => built.get(m.key))
   /** A felt chosen in the drawing (a plate, not a door), when nothing on the wall is. */
-  const Fe = !T && !F && !S && !O && sel.felt !== undefined && mods[sel.felt] && !mods[sel.felt]!.opening ? sel.felt : undefined
+  const Fe = c.kind === 'wall' && c.felt !== undefined && mods[c.felt] && !mods[c.felt]!.opening ? c.felt : undefined
   const rooms = roomsAgainst(v, w, s)
   const ratioOf = (id?: string) => findMotif(motifs, id)?.ratio ?? 0
   const label = wallLabel(w)
@@ -160,11 +159,11 @@ export function WallDrawer(p: Props) {
   /** Modules of this wall holding a door (not a curtain): a leaf for the brush, a header and leaf for a print. */
   const doorModules = new Set(doors.map((d) => d.module))
   /** The brush is live on the whole wall's «Hyller og heng» with nothing chosen; choosing something puts it away. */
-  const chosen = !!(T || F || S || O) || Fe !== undefined
-  const brushOn = shelfBrush && page === 'extras' && !chosen
-  if (chosen !== wasChosen) {
-    setWasChosen(chosen)
-    if (chosen) setShelfBrush(false)
+  const picked = c.kind !== 'wall' || Fe !== undefined
+  const brushOn = shelfBrush && page === 'extras' && !picked
+  if (picked !== wasChosen) {
+    setWasChosen(picked)
+    if (picked) setShelfBrush(false)
   }
   /** Take the shelf brush: a chosen felt is let go, as the paint tools do. */
   const takeBrush = (on: boolean) => {

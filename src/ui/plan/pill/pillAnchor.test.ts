@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { parse } from '../../persistence/file'
-import type { Variant } from '../../domain/types'
+import { parse } from '../../../persistence/file'
+import type { Variant } from '../../../domain/types'
 import { PILL_GAP, PILL_PAST_CHAIN, PILL_PAST_NAME, pillAnchor, placePill, type PillAnchor } from './pillAnchor'
 
-const TEXTS = import.meta.glob<string>('../../test/fixtures/*.json', { query: '?raw', import: 'default', eager: true })
+const TEXTS = import.meta.glob<string>('../../../test/fixtures/*.json', { query: '?raw', import: 'default', eager: true })
 const sketch = (name: string): Variant => {
   const key = Object.keys(TEXTS).find((k) => k.includes(name))!
   const r = parse(TEXTS[key])

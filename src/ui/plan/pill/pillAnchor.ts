@@ -2,15 +2,15 @@
 // room. For a wall (and a door, frame or decal in it) on the side away from the stand's centre, opposite its module
 // chain (arbeidstegning.md A5); on a stand edge it clears the totals and the side name outside. Pure, in model
 // metres and screen pixels, so it can be tested without a plan; SelectionPill.tsx turns it into a place on screen.
-import { footprintBox } from '../../domain/objects'
-import { shelfBox, shelvesOf } from '../../domain/shelves/model'
-import { CELL, pointAlong } from '../../domain/grid'
-import type { Point, Variant, Wall } from '../../domain/types'
-import { isPerimeterWall } from '../../domain/walls'
-import { place } from '../env'
-import { DIM_NEAR, DIM_TOTAL } from './dims'
+import { footprintBox } from '../../../domain/objects'
+import { shelfBox } from '../../../domain/shelves/model'
+import { CELL, pointAlong } from '../../../domain/grid'
+import type { FloorTile, Point, Variant, Wall } from '../../../domain/types'
+import { isPerimeterWall } from '../../../domain/walls'
+import { place } from '../../env'
+import { DIM_NEAR, DIM_TOTAL } from '../dims'
 import { awayFrom } from './pillPlace'
-import type { PlanSelection } from './selection'
+import { chosen, type PlanSelection } from '../selection'
 
 export type PillDir = 'up' | 'down' | 'left' | 'right'
 
@@ -73,44 +73,40 @@ const over = (v: Variant, b: { x0: number; y0: number; x1: number; y1: number })
 
 /** The pill's anchor for a selection, or null when there is nothing to anchor to (it was removed). */
 export function pillAnchor(v: Variant, sel: PlanSelection): PillAnchor | null {
-  if (sel.openingId) {
-    const o = v.openings.find((x) => x.id === sel.openingId)
-    const w = o && v.walls.find((x) => x.id === o.wallId)
-    return o && w ? wallAnchor(v, w, o.module * place.rules.wall.cc, (o.module + 1) * place.rules.wall.cc) : null
+  const c = chosen(v, sel)
+  if (!c) return null
+  switch (c.kind) {
+    case 'opening': {
+      const m = c.opening.module * place.rules.wall.cc
+      return wallAnchor(v, c.wall, m, m + place.rules.wall.cc)
+    }
+    case 'shelf': {
+      const b = shelfBox(v, place.rules, c.shelf)
+      return b ? over(v, b) : null
+    }
+    // A frame or decal: along the whole wall, as the wall
+    case 'textile':
+    case 'foil':
+    case 'wall':
+      return wallAnchor(v, c.wall, 0, Math.abs(c.wall.to[0] - c.wall.from[0]) + Math.abs(c.wall.to[1] - c.wall.from[1]))
+    case 'free':
+      return over(v, box([c.textile.from, c.textile.to]))
+    case 'object': {
+      const f = place.footprint(c.object.product)
+      return f ? over(v, footprintBox(c.object, f)) : null
+    }
+    case 'room':
+      return over(v, box(c.room.outline))
+    case 'beam':
+      return over(v, box([c.beam.from, c.beam.to]))
+    case 'fill':
+      return over(v, tilesBox(c.tiles))
+    case 'lane':
+      return over(v, tilesBox([c.tile]))
   }
-  if (sel.shelfId) {
-    const f = shelvesOf(v).find((x) => x.id === sel.shelfId)
-    const b = f && shelfBox(v, place.rules, f)
-    return b ? over(v, b) : null
-  }
-  if (sel.wallId) {
-    const w = v.walls.find((x) => x.id === sel.wallId)
-    if (!w) return null
-    const len = Math.abs(w.to[0] - w.from[0]) + Math.abs(w.to[1] - w.from[1])
-    return wallAnchor(v, w, 0, len)
-  }
-  if (sel.freeTextileId) {
-    const t = v.freeTextiles.find((x) => x.id === sel.freeTextileId)
-    return t ? over(v, box([t.from, t.to])) : null
-  }
-  if (sel.objectId) {
-    const o = v.objects.find((x) => x.id === sel.objectId)
-    const f = o && place.footprint(o.product)
-    if (!o || !f) return null
-    return over(v, footprintBox(o, f))
-  }
-  if (sel.roomId) {
-    const r = v.rooms.find((x) => x.id === sel.roomId)
-    return r ? over(v, box(r.outline)) : null
-  }
-  if (sel.beamId) {
-    const b = v.innerBeams?.find((x) => x.id === sel.beamId)
-    return b ? over(v, box([b.from, b.to])) : null
-  }
-  const tiles = sel.fill ? v.floor.tiles.filter((t) => t.fill === sel.fill) : sel.lane ? v.floor.tiles.filter((t) => t.i === sel.lane!.i && t.j === sel.lane!.j) : []
-  if (!tiles.length) return null
-  return over(v, box(tiles.flatMap((t) => [[t.i * CELL, t.j * CELL] as Point, [(t.i + t.w) * CELL, (t.j + t.h) * CELL] as Point])))
 }
+
+const tilesBox = (tiles: FloorTile[]) => box(tiles.flatMap((t) => [[t.i * CELL, t.j * CELL] as Point, [(t.i + t.w) * CELL, (t.j + t.h) * CELL] as Point]))
 
 /** The selected object's box on screen, px from the plan's corner, and the plan's size. */
 export interface PillPlace {

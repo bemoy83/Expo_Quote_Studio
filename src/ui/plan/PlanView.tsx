@@ -45,8 +45,8 @@ import { floorBrush } from './pointer/floorBrush'
 import { planHits } from './pointer/hits'
 import { pens } from './pointer/pens'
 import { usePlanPointer } from './pointer/usePlanPointer'
-import { pillAnchor, type PillPlace } from './pillAnchor'
-import { SelectionPill } from './SelectionPill'
+import { pillAnchor, type PillPlace } from './pill/pillAnchor'
+import { SelectionPill } from './pill/SelectionPill'
 import { selectionKey, type PlanSelection } from './selection'
 
 interface Props {

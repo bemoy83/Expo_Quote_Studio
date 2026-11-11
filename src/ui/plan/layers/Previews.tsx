@@ -8,7 +8,7 @@ import { type FaceSide } from '../../../domain/faces'
 import { AIM, aimDash, HATCH, INVALID, PILL, RING, SNAP_DOT, wallWidth } from '../planStyle'
 import { linePx, sizePx, usePlanScale } from '../planScale'
 import { mm } from '../dims'
-import { pillCentre, pillWidth } from '../pillPlace'
+import { pillCentre, pillWidth } from '../pill/pillPlace'
 import { Seg } from './Seg'
 
 /** A wall face under the pointer: wall, face, offset along the wall and module index. */

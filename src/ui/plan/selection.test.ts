@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { parse } from '../../persistence/file'
 import type { Variant } from '../../domain/types'
-import { deleteSelection, doorWall, hasDrawer, selectionKey } from './selection'
+import { chosen, deleteSelection, doorWall, hasDrawer, selectionKey } from './selection'
+import { doorFace } from '../../domain/doors'
+import { faces } from '../../domain/faces'
 
 const TEXTS = import.meta.glob<string>('../../test/fixtures/*.json', { query: '?raw', import: 'default', eager: true })
 const variants: Variant[] = Object.values(TEXTS).flatMap((t) => {
@@ -77,5 +79,54 @@ describe('Selection key and drawer', () => {
     expect(hasDrawer({ objectId: 'o' })).toBe(false)
     expect(hasDrawer({ roomId: 'r' })).toBe(false)
     expect(hasDrawer({ beamId: 'b' })).toBe(false)
+  })
+})
+
+describe('What is chosen', () => {
+  it('is nothing with nothing selected, or when what was selected is gone', () => {
+    expect(chosen(variants[0], {})).toBeNull()
+    expect(chosen(variants[0], { objectId: 'gone' })).toBeNull()
+    expect(chosen(variants[0], { wallId: 'gone' })).toBeNull()
+    expect(chosen(variants[0], { openingId: 'gone' })).toBeNull()
+  })
+
+  it('a door: its own wall, on the face its drawer shows', () => {
+    const { v, x } = first((v) => v.openings[0])
+    const c = chosen(v, { openingId: x.id })!
+    const w = v.walls.find((y) => y.id === x.wallId)!
+    expect(c.kind).toBe('opening')
+    expect(c.kind === 'opening' && c.wall.id).toBe(w.id)
+    const want = doorFace(v, w, x)
+    expect(c.kind === 'opening' && c.side).toBe(faces(v, w).includes(want) ? want : faces(v, w)[0])
+  })
+
+  it('a frame, decal or shelf on its wall; one that is gone leaves the wall chosen', () => {
+    const { v, x } = first((v) => v.textiles[0])
+    expect(chosen(v, { wallId: x.wallId, textileId: x.id })).toMatchObject({ kind: 'textile', textile: x, wall: { id: x.wallId } })
+    expect(chosen(v, { wallId: x.wallId, textileId: 'gone' })).toMatchObject({ kind: 'wall', wall: { id: x.wallId } })
+    const f = first((v) => v.foils[0])
+    expect(chosen(f.v, { wallId: f.x.wallId, foilId: f.x.id })?.kind).toBe('foil')
+    const s = first((v) => v.shelves?.[0])
+    expect(chosen(s.v, { wallId: s.x.wallId, shelfId: s.x.id })?.kind).toBe('shelf')
+  })
+
+  it('a wall keeps the felt chosen in its drawer, and a face it does not have falls back to its first', () => {
+    const { v, x } = first((v) => v.walls[0])
+    const c = chosen(v, { wallId: x.id, side: 7 as never, felt: 2 })
+    expect(c).toMatchObject({ kind: 'wall', felt: 2, side: faces(v, x)[0] })
+  })
+
+  it('furniture, rooms, beams, free-standing textile walls and engangsteppe', () => {
+    const o = first((v) => v.objects[0])
+    expect(chosen(o.v, { objectId: o.x.id })).toEqual({ kind: 'object', object: o.x })
+    const r = first((v) => v.rooms[0])
+    expect(chosen(r.v, { roomId: r.x.id })).toEqual({ kind: 'room', room: r.x })
+    const b = first((v) => v.innerBeams?.[0])
+    expect(chosen(b.v, { beamId: b.x.id, beamFine: true })).toEqual({ kind: 'beam', beam: b.x, fine: true })
+    const ft = first((v) => v.freeTextiles[0])
+    expect(chosen(ft.v, { freeTextileId: ft.x.id })).toEqual({ kind: 'free', textile: ft.x, face: 'a' })
+    const t = first((v) => v.floor.tiles.find((x) => x.fill))
+    const c = chosen(t.v, { fill: t.x.fill })
+    expect(c?.kind === 'fill' && c.tiles.every((x) => x.fill === t.x.fill)).toBe(true)
   })
 })
