@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { awayFrom, pillCentre, pillWidth } from './pillPlace'
-import type { PlanScale } from './planScale'
+import type { PlanScale } from '../planScale'
 
 const sc: PlanScale = { u: 1 / 100, lw: 1, detail: 'full' }
 const C: [number, number] = [3, 2]

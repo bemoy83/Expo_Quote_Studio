@@ -44,7 +44,7 @@ Brukeren skal gjøre det meste rett på tegneflaten. **Pillen** gir rask tilgang
 
 ## Pillen
 
-Én komponent (forslag `plan/SelectionPill.tsx`), med samme oppbygning for alt:
+Én komponent (`plan/pill/SelectionPill.tsx`, innholdet per type i `plan/pill/`), med samme oppbygning for alt:
 
 `navn og mål` · farge eller motiv · roter (der det gir mening) · **Detaljer** (åpner skuffen) · fjern. Knapper med et
 ikon som ikke sier seg selv har tekst ved siden av (lag, Detaljer, Fyll ledig vegg); papirkurven står alene

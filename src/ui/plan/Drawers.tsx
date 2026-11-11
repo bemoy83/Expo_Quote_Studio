@@ -4,7 +4,7 @@ import type { CalcResult } from '../../calc/calc'
 import type { Motif, Variant } from '../../domain/types'
 import { CarpetDrawer } from './CarpetDrawer'
 import { FreeTextileDrawer } from './FreeTextileDrawer'
-import type { PlanSelection } from './selection'
+import { chosen, isOnWall, type PlanSelection } from './selection'
 import { WallDrawer } from './WallDrawer'
 
 interface Props {
@@ -23,16 +23,17 @@ interface Props {
 
 export function Drawers({ v, res, view, selection, onSelect, onEdit, onCheckpoint, onToast, motifs, onUpload }: Props) {
   const onClose = () => onSelect({})
-  const freeFrame = selection.freeTextileId ? res.production.free.find((f) => f.textileId === selection.freeTextileId) : undefined
+  const c = chosen(v, selection)
+  const freeFrame = c?.kind === 'free' ? res.production.free.find((f) => f.textileId === c.textile.id) : undefined
   return (
     <>
       {freeFrame && (
         <FreeTextileDrawer v={v} frame={freeFrame} selection={selection} motifs={motifs} onUpload={onUpload} onSelect={onSelect} onEdit={onEdit} onToast={onToast} onClose={onClose} />
       )}
-      {(selection.lane || selection.fill) && view === 'plan' && (
+      {(c?.kind === 'lane' || c?.kind === 'fill') && view === 'plan' && (
         <CarpetDrawer v={v} selection={selection} onSelect={onSelect} onEdit={(fn) => onEdit(fn)} onClose={onClose} />
       )}
-      {(selection.wallId || selection.openingId) && (
+      {isOnWall(c) && (
         <WallDrawer
           v={v}
           selection={selection}
