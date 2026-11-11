@@ -79,13 +79,13 @@ export function FoilPanel({ F, ratioOf, onEdit }: { F: Foil; ratioOf: (id?: stri
 
 /**
  * The Profilering section under the colour (Bjørn 9.11.2026: the same word as in the rail and the tool dock): the motif
- * library, with what is laid on or beside the plates. With a felt chosen it sets the motif its «Print» and decal use and
- * adds a decal; with the whole wall it is the print files to drag onto the wall, and a textile wall. A chosen decal picks
+ * library, with what is laid on or beside the plates. With a felt chosen a motif prints the plate (and is the one its
+ * «Print» and decal use), and it adds a decal; with the whole wall it is the print files to drag onto the wall, and a textile wall. A chosen decal picks
  * its motif here. A chosen textile frame has its motifs in its fabric section.
  */
 export function WallShelf(props: {
   F?: Foil
-  /** A felt is chosen: picking a motif sets the one its «Print» and «Dekal» use. */
+  /** A felt is chosen: picking a motif prints it on the plate and sets the one its «Print» and «Dekal» use. */
   felt?: (id: string) => void
   printing: boolean
   pm: Motif | undefined

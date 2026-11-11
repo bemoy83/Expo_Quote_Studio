@@ -120,8 +120,10 @@ vei tilbake til paletten (`FeltPanel` i ui/plan/wallDrawer/panels.tsx):
 - **Farge og profilering** (først), med samme ord som skinnen og verktøybrikken (Bjørn 9.11.2026). «FELT n · farge»:
   paletten er det som dekker platen. En farge gjelder bare denne platen (begge sider, det er én plate); «Print» sist
   legger hele motivet på platen, på siden som vises. Siste strøk vinner som med kosten. Under ligger seksjonen
-  «PROFILERING» med motivbiblioteket: motivet du velger der brukes av Print og Dekal, og har feltet print, får det nytt
-  motiv med en gang. «+ Dekal» legger en dekal midt i feltet (ikke på et printet felt). Med hele veggen valgt har
+  «PROFILERING» med motivbiblioteket: et trykk på et motiv printer platen med en gang, slik et trykk på en farge farger
+  den (Bjørn 11.11.2026); samme motiv igjen gjør ingenting, og et felt som ikke kan ha print sier hvorfor. Motivet blir
+  også det Print og Dekal bruker. «+ Dekal» legger en dekal midt i feltet (ikke på et printet felt) og velger den, så
+  bytter et motiv dekalens motiv. Med hele veggen valgt har
   Profilering «+ Tekstilvegg» og motivene som dras til veggen.
 - **Hyller og heng**: tilbehør som festes i feltet, én seksjon per slag (hyller nå, heng senere). «Hylle til i feltet»
   legger til og velger hyllen. En valgt hylle har «Farge og profilering» nederst tilbake til feltet; fjernes hyllen, står
