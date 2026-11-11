@@ -1,6 +1,8 @@
-// Furniture in the plan.
+// Furniture in the plan. A counter (Byggeregel K1) also shows its plates: front and both ends closed, the back open.
 import { mainGroupOf } from '../../../catalog/groups'
 import { footprintBox } from '../../../domain/objects'
+import { counterBuild } from '../../../foga/counter'
+import { RECIPES } from '../../../foga/recipes'
 import type { Variant } from '../../../domain/types'
 import { BLOCK, INK } from '../../colors'
 import { idx, productOf } from '../../env'
@@ -44,12 +46,30 @@ export function ObjectLayer(props: {
           ) : (
             <rect x={b.x0} y={b.y0} width={b.x1 - b.x0} height={b.y1 - b.y0} rx={0.03} fill={fill} {...props} />
           )
+        const counter = productOf(o.product)?.counter
         return (
           <g key={o.id}>
             {shape(col, { stroke, strokeWidth: sw, opacity: op, fillOpacity: g ? GONE_FILL : undefined, style: { cursor: tool === 'select' && f.round ? 'move' : undefined } })}
             {g && shape(hatch, {})}
+            {counter && <CounterPlates o={o} size={counter} width={linePx(sc, 1.2)} opacity={op} />}
           </g>
         )
+      })}
+    </g>
+  )
+}
+
+/** The counter's plates seen from above, a line each (Byggeregel K4): the closed front toward the object's +y. */
+function CounterPlates({ o, size, width, opacity }: { o: { x: number; y: number; rot: number }; size: { length: number; depth: number }; width: number; opacity?: number }) {
+  const b = counterBuild(RECIPES.counter, size.length, size.depth)
+  const lower = b.plates.filter((p) => p.level === 'lower')
+  return (
+    <g transform={`translate(${o.x} ${o.y}) rotate(${o.rot})`} opacity={opacity} pointerEvents="none">
+      {lower.map((p) => {
+        const along = p.side === 'front'
+        const [x0, x1] = along ? p.box.x : [(p.box.x[0] + p.box.x[1]) / 2, (p.box.x[0] + p.box.x[1]) / 2]
+        const [z0, z1] = along ? [(p.box.z[0] + p.box.z[1]) / 2, (p.box.z[0] + p.box.z[1]) / 2] : p.box.z
+        return <line key={p.side} x1={x0 / 1000} y1={z0 / 1000} x2={x1 / 1000} y2={z1 / 1000} stroke={INK} strokeWidth={width} strokeLinecap="round" />
       })}
     </g>
   )
