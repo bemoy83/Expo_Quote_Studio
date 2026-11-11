@@ -22,11 +22,10 @@ export const isCarpetFill = (tool: Tool, brush: Brush | null) => !!rollWidthOf(b
 
 export function floorBrush(v: Variant, { tool, brush, floorSize }: FloorPen) {
   const rollWidth = rollWidthOf(brush)
-  // Rolled floor as the eraser sees it: the whole lane under the pointer
-  const brushSize = rollWidth ? { roll: 'x' as const, width: Math.round(rollWidth / CELL) } : floorSize
-  const floorTouch = (q: P, anchor: { i: number; j: number } | null, from: P | null = null): FloorAction =>
-    brush?.kind === 'floor'
-      ? floorAction(v, { x: q.x / CELL, y: q.y / CELL, size: brushSize, product: brush.product, anchor, from })
+  // Carpet tiles only: rolled floor goes through the carpet brush (carpetFill)
+  const floorTouch = (q: P, anchor: { i: number; j: number } | null): FloorAction =>
+    brush?.kind === 'floor' && !rollWidth
+      ? floorAction(v, { x: q.x / CELL, y: q.y / CELL, size: floorSize, product: brush.product, anchor })
       : { kind: 'none' }
   const carpetFill = isCarpetFill(tool, brush)
   const cellOf = (q: P) => {

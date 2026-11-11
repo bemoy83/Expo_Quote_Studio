@@ -97,7 +97,7 @@ export function FloorSection({ v, res, brush, tool, pick, onEdit }: RailProps) {
           />
         </div>
       )}
-      <p className="panel-note">Fyll legger hele standen med 1 × 1. Penselen legger fliser hvor som helst i 0,5-rutenettet: 1 × 1 som standard, Auto tar største flis som passer på ledig gulv, og under Andre ligger 1 × 0,5, 0,5 × 1 og 0,5 × 0,5. Engangsteppe: Fyll legger et område eller hele standen slik det koster minst internt (materiale, teip og arbeid), og Velg på teppet viser andre forslag. Bane legger én hel bane av gangen; R snur retningen. Kunden betaler alltid lagt m². Teppet går under bakrom og vegger. Flere gulvtyper kan stå på samme stand.</p>
+      <p className="panel-note">Fyll legger hele standen med 1 × 1. Penselen legger fliser hvor som helst i 0,5-rutenettet: 1 × 1 som standard, Auto tar største flis som passer på ledig gulv, og under Andre ligger 1 × 0,5, 0,5 × 1 og 0,5 × 0,5. Engangsteppe: Kosten legger et dratt område slik det koster minst internt (materiale, teip og arbeid), et klikk på ledig gulv fyller alt ledig gulv, og et klikk på en bane gir den pennens farge. Spannet fyller hele standen. Velg på teppet viser andre forslag, og R snur en valgt bane. Kunden betaler alltid lagt m². Teppet går under bakrom og vegger. Flere gulvtyper kan stå på samme stand.</p>
     </>
   )
 }

@@ -79,8 +79,8 @@ Tre filer med «support» i navnet, med hver sin jobb:
 ### Engangsteppe
 
 - Modell: `FloorTile` med `roll`, `fill`, `split` · `domain/floor/lanes.ts` (baner, `rollPieces`, `rollUsage`) ·
-  `domain/floor/rollFill.ts` (Fyll med forslag) · `domain/floor/edit.ts` (snu, forlenge og fjerne én bane) ·
-  `domain/floor/brush.ts` (penselen for hele baner)
+  `domain/floor/rollFill.ts` (Fyll med forslag, `fillCarpet`, `carpetClick`) · `domain/floor/edit.ts` (snu, forlenge og
+  fjerne én bane)
 - Kalkyle: `calc/lines/floor.ts` (`rollLine`)
 - Plan, 3D: `plan/layers/FloorLayer.tsx` (RollPreview, Offcut, LaneMark), pensel `plan/pointer/carpetFill.ts` (kosten: dra et område, klikk `carpetClick`) · `scene3d/build/floor.ts` · skuff `CarpetDrawer.tsx`
 - Kappliste: `ui/cutList.ts`, brukt av skuffen og `WorkOrderPage.tsx`

@@ -49,7 +49,7 @@ describe('changedAreas', () => {
     const product = v.floor.tiles.length ? v.floor.tiles[0].product : 'x';
     const other = catalog.products.find((p) => p.tiles && p.variants.some((x) => x.artnr !== product))!;
     const artnr = other.variants.find((x) => x.artnr !== product)!.artnr;
-    const act = floorAction(v, { x: 2.4, y: 2.4, size: { w: 2, h: 2 }, product: artnr, anchor: null, from: null });
+    const act = floorAction(v, { x: 2.4, y: 2.4, size: { w: 2, h: 2 }, product: artnr, anchor: null });
     const next = applyFloor(v, act, artnr);
     const a = changedAreas(state(v), state(next));
     const area = a.floor.clip.reduce((s, b) => s + (b.x1 - b.x0 - 0.04) * (b.y1 - b.y0 - 0.04), 0);
