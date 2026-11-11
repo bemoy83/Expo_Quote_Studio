@@ -55,6 +55,11 @@ export function hint(tool: Tool, brush: Brush | null, carpet = false): Hint {
       )
     case 'motif':
       return h('Klikk en tekstilvegg eller et veggfelt', 'Klikk en tekstilvegg for trykk, eller et veggfelt for foliedekor')
+    case 'counter':
+      return h(
+        'Klikk i planen for å sette ut en bardisk',
+        'Klikk i planen for å sette ut en bardisk i fargen du har valgt, den åpne siden bak · fyll gir alle diskene på standen denne fargen · velg en disk for å bytte farge eller rotere den',
+      )
     case 'object':
       return h(`Klikk i planen for å sette ut ${productOf(brush?.kind === 'object' ? brush.product : '')?.name.toLowerCase() ?? 'varen'}`)
     case 'shelf':

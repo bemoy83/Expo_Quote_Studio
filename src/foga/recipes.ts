@@ -172,8 +172,9 @@ export interface CounterRecipe {
   plateThickness: number;
   platePlay: number;
   boardPlay: number;
-  /** The counter in stock (6560): ready built, picked as one piece (K1). Outer size, mm. */
-  stock: { length: number; depth: number };
+  /** The counter in stock (6560): ready built, picked as one piece (K1). Outer size, mm, and the colour of its plates
+   *  (K6): another wall colour means its plates are swapped. */
+  stock: { length: number; depth: number; ral: string };
 }
 
 export interface Recipes {
@@ -260,6 +261,6 @@ export const RECIPES: Recipes = {
     plateThickness: 3,
     platePlay: 4,
     boardPlay: 2,
-    stock: { length: 1020, depth: 520 },
+    stock: { length: 1020, depth: 520, ral: '9010' },
   },
 };

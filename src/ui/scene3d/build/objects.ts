@@ -1,7 +1,7 @@
 // Furniture: top, pole and foot from the footprint. A counter is built of its Foga profiles (counter.ts).
 import * as THREE from 'three'
 import { FURNITURE_WHITE } from '../../../catalog/defaultCatalog'
-import { conflicts } from '../../../domain/objects'
+import { conflicts, counterRal } from '../../../domain/objects'
 import { stockCounter } from '../../../foga/counter'
 import { idx, place } from '../../env'
 import { CHROME, CONFLICT, NO_COLOR, SELECT, type BuildContext, type Tag } from './context'
@@ -24,7 +24,7 @@ export function buildObjects(c: BuildContext) {
     root.add(g)
     const counter = r.product.counter
     if (counter) {
-      buildCounter(c, g, stockCounter(counter), tag, warn)
+      buildCounter(c, g, stockCounter(counter), counterRal(o), tag, warn)
       continue
     }
     const body = mat('objects', color, { roughness: 0.6, ...warn })

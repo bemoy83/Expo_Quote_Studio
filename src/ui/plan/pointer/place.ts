@@ -8,6 +8,7 @@ import { faceOfPoint, freeTextileAt } from '../../../domain/textile/free'
 import { textileAt } from '../../../domain/textile/inFrame'
 import { inDoorArea } from '../../../domain/doors'
 import { place, rules } from '../../env'
+import { placedBy } from '../../tools'
 import { decorClick } from './decor'
 import { objectClick } from './object'
 import { isDoor, openingAt, openingEdge } from './opening'
@@ -31,7 +32,8 @@ export function placeKey(c: Pick<PointerCtx, 'v' | 'hits' | 'brush'>, what: Plac
   }
   // Furniture follows the pointer while pressed: the same as long as it stays on the stand and has a spot
   if (!hits.onStand(q)) return 'off'
-  return brush?.kind === 'object' && addObject(v, place, brush.product, q.x, q.y) ? 'spot' : 'none'
+  const pen = placedBy(brush)
+  return pen && addObject(v, place, pen.product, q.x, q.y, pen.ral) ? 'spot' : 'none'
 }
 
 export function startPlace(c: PointerCtx, what: PlaceWhat, q: P): Drag {

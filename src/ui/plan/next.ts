@@ -23,7 +23,7 @@ import { builtModules, doorAllowed, type BuiltModule } from '../../domain/walls'
 import { RECIPES } from '../../foga/recipes'
 import { applyDrop, type DecorDrag } from '../dnd'
 import { place, pricing, productOf, rules } from '../env'
-import type { Brush, Tool } from '../tools'
+import { placedBy, type Brush, type Tool } from '../tools'
 import { mm } from './dims'
 import { nearestEdge } from './geometry'
 import type { FaceHit, TextileLine } from './layers/Previews'
@@ -310,11 +310,12 @@ function decorTarget(p: NextInput, q: P): NextTarget | null {
 
 /** Furniture where it actually lands (findSpot moves it off walls and other furniture), or hatched with no room. */
 function objectTarget(v: Variant, brush: Brush | null, q: P): NextTarget | null {
-  if (brush?.kind !== 'object') return null
-  const product = brush.product
+  const pen = placedBy(brush)
+  if (!pen) return null
+  const { product, ral } = pen
   const f = productOf(product)?.footprint
   if (!f) return null
-  const next = addObject(v, place, product, q.x, q.y)
+  const next = addObject(v, place, product, q.x, q.y, ral)
   const o = next?.objects[next.objects.length - 1]
   if (!next || !o) {
     const key = `obj:none:${Math.round(q.x * 20)},${Math.round(q.y * 20)}`
@@ -322,7 +323,7 @@ function objectTarget(v: Variant, brush: Brush | null, q: P): NextTarget | null 
     const invalid: Invalid = f.round ? { circle: { cx: q.x, cy: q.y, r: f.w / 2 } } : { rect: b }
     return target(key, () => line({ hint: `Ikke plass til ${productOf(product)?.name.toLowerCase() ?? 'varen'} her`, invalid }))
   }
-  return target(`obj:${product}:${o.x},${o.y}`, () => line({ edit: () => next, hint: null }))
+  return target(`obj:${product}:${ral ?? ''}:${o.x},${o.y}`, () => line({ edit: () => next, hint: null }))
 }
 
 /**

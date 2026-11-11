@@ -4,6 +4,7 @@ import { r2 } from '../calc/referenceStands'
 import { addObject } from '../domain/objects'
 import { addDefaultRoom, roomSize } from '../domain/rooms'
 import { paintAllWalls } from '../domain/panels'
+import { paintCounters } from '../domain/objects'
 import type { StandWallTerms, Variant } from '../domain/types'
 import { customerName, fillFloor, standWallTerms } from '../domain/variant'
 import { basisLabel, basisRef, sameBasis } from '../cost/basis'
@@ -18,7 +19,7 @@ import { CostBasisPage } from './costbasis/CostBasisPage'
 import { BASIS_EVENT } from './costbasis/link'
 import { IconButton, Toast } from './controls'
 import { download } from './download'
-import { catalog, costBasis, getVersion, idx, place, plateColor, pricing, subscribe } from './env'
+import { catalog, costBasis, getVersion, idx, isCounter, place, plateColor, pricing, subscribe } from './env'
 import { hint, HINT_3D } from './hints'
 import { motifLibrary, readMotif } from './motifs'
 import { NameTip } from './NameTip'
@@ -256,6 +257,7 @@ export default function App() {
       onGridStep={tools.setGridStep}
       onFill={fillWithPen}
       onFillWalls={() => onEdit((x) => paintAllWalls(x, tools.wallRal))}
+      onFillCounters={() => onEdit((x) => paintCounters(x, isCounter, tools.counterRal))}
     />
   )
   return (
@@ -370,7 +372,7 @@ export default function App() {
                   tools={view === 'plan'}
                   active={active}
                   onTool={tools.activate}
-                  stripes={{ wall: plateColor(tools.wallRal), floor: tools.floorPen?.kind === 'floor' ? idx.byArtnr.get(tools.floorPen.product)?.variant.color : undefined }}
+                  stripes={{ wall: plateColor(tools.wallRal), counter: plateColor(tools.counterRal), floor: tools.floorPen?.kind === 'floor' ? idx.byArtnr.get(tools.floorPen.product)?.variant.color : undefined }}
                   canUndo={state.past.length > 0}
                   canRedo={state.future.length > 0}
                   onUndo={() => dispatch({ type: 'undo' })}
@@ -419,4 +421,4 @@ export default function App() {
 const LAYOUT: Layout = { panel: true, calc: true }
 
 /** «…» on the quick picks opens the panel on the tool's tab, where all its options are. */
-const PANEL_TAB: Record<PenTool, string> = { wall: 'vegg', floor: 'gulv', profile: 'prof', fitting: 'hyll', object: 'mob' }
+const PANEL_TAB: Record<PenTool, string> = { wall: 'vegg', floor: 'gulv', profile: 'prof', fitting: 'hyll', counter: 'disk', object: 'mob' }

@@ -15,6 +15,8 @@ export type Brush =
   | { kind: 'floor'; product: string }
   | { kind: 'opening'; product: string }
   | { kind: 'object'; product: string }
+  /** Disk: a counter placed like furniture, its plates in a wall colour (Byggeregel K6). */
+  | { kind: 'counter'; product: string; ral: string }
   /** Tekstilvegg: drawn on a system wall it is mounted there (InFrame), anywhere else it stands free on foot plates.
    * Drawn on the drawing grid in cells of the chosen grid step; a click next to a wall fills its free part. */
   | { kind: 'textile' }
@@ -25,8 +27,9 @@ export type Brush =
 
 /** The drawing tools in the dock. Each one remembers its own brush (pen); the product chosen decides which tool draws it.
  * Openings and inner beams belong to Vegg, motifs to Profilering. Shelves have their own tool, Hyller (Bjørn 9.11.2026:
- * not under Møbel), where later wall fittings (heng) join them. */
-export type PenTool = 'wall' | 'floor' | 'profile' | 'fitting' | 'object'
+ * not under Møbel), where later wall fittings (heng) join them. Counters have theirs, Disker, after Hyller
+ * (Bjørn 11.11.2026). */
+export type PenTool = 'wall' | 'floor' | 'profile' | 'fitting' | 'counter' | 'object'
 export type DockTool = 'select' | PenTool | 'erase'
 
 export function penToolOf(b: Brush): PenTool {
@@ -42,9 +45,18 @@ export function penToolOf(b: Brush): PenTool {
       return 'profile'
     case 'shelf':
       return 'fitting'
+    case 'counter':
+      return 'counter'
     case 'object':
       return 'object'
   }
+}
+
+/** What a pen that places a piece on the floor puts there: furniture or a counter in its colour. */
+export function placedBy(b: Brush | null): { product: string; ral?: string } | null {
+  if (b?.kind === 'object') return { product: b.product }
+  if (b?.kind === 'counter') return { product: b.product, ral: b.ral }
+  return null
 }
 
 /** The pen is out (not Velg) and draws this kind; with `id`, this product or motif too. */
@@ -87,12 +99,13 @@ export type Layer = Exclude<Highlight, null>
 
 /** Layers that stay at full strength while a pen draws or erases; the rest are toned down so what the pen works on
  * stands out. Vegg keeps everything on the walls, Profilering and Hyller keep the walls they hang on (and what is on
- * them), Møbel keeps the walls it must clear. */
+ * them), Disker and Møbel keep the walls they must clear. */
 const PEN_LAYERS: Record<PenTool, readonly Layer[]> = {
   wall: ['walls', 'openings', 'beams', 'textile', 'foil'],
   floor: ['floor'],
   profile: ['walls', 'openings', 'textile', 'foil'],
   fitting: ['walls', 'openings', 'textile', 'foil'],
+  counter: ['walls', 'openings', 'objects'],
   object: ['walls', 'openings', 'objects'],
 }
 

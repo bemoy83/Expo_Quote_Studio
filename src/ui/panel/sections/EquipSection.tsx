@@ -4,13 +4,13 @@ import { useState } from 'react'
 import { mainGroupOf, PRODUCT_GROUPS, resolveGroup } from '../../../catalog/groups'
 import type { Product } from '../../../catalog/types'
 import { setCounted } from '../../../domain/edit'
-import { addObjectAnywhere, removeObjects } from '../../../domain/objects'
+import { addObjectAnywhere, COUNTER_STOCK_RAL, removeObjects } from '../../../domain/objects'
 import { shelvesOf } from '../../../domain/shelves/model'
 import type { Variant } from '../../../domain/types'
 import { Counter, IconButton } from '../../controls'
 import { catalog, place } from '../../env'
 import { kr } from '../../format'
-import { penOn } from '../../tools'
+import { penOn, type Brush } from '../../tools'
 import { ShelfIcon } from '../../plan/QuickPicks'
 import { ObjectThumb, ProductRow, VariantChips } from '../ProductRow'
 import type { RailProps } from '../Rail'
@@ -88,7 +88,9 @@ function CatalogRow({ v, product, brush, tool, pick, onEdit, onToast, showGroup 
   const { tot, sum, first } = variantTotals(product, counts)
   const i = vi ?? first
   const cur = product.variants[i]
-  const pen = isObject && penOn(tool, brush, 'object', cur.artnr)
+  const pen = isObject && penOn(tool, brush, product.counter ? 'counter' : 'object', cur.artnr)
+  /** A counter's pen keeps the colour Disker last placed with (Byggeregel K6). */
+  const penBrush = (): Brush => (product.counter ? { kind: 'counter', product: cur.artnr, ral: brush?.kind === 'counter' ? brush.ral : COUNTER_STOCK_RAL } : { kind: 'object', product: cur.artnr })
   const setCount = (n: number) => {
     if (!isObject) return onEdit((x) => setCounted(x, cur.artnr, n))
     const have = counts[i]
@@ -121,7 +123,7 @@ function CatalogRow({ v, product, brush, tool, pick, onEdit, onToast, showGroup 
       action={
         <>
           <Counter value={counts[i]} onChange={setCount} label={`Legg til ${product.name.toLowerCase()}`} max={isObject ? 20 : 99} />
-          {isObject && <IconButton icon={Paintbrush} label={`Plasser ${product.name.toLowerCase()} i plan`} pressed={pen && tool === 'brush'} onClick={() => pick({ kind: 'object', product: cur.artnr })} />}
+          {isObject && <IconButton icon={Paintbrush} label={`Plasser ${product.name.toLowerCase()} i plan`} pressed={pen && tool === 'brush'} onClick={() => pick(penBrush())} />}
         </>
       }
     />

@@ -3,8 +3,8 @@
 import type { ReactNode } from 'react'
 import type { CalcResult } from '../../../calc/calc'
 import type { Motif, Variant } from '../../../domain/types'
-import { wallPlates } from '../../env'
 import { Sw } from '../QuickPicks'
+import { ralSwatches } from '../swatches'
 import type { PlanSelection } from '../selection'
 
 export type Edit = (fn: (v: Variant) => Variant, history?: boolean) => void
@@ -39,17 +39,13 @@ export interface SecondFace {
 
 /** Motifs on the pill: the newest of the library (the customer's own come last), plus the chosen one. */
 const MOTIFS = 5
-/** Colours on the pill, as on the wall tool's quick picks. */
-const COLOURS = 8
-
+/** The wall colours on the pill, the same row as on the Vegg and Disker quick picks (`ralSwatches`). */
 export function Colours({ value, title, onPick }: { value: string; title: (name: string) => string; onPick: (ral: string) => void }) {
   return (
     <>
-      {wallPlates()
-        .slice(0, COLOURS)
-        .map((x) => (
-          <Sw key={x.ral} color={x.color} title={`${title(x.name.toLowerCase())} · RAL ${x.ral}`} on={value === x.ral} onClick={() => value !== x.ral && onPick(x.ral!)} />
-        ))}
+      {ralSwatches(value, title, (r) => r !== value && onPick(r)).map(({ key, ...x }) => (
+        <Sw key={key} {...x} />
+      ))}
     </>
   )
 }

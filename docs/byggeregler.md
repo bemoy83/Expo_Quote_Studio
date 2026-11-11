@@ -360,6 +360,12 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   falsen på den øverste 93 (1030–1036, 4 mm under skinnens overkant), hyllen i falsen på den midterste (780–786). Platen
   står 2 mm fra skinnens kropp på alle sider.
   *Bjørn 11.11.2026 · `RECIPES.counter.board`, `boardPlay` · kode `src/foga/counter.ts` · test `src/foga/counter.test.ts`*
+- **K6 Farge på disken.** Alle platene på en disk har samme farge, en av veggfargene (RAL som systemveggen). Disken på
+  lager er hvit 9010; en annen farge betyr at platene byttes på lageret før messen og tilbake etter. Prisen er den samme
+  i alle farger (1320 kr), kalkylen tar med kostnaden for platebyttet (prisartikkelen platebytte bardisk), og linjen sier
+  hvilke farger montøren skal ha med. Fargen følger ikke veggenes standardfarge, og spannet på veggene farger ikke
+  diskene: Disker har sitt eget spann.
+  *Bjørn 11.11.2026 · `RECIPES.counter.stock.ral` · kode `src/domain/objects.ts`, `src/calc/lines/objects.ts`, `src/cost/itemDefs.ts` · test `src/calc/counter.test.ts`, `src/domain/objects.test.ts`*
 
 ## P · Plukkliste og arbeidsordre
 

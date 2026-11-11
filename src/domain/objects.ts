@@ -8,6 +8,7 @@ import { builtModules } from './walls';
 import { doorSwing } from './doors';
 import { nextId } from './ids';
 import { faceSegment, sideOf } from './faces';
+import { RECIPES } from '../foga/recipes';
 
 export interface Box {
   x0: number;
@@ -124,9 +125,11 @@ export function findSpot(v: Variant, ctx: PlaceContext, o: PlacedObject, radius:
 }
 
 /** Add one object near (x, y). Null when it does not fit anywhere. */
-export function addObject(v: Variant, ctx: PlaceContext, product: string, x: number, y: number): Variant | null {
+/** Place a product at x, y or the nearest free spot; a counter (`ral`) with its plates in that colour (Byggeregel K6). */
+export function addObject(v: Variant, ctx: PlaceContext, product: string, x: number, y: number, ral?: string): Variant | null {
   const id = nextId(v.objects.map((o) => o.id), 'i');
-  const spot = findSpot(v, ctx, { id, product, x, y, rot: 0 }, Math.max(v.stand.width, v.stand.depth));
+  const colour = ral && ral !== COUNTER_STOCK_RAL ? { ral } : {};
+  const spot = findSpot(v, ctx, { id, product, x, y, rot: 0, ...colour }, Math.max(v.stand.width, v.stand.depth));
   return spot ? { ...v, objects: [...v.objects, spot] } : null;
 }
 
@@ -224,3 +227,24 @@ export function setObjectProduct(v: Variant, ctx: PlaceContext, id: string, prod
 
 /** The footprint is no wider or deeper than the stand. */
 const fitsStand = (v: Variant, b: Omit<Box, 'kind'>) => b.x1 - b.x0 <= v.stand.width + 1e-9 && b.y1 - b.y0 <= v.stand.depth + 1e-9;
+
+/** Colour of a counter's plates in stock (Byggeregel K6). */
+export const COUNTER_STOCK_RAL = RECIPES.counter.stock.ral;
+
+/** The colour of a counter's plates (K6): its own, else as in stock. */
+export const counterRal = (o: Pick<PlacedObject, 'ral'>): string => o.ral ?? COUNTER_STOCK_RAL;
+
+/** A counter's plates in `ral`, all of them (K6). The stock colour is stored as none. */
+export function setCounterRal(v: Variant, id: string, ral: string): Variant {
+  return { ...v, objects: v.objects.map((o) => (o.id === id ? withRal(o, ral) : o)) };
+}
+
+/** The Disker pen's bucket: every counter on the stand in `ral` (K6). */
+export function paintCounters(v: Variant, isCounter: (product: string) => boolean, ral: string): Variant {
+  return { ...v, objects: v.objects.map((o) => (isCounter(o.product) ? withRal(o, ral) : o)) };
+}
+
+function withRal(o: PlacedObject, ral: string): PlacedObject {
+  const { ral: _, ...rest } = o;
+  return ral === COUNTER_STOCK_RAL ? rest : { ...rest, ral };
+}
