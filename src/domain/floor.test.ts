@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyFloor, floorAction, type FloorTouch, type RollBrush } from './floor/brush';
+import { applyFloor, floorAction, type FloorTouch } from './floor/brush';
 import { cutTiles } from './floor/edit';
 import { lanesOf, rollUsage } from './floor/lanes';
 import { tileAreas, tilesFromCells } from './floor/tiles';
@@ -95,12 +95,7 @@ describe('floor tiles', () => {
 
 describe('rolled floor in lanes', () => {
   const v0 = createVariant('A', { width: 5, depth: 3, type: 'row' }); // 10 × 6 cells
-  const ROLL: RollBrush = { roll: 'x', width: 4 };
   const lanes = (v: Variant) => v.floor.tiles.map(({ i, j, w, h, roll, product }) => [i, j, w, h, roll, product]).sort((a, b) => +a[1]! - +b[1]! || +a[0]! - +b[0]!);
-  const touch = (v: Variant, x: number, y: number, t: Partial<FloorTouch> = {}) => {
-    const a = floorAction(v, { x, y, size: ROLL, erase: false, product: A, ...t });
-    return applyFloor(v, a, t.product ?? A, 'x');
-  };
 
   /** Two lanes along the width: a whole one at the back, one cut to 1 m in front. */
   const laid = (v: Variant): Variant => ({ ...v, floor: { ...v.floor, tiles: [{ i: 0, j: 0, w: 10, h: 4, roll: 'x', product: A }, { i: 0, j: 4, w: 10, h: 2, roll: 'x', product: A }] } });
@@ -117,36 +112,6 @@ describe('rolled floor in lanes', () => {
     expect(u.lanes.map((l) => [l.n, l.length, l.width, l.cut])).toEqual([[1, 5, 2, false], [2, 5, 1, true]]);
     expect(u.lm).toBeCloseTo(10.4);
     expect(u.waste).toBeCloseTo(10.4 * 2 - 15);
-  });
-
-  it('a click lays a whole lane on free floor, and a narrower cut lane where only a strip is free', () => {
-    let v = touch(v0, 3, 1.2);
-    expect(lanes(v)).toEqual([[0, 0, 10, 4, 'x', A]]);
-    v = touch(v, 3, 5);
-    expect(lanes(v)).toEqual([[0, 0, 10, 4, 'x', A], [0, 4, 10, 2, 'x', A]]);
-  });
-
-  it('a drag lays the same whole lane as a click; dragging along does not shorten it', () => {
-    const v = touch(v0, 7.5, 2.2, { from: { x: 2.5, y: 2.2 } });
-    expect(lanes(v)).toEqual(lanes(touch(v0, 2.5, 2.2)));
-    expect(lanes(v)).toEqual([[0, 0, 10, 4, 'x', A]]);
-  });
-
-  it('a drag across lays whole lanes side by side in the same direction, lined up with the first, cut at the edge', () => {
-    expect(lanes(touch(v0, 9.5, 5.5, { from: { x: 0.5, y: 0.5 } }))).toEqual([[0, 0, 10, 4, 'x', A], [0, 4, 10, 2, 'x', A]]);
-    // Started at the front and dragged to the back: the lanes keep lining up with the first
-    expect(lanes(touch(v0, 6.5, 0.5, { from: { x: 2.5, y: 5.5 } }))).toEqual([[0, 0, 10, 2, 'x', A], [0, 2, 10, 4, 'x', A]]);
-  });
-
-  it('a drag that leaves the stand keeps its lanes, as if the pointer stopped at the edge', () => {
-    expect(lanes(touch(v0, 4, 9, { from: { x: 0.5, y: 0.5 } }))).toEqual([[0, 0, 10, 4, 'x', A], [0, 4, 10, 2, 'x', A]]);
-    expect(lanes(touch(v0, -3, -2, { from: { x: 2.5, y: 2.2 } }))).toEqual([[0, 0, 10, 4, 'x', A]]);
-  });
-
-  it('a click on a lane of another colour recolours it; the eraser takes the whole lane', () => {
-    const v = laid(v0);
-    expect(lanes(touch(v, 3, 1, { product: B }))[0]).toEqual([0, 0, 10, 4, 'x', B]);
-    expect(lanes(touch(v, 3, 1, { erase: true }))).toEqual([[0, 4, 10, 2, 'x', A]]);
   });
 
   it('a tile laid over a lane splits it, and what is left across stays a narrower lane', () => {

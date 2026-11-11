@@ -4,8 +4,6 @@ import { TILE_FULL, type TileSize } from '../domain/floor/tiles';
 import { type FloorBrushSize } from '../domain/floor/brush';
 import type { Rules } from '../rules/rules';
 
-/** Engangsteppe: Fyll marks an area the engine lays (domain/floor/rollFill.ts), Bane places one lane. */
-
 /** Velg · Pensel · Tøm */
 export type Tool = 'select' | 'brush' | 'erase';
 
