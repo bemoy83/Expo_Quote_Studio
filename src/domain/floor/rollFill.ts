@@ -228,8 +228,8 @@ export function fillCarpet(v: Variant, product: string, roll: number, r: CarpetR
 }
 
 /**
- * A click with the carpet brush (Bjørn 11.11.2026): a lane of another colour takes this colour (out of its fill, as the
- * lane brush did); on free floor the free floor is filled the cheapest way, and what is laid stays. A drag fills an
+ * A click with the carpet brush (Bjørn 11.11.2026): a lane of another colour takes this colour (out of its fill: it is cut
+ * from another roll); on free floor the free floor is filled the cheapest way, and what is laid stays. A drag fills an
  * area (fillCarpet), the paint bucket the whole stand.
  */
 export function carpetClick(v: Variant, product: string, roll: number, r: CarpetRates, [i, j]: Cell): Variant {

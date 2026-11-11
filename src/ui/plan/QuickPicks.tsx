@@ -1,5 +1,5 @@
 // Quick picks over the active tool in the dock: everything the tool draws, in fixed places so the hand learns where the
-// colours are. The tool's own settings (floor type, size or roll direction, drawing grid) sit here too, and the last
+// colours are. The tool's own settings (floor type, tile size, drawing grid) sit here too, and the last
 // button («…») opens the panel on the tool's tab for the rest.
 import { Blinds, Box, DoorClosed, Ellipsis, PaintBucket, Paintbrush, Upload } from 'lucide-react'
 import type { ReactNode } from 'react'
@@ -246,7 +246,6 @@ export function QName({ name, meta }: { name: string; meta?: string }) {
   )
 }
 
-/** A colour as a square swatch, chosen = an ink ring inside it (dock quick picks, stand popover). */
 /**
  * The colours of a pen and its paint bucket right after them (Bjørn 11.11.2026): the same row on the wall and the floor
  * pill, the bucket filling the whole stand with the chosen colour.
@@ -264,6 +263,7 @@ function Palette({ swatches, fill, onFill }: { swatches: { key: string; color?: 
   )
 }
 
+/** A colour as a square swatch, chosen = an ink ring inside it (dock quick picks, stand popover). */
 export function Sw({ color, title, on, onClick }: { color?: string; title: string; on: boolean; onClick: () => void }) {
   return <button type="button" className="q-sw" aria-pressed={on} title={title} aria-label={title} style={{ background: color }} onClick={onClick} />
 }

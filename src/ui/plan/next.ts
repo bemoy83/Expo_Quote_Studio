@@ -115,7 +115,7 @@ function newModules(v: Variant, a: Point, b: Point): Module[] {
 /** The target of the pen in hand and what a click or release there stores; null when there is nothing to show. */
 export function nextTarget(p: NextInput): NextTarget | null {
   const t = targetOf(p)
-  // The same target with another pen (colour, product, lane direction) stores something else
+  // The same target with another pen (colour, product) stores something else
   return t && { key: `${p.tool}|${JSON.stringify(p.brush)}|${t.key}`, outcome: t.outcome }
 }
 
@@ -351,7 +351,7 @@ function shelfTarget(v: Variant, wallId: string, s: FaceSide, m0: number, m1: nu
   })
 }
 
-/** Fyll: the area being dragged, or the whole stand a click fills, laid the cheapest way. */
+/** The carpet brush dragged: the area, laid the cheapest way. */
 function fillTarget(p: NextInput, product: string, rect: Rect): NextTarget | null {
   const roll = p.floor.rollWidth
   if (!roll) return null

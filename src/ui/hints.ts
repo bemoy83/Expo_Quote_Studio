@@ -16,7 +16,8 @@ export const HINT_3D = h(
   'Dra for å rotere · rull for å zoome · klikk en dør for å endre den · dra møbler, en innervegg eller grafikk for å flytte · dra et rom i veggen eller taket, toppkanten av en romvegg endrer størrelsen · dra grafikk eller tekstilvegg fra Profilering til en vegg',
 )
 
-export function hint(tool: Tool, brush: Brush | null, roll = false): Hint {
+/** `carpet`: the floor pen lays engangsteppe (the carpet brush). */
+export function hint(tool: Tool, brush: Brush | null, carpet = false): Hint {
   if (tool === 'select')
     return h(
       'Klikk for å velge · Mer i pillen for å endre · dra for å flytte · Delete fjerner',
@@ -39,7 +40,7 @@ export function hint(tool: Tool, brush: Brush | null, roll = false): Hint {
         'Dra langs rutenettet for innvendig takdrager · en ende på en annen takdrager henger på krok, ellers stolpe med fotplate · tegn en tverrdrager mot en stolpe for å spare fotplaten · i Velg flytter Shift + dra (eller Fin i pillen) den på tvers i 50 mm-steg',
       )
     case 'floor':
-      if (roll)
+      if (carpet)
         return h(
           'Dra et område · klikk ledig gulv for å fylle det · klikk en bane for å bytte farge',
           'Dra et område for engangsteppe, banene legges slik det koster minst · klikk ledig gulv for å fylle alt ledig gulv, klikk en bane for å gi den denne fargen · spannet fyller hele standen · Velg teppet for andre forslag til legging, eller en bane for å snu eller endre lengden',

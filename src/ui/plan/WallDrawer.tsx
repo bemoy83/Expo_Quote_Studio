@@ -174,7 +174,6 @@ export function WallDrawer(p: Props) {
   }
   const hint0 = wallHint({ O, door: !!O && doorModules.has(O.module), painting, tool, printing, T, F, S, felt: Fe !== undefined ? page : undefined, extras: !T && !F && !S && Fe === undefined && page === 'extras', w })
 
-
   const hint = brushOn ? (brushHint ?? BRUSH_HINT) : hint0
 
   /**
