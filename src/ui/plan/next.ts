@@ -203,10 +203,9 @@ function targetOf(p: NextInput): NextTarget | null {
 
   // Floor
   const product = brush?.kind === 'floor' ? brush.product : null
-  if (dragging?.kind === 'carpetFill' && product) {
-    if (p.fillRect) return fillTarget(p, product, p.fillRect)
-    return hover && onStandFloor(v, hover) ? carpetClickTarget(p, product, hover) : null
-  }
+  // The carpet brush held: the area once it is dragged out. Before that nothing, as the press may turn into a drag:
+  // what a click stores shows on hover and comes on release (Bjørn 11.11.2026)
+  if (dragging?.kind === 'carpetFill') return p.fillRect && product ? fillTarget(p, product, p.fillRect) : null
   // Carpet tiles paint while dragging: the floor itself shows the stroke
   if (dragging) return null
 

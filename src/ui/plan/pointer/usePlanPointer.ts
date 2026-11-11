@@ -126,7 +126,7 @@ export function usePlanPointer(input: PlanPointerInput) {
     // Shift held (or «Fin» on in the pill): a drawn takdrager moves across in 50 mm steps, off the 1 m grid (Byggeregel T15)
     if (d?.kind === 'beam') d.fine = e.shiftKey || !!d.fineLock
     if (d) drag.current = d
-    // Held without moving counts as dragging too: Fyll shows its proposal while pressed
+    // Held without moving counts as dragging too, so the hover preview stops while pressed
     setDragging(d ?? null)
   }
 
