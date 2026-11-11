@@ -65,6 +65,11 @@ describe('imports', () => {
     expect(cycles(new Map([['a', ['b']], ['b', ['c']], ['c', ['a']]]))).toEqual([['a', 'b', 'c', 'a']]);
   });
 
+  it('keeps the cost engine free of the price model: pricing/ reads cost/, never the other way', () => {
+    const wrong = [...graph].flatMap(([f, to]) => (f.startsWith('cost/') ? to.filter((t) => t.startsWith('pricing/')).map((t) => `${f} → ${t}`) : []));
+    expect(wrong).toEqual([]);
+  });
+
   it('has no circular imports', () => {
     expect(cycles(graph).map((c) => c.join(' → '))).toEqual([]);
   });

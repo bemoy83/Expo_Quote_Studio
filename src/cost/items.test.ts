@@ -1,10 +1,9 @@
 import { EXAMPLE_LIST } from './example-list';
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_PRICING, ITEM } from '../pricing/data';
-import { EXAMPLE_RECIPES as ITEM_RECIPES, ITEM_DEFS } from '../pricing/items';
-import type { PriceItem } from '../pricing/model';
+import { EXAMPLE_RECIPES as ITEM_RECIPES, ITEM_DEFS } from './itemDefs';
 import { EXAMPLE_BASIS as B, supplierList } from './basis';
-import { basisYear, costItem, costItems } from './items';
+import { basisYear, costItem, costItems, type PriceItem } from './items';
 import { fogaPartPerUse, labourCost, purchaseCost } from './model';
 import { OWN_SUPPLIER } from './own-list';
 

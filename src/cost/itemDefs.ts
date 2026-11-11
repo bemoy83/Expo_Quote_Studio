@@ -1,10 +1,10 @@
 // The price items the calc builds lines from, as structure: id, name, unit and whether it is rented or sold. Every
 // number for them (minutes per handling step, what each is made of) is in the kostgrunnlag (src/cost/basis.ts); the
 // examples here are what the app ships with. Kostmodell: docs/kostmodell.md.
-import type { ItemRecipe } from '../cost/items';
+import type { ItemRecipe, PriceItem } from './items';
 import { railLengths } from '../domain/shelves/corners';
 import { RULES } from '../rules/rules';
-import type { PriceItem, Time } from './model';
+import type { Time } from './time';
 
 /** Ids the calc builds from the Foga structure. Rails and beams per standard length, the rest per piece, m or m². */
 export const ITEM = {

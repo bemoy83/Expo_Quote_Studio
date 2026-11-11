@@ -120,7 +120,7 @@ hver artikkel og hvert produkt som egen størrelse, også når kronene er regnet
 | Kundetekst ved leie og kjøp | Salgsprodukt | Tilbudet |
 | Hvem betaler standveggene, arrangørens farge | Prosjekt (messe) | Fakturamottaker, platebytte |
 
-I appen i dag er dette `PriceItem` og `PricingData` i `src/pricing/`, `pricing` og `cost` i katalogen
+I appen i dag er dette `PriceItem` (`src/cost/items.ts`) og `PricingData` (`src/pricing/data.ts`), `pricing` og `cost` i katalogen
 (`src/catalog/types.ts`), og `priceLine` som viser hvordan en linje prises.
 
 ## 7. Senere, eies av OMS

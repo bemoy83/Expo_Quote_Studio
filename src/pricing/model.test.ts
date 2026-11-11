@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { dgOf, priceLine, sumItems, type PriceItem } from './model';
+import { dgOf, priceLine, sumItems } from './model';
+import type { PriceItem } from '../cost/items';
 
 const list = new Map<string, PriceItem>([
   ['a', { id: 'a', name: 'A', unit: 'stk', cost: 10, price: 20, transfer: 'leie', time: { plukk: 6 } }],

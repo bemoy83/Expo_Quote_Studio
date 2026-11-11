@@ -10,8 +10,8 @@
 // Kostmodell: docs/kostmodell.md.
 import type { CostBasisRef } from '../domain/types';
 import { FOGA_PARTS, type PartKind } from '../foga/parts';
-import { EXAMPLE_CATALOG, EXAMPLE_RECIPES, EXAMPLE_TIMES, ITEM_DEFS } from '../pricing/items';
-import { HANDLING_STEPS, type Time } from '../pricing/model';
+import { EXAMPLE_CATALOG, EXAMPLE_RECIPES, EXAMPLE_TIMES, ITEM_DEFS } from './itemDefs';
+import { HANDLING_STEPS, type Time } from './time';
 import { EXAMPLE_LIST } from './example-list';
 import type { ItemRecipe } from './items';
 import { EXAMPLE_OWN_LIST, OWN_SUPPLIER } from './own-list';

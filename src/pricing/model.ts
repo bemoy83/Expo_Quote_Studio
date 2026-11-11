@@ -2,25 +2,8 @@
 // app fixed per-piece prices for catalog products; cost (and price for what the catalog does not cover) comes from the
 // app's own cost engine (src/cost, Bjørn 7.11.2026). A product priced as a sum adds up what is actually drawn; the
 // margin is shown internally only. docs/prismodell.md, docs/kostmodell.md.
-import type { ItemTrace } from '../cost/items';
-
-/** Leie: comes back after the fair (frame, posts, furniture). Salg: the customer keeps it or it is used up (print, foil). */
-export type Transfer = 'leie' | 'salg';
-
-/** Handling steps, in the order the work is done. Time is kept per step: it is cost (× hourly rate, in the OMS) and
- *  it is the plan on the work order. */
-export const HANDLING_STEPS = ['plukk', 'vask', 'transport', 'forhåndsmontering', 'montering', 'demontering'] as const;
-export type HandlingStep = (typeof HANDLING_STEPS)[number];
-/** Minutes per handling step. */
-export type Time = Partial<Record<HandlingStep, number>>;
-
-/** a + b × times, per step. */
-export function addTime(a: Time, b: Time | undefined, times = 1): Time {
-  if (!b) return a;
-  const out: Time = { ...a };
-  for (const s of HANDLING_STEPS) if (b[s]) out[s] = (out[s] ?? 0) + b[s]! * times;
-  return out;
-}
+import type { PriceList, Transfer } from '../cost/items';
+import { addTime, type Time } from '../cost/time';
 
 /**
  * How the sales price of a level 1 product is set.
@@ -28,27 +11,6 @@ export function addTime(a: Time, b: Time | undefined, times = 1): Time {
  * - sum: the sum of the articles, parts and handling that are actually built for the line, each at its OMS price.
  */
 export type Strategy = 'fast' | 'sum';
-
-/**
- * A level 2 article, a level 3 part that is picked directly, or a handling item (montering on site), with cost and
- * price per unit (src/pricing/data.ts, costed by src/cost/items.ts). Internal: never a line on the quote.
- */
-export interface PriceItem {
-  id: string;
-  name: string;
-  unit: 'stk' | 'm' | 'm²' | 'lm';
-  /** Cost per unit, kr. */
-  cost: number;
-  /** Sales price per unit eks. mva., kr. */
-  price: number;
-  transfer?: Transfer;
-  /** Minutes per unit and handling step. */
-  time?: Time;
-  /** How the cost engine got `cost` and `price` («Slik er det regnet», src/cost/items.ts). */
-  trace?: ItemTrace;
-}
-
-export type PriceList = ReadonlyMap<string, PriceItem>;
 
 export interface Use {
   id: string;
