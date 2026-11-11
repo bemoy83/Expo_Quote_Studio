@@ -43,7 +43,7 @@ export interface PlanSelection {
 }
 
 /** How the drawer under the plan stands: closed, or open in one of its two heights (docs/pille-og-skuff.md). A plain
- *  click only selects; Mer in the pill opens it. */
+ *  click only selects; Detaljer in the pill opens it. */
 export type DrawerState = 'closed' | 'compact' | 'detail'
 
 /** What a selection is about. The one order a selection is read in: the first field set says it (a selection made by a
@@ -67,7 +67,7 @@ export function kindOf(s: PlanSelection): { kind: Kind; id: string } | null {
 }
 
 /** The kinds that open in the wall drawer: the wall, and a door, frame, decal or shelf on it. */
-export const ON_WALL: ReadonlySet<Kind> = new Set<Kind>(['opening', 'textile', 'foil', 'shelf', 'wall'])
+const ON_WALL: ReadonlySet<Kind> = new Set<Kind>(['opening', 'textile', 'foil', 'shelf', 'wall'])
 
 /** The object a selection is about, so a second click on it can be told apart: the face shown does not count. */
 export function selectionKey(s: PlanSelection): string {

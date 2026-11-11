@@ -4,7 +4,7 @@
 // metres and screen pixels, so it can be tested without a plan; SelectionPill.tsx turns it into a place on screen.
 import { footprintBox } from '../../../domain/objects'
 import { shelfBox } from '../../../domain/shelves/model'
-import { CELL, pointAlong } from '../../../domain/grid'
+import { CELL, pointAlong, wallLength } from '../../../domain/grid'
 import type { FloorTile, Point, Variant, Wall } from '../../../domain/types'
 import { isPerimeterWall } from '../../../domain/walls'
 import { place } from '../../env'
@@ -88,7 +88,7 @@ export function pillAnchor(v: Variant, sel: PlanSelection): PillAnchor | null {
     case 'textile':
     case 'foil':
     case 'wall':
-      return wallAnchor(v, c.wall, 0, Math.abs(c.wall.to[0] - c.wall.from[0]) + Math.abs(c.wall.to[1] - c.wall.from[1]))
+      return wallAnchor(v, c.wall, 0, wallLength(c.wall))
     case 'free':
       return over(v, box([c.textile.from, c.textile.to]))
     case 'object': {

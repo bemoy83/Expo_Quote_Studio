@@ -2957,7 +2957,7 @@ select.cin {
   cursor: grab;
 }
 
-/* The selection pill over what is selected in Velg (plan/SelectionPill.tsx): like the quick picks, shadow only */
+/* The selection pill over what is selected in Velg (plan/pill/SelectionPill.tsx): like the quick picks, shadow only */
 .sel-pill {
   position: absolute;
   z-index: 8;

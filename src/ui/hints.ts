@@ -20,8 +20,8 @@ export const HINT_3D = h(
 export function hint(tool: Tool, brush: Brush | null, carpet = false): Hint {
   if (tool === 'select')
     return h(
-      'Klikk for å velge · Mer i pillen for å endre · dra for å flytte · Delete fjerner',
-      'Klikk for å velge, klikk tomt gulv eller Esc for å slippe · Mer i pillen åpner skuffen for en vegg, dør, tekstilvegg eller engangsteppe · dra en innervegg, innvendig takdrager eller møbler for å flytte · Shift + dra en innvendig takdrager (eller Fin i pillen) flytter den på tvers i 50 mm-steg · dra gulvet i et rom for å flytte rommet, en romvegg for å endre størrelsen · Delete fjerner valgt møbel, hylle, dør, takdrager eller rom',
+      'Klikk for å velge · Detaljer i pillen for å endre · dra for å flytte · Delete fjerner',
+      'Klikk for å velge, klikk tomt gulv eller Esc for å slippe · Detaljer i pillen åpner skuffen for en vegg, dør, tekstilvegg eller engangsteppe · dra en innervegg, innvendig takdrager eller møbler for å flytte · Shift + dra en innvendig takdrager (eller Fin i pillen) flytter den på tvers i 50 mm-steg · dra gulvet i et rom for å flytte rommet, en romvegg for å endre størrelsen · Delete fjerner valgt møbel, hylle, dør, takdrager eller rom',
     )
   if (tool === 'erase')
     return h(
