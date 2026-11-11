@@ -252,10 +252,6 @@ export default function App() {
       onFloorSize={tools.setFloorSize}
       otherSize={tools.otherSize}
       onOtherSize={tools.setOtherSize}
-      roll={tools.roll}
-      onRoll={tools.setRollDir}
-      rollMode={tools.rollMode}
-      onRollMode={tools.setRollMode}
       gridStep={tools.gridStep}
       onGridStep={tools.setGridStep}
       onFill={fillWithPen}
@@ -329,8 +325,6 @@ export default function App() {
                       tool={tool}
                       brush={brush}
                       floorSize={tools.floorSize}
-                      rollDir={tools.roll}
-                      rollMode={tools.rollMode}
                       gridStep={tools.gridStep}
                       highlight={highlight}
                       selection={selection}
@@ -370,7 +364,7 @@ export default function App() {
                     </div>
                   </Suspense>
                 )}
-                <StandChip v={v} res={res} onEdit={onEdit} terms={terms} onTerms={setTerms} view={view} onView={showView} hint={view === '3d' ? HINT_3D : planHint ? { text: planHint, more: planHint } : hint(tool, brush, tools.rollBrush && tools.rollMode)} />
+                <StandChip v={v} res={res} onEdit={onEdit} terms={terms} onTerms={setTerms} view={view} onView={showView} hint={view === '3d' ? HINT_3D : planHint ? { text: planHint, more: planHint } : hint(tool, brush, tools.rollBrush)} />
                 {view === 'plan' && change?.at && <PriceChangePill key={change.id} change={change} />}
                 <ToolDock
                   tools={view === 'plan'}

@@ -1,7 +1,6 @@
 // What the plan's pointer handlers share: the drag under way, and the context each handler gets (the sketch, the pen
 // in hand, the hit tests and the callbacks). Each drag kind has its own file in this folder; usePlanPointer.ts picks it.
 import type { Dispatch, SetStateAction } from 'react'
-import type { FloorAction } from '../../../domain/floor/brush'
 import type { Rect } from '../../../domain/floor/tiles'
 import type { FaceSide } from '../../../domain/faces'
 import type { Module } from '../../../domain/grid'
@@ -33,8 +32,6 @@ export type Drag =
   | { kind: 'stroke'; p0: P; moved: boolean; beamId?: string }
   /** A floor stroke: the tiles after the first line up with it (`anchor`). */
   | { kind: 'floor'; last: string | null; anchor: { i: number; j: number } | null }
-  /** A stroke of rolled floor from `from`: whole lanes, laid on release (`rollPending` until then). */
-  | { kind: 'roll'; from: P; moved: boolean }
   /** Fyll with rolled floor: an area from cell `from`; a click without a drag fills the stand. */
   | { kind: 'carpetFill'; from: { i: number; j: number }; moved: boolean }
   | { kind: 'click'; select: PlanSelection }
@@ -78,8 +75,6 @@ export interface PointerCtx {
   standardRuns: Run[]
   /** Edges carrying a stand wall: locked. */
   standKeys: Set<string>
-  /** What the roll stroke in progress will lay on release. */
-  rollPending: FloorAction | null
   motifs?: Motif[]
   onEdit: Edit
   onCheckpoint: () => void
@@ -93,7 +88,6 @@ export interface PointerCtx {
   clickSelect: (s: PlanSelection) => void
   setStroke: Dispatch<SetStateAction<[Point, Point] | null>>
   setTextileStroke: Dispatch<SetStateAction<TextileLine | null>>
-  setRollPending: Dispatch<SetStateAction<FloorAction | null>>
   setFillRect: Dispatch<SetStateAction<Rect | null>>
   /** What a Tøm press will take on release (touch has no hover to show it). */
   setErasing: Dispatch<SetStateAction<Erasing | null>>

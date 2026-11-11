@@ -1,10 +1,9 @@
 // Quick picks over the active tool in the dock: everything the tool draws, in fixed places so the hand learns where the
 // colours are. The tool's own settings (floor type, size or roll direction, drawing grid) sit here too, and the last
 // button («…») opens the panel on the tool's tab for the rest.
-import { Blinds, Box, DoorClosed, Ellipsis, PaintBucket, Upload } from 'lucide-react'
+import { Blinds, Box, DoorClosed, Ellipsis, PaintBucket, Paintbrush, Upload } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { mainGroupOf } from '../../catalog/groups'
-import { type RollDir } from '../../domain/floor/lanes'
 import { type FloorBrushSize } from '../../domain/floor/brush'
 import { type TileSize } from '../../domain/floor/tiles'
 import type { GridStep } from '../../domain/snapGrid'
@@ -12,7 +11,7 @@ import type { Motif } from '../../persistence/file'
 import { ImageInput, Segmented } from '../controls'
 import { catalog, idx, rules, wallPlates } from '../env'
 import { ObjectThumb } from '../panel/ProductRow'
-import { FLOOR_MAIN, FLOOR_OTHER, floorSizeLabel, gridSteps, type Brush, type DockTool, type RollMode } from '../tools'
+import { FLOOR_MAIN, FLOOR_OTHER, floorSizeLabel, gridSteps, type Brush, type DockTool } from '../tools'
 import { GridPicker } from './GridPicker'
 
 export interface QuickPicksProps {
@@ -34,10 +33,6 @@ export interface QuickPicksProps {
   onFloorSize: (s: FloorBrushSize) => void
   otherSize: TileSize
   onOtherSize: (s: TileSize) => void
-  roll: RollDir
-  onRoll: (d: RollDir) => void
-  rollMode: RollMode
-  onRollMode: (m: RollMode) => void
   gridStep: GridStep
   onGridStep: (s: GridStep) => void
   onFill: () => void
@@ -158,28 +153,10 @@ function quickContent(p: QuickPicksProps): ReactNode {
         />
         <Sep />
         {rollBrush ? (
-          <>
-            <Segmented<RollMode>
-              label="Legging"
-              value={p.rollMode}
-              onChange={p.onRollMode}
-              options={[
-                { value: 'fill', title: 'Fyll · dra et område, banene legges slik det koster minst', label: 'Fyll' },
-                { value: 'lane', title: 'Bane · legg én hel bane av gangen', label: 'Bane' },
-              ]}
-            />
-            {p.rollMode === 'lane' && (
-              <Segmented<RollDir>
-                label="Rulleretning"
-                value={p.roll}
-                onChange={p.onRoll}
-                options={[
-                  { value: 'x', title: 'Bredden · banene går fra venstre til høyre (R)', label: <span className="num">↔ Bredden</span> },
-                  { value: 'y', title: 'Dybden · banene går fra bak til front (R)', label: <span className="num">↕ Dybden</span> },
-                ]}
-              />
-            )}
-          </>
+          // Engangsteppe has one pen, the brush: drag an area or click free floor, the engine lays the lanes
+          <QBtn on setting title="Malerkost · dra et område, eller klikk ledig gulv eller en bane" label="Kost" onClick={() => brush && onPick(brush)}>
+            <Paintbrush size={15} />
+          </QBtn>
         ) : (
           floorSizes
         )}

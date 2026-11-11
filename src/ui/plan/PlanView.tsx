@@ -7,7 +7,6 @@ import { useId, useMemo, type ReactNode } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import { canMoveWall } from '../../domain/edit'
 import type { FloorBrushSize } from '../../domain/floor/brush'
-import type { RollDir } from '../../domain/floor/lanes'
 import { CELL, openSides, sideLength, sidePoint } from '../../domain/grid'
 import type { Run } from '../../domain/innerBeams'
 import { conflicts } from '../../domain/objects'
@@ -18,7 +17,7 @@ import { builtModules, standWallKeys } from '../../domain/walls'
 import type { Motif } from '../../persistence/file'
 import { SURFACE } from '../colors'
 import { place, rules } from '../env'
-import { penLayers, type Brush, type Highlight, type Layer, type RollMode, type Tool } from '../tools'
+import { penLayers, type Brush, type Highlight, type Layer, type Tool } from '../tools'
 import { totalSides } from './dims'
 import { nearestEdge } from './geometry'
 import { BeamLayer } from './layers/BeamLayer'
@@ -57,10 +56,6 @@ interface Props {
   tool: Tool
   brush: Brush | null
   floorSize: FloorBrushSize
-  /** Direction lanes of rolled floor run when the brush lays them. */
-  rollDir?: RollDir
-  /** Rolled floor: Fyll marks an area the engine lays, Bane places one lane. */
-  rollMode?: RollMode
   /** Cell size of the drawing grid for the textile brush, m (domain/snapGrid). */
   gridStep?: number
   highlight: Highlight
@@ -130,7 +125,7 @@ export function PlanView(p: Props) {
   let scaleNow: PlanScale | undefined
   const hits = planHits(v, mods, selection, () => scaleNow)
   const { moduleAt, beamAt, roomEdgeAt, objectAt } = hits
-  const fb = floorBrush(v, { tool, brush, floorSize: p.floorSize, rollDir: p.rollDir, rollMode: p.rollMode })
+  const fb = floorBrush(v, { tool, brush, floorSize: p.floorSize })
   /** Snap points show only while a brush snaps to them, at its own grid. */
   const dotStep = textileTool ? step : wallTool || beamTool ? rules.wall.cc : null
 
@@ -326,7 +321,7 @@ export function PlanView(p: Props) {
       {!p.mini && tool === 'select' && <PickLayer v={v} mods={mods} picked={pointer.picked} selection={selection} />}
 
       {/* Interaction preview: measure pill, invalid hatch and hint of the pen in hand, Tøm, room handles, the chosen lanes */}
-      <PreviewLayer v={v} tool={tool} brush={brush} selection={selection} floorSize={p.floorSize} rollDir={fb.dir} pointer={pointer} next={next?.outcome ?? null} mini={p.mini} onHint={p.onHint} />
+      <PreviewLayer v={v} tool={tool} brush={brush} selection={selection} floorSize={p.floorSize} pointer={pointer} next={next?.outcome ?? null} mini={p.mini} onHint={p.onHint} />
       </PlanScaleContext.Provider>
     </svg>
     {pillPlace && (

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_PRICING } from '../pricing/data';
-import { carpetMetrics, fillCarpet, fillProposals, layouts, offered, relayFill, removeFill } from './floor/rollFill';
+import { carpetClick, carpetMetrics, fillCarpet, fillProposals, layouts, offered, relayFill, removeFill } from './floor/rollFill';
 import { resizeLane, rotateLane } from './floor/edit';
 import { applyFloor } from './floor/brush';
 import { cutTiles } from './floor/edit';
@@ -15,6 +15,19 @@ const R = DEFAULT_PRICING.carpet;
 const box = (t: FloorTile) => [t.i, t.j, t.w, t.h, t.roll];
 const sorted = (ts: readonly FloorTile[]) => ts.map(box).sort((a, b) => +a[1]! - +b[1]! || +a[0]! - +b[0]!);
 const stand = (width: number, depth: number) => createVariant('A', { width, depth, type: 'row' });
+
+describe('the carpet brush clicked', () => {
+  it('fills the free floor and leaves what is laid; a lane of another colour takes the colour', () => {
+    const half = fillCarpet(stand(6, 4), A, 2, R, { i: 0, j: 0, w: 12, h: 4 });
+    const v = carpetClick(half, B, 2, R, [3, 6]);
+    expect(tileAreas(v.floor.tiles)).toEqual({ [A]: 12, [B]: 12 });
+    expect(v.floor.tiles.filter((t) => t.product === A)).toEqual(half.floor.tiles);
+    const lane = carpetClick(half, B, 2, R, [3, 1]);
+    expect(tileAreas(lane.floor.tiles)).toEqual({ [B]: 12 });
+    expect(lane.floor.tiles[0].fill).toBeUndefined();
+    expect(carpetClick(half, A, 2, R, [3, 1])).toBe(half);
+  });
+});
 
 describe('fill: the engine lays an area the cheapest way', () => {
   it('a 6 × 4 m stand gives 24 m² laid in two whole lanes along the front, no waste but the ends', () => {

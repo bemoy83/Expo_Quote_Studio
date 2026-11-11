@@ -1,11 +1,11 @@
 // Measure pills of the floor pen (docs/forhandsvisning.md): carpet tiles paint while dragging, so the floor itself shows
-// the stroke and only the measures of the area painted so far are added; engangsteppe lanes being dragged get their
-// length and roll width. The floor itself is drawn by FloorLayer, dimmed, from the next variant (PlanView).
+// the stroke and only the measures of the area painted so far are added. The floor itself is drawn by FloorLayer,
+// dimmed, from the next variant (PlanView).
 import type { ReactNode } from 'react'
 import { CELL } from '../../../domain/grid'
 import { TILE_FULL, type Rect } from '../../../domain/floor/tiles'
 import type { FloorBrushSize } from '../../../domain/floor/brush'
-import type { FloorTile, Point, Variant } from '../../../domain/types'
+import type { Point, Variant } from '../../../domain/types'
 import { count, fmt } from '../../format'
 import { mm } from '../dims'
 import { MeasurePill, PillAt } from './Previews'
@@ -50,21 +50,3 @@ export function tileAreaMeasures(v: Variant, r: Rect, product: string, centre: P
   )
 }
 
-/** The pill of engangsteppe lanes being laid: their length, the roll width, and what is cut off a narrower lane. */
-export function lanePill(lanes: FloorTile[], roll: number, centre: Point): ReactNode {
-  if (!lanes.length) return null
-  const along = (t: FloorTile) => (t.roll === 'x' ? t.w : t.h) * CELL
-  const across = (t: FloorTile) => (t.roll === 'x' ? t.h : t.w) * CELL
-  const i0 = Math.min(...lanes.map((t) => t.i))
-  const j0 = Math.min(...lanes.map((t) => t.j))
-  const i1 = Math.max(...lanes.map((t) => t.i + t.w))
-  const j1 = Math.max(...lanes.map((t) => t.j + t.h))
-  const x = lanes[0].roll === 'x'
-  const L = Math.max(...lanes.map(along))
-  const cut = Math.max(...lanes.map((t) => roll - across(t)))
-  const text = `${mm(L)} · ${lanes.length === 1 ? `bane ${fmt(roll)} m` : `${lanes.length} baner ${fmt(roll)} m`}${cut > 1e-9 ? ` · kapp ${mm(cut)}` : ''}`
-  // Along the lanes' length, beside the box around them
-  const [a, b]: [Point, Point] = x ? [[i0 * CELL, ((j0 + j1) / 2) * CELL], [i1 * CELL, ((j0 + j1) / 2) * CELL]] : [[((i0 + i1) / 2) * CELL, j0 * CELL], [((i0 + i1) / 2) * CELL, j1 * CELL]]
-  const width = (x ? j1 - j0 : i1 - i0) * CELL
-  return <MeasurePill a={a} b={b} centre={centre} stroke={width} text={text} />
-}
