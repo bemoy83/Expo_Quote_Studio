@@ -3,7 +3,7 @@
 // bucket and brush). «Hyller og heng» and a chosen shelf are in fittings.tsx.
 import { ArrowLeft, ArrowRight, PaintBucket, Paintbrush, Palette, Repeat2 } from 'lucide-react'
 import type { Dispatch, ReactNode, SetStateAction } from 'react'
-import { feltBlocked, updateFoil } from '../../../domain/decor'
+import { foilBlocked, updateFoil } from '../../../domain/decor'
 import { setPanels } from '../../../domain/panels'
 import { clearPrint, printPlate, printsOn } from '../../../domain/print'
 import { removeOpening } from '../../../domain/doors'
@@ -216,7 +216,7 @@ export function FeltPanel(props: {
   const printed = printsOn(v, w.id, s).find((f) => f.module === m)
   const arrows = <FeltArrows m={m} s={s} mods={mods} select={select} />
 
-  const noPrint = feltBlocked(v, rules, w.id, m, s, true)
+  const noPrint = foilBlocked(v, rules, w.id, m, s, true)
   /** A colour on this plate (the print on this face comes off: the last stroke wins), or the chosen motif over it. */
   const pick = (r: string) => {
     if (r !== PRINT) return onEdit((x) => clearPrint(setPanels(x, [key], r, base), w.id, s, [m]))

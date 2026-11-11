@@ -2,7 +2,7 @@
 // posts (Bjørn 9.11.2026: shelves and heng are fastened to the wall exactly alike; only the Foga profile and the shape
 // differ). Where such a fitting may sit (H1, H6) and the felts of a face in the order fittings fill them. Shelves are
 // the first fitting (domain/shelves/); heng follow the same rules. Byggeregler H1, H6 (docs/byggeregler.md).
-import { blockedModules, faceNormal, faces, type FaceSide } from './faces';
+import { faceNormal, faces, feltWall, type FaceSide } from './faces';
 import { pointKey, wallLength, wallModules } from './grid';
 import { textilesOn } from './textile/inFrame';
 import type { Point, Variant, Wall } from './types';
@@ -36,9 +36,9 @@ export function channelTakers(v: Variant, p: Point, n: Point): BuiltModule[] {
  * bracket. `what` names the fitting in the reasons («Hylle»).
  */
 export function feltBlocked(v: Variant, wallId: string, module: number, s: FaceSide, what = 'Tilbehør'): string | null {
-  const w = v.walls.find((x) => x.id === wallId);
-  const blocked = w && blockedModules(v, w);
-  if (!w || !blocked || module < 0 || module >= Math.round(wallLength(w)) || blocked.foreign.has(module)) return 'Ingen vegg her';
+  const at = feltWall(v, wallId, module);
+  if (!at) return 'Ingen vegg her';
+  const { w, blocked } = at;
   if (!faces(v, w).includes(s)) return `${what} kan ikke stå på denne siden av veggen`;
   if (blocked.openings.has(module)) return `${what} kan ikke stå i en åpning`;
   // A textile on the face covers the felt, or holds the post's face channel with its bracket (520)

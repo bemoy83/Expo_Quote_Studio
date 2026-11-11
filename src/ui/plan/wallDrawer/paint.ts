@@ -1,6 +1,6 @@
 // Colouring in the wall drawer, as in a paint program: the paint bucket (the whole face) or the brush (one plate at a
 // time, press and sweep) lays a plate colour or «Print» on the plates of the face shown (Bjørn 2.11.2026).
-import { feltBlocked } from '../../../domain/decor'
+import { foilBlocked } from '../../../domain/decor'
 import { setDoorRal, doorRal, paintDoors } from '../../../domain/doors'
 import { setWallPlate } from '../../../domain/edit'
 import type { FaceSide } from '../../../domain/faces'
@@ -89,7 +89,7 @@ export function wallPaint({ v, w, s, built, mods, motifs, tool, paintSel, printS
       return onEdit((x) => clearPrint(paintDoors(setWallPlate(x, w.id, paint), w.id, paint), w.id, s))
     }
     if (!printing) return leaf ? paintLeaf(i, key, first) : paintPlate(i, key, first)
-    const why = feltBlocked(v, rules, w.id, i, s, true)
+    const why = foilBlocked(v, rules, w.id, i, s, true)
     if (why) {
       if (first) onToast(why)
       return
