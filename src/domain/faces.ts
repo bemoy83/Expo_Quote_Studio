@@ -78,7 +78,6 @@ export function blockedModules(v: Variant, w: Wall): { openings: Set<number>; do
 }
 
 /** Module indices of the wall that are openings (also when the opening sits on an overlapping wall). */
-export const openingModules = (v: Variant, w: Wall): Set<number> => blockedModules(v, w).openings;
 
 /** World points of a span along a wall, pushed out from the wall centre by `off` on face s. */
 export function faceSegment(w: Wall, s: FaceSide, from: number, to: number, off: number): [Point, Point] {
