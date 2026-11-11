@@ -261,7 +261,7 @@ await tool('Velg'); await press(2, 3); await key('Delete'); await record('tast s
 await close()
 
 // Click rules (docs/pille-og-skuff.md): a click selects without the drawer and shows the pill at once, a second click
-// keeps it, a double click is just two clicks; Mer in the pill opens the drawer; with the drawer open a click on another
+// keeps it, a double click is just two clicks; Detaljer in the pill opens the drawer; with the drawer open a click on another
 // wall switches it, on furniture or empty floor closes it
 async function dbl(x, y) { const a = await at(x, y); await page.mouse.dblclick(a.x, a.y); await page.waitForTimeout(250) }
 async function more(x, y) {
@@ -283,14 +283,14 @@ await press(6, 3); await record('regel skuff åpen klikk samme vegg')
 await press(1.5, 3.5); await record('regel skuff åpen klikk tomt gulv')
 await more(2, 0); await key('Escape'); await record('regel skuff åpen Esc')
 await close()
-// The pill: Mer opens the drawer; a double click only selects, and the pill shows
+// The pill: Detaljer opens the drawer; a double click only selects, and the pill shows
 await open('02-hjorne-utstiller')
 await tool('Velg'); await press(2, 0); await page.waitForTimeout(300); await record('pille vegg')
 const mer = page.locator('.sel-pill [aria-label="Detaljer"]'); if (await mer.count()) await mer.click(); await page.waitForTimeout(250); await record('pille Mer åpner skuffen')
 await key('Escape'); await page.evaluate(() => { window.__pillSeen = false })
 await dbl(6, 3); await record(`regel dobbeltklikk vegg er to klikk (velg og slipp), pillen sett ${await page.evaluate(() => window.__pillSeen)}`)
 await close()
-// The drawer in two heights: Mer opens it in detail; the edge switches by a click or a drag
+// The drawer in two heights: Detaljer opens it in detail; the edge switches by a click or a drag
 await open('09-dekor')
 await tool('Velg'); await more(2.5, 0); await record('skuff Mer åpner i detalj')
 const edge = page.locator('.drawer-handle')
