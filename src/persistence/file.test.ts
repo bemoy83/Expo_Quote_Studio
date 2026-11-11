@@ -37,6 +37,17 @@ describe('sketch file', () => {
       { id: 'l2', name: 'Hylle 1 m, skrå', qty: 1, price: 290 },
     ]);
   });
+  it('the made-up counters before 6560 are kept as loose lines at their price', () => {
+    const f = JSON.parse(serialize(sketch()));
+    f.varianter[0].counted = [{ product: '5415', qty: 1 }, { product: '5280', qty: 1 }, { product: '5420', qty: 2 }];
+    const res = parse(JSON.stringify(f));
+    const v = res.ok ? res.sketch.variants[0] : null;
+    expect(v?.counted).toEqual([{ product: '5280', qty: 1 }]);
+    expect(v?.loose).toEqual([
+      { id: 'l1', name: 'Disk 100, høy med lås', qty: 1, price: 1890 },
+      { id: 'l2', name: 'Bardisk, buet', qty: 2, price: 2950 },
+    ]);
+  });
   it('refuses a newer version with an explanation', () => {
     const f = JSON.parse(serialize(sketch()));
     const res = parse(JSON.stringify({ ...f, versjon: VERSION + 1 }));

@@ -1,6 +1,6 @@
 // Sketch file: JSON `{ format: 'standskisse', versjon, prosjekt, varianter, egneMotiver }`.
 // Newer versions are refused with an explanation; older versions are migrated step by step.
-import { OLD_SHELF } from '../catalog/defaultCatalog';
+import { OLD_COUNTERS, OLD_SHELF } from '../catalog/defaultCatalog';
 import { tilesFromCells } from '../domain/floor/tiles';
 import { nextId } from '../domain/ids';
 import { rectOutline } from '../domain/outline';
@@ -154,23 +154,30 @@ export function parse(text: string): ParseResult {
     freeTextiles: Array.isArray(x.freeTextiles) ? x.freeTextiles : [],
     innerBeams: Array.isArray(x.innerBeams) ? x.innerBeams : undefined,
     shelves: Array.isArray(x.shelves) ? x.shelves : undefined,
-  })).map(oldShelfToLoose);
+  })).map(retiredToLoose);
   return { ok: true, sketch: { project: project as unknown as Project, variants: vs, motifs: motifs as Motif[] } };
 }
 
-/** «Hylle 1 m» (6180) counted on a sketch made before the drawn shelf 6311 replaced it (Bjørn 8.11.2026): kept as a loose
- *  line at its price, so the quote is the same, until the shelves are drawn. */
-function oldShelfToLoose(v: Variant): Variant {
-  if (!v.counted.some((c) => c.product.startsWith(OLD_SHELF.prefix))) return v;
-  const old = v.counted.filter((c) => c.product.startsWith(OLD_SHELF.prefix) && c.qty > 0);
+/** Counted products the catalog no longer has, kept as loose lines at their price so the quote is the same: «Hylle 1 m»
+ *  (6180) before the drawn shelf 6311 replaced it (Bjørn 8.11.2026), and the made-up counters before 6560 (Bjørn
+ *  11.11.2026). */
+function retiredToLoose(v: Variant): Variant {
+  const retired = (product: string) => {
+    if (OLD_COUNTERS[product]) return OLD_COUNTERS[product];
+    if (!product.startsWith(OLD_SHELF.prefix)) return undefined;
+    const variant = OLD_SHELF.variants[Number(product.slice(OLD_SHELF.prefix.length)) - 1];
+    return { name: `${OLD_SHELF.name}${variant ? `, ${variant.toLowerCase()}` : ''}`, price: OLD_SHELF.price };
+  };
+  if (!v.counted.some((c) => retired(c.product))) return v;
   const ids = v.loose.map((l) => l.id);
-  const loose = old.map((c) => {
+  const loose = v.counted.flatMap((c) => {
+    const r = retired(c.product);
+    if (!r || c.qty <= 0) return [];
     const id = nextId(ids, 'l');
     ids.push(id);
-    const variant = OLD_SHELF.variants[Number(c.product.slice(OLD_SHELF.prefix.length)) - 1];
-    return { id, name: `${OLD_SHELF.name}${variant ? `, ${variant.toLowerCase()}` : ''}`, qty: c.qty, price: OLD_SHELF.price };
+    return [{ id, name: r.name, qty: c.qty, price: r.price }];
   });
-  return { ...v, counted: v.counted.filter((c) => !c.product.startsWith(OLD_SHELF.prefix)), loose: [...v.loose, ...loose] };
+  return { ...v, counted: v.counted.filter((c) => !retired(c.product)), loose: [...v.loose, ...loose] };
 }
 
 const isObject = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null && !Array.isArray(x);
