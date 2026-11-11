@@ -1,6 +1,6 @@
 // The rows of the picking list on Arbeidsordre: calc lines that are picked, the Foga parts and each textile.
 import type { CalcResult } from '../../calc/calc'
-import { FILL_NAME, textileRows } from '../../calc/production'
+import { FILL_NAME, textileRows } from '../../calc/textile/production'
 import { resolveGroup } from '../../catalog/groups'
 import { plateName } from '../env'
 import { fmt } from '../format'

@@ -1,7 +1,7 @@
 // Byggeregler T2–T5, T12 (docs/byggeregler.md).
-import { inward, makeModule, pointKey, SIDES, sideLength, sidePoint } from '../domain/grid';
-import type { Point, Side, Stand, Variant } from '../domain/types';
-import { standardBeamsOn, standWallSide, type BuiltModule } from '../domain/walls';
+import { inward, makeModule, pointKey, SIDES, sideLength, sidePoint } from '../../domain/grid';
+import type { Point, Side, Stand, Variant } from '../../domain/types';
+import { standardBeamsOn, standWallSide, type BuiltModule } from '../../domain/walls';
 import { layoutInnerBeams, mergeBeams, type InnerBeamLayout } from './innerBeams';
 import { splitBeamLength, type BeamLayout, type BeamSegment } from './beamSegments';
 import { layoutSupportBeams, NO_SUPPORT_BEAMS, type SupportBeamLayout } from './supportBeams';
@@ -11,8 +11,8 @@ const lerp = (a: Point, b: Point, t: number): Point => [a[0] + (b[0] - a[0]) * t
 export const NO_BEAMS: BeamLayout = { segments: [], posts: new Map(), lm: 0 };
 
 /** The takdrager of a variant. `standard`: none when the customer turned them off, else {@link layoutBeams} and the
- *  støttedrager holding long stand walls (`support`, calc/supportBeams.ts). `inner`: the ones the customer drew
- *  (calc/innerBeams.ts). `all`: both. The hooks: calc/beamHooks.ts. */
+ *  støttedrager holding long stand walls (`support`, calc/beams/supportBeams.ts). `inner`: the ones the customer drew
+ *  (calc/beams/innerBeams.ts). `all`: both. The hooks: calc/beams/beamHooks.ts. */
 export function variantBeams(
   v: Variant,
   mods: readonly BuiltModule[],

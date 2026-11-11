@@ -1,11 +1,11 @@
 // Stand sketch → Foga structure. Built from the same derivations as calc (built modules, beam layout, InFrame
 // sizes); calc passes its own so the quote, the picking list and the parts list count from one structure.
 // Byggeregel P3 (docs/byggeregler.md).
-import { liftBeams, withJoins } from '../calc/beamLift';
-import { beamHooks, hookCount } from '../calc/beamHooks';
-import { variantBeams } from '../calc/beams';
-import type { BeamLayout } from '../calc/beamSegments';
-import { production, type Production } from '../calc/production';
+import { liftBeams, withJoins } from '../calc/beams/beamLift';
+import { beamHooks, hookCount } from '../calc/beams/beamHooks';
+import { variantBeams } from '../calc/beams/beams';
+import type { BeamLayout } from '../calc/beams/beamSegments';
+import { production, type Production } from '../calc/textile/production';
 import { shelfBrackets } from '../domain/shelves/brackets';
 import type { Variant } from '../domain/types';
 import { builtModules, wallPoints, type BuiltModule } from '../domain/walls';
@@ -18,7 +18,7 @@ export interface Derived {
   /** Wall posts and posts that only carry takdrager. */
   posts: number;
   beams: BeamLayout;
-  /** Hooks a takdrager hangs on another beam or a wall's top rail with, by kind (calc/beamHooks.ts). */
+  /** Hooks a takdrager hangs on another beam or a wall's top rail with, by kind (calc/beams/beamHooks.ts). */
   hooks?: { oneWay: number; twoWay: number };
   /** Takdrager lifted over a textile wall: posts extended, mixed-level hook points and ends on a wall (T15). */
   lift?: { posts: number; hooks: number; walls?: number };

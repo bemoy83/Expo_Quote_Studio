@@ -1,16 +1,16 @@
 // Støttedrager: a takdrager that holds a long stand wall from sagging, byggeregel T7 (docs/byggeregler.md). With
 // takdrager turned off there is nothing to hang it on, and the walls get foot plates (calc/wallSupports.ts).
-import { inward, makeModule, pointKey } from '../domain/grid';
-import { RULES } from '../rules/rules';
-import type { Point, Side, Stand } from '../domain/types';
-import type { BuiltModule } from '../domain/walls';
+import { inward, makeModule, pointKey } from '../../domain/grid';
+import { RULES } from '../../rules/rules';
+import type { Point, Side, Stand } from '../../domain/types';
+import type { BuiltModule } from '../../domain/walls';
 import { onSegment, splitBeamLength, type BeamLayout, type BeamSegment } from './beamSegments';
-import { holdsRun, hookHolds, wallRuns } from './wallSupports';
+import { holdsRun, hookHolds, wallRuns } from '../wallSupports';
 
 /** A free span of a stand wall from this long, m, gets støttedrager. */
 export const SUPPORT_SPAN = RULES.beam.supportSpan;
 
-/** A støttedrager end on a beam's length hangs on a hook there (calc/beamHooks.ts): no post. */
+/** A støttedrager end on a beam's length hangs on a hook there (calc/beams/beamHooks.ts): no post. */
 export type SupportBeamLayout = BeamLayout;
 
 const EPS = 1e-6;

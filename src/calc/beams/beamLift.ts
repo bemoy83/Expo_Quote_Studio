@@ -3,13 +3,13 @@
 // the posts' faces, its width across) overlapping a frame's box in plan, for a frame that reaches the beam's underside.
 // A lifted beam lies one beam height over the others, so where it crosses an unlifted beam, or a wall between its posts,
 // the lengths meeting there are joined into one whole length, up to the max length (T16).
-import { pointKey } from '../domain/grid';
-import { runDirection } from '../domain/textile/free';
-import type { Point, Variant } from '../domain/types';
-import { wallHeight, type Rules } from '../rules/rules';
+import { pointKey } from '../../domain/grid';
+import { runDirection } from '../../domain/textile/free';
+import type { Point, Variant } from '../../domain/types';
+import { wallHeight, type Rules } from '../../rules/rules';
 import type { BeamLayout, BeamSegment } from './beamSegments';
 import { onSegment } from './beamSegments';
-import { boxOf, overlaps, placement, type Box } from './textile/placement';
+import { boxOf, overlaps, placement, type Box } from '../textile/placement';
 
 export interface BeamLift {
   /** The lifted lengths (the same objects as in the layout). */

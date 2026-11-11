@@ -19,7 +19,7 @@ export interface BeamSpec {
 /**
  * What one textile frame is built of, counted once (calc/textile/common.ts): the picking list (engine.ts) and the
  * kalkyle (calc/textile/lines.ts) both read it. A corner post shared by two free-standing frames is not here
- * (calc/production.ts counts them).
+ * (calc/textile/production.ts counts them).
  */
 export interface FrameParts {
   /** Frame profile pieces by cut length: top and bottom rails, the sides or the uprights at free ends, mm. */
@@ -47,10 +47,10 @@ export interface FogaStructure {
   posts: number;
   modules: ModuleSpec[];
   beams: BeamSpec[];
-  /** Hooks in Flex 01 a takdrager hangs on another beam or a wall's top rail 92 with (calc/beamHooks.ts): one leg
+  /** Hooks in Flex 01 a takdrager hangs on another beam or a wall's top rail 92 with (calc/beams/beamHooks.ts): one leg
    *  (enveis) or two (toveis). */
   beamHooks?: { oneWay: number; twoWay: number };
-  /** Takdrager lifted over a textile wall (calc/beamLift.ts): posts extended under them, hook points between a lifted
+  /** Takdrager lifted over a textile wall (calc/beams/beamLift.ts): posts extended under them, hook points between a lifted
    *  beam and one that is not, and ends on a wall between its posts (T15). */
   beamLift?: { posts: number; hooks: number; walls?: number };
   /** Textile frames, on walls and on foot plates. */

@@ -1,7 +1,7 @@
 // Textile walls on the quote: one product whatever it is mounted on (Bjørn 7.11.2026: the frame is the same, on a
 // system wall with 520 or on foot plates). The frame (rental) and the textile (sale) are two kinds of line here and one
 // line per frame size on the quote (`quote`), each with its own price: frames by size and mounting, then the textile
-// by size and fill. What is built comes from calc/production.ts.
+// by size and fill. What is built comes from calc/textile/production.ts.
 import { displayName } from '../../catalog/lookup';
 import type { TextileFill } from '../../domain/types';
 import { RECIPES } from '../../foga/recipes';

@@ -20,7 +20,7 @@ Alt avledes fra modellen (`Variant` i `src/domain/types.ts`). Rekkefølgen er al
 | 3D | `src/ui/scene3d/build.ts`, `build/`, `Scene3D.tsx`, `pointer/` | `build.ts` kjører én del per produkt i `build/` på felles kontekst (`build/context.ts`: materialer per lag, farger, `along`); motivteksturer i `build/motifs.ts`. Foga-profilene (målte tverrsnitt) og annen geometri som er lik hver gang (justeringsfot, stolpefeste 795, 92LTX-hjørner per retning) lages én gang i `build/profiles.ts` (`shared`, `unitProfile`) og skaleres til lengden; `dispose` i `build.ts` lar den ligge. Det de tre 3D-bildene deler (renderer, størrelse, bytte av scene der den nye tegnes før den gamle kastes, så shadere og teksturer beholdes): `view.ts`. 3D-visningen `Scene3D.tsx` setter sammen kamera og peker: hva som ligger under pekeren og hvor på gulv eller veggflate i `pointer/hits.ts`, hva et trykk drar og hva et klikk velger i `pointer/drag.ts` (et drag er aldri et klikk: slipp etter drag eller rotering endrer ikke valget, så skuffen åpnes ikke), slipp fra Profilering i `drop.ts`, og det som tegnes over scenen (slippflate, lyskant på romside, demping ved hover i kalkylen) i `overlays.ts`. Miniatyren i planen: `Scene3DPreview.tsx`. Bildet øverst på tilbudet: `QuoteRender.tsx` (tegnet én gang til `<img>` så det skrives ut, numre på tekstilveggene). Lyset (himmel og sol med skygge) er felles for alle tre i `lights.ts` |
 | Skjermen | `src/ui/App.tsx` | Setter sammen sidene og Standskisse. Verktøy, penn og penninnstillinger: `useTools.ts`. Tastatur: `useShortcuts.ts`, og hva Delete fjerner i `deleteSelection` (`plan/selection.ts`, med test). Båndet med varianter og nøkkeltall: `shell/SketchBand.tsx`. Nøkkeltallene (`shell/KeyFigures.tsx`) viser detaljlinjene bare når hele raden får plass på én linje (målt med en usynlig kopi); ellers vises kort rad, og et trykk åpner et kort med alle detaljer. Skuffene for det som er valgt: `plan/Drawers.tsx`. Skuffen har egen tilstand (`drawer` i `App.tsx`, `DrawerState` i `plan/selection.ts`): et vanlig valg åpner den ikke, Mer i pillen og et valg fra panelet åpner den i detalj, og den lukkes når valget ikke har skuff (`hasDrawer`). 3D åpner fortsatt skuffen ved klikk. Skuffen står i `.drawer-frame` med to høyder: kompakt (270 px) og detalj (omtrent 60 % av tegneflaten, minst 420 px). Kanten øverst (`plan/DrawerHandle.tsx`) bytter ved klikk eller drag, og Mer åpner alltid i detalj. Skuffen har to deler: innstillinger (med grafikkhylla eller dørens miniplan under, bare i detalj) og veggrisset, som fyller det som er igjen (`wd-fit`). Planen over blir kartet. Kalkylen per variant, bufret: `calcCache.ts`. Navnepillen over ikonknappene (i stedet for nettleserens title-boble): `NameTip.tsx`, én forekomst i App som leser `title` i formen «Navn · forklaring (tast)»; oppdeling og plassering i `tip.ts` (med test) |
 | Skuffer og panel | `src/ui/plan/*Drawer.tsx`, `src/ui/panel/Rail.tsx` | Innstillinger per produkt. Veggskuffen: `WallDrawer.tsx` velger hva som vises, delene ligger i `plan/wallDrawer/` (se Vegger). Innstillingene i skuffene og standbrikken (`panel/StandSettings.tsx`) er bygd av `Section` i `controls.tsx`: tittel i dempede versaler med verdien når innholdet ikke viser den («HELE VEGGEN · HVIT 9010»), ikonknapper til høyre, innholdet rett på flaten; valg med `FlatChoice`, valgt fyll `--chosen` (verktøy man tegner med beholder ink); en side som kan speiles (dørens slag, hjørnestandens åpne side) er verdien i tittelen og én ikonknapp. Duk og motiv: `FabricSection`, trykkfilene: `Shelf` (begge i `plan/drawerParts.tsx`). Panelet: `Rail.tsx` har stripen og fanevalget, hver fane ligger i `panel/sections/` (`WallSection`, `FloorSection`, `ProfileSection`, `EquipSection` med søk) |
-| Sider | `src/ui/quote`, `workorder` | Tilbud (med trykkfilene kunden leverer og CSV-eksport av trykklisten i `quote/printCsv.ts`, filene fra `printFiles` i `calc/production.ts`) og Arbeidsordre (plukkradene i `workorder/pickRows.ts`). Antakelsene for tekstilrammen redigeres på Kostgrunnlag › Regler (`costbasis/InFrame.tsx`). Produksjon og Plukkliste er fjernet (Bjørn 8.11.2026) |
+| Sider | `src/ui/quote`, `workorder` | Tilbud (med trykkfilene kunden leverer og CSV-eksport av trykklisten i `quote/printCsv.ts`, filene fra `printFiles` i `calc/textile/production.ts`) og Arbeidsordre (plukkradene i `workorder/pickRows.ts`). Antakelsene for tekstilrammen redigeres på Kostgrunnlag › Regler (`costbasis/InFrame.tsx`). Produksjon og Plukkliste er fjernet (Bjørn 8.11.2026) |
 | Lagring | `src/persistence/file.ts` | Filformat, versjoner og migrering |
 
 **Ny eller endret linje i kalkylen:** finn produktets blokk i `calc/lines/` (eller `calc/textile/lines.ts`). Det som
@@ -51,11 +51,11 @@ kostgrunnlaget). Regel og kilde føres i `docs/byggeregler.md`.
 
 ### Takdragere
 
-- Standard: `calc/beams.ts` (`variantBeams` setter sammen alle tre) · felles for alle utleggene: `calc/beamSegments.ts` (`BeamSegment`, `BeamLayout`, deling etter T2 og `onSegment`), så utleggene ikke importerer hverandre
-- Innvendige (tegnet av kunden): modell `InnerBeam`, redigering `domain/innerBeams.ts`, utlegg `calc/innerBeams.ts`; Shift + dra eller «Fin» i pillen (`PlanSelection.beamFine`) utenfor rasteret `shiftInnerBeam` + `dragInnerBeamFine` (`ui/drag.ts`), mållinjer `calc/beamOffsets.ts` tegnet med `DimChain` i `layers/BeamLayer.tsx`, på arbeidsordren for alle (`beamMeasures`) (T15)
-- Støttedrager på lange standvegger: `calc/supportBeams.ts`
-- Kroker i 01, enveis og toveis (der en drager henger på en annen, eller på en vegg mellom stolpene, T15): `calc/beamHooks.ts`, plukk i `foga/engine.ts`, 3D i `scene3d/build/frame.ts`
-- Hevet over tekstilvegg (skjøtet stolpe og krok, hel lengde over et annet nivå T16): `calc/beamLift.ts` (`withJoins`), linjen `beamLiftLines` i `calc/lines/beams.ts`, 3D i `scene3d/build/frame.ts`
+- Standard: `calc/beams/beams.ts` (`variantBeams` setter sammen alle tre) · felles for alle utleggene: `calc/beams/beamSegments.ts` (`BeamSegment`, `BeamLayout`, deling etter T2 og `onSegment`), så utleggene ikke importerer hverandre
+- Innvendige (tegnet av kunden): modell `InnerBeam`, redigering `domain/innerBeams.ts`, utlegg `calc/beams/innerBeams.ts`; Shift + dra eller «Fin» i pillen (`PlanSelection.beamFine`) utenfor rasteret `shiftInnerBeam` + `dragInnerBeamFine` (`ui/drag.ts`), mållinjer `calc/beams/beamOffsets.ts` tegnet med `DimChain` i `layers/BeamLayer.tsx`, på arbeidsordren for alle (`beamMeasures`) (T15)
+- Støttedrager på lange standvegger: `calc/beams/supportBeams.ts`
+- Kroker i 01, enveis og toveis (der en drager henger på en annen, eller på en vegg mellom stolpene, T15): `calc/beams/beamHooks.ts`, plukk i `foga/engine.ts`, 3D i `scene3d/build/frame.ts`
+- Hevet over tekstilvegg (skjøtet stolpe og krok, hel lengde over et annet nivå T16): `calc/beams/beamLift.ts` (`withJoins`), linjen `beamLiftLines` i `calc/lines/beams.ts`, 3D i `scene3d/build/frame.ts`
 - Linjen og hvem som betaler: `calc/lines/beams.ts` · `calc/context.ts` (`organiserBeams`)
 - Plan og 3D: `plan/layers/BeamLayer.tsx`, tegne `plan/pointer/stroke.ts`, dra `pointer/beam.ts` · `scene3d/build/frame.ts`
 
@@ -65,8 +65,8 @@ Tre filer med «support» i navnet, med hver sin jobb:
 
 - `calc/supports.ts`: den felles regelen (minst to fra 1 m, maks 3 m mellom, en ved hver fri ende)
 - `calc/wallSupports.ts`: fotplater under systemvegg som står fritt (bruker regelen)
-- `calc/supportBeams.ts`: støttedrager, ikke fotplater (hvor en lang standvegg trenger en takdrager)
-- Også: `calc/textile/free.ts` (fotplater under frittstående tekstil), `calc/innerBeams.ts` (under innvendige takdragere)
+- `calc/beams/supportBeams.ts`: støttedrager, ikke fotplater (hvor en lang standvegg trenger en takdrager)
+- Også: `calc/textile/free.ts` (fotplater under frittstående tekstil), `calc/beams/innerBeams.ts` (under innvendige takdragere)
 - Linjen: `calc/lines/feet.ts`
 
 ### Teppefliser
@@ -95,8 +95,8 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 - Veggflater og felt (deles med folie): `domain/faces.ts` · tekstil holdes gyldig etter andre endringer i
   `fitDecor` (`domain/decor.ts`)
 - Kalkyle: `calc/textile/inFrame.ts` (rammemål og trykk), `calc/textile/free.ts` (frittstående: skinner, hjørner,
-  fotplater, stag `bracePoints`, skjøt 609 eller 604), holdte ender i `heldEnds` (`calc/production.ts`), `calc/textile/common.ts` (full høyde, filnavn, og `FrameParts`: hva én ramme er bygget av, telt én gang og lest av både plukklisten i `foga/engine.ts` og kalkylen i `calc/textile/lines.ts`; oppskriften `RECIPES.textileFrame` har monteringene `wall` og `feet`) · linjene: `calc/textile/lines.ts`, kost og pris fra motoren via oppskriftene i kostgrunnlaget (`pricing/items.ts`) · produksjonsrader:
-  `calc/production.ts` (lager også folierader)
+  fotplater, stag `bracePoints`, skjøt 609 eller 604), holdte ender i `heldEnds` (`calc/textile/production.ts`), `calc/textile/common.ts` (full høyde, filnavn, og `FrameParts`: hva én ramme er bygget av, telt én gang og lest av både plukklisten i `foga/engine.ts` og kalkylen i `calc/textile/lines.ts`; oppskriften `RECIPES.textileFrame` har monteringene `wall` og `feet`) · linjene: `calc/textile/lines.ts`, kost og pris fra motoren via oppskriftene i kostgrunnlaget (`pricing/items.ts`) · produksjonsrader:
+  `calc/textile/production.ts` (lager også folierader)
 - Plan, 3D: `plan/layers/TextileLayer.tsx`, pensel `plan/pointer/textile.ts`, flytte frittstående `pointer/freeMove.ts` · `scene3d/build/textile.ts`, dra i 3D `scene3d/pointer/drag.ts`
 - Skuff: `WallDrawer.tsx` med `plan/wallDrawer/panels.tsx` (`TextilePanel`) og `drag.ts` (InFrame), `FreeTextileDrawer.tsx` (frittstående)
 
@@ -105,7 +105,7 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 - Dekal: `Foil` · `domain/decor.ts` (folie og `fitDecor`) · veggflater og felt: `domain/faces.ts`
 - Print med spann og kost: `domain/print.ts` · i veggskuffen: `plan/wallDrawer/paint.ts`
 - Farge per plate: `domain/panels.ts`
-- Kalkyle: `calc/lines/decor.ts` (folie, print-oppsett) · `calc/lines/swaps.ts` (platebytte) · `calc/production.ts` (`foilRows`)
+- Kalkyle: `calc/lines/decor.ts` (folie, print-oppsett) · `calc/lines/swaps.ts` (platebytte) · `calc/textile/production.ts` (`foilRows`)
 - 3D: `scene3d/build/decor.ts` · teksturbuffer for motiver: `scene3d/build/motifs.ts` · motiver `ui/motifs.ts` · dra inn: `ui/dnd.ts` · motivpensel i planen: `plan/pointer/decor.ts`
 
 ### Rom

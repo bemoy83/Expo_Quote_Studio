@@ -3,8 +3,8 @@
 // an 80 mm leg down its side whose channel takes the hanging beam's 600. One leg (enveis) when beams hang from one side,
 // two (toveis) when from both. The same hook over the top rail 92 of a wall between its posts (T15). Byggeregler T9,
 // T15 (docs/byggeregler.md).
-import { pointKey } from '../domain/grid';
-import type { Point } from '../domain/types';
+import { pointKey } from '../../domain/grid';
+import type { Point } from '../../domain/types';
 import type { BeamLift } from './beamLift';
 import type { BeamLayout } from './beamSegments';
 import { onSegment } from './beamSegments';
@@ -15,7 +15,7 @@ export interface BeamHook {
   along: 'h' | 'v';
   /** The sides of that beam a beam hangs from: +1 / −1 along the other axis. One side: enveis, both: toveis. */
   sides: (1 | -1)[];
-  /** On a beam lifted over a textile wall (calc/beamLift.ts), with all the beams hanging on it. */
+  /** On a beam lifted over a textile wall (calc/beams/beamLift.ts), with all the beams hanging on it. */
   lifted: boolean;
   /** A drawn (innvendig) beam hangs on it. */
   inner: boolean;

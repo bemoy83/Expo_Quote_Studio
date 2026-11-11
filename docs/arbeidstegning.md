@@ -57,7 +57,7 @@ Svar fra Bjørn står i **fet**. Der det står «forslag», gjelder det til Bjø
   `styles/tokens/colors.css` (`--tusj-tekstil`, `--tusj-trykk`). Bruk tekstilfargen der `LAYER_COLOR.textile` brukes
   i dag, og blekk der `LAYER_COLOR.walls` og `.openings` brukes. Prikkene i kalkylepanelet følger dermed planen.
 - **A2 · To nummerserier.** Produksjonen har allerede id-er per stykk: `T1`, `T2` … for tekstil og `F1` … for folie
-  (`calc/production.ts`). De står i trykkfilnavn og på Tilbud (trykkfilene) og Arbeidsordre. Posisjonsnummer i v5 er noe annet:
+  (`calc/textile/production.ts`). De står i trykkfilnavn og på Tilbud (trykkfilene) og Arbeidsordre. Posisjonsnummer i v5 er noe annet:
   **ett nummer per artikkel**. Samme artikkel får samme nummer overalt, og nummeret står ved prislinjen. Forslag:
   behold `T`/`F` som de er (de er produksjonens nøkler), og innfør artikkelnummeret som `Pos.` bare på tilbudet. Om
   arbeidsordrens plan skal vise `Pos.` eller `T`/`F`, avgjør Bjørn. **Bjørn 7.11.2026: arbeidsordrens plan viser
@@ -131,7 +131,7 @@ Takdragere tegnes stiplet, som på hallkartene.
 - **Mållinje for fritt plassert drager (T15):** tegnet som planens og veggrissets målkjeder (`DimChain.tsx`): dempet
   hårstrek, skråstreker og tallet ved siden, 9 px inn fra veggen eller drageren mot standens midte. Fra hver ende
   av en tegnet drager utenfor meterrasteret til nærmeste stolpe eller krok langs veggen eller drageren den henger på
-  (`calc/beamOffsets.ts`). I tegneflaten på drageren som flyttes eller er valgt; på arbeidsordren for alle
+  (`calc/beams/beamOffsets.ts`). I tegneflaten på drageren som flyttes eller er valgt; på arbeidsordren for alle
   (`beamMeasures`), dempet sammen med takdragerne når arbeidsordren er filtrert bort fra dem. Ikke på tilbudet.
 
 ### Gulv · `layers/FloorLayer.tsx`

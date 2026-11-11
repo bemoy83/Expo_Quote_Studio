@@ -50,7 +50,7 @@ export function buildFrame(c: BuildContext) {
   }
 
   // Beams (takdrager) in 292, top flush with the walls, cut between the posts (centres − 40). A beam lifted over a
-  // textile wall (calc/beamLift.ts) is one piece of 94 higher
+  // textile wall (calc/beams/beamLift.ts) is one piece of 94 higher
   const lift = RECIPES.beam.lift.length / 1000
   for (const s of res.beams.segments) {
     const [a, b] = [s.from, s.to]
@@ -60,7 +60,7 @@ export function buildFrame(c: BuildContext) {
     mesh.rotation.y = Math.atan2(-(b[1] - a[1]), b[0] - a[0])
     add(mesh, { layer: 'beams' })
   }
-  // Hooks in 01 where a beam hangs on another (calc/beamHooks.ts): set as a T over the beam it hangs on, a 20 mm piece
+  // Hooks in 01 where a beam hangs on another (calc/beams/beamHooks.ts): set as a T over the beam it hangs on, a 20 mm piece
   // lying on top with its channel up, and an 80 mm leg down the side each hanging beam comes from, channel out to it
   const hook = RECIPES.beam.hook
   const [top, leg] = [hook.top / 1000, hook.leg / 1000]

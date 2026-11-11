@@ -5,7 +5,7 @@
 // The work order and the drawings are covered by the screenshot script (scripts/shots.mjs).
 import { describe, expect, it } from 'vitest';
 import { calc } from '../calc/calc';
-import { foilRows, production, textileRows } from '../calc/production';
+import { foilRows, production, textileRows } from '../calc/textile/production';
 import { quoteGroups } from '../calc/quoteLines';
 import { DEFAULT_CATALOG } from '../catalog/defaultCatalog';
 import { indexCatalog } from '../catalog/lookup';

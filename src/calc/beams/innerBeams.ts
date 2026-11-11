@@ -2,12 +2,12 @@
 // walls: hooks, crossings, walls along them, own posts and foot plates. Byggeregler T8–T12, T15 (docs/byggeregler.md).
 // A drawn beam may lie off the 1 m grid across its direction (T15): it then meets walls between their posts, where it
 // hangs on a hook on the top rail 92, and crosses other beams between whole metres.
-import { makeModule, pointKey } from '../domain/grid';
-import type { InnerBeam, Point } from '../domain/types';
+import { makeModule, pointKey } from '../../domain/grid';
+import type { InnerBeam, Point } from '../../domain/types';
 import { splitBeamLength, type BeamLayout, type BeamSegment } from './beamSegments';
-import type { WallSupport } from './wallSupports';
+import type { WallSupport } from '../wallSupports';
 
-/** Where drawn beams hang on hooks is read from the layout (calc/beamHooks.ts): an end on no post. */
+/** Where drawn beams hang on hooks is read from the layout (calc/beams/beamHooks.ts): an end on no post. */
 export interface InnerBeamLayout extends BeamLayout {
   /** Foot plates under the beams' own free posts. */
   feet: WallSupport[];

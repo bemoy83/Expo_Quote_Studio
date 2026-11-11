@@ -2,13 +2,13 @@
 // its direction hangs on a hook on the top rail 92 where it meets a wall between its posts, and on a hook where it meets a
 // beam; crossings between whole metres are found; a lifted one on a wall gets the 94 × 80 with 600 on top of the wall.
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_CATALOG } from '../catalog/defaultCatalog';
-import { pointKey } from '../domain/grid';
-import type { FreeTextile, InnerBeam, Point, Stand, Variant } from '../domain/types';
-import { createVariant } from '../domain/variant';
-import { RULES } from '../rules/rules';
+import { DEFAULT_CATALOG } from '../../catalog/defaultCatalog';
+import { pointKey } from '../../domain/grid';
+import type { FreeTextile, InnerBeam, Point, Stand, Variant } from '../../domain/types';
+import { createVariant } from '../../domain/variant';
+import { RULES } from '../../rules/rules';
 import { beamOffsets } from './beamOffsets';
-import { calc } from './calc';
+import { calc } from '../calc';
 
 const beam = (id: string, from: Point, to: Point): InnerBeam => ({ id, from, to });
 const free = (id: string, from: Point, to: Point): FreeTextile => ({ id, from, to });

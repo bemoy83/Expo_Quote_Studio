@@ -1,5 +1,5 @@
 // Støtteplater, per piece: the plate and putting it on. Under walls that stand free and under drawn takdrager's own
-// posts (calc/wallSupports.ts, calc/innerBeams.ts), always the exhibitor's.
+// posts (calc/wallSupports.ts, calc/beams/innerBeams.ts), always the exhibitor's.
 import { fogaPart } from '../../foga/parts';
 import { RECIPES } from '../../foga/recipes';
 import { ITEM } from '../../pricing/data';

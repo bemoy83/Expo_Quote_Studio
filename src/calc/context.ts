@@ -18,13 +18,13 @@ import type { FogaStructure } from '../foga/structure';
 import { catalogOwn, ITEM, type PricingData } from '../pricing/data';
 import { priceLine, type Use } from '../pricing/model';
 import type { Rules } from '../rules/rules';
-import { liftBeams, withJoins, type BeamLift } from './beamLift';
-import { beamHooks, hookCount, type BeamHook } from './beamHooks';
-import { variantBeams } from './beams';
-import type { BeamLayout } from './beamSegments';
-import type { InnerBeamLayout } from './innerBeams';
-import { production, type Production } from './production';
-import type { SupportBeamLayout } from './supportBeams';
+import { liftBeams, withJoins, type BeamLift } from './beams/beamLift';
+import { beamHooks, hookCount, type BeamHook } from './beams/beamHooks';
+import { variantBeams } from './beams/beams';
+import type { BeamLayout } from './beams/beamSegments';
+import type { InnerBeamLayout } from './beams/innerBeams';
+import { production, type Production } from './textile/production';
+import type { SupportBeamLayout } from './beams/supportBeams';
 import type { CalcLine } from './types';
 import { wallSupports, type WallSupport } from './wallSupports';
 
@@ -55,7 +55,7 @@ export interface CalcContext {
   /** Every post on the sketch: wall posts, then the posts only the standard takdrager need, then the drawn ones'. */
   allPosts: Map<string, Point>;
   beams: { standard: BeamLayout; inner: InnerBeamLayout; all: BeamLayout; support: SupportBeamLayout; hooks: BeamHook[] };
-  /** Takdrager lifted over textile walls, and the posts and hook points that takes (calc/beamLift.ts). */
+  /** Takdrager lifted over textile walls, and the posts and hook points that takes (calc/beams/beamLift.ts). */
   lift: BeamLift;
   standardPosts: number;
   innerPosts: number;

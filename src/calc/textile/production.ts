@@ -1,11 +1,11 @@
-import type { Foil, TextileFill, TextileWall, Variant, Wall } from '../domain/types';
-import { standWallSide } from '../domain/walls';
-import { RECIPES } from '../foga/recipes';
-import type { InFrameParams, Rules } from '../rules/rules';
-import { freeTrims, placeFrames } from './textile/placement';
-import { framePiece, type FramePiece } from './textile/inFrame';
-import { cornerPosts, freeFrames, type FreeFrame, type HeldEnds } from './textile/free';
-import { fullHeight, partsLm, printFileName } from './textile/common';
+import type { Foil, TextileFill, TextileWall, Variant, Wall } from '../../domain/types';
+import { wallLabel } from '../../domain/walls';
+import { RECIPES } from '../../foga/recipes';
+import type { InFrameParams, Rules } from '../../rules/rules';
+import { freeTrims, placeFrames } from './placement';
+import { framePiece, type FramePiece } from './inFrame';
+import { cornerPosts, freeFrames, type FreeFrame, type HeldEnds } from './free';
+import { fullHeight, partsLm, printFileName } from './common';
 
 export interface ProductionPiece extends FramePiece {
   pos: string;
@@ -38,14 +38,6 @@ export interface Production {
 }
 
 const mm = (m: number) => Math.round(m * 1000);
-
-const SIDE_NAMES = { back: 'Bak', front: 'Front', left: 'Venstre', right: 'Høyre' } as const;
-
-/** Bak / Venstre / Høyre / Front for the stand walls, otherwise Innervegg: an inner wall on the edge is still one. */
-export function wallLabel(w: Wall): string {
-  const side = standWallSide(w);
-  return side ? SIDE_NAMES[side] : 'Innervegg';
-}
 
 /** Height in mm for the frame: the textile's own height when lower than the full wall, else full height. */
 export function textileHeightMm(t: TextileWall, s: InFrameParams): number | undefined {

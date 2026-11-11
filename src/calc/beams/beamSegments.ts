@@ -1,7 +1,7 @@
 // What a takdrager is, and the two rules every layout of them uses: splitting a run (Byggeregel T2) and whether a point
-// lies on a beam. Shared by calc/beams.ts, innerBeams.ts, supportBeams.ts, wallSupports.ts, beamLift.ts and beamHooks.ts,
+// lies on a beam. Shared by calc/beams/beams.ts, innerBeams.ts, supportBeams.ts, wallSupports.ts, beamLift.ts and beamHooks.ts,
 // so none of them imports another's layout.
-import type { Point, Side } from '../domain/types';
+import type { Point, Side } from '../../domain/types';
 
 const EPS = 1e-9;
 
@@ -12,11 +12,11 @@ export interface BeamSegment {
   side: Side;
   /** Tverrdrager: runs from a joint in to the facing wall. */
   cross: boolean;
-  /** Drawn by the customer (calc/innerBeams.ts), not derived from the stand. */
+  /** Drawn by the customer (calc/beams/innerBeams.ts), not derived from the stand. */
   inner?: true;
-  /** Støttedrager holding a long stand wall (calc/supportBeams.ts); also a cross beam. */
+  /** Støttedrager holding a long stand wall (calc/beams/supportBeams.ts); also a cross beam. */
   support?: true;
-  /** Lifted one beam height over a textile wall (calc/beamLift.ts). */
+  /** Lifted one beam height over a textile wall (calc/beams/beamLift.ts). */
   lifted?: true;
 }
 

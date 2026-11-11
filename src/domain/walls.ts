@@ -84,6 +84,14 @@ export const wallKind = (w: Wall): WallKind => (isStandWall(w) ? 'stand' : w.roo
 /** The side a stand wall belongs to. */
 export const standWallSide = (w: Wall): Side | null => (isStandWall(w) ? (w.id.split('-')[1] as Side) : null);
 
+const SIDE_NAMES = { back: 'Bak', front: 'Front', left: 'Venstre', right: 'Høyre' } as const;
+
+/** Bak / Venstre / Høyre / Front for the stand walls, otherwise Innervegg: an inner wall on the edge is still one. */
+export function wallLabel(w: Wall): string {
+  const side = standWallSide(w);
+  return side ? SIDE_NAMES[side] : 'Innervegg';
+}
+
 /** The closed side of the stand type that the module a–b lies on: there only stand walls stand. */
 export function closedSideAt(stand: Stand, a: Point, b: Point): Side | null {
   const open = new Set(openSides(stand));

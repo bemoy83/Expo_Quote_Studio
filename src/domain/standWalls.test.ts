@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { wallLabel } from '../calc/production';
 import { faces } from './faces';
 import { canMoveWall, eraseWalls, moveWall, paintWalls, setStand, splitWall } from './edit';
 import { moduleKey } from './grid';
 import type { Variant } from './types';
 import { createVariant } from './variant';
-import { doorAllowed, isStandWall } from './walls';
+import { doorAllowed, isStandWall, wallLabel } from './walls';
 
 // Stand walls (from the stand type) and inner walls (tilvalg) are told apart by the wall, never by where it stands.
 const inner = (v: Variant) => v.walls.filter((w) => !isStandWall(w));
