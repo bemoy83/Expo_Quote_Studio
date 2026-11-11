@@ -116,6 +116,8 @@ export interface PlacedObject {
   x: number;
   y: number;
   rot: number;
+  /** A counter's plates (Byggeregel K6): a wall colour, RAL. Omitted = the counter as in stock, white 9010. */
+  ral?: string;
 }
 
 /** InFrame: fabric stretched in an aluminium frame, mounted against a wall (not in it). */

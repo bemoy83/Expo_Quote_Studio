@@ -176,8 +176,15 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
   (fra `ObjectLayer.tsx`) · `scene3d/build/counter.ts` (`buildCounter` tar en `CounterBuild`, kalt fra `buildObjects`),
   profilen snudd etter omrisset med `turnedProfile` (`build/profiles.ts`). Begge tegner i diskens egne koordinater og
   plasseres og snus utenfra, så en tegnet disk bruker de samme delene
+- Verktøyet Disker (`counter` i `ui/tools.ts`, D i verktøylinjen, etter Hyller): penselen `{ kind: 'counter', product, ral }`
+  plasserer som møbelpennen (`placedBy` i `tools.ts`, brukt av `pointer/object.ts`, `pointer/place.ts` og `plan/next.ts`).
+  Hurtigvalget i `plan/QuickPicks.tsx` er veggfargene og Fyll (`Palette`, som Vegg og Gulv; Fyll = `paintCounters`).
+  Pillen på en valgt disk har de samme fargene (`Colours` i `plan/pill/objects.tsx`, `setCounterRal`)
+- Farge (K6): `PlacedObject.ral`, uten = som på lager (`counterRal`, `COUNTER_STOCK_RAL` i `domain/objects.ts`). Planen
+  fyller disken med platefargen, 3D farger platene (`buildCounter` tar fargen). Kalkylen legger prisartikkelen
+  `ITEM.counterPlates` til linjen for hver farget disk, prisen er den samme
 - Neste steg: pensel som tegner disk i valgfri lengde og med hjørner (egen modell ved siden av `PlacedObject`, kassene fra
-  `counterBuild`, skjøtene som nye regler i K-serien), og RAL, print og dekal på platene
+  `counterBuild`, skjøtene som nye regler i K-serien), og print og dekal på platene
 - Tester: `foga/counter.test.ts`, `calc/counter.test.ts`, `scene3d/build/counter.test.ts`; eksempel i `src/test/fixtures/10-mobler-utstyr.json`
 
 ### Møbler og utstyr

@@ -35,3 +35,21 @@ describe('counter 6560 (Byggeregel K1)', () => {
     expect(res.bom.lines.some((l) => /92L|93/.test(l.name))).toBe(false);
   });
 });
+
+describe('counter colour (Byggeregel K6)', () => {
+  const coloured = { ...v, objects: [v.objects[0], { ...v.objects[1], ral: '3002' }] };
+  const r = calc(coloured, RULES, DEFAULT_CATALOG, { payer: 'utstiller', ral: '9010' });
+  const l = r.groups.flatMap((g) => g.lines).find((x) => x.artnr === '6560')!;
+
+  it('keeps the same price in every colour and says which colours', () => {
+    expect(l).toMatchObject({ qty: 2, price: 1320, sum: 2640, meta: 'RAL 3002 × 1 · RAL 9010 × 1' });
+    expect(line.meta).toBeUndefined();
+  });
+
+  it('costs the plate swap for each coloured counter', () => {
+    const swap = DEFAULT_PRICING.items.get(ITEM.counterPlates(1020, 520))!;
+    expect(swap.cost).toBeGreaterThan(0);
+    expect(l.cost).toBeCloseTo(line.cost! + swap.cost, 6);
+    expect(DEFAULT_PRICING.missing.map((m) => m.id)).not.toContain(ITEM.counterPlates(1020, 520));
+  });
+});

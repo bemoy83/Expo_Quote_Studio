@@ -1,8 +1,8 @@
-// The pill on what stands on the floor: a room, a drawn takdrager, furniture and a frittstående tekstilvegg
+// The pill on what stands on the floor: a room, a drawn takdrager, furniture, a counter and a frittstående tekstilvegg
 // (docs/pille-og-skuff.md).
 import { MoveHorizontal, MoveVertical, RotateCw } from 'lucide-react'
 import { roomName, roomSize } from '../../../domain/rooms'
-import { setObjectProduct } from '../../../domain/objects'
+import { counterRal, setCounterRal, setObjectProduct } from '../../../domain/objects'
 import { updateFace } from '../../../domain/textile/free'
 import { idx, place } from '../../env'
 import { fmt, mm } from '../../format'
@@ -10,7 +10,7 @@ import { objectFamily } from '../../objectFamily'
 import { QBtn, Sep, Sw } from '../QuickPicks'
 import type { Chosen } from '../selection'
 import { turnFree, turnObject } from '../turn'
-import { Motifs, type Content, type PillActions } from './parts'
+import { Colours, Motifs, type Content, type PillActions } from './parts'
 
 type Of<K extends Chosen['kind']> = Extract<Chosen, { kind: K }>
 
@@ -52,6 +52,13 @@ export function objectPill(p: PillActions, c: Of<'object'>, remove: () => void):
     meta: fp ? `${fp.round ? `ø ${mm(fp.w)}` : `${mm(fp.w)} × ${mm(fp.d)}`}${o.rot ? ` · ${o.rot}°` : ''}` : undefined,
     body: (
       <>
+        {/* A counter's plates in the wall colours, as on a wall (Byggeregel K6, Bjørn 11.11.2026) */}
+        {f?.product.counter && (
+          <>
+            <Colours value={counterRal(o)} title={(n) => `Disken ${n}`} onPick={(r) => onEdit((x) => setCounterRal(x, o.id, r))} />
+            {!fp?.round && <Sep />}
+          </>
+        )}
         {family.length > 1 &&
           family.map((x) => (
             <Sw

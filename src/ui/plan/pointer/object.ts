@@ -2,14 +2,16 @@
 import { addObject, moveObject } from '../../../domain/objects'
 import { place, productOf } from '../../env'
 import { dropObject } from '../../drag'
+import { placedBy } from '../../tools'
 import type { DragHandlers, P, PointerCtx } from './types'
 
-/** A click with the object pen: place the product here. */
+/** A click with the object or counter pen: place the product here. */
 export function objectClick(c: PointerCtx, q: P) {
   const { v, brush } = c
-  if (brush?.kind !== 'object') return
-  const product = brush.product
-  const next = addObject(v, place, product, q.x, q.y)
+  const pen = placedBy(brush)
+  if (!pen) return
+  const { product, ral } = pen
+  const next = addObject(v, place, product, q.x, q.y, ral)
   if (!next) c.onToast(`Ikke plass til ${productOf(product)?.name.toLowerCase() ?? 'varen'} her`)
   else c.onEdit(() => next)
 }

@@ -1,9 +1,9 @@
-// Floating tools on the drawing surface, one icon per tool: Velg · Vegg · Gulv · Profilering · Hyller · Møbel · Tøm
+// Floating tools on the drawing surface, one icon per tool: Velg · Vegg · Gulv · Profilering · Hyller · Disker · Møbel · Tøm
 // at the bottom, undo and redo on their own pill to the left. Over the active tool: its quick picks. A short stripe under
-// Vegg and Gulv shows the colour they draw with. Over the quick picks: the price change of an edit made outside the
+// Vegg, Gulv and Disker shows the colour they draw with. Over the quick picks: the price change of an edit made outside the
 // plan (PriceChangePill).
 import type { LucideIcon } from 'lucide-react'
-import { Armchair, BrickWall, Eraser, Grid2x2, Image, Library, MousePointer2, Redo2, Undo2 } from 'lucide-react'
+import { Armchair, BrickWall, Eraser, Grid2x2, Image, Library, MousePointer2, Redo2, Store, Undo2 } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { DockTool } from '../tools'
 import { PriceChangePill } from './PriceChangePill'
@@ -24,6 +24,7 @@ const DOCK_TOOLS: ToolDef[] = [
   { id: 'floor', name: 'Gulv', more: 'teppefliser og engangsteppe', key: 'G', icon: Grid2x2 },
   { id: 'profile', name: 'Profilering', more: 'tekstilvegger, print og motiver', key: 'T', icon: Image },
   { id: 'fitting', name: 'Hyller', more: 'hyller i veggfeltene', key: 'H', icon: Library },
+  { id: 'counter', name: 'Disker', more: 'bardisker i veggfarge', key: 'D', icon: Store },
   { id: 'object', name: 'Møbel', more: 'plasser møbler på standen', key: 'M', icon: Armchair },
   { id: 'erase', name: 'Tøm', more: 'fjern det du peker på', key: 'E', icon: Eraser },
 ]
@@ -44,7 +45,7 @@ export function ToolDock({
   tools: boolean
   active: DockTool
   onTool: (t: DockTool) => void
-  /** Colour each tool draws with (wall RAL, floor colour). */
+  /** Colour each tool draws with (wall RAL, floor colour, counter RAL). */
   stripes: Partial<Record<DockTool, string | undefined>>
   canUndo: boolean
   canRedo: boolean

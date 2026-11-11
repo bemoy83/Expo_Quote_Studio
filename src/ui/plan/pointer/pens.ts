@@ -1,5 +1,5 @@
 // Which kind of pen is in hand. Velg and Tøm hold none of them: Tøm takes whatever lies under the pointer (erase.ts).
-import type { Brush, Tool } from '../../tools'
+import { placedBy, type Brush, type Tool } from '../../tools'
 
 export function pens(tool: Tool, brush: Brush | null) {
   const pen = tool === 'brush'
@@ -7,7 +7,8 @@ export function pens(tool: Tool, brush: Brush | null) {
     wallTool: pen && (brush?.kind === 'wall'),
     floorTool: pen && brush?.kind === 'floor',
     openingTool: pen && brush?.kind === 'opening',
-    objectTool: pen && brush?.kind === 'object',
+    /** Møbel and Disker: a piece on the floor, placed where it has room. */
+    objectTool: pen && !!placedBy(brush),
     decorTool: pen && brush?.kind === 'motif',
     /** One textile brush: on a system wall it is mounted there, anywhere else it stands free (domain/textile/brush). */
     textileTool: pen && brush?.kind === 'textile',

@@ -1,5 +1,5 @@
 // Counter (bardisk 6560, Byggeregler K1–K5) from the same pieces the kalkyle costs (foga/counter.ts): 92L in the
-// corners, 93 and 92 rails from their measured outlines, the wall plates in the sketch's wall colour, the white top and
+// corners, 93 and 92 rails from their measured outlines, the wall plates in the counter's colour (K6), the white top and
 // shelf. The 600 couplings sit inside the profiles and are not drawn. The closed front faces the object's +y.
 import * as THREE from 'three'
 import type { Box3, CounterBuild, CounterProfile } from '../../../foga/counter'
@@ -19,8 +19,8 @@ function outward(x: CounterProfile) {
 }
 
 /** Every piece of counter `b` into group `g`, in the counter's own coordinates (the group places and turns it). */
-export function buildCounter(c: BuildContext, g: THREE.Group, b: CounterBuild, tag: Tag, warn: THREE.MeshStandardMaterialParameters) {
-  const { v, mat, add } = c
+export function buildCounter(c: BuildContext, g: THREE.Group, b: CounterBuild, ral: string, tag: Tag, warn: THREE.MeshStandardMaterialParameters) {
+  const { mat, add } = c
   const alu = mat('objects', ALU, { ...ALU_FINISH, ...warn })
   for (const x of b.profiles) {
     const { u, v: vv } = outward(x)
@@ -36,8 +36,8 @@ export function buildCounter(c: BuildContext, g: THREE.Group, b: CounterBuild, t
     mesh.position.copy(mid(bx))
     add(mesh, tag, g)
   }
-  // K4: the wall plate in the sketch's wall colour (its own colour, print and decal come later)
-  const plate = mat('objects', plateColor(v.defaultPlate), { roughness: 0.6, ...warn })
+  // K4, K6: the wall plate in the counter's colour (print and decal come later)
+  const plate = mat('objects', plateColor(ral), { roughness: 0.6, ...warn })
   for (const p of b.plates) box(p.box, plate)
   const board = mat('objects', BOARD, { roughness: 0.55, ...warn })
   for (const x of b.boards) box(x.box, board)

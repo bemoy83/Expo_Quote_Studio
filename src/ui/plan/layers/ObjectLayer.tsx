@@ -1,10 +1,10 @@
-// Furniture in the plan. A counter (Byggeregel K1) also shows its plates: front and both ends closed, the back open.
+// Furniture in the plan. A counter (Byggeregel K1) is drawn in its plates' colour (K6) and shows its plates: front and both ends closed, the back open.
 import { mainGroupOf } from '../../../catalog/groups'
-import { footprintBox } from '../../../domain/objects'
+import { counterRal, footprintBox } from '../../../domain/objects'
 import { stockCounter } from '../../../foga/counter'
 import type { Variant } from '../../../domain/types'
 import { BLOCK, INK } from '../../colors'
-import { idx, productOf } from '../../env'
+import { idx, plateColor, productOf } from '../../env'
 import { linePx, usePlanScale } from '../planScale'
 import type { Layer, Tool } from '../../tools'
 import type { PlanSelection } from '../selection'
@@ -30,7 +30,9 @@ export function ObjectLayer(props: {
     <g opacity={dim('objects')}>
       {v.objects.map((o) => {
         const f = productOf(o.product)?.footprint
-        const col = idx.byArtnr.get(o.product)?.variant.color ?? 'oklch(0.3 0.004 250)'
+        const counter = productOf(o.product)?.counter
+        // A counter in its plates' colour (K6), other furniture in its own
+        const col = counter ? plateColor(counterRal(o)) : (idx.byArtnr.get(o.product)?.variant.color ?? 'oklch(0.3 0.004 250)')
         if (!f) return null
         const b = footprintBox(o, f)
         const isBad = bad.has(o.id)
@@ -46,7 +48,6 @@ export function ObjectLayer(props: {
           ) : (
             <rect x={b.x0} y={b.y0} width={b.x1 - b.x0} height={b.y1 - b.y0} rx={0.03} fill={fill} {...props} />
           )
-        const counter = productOf(o.product)?.counter
         return (
           <g key={o.id}>
             {shape(col, { stroke, strokeWidth: sw, opacity: op, fillOpacity: g ? GONE_FILL : undefined, style: { cursor: tool === 'select' && f.round ? 'move' : undefined } })}
