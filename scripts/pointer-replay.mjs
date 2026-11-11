@@ -5,8 +5,8 @@
 //   node scripts/pointer-replay.mjs compare <a.json> <b.json>
 //
 // Each scenario loads an example sketch from src/test/fixtures, picks tools in the dock and quick picks, and clicks
-// and drags in the plan in model coordinates: walls, doors, inner beams, rooms, furniture, tiles, engangsteppe (Fyll
-// and Bane), the textile brush, motifs, drag and drop from Profilering, and press, hold and release (or Escape) for
+// and drags in the plan in model coordinates: walls, doors, inner beams, rooms, furniture, tiles, engangsteppe (the
+// brush), the textile brush, motifs, drag and drop from Profilering, and press, hold and release (or Escape) for
 // doors, decals and furniture. After each step it records a hash of the
 // sketch stored in localStorage, the open drawer, what is selected (the plan's data-selection), the cursor, the pen in
 // the dock, where the last piece of furniture stands, the last door's swing and hinge, the selection pill, the drawer's
@@ -154,19 +154,17 @@ await tool('Møbel'); await page.locator('.q-obj').first().click(); await press(
 await press(0.2, 0.2); await record('sett møbel trangt')
 await close()
 
-// Floor: tiles, then engangsteppe with Fyll and Bane
+// Floor: tiles, then the engangsteppe brush (one brush since #162: drag fills an area, a click on free floor fills all
+// free floor, a click on a lane of another colour recolours it)
 await open('01-hjorne-arrangor')
 await tool('Gulv'); await page.locator('[aria-label="Gulvtype"] [role=tab]').nth(0).click(); await page.locator('.q-sw').nth(1).click()
 await drag(0.5, 0.5, 3.5, 2.5); await record('fliser')
 await tool('Tøm'); await drag(1, 1, 2, 1); await record('visk fliser')
 await tool('Gulv'); await page.locator('[aria-label="Gulvtype"] [role=tab]').nth(1).click(); await page.locator('.q-sw').nth(0).click()
-await page.locator('[aria-label="Legging"] [role=tab]').nth(0).click()
 await drag(0.5, 0.5, 4.5, 2.5); await record('fyll område')
 await press(5, 3.5); await record('fyll stand')
-await page.locator('[aria-label="Legging"] [role=tab]').nth(1).click()
-await press(1, 3.5); await record('bane klikk')
-await drag(0.5, 1, 0.5, 3); await record('bane dra')
-await tool('Velg'); await press(1, 1); await record('velg bane')
+await page.locator('.q-sw').nth(1).click(); await press(1, 1); await record('kost ny farge på bane')
+await tool('Velg'); await press(1, 1); await record('velg fyll i stand')
 await close()
 await open('07-engangsteppe')
 await tool('Velg'); await press(1, 1); await record('velg fyll')
@@ -245,13 +243,8 @@ await close()
 await open('07-engangsteppe')
 await tool('Velg'); await press(1, 1); await key('Delete'); await record('tast slett fyll')
 await close()
-await open('01-hjorne-arrangor')
-await tool('Gulv'); await page.locator('[aria-label="Gulvtype"] [role=tab]').nth(1).click(); await page.locator('.q-sw').nth(0).click()
-await page.locator('[aria-label="Legging"] [role=tab]').nth(1).click()
-await press(1, 3.5); await key('r'); await press(5, 1); await record('tast R snur pensel')
-await tool('Velg'); await press(1, 3.5); await key('r'); await record('tast R snur bane')
-await key('Escape'); await record('tast Escape fra bane')
-await press(1, 3.5); await key('Delete'); await record('tast slett bane')
+await open('07-engangsteppe')
+await tool('Velg'); await press(1, 1); await key('Escape'); await record('tast Escape fra fyll')
 await close()
 await open('08-tekstil')
 await tool('Velg'); await press(4.5, 3); await key('Delete'); await record('tast slett frittstående')
