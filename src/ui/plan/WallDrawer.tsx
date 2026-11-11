@@ -6,9 +6,9 @@
 // drawing, the plan or 3D): its settings on the left and the mini plan to move it in the middle (Bjørn 3.11.2026).
 // The parts are in wallDrawer/: the settings panels (panels.tsx), «Hyller og heng» and a chosen shelf (fittings.tsx), the drawing (WallElevation.tsx), dragging in it
 // (drag.ts), the paint bucket and brush (paint.ts), the face's name and rooms (face.ts) and the drawer's words (text.ts).
-// This file picks what to show.
+// What to show for what is chosen is decided in focus.ts, and the tools kept between renders live in useWallTools.ts;
+// this file puts it together.
 import { AlignVerticalSpaceAround, DoorOpen, FlipHorizontal2, MoveHorizontal, Palette, Plus } from 'lucide-react'
-import { useState } from 'react'
 import { production } from '../../calc/textile/production'
 import { addFoil, foilBlocked, foilsOn, removeFoil, updateFoil } from '../../domain/decor'
 import { eraseWalls } from '../../domain/edit'
@@ -30,8 +30,10 @@ import { chosen, chosenShelves, isOnWall, type PlanSelection } from './selection
 import { addTextile, fillTextile, removeTextile, textilesOn, updateTextile } from '../../domain/textile/inFrame'
 import { faces, type FaceSide } from '../../domain/faces'
 import { faceName, roomsAgainst } from './wallDrawer/face'
-import { wallPaint, type PaintTool } from './wallDrawer/paint'
-import { FeltFittings, type FeltPage, ShelfPanel, WallFittings } from './wallDrawer/fittings'
+import { wallPaint } from './wallDrawer/paint'
+import { FeltFittings, ShelfPanel, WallFittings } from './wallDrawer/fittings'
+import { focusOf, layoutOf } from './wallDrawer/focus'
+import { useWallTools } from './wallDrawer/useWallTools'
 import { ColourPanel, DoorPanel, FeltPanel, FoilPanel, TextilePanel, WallShelf } from './wallDrawer/panels'
 import { BRUSH_HINT, wallHint, wallMeta, wallTitle } from './wallDrawer/text'
 import { WallElevation } from './wallDrawer/WallElevation'
@@ -50,23 +52,8 @@ interface Props {
 
 export function WallDrawer(p: Props) {
   const { v, selection: sel, motifs } = p
-  /**
-   * Colouring as in a paint program: pick the paint bucket (the whole face) or the brush (one plate at a time), pick a
-   * colour or «Print», then click the wall. No tool: the drawing selects and moves as usual (Bjørn 2.11.2026).
-   */
-  const [tool, setTool] = useState<PaintTool>(null)
-  /** What the tools lay on: a plate colour (RAL) or PRINT. Unset: the wall's own colour. */
-  const [paintSel, setPaint] = useState<string | null>(null)
-  /** The motif «Print» lays on, chosen in Profilering. Unset: the first in the library. */
-  const [printSel, setPrintMotif] = useState<string | null>(null)
-  /** The page shown for a felt or the whole wall: colour and profilering, or shelves and hooks. Kept from felt to felt. */
-  const [page, setPage] = useState<FeltPage>('decor')
-  /** The shelf brush (Hyller og heng): shelves are laid in the drawing where it is clicked (Bjørn 9.11.2026). */
-  const [shelfBrush, setShelfBrush] = useState(false)
-  /** The hint line while the shelf brush aims at a felt that takes none, or too high. */
-  const [brushHint, setBrushHint] = useState<string | null>(null)
-  /** Whether something on the wall was chosen at the last render: choosing something puts the brush away. */
-  const [wasChosen, setWasChosen] = useState(false)
+  const t = useWallTools()
+  const { tool, setTool, page } = t
   /** The wall and face shown, and what on it is chosen. A chosen door or curtain: the drawer shows its wall, which follows
    *  the door when the mini plan moves it. */
   const c = chosen(v, sel)
@@ -87,6 +74,9 @@ export function WallDrawer(p: Props) {
   const mods = wallModules(w).map((m) => built.get(m.key))
   /** A felt chosen in the drawing (a plate, not a door), when nothing on the wall is. */
   const Fe = c.kind === 'wall' && c.felt !== undefined && mods[c.felt] && !mods[c.felt]!.opening ? c.felt : undefined
+  /** What the drawer shows: one answer for the panel, the motif library and the buttons (focus.ts). */
+  const focus = focusOf(c.kind, Fe)
+  const ui = layoutOf(focus, page)
   const rooms = roomsAgainst(v, w, s)
   const ratioOf = (id?: string) => findMotif(motifs, id)?.ratio ?? 0
   const label = wallLabel(w)
@@ -147,10 +137,10 @@ export function WallDrawer(p: Props) {
     mods,
     motifs,
     tool,
-    paintSel,
-    printSel,
+    paintSel: t.paintSel,
+    printSel: t.printSel,
     ral,
-    free: !T && !F && !O && !S && Fe === undefined,
+    free: ui.paint,
     base,
     onEdit: p.onEdit,
     onCheckpoint: p.onCheckpoint,
@@ -159,20 +149,15 @@ export function WallDrawer(p: Props) {
   /** Modules of this wall holding a door (not a curtain): a leaf for the brush, a header and leaf for a print. */
   const doorModules = new Set(doors.map((d) => d.module))
   /** The brush is live on the whole wall's «Hyller og heng» with nothing chosen; choosing something puts it away. */
-  const picked = c.kind !== 'wall' || Fe !== undefined
-  const brushOn = shelfBrush && page === 'extras' && !picked
-  if (picked !== wasChosen) {
-    setWasChosen(picked)
-    if (picked) setShelfBrush(false)
-  }
+  const brushOn = t.brushLive(focus !== 'wall')
   /** Take the shelf brush: a chosen felt is let go, as the paint tools do. */
   const takeBrush = (on: boolean) => {
-    setShelfBrush(on)
+    t.setShelfBrush(on)
     if (on && Fe !== undefined) select({})
   }
-  const hint0 = wallHint({ O, door: !!O && doorModules.has(O.module), painting, tool, printing, T, F, S, felt: Fe !== undefined ? page : undefined, extras: !T && !F && !S && Fe === undefined && page === 'extras', w })
+  const hint0 = wallHint({ O, door: !!O && doorModules.has(O.module), painting, tool, printing, T, F, S, felt: focus === 'felt' ? page : undefined, extras: ui.panel === 'wall-extras', w })
 
-  const hint = brushOn ? (brushHint ?? BRUSH_HINT) : hint0
+  const hint = brushOn ? (t.brushHint ?? BRUSH_HINT) : hint0
 
   /**
    * With a felt chosen a motif in Profilering prints the plate at once, as a colour in the palette colours it (Bjørn
@@ -182,7 +167,7 @@ export function WallDrawer(p: Props) {
     Fe === undefined
       ? undefined
       : (id: string) => {
-          setPrintMotif(id)
+          t.setPrintMotif(id)
           const no = foilBlocked(v, rules, w.id, Fe, s, true)
           if (no) return p.onToast(no)
           const on = printsOn(v, w.id, s).find((f) => f.module === Fe)
@@ -198,7 +183,7 @@ export function WallDrawer(p: Props) {
     else if (S) {
       // Back to the felt's shelves and hooks, where the shelf was added
       p.onEdit((x) => removeShelves(x, chosenShelves(v, sel)))
-      setPage('extras')
+      t.setPage('extras')
       return select({ felt: S.module })
     }
     else {
@@ -212,7 +197,7 @@ export function WallDrawer(p: Props) {
   return (
     <section className="wall-drawer drawer2" aria-label="Vegg sett forfra">
       <div className="wd-insp">
-        {O ? (
+        {ui.panel === 'door' && O ? (
           <DoorPanel v={v} O={O} w={w} flip={flip} select={select} selectDoor={selectDoor} onEdit={p.onEdit} onClose={p.onClose}>
             <DoorMap v={v} openingId={O.id} onEdit={p.onEdit} />
           </DoorPanel>
@@ -246,33 +231,32 @@ export function WallDrawer(p: Props) {
 
             {S && <ShelfPanel v={v} H={S} w={w} s={s} sel={sel} select={select} onEdit={p.onEdit} onToast={p.onToast} />}
 
-            {Fe !== undefined && page === 'extras' && <FeltFittings v={v} w={w} s={s} m={Fe} mods={mods} onBrush={() => takeBrush(true)} select={select} onEdit={p.onEdit} onToast={p.onToast} />}
+            {ui.panel === 'felt-extras' && Fe !== undefined && <FeltFittings v={v} w={w} s={s} m={Fe} mods={mods} onBrush={() => takeBrush(true)} select={select} onEdit={p.onEdit} onToast={p.onToast} />}
 
-            {Fe !== undefined && page === 'decor' && (
+            {ui.panel === 'felt-decor' && Fe !== undefined && (
               <FeltPanel v={v} w={w} s={s} m={Fe} mods={mods} motifs={motifs} pm={pm} base={base} twoFaces={fs.length > 1} setTool={setTool} select={select} onEdit={p.onEdit} onToast={p.onToast} />
             )}
 
-            {!T && !F && !S && Fe === undefined && page === 'extras' && <WallFittings v={v} w={w} s={s} brush={brushOn} onBrush={takeBrush} onEdit={p.onEdit} onToast={p.onToast} />}
+            {ui.panel === 'wall-extras' && <WallFittings v={v} w={w} s={s} brush={brushOn} onBrush={takeBrush} onEdit={p.onEdit} onToast={p.onToast} />}
 
-            {!T && !F && !S && Fe === undefined && page === 'decor' && <ColourPanel painting={painting} tool={tool} setTool={setTool} printing={printing} pm={pm} paint={paint} ral={ral} setPaint={setPaint} />}
+            {ui.panel === 'wall-decor' && <ColourPanel painting={painting} tool={tool} setTool={setTool} printing={printing} pm={pm} paint={paint} ral={ral} setPaint={t.setPaint} />}
           </>
         )}
-        {!O && !T && !S && !(!F && page === 'extras') && (
-          <WallShelf F={F} felt={feltShelf} printing={printing} pm={pm} motifs={motifs} ratioOf={ratioOf} setPrintMotif={setPrintMotif} onEdit={p.onEdit} onUpload={p.onUpload}>
-            {Fe !== undefined ? (
+        {ui.library && (
+          <WallShelf F={F} felt={feltShelf} printing={printing} pm={pm} motifs={motifs} ratioOf={ratioOf} setPrintMotif={t.setPrintMotif} onEdit={p.onEdit} onUpload={p.onUpload}>
+            {ui.library.add === 'decal' && Fe !== undefined && (
               <Button variant="ghost" icon={Plus} onClick={addDecal} disabled={!!feltFoil(Fe)}>
                 Dekal
               </Button>
-            ) : (
-              !F && (
-                <Button variant="ghost" icon={Plus} onClick={addFrame}>
-                  Tekstilvegg
-                </Button>
-              )
+            )}
+            {ui.library.add === 'frame' && (
+              <Button variant="ghost" icon={Plus} onClick={addFrame}>
+                Tekstilvegg
+              </Button>
             )}
           </WallShelf>
         )}
-        {!O && (
+        {ui.foot && (
           <div className="wd-foot">
             <Section
               title="Side"
@@ -283,48 +267,37 @@ export function WallDrawer(p: Props) {
                     icon={FlipHorizontal2}
                     label={T ? 'Flytt rammen til andre siden' : F ? 'Flytt folien til andre siden' : S ? 'Flytt hyllen til andre siden' : `Vis ${faceName(w, flip).toLowerCase()}`}
                     size={15}
-                    onClick={() => (T || F || S ? moveToSide(flip) : p.onSelect({ wallId: w.id, side: flip }))}
+                    onClick={() => (ui.moves ? moveToSide(flip) : p.onSelect({ wallId: w.id, side: flip }))}
                   />
                 )
               }
             />
             <div className="wd-actions">
-              {T && (
+              {ui.fill && T && (
                 <Button variant="ghost" icon={MoveHorizontal} onClick={() => p.onEdit((x) => fillTextile(x, rules, T.id))}>
                   Fyll ledig vegg
                 </Button>
               )}
               {/* A felt and the whole wall have two pages, switched here as a door's way back to the palette is (Bjørn
                   9.11.2026); a chosen shelf goes back to its felt's colour and profilering */}
-              {!T && !F && !S && (
-                <Button
-                  variant="ghost"
-                  icon={page === 'extras' ? Palette : AlignVerticalSpaceAround}
-                  onClick={() => {
-                    setTool(null)
-                    setShelfBrush(false)
-                    setPage(page === 'extras' ? 'decor' : 'extras')
-                  }}
-                >
+              {ui.pageSwitch && (
+                <Button variant="ghost" icon={page === 'extras' ? Palette : AlignVerticalSpaceAround} onClick={t.switchPage}>
                   {page === 'extras' ? 'Farge og profilering' : 'Hyller og heng'}
                 </Button>
               )}
-              {S && (
+              {ui.backToFelt && S && (
                 <Button
                   variant="ghost"
                   icon={Palette}
                   onClick={() => {
-                    setPage('decor')
+                    t.setPage('decor')
                     select({ felt: S.module })
                   }}
                 >
                   Farge og profilering
                 </Button>
               )}
-              {!T &&
-                !F &&
-                !S &&
-                Fe === undefined &&
+              {ui.doors &&
                 doors.map((d, i) => (
                   <Button key={d.id} variant="ghost" icon={DoorOpen} onClick={() => selectDoor(d.id)}>
                     Dør{doors.length > 1 ? ` ${i + 1}` : ''}
@@ -362,8 +335,8 @@ export function WallDrawer(p: Props) {
         tool={tool}
         paintAt={paintAt}
         shelfBrush={brushOn}
-        onBrushDone={() => setShelfBrush(false)}
-        onBrushHint={setBrushHint}
+        onBrushDone={() => t.setShelfBrush(false)}
+        onBrushHint={t.setBrushHint}
         doorModules={doorModules}
         ratioOf={ratioOf}
         select={select}

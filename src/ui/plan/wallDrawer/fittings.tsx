@@ -19,9 +19,6 @@ import { FeltArrows } from './panels'
 
 type Edit = (fn: (v: Variant) => Variant, history?: boolean) => void
 
-/** What a felt or the whole wall shows: colour and profilering, or what is fitted to it (shelves, later heng), like a door's own page. */
-export type FeltPage = 'decor' | 'extras'
-
 /** Adding fittings chooses nothing: they go on without a break and are tapped to change (Bjørn 9.11.2026). */
 const added = (onEdit: Edit, onToast: (t: string) => void) => (r: { v: Variant } | { error: string }) => {
   if ('error' in r) return onToast(r.error)
