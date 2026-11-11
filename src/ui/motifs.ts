@@ -1,5 +1,5 @@
 // Motif library: a few sample motifs plus the customer's own uploads (stored in the sketch file as egneMotiver).
-import type { Motif } from '../persistence/file'
+import type { Motif } from '../domain/types'
 
 /** A flat sample motif drawn as SVG, so the PoC ships without image files. */
 function sample(id: string, name: string, ratio: number, bg: string, fg: string, text: string): Motif {

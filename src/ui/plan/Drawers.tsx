@@ -1,8 +1,7 @@
 // The drawer for what is selected in Velg: a free-standing textile wall, engangsteppe (plan only), or a wall with its
 // doors, frames and decals. They open under the plan or the 3D view.
 import type { CalcResult } from '../../calc/calc'
-import type { Variant } from '../../domain/types'
-import type { Motif } from '../../persistence/file'
+import type { Motif, Variant } from '../../domain/types'
 import { CarpetDrawer } from './CarpetDrawer'
 import { FreeTextileDrawer } from './FreeTextileDrawer'
 import type { PlanSelection } from './selection'

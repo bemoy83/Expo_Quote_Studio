@@ -1,7 +1,7 @@
 // Sketch state with undo and redo at model level (snapshots). Pure reducer, no React.
-import type { Project, StandWallTerms, Variant, VariantName } from '../domain/types';
+import type { Motif, Project, StandWallTerms, Variant, VariantName } from '../domain/types';
 import { setStandWallTerms } from '../domain/variant';
-import type { Motif, Sketch } from '../persistence/file';
+import type { Sketch } from '../persistence/file';
 
 export interface SketchState {
   sketch: Sketch;

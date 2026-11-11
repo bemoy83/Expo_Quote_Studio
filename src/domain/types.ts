@@ -6,7 +6,6 @@
 //   Tekstilvegg → TextileWall · Frittstående tekstilvegg → FreeTextile · Foliedekor → Foil · Tellevare → CountedItem · Variant → Variant
 //   Prosjekt → Project · Produkt → Product (see catalog)
 
-import type { CostBasisRef } from '../cost/basis';
 
 export type Point = readonly [x: number, y: number];
 
@@ -284,4 +283,21 @@ export interface Project {
   standWalls?: StandWallTerms;
   /** The kostgrunnlag the quote was last saved with, so it shows what its cost was calculated with. */
   costBasis?: CostBasisRef;
+}
+
+/** A customer motif uploaded by the user (image as data URL). */
+export interface Motif {
+  id: string;
+  name: string;
+  ratio: number;
+  src: string;
+}
+
+/** What a quote remembers about the basis it was calculated with. */
+export interface CostBasisRef {
+  version: string;
+  date: string;
+  example: boolean;
+  /** Fingerprint of everything the calc ran on (`PricingData.code`, src/pricing/data.ts). Missing in older files. */
+  code?: string;
 }

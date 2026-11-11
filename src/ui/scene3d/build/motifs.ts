@@ -2,7 +2,7 @@
 // shares it (the iPad print fix). A print shows light grey until its picture has loaded.
 import * as THREE from 'three'
 import type { Crop } from '../../../domain/print'
-import type { Motif } from '../../../persistence/file'
+import type { Motif } from '../../../domain/types'
 
 /** Longest side of a motif in 3D. Uploads are already at most 640 px; the samples are SVG drawn at 4 x. */
 const MOTIF_PX = 1024

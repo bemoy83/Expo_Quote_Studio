@@ -8,6 +8,7 @@
 // File: JSON `{ format: 'kostgrunnlag', versjon, kostversjon, dato, kilde, parametere, ordrekost, prislister, tider,
 // oppskrifter, katalog }`. Version 1 files (no tider, oppskrifter, katalog) are read too.
 // Kostmodell: docs/kostmodell.md.
+import type { CostBasisRef } from '../domain/types';
 import { FOGA_PARTS, type PartKind } from '../foga/parts';
 import { EXAMPLE_CATALOG, EXAMPLE_RECIPES, EXAMPLE_TIMES, ITEM_DEFS } from '../pricing/items';
 import { HANDLING_STEPS, type Time } from '../pricing/model';
@@ -60,15 +61,6 @@ export interface CostBasis {
   notes: Readonly<Record<string, FieldNote>>;
   /** What is taken from the example ("prisliste", "parametere.owned.interest", "tider.stolpe-94"). Empty when nothing is. */
   fromExample: readonly string[];
-}
-
-/** What a quote remembers about the basis it was calculated with. */
-export interface CostBasisRef {
-  version: string;
-  date: string;
-  example: boolean;
-  /** Fingerprint of everything the calc ran on (`PricingData.code`, src/pricing/data.ts). Missing in older files. */
-  code?: string;
 }
 
 export const EXAMPLE_BASIS: CostBasis = {

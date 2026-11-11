@@ -17,7 +17,7 @@ import { buildShelves } from './build/shelves'
 import { buildTextile } from './build/textile'
 import { buildWalls } from './build/walls'
 
-export type { BuildOptions, Layer, Tag } from './build/context'
+export type { BuildOptions, Tag } from './build/context'
 
 export function build(v: Variant, res: CalcResult, opts: BuildOptions = {}): THREE.Group {
   const c = buildContext(v, res, opts)

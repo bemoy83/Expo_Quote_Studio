@@ -5,19 +5,11 @@ import { tilesFromCells } from '../domain/floor/tiles';
 import { nextId } from '../domain/ids';
 import { rectOutline } from '../domain/outline';
 import { RECT_SIDE, roomWalls, roomWallId } from '../domain/rooms';
-import type { Project, Room, Variant } from '../domain/types';
+import type { Motif, Project, Room, Variant } from '../domain/types';
 import { createProject, createVariant } from '../domain/variant';
 
 export const FORMAT = 'standskisse';
 export const VERSION = 3;
-
-/** A customer motif uploaded by the user (image as data URL). */
-export interface Motif {
-  id: string;
-  name: string;
-  ratio: number;
-  src: string;
-}
 
 export interface SketchFile {
   format: typeof FORMAT;
