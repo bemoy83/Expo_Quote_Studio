@@ -142,12 +142,47 @@ export interface ShelfRecipe {
   };
 }
 
+/**
+ * Counter (bardisk 6560), Byggeregler K1–K5 (docs/byggeregler.md): a box of Foga profiles with plates in its channels,
+ * closed on the front and both ends, open at the back where the staff stand. `post` in every corner, full height, its
+ * closed faces outward. `rail` all round at `middle` and `top` (bottom of the rail, mm from the floor), `bottomRail` on
+ * the floor on the closed sides only. Rails sit between the posts: side − 2 × post. `coupling` in each rail end. `plate`
+ * is the wall plate (V5) in the channels, split at the middle rail; `board` lies in the rail's notch, the top and
+ * a shelf on the middle rail. The counter is one box of one size now; a brush
+ * that draws counters of any length and with corners is a later step (K1), with the joints it needs. mm.
+ */
+export interface CounterRecipe {
+  post: string;
+  rail: string;
+  bottomRail: string;
+  coupling: { code: string; perEnd: number };
+  plate: string;
+  board: { code: string; t: number };
+  height: number;
+  /** Post section (92L), rail height (93 and 92) and the rail's depth into the box (93 is 30, 92 is 20), mm. */
+  postSize: number;
+  railHeight: number;
+  bottomRailDepth: number;
+  middle: number;
+  top: number;
+  /** Channel: its centre in from the outer face and its depth. A plate (`plateThickness`) goes to the channel's bottom,
+   *  `platePlay` shorter in all along and at its top end. A board lies in the notch, as deep as a channel, so its top
+   *  is the notch less its thickness under the rail's top, and stops `boardPlay` short of the rail's body. */
+  channel: { inset: number; depth: number };
+  plateThickness: number;
+  platePlay: number;
+  boardPlay: number;
+  /** The counter in stock (6560): ready built, picked as one piece (K1). Outer size, mm. */
+  stock: { length: number; depth: number };
+}
+
 export interface Recipes {
   wall: WallRecipe;
   textileFrame: TextileFrameRecipe;
   beam: BeamRecipe;
   door: DoorRecipe;
   shelf: ShelfRecipe;
+  counter: CounterRecipe;
 }
 
 /** Same rule for a free-standing textile wall and a system wall that stands free (Bjørn 1.11.2026). */
@@ -205,5 +240,26 @@ export const RECIPES: Recipes = {
         twoThirds: { name: '2/3 hylleplate', w: 655, d: 300 },
       },
     },
+  },
+  // Bjørn 11.11.2026 (STL «6560 barinformasjonsdisk»): 92L corners, 93 top and middle, 92 at the bottom, 600 in the
+  // rail ends, wall plate 3 mm, Fibraplast 6 mm top and shelf, straight on the floor (no feet)
+  counter: {
+    post: '92L',
+    rail: '93',
+    bottomRail: '92',
+    coupling: { code: '600', perEnd: 1 },
+    plate: 'HDF',
+    board: { code: 'FIBRAPLAST6', t: 6 },
+    height: 1040,
+    postSize: 30,
+    railHeight: 40,
+    bottomRailDepth: 20,
+    middle: 750,
+    top: 1000,
+    channel: { inset: 10, depth: 10 },
+    plateThickness: 3,
+    platePlay: 4,
+    boardPlay: 2,
+    stock: { length: 1020, depth: 520 },
   },
 };

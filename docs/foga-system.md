@@ -377,6 +377,8 @@ innvendig (der koblinger og fotinnsats sitter). Kanalene ligger midt på en 20 m
 | 90 stag | 873 040 22 | 20 × 20 | Firkantrør uten kanal, midtrør 17 × 17 for 600 |
 | 43TX | 873 805 22 | 40 × 40 | Ytterst (mot rammens utside) en 1,5 mm flens med **tekstilspor på begge flater** (4 mm åpning, 14 mm dypt, 1,5–5,5 mm fra ytterkanten): silikonlisten trykkes inn fra hver side, dukene står 40 mm fra hverandre. Flex-kanal på begge flater (senter 20 mm inn) og på innerkanten (mot rammens midte). Midtrør + to små kamre |
 | 92LTX | 873 809 22 | 57 × 57 | To ben, 20 mm brede, som ender i en Flex-kanal mot hver vegg. Utvendig hjørne avfaset med **tre 45°-spor** der duken svinger rundt hjørnet. Flere kanaler og kamre innvendig |
+| 92L hjørne | 873 050 22 | 30 × 30 | L-form: lukket på de to yttersidene, kanal på hver innerside, fals 10 × 10 i innerhjørnet. Midtrør 17 × 17. Hjørnestolpe i disken (K2). STL 11.11.2026 |
+| 93 | 873 060 22 | 30 × 40 | T-form: kroppen til 92 (20 × 40, kanal i begge ender) og en kanal på langsiden, mellom to falser 10 × 10. Skinne i disken (K3): kanal opp og ned mot platene, fals inn mot topp og hylle. STL 11.11.2026 |
 | Endelokk | 876 900 92 | 57 × 57 × 7 | Plate over hele fotavtrykket til 92LTX, to skruehull (Ø ca. 3,8). Under og over 92LTX. STL-en er tegnet i tre lag, men det er én del (Bjørn 6.11.2026); appen viser den som én plate |
 
 Slik henger det sammen:
@@ -393,6 +395,10 @@ Slik henger det sammen:
 - **Endelokket** ligger under 92LTX på gulvet (7 mm), og 92LTX står på det. Skinnen 43TX står på gulvet ved siden av.
   Med lokk oppe og nede kappes 92LTX **14 mm kortere** enn rammehøyden (2540 → 2526, `cornerPostCap` i
   `src/foga/recipes.ts`). Endelokkene plukkes ikke (Bjørn 6.11.2026).
+
+- **Disk 6560** (STL 11.11.2026, K1–K5): 92L i hjørnene med de lukkede sidene ut, 93 mellom dem i midten og øverst,
+  92 på gulvet foran og i endene. Veggplaten står i kanalene 10 mm inn fra yttersiden, som i veggen. Topp og hylle
+  (6 mm) ligger i falsen på 93, så toppen ender 4 mm under skinnens overkant. Oppskriften er i `src/foga/counter.ts`.
 
 ### 3D-visning med ekte profiler (bygget 6.11.2026)
 

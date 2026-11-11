@@ -25,7 +25,7 @@ const with_ = (patch: Partial<CostParams>): CostParams => ({ ...P, ...patch });
 
 describe('example price list', () => {
   it('has a made-up price for the parts the app builds with, broken pack 30 % over full pack', () => {
-    for (const code of ['94', '91', '92', '292', '90', '43TX', '92LTX', '600', '604', '609', '617', '520', '700', 'M10x65', '730', '740', '750', '795']) {
+    for (const code of ['94', '91', '92', '92L', '93', '292', '90', '43TX', '92LTX', '600', '604', '609', '617', '520', '700', 'M10x65', '730', '740', '750', '795']) {
       const part = FOGA_PARTS.find((x) => x.code === code)!;
       expect(supplierItem(FOGA, part.artnr), code).toBeDefined();
     }
