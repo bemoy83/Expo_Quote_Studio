@@ -71,6 +71,23 @@ export function panelMoves(before: Wall, after: Wall, index = (i: number) => i):
   return out;
 }
 
+/**
+ * The wall pen's paint bucket (Bjørn 11.11.2026): every wall on the stand in one colour. It becomes the stand's colour,
+ * and the colours of their own on walls, rooms, single plates and door leaves (part of the wall) come off. Prints go
+ * too, as the last stroke wins (colour over print); decals and textile frames stay.
+ */
+export function paintAllWalls(v: Variant, ral: string): Variant {
+  const { panels: _p, ...rest } = v;
+  return {
+    ...rest,
+    defaultPlate: ral,
+    walls: v.walls.map(({ plate: _w, ...w }) => w),
+    rooms: v.rooms.map(({ plate: _r, ...r }) => r),
+    openings: v.openings.map(({ ral: _o, ...o }) => o),
+    foils: v.foils.filter((f) => !f.full),
+  };
+}
+
 function withPanels(v: Variant, panels: Record<string, string>): Variant {
   const { panels: _old, ...rest } = v;
   return Object.keys(panels).length ? { ...rest, panels } : rest;

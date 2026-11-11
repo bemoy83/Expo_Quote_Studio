@@ -4,7 +4,7 @@ import { DEFAULT_CATALOG } from '../catalog/defaultCatalog';
 import { RULES } from '../rules/rules';
 import { eraseWalls, moveWall, paintWalls, setWallPlate } from './edit';
 import { moduleKey } from './grid';
-import { setPanels, wallRal } from './panels';
+import { paintAllWalls, setPanels, wallRal } from './panels';
 import { addRoom, moveRoom, removeRoom, roomWallId } from './rooms';
 import type { Variant } from './types';
 import { createVariant } from './variant';
@@ -68,5 +68,20 @@ describe('colour per plate', () => {
     expect(now.key).not.toBe(k);
     expect(now.plate).toBe(BLACK);
     expect(removeRoom(v, r.id).panels).toBeUndefined();
+  });
+
+  it('the wall pen\'s bucket gives every wall one colour: own colours and prints off, decals stay', () => {
+    let v = paintWalls(createVariant('A', { width: 6, depth: 4, type: 'corner', cornerSide: 'right' }), [4, 1], [4, 3]);
+    v = setWallPlate(v, v.walls.find((w) => w.from[0] === 4)!.id, '5010');
+    v = addRoom(v, { x: 1, y: 2, w: 2, d: 2 })!;
+    v = setWallPlate(v, roomWallId(v.rooms[0].id, 0), '3002');
+    v = colour(v, [moduleKey([0, 0], [1, 0])]);
+    const foil = { wallId: 'side-back', module: 1, side: 1 as const, width: 0.96, height: 2.42, x: 0, y: 1.29, motif: 'logo' };
+    v = { ...v, foils: [{ ...foil, id: 'p', full: true }, { ...foil, id: 'd', full: false, width: 0.5, height: 0.5 }] };
+    const all = paintAllWalls(v, '5012');
+    expect(all.defaultPlate).toBe('5012');
+    expect(all.panels).toBeUndefined();
+    expect(new Set(builtModules(all).map((m) => m.plate))).toEqual(new Set(['5012']));
+    expect(all.foils.map((f) => f.id)).toEqual(['d']);
   });
 });

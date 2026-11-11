@@ -3,6 +3,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useRef, us
 import { r2 } from '../calc/referenceStands'
 import { addObject } from '../domain/objects'
 import { addDefaultRoom, roomSize } from '../domain/rooms'
+import { paintAllWalls } from '../domain/panels'
 import type { StandWallTerms, Variant } from '../domain/types'
 import { customerName, fillFloor, standWallTerms } from '../domain/variant'
 import { basisLabel, basisRef, sameBasis } from '../cost/basis'
@@ -258,6 +259,7 @@ export default function App() {
       gridStep={tools.gridStep}
       onGridStep={tools.setGridStep}
       onFill={fillWithPen}
+      onFillWalls={() => onEdit((x) => paintAllWalls(x, tools.wallRal))}
     />
   )
   return (

@@ -41,6 +41,8 @@ export interface QuickPicksProps {
   gridStep: GridStep
   onGridStep: (s: GridStep) => void
   onFill: () => void
+  /** The wall pen's bucket: every wall in the pen's colour. */
+  onFillWalls: () => void
 }
 
 const MAX = 8
@@ -110,6 +112,9 @@ function quickContent(p: QuickPicksProps): ReactNode {
           .map((x) => (
             <Sw key={x.ral} color={x.color} title={`Innervegg ${x.name} · RAL ${x.ral}`} on={brush?.kind === 'wall' && brush.ral === x.ral} onClick={() => onPick({ kind: 'wall', ral: x.ral! })} />
           ))}
+        <QBtn title="Fyll alle vegger med denne fargen" label="Fyll" onClick={p.onFillWalls}>
+          <PaintBucket size={15} />
+        </QBtn>
         <Sep />
         {openings.map((x) => {
           const b: Brush = { kind: 'opening', product: x.variants[0].artnr }

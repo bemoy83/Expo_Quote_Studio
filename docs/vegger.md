@@ -108,6 +108,9 @@ lagres per modul i `Variant.panels` (domain/panels.ts), nøklet på platens kant
 - Der en romside står på en standvegg, er platen standveggens, og fargen også.
 - Fargen følger med når en innervegg eller et rom flyttes eller endrer form, og forsvinner når platen fjernes.
 - Hel-vegg-farge tar over: platene på veggen får veggens nye farge.
+- «Fyll» i veggpillen i planen (malerspann, Bjørn 11.11.2026) gir alle vegger på standen pennens farge: den blir
+  standens farge (`defaultPlate`), og egne farger på vegger, rom, enkeltplater og dørblad går av (`paintAllWalls`).
+  Siste strøk vinner, så print på hele plater går også; dekaler og tekstilrammer blir stående. Ett angre tar alt tilbake.
 - Kalkylen har én linje per farge. En farget plate i en standvegg arrangøren betaler blir platebytte for akkurat den
   platen (6125-RAL). Plukklisten teller plater per RAL, og overstykket over en dør har platens farge.
 
