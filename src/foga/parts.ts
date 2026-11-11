@@ -39,7 +39,9 @@ export const FOGA_PARTS: readonly FogaPart[] = [
   // Flex profiles
   profile('92', '873 051 22', 'Stolpe eller skinne', 'flex', [20, 40]),
   profile('92B', '873 171 22', 'Stolpe eller skinne med dobbel flens', 'flex', [40, 40]),
+  // 92L and 93 measured from Bjørn's STL 11.11.2026: the counter 6560 is built of them (Byggeregler K2, K3)
   profile('92L', '873 050 22', 'Stolpe eller skinne, 90° hjørne', 'flex', [30, 30]),
+  profile('93', '873 060 22', 'Stolpe eller skinne, tre kanaler', 'flex', [30, 40]),
   profile('92R', '873 054 22', 'Stolpe eller skinne, 90° hjørne med hyllestøtte', 'flex', [30, 30]),
   profile('92LL', '873 048 22', 'Stolpe eller skinne, dobbelt 90° hjørne', 'flex', [60, 30]),
   { ...profile('90', '873 040 22', 'Stolpe eller skinne, firkant', 'flex', [20, 20]), kind: 'frame' },
@@ -95,6 +97,8 @@ export const FOGA_PARTS: readonly FogaPart[] = [
   // Wall plates: not Foga. Lacquered HDF, ordered per RAL
   { artnr: '', code: 'HDF', name: 'Lakkert HDF-plate 3 mm', kind: 'plate', system: 'other' },
   // Shelf board: not Foga, bought elsewhere (Bjørn 8.11.2026)
+  // Counter top and shelf: not Foga (Bjørn 11.11.2026, Byggeregel K5)
+  { artnr: '', code: 'FIBRAPLAST6', name: 'MDF malingsmelamin Fibraplast H Barnizable hvit/hvit 6 mm', kind: 'plate', system: 'other' },
   { artnr: '', code: 'HYLLEPLATE', name: 'Hobbyplate melamin hvit 18 mm', kind: 'plate', system: 'other' },
 ];
 

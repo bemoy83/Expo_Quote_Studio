@@ -15,6 +15,11 @@ export const OUTLINES = {
   // board lies on, 15 mm out to one side or both
   '91F': [[16.5,10],[33.5,10],[33.5,3],[29.5,3],[29.5,0],[35,0],[35,30],[15,30],[15,10.5],[0,10.5],[0,9],[15,9],[15,0],[20.5,0],[20.5,3],[16.5,3]],
   '91FF': [[16.5,10],[33.5,10],[33.5,3],[29.5,3],[29.5,0],[35,0],[35,9],[50,9],[50,10.5],[35,10.5],[35,30],[15,30],[15,10.5],[0,10.5],[0,9],[15,9],[15,0],[20.5,0],[20.5,3],[16.5,3]],
+  // Counter profiles (Bjørn's STL 11.11.2026, Byggeregel K2, K3). 92L: 30 × 30, closed outer faces x = 0 and y = 30,
+  // a channel on each inner face. 93: the 92 body 20 × 40 (channel both ends) and a channel on its 40 side at x = 30,
+  // between two 10 × 10 notches (the counter's top and shelf lie in them); closed face x = 0
+  '92L': [[20,11.5],[20,28.5],[27,28.5],[27,24.5],[30,24.5],[30,30],[0,30],[0,0],[5.5,0],[5.5,3],[1.5,3],[1.5,10],[18.5,10],[18.5,3],[14.5,3],[14.5,0],[20,0],[20,10],[30,10],[30,15.5],[27,15.5],[27,11.5]],
+  '93': [[20,11.5],[20,28.5],[27,28.5],[27,24.5],[30,24.5],[30,30],[20,30],[20,40],[14.5,40],[14.5,37],[18.5,37],[18.5,30],[1.5,30],[1.5,37],[5.5,37],[5.5,40],[0,40],[0,0],[5.5,0],[5.5,3],[1.5,3],[1.5,10],[18.5,10],[18.5,3],[14.5,3],[14.5,0],[20,0],[20,10],[30,10],[30,15.5],[27,15.5],[27,11.5]],
   '292': [[20,0],[20,80],[14.5,80],[14.5,77],[18.5,77],[18.5,70],[1.5,70],[1.5,77],[5.5,77],[5.5,80],[0,80],[0,0],[5.5,0],[5.5,3],[1.5,3],[1.5,10],[18.5,10],[18.5,3],[14.5,3],[14.5,0]],
 } as const
 
@@ -53,6 +58,18 @@ export function unitProfile(name: ProfileName, flipY = false): THREE.BufferGeome
     g.rotateY(Math.PI / 2)
     return g
   })
+}
+
+/**
+ * A profile (by recipe code) turned so its outline's x runs along `u` and its y along `v`, its length along `e`: scale x
+ * to its length and place its middle. Used where a part does not lie along a wall (the counter, Byggeregler K2, K3). unitProfile has the
+ * length on local x, the outline's y on local y and its x on local −z; a mirrored turn takes the flipped outline.
+ */
+export function turnedProfile(code: string, e: THREE.Vector3, u: THREE.Vector3, v: THREE.Vector3) {
+  const m = new THREE.Matrix4().makeBasis(e, v, u.clone().negate())
+  const flip = m.determinant() < 0
+  if (flip) m.makeBasis(e, v.clone().negate(), u.clone().negate())
+  return { geo: unitProfile(profile(code), flip), q: new THREE.Quaternion().setFromRotationMatrix(m) }
 }
 
 /**

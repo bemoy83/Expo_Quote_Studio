@@ -15,6 +15,8 @@ const ROWS: Row[] = [
   ['HYLLEPLATE-960x300', 'Hjørne hylleplate, hobbyplate melamin hvit 18 × 300 × 960 mm', 'Plater', 'stk', 120],
   ['HYLLEPLATE-960x290', 'Hjørne hylleplate smal, hobbyplate melamin hvit 18 × 290 × 960 mm', 'Plater', 'stk', 120],
   ['HYLLEPLATE-655x300', '2/3 hylleplate, hobbyplate melamin hvit 18 × 300 × 655 mm', 'Plater', 'stk', 90],
+  // Counter top and shelf (Bjørn 11.11.2026): placeholder until the real price is in the kostgrunnlag
+  ['FIBRAPLAST6-976x476', 'MDF malingsmelamin Fibraplast H Barnizable hvit/hvit 6 × 476 × 976 mm', 'Plater', 'stk', 60],
   // Textile with silicone edge, per m² incl. bleed. Blackback is the default for print (Bjørn 7.11.2026); Samba goes in
   // front of LED, which the app does not draw yet
   ['TRYKK-BLACKBACK', 'Trykt tekstil Blackback med silikonkant', 'Tekstil', 'm²', 180],

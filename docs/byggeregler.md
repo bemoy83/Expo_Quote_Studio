@@ -7,7 +7,7 @@ i [foga-system.md](foga-system.md), veggbegrepene i [vegger.md](vegger.md), pris
 ## Slik brukes registeret
 
 - **Nummeret er regelens navn.** Bokstaven er området (V vegg, S støtte, T takdrager, D dør, R rom, X tekstil, G gulv,
-  P plukk, B hvem bygger, H hylle). Et nummer brukes aldri om igjen: en regel som faller bort, blir stående som «utgått».
+  P plukk, B hvem bygger, H hylle, K disk). Et nummer brukes aldri om igjen: en regel som faller bort, blir stående som «utgått».
 - **Én kilde per regel.** Regelen står her. Koden viser til nummeret («Byggeregel T7») i stedet for å gjenta teksten,
   og foga-system.md forklarer bakgrunnen.
 - **Verdier er data.** Mål, avstander og antall står i `src/rules/rules.ts` (mål i meter) og `src/foga/recipes.ts`
@@ -334,6 +334,32 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   veggen bak en hjørne hylleplate, blir platen smal, 960 × 290: forkanten står der den alltid gjør, og skinnen har nok
   gi til de 1,5 mm som mangler.
   *Bjørn 10.11.2026 · `RECIPES.shelf.corner` (`rail`, `hook`, `boards.narrow`), `railLengths` · kode `src/domain/shelves/corners.ts`, `src/domain/shelves/brackets.ts`, `src/foga/engine.ts`, `src/cost/itemDefs.ts` · test `src/domain/shelves/corners.test.ts`, `src/calc/shelves.test.ts`*
+
+## K · Disk
+
+- **K1 Bardisk 6560.** Disken på lager er 1020 × 520 × 1040 mm utvendig: én kasse av Foga-profiler, lukket foran og i
+  begge ender, åpen bak der standpersonalet står. Den kommer ferdig montert og plukkes som 1 stk så lenge lageret rekker.
+  I tilbudet er den én linje per stk til fast pris (1320 kr); kalkylen regner kost og tid fra det den er bygget av
+  (K2–K5). Den plasseres og kolliderer som et møbel, og fronten er den lukkede langsiden. Den erstatter de oppdiktede
+  diskene 5410, 5415 og 5420 (en gammel skisse beholder dem som løse linjer). Kunder bestiller også andre lengder og
+  hjørner som må plassbygges: en pensel som tegner disk i planen, med de skjøtene det trenger, er ikke bygget (egen PR).
+  *Bjørn 11.11.2026 · `RECIPES.counter.stock` · kode `src/foga/recipes.ts`, `src/catalog/defaultCatalog.ts`, `src/calc/lines/objects.ts`, `src/cost/itemDefs.ts` · test `src/foga/counter.test.ts`, `src/calc/counter.test.ts`*
+- **K2 Hjørnestolpe.** 92L (873 050 22, 30 × 30, kanal på de to innersidene) i hvert hjørne, hele høyden 1040 mm, med de
+  lukkede sidene ut. Disken står rett på gulvet uten justeringsfot, så disker kan settes helt inntil hverandre. Trengs
+  justeringsfot, bygges den utenfor 92L (ikke bygget).
+  *Bjørn 11.11.2026 · `RECIPES.counter.post`, `height`, `postSize` · kode `src/foga/counter.ts` · test `src/foga/counter.test.ts`*
+- **K3 Skinner.** 93 (873 060 22, 30 × 40, kanal i begge ender og på innsiden) rundt alle fire sidene i midten (750–790)
+  og øverst (1000–1040), og 92 på gulvet foran og i begge ender; bak er det ingen bunnskinne. Skinnene står mellom
+  stolpene: sidens lengde − 2 × 30, altså 960 og 460. Én 600 i hver skinneende, 22 per disk.
+  *Bjørn 11.11.2026 · `RECIPES.counter.rail`, `bottomRail`, `middle`, `top`, `coupling` · kode `src/foga/counter.ts` · test `src/foga/counter.test.ts`*
+- **K4 Plater.** Samme veggplate som systemveggen (V5, 3 mm) i kanalene foran og i begge ender, delt ved midtskinnen:
+  976 × 726 og 976 × 226 foran, 476 × 726 og 476 × 226 i hver ende. Platen går ned i kanalen og står 2 mm kort i hver
+  ende og 4 mm kort i toppen. RAL, print eller dekal på lysmålet i disken er bestemt, men ikke bygget (egen PR).
+  *Bjørn 11.11.2026 · `RECIPES.counter.plate`, `channel`, `platePlay` · kode `src/foga/counter.ts` · test `src/foga/counter.test.ts`*
+- **K5 Topp og hylle.** MDF malingsmelamin Fibraplast H Barnizable hvit/hvit 6 mm, 976 × 476, ikke Foga. Toppen ligger i
+  falsen på den øverste 93 (1030–1036, 4 mm under skinnens overkant), hyllen i falsen på den midterste (780–786). Platen
+  står 2 mm fra skinnens kropp på alle sider.
+  *Bjørn 11.11.2026 · `RECIPES.counter.board`, `boardPlay` · kode `src/foga/counter.ts` · test `src/foga/counter.test.ts`*
 
 ## P · Plukkliste og arbeidsordre
 

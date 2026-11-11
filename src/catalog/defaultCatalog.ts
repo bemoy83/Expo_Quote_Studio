@@ -1,5 +1,6 @@
 // Example catalog for the PoC. Art.nr are made up, groups are subgroup ids from groups.ts; prices are examples eks. mva. (F1, H6).
 // Later this comes from the OMS export (Bærer, Art.nr, Beskrivelse, Pris).
+import { RECIPES } from '../foga/recipes';
 import type { Catalog, Product, ProductKind, Unit } from './types';
 
 const one = (
@@ -11,6 +12,21 @@ const one = (
   price: number,
   extra: Partial<Product> = {},
 ): Product => ({ id, name, kind, unit, group, variants: [{ artnr: id, name, price, placeholder: true }], ...extra });
+
+/** Counter built of Foga profiles, the size in stock (Byggeregler K1–K5), placed and colliding like furniture. Price
+ *  from Bjørn (11.11.2026). It replaces the made-up counters 5410, 5415 and 5420 (OLD_COUNTERS). */
+const counter = (id: string, name: string, price: number): Product => {
+  const { length, depth } = RECIPES.counter.stock;
+  const h = RECIPES.counter.height;
+  return {
+    ...one(id, name, 'object', 'stk', 'disk.disker', price, {
+      dim: `${length / 10} × ${depth / 10} · h ${h / 10}`,
+      footprint: { w: length / 1000, d: depth / 1000, h: h / 1000 },
+      counter: { length, depth },
+    }),
+    variants: [{ artnr: id, name, price }],
+  };
+};
 
 /** Counted product with optional named variants ("Sort;Hvit"). Art.nr gets a suffix per variant. */
 const counted = (
@@ -178,9 +194,7 @@ const products: Product[] = [
   counted('5280', 'Møtebord 120 × 80', 'mob.bord', 690),
   counted('5285', 'Kafébord ø70', 'mob.bord', 450),
   counted('5300', 'Loungegruppe', 'mob.grupper', 3900),
-  counted('5410', 'Disk 100, lav', 'disk.disker', 1350),
-  counted('5415', 'Disk 100, høy med lås', 'disk.disker', 1890),
-  counted('5420', 'Bardisk, buet', 'disk.disker', 2950),
+  counter('6560', 'Bardisk', 1320),
   counted('5450', 'Podie 50 × 50', 'disk.podier', 380, ['50 cm', '75 cm', '100 cm']),
   counted('6185', 'Kleskrok, 5 kroker', 'hyll.heng', 160),
   counted('6186', 'Klesstativ', 'hyll.heng', 340),
@@ -209,7 +223,7 @@ const products: Product[] = [
 // Colours for drawing placed furniture (product data, not tokens).
 const BLACK = '#2B2C2E';
 export const FURNITURE_WHITE = '#F3F2EE';
-const OBJECT_COLORS: Record<string, string> = { '5276': BLACK, '5275': FURNITURE_WHITE, '5296': BLACK, '5186': BLACK, '5196': BLACK, '5195': FURNITURE_WHITE };
+const OBJECT_COLORS: Record<string, string> = { '6560': FURNITURE_WHITE, '5276': BLACK, '5275': FURNITURE_WHITE, '5296': BLACK, '5186': BLACK, '5196': BLACK, '5195': FURNITURE_WHITE };
 for (const p of products) for (const v of p.variants) if (OBJECT_COLORS[v.artnr]) v.color = OBJECT_COLORS[v.artnr];
 
 // Cost and handling time of the products without a recipe (furniture, floor, foil, services) come from the kostgrunnlag
@@ -236,6 +250,14 @@ export const DEFAULT_CATALOG: Catalog = {
 /** «Hylle 1 m» (6180, Rett and Skrå) was a counted product until the drawn shelf 6311 replaced it (Bjørn 8.11.2026). A
  *  sketch that has it keeps it as a loose line at its price then (persistence/file.ts). */
 export const OLD_SHELF = { prefix: '6180-', name: 'Hylle 1 m', price: 290, variants: ['Rett', 'Skrå'] } as const;
+
+/** The made-up counters before 6560 (Bjørn 11.11.2026): a sketch that has them keeps them as loose lines at their
+ *  price (persistence/file.ts). */
+export const OLD_COUNTERS: Readonly<Record<string, { name: string; price: number }>> = {
+  '5410': { name: 'Disk 100, lav', price: 1350 },
+  '5415': { name: 'Disk 100, høy med lås', price: 1890 },
+  '5420': { name: 'Bardisk, buet', price: 2950 },
+};
 
 export const DOOR = '6130';
 export const CURTAIN = '6131';

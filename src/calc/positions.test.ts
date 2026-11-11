@@ -46,7 +46,7 @@ describe('position numbers', () => {
     const v = { ...textile.v, objects: furniture.v.objects }
     const r = calc(v, RULES, DEFAULT_CATALOG)
     const p = positions(v, r.groups.flatMap((g) => g.lines), DEFAULT_CATALOG)
-    expect(p.items.map((i) => `${i.pos} ${i.kind}`)).toEqual(['1 textile', '2 textile', '3 freeTextile', '4 freeTextile', '5 object', '6 object', '7 object'])
+    expect(p.items.map((i) => `${i.pos} ${i.kind}`)).toEqual(['1 textile', '2 textile', '3 freeTextile', '4 freeTextile', '5 object', '6 object', '7 object', '8 object'])
     // Textile on a wall and on foot plates is one product, but each frame size its own quote line and number (Bjørn 7.11.2026)
     // Swaps before doors; two plates with the same colour are one article
     const arr = positions(find('01-hjorne').v, find('01-hjorne').r.groups.flatMap((g) => g.lines), DEFAULT_CATALOG)

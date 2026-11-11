@@ -1,6 +1,7 @@
-// Furniture in the plan.
+// Furniture in the plan. A counter (Byggeregel K1) also shows its plates: front and both ends closed, the back open.
 import { mainGroupOf } from '../../../catalog/groups'
 import { footprintBox } from '../../../domain/objects'
+import { stockCounter } from '../../../foga/counter'
 import type { Variant } from '../../../domain/types'
 import { BLOCK, INK } from '../../colors'
 import { idx, productOf } from '../../env'
@@ -8,6 +9,7 @@ import { linePx, usePlanScale } from '../planScale'
 import type { Layer, Tool } from '../../tools'
 import type { PlanSelection } from '../selection'
 import { DIMMED } from '../planStyle'
+import { CounterPlates } from './CounterPlates'
 import { GONE_FILL, useErasing } from './erasing'
 
 /** Furniture by its footprint; one that collides is outlined in red. */
@@ -44,13 +46,16 @@ export function ObjectLayer(props: {
           ) : (
             <rect x={b.x0} y={b.y0} width={b.x1 - b.x0} height={b.y1 - b.y0} rx={0.03} fill={fill} {...props} />
           )
+        const counter = productOf(o.product)?.counter
         return (
           <g key={o.id}>
             {shape(col, { stroke, strokeWidth: sw, opacity: op, fillOpacity: g ? GONE_FILL : undefined, style: { cursor: tool === 'select' && f.round ? 'move' : undefined } })}
             {g && shape(hatch, {})}
+            {counter && <CounterPlates b={stockCounter(counter)} at={o} width={linePx(sc, 1.2)} opacity={op} />}
           </g>
         )
       })}
     </g>
   )
 }
+

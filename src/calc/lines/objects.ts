@@ -1,5 +1,7 @@
 // Placed objects and counted items (Arbeidstimer too: hours counted in the panel), in catalog order, then the loose
-// lines typed in the panel.
+// lines typed in the panel. A counter (6560) keeps its catalog price and is costed from what it is built of
+// (Byggeregler K1–K5): one price item per counter, picked whole.
+import { ITEM } from '../../pricing/data';
 import { countBy, type CalcContext } from '../context';
 import type { CalcLine } from '../types';
 
@@ -7,7 +9,10 @@ export function objectLines(c: CalcContext): CalcLine[] {
   const { v } = c;
   const objectCounts = countBy(v.objects.map((o) => o.product));
   for (const x of v.counted) objectCounts.set(x.product, (objectCounts.get(x.product) ?? 0) + x.qty);
-  return [...objectCounts].map(([a, n]) => c.line(a, n));
+  return [...objectCounts].map(([a, n]) => {
+    const counter = c.idx.byArtnr.get(a)?.product.counter;
+    return counter ? c.line(a, n, {}, [{ id: ITEM.counter(counter.length, counter.depth), qty: n }]) : c.line(a, n);
+  });
 }
 
 export function looseLines(c: CalcContext): CalcLine[] {
