@@ -9,7 +9,8 @@ import { eraseWalls, moveWall, paintWalls, setStand, setWallPlate } from './edit
 import { moduleKey } from './grid';
 import { conflicts } from './objects';
 import { bounds, rectOutline } from './outline';
-import { addDefaultRoom, addRoom, dissolveRoom, moveRoom, RECT_SIDE, removeRoom, resizeRoom, roomAt, roomSideAt, roomSize, roomWallId } from './rooms';
+import { addDefaultRoom, addRoom, dissolveRoom, moveRoom, RECT_SIDE, removeRoom, resizeRoom, roomAt, roomSideAt, roomSize } from './rooms';
+import { roomWallId } from './roomKeys';
 import type { Variant } from './types';
 import { createVariant } from './variant';
 import { builtModules, defaultSwing } from './walls';

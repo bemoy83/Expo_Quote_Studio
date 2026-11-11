@@ -4,7 +4,8 @@ import { OLD_SHELF } from '../catalog/defaultCatalog';
 import { tilesFromCells } from '../domain/floor/tiles';
 import { nextId } from '../domain/ids';
 import { rectOutline } from '../domain/outline';
-import { RECT_SIDE, roomWalls, roomWallId } from '../domain/rooms';
+import { RECT_SIDE, roomWalls } from '../domain/rooms';
+import { roomWallId } from '../domain/roomKeys';
 import type { Motif, Project, Room, Variant } from '../domain/types';
 import { createProject, createVariant } from '../domain/variant';
 

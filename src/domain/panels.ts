@@ -6,6 +6,9 @@ import { wallModules } from './grid';
 import type { Variant, Wall } from './types';
 import { builtModules } from './walls';
 
+/** `{ plate }` when the colour differs from the variant's default, else nothing: walls and rooms store only overrides. */
+export const ownPlate = (v: Variant, ral: string | undefined): { plate?: string } => (ral && ral !== v.defaultPlate ? { plate: ral } : {});
+
 /** The colour of a wall's plates before any single plate is coloured (a room's walls carry the room's colour). */
 export const wallRal = (v: Variant, w: Wall): string => w.plate ?? v.defaultPlate;
 

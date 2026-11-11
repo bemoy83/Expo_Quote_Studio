@@ -5,7 +5,9 @@
 // a U …) becomes a room with that outline; an area with a hole does not.
 // Byggeregel R3 (docs/byggeregler.md).
 import { wallDirection, wallModules } from './grid';
-import { canMoveWall, ownPlate, replaceWalls, splitWall } from './edit';
+import { canMoveWall, splitWall } from './edit';
+import { ownPlate } from './panels';
+import { replaceWalls } from './replaceWalls';
 import { cellId, cellRim, cellSides, outlineOf, outlineSides, rimKeys, type Cell } from './outline';
 import { overlapsRoom, roomWalls, syncRooms } from './rooms';
 import type { Point, Room, Variant } from './types';

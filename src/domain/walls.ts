@@ -1,6 +1,6 @@
 // Byggeregler V1, V6, T6, D3 (docs/byggeregler.md).
 import { moduleKey, openSides, pointAlong, pointKey, SIDES, sideEnds, wallDirection, wallLength, wallModules, type Module } from './grid';
-import { gapKeys, OUTSIDE } from './rooms';
+import { gapKeys, OUTSIDE } from './roomKeys';
 import type { Rules } from '../rules/rules';
 import type { Opening, Point, Side, Stand, Variant, Wall } from './types';
 

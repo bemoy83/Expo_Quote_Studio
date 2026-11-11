@@ -1,5 +1,6 @@
 // The wall face the wall drawer shows: what it is called, and which rooms stand against it.
-import { OUTSIDE, roomAt } from '../../../domain/rooms'
+import { roomAt } from '../../../domain/rooms'
+import { OUTSIDE } from '../../../domain/roomKeys'
 import { wallModules } from '../../../domain/grid'
 import type { Point, Room, Variant, Wall } from '../../../domain/types'
 import { isStandWall } from '../../../domain/walls'

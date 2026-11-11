@@ -4,7 +4,7 @@
 import { CURTAIN } from '../catalog/defaultCatalog';
 import type { Rules } from '../rules/rules';
 import { pointAlong, wallDirection, wallModules } from './grid';
-import { OUTSIDE } from './rooms';
+import { OUTSIDE } from './roomKeys';
 import type { Point, Variant, Wall } from './types';
 import { builtModules, defaultSwing, isStandWall } from './walls';
 
