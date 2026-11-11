@@ -1,10 +1,9 @@
-// The floor in the plan: carpet tiles and rolled floor (engangsteppe) with lane numbers, and the previews of lanes
-// being laid and of the strip cut off a lane.
+// The floor in the plan: carpet tiles and rolled floor (engangsteppe) with lane numbers, and the strip cut off a lane
+// narrower than the roll.
 import { CELL } from '../../../domain/grid'
 import type { FloorTile, Variant } from '../../../domain/types'
 import { useId } from 'react'
-import { INK, jointColor } from '../../colors'
-import { fmt } from '../../format'
+import { jointColor } from '../../colors'
 import { idx } from '../../env'
 import type { Layer } from '../../tools'
 import { across, lanesOf, type RollDir } from '../../../domain/floor/lanes'
@@ -106,38 +105,6 @@ function MutedFloor({ v, dim }: { v: Variant; dim: (...layers: Layer[]) => numbe
         )
       })}
       {goneTile && <rect x={goneTile.i * CELL} y={goneTile.j * CELL} width={goneTile.w * CELL} height={goneTile.h * CELL} fill={hatch} />}
-    </g>
-  )
-}
-
-/** Lanes a roll brush will lay: each with its edge in ink, the roll direction and its width, cut lanes dashed. With
- * `stand`, a cut lane shows the strip cut off it, hatched, as waste. */
-export function RollPreview({ tiles, color, roll, stand }: { tiles: FloorTile[]; color: string | undefined; roll: number; stand?: { nx: number; ny: number } }) {
-  const sc = usePlanScale()
-  const mark = jointColor(color)
-  return (
-    <g pointerEvents="none">
-      {tiles.map((t) => {
-        const width = (t.roll === 'x' ? t.h : t.w) * CELL
-        const cut = width < roll - 1e-9
-        return (
-          <g key={`${t.i},${t.j}`}>
-            {cut && stand && !t.split && <Offcut t={t} roll={roll} stand={stand} />}
-            <rect
-              x={t.i * CELL}
-              y={t.j * CELL}
-              width={t.w * CELL}
-              height={t.h * CELL}
-              fill={color}
-              fillOpacity={0.8}
-              stroke={INK}
-              strokeWidth={linePx(sc, 1)}
-              strokeDasharray={cut ? `${sizePx(sc, 4)} ${sizePx(sc, 3)}` : undefined}
-            />
-            <LaneMark n={cut ? `${fmt(width)} m kappet` : `${fmt(width)} m`} x={(t.i + t.w / 2) * CELL} y={(t.j + t.h / 2) * CELL} dir={t.roll!} length={(t.roll === 'x' ? t.w : t.h) * CELL} color={mark} />
-          </g>
-        )
-      })}
     </g>
   )
 }

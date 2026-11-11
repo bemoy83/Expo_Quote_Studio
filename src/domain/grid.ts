@@ -1,8 +1,6 @@
 import { RULES } from '../rules/rules';
 import type { Point, Side, Stand, Wall } from './types';
 
-const EPS = 1e-9;
-
 export const pointKey = ([x, y]: Point): string => `${round3(x)},${round3(y)}`;
 
 const round3 = (v: number) => Math.round(v * 1000) / 1000;
@@ -71,13 +69,6 @@ export function wallModules(w: Wall): Module[] {
   return Array.from({ length: n }, (_, i) => makeModule(pointAlong(w, i), pointAlong(w, i + 1)));
 }
 
-export function isValidWall(w: Wall): boolean {
-  const [x0, y0] = w.from;
-  const [x1, y1] = w.to;
-  const onGrid = [x0, y0, x1, y1].every((v) => Math.abs(v - Math.round(v)) < EPS);
-  const axisAligned = (x0 === x1) !== (y0 === y1);
-  return onGrid && axisAligned;
-}
 
 export const SIDES: readonly Side[] = ['back', 'left', 'right', 'front'];
 

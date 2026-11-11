@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { RULES } from '../rules/rules';
-import { addFreeTextile, cornerEnds, fitFreeTextiles, moveFreeTextile, rotateFreeTextile, updateFace } from './textile/free';
-import type { Point, Variant } from './types';
-import { createVariant } from './variant';
+import { RULES } from '../../rules/rules';
+import { addFreeTextile, cornerEnds, fitFreeTextiles, moveFreeTextile, rotateFreeTextile, updateFace } from './free';
+import type { Point, Variant } from '../types';
+import { createVariant } from '../variant';
 
 // 6 × 4 row stand: stand walls at the back (y = 0) and on both sides (x = 0, x = 6)
 const base = () => createVariant('A', { width: 6, depth: 4, type: 'row' });

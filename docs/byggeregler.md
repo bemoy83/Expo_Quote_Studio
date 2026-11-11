@@ -190,7 +190,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   veggen; på fotplater står den fritt og har duk på begge sider. Reglene for selve rammen (mål, stag, skjøt, hjørner i
   rammen, duk og trykkfil) er de samme. En strek på en systemveggs linje monteres på veggen (på siden streken startet
   fra), en strek alle andre steder står på fotplater.
-  *Bjørn 31.10.2026, 6.11.2026 og 7.11.2026 («frittstående er InFrame på fotplater») · kode `src/domain/textile/brush.ts` · test `src/domain/textileBrush.test.ts`*
+  *Bjørn 31.10.2026, 6.11.2026 og 7.11.2026 («frittstående er InFrame på fotplater») · kode `src/domain/textile/brush.ts` · test `src/domain/textile/brush.test.ts`*
 - **X2 Ramme på systemvegg.** Bredde = spenn − 20 − 10 (sentrert i spennet), høyde 2540 eller tekstilens egen. 43TX gjæret,
   2B + 2H, 617 i alle fire hjørner, festet med 2 × 520 (med 503) til stolpe 94. Stående stag i 90 maks 2000 fra hverandre
   (rammesidene teller), lengde H − 80, med 600 i hver ende: duken trekker mest på midten.
@@ -205,7 +205,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 - **X5 På fotplater (frittstående).** Samme ramme som X2, på fotplater, med tekstil på begge sider (trykt, hvit eller kundens egen), høyde 2540, minst
   0,25 m. Tegnes på rutenettet 25, 50, 75 eller 100 cm. Ikke langs eller gjennom en systemvegg (helt inntil er lov). Den
   lager ikke rom og kan ikke ha dør.
-  *Bjørn 31.10.2026 · `rules.textile` · kode `src/domain/textile/free.ts` · test `src/domain/freeTextile.test.ts`*
+  *Bjørn 31.10.2026 · `rules.textile` · kode `src/domain/textile/free.ts` · test `src/domain/textile/free.test.ts`*
 - **X6 Skinner.** Gjelder rammen uansett montering. Topp- og bunnskinne går hele rammen; over 5000 skjøtes de i like stykker. Skjøten er 2 × 609 per
   skjøt (tres inn, krever plass i enden), eller 4 × 604 i sporet når begge ender er holdt av en vegg, en ramme på vegg
   eller en 92LTX, så profilen ikke kan tres. Stående 43TX i hver fri ende, 617 i hvert hjørne. En ramme på
@@ -250,22 +250,22 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 
 - **G1 Teppefliser.** Legges i rutenettet på 0,5 m: 1 × 1 som standard, 1 × 0,5 og 0,5 × 0,5. En flis kan starte i
   hvilken som helst celle, og fliser overlapper aldri. Plukkes per størrelse og farge.
-  *Bjørn 1.11.2026 · `rules.floor.cell` · kode `src/domain/floor/tiles.ts` · test `src/domain/floor.test.ts`*
+  *Bjørn 1.11.2026 · `rules.floor.cell` · kode `src/domain/floor/tiles.ts` · test `src/domain/floor/floor.test.ts`*
 - **G2 Auto og fast størrelse.** Auto legger 1 × 1 der den passer, ellers den største flisen som passer, og kutter aldri.
   En fast størrelse dekker det som ligger der og kutter fliser som bare delvis dekkes.
-  *Bjørn 1.11.2026 · kode `src/domain/floor/brush.ts` · test `src/domain/floor.test.ts`*
+  *Bjørn 1.11.2026 · kode `src/domain/floor/brush.ts` · test `src/domain/floor/floor.test.ts`*
 - **G3 Engangsteppe.** Legges i baner fra en rull 2 m bred, lengde i 0,5 m, langs standens lengste side som standard
   (kan snus). Siste bane kappes på langs. 10 cm ekstra i hver ende; avkappet er alltid svinn. Kunden betaler lagte m²,
   plukklisten har løpemeter fra rullen og teip langs omriss og skjøter.
-  *Bjørn 1.11.2026 · `rules.floor.rollEnd`, katalogens `roll` · kode `src/domain/floor/lanes.ts` · test `src/domain/floor.test.ts`*
+  *Bjørn 1.11.2026 · `rules.floor.rollEnd`, katalogens `roll` · kode `src/domain/floor/lanes.ts` · test `src/domain/floor/floor.test.ts`*
 - **G4 Fyll.** Fyll foreslår hvordan rullen kappes og legges over et område, rangert etter intern kost (materiale, teip,
   arbeid; satsene er forslag). Arbeidet regnes med montørens timekost, samme som for Foga, tekstil og møbler (Bjørn
   7.11.2026). Deling på langs finnes bare som forslag fra Fyll. Gulvpennen for engangsteppe er én malerkost (Bjørn
   11.11.2026, Bane er fjernet): dra et område, klikk ledig gulv for å fylle alt ledig gulv, eller klikk en bane for å
   gi den pennens farge; spannet fyller hele standen. Retning og andre legginger velges i skuffen eller med R på en bane.
-  *Bjørn 1.11.2026 · kostgrunnlaget `parametere.carpet`, timekost fra `parametere.labour` (`pricing.carpet`) · kode `src/domain/floor/rollFill.ts` · test `src/domain/carpet.test.ts`*
+  *Bjørn 1.11.2026 · kostgrunnlaget `parametere.carpet`, timekost fra `parametere.labour` (`pricing.carpet`) · kode `src/domain/floor/rollFill.ts` · test `src/domain/floor/rollFill.test.ts`*
 - **G5 Under rom og vegger.** Gulvet legges under rom og vegger.
-  *Bjørn 1.11.2026 · kode `src/domain/floor/lanes.ts` · test `src/domain/floor.test.ts`*
+  *Bjørn 1.11.2026 · kode `src/domain/floor/lanes.ts` · test `src/domain/floor/floor.test.ts`*
 
 ## H · Hylle
 

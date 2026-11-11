@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_PRICING } from '../pricing/data';
-import { carpetClick, carpetMetrics, fillCarpet, fillProposals, layouts, offered, relayFill, removeFill } from './floor/rollFill';
-import { resizeLane, rotateLane } from './floor/edit';
-import { applyFloor } from './floor/brush';
-import { cutTiles } from './floor/edit';
-import { rollUsage } from './floor/lanes';
-import { tileAreas } from './floor/tiles';
-import type { FloorTile, Variant } from './types';
-import { createVariant } from './variant';
+import { DEFAULT_PRICING } from '../../pricing/data';
+import { carpetClick, carpetMetrics, fillCarpet, fillProposals, layouts, offered, relayFill, removeFill } from './rollFill';
+import { resizeLane, rotateLane } from './edit';
+import { applyFloor } from './brush';
+import { cutTiles } from './edit';
+import { rollUsage } from './lanes';
+import { tileAreas } from './tiles';
+import type { FloorTile, Variant } from '../types';
+import { createVariant } from '../variant';
 
 const A = '5920';
 const B = '5921';

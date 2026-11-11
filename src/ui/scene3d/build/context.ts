@@ -3,14 +3,11 @@
 // are here too; product colours come from the catalog.
 import * as THREE from 'three'
 import type { CalcResult } from '../../../calc/calc'
-import type { Point, Variant } from '../../../domain/types'
+import type { Motif, Point, Variant } from '../../../domain/types'
 import { builtModules, type BuiltModule } from '../../../domain/walls'
-import type { Motif } from '../../../persistence/file'
 import { wallHeight } from '../../../rules/rules'
 import { rules } from '../../env'
-import type { Highlight } from '../../tools'
-
-export type Layer = Exclude<Highlight, null>
+import type { Layer } from '../../tools'
 
 /** What a mesh stands for. `pick` marks meshes the pointer can hit. */
 export interface Tag {

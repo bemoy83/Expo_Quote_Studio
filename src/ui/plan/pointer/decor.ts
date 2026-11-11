@@ -3,7 +3,7 @@
 import { addFoil } from '../../../domain/decor'
 import { faceOfPoint, freeTextileAt, updateFace } from '../../../domain/textile/free'
 import { textileAt, updateTextile } from '../../../domain/textile/inFrame'
-import type { Motif } from '../../../persistence/file'
+import type { Motif } from '../../../domain/types'
 import { rules } from '../../env'
 import { findMotif } from '../../motifs'
 import type { P, PointerCtx } from './types'

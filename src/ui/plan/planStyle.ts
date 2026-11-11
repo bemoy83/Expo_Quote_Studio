@@ -1,6 +1,6 @@
 // Sizes, colours and text styles of the plan, shared by PlanView and its layers (plan/layers/).
 import type { Side } from '../../domain/types'
-import { INK_FAINT, LAYER_COLOR } from '../colors'
+import { INK_FAINT } from '../colors'
 import { linePx, sizePx, type PlanScale } from './planScale'
 
 /** Nominal wall width in model metres, for gaps around labels (the line itself is drawn in screen pixels). */
@@ -83,10 +83,6 @@ export const PILL = { height: 18, radius: 5, font: 10.5, pad: 7, gap: 6 } as con
 /** Margin around the stand for the aisle and the side labels, m. */
 export const PLAN_MARGIN = 1.3
 
-export const WALL = LAYER_COLOR.walls
-
-export const TEXTILE = LAYER_COLOR.textile
-
 /**
  * Floor in full colour (docs/arbeidstegning.md, Gulv): a joint is a hairline of 1 px in a strong shade of the floor's
  * own colour (`jointColor`), only where two tiles or lanes meet, so the floor's edge is drawn by the walls and the stand
@@ -106,16 +102,11 @@ export const GRID_PX = 0.5
 export const TUSJ_TEXTILE = 'var(--tusj-tekstil)'
 export const TUSJ_PRINT = 'var(--tusj-trykk)'
 
-/** Reserved for a snekret (carpentry) wall, which is not in the model yet: diagonal hatch at 45°, no colour. */
-export const SNEKRET_HATCH = { angle: 45, colour: null } as const
-
 /** Half-metre lines while painting floor: a dotted ink hairline like the metre grid, in screen pixels. */
 export const GRID_FINE = { stroke: 'rgb(var(--ink) / .14)', width: 0.5, dash: 2, gap: 3 } as const
 
 /** Opacity of layers outside the hovered calc group. */
 export const DIMMED = 0.25
-
-export const MONO = { font: '500 0.24px var(--font-numeric)', fill: INK_FAINT }
 
 /** Side names and stand dimensions around the stand: context, so quieter than the drawing itself. */
 export const SIDE = { font: '500 0.17px var(--font-ui)', fill: INK_FAINT }

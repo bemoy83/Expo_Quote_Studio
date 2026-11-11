@@ -88,7 +88,7 @@ R på en bane snur den, som i dag.
   90° om midtpunktet, på tegnerutenettet, og holder veggen innenfor standen. Gyldigheten sjekkes med de samme reglene
   som når veggen tegnes (`addFreeTextile`). Går det ikke, roteres den ikke, og hintet sier hvorfor. Sidene A og B
   følger veggen. Fotplatene regnes på nytt av kalkylen som vanlig.
-- Egne enhetstester for begge, ved siden av `freeTextile.test.ts` og `objects`-testene.
+- Egne enhetstester for begge, ved siden av `domain/textile/free.test.ts` og `objects`-testene.
 
 ### Bytt variant på møbel (ny)
 
