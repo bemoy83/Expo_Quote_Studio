@@ -1,11 +1,11 @@
 // Støtteplater: foot plates under a system wall that stands free, by the shared support rule (calc/supports.ts) on
 // the wall's posts. The rules are byggeregler S1–S3, S5–S7, T15 (docs/byggeregler.md); a long stand wall is held by a
-// støttedrager instead (calc/supportBeams.ts).
+// støttedrager instead (calc/beams/supportBeams.ts).
 import { pointKey } from '../domain/grid';
 import type { Point } from '../domain/types';
 import type { BuiltModule } from '../domain/walls';
 import type { SupportRule } from '../foga/recipes';
-import { onSegment, type BeamLayout } from './beamSegments';
+import { onSegment, type BeamLayout } from './beams/beamSegments';
 import { minSupports, spreadSupports, type Ends } from './supports';
 
 export interface WallSupport {
@@ -57,7 +57,7 @@ const underBeam = (beams: BeamLayout) => (p: Point) => beams.posts.has(pointKey(
 
 /**
  * What holds a wall run at each of its posts: another system wall meeting it there (corner, T or cross), or a takdrager
- * resting on it. Shared by the foot plates and the støttedrager (calc/supportBeams.ts).
+ * resting on it. Shared by the foot plates and the støttedrager (calc/beams/supportBeams.ts).
  */
 export function holdsRun(mods: readonly BuiltModule[], beams: BeamLayout): (run: Run, p: Point) => boolean {
   const touched = { h: new Set<string>(), v: new Set<string>() };

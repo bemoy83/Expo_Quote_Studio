@@ -1,7 +1,7 @@
 // Drag and drop from the Profilering panel onto a wall, in the plan or the 3D view. What is being dragged is kept
 // here: browsers hide drag data until the drop, but the views need it while hovering to show where it would land.
 import type { DragEvent } from 'react'
-import { dropMotif, feltBlocked, updateFoil } from '../domain/decor'
+import { dropMotif, foilBlocked, updateFoil } from '../domain/decor'
 import type { Variant } from '../domain/types'
 import { type PlanSelection } from './plan/selection'
 import { fmt } from './format'
@@ -87,7 +87,7 @@ export function dropSpot(v: Variant, d: DecorDrag, h: FaceTarget): DropSpot | nu
   const foil = h.foilId && v.foils.find((x) => x.id === h.foilId)
   if (foil) return onFelt(foil.module)
   if (tx) return onTextile()
-  return onFelt(module, feltBlocked(v, rules, h.wallId, module, h.s) ?? undefined)
+  return onFelt(module, foilBlocked(v, rules, h.wallId, module, h.s) ?? undefined)
 }
 
 /** Apply a drop: a new textile filling the free span, or a motif as print or decal. The new selection, or the reason it failed. */

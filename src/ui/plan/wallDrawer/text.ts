@@ -1,9 +1,9 @@
 // The wall drawer's words: the title, the line under it and the help line across the bottom, for what is chosen.
-import { wallLabel, type ProductionPiece } from '../../../calc/production'
+import type { ProductionPiece } from '../../../calc/textile/production'
 import { wallModules } from '../../../domain/grid'
 import { roomName, roomSize } from '../../../domain/rooms'
 import type { Foil, Opening, Shelf, TextileWall, Variant, Wall } from '../../../domain/types'
-import { isStandWall } from '../../../domain/walls'
+import { isStandWall, wallLabel } from '../../../domain/walls'
 import { RECIPES } from '../../../foga/recipes'
 import { count, fmt, mm } from '../../format'
 import type { RoomRun } from './face'

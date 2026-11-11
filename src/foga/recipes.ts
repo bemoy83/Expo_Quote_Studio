@@ -83,12 +83,12 @@ export interface BeamRecipe {
   /** Couplings at each end into the post channel. 292 is 80 high: one in the top and one in the bottom chamber.
    *  Stored mounted: each beam length + its couplings is one piece. */
   coupling: { code: string; perEnd: number };
-  /** Hook a beam end hangs on another beam or a wall's top rail 92 with (Bjørn 10.11.2026, calc/beamHooks.ts): `profile`
+  /** Hook a beam end hangs on another beam or a wall's top rail 92 with (Bjørn 10.11.2026, calc/beams/beamHooks.ts): `profile`
    *  set as a T over the beam or rail, a `top` mm piece lying on it fixed with `screw` into a `nut` in its top channel,
    *  and a `leg` mm piece down its side per side a beam hangs from, its channel taking that beam's couplings. Picked
    *  whole, screw and nut mounted; no art.nr. and no cost of its own. */
   hook: { profile: string; top: number; leg: number; screw: string; nut: string };
-  /** Lifting a beam over a textile wall (Bjørn 6.11.2026, calc/beamLift.ts): a piece of `profile` `length` mm on top of
+  /** Lifting a beam over a textile wall (Bjørn 6.11.2026, calc/beams/beamLift.ts): a piece of `profile` `length` mm on top of
    *  every post the lifted beam rests on, with `post` down into the post, and at a hook point between a lifted beam and
    *  one that is not, the same piece with `hook` into the other beam. */
   lift: { profile: string; length: number; post: string; hook: string };

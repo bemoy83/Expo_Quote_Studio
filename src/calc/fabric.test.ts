@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { RULES } from '../rules/rules';
-import { splitBeamLength } from './beamSegments';
+import { splitBeamLength } from './beams/beamSegments';
 import { framePiece } from './textile/inFrame';
 import { buttEnds, printFileName } from './textile/common';
 

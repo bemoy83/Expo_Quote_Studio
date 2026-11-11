@@ -9,8 +9,8 @@
 // This file picks what to show.
 import { AlignVerticalSpaceAround, DoorOpen, FlipHorizontal2, MoveHorizontal, Palette, Plus } from 'lucide-react'
 import { useState } from 'react'
-import { production, wallLabel } from '../../calc/production'
-import { addFoil, feltBlocked, foilsOn, removeFoil, updateFoil } from '../../domain/decor'
+import { production } from '../../calc/textile/production'
+import { addFoil, foilBlocked, foilsOn, removeFoil, updateFoil } from '../../domain/decor'
 import { eraseWalls } from '../../domain/edit'
 import { wallRal } from '../../domain/panels'
 import { clearDecor, clearFelt, printPlate, printsOn } from '../../domain/print'
@@ -19,7 +19,7 @@ import { shelvesOn } from '../../domain/shelves/model'
 import { doorFace, openingById } from '../../domain/doors'
 import { wallLength, wallModules } from '../../domain/grid'
 import type { Motif, Variant } from '../../domain/types'
-import { builtModules, isStandWall } from '../../domain/walls'
+import { builtModules, isStandWall, wallLabel } from '../../domain/walls'
 import { wallHeight } from '../../rules/rules'
 import { INK_FAINT, LAYER_COLOR } from '../colors'
 import { Button, IconButton, Section } from '../controls'
@@ -104,7 +104,7 @@ export function WallDrawer(p: Props) {
   }
 
   /** Why the chosen felt takes no decal: blocked (an opening, a textile frame over it) or printed over the whole plate. */
-  const feltFoil = (m: number) => feltBlocked(v, rules, w.id, m, s) ?? (printsOn(v, w.id, s).some((f) => f.module === m) ? 'Feltet har print' : null)
+  const feltFoil = (m: number) => foilBlocked(v, rules, w.id, m, s) ?? (printsOn(v, w.id, s).some((f) => f.module === m) ? 'Feltet har print' : null)
   /** A decal in the middle of the chosen felt, with the motif chosen in Profilering; it is then chosen. */
   const addDecal = () => {
     if (Fe === undefined) return
@@ -184,7 +184,7 @@ export function WallDrawer(p: Props) {
       ? undefined
       : (id: string) => {
           setPrintMotif(id)
-          const no = feltBlocked(v, rules, w.id, Fe, s, true)
+          const no = foilBlocked(v, rules, w.id, Fe, s, true)
           if (no) return p.onToast(no)
           const on = printsOn(v, w.id, s).find((f) => f.module === Fe)
           if (on?.motif !== id || on.run) p.onEdit((x) => printPlate(x, rules, w.id, Fe, s, id))

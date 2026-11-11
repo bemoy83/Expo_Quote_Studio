@@ -1,10 +1,10 @@
 // Mållinjer for fritt plasserte innvendige takdragere (Byggeregel T15, Bjørn 10.11.2026): from each end of a drawn beam
 // off the 1 m grid, along the wall or beam it hangs on, to the nearest fixed point there (a post, or another hook), so the
 // montør can measure it out. The plan shows them on the beam being moved or selected, the work order for every one.
-import { offGrid } from '../domain/innerBeams';
-import { pointKey } from '../domain/grid';
-import type { Point, Variant } from '../domain/types';
-import type { CalcResult } from './calc';
+import { offGrid } from '../../domain/innerBeams';
+import { pointKey } from '../../domain/grid';
+import type { Point, Variant } from '../../domain/types';
+import type { CalcResult } from '../calc';
 
 export interface BeamOffset {
   beamId: string;

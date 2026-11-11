@@ -1,7 +1,7 @@
 // The frame in the plan: takdragere, posts and the foot plates under walls that stand free.
 import { RECIPES } from '../../../foga/recipes'
 import type { CalcResult } from '../../../calc/calc'
-import { beamOffsets } from '../../../calc/beamOffsets'
+import { beamOffsets } from '../../../calc/beams/beamOffsets'
 import { DIM_NEAR } from '../dims'
 import { Chain } from '../DimChain'
 import type { InnerBeam, Point, Variant } from '../../../domain/types'
@@ -88,7 +88,7 @@ export function BeamStroke({ a, b, body }: { a: P; b: P; body: number }) {
 }
 
 /** Byggeregel T15: from each end of a drawn beam off the grid, along the wall or beam it hangs on, to the nearest post or
- *  hook, while it is moved or selected, and for every one on the work order (calc/beamOffsets.ts). Drawn as the plan's
+ *  hook, while it is moved or selected, and for every one on the work order (calc/beams/beamOffsets.ts). Drawn as the plan's
  *  and the wall drawing's own dimension chains (DimChain.tsx, Bjørn 10.11.2026): a muted hairline with slashes and the
  *  number beside it, just off the wall or beam on the side towards the stand's middle, where it stays clear of the aisle
  *  and the stand's own measures and inside the work order's plan. */

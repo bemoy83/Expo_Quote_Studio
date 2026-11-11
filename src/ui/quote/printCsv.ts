@@ -1,6 +1,6 @@
 // Trykkliste as CSV, from Tilbud: every textile to produce, with frame, print and file size, for the print order.
-// The same rows as the print list on Arbeidsordre (calc/production.ts textileRows).
-import { FILL_NAME, textileRows, type Production } from '../../calc/production'
+// The same rows as the print list on Arbeidsordre (calc/textile/production.ts textileRows).
+import { FILL_NAME, textileRows, type Production } from '../../calc/textile/production'
 import { toCsvText } from '../../persistence/csv'
 import type { InFrameParams } from '../../rules/rules'
 

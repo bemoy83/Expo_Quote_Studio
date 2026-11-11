@@ -8,7 +8,7 @@ const SRC = import.meta.glob<string>(['../**/*.ts', '../**/*.tsx', '!../**/*.tes
   import: 'default',
   eager: true,
 });
-/** Source files by path under src/ (`calc/beams.ts`). */
+/** Source files by path under src/ (`calc/beams/beams.ts`). */
 const files = new Map(Object.entries(SRC).map(([k, text]) => [k.replace(/^\.\.\//, ''), text]));
 
 /** Normalised path of `spec` imported from `from`, or null when it is a package. */
@@ -57,7 +57,7 @@ describe('imports', () => {
   const graph = new Map([...files].map(([f, text]) => [f, runtimeImports(f, text)]));
 
   it('reads the imports of the source files', () => {
-    expect(graph.get('calc/beams.ts')).toContain('calc/beamSegments.ts');
+    expect(graph.get('calc/beams/beams.ts')).toContain('calc/beams/beamSegments.ts');
     expect(graph.get('domain/walls.ts')).toContain('domain/roomKeys.ts');
   });
 

@@ -3,7 +3,7 @@
 // convention: 1 = the wall's left normal (−dy, dx), −1 = the other. Perimeter walls only have the face toward the stand.
 import { CURTAIN } from '../catalog/defaultCatalog';
 import type { Rules } from '../rules/rules';
-import { pointAlong, wallDirection, wallModules } from './grid';
+import { pointAlong, wallDirection, wallLength, wallModules } from './grid';
 import { OUTSIDE } from './roomKeys';
 import type { Point, Variant, Wall } from './types';
 import { builtModules, defaultSwing, isStandWall } from './walls';
@@ -75,6 +75,16 @@ export function blockedModules(v: Variant, w: Wall): { openings: Set<number>; do
     if (b?.wallId !== w.id) foreign.add(i);
   });
   return { openings, doors, foreign };
+}
+
+/** A felt on a wall that is there: the wall and its blocked modules, or null when the wall is gone, the felt lies past
+ *  its end or the module is another wall's (a room side on a stand wall). Where foilBlocked (domain/decor.ts) and
+ *  feltBlocked (domain/fittings.ts) both start. */
+export function feltWall(v: Variant, wallId: string, module: number): { w: Wall; blocked: ReturnType<typeof blockedModules> } | null {
+  const w = v.walls.find((x) => x.id === wallId);
+  if (!w || module < 0 || module >= Math.round(wallLength(w))) return null;
+  const blocked = blockedModules(v, w);
+  return blocked.foreign.has(module) ? null : { w, blocked };
 }
 
 /** Module indices of the wall that are openings (also when the opening sits on an overlapping wall). */

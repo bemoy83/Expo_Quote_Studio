@@ -7,7 +7,7 @@
 import { Printer } from 'lucide-react'
 import { useState } from 'react'
 import type { CalcResult } from '../../calc/calc'
-import { FILL_NAME, foilRows, production, textileRows } from '../../calc/production'
+import { FILL_NAME, foilRows, production, textileRows } from '../../calc/textile/production'
 import { groupItems, PRODUCT_GROUPS } from '../../catalog/groups'
 import { dateText, DELIVERY_FIELDS, today } from '../../domain/delivery'
 import type { Project, Variant } from '../../domain/types'

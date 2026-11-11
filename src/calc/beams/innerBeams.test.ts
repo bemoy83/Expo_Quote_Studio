@@ -1,18 +1,18 @@
 // Innvendige takdragere (Bjørn 1.11.2026): hooks on other beams, the longer span runs through a crossing, posts only
 // at free ends and 6 m joints, a foot plate under each free post unless a beam drawn the other way meets it.
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_CATALOG } from '../catalog/defaultCatalog';
-import { pointKey } from '../domain/grid';
-import type { InnerBeam, Point, Stand, Variant } from '../domain/types';
-import { drawOpening } from '../domain/doors';
-import { addRoom, moveRoom } from '../domain/rooms';
-import { createVariant } from '../domain/variant';
-import { builtModules, wallPoints } from '../domain/walls';
+import { DEFAULT_CATALOG } from '../../catalog/defaultCatalog';
+import { pointKey } from '../../domain/grid';
+import type { InnerBeam, Point, Stand, Variant } from '../../domain/types';
+import { drawOpening } from '../../domain/doors';
+import { addRoom, moveRoom } from '../../domain/rooms';
+import { createVariant } from '../../domain/variant';
+import { builtModules, wallPoints } from '../../domain/walls';
 import { NO_LIFT } from './beamLift';
 import { beamHooks } from './beamHooks';
-import { RULES } from '../rules/rules';
+import { RULES } from '../../rules/rules';
 import { variantBeams } from './beams';
-import { calc } from './calc';
+import { calc } from '../calc';
 
 const beam = (id: string, from: Point, to: Point): InnerBeam => ({ id, from, to });
 const variant = (stand: Stand, innerBeams: InnerBeam[], noBeams = false): Variant => ({ ...createVariant('A', stand), innerBeams, ...(noBeams ? { noBeams } : {}) });
@@ -20,7 +20,7 @@ const layout = (v: Variant) => {
   const mods = builtModules(v);
   return variantBeams(v, mods, wallPoints(mods), RULES.beam.max);
 };
-/** Hook points a drawn beam hangs on (calc/beamHooks.ts). */
+/** Hook points a drawn beam hangs on (calc/beams/beamHooks.ts). */
 const hooks = (v: Variant) => {
   const mods = builtModules(v);
   return beamHooks(layout(v).all, wallPoints(mods), NO_LIFT).filter((h) => h.inner).length;

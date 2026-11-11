@@ -2,7 +2,7 @@
 // height row to the right, the brace chain under it, the leader texts over it, and the room each of them takes round the wall, in screen px.
 // The drawing is in metres with y down: the wall top is y = 0, the floor y = H.
 import { chainPoints, DIM_NEAR as NEAR, DIM_TOTAL as TOTAL, mm } from '../dims'
-import type { ProductionPiece } from '../../../calc/production'
+import type { ProductionPiece } from '../../../calc/textile/production'
 import { frameInset } from '../../../calc/textile/inFrame'
 import { foilCenter } from '../../../domain/decor'
 import { textileBox } from '../../../domain/textile/inFrame'

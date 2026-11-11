@@ -35,7 +35,7 @@ export interface Wall {
   room?: { id: string; side: number };
 }
 
-/** An optional takdrager drawn inside the stand: a straight run on the 1 m grid (calc/innerBeams.ts). */
+/** An optional takdrager drawn inside the stand: a straight run on the 1 m grid (calc/beams/innerBeams.ts). */
 export interface InnerBeam {
   id: string;
   from: Point;
@@ -245,7 +245,7 @@ export interface Variant {
   /** Standard takdrager turned off (true) or on (false); omitted = the stand type's default: they follow the stand
    *  walls, so on, except on an island, which has none (Bjørn 3.11.2026, {@link standardBeamsOn}). */
   noBeams?: boolean;
-  /** Innvendige takdragere the customer draws, always the exhibitor's (calc/innerBeams.ts). Omitted = none. */
+  /** Innvendige takdragere the customer draws, always the exhibitor's (calc/beams/innerBeams.ts). Omitted = none. */
   innerBeams?: InnerBeam[];
   /** Shelves on wall faces (domain/shelves/). Omitted = none. */
   shelves?: Shelf[];

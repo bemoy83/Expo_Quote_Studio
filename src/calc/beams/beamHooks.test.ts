@@ -1,11 +1,11 @@
 // Kroker i 01 (Bjørn 10.11.2026, Byggeregel T9): enveis where beams hang from one side, toveis from both; picked whole,
 // no cost of their own.
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_CATALOG } from '../catalog/defaultCatalog';
-import type { InnerBeam, Point, Stand, Variant } from '../domain/types';
-import { createVariant } from '../domain/variant';
-import { RULES } from '../rules/rules';
-import { calc } from './calc';
+import { DEFAULT_CATALOG } from '../../catalog/defaultCatalog';
+import type { InnerBeam, Point, Stand, Variant } from '../../domain/types';
+import { createVariant } from '../../domain/variant';
+import { RULES } from '../../rules/rules';
+import { calc } from '../calc';
 
 const beam = (id: string, from: Point, to: Point): InnerBeam => ({ id, from, to });
 const variant = (stand: Stand, innerBeams: InnerBeam[], noBeams = false): Variant => ({ ...createVariant('A', stand), innerBeams, ...(noBeams ? { noBeams } : {}) });

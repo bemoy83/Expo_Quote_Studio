@@ -1,5 +1,5 @@
 // Editing innvendige takdragere: drawn straight on the 1 m grid inside the stand, never along a wall or on top of
-// another beam. Layout, posts, hooks and foot plates: calc/innerBeams.ts.
+// another beam. Layout, posts, hooks and foot plates: calc/beams/innerBeams.ts.
 // Byggeregel T8 (docs/byggeregler.md).
 import { nextId } from './ids';
 import { segmentKeys as keys } from './grid';

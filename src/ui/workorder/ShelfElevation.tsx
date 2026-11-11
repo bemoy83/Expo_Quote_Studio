@@ -2,7 +2,6 @@
 // drawer but fixed, so the stand builder can mount them: the plates and doors, the shelves, and in each felt with
 // shelves its height chain from the floor with the lysmål between boards (ElevationDims). The module chain under the
 // wall counts the felts from the end the heading names. Corner shelves with their cut boards and 01 rails (H10–H12).
-import { wallLabel } from '../../calc/production'
 import { doorRal } from '../../domain/doors'
 import { felt, sideOf, type FaceSide } from '../../domain/faces'
 import { RECIPES } from '../../foga/recipes'
@@ -12,7 +11,7 @@ import { wallRal } from '../../domain/panels'
 import { railsOn, type CornerLayout } from '../../domain/shelves/corners'
 import { shelfStacks, shelvesOf } from '../../domain/shelves/model'
 import type { Shelf, Variant } from '../../domain/types'
-import { builtModules } from '../../domain/walls'
+import { builtModules, wallLabel } from '../../domain/walls'
 import { doorInset, wallHeight } from '../../rules/rules'
 import { ALU, BORDER_STRONG } from '../colors'
 import { plateColor, productOf, rules } from '../env'

@@ -1,7 +1,7 @@
 // Panel tab Profilering: textile walls (on a system wall or free-standing, one brush) and the motif library.
 import { Paintbrush, Upload } from 'lucide-react'
 import { useRef } from 'react'
-import { wallLabel } from '../../../calc/production'
+import { wallLabel } from '../../../domain/walls'
 import { textileBox } from '../../../domain/textile/inFrame'
 import { Button, IconButton, ImageInput } from '../../controls'
 import { decorSource } from '../../dnd'

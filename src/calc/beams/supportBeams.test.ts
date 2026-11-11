@@ -1,11 +1,11 @@
 // Støttedrager on long stand walls, and no foot plates on a wall closing four locked sides (Bjørn 3.11.2026).
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_CATALOG } from '../catalog/defaultCatalog';
-import type { InnerBeam, Point, Stand, Variant } from '../domain/types';
-import { createVariant } from '../domain/variant';
-import { standardBeamsOn, withStandardBeams } from '../domain/walls';
-import { RULES } from '../rules/rules';
-import { calc } from './calc';
+import { DEFAULT_CATALOG } from '../../catalog/defaultCatalog';
+import type { InnerBeam, Point, Stand, Variant } from '../../domain/types';
+import { createVariant } from '../../domain/variant';
+import { standardBeamsOn, withStandardBeams } from '../../domain/walls';
+import { RULES } from '../../rules/rules';
+import { calc } from '../calc';
 import { supportBeamPoints } from './supportBeams';
 
 const EXHIBITOR = { payer: 'utstiller', ral: '9010' } as const;

@@ -62,7 +62,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   *Bjørn 1.11.2026 · kode `src/calc/wallSupports.ts` · test `src/calc/wallSupports.test.ts`*
 - **S6 Fire låste sider.** Med takdrager på får en strekning som er holdt i begge ender, og der endene henger sammen
   rundt en annen vei med vegger og takdragere (en lukket firkant), ingen plater.
-  *Bjørn 3.11.2026 · kode `src/calc/wallSupports.ts` · test `src/calc/supportBeams.test.ts`*
+  *Bjørn 3.11.2026 · kode `src/calc/wallSupports.ts` · test `src/calc/beams/supportBeams.test.ts`*
 - **S7 Uten takdrager.** Er takdragerne valgt bort, gjelder S3 også mellom to hjørner: en bakvegg på 6 m får én plate
   midt på.
   *Bjørn 1.11.2026 · kode `src/calc/wallSupports.ts` · test `src/calc/wallSupports.test.ts`*
@@ -77,50 +77,50 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   *Bjørn 31.10.2026 og 6.11.2026 · `rules.beam`, `RECIPES.beam` · kode `src/foga/engine.ts` · test `src/foga/engine.test.ts`*
 - **T2 Deling.** En strekning deles i færrest mulige lengder på maks 6 m, så like som mulig, med skjøter i hele meter:
   7 → 4 + 3, 13 → 5 + 4 + 4. Det er stolpe i hver skjøt.
-  *Bjørn 31.10.2026 · `rules.beam.max` · kode `src/calc/beamSegments.ts`, `src/calc/beams.ts` · test `src/calc/calc.test.ts`*
+  *Bjørn 31.10.2026 · `rules.beam.max` · kode `src/calc/beams/beamSegments.ts`, `src/calc/beams/beams.ts` · test `src/calc/calc.test.ts`*
 - **T3 Standard takdrager.** Legges langs de åpne sidene av standen. En ende mot en vegg deler veggens stolpe.
-  *Bjørn 31.10.2026 · kode `src/calc/beams.ts` · test `src/calc/calc.test.ts`*
+  *Bjørn 31.10.2026 · kode `src/calc/beams/beams.ts` · test `src/calc/calc.test.ts`*
 - **T4 Vegg deler drageren.** Der en vegg møter eller krysser en takdrager, også enden av en inner- eller romvegg, deles
   drageren og deler veggens stolpe. Hver side er egen lengde etter T2.
-  *Bjørn 1.11.2026 · kode `src/calc/beams.ts` · test `src/calc/calc.test.ts`*
+  *Bjørn 1.11.2026 · kode `src/calc/beams/beams.ts` · test `src/calc/calc.test.ts`*
 - **T5 Tverrdrager.** Fra hver 6 m-skjøt går en tverrdrager inn til motstående vegg eller side. Den går videre forbi en
   vegg som møter eller krysser den, delt på veggens stolpe, og stopper bare der en vegg går langs linjen.
-  *Bjørn 1.11.2026 · kode `src/calc/beams.ts` · test `src/calc/calc.test.ts`*
+  *Bjørn 1.11.2026 · kode `src/calc/beams/beams.ts` · test `src/calc/calc.test.ts`*
 - **T6 Følger standveggene.** En øy har ingen standvegger og får ingen standard takdrager, men kan slå dem på. Kunden kan
   velge bort takdragerne (`Variant.noBeams`); da står veggene fritt (S2).
-  *Bjørn 1.11.2026 og 3.11.2026 · kode `src/domain/walls.ts` · test `src/calc/supportBeams.test.ts`*
+  *Bjørn 1.11.2026 og 3.11.2026 · kode `src/domain/walls.ts` · test `src/calc/beams/supportBeams.test.ts`*
 - **T7 Støttedrager.** En standvegg med et fritt spenn på 6 m mellom to punkter som holder den (hjørne, T, en takdrager
   som hviler på den) får én støttedrager 3 m fra hjørnet. Den går rett inn til det første den møter, en vegg eller en
   takdrager: deler stolpen på en vegg eller stolpe, henger på krok på lengden av en drager, og stopper foran en vegg
   langs linjen. Et lengre spenn får én per 6 m. Den er en standard takdrager. Uten takdrager blir det fotplater (S2).
-  *Bjørn 3.11.2026 · `rules.beam.supportSpan` · kode `src/calc/supportBeams.ts` · test `src/calc/supportBeams.test.ts`*
+  *Bjørn 3.11.2026 · `rules.beam.supportSpan` · kode `src/calc/beams/supportBeams.ts` · test `src/calc/beams/supportBeams.test.ts`*
 - **T8 Innvendig takdrager.** Tegnes av kunden, rett og i hele meter innenfor standen, aldri langs en vegg eller oppå en
   annen takdrager. Samme profil, høyde og deling (T1, T2) som standard.
-  *Bjørn 1.11.2026 · kode `src/domain/innerBeams.ts`, `src/calc/innerBeams.ts` · test `src/domain/innerBeams.test.ts`*
+  *Bjørn 1.11.2026 · kode `src/domain/innerBeams.ts`, `src/calc/beams/innerBeams.ts` · test `src/domain/innerBeams.test.ts`*
 - **T9 Krok.** En ende som treffer en annen takdrager henger på den med krok: ingen stolpe der, og drageren den henger
   på deles ikke. Én krok per krokpunkt, i 01 som en T over drageren: enveis (ett ben) når dragere henger fra én side,
   toveis (to ben) fra begge. Festes med M5 maskinskrue i 503. Plukkes hel, uten eget art.nr. og uten kost eller pris.
-  *Bjørn 1.11.2026, 10.11.2026 · `RECIPES.beam.hook` · kode `src/calc/innerBeams.ts`, `src/calc/beamHooks.ts` · test `src/calc/innerBeams.test.ts`, `src/calc/beamHooks.test.ts`*
+  *Bjørn 1.11.2026, 10.11.2026 · `RECIPES.beam.hook` · kode `src/calc/beams/innerBeams.ts`, `src/calc/beams/beamHooks.ts` · test `src/calc/beams/innerBeams.test.ts`, `src/calc/beams/beamHooks.test.ts`*
 - **T10 Kryss.** Der to tegnede takdragere krysser, går det lengste spennet gjennom og det korteste deles og henger på
   krok på hver side. Like lange: den først tegnede går gjennom. En tegnet drager som krysser en standard deles likt.
   Ligger de i hver sin høyde, deles ingen av dem (T16).
-  *Bjørn 1.11.2026 · kode `src/calc/innerBeams.ts` · test `src/calc/innerBeams.test.ts`*
+  *Bjørn 1.11.2026 · kode `src/calc/beams/innerBeams.ts` · test `src/calc/beams/innerBeams.test.ts`*
 - **T11 Vegg langs drageren vinner.** Havner en vegg (innervegg, romside, dør, standvegg) langs en tegnet takdrager,
   bygges ikke den biten. Drageren stopper på veggens stolper, veggen regnes ikke som holdt av den, og drageren kommer
   tilbake når veggen flyttes bort. Over et rom er lov: drageren hviler på romveggene.
-  *Bjørn 1.11.2026 · kode `src/calc/innerBeams.ts` · test `src/calc/innerBeams.test.ts`*
+  *Bjørn 1.11.2026 · kode `src/calc/beams/innerBeams.ts` · test `src/calc/beams/innerBeams.test.ts`*
 - **T12 Egne stolper.** En tegnet takdrager har stolper bare i frie ender og 6 m-skjøter, og ingen tverrdrager. Under
   hver egen stolpe står fotplate 750 med 795 på tvers av drageren; den faller bort der en drager fra den andre retningen
   (tegnet eller støttedrager) møter stolpen.
-  *Bjørn 1.11.2026 · kode `src/calc/innerBeams.ts`, `src/calc/beams.ts` · test `src/calc/innerBeams.test.ts`*
+  *Bjørn 1.11.2026 · kode `src/calc/beams/innerBeams.ts`, `src/calc/beams/beams.ts` · test `src/calc/beams/innerBeams.test.ts`*
 - **T13 Over tekstilvegg.** En takdrager kan ikke kobles på en tekstilvegg (InFrame eller frittstående, begge 43TX).
   Tar drageren og en tekstilramme som når opp til dragerens underkant samme plass i plan, heves hele løpet (lengdene i
   samme rette linje som møtes ende mot ende) 80 mm. Gjelder alle takdragere. Bare fysisk konflikt teller, ikke innsyn.
-  *Bjørn 6.11.2026 · `RECIPES.beam.lift` · kode `src/calc/beamLift.ts` · test `src/calc/beamLift.test.ts`*
+  *Bjørn 6.11.2026 · `RECIPES.beam.lift` · kode `src/calc/beams/beamLift.ts` · test `src/calc/beams/beamLift.test.ts`*
 - **T14 Skjøt.** Hver stolpe et hevet løp hviler på, også en veggstolpe, får 94 × 80 med 609 ned i stolpen. Der en hevet
   drager henger på en som ikke er hevet, eller omvendt, står samme stykke med 600 mot den andre drageren, i høyden til
   drageren som henger der.
-  *Bjørn 6.11.2026 · `RECIPES.beam.lift` · kode `src/calc/beamLift.ts` · test `src/calc/beamLift.test.ts`*
+  *Bjørn 6.11.2026 · `RECIPES.beam.lift` · kode `src/calc/beams/beamLift.ts` · test `src/calc/beams/beamLift.test.ts`*
 - **T15 Fritt plassert innvendig takdrager.** En tegnet takdrager kan flyttes ut av meterrasteret på tvers av sin
   retning (50 mm-steg), som oftest for å henge lys der det trengs. Treffer den en systemvegg mellom stolpene (også over
   et dørstykke), henger den på krok 01 satt som T over toppskinne 92; krysser den veggen, deles den der og henger på
@@ -132,7 +132,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   fortsatt på stolpene. I planen flytter Shift + dra i Velg drageren på tvers i 50 mm-steg (på berøring: «Fin» i pillen, på
   så lenge drageren er valgt); en hel meter setter den tilbake i rasteret. Mållinje fra hver ende til nærmeste stolpe eller krok langs veggen eller drageren den henger på, på
   drageren som flyttes eller er valgt, og på arbeidsordrens plan for alle slike dragere så montøren kan måle ut.
-  *Bjørn 10.11.2026 · `RECIPES.beam.hook`, `RECIPES.beam.lift` · kode `src/domain/innerBeams.ts`, `src/calc/innerBeams.ts`, `src/calc/beamHooks.ts`, `src/calc/beamLift.ts`, `src/calc/wallSupports.ts`, `src/calc/supportBeams.ts`, `src/calc/beamOffsets.ts`, `src/ui/workorder/WorkOrderPage.tsx` · test `src/calc/offGridBeams.test.ts`, `src/domain/innerBeams.test.ts`*
+  *Bjørn 10.11.2026 · `RECIPES.beam.hook`, `RECIPES.beam.lift` · kode `src/domain/innerBeams.ts`, `src/calc/beams/innerBeams.ts`, `src/calc/beams/beamHooks.ts`, `src/calc/beams/beamLift.ts`, `src/calc/wallSupports.ts`, `src/calc/beams/supportBeams.ts`, `src/calc/beams/beamOffsets.ts`, `src/ui/workorder/WorkOrderPage.tsx` · test `src/calc/beams/offGridBeams.test.ts`, `src/domain/innerBeams.test.ts`*
 - **T16 Hel lengde over et annet nivå.** Hele lengder går foran. En hevet drager (T13) ligger en dragerhøyde over de
   andre, så der en hevet og en ikke hevet drager krysser, deles ingen av dem (unntak fra T10): den hevede ligger løst
   oppå den andre, og det står ikke noe 94 × 80 i krysset. Det gjelder begge veier, også når det er drageren som går
@@ -142,7 +142,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   hele lengden er høyst 6 m (T2) og festet i hver ende til en stolpe, en vegg eller en tverrgående drager; blir den
   lengre, står skjøten i krysset som før, med 94 × 80 oppå. En ende som henger på en drager (T9) er uendret. To hevede
   dragere ligger i samme høyde og følger T10.
-  *Bjørn 10.11.2026 · `rules.beam.max` · kode `src/calc/beamLift.ts`, `src/calc/context.ts` · test `src/calc/beamLift.test.ts`*
+  *Bjørn 10.11.2026 · `rules.beam.max` · kode `src/calc/beams/beamLift.ts`, `src/calc/context.ts` · test `src/calc/beams/beamLift.test.ts`*
 ## D · Dør og forheng
 
 - **D1 Dør.** Fogas ferdige dør: karm i 292 med lås 410 ferdig montert, plukkes som ett dørblad. Bladet er 2000 høyt og
@@ -356,10 +356,10 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 - **B1 Arrangørens standvegger.** Betaler arrangøren standveggene, bygger arrangøren dem og standard takdragerne (med
   stolpene bare de trenger, og støttedragerne). De er da ute av utstillerens tilbud, plukkliste og arbeidsordre. En
   stolpe i arrangørens standvegg er arrangørens, også når en innervegg står inntil. Detaljer i [vegger.md](vegger.md).
-  *Bjørn 31.10.2026 · kode `src/calc/context.ts` · test `src/calc/supportBeams.test.ts`*
+  *Bjørn 31.10.2026 · kode `src/calc/context.ts` · test `src/calc/beams/supportBeams.test.ts`*
 - **B2 Alltid utstillerens.** Innvendige takdragere, fotplater (også under arrangørens vegger), skjøt over tekstilvegg og
   platebytte i en standvegg bygges og betales av utstilleren. En øy uten standvegger: utstilleren betaler takdragerne.
-  *Bjørn 31.10.2026, 1.11.2026 og 6.11.2026 · kode `src/calc/context.ts`, `src/calc/lines/beams.ts` · test `src/calc/innerBeams.test.ts`*
+  *Bjørn 31.10.2026, 1.11.2026 og 6.11.2026 · kode `src/calc/context.ts`, `src/calc/lines/beams.ts` · test `src/calc/beams/innerBeams.test.ts`*
 
 ## Ikke bygget ennå
 

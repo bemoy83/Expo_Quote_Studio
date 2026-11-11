@@ -86,7 +86,7 @@ export interface FreeFrame {
   mount: 'fotplater';
   /** What it is built of: 43TX rails and uprights, 617 top and bottom at every free end and into every corner post,
    *  the splice connector (`spliceCode`) top and bottom in every rail splice, a foot plate at every support, braces.
-   *  The corner posts are shared and counted in calc/production.ts. */
+   *  The corner posts are shared and counted in calc/textile/production.ts. */
   parts: FrameParts;
 }
 

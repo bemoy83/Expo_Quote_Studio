@@ -1,12 +1,12 @@
 // What the calculation gives: the quote lines, their groups, the margin, the key figures and the rest of the result.
-import type { BeamHook } from './beamHooks';
+import type { BeamHook } from './beams/beamHooks';
 import type { Unit } from '../catalog/types';
 import type { Payer, Point } from '../domain/types';
 import type { Bom } from '../foga/engine';
 import type { FogaStructure } from '../foga/structure';
 import type { Strategy, Time, Transfer, Use } from '../pricing/model';
-import type { BeamLayout } from './beamSegments';
-import type { Production } from './production';
+import type { BeamLayout } from './beams/beamSegments';
+import type { Production } from './textile/production';
 import type { WallSupport } from './wallSupports';
 
 export interface CalcLine {
@@ -85,7 +85,7 @@ export interface KeyFigures {
   organiserBeamLm: number;
   /** Part of beamLm in innvendige takdragere the customer draws: always the exhibitor's. */
   innerBeamLm: number;
-  /** Hooks a takdrager hangs on another beam or on a wall's top rail 92 with, enveis and toveis (calc/beamHooks.ts). */
+  /** Hooks a takdrager hangs on another beam or on a wall's top rail 92 with, enveis and toveis (calc/beams/beamHooks.ts). */
   beamHooks: number;
   /** Part of wallLm in inner walls the exhibitor draws (room walls not included). */
   innerWallLm: number;
@@ -135,10 +135,10 @@ export interface CalcResult {
   margin: Margin;
   keyFigures: KeyFigures;
   beams: BeamLayout;
-  /** Takdrager lifted over textile walls (calc/beamLift.ts; the lengths are `lifted` in `beams`): the posts extended
+  /** Takdrager lifted over textile walls (calc/beams/beamLift.ts; the lengths are `lifted` in `beams`): the posts extended
    *  under them, and the hook points between a lifted beam and one that is not. Only when there are any. */
   lift?: { posts: Point[]; hooks: Point[]; walls: Point[] };
-  /** Hooks a takdrager hangs on another beam or a wall's top rail with (calc/beamHooks.ts): 3D and mållinjer. */
+  /** Hooks a takdrager hangs on another beam or a wall's top rail with (calc/beams/beamHooks.ts): 3D and mållinjer. */
   hooks: BeamHook[];
   posts: Point[];
   /** Støtteplater under free-standing system walls and drawn takdrager's own posts: always the exhibitor's, also under

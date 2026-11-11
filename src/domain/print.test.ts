@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { calc } from '../calc/calc';
-import { foilRows } from '../calc/production';
+import { foilRows } from '../calc/textile/production';
 import { CURTAIN, DEFAULT_CATALOG, DOOR } from '../catalog/defaultCatalog';
 import { RULES } from '../rules/rules';
 import { addFoil, fitDecor, updateFoil } from './decor';

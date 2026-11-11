@@ -6,9 +6,9 @@ import { createVariant } from '../../domain/variant';
 import { builtModules, wallPoints } from '../../domain/walls';
 import { RECIPES } from '../../foga/recipes';
 import { RULES } from '../../rules/rules';
-import { liftBeams } from '../beamLift';
-import { variantBeams } from '../beams';
-import { production } from '../production';
+import { liftBeams } from '../beams/beamLift';
+import { variantBeams } from '../beams/beams';
+import { production } from './production';
 import { freeFrames } from './free';
 import { freeTrims, placeFrames } from './placement';
 

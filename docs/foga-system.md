@@ -135,7 +135,7 @@ Systemhøyde fra gulv: 2490 + 50 = 2540 mm.
   krysser den, delt der på veggens stolpe (Bjørn 1.11.2026: den holder den motstående veggen, ellers blir spennet på
   standveggen for langt). Den stopper bare der en vegg går langs linjen.
   Eksempel: front 6 m med en innervegg fra midten gir 3 + 3; front 10 m med vegg ved 2 m gir 2 + 4 + 4.
-- **Støttedrager** (Bjørn 3.11.2026, `calc/supportBeams.ts`). Med 6 m fritt spenn har standveggen lite støtte og kan
+- **Støttedrager** (Bjørn 3.11.2026, `calc/beams/supportBeams.ts`). Med 6 m fritt spenn har standveggen lite støtte og kan
   sige. En standvegg med et fritt spenn på 6 m mellom to punkter som holder den (hjørne, T med en vegg, en takdrager som
   hviler på den) får én støttedrager 3 m fra hjørnet. Den går rett inn fra veggen til det første den møter: en vegg
   (innervegg, romvegg, standvegg) eller en takdrager (standard eller tegnet). Ligger noe nærmere, blir den kortere. På
@@ -155,12 +155,12 @@ Systemhøyde fra gulv: 2490 + 50 = 2540 mm.
 ### Innvendig takdrager (tilvalg) · T8–T12
 
 Bjørn 1.11.2026. Kunden kan tegne egne takdragere inne på standen med en egen pensel (`Variant.innerBeams`,
-`calc/innerBeams.ts`). Samme profil 292, høyde og 6 m-regel som standard takdrager, og alltid utstillerens.
+`calc/beams/innerBeams.ts`). Samme profil 292, høyde og 6 m-regel som standard takdrager, og alltid utstillerens.
 
 - Tegnes rett i hele meter innenfor standen, aldri langs en vegg eller oppå en annen takdrager. Kan flyttes i plan og
   fjernes med Tøm (også bare en del av den) eller Delete.
 - **Krok:** en ende som treffer en annen takdrager (standard eller tegnet) henger på den med krok. Ingen stolpe der, og
-  standarddrageren deles ikke. Én krok per krokpunkt (`calc/beamHooks.ts`): **enveis** når dragere henger fra én side,
+  standarddrageren deles ikke. Én krok per krokpunkt (`calc/beams/beamHooks.ts`): **enveis** når dragere henger fra én side,
   **toveis** når de henger fra begge sider av samme punkt. Se «Krok i 01» under.
 - **Kryss:** der to tegnede takdragere krysser hverandre går det lengste spennet gjennom, og det korteste deles og henger
   på krok på hver side. Like lange: den først tegnede går gjennom. En tegnet drager som krysser en standard drager deles
@@ -215,7 +215,7 @@ retning i steg på 50 mm, mellom stolpene.
 - Plan: i Velg flytter Shift + dra en innvendig drager på tvers i 50 mm-steg (`shiftInnerBeam`), på berøring «Fin» i
   pillen; slipp på hel meter
   gir vanlig drager igjen. Mens den flyttes, og når den er valgt, viser planen mållinje fra hver ende til nærmeste
-  stolpe eller krok langs veggen eller drageren den henger på (`calc/beamOffsets.ts`).
+  stolpe eller krok langs veggen eller drageren den henger på (`calc/beams/beamOffsets.ts`).
 - Arbeidsordre: planen viser mållinjene for alle slike dragere så montøren kan måle ut fra nærmeste faste punkt
   (`beamMeasures`). Mållinjene tegnes som planens målkjeder (`DimChain.tsx`).
 
@@ -224,7 +224,7 @@ retning i steg på 50 mm, mellom stolpene.
 Bjørn 6.11.2026. En takdrager kan ikke kobles på en tekstilvegg. InFrame er bare navnet på tekstilveggen når den står
 mot en systemvegg: den er bygget i samme 43TX, så konflikten er den samme som for frittstående tekstilvegg. Der en
 takdrager kommer i konflikt med en tekstilramme, viker drageren: stolpene skjøtes opp, og drageren går klar over
-(`calc/beamLift.ts`).
+(`calc/beams/beamLift.ts`).
 
 - **Konflikt** er bare fysisk: drageren (292, 20 bred, mellom stolpenes sider) og rammen (43TX, 40 dyp) tar samme plass
   i plan, og rammen når opp til dragerens underkant. Typisk en tverrdrager eller tegnet drager over en frittstående

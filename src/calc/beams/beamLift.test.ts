@@ -1,17 +1,17 @@
 // Takdrager over tekstilvegger (Bjørn 6.11.2026): a beam that runs into a 43TX frame, InFrame or free-standing, is lifted
 // with its whole run; every post under it gets a 94 × 80 with 609, a hook point between levels a 94 × 80 with 600.
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_CATALOG } from '../catalog/defaultCatalog';
-import type { FreeTextile, InnerBeam, Point, Stand, TextileWall, Variant } from '../domain/types';
-import { createVariant } from '../domain/variant';
-import { builtModules, wallPoints } from '../domain/walls';
-import { bom } from '../foga/engine';
-import { bomSizes } from '../foga/fromVariant';
-import { RECIPES } from '../foga/recipes';
-import { RULES } from '../rules/rules';
+import { DEFAULT_CATALOG } from '../../catalog/defaultCatalog';
+import type { FreeTextile, InnerBeam, Point, Stand, TextileWall, Variant } from '../../domain/types';
+import { createVariant } from '../../domain/variant';
+import { builtModules, wallPoints } from '../../domain/walls';
+import { bom } from '../../foga/engine';
+import { bomSizes } from '../../foga/fromVariant';
+import { RECIPES } from '../../foga/recipes';
+import { RULES } from '../../rules/rules';
 import { liftBeams, withJoins } from './beamLift';
 import { variantBeams } from './beams';
-import { calc } from './calc';
+import { calc } from '../calc';
 
 const ROW: Stand = { width: 6, depth: 4, type: 'row' };
 const ISLAND: Stand = { width: 10, depth: 6, type: 'island' };
