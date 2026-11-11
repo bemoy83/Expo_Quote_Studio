@@ -107,14 +107,13 @@ function quickContent(p: QuickPicksProps): ReactNode {
     return (
       <>
         {head}
-        {wallPlates()
-          .slice(0, MAX)
-          .map((x) => (
-            <Sw key={x.ral} color={x.color} title={`Innervegg ${x.name} · RAL ${x.ral}`} on={brush?.kind === 'wall' && brush.ral === x.ral} onClick={() => onPick({ kind: 'wall', ral: x.ral! })} />
-          ))}
-        <QBtn title="Fyll alle vegger med denne fargen" label="Fyll" onClick={p.onFillWalls}>
-          <PaintBucket size={15} />
-        </QBtn>
+        <Palette
+          swatches={wallPlates()
+            .slice(0, MAX)
+            .map((x) => ({ key: x.ral!, color: x.color, title: `Innervegg ${x.name} · RAL ${x.ral}`, on: brush?.kind === 'wall' && brush.ral === x.ral, onClick: () => onPick({ kind: 'wall', ral: x.ral! }) }))}
+          fill="Fyll alle vegger med denne fargen"
+          onFill={p.onFillWalls}
+        />
         <Sep />
         {openings.map((x) => {
           const b: Brush = { kind: 'opening', product: x.variants[0].artnr }
@@ -149,10 +148,14 @@ function quickContent(p: QuickPicksProps): ReactNode {
           options={floors.map((x) => ({ value: x.id, title: x.name, label: FLOOR_SHORT[x.name] ?? x.name }))}
         />
         <Sep />
-        {(cur?.variants ?? []).slice(0, MAX).map((x) => {
-          const b: Brush = { kind: 'floor', product: x.artnr }
-          return <Sw key={x.artnr} color={x.color} title={`${cur!.name} ${x.name.toLowerCase()} · ${x.artnr}`} on={is(b)} onClick={() => onPick(b)} />
-        })}
+        <Palette
+          swatches={(cur?.variants ?? []).slice(0, MAX).map((x) => {
+            const b: Brush = { kind: 'floor', product: x.artnr }
+            return { key: x.artnr, color: x.color, title: `${cur!.name} ${x.name.toLowerCase()} · ${x.artnr}`, on: is(b), onClick: () => onPick(b) }
+          })}
+          fill="Fyll hele standen med denne fargen"
+          onFill={p.onFill}
+        />
         <Sep />
         {rollBrush ? (
           <>
@@ -180,10 +183,6 @@ function quickContent(p: QuickPicksProps): ReactNode {
         ) : (
           floorSizes
         )}
-        <Sep />
-        <QBtn title="Fyll hele standen med denne fargen" label="Fyll" onClick={p.onFill}>
-          <PaintBucket size={15} />
-        </QBtn>
         {more}
       </>
     )
@@ -271,6 +270,23 @@ export function QName({ name, meta }: { name: string; meta?: string }) {
 }
 
 /** A colour as a square swatch, chosen = an ink ring inside it (dock quick picks, stand popover). */
+/**
+ * The colours of a pen and its paint bucket right after them (Bjørn 11.11.2026): the same row on the wall and the floor
+ * pill, the bucket filling the whole stand with the chosen colour.
+ */
+function Palette({ swatches, fill, onFill }: { swatches: { key: string; color?: string; title: string; on: boolean; onClick: () => void }[]; fill: string; onFill: () => void }) {
+  return (
+    <>
+      {swatches.map(({ key, ...x }) => (
+        <Sw key={key} {...x} />
+      ))}
+      <QBtn title={fill} label="Fyll" onClick={onFill}>
+        <PaintBucket size={15} />
+      </QBtn>
+    </>
+  )
+}
+
 export function Sw({ color, title, on, onClick }: { color?: string; title: string; on: boolean; onClick: () => void }) {
   return <button type="button" className="q-sw" aria-pressed={on} title={title} aria-label={title} style={{ background: color }} onClick={onClick} />
 }
