@@ -1,8 +1,7 @@
 // Furniture in the plan. A counter (Byggeregel K1) also shows its plates: front and both ends closed, the back open.
 import { mainGroupOf } from '../../../catalog/groups'
 import { footprintBox } from '../../../domain/objects'
-import { counterBuild } from '../../../foga/counter'
-import { RECIPES } from '../../../foga/recipes'
+import { stockCounter } from '../../../foga/counter'
 import type { Variant } from '../../../domain/types'
 import { BLOCK, INK } from '../../colors'
 import { idx, productOf } from '../../env'
@@ -10,6 +9,7 @@ import { linePx, usePlanScale } from '../planScale'
 import type { Layer, Tool } from '../../tools'
 import type { PlanSelection } from '../selection'
 import { DIMMED } from '../planStyle'
+import { CounterPlates } from './CounterPlates'
 import { GONE_FILL, useErasing } from './erasing'
 
 /** Furniture by its footprint; one that collides is outlined in red. */
@@ -51,7 +51,7 @@ export function ObjectLayer(props: {
           <g key={o.id}>
             {shape(col, { stroke, strokeWidth: sw, opacity: op, fillOpacity: g ? GONE_FILL : undefined, style: { cursor: tool === 'select' && f.round ? 'move' : undefined } })}
             {g && shape(hatch, {})}
-            {counter && <CounterPlates o={o} size={counter} width={linePx(sc, 1.2)} opacity={op} />}
+            {counter && <CounterPlates b={stockCounter(counter)} at={o} width={linePx(sc, 1.2)} opacity={op} />}
           </g>
         )
       })}
@@ -59,18 +59,3 @@ export function ObjectLayer(props: {
   )
 }
 
-/** The counter's plates seen from above, a line each (Byggeregel K4): the closed front toward the object's +y. */
-function CounterPlates({ o, size, width, opacity }: { o: { x: number; y: number; rot: number }; size: { length: number; depth: number }; width: number; opacity?: number }) {
-  const b = counterBuild(RECIPES.counter, size.length, size.depth)
-  const lower = b.plates.filter((p) => p.level === 'lower')
-  return (
-    <g transform={`translate(${o.x} ${o.y}) rotate(${o.rot})`} opacity={opacity} pointerEvents="none">
-      {lower.map((p) => {
-        const along = p.side === 'front'
-        const [x0, x1] = along ? p.box.x : [(p.box.x[0] + p.box.x[1]) / 2, (p.box.x[0] + p.box.x[1]) / 2]
-        const [z0, z1] = along ? [(p.box.z[0] + p.box.z[1]) / 2, (p.box.z[0] + p.box.z[1]) / 2] : p.box.z
-        return <line key={p.side} x1={x0 / 1000} y1={z0 / 1000} x2={x1 / 1000} y2={z1 / 1000} stroke={INK} strokeWidth={width} strokeLinecap="round" />
-      })}
-    </g>
-  )
-}

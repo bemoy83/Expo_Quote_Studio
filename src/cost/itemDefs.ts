@@ -3,7 +3,7 @@
 // examples here are what the app ships with. Kostmodell: docs/kostmodell.md.
 import type { ItemRecipe, PriceItem } from './items';
 import { railLengths } from '../domain/shelves/corners';
-import { counterBuild, profileMetres } from '../foga/counter';
+import { profileMetres, stockCounter } from '../foga/counter';
 import { RECIPES } from '../foga/recipes';
 import { RULES } from '../rules/rules';
 import type { Time } from './time';
@@ -220,7 +220,7 @@ export const EXAMPLE_RECIPES: Readonly<Record<string, ItemRecipe>> = {
 /** A ready-built counter (Byggeregler K1–K5): its profiles by the metre and the 600, rented out; the plates as their
  *  share of a whole wall plate (cut from one), and the two boards. */
 function counterRecipe(length: number, depth: number): ItemRecipe {
-  const b = counterBuild(RECIPES.counter, length, depth);
+  const b = stockCounter({ length, depth });
   const plate = RECIPES.wall.plate;
   const share = b.plates.reduce((s, p) => s + p.w * p.h, 0) / (plate.w * plate.h);
   const [top] = b.boards;

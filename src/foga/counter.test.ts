@@ -1,10 +1,10 @@
 // Counter 6560 against Bjørn's STL (11.11.2026): 1020 × 520 × 1040, Byggeregler K1–K5.
 import { describe, expect, it } from 'vitest';
-import { counterBuild, profileMetres } from './counter';
+import { counterBuild, profileMetres, STOCK_OPEN } from './counter';
 import { RECIPES } from './recipes';
 
 const r = RECIPES.counter;
-const b = counterBuild(r, r.stock.length, r.stock.depth);
+const b = counterBuild(r, { ...r.stock, open: STOCK_OPEN });
 const span = (x: readonly [number, number]) => x[1] - x[0];
 
 describe('counter 6560 (K1–K5)', () => {
@@ -49,5 +49,14 @@ describe('counter 6560 (K1–K5)', () => {
     // 4 mm under the top rail's top
     expect(1040 - b.boards[1].box.y[1]).toBe(4);
     expect(span(b.boards[1].box.x)).toBe(976);
+  });
+
+  it('closes the sides it is not told to leave open: plates and a bottom rail on each, the rails all round whatever', () => {
+    const island = counterBuild(r, { ...r.stock, open: [] });
+    expect(island.plates).toHaveLength(8);
+    expect(island.profiles.filter((x) => x.role === 'bottomRail').map((x) => x.len)).toEqual([960, 960, 460, 460]);
+    expect(island.profiles.filter((x) => x.role === 'rail')).toHaveLength(8);
+    expect(island.plates.find((p) => p.side === 'front')?.w).toBe(976);
+    expect(island.couplings).toBe(24);
   });
 });

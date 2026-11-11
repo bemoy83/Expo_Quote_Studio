@@ -164,16 +164,20 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 
 ### Disk (bardisk 6560)
 
-- Oppskriften: `RECIPES.counter` (`foga/recipes.ts`), og hver profil, plate og topp med mål og plass i `foga/counter.ts`
-  (`counterBuild`, med tester). Reglene K1–K5 i [byggeregler.md](byggeregler.md). Profilene 92L og 93 i `foga/parts.ts`,
+- Oppskriften: `RECIPES.counter` (`foga/recipes.ts`), og hver profil, plate og topp med mål og plass i `foga/counter.ts`:
+  `counterBuild(recipe, shape)` for en kasse med mål og åpne sider (`CounterShape`), `stockCounter(size)` for disken på
+  lager (åpen bak), bygget én gang og delt av plan, 3D og kost (med tester). Reglene K1–K5 i [byggeregler.md](byggeregler.md). Profilene 92L og 93 i `foga/parts.ts`,
   omrisset i `scene3d/build/profiles.ts`
 - Katalogen: `counter('6560', …)` i `catalog/defaultCatalog.ts` (`Product.counter`: utvendig mål, fotavtrykket følger);
   de gamle diskene 5410, 5415 og 5420 blir løse linjer i gamle skisser (`OLD_COUNTERS`, `retiredToLoose` i `persistence/file.ts`)
 - Kalkyle: `calc/lines/objects.ts` (fast pris, kost fra prisartikkelen `ITEM.counter` i `cost/itemDefs.ts`, bygget av
   `counterBuild`). Plukkes hel, 1 stk (K1)
-- Plan, 3D: plassert og kolliderer som et møbel (`domain/objects.ts`), platene som strek i `plan/layers/ObjectLayer.tsx`
-  (`CounterPlates`) · `scene3d/build/counter.ts` (fra `buildObjects`). Neste steg: pensel som tegner disk i valgfri lengde
-  og med hjørner, og RAL, print og dekal på platene
+- Plan, 3D: plassert og kolliderer som et møbel (`domain/objects.ts`), platene som strek i `plan/layers/CounterPlates.tsx`
+  (fra `ObjectLayer.tsx`) · `scene3d/build/counter.ts` (`buildCounter` tar en `CounterBuild`, kalt fra `buildObjects`),
+  profilen snudd etter omrisset med `turnedProfile` (`build/profiles.ts`). Begge tegner i diskens egne koordinater og
+  plasseres og snus utenfra, så en tegnet disk bruker de samme delene
+- Neste steg: pensel som tegner disk i valgfri lengde og med hjørner (egen modell ved siden av `PlacedObject`, kassene fra
+  `counterBuild`, skjøtene som nye regler i K-serien), og RAL, print og dekal på platene
 - Tester: `foga/counter.test.ts`, `calc/counter.test.ts`, `scene3d/build/counter.test.ts`; eksempel i `src/test/fixtures/10-mobler-utstyr.json`
 
 ### Møbler og utstyr

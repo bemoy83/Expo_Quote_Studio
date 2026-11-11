@@ -61,6 +61,18 @@ export function unitProfile(name: ProfileName, flipY = false): THREE.BufferGeome
 }
 
 /**
+ * A profile (by recipe code) turned so its outline's x runs along `u` and its y along `v`, its length along `e`: scale x
+ * to its length and place its middle. Used where a part does not lie along a wall (the counter, Byggeregler K2, K3). unitProfile has the
+ * length on local x, the outline's y on local y and its x on local −z; a mirrored turn takes the flipped outline.
+ */
+export function turnedProfile(code: string, e: THREE.Vector3, u: THREE.Vector3, v: THREE.Vector3) {
+  const m = new THREE.Matrix4().makeBasis(e, v, u.clone().negate())
+  const flip = m.determinant() < 0
+  if (flip) m.makeBasis(e, v.clone().negate(), u.clone().negate())
+  return { geo: unitProfile(profile(code), flip), q: new THREE.Quaternion().setFromRotationMatrix(m) }
+}
+
+/**
  * `len` m of a frame profile, its outer edge (profile y = 0) toward local −y. A mitred end is cut at 45°: the outer
  * edge keeps the full length, the inner edge is a profile depth shorter, so two pieces meet in a frame corner. A
  * square end butts against something (a 92LTX leg). Its own geometry: free it with the build.
