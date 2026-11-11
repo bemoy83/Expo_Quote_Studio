@@ -107,7 +107,7 @@ Venstre kolonne er det appen gjør i dag (`PlanView.tsx`, «Interaction preview�
 | Dekal og motiv (`FacePreview`) | Blekk 45 % langs feltet | Stiplet omriss av feltet, i `printOffset`, på siden som treffes | Rasterbåndet (`RasterPattern`) ved trykk |
 | Dør og forheng (`HoverModule`) | Tykk blekkstrek 35 % over modulen | Stiplet omriss på begge sider av modulen | Dørblad og bue (`OpeningMark`) ved trykk |
 | Teppeflis (`hoverFloor`) | Flate i produktfarge 75 % med blekkant | Stiplet omriss av penselens størrelse | Ingen: penselen maler mens man drar, så det som tegnes **er** resultatet. Under drag et område: mål og antall som over |
-| Engangsteppe, kosten (`carpetClickTarget`, `fillTarget`) | Det et klikk gjør vises ved peking: ledig gulv fylt, eller banen i ny farge | Stiplet omriss | Forslaget for området mens man drar |
+| Engangsteppe, kosten (`carpetClickTarget`, `fillTarget`) | Det et klikk gjør vises ved peking: ledig gulv fylt, eller banen i ny farge | Stiplet omriss | Ingenting mens man holder inne (et trykk kan bli et drag); forslaget for området når man drar, lagt ved slipp |
 | Møbel (ingen i dag) | Ingenting før klikket | Stiplet fotavtrykk der møbelet **faktisk** havner (`findSpot` i `domain/objects.ts` flytter det bort fra vegger) | Fotavtrykket i produktets farge med blekkant ved trykk |
 | Dra fra hyllen (`dropHover`) | Som `FacePreview` | | Fantom som tekstil eller dekal over |
 
