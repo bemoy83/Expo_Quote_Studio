@@ -179,6 +179,7 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 - Verktøyet Disker (`counter` i `ui/tools.ts`, D i verktøylinjen, etter Hyller): penselen `{ kind: 'counter', product, ral }`
   plasserer som møbelpennen (`placedBy` i `tools.ts`, brukt av `pointer/object.ts`, `pointer/place.ts` og `plan/next.ts`).
   Hurtigvalget i `plan/QuickPicks.tsx` er veggfargene og Fyll (`Palette`, som Vegg og Gulv; Fyll = `paintCounters`).
+  Veggfargene som rad er én funksjon, `ralSwatches` i `plan/swatches.ts`, brukt av Vegg, Disker og pillens `Colours`.
   Pillen på en valgt disk har de samme fargene (`Colours` i `plan/pill/objects.tsx`, `setCounterRal`)
 - Farge (K6): `PlacedObject.ral`, uten = som på lager (`counterRal`, `COUNTER_STOCK_RAL` i `domain/objects.ts`). Planen
   fyller disken med platefargen, 3D farger platene (`buildCounter` tar fargen). Kalkylen legger prisartikkelen

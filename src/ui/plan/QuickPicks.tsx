@@ -9,10 +9,11 @@ import { type TileSize } from '../../domain/floor/tiles'
 import type { GridStep } from '../../domain/snapGrid'
 import type { Motif } from '../../domain/types'
 import { ImageInput, Segmented } from '../controls'
-import { catalog, counterProducts, idx, rules, wallPlates } from '../env'
+import { catalog, counterProducts, idx, rules } from '../env'
 import { ObjectThumb } from '../panel/ProductRow'
 import { FLOOR_MAIN, FLOOR_OTHER, floorSizeLabel, gridSteps, type Brush, type DockTool } from '../tools'
 import { GridPicker } from './GridPicker'
+import { ralSwatches, type Swatch } from './swatches'
 
 export interface QuickPicksProps {
   tool: DockTool
@@ -105,9 +106,7 @@ function quickContent(p: QuickPicksProps): ReactNode {
       <>
         {head}
         <Palette
-          swatches={wallPlates()
-            .slice(0, MAX)
-            .map((x) => ({ key: x.ral!, color: x.color, title: `Innervegg ${x.name} · RAL ${x.ral}`, on: brush?.kind === 'wall' && brush.ral === x.ral, onClick: () => onPick({ kind: 'wall', ral: x.ral! }) }))}
+          swatches={ralSwatches(brush?.kind === 'wall' ? brush.ral : undefined, (n) => `Innervegg ${n}`, (ral) => onPick({ kind: 'wall', ral }))}
           fill="Fyll alle vegger med denne fargen"
           onFill={p.onFillWalls}
         />
@@ -226,9 +225,7 @@ function quickContent(p: QuickPicksProps): ReactNode {
       <>
         {head}
         <Palette
-          swatches={wallPlates()
-            .slice(0, MAX)
-            .map((x) => ({ key: x.ral!, color: x.color, title: `Disk ${x.name.toLowerCase()} · RAL ${x.ral}`, on: ral === x.ral, onClick: () => onPick({ kind: 'counter', product, ral: x.ral! }) }))}
+          swatches={ralSwatches(ral, (n) => `Disk ${n}`, (r) => onPick({ kind: 'counter', product, ral: r }))}
           fill="Fyll alle disker med denne fargen"
           onFill={p.onFillCounters}
         />
@@ -273,7 +270,7 @@ export function QName({ name, meta }: { name: string; meta?: string }) {
  * The colours of a pen and its paint bucket right after them (Bjørn 11.11.2026): the same row on the wall, floor and
  * counter pill, the bucket filling the whole stand with the chosen colour.
  */
-function Palette({ swatches, fill, onFill }: { swatches: { key: string; color?: string; title: string; on: boolean; onClick: () => void }[]; fill: string; onFill: () => void }) {
+function Palette({ swatches, fill, onFill }: { swatches: Swatch[]; fill: string; onFill: () => void }) {
   return (
     <>
       {swatches.map(({ key, ...x }) => (
