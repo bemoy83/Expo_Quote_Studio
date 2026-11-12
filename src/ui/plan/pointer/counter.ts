@@ -1,7 +1,7 @@
-// The counter pen (Disker, Byggeregler K7, K8): a click places the counter in stock where it has room, as before; a
+// The counter pen (Disker, Byggeregler K7, K8): a click on a counter chooses it, elsewhere places the counter in stock; a
 // drag draws a counter along the stroke in half metres, or on from the end of one (longer in line, an L back toward the
 // staff). The plan shows what a release stores while dragging (plan/next.ts).
-import { drawCounter } from '../../../domain/counters'
+import { counterEnd, drawCounter } from '../../../domain/counters'
 import { addObject } from '../../../domain/objects'
 import { isCounter, place } from '../../env'
 import { placedBy } from '../../tools'
@@ -28,7 +28,12 @@ export const counter: DragHandlers<'counter'> = {
     if (!d.moved && Math.hypot(q.x - d.p0.x, q.y - d.p0.y) > COUNTER_DRAG) d.moved = true
   },
   up(c, d, q) {
-    if (!d.moved) return c.hits.onStand(d.p0) ? objectClick(c, d.p0) : undefined
+    if (!d.moved) {
+      // On a counter (its body or an end): choose it; elsewhere place the counter in stock
+      const on = counterEnd(c.v, isCounter, [d.p0.x, d.p0.y])?.id ?? c.hits.objectAt(d.p0)?.id
+      if (on && isCounter(c.v.objects.find((o) => o.id === on)!.product)) return c.clickSelect({ objectId: on })
+      return c.hits.onStand(d.p0) ? objectClick(c, d.p0) : undefined
+    }
     const r = counterDraw(c, d.p0, q)
     if (!r) return
     if ('error' in r) return c.onToast(r.error)

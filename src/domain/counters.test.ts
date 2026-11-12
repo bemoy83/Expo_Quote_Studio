@@ -1,7 +1,7 @@
 // Drawn counters (Byggeregler K7, K8): a stroke in half metres, on from an end in line or back into an L.
 import { describe, expect, it } from 'vitest';
 import { counterBuildOf, piecesFootprint, piecesOf } from './counterShape';
-import { drawCounter } from './counters';
+import { counterEnd, drawCounter } from './counters';
 import { blockers, footprintBox, hitsAny, objectBoxes, type PlaceContext } from './objects';
 import { createVariant } from './variant';
 import { RULES } from '../rules/rules';
@@ -149,6 +149,29 @@ describe('shorter: drawn inward from a free end (K7)', () => {
     expect(counterBuildOf(only(v))).toMatchObject({ length: 1020, depth: 1020 });
     expect(drawCounter(ell, ctx, isCounter, pen, [1.25, 2], [1.75, 2])).toMatchObject({ error: expect.stringMatching(/hjørnet/) });
     expect(piecesOf(o)).toHaveLength(2);
+  });
+});
+
+describe('the end a drag works on, shown as a handle (Bjørn 12.11.2026)', () => {
+  const one = draw(base, [1.5, 2], [2, 2]);
+  const longer = draw(one, [1.95, 2], [2.45, 2]);
+  const r = (b: { x0: number; y0: number; x1: number; y1: number }) => [b.x0, b.y0, b.x1, b.y1].map((n) => Math.round(n * 1000) / 1000);
+
+  it('is the last half metre, out longer, in shorter, back a corner', () => {
+    const e = counterEnd(longer, isCounter, [2.4, 2])!;
+    expect(r(e.box)).toEqual([2.01, 1.74, 2.51, 2.26]);
+    expect(e.out).toEqual([[1, 0]]);
+    expect(e.in).toEqual([-1, 0]);
+    expect(e.back).toEqual([0, -1]);
+    expect(counterEnd(longer, isCounter, [1.75, 2])).toBeNull();
+  });
+
+  it('cannot go shorter on a half, which grows both ways, or at the end a corner stands on', () => {
+    const half = { ...base, objects: [only(draw(one, [1.75, 2], [1.3, 2]))] };
+    expect(counterEnd(half, isCounter, [1.25, 2])).toMatchObject({ in: null, out: [[-1, 0], [1, 0]] });
+    const ell = draw(one, [1.2, 2], [1.2, 1]);
+    expect(counterEnd(ell, isCounter, [1.25, 2])?.in).toBeNull();
+    expect(counterEnd(ell, isCounter, [1.25, 0.95])?.in).not.toBeNull();
   });
 });
 
