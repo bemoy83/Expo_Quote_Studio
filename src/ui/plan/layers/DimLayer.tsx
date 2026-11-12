@@ -3,7 +3,7 @@
 import type { Variant } from '../../../domain/types'
 import type { PlanSelection } from '../selection'
 import { sizePx, usePlanScale, type PlanScale } from '../planScale'
-import { counterChains, DIM_NEAR, DIM_TOTAL, planDims, sideLine, type InnerChain } from '../dims'
+import { counterChains, counterDimSides, DIM_NEAR, DIM_TOTAL, planDims, sideLine, type InnerChain } from '../dims'
 import { objectBoxes } from '../../../domain/objects'
 import { Chain } from '../DimChain'
 import { mainGroupOf } from '../../../catalog/groups'
@@ -41,9 +41,7 @@ function CounterDims({ sc, v, selection, all, off }: { sc: PlanScale; v: Variant
   return shown.map((o) => {
     const c = counterChains(objectBoxes(place, o))
     if (!c) return null
-    // Each measure on the side toward the stand's middle, clear of the stand's own chains and the aisle
-    const dx: 1 | -1 = (c.x[0] + c.x[1]) / 2 < v.stand.width / 2 ? 1 : -1
-    const dy: 1 | -1 = (c.y[0] + c.y[1]) / 2 < v.stand.depth / 2 ? 1 : -1
+    const { dx, dy } = counterDimSides(v, c)
     return (
       c && (
         <g key={o.id}>

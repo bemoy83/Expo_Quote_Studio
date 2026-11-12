@@ -37,6 +37,21 @@ describe('Where the selection pill stands', () => {
     ])
   })
 
+  it('a counter: past its width measure, toward the middle of the stand, else on the other side (K7)', () => {
+    const v = sketch('10-mobler-utstyr')
+    const id = v.objects.find((o) => o.product === '6560')!.id
+    // In the front half its measure stands over it: the pill goes over that, not down toward the aisle
+    expect(pillAnchor(v, { objectId: id })!.tries).toEqual([
+      { dir: 'up', gap: PILL_PAST_CHAIN },
+      { dir: 'down', gap: PILL_GAP },
+    ])
+    const back = { ...v, objects: v.objects.map((o) => (o.id === id ? { ...o, y: 1 } : o)) }
+    expect(pillAnchor(back, { objectId: id })!.tries).toEqual([
+      { dir: 'down', gap: PILL_PAST_CHAIN },
+      { dir: 'up', gap: PILL_GAP },
+    ])
+  })
+
   it('nothing to anchor to once the object is gone', () => {
     const v = sketch('10-mobler-utstyr')
     expect(pillAnchor(v, { objectId: 'gone' })).toBeNull()

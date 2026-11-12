@@ -2,13 +2,13 @@
 // room. For a wall (and a door, frame or decal in it) on the side away from the stand's centre, opposite its module
 // chain (arbeidstegning.md A5); on a stand edge it clears the totals and the side name outside. Pure, in model
 // metres and screen pixels, so it can be tested without a plan; SelectionPill.tsx turns it into a place on screen.
-import { footprintBox, objectFootprint } from '../../../domain/objects'
+import { footprintBox, objectBoxes, objectFootprint } from '../../../domain/objects'
 import { shelfBox } from '../../../domain/shelves/model'
 import { CELL, pointAlong, wallLength } from '../../../domain/grid'
 import type { FloorTile, Point, Variant, Wall } from '../../../domain/types'
 import { isPerimeterWall } from '../../../domain/walls'
 import { place } from '../../env'
-import { DIM_NEAR, DIM_TOTAL } from '../dims'
+import { counterDimSides, DIM_NEAR, DIM_TOTAL } from '../dims'
 import { awayFrom } from './pillPlace'
 import { chosen, type PlanSelection } from '../selection'
 
@@ -71,6 +71,16 @@ const over = (v: Variant, b: { x0: number; y0: number; x1: number; y1: number })
   ],
 })
 
+/** A chosen counter: past its width chain (K7), which stands toward the stand's middle where there is room, so the
+ *  pill never covers a measure nor the aisle a counter often stands by (Bjørn 12.11.2026); else on the other side. */
+function counterAnchor(v: Variant, b: { x0: number; y0: number; x1: number; y1: number }): PillAnchor {
+  const { dy } = counterDimSides(v, { x: [b.x0, b.x1], y: [b.y0, b.y1] })
+  const tries = over(v, b).tries
+  const chain = tries.find((t) => t.dir === (dy > 0 ? 'down' : 'up'))!
+  const free = tries.find((t) => t !== chain)!
+  return { ...b, tries: [{ dir: chain.dir, gap: Math.max(chain.gap, PILL_PAST_CHAIN) }, free] }
+}
+
 /** The pill's anchor for a selection, or null when there is nothing to anchor to (it was removed). */
 export function pillAnchor(v: Variant, sel: PlanSelection): PillAnchor | null {
   const c = chosen(v, sel)
@@ -93,7 +103,11 @@ export function pillAnchor(v: Variant, sel: PlanSelection): PillAnchor | null {
       return over(v, box([c.textile.from, c.textile.to]))
     case 'object': {
       const f = objectFootprint(place, c.object)
-      return f ? over(v, footprintBox(c.object, f)) : null
+      if (!f) return null
+      if (!place.isCounter(c.object.product)) return over(v, footprintBox(c.object, f))
+      // A counter by what it covers, as its measures are (an L's pieces)
+      const bs = objectBoxes(place, c.object)
+      return counterAnchor(v, { x0: Math.min(...bs.map((b) => b.x0)), y0: Math.min(...bs.map((b) => b.y0)), x1: Math.max(...bs.map((b) => b.x1)), y1: Math.max(...bs.map((b) => b.y1)) })
     }
     case 'room':
       return over(v, box(c.room.outline))
