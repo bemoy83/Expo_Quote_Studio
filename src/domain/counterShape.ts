@@ -59,6 +59,17 @@ export function counterBuildOf(o: Pick<PlacedObject, 'pieces'>, size = { length:
   return b;
 }
 
+/** What a drawn counter covers, one rectangle per piece in its own coordinates, mm: the piece's centre line out to the
+ *  outer faces. An L is two, so the corner it leaves open stays free floor. */
+export function pieceRects(o: Pick<PlacedObject, 'pieces'>): { x0: number; y0: number; x1: number; y1: number }[] {
+  const out = HALF + R.face;
+  return piecesOf(o).map((p) => {
+    const [ax, bx] = [Math.min(p.a[0], p.b[0]), Math.max(p.a[0], p.b[0])];
+    const [ay, by] = [Math.min(p.a[1], p.b[1]), Math.max(p.a[1], p.b[1])];
+    return alongX(p) ? { x0: ax - R.face, x1: bx + R.face, y0: ay - out, y1: ay + out } : { x0: ax - out, x1: ax + out, y0: ay - R.face, y1: by + R.face };
+  });
+}
+
 /** A drawn counter's footprint: the box round it, m. */
 export function piecesFootprint(o: Pick<PlacedObject, 'pieces'>, f: Footprint): Footprint {
   if (!o.pieces) return f;

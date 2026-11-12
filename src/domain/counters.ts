@@ -8,7 +8,7 @@ import { RECIPES } from '../foga/recipes';
 import { alongX, counterBuildOf, HALF, layoutOf, pieceLength as len, piecesFootprint, piecesOf, unit } from './counterShape';
 import { openSides } from './grid';
 import { nextId } from './ids';
-import { blockers, counterRal, footprintBox, hits, type PlaceContext } from './objects';
+import { blockers, counterRal, footprintBox, hitsAny, objectBoxes, type PlaceContext } from './objects';
 import type { CounterPiece, PlacedObject, Point, Variant } from './types';
 
 const R = RECIPES.counter;
@@ -187,7 +187,7 @@ function placed(v: Variant, ctx: PlaceContext, o: PlacedObject, a: Point, b: Poi
   const next = { ...o, x: snap(o.x + s.x), y: snap(o.y + s.y) };
   const nb = footprintBox(next, fp);
   const inside = nb.x0 > -EPS && nb.y0 > -EPS && nb.x1 < v.stand.width + EPS && nb.y1 < v.stand.depth + EPS;
-  if (!inside || hits(nb, others)) return { error: 'Ikke plass til disken her', a, b };
+  if (!inside || hitsAny(objectBoxes(ctx, next), others)) return { error: 'Ikke plass til disken her', a, b };
   const objects = was ? v.objects.map((x) => (x.id === was.id ? next : x)) : [...v.objects, next];
   return { v: { ...v, objects }, id: next.id, a, b };
 }

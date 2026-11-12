@@ -9,7 +9,7 @@ import { doorSwing } from './doors';
 import { nextId } from './ids';
 import { faceSegment, sideOf } from './faces';
 import { RECIPES } from '../foga/recipes';
-import { piecesFootprint } from './counterShape';
+import { pieceRects, piecesFootprint } from './counterShape';
 
 export interface Box {
   x0: number;
@@ -35,6 +35,26 @@ export function objectFootprint(ctx: Pick<PlaceContext, 'footprint'>, o: Pick<Pl
   const f = ctx.footprint(o.product);
   return f && piecesFootprint(o, f);
 }
+
+/** What an object covers in the plan, m: its footprint box, or one box per piece of a drawn counter (K7), so an L
+ *  leaves its open corner free. */
+export function objectBoxes(ctx: Pick<PlaceContext, 'footprint'>, o: Pick<PlacedObject, 'product' | 'pieces' | 'x' | 'y' | 'rot'>): Omit<Box, 'kind'>[] {
+  const f = objectFootprint(ctx, o);
+  if (!f) return [];
+  if (!o.pieces || o.pieces.length < 2) return [footprintBox(o, f)];
+  const t = (o.rot * Math.PI) / 180;
+  const c = Math.round(Math.cos(t));
+  const s = Math.round(Math.sin(t));
+  const plan = (x: number, y: number) => [o.x + (x * c - y * s) / 1000, o.y + (x * s + y * c) / 1000];
+  return pieceRects(o).map((r) => {
+    const [ax, ay] = plan(r.x0, r.y0);
+    const [bx, by] = plan(r.x1, r.y1);
+    return { x0: Math.min(ax, bx), y0: Math.min(ay, by), x1: Math.max(ax, bx), y1: Math.max(ay, by) };
+  });
+}
+
+/** Moved by (dx, dy). */
+const shifted = (b: Omit<Box, 'kind'>, dx: number, dy: number) => ({ x0: b.x0 + dx, y0: b.y0 + dy, x1: b.x1 + dx, y1: b.y1 + dy });
 
 /** Axis-aligned footprint. A quarter turn swaps width and depth. */
 export function footprintBox(o: Pick<PlacedObject, 'x' | 'y' | 'rot'>, f: Footprint): Omit<Box, 'kind'> {
@@ -85,10 +105,18 @@ export function blockers(v: Variant, ctx: PlaceContext, skipId?: string): Box[] 
   }
   for (const o of v.objects) {
     if (o.id === skipId) continue;
-    const f = objectFootprint(ctx, o);
-    if (f) out.push({ ...footprintBox(o, f), kind: 'object', id: o.id });
+    for (const b of objectBoxes(ctx, o)) out.push({ ...b, kind: 'object', id: o.id });
   }
   return out;
+}
+
+/** The first of `others` any of `boxes` hits. */
+export function hitsAny(boxes: Omit<Box, 'kind'>[], others: Box[]): Box | null {
+  for (const b of boxes) {
+    const h = hits(b, others);
+    if (h) return h;
+  }
+  return null;
 }
 
 export function hits(box: Omit<Box, 'kind'>, others: Box[]): Box | null {
@@ -111,15 +139,17 @@ export function findSpot(v: Variant, ctx: PlaceContext, o: PlacedObject, radius:
   const f = objectFootprint(ctx, o);
   if (!f) return null;
   const bl = blockers(v, ctx, o.id);
+  const boxes = objectBoxes(ctx, o);
+  const free = (q: PlacedObject) => !hitsAny(boxes.map((b) => shifted(b, q.x - o.x, q.y - o.y)), bl);
   const start = clampInto(v, o, f);
-  if (!hits(footprintBox(start, f), bl)) return start;
+  if (free(start)) return start;
   for (let r = 0.05; r <= radius + 1e-9; r += 0.05) {
     let best: PlacedObject | null = null;
     let bd = Infinity;
     for (let k = 0; k < 24; k++) {
       const t = (k / 24) * Math.PI * 2;
       const q = clampInto(v, { ...o, x: o.x + Math.cos(t) * r, y: o.y + Math.sin(t) * r }, f);
-      if (hits(footprintBox(q, f), bl)) continue;
+      if (!free(q)) continue;
       const d = Math.hypot(q.x - o.x, q.y - o.y);
       if (d < bd) {
         bd = d;
@@ -174,8 +204,7 @@ export function removeObjects(v: Variant, product: string, n: number): Variant {
 export function conflicts(v: Variant, ctx: PlaceContext): Set<string> {
   const out = new Set<string>();
   for (const o of v.objects) {
-    const f = objectFootprint(ctx, o);
-    if (f && hits(footprintBox(o, f), blockers(v, ctx, o.id))) out.add(o.id);
+    if (hitsAny(objectBoxes(ctx, o), blockers(v, ctx, o.id))) out.add(o.id);
   }
   return out;
 }

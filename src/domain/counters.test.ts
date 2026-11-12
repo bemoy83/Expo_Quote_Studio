@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { counterBuildOf, piecesFootprint, piecesOf } from './counterShape';
 import { drawCounter } from './counters';
-import { footprintBox, type PlaceContext } from './objects';
+import { blockers, footprintBox, hitsAny, objectBoxes, type PlaceContext } from './objects';
 import { createVariant } from './variant';
 import { RULES } from '../rules/rules';
 import type { PlacedObject, Variant } from './types';
@@ -18,6 +18,7 @@ const draw = (v: Variant, a: [number, number], b: [number, number]) => {
   return r.v;
 };
 const only = (v: Variant) => v.objects[v.objects.length - 1];
+const onlyIn = (objects: PlacedObject[]): Variant => ({ ...base, objects });
 const box = (o: PlacedObject) => {
   const b = footprintBox(o, piecesFootprint(o, ctx.footprint('6560')!));
   return [b.x0, b.y0, b.x1, b.y1].map((n) => Math.round(n * 1000) / 1000);
@@ -101,6 +102,17 @@ describe('drawn on from the end of a counter (K7, K8)', () => {
     expect([b.length, b.depth]).toEqual([1020, 1520]);
     expect(b.profiles.filter((p) => p.role === 'post').map((p) => p.code).sort()).toEqual(['92L', '92L', '92L', '92L', '92L', '93', '93']);
     expect(box(o)).toEqual([0.99, 0.74, 2.01, 2.26]);
+  });
+
+  it('covers its pieces only: the open corner of the L is floor (K7)', () => {
+    const o = only(draw(one, [1.2, 2], [1.2, 1]));
+    const boxes = objectBoxes(ctx, o).map((b) => [b.x0, b.y0, b.x1, b.y1].map((n) => Math.round(n * 1000) / 1000));
+    expect(boxes).toEqual([
+      [0.99, 1.74, 2.01, 2.26],
+      [0.99, 0.74, 1.51, 1.76],
+    ]);
+    const corner = { x0: 1.6, y0: 0.8, x1: 2.0, y1: 1.6 };
+    expect(hitsAny([corner], blockers(onlyIn([o]), ctx))).toBeNull();
   });
 
   it('refuses a corner toward the front, where the customers stand', () => {
