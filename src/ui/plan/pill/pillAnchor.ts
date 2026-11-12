@@ -2,7 +2,7 @@
 // room. For a wall (and a door, frame or decal in it) on the side away from the stand's centre, opposite its module
 // chain (arbeidstegning.md A5); on a stand edge it clears the totals and the side name outside. Pure, in model
 // metres and screen pixels, so it can be tested without a plan; SelectionPill.tsx turns it into a place on screen.
-import { footprintBox, objectFootprint } from '../../../domain/objects'
+import { footprintBox, objectBoxes, objectFootprint } from '../../../domain/objects'
 import { shelfBox } from '../../../domain/shelves/model'
 import { CELL, pointAlong, wallLength } from '../../../domain/grid'
 import type { FloorTile, Point, Variant, Wall } from '../../../domain/types'
@@ -104,8 +104,10 @@ export function pillAnchor(v: Variant, sel: PlanSelection): PillAnchor | null {
     case 'object': {
       const f = objectFootprint(place, c.object)
       if (!f) return null
-      const b = footprintBox(c.object, f)
-      return place.isCounter(c.object.product) ? counterAnchor(v, b) : over(v, b)
+      if (!place.isCounter(c.object.product)) return over(v, footprintBox(c.object, f))
+      // A counter by what it covers, as its measures are (an L's pieces)
+      const bs = objectBoxes(place, c.object)
+      return counterAnchor(v, { x0: Math.min(...bs.map((b) => b.x0)), y0: Math.min(...bs.map((b) => b.y0)), x1: Math.max(...bs.map((b) => b.x1)), y1: Math.max(...bs.map((b) => b.y1)) })
     }
     case 'room':
       return over(v, box(c.room.outline))
