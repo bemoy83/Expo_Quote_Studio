@@ -1,6 +1,6 @@
 // Sizes, colours and text styles of the plan, shared by PlanView and its layers (plan/layers/).
 import type { Side } from '../../domain/types'
-import { INK_FAINT } from '../colors'
+import { INK, INK_FAINT } from '../colors'
 import { linePx, sizePx, type PlanScale } from './planScale'
 
 /** Nominal wall width in model metres, for gaps around labels (the line itself is drawn in screen pixels). */
@@ -43,9 +43,9 @@ export const beamDash = (s: PlanScale) => `${sizePx(s, 6)} ${sizePx(s, 3)}`
 export const footStroke = (s: PlanScale) => linePx(s, 0.75)
 export const footDash = (s: PlanScale) => `${sizePx(s, 2.5)} ${sizePx(s, 1.5)}`
 
-/** Chosen in the plan: a soft halo in the stand sketch band's green, a colour no line type has (Bjørn 12.11.2026). */
-export const HALO = 'var(--plan-chosen)'
-export const HALO_OPACITY = 0.5
+/** Chosen in the plan: a soft ink halo (Bjørn 12.11.2026: 5 px; the band's green was tried, ink kept for now). */
+export const HALO = INK
+export const HALO_OPACITY = 0.22
 /** A selected line: the halo 5 px wider than the line. */
 export const haloWidth = (s: PlanScale, w: number) => w + linePx(s, 5)
 /** The same halo round a shape (shelf, furniture, counter): its outline stroked this wide, half of it outside. The

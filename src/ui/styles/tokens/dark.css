@@ -36,8 +36,6 @@
     /* Tusj: samme farge, litt dypere så de ikke gløder */
     --tusj-tekstil: oklch(0.74 0.13 55);
     --tusj-trykk: oklch(0.78 0.1 158);
-    /* Valgt i planen: samme grønn, litt lysere mot mørk bunn */
-    --plan-chosen: oklch(0.74 0.15 128);
     /* Valgt i et flatt valg (FlatChoice): tydelig lysere enn hover, ellers for lav kontrast (Bjørn 8.11.2026) */
     --chosen: color-mix(in oklab, rgb(var(--panel)) 76%, rgb(var(--ink)));
   }
