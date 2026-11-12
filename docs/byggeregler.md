@@ -384,6 +384,14 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   Disken tettes bare utvendig: ingen plater og ingen bunnskinne inne i disken. Åpne er baksiden og innsiden av en L,
   endene er lukket.
   *Bjørn 12.11.2026 · `RECIPES.counter.nodes`, `innerRail` · kode `src/foga/counter.ts` · test `src/foga/counter.test.ts`*
+- **K9 Pris og plukk for tegnet disk.** En tegnet disk bygges på stedet. Den prises av kostmotoren fra det den er bygget
+  av (profiler per meter, 600, plater per m², topper og hyller) og arbeidet, likt i alle farger; 6560 på lager beholder
+  fast pris (K1). Tiden er plassholder til Bjørn har målt: 26 min i alt per hel meter (plukk, vask og transport 2 + 2 + 2,
+  montering 13, demontering 7), halvparten per halv meter (1 + 1 + 1, 6, 4) og 6 til per hjørne (4, 2), så en tegnet
+  1,0 m koster omtrent 1320 som 6560 (20–30 min på 1 m, Bjørn). Linjen i tilbudet er én per disk, «bygget på stedet
+  L × D mm», og plukkes ikke selv: plukklisten har delene under Disker, stolpene per profil i 1040, skinnene med 600 per
+  lengde, platene i diskens farge per mål og toppene og hyllene per mål.
+  *Bjørn 12.11.2026 (tid forslag) · `ITEM.counterProfile`, `counterWhole`, `counterHalf`, `counterCorner` · kode `src/calc/lines/objects.ts`, `src/cost/itemDefs.ts`, `src/foga/counter.ts`, `src/foga/engine.ts`, `src/domain/counters.ts` · test `src/calc/counter.test.ts`*
 
 ## P · Plukkliste og arbeidsordre
 

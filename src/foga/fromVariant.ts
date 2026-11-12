@@ -6,10 +6,12 @@ import { beamHooks, hookCount } from '../calc/beams/beamHooks';
 import { variantBeams } from '../calc/beams/beams';
 import type { BeamLayout } from '../calc/beams/beamSegments';
 import { production, type Production } from '../calc/textile/production';
+import { drawnCounterParts } from '../domain/counters';
 import { shelfBrackets } from '../domain/shelves/brackets';
 import type { Variant } from '../domain/types';
 import { builtModules, wallPoints, type BuiltModule } from '../domain/walls';
 import type { Rules } from '../rules/rules';
+import type { CounterParts } from './counter';
 import type { BomSizes } from './engine';
 import type { BeamSpec, FogaStructure, ShelfSpec } from './structure';
 
@@ -32,6 +34,8 @@ export interface Derived {
   curtain?: (product: string) => boolean;
   /** Shelves and their brackets (domain/shelves/brackets.ts). */
   shelves?: ShelfSpec;
+  /** Counters drawn and built on site (domain/counters.ts). */
+  counters?: CounterParts;
 }
 
 /** Takdrager lengths, post centre to post centre, mm. */
@@ -50,6 +54,7 @@ export function structureOf(d: Derived): FogaStructure {
     ...(d.wallFeet ? { wallFeet: d.wallFeet } : {}),
     ...(d.barePosts ? { barePosts: d.barePosts } : {}),
     ...(d.shelves?.boards ? { shelves: d.shelves } : {}),
+    ...(d.counters ? { counters: d.counters } : {}),
   };
 }
 
@@ -62,7 +67,7 @@ export function fromVariant(v: Variant, rules: Rules): FogaStructure {
   const lift = liftBeams(v, rules, laid, points);
   const beams = withJoins(laid, lift);
   const hooks = hookCount(beamHooks(beams, points, lift));
-  return structureOf({ mods, posts, beams, hooks, lift: { posts: lift.posts.length, hooks: lift.hooks.length, walls: lift.walls.length }, production: production(v, rules, ''), shelves: shelfBrackets(v, rules) });
+  return structureOf({ mods, posts, beams, hooks, lift: { posts: lift.posts.length, hooks: lift.hooks.length, walls: lift.walls.length }, production: production(v, rules, ''), shelves: shelfBrackets(v, rules), counters: drawnCounterParts(v) });
 }
 
 /** Sizes from the rules, mm: post = system wall height without feet (2490), cc 1000. */

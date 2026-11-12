@@ -3,11 +3,12 @@
 // anywhere on the floor; drawn from the end of a counter it makes it longer (in line) or an L (back toward where the
 // staff stand: the new piece's short side against the other's long side, Bjørn 12.11.2026). A straight 1,0 m is the
 // counter in stock and carries no pieces. Plan, 3D and the kalkyle read the build from counterBuildOf.
+import { addParts, counterParts, type CounterParts } from '../foga/counter';
 import { RECIPES } from '../foga/recipes';
-import { alongX, HALF, layoutOf, pieceLength as len, piecesFootprint, piecesOf, unit } from './counterShape';
+import { alongX, counterBuildOf, HALF, layoutOf, pieceLength as len, piecesFootprint, piecesOf, unit } from './counterShape';
 import { openSides } from './grid';
 import { nextId } from './ids';
-import { blockers, footprintBox, hits, type PlaceContext } from './objects';
+import { blockers, counterRal, footprintBox, hits, type PlaceContext } from './objects';
 import type { CounterPiece, PlacedObject, Point, Variant } from './types';
 
 const R = RECIPES.counter;
@@ -16,6 +17,13 @@ const EPS = 1e-6;
 export const JOIN_REACH = 0.3;
 /** A counter this close to a wall or another counter (m) moves in against it. */
 export const SNAP = 0.1;
+
+/** The parts of every drawn counter, picked loose (K9); none when nothing is drawn. The counter in stock is picked whole. */
+export function drawnCounterParts(v: Variant): CounterParts | undefined {
+  const drawn = v.objects.filter((o) => o.pieces);
+  if (!drawn.length) return undefined;
+  return drawn.map((o) => counterParts(counterBuildOf(o), counterRal(o))).reduce(addParts);
+}
 
 /** Plan direction of a local one, for a counter turned `rot` degrees (SVG rotate: clockwise with y down). */
 function turn(p: Point, rot: number): Point {
