@@ -81,7 +81,7 @@ describe('a chosen counter is measured (K7)', () => {
       { x0: 0.99, y0: 1.74, x1: 2.01, y1: 2.26 },
       { x0: 0.99, y0: 0.74, x1: 1.51, y1: 1.76 },
     ])!
-    expect(c).toEqual({ x: [0.99, 2.01], y: [0.74, 2.26], x0: 0.99, y1: 2.26 })
+    expect(c).toEqual({ x: [0.99, 2.01], y: [0.74, 2.26] })
   })
 })
 
