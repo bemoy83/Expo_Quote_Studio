@@ -66,27 +66,56 @@ describe('counter in 3D', () => {
     expect([size.min.x, size.max.x, size.min.z, size.max.z].map(mm)).toEqual([-260, 260, -510, 510])
   })
 
-  it('draws a drawn L the same way: every 92L and 93 in its box (K8)', () => {
-    const empty: Variant = { ...createVariant('A', { width: 4, depth: 4, type: 'row' }), walls: [] }
-    const one = drawCounter(empty, place, isCounter, { product: '6560' }, [1, 1.5], [2, 1.5])
-    if ('error' in one) throw new Error(one.error)
-    const l = drawCounter(one.v, place, isCounter, { product: '6560' }, [1.2, 1.5], [1.2, 0.5])
-    if ('error' in l) throw new Error(l.error)
-    const o = l.v.objects[0]
-    const g = build(l.v, calc(l.v, rules, catalog))
+  /** The meshes of the first counter in a sketch drawn with these strokes, and that counter. */
+  const drawn = (...strokes: [[number, number], [number, number]][]) => {
+    let v: Variant = { ...createVariant('A', { width: 4, depth: 4, type: 'row' }), walls: [] }
+    for (const [a, b] of strokes) {
+      const r = drawCounter(v, place, isCounter, { product: '6560' }, a, b)
+      if ('error' in r) throw new Error(r.error)
+      v = r.v
+    }
+    const o = v.objects[0]
+    const g = build(v, calc(v, rules, catalog))
     g.updateMatrixWorld(true)
     const ms: THREE.Mesh[] = []
     g.traverse((x) => {
       if ((x.userData as Partial<Tag>).pick?.objectId === o.id && (x as THREE.Mesh).geometry?.name.startsWith('foga-')) ms.push(x as THREE.Mesh)
     })
-    const b = counterBuildOf(o)
-    expect(ms).toHaveLength(b.profiles.length)
-    // In the counter's own coordinates: the group sits at the object's place, unturned
-    const local = (m: THREE.Mesh) => {
-      const x = new THREE.Box3().setFromObject(m)
-      return [x.min.x - o.x + 2, x.max.x - o.x + 2, x.min.y, x.max.y, x.min.z - o.y + 2, x.max.z - o.y + 2].map(mm).join(' ')
-    }
-    const posts = ms.filter((m) => /foga-9(2L|3)/.test(m.geometry.name) && mm(new THREE.Box3().setFromObject(m).max.y) === 1040 && mm(new THREE.Box3().setFromObject(m).min.y) === 0)
-    expect(posts.map(local).sort()).toEqual(b.profiles.filter((p) => p.role === 'post').map((p) => [...p.box.x, ...p.box.y, ...p.box.z].join(' ')).sort())
+    // In the counter's own coordinates (mm): the stand is centred on the origin, the counter unturned
+    const local = (m: THREE.Box3) => [m.min.x - o.x + 2, m.max.x - o.x + 2, m.min.y, m.max.y, m.min.z - o.y + 2, m.max.z - o.y + 2].map(mm)
+    return { o, ms, b: counterBuildOf(o), local, at: (m: THREE.Mesh) => local(new THREE.Box3().setFromObject(m)) }
+  }
+  const boxes = (d: ReturnType<typeof drawn>) => ({
+    drawn: d.ms.map((m) => d.at(m).join(' ')).sort(),
+    built: d.b.profiles.map((p) => [...p.box.x, ...p.box.y, ...p.box.z].join(' ')).sort(),
+  })
+
+  it('draws every profile of a drawn counter in its box: 93 in the joints, 94 across between the parts (K8)', () => {
+    const d = drawn([[1, 1.5], [3.5, 1.5]])
+    expect(d.b.length).toBe(2520)
+    expect(d.ms.filter((m) => m.geometry.name.startsWith('foga-94'))).toHaveLength(4)
+    const { drawn: got, built } = boxes(d)
+    expect(got).toEqual(built)
+    expect(d.ms.every((m) => Number.isFinite(m.quaternion.x) && Number.isFinite(m.position.x))).toBe(true)
+  })
+
+  it('turns a 93 in a joint with its closed face out and its third channel in, toward the rail across', () => {
+    const d = drawn([[1, 1.5], [2.5, 1.5]])
+    const tee = d.ms.find((m) => m.geometry.name.startsWith('foga-93') && d.at(m)[3] === 1040 && d.at(m)[5] === 260)!
+    const pts = (() => {
+      const p = tee.geometry.attributes.position
+      return Array.from({ length: p.count }, (_, i) => d.local(new THREE.Box3().setFromPoints([new THREE.Vector3().fromBufferAttribute(p, i).applyMatrix4(tee.matrixWorld)])))
+    })()
+    const xsAt = (z: number) => [...new Set(pts.filter((p) => p[4] === z).map((p) => p[0]))].sort((a, b) => a - b)
+    // The front face (z 260) is closed: only its two edges. The inner face (z 230) has the channel the rail goes in
+    expect(xsAt(260)).toEqual([230, 270])
+    expect(xsAt(230).length).toBeGreaterThan(2)
+  })
+
+  it('draws a drawn L the same way (Bjørn 12.11.2026)', () => {
+    const d = drawn([[1, 1.5], [2, 1.5]], [[1.2, 1.5], [1.2, 0.5]])
+    expect(d.ms).toHaveLength(d.b.profiles.length)
+    const { drawn: got, built } = boxes(d)
+    expect(got).toEqual(built)
   })
 })
