@@ -165,8 +165,10 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 ### Disk (bardisk 6560)
 
 - Oppskriften: `RECIPES.counter` (`foga/recipes.ts`), og hver profil, plate og topp med mål og plass i `foga/counter.ts`:
-  `counterBuild(recipe, shape)` for en kasse med mål og åpne sider (`CounterShape`), `stockCounter(size)` for disken på
-  lager (åpen bak), bygget én gang og delt av plan, 3D og kost (med tester). Reglene K1–K5 i [byggeregler.md](byggeregler.md). Profilene 92L og 93 i `foga/parts.ts`,
+  `layoutBuild(recipe, layout)` bygger en disk av deler (`CounterLayout`: deler mellom knutepunkter og åpne strekk),
+  finner knutepunktene og velger profil etter retningene de kobler (K8); `counterBuild(recipe, shape)` er en rett disk
+  (`straightLayout`, hele meter og en halv til slutt, K7), `stockCounter(size)` disken på lager (åpen bak), bygget én
+  gang og delt av plan, 3D og kost (med tester). Reglene K1–K8 i [byggeregler.md](byggeregler.md). Profilene 92L og 93 i `foga/parts.ts`,
   omrisset i `scene3d/build/profiles.ts`
 - Katalogen: `counter('6560', …)` i `catalog/defaultCatalog.ts` (`Product.counter`: utvendig mål, fotavtrykket følger);
   de gamle diskene 5410, 5415 og 5420 blir løse linjer i gamle skisser (`OLD_COUNTERS`, `retiredToLoose` i `persistence/file.ts`)
