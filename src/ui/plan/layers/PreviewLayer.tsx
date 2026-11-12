@@ -22,7 +22,7 @@ import { Offcut } from './FloorLayer'
 import { tileArea, tileAreaMeasures } from './measures'
 import { AimRect, EraseStroke, InvalidSeg, InvalidShape, MeasurePill } from './Previews'
 import { RoomHandles } from './RoomLayer'
-import type { CounterEnd } from '../../../domain/counters'
+import type { CounterEnd } from '../../../domain/counterEnds'
 
 interface Props {
   v: Variant

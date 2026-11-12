@@ -19,7 +19,7 @@ import { CostBasisPage } from './costbasis/CostBasisPage'
 import { BASIS_EVENT } from './costbasis/link'
 import { IconButton, Toast } from './controls'
 import { download } from './download'
-import { catalog, costBasis, getVersion, idx, isCounter, place, plateColor, pricing, subscribe } from './env'
+import { catalog, costBasis, getVersion, idx, place, plateColor, pricing, subscribe } from './env'
 import { hint, HINT_3D } from './hints'
 import { motifLibrary, readMotif } from './motifs'
 import { NameTip } from './NameTip'
@@ -257,7 +257,7 @@ export default function App() {
       onGridStep={tools.setGridStep}
       onFill={fillWithPen}
       onFillWalls={() => onEdit((x) => paintAllWalls(x, tools.wallRal))}
-      onFillCounters={() => onEdit((x) => paintCounters(x, isCounter, tools.counterRal))}
+      onFillCounters={() => onEdit((x) => paintCounters(x, place, tools.counterRal))}
     />
   )
   return (

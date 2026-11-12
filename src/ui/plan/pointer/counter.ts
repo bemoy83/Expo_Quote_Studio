@@ -1,7 +1,8 @@
 // The counter pen (Disker, Byggeregler K7, K8): a click on a counter chooses it, elsewhere places the counter in stock; a
 // drag draws a counter along the stroke in half metres, or on from the end of one (longer in line, an L back toward the
 // staff). The plan shows what a release stores while dragging (plan/next.ts).
-import { counterEnd, drawCounter } from '../../../domain/counters'
+import { counterEnd } from '../../../domain/counterEnds'
+import { drawCounter } from '../../../domain/counters'
 import { addObject } from '../../../domain/objects'
 import { isCounter, place } from '../../env'
 import { placedBy } from '../../tools'
@@ -20,7 +21,7 @@ export function counterDraw(c: Pick<PointerCtx, 'v' | 'brush'>, p0: P, q: P) {
   const pen = placedBy(c.brush)
   if (!pen) return null
   const click = addObject(c.v, place, pen.product, p0.x, p0.y, pen.ral)?.objects.at(-1)
-  return drawCounter(c.v, place, isCounter, pen, [p0.x, p0.y], [q.x, q.y], click ? [click.x, click.y] : undefined)
+  return drawCounter(c.v, place, pen, [p0.x, p0.y], [q.x, q.y], click ? [click.x, click.y] : undefined)
 }
 
 export const counter: DragHandlers<'counter'> = {
@@ -30,7 +31,7 @@ export const counter: DragHandlers<'counter'> = {
   up(c, d, q) {
     if (!d.moved) {
       // On a counter (its body or an end): choose it; elsewhere place the counter in stock
-      const on = counterEnd(c.v, isCounter, [d.p0.x, d.p0.y])?.id ?? c.hits.objectAt(d.p0)?.id
+      const on = counterEnd(c.v, place, [d.p0.x, d.p0.y])?.id ?? c.hits.objectAt(d.p0)?.id
       if (on && isCounter(c.v.objects.find((o) => o.id === on)!.product)) return c.clickSelect({ objectId: on })
       return c.hits.onStand(d.p0) ? objectClick(c, d.p0) : undefined
     }

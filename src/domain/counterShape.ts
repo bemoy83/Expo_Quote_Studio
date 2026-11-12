@@ -1,6 +1,6 @@
 // A drawn counter's shape (Byggeregler K7, K8): its straight pieces (`PlacedObject.pieces`, mm, front toward +y
-// unturned) as parts and open stretches, the build of every piece of it, and its footprint. The pen that draws them is
-// in counters.ts.
+// unturned) as parts and open stretches, the build of every piece of it, its footprint, and the
+// way between its own coordinates and the plan's. The pen that draws them is in counters.ts, its ends in counterEnds.ts.
 import { layoutBuild, runBreaks, stockCounter, type CounterBuild, type CounterCell, type CounterLayout } from '../foga/counter';
 import { RECIPES } from '../foga/recipes';
 import type { Footprint } from '../catalog/types';
@@ -77,3 +77,25 @@ export function piecesFootprint(o: Pick<PlacedObject, 'pieces'>, f: Footprint): 
   return { ...f, w: b.length / 1000, d: b.depth / 1000 };
 }
 
+// Between a counter's own coordinates (mm, front toward +y unturned) and the plan's (m), in quarter turns
+
+/** Plan direction of a local one, for a counter turned `rot` degrees (SVG rotate: clockwise with y down). */
+export function turn(p: Point, rot: number): Point {
+  const t = (rot * Math.PI) / 180;
+  const c = Math.round(Math.cos(t));
+  const s = Math.round(Math.sin(t));
+  return [p[0] * c - p[1] * s + 0, p[0] * s + p[1] * c + 0];
+}
+export const unturn = (p: Point, rot: number) => turn(p, -rot);
+
+/** A local point (mm) in the plan (m). */
+export const toPlan = (o: Pick<PlacedObject, 'x' | 'y' | 'rot'>, p: Point): Point => {
+  const q = turn(p, o.rot);
+  return [o.x + q[0] / 1000, o.y + q[1] / 1000];
+};
+/** A plan point (m) in a counter's own coordinates (mm). */
+export const toLocal = (o: Pick<PlacedObject, 'x' | 'y' | 'rot'>, p: Point): Point => unturn([(p[0] - o.x) * 1000, (p[1] - o.y) * 1000], o.rot);
+
+/** To whole mm in m, or whole µm in mm; `tidy` also drops −0. */
+export const snap = (n: number) => Math.round(n * 1000) / 1000;
+export const tidy = (p: Point): Point => [snap(p[0]) + 0, snap(p[1]) + 0];
