@@ -52,6 +52,9 @@ export const haloWidth = (s: PlanScale, w: number) => w + linePx(s, 5)
  *  thing itself keeps its thin edge; chosen is the halo alone, everywhere in the plan (Bjørn 12.11.2026). */
 export const outlineHalo = (s: PlanScale) => linePx(s, 5)
 
+/** A counter's outline (K7, K8), px: solid along closed sides, dashed and thinner along open ones (dash, gap). */
+export const COUNTER_EDGE = { closed: 1.2, open: 0.9, dash: 4, gap: 3 } as const
+
 /** A post: a white square with an ink edge, a little wider than the wall. */
 export const postSize = (s: PlanScale) => Math.max(WALL_MIN, wallWidth(s) + linePx(s, 1.5))
 
