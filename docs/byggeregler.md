@@ -371,8 +371,10 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   fra ytterflaten: 520, 1020, 1520, 2020. En rett disk på 1,0 m er 6560 slik den er; først over 1000 kommer nye
   knutepunkter. Skinnene er c/c − 40, altså 960 og 460, og platene og toppene 976 og 476. Podier (ingen åpne sider)
   følger de samme reglene og kan bli dypere (ikke bygget). Disker-pennen tegner disken: et klikk setter ut 6560 (forhåndsvist rundt
-  pekeren), en strek på ledig gulv tegner fra den andre enden av forhåndsvisningen til pekeren, i halve meter (minst én), låst til standens akser og ellers fritt plassert, og den
-  legger seg inntil vegg, disk eller standkant innen 10 cm. Fronten vender mot den åpne siden av standen på tvers av
+  pekeren), en strek på ledig gulv tegner fra den andre enden av forhåndsvisningen til pekeren, i halve meter og aldri kortere
+  enn forhåndsvisningen (som står stille mens trykket holdes), låst til standens akser og ellers fritt plassert, og den
+  legger seg inntil vegg, disk eller standkant innen 10 cm (fra forhåndsvisningen står starten der klikket ville satt
+  6560, uten nytt hopp). Fronten vender mot den åpne siden av standen på tvers av
   streken (den nærmeste når begge er åpne). En strek fra enden av en disk gjør den lengre når den går rett ut, og en L
   når den går bakover mot personalet (K8); et hjørne framover mot kundene går ikke.
   *Bjørn 12.11.2026 · `RECIPES.counter.module`, `face`, `joint` · kode `src/foga/counter.ts`, `src/domain/counters.ts`, `src/domain/counterShape.ts` · test `src/foga/counter.test.ts`, `src/domain/counters.test.ts`*

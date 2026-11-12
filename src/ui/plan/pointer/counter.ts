@@ -2,6 +2,7 @@
 // drag draws a counter along the stroke in half metres, or on from the end of one (longer in line, an L back toward the
 // staff). The plan shows what a release stores while dragging (plan/next.ts).
 import { drawCounter } from '../../../domain/counters'
+import { addObject } from '../../../domain/objects'
 import { isCounter, place } from '../../env'
 import { placedBy } from '../../tools'
 import { objectClick } from './object'
@@ -14,10 +15,12 @@ export function startCounter(q: P): Drag {
   return { kind: 'counter', p0: q, moved: false }
 }
 
-/** What a drag from p0 to q with the pen in hand draws. */
+/** What a drag from p0 to q with the pen in hand draws: on free floor from the counter in stock a click at p0 shows. */
 export function counterDraw(c: Pick<PointerCtx, 'v' | 'brush'>, p0: P, q: P) {
   const pen = placedBy(c.brush)
-  return pen && drawCounter(c.v, place, isCounter, pen, [p0.x, p0.y], [q.x, q.y])
+  if (!pen) return null
+  const click = addObject(c.v, place, pen.product, p0.x, p0.y, pen.ral)?.objects.at(-1)
+  return drawCounter(c.v, place, isCounter, pen, [p0.x, p0.y], [q.x, q.y], click ? [click.x, click.y] : undefined)
 }
 
 export const counter: DragHandlers<'counter'> = {

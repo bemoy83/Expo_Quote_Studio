@@ -110,9 +110,10 @@ export type CounterDraw = { v: Variant; id: string; a: Point; b: Point } | { err
 /**
  * The counter a stroke from p0 to p draws: from the end of a counter it goes on from it, anywhere else a new one. The
  * stroke runs along the counter's middle, locked to the stand's axes, in half metres. `a`, `b`: the stroke as drawn
- * (for the measure pill), m.
+ * (for the measure pill), m. `from`: the middle of the counter in stock a click at p0 places (it moves in against what
+ * is near), where a stroke on free floor starts from, and then stays: no new snap.
  */
-export function drawCounter(v: Variant, ctx: PlaceContext, isCounter: (product: string) => boolean, pen: { product: string; ral?: string }, p0: Point, p: Point): CounterDraw {
+export function drawCounter(v: Variant, ctx: PlaceContext, isCounter: (product: string) => boolean, pen: { product: string; ral?: string }, p0: Point, p: Point, from?: Point): CounterDraw {
   const dx = p[0] - p0[0];
   const dy = p[1] - p0[1];
   const horizontal = Math.abs(dx) >= Math.abs(dy);
@@ -122,10 +123,11 @@ export function drawCounter(v: Variant, ctx: PlaceContext, isCounter: (product: 
   const join = endAt(v, isCounter, p0);
   if (join) return drawOn(v, ctx, join.o, join.i, join.end, dir, strokeCc(along));
   // On free floor the pen shows the counter in stock round the pointer; a drag draws from its far end to the pointer,
-  // so the counter starts where the preview did (Bjørn 12.11.2026)
+  // so the counter starts where the preview did, and is never shorter than it (Bjørn 12.11.2026)
   const back = R.module.whole / 2000;
-  const cc = strokeCc(along + back);
-  const a: Point = [p0[0] - dir[0] * back, p0[1] - dir[1] * back];
+  const cc = Math.max(R.module.whole, strokeCc(along + back));
+  const c = from ?? p0;
+  const a: Point = [c[0] - dir[0] * back, c[1] - dir[1] * back];
   const b: Point = [a[0] + (dir[0] * cc) / 1000, a[1] + (dir[1] * cc) / 1000];
   const rot = frontRot(v, a, horizontal);
   const id = nextId(v.objects.map((o) => o.id), 'i');
@@ -136,7 +138,7 @@ export function drawCounter(v: Variant, ctx: PlaceContext, isCounter: (product: 
   const start = toLocal(base, a);
   const end = toLocal(base, b);
   const o = recentred(base, [{ a: tidy([start[0], 0]), b: tidy([end[0], 0]), back: [0, -1] }]);
-  return placed(v, ctx, o, a, b);
+  return placed(v, ctx, o, a, b, undefined, !!from);
 }
 
 /** A counter drawn on from the end of `o`'s piece `i`: in line it grows, back toward the staff an L, forward refused. */
@@ -173,14 +175,15 @@ function overlaps(ps: readonly CounterPiece[], piece: CounterPiece): boolean {
 
 /** The counter stored, moved in against a wall or counter within SNAP; refused where it has no room. `was`: the
  *  counter it replaces (drawn on from). */
-function placed(v: Variant, ctx: PlaceContext, o: PlacedObject, a: Point, b: Point, was?: PlacedObject): CounterDraw {
+function placed(v: Variant, ctx: PlaceContext, o: PlacedObject, a: Point, b: Point, was?: PlacedObject, fixed = false): CounterDraw {
   const f = ctx.footprint(o.product);
   if (!f) return { error: 'Ukjent disk', a, b };
   const fp = piecesFootprint(o, f);
   const others = blockers(v, ctx, was?.id ?? o.id);
   const box = footprintBox(o, fp);
-  // A new counter moves in against what is near; one drawn on from stays where it is
-  const s = was ? { x: 0, y: 0 } : snapShift(v, box, others);
+  // A new counter moves in against what is near; one drawn on from stays where it is, and so does one drawn from the
+  // preview of a click (`fixed`: the click has placed it already, so a drag does not make it jump)
+  const s = was || fixed ? { x: 0, y: 0 } : snapShift(v, box, others);
   const next = { ...o, x: snap(o.x + s.x), y: snap(o.y + s.y) };
   const nb = footprintBox(next, fp);
   const inside = nb.x0 > -EPS && nb.y0 > -EPS && nb.x1 < v.stand.width + EPS && nb.y1 < v.stand.depth + EPS;
