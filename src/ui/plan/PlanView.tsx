@@ -186,7 +186,8 @@ export function PlanView(p: Props) {
       : keep && !layers.some((l) => keep.has(l))
         ? PEN_DIMMED
         : 1
-  const cursor = tool !== 'select' ? 'crosshair' : roomCursor()
+  // The end of a counter under the Disker pen is a handle (K7): a hand to take hold of, closed while dragging it
+  const cursor = tool !== 'select' ? (next?.outcome.handle ? (dragging?.kind === 'counter' ? 'grabbing' : 'grab') : 'crosshair') : roomCursor()
   function roomCursor() {
     const d = dragging
     if (d?.kind === 'room') return d.mode === 'move' ? 'grabbing' : d.horizontal ? 'ns-resize' : 'ew-resize'

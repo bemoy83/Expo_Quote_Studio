@@ -23,7 +23,8 @@ import type { Motif, Point, Variant } from '../../domain/types'
 import { builtModules, doorAllowed, type BuiltModule } from '../../domain/walls'
 import { RECIPES } from '../../foga/recipes'
 import { applyDrop, type DecorDrag } from '../dnd'
-import { place, pricing, productOf, rules } from '../env'
+import { isCounter, place, pricing, productOf, rules } from '../env'
+import { counterEnd, type CounterEnd } from '../../domain/counters'
 import { placedBy, type Brush, type Tool } from '../tools'
 import { mm } from './dims'
 import { nearestEdge } from './geometry'
@@ -72,6 +73,8 @@ export interface NextOutcome {
   hint: string | null
   invalid?: Invalid
   pill?: Pill
+  /** The end of a counter the pointer is on, shown as a handle with the ways a drag can take it (K7, K8). */
+  handle?: CounterEnd
 }
 
 export interface NextTarget {
@@ -206,7 +209,7 @@ function targetOf(p: NextInput): NextTarget | null {
   // was hovering, so it stays put until the drag grows it (Bjørn 12.11.2026)
   if (dragging?.kind === 'counter') {
     if (dragging.moved && hover) return counterTarget(v, brush, dragging.p0, hover)
-    return hits.onStand(dragging.p0) ? objectTarget(v, brush, dragging.p0) : null
+    return counterHover(p, dragging.p0)
   }
 
   // Floor
@@ -241,6 +244,7 @@ function targetOf(p: NextInput): NextTarget | null {
     const e = openingEdge({ v, hits }, hover)
     return e ? doorTarget(v, e, brush.product, null, false) : null
   }
+  if (pens.counterTool) return counterHover(p, hover)
   if (pens.objectTool && hits.onStand(hover)) return objectTarget(v, brush, hover)
   if (pens.shelfTool) {
     const h = hits.faceHit(hover)
@@ -333,6 +337,22 @@ function objectTarget(v: Variant, brush: Brush | null, q: P): NextTarget | null 
     return target(key, () => line({ hint: `Ikke plass til ${productOf(product)?.name.toLowerCase() ?? 'varen'} her`, invalid }))
   }
   return target(`obj:${product}:${ral ?? ''}:${o.x},${o.y}`, () => line({ edit: () => next, hint: null }))
+}
+
+const COUNTER_END_HINT = 'Dra fra enden: utover blir den lengre, innover kortere, bakover mot personalet et hjørne'
+
+/** The counter pen on the floor (K7, K8): at a counter's end, the end as a handle and what a drag from it does; on a
+ *  counter, a click chooses it; elsewhere what a click places. */
+function counterHover(p: NextInput, q: P): NextTarget | null {
+  const { v, brush, hits } = p
+  const end = counterEnd(v, isCounter, [q.x, q.y])
+  if (end) {
+    const hint = end.in ? COUNTER_END_HINT : COUNTER_END_HINT.replace(', innover kortere', '')
+    return target(`ctr:end:${JSON.stringify(end)}`, () => line({ hint, handle: end }))
+  }
+  const on = hits.objectAt(q)
+  if (on && isCounter(on.product)) return target(`ctr:on:${on.id}`, () => line({ hint: 'Klikk for å velge disken · dra fra en ende for å endre den' }))
+  return hits.onStand(q) ? objectTarget(v, brush, q) : null
 }
 
 /** A counter drawn from p0 to q (Byggeregler K7, K8), with its outer size in the pill; hatched along the stroke where
