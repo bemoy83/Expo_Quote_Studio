@@ -14,7 +14,12 @@ const mid = (b: Box3) => new THREE.Vector3((b.x[0] + b.x[1]) / 2000, (b.y[0] + b
 /** Outline x and y as directions in the counter (K2, K3): the closed faces outward. */
 function outward(x: CounterProfile) {
   const [ox, oz] = x.out
-  if (x.role === 'post') return { u: new THREE.Vector3(-ox, 0, 0), v: new THREE.Vector3(0, 0, oz) }
+  if (x.role === 'post') {
+    // A 94 joins all four ways: any turn. A 93 has one closed face (K8): its channel side inward from it
+    if (!ox && !oz) return { u: new THREE.Vector3(1, 0, 0), v: new THREE.Vector3(0, 0, 1) }
+    if (!ox || !oz) return { u: new THREE.Vector3(-ox, 0, -oz), v: new THREE.Vector3(oz, 0, -ox) }
+    return { u: new THREE.Vector3(-ox, 0, 0), v: new THREE.Vector3(0, 0, oz) }
+  }
   return { u: new THREE.Vector3(-ox, 0, -oz), v: AXIS.y.clone() }
 }
 

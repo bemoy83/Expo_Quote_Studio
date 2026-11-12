@@ -118,6 +118,17 @@ export interface PlacedObject {
   rot: number;
   /** A counter's plates (Byggeregel K6): a wall colour, RAL. Omitted = the counter as in stock, white 9010. */
   ral?: string;
+  /** A drawn counter (Byggeregler K7, K8, domain/counters.ts): its straight pieces, in its own coordinates around
+   *  (x, y), mm, front toward +y unturned. Omitted = the product as in stock. */
+  pieces?: CounterPiece[];
+}
+
+/** One straight piece of a drawn counter: its centre line from `a` to `b` (whole metres from `a`, a half last, K7),
+ *  and the side it is open toward, where the staff stand. mm, in the counter's own coordinates. */
+export interface CounterPiece {
+  a: Point;
+  b: Point;
+  back: Point;
 }
 
 /** InFrame: fabric stretched in an aluminium frame, mounted against a wall (not in it). */

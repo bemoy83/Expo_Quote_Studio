@@ -370,8 +370,12 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   halv modul på 500 c/c tar resten (1520 = 1000 + 500). Utvendig er disken c/c + 20, fordi knutepunktet står 10 mm inn
   fra ytterflaten: 520, 1020, 1520, 2020. En rett disk på 1,0 m er 6560 slik den er; først over 1000 kommer nye
   knutepunkter. Skinnene er c/c − 40, altså 960 og 460, og platene og toppene 976 og 476. Podier (ingen åpne sider)
-  følger de samme reglene og kan bli dypere (ikke bygget). Penselen som tegner disken er ikke bygget.
-  *Bjørn 12.11.2026 · `RECIPES.counter.module`, `face`, `joint` · kode `src/foga/counter.ts` · test `src/foga/counter.test.ts`*
+  følger de samme reglene og kan bli dypere (ikke bygget). Disker-pennen tegner disken: et klikk setter ut 6560, en
+  strek tegner en disk langs streken i halve meter (minst én), låst til standens akser og ellers fritt plassert, og den
+  legger seg inntil vegg, disk eller standkant innen 10 cm. Fronten vender mot den åpne siden av standen på tvers av
+  streken (den nærmeste når begge er åpne). En strek fra enden av en disk gjør den lengre når den går rett ut, og en L
+  når den går bakover mot personalet (K8); et hjørne framover mot kundene går ikke.
+  *Bjørn 12.11.2026 · `RECIPES.counter.module`, `face`, `joint` · kode `src/foga/counter.ts`, `src/domain/counters.ts`, `src/domain/counterShape.ts` · test `src/foga/counter.test.ts`, `src/domain/counters.test.ts`*
 - **K8 Knutepunkt.** Profilen som står i et knutepunkt, velges etter retningene den kobler: to i L gir 92L, tre i T gir
   93, fire i kors gir 94. Skinnene blir like lange uansett profil; bare antall retninger profilen kan kobles i er
   forskjellig. En skjøt i en rett disk er derfor en 93 foran og en bak. En L er to disker der kortsiden på den ene står

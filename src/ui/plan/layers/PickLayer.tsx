@@ -5,13 +5,13 @@ import { faceSegment, sideOf } from '../../../domain/faces'
 import { laneAt } from '../../../domain/floor/edit'
 import { fillTilesOf } from '../../../domain/floor/rollFill'
 import { CELL } from '../../../domain/grid'
-import { footprintBox } from '../../../domain/objects'
+import { footprintBox, objectFootprint } from '../../../domain/objects'
 import { shelfBox, shelvesOf } from '../../../domain/shelves/model'
 import type { BuiltModule } from '../../../domain/walls'
 import type { ReactNode } from 'react'
 import type { Point, Variant } from '../../../domain/types'
 import { INK } from '../../colors'
-import { productOf, rules } from '../../env'
+import { place, rules } from '../../env'
 import { usePlanScale } from '../planScale'
 import { beamBody, textileOffset, textileWidth, wallWidth } from '../planStyle'
 import { selectionKey, type PlanSelection } from '../selection'
@@ -51,7 +51,7 @@ export function PickLayer({ v, mods, picked, selection }: { v: Variant; mods: Bu
     const sb = sh && shelfBox(v, rules, sh)
     if (sb) return <rect x={sb.x0} y={sb.y0} width={sb.x1 - sb.x0} height={sb.y1 - sb.y0} fill={INK} fillOpacity={PICK_OPACITY} />
     const o = picked.objectId ? v.objects.find((x) => x.id === picked.objectId) : undefined
-    const f = o && productOf(o.product)?.footprint
+    const f = o && objectFootprint(place, o)
     if (o && f) {
       const r = footprintBox(o, f)
       return <rect x={r.x0} y={r.y0} width={r.x1 - r.x0} height={r.y1 - r.y0} fill={INK} fillOpacity={PICK_OPACITY} />

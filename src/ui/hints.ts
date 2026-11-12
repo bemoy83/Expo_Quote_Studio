@@ -57,8 +57,8 @@ export function hint(tool: Tool, brush: Brush | null, carpet = false): Hint {
       return h('Klikk en tekstilvegg eller et veggfelt', 'Klikk en tekstilvegg for trykk, eller et veggfelt for foliedekor')
     case 'counter':
       return h(
-        'Klikk i planen for å sette ut en bardisk',
-        'Klikk i planen for å sette ut en bardisk i fargen du har valgt, den åpne siden bak · fyll gir alle diskene på standen denne fargen · velg en disk for å bytte farge eller rotere den',
+        'Klikk for bardisk, dra for å tegne disk',
+        'Klikk for en bardisk på 1 m, eller dra for å tegne disk i halve meter med fronten mot gangen · dra fra enden av en disk for å gjøre den lengre, eller bakover for hjørne · fyll gir alle diskene på standen fargen · velg en disk for å bytte farge eller rotere den',
       )
     case 'object':
       return h(`Klikk i planen for å sette ut ${productOf(brush?.kind === 'object' ? brush.product : '')?.name.toLowerCase() ?? 'varen'}`)

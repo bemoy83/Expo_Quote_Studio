@@ -2,7 +2,7 @@
 // (docs/pille-og-skuff.md).
 import { MoveHorizontal, MoveVertical, RotateCw } from 'lucide-react'
 import { roomName, roomSize } from '../../../domain/rooms'
-import { counterRal, setCounterRal, setObjectProduct } from '../../../domain/objects'
+import { counterRal, objectFootprint, setCounterRal, setObjectProduct } from '../../../domain/objects'
 import { updateFace } from '../../../domain/textile/free'
 import { idx, place } from '../../env'
 import { fmt, mm } from '../../format'
@@ -44,7 +44,7 @@ export function objectPill(p: PillActions, c: Of<'object'>, remove: () => void):
   const { v, onEdit } = p
   const o = c.object
   const f = idx.byArtnr.get(o.product)
-  const fp = f?.product.footprint
+  const fp = objectFootprint(place, o)
   const family = objectFamily(o.product)
   const name = family.find((x) => x.artnr === o.product)?.name ?? f?.product.name ?? 'Møbel'
   return {

@@ -2,7 +2,7 @@
 // room. For a wall (and a door, frame or decal in it) on the side away from the stand's centre, opposite its module
 // chain (arbeidstegning.md A5); on a stand edge it clears the totals and the side name outside. Pure, in model
 // metres and screen pixels, so it can be tested without a plan; SelectionPill.tsx turns it into a place on screen.
-import { footprintBox } from '../../../domain/objects'
+import { footprintBox, objectFootprint } from '../../../domain/objects'
 import { shelfBox } from '../../../domain/shelves/model'
 import { CELL, pointAlong, wallLength } from '../../../domain/grid'
 import type { FloorTile, Point, Variant, Wall } from '../../../domain/types'
@@ -92,7 +92,7 @@ export function pillAnchor(v: Variant, sel: PlanSelection): PillAnchor | null {
     case 'free':
       return over(v, box([c.textile.from, c.textile.to]))
     case 'object': {
-      const f = place.footprint(c.object.product)
+      const f = objectFootprint(place, c.object)
       return f ? over(v, footprintBox(c.object, f)) : null
     }
     case 'room':
