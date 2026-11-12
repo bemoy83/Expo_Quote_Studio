@@ -91,7 +91,7 @@ describe('counter in 3D', () => {
   })
 
   it('draws every profile of a drawn counter in its box: 93 in the joints, 94 across between the parts (K8)', () => {
-    const d = drawn([[1, 1.5], [3.5, 1.5]])
+    const d = drawn([[1.5, 1.5], [3.5, 1.5]])
     expect(d.b.length).toBe(2520)
     expect(d.ms.filter((m) => m.geometry.name.startsWith('foga-94'))).toHaveLength(4)
     const { drawn: got, built } = boxes(d)
@@ -100,7 +100,7 @@ describe('counter in 3D', () => {
   })
 
   it('turns a 93 in a joint with its closed face out and its third channel in, toward the rail across', () => {
-    const d = drawn([[1, 1.5], [2.5, 1.5]])
+    const d = drawn([[1.5, 1.5], [2.5, 1.5]])
     const tee = d.ms.find((m) => m.geometry.name.startsWith('foga-93') && d.at(m)[3] === 1040 && d.at(m)[5] === 260)!
     const pts = (() => {
       const p = tee.geometry.attributes.position
@@ -113,7 +113,7 @@ describe('counter in 3D', () => {
   })
 
   it('draws a drawn L the same way (Bjørn 12.11.2026)', () => {
-    const d = drawn([[1, 1.5], [2, 1.5]], [[1.2, 1.5], [1.2, 0.5]])
+    const d = drawn([[1.5, 1.5], [2, 1.5]], [[1.2, 1.5], [1.2, 0.5]])
     expect(d.ms).toHaveLength(d.b.profiles.length)
     const { drawn: got, built } = boxes(d)
     expect(got).toEqual(built)

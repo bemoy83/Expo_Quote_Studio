@@ -117,13 +117,17 @@ export function drawCounter(v: Variant, ctx: PlaceContext, isCounter: (product: 
   const dy = p[1] - p0[1];
   const horizontal = Math.abs(dx) >= Math.abs(dy);
   const sign = (horizontal ? dx : dy) < 0 ? -1 : 1;
-  const cc = strokeCc(Math.abs(horizontal ? dx : dy));
+  const along = Math.abs(horizontal ? dx : dy);
   const dir: Point = horizontal ? [sign, 0] : [0, sign];
   const join = endAt(v, isCounter, p0);
-  if (join) return drawOn(v, ctx, join.o, join.i, join.end, dir, cc);
-  const a = p0;
-  const b: Point = [p0[0] + (dir[0] * cc) / 1000, p0[1] + (dir[1] * cc) / 1000];
-  const rot = frontRot(v, p0, horizontal);
+  if (join) return drawOn(v, ctx, join.o, join.i, join.end, dir, strokeCc(along));
+  // On free floor the pen shows the counter in stock round the pointer; a drag draws from its far end to the pointer,
+  // so the counter starts where the preview did (Bjørn 12.11.2026)
+  const back = R.module.whole / 2000;
+  const cc = strokeCc(along + back);
+  const a: Point = [p0[0] - dir[0] * back, p0[1] - dir[1] * back];
+  const b: Point = [a[0] + (dir[0] * cc) / 1000, a[1] + (dir[1] * cc) / 1000];
+  const rot = frontRot(v, a, horizontal);
   const id = nextId(v.objects.map((o) => o.id), 'i');
   const colour = pen.ral && pen.ral !== R.stock.ral ? { ral: pen.ral } : {};
   const centre: Point = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];

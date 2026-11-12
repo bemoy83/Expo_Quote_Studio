@@ -370,8 +370,8 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   halv modul på 500 c/c tar resten (1520 = 1000 + 500). Utvendig er disken c/c + 20, fordi knutepunktet står 10 mm inn
   fra ytterflaten: 520, 1020, 1520, 2020. En rett disk på 1,0 m er 6560 slik den er; først over 1000 kommer nye
   knutepunkter. Skinnene er c/c − 40, altså 960 og 460, og platene og toppene 976 og 476. Podier (ingen åpne sider)
-  følger de samme reglene og kan bli dypere (ikke bygget). Disker-pennen tegner disken: et klikk setter ut 6560, en
-  strek tegner en disk langs streken i halve meter (minst én), låst til standens akser og ellers fritt plassert, og den
+  følger de samme reglene og kan bli dypere (ikke bygget). Disker-pennen tegner disken: et klikk setter ut 6560 (forhåndsvist rundt
+  pekeren), en strek på ledig gulv tegner fra den andre enden av forhåndsvisningen til pekeren, i halve meter (minst én), låst til standens akser og ellers fritt plassert, og den
   legger seg inntil vegg, disk eller standkant innen 10 cm. Fronten vender mot den åpne siden av standen på tvers av
   streken (den nærmeste når begge er åpne). En strek fra enden av en disk gjør den lengre når den går rett ut, og en L
   når den går bakover mot personalet (K8); et hjørne framover mot kundene går ikke.
