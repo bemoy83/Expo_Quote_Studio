@@ -5,7 +5,7 @@
 // counter in stock and carries no pieces. Plan, 3D and the kalkyle read the build from counterBuildOf.
 import { addParts, counterParts, type CounterParts } from '../foga/counter';
 import { RECIPES } from '../foga/recipes';
-import { alongX, counterBuildOf, HALF, layoutOf, pieceLength as len, piecesFootprint, piecesOf, unit } from './counterShape';
+import { alongX, counterBuildOf, HALF, layoutOf, pieceLength as len, pieceRects, piecesFootprint, piecesOf, unit } from './counterShape';
 import { openSides } from './grid';
 import { nextId } from './ids';
 import { blockers, counterRal, footprintBox, hitsAny, objectBoxes, type PlaceContext } from './objects';
@@ -121,7 +121,7 @@ export function drawCounter(v: Variant, ctx: PlaceContext, isCounter: (product: 
   const along = Math.abs(horizontal ? dx : dy);
   const dir: Point = horizontal ? [sign, 0] : [0, sign];
   const join = endAt(v, isCounter, p0);
-  if (join) return drawOn(v, ctx, join.o, join.i, join.end, dir, strokeCc(along));
+  if (join) return drawOn(v, ctx, join.o, join.i, join.end, dir, along);
   // On free floor the pen shows the counter in stock round the pointer; a drag draws from its far end to the pointer,
   // so the counter starts where the preview did, and is never shorter than it (Bjørn 12.11.2026)
   const back = R.module.whole / 2000;
@@ -142,22 +142,27 @@ export function drawCounter(v: Variant, ctx: PlaceContext, isCounter: (product: 
 }
 
 /** A counter drawn on from the end of `o`'s piece `i`: in line it grows, back toward the staff an L, forward refused. */
-function drawOn(v: Variant, ctx: PlaceContext, o: PlacedObject, i: number, end: 'a' | 'b', dir: Point, cc: number): CounterDraw {
+function drawOn(v: Variant, ctx: PlaceContext, o: PlacedObject, i: number, end: 'a' | 'b', dir: Point, along: number): CounterDraw {
+  const cc = strokeCc(along);
   const ps = [...piecesOf(o)];
   const p = ps[i];
   const d = unturn(dir, o.rot);
   const u = unit(p);
-  const out: Point = end === 'b' ? u : [-u[0], -u[1]];
+  const outOf = (x: 'a' | 'b'): Point => (x === 'b' ? u : [-u[0], -u[1]]);
+  const same = (x: Point, y: Point) => Math.abs(x[0] - y[0]) < EPS && Math.abs(x[1] - y[1]) < EPS;
+  // A half has both ends in one place: it is the end the stroke goes out from
+  if (len(p) <= R.module.half + EPS && same(d, outOf(end === 'a' ? 'b' : 'a'))) end = end === 'a' ? 'b' : 'a';
+  const out = outOf(end);
   const e = p[end];
   const a = toPlan(o, e);
-  if (Math.abs(d[0] - out[0]) < EPS && Math.abs(d[1] - out[1]) < EPS) {
+  if (same(d, out)) {
     const moved: Point = tidy([e[0] + out[0] * cc, e[1] + out[1] * cc]);
     ps[i] = end === 'b' ? { ...p, b: moved } : { ...p, a: moved };
     const b = toPlan(o, moved);
     return placed(v, ctx, recentred(o, ps), a, b, o);
   }
-  if (Math.abs(d[0] + out[0]) < EPS && Math.abs(d[1] + out[1]) < EPS) return { error: 'Dra utover fra enden for å gjøre disken lengre', a, b: a };
-  if (Math.abs(d[0] - p.back[0]) > EPS || Math.abs(d[1] - p.back[1]) > EPS) return { error: 'Et hjørne går bakover, på siden personalet står', a, b: a };
+  if (same(d, outOf(end === 'a' ? 'b' : 'a'))) return shorten(v, ctx, o, ps, i, end, Math.round((along * 1000) / R.module.half) * R.module.half);
+  if (!same(d, p.back)) return { error: 'Et hjørne går bakover, på siden personalet står', a, b: a };
   // K8: the new piece's short side against the long side of the end's last half metre, its open side inward
   const mid: Point = [e[0] - out[0] * HALF, e[1] - out[1] * HALF];
   const start: Point = tidy([mid[0] + p.back[0] * HALF, mid[1] + p.back[1] * HALF]);
@@ -165,6 +170,27 @@ function drawOn(v: Variant, ctx: PlaceContext, o: PlacedObject, i: number, end: 
   const piece: CounterPiece = { a: start, b: stop, back: [-out[0] + 0, -out[1] + 0] };
   if (overlaps(ps, piece)) return { error: 'Disken kan ikke gå over seg selv', a, b: a };
   return placed(v, ctx, recentred(o, [...ps, piece]), toPlan(o, start), toPlan(o, stop), o);
+}
+
+/** Drawn inward from a free end: shorter by the stroke in half metres (`cut`, mm; none yet leaves it as it is), down to
+ *  one half (K7). The end of an L's corner cannot: the other piece stands on it. */
+function shorten(v: Variant, ctx: PlaceContext, o: PlacedObject, ps: CounterPiece[], i: number, end: 'a' | 'b', cut: number): CounterDraw {
+  const p = ps[i];
+  const e = p[end];
+  const a = toPlan(o, e);
+  const rects = pieceRects({ pieces: ps });
+  const inside = (q: Point, j: number) => q[0] > rects[j].x0 - EPS && q[0] < rects[j].x1 + EPS && q[1] > rects[j].y0 - EPS && q[1] < rects[j].y1 + EPS;
+  const near = (q: Point) => Math.hypot(q[0] - e[0], q[1] - e[1]) < R.module.half + HALF;
+  if (ps.some((q, j) => j !== i && (inside(e, j) || near(q.a) || near(q.b)))) return { error: 'Denne enden sitter i hjørnet: gjør disken kortere fra den andre enden', a, b: a };
+  if (cut < EPS) return { v, id: o.id, a, b: a };
+  const length = Math.max(R.module.half, len(p) - cut);
+  if (Math.abs(length - len(p)) < EPS) return { error: 'Kortere enn 0,5 m blir ikke disken', a, b: a };
+  const u = unit(p);
+  const from = end === 'a' ? p.b : p.a;
+  const s = end === 'a' ? -1 : 1;
+  const moved: Point = tidy([from[0] + u[0] * s * length, from[1] + u[1] * s * length]);
+  ps[i] = end === 'b' ? { ...p, b: moved } : { ...p, a: moved };
+  return placed(v, ctx, recentred(o, ps), a, toPlan(o, moved), o);
 }
 
 /** The new piece lies on one of the counter's own parts. */

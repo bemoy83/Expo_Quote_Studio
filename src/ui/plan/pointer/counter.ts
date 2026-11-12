@@ -32,6 +32,7 @@ export const counter: DragHandlers<'counter'> = {
     const r = counterDraw(c, d.p0, q)
     if (!r) return
     if ('error' in r) return c.onToast(r.error)
+    if (r.v === c.v) return
     c.onEdit(() => r.v)
     c.onSelect({ objectId: r.id })
   },

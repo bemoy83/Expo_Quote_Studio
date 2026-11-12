@@ -120,3 +120,35 @@ describe('drawn on from the end of a counter (K7, K8)', () => {
     expect('error' in r && r.error).toMatch(/bakover/);
   });
 });
+
+describe('shorter: drawn inward from a free end (K7)', () => {
+  const one = draw(base, [1.5, 2], [2, 2]);
+  const longer = draw(one, [1.95, 2], [2.45, 2]);
+
+  it('takes off half metres, back to the counter in stock and down to a half', () => {
+    const v = draw(longer, [2.25, 2], [1.8, 2]);
+    expect(only(v).pieces).toBeUndefined();
+    expect(box(only(v))).toEqual([0.99, 1.74, 2.01, 2.26]);
+    const half = only(draw(one, [1.75, 2], [1.3, 2]));
+    expect(counterBuildOf(half).length).toBe(520);
+    expect(box(half)).toEqual([0.99, 1.74, 1.51, 2.26]);
+    // A half has nothing to take off: either way from it draws it longer
+    expect(counterBuildOf(only(draw({ ...base, objects: [half] }, [1.25, 2], [1.75, 2]))).length).toBe(1020);
+    expect(box(only(draw({ ...base, objects: [half] }, [1.25, 2], [0.75, 2])))).toEqual([0.49, 1.74, 1.51, 2.26]);
+  });
+
+  it('leaves it as it is until the stroke is near half a metre', () => {
+    const r = drawCounter(longer, ctx, isCounter, pen, [2.25, 2], [2.1, 2]);
+    expect('v' in r && r.v).toBe(longer);
+  });
+
+  it('shortens the free arm of an L, never the end the corner stands on', () => {
+    const ell = draw(one, [1.2, 2], [1.2, 1]);
+    const o = only(ell);
+    const v = draw(ell, [1.25, 0.95], [1.25, 1.5]);
+    expect(counterBuildOf(only(v))).toMatchObject({ length: 1020, depth: 1020 });
+    expect(drawCounter(ell, ctx, isCounter, pen, [1.25, 2], [1.75, 2])).toMatchObject({ error: expect.stringMatching(/hjørnet/) });
+    expect(piecesOf(o)).toHaveLength(2);
+  });
+});
+

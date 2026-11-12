@@ -376,7 +376,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   legger seg inntil vegg, disk eller standkant innen 10 cm (fra forhåndsvisningen står starten der klikket ville satt
   6560, uten nytt hopp). Fronten vender mot den åpne siden av standen på tvers av
   streken (den nærmeste når begge er åpne). En strek fra enden av en disk gjør den lengre når den går rett ut, og en L
-  når den går bakover mot personalet (K8); et hjørne framover mot kundene går ikke.
+  når den går bakover mot personalet (K8); et hjørne framover mot kundene går ikke. En strek innover fra en fri ende
+  gjør disken kortere i halve meter, ned til 0,5 m; enden et hjørne står på, kan ikke kortes. En L dekker bare bitene
+  sine: hjørnet den lar stå åpent, er gulv for andre ting.
   *Bjørn 12.11.2026 · `RECIPES.counter.module`, `face`, `joint` · kode `src/foga/counter.ts`, `src/domain/counters.ts`, `src/domain/counterShape.ts` · test `src/foga/counter.test.ts`, `src/domain/counters.test.ts`*
 - **K8 Knutepunkt.** Profilen som står i et knutepunkt, velges etter retningene den kobler: to i L gir 92L, tre i T gir
   93, fire i kors gir 94. Skinnene blir like lange uansett profil; bare antall retninger profilen kan kobles i er
