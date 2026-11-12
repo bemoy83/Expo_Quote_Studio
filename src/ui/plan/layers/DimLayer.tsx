@@ -31,7 +31,7 @@ export function DimLayer({ v, selection }: { v: Variant; selection: PlanSelectio
   )
 }
 
-/** A chosen counter: its length under it and its depth left of it, each arm of an L on its own (K7). */
+/** A chosen counter: its whole outer width under it and depth left of it (K7). */
 function CounterDims({ sc, v, selection }: { sc: PlanScale; v: Variant; selection: PlanSelection }) {
   const o = selection.objectId ? v.objects.find((x) => x.id === selection.objectId) : undefined
   const c = o && isCounter(o.product) ? counterChains(objectBoxes(place, o)) : null

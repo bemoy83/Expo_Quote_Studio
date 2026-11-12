@@ -380,7 +380,8 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   over den siste halvmeteren (stiplet omriss, piler for lengre, kortere og hjørne, hånd som peker), og et klikk på en
   disk velger den. En strek innover fra en fri ende
   gjør disken kortere i halve meter, ned til 0,5 m; enden et hjørne står på, kan ikke kortes. En L dekker bare bitene
-  sine: hjørnet den lar stå åpent, er gulv for andre ting.
+  sine: hjørnet den lar stå åpent, er gulv for andre ting. Valgt disk viser utvendig helmål i planen: bredden under
+  og dybden til venstre, en L sine to ytre lengder.
   *Bjørn 12.11.2026 · `RECIPES.counter.module`, `face`, `joint` · kode `src/foga/counter.ts`, `src/domain/counters.ts`, `src/domain/counterShape.ts` · test `src/foga/counter.test.ts`, `src/domain/counters.test.ts`*
 - **K8 Knutepunkt.** Profilen som står i et knutepunkt, velges etter retningene den kobler: to i L gir 92L, tre i T gir
   93, fire i kors gir 94. Skinnene blir like lange uansett profil; bare antall retninger profilen kan kobles i er
