@@ -10,7 +10,7 @@ import { rules } from '../../env'
 import type { Layer } from '../../tools'
 import { linePx, sizePx, usePlanScale } from '../planScale'
 import { chosenShelves, type PlanSelection } from '../selection'
-import { HALO_OPACITY } from '../planStyle'
+import { HALO_OPACITY, outlineHalo } from '../planStyle'
 import { GONE_FILL, useErasing } from './erasing'
 
 export function ShelfLayer({ v, selection, dim }: { v: Variant; selection: PlanSelection; dim: (...layers: Layer[]) => number }) {
@@ -38,8 +38,8 @@ export function ShelfLayer({ v, selection, dim }: { v: Variant; selection: PlanS
         const cy = (b.y0 + b.y1) / 2
         return (
           <g key={stack[0].id}>
-            {sel && rect({ fill: 'none', stroke: INK, strokeOpacity: HALO_OPACITY, strokeWidth: linePx(sc, 6) })}
-            {rect({ fill: SURFACE, fillOpacity: g ? GONE_FILL : undefined, stroke: INK, strokeWidth: sel ? linePx(sc, 1.8) : linePx(sc, 0.75) })}
+            {sel && rect({ fill: 'none', stroke: INK, strokeOpacity: HALO_OPACITY, strokeWidth: outlineHalo(sc) })}
+            {rect({ fill: SURFACE, fillOpacity: g ? GONE_FILL : undefined, stroke: INK, strokeWidth: linePx(sc, 0.75) })}
             {g && rect({ fill: hatch })}
             {stack.length > 1 && sc.detail === 'full' && stack[0].wallId !== wallChosen && (
               <text x={cx} y={cy + sizePx(sc, 3)} textAnchor="middle" style={{ font: `500 ${sizePx(sc, 9)}px var(--font-numeric)`, fill: INK }}>
