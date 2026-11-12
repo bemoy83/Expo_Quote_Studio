@@ -84,6 +84,8 @@ interface Props {
   textileLabels?: boolean
   /** Work order: the mållinjer of every drawn beam off the grid, so the montør can measure it out (Byggeregel T15). */
   beamMeasures?: boolean
+  /** The work order: every drawn counter with its outer size (K7). */
+  counterMeasures?: boolean
   /** Why what the pointer aims at cannot be stored (or that it is already there), for the hint line; null when it can. */
   onHint?: (text: string | null) => void
   /** What an edit would store (App's onEdit without storing it) and its calc: the plan shows it dimmed before the click.
@@ -310,7 +312,7 @@ export function PlanView(p: Props) {
       {!p.mini && <Labels W={W} D={D} sideText={sideText} totals={totals} />}
 
       {/* Dimension chains in millimetres: totals, placement rows, module chain of the selected wall */}
-      {!p.mini && <DimLayer v={v} selection={selection} />}
+      {!p.mini && <DimLayer v={v} selection={selection} counters={p.counterMeasures} off={off} />}
       {p.positions && <PosLayer v={v} res={res} dim={dim} textileLabels={p.textileLabels} />}
 
       {/* Legend and drawing head in the front aisle: always on the documents; while drawing only with Velg, when no

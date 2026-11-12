@@ -6,11 +6,12 @@ import { sizePx, usePlanScale, type PlanScale } from '../planScale'
 import { counterChains, DIM_NEAR, DIM_TOTAL, planDims, sideLine, type InnerChain } from '../dims'
 import { objectBoxes } from '../../../domain/objects'
 import { Chain } from '../DimChain'
-import { isCounter, place, rules } from '../../env'
+import { mainGroupOf } from '../../../catalog/groups'
+import { isCounter, place, productOf, rules } from '../../env'
 import { textileOffset, textileWidth, wallWidth } from '../planStyle'
 
 /** All dimension chains for the current selection. */
-export function DimLayer({ v, selection }: { v: Variant; selection: PlanSelection }) {
+export function DimLayer({ v, selection, counters, off }: { v: Variant; selection: PlanSelection; counters?: boolean; off?: (group: string) => boolean }) {
   const sc = usePlanScale()
   const dims = planDims(v, selection, sc.detail === 'compact')
   return (
@@ -26,23 +27,32 @@ export function DimLayer({ v, selection }: { v: Variant; selection: PlanSelectio
         )
       })}
       {dims.inner && <Inner sc={sc} c={dims.inner} />}
-      <CounterDims sc={sc} v={v} selection={selection} />
+      <CounterDims sc={sc} v={v} selection={selection} all={counters} off={off} />
     </g>
   )
 }
 
-/** A chosen counter: its length under it and its depth left of it, each arm of an L on its own (K7). */
-function CounterDims({ sc, v, selection }: { sc: PlanScale; v: Variant; selection: PlanSelection }) {
-  const o = selection.objectId ? v.objects.find((x) => x.id === selection.objectId) : undefined
-  const c = o && isCounter(o.product) ? counterChains(objectBoxes(place, o)) : null
-  if (!c) return null
-  const off = sizePx(sc, DIM_NEAR)
-  return (
-    <>
-      <Chain sc={sc} axis="x" at={c.y1 + off} ts={c.x.map(r3)} dir={1} />
-      <Chain sc={sc} axis="y" at={c.x0 - off} ts={c.y.map(r3)} dir={-1} />
-    </>
-  )
+/** A counter's whole outer width and depth (K7), each on the side toward the stand's middle: the chosen one in the plan, and on the work order
+ *  (`all`) every drawn one, since the montør builds those on site (Bjørn 12.11.2026). */
+function CounterDims({ sc, v, selection, all, off }: { sc: PlanScale; v: Variant; selection: PlanSelection; all?: boolean; off?: (group: string) => boolean }) {
+  // On a work order filtered to other groups, the dimmed counters get no measures
+  const shown = v.objects.filter((o) => isCounter(o.product) && (all ? !!o.pieces && !off?.(mainGroupOf(productOf(o.product)?.group)) : o.id === selection.objectId))
+  const gap = sizePx(sc, DIM_NEAR)
+  return shown.map((o) => {
+    const c = counterChains(objectBoxes(place, o))
+    if (!c) return null
+    // Each measure on the side toward the stand's middle, clear of the stand's own chains and the aisle
+    const dx: 1 | -1 = (c.x[0] + c.x[1]) / 2 < v.stand.width / 2 ? 1 : -1
+    const dy: 1 | -1 = (c.y[0] + c.y[1]) / 2 < v.stand.depth / 2 ? 1 : -1
+    return (
+      c && (
+        <g key={o.id}>
+          <Chain sc={sc} axis="x" at={dy > 0 ? c.y[1] + gap : c.y[0] - gap} ts={c.x.map(r3)} dir={dy} keep={all} />
+          <Chain sc={sc} axis="y" at={dx > 0 ? c.x[1] + gap : c.x[0] - gap} ts={c.y.map(r3)} dir={dx} keep={all} />
+        </g>
+      )
+    )
+  })
 }
 
 const r3 = (n: number) => Math.round(n * 1000) / 1000

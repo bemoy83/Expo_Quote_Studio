@@ -128,7 +128,7 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf }: 
 
           <section className="qdoc-summary">
             <div className="qdoc-plan" style={{ aspectRatio: `${v.stand.width + 2 * PLAN_MARGIN} / ${v.stand.depth + 2 * PLAN_MARGIN}` }}>
-              <PlanPreview v={v} res={res} groups={filtered ? shown : undefined} floorFull={shown.has('gulv')} positions textileLabels beamMeasures />
+              <PlanPreview v={v} res={res} groups={filtered ? shown : undefined} floorFull={shown.has('gulv')} positions textileLabels beamMeasures counterMeasures />
             </div>
             <dl>
               {DELIVERY_FIELDS.map((d) => (

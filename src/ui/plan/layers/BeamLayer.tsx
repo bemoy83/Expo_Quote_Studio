@@ -7,7 +7,7 @@ import { Chain } from '../DimChain'
 import type { InnerBeam, Point, Variant } from '../../../domain/types'
 import { INK, INK_MUTED, SURFACE } from '../../colors'
 import { linePx, sizePx, usePlanScale } from '../planScale'
-import { BEAM_FILL, beamBody, beamDash, footDash, footStroke, HALO_OPACITY, haloWidth, postSize } from '../planStyle'
+import { BEAM_FILL, beamBody, beamDash, footDash, footStroke, HALO, HALO_OPACITY, haloWidth, postSize } from '../planStyle'
 import { rules } from '../../env'
 import type { Point as P } from '../../../domain/types'
 import type { Layer } from '../../tools'
@@ -29,7 +29,7 @@ export function BeamLayer({ v, res, selection, dim, measured }: { v: Variant; re
     <g pointerEvents="none">
       <g opacity={dim('beams')}>
         {(v.innerBeams ?? []).filter((b) => b.id === selection.beamId).map((b) => (
-          <Seg key={b.id} a={b.from} b={b.to} stroke={INK} strokeOpacity={HALO_OPACITY} strokeWidth={haloWidth(sc, body)} />
+          <Seg key={b.id} a={b.from} b={b.to} stroke={HALO} strokeOpacity={HALO_OPACITY} strokeWidth={haloWidth(sc, body)} />
         ))}
         {res.beams.segments.map((s, i) => (
           <g key={i} opacity={s.inner && goneBeam && along(goneBeam, s) ? GONE : undefined}>
