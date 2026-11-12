@@ -8,7 +8,7 @@ import { stockCounter } from '../../../foga/counter'
 import { counterBuildOf } from '../../../domain/counterShape'
 import { drawCounter } from '../../../domain/counters'
 import type { Variant } from '../../../domain/types'
-import { catalog, isCounter, place, rules } from '../../env'
+import { catalog, place, rules } from '../../env'
 import { build, type Tag } from '../build'
 
 const sketch = (rot: number) => ({ ...createVariant('A', { width: 4, depth: 3, type: 'row' }), walls: [], objects: [{ id: 'i1', product: '6560', x: 2, y: 1.5, rot }] })
@@ -70,7 +70,7 @@ describe('counter in 3D', () => {
   const drawn = (...strokes: [[number, number], [number, number]][]) => {
     let v: Variant = { ...createVariant('A', { width: 4, depth: 4, type: 'row' }), walls: [] }
     for (const [a, b] of strokes) {
-      const r = drawCounter(v, place, isCounter, { product: '6560' }, a, b)
+      const r = drawCounter(v, place, { product: '6560' }, a, b)
       if ('error' in r) throw new Error(r.error)
       v = r.v
     }

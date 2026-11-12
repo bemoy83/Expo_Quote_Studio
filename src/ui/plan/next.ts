@@ -24,7 +24,7 @@ import { builtModules, doorAllowed, type BuiltModule } from '../../domain/walls'
 import { RECIPES } from '../../foga/recipes'
 import { applyDrop, type DecorDrag } from '../dnd'
 import { isCounter, place, pricing, productOf, rules } from '../env'
-import { counterEnd, type CounterEnd } from '../../domain/counters'
+import { counterEnd, type CounterEnd } from '../../domain/counterEnds'
 import { placedBy, type Brush, type Tool } from '../tools'
 import { mm } from './dims'
 import { nearestEdge } from './geometry'
@@ -345,7 +345,7 @@ const COUNTER_END_HINT = 'Dra fra enden: utover blir den lengre, innover kortere
  *  counter, a click chooses it; elsewhere what a click places. */
 function counterHover(p: NextInput, q: P): NextTarget | null {
   const { v, brush, hits } = p
-  const end = counterEnd(v, isCounter, [q.x, q.y])
+  const end = counterEnd(v, place, [q.x, q.y])
   if (end) {
     const hint = end.in ? COUNTER_END_HINT : COUNTER_END_HINT.replace(', innover kortere', '')
     return target(`ctr:end:${JSON.stringify(end)}`, () => line({ hint, handle: end }))

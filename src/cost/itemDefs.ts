@@ -3,7 +3,7 @@
 // examples here are what the app ships with. Kostmodell: docs/kostmodell.md.
 import type { ItemRecipe, PriceItem } from './items';
 import { railLengths } from '../domain/shelves/corners';
-import { profileMetres, stockCounter } from '../foga/counter';
+import { counterBuild, profileMetres, STOCK_OPEN, stockCounter } from '../foga/counter';
 import { RECIPES } from '../foga/recipes';
 import { RULES } from '../rules/rules';
 import type { Time } from './time';
@@ -80,10 +80,18 @@ const def = (id: string, name: string, unit: PriceItem['unit'], transfer: PriceI
 /** The counter in stock (6560). */
 const STOCK = RECIPES.counter.stock;
 
-/** The profiles a drawn counter is built of (K8), and its boards: a whole part and a half (c/c − 24). */
+/** The profiles a drawn counter is built of (K8), and its boards: those of a whole part and a half, as a straight
+ *  1,5 m builds them (long × short). */
 const C = RECIPES.counter;
 const COUNTER_PROFILES = [...new Set([...Object.values(C.nodes), C.rail, C.innerRail.code, C.bottomRail])];
-const COUNTER_BOARDS = [C.module.whole, C.module.half].map((cc) => [cc - 24, C.module.half - 24] as const);
+const COUNTER_BOARDS = [
+  ...new Map(
+    counterBuild(C, { length: C.module.whole + C.module.half + 2 * C.face, depth: STOCK.depth, open: STOCK_OPEN }).boards.map((b) => {
+      const size = [Math.max(b.w, b.d), Math.min(b.w, b.d)] as const;
+      return [size.join('x'), size] as const;
+    }),
+  ).values(),
+];
 const WALL_PLATE_M2 = (RECIPES.wall.plate.w * RECIPES.wall.plate.h) / 1e6;
 
 /** Takdrager 292 in every standard length: centres 1–6 m, cut 40 shorter, couplings mounted. */

@@ -4,7 +4,7 @@ import { addObject, counterRal, paintCounters, setCounterRal, type PlaceContext 
 import { createVariant } from './variant';
 import { RULES } from '../rules/rules';
 
-const ctx: PlaceContext = { rules: RULES, footprint: () => ({ w: 1.02, d: 0.52, h: 1.04 }), swings: () => false };
+const ctx: PlaceContext = { rules: RULES, footprint: () => ({ w: 1.02, d: 0.52, h: 1.04 }), swings: () => false, isCounter: (a) => a === '6560' };
 const base = createVariant('A', { width: 4, depth: 3, type: 'row' });
 
 describe('counter colour (K6)', () => {
@@ -25,7 +25,7 @@ describe('counter colour (K6)', () => {
 
   it('the bucket paints every counter and nothing else', () => {
     const v = { ...base, objects: [{ id: 'i1', product: '6560', x: 1, y: 1, rot: 0 }, { id: 'i2', product: '5276', x: 3, y: 1, rot: 0 }] };
-    const out = paintCounters(v, (a) => a === '6560', '7012');
+    const out = paintCounters(v, ctx, '7012');
     expect(out.objects.map((o) => o.ral)).toEqual(['7012', undefined]);
   });
 });

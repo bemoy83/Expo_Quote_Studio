@@ -9,7 +9,7 @@ import { doorSwing } from './doors';
 import { nextId } from './ids';
 import { faceSegment, sideOf } from './faces';
 import { RECIPES } from '../foga/recipes';
-import { pieceRects, piecesFootprint } from './counterShape';
+import { pieceRects, piecesFootprint, toPlan } from './counterShape';
 
 export interface Box {
   x0: number;
@@ -26,6 +26,8 @@ export interface PlaceContext {
   footprint: (product: string) => Footprint | undefined;
   /** Doors swing and block the swing area; curtains do not. */
   swings: (product: string) => boolean;
+  /** A counter (Byggeregel K1): drawn by the Disker pen, its ends drawn on from (K7). */
+  isCounter: (product: string) => boolean;
 }
 
 const GAP = 0.02;
@@ -42,11 +44,9 @@ export function objectBoxes(ctx: Pick<PlaceContext, 'footprint'>, o: Pick<Placed
   const f = objectFootprint(ctx, o);
   if (!f) return [];
   if (!o.pieces || o.pieces.length < 2) return [footprintBox(o, f)];
-  const t = (o.rot * Math.PI) / 180;
-  const c = Math.round(Math.cos(t));
-  const s = Math.round(Math.sin(t));
+  // Rounded, so an L's arm and the thing it meets are not a float apart
   const mm = (n: number) => Math.round(n * 1e6) / 1e6;
-  const plan = (x: number, y: number) => [mm(o.x + (x * c - y * s) / 1000), mm(o.y + (x * s + y * c) / 1000)];
+  const plan = (x: number, y: number) => toPlan(o, [x, y]).map(mm);
   return pieceRects(o).map((r) => {
     const [ax, ay] = plan(r.x0, r.y0);
     const [bx, by] = plan(r.x1, r.y1);
@@ -281,8 +281,8 @@ export function setCounterRal(v: Variant, id: string, ral: string): Variant {
 }
 
 /** The Disker pen's bucket: every counter on the stand in `ral` (K6). */
-export function paintCounters(v: Variant, isCounter: (product: string) => boolean, ral: string): Variant {
-  return { ...v, objects: v.objects.map((o) => (isCounter(o.product) ? withRal(o, ral) : o)) };
+export function paintCounters(v: Variant, ctx: Pick<PlaceContext, 'isCounter'>, ral: string): Variant {
+  return { ...v, objects: v.objects.map((o) => (ctx.isCounter(o.product) ? withRal(o, ral) : o)) };
 }
 
 function withRal(o: PlacedObject, ral: string): PlacedObject {

@@ -31,12 +31,13 @@ export function displayName({ product, variant }: ResolvedVariant): string {
   return variant.name && variant.name !== product.name ? `${product.name} ${variant.name.toLowerCase()}` : product.name;
 }
 
-/** Context for placing objects: footprints and which openings swing. */
+/** Context for placing objects: footprints, which openings swing, which products are counters. */
 export function placeContext(rules: Rules, c: Catalog): PlaceContext {
   const idx = indexCatalog(c);
   return {
     rules,
     footprint: (a) => idx.byArtnr.get(a)?.product.footprint,
     swings: (a) => idx.byArtnr.get(a)?.product.opening === 'door',
+    isCounter: (a) => !!idx.byArtnr.get(a)?.product.counter,
   };
 }

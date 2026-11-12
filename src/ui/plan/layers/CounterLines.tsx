@@ -4,7 +4,7 @@ import type { CounterBuild } from '../../../foga/counter'
 import { RECIPES } from '../../../foga/recipes'
 import { INK } from '../../colors'
 
-export function CounterPlates({ b, at, width, divide, opacity }: { b: CounterBuild; at: { x: number; y: number; rot: number }; width: number; divide: number; opacity?: number }) {
+export function CounterLines({ b, at, width, divide, opacity }: { b: CounterBuild; at: { x: number; y: number; rot: number }; width: number; divide: number; opacity?: number }) {
   const mid = (r: readonly [number, number]) => (r[0] + r[1]) / 2000
   // The rails inside the counter (no closed face), once: the top ones, drawn on through the nodes to the outer faces
   const reach = RECIPES.counter.joint + RECIPES.counter.face

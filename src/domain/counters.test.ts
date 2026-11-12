@@ -1,19 +1,19 @@
 // Drawn counters (Byggeregler K7, K8): a stroke in half metres, on from an end in line or back into an L.
 import { describe, expect, it } from 'vitest';
 import { counterBuildOf, piecesFootprint, piecesOf } from './counterShape';
-import { counterEnd, drawCounter } from './counters';
+import { counterEnd } from './counterEnds';
+import { drawCounter } from './counters';
 import { blockers, footprintBox, hitsAny, objectBoxes, type PlaceContext } from './objects';
 import { createVariant } from './variant';
 import { RULES } from '../rules/rules';
 import type { PlacedObject, Variant } from './types';
 
-const ctx: PlaceContext = { rules: RULES, footprint: () => ({ w: 1.02, d: 0.52, h: 1.04 }), swings: () => false };
+const ctx: PlaceContext = { rules: RULES, footprint: () => ({ w: 1.02, d: 0.52, h: 1.04 }), swings: () => false, isCounter: () => true };
 // A row stand, open at the front (+y), its walls taken away so the counters have the floor
 const base: Variant = { ...createVariant('A', { width: 6, depth: 5, type: 'row' }), walls: [] };
 const pen = { product: '6560' };
-const isCounter = () => true;
 const draw = (v: Variant, a: [number, number], b: [number, number]) => {
-  const r = drawCounter(v, ctx, isCounter, pen, a, b);
+  const r = drawCounter(v, ctx, pen, a, b);
   if ('error' in r) throw new Error(r.error);
   return r.v;
 };
@@ -61,8 +61,8 @@ describe('the counter pen draws in half metres (K7)', () => {
 
   it('refuses where it has no room: over another counter or past the stand edge', () => {
     const v = draw(base, [1.5, 2], [3, 2]);
-    expect(drawCounter(v, ctx, isCounter, pen, [2, 1.5], [2, 3])).toMatchObject({ error: 'Ikke plass til disken her' });
-    expect('error' in drawCounter(base, ctx, isCounter, pen, [6.3, 2], [6.8, 2])).toBe(true);
+    expect(drawCounter(v, ctx, pen, [2, 1.5], [2, 3])).toMatchObject({ error: 'Ikke plass til disken her' });
+    expect('error' in drawCounter(base, ctx, pen, [6.3, 2], [6.8, 2])).toBe(true);
   });
 });
 
@@ -75,7 +75,7 @@ describe('a drag on free floor starts where the preview of the counter in stock 
   });
 
   it('starts where the click would have placed it and does not move in again (no jump when the drag begins)', () => {
-    const r = drawCounter(base, ctx, isCounter, pen, [2, 0.35], [2.6, 0.35], [2, 0.35]);
+    const r = drawCounter(base, ctx, pen, [2, 0.35], [2.6, 0.35], [2, 0.35]);
     if ('error' in r) throw new Error(r.error);
     expect(box(only(r.v))).toEqual([1.49, 0.09, 2.51, 0.61]);
   });
@@ -116,7 +116,7 @@ describe('drawn on from the end of a counter (K7, K8)', () => {
   });
 
   it('refuses a corner toward the front, where the customers stand', () => {
-    const r = drawCounter(one, ctx, isCounter, pen, [1.2, 2], [1.2, 3]);
+    const r = drawCounter(one, ctx, pen, [1.2, 2], [1.2, 3]);
     expect('error' in r && r.error).toMatch(/bakover/);
   });
 });
@@ -138,7 +138,7 @@ describe('shorter: drawn inward from a free end (K7)', () => {
   });
 
   it('leaves it as it is until the stroke is near half a metre', () => {
-    const r = drawCounter(longer, ctx, isCounter, pen, [2.25, 2], [2.1, 2]);
+    const r = drawCounter(longer, ctx, pen, [2.25, 2], [2.1, 2]);
     expect('v' in r && r.v).toBe(longer);
   });
 
@@ -147,7 +147,7 @@ describe('shorter: drawn inward from a free end (K7)', () => {
     const o = only(ell);
     const v = draw(ell, [1.25, 0.95], [1.25, 1.5]);
     expect(counterBuildOf(only(v))).toMatchObject({ length: 1020, depth: 1020 });
-    expect(drawCounter(ell, ctx, isCounter, pen, [1.25, 2], [1.75, 2])).toMatchObject({ error: expect.stringMatching(/hjørnet/) });
+    expect(drawCounter(ell, ctx, pen, [1.25, 2], [1.75, 2])).toMatchObject({ error: expect.stringMatching(/hjørnet/) });
     expect(piecesOf(o)).toHaveLength(2);
   });
 });
@@ -158,20 +158,20 @@ describe('the end a drag works on, shown as a handle (Bjørn 12.11.2026)', () =>
   const r = (b: { x0: number; y0: number; x1: number; y1: number }) => [b.x0, b.y0, b.x1, b.y1].map((n) => Math.round(n * 1000) / 1000);
 
   it('is the last half metre, out longer, in shorter, back a corner', () => {
-    const e = counterEnd(longer, isCounter, [2.4, 2])!;
+    const e = counterEnd(longer, ctx, [2.4, 2])!;
     expect(r(e.box)).toEqual([2.01, 1.74, 2.51, 2.26]);
     expect(e.out).toEqual([[1, 0]]);
     expect(e.in).toEqual([-1, 0]);
     expect(e.back).toEqual([0, -1]);
-    expect(counterEnd(longer, isCounter, [1.75, 2])).toBeNull();
+    expect(counterEnd(longer, ctx, [1.75, 2])).toBeNull();
   });
 
   it('cannot go shorter on a half, which grows both ways, or at the end a corner stands on', () => {
     const half = { ...base, objects: [only(draw(one, [1.75, 2], [1.3, 2]))] };
-    expect(counterEnd(half, isCounter, [1.25, 2])).toMatchObject({ in: null, out: [[-1, 0], [1, 0]] });
+    expect(counterEnd(half, ctx, [1.25, 2])).toMatchObject({ in: null, out: [[-1, 0], [1, 0]] });
     const ell = draw(one, [1.2, 2], [1.2, 1]);
-    expect(counterEnd(ell, isCounter, [1.25, 2])?.in).toBeNull();
-    expect(counterEnd(ell, isCounter, [1.25, 0.95])?.in).not.toBeNull();
+    expect(counterEnd(ell, ctx, [1.25, 2])?.in).toBeNull();
+    expect(counterEnd(ell, ctx, [1.25, 0.95])?.in).not.toBeNull();
   });
 });
 

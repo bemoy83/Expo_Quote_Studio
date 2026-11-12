@@ -103,6 +103,6 @@ export const wallPlates = () => catalog.products.find((p) => p.id === catalog.sy
 
 /** Counters (Disker, Byggeregler K1–K6): products built of Foga profiles, placed like furniture. */
 export const counterProducts = () => catalog.products.filter((p) => p.counter)
-export const isCounter = (artnr: string) => !!idx.byArtnr.get(artnr)?.product.counter
+export const isCounter = (artnr: string) => place.isCounter(artnr)
 
 export const openingProducts = () => catalog.products.filter((p) => p.opening)
