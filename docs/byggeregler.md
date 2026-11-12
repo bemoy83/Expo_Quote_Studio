@@ -390,7 +390,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   mot langsiden på den andre: innerhjørnet kobler tre retninger og blir 93. Hver del mellom fire knutepunkter har sin
   topp og hylle; skinnen mellom to deler er 94 og bærer topp og hylle fra begge sider.
   Disken tettes bare utvendig: ingen plater og ingen bunnskinne inne i disken. Åpne er baksiden og innsiden av en L,
-  endene er lukket.
+  endene er lukket. I planen viser en tynn delelinje på tvers av disken hvor to deler møtes, over 94-skinnen mellom dem.
   *Bjørn 12.11.2026 · `RECIPES.counter.nodes`, `innerRail` · kode `src/foga/counter.ts` · test `src/foga/counter.test.ts`*
 - **K9 Pris og plukk for tegnet disk.** En tegnet disk bygges på stedet. Den prises av kostmotoren fra det den er bygget
   av (profiler per meter, 600, plater per m², topper og hyller) og arbeidet, likt i alle farger; 6560 på lager beholder

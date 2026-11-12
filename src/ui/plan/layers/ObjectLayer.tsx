@@ -57,7 +57,7 @@ export function ObjectLayer(props: {
                 {each({ fill: col, fillOpacity: g ? GONE_FILL : undefined })}
                 {g && each({ fill: hatch })}
               </g>
-              <CounterPlates b={counterBuildOf(o)} at={o} width={linePx(sc, 1.2)} opacity={op} />
+              <CounterPlates b={counterBuildOf(o)} at={o} width={linePx(sc, 1.2)} divide={linePx(sc, 0.75)} opacity={op} />
             </g>
           )
         }
@@ -72,7 +72,7 @@ export function ObjectLayer(props: {
             {sel && shape('none', { ...halo, strokeOpacity: HALO_OPACITY })}
             {shape(col, { stroke, strokeWidth: sw, opacity: op, fillOpacity: g ? GONE_FILL : undefined, style: { cursor: tool === 'select' && f.round ? 'move' : undefined } })}
             {g && shape(hatch, {})}
-            {counter && <CounterPlates b={counterBuildOf(o, counter)} at={o} width={linePx(sc, 1.2)} opacity={op} />}
+            {counter && <CounterPlates b={counterBuildOf(o, counter)} at={o} width={linePx(sc, 1.2)} divide={linePx(sc, 0.75)} opacity={op} />}
           </g>
         )
       })}
