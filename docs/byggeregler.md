@@ -342,7 +342,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   I tilbudet er den én linje per stk til fast pris (1320 kr); kalkylen regner kost og tid fra det den er bygget av
   (K2–K5). Den plasseres og kolliderer som et møbel, og fronten er den lukkede langsiden. Den erstatter de oppdiktede
   diskene 5410, 5415 og 5420 (en gammel skisse beholder dem som løse linjer). Kunder bestiller også andre lengder og
-  hjørner som må plassbygges: en pensel som tegner disk i planen, med de skjøtene det trenger, er ikke bygget (egen PR).
+  hjørner som må plassbygges (K7, K8).
   *Bjørn 11.11.2026 · `RECIPES.counter.stock` · kode `src/foga/recipes.ts`, `src/catalog/defaultCatalog.ts`, `src/calc/lines/objects.ts`, `src/cost/itemDefs.ts` · test `src/foga/counter.test.ts`, `src/calc/counter.test.ts`*
 - **K2 Hjørnestolpe.** 92L (873 050 22, 30 × 30, kanal på de to innersidene) i hvert hjørne, hele høyden 1040 mm, med de
   lukkede sidene ut. Disken står rett på gulvet uten justeringsfot, så disker kan settes helt inntil hverandre. Trengs
@@ -366,6 +366,20 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   hvilke farger montøren skal ha med. Fargen følger ikke veggenes standardfarge, og spannet på veggene farger ikke
   diskene: Disker har sitt eget spann.
   *Bjørn 11.11.2026 · `RECIPES.counter.stock.ral` · kode `src/domain/objects.ts`, `src/calc/lines/objects.ts`, `src/cost/itemDefs.ts` · test `src/calc/counter.test.ts`, `src/domain/objects.test.ts`*
+- **K7 Tegnet disk.** En disk som tegnes, er 520 dyp og går i lengder på 0,5 m: knutepunktene står 1000 c/c, og en
+  halv modul på 500 c/c tar resten (1520 = 1000 + 500). Utvendig er disken c/c + 20, fordi knutepunktet står 10 mm inn
+  fra ytterflaten: 520, 1020, 1520, 2020. En rett disk på 1,0 m er 6560 slik den er; først over 1000 kommer nye
+  knutepunkter. Skinnene er c/c − 40, altså 960 og 460, og platene og toppene 976 og 476. Podier (ingen åpne sider)
+  følger de samme reglene og kan bli dypere (ikke bygget). Penselen som tegner disken er ikke bygget.
+  *Bjørn 12.11.2026 · `RECIPES.counter.module`, `face`, `joint` · kode `src/foga/counter.ts` · test `src/foga/counter.test.ts`*
+- **K8 Knutepunkt.** Profilen som står i et knutepunkt, velges etter retningene den kobler: to i L gir 92L, tre i T gir
+  93, fire i kors gir 94. Skinnene blir like lange uansett profil; bare antall retninger profilen kan kobles i er
+  forskjellig. En skjøt i en rett disk er derfor en 93 foran og en bak. En L er to disker der kortsiden på den ene står
+  mot langsiden på den andre: innerhjørnet kobler tre retninger og blir 93. Hver del mellom fire knutepunkter har sin
+  topp og hylle; skinnen mellom to deler er 94 og bærer topp og hylle fra begge sider.
+  Disken tettes bare utvendig: ingen plater og ingen bunnskinne inne i disken. Åpne er baksiden og innsiden av en L,
+  endene er lukket.
+  *Bjørn 12.11.2026 · `RECIPES.counter.nodes`, `innerRail` · kode `src/foga/counter.ts` · test `src/foga/counter.test.ts`*
 
 ## P · Plukkliste og arbeidsordre
 

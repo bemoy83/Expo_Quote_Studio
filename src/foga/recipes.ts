@@ -152,8 +152,18 @@ export interface ShelfRecipe {
  * that draws counters of any length and with corners is a later step (K1), with the joints it needs. mm.
  */
 export interface CounterRecipe {
-  post: string;
+  /** The profile standing in a node, by the directions it joins (K8): two at a right angle, three, four. */
+  nodes: { corner: string; tee: string; cross: string };
   rail: string;
+  /** A rail inside the counter, between two parts: a 94, carrying a top and a shelf on both sides, no plate (K8). Its
+   *  section across, mm. */
+  innerRail: { code: string; size: number };
+  /** Nodes c/c along a run: whole metres, and a half to make up the length (K7), mm. */
+  module: { whole: number; half: number };
+  /** From a node to the outer face where it joins nothing, and to the end of a rail it joins (K8), mm: outer size is
+   *  c/c + 2 × face, a rail c/c − 2 × joint, whatever profile stands in the node. */
+  face: number;
+  joint: number;
   bottomRail: string;
   coupling: { code: string; perEnd: number };
   plate: string;
@@ -245,8 +255,12 @@ export const RECIPES: Recipes = {
   // Bjørn 11.11.2026 (STL «6560 barinformasjonsdisk»): 92L corners, 93 top and middle, 92 at the bottom, 600 in the
   // rail ends, wall plate 3 mm, Fibraplast 6 mm top and shelf, straight on the floor (no feet)
   counter: {
-    post: '92L',
+    nodes: { corner: '92L', tee: '93', cross: '94' },
     rail: '93',
+    innerRail: { code: '94', size: 40 },
+    module: { whole: 1000, half: 500 },
+    face: 10,
+    joint: 20,
     bottomRail: '92',
     coupling: { code: '600', perEnd: 1 },
     plate: 'HDF',
