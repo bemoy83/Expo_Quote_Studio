@@ -377,8 +377,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   6560, uten nytt hopp). Fronten vender mot den åpne siden av standen på tvers av
   streken (den nærmeste når begge er åpne). En strek fra enden av en disk gjør den lengre når den går rett ut, og en L
   når den går bakover mot personalet (K8); et hjørne framover mot kundene går ikke. Pennen viser enden som et grep når den står
-  over den siste halvmeteren (stiplet omriss, piler for lengre, kortere og hjørne, hånd som peker), og et klikk på en
-  disk velger den. En strek innover fra en fri ende
+  over den siste halvmeteren (den halve meteren tonet, en rund knapp med en trekant for hver vei et drag kan gå: lengre
+  rett utenfor endeflaten, kortere på den indre kanten, hjørne utenfor baksiden; en vei som ikke går, for eksempel mot en
+  vegg eller fra enden et hjørne står på, får ingen knapp; hånd som peker), og et klikk på en disk velger den. En strek innover fra en fri ende
   gjør disken kortere i halve meter, ned til 0,5 m; enden et hjørne står på, kan ikke kortes. En L dekker bare bitene
   sine: hjørnet den lar stå åpent, er gulv for andre ting. Valgt disk viser utvendig helmål i planen: bredde og dybde på
   siden mot midten av standen, en L sine to ytre lengder. Arbeidsordren viser helmålene på alle tegnede disker, siden de bygges
@@ -390,7 +391,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   mot langsiden på den andre: innerhjørnet kobler tre retninger og blir 93. Hver del mellom fire knutepunkter har sin
   topp og hylle; skinnen mellom to deler er 94 og bærer topp og hylle fra begge sider.
   Disken tettes bare utvendig: ingen plater og ingen bunnskinne inne i disken. Åpne er baksiden og innsiden av en L,
-  endene er lukket. I planen viser en tynn delelinje på tvers av disken hvor to deler møtes, over 94-skinnen mellom dem.
+  endene er lukket. I planen har disken ett omriss rundt hele seg, hel strek der den er lukket og stiplet, litt tynnere,
+  der den er åpen; stiplet på en disk betyr bare åpen side. Begge strekene ligger innenfor ytterkanten. En tynn delelinje
+  går på tvers av disken der to deler møtes, over 94-skinnen mellom dem.
   *Bjørn 12.11.2026 · `RECIPES.counter.nodes`, `innerRail` · kode `src/foga/counter.ts` · test `src/foga/counter.test.ts`*
 - **K9 Pris og plukk for tegnet disk.** En tegnet disk bygges på stedet. Den prises av kostmotoren fra det den er bygget
   av (profiler per meter, 600, plater per m², topper og hyller) og arbeidet, likt i alle farger; 6560 på lager beholder

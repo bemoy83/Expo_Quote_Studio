@@ -74,7 +74,13 @@ export interface NextOutcome {
   invalid?: Invalid
   pill?: Pill
   /** The end of a counter the pointer is on, shown as a handle with the ways a drag can take it (K7, K8). */
-  handle?: CounterEnd
+  handle?: CounterHandleView
+}
+
+/** A counter's end as a handle (K7, K8), and which of its ways a drag can go: half a metre that way draws (no error). */
+export interface CounterHandleView {
+  end: CounterEnd
+  ok: { out: boolean[]; in: boolean; back: boolean }
 }
 
 export interface NextTarget {
@@ -339,17 +345,23 @@ function objectTarget(v: Variant, brush: Brush | null, q: P): NextTarget | null 
   return target(`obj:${product}:${ral ?? ''}:${o.x},${o.y}`, () => line({ edit: () => next, hint: null }))
 }
 
-const COUNTER_END_HINT = 'Dra fra enden: utover blir den lengre, innover kortere, bakover mot personalet et hjørne'
-
 /** The counter pen on the floor (K7, K8): at a counter's end, the end as a handle and what a drag from it does; on a
  *  counter, a click chooses it; elsewhere what a click places. */
 function counterHover(p: NextInput, q: P): NextTarget | null {
   const { v, brush, hits } = p
   const end = counterEnd(v, place, [q.x, q.y])
-  if (end) {
-    const hint = end.in ? COUNTER_END_HINT : COUNTER_END_HINT.replace(', innover kortere', '')
-    return target(`ctr:end:${JSON.stringify(end)}`, () => line({ hint, handle: end }))
-  }
+  if (end)
+    return target(`ctr:end:${JSON.stringify(end)}`, () => {
+      // Each way a drag can go, tried half a metre from the middle of the end, as a release there would draw it
+      const c: P = { x: (end.box.x0 + end.box.x1) / 2, y: (end.box.y0 + end.box.y1) / 2 }
+      const goes = (d: Point) => {
+        const r = counterDraw({ v, brush }, c, { x: c.x + d[0] * 0.5, y: c.y + d[1] * 0.5 })
+        return !!r && !('error' in r)
+      }
+      const ok = { out: end.out.map(goes), in: !!end.in && goes(end.in), back: goes(end.back) }
+      const any = ok.out.some(Boolean) || ok.in || ok.back
+      return line({ hint: any ? 'Dra fra enden for å endre disken' : 'Denne enden kan ikke gå videre', handle: { end, ok } })
+    })
   const on = hits.objectAt(q)
   if (on && isCounter(on.product)) return target(`ctr:on:${on.id}`, () => line({ hint: 'Klikk for å velge disken · dra fra en ende for å endre den' }))
   return hits.onStand(q) ? objectTarget(v, brush, q) : null
