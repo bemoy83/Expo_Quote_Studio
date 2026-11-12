@@ -4,6 +4,7 @@
 // the price stays the same in every colour (Bjørn 11.11.2026); the line says which colours, for the montør.
 import { counterBuildOf, layoutOf, piecesOf } from '../../domain/counterShape';
 import { profileMetres } from '../../foga/counter';
+import { RECIPES } from '../../foga/recipes';
 import type { Use } from '../../pricing/model';
 import { counterRal } from '../../domain/objects';
 import type { PlacedObject } from '../../domain/types';
@@ -42,6 +43,9 @@ function drawnCounterLine(c: CalcContext, o: PlacedObject): CalcLine {
   return c.line(o.product, 1, { meta, strategy: 'sum', foga: true }, drawnCounterUses(o), (hit?.variant.price ?? 0) * metres);
 }
 
+/** A part this long (mm, along) or shorter is a half (K7). */
+const HALF_PART = RECIPES.counter.module.half;
+
 /** Metres of a drawn counter's parts: 1 per whole, 0,5 per half (K7). */
 export const counterMetres = (o: PlacedObject) => counterCells(o).reduce((s, n) => s + n / 1000, 0);
 const counterCells = (o: PlacedObject) => layoutOf(o.pieces ?? []).cells.map((x) => Math.max(x.x[1] - x.x[0], x.z[1] - x.z[0]));
@@ -57,8 +61,8 @@ export function drawnCounterUses(o: PlacedObject): Use[] {
     { id: ITEM.counterCoupling, qty: b.couplings },
     { id: ITEM.counterPlateM2, qty: r3(b.plates.reduce((s, p) => s + p.w * p.h, 0) / 1e6) },
     ...[...boards].map(([k, n]) => ({ id: ITEM.counterBoard(+k.split('|')[0], +k.split('|')[1]), qty: n })),
-    { id: ITEM.counterWhole, qty: cells.filter((n) => n > 750).length },
-    { id: ITEM.counterHalf, qty: cells.filter((n) => n <= 750).length },
+    { id: ITEM.counterWhole, qty: cells.filter((n) => n > HALF_PART).length },
+    { id: ITEM.counterHalf, qty: cells.filter((n) => n <= HALF_PART).length },
     { id: ITEM.counterCorner, qty: piecesOf(o).length - 1 },
   ].filter((u) => u.qty > 0);
 }

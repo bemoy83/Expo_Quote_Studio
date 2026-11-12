@@ -268,7 +268,6 @@ export function counterBuild(r: CounterRecipe, shape: CounterShape): CounterBuil
   return layoutBuild(r, straightLayout(r, shape));
 }
 
-
 const built = new Map<string, CounterBuild>();
 /** The counter of a catalog product (`Product.counter`): the stock shape, open at the back, built once and shared by the
  *  plan, 3D and the cost. */
