@@ -10,7 +10,7 @@ import { rules } from '../../env'
 import type { Layer } from '../../tools'
 import { linePx, sizePx, usePlanScale } from '../planScale'
 import { chosenShelves, type PlanSelection } from '../selection'
-import { HALO_OPACITY, outlineHalo } from '../planStyle'
+import { HALO, HALO_OPACITY, outlineHalo } from '../planStyle'
 import { GONE_FILL, useErasing } from './erasing'
 
 export function ShelfLayer({ v, selection, dim }: { v: Variant; selection: PlanSelection; dim: (...layers: Layer[]) => number }) {
@@ -38,7 +38,7 @@ export function ShelfLayer({ v, selection, dim }: { v: Variant; selection: PlanS
         const cy = (b.y0 + b.y1) / 2
         return (
           <g key={stack[0].id}>
-            {sel && rect({ fill: 'none', stroke: INK, strokeOpacity: HALO_OPACITY, strokeWidth: outlineHalo(sc) })}
+            {sel && rect({ fill: 'none', stroke: HALO, strokeOpacity: HALO_OPACITY, strokeWidth: outlineHalo(sc) })}
             {rect({ fill: SURFACE, fillOpacity: g ? GONE_FILL : undefined, stroke: INK, strokeWidth: linePx(sc, 0.75) })}
             {g && rect({ fill: hatch })}
             {stack.length > 1 && sc.detail === 'full' && stack[0].wallId !== wallChosen && (

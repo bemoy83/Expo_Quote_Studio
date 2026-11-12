@@ -56,6 +56,8 @@
      Each also has its own pattern in the plan, so a black-and-white print still tells them apart. */
   --tusj-tekstil:oklch(0.81 0.12 55);
   --tusj-trykk:oklch(0.86 0.09 158);
+  /* Chosen in the plan: the halo, in the stand sketch band's green (eple 128) so it is no line type (Bjørn 12.11.2026) */
+  --plan-chosen:oklch(0.66 0.15 128);
 
   /* Bars (Resultat) */
   --bar-plan:oklch(0.79 0.012 90);

@@ -43,12 +43,14 @@ export const beamDash = (s: PlanScale) => `${sizePx(s, 6)} ${sizePx(s, 3)}`
 export const footStroke = (s: PlanScale) => linePx(s, 0.75)
 export const footDash = (s: PlanScale) => `${sizePx(s, 2.5)} ${sizePx(s, 1.5)}`
 
-/** A selected line: a soft ink halo 8 px wider than the line. */
-export const haloWidth = (s: PlanScale, w: number) => w + linePx(s, 8)
-export const HALO_OPACITY = 0.22
+/** Chosen in the plan: a soft halo in the stand sketch band's green, a colour no line type has (Bjørn 12.11.2026). */
+export const HALO = 'var(--plan-chosen)'
+export const HALO_OPACITY = 0.5
+/** A selected line: the halo 5 px wider than the line. */
+export const haloWidth = (s: PlanScale, w: number) => w + linePx(s, 5)
 /** The same halo round a shape (shelf, furniture, counter): its outline stroked this wide, half of it outside. The
  *  thing itself keeps its thin edge; chosen is the halo alone, everywhere in the plan (Bjørn 12.11.2026). */
-export const outlineHalo = (s: PlanScale) => linePx(s, 8)
+export const outlineHalo = (s: PlanScale) => linePx(s, 5)
 
 /** A post: a white square with an ink edge, a little wider than the wall. */
 export const postSize = (s: PlanScale) => Math.max(WALL_MIN, wallWidth(s) + linePx(s, 1.5))

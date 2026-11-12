@@ -8,14 +8,14 @@ import { plateColor, productOf, rules } from '../../env'
 import { doorInset } from '../../../rules/rules'
 import type { Layer } from '../../tools'
 import type { PlanSelection } from '../selection'
-import { headerCore, headerWidth, wallCore, wallWidth } from '../planStyle'
+import { HALO, HALO_OPACITY, haloWidth, headerCore, headerWidth, wallCore, wallWidth } from '../planStyle'
 import { linePx, usePlanScale } from '../planScale'
 import { Seg } from './Seg'
 import { GONE, useErasing } from './erasing'
 
 /**
  * Walls and openings. A wall is an ink line with its plate's RAL in the core, so a white and a blue wall differ without
- * a note; a selected wall gets a soft ink halo.
+ * a note; a selected wall gets the plan's chosen halo.
  */
 export function WallLayer({ v, mods, selection, dim }: { v: Variant; mods: BuiltModule[]; selection: PlanSelection; dim: (...layers: Layer[]) => number }) {
   const { gone, hatch } = useErasing()
@@ -34,7 +34,7 @@ export function WallLayer({ v, mods, selection, dim }: { v: Variant; mods: Built
           const g = goneWall(m)
           return (
             <g key={m.key} opacity={g ? GONE : undefined}>
-              {sel && <Seg a={m.a} b={m.b} stroke={INK} strokeOpacity={0.22} strokeWidth={ww + linePx(sc, 8)} />}
+              {sel && <Seg a={m.a} b={m.b} stroke={HALO} strokeOpacity={HALO_OPACITY} strokeWidth={haloWidth(sc, ww)} />}
               <Seg a={m.a} b={m.b} stroke={INK} strokeWidth={ww} />
               <Seg a={m.a} b={m.b} stroke={plateColor(m.plate)} strokeWidth={wallCore(sc)} />
             </g>
@@ -81,7 +81,7 @@ export function OpeningMark({ v, m, selected }: { v: Variant; m: BuiltModule; se
   const sc = usePlanScale()
   return (
     <g>
-      {selected && <Seg a={a} b={b} stroke={INK} strokeOpacity={0.22} strokeWidth={wallWidth(sc) + linePx(sc, 8)} />}
+      {selected && <Seg a={a} b={b} stroke={HALO} strokeOpacity={HALO_OPACITY} strokeWidth={haloWidth(sc, wallWidth(sc))} />}
       {/* Header panel over the opening: a thin line in its plate's RAL */}
       <Seg a={a} b={b} stroke={INK} strokeWidth={headerWidth(sc)} />
       <Seg a={a} b={b} stroke={plateColor(m.plate)} strokeWidth={headerCore(sc)} />

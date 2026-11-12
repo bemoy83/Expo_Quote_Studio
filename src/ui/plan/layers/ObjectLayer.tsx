@@ -8,7 +8,7 @@ import { idx, place, plateColor, productOf } from '../../env'
 import { linePx, usePlanScale } from '../planScale'
 import type { Layer, Tool } from '../../tools'
 import type { PlanSelection } from '../selection'
-import { DIMMED, HALO_OPACITY, outlineHalo } from '../planStyle'
+import { DIMMED, HALO, HALO_OPACITY, outlineHalo } from '../planStyle'
 import { CounterPlates } from './CounterPlates'
 import { GONE_FILL, useErasing } from './erasing'
 
@@ -41,7 +41,7 @@ export function ObjectLayer(props: {
         // A thin ink edge round the furniture's own colour (Bjørn 04.11.2026), red and heavier when colliding; chosen is
         // the plan's halo round it, as for walls, takdrager, textile and shelves (Bjørn 12.11.2026)
         const sw = isBad ? Math.max(0.06, linePx(sc, 2)) : linePx(sc, 0.75)
-        const halo = { fill: 'none', stroke: INK, strokeWidth: outlineHalo(sc) }
+        const halo = { fill: 'none', stroke: HALO, strokeWidth: outlineHalo(sc) }
         const g = gone('object', o.id)
         const op = off(mainGroupOf(productOf(o.product)?.group)) ? DIMMED : undefined
         // A drawn counter (K7): each piece, stroked first and filled over, so only its outline shows

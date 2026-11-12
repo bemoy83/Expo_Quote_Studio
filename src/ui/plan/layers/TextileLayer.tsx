@@ -16,6 +16,7 @@ import { linePx, sizePx, usePlanScale, type PlanScale } from '../planScale'
 import {
   footDash,
   footStroke,
+  HALO,
   HALO_OPACITY,
   haloWidth,
   postSize,
@@ -61,7 +62,7 @@ export function TextileLayer({ v, res, selection, dim }: { v: Variant; res: Calc
                 const d = (h ? f.foot.across : f.foot.along) / 1000
                 return <rect key={i} x={x - w / 2} y={y - d / 2} width={w} height={d} fill="none" stroke={INK_MUTED} strokeWidth={footStroke(sc)} strokeDasharray={footDash(sc)} />
               })}
-              {sel && <Seg a={t.from} b={t.to} stroke={INK} strokeOpacity={HALO_OPACITY} strokeWidth={haloWidth(sc, tw)} />}
+              {sel && <Seg a={t.from} b={t.to} stroke={HALO} strokeOpacity={HALO_OPACITY} strokeWidth={haloWidth(sc, tw)} />}
               <TextileStroke a={t.from} b={t.to} sc={sc} />
               {sel && selection.freeFace && <FaceMark t={t} face={selection.freeFace} sc={sc} />}
               {g && <Seg a={t.from} b={t.to} stroke={hatch} strokeWidth={tw} />}
@@ -88,7 +89,7 @@ export function TextileLayer({ v, res, selection, dim }: { v: Variant; res: Calc
           return (
             <g key={t.id}>
               <g opacity={g ? GONE : undefined}>
-                {sel && <Seg a={a} b={b} stroke={INK} strokeOpacity={HALO_OPACITY} strokeWidth={haloWidth(sc, tw)} />}
+                {sel && <Seg a={a} b={b} stroke={HALO} strokeOpacity={HALO_OPACITY} strokeWidth={haloWidth(sc, tw)} />}
                 <TextileStroke a={a} b={b} sc={sc} />
               </g>
               {(g || gone('graphic', `${t.id}.motif`)) && <Seg a={a} b={b} stroke={hatch} strokeWidth={tw} />}
@@ -110,7 +111,7 @@ export function TextileLayer({ v, res, selection, dim }: { v: Variant; res: Calc
           return (
             <g key={f.id}>
               <g opacity={g ? GONE : undefined}>
-                {sel && <Seg a={a} b={b} stroke={INK} strokeOpacity={HALO_OPACITY} strokeWidth={haloWidth(sc, band)} />}
+                {sel && <Seg a={a} b={b} stroke={HALO} strokeOpacity={HALO_OPACITY} strokeWidth={haloWidth(sc, band)} />}
                 <Seg a={a} b={b} stroke={`url(#${raster})`} strokeWidth={band} />
               </g>
               {g && <Seg a={a} b={b} stroke={hatch} strokeWidth={linePx(sc, 4)} />}
