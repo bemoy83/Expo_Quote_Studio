@@ -1,5 +1,6 @@
 // What is to be built, in Foga terms and mm. Neutral: no plan geometry, no prices, no loose goods.
 // fromVariant.ts derives it from the stand sketch; the engine turns it into a parts list.
+import type { CounterParts } from './counter';
 
 /** One wall module between two posts (cc 1000). */
 export interface ModuleSpec {
@@ -66,6 +67,9 @@ export interface FogaStructure {
   /** Shelves: boards, and brackets at a row's ends (91F) and between two boards (91FF), Byggeregel H2; in corners short
    *  91 and 01 rails (Byggeregler H10–H12). */
   shelves?: ShelfSpec;
+  /** Counters drawn and built on site (Byggeregler K7, K8): their parts, picked loose. The counter in stock is picked
+   *  whole and is not here. */
+  counters?: CounterParts;
 }
 
 /** A shelf board: standard 976 × 300, corner 960 × 300, narrow corner 960 × 290, 2/3 655 × 300 (Byggeregler H10–H12). */

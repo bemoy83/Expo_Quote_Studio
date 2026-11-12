@@ -61,6 +61,15 @@ export const ITEM = {
   counter: (length: number, depth: number) => `disk-${length}x${depth}`,
   /** Its plates swapped for plates in another wall colour (Byggeregel K6), and back after the fair. */
   counterPlates: (length: number, depth: number) => `disk-platebytte-${length}x${depth}`,
+  /** A counter drawn and built on site (Byggeregler K7–K9): its profiles by the metre, the 600, the plates by the m²
+   *  (cut from wall plates), the boards by size, and the work per whole and half metre and per corner. */
+  counterProfile: (code: string) => `disk-profil-${code}`,
+  counterCoupling: 'disk-kobling-600',
+  counterPlateM2: 'disk-plate-m2',
+  counterBoard: (w: number, d: number) => `disk-plate-${w}x${d}`,
+  counterWhole: 'montering-disk-meter',
+  counterHalf: 'montering-disk-halv',
+  counterCorner: 'montering-disk-hjorne',
 } as const;
 
 /** A price item without its numbers: the kostgrunnlag gives its time, and the cost engine its cost and price. */
@@ -70,6 +79,12 @@ const def = (id: string, name: string, unit: PriceItem['unit'], transfer: PriceI
 
 /** The counter in stock (6560). */
 const STOCK = RECIPES.counter.stock;
+
+/** The profiles a drawn counter is built of (K8), and its boards: a whole part and a half (c/c − 24). */
+const C = RECIPES.counter;
+const COUNTER_PROFILES = [...new Set([...Object.values(C.nodes), C.rail, C.innerRail.code, C.bottomRail])];
+const COUNTER_BOARDS = [C.module.whole, C.module.half].map((cc) => [cc - 24, C.module.half - 24] as const);
+const WALL_PLATE_M2 = (RECIPES.wall.plate.w * RECIPES.wall.plate.h) / 1e6;
 
 /** Takdrager 292 in every standard length: centres 1–6 m, cut 40 shorter, couplings mounted. */
 const BEAM_M = [1, 2, 3, 4, 5, 6] as const;
@@ -124,6 +139,13 @@ export const ITEM_DEFS: readonly ItemDef[] = [
   def(ITEM.shelfPick, 'Vareplukk hyller, per ordre', 'stk'),
   def(ITEM.counter(STOCK.length, STOCK.depth), `Bardisk ${STOCK.length} × ${STOCK.depth} mm, ferdig montert`, 'stk'),
   def(ITEM.counterPlates(STOCK.length, STOCK.depth), `Platebytte bardisk ${STOCK.length} × ${STOCK.depth} mm, plater i RAL`, 'stk'),
+  ...COUNTER_PROFILES.map((code) => def(ITEM.counterProfile(code), `Disk bygget på stedet: profil ${code}, per meter`, 'm')),
+  def(ITEM.counterCoupling, 'Disk bygget på stedet: kobling 600', 'stk'),
+  def(ITEM.counterPlateM2, 'Disk bygget på stedet: plate 3 mm, per m²', 'm²'),
+  ...COUNTER_BOARDS.map(([w, d]) => def(ITEM.counterBoard(w, d), `Disk bygget på stedet: topp- og hylleplate ${w} × ${d} mm`, 'stk')),
+  def(ITEM.counterWhole, 'Montering disk per hel meter', 'stk'),
+  def(ITEM.counterHalf, 'Montering disk per halv meter', 'stk'),
+  def(ITEM.counterCorner, 'Montering disk per hjørne', 'stk'),
 ];
 
 /** Minutes per handling step. Picking, washing and transport of one article; on site up (montering) and down (demontering). */
@@ -168,6 +190,12 @@ export const EXAMPLE_TIMES: Readonly<Record<string, Time>> = {
   // Its plates in a wall colour (K6): the coloured plates picked and washed, the swap in the workshop before and after
   // the fair as six plates of a stand wall swap. Eksempeltall until Bjørn gives his
   [ITEM.counterPlates(STOCK.length, STOCK.depth)]: { ...pvt(0.5, 1, 0), ...onSite(6, 4) },
+  // A counter built on site (K9, Bjørn 12.11.2026: 20–30 min on 1 m): placeholders, 26 min in all per whole metre (its
+  // parts picked, washed and carried, built up and taken down), half that for a half, 6 more per corner. With 26 a
+  // drawn 1,0 m prices at about the 1320 of the counter in stock
+  [ITEM.counterWhole]: { ...pvt(2, 2, 2), ...onSite(13, 7) },
+  [ITEM.counterHalf]: { ...pvt(1, 1, 1), ...onSite(6, 4) },
+  [ITEM.counterCorner]: onSite(4, 2),
 };
 
 const POST_M = RULES.wall.height;
@@ -222,6 +250,13 @@ export const EXAMPLE_RECIPES: Readonly<Record<string, ItemRecipe>> = {
   [ITEM.shelfPick]: work,
   [ITEM.counter(STOCK.length, STOCK.depth)]: counterRecipe(STOCK.length, STOCK.depth),
   [ITEM.counterPlates(STOCK.length, STOCK.depth)]: counterPlatesRecipe(STOCK.length, STOCK.depth),
+  ...Object.fromEntries(COUNTER_PROFILES.map((code): [string, ItemRecipe] => [ITEM.counterProfile(code), { parts: [[code, 1]], dg: 'utleie' }])),
+  [ITEM.counterCoupling]: { parts: [['600', 1]], dg: 'utleie' },
+  [ITEM.counterPlateM2]: { own: [['HDF-976x2440', Math.round((1 / WALL_PLATE_M2) * 1000) / 1000, 'plate']], dg: 'utleie' },
+  ...Object.fromEntries(COUNTER_BOARDS.map(([w, d]): [string, ItemRecipe] => [ITEM.counterBoard(w, d), { own: [[`FIBRAPLAST6-${w}x${d}`, 1, 'plate']], dg: 'utleie' }])),
+  [ITEM.counterWhole]: work,
+  [ITEM.counterHalf]: work,
+  [ITEM.counterCorner]: work,
 };
 
 /** A counter's plates in a wall colour (K6): the coloured plates, rented out like the white ones, and the work. */

@@ -282,6 +282,38 @@ export function stockCounter(size: { length: number; depth: number }): CounterBu
   return b;
 }
 
+/** What a counter built on site is picked as (Byggeregel K7): posts by profile, rails by profile and cut length (with
+ *  their 600), plates by colour and size, tops and shelves by size. Keys: code, `code|len`, `ral|w×h`, `long×short`. */
+export interface CounterParts {
+  posts: Record<string, number>;
+  rails: Record<string, number>;
+  plates: Record<string, number>;
+  boards: Record<string, number>;
+}
+
+const bump = (m: Record<string, number>, k: string, n = 1) => {
+  m[k] = (m[k] ?? 0) + n;
+};
+
+/** The parts of a counter, its plates in `ral` (K6). */
+export function counterParts(b: CounterBuild, ral: string): CounterParts {
+  const out: CounterParts = { posts: {}, rails: {}, plates: {}, boards: {} };
+  for (const p of b.profiles) {
+    if (p.role === 'post') bump(out.posts, p.code);
+    else bump(out.rails, `${p.code}|${p.len}`);
+  }
+  for (const p of b.plates) bump(out.plates, `${ral}|${p.w}×${p.h}`);
+  for (const x of b.boards) bump(out.boards, `${Math.max(x.w, x.d)}×${Math.min(x.w, x.d)}`);
+  return out;
+}
+
+/** Two lists of parts added up. */
+export function addParts(a: CounterParts, b: CounterParts): CounterParts {
+  const out: CounterParts = { posts: { ...a.posts }, rails: { ...a.rails }, plates: { ...a.plates }, boards: { ...a.boards } };
+  for (const k of ['posts', 'rails', 'plates', 'boards'] as const) for (const [x, n] of Object.entries(b[k])) bump(out[k], x, n);
+  return out;
+}
+
 /** Metres of each profile, for the cost. */
 export function profileMetres(b: CounterBuild): Record<string, number> {
   const out: Record<string, number> = {};

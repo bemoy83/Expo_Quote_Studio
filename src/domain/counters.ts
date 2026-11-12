@@ -3,11 +3,12 @@
 // anywhere on the floor; drawn from the end of a counter it makes it longer (in line) or an L (back toward where the
 // staff stand: the new piece's short side against the other's long side, Bjørn 12.11.2026). A straight 1,0 m is the
 // counter in stock and carries no pieces. Plan, 3D and the kalkyle read the build from counterBuildOf.
+import { addParts, counterParts, type CounterParts } from '../foga/counter';
 import { RECIPES } from '../foga/recipes';
-import { alongX, HALF, layoutOf, pieceLength as len, piecesFootprint, piecesOf, unit } from './counterShape';
+import { alongX, counterBuildOf, HALF, layoutOf, pieceLength as len, piecesFootprint, piecesOf, unit } from './counterShape';
 import { openSides } from './grid';
 import { nextId } from './ids';
-import { blockers, footprintBox, hits, type PlaceContext } from './objects';
+import { blockers, counterRal, footprintBox, hits, type PlaceContext } from './objects';
 import type { CounterPiece, PlacedObject, Point, Variant } from './types';
 
 const R = RECIPES.counter;
@@ -16,6 +17,13 @@ const EPS = 1e-6;
 export const JOIN_REACH = 0.3;
 /** A counter this close to a wall or another counter (m) moves in against it. */
 export const SNAP = 0.1;
+
+/** The parts of every drawn counter, picked loose (K9); none when nothing is drawn. The counter in stock is picked whole. */
+export function drawnCounterParts(v: Variant): CounterParts | undefined {
+  const drawn = v.objects.filter((o) => o.pieces);
+  if (!drawn.length) return undefined;
+  return drawn.map((o) => counterParts(counterBuildOf(o), counterRal(o))).reduce(addParts);
+}
 
 /** Plan direction of a local one, for a counter turned `rot` degrees (SVG rotate: clockwise with y down). */
 function turn(p: Point, rot: number): Point {
@@ -109,13 +117,17 @@ export function drawCounter(v: Variant, ctx: PlaceContext, isCounter: (product: 
   const dy = p[1] - p0[1];
   const horizontal = Math.abs(dx) >= Math.abs(dy);
   const sign = (horizontal ? dx : dy) < 0 ? -1 : 1;
-  const cc = strokeCc(Math.abs(horizontal ? dx : dy));
+  const along = Math.abs(horizontal ? dx : dy);
   const dir: Point = horizontal ? [sign, 0] : [0, sign];
   const join = endAt(v, isCounter, p0);
-  if (join) return drawOn(v, ctx, join.o, join.i, join.end, dir, cc);
-  const a = p0;
-  const b: Point = [p0[0] + (dir[0] * cc) / 1000, p0[1] + (dir[1] * cc) / 1000];
-  const rot = frontRot(v, p0, horizontal);
+  if (join) return drawOn(v, ctx, join.o, join.i, join.end, dir, strokeCc(along));
+  // On free floor the pen shows the counter in stock round the pointer; a drag draws from its far end to the pointer,
+  // so the counter starts where the preview did (Bjørn 12.11.2026)
+  const back = R.module.whole / 2000;
+  const cc = strokeCc(along + back);
+  const a: Point = [p0[0] - dir[0] * back, p0[1] - dir[1] * back];
+  const b: Point = [a[0] + (dir[0] * cc) / 1000, a[1] + (dir[1] * cc) / 1000];
+  const rot = frontRot(v, a, horizontal);
   const id = nextId(v.objects.map((o) => o.id), 'i');
   const colour = pen.ral && pen.ral !== R.stock.ral ? { ral: pen.ral } : {};
   const centre: Point = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];

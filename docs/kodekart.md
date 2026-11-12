@@ -168,7 +168,7 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
   `layoutBuild(recipe, layout)` bygger en disk av deler (`CounterLayout`: deler mellom knutepunkter og åpne strekk),
   finner knutepunktene og velger profil etter retningene de kobler (K8); `counterBuild(recipe, shape)` er en rett disk
   (`straightLayout`, hele meter og en halv til slutt, K7), `stockCounter(size)` disken på lager (åpen bak), bygget én
-  gang og delt av plan, 3D og kost (med tester). Reglene K1–K8 i [byggeregler.md](byggeregler.md). Profilene 92L og 93 i `foga/parts.ts`,
+  gang og delt av plan, 3D og kost (med tester). Reglene K1–K9 i [byggeregler.md](byggeregler.md). Profilene 92L og 93 i `foga/parts.ts`,
   omrisset i `scene3d/build/profiles.ts`
 - Katalogen: `counter('6560', …)` i `catalog/defaultCatalog.ts` (`Product.counter`: utvendig mål, fotavtrykket følger);
   de gamle diskene 5410, 5415 og 5420 blir løse linjer i gamle skisser (`OLD_COUNTERS`, `retiredToLoose` i `persistence/file.ts`)
@@ -183,7 +183,10 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
   (`pointer/counter.ts` → `drawCounter` i `domain/counters.ts`, forhåndsvist av `counterTarget` i `plan/next.ts`). En
   tegnet disk er et møbel med `pieces` (rette biter, mm); `domain/counterShape.ts` gjør dem til deler (`layoutOf`),
   bygg (`counterBuildOf`, delt av plan, 3D og kalkyle) og fotavtrykk (`objectFootprint` i `domain/objects.ts`). I
-  kalkylen har en tegnet disk foreløpig pris per meter av 6560 (`drawnCounterLine` i `calc/lines/objects.ts`).
+  kalkylen prises en tegnet disk av kostmotoren (`drawnCounterLine`, `drawnCounterUses` i `calc/lines/objects.ts`,
+  `strategy: 'sum'` gjennom `extra` i `line()`, prisartiklene `ITEM.counterProfile` … `counterCorner` i
+  `cost/itemDefs.ts`, K9); delene plukkes løse: `counterParts`/`addParts` (`foga/counter.ts`) → `drawnCounterParts`
+  (`domain/counters.ts`) → `FogaStructure.counters` → `bom()` i gruppen Disker (`foga/engine.ts`).
   Hurtigvalget i `plan/QuickPicks.tsx` er veggfargene og Fyll (`Palette`, som Vegg og Gulv; Fyll = `paintCounters`).
   Veggfargene som rad er én funksjon, `ralSwatches` i `plan/swatches.ts`, brukt av Vegg, Disker og pillens `Colours`.
   Pillen på en valgt disk har de samme fargene (`Colours` i `plan/pill/objects.tsx`, `setCounterRal`)

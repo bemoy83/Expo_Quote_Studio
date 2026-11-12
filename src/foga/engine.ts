@@ -49,6 +49,8 @@ export const BOM_GROUP = {
   header: 'vegg.dorer',
   textile: 'prof.tekstil',
   shelves: 'hyll.hyller',
+  /** Counters drawn and built on site (K9): their posts, rails, plates and boards. */
+  counters: 'disk.disker',
 } as const;
 
 type BomGroup = (typeof BOM_GROUP)[keyof typeof BOM_GROUP];
@@ -285,6 +287,29 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
     const b = co.boards[k];
     put(BOM_GROUP.shelves, `board|${k}`, { artnr: '', name: b.name, detail: `${b.w} × ${b.d} mm · ${board}`, preassembled: false }, kinds[k] ?? 0);
   }
+
+  // Disker built on site (Byggeregler K7–K9): posts by profile, rails with their 600 mounted (stored so, like the wall's),
+  // plates in their colour, tops and shelves. The counter in stock is a calc line, picked whole
+  const dk = r.counter;
+  const cp = s.counters;
+  // Profiles in code order, then longest first; plates by colour, then largest first; boards largest first
+  const sizes = (k: string) => k.split('×').map(Number);
+  const larger = (a: string, b: string) => sizes(b)[0] - sizes(a)[0] || sizes(b)[1] - sizes(a)[1];
+  const split = (k: string) => k.split('|') as [string, string];
+  const of = (m?: Record<string, number>) => Object.entries(m ?? {});
+  for (const [code, qty] of of(cp?.posts).sort(([a], [b]) => a.localeCompare(b)))
+    put(BOM_GROUP.counters, `post|${code}`, { artnr: '', name: `Diskstolpe ${code}, ${dk.height} mm`, detail: `${code} (${fogaPart(code).artnr}) × ${dk.height} mm`, preassembled: false }, qty);
+  for (const [k, qty] of of(cp?.rails).sort(([a], [b]) => split(a)[0].localeCompare(split(b)[0]) || +split(b)[1] - +split(a)[1])) {
+    const [code, len] = split(k);
+    const name = code === dk.bottomRail ? 'Bunnskinne' : code === dk.innerRail.code ? 'Tverrskinne' : 'Skinne';
+    unit(BOM_GROUP.counters, `Disk ${name.toLowerCase()}`, code, +len, dk.coupling, qty);
+  }
+  for (const [k, qty] of of(cp?.plates).sort(([a], [b]) => split(a)[0].localeCompare(split(b)[0]) || larger(split(a)[1], split(b)[1]))) {
+    const [ral, size] = split(k);
+    put(BOM_GROUP.counters, `plate|${k}`, { artnr: '', name: `Diskplate, ${fogaPart(dk.plate).name}`, detail: `${size.replace('×', ' × ')} mm`, preassembled: false, ral }, qty);
+  }
+  for (const [size, qty] of of(cp?.boards).sort(([a], [b]) => larger(a, b)))
+    put(BOM_GROUP.counters, `board|${size}`, { artnr: '', name: `Topp- og hylleplate, ${fogaPart(dk.board.code).name}`, detail: `${size.replace('×', ' × ')} mm`, preassembled: false }, qty);
 
   // Tree order; inside a subgroup beams longest first, plates tallest first then by RAL, the rest as added
   const order = (l: BomLine) => resolveGroup(l.group).order;
