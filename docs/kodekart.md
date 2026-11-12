@@ -182,7 +182,10 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
   plasserer som møbelpennen ved klikk (`placedBy` i `tools.ts`, `pointer/object.ts`); dra tegner disk
   (`pointer/counter.ts` → `drawCounter` i `domain/counters.ts`, forhåndsvist av `counterTarget` i `plan/next.ts`). En
   tegnet disk er et møbel med `pieces` (rette biter, mm); `domain/counterShape.ts` gjør dem til deler (`layoutOf`),
-  bygg (`counterBuildOf`, delt av plan, 3D og kalkyle) og fotavtrykk (`objectFootprint` i `domain/objects.ts`). I
+  bygg (`counterBuildOf`, delt av plan, 3D og kalkyle), boksen rundt (`objectFootprint`) og det den dekker, én
+  rektangel per bit (`pieceRects` → `objectBoxes` i `domain/objects.ts`, brukt av kollisjon, treff og markering, så det
+  åpne hjørnet i en L er gulv). Dra innover fra en fri ende korter den (`shorten`); valgt disk får mål med `Chain`
+  (`counterChains` i `plan/dims.ts`, `CounterDims` i `layers/DimLayer.tsx`). I
   kalkylen prises en tegnet disk av kostmotoren (`drawnCounterLine`, `drawnCounterUses` i `calc/lines/objects.ts`,
   `strategy: 'sum'` gjennom `extra` i `line()`, prisartiklene `ITEM.counterProfile` … `counterCorner` i
   `cost/itemDefs.ts`, K9); delene plukkes løse: `counterParts`/`addParts` (`foga/counter.ts`) → `drawnCounterParts`

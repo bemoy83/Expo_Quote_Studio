@@ -1,8 +1,7 @@
 // Furniture in the plan. A counter (Byggeregel K1) is drawn in its plates' colour (K6) and shows its plates: front and both ends closed, the back open.
 import { mainGroupOf } from '../../../catalog/groups'
-import { counterBuildOf, layoutOf } from '../../../domain/counterShape'
+import { counterBuildOf, pieceRects } from '../../../domain/counterShape'
 import { counterRal, footprintBox, objectFootprint } from '../../../domain/objects'
-import { RECIPES } from '../../../foga/recipes'
 import type { Variant } from '../../../domain/types'
 import { BLOCK, INK } from '../../colors'
 import { idx, place, plateColor, productOf } from '../../env'
@@ -43,10 +42,9 @@ export function ObjectLayer(props: {
         const sw = isBad ? Math.max(0.06, linePx(sc, 2)) : sel ? Math.max(0.05, linePx(sc, 1.8)) : linePx(sc, 0.75)
         const g = gone('object', o.id)
         const op = off(mainGroupOf(productOf(o.product)?.group)) ? DIMMED : undefined
-        // A drawn counter (K7): each part, stroked first and filled over, so only its outline shows
+        // A drawn counter (K7): each piece, stroked first and filled over, so only its outline shows
         if (counter && o.pieces) {
-          const k = RECIPES.counter.face
-          const rects = layoutOf(o.pieces).cells.map((c) => ({ x: (c.x[0] - k) / 1000, y: (c.z[0] - k) / 1000, w: (c.x[1] - c.x[0] + 2 * k) / 1000, h: (c.z[1] - c.z[0] + 2 * k) / 1000 }))
+          const rects = pieceRects(o).map((r) => ({ x: r.x0 / 1000, y: r.y0 / 1000, w: (r.x1 - r.x0) / 1000, h: (r.y1 - r.y0) / 1000 }))
           const each = (props: object) => rects.map((r, i) => <rect key={i} x={r.x} y={r.y} width={r.w} height={r.h} {...props} />)
           return (
             <g key={o.id}>

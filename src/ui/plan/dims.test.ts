@@ -3,7 +3,7 @@ import { paintWalls } from '../../domain/edit'
 import { createVariant } from '../../domain/variant'
 import { faceAt } from '../../domain/faces'
 import { isStandWall } from '../../domain/walls'
-import { mm, placementRow, planDims, totalSides } from './dims'
+import { counterChains, mm, placementRow, planDims, totalSides } from './dims'
 import { addShelfRow } from '../../domain/shelves/edit'
 import { RULES } from '../../rules/rules'
 
@@ -74,3 +74,14 @@ describe('dimensions with shelves (Bjørn 9.11.2026)', () => {
     expect(d.ts).not.toContain(3)
   })
 })
+
+describe('a chosen counter is measured (K7)', () => {
+  it('through the outer edges of its pieces, an arm on the other one\'s back line once', () => {
+    const c = counterChains([
+      { x0: 0.99, y0: 1.74, x1: 2.01, y1: 2.26 },
+      { x0: 0.99, y0: 0.74, x1: 1.51, y1: 1.76 },
+    ])!
+    expect(c).toEqual({ x: [0.99, 1.51, 2.01], y: [0.74, 1.74, 2.26], x0: 0.99, y1: 2.26 })
+  })
+})
+

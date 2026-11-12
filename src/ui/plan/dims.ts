@@ -171,3 +171,21 @@ export function planDims(v: Variant, selection: PlanSelection, compact: boolean)
 
 /** Which way from a run's line its chain stands: the side its normal `n` points to, across the run. */
 const toward = (n: Point, hz: boolean): 1 | -1 => ((hz ? n[1] : n[0]) < 0 ? -1 : 1)
+
+/** A chosen counter's chains, m (Byggeregler K7, K8): across x under it and along y left of it, through the outer edges
+ *  of its pieces, so an L shows each arm. Edges closer than 5 cm (an arm on the other's back line) count once. */
+export function counterChains(boxes: { x0: number; y0: number; x1: number; y1: number }[]): { x: number[]; y: number[]; x0: number; y1: number } | null {
+  if (!boxes.length) return null
+  const ticks = (ns: number[]) =>
+    [...ns]
+      .sort((a, b) => a - b)
+      .filter((n, i, all) => i === 0 || n - all[i - 1] >= 0.05 || i === all.length - 1)
+      .filter((n, i, all) => i === all.length - 1 || i === 0 || all[i + 1] - n >= 0.05)
+  return {
+    x: ticks(boxes.flatMap((b) => [b.x0, b.x1])),
+    y: ticks(boxes.flatMap((b) => [b.y0, b.y1])),
+    x0: Math.min(...boxes.map((b) => b.x0)),
+    y1: Math.max(...boxes.map((b) => b.y1)),
+  }
+}
+

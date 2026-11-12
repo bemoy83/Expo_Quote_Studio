@@ -45,7 +45,8 @@ export function objectBoxes(ctx: Pick<PlaceContext, 'footprint'>, o: Pick<Placed
   const t = (o.rot * Math.PI) / 180;
   const c = Math.round(Math.cos(t));
   const s = Math.round(Math.sin(t));
-  const plan = (x: number, y: number) => [o.x + (x * c - y * s) / 1000, o.y + (x * s + y * c) / 1000];
+  const mm = (n: number) => Math.round(n * 1e6) / 1e6;
+  const plan = (x: number, y: number) => [mm(o.x + (x * c - y * s) / 1000), mm(o.y + (x * s + y * c) / 1000)];
   return pieceRects(o).map((r) => {
     const [ax, ay] = plan(r.x0, r.y0);
     const [bx, by] = plan(r.x1, r.y1);
@@ -128,8 +129,12 @@ function clampInto(v: Variant, o: PlacedObject, f: Footprint): PlacedObject {
   const b = footprintBox({ ...o, x: 0, y: 0 }, f);
   const hw = b.x1;
   const hd = b.y1;
-  const r = (n: number) => Math.round(n * 20) / 20;
-  return { ...o, x: r(Math.max(hw, Math.min(v.stand.width - hw, o.x))), y: r(Math.max(hd, Math.min(v.stand.depth - hd, o.y))) };
+  // On the 5 cm grid, never rounded out past the edge (a 1020 counter at the edge: 5,49 is 5,45, not 5,50)
+  const r = (n: number, lo: number, hi: number) => {
+    const q = Math.round(Math.max(lo, Math.min(hi, n)) * 20) / 20;
+    return q > hi + 1e-9 ? Math.floor(hi * 20) / 20 : q < lo - 1e-9 ? Math.ceil(lo * 20) / 20 : q;
+  };
+  return { ...o, x: r(o.x, hw, v.stand.width - hw), y: r(o.y, hd, v.stand.depth - hd) };
 }
 
 /**
