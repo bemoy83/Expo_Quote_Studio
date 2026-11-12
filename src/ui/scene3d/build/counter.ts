@@ -1,6 +1,6 @@
-// Counter (bardisk 6560, Byggeregler K1–K5) from the same pieces the kalkyle costs (foga/counter.ts): 92L in the
-// corners, 93 and 92 rails from their measured outlines, the wall plates in the counter's colour (K6), the white top and
-// shelf. The 600 couplings sit inside the profiles and are not drawn. The closed front faces the object's +y.
+// Counter (bardisk 6560, Byggeregler K1–K8) from the same pieces the kalkyle costs (foga/counter.ts): in each node
+// the profile for the directions it joins (92L, 93, 94), 93 and 92 rails round the outside and 94 between two parts,
+// all from their measured outlines; the wall plates in the counter's colour (K6), the white tops and shelves. The 600 couplings sit inside the profiles and are not drawn. The closed front faces the object's +y.
 import * as THREE from 'three'
 import type { Box3, CounterBuild, CounterProfile } from '../../../foga/counter'
 import { plateColor } from '../../env'
@@ -20,6 +20,8 @@ function outward(x: CounterProfile) {
     if (!ox || !oz) return { u: new THREE.Vector3(-ox, 0, -oz), v: new THREE.Vector3(oz, 0, -ox) }
     return { u: new THREE.Vector3(-ox, 0, 0), v: new THREE.Vector3(0, 0, oz) }
   }
+  // A rail inside the counter (a 94, K8) has no outer face: either side across it
+  if (!ox && !oz) return { u: x.axis === 'x' ? AXIS.z.clone() : AXIS.x.clone(), v: AXIS.y.clone() }
   return { u: new THREE.Vector3(-ox, 0, -oz), v: AXIS.y.clone() }
 }
 
