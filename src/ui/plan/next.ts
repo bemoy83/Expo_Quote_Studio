@@ -202,8 +202,12 @@ function targetOf(p: NextInput): NextTarget | null {
   // Shelves pressed: the felts from the press to the pointer along the same face
   if (dragging?.kind === 'shelf') return shelfTarget(v, dragging.wallId, dragging.s, dragging.m0, dragging.m1, true)
 
-  // The counter pen dragged: the counter a release draws. Held without moving, nothing: it may still be a click
-  if (dragging?.kind === 'counter') return dragging.moved && hover ? counterTarget(v, brush, dragging.p0, hover) : null
+  // The counter pen dragged: the counter a release draws. Held without moving, what a click there stores, the preview it
+  // was hovering, so it stays put until the drag grows it (Bjørn 12.11.2026)
+  if (dragging?.kind === 'counter') {
+    if (dragging.moved && hover) return counterTarget(v, brush, dragging.p0, hover)
+    return hits.onStand(dragging.p0) ? objectTarget(v, brush, dragging.p0) : null
+  }
 
   // Floor
   const product = brush?.kind === 'floor' ? brush.product : null

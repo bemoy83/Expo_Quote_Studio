@@ -37,12 +37,13 @@ describe('the counter pen draws in half metres (K7)', () => {
     expect(only(draw(island, [1.5, 4], [2, 4])).rot).toBe(0);
   });
 
-  it('rounds the stroke to half metres, at least one, and builds whole metres first', () => {
+  it('rounds the stroke to half metres, at least the preview, and builds whole metres first', () => {
     const o = only(draw(base, [1.5, 2], [2.6, 2.05]));
     const b = counterBuildOf(o);
     expect([b.length, b.depth]).toEqual([1520, 520]);
     expect(b.profiles.filter((p) => p.role === 'post').map((p) => p.code).sort()).toEqual(['92L', '92L', '92L', '92L', '93', '93']);
-    expect(counterBuildOf(only(draw(base, [1.5, 2], [1.6, 2]))).length).toBe(520);
+    // From free floor never shorter than the preview: the counter in stock
+    expect(only(draw(base, [1.5, 2], [1.6, 2])).pieces).toBeUndefined();
   });
 
   it('draws upright strokes too, with no aisle across them facing away from the nearer side', () => {
@@ -70,6 +71,12 @@ describe('a drag on free floor starts where the preview of the counter in stock 
     expect(box(only(draw(base, [2, 2], [2.5, 2])))).toEqual([1.49, 1.74, 2.51, 2.26]);
     expect(counterBuildOf(only(draw(base, [2, 2], [3, 2]))).length).toBe(1520);
     expect(box(only(draw(base, [2, 2], [1, 2])))).toEqual([0.99, 1.74, 2.51, 2.26]);
+  });
+
+  it('starts where the click would have placed it and does not move in again (no jump when the drag begins)', () => {
+    const r = drawCounter(base, ctx, isCounter, pen, [2, 0.35], [2.6, 0.35], [2, 0.35]);
+    if ('error' in r) throw new Error(r.error);
+    expect(box(only(r.v))).toEqual([1.49, 0.09, 2.51, 0.61]);
   });
 });
 
