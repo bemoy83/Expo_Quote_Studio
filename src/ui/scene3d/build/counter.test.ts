@@ -5,7 +5,10 @@ import { describe, expect, it } from 'vitest'
 import { calc } from '../../../calc/calc'
 import { createVariant } from '../../../domain/variant'
 import { stockCounter } from '../../../foga/counter'
-import { catalog, rules } from '../../env'
+import { counterBuildOf } from '../../../domain/counterShape'
+import { drawCounter } from '../../../domain/counters'
+import type { Variant } from '../../../domain/types'
+import { catalog, isCounter, place, rules } from '../../env'
 import { build, type Tag } from '../build'
 
 const sketch = (rot: number) => ({ ...createVariant('A', { width: 4, depth: 3, type: 'row' }), walls: [], objects: [{ id: 'i1', product: '6560', x: 2, y: 1.5, rot }] })
@@ -61,5 +64,29 @@ describe('counter in 3D', () => {
     const size = new THREE.Box3()
     for (const m of meshesOf(90)) size.expandByObject(m)
     expect([size.min.x, size.max.x, size.min.z, size.max.z].map(mm)).toEqual([-260, 260, -510, 510])
+  })
+
+  it('draws a drawn L the same way: every 92L and 93 in its box (K8)', () => {
+    const empty: Variant = { ...createVariant('A', { width: 4, depth: 4, type: 'row' }), walls: [] }
+    const one = drawCounter(empty, place, isCounter, { product: '6560' }, [1, 1.5], [2, 1.5])
+    if ('error' in one) throw new Error(one.error)
+    const l = drawCounter(one.v, place, isCounter, { product: '6560' }, [1.2, 1.5], [1.2, 0.5])
+    if ('error' in l) throw new Error(l.error)
+    const o = l.v.objects[0]
+    const g = build(l.v, calc(l.v, rules, catalog))
+    g.updateMatrixWorld(true)
+    const ms: THREE.Mesh[] = []
+    g.traverse((x) => {
+      if ((x.userData as Partial<Tag>).pick?.objectId === o.id && (x as THREE.Mesh).geometry?.name.startsWith('foga-')) ms.push(x as THREE.Mesh)
+    })
+    const b = counterBuildOf(o)
+    expect(ms).toHaveLength(b.profiles.length)
+    // In the counter's own coordinates: the group sits at the object's place, unturned
+    const local = (m: THREE.Mesh) => {
+      const x = new THREE.Box3().setFromObject(m)
+      return [x.min.x - o.x + 2, x.max.x - o.x + 2, x.min.y, x.max.y, x.min.z - o.y + 2, x.max.z - o.y + 2].map(mm).join(' ')
+    }
+    const posts = ms.filter((m) => /foga-9(2L|3)/.test(m.geometry.name) && mm(new THREE.Box3().setFromObject(m).max.y) === 1040 && mm(new THREE.Box3().setFromObject(m).min.y) === 0)
+    expect(posts.map(local).sort()).toEqual(b.profiles.filter((p) => p.role === 'post').map((p) => [...p.box.x, ...p.box.y, ...p.box.z].join(' ')).sort())
   })
 })

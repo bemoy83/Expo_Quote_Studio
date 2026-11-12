@@ -179,7 +179,11 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
   profilen snudd etter omrisset med `turnedProfile` (`build/profiles.ts`). Begge tegner i diskens egne koordinater og
   plasseres og snus utenfra, så en tegnet disk bruker de samme delene
 - Verktøyet Disker (`counter` i `ui/tools.ts`, D i verktøylinjen, etter Hyller): penselen `{ kind: 'counter', product, ral }`
-  plasserer som møbelpennen (`placedBy` i `tools.ts`, brukt av `pointer/object.ts`, `pointer/place.ts` og `plan/next.ts`).
+  plasserer som møbelpennen ved klikk (`placedBy` i `tools.ts`, `pointer/object.ts`); dra tegner disk
+  (`pointer/counter.ts` → `drawCounter` i `domain/counters.ts`, forhåndsvist av `counterTarget` i `plan/next.ts`). En
+  tegnet disk er et møbel med `pieces` (rette biter, mm); `domain/counterShape.ts` gjør dem til deler (`layoutOf`),
+  bygg (`counterBuildOf`, delt av plan, 3D og kalkyle) og fotavtrykk (`objectFootprint` i `domain/objects.ts`). I
+  kalkylen har en tegnet disk foreløpig pris per meter av 6560 (`drawnCounterLine` i `calc/lines/objects.ts`).
   Hurtigvalget i `plan/QuickPicks.tsx` er veggfargene og Fyll (`Palette`, som Vegg og Gulv; Fyll = `paintCounters`).
   Veggfargene som rad er én funksjon, `ralSwatches` i `plan/swatches.ts`, brukt av Vegg, Disker og pillens `Colours`.
   Pillen på en valgt disk har de samme fargene (`Colours` i `plan/pill/objects.tsx`, `setCounterRal`)

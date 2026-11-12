@@ -1,14 +1,14 @@
 // What lies under the pointer, in model coordinates: wall modules, faces, drawn beams, room sides, furniture and shelves. Shared
 // by the pointer handlers and the plan's cursor and hover previews.
 import { innerBeamAt } from '../../../domain/innerBeams'
-import { footprintBox } from '../../../domain/objects'
+import { footprintBox, objectFootprint } from '../../../domain/objects'
 import { roomSideAt } from '../../../domain/rooms'
 import { shelfBox, shelvesOf } from '../../../domain/shelves/model'
 import { faceAt } from '../../../domain/faces'
 import { offsetAlong, wallLength } from '../../../domain/grid'
 import type { Room, Variant } from '../../../domain/types'
 import type { BuiltModule } from '../../../domain/walls'
-import { productOf, rules } from '../../env'
+import { place, rules } from '../../env'
 import { sizePx, type PlanScale } from '../planScale'
 import { wallWidth } from '../planStyle'
 import { distToSegment } from '../geometry'
@@ -76,7 +76,7 @@ export function planHits(v: Variant, mods: BuiltModule[], selection: PlanSelecti
 
   const objectAt = (q: P) =>
     [...v.objects].reverse().find((o) => {
-      const f = productOf(o.product)?.footprint
+      const f = objectFootprint(place, o)
       if (!f) return false
       const b = footprintBox(o, f)
       return q.x >= b.x0 && q.x <= b.x1 && q.y >= b.y0 && q.y <= b.y1

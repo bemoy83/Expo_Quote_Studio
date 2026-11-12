@@ -9,6 +9,8 @@ export function pens(tool: Tool, brush: Brush | null) {
     openingTool: pen && brush?.kind === 'opening',
     /** Møbel and Disker: a piece on the floor, placed where it has room. */
     objectTool: pen && !!placedBy(brush),
+    /** Disker: a click places the counter in stock, a drag draws one (Byggeregler K7, K8). */
+    counterTool: pen && brush?.kind === 'counter',
     decorTool: pen && brush?.kind === 'motif',
     /** One textile brush: on a system wall it is mounted there, anywhere else it stands free (domain/textile/brush). */
     textileTool: pen && brush?.kind === 'textile',

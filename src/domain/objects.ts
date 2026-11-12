@@ -9,6 +9,7 @@ import { doorSwing } from './doors';
 import { nextId } from './ids';
 import { faceSegment, sideOf } from './faces';
 import { RECIPES } from '../foga/recipes';
+import { piecesFootprint } from './counterShape';
 
 export interface Box {
   x0: number;
@@ -29,6 +30,12 @@ export interface PlaceContext {
 
 const GAP = 0.02;
 
+/** An object's footprint: its product's, or the box round a drawn counter (Byggeregel K7). */
+export function objectFootprint(ctx: Pick<PlaceContext, 'footprint'>, o: Pick<PlacedObject, 'product' | 'pieces'>): Footprint | undefined {
+  const f = ctx.footprint(o.product);
+  return f && piecesFootprint(o, f);
+}
+
 /** Axis-aligned footprint. A quarter turn swaps width and depth. */
 export function footprintBox(o: Pick<PlacedObject, 'x' | 'y' | 'rot'>, f: Footprint): Omit<Box, 'kind'> {
   const quarter = Math.round(o.rot / 90) % 2 !== 0;
@@ -38,7 +45,7 @@ export function footprintBox(o: Pick<PlacedObject, 'x' | 'y' | 'rot'>, f: Footpr
 }
 
 export function blockers(v: Variant, ctx: PlaceContext, skipId?: string): Box[] {
-  const { rules, footprint: fp } = ctx;
+  const { rules } = ctx;
   const out: Box[] = [];
   const half = rules.wall.post / 2;
   for (const m of builtModules(v)) {
@@ -78,7 +85,7 @@ export function blockers(v: Variant, ctx: PlaceContext, skipId?: string): Box[] 
   }
   for (const o of v.objects) {
     if (o.id === skipId) continue;
-    const f = fp(o.product);
+    const f = objectFootprint(ctx, o);
     if (f) out.push({ ...footprintBox(o, f), kind: 'object', id: o.id });
   }
   return out;
@@ -101,7 +108,7 @@ function clampInto(v: Variant, o: PlacedObject, f: Footprint): PlacedObject {
  * Nearest free spot for the object, searching outward up to `radius` metres. Null when there is no room.
  */
 export function findSpot(v: Variant, ctx: PlaceContext, o: PlacedObject, radius: number): PlacedObject | null {
-  const f = ctx.footprint(o.product);
+  const f = objectFootprint(ctx, o);
   if (!f) return null;
   const bl = blockers(v, ctx, o.id);
   const start = clampInto(v, o, f);
@@ -146,7 +153,7 @@ export function moveObject(v: Variant, ctx: PlaceContext, id: string, x: number,
     ...v,
     objects: v.objects.map((o) => {
       if (o.id !== id) return o;
-      const f = ctx.footprint(o.product);
+      const f = objectFootprint(ctx, o);
       return f ? clampInto(v, { ...o, x, y }, f) : o;
     }),
   };
@@ -167,7 +174,7 @@ export function removeObjects(v: Variant, product: string, n: number): Variant {
 export function conflicts(v: Variant, ctx: PlaceContext): Set<string> {
   const out = new Set<string>();
   for (const o of v.objects) {
-    const f = ctx.footprint(o.product);
+    const f = objectFootprint(ctx, o);
     if (f && hits(footprintBox(o, f), blockers(v, ctx, o.id))) out.add(o.id);
   }
   return out;
@@ -202,7 +209,7 @@ export function settleAll(v: Variant, ctx: PlaceContext): Variant {
  */
 export function rotateObject(v: Variant, ctx: PlaceContext, id: string): Variant | null {
   const o = v.objects.find((x) => x.id === id);
-  const f = o && ctx.footprint(o.product);
+  const f = o && objectFootprint(ctx, o);
   if (!o || !f) return null;
   const rot = (o.rot + 90) % 360;
   if (!fitsStand(v, footprintBox({ x: 0, y: 0, rot }, f))) return null;

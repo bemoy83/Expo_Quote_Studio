@@ -7,7 +7,7 @@ import { cornerPosts } from '../../calc/textile/free'
 import { foilSpan } from '../../domain/decor'
 import { faceSegment, sideOf } from '../../domain/faces'
 import { CELL } from '../../domain/grid'
-import { footprintBox } from '../../domain/objects'
+import { footprintBox, objectFootprint } from '../../domain/objects'
 import { shelfBox, shelvesOf } from '../../domain/shelves/model'
 import type { Point, Variant } from '../../domain/types'
 import type { BuiltModule } from '../../domain/walls'
@@ -122,7 +122,7 @@ export function changedAreas(a: PlanState, b: PlanState): Areas {
   )
 
   const objBox = (o: Variant['objects'][number]) => {
-    const f = place.footprint(o.product)
+    const f = objectFootprint(place, o)
     if (!f) return null
     const bx = footprintBox(o, f)
     return { x0: bx.x0 - 0.1, y0: bx.y0 - 0.1, x1: bx.x1 + 0.1, y1: bx.y1 + 0.1 }

@@ -13,6 +13,7 @@ import { carpetClick, fillCarpet } from '../../domain/floor/rollFill'
 import { tileAt, type Rect } from '../../domain/floor/tiles'
 import { wallModules, type Module } from '../../domain/grid'
 import { drawInnerBeam, type Run } from '../../domain/innerBeams'
+import { counterBuildOf, piecesOf } from '../../domain/counterShape'
 import { addObject, footprintBox } from '../../domain/objects'
 import { addShelf, addShelfRow, penHeight } from '../../domain/shelves/edit'
 import { drawTextile, fillFace, type TextileResult } from '../../domain/textile/brush'
@@ -35,6 +36,7 @@ import type { FloorBrush } from './pointer/floorBrush'
 import type { PlanHits } from './pointer/hits'
 import { isDoor, openingEdge } from './pointer/opening'
 import type { Pens } from './pointer/pens'
+import { counterDraw } from './pointer/counter'
 import { placeHolds, placeKey } from './pointer/place'
 import { paintPlates, plateAt, platesAlong } from './pointer/plates'
 import type { Drag, P } from './pointer/types'
@@ -200,6 +202,9 @@ function targetOf(p: NextInput): NextTarget | null {
   // Shelves pressed: the felts from the press to the pointer along the same face
   if (dragging?.kind === 'shelf') return shelfTarget(v, dragging.wallId, dragging.s, dragging.m0, dragging.m1, true)
 
+  // The counter pen dragged: the counter a release draws. Held without moving, nothing: it may still be a click
+  if (dragging?.kind === 'counter') return dragging.moved && hover ? counterTarget(v, brush, dragging.p0, hover) : null
+
   // Floor
   const product = brush?.kind === 'floor' ? brush.product : null
   // The carpet brush held: the area once it is dragged out. Before that nothing, as the press may turn into a drag:
@@ -324,6 +329,21 @@ function objectTarget(v: Variant, brush: Brush | null, q: P): NextTarget | null 
     return target(key, () => line({ hint: `Ikke plass til ${productOf(product)?.name.toLowerCase() ?? 'varen'} her`, invalid }))
   }
   return target(`obj:${product}:${ral ?? ''}:${o.x},${o.y}`, () => line({ edit: () => next, hint: null }))
+}
+
+/** A counter drawn from p0 to q (Byggeregler K7, K8), with its outer size in the pill; hatched along the stroke where
+ *  it cannot go. */
+function counterTarget(v: Variant, brush: Brush | null, p0: P, q: P): NextTarget | null {
+  const r = counterDraw({ v, brush }, p0, q)
+  if (!r) return null
+  const seg: [Point, Point] = [r.a, r.b]
+  if ('error' in r) return target(`ctr:err:${r.error}:${pt(r.a)}:${pt(r.b)}`, () => line({ hint: r.error, invalid: r.a[0] === r.b[0] && r.a[1] === r.b[1] ? undefined : { seg, width: 'wall' } }))
+  const o = r.v.objects.find((x) => x.id === r.id)!
+  return target(`ctr:${JSON.stringify(o)}`, () => {
+    const b = counterBuildOf(o)
+    const text = piecesOf(o).length > 1 ? `${mm(b.length / 1000)} × ${mm(b.depth / 1000)}` : mm(Math.max(b.length, b.depth) / 1000)
+    return line({ edit: () => r.v, hint: null, pill: { a: r.a, b: r.b, width: 'wall', text } })
+  })
 }
 
 /**
