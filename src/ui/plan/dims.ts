@@ -182,3 +182,9 @@ export function counterChains(boxes: { x0: number; y0: number; x1: number; y1: n
   }
 }
 
+/** Which side of a counter its chains stand on (K7): toward the stand's middle, clear of the stand's own chains and the
+ *  aisle. `dx` 1: the depth right of it, −1 left; `dy` 1: the width under it, −1 over it. Shared with the pill. */
+export function counterDimSides(v: Variant, c: { x: readonly [number, number]; y: readonly [number, number] }): { dx: 1 | -1; dy: 1 | -1 } {
+  return { dx: (c.x[0] + c.x[1]) / 2 < v.stand.width / 2 ? 1 : -1, dy: (c.y[0] + c.y[1]) / 2 < v.stand.depth / 2 ? 1 : -1 }
+}
+
