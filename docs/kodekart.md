@@ -174,7 +174,7 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
   de gamle diskene 5410, 5415 og 5420 blir løse linjer i gamle skisser (`OLD_COUNTERS`, `retiredToLoose` i `persistence/file.ts`)
 - Kalkyle: `calc/lines/objects.ts` (fast pris, kost fra prisartikkelen `ITEM.counter` i `cost/itemDefs.ts`, bygget av
   `counterBuild`). Plukkes hel, 1 stk (K1)
-- Plan, 3D: plassert og kolliderer som et møbel (`domain/objects.ts`), platene som strek i `plan/layers/CounterPlates.tsx`
+- Plan, 3D: plassert og kolliderer som et møbel (`domain/objects.ts`), platene og delelinjene som strek i `plan/layers/CounterLines.tsx`
   (fra `ObjectLayer.tsx`) · `scene3d/build/counter.ts` (`buildCounter` tar en `CounterBuild`, kalt fra `buildObjects`; profilen i et knutepunkt dreies etter de lukkede sidene den har, `outward`),
   profilen snudd etter omrisset med `turnedProfile` (`build/profiles.ts`). Begge tegner i diskens egne koordinater og
   plasseres og snus utenfra, så en tegnet disk bruker de samme delene
@@ -184,8 +184,11 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
   tegnet disk er et møbel med `pieces` (rette biter, mm); `domain/counterShape.ts` gjør dem til deler (`layoutOf`),
   bygg (`counterBuildOf`, delt av plan, 3D og kalkyle), boksen rundt (`objectFootprint`) og det den dekker, én
   rektangel per bit (`pieceRects` → `objectBoxes` i `domain/objects.ts`, brukt av kollisjon, treff og markering, så det
-  åpne hjørnet i en L er gulv). Dra innover fra en fri ende korter den (`shorten`); valgt disk får mål med `Chain`
-  (`counterChains` i `plan/dims.ts`, `CounterDims` i `layers/DimLayer.tsx`). I
+  åpne hjørnet i en L er gulv), og veien mellom diskens egne koordinater og planen (`toPlan`, `toLocal`, `turn`). Endene
+  en strek går ut fra er i `domain/counterEnds.ts` (`counterEnd`, vist som grep av `layers/CounterHandle.tsx`). Om et
+  møbel er en disk, sier `PlaceContext.isCounter`. Dra innover fra en fri ende korter den (`shorten`); valgt disk, og
+  hver tegnet disk på arbeidsordren, får helmål med `Chain` (`counterChains` i `plan/dims.ts`, `CounterDims` i
+  `layers/DimLayer.tsx`). I
   kalkylen prises en tegnet disk av kostmotoren (`drawnCounterLine`, `drawnCounterUses` i `calc/lines/objects.ts`,
   `strategy: 'sum'` gjennom `extra` i `line()`, prisartiklene `ITEM.counterProfile` … `counterCorner` i
   `cost/itemDefs.ts`, K9); delene plukkes løse: `counterParts`/`addParts` (`foga/counter.ts`) → `drawnCounterParts`
@@ -196,8 +199,7 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 - Farge (K6): `PlacedObject.ral`, uten = som på lager (`counterRal`, `COUNTER_STOCK_RAL` i `domain/objects.ts`). Planen
   fyller disken med platefargen, 3D farger platene (`buildCounter` tar fargen). Kalkylen legger prisartikkelen
   `ITEM.counterPlates` til linjen for hver farget disk, prisen er den samme
-- Neste steg: pensel som tegner disk i valgfri lengde og med hjørner (egen modell ved siden av `PlacedObject`, kassene fra
-  `counterBuild`, skjøtene som nye regler i K-serien), og print og dekal på platene
+- Neste steg: print og dekal på platene
 - Tester: `foga/counter.test.ts`, `calc/counter.test.ts`, `scene3d/build/counter.test.ts`; eksempel i `src/test/fixtures/10-mobler-utstyr.json`
 
 ### Møbler og utstyr

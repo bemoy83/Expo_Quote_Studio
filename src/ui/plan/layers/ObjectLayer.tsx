@@ -1,7 +1,8 @@
-// Furniture in the plan. A counter (Byggeregel K1) is drawn in its plates' colour (K6) and shows its plates: front and both ends closed, the back open.
+// Furniture in the plan. A counter (Byggeregel K1) is drawn in its plates' colour (K6) and shows its plates: front and
+// both ends closed, the back open; a drawn one (K7) piece by piece, with a line where two parts meet (CounterLines.tsx).
 import { mainGroupOf } from '../../../catalog/groups'
-import { counterBuildOf, pieceRects } from '../../../domain/counterShape'
-import { counterRal, footprintBox, objectFootprint } from '../../../domain/objects'
+import { counterBuildOf } from '../../../domain/counterShape'
+import { counterRal, footprintBox, objectBoxes, objectFootprint } from '../../../domain/objects'
 import type { Variant } from '../../../domain/types'
 import { BLOCK, INK } from '../../colors'
 import { idx, place, plateColor, productOf } from '../../env'
@@ -9,7 +10,7 @@ import { linePx, usePlanScale } from '../planScale'
 import type { Layer, Tool } from '../../tools'
 import type { PlanSelection } from '../selection'
 import { DIMMED, HALO, HALO_OPACITY, outlineHalo } from '../planStyle'
-import { CounterPlates } from './CounterPlates'
+import { CounterLines } from './CounterLines'
 import { GONE_FILL, useErasing } from './erasing'
 
 /** Furniture by its footprint; one that collides is outlined in red. */
@@ -34,7 +35,6 @@ export function ObjectLayer(props: {
         // A counter in its plates' colour (K6), other furniture in its own
         const col = counter ? plateColor(counterRal(o)) : (idx.byArtnr.get(o.product)?.variant.color ?? 'oklch(0.3 0.004 250)')
         if (!f) return null
-        const b = footprintBox(o, f)
         const isBad = bad.has(o.id)
         const sel = selection.objectId === o.id
         const stroke = isBad ? BLOCK : INK
@@ -44,23 +44,23 @@ export function ObjectLayer(props: {
         const halo = { fill: 'none', stroke: HALO, strokeWidth: outlineHalo(sc) }
         const g = gone('object', o.id)
         const op = off(mainGroupOf(productOf(o.product)?.group)) ? DIMMED : undefined
-        // A drawn counter (K7): each piece, stroked first and filled over, so only its outline shows
-        if (counter && o.pieces) {
-          const rects = pieceRects(o).map((r) => ({ x: r.x0 / 1000, y: r.y0 / 1000, w: (r.x1 - r.x0) / 1000, h: (r.y1 - r.y0) / 1000 }))
-          const each = (props: object) => rects.map((r, i) => <rect key={i} x={r.x} y={r.y} width={r.w} height={r.h} {...props} />)
+        // A counter (K1, K7): each of its boxes (one, or one per drawn piece), stroked first and filled over, so only
+        // the outline shows, and one halo over the pieces of an L, not darker where they overlap
+        if (counter) {
+          const each = (props: object) => objectBoxes(place, o).map((r, i) => <rect key={i} x={r.x0} y={r.y0} width={r.x1 - r.x0} height={r.y1 - r.y0} {...props} />)
           return (
             <g key={o.id}>
-              <g transform={`translate(${o.x} ${o.y}) rotate(${o.rot})`} opacity={op}>
-                {/* One halo over the pieces of an L, not darker where they overlap */}
+              <g opacity={op}>
                 {sel && <g opacity={HALO_OPACITY}>{each(halo)}</g>}
                 {each({ fill: col, stroke, strokeWidth: 2 * sw })}
                 {each({ fill: col, fillOpacity: g ? GONE_FILL : undefined })}
                 {g && each({ fill: hatch })}
               </g>
-              <CounterPlates b={counterBuildOf(o)} at={o} width={linePx(sc, 1.2)} divide={linePx(sc, 0.75)} opacity={op} />
+              <CounterLines b={counterBuildOf(o, counter)} at={o} width={linePx(sc, 1.2)} divide={linePx(sc, 0.75)} opacity={op} />
             </g>
           )
         }
+        const b = footprintBox(o, f)
         const shape = (fill: string, props: object) =>
           f.round ? (
             <circle cx={o.x} cy={o.y} r={f.w / 2} fill={fill} {...props} />
@@ -72,7 +72,6 @@ export function ObjectLayer(props: {
             {sel && shape('none', { ...halo, strokeOpacity: HALO_OPACITY })}
             {shape(col, { stroke, strokeWidth: sw, opacity: op, fillOpacity: g ? GONE_FILL : undefined, style: { cursor: tool === 'select' && f.round ? 'move' : undefined } })}
             {g && shape(hatch, {})}
-            {counter && <CounterPlates b={counterBuildOf(o, counter)} at={o} width={linePx(sc, 1.2)} divide={linePx(sc, 0.75)} opacity={op} />}
           </g>
         )
       })}
