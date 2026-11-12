@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { counterBuildOf, piecesFootprint, piecesOf } from './counterShape';
 import { drawCounter } from './counters';
-import { footprintBox, type PlaceContext } from './objects';
+import { blockers, footprintBox, hitsAny, objectBoxes, type PlaceContext } from './objects';
 import { createVariant } from './variant';
 import { RULES } from '../rules/rules';
 import type { PlacedObject, Variant } from './types';
@@ -18,6 +18,7 @@ const draw = (v: Variant, a: [number, number], b: [number, number]) => {
   return r.v;
 };
 const only = (v: Variant) => v.objects[v.objects.length - 1];
+const onlyIn = (objects: PlacedObject[]): Variant => ({ ...base, objects });
 const box = (o: PlacedObject) => {
   const b = footprintBox(o, piecesFootprint(o, ctx.footprint('6560')!));
   return [b.x0, b.y0, b.x1, b.y1].map((n) => Math.round(n * 1000) / 1000);
@@ -103,8 +104,51 @@ describe('drawn on from the end of a counter (K7, K8)', () => {
     expect(box(o)).toEqual([0.99, 0.74, 2.01, 2.26]);
   });
 
+  it('covers its pieces only: the open corner of the L is floor (K7)', () => {
+    const o = only(draw(one, [1.2, 2], [1.2, 1]));
+    const boxes = objectBoxes(ctx, o).map((b) => [b.x0, b.y0, b.x1, b.y1].map((n) => Math.round(n * 1000) / 1000));
+    expect(boxes).toEqual([
+      [0.99, 1.74, 2.01, 2.26],
+      [0.99, 0.74, 1.51, 1.76],
+    ]);
+    const corner = { x0: 1.6, y0: 0.8, x1: 2.0, y1: 1.6 };
+    expect(hitsAny([corner], blockers(onlyIn([o]), ctx))).toBeNull();
+  });
+
   it('refuses a corner toward the front, where the customers stand', () => {
     const r = drawCounter(one, ctx, isCounter, pen, [1.2, 2], [1.2, 3]);
     expect('error' in r && r.error).toMatch(/bakover/);
   });
 });
+
+describe('shorter: drawn inward from a free end (K7)', () => {
+  const one = draw(base, [1.5, 2], [2, 2]);
+  const longer = draw(one, [1.95, 2], [2.45, 2]);
+
+  it('takes off half metres, back to the counter in stock and down to a half', () => {
+    const v = draw(longer, [2.25, 2], [1.8, 2]);
+    expect(only(v).pieces).toBeUndefined();
+    expect(box(only(v))).toEqual([0.99, 1.74, 2.01, 2.26]);
+    const half = only(draw(one, [1.75, 2], [1.3, 2]));
+    expect(counterBuildOf(half).length).toBe(520);
+    expect(box(half)).toEqual([0.99, 1.74, 1.51, 2.26]);
+    // A half has nothing to take off: either way from it draws it longer
+    expect(counterBuildOf(only(draw({ ...base, objects: [half] }, [1.25, 2], [1.75, 2]))).length).toBe(1020);
+    expect(box(only(draw({ ...base, objects: [half] }, [1.25, 2], [0.75, 2])))).toEqual([0.49, 1.74, 1.51, 2.26]);
+  });
+
+  it('leaves it as it is until the stroke is near half a metre', () => {
+    const r = drawCounter(longer, ctx, isCounter, pen, [2.25, 2], [2.1, 2]);
+    expect('v' in r && r.v).toBe(longer);
+  });
+
+  it('shortens the free arm of an L, never the end the corner stands on', () => {
+    const ell = draw(one, [1.2, 2], [1.2, 1]);
+    const o = only(ell);
+    const v = draw(ell, [1.25, 0.95], [1.25, 1.5]);
+    expect(counterBuildOf(only(v))).toMatchObject({ length: 1020, depth: 1020 });
+    expect(drawCounter(ell, ctx, isCounter, pen, [1.25, 2], [1.75, 2])).toMatchObject({ error: expect.stringMatching(/hjørnet/) });
+    expect(piecesOf(o)).toHaveLength(2);
+  });
+});
+

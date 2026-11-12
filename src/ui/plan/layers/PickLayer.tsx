@@ -5,7 +5,7 @@ import { faceSegment, sideOf } from '../../../domain/faces'
 import { laneAt } from '../../../domain/floor/edit'
 import { fillTilesOf } from '../../../domain/floor/rollFill'
 import { CELL } from '../../../domain/grid'
-import { footprintBox, objectFootprint } from '../../../domain/objects'
+import { objectBoxes } from '../../../domain/objects'
 import { shelfBox, shelvesOf } from '../../../domain/shelves/model'
 import type { BuiltModule } from '../../../domain/walls'
 import type { ReactNode } from 'react'
@@ -51,11 +51,16 @@ export function PickLayer({ v, mods, picked, selection }: { v: Variant; mods: Bu
     const sb = sh && shelfBox(v, rules, sh)
     if (sb) return <rect x={sb.x0} y={sb.y0} width={sb.x1 - sb.x0} height={sb.y1 - sb.y0} fill={INK} fillOpacity={PICK_OPACITY} />
     const o = picked.objectId ? v.objects.find((x) => x.id === picked.objectId) : undefined
-    const f = o && objectFootprint(place, o)
-    if (o && f) {
-      const r = footprintBox(o, f)
-      return <rect x={r.x0} y={r.y0} width={r.x1 - r.x0} height={r.y1 - r.y0} fill={INK} fillOpacity={PICK_OPACITY} />
-    }
+    // One shade over what it covers (an L's pieces overlap in the corner)
+    const boxes = o ? objectBoxes(place, o) : []
+    if (boxes.length)
+      return (
+        <g opacity={PICK_OPACITY}>
+          {boxes.map((r, i) => (
+            <rect key={i} x={r.x0} y={r.y0} width={r.x1 - r.x0} height={r.y1 - r.y0} fill={INK} />
+          ))}
+        </g>
+      )
     const room = picked.roomId ? v.rooms.find((r) => r.id === picked.roomId) : undefined
     if (room) return <polygon points={room.outline.map((p) => p.join(',')).join(' ')} fill={INK} fillOpacity={PICK_OPACITY / 2} />
     const w = picked.wallId ? v.walls.find((x) => x.id === picked.wallId) : undefined
