@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { parse } from '../../../persistence/file'
+import { stockOf } from '../../../domain/podiumStock'
 import type { Variant } from '../../../domain/types'
 import { PILL_GAP, PILL_PAST_CHAIN, PILL_PAST_NAME, pillAnchor, placePill, type PillAnchor } from './pillAnchor'
 
@@ -39,7 +40,7 @@ describe('Where the selection pill stands', () => {
 
   it('a counter: past its width measure, toward the middle of the stand, else on the other side (K7)', () => {
     const v = sketch('10-mobler-utstyr')
-    const id = v.objects.find((o) => o.product === '6560')!.id
+    const id = v.objects.find((o) => stockOf(o.sections)?.artnr === '6560')!.id
     // In the front half its measure stands over it: the pill goes over that, not down toward the aisle
     expect(pillAnchor(v, { objectId: id })!.tries).toEqual([
       { dir: 'up', gap: PILL_PAST_CHAIN },

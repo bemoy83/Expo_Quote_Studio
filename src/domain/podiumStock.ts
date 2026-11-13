@@ -4,9 +4,10 @@
 // decals (K20), turning, moving and standing against a wall or another counter keep it; another size, height or shelf,
 // a sliding door, another open side or a fusion makes it built on site (K13). Pure, mm in the counter's frame.
 import { RECIPES } from '../foga/recipes';
-import { turnedSides } from './podiumFaces';
-import { bounds } from './podiumSections';
-import type { CounterSection, SectionSide } from './types';
+import { layoutOf, piecesOf } from './counterShape';
+import { prunedSides, turnedSides } from './podiumFaces';
+import { bounds, EPS } from './podiumSections';
+import type { CounterLight, CounterSection, PlacedObject, Point, SectionSide } from './types';
 
 const R = RECIPES.counter;
 
@@ -59,4 +60,31 @@ export function stockOf(sections: readonly CounterSection[] | undefined): StockC
   if (!sections?.length) return undefined;
   const keys = new Set([0, 90, 180, 270].map((r) => shapeKey(sections, r)));
   return STOCK_COUNTERS.find((s) => s.sections.length === sections.length && keys.has(shapeKey(s.sections, 0)));
+}
+
+/**
+ * A counter from before Disker og podier took over Disker (Bjørn 13.11.2026) as sections (K22): the counter in stock as
+ * its standard counter, a drawn counter (K7) one section per whole or half metre, open at its back in both light
+ * openings, with the shelf at CC 750 as in 6560. Built the same, so it costs and is picked the same; colour and place
+ * kept. `product`: the product of Disker og podier. Other objects as they are.
+ */
+export function asSections(o: PlacedObject, product: string): PlacedObject {
+  const stock = !o.pieces && !o.sections && STOCK_COUNTERS.find((s) => s.artnr === o.product);
+  if (!o.pieces && !stock) return o;
+  const l = layoutOf(piecesOf(o));
+  const onOpen = (a: Point, b: Point) =>
+    l.open.some(([p, q]) => [a, b].every(([x, z]) => x > Math.min(p[0], q[0]) - EPS && x < Math.max(p[0], q[0]) + EPS && z > Math.min(p[1], q[1]) - EPS && z < Math.max(p[1], q[1]) + EPS));
+  const open = { lights: ['open', 'open'] as CounterLight[] };
+  const sections = stock
+    ? stockSections(stock.artnr)
+    : l.cells.map((c): CounterSection => {
+        const sides: CounterSection['sides'] = {};
+        if (onOpen([c.x[0], c.z[0]], [c.x[0], c.z[1]])) sides['x-'] = open;
+        if (onOpen([c.x[1], c.z[0]], [c.x[1], c.z[1]])) sides['x+'] = open;
+        if (onOpen([c.x[0], c.z[0]], [c.x[1], c.z[0]])) sides['z-'] = open;
+        if (onOpen([c.x[0], c.z[1]], [c.x[1], c.z[1]])) sides['z+'] = open;
+        return { x: [c.x[0], c.x[1]], z: [c.z[0], c.z[1]], h: R.top, shelves: [R.middle], ...(Object.keys(sides).length && { sides }) };
+      });
+  const { pieces: _, ...rest } = o;
+  return { ...rest, product, sections: prunedSides(sections) };
 }

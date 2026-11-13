@@ -11,7 +11,8 @@ import { counterBuildOf } from './counterShape';
 import { setPodiumPrint } from './podiumDecor';
 import { setPodiumLight, partKey, podiumParts } from './podiumFaces';
 import { podiumAt } from './podiums';
-import { stockOf, stockSections } from './podiumStock';
+import { asSections, stockOf, stockSections } from './podiumStock';
+import { drawnCounterUses, podiumUses } from '../calc/lines/objects';
 const isStock6560 = (s: CounterSection[]) => stockOf(s)?.artnr === '6560';
 import type { CounterSection, PlacedObject, Variant } from './types';
 import { createVariant } from './variant';
@@ -93,5 +94,35 @@ describe('the pen places a standard counter (K22)', () => {
     const r = podiumAt(base, ctx, { product: '6570' }, [3, 2]);
     if ('error' in r) throw new Error(r.error);
     expect(r.v.objects[0].sections).toEqual([{ x: [-250, 250], z: [-250, 250], h: 1000 }]);
+  });
+});
+
+describe('counters from Disker as sections when a sketch opens (K22)', () => {
+  type Piece = NonNullable<PlacedObject['pieces']>[number];
+  const shapes: Record<string, Piece[]> = {
+    'straight 1,5 m': [{ a: [-750, 0], b: [750, 0], back: [0, -1] }],
+    'straight 2,5 m': [{ a: [-1250, 0], b: [1250, 0], back: [0, -1] }],
+    L: [
+      { a: [-500, 0], b: [500, 0], back: [0, -1] },
+      { a: [-250, -250], b: [-250, -1250], back: [1, 0] },
+    ],
+  };
+  const sum = (b: ReturnType<typeof counterBuildOf>) => ({ prof: profileMetres(b), couplings: b.couplings, plates: b.plates.map((p) => `${p.w}×${p.h}`).sort(), boards: b.boards.map((x) => `${x.w}×${x.d}`).sort() });
+  const uses = (u: { id: string; qty: number }[]) => Object.fromEntries(u.map((x) => [x.id, x.qty]));
+
+  for (const [name, pieces] of Object.entries(shapes))
+    it(`a drawn ${name} is built and costed the same`, () => {
+      const o: PlacedObject = { id: 'i1', product: '6560', x: 2, y: 1.5, rot: 90, ral: '7012', pieces };
+      const s = asSections(o, '6570');
+      expect([s.product, s.pieces, s.ral, s.rot, s.x, s.y]).toEqual(['6570', undefined, '7012', 90, 2, 1.5]);
+      expect(sum(counterBuildOf(s))).toEqual(sum(counterBuildOf(o)));
+      expect(uses(podiumUses(s))).toEqual(uses(drawnCounterUses(o)));
+    });
+
+  it('the counter in stock becomes its standard counter; other objects stay as they are', () => {
+    const s = asSections({ id: 'i1', product: '6560', x: 2, y: 1.5, rot: 180 }, '6570');
+    expect([s.product, stockOf(s.sections)?.artnr, s.rot]).toEqual(['6570', '6560', 180]);
+    const chair: PlacedObject = { id: 'i2', product: '5276', x: 1, y: 1, rot: 0 };
+    expect(asSections(chair, '6570')).toBe(chair);
   });
 });

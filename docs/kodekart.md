@@ -264,7 +264,8 @@ står urørt; det nye deler bygger, omriss, 3D og kalkyle med dem.
   `stockOf`: hvilken standarddisk seksjonene er, i hvilken som helst dreining, uten farge og dekor; `stockSections`).
   Kalkylen (`calc/lines/objects.ts`) gir en standarddisk katalogens linje og plukker den hel; `drawnCounterParts`
   hopper over den. Navnet i pille, skuff og arbeidsordre: `counterName` i `ui/env.ts`. Pennen: `Brush.stock` (valgt i hurtigvalget, `QuickPicks.tsx`), `podiumAt` setter
-  standarddisken med `frontRot` fra `counters.ts`.
+  standarddisken med `frontRot` fra `counters.ts`. Gamle skisser: `asSections` (podiumStock.ts) via `countersAsSections` i
+  `persistence/file.ts` gjør disker fra Disker om til seksjoner når de åpnes.
 - Høyde i 3D (K18): `podiumTopAt` og draget `podiumTop` i `scene3d/pointer/drag.ts`, `onUpright` i `pointer/hits.ts`.
   Arbeidsordren: `workorder/PodiumSides.tsx` («Disker sett utenfra», `PodiumElevation` uten håndtak) og
   `workorder/podiumSideList.ts` (hvilke sider som tegnes).
