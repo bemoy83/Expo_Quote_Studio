@@ -46,6 +46,8 @@ export interface PlanSelection {
   podiumSide?: string
   podiumPart?: number
   podiumLight?: number
+  /** A decal on it (K20), by id. */
+  podiumDecal?: string
 }
 
 /** How the drawer under the plan stands: closed, or open in one of its two heights (docs/pille-og-skuff.md). A plain

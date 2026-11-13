@@ -4,11 +4,15 @@
 import { useId } from 'react'
 import { mainGroupOf } from '../../../catalog/groups'
 import { lockedParts, placedBuild } from '../../../domain/podiumLocks'
-import { lightsOf, partKey, podiumParts } from '../../../domain/podiumFaces'
+import { lightsOf, partKey, podiumParts, type PodiumPart } from '../../../domain/podiumFaces'
 import { toPlan } from '../../../domain/counterShape'
 import { RECIPES } from '../../../foga/recipes'
 import { counterRal, footprintBox, objectBoxes, objectFootprint } from '../../../domain/objects'
-import type { PlacedObject, Variant } from '../../../domain/types'
+import type { Motif, PlacedObject, Variant } from '../../../domain/types'
+import { podiumDecals, podiumPrints } from '../../../domain/podiumDecor'
+import type { Crop } from '../../../domain/print'
+import { findMotif } from '../../motifs'
+import { Print } from '../drawerParts'
 import { BLOCK, INK } from '../../colors'
 import { idx, place, plateColor, productOf } from '../../env'
 import { linePx, usePlanScale } from '../planScale'
@@ -29,8 +33,10 @@ export function ObjectLayer(props: {
   dim: (...layers: Layer[]) => number
   /** A main product group the panel has hidden. */
   off: (group: string) => boolean
+  /** The motifs print and decals on a counter show (K20). */
+  motifs?: Motif[]
 }) {
-  const { v, selection, tool, bad, dim, off } = props
+  const { v, selection, tool, bad, dim, off, motifs } = props
   const { gone, hatch } = useErasing()
   const sc = usePlanScale()
   return (
@@ -54,7 +60,7 @@ export function ObjectLayer(props: {
         if (counter)
           return (
             <g key={o.id}>
-              <CounterShape v={v} o={o} fill={col} stroke={stroke} bad={isBad} sel={sel} gone={g ? hatch : null} opacity={op} />
+              <CounterShape v={v} o={o} fill={col} stroke={stroke} bad={isBad} sel={sel} gone={g ? hatch : null} opacity={op} motifs={motifs} />
               <CounterLines b={placedBuild(v, place, o, counter)} at={o} divide={linePx(sc, 0.75)} opacity={op} />
             </g>
           )
@@ -83,7 +89,7 @@ export function ObjectLayer(props: {
  * the open ones (Bjørn 13.11.2026). Both strokes lie inside the outer edge, so the counter is drawn no
  * wider than it is: each is twice as wide and clipped to the counter.
  */
-function CounterShape({ v, o, fill, stroke, bad, sel, gone, opacity }: { v: Variant; o: PlacedObject; fill: string; stroke: string; bad: boolean; sel: boolean; gone: string | null; opacity?: number }) {
+function CounterShape({ v, o, fill, stroke, bad, sel, gone, opacity, motifs }: { v: Variant; o: PlacedObject; fill: string; stroke: string; bad: boolean; sel: boolean; gone: string | null; opacity?: number; motifs?: Motif[] }) {
   const sc = usePlanScale()
   const clip = `counter${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`
   const boxes = objectBoxes(place, o)
@@ -100,11 +106,38 @@ function CounterShape({ v, o, fill, stroke, bad, sel, gone, opacity }: { v: Vari
       {each({ fill, fillOpacity: gone ? GONE_FILL : undefined })}
       {gone && each({ fill: gone })}
       <g clipPath={`url(#${clip})`}>
+        <PrintMarks o={o} locked={locked} motifs={motifs} />
         <DoorMarks o={o} locked={locked} stroke={stroke} />
         {counterOutline(place, o, locked).map((s, i) => (
           <line key={i} x1={s.a[0]} y1={s.a[1]} x2={s.b[0]} y2={s.b[1]} stroke={stroke} strokeWidth={2 * (s.open ? open : closed)} strokeOpacity={s.open ? COUNTER_EDGE.openOpacity : undefined} />
         ))}
       </g>
+    </g>
+  )
+}
+
+/** Print and decals on the sides of a counter of Disker og podier seen from above (K20): a thin band of the motif just
+ *  inside the outer face, as long as the print or decal. Drawn in the counter's own frame, mm. */
+function PrintMarks({ o, locked, motifs }: { o: PlacedObject; locked: readonly string[]; motifs?: Motif[] }) {
+  const sc = usePlanScale()
+  if (!o.sections?.some((s) => s.sides) || !motifs?.length) return null
+  const off = new Set(locked)
+  const ratio = (id: string) => findMotif(motifs, id)?.ratio ?? 0
+  const t = linePx(sc, 3) * 1000
+  const { face } = RECIPES.counter
+  const band = (key: string, p: PodiumPart, t0: number, t1: number, motif: string, crop?: Crop) => {
+    const m = findMotif(motifs, motif)
+    if (!m) return null
+    const outer = p.at + p.out * face
+    const inner = outer - p.out * t
+    const [c0, c1] = [Math.min(outer, inner), Math.max(outer, inner)]
+    const box = p.axis === 'z' ? { x: t0, y: c0, width: t1 - t0, height: c1 - c0 } : { x: c0, y: t0, width: c1 - c0, height: t1 - t0 }
+    return <Print key={key} m={m} {...box} crop={crop ?? [0, 0.45, 1, 0.55]} />
+  }
+  return (
+    <g transform={`translate(${o.x} ${o.y}) rotate(${o.rot}) scale(0.001)`} pointerEvents="none">
+      {podiumPrints(o.sections, off, ratio).map((w, i) => band(`p${i}`, w.part, w.t0, w.t1, w.motif, [w.crop[0], (w.crop[1] + w.crop[3]) / 2 - 0.02, w.crop[2], (w.crop[1] + w.crop[3]) / 2 + 0.02]))}
+      {podiumDecals(o.sections, off).map((d) => band(d.decal.id, d.part, d.t0, d.t1, d.decal.motif))}
     </g>
   )
 }

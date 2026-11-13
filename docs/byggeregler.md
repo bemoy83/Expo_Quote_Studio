@@ -510,6 +510,17 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   seksjoner slås bare sammen (K14) med like hyller; et grep som legger på seksjoner gir dem hyllene til seksjonen det
   strekker. Tid, plassholder: 1,5 min opp og 1 ned per hylle (som H7, Bjørn 13.11.2026). Tilbudet sier «3 hyller».
   *Bjørn 13.11.2026 · kode `src/foga/counter.ts` (`shelfRails`), `src/domain/podiumShelves.ts` · test `src/domain/podiumShelves.test.ts`, `src/calc/podium.test.ts`*
+- **K20 Print og dekal på disk.** På plate og skyvedør, aldri på åpen lysåpning, trinnplate eller del mot vegg eller
+  annen disk (valget står og kommer tilbake når disken flyttes ut). Print er heldekkende dekal, ikke trykk på platen, og
+  dekker platene og dørene i delen mellom stolpene og skinnene. Deler på rad på samme side med samme motiv viser ett
+  motiv strukket over dem (som `printWall`): bildet dekker fra første dels venstre stolpe til siste dels høyre og fra
+  bunnskinnen til den høyeste toppen, beskåret, aldri strukket ut av form. En dekal har mål og plass på delen (fra
+  midten av seksjonens side, sett utenfra) og flyttes og skaleres i risset som på vegg, holdt innenfor delen. Print
+  tar bort dekalene på siden, og en dekal tar bort printen. Fargen er diskens (K6): en farge valgt i paletten tar
+  printen av det som er valgt (siste strøk vinner), og malerspannet farger hele disken eller printer alle delene som
+  kan ta det. Vist i risset, i planen (en tynn stripe av motivet innenfor ytterkanten) og i 3D. Prises som på vegg:
+  print som m² helt felt, dekal som m² dekal, og en oppstart per print strukket over flere deler.
+  *Bjørn 13.11.2026 · kode `src/domain/podiumDecor.ts`, `src/calc/lines/decor.ts` · test `src/domain/podiumDecor.test.ts`*
 
 ## P · Plukkliste og arbeidsordre
 

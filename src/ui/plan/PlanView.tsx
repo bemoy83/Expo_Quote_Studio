@@ -305,7 +305,7 @@ export function PlanView(p: Props) {
       {twin('beams', (s) => <BeamLayer v={s.v} res={s.res} selection={selection} dim={dim} measured={p.mini ? undefined : dragging?.kind === 'beam' ? dragging.id : (selection.beamId ?? (p.beamMeasures || undefined))} />)}
 
       {/* Objects */}
-      {twin('objects', (s) => <ObjectLayer v={s.v} selection={selection} tool={tool} bad={s.bad} dim={dim} off={off} />)}
+      {twin('objects', (s) => <ObjectLayer v={s.v} selection={selection} tool={tool} bad={s.bad} dim={dim} off={off} motifs={p.motifs} />)}
 
       {/* Rooms: name and size over the floor and furniture, the selected one outlined */}
       {!p.mini && twin('rooms', (s) => <RoomLayer v={s.v} selection={selection} />)}

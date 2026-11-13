@@ -149,6 +149,21 @@ export type CounterLight = 'open' | 'door';
  *  is outside the counter; a side that becomes inner loses it (domain/podiumFaces.ts). */
 export interface SectionSide {
   lights?: (CounterLight | null)[];
+  /** Print over the whole of its parts (Byggeregel K20): the motif, as a decal over every plate and door. */
+  print?: string;
+  /** Decals on it (K20). */
+  decals?: PodiumDecal[];
+}
+
+/** A decal on a side of a counter of Disker og podier (K20), mm: its size, its centre from the middle of the section's
+ *  side as seen from outside (left to right), and its centre's height above the floor. */
+export interface PodiumDecal {
+  id: string;
+  motif: string;
+  w: number;
+  h: number;
+  x: number;
+  y: number;
 }
 
 /** One straight piece of a drawn counter: its centre line from `a` to `b` (whole metres from `a`, a half last, K7),

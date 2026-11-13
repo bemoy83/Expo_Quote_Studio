@@ -174,11 +174,12 @@ const SIDES: Edge[] = ['l', 'r', 't', 'b']
 const CORNERS: Edge[] = ['tl', 'tr', 'bl', 'br']
 const CURSOR: Record<Edge, string> = { l: 'ew', r: 'ew', t: 'ns', b: 'ns', tl: 'nwse', br: 'nwse', tr: 'nesw', bl: 'nesw' }
 
-/** Handles on a box in a drawing (metres, y down): on every edge and corner, or on the corners only. */
-export function Handles({ x, y, w, h, corners, onDown }: { x: number; y: number; w: number; h: number; corners?: boolean; onDown: (e: RPointerEvent, edge: Edge) => void }) {
-  const t = 0.07
-  const len = Math.min(0.2, w / 3, h / 3)
-  const c = 0.08
+/** Handles on a box in a drawing (metres, y down): on every edge and corner, or on the corners only. `k`: smaller for a
+ *  smaller drawing (a counter's side). */
+export function Handles({ x, y, w, h, corners, k = 1, onDown }: { x: number; y: number; w: number; h: number; corners?: boolean; k?: number; onDown: (e: RPointerEvent, edge: Edge) => void }) {
+  const t = 0.07 * k
+  const len = Math.min(0.2 * k, w / 3, h / 3)
+  const c = 0.08 * k
   const at = (e: Edge) => {
     const hx = e.includes('l') ? x : e.includes('r') ? x + w : x + w / 2
     const hy = e.includes('t') ? y : e.includes('b') ? y + h : y + h / 2
@@ -188,7 +189,7 @@ export function Handles({ x, y, w, h, corners, onDown }: { x: number; y: number;
   return (
     <g>
       {(corners ? CORNERS : [...SIDES, ...CORNERS]).map((e) => (
-        <rect key={e} {...at(e)} rx={0.015} fill={INK} style={{ cursor: `${CURSOR[e]}-resize` }} onPointerDown={(ev) => onDown(ev, e)} />
+        <rect key={e} {...at(e)} rx={0.015 * k} fill={INK} style={{ cursor: `${CURSOR[e]}-resize` }} onPointerDown={(ev) => onDown(ev, e)} />
       ))}
     </g>
   )

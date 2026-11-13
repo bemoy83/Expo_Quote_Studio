@@ -2,10 +2,10 @@
 import * as THREE from 'three'
 import { FURNITURE_WHITE } from '../../../catalog/defaultCatalog'
 import { conflicts, counterRal } from '../../../domain/objects'
-import { placedBuild } from '../../../domain/podiumLocks'
+import { lockedParts, placedBuild } from '../../../domain/podiumLocks'
 import { idx, place } from '../../env'
 import { CHROME, CONFLICT, NO_COLOR, SELECT, type BuildContext, type Tag } from './context'
-import { buildCounter } from './counter'
+import { buildCounter, buildPodiumDecor } from './counter'
 
 export function buildObjects(c: BuildContext) {
   const { v, root, at, mat, add, sel } = c
@@ -25,6 +25,7 @@ export function buildObjects(c: BuildContext) {
     const counter = r.product.counter
     if (counter) {
       buildCounter(c, g, placedBuild(v, place, o, counter), counterRal(o), tag, warn)
+      if (o.sections) buildPodiumDecor(c, g, o.sections, new Set(lockedParts(v, place, o)), tag, warn)
       continue
     }
     const body = mat('objects', color, { roughness: 0.6, ...warn })
