@@ -189,7 +189,9 @@ export function PlanView(p: Props) {
         ? PEN_DIMMED
         : 1
   // The end of a counter under the Disker pen is a handle (K7): a hand to take hold of, closed while dragging it
-  const cursor = tool !== 'select' ? (next?.outcome.handle ? (dragging?.kind === 'counter' ? 'grabbing' : 'grab') : 'crosshair') : roomCursor()
+  // so is an edge of Disker og podier with Shift (PR 2)
+  const grips = !!next?.outcome.handle || !!next?.outcome.grip?.length
+  const cursor = tool !== 'select' ? (grips ? (dragging?.kind === 'counter' || dragging?.kind === 'podium' ? 'grabbing' : 'grab') : 'crosshair') : roomCursor()
   function roomCursor() {
     const d = dragging
     if (d?.kind === 'room') return d.mode === 'move' ? 'grabbing' : d.horizontal ? 'ns-resize' : 'ew-resize'

@@ -383,7 +383,8 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   gjør disken kortere i halve meter, ned til 0,5 m; enden et hjørne står på, kan ikke kortes. En L dekker bare bitene
   sine: hjørnet den lar stå åpent, er gulv for andre ting. Valgt disk viser utvendig helmål i planen: bredde og dybde på
   siden mot midten av standen, en L sine to ytre lengder. Arbeidsordren viser helmålene på alle tegnede disker, siden de bygges
-  på stedet; 6560 fra lager får ingen.
+  på stedet; 6560 fra lager får ingen. Disker og podier (K10–K13) er et eget verktøy med egne regler, og K7 gjelder ikke
+  for det.
   *Bjørn 12.11.2026 · `RECIPES.counter.module`, `face`, `joint` · kode `src/foga/counter.ts`, `src/domain/counters.ts`, `src/domain/counterShape.ts` · test `src/foga/counter.test.ts`, `src/domain/counters.test.ts`*
 - **K8 Knutepunkt.** Profilen som står i et knutepunkt, velges etter retningene den kobler: to i L gir 92L, tre i T gir
   93, fire i kors gir 94. Skinnene blir like lange uansett profil; bare antall retninger profilen kan kobles i er
@@ -404,6 +405,43 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   L × D mm», og plukkes ikke selv: plukklisten har delene under Disker, stolpene per profil i 1040, skinnene med 600 per
   lengde, platene i diskens farge per mål og toppene og hyllene per mål.
   *Bjørn 12.11.2026 (tid forslag) · `ITEM.counterProfile`, `counterWhole`, `counterHalf`, `counterCorner` · kode `src/calc/lines/objects.ts`, `src/cost/itemDefs.ts`, `src/foga/counter.ts`, `src/foga/engine.ts`, `src/domain/counters.ts` · test `src/calc/counter.test.ts`*
+- **K10 Seksjoner.** En disk eller et podium fra Disker og podier er satt sammen av seksjoner på et raster på 250 mm:
+  250, 500, 750 eller 1000 c/c i hver retning. Et knutepunkt står i hvert hjørne av hver seksjon. Utvendig mål er
+  c/c + 20 (270, 520, 770, 1020 …), skinnene c/c − 40 (210, 460, 710, 960), platene og toppene c/c − 24 (226, 476, 726,
+  976). En lengde deles i hele meter først og resten sist, regnet fra seksjonen man startet i (1750 = 1000 + 750).
+  Fasongen er fri så lenge seksjonene henger sammen langs en kant på minst 250; alle fasonger går, også T og kors (K7s
+  «hjørne bare bakover» gjelder ikke). Disker og podier er et eget verktøy ved siden av Disker (tast B), og et klikk setter
+  aldri ut 6560. Pennen viser én seksjon 500 × 500 dempet midt under pekeren, inntil vegg, disk eller standkant innen
+  10 cm, og ingenting over en disk; et klikk lagrer den, et klikk på en disk velger den. Trykk og dra tegner videre fra
+  seksjonen, som står fast fra trykket: i hver retning for seg vokser disken `round(d / 500) × 500` på den siden når
+  pekeren går `d` forbi kanten, inne i seksjonen skjer ingenting, og begge retninger gir et rektangel. Der den ikke får
+  plass, nektes den med «Ikke plass til disken her». En disk kan stå helt inntil en vegg. Med Shift (som i CAD: det man
+  har tak i, avgjøres av hvor man trykker, aldri av hvilken vei man drar) står forhåndsvisningen stille, og pekeren kan
+  flyttes over den. Et trykk ved en kant eller et hjørne (utenfor den midterste tredjedelen) tar tak i den kanten, som
+  vises tykk mens man peker, og flytter den `round(Δ / 250) × 250` ut eller inn til 250; motsatt kant står stille. Et
+  trykk midt i tegner fra rasterlinjen gjennom trykket til den nærmest pekeren, minst 250, og de første 75 mm endrer
+  ingenting. Shift trykket eller sluppet midt i et drag låser det som er tegnet og går videre derfra; tastetrykket alene
+  endrer aldri størrelsen. «Fin» i hurtigvalget gjør det samme som Shift for berøring, uten å fryse forhåndsvisningen.
+  *Bjørn 13.11.2026 · kode `src/domain/podiums.ts`, `src/domain/counterShape.ts`, `src/domain/types.ts` · test `src/domain/podiums.test.ts`*
+- **K11 Tett bygg.** Alle utvendige sider er tette: bunnskinne 92 og toppskinne 93 på hver utvendig kant, og én
+  veggplate i hele høyden i kanalene, mellom bunnskinne og toppskinne. Det er ingen midtskinne og ingen hylle i
+  grunnbygget; hyller kommer senere på egne skinner. Inne i disken står ingen plater og ingen bunnskinne; mellom to
+  seksjoner går en 94 øverst som bærer toppen fra begge sider. Hver seksjon har sin topp, MDF 6 mm som K5, også på
+  podier. Profilen i knutepunktet følger K8: to retninger 92L, tre 93, fire 94 (en L av 500 × 500 med to ben på 1000 har
+  94 i innerhjørnet).
+  *Bjørn 13.11.2026 · kode `src/foga/counter.ts`, `src/domain/counterShape.ts` · test `src/domain/podiums.test.ts`*
+- **K12 Høyde.** CC 250, 500, 750 eller 1000: toppskinnen står med underkant i den høyden, stolpen er CC + 40 (290,
+  540, 790, 1040), og platen CC − 24 høy. Høyden lagres per seksjon; alt som tegnes nå, er CC 1000 (Høyde i hurtigvalget
+  kommer i en egen PR). Der to seksjoner med ulik høyde møtes, lukkes trinnet med plate på den høye siden, fra den lave
+  toppen og opp (ikke bygget).
+  *Bjørn 13.11.2026 · kode `src/foga/counter.ts`, `src/domain/podiums.ts` · test `src/domain/podiums.test.ts`*
+- **K13 Pris og plukk for Disker og podier.** Som K9: ett katalogprodukt, «Disk og podium, bygget på stedet»
+  (varenummer 6570 er midlertidig), priset av kostmotoren fra delene og arbeidet, én linje per disk, «bygget på stedet
+  L × D × H mm», og delene plukkes løse under Disker. Linjen heter «Disk» når fasongen ikke er dypere enn 500 noe sted
+  (ingen 750 × 750 får plass i den), ellers «Podium». Toppene har prisartikler for alle målene i K10. Tid, plassholder:
+  `counterWhole` per seksjon med lengste side over 500, `counterHalf` per seksjon ellers, `counterCorner` per innvendig
+  hjørne i omrisset.
+  *Bjørn 13.11.2026 · `ITEM.counterBoard`, `counterWhole`, `counterHalf`, `counterCorner` · kode `src/calc/lines/objects.ts`, `src/cost/itemDefs.ts`, `src/catalog/defaultCatalog.ts`, `src/domain/podiums.ts` · test `src/calc/podium.test.ts`, `src/domain/podiums.test.ts`*
 
 ## P · Plukkliste og arbeidsordre
 

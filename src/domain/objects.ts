@@ -9,7 +9,7 @@ import { doorSwing } from './doors';
 import { nextId } from './ids';
 import { faceSegment, sideOf } from './faces';
 import { RECIPES } from '../foga/recipes';
-import { pieceRects, piecesFootprint, toPlan } from './counterShape';
+import { pieceRects, piecesFootprint, sectionRects, toPlan } from './counterShape';
 
 export interface Box {
   x0: number;
@@ -33,21 +33,22 @@ export interface PlaceContext {
 const GAP = 0.02;
 
 /** An object's footprint: its product's, or the box round a drawn counter (Byggeregel K7). */
-export function objectFootprint(ctx: Pick<PlaceContext, 'footprint'>, o: Pick<PlacedObject, 'product' | 'pieces'>): Footprint | undefined {
+export function objectFootprint(ctx: Pick<PlaceContext, 'footprint'>, o: Pick<PlacedObject, 'product' | 'pieces' | 'sections'>): Footprint | undefined {
   const f = ctx.footprint(o.product);
   return f && piecesFootprint(o, f);
 }
 
-/** What an object covers in the plan, m: its footprint box, or one box per piece of a drawn counter (K7), so an L
- *  leaves its open corner free. */
-export function objectBoxes(ctx: Pick<PlaceContext, 'footprint'>, o: Pick<PlacedObject, 'product' | 'pieces' | 'x' | 'y' | 'rot'>): Omit<Box, 'kind'>[] {
+/** What an object covers in the plan, m: its footprint box, or one box per piece of a drawn counter (K7) or per section
+ *  of Disker og podier (K10), so an L leaves its open corner free. */
+export function objectBoxes(ctx: Pick<PlaceContext, 'footprint'>, o: Pick<PlacedObject, 'product' | 'pieces' | 'sections' | 'x' | 'y' | 'rot'>): Omit<Box, 'kind'>[] {
   const f = objectFootprint(ctx, o);
   if (!f) return [];
-  if (!o.pieces || o.pieces.length < 2) return [footprintBox(o, f)];
+  const rects = o.sections ? sectionRects(o) : o.pieces && o.pieces.length > 1 ? pieceRects(o) : null;
+  if (!rects) return [footprintBox(o, f)];
   // Rounded, so an L's arm and the thing it meets are not a float apart
   const mm = (n: number) => Math.round(n * 1e6) / 1e6;
   const plan = (x: number, y: number) => toPlan(o, [x, y]).map(mm);
-  return pieceRects(o).map((r) => {
+  return rects.map((r) => {
     const [ax, ay] = plan(r.x0, r.y0);
     const [bx, by] = plan(r.x1, r.y1);
     return { x0: Math.min(ax, bx), y0: Math.min(ay, by), x1: Math.max(ax, bx), y1: Math.max(ay, by) };
@@ -280,9 +281,14 @@ export function setCounterRal(v: Variant, id: string, ral: string): Variant {
   return { ...v, objects: v.objects.map((o) => (o.id === id ? withRal(o, ral) : o)) };
 }
 
-/** The Disker pen's bucket: every counter on the stand in `ral` (K6). */
+/** The Disker pen's bucket: every counter on the stand in `ral` (K6), not those of Disker og podier. */
 export function paintCounters(v: Variant, ctx: Pick<PlaceContext, 'isCounter'>, ral: string): Variant {
-  return { ...v, objects: v.objects.map((o) => (ctx.isCounter(o.product) ? withRal(o, ral) : o)) };
+  return { ...v, objects: v.objects.map((o) => (ctx.isCounter(o.product) && !o.sections ? withRal(o, ral) : o)) };
+}
+
+/** The bucket of Disker og podier: every counter and podium it drew, in `ral` (K6). */
+export function paintPodiums(v: Variant, ral: string): Variant {
+  return { ...v, objects: v.objects.map((o) => (o.sections ? withRal(o, ral) : o)) };
 }
 
 function withRal(o: PlacedObject, ral: string): PlacedObject {

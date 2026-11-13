@@ -16,7 +16,8 @@ export function endAt(v: Variant, ctx: Pick<PlaceContext, 'isCounter'>, q: Point
   let best: { o: PlacedObject; i: number; end: 'a' | 'b' } | null = null;
   let bd = JOIN_REACH + EPS;
   for (const o of v.objects) {
-    if (!ctx.isCounter(o.product)) continue;
+    // Disker og podier has no ends to draw on from (K10)
+    if (!ctx.isCounter(o.product) || o.sections) continue;
     piecesOf(o).forEach((p, i) => {
       const d = unit(p);
       for (const end of ['a', 'b'] as const) {

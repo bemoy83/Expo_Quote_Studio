@@ -202,6 +202,29 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 - Neste steg: print og dekal på platene
 - Tester: `foga/counter.test.ts`, `calc/counter.test.ts`, `scene3d/build/counter.test.ts`; eksempel i `src/test/fixtures/10-mobler-utstyr.json`
 
+### Disker og podier
+
+Eget verktøy ved siden av Disker (tast B), K10–K13 i [byggeregler.md](byggeregler.md). 6560 og diskene Disker tegner
+står urørt; det nye deler bygger, omriss, 3D og kalkyle med dem.
+
+- Modell: `PlacedObject.sections` (`CounterSection`: x og z mellom knutepunkter, mm på 250-raster, og høyden `h`), aldri
+  sammen med `pieces`. Bygget: `layoutBuild(recipe, layout, 'tight')` i `foga/counter.ts` (ingen midtskinne eller hylle,
+  én plate i hele høyden, høyde per del), lest via `counterBuildOf`, `sectionsLayout`, `counterLayoutOf` og
+  `sectionRects` i `domain/counterShape.ts` (én boks per seksjon i `objectBoxes`)
+- Pennen, ren og testet: `domain/podiums.ts` (`podiumAt`: én seksjon under pekeren, inntil vegg og standkant innen 10 cm;
+  `drawPodium` og `dragSpan`: et drag fra seksjonen man trykket i; `rectSections`/`runNodes`: hele meter først, resten
+  lengst unna; Shift og Fin: `grabOf`/`podiumGrab` (hvilken kant et trykk tar), `axisSpan` (rektangelet et drag gir,
+  bestillingens referanse), `startDrag`, `rebaseDrag` (Shift midt i et drag); `podiumName`, `innerCorners`, `podiumSize`).
+  Forhåndsvisningen fryses med Shift i `usePlanPointer.ts` (`podiumFreeze`), kanten man tar tak i tegnes tykk (`grip` i
+  `PreviewLayer.tsx`). Pekeren: `plan/pointer/podium.ts`, forhåndsvisningen
+  `podiumHover`/`podiumTarget` i `plan/next.ts`. Verktøyet: `Brush` `podium` og `PenTool` `podium` i `ui/tools.ts`,
+  docken, hurtigvalget (farger og Fyll, `paintPodiums`) og hintet
+- Katalogen: `podium('6570', …)` i `catalog/defaultCatalog.ts` (`Product.podium`, varenummer midlertidig; `counter` er
+  én seksjon, så plan, pille og 3D tegner den som en disk)
+- Kalkyle: `podiumLine`/`podiumUses` i `calc/lines/objects.ts` (som K9, navnet Disk eller Podium); toppene i alle mål i
+  `COUNTER_BOARDS` (`cost/itemDefs.ts`) med eksempelpriser i `cost/own-list.ts`. Delene plukkes under Disker
+  (`drawnCounterParts`). Eksempelskisse: `test/fixtures/13-disker-og-podier.json`
+
 ### Møbler og utstyr
 
 - Møbler: `PlacedObject` · `domain/objects.ts` · tellevarer: `setCounted` i `domain/edit.ts`

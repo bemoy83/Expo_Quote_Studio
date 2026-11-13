@@ -18,9 +18,10 @@ const EPS = 1e-6;
 /** A counter this close to a wall or another counter (m) moves in against it. */
 const SNAP = 0.1;
 
-/** The parts of every drawn counter, picked loose (K9); none when nothing is drawn. The counter in stock is picked whole. */
+/** The parts of every drawn counter, picked loose (K9, K13; Disker og podier too); none when nothing is drawn. The
+ *  counter in stock is picked whole. */
 export function drawnCounterParts(v: Variant): CounterParts | undefined {
-  const drawn = v.objects.filter((o) => o.pieces);
+  const drawn = v.objects.filter((o) => o.pieces || o.sections);
   if (!drawn.length) return undefined;
   return drawn.map((o) => counterParts(counterBuildOf(o), counterRal(o))).reduce(addParts);
 }
@@ -167,7 +168,7 @@ function placed(v: Variant, ctx: PlaceContext, o: PlacedObject, a: Point, b: Poi
 }
 
 /** How far to move a box so its edges meet a wall, counter or the stand edge within SNAP. */
-function snapShift(v: Variant, b: { x0: number; y0: number; x1: number; y1: number }, others: { x0: number; y0: number; x1: number; y1: number }[]) {
+export function snapShift(v: Variant, b: { x0: number; y0: number; x1: number; y1: number }, others: { x0: number; y0: number; x1: number; y1: number }[]) {
   const xs = [0, v.stand.width];
   const ys = [0, v.stand.depth];
   for (const r of others) {

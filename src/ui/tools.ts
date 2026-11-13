@@ -17,6 +17,9 @@ export type Brush =
   | { kind: 'object'; product: string }
   /** Disk: a counter placed like furniture, its plates in a wall colour (Byggeregel K6). */
   | { kind: 'counter'; product: string; ral: string }
+  /** Disker og podier (Byggeregler K10–K13): sections on the 250 grid, all sides closed, its plates in a wall colour.
+   *  `fine`: «Fin» on, as Shift held for touch (250 steps, a press by an edge takes it). */
+  | { kind: 'podium'; product: string; ral: string; fine?: boolean }
   /** Tekstilvegg: drawn on a system wall it is mounted there (InFrame), anywhere else it stands free on foot plates.
    * Drawn on the drawing grid in cells of the chosen grid step; a click next to a wall fills its free part. */
   | { kind: 'textile' }
@@ -28,8 +31,8 @@ export type Brush =
 /** The drawing tools in the dock. Each one remembers its own brush (pen); the product chosen decides which tool draws it.
  * Openings and inner beams belong to Vegg, motifs to Profilering. Shelves have their own tool, Hyller (Bjørn 9.11.2026:
  * not under Møbel), where later wall fittings (heng) join them. Counters have theirs, Disker, after Hyller
- * (Bjørn 11.11.2026). */
-export type PenTool = 'wall' | 'floor' | 'profile' | 'fitting' | 'counter' | 'object'
+ * (Bjørn 11.11.2026). Disker og podier has its own after Disker (Bjørn 13.11.2026). */
+export type PenTool = 'wall' | 'floor' | 'profile' | 'fitting' | 'counter' | 'podium' | 'object'
 export type DockTool = 'select' | PenTool | 'erase'
 
 export function penToolOf(b: Brush): PenTool {
@@ -47,6 +50,8 @@ export function penToolOf(b: Brush): PenTool {
       return 'fitting'
     case 'counter':
       return 'counter'
+    case 'podium':
+      return 'podium'
     case 'object':
       return 'object'
   }
@@ -106,6 +111,7 @@ const PEN_LAYERS: Record<PenTool, readonly Layer[]> = {
   profile: ['walls', 'openings', 'textile', 'foil'],
   fitting: ['walls', 'openings', 'textile', 'foil'],
   counter: ['walls', 'openings', 'objects'],
+  podium: ['walls', 'openings', 'objects'],
   object: ['walls', 'openings', 'objects'],
 }
 

@@ -1,7 +1,7 @@
 // Quick picks over the active tool in the dock: everything the tool draws, in fixed places so the hand learns where the
 // colours are. The tool's own settings (floor type, tile size, drawing grid) sit here too, and the last
 // button («…») opens the panel on the tool's tab for the rest.
-import { Blinds, Box, DoorClosed, Ellipsis, PaintBucket, Paintbrush, Upload } from 'lucide-react'
+import { Blinds, Box, DoorClosed, Ellipsis, PaintBucket, Paintbrush, Ruler, Upload } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { mainGroupOf } from '../../catalog/groups'
 import { type FloorBrushSize } from '../../domain/floor/brush'
@@ -41,6 +41,8 @@ export interface QuickPicksProps {
   onFillWalls: () => void
   /** The counter pen's bucket: every counter in the pen's colour. */
   onFillCounters: () => void
+  /** The bucket of Disker og podier: every counter and podium it drew in the pen's colour. */
+  onFillPodiums: () => void
 }
 
 const MAX = 8
@@ -229,6 +231,35 @@ function quickContent(p: QuickPicksProps): ReactNode {
           fill="Fyll alle disker med denne fargen"
           onFill={p.onFillCounters}
         />
+        <Sep />
+        {more}
+      </>
+    )
+  }
+
+  if (tool === 'podium' && brush?.kind === 'podium') {
+    // Disker og podier: the plates in the wall colours and the bucket, as on Disker (K6). Høyde joins them (PR 6)
+    const { product, ral, fine } = brush
+    return (
+      <>
+        {head}
+        <Palette
+          swatches={ralSwatches(ral, (n) => `Disk ${n}`, (r) => onPick({ kind: 'podium', product, ral: r, fine }))}
+          fill="Fyll alle disker og podier med denne fargen"
+          onFill={p.onFillPodiums}
+        />
+        <Sep />
+        {/* «Fin»: as Shift held, for touch (PR 2) */}
+        <QBtn
+          on={fine}
+          setting
+          title={fine ? 'Fin · 250-steg, dra fra en kant flytter den · trykk for 500-steg igjen' : 'Fin · 250-steg, og dra fra en kant for å flytte den · på desktop også Shift'}
+          label="Fin"
+          onClick={() => onPick({ ...brush, fine: !fine })}
+        >
+          <Ruler size={15} />
+          Fin
+        </QBtn>
         <Sep />
         {more}
       </>

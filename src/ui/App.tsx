@@ -4,7 +4,7 @@ import { r2 } from '../calc/referenceStands'
 import { addObject } from '../domain/objects'
 import { addDefaultRoom, roomSize } from '../domain/rooms'
 import { paintAllWalls } from '../domain/panels'
-import { paintCounters } from '../domain/objects'
+import { paintCounters, paintPodiums } from '../domain/objects'
 import type { StandWallTerms, Variant } from '../domain/types'
 import { customerName, fillFloor, standWallTerms } from '../domain/variant'
 import { basisLabel, basisRef, sameBasis } from '../cost/basis'
@@ -258,6 +258,7 @@ export default function App() {
       onFill={fillWithPen}
       onFillWalls={() => onEdit((x) => paintAllWalls(x, tools.wallRal))}
       onFillCounters={() => onEdit((x) => paintCounters(x, place, tools.counterRal))}
+      onFillPodiums={() => onEdit((x) => paintPodiums(x, tools.podiumRal))}
     />
   )
   return (
@@ -372,7 +373,7 @@ export default function App() {
                   tools={view === 'plan'}
                   active={active}
                   onTool={tools.activate}
-                  stripes={{ wall: plateColor(tools.wallRal), counter: plateColor(tools.counterRal), floor: tools.floorPen?.kind === 'floor' ? idx.byArtnr.get(tools.floorPen.product)?.variant.color : undefined }}
+                  stripes={{ wall: plateColor(tools.wallRal), counter: plateColor(tools.counterRal), podium: plateColor(tools.podiumRal), floor: tools.floorPen?.kind === 'floor' ? idx.byArtnr.get(tools.floorPen.product)?.variant.color : undefined }}
                   canUndo={state.past.length > 0}
                   canRedo={state.future.length > 0}
                   onUndo={() => dispatch({ type: 'undo' })}
@@ -421,4 +422,4 @@ export default function App() {
 const LAYOUT: Layout = { panel: true, calc: true }
 
 /** «…» on the quick picks opens the panel on the tool's tab, where all its options are. */
-const PANEL_TAB: Record<PenTool, string> = { wall: 'vegg', floor: 'gulv', profile: 'prof', fitting: 'hyll', counter: 'disk', object: 'mob' }
+const PANEL_TAB: Record<PenTool, string> = { wall: 'vegg', floor: 'gulv', profile: 'prof', fitting: 'hyll', counter: 'disk', podium: 'disk', object: 'mob' }

@@ -3,6 +3,7 @@
 import { MoveHorizontal, MoveVertical, RotateCw } from 'lucide-react'
 import { roomName, roomSize } from '../../../domain/rooms'
 import { counterRal, objectFootprint, setCounterRal, setObjectProduct } from '../../../domain/objects'
+import { podiumName } from '../../../domain/podiums'
 import { updateFace } from '../../../domain/textile/free'
 import { idx, place } from '../../env'
 import { fmt, mm } from '../../format'
@@ -46,7 +47,8 @@ export function objectPill(p: PillActions, c: Of<'object'>, remove: () => void):
   const f = idx.byArtnr.get(o.product)
   const fp = objectFootprint(place, o)
   const family = objectFamily(o.product)
-  const name = family.find((x) => x.artnr === o.product)?.name ?? f?.product.name ?? 'Møbel'
+  // Disker og podier: «Disk» or «Podium» by its shape, as on the quote (Byggeregel K13)
+  const name = o.sections ? podiumName(o.sections) : (family.find((x) => x.artnr === o.product)?.name ?? f?.product.name ?? 'Møbel')
   return {
     name,
     meta: fp ? `${fp.round ? `ø ${mm(fp.w)}` : `${mm(fp.w)} × ${mm(fp.d)}`}${o.rot ? ` · ${o.rot}°` : ''}` : undefined,

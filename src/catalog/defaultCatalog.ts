@@ -28,6 +28,22 @@ const counter = (id: string, name: string, price: number): Product => {
   };
 };
 
+/** Disker og podier (Byggeregler K10–K13): one product for every counter and podium drawn of sections, built on site
+ *  and priced by the cost engine (K13). Art.nr is temporary until Bjørn gives one; the price is a placeholder per m² of
+ *  top, used only when the cost basis lacks a price. Footprint and `counter`: one section of 500 × 500, as the pen
+ *  starts. */
+const podium = (id: string, name: string, pricePerM2: number): Product => {
+  const side = 500 + 2 * RECIPES.counter.face;
+  const h = 1000 + RECIPES.counter.railHeight;
+  return one(id, name, 'object', 'stk', 'disk.disker', pricePerM2, {
+    dim: 'bygget på stedet',
+    footprint: { w: side / 1000, d: side / 1000, h: h / 1000 },
+    counter: { length: side, depth: side },
+    podium: true,
+    pricing: 'sum',
+  });
+};
+
 /** Counted product with optional named variants ("Sort;Hvit"). Art.nr gets a suffix per variant. */
 const counted = (
   id: string,
@@ -195,6 +211,7 @@ const products: Product[] = [
   counted('5285', 'Kafébord ø70', 'mob.bord', 450),
   counted('5300', 'Loungegruppe', 'mob.grupper', 3900),
   counter('6560', 'Bardisk', 1320),
+  podium('6570', 'Disk og podium, bygget på stedet', 2640),
   counted('5450', 'Podie 50 × 50', 'disk.podier', 380, ['50 cm', '75 cm', '100 cm']),
   counted('6185', 'Kleskrok, 5 kroker', 'hyll.heng', 160),
   counted('6186', 'Klesstativ', 'hyll.heng', 340),

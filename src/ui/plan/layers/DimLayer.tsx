@@ -36,7 +36,7 @@ export function DimLayer({ v, selection, counters, off }: { v: Variant; selectio
  *  (`all`) every drawn one, since the montør builds those on site (Bjørn 12.11.2026). */
 function CounterDims({ sc, v, selection, all, off }: { sc: PlanScale; v: Variant; selection: PlanSelection; all?: boolean; off?: (group: string) => boolean }) {
   // On a work order filtered to other groups, the dimmed counters get no measures
-  const shown = v.objects.filter((o) => isCounter(o.product) && (all ? !!o.pieces && !off?.(mainGroupOf(productOf(o.product)?.group)) : o.id === selection.objectId))
+  const shown = v.objects.filter((o) => isCounter(o.product) && (all ? (!!o.pieces || !!o.sections) && !off?.(mainGroupOf(productOf(o.product)?.group)) : o.id === selection.objectId))
   const gap = sizePx(sc, DIM_NEAR)
   return shown.map((o) => {
     const c = counterChains(objectBoxes(place, o))

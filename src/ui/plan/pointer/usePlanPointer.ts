@@ -24,10 +24,11 @@ import { startSelect } from './select'
 import { startStroke, stroke } from './stroke'
 import { startTextile, textile } from './textile'
 import { counter, startCounter } from './counter'
+import { podium, podiumFine, podiumShift, startPodium } from './podium'
 import type { Drag, DragHandlers, P, PointerCtx } from './types'
 import { wall } from './wall'
 
-const DRAGS: { [K in Drag['kind']]: DragHandlers<K> } = { stroke, plates, floor, carpetFill, click, object, wall, beam, room, textile, counter, freeMove, erase, shelf, shelfMove, place: placeDrag }
+const DRAGS: { [K in Drag['kind']]: DragHandlers<K> } = { stroke, plates, floor, carpetFill, click, object, wall, beam, room, textile, counter, podium, freeMove, erase, shelf, shelfMove, place: placeDrag }
 const handlersOf = (d: Drag) => DRAGS[d.kind] as DragHandlers<Drag['kind']>
 
 /** What the plan passes in: the context without the previews' setters and state, which the hook owns. */
@@ -60,6 +61,29 @@ export function usePlanPointer(input: PlanPointerInput) {
   const [dropHover, setDropHover] = useState<{ h: FaceHit; d: DecorDrag } | null>(null)
   /** What a Tøm press takes on release. */
   const [erasing, setErasing] = useState<Erasing | null>(null)
+  /** Disker og podier with Shift held and nothing pressed: where the preview stands still, so the pointer can go over it
+   *  and take hold of an edge (podium.ts). */
+  const [podiumFreeze, setPodiumFreeze] = useState<P | null>(null)
+  /** The hover point for the Shift key listener, set where the hover is. */
+  const hoverRef = useRef<P | null>(null)
+  const podiumOn = pens.podiumTool
+  useEffect(() => {
+    if (!podiumOn) return
+    const on = (e: KeyboardEvent) => {
+      if (e.key !== 'Shift' || drag.current) return
+      setPodiumFreeze(e.type === 'keydown' ? (f) => f ?? hoverRef.current : null)
+    }
+    const off = () => setPodiumFreeze(null)
+    window.addEventListener('keydown', on)
+    window.addEventListener('keyup', on)
+    window.addEventListener('blur', off)
+    return () => {
+      window.removeEventListener('keydown', on)
+      window.removeEventListener('keyup', on)
+      window.removeEventListener('blur', off)
+      setPodiumFreeze(null)
+    }
+  }, [podiumOn])
 
   // A new tool or pen drops whatever stroke was under way
   const [penNow, setPenNow] = useState({ tool, brush })
@@ -100,7 +124,7 @@ export function usePlanPointer(input: PlanPointerInput) {
   const c: PointerCtx = { ...input, clickSelect: (s) => input.onSelect(clickSelection(input.selection, s, input.drawerOpen)), setStroke, setTextileStroke, setFillRect, setErasing }
 
   /** The drag a press starts, or nothing for a pen that acts on the click alone. */
-  const press = (q: P): Drag | undefined => {
+  const press = (q: P, shift = false): Drag | undefined => {
     if (tool === 'erase') return startErase(c, q)
     if (fb.carpetFill) return startCarpetFill(c, q)
     if (pens.floorTool) return startFloor(c, q)
@@ -113,6 +137,7 @@ export function usePlanPointer(input: PlanPointerInput) {
     if (pens.decorTool) return startPlace(c, 'decor', q)
     if (pens.textileTool) return startTextile(c, q)
     if (pens.counterTool) return startCounter(q)
+    if (pens.podiumTool) return startPodium(c, q, shift || podiumFine(brush), podiumFreeze)
     if (pens.objectTool) return startPlace(c, 'object', q)
     if (pens.shelfTool) return startShelf(c, q)
     return startSelect(c, q)
@@ -122,7 +147,7 @@ export function usePlanPointer(input: PlanPointerInput) {
     if (e.button !== 0) return
     const q = toModel(e)
     svg.current!.setPointerCapture(e.pointerId)
-    const d = press(q)
+    const d = press(q, e.shiftKey)
     // Alt (Option) held: a shelf dragged leaves a copy where it goes (desktop; the pill's Kopier on touch)
     if (d?.kind === 'shelfMove') d.copy = e.altKey
     // Shift held (or «Fin» on in the pill): a drawn takdrager moves across in 50 mm steps, off the 1 m grid (Byggeregel T15)
@@ -135,10 +160,12 @@ export function usePlanPointer(input: PlanPointerInput) {
   const onPointerMove = (e: RPointerEvent<SVGSVGElement>) => {
     const q = toModel(e)
     setHover(q)
+    hoverRef.current = q
     const d = drag.current
     setDragging(d)
     if (!d) return
     if (d.kind === 'beam') d.fine = e.shiftKey || !!d.fineLock
+    if (d.kind === 'podium') podiumShift(d, e.shiftKey || podiumFine(brush))
     handlersOf(d).move?.(c, d, q)
   }
 
@@ -147,6 +174,8 @@ export function usePlanPointer(input: PlanPointerInput) {
     drag.current = null
     setDragging(null)
     if (!d) return
+    // After a press the preview follows the pointer again, until Shift is pressed anew
+    if (d.kind === 'podium') setPodiumFreeze(null)
     handlersOf(d).up?.(c, d, toModel(e))
   }
 
@@ -207,12 +236,16 @@ export function usePlanPointer(input: PlanPointerInput) {
     textileStroke,
     dropHover,
     erasing,
+    podiumFreeze,
     handlers: {
       onPointerDown,
       onPointerMove,
       onPointerUp,
       onPointerCancel,
-      onPointerLeave: () => setHover(null),
+      onPointerLeave: () => {
+        setHover(null)
+        hoverRef.current = null
+      },
       onDragOver,
       onDragLeave: () => setDropHover(null),
       onDrop,
