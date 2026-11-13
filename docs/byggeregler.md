@@ -484,7 +484,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   del med en vegg eller en annen disk nærmere enn 60 mm utenfor seg er alltid plate; valget beholdes og kommer tilbake
   når disken flyttes ut. Trinnplaten (K12) er alltid plate. I planen er en del som er åpen i hele høyden en tynn, lys
   hårstrek (som 6560), og en del med skyvedør i en lysåpning hel strek med dørstreker. Valget gjøres i skuffen for
-  disken. Tilbudet sier hvor mange sider som har en åpen lysåpning: «1 åpen side».
+  disken. Tilbudet sier hvor mange sider som har en åpen lysåpning: «1 åpen side». Arbeidsordren tegner hver side som
+  har annet enn plate, hyller bak seg, eller print eller dekal, sett utenfra og målsatt som i skuffen («Disker sett
+  utenfra»).
   *Bjørn 13.11.2026 · kode `src/domain/podiumFaces.ts`, `src/domain/podiumLocks.ts` · test `src/domain/podiumFaces.test.ts`*
 - **K17 Skyvedør.** To plater i sporet i skinnen under og skinnen over lysåpningen, i stedet for én plate. Hver dør er
   lysåpningen / 2 + 10 (overlapp) + 10 (skinnespor) bred: 500 i lysåpning 960, 375 i 710 og 250 i 460, og like høy
@@ -495,10 +497,11 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   13.11.2026). Tilbudet sier «1 skyvedør», én per lysåpning med dør.
   *Bjørn 13.11.2026 · kode `src/foga/counter.ts` (`doorLeaves`), `src/domain/podiumFaces.ts` (`takesDoor`) · test `src/domain/podiumFaces.test.ts`, `src/calc/podium.test.ts`*
 - **K18 Høyde per seksjon.** Høyden på en seksjon som står, endres i skuffen (CC 250, 500, 750 eller 1000) eller ved å
-  dra toppen av seksjonen i risset (grepet «CC 750»); draget snapper til de samme fire høydene, vises mens det dras og
-  settes når det slippes. Bygget følger K12: trinnplate og 94 under den lave toppen mot en høyere nabo. Valget på delene
+  dra toppen av seksjonen i risset (grepet «CC 750») eller i 3D (de øverste 80 mm av seksjonen, pekeren viser ↕);
+  draget snapper til de samme fire høydene, vises mens det dras og settes når det slippes. I 3D regnes draget fra
+  skissen ved trykket, så hyller en lavere høyde tok bort, kommer tilbake om toppen dras opp igjen før slipp. Bygget følger K12: trinnplate og 94 under den lave toppen mot en høyere nabo. Valget på delene
   (K16, K17) står. Hyller i eller over den nye høyden fjernes, og hintet i skuffen sier hvor mange.
-  *Bjørn 13.11.2026 · kode `src/domain/podiums.ts` (`setSectionHeight`), `src/ui/plan/podiumDrawer/PodiumElevation.tsx` · test `src/domain/podiumFaces.test.ts`*
+  *Bjørn 13.11.2026 · kode `src/domain/podiums.ts` (`setSectionHeight`), `src/ui/plan/podiumDrawer/PodiumElevation.tsx`, `src/ui/scene3d/pointer/drag.ts` (`podiumTopAt`) · test `src/domain/podiumFaces.test.ts`, `src/ui/scene3d/pointer/drag.test.ts`*
 - **K19 Hylle i disk.** En hylle hører til en seksjon og står i CC 250, 500 eller 750, lavere enn seksjonens høyde.
   Det er ingen fri høyde. Bygget som midtskinnen i 6560 (K3, K5): fire skinner rundt seksjonen med underkant i
   CC-høyden, 93 på utvendige kanter og 94 mot en naboseksjon, og MDF 6 mm i falsen med overkant 36 over skinnens

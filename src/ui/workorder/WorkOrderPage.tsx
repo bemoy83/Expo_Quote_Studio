@@ -10,7 +10,7 @@ import type { CalcResult } from '../../calc/calc'
 import { FILL_NAME, foilRows, production, textileRows } from '../../calc/textile/production'
 import { groupItems, PRODUCT_GROUPS } from '../../catalog/groups'
 import { dateText, DELIVERY_FIELDS, today } from '../../domain/delivery'
-import type { Project, Variant } from '../../domain/types'
+import type { Motif, Project, Variant } from '../../domain/types'
 import { customerName, projectField } from '../../domain/variant'
 import { addTime, type HandlingStep, type Time } from '../../cost/time'
 import { Button } from '../controls'
@@ -23,6 +23,7 @@ import { hours } from '../format'
 import { standScope, TYPE_NAME } from '../names'
 import { pickRows, type PickRow } from './pickRows'
 import { CornerNotes, ShelfElevation } from './ShelfElevation'
+import { PodiumSides } from './PodiumSides'
 import { PLAN_MARGIN } from '../plan/planStyle'
 import { PlanPreview } from '../plan/PlanPreview'
 import { PageBand } from '../shell/PageBand'
@@ -34,6 +35,8 @@ interface Props {
   current: number
   onSelect: (i: number) => void
   calcOf: (v: Variant) => CalcResult
+  /** The motifs print and decals on a counter show. */
+  motifs?: Motif[]
 }
 
 /** From the order is started until it is delivered (Bjørn 31.10.2026). Vask and demontering come after the fair:
@@ -47,7 +50,7 @@ const aToB = (t: Time) => A_TO_B.reduce((a, st) => a + (t[st] ?? 0), 0)
 /** Hours with one decimal, '–' for none. */
 const h = (min: number | undefined) => (min ? hours(min) : '–')
 
-export function WorkOrderPage({ project, variants, current, onSelect, calcOf }: Props) {
+export function WorkOrderPage({ project, variants, current, onSelect, calcOf, motifs }: Props) {
   const v = variants[current]
   const res = calcOf(v)
   const k = res.keyFigures
@@ -212,6 +215,8 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf }: 
               <p className="foot">Høyde er overkant hylle fra gulvet. Lysmål er fri høyde mellom hyllene over hverandre.</p>
             </section>
           )}
+
+          {shown.has('disk') && <PodiumSides v={v} motifs={motifs} />}
 
           {carpets.length > 0 && (
             <section className="wo-sec">

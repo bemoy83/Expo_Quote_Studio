@@ -407,7 +407,7 @@ export default function App() {
       ) : page === 'tilbud' ? (
         <QuotePage project={sketch.project} variants={sketch.variants} current={current} onSelect={selectVariant} calcOf={calcFor} motifs={motifs} />
       ) : page === 'arbeidsordre' ? (
-        <WorkOrderPage project={sketch.project} variants={sketch.variants} current={current} onSelect={selectVariant} calcOf={calcFor} />
+        <WorkOrderPage project={sketch.project} variants={sketch.variants} current={current} onSelect={selectVariant} calcOf={calcFor} motifs={motifs} />
       ) : page === 'kostgrunnlag' ? (
         <CostBasisPage key={basisFocus?.n ?? 0} focus={basisFocus?.path ?? null} onToast={showToast} />
       ) : (

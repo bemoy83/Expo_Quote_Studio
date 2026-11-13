@@ -258,6 +258,9 @@ står urørt; det nye deler bygger, omriss, 3D og kalkyle med dem.
   `podiumDecorAreas`). Kalkylen i `calc/lines/decor.ts` (`podiumFoil`). Vist i risset (`sideDecor` i `podiumView.ts`,
   `Handles` i `PodiumElevation`), i planen (`PrintMarks` i `layers/ObjectLayer.tsx`) og i 3D (`buildPodiumDecor` i
   `scene3d/build/counter.ts`).
+- Høyde i 3D (K18): `podiumTopAt` og draget `podiumTop` i `scene3d/pointer/drag.ts`, `onUpright` i `pointer/hits.ts`.
+  Arbeidsordren: `workorder/PodiumSides.tsx` («Disker sett utenfra», `PodiumElevation` uten håndtak) og
+  `workorder/podiumSideList.ts` (hvilke sider som tegnes).
 - Skuffen: `plan/podiumDrawer/` (`PodiumDrawer.tsx`, risset `PodiumElevation.tsx`, miniplanen `PodiumMap.tsx`, og
   `podiumView.ts`: sidene rundt disken med navn, siden nærmest et klikk, siden sett utenfra). Valget i
   `PlanSelection.podiumSide`/`podiumPart`; `hasDrawer` får varianten for å vite at et objekt har seksjoner.

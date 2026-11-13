@@ -3403,3 +3403,12 @@ select.cin {
     grid-column: 1 / -1;
   }
 }
+
+/* A side of a counter of Disker og podier in the work order (PodiumSides.tsx): the drawer's drawing at a fixed height */
+.wo-podium {
+  height: 250px;
+  display: flex;
+}
+.wo-podium > .wd-view {
+  flex: 1;
+}
