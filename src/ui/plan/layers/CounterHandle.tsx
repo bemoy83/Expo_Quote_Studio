@@ -8,8 +8,8 @@ import { sizePx, usePlanScale } from '../planScale'
 
 /** The handle (Bjørn 12.11.2026): the end's last half metre toned, and a round button for each way a drag from it can
  *  go, a filled triangle pointing that way: longer just past the end face, shorter on the box's inner edge, a corner
- *  past the back. A way that cannot go (a wall, the corner an L stands on) has no button. No dashes: on a counter a
- *  dashed line means an open side. */
+ *  past the back. A way that cannot go (a wall, the corner an L stands on) has no button. No dashes: in the plan they
+ *  mean the aisle and the beams. */
 export function CounterHandle({ h }: { h: CounterHandleView }) {
   const sc = usePlanScale()
   const lift = `lift${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`

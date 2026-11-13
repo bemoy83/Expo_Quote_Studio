@@ -174,7 +174,7 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
   de gamle diskene 5410, 5415 og 5420 blir løse linjer i gamle skisser (`OLD_COUNTERS`, `retiredToLoose` i `persistence/file.ts`)
 - Kalkyle: `calc/lines/objects.ts` (fast pris, kost fra prisartikkelen `ITEM.counter` i `cost/itemDefs.ts`, bygget av
   `counterBuild`). Plukkes hel, 1 stk (K1)
-- Plan, 3D: plassert og kolliderer som et møbel (`domain/objects.ts`), omrisset (hel strek lukket, stiplet åpen) fra `plan/counterOutline.ts` i `CounterShape`, delelinjene i `plan/layers/CounterLines.tsx`
+- Plan, 3D: plassert og kolliderer som et møbel (`domain/objects.ts`), omrisset (hel strek lukket, lys hårstrek åpen) fra `plan/counterOutline.ts` i `CounterShape`, delelinjene i `plan/layers/CounterLines.tsx`
   (fra `ObjectLayer.tsx`) · `scene3d/build/counter.ts` (`buildCounter` tar en `CounterBuild`, kalt fra `buildObjects`; profilen i et knutepunkt dreies etter de lukkede sidene den har, `outward`),
   profilen snudd etter omrisset med `turnedProfile` (`build/profiles.ts`). Begge tegner i diskens egne koordinater og
   plasseres og snus utenfra, så en tegnet disk bruker de samme delene
