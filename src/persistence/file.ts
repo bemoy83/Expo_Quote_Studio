@@ -1,6 +1,7 @@
 // Sketch file: JSON `{ format: 'standskisse', versjon, prosjekt, varianter, egneMotiver }`.
 // Newer versions are refused with an explanation; older versions are migrated step by step.
-import { OLD_COUNTERS, OLD_SHELF } from '../catalog/defaultCatalog';
+import { DEFAULT_CATALOG, OLD_COUNTERS, OLD_SHELF } from '../catalog/defaultCatalog';
+import { asSections } from '../domain/podiumStock';
 import { tilesFromCells } from '../domain/floor/tiles';
 import { nextId } from '../domain/ids';
 import { rectOutline } from '../domain/outline';
@@ -154,8 +155,18 @@ export function parse(text: string): ParseResult {
     freeTextiles: Array.isArray(x.freeTextiles) ? x.freeTextiles : [],
     innerBeams: Array.isArray(x.innerBeams) ? x.innerBeams : undefined,
     shelves: Array.isArray(x.shelves) ? x.shelves : undefined,
-  })).map(retiredToLoose);
+  })).map(retiredToLoose).map(countersAsSections);
   return { ok: true, sketch: { project: project as unknown as Project, variants: vs, motifs: motifs as Motif[] } };
+}
+
+/** The product of Disker og podier (K10). */
+const PODIUM = DEFAULT_CATALOG.products.find((p) => p.podium)!.id;
+
+/** Counters from before Disker og podier took over Disker (Bjørn 13.11.2026), as its sections: the counter in stock as
+ *  its standard counter, a drawn counter section by section, built and priced the same (Byggeregel K22). */
+function countersAsSections(v: Variant): Variant {
+  if (!v.objects.some((o) => o.pieces || asSections(o, PODIUM) !== o)) return v;
+  return { ...v, objects: v.objects.map((o) => asSections(o, PODIUM)) };
 }
 
 /** Counted products the catalog no longer has, kept as loose lines at their price so the quote is the same: «Hylle 1 m»

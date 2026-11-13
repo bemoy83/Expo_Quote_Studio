@@ -534,7 +534,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   lengde, dybde, høyde eller hylle, skyvedør, en annen åpen side eller sammenslåing (K15) gjør den til spesialbygg
   (K13). Pennen viser «Fri» og én knapp per standarddisk over verktøyene: et klikk setter den som er valgt, med
   fronten mot gangen som på Disker, og «Fri» en seksjon på 500 × 500; å dra tegner alltid fritt.
-  *Bjørn 13.11.2026 · kode `src/domain/podiumStock.ts`, `src/calc/lines/objects.ts` · test `src/domain/podiumStock.test.ts`*
+  En skisse lagret før dette gjør disker fra Disker om når den åpnes: disken på lager blir 6560, en tegnet disk én
+  seksjon per hel eller halv meter, åpen bak og med hylle i CC 750, bygget og priset likt.
+  *Bjørn 13.11.2026 · kode `src/domain/podiumStock.ts`, `src/calc/lines/objects.ts`, `src/persistence/file.ts` · test `src/domain/podiumStock.test.ts`*
 
 ## P · Plukkliste og arbeidsordre
 
