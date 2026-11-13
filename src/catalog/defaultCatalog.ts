@@ -143,6 +143,8 @@ const products: Product[] = [
   },
   one('8020', 'Foliedekor, dekal', 'system', 'm²', 'prof.folie', 520),
   one('8021', 'Foliedekor, helt veggfelt 960 × 2420 mm', 'system', 'm²', 'prof.folie', 520),
+  // Print on a counter of Disker og podier: its own article, the sizes cut on the line (Bjørn 13.11.2026, K20)
+  one('8023', 'Foliedekor, diskfelt', 'system', 'm²', 'prof.folie', 520, { dim: 'helt felt på disk, kuttet per plate og dør' }),
   one('8022', 'Tilpasning av trykkfil over flere plater', 'system', 'stk', 'prof.folie', 450, { dim: 'ett motiv, delt per plate' }),
   // Floor
   {
@@ -258,6 +260,7 @@ export const DEFAULT_CATALOG: Catalog = {
     textileFill: { print: '8040', white: '8041', reuse: '8042' },
     foil: '8020',
     foilFull: '8021',
+    foilCounter: '8023',
     printSetup: '8022',
     floorProtection: '5911',
     shelf: '6311',

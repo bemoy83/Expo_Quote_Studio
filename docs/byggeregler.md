@@ -521,8 +521,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   midten av seksjonens side, sett utenfra) og flyttes og skaleres i risset som på vegg, holdt innenfor delen. Print
   tar bort dekalene på siden, og en dekal tar bort printen. Fargen er diskens (K6): en farge valgt i paletten tar
   printen av det som er valgt (siste strøk vinner), og malerspannet farger hele disken eller printer alle delene som
-  kan ta det. Vist i risset, i planen (en tynn stripe av motivet innenfor ytterkanten) og i 3D. Prises som på vegg:
-  print som m² helt felt, dekal som m² dekal, og en oppstart per print strukket over flere deler.
+  kan ta det. Vist i risset, i planen (en tynn stripe av motivet innenfor ytterkanten) og i 3D. Print prises på eget
+  artikkelnummer 8023 «Foliedekor, diskfelt» per m², med målene som kuttes på linjen («2 × 960 × 960 mm»), dekal som m²
+  dekal (8020) og en oppstart per print strukket over flere deler (8022).
   *Bjørn 13.11.2026 · kode `src/domain/podiumDecor.ts`, `src/calc/lines/decor.ts` · test `src/domain/podiumDecor.test.ts`*
 
 ## P · Plukkliste og arbeidsordre
