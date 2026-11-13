@@ -4,6 +4,9 @@
 import { useId } from 'react'
 import { mainGroupOf } from '../../../catalog/groups'
 import { lockedParts, placedBuild } from '../../../domain/podiumLocks'
+import { lightOf, partKey, podiumParts, takesDoor } from '../../../domain/podiumFaces'
+import { toPlan } from '../../../domain/counterShape'
+import { RECIPES } from '../../../foga/recipes'
 import { counterRal, footprintBox, objectBoxes, objectFootprint } from '../../../domain/objects'
 import type { PlacedObject, Variant } from '../../../domain/types'
 import { BLOCK, INK } from '../../colors'
@@ -84,6 +87,7 @@ function CounterShape({ v, o, fill, stroke, bad, sel, gone, opacity }: { v: Vari
   const sc = usePlanScale()
   const clip = `counter${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`
   const boxes = objectBoxes(place, o)
+  const locked = lockedParts(v, place, o)
   const each = (props: object) => boxes.map((r, i) => <rect key={i} x={r.x0} y={r.y0} width={r.x1 - r.x0} height={r.y1 - r.y0} {...props} />)
   const closed = bad ? Math.max(0.03, linePx(sc, 2)) : linePx(sc, COUNTER_EDGE.closed)
   const open = linePx(sc, COUNTER_EDGE.open)
@@ -96,10 +100,34 @@ function CounterShape({ v, o, fill, stroke, bad, sel, gone, opacity }: { v: Vari
       {each({ fill, fillOpacity: gone ? GONE_FILL : undefined })}
       {gone && each({ fill: gone })}
       <g clipPath={`url(#${clip})`}>
-        {counterOutline(place, o, lockedParts(v, place, o)).map((s, i) => (
+        <DoorMarks o={o} locked={locked} stroke={stroke} />
+        {counterOutline(place, o, locked).map((s, i) => (
           <line key={i} x1={s.a[0]} y1={s.a[1]} x2={s.b[0]} y2={s.b[1]} stroke={stroke} strokeWidth={2 * (s.open ? open : closed)} strokeOpacity={s.open ? COUNTER_EDGE.openOpacity : undefined} />
         ))}
       </g>
+    </g>
+  )
+}
+
+/** A sliding door in a side of Disker og podier seen from above (K17): its two leaves as two lines just inside the outer
+ *  face, overlapping in the middle. */
+function DoorMarks({ o, locked, stroke }: { o: PlacedObject; locked: readonly string[]; stroke: string }) {
+  const sc = usePlanScale()
+  if (!o.sections?.some((s) => s.sides)) return null
+  const off = new Set(locked)
+  const doors = podiumParts(o.sections).filter((p) => lightOf(o.sections!, p) === 'door' && takesDoor(p) && !off.has(partKey(p)))
+  const { face, door } = RECIPES.counter
+  return (
+    <g stroke={stroke} strokeWidth={linePx(sc, 0.75)}>
+      {doors.flatMap((p) => {
+        const mid = (p.a + p.b) / 2
+        const leaf = (a: number, b: number, inset: number) => {
+          const at = p.at + p.out * (face - inset)
+          const [u, w] = p.axis === 'x' ? [toPlan(o, [at, a]), toPlan(o, [at, b])] : [toPlan(o, [a, at]), toPlan(o, [b, at])]
+          return <line key={`${partKey(p)}${inset}`} x1={u[0]} y1={u[1]} x2={w[0]} y2={w[1]} />
+        }
+        return [leaf(p.a + 20, mid + door.overlap * 3, 30), leaf(mid - door.overlap * 3, p.b - 20, 55)]
+      })}
     </g>
   )
 }

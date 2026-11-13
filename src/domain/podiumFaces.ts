@@ -1,9 +1,9 @@
-// The sides of a counter of Disker og podier and what they are (Byggeregel K16, trinn 2): every part of the outline, from
+// The sides of a counter of Disker og podier and what they are (Byggeregler K16, K17, trinn 2): every part of the outline, from
 // node to node, belongs to the section behind it and is a plate unless that section's side says otherwise. The choice
 // is kept on the section (`CounterSection.sides`), so it follows the part when the counter is moved, turned, stretched
 // by a grip, built on, fused or parted; a side that becomes inner loses it (`prunedSides`). Pure, mm in the counter's
 // frame.
-import { covered, EPS, type Axis } from './podiumSections';
+import { covered, EPS, GRID, type Axis } from './podiumSections';
 import type { CounterLight, CounterSection, SectionSide, SectionSideKey, Variant } from './types';
 
 /** The key of a section's side facing `out` across `axis`. */
@@ -96,8 +96,20 @@ export const partLine = (p: PodiumPart): [[number, number], [number, number]] =>
 /** The open stretches of the build (K16): every part open from the floor, unless it stands against a wall or another
  *  counter (`locked`, by partKey), which keeps it a plate. */
 export function openStretches(sections: readonly CounterSection[], locked: ReadonlySet<string> = new Set()): [[number, number], [number, number]][] {
+  return stretchesOf(sections, 'open', locked);
+}
+
+/** A sliding door takes a part longer than GRID (K17: not on a part of 250). */
+export const takesDoor = (p: Pick<PodiumPart, 'a' | 'b'>) => p.b - p.a > GRID + EPS;
+/** Why a part takes no sliding door, or null. */
+export const NO_DOOR = 'Skyvedør går ikke på en del på 250';
+
+/** The stretches closed by a sliding door instead of a plate (K17): parts that take one, not locked. */
+export const doorStretches = (sections: readonly CounterSection[], locked: ReadonlySet<string> = new Set()) => stretchesOf(sections, 'door', locked).filter(([p, q]) => takesDoor({ a: 0, b: Math.abs(q[0] - p[0]) + Math.abs(q[1] - p[1]) }));
+
+function stretchesOf(sections: readonly CounterSection[], kind: CounterLight, locked: ReadonlySet<string>) {
   return podiumParts(sections)
-    .filter((p) => lightOf(sections, p) === 'open' && !locked.has(partKey(p)))
+    .filter((p) => lightOf(sections, p) === kind && !locked.has(partKey(p)))
     .map(partLine);
 }
 
@@ -147,12 +159,14 @@ export function keptSides(s: CounterSection, t: CounterSection, keep?: SectionSi
 }
 
 /** What a counter has beside plates, for its line in the quote (K21): «1 åpen side», a side of the outline counted once
- *  however many of its parts are open; `locked` parts are plates. */
+ *  however many of its parts are open, and «1 skyvedør» per door; `locked` parts are plates. */
 export function podiumHas(sections: readonly CounterSection[], locked: readonly string[] = []): string[] {
   const off = new Set(locked);
-  const sides = new Set(podiumParts(sections).filter((p) => lightOf(sections, p) === 'open' && !off.has(partKey(p))).map((p) => `${p.axis}${p.out}:${p.at}:${runOf(sections, p)}`));
+  const live = podiumParts(sections).filter((p) => !off.has(partKey(p)));
+  const sides = new Set(live.filter((p) => lightOf(sections, p) === 'open').map((p) => `${p.axis}${p.out}:${p.at}:${runOf(sections, p)}`));
+  const doors = live.filter((p) => lightOf(sections, p) === 'door' && takesDoor(p)).length;
   const n = sides.size;
-  return n ? [`${n} ${n === 1 ? 'åpen side' : 'åpne sider'}`] : [];
+  return [...(n ? [`${n} ${n === 1 ? 'åpen side' : 'åpne sider'}`] : []), ...(doors ? [`${doors} ${doors === 1 ? 'skyvedør' : 'skyvedører'}`] : [])];
 }
 
 /** Which straight side of the outline a part lies on: where its run of outer parts in line starts. */
@@ -170,12 +184,13 @@ function runOf(sections: readonly CounterSection[], p: PodiumPart): number {
   return a;
 }
 
-/** The sketch with the parts `keys` (partKey) of counter `id` set to `kind` (null: plate) from the floor (K16). */
+/** The sketch with the parts `keys` (partKey) of counter `id` set to `kind` (null: plate) from the floor (K16); a door
+ *  only where the part takes one (K17). */
 export function setPodiumLight(v: Variant, id: string, keys: readonly string[], kind: CounterLight | null): Variant {
   const o = v.objects.find((x) => x.id === id);
   if (!o?.sections) return v;
   const want = new Set(keys);
-  const parts = podiumParts(o.sections).filter((p) => want.has(partKey(p)));
+  const parts = podiumParts(o.sections).filter((p) => want.has(partKey(p)) && (kind !== 'door' || takesDoor(p)));
   if (!parts.length) return v;
   const sections = setLight(o.sections, parts, kind);
   return { ...v, objects: v.objects.map((x) => (x.id === id ? { ...x, sections } : x)) };

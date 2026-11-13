@@ -1,5 +1,5 @@
 // A side of a counter of Disker og podier seen from outside (trinn 2): its posts, rails and parts, each a plate in the
-// counter's colour or open to the inside (Byggeregel K16), the chosen part toned; under it the parts' outer lengths and
+// counter's colour, open to the inside (Byggeregel K16) or a sliding door (K17), the chosen part toned; under it the parts' outer lengths and
 // the whole, to the left its height (CC and outer). A click on a part chooses it, a click on the chosen part goes back to
 // the whole side.
 import { useRef } from 'react'
@@ -15,6 +15,8 @@ import type { ElevationPart } from './podiumView'
 const R = RECIPES.counter
 const RAIL = R.railHeight / 1000
 const POST = R.postSize / 1000
+/** How far a door leaf goes past the middle, m (K17). */
+const DOOR = R.door.overlap / 1000
 
 interface Props {
   parts: ElevationPart[]
@@ -64,6 +66,13 @@ export function PodiumElevation({ parts, length, h, title, fill, chosen, onPick 
                 {/* Top rail, and the bottom rail where it is not open */}
                 <rect x={x(p.x0)} y={y} width={w} height={RAIL} fill={ALU} />
                 {!open && <rect x={x(p.x0)} y={H - RAIL} width={w} height={RAIL} fill={ALU} />}
+                {/* K17: two leaves in the channel, overlapping in the middle */}
+                {p.light === 'door' && !p.locked && (
+                  <g fill="none" stroke={INK_MUTED} strokeWidth={px(0.75)}>
+                    <rect x={x(p.x0) + px(3)} y={y + RAIL + px(3)} width={w / 2 + DOOR - px(3)} height={H - y - 2 * RAIL - px(6)} />
+                    <rect x={x(p.x0) + w / 2 - DOOR} y={y + RAIL + px(6)} width={w / 2 + DOOR - px(3)} height={H - y - 2 * RAIL - px(12)} />
+                  </g>
+                )}
                 {chosen === i && <rect x={x(p.x0)} y={y} width={w} height={H - y} fill={INK} fillOpacity={0.12} />}
                 {open && (
                   <text x={x((p.x0 + p.x1) / 2)} y={(y + H) / 2} textAnchor="middle" dominantBaseline="middle" style={{ font: `500 ${px(10)}px var(--font-ui)`, fill: INK_MUTED }} pointerEvents="none">

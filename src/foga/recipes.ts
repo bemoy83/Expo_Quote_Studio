@@ -181,6 +181,9 @@ export interface CounterRecipe {
   channel: { inset: number; depth: number };
   plateThickness: number;
   platePlay: number;
+  /** A sliding door of Disker og podier (K17): each leaf half the light opening, + `overlap` past the middle and + `track`
+   *  into the channel at its end, mm. */
+  door: { overlap: number; track: number };
   boardPlay: number;
   /** The counter in stock (6560): ready built, picked as one piece (K1). Outer size, mm, and the colour of its plates
    *  (K6): another wall colour means its plates are swapped. */
@@ -274,6 +277,7 @@ export const RECIPES: Recipes = {
     channel: { inset: 10, depth: 10 },
     plateThickness: 3,
     platePlay: 4,
+    door: { overlap: 10, track: 10 },
     boardPlay: 2,
     stock: { length: 1020, depth: 520, ral: '9010' },
   },
