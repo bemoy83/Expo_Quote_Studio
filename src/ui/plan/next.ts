@@ -15,7 +15,7 @@ import { wallModules, type Module } from '../../domain/grid'
 import { drawInnerBeam, type Run } from '../../domain/innerBeams'
 import { counterBuildOf, piecesOf } from '../../domain/counterShape'
 import { addObject, footprintBox, objectFootprint } from '../../domain/objects'
-import type { PodiumDraw } from '../../domain/podiums'
+import { podiumGrab, type PodiumDraw } from '../../domain/podiums'
 import { addShelf, addShelfRow, penHeight } from '../../domain/shelves/edit'
 import { drawTextile, fillFace, type TextileResult } from '../../domain/textile/brush'
 import { faceOfPoint, freeTextileAt, updateFace } from '../../domain/textile/free'
@@ -39,7 +39,7 @@ import type { PlanHits } from './pointer/hits'
 import { isDoor, openingEdge } from './pointer/opening'
 import type { Pens } from './pointer/pens'
 import { counterDraw } from './pointer/counter'
-import { counterUnder, podiumDraw, podiumStart } from './pointer/podium'
+import { counterUnder, drawPodiumAt, podiumStart } from './pointer/podium'
 import { placeHolds, placeKey } from './pointer/place'
 import { paintPlates, plateAt, platesAlong } from './pointer/plates'
 import type { Drag, P } from './pointer/types'
@@ -77,6 +77,8 @@ export interface NextOutcome {
   pill?: Pill
   /** The end of a counter the pointer is on, shown as a handle with the ways a drag can take it (K7, K8). */
   handle?: CounterHandleView
+  /** Disker og podier with Shift: the edges of the preview a press here takes hold of, drawn thick (PR 2). */
+  grip?: [Point, Point][]
 }
 
 /** A counter's end as a handle (K7, K8), and which of its ways a drag can go: half a metre that way draws (no error). */
@@ -107,6 +109,8 @@ export interface NextInput {
   textileStroke: TextileLine | null
   fillRect: Rect | null
   dropHover: { h: FaceHit; d: DecorDrag } | null
+  /** Disker og podier with Shift held: where the preview stands still (usePlanPointer). */
+  podiumFreeze?: P | null
 }
 
 const pt = (p: Point) => `${p[0]},${p[1]}`
@@ -222,8 +226,8 @@ function targetOf(p: NextInput): NextTarget | null {
 
   // Disker og podier dragged: the counter a release draws from the section pressed; held without moving, that section
   if (dragging?.kind === 'podium') {
-    if (dragging.moved && dragging.start && hover) return podiumTarget(podiumDraw(p, dragging.start, hover))
-    return podiumHover(p, dragging.p0)
+    if (dragging.moved && dragging.drag && hover) return podiumTarget(drawPodiumAt(p, dragging.drag, hover))
+    return podiumHover(p, dragging.at)
   }
 
   // Floor
@@ -259,7 +263,7 @@ function targetOf(p: NextInput): NextTarget | null {
     return e ? doorTarget(v, e, brush.product, null, false) : null
   }
   if (pens.counterTool) return counterHover(p, hover)
-  if (pens.podiumTool) return podiumHover(p, hover)
+  if (pens.podiumTool) return podiumHover(p, p.podiumFreeze ?? hover, p.podiumFreeze ? hover : null)
   if (pens.objectTool && hits.onStand(hover)) return objectTarget(v, brush, hover)
   if (pens.shelfTool) {
     const h = hits.faceHit(hover)
@@ -391,12 +395,25 @@ function counterTarget(v: Variant, brush: Brush | null, p0: P, q: P): NextTarget
   })
 }
 
+/** Shift held over Disker og podier (PR 2). */
+const LOCKED = 'Låst plass: dra i en kant for å flytte den, eller fra midten for å tegne mot pekeren · 250-steg · slipp Shift for å flytte'
+
 /** Disker og podier pointing (K10): on a counter, a click chooses it and nothing is shown; elsewhere the section a click
- *  stores, dimmed, or hatched where it has no room. */
-function podiumHover(p: NextInput, q: P): NextTarget | null {
-  if (counterUnder(p, q)) return target(`pod:on`, () => line({ hint: 'Klikk for å velge disken' }))
+ *  stores, dimmed, or hatched where it has no room. Shift held (`over`: the pointer over the preview standing still at
+ *  q): the edges a press takes hold of, thick, and the hint for it. */
+function podiumHover(p: NextInput, q: P, over: P | null = null): NextTarget | null {
+  if (!over && counterUnder(p, q)) return target(`pod:on`, () => line({ hint: 'Klikk for å velge disken' }))
   const r = podiumStart(p, q)
-  return r && podiumTarget(r, false)
+  if (!r) return null
+  const t = podiumTarget(r, false)
+  if (!over || 'error' in r) return t
+  const g = podiumGrab(r.o, [over.x, over.y])
+  const b = footprintBox(r.o, objectFootprint(place, r.o)!)
+  const grip: [Point, Point][] = [
+    ...(g.x ? [[[g.x < 0 ? b.x0 : b.x1, b.y0], [g.x < 0 ? b.x0 : b.x1, b.y1]] as [Point, Point]] : []),
+    ...(g.z ? [[[b.x0, g.z < 0 ? b.y0 : b.y1], [b.x1, g.z < 0 ? b.y0 : b.y1]] as [Point, Point]] : []),
+  ]
+  return target(`${t.key}:grip:${g.x},${g.z}`, () => ({ ...t.outcome(), hint: LOCKED, grip }))
 }
 
 /** What a click or drag of Disker og podier stores (K10), with its outer size in the pill while dragging; hatched with

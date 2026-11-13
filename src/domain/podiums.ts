@@ -46,12 +46,94 @@ export function rectSections(x: Range, z: Range, from: { x: 'lo' | 'hi'; z: 'lo'
   return out;
 }
 
-/** One way of a drag (the order's reference): the section pressed spans lo–hi, and the pointer at `v` past an edge
- *  grows it on that side by whole steps of 500, rounded; inside the section nothing changes. mm. */
+/** One way of a drag without Shift (the order's reference): the section pressed spans lo–hi, and the pointer at `v` past
+ *  an edge grows it on that side by whole steps of 500, rounded; inside the section nothing changes. mm. */
 export function dragSpan(lo: number, hi: number, v: number): [number, number] {
-  if (v > hi) return [lo, hi + Math.round((v - hi) / DRAG_STEP) * DRAG_STEP];
-  if (v < lo) return [lo - Math.round((lo - v) / DRAG_STEP) * DRAG_STEP, hi];
-  return [lo, hi];
+  const [a, b] = axisSpan({ lo: lo / GRID, hi: hi / GRID, v0: 0, g: 0 }, v / GRID, false);
+  return [a * GRID, b * GRID];
+}
+
+/** Which edge a press takes hold of, one way (PR 2, CAD: what you hold is where you press, never which way you drag):
+ *  −1 the low edge, 1 the high, 0 the middle third. Grid units. */
+export type Grab = -1 | 0 | 1;
+export function grabOf(lo: number, hi: number, v: number): Grab {
+  const t = (v - (lo + hi) / 2) / (hi - lo);
+  return Math.abs(t) < 1 / 6 ? 0 : t < 0 ? -1 : 1;
+}
+
+/** One way of a drag, in grid units (250 mm): the span lo–hi it started from, the pointer at the press `v0`, and the
+ *  edge taken hold of `g`. */
+export interface PodiumAxis {
+  lo: number;
+  hi: number;
+  v0: number;
+  g: Grab;
+}
+
+/** Below this (grid units, 75 mm) a press in the middle with Shift changes nothing yet. */
+const STILL = 0.3;
+
+/**
+ * The span one way of a drag gives with the pointer at `v` (the order's reference, grid units). Without Shift (`fine`
+ * false) it grows past an edge in steps of two. With Shift, an edge taken hold of moves by the pointer's travel in steps
+ * of one, out or in down to one, the other edge still; from the middle it is a rectangle from the grid line through the
+ * press to the one nearest the pointer, at least one, after the first 75 mm.
+ */
+export function axisSpan(a: PodiumAxis, v: number, fine: boolean): [number, number] {
+  const { lo, hi, v0, g } = a;
+  const r = Math.round;
+  const grow = (step: number): [number, number] => (v > hi ? [lo, hi + r((v - hi) / step) * step] : v < lo ? [lo - r((lo - v) / step) * step, hi] : [lo, hi]);
+  if (!fine) return grow(2);
+  const d = r(v - v0);
+  if (g > 0) return [lo, Math.max(lo + 1, hi + d)];
+  if (g < 0) return [Math.min(hi - 1, lo + d), hi];
+  if (Math.abs(v - v0) < STILL) return [lo, hi];
+  if (hi - lo === 1) return grow(1);
+  const A = Math.min(Math.max(r(v0), lo + 1), hi - 1);
+  return v < v0 ? [Math.min(A - 1, r(v)), A] : [A, Math.max(A + 1, r(v))];
+}
+
+/** A drag of Disker og podier under way: `o`, the section the pen showed at the press (its frame: unturned, centred on
+ *  its own origin), and each way's axis. `fine`: Shift held, or «Fin» on. */
+export interface PodiumDrag {
+  o: PlacedObject;
+  x: PodiumAxis;
+  z: PodiumAxis;
+  fine: boolean;
+}
+
+/** A plan point in grid units of the section's frame. */
+const unitsOf = (o: PlacedObject, q: Point): Point => [((q[0] - o.x) * 1000) / GRID, ((q[1] - o.y) * 1000) / GRID];
+
+/** Which edges of the section `o` a press at q takes hold of (with Shift): each way −1, 0 or 1. */
+export function podiumGrab(o: PlacedObject, q: Point): { x: Grab; z: Grab } {
+  const s = o.sections![0];
+  const [u, w] = unitsOf(o, q);
+  return { x: grabOf(s.x[0] / GRID, s.x[1] / GRID, u), z: grabOf(s.z[0] / GRID, s.z[1] / GRID, w) };
+}
+
+/** A drag pressed at q on the section `o` the pen shows. Without Shift a press is always in the middle (the section
+ *  stands round the pointer); with Shift it takes the edge it is by. */
+export function startDrag(o: PlacedObject, q: Point, fine: boolean): PodiumDrag {
+  const s = o.sections![0];
+  const [u, w] = unitsOf(o, q);
+  const g = fine ? podiumGrab(o, q) : { x: 0 as Grab, z: 0 as Grab };
+  return { o, fine, x: { lo: s.x[0] / GRID, hi: s.x[1] / GRID, v0: u, g: g.x }, z: { lo: s.z[0] / GRID, hi: s.z[1] / GRID, v0: w, g: g.z } };
+}
+
+/** The spans a drag gives with the pointer at q, grid units. */
+export function dragSpans(d: PodiumDrag, q: Point): { x: [number, number]; z: [number, number] } {
+  const [u, w] = unitsOf(d.o, q);
+  return { x: axisSpan(d.x, u, d.fine), z: axisSpan(d.z, w, d.fine) };
+}
+
+/** Shift pressed or let go during a drag, the pointer at q: what is drawn now is where it goes on from, measured from q,
+ *  with Shift the edge nearest the pointer taken hold of. The key alone never changes the size. */
+export function rebaseDrag(d: PodiumDrag, q: Point, fine: boolean): PodiumDrag {
+  const span = dragSpans(d, q);
+  const [u, w] = unitsOf(d.o, q);
+  const axis = ([lo, hi]: [number, number], v: number): PodiumAxis => ({ lo, hi, v0: v, g: fine ? (Math.abs(v - lo) < Math.abs(v - hi) ? -1 : 1) : 0 });
+  return { o: d.o, fine, x: axis(span.x, u), z: axis(span.z, w) };
 }
 
 /** The box round some sections, node to node, mm. */
@@ -130,19 +212,16 @@ export function podiumAt(v: Variant, ctx: PlaceContext, pen: { product: string; 
 }
 
 /**
- * The counter a press and drag draws (K10): from `start`, the section the pen showed at the press (podiumAt), which stays
- * put. Each way on its own, the pointer at q past an edge of it grows the counter on that side in 500 steps; both ways
- * make a rectangle. Split in sections with the rest farthest from the section pressed.
+ * The counter a drag draws (K10), from `d.o`, the section the pen showed at the press, with the pointer at q (axisSpan
+ * each way; both ways make a rectangle). Split in sections with the rest farthest from the edge that stayed.
  */
-export function drawPodium(v: Variant, ctx: PlaceContext, start: PlacedObject, q: Point): PodiumDraw {
-  const s = start.sections?.[0];
-  if (!s) return { error: 'Ukjent disk', o: start };
-  const px = (q[0] - start.x) * 1000;
-  const pz = (q[1] - start.y) * 1000;
-  const x = dragSpan(s.x[0], s.x[1], px);
-  const z = dragSpan(s.z[0], s.z[1], pz);
-  const from = { x: x[0] < s.x[0] - EPS ? ('hi' as const) : ('lo' as const), z: z[0] < s.z[0] - EPS ? ('hi' as const) : ('lo' as const) };
-  return placed(v, ctx, centred(start, rectSections(x, z, from, s.h)));
+export function drawPodium(v: Variant, ctx: PlaceContext, d: PodiumDrag, q: Point): PodiumDraw {
+  const s = d.o.sections?.[0];
+  if (!s) return { error: 'Ukjent disk', o: d.o };
+  const span = dragSpans(d, q);
+  const mm = ([a, b]: [number, number]): [number, number] => [a * GRID, b * GRID];
+  const from = { x: span.x[0] === d.x.lo ? ('lo' as const) : ('hi' as const), z: span.z[0] === d.z.lo ? ('lo' as const) : ('hi' as const) };
+  return placed(v, ctx, centred(d.o, rectSections(mm(span.x), mm(span.z), from, s.h)));
 }
 
 /** Outer size of a counter of Disker og podier, mm: length × depth × height (K10, K12). */

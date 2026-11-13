@@ -1,7 +1,7 @@
 // Disker og podier (Byggeregler K10–K12): sections on the 250 grid, built tight, drawn from one section by a drag.
 import { describe, expect, it } from 'vitest';
 import { counterBuildOf } from './counterShape';
-import { drawPodium, dragSpan, innerCorners, podiumAt, podiumName, podiumSize, rectSections, runNodes } from './podiums';
+import { drawPodium, dragSpan, innerCorners, podiumAt, podiumName, podiumSize, rebaseDrag, rectSections, runNodes, startDrag, type PodiumDrag } from './podiums';
 import { objectBoxes, type PlaceContext } from './objects';
 import { createVariant } from './variant';
 import { RULES } from '../rules/rules';
@@ -86,7 +86,7 @@ describe('the pen (PR 1)', () => {
     return r.o;
   };
   const drawn = (start: PlacedObject, q: [number, number], v = base) => {
-    const r = drawPodium(v, ctx, start, q);
+    const r = drawPodium(v, ctx, startDrag(start, [start.x, start.y], false), q);
     if ('error' in r) throw new Error(r.error);
     return r.o;
   };
@@ -136,7 +136,7 @@ describe('the pen (PR 1)', () => {
   it('is refused where it has no room, with the reason', () => {
     const one = podiumAt(base, ctx, pen, [3, 2]);
     if ('error' in one) throw new Error(one.error);
-    const r = drawPodium(one.v, ctx, at([1, 2], one.v), [3, 2]);
+    const r = drawPodium(one.v, ctx, startDrag(at([1, 2], one.v), [1, 2], false), [3, 2]);
     expect('error' in r && r.error).toBe('Ikke plass til disken her');
   });
 
@@ -144,5 +144,71 @@ describe('the pen (PR 1)', () => {
     expect(dragSpan(-250, 250, 1200)).toEqual([-250, 1250]);
     expect(dragSpan(-250, 250, 400)).toEqual([-250, 250]);
     expect(dragSpan(-250, 250, -600)).toEqual([-750, 250]);
+  });
+});
+
+describe('Shift: locked place and 250 steps (PR 2)', () => {
+  // A section 500 × 500 round (2, 2), Shift held: what a press there and a move (mm) gives, c/c
+  const start = (() => {
+    const r = podiumAt(base, ctx, pen, [2, 2]);
+    if ('error' in r) throw new Error(r.error);
+    return r.o;
+  })();
+  const cc = (d: PodiumDrag, q: [number, number]) => {
+    const r = drawPodium(base, ctx, d, q);
+    if ('error' in r) throw new Error(r.error);
+    const s = podiumSize(r.o);
+    return [s.length - 20, s.depth - 20];
+  };
+  const left = (d: PodiumDrag, q: [number, number]) => {
+    const r = drawPodium(base, ctx, d, q);
+    if ('error' in r) throw new Error(r.error);
+    return Math.round(Math.min(...objectBoxes(ctx, r.o).map((b) => b.x0)) * 1000) + 10;
+  };
+  const top = (d: PodiumDrag, q: [number, number]) => {
+    const r = drawPodium(base, ctx, d, q);
+    if ('error' in r) throw new Error(r.error);
+    return Math.round(Math.min(...objectBoxes(ctx, r.o).map((b) => b.y0)) * 1000) + 10;
+  };
+  const press = (dx: number, dy: number) => startDrag(start, [2 + dx / 1000, 2 + dy / 1000], true);
+  const move = (p: [number, number], dx: number, dy: number): [number, number] => [2 + (p[0] + dx) / 1000, 2 + (p[1] + dy) / 1000];
+
+  it.each([
+    ['right edge, 80 right', [240, 0], [80, 0], [500, 500]],
+    ['right edge, 250 in', [240, 0], [-250, 0], [250, 500]],
+    ['right edge, 600 in', [240, 0], [-600, 0], [250, 500]],
+    ['right edge, 800 out', [240, 0], [800, 0], [1250, 500]],
+    ['lower right corner, 500 out and 250 down', [240, 240], [500, 250], [1000, 750]],
+    ['middle, 50 left', [0, 0], [-50, 0], [500, 500]],
+    ['middle, 100 left', [0, 0], [-100, 0], [250, 500]],
+    ['middle, 100 left and 100 up', [0, 0], [-100, -100], [250, 250]],
+    ['middle, 400 left', [0, 0], [-400, 0], [500, 500]],
+    ['middle, 650 left', [0, 0], [-650, 0], [750, 500]],
+  ] as const)('%s', (_name, p, d, want) => {
+    expect(cc(press(p[0], p[1]), move([p[0], p[1]], d[0], d[1]))).toEqual(want);
+  });
+
+  it('keeps the edge it does not hold: the right edge in leaves the left where it was', () => {
+    expect(left(press(240, 0), move([240, 0], -250, 0))).toBe(1750);
+  });
+
+  it('from the middle, the half and the quarter toward the pointer', () => {
+    expect(left(press(0, 0), move([0, 0], -100, 0))).toBe(1750);
+    expect(top(press(0, 0), move([0, 0], -100, -100))).toBe(1750);
+    expect(left(press(0, 0), move([0, 0], -400, 0))).toBe(1500);
+  });
+
+  it('Shift during a drag locks what is drawn and goes on from the pointer', () => {
+    const p = (mm: number): [number, number] => [2 + mm / 1000, 2];
+    let d = startDrag(start, p(0), false);
+    expect(cc(d, p(1200))[0]).toBe(1500);
+    d = rebaseDrag(d, p(1200), true);
+    expect(cc(d, p(1200))[0]).toBe(1500);
+    expect(cc(d, p(1280))[0]).toBe(1500);
+    expect(cc(d, p(1350))[0]).toBe(1750);
+    expect(cc(d, p(950))[0]).toBe(1250);
+    d = rebaseDrag(d, p(950), false);
+    expect(cc(d, p(950))[0]).toBe(1250);
+    expect(cc(d, p(1600))[0]).toBe(1750);
   });
 });

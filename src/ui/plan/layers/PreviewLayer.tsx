@@ -14,7 +14,7 @@ import { INK } from '../../colors'
 import { idx } from '../../env'
 import type { Brush, Tool } from '../../tools'
 import { widthOf, type NextOutcome } from '../next'
-import { usePlanScale } from '../planScale'
+import { linePx, usePlanScale } from '../planScale'
 import { rollWidthOf } from '../pointer/floorBrush'
 import type { PlanPointer } from '../pointer/usePlanPointer'
 import type { PlanSelection } from '../selection'
@@ -69,6 +69,8 @@ export function PreviewLayer(p: Props) {
       {bad && 'rect' in bad && <InvalidShape kind="rect" x={bad.rect.x0} y={bad.rect.y0} width={bad.rect.x1 - bad.rect.x0} height={bad.rect.y1 - bad.rect.y0} />}
       {bad && 'circle' in bad && <InvalidShape kind="circle" {...bad.circle} />}
       {next?.handle && !mini && <CounterHandle h={next.handle} />}
+      {/* Disker og podier with Shift: the edge a press takes hold of, thick (PR 2) */}
+      {!mini && next?.grip?.map(([a, b], i) => <line key={`grip${i}`} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke={INK} strokeWidth={linePx(sc, 4)} strokeLinecap="round" />)}
       {pill && <MeasurePill a={pill.a} b={pill.b} centre={centre} stroke={widthOf(sc, pill.width)} text={pill.text} />}
       {tileDrag && brush?.kind === 'floor' && tileAreaMeasures(v, tileDrag, brush.product, centre)}
       {selLanes.length > 0 && (

@@ -213,7 +213,10 @@ står urørt; det nye deler bygger, omriss, 3D og kalkyle med dem.
   `sectionRects` i `domain/counterShape.ts` (én boks per seksjon i `objectBoxes`)
 - Pennen, ren og testet: `domain/podiums.ts` (`podiumAt`: én seksjon under pekeren, inntil vegg og standkant innen 10 cm;
   `drawPodium` og `dragSpan`: et drag fra seksjonen man trykket i; `rectSections`/`runNodes`: hele meter først, resten
-  lengst unna; `podiumName`, `innerCorners`, `podiumSize`). Pekeren: `plan/pointer/podium.ts`, forhåndsvisningen
+  lengst unna; Shift og Fin: `grabOf`/`podiumGrab` (hvilken kant et trykk tar), `axisSpan` (rektangelet et drag gir,
+  bestillingens referanse), `startDrag`, `rebaseDrag` (Shift midt i et drag); `podiumName`, `innerCorners`, `podiumSize`).
+  Forhåndsvisningen fryses med Shift i `usePlanPointer.ts` (`podiumFreeze`), kanten man tar tak i tegnes tykk (`grip` i
+  `PreviewLayer.tsx`). Pekeren: `plan/pointer/podium.ts`, forhåndsvisningen
   `podiumHover`/`podiumTarget` i `plan/next.ts`. Verktøyet: `Brush` `podium` og `PenTool` `podium` i `ui/tools.ts`,
   docken, hurtigvalget (farger og Fyll, `paintPodiums`) og hintet
 - Katalogen: `podium('6570', …)` i `catalog/defaultCatalog.ts` (`Product.podium`, varenummer midlertidig; `counter` er

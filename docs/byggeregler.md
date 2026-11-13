@@ -415,7 +415,13 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   10 cm, og ingenting over en disk; et klikk lagrer den, et klikk på en disk velger den. Trykk og dra tegner videre fra
   seksjonen, som står fast fra trykket: i hver retning for seg vokser disken `round(d / 500) × 500` på den siden når
   pekeren går `d` forbi kanten, inne i seksjonen skjer ingenting, og begge retninger gir et rektangel. Der den ikke får
-  plass, nektes den med «Ikke plass til disken her». En disk kan stå helt inntil en vegg.
+  plass, nektes den med «Ikke plass til disken her». En disk kan stå helt inntil en vegg. Med Shift (som i CAD: det man
+  har tak i, avgjøres av hvor man trykker, aldri av hvilken vei man drar) står forhåndsvisningen stille, og pekeren kan
+  flyttes over den. Et trykk ved en kant eller et hjørne (utenfor den midterste tredjedelen) tar tak i den kanten, som
+  vises tykk mens man peker, og flytter den `round(Δ / 250) × 250` ut eller inn til 250; motsatt kant står stille. Et
+  trykk midt i tegner fra rasterlinjen gjennom trykket til den nærmest pekeren, minst 250, og de første 75 mm endrer
+  ingenting. Shift trykket eller sluppet midt i et drag låser det som er tegnet og går videre derfra; tastetrykket alene
+  endrer aldri størrelsen. «Fin» i hurtigvalget gjør det samme som Shift for berøring, uten å fryse forhåndsvisningen.
   *Bjørn 13.11.2026 · kode `src/domain/podiums.ts`, `src/domain/counterShape.ts`, `src/domain/types.ts` · test `src/domain/podiums.test.ts`*
 - **K11 Tett bygg.** Alle utvendige sider er tette: bunnskinne 92 og toppskinne 93 på hver utvendig kant, og én
   veggplate i hele høyden i kanalene, mellom bunnskinne og toppskinne. Det er ingen midtskinne og ingen hylle i
