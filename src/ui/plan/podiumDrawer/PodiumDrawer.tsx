@@ -1,16 +1,18 @@
 // Drawer for a counter of Disker og podier (trinn 2, mockup «Standskisse v10»): one side at a time, seen from outside.
-// Laid out like the wall drawer: settings on the left with two pages, «Sider og hyller» (what each part of the side is,
-// K16) and «Farge og profilering» (the counter's colour, K6), the mini plan to choose a side in the detail height, the
-// side's drawing on the right and the hint across the bottom. Without a part chosen the settings act on the whole side;
-// a click on a part in the drawing chooses it, a click on it again the whole side.
+// Laid out like the wall drawer: settings on the left with two pages, «Sider og hyller» (what each part or light opening
+// of the side is, K16, K17; the shelves and height of the sections behind, K18, K19) and «Farge og profilering» (the
+// counter's colour, K6), the mini plan to choose a side in the detail height, the side's drawing on the right and the
+// hint across the bottom. Without a part chosen the settings act on the whole side; a click in the drawing chooses the
+// light opening under it (the part when it has no shelves), a click on it again the whole side.
 import { ChevronLeft, ChevronRight, LibraryBig, Palette } from 'lucide-react'
 import { useState } from 'react'
+import { SHELF_HEIGHTS, lowered, movePodiumShelf, setPodiumShelf } from '../../../domain/podiumShelves'
 import { counterRal, removeObject, setCounterRal } from '../../../domain/objects'
 import { NO_DOOR, setPodiumLight, takesDoor } from '../../../domain/podiumFaces'
 import { partLocks } from '../../../domain/podiumLocks'
 import { HEIGHTS, podiumName, podiumSize, setSectionHeight } from '../../../domain/podiums'
 import type { CounterLight, PlacedObject, Variant } from '../../../domain/types'
-import { Button, FlatChoice, IconButton, Section } from '../../controls'
+import { Button, FlatChoice, FlatToggles, IconButton, Section } from '../../controls'
 import { place, plateColor, plateName } from '../../env'
 import { count, mm } from '../../format'
 import { DrawerHead, PlatePalette } from '../drawerParts'
@@ -38,14 +40,16 @@ const KINDS: { value: Kind; label: string }[] = [
 ]
 const KIND_NAME: Record<Kind, string> = { plate: 'plate', open: 'åpen', door: 'skyvedør' }
 
-/** What the parts are, as one: the kind they share, or null when they differ. */
-const shared = (ps: ElevationPart[]): Kind | null => {
-  const ks = [...new Set(ps.map((p) => (p.locked ? 'plate' : (p.light ?? 'plate'))))]
+/** What the parts are, as one (in light opening `light`, or in all): the kind they share, or null when they differ. */
+const shared = (ps: ElevationPart[], light?: number): Kind | null => {
+  const ks = [...new Set(ps.flatMap((p) => (light === undefined ? p.lights : [p.lights[light] ?? null]).map((k): Kind => (p.locked ? 'plate' : (k ?? 'plate')))))]
   return ks.length === 1 ? ks[0] : null
 }
 
 export function PodiumDrawer({ v, o, selection: sel, onSelect, onEdit, onClose }: Props) {
   const [page, setPage] = useState<Page>('sides')
+  // K18: how many shelves the last lower height took away, for the hint
+  const [gone, setGone] = useState(0)
   const sides = drawerSides(o)
   if (!sides.length) return null
   const si = chosenSide(sides, sel.podiumSide)
@@ -54,13 +58,14 @@ export function PodiumDrawer({ v, o, selection: sel, onSelect, onEdit, onClose }
   const el = sideElevation(o, S.side, new Set(locks.keys()))
   const pi = sel.podiumPart !== undefined && sel.podiumPart < el.parts.length ? sel.podiumPart : undefined
   const parts = pi === undefined ? el.parts : [el.parts[pi]]
-  const kind = shared(parts)
+  const li = pi !== undefined && sel.podiumLight !== undefined && sel.podiumLight < parts[0].lights.length ? sel.podiumLight : undefined
+  const kind = shared(parts, li)
   const ral = counterRal(o)
   const name = podiumName(o.sections ?? [])
   const size = podiumSize(o)
   const select = (x: Partial<PlanSelection>) => onSelect({ objectId: o.id, podiumSide: S.key, ...x })
   const showSide = (i: number) => onSelect({ objectId: o.id, podiumSide: sides[(i + sides.length) % sides.length].key })
-  const pickPart = (i: number | undefined) => select({ podiumPart: i })
+  const pickPart = (i: number | undefined, light?: number) => (setGone(0), select({ podiumPart: i, podiumLight: light }))
 
   // A part against a wall or another counter stays a plate (K16): its choice is greyed out, with why
   const lockedHere = parts.filter((p) => p.locked)
@@ -77,13 +82,23 @@ export function PodiumDrawer({ v, o, selection: sel, onSelect, onEdit, onClose }
   const options = KINDS.map((k) => (k.value === 'door' && !doorable.length ? { ...k, disabled: true, title: NO_DOOR } : k))
   const setKind = (k: Kind) => {
     const keys = (k === 'door' ? doorable : parts.filter((p) => !p.locked)).map((p) => p.key)
-    onEdit((x) => setPodiumLight(x, o.id, keys, k === 'plate' ? null : k))
+    setGone(0)
+    onEdit((x) => setPodiumLight(x, o.id, keys, k === 'plate' ? null : k, li))
   }
 
   const secs = [...new Set(parts.map((p) => p.part.section))]
   const heights = [...new Set(secs.map((i) => o.sections![i].h))].sort((a, b) => a - b)
-  const setHeight = (h: number) => onEdit((x) => setSectionHeight(x, o.id, secs, h))
-  const scope = pi === undefined ? 'Hele siden' : `Del ${pi + 1} av ${el.parts.length}`
+  const heightOf = (which: number[], h: number) => {
+    setGone(which.reduce((n, i) => n + lowered(o.sections![i], h).gone, 0))
+    onEdit((x) => setSectionHeight(x, o.id, which, h))
+  }
+  // K19: a shelf is on when every section along has it; one that is not lower than a section's height is greyed out
+  const shelvesNow = SHELF_HEIGHTS.filter((y) => secs.every((i) => o.sections![i].shelves?.includes(y)))
+  const lowest = Math.min(...secs.map((i) => o.sections![i].h))
+  const shelfCount = secs.reduce((n, i) => n + (o.sections![i].shelves?.length ?? 0), 0)
+  const toggleShelf = (y: number, on: boolean) => (setGone(0), onEdit((x) => setPodiumShelf(x, o.id, secs, y, on)))
+  const several = pi === undefined && secs.length > 1
+  const scope = pi === undefined ? 'Hele siden' : li === undefined ? `Del ${pi + 1} av ${el.parts.length}` : `Del ${pi + 1} · åpning ${li + 1}/${parts[0].lights.length}`
   const partNav =
     el.parts.length > 1 ? (
       <>
@@ -93,7 +108,7 @@ export function PodiumDrawer({ v, o, selection: sel, onSelect, onEdit, onClose }
     ) : undefined
   const hint =
     page === 'sides'
-      ? `${pi === undefined ? 'Klikk en del i risset for bare den' : 'Klikk delen igjen for hele siden'} · dra toppen av en seksjon for høyden · ‹ › bytter del · åpen: ingen plate og ingen bunnskinne · skyvedør: to plater i sporet · velg side i miniplanen eller ved å klikke disken i planen`
+      ? `${gone ? `Lavere høyde tok bort ${count(gone, 'hylle', 'hyller')} · ` : ''}${pi === undefined ? 'Klikk en del eller en åpning i risset for bare den' : 'Klikk den igjen for hele siden'} · dra toppen av en seksjon for høyden, en hylle for hyllehøyden · ‹ › bytter del · åpen: ingen plate · skyvedør: to plater i sporet · velg side i miniplanen eller ved å klikke disken i planen`
       : 'Fargen gjelder hele disken, også dørene · «Sider og hyller» for åpne sider og dører'
 
   return (
@@ -119,8 +134,12 @@ export function PodiumDrawer({ v, o, selection: sel, onSelect, onEdit, onClose }
             {!allLocked && !doorable.length && <p className="set-note">{NO_DOOR}</p>}
           </Section>
           {/* K18: the height of the section behind the part, or of every section along the side */}
-          <Section title={pi === undefined && secs.length > 1 ? 'Seksjonene · høyde' : 'Seksjonen · høyde'} aside={`CC ${heights.map((h) => mm(h / 1000)).join('/')}`}>
-            <FlatChoice<number> label="Høyde CC" value={heights.length === 1 ? heights[0] : 0} onChange={setHeight} options={HEIGHTS.map((h) => ({ value: h, label: mm(h / 1000) }))} />
+          {/* K19: shelves at CC 250, 500 and 750, below the section's height */}
+          <Section title={several ? 'Seksjonene · hyller' : 'Seksjonen · hyller'} aside={shelfCount ? count(shelfCount, 'hylle', 'hyller') : 'ingen'}>
+            <FlatToggles<number> label="Hyller, CC" value={shelvesNow} onToggle={toggleShelf} options={SHELF_HEIGHTS.map((y) => ({ value: y, label: mm(y / 1000), disabled: y >= Math.max(...secs.map((i) => o.sections![i].h)), title: y >= lowest ? 'Hyllen må stå lavere enn seksjonen' : undefined }))} />
+          </Section>
+          <Section title={several ? 'Seksjonene · høyde' : 'Seksjonen · høyde'} aside={`CC ${heights.map((h) => mm(h / 1000)).join('/')}`}>
+            <FlatChoice<number> label="Høyde CC" value={heights.length === 1 ? heights[0] : 0} onChange={(h) => heightOf(secs, h)} options={HEIGHTS.map((h) => ({ value: h, label: mm(h / 1000) }))} />
           </Section>
           </>
         ) : (
@@ -145,7 +164,7 @@ export function PodiumDrawer({ v, o, selection: sel, onSelect, onEdit, onClose }
         </div>
       </div>
 
-      <PodiumElevation parts={el.parts} length={el.length} h={el.h} title={`${S.name[0].toUpperCase()}${S.name.slice(1)} · sett utenfra`} fill={plateColor(ral)} chosen={pi} onPick={pickPart} onHeight={(sec, h) => onEdit((x) => setSectionHeight(x, o.id, [sec], h))} />
+      <PodiumElevation parts={el.parts} length={el.length} h={el.h} title={`${S.name[0].toUpperCase()}${S.name.slice(1)} · sett utenfra`} fill={plateColor(ral)} chosen={pi === undefined ? undefined : { part: pi, light: li }} onPick={(p) => pickPart(p?.part, p?.light)} onHeight={(sec, h) => heightOf([sec], h)} onShelf={(sec, from, to) => (setGone(0), onEdit((x) => movePodiumShelf(x, o.id, sec, from, to)))} />
       <div className="wd-hint">{hint}</div>
     </section>
   )

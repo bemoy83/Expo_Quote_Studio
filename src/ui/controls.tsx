@@ -120,6 +120,34 @@ export function FlatChoice<T extends string | number | boolean>({
   )
 }
 
+/** FlatChoice where each choice is on or off by itself (the shelves of a counter, K19). */
+export function FlatToggles<T extends string | number>({
+  options,
+  value,
+  onToggle,
+  label,
+  disabled,
+}: {
+  options: { value: T; label: ReactNode; title?: string; disabled?: boolean }[]
+  value: readonly T[]
+  onToggle: (v: T, on: boolean) => void
+  label: string
+  disabled?: boolean
+}) {
+  return (
+    <div role="group" aria-label={label} className="flat-choice">
+      {options.map((o) => {
+        const on = value.includes(o.value)
+        return (
+          <button key={String(o.value)} type="button" role="checkbox" aria-checked={on} title={o.title} disabled={disabled || o.disabled} onClick={() => onToggle(o.value, !on)}>
+            {o.label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 /**
  * A section of settings (Bjørn 8.11.2026), in the drawers and the stand chip alike: one title in the app's muted capitals,
  * with what it is set to when its content does not show it («HELE VEGGEN · HVIT 9010»), its icon buttons on the same

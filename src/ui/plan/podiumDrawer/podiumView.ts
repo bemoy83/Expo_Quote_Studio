@@ -1,7 +1,7 @@
 // What the drawer for a counter of Disker og podier shows (trinn 2): its sides in order round it, named after the stand
 // side each faces, the side chosen, and that side seen from outside, left to right, part by part. Pure, with tests.
 import { toPlan, turn } from '../../../domain/counterShape'
-import { lightOf, partKey, partsOn, type PodiumPart } from '../../../domain/podiumFaces'
+import { lightsOf, partKey, partsOn, type PodiumPart } from '../../../domain/podiumFaces'
 import { podiumSides, type PodiumSide } from '../../../domain/podiums'
 import type { CounterLight, PlacedObject, Side } from '../../../domain/types'
 import { RECIPES } from '../../../foga/recipes'
@@ -85,7 +85,8 @@ export function nearestSide(o: PlacedObject, q: [number, number]): string | unde
 }
 
 /** One part of the side seen from outside: from x0 to x1 (mm from the outer face at the left end), its node line ends
- *  n0 and n1, how high its section is (CC, the underside of the top rail), what it is and whether it is held a plate. */
+ *  n0 and n1, how high its section is (CC, the underside of the top rail), its section's shelves (CC, low to high),
+ *  what each light opening is from the floor (K16) and whether it is held a plate. */
 export interface ElevationPart {
   part: PodiumPart
   key: string
@@ -94,7 +95,8 @@ export interface ElevationPart {
   n0: number
   n1: number
   h: number
-  light: CounterLight | null
+  shelves: readonly number[]
+  lights: (CounterLight | null)[]
   locked: boolean
 }
 
@@ -108,7 +110,8 @@ export function sideElevation(o: PlacedObject, side: PodiumSide, locked: Readonl
     .map((p): ElevationPart => {
       const [n0, n1] = [x(p.a), x(p.b)].sort((a, b) => a - b)
       const key = partKey(p)
-      return { part: p, key, n0, n1, x0: n0, x1: n1, h: sections[p.section].h, light: lightOf(sections, p), locked: locked.has(key) }
+      const s = sections[p.section]
+      return { part: p, key, n0, n1, x0: n0, x1: n1, h: s.h, shelves: s.shelves ?? [], lights: lightsOf(sections, p), locked: locked.has(key) }
     })
     .sort((p, q) => p.n0 - q.n0)
   // The ends out to the outer face
@@ -117,4 +120,10 @@ export function sideElevation(o: PlacedObject, side: PodiumSide, locked: Readonl
     parts[parts.length - 1].x1 = len + 2 * R.face
   }
   return { parts, length: len + 2 * R.face, h: Math.max(...parts.map((p) => p.h), 0) }
+}
+
+/** The light openings of a part as CC bands from the floor (K16): [0, first shelf], …, [last shelf, top]. */
+export const lightBands = (p: Pick<ElevationPart, 'h' | 'shelves'>): [number, number][] => {
+  const cuts = [0, ...p.shelves, p.h]
+  return cuts.slice(1).map((y, i) => [cuts[i], y])
 }

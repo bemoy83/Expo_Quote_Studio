@@ -4,7 +4,7 @@
 import { useId } from 'react'
 import { mainGroupOf } from '../../../catalog/groups'
 import { lockedParts, placedBuild } from '../../../domain/podiumLocks'
-import { lightOf, partKey, podiumParts, takesDoor } from '../../../domain/podiumFaces'
+import { lightsOf, partKey, podiumParts } from '../../../domain/podiumFaces'
 import { toPlan } from '../../../domain/counterShape'
 import { RECIPES } from '../../../foga/recipes'
 import { counterRal, footprintBox, objectBoxes, objectFootprint } from '../../../domain/objects'
@@ -115,7 +115,7 @@ function DoorMarks({ o, locked, stroke }: { o: PlacedObject; locked: readonly st
   const sc = usePlanScale()
   if (!o.sections?.some((s) => s.sides)) return null
   const off = new Set(locked)
-  const doors = podiumParts(o.sections).filter((p) => lightOf(o.sections!, p) === 'door' && takesDoor(p) && !off.has(partKey(p)))
+  const doors = podiumParts(o.sections).filter((p) => lightsOf(o.sections!, p).includes('door') && !off.has(partKey(p)))
   const { face, door } = RECIPES.counter
   return (
     <g stroke={stroke} strokeWidth={linePx(sc, 0.75)}>

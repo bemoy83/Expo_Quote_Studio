@@ -49,6 +49,14 @@ describe('Disker og podier (Byggeregel K13)', () => {
     expect(r.groups.flatMap((g) => g.lines).find((l) => l.artnr === '6570')!.meta).toBe('bygget på stedet 1020 × 1020 × 1040 mm · 1 skyvedør · RAL 3002');
   });
 
+  it('a shelf is fitted per board, the line says how many (K19, K21)', () => {
+    const shelf = { ...podium, sections: [sec(-500, 500, -500, 500), sec(500, 1000, -500, 500)].map((s) => ({ ...s, shelves: [500] })) };
+    expect(Object.fromEntries(podiumUses(shelf).map((u) => [u.id, u.qty]))[ITEM.counterShelf]).toBe(2);
+    expect(DEFAULT_PRICING.items.get(ITEM.counterShelf)).toBeDefined();
+    const r = calc({ ...v, objects: [shelf] }, RULES, DEFAULT_CATALOG, { payer: 'utstiller', ral: '9010' });
+    expect(r.groups.flatMap((g) => g.lines).find((l) => l.artnr === '6570')!.meta).toContain('· 2 hyller ·');
+  });
+
   it('is picked as loose parts under Disker, not as the line', () => {
     const rows = pickRows(res);
     expect(rows.some((r) => r.code === '6570')).toBe(false);

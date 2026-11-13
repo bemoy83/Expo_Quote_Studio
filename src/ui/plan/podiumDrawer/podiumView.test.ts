@@ -36,6 +36,6 @@ describe('the drawer for Disker og podier', () => {
     const back = sideElevation(two, s[2].side)
     expect(back.parts.map((p) => p.x1 - p.x0)).toEqual([510, 1010])
     const open = { ...two, sections: setLight(two.sections!, podiumParts(two.sections!).filter((p) => p.axis === 'z' && p.out === 1 && p.a === 250), 'open') }
-    expect(sideElevation(open, s[0].side).parts.map((p) => p.light)).toEqual([null, 'open'])
+    expect(sideElevation(open, s[0].side).parts.map((p) => p.lights)).toEqual([[null], ['open']])
   })
 })

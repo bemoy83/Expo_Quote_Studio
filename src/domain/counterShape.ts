@@ -6,7 +6,7 @@
 import { layoutBuild, runBreaks, stockCounter, type CounterBuild, type CounterCell, type CounterLayout } from '../foga/counter';
 import { RECIPES } from '../foga/recipes';
 import type { Footprint } from '../catalog/types';
-import { doorStretches, openStretches } from './podiumFaces';
+import { podiumLights } from './podiumFaces';
 import type { CounterPiece, CounterSection, PlacedObject, Point } from './types';
 
 const R = RECIPES.counter;
@@ -54,7 +54,7 @@ export function layoutOf(pieces: readonly CounterPiece[]): CounterLayout {
  *  not `locked` against a wall or another counter (podiumLocks.ts, by partKey). */
 export function sectionsLayout(sections: readonly CounterSection[], locked: readonly string[] = []): CounterLayout {
   const off = new Set(locked);
-  return { cells: sections.map((c) => ({ x: c.x, z: c.z, h: c.h })), open: openStretches(sections, off), doors: doorStretches(sections, off) };
+  return { cells: sections.map((c) => ({ x: c.x, z: c.z, h: c.h, ...(c.shelves?.length && { shelves: c.shelves }) })), ...podiumLights(sections, off) };
 }
 
 /** The parts and open stretches of a counter: its sections, its drawn pieces, or the counter in stock. */

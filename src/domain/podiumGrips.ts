@@ -126,6 +126,8 @@ export function joined(sections: readonly CounterSection[]): CounterSection[] {
           // The long sides run on as one part each, so they must be the same; the ends are p's and q's (K16)
           const long = [sideKey(other, -1), sideKey(other, 1)] as const;
           if (long.some((k) => JSON.stringify(p.sides?.[k] ?? null) !== JSON.stringify(q.sides?.[k] ?? null))) continue;
+          // …and the shelves, which run through both as one (K19)
+          if (JSON.stringify(p.shelves ?? []) !== JSON.stringify(q.shelves ?? [])) continue;
           out.splice(j, 1);
           const end = sideKey(axis, 1);
           out[j < i ? i - 1 : i] = withSide(withAxis(p, axis, [p[axis][0], q[axis][1]]), end, q.sides?.[end]);

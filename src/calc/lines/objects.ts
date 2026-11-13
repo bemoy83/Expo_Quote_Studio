@@ -67,7 +67,13 @@ export function podiumUses(o: PlacedObject, b: CounterBuild = counterBuildOf(o))
   const longest = sections.map((x) => Math.max(x.x[1] - x.x[0], x.z[1] - x.z[0]));
   // K21: a sliding door is two leaves, fitted as one
   const doors = b.plates.filter((p) => p.level === 'door').length / 2;
-  return [...builtUses(b, longest.filter((n) => n > HALF_PART).length, longest.filter((n) => n <= HALF_PART).length, innerCorners(sections)), ...(doors ? [{ id: ITEM.counterDoor, qty: doors }] : [])];
+  // K19: a shelf is fitted on its rails (H7's times, placeholder)
+  const shelves = b.boards.filter((x) => x.role === 'shelf').length;
+  return [
+    ...builtUses(b, longest.filter((n) => n > HALF_PART).length, longest.filter((n) => n <= HALF_PART).length, innerCorners(sections)),
+    ...(doors ? [{ id: ITEM.counterDoor, qty: doors }] : []),
+    ...(shelves ? [{ id: ITEM.counterShelf, qty: shelves }] : []),
+  ];
 }
 
 /** A counter built on site (K9, K13): its parts, and the work for its whole and half parts and its corners. */

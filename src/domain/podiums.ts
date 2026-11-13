@@ -8,6 +8,7 @@
 import { RECIPES } from '../foga/recipes';
 import { counterBuildOf, snap, toLocal, toPlan } from './counterShape';
 import { prunedSides } from './podiumFaces';
+import { lowered } from './podiumShelves';
 import { snapShift } from './counters';
 import { nextId } from './ids';
 import { blockers, COUNTER_STOCK_RAL, footprintBox, hitsAny, objectBoxes, objectFootprint, type PlaceContext } from './objects';
@@ -350,12 +351,12 @@ export function podiumSize(o: Pick<PlacedObject, 'sections'>): { length: number;
 }
 
 /** The sketch with the sections `which` (by index) of counter `id` at CC `h`, one of HEIGHTS (Byggeregel K18); the step
- *  between two heights is built by K12. */
+ *  between two heights is built by K12, and the shelves in or above the new height go (K19, `lowered`). */
 export function setSectionHeight(v: Variant, id: string, which: readonly number[], h: number): Variant {
   const o = v.objects.find((x) => x.id === id);
   if (!o?.sections || !(HEIGHTS as readonly number[]).includes(h)) return v;
   const pick = new Set(which);
   if (!o.sections.some((s, i) => pick.has(i) && s.h !== h)) return v;
-  const sections = o.sections.map((s, i) => (pick.has(i) ? { ...s, h } : s));
+  const sections = o.sections.map((s, i) => (pick.has(i) ? lowered(s, h).section : s));
   return { ...v, objects: v.objects.map((x) => (x.id === id ? { ...x, sections } : x)) };
 }
