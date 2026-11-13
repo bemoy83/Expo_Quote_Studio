@@ -42,6 +42,9 @@ export interface Product {
   /** A counter built of Foga profiles (Byggeregler K1–K5): outer size, mm. Drawn in 3D and costed from its recipe
    *  (foga/counter.ts); its footprint is the same size. */
   counter?: { length: number; depth: number };
+  /** Disker og podier (Byggeregler K10–K13): drawn of sections and built on site, priced by the cost engine. Its
+   *  `counter` and footprint are one section of 500 × 500, the size the pen starts from. */
+  podium?: true;
   /** Short spec shown in the product row, e.g. "ø 70 · h 111". */
   dim?: string;
   /** Level 2: an article the montør picks, part of a level 1 product. Never a line on the quote. */

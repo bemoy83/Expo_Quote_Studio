@@ -19,6 +19,13 @@ const ROWS: Row[] = [
   ['FIBRAPLAST6-976x476', 'MDF malingsmelamin Fibraplast H Barnizable hvit/hvit 6 × 476 × 976 mm', 'Plater', 'stk', 60],
   // Half a counter part (K7), cut from the same board: placeholder too
   ['FIBRAPLAST6-476x476', 'MDF malingsmelamin Fibraplast H Barnizable hvit/hvit 6 × 476 × 476 mm', 'Plater', 'stk', 30],
+  // The other tops of Disker og podier (K10, sections 250–1000 c/c, top c/c − 24), cut from the same board: placeholders
+  // at the same price per m²
+  ...[976, 726, 476, 226].flatMap((w) =>
+    [976, 726, 476, 226]
+      .filter((d) => d <= w && !(w === 976 && d === 476) && !(w === 476 && d === 476))
+      .map((d): Row => [`FIBRAPLAST6-${w}x${d}`, `MDF malingsmelamin Fibraplast H Barnizable hvit/hvit 6 × ${d} × ${w} mm`, 'Plater', 'stk', Math.max(10, Math.round((130 * w * d) / 1e6 / 10) * 10)]),
+  ),
   // Textile with silicone edge, per m² incl. bleed. Blackback is the default for print (Bjørn 7.11.2026); Samba goes in
   // front of LED, which the app does not draw yet
   ['TRYKK-BLACKBACK', 'Trykt tekstil Blackback med silikonkant', 'Tekstil', 'm²', 180],

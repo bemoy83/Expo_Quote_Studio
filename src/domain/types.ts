@@ -121,6 +121,17 @@ export interface PlacedObject {
   /** A drawn counter (Byggeregler K7, K8, domain/counters.ts): its straight pieces, in its own coordinates around
    *  (x, y), mm, front toward +y unturned. Omitted = the product as in stock. */
   pieces?: CounterPiece[];
+  /** A counter or podium from Disker og podier (Byggeregler K10–K13, domain/podiums.ts): its sections in its own
+   *  coordinates around (x, y), mm c/c between nodes on the 250 grid, front toward +y unturned. Never with `pieces`. */
+  sections?: CounterSection[];
+}
+
+/** One section of Disker og podier (K10, K12): x and z from node to node, mm, and its height `h`, CC 250, 500, 750 or
+ *  1000 (the underside of its top rail). Sides (open, doors), shelves and decor come in step 2 as fields of their own. */
+export interface CounterSection {
+  x: [number, number];
+  z: [number, number];
+  h: number;
 }
 
 /** One straight piece of a drawn counter: its centre line from `a` to `b` (whole metres from `a`, a half last, K7),
