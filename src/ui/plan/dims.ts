@@ -172,7 +172,7 @@ export function planDims(v: Variant, selection: PlanSelection, compact: boolean)
 /** Which way from a run's line its chain stands: the side its normal `n` points to, across the run. */
 const toward = (n: Point, hz: boolean): 1 | -1 => ((hz ? n[1] : n[0]) < 0 ? -1 : 1)
 
-/** A chosen counter's dimensions, m (Byggeregler K7): its whole outer size across x and along y.
+/** A chosen counter's dimensions, m (Byggeregel K8): its whole outer size across x and along y.
  *  An L gives its two outer lengths; the depth (always 520) needs no line of its own (Bjørn 12.11.2026). */
 export function counterChains(boxes: { x0: number; y0: number; x1: number; y1: number }[]): { x: [number, number]; y: [number, number] } | null {
   if (!boxes.length) return null
@@ -182,7 +182,7 @@ export function counterChains(boxes: { x0: number; y0: number; x1: number; y1: n
   }
 }
 
-/** Which side of a counter its chains stand on (K7): toward the stand's middle, clear of the stand's own chains and the
+/** Which side of a counter its chains stand on (K8): toward the stand's middle, clear of the stand's own chains and the
  *  aisle. `dx` 1: the depth right of it, −1 left; `dy` 1: the width under it, −1 over it. Shared with the pill. */
 export function counterDimSides(v: Variant, c: { x: readonly [number, number]; y: readonly [number, number] }): { dx: 1 | -1; dy: 1 | -1 } {
   return { dx: (c.x[0] + c.x[1]) / 2 < v.stand.width / 2 ? 1 : -1, dy: (c.y[0] + c.y[1]) / 2 < v.stand.depth / 2 ? 1 : -1 }

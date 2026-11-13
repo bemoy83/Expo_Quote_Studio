@@ -67,8 +67,8 @@ export interface FogaStructure {
   /** Shelves: boards, and brackets at a row's ends (91F) and between two boards (91FF), Byggeregel H2; in corners short
    *  91 and 01 rails (Byggeregler H10–H12). */
   shelves?: ShelfSpec;
-  /** Counters drawn and built on site (Byggeregler K7, K8): their parts, picked loose. The counter in stock is picked
-   *  whole and is not here. */
+  /** Counters built on site (Byggeregler K10–K13): their parts, picked loose. A standard counter is picked whole and is
+   *  not here (K22). */
   counters?: CounterParts;
 }
 

@@ -71,7 +71,7 @@ const over = (v: Variant, b: { x0: number; y0: number; x1: number; y1: number })
   ],
 })
 
-/** A chosen counter: past its width chain (K7), which stands toward the stand's middle where there is room, so the
+/** A chosen counter: past its width chain (K8), which stands toward the stand's middle where there is room, so the
  *  pill never covers a measure nor the aisle a counter often stands by (Bjørn 12.11.2026); else on the other side. */
 function counterAnchor(v: Variant, b: { x0: number; y0: number; x1: number; y1: number }): PillAnchor {
   const { dy } = counterDimSides(v, { x: [b.x0, b.x1], y: [b.y0, b.y1] })

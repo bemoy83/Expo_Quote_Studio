@@ -1,5 +1,5 @@
-// A counter's outline in the plan (Byggeregler K7, K8): one figure round the whole counter, made from the boxes of its
-// pieces, each stretch closed (plates) or open (the back toward the staff and the inside of an L). Pure, in plan metres,
+// A counter's outline in the plan (Byggeregler K8, K16): one figure round the whole counter, made from the boxes of its
+// sections, each stretch closed (plates) or open (where its layout leaves it open). Pure, in plan metres,
 // so ObjectLayer only draws it.
 import { counterLayoutOf, toLocal, unturn } from '../../domain/counterShape'
 import { objectBoxes, type PlaceContext } from '../../domain/objects'

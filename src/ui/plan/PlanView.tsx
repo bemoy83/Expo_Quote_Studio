@@ -84,7 +84,7 @@ interface Props {
   textileLabels?: boolean
   /** Work order: the mållinjer of every drawn beam off the grid, so the montør can measure it out (Byggeregel T15). */
   beamMeasures?: boolean
-  /** The work order: every counter of Disker og podier with its outer size (K10). */
+  /** The work order: every counter built on site with its outer size (K8). */
   counterMeasures?: boolean
   /** Why what the pointer aims at cannot be stored (or that it is already there), for the hint line; null when it can. */
   onHint?: (text: string | null) => void

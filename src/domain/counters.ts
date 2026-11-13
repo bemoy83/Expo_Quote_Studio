@@ -14,7 +14,7 @@ const SNAP = 0.1;
 
 /** The parts of every counter built on site, picked loose (K13); none when there is none. A standard counter is picked
  *  whole (K22). */
-export function drawnCounterParts(v: Variant, ctx?: PlaceContext): CounterParts | undefined {
+export function builtCounterParts(v: Variant, ctx?: PlaceContext): CounterParts | undefined {
   // A standard counter of Disker og podier is picked whole (K22)
   const drawn = v.objects.filter((o) => o.sections && !stockOf(o.sections));
   if (!drawn.length) return undefined;

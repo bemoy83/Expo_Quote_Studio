@@ -93,10 +93,12 @@ function CatalogRow({ v, product, brush, tool, pick, onEdit, onToast, showGroup 
   const cur = product.variants[i]
   const stock = isStock(cur.artnr)
   const podium = podiumProduct()!.variants[0].artnr
-  const pen = isObject && (stock ? penOn(tool, brush, 'podium') && brush?.kind === 'podium' && brush.stock === cur.artnr : penOn(tool, brush, product.podium ? 'podium' : 'object', cur.artnr))
   /** A counter's pen keeps the colour Disker og podier last drew with (Byggeregel K6). */
   const ral = brush?.kind === 'podium' ? brush.ral : COUNTER_STOCK_RAL
   const penBrush = (): Brush => (stock ? { kind: 'podium', product: podium, ral, stock: cur.artnr } : product.podium ? { kind: 'podium', product: cur.artnr, ral } : { kind: 'object', product: cur.artnr })
+  // The pen in hand draws this row: its standard counter (K22), «Fri» for Disker og podier, else the product
+  const drawsThis = brush?.kind === 'podium' ? (stock ? brush.stock === cur.artnr : !!product.podium && !brush.stock) : penOn(tool, brush, 'object', cur.artnr)
+  const pen = isObject && tool !== 'select' && drawsThis
   const setCount = (n: number) => {
     if (!isObject) return onEdit((x) => setCounted(x, cur.artnr, n))
     const have = counts[i]
