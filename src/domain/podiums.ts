@@ -24,7 +24,7 @@ export const SECTION_MAX = R.module.whole;
 export const START = 500;
 /** A drag grows the counter in steps of this, mm (twice the grid; 250 with Shift is PR 2). */
 export const DRAG_STEP = 2 * GRID;
-/** Heights a section can have, CC mm (K12); everything drawn is the highest until the quick picks get Høyde (PR 6). */
+/** Heights a section can have, CC mm (K12): Høyde in the quick picks; the highest when none is picked. */
 export const HEIGHTS = [250, 500, 750, 1000] as const;
 export const HEIGHT = 1000;
 
@@ -349,7 +349,7 @@ function addOnto(v: Variant, ctx: PlaceContext, c: PlacedObject, added: CounterS
 
 /** What the pen shows and a click at q stores: one section of START × START round q, kept inside the stand and moved in
  *  against a wall, counter or the stand edge within 10 cm (K10). Refused where it has no room. */
-export function podiumAt(v: Variant, ctx: PlaceContext, pen: { product: string; ral?: string }, q: Point, fine = false): PodiumDraw {
+export function podiumAt(v: Variant, ctx: PlaceContext, pen: { product: string; ral?: string; h?: number }, q: Point, fine = false): PodiumDraw {
   const by = ontoAt(v, q, fine ? GRID : START);
   if (by) {
     const { c, side, cell } = by;
@@ -358,7 +358,7 @@ export function podiumAt(v: Variant, ctx: PlaceContext, pen: { product: string; 
   const id = nextId(v.objects.map((o) => o.id), 'i');
   const colour = pen.ral && pen.ral !== COUNTER_STOCK_RAL ? { ral: pen.ral } : {};
   const half = START / 2;
-  const o: PlacedObject = { id, product: pen.product, x: q[0], y: q[1], rot: 0, ...colour, sections: [{ x: [-half, half], z: [-half, half], h: HEIGHT }] };
+  const o: PlacedObject = { id, product: pen.product, x: q[0], y: q[1], rot: 0, ...colour, sections: [{ x: [-half, half], z: [-half, half], h: pen.h ?? HEIGHT }] };
   const w = (half + R.face) / 1000;
   const clamp = (n: number, hi: number) => Math.min(Math.max(n, w), hi - w);
   const kept = { ...o, x: clamp(o.x, v.stand.width), y: clamp(o.y, v.stand.depth) };
@@ -392,6 +392,9 @@ export function drawPodium(v: Variant, ctx: PlaceContext, d: PodiumDrag, q: Poin
   return addOnto(v, ctx, c, added, cell, d.onto);
 }
 
+
+/** The outer heights of a counter of Disker og podier, mm, low to high (K12: CC + 40). */
+export const podiumHeights = (o: Pick<PlacedObject, 'sections'>): number[] => [...new Set((o.sections ?? []).map((s) => s.h + R.railHeight))].sort((a, b) => a - b);
 
 /** Outer size of a counter of Disker og podier, mm: length × depth × height (K10, K12). */
 export function podiumSize(o: Pick<PlacedObject, 'sections'>): { length: number; depth: number; height: number } {

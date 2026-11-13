@@ -15,7 +15,7 @@ import { wallModules, type Module } from '../../domain/grid'
 import { drawInnerBeam, type Run } from '../../domain/innerBeams'
 import { counterBuildOf, piecesOf } from '../../domain/counterShape'
 import { addObject, footprintBox, objectBoxes, objectFootprint } from '../../domain/objects'
-import { NO_ROOM, podiumGrab, type PodiumDraw } from '../../domain/podiums'
+import { NO_ROOM, podiumGrab, podiumHeights, type PodiumDraw } from '../../domain/podiums'
 import { podiumGrips, type PodiumGripDraw } from '../../domain/podiumGrips'
 import { fusePodiums } from '../../domain/podiumLinks'
 import { addShelf, addShelfRow, penHeight } from '../../domain/shelves/edit'
@@ -469,7 +469,7 @@ function podiumTarget(r: PodiumDraw, pill = true): NextTarget {
   const b = box(r.o)
   const key = `pod:${'error' in r ? 'x' : ''}:${JSON.stringify(r.o)}:${JSON.stringify(r.cell)}`
   if ('error' in r) return target(key, () => line({ hint: r.error, invalid: { rect: box(r.cell) } }))
-  const size = `${mm(b.x1 - b.x0)} × ${mm(b.y1 - b.y0)}`
+  const size = `${mm(b.x1 - b.x0)} × ${mm(b.y1 - b.y0)} · H ${podiumHeights(r.o).map((x) => mm(x / 1000)).join('/')}`
   const c = box(r.cell)
   const face = (2 * RECIPES.counter.face) / 1000
   const text = r.onto ? `+ ${mm(c.x1 - c.x0 - face)} × ${mm(c.y1 - c.y0 - face)} · ${size}` : size

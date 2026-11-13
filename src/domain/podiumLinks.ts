@@ -45,17 +45,6 @@ function facing(cs: readonly CounterSection[], os: readonly CounterSection[]) {
   return out;
 }
 
-/** Whether the sections touching across a side pair (c's side, the other's in c's frame, node lines together) have the
- *  same height everywhere they meet (K15: until heights come, PR 6). */
-function sameHeight(cs: readonly CounterSection[], os: readonly CounterSection[], side: PodiumSide): boolean {
-  const run = (s: CounterSection) => (side.axis === 'x' ? s.z : s.x);
-  const edge = (s: CounterSection, out: number) => (out > 0 ? s[side.axis][1] : s[side.axis][0]);
-  for (const p of cs)
-    for (const q of os)
-      if (Math.abs(edge(p, side.out) - side.at) < EPS && Math.abs(edge(q, -side.out) - side.at) < EPS && shared(run(p), run(q)) > EPS && p.h !== q.h) return false;
-  return true;
-}
-
 /** Where `o`, dragged, lies against another counter of Disker og podier within ONTO of it (K15): moved so the two stand
  *  face against face, its nodes in the other's grid, sharing at least GRID along. Null when it is by none. */
 export function snapBeside(v: Variant, ctx: PlaceContext, o: PlacedObject): { o: PlacedObject; onto: string } | null {
@@ -85,11 +74,8 @@ export function snapBeside(v: Variant, ctx: PlaceContext, o: PlacedObject): { o:
   return best && { o: best.o, onto: best.onto };
 }
 
-/** Two counters with different heights where they meet (K15, until PR 6). */
-export const NOT_SAME_HEIGHT = 'Ulik høyde: diskene blir stående inntil hverandre';
-
 /** `b` made part of `a`, the two standing face against face (K15): b's sections laid in a's frame on a's node line, a
- *  keeping its colour and place, b gone. Refused with the reason, and nothing changed, where it cannot be. */
+ *  keeping its colour and place, b gone; each section keeps its height, a step where two meet (K12). Refused with the reason, and nothing changed, where it cannot be. */
 export function fusePodiums(v: Variant, ctx: PlaceContext, aId: string, bId: string): { v: Variant; id: string } | { error: string } {
   const a = v.objects.find((x) => x.id === aId);
   const b = v.objects.find((x) => x.id === bId);
@@ -101,7 +87,6 @@ export function fusePodiums(v: Variant, ctx: PlaceContext, aId: string, bId: str
   const shift = -APART * side.out;
   const laid = bs.map((s): CounterSection => (side.axis === 'x' ? { ...s, x: [s.x[0] + shift, s.x[1] + shift] } : { ...s, z: [s.z[0] + shift, s.z[1] + shift] }));
   if (overlapping(laid, a.sections!)) return { error: 'Disken kan ikke gå over seg selv' };
-  if (!sameHeight(a.sections!, laid, side)) return { error: NOT_SAME_HEIGHT };
   const o = centred(a, [...a.sections!, ...laid]);
   const rest = { ...v, objects: v.objects.filter((x) => x.id !== b.id) };
   if (!hasRoom(rest, ctx, o)) return { error: NO_ROOM };

@@ -11,8 +11,8 @@ import type { DragHandlers, Drag, P, PointerCtx } from './types'
 /** A press that moves this far (m) draws instead of clicking; less than the 75 mm a press in the middle waits with Shift. */
 export const PODIUM_DRAG = 0.05
 
-/** What the pen draws with: its product and colour. */
-const penOf = (b: Brush | null) => (b?.kind === 'podium' ? { product: b.product, ral: b.ral } : null)
+/** What the pen draws with: its product, colour and height (K12). */
+const penOf = (b: Brush | null) => (b?.kind === 'podium' ? { product: b.product, ral: b.ral, h: b.h } : null)
 
 /** «Fin» on in the quick picks: Shift held, for touch, without the preview standing still. */
 export const podiumFine = (b: Brush | null) => b?.kind === 'podium' && !!b.fine

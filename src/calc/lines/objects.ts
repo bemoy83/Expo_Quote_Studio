@@ -3,7 +3,7 @@
 // (Byggeregler K1–K5): one price item per counter, picked whole. Its plates in another wall colour (K6) cost the swap,
 // the price stays the same in every colour (Bjørn 11.11.2026); the line says which colours, for the montør.
 import { counterBuildOf, layoutOf, piecesOf } from '../../domain/counterShape';
-import { innerCorners, podiumName, podiumSize } from '../../domain/podiums';
+import { innerCorners, podiumHeights, podiumName, podiumSize } from '../../domain/podiums';
 import { profileMetres, type CounterBuild } from '../../foga/counter';
 import { RECIPES } from '../../foga/recipes';
 import type { Use } from '../../pricing/model';
@@ -90,7 +90,8 @@ function podiumLine(c: CalcContext, o: PlacedObject): CalcLine {
   const hit = c.idx.byArtnr.get(o.product);
   const s = podiumSize(o);
   const top = (o.sections ?? []).reduce((a, x) => a + ((x.x[1] - x.x[0]) * (x.z[1] - x.z[0])) / 1e6, 0);
-  const meta = [`bygget på stedet ${s.length} × ${s.depth} × ${s.height} mm`, ...(o.ral ? [`RAL ${o.ral}`] : [])].join(' · ');
+  // Two heights or more after a fusion: each, low to high (K12)
+  const meta = [`bygget på stedet ${s.length} × ${s.depth} × ${podiumHeights(o).join('/')} mm`, ...(o.ral ? [`RAL ${o.ral}`] : [])].join(' · ');
   const name = podiumName(o.sections ?? []);
   // Each its own article, so each gets its own position number (calc/positions.ts)
   return c.line(o.product, 1, { name, meta, strategy: 'sum', foga: true, quote: { key: podiumKey(o.id), name, lead: true } }, podiumUses(o), (hit?.variant.price ?? 0) * top);

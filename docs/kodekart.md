@@ -226,6 +226,9 @@ står urørt; det nye deler bygger, omriss, 3D og kalkyle med dem.
   én; `podiumJoints`/`breakJoint`: skjøtene og å dele ved en; `podiumLinks`: ikonene for valgt disk; `inFrame`: en disks
   seksjoner i en annens ramme). Draget i `plan/pointer/object.ts` (`fuse` på draget), klikket i
   `plan/pointer/podiumLink.ts` (`hits.podiumLinkAt`, før grepene), ikonene i `layers/PodiumLinks.tsx`.
+- Høyde (K12): `h` på penselen (`Brush` podium), valgt i hurtigvalget (`QuickPicks.tsx`); trinnet mellom to høyder i
+  `layoutBuild` (`stepOf`: 93 i den høye høyden, 94 under den lave toppen, plate `level: 'step'`); `podiumHeights` for
+  pillen og linjen i tilbudet.
   Forhåndsvisningen fryses med Shift i `usePlanPointer.ts` (`podiumFreeze`), kanten man tar tak i tegnes tykk (`grip` i
   `PreviewLayer.tsx`). Pekeren: `plan/pointer/podium.ts`, forhåndsvisningen
   `podiumHover`/`podiumTarget` i `plan/next.ts`. Verktøyet: `Brush` `podium` og `PenTool` `podium` i `ui/tools.ts`,

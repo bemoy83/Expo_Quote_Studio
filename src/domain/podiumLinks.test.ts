@@ -2,7 +2,8 @@
 import { describe, expect, it } from 'vitest';
 import { RULES } from '../rules/rules';
 import type { PlaceContext } from './objects';
-import { breakJoint, fusePodiums, NOT_ALONE, NOT_SAME_HEIGHT, podiumJoints, podiumLinks, snapBeside } from './podiumLinks';
+import { counterBuildOf } from './counterShape';
+import { breakJoint, fusePodiums, NOT_ALONE, podiumJoints, podiumLinks, snapBeside } from './podiumLinks';
 import { podiumSize } from './podiums';
 import type { CounterSection, PlacedObject, Variant } from './types';
 import { createVariant } from './variant';
@@ -39,9 +40,11 @@ describe('fusion (K15)', () => {
     expect(o.x + Math.min(...o.sections!.map((x) => x.x[0])) / 1000).toBeCloseTo(1.5);
   });
 
-  it('only counters of the same height, until heights come (PR 6)', () => {
+  it('counters of two heights become one, each section keeping its own, the step closed (K12)', () => {
     const low = { ...b, x: 2.77, y: 2.5, sections: [sec(-250, 250, -250, 250, 500)] };
-    expect(fusePodiums(vOf(a, low), ctx, 'a', 'b')).toEqual({ error: NOT_SAME_HEIGHT });
+    const o = ok(fusePodiums(vOf(a, low), ctx, 'a', 'b')).v.objects[0];
+    expect(o.sections!.map((s) => s.h).sort((p, q) => p - q)).toEqual([500, 1000]);
+    expect(counterBuildOf(o).plates.filter((p) => p.level === 'step')).toHaveLength(1);
   });
 
   it('a turned counter joins in the other one\'s grid', () => {

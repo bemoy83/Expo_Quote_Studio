@@ -438,10 +438,13 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   94 i innerhjørnet).
   *Bjørn 13.11.2026 · kode `src/foga/counter.ts`, `src/domain/counterShape.ts` · test `src/domain/podiums.test.ts`*
 - **K12 Høyde.** CC 250, 500, 750 eller 1000: toppskinnen står med underkant i den høyden, stolpen er CC + 40 (290,
-  540, 790, 1040), og platen CC − 24 høy. Høyden lagres per seksjon; alt som tegnes nå, er CC 1000 (Høyde i hurtigvalget
-  kommer i en egen PR). Der to seksjoner med ulik høyde møtes, lukkes trinnet med plate på den høye siden, fra den lave
-  toppen og opp (ikke bygget).
-  *Bjørn 13.11.2026 · kode `src/foga/counter.ts`, `src/domain/podiums.ts` · test `src/domain/podiums.test.ts`*
+  540, 790, 1040), og platen CC − 24 høy. Høyden lagres per seksjon. Høyde i hurtigvalget (250, 500, 750, 1000, ved
+  siden av fargen, 1000 til noe er valgt) gir høyden alt i ett drag tegnes med; et påbygg arver høyden til seksjonen det
+  ligger mot. Der to seksjoner med ulik høyde møtes (etter en fusjon), står en 94 under den lave toppen og en 93 i den
+  høyes høyde mot den lave siden, og trinnet lukkes med en plate mellom dem, høydeforskjellen − 24 høy; stolpene der
+  går til den høye. Høyden står i pillen («H 540») og i linjen i tilbudet, med alle høydene når disken har flere
+  («540/1040»). Å endre høyden på en seksjon som står, kommer med skuffen i trinn 2.
+  *Bjørn 13.11.2026 · kode `src/foga/counter.ts`, `src/domain/podiums.ts`, `src/ui/plan/QuickPicks.tsx` · test `src/domain/podiums.test.ts`*
 - **K13 Pris og plukk for Disker og podier.** Som K9: ett katalogprodukt, «Disk og podium, bygget på stedet»
   (varenummer 6570 er midlertidig), priset av kostmotoren fra delene og arbeidet, én linje per disk, «bygget på stedet
   L × D × H mm», og delene plukkes løse under Disker. Linjen heter «Disk» når fasongen ikke er dypere enn 500 noe sted
@@ -464,9 +467,8 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   flatene blir én skjøt). En skjøt er en rett linje inne i disken der seksjoner møtes; valgt disk viser et lenkeikon
   midt på hver skjøt. Et klikk bryter lenken: den største delen blir stående, de andre blir egne disker med samme farge,
   flyttet 20 mm ut slik at de står flate mot flate. Deler ikke skjøten disken alene: «Skjøten deler ikke disken alene:
-  bryt også skjøten ved siden av». Mot en disk som står inntil, vises en brutt lenke, og et klikk lenker dem. Fram til
-  høyde kommer (PR 6), blir bare disker med samme høyde der de møtes slått sammen; ellers blir de stående inntil
-  hverandre med «Ulik høyde: diskene blir stående inntil hverandre». To disker som står inntil hverandre uten lenke, er
+  bryt også skjøten ved siden av». Mot en disk som står inntil, vises en brutt lenke, og et klikk lenker dem. Disker med
+  ulik høyde slås sammen også; hver seksjon beholder sin høyde, og trinnet bygges etter K12. To disker som står inntil hverandre uten lenke, er
   to linjer i tilbudet og har plater mot hverandre.
   *Bjørn 13.11.2026 · kode `src/domain/podiumLinks.ts` · test `src/domain/podiumLinks.test.ts`*
 

@@ -19,7 +19,8 @@ export type Brush =
   | { kind: 'counter'; product: string; ral: string }
   /** Disker og podier (Byggeregler K10–K13): sections on the 250 grid, all sides closed, its plates in a wall colour.
    *  `fine`: «Fin» on, as Shift held for touch (250 steps, a press by an edge takes it). */
-  | { kind: 'podium'; product: string; ral: string; fine?: boolean }
+  /** `h`: the height everything drawn gets, CC mm (K12); a påbygg takes its neighbour's. */
+  | { kind: 'podium'; product: string; ral: string; fine?: boolean; h?: number }
   /** Tekstilvegg: drawn on a system wall it is mounted there (InFrame), anywhere else it stands free on foot plates.
    * Drawn on the drawing grid in cells of the chosen grid step; a click next to a wall fills its free part. */
   | { kind: 'textile' }
