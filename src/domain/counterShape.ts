@@ -1,8 +1,8 @@
-// A drawn counter's shape (Byggeregler K7, K8): its straight pieces (`PlacedObject.pieces`, mm, front toward +y
-// unturned) as parts and open stretches, the build of every piece of it, its footprint, and the
-// way between its own coordinates and the plan's. The pen that draws them is in counters.ts, its ends in counterEnds.ts.
-// A counter or podium from Disker og podier (K10–K12) has sections instead (`PlacedObject.sections`), built tight; its
-// pen is in podiums.ts.
+// A counter's shape: the sections of Disker og podier (`PlacedObject.sections`, K10–K12, mm, front toward +y unturned)
+// as parts and open stretches, the build of every piece of it (tight), its footprint, and the way between its own
+// coordinates and the plan's. Its pen is in podiums.ts. A counter without sections is the counter in stock (K1). The
+// straight pieces Disker drew (`PlacedObject.pieces`, K7, K8) are read only to turn an old sketch into sections
+// (podiumStock.ts asSections).
 import { layoutBuild, runBreaks, stockCounter, type CounterBuild, type CounterCell, type CounterLayout } from '../foga/counter';
 import { RECIPES } from '../foga/recipes';
 import type { Footprint } from '../catalog/types';
@@ -25,7 +25,7 @@ export const unit = (p: Pick<CounterPiece, 'a' | 'b'>): Point => {
 /** The counter in stock as one piece, open at the back (K1). */
 export const STOCK_PIECE: CounterPiece = { a: [-(R.stock.length / 2 - R.face), 0], b: [R.stock.length / 2 - R.face, 0], back: [0, -1] };
 
-/** The pieces of a counter: its own, or the counter in stock. */
+/** The pieces Disker drew, or the counter in stock as one (for asSections). */
 export const piecesOf = (o: Pick<PlacedObject, 'pieces'>): readonly CounterPiece[] => o.pieces ?? [STOCK_PIECE];
 
 /** Parts and open stretches of these pieces (K7): whole metres from `a`, a half last, each piece open at its back. */
@@ -57,32 +57,21 @@ export function sectionsLayout(sections: readonly CounterSection[], locked: read
   return { cells: sections.map((c) => ({ x: c.x, z: c.z, h: c.h, ...(c.shelves?.length && { shelves: c.shelves }) })), ...podiumLights(sections, off) };
 }
 
-/** The parts and open stretches of a counter: its sections, its drawn pieces, or the counter in stock. */
-export const counterLayoutOf = (o: Pick<PlacedObject, 'pieces' | 'sections'>, locked: readonly string[] = []): CounterLayout => (o.sections ? sectionsLayout(o.sections, locked) : layoutOf(piecesOf(o)));
+/** The parts and open stretches of a counter: its sections, or the counter in stock. */
+export const counterLayoutOf = (o: Pick<PlacedObject, 'sections'>, locked: readonly string[] = []): CounterLayout => (o.sections ? sectionsLayout(o.sections, locked) : layoutOf([STOCK_PIECE]));
 
 const built = new Map<string, CounterBuild>();
-/** Every piece of a counter (K1–K8, K10–K12, K16): the stock build, its drawn pieces or its sections (tight), built once
- *  per shape; `locked`: the parts of its sides kept plates against a wall or another counter (podiumLocks.ts). */
-export function counterBuildOf(o: Pick<PlacedObject, 'pieces' | 'sections'>, size = { length: R.stock.length, depth: R.stock.depth }, locked: readonly string[] = []): CounterBuild {
-  if (!o.pieces && !o.sections) return stockCounter(size);
-  const key = o.sections ? `s${JSON.stringify(o.sections)}|${locked.join(';')}` : JSON.stringify(o.pieces);
+/** Every piece of a counter (K1–K5, K10–K12, K16): its sections (tight), built once per shape, or the stock build;
+ *  `locked`: the parts of its sides kept plates against a wall or another counter (podiumLocks.ts). */
+export function counterBuildOf(o: Pick<PlacedObject, 'sections'>, size = { length: R.stock.length, depth: R.stock.depth }, locked: readonly string[] = []): CounterBuild {
+  if (!o.sections) return stockCounter(size);
+  const key = `${JSON.stringify(o.sections)}|${locked.join(';')}`;
   let b = built.get(key);
   if (!b) {
-    b = o.sections ? layoutBuild(R, sectionsLayout(o.sections, locked), 'tight') : layoutBuild(R, layoutOf(o.pieces!));
+    b = layoutBuild(R, sectionsLayout(o.sections, locked), 'tight');
     built.set(key, b);
   }
   return b;
-}
-
-/** What a drawn counter covers, one rectangle per piece in its own coordinates, mm: the piece's centre line out to the
- *  outer faces. An L is two, so the corner it leaves open stays free floor. */
-export function pieceRects(o: Pick<PlacedObject, 'pieces'>): { x0: number; y0: number; x1: number; y1: number }[] {
-  const out = HALF + R.face;
-  return piecesOf(o).map((p) => {
-    const [ax, bx] = [Math.min(p.a[0], p.b[0]), Math.max(p.a[0], p.b[0])];
-    const [ay, by] = [Math.min(p.a[1], p.b[1]), Math.max(p.a[1], p.b[1])];
-    return alongX(p) ? { x0: ax - R.face, x1: bx + R.face, y0: ay - out, y1: ay + out } : { x0: ax - out, x1: ax + out, y0: ay - R.face, y1: by + R.face };
-  });
 }
 
 /** What a counter of Disker og podier covers, one rectangle per section in its own coordinates, mm: node to node and out
@@ -91,9 +80,9 @@ export function sectionRects(o: Pick<PlacedObject, 'sections'>): { x0: number; y
   return (o.sections ?? []).map((c) => ({ x0: c.x[0] - R.face, x1: c.x[1] + R.face, y0: c.z[0] - R.face, y1: c.z[1] + R.face }));
 }
 
-/** A drawn counter's footprint: the box round it, m. */
-export function piecesFootprint(o: Pick<PlacedObject, 'pieces' | 'sections'>, f: Footprint): Footprint {
-  if (!o.pieces && !o.sections) return f;
+/** A counter's footprint: the box round its sections, m; the catalog's for the counter in stock. */
+export function counterFootprint(o: Pick<PlacedObject, 'sections'>, f: Footprint): Footprint {
+  if (!o.sections) return f;
   const b = counterBuildOf(o);
   return { ...f, w: b.length / 1000, d: b.depth / 1000 };
 }

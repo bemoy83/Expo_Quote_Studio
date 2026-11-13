@@ -121,8 +121,8 @@ describe('the pen (PR 1)', () => {
     expect(at([0.45, 2]).x).toBe(0.45);
   });
 
-  it('moves in against a counter of Disker within 10 cm, and shows nothing where it has no room', () => {
-    // 6560 from Disker (no sections): by one of its own the pen lies against it as a påbygg instead (PR 3)
+  it('moves in against a counter without sections within 10 cm, and shows nothing where it has no room', () => {
+    // The counter in stock as a placed object: no påbygg on it, only against it (by one of its own sections, PR 3)
     const one = { ...base, objects: [{ id: 'c1', product: '6560', x: 2, y: 2, rot: 0 }] };
     expect(at([2.6, 2], one).x).toBe(2.52);
     expect('error' in podiumAt(one, ctx, pen, [2.3, 2])).toBe(true);

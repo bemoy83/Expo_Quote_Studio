@@ -9,7 +9,7 @@ import { doorSwing } from './doors';
 import { nextId } from './ids';
 import { faceSegment, sideOf } from './faces';
 import { RECIPES } from '../foga/recipes';
-import { pieceRects, piecesFootprint, sectionRects, toPlan } from './counterShape';
+import { counterFootprint, sectionRects, toPlan } from './counterShape';
 
 export interface Box {
   x0: number;
@@ -26,25 +26,25 @@ export interface PlaceContext {
   footprint: (product: string) => Footprint | undefined;
   /** Doors swing and block the swing area; curtains do not. */
   swings: (product: string) => boolean;
-  /** A counter (Byggeregel K1): drawn by the Disker pen, its ends drawn on from (K7). */
+  /** A counter (Byggeregel K1): built of Foga profiles, of Disker og podier or the counter in stock (K10, K22). */
   isCounter: (product: string) => boolean;
 }
 
 const GAP = 0.02;
 
-/** An object's footprint: its product's, or the box round a drawn counter (Byggeregel K7). */
-export function objectFootprint(ctx: Pick<PlaceContext, 'footprint'>, o: Pick<PlacedObject, 'product' | 'pieces' | 'sections'>): Footprint | undefined {
+/** An object's footprint: its product's, or the box round a counter of Disker og podier (Byggeregel K10). */
+export function objectFootprint(ctx: Pick<PlaceContext, 'footprint'>, o: Pick<PlacedObject, 'product' | 'sections'>): Footprint | undefined {
   const f = ctx.footprint(o.product);
-  return f && piecesFootprint(o, f);
+  return f && counterFootprint(o, f);
 }
 
-/** What an object covers in the plan, m: its footprint box, or one box per piece of a drawn counter (K7) or per section
- *  of Disker og podier (K10), so an L leaves its open corner free. */
-export function objectBoxes(ctx: Pick<PlaceContext, 'footprint'>, o: Pick<PlacedObject, 'product' | 'pieces' | 'sections' | 'x' | 'y' | 'rot'>): Omit<Box, 'kind'>[] {
+/** What an object covers in the plan, m: its footprint box, or one box per section of Disker og podier (K10), so an L
+ *  leaves its open corner free. */
+export function objectBoxes(ctx: Pick<PlaceContext, 'footprint'>, o: Pick<PlacedObject, 'product' | 'sections' | 'x' | 'y' | 'rot'>): Omit<Box, 'kind'>[] {
   const f = objectFootprint(ctx, o);
   if (!f) return [];
-  const rects = o.sections ? sectionRects(o) : o.pieces && o.pieces.length > 1 ? pieceRects(o) : null;
-  if (!rects) return [footprintBox(o, f)];
+  if (!o.sections) return [footprintBox(o, f)];
+  const rects = sectionRects(o);
   // Rounded, so an L's arm and the thing it meets are not a float apart
   const mm = (n: number) => Math.round(n * 1e6) / 1e6;
   const plan = (x: number, y: number) => toPlan(o, [x, y]).map(mm);
@@ -169,18 +169,24 @@ export function findSpot(v: Variant, ctx: PlaceContext, o: PlacedObject, radius:
 
 /** Add one object near (x, y). Null when it does not fit anywhere. */
 /** Place a product at x, y or the nearest free spot; a counter (`ral`) with its plates in that colour (Byggeregel K6). */
-export function addObject(v: Variant, ctx: PlaceContext, product: string, x: number, y: number, ral?: string): Variant | null {
-  const id = nextId(v.objects.map((o) => o.id), 'i');
-  const colour = ral && ral !== COUNTER_STOCK_RAL ? { ral } : {};
-  const spot = findSpot(v, ctx, { id, product, x, y, rot: 0, ...colour }, Math.max(v.stand.width, v.stand.depth));
+export function addObject(v: Variant, ctx: PlaceContext, product: string, x: number, y: number): Variant | null {
+  return addAt(v, ctx, { id: nextId(v.objects.map((o) => o.id), 'i'), product, x, y, rot: 0 });
+}
+
+/** `o` stored in the free spot nearest where it is, or null where the stand has none. */
+export function addAt(v: Variant, ctx: PlaceContext, o: PlacedObject): Variant | null {
+  const spot = findSpot(v, ctx, o, Math.max(v.stand.width, v.stand.depth));
   return spot ? { ...v, objects: [...v.objects, spot] } : null;
 }
+
+/** Where the + counter puts what it adds: the middle of the stand, toward the front, for a footprint `d` deep (m). */
+export const anywhere = (v: Variant, d: number): [number, number] => [v.stand.width / 2, Math.max(d / 2, v.stand.depth - d / 2 - 0.4)];
 
 /** Add one object in the first free spot, front rows first (used by the + counter). */
 export function addObjectAnywhere(v: Variant, ctx: PlaceContext, product: string): Variant | null {
   const f = ctx.footprint(product);
   if (!f) return null;
-  return addObject(v, ctx, product, v.stand.width / 2, Math.max(f.d / 2, v.stand.depth - f.d / 2 - 0.4));
+  return addObject(v, ctx, product, ...anywhere(v, f.d));
 }
 
 /** Move an object; it may overlap while dragging, the plan shows the conflict. Kept inside the stand. */
@@ -199,9 +205,9 @@ export function removeObject(v: Variant, id: string): Variant {
   return { ...v, objects: v.objects.filter((o) => o.id !== id) };
 }
 
-/** Remove the last `n` objects of a product (used by the − counter). */
-export function removeObjects(v: Variant, product: string, n: number): Variant {
-  const idx = v.objects.map((o, i) => (o.product === product ? i : -1)).filter((i) => i >= 0).slice(-n);
+/** Remove the last `n` objects of a product (used by the − counter); `soldAs`: the product an object is sold as. */
+export function removeObjects(v: Variant, product: string, n: number, soldAs = (o: PlacedObject) => o.product): Variant {
+  const idx = v.objects.map((o, i) => (soldAs(o) === product ? i : -1)).filter((i) => i >= 0).slice(-n);
   const drop = new Set(idx);
   return { ...v, objects: v.objects.filter((_, i) => !drop.has(i)) };
 }
@@ -279,11 +285,6 @@ export const counterRal = (o: Pick<PlacedObject, 'ral'>): string => o.ral ?? COU
 /** A counter's plates in `ral`, all of them (K6). The stock colour is stored as none. */
 export function setCounterRal(v: Variant, id: string, ral: string): Variant {
   return { ...v, objects: v.objects.map((o) => (o.id === id ? withRal(o, ral) : o)) };
-}
-
-/** The Disker pen's bucket: every counter on the stand in `ral` (K6), not those of Disker og podier. */
-export function paintCounters(v: Variant, ctx: Pick<PlaceContext, 'isCounter'>, ral: string): Variant {
-  return { ...v, objects: v.objects.map((o) => (ctx.isCounter(o.product) && !o.sections ? withRal(o, ral) : o)) };
 }
 
 /** The bucket of Disker og podier: every counter and podium it drew, in `ral` (K6). */

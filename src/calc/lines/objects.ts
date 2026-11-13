@@ -1,13 +1,12 @@
 // Placed objects and counted items (Arbeidstimer too: hours counted in the panel), in catalog order, then the loose
-// lines typed in the panel. A counter (6560) keeps its catalog price and is costed from what it is built of
-// (Byggeregler K1–K5): one price item per counter, picked whole; a counter of Disker og podier that is exactly a
-// standard counter is that product (K22). Its plates in another wall colour (K6) cost the swap,
+// lines typed in the panel. A standard counter (6560, K22) keeps its catalog price and is costed from what it is built
+// of (Byggeregler K1–K5): one price item per counter, picked whole. Its plates in another wall colour (K6) cost the swap,
 // the price stays the same in every colour (Bjørn 11.11.2026); the line says which colours, for the montør.
-import { counterBuildOf, layoutOf, piecesOf } from '../../domain/counterShape';
+import { counterBuildOf } from '../../domain/counterShape';
 import { innerCorners, podiumHeights, podiumName, podiumSize } from '../../domain/podiums';
 import { podiumHas } from '../../domain/podiumFaces';
 import { lockedParts } from '../../domain/podiumLocks';
-import { stockOf } from '../../domain/podiumStock';
+import { soldAs, stockOf } from '../../domain/podiumStock';
 import { profileMetres, type CounterBuild } from '../../foga/counter';
 import { RECIPES } from '../../foga/recipes';
 import type { Use } from '../../pricing/model';
@@ -19,16 +18,15 @@ import type { CalcLine } from '../types';
 
 export function objectLines(c: CalcContext): CalcLine[] {
   const { v } = c;
-  // A drawn counter (K7) and one of Disker og podier (K13) have their own line below, unless it is a 6560 (K22); the
-  // rest count by product
-  const stock = (o: PlacedObject) => !o.pieces && (!o.sections || !!stockOf(o.sections));
-  const productOf = (o: PlacedObject) => stockOf(o.sections)?.artnr ?? o.product;
-  const objectCounts = countBy(v.objects.filter(stock).map(productOf));
+  // A counter of Disker og podier (K13) has its own line below, unless it is a standard counter (K22); the rest count by
+  // the product they are sold as
+  const stock = (o: PlacedObject) => !o.sections || !!stockOf(o.sections);
+  const objectCounts = countBy(v.objects.filter(stock).map(soldAs));
   for (const x of v.counted) objectCounts.set(x.product, (objectCounts.get(x.product) ?? 0) + x.qty);
   const lines = [...objectCounts].map(([a, n]) => {
     const counter = c.idx.byArtnr.get(a)?.product.counter;
     if (!counter) return c.line(a, n);
-    const placed = v.objects.filter((o) => stock(o) && productOf(o) === a);
+    const placed = v.objects.filter((o) => stock(o) && soldAs(o) === a);
     const swapped = placed.filter((o) => o.ral).length;
     const colours = [...countBy(placed.map(counterRal))].sort(([x], [y]) => x.localeCompare(y));
     return c.line(a, n, swapped ? { meta: colours.map(([ral, k]) => `RAL ${ral}${colours.length > 1 ? ` × ${k}` : ''}`).join(' · ') } : {}, [
@@ -36,35 +34,13 @@ export function objectLines(c: CalcContext): CalcLine[] {
       ...(swapped ? [{ id: ITEM.counterPlates(counter.length, counter.depth), qty: swapped }] : []),
     ]);
   });
-  return [...lines, ...v.objects.filter((o) => o.pieces).map((o) => drawnCounterLine(c, o)), ...v.objects.filter((o) => o.sections && !stock(o)).map((o) => podiumLine(c, o))];
+  return [...lines, ...v.objects.filter((o) => !stock(o)).map((o) => podiumLine(c, o))];
 }
 
-/** A drawn counter (Byggeregler K7–K9): built on site, so priced by the cost engine from what it is built of and the
- *  work, the same in every colour (K6); without a complete cost the catalog price per metre of parts. Its parts are
- *  picked loose (foga/engine.ts), so the line is not picked itself. */
-function drawnCounterLine(c: CalcContext, o: PlacedObject): CalcLine {
-  const hit = c.idx.byArtnr.get(o.product);
-  const b = counterBuildOf(o);
-  const metres = counterMetres(o);
-  const size = piecesOf(o).length > 1 ? `${b.length} × ${b.depth}` : `${Math.max(b.length, b.depth)} × ${Math.min(b.length, b.depth)}`;
-  const meta = [`bygget på stedet ${size} mm`, ...(o.ral ? [`RAL ${o.ral}`] : [])].join(' · ');
-  return c.line(o.product, 1, { meta, strategy: 'sum', foga: true }, drawnCounterUses(o), (hit?.variant.price ?? 0) * metres);
-}
-
-/** A part this long (mm, along) or shorter is a half (K7). */
+/** A section this long (mm, its longest side) or shorter is a half (K13). */
 const HALF_PART = RECIPES.counter.module.half;
 
-/** Metres of a drawn counter's parts: 1 per whole, 0,5 per half (K7). */
-export const counterMetres = (o: PlacedObject) => counterCells(o).reduce((s, n) => s + n / 1000, 0);
-const counterCells = (o: PlacedObject) => layoutOf(o.pieces ?? []).cells.map((x) => Math.max(x.x[1] - x.x[0], x.z[1] - x.z[0]));
-
-/** What a drawn counter costs (K9): profiles by the metre, 600, plates by the m², boards by size, the work. */
-export function drawnCounterUses(o: PlacedObject): Use[] {
-  const cells = counterCells(o);
-  return builtUses(counterBuildOf(o), cells.filter((n) => n > HALF_PART).length, cells.filter((n) => n <= HALF_PART).length, piecesOf(o).length - 1);
-}
-
-/** What a counter or podium of Disker og podier costs (K13): as a drawn counter (K9), the work per section, whole when
+/** What a counter or podium of Disker og podier costs (K13): its parts as K9, the work per section, whole when
  *  its longest side is over 500, else half, and per inner corner of its outline (placeholders). `b`: its build as it
  *  stands (podiumLocks.ts placedBuild: a side against a wall a plate, K16). */
 export function podiumUses(o: PlacedObject, b: CounterBuild = counterBuildOf(o)): Use[] {
@@ -73,7 +49,7 @@ export function podiumUses(o: PlacedObject, b: CounterBuild = counterBuildOf(o))
   // K21: a sliding door is two leaves, fitted as one
   const doors = b.plates.filter((p) => p.level === 'door').length / 2;
   // K19: a shelf is fitted on its rails (H7's times, placeholder); the shelf at CC 750 in a section 500 deep is in the
-  // work per section, as in 6560 and the drawn counters (K9, Bjørn 13.11.2026)
+  // work per section, as in 6560 (K9, Bjørn 13.11.2026)
   const shelves = sections.reduce((n, x) => n + (x.shelves ?? []).filter((y) => !(y === RECIPES.counter.middle && Math.min(x.x[1] - x.x[0], x.z[1] - x.z[0]) === HALF_PART)).length, 0);
   return [
     ...builtUses(b, longest.filter((n) => n > HALF_PART).length, longest.filter((n) => n <= HALF_PART).length, innerCorners(sections)),

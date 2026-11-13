@@ -31,7 +31,7 @@ export function partLocks(v: Variant, ctx: Pick<PlaceContext, 'rules' | 'footpri
 
 const isCounterId = (v: Variant, ctx: Pick<PlaceContext, 'isCounter'>, id?: string) => {
   const x = v.objects.find((o) => o.id === id);
-  return !!x && (!!x.sections || !!x.pieces || ctx.isCounter(x.product));
+  return !!x && (!!x.sections || ctx.isCounter(x.product));
 };
 
 /** The band outside a part on the plan, m: from its outer face out AGAINST, along it less a mm each end (a counter or

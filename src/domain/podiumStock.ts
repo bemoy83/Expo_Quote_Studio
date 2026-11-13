@@ -62,6 +62,12 @@ export function stockOf(sections: readonly CounterSection[] | undefined): StockC
   return STOCK_COUNTERS.find((s) => s.sections.length === sections.length && keys.has(shapeKey(s.sections, 0)));
 }
 
+/** The product an object is sold as: a standard counter's art.nr while it is one (K22), else its own. */
+export const soldAs = (o: Pick<PlacedObject, 'product' | 'sections'>): string => stockOf(o.sections)?.artnr ?? o.product;
+
+/** This art.nr is a standard counter (K22). */
+export const isStock = (artnr: string): boolean => STOCK_COUNTERS.some((s) => s.artnr === artnr);
+
 /**
  * A counter from before Disker og podier took over Disker (Bjørn 13.11.2026) as sections (K22): the counter in stock as
  * its standard counter, a drawn counter (K7) one section per whole or half metre, open at its back in both light

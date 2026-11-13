@@ -44,8 +44,6 @@ export type Drag =
   | ({ kind: 'beam'; moved: boolean; select: PlanSelection; fine?: boolean; fineLock?: boolean } & WallDrag)
   | ({ kind: 'room'; select: PlanSelection | null } & RoomDrag)
   | { kind: 'textile'; p0: P }
-  /** The counter pen pressed: a click places the counter in stock, a drag draws one (counter.ts). */
-  | { kind: 'counter'; p0: P; moved: boolean }
   /** Disker og podier pressed (podium.ts): `at`, where the section the pen showed stands (the press, or where Shift froze
    *  it); `click`, what a click there stores (podiumStart); `drag`, what a drag draws from it, none on a counter or where it has no room; `last`, the pointer at the last
    *  move, where Shift pressed or let go goes on from. */

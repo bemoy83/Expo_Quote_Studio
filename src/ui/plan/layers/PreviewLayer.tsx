@@ -20,7 +20,6 @@ import type { PlanPointer } from '../pointer/usePlanPointer'
 import type { PlanSelection } from '../selection'
 import { Offcut } from './FloorLayer'
 import { tileArea, tileAreaMeasures } from './measures'
-import { CounterHandle } from './CounterHandle'
 import { PodiumGrips } from './PodiumGrips'
 import { PodiumLinks } from './PodiumLinks'
 import { AimRect, EraseStroke, InvalidSeg, InvalidShape, MeasurePill } from './Previews'
@@ -75,7 +74,6 @@ export function PreviewLayer(p: Props) {
       {bad && 'seg' in bad && <InvalidSeg a={bad.seg[0]} b={bad.seg[1]} width={widthOf(sc, bad.width)} />}
       {bad && 'rect' in bad && <InvalidShape kind="rect" x={bad.rect.x0} y={bad.rect.y0} width={bad.rect.x1 - bad.rect.x0} height={bad.rect.y1 - bad.rect.y0} />}
       {bad && 'circle' in bad && <InvalidShape kind="circle" {...bad.circle} />}
-      {next?.handle && !mini && <CounterHandle h={next.handle} />}
       {!mini && next?.erased?.map((b, i) => <InvalidShape key={`gone${i}`} kind="rect" x={b.x0} y={b.y0} width={b.x1 - b.x0} height={b.y1 - b.y0} />)}
       {grips && !(gripDrag && dragging.moved) && <PodiumGrips v={v} o={grips} hot={next?.hotGrip} />}
       {grips && !(gripDrag && dragging.moved) && <PodiumLinks v={v} o={grips} hot={next?.hotGrip} />}

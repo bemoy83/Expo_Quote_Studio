@@ -84,7 +84,7 @@ interface Props {
   textileLabels?: boolean
   /** Work order: the mållinjer of every drawn beam off the grid, so the montør can measure it out (Byggeregel T15). */
   beamMeasures?: boolean
-  /** The work order: every drawn counter with its outer size (K7). */
+  /** The work order: every counter of Disker og podier with its outer size (K10). */
   counterMeasures?: boolean
   /** Why what the pointer aims at cannot be stored (or that it is already there), for the hint line; null when it can. */
   onHint?: (text: string | null) => void
@@ -188,11 +188,10 @@ export function PlanView(p: Props) {
       : keep && !layers.some((l) => keep.has(l))
         ? PEN_DIMMED
         : 1
-  // The end of a counter under the Disker pen is a handle (K7): a hand to take hold of, closed while dragging it
-  // so is an edge of Disker og podier with Shift (PR 2)
-  // and a grip of the chosen counter of Disker og podier (K14), in Velg too
-  const grips = !!next?.outcome.handle || !!next?.outcome.grip?.length || !!next?.outcome.hotGrip
-  const holding = dragging?.kind === 'counter' || dragging?.kind === 'podium' || dragging?.kind === 'podiumGrip'
+  // An edge of Disker og podier with Shift (PR 2) is a hand to take hold of, closed while dragging it, and so is a grip
+  // of the chosen counter (K14), in Velg too
+  const grips = !!next?.outcome.grip?.length || !!next?.outcome.hotGrip
+  const holding = dragging?.kind === 'podium' || dragging?.kind === 'podiumGrip'
   const cursor = dragging?.kind === 'podiumGrip' || (tool === 'select' && next?.outcome.hotGrip) ? (holding ? 'grabbing' : 'grab') : tool !== 'select' ? (grips ? (holding ? 'grabbing' : 'grab') : 'crosshair') : roomCursor()
   function roomCursor() {
     const d = dragging
