@@ -1,12 +1,21 @@
 // The sections of a counter of Disker og podier as rectangles on the 250 grid (Byggeregler K10–K15): the geometry the
 // pen (podiums.ts), the grips (podiumGrips.ts) and the links (podiumLinks.ts) share. Pure, mm in the counter's frame.
-import type { CounterSection } from './types';
+import type { CounterSection, Variant } from './types';
 
 export const EPS = 1e-6;
 /** The grid sections are drawn on, mm (K10). */
 export const GRID = 250;
 export type Range = readonly [number, number];
 export type Axis = 'x' | 'z';
+
+/** The sketch with the sections of counter `id` changed by `fn`; the same sketch when nothing changed (no undo step). */
+export function withSections(v: Variant, id: string, fn: (sections: CounterSection[]) => CounterSection[]): Variant {
+  const o = v.objects.find((x) => x.id === id);
+  if (!o?.sections) return v;
+  const sections = fn(o.sections);
+  if (JSON.stringify(sections) === JSON.stringify(o.sections)) return v;
+  return { ...v, objects: v.objects.map((x) => (x.id === id ? { ...x, sections } : x)) };
+}
 
 /** The length two ranges share (negative when apart). */
 export const shared = (p: Range, q: Range) => Math.min(p[1], q[1]) - Math.max(p[0], q[0]);

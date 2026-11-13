@@ -86,6 +86,9 @@ export function nearestSide(o: PlacedObject, q: [number, number]): string | unde
   return best?.key
 }
 
+/** Where a point along a side (counter frame, mm) is seen from outside: mm from the outer face at the left end. */
+const fromLeft = (side: PodiumSide) => (t: number) => (rightward(side) > 0 ? t - side.a : side.b - t) + R.face
+
 /** One part of the side seen from outside: from x0 to x1 (mm from the outer face at the left end), its node line ends
  *  n0 and n1, how high its section is (CC, the underside of the top rail), its section's shelves (CC, low to high),
  *  what each light opening is from the floor (K16) and whether it is held a plate. */
@@ -105,9 +108,8 @@ export interface ElevationPart {
 /** The side seen from outside, left to right: its parts, the outer length (mm) and the highest section's CC. */
 export function sideElevation(o: PlacedObject, side: PodiumSide, locked: ReadonlySet<string> = new Set()): { parts: ElevationPart[]; length: number; h: number } {
   const sections = o.sections ?? []
-  const dir = rightward(side)
   const len = side.b - side.a
-  const x = (t: number) => (dir > 0 ? t - side.a : side.b - t) + R.face
+  const x = fromLeft(side)
   const parts = partsOn(sections, side)
     .map((p): ElevationPart => {
       const [n0, n1] = [x(p.a), x(p.b)].sort((a, b) => a - b)
@@ -153,8 +155,7 @@ export interface ElevationDecal {
 /** The print windows and decals of a side, as the drawing shows them. `ratio`: a motif's width / height. */
 export function sideDecor(o: PlacedObject, side: PodiumSide, locked: ReadonlySet<string>, ratio: (motif: string) => number): { prints: ElevationPrint[]; decals: ElevationDecal[] } {
   const sections = o.sections ?? []
-  const dir = rightward(side)
-  const x = (t: number) => (dir > 0 ? t - side.a : side.b - t) + R.face
+  const x = fromLeft(side)
   const on = (p: PodiumPart) => p.axis === side.axis && p.out === side.out && Math.abs(p.at - side.at) < EPS && p.a > side.a - EPS && p.b < side.b + EPS
   const span = (t0: number, t1: number) => [x(t0), x(t1)].sort((a, b) => a - b)
   return {

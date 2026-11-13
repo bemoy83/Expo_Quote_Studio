@@ -4,7 +4,7 @@
 // is kept on the section (`CounterSection.sides`), so it follows the part when the counter is moved, turned, stretched
 // by a grip, built on, fused or parted; a side that becomes inner loses it (`prunedSides`). Pure, mm in the counter's
 // frame.
-import { covered, EPS, GRID, type Axis } from './podiumSections';
+import { covered, EPS, GRID, withSections, type Axis } from './podiumSections';
 import type { CounterLight, CounterSection, SectionSide, SectionSideKey, Variant } from './types';
 
 /** The key of a section's side facing `out` across `axis`. */
@@ -210,11 +210,6 @@ function runOf(sections: readonly CounterSection[], p: PodiumPart): number {
 /** The sketch with the parts `keys` (partKey) of counter `id` set to `kind` (null: plate) in light opening `light` (from
  *  the floor), or in all of them (K16); a door only where the part takes one (K17). */
 export function setPodiumLight(v: Variant, id: string, keys: readonly string[], kind: CounterLight | null, light?: number): Variant {
-  const o = v.objects.find((x) => x.id === id);
-  if (!o?.sections) return v;
   const want = new Set(keys);
-  const parts = podiumParts(o.sections).filter((p) => want.has(partKey(p)) && (kind !== 'door' || takesDoor(p)));
-  if (!parts.length) return v;
-  const sections = setLight(o.sections, parts, kind, light);
-  return { ...v, objects: v.objects.map((x) => (x.id === id ? { ...x, sections } : x)) };
+  return withSections(v, id, (ss) => setLight(ss, podiumParts(ss).filter((p) => want.has(partKey(p)) && (kind !== 'door' || takesDoor(p))), kind, light));
 }

@@ -8,7 +8,7 @@ import { RECIPES } from '../foga/recipes';
 import { nextId } from './ids';
 import { lightsOf, partKey, podiumParts, sideKey, withSide, type PodiumPart } from './podiumFaces';
 import { coverCrop, cropWindow, type Crop } from './print';
-import { EPS, type Axis } from './podiumSections';
+import { EPS, withSections, type Axis } from './podiumSections';
 import type { CounterSection, PodiumDecal, SectionSide, Variant } from './types';
 
 const R = RECIPES.counter;
@@ -156,13 +156,6 @@ function withField<K extends 'print' | 'decals'>(side: SectionSide | undefined, 
   return Object.keys(next).length ? next : undefined;
 }
 
-const onObject = (v: Variant, id: string, fn: (sections: CounterSection[]) => CounterSection[]): Variant => {
-  const o = v.objects.find((x) => x.id === id);
-  if (!o?.sections) return v;
-  const sections = fn(o.sections);
-  if (JSON.stringify(sections) === JSON.stringify(o.sections)) return v;
-  return { ...v, objects: v.objects.map((x) => (x.id === id ? { ...x, sections } : x)) };
-};
 const partsBy = (sections: readonly CounterSection[], keys: readonly string[] | 'all') => {
   const want = keys === 'all' ? null : new Set(keys);
   return podiumParts(sections).filter((p) => (!want || want.has(partKey(p))) && takesDecor(sections, p));
@@ -171,7 +164,7 @@ const partsBy = (sections: readonly CounterSection[], keys: readonly string[] | 
 /** The sketch with print `motif` on the parts `keys` (partKey) of counter `id`, or on every part that takes it (`all`,
  *  the paint bucket); the print replaces the decals there (K20). null takes the print off. */
 export function setPodiumPrint(v: Variant, id: string, keys: readonly string[] | 'all', motif: string | null): Variant {
-  return onObject(v, id, (ss) => onSides(ss, partsBy(ss, keys), (side) => (motif ? withField(withField(side, 'decals', undefined), 'print', motif) : withField(side, 'print', undefined))));
+  return withSections(v, id, (ss) => onSides(ss, partsBy(ss, keys), (side) => (motif ? withField(withField(side, 'decals', undefined), 'print', motif) : withField(side, 'print', undefined))));
 }
 
 /** The sketch with a decal of `motif` in the middle of part `key` of counter `id`: as wide as the motif allows within
@@ -192,13 +185,12 @@ export function addPodiumDecal(v: Variant, id: string, key: string, motif: strin
   }
   const taken = o.sections.flatMap((s) => Object.values(s.sides ?? {}).flatMap((x) => (x.decals ?? []).map((d) => d.id)));
   const decal: PodiumDecal = { id: nextId(taken, 'd'), motif, w: Math.round(w), h: Math.round(h), x: Math.round(rightOf(p.axis, p.out) * ((p.a + p.b) / 2 - sideMid(o.sections, p))), y: Math.round((R.railHeight + top) / 2) };
-  const sections = onSides(o.sections, [p], (side) => withField(withField(side, 'print', undefined), 'decals', [...(side?.decals ?? []), decal]));
-  return { v: { ...v, objects: v.objects.map((x) => (x.id === id ? { ...x, sections } : x)) }, decal: decal.id };
+  return { v: withSections(v, id, (ss) => onSides(ss, [p], (side) => withField(withField(side, 'print', undefined), 'decals', [...(side?.decals ?? []), decal]))), decal: decal.id };
 }
 
 /** The decal `decal` of counter `id` changed (moved, scaled, another motif) or taken off (null), kept on its part. */
 export function updatePodiumDecal(v: Variant, id: string, decal: string, patch: Partial<Omit<PodiumDecal, 'id'>> | null): Variant {
-  return onObject(v, id, (ss) => {
+  return withSections(v, id, (ss) => {
     const at = podiumDecals(ss).find((x) => x.decal.id === decal);
     if (!at) return ss;
     return onSides(ss, [at.part], (side) => {
