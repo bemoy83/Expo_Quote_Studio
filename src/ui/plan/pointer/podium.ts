@@ -23,19 +23,20 @@ export function counterUnder(c: Pick<PointerCtx, 'hits'>, q: P): string | null {
   return on && isCounter(on.product) ? on.id : null
 }
 
-/** The section the pen shows at q (podiumAt): stored by a click, the start of a drag. */
-export function podiumStart(c: Pick<PointerCtx, 'v' | 'brush' | 'hits'>, q: P) {
+/** The section the pen shows at q (podiumAt): stored by a click, the start of a drag; by a side of a counter, a påbygg
+ *  against it (PR 3), slid along in 250 steps when `fine`. */
+export function podiumStart(c: Pick<PointerCtx, 'v' | 'brush' | 'hits'>, q: P, fine = false) {
   const pen = penOf(c.brush)
   if (!pen || !c.hits.onStand(q) || counterUnder(c, q)) return null
-  return podiumAt(c.v, place, pen, [q.x, q.y])
+  return podiumAt(c.v, place, pen, [q.x, q.y], fine)
 }
 
 /** A press at q. `frozen`: where Shift froze the preview, which the press works on wherever it is; `fine`: Shift or Fin. */
 export function startPodium(c: PointerCtx, q: P, fine: boolean, frozen: P | null): Drag {
   const at = frozen ?? q
-  const click = podiumStart(c, at)
-  const drag = click && !('error' in click) ? startDrag(click.o, [q.x, q.y], fine) : null
-  return { kind: 'podium', p0: q, at, drag, last: q, moved: false }
+  const click = podiumStart(c, at, fine)
+  const drag = click && !('error' in click) ? startDrag(click.cell, [q.x, q.y], fine, click.onto) : null
+  return { kind: 'podium', p0: q, at, click, drag, last: q, moved: false }
 }
 
 /** Shift pressed or let go since the last move (or Fin): goes on from what is drawn, at the pointer before this move. */
@@ -52,7 +53,7 @@ export const podium: DragHandlers<'podium'> = {
     if (!d.moved) {
       const on = counterUnder(c, d.at)
       if (on) return c.clickSelect({ objectId: on })
-      const r = podiumStart(c, d.at)
+      const r = d.click
       if (!r) return
       if ('error' in r) return c.onToast(r.error)
       return c.onEdit(() => r.v)

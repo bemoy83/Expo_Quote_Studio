@@ -1,7 +1,7 @@
 // Disker og podier (Byggeregler K10–K12): sections on the 250 grid, built tight, drawn from one section by a drag.
 import { describe, expect, it } from 'vitest';
 import { counterBuildOf } from './counterShape';
-import { drawPodium, dragSpan, innerCorners, podiumAt, podiumName, podiumSize, rebaseDrag, rectSections, runNodes, startDrag, type PodiumDrag } from './podiums';
+import { drawPodium, dragSpan, innerCorners, podiumAt, podiumName, podiumSides, podiumSize, rebaseDrag, rectSections, runNodes, startDrag, type PodiumDraw, type PodiumDrag } from './podiums';
 import { objectBoxes, type PlaceContext } from './objects';
 import { createVariant } from './variant';
 import { RULES } from '../rules/rules';
@@ -107,11 +107,11 @@ describe('the pen (PR 1)', () => {
     expect(at([0.45, 2]).x).toBe(0.45);
   });
 
-  it('moves in against a counter within 10 cm, and shows nothing where it has no room', () => {
-    const one = podiumAt(base, ctx, pen, [2, 2]);
-    if ('error' in one) throw new Error(one.error);
-    expect(at([2.6, 2], one.v).x).toBe(2.52);
-    expect('error' in podiumAt(one.v, ctx, pen, [2.3, 2])).toBe(true);
+  it('moves in against a counter of Disker within 10 cm, and shows nothing where it has no room', () => {
+    // 6560 from Disker (no sections): by one of its own the pen lies against it as a påbygg instead (PR 3)
+    const one = { ...base, objects: [{ id: 'c1', product: '6560', x: 2, y: 2, rot: 0 }] };
+    expect(at([2.6, 2], one).x).toBe(2.52);
+    expect('error' in podiumAt(one, ctx, pen, [2.3, 2])).toBe(true);
   });
 
   it('a press in the middle dragged 1,2 m right gives 1500 × 500 (1 520 × 520) in two sections, 1000 + 500', () => {
@@ -210,5 +210,111 @@ describe('Shift: locked place and 250 steps (PR 2)', () => {
     d = rebaseDrag(d, p(950), false);
     expect(cc(d, p(950))[0]).toBe(1250);
     expect(cc(d, p(1600))[0]).toBe(1750);
+  });
+});
+
+describe('påbygg (PR 3)', () => {
+  // A counter 1500 × 1000 c/c (1 520 × 1 020 outer), front toward +y, its middle at (3, 2.5)
+  const counter: PlacedObject = { id: 'i1', product: 'P', x: 3, y: 2.5, rot: 0, ral: '3002', sections: [sec(-750, 250, -500, 500), sec(250, 750, -500, 500)] };
+  const v: Variant = { ...base, objects: [counter] };
+  const ok = (r: PodiumDraw) => {
+    if ('error' in r) throw new Error(r.error);
+    return r;
+  };
+  const outer = (o: PlacedObject) => [podiumSize(o).length, podiumSize(o).depth];
+  /** The sections added, in plan mm round the counter's old middle (unturned). */
+  const added = (o: PlacedObject) => {
+    const old = new Set(counter.sections!.map((s) => JSON.stringify([s.x.map((n) => n + 3000), s.z.map((n) => n + 2500)])));
+    return o.sections!.map((s) => [s.x.map((n) => n + o.x * 1000), s.z.map((n) => n + o.y * 1000)]).filter((s) => !old.has(JSON.stringify(s)));
+  };
+
+  it('finds the sides of the outline, joined where they run on', () => {
+    const ell = [sec(0, 1000, 0, 500), sec(0, 500, 500, 1000)];
+    expect(podiumSides(ell)).toEqual(
+      expect.arrayContaining([
+        { axis: 'z', out: -1, at: 0, a: 0, b: 1000 },
+        { axis: 'z', out: 1, at: 500, a: 500, b: 1000 },
+        { axis: 'x', out: 1, at: 500, a: 500, b: 1000 },
+        { axis: 'x', out: -1, at: 0, a: 0, b: 1000 },
+      ]),
+    );
+    expect(podiumSides(ell)).toHaveLength(6);
+  });
+
+  it('lies against a side within 300 mm and becomes part of the counter: + 500 × 500 · 2 020 × 1 020', () => {
+    const r = ok(podiumAt(v, ctx, pen, [3.95, 2.2]));
+    expect(r.onto?.id).toBe('i1');
+    expect(r.id).toBe('i1');
+    expect(r.v.objects).toHaveLength(1);
+    expect(outer(r.o)).toEqual([2020, 1020]);
+    expect(added(r.o)).toEqual([[[3750, 4250], [2000, 2500]]]);
+    expect(r.o.ral).toBe('3002');
+  });
+
+  it('not past 300 mm from the outer face: a section of its own', () => {
+    expect(ok(podiumAt(v, ctx, pen, [3.76 + 0.29, 2.5])).onto).toBeDefined();
+    expect(ok(podiumAt(v, ctx, pen, [3.76 + 0.31, 2.5])).onto).toBeUndefined();
+  });
+
+  it('slides along in 500 steps from the end, 250 with Shift, and at most 250 past either end', () => {
+    // The front side runs x 2250–3750; the pointer 100 below it
+    const along = (x: number, fine = false) => added(ok(podiumAt(v, ctx, pen, [x / 1000, 3.11], fine)).o)[0][0];
+    expect(along(2500)).toEqual([2250, 2750]);
+    expect(along(2800)).toEqual([2750, 3250]);
+    expect(along(2800, true)).toEqual([2500, 3000]);
+    expect(along(3700)).toEqual([3250, 3750]);
+    expect(along(3900)).toEqual([3500, 4000]);
+    expect(along(2100)).toEqual([2000, 2500]);
+  });
+
+  it('takes the height of the section it lies against', () => {
+    const low = { ...counter, sections: [sec(-750, 250, -500, 500, 500), sec(250, 750, -500, 500)] };
+    const r = ok(podiumAt({ ...base, objects: [low] }, ctx, pen, [1.95, 2.5]));
+    expect(r.o.sections!.map((s) => s.h)).toEqual([500, 1000, 500]);
+  });
+
+  it('never over the counter itself', () => {
+    // An L: the pointer just below the bottom of its long leg, by the short one, would stick 250 into it
+    const ell: PlacedObject = { ...counter, x: 3, y: 2, sections: [sec(-500, 500, -500, 0), sec(-500, 0, 0, 500)] };
+    const r = podiumAt({ ...base, objects: [ell] }, ctx, pen, [2.8, 2.02]);
+    expect(r).toMatchObject({ error: 'Disken kan ikke gå over seg selv' });
+  });
+
+  it('is refused where it has no room', () => {
+    const edge = { ...counter, x: 5.2 };
+    expect(podiumAt({ ...base, objects: [edge] }, ctx, pen, [6, 2.5])).toMatchObject({ error: 'Ikke plass til disken her' });
+  });
+
+  it('a drag grows it away from the counter; the edge against it stays wherever it is pressed', () => {
+    const r = ok(podiumAt(v, ctx, pen, [3.95, 2.2]));
+    const drag = (fine: boolean, q: [number, number], p: [number, number] = [3.95, 2.2]) => ok(drawPodium(v, ctx, startDrag(r.cell, p, fine, r.onto), q));
+    // 1,2 m out from the middle of the section: 1500 = 1000 + 500, the whole metre against the counter
+    expect(outer(drag(false, [5.15, 2.2]).o)).toEqual([3020, 1020]);
+    expect(added(drag(false, [5.15, 2.2]).o).map((s) => s[0])).toEqual([[3750, 4750], [4750, 5250]]);
+    // Toward the counter, nothing changes
+    expect(outer(drag(false, [3.4, 2.2]).o)).toEqual([2020, 1020]);
+    // Out and down: 1000 × 1500 c/c from the side, past the counter's front
+    expect(outer(drag(false, [4.5, 3.4]).o)).toEqual([2520, 1520]);
+    // With Shift, pressed by the edge against the counter, it is still the far edge that moves
+    expect(outer(drag(true, [4.05, 2.2], [3.8, 2.2]).o)).toEqual([2270, 1020]);
+    expect(drag(true, [4.05, 2.2], [3.8, 2.2]).o.ral).toBe('3002');
+  });
+
+  it('a part that would no longer touch the side is refused', () => {
+    // Stuck 250 past the end, then with Shift its inner end dragged off the side
+    const r = ok(podiumAt(v, ctx, pen, [3.9, 3.11]));
+    expect(added(r.o)[0][0]).toEqual([3500, 4000]);
+    const d = startDrag(r.cell, [3.52, 3.4], true, r.onto);
+    expect(drawPodium(v, ctx, d, [3.77, 3.4])).toMatchObject({ error: 'En del ville stått løst' });
+  });
+
+  it('works the same on a turned counter', () => {
+    const turned = { ...counter, rot: 90 };
+    // Turned a quarter, its 1 520 runs along plan y, from 1.74 to 3.26; the pointer 190 past the end
+    const r = ok(podiumAt({ ...base, objects: [turned] }, ctx, pen, [3, 3.45]));
+    expect(r.o.rot).toBe(90);
+    expect(outer(r.o)).toEqual([2020, 1020]);
+    const b = objectBoxes(ctx, r.o);
+    expect(Math.max(...b.map((x) => x.y1))).toBeCloseTo(3.76);
   });
 });

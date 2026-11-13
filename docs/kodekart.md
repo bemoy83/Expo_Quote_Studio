@@ -215,6 +215,9 @@ står urørt; det nye deler bygger, omriss, 3D og kalkyle med dem.
   `drawPodium` og `dragSpan`: et drag fra seksjonen man trykket i; `rectSections`/`runNodes`: hele meter først, resten
   lengst unna; Shift og Fin: `grabOf`/`podiumGrab` (hvilken kant et trykk tar), `axisSpan` (rektangelet et drag gir,
   bestillingens referanse), `startDrag`, `rebaseDrag` (Shift midt i et drag); `podiumName`, `innerCorners`, `podiumSize`).
+  Påbygg (PR 3): `podiumSides` (omrisset som rette sider), `ontoAt` (siden innen `ONTO` og plassen langs den), og
+  `PodiumDraw.cell`/`onto`: det som legges til, i en ramme dreid som disken med knutepunkter på hele rasterenheter, og
+  disken og siden det ligger mot. `PodiumAxis.fix` holder kanten mot disken fast i `axisSpan`.
   Forhåndsvisningen fryses med Shift i `usePlanPointer.ts` (`podiumFreeze`), kanten man tar tak i tegnes tykk (`grip` i
   `PreviewLayer.tsx`). Pekeren: `plan/pointer/podium.ts`, forhåndsvisningen
   `podiumHover`/`podiumTarget` i `plan/next.ts`. Verktøyet: `Brush` `podium` og `PenTool` `podium` i `ui/tools.ts`,
