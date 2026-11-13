@@ -174,7 +174,7 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
   de gamle diskene 5410, 5415 og 5420 blir løse linjer i gamle skisser (`OLD_COUNTERS`, `retiredToLoose` i `persistence/file.ts`)
 - Kalkyle: `calc/lines/objects.ts` (fast pris, kost fra prisartikkelen `ITEM.counter` i `cost/itemDefs.ts`, bygget av
   `counterBuild`). Plukkes hel, 1 stk (K1)
-- Plan, 3D: plassert og kolliderer som et møbel (`domain/objects.ts`), platene og delelinjene som strek i `plan/layers/CounterLines.tsx`
+- Plan, 3D: plassert og kolliderer som et møbel (`domain/objects.ts`), omrisset (hel strek lukket, lys hårstrek åpen) fra `plan/counterOutline.ts` i `CounterShape`, delelinjene i `plan/layers/CounterLines.tsx`
   (fra `ObjectLayer.tsx`) · `scene3d/build/counter.ts` (`buildCounter` tar en `CounterBuild`, kalt fra `buildObjects`; profilen i et knutepunkt dreies etter de lukkede sidene den har, `outward`),
   profilen snudd etter omrisset med `turnedProfile` (`build/profiles.ts`). Begge tegner i diskens egne koordinater og
   plasseres og snus utenfra, så en tegnet disk bruker de samme delene
@@ -185,7 +185,7 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
   bygg (`counterBuildOf`, delt av plan, 3D og kalkyle), boksen rundt (`objectFootprint`) og det den dekker, én
   rektangel per bit (`pieceRects` → `objectBoxes` i `domain/objects.ts`, brukt av kollisjon, treff og markering, så det
   åpne hjørnet i en L er gulv), og veien mellom diskens egne koordinater og planen (`toPlan`, `toLocal`, `turn`). Endene
-  en strek går ut fra er i `domain/counterEnds.ts` (`counterEnd`, vist som grep av `layers/CounterHandle.tsx`). Om et
+  en strek går ut fra er i `domain/counterEnds.ts` (`counterEnd`, vist som grep av `layers/CounterHandle.tsx`: tonet halvmeter og runde knapper for veiene som går, prøvd med `counterDraw` i `counterHover`). Om et
   møbel er en disk, sier `PlaceContext.isCounter`. Dra innover fra en fri ende korter den (`shorten`); valgt disk, og
   hver tegnet disk på arbeidsordren, får helmål med `Chain` (`counterChains` i `plan/dims.ts`, `CounterDims` i
   `layers/DimLayer.tsx`). I
