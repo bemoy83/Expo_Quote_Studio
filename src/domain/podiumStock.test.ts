@@ -1,0 +1,74 @@
+// Standard counters in Disker og podier (Byggeregel K22): 6560 built as the counter in stock, and the stock product
+// while it is exactly that.
+import { describe, expect, it } from 'vitest';
+import { DEFAULT_CATALOG } from '../catalog/defaultCatalog';
+import { calc } from '../calc/calc';
+import { profileMetres } from '../foga/counter';
+import { DEFAULT_PRICING, ITEM } from '../pricing/data';
+import { RULES } from '../rules/rules';
+import { pickRows } from '../ui/workorder/pickRows';
+import { counterBuildOf } from './counterShape';
+import { setPodiumPrint } from './podiumDecor';
+import { setPodiumLight, partKey, podiumParts } from './podiumFaces';
+import { stockOf, stockSections } from './podiumStock';
+const isStock6560 = (s: CounterSection[]) => stockOf(s)?.artnr === '6560';
+import type { CounterSection, PlacedObject, Variant } from './types';
+import { createVariant } from './variant';
+
+const stock = (): PlacedObject => ({ id: 'i1', product: '6570', x: 2, y: 1.5, rot: 0, sections: stockSections() });
+const vOf = (...objects: PlacedObject[]): Variant => ({ ...createVariant('A', { width: 5, depth: 3, type: 'row' }), objects });
+const run = (v: Variant) => calc(v, RULES, DEFAULT_CATALOG, { payer: 'utstiller', ral: '9010' });
+const linesOf = (v: Variant) => run(v).groups.flatMap((g) => g.lines);
+const sectionsOf = (v: Variant) => v.objects[0].sections!;
+
+describe('6560 in Disker og podier (K22)', () => {
+  it('is built exactly as the counter in stock: the same profiles, 600, plates and boards', () => {
+    const a = counterBuildOf({});
+    const b = counterBuildOf({ sections: stockSections() });
+    expect(profileMetres(b)).toEqual(profileMetres(a));
+    expect(b.couplings).toBe(a.couplings);
+    expect(b.plates.map((p) => `${p.w}×${p.h}`).sort()).toEqual(a.plates.map((p) => `${p.w}×${p.h}`).sort());
+    expect(b.boards.map((x) => `${x.w}×${x.d}`).sort()).toEqual(a.boards.map((x) => `${x.w}×${x.d}`).sort());
+  });
+
+  it('is the stock product: 6560 at the catalog price, costed as one counter, picked whole', () => {
+    const lines = linesOf(vOf(stock()));
+    const l = lines.find((x) => x.artnr === '6560')!;
+    expect([l.qty, l.price, l.foga]).toEqual([1, 1320, undefined]);
+    expect(lines.some((x) => x.artnr === '6570')).toBe(false);
+    expect(DEFAULT_PRICING.items.get(ITEM.counter(1020, 520))).toBeDefined();
+    const rows = pickRows(run(vOf(stock())));
+    expect(rows.filter((r) => r.code === '6560').map((r) => r.qty)).toEqual(['1 stk']);
+    // Not picked as parts
+    expect(rows.some((r) => r.group === 'disk.disker' && r.code === '')).toBe(false);
+  });
+
+  it('stays 6560 turned, the long side open either way, in another colour and with print', () => {
+    const turned: CounterSection[] = [{ x: [-250, 250], z: [-500, 500], h: 1000, shelves: [750], sides: { 'x+': { lights: ['open', 'open'] } } }];
+    expect(isStock6560(turned)).toBe(true);
+    expect(isStock6560([{ ...stockSections()[0], sides: { 'z+': { lights: ['open', 'open'] } } }])).toBe(true);
+    const v = vOf({ ...stock(), ral: '3002', rot: 90 });
+    const front = podiumParts(sectionsOf(v)).find((p) => p.axis === 'z' && p.out === 1)!;
+    const printed = setPodiumPrint(v, 'i1', [partKey(front)], 'm1');
+    expect(isStock6560(sectionsOf(printed))).toBe(true);
+    const lines = linesOf(printed);
+    expect(lines.find((x) => x.artnr === '6560')?.price).toBe(1320);
+    expect(lines.find((x) => x.artnr === '8023')?.qty).toBeGreaterThan(0);
+  });
+
+  it('is built on site once it is changed: another height, shelf, size, a door or another open side', () => {
+    const [s] = stockSections();
+    expect(isStock6560([{ ...s, h: 750, shelves: [500] }])).toBe(false);
+    expect(isStock6560([{ ...s, shelves: [500] }])).toBe(false);
+    expect(isStock6560([{ ...s, shelves: undefined }])).toBe(false);
+    expect(isStock6560([{ ...s, x: [-750, 750] }])).toBe(false);
+    expect(isStock6560([{ ...s, sides: undefined }])).toBe(false);
+    expect(isStock6560([s, { x: [500, 1000], z: [-250, 250], h: 1000 }])).toBe(false);
+    const front = podiumParts([s]).find((p) => p.axis === 'z' && p.out === 1)!;
+    const door = setPodiumLight(vOf(stock()), 'i1', [partKey(front)], 'door', 0);
+    expect(isStock6560(sectionsOf(door))).toBe(false);
+    expect(linesOf(door).find((x) => x.artnr === '6570')?.name).toBe('Disk');
+    const end = podiumParts([s]).find((p) => p.axis === 'x')!;
+    expect(isStock6560(sectionsOf(setPodiumLight(vOf(stock()), 'i1', [partKey(end)], 'open')))).toBe(false);
+  });
+});

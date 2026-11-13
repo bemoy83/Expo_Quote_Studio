@@ -1,9 +1,8 @@
 // Which sides of the counters of Disker og podier the work order draws (PodiumSides.tsx): those that are more than
 // plates (Byggeregler K16–K20).
 import { lockedParts } from '../../domain/podiumLocks'
-import { podiumName } from '../../domain/podiums'
 import type { Motif, Variant } from '../../domain/types'
-import { place } from '../env'
+import { counterName, place } from '../env'
 import { findMotif } from '../motifs'
 import { drawerSides, sideDecor, sideElevation } from '../plan/podiumDrawer/podiumView'
 
@@ -13,7 +12,7 @@ export function podiumSidesToDraw(v: Variant, motifs: readonly Motif[] = []) {
   const counters = v.objects.filter((o) => o.sections?.length)
   return counters.flatMap((o, n) => {
     const locked = new Set(lockedParts(v, place, o))
-    const name = `${podiumName(o.sections!)} ${n + 1}`
+    const name = `${counterName(o.sections!)} ${n + 1}`
     return drawerSides(o).flatMap((S) => {
       const el = sideElevation(o, S.side, locked)
       const decor = sideDecor(o, S.side, locked, ratio)

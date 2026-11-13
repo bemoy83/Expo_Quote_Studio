@@ -511,7 +511,8 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   skuffen (for seksjonen bak delen, eller alle langs siden) og dras opp og ned i risset med grepet «Hylle 500»: draget
   snapper til CC-høydene og stopper mot en nabohylle og mot toppen. Risset målsetter hyllene fra gulv i CC. To
   seksjoner slås bare sammen (K14) med like hyller; et grep som legger på seksjoner gir dem hyllene til seksjonen det
-  strekker. Tid, plassholder: 1,5 min opp og 1 ned per hylle (som H7, Bjørn 13.11.2026). Tilbudet sier «3 hyller».
+  strekker. Tid, plassholder: 1,5 min opp og 1 ned per hylle (som H7, Bjørn 13.11.2026), unntatt hyllen i CC 750 i en
+  seksjon som er 500 dyp: den er med i tiden per seksjon som i 6560 og K9. Tilbudet sier «3 hyller».
   *Bjørn 13.11.2026 · kode `src/foga/counter.ts` (`shelfRails`), `src/domain/podiumShelves.ts` · test `src/domain/podiumShelves.test.ts`, `src/calc/podium.test.ts`*
 - **K20 Print og dekal på disk.** På plate og skyvedør, aldri på åpen lysåpning, trinnplate eller del mot vegg eller
   annen disk (valget står og kommer tilbake når disken flyttes ut). Print er heldekkende dekal, ikke trykk på platen, og
@@ -525,6 +526,14 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   artikkelnummer 8023 «Foliedekor, diskfelt» per m², med målene som kuttes på linjen («2 × 960 × 960 mm»), dekal som m²
   dekal (8020) og en oppstart per print strukket over flere deler (8022).
   *Bjørn 13.11.2026 · kode `src/domain/podiumDecor.ts`, `src/calc/lines/decor.ts` · test `src/domain/podiumDecor.test.ts`*
+
+- **K22 6560 i Disker og podier.** Bardisk 6560 er et ferdig oppsett i Disker og podier: én seksjon 1000 × 500 c/c,
+  CC 1000, hylle i CC 750 og baksiden åpen i begge lysåpningene, bygget nøyaktig som disken på lager (K1–K5). Så lenge
+  disken er dette, er den lagervaren: katalogpris 6560 (1320 kr), kostet som én disk, plukket hel som 1 stk, og navnet
+  «Bardisk». Farge (K6), print og dekal (K20), snudd, flyttet og mot vegg eller annen disk er fortsatt 6560. Annen
+  lengde, dybde, høyde eller hylle, skyvedør, en annen åpen side eller sammenslåing (K15) gjør den til spesialbygg
+  (K13).
+  *Bjørn 13.11.2026 · kode `src/domain/podiumStock.ts`, `src/calc/lines/objects.ts` · test `src/domain/podiumStock.test.ts`*
 
 ## P · Plukkliste og arbeidsordre
 

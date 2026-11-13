@@ -1,11 +1,13 @@
 // Placed objects and counted items (Arbeidstimer too: hours counted in the panel), in catalog order, then the loose
 // lines typed in the panel. A counter (6560) keeps its catalog price and is costed from what it is built of
-// (Byggeregler K1–K5): one price item per counter, picked whole. Its plates in another wall colour (K6) cost the swap,
+// (Byggeregler K1–K5): one price item per counter, picked whole; a counter of Disker og podier that is exactly a
+// standard counter is that product (K22). Its plates in another wall colour (K6) cost the swap,
 // the price stays the same in every colour (Bjørn 11.11.2026); the line says which colours, for the montør.
 import { counterBuildOf, layoutOf, piecesOf } from '../../domain/counterShape';
 import { innerCorners, podiumHeights, podiumName, podiumSize } from '../../domain/podiums';
 import { podiumHas } from '../../domain/podiumFaces';
 import { lockedParts } from '../../domain/podiumLocks';
+import { stockOf } from '../../domain/podiumStock';
 import { profileMetres, type CounterBuild } from '../../foga/counter';
 import { RECIPES } from '../../foga/recipes';
 import type { Use } from '../../pricing/model';
@@ -17,13 +19,16 @@ import type { CalcLine } from '../types';
 
 export function objectLines(c: CalcContext): CalcLine[] {
   const { v } = c;
-  // A drawn counter (K7) and one of Disker og podier (K13) have their own line below; the rest count by product
-  const objectCounts = countBy(v.objects.filter((o) => !o.pieces && !o.sections).map((o) => o.product));
+  // A drawn counter (K7) and one of Disker og podier (K13) have their own line below, unless it is a 6560 (K22); the
+  // rest count by product
+  const stock = (o: PlacedObject) => !o.pieces && (!o.sections || !!stockOf(o.sections));
+  const productOf = (o: PlacedObject) => stockOf(o.sections)?.artnr ?? o.product;
+  const objectCounts = countBy(v.objects.filter(stock).map(productOf));
   for (const x of v.counted) objectCounts.set(x.product, (objectCounts.get(x.product) ?? 0) + x.qty);
   const lines = [...objectCounts].map(([a, n]) => {
     const counter = c.idx.byArtnr.get(a)?.product.counter;
     if (!counter) return c.line(a, n);
-    const placed = v.objects.filter((o) => o.product === a && !o.pieces && !o.sections);
+    const placed = v.objects.filter((o) => stock(o) && productOf(o) === a);
     const swapped = placed.filter((o) => o.ral).length;
     const colours = [...countBy(placed.map(counterRal))].sort(([x], [y]) => x.localeCompare(y));
     return c.line(a, n, swapped ? { meta: colours.map(([ral, k]) => `RAL ${ral}${colours.length > 1 ? ` × ${k}` : ''}`).join(' · ') } : {}, [
@@ -31,7 +36,7 @@ export function objectLines(c: CalcContext): CalcLine[] {
       ...(swapped ? [{ id: ITEM.counterPlates(counter.length, counter.depth), qty: swapped }] : []),
     ]);
   });
-  return [...lines, ...v.objects.filter((o) => o.pieces).map((o) => drawnCounterLine(c, o)), ...v.objects.filter((o) => o.sections).map((o) => podiumLine(c, o))];
+  return [...lines, ...v.objects.filter((o) => o.pieces).map((o) => drawnCounterLine(c, o)), ...v.objects.filter((o) => o.sections && !stock(o)).map((o) => podiumLine(c, o))];
 }
 
 /** A drawn counter (Byggeregler K7–K9): built on site, so priced by the cost engine from what it is built of and the
@@ -67,8 +72,9 @@ export function podiumUses(o: PlacedObject, b: CounterBuild = counterBuildOf(o))
   const longest = sections.map((x) => Math.max(x.x[1] - x.x[0], x.z[1] - x.z[0]));
   // K21: a sliding door is two leaves, fitted as one
   const doors = b.plates.filter((p) => p.level === 'door').length / 2;
-  // K19: a shelf is fitted on its rails (H7's times, placeholder)
-  const shelves = b.boards.filter((x) => x.role === 'shelf').length;
+  // K19: a shelf is fitted on its rails (H7's times, placeholder); the shelf at CC 750 in a section 500 deep is in the
+  // work per section, as in 6560 and the drawn counters (K9, Bjørn 13.11.2026)
+  const shelves = sections.reduce((n, x) => n + (x.shelves ?? []).filter((y) => !(y === RECIPES.counter.middle && Math.min(x.x[1] - x.x[0], x.z[1] - x.z[0]) === HALF_PART)).length, 0);
   return [
     ...builtUses(b, longest.filter((n) => n > HALF_PART).length, longest.filter((n) => n <= HALF_PART).length, innerCorners(sections)),
     ...(doors ? [{ id: ITEM.counterDoor, qty: doors }] : []),

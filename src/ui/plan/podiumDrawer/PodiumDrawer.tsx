@@ -11,11 +11,11 @@ import { counterRal, removeObject } from '../../../domain/objects'
 import { podiumDecals, updatePodiumDecal } from '../../../domain/podiumDecor'
 import { NO_DOOR, setPodiumLight, takesDoor } from '../../../domain/podiumFaces'
 import { partLocks } from '../../../domain/podiumLocks'
-import { HEIGHTS, podiumName, podiumSize, setSectionHeight } from '../../../domain/podiums'
+import { HEIGHTS, podiumSize, setSectionHeight } from '../../../domain/podiums'
 import { SHELF_HEIGHTS, lowered, movePodiumShelf, setPodiumShelf } from '../../../domain/podiumShelves'
 import type { CounterLight, Motif, PlacedObject, Variant } from '../../../domain/types'
 import { Button, FlatChoice, FlatToggles, Section } from '../../controls'
-import { place, plateColor } from '../../env'
+import { counterName, place, plateColor } from '../../env'
 import { count, mm } from '../../format'
 import { findMotif } from '../../motifs'
 import { DrawerHead, PrevNext } from '../drawerParts'
@@ -67,7 +67,7 @@ export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect,
   const li = pi !== undefined && sel.podiumLight !== undefined && sel.podiumLight < parts[0].lights.length ? sel.podiumLight : undefined
   const kind = shared(parts, li)
   const ral = counterRal(o)
-  const name = podiumName(o.sections ?? [])
+  const name = counterName(o.sections ?? [])
   const size = podiumSize(o)
   const select = (x: Partial<PlanSelection>) => onSelect({ objectId: o.id, podiumSide: S.key, ...x })
   const showSide = (i: number) => onSelect({ objectId: o.id, podiumSide: sides[(i + sides.length) % sides.length].key })
@@ -121,7 +121,7 @@ export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect,
   return (
     <section className="wall-drawer drawer2" aria-label={`${name} sett utenfra`}>
       <div className="wd-insp">
-        <DrawerHead dot={plateColor(ral)} title={`${name} · ${S.name.replace(/^mot /, '')}`} remove={{ label: `Fjern ${name.toLowerCase()}en (Delete)`, onClick: () => (onEdit((x) => removeObject(x, o.id)), onClose()) }} onClose={onClose}>
+        <DrawerHead dot={plateColor(ral)} title={`${name} · ${S.name.replace(/^mot /, '')}`} remove={{ label: `Fjern ${/\d/.test(name) ? name : `${name.toLowerCase()}en`} (Delete)`, onClick: () => (onEdit((x) => removeObject(x, o.id)), onClose()) }} onClose={onClose}>
           {sides.length > 1 && <PrevNext what="side" onPrev={() => showSide(si - 1)} onNext={() => showSide(si + 1)} />}
         </DrawerHead>
         <p className="wd-meta num">

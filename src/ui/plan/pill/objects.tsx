@@ -3,9 +3,9 @@
 import { MoveHorizontal, MoveVertical, RotateCw } from 'lucide-react'
 import { roomName, roomSize } from '../../../domain/rooms'
 import { counterRal, objectFootprint, setCounterRal, setObjectProduct } from '../../../domain/objects'
-import { podiumHeights, podiumName } from '../../../domain/podiums'
+import { podiumHeights } from '../../../domain/podiums'
 import { updateFace } from '../../../domain/textile/free'
-import { idx, place } from '../../env'
+import { counterName, idx, place } from '../../env'
 import { fmt, mm } from '../../format'
 import { objectFamily } from '../../objectFamily'
 import { QBtn, Sep, Sw } from '../QuickPicks'
@@ -48,7 +48,7 @@ export function objectPill(p: PillActions, c: Of<'object'>, remove: () => void):
   const fp = objectFootprint(place, o)
   const family = objectFamily(o.product)
   // Disker og podier: «Disk» or «Podium» by its shape, as on the quote (Byggeregel K13)
-  const name = o.sections ? podiumName(o.sections) : (family.find((x) => x.artnr === o.product)?.name ?? f?.product.name ?? 'Møbel')
+  const name = o.sections ? counterName(o.sections) : (family.find((x) => x.artnr === o.product)?.name ?? f?.product.name ?? 'Møbel')
   return {
     name,
     meta: fp ? `${fp.round ? `ø ${mm(fp.w)}` : `${mm(fp.w)} × ${mm(fp.d)}`}${o.sections ? ` · H ${podiumHeights(o).map((x) => mm(x / 1000)).join('/')}` : ''}${o.rot ? ` · ${o.rot}°` : ''}` : undefined,

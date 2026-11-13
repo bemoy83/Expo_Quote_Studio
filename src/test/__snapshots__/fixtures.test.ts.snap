@@ -12395,9 +12395,37 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
   },
   "groups": [
     {
-      "cost": 2518.39314,
+      "cost": 2730.73314,
       "id": "disk",
       "lines": [
+        {
+          "artnr": "6560",
+          "cost": 233.85,
+          "dg": 0.8228409090909091,
+          "group": "disk.disker",
+          "name": "Bardisk",
+          "payer": "utstiller",
+          "placeholder": false,
+          "price": 1320,
+          "qty": 1,
+          "strategy": "fast",
+          "sum": 1320,
+          "time": {
+            "demontering": 1,
+            "montering": 1,
+            "plukk": 1,
+            "transport": 2,
+            "vask": 2,
+          },
+          "transfer": "leie",
+          "unit": "stk",
+          "uses": [
+            {
+              "id": "disk-1020x520",
+              "qty": 1,
+            },
+          ],
+        },
         {
           "artnr": "6570",
           "cost": 415.36259999999993,
@@ -12538,15 +12566,15 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
         },
         {
           "artnr": "6570",
-          "cost": 1121.7198799999999,
-          "dg": 0.6857927507002802,
+          "cost": 1100.2098799999999,
+          "dg": 0.6871737617287461,
           "foga": true,
           "group": "disk.disker",
           "meta": "bygget på stedet 1520 × 1520 × 1040 mm · 1 skyvedør · 1 hylle · RAL 3002",
           "name": "Disk",
           "payer": "utstiller",
           "placeholder": false,
-          "price": 3570,
+          "price": 3517,
           "qty": 1,
           "quote": {
             "key": "disk:i3",
@@ -12554,10 +12582,10 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
             "name": "Disk",
           },
           "strategy": "sum",
-          "sum": 3570,
+          "sum": 3517,
           "time": {
-            "demontering": 25,
-            "montering": 42.5,
+            "demontering": 24,
+            "montering": 41,
             "plukk": 5,
             "transport": 5,
             "vask": 5,
@@ -12613,15 +12641,11 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
               "id": "montering-disk-skyvedor",
               "qty": 1,
             },
-            {
-              "id": "montering-disk-hylle",
-              "qty": 1,
-            },
           ],
         },
       ],
       "name": "Disker og podier",
-      "sum": 8068,
+      "sum": 9335,
     },
     {
       "cost": 543.4000000000001,
@@ -12696,18 +12720,18 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
     "textileM2": 0,
     "time": {
       "demontering": 62.5,
-      "montering": 121.5,
-      "plukk": 12,
-      "transport": 12,
-      "vask": 12,
+      "montering": 121,
+      "plukk": 13,
+      "transport": 14,
+      "vask": 14,
     },
     "wallLm": 0,
     "wallSupports": 0,
   },
   "margin": {
-    "cost": 3577.959451848,
-    "db": 5478.040548152,
-    "dg": 0.6049073043454064,
+    "cost": 3790.299451848,
+    "db": 6532.700548152,
+    "dg": 0.6328296568974136,
     "order": [
       {
         "cost": 172.05543728266665,
@@ -12726,7 +12750,7 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
         "name": "Gange til og fra demontering",
       },
     ],
-    "sum": 9056,
+    "sum": 10323,
     "unknown": 0,
   },
   "organiser": {
@@ -12746,7 +12770,7 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
     "lm": 0,
     "pieces": [],
   },
-  "sum": 9056,
+  "sum": 10323,
   "wallSupports": [],
 }
 `;
@@ -12755,6 +12779,13 @@ exports[`13-disker-og-podier.json > variant A > engangsteppe cut list 1`] = `[]`
 
 exports[`13-disker-og-podier.json > variant A > picking list 1`] = `
 [
+  {
+    "code": "6560",
+    "group": "disk.disker",
+    "key": "6560Bardisk",
+    "qty": "1 stk",
+    "title": "Bardisk",
+  },
   {
     "code": "8020",
     "group": "prof.folie",
@@ -13033,9 +13064,37 @@ exports[`13-disker-og-podier.json > variant A > production: textile and print ro
 exports[`13-disker-og-podier.json > variant A > quote lines 1`] = `
 [
   {
-    "cost": 2518.39314,
+    "cost": 2730.73314,
     "id": "disk",
     "lines": [
+      {
+        "artnr": "6560",
+        "cost": 233.85,
+        "dg": 0.8228409090909091,
+        "group": "disk.disker",
+        "name": "Bardisk",
+        "payer": "utstiller",
+        "placeholder": false,
+        "price": 1320,
+        "qty": 1,
+        "strategy": "fast",
+        "sum": 1320,
+        "time": {
+          "demontering": 1,
+          "montering": 1,
+          "plukk": 1,
+          "transport": 2,
+          "vask": 2,
+        },
+        "transfer": "leie",
+        "unit": "stk",
+        "uses": [
+          {
+            "id": "disk-1020x520",
+            "qty": 1,
+          },
+        ],
+      },
       {
         "artnr": "6570",
         "cost": 415.36259999999993,
@@ -13176,15 +13235,15 @@ exports[`13-disker-og-podier.json > variant A > quote lines 1`] = `
       },
       {
         "artnr": "6570",
-        "cost": 1121.7198799999999,
-        "dg": 0.6857927507002802,
+        "cost": 1100.2098799999999,
+        "dg": 0.6871737617287461,
         "foga": true,
         "group": "disk.disker",
         "meta": "bygget på stedet 1520 × 1520 × 1040 mm · 1 skyvedør · 1 hylle · RAL 3002",
         "name": "Disk",
         "payer": "utstiller",
         "placeholder": false,
-        "price": 3570,
+        "price": 3517,
         "qty": 1,
         "quote": {
           "key": "disk:i3",
@@ -13192,10 +13251,10 @@ exports[`13-disker-og-podier.json > variant A > quote lines 1`] = `
           "name": "Disk",
         },
         "strategy": "sum",
-        "sum": 3570,
+        "sum": 3517,
         "time": {
-          "demontering": 25,
-          "montering": 42.5,
+          "demontering": 24,
+          "montering": 41,
           "plukk": 5,
           "transport": 5,
           "vask": 5,
@@ -13251,15 +13310,11 @@ exports[`13-disker-og-podier.json > variant A > quote lines 1`] = `
             "id": "montering-disk-skyvedor",
             "qty": 1,
           },
-          {
-            "id": "montering-disk-hylle",
-            "qty": 1,
-          },
         ],
       },
     ],
     "name": "Disker og podier",
-    "sum": 8068,
+    "sum": 9335,
   },
   {
     "cost": 543.4000000000001,

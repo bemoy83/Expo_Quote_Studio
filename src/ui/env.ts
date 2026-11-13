@@ -6,6 +6,9 @@ import { indexCatalog, placeContext } from '../catalog/lookup'
 import type { Product } from '../catalog/types'
 import { EXAMPLE_BASIS, parseBasis, serializeBasis, type CostBasis } from '../cost/basis'
 import { readHistory, withEntry, type HistoryEntry } from '../cost/history'
+import { podiumName } from '../domain/podiums'
+import { stockOf } from '../domain/podiumStock'
+import type { CounterSection } from '../domain/types'
 import { pricingFrom } from '../pricing/data'
 import { KEYS, loadCostBasis, loadJson, saveCostBasis, saveJson } from '../persistence/storage'
 import { ownInFrame, RULES, type InFrameParams, type Rules } from '../rules/rules'
@@ -108,3 +111,10 @@ export const podiumProduct = () => catalog.products.find((p) => p.podium)
 export const isCounter = (artnr: string) => place.isCounter(artnr)
 
 export const openingProducts = () => catalog.products.filter((p) => p.opening)
+
+/** The name of a counter of Disker og podier: a standard counter's catalog name («Bardisk 6560», K22), else «Disk» or
+ *  «Podium» by its shape (K13). */
+export const counterName = (sections: readonly CounterSection[]) => {
+  const s = stockOf(sections)
+  return s ? `${productOf(s.artnr)?.name ?? 'Disk'} ${s.artnr}` : podiumName(sections)
+}

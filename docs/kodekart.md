@@ -260,6 +260,10 @@ står urørt; det nye deler bygger, omriss, 3D og kalkyle med dem.
   (`podiumFoil`, egen artikkel 8023 `sys.foilCounter`). Vist i risset (`sideDecor` i `podiumView.ts`,
   `Handles` i `PodiumElevation`), i planen (`PrintMarks` i `layers/ObjectLayer.tsx`) og i 3D (`buildPodiumDecor` i
   `scene3d/build/counter.ts`).
+- Standarddisker (K22): `domain/podiumStock.ts` (`STOCK_COUNTERS`: art.nr og seksjoner per standarddisk, 6560 først;
+  `stockOf`: hvilken standarddisk seksjonene er, i hvilken som helst dreining, uten farge og dekor; `stockSections`).
+  Kalkylen (`calc/lines/objects.ts`) gir en standarddisk katalogens linje og plukker den hel; `drawnCounterParts`
+  hopper over den. Navnet i pille, skuff og arbeidsordre: `counterName` i `ui/env.ts`.
 - Høyde i 3D (K18): `podiumTopAt` og draget `podiumTop` i `scene3d/pointer/drag.ts`, `onUpright` i `pointer/hits.ts`.
   Arbeidsordren: `workorder/PodiumSides.tsx` («Disker sett utenfra», `PodiumElevation` uten håndtak) og
   `workorder/podiumSideList.ts` (hvilke sider som tegnes).

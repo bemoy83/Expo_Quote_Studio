@@ -4,6 +4,7 @@
 // staff stand: the new piece's short side against the other's long side, Bjørn 12.11.2026). A straight 1,0 m is the
 // counter in stock and carries no pieces. Plan, 3D and the kalkyle read the build from counterBuildOf; the ends a drag
 // starts from are in counterEnds.ts.
+import { stockOf } from './podiumStock';
 import { addParts, counterParts, type CounterParts } from '../foga/counter';
 import { RECIPES } from '../foga/recipes';
 import { endAt, heldEnd } from './counterEnds';
@@ -22,7 +23,8 @@ const SNAP = 0.1;
 /** The parts of every drawn counter, picked loose (K9, K13; Disker og podier too); none when nothing is drawn. The
  *  counter in stock is picked whole. */
 export function drawnCounterParts(v: Variant, ctx?: PlaceContext): CounterParts | undefined {
-  const drawn = v.objects.filter((o) => o.pieces || o.sections);
+  // A standard counter of Disker og podier is picked whole (K22)
+  const drawn = v.objects.filter((o) => o.pieces || (o.sections && !stockOf(o.sections)));
   if (!drawn.length) return undefined;
   // With the catalog, a side of Disker og podier against a wall or another counter is a plate (K16)
   return drawn.map((o) => counterParts(ctx ? placedBuild(v, ctx, o) : counterBuildOf(o), counterRal(o))).reduce(addParts);
