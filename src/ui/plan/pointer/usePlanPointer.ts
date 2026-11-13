@@ -25,10 +25,11 @@ import { startStroke, stroke } from './stroke'
 import { startTextile, textile } from './textile'
 import { counter, startCounter } from './counter'
 import { podium, podiumFine, podiumShift, startPodium } from './podium'
+import { podiumGrip, startPodiumGrip } from './podiumGrip'
 import type { Drag, DragHandlers, P, PointerCtx } from './types'
 import { wall } from './wall'
 
-const DRAGS: { [K in Drag['kind']]: DragHandlers<K> } = { stroke, plates, floor, carpetFill, click, object, wall, beam, room, textile, counter, podium, freeMove, erase, shelf, shelfMove, place: placeDrag }
+const DRAGS: { [K in Drag['kind']]: DragHandlers<K> } = { stroke, plates, floor, carpetFill, click, object, wall, beam, room, textile, counter, podium, podiumGrip, freeMove, erase, shelf, shelfMove, place: placeDrag }
 const handlersOf = (d: Drag) => DRAGS[d.kind] as DragHandlers<Drag['kind']>
 
 /** What the plan passes in: the context without the previews' setters and state, which the hook owns. */
@@ -137,7 +138,7 @@ export function usePlanPointer(input: PlanPointerInput) {
     if (pens.decorTool) return startPlace(c, 'decor', q)
     if (pens.textileTool) return startTextile(c, q)
     if (pens.counterTool) return startCounter(q)
-    if (pens.podiumTool) return startPodium(c, q, shift || podiumFine(brush), podiumFreeze)
+    if (pens.podiumTool) return startPodiumGrip(c, q) ?? startPodium(c, q, shift || podiumFine(brush), podiumFreeze)
     if (pens.objectTool) return startPlace(c, 'object', q)
     if (pens.shelfTool) return startShelf(c, q)
     return startSelect(c, q)
@@ -152,6 +153,7 @@ export function usePlanPointer(input: PlanPointerInput) {
     if (d?.kind === 'shelfMove') d.copy = e.altKey
     // Shift held (or «Fin» on in the pill): a drawn takdrager moves across in 50 mm steps, off the 1 m grid (Byggeregel T15)
     if (d?.kind === 'beam') d.fine = e.shiftKey || !!d.fineLock
+    if (d?.kind === 'podiumGrip') d.fine = e.shiftKey || podiumFine(brush)
     if (d) drag.current = d
     // Held without moving counts as dragging too, so the hover preview stops while pressed
     setDragging(d ?? null)
@@ -166,6 +168,7 @@ export function usePlanPointer(input: PlanPointerInput) {
     if (!d) return
     if (d.kind === 'beam') d.fine = e.shiftKey || !!d.fineLock
     if (d.kind === 'podium') podiumShift(d, e.shiftKey || podiumFine(brush))
+    if (d.kind === 'podiumGrip') d.fine = e.shiftKey || podiumFine(brush)
     handlersOf(d).move?.(c, d, q)
   }
 

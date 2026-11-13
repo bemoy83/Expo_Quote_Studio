@@ -2,6 +2,7 @@
 // by the pointer handlers and the plan's cursor and hover previews.
 import { innerBeamAt } from '../../../domain/innerBeams'
 import { objectBoxes } from '../../../domain/objects'
+import { podiumGrips } from '../../../domain/podiumGrips'
 import { roomSideAt } from '../../../domain/rooms'
 import { shelfBox, shelvesOf } from '../../../domain/shelves/model'
 import { faceAt } from '../../../domain/faces'
@@ -15,6 +16,9 @@ import { distToSegment } from '../geometry'
 import type { FaceHit } from '../layers/Previews'
 import type { PlanSelection } from '../selection'
 import type { P } from './types'
+
+/** How near a grip of the chosen counter (K14) the pointer takes hold of it, screen px: a finger's width across. */
+export const GRIP_HIT_PX = 16
 
 /** Half the wall's own band across its line in Velg, screen px at least: wide enough for a finger between two textiles. */
 const WALL_BAND_PX = 5
@@ -87,7 +91,24 @@ export function planHits(v: Variant, mods: BuiltModule[], selection: PlanSelecti
       })
       .sort((a, b) => a.y - b.y)[0]
 
-  return { onStand, moduleAt, beamAt, faceHit, onWallBand, roomEdgeAt, objectAt, shelfAt }
+  /** A grip of the chosen counter of Disker og podier under the pointer (Byggeregel K14), the nearest. */
+  const podiumGripAt = (q: P) => {
+    const o = selection.objectId ? v.objects.find((x) => x.id === selection.objectId) : undefined
+    if (!o?.sections) return null
+    const sc = scale?.()
+    let bd = sc ? sizePx(sc, GRIP_HIT_PX) : 0.15
+    let best: (ReturnType<typeof podiumGrips>[number] & { o: typeof o }) | null = null
+    for (const g of podiumGrips(o)) {
+      const d = Math.hypot(q.x - g.at[0], q.y - g.at[1])
+      if (d < bd) {
+        bd = d
+        best = { ...g, o }
+      }
+    }
+    return best
+  }
+
+  return { onStand, moduleAt, beamAt, faceHit, onWallBand, roomEdgeAt, objectAt, shelfAt, podiumGripAt }
 }
 
 export type PlanHits = ReturnType<typeof planHits>

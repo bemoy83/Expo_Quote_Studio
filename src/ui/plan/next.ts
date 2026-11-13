@@ -14,8 +14,9 @@ import { tileAt, type Rect } from '../../domain/floor/tiles'
 import { wallModules, type Module } from '../../domain/grid'
 import { drawInnerBeam, type Run } from '../../domain/innerBeams'
 import { counterBuildOf, piecesOf } from '../../domain/counterShape'
-import { addObject, footprintBox, objectFootprint } from '../../domain/objects'
-import { podiumGrab, type PodiumDraw } from '../../domain/podiums'
+import { addObject, footprintBox, objectBoxes, objectFootprint } from '../../domain/objects'
+import { NO_ROOM, podiumGrab, type PodiumDraw } from '../../domain/podiums'
+import { podiumGrips, type PodiumGripDraw } from '../../domain/podiumGrips'
 import { addShelf, addShelfRow, penHeight } from '../../domain/shelves/edit'
 import { drawTextile, fillFace, type TextileResult } from '../../domain/textile/brush'
 import { faceOfPoint, freeTextileAt, updateFace } from '../../domain/textile/free'
@@ -40,6 +41,7 @@ import { isDoor, openingEdge } from './pointer/opening'
 import type { Pens } from './pointer/pens'
 import { counterDraw } from './pointer/counter'
 import { counterUnder, drawPodiumAt, podiumFine, podiumStart } from './pointer/podium'
+import { podiumGripAt } from './pointer/podiumGrip'
 import { placeHolds, placeKey } from './pointer/place'
 import { paintPlates, plateAt, platesAlong } from './pointer/plates'
 import type { Drag, P } from './pointer/types'
@@ -79,6 +81,10 @@ export interface NextOutcome {
   handle?: CounterHandleView
   /** Disker og podier with Shift: the edges of the preview a press here takes hold of, drawn thick (PR 2). */
   grip?: [Point, Point][]
+  /** What a release takes away, hatched (a grip of a counter moved in, K14). */
+  erased?: Box[]
+  /** The grip of the chosen counter under the pointer, or being dragged (K14). */
+  hotGrip?: Point
 }
 
 /** A counter's end as a handle (K7, K8), and which of its ways a drag can go: half a metre that way draws (no error). */
@@ -230,6 +236,14 @@ function targetOf(p: NextInput): NextTarget | null {
     return dragging.click ? podiumTarget(dragging.click, false) : podiumHover(p, dragging.at)
   }
 
+  // A grip of the chosen counter dragged (K14): what a release stores, with what goes away hatched
+  if (dragging?.kind === 'podiumGrip') {
+    const r = dragging.moved && hover ? podiumGripAt(p, dragging, hover) : null
+    const o = v.objects.find((x) => x.id === dragging.id)
+    const at = o && podiumGrips(o).find((g) => JSON.stringify(g.grip) === JSON.stringify(dragging.grip))?.at
+    return r ? gripTarget(r) : target(`grip:held`, () => line({ hint: GRIP_HINT, hotGrip: at }))
+  }
+
   // Floor
   const product = brush?.kind === 'floor' ? brush.product : null
   // The carpet brush held: the area once it is dragged out. Before that nothing, as the press may turn into a drag:
@@ -240,6 +254,11 @@ function targetOf(p: NextInput): NextTarget | null {
 
   // Hovering: what a click here stores
   if (!hover) return null
+  // On a grip of the chosen counter of Disker og podier, in Velg or with its pen: the grip, and what a drag does (K14)
+  if (tool === 'select' || pens.podiumTool) {
+    const g = hits.podiumGripAt(hover)
+    if (g) return target(`grip:${g.at}`, () => line({ hint: GRIP_HINT, hotGrip: g.at }))
+  }
   if (pens.wallTool && wallRal) {
     const m = plateAt(p.mods, hover)
     if (m) return target(`plate:${m.key}`, () => area({ edit: (x) => paintPlates(x, p.mods, [m.key], wallRal), hint: null }))
@@ -400,6 +419,21 @@ const LOCKED = 'Låst plass: dra i en kant for å flytte den, eller fra midten f
 
 /** By a side of a counter of Disker og podier (PR 3). */
 const ONTO_HINT = 'Inntil disken: klikk for å bygge på, dra for å tegne påbygget · kanten mot disken står fast'
+
+/** On a grip of the chosen counter (K14). */
+const GRIP_HINT = 'Dra for å flytte kanten · 500-steg, Shift 250'
+
+/** A grip of the chosen counter dragged (K14): the counter after with its outer size in the pill, what goes away
+ *  hatched; refused, the reason, hatched where it would stand when it has no room. */
+function gripTarget(r: PodiumGripDraw): NextTarget {
+  const box = (o: PlacedObject) => footprintBox(o, objectFootprint(place, o)!)
+  const erased = r.gone ? objectBoxes(place, r.gone) : undefined
+  const key = `grip:${'error' in r ? r.error : ''}:${JSON.stringify(r.o)}`
+  if ('error' in r) return target(key, () => line({ hint: r.error, ...(r.error === NO_ROOM && { invalid: { rect: box(r.o) } }) }))
+  const b = box(r.o)
+  const text = `${mm(b.x1 - b.x0)} × ${mm(b.y1 - b.y0)}`
+  return target(key, () => line({ edit: () => r.v, hint: null, erased, pill: { a: [b.x0, b.y1], b: [b.x1, b.y1], width: 'wall', text } }))
+}
 
 /** Disker og podier pointing (K10): on a counter, a click chooses it and nothing is shown; elsewhere the section a click
  *  stores, dimmed, or hatched where it has no room. Shift held (`over`: the pointer over the preview standing still at
