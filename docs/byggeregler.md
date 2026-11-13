@@ -458,6 +458,17 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   Minste disk er 250 × 250: lenger inn stopper grepet. Nektes med «En del ville stått løst», «Disken kan ikke gå over
   seg selv» eller «Ikke plass til disken her». Endegrepene til 6560 og diskene fra Disker (K7) er noe annet.
   *Bjørn 13.11.2026 · kode `src/domain/podiumGrips.ts` · test `src/domain/podiumGrips.test.ts`*
+- **K15 Fusjon og lenker.** En disk fra Disker og podier som dras med Velg innen 300 mm fra en annen, legger seg inntil
+  den, flate mot flate, med knutepunktene i dens raster og minst 250 felles langs siden. Ved slipp blir de én disk: den
+  som sto stille, beholder fargen og plassen, og den som ble dratt, legges på dens knutepunktlinje (20 mm inn, de to
+  flatene blir én skjøt). En skjøt er en rett linje inne i disken der seksjoner møtes; valgt disk viser et lenkeikon
+  midt på hver skjøt. Et klikk bryter lenken: den største delen blir stående, de andre blir egne disker med samme farge,
+  flyttet 20 mm ut slik at de står flate mot flate. Deler ikke skjøten disken alene: «Skjøten deler ikke disken alene:
+  bryt også skjøten ved siden av». Mot en disk som står inntil, vises en brutt lenke, og et klikk lenker dem. Fram til
+  høyde kommer (PR 6), blir bare disker med samme høyde der de møtes slått sammen; ellers blir de stående inntil
+  hverandre med «Ulik høyde: diskene blir stående inntil hverandre». To disker som står inntil hverandre uten lenke, er
+  to linjer i tilbudet og har plater mot hverandre.
+  *Bjørn 13.11.2026 · kode `src/domain/podiumLinks.ts` · test `src/domain/podiumLinks.test.ts`*
 
 ## P · Plukkliste og arbeidsordre
 

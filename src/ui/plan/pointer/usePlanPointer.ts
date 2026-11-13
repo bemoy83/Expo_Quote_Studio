@@ -26,10 +26,11 @@ import { startTextile, textile } from './textile'
 import { counter, startCounter } from './counter'
 import { podium, podiumFine, podiumShift, startPodium } from './podium'
 import { podiumGrip, startPodiumGrip } from './podiumGrip'
+import { podiumLink, startPodiumLink } from './podiumLink'
 import type { Drag, DragHandlers, P, PointerCtx } from './types'
 import { wall } from './wall'
 
-const DRAGS: { [K in Drag['kind']]: DragHandlers<K> } = { stroke, plates, floor, carpetFill, click, object, wall, beam, room, textile, counter, podium, podiumGrip, freeMove, erase, shelf, shelfMove, place: placeDrag }
+const DRAGS: { [K in Drag['kind']]: DragHandlers<K> } = { stroke, plates, floor, carpetFill, click, object, wall, beam, room, textile, counter, podium, podiumGrip, podiumLink, freeMove, erase, shelf, shelfMove, place: placeDrag }
 const handlersOf = (d: Drag) => DRAGS[d.kind] as DragHandlers<Drag['kind']>
 
 /** What the plan passes in: the context without the previews' setters and state, which the hook owns. */
@@ -138,7 +139,7 @@ export function usePlanPointer(input: PlanPointerInput) {
     if (pens.decorTool) return startPlace(c, 'decor', q)
     if (pens.textileTool) return startTextile(c, q)
     if (pens.counterTool) return startCounter(q)
-    if (pens.podiumTool) return startPodiumGrip(c, q) ?? startPodium(c, q, shift || podiumFine(brush), podiumFreeze)
+    if (pens.podiumTool) return startPodiumLink(c, q) ?? startPodiumGrip(c, q) ?? startPodium(c, q, shift || podiumFine(brush), podiumFreeze)
     if (pens.objectTool) return startPlace(c, 'object', q)
     if (pens.shelfTool) return startShelf(c, q)
     return startSelect(c, q)

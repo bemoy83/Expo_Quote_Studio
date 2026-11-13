@@ -1,4 +1,4 @@
-// Velg: what a press grabs. The first hit wins: a side of the selected room, a grip of the chosen counter (K14), a free-standing textile wall, furniture, a
+// Velg: what a press grabs. The first hit wins: a side of the selected room, a link or grip of the chosen counter (K15, K14), a free-standing textile wall, furniture, a
 // shelf, a drawn takdrager, a wall, a room's floor, a lane of engangsteppe, else empty floor. Each selects on release.
 import { canMoveWall } from '../../../domain/edit'
 import { inFrontOf, sideOf } from '../../../domain/faces'
@@ -11,6 +11,7 @@ import { textileAt } from '../../../domain/textile/inFrame'
 import { chosenShelves, type PlanSelection } from '../selection'
 import { shelfRow } from '../../../domain/shelves/model'
 import { startPodiumGrip } from './podiumGrip'
+import { startPodiumLink } from './podiumLink'
 import { startRoom } from './room'
 import type { Drag, P, PointerCtx } from './types'
 
@@ -23,8 +24,8 @@ export function startSelect(c: PointerCtx, q: P): Drag {
   // A side of the selected room comes first, so a side shared with a stand wall can still be dragged.
   const selEdge = selection.roomId ? hits.roomEdgeAt(q) : null
   if (selEdge && selEdge.room.id === selection.roomId) return startRoom(c, selEdge.room, selEdge.side, q, doorSelect)
-  // A grip of the chosen counter of Disker og podier (K14) comes before the counter itself, which would move
-  const grip = startPodiumGrip(c, q)
+  // A link or grip of the chosen counter of Disker og podier (K15, K14) comes before the counter itself, which would move
+  const grip = startPodiumLink(c, q) ?? startPodiumGrip(c, q)
   if (grip) return grip
   const ft = freeTextileAt(v, q, 0.15)
   if (ft) return { kind: 'freeMove', id: ft.id, p0: q, v0: v, moved: false, select: { freeTextileId: ft.id, freeFace: faceOfPoint(ft, q) } }

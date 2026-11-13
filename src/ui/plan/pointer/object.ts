@@ -1,5 +1,7 @@
-// Furniture: the object pen places one, Velg drags it (it settles on release) and selects it.
+// Furniture: the object pen places one, Velg drags it (it settles on release) and selects it. A counter of Disker og
+// podier dragged within 300 mm of another lies against it and becomes part of it on release (Byggeregel K15).
 import { addObject, moveObject } from '../../../domain/objects'
+import { fusePodiums, snapBeside } from '../../../domain/podiumLinks'
 import { place, productOf } from '../../env'
 import { dropObject } from '../../drag'
 import { placedBy } from '../../tools'
@@ -23,10 +25,23 @@ export const object: DragHandlers<'object'> = {
       d.moved = true
       c.onCheckpoint()
     }
-    c.onEdit((x) => moveObject(x, place, d.id, q.x - d.dx, q.y - d.dy), false)
+    c.onEdit((x) => {
+      const y = moveObject(x, place, d.id, q.x - d.dx, q.y - d.dy)
+      const s = snapBeside(y, place, y.objects.find((o) => o.id === d.id)!)
+      d.fuse = s?.onto
+      return s ? { ...y, objects: y.objects.map((o) => (o.id === d.id ? s.o : o)) } : y
+    }, false)
   },
   up(c, d) {
     if (!d.moved) return c.clickSelect(d.select)
+    if (d.fuse) {
+      const r = fusePodiums(c.v, place, d.fuse, d.id)
+      if (!('error' in r)) {
+        c.onEdit(() => r.v, false)
+        return c.onSelect({ objectId: r.id })
+      }
+      c.onToast(r.error)
+    }
     dropObject(c.v, d.id, d.start, c.onEdit, c.onToast)
     c.onSelect(d.select)
   },

@@ -222,6 +222,10 @@ står urørt; det nye deler bygger, omriss, 3D og kalkyle med dem.
   drag, med `gone`, det som fjernes; `joined` slår sammen seksjoner som får plass i én). Treff i `hits.podiumGripAt`,
   draget i `plan/pointer/podiumGrip.ts` (Velg i `select.ts` og pennen i `usePlanPointer.ts`), forhåndsvisningen
   `gripTarget` i `plan/next.ts` (`erased` skraveres), grepene tegnes av `layers/PodiumGrips.tsx`.
+- Fusjon og lenker (K15): `domain/podiumLinks.ts` (`snapBeside`: en dratt disk inntil en annen; `fusePodiums`: to blir
+  én; `podiumJoints`/`breakJoint`: skjøtene og å dele ved en; `podiumLinks`: ikonene for valgt disk; `inFrame`: en disks
+  seksjoner i en annens ramme). Draget i `plan/pointer/object.ts` (`fuse` på draget), klikket i
+  `plan/pointer/podiumLink.ts` (`hits.podiumLinkAt`, før grepene), ikonene i `layers/PodiumLinks.tsx`.
   Forhåndsvisningen fryses med Shift i `usePlanPointer.ts` (`podiumFreeze`), kanten man tar tak i tegnes tykk (`grip` i
   `PreviewLayer.tsx`). Pekeren: `plan/pointer/podium.ts`, forhåndsvisningen
   `podiumHover`/`podiumTarget` i `plan/next.ts`. Verktøyet: `Brush` `podium` og `PenTool` `podium` i `ui/tools.ts`,

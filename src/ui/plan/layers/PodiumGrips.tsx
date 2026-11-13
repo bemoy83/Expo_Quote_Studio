@@ -3,17 +3,22 @@
 // is pointer/podiumGrip.ts.
 import { useId } from 'react'
 import { podiumGrips } from '../../../domain/podiumGrips'
-import type { PlacedObject, Point } from '../../../domain/types'
+import { podiumLinks } from '../../../domain/podiumLinks'
+import type { PlacedObject, Point, Variant } from '../../../domain/types'
 import { INK, SURFACE } from '../../colors'
 import { sizePx, usePlanScale } from '../planScale'
+import { GRIP_HIT_PX } from '../pointer/hits'
 
-/** `hot`: the grip under the pointer or pressed, filled with ink. Not drawn while a grip is dragged (PreviewLayer). */
-export function PodiumGrips({ o, hot }: { o: PlacedObject; hot?: Point }) {
+/** `hot`: the grip under the pointer or pressed, filled with ink. Not drawn while a grip is dragged (PreviewLayer), nor
+ *  where a link stands (K15: the link comes first, hits.ts). */
+export function PodiumGrips({ v, o, hot }: { v: Variant; o: PlacedObject; hot?: Point }) {
   const sc = usePlanScale()
   const lift = `lift${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`
   const r = sizePx(sc, GRIP.r)
   const isHot = (p: Point) => !!hot && Math.hypot(p[0] - hot[0], p[1] - hot[1]) < 1e-6
-  const grips = podiumGrips(o)
+  const links = podiumLinks(v, o)
+  const reach = sizePx(sc, GRIP_HIT_PX)
+  const grips = podiumGrips(o).filter((g) => !links.some((l) => Math.hypot(l.at[0] - g.at[0], l.at[1] - g.at[1]) < reach))
   return (
     <g>
       <defs>
