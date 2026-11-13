@@ -3,7 +3,8 @@
 // textile production and the Foga structure, split by who pays.
 // Byggeregler B1, B2 (docs/byggeregler.md).
 import { resolveGroup } from '../catalog/groups';
-import { displayName, indexCatalog, type CatalogIndex } from '../catalog/lookup';
+import { displayName, indexCatalog, placeContext, type CatalogIndex } from '../catalog/lookup';
+import type { PlaceContext } from '../domain/objects';
 import type { Catalog } from '../catalog/types';
 import { pointKey } from '../domain/grid';
 import { hiddenPlates } from '../domain/print';
@@ -37,6 +38,8 @@ export interface CalcContext {
   idx: CatalogIndex;
   sys: Catalog['system'];
   sizes: BomSizes;
+  /** Footprints and which products are counters, for what stands against what (a counter's locked sides, K16). */
+  place: PlaceContext;
   /**
    * One quote line. `uses` is what the line is built from (all of it, not per unit), each at its OMS price: a product
    * priced as a sum gets its price from them. Otherwise the variant's own price (from the OMS); `own` overrides it.
@@ -83,6 +86,7 @@ const r1 = (n: number) => Math.round(n * 10) / 10;
 
 export function calcContext(v: Variant, rules: Rules, catalog: Catalog, standWalls: StandWallTerms, pricing: PricingData): CalcContext {
   const idx = indexCatalog(catalog);
+  const place = placeContext(rules, catalog);
   const sizes = bomSizes(rules);
   const items = pricing.items;
 
@@ -178,7 +182,7 @@ export function calcContext(v: Variant, rules: Rules, catalog: Catalog, standWal
   const wallFeet = [...freeWallFeet, ...inner.feet];
   const prod = production(v, rules, '');
   // Foga structure of what the exhibitor orders: posts, walled modules, headers and beam lengths are counted from it
-  const foga = structureOf({ mods: ours, posts: ourPoints.size + (organiserBeams ? innerPosts : beamPosts), beams: ourBeams, hooks: hookCount(organiserBeams ? hooks.filter((h) => h.inner) : hooks), lift: { posts: lift.posts.length, hooks: lift.hooks.length, walls: lift.walls.length }, production: prod, swaps, wallFeet: wallFeet.length, barePosts: wallFeet.filter((f) => ourPoints.has(pointKey(f.at))).length + inner.feet.length, curtain: (a) => idx.byArtnr.get(a)?.product.opening === 'curtain', shelves: shelfBrackets(v, rules), counters: drawnCounterParts(v) });
+  const foga = structureOf({ mods: ours, posts: ourPoints.size + (organiserBeams ? innerPosts : beamPosts), beams: ourBeams, hooks: hookCount(organiserBeams ? hooks.filter((h) => h.inner) : hooks), lift: { posts: lift.posts.length, hooks: lift.hooks.length, walls: lift.walls.length }, production: prod, swaps, wallFeet: wallFeet.length, barePosts: wallFeet.filter((f) => ourPoints.has(pointKey(f.at))).length + inner.feet.length, curtain: (a) => idx.byArtnr.get(a)?.product.opening === 'curtain', shelves: shelfBrackets(v, rules), counters: drawnCounterParts(v, place) });
   // Wall posts are shared between modules: each module (door and curtain included) carries an equal share of the
   // posts of its builder
   const share = (nPosts: number, nMods: number) => (nMods ? nPosts / nMods : 0);
@@ -198,6 +202,7 @@ export function calcContext(v: Variant, rules: Rules, catalog: Catalog, standWal
     standWalls,
     idx,
     sys: catalog.system,
+    place,
     sizes,
     line,
     built: { foga: true },

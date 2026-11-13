@@ -40,6 +40,10 @@ export interface PlanSelection {
   lane?: { i: number; j: number }
   /** Engangsteppe laid by Fyll (domain/floor/rollFill.ts). */
   fill?: string
+  /** A counter of Disker og podier: the side its drawer shows (podiumDrawer/podiumView.ts sideKeyOf) and, left to right
+   *  on it, the part chosen; none: the whole side. Only with `objectId`. */
+  podiumSide?: string
+  podiumPart?: number
 }
 
 /** How the drawer under the plan stands: closed, or open in one of its two heights (docs/pille-og-skuff.md). A plain
@@ -75,10 +79,12 @@ export function selectionKey(s: PlanSelection): string {
   return k ? `${k.kind}:${k.id}` : ''
 }
 
-/** Whether the selection has a drawer: a wall with its doors, frames and decals, a free-standing textile wall, or
- *  engangsteppe (only under the plan). Furniture, rooms and drawn takdragere have none. */
-export function hasDrawer(s: PlanSelection, view: 'plan' | '3d' = 'plan'): boolean {
+/** Whether the selection has a drawer: a wall with its doors, frames and decals, a free-standing textile wall, a counter
+ *  of Disker og podier (its sides, trinn 2), or engangsteppe (only under the plan). Other furniture, 6560, rooms and
+ *  drawn takdragere have none. */
+export function hasDrawer(s: PlanSelection, view: 'plan' | '3d' = 'plan', v?: Variant): boolean {
   const k = kindOf(s)?.kind
+  if (k === 'object') return !!v?.objects.find((o) => o.id === s.objectId)?.sections
   return k === 'fill' || k === 'lane' ? view === 'plan' : k === 'free' || (!!k && ON_WALL.has(k))
 }
 

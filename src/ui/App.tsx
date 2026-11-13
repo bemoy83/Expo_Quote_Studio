@@ -61,6 +61,10 @@ export default function App() {
   const [state, dispatch] = useReducer(reduce, undefined, () => initState(loadSketch() ?? exampleSketch()))
   const { sketch, current } = state
   const v = sketch.variants[current]
+  const vRef = useRef(v)
+  useEffect(() => {
+    vRef.current = v
+  }, [v])
   const terms = standWallTerms(sketch.project)
   const calcFor = useCallback((x: Variant) => calcOf(x, terms), [terms])
   /** Who pays the stand walls and their colour: a project setting, set from the stand chip. */
@@ -94,16 +98,16 @@ export default function App() {
   /** Select; the drawer stays open while the selection has one (another wall, a frame on it), else it closes. */
   const setSelection = useCallback((s: PlanSelection) => {
     setSelectionRaw(s)
-    if (!hasDrawer(s)) setDrawer('closed')
+    if (!hasDrawer(s, 'plan', vRef.current)) setDrawer('closed')
   }, [])
   /** Select and open the drawer in detail: Detaljer in the pill, a frame chosen in the panel, a click in 3D. */
   const openDrawer = useCallback((s: PlanSelection) => {
     setSelectionRaw(s)
-    setDrawer(hasDrawer(s) ? 'detail' : 'closed')
+    setDrawer(hasDrawer(s, 'plan', vRef.current) ? 'detail' : 'closed')
   }, [])
   /** 3D keeps the drawer on a plain click for now (no pill there). */
-  const select3d = useCallback((s: PlanSelection) => (hasDrawer(s, '3d') ? openDrawer(s) : setSelection(s)), [openDrawer, setSelection])
-  const drawerOpen = drawer !== 'closed' && hasDrawer(selection, view)
+  const select3d = useCallback((s: PlanSelection) => (hasDrawer(s, '3d', vRef.current) ? openDrawer(s) : setSelection(s)), [openDrawer, setSelection])
+  const drawerOpen = drawer !== 'closed' && hasDrawer(selection, view, v)
   const [toast, showToast] = useToast()
   const fileInput = useRef<HTMLInputElement>(null)
 
@@ -124,10 +128,6 @@ export default function App() {
     onErase: () => setView('plan'),
   })
   const { tool, setTool, brush, active, pick } = tools
-  const vRef = useRef(v)
-  useEffect(() => {
-    vRef.current = v
-  }, [v])
   // Every edit keeps textiles and foils valid: on a wall, off openings, inside their felt.
   // An edit that walls in an area with a door turns it into a room (frihåndsrom), as its own undo step.
   const onEdit = useCallback(

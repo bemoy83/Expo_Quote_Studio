@@ -2,7 +2,7 @@
 import * as THREE from 'three'
 import { FURNITURE_WHITE } from '../../../catalog/defaultCatalog'
 import { conflicts, counterRal } from '../../../domain/objects'
-import { counterBuildOf } from '../../../domain/counterShape'
+import { placedBuild } from '../../../domain/podiumLocks'
 import { idx, place } from '../../env'
 import { CHROME, CONFLICT, NO_COLOR, SELECT, type BuildContext, type Tag } from './context'
 import { buildCounter } from './counter'
@@ -24,7 +24,7 @@ export function buildObjects(c: BuildContext) {
     root.add(g)
     const counter = r.product.counter
     if (counter) {
-      buildCounter(c, g, counterBuildOf(o, counter), counterRal(o), tag, warn)
+      buildCounter(c, g, placedBuild(v, place, o, counter), counterRal(o), tag, warn)
       continue
     }
     const body = mat('objects', color, { roughness: 0.6, ...warn })

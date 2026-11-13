@@ -71,6 +71,7 @@ Kolonnen «Finnes» sier hvor funksjonen ligger i dag. **Ny** betyr at den må l
 | Dekal | «Dekal · 1,40 m» | Motiv | – | Veggskuff på dekalen | ✓ | `updateFoil`, `FoilPanel` |
 | Frittstående tekstil | «T1 · 2 000 × 2 500» | Motiv på siden som ble klikket (`freeFace`) | **Ny:** 90° om midten | `FreeTextileDrawer` | ✓ | `updateFace` (`domain/textile/free.ts`) |
 | Dør, forheng | «Dør med lås · 960» | Dør eller forheng, snu slag, snu hengsel (bare dør), farge på dørbladet | – | Veggskuff med døren | ✓ | `DoorPanel` (`plan/wallDrawer/panels.tsx`) med `flipSwing` og snu hengsel og farge i `domain/doors.ts` |
+| Disk fra Disker og podier | «Disk · 1 520 × 1 020 · H 1 040» | Platefarge for hele disken (K6) | 90° | `PodiumDrawer` (trinn 2): én side om gangen sett utenfra, «Sider og hyller» og «Farge og profilering», miniplan i detalj; et klikk på disken i planen velger siden nærmest | ✓ | `setPodiumLight` (`domain/podiumFaces.ts`), `plan/podiumDrawer/` |
 | Møbel | Produktnavn og mål | Fargevariant (de andre variantene av samme produkt i katalogen) | **Ny:** 90° | – | ✓ | **Ny:** bytt variant. `PlacedObject.rot` finnes |
 | Rom | «Bakrom · 2 × 2 m» | – | – | – | ✓ | `removeRoom` |
 | Innvendig takdrager | «Takdrager · 3 500» | «Fin»: dra på tvers i 50 mm-steg, på til drageren slippes (Shift + dra på desktop, T15) | – | – | ✓ | `removeInnerBeam` |

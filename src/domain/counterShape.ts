@@ -6,6 +6,7 @@
 import { layoutBuild, runBreaks, stockCounter, type CounterBuild, type CounterCell, type CounterLayout } from '../foga/counter';
 import { RECIPES } from '../foga/recipes';
 import type { Footprint } from '../catalog/types';
+import { openStretches } from './podiumFaces';
 import type { CounterPiece, CounterSection, PlacedObject, Point } from './types';
 
 const R = RECIPES.counter;
@@ -48,23 +49,24 @@ export function layoutOf(pieces: readonly CounterPiece[]): CounterLayout {
   return { cells, open };
 }
 
-/** Sections of Disker og podier as parts (K10, K11): each its own cell with its height, none open. */
-export function sectionsLayout(sections: readonly CounterSection[]): CounterLayout {
-  return { cells: sections.map((c) => ({ x: c.x, z: c.z, h: c.h })), open: [] };
+/** Sections of Disker og podier as parts (K10, K11): each its own cell with its height, open where a side is (K16) and
+ *  not `locked` against a wall or another counter (podiumLocks.ts, by partKey). */
+export function sectionsLayout(sections: readonly CounterSection[], locked: readonly string[] = []): CounterLayout {
+  return { cells: sections.map((c) => ({ x: c.x, z: c.z, h: c.h })), open: openStretches(sections, new Set(locked)) };
 }
 
 /** The parts and open stretches of a counter: its sections, its drawn pieces, or the counter in stock. */
-export const counterLayoutOf = (o: Pick<PlacedObject, 'pieces' | 'sections'>): CounterLayout => (o.sections ? sectionsLayout(o.sections) : layoutOf(piecesOf(o)));
+export const counterLayoutOf = (o: Pick<PlacedObject, 'pieces' | 'sections'>, locked: readonly string[] = []): CounterLayout => (o.sections ? sectionsLayout(o.sections, locked) : layoutOf(piecesOf(o)));
 
 const built = new Map<string, CounterBuild>();
-/** Every piece of a counter (K1–K8, K10–K12): the stock build, its drawn pieces or its sections (tight), built once per
- *  shape. */
-export function counterBuildOf(o: Pick<PlacedObject, 'pieces' | 'sections'>, size = { length: R.stock.length, depth: R.stock.depth }): CounterBuild {
+/** Every piece of a counter (K1–K8, K10–K12, K16): the stock build, its drawn pieces or its sections (tight), built once
+ *  per shape; `locked`: the parts of its sides kept plates against a wall or another counter (podiumLocks.ts). */
+export function counterBuildOf(o: Pick<PlacedObject, 'pieces' | 'sections'>, size = { length: R.stock.length, depth: R.stock.depth }, locked: readonly string[] = []): CounterBuild {
   if (!o.pieces && !o.sections) return stockCounter(size);
-  const key = o.sections ? `s${JSON.stringify(o.sections)}` : JSON.stringify(o.pieces);
+  const key = o.sections ? `s${JSON.stringify(o.sections)}|${locked.join(';')}` : JSON.stringify(o.pieces);
   let b = built.get(key);
   if (!b) {
-    b = o.sections ? layoutBuild(R, sectionsLayout(o.sections), 'tight') : layoutBuild(R, layoutOf(o.pieces!));
+    b = o.sections ? layoutBuild(R, sectionsLayout(o.sections, locked), 'tight') : layoutBuild(R, layoutOf(o.pieces!));
     built.set(key, b);
   }
   return b;

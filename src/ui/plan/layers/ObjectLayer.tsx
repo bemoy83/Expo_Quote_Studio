@@ -3,7 +3,7 @@
 // (CounterLines.tsx).
 import { useId } from 'react'
 import { mainGroupOf } from '../../../catalog/groups'
-import { counterBuildOf } from '../../../domain/counterShape'
+import { lockedParts, placedBuild } from '../../../domain/podiumLocks'
 import { counterRal, footprintBox, objectBoxes, objectFootprint } from '../../../domain/objects'
 import type { PlacedObject, Variant } from '../../../domain/types'
 import { BLOCK, INK } from '../../colors'
@@ -51,8 +51,8 @@ export function ObjectLayer(props: {
         if (counter)
           return (
             <g key={o.id}>
-              <CounterShape o={o} fill={col} stroke={stroke} bad={isBad} sel={sel} gone={g ? hatch : null} opacity={op} />
-              <CounterLines b={counterBuildOf(o, counter)} at={o} divide={linePx(sc, 0.75)} opacity={op} />
+              <CounterShape v={v} o={o} fill={col} stroke={stroke} bad={isBad} sel={sel} gone={g ? hatch : null} opacity={op} />
+              <CounterLines b={placedBuild(v, place, o, counter)} at={o} divide={linePx(sc, 0.75)} opacity={op} />
             </g>
           )
         const b = footprintBox(o, f)
@@ -80,7 +80,7 @@ export function ObjectLayer(props: {
  * the open ones (Bjørn 13.11.2026). Both strokes lie inside the outer edge, so the counter is drawn no
  * wider than it is: each is twice as wide and clipped to the counter.
  */
-function CounterShape({ o, fill, stroke, bad, sel, gone, opacity }: { o: PlacedObject; fill: string; stroke: string; bad: boolean; sel: boolean; gone: string | null; opacity?: number }) {
+function CounterShape({ v, o, fill, stroke, bad, sel, gone, opacity }: { v: Variant; o: PlacedObject; fill: string; stroke: string; bad: boolean; sel: boolean; gone: string | null; opacity?: number }) {
   const sc = usePlanScale()
   const clip = `counter${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`
   const boxes = objectBoxes(place, o)
@@ -96,7 +96,7 @@ function CounterShape({ o, fill, stroke, bad, sel, gone, opacity }: { o: PlacedO
       {each({ fill, fillOpacity: gone ? GONE_FILL : undefined })}
       {gone && each({ fill: gone })}
       <g clipPath={`url(#${clip})`}>
-        {counterOutline(place, o).map((s, i) => (
+        {counterOutline(place, o, lockedParts(v, place, o)).map((s, i) => (
           <line key={i} x1={s.a[0]} y1={s.a[1]} x2={s.b[0]} y2={s.b[1]} stroke={stroke} strokeWidth={2 * (s.open ? open : closed)} strokeOpacity={s.open ? COUNTER_EDGE.openOpacity : undefined} />
         ))}
       </g>

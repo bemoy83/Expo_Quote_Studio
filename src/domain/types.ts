@@ -127,11 +127,24 @@ export interface PlacedObject {
 }
 
 /** One section of Disker og podier (K10, K12): x and z from node to node, mm, and its height `h`, CC 250, 500, 750 or
- *  1000 (the underside of its top rail). Sides (open, doors), shelves and decor come in step 2 as fields of their own. */
+ *  1000 (the underside of its top rail). `sides`: what its outer sides are (K16), by the way each faces. */
 export interface CounterSection {
   x: [number, number];
   z: [number, number];
   h: number;
+  sides?: Partial<Record<SectionSideKey, SectionSide>>;
+}
+
+/** A side of a section by the way it faces: across x at x[0] (`x-`) or x[1] (`x+`), across z at z[0] or z[1]. */
+export type SectionSideKey = 'x-' | 'x+' | 'z-' | 'z+';
+
+/** What a light opening of a counter's side is (Byggeregel K16), when not a plate: open. */
+export type CounterLight = 'open';
+
+/** One side of a section (K16): each light opening from the floor up, a plate where missing or null. Only where the side
+ *  is outside the counter; a side that becomes inner loses it (domain/podiumFaces.ts). */
+export interface SectionSide {
+  lights?: (CounterLight | null)[];
 }
 
 /** One straight piece of a drawn counter: its centre line from `a` to `b` (whole metres from `a`, a half last, K7),

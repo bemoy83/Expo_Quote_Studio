@@ -4,6 +4,8 @@
 // the price stays the same in every colour (Bjørn 11.11.2026); the line says which colours, for the montør.
 import { counterBuildOf, layoutOf, piecesOf } from '../../domain/counterShape';
 import { innerCorners, podiumHeights, podiumName, podiumSize } from '../../domain/podiums';
+import { podiumHas } from '../../domain/podiumFaces';
+import { lockedParts } from '../../domain/podiumLocks';
 import { profileMetres, type CounterBuild } from '../../foga/counter';
 import { RECIPES } from '../../foga/recipes';
 import type { Use } from '../../pricing/model';
@@ -58,11 +60,12 @@ export function drawnCounterUses(o: PlacedObject): Use[] {
 }
 
 /** What a counter or podium of Disker og podier costs (K13): as a drawn counter (K9), the work per section, whole when
- *  its longest side is over 500, else half, and per inner corner of its outline (placeholders). */
-export function podiumUses(o: PlacedObject): Use[] {
+ *  its longest side is over 500, else half, and per inner corner of its outline (placeholders). `b`: its build as it
+ *  stands (podiumLocks.ts placedBuild: a side against a wall a plate, K16). */
+export function podiumUses(o: PlacedObject, b: CounterBuild = counterBuildOf(o)): Use[] {
   const sections = o.sections ?? [];
   const longest = sections.map((x) => Math.max(x.x[1] - x.x[0], x.z[1] - x.z[0]));
-  return builtUses(counterBuildOf(o), longest.filter((n) => n > HALF_PART).length, longest.filter((n) => n <= HALF_PART).length, innerCorners(sections));
+  return builtUses(b, longest.filter((n) => n > HALF_PART).length, longest.filter((n) => n <= HALF_PART).length, innerCorners(sections));
 }
 
 /** A counter built on site (K9, K13): its parts, and the work for its whole and half parts and its corners. */
@@ -91,10 +94,11 @@ function podiumLine(c: CalcContext, o: PlacedObject): CalcLine {
   const s = podiumSize(o);
   const top = (o.sections ?? []).reduce((a, x) => a + ((x.x[1] - x.x[0]) * (x.z[1] - x.z[0])) / 1e6, 0);
   // Two heights or more after a fusion: each, low to high (K12)
-  const meta = [`bygget på stedet ${s.length} × ${s.depth} × ${podiumHeights(o).join('/')} mm`, ...(o.ral ? [`RAL ${o.ral}`] : [])].join(' · ');
+  const locked = lockedParts(c.v, c.place, o);
+  const meta = [`bygget på stedet ${s.length} × ${s.depth} × ${podiumHeights(o).join('/')} mm`, ...podiumHas(o.sections ?? [], locked), ...(o.ral ? [`RAL ${o.ral}`] : [])].join(' · ');
   const name = podiumName(o.sections ?? []);
   // Each its own article, so each gets its own position number (calc/positions.ts)
-  return c.line(o.product, 1, { name, meta, strategy: 'sum', foga: true, quote: { key: podiumKey(o.id), name, lead: true } }, podiumUses(o), (hit?.variant.price ?? 0) * top);
+  return c.line(o.product, 1, { name, meta, strategy: 'sum', foga: true, quote: { key: podiumKey(o.id), name, lead: true } }, podiumUses(o, counterBuildOf(o, undefined, locked)), (hit?.variant.price ?? 0) * top);
 }
 
 export function looseLines(c: CalcContext): CalcLine[] {

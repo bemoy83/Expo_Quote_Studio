@@ -6,6 +6,7 @@
 import { RECIPES } from '../foga/recipes';
 import { toLocal, toPlan, turn } from './counterShape';
 import { nextId } from './ids';
+import { turnedSides } from './podiumFaces';
 import type { PlaceContext } from './objects';
 import { centred, hasRoom, NO_ROOM, ONTO, podiumSides, type PodiumSide } from './podiums';
 import { covered, edgeRuns, EPS, GRID, groups, meet, overlaps, shared, shifted, type EdgeRun, type Range } from './podiumSections';
@@ -17,12 +18,13 @@ const APART = 2 * FACE;
 const mm = (n: number) => Math.round(n * 1000) / 1000 + 0;
 const isPodium = (o: PlacedObject) => !!o.sections?.length;
 
-/** The sections of `o` in the frame of `c`, mm. */
+/** The sections of `o` in the frame of `c`, mm, their sides turned with them (K16). */
 export function inFrame(c: PlacedObject, o: PlacedObject): CounterSection[] {
   return (o.sections ?? []).map((s) => {
     const p = toLocal(c, toPlan(o, [s.x[0], s.z[0]]));
     const q = toLocal(c, toPlan(o, [s.x[1], s.z[1]]));
-    return { x: [mm(Math.min(p[0], q[0])), mm(Math.max(p[0], q[0]))], z: [mm(Math.min(p[1], q[1])), mm(Math.max(p[1], q[1]))], h: s.h };
+    const sides = turnedSides(s.sides, o.rot - c.rot);
+    return { x: [mm(Math.min(p[0], q[0])), mm(Math.max(p[0], q[0]))], z: [mm(Math.min(p[1], q[1])), mm(Math.max(p[1], q[1]))], h: s.h, ...(sides && { sides }) };
   });
 }
 

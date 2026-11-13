@@ -13,6 +13,7 @@ import { shelfRow } from '../../../domain/shelves/model'
 import { startPodiumGrip } from './podiumGrip'
 import { startPodiumLink } from './podiumLink'
 import { startRoom } from './room'
+import { nearestSide } from '../podiumDrawer/podiumView'
 import type { Drag, P, PointerCtx } from './types'
 
 export function startSelect(c: PointerCtx, q: P): Drag {
@@ -30,7 +31,9 @@ export function startSelect(c: PointerCtx, q: P): Drag {
   const ft = freeTextileAt(v, q, 0.15)
   if (ft) return { kind: 'freeMove', id: ft.id, p0: q, v0: v, moved: false, select: { freeTextileId: ft.id, freeFace: faceOfPoint(ft, q) } }
   const o = hits.objectAt(q)
-  if (o) return { kind: 'object', id: o.id, dx: q.x - o.x, dy: q.y - o.y, start: { x: o.x, y: o.y }, moved: false, select: { objectId: o.id } }
+  // A counter of Disker og podier: the side clicked is the one its drawer shows (trinn 2)
+  const side = o?.sections ? nearestSide(o, [q.x, q.y]) : undefined
+  if (o) return { kind: 'object', id: o.id, dx: q.x - o.x, dy: q.y - o.y, start: { x: o.x, y: o.y }, moved: false, select: { objectId: o.id, ...(side && { podiumSide: side }) } }
   // A shelf on a wall face: the wall drawer on that face, with the shelf and its row chosen. A drag moves them (Alt: copies)
   // Zones as for a textile wall (Bjørn 9.11.2026): the wall's own band picks the wall, the board in front of it the shelf
   const band = hits.moduleAt(q)

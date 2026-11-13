@@ -10,6 +10,7 @@ import { endAt, heldEnd } from './counterEnds';
 import { alongX, counterBuildOf, HALF, layoutOf, pieceLength as len, piecesFootprint, piecesOf, snap, tidy, toLocal, toPlan, unit, unturn } from './counterShape';
 import { openSides } from './grid';
 import { nextId } from './ids';
+import { placedBuild } from './podiumLocks';
 import { blockers, counterRal, footprintBox, hitsAny, objectBoxes, type PlaceContext } from './objects';
 import type { CounterPiece, PlacedObject, Point, Variant } from './types';
 
@@ -20,10 +21,11 @@ const SNAP = 0.1;
 
 /** The parts of every drawn counter, picked loose (K9, K13; Disker og podier too); none when nothing is drawn. The
  *  counter in stock is picked whole. */
-export function drawnCounterParts(v: Variant): CounterParts | undefined {
+export function drawnCounterParts(v: Variant, ctx?: PlaceContext): CounterParts | undefined {
   const drawn = v.objects.filter((o) => o.pieces || o.sections);
   if (!drawn.length) return undefined;
-  return drawn.map((o) => counterParts(counterBuildOf(o), counterRal(o))).reduce(addParts);
+  // With the catalog, a side of Disker og podier against a wall or another counter is a plate (K16)
+  return drawn.map((o) => counterParts(ctx ? placedBuild(v, ctx, o) : counterBuildOf(o), counterRal(o))).reduce(addParts);
 }
 
 /** The counter with its pieces centred on its own origin again, (x, y) moved to match. A straight 1,0 m open at the
