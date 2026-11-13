@@ -2,6 +2,7 @@
 // colours are. The tool's own settings (floor type, tile size, drawing grid) sit here too, and the last
 // button («…») opens the panel on the tool's tab for the rest.
 import { HEIGHT as PODIUM_HEIGHT, HEIGHTS as PODIUM_HEIGHTS } from '../../domain/podiums'
+import { STOCK_COUNTERS } from '../../domain/podiumStock'
 import { Blinds, Box, DoorClosed, Ellipsis, PaintBucket, Paintbrush, Ruler, Upload } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { mainGroupOf } from '../../catalog/groups'
@@ -240,13 +241,23 @@ function quickContent(p: QuickPicksProps): ReactNode {
 
   if (tool === 'podium' && brush?.kind === 'podium') {
     // Disker og podier: the plates in the wall colours and the bucket, as on Disker (K6), then Høyde (K12)
-    const { product, ral, fine } = brush
+    const { ral, fine, stock } = brush
     const h = brush.h ?? PODIUM_HEIGHT
     return (
       <>
         {head}
+        {/* What a click places (K22): «Fri», a section 500 × 500, or a standard counter; a drag always draws free */}
+        <QBtn on={!stock} setting title="Fri · et klikk setter en seksjon 500 × 500, dra for å tegne" label="Fri" onClick={() => onPick({ ...brush, stock: undefined })}>
+          Fri
+        </QBtn>
+        {STOCK_COUNTERS.map((s) => (
+          <QBtn key={s.artnr} on={stock === s.artnr} setting title={`${idx.byArtnr.get(s.artnr)?.product.name ?? 'Disk'} ${s.artnr} · et klikk setter den, dra tegner fritt`} label={s.artnr} onClick={() => onPick({ ...brush, stock: s.artnr })}>
+            {s.artnr}
+          </QBtn>
+        ))}
+        <Sep />
         <Palette
-          swatches={ralSwatches(ral, (n) => `Disk ${n}`, (r) => onPick({ kind: 'podium', product, ral: r, fine }))}
+          swatches={ralSwatches(ral, (n) => `Disk ${n}`, (r) => onPick({ ...brush, ral: r }))}
           fill="Fyll alle disker og podier med denne fargen"
           onFill={p.onFillPodiums}
         />

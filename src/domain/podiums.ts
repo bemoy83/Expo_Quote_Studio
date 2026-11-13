@@ -9,7 +9,8 @@ import { RECIPES } from '../foga/recipes';
 import { counterBuildOf, snap, toLocal, toPlan } from './counterShape';
 import { prunedSides } from './podiumFaces';
 import { lowered } from './podiumShelves';
-import { snapShift } from './counters';
+import { frontRot, snapShift } from './counters';
+import { stockSections } from './podiumStock';
 import { nextId } from './ids';
 import { blockers, COUNTER_STOCK_RAL, footprintBox, hitsAny, objectBoxes, objectFootprint, type PlaceContext } from './objects';
 import { bounds, covered, edgeRuns, EPS, GRID, overlaps, withSections, type EdgeRun, type Range } from './podiumSections';
@@ -297,8 +298,9 @@ function addOnto(v: Variant, ctx: PlaceContext, c: PlacedObject, added: CounterS
 
 /** What the pen shows and a click at q stores: one section of START × START round q, kept inside the stand and moved in
  *  against a wall, counter or the stand edge within 10 cm (K10). Refused where it has no room. */
-export function podiumAt(v: Variant, ctx: PlaceContext, pen: { product: string; ral?: string; h?: number }, q: Point, fine = false): PodiumDraw {
-  const by = ontoAt(v, q, fine ? GRID : START);
+export function podiumAt(v: Variant, ctx: PlaceContext, pen: { product: string; ral?: string; h?: number; stock?: string }, q: Point, fine = false): PodiumDraw {
+  // A standard counter (K22) stands free; «Fri» builds on a counter it points by
+  const by = pen.stock ? null : ontoAt(v, q, fine ? GRID : START);
   if (by) {
     const { c, side, cell } = by;
     return addOnto(v, ctx, c, [cell], cellOf(c, cell), { id: c.id, side });
@@ -306,12 +308,15 @@ export function podiumAt(v: Variant, ctx: PlaceContext, pen: { product: string; 
   const id = nextId(v.objects.map((o) => o.id), 'i');
   const colour = pen.ral && pen.ral !== COUNTER_STOCK_RAL ? { ral: pen.ral } : {};
   const half = START / 2;
-  const o: PlacedObject = { id, product: pen.product, x: q[0], y: q[1], rot: 0, ...colour, sections: [{ x: [-half, half], z: [-half, half], h: pen.h ?? HEIGHT }] };
-  const w = (half + R.face) / 1000;
-  const clamp = (n: number, hi: number) => Math.min(Math.max(n, w), hi - w);
-  const kept = { ...o, x: clamp(o.x, v.stand.width), y: clamp(o.y, v.stand.depth) };
-  const f = objectFootprint(ctx, kept);
+  // A standard counter as it is in stock, its front toward the aisle as on Disker (K22); else one section
+  const sections = pen.stock ? stockSections(pen.stock) : [{ x: [-half, half] as [number, number], z: [-half, half] as [number, number], h: pen.h ?? HEIGHT }];
+  const o: PlacedObject = { id, product: pen.product, x: q[0], y: q[1], rot: pen.stock ? frontRot(v, q, true) : 0, ...colour, sections };
+  const f = objectFootprint(ctx, o);
   if (!f) return { error: 'Ukjent disk', o, cell: o };
+  // Kept inside the stand
+  const b = footprintBox(o, f);
+  const into = (lo: number, hi: number, size: number) => (lo < 0 ? -lo : hi > size ? size - hi : 0);
+  const kept = { ...o, x: o.x + into(b.x0, b.x1, v.stand.width), y: o.y + into(b.y0, b.y1, v.stand.depth) };
   const s = snapShift(v, footprintBox(kept, f), blockers(v, ctx, id));
   const at = { ...kept, x: snap(kept.x + s.x), y: snap(kept.y + s.y) };
   return placed(v, ctx, at, at);

@@ -50,7 +50,7 @@ function recentred(o: PlacedObject, pieces: CounterPiece[]): PlacedObject {
 
 /** Which way a counter drawn at `a` faces: toward the open side of the stand across it (the aisle, where the
  *  customers come), the nearer one when both are open; with neither open, away from the nearer edge. */
-function frontRot(v: Variant, a: Point, horizontal: boolean): number {
+export function frontRot(v: Variant, a: Point, horizontal: boolean): number {
   const open = openSides(v.stand);
   const [lo, hi, d, size] = horizontal ? (['back', 'front', a[1], v.stand.depth] as const) : (['left', 'right', a[0], v.stand.width] as const);
   const toHi = open.includes(hi) && !open.includes(lo) ? true : open.includes(lo) && !open.includes(hi) ? false : open.includes(hi) ? d >= size / 2 : d < size / 2;

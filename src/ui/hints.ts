@@ -61,9 +61,15 @@ export function hint(tool: Tool, brush: Brush | null, carpet = false): Hint {
         'Klikk for en bardisk på 1 m, eller dra for å tegne disk i halve meter med fronten mot gangen · trykk i den siste halvmeteren av en disk og dra mot en av knappene: lengre, kortere eller hjørne bakover mot personalet · fyll gir alle diskene på standen fargen · velg en disk for å bytte farge eller rotere den',
       )
     case 'podium':
+      // K22: a click places the standard counter chosen in the quick picks
+      if (brush?.kind === 'podium' && brush.stock)
+        return h(
+          `Klikk for bardisk ${brush.stock}, dra for å tegne disk eller podium`,
+          `Klikk for en bardisk ${brush.stock} med fronten mot gangen, eller dra for å tegne disk eller podium fritt · velg Fri over verktøyene for at et klikk skal sette en seksjon på 500 × 500 · fyll gir alle diskene og podiene fargen · velg en disk for å bytte farge eller rotere den`,
+        )
       return h(
         'Klikk for en seksjon, dra for å tegne disk eller podium',
-        'Klikk for en seksjon på 500 × 500, eller trykk og dra for å gjøre den større i 500-steg i hver retning · seksjonen du trykket i står fast · Shift (eller Fin) gir 250-steg: hold Shift for å låse forhåndsvisningen, og dra i en kant for å flytte den · alle sider er tette · fyll gir alle diskene og podiene fargen · velg en disk for å bytte farge eller rotere den',
+        'Klikk for en seksjon på 500 × 500 (eller velg en standarddisk som 6560 over verktøyene), eller trykk og dra for å gjøre den større i 500-steg i hver retning · seksjonen du trykket i står fast · Shift (eller Fin) gir 250-steg: hold Shift for å låse forhåndsvisningen, og dra i en kant for å flytte den · alle sider er tette · fyll gir alle diskene og podiene fargen · velg en disk for å bytte farge eller rotere den',
       )
     case 'object':
       return h(`Klikk i planen for å sette ut ${productOf(brush?.kind === 'object' ? brush.product : '')?.name.toLowerCase() ?? 'varen'}`)
