@@ -236,6 +236,16 @@ står urørt; det nye deler bygger, omriss, 3D og kalkyle med dem.
   `PreviewLayer.tsx`). Pekeren: `plan/pointer/podium.ts`, forhåndsvisningen
   `podiumHover`/`podiumTarget` i `plan/next.ts`. Verktøyet: `Brush` `podium` og `PenTool` `podium` i `ui/tools.ts`,
   docken, hurtigvalget (farger og Fyll, `paintPodiums`) og hintet
+- Sider (K16, trinn 2): valget per del står på seksjonen (`CounterSection.sides`, nøklet `x-`/`x+`/`z-`/`z+`, en liste
+  per lysåpning fra gulvet). `domain/podiumFaces.ts`: `podiumParts` (delene, knutepunkt til knutepunkt), `partsOn`,
+  `setLight`/`setPodiumLight`, `openStretches` (de åpne strekkene byggeren og omrisset leser via `sectionsLayout`),
+  `prunedSides` (i `centred`: en side som blir innvendig mister valget), `turnedSides` (`inFrame`), `keptSides` (grep:
+  en del som flyttes til en ny linje blir plate), `podiumHas` (tilbudslinjen). `joined` slår bare sammen like sider.
+  `domain/podiumLocks.ts`: `partLocks`/`lockedParts` (vegg eller annen disk nærmere enn 60 mm) og `placedBuild`, bygget
+  slik disken står, brukt av planen (`ObjectLayer`, `counterOutline`), 3D, kalkylen (`CalcContext.place`) og plukket.
+- Skuffen: `plan/podiumDrawer/` (`PodiumDrawer.tsx`, risset `PodiumElevation.tsx`, miniplanen `PodiumMap.tsx`, og
+  `podiumView.ts`: sidene rundt disken med navn, siden nærmest et klikk, siden sett utenfra). Valget i
+  `PlanSelection.podiumSide`/`podiumPart`; `hasDrawer` får varianten for å vite at et objekt har seksjoner.
 - Katalogen: `podium('6570', …)` i `catalog/defaultCatalog.ts` (`Product.podium`, varenummer midlertidig; `counter` er
   én seksjon, så plan, pille og 3D tegner den som en disk)
 - Kalkyle: `podiumLine`/`podiumUses` i `calc/lines/objects.ts` (som K9, navnet Disk eller Podium); toppene i alle mål i

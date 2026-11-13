@@ -1,11 +1,12 @@
-// The drawer for what is selected in Velg: a free-standing textile wall, engangsteppe (plan only), or a wall with its
-// doors, frames and decals. They open under the plan or the 3D view.
+// The drawer for what is selected in Velg: a free-standing textile wall, engangsteppe (plan only), a counter of Disker
+// og podier, or a wall with its doors, frames and decals. They open under the plan or the 3D view.
 import type { CalcResult } from '../../calc/calc'
 import type { Motif, Variant } from '../../domain/types'
 import { CarpetDrawer } from './CarpetDrawer'
 import { FreeTextileDrawer } from './FreeTextileDrawer'
 import { chosen, isOnWall, type PlanSelection } from './selection'
 import { WallDrawer } from './WallDrawer'
+import { PodiumDrawer } from './podiumDrawer/PodiumDrawer'
 
 interface Props {
   v: Variant
@@ -33,6 +34,7 @@ export function Drawers({ v, res, view, selection, onSelect, onEdit, onCheckpoin
       {(c?.kind === 'lane' || c?.kind === 'fill') && view === 'plan' && (
         <CarpetDrawer v={v} selection={selection} onSelect={onSelect} onEdit={(fn) => onEdit(fn)} onClose={onClose} />
       )}
+      {c?.kind === 'object' && c.object.sections && <PodiumDrawer key={c.object.id} v={v} o={c.object} selection={selection} onSelect={onSelect} onEdit={onEdit} onClose={onClose} />}
       {isOnWall(c) && (
         <WallDrawer
           v={v}

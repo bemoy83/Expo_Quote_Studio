@@ -84,6 +84,8 @@ export function objectPill(p: PillActions, c: Of<'object'>, remove: () => void):
         )}
       </>
     ),
+    // Disker og podier has a drawer: its sides, one at a time (trinn 2)
+    more: !!o.sections,
     remove,
   }
 }

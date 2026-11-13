@@ -12216,7 +12216,7 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
         "group": "disk.disker",
         "name": "Disk bunnskinne 92, 960 mm, med 600",
         "preassembled": true,
-        "qty": 10,
+        "qty": 9,
       },
       {
         "artnr": "",
@@ -12224,7 +12224,7 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
         "group": "disk.disker",
         "name": "Disk bunnskinne 92, 460 mm, med 600",
         "preassembled": true,
-        "qty": 12,
+        "qty": 11,
       },
       {
         "artnr": "",
@@ -12298,7 +12298,7 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
         "group": "disk.disker",
         "name": "Diskplate, Lakkert HDF-plate 3 mm",
         "preassembled": false,
-        "qty": 4,
+        "qty": 3,
         "ral": "7012",
       },
       {
@@ -12307,7 +12307,7 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
         "group": "disk.disker",
         "name": "Diskplate, Lakkert HDF-plate 3 mm",
         "preassembled": false,
-        "qty": 4,
+        "qty": 3,
         "ral": "7012",
       },
       {
@@ -12332,8 +12332,8 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
       "plates": {
         "3002|476×976": 8,
         "3002|976×976": 2,
-        "7012|476×976": 4,
-        "7012|976×976": 4,
+        "7012|476×976": 3,
+        "7012|976×976": 3,
         "9010|976×976": 4,
       },
       "posts": {
@@ -12342,8 +12342,8 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
         "94": 3,
       },
       "rails": {
-        "92|460": 12,
-        "92|960": 10,
+        "92|460": 11,
+        "92|960": 9,
         "93|460": 12,
         "93|960": 10,
         "94|460": 5,
@@ -12355,7 +12355,7 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
   },
   "groups": [
     {
-      "cost": 2400.61946,
+      "cost": 2361.44978,
       "id": "disk",
       "lines": [
         {
@@ -12419,15 +12419,15 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
         },
         {
           "artnr": "6570",
-          "cost": 946.77934,
-          "dg": 0.6834572584419927,
+          "cost": 907.6096600000001,
+          "dg": 0.6779241802696948,
           "foga": true,
           "group": "disk.disker",
-          "meta": "bygget på stedet 1520 × 1520 × 1040 mm · RAL 7012",
+          "meta": "bygget på stedet 1520 × 1520 × 1040 mm · 1 åpen side · RAL 7012",
           "name": "Disk",
           "payer": "utstiller",
           "placeholder": false,
-          "price": 2991,
+          "price": 2818,
           "qty": 1,
           "quote": {
             "key": "disk:i2",
@@ -12435,7 +12435,7 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
             "name": "Disk",
           },
           "strategy": "sum",
-          "sum": 2991,
+          "sum": 2818,
           "time": {
             "demontering": 20,
             "montering": 36,
@@ -12448,7 +12448,7 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
           "uses": [
             {
               "id": "disk-profil-92",
-              "qty": 5.68,
+              "qty": 4.26,
             },
             {
               "id": "disk-profil-93",
@@ -12464,11 +12464,11 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
             },
             {
               "id": "disk-kobling-600",
-              "qty": 36,
+              "qty": 32,
             },
             {
               "id": "disk-plate-m2",
-              "qty": 5.669,
+              "qty": 4.251,
             },
             {
               "id": "disk-plate-476x476",
@@ -12569,7 +12569,7 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
         },
       ],
       "name": "Disker og podier",
-      "sum": 7683,
+      "sum": 7510,
     },
   ],
   "hooks": [],
@@ -12605,9 +12605,9 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
     "wallSupports": 0,
   },
   "margin": {
-    "cost": 2916.785771848,
-    "db": 4766.214228152,
-    "dg": 0.6203584834247039,
+    "cost": 2877.616091848,
+    "db": 4632.383908152,
+    "dg": 0.6168287494210386,
     "order": [
       {
         "cost": 172.05543728266665,
@@ -12626,7 +12626,7 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
         "name": "Gange til og fra demontering",
       },
     ],
-    "sum": 7683,
+    "sum": 7510,
     "unknown": 0,
   },
   "organiser": {
@@ -12646,7 +12646,7 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
     "lm": 0,
     "pieces": [],
   },
-  "sum": 7683,
+  "sum": 7510,
   "wallSupports": [],
 }
 `;
@@ -12700,7 +12700,7 @@ exports[`13-disker-og-podier.json > variant A > picking list 1`] = `
     "nobb": false,
     "note": undefined,
     "preassembled": true,
-    "qty": "10 stk",
+    "qty": "9 stk",
     "title": "Disk bunnskinne 92, 960 mm, med 600",
   },
   {
@@ -12712,7 +12712,7 @@ exports[`13-disker-og-podier.json > variant A > picking list 1`] = `
     "nobb": false,
     "note": undefined,
     "preassembled": true,
-    "qty": "12 stk",
+    "qty": "11 stk",
     "title": "Disk bunnskinne 92, 460 mm, med 600",
   },
   {
@@ -12820,7 +12820,7 @@ exports[`13-disker-og-podier.json > variant A > picking list 1`] = `
     "nobb": false,
     "note": undefined,
     "preassembled": false,
-    "qty": "4 stk",
+    "qty": "3 stk",
     "title": "Diskplate, Lakkert HDF-plate 3 mm · Mørk grå",
   },
   {
@@ -12832,7 +12832,7 @@ exports[`13-disker-og-podier.json > variant A > picking list 1`] = `
     "nobb": false,
     "note": undefined,
     "preassembled": false,
-    "qty": "4 stk",
+    "qty": "3 stk",
     "title": "Diskplate, Lakkert HDF-plate 3 mm · Mørk grå",
   },
   {
@@ -12871,7 +12871,7 @@ exports[`13-disker-og-podier.json > variant A > production: textile and print ro
 exports[`13-disker-og-podier.json > variant A > quote lines 1`] = `
 [
   {
-    "cost": 2400.61946,
+    "cost": 2361.44978,
     "id": "disk",
     "lines": [
       {
@@ -12935,15 +12935,15 @@ exports[`13-disker-og-podier.json > variant A > quote lines 1`] = `
       },
       {
         "artnr": "6570",
-        "cost": 946.77934,
-        "dg": 0.6834572584419927,
+        "cost": 907.6096600000001,
+        "dg": 0.6779241802696948,
         "foga": true,
         "group": "disk.disker",
-        "meta": "bygget på stedet 1520 × 1520 × 1040 mm · RAL 7012",
+        "meta": "bygget på stedet 1520 × 1520 × 1040 mm · 1 åpen side · RAL 7012",
         "name": "Disk",
         "payer": "utstiller",
         "placeholder": false,
-        "price": 2991,
+        "price": 2818,
         "qty": 1,
         "quote": {
           "key": "disk:i2",
@@ -12951,7 +12951,7 @@ exports[`13-disker-og-podier.json > variant A > quote lines 1`] = `
           "name": "Disk",
         },
         "strategy": "sum",
-        "sum": 2991,
+        "sum": 2818,
         "time": {
           "demontering": 20,
           "montering": 36,
@@ -12964,7 +12964,7 @@ exports[`13-disker-og-podier.json > variant A > quote lines 1`] = `
         "uses": [
           {
             "id": "disk-profil-92",
-            "qty": 5.68,
+            "qty": 4.26,
           },
           {
             "id": "disk-profil-93",
@@ -12980,11 +12980,11 @@ exports[`13-disker-og-podier.json > variant A > quote lines 1`] = `
           },
           {
             "id": "disk-kobling-600",
-            "qty": 36,
+            "qty": 32,
           },
           {
             "id": "disk-plate-m2",
-            "qty": 5.669,
+            "qty": 4.251,
           },
           {
             "id": "disk-plate-476x476",
@@ -13085,7 +13085,7 @@ exports[`13-disker-og-podier.json > variant A > quote lines 1`] = `
       },
     ],
     "name": "Disker og podier",
-    "sum": 7683,
+    "sum": 7510,
   },
 ]
 `;

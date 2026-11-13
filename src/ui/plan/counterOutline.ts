@@ -22,14 +22,14 @@ const r6 = (n: number) => Math.round(n * 1e6) / 1e6
 /**
  * Every outer side of a counter: each box's edges cut where other boxes' edges cross them, the stretches with another box
  * just outside them dropped (where two pieces of an L meet), the same stretch from two boxes once, and stretches in line
- * with the same state joined again. Open where the counter's layout leaves it open (`layoutOf(...).open`).
+ * with the same state joined again. Open where the counter's layout leaves it open (`counterLayoutOf(o, locked).open`).
  */
-export function counterOutline(ctx: Pick<PlaceContext, 'footprint'>, o: PlacedObject): OutlineSide[] {
+export function counterOutline(ctx: Pick<PlaceContext, 'footprint'>, o: PlacedObject, locked: readonly string[] = []): OutlineSide[] {
   const boxes = objectBoxes(ctx, o)
   const xs = [...new Set(boxes.flatMap((b) => [b.x0, b.x1]))]
   const ys = [...new Set(boxes.flatMap((b) => [b.y0, b.y1]))]
   const inside = (p: Point) => boxes.some((b) => p[0] > b.x0 - EPS && p[0] < b.x1 + EPS && p[1] > b.y0 - EPS && p[1] < b.y1 + EPS)
-  const open = openAt(o)
+  const open = openAt(o, locked)
   const seen = new Set<string>()
   const sides: OutlineSide[] = []
   for (const b of boxes) {
@@ -58,10 +58,11 @@ export function counterOutline(ctx: Pick<PlaceContext, 'footprint'>, o: PlacedOb
 }
 
 /** Whether the outer side at plan point `m`, facing `out`, lies on an open stretch of the counter's layout: the
- *  stretch runs through the nodes, `face` in from the outer side (K7). Disker og podier has none (K11). */
-function openAt(o: PlacedObject) {
+ *  stretch runs through the nodes, `face` in from the outer side (K7). Disker og podier: its open sides not `locked`
+ *  against a wall or another counter (K16). */
+function openAt(o: PlacedObject, locked: readonly string[]) {
   const { face } = RECIPES.counter
-  const stretches = counterLayoutOf(o).open
+  const stretches = counterLayoutOf(o, locked).open
   return (m: Point, out: Point): boolean => {
     const n = unturn(out, o.rot)
     const l = toLocal(o, m)

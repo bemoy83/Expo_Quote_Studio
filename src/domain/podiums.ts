@@ -7,6 +7,7 @@
 // becomes part of the counter when stored (påbygg, PR 3). Pure, plan in m, sections in mm.
 import { RECIPES } from '../foga/recipes';
 import { counterBuildOf, snap, toLocal, toPlan } from './counterShape';
+import { prunedSides } from './podiumFaces';
 import { snapShift } from './counters';
 import { nextId } from './ids';
 import { blockers, COUNTER_STOCK_RAL, footprintBox, hitsAny, objectBoxes, objectFootprint, type PlaceContext } from './objects';
@@ -183,13 +184,14 @@ export function podiumName(sections: readonly CounterSection[]): 'Disk' | 'Podiu
   return 'Disk';
 }
 
-/** The counter with its sections centred on its own origin, (x, y) moved to match, turned as it is. */
+/** The counter with its sections centred on its own origin, (x, y) moved to match, turned as it is; sides that are no
+ *  longer outside lose their choice (K16). */
 export function centred(o: PlacedObject, sections: CounterSection[]): PlacedObject {
   const b = bounds(sections);
   const cx = (b.x[0] + b.x[1]) / 2;
   const cz = (b.z[0] + b.z[1]) / 2;
   const t = (n: number) => snap(n) + 0;
-  const moved = sections.map((s): CounterSection => ({ x: [t(s.x[0] - cx), t(s.x[1] - cx)], z: [t(s.z[0] - cz), t(s.z[1] - cz)], h: s.h }));
+  const moved = prunedSides(sections).map((s): CounterSection => ({ ...s, x: [t(s.x[0] - cx), t(s.x[1] - cx)], z: [t(s.z[0] - cz), t(s.z[1] - cz)] }));
   const [x, y] = toPlan(o, [cx, cz]);
   return { ...o, x: snap(x), y: snap(y), sections: moved };
 }

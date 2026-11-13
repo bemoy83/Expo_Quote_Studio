@@ -471,6 +471,16 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   ulik høyde slås sammen også; hver seksjon beholder sin høyde, og trinnet bygges etter K12. To disker som står inntil hverandre uten lenke, er
   to linjer i tilbudet og har plater mot hverandre.
   *Bjørn 13.11.2026 · kode `src/domain/podiumLinks.ts` · test `src/domain/podiumLinks.test.ts`*
+- **K16 Sider og lysåpninger.** Hver del av omrisset, mellom to knutepunkter, hører til seksjonen bak og er plate,
+  åpen eller (K17) skyvedør. Plate er standard (K11) og lagres ikke. Åpen: ingen plate og ingen bunnskinne (som baksiden
+  på 6560, K3 og K4); toppskinnen og stolpene står. Valget lagres på seksjonens side, så det følger delen: flytt og roter
+  endrer ingenting, et grep som strekker en seksjon strekker valget med, en ny del er plate, og en side som blir
+  innvendig (påbygg, fusjon) mister valget. To seksjoner slås bare sammen (K14) når sidene langs dem har samme valg. En
+  del med en vegg eller en annen disk nærmere enn 60 mm utenfor seg er alltid plate; valget beholdes og kommer tilbake
+  når disken flyttes ut. Trinnplaten (K12) er alltid plate. I planen er en åpen del en tynn, lys hårstrek (som 6560).
+  Valget gjøres i skuffen for disken, for hele siden eller én del. Lysåpninger over hverandre kommer med hyllene (K19);
+  til da er hver del én lysåpning. Tilbudet sier hvor mange sider som har en åpen del: «1 åpen side».
+  *Bjørn 13.11.2026 · kode `src/domain/podiumFaces.ts`, `src/domain/podiumLocks.ts` · test `src/domain/podiumFaces.test.ts`*
 
 ## P · Plukkliste og arbeidsordre
 

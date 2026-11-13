@@ -4,6 +4,7 @@
 // one is laid; in, the sections are shrunk and taken away, and what is left joined again where two fit in one. Pure,
 // sections in the counter's own frame, mm.
 import { RECIPES } from '../foga/recipes';
+import { keptSides, sideKey, withSide } from './podiumFaces';
 import { toLocal, toPlan } from './counterShape';
 import type { PlaceContext } from './objects';
 import { centred, hasRoom, NO_ROOM, podiumSides, runNodes, SECTION_MAX, type PodiumSide } from './podiums';
@@ -20,6 +21,8 @@ export type PodiumGrip = { kind: 'side'; side: PodiumSide } | { kind: 'corner'; 
 type Line = Omit<PodiumSide, 'a' | 'b'> & { a: number; b: number };
 
 const len = (r: Range) => r[1] - r[0];
+/** A section without the choices of its sides: a new one is plates (K16). */
+const bare = (s: CounterSection): CounterSection => withSide(withSide(withSide(withSide(s, 'x-', undefined), 'x+', undefined), 'z-', undefined), 'z+', undefined);
 
 /** Each grip of a counter and where it is drawn on the plan (m): on the outer face, a side's in its middle. */
 export function podiumGrips(o: PlacedObject): { grip: PodiumGrip; at: Point }[] {
@@ -71,7 +74,8 @@ function moveOut(sections: readonly CounterSection[], l: Line, d: number): Count
     const nodes = runNodes(0, rest).map((t) => from + l.out * t);
     for (let i = 1; i < nodes.length; i++) {
       const span: Range = l.out > 0 ? [nodes[i - 1], nodes[i]] : [nodes[i], nodes[i - 1]];
-      added.push(withAlong(withAxis(s, l.axis, span), l.axis, on));
+      // A new part is a plate (K16)
+      added.push(bare(withAlong(withAxis(s, l.axis, span), l.axis, on)));
     }
   }
   return [...out, ...added];
@@ -92,19 +96,21 @@ function moveIn(sections: readonly CounterSection[], l: Line, d: number): { sect
     }
     // Along: the part outside the line stays whole
     const inner: Range = [Math.max(run[0], l.a), Math.min(run[1], l.b)];
-    if (inner[0] - run[0] > EPS) keep.push(withAlong(s, l.axis, [run[0], inner[0]]));
-    if (run[1] - inner[1] > EPS) keep.push(withAlong(s, l.axis, [inner[1], run[1]]));
-    const mid = withAlong(s, l.axis, inner);
-    // Across: what lies outside the cut stays
-    if (cut[0] - r[0] > EPS) keep.push(withAxis(mid, l.axis, [r[0], cut[0]]));
-    if (r[1] - cut[1] > EPS) keep.push(withAxis(mid, l.axis, [cut[1], r[1]]));
+    // Along: the part outside the line stays whole; a side where it is cut off is new (K16)
+    if (inner[0] - run[0] > EPS) keep.push(keptSides(s, withAlong(s, l.axis, [run[0], inner[0]])));
+    if (run[1] - inner[1] > EPS) keep.push(keptSides(s, withAlong(s, l.axis, [inner[1], run[1]])));
+    const mid = keptSides(s, withAlong(s, l.axis, inner));
+    // Across: what lies outside the cut stays, its side on the grip's line the one the grip moved
+    const grip = sideKey(l.axis, l.out);
+    if (cut[0] - r[0] > EPS) keep.push(keptSides(mid, withAxis(mid, l.axis, [r[0], cut[0]]), grip));
+    if (r[1] - cut[1] > EPS) keep.push(keptSides(mid, withAxis(mid, l.axis, [cut[1], r[1]]), grip));
     gone.push(withAxis(mid, l.axis, [Math.max(r[0], cut[0]), Math.min(r[1], cut[1])]));
   }
   return { sections: keep, gone };
 }
 
-/** Two sections side by side with the same span the other way, the same height, and together no longer than
- *  SECTION_MAX, joined into one (K10: whole metres first); again until none are left. */
+/** Two sections side by side with the same span the other way, the same height, the same sides along them, and together
+ *  no longer than SECTION_MAX, joined into one (K10: whole metres first); again until none are left. */
 export function joined(sections: readonly CounterSection[]): CounterSection[] {
   const out = [...sections];
   for (let again = true; again; ) {
@@ -117,8 +123,12 @@ export function joined(sections: readonly CounterSection[]): CounterSection[] {
           const other = axis === 'x' ? 'z' : 'x';
           const same = Math.abs(p[other][0] - q[other][0]) < EPS && Math.abs(p[other][1] - q[other][1]) < EPS;
           if (!same || Math.abs(p[axis][1] - q[axis][0]) > EPS || q[axis][1] - p[axis][0] > SECTION_MAX + EPS) continue;
+          // The long sides run on as one part each, so they must be the same; the ends are p's and q's (K16)
+          const long = [sideKey(other, -1), sideKey(other, 1)] as const;
+          if (long.some((k) => JSON.stringify(p.sides?.[k] ?? null) !== JSON.stringify(q.sides?.[k] ?? null))) continue;
           out.splice(j, 1);
-          out[j < i ? i - 1 : i] = withAxis(p, axis, [p[axis][0], q[axis][1]]);
+          const end = sideKey(axis, 1);
+          out[j < i ? i - 1 : i] = withSide(withAxis(p, axis, [p[axis][0], q[axis][1]]), end, q.sides?.[end]);
           again = true;
           break;
         }
