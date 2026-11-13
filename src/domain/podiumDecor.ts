@@ -216,10 +216,16 @@ function kept(sections: readonly CounterSection[], p: PodiumPart, d: PodiumDecal
 
 /** What a counter's print and decals cost (K20, as on a wall): m² of print over its plates and doors, the decals' m²,
  *  the parts printed, and the prints stretched over more than one part (a print setup each). */
-export function podiumDecorAreas(sections: readonly CounterSection[], locked: ReadonlySet<string> = new Set()): { full: number; decal: number; parts: number; runs: number } {
+export function podiumDecorAreas(sections: readonly CounterSection[], locked: ReadonlySet<string> = new Set()): { full: number; decal: number; parts: number; runs: number; sizes: Map<string, number> } {
   const prints = podiumPrints(sections, locked, () => 1);
   const full = prints.reduce((a, w) => a + ((w.t1 - w.t0) * (w.y1 - w.y0)) / 1e6, 0);
   const decal = podiumDecals(sections, locked).reduce((a, d) => a + (d.decal.w * d.decal.h) / 1e6, 0);
   const parts = new Set(prints.map((w) => partKey(w.part)));
-  return { full, decal, parts: parts.size, runs: new Set(prints.filter((w) => w.runParts > 1).map((w) => w.run)).size };
+  // The foil is cut per plate or door it covers: how many of each size, B × H in mm (Byggeregel K20)
+  const sizes = new Map<string, number>();
+  for (const w of prints) {
+    const k = `${Math.round(w.t1 - w.t0)} × ${Math.round(w.y1 - w.y0)}`;
+    sizes.set(k, (sizes.get(k) ?? 0) + 1);
+  }
+  return { full, decal, parts: parts.size, runs: new Set(prints.filter((w) => w.runParts > 1).map((w) => w.run)).size, sizes };
 }

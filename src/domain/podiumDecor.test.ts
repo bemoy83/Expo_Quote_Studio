@@ -20,6 +20,8 @@ describe('print (K20)', () => {
     expect(ws).toHaveLength(1);
     expect([ws[0].t1 - ws[0].t0, ws[0].y1 - ws[0].y0]).toEqual([960, 960]);
     expect(podiumDecorAreas(sectionsOf(v), none).full).toBeCloseTo(0.9216);
+    // Cut per plate: the sizes go on its own article's line (8023)
+    expect([...podiumDecorAreas(sectionsOf(v), none).sizes]).toEqual([['960 × 960', 1]]);
   });
 
   it('parts in a row with the same motif show one motif stretched over them, left to right as seen from outside', () => {

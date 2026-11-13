@@ -80,6 +80,8 @@ export interface SystemParts {
   textileFill: Record<TextileFill, string>;
   foil: string;
   foilFull: string;
+  /** Print on a counter of Disker og podier per m², the sizes cut on the line (Byggeregel K20). */
+  foilCounter: string;
   /** Fitting one motif stretched over several plates and cutting the print file per plate, per motif. */
   printSetup: string;
   floorProtection: string;
