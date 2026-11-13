@@ -7,10 +7,18 @@ import { INK } from '../../colors'
 
 export function CounterLines({ b, at, divide, opacity }: { b: CounterBuild; at: { x: number; y: number; rot: number }; divide: number; opacity?: number }) {
   const mid = (r: readonly [number, number]) => (r[0] + r[1]) / 2000
-  // The rails inside the counter (no closed face), once: the top ones, drawn on through the nodes to the outer faces
+  // The rails inside the counter (no closed face), once each where they lie (6560 has one at the middle and one at the
+  // top; between two heights of Disker og podier, K12, it is under the low top), drawn on through the nodes to the
+  // outer faces
   const reach = RECIPES.counter.joint + RECIPES.counter.face
-  const top = Math.max(...b.profiles.map((p) => p.box.y[1]))
-  const inner = b.profiles.filter((p) => p.role === 'rail' && p.out[0] === 0 && p.out[1] === 0 && p.box.y[1] === top)
+  const seen = new Set<string>()
+  const inner = b.profiles.filter((p) => {
+    if (p.role !== 'rail' || p.out[0] !== 0 || p.out[1] !== 0) return false
+    const k = `${p.axis}:${p.box.x}:${p.box.z}`
+    if (seen.has(k)) return false
+    seen.add(k)
+    return true
+  })
   return (
     <g transform={`translate(${at.x} ${at.y}) rotate(${at.rot})`} opacity={opacity} pointerEvents="none">
       {inner.map((p, i) => {

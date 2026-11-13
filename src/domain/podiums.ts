@@ -10,21 +10,16 @@ import { counterBuildOf, snap, toLocal, toPlan } from './counterShape';
 import { snapShift } from './counters';
 import { nextId } from './ids';
 import { blockers, COUNTER_STOCK_RAL, footprintBox, hitsAny, objectBoxes, objectFootprint, type PlaceContext } from './objects';
+import { bounds, covered, edgeRuns, EPS, GRID, overlaps, type EdgeRun, type Range } from './podiumSections';
 import type { CounterSection, PlacedObject, Point, Variant } from './types';
 
 const R = RECIPES.counter;
-const EPS = 1e-6;
-type Range = readonly [number, number];
-
-/** The grid sections are drawn on, mm (K10). */
-export const GRID = 250;
+export { GRID };
 /** The largest section each way, mm c/c (K10). */
 export const SECTION_MAX = R.module.whole;
-/** The section the pen shows and a click stores, mm c/c. */
-export const START = 500;
-/** A drag grows the counter in steps of this, mm (twice the grid; 250 with Shift is PR 2). */
-export const DRAG_STEP = 2 * GRID;
-/** Heights a section can have, CC mm (K12); everything drawn is the highest until the quick picks get Høyde (PR 6). */
+/** The section the pen shows and a click stores, mm c/c; a drag grows the counter in steps of this (250 with Shift). */
+const START = 500;
+/** Heights a section can have, CC mm (K12): Høyde in the quick picks; the highest when none is picked. */
 export const HEIGHTS = [250, 500, 750, 1000] as const;
 export const HEIGHT = 1000;
 
@@ -163,17 +158,6 @@ export function rebaseDrag(d: PodiumDrag, q: Point, fine: boolean): PodiumDrag {
   return { ...d, fine, x: axis(span.x, u, d.x), z: axis(span.z, w, d.z) };
 }
 
-/** The box round some sections, node to node, mm. */
-function bounds(sections: readonly CounterSection[]) {
-  return {
-    x: [Math.min(...sections.map((s) => s.x[0])), Math.max(...sections.map((s) => s.x[1]))] as const,
-    z: [Math.min(...sections.map((s) => s.z[0])), Math.max(...sections.map((s) => s.z[1]))] as const,
-  };
-}
-
-/** Whether a point (mm) lies inside one of the sections. */
-const covered = (sections: readonly CounterSection[], x: number, z: number) => sections.some((s) => x > s.x[0] && x < s.x[1] && z > s.z[0] && z < s.z[1]);
-
 /** The inner corners of the outline (K13, time per corner): the nodes with three of their four quarters covered. */
 export function innerCorners(sections: readonly CounterSection[]): number {
   const nodes = new Map<string, Point>();
@@ -240,52 +224,13 @@ function placed(v: Variant, ctx: PlaceContext, o: PlacedObject, cell: PlacedObje
 
 /** A straight run of a counter's outline (PR 3), in its own frame, mm: across `axis` at the node line `at`, facing
  *  `out`, from `a` to `b` along. */
-export interface PodiumSide {
-  axis: 'x' | 'z';
-  out: -1 | 1;
-  at: number;
-  a: number;
-  b: number;
-}
+export type PodiumSide = EdgeRun & { out: -1 | 1 };
 
 /** The sides of a counter's outline: every edge of a section with no section outside it, joined where they run on. */
-export function podiumSides(sections: readonly CounterSection[]): PodiumSide[] {
-  const bits = new Map<string, { side: Omit<PodiumSide, 'a' | 'b'>; at: number[] }>();
-  for (const s of sections)
-    for (const axis of ['x', 'z'] as const) {
-      const along = axis === 'x' ? s.z : s.x;
-      for (const out of [-1, 1] as const) {
-        const at = out < 0 ? s[axis][0] : s[axis][1];
-        for (let t = along[0]; t < along[1] - EPS; t += GRID) {
-          const mid = t + GRID / 2;
-          const past = at + out;
-          if (axis === 'x' ? covered(sections, past, mid) : covered(sections, mid, past)) continue;
-          const key = `${axis}${out}:${at}`;
-          const run = bits.get(key) ?? { side: { axis, out, at }, at: [] };
-          run.at.push(t);
-          bits.set(key, run);
-        }
-      }
-    }
-  const sides: PodiumSide[] = [];
-  for (const { side, at } of bits.values()) {
-    at.sort((p, q) => p - q);
-    let a = at[0];
-    for (let i = 1; i <= at.length; i++)
-      if (i === at.length || at[i] - at[i - 1] > GRID + EPS) {
-        sides.push({ ...side, a, b: at[i - 1] + GRID });
-        a = at[i];
-      }
-  }
-  return sides;
-}
+export const podiumSides = (sections: readonly CounterSection[]): PodiumSide[] => edgeRuns(sections, [-1, 1], ([x, z]) => !covered(sections, x, z));
 
 /** How near a side (mm, from its outer face) the pen lies against it (PR 3). */
 export const ONTO = 300;
-
-/** Whether two sets of sections overlap anywhere. */
-const overlaps = (p: readonly CounterSection[], q: readonly CounterSection[]) =>
-  p.some((s) => q.some((t) => Math.min(s.x[1], t.x[1]) - Math.max(s.x[0], t.x[0]) > EPS && Math.min(s.z[1], t.z[1]) - Math.max(s.z[0], t.z[0]) > EPS));
 
 /** The section a counter's grid lines run through: nodes on whole grid units from here. */
 const originOf = (c: PlacedObject): Point => [c.sections![0].x[0], c.sections![0].z[0]];
@@ -349,7 +294,7 @@ function addOnto(v: Variant, ctx: PlaceContext, c: PlacedObject, added: CounterS
 
 /** What the pen shows and a click at q stores: one section of START × START round q, kept inside the stand and moved in
  *  against a wall, counter or the stand edge within 10 cm (K10). Refused where it has no room. */
-export function podiumAt(v: Variant, ctx: PlaceContext, pen: { product: string; ral?: string }, q: Point, fine = false): PodiumDraw {
+export function podiumAt(v: Variant, ctx: PlaceContext, pen: { product: string; ral?: string; h?: number }, q: Point, fine = false): PodiumDraw {
   const by = ontoAt(v, q, fine ? GRID : START);
   if (by) {
     const { c, side, cell } = by;
@@ -358,7 +303,7 @@ export function podiumAt(v: Variant, ctx: PlaceContext, pen: { product: string; 
   const id = nextId(v.objects.map((o) => o.id), 'i');
   const colour = pen.ral && pen.ral !== COUNTER_STOCK_RAL ? { ral: pen.ral } : {};
   const half = START / 2;
-  const o: PlacedObject = { id, product: pen.product, x: q[0], y: q[1], rot: 0, ...colour, sections: [{ x: [-half, half], z: [-half, half], h: HEIGHT }] };
+  const o: PlacedObject = { id, product: pen.product, x: q[0], y: q[1], rot: 0, ...colour, sections: [{ x: [-half, half], z: [-half, half], h: pen.h ?? HEIGHT }] };
   const w = (half + R.face) / 1000;
   const clamp = (n: number, hi: number) => Math.min(Math.max(n, w), hi - w);
   const kept = { ...o, x: clamp(o.x, v.stand.width), y: clamp(o.y, v.stand.depth) };
@@ -392,6 +337,9 @@ export function drawPodium(v: Variant, ctx: PlaceContext, d: PodiumDrag, q: Poin
   return addOnto(v, ctx, c, added, cell, d.onto);
 }
 
+
+/** The outer heights of a counter of Disker og podier, mm, low to high (K12: CC + 40). */
+export const podiumHeights = (o: Pick<PlacedObject, 'sections'>): number[] => [...new Set((o.sections ?? []).map((s) => s.h + R.railHeight))].sort((a, b) => a - b);
 
 /** Outer size of a counter of Disker og podier, mm: length × depth × height (K10, K12). */
 export function podiumSize(o: Pick<PlacedObject, 'sections'>): { length: number; depth: number; height: number } {

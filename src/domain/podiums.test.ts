@@ -57,6 +57,20 @@ describe('tight build (K11)', () => {
     expect(b.boards.map((x) => `${x.w}×${x.d}`).sort()).toEqual(['476×476', '976×476']);
   });
 
+  it('two heights (K12): the low part\'s 94 under its top, the high part\'s 93 facing it, the step closed by a plate', () => {
+    const b = build([sec(0, 1000, 0, 500, 1000), sec(1000, 1500, 0, 500, 500)]);
+    const at = (p: { box: { x: readonly [number, number] } }) => p.box.x[0] < 1000 && p.box.x[1] > 1000;
+    const inner = b.profiles.filter((p) => p.role === 'rail' && at(p));
+    expect(inner.map((p) => [p.code, p.box.y[0]]).sort()).toEqual([['93', 1000], ['94', 500]]);
+    // The step: CC 1000 − 500, less 24, as a plate (K10)
+    expect(b.plates.filter((p) => p.level === 'step').map((p) => `${p.w}×${p.h}`)).toEqual(['476×476']);
+    // The posts where the two meet reach the high top; the low end's only the low
+    expect(b.profiles.filter((p) => p.role === 'post' && at(p)).map((p) => p.len)).toEqual([1040, 1040]);
+    expect(b.profiles.filter((p) => p.role === 'post' && p.box.x[0] > 1400).map((p) => p.len)).toEqual([540, 540]);
+    // Each top in the notch of its own rails
+    expect(b.boards.map((x) => x.box.y[0])).toEqual([1030, 530]);
+  });
+
   it('an L of 500 × 500 with two legs of 1000 has a 94 in the inner corner', () => {
     const b = build([sec(0, 500, 0, 500), sec(500, 1500, 0, 500), sec(0, 500, 500, 1500)]);
     const inner = b.profiles.find((p) => p.role === 'post' && p.box.x[0] < 500 && p.box.x[1] > 500 && p.box.z[0] < 500 && p.box.z[1] > 500)!;

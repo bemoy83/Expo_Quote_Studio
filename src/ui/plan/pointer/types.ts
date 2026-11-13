@@ -9,6 +9,7 @@ import type { Run } from '../../../domain/innerBeams'
 import type { Motif, Point, Variant } from '../../../domain/types'
 import type { PodiumDraw, PodiumDrag } from '../../../domain/podiums'
 import type { PodiumGrip } from '../../../domain/podiumGrips'
+import type { PodiumLink } from '../../../domain/podiumLinks'
 import type { RoomDrag, WallDrag } from '../../drag'
 import type { Brush, Tool } from '../../tools'
 import type { TextileLine } from '../layers/Previews'
@@ -36,7 +37,8 @@ export type Drag =
   /** Fyll with rolled floor: an area from cell `from`; a click without a drag fills the stand. */
   | { kind: 'carpetFill'; from: { i: number; j: number }; moved: boolean }
   | { kind: 'click'; select: PlanSelection }
-  | { kind: 'object'; id: string; dx: number; dy: number; start: P; moved: boolean; select: PlanSelection }
+  /** `fuse`: a counter of Disker og podier dragged against another, the one it lies against (K15), or why not. */
+  | { kind: 'object'; id: string; dx: number; dy: number; start: P; moved: boolean; select: PlanSelection; fuse?: string }
   | ({ kind: 'wall'; moved: boolean; select: PlanSelection } & WallDrag)
   /** `fine`: Shift held or «Fin» on in the pill (`fineLock`), it moves across in 50 mm steps off the grid (Byggeregel T15). */
   | ({ kind: 'beam'; moved: boolean; select: PlanSelection; fine?: boolean; fineLock?: boolean } & WallDrag)
@@ -51,6 +53,8 @@ export type Drag =
   /** A grip of the chosen counter of Disker og podier pressed, in Velg or with its pen (podiumGrip.ts, K14): its side or
    *  corner follows the pointer from the press `p0` in 500 steps, 250 with `fine` (Shift, or «Fin» on the pen). */
   | { kind: 'podiumGrip'; id: string; grip: PodiumGrip; p0: P; moved: boolean; fine: boolean }
+  /** A link of the chosen counter pressed (podiumLink.ts, K15): a click breaks a joint or links a counter against it. */
+  | { kind: 'podiumLink'; id: string; link: PodiumLink; p0: P; moved: boolean }
   | { kind: 'freeMove'; id: string; p0: P; v0: Variant; moved: boolean; select: PlanSelection }
   /** Door, decal or furniture pressed: shown until release, stored on release over the same target (place.ts). */
   /** `module`: the door's module, pressed; `door`: a door (not a curtain), turned by where the pointer is dragged. */

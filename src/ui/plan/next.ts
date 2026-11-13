@@ -15,8 +15,9 @@ import { wallModules, type Module } from '../../domain/grid'
 import { drawInnerBeam, type Run } from '../../domain/innerBeams'
 import { counterBuildOf, piecesOf } from '../../domain/counterShape'
 import { addObject, footprintBox, objectBoxes, objectFootprint } from '../../domain/objects'
-import { NO_ROOM, podiumGrab, type PodiumDraw } from '../../domain/podiums'
+import { NO_ROOM, podiumGrab, podiumHeights, type PodiumDraw } from '../../domain/podiums'
 import { podiumGrips, type PodiumGripDraw } from '../../domain/podiumGrips'
+import { fusePodiums } from '../../domain/podiumLinks'
 import { addShelf, addShelfRow, penHeight } from '../../domain/shelves/edit'
 import { drawTextile, fillFace, type TextileResult } from '../../domain/textile/brush'
 import { faceOfPoint, freeTextileAt, updateFace } from '../../domain/textile/free'
@@ -83,7 +84,7 @@ export interface NextOutcome {
   grip?: [Point, Point][]
   /** What a release takes away, hatched (a grip of a counter moved in, K14). */
   erased?: Box[]
-  /** The grip of the chosen counter under the pointer, or being dragged (K14). */
+  /** The grip of the chosen counter under the pointer, or being dragged (K14); or its link (K15). */
   hotGrip?: Point
 }
 
@@ -236,6 +237,12 @@ function targetOf(p: NextInput): NextTarget | null {
     return dragging.click ? podiumTarget(dragging.click, false) : podiumHover(p, dragging.at)
   }
 
+  // A counter of Disker og podier dragged against another (K15): they become one on release
+  if (dragging?.kind === 'object' && dragging.moved && dragging.fuse) {
+    const r = fusePodiums(v, place, dragging.fuse, dragging.id)
+    return target(`fuse:${dragging.fuse}:${'error' in r ? r.error : ''}`, () => line({ hint: 'error' in r ? r.error : 'Slipp for å slå diskene sammen' }))
+  }
+
   // A grip of the chosen counter dragged (K14): what a release stores, with what goes away hatched
   if (dragging?.kind === 'podiumGrip') {
     const r = dragging.moved && hover ? podiumGripAt(p, dragging, hover) : null
@@ -254,8 +261,10 @@ function targetOf(p: NextInput): NextTarget | null {
 
   // Hovering: what a click here stores
   if (!hover) return null
-  // On a grip of the chosen counter of Disker og podier, in Velg or with its pen: the grip, and what a drag does (K14)
+  // On a link or grip of the chosen counter of Disker og podier, in Velg or with its pen: what a click or drag does
   if (tool === 'select' || pens.podiumTool) {
+    const l = hits.podiumLinkAt(hover)
+    if (l) return target(`link:${l.at}`, () => line({ hint: l.kind === 'joint' ? 'Klikk for å dele disken her' : 'Klikk for å lenke diskene sammen', hotGrip: l.at }))
     const g = hits.podiumGripAt(hover)
     if (g) return target(`grip:${g.at}`, () => line({ hint: GRIP_HINT, hotGrip: g.at }))
   }
@@ -460,7 +469,7 @@ function podiumTarget(r: PodiumDraw, pill = true): NextTarget {
   const b = box(r.o)
   const key = `pod:${'error' in r ? 'x' : ''}:${JSON.stringify(r.o)}:${JSON.stringify(r.cell)}`
   if ('error' in r) return target(key, () => line({ hint: r.error, invalid: { rect: box(r.cell) } }))
-  const size = `${mm(b.x1 - b.x0)} × ${mm(b.y1 - b.y0)}`
+  const size = `${mm(b.x1 - b.x0)} × ${mm(b.y1 - b.y0)} · H ${podiumHeights(r.o).map((x) => mm(x / 1000)).join('/')}`
   const c = box(r.cell)
   const face = (2 * RECIPES.counter.face) / 1000
   const text = r.onto ? `+ ${mm(c.x1 - c.x0 - face)} × ${mm(c.y1 - c.y0 - face)} · ${size}` : size

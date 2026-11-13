@@ -3,7 +3,7 @@
 import { MoveHorizontal, MoveVertical, RotateCw } from 'lucide-react'
 import { roomName, roomSize } from '../../../domain/rooms'
 import { counterRal, objectFootprint, setCounterRal, setObjectProduct } from '../../../domain/objects'
-import { podiumName } from '../../../domain/podiums'
+import { podiumHeights, podiumName } from '../../../domain/podiums'
 import { updateFace } from '../../../domain/textile/free'
 import { idx, place } from '../../env'
 import { fmt, mm } from '../../format'
@@ -51,7 +51,7 @@ export function objectPill(p: PillActions, c: Of<'object'>, remove: () => void):
   const name = o.sections ? podiumName(o.sections) : (family.find((x) => x.artnr === o.product)?.name ?? f?.product.name ?? 'Møbel')
   return {
     name,
-    meta: fp ? `${fp.round ? `ø ${mm(fp.w)}` : `${mm(fp.w)} × ${mm(fp.d)}`}${o.rot ? ` · ${o.rot}°` : ''}` : undefined,
+    meta: fp ? `${fp.round ? `ø ${mm(fp.w)}` : `${mm(fp.w)} × ${mm(fp.d)}`}${o.sections ? ` · H ${podiumHeights(o).map((x) => mm(x / 1000)).join('/')}` : ''}${o.rot ? ` · ${o.rot}°` : ''}` : undefined,
     body: (
       <>
         {/* A counter's plates in the wall colours, as on a wall (Byggeregel K6, Bjørn 11.11.2026) */}

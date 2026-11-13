@@ -1,10 +1,10 @@
 // The end of a drawn counter under the Disker pen, as a handle (Byggeregler K7, K8): drawn by PreviewLayer from what
 // plan/next.ts finds at the pointer.
-import { useId } from 'react'
 import type { Point } from '../../../domain/types'
 import { INK, SURFACE } from '../../colors'
 import type { CounterHandleView } from '../next'
 import { sizePx, usePlanScale } from '../planScale'
+import { useLift } from './LiftFilter'
 
 /** The handle (Bjørn 12.11.2026): the end's last half metre toned, and a round button for each way a drag from it can
  *  go, a filled triangle pointing that way: longer just past the end face, shorter on the box's inner edge, a corner
@@ -12,7 +12,7 @@ import { sizePx, usePlanScale } from '../planScale'
  *  mean the aisle and the beams. */
 export function CounterHandle({ h }: { h: CounterHandleView }) {
   const sc = usePlanScale()
-  const lift = `lift${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`
+  const lift = useLift()
   const { end, ok } = h
   const b = end.box
   const c: Point = [(b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2]
@@ -29,9 +29,7 @@ export function CounterHandle({ h }: { h: CounterHandleView }) {
     <g>
       <defs>
         {/* The lift of a small control, in screen px like the rest of the plan's marks */}
-        <filter id={lift} x="-50%" y="-50%" width="200%" height="200%">
-          <feDropShadow dx={0} dy={sizePx(sc, HANDLE.shadow.dy)} stdDeviation={sizePx(sc, HANDLE.shadow.blur)} floodColor="#000" floodOpacity={HANDLE.shadow.opacity} />
-        </filter>
+        {lift.def}
       </defs>
       <rect x={b.x0} y={b.y0} width={b.x1 - b.x0} height={b.y1 - b.y0} fill={INK} fillOpacity={HANDLE.tone} />
       {buttons.map(({ d, at }) => {
@@ -40,7 +38,7 @@ export function CounterHandle({ h }: { h: CounterHandleView }) {
         const pt = (along: number, across: number) => `${m[0] + d[0] * r * along + side[0] * r * across},${m[1] + d[1] * r * along + side[1] * r * across}`
         return (
           <g key={`${d}`}>
-            <circle cx={m[0]} cy={m[1]} r={r} fill={SURFACE} filter={`url(#${lift})`} />
+            <circle cx={m[0]} cy={m[1]} r={r} fill={SURFACE} filter={lift.url} />
             <polygon points={`${pt(0.45, 0)} ${pt(-0.3, 0.42)} ${pt(-0.3, -0.42)}`} fill={INK} />
           </g>
         )
@@ -49,5 +47,5 @@ export function CounterHandle({ h }: { h: CounterHandleView }) {
   )
 }
 
-/** Sizes in screen px: button radius (22 px across), gap past the box, the end's tone, the button's lift. */
-const HANDLE = { r: 11, gap: 4, tone: 0.08, shadow: { dy: 1, blur: 1.6, opacity: 0.35 } } as const
+/** Sizes in screen px: button radius (22 px across), gap past the box, the end's tone. */
+const HANDLE = { r: 11, gap: 4, tone: 0.08 } as const

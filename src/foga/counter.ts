@@ -64,7 +64,7 @@ export interface CounterPlate {
   /** Outward from the counter, along x or z. */
   out: Dir;
   /** Split at the middle rail (K4), or one plate the whole height (K11). */
-  level: 'lower' | 'upper' | 'full';
+  level: 'lower' | 'upper' | 'full' | 'step';
   /** Order size, mm: along the side × high. */
   w: number;
   h: number;
@@ -182,8 +182,8 @@ export function layoutBuild(r: CounterRecipe, l: CounterLayout, kind: CounterBui
   const rh = r.railHeight;
   const { inset, depth: ch } = r.channel;
   const tight = kind === 'tight';
-  // K12: a tight part's top rail stands with its underside at the part's height; a rail or post shared by parts of two
-  // heights goes to the higher (the step between them is closed in PR 6). As 6560 all at `top`
+  // K12: a tight part's top rail stands with its underside at the part's height; a post shared by parts of two heights
+  // goes to the higher. As 6560 all at `top`
   const onEdge = (e: Edge, c: CounterCell) => {
     const alongX = Math.abs(e.a[1] - e.b[1]) < EPS;
     const [i, k] = alongX ? [0, 1] : [1, 0];
@@ -195,6 +195,19 @@ export function layoutBuild(r: CounterRecipe, l: CounterLayout, kind: CounterBui
   };
   const cellTop = (c: CounterCell) => (tight ? (c.h ?? r.top) : r.top);
   const edgeTop = (e: Edge) => Math.max(...l.cells.filter((c) => onEdge(e, c)).map(cellTop));
+  /** K12: an edge inside a tight counter between parts of two heights, a step: the low height, and the way down to the
+   *  low part (the step's face). */
+  const stepOf = (e: Edge): { lo: number; out: [number, number] } | null => {
+    if (!tight || e.out) return null;
+    const by = l.cells.filter((c) => onEdge(e, c));
+    if (by.length < 2) return null;
+    const low = by.reduce((m, c) => (cellTop(c) < cellTop(m) ? c : m));
+    if (edgeTop(e) - cellTop(low) < EPS) return null;
+    const alongX = Math.abs(e.a[1] - e.b[1]) < EPS;
+    const across = alongX ? low.z : low.x;
+    const dir = Math.sign((across[0] + across[1]) / 2 - (alongX ? e.a[1] : e.a[0]));
+    return { lo: cellTop(low), out: alongX ? [0, dir] : [dir, 0] };
+  };
   const nodeTop = (p: Pt) => Math.max(...l.cells.filter((c) => p[0] > c.x[0] - EPS && p[0] < c.x[1] + EPS && p[1] > c.z[0] - EPS && p[1] < c.z[1] + EPS).map(cellTop));
 
   // K2, K8: a post in each node, full height, reaching `joint` toward each rail it takes and `face` elsewhere
@@ -240,10 +253,17 @@ export function layoutBuild(r: CounterRecipe, l: CounterLayout, kind: CounterBui
   });
 
   // K3: rails on every side of every part at the middle and the top, on the floor on the closed sides only. A rail
-  // inside the counter carries a top and a shelf on both sides (K8). Tight (K11): the top only, a 94 between two parts
+  // inside the counter carries a top and a shelf on both sides (K8). Tight (K11): the top only, a 94 between two parts.
+  // A step (K12): the high part's top rail as on an outer side, facing the low part, and a 94 under the low top
   const railsAt = (e: Edge, y0: number) => (e.out ? rail(r.rail, 'rail', e, r.postSize, [y0, y0 + rh]) : rail(r.innerRail.code, 'rail', e, r.innerRail.size, [y0, y0 + rh]));
+  const tightRails = (e: Edge) => {
+    const s = stepOf(e);
+    if (!s) return [railsAt(e, edgeTop(e))];
+    const hi = edgeTop(e);
+    return [rail(r.rail, 'rail', { ...e, out: s.out }, r.postSize, [hi, hi + rh]), railsAt(e, s.lo)];
+  };
   const rails = [
-    ...(tight ? edges.map((e) => railsAt(e, edgeTop(e))) : [r.middle, r.top].flatMap((y0) => edges.map((e) => railsAt(e, y0)))),
+    ...(tight ? edges.flatMap(tightRails) : [r.middle, r.top].flatMap((y0) => edges.map((e) => railsAt(e, y0)))),
     ...edges.filter((e) => e.closed).map((e) => rail(r.bottomRail, 'bottomRail', e, r.bottomRailDepth, [0, rh])),
   ];
 
@@ -258,17 +278,19 @@ export function layoutBuild(r: CounterRecipe, l: CounterLayout, kind: CounterBui
       { level: 'upper', y: [r.middle + rh - ch, r.top + ch - r.platePlay] },
     ];
   };
-  const plates = edges
-    .filter((e) => e.closed)
-    .flatMap((e) =>
-      plateLevels(e).map(({ level, y }): CounterPlate => ({
-        out: e.out!,
-        level,
-        w: lenOf(e) + 2 * into,
-        h: y[1] - y[0],
-        box: { ...band(e, inset - t, inset + t, j - into), y },
-      })),
-    );
+  const plateOf = (e: Edge, level: CounterPlate['level'], y: Range): CounterPlate => ({
+    out: e.out!,
+    level,
+    w: lenOf(e) + 2 * into,
+    h: y[1] - y[0],
+    box: { ...band(e, inset - t, inset + t, j - into), y },
+  });
+  // K12: a step is closed with a plate on the high side, from the low top rail up to the high one
+  const steps = edges.flatMap((e) => {
+    const s = stepOf(e);
+    return s ? [plateOf({ ...e, out: s.out }, 'step', [s.lo + rh - ch, edgeTop(e) + ch - r.platePlay])] : [];
+  });
+  const plates = [...edges.filter((e) => e.closed).flatMap((e) => plateLevels(e).map(({ level, y }) => plateOf(e, level, y))), ...steps];
 
   // K5: a top and a shelf on each part, in the rails' notch, short of the rail body by the play. Tight (K11): the top
   const body = r.postSize - ch + r.boardPlay - f;

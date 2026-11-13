@@ -93,7 +93,7 @@ export function useTools({ v, res, motifs, onPick, onErase }: ToolsInput) {
     if (b.kind === 'motif') return { name: findMotif(motifs, b.motif)?.name ?? 'Motiv', meta: 'trykk eller folie' }
     const r = idx.byArtnr.get(b.product)
     if (b.kind === 'counter') return { name: r?.product.name ?? 'Disk', meta: `RAL ${b.ral}${r ? ` · ${kr(r.variant.price)} kr` : ''}` }
-    if (b.kind === 'podium') return { name: 'Disk eller podium', meta: `RAL ${b.ral} · bygget på stedet` }
+    if (b.kind === 'podium') return { name: 'Disk eller podium', meta: `RAL ${b.ral} · høyde ${b.h ?? 1000}` }
     const name = r ? (r.product.variants.length > 1 ? `${r.product.name.split(' ')[0]} ${r.variant.name.toLowerCase()}` : r.product.name) : b.product
     return { name, meta: r ? `${kr(r.variant.price)} kr${b.kind === 'floor' ? '/m²' : ''}` : undefined }
   }

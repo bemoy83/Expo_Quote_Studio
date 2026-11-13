@@ -1,6 +1,7 @@
 // Quick picks over the active tool in the dock: everything the tool draws, in fixed places so the hand learns where the
 // colours are. The tool's own settings (floor type, tile size, drawing grid) sit here too, and the last
 // button («…») opens the panel on the tool's tab for the rest.
+import { HEIGHT as PODIUM_HEIGHT, HEIGHTS as PODIUM_HEIGHTS } from '../../domain/podiums'
 import { Blinds, Box, DoorClosed, Ellipsis, PaintBucket, Paintbrush, Ruler, Upload } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { mainGroupOf } from '../../catalog/groups'
@@ -238,8 +239,9 @@ function quickContent(p: QuickPicksProps): ReactNode {
   }
 
   if (tool === 'podium' && brush?.kind === 'podium') {
-    // Disker og podier: the plates in the wall colours and the bucket, as on Disker (K6). Høyde joins them (PR 6)
+    // Disker og podier: the plates in the wall colours and the bucket, as on Disker (K6), then Høyde (K12)
     const { product, ral, fine } = brush
+    const h = brush.h ?? PODIUM_HEIGHT
     return (
       <>
         {head}
@@ -248,6 +250,13 @@ function quickContent(p: QuickPicksProps): ReactNode {
           fill="Fyll alle disker og podier med denne fargen"
           onFill={p.onFillPodiums}
         />
+        <Sep />
+        {/* Høyde, CC: what everything drawn gets; a påbygg takes its neighbour's (K12) */}
+        {PODIUM_HEIGHTS.map((x) => (
+          <QBtn key={x} on={x === h} setting title={`Høyde CC ${x} mm (utvendig ${x + 40})`} label={`Høyde ${x}`} onClick={() => onPick({ ...brush, h: x })}>
+            {x}
+          </QBtn>
+        ))}
         <Sep />
         {/* «Fin»: as Shift held, for touch (PR 2) */}
         <QBtn

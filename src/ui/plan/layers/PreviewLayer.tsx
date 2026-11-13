@@ -22,6 +22,7 @@ import { Offcut } from './FloorLayer'
 import { tileArea, tileAreaMeasures } from './measures'
 import { CounterHandle } from './CounterHandle'
 import { PodiumGrips } from './PodiumGrips'
+import { PodiumLinks } from './PodiumLinks'
 import { AimRect, EraseStroke, InvalidSeg, InvalidShape, MeasurePill } from './Previews'
 import { RoomHandles } from './RoomLayer'
 
@@ -76,7 +77,8 @@ export function PreviewLayer(p: Props) {
       {bad && 'circle' in bad && <InvalidShape kind="circle" {...bad.circle} />}
       {next?.handle && !mini && <CounterHandle h={next.handle} />}
       {!mini && next?.erased?.map((b, i) => <InvalidShape key={`gone${i}`} kind="rect" x={b.x0} y={b.y0} width={b.x1 - b.x0} height={b.y1 - b.y0} />)}
-      {grips && !(gripDrag && dragging.moved) && <PodiumGrips o={grips} hot={next?.hotGrip} />}
+      {grips && !(gripDrag && dragging.moved) && <PodiumGrips v={v} o={grips} hot={next?.hotGrip} />}
+      {grips && !(gripDrag && dragging.moved) && <PodiumLinks v={v} o={grips} hot={next?.hotGrip} />}
       {/* Disker og podier with Shift: the edge a press takes hold of, thick (PR 2) */}
       {!mini && next?.grip?.map(([a, b], i) => <line key={`grip${i}`} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke={INK} strokeWidth={linePx(sc, 4)} strokeLinecap="round" />)}
       {pill && <MeasurePill a={pill.a} b={pill.b} centre={centre} stroke={widthOf(sc, pill.width)} text={pill.text} />}

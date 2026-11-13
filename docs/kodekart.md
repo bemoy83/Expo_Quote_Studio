@@ -218,10 +218,20 @@ står urørt; det nye deler bygger, omriss, 3D og kalkyle med dem.
   Påbygg (PR 3): `podiumSides` (omrisset som rette sider), `ontoAt` (siden innen `ONTO` og plassen langs den), og
   `PodiumDraw.cell`/`onto`: det som legges til, i en ramme dreid som disken med knutepunkter på hele rasterenheter, og
   disken og siden det ligger mot. `PodiumAxis.fix` holder kanten mot disken fast i `axisSpan`.
+- Felles geometri for seksjonene: `domain/podiumSections.ts` (`GRID`, `bounds`, `covered`, `overlaps`, `meet`: knutelinjen
+  der to seksjoner møtes, `groups`: delene som henger sammen, `edgeRuns`: kanter som rette løp; brukt av pennen, grepene
+  og lenkene). Grep, lenker og disk-knappene får samme skygge fra `layers/LiftFilter.tsx` (`useLift`).
 - Grep på valgt disk (K14): `domain/podiumGrips.ts` (`podiumGrips`: hvor grepene står; `gripPodium`: disken etter et
   drag, med `gone`, det som fjernes; `joined` slår sammen seksjoner som får plass i én). Treff i `hits.podiumGripAt`,
   draget i `plan/pointer/podiumGrip.ts` (Velg i `select.ts` og pennen i `usePlanPointer.ts`), forhåndsvisningen
   `gripTarget` i `plan/next.ts` (`erased` skraveres), grepene tegnes av `layers/PodiumGrips.tsx`.
+- Fusjon og lenker (K15): `domain/podiumLinks.ts` (`snapBeside`: en dratt disk inntil en annen; `fusePodiums`: to blir
+  én; `podiumJoints`/`breakJoint`: skjøtene og å dele ved en; `podiumLinks`: ikonene for valgt disk; `inFrame`: en disks
+  seksjoner i en annens ramme). Draget i `plan/pointer/object.ts` (`fuse` på draget), klikket i
+  `plan/pointer/podiumLink.ts` (`hits.podiumLinkAt`, før grepene), ikonene i `layers/PodiumLinks.tsx`.
+- Høyde (K12): `h` på penselen (`Brush` podium), valgt i hurtigvalget (`QuickPicks.tsx`); trinnet mellom to høyder i
+  `layoutBuild` (`stepOf`: 93 i den høye høyden, 94 under den lave toppen, plate `level: 'step'`); `podiumHeights` for
+  pillen og linjen i tilbudet.
   Forhåndsvisningen fryses med Shift i `usePlanPointer.ts` (`podiumFreeze`), kanten man tar tak i tegnes tykk (`grip` i
   `PreviewLayer.tsx`). Pekeren: `plan/pointer/podium.ts`, forhåndsvisningen
   `podiumHover`/`podiumTarget` i `plan/next.ts`. Verktøyet: `Brush` `podium` og `PenTool` `podium` i `ui/tools.ts`,
