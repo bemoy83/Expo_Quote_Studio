@@ -88,9 +88,10 @@ function CatalogRow({ v, product, brush, tool, pick, onEdit, onToast, showGroup 
   const { tot, sum, first } = variantTotals(product, counts)
   const i = vi ?? first
   const cur = product.variants[i]
-  const pen = isObject && penOn(tool, brush, product.counter ? 'counter' : 'object', cur.artnr)
-  /** A counter's pen keeps the colour Disker last placed with (Byggeregel K6). */
-  const penBrush = (): Brush => (product.counter ? { kind: 'counter', product: cur.artnr, ral: brush?.kind === 'counter' ? brush.ral : COUNTER_STOCK_RAL } : { kind: 'object', product: cur.artnr })
+  const kind = product.podium ? 'podium' : product.counter ? 'counter' : 'object'
+  const pen = isObject && penOn(tool, brush, kind, cur.artnr)
+  /** A counter's pen keeps the colour Disker (or Disker og podier) last drew with (Byggeregel K6). */
+  const penBrush = (): Brush => (kind === 'object' ? { kind, product: cur.artnr } : { kind, product: cur.artnr, ral: brush?.kind === kind ? brush.ral : COUNTER_STOCK_RAL })
   const setCount = (n: number) => {
     if (!isObject) return onEdit((x) => setCounted(x, cur.artnr, n))
     const have = counts[i]
@@ -118,11 +119,12 @@ function CatalogRow({ v, product, brush, tool, pick, onEdit, onToast, showGroup 
           {isObject ? ' · tegnes' : product.unit === 't' ? ' · timer' : ' · plasseres senere'}
         </>
       }
-      result={tot ? `${product.variants.length > 1 ? `${tot} totalt · ` : ''}${kr(sum)} kr` : null}
+      // Disker og podier is drawn, never counted in: each is priced from what it is built of (Byggeregel K13)
+      result={tot && product.podium ? `${tot} tegnet` : tot ? `${product.variants.length > 1 ? `${tot} totalt · ` : ''}${kr(sum)} kr` : null}
       chips={<VariantChips chips={product.variants.map((x, k) => ({ name: x.name, color: x.color, count: counts[k] }))} selected={tot > 0 || vi !== null ? i : -1} onSelect={setVi} />}
       action={
         <>
-          <Counter value={counts[i]} onChange={setCount} label={`Legg til ${product.name.toLowerCase()}`} max={isObject ? 20 : 99} />
+          {!product.podium && <Counter value={counts[i]} onChange={setCount} label={`Legg til ${product.name.toLowerCase()}`} max={isObject ? 20 : 99} />}
           {isObject && <IconButton icon={Paintbrush} label={`Plasser ${product.name.toLowerCase()} i plan`} pressed={pen && tool === 'brush'} onClick={() => pick(penBrush())} />}
         </>
       }

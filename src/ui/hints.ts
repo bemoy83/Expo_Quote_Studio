@@ -60,6 +60,11 @@ export function hint(tool: Tool, brush: Brush | null, carpet = false): Hint {
         'Klikk for bardisk, dra for å tegne disk',
         'Klikk for en bardisk på 1 m, eller dra for å tegne disk i halve meter med fronten mot gangen · trykk i den siste halvmeteren av en disk og dra mot en av knappene: lengre, kortere eller hjørne bakover mot personalet · fyll gir alle diskene på standen fargen · velg en disk for å bytte farge eller rotere den',
       )
+    case 'podium':
+      return h(
+        'Klikk for en seksjon, dra for å tegne disk eller podium',
+        'Klikk for en seksjon på 500 × 500, eller trykk og dra for å gjøre den større i 500-steg i hver retning · seksjonen du trykket i står fast · alle sider er tette · fyll gir alle diskene og podiene fargen · velg en disk for å bytte farge eller rotere den',
+      )
     case 'object':
       return h(`Klikk i planen for å sette ut ${productOf(brush?.kind === 'object' ? brush.product : '')?.name.toLowerCase() ?? 'varen'}`)
     case 'shelf':

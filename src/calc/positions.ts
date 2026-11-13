@@ -8,6 +8,7 @@ import { hiddenPlates } from '../domain/print';
 import type { Variant } from '../domain/types';
 import { builtModules, isStandWall } from '../domain/walls';
 import { doorKey, openingKey } from './lines/doors';
+import { podiumKey } from './lines/objects';
 import type { CalcLine, CalcResult } from './types';
 
 /** A drawn thing with a number: what it is, its id in the variant, and its article. */
@@ -61,7 +62,8 @@ export function positions(v: Variant, lines: CalcLine[], catalog: Catalog): Posi
   for (const m of mods) if (stand.has(m.wallId) && !m.opening && !hidden.has(m.key)) drawn.push({ kind: 'swap', id: m.key, key: `${sys.plateSwap}-${m.plate}` });
   for (const f of v.foils) if (walls.has(f.wallId)) drawn.push({ kind: 'foil', id: f.id, key: f.full ? sys.foilFull : sys.foil });
   for (const m of mods) if (m.opening) drawn.push({ kind: 'door', id: m.opening.id, key: openingKey(idx, v, m.opening) });
-  for (const o of v.objects) drawn.push({ kind: 'object', id: o.id, key: o.product });
+  // A counter or podium of Disker og podier is its own article (lines/objects.ts)
+  for (const o of v.objects) drawn.push({ kind: 'object', id: o.id, key: o.sections ? `quote:${podiumKey(o.id)}` : o.product });
 
   // One number per article that has a line, first come first numbered
   const number = new Map<string, number>();

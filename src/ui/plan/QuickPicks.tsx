@@ -41,6 +41,8 @@ export interface QuickPicksProps {
   onFillWalls: () => void
   /** The counter pen's bucket: every counter in the pen's colour. */
   onFillCounters: () => void
+  /** The bucket of Disker og podier: every counter and podium it drew in the pen's colour. */
+  onFillPodiums: () => void
 }
 
 const MAX = 8
@@ -228,6 +230,23 @@ function quickContent(p: QuickPicksProps): ReactNode {
           swatches={ralSwatches(ral, (n) => `Disk ${n}`, (r) => onPick({ kind: 'counter', product, ral: r }))}
           fill="Fyll alle disker med denne fargen"
           onFill={p.onFillCounters}
+        />
+        <Sep />
+        {more}
+      </>
+    )
+  }
+
+  if (tool === 'podium' && brush?.kind === 'podium') {
+    // Disker og podier: the plates in the wall colours and the bucket, as on Disker (K6). Høyde joins them (PR 6)
+    const { product, ral } = brush
+    return (
+      <>
+        {head}
+        <Palette
+          swatches={ralSwatches(ral, (n) => `Disk ${n}`, (r) => onPick({ kind: 'podium', product, ral: r }))}
+          fill="Fyll alle disker og podier med denne fargen"
+          onFill={p.onFillPodiums}
         />
         <Sep />
         {more}

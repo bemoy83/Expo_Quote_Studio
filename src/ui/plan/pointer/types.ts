@@ -6,7 +6,7 @@ import type { FaceSide } from '../../../domain/faces'
 import type { Module } from '../../../domain/grid'
 import type { BuiltModule } from '../../../domain/walls'
 import type { Run } from '../../../domain/innerBeams'
-import type { Motif, Point, Variant } from '../../../domain/types'
+import type { Motif, PlacedObject, Point, Variant } from '../../../domain/types'
 import type { RoomDrag, WallDrag } from '../../drag'
 import type { Brush, Tool } from '../../tools'
 import type { TextileLine } from '../layers/Previews'
@@ -42,6 +42,9 @@ export type Drag =
   | { kind: 'textile'; p0: P }
   /** The counter pen pressed: a click places the counter in stock, a drag draws one (counter.ts). */
   | { kind: 'counter'; p0: P; moved: boolean }
+  /** Disker og podier pressed (podium.ts): `start`, the section the pen showed there, which a drag grows from; none on a
+   *  counter or where it has no room. */
+  | { kind: 'podium'; p0: P; start: PlacedObject | null; moved: boolean }
   | { kind: 'freeMove'; id: string; p0: P; v0: Variant; moved: boolean; select: PlanSelection }
   /** Door, decal or furniture pressed: shown until release, stored on release over the same target (place.ts). */
   /** `module`: the door's module, pressed; `door`: a door (not a curtain), turned by where the pointer is dragged. */

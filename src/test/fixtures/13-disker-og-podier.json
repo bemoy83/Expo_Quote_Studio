@@ -1,0 +1,176 @@
+{
+  "format": "standskisse",
+  "versjon": 3,
+  "prosjekt": {
+    "fields": [
+      {
+        "id": "kunde",
+        "name": "Kundenavn",
+        "value": "Disk og Podium AS"
+      },
+      {
+        "id": "prosjekt",
+        "name": "Prosjekt",
+        "value": ""
+      },
+      {
+        "id": "standnr",
+        "name": "Standnr.",
+        "value": ""
+      },
+      {
+        "id": "x1",
+        "name": "Kontakt",
+        "value": "Kari Nordmann"
+      }
+    ],
+    "delivery": {
+      "montering": "2026-12-01",
+      "apning": "2026-12-03",
+      "demontering": "2026-12-05"
+    }
+  },
+  "varianter": [
+    {
+      "name": "A",
+      "stand": {
+        "width": 8,
+        "depth": 5,
+        "type": "island"
+      },
+      "defaultPlate": "9010",
+      "walls": [],
+      "rooms": [],
+      "openings": [],
+      "floor": {
+        "tiles": [],
+        "protection": false
+      },
+      "objects": [
+        {
+          "id": "i1",
+          "product": "6570",
+          "x": 1.5,
+          "y": 1.5,
+          "rot": 0,
+          "sections": [
+            {
+              "x": [
+                -500,
+                500
+              ],
+              "z": [
+                -500,
+                500
+              ],
+              "h": 1000
+            }
+          ]
+        },
+        {
+          "id": "i2",
+          "product": "6570",
+          "x": 4,
+          "y": 1.5,
+          "rot": 0,
+          "ral": "7012",
+          "sections": [
+            {
+              "x": [
+                -750,
+                -250
+              ],
+              "z": [
+                -750,
+                -250
+              ],
+              "h": 1000
+            },
+            {
+              "x": [
+                -250,
+                750
+              ],
+              "z": [
+                -750,
+                -250
+              ],
+              "h": 1000
+            },
+            {
+              "x": [
+                -750,
+                -250
+              ],
+              "z": [
+                -250,
+                750
+              ],
+              "h": 1000
+            }
+          ]
+        },
+        {
+          "id": "i3",
+          "product": "6570",
+          "x": 6.5,
+          "y": 3.5,
+          "rot": 0,
+          "ral": "3002",
+          "sections": [
+            {
+              "x": [
+                -750,
+                -250
+              ],
+              "z": [
+                -750,
+                -250
+              ],
+              "h": 1000
+            },
+            {
+              "x": [
+                -250,
+                250
+              ],
+              "z": [
+                -750,
+                -250
+              ],
+              "h": 1000
+            },
+            {
+              "x": [
+                250,
+                750
+              ],
+              "z": [
+                -750,
+                -250
+              ],
+              "h": 1000
+            },
+            {
+              "x": [
+                -250,
+                250
+              ],
+              "z": [
+                -250,
+                750
+              ],
+              "h": 1000
+            }
+          ]
+        }
+      ],
+      "textiles": [],
+      "freeTextiles": [],
+      "foils": [],
+      "counted": [],
+      "loose": []
+    }
+  ],
+  "egneMotiver": []
+}

@@ -80,6 +80,9 @@ function builtUses(b: CounterBuild, whole: number, half: number, corners: number
   ].filter((u) => u.qty > 0);
 }
 
+/** The article of one counter or podium of Disker og podier: each is built to its own shape. */
+export const podiumKey = (id: string) => `disk:${id}`;
+
 /** A counter or podium of Disker og podier (Byggeregel K13): as K9, built on site and priced by the cost engine from its
  *  parts and the work, one line each, «Disk» when no deeper than 500, else «Podium»; without a complete cost the
  *  catalog price per m² of top. Its parts are picked loose under Disker. */
@@ -88,7 +91,9 @@ function podiumLine(c: CalcContext, o: PlacedObject): CalcLine {
   const s = podiumSize(o);
   const top = (o.sections ?? []).reduce((a, x) => a + ((x.x[1] - x.x[0]) * (x.z[1] - x.z[0])) / 1e6, 0);
   const meta = [`bygget på stedet ${s.length} × ${s.depth} × ${s.height} mm`, ...(o.ral ? [`RAL ${o.ral}`] : [])].join(' · ');
-  return c.line(o.product, 1, { name: podiumName(o.sections ?? []), meta, strategy: 'sum', foga: true }, podiumUses(o), (hit?.variant.price ?? 0) * top);
+  const name = podiumName(o.sections ?? []);
+  // Each its own article, so each gets its own position number (calc/positions.ts)
+  return c.line(o.product, 1, { name, meta, strategy: 'sum', foga: true, quote: { key: podiumKey(o.id), name, lead: true } }, podiumUses(o), (hit?.variant.price ?? 0) * top);
 }
 
 export function looseLines(c: CalcContext): CalcLine[] {

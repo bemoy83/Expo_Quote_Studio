@@ -14,12 +14,13 @@ import { tileAt, type Rect } from '../../domain/floor/tiles'
 import { wallModules, type Module } from '../../domain/grid'
 import { drawInnerBeam, type Run } from '../../domain/innerBeams'
 import { counterBuildOf, piecesOf } from '../../domain/counterShape'
-import { addObject, footprintBox } from '../../domain/objects'
+import { addObject, footprintBox, objectFootprint } from '../../domain/objects'
+import type { PodiumDraw } from '../../domain/podiums'
 import { addShelf, addShelfRow, penHeight } from '../../domain/shelves/edit'
 import { drawTextile, fillFace, type TextileResult } from '../../domain/textile/brush'
 import { faceOfPoint, freeTextileAt, updateFace } from '../../domain/textile/free'
 import { textileAt, updateTextile } from '../../domain/textile/inFrame'
-import type { Motif, Point, Variant } from '../../domain/types'
+import type { Motif, PlacedObject, Point, Variant } from '../../domain/types'
 import { builtModules, doorAllowed, type BuiltModule } from '../../domain/walls'
 import { RECIPES } from '../../foga/recipes'
 import { applyDrop, type DecorDrag } from '../dnd'
@@ -38,6 +39,7 @@ import type { PlanHits } from './pointer/hits'
 import { isDoor, openingEdge } from './pointer/opening'
 import type { Pens } from './pointer/pens'
 import { counterDraw } from './pointer/counter'
+import { counterUnder, podiumDraw, podiumStart } from './pointer/podium'
 import { placeHolds, placeKey } from './pointer/place'
 import { paintPlates, plateAt, platesAlong } from './pointer/plates'
 import type { Drag, P } from './pointer/types'
@@ -218,6 +220,12 @@ function targetOf(p: NextInput): NextTarget | null {
     return counterHover(p, dragging.p0)
   }
 
+  // Disker og podier dragged: the counter a release draws from the section pressed; held without moving, that section
+  if (dragging?.kind === 'podium') {
+    if (dragging.moved && dragging.start && hover) return podiumTarget(podiumDraw(p, dragging.start, hover))
+    return podiumHover(p, dragging.p0)
+  }
+
   // Floor
   const product = brush?.kind === 'floor' ? brush.product : null
   // The carpet brush held: the area once it is dragged out. Before that nothing, as the press may turn into a drag:
@@ -251,6 +259,7 @@ function targetOf(p: NextInput): NextTarget | null {
     return e ? doorTarget(v, e, brush.product, null, false) : null
   }
   if (pens.counterTool) return counterHover(p, hover)
+  if (pens.podiumTool) return podiumHover(p, hover)
   if (pens.objectTool && hits.onStand(hover)) return objectTarget(v, brush, hover)
   if (pens.shelfTool) {
     const h = hits.faceHit(hover)
@@ -380,6 +389,25 @@ function counterTarget(v: Variant, brush: Brush | null, p0: P, q: P): NextTarget
     const text = piecesOf(o).length > 1 ? `${mm(b.length / 1000)} × ${mm(b.depth / 1000)}` : mm(Math.max(b.length, b.depth) / 1000)
     return line({ edit: () => r.v, hint: null, pill: { a: r.a, b: r.b, width: 'wall', text } })
   })
+}
+
+/** Disker og podier pointing (K10): on a counter, a click chooses it and nothing is shown; elsewhere the section a click
+ *  stores, dimmed, or hatched where it has no room. */
+function podiumHover(p: NextInput, q: P): NextTarget | null {
+  if (counterUnder(p, q)) return target(`pod:on`, () => line({ hint: 'Klikk for å velge disken' }))
+  const r = podiumStart(p, q)
+  return r && podiumTarget(r, false)
+}
+
+/** What a click or drag of Disker og podier stores (K10), with its outer size in the pill while dragging; hatched with
+ *  the reason where it has no room. */
+function podiumTarget(r: PodiumDraw, pill = true): NextTarget {
+  const box = (o: PlacedObject) => footprintBox(o, objectFootprint(place, o)!)
+  const b = box(r.o)
+  const key = `pod:${'error' in r ? 'x' : ''}:${JSON.stringify(r.o)}`
+  if ('error' in r) return target(key, () => line({ hint: r.error, invalid: { rect: b } }))
+  const text = `${mm(b.x1 - b.x0)} × ${mm(b.y1 - b.y0)}`
+  return target(key, () => line({ edit: () => r.v, hint: null, ...(pill && { pill: { a: [b.x0, b.y1], b: [b.x1, b.y1], width: 'wall', text } }) }))
 }
 
 /**

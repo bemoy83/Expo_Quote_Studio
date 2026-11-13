@@ -34,3 +34,20 @@ describe('a counter outline in the plan (K7, K8)', () => {
     ])
   })
 })
+
+describe('Disker og podier in the plan (K10, K11)', () => {
+  const sec = (x0: number, x1: number, z0: number, z1: number) => ({ x: [x0, x1] as [number, number], z: [z0, z1] as [number, number], h: 1000 })
+
+  it('1500 × 500: one closed figure of four sides round both sections', () => {
+    const s = counterOutline(place, at({ product: '6570', sections: [sec(-750, 250, -250, 250), sec(250, 750, -250, 250)] }))
+    expect(s).toHaveLength(4)
+    expect(s.some((x) => x.open)).toBe(false)
+    expect(s.map(len).sort((a, b) => a - b)).toEqual([520, 520, 1520, 1520])
+  })
+
+  it('an L of three sections: six closed sides', () => {
+    const s = counterOutline(place, at({ product: '6570', sections: [sec(-750, -250, -750, -250), sec(-250, 750, -750, -250), sec(-750, -250, -250, 750)] }))
+    expect(s).toHaveLength(6)
+    expect(s.some((x) => x.open)).toBe(false)
+  })
+})

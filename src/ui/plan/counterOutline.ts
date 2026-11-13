@@ -1,7 +1,7 @@
 // A counter's outline in the plan (Byggeregler K7, K8): one figure round the whole counter, made from the boxes of its
 // pieces, each stretch closed (plates) or open (the back toward the staff and the inside of an L). Pure, in plan metres,
 // so ObjectLayer only draws it.
-import { piecesOf, layoutOf, toLocal, unturn } from '../../domain/counterShape'
+import { counterLayoutOf, toLocal, unturn } from '../../domain/counterShape'
 import { objectBoxes, type PlaceContext } from '../../domain/objects'
 import type { PlacedObject, Point } from '../../domain/types'
 import { RECIPES } from '../../foga/recipes'
@@ -58,10 +58,10 @@ export function counterOutline(ctx: Pick<PlaceContext, 'footprint'>, o: PlacedOb
 }
 
 /** Whether the outer side at plan point `m`, facing `out`, lies on an open stretch of the counter's layout: the
- *  stretch runs through the nodes, `face` in from the outer side (K7). */
+ *  stretch runs through the nodes, `face` in from the outer side (K7). Disker og podier has none (K11). */
 function openAt(o: PlacedObject) {
   const { face } = RECIPES.counter
-  const stretches = layoutOf(piecesOf(o)).open
+  const stretches = counterLayoutOf(o).open
   return (m: Point, out: Point): boolean => {
     const n = unturn(out, o.rot)
     const l = toLocal(o, m)
