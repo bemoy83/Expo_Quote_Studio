@@ -21,6 +21,7 @@ import type { PlanSelection } from '../selection'
 import { Offcut } from './FloorLayer'
 import { tileArea, tileAreaMeasures } from './measures'
 import { CounterHandle } from './CounterHandle'
+import { PodiumGrips } from './PodiumGrips'
 import { AimRect, EraseStroke, InvalidSeg, InvalidShape, MeasurePill } from './Previews'
 import { RoomHandles } from './RoomLayer'
 
@@ -59,6 +60,11 @@ export function PreviewLayer(p: Props) {
   useEffect(() => onHint?.(hint), [onHint, hint])
   useEffect(() => () => onHint?.(null), [onHint])
 
+  // The chosen counter of Disker og podier: its grips, in Velg and with its pen (K14)
+  const chosen = selection.objectId ? v.objects.find((o) => o.id === selection.objectId) : undefined
+  const grips = !mini && chosen?.sections && (tool === 'select' || brush?.kind === 'podium') ? chosen : null
+  const gripDrag = dragging?.kind === 'podiumGrip'
+
   const bad = !mini ? next?.invalid : undefined
   const pill = !mini ? next?.pill : undefined
   return (
@@ -69,6 +75,8 @@ export function PreviewLayer(p: Props) {
       {bad && 'rect' in bad && <InvalidShape kind="rect" x={bad.rect.x0} y={bad.rect.y0} width={bad.rect.x1 - bad.rect.x0} height={bad.rect.y1 - bad.rect.y0} />}
       {bad && 'circle' in bad && <InvalidShape kind="circle" {...bad.circle} />}
       {next?.handle && !mini && <CounterHandle h={next.handle} />}
+      {!mini && next?.erased?.map((b, i) => <InvalidShape key={`gone${i}`} kind="rect" x={b.x0} y={b.y0} width={b.x1 - b.x0} height={b.y1 - b.y0} />)}
+      {grips && !(gripDrag && dragging.moved) && <PodiumGrips o={grips} hot={next?.hotGrip} />}
       {/* Disker og podier with Shift: the edge a press takes hold of, thick (PR 2) */}
       {!mini && next?.grip?.map(([a, b], i) => <line key={`grip${i}`} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke={INK} strokeWidth={linePx(sc, 4)} strokeLinecap="round" />)}
       {pill && <MeasurePill a={pill.a} b={pill.b} centre={centre} stroke={widthOf(sc, pill.width)} text={pill.text} />}

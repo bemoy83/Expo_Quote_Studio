@@ -218,6 +218,10 @@ står urørt; det nye deler bygger, omriss, 3D og kalkyle med dem.
   Påbygg (PR 3): `podiumSides` (omrisset som rette sider), `ontoAt` (siden innen `ONTO` og plassen langs den), og
   `PodiumDraw.cell`/`onto`: det som legges til, i en ramme dreid som disken med knutepunkter på hele rasterenheter, og
   disken og siden det ligger mot. `PodiumAxis.fix` holder kanten mot disken fast i `axisSpan`.
+- Grep på valgt disk (K14): `domain/podiumGrips.ts` (`podiumGrips`: hvor grepene står; `gripPodium`: disken etter et
+  drag, med `gone`, det som fjernes; `joined` slår sammen seksjoner som får plass i én). Treff i `hits.podiumGripAt`,
+  draget i `plan/pointer/podiumGrip.ts` (Velg i `select.ts` og pennen i `usePlanPointer.ts`), forhåndsvisningen
+  `gripTarget` i `plan/next.ts` (`erased` skraveres), grepene tegnes av `layers/PodiumGrips.tsx`.
   Forhåndsvisningen fryses med Shift i `usePlanPointer.ts` (`podiumFreeze`), kanten man tar tak i tegnes tykk (`grip` i
   `PreviewLayer.tsx`). Pekeren: `plan/pointer/podium.ts`, forhåndsvisningen
   `podiumHover`/`podiumTarget` i `plan/next.ts`. Verktøyet: `Brush` `podium` og `PenTool` `podium` i `ui/tools.ts`,

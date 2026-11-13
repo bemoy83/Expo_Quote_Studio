@@ -200,7 +200,7 @@ export function podiumName(sections: readonly CounterSection[]): 'Disk' | 'Podiu
 }
 
 /** The counter with its sections centred on its own origin, (x, y) moved to match, turned as it is. */
-function centred(o: PlacedObject, sections: CounterSection[]): PlacedObject {
+export function centred(o: PlacedObject, sections: CounterSection[]): PlacedObject {
   const b = bounds(sections);
   const cx = (b.x[0] + b.x[1]) / 2;
   const cz = (b.z[0] + b.z[1]) / 2;
@@ -217,14 +217,23 @@ function centred(o: PlacedObject, sections: CounterSection[]): PlacedObject {
  */
 export type PodiumDraw = ({ v: Variant; id: string } | { error: string }) & { o: PlacedObject; cell: PlacedObject; onto?: PodiumOnto };
 
-/** Stored where it stands, or refused where it has no room (K10). `was`: the counter it replaces. */
-function placed(v: Variant, ctx: PlaceContext, o: PlacedObject, cell: PlacedObject, onto?: PodiumOnto): PodiumDraw {
-  const at = { o, cell, ...(onto && { onto }) };
+/** Whether a counter of Disker og podier has room where it stands (K10): inside the stand, clear of everything but
+ *  itself (an earlier version of it, by id). */
+export function hasRoom(v: Variant, ctx: PlaceContext, o: PlacedObject): boolean {
   const f = objectFootprint(ctx, o);
-  if (!f) return { error: 'Ukjent disk', ...at };
+  if (!f) return false;
   const b = footprintBox(o, f);
   const inside = b.x0 > -EPS && b.y0 > -EPS && b.x1 < v.stand.width + EPS && b.y1 < v.stand.depth + EPS;
-  if (!inside || hitsAny(objectBoxes(ctx, o), blockers(v, ctx, o.id))) return { error: 'Ikke plass til disken her', ...at };
+  return inside && !hitsAny(objectBoxes(ctx, o), blockers(v, ctx, o.id));
+}
+
+/** No room for the counter here (K10). */
+export const NO_ROOM = 'Ikke plass til disken her';
+
+/** Stored where it stands, or refused where it has no room (K10); with `onto`, in place of the counter it builds on. */
+function placed(v: Variant, ctx: PlaceContext, o: PlacedObject, cell: PlacedObject, onto?: PodiumOnto): PodiumDraw {
+  const at = { o, cell, ...(onto && { onto }) };
+  if (!hasRoom(v, ctx, o)) return { error: NO_ROOM, ...at };
   const objects = onto ? v.objects.map((x) => (x.id === o.id ? o : x)) : [...v.objects, o];
   return { v: { ...v, objects }, id: o.id, ...at };
 }

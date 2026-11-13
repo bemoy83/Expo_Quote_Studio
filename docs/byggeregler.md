@@ -449,6 +449,15 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   `counterWhole` per seksjon med lengste side over 500, `counterHalf` per seksjon ellers, `counterCorner` per innvendig
   hjørne i omrisset.
   *Bjørn 13.11.2026 · `ITEM.counterBoard`, `counterWhole`, `counterHalf`, `counterCorner` · kode `src/calc/lines/objects.ts`, `src/cost/itemDefs.ts`, `src/catalog/defaultCatalog.ts`, `src/domain/podiums.ts` · test `src/calc/podium.test.ts`, `src/domain/podiums.test.ts`*
+- **K14 Grep på valgt disk.** En valgt disk fra Disker og podier viser grep som i et CAD-verktøy, i Velg og med
+  pennen: ett midt på hver rette side av omrisset (hele siden, også over flere seksjoner) og ett i hvert hjørne av
+  boksen rundt (flytter de to sidene av boksen som møtes der). Et grep flytter kanten i 500-steg, 250 med Shift eller
+  Fin. Ut: seksjonen ved siden strekkes til 1000 før en ny legges til, hele meter først og resten sist; en seksjon som
+  bare delvis ligger langs siden, strekkes ikke, det legges en ny ved siden av. Inn: seksjoner krympes og fjernes, vist
+  med skravur før slipp; to seksjoner som da får plass i én (samme spenn, samme høyde, til sammen høyst 1000), blir én.
+  Minste disk er 250 × 250: lenger inn stopper grepet. Nektes med «En del ville stått løst», «Disken kan ikke gå over
+  seg selv» eller «Ikke plass til disken her». Endegrepene til 6560 og diskene fra Disker (K7) er noe annet.
+  *Bjørn 13.11.2026 · kode `src/domain/podiumGrips.ts` · test `src/domain/podiumGrips.test.ts`*
 
 ## P · Plukkliste og arbeidsordre
 
