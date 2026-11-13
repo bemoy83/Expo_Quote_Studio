@@ -1,10 +1,13 @@
-// A side of a counter of Disker og podier seen from outside (trinn 2): its posts, rails and parts, each a plate in the
-// counter's colour, open to the inside (Byggeregel K16) or a sliding door (K17), the chosen part toned; under it the parts' outer lengths and
-// the whole, to the left its height (CC and outer). A click on a part chooses it, a click on the chosen part goes back to
-// the whole side. On top of each section a grip «CC 750»: dragged up or down it sets the section's height on the
-// 250 grid (Byggeregel K18), shown live and set on release.
+// A side of a counter of Disker og podier seen from outside (trinn 2): its posts, rails and parts, each split by the
+// shelves of its section into light openings (Byggeregler K16, K19), each a plate in the counter's colour, open to the
+// inside or a sliding door (K17), what is chosen toned; under it the parts' outer lengths and the whole, to the left the
+// shelves and the height from the floor (CC) and the outer height. A click on a part chooses the light opening under
+// the pointer (the part when it has no shelves), a click on what is chosen goes back to the whole side. On top of each
+// section a grip «CC 750» sets its height (K18), on each shelf rail a grip «Hylle 500» moves the shelf (K19): both
+// snap to the 250 grid, show live and are set on release.
 import { useRef, useState, type PointerEvent } from 'react'
 import { HEIGHTS } from '../../../domain/podiums'
+import { shelfStop } from '../../../domain/podiumShelves'
 import { RECIPES } from '../../../foga/recipes'
 import { ALU, ALU_POST, BORDER_STRONG, INK, INK_MUTED, SUNKEN, SURFACE } from '../../colors'
 import { useElementSize } from '../../useElementSize'
@@ -12,13 +15,19 @@ import { Chain } from '../DimChain'
 import { DIM_NEAR as NEAR, DIM_TOTAL as TOTAL } from '../dims'
 import { planScale, sizePx } from '../planScale'
 import { frame } from '../wallDrawer/elevationMeasure'
-import type { ElevationPart } from './podiumView'
+import { lightBands, type ElevationPart } from './podiumView'
 
 const R = RECIPES.counter
 const RAIL = R.railHeight / 1000
 const POST = R.postSize / 1000
 /** How far a door leaf goes past the middle, m (K17). */
 const DOOR = R.door.overlap / 1000
+
+/** What is chosen on the side: a part (left to right) and in it a light opening (from the floor), or the whole part. */
+export interface ElevationPick {
+  part: number
+  light?: number
+}
 
 interface Props {
   parts: ElevationPart[]
@@ -27,31 +36,33 @@ interface Props {
   h: number
   title: string
   fill: string
-  /** The chosen part, left to right; none: the whole side. */
-  chosen?: number
-  onPick: (i: number | undefined) => void
+  /** None: the whole side. */
+  chosen?: ElevationPick
+  onPick: (p: ElevationPick | undefined) => void
   /** The section `section` (index in the counter) dragged to CC `h`. */
   onHeight?: (section: number, h: number) => void
+  /** The shelf at CC `from` in section `section` dragged to `to`. */
+  onShelf?: (section: number, from: number, to: number) => void
 }
 
-interface Drag {
-  section: number
-  /** CC at the start and now, mm; where the pointer started, m in the drawing. */
-  h0: number
-  h: number
-  y0: number
-}
+type Drag = { section: number; y0: number } & ({ kind: 'top'; h0: number; h: number } | { kind: 'shelf'; from: number; to: number; h: number; shelves: number[] })
 
 /** The nearest height on the grid (K18). */
 const snap = (mm: number) => HEIGHTS.reduce((a, b) => (Math.abs(b - mm) < Math.abs(a - mm) ? b : a))
 
-export function PodiumElevation({ parts: given, length, h: hTop, title, fill, chosen, onPick, onHeight }: Props) {
+export function PodiumElevation({ parts: given, length, h: hTop, title, fill, chosen, onPick, onHeight, onShelf }: Props) {
   const box = useRef<HTMLDivElement>(null)
   const svg = useRef<SVGSVGElement>(null)
   const size = useElementSize(box, true)
   const [drag, setDrag] = useState<Drag | null>(null)
-  // While a top is dragged its section is drawn at the new height, in a frame as high as the highest one (no rescaling)
-  const parts = drag ? given.map((p) => (p.part.section === drag.section ? { ...p, h: drag.h } : p)) : given
+  // While a top or a shelf is dragged its section is drawn as it would be, in a frame as high as the highest (no rescaling)
+  const parts = drag
+    ? given.map((p) => {
+        if (p.part.section !== drag.section) return p
+        if (drag.kind === 'top') return { ...p, h: drag.h }
+        return { ...p, shelves: p.shelves.map((y) => (y === drag.from ? drag.to : y)) }
+      })
+    : given
   const h = drag ? Math.max(...parts.map((p) => p.h)) : hTop
   const L = length / 1000
   const H = ((drag ? HEIGHTS[HEIGHTS.length - 1] : h) + R.railHeight) / 1000
@@ -59,92 +70,148 @@ export function PodiumElevation({ parts: given, length, h: hTop, title, fill, ch
   const sc = planScale(1 / view.u, {})
   const px = (n: number) => sizePx(sc, n)
   const x = (mm: number) => mm / 1000
-  // Floor at H, y down
-  const top = (p: ElevationPart) => H - (p.h + R.railHeight) / 1000
+  /** The drawing's y (floor at H, down) of CC `mm`: the underside of a rail standing there. */
+  const yAt = (mm: number) => H - mm / 1000
   const nodes = [...new Set(parts.flatMap((p) => [p.n0, p.n1]))].sort((a, b) => a - b)
   const post = (n: number) => {
     const c = x(n)
     const x0 = Math.min(Math.max(c - POST / 2, 0), L - POST)
     // As high as the highest part it holds
     const hi = Math.max(...parts.filter((p) => Math.abs(p.n0 - n) < 1e-6 || Math.abs(p.n1 - n) < 1e-6).map((p) => p.h))
-    return <rect key={`n${n}`} x={x0} y={H - (hi + R.railHeight) / 1000} width={POST} height={(hi + R.railHeight) / 1000} fill={ALU_POST} />
+    return <rect key={`n${n}`} x={x0} y={yAt(hi + R.railHeight)} width={POST} height={(hi + R.railHeight) / 1000} fill={ALU_POST} />
   }
   const chainTs = [0, ...nodes.slice(1, -1).map(x), L]
-  // One grip per section on this side, over the middle of its parts
-  const tops = [...new Set(parts.map((p) => p.part.section))].map((section) => {
-    const ps = parts.filter((p) => p.part.section === section)
-    return { section, h: ps[0].h, x: x((Math.min(...ps.map((p) => p.x0)) + Math.max(...ps.map((p) => p.x1))) / 2), y: top(ps[0]) }
-  })
+  // The shelves from the floor, then the top (K19): one chain to the left
+  const shelfYs = [...new Set(parts.flatMap((p) => p.shelves))].filter((y) => y < h).sort((a, b) => b - a)
   const svgY = (e: PointerEvent) => {
     const m = svg.current?.getScreenCTM()
     return m ? new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse()).y : 0
   }
-  const grip = (t: (typeof tops)[number]) => {
-    const w = px(44)
+  const sections = [...new Set(parts.map((p) => p.part.section))].map((section) => {
+    const ps = parts.filter((p) => p.part.section === section)
+    return { section, h: ps[0].h, shelves: ps[0].shelves, x: x((Math.min(...ps.map((p) => p.x0)) + Math.max(...ps.map((p) => p.x1))) / 2) }
+  })
+  const pick = (i: number, light: number | undefined) => onPick(chosen?.part === i && chosen.light === light ? undefined : { part: i, light })
+
+  /** A grip at (cx, cy) labelled `label`, dragged up and down. */
+  const grip = (key: string, cx: number, cy: number, label: string, live: boolean, start: (y0: number) => Drag, move: (d: Drag, mm: number) => Drag, done: (d: Drag) => void) => {
+    const w = px(label.length * 6 + 12)
     const gh = px(16)
     return (
       <g
-        key={`g${t.section}`}
+        key={key}
         style={{ cursor: 'ns-resize', touchAction: 'none' }}
-        aria-label={`Dra for høyden, CC ${t.h}`}
+        aria-label={`Dra: ${label}`}
         onClick={(e) => e.stopPropagation()}
         onPointerDown={(e) => {
           e.stopPropagation()
           ;(e.currentTarget as Element).setPointerCapture(e.pointerId)
-          setDrag({ section: t.section, h0: t.h, h: t.h, y0: svgY(e) })
+          setDrag(start(svgY(e)))
         }}
         onPointerMove={(e) => {
           if (!drag) return
-          const next = snap(drag.h0 + (drag.y0 - svgY(e)) * 1000)
-          if (next !== drag.h) setDrag({ ...drag, h: next })
+          const next = move(drag, (drag.y0 - svgY(e)) * 1000)
+          if (JSON.stringify(next) !== JSON.stringify(drag)) setDrag(next)
         }}
         onPointerUp={() => {
-          if (drag && drag.h !== drag.h0) onHeight?.(drag.section, drag.h)
+          if (drag) done(drag)
           setDrag(null)
         }}
         onPointerCancel={() => setDrag(null)}
       >
-        <rect x={t.x - w / 2} y={t.y - gh / 2} width={w} height={gh} rx={gh / 2} style={{ fill: drag?.section === t.section ? INK : SURFACE, filter: 'drop-shadow(0 1px 2px rgb(0 0 0 / 0.25))' }} />
-        <text x={t.x} y={t.y} textAnchor="middle" dominantBaseline="central" className="num" style={{ font: `500 ${px(9.5)}px var(--font-ui)`, fill: drag?.section === t.section ? SURFACE : INK }} pointerEvents="none">
-          {`CC ${t.h}`}
+        <rect x={cx - w / 2} y={cy - gh / 2} width={w} height={gh} rx={gh / 2} style={{ fill: live ? INK : SURFACE, filter: 'drop-shadow(0 1px 2px rgb(0 0 0 / 0.25))' }} />
+        <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central" className="num" style={{ font: `500 ${px(9.5)}px var(--font-ui)`, fill: live ? SURFACE : INK }} pointerEvents="none">
+          {label}
         </text>
       </g>
     )
   }
+  const topGrip = (t: (typeof sections)[number]) =>
+    grip(
+      `t${t.section}`,
+      t.x,
+      yAt(t.h + R.railHeight / 2),
+      `CC ${t.h}`,
+      drag?.kind === 'top' && drag.section === t.section,
+      (y0) => ({ kind: 'top', section: t.section, y0, h0: t.h, h: t.h }),
+      (d, mm) => (d.kind === 'top' ? { ...d, h: snap(d.h0 + mm) } : d),
+      (d) => {
+        if (d.kind === 'top' && d.h !== d.h0) onHeight?.(d.section, d.h)
+      },
+    )
+  // A shelf's grip keeps its key while it is dragged (by where it started), so the pointer stays captured
+  const shelfGrips = (t: (typeof sections)[number]) =>
+    t.shelves.map((y) => {
+      const live = drag?.kind === 'shelf' && drag.section === t.section && drag.to === y
+      const from = live ? drag.from : y
+      return grip(
+        `s${t.section}:${from}`,
+        t.x,
+        yAt(y + R.railHeight / 2),
+        `Hylle ${y}`,
+        live,
+        (y0) => ({ kind: 'shelf', section: t.section, y0, from: y, to: y, h: t.h, shelves: [...t.shelves] }),
+        (d, mm) => (d.kind === 'shelf' ? { ...d, to: shelfStop({ h: d.h, shelves: d.shelves }, d.from, d.from + mm) } : d),
+        (d) => {
+          if (d.kind === 'shelf' && d.to !== d.from) onShelf?.(d.section, d.from, d.to)
+        },
+      )
+    })
+
   return (
     <div className="wd-view">
       <div ref={box} className="wd-fit">
         <svg ref={svg} className="wd-svg" viewBox={view.viewBox} preserveAspectRatio="xMidYMid meet" role="img" aria-label={`${title}, ${length} mm`}>
           {parts.map((p, i) => {
-            const open = p.light === 'open' && !p.locked
-            const y = top(p)
             const w = x(p.x1 - p.x0)
+            const x0 = x(p.x0)
+            const kinds = p.locked ? p.lights.map(() => null) : p.lights
+            const bands = lightBands(p)
+            const lowOpen = kinds[0] === 'open'
             return (
-              <g key={p.key} style={{ cursor: 'pointer' }} onClick={() => onPick(chosen === i ? undefined : i)}>
-                {/* The plate, or the inside seen through an open part (no plates between the sections, K16) */}
-                <rect x={x(p.x0)} y={y} width={w} height={H - y} fill={open ? SUNKEN : fill} />
-                {open && <rect x={x(p.x0)} y={y + RAIL} width={w} height={H - y - RAIL} fill={INK} fillOpacity={0.06} />}
-                {/* Top rail, and the bottom rail where it is not open */}
-                <rect x={x(p.x0)} y={y} width={w} height={RAIL} fill={ALU} />
-                {!open && <rect x={x(p.x0)} y={H - RAIL} width={w} height={RAIL} fill={ALU} />}
-                {/* K17: two leaves in the channel, overlapping in the middle */}
-                {p.light === 'door' && !p.locked && (
-                  <g fill="none" stroke={INK_MUTED} strokeWidth={px(0.75)}>
-                    <rect x={x(p.x0) + px(3)} y={y + RAIL + px(3)} width={w / 2 + DOOR - px(3)} height={H - y - 2 * RAIL - px(6)} />
-                    <rect x={x(p.x0) + w / 2 - DOOR} y={y + RAIL + px(6)} width={w / 2 + DOOR - px(3)} height={H - y - 2 * RAIL - px(12)} />
-                  </g>
-                )}
-                {chosen === i && <rect x={x(p.x0)} y={y} width={w} height={H - y} fill={INK} fillOpacity={0.12} />}
-                {open && (
-                  <text x={x((p.x0 + p.x1) / 2)} y={(y + H) / 2} textAnchor="middle" dominantBaseline="middle" style={{ font: `500 ${px(10)}px var(--font-ui)`, fill: INK_MUTED }} pointerEvents="none">
-                    åpen
-                  </text>
-                )}
+              <g key={p.key}>
+                {bands.map(([c0, c1], li) => {
+                  const kind = kinds[li] ?? null
+                  // From the underside of the rail over it down to the top of the rail under it (the floor when open there)
+                  const y0 = yAt(c1)
+                  const y1 = li === 0 ? (lowOpen ? H : H - RAIL) : yAt(c0 + R.railHeight)
+                  const open = kind === 'open'
+                  return (
+                    <g key={li} style={{ cursor: 'pointer' }} onClick={() => pick(i, bands.length > 1 ? li : undefined)}>
+                      {/* The plate, or the inside seen through an open light opening (no plates between the sections, K16) */}
+                      <rect x={x0} y={y0} width={w} height={y1 - y0} fill={open ? SUNKEN : fill} />
+                      {open && <rect x={x0} y={y0} width={w} height={y1 - y0} fill={INK} fillOpacity={0.06} />}
+                      {/* K17: two leaves in the channel, overlapping in the middle */}
+                      {kind === 'door' && (
+                        <g fill="none" stroke={INK_MUTED} strokeWidth={px(0.75)}>
+                          <rect x={x0 + px(3)} y={y0 + px(3)} width={w / 2 + DOOR - px(3)} height={y1 - y0 - px(6)} />
+                          <rect x={x0 + w / 2 - DOOR} y={y0 + px(6)} width={w / 2 + DOOR - px(3)} height={y1 - y0 - px(12)} />
+                        </g>
+                      )}
+                      {chosen?.part === i && chosen.light === li && <rect x={x0} y={y0} width={w} height={y1 - y0} fill={INK} fillOpacity={0.12} />}
+                      {open && y1 - y0 > px(14) && (
+                        <text x={x0 + w / 2} y={(y0 + y1) / 2} textAnchor="middle" dominantBaseline="middle" style={{ font: `500 ${px(10)}px var(--font-ui)`, fill: INK_MUTED }} pointerEvents="none">
+                          åpen
+                        </text>
+                      )}
+                    </g>
+                  )
+                })}
+                {/* Top rail, the shelves' rails (K19), and the bottom rail where it is not open from the floor */}
+                <g pointerEvents="none" fill={ALU}>
+                  <rect x={x0} y={yAt(p.h + R.railHeight)} width={w} height={RAIL} />
+                  {p.shelves.map((y) => (
+                    <rect key={y} x={x0} y={yAt(y + R.railHeight)} width={w} height={RAIL} />
+                  ))}
+                  {!lowOpen && <rect x={x0} y={H - RAIL} width={w} height={RAIL} />}
+                </g>
+                {chosen?.part === i && chosen.light === undefined && <rect x={x0} y={yAt(p.h + R.railHeight)} width={w} height={(p.h + R.railHeight) / 1000} fill={INK} fillOpacity={0.12} pointerEvents="none" />}
               </g>
             )
           })}
           {nodes.map(post)}
-          {onHeight && tops.map(grip)}
+          {onShelf && sections.flatMap(shelfGrips)}
+          {onHeight && sections.map(topGrip)}
           <line x1={-px(12)} y1={H} x2={L + px(12)} y2={H} stroke={BORDER_STRONG} strokeWidth={px(1)} />
           <g pointerEvents="none">
             <text x={L / 2} y={view.top + px(14)} textAnchor="middle" style={{ font: `500 ${px(11.5)}px var(--font-ui)`, fill: INK_MUTED }}>
@@ -152,8 +219,8 @@ export function PodiumElevation({ parts: given, length, h: hTop, title, fill, ch
             </text>
             {chainTs.length > 2 && <Chain sc={sc} axis="x" at={H + px(NEAR)} ts={chainTs} dir={1} />}
             <Chain sc={sc} axis="x" at={H + px(chainTs.length > 2 ? TOTAL : NEAR)} ts={[0, L]} dir={1} />
-            <Chain sc={sc} axis="y" at={-px(NEAR)} ts={[H - h / 1000, H]} dir={-1} suffix="CC" />
-            <Chain sc={sc} axis="y" at={-px(TOTAL)} ts={[0, H]} dir={-1} suffix="utv." />
+            <Chain sc={sc} axis="y" at={-px(NEAR)} ts={[yAt(h), ...shelfYs.map(yAt), H]} dir={-1} suffix="CC" />
+            <Chain sc={sc} axis="y" at={-px(TOTAL)} ts={[yAt(h + R.railHeight), H]} dir={-1} suffix="utv." />
           </g>
         </svg>
       </div>

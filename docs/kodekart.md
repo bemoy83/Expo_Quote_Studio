@@ -247,6 +247,12 @@ står urørt; det nye deler bygger, omriss, 3D og kalkyle med dem.
   slik disken står, brukt av planen (`ObjectLayer`, `counterOutline`), 3D, kalkylen (`CalcContext.place`) og plukket.
 - Høyde per seksjon (K18): `setSectionHeight` i `domain/podiums.ts`, fra skuffen og grepet øverst i risset
   (`PodiumElevation`, `onHeight`, snapper til `HEIGHTS`).
+- Hyller og lysåpninger (K19, K16): `CounterSection.shelves`; `domain/podiumShelves.ts` (`withShelf`/`withoutShelf` deler
+  og slår sammen lysåpningenes valg, `lowered` for K18, `shelfStop`/`movedShelf` for draget, `setPodiumShelf`,
+  `movePodiumShelf`). `podiumLights` (podiumFaces) gir byggeren `open` (åpen i hele høyden) og `lights` (valget per
+  lysåpning); `layoutBuild` deler platene ved hylleskinnene (`plateLevels`, `between`), legger skinnene (`shelfRails`)
+  og hyllene (`boards` med `role: 'shelf'`). `ITEM.counterShelf` i kalkylen. I skuffen `PlanSelection.podiumLight`,
+  `FlatToggles` i `controls.tsx`, og `lightBands` i `podiumView.ts`.
 - Skuffen: `plan/podiumDrawer/` (`PodiumDrawer.tsx`, risset `PodiumElevation.tsx`, miniplanen `PodiumMap.tsx`, og
   `podiumView.ts`: sidene rundt disken med navn, siden nærmest et klikk, siden sett utenfra). Valget i
   `PlanSelection.podiumSide`/`podiumPart`; `hasDrawer` får varianten for å vite at et objekt har seksjoner.

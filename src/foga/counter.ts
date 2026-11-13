@@ -4,7 +4,8 @@
 // at a right angle a 92L, three a 93, four a 94; the rails are as long whatever stands in the node. Local coordinates
 // in mm: x along the counter, z across it with the closed front at +z, y up from the floor. Nodes sit 10 mm in from
 // the outer face, so the outer size is the nodes' c/c + 20. Disker og podier is built tight from the same nodes
-// (Byggeregler K10–K12): no middle rail or shelf, one plate the whole height, each part as high as its own.
+// (Byggeregler K10–K12): no middle rail, each part as high as its own; a shelf where the section has one (K19), on four
+// rails round it that split its plates into light openings (K16), each a plate, open or a sliding door (K17).
 import { RECIPES, type CounterRecipe } from './recipes';
 
 export type Range = readonly [number, number];
@@ -34,6 +35,17 @@ export interface CounterCell {
   x: Range;
   z: Range;
   h?: number;
+  /** Tight (K19): the CC heights of its shelves, mm, each lower than `h`. */
+  shelves?: readonly number[];
+}
+
+/** What a light opening of a part is (K16, K17): a plate (null), open or a sliding door. */
+export type LightKind = 'open' | 'door' | null;
+/** A part of the outside, node to node, and what each of its light openings is, from the floor (K16). */
+export interface CounterLights {
+  a: Pt;
+  b: Pt;
+  kinds: readonly LightKind[];
 }
 
 /** What a counter is made of, in node coordinates (mm): its parts, and the stretches of its outside left open, each
@@ -41,8 +53,9 @@ export interface CounterCell {
 export interface CounterLayout {
   cells: readonly CounterCell[];
   open: readonly (readonly [Pt, Pt])[];
-  /** Stretches of the outside closed by a sliding door instead of a plate (Disker og podier, K17). */
-  doors?: readonly (readonly [Pt, Pt])[];
+  /** Tight: parts of the outside with a light opening open or closed by a sliding door (K16, K17); the rest of a part
+   *  open in every light opening is in `open`. */
+  lights?: readonly CounterLights[];
 }
 
 type Pt = readonly [number, number];
@@ -127,8 +140,8 @@ interface Edge {
   /** On the outside: the direction out of the counter. Inside (between two parts): none. */
   out?: Dir;
   closed: boolean;
-  /** Closed by a sliding door (K17). */
-  door?: boolean;
+  /** What its light openings are, from the floor (K16, K17); none: plates. */
+  kinds?: readonly LightKind[];
 }
 
 /** Every rail of the layout: the sides of its parts, split where another node lies on them, each once (K3). */
@@ -137,11 +150,12 @@ function edgesOf(l: CounterLayout): { nodes: Map<string, Pt>; edges: Edge[] } {
   for (const c of l.cells) for (const x of c.x) for (const z of c.z) nodes.set(key([x, z]), [x, z]);
   const pts = [...nodes.values()];
   const seen = new Map<string, Edge & { n: number }>();
-  const onOpen = (a: Pt, b: Pt, stretches: readonly (readonly [Pt, Pt])[] = l.open) =>
-    stretches.some(([p, q]) => {
-      const within = (v: Pt) => Math.abs((q[0] - p[0]) * (v[1] - p[1]) - (q[1] - p[1]) * (v[0] - p[0])) < EPS && v[0] >= Math.min(p[0], q[0]) - EPS && v[0] <= Math.max(p[0], q[0]) + EPS && v[1] >= Math.min(p[1], q[1]) - EPS && v[1] <= Math.max(p[1], q[1]) + EPS;
-      return within(a) && within(b);
-    });
+  // An edge lies on a stretch when both its ends lie on the stretch's line, between its ends
+  const onStretch = (a: Pt, b: Pt, p: Pt, q: Pt) => {
+    const within = (v: Pt) => Math.abs((q[0] - p[0]) * (v[1] - p[1]) - (q[1] - p[1]) * (v[0] - p[0])) < EPS && v[0] >= Math.min(p[0], q[0]) - EPS && v[0] <= Math.max(p[0], q[0]) + EPS && v[1] >= Math.min(p[1], q[1]) - EPS && v[1] <= Math.max(p[1], q[1]) + EPS;
+    return within(a) && within(b);
+  };
+  const onOpen = (a: Pt, b: Pt) => l.open.some(([p, q]) => onStretch(a, b, p, q));
   for (const c of l.cells) {
     const sides: [Pt, Pt, Dir][] = [
       [[c.x[0], c.z[1]], [c.x[1], c.z[1]], [0, 1]],
@@ -165,7 +179,8 @@ function edgesOf(l: CounterLayout): { nodes: Map<string, Pt>; edges: Edge[] } {
   const edges = [...seen.values()].map(({ a, b, out, n }): Edge => {
     if (n > 1) return { a, b, closed: false };
     const closed = !onOpen(a, b);
-    return { a, b, out, closed, ...(closed && l.doors?.length && onOpen(a, b, l.doors) && { door: true }) };
+    const kinds = closed ? l.lights?.find((x) => onStretch(a, b, x.a, x.b))?.kinds : undefined;
+    return { a, b, out, closed, ...(kinds?.some((k) => k) && { kinds }) };
   });
   return { nodes, edges };
 }
@@ -203,6 +218,8 @@ export function layoutBuild(r: CounterRecipe, l: CounterLayout, kind: CounterBui
   };
   const cellTop = (c: CounterCell) => (tight ? (c.h ?? r.top) : r.top);
   const edgeTop = (e: Edge) => Math.max(...l.cells.filter((c) => onEdge(e, c)).map(cellTop));
+  /** K19: the CC heights of the shelves along an edge, of the part behind it or of both parts inside. */
+  const shelvesOn = (e: Edge) => (tight ? [...new Set(l.cells.filter((c) => onEdge(e, c)).flatMap((c) => c.shelves ?? []))].sort((a, b) => a - b) : []);
   /** K12: an edge inside a tight counter between parts of two heights, a step: the low height, and the way down to the
    *  low part (the step's face). */
   const stepOf = (e: Edge): { lo: number; out: [number, number] } | null => {
@@ -270,20 +287,37 @@ export function layoutBuild(r: CounterRecipe, l: CounterLayout, kind: CounterBui
     const hi = edgeTop(e);
     return [rail(r.rail, 'rail', { ...e, out: s.out }, r.postSize, [hi, hi + rh]), railsAt(e, s.lo)];
   };
+  // K19: a shelf stands on a rail on each side of its part, as the middle rail of 6560: a 93 outside, a 94 toward a
+  // neighbour (one shared by two shelves at the same height); on a step above the low top a 93 facing the low part,
+  // and none where the low top's 94 already is
+  const shelfRails = (e: Edge) => {
+    const st = stepOf(e);
+    return shelvesOn(e).flatMap((y) => {
+      if (st && Math.abs(y - st.lo) < EPS) return [];
+      if (st && y > st.lo) return [rail(r.rail, 'rail', { ...e, out: st.out }, r.postSize, [y, y + rh])];
+      return [railsAt(e, y)];
+    });
+  };
+  // K16: no bottom rail where the part is open from the floor
   const rails = [
-    ...(tight ? edges.flatMap(tightRails) : [r.middle, r.top].flatMap((y0) => edges.map((e) => railsAt(e, y0)))),
-    ...edges.filter((e) => e.closed).map((e) => rail(r.bottomRail, 'bottomRail', e, r.bottomRailDepth, [0, rh])),
+    ...(tight ? edges.flatMap((e) => [...tightRails(e), ...shelfRails(e)]) : [r.middle, r.top].flatMap((y0) => edges.map((e) => railsAt(e, y0)))),
+    ...edges.filter((e) => e.closed && e.kinds?.[0] !== 'open').map((e) => rail(r.bottomRail, 'bottomRail', e, r.bottomRailDepth, [0, rh])),
   ];
 
-  // K4: the wall plate in the channels of the closed sides, split at the middle rail. Tight (K11): one plate from the
-  // bottom rail to the top rail
+  // K4: the wall plate in the channels of the closed sides, split at the middle rail. Tight (K11, K16): a plate in each
+  // light opening, from the rail under it to the rail over it; without shelves one the whole height
   const t = r.plateThickness / 2;
   const into = ch - r.platePlay / 2;
-  const plateLevels = (e: Edge): { level: CounterPlate['level']; y: Range }[] => {
-    if (tight) return [{ level: 'full', y: [rh - ch, edgeTop(e) + ch - r.platePlay] }];
+  /** The plate's height between two rails with their undersides at CC y0 and y1 (y0 0: the bottom rail). */
+  const between = (y0: number, y1: number): Range => [y0 + rh - ch, y1 + ch - r.platePlay];
+  const plateLevels = (e: Edge): { level: CounterPlate['level']; y: Range; kind: LightKind }[] => {
+    if (tight) {
+      const cuts = [0, ...shelvesOn(e), edgeTop(e)];
+      return cuts.slice(1).map((y, i) => ({ level: 'full', y: between(cuts[i], y), kind: e.kinds?.[i] ?? null }));
+    }
     return [
-      { level: 'lower', y: [rh - ch, r.middle + ch - r.platePlay] },
-      { level: 'upper', y: [r.middle + rh - ch, r.top + ch - r.platePlay] },
+      { level: 'lower', y: between(0, r.middle), kind: null },
+      { level: 'upper', y: between(r.middle, r.top), kind: null },
     ];
   };
   const plateOf = (e: Edge, level: CounterPlate['level'], y: Range): CounterPlate => ({
@@ -293,16 +327,18 @@ export function layoutBuild(r: CounterRecipe, l: CounterLayout, kind: CounterBui
     h: y[1] - y[0],
     box: { ...band(e, inset - t, inset + t, j - into), y },
   });
-  // K12: a step is closed with a plate on the high side, from the low top rail up to the high one
+  // K12: a step is closed with a plate on the high side, from the low top rail up to the high one, split at a shelf's
+  // rail between them (K19)
   const steps = edges.flatMap((e) => {
     const s = stepOf(e);
-    return s ? [plateOf({ ...e, out: s.out }, 'step', [s.lo + rh - ch, edgeTop(e) + ch - r.platePlay])] : [];
+    if (!s) return [];
+    const cuts = [s.lo, ...shelvesOn(e).filter((y) => y > s.lo + EPS), edgeTop(e)];
+    return cuts.slice(1).map((y, i) => plateOf({ ...e, out: s.out }, 'step', between(cuts[i], y)));
   });
   // K17: a sliding door, two leaves in the channel instead of the plate, each half the light opening + 10 overlap + 10
   // into the channel; the second just inside the first, so the two slide past each other
-  const doorLeaves = (e: Edge): CounterPlate[] => {
-    const [p] = plateLevels(e);
-    const whole = plateOf(e, 'door', p.y);
+  const doorLeaves = (e: Edge, y: Range): CounterPlate[] => {
+    const whole = plateOf(e, 'door', y);
     const w = lenOf(e) / 2 + r.door.overlap + r.door.track;
     const alongX = Math.abs(e.a[1] - e.b[1]) < EPS;
     const run = alongX ? whole.box.x : whole.box.z;
@@ -312,13 +348,17 @@ export function layoutBuild(r: CounterRecipe, l: CounterLayout, kind: CounterBui
     const leaf = (along: Range, at: Range): CounterPlate => ({ ...whole, w, box: alongX ? { x: along, y: whole.box.y, z: at } : { x: at, y: whole.box.y, z: along } });
     return [leaf([run[0], run[0] + w], across), leaf([run[1] - w, run[1]], inner)];
   };
-  const plates = [...edges.filter((e) => e.closed).flatMap((e) => (e.door ? doorLeaves(e) : plateLevels(e).map(({ level, y }) => plateOf(e, level, y)))), ...steps];
+  const plates = [
+    ...edges.filter((e) => e.closed).flatMap((e) => plateLevels(e).flatMap(({ level, y, kind }) => (kind === 'open' ? [] : kind === 'door' ? doorLeaves(e, y) : [plateOf(e, level, y)]))),
+    ...steps,
+  ];
 
-  // K5: a top and a shelf on each part, in the rails' notch, short of the rail body by the play. Tight (K11): the top
+  // K5: a top and a shelf on each part, in the rails' notch, short of the rail body by the play. Tight (K11, K19): the
+  // top and the part's own shelves
   const body = r.postSize - ch + r.boardPlay - f;
   const boards = l.cells.flatMap((c) =>
-    (tight ? (['top'] as const) : (['shelf', 'top'] as const)).map((role): CounterBoard => {
-      const y0 = (role === 'top' ? cellTop(c) : r.middle) + rh - ch;
+    (tight ? [...(c.shelves ?? []).map((y) => ['shelf', y] as const), ['top', cellTop(c)] as const] : ([['shelf', r.middle], ['top', r.top]] as const)).map(([role, at]): CounterBoard => {
+      const y0 = at + rh - ch;
       const x: Range = [c.x[0] + body, c.x[1] - body];
       const z: Range = [c.z[0] + body, c.z[1] - body];
       return { role, w: x[1] - x[0], d: z[1] - z[0], box: { x, y: [y0, y0 + r.board.t], z } };

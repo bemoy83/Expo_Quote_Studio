@@ -471,29 +471,45 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   ulik høyde slås sammen også; hver seksjon beholder sin høyde, og trinnet bygges etter K12. To disker som står inntil hverandre uten lenke, er
   to linjer i tilbudet og har plater mot hverandre.
   *Bjørn 13.11.2026 · kode `src/domain/podiumLinks.ts` · test `src/domain/podiumLinks.test.ts`*
-- **K16 Sider og lysåpninger.** Hver del av omrisset, mellom to knutepunkter, hører til seksjonen bak og er plate,
-  åpen eller (K17) skyvedør. Plate er standard (K11) og lagres ikke. Åpen: ingen plate og ingen bunnskinne (som baksiden
-  på 6560, K3 og K4); toppskinnen og stolpene står. Valget lagres på seksjonens side, så det følger delen: flytt og roter
+- **K16 Sider og lysåpninger.** Hver del av omrisset, mellom to knutepunkter, hører til seksjonen bak og er delt i
+  lysåpninger av hylleskinnene i seksjonen (K19): en under den nederste skinnen og en over hver; uten hyller er delen én
+  lysåpning. Hver lysåpning er plate, åpen eller (K17) skyvedør. Plate er standard (K11) og lagres ikke; platen går fra
+  skinnen under til skinnen over, i høydene 226, 476, 726 og 976. Åpen: ingen plate, og ingen bunnskinne når det er
+  den nederste lysåpningen (som baksiden på 6560, K3 og K4); de andre skinnene og stolpene står. Med hele siden eller en
+  del valgt gjelder valget alle lysåpningene i den; et klikk på én lysåpning i risset velger bare den. En ny hylle deler
+  en lysåpning i to som begge beholder valget, og en hylle som tas bort slår de to sammen til den nederste, som beholder
+  sitt. Valget lagres på seksjonens side, så det følger delen: flytt og roter
   endrer ingenting, et grep som strekker en seksjon strekker valget med, en ny del er plate, og en side som blir
   innvendig (påbygg, fusjon) mister valget. To seksjoner slås bare sammen (K14) når sidene langs dem har samme valg. En
   del med en vegg eller en annen disk nærmere enn 60 mm utenfor seg er alltid plate; valget beholdes og kommer tilbake
-  når disken flyttes ut. Trinnplaten (K12) er alltid plate. I planen er en åpen del en tynn, lys hårstrek (som 6560).
-  Valget gjøres i skuffen for disken, for hele siden eller én del. Lysåpninger over hverandre kommer med hyllene (K19);
-  til da er hver del én lysåpning. Tilbudet sier hvor mange sider som har en åpen del: «1 åpen side».
+  når disken flyttes ut. Trinnplaten (K12) er alltid plate. I planen er en del som er åpen i hele høyden en tynn, lys
+  hårstrek (som 6560), og en del med skyvedør i en lysåpning hel strek med dørstreker. Valget gjøres i skuffen for
+  disken. Tilbudet sier hvor mange sider som har en åpen lysåpning: «1 åpen side».
   *Bjørn 13.11.2026 · kode `src/domain/podiumFaces.ts`, `src/domain/podiumLocks.ts` · test `src/domain/podiumFaces.test.ts`*
 - **K17 Skyvedør.** To plater i sporet i skinnen under og skinnen over lysåpningen, i stedet for én plate. Hver dør er
   lysåpningen / 2 + 10 (overlapp) + 10 (skinnespor) bred: 500 i lysåpning 960, 375 i 710 og 250 i 460, og like høy
   som platen ville vært. En dør skjøvet helt inn i sporet går da fortsatt 10 forbi midten. Den andre døren står rett
   innenfor den første, så de glir forbi hverandre. Skinnene står, også bunnskinnen. Ikke på deler på 250: «Skyvedør går
-  ikke på en del på 250». Lås er ikke bygget. Fram til hyllene (K19) får døren hele delens høyde. I planen er delen hel
+  ikke på en del på 250». Lås er ikke bygget. Døren står i én lysåpning (K16) og er like høy som platen der. I planen er delen hel
   strek med to korte streker innenfor for dørene. Tid, plassholder: 2 min opp og 1 ned per skyvedør (Bjørn
-  13.11.2026). Tilbudet sier «1 skyvedør».
+  13.11.2026). Tilbudet sier «1 skyvedør», én per lysåpning med dør.
   *Bjørn 13.11.2026 · kode `src/foga/counter.ts` (`doorLeaves`), `src/domain/podiumFaces.ts` (`takesDoor`) · test `src/domain/podiumFaces.test.ts`, `src/calc/podium.test.ts`*
 - **K18 Høyde per seksjon.** Høyden på en seksjon som står, endres i skuffen (CC 250, 500, 750 eller 1000) eller ved å
   dra toppen av seksjonen i risset (grepet «CC 750»); draget snapper til de samme fire høydene, vises mens det dras og
   settes når det slippes. Bygget følger K12: trinnplate og 94 under den lave toppen mot en høyere nabo. Valget på delene
-  (K16, K17) står. Hyller i eller over den nye høyden fjernes (når K19 er bygget).
+  (K16, K17) står. Hyller i eller over den nye høyden fjernes, og hintet i skuffen sier hvor mange.
   *Bjørn 13.11.2026 · kode `src/domain/podiums.ts` (`setSectionHeight`), `src/ui/plan/podiumDrawer/PodiumElevation.tsx` · test `src/domain/podiumFaces.test.ts`*
+- **K19 Hylle i disk.** En hylle hører til en seksjon og står i CC 250, 500 eller 750, lavere enn seksjonens høyde.
+  Det er ingen fri høyde. Bygget som midtskinnen i 6560 (K3, K5): fire skinner rundt seksjonen med underkant i
+  CC-høyden, 93 på utvendige kanter og 94 mot en naboseksjon, og MDF 6 mm i falsen med overkant 36 over skinnens
+  underkant, like stor som toppen. To naboseksjoner med hylle i samme høyde deler 94-skinnen mellom seg. Skinnen står
+  også der delen er åpen eller har skyvedør. Mot en lavere nabo står skinnen over den lave toppen som 93 vendt mot
+  den, og trinnplaten deles ved den; i høyde med den lave toppen er 94-en under toppen nok. Hyllene slås av og på i
+  skuffen (for seksjonen bak delen, eller alle langs siden) og dras opp og ned i risset med grepet «Hylle 500»: draget
+  snapper til CC-høydene og stopper mot en nabohylle og mot toppen. Risset målsetter hyllene fra gulv i CC. To
+  seksjoner slås bare sammen (K14) med like hyller; et grep som legger på seksjoner gir dem hyllene til seksjonen det
+  strekker. Tid, plassholder: 1,5 min opp og 1 ned per hylle (som H7, Bjørn 13.11.2026). Tilbudet sier «3 hyller».
+  *Bjørn 13.11.2026 · kode `src/foga/counter.ts` (`shelfRails`), `src/domain/podiumShelves.ts` · test `src/domain/podiumShelves.test.ts`, `src/calc/podium.test.ts`*
 
 ## P · Plukkliste og arbeidsordre
 

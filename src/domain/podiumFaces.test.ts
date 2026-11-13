@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { RULES } from '../rules/rules';
 import { counterBuildOf } from './counterShape';
 import type { PlaceContext } from './objects';
-import { lightOf, openStretches, partKey, partsOn, podiumHas, podiumParts, prunedSides, setLight, setPodiumLight } from './podiumFaces';
+import { lightOf, partKey, partsOn, podiumHas, podiumLights, podiumParts, prunedSides, setLight, setPodiumLight } from './podiumFaces';
 import { gripPodium, joined, podiumGrips } from './podiumGrips';
 import { fusePodiums, inFrame, snapBeside } from './podiumLinks';
 import { lockedParts, partLocks, placedBuild } from './podiumLocks';
@@ -96,7 +96,7 @@ describe('the choice follows the part', () => {
     const r = ok(fusePodiums(vOf(a, s.o), ctx, 'a', 'b'));
     const o = r.v.objects[0].sections!;
     expect(o.flatMap((x) => Object.keys(x.sides ?? {}))).toEqual(['z-', 'z-']);
-    expect(openStretches(o)).toHaveLength(2);
+    expect(podiumLights(o).open).toHaveLength(2);
   });
 
   it('a side that becomes inner loses its choice; turned with the counter it is the same side', () => {

@@ -41,9 +41,11 @@ export interface PlanSelection {
   /** Engangsteppe laid by Fyll (domain/floor/rollFill.ts). */
   fill?: string
   /** A counter of Disker og podier: the side its drawer shows (podiumDrawer/podiumView.ts sideKeyOf) and, left to right
-   *  on it, the part chosen; none: the whole side. Only with `objectId`. */
+   *  on it, the part chosen, and in it the light opening (from the floor, K16); none: the whole side or part. Only with
+   *  `objectId`. */
   podiumSide?: string
   podiumPart?: number
+  podiumLight?: number
 }
 
 /** How the drawer under the plan stands: closed, or open in one of its two heights (docs/pille-og-skuff.md). A plain

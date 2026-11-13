@@ -133,12 +133,16 @@ export interface CounterSection {
   z: [number, number];
   h: number;
   sides?: Partial<Record<SectionSideKey, SectionSide>>;
+  /** Its shelves (K19), the CC heights 250, 500 or 750 below `h`, low to high; each splits its sides into one more
+   *  light opening (K16). */
+  shelves?: number[];
 }
 
 /** A side of a section by the way it faces: across x at x[0] (`x-`) or x[1] (`x+`), across z at z[0] or z[1]. */
 export type SectionSideKey = 'x-' | 'x+' | 'z-' | 'z+';
 
-/** What a light opening of a counter's side is (Byggeregel K16), when not a plate: open, or a sliding door (K17). */
+/** What a light opening of a counter's side is (Byggeregel K16), when not a plate: open, or a sliding door (K17). The
+ *  light openings of a side are counted from the floor, one under each shelf (K19) and one over the highest. */
 export type CounterLight = 'open' | 'door';
 
 /** One side of a section (K16): each light opening from the floor up, a plate where missing or null. Only where the side
