@@ -8,7 +8,7 @@ import { turnFree, turnObject } from './plan/turn'
 import type { DockTool } from './tools'
 import type { Tools } from './useTools'
 
-const DOCK_KEYS: Record<string, DockTool> = { v: 'select', s: 'wall', g: 'floor', t: 'profile', h: 'fitting', d: 'counter', b: 'podium', m: 'object', e: 'erase' }
+const DOCK_KEYS: Record<string, DockTool> = { v: 'select', s: 'wall', g: 'floor', t: 'profile', h: 'fitting', d: 'podium', m: 'object', e: 'erase' }
 
 interface Shortcuts {
   v: Variant

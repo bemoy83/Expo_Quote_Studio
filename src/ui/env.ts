@@ -104,8 +104,6 @@ export const plateName = (ral: string) => idx.wallByRal.get(ral)?.variant.name ?
 /** Wall colours: the variants of the wall product (level 1). */
 export const wallPlates = () => catalog.products.find((p) => p.id === catalog.system.wall)?.variants ?? []
 
-/** Counters (Disker, Byggeregler K1–K6): products built of Foga profiles, placed like furniture. Not Disker og podier. */
-export const counterProducts = () => catalog.products.filter((p) => p.counter && !p.podium)
 /** Disker og podier (Byggeregler K10–K13): the product the pen draws with. */
 export const podiumProduct = () => catalog.products.find((p) => p.podium)
 export const isCounter = (artnr: string) => place.isCounter(artnr)

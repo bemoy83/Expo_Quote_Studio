@@ -55,11 +55,6 @@ export function hint(tool: Tool, brush: Brush | null, carpet = false): Hint {
       )
     case 'motif':
       return h('Klikk en tekstilvegg eller et veggfelt', 'Klikk en tekstilvegg for trykk, eller et veggfelt for foliedekor')
-    case 'counter':
-      return h(
-        'Klikk for bardisk, dra for å tegne disk',
-        'Klikk for en bardisk på 1 m, eller dra for å tegne disk i halve meter med fronten mot gangen · trykk i den siste halvmeteren av en disk og dra mot en av knappene: lengre, kortere eller hjørne bakover mot personalet · fyll gir alle diskene på standen fargen · velg en disk for å bytte farge eller rotere den',
-      )
     case 'podium':
       // K22: a click places the standard counter chosen in the quick picks
       if (brush?.kind === 'podium' && brush.stock)

@@ -5,10 +5,12 @@ import { mainGroupOf, PRODUCT_GROUPS, resolveGroup } from '../../../catalog/grou
 import type { Product } from '../../../catalog/types'
 import { setCounted } from '../../../domain/edit'
 import { addObjectAnywhere, COUNTER_STOCK_RAL, removeObjects } from '../../../domain/objects'
+import { addStockAnywhere } from '../../../domain/podiums'
+import { isStock, soldAs } from '../../../domain/podiumStock'
 import { shelvesOf } from '../../../domain/shelves/model'
 import type { Variant } from '../../../domain/types'
 import { Counter, IconButton } from '../../controls'
-import { catalog, place } from '../../env'
+import { catalog, place, podiumProduct } from '../../env'
 import { kr } from '../../format'
 import { penOn, type Brush } from '../../tools'
 import { ShelfIcon } from '../../plan/QuickPicks'
@@ -78,26 +80,29 @@ function ShelfRow({ v, product, brush, tool, pick }: RailProps & { product: Prod
   )
 }
 
-/** A placed object (counter + brush) or a counted item (counter per variant). */
+/** A placed object (counter + brush) or a counted item (counter per variant). A standard counter (K22) is placed and
+ *  drawn by Disker og podier, its preset chosen. */
 function CatalogRow({ v, product, brush, tool, pick, onEdit, onToast, showGroup }: RailProps & { product: Product; showGroup?: boolean }) {
   const [vi, setVi] = useState<number | null>(null)
   const isObject = product.kind === 'object'
   const counts = product.variants.map((x) =>
-    isObject ? v.objects.filter((o) => o.product === x.artnr).length : (v.counted.find((c) => c.product === x.artnr)?.qty ?? 0),
+    isObject ? v.objects.filter((o) => soldAs(o) === x.artnr).length : (v.counted.find((c) => c.product === x.artnr)?.qty ?? 0),
   )
   const { tot, sum, first } = variantTotals(product, counts)
   const i = vi ?? first
   const cur = product.variants[i]
-  const kind = product.podium ? 'podium' : product.counter ? 'counter' : 'object'
-  const pen = isObject && penOn(tool, brush, kind, cur.artnr)
-  /** A counter's pen keeps the colour Disker (or Disker og podier) last drew with (Byggeregel K6). */
-  const penBrush = (): Brush => (kind === 'object' ? { kind, product: cur.artnr } : { kind, product: cur.artnr, ral: brush?.kind === kind ? brush.ral : COUNTER_STOCK_RAL })
+  const stock = isStock(cur.artnr)
+  const podium = podiumProduct()!.variants[0].artnr
+  const pen = isObject && (stock ? penOn(tool, brush, 'podium') && brush?.kind === 'podium' && brush.stock === cur.artnr : penOn(tool, brush, product.podium ? 'podium' : 'object', cur.artnr))
+  /** A counter's pen keeps the colour Disker og podier last drew with (Byggeregel K6). */
+  const ral = brush?.kind === 'podium' ? brush.ral : COUNTER_STOCK_RAL
+  const penBrush = (): Brush => (stock ? { kind: 'podium', product: podium, ral, stock: cur.artnr } : product.podium ? { kind: 'podium', product: cur.artnr, ral } : { kind: 'object', product: cur.artnr })
   const setCount = (n: number) => {
     if (!isObject) return onEdit((x) => setCounted(x, cur.artnr, n))
     const have = counts[i]
-    if (n < have) return onEdit((x) => removeObjects(x, cur.artnr, have - n))
+    if (n < have) return onEdit((x) => removeObjects(x, cur.artnr, have - n, soldAs))
     let next: Variant | null = v
-    for (let k = have; k < n && next; k++) next = addObjectAnywhere(next, place, cur.artnr)
+    for (let k = have; k < n && next; k++) next = stock ? addStockAnywhere(next, place, podium, cur.artnr) : addObjectAnywhere(next, place, cur.artnr)
     if (next) onEdit(() => next!)
     else onToast(`Ikke plass til ${product.name.toLowerCase()} på standen`)
   }

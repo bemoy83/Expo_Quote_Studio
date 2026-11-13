@@ -33,7 +33,7 @@ export function placeKey(c: Pick<PointerCtx, 'v' | 'hits' | 'brush'>, what: Plac
   // Furniture follows the pointer while pressed: the same as long as it stays on the stand and has a spot
   if (!hits.onStand(q)) return 'off'
   const pen = placedBy(brush)
-  return pen && addObject(v, place, pen.product, q.x, q.y, pen.ral) ? 'spot' : 'none'
+  return pen && addObject(v, place, pen.product, q.x, q.y) ? 'spot' : 'none'
 }
 
 export function startPlace(c: PointerCtx, what: PlaceWhat, q: P): Drag {

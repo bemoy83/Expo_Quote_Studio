@@ -13,7 +13,6 @@ import { carpetClick, fillCarpet } from '../../domain/floor/rollFill'
 import { tileAt, type Rect } from '../../domain/floor/tiles'
 import { wallModules, type Module } from '../../domain/grid'
 import { drawInnerBeam, type Run } from '../../domain/innerBeams'
-import { counterBuildOf, piecesOf } from '../../domain/counterShape'
 import { addObject, footprintBox, objectBoxes, objectFootprint } from '../../domain/objects'
 import { NO_ROOM, podiumGrab, podiumHeights, type PodiumDraw } from '../../domain/podiums'
 import { podiumGrips, type PodiumGripDraw } from '../../domain/podiumGrips'
@@ -26,8 +25,7 @@ import type { Motif, PlacedObject, Point, Variant } from '../../domain/types'
 import { builtModules, doorAllowed, type BuiltModule } from '../../domain/walls'
 import { RECIPES } from '../../foga/recipes'
 import { applyDrop, type DecorDrag } from '../dnd'
-import { isCounter, place, pricing, productOf, rules } from '../env'
-import { counterEnd, type CounterEnd } from '../../domain/counterEnds'
+import { place, pricing, productOf, rules } from '../env'
 import { placedBy, type Brush, type Tool } from '../tools'
 import { mm } from './dims'
 import { nearestEdge } from './geometry'
@@ -40,7 +38,6 @@ import type { FloorBrush } from './pointer/floorBrush'
 import type { PlanHits } from './pointer/hits'
 import { isDoor, openingEdge } from './pointer/opening'
 import type { Pens } from './pointer/pens'
-import { counterDraw } from './pointer/counter'
 import { counterUnder, drawPodiumAt, podiumFine, podiumStart } from './pointer/podium'
 import { podiumGripAt } from './pointer/podiumGrip'
 import { placeHolds, placeKey } from './pointer/place'
@@ -78,20 +75,12 @@ export interface NextOutcome {
   hint: string | null
   invalid?: Invalid
   pill?: Pill
-  /** The end of a counter the pointer is on, shown as a handle with the ways a drag can take it (K7, K8). */
-  handle?: CounterHandleView
   /** Disker og podier with Shift: the edges of the preview a press here takes hold of, drawn thick (PR 2). */
   grip?: [Point, Point][]
   /** What a release takes away, hatched (a grip of a counter moved in, K14). */
   erased?: Box[]
   /** The grip of the chosen counter under the pointer, or being dragged (K14); or its link (K15). */
   hotGrip?: Point
-}
-
-/** A counter's end as a handle (K7, K8), and which of its ways a drag can go: half a metre that way draws (no error). */
-export interface CounterHandleView {
-  end: CounterEnd
-  ok: { out: boolean[]; in: boolean; back: boolean }
 }
 
 export interface NextTarget {
@@ -224,13 +213,6 @@ function targetOf(p: NextInput): NextTarget | null {
   // Shelves pressed: the felts from the press to the pointer along the same face
   if (dragging?.kind === 'shelf') return shelfTarget(v, dragging.wallId, dragging.s, dragging.m0, dragging.m1, true)
 
-  // The counter pen dragged: the counter a release draws. Held without moving, what a click there stores, the preview it
-  // was hovering, so it stays put until the drag grows it (Bjørn 12.11.2026)
-  if (dragging?.kind === 'counter') {
-    if (dragging.moved && hover) return counterTarget(v, brush, dragging.p0, hover)
-    return counterHover(p, dragging.p0)
-  }
-
   // Disker og podier dragged: the counter a release draws from the section pressed; held without moving, that section
   if (dragging?.kind === 'podium') {
     if (dragging.moved && dragging.drag && hover) return podiumTarget(drawPodiumAt(p, dragging.drag, hover))
@@ -290,7 +272,6 @@ function targetOf(p: NextInput): NextTarget | null {
     const e = openingEdge({ v, hits }, hover)
     return e ? doorTarget(v, e, brush.product, null, false) : null
   }
-  if (pens.counterTool) return counterHover(p, hover)
   if (pens.podiumTool) return podiumHover(p, p.podiumFreeze ?? hover, p.podiumFreeze ? hover : null)
   if (pens.objectTool && hits.onStand(hover)) return objectTarget(v, brush, hover)
   if (pens.shelfTool) {
@@ -372,10 +353,10 @@ function decorTarget(p: NextInput, q: P): NextTarget | null {
 function objectTarget(v: Variant, brush: Brush | null, q: P): NextTarget | null {
   const pen = placedBy(brush)
   if (!pen) return null
-  const { product, ral } = pen
+  const { product } = pen
   const f = productOf(product)?.footprint
   if (!f) return null
-  const next = addObject(v, place, product, q.x, q.y, ral)
+  const next = addObject(v, place, product, q.x, q.y)
   const o = next?.objects[next.objects.length - 1]
   if (!next || !o) {
     const key = `obj:none:${Math.round(q.x * 20)},${Math.round(q.y * 20)}`
@@ -383,44 +364,7 @@ function objectTarget(v: Variant, brush: Brush | null, q: P): NextTarget | null 
     const invalid: Invalid = f.round ? { circle: { cx: q.x, cy: q.y, r: f.w / 2 } } : { rect: b }
     return target(key, () => line({ hint: `Ikke plass til ${productOf(product)?.name.toLowerCase() ?? 'varen'} her`, invalid }))
   }
-  return target(`obj:${product}:${ral ?? ''}:${o.x},${o.y}`, () => line({ edit: () => next, hint: null }))
-}
-
-/** The counter pen on the floor (K7, K8): at a counter's end, the end as a handle and what a drag from it does; on a
- *  counter, a click chooses it; elsewhere what a click places. */
-function counterHover(p: NextInput, q: P): NextTarget | null {
-  const { v, brush, hits } = p
-  const end = counterEnd(v, place, [q.x, q.y])
-  if (end)
-    return target(`ctr:end:${JSON.stringify(end)}`, () => {
-      // Each way a drag can go, tried half a metre from the middle of the end, as a release there would draw it
-      const c: P = { x: (end.box.x0 + end.box.x1) / 2, y: (end.box.y0 + end.box.y1) / 2 }
-      const goes = (d: Point) => {
-        const r = counterDraw({ v, brush }, c, { x: c.x + d[0] * 0.5, y: c.y + d[1] * 0.5 })
-        return !!r && !('error' in r)
-      }
-      const ok = { out: end.out.map(goes), in: !!end.in && goes(end.in), back: goes(end.back) }
-      const any = ok.out.some(Boolean) || ok.in || ok.back
-      return line({ hint: any ? 'Dra fra enden for å endre disken' : 'Denne enden kan ikke gå videre', handle: { end, ok } })
-    })
-  const on = hits.objectAt(q)
-  if (on && isCounter(on.product)) return target(`ctr:on:${on.id}`, () => line({ hint: 'Klikk for å velge disken · dra fra en ende for å endre den' }))
-  return hits.onStand(q) ? objectTarget(v, brush, q) : null
-}
-
-/** A counter drawn from p0 to q (Byggeregler K7, K8), with its outer size in the pill; hatched along the stroke where
- *  it cannot go. */
-function counterTarget(v: Variant, brush: Brush | null, p0: P, q: P): NextTarget | null {
-  const r = counterDraw({ v, brush }, p0, q)
-  if (!r) return null
-  const seg: [Point, Point] = [r.a, r.b]
-  if ('error' in r) return target(`ctr:err:${r.error}:${pt(r.a)}:${pt(r.b)}`, () => line({ hint: r.error, invalid: r.a[0] === r.b[0] && r.a[1] === r.b[1] ? undefined : { seg, width: 'wall' } }))
-  const o = r.v.objects.find((x) => x.id === r.id)!
-  return target(`ctr:${JSON.stringify(o)}`, () => {
-    const b = counterBuildOf(o)
-    const text = piecesOf(o).length > 1 ? `${mm(b.length / 1000)} × ${mm(b.depth / 1000)}` : mm(Math.max(b.length, b.depth) / 1000)
-    return line({ edit: () => r.v, hint: null, pill: { a: r.a, b: r.b, width: 'wall', text } })
-  })
+  return target(`obj:${product}:${o.x},${o.y}`, () => line({ edit: () => next, hint: null }))
 }
 
 /** Shift held over Disker og podier (PR 2). */

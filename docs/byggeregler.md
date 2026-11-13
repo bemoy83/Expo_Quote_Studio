@@ -341,8 +341,8 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   begge ender, åpen bak der standpersonalet står. Den kommer ferdig montert og plukkes som 1 stk så lenge lageret rekker.
   I tilbudet er den én linje per stk til fast pris (1320 kr); kalkylen regner kost og tid fra det den er bygget av
   (K2–K5). Den plasseres og kolliderer som et møbel, og fronten er den lukkede langsiden. Den erstatter de oppdiktede
-  diskene 5410, 5415 og 5420 (en gammel skisse beholder dem som løse linjer). Kunder bestiller også andre lengder og
-  hjørner som må plassbygges (K7, K8).
+  diskene 5410, 5415 og 5420 (en gammel skisse beholder dem som løse linjer). Den settes ut som et ferdig oppsett i
+  Disker og podier (K22). Kunder bestiller også andre lengder og hjørner, som bygges på stedet (K10–K13).
   *Bjørn 11.11.2026 · `RECIPES.counter.stock` · kode `src/foga/recipes.ts`, `src/catalog/defaultCatalog.ts`, `src/calc/lines/objects.ts`, `src/cost/itemDefs.ts` · test `src/foga/counter.test.ts`, `src/calc/counter.test.ts`*
 - **K2 Hjørnestolpe.** 92L (873 050 22, 30 × 30, kanal på de to innersidene) i hvert hjørne, hele høyden 1040 mm, med de
   lukkede sidene ut. Disken står rett på gulvet uten justeringsfot, så disker kan settes helt inntil hverandre. Trengs
@@ -364,54 +364,38 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   lager er hvit 9010; en annen farge betyr at platene byttes på lageret før messen og tilbake etter. Prisen er den samme
   i alle farger (1320 kr), kalkylen tar med kostnaden for platebyttet (prisartikkelen platebytte bardisk), og linjen sier
   hvilke farger montøren skal ha med. Fargen følger ikke veggenes standardfarge, og spannet på veggene farger ikke
-  diskene: Disker har sitt eget spann.
+  diskene: Disker og podier har sitt eget spann.
   *Bjørn 11.11.2026 · `RECIPES.counter.stock.ral` · kode `src/domain/objects.ts`, `src/calc/lines/objects.ts`, `src/cost/itemDefs.ts` · test `src/calc/counter.test.ts`, `src/domain/objects.test.ts`*
-- **K7 Tegnet disk.** En disk som tegnes, er 520 dyp og går i lengder på 0,5 m: knutepunktene står 1000 c/c, og en
-  halv modul på 500 c/c tar resten (1520 = 1000 + 500). Utvendig er disken c/c + 20, fordi knutepunktet står 10 mm inn
-  fra ytterflaten: 520, 1020, 1520, 2020. En rett disk på 1,0 m er 6560 slik den er; først over 1000 kommer nye
-  knutepunkter. Skinnene er c/c − 40, altså 960 og 460, og platene og toppene 976 og 476. Podier (ingen åpne sider)
-  følger de samme reglene og kan bli dypere (ikke bygget). Disker-pennen tegner disken: et klikk setter ut 6560 (forhåndsvist rundt
-  pekeren), en strek på ledig gulv tegner fra den andre enden av forhåndsvisningen til pekeren, i halve meter og aldri kortere
-  enn forhåndsvisningen (som står stille mens trykket holdes), låst til standens akser og ellers fritt plassert, og den
-  legger seg inntil vegg, disk eller standkant innen 10 cm (fra forhåndsvisningen står starten der klikket ville satt
-  6560, uten nytt hopp). Fronten vender mot den åpne siden av standen på tvers av
-  streken (den nærmeste når begge er åpne). En strek fra enden av en disk gjør den lengre når den går rett ut, og en L
-  når den går bakover mot personalet (K8); et hjørne framover mot kundene går ikke. Pennen viser enden som et grep når den står
-  over den siste halvmeteren (den halve meteren tonet, en rund knapp med en trekant for hver vei et drag kan gå: lengre
-  rett utenfor endeflaten, kortere på den indre kanten, hjørne utenfor baksiden; en vei som ikke går, for eksempel mot en
-  vegg eller fra enden et hjørne står på, får ingen knapp; hånd som peker), og et klikk på en disk velger den. En strek innover fra en fri ende
-  gjør disken kortere i halve meter, ned til 0,5 m; enden et hjørne står på, kan ikke kortes. En L dekker bare bitene
-  sine: hjørnet den lar stå åpent, er gulv for andre ting. Valgt disk viser utvendig helmål i planen: bredde og dybde på
-  siden mot midten av standen, en L sine to ytre lengder. Arbeidsordren viser helmålene på alle tegnede disker, siden de bygges
-  på stedet; 6560 fra lager får ingen. Disker og podier (K10–K13) er et eget verktøy med egne regler, og K7 gjelder ikke
-  for det.
-  *Bjørn 12.11.2026 · `RECIPES.counter.module`, `face`, `joint` · kode `src/foga/counter.ts`, `src/domain/counters.ts`, `src/domain/counterShape.ts` · test `src/foga/counter.test.ts`, `src/domain/counters.test.ts`*
+- **K7 Lengder.** En disk er 520 dyp og går i lengder på 0,5 m: knutepunktene står 1000 c/c, og en halv modul på
+  500 c/c tar resten (1520 = 1000 + 500). Utvendig er disken c/c + 20, fordi knutepunktet står 10 mm inn fra
+  ytterflaten: 520, 1020, 1520, 2020. Skinnene er c/c − 40, altså 960 og 460, og platene og toppene 976 og 476. Disker og
+  podier (K10) bruker de samme målene på et raster på 250. Verktøyet Disker, som tegnet disker i halve meter med
+  endegrep, L bakover mot personalet og kortere fra en fri ende, er tatt bort (Bjørn 13.11.2026): alle disker tegnes i
+  Disker og podier, og en skisse med disker fra Disker gjøres om når den åpnes (K22).
+  *Bjørn 12.11.2026, 13.11.2026 · `RECIPES.counter.module`, `face`, `joint` · kode `src/foga/counter.ts`, `src/domain/counterShape.ts` · test `src/foga/counter.test.ts`, `src/domain/podiumStock.test.ts`*
 - **K8 Knutepunkt.** Profilen som står i et knutepunkt, velges etter retningene den kobler: to i L gir 92L, tre i T gir
   93, fire i kors gir 94. Skinnene blir like lange uansett profil; bare antall retninger profilen kan kobles i er
-  forskjellig. En skjøt i en rett disk er derfor en 93 foran og en bak. En L er to disker der kortsiden på den ene står
-  mot langsiden på den andre: innerhjørnet kobler tre retninger og blir 93. Hver del mellom fire knutepunkter har sin
-  topp og hylle; skinnen mellom to deler er 94 og bærer topp og hylle fra begge sider.
-  Disken tettes bare utvendig: ingen plater og ingen bunnskinne inne i disken. Åpne er baksiden og innsiden av en L,
-  endene er lukket. I planen har disken ett omriss rundt hele seg, hel strek der den er lukket og en tynn, lys hårstrek
+  forskjellig. En skjøt i en rett disk er derfor en 93 foran og en bak. Hver del mellom fire knutepunkter har sin topp;
+  skinnen mellom to deler er 94 og bærer toppen fra begge sider.
+  Disken tettes bare utvendig: ingen plater og ingen bunnskinne inne i disken. I planen har disken ett omriss rundt hele seg, hel strek der den er lukket og en tynn, lys hårstrek
   der den er åpen (Bjørn 13.11.2026: stiplet i planen hører til gangside og takdrager, og uten strek forsvinner en hvit disk
   på hvitt gulv). Begge strekene ligger innenfor ytterkanten. En tynn delelinje
   går på tvers av disken der to deler møtes, over 94-skinnen mellom dem.
   *Bjørn 12.11.2026 · `RECIPES.counter.nodes`, `innerRail` · kode `src/foga/counter.ts` · test `src/foga/counter.test.ts`*
-- **K9 Pris og plukk for tegnet disk.** En tegnet disk bygges på stedet. Den prises av kostmotoren fra det den er bygget
-  av (profiler per meter, 600, plater per m², topper og hyller) og arbeidet, likt i alle farger; 6560 på lager beholder
-  fast pris (K1). Tiden er plassholder til Bjørn har målt: 26 min i alt per hel meter (plukk, vask og transport 2 + 2 + 2,
-  montering 13, demontering 7), halvparten per halv meter (1 + 1 + 1, 6, 4) og 6 til per hjørne (4, 2), så en tegnet
-  1,0 m koster omtrent 1320 som 6560 (20–30 min på 1 m, Bjørn). Linjen i tilbudet er én per disk, «bygget på stedet
-  L × D mm», og plukkes ikke selv: plukklisten har delene under Disker, stolpene per profil i 1040, skinnene med 600 per
-  lengde, platene i diskens farge per mål og toppene og hyllene per mål.
-  *Bjørn 12.11.2026 (tid forslag) · `ITEM.counterProfile`, `counterWhole`, `counterHalf`, `counterCorner` · kode `src/calc/lines/objects.ts`, `src/cost/itemDefs.ts`, `src/foga/counter.ts`, `src/foga/engine.ts`, `src/domain/counters.ts` · test `src/calc/counter.test.ts`*
+- **K9 Tid for disk bygget på stedet.** En disk som bygges på stedet, prises av kostmotoren fra det den er bygget av
+  (profiler per meter, 600, plater per m², topper og hyller) og arbeidet, likt i alle farger; 6560 beholder fast pris
+  (K1, K22). Tiden er plassholder til Bjørn har målt: 26 min i alt per hel meter (plukk, vask og transport 2 + 2 + 2,
+  montering 13, demontering 7), halvparten per halv meter (1 + 1 + 1, 6, 4) og 6 til per hjørne (4, 2), så en disk på
+  1,0 m bygget på stedet koster omtrent 1320 som 6560 (20–30 min på 1 m, Bjørn). Hvordan tiden telles per seksjon og
+  linjen og plukket, står i K13.
+  *Bjørn 12.11.2026 (tid forslag) · `ITEM.counterProfile`, `counterWhole`, `counterHalf`, `counterCorner` · kode `src/calc/lines/objects.ts`, `src/cost/itemDefs.ts`, `src/foga/counter.ts`, `src/foga/engine.ts`, `src/domain/counters.ts` · test `src/calc/podium.test.ts`*
 - **K10 Seksjoner.** En disk eller et podium fra Disker og podier er satt sammen av seksjoner på et raster på 250 mm:
   250, 500, 750 eller 1000 c/c i hver retning. Et knutepunkt står i hvert hjørne av hver seksjon. Utvendig mål er
   c/c + 20 (270, 520, 770, 1020 …), skinnene c/c − 40 (210, 460, 710, 960), platene og toppene c/c − 24 (226, 476, 726,
   976). En lengde deles i hele meter først og resten sist, regnet fra seksjonen man startet i (1750 = 1000 + 750).
   Fasongen er fri så lenge seksjonene henger sammen langs en kant på minst 250; alle fasonger går, også T og kors (K7s
-  «hjørne bare bakover» gjelder ikke). Disker og podier er et eget verktøy ved siden av Disker (tast B), og et klikk setter
-  aldri ut 6560. Pennen viser én seksjon 500 × 500 dempet midt under pekeren, inntil vegg, disk eller standkant innen
+  «hjørne bare bakover» gjaldt bare Disker). Disker og podier er verktøyet for alle disker (tast D). Med «Fri» i
+  hurtigvalget (K22) viser pennen én seksjon 500 × 500 dempet midt under pekeren, inntil vegg, disk eller standkant innen
   10 cm, og ingenting over en disk; et klikk lagrer den, et klikk på en disk velger den. Trykk og dra tegner videre fra
   seksjonen, som står fast fra trykket: i hver retning for seg vokser disken `round(d / 500) × 500` på den siden når
   pekeren går `d` forbi kanten, inne i seksjonen skjer ingenting, og begge retninger gir et rektangel. Der den ikke får
@@ -428,7 +412,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   alltid fast, uansett hvor man trykker. Påbygget blir en del av disken: én disk, én linje, diskens farge, og høyden til
   seksjonen det ligger mot. Nektes med «Disken kan ikke gå over seg selv», «En del ville stått løst» (deler mindre enn
   250 med siden) eller «Ikke plass til disken her». Pillen viser påbygget c/c og disken utvendig etterpå:
-  «+ 500 × 500 · 2 020 × 1 020». Mot 6560 og tegnede disker fra Disker blir det ikke påbygg, bare snappet inntil.
+  «+ 500 × 500 · 2 020 × 1 020».
   *Bjørn 13.11.2026 · kode `src/domain/podiums.ts`, `src/domain/counterShape.ts`, `src/domain/types.ts` · test `src/domain/podiums.test.ts`*
 - **K11 Tett bygg.** Alle utvendige sider er tette: bunnskinne 92 og toppskinne 93 på hver utvendig kant, og én
   veggplate i hele høyden i kanalene, mellom bunnskinne og toppskinne. Det er ingen midtskinne og ingen hylle i
@@ -445,12 +429,12 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   går til den høye. Høyden står i pillen («H 540») og i linjen i tilbudet, med alle høydene når disken har flere
   («540/1040»). Å endre høyden på en seksjon som står, kommer med skuffen i trinn 2.
   *Bjørn 13.11.2026 · kode `src/foga/counter.ts`, `src/domain/podiums.ts`, `src/ui/plan/QuickPicks.tsx` · test `src/domain/podiums.test.ts`*
-- **K13 Pris og plukk for Disker og podier.** Som K9: ett katalogprodukt, «Disk og podium, bygget på stedet»
+- **K13 Pris og plukk for Disker og podier.** Ett katalogprodukt, «Disk og podium, bygget på stedet»
   (varenummer 6570 er midlertidig), priset av kostmotoren fra delene og arbeidet, én linje per disk, «bygget på stedet
   L × D × H mm», og delene plukkes løse under Disker. Linjen heter «Disk» når fasongen ikke er dypere enn 500 noe sted
   (ingen 750 × 750 får plass i den), ellers «Podium». Toppene har prisartikler for alle målene i K10. Tid, plassholder:
   `counterWhole` per seksjon med lengste side over 500, `counterHalf` per seksjon ellers, `counterCorner` per innvendig
-  hjørne i omrisset.
+  hjørne i omrisset, med tidene i K9.
   *Bjørn 13.11.2026 · `ITEM.counterBoard`, `counterWhole`, `counterHalf`, `counterCorner` · kode `src/calc/lines/objects.ts`, `src/cost/itemDefs.ts`, `src/catalog/defaultCatalog.ts`, `src/domain/podiums.ts` · test `src/calc/podium.test.ts`, `src/domain/podiums.test.ts`*
 - **K14 Grep på valgt disk.** En valgt disk fra Disker og podier viser grep som i et CAD-verktøy, i Velg og med
   pennen: ett midt på hver rette side av omrisset (hele siden, også over flere seksjoner) og ett i hvert hjørne av
@@ -459,7 +443,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   bare delvis ligger langs siden, strekkes ikke, det legges en ny ved siden av. Inn: seksjoner krympes og fjernes, vist
   med skravur før slipp; to seksjoner som da får plass i én (samme spenn, samme høyde, til sammen høyst 1000), blir én.
   Minste disk er 250 × 250: lenger inn stopper grepet. Nektes med «En del ville stått løst», «Disken kan ikke gå over
-  seg selv» eller «Ikke plass til disken her». Endegrepene til 6560 og diskene fra Disker (K7) er noe annet.
+  seg selv» eller «Ikke plass til disken her».
   *Bjørn 13.11.2026 · kode `src/domain/podiumGrips.ts` · test `src/domain/podiumGrips.test.ts`*
 - **K15 Fusjon og lenker.** En disk fra Disker og podier som dras med Velg innen 300 mm fra en annen, legger seg inntil
   den, flate mot flate, med knutepunktene i dens raster og minst 250 felles langs siden. Ved slipp blir de én disk: den
@@ -512,7 +496,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   snapper til CC-høydene og stopper mot en nabohylle og mot toppen. Risset målsetter hyllene fra gulv i CC. To
   seksjoner slås bare sammen (K14) med like hyller; et grep som legger på seksjoner gir dem hyllene til seksjonen det
   strekker. Tid, plassholder: 1,5 min opp og 1 ned per hylle (som H7, Bjørn 13.11.2026), unntatt hyllen i CC 750 i en
-  seksjon som er 500 dyp: den er med i tiden per seksjon som i 6560 og K9. Tilbudet sier «3 hyller».
+  seksjon som er 500 dyp: den er med i tiden per seksjon (K9), som i 6560. Tilbudet sier «3 hyller».
   *Bjørn 13.11.2026 · kode `src/foga/counter.ts` (`shelfRails`), `src/domain/podiumShelves.ts` · test `src/domain/podiumShelves.test.ts`, `src/calc/podium.test.ts`*
 - **K20 Print og dekal på disk.** På plate og skyvedør, aldri på åpen lysåpning, trinnplate eller del mot vegg eller
   annen disk (valget står og kommer tilbake når disken flyttes ut). Print er heldekkende dekal, ikke trykk på platen, og
@@ -533,10 +517,13 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   «Bardisk». Farge (K6), print og dekal (K20), snudd, flyttet og mot vegg eller annen disk er fortsatt 6560. Annen
   lengde, dybde, høyde eller hylle, skyvedør, en annen åpen side eller sammenslåing (K15) gjør den til spesialbygg
   (K13). Pennen viser «Fri» og én knapp per standarddisk over verktøyene: et klikk setter den som er valgt, med
-  fronten mot gangen som på Disker, og «Fri» en seksjon på 500 × 500; å dra tegner alltid fritt.
+  fronten mot den åpne siden av standen på tvers av den (den nærmeste når begge er åpne), og «Fri» en seksjon på
+  500 × 500; å dra tegner alltid fritt. Bardisk 6560 i Utstyr er det samme: + setter en 6560 fra Disker og podier, og
+  penselen der velger verktøyet med 6560.
   En skisse lagret før dette gjør disker fra Disker om når den åpnes: disken på lager blir 6560, en tegnet disk én
-  seksjon per hel eller halv meter, åpen bak og med hylle i CC 750, bygget og priset likt.
-  *Bjørn 13.11.2026 · kode `src/domain/podiumStock.ts`, `src/calc/lines/objects.ts`, `src/persistence/file.ts` · test `src/domain/podiumStock.test.ts`*
+  seksjon per hel eller halv meter, åpen bak og med hylle i CC 750, bygget og priset likt. Verktøyet Disker finnes ikke
+  lenger (K7).
+  *Bjørn 13.11.2026 · kode `src/domain/podiumStock.ts`, `src/domain/podiums.ts`, `src/calc/lines/objects.ts`, `src/persistence/file.ts`, `src/ui/panel/sections/EquipSection.tsx` · test `src/domain/podiumStock.test.ts`*
 
 ## P · Plukkliste og arbeidsordre
 

@@ -165,7 +165,7 @@ const PODIUM = DEFAULT_CATALOG.products.find((p) => p.podium)!.id;
 /** Counters from before Disker og podier took over Disker (Bjørn 13.11.2026), as its sections: the counter in stock as
  *  its standard counter, a drawn counter section by section, built and priced the same (Byggeregel K22). */
 function countersAsSections(v: Variant): Variant {
-  if (!v.objects.some((o) => o.pieces || asSections(o, PODIUM) !== o)) return v;
+  if (!v.objects.some((o) => asSections(o, PODIUM) !== o)) return v;
   return { ...v, objects: v.objects.map((o) => asSections(o, PODIUM)) };
 }
 

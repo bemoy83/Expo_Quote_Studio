@@ -118,11 +118,12 @@ export interface PlacedObject {
   rot: number;
   /** A counter's plates (Byggeregel K6): a wall colour, RAL. Omitted = the counter as in stock, white 9010. */
   ral?: string;
-  /** A drawn counter (Byggeregler K7, K8, domain/counters.ts): its straight pieces, in its own coordinates around
-   *  (x, y), mm, front toward +y unturned. Omitted = the product as in stock. */
+  /** A counter Disker drew (Byggeregler K7, K8) before Disker og podier took it over: its straight pieces, in its own
+   *  coordinates around (x, y), mm, front toward +y unturned. Only in old sketches: made sections when one opens
+   *  (domain/podiumStock.ts asSections, K22). */
   pieces?: CounterPiece[];
   /** A counter or podium from Disker og podier (Byggeregler K10–K13, domain/podiums.ts): its sections in its own
-   *  coordinates around (x, y), mm c/c between nodes on the 250 grid, front toward +y unturned. Never with `pieces`. */
+   *  coordinates around (x, y), mm c/c between nodes on the 250 grid, front toward +y unturned. */
   sections?: CounterSection[];
 }
 
@@ -166,7 +167,7 @@ export interface PodiumDecal {
   y: number;
 }
 
-/** One straight piece of a drawn counter: its centre line from `a` to `b` (whole metres from `a`, a half last, K7),
+/** One straight piece of a counter Disker drew (old sketches only, K22): its centre line from `a` to `b` (whole metres from `a`, a half last, K7),
  *  and the side it is open toward, where the staff stand. mm, in the counter's own coordinates. */
 export interface CounterPiece {
   a: Point;

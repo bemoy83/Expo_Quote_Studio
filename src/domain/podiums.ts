@@ -1,6 +1,6 @@
 // Disker og podier (Byggeregler K10–K13): a counter or podium drawn of sections on a 250 mm grid, every side closed,
-// built on site. It is a PlacedObject with `sections` (counterShape.ts builds it tight, K11), beside the counters of
-// Disker (6560 and drawn pieces, counters.ts), which stay as they are. The pen: pointing shows one section 500 × 500
+// built on site. It is a PlacedObject with `sections` (counterShape.ts builds it tight, K11); a standard counter such as
+// 6560 is a preset of sections (podiumStock.ts, K22). The pen: pointing shows one section 500 × 500
 // under the pointer, moved in against a wall, counter or the stand edge within 10 cm; a click stores it; a press and drag
 // grows it from the section pressed, which stays put, each way on its own in 500 steps (K10: whole metres from the
 // section pressed, the rest last). Pointed by the side of a counter of its own, the section lies against that side and
@@ -12,7 +12,7 @@ import { lowered } from './podiumShelves';
 import { frontRot, snapShift } from './counters';
 import { stockSections } from './podiumStock';
 import { nextId } from './ids';
-import { blockers, COUNTER_STOCK_RAL, footprintBox, hitsAny, objectBoxes, objectFootprint, type PlaceContext } from './objects';
+import { addAt, anywhere, blockers, COUNTER_STOCK_RAL, footprintBox, hitsAny, objectBoxes, objectFootprint, type PlaceContext } from './objects';
 import { bounds, covered, edgeRuns, EPS, GRID, overlaps, withSections, type EdgeRun, type Range } from './podiumSections';
 import type { CounterSection, PlacedObject, Point, Variant } from './types';
 
@@ -308,7 +308,7 @@ export function podiumAt(v: Variant, ctx: PlaceContext, pen: { product: string; 
   const id = nextId(v.objects.map((o) => o.id), 'i');
   const colour = pen.ral && pen.ral !== COUNTER_STOCK_RAL ? { ral: pen.ral } : {};
   const half = START / 2;
-  // A standard counter as it is in stock, its front toward the aisle as on Disker (K22); else one section
+  // A standard counter as it is in stock, its front toward the aisle (K22); else one section
   const sections = pen.stock ? stockSections(pen.stock) : [{ x: [-half, half] as [number, number], z: [-half, half] as [number, number], h: pen.h ?? HEIGHT }];
   const o: PlacedObject = { id, product: pen.product, x: q[0], y: q[1], rot: pen.stock ? frontRot(v, q, true) : 0, ...colour, sections };
   const f = objectFootprint(ctx, o);
@@ -320,6 +320,17 @@ export function podiumAt(v: Variant, ctx: PlaceContext, pen: { product: string; 
   const s = snapShift(v, footprintBox(kept, f), blockers(v, ctx, id));
   const at = { ...kept, x: snap(kept.x + s.x), y: snap(kept.y + s.y) };
   return placed(v, ctx, at, at);
+}
+
+/** A standard counter added with + in Utstyr (K22): where + puts furniture, its front toward the aisle, in the nearest
+ *  free spot; null where the stand has none. `product`: the product of Disker og podier. */
+export function addStockAnywhere(v: Variant, ctx: PlaceContext, product: string, artnr: string, ral?: string): Variant | null {
+  const colour = ral && ral !== COUNTER_STOCK_RAL ? { ral } : {};
+  const o: PlacedObject = { id: nextId(v.objects.map((x) => x.id), 'i'), product, x: 0, y: 0, rot: 0, ...colour, sections: stockSections(artnr) };
+  const f = objectFootprint(ctx, o);
+  if (!f) return null;
+  const [x, y] = anywhere(v, f.d);
+  return addAt(v, ctx, { ...o, x, y, rot: frontRot(v, [x, y], true) });
 }
 
 /**

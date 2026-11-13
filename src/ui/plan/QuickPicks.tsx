@@ -11,7 +11,7 @@ import { type TileSize } from '../../domain/floor/tiles'
 import type { GridStep } from '../../domain/snapGrid'
 import type { Motif } from '../../domain/types'
 import { ImageInput, Segmented } from '../controls'
-import { catalog, counterProducts, idx, rules } from '../env'
+import { catalog, idx, rules } from '../env'
 import { ObjectThumb } from '../panel/ProductRow'
 import { FLOOR_MAIN, FLOOR_OTHER, floorSizeLabel, gridSteps, type Brush, type DockTool } from '../tools'
 import { GridPicker } from './GridPicker'
@@ -42,7 +42,6 @@ export interface QuickPicksProps {
   /** The wall pen's bucket: every wall in the pen's colour. */
   onFillWalls: () => void
   /** The counter pen's bucket: every counter in the pen's colour. */
-  onFillCounters: () => void
   /** The bucket of Disker og podier: every counter and podium it drew in the pen's colour. */
   onFillPodiums: () => void
 }
@@ -220,27 +219,8 @@ function quickContent(p: QuickPicksProps): ReactNode {
     )
   }
 
-  if (tool === 'counter') {
-    // Disker: the plates in the wall colours and the bucket, as on Vegg (Bjørn 11.11.2026). One counter in stock now;
-    // the counter brush (other lengths, corners) joins it here
-    const product = brush?.kind === 'counter' ? brush.product : counterProducts()[0].variants[0].artnr
-    const ral = brush?.kind === 'counter' ? brush.ral : undefined
-    return (
-      <>
-        {head}
-        <Palette
-          swatches={ralSwatches(ral, (n) => `Disk ${n}`, (r) => onPick({ kind: 'counter', product, ral: r }))}
-          fill="Fyll alle disker med denne fargen"
-          onFill={p.onFillCounters}
-        />
-        <Sep />
-        {more}
-      </>
-    )
-  }
-
   if (tool === 'podium' && brush?.kind === 'podium') {
-    // Disker og podier: the plates in the wall colours and the bucket, as on Disker (K6), then Høyde (K12)
+    // Disker og podier: the plates in the wall colours and the bucket, as on Vegg (K6), then Høyde (K12)
     const { ral, fine, stock } = brush
     const h = brush.h ?? PODIUM_HEIGHT
     return (

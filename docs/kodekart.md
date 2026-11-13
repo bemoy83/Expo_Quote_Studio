@@ -174,41 +174,27 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
   de gamle diskene 5410, 5415 og 5420 blir løse linjer i gamle skisser (`OLD_COUNTERS`, `retiredToLoose` i `persistence/file.ts`)
 - Kalkyle: `calc/lines/objects.ts` (fast pris, kost fra prisartikkelen `ITEM.counter` i `cost/itemDefs.ts`, bygget av
   `counterBuild`). Plukkes hel, 1 stk (K1)
-- Plan, 3D: plassert og kolliderer som et møbel (`domain/objects.ts`), omrisset (hel strek lukket, lys hårstrek åpen) fra `plan/counterOutline.ts` i `CounterShape`, delelinjene i `plan/layers/CounterLines.tsx`
-  (fra `ObjectLayer.tsx`) · `scene3d/build/counter.ts` (`buildCounter` tar en `CounterBuild`, kalt fra `buildObjects`; profilen i et knutepunkt dreies etter de lukkede sidene den har, `outward`),
+- Plan, 3D: omrisset (hel strek lukket, lys hårstrek åpen) fra `plan/counterOutline.ts` i `CounterShape`, delelinjene i
+  `plan/layers/CounterLines.tsx` (fra `ObjectLayer.tsx`) · `scene3d/build/counter.ts` (`buildCounter` tar en
+  `CounterBuild`, kalt fra `buildObjects`; profilen i et knutepunkt dreies etter de lukkede sidene den har, `outward`),
   profilen snudd etter omrisset med `turnedProfile` (`build/profiles.ts`). Begge tegner i diskens egne koordinater og
-  plasseres og snus utenfra, så en tegnet disk bruker de samme delene
-- Verktøyet Disker (`counter` i `ui/tools.ts`, D i verktøylinjen, etter Hyller): penselen `{ kind: 'counter', product, ral }`
-  plasserer som møbelpennen ved klikk (`placedBy` i `tools.ts`, `pointer/object.ts`); dra tegner disk
-  (`pointer/counter.ts` → `drawCounter` i `domain/counters.ts`, forhåndsvist av `counterTarget` i `plan/next.ts`). En
-  tegnet disk er et møbel med `pieces` (rette biter, mm); `domain/counterShape.ts` gjør dem til deler (`layoutOf`),
-  bygg (`counterBuildOf`, delt av plan, 3D og kalkyle), boksen rundt (`objectFootprint`) og det den dekker, én
-  rektangel per bit (`pieceRects` → `objectBoxes` i `domain/objects.ts`, brukt av kollisjon, treff og markering, så det
-  åpne hjørnet i en L er gulv), og veien mellom diskens egne koordinater og planen (`toPlan`, `toLocal`, `turn`). Endene
-  en strek går ut fra er i `domain/counterEnds.ts` (`counterEnd`, vist som grep av `layers/CounterHandle.tsx`: tonet halvmeter og runde knapper for veiene som går, prøvd med `counterDraw` i `counterHover`). Om et
-  møbel er en disk, sier `PlaceContext.isCounter`. Dra innover fra en fri ende korter den (`shorten`); valgt disk, og
-  hver tegnet disk på arbeidsordren, får helmål med `Chain` (`counterChains` i `plan/dims.ts`, `CounterDims` i
-  `layers/DimLayer.tsx`). I
-  kalkylen prises en tegnet disk av kostmotoren (`drawnCounterLine`, `drawnCounterUses` i `calc/lines/objects.ts`,
-  `strategy: 'sum'` gjennom `extra` i `line()`, prisartiklene `ITEM.counterProfile` … `counterCorner` i
-  `cost/itemDefs.ts`, K9); delene plukkes løse: `counterParts`/`addParts` (`foga/counter.ts`) → `drawnCounterParts`
-  (`domain/counters.ts`) → `FogaStructure.counters` → `bom()` i gruppen Disker (`foga/engine.ts`).
-  Hurtigvalget i `plan/QuickPicks.tsx` er veggfargene og Fyll (`Palette`, som Vegg og Gulv; Fyll = `paintCounters`).
-  Veggfargene som rad er én funksjon, `ralSwatches` i `plan/swatches.ts`, brukt av Vegg, Disker og pillens `Colours`.
-  Pillen på en valgt disk har de samme fargene (`Colours` i `plan/pill/objects.tsx`, `setCounterRal`)
+  plasseres og snus utenfra (`toPlan`, `toLocal`, `turn` i `domain/counterShape.ts`). Om et møbel er en disk, sier
+  `PlaceContext.isCounter`.
+- 6560 settes ut som et ferdig oppsett i Disker og podier (K22, se under). Verktøyet Disker med `pieces`, endegrep og
+  `drawCounter` er tatt bort (K7); `PlacedObject.pieces`, `layoutOf` og `piecesOf` lever bare for å gjøre gamle skisser
+  om (`asSections`).
 - Farge (K6): `PlacedObject.ral`, uten = som på lager (`counterRal`, `COUNTER_STOCK_RAL` i `domain/objects.ts`). Planen
   fyller disken med platefargen, 3D farger platene (`buildCounter` tar fargen). Kalkylen legger prisartikkelen
-  `ITEM.counterPlates` til linjen for hver farget disk, prisen er den samme
-- Neste steg: print og dekal på platene
+  `ITEM.counterPlates` til linjen for hver farget disk, prisen er den samme. Veggfargene som rad er én funksjon,
+  `ralSwatches` i `plan/swatches.ts`, brukt av Vegg, Disker og podier og pillens `Colours`
 - Tester: `foga/counter.test.ts`, `calc/counter.test.ts`, `scene3d/build/counter.test.ts`; eksempel i `src/test/fixtures/10-mobler-utstyr.json`
 
 ### Disker og podier
 
-Eget verktøy ved siden av Disker (tast B), K10–K13 i [byggeregler.md](byggeregler.md). 6560 og diskene Disker tegner
-står urørt; det nye deler bygger, omriss, 3D og kalkyle med dem.
+Verktøyet for alle disker og podier (tast D), K10–K22 i [byggeregler.md](byggeregler.md). Det deler bygger, omriss, 3D
+og kalkyle med 6560, som er et ferdig oppsett i det (K22).
 
-- Modell: `PlacedObject.sections` (`CounterSection`: x og z mellom knutepunkter, mm på 250-raster, og høyden `h`), aldri
-  sammen med `pieces`. Bygget: `layoutBuild(recipe, layout, 'tight')` i `foga/counter.ts` (ingen midtskinne eller hylle,
+- Modell: `PlacedObject.sections` (`CounterSection`: x og z mellom knutepunkter, mm på 250-raster, og høyden `h`). Bygget: `layoutBuild(recipe, layout, 'tight')` i `foga/counter.ts` (ingen midtskinne eller hylle,
   én plate i hele høyden, høyde per del), lest via `counterBuildOf`, `sectionsLayout`, `counterLayoutOf` og
   `sectionRects` i `domain/counterShape.ts` (én boks per seksjon i `objectBoxes`)
 - Pennen, ren og testet: `domain/podiums.ts` (`podiumAt`: én seksjon under pekeren, inntil vegg og standkant innen 10 cm;
@@ -263,9 +249,12 @@ står urørt; det nye deler bygger, omriss, 3D og kalkyle med dem.
 - Standarddisker (K22): `domain/podiumStock.ts` (`STOCK_COUNTERS`: art.nr og seksjoner per standarddisk, 6560 først;
   `stockOf`: hvilken standarddisk seksjonene er, i hvilken som helst dreining, uten farge og dekor; `stockSections`).
   Kalkylen (`calc/lines/objects.ts`) gir en standarddisk katalogens linje og plukker den hel; `drawnCounterParts`
-  hopper over den. Navnet i pille, skuff og arbeidsordre: `counterName` i `ui/env.ts`. Pennen: `Brush.stock` (valgt i hurtigvalget, `QuickPicks.tsx`), `podiumAt` setter
-  standarddisken med `frontRot` fra `counters.ts`. Gamle skisser: `asSections` (podiumStock.ts) via `countersAsSections` i
-  `persistence/file.ts` gjør disker fra Disker om til seksjoner når de åpnes.
+  hopper over den; `soldAs` er varen et objekt selges som (standarddiskens art.nr, ellers produktet). Navnet i pille,
+  skuff og arbeidsordre: `counterName` i `ui/env.ts`. Pennen: `Brush.stock` (valgt i hurtigvalget, `QuickPicks.tsx`),
+  `podiumAt` setter standarddisken med `frontRot` fra `counters.ts`. I Utstyr (`EquipSection.tsx`) teller raden for 6560
+  standarddiskene (`soldAs`), + setter en med `addStockAnywhere` (podiums.ts), og penselen velger Disker og podier med
+  6560. Gamle skisser: `asSections` (podiumStock.ts) via `countersAsSections` i `persistence/file.ts` gjør disker fra
+  Disker om til seksjoner når de åpnes.
 - Høyde i 3D (K18): `podiumTopAt` og draget `podiumTop` i `scene3d/pointer/drag.ts`, `onUpright` i `pointer/hits.ts`.
   Arbeidsordren: `workorder/PodiumSides.tsx` («Disker sett utenfra», `PodiumElevation` uten håndtak) og
   `workorder/podiumSideList.ts` (hvilke sider som tegnes).
@@ -275,7 +264,7 @@ står urørt; det nye deler bygger, omriss, 3D og kalkyle med dem.
   `PlanSelection.podiumSide`/`podiumPart`; `hasDrawer` får varianten for å vite at et objekt har seksjoner.
 - Katalogen: `podium('6570', …)` i `catalog/defaultCatalog.ts` (`Product.podium`, varenummer midlertidig; `counter` er
   én seksjon, så plan, pille og 3D tegner den som en disk)
-- Kalkyle: `podiumLine`/`podiumUses` i `calc/lines/objects.ts` (som K9, navnet Disk eller Podium); toppene i alle mål i
+- Kalkyle: `podiumLine`/`podiumUses` i `calc/lines/objects.ts` (tidene i K9, navnet Disk eller Podium); toppene i alle mål i
   `COUNTER_BOARDS` (`cost/itemDefs.ts`) med eksempelpriser i `cost/own-list.ts`. Delene plukkes under Disker
   (`drawnCounterParts`). Eksempelskisse: `test/fixtures/13-disker-og-podier.json`
 

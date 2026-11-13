@@ -10,9 +10,13 @@ import { pickRows } from '../ui/workorder/pickRows';
 import { counterBuildOf } from './counterShape';
 import { setPodiumPrint } from './podiumDecor';
 import { setPodiumLight, partKey, podiumParts } from './podiumFaces';
-import { podiumAt } from './podiums';
-import { asSections, stockOf, stockSections } from './podiumStock';
-import { drawnCounterUses, podiumUses } from '../calc/lines/objects';
+import { addStockAnywhere, podiumAt } from './podiums';
+import { asSections, soldAs, stockOf, stockSections } from './podiumStock';
+import { removeObjects } from './objects';
+import { podiumUses } from '../calc/lines/objects';
+import { layoutBuild } from '../foga/counter';
+import { RECIPES } from '../foga/recipes';
+import { layoutOf } from './counterShape';
 const isStock6560 = (s: CounterSection[]) => stockOf(s)?.artnr === '6560';
 import type { CounterSection, PlacedObject, Variant } from './types';
 import { createVariant } from './variant';
@@ -90,6 +94,15 @@ describe('the pen places a standard counter (K22)', () => {
     expect(o.y).toBeCloseTo(4.74);
   });
 
+  it('+ in Utstyr adds a 6560 of Disker og podier, front toward the aisle; − takes it away again', () => {
+    const one = addStockAnywhere(base, ctx, '6570', '6560', '3002')!;
+    const o = one.objects[0];
+    expect([o.product, soldAs(o), o.rot, o.ral]).toEqual(['6570', '6560', 0, '3002']);
+    const two = addStockAnywhere(one, ctx, '6570', '6560')!;
+    expect(two.objects.filter((x) => soldAs(x) === '6560')).toHaveLength(2);
+    expect(removeObjects(two, '6560', 1, soldAs).objects.map((x) => x.id)).toEqual([o.id]);
+  });
+
   it('«Fri» stores one section 500 × 500, as before', () => {
     const r = podiumAt(base, ctx, { product: '6570' }, [3, 2]);
     if ('error' in r) throw new Error(r.error);
@@ -115,8 +128,12 @@ describe('counters from Disker as sections when a sketch opens (K22)', () => {
       const o: PlacedObject = { id: 'i1', product: '6560', x: 2, y: 1.5, rot: 90, ral: '7012', pieces };
       const s = asSections(o, '6570');
       expect([s.product, s.pieces, s.ral, s.rot, s.x, s.y]).toEqual(['6570', undefined, '7012', 90, 2, 1.5]);
-      expect(sum(counterBuildOf(s))).toEqual(sum(counterBuildOf(o)));
-      expect(uses(podiumUses(s))).toEqual(uses(drawnCounterUses(o)));
+      // As Disker built it (K7): whole metres from its start, a half last, open at its back
+      expect(sum(counterBuildOf(s))).toEqual(sum(layoutBuild(RECIPES.counter, layoutOf(pieces))));
+      // The work as Disker costed it (K9): per whole and half part, per corner
+      const cells = layoutOf(pieces).cells.map((x) => Math.max(x.x[1] - x.x[0], x.z[1] - x.z[0]));
+      const u = uses(podiumUses(s));
+      expect([u[ITEM.counterWhole] ?? 0, u[ITEM.counterHalf] ?? 0, u[ITEM.counterCorner] ?? 0]).toEqual([cells.filter((n) => n > 500).length, cells.filter((n) => n <= 500).length, pieces.length - 1]);
     });
 
   it('the counter in stock becomes its standard counter; other objects stay as they are', () => {

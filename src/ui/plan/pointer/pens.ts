@@ -7,11 +7,9 @@ export function pens(tool: Tool, brush: Brush | null) {
     wallTool: pen && (brush?.kind === 'wall'),
     floorTool: pen && brush?.kind === 'floor',
     openingTool: pen && brush?.kind === 'opening',
-    /** Møbel and Disker: a piece on the floor, placed where it has room. */
+    /** Møbel: a piece on the floor, placed where it has room. */
     objectTool: pen && !!placedBy(brush),
-    /** Disker: a click places the counter in stock, a drag draws one (Byggeregler K7, K8). */
-    counterTool: pen && brush?.kind === 'counter',
-    /** Disker og podier: a click stores a section, a drag grows it (Byggeregel K10). */
+    /** Disker og podier: a click stores a standard counter or a section, a drag grows it (Byggeregler K10, K22). */
     podiumTool: pen && brush?.kind === 'podium',
     decorTool: pen && brush?.kind === 'motif',
     /** One textile brush: on a system wall it is mounted there, anywhere else it stands free (domain/textile/brush). */
