@@ -348,3 +348,14 @@ export function podiumSize(o: Pick<PlacedObject, 'sections'>): { length: number;
   const b = counterBuildOf(o);
   return { length: b.length, depth: b.depth, height: Math.max(...b.profiles.map((p) => p.box.y[1])) };
 }
+
+/** The sketch with the sections `which` (by index) of counter `id` at CC `h`, one of HEIGHTS (Byggeregel K18); the step
+ *  between two heights is built by K12. */
+export function setSectionHeight(v: Variant, id: string, which: readonly number[], h: number): Variant {
+  const o = v.objects.find((x) => x.id === id);
+  if (!o?.sections || !(HEIGHTS as readonly number[]).includes(h)) return v;
+  const pick = new Set(which);
+  if (!o.sections.some((s, i) => pick.has(i) && s.h !== h)) return v;
+  const sections = o.sections.map((s, i) => (pick.has(i) ? { ...s, h } : s));
+  return { ...v, objects: v.objects.map((x) => (x.id === id ? { ...x, sections } : x)) };
+}

@@ -489,6 +489,11 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   strek med to korte streker innenfor for dørene. Tid, plassholder: 2 min opp og 1 ned per skyvedør (Bjørn
   13.11.2026). Tilbudet sier «1 skyvedør».
   *Bjørn 13.11.2026 · kode `src/foga/counter.ts` (`doorLeaves`), `src/domain/podiumFaces.ts` (`takesDoor`) · test `src/domain/podiumFaces.test.ts`, `src/calc/podium.test.ts`*
+- **K18 Høyde per seksjon.** Høyden på en seksjon som står, endres i skuffen (CC 250, 500, 750 eller 1000) eller ved å
+  dra toppen av seksjonen i risset (grepet «CC 750»); draget snapper til de samme fire høydene, vises mens det dras og
+  settes når det slippes. Bygget følger K12: trinnplate og 94 under den lave toppen mot en høyere nabo. Valget på delene
+  (K16, K17) står. Hyller i eller over den nye høyden fjernes (når K19 er bygget).
+  *Bjørn 13.11.2026 · kode `src/domain/podiums.ts` (`setSectionHeight`), `src/ui/plan/podiumDrawer/PodiumElevation.tsx` · test `src/domain/podiumFaces.test.ts`*
 
 ## P · Plukkliste og arbeidsordre
 

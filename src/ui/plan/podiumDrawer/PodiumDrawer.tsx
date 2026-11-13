@@ -8,7 +8,7 @@ import { useState } from 'react'
 import { counterRal, removeObject, setCounterRal } from '../../../domain/objects'
 import { NO_DOOR, setPodiumLight, takesDoor } from '../../../domain/podiumFaces'
 import { partLocks } from '../../../domain/podiumLocks'
-import { podiumName, podiumSize } from '../../../domain/podiums'
+import { HEIGHTS, podiumName, podiumSize, setSectionHeight } from '../../../domain/podiums'
 import type { CounterLight, PlacedObject, Variant } from '../../../domain/types'
 import { Button, FlatChoice, IconButton, Section } from '../../controls'
 import { place, plateColor, plateName } from '../../env'
@@ -80,6 +80,9 @@ export function PodiumDrawer({ v, o, selection: sel, onSelect, onEdit, onClose }
     onEdit((x) => setPodiumLight(x, o.id, keys, k === 'plate' ? null : k))
   }
 
+  const secs = [...new Set(parts.map((p) => p.part.section))]
+  const heights = [...new Set(secs.map((i) => o.sections![i].h))].sort((a, b) => a - b)
+  const setHeight = (h: number) => onEdit((x) => setSectionHeight(x, o.id, secs, h))
   const scope = pi === undefined ? 'Hele siden' : `Del ${pi + 1} av ${el.parts.length}`
   const partNav =
     el.parts.length > 1 ? (
@@ -90,7 +93,7 @@ export function PodiumDrawer({ v, o, selection: sel, onSelect, onEdit, onClose }
     ) : undefined
   const hint =
     page === 'sides'
-      ? `${pi === undefined ? 'Klikk en del i risset for bare den' : 'Klikk delen igjen for hele siden'} · ‹ › bytter del · åpen: ingen plate og ingen bunnskinne · skyvedør: to plater i sporet · velg side i miniplanen eller ved å klikke disken i planen`
+      ? `${pi === undefined ? 'Klikk en del i risset for bare den' : 'Klikk delen igjen for hele siden'} · dra toppen av en seksjon for høyden · ‹ › bytter del · åpen: ingen plate og ingen bunnskinne · skyvedør: to plater i sporet · velg side i miniplanen eller ved å klikke disken i planen`
       : 'Fargen gjelder hele disken, også dørene · «Sider og hyller» for åpne sider og dører'
 
   return (
@@ -109,11 +112,17 @@ export function PodiumDrawer({ v, o, selection: sel, onSelect, onEdit, onClose }
         </p>
 
         {page === 'sides' ? (
+          <>
           <Section title={scope} aside={kind ? KIND_NAME[kind] : 'blandet'} tools={partNav}>
             <FlatChoice<Kind> label="Hva delen er" value={kind ?? ('' as Kind)} onChange={setKind} options={options} disabled={allLocked} />
             {lockWhy && <p className="set-note">{lockWhy}</p>}
             {!allLocked && !doorable.length && <p className="set-note">{NO_DOOR}</p>}
           </Section>
+          {/* K18: the height of the section behind the part, or of every section along the side */}
+          <Section title={pi === undefined && secs.length > 1 ? 'Seksjonene · høyde' : 'Seksjonen · høyde'} aside={`CC ${heights.map((h) => mm(h / 1000)).join('/')}`}>
+            <FlatChoice<number> label="Høyde CC" value={heights.length === 1 ? heights[0] : 0} onChange={setHeight} options={HEIGHTS.map((h) => ({ value: h, label: mm(h / 1000) }))} />
+          </Section>
+          </>
         ) : (
           <Section title="Hele disken" aside={`${plateName(ral)} ${ral}`}>
             <PlatePalette value={ral} onPick={(r) => onEdit((x) => setCounterRal(x, o.id, r))} />
@@ -136,7 +145,7 @@ export function PodiumDrawer({ v, o, selection: sel, onSelect, onEdit, onClose }
         </div>
       </div>
 
-      <PodiumElevation parts={el.parts} length={el.length} h={el.h} title={`${S.name[0].toUpperCase()}${S.name.slice(1)} · sett utenfra`} fill={plateColor(ral)} chosen={pi} onPick={pickPart} />
+      <PodiumElevation parts={el.parts} length={el.length} h={el.h} title={`${S.name[0].toUpperCase()}${S.name.slice(1)} · sett utenfra`} fill={plateColor(ral)} chosen={pi} onPick={pickPart} onHeight={(sec, h) => onEdit((x) => setSectionHeight(x, o.id, [sec], h))} />
       <div className="wd-hint">{hint}</div>
     </section>
   )

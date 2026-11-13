@@ -8,7 +8,7 @@ import { lightOf, openStretches, partKey, partsOn, podiumHas, podiumParts, prune
 import { gripPodium, joined, podiumGrips } from './podiumGrips';
 import { fusePodiums, inFrame, snapBeside } from './podiumLinks';
 import { lockedParts, partLocks, placedBuild } from './podiumLocks';
-import { podiumSides } from './podiums';
+import { podiumSides, setSectionHeight } from './podiums';
 import type { CounterSection, PlacedObject, Variant } from './types';
 import { createVariant } from './variant';
 
@@ -188,5 +188,23 @@ describe('sliding door (K17)', () => {
     expect(v.objects[0].sections![0].sides).toBeUndefined();
     const one = [sec(-500, 500, -250, 250)];
     expect(podiumHas(setLight(one, front(one), 'door'))).toEqual(['1 skyvedør']);
+  });
+});
+
+describe('height per section (K18)', () => {
+  const v = vOf(at(openBack(two)));
+  it('sets the chosen sections on the grid and keeps what their parts are', () => {
+    const w = setSectionHeight(v, 'a', [1], 500);
+    expect(w.objects[0].sections!.map((s) => s.h)).toEqual([1000, 500]);
+    expect(backOf(w.objects[0].sections!).map((p) => lightOf(w.objects[0].sections!, p))).toEqual(['open', 'open']);
+  });
+  it('only 250, 500, 750 or 1000; the same height is no change', () => {
+    expect(setSectionHeight(v, 'a', [1], 600)).toBe(v);
+    expect(setSectionHeight(v, 'a', [0, 1], 1000)).toBe(v);
+  });
+  it('a lower section gets the step of K12 against its higher neighbour', () => {
+    const steps = (x: Variant) => counterBuildOf(x.objects[0]).plates.filter((p) => p.level === 'step').length;
+    expect(steps(v)).toBe(0);
+    expect(steps(setSectionHeight(v, 'a', [1], 500))).toBe(1);
   });
 });
