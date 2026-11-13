@@ -7,17 +7,13 @@ import { RECIPES } from '../foga/recipes';
 import { toLocal, toPlan, turn } from './counterShape';
 import { nextId } from './ids';
 import type { PlaceContext } from './objects';
-import { centred, GRID, hasRoom, NO_ROOM, ONTO, podiumSides, type PodiumSide } from './podiums';
+import { centred, hasRoom, NO_ROOM, ONTO, podiumSides, type PodiumSide } from './podiums';
+import { covered, edgeRuns, EPS, GRID, groups, meet, overlaps, shared, shifted, type EdgeRun, type Range } from './podiumSections';
 import type { CounterSection, PlacedObject, Point, Variant } from './types';
 
-const EPS = 1e-6;
 const FACE = RECIPES.counter.face;
 /** Node lines of two counters standing against each other: face against face. */
 const APART = 2 * FACE;
-type Range = [number, number];
-type Axis = 'x' | 'z';
-
-const shared = (p: Range, q: Range) => Math.min(p[1], q[1]) - Math.max(p[0], q[0]);
 const mm = (n: number) => Math.round(n * 1000) / 1000 + 0;
 const isPodium = (o: PlacedObject) => !!o.sections?.length;
 
@@ -29,8 +25,6 @@ export function inFrame(c: PlacedObject, o: PlacedObject): CounterSection[] {
     return { x: [mm(Math.min(p[0], q[0])), mm(Math.max(p[0], q[0]))], z: [mm(Math.min(p[1], q[1])), mm(Math.max(p[1], q[1]))], h: s.h };
   });
 }
-
-const overlapping = (p: readonly CounterSection[], q: readonly CounterSection[]) => p.some((s) => q.some((t) => shared(s.x, t.x) > EPS && shared(s.z, t.z) > EPS));
 
 /** Each side of `c` with a side of `os` (in c's frame) facing it, node lines `d` apart (mm, out from c), sharing at least
  *  some length: the side of c, how far apart, and the length they share. */
@@ -67,7 +61,7 @@ export function snapBeside(v: Variant, ctx: PlaceContext, o: PlacedObject): { o:
       const [dx, dy] = turn(delta, c.rot);
       const at = { ...o, x: mm(o.x + dx / 1000), y: mm(o.y + dy / 1000) };
       const moved = inFrame(c, at);
-      if (overlapping(moved, c.sections!) || !hasRoom({ ...v, objects: v.objects.filter((x) => x.id !== c.id) }, ctx, at)) continue;
+      if (overlaps(moved, c.sections!) || !hasRoom({ ...v, objects: v.objects.filter((x) => x.id !== c.id) }, ctx, at)) continue;
       best = { o: at, onto: c.id, cost };
     }
   }
@@ -85,8 +79,8 @@ export function fusePodiums(v: Variant, ctx: PlaceContext, aId: string, bId: str
   if (!pair) return { error: 'Diskene står ikke inntil hverandre' };
   const { side } = pair;
   const shift = -APART * side.out;
-  const laid = bs.map((s): CounterSection => (side.axis === 'x' ? { ...s, x: [s.x[0] + shift, s.x[1] + shift] } : { ...s, z: [s.z[0] + shift, s.z[1] + shift] }));
-  if (overlapping(laid, a.sections!)) return { error: 'Disken kan ikke gå over seg selv' };
+  const laid = bs.map((s) => shifted(s, side.axis, shift));
+  if (overlaps(laid, a.sections!)) return { error: 'Disken kan ikke gå over seg selv' };
   const o = centred(a, [...a.sections!, ...laid]);
   const rest = { ...v, objects: v.objects.filter((x) => x.id !== b.id) };
   if (!hasRoom(rest, ctx, o)) return { error: NO_ROOM };
@@ -94,72 +88,27 @@ export function fusePodiums(v: Variant, ctx: PlaceContext, aId: string, bId: str
 }
 
 /** A joint: a straight line inside a counter where sections meet, across `axis` at `at`, from `a` to `b` along. */
-export interface PodiumJoint {
-  axis: Axis;
-  at: number;
-  a: number;
-  b: number;
-}
-
-const covered = (sections: readonly CounterSection[], x: number, z: number) => sections.some((s) => x > s.x[0] && x < s.x[1] && z > s.z[0] && z < s.z[1]);
+export type PodiumJoint = EdgeRun;
 
 /** The joints of a counter: every edge between two sections, joined where they run on in a straight line. */
-export function podiumJoints(sections: readonly CounterSection[]): PodiumJoint[] {
-  const bits = new Map<string, { axis: Axis; at: number; t: number[] }>();
-  for (const s of sections)
-    for (const axis of ['x', 'z'] as const) {
-      const at = s[axis][1];
-      const run = axis === 'x' ? s.z : s.x;
-      for (let t = run[0]; t < run[1] - EPS; t += GRID) {
-        const mid = t + GRID / 2;
-        if (!(axis === 'x' ? covered(sections, at + 1, mid) : covered(sections, mid, at + 1))) continue;
-        const key = `${axis}:${at}`;
-        const j = bits.get(key) ?? { axis, at, t: [] };
-        j.t.push(t);
-        bits.set(key, j);
-      }
-    }
-  const out: PodiumJoint[] = [];
-  for (const { axis, at, t } of bits.values()) {
-    t.sort((p, q) => p - q);
-    let a = t[0];
-    for (let i = 1; i <= t.length; i++)
-      if (i === t.length || t[i] - t[i - 1] > GRID + EPS) {
-        out.push({ axis, at, a, b: t[i - 1] + GRID });
-        a = t[i];
-      }
-  }
-  return out;
-}
+export const podiumJoints = (sections: readonly CounterSection[]): PodiumJoint[] =>
+  edgeRuns(sections, [1], ([x, z]) => covered(sections, x, z)).map(({ axis, at, a, b }) => ({ axis, at, a, b }));
 
 /** A joint that does not part the counter on its own (K15). */
 export const NOT_ALONE = 'Skjøten deler ikke disken alene: bryt også skjøten ved siden av';
 
 /** The groups of sections that hang together with the joint `cut` broken (edges of at least GRID, K10). */
 function parts(sections: readonly CounterSection[], cut: PodiumJoint): CounterSection[][] {
-  const across = (p: CounterSection, q: CounterSection, axis: Axis) => {
-    const other = axis === 'x' ? 'z' : 'x';
-    const at = Math.abs(p[axis][1] - q[axis][0]) < EPS ? p[axis][1] : Math.abs(q[axis][1] - p[axis][0]) < EPS ? p[axis][0] : null;
-    if (at === null || shared(p[other], q[other]) < GRID - EPS) return false;
-    const broken = cut.axis === axis && Math.abs(at - cut.at) < EPS && shared([Math.max(p[other][0], q[other][0]), Math.min(p[other][1], q[other][1])], [cut.a, cut.b]) > EPS;
-    return !broken;
+  const broken = (p: CounterSection, q: CounterSection, at: number) => {
+    const run: Range = cut.axis === 'x' ? [Math.max(p.z[0], q.z[0]), Math.min(p.z[1], q.z[1])] : [Math.max(p.x[0], q.x[0]), Math.min(p.x[1], q.x[1])];
+    return Math.abs(at - cut.at) < EPS && shared(run, [cut.a, cut.b]) > EPS;
   };
-  const seen = new Set<number>();
-  const out: CounterSection[][] = [];
-  for (let k = 0; k < sections.length; k++) {
-    if (seen.has(k)) continue;
-    const group = [k];
-    seen.add(k);
-    for (let i = 0; i < group.length; i++)
-      sections.forEach((s, j) => {
-        if (!seen.has(j) && (across(sections[group[i]], s, 'x') || across(sections[group[i]], s, 'z'))) {
-          seen.add(j);
-          group.push(j);
-        }
-      });
-    out.push(group.map((i) => sections[i]));
-  }
-  return out;
+  return groups(sections, (p, q) =>
+    (['x', 'z'] as const).some((axis) => {
+      const at = meet(p, q, axis);
+      return at !== null && !(axis === cut.axis && broken(p, q, at));
+    }),
+  );
 }
 
 /** `o` parted at the joint (K15): the biggest part stays where it is, with o's id; each other part becomes a counter of
@@ -178,7 +127,7 @@ export function breakJoint(v: Variant, ctx: PlaceContext, id: string, joint: Pod
     // Away from the joint, on the side the part lies
     const side = g.reduce((n, s) => n + Math.sign((s[joint.axis][0] + s[joint.axis][1]) / 2 - joint.at) * area([s]), 0) >= 0 ? 1 : -1;
     const shift = side * APART;
-    const moved = g.map((s): CounterSection => (joint.axis === 'x' ? { ...s, x: [s.x[0] + shift, s.x[1] + shift] } : { ...s, z: [s.z[0] + shift, s.z[1] + shift] }));
+    const moved = g.map((s) => shifted(s, joint.axis, shift));
     const nid = nextId(objects.map((x) => x.id), 'i');
     objects = [...objects, centred({ ...o, id: nid }, moved)];
     ids.push(nid);

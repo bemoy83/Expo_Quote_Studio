@@ -8,7 +8,7 @@ import { roomSideAt } from '../../../domain/rooms'
 import { shelfBox, shelvesOf } from '../../../domain/shelves/model'
 import { faceAt } from '../../../domain/faces'
 import { offsetAlong, wallLength } from '../../../domain/grid'
-import type { Room, Variant } from '../../../domain/types'
+import type { PlacedObject, Point, Room, Variant } from '../../../domain/types'
 import type { BuiltModule } from '../../../domain/walls'
 import { place, rules } from '../../env'
 import { sizePx, type PlanScale } from '../planScale'
@@ -102,36 +102,27 @@ export function planHits(v: Variant, mods: BuiltModule[], selection: PlanSelecti
   }
 
   /** A link of the chosen counter of Disker og podier under the pointer (Byggeregel K15), the nearest. */
+  /** Of things drawn at `at`, the one nearest q within a grip's reach, with the counter it belongs to. */
+  const nearestOf = <T extends { at: Point }>(o: PlacedObject, items: T[], q: P): (T & { o: PlacedObject }) | null => {
+    let bd = gripReach()
+    let best: T | null = null
+    for (const x of items) {
+      const d = Math.hypot(q.x - x.at[0], q.y - x.at[1])
+      if (d < bd) [bd, best] = [d, x]
+    }
+    return best && { ...best, o }
+  }
+
   const podiumLinkAt = (q: P) => {
     const o = chosenPodium()
-    if (!o) return null
-    let bd = gripReach()
-    let best: (ReturnType<typeof podiumLinks>[number] & { o: typeof o }) | null = null
-    for (const l of podiumLinks(v, o)) {
-      const d = Math.hypot(q.x - l.at[0], q.y - l.at[1])
-      if (d < bd) {
-        bd = d
-        best = { ...l, o }
-      }
-    }
-    return best
+    return o ? nearestOf(o, podiumLinks(v, o), q) : null
   }
 
   /** A grip of the chosen counter of Disker og podier under the pointer (Byggeregel K14), the nearest; a link there
    *  comes first (K15). */
   const podiumGripAt = (q: P) => {
     const o = chosenPodium()
-    if (!o || podiumLinkAt(q)) return null
-    let bd = gripReach()
-    let best: (ReturnType<typeof podiumGrips>[number] & { o: typeof o }) | null = null
-    for (const g of podiumGrips(o)) {
-      const d = Math.hypot(q.x - g.at[0], q.y - g.at[1])
-      if (d < bd) {
-        bd = d
-        best = { ...g, o }
-      }
-    }
-    return best
+    return o && !podiumLinkAt(q) ? nearestOf(o, podiumGrips(o), q) : null
   }
 
   return { onStand, moduleAt, beamAt, faceHit, onWallBand, roomEdgeAt, objectAt, shelfAt, podiumGripAt, podiumLinkAt }

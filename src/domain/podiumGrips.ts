@@ -1,17 +1,17 @@
 // Grep på valgt disk (Byggeregel K14, PR 4): a chosen counter of Disker og podier shows a grip in the middle of each
 // straight side of its outline and one in each corner of the box round it. A grip moves its side (a corner: the two box
 // sides that meet there) in 500 steps, 250 with Shift. Out, the section by the side is stretched to 1000 before a new
-// one is laid; in, the sections are shrunk and taken away, and what is left joined again where two fit in one. Pure, sections in the counter's own frame, mm.
+// one is laid; in, the sections are shrunk and taken away, and what is left joined again where two fit in one. Pure,
+// sections in the counter's own frame, mm.
 import { RECIPES } from '../foga/recipes';
 import { toLocal, toPlan } from './counterShape';
 import type { PlaceContext } from './objects';
-import { centred, GRID, hasRoom, NO_ROOM, podiumSides, runNodes, SECTION_MAX, type PodiumSide } from './podiums';
+import { centred, hasRoom, NO_ROOM, podiumSides, runNodes, SECTION_MAX, type PodiumSide } from './podiums';
+import { along, bounds as box, EPS, GRID, groups, meet, overlaps, shared, withAlong, withAxis, type Axis } from './podiumSections';
 import type { CounterSection, PlacedObject, Point, Variant } from './types';
 
-const EPS = 1e-6;
 const FACE = RECIPES.counter.face;
-type Range = [number, number];
-type Axis = 'x' | 'z';
+type Range = readonly [number, number];
 
 /** A grip: a side of the outline, or a corner of the box round it (the box's x side `x` and z side `z`, −1 low, 1 high). */
 export type PodiumGrip = { kind: 'side'; side: PodiumSide } | { kind: 'corner'; x: -1 | 1; z: -1 | 1 };
@@ -19,19 +19,7 @@ export type PodiumGrip = { kind: 'side'; side: PodiumSide } | { kind: 'corner'; 
 /** A line of the outline a grip moves: across `axis` at `at` facing `out`, along from `a` to `b` (a box side: all of it). */
 type Line = Omit<PodiumSide, 'a' | 'b'> & { a: number; b: number };
 
-const along = (s: CounterSection, axis: Axis): Range => (axis === 'x' ? s.z : s.x);
-const withAxis = (s: CounterSection, axis: Axis, r: Range): CounterSection => (axis === 'x' ? { ...s, x: r } : { ...s, z: r });
-const withAlong = (s: CounterSection, axis: Axis, r: Range): CounterSection => (axis === 'x' ? { ...s, z: r } : { ...s, x: r });
 const len = (r: Range) => r[1] - r[0];
-const shared = (p: Range, q: Range) => Math.min(p[1], q[1]) - Math.max(p[0], q[0]);
-
-/** The box round some sections, node to node. */
-function box(sections: readonly CounterSection[]): { x: Range; z: Range } {
-  return {
-    x: [Math.min(...sections.map((s) => s.x[0])), Math.max(...sections.map((s) => s.x[1]))],
-    z: [Math.min(...sections.map((s) => s.z[0])), Math.max(...sections.map((s) => s.z[1]))],
-  };
-}
 
 /** Each grip of a counter and where it is drawn on the plan (m): on the outer face, a side's in its middle. */
 export function podiumGrips(o: PlacedObject): { grip: PodiumGrip; at: Point }[] {
@@ -139,32 +127,9 @@ export function joined(sections: readonly CounterSection[]): CounterSection[] {
   return out;
 }
 
-/** Whether some sections overlap anywhere. */
-function overlapping(sections: readonly CounterSection[]): boolean {
-  for (let i = 0; i < sections.length; i++)
-    for (let j = i + 1; j < sections.length; j++) if (shared(sections[i].x, sections[j].x) > EPS && shared(sections[i].z, sections[j].z) > EPS) return true;
-  return false;
-}
-
 /** Whether the sections hang together along edges of at least GRID (K10). */
-export function connected(sections: readonly CounterSection[]): boolean {
-  if (!sections.length) return false;
-  const touch = (p: CounterSection, q: CounterSection) =>
-    ((Math.abs(p.x[1] - q.x[0]) < EPS || Math.abs(q.x[1] - p.x[0]) < EPS) && shared(p.z, q.z) >= GRID - EPS) ||
-    ((Math.abs(p.z[1] - q.z[0]) < EPS || Math.abs(q.z[1] - p.z[0]) < EPS) && shared(p.x, q.x) >= GRID - EPS);
-  const seen = new Set([0]);
-  const todo = [0];
-  while (todo.length) {
-    const i = todo.pop()!;
-    sections.forEach((s, j) => {
-      if (!seen.has(j) && touch(sections[i], s)) {
-        seen.add(j);
-        todo.push(j);
-      }
-    });
-  }
-  return seen.size === sections.length;
-}
+export const connected = (sections: readonly CounterSection[]): boolean =>
+  sections.length > 0 && groups(sections, (p, q) => meet(p, q, 'x') !== null || meet(p, q, 'z') !== null).length === 1;
 
 /** The step a grip moves in (K14): 500, 250 with Shift. */
 export const gripStep = (fine: boolean) => (fine ? GRID : 2 * GRID);
@@ -201,7 +166,7 @@ function moved(sections: readonly CounterSection[], lines: Line[], ds: number[])
     }
   }
   if (!now.length) return { error: SMALLEST, gone };
-  if (overlapping(now)) return { error: 'Disken kan ikke gå over seg selv', gone };
+  if (overlaps(now)) return { error: 'Disken kan ikke gå over seg selv', gone };
   if (!connected(now)) return { error: 'En del ville stått løst', gone };
   return { sections: joined(now), gone };
 }
