@@ -11,19 +11,18 @@ import type { CounterPiece, CounterSection, PlacedObject, Point } from './types'
 
 const R = RECIPES.counter;
 const EPS = 1e-6;
-/** Across a piece, node to node (520 − 2 × 10), and half of it. */
-export const CC_DEPTH = R.stock.depth - 2 * R.face;
-export const HALF = CC_DEPTH / 2;
+/** Across a piece, node to node (520 − 2 × 10), half of it. */
+const HALF = (R.stock.depth - 2 * R.face) / 2;
 
-export const alongX = (p: Pick<CounterPiece, 'a' | 'b'>) => Math.abs(p.a[1] - p.b[1]) < EPS;
-export const pieceLength = (p: Pick<CounterPiece, 'a' | 'b'>) => Math.abs(p.b[0] - p.a[0]) + Math.abs(p.b[1] - p.a[1]);
-export const unit = (p: Pick<CounterPiece, 'a' | 'b'>): Point => {
+const alongX = (p: Pick<CounterPiece, 'a' | 'b'>) => Math.abs(p.a[1] - p.b[1]) < EPS;
+const pieceLength = (p: Pick<CounterPiece, 'a' | 'b'>) => Math.abs(p.b[0] - p.a[0]) + Math.abs(p.b[1] - p.a[1]);
+const unit = (p: Pick<CounterPiece, 'a' | 'b'>): Point => {
   const L = pieceLength(p) || 1;
   return [(p.b[0] - p.a[0]) / L, (p.b[1] - p.a[1]) / L];
 };
 
 /** The counter in stock as one piece, open at the back (K1). */
-export const STOCK_PIECE: CounterPiece = { a: [-(R.stock.length / 2 - R.face), 0], b: [R.stock.length / 2 - R.face, 0], back: [0, -1] };
+const STOCK_PIECE: CounterPiece = { a: [-(R.stock.length / 2 - R.face), 0], b: [R.stock.length / 2 - R.face, 0], back: [0, -1] };
 
 /** The pieces Disker drew, or the counter in stock as one (for asSections). */
 export const piecesOf = (o: Pick<PlacedObject, 'pieces'>): readonly CounterPiece[] => o.pieces ?? [STOCK_PIECE];
@@ -52,7 +51,7 @@ export function layoutOf(pieces: readonly CounterPiece[]): CounterLayout {
 /** Sections of Disker og podier as parts (K10, K11): each its own cell with its height, open or with a sliding door
  *  where a side is (K16, K17) and
  *  not `locked` against a wall or another counter (podiumLocks.ts, by partKey). */
-export function sectionsLayout(sections: readonly CounterSection[], locked: readonly string[] = []): CounterLayout {
+function sectionsLayout(sections: readonly CounterSection[], locked: readonly string[] = []): CounterLayout {
   const off = new Set(locked);
   return { cells: sections.map((c) => ({ x: c.x, z: c.z, h: c.h, ...(c.shelves?.length && { shelves: c.shelves }) })), ...podiumLights(sections, off) };
 }
@@ -106,6 +105,5 @@ export const toPlan = (o: Pick<PlacedObject, 'x' | 'y' | 'rot'>, p: Point): Poin
 /** A plan point (m) in a counter's own coordinates (mm). */
 export const toLocal = (o: Pick<PlacedObject, 'x' | 'y' | 'rot'>, p: Point): Point => unturn([(p[0] - o.x) * 1000, (p[1] - o.y) * 1000], o.rot);
 
-/** To whole mm in m, or whole µm in mm; `tidy` also drops −0. */
+/** To whole mm in m, or whole µm in mm. */
 export const snap = (n: number) => Math.round(n * 1000) / 1000;
-export const tidy = (p: Point): Point => [snap(p[0]) + 0, snap(p[1]) + 0];

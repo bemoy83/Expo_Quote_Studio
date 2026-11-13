@@ -83,7 +83,7 @@ const def = (id: string, name: string, unit: PriceItem['unit'], transfer: PriceI
 /** The counter in stock (6560). */
 const STOCK = RECIPES.counter.stock;
 
-/** The profiles a drawn counter is built of (K8), and its boards: those of a whole part and a half, as a straight
+/** The profiles a counter built on site is built of (K8), and its boards: those of a whole part and a half, as a straight
  *  1,5 m builds them, and the top of every section of Disker og podier, 250 to 1000 c/c each way (K10) (long × short). */
 const C = RECIPES.counter;
 const COUNTER_PROFILES = [...new Set([...Object.values(C.nodes), C.rail, C.innerRail.code, C.bottomRail])];

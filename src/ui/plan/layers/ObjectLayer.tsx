@@ -57,7 +57,7 @@ export function ObjectLayer(props: {
         const halo = { fill: 'none', stroke: HALO, strokeWidth: outlineHalo(sc) }
         const g = gone('object', o.id)
         const op = off(mainGroupOf(productOf(o.product)?.group)) ? DIMMED : undefined
-        // A counter (K1, K7): one shape round all its pieces, closed sides solid, open sides dashed (CounterShape)
+        // A counter (K1, K10): one shape round all its sections, closed sides solid, open sides a hairline (CounterShape)
         if (counter)
           return (
             <g key={o.id}>
@@ -85,7 +85,7 @@ export function ObjectLayer(props: {
 }
 
 /**
- * A counter seen from above (Byggeregler K7, K8): its plates' colour over all its pieces, one halo round them when
+ * A counter seen from above (Byggeregler K8, K10): its plates' colour over all its sections, one halo round them when
  * chosen, and one outline round the whole counter (counterOutline): solid along the closed sides, a faint hairline along
  * the open ones (Bjørn 13.11.2026). Both strokes lie inside the outer edge, so the counter is drawn no
  * wider than it is: each is twice as wide and clipped to the counter.

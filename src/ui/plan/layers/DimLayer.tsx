@@ -5,6 +5,7 @@ import type { PlanSelection } from '../selection'
 import { sizePx, usePlanScale, type PlanScale } from '../planScale'
 import { counterChains, counterDimSides, DIM_NEAR, DIM_TOTAL, planDims, sideLine, type InnerChain } from '../dims'
 import { objectBoxes } from '../../../domain/objects'
+import { stockOf } from '../../../domain/podiumStock'
 import { Chain } from '../DimChain'
 import { mainGroupOf } from '../../../catalog/groups'
 import { isCounter, place, productOf, rules } from '../../env'
@@ -32,12 +33,12 @@ export function DimLayer({ v, selection, counters, off }: { v: Variant; selectio
   )
 }
 
-/** A counter's whole outer width and depth (K10), each on the side toward the stand's middle: the chosen one in the
- *  plan, and on the work order (`all`) every one of Disker og podier, since the montør reads them there (Bjørn
- *  12.11.2026). */
+/** A counter's whole outer width and depth (K8), each on the side toward the stand's middle: the chosen one in the
+ *  plan, and on the work order (`all`) every one built on site, since the montør reads them there (Bjørn 12.11.2026);
+ *  a standard counter none (K22). */
 function CounterDims({ sc, v, selection, all, off }: { sc: PlanScale; v: Variant; selection: PlanSelection; all?: boolean; off?: (group: string) => boolean }) {
   // On a work order filtered to other groups, the dimmed counters get no measures
-  const shown = v.objects.filter((o) => isCounter(o.product) && (all ? !!o.sections && !off?.(mainGroupOf(productOf(o.product)?.group)) : o.id === selection.objectId))
+  const shown = v.objects.filter((o) => isCounter(o.product) && (all ? !!o.sections && !stockOf(o.sections) && !off?.(mainGroupOf(productOf(o.product)?.group)) : o.id === selection.objectId))
   const gap = sizePx(sc, DIM_NEAR)
   return shown.map((o) => {
     const c = counterChains(objectBoxes(place, o))

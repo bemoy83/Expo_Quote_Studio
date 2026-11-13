@@ -288,8 +288,8 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
     put(BOM_GROUP.shelves, `board|${k}`, { artnr: '', name: b.name, detail: `${b.w} × ${b.d} mm · ${board}`, preassembled: false }, kinds[k] ?? 0);
   }
 
-  // Disker built on site (Byggeregler K7–K9): posts by profile, rails with their 600 mounted (stored so, like the wall's),
-  // plates in their colour, tops and shelves. The counter in stock is a calc line, picked whole
+  // Disker built on site (Byggeregler K13): posts by profile, rails with their 600 mounted (stored so, like the wall's),
+  // plates in their colour, tops and shelves. A standard counter is a calc line, picked whole (K22)
   const dk = r.counter;
   const cp = s.counters;
   // Profiles in code order, then longest first; plates by colour, then largest first; boards largest first

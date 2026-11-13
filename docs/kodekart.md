@@ -248,7 +248,7 @@ og kalkyle med 6560, som er et ferdig oppsett i det (K22).
   `scene3d/build/counter.ts`).
 - Standarddisker (K22): `domain/podiumStock.ts` (`STOCK_COUNTERS`: art.nr og seksjoner per standarddisk, 6560 først;
   `stockOf`: hvilken standarddisk seksjonene er, i hvilken som helst dreining, uten farge og dekor; `stockSections`).
-  Kalkylen (`calc/lines/objects.ts`) gir en standarddisk katalogens linje og plukker den hel; `drawnCounterParts`
+  Kalkylen (`calc/lines/objects.ts`) gir en standarddisk katalogens linje og plukker den hel; `builtCounterParts`
   hopper over den; `soldAs` er varen et objekt selges som (standarddiskens art.nr, ellers produktet). Navnet i pille,
   skuff og arbeidsordre: `counterName` i `ui/env.ts`. Pennen: `Brush.stock` (valgt i hurtigvalget, `QuickPicks.tsx`),
   `podiumAt` setter standarddisken med `frontRot` fra `counters.ts`. I Utstyr (`EquipSection.tsx`) teller raden for 6560
@@ -266,7 +266,7 @@ og kalkyle med 6560, som er et ferdig oppsett i det (K22).
   én seksjon, så plan, pille og 3D tegner den som en disk)
 - Kalkyle: `podiumLine`/`podiumUses` i `calc/lines/objects.ts` (tidene i K9, navnet Disk eller Podium); toppene i alle mål i
   `COUNTER_BOARDS` (`cost/itemDefs.ts`) med eksempelpriser i `cost/own-list.ts`. Delene plukkes under Disker
-  (`drawnCounterParts`). Eksempelskisse: `test/fixtures/13-disker-og-podier.json`
+  (`builtCounterParts`). Eksempelskisse: `test/fixtures/13-disker-og-podier.json`
 
 ### Møbler og utstyr
 

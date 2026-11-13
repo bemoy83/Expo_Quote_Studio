@@ -6,7 +6,7 @@ import { beamHooks, hookCount } from '../calc/beams/beamHooks';
 import { variantBeams } from '../calc/beams/beams';
 import type { BeamLayout } from '../calc/beams/beamSegments';
 import { production, type Production } from '../calc/textile/production';
-import { drawnCounterParts } from '../domain/counters';
+import { builtCounterParts } from '../domain/counters';
 import { shelfBrackets } from '../domain/shelves/brackets';
 import type { Variant } from '../domain/types';
 import { builtModules, wallPoints, type BuiltModule } from '../domain/walls';
@@ -67,7 +67,7 @@ export function fromVariant(v: Variant, rules: Rules): FogaStructure {
   const lift = liftBeams(v, rules, laid, points);
   const beams = withJoins(laid, lift);
   const hooks = hookCount(beamHooks(beams, points, lift));
-  return structureOf({ mods, posts, beams, hooks, lift: { posts: lift.posts.length, hooks: lift.hooks.length, walls: lift.walls.length }, production: production(v, rules, ''), shelves: shelfBrackets(v, rules), counters: drawnCounterParts(v) });
+  return structureOf({ mods, posts, beams, hooks, lift: { posts: lift.posts.length, hooks: lift.hooks.length, walls: lift.walls.length }, production: production(v, rules, ''), shelves: shelfBrackets(v, rules), counters: builtCounterParts(v) });
 }
 
 /** Sizes from the rules, mm: post = system wall height without feet (2490), cc 1000. */

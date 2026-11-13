@@ -380,7 +380,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   Disken tettes bare utvendig: ingen plater og ingen bunnskinne inne i disken. I planen har disken ett omriss rundt hele seg, hel strek der den er lukket og en tynn, lys hårstrek
   der den er åpen (Bjørn 13.11.2026: stiplet i planen hører til gangside og takdrager, og uten strek forsvinner en hvit disk
   på hvitt gulv). Begge strekene ligger innenfor ytterkanten. En tynn delelinje
-  går på tvers av disken der to deler møtes, over 94-skinnen mellom dem.
+  går på tvers av disken der to deler møtes, over 94-skinnen mellom dem. Valgt disk viser utvendig helmål i planen:
+  bredde og dybde på siden mot midten av standen, en L sine to ytre lengder. Arbeidsordren viser helmålene på alle
+  disker som bygges på stedet; en standarddisk (K22) får ingen.
   *Bjørn 12.11.2026 · `RECIPES.counter.nodes`, `innerRail` · kode `src/foga/counter.ts` · test `src/foga/counter.test.ts`*
 - **K9 Tid for disk bygget på stedet.** En disk som bygges på stedet, prises av kostmotoren fra det den er bygget av
   (profiler per meter, 600, plater per m², topper og hyller) og arbeidet, likt i alle farger; 6560 beholder fast pris
