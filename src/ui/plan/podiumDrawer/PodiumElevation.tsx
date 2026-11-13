@@ -4,8 +4,10 @@
 // shelves and the height from the floor (CC) and the outer height. A click on a part chooses the light opening under
 // the pointer (the part when it has no shelves), a click on what is chosen goes back to the whole side. On top of each
 // section a grip «CC 750» sets its height (K18), on each shelf rail a grip «Hylle 500» moves the shelf (K19): both
-// snap to the 250 grid, show live and are set on release.
-import { useRef, useState, type PointerEvent } from 'react'
+// snap to the 250 grid, show live and are set on release. Print (K20) shows its share of the motif in each window of
+// plate and door; a decal is chosen by a click and moved or scaled by its handles, set on release.
+import { useRef, useState, type PointerEvent, type ReactNode } from 'react'
+import type { Motif } from '../../../domain/types'
 import { HEIGHTS } from '../../../domain/podiums'
 import { shelfStop } from '../../../domain/podiumShelves'
 import { RECIPES } from '../../../foga/recipes'
@@ -15,7 +17,9 @@ import { Chain } from '../DimChain'
 import { DIM_NEAR as NEAR, DIM_TOTAL as TOTAL } from '../dims'
 import { planScale, sizePx } from '../planScale'
 import { frame } from '../wallDrawer/elevationMeasure'
-import { lightBands, type ElevationPart } from './podiumView'
+import { findMotif } from '../../motifs'
+import { Handles, Print, type Edge } from '../drawerParts'
+import { lightBands, type ElevationDecal, type ElevationPart, type ElevationPrint } from './podiumView'
 
 const R = RECIPES.counter
 const RAIL = R.railHeight / 1000
@@ -43,6 +47,25 @@ interface Props {
   onHeight?: (section: number, h: number) => void
   /** The shelf at CC `from` in section `section` dragged to `to`. */
   onShelf?: (section: number, from: number, to: number) => void
+  /** Print and decals on the side (K20), and the motifs they show. */
+  prints?: ElevationPrint[]
+  decals?: ElevationDecal[]
+  motifs?: Motif[]
+  /** The decal chosen; a click on a decal chooses it. */
+  decal?: string
+  onDecal?: (id: string | undefined) => void
+  /** Decal `id` moved or scaled: its new size and centre height (mm) and how far its centre went right. */
+  onDecalBox?: (id: string, box: { w: number; h: number; dx: number; y: number }) => void
+}
+
+/** A decal being moved (`move`) or scaled by an edge, from where the pointer went down (m in the drawing). */
+interface DecalDrag {
+  id: string
+  edge: Edge | 'move'
+  sx: number
+  sy: number
+  from: { x0: number; x1: number; y0: number; y1: number }
+  box: { x0: number; x1: number; y0: number; y1: number }
 }
 
 type Drag = { section: number; y0: number } & ({ kind: 'top'; h0: number; h: number } | { kind: 'shelf'; from: number; to: number; h: number; shelves: number[] })
@@ -50,11 +73,12 @@ type Drag = { section: number; y0: number } & ({ kind: 'top'; h0: number; h: num
 /** The nearest height on the grid (K18). */
 const snap = (mm: number) => HEIGHTS.reduce((a, b) => (Math.abs(b - mm) < Math.abs(a - mm) ? b : a))
 
-export function PodiumElevation({ parts: given, length, h: hTop, title, fill, chosen, onPick, onHeight, onShelf }: Props) {
+export function PodiumElevation({ parts: given, length, h: hTop, title, fill, chosen, onPick, onHeight, onShelf, prints = [], decals = [], motifs = [], decal, onDecal, onDecalBox }: Props) {
   const box = useRef<HTMLDivElement>(null)
   const svg = useRef<SVGSVGElement>(null)
   const size = useElementSize(box, true)
   const [drag, setDrag] = useState<Drag | null>(null)
+  const [dd, setDd] = useState<DecalDrag | null>(null)
   // While a top or a shelf is dragged its section is drawn as it would be, in a frame as high as the highest (no rescaling)
   const parts = drag
     ? given.map((p) => {
@@ -83,14 +107,49 @@ export function PodiumElevation({ parts: given, length, h: hTop, title, fill, ch
   const chainTs = [0, ...nodes.slice(1, -1).map(x), L]
   // The shelves from the floor, then the top (K19): one chain to the left
   const shelfYs = [...new Set(parts.flatMap((p) => p.shelves))].filter((y) => y < h).sort((a, b) => b - a)
-  const svgY = (e: PointerEvent) => {
+  const svgPt = (e: PointerEvent) => {
     const m = svg.current?.getScreenCTM()
-    return m ? new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse()).y : 0
+    return m ? new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse()) : { x: 0, y: 0 }
+  }
+  const svgY = (e: PointerEvent) => svgPt(e).y
+  // K20: a decal moved by its body or scaled by an edge, in mm (y up), no smaller than 50
+  const decalDown = (e: PointerEvent, d: ElevationDecal, edge: Edge | 'move') => {
+    e.stopPropagation()
+    ;(svg.current as Element | null)?.setPointerCapture(e.pointerId)
+    const q = svgPt(e)
+    const box = { x0: d.x0, x1: d.x1, y0: d.y0, y1: d.y1 }
+    setDd({ id: d.id, edge, sx: q.x, sy: q.y, from: box, box })
+    onDecal?.(d.id)
+  }
+  const decalMove = (e: PointerEvent) => {
+    if (!dd) return
+    const q = svgPt(e)
+    const dx = (q.x - dd.sx) * 1000
+    const dy = -(q.y - dd.sy) * 1000
+    const f = dd.from
+    const MIN = 50
+    const b = { ...f }
+    if (dd.edge === 'move') Object.assign(b, { x0: f.x0 + dx, x1: f.x1 + dx, y0: f.y0 + dy, y1: f.y1 + dy })
+    else {
+      if (dd.edge.includes('l')) b.x0 = Math.min(f.x0 + dx, f.x1 - MIN)
+      if (dd.edge.includes('r')) b.x1 = Math.max(f.x1 + dx, f.x0 + MIN)
+      if (dd.edge.includes('t')) b.y1 = Math.max(f.y1 + dy, f.y0 + MIN)
+      if (dd.edge.includes('b')) b.y0 = Math.min(f.y0 + dy, f.y1 - MIN)
+    }
+    setDd({ ...dd, box: b })
+  }
+  const decalUp = () => {
+    if (!dd) return
+    const { from: f, box: b } = dd
+    if (JSON.stringify(f) !== JSON.stringify(b)) onDecalBox?.(dd.id, { w: Math.round(b.x1 - b.x0), h: Math.round(b.y1 - b.y0), dx: Math.round((b.x0 + b.x1 - f.x0 - f.x1) / 2), y: Math.round((b.y0 + b.y1) / 2) })
+    setDd(null)
   }
   const sections = [...new Set(parts.map((p) => p.part.section))].map((section) => {
     const ps = parts.filter((p) => p.part.section === section)
     return { section, h: ps[0].h, shelves: ps[0].shelves, x: x((Math.min(...ps.map((p) => p.x0)) + Math.max(...ps.map((p) => p.x1))) / 2) }
   })
+  // The chosen part or light opening, drawn over the print
+  const tints: ReactNode[] = []
   const pick = (i: number, light: number | undefined) => onPick(chosen?.part === i && chosen.light === light ? undefined : { part: i, light })
 
   /** A grip at (cx, cy) labelled `label`, dragged up and down. */
@@ -161,7 +220,7 @@ export function PodiumElevation({ parts: given, length, h: hTop, title, fill, ch
   return (
     <div className="wd-view">
       <div ref={box} className="wd-fit">
-        <svg ref={svg} className="wd-svg" viewBox={view.viewBox} preserveAspectRatio="xMidYMid meet" role="img" aria-label={`${title}, ${length} mm`}>
+        <svg ref={svg} className="wd-svg" viewBox={view.viewBox} preserveAspectRatio="xMidYMid meet" role="img" aria-label={`${title}, ${length} mm`} onPointerMove={decalMove} onPointerUp={decalUp} onPointerCancel={() => setDd(null)}>
           {parts.map((p, i) => {
             const w = x(p.x1 - p.x0)
             const x0 = x(p.x0)
@@ -188,7 +247,7 @@ export function PodiumElevation({ parts: given, length, h: hTop, title, fill, ch
                           <rect x={x0 + w / 2 - DOOR} y={y0 + px(6)} width={w / 2 + DOOR - px(3)} height={y1 - y0 - px(12)} />
                         </g>
                       )}
-                      {chosen?.part === i && chosen.light === li && <rect x={x0} y={y0} width={w} height={y1 - y0} fill={INK} fillOpacity={0.12} />}
+                      {chosen?.part === i && chosen.light === li && tints.push(<rect key="tint" x={x0} y={y0} width={w} height={y1 - y0} />) && null}
                       {open && y1 - y0 > px(14) && (
                         <text x={x0 + w / 2} y={(y0 + y1) / 2} textAnchor="middle" dominantBaseline="middle" style={{ font: `500 ${px(10)}px var(--font-ui)`, fill: INK_MUTED }} pointerEvents="none">
                           åpen
@@ -205,11 +264,40 @@ export function PodiumElevation({ parts: given, length, h: hTop, title, fill, ch
                   ))}
                   {!lowOpen && <rect x={x0} y={H - RAIL} width={w} height={RAIL} />}
                 </g>
-                {chosen?.part === i && chosen.light === undefined && <rect x={x0} y={yAt(p.h + R.railHeight)} width={w} height={(p.h + R.railHeight) / 1000} fill={INK} fillOpacity={0.12} pointerEvents="none" />}
+                {chosen?.part === i && chosen.light === undefined && tints.push(<rect key="tint" x={x0} y={yAt(p.h + R.railHeight)} width={w} height={(p.h + R.railHeight) / 1000} />) && null}
               </g>
             )
           })}
+          {/* K20: print in every window of plate and door, its share of the motif; decals over it */}
+          <g pointerEvents="none">
+            {!drag &&
+              prints.map((w, i) => {
+                const m = findMotif(motifs, w.motif)
+                return m && <Print key={i} m={m} x={x(w.x0)} y={yAt(w.y1)} width={x(w.x1 - w.x0)} height={(w.y1 - w.y0) / 1000} crop={w.crop} />
+              })}
+          </g>
+          {!drag &&
+            decals.map((d) => {
+              const m = findMotif(motifs, d.motif)
+              const b = dd?.id === d.id ? dd.box : d
+              return (
+                <g key={d.id} style={{ cursor: 'move' }} onClick={(e) => e.stopPropagation()} onPointerDown={(e) => decalDown(e, d, 'move')}>
+                  {m ? <Print m={m} x={x(b.x0)} y={yAt(b.y1)} width={x(b.x1 - b.x0)} height={(b.y1 - b.y0) / 1000} /> : <rect x={x(b.x0)} y={yAt(b.y1)} width={x(b.x1 - b.x0)} height={(b.y1 - b.y0) / 1000} fill={SUNKEN} />}
+                </g>
+              )
+            })}
           {nodes.map(post)}
+          {/* What is chosen, toned over the print */}
+          <g fill={INK} fillOpacity={0.12} pointerEvents="none">
+            {tints}
+          </g>
+          {!drag &&
+            decals
+              .filter((d) => d.id === decal)
+              .map((d) => {
+                const b = dd?.id === d.id ? dd.box : d
+                return <Handles key={d.id} k={0.45} x={x(b.x0)} y={yAt(b.y1)} w={x(b.x1 - b.x0)} h={(b.y1 - b.y0) / 1000} onDown={(e, edge) => decalDown(e, d, edge)} />
+              })}
           {onShelf && sections.flatMap(shelfGrips)}
           {onHeight && sections.map(topGrip)}
           <line x1={-px(12)} y1={H} x2={L + px(12)} y2={H} stroke={BORDER_STRONG} strokeWidth={px(1)} />

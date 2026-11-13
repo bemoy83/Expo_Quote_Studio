@@ -1,7 +1,9 @@
 // What the drawer for a counter of Disker og podier shows (trinn 2): its sides in order round it, named after the stand
 // side each faces, the side chosen, and that side seen from outside, left to right, part by part. Pure, with tests.
 import { toPlan, turn } from '../../../domain/counterShape'
+import { podiumDecals, podiumPrints } from '../../../domain/podiumDecor'
 import { lightsOf, partKey, partsOn, type PodiumPart } from '../../../domain/podiumFaces'
+import type { Crop } from '../../../domain/print'
 import { podiumSides, type PodiumSide } from '../../../domain/podiums'
 import type { CounterLight, PlacedObject, Side } from '../../../domain/types'
 import { RECIPES } from '../../../foga/recipes'
@@ -126,4 +128,47 @@ export function sideElevation(o: PlacedObject, side: PodiumSide, locked: Readonl
 export const lightBands = (p: Pick<ElevationPart, 'h' | 'shelves'>): [number, number][] => {
   const cuts = [0, ...p.shelves, p.h]
   return cuts.slice(1).map((y, i) => [cuts[i], y])
+}
+
+/** Print and a decal on the side seen from outside (K20), mm from the outer face at the left end and up from the floor. */
+export interface ElevationPrint {
+  x0: number
+  x1: number
+  y0: number
+  y1: number
+  motif: string
+  crop: Crop
+}
+export interface ElevationDecal {
+  id: string
+  motif: string
+  /** The part it is on (partKey). */
+  key: string
+  x0: number
+  x1: number
+  y0: number
+  y1: number
+}
+
+/** The print windows and decals of a side, as the drawing shows them. `ratio`: a motif's width / height. */
+export function sideDecor(o: PlacedObject, side: PodiumSide, locked: ReadonlySet<string>, ratio: (motif: string) => number): { prints: ElevationPrint[]; decals: ElevationDecal[] } {
+  const sections = o.sections ?? []
+  const dir = rightward(side)
+  const x = (t: number) => (dir > 0 ? t - side.a : side.b - t) + R.face
+  const on = (p: PodiumPart) => p.axis === side.axis && p.out === side.out && Math.abs(p.at - side.at) < EPS && p.a > side.a - EPS && p.b < side.b + EPS
+  const span = (t0: number, t1: number) => [x(t0), x(t1)].sort((a, b) => a - b)
+  return {
+    prints: podiumPrints(sections, locked, ratio)
+      .filter((w) => on(w.part))
+      .map((w) => {
+        const [x0, x1] = span(w.t0, w.t1)
+        return { x0, x1, y0: w.y0, y1: w.y1, motif: w.motif, crop: w.crop }
+      }),
+    decals: podiumDecals(sections, locked)
+      .filter((d) => on(d.part))
+      .map((d) => {
+        const [x0, x1] = span(d.t0, d.t1)
+        return { id: d.decal.id, motif: d.decal.motif, key: partKey(d.part), x0, x1, y0: d.y0, y1: d.y1 }
+      }),
+  }
 }

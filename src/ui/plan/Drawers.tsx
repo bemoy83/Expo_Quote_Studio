@@ -34,7 +34,7 @@ export function Drawers({ v, res, view, selection, onSelect, onEdit, onCheckpoin
       {(c?.kind === 'lane' || c?.kind === 'fill') && view === 'plan' && (
         <CarpetDrawer v={v} selection={selection} onSelect={onSelect} onEdit={(fn) => onEdit(fn)} onClose={onClose} />
       )}
-      {c?.kind === 'object' && c.object.sections && <PodiumDrawer key={c.object.id} v={v} o={c.object} selection={selection} onSelect={onSelect} onEdit={onEdit} onClose={onClose} />}
+      {c?.kind === 'object' && c.object.sections && <PodiumDrawer key={c.object.id} v={v} o={c.object} selection={selection} motifs={motifs} onUpload={onUpload} onSelect={onSelect} onEdit={onEdit} onClose={onClose} />}
       {isOnWall(c) && (
         <WallDrawer
           v={v}

@@ -2,7 +2,13 @@
 // the profile for the directions it joins (92L, 93, 94), 93 and 92 rails round the outside and 94 between two parts,
 // all from their measured outlines; the wall plates in the counter's colour (K6), the white tops and shelves. The 600 couplings sit inside the profiles and are not drawn. The closed front faces the object's +y.
 import * as THREE from 'three'
+import { podiumDecals, podiumPrints } from '../../../domain/podiumDecor'
+import type { PodiumPart } from '../../../domain/podiumFaces'
+import type { CounterSection } from '../../../domain/types'
 import type { Box3, CounterBuild, CounterProfile } from '../../../foga/counter'
+import { RECIPES } from '../../../foga/recipes'
+import { findMotif } from '../../motifs'
+import { cropMaterial, printMaterial } from './motifs'
 import { plateColor } from '../../env'
 import { ALU, ALU_FINISH, type BuildContext, type Tag } from './context'
 import { turnedProfile } from './profiles'
@@ -43,9 +49,35 @@ export function buildCounter(c: BuildContext, g: THREE.Group, b: CounterBuild, r
     mesh.position.copy(mid(bx))
     add(mesh, tag, g)
   }
-  // K4, K6: the wall plate in the counter's colour (print and decal come later)
+  // K4, K6: the wall plate in the counter's colour (print and decal over it: buildPodiumDecor)
   const plate = mat('objects', plateColor(ral), { roughness: 0.6, ...warn })
   for (const p of b.plates) box(p.box, plate)
   const board = mat('objects', BOARD, { roughness: 0.55, ...warn })
   for (const x of b.boards) box(x.box, board)
+}
+
+/** Print and decals on a counter of Disker og podier (Byggeregel K20), a thin sheet just outside the plates, facing
+ *  out: print its share of the motif in each window of plate and door, decals whole. `locked`: parts held to a plate. */
+export function buildPodiumDecor(c: BuildContext, g: THREE.Group, sections: readonly CounterSection[], locked: ReadonlySet<string>, tag: Tag, warn: THREE.MeshStandardMaterialParameters) {
+  const { opts, add } = c
+  const ratio = (id: string) => findMotif(opts.motifs, id)?.ratio ?? 0
+  const R = RECIPES.counter
+  // A sheet on the part's outer face from t0 to t1 along and y0 to y1 up (mm), its local x running left to right as
+  // seen from outside
+  const sheet = (p: PodiumPart, t0: number, t1: number, y0: number, y1: number, m: THREE.Material) => {
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry((t1 - t0) / 1000, (y1 - y0) / 1000), m)
+    const across = (p.at + p.out * (R.face + 1)) / 1000
+    const along = (t0 + t1) / 2000
+    mesh.position.set(p.axis === 'x' ? across : along, (y0 + y1) / 2000, p.axis === 'x' ? along : across)
+    mesh.rotation.y = p.axis === 'z' ? (p.out > 0 ? 0 : Math.PI) : p.out > 0 ? Math.PI / 2 : -Math.PI / 2
+    add(mesh, tag, g)
+  }
+  for (const w of podiumPrints(sections, locked, ratio)) {
+    const m = findMotif(opts.motifs, w.motif)
+    if (m) sheet(w.part, w.t0, w.t1, w.y0, w.y1, cropMaterial(m, w.crop, opts.onLoad, warn))
+  }
+  for (const d of podiumDecals(sections, locked)) {
+    const m = findMotif(opts.motifs, d.decal.motif)
+    if (m) sheet(d.part, d.t0, d.t1, d.y0, d.y1, printMaterial(m, d.decal.w / d.decal.h, opts.onLoad, { ...warn, polygonOffset: true, polygonOffsetFactor: -2 }))
+  }
 }

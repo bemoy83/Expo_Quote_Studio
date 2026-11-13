@@ -253,6 +253,11 @@ står urørt; det nye deler bygger, omriss, 3D og kalkyle med dem.
   lysåpning); `layoutBuild` deler platene ved hylleskinnene (`plateLevels`, `between`), legger skinnene (`shelfRails`)
   og hyllene (`boards` med `role: 'shelf'`). `ITEM.counterShelf` i kalkylen. I skuffen `PlanSelection.podiumLight`,
   `FlatToggles` i `controls.tsx`, og `lightBands` i `podiumView.ts`.
+- Print og dekal (K20): `SectionSide.print`/`decals` (`PodiumDecal`); `domain/podiumDecor.ts` (`partWindows`,
+  `podiumPrints` med beskjæring per vindu, `podiumDecals`, `setPodiumPrint`, `addPodiumDecal`, `updatePodiumDecal`,
+  `podiumDecorAreas`). Kalkylen i `calc/lines/decor.ts` (`podiumFoil`). Vist i risset (`sideDecor` i `podiumView.ts`,
+  `Handles` i `PodiumElevation`), i planen (`PrintMarks` i `layers/ObjectLayer.tsx`) og i 3D (`buildPodiumDecor` i
+  `scene3d/build/counter.ts`).
 - Skuffen: `plan/podiumDrawer/` (`PodiumDrawer.tsx`, risset `PodiumElevation.tsx`, miniplanen `PodiumMap.tsx`, og
   `podiumView.ts`: sidene rundt disken med navn, siden nærmest et klikk, siden sett utenfra). Valget i
   `PlanSelection.podiumSide`/`podiumPart`; `hasDrawer` får varianten for å vite at et objekt har seksjoner.

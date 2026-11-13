@@ -1,5 +1,9 @@
 // Foil (decal within one plate, and full plate) and print setup: one motif stretched over several plates (paint
-// bucket with «Print»), where the file is fitted and cut per plate.
+// bucket with «Print»), where the file is fitted and cut per plate. A counter of Disker og podier is priced the same
+// (Byggeregel K20): its print by the m² of the plates and doors it covers, its decals by their m², a setup per print
+// stretched over more than one part.
+import { podiumDecorAreas } from '../../domain/podiumDecor';
+import { lockedParts } from '../../domain/podiumLocks';
 import { stretchedRuns } from '../../domain/print';
 import type { CalcContext } from '../context';
 import type { CalcLine } from '../types';
@@ -14,14 +18,31 @@ export function foilAreas(c: CalcContext): { decal: number; full: number; fullCo
   return { decal: foils.filter((f) => !f.full).reduce((a, f) => a + f.width * f.height, 0), full: fullCount * fullFelt, fullCount };
 }
 
+/** Print and decals on the counters of Disker og podier, as they stand (a part against a wall is a plate, K16). */
+export function podiumFoil(c: CalcContext): { decal: number; full: number; parts: number; runs: number } {
+  const out = { decal: 0, full: 0, parts: 0, runs: 0 };
+  for (const o of c.v.objects) {
+    if (!o.sections?.some((s) => s.sides)) continue;
+    const a = podiumDecorAreas(o.sections, new Set(lockedParts(c.v, c.place, o)));
+    out.decal += a.decal;
+    out.full += a.full;
+    out.parts += a.parts;
+    out.runs += a.runs;
+  }
+  return out;
+}
+
 export function decorLines(c: CalcContext): CalcLine[] {
   const { rules, sys } = c;
   const plateSize = `${rules.wall.plate.width} × ${rules.wall.plate.height} mm`;
   const foil = foilAreas(c);
+  const disk = podiumFoil(c);
   const runs = [...stretchedRuns(c.v).values()];
+  const r3 = (n: number) => Math.round(n * 1000) / 1000;
+  const and = (s: string, extra: string | false) => [s, extra].filter(Boolean).join(' · ');
   return [
-    c.line(sys.foil, foil.decal, { meta: 'innenfor ett veggfelt' }),
-    c.line(sys.foilFull, foil.full, { meta: `${foil.fullCount} felt · ${plateSize}` }),
-    c.line(sys.printSetup, runs.length, { meta: runs.map((r) => `${r.length} plater`).join(' · ') }),
+    c.line(sys.foil, r3(foil.decal + disk.decal), { meta: and(foil.decal > 0 || !disk.decal ? 'innenfor ett veggfelt' : '', disk.decal > 0 && 'dekal på disk') }),
+    c.line(sys.foilFull, r3(foil.full + disk.full), { meta: and(foil.fullCount ? `${foil.fullCount} felt · ${plateSize}` : '', disk.parts > 0 && `${disk.parts} ${disk.parts === 1 ? 'del' : 'deler'} på disk`) }),
+    c.line(sys.printSetup, runs.length + disk.runs, { meta: [...runs.map((r) => `${r.length} plater`), ...(disk.runs ? [`${disk.runs} på disk`] : [])].join(' · ') }),
   ];
 }

@@ -12623,6 +12623,54 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
       "name": "Disker og podier",
       "sum": 8068,
     },
+    {
+      "cost": 543.4000000000001,
+      "id": "prof",
+      "lines": [
+        {
+          "artnr": "8020",
+          "cost": 28.6,
+          "dg": 0.44999999999999996,
+          "group": "prof.folie",
+          "meta": "dekal på disk",
+          "name": "Foliedekor, dekal",
+          "payer": "utstiller",
+          "placeholder": true,
+          "price": 520,
+          "qty": 0.1,
+          "strategy": "fast",
+          "sum": 52,
+          "time": {
+            "demontering": 0.5,
+            "montering": 1.5,
+          },
+          "transfer": null,
+          "unit": "m²",
+        },
+        {
+          "artnr": "8021",
+          "cost": 514.8000000000001,
+          "dg": 0.4499999999999999,
+          "group": "prof.folie",
+          "meta": "2 deler på disk",
+          "name": "Foliedekor, helt veggfelt 960 × 2420 mm",
+          "payer": "utstiller",
+          "placeholder": true,
+          "price": 520,
+          "qty": 1.8,
+          "strategy": "fast",
+          "sum": 936,
+          "time": {
+            "demontering": 9,
+            "montering": 27,
+          },
+          "transfer": null,
+          "unit": "m²",
+        },
+      ],
+      "name": "Profilering",
+      "sum": 988,
+    },
   ],
   "hooks": [],
   "keyFigures": {
@@ -12647,8 +12695,8 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
     "swapLm": 0,
     "textileM2": 0,
     "time": {
-      "demontering": 53,
-      "montering": 93,
+      "demontering": 62.5,
+      "montering": 121.5,
       "plukk": 12,
       "transport": 12,
       "vask": 12,
@@ -12657,9 +12705,9 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
     "wallSupports": 0,
   },
   "margin": {
-    "cost": 3034.559451848,
-    "db": 5033.440548152,
-    "dg": 0.6238771130580069,
+    "cost": 3577.959451848,
+    "db": 5478.040548152,
+    "dg": 0.6049073043454064,
     "order": [
       {
         "cost": 172.05543728266665,
@@ -12678,7 +12726,7 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
         "name": "Gange til og fra demontering",
       },
     ],
-    "sum": 8068,
+    "sum": 9056,
     "unknown": 0,
   },
   "organiser": {
@@ -12698,7 +12746,7 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
     "lm": 0,
     "pieces": [],
   },
-  "sum": 8068,
+  "sum": 9056,
   "wallSupports": [],
 }
 `;
@@ -12707,6 +12755,20 @@ exports[`13-disker-og-podier.json > variant A > engangsteppe cut list 1`] = `[]`
 
 exports[`13-disker-og-podier.json > variant A > picking list 1`] = `
 [
+  {
+    "code": "8020",
+    "group": "prof.folie",
+    "key": "8020Foliedekor, dekal",
+    "qty": "0,1 m²",
+    "title": "Foliedekor, dekal",
+  },
+  {
+    "code": "8021",
+    "group": "prof.folie",
+    "key": "8021Foliedekor, helt veggfelt 960 × 2420 mm",
+    "qty": "1,8 m²",
+    "title": "Foliedekor, helt veggfelt 960 × 2420 mm",
+  },
   {
     "code": "",
     "detail": "92L (873 050 22) × 1040 mm",
@@ -13198,6 +13260,54 @@ exports[`13-disker-og-podier.json > variant A > quote lines 1`] = `
     ],
     "name": "Disker og podier",
     "sum": 8068,
+  },
+  {
+    "cost": 543.4000000000001,
+    "id": "prof",
+    "lines": [
+      {
+        "artnr": "8020",
+        "cost": 28.6,
+        "dg": 0.44999999999999996,
+        "group": "prof.folie",
+        "meta": "dekal på disk",
+        "name": "Foliedekor, dekal",
+        "payer": "utstiller",
+        "placeholder": true,
+        "price": 520,
+        "qty": 0.1,
+        "strategy": "fast",
+        "sum": 52,
+        "time": {
+          "demontering": 0.5,
+          "montering": 1.5,
+        },
+        "transfer": null,
+        "unit": "m²",
+      },
+      {
+        "artnr": "8021",
+        "cost": 514.8000000000001,
+        "dg": 0.4499999999999999,
+        "group": "prof.folie",
+        "meta": "2 deler på disk",
+        "name": "Foliedekor, helt veggfelt 960 × 2420 mm",
+        "payer": "utstiller",
+        "placeholder": true,
+        "price": 520,
+        "qty": 1.8,
+        "strategy": "fast",
+        "sum": 936,
+        "time": {
+          "demontering": 9,
+          "montering": 27,
+        },
+        "transfer": null,
+        "unit": "m²",
+      },
+    ],
+    "name": "Profilering",
+    "sum": 988,
   },
 ]
 `;
