@@ -10,6 +10,7 @@ import { pickRows } from '../ui/workorder/pickRows';
 import { counterBuildOf } from './counterShape';
 import { setPodiumPrint } from './podiumDecor';
 import { setPodiumLight, partKey, podiumParts } from './podiumFaces';
+import { podiumAt } from './podiums';
 import { stockOf, stockSections } from './podiumStock';
 const isStock6560 = (s: CounterSection[]) => stockOf(s)?.artnr === '6560';
 import type { CounterSection, PlacedObject, Variant } from './types';
@@ -70,5 +71,27 @@ describe('6560 in Disker og podier (K22)', () => {
     expect(linesOf(door).find((x) => x.artnr === '6570')?.name).toBe('Disk');
     const end = podiumParts([s]).find((p) => p.axis === 'x')!;
     expect(isStock6560(sectionsOf(setPodiumLight(vOf(stock()), 'i1', [partKey(end)], 'open')))).toBe(false);
+  });
+});
+
+describe('the pen places a standard counter (K22)', () => {
+  const ctx = { rules: RULES, footprint: () => ({ w: 0.52, d: 0.52, h: 1.04 }), swings: () => false, isCounter: () => true };
+  const base: Variant = { ...createVariant('A', { width: 6, depth: 5, type: 'row' }), walls: [] };
+
+  it('a click with 6560 chosen stores a 6560, its front toward the aisle, kept inside the stand', () => {
+    const r = podiumAt(base, ctx, { product: '6570', stock: '6560' }, [0.1, 4.9]);
+    if ('error' in r) throw new Error(r.error);
+    const o = r.v.objects[0];
+    expect(stockOf(o.sections)?.artnr).toBe('6560');
+    // A row stand is open at the front: the open back (z−) faces the back of the stand
+    expect(o.rot).toBe(0);
+    expect(o.x).toBeCloseTo(0.51);
+    expect(o.y).toBeCloseTo(4.74);
+  });
+
+  it('«Fri» stores one section 500 × 500, as before', () => {
+    const r = podiumAt(base, ctx, { product: '6570' }, [3, 2]);
+    if ('error' in r) throw new Error(r.error);
+    expect(r.v.objects[0].sections).toEqual([{ x: [-250, 250], z: [-250, 250], h: 1000 }]);
   });
 });

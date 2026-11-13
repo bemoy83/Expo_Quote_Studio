@@ -532,7 +532,8 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   disken er dette, er den lagervaren: katalogpris 6560 (1320 kr), kostet som én disk, plukket hel som 1 stk, og navnet
   «Bardisk». Farge (K6), print og dekal (K20), snudd, flyttet og mot vegg eller annen disk er fortsatt 6560. Annen
   lengde, dybde, høyde eller hylle, skyvedør, en annen åpen side eller sammenslåing (K15) gjør den til spesialbygg
-  (K13).
+  (K13). Pennen viser «Fri» og én knapp per standarddisk over verktøyene: et klikk setter den som er valgt, med
+  fronten mot gangen som på Disker, og «Fri» en seksjon på 500 × 500; å dra tegner alltid fritt.
   *Bjørn 13.11.2026 · kode `src/domain/podiumStock.ts`, `src/calc/lines/objects.ts` · test `src/domain/podiumStock.test.ts`*
 
 ## P · Plukkliste og arbeidsordre
