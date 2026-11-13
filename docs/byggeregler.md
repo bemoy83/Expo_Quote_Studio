@@ -481,6 +481,14 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   Valget gjøres i skuffen for disken, for hele siden eller én del. Lysåpninger over hverandre kommer med hyllene (K19);
   til da er hver del én lysåpning. Tilbudet sier hvor mange sider som har en åpen del: «1 åpen side».
   *Bjørn 13.11.2026 · kode `src/domain/podiumFaces.ts`, `src/domain/podiumLocks.ts` · test `src/domain/podiumFaces.test.ts`*
+- **K17 Skyvedør.** To plater i sporet i skinnen under og skinnen over lysåpningen, i stedet for én plate. Hver dør er
+  lysåpningen / 2 + 10 (overlapp) + 10 (skinnespor) bred: 500 i lysåpning 960, 375 i 710 og 250 i 460, og like høy
+  som platen ville vært. En dør skjøvet helt inn i sporet går da fortsatt 10 forbi midten. Den andre døren står rett
+  innenfor den første, så de glir forbi hverandre. Skinnene står, også bunnskinnen. Ikke på deler på 250: «Skyvedør går
+  ikke på en del på 250». Lås er ikke bygget. Fram til hyllene (K19) får døren hele delens høyde. I planen er delen hel
+  strek med to korte streker innenfor for dørene. Tid, plassholder: 2 min opp og 1 ned per skyvedør (Bjørn
+  13.11.2026). Tilbudet sier «1 skyvedør».
+  *Bjørn 13.11.2026 · kode `src/foga/counter.ts` (`doorLeaves`), `src/domain/podiumFaces.ts` (`takesDoor`) · test `src/domain/podiumFaces.test.ts`, `src/calc/podium.test.ts`*
 
 ## P · Plukkliste og arbeidsordre
 

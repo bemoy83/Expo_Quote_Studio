@@ -70,6 +70,9 @@ export const ITEM = {
   counterWhole: 'montering-disk-meter',
   counterHalf: 'montering-disk-halv',
   counterCorner: 'montering-disk-hjorne',
+  /** Disker og podier: a sliding door (K17) and a shelf (K19) fitted, per piece. */
+  counterDoor: 'montering-disk-skyvedor',
+  counterShelf: 'montering-disk-hylle',
 } as const;
 
 /** A price item without its numbers: the kostgrunnlag gives its time, and the cost engine its cost and price. */
@@ -158,6 +161,8 @@ export const ITEM_DEFS: readonly ItemDef[] = [
   def(ITEM.counterWhole, 'Montering disk per hel meter', 'stk'),
   def(ITEM.counterHalf, 'Montering disk per halv meter', 'stk'),
   def(ITEM.counterCorner, 'Montering disk per hjørne', 'stk'),
+  def(ITEM.counterDoor, 'Montering skyvedør i disk', 'stk'),
+  def(ITEM.counterShelf, 'Montering hylle i disk', 'stk'),
 ];
 
 /** Minutes per handling step. Picking, washing and transport of one article; on site up (montering) and down (demontering). */
@@ -208,6 +213,9 @@ export const EXAMPLE_TIMES: Readonly<Record<string, Time>> = {
   [ITEM.counterWhole]: { ...pvt(2, 2, 2), ...onSite(13, 7) },
   [ITEM.counterHalf]: { ...pvt(1, 1, 1), ...onSite(6, 4) },
   [ITEM.counterCorner]: onSite(4, 2),
+  // Disker og podier (Bjørn 13.11.2026, placeholders): a sliding door 2 min up and 1 down, a shelf as H7 (1,5 and 1)
+  [ITEM.counterDoor]: onSite(2, 1),
+  [ITEM.counterShelf]: onSite(1.5, 1),
 };
 
 const POST_M = RULES.wall.height;
@@ -269,6 +277,8 @@ export const EXAMPLE_RECIPES: Readonly<Record<string, ItemRecipe>> = {
   [ITEM.counterWhole]: work,
   [ITEM.counterHalf]: work,
   [ITEM.counterCorner]: work,
+  [ITEM.counterDoor]: work,
+  [ITEM.counterShelf]: work,
 };
 
 /** A counter's plates in a wall colour (K6): the coloured plates, rented out like the white ones, and the work. */

@@ -41,6 +41,14 @@ describe('Disker og podier (Byggeregel K13)', () => {
     expect(q(ell)).toMatchObject({ [ITEM.counterWhole]: 2, [ITEM.counterHalf]: 1, [ITEM.counterCorner]: 1 });
   });
 
+  it('a sliding door is fitted once, the line says it has one (K17, K21)', () => {
+    const door = { ...podium, sections: [{ ...sec(-500, 500, -500, 500), sides: { 'z+': { lights: ['door' as const] } } }] };
+    expect(Object.fromEntries(podiumUses(door).map((u) => [u.id, u.qty]))[ITEM.counterDoor]).toBe(1);
+    expect(DEFAULT_PRICING.items.get(ITEM.counterDoor)).toBeDefined();
+    const r = calc({ ...v, objects: [door] }, RULES, DEFAULT_CATALOG, { payer: 'utstiller', ral: '9010' });
+    expect(r.groups.flatMap((g) => g.lines).find((l) => l.artnr === '6570')!.meta).toBe('bygget på stedet 1020 × 1020 × 1040 mm · 1 skyvedør · RAL 3002');
+  });
+
   it('is picked as loose parts under Disker, not as the line', () => {
     const rows = pickRows(res);
     expect(rows.some((r) => r.code === '6570')).toBe(false);

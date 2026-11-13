@@ -6,7 +6,7 @@
 import { ChevronLeft, ChevronRight, LibraryBig, Palette } from 'lucide-react'
 import { useState } from 'react'
 import { counterRal, removeObject, setCounterRal } from '../../../domain/objects'
-import { setPodiumLight } from '../../../domain/podiumFaces'
+import { NO_DOOR, setPodiumLight, takesDoor } from '../../../domain/podiumFaces'
 import { partLocks } from '../../../domain/podiumLocks'
 import { podiumName, podiumSize } from '../../../domain/podiums'
 import type { CounterLight, PlacedObject, Variant } from '../../../domain/types'
@@ -34,8 +34,9 @@ type Kind = CounterLight | 'plate'
 const KINDS: { value: Kind; label: string }[] = [
   { value: 'plate', label: 'Plate' },
   { value: 'open', label: 'Åpen' },
+  { value: 'door', label: 'Skyvedør' },
 ]
-const KIND_NAME: Record<Kind, string> = { plate: 'plate', open: 'åpen' }
+const KIND_NAME: Record<Kind, string> = { plate: 'plate', open: 'åpen', door: 'skyvedør' }
 
 /** What the parts are, as one: the kind they share, or null when they differ. */
 const shared = (ps: ElevationPart[]): Kind | null => {
@@ -71,8 +72,11 @@ export function PodiumDrawer({ v, o, selection: sel, onSelect, onEdit, onClose }
     return `${count(lockedHere.length, 'del', 'deler')} står mot ${what} og blir plate`
   })()
   const allLocked = lockedHere.length === parts.length
+  // K17: no sliding door on a part of 250; with the whole side chosen, on the parts that take one
+  const doorable = parts.filter((p) => !p.locked && takesDoor(p.part))
+  const options = KINDS.map((k) => (k.value === 'door' && !doorable.length ? { ...k, disabled: true, title: NO_DOOR } : k))
   const setKind = (k: Kind) => {
-    const keys = parts.filter((p) => !p.locked).map((p) => p.key)
+    const keys = (k === 'door' ? doorable : parts.filter((p) => !p.locked)).map((p) => p.key)
     onEdit((x) => setPodiumLight(x, o.id, keys, k === 'plate' ? null : k))
   }
 
@@ -86,8 +90,8 @@ export function PodiumDrawer({ v, o, selection: sel, onSelect, onEdit, onClose }
     ) : undefined
   const hint =
     page === 'sides'
-      ? `${pi === undefined ? 'Klikk en del i risset for bare den' : 'Klikk delen igjen for hele siden'} · ‹ › bytter del · åpen side: ingen plate og ingen bunnskinne · velg side i miniplanen eller ved å klikke disken i planen`
-      : 'Fargen gjelder hele disken · «Sider og hyller» for åpne sider'
+      ? `${pi === undefined ? 'Klikk en del i risset for bare den' : 'Klikk delen igjen for hele siden'} · ‹ › bytter del · åpen: ingen plate og ingen bunnskinne · skyvedør: to plater i sporet · velg side i miniplanen eller ved å klikke disken i planen`
+      : 'Fargen gjelder hele disken, også dørene · «Sider og hyller» for åpne sider og dører'
 
   return (
     <section className="wall-drawer drawer2" aria-label={`${name} sett utenfra`}>
@@ -106,8 +110,9 @@ export function PodiumDrawer({ v, o, selection: sel, onSelect, onEdit, onClose }
 
         {page === 'sides' ? (
           <Section title={scope} aside={kind ? KIND_NAME[kind] : 'blandet'} tools={partNav}>
-            <FlatChoice<Kind> label="Hva delen er" value={kind ?? ('' as Kind)} onChange={setKind} options={KINDS} disabled={allLocked} />
+            <FlatChoice<Kind> label="Hva delen er" value={kind ?? ('' as Kind)} onChange={setKind} options={options} disabled={allLocked} />
             {lockWhy && <p className="set-note">{lockWhy}</p>}
+            {!allLocked && !doorable.length && <p className="set-note">{NO_DOOR}</p>}
           </Section>
         ) : (
           <Section title="Hele disken" aside={`${plateName(ral)} ${ral}`}>

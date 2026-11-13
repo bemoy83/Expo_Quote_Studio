@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { RULES } from '../rules/rules';
 import { counterBuildOf } from './counterShape';
 import type { PlaceContext } from './objects';
-import { lightOf, openStretches, partsOn, podiumHas, podiumParts, prunedSides, setLight } from './podiumFaces';
+import { lightOf, openStretches, partKey, partsOn, podiumHas, podiumParts, prunedSides, setLight, setPodiumLight } from './podiumFaces';
 import { gripPodium, joined, podiumGrips } from './podiumGrips';
 import { fusePodiums, inFrame, snapBeside } from './podiumLinks';
 import { lockedParts, partLocks, placedBuild } from './podiumLocks';
@@ -147,5 +147,46 @@ describe('held to a plate against a wall or another counter (K16)', () => {
     const ends = podiumParts(two).filter((p) => p.axis === 'x');
     expect(podiumHas(setLight(openBack(two), ends, 'open'))).toEqual(['3 åpne sider']);
     expect(partsOn(two, podiumSides(two).find((s) => s.axis === 'z' && s.out === -1)!)).toHaveLength(2);
+  });
+});
+
+describe('sliding door (K17)', () => {
+  const plates = (b: ReturnType<typeof counterBuildOf>) => b.plates.map((p) => `${p.level}:${p.w}×${p.h}`).sort();
+  const front = (sections: CounterSection[]) => podiumParts(sections).filter((p) => p.axis === 'z' && p.out === 1);
+
+  it('table: one part of 1000 c/c, CC 1000: one plate 976 × 976 less, two leaves 500 × 976 more', () => {
+    const one = [sec(-500, 500, -250, 250)];
+    const a = counterBuildOf({ sections: one });
+    const b = counterBuildOf({ sections: setLight(one, front(one), 'door') });
+    expect(plates(a).filter((p) => p === 'full:976×976')).toHaveLength(2);
+    expect(plates(b).filter((p) => p === 'full:976×976')).toHaveLength(1);
+    expect(plates(b).filter((p) => p.startsWith('door'))).toEqual(['door:500×976', 'door:500×976']);
+    // The rails stand: the door slides in the bottom rail's channel
+    const bottoms = (x: typeof a) => x.profiles.filter((p) => p.role === 'bottomRail').length;
+    expect(bottoms(b)).toBe(bottoms(a));
+  });
+
+  it('each leaf half the light opening + 10 overlap + 10 into the channel: 375 on a part of 750, 250 on 500', () => {
+    const one = [sec(-375, 375, -250, 250, 750)];
+    expect(plates(counterBuildOf({ sections: setLight(one, front(one), 'door') })).filter((p) => p.startsWith('door'))).toEqual(['door:375×726', 'door:375×726']);
+    const half = [sec(-250, 250, -250, 250, 500)];
+    expect(plates(counterBuildOf({ sections: setLight(half, front(half), 'door') })).filter((p) => p.startsWith('door'))).toEqual(['door:250×476', 'door:250×476']);
+  });
+
+  it('the two leaves overlap in the middle and lie one inside the other', () => {
+    const one = [sec(-500, 500, -250, 250)];
+    const leaves = counterBuildOf({ sections: setLight(one, front(one), 'door') }).plates.filter((p) => p.level === 'door');
+    const [l, r] = leaves.sort((p, q) => p.box.x[0] - q.box.x[0]);
+    expect(l.box.x[1] - r.box.x[0]).toBeGreaterThan(0);
+    expect(l.box.z[0]).not.toBe(r.box.z[0]);
+  });
+
+  it('not on a part of 250; a sliding door in the quote line', () => {
+    const small = [sec(-125, 125, -250, 250)];
+    const o: PlacedObject = at(small);
+    const v = setPodiumLight(vOf(o), 'a', front(small).map(partKey), 'door');
+    expect(v.objects[0].sections![0].sides).toBeUndefined();
+    const one = [sec(-500, 500, -250, 250)];
+    expect(podiumHas(setLight(one, front(one), 'door'))).toEqual(['1 skyvedør']);
   });
 });

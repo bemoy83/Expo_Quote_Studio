@@ -241,6 +241,8 @@ står urørt; det nye deler bygger, omriss, 3D og kalkyle med dem.
   `setLight`/`setPodiumLight`, `openStretches` (de åpne strekkene byggeren og omrisset leser via `sectionsLayout`),
   `prunedSides` (i `centred`: en side som blir innvendig mister valget), `turnedSides` (`inFrame`), `keptSides` (grep:
   en del som flyttes til en ny linje blir plate), `podiumHas` (tilbudslinjen). `joined` slår bare sammen like sider.
+  Skyvedør (K17): `CounterLayout.doors` (`doorStretches`), to plater `level: 'door'` i `layoutBuild` (`doorLeaves`),
+  `takesDoor` (ikke på 250), dørstrekene i planen `DoorMarks` i `layers/ObjectLayer.tsx`, `ITEM.counterDoor` i kalkylen.
   `domain/podiumLocks.ts`: `partLocks`/`lockedParts` (vegg eller annen disk nærmere enn 60 mm) og `placedBuild`, bygget
   slik disken står, brukt av planen (`ObjectLayer`, `counterOutline`), 3D, kalkylen (`CalcContext.place`) og plukket.
 - Skuffen: `plan/podiumDrawer/` (`PodiumDrawer.tsx`, risset `PodiumElevation.tsx`, miniplanen `PodiumMap.tsx`, og

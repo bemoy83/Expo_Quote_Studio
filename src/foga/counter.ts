@@ -41,6 +41,8 @@ export interface CounterCell {
 export interface CounterLayout {
   cells: readonly CounterCell[];
   open: readonly (readonly [Pt, Pt])[];
+  /** Stretches of the outside closed by a sliding door instead of a plate (Disker og podier, K17). */
+  doors?: readonly (readonly [Pt, Pt])[];
 }
 
 type Pt = readonly [number, number];
@@ -63,8 +65,8 @@ export interface CounterProfile {
 export interface CounterPlate {
   /** Outward from the counter, along x or z. */
   out: Dir;
-  /** Split at the middle rail (K4), or one plate the whole height (K11). */
-  level: 'lower' | 'upper' | 'full' | 'step';
+  /** Split at the middle rail (K4), or one plate the whole height (K11); a step (K12); one leaf of a sliding door (K17). */
+  level: 'lower' | 'upper' | 'full' | 'step' | 'door';
   /** Order size, mm: along the side × high. */
   w: number;
   h: number;
@@ -125,6 +127,8 @@ interface Edge {
   /** On the outside: the direction out of the counter. Inside (between two parts): none. */
   out?: Dir;
   closed: boolean;
+  /** Closed by a sliding door (K17). */
+  door?: boolean;
 }
 
 /** Every rail of the layout: the sides of its parts, split where another node lies on them, each once (K3). */
@@ -133,8 +137,8 @@ function edgesOf(l: CounterLayout): { nodes: Map<string, Pt>; edges: Edge[] } {
   for (const c of l.cells) for (const x of c.x) for (const z of c.z) nodes.set(key([x, z]), [x, z]);
   const pts = [...nodes.values()];
   const seen = new Map<string, Edge & { n: number }>();
-  const onOpen = (a: Pt, b: Pt) =>
-    l.open.some(([p, q]) => {
+  const onOpen = (a: Pt, b: Pt, stretches: readonly (readonly [Pt, Pt])[] = l.open) =>
+    stretches.some(([p, q]) => {
       const within = (v: Pt) => Math.abs((q[0] - p[0]) * (v[1] - p[1]) - (q[1] - p[1]) * (v[0] - p[0])) < EPS && v[0] >= Math.min(p[0], q[0]) - EPS && v[0] <= Math.max(p[0], q[0]) + EPS && v[1] >= Math.min(p[1], q[1]) - EPS && v[1] <= Math.max(p[1], q[1]) + EPS;
       return within(a) && within(b);
     });
@@ -158,7 +162,11 @@ function edgesOf(l: CounterLayout): { nodes: Map<string, Pt>; edges: Edge[] } {
       }
     }
   }
-  const edges = [...seen.values()].map(({ a, b, out, n }): Edge => (n > 1 ? { a, b, closed: false } : { a, b, out, closed: !onOpen(a, b) }));
+  const edges = [...seen.values()].map(({ a, b, out, n }): Edge => {
+    if (n > 1) return { a, b, closed: false };
+    const closed = !onOpen(a, b);
+    return { a, b, out, closed, ...(closed && l.doors?.length && onOpen(a, b, l.doors) && { door: true }) };
+  });
   return { nodes, edges };
 }
 
@@ -290,7 +298,21 @@ export function layoutBuild(r: CounterRecipe, l: CounterLayout, kind: CounterBui
     const s = stepOf(e);
     return s ? [plateOf({ ...e, out: s.out }, 'step', [s.lo + rh - ch, edgeTop(e) + ch - r.platePlay])] : [];
   });
-  const plates = [...edges.filter((e) => e.closed).flatMap((e) => plateLevels(e).map(({ level, y }) => plateOf(e, level, y))), ...steps];
+  // K17: a sliding door, two leaves in the channel instead of the plate, each half the light opening + 10 overlap + 10
+  // into the channel; the second just inside the first, so the two slide past each other
+  const doorLeaves = (e: Edge): CounterPlate[] => {
+    const [p] = plateLevels(e);
+    const whole = plateOf(e, 'door', p.y);
+    const w = lenOf(e) / 2 + r.door.overlap + r.door.track;
+    const alongX = Math.abs(e.a[1] - e.b[1]) < EPS;
+    const run = alongX ? whole.box.x : whole.box.z;
+    const across = alongX ? whole.box.z : whole.box.x;
+    const o = e.out![alongX ? 1 : 0];
+    const inner: Range = [across[0] - o * r.plateThickness, across[1] - o * r.plateThickness];
+    const leaf = (along: Range, at: Range): CounterPlate => ({ ...whole, w, box: alongX ? { x: along, y: whole.box.y, z: at } : { x: at, y: whole.box.y, z: along } });
+    return [leaf([run[0], run[0] + w], across), leaf([run[1] - w, run[1]], inner)];
+  };
+  const plates = [...edges.filter((e) => e.closed).flatMap((e) => (e.door ? doorLeaves(e) : plateLevels(e).map(({ level, y }) => plateOf(e, level, y)))), ...steps];
 
   // K5: a top and a shelf on each part, in the rails' notch, short of the rail body by the play. Tight (K11): the top
   const body = r.postSize - ch + r.boardPlay - f;

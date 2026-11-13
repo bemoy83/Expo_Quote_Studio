@@ -6,7 +6,7 @@
 import { layoutBuild, runBreaks, stockCounter, type CounterBuild, type CounterCell, type CounterLayout } from '../foga/counter';
 import { RECIPES } from '../foga/recipes';
 import type { Footprint } from '../catalog/types';
-import { openStretches } from './podiumFaces';
+import { doorStretches, openStretches } from './podiumFaces';
 import type { CounterPiece, CounterSection, PlacedObject, Point } from './types';
 
 const R = RECIPES.counter;
@@ -49,10 +49,12 @@ export function layoutOf(pieces: readonly CounterPiece[]): CounterLayout {
   return { cells, open };
 }
 
-/** Sections of Disker og podier as parts (K10, K11): each its own cell with its height, open where a side is (K16) and
+/** Sections of Disker og podier as parts (K10, K11): each its own cell with its height, open or with a sliding door
+ *  where a side is (K16, K17) and
  *  not `locked` against a wall or another counter (podiumLocks.ts, by partKey). */
 export function sectionsLayout(sections: readonly CounterSection[], locked: readonly string[] = []): CounterLayout {
-  return { cells: sections.map((c) => ({ x: c.x, z: c.z, h: c.h })), open: openStretches(sections, new Set(locked)) };
+  const off = new Set(locked);
+  return { cells: sections.map((c) => ({ x: c.x, z: c.z, h: c.h })), open: openStretches(sections, off), doors: doorStretches(sections, off) };
 }
 
 /** The parts and open stretches of a counter: its sections, its drawn pieces, or the counter in stock. */
