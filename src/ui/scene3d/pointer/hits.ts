@@ -97,7 +97,19 @@ export function sceneHits(renderer: THREE.WebGLRenderer, camera: THREE.Perspecti
     return roomSideAt(model(), q.x, q.y, 0.12)
   }
 
-  return { pick, faceOf, onFace, onFloor, sideAt, toModel }
+  /** Pointer height on the upright plane through `at` (world) that faces the camera: for dragging something up. */
+  const onUpright = (e: At, at: THREE.Vector3) => {
+    setRay(e)
+    const n = new THREE.Vector3()
+    camera.getWorldDirection(n)
+    n.y = 0
+    if (n.lengthSq() < 1e-9) return null
+    const q = new THREE.Vector3()
+    if (!ray.ray.intersectPlane(new THREE.Plane().setFromNormalAndCoplanarPoint(n.normalize(), at), q)) return null
+    return q.y
+  }
+
+  return { pick, faceOf, onFace, onFloor, onUpright, sideAt, toModel }
 }
 
 export type SceneHits = ReturnType<typeof sceneHits>

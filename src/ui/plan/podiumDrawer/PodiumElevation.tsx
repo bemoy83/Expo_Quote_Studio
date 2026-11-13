@@ -42,7 +42,8 @@ interface Props {
   fill: string
   /** None: the whole side. */
   chosen?: ElevationPick
-  onPick: (p: ElevationPick | undefined) => void
+  /** Left out: the drawing is fixed (the work order). */
+  onPick?: (p: ElevationPick | undefined) => void
   /** The section `section` (index in the counter) dragged to CC `h`. */
   onHeight?: (section: number, h: number) => void
   /** The shelf at CC `from` in section `section` dragged to `to`. */
@@ -150,7 +151,7 @@ export function PodiumElevation({ parts: given, length, h: hTop, title, fill, ch
   })
   // The chosen part or light opening, drawn over the print
   const tints: ReactNode[] = []
-  const pick = (i: number, light: number | undefined) => onPick(chosen?.part === i && chosen.light === light ? undefined : { part: i, light })
+  const pick = (i: number, light: number | undefined) => onPick?.(chosen?.part === i && chosen.light === light ? undefined : { part: i, light })
 
   /** A grip at (cx, cy) labelled `label`, dragged up and down. */
   const grip = (key: string, cx: number, cy: number, label: string, live: boolean, start: (y0: number) => Drag, move: (d: Drag, mm: number) => Drag, done: (d: Drag) => void) => {
@@ -236,7 +237,7 @@ export function PodiumElevation({ parts: given, length, h: hTop, title, fill, ch
                   const y1 = li === 0 ? (lowOpen ? H : H - RAIL) : yAt(c0 + R.railHeight)
                   const open = kind === 'open'
                   return (
-                    <g key={li} style={{ cursor: 'pointer' }} onClick={() => pick(i, bands.length > 1 ? li : undefined)}>
+                    <g key={li} style={{ cursor: onPick ? 'pointer' : undefined }} onClick={() => pick(i, bands.length > 1 ? li : undefined)}>
                       {/* The plate, or the inside seen through an open light opening (no plates between the sections, K16) */}
                       <rect x={x0} y={y0} width={w} height={y1 - y0} fill={open ? SUNKEN : fill} />
                       {open && <rect x={x0} y={y0} width={w} height={y1 - y0} fill={INK} fillOpacity={0.06} />}
@@ -281,7 +282,7 @@ export function PodiumElevation({ parts: given, length, h: hTop, title, fill, ch
               const m = findMotif(motifs, d.motif)
               const b = dd?.id === d.id ? dd.box : d
               return (
-                <g key={d.id} style={{ cursor: 'move' }} onClick={(e) => e.stopPropagation()} onPointerDown={(e) => decalDown(e, d, 'move')}>
+                <g key={d.id} style={{ cursor: onDecalBox ? 'move' : undefined }} onClick={(e) => e.stopPropagation()} onPointerDown={onDecalBox && ((e) => decalDown(e, d, 'move'))}>
                   {m ? <Print m={m} x={x(b.x0)} y={yAt(b.y1)} width={x(b.x1 - b.x0)} height={(b.y1 - b.y0) / 1000} /> : <rect x={x(b.x0)} y={yAt(b.y1)} width={x(b.x1 - b.x0)} height={(b.y1 - b.y0) / 1000} fill={SUNKEN} />}
                 </g>
               )

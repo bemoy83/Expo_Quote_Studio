@@ -1,11 +1,15 @@
-// Velg in the 3D view, as in the plan: a press picks what to drag (decor or a shelf on its face, furniture, a room, an
-// inner wall), a move drags it, a release drops it or, without moving, selects what was pressed. Anything else orbits
+// Velg in the 3D view, as in the plan: a press picks what to drag (decor or a shelf on its face, furniture, the top of
+// a section of Disker og podier (its height, Byggeregel K18), a room, an inner wall), a move drags it, a release drops it or, without moving, selects what was pressed. Anything else orbits
 // the camera. A click is a click, a drag is never one (Bjørn 9.11.2026): letting go after a drag (or an orbit) leaves the
 // selection as it was, so the drawer does not open when something is only moved.
 import { moveFoilBy } from '../../../domain/decor'
 import { canMoveWall } from '../../../domain/edit'
 import { sideOf, type FaceSide } from '../../../domain/faces'
+import { toLocal } from '../../../domain/counterShape'
 import { moveObject } from '../../../domain/objects'
+import { HEIGHTS, setSectionHeight } from '../../../domain/podiums'
+import { RECIPES } from '../../../foga/recipes'
+import type * as THREE from 'three'
 import { faceOfPoint } from '../../../domain/textile/free'
 import { moveTextileBy } from '../../../domain/textile/inFrame'
 import { dragShelves, placeShelves } from '../../../domain/shelves/edit'
@@ -39,6 +43,22 @@ export type Drag =
   /** A shelf dragged on its face: up and down in 50 mm steps, sideways felt by felt (as in the wall drawer). `follow`: the
    *  shelves were chosen at the press, so the choice goes over to the copies. */
   | { kind: 'shelf'; shelf: Shelf; ids: string[]; w: Wall; s: FaceSide; t0: number; h0: number; moved: boolean; copy: Variant | null; follow: boolean }
+  /** The top of a section of Disker og podier dragged up or down (K18), snapping to CC 250–1000, from the sketch at the
+   *  press (shelves a lower height takes away come back when it goes up again before the release). */
+  | { kind: 'podiumTop'; id: string; section: number; h0: number; y0: number; at: THREE.Vector3; v0: Variant; moved: boolean }
+
+/** How far down from the top of a section a press grabs it to change its height, m. */
+const TOP_GRIP = 0.08
+
+/** The section of a counter of Disker og podier whose top is under a hit (world point), if any. */
+export function podiumTopAt(v: Variant, hit: Hit | null): { id: string; section: number; h: number } | undefined {
+  const o = hit?.objectId ? v.objects.find((x) => x.id === hit.objectId) : undefined
+  if (!o?.sections || !hit) return undefined
+  const [x, z] = toLocal(o, [hit.point.x + v.stand.width / 2, hit.point.z + v.stand.depth / 2])
+  const f = RECIPES.counter.face
+  const i = o.sections.findIndex((s) => x > s.x[0] - f && x < s.x[1] + f && z > s.z[0] - f && z < s.z[1] + f && hit.point.y > (s.h + RECIPES.counter.railHeight) / 1000 - TOP_GRIP)
+  return i < 0 ? undefined : { id: o.id, section: i, h: o.sections[i].h }
+}
 
 /** Pointer moves under this many px are a click. */
 export const CLICK_PX = 4
@@ -63,6 +83,9 @@ export function startDrag(P: PointerProps, hits: SceneHits, hit: Hit | null, e: 
     const s = sideOf(P.v, deco)
     const q = hits.onFace(e, w, s)
     if (q) return { kind: 'decor', item: 'from' in deco ? { textile: deco } : { foil: deco }, w, s, t0: q.t, h0: q.h, moved: false }
+  } else if (podiumTopAt(P.v, hit)) {
+    const t = podiumTopAt(P.v, hit)!
+    return { kind: 'podiumTop', id: t.id, section: t.section, h0: t.h, y0: hit!.point.y, at: hit!.point.clone(), v0: P.v, moved: false }
   } else if (hit?.objectId) {
     const o = P.v.objects.find((x) => x.id === hit.objectId)
     const q = hits.onFloor(e)
@@ -116,6 +139,17 @@ export function moveDrag(P: PointerProps, hits: SceneHits, drag: Exclude<Drag, {
     if (drag.follow) P.onSelect({ wallId: shelf.wallId, side: drag.s, shelfId: r.ids[drag.ids.indexOf(shelf.id)], shelfOnly: P.selection.shelfOnly })
     return
   }
+  if (drag.kind === 'podiumTop') {
+    const y = hits.onUpright(e, drag.at)
+    if (y === null) return
+    const mm = drag.h0 + (y - drag.y0) * 1000
+    const h = HEIGHTS.reduce((a, b) => (Math.abs(b - mm) < Math.abs(a - mm) ? b : a))
+    if (!drag.moved) P.onCheckpoint()
+    drag.moved = true
+    const { v0, id, section } = drag
+    P.onEdit(() => setSectionHeight(v0, id, [section], h), false)
+    return
+  }
   if (drag.kind === 'room') {
     const q = hits.onFloor(e, drag.y)
     if (q) dragRoom(drag, q, P.onEdit, P.onCheckpoint)
@@ -165,6 +199,7 @@ export function endDrag(P: PointerProps, hits: SceneHits, d: Drag | null, hit: H
 /** The cursor over what is under the pointer while nothing is pressed. */
 export function hoverCursor(v: Variant, hit: Hit | null, resizing: string | null) {
   const w = hit?.wallId ? v.walls.find((x) => x.id === hit.wallId) : undefined
+  if (podiumTopAt(v, hit)) return 'ns-resize'
   const movable = hit?.objectId || hit?.textileId || hit?.foilId || hit?.shelfId || hit?.roomId || (w && (w.room || canMoveWall(w)))
   return resizing ?? (movable ? 'move' : hit ? 'pointer' : 'grab')
 }
