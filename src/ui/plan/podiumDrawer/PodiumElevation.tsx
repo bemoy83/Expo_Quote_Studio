@@ -6,7 +6,7 @@
 // section a grip «CC 750» sets its height (K18), on each shelf rail a grip «Hylle 500» moves the shelf (K19): both
 // snap to the 250 grid, show live and are set on release. Print (K20) shows its share of the motif in each window of
 // plate and door; a decal is chosen by a click and moved or scaled by its handles, set on release.
-import { useRef, useState, type PointerEvent, type ReactNode } from 'react'
+import { useRef, useState, type PointerEvent } from 'react'
 import type { Motif } from '../../../domain/types'
 import { HEIGHTS } from '../../../domain/podiums'
 import { shelfStop } from '../../../domain/podiumShelves'
@@ -149,8 +149,21 @@ export function PodiumElevation({ parts: given, length, h: hTop, title, fill, ch
     const ps = parts.filter((p) => p.part.section === section)
     return { section, h: ps[0].h, shelves: ps[0].shelves, x: x((Math.min(...ps.map((p) => p.x0)) + Math.max(...ps.map((p) => p.x1))) / 2) }
   })
-  // The chosen part or light opening, drawn over the print
-  const tints: ReactNode[] = []
+  /** What each light opening of a part is as drawn: plates where it is held to a plate (K16). */
+  const kindsOf = (p: ElevationPart) => (p.locked ? p.lights.map(() => null) : p.lights)
+  /** A light opening's box in the drawing: from the underside of the rail over it down to the top of the rail under it,
+   *  or the floor when it is open at the bottom. */
+  const lightY = (p: ElevationPart, li: number): [number, number] => {
+    const [c0, c1] = lightBands(p)[li]
+    return [yAt(c1), li === 0 ? (kindsOf(p)[0] === 'open' ? H : H - RAIL) : yAt(c0 + R.railHeight)]
+  }
+  // The chosen part or light opening, toned over the print
+  const tint = (() => {
+    const p = chosen && parts[chosen.part]
+    if (!p) return null
+    const [y0, y1] = chosen.light === undefined ? [yAt(p.h + R.railHeight), H] : lightY(p, chosen.light)
+    return <rect x={x(p.x0)} y={y0} width={x(p.x1 - p.x0)} height={y1 - y0} />
+  })()
   const pick = (i: number, light: number | undefined) => onPick?.(chosen?.part === i && chosen.light === light ? undefined : { part: i, light })
 
   /** A grip at (cx, cy) labelled `label`, dragged up and down. */
@@ -225,16 +238,14 @@ export function PodiumElevation({ parts: given, length, h: hTop, title, fill, ch
           {parts.map((p, i) => {
             const w = x(p.x1 - p.x0)
             const x0 = x(p.x0)
-            const kinds = p.locked ? p.lights.map(() => null) : p.lights
+            const kinds = kindsOf(p)
             const bands = lightBands(p)
             const lowOpen = kinds[0] === 'open'
             return (
               <g key={p.key}>
-                {bands.map(([c0, c1], li) => {
+                {bands.map((_, li) => {
                   const kind = kinds[li] ?? null
-                  // From the underside of the rail over it down to the top of the rail under it (the floor when open there)
-                  const y0 = yAt(c1)
-                  const y1 = li === 0 ? (lowOpen ? H : H - RAIL) : yAt(c0 + R.railHeight)
+                  const [y0, y1] = lightY(p, li)
                   const open = kind === 'open'
                   return (
                     <g key={li} style={{ cursor: onPick ? 'pointer' : undefined }} onClick={() => pick(i, bands.length > 1 ? li : undefined)}>
@@ -248,7 +259,6 @@ export function PodiumElevation({ parts: given, length, h: hTop, title, fill, ch
                           <rect x={x0 + w / 2 - DOOR} y={y0 + px(6)} width={w / 2 + DOOR - px(3)} height={y1 - y0 - px(12)} />
                         </g>
                       )}
-                      {chosen?.part === i && chosen.light === li && tints.push(<rect key="tint" x={x0} y={y0} width={w} height={y1 - y0} />) && null}
                       {open && y1 - y0 > px(14) && (
                         <text x={x0 + w / 2} y={(y0 + y1) / 2} textAnchor="middle" dominantBaseline="middle" style={{ font: `500 ${px(10)}px var(--font-ui)`, fill: INK_MUTED }} pointerEvents="none">
                           åpen
@@ -265,7 +275,6 @@ export function PodiumElevation({ parts: given, length, h: hTop, title, fill, ch
                   ))}
                   {!lowOpen && <rect x={x0} y={H - RAIL} width={w} height={RAIL} />}
                 </g>
-                {chosen?.part === i && chosen.light === undefined && tints.push(<rect key="tint" x={x0} y={yAt(p.h + R.railHeight)} width={w} height={(p.h + R.railHeight) / 1000} />) && null}
               </g>
             )
           })}
@@ -290,7 +299,7 @@ export function PodiumElevation({ parts: given, length, h: hTop, title, fill, ch
           {nodes.map(post)}
           {/* What is chosen, toned over the print */}
           <g fill={INK} fillOpacity={0.12} pointerEvents="none">
-            {tints}
+            {tint}
           </g>
           {!drag &&
             decals
