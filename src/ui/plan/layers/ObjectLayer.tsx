@@ -5,6 +5,7 @@ import { useId } from 'react'
 import { mainGroupOf } from '../../../catalog/groups'
 import { lockedParts, placedBuild } from '../../../domain/podiumLocks'
 import { lightsOf, partKey, podiumParts, type PodiumPart } from '../../../domain/podiumFaces'
+import { lineOf } from '../../../domain/podiumSections'
 import { toPlan } from '../../../domain/counterShape'
 import { RECIPES } from '../../../foga/recipes'
 import { counterRal, footprintBox, objectBoxes, objectFootprint } from '../../../domain/objects'
@@ -156,7 +157,7 @@ function DoorMarks({ o, locked, stroke }: { o: PlacedObject; locked: readonly st
         const mid = (p.a + p.b) / 2
         const leaf = (a: number, b: number, inset: number) => {
           const at = p.at + p.out * (face - inset)
-          const [u, w] = p.axis === 'x' ? [toPlan(o, [at, a]), toPlan(o, [at, b])] : [toPlan(o, [a, at]), toPlan(o, [b, at])]
+          const [u, w] = lineOf(p.axis, at, a, b).map((q) => toPlan(o, q))
           return <line key={`${partKey(p)}${inset}`} x1={u[0]} y1={u[1]} x2={w[0]} y2={w[1]} />
         }
         return [leaf(p.a + 20, mid + door.overlap * 3, 30), leaf(mid - door.overlap * 3, p.b - 20, 55)]

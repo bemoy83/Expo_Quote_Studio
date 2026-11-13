@@ -17,6 +17,11 @@ export function withSections(v: Variant, id: string, fn: (sections: CounterSecti
   return { ...v, objects: v.objects.map((x) => (x.id === id ? { ...x, sections } : x)) };
 }
 
+/** The ends of a line across `axis` at `at`, from `a` to `b` along, as (x, z) in the counter's frame: a part, a side, a
+ *  leaf or a band of print. */
+export const lineOf = (axis: Axis, at: number, a: number, b: number): [[number, number], [number, number]] =>
+  axis === 'x' ? [[at, a], [at, b]] : [[a, at], [b, at]];
+
 /** The length two ranges share (negative when apart). */
 export const shared = (p: Range, q: Range) => Math.min(p[1], q[1]) - Math.max(p[0], q[0]);
 

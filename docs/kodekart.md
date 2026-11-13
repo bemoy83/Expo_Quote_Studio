@@ -219,8 +219,8 @@ står urørt; det nye deler bygger, omriss, 3D og kalkyle med dem.
   `PodiumDraw.cell`/`onto`: det som legges til, i en ramme dreid som disken med knutepunkter på hele rasterenheter, og
   disken og siden det ligger mot. `PodiumAxis.fix` holder kanten mot disken fast i `axisSpan`.
 - Felles geometri for seksjonene: `domain/podiumSections.ts` (`GRID`, `bounds`, `covered`, `overlaps`, `meet`: knutelinjen
-  der to seksjoner møtes, `groups`: delene som henger sammen, `edgeRuns`: kanter som rette løp; brukt av pennen, grepene
-  og lenkene). Grep, lenker og disk-knappene får samme skygge fra `layers/LiftFilter.tsx` (`useLift`).
+  der to seksjoner møtes, `groups`: delene som henger sammen, `edgeRuns`: kanter som rette løp, `lineOf`: endene til en
+  linje på tvers av en akse, brukt av deler, sider, dørstreker og miniplanen; brukt av pennen, grepene og lenkene). Grep, lenker og disk-knappene får samme skygge fra `layers/LiftFilter.tsx` (`useLift`).
 - Grep på valgt disk (K14): `domain/podiumGrips.ts` (`podiumGrips`: hvor grepene står; `gripPodium`: disken etter et
   drag, med `gone`, det som fjernes; `joined` slår sammen seksjoner som får plass i én). Treff i `hits.podiumGripAt`,
   draget i `plan/pointer/podiumGrip.ts` (Velg i `select.ts` og pennen i `usePlanPointer.ts`), forhåndsvisningen
@@ -237,7 +237,8 @@ står urørt; det nye deler bygger, omriss, 3D og kalkyle med dem.
   `podiumHover`/`podiumTarget` i `plan/next.ts`. Verktøyet: `Brush` `podium` og `PenTool` `podium` i `ui/tools.ts`,
   docken, hurtigvalget (farger og Fyll, `paintPodiums`) og hintet
 - Sider (K16, trinn 2): valget per del står på seksjonen (`CounterSection.sides`, nøklet `x-`/`x+`/`z-`/`z+`, en liste
-  per lysåpning fra gulvet). `domain/podiumFaces.ts`: `podiumParts` (delene, knutepunkt til knutepunkt), `partsOn`,
+  per lysåpning fra gulvet). `domain/podiumFaces.ts`: `podiumParts` (delene, knutepunkt til knutepunkt), `partsOn`/`onSide`,
+  `withSideField` (ett felt på en side: lysåpningene, print, dekaler),
   `setLight`/`setPodiumLight`, `openStretches` (de åpne strekkene byggeren og omrisset leser via `sectionsLayout`),
   `prunedSides` (i `centred`: en side som blir innvendig mister valget), `turnedSides` (`inFrame`), `keptSides` (grep:
   en del som flyttes til en ny linje blir plate), `podiumHas` (tilbudslinjen). `joined` slår bare sammen like sider.
@@ -255,14 +256,16 @@ står urørt; det nye deler bygger, omriss, 3D og kalkyle med dem.
   `FlatToggles` i `controls.tsx`, og `lightBands` i `podiumView.ts`.
 - Print og dekal (K20): `SectionSide.print`/`decals` (`PodiumDecal`); `domain/podiumDecor.ts` (`partWindows`,
   `podiumPrints` med beskjæring per vindu, `podiumDecals`, `setPodiumPrint`, `addPodiumDecal`, `updatePodiumDecal`,
-  `podiumDecorAreas`). Kalkylen i `calc/lines/decor.ts` (`podiumFoil`). Vist i risset (`sideDecor` i `podiumView.ts`,
+  `podiumDecorAreas` med målene som kuttes, `decalRoom`: hvor en dekal kan stå). Kalkylen i `calc/lines/decor.ts`
+  (`podiumFoil`, egen artikkel 8023 `sys.foilCounter`). Vist i risset (`sideDecor` i `podiumView.ts`,
   `Handles` i `PodiumElevation`), i planen (`PrintMarks` i `layers/ObjectLayer.tsx`) og i 3D (`buildPodiumDecor` i
   `scene3d/build/counter.ts`).
 - Høyde i 3D (K18): `podiumTopAt` og draget `podiumTop` i `scene3d/pointer/drag.ts`, `onUpright` i `pointer/hits.ts`.
   Arbeidsordren: `workorder/PodiumSides.tsx` («Disker sett utenfra», `PodiumElevation` uten håndtak) og
   `workorder/podiumSideList.ts` (hvilke sider som tegnes).
 - Skuffen: `plan/podiumDrawer/` (`PodiumDrawer.tsx`, risset `PodiumElevation.tsx`, miniplanen `PodiumMap.tsx`, og
-  `podiumView.ts`: sidene rundt disken med navn, siden nærmest et klikk, siden sett utenfra). Valget i
+  `podiumView.ts`: sidene rundt disken med navn, siden nærmest et klikk, siden sett utenfra, `sideOnPlan`: sidens ender
+  på planen). ‹ › for side og del: `PrevNext` i `drawerParts.tsx`. Valget i
   `PlanSelection.podiumSide`/`podiumPart`; `hasDrawer` får varianten for å vite at et objekt har seksjoner.
 - Katalogen: `podium('6570', …)` i `catalog/defaultCatalog.ts` (`Product.podium`, varenummer midlertidig; `counter` er
   én seksjon, så plan, pille og 3D tegner den som en disk)

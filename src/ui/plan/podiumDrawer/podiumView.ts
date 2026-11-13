@@ -1,15 +1,15 @@
 // What the drawer for a counter of Disker og podier shows (trinn 2): its sides in order round it, named after the stand
 // side each faces, the side chosen, and that side seen from outside, left to right, part by part. Pure, with tests.
 import { toPlan, turn } from '../../../domain/counterShape'
-import { podiumDecals, podiumPrints } from '../../../domain/podiumDecor'
-import { lightsOf, partKey, partsOn, type PodiumPart } from '../../../domain/podiumFaces'
+import { podiumDecals, podiumPrints, rightOf } from '../../../domain/podiumDecor'
+import { lightsOf, onSide, partKey, partsOn, type PodiumPart } from '../../../domain/podiumFaces'
+import { EPS, lineOf } from '../../../domain/podiumSections'
 import type { Crop } from '../../../domain/print'
 import { podiumSides, type PodiumSide } from '../../../domain/podiums'
-import type { CounterLight, PlacedObject, Side } from '../../../domain/types'
+import type { CounterLight, PlacedObject, Point, Side } from '../../../domain/types'
 import { RECIPES } from '../../../foga/recipes'
 
 const R = RECIPES.counter
-const EPS = 1e-6
 
 /** The stand side a direction on the plan faces (front toward +y). */
 const facingOf = (d: [number, number]): Side => (d[1] > 0 ? 'front' : d[1] < 0 ? 'back' : d[0] < 0 ? 'left' : 'right')
@@ -26,8 +26,9 @@ export interface DrawerSide {
 /** A side's key, kept while the side stands where it stands. */
 export const sideKeyOf = (s: PodiumSide) => `${s.axis}${s.out}:${s.at}:${s.a}`
 
-/** The direction along a side that runs left to right for one standing outside it, in the counter's frame. */
-const rightward = (s: PodiumSide): 1 | -1 => (s.axis === 'z' ? s.out : (-s.out as 1 | -1))
+/** A side's ends on the plan, m; `pad` mm past each end and out from its node line (the outer face: R.face). */
+export const sideOnPlan = (o: Pick<PlacedObject, 'x' | 'y' | 'rot'>, s: PodiumSide, pad = 0): [Point, Point] =>
+  lineOf(s.axis, s.at + s.out * pad, s.a - pad, s.b + pad).map((p) => toPlan(o, p)) as [Point, Point]
 
 /** The sides of a counter, clockwise round its outline on the plan from the longest facing front (of two, the one
  *  nearer the stand's front; else the first), each
@@ -38,7 +39,7 @@ export function drawerSides(o: PlacedObject): DrawerSide[] {
   const facingOf_ = (s: PodiumSide) => turn(s.axis === 'x' ? [s.out, 0] : [0, s.out], o.rot) as [number, number]
   // Each side as a step round the outline, the counter on its right (clockwise on the plan, y down)
   const ends = sides.map((s) => {
-    const [p, q] = s.axis === 'x' ? [toPlan(o, [s.at, s.a]), toPlan(o, [s.at, s.b])] : [toPlan(o, [s.a, s.at]), toPlan(o, [s.b, s.at])]
+    const [p, q] = sideOnPlan(o, s)
     const n = facingOf_(s)
     const d = [-n[1], n[0]]
     return (q[0] - p[0]) * d[0] + (q[1] - p[1]) * d[1] > 0 ? { from: p, to: q } : { from: q, to: p }
@@ -77,7 +78,7 @@ export function chosenSide(sides: DrawerSide[], key?: string): number {
 export function nearestSide(o: PlacedObject, q: [number, number]): string | undefined {
   let best: { key: string; d: number } | null = null
   for (const s of podiumSides(o.sections ?? [])) {
-    const [p0, p1] = s.axis === 'x' ? [toPlan(o, [s.at, s.a]), toPlan(o, [s.at, s.b])] : [toPlan(o, [s.a, s.at]), toPlan(o, [s.b, s.at])]
+    const [p0, p1] = sideOnPlan(o, s)
     const [dx, dy] = [p1[0] - p0[0], p1[1] - p0[1]]
     const t = Math.max(0, Math.min(1, ((q[0] - p0[0]) * dx + (q[1] - p0[1]) * dy) / (dx * dx + dy * dy || 1)))
     const d = Math.hypot(q[0] - p0[0] - t * dx, q[1] - p0[1] - t * dy)
@@ -87,7 +88,7 @@ export function nearestSide(o: PlacedObject, q: [number, number]): string | unde
 }
 
 /** Where a point along a side (counter frame, mm) is seen from outside: mm from the outer face at the left end. */
-const fromLeft = (side: PodiumSide) => (t: number) => (rightward(side) > 0 ? t - side.a : side.b - t) + R.face
+const fromLeft = (side: PodiumSide) => (t: number) => (rightOf(side.axis, side.out) > 0 ? t - side.a : side.b - t) + R.face
 
 /** One part of the side seen from outside: from x0 to x1 (mm from the outer face at the left end), its node line ends
  *  n0 and n1, how high its section is (CC, the underside of the top rail), its section's shelves (CC, low to high),
@@ -156,7 +157,7 @@ export interface ElevationDecal {
 export function sideDecor(o: PlacedObject, side: PodiumSide, locked: ReadonlySet<string>, ratio: (motif: string) => number): { prints: ElevationPrint[]; decals: ElevationDecal[] } {
   const sections = o.sections ?? []
   const x = fromLeft(side)
-  const on = (p: PodiumPart) => p.axis === side.axis && p.out === side.out && Math.abs(p.at - side.at) < EPS && p.a > side.a - EPS && p.b < side.b + EPS
+  const on = onSide(side)
   const span = (t0: number, t1: number) => [x(t0), x(t1)].sort((a, b) => a - b)
   return {
     prints: podiumPrints(sections, locked, ratio)

@@ -1,5 +1,5 @@
 // Controls shared by the drawers (skuffer): wall, free-standing textile wall, door, roll carpet.
-import { Trash2, Upload, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Trash2, Upload, X } from 'lucide-react'
 import type { PointerEvent as RPointerEvent, ReactNode } from 'react'
 import type { Crop } from '../../domain/print'
 import type { Motif, TextileFill } from '../../domain/types'
@@ -22,6 +22,16 @@ export function DrawerHead({ dot, title, remove, onClose, children }: { dot?: st
       {remove && <IconButton icon={Trash2} label={remove.label} size={14} onClick={remove.onClick} />}
       <IconButton icon={X} label="Lukk" title="Lukk skuffen" size={14} onClick={onClose} />
     </div>
+  )
+}
+
+/** ‹ › in a drawer's head or section: «Forrige del» and «Neste del» for `what` = «del». */
+export function PrevNext({ what, onPrev, onNext }: { what: string; onPrev: () => void; onNext: () => void }) {
+  return (
+    <>
+      <IconButton icon={ChevronLeft} label={`Forrige ${what}`} size={15} onClick={onPrev} />
+      <IconButton icon={ChevronRight} label={`Neste ${what}`} size={15} onClick={onNext} />
+    </>
   )
 }
 
