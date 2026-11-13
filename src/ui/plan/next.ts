@@ -39,7 +39,7 @@ import type { PlanHits } from './pointer/hits'
 import { isDoor, openingEdge } from './pointer/opening'
 import type { Pens } from './pointer/pens'
 import { counterDraw } from './pointer/counter'
-import { counterUnder, drawPodiumAt, podiumStart } from './pointer/podium'
+import { counterUnder, drawPodiumAt, podiumFine, podiumStart } from './pointer/podium'
 import { placeHolds, placeKey } from './pointer/place'
 import { paintPlates, plateAt, platesAlong } from './pointer/plates'
 import type { Drag, P } from './pointer/types'
@@ -227,7 +227,7 @@ function targetOf(p: NextInput): NextTarget | null {
   // Disker og podier dragged: the counter a release draws from the section pressed; held without moving, that section
   if (dragging?.kind === 'podium') {
     if (dragging.moved && dragging.drag && hover) return podiumTarget(drawPodiumAt(p, dragging.drag, hover))
-    return podiumHover(p, dragging.at)
+    return dragging.click ? podiumTarget(dragging.click, false) : podiumHover(p, dragging.at)
   }
 
   // Floor
@@ -398,17 +398,20 @@ function counterTarget(v: Variant, brush: Brush | null, p0: P, q: P): NextTarget
 /** Shift held over Disker og podier (PR 2). */
 const LOCKED = 'Låst plass: dra i en kant for å flytte den, eller fra midten for å tegne mot pekeren · 250-steg · slipp Shift for å flytte'
 
+/** By a side of a counter of Disker og podier (PR 3). */
+const ONTO_HINT = 'Inntil disken: klikk for å bygge på, dra for å tegne påbygget · kanten mot disken står fast'
+
 /** Disker og podier pointing (K10): on a counter, a click chooses it and nothing is shown; elsewhere the section a click
  *  stores, dimmed, or hatched where it has no room. Shift held (`over`: the pointer over the preview standing still at
  *  q): the edges a press takes hold of, thick, and the hint for it. */
 function podiumHover(p: NextInput, q: P, over: P | null = null): NextTarget | null {
   if (!over && counterUnder(p, q)) return target(`pod:on`, () => line({ hint: 'Klikk for å velge disken' }))
-  const r = podiumStart(p, q)
+  const r = podiumStart(p, q, !!over || podiumFine(p.brush))
   if (!r) return null
   const t = podiumTarget(r, false)
   if (!over || 'error' in r) return t
-  const g = podiumGrab(r.o, [over.x, over.y])
-  const b = footprintBox(r.o, objectFootprint(place, r.o)!)
+  const g = podiumGrab(r.cell, [over.x, over.y], r.onto)
+  const b = footprintBox(r.cell, objectFootprint(place, r.cell)!)
   const grip: [Point, Point][] = [
     ...(g.x ? [[[g.x < 0 ? b.x0 : b.x1, b.y0], [g.x < 0 ? b.x0 : b.x1, b.y1]] as [Point, Point]] : []),
     ...(g.z ? [[[b.x0, g.z < 0 ? b.y0 : b.y1], [b.x1, g.z < 0 ? b.y0 : b.y1]] as [Point, Point]] : []),
@@ -416,15 +419,19 @@ function podiumHover(p: NextInput, q: P, over: P | null = null): NextTarget | nu
   return target(`${t.key}:grip:${g.x},${g.z}`, () => ({ ...t.outcome(), hint: LOCKED, grip }))
 }
 
-/** What a click or drag of Disker og podier stores (K10), with its outer size in the pill while dragging; hatched with
- *  the reason where it has no room. */
+/** What a click or drag of Disker og podier stores (K10), with its outer size in the pill while dragging (a påbygg: its
+ *  own size c/c, then the counter's after, PR 3); hatched with the reason where it has no room. */
 function podiumTarget(r: PodiumDraw, pill = true): NextTarget {
   const box = (o: PlacedObject) => footprintBox(o, objectFootprint(place, o)!)
   const b = box(r.o)
-  const key = `pod:${'error' in r ? 'x' : ''}:${JSON.stringify(r.o)}`
-  if ('error' in r) return target(key, () => line({ hint: r.error, invalid: { rect: b } }))
-  const text = `${mm(b.x1 - b.x0)} × ${mm(b.y1 - b.y0)}`
-  return target(key, () => line({ edit: () => r.v, hint: null, ...(pill && { pill: { a: [b.x0, b.y1], b: [b.x1, b.y1], width: 'wall', text } }) }))
+  const key = `pod:${'error' in r ? 'x' : ''}:${JSON.stringify(r.o)}:${JSON.stringify(r.cell)}`
+  if ('error' in r) return target(key, () => line({ hint: r.error, invalid: { rect: box(r.cell) } }))
+  const size = `${mm(b.x1 - b.x0)} × ${mm(b.y1 - b.y0)}`
+  const c = box(r.cell)
+  const face = (2 * RECIPES.counter.face) / 1000
+  const text = r.onto ? `+ ${mm(c.x1 - c.x0 - face)} × ${mm(c.y1 - c.y0 - face)} · ${size}` : size
+  const hint = r.onto && !pill ? ONTO_HINT : null
+  return target(key, () => line({ edit: () => r.v, hint, ...(pill && { pill: { a: [b.x0, b.y1], b: [b.x1, b.y1], width: 'wall', text } }) }))
 }
 
 /**

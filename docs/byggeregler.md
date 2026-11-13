@@ -422,6 +422,13 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   trykk midt i tegner fra rasterlinjen gjennom trykket til den nærmest pekeren, minst 250, og de første 75 mm endrer
   ingenting. Shift trykket eller sluppet midt i et drag låser det som er tegnet og går videre derfra; tastetrykket alene
   endrer aldri størrelsen. «Fin» i hurtigvalget gjør det samme som Shift for berøring, uten å fryse forhåndsvisningen.
+  Påbygg: er pekeren utenfor en disk fra Disker og podier og innen 300 mm fra yttersiden av en av sidene, legger
+  seksjonen seg inntil siden i diskens raster. Den glir langs siden i 500-steg regnet fra sidens ende (250 med Shift
+  eller Fin) og stikker høyst 250 utenfor enden. Et klikk eller drag derfra tegner som over, men kanten mot disken står
+  alltid fast, uansett hvor man trykker. Påbygget blir en del av disken: én disk, én linje, diskens farge, og høyden til
+  seksjonen det ligger mot. Nektes med «Disken kan ikke gå over seg selv», «En del ville stått løst» (deler mindre enn
+  250 med siden) eller «Ikke plass til disken her». Pillen viser påbygget c/c og disken utvendig etterpå:
+  «+ 500 × 500 · 2 020 × 1 020». Mot 6560 og tegnede disker fra Disker blir det ikke påbygg, bare snappet inntil.
   *Bjørn 13.11.2026 · kode `src/domain/podiums.ts`, `src/domain/counterShape.ts`, `src/domain/types.ts` · test `src/domain/podiums.test.ts`*
 - **K11 Tett bygg.** Alle utvendige sider er tette: bunnskinne 92 og toppskinne 93 på hver utvendig kant, og én
   veggplate i hele høyden i kanalene, mellom bunnskinne og toppskinne. Det er ingen midtskinne og ingen hylle i

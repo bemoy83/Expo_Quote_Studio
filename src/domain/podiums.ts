@@ -3,9 +3,10 @@
 // Disker (6560 and drawn pieces, counters.ts), which stay as they are. The pen: pointing shows one section 500 × 500
 // under the pointer, moved in against a wall, counter or the stand edge within 10 cm; a click stores it; a press and drag
 // grows it from the section pressed, which stays put, each way on its own in 500 steps (K10: whole metres from the
-// section pressed, the rest last). Pure, plan in m, sections in mm.
+// section pressed, the rest last). Pointed by the side of a counter of its own, the section lies against that side and
+// becomes part of the counter when stored (påbygg, PR 3). Pure, plan in m, sections in mm.
 import { RECIPES } from '../foga/recipes';
-import { counterBuildOf, snap } from './counterShape';
+import { counterBuildOf, snap, toLocal, toPlan } from './counterShape';
 import { snapShift } from './counters';
 import { nextId } from './ids';
 import { blockers, COUNTER_STOCK_RAL, footprintBox, hitsAny, objectBoxes, objectFootprint, type PlaceContext } from './objects';
@@ -68,6 +69,8 @@ export interface PodiumAxis {
   hi: number;
   v0: number;
   g: Grab;
+  /** The edge that never moves (påbygg: the one against the counter), −1 low or 1 high. */
+  fix?: -1 | 1;
 }
 
 /** Below this (grid units, 75 mm) a press in the middle with Shift changes nothing yet. */
@@ -80,6 +83,11 @@ const STILL = 0.3;
  * press to the one nearest the pointer, at least one, after the first 75 mm.
  */
 export function axisSpan(a: PodiumAxis, v: number, fine: boolean): [number, number] {
+  const [x, y] = freeSpan(a, v, fine);
+  return a.fix === -1 ? [a.lo, Math.max(a.lo + 1, y)] : a.fix === 1 ? [Math.min(a.hi - 1, x), a.hi] : [x, y];
+}
+
+function freeSpan(a: PodiumAxis, v: number, fine: boolean): [number, number] {
   const { lo, hi, v0, g } = a;
   const r = Math.round;
   const grow = (step: number): [number, number] => (v > hi ? [lo, hi + r((v - hi) / step) * step] : v < lo ? [lo - r((lo - v) / step) * step, hi] : [lo, hi]);
@@ -93,32 +101,48 @@ export function axisSpan(a: PodiumAxis, v: number, fine: boolean): [number, numb
   return v < v0 ? [Math.min(A - 1, r(v)), A] : [A, Math.max(A + 1, r(v))];
 }
 
-/** A drag of Disker og podier under way: `o`, the section the pen showed at the press (its frame: unturned, centred on
- *  its own origin), and each way's axis. `fine`: Shift held, or «Fin» on. */
+/** A påbygg (PR 3): the counter `id` it becomes part of, and the side of it the påbygg lies against. */
+export interface PodiumOnto {
+  id: string;
+  side: PodiumSide;
+}
+
+/** A drag of Disker og podier under way: `o`, the section the pen showed at the press (its frame: centred on its own
+ *  origin, or for a påbygg turned as the counter with nodes on whole grid units), and each way's axis. `fine`: Shift
+ *  held, or «Fin» on. */
 export interface PodiumDrag {
   o: PlacedObject;
   x: PodiumAxis;
   z: PodiumAxis;
   fine: boolean;
+  onto?: PodiumOnto;
 }
 
 /** A plan point in grid units of the section's frame. */
-const unitsOf = (o: PlacedObject, q: Point): Point => [((q[0] - o.x) * 1000) / GRID, ((q[1] - o.y) * 1000) / GRID];
+const unitsOf = (o: PlacedObject, q: Point): Point => {
+  const [u, w] = toLocal(o, q);
+  return [u / GRID, w / GRID];
+};
 
-/** Which edges of the section `o` a press at q takes hold of (with Shift): each way −1, 0 or 1. */
-export function podiumGrab(o: PlacedObject, q: Point): { x: Grab; z: Grab } {
+/** Which edges of the section `o` a press at q takes hold of (with Shift): each way −1, 0 or 1; on a påbygg always the
+ *  edge away from the counter across the side. */
+export function podiumGrab(o: PlacedObject, q: Point, onto?: PodiumOnto): { x: Grab; z: Grab } {
   const s = o.sections![0];
   const [u, w] = unitsOf(o, q);
-  return { x: grabOf(s.x[0] / GRID, s.x[1] / GRID, u), z: grabOf(s.z[0] / GRID, s.z[1] / GRID, w) };
+  const g = { x: grabOf(s.x[0] / GRID, s.x[1] / GRID, u), z: grabOf(s.z[0] / GRID, s.z[1] / GRID, w) };
+  return onto ? { ...g, [onto.side.axis]: onto.side.out } : g;
 }
 
 /** A drag pressed at q on the section `o` the pen shows. Without Shift a press is always in the middle (the section
- *  stands round the pointer); with Shift it takes the edge it is by. */
-export function startDrag(o: PlacedObject, q: Point, fine: boolean): PodiumDrag {
+ *  stands round the pointer); with Shift it takes the edge it is by. On a påbygg the edge against the counter stays. */
+export function startDrag(o: PlacedObject, q: Point, fine: boolean, onto?: PodiumOnto): PodiumDrag {
   const s = o.sections![0];
   const [u, w] = unitsOf(o, q);
-  const g = fine ? podiumGrab(o, q) : { x: 0 as Grab, z: 0 as Grab };
-  return { o, fine, x: { lo: s.x[0] / GRID, hi: s.x[1] / GRID, v0: u, g: g.x }, z: { lo: s.z[0] / GRID, hi: s.z[1] / GRID, v0: w, g: g.z } };
+  const g = fine ? podiumGrab(o, q, onto) : { x: 0 as Grab, z: 0 as Grab };
+  const fix = (a: 'x' | 'z') => (onto?.side.axis === a ? { fix: (-onto.side.out) as -1 | 1 } : {});
+  const x: PodiumAxis = { lo: s.x[0] / GRID, hi: s.x[1] / GRID, v0: u, g: g.x, ...fix('x') };
+  const z: PodiumAxis = { lo: s.z[0] / GRID, hi: s.z[1] / GRID, v0: w, g: g.z, ...fix('z') };
+  return { o, fine, x, z, ...(onto && { onto }) };
 }
 
 /** The spans a drag gives with the pointer at q, grid units. */
@@ -132,8 +156,11 @@ export function dragSpans(d: PodiumDrag, q: Point): { x: [number, number]; z: [n
 export function rebaseDrag(d: PodiumDrag, q: Point, fine: boolean): PodiumDrag {
   const span = dragSpans(d, q);
   const [u, w] = unitsOf(d.o, q);
-  const axis = ([lo, hi]: [number, number], v: number): PodiumAxis => ({ lo, hi, v0: v, g: fine ? (Math.abs(v - lo) < Math.abs(v - hi) ? -1 : 1) : 0 });
-  return { o: d.o, fine, x: axis(span.x, u), z: axis(span.z, w) };
+  const axis = ([lo, hi]: [number, number], v: number, a: PodiumAxis): PodiumAxis => {
+    const g: Grab = !fine ? 0 : a.fix ? (-a.fix as Grab) : Math.abs(v - lo) < Math.abs(v - hi) ? -1 : 1;
+    return { lo, hi, v0: v, g, ...(a.fix && { fix: a.fix }) };
+  };
+  return { ...d, fine, x: axis(span.x, u, d.x), z: axis(span.z, w, d.z) };
 }
 
 /** The box round some sections, node to node, mm. */
@@ -172,32 +199,153 @@ export function podiumName(sections: readonly CounterSection[]): 'Disk' | 'Podiu
   return 'Disk';
 }
 
-/** The counter with its sections centred on its own origin, (x, y) moved to match (an unturned counter). */
+/** The counter with its sections centred on its own origin, (x, y) moved to match, turned as it is. */
 function centred(o: PlacedObject, sections: CounterSection[]): PlacedObject {
   const b = bounds(sections);
   const cx = (b.x[0] + b.x[1]) / 2;
   const cz = (b.z[0] + b.z[1]) / 2;
   const t = (n: number) => snap(n) + 0;
   const moved = sections.map((s): CounterSection => ({ x: [t(s.x[0] - cx), t(s.x[1] - cx)], z: [t(s.z[0] - cz), t(s.z[1] - cz)], h: s.h }));
-  return { ...o, x: snap(o.x + cx / 1000), y: snap(o.y + cz / 1000), sections: moved };
+  const [x, y] = toPlan(o, [cx, cz]);
+  return { ...o, x: snap(x), y: snap(y), sections: moved };
 }
 
-export type PodiumDraw = { v: Variant; id: string; o: PlacedObject } | { error: string; o: PlacedObject };
+/**
+ * What the pen stores or a drag draws (K10): stored as `v`, the counter `o` (with a påbygg, the whole counter after),
+ * or refused with the reason. `cell`: what is added, in the frame a drag goes on in (a free counter is all of it);
+ * `onto`: the counter and side a påbygg lies against (PR 3).
+ */
+export type PodiumDraw = ({ v: Variant; id: string } | { error: string }) & { o: PlacedObject; cell: PlacedObject; onto?: PodiumOnto };
 
 /** Stored where it stands, or refused where it has no room (K10). `was`: the counter it replaces. */
-function placed(v: Variant, ctx: PlaceContext, o: PlacedObject, was?: PlacedObject): PodiumDraw {
+function placed(v: Variant, ctx: PlaceContext, o: PlacedObject, cell: PlacedObject, onto?: PodiumOnto): PodiumDraw {
+  const at = { o, cell, ...(onto && { onto }) };
   const f = objectFootprint(ctx, o);
-  if (!f) return { error: 'Ukjent disk', o };
+  if (!f) return { error: 'Ukjent disk', ...at };
   const b = footprintBox(o, f);
   const inside = b.x0 > -EPS && b.y0 > -EPS && b.x1 < v.stand.width + EPS && b.y1 < v.stand.depth + EPS;
-  if (!inside || hitsAny(objectBoxes(ctx, o), blockers(v, ctx, was?.id ?? o.id))) return { error: 'Ikke plass til disken her', o };
-  const objects = was ? v.objects.map((x) => (x.id === was.id ? o : x)) : [...v.objects, o];
-  return { v: { ...v, objects }, id: o.id, o };
+  if (!inside || hitsAny(objectBoxes(ctx, o), blockers(v, ctx, o.id))) return { error: 'Ikke plass til disken her', ...at };
+  const objects = onto ? v.objects.map((x) => (x.id === o.id ? o : x)) : [...v.objects, o];
+  return { v: { ...v, objects }, id: o.id, ...at };
+}
+
+/** A straight run of a counter's outline (PR 3), in its own frame, mm: across `axis` at the node line `at`, facing
+ *  `out`, from `a` to `b` along. */
+export interface PodiumSide {
+  axis: 'x' | 'z';
+  out: -1 | 1;
+  at: number;
+  a: number;
+  b: number;
+}
+
+/** The sides of a counter's outline: every edge of a section with no section outside it, joined where they run on. */
+export function podiumSides(sections: readonly CounterSection[]): PodiumSide[] {
+  const bits = new Map<string, { side: Omit<PodiumSide, 'a' | 'b'>; at: number[] }>();
+  for (const s of sections)
+    for (const axis of ['x', 'z'] as const) {
+      const along = axis === 'x' ? s.z : s.x;
+      for (const out of [-1, 1] as const) {
+        const at = out < 0 ? s[axis][0] : s[axis][1];
+        for (let t = along[0]; t < along[1] - EPS; t += GRID) {
+          const mid = t + GRID / 2;
+          const past = at + out;
+          if (axis === 'x' ? covered(sections, past, mid) : covered(sections, mid, past)) continue;
+          const key = `${axis}${out}:${at}`;
+          const run = bits.get(key) ?? { side: { axis, out, at }, at: [] };
+          run.at.push(t);
+          bits.set(key, run);
+        }
+      }
+    }
+  const sides: PodiumSide[] = [];
+  for (const { side, at } of bits.values()) {
+    at.sort((p, q) => p - q);
+    let a = at[0];
+    for (let i = 1; i <= at.length; i++)
+      if (i === at.length || at[i] - at[i - 1] > GRID + EPS) {
+        sides.push({ ...side, a, b: at[i - 1] + GRID });
+        a = at[i];
+      }
+  }
+  return sides;
+}
+
+/** How near a side (mm, from its outer face) the pen lies against it (PR 3). */
+export const ONTO = 300;
+
+/** Whether two sets of sections overlap anywhere. */
+const overlaps = (p: readonly CounterSection[], q: readonly CounterSection[]) =>
+  p.some((s) => q.some((t) => Math.min(s.x[1], t.x[1]) - Math.max(s.x[0], t.x[0]) > EPS && Math.min(s.z[1], t.z[1]) - Math.max(s.z[0], t.z[0]) > EPS));
+
+/** The section a counter's grid lines run through: nodes on whole grid units from here. */
+const originOf = (c: PlacedObject): Point => [c.sections![0].x[0], c.sections![0].z[0]];
+
+/**
+ * What the pen shows by a counter of its own at q (PR 3): one section of START × START against the nearest side within
+ * ONTO of it, in the counter's grid, slid along in `step`s from the side's end and at most GRID past either end; it takes
+ * the height of the section it lies against. Null when q is by no side.
+ */
+function ontoAt(v: Variant, q: Point, step: number): { c: PlacedObject; side: PodiumSide; cell: CounterSection } | null {
+  let best: { c: PlacedObject; side: PodiumSide; d: number; t: number } | null = null;
+  for (const c of v.objects) {
+    if (!c.sections?.length) continue;
+    const [u, w] = toLocal(c, q);
+    for (const side of podiumSides(c.sections)) {
+      const [across, t] = side.axis === 'x' ? [u, w] : [w, u];
+      const d = (across - side.at) * side.out - R.face;
+      if (d <= 0 || d > ONTO || t < side.a - GRID || t > side.b + GRID) continue;
+      if (!best || d < best.d) best = { c, side, d, t };
+    }
+  }
+  if (!best) return null;
+  const { c, side, t } = best;
+  const a0 = Math.min(Math.max(side.a + Math.round((t - START / 2 - side.a) / step) * step, side.a - GRID), side.b - GRID);
+  const along: [number, number] = [a0, a0 + START];
+  const off: [number, number] = side.out > 0 ? [side.at, side.at + START] : [side.at - START, side.at];
+  const h = against(c.sections!, side, along);
+  return { c, side, cell: side.axis === 'x' ? { x: off, z: along, h } : { x: along, z: off, h } };
+}
+
+/** The height of the section a påbygg from `along` lies against on `side` (the one it shares most with). */
+function against(sections: readonly CounterSection[], side: PodiumSide, along: Range): number {
+  let h = HEIGHT;
+  let most = 0;
+  for (const s of sections) {
+    const [edge, run] = side.axis === 'x' ? [s.x, s.z] : [s.z, s.x];
+    if (Math.abs((side.out > 0 ? edge[1] : edge[0]) - side.at) > EPS) continue;
+    const shared = Math.min(run[1], along[1]) - Math.max(run[0], along[0]);
+    if (shared > most) [most, h] = [shared, s.h];
+  }
+  return h;
+}
+
+/** A section in the counter's frame as one in the frame a påbygg's drag goes on in (`cell`, nodes on whole units). */
+function cellOf(c: PlacedObject, s: CounterSection): PlacedObject {
+  const [ox, oz] = originOf(c);
+  const [x, y] = toPlan(c, [ox, oz]);
+  return { ...c, x, y, sections: [{ x: [s.x[0] - ox, s.x[1] - ox], z: [s.z[0] - oz, s.z[1] - oz], h: s.h }] };
+}
+
+/** `added`, in the counter's frame, stored as part of counter `c` (PR 3): refused over itself, loose, or with no room. */
+function addOnto(v: Variant, ctx: PlaceContext, c: PlacedObject, added: CounterSection[], cell: PlacedObject, onto: PodiumOnto): PodiumDraw {
+  const at = { o: c, cell, onto };
+  const { side } = onto;
+  if (overlaps(added, c.sections!)) return { error: 'Disken kan ikke gå over seg selv', ...at };
+  const run = (s: CounterSection) => (side.axis === 'x' ? s.z : s.x);
+  const shared = Math.max(...added.map((s) => Math.min(run(s)[1], side.b) - Math.max(run(s)[0], side.a)));
+  if (shared < GRID - EPS) return { error: 'En del ville stått løst', ...at };
+  return placed(v, ctx, centred(c, [...c.sections!, ...added]), cell, onto);
 }
 
 /** What the pen shows and a click at q stores: one section of START × START round q, kept inside the stand and moved in
  *  against a wall, counter or the stand edge within 10 cm (K10). Refused where it has no room. */
-export function podiumAt(v: Variant, ctx: PlaceContext, pen: { product: string; ral?: string }, q: Point): PodiumDraw {
+export function podiumAt(v: Variant, ctx: PlaceContext, pen: { product: string; ral?: string }, q: Point, fine = false): PodiumDraw {
+  const by = ontoAt(v, q, fine ? GRID : START);
+  if (by) {
+    const { c, side, cell } = by;
+    return addOnto(v, ctx, c, [cell], cellOf(c, cell), { id: c.id, side });
+  }
   const id = nextId(v.objects.map((o) => o.id), 'i');
   const colour = pen.ral && pen.ral !== COUNTER_STOCK_RAL ? { ral: pen.ral } : {};
   const half = START / 2;
@@ -206,9 +354,10 @@ export function podiumAt(v: Variant, ctx: PlaceContext, pen: { product: string; 
   const clamp = (n: number, hi: number) => Math.min(Math.max(n, w), hi - w);
   const kept = { ...o, x: clamp(o.x, v.stand.width), y: clamp(o.y, v.stand.depth) };
   const f = objectFootprint(ctx, kept);
-  if (!f) return { error: 'Ukjent disk', o };
+  if (!f) return { error: 'Ukjent disk', o, cell: o };
   const s = snapShift(v, footprintBox(kept, f), blockers(v, ctx, id));
-  return placed(v, ctx, { ...kept, x: snap(kept.x + s.x), y: snap(kept.y + s.y) });
+  const at = { ...kept, x: snap(kept.x + s.x), y: snap(kept.y + s.y) };
+  return placed(v, ctx, at, at);
 }
 
 /**
@@ -217,12 +366,23 @@ export function podiumAt(v: Variant, ctx: PlaceContext, pen: { product: string; 
  */
 export function drawPodium(v: Variant, ctx: PlaceContext, d: PodiumDrag, q: Point): PodiumDraw {
   const s = d.o.sections?.[0];
-  if (!s) return { error: 'Ukjent disk', o: d.o };
+  if (!s) return { error: 'Ukjent disk', o: d.o, cell: d.o };
   const span = dragSpans(d, q);
   const mm = ([a, b]: [number, number]): [number, number] => [a * GRID, b * GRID];
   const from = { x: span.x[0] === d.x.lo ? ('lo' as const) : ('hi' as const), z: span.z[0] === d.z.lo ? ('lo' as const) : ('hi' as const) };
-  return placed(v, ctx, centred(d.o, rectSections(mm(span.x), mm(span.z), from, s.h)));
+  const drawn = rectSections(mm(span.x), mm(span.z), from, s.h);
+  if (!d.onto) {
+    const o = centred(d.o, drawn);
+    return placed(v, ctx, o, o);
+  }
+  const c = v.objects.find((x) => x.id === d.onto!.id);
+  if (!c?.sections) return { error: 'Ukjent disk', o: d.o, cell: d.o };
+  const cell = { ...d.o, sections: drawn };
+  const [ox, oz] = originOf(c);
+  const added = drawn.map((t): CounterSection => ({ x: [t.x[0] + ox, t.x[1] + ox], z: [t.z[0] + oz, t.z[1] + oz], h: t.h }));
+  return addOnto(v, ctx, c, added, cell, d.onto);
 }
+
 
 /** Outer size of a counter of Disker og podier, mm: length × depth × height (K10, K12). */
 export function podiumSize(o: Pick<PlacedObject, 'sections'>): { length: number; depth: number; height: number } {
