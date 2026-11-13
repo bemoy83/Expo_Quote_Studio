@@ -5,7 +5,7 @@ import { toPlan } from '../../../domain/counterShape'
 import type { PlacedObject } from '../../../domain/types'
 import { RECIPES } from '../../../foga/recipes'
 import { INK, INK_FAINT, SURFACE } from '../../colors'
-import type { DrawerSide } from './podiumView'
+import { sideOnPlan, type DrawerSide } from './podiumView'
 
 const F = RECIPES.counter.face
 /** The map's largest size, px. */
@@ -15,9 +15,10 @@ export function PodiumMap({ o, sides, chosen, onPick }: { o: PlacedObject; sides
   const [hover, setHover] = useState<number | null>(null)
   const sections = o.sections ?? []
   // Outer corners of each section on the plan, m, about the counter's middle
+  const mid = { ...o, x: 0, y: 0 }
   const rects = sections.map((s) => {
-    const p = toPlan({ ...o, x: 0, y: 0 }, [s.x[0] - F, s.z[0] - F])
-    const q = toPlan({ ...o, x: 0, y: 0 }, [s.x[1] + F, s.z[1] + F])
+    const p = toPlan(mid, [s.x[0] - F, s.z[0] - F])
+    const q = toPlan(mid, [s.x[1] + F, s.z[1] + F])
     return { x0: Math.min(p[0], q[0]), y0: Math.min(p[1], q[1]), x1: Math.max(p[0], q[0]), y1: Math.max(p[1], q[1]) }
   })
   if (!rects.length) return null
@@ -30,11 +31,7 @@ export function PodiumMap({ o, sides, chosen, onPick }: { o: PlacedObject; sides
   const W = (bx[1] - bx[0]) * k + 2 * P
   const H = (by[1] - by[0]) * k + 2 * P
   const line = (d: DrawerSide) => {
-    const s = d.side
-    const at = s.at + s.out * F
-    const [a, b] = s.axis === 'x' ? [[at, s.a - F], [at, s.b + F]] : [[s.a - F, at], [s.b + F, at]]
-    const p = toPlan({ ...o, x: 0, y: 0 }, a as [number, number])
-    const q = toPlan({ ...o, x: 0, y: 0 }, b as [number, number])
+    const [p, q] = sideOnPlan(mid, d.side, F)
     return { x1: X(p[0]), y1: Y(p[1]), x2: X(q[0]), y2: Y(q[1]) }
   }
   return (

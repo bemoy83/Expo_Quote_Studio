@@ -5,7 +5,7 @@
 // height, the side's drawing on the right and the hint across the bottom. Without a part chosen the settings act on the
 // whole side; a click in the drawing chooses the light opening under it (the part when it has no shelves), a click on
 // it again the whole side.
-import { ChevronLeft, ChevronRight, LibraryBig, Palette } from 'lucide-react'
+import { LibraryBig, Palette } from 'lucide-react'
 import { useState } from 'react'
 import { counterRal, removeObject } from '../../../domain/objects'
 import { podiumDecals, updatePodiumDecal } from '../../../domain/podiumDecor'
@@ -14,11 +14,11 @@ import { partLocks } from '../../../domain/podiumLocks'
 import { HEIGHTS, podiumName, podiumSize, setSectionHeight } from '../../../domain/podiums'
 import { SHELF_HEIGHTS, lowered, movePodiumShelf, setPodiumShelf } from '../../../domain/podiumShelves'
 import type { CounterLight, Motif, PlacedObject, Variant } from '../../../domain/types'
-import { Button, FlatChoice, FlatToggles, IconButton, Section } from '../../controls'
+import { Button, FlatChoice, FlatToggles, Section } from '../../controls'
 import { place, plateColor } from '../../env'
 import { count, mm } from '../../format'
 import { findMotif } from '../../motifs'
-import { DrawerHead } from '../drawerParts'
+import { DrawerHead, PrevNext } from '../drawerParts'
 import type { PlanSelection } from '../selection'
 import { PodiumDecor } from './PodiumDecor'
 import { PodiumElevation } from './PodiumElevation'
@@ -72,6 +72,8 @@ export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect,
   const select = (x: Partial<PlanSelection>) => onSelect({ objectId: o.id, podiumSide: S.key, ...x })
   const showSide = (i: number) => onSelect({ objectId: o.id, podiumSide: sides[(i + sides.length) % sides.length].key })
   const pickPart = (i: number | undefined, light?: number) => (setGone(0), select({ podiumPart: i, podiumLight: light }))
+  // Every change but a lower height clears the hint of shelves it took away
+  const edit = (fn: (v: Variant) => Variant) => (setGone(0), onEdit(fn))
   const decor = sideDecor(o, S.side, new Set(locks.keys()), (id) => findMotif(motifs, id)?.ratio ?? 0)
   const decals = podiumDecals(o.sections ?? [])
   const chosenDecal = decals.find((d) => d.decal.id === sel.podiumDecal)
@@ -91,8 +93,7 @@ export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect,
   const options = KINDS.map((k) => (k.value === 'door' && !doorable.length ? { ...k, disabled: true, title: NO_DOOR } : k))
   const setKind = (k: Kind) => {
     const keys = (k === 'door' ? doorable : parts.filter((p) => !p.locked)).map((p) => p.key)
-    setGone(0)
-    onEdit((x) => setPodiumLight(x, o.id, keys, k === 'plate' ? null : k, li))
+    edit((x) => setPodiumLight(x, o.id, keys, k === 'plate' ? null : k, li))
   }
 
   const secs = [...new Set(parts.map((p) => p.part.section))]
@@ -105,15 +106,12 @@ export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect,
   const shelvesNow = SHELF_HEIGHTS.filter((y) => secs.every((i) => o.sections![i].shelves?.includes(y)))
   const lowest = Math.min(...secs.map((i) => o.sections![i].h))
   const shelfCount = secs.reduce((n, i) => n + (o.sections![i].shelves?.length ?? 0), 0)
-  const toggleShelf = (y: number, on: boolean) => (setGone(0), onEdit((x) => setPodiumShelf(x, o.id, secs, y, on)))
+  const toggleShelf = (y: number, on: boolean) => edit((x) => setPodiumShelf(x, o.id, secs, y, on))
   const several = pi === undefined && secs.length > 1
   const scope = pi === undefined ? 'Hele siden' : li === undefined ? `Del ${pi + 1} av ${el.parts.length}` : `Del ${pi + 1} · åpning ${li + 1}/${parts[0].lights.length}`
   const partNav =
     el.parts.length > 1 ? (
-      <>
-        <IconButton icon={ChevronLeft} label="Forrige del" size={15} onClick={() => pickPart(pi === undefined ? el.parts.length - 1 : pi === 0 ? undefined : pi - 1)} />
-        <IconButton icon={ChevronRight} label="Neste del" size={15} onClick={() => pickPart(pi === undefined ? 0 : pi === el.parts.length - 1 ? undefined : pi + 1)} />
-      </>
+      <PrevNext what="del" onPrev={() => pickPart(pi === undefined ? el.parts.length - 1 : pi === 0 ? undefined : pi - 1)} onNext={() => pickPart(pi === undefined ? 0 : pi === el.parts.length - 1 ? undefined : pi + 1)} />
     ) : undefined
   const hint =
     page === 'sides'
@@ -124,12 +122,7 @@ export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect,
     <section className="wall-drawer drawer2" aria-label={`${name} sett utenfra`}>
       <div className="wd-insp">
         <DrawerHead dot={plateColor(ral)} title={`${name} · ${S.name.replace(/^mot /, '')}`} remove={{ label: `Fjern ${name.toLowerCase()}en (Delete)`, onClick: () => (onEdit((x) => removeObject(x, o.id)), onClose()) }} onClose={onClose}>
-          {sides.length > 1 && (
-            <>
-              <IconButton icon={ChevronLeft} label="Forrige side" size={15} onClick={() => showSide(si - 1)} />
-              <IconButton icon={ChevronRight} label="Neste side" size={15} onClick={() => showSide(si + 1)} />
-            </>
-          )}
+          {sides.length > 1 && <PrevNext what="side" onPrev={() => showSide(si - 1)} onNext={() => showSide(si + 1)} />}
         </DrawerHead>
         <p className="wd-meta num">
           {`${mm(size.length / 1000)} × ${mm(size.depth / 1000)} mm`} · {count(o.sections?.length ?? 0, 'seksjon', 'seksjoner')}
@@ -180,7 +173,7 @@ export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect,
         chosen={pi === undefined ? undefined : { part: pi, light: li }}
         onPick={(p) => pickPart(p?.part, p?.light)}
         onHeight={(sec, h) => heightOf([sec], h)}
-        onShelf={(sec, from, to) => (setGone(0), onEdit((x) => movePodiumShelf(x, o.id, sec, from, to)))}
+        onShelf={(sec, from, to) => edit((x) => movePodiumShelf(x, o.id, sec, from, to))}
         prints={decor.prints}
         decals={decor.decals}
         motifs={motifs}

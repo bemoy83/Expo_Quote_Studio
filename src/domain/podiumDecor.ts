@@ -6,7 +6,7 @@
 // `decals`), so it follows the part as the lights do. Pure, mm in the counter's frame.
 import { RECIPES } from '../foga/recipes';
 import { nextId } from './ids';
-import { lightsOf, partKey, podiumParts, sideKey, withSide, type PodiumPart } from './podiumFaces';
+import { lightsOf, partKey, podiumParts, sideKey, withSide, withSideField, type PodiumPart } from './podiumFaces';
 import { coverCrop, cropWindow, type Crop } from './print';
 import { EPS, withSections, type Axis } from './podiumSections';
 import type { CounterSection, PodiumDecal, SectionSide, Variant } from './types';
@@ -149,12 +149,6 @@ function onSides(sections: readonly CounterSection[], parts: readonly PodiumPart
   }
   return out;
 }
-/** A side with a field set or taken off; none when nothing is left. */
-function withField<K extends 'print' | 'decals'>(side: SectionSide | undefined, k: K, v: SectionSide[K] | undefined): SectionSide | undefined {
-  const { [k]: _, ...rest } = side ?? {};
-  const next: SectionSide = v === undefined || (Array.isArray(v) && !v.length) ? rest : { ...rest, [k]: v };
-  return Object.keys(next).length ? next : undefined;
-}
 
 const partsBy = (sections: readonly CounterSection[], keys: readonly string[] | 'all') => {
   const want = keys === 'all' ? null : new Set(keys);
@@ -164,7 +158,7 @@ const partsBy = (sections: readonly CounterSection[], keys: readonly string[] | 
 /** The sketch with print `motif` on the parts `keys` (partKey) of counter `id`, or on every part that takes it (`all`,
  *  the paint bucket); the print replaces the decals there (K20). null takes the print off. */
 export function setPodiumPrint(v: Variant, id: string, keys: readonly string[] | 'all', motif: string | null): Variant {
-  return withSections(v, id, (ss) => onSides(ss, partsBy(ss, keys), (side) => (motif ? withField(withField(side, 'decals', undefined), 'print', motif) : withField(side, 'print', undefined))));
+  return withSections(v, id, (ss) => onSides(ss, partsBy(ss, keys), (side) => (motif ? withSideField(withSideField(side, 'decals', undefined), 'print', motif) : withSideField(side, 'print', undefined))));
 }
 
 /** The sketch with a decal of `motif` in the middle of part `key` of counter `id`: as wide as the motif allows within
@@ -173,19 +167,17 @@ export function addPodiumDecal(v: Variant, id: string, key: string, motif: strin
   const o = v.objects.find((x) => x.id === id);
   const p = o?.sections && podiumParts(o.sections).find((q) => partKey(q) === key);
   if (!o?.sections || !p || !takesDecor(o.sections, p)) return { v };
-  const ws = partWindows(o.sections, p);
-  const top = Math.max(...ws.map((w) => w.y1));
-  const span = p.b - p.a - 2 * R.joint;
+  const { lo, hi, span, mid } = decalRoom(o.sections, p);
   const r = ratio > 0 ? ratio : 1;
   let w = Math.min(600, span * 0.8);
   let h = w / r;
-  if (h > Math.min(600, (top - R.railHeight) * 0.6)) {
-    h = Math.min(600, (top - R.railHeight) * 0.6);
+  if (h > Math.min(600, (hi - lo) * 0.6)) {
+    h = Math.min(600, (hi - lo) * 0.6);
     w = h * r;
   }
   const taken = o.sections.flatMap((s) => Object.values(s.sides ?? {}).flatMap((x) => (x.decals ?? []).map((d) => d.id)));
-  const decal: PodiumDecal = { id: nextId(taken, 'd'), motif, w: Math.round(w), h: Math.round(h), x: Math.round(rightOf(p.axis, p.out) * ((p.a + p.b) / 2 - sideMid(o.sections, p))), y: Math.round((R.railHeight + top) / 2) };
-  return { v: withSections(v, id, (ss) => onSides(ss, [p], (side) => withField(withField(side, 'print', undefined), 'decals', [...(side?.decals ?? []), decal]))), decal: decal.id };
+  const decal: PodiumDecal = { id: nextId(taken, 'd'), motif, w: Math.round(w), h: Math.round(h), x: Math.round(mid), y: Math.round((lo + hi) / 2) };
+  return { v: withSections(v, id, (ss) => onSides(ss, [p], (side) => withSideField(withSideField(side, 'print', undefined), 'decals', [...(side?.decals ?? []), decal]))), decal: decal.id };
 }
 
 /** The decal `decal` of counter `id` changed (moved, scaled, another motif) or taken off (null), kept on its part. */
@@ -195,20 +187,23 @@ export function updatePodiumDecal(v: Variant, id: string, decal: string, patch: 
     if (!at) return ss;
     return onSides(ss, [at.part], (side) => {
       const list = (side?.decals ?? []).flatMap((d) => (d.id !== decal ? [d] : patch ? [kept(ss, at.part, { ...d, ...patch })] : []));
-      return withField(side, 'decals', list);
+      return withSideField(side, 'decals', list);
     });
   });
 }
 
+/** Where a decal can go on a part: from the bottom rail (lo) to the highest plate top (hi), mm up, `span` between the
+ *  posts and the part's middle as a decal's `x` (from the middle of the section's side, seen from outside). */
+function decalRoom(sections: readonly CounterSection[], p: PodiumPart) {
+  const hi = Math.max(...partWindows(sections, p).map((w) => w.y1));
+  return { lo: R.railHeight, hi, span: p.b - p.a - 2 * R.joint, mid: rightOf(p.axis, p.out) * ((p.a + p.b) / 2 - sideMid(sections, p)) };
+}
+
 /** A decal held within its part's plates, mm: no smaller than 50, no bigger than the part. */
 function kept(sections: readonly CounterSection[], p: PodiumPart, d: PodiumDecal): PodiumDecal {
-  const ws = partWindows(sections, p);
-  const lo = R.railHeight;
-  const hi = Math.max(...ws.map((w) => w.y1));
-  const span = p.b - p.a - 2 * R.joint;
+  const { lo, hi, span, mid } = decalRoom(sections, p);
   const w = Math.round(Math.max(50, Math.min(d.w, span)));
   const h = Math.round(Math.max(50, Math.min(d.h, hi - lo)));
-  const mid = rightOf(p.axis, p.out) * ((p.a + p.b) / 2 - sideMid(sections, p));
   const x = Math.round(Math.max(mid - (span - w) / 2, Math.min(mid + (span - w) / 2, d.x)));
   const y = Math.round(Math.max(lo + h / 2, Math.min(hi - h / 2, d.y)));
   return { ...d, w, h, x, y };

@@ -4,7 +4,7 @@
 // is kept on the section (`CounterSection.sides`), so it follows the part when the counter is moved, turned, stretched
 // by a grip, built on, fused or parted; a side that becomes inner loses it (`prunedSides`). Pure, mm in the counter's
 // frame.
-import { covered, EPS, GRID, withSections, type Axis } from './podiumSections';
+import { covered, EPS, GRID, lineOf, withSections, type Axis } from './podiumSections';
 import type { CounterLight, CounterSection, SectionSide, SectionSideKey, Variant } from './types';
 
 /** The key of a section's side facing `out` across `axis`. */
@@ -49,11 +49,12 @@ export function podiumParts(sections: readonly CounterSection[]): PodiumPart[] {
   return out;
 }
 
-/** The parts on a straight side of the outline (podiumSides), in order along it. */
-export const partsOn = (sections: readonly CounterSection[], side: { axis: Axis; out: -1 | 1; at: number; a: number; b: number }): PodiumPart[] =>
-  podiumParts(sections)
-    .filter((p) => p.axis === side.axis && p.out === side.out && Math.abs(p.at - side.at) < EPS && p.a > side.a - EPS && p.b < side.b + EPS)
-    .sort((p, q) => p.a - q.a);
+type Line = Pick<PodiumPart, 'axis' | 'out' | 'at' | 'a' | 'b'>;
+/** Whether a part lies on a straight side of the outline (podiumSides). */
+export const onSide = (side: Line) => (p: PodiumPart) => p.axis === side.axis && p.out === side.out && Math.abs(p.at - side.at) < EPS && p.a > side.a - EPS && p.b < side.b + EPS;
+
+/** The parts on a straight side of the outline, in order along it. */
+export const partsOn = (sections: readonly CounterSection[], side: Line): PodiumPart[] => podiumParts(sections).filter(onSide(side)).sort((p, q) => p.a - q.a);
 
 /** What a part's light opening `i` (from the floor) is as stored: a plate (null), open or a sliding door. */
 export const lightOf = (sections: readonly CounterSection[], p: PodiumPart, i = 0): CounterLight | null => sections[p.section]?.sides?.[sideKey(p.axis, p.out)]?.lights?.[i] ?? null;
@@ -74,8 +75,14 @@ function withLightAt(side: SectionSide | undefined, i: number, kind: CounterLigh
   while (lights.length <= i) lights.push(null);
   lights[i] = kind;
   while (lights.length && lights[lights.length - 1] === null) lights.pop();
-  const { lights: _, ...rest } = side ?? {};
-  return lights.length ? { ...rest, lights } : Object.keys(rest).length ? rest : undefined;
+  return withSideField(side, 'lights', lights);
+}
+
+/** A side with one field set, or taken off when `value` is left out or an empty list; none when nothing is left. */
+export function withSideField<K extends keyof SectionSide>(side: SectionSide | undefined, k: K, value: SectionSide[K] | undefined): SectionSide | undefined {
+  const { [k]: _, ...rest } = side ?? {};
+  const next: SectionSide = value === undefined || (Array.isArray(value) && !value.length) ? rest : { ...rest, [k]: value };
+  return Object.keys(next).length ? next : undefined;
 }
 
 /** A section with one side replaced; no `sides` when none is left. */
@@ -103,8 +110,7 @@ export function setLight(sections: readonly CounterSection[], parts: readonly Po
 }
 
 /** The parts' end nodes in the counter's frame (x, z). */
-export const partLine = (p: PodiumPart): [[number, number], [number, number]] =>
-  p.axis === 'x' ? [[p.at, p.a], [p.at, p.b]] : [[p.a, p.at], [p.b, p.at]];
+export const partLine = (p: PodiumPart) => lineOf(p.axis, p.at, p.a, p.b);
 
 type Stretch = [[number, number], [number, number]];
 /** What the build reads of the sides (K16, K17): the parts open in every light opening (`open`, drawn as a hairline in
@@ -184,12 +190,8 @@ export function podiumHas(sections: readonly CounterSection[], locked: readonly 
   const sides = new Set(live.filter((p) => lightsOf(sections, p).includes('open')).map((p) => `${p.axis}${p.out}:${p.at}:${runOf(sections, p)}`));
   const doors = live.reduce((n, p) => n + lightsOf(sections, p).filter((k) => k === 'door').length, 0);
   const shelves = sections.reduce((n, s) => n + (s.shelves?.length ?? 0), 0);
-  const n = sides.size;
-  return [
-    ...(n ? [`${n} ${n === 1 ? 'åpen side' : 'åpne sider'}`] : []),
-    ...(doors ? [`${doors} ${doors === 1 ? 'skyvedør' : 'skyvedører'}`] : []),
-    ...(shelves ? [`${shelves} ${shelves === 1 ? 'hylle' : 'hyller'}`] : []),
-  ];
+  const some = (n: number, one: string, many: string) => (n ? [`${n} ${n === 1 ? one : many}`] : []);
+  return [...some(sides.size, 'åpen side', 'åpne sider'), ...some(doors, 'skyvedør', 'skyvedører'), ...some(shelves, 'hylle', 'hyller')];
 }
 
 /** Which straight side of the outline a part lies on: where its run of outer parts in line starts. */
