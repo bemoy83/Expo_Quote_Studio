@@ -17,4 +17,9 @@ describe('drawing grid (Tøm along walls)', () => {
     expect(strokeFrom(stand, { x: 1.5, y: 1.05 }, { x: 0.2, y: 1 })).toEqual([[2, 1], [0, 1]]);
     expect(strokeFrom(stand, { x: 2.02, y: 0.5 }, { x: 2.1, y: 2.8 })).toEqual([[2, 0], [2, 3]]);
   });
+
+  it('a stroke along a wall off the metre lines runs on its line in 250 (V9)', () => {
+    expect(strokeFrom(stand, { x: 1.6, y: 1.25 }, { x: 1.62, y: 1.25 }, 0.25, 0.25)).toEqual([[1.5, 1.25], [1.75, 1.25]]);
+    expect(strokeFrom(stand, { x: 1.6, y: 1.25 }, { x: 2.6, y: 1.3 }, 0.25, 0.25)).toEqual([[1.5, 1.25], [2.5, 1.25]]);
+  });
 });

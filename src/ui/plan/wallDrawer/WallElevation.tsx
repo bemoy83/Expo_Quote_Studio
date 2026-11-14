@@ -13,7 +13,7 @@ import { cornerLayout } from '../../../domain/shelves/corners'
 import { shelfRow, shelfStacks } from '../../../domain/shelves/model'
 import type { Foil, Motif, Opening, Shelf, TextileWall, Variant, Wall } from '../../../domain/types'
 import { wallRal } from '../../../domain/panels'
-import type { BuiltModule } from '../../../domain/walls'
+import type { BuiltModule, WallPart } from '../../../domain/walls'
 import { doorInset } from '../../../rules/rules'
 import { ALU, BORDER_STRONG, INK, INK_FAINT, SUNKEN } from '../../colors'
 import { applyDrop, decorDrag, dropSpot, endDecorDrag, type DropSpot, type FaceTarget } from '../../dnd'
@@ -48,6 +48,8 @@ interface Props {
   L: number
   H: number
   mods: (BuiltModule | undefined)[]
+  /** The wall's plates as built, the parts of a split module each its own (V10). */
+  parts: WallPart[]
   tex: TextileWall[]
   /** A frame's production facts (size, braces, splices, X10 move), by textile id. */
   pieceOf: (id: string) => FrameFacts | undefined
@@ -100,6 +102,10 @@ export function WallElevation(p: Props) {
   const spanX = (a: number, b: number) => Math.min(u(a), u(b))
   /** Module i's length c/c: a shorter last module is drawn as long as it is (Byggeregel V1). */
   const ccOf = (i: number) => moduleCc(w, i)
+  /** The parts of module i when another wall split it (V10), else none. */
+  const splitParts = (i: number) => (p.parts.filter((q) => q.index === i).length > 1 ? p.parts.filter((q) => q.index === i) : [])
+  /** Post centres along the wall: every module's and part's start, and the end. */
+  const postsAt = [...new Set([...mods.map((_, i) => i), ...p.parts.map((q) => q.at), L])].sort((a, b) => a - b)
   const z = (h: number) => H - h
   // Corner shelves: their boards, brackets and the 01 rails on this face (Byggeregler H10–H12)
   const layout = useMemo(() => cornerLayout(v, rules), [v])
@@ -272,6 +278,23 @@ export function WallElevation(p: Props) {
                 </g>
               )
             }
+            // A module another wall split (V10): each part its own plate, in its own colour
+            const split = !m ? splitParts(i) : []
+            if (split.length)
+              return (
+                <g key={i}>
+                  {split.map((q) => {
+                    const f = felt(rules, q.at, q.cc)
+                    return (
+                      <g key={q.mod.key}>
+                        <rect x={spanX(f.a, f.b)} y={z(H)} width={f.w} height={H - rules.wall.feet} fill={plateColor(q.mod.plate)} />
+                        <rect x={spanX(q.at, q.at + q.cc)} y={z(H)} width={q.cc} height={rules.wall.profile.top} fill={ALU} />
+                        <rect x={spanX(q.at, q.at + q.cc)} y={z(f.y0)} width={q.cc} height={rules.wall.profile.bottom} fill={ALU} />
+                      </g>
+                    )
+                  })}
+                </g>
+              )
             const f = felt(rules, i, ccOf(i))
             return (
               <g key={i}>
@@ -281,7 +304,7 @@ export function WallElevation(p: Props) {
               </g>
             )
           })}
-          <Posts xs={[...mods.map((_, i) => u(i)), u(L)]} H={H} />
+          <Posts xs={postsAt.map(u)} H={H} />
           {/* The chosen door: marked, with its swing (the point of the triangle is the hinge side) */}
           {O &&
             O.wallId === w.id &&
@@ -389,7 +412,11 @@ export function WallElevation(p: Props) {
               print, decal or textile on a plate never takes the tap. */}
           {painting &&
             mods.map((m, i) => {
-              if (!m) return null
+              if (!m)
+                return splitParts(i).map((q) => {
+                  const f = felt(rules, q.at, q.cc)
+                  return <rect key={`hit${q.mod.key}`} x={spanX(f.a, f.b)} y={z(H)} width={f.w} height={H - rules.wall.feet} fill="transparent" {...paintOn(i, q.mod.key)} />
+                })
               const f = felt(rules, i, ccOf(i))
               if (m.opening) {
                 // A door is part of the wall: the header is a plate, the leaf below it one more for the brush
@@ -424,7 +451,7 @@ export function WallElevation(p: Props) {
             />
           )}
 
-          <ElevationDims w={w} s={s} name={name} L={L} H={H} items={items} leaders={fr.leaders} top={fr.top} width={fr.width} right={fr.right} sc={sc} fields={fields} fieldCc={fieldCc} shelves={shelfChains(rules, shelfStacks({ ...v, shelves: brush.shelves ?? shelves }), u)} />
+          <ElevationDims w={w} s={s} name={name} L={L} H={H} posts={postsAt} items={items} leaders={fr.leaders} top={fr.top} width={fr.width} right={fr.right} sc={sc} fields={fields} fieldCc={fieldCc} shelves={shelfChains(rules, shelfStacks({ ...v, shelves: brush.shelves ?? shelves }), u)} />
         </svg>
       </div>
     </div>

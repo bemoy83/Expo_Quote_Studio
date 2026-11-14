@@ -18,7 +18,7 @@ import { moveShelves, removeShelves } from '../../domain/shelves/edit'
 import { shelvesOn } from '../../domain/shelves/model'
 import { wallLength, wallModules } from '../../domain/grid'
 import type { Motif, Variant } from '../../domain/types'
-import { builtModules, isStandWall, wallLabel } from '../../domain/walls'
+import { builtModules, isStandWall, wallLabel, wallParts } from '../../domain/walls'
 import { wallHeight } from '../../rules/rules'
 import { INK_FAINT, LAYER_COLOR } from '../colors'
 import { Button, IconButton, Section } from '../controls'
@@ -70,8 +70,11 @@ export function WallDrawer(p: Props) {
   const F = c.kind === 'foil' ? c.foil : undefined
   const shelves = shelvesOn(v, w.id, s)
   const S = c.kind === 'shelf' ? c.shelf : undefined
-  const built = new Map(builtModules(v).map((m) => [m.key, m]))
+  const builtList = builtModules(v)
+  const built = new Map(builtList.map((m) => [m.key, m]))
   const mods = wallModules(w).map((m) => built.get(m.key))
+  // The plates as built: a module another wall split (V10) is its parts
+  const parts = wallParts(w, builtList)
   /** A felt chosen in the drawing (a plate, not a door), when nothing on the wall is. */
   const Fe = c.kind === 'wall' && c.felt !== undefined && mods[c.felt] && !mods[c.felt]!.opening ? c.felt : undefined
   /** What the drawer shows: one answer for the panel, the motif library and the buttons (focus.ts). */
@@ -123,7 +126,7 @@ export function WallDrawer(p: Props) {
     const owner = v.walls.find((x) => x.id === built.get(key)?.wallId)
     return owner ? wallRal(v, owner) : v.defaultPlate
   }
-  const odd = mods.filter((m) => m && m.plate !== base(m.key)).length
+  const odd = parts.filter((q) => !q.mod.opening && q.mod.plate !== base(q.mod.key)).length
   /**
    * The wall carries decor (foil on either face, or plates in their own colour). With the whole wall chosen the trash
    * then clears that first; on a plain wall it removes the wall as before (Bjørn 2.11.2026).
@@ -222,7 +225,7 @@ export function WallDrawer(p: Props) {
               onClose={p.onClose}
             />
             <p className="wd-meta num">
-              {wallMeta(v, w, { L, T, F, S, piece, openings, odd, tex, rooms, shelves })}
+              {wallMeta(v, w, { L, T, F, S, piece, openings, plates: parts.filter((q) => !q.mod.opening).length, odd, tex, rooms, shelves })}
             </p>
 
             {T && <TextilePanel T={T} motifs={motifs} onEdit={p.onEdit} onUpload={p.onUpload} />}
@@ -316,6 +319,7 @@ export function WallDrawer(p: Props) {
         L={L}
         H={H}
         mods={mods}
+        parts={parts}
         tex={tex}
         pieceOf={pieceOf}
         foils={foils}

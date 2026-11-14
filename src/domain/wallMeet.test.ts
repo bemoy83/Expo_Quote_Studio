@@ -4,11 +4,11 @@ import { describe, expect, it } from 'vitest';
 import { calc } from '../calc/calc';
 import { DEFAULT_CATALOG } from '../catalog/defaultCatalog';
 import { RULES } from '../rules/rules';
-import { paintWalls } from './edit';
+import { eraseWalls, paintWalls } from './edit';
 import { makeModule, moduleKey } from './grid';
 import type { Variant } from './types';
 import { createVariant } from './variant';
-import { builtModules, splitAt, wallPoints } from './walls';
+import { builtModules, splitAt, wallParts, wallPoints } from './walls';
 
 const row = () => createVariant('A', { width: 6, depth: 4, type: 'row' });
 const ccOf = (v: Variant, id: string) => builtModules(v).filter((m) => m.wallId === id).map((m) => m.cc);
@@ -83,5 +83,27 @@ describe('split modules on the quote (V1, V10)', () => {
     expect(qtyOf(ours, '6122-9010')).toBe(2);
     // No plate swap for the parts: they are the exhibitor's own plates
     expect(ours.filter((l) => l.artnr.startsWith('6125'))).toEqual([]);
+  });
+});
+
+describe('the wall drawing and Tøm on split modules (V10)', () => {
+  it('a wall\'s plates as built: a split module is its parts, in order along the wall', () => {
+    let v = paintWalls(createVariant('A', { width: 6, depth: 4, type: 'island' }), [4, 2], [1, 2]);
+    v = paintWalls(v, [2.5, 2], [2.5, 3.5]);
+    const w = v.walls.find((x) => x.from[1] === 2 && x.to[1] === 2)!;
+    expect(wallParts(w, builtModules(v)).map((q) => [q.index, q.at, q.cc])).toEqual([
+      [0, 0, 1],
+      [1, 1, 0.5],
+      [1, 1.5, 0.5],
+      [2, 2, 1],
+    ]);
+  });
+
+  it('erasing the module a part was cut from takes both parts', () => {
+    let v = paintWalls(createVariant('A', { width: 6, depth: 4, type: 'island' }), [1, 2], [4, 2]);
+    v = paintWalls(v, [2.5, 2], [2.5, 3.5]);
+    const part = builtModules(v).find((m) => m.whole)!;
+    const after = eraseWalls(v, [part.whole!]);
+    expect(builtModules(after).filter((m) => m.a[1] === 2 && m.b[1] === 2).map((m) => m.cc)).toEqual([1, 1]);
   });
 });

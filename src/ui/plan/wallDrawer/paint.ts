@@ -89,6 +89,11 @@ export function wallPaint({ v, w, s, built, mods, motifs, tool, paintSel, printS
       return onEdit((x) => clearPrint(paintDoors(setWallPlate(x, w.id, paint), w.id, paint), w.id, s))
     }
     if (!printing) return leaf ? paintLeaf(i, key, first) : paintPlate(i, key, first)
+    // Print is laid per module: a part of a split module (V10) takes none yet
+    if (built.get(key)?.whole) {
+      if (first) onToast('Delte plater kan ikke ha print ennå')
+      return
+    }
     const why = foilBlocked(v, rules, w.id, i, s, true)
     if (why) {
       if (first) onToast(why)

@@ -40,7 +40,7 @@ kostgrunnlaget). Regel og kilde føres i `docs/byggeregler.md`.
 
 ### Vegger (standvegg, innervegg, romvegg)
 
-- Modell: `Wall` · `domain/walls.ts` (bygde moduler, standvegg, standardtakdrager av/på, vegggeometri som
+- Modell: `Wall` · `domain/walls.ts` (bygde moduler, delt der en vegg møter mellom stolpene med `whole` og `wallParts` (V10), standvegg, standardtakdrager av/på, vegggeometri som
   `defaultSwing`, `doorAllowed`, `isPerimeterWall`) · `domain/edit.ts` (tegne, viske, flytte, farge) · `domain/replaceWalls.ts` (nye vegger, dører, tekstil, dekaler og hyller følger med) · `domain/panels.ts` (farge per plate, `ownPlate`) · `domain/grid.ts` (moduler og nøkler)
 - Kalkyle: `calc/lines/walls.ts` (vegglinjer, arrangørens standvegger) · `calc/lines/swaps.ts` (platebytte) · hvem
   som betaler: `calc/context.ts` · `foga/fromVariant.ts`
@@ -54,8 +54,9 @@ kostgrunnlaget). Regel og kilde føres i `docs/byggeregler.md`.
 - Standard: `calc/beams/beams.ts` (`variantBeams` setter sammen alle tre) · felles for alle utleggene: `calc/beams/beamSegments.ts` (`BeamSegment`, `BeamLayout`, deling etter T2 og `onSegment`), så utleggene ikke importerer hverandre
 - Innvendige (tegnet av kunden): modell `InnerBeam`, redigering `domain/innerBeams.ts`, utlegg `calc/beams/innerBeams.ts`; Shift + dra eller «Fin» i pillen (`PlanSelection.beamFine`) utenfor rasteret `shiftInnerBeam` + `dragInnerBeamFine` (`ui/drag.ts`), mållinjer `calc/beams/beamOffsets.ts` tegnet med `DimChain` i `layers/BeamLayer.tsx`, på arbeidsordren for alle (`beamMeasures`) (T15)
 - Støttedrager på lange standvegger: `calc/beams/supportBeams.ts`
+- Vegger hvor som helst i 250-rasteret mot dragerne (vegg langs, kryss i stolpe eller mellom stolper, T4, T11, T17): `calc/beams/wallLines.ts`
 - Kroker i 01, enveis og toveis (der en drager henger på en annen, eller på en vegg mellom stolpene, T15): `calc/beams/beamHooks.ts`, plukk i `foga/engine.ts`, 3D i `scene3d/build/frame.ts`
-- Hevet over tekstilvegg (skjøtet stolpe og krok, hel lengde over et annet nivå T16): `calc/beams/beamLift.ts` (`withJoins`), linjen `beamLiftLines` i `calc/lines/beams.ts`, 3D i `scene3d/build/frame.ts`
+- Hevet over tekstilvegg eller over en vegg uten stolpe (skjøtet stolpe og krok, hel lengde over et annet nivå T16, T17): `calc/beams/beamLift.ts` (`withJoins`), linjen `beamLiftLines` i `calc/lines/beams.ts`, 3D i `scene3d/build/frame.ts`
 - Linjen og hvem som betaler: `calc/lines/beams.ts` · `calc/context.ts` (`organiserBeams`)
 - Plan og 3D: `plan/layers/BeamLayer.tsx`, tegne `plan/pointer/run.ts`, dra `pointer/beam.ts` · `scene3d/build/frame.ts`
 

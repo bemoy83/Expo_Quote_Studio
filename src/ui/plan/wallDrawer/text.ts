@@ -24,9 +24,9 @@ export function wallTitle(v: Variant, w: Wall, T?: TextileWall, F?: Foil, S?: Sh
 export function wallMeta(
   v: Variant,
   w: Wall,
-  x: { L: number; T?: TextileWall; F?: Foil; S?: Shelf; piece?: ProductionPiece; openings: Opening[]; odd: number; tex: TextileWall[]; rooms: RoomRun[]; shelves?: Shelf[] },
+  x: { L: number; T?: TextileWall; F?: Foil; S?: Shelf; piece?: ProductionPiece; openings: Opening[]; /** Plates as built, a split module's parts each one (V10); else one per module. */ plates?: number; odd: number; tex: TextileWall[]; rooms: RoomRun[]; shelves?: Shelf[] },
 ): string {
-  const { L, T, F, S, piece, openings, odd, tex, rooms, shelves = [] } = x
+  const { L, T, F, S, piece, openings, plates, odd, tex, rooms, shelves = [] } = x
   if (S) {
     const { w: width, d: depth } = RECIPES.shelf.board
     const n = shelves.filter((f) => f.module === S.module).length
@@ -48,7 +48,7 @@ export function wallMeta(
   if (F) return `Felt ${F.module + 1} · ${mm(F.width)} × ${mm(F.height)} mm${F.run ? ` · del av print over ${v.foils.filter((y) => y.run === F.run).length} plater` : ''}`
   return [
     `${fmt(L, 2)} m`,
-    count(wallModules(w).length - openings.length, 'plate', 'plater') + (odd ? ` (${odd} i egen farge)` : ''),
+    count(plates ?? wallModules(w).length - openings.length, 'plate', 'plater') + (odd ? ` (${odd} i egen farge)` : ''),
     openings.length && count(openings.length, 'åpning', 'åpninger'),
     tex.length && count(tex.length, 'tekstilvegg', 'tekstilvegger'),
     shelves.length && count(shelves.length, 'hylle', 'hyller'),
