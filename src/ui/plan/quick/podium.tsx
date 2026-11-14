@@ -1,13 +1,12 @@
 // Disker og podier by function (Bjørn 14.11.2026): «Fri», then one button per function with the outline of the item
 // behind it; the plates in the wall colours and the bucket, as on Vegg (K6); Høyde (K12) and Fin.
-import { Ruler } from 'lucide-react'
 import { stockByArtnr } from '../../../domain/podiumStock'
 import { artnrName, catalog, idx } from '../../env'
 import { fineApplies, funcOf, penFuncs, penHeights, stockFor, withFunc, withHeight } from '../../podiumPen'
 import type { Brush } from '../../tools'
 import { ralSwatches } from '../swatches'
 import { StockOutline } from './StockOutline'
-import { Palette, QBtn, Sep } from './parts'
+import { FinBtn, Palette, QBtn, Sep } from './parts'
 import type { QuickCtx } from './types'
 
 export function PodiumPicks({ p, head, more, brush }: Omit<QuickCtx, 'is'> & { brush: Extract<Brush, { kind: 'podium' }> }) {
@@ -62,17 +61,12 @@ export function PodiumPicks({ p, head, more, brush }: Omit<QuickCtx, 'is'> & { b
       ))}
       <Sep />
       {/* «Fin»: as Shift held, for touch; Fri only, a function places its item whole */}
-      <QBtn
-        on={fine && fineOn}
-        setting
-        disabled={!fineOn}
-        title={!fineOn ? 'Fin · gjelder bare Fri' : fine ? 'Fin · 250-steg, dra fra en kant flytter den · trykk for 500-steg igjen' : 'Fin · 250-steg, og dra fra en kant for å flytte den · på desktop også Shift'}
-        label="Fin"
+      <FinBtn
+        on={!!fine}
+        off={fineOn ? undefined : 'Fin · gjelder bare Fri'}
+        title={fine ? 'Fin · 250-steg, dra fra en kant flytter den · trykk for 500-steg igjen' : 'Fin · 250-steg, og dra fra en kant for å flytte den · på desktop også Shift'}
         onClick={() => onPick({ ...brush, fine: !fine })}
-      >
-        <Ruler size={15} />
-        Fin
-      </QBtn>
+      />
       <Sep />
       {more}
     </>
