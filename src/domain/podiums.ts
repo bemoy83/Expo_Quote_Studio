@@ -15,6 +15,11 @@ import { nextId } from './ids';
 import { addAt, anywhere, blockers, COUNTER_STOCK_RAL, footprintBox, hitsAny, objectBoxes, objectFootprint, type PlaceContext } from './objects';
 import { bounds, covered, edgeRuns, EPS, GRID, overlaps, withSections, type EdgeRun, type Range } from './podiumSections';
 import type { CounterSection, PlacedObject, Point, Variant } from './types';
+import { axisSpan, rebaseAxis, type DrawAxis, type Grab, grabOf } from './drawAxis';
+
+export { axisSpan, grabOf, type Grab };
+/** One way of a drag of Disker og podier (drawAxis.ts). */
+export type PodiumAxis = DrawAxis;
 
 const R = RECIPES.counter;
 export { GRID };
@@ -50,53 +55,6 @@ export function rectSections(x: Range, z: Range, from: { x: 'lo' | 'hi'; z: 'lo'
 export function dragSpan(lo: number, hi: number, v: number): [number, number] {
   const [a, b] = axisSpan({ lo: lo / GRID, hi: hi / GRID, v0: 0, g: 0 }, v / GRID, false);
   return [a * GRID, b * GRID];
-}
-
-/** Which edge a press takes hold of, one way (PR 2, CAD: what you hold is where you press, never which way you drag):
- *  −1 the low edge, 1 the high, 0 the middle third. Grid units. */
-export type Grab = -1 | 0 | 1;
-export function grabOf(lo: number, hi: number, v: number): Grab {
-  const t = (v - (lo + hi) / 2) / (hi - lo);
-  return Math.abs(t) < 1 / 6 ? 0 : t < 0 ? -1 : 1;
-}
-
-/** One way of a drag, in grid units (250 mm): the span lo–hi it started from, the pointer at the press `v0`, and the
- *  edge taken hold of `g`. */
-export interface PodiumAxis {
-  lo: number;
-  hi: number;
-  v0: number;
-  g: Grab;
-  /** The edge that never moves (påbygg: the one against the counter), −1 low or 1 high. */
-  fix?: -1 | 1;
-}
-
-/** Below this (grid units, 75 mm) a press in the middle with Shift changes nothing yet. */
-const STILL = 0.3;
-
-/**
- * The span one way of a drag gives with the pointer at `v` (the order's reference, grid units). Without Shift (`fine`
- * false) it grows past an edge in steps of two. With Shift, an edge taken hold of moves by the pointer's travel in steps
- * of one, out or in down to one, the other edge still; from the middle it is a rectangle from the grid line through the
- * press to the one nearest the pointer, at least one, after the first 75 mm.
- */
-export function axisSpan(a: PodiumAxis, v: number, fine: boolean): [number, number] {
-  const [x, y] = freeSpan(a, v, fine);
-  return a.fix === -1 ? [a.lo, Math.max(a.lo + 1, y)] : a.fix === 1 ? [Math.min(a.hi - 1, x), a.hi] : [x, y];
-}
-
-function freeSpan(a: PodiumAxis, v: number, fine: boolean): [number, number] {
-  const { lo, hi, v0, g } = a;
-  const r = Math.round;
-  const grow = (step: number): [number, number] => (v > hi ? [lo, hi + r((v - hi) / step) * step] : v < lo ? [lo - r((lo - v) / step) * step, hi] : [lo, hi]);
-  if (!fine) return grow(2);
-  const d = r(v - v0);
-  if (g > 0) return [lo, Math.max(lo + 1, hi + d)];
-  if (g < 0) return [Math.min(hi - 1, lo + d), hi];
-  if (Math.abs(v - v0) < STILL) return [lo, hi];
-  if (hi - lo === 1) return grow(1);
-  const A = Math.min(Math.max(r(v0), lo + 1), hi - 1);
-  return v < v0 ? [Math.min(A - 1, r(v)), A] : [A, Math.max(A + 1, r(v))];
 }
 
 /** A påbygg (PR 3): the counter `id` it becomes part of, and the side of it the påbygg lies against. */
@@ -154,11 +112,7 @@ export function dragSpans(d: PodiumDrag, q: Point): { x: [number, number]; z: [n
 export function rebaseDrag(d: PodiumDrag, q: Point, fine: boolean): PodiumDrag {
   const span = dragSpans(d, q);
   const [u, w] = unitsOf(d.o, q);
-  const axis = ([lo, hi]: [number, number], v: number, a: PodiumAxis): PodiumAxis => {
-    const g: Grab = !fine ? 0 : a.fix ? (-a.fix as Grab) : Math.abs(v - lo) < Math.abs(v - hi) ? -1 : 1;
-    return { lo, hi, v0: v, g, ...(a.fix && { fix: a.fix }) };
-  };
-  return { ...d, fine, x: axis(span.x, u, d.x), z: axis(span.z, w, d.z) };
+  return { ...d, fine, x: rebaseAxis(span.x, u, d.x, fine), z: rebaseAxis(span.z, w, d.z, fine) };
 }
 
 /** The inner corners of the outline (K13, time per corner): the nodes with three of their four quarters covered. */
