@@ -233,6 +233,11 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   forheng bare i hele moduler. Flyttes en sides start et stykke som ikke er hel meter, beholder dører og felt på siden
   modulnummeret sitt fra starten.
   *Bjørn 14.11.2026 · kode `src/domain/outline.ts`, `src/domain/rooms.ts`, `src/ui/drag.ts` · test `src/domain/rooms250.test.ts`*
+- **R6 Romside langs en vegg.** Ligger en romside på samme linje som en vegg med andre modulgrenser, bygger rommet bare
+  strekningen som mangler, regnet etter hvor veggene står og ikke etter modulene (R1). Det som bygges av en modul som
+  bare delvis mangler, er en del av den modulen med egen stolpe (V10). En dør på en romside som allerede er bygget av
+  en annen vegg, må stå i en hel modul av den veggen.
+  *Bjørn 14.11.2026 · kode `src/domain/walls.ts` · test `src/domain/rooms250.test.ts`*
 - **R7 Frihåndsrom i 250.** Området et frihåndsrom (R3) lukker, finnes i 250 × 250-celler, så vegger utenfor
   metrelinjene (V9) lukker rom også. Et lukket område med en side under 1 m forblir vanlige vegger (R2).
   *Bjørn 14.11.2026 · kode `src/domain/enclosures.ts` · test `src/domain/rooms250.test.ts`*

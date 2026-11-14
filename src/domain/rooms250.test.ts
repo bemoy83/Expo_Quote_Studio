@@ -1,4 +1,4 @@
-// Byggeregler R5 and R7 (Bjørn 14.11.2026): rooms on the 250 grid, and walls off the metre lines closing a frihåndsrom.
+// Byggeregler R5, R6 and R7 (Bjørn 14.11.2026): rooms on the 250 grid, and walls off the metre lines closing a frihåndsrom.
 import { describe, expect, it } from 'vitest';
 import { DOOR } from '../catalog/defaultCatalog';
 import { paintWalls } from './edit';
@@ -64,5 +64,24 @@ describe('frihåndsrom off the metre lines (R7)', () => {
     const v = addRoom(row(), { x: 0.5, y: 0, w: 2.25, d: 1.5 }, { side: RECT_SIDE.front, module: 0, product: DOOR })!;
     expect(roomOpenings(v, room(v))).toHaveLength(1);
     expect(builtModules(v).filter((m) => m.opening)).toHaveLength(1);
+  });
+});
+
+describe('a room side along a wall with other module lines (R6)', () => {
+  const length = (v: Variant) => builtModules(v).reduce((n, m) => n + m.cc, 0);
+  const lengthOn = (v: Variant, y: number) => builtModules(v).filter((m) => m.orientation === 'h' && m.a[1] === y).reduce((n, m) => n + m.cc, 0);
+  it('on the back stand wall nothing more is built there', () => {
+    const v = addRoom(createVariant('A', { width: 6, depth: 4, type: 'corner', cornerSide: 'right' }), { x: 1.5, y: 0, w: 2.25, d: 2 })!;
+    expect(lengthOn(v, 0)).toBeCloseTo(6);
+    // Stand walls 6 + 4, the room's three own sides 2 + 2,25 + 2
+    expect(length(v)).toBeCloseTo(16.25);
+  });
+  it('along part of an inner wall only the missing stretch is built, as a part of its module', () => {
+    const walled = paintWalls(row(), [0, 2], [2.5, 2]);
+    const v = addRoom(walled, { x: 1, y: 0, w: 2.25, d: 2 })!;
+    expect(lengthOn(v, 2)).toBeCloseTo(3.25);
+    const own = builtModules(v).filter((m) => m.wallId === roomWallId(room(v).id, RECT_SIDE.front));
+    expect(own.map((m) => m.cc)).toEqual([0.75]);
+    expect(own.every((m) => m.whole)).toBe(true);
   });
 });
