@@ -4,7 +4,9 @@
 // draws toward the pointer, in 250 steps (PR 2); Shift pressed or let go during a drag goes on from what is drawn. The
 // plan shows what a release stores while dragging (plan/next.ts).
 import { drawPodium, podiumAt, rebaseDrag, startDrag, type PodiumDrag } from '../../../domain/podiums'
-import { isCounter, place } from '../../env'
+import type { Variant } from '../../../domain/types'
+import { catalog, isCounter, place } from '../../env'
+import { builtByShape } from '../../podiumPen'
 import type { Brush } from '../../tools'
 import type { DragHandlers, Drag, P, PointerCtx } from './types'
 
@@ -56,15 +58,19 @@ export const podium: DragHandlers<'podium'> = {
       const r = d.click
       if (!r) return
       if ('error' in r) return c.onToast(r.error)
-      return c.onEdit(() => r.v)
+      return c.onEdit(() => shaped(c, r.v, r.id))
     }
     if (!d.drag) return
     const r = drawPodiumAt(c, d.drag, q)
     if ('error' in r) return c.onToast(r.error)
-    c.onEdit(() => r.v)
+    c.onEdit(() => shaped(c, r.v, r.id))
     c.onSelect({ objectId: r.id })
   },
 }
+
+/** What is stored, built as its function's product (K13): with «Fri» a new one by what it is. */
+const shaped = (c: Pick<PointerCtx, 'v' | 'brush'>, v: Variant, id: string) =>
+  c.brush?.kind === 'podium' ? builtByShape(v, id, !c.v.objects.some((o) => o.id === id), c.brush, catalog.products) : v
 
 /** What the drag draws with the pointer at q. */
 export const drawPodiumAt = (c: Pick<PointerCtx, 'v'>, d: PodiumDrag, q: P) => drawPodium(c.v, place, d, [q.x, q.y])

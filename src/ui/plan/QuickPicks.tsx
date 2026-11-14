@@ -13,7 +13,7 @@ import { ImageInput, Segmented } from '../controls'
 import { catalog, idx, rules } from '../env'
 import { ObjectThumb } from '../panel/ProductRow'
 import { FLOOR_MAIN, FLOOR_OTHER, floorSizeLabel, gridSteps, type Brush, type DockTool } from '../tools'
-import { fineApplies, funcOf, PEN_FUNCS, penHeights, stockFor, withFunc, withHeight, type PenPicks } from '../podiumPen'
+import { fineApplies, funcOf, penFuncs, penHeights, stockFor, withFunc, withHeight, type PenPicks } from '../podiumPen'
 import { GridPicker } from './GridPicker'
 import { StockOutline } from './StockOutline'
 import { ralSwatches, type Swatch } from './swatches'
@@ -231,10 +231,10 @@ function quickContent(p: QuickPicksProps): ReactNode {
     return (
       <>
         {head}
-        <QBtn on={!func} setting title="Fri · tegn fasongen selv · et klikk setter en seksjon 500 × 500, dra tegner fritt" label="Fri" onClick={() => onPick(withFunc(brush, undefined, p.podiumPicks))}>
+        <QBtn on={!func} setting title="Fri · tegn fasongen selv · et klikk setter en seksjon 500 × 500, dra tegner fritt" label="Fri" onClick={() => onPick(withFunc(brush, undefined, p.podiumPicks, catalog.products))}>
           Fri
         </QBtn>
-        {PEN_FUNCS.map((f) => {
+        {penFuncs(catalog.products).map((f) => {
           // The item behind the function: the one in hand, else the one it would put in hand
           const s = (func === f.func && brush.stock ? stockByArtnr(brush.stock) : undefined) ?? stockFor(f.func, p.podiumPicks, brush.h)
           const name = s ? idx.byArtnr.get(s.artnr)?.product.name : undefined
@@ -245,7 +245,7 @@ function quickContent(p: QuickPicksProps): ReactNode {
               setting
               title={`${f.one} · ${f.does.toLowerCase()} · et klikk setter ${name ?? f.one.toLowerCase()}, dra tegner fritt`}
               label={f.one}
-              onClick={() => onPick(withFunc(brush, f.func, p.podiumPicks))}
+              onClick={() => onPick(withFunc(brush, f.func, p.podiumPicks, catalog.products))}
             >
               {s && <StockOutline sections={s.sections} />}
               {f.one}

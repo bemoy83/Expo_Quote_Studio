@@ -1,7 +1,7 @@
 // What a click or drag does now, after the stand chip (under it when the stage is narrow): a short line for the eye, the full help on hover (title).
 import type { Brush, Tool } from './tools'
 import { stockByArtnr } from '../domain/podiumStock'
-import { counterName, productOf } from './env'
+import { artnrName, productOf } from './env'
 
 export interface Hint {
   /** One short line, shown after the stand chip. */
@@ -60,11 +60,13 @@ export function hint(tool: Tool, brush: Brush | null, carpet = false): Hint {
       // K22: a click places the item behind the function in hand, named, never by art.nr (Bjørn 14.11.2026)
       if (brush?.kind === 'podium' && brush.stock) {
         const s = stockByArtnr(brush.stock)
-        const name = s ? counterName(s.sections) : 'disken'
+        const name = s ? artnrName(s.artnr) : 'disken'
         const disk = s?.func === 'disker'
+        // A drag draws the function's product built on site, named from the product list (K13)
+        const built = artnrName(brush.product).toLowerCase()
         return h(
-          disk ? `Klikk setter ${name} med fronten mot gangen · dra tegner fritt` : `Klikk setter ${name} · høyden velger varen · dra tegner fritt`,
-          `${disk ? `Klikk setter ${name} med fronten mot gangen` : `Klikk setter ${name}, høyden i pillen velger varen`} · trykk og dra for å tegne fritt · «…» har de andre i katalogen · velg Fri over verktøyene for å tegne fasongen selv · fyll gir alle diskene og podiene fargen · velg en disk for å bytte farge eller rotere den`,
+          disk ? `Klikk setter ${name} med fronten mot gangen · dra for å tegne ${built}` : `Klikk setter ${name} · høyden velger varen · dra for å tegne ${built}`,
+          `${disk ? `Klikk setter ${name} med fronten mot gangen` : `Klikk setter ${name}, høyden i pillen velger varen`} · trykk og dra for å tegne ${built} i fri fasong · «…» har de andre i katalogen · velg Fri over verktøyene for å tegne fasongen selv · fyll gir alle diskene og podiene fargen · velg en disk for å bytte farge eller rotere den`,
         )
       }
       return h(

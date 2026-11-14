@@ -6,7 +6,7 @@ import type { PlacedObject } from './types';
 import { createVariant } from './variant';
 
 const base = createVariant('A', { width: 4, depth: 3, type: 'row' });
-const counter: PlacedObject = { id: 'i1', product: '6570', x: 2, y: 1.5, rot: 0, sections: stockSections() };
+const counter: PlacedObject = { id: 'i1', product: '6571', x: 2, y: 1.5, rot: 0, sections: stockSections() };
 
 describe('counter colour (K6)', () => {
   it('recolours one counter, and back to stock clears it', () => {

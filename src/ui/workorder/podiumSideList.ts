@@ -12,7 +12,7 @@ export function podiumSidesToDraw(v: Variant, motifs: readonly Motif[] = []) {
   const counters = v.objects.filter((o) => o.sections?.length)
   return counters.flatMap((o, n) => {
     const locked = new Set(lockedParts(v, place, o))
-    const name = `${counterName(o.sections!)} ${n + 1}`
+    const name = `${counterName(o)} ${n + 1}`
     return drawerSides(o).flatMap((S) => {
       const el = sideElevation(o, S.side, locked)
       const decor = sideDecor(o, S.side, locked, ratio)

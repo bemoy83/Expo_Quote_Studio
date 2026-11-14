@@ -1,7 +1,7 @@
 // Disker og podier (Byggeregler K10–K12): sections on the 250 grid, built tight, drawn from one section by a drag.
 import { describe, expect, it } from 'vitest';
 import { counterBuildOf } from './counterShape';
-import { drawPodium, dragSpan, innerCorners, podiumAt, podiumName, podiumSides, podiumSize, rebaseDrag, rectSections, runNodes, startDrag, type PodiumDraw, type PodiumDrag } from './podiums';
+import { drawPodium, dragSpan, innerCorners, podiumAt, funcByShape, podiumSides, podiumSize, rebaseDrag, rectSections, runNodes, startDrag, type PodiumDraw, type PodiumDrag } from './podiums';
 import { objectBoxes, type PlaceContext } from './objects';
 import { createVariant } from './variant';
 import { RULES } from '../rules/rules';
@@ -86,10 +86,10 @@ describe('tight build (K11)', () => {
   });
 
   it('is «Disk» when no deeper than 500 anywhere, else «Podie»', () => {
-    expect(podiumName([sec(0, 1000, 0, 500), sec(1000, 1500, 0, 500)])).toBe('Disk');
-    expect(podiumName([sec(0, 500, 0, 500), sec(500, 1500, 0, 500), sec(0, 500, 500, 1500)])).toBe('Disk');
-    expect(podiumName([sec(0, 1000, 0, 1000)])).toBe('Podie');
-    expect(podiumName([sec(0, 750, 0, 750)])).toBe('Podie');
+    expect(funcByShape([sec(0, 1000, 0, 500), sec(1000, 1500, 0, 500)])).toBe('disker');
+    expect(funcByShape([sec(0, 500, 0, 500), sec(500, 1500, 0, 500), sec(0, 500, 500, 1500)])).toBe('disker');
+    expect(funcByShape([sec(0, 1000, 0, 1000)])).toBe('podier');
+    expect(funcByShape([sec(0, 750, 0, 750)])).toBe('podier');
   });
 });
 

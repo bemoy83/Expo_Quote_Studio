@@ -101,3 +101,26 @@ describe('new sketch', () => {
     expect(parse(serialize(s))).toEqual({ ok: true, sketch: s });
   });
 });
+
+describe('Disker og podier: a disk and a podie each their own product (Bjørn 14.11.2026)', () => {
+  it('opens a counter of the old 6570 as the one its shape is (K13)', () => {
+    const sec = (x0: number, x1: number, z0: number, z1: number) => ({ x: [x0, x1] as [number, number], z: [z0, z1] as [number, number], h: 1000 });
+    const s = newSketch();
+    const v = s.variants[0];
+    const old = {
+      ...s,
+      variants: [
+        {
+          ...v,
+          objects: [
+            { id: 'i1', product: '6570', x: 1, y: 1, rot: 0, sections: [sec(-750, 250, -250, 250), sec(250, 750, -250, 250)] },
+            { id: 'i2', product: '6570', x: 3, y: 1.5, rot: 0, sections: [sec(-500, 500, -500, 500)] },
+          ],
+        },
+      ],
+    };
+    const r = parse(serialize(old as Sketch));
+    if (!r.ok) throw new Error(r.error);
+    expect(r.sketch.variants[0].objects.map((o) => o.product)).toEqual(['6571', '6572']);
+  });
+});

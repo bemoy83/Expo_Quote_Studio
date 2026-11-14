@@ -61,7 +61,7 @@ describe('release in 3D', () => {
 
 describe('the top of a section of Disker og podier (K18)', () => {
   // A podium 1000 × 1000 at CC 500 in the middle of the stand: world origin is the stand's middle
-  const pv = { ...createVariant('A', { width: 6, depth: 3, type: 'row' }), walls: [], objects: [{ id: 'p', product: '6570', x: 3, y: 1.5, rot: 0, sections: [{ x: [-500, 500] as [number, number], z: [-500, 500] as [number, number], h: 500, shelves: [250] }] }] }
+  const pv = { ...createVariant('A', { width: 6, depth: 3, type: 'row' }), walls: [], objects: [{ id: 'p', product: '6571', x: 3, y: 1.5, rot: 0, sections: [{ x: [-500, 500] as [number, number], z: [-500, 500] as [number, number], h: 500, shelves: [250] }] }] }
   const hit = (y: number): Hit => ({ objectId: 'p', point: new THREE.Vector3(0.2, y, 0.1) }) as Hit
   it('is grabbed within 80 mm of the top, else the podium moves', () => {
     expect(podiumTopAt(pv, hit(0.52))).toEqual({ id: 'p', section: 0, h: 500 })

@@ -5,7 +5,7 @@ import type { Variant } from '../../domain/types'
 import { podiumSidesToDraw } from './podiumSideList'
 
 const sec = { x: [-500, 500] as [number, number], z: [-250, 250] as [number, number], h: 1000 }
-const vOf = (sections: Variant['objects'][number]['sections']): Variant => ({ ...createVariant('A', { width: 6, depth: 5, type: 'row' }), walls: [], objects: [{ id: 'a', product: '6570', x: 3, y: 2.5, rot: 0, sections }] })
+const vOf = (sections: Variant['objects'][number]['sections']): Variant => ({ ...createVariant('A', { width: 6, depth: 5, type: 'row' }), walls: [], objects: [{ id: 'a', product: '6571', x: 3, y: 2.5, rot: 0, sections }] })
 
 describe('sides in the work order', () => {
   it('none for a counter of plates only', () => {

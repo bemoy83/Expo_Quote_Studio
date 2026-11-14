@@ -200,7 +200,7 @@ og kalkyle med 6560, som er et ferdig oppsett i det (K22).
 - Pennen, ren og testet: `domain/podiums.ts` (`podiumAt`: én seksjon under pekeren, inntil vegg og standkant innen 10 cm;
   `drawPodium` og `dragSpan`: et drag fra seksjonen man trykket i; `rectSections`/`runNodes`: hele meter først, resten
   lengst unna; Shift og Fin: `grabOf`/`podiumGrab` (hvilken kant et trykk tar), `axisSpan` (rektangelet et drag gir,
-  bestillingens referanse), `startDrag`, `rebaseDrag` (Shift midt i et drag); `podiumName`, `innerCorners`, `podiumSize`).
+  bestillingens referanse), `startDrag`, `rebaseDrag` (Shift midt i et drag); `funcByShape` (K13: disk eller podie etter fasongen), `innerCorners`, `podiumSize`).
   Påbygg (PR 3): `podiumSides` (omrisset som rette sider), `ontoAt` (siden innen `ONTO` og plassen langs den), og
   `PodiumDraw.cell`/`onto`: det som legges til, i en ramme dreid som disken med knutepunkter på hele rasterenheter, og
   disken og siden det ligger mot. `PodiumAxis.fix` holder kanten mot disken fast i `axisSpan`.
@@ -252,8 +252,9 @@ og kalkyle med 6560, som er et ferdig oppsett i det (K22).
   `stockOf`: hvilken standarddisk seksjonene er, i hvilken som helst dreining, uten farge og dekor; `stockSections`).
   Kalkylen (`calc/lines/objects.ts`) gir en standarddisk katalogens linje og plukker den hel; `builtCounterParts`
   hopper over den; `soldAs` er varen et objekt selges som (standarddiskens art.nr, ellers produktet). Navnet i pille,
-  skuff og arbeidsordre: `counterName` i `ui/env.ts`. Pennen etter funksjon: `ui/podiumPen.ts` (`PEN_FUNCS` er
-  undergruppene i `disk` med entallsnavn `one` og `does` i `catalog/groups.ts` og en standardvare; `withFunc`,
+  skuff og arbeidsordre: `counterName` i `ui/env.ts`. Pennen etter funksjon: `ui/podiumPen.ts` (`penFuncs` er
+  undergruppene i `disk` med et produkt bygget på stedet, hvis navn er funksjonens, `does` i `catalog/groups.ts`, og
+  en standardvare; `builtByShape` gir det «Fri» tegnet produktet etter fasongen; `withFunc`,
   `withHeight`, `penHeights`, `fineApplies`); varen i hånden er `Brush.stock`, Fri sin høyde `Brush.h`, og varen bak
   hver funksjon `podiumPicks` i `useTools.ts`, satt i `pick`. Hurtigvalget (`QuickPicks.tsx`) tegner varen med
   `plan/StockOutline.tsx`, og `QBtn disabled` gjør det som ikke gjelder grått. Mønsteret kan gi funksjoner på andre
@@ -268,9 +269,11 @@ og kalkyle med 6560, som er et ferdig oppsett i det (K22).
   `podiumView.ts`: sidene rundt disken med navn, siden nærmest et klikk, siden sett utenfra, `sideOnPlan`: sidens ender
   på planen). ‹ › for side og del: `PrevNext` i `drawerParts.tsx`. Valget i
   `PlanSelection.podiumSide`/`podiumPart`; `hasDrawer` får varianten for å vite at et objekt har seksjoner.
-- Katalogen: `podium('6570', …)` i `catalog/defaultCatalog.ts` (`Product.podium`, varenummer midlertidig; `counter` er
-  én seksjon, så plan, pille og 3D tegner den som en disk)
-- Kalkyle: `podiumLine`/`podiumUses` i `calc/lines/objects.ts` (tidene i K9, navnet Disk eller Podium); toppene i alle mål i
+- Katalogen: `podium('6571', 'Disk', …)` og `podium('6572', 'Podie', …)` i `catalog/defaultCatalog.ts` (`Product.podium`,
+  ett per funksjon, varenumre midlertidige; `counter` er én seksjon, så plan, pille og 3D tegner den som en disk);
+  `builtProduct`/`builtFunc` i `catalog/podium.ts`. Alle navn fra produktlisten: `artnrName`/`counterName` i `ui/env.ts`.
+  Gamle 6570 gjøres om i `builtAsFunction` (`persistence/file.ts`)
+- Kalkyle: `podiumLine`/`podiumUses` i `calc/lines/objects.ts` (tidene i K9, navnet fra produktet); toppene i alle mål i
   `COUNTER_BOARDS` (`cost/itemDefs.ts`) med eksempelpriser i `cost/own-list.ts`. Delene plukkes under Disker
   (`builtCounterParts`). Eksempelskisse: `test/fixtures/13-disker-og-podier.json`
 

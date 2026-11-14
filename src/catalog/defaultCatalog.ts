@@ -28,14 +28,15 @@ const counter = (id: string, name: string, price: number): Product => {
   };
 };
 
-/** Disker og podier (Byggeregler K10–K13): one product for every counter and podium drawn of sections, built on site
- *  and priced by the cost engine (K13). Art.nr is temporary until Bjørn gives one; the price is a placeholder per m² of
- *  top, used only when the cost basis lacks a price. Footprint and `counter`: one section of 500 × 500, as the pen
- *  starts. */
-const podium = (id: string, name: string, pricePerM2: number): Product => {
+/** Disker og podier (Byggeregler K10–K13): a product per function (subgroup) for every counter or podie drawn of
+ *  sections and not exactly a standard item, built on site and priced by the cost engine (K13). Its name is what it is
+ *  called everywhere: pen, pill, drawer, calc, quote (Bjørn 14.11.2026). Art.nr is temporary until Bjørn gives one; the
+ *  price is a placeholder per m² of top, used only when the cost basis lacks a price. Footprint and `counter`: one
+ *  section of 500 × 500, as the pen starts. */
+const podium = (id: string, name: string, group: string, pricePerM2: number): Product => {
   const side = 500 + 2 * RECIPES.counter.face;
   const h = 1000 + RECIPES.counter.railHeight;
-  return one(id, name, 'object', 'stk', 'disk.disker', pricePerM2, {
+  return one(id, name, 'object', 'stk', group, pricePerM2, {
     dim: 'bygget på stedet',
     footprint: { w: side / 1000, d: side / 1000, h: h / 1000 },
     counter: { length: side, depth: side },
@@ -229,13 +230,14 @@ const products: Product[] = [
   counted('5285', 'Kafébord ø70', 'mob.bord', 450),
   counted('5300', 'Loungegruppe', 'mob.grupper', 3900),
   counter('6560', 'Bardisk', 1320),
-  podium('6570', 'Disk og podie, bygget på stedet', 2640),
+  podium('6571', 'Disk', 'disk.disker', 2640),
   podie('5450', 'Podie 50 × 50', [
     [4, 25, 290],
     [1, 50, 380],
     [2, 75, 460],
     [3, 100, 540],
   ]),
+  podium('6572', 'Podie', 'disk.podier', 2640),
   counted('6185', 'Kleskrok, 5 kroker', 'hyll.heng', 160),
   counted('6186', 'Klesstativ', 'hyll.heng', 340),
   counted('6190', 'Låsbart skap', 'hyll.skap', 1100),
@@ -264,7 +266,7 @@ const products: Product[] = [
 const BLACK = '#2B2C2E';
 export const FURNITURE_WHITE = '#F3F2EE';
 // Per art.nr, or per product for all its variants; standard counters and podier are white plates (K6)
-const OBJECT_COLORS: Record<string, string> = { '6560': FURNITURE_WHITE, '5450': FURNITURE_WHITE, '6570': FURNITURE_WHITE, '5276': BLACK, '5275': FURNITURE_WHITE, '5296': BLACK, '5186': BLACK, '5196': BLACK, '5195': FURNITURE_WHITE };
+const OBJECT_COLORS: Record<string, string> = { '6560': FURNITURE_WHITE, '5450': FURNITURE_WHITE, '6571': FURNITURE_WHITE, '6572': FURNITURE_WHITE, '5276': BLACK, '5275': FURNITURE_WHITE, '5296': BLACK, '5186': BLACK, '5196': BLACK, '5195': FURNITURE_WHITE };
 for (const p of products) for (const v of p.variants) if (OBJECT_COLORS[v.artnr] ?? OBJECT_COLORS[p.id]) v.color = OBJECT_COLORS[v.artnr] ?? OBJECT_COLORS[p.id];
 
 // Cost and handling time of the products without a recipe (furniture, floor, foil, services) come from the kostgrunnlag

@@ -68,7 +68,7 @@ describe('counter in 3D', () => {
 
   /** The meshes of a counter of these pieces as an old sketch with Disker had it, as sections (K22), and that counter. */
   const drawn = (...pieces: CounterPiece[]) => {
-    const o = asSections({ id: 'i1', product: '6560', x: 2, y: 2, rot: 0, pieces }, '6570')
+    const o = asSections({ id: 'i1', product: '6560', x: 2, y: 2, rot: 0, pieces }, '6571')
     const v: Variant = { ...createVariant('A', { width: 4, depth: 4, type: 'row' }), walls: [], objects: [o] }
     const g = build(v, calc(v, rules, catalog))
     g.updateMatrixWorld(true)

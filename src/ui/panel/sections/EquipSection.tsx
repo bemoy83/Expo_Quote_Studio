@@ -10,7 +10,8 @@ import { isStock, soldAs, stockByArtnr } from '../../../domain/podiumStock'
 import { shelvesOf } from '../../../domain/shelves/model'
 import type { Variant } from '../../../domain/types'
 import { Counter, IconButton } from '../../controls'
-import { catalog, place, podiumProduct } from '../../env'
+import { builtProduct } from '../../../catalog/podium'
+import { catalog, place } from '../../env'
 import { kr } from '../../format'
 import { penOn, type Brush } from '../../tools'
 import { ShelfIcon } from '../../plan/QuickPicks'
@@ -94,12 +95,13 @@ function CatalogRow({ v, product, brush, tool, pick, onEdit, onToast, showGroup 
   const i = vi ?? first
   const cur = product.variants[i]
   const stock = isStock(cur.artnr)
-  const podium = podiumProduct()!.variants[0].artnr
+  // A standard item is placed as the product its function builds on site, so a grip or shelf keeps its name (K13, K22)
+  const podium = builtProduct(catalog.products, stockByArtnr(cur.artnr)?.func ?? 'disker')?.variants[0].artnr ?? cur.artnr
   /** A counter's pen keeps the colour Disker og podier last drew with (Byggeregel K6). */
   const ral = brush?.kind === 'podium' ? brush.ral : COUNTER_STOCK_RAL
   // A standard counter's pen puts it behind its function and in hand, the pen kept as it was (Fri's height, Fin) (K22)
   const kept = brush?.kind === 'podium' ? brush : { kind: 'podium' as const, product: podium, ral }
-  const penBrush = (): Brush => (stock ? { ...kept, stock: cur.artnr } : product.podium ? { kind: 'podium', product: cur.artnr, ral } : { kind: 'object', product: cur.artnr })
+  const penBrush = (): Brush => (stock ? { ...kept, product: podium, stock: cur.artnr } : product.podium ? { kind: 'podium', product: cur.artnr, ral } : { kind: 'object', product: cur.artnr })
   // The pen in hand draws this row: the product behind the function in hand (K22), «Fri» for Disker og podier, else the product
   const inHand = brush?.kind === 'podium' && brush.stock ? stockByArtnr(brush.stock) : undefined
   const drawsThis = brush?.kind === 'podium' ? (stock ? inHand?.product === product.id : !!product.podium && !brush.stock) : penOn(tool, brush, 'object', cur.artnr)
