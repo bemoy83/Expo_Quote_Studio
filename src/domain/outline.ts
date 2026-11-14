@@ -24,7 +24,7 @@ export type Cell = [i: number, j: number];
 export const cellId = (i: number, j: number) => `${i},${j}`;
 
 /** The shortest side a room may have, m (Byggeregel R2). */
-export const MIN_SIDE = 1;
+const MIN_SIDE = 1;
 
 /** A length in metres as a whole number of cells. */
 const toCells = (m: number) => Math.round(m / CELL);
@@ -41,11 +41,8 @@ export const outlineSide = (o: Point[], i: number): [Point, Point] => [o[i], o[(
 
 export const outlineSides = (o: Point[]): [Point, Point][] => o.map((_, i) => outlineSide(o, i));
 
-/** Length of side i, in metres (= modules). */
-export function sideLength(o: Point[], i: number): number {
-  const [a, b] = outlineSide(o, i);
-  return Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1]);
-}
+/** True when a side of the outline is under 1 m (Byggeregel R2). */
+export const hasShortSide = (o: Point[]) => outlineSides(o).some(([a, b]) => Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1]) < MIN_SIDE - 1e-9);
 
 export const isHorizontal = ([a, b]: [Point, Point]) => a[1] === b[1];
 
@@ -204,7 +201,7 @@ export function settle(raw: Point[]): Point[] | null {
     if (straight && dot < 0) return null;
   }
   // No side under 1 m (R2)
-  if (outlineSides(corners(pts)).some(([a, b]) => Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1]) < MIN_SIDE - 1e-9)) return null;
+  if (hasShortSide(corners(pts))) return null;
   const cells = cellsOf(pts);
   if (Math.round(area(pts) / (CELL * CELL)) !== cells.length) return null;
   const out = outlineOf(cells);

@@ -8,7 +8,7 @@ import { wallDirection, wallModules } from './grid';
 import { canMoveWall, splitWall } from './edit';
 import { ownPlate } from './panels';
 import { replaceWalls } from './replaceWalls';
-import { CELL, MIN_SIDE, cellId, cellRim, cellSides, edgesOf, onOutline, outlineOf, outlineSides, type Cell } from './outline';
+import { CELL, cellId, hasShortSide, cellRim, cellSides, edgesOf, onOutline, outlineOf, outlineSides, type Cell } from './outline';
 import { overlapsRoom, roomWalls, syncRooms } from './rooms';
 import type { Point, Room, Variant } from './types';
 import { type BuiltModule, builtModules, defaultSwing } from './walls';
@@ -71,7 +71,7 @@ const drawn = (v: Variant, wallId: string) => {
 /** A closed area that may become a room: not in a room, has a door or curtain, and at least one drawn side. */
 function qualifies(v: Variant, outline: Point[], mods: BuiltModule[]): boolean {
   // No side under 1 m (R2): a narrower nook stays plain walls
-  if (overlapsRoom(v, outline) || outlineSides(outline).some(([p, q]) => Math.abs(q[0] - p[0]) + Math.abs(q[1] - p[1]) < MIN_SIDE - 1e-9)) return false;
+  if (overlapsRoom(v, outline) || hasShortSide(outline)) return false;
   const around = mods.filter((m) => onOutline(outline, m.a, m.b));
   return around.some((m) => m.opening) && around.some((m) => drawn(v, m.wallId));
 }

@@ -111,9 +111,9 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 
 ### Rom
 
-- Modell: `Room` · `domain/rooms.ts` · `domain/roomKeys.ts` (romveggenes id, viskede moduler og `OUTSIDE`, lest av `walls.ts`) · `domain/outline.ts` (L-, U-, T-form) · `domain/enclosures.ts` (frihåndsrom)
-- Kalkyle: ingen egen, rommet gir vegger
-- Plan, 3D: `plan/layers/RoomLayer.tsx` (RoomMark, håndtak), dra `plan/pointer/room.ts` · `scene3d/build/rooms.ts`, dra i 3D `scene3d/pointer/drag.ts` · `RoomLabel.tsx`
+- Modell: `Room` · `domain/rooms.ts` · `domain/roomKeys.ts` (romveggenes id, viskede moduler og `OUTSIDE`, lest av `walls.ts`) · `domain/outline.ts` (L-, U-, T-form i 250 × 250-celler `CELL`, R5; `onOutline` finner veggmoduler på omrisset geometrisk) · `domain/enclosures.ts` (frihåndsrom, også fra vegger utenfor metrelinjene, R7)
+- Kalkyle: ingen egen, rommet gir vegger; en romside langs en vegg bygger bare det som mangler (`Covered` i `builtModules`, R6)
+- Plan, 3D: `plan/layers/RoomLayer.tsx` (RoomMark, håndtak), dra `plan/pointer/room.ts` og `dragRoom` i `ui/drag.ts` (hele meter, 250 med Shift eller «Fin» i `roomPill`, `roomFine` på utvalget) · `scene3d/build/rooms.ts`, dra i 3D `scene3d/pointer/drag.ts` · `RoomLabel.tsx`
 
 ### Dører og forheng
 
