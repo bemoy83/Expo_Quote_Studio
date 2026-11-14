@@ -178,6 +178,7 @@ const products: Product[] = [
   {
     id: 'flis',
     name: 'Teppefliser',
+    short: 'Fliser',
     kind: 'surface',
     unit: 'm²',
     group: 'gulv.belegg',
@@ -195,6 +196,7 @@ const products: Product[] = [
   {
     id: 'eng',
     name: 'Engangsteppe',
+    short: 'Engangsteppe',
     kind: 'surface',
     unit: 'm²',
     group: 'gulv.belegg',
@@ -209,6 +211,7 @@ const products: Product[] = [
   {
     id: '5930',
     name: 'Vinylgulv',
+    short: 'Vinyl',
     kind: 'surface',
     unit: 'm²',
     group: 'gulv.belegg',
