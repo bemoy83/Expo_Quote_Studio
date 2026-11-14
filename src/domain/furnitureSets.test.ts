@@ -60,3 +60,13 @@ describe('furniture sets (Bjørn 14.11.2026)', () => {
     expect(v.objects).toHaveLength(0)
   })
 })
+
+describe('Møtesett (Bjørn 14.11.2026)', () => {
+  it('is table 5221 with 4 conference chairs, chairs tucked without conflict, priced as their sum', () => {
+    const mote = DEFAULT_CATALOG.products.find((p) => p.id === 'sett-mote')!
+    const v = placeSet(stand(), ctx, mote.set!, 3, 2)!
+    expect(v.objects.map((o) => o.product)).toEqual(['5221', '5190-1', '5190-1', '5190-1', '5190-1'])
+    expect(conflicts(v, ctx).size).toBe(0)
+    expect(mote.variants[0].price).toBe(606 + 4 * 220)
+  })
+})

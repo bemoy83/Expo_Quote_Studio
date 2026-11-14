@@ -135,7 +135,7 @@ funksjoner, ikke artikler.
 
 ### Møbel
 
-- Pensel: én knapp per møbelsett i katalogen (Møte, Lounge, Mingle; kortnavnet) med settet sett ovenfra, og
+- Pensel: én knapp per møbelsett i katalogen (Møte, Lounge, Mingle; kortnavnet). Møte = bord 5221 120 × 60 og 4 konferansestoler med settet sett ovenfra, og
   **Enkelt** med møbelet bak seg. Tilpasset med Enkelt i hånden velger hvilket møbel (`ui/furniturePen.ts`).
 - Et sett (`set` på produktet, undergruppe Møbelgrupper) settes ut som sine møbler med felles `set` på hvert møbel.
   Hvert møbel er sin egen linje i kalkyle og tilbud; settets pris i produktlisten er summen.
