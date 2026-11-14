@@ -1,6 +1,6 @@
 // Replacing the walls of a variant while openings, textiles, foils and shelves follow onto the new walls. Used by every
 // edit that redraws walls (domain/edit.ts, rooms.ts, enclosures.ts).
-import { moduleKey, pointAlong, wallDirection, wallLength } from './grid';
+import { moduleKey, pointAlong, wallDirection, wallLength, moduleEnd } from './grid';
 import type { Opening, Point, TextileWall, Variant, Wall } from './types';
 import { defaultSwing } from './walls';
 
@@ -16,6 +16,12 @@ function locate(walls: Wall[], wallId: string, from: number, to: number): Anchor
   const w = walls.find((x) => x.id === wallId);
   if (!w) return null;
   return { a: pointAlong(w, from), b: pointAlong(w, to) };
+}
+
+/** Where module i of a wall lies: from its start to its end, which for a shorter last module is the wall's end (V1). */
+function locateModule(walls: Wall[], wallId: string, module: number): Anchor | null {
+  const w = walls.find((x) => x.id === wallId);
+  return w ? locate(walls, wallId, module, moduleEnd(w, module)) : null;
 }
 
 /** Find a wall that contains the segment a→b and return the offsets along it. */
@@ -48,7 +54,7 @@ export function replaceWalls(v: Variant, walls: Wall[]): Variant {
   const old = v.walls;
   const openings: Opening[] = [];
   for (const o of v.openings) {
-    const at = locate(old, o.wallId, o.module, o.module + 1);
+    const at = locateModule(old, o.wallId, o.module);
     const hit = at && reanchor(walls, at);
     if (!hit) continue;
     const oldW = old.find((w) => w.id === o.wallId)!;
@@ -71,7 +77,7 @@ export function replaceWalls(v: Variant, walls: Wall[]): Variant {
     if (hit) textiles.push({ ...t, wallId: hit.wallId, from: hit.from, side: faceOn(t, hit) });
   }
   const foils = v.foils.flatMap((f) => {
-    const at = locate(old, f.wallId, f.module, f.module + 1);
+    const at = locateModule(old, f.wallId, f.module);
     const hit = at && reanchor(walls, at);
     if (!hit) return [];
     const side = faceOn(f, hit);
@@ -79,7 +85,7 @@ export function replaceWalls(v: Variant, walls: Wall[]): Variant {
     return [{ ...f, wallId: hit.wallId, module: Math.round(hit.from), side, x: flipped ? -f.x : f.x }];
   });
   const shelves = v.shelves?.flatMap((f) => {
-    const at = locate(old, f.wallId, f.module, f.module + 1);
+    const at = locateModule(old, f.wallId, f.module);
     const hit = at && reanchor(walls, at);
     return hit ? [{ ...f, wallId: hit.wallId, module: Math.round(hit.from), side: faceOn(f, hit) }] : [];
   });
@@ -93,7 +99,7 @@ function dedupeOpenings(walls: Wall[], openings: Opening[]): Opening[] {
   return openings.filter((o) => {
     const w = walls.find((x) => x.id === o.wallId);
     if (!w) return false;
-    const key = moduleKey(pointAlong(w, o.module), pointAlong(w, o.module + 1));
+    const key = moduleKey(pointAlong(w, o.module), pointAlong(w, moduleEnd(w, o.module)));
     if (seen.has(key)) return false;
     seen.add(key);
     return true;

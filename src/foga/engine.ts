@@ -120,8 +120,10 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   const railsH = railHeight(r.wall.topRail) + railHeight(r.wall.bottomRail);
   const plateExtra = plate.h - (z.postLength - railsH);
   const header = z.postLength - r.door.floorGap - r.door.leaf - r.door.topGap;
-  const addPlate = (group: BomGroup, ral: string, h: number, note: string) =>
-    put(group, `${ral}|${h}|${note}`, { artnr: '', name: fogaPart(plate.code).name, detail: `${plate.w} × ${h} mm${note}`, preassembled: false, ral }, 1, h);
+  const addPlate = (group: BomGroup, ral: string, h: number, note: string, w = plate.w) =>
+    put(group, `${ral}|${w}|${h}|${note}`, { artnr: '', name: fogaPart(plate.code).name, detail: `${w} × ${h} mm${note}`, preassembled: false, ral }, 1, h);
+  /** A module's c/c, mm: a shorter one is cut (Byggeregel V1), its rails c/c − 40 and its plate that much narrower. */
+  const ccOf = (m: ModuleSpec) => m.cc ?? z.cc;
 
   // Stolper: wall and takdrager alike, stored with the foot mounted. A post on a støtteplate has the plate's pin in its
   // centre channel instead, so it is picked without the foot.
@@ -155,13 +157,17 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   const walled = s.modules.filter((m) => !m.opening);
   const headers = s.modules.filter((m) => m.opening);
   const bottomRail = (m: ModuleSpec) => (m.curtain ? r.door.curtainBottomRail : r.wall.bottomRail);
-  unit(BOM_GROUP.rails, 'Toppskinne', r.wall.topRail, rail, r.wall.railCoupling, walled.length);
-  unit(BOM_GROUP.rails, 'Bunnskinne', r.wall.bottomRail, rail, r.wall.railCoupling, walled.length);
+  const byCc = new Map<number, number>();
+  for (const m of walled) byCc.set(ccOf(m), (byCc.get(ccOf(m)) ?? 0) + 1);
+  for (const [cc, n] of [...byCc].sort(([a], [b]) => b - a)) {
+    unit(BOM_GROUP.rails, 'Toppskinne', r.wall.topRail, between(cc), r.wall.railCoupling, n);
+    unit(BOM_GROUP.rails, 'Bunnskinne', r.wall.bottomRail, between(cc), r.wall.railCoupling, n);
+  }
   for (const m of headers) {
     unit(BOM_GROUP.header, 'Toppskinne', r.wall.topRail, rail, r.wall.railCoupling, 1, 'overstykke');
     unit(BOM_GROUP.header, 'Bunnskinne', bottomRail(m), rail, r.wall.railCoupling, 1, 'overstykke');
   }
-  for (const m of walled) addPlate(BOM_GROUP.plates, m.plate, plate.h, '');
+  for (const m of walled) addPlate(BOM_GROUP.plates, m.plate, plate.h, '', plate.w - (z.cc - ccOf(m)));
   for (const ral of s.swaps ?? []) addPlate(BOM_GROUP.plates, ral, plate.h, ' · platebytte i standvegg');
   const headerRails = (m: ModuleSpec) => railHeight(r.wall.topRail) + railHeight(bottomRail(m));
   for (const m of headers) addPlate(BOM_GROUP.header, m.plate, header - headerRails(m) + plateExtra, ' · overstykke');

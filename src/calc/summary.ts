@@ -28,6 +28,8 @@ export function summary(c: CalcContext, lines: CalcLine[], organiserLines: CalcL
   const { floor, floorTotal } = floorAreas(v);
   const foil = foilAreas(c);
 
+  // Metres of wall: a shorter module (Byggeregel V1) counts its length
+  const lm = (mods: readonly { cc: number }[]) => Math.round(mods.reduce((a, m) => a + m.cc, 0) * 1000) / 1000;
   return {
     groups,
     sum: groups.reduce((a, g) => a + g.sum, 0),
@@ -35,14 +37,14 @@ export function summary(c: CalcContext, lines: CalcLine[], organiserLines: CalcL
     keyFigures: {
       area: v.stand.width * v.stand.depth,
       openSides: openSides(v.stand).length,
-      wallLm: walled.length,
-      standWallLm: walled.filter((m) => kindOf(m) === 'stand').length,
-      organiserWallLm: theirs.length,
+      wallLm: lm(walled),
+      standWallLm: lm(walled.filter((m) => kindOf(m) === 'stand')),
+      organiserWallLm: lm(theirs),
       organiserBeamLm: organiserBeams ? c.lmOf(beams.standard) : 0,
       innerBeamLm: c.lmOf(beams.inner),
       beamHooks: beams.hooks.length,
-      innerWallLm: walled.filter((m) => kindOf(m) === 'inner').length,
-      roomWallLm: walled.filter((m) => kindOf(m) === 'room').length,
+      innerWallLm: lm(walled.filter((m) => kindOf(m) === 'inner')),
+      roomWallLm: lm(walled.filter((m) => kindOf(m) === 'room')),
       swapLm: c.swaps.length,
       openings: foga.modules.filter((m) => m.opening).length,
       beamLm: c.lmOf(beams.all),

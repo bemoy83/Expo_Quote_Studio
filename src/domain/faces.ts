@@ -3,7 +3,7 @@
 // convention: 1 = the wall's left normal (−dy, dx), −1 = the other. Perimeter walls only have the face toward the stand.
 import { CURTAIN } from '../catalog/defaultCatalog';
 import type { Rules } from '../rules/rules';
-import { pointAlong, wallDirection, wallLength, wallModules } from './grid';
+import { moduleCc, moduleCount, pointAlong, wallDirection, wallModules } from './grid';
 import { OUTSIDE } from './roomKeys';
 import type { Point, Variant, Wall } from './types';
 import { builtModules, defaultSwing, isStandWall } from './walls';
@@ -50,13 +50,20 @@ export function faceAt(v: Variant, w: Wall, p: { x: number; y: number }): FaceSi
   return faces(v, w).includes(s) ? s : faces(v, w)[0];
 }
 
-/** Wall panel inside one module: along-wall span and height above the floor, metres. */
-export function felt(rules: Rules, module: number) {
+/** Wall panel inside one module: along-wall span and height above the floor, metres. `cc`: the module's length c/c
+ *  (V1), less than a whole one for a shorter last module, whose panel is that much narrower. */
+export function felt(rules: Rules, module: number, cc = rules.wall.cc) {
   const post = rules.wall.post;
-  const w = rules.wall.plate.width / 1000;
+  const w = rules.wall.plate.width / 1000 - (rules.wall.cc - cc);
   const h = rules.wall.plate.height / 1000;
   const y0 = rules.wall.feet + rules.wall.profile.bottom;
-  return { a: module + post / 2, b: module + post / 2 + w, w, y0, y1: y0 + h, h, center: module + 0.5 };
+  return { a: module + post / 2, b: module + post / 2 + w, w, y0, y1: y0 + h, h, center: module + cc / 2 };
+}
+
+/** The length c/c of module `module` of the wall `wallId` (V1): a whole module when the wall is not there. */
+export function feltCc(v: Pick<Variant, 'walls'>, rules: Rules, wallId: string, module: number): number {
+  const w = v.walls.find((x) => x.id === wallId);
+  return w && module < moduleCount(w) ? moduleCc(w, module) : rules.wall.cc;
 }
 
 /**
@@ -82,7 +89,7 @@ export function blockedModules(v: Variant, w: Wall): { openings: Set<number>; do
  *  feltBlocked (domain/fittings.ts) both start. */
 export function feltWall(v: Variant, wallId: string, module: number): { w: Wall; blocked: ReturnType<typeof blockedModules> } | null {
   const w = v.walls.find((x) => x.id === wallId);
-  if (!w || module < 0 || module >= Math.round(wallLength(w))) return null;
+  if (!w || module < 0 || module >= moduleCount(w)) return null;
   const blocked = blockedModules(v, w);
   return blocked.foreign.has(module) ? null : { w, blocked };
 }

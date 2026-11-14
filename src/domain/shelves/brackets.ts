@@ -4,7 +4,7 @@
 // Byggeregler H2, H3, H10, H11, H12.
 import { faceNormal, sideOf } from '../faces';
 import { modulePosts } from '../fittings';
-import { pointKey, wallLength } from '../grid';
+import { pointKey, moduleCount } from '../grid';
 import type { BoardKind, ShelfSpec } from '../../foga/structure';
 import type { Rules } from '../../rules/rules';
 import type { Variant } from '../types';
@@ -26,7 +26,7 @@ export function shelfBrackets(v: Variant, rules: Rules): ShelfSpec {
   let meet = 0;
   for (const f of shelvesOf(v)) {
     const w = v.walls.find((x) => x.id === f.wallId);
-    if (!w || f.module < 0 || f.module >= Math.round(wallLength(w))) continue;
+    if (!w || f.module < 0 || f.module >= moduleCount(w)) continue;
     boards++;
     const c = inCorner.get(f.id);
     const kind = c?.board ?? 'standard';

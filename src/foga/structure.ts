@@ -10,6 +10,8 @@ export interface ModuleSpec {
   opening: boolean;
   /** The opening is a curtain: its header has 92 at the bottom for the glider (Byggeregel D2). */
   curtain?: boolean;
+  /** Length c/c, mm, of a shorter module (250, 500 or 750, Byggeregel V1); omitted for a whole one. */
+  cc?: number;
 }
 
 /** One length of takdrager, post centre to post centre. */

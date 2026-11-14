@@ -15,6 +15,11 @@ export const ITEM = {
   post: 'stolpe-94',
   rail: (code: string, lengthMm: number) => `skinne-${code}-${lengthMm}`,
   plate: 'veggplate',
+  /** A plate cut for a shorter module (Byggeregel V1), by width: 226, 476 or 726 mm. */
+  cutPlate: (widthMm: number) => `veggplate-${widthMm}`,
+  /** Cutting a rail or a plate for a shorter module, per piece (Bjørn 14.11.2026, placeholders). */
+  railCut: 'kapp-skinne',
+  plateCut: 'kapp-veggplate',
   headerPlate: 'veggplate-overstykke',
   door: 'dor',
   curtain: 'forheng',
@@ -111,6 +116,12 @@ const COUNTER_BOARDS = [
 ];
 const WALL_PLATE_M2 = (RECIPES.wall.plate.w * RECIPES.wall.plate.h) / 1e6;
 
+/** A wall module's lengths c/c (Byggeregel V1): whole, and the shorter ones, mm. Rails are c/c − 40, plates c/c − 24. */
+const WALL_CC = [1000, 750, 500, 250] as const;
+const WALL_SHORT = WALL_CC.filter((cc) => cc < 1000);
+const railMm = (cc: number) => cc - 40;
+const plateMm = (cc: number) => RECIPES.wall.plate.w - (1000 - cc);
+
 /** Takdrager 292 in every standard length: centres 1–6 m, cut 40 shorter, couplings mounted. */
 const BEAM_M = [1, 2, 3, 4, 5, 6] as const;
 const beamLen = (m: number) => m * 1000 - 40;
@@ -118,9 +129,14 @@ const beamLen = (m: number) => m * 1000 - 40;
 export const ITEM_DEFS: readonly ItemDef[] = [
   // Level 2: articles the montør picks
   def(ITEM.post, 'Stolpe 94 med justeringsfot', 'stk'),
-  def(ITEM.rail('92', 960), 'Toppskinne 92, 960 mm, med 600', 'stk'),
-  def(ITEM.rail('91', 960), 'Bunnskinne 91, 960 mm, med 600', 'stk'),
+  ...WALL_CC.flatMap((cc) => [
+    def(ITEM.rail('92', railMm(cc)), `Toppskinne 92, ${railMm(cc)} mm, med 600`, 'stk'),
+    def(ITEM.rail('91', railMm(cc)), `Bunnskinne 91, ${railMm(cc)} mm, med 600`, 'stk'),
+  ]),
   def(ITEM.plate, 'Veggplate 976 × 2440 mm', 'stk'),
+  ...WALL_SHORT.map((cc) => def(ITEM.cutPlate(plateMm(cc)), `Veggplate ${plateMm(cc)} × 2440 mm, kappet`, 'stk')),
+  def(ITEM.railCut, 'Kapp av skinne til kort modul', 'stk'),
+  def(ITEM.plateCut, 'Kapp av veggplate til kort modul', 'stk'),
   def(ITEM.headerPlate, 'Veggplate, overstykke', 'stk'),
   def(ITEM.door, 'Dør 292 med lås 410', 'stk'),
   def(ITEM.curtain, 'Forheng', 'stk'),
@@ -190,9 +206,12 @@ const onSite = (montering: number, demontering: number): Time => ({ montering, d
  */
 export const EXAMPLE_TIMES: Readonly<Record<string, Time>> = {
   [ITEM.post]: pvt(0.34, 0.34, 0.34),
-  [ITEM.rail('92', 960)]: pvt(0.17, 0.17, 0.17),
-  [ITEM.rail('91', 960)]: pvt(0.17, 0.17, 0.17),
+  ...Object.fromEntries(WALL_CC.flatMap((cc) => ['92', '91'].map((code) => [ITEM.rail(code, railMm(cc)), pvt(0.17, 0.17, 0.17)]))),
   [ITEM.plate]: pvt(0.34, 1.02, 0.34),
+  ...Object.fromEntries(WALL_SHORT.map((cc) => [ITEM.cutPlate(plateMm(cc)), pvt(0.34, 1.02, 0.34)])),
+  // Cutting for a shorter module (V1), placeholders agreed with Bjørn 14.11.2026: 2 min a rail, 3 a plate
+  [ITEM.railCut]: { forhåndsmontering: 2 },
+  [ITEM.plateCut]: { forhåndsmontering: 3 },
   [ITEM.headerPlate]: pvt(0.17, 0.51, 0.17),
   [ITEM.door]: pvt(0.68, 1.02, 0.68),
   [ITEM.curtain]: pvt(0.34, 1.7, 0.34),
@@ -235,17 +254,21 @@ export const EXAMPLE_TIMES: Readonly<Record<string, Time>> = {
 };
 
 const POST_M = RULES.wall.height;
-/** A rail of one module: profile cut to cc − post width, with a 600 in each end. */
-const rail = (code: string): ItemRecipe => ({ parts: [[code, 0.96], ['600', 2]], dg: 'utleie' });
+/** A rail of one module: profile cut to cc − post width, with a 600 in each end; priced by its metres of profile, so a
+ *  shorter one costs its share of the whole (Bjørn 14.11.2026). */
+const rail = (code: string, mm = 960): ItemRecipe => ({ parts: [[code, mm / 1000], ['600', 2]], dg: 'utleie' });
 const work: ItemRecipe = { dg: 'arbeid' };
 
 /** What each price item is made of, per unit. Foga parts by code in the list's unit (m or stk), own purchases by
  *  art.nr (src/cost/own-list.ts). Every item has one: an item without a recipe has no cost and shows as missing. */
 export const EXAMPLE_RECIPES: Readonly<Record<string, ItemRecipe>> = {
   [ITEM.post]: { parts: [['94', POST_M], ['700', 1], ['M10x65', 1]], dg: 'utleie' },
-  [ITEM.rail('92', 960)]: rail('92'),
-  [ITEM.rail('91', 960)]: rail('91'),
+  ...Object.fromEntries(WALL_CC.flatMap((cc) => ['92', '91'].map((code): [string, ItemRecipe] => [ITEM.rail(code, railMm(cc)), rail(code, railMm(cc))]))),
   [ITEM.plate]: { own: [['HDF-976x2440', 1, 'plate']], dg: 'utleie' },
+  // A cut plate is its share of a whole one by width (V1)
+  ...Object.fromEntries(WALL_SHORT.map((cc): [string, ItemRecipe] => [ITEM.cutPlate(plateMm(cc)), { own: [['HDF-976x2440', Math.round((plateMm(cc) / RECIPES.wall.plate.w) * 1000) / 1000, 'plate']], dg: 'utleie' }])),
+  [ITEM.railCut]: work,
+  [ITEM.plateCut]: work,
   // The header over a door or curtain is cut from a plate: about a fifth of it
   [ITEM.headerPlate]: { own: [['HDF-976x2440', 0.2, 'plate']], dg: 'utleie' },
   [ITEM.door]: { own: [['DOR-292-410', 1, 'accessory']], dg: 'utleie' },

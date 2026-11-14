@@ -2,7 +2,7 @@
 // They collide with walls (post depth), textile frames (in front of their face), door swings and each other.
 import type { Footprint, SetPiece } from '../catalog/types';
 import type { Rules } from '../rules/rules';
-import { pointAlong, wallDirection } from './grid';
+import { pointAlong, wallDirection, moduleEnd } from './grid';
 import type { PlacedObject, Variant } from './types';
 import { builtModules } from './walls';
 import { doorSwing } from './doors';
@@ -104,7 +104,7 @@ export function blockers(v: Variant, ctx: PlaceContext, skipId?: string): Box[] 
     const s = doorSwing(v.stand, w, o);
     const n = [-dy * s, dx * s];
     const a = pointAlong(w, o.module);
-    const b = pointAlong(w, o.module + 1);
+    const b = pointAlong(w, moduleEnd(w, o.module));
     const r = rules.door.swing;
     const xs = [a[0], b[0], a[0] + n[0] * r, b[0] + n[0] * r];
     const ys = [a[1], b[1], a[1] + n[1] * r, b[1] + n[1] * r];
