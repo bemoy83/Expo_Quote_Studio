@@ -110,9 +110,11 @@ export const isCounter = (artnr: string) => place.isCounter(artnr)
 
 export const openingProducts = () => catalog.products.filter((p) => p.opening)
 
-/** The name of a counter of Disker og podier: a standard counter's catalog name («Bardisk 6560», K22), else «Disk» or
- *  «Podium» by its shape (K13). */
+/** The name of a counter of Disker og podier: a standard counter's catalog name (K22), else «Disk» or «Podium» by its
+ *  shape (K13). */
 export const counterName = (sections: readonly CounterSection[]) => {
   const s = stockOf(sections)
-  return s ? `${productOf(s.artnr)?.name ?? 'Disk'} ${s.artnr}` : podiumName(sections)
+  // The catalog name and, with more than one variant, the variant: «Bardisk», «Podie 50 × 50, 75 cm» (Bjørn 14.11.2026)
+  const r = s && idx.byArtnr.get(s.artnr)
+  return r ? `${r.product.name}${r.product.variants.length > 1 ? `, ${r.variant.name}` : ''}` : s ? 'Disk' : podiumName(sections)
 }

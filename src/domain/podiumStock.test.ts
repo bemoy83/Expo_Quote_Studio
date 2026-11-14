@@ -19,7 +19,8 @@ import { RECIPES } from '../foga/recipes';
 import { layoutOf } from './counterShape';
 const isStock6560 = (s: CounterSection[]) => stockOf(s)?.artnr === '6560';
 import type { CounterSection, PlacedObject, Variant } from './types';
-import { createVariant } from './variant';
+import { createProject, createVariant } from './variant';
+import { parse, serialize } from '../persistence/file';
 
 const stock = (): PlacedObject => ({ id: 'i1', product: '6570', x: 2, y: 1.5, rot: 0, sections: stockSections() });
 const vOf = (...objects: PlacedObject[]): Variant => ({ ...createVariant('A', { width: 5, depth: 3, type: 'row' }), objects });
@@ -141,5 +142,58 @@ describe('counters from Disker as sections when a sketch opens (K22)', () => {
     expect([s.product, stockOf(s.sections)?.artnr, s.rot]).toEqual(['6570', '6560', 180]);
     const chair: PlacedObject = { id: 'i2', product: '5276', x: 1, y: 1, rot: 0 };
     expect(asSections(chair, '6570')).toBe(chair);
+  });
+});
+
+describe('Podie 50 × 50, a standard podie per height (K22, Bjørn 14.11.2026)', () => {
+  const ctx = { rules: RULES, footprint: () => ({ w: 0.52, d: 0.52, h: 1.04 }), swings: () => false, isCounter: () => true };
+  const base: Variant = { ...createVariant('A', { width: 5, depth: 3, type: 'row' }), walls: [] };
+  const lineOf = (v: Variant) => linesOf(v).find((l) => l.group === 'disk.podier' || l.artnr === '6570');
+
+  it('+ in Utstyr on 75 cm: one podie 500 × 500 at CC 750, its own line at the catalog price, picked whole', () => {
+    const v = addStockAnywhere(base, ctx, '6570', '5450-2')!;
+    expect(v.objects[0].sections).toEqual([{ x: [-250, 250], z: [-250, 250], h: 750 }]);
+    expect(lineOf(v)).toMatchObject({ artnr: '5450-2', name: 'Podie 50 × 50 75 cm', qty: 1, price: 460, strategy: 'fast' });
+    expect(pickRows(run(v)).filter((r) => r.code === '5450-2').map((r) => r.qty)).toEqual(['1 stk']);
+    expect(pickRows(run(v)).some((r) => r.group === 'disk.disker' && r.code === '')).toBe(false);
+    expect(DEFAULT_PRICING.missing.filter((m) => /disk/.test(m.id))).toEqual([]);
+  });
+
+  it('every height is its own variant, in any turn; colour and print keep it', () => {
+    for (const [artnr, h] of [['5450-4', 250], ['5450-1', 500], ['5450-2', 750], ['5450-3', 1000]] as const)
+      expect(stockOf([{ x: [0, 500], z: [-500, 0], h }])?.artnr).toBe(artnr);
+    const one = addStockAnywhere(base, ctx, '6570', '5450-1', '3002')!;
+    const v = { ...one, objects: [{ ...one.objects[0], rot: 90 }] };
+    expect(lineOf(v)).toMatchObject({ artnr: '5450-1', price: 380, meta: 'RAL 3002' });
+  });
+
+  it('grown 250 out by a grip, another height or a shelf: built on site (K13)', () => {
+    const [s] = stockSections('5450-2');
+    expect(stockOf([{ ...s, x: [-250, 500] }])).toBeUndefined();
+    expect(stockOf([{ ...s, h: 600 }])).toBeUndefined();
+    expect(stockOf([{ ...s, shelves: [250] }])).toBeUndefined();
+    const v = { ...base, objects: [{ id: 'i1', product: '6570', x: 2, y: 1.5, rot: 0, sections: [{ ...s, x: [-250, 500] as [number, number] }] }] };
+    expect(lineOf(v)).toMatchObject({ artnr: '6570', strategy: 'sum' });
+  });
+
+  it('«Fri» at height 500, one click: drawn exactly as the podie, it is Podie 50 × 50, 50 cm', () => {
+    const r = podiumAt(base, ctx, { product: '6570', h: 500 }, [2, 1.5]);
+    if ('error' in r) throw new Error(r.error);
+    expect(lineOf(r.v)).toMatchObject({ artnr: '5450-1', price: 380 });
+    const shelved = { ...r.v, objects: [{ ...r.v.objects[0], sections: [{ ...r.v.objects[0].sections![0], shelves: [250] }] }] };
+    expect(lineOf(shelved)).toMatchObject({ artnr: '6570' });
+  });
+
+  it('an old sketch with 2 × 5450-2 counted opens with two podier at CC 750 on the stand', () => {
+    const old = { ...base, counted: [{ product: '5450-2', qty: 2 }] };
+    const text = serialize({ project: createProject(), variants: [old], motifs: [] });
+    const r = parse(text);
+    if (!r.ok) throw new Error(r.error);
+    const [v] = r.sketch.variants;
+    expect(v.counted).toEqual([]);
+    expect(v.objects.map((o) => [soldAs(o), o.sections![0].h])).toEqual([
+      ['5450-2', 750],
+      ['5450-2', 750],
+    ]);
   });
 });

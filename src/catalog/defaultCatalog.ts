@@ -44,6 +44,22 @@ const podium = (id: string, name: string, pricePerM2: number): Product => {
   });
 };
 
+/** Podie 50 × 50 (Byggeregel K22, Bjørn 14.11.2026): a standard podie of Disker og podier, one tight section
+ *  500 × 500, each height its own variant and price (domain/podiumStock.ts builds them). Listed by height; 25 cm came
+ *  last and has the last art.nr, so 5450-1, -2 and -3 keep meaning 50, 75 and 100 cm. Placeholder prices. */
+const podie = (id: string, name: string, heights: [suffix: number, cm: number, price: number][]): Product => {
+  const side = 500 + 2 * RECIPES.counter.face;
+  const top = Math.max(...heights.map(([, cm]) => cm)) * 10 + RECIPES.counter.railHeight;
+  return {
+    ...one(id, name, 'object', 'stk', 'disk.podier', heights[0][2], {
+      dim: `${side / 10} × ${side / 10}`,
+      footprint: { w: side / 1000, d: side / 1000, h: top / 1000 },
+      counter: { length: side, depth: side },
+    }),
+    variants: heights.map(([n, cm, price]) => ({ artnr: `${id}-${n}`, name: `${cm} cm`, price, placeholder: true })),
+  };
+};
+
 /** Counted product with optional named variants ("Sort;Hvit"). Art.nr gets a suffix per variant. */
 const counted = (
   id: string,
@@ -214,7 +230,12 @@ const products: Product[] = [
   counted('5300', 'Loungegruppe', 'mob.grupper', 3900),
   counter('6560', 'Bardisk', 1320),
   podium('6570', 'Disk og podium, bygget på stedet', 2640),
-  counted('5450', 'Podie 50 × 50', 'disk.podier', 380, ['50 cm', '75 cm', '100 cm']),
+  podie('5450', 'Podie 50 × 50', [
+    [4, 25, 290],
+    [1, 50, 380],
+    [2, 75, 460],
+    [3, 100, 540],
+  ]),
   counted('6185', 'Kleskrok, 5 kroker', 'hyll.heng', 160),
   counted('6186', 'Klesstativ', 'hyll.heng', 340),
   counted('6190', 'Låsbart skap', 'hyll.skap', 1100),

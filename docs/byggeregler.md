@@ -525,6 +525,16 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   En skisse lagret før dette gjør disker fra Disker om når den åpnes: disken på lager blir 6560, en tegnet disk én
   seksjon per hel eller halv meter, åpen bak og med hylle i CC 750, bygget og priset likt. Verktøyet Disker finnes ikke
   lenger (K7).
+  Podie 50 × 50 (5450) er en standardvare på samme måte (Bjørn 14.11.2026): én tett seksjon 500 × 500 uten hylle, og
+  hver høyde er sin egen variant med egen pris: 25 cm (CC 250) 5450-4, 50 cm 5450-1, 75 cm 5450-2 og 100 cm 5450-3. Et
+  varenummer skifter aldri betydning, så 25 cm, som kom sist, fikk det siste nummeret; katalogen viser dem etter høyde.
+  Det som er tegnet fritt og bygget nøyaktig som en standardvare, *er* den varen: et klikk med «Fri» setter en seksjon
+  500 × 500 i pennens høyde, og det er et Podie 50 × 50 til katalogpris. Alt som er tegnet fritt og ikke er nøyaktig en
+  standardvare, er spesialbygg (K13). Podie 50 × 50 i Utstyr virker som 6560 (+ setter et podie i variantens høyde). En
+  skisse lagret før dette gjør talte podier om når den åpnes: ett podie per stykk der + ville satt det, i høyden
+  varenummeret alltid har betydd; et podie som ikke får plass, blir stående talt. Navnet i pille og skuff er
+  katalognavnet med varianten, uten varenummer: «Bardisk», «Podie 50 × 50, 75 cm». Ferdig bygget kostes hver
+  standardvare som én leid vare (`ITEM.counter` per utvendig mål og høyde).
   *Bjørn 13.11.2026 · kode `src/domain/podiumStock.ts`, `src/domain/podiums.ts`, `src/calc/lines/objects.ts`, `src/persistence/file.ts`, `src/ui/panel/sections/EquipSection.tsx` · test `src/domain/podiumStock.test.ts`*
 
 ## P · Plukkliste og arbeidsordre
