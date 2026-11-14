@@ -120,7 +120,7 @@ describe('What is chosen', () => {
     const o = first((v) => v.objects[0])
     expect(chosen(o.v, { objectId: o.x.id })).toEqual({ kind: 'object', object: o.x })
     const r = first((v) => v.rooms[0])
-    expect(chosen(r.v, { roomId: r.x.id })).toEqual({ kind: 'room', room: r.x })
+    expect(chosen(r.v, { roomId: r.x.id })).toEqual({ kind: 'room', room: r.x, fine: false })
     const b = first((v) => v.innerBeams?.[0])
     expect(chosen(b.v, { beamId: b.x.id, beamFine: true })).toEqual({ kind: 'beam', beam: b.x, fine: true })
     const ft = first((v) => v.freeTextiles[0])
