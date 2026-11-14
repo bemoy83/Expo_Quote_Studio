@@ -73,6 +73,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 - **V12 Mål utenfor hele meter.** En vegg utenfor metrelinjene (V9) får mål på arbeidsordrens plan, så montøren kan
   måle den ut: veggens linje én gang (ved en fri ende) og hver ende som ikke står på hel meter, hver fra nærmeste vegg
   eller standkant på tvers av målet. Mål som er hele meter vises ikke; montøren leser dem av rutenettet.
+  Slått av foreløpig (Bjørn 14.11.2026): koden ligger klar, men arbeidsordren viser ikke målene (`wallMeasures`).
   *Bjørn 14.11.2026 · kode `src/domain/wallOffsets.ts`, `src/ui/plan/layers/DimLayer.tsx` · test `src/domain/wallOffsets.test.ts`*
 
 ## S · Støtte for systemvegg
