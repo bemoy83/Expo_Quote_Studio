@@ -1,4 +1,4 @@
-// Byggeregler V1, V6, V10, T6, D3 (docs/byggeregler.md).
+// Byggeregler V1, V6, V10, T6, D3, R6 (docs/byggeregler.md).
 import { makeModule, moduleKey, onSpan, openSides, pointAlong, pointKey, SIDES, sideEnds, wallDirection, wallLength, wallModules, type Module } from './grid';
 import { gapKeys, OUTSIDE } from './roomKeys';
 import type { Rules } from '../rules/rules';
@@ -26,7 +26,8 @@ export interface BuiltModule extends Module {
 
 /**
  * All wall modules of a variant, deduplicated by edge.
- * When two walls cover the same edge the first wall wins (plate and opening). A plate coloured on its own
+ * When two walls cover the same edge the first wall wins (plate and opening). Where a later wall lies on an earlier one
+ * with other module lines (a room side on the 250 grid along a wall, R6), only the stretch not yet built is built. A plate coloured on its own
  * (Variant.panels) keeps that colour whichever wall owns it. Room walls come last, so a room
  * side on a stand wall or a drawn wall shares it.
  * An opening on a later, overlapping wall still applies to the shared module.
@@ -37,6 +38,7 @@ export function builtModules(v: Variant): BuiltModule[] {
   const gaps = gapKeys(v);
   const cuts = meetPoints(v.walls);
   const byKey = new Map<string, BuiltModule>();
+  const built = new Covered();
   for (const w of v.walls) {
     wallModules(w).forEach((m, index) => {
       // A module erased from a room is open: no wall, unless another wall covers it
@@ -52,13 +54,53 @@ export function builtModules(v: Variant): BuiltModule[] {
           if (!existing.opening && opening) existing.opening = opening;
           continue;
         }
-        // A part keeps the colour of the module it was cut from, and is its own plate for colour and graphics
-        const plate = v.panels?.[part.key] ?? v.panels?.[m.key] ?? own;
-        byKey.set(part.key, { ...part, wallId: w.id, index, plate, opening, ...(part.key !== m.key && { whole: m.key }) });
+        // Only what no earlier wall covers (R6); a stretch cut short is a part of its module too
+        const rest = built.rest(part);
+        const pieces = rest.length === 1 && rest[0] === part ? rest : rest.map((x) => ({ ...x, key: `${x.key}~${x.cc}` }));
+        for (const piece of pieces) {
+          // A part keeps the colour of the module it was cut from, and is its own plate for colour and graphics
+          const plate = v.panels?.[piece.key] ?? v.panels?.[m.key] ?? own;
+          byKey.set(piece.key, { ...piece, wallId: w.id, index, plate, opening: piece === part ? opening : null, ...(piece.key !== m.key && { whole: m.key }) });
+          built.add(piece);
+        }
       }
     });
   }
   return [...byKey.values()];
+}
+
+/** The stretches already built on each line, to build a later wall only where it is missing (R6). */
+class Covered {
+  private lines = new Map<string, [number, number][]>();
+  private static line(m: Module): { key: string; i: 0 | 1; j: 0 | 1 } {
+    const h = m.orientation === 'h';
+    const [i, j]: [0 | 1, 0 | 1] = h ? [0, 1] : [1, 0];
+    return { key: `${m.orientation}${Math.round(m.a[j] * 1000)}`, i, j };
+  }
+  add(m: Module) {
+    const { key, i } = Covered.line(m);
+    const have = this.lines.get(key) ?? [];
+    have.push([Math.min(m.a[i], m.b[i]), Math.max(m.a[i], m.b[i])]);
+    this.lines.set(key, have);
+  }
+  /** What of m is not built yet, in order from its start: m itself when none of it is. */
+  rest(m: Module): Module[] {
+    const { key, i, j } = Covered.line(m);
+    const have = this.lines.get(key);
+    const [lo, hi] = [Math.min(m.a[i], m.b[i]), Math.max(m.a[i], m.b[i])];
+    const over = (have ?? []).filter(([a, b]) => b > lo + EPS && a < hi - EPS).sort((x, y) => x[0] - y[0]);
+    if (!over.length) return [m];
+    const free: [number, number][] = [];
+    let t = lo;
+    for (const [a, b] of over) {
+      if (a > t + EPS) free.push([t, a]);
+      t = Math.max(t, b);
+    }
+    if (hi > t + EPS) free.push([t, hi]);
+    const pt = (x: number): Point => (i === 0 ? [x, m.a[j]] : [m.a[j], x]);
+    const forward = m.b[i] > m.a[i];
+    return (forward ? free : free.reverse()).map(([a, b]) => (forward ? makeModule(pt(a), pt(b)) : makeModule(pt(b), pt(a))));
+  }
 }
 
 /** A plate of a wall as built: a module, or a part of one another wall split (V10), where it starts along the wall. */
