@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react'
 import type { CalcResult } from '../../../calc/calc'
 import type { Motif, Variant } from '../../../domain/types'
-import { Sw } from '../QuickPicks'
+import { Sw } from '../quick/parts'
 import { ralSwatches } from '../swatches'
 import type { PlanSelection } from '../selection'
 

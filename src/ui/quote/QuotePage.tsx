@@ -12,7 +12,7 @@ import { dateText, DELIVERY_FIELDS, today, validUntil } from '../../domain/deliv
 import { isFixedField, projectField, standWallTerms } from '../../domain/variant'
 import { Button } from '../controls'
 import { download } from '../download'
-import { catalog, idx, plateName, productOf, rules } from '../env'
+import { artnrName, catalog, plateName, productOf, rules } from '../env'
 import { count, fmt, kr, mm } from '../format'
 import { beamSummary, capitalise, frameCount, fromOrganiser, TYPE_NAME } from '../names'
 import { PLAN_MARGIN } from '../plan/planStyle'
@@ -62,10 +62,7 @@ export function QuotePage({ project, variants, current, onSelect, calcOf, motifs
       return a
     }, {}),
   ).map(([n, q]) => `${q} ${n}`)
-  const floorNames = Object.keys(k.floor).map((a) => {
-    const r = idx.byArtnr.get(a)
-    return r ? (r.product.variants.length > 1 ? `${r.product.name} ${r.variant.name.toLowerCase()}` : r.product.name) : a
-  })
+  const floorNames = Object.keys(k.floor).map(artnrName)
   const facts: [string, string][] = [
     [`${v.stand.width} × ${v.stand.depth} m`, `${fmt(k.area)} m² · ${TYPE_NAME[v.stand.type]} · ${k.openSides} åpne sider`],
     [

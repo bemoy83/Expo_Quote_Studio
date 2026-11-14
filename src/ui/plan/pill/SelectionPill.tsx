@@ -5,7 +5,7 @@
 // objects.tsx (room, takdrager, furniture, frittstående tekstilvegg), door.tsx, wall.tsx (wall, frame, decal), shelf.tsx.
 import { PanelBottomOpen, Trash2 } from 'lucide-react'
 import { useLayoutEffect, useRef, useState } from 'react'
-import { QBtn, QName, Sep } from '../QuickPicks'
+import { QBtn, QName, Sep } from '../quick/parts'
 import { chosen, deleteSelection } from '../selection'
 import { doorPill } from './door'
 import { fillPill, lanePill } from './floor'

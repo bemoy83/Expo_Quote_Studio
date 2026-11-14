@@ -9,7 +9,7 @@ import type { Motif, Variant } from '../domain/types'
 import { COUNTER_STOCK_RAL } from '../domain/objects'
 import { stockByArtnr, stockSize } from '../domain/podiumStock'
 import { HEIGHT } from '../domain/podiums'
-import { artnrName, catalog, idx, isCounter, podiumProduct } from './env'
+import { artnrName, builtOf, catalog, idx, isCounter } from './env'
 import { funcOf, type PenPicks } from './podiumPen'
 import { kr } from './format'
 import { findMotif } from './motifs'
@@ -38,8 +38,9 @@ export function useTools({ v, res, motifs, onPick, onErase }: ToolsInput) {
   const [wallPen, setWallPen] = useState<string | null>(null)
   /** Colour Disker og podier draws with (K6 as for counters): white until a colour is picked. */
   const [podiumRal, setPodiumRal] = useState<string>(COUNTER_STOCK_RAL)
-  /** The item behind each function of Disker og podier: the standard counter last put in hand for it (Bjørn 14.11.2026). */
-  const [podiumPicks, setPodiumPicks] = useState<PenPicks>({})
+  /** The item behind each function of each pen: the one last put in hand for it, from the quick picks or the catalog
+   *  (Bjørn 14.11.2026). Disker og podier for now; the other tools take the same pattern. */
+  const [picks, setPicks] = useState<Partial<Record<PenTool, PenPicks>>>({})
 
   const rollBrush = brush?.kind === 'floor' && !!idx.byArtnr.get(brush.product)?.product.roll
   const wallRal = wallPen ?? v.defaultPlate
@@ -53,7 +54,7 @@ export function useTools({ v, res, motifs, onPick, onErase }: ToolsInput) {
     if (b.kind === 'wall') setWallPen(b.ral)
     if (b.kind === 'podium') setPodiumRal(b.ral)
     const func = b.kind === 'podium' ? funcOf(b) : undefined
-    if (func && b.kind === 'podium') setPodiumPicks((p) => ({ ...p, [func]: b.stock }))
+    if (func && b.kind === 'podium') setPicks((p) => ({ ...p, podium: { ...p.podium, [func]: b.stock } }))
     setTool(t)
     onPick()
   }
@@ -66,7 +67,8 @@ export function useTools({ v, res, motifs, onPick, onErase }: ToolsInput) {
     if (t === 'floor') return { kind: 'floor', product: Object.keys(res.keyFigures.floor)[0] ?? '5902' }
     if (t === 'profile') return { kind: 'textile' }
     if (t === 'fitting') return { kind: 'shelf' }
-    if (t === 'podium') return { kind: 'podium', product: podiumProduct()!.variants[0].artnr, ral: podiumRal }
+    // «Fri» first: what it draws is built as the disk or the podie its shape is when stored (K13)
+    if (t === 'podium') return { kind: 'podium', product: builtOf('disker')!.variants[0].artnr, ral: podiumRal }
     const used = v.objects.find((o) => !isCounter(o.product))?.product
     return { kind: 'object', product: used ?? catalog.products.find((x) => x.kind === 'object' && !x.opening && !x.counter)!.variants[0].artnr }
   }
@@ -99,7 +101,7 @@ export function useTools({ v, res, motifs, onPick, onErase }: ToolsInput) {
       const z = stockSize(s)
       return { name: artnrName(s.artnr), meta: `${kr(z.length)} × ${kr(z.depth)}` }
     }
-    const name = r ? (r.product.variants.length > 1 ? `${r.product.name.split(' ')[0]} ${r.variant.name.toLowerCase()}` : r.product.name) : b.product
+    const name = artnrName(b.product)
     return { name, meta: r ? `${kr(r.variant.price)} kr${b.kind === 'floor' ? '/m²' : ''}` : undefined }
   }
 
@@ -114,7 +116,7 @@ export function useTools({ v, res, motifs, onPick, onErase }: ToolsInput) {
     floorPen,
     wallRal,
     podiumRal,
-    podiumPicks,
+    picks,
     floorSize,
     setFloorSize,
     otherSize,

@@ -11,7 +11,7 @@ import { Dim, FlatChoice, IconButton, Section } from '../controls'
 import { wallPlates } from '../env'
 import { fmt } from '../format'
 import { beamSummary } from '../names'
-import { Sw } from '../plan/QuickPicks'
+import { Sw } from '../plan/quick/parts'
 
 /** Stand side, whole metres. */
 const SIDE_MIN = 1

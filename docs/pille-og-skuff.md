@@ -112,7 +112,7 @@ funksjoner, ikke artikler.
 
 - Bak hver funksjon står én vare: den som sist ble hentet fra katalogen for den, i starten katalogens første.
   Penselen på en rad i katalogen legger varen bak sin funksjon og i hånden, og lyser på raden bak funksjonen i hånden.
-- Varen vises som omriss sett ovenfra (`plan/StockOutline.tsx`), aldri som varenummer.
+- Varen vises som omriss sett ovenfra (`plan/quick/StockOutline.tsx`), aldri som varenummer.
 - En innstilling som ikke gjelder det som er i hånden, er grå og står der den pleier (`QBtn disabled`). Den
   forsvinner ikke.
 - Funksjonene er undergruppene i katalogen; navnet er navnet på produktet bygget på stedet i undergruppen («Disk»,

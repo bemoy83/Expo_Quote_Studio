@@ -5,7 +5,8 @@ import { mainGroupOf } from '../../catalog/groups'
 import type { Motif, Variant } from '../../domain/types'
 import { productOf } from '../env'
 import { type PlanSelection } from '../plan/selection'
-import type { Brush, Tool } from '../tools'
+import type { PenPicks } from '../podiumPen'
+import type { Brush, PenTool, Tool } from '../tools'
 import { MENUS } from './menus'
 import { EquipSection, SearchResults } from './sections/EquipSection'
 import { FloorSection } from './sections/FloorSection'
@@ -24,6 +25,8 @@ export interface RailProps {
   brush: Brush | null
   /** Choose what the brush draws, and switch to the brush (or eraser). */
   pick: (b: Brush, tool?: Tool) => void
+  /** The item behind each function of each pen (quick picks by function). */
+  picks: Partial<Record<PenTool, PenPicks>>
   onEdit: (fn: (v: Variant) => Variant) => void
   onToast: (t: string) => void
   /** Motif library: samples and the customer's own. */

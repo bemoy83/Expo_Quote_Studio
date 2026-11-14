@@ -430,7 +430,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   høyes høyde mot den lave siden, og trinnet lukkes med en plate mellom dem, høydeforskjellen − 24 høy; stolpene der
   går til den høye. Høyden står i pillen («H 540») og i linjen i tilbudet, med alle høydene når disken har flere
   («540/1040»). Å endre høyden på en seksjon som står, kommer med skuffen i trinn 2.
-  *Bjørn 13.11.2026 · kode `src/foga/counter.ts`, `src/domain/podiums.ts`, `src/ui/plan/QuickPicks.tsx` · test `src/domain/podiums.test.ts`*
+  *Bjørn 13.11.2026 · kode `src/foga/counter.ts`, `src/domain/podiums.ts`, `src/ui/plan/quick/podium.tsx` · test `src/domain/podiums.test.ts`*
 - **K13 Pris og plukk for Disker og podier.** Ett katalogprodukt per funksjon for det som bygges på stedet: «Disk»
   (6571) under Disker og «Podie» (6572) under Podier (varenumrene er midlertidige). Hver er priset av kostmotoren fra
   delene og arbeidet, én linje per disk eller podie, «bygget på stedet L × D × H mm», og delene plukkes løse under

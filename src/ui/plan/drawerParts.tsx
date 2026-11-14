@@ -7,7 +7,7 @@ import { FlatChoice, IconButton, ImageInput, Section } from '../controls'
 import { wallPlates } from '../env'
 import { decorSource } from '../dnd'
 import { INK } from '../colors'
-import { Sw } from './QuickPicks'
+import { Sw } from './quick/parts'
 
 /**
  * The top of every drawer: a dot in the colour of what is chosen, its name, the drawer's own icon buttons (`children`),

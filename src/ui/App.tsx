@@ -29,7 +29,7 @@ import { Drawers } from './plan/Drawers'
 import { PlanPreview } from './plan/PlanPreview'
 import { PlanView } from './plan/PlanView'
 import { PriceChangePill } from './plan/PriceChangePill'
-import { QuickPicks } from './plan/QuickPicks'
+import { QuickPicks } from './plan/quick/QuickPicks'
 import { hasDrawer, type DrawerState, type PlanSelection } from './plan/selection'
 import { StandChip } from './plan/StandChip'
 import { ToolDock } from './plan/ToolDock'
@@ -258,7 +258,7 @@ export default function App() {
       onFill={fillWithPen}
       onFillWalls={() => onEdit((x) => paintAllWalls(x, tools.wallRal))}
       onFillPodiums={() => onEdit((x) => paintPodiums(x, tools.podiumRal))}
-      podiumPicks={tools.podiumPicks}
+      picks={tools.picks.podium ?? {}}
     />
   )
   return (
@@ -307,6 +307,7 @@ export default function App() {
               tool={tool}
               brush={brush}
               pick={pick}
+              picks={tools.picks}
               onEdit={onEdit}
               onToast={showToast}
               motifs={motifs}
