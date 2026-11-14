@@ -9,7 +9,7 @@
 /** Which end a drag holds, one way: −1 the low end, 1 the high, 0 none (without Shift it grows past either). */
 export type Grab = -1 | 0 | 1;
 /** The end a press with Shift takes hold of: the one nearest, as the corner grip nearest on a chosen counter. */
-export const grabOf = (lo: number, hi: number, v: number): -1 | 1 => (v < (lo + hi) / 2 ? -1 : 1);
+const grabOf = (lo: number, hi: number, v: number): -1 | 1 => (v < (lo + hi) / 2 ? -1 : 1);
 
 /** One way of a drag: the span lo–hi it started from, the pointer at the press `v0`, and the end taken hold of `g`. */
 export interface DrawAxis {

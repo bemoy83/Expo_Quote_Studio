@@ -5,7 +5,7 @@ import type { Brush } from '../../tools'
 import type { P } from './types'
 
 /** A press that moves this far (m) draws instead of clicking; less than the 75 mm a press in the middle waits with Shift. */
-export const DRAW_DRAG = 0.05
+const DRAW_DRAG = 0.05
 
 /** A drawing pen pressed: at `p0`, on what the pen showed at `at`, the pointer last at `last`. */
 export interface DrawPress {

@@ -12,7 +12,7 @@ import type { Point, Stand } from './types';
 /** One grid unit, m: the fine step. */
 export const RUN_UNIT = 0.25;
 /** The coarse step in grid units: 1 m. */
-export const RUN_COARSE = 4;
+const RUN_COARSE = 4;
 
 /** The module a pen shows at q, and what a click there stores: the 1 m edge nearest, inside the stand; with Shift or
  *  Fin (`fine`) the 250 edge nearest on the 250 grid (V9). */

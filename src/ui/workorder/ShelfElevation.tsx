@@ -3,7 +3,7 @@
 // shelves its height chain from the floor with the lysmål between boards (ElevationDims). The module chain under the
 // wall counts the felts from the end the heading names. Corner shelves with their cut boards and 01 rails (H10–H12).
 import { doorRal } from '../../domain/doors'
-import { felt, sideOf, type FaceSide } from '../../domain/faces'
+import { sideOf, type FaceSide } from '../../domain/faces'
 import { RECIPES } from '../../foga/recipes'
 import type { BoardKind } from '../../foga/structure'
 import { moduleCc, wallLength, wallModules } from '../../domain/grid'
@@ -11,11 +11,11 @@ import { wallRal } from '../../domain/panels'
 import { railsOn, type CornerLayout } from '../../domain/shelves/corners'
 import { shelfStacks, shelvesOf } from '../../domain/shelves/model'
 import type { Shelf, Variant } from '../../domain/types'
-import { builtModules, wallLabel } from '../../domain/walls'
+import { builtModules, postOffsets, splitParts, wallLabel, wallParts } from '../../domain/walls'
 import { doorInset, wallHeight } from '../../rules/rules'
-import { ALU, BORDER_STRONG } from '../colors'
+import { BORDER_STRONG } from '../colors'
 import { plateColor, productOf, rules } from '../env'
-import { FaceRails, Opening as OpeningView, Posts, ShelfFront } from '../plan/elevation'
+import { FaceRails, Opening as OpeningView, Plate, Posts, ShelfFront } from '../plan/elevation'
 import { shelfFront } from '../plan/shelfFront'
 import { planScale } from '../plan/planScale'
 import { ElevationDims } from '../plan/wallDrawer/ElevationDims'
@@ -31,9 +31,11 @@ export function ShelfElevation({ v, wallId, s, shelves, layout }: { v: Variant; 
   const H = wallHeight(rules)
   const u = (t: number) => (s === 1 ? t : L - t)
   const spanX = (a: number, b: number) => Math.min(u(a), u(b))
-  const z = (h: number) => H - h
-  const built = new Map(builtModules(v).map((m) => [m.key, m]))
+  const all = builtModules(v)
+  const built = new Map(all.map((m) => [m.key, m]))
   const mods = wallModules(w).map((m) => built.get(m.key))
+  const parts = wallParts(w, all)
+  const posts = postOffsets(w, parts)
   const fr = frame(SIZE, L, H, [])
   const sc = planScale(1 / fr.u, { doc: true })
   const name = w.room ? 'Romvegg' : wallLabel(w)
@@ -56,22 +58,25 @@ export function ShelfElevation({ v, wallId, s, shelves, layout }: { v: Variant; 
             />
           )
         }
-        const f = felt(rules, i, cc)
-        return (
-          <g key={i}>
-            <rect x={spanX(f.a, f.b)} y={z(H)} width={f.w} height={H - rules.wall.feet} fill={plateColor(m?.plate ?? wallRal(v, w))} />
-            <rect x={x} y={z(H)} width={cc} height={rules.wall.profile.top} fill={ALU} />
-            <rect x={x} y={z(f.y0)} width={cc} height={rules.wall.profile.bottom} fill={ALU} />
-          </g>
-        )
+        // A module another wall split (V10): each part its own plate, in its own colour
+        const split = !m ? splitParts(parts, i) : []
+        if (split.length)
+          return (
+            <g key={i}>
+              {split.map((q) => (
+                <Plate key={q.mod.key} at={q.at} cc={q.cc} fill={plateColor(q.mod.plate)} x={spanX} H={H} />
+              ))}
+            </g>
+          )
+        return <Plate key={i} at={i} cc={cc} fill={plateColor(m?.plate ?? wallRal(v, w))} x={spanX} H={H} />
       })}
-      <Posts xs={[...mods.map((_, i) => u(i)), u(L)]} H={H} />
+      <Posts xs={posts.map(u)} H={H} />
       <line x1={-0.12} y1={H} x2={L + 0.12} y2={H} stroke={BORDER_STRONG} strokeWidth={0.01} />
       <FaceRails wallId={w.id} s={s} layout={layout} x={u} H={H} u={fr.u} />
       {shelves.map((f) => (
         <ShelfFront key={f.id} {...shelfFront(v, f, layout, spanX)} y={f.y} H={H} u={fr.u} />
       ))}
-      <ElevationDims w={w} s={s} name={name} L={L} H={H} items={[]} leaders={[]} top={fr.top} width={fr.width} right={fr.right} sc={sc} shelves={shelfChains(rules, shelfStacks({ ...v, shelves }), u)} />
+      <ElevationDims w={w} s={s} name={name} L={L} H={H} posts={posts} items={[]} leaders={[]} top={fr.top} width={fr.width} right={fr.right} sc={sc} shelves={shelfChains(rules, shelfStacks({ ...v, shelves }), u)} />
     </svg>
   )
 }

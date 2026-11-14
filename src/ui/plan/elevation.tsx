@@ -2,6 +2,7 @@
 // In metres, y down: the top of the wall is y = 0 and the floor y = H.
 import { useId, type ReactNode, type SVGProps } from 'react'
 import { doorLevels, doorWindows } from '../../domain/doors'
+import { felt } from '../../domain/faces'
 import { RAIL_W, railsOn, railT, type CornerLayout } from '../../domain/shelves/corners'
 import type { Motif, TextileFill } from '../../domain/types'
 import { RECIPES } from '../../foga/recipes'
@@ -13,6 +14,19 @@ import { rules } from '../env'
 import { Print } from './drawerParts'
 
 /** System wall posts with their feet, at each x. */
+/** One plate of the wall drawing from `at` along the wall, `cc` long: the plate between its posts and the top and bottom
+ *  rails. `x(a, b)`: where the stretch a–b starts in the drawing. */
+export function Plate({ at, cc, fill, x, H }: { at: number; cc: number; fill: string; x: (a: number, b: number) => number; H: number }) {
+  const f = felt(rules, at, cc)
+  return (
+    <g>
+      <rect x={x(f.a, f.b)} y={0} width={f.w} height={H - rules.wall.feet} fill={fill} />
+      <rect x={x(at, at + cc)} y={0} width={cc} height={rules.wall.profile.top} fill={ALU} />
+      <rect x={x(at, at + cc)} y={H - f.y0} width={cc} height={rules.wall.profile.bottom} fill={ALU} />
+    </g>
+  )
+}
+
 export function Posts({ xs, H }: { xs: number[]; H: number }) {
   const { post, feet } = rules.wall
   return (
