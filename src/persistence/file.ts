@@ -1,8 +1,9 @@
 // Sketch file: JSON `{ format: 'standskisse', versjon, prosjekt, varianter, egneMotiver }`.
 // Newer versions are refused with an explanation; older versions are migrated step by step.
 import { DEFAULT_CATALOG, OLD_COUNTERS, OLD_SHELF } from '../catalog/defaultCatalog';
+import { builtProduct } from '../catalog/podium';
 import { asSections, isStock } from '../domain/podiumStock';
-import { addStockAnywhere } from '../domain/podiums';
+import { addStockAnywhere, funcByShape } from '../domain/podiums';
 import { placeContext } from '../catalog/lookup';
 import { RULES } from '../rules/rules';
 import { tilesFromCells } from '../domain/floor/tiles';
@@ -158,18 +159,27 @@ export function parse(text: string): ParseResult {
     freeTextiles: Array.isArray(x.freeTextiles) ? x.freeTextiles : [],
     innerBeams: Array.isArray(x.innerBeams) ? x.innerBeams : undefined,
     shelves: Array.isArray(x.shelves) ? x.shelves : undefined,
-  })).map(retiredToLoose).map(countersAsSections).map(countedAsPodier);
+  })).map(retiredToLoose).map(countersAsSections).map(countedAsPodier).map(builtAsFunction);
   return { ok: true, sketch: { project: project as unknown as Project, variants: vs, motifs: motifs as Motif[] } };
 }
 
-/** The product of Disker og podier (K10). */
-const PODIUM = DEFAULT_CATALOG.products.find((p) => p.podium)!.id;
+/** The products of Disker og podier built on site (K13): a disk, a podie. */
+const BUILT = (func: string) => builtProduct(DEFAULT_CATALOG.products, func)!.variants[0].artnr;
+/** The one product of Disker og podier before a disk and a podie were each their own (Bjørn 14.11.2026). */
+const OLD_PODIUM = '6570';
+
+/** Counters and podier drawn before a disk and a podie were each their own product (Bjørn 14.11.2026): built as the
+ *  one their shape is by K13, as they were named. */
+function builtAsFunction(v: Variant): Variant {
+  if (!v.objects.some((o) => o.product === OLD_PODIUM)) return v;
+  return { ...v, objects: v.objects.map((o) => (o.product === OLD_PODIUM ? { ...o, product: BUILT(funcByShape(o.sections ?? [])) } : o)) };
+}
 
 /** Counters from before Disker og podier took over Disker (Bjørn 13.11.2026), as its sections: the counter in stock as
  *  its standard counter, a drawn counter section by section, built and priced the same (Byggeregel K22). */
 function countersAsSections(v: Variant): Variant {
-  if (!v.objects.some((o) => asSections(o, PODIUM) !== o)) return v;
-  return { ...v, objects: v.objects.map((o) => asSections(o, PODIUM)) };
+  if (!v.objects.some((o) => asSections(o, BUILT('disker')) !== o)) return v;
+  return { ...v, objects: v.objects.map((o) => asSections(o, BUILT('disker'))) };
 }
 
 /** Podier counted before Podie 50 × 50 became a standard podie of Disker og podier (Bjørn 14.11.2026), placed: one per
@@ -187,7 +197,7 @@ function countedAsPodier(v: Variant): Variant {
     }
     let k = 0;
     for (; k < c.qty; k++) {
-      const placed = addStockAnywhere(next, ctx, PODIUM, c.product);
+      const placed = addStockAnywhere(next, ctx, BUILT('podier'), c.product);
       if (!placed) break;
       next = placed;
     }

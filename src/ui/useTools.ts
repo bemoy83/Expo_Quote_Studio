@@ -9,7 +9,7 @@ import type { Motif, Variant } from '../domain/types'
 import { COUNTER_STOCK_RAL } from '../domain/objects'
 import { stockByArtnr, stockSize } from '../domain/podiumStock'
 import { HEIGHT } from '../domain/podiums'
-import { catalog, counterName, idx, isCounter, podiumProduct } from './env'
+import { artnrName, catalog, idx, isCounter, podiumProduct } from './env'
 import { funcOf, type PenPicks } from './podiumPen'
 import { kr } from './format'
 import { findMotif } from './motifs'
@@ -97,7 +97,7 @@ export function useTools({ v, res, motifs, onPick, onErase }: ToolsInput) {
       const s = b.stock ? stockByArtnr(b.stock) : undefined
       if (!s) return { name: 'Fri fasong', meta: `RAL ${b.ral} · høyde ${b.h ?? HEIGHT}` }
       const z = stockSize(s)
-      return { name: counterName(s.sections), meta: `${kr(z.length)} × ${kr(z.depth)}` }
+      return { name: artnrName(s.artnr), meta: `${kr(z.length)} × ${kr(z.depth)}` }
     }
     const name = r ? (r.product.variants.length > 1 ? `${r.product.name.split(' ')[0]} ${r.variant.name.toLowerCase()}` : r.product.name) : b.product
     return { name, meta: r ? `${kr(r.variant.price)} kr${b.kind === 'floor' ? '/m²' : ''}` : undefined }

@@ -3,7 +3,7 @@
 // of (Byggeregler K1–K5): one price item per counter, picked whole. Its plates in another wall colour (K6) cost the swap,
 // the price stays the same in every colour (Bjørn 11.11.2026); the line says which colours, for the montør.
 import { counterBuildOf } from '../../domain/counterShape';
-import { innerCorners, podiumHeights, podiumName, podiumSize } from '../../domain/podiums';
+import { innerCorners, podiumHeights, podiumSize } from '../../domain/podiums';
 import { podiumHas } from '../../domain/podiumFaces';
 import { lockedParts } from '../../domain/podiumLocks';
 import { soldAs, stockByArtnr, stockOf, stockSize } from '../../domain/podiumStock';
@@ -80,7 +80,7 @@ function builtUses(b: CounterBuild, whole: number, half: number, corners: number
 export const podiumKey = (id: string) => `disk:${id}`;
 
 /** A counter or podium of Disker og podier (Byggeregel K13): as K9, built on site and priced by the cost engine from its
- *  parts and the work, one line each, «Disk» when no deeper than 500, else «Podie»; without a complete cost the
+ *  parts and the work, one line each, named as its product in the product list («Disk», «Podie»); without a complete cost the
  *  catalog price per m² of top. Its parts are picked loose under Disker. */
 function podiumLine(c: CalcContext, o: PlacedObject): CalcLine {
   const hit = c.idx.byArtnr.get(o.product);
@@ -89,7 +89,8 @@ function podiumLine(c: CalcContext, o: PlacedObject): CalcLine {
   // Two heights or more after a fusion: each, low to high (K12)
   const locked = lockedParts(c.v, c.place, o);
   const meta = [`bygget på stedet ${s.length} × ${s.depth} × ${podiumHeights(o).join('/')} mm`, ...podiumHas(o.sections ?? [], locked), ...(o.ral ? [`RAL ${o.ral}`] : [])].join(' · ');
-  const name = podiumName(o.sections ?? []);
+  // Its name from the product list: the product it is built as, «Disk» or «Podie» (Bjørn 14.11.2026)
+  const name = hit?.product.name ?? o.product;
   // Each its own article, so each gets its own position number (calc/positions.ts)
   return c.line(o.product, 1, { name, meta, strategy: 'sum', foga: true, quote: { key: podiumKey(o.id), name, lead: true } }, podiumUses(o, counterBuildOf(o, undefined, locked)), (hit?.variant.price ?? 0) * top);
 }

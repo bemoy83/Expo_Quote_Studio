@@ -173,17 +173,18 @@ export function innerCorners(sections: readonly CounterSection[]): number {
   return n;
 }
 
-/** «Disk» when the shape is no deeper than 500 anywhere (no 750 × 750 fits in it), else «Podie» (K13). */
-export function podiumName(sections: readonly CounterSection[]): 'Disk' | 'Podie' {
+/** What «Fri» drew serves, by its shape (K13): a disk (`disker`) when no deeper than 500 anywhere (no 750 × 750 fits in
+ *  it), else a podie (`podier`). With Disk or Podie in hand, what is drawn serves that function. */
+export function funcByShape(sections: readonly CounterSection[]): 'disker' | 'podier' {
   const b = bounds(sections);
   const g = GRID;
   for (let x = b.x[0]; x + 3 * g <= b.x[1] + EPS; x += g)
     for (let z = b.z[0]; z + 3 * g <= b.z[1] + EPS; z += g) {
       let all = true;
       for (let i = 0; i < 3 && all; i++) for (let k = 0; k < 3 && all; k++) all = covered(sections, x + (i + 0.5) * g, z + (k + 0.5) * g);
-      if (all) return 'Podie';
+      if (all) return 'podier';
     }
-  return 'Disk';
+  return 'disker';
 }
 
 /** The counter with its sections centred on its own origin, (x, y) moved to match, turned as it is; sides that are no

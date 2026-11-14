@@ -48,7 +48,7 @@ export function objectPill(p: PillActions, c: Of<'object'>, remove: () => void):
   const fp = objectFootprint(place, o)
   const family = objectFamily(o.product)
   // Disker og podier: «Disk» or «Podie» by its shape, as on the quote (Byggeregel K13)
-  const name = o.sections ? counterName(o.sections) : (family.find((x) => x.artnr === o.product)?.name ?? f?.product.name ?? 'Møbel')
+  const name = o.sections ? counterName(o) : (family.find((x) => x.artnr === o.product)?.name ?? f?.product.name ?? 'Møbel')
   return {
     name,
     meta: fp ? `${fp.round ? `ø ${mm(fp.w)}` : `${mm(fp.w)} × ${mm(fp.d)}`}${o.sections ? ` · H ${podiumHeights(o).map((x) => mm(x / 1000)).join('/')}` : ''}${o.rot ? ` · ${o.rot}°` : ''}` : undefined,

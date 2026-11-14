@@ -115,7 +115,8 @@ funksjoner, ikke artikler.
 - Varen vises som omriss sett ovenfra (`plan/StockOutline.tsx`), aldri som varenummer.
 - En innstilling som ikke gjelder det som er i hånden, er grå og står der den pleier (`QBtn disabled`). Den
   forsvinner ikke.
-- Funksjonene er undergruppene i katalogen (`one` og `does` i `catalog/groups.ts`); logikken i `ui/podiumPen.ts`.
+- Funksjonene er undergruppene i katalogen; navnet er navnet på produktet bygget på stedet i undergruppen («Disk»,
+  «Podie»), så alle navn kommer fra produktlisten, og `does` i `catalog/groups.ts`; logikken i `ui/podiumPen.ts`.
   Samme mønster kan senere gi «Ståbord», «Barkrakker» osv. for møbler.
 
 ## Skuffen

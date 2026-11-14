@@ -7,13 +7,12 @@ export interface Subgroup {
   name: string;
   /** Not on the picking list (services, loose quote lines). */
   notPicked?: true;
-  /** A function the pen offers on its quick picks (Bjørn 14.11.2026): its name as one thing («Disk», «Podie») and what
-   *  it is for, shown with it and in the catalog. */
-  one?: string;
+  /** What a function of a pen is for (Bjørn 14.11.2026), shown with it and in the catalog. Its name is the name of the
+   *  product built on site in it (`podium`), so names come from the product list only. */
   does?: string;
 }
 
-type SubExtra = { notPicked?: true; one?: string; does?: string };
+type SubExtra = { notPicked?: true; does?: string };
 
 export interface ProductGroup {
   id: string;
@@ -46,8 +45,8 @@ export const PRODUCT_GROUPS: ProductGroup[] = [
     ['grupper', 'Møbelgrupper'],
   ]),
   g('disk', 'Disker og podier', [
-    ['disker', 'Disker', { one: 'Disk', does: 'En møteplass der besøkende oppsøker en person' }],
-    ['podier', 'Podier', { one: 'Podie', does: 'Bærer et produkt som skal vises fram' }],
+    ['disker', 'Disker', { does: 'En møteplass der besøkende oppsøker en person' }],
+    ['podier', 'Podier', { does: 'Bærer et produkt som skal vises fram' }],
   ]),
   g('hyll', 'Hyller og heng', [
     ['hyller', 'Hyller'],

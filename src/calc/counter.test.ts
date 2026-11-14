@@ -67,14 +67,14 @@ describe('a counter built on site, as Disker drew it (Byggeregler K7–K9, K22)'
   ];
   /** A counter of these pieces from an old sketch, as sections when it opens (K22). */
   const drawn = (pieces: Piece[], ral?: string) => {
-    const o = asSections({ id: 'd1', product: '6560', x: 2, y: 2, rot: 0, pieces, ...(ral && { ral }) }, '6570');
+    const o = asSections({ id: 'd1', product: '6560', x: 2, y: 2, rot: 0, pieces, ...(ral && { ral }) }, '6571');
     const s = { ...createVariant('A', { width: 6, depth: 5, type: 'row' }), walls: [], objects: [o] };
     const r = calc(s, RULES, DEFAULT_CATALOG, { payer: 'utstiller', ral: '9010' });
-    return { o, r, l: r.groups.flatMap((g) => g.lines).find((x) => x.artnr === '6570')! };
+    return { o, r, l: r.groups.flatMap((g) => g.lines).find((x) => x.artnr === '6571')! };
   };
 
   it('built on site, 1,0 m costs about the 1320 of the counter in stock', () => {
-    const one = sumItems(podiumUses({ id: 'd1', product: '6570', x: 0, y: 0, rot: 0, sections: stockSections() }), DEFAULT_PRICING.items);
+    const one = sumItems(podiumUses({ id: 'd1', product: '6571', x: 0, y: 0, rot: 0, sections: stockSections() }), DEFAULT_PRICING.items);
     expect(one.missing).toEqual([]);
     expect(Math.abs(one.price - 1320) / 1320).toBeLessThan(0.01);
     expect(drawn(straight(1500)).l.strategy).toBe('sum');
@@ -102,7 +102,7 @@ describe('a counter built on site, as Disker drew it (Byggeregler K7–K9, K22)'
   it('is picked as its parts, the line itself not (K13)', () => {
     const { r } = drawn(straight(1500), '3002');
     const rows = pickRows(r).filter((x) => x.group === 'disk.disker');
-    expect(rows.some((x) => x.code === '6560' || x.code === '6570')).toBe(false);
+    expect(rows.some((x) => x.code === '6560' || x.code === '6571')).toBe(false);
     const q = (title: string, detail?: string) => rows.filter((x) => x.title.startsWith(title) && (!detail || x.detail?.startsWith(detail))).map((x) => x.qty);
     expect(q('Diskstolpe 92L')).toEqual(['4 stk']);
     expect(q('Diskstolpe 93')).toEqual(['2 stk']);

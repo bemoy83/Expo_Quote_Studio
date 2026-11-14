@@ -22,7 +22,7 @@ import type { CounterSection, PlacedObject, Variant } from './types';
 import { createProject, createVariant } from './variant';
 import { parse, serialize } from '../persistence/file';
 
-const stock = (): PlacedObject => ({ id: 'i1', product: '6570', x: 2, y: 1.5, rot: 0, sections: stockSections() });
+const stock = (): PlacedObject => ({ id: 'i1', product: '6571', x: 2, y: 1.5, rot: 0, sections: stockSections() });
 const vOf = (...objects: PlacedObject[]): Variant => ({ ...createVariant('A', { width: 5, depth: 3, type: 'row' }), objects });
 const run = (v: Variant) => calc(v, RULES, DEFAULT_CATALOG, { payer: 'utstiller', ral: '9010' });
 const linesOf = (v: Variant) => run(v).groups.flatMap((g) => g.lines);
@@ -42,7 +42,7 @@ describe('6560 in Disker og podier (K22)', () => {
     const lines = linesOf(vOf(stock()));
     const l = lines.find((x) => x.artnr === '6560')!;
     expect([l.qty, l.price, l.foga]).toEqual([1, 1320, undefined]);
-    expect(lines.some((x) => x.artnr === '6570')).toBe(false);
+    expect(lines.some((x) => x.artnr === '6571')).toBe(false);
     expect(DEFAULT_PRICING.items.get(ITEM.counter(1020, 520))).toBeDefined();
     const rows = pickRows(run(vOf(stock())));
     expect(rows.filter((r) => r.code === '6560').map((r) => r.qty)).toEqual(['1 stk']);
@@ -74,7 +74,7 @@ describe('6560 in Disker og podier (K22)', () => {
     const front = podiumParts([s]).find((p) => p.axis === 'z' && p.out === 1)!;
     const door = setPodiumLight(vOf(stock()), 'i1', [partKey(front)], 'door', 0);
     expect(isStock6560(sectionsOf(door))).toBe(false);
-    expect(linesOf(door).find((x) => x.artnr === '6570')?.name).toBe('Disk');
+    expect(linesOf(door).find((x) => x.artnr === '6571')?.name).toBe('Disk');
     const end = podiumParts([s]).find((p) => p.axis === 'x')!;
     expect(isStock6560(sectionsOf(setPodiumLight(vOf(stock()), 'i1', [partKey(end)], 'open')))).toBe(false);
   });
@@ -85,7 +85,7 @@ describe('the pen places a standard counter (K22)', () => {
   const base: Variant = { ...createVariant('A', { width: 6, depth: 5, type: 'row' }), walls: [] };
 
   it('a click with 6560 chosen stores a 6560, its front toward the aisle, kept inside the stand', () => {
-    const r = podiumAt(base, ctx, { product: '6570', stock: '6560' }, [0.1, 4.9]);
+    const r = podiumAt(base, ctx, { product: '6571', stock: '6560' }, [0.1, 4.9]);
     if ('error' in r) throw new Error(r.error);
     const o = r.v.objects[0];
     expect(stockOf(o.sections)?.artnr).toBe('6560');
@@ -96,16 +96,16 @@ describe('the pen places a standard counter (K22)', () => {
   });
 
   it('+ in Utstyr adds a 6560 of Disker og podier, front toward the aisle; − takes it away again', () => {
-    const one = addStockAnywhere(base, ctx, '6570', '6560', '3002')!;
+    const one = addStockAnywhere(base, ctx, '6571', '6560', '3002')!;
     const o = one.objects[0];
-    expect([o.product, soldAs(o), o.rot, o.ral]).toEqual(['6570', '6560', 0, '3002']);
-    const two = addStockAnywhere(one, ctx, '6570', '6560')!;
+    expect([o.product, soldAs(o), o.rot, o.ral]).toEqual(['6571', '6560', 0, '3002']);
+    const two = addStockAnywhere(one, ctx, '6571', '6560')!;
     expect(two.objects.filter((x) => soldAs(x) === '6560')).toHaveLength(2);
     expect(removeObjects(two, '6560', 1, soldAs).objects.map((x) => x.id)).toEqual([o.id]);
   });
 
   it('«Fri» stores one section 500 × 500, as before', () => {
-    const r = podiumAt(base, ctx, { product: '6570' }, [3, 2]);
+    const r = podiumAt(base, ctx, { product: '6571' }, [3, 2]);
     if ('error' in r) throw new Error(r.error);
     expect(r.v.objects[0].sections).toEqual([{ x: [-250, 250], z: [-250, 250], h: 1000 }]);
   });
@@ -127,8 +127,8 @@ describe('counters from Disker as sections when a sketch opens (K22)', () => {
   for (const [name, pieces] of Object.entries(shapes))
     it(`a drawn ${name} is built and costed the same`, () => {
       const o: PlacedObject = { id: 'i1', product: '6560', x: 2, y: 1.5, rot: 90, ral: '7012', pieces };
-      const s = asSections(o, '6570');
-      expect([s.product, s.pieces, s.ral, s.rot, s.x, s.y]).toEqual(['6570', undefined, '7012', 90, 2, 1.5]);
+      const s = asSections(o, '6571');
+      expect([s.product, s.pieces, s.ral, s.rot, s.x, s.y]).toEqual(['6571', undefined, '7012', 90, 2, 1.5]);
       // As Disker built it (K7): whole metres from its start, a half last, open at its back
       expect(sum(counterBuildOf(s))).toEqual(sum(layoutBuild(RECIPES.counter, layoutOf(pieces))));
       // The work as Disker costed it (K9): per whole and half part, per corner
@@ -138,20 +138,20 @@ describe('counters from Disker as sections when a sketch opens (K22)', () => {
     });
 
   it('the counter in stock becomes its standard counter; other objects stay as they are', () => {
-    const s = asSections({ id: 'i1', product: '6560', x: 2, y: 1.5, rot: 180 }, '6570');
-    expect([s.product, stockOf(s.sections)?.artnr, s.rot]).toEqual(['6570', '6560', 180]);
+    const s = asSections({ id: 'i1', product: '6560', x: 2, y: 1.5, rot: 180 }, '6571');
+    expect([s.product, stockOf(s.sections)?.artnr, s.rot]).toEqual(['6571', '6560', 180]);
     const chair: PlacedObject = { id: 'i2', product: '5276', x: 1, y: 1, rot: 0 };
-    expect(asSections(chair, '6570')).toBe(chair);
+    expect(asSections(chair, '6571')).toBe(chair);
   });
 });
 
 describe('Podie 50 × 50, a standard podie per height (K22, Bjørn 14.11.2026)', () => {
   const ctx = { rules: RULES, footprint: () => ({ w: 0.52, d: 0.52, h: 1.04 }), swings: () => false, isCounter: () => true };
   const base: Variant = { ...createVariant('A', { width: 5, depth: 3, type: 'row' }), walls: [] };
-  const lineOf = (v: Variant) => linesOf(v).find((l) => l.group === 'disk.podier' || l.artnr === '6570');
+  const lineOf = (v: Variant) => linesOf(v).find((l) => l.group === 'disk.podier' || l.artnr === '6571');
 
   it('+ in Utstyr on 75 cm: one podie 500 × 500 at CC 750, its own line at the catalog price, picked whole', () => {
-    const v = addStockAnywhere(base, ctx, '6570', '5450-2')!;
+    const v = addStockAnywhere(base, ctx, '6571', '5450-2')!;
     expect(v.objects[0].sections).toEqual([{ x: [-250, 250], z: [-250, 250], h: 750 }]);
     expect(lineOf(v)).toMatchObject({ artnr: '5450-2', name: 'Podie 50 × 50 75 cm', qty: 1, price: 460, strategy: 'fast' });
     expect(pickRows(run(v)).filter((r) => r.code === '5450-2').map((r) => r.qty)).toEqual(['1 stk']);
@@ -162,7 +162,7 @@ describe('Podie 50 × 50, a standard podie per height (K22, Bjørn 14.11.2026)',
   it('every height is its own variant, in any turn; colour and print keep it', () => {
     for (const [artnr, h] of [['5450-4', 250], ['5450-1', 500], ['5450-2', 750], ['5450-3', 1000]] as const)
       expect(stockOf([{ x: [0, 500], z: [-500, 0], h }])?.artnr).toBe(artnr);
-    const one = addStockAnywhere(base, ctx, '6570', '5450-1', '3002')!;
+    const one = addStockAnywhere(base, ctx, '6571', '5450-1', '3002')!;
     const v = { ...one, objects: [{ ...one.objects[0], rot: 90 }] };
     expect(lineOf(v)).toMatchObject({ artnr: '5450-1', price: 380, meta: 'RAL 3002' });
   });
@@ -172,16 +172,16 @@ describe('Podie 50 × 50, a standard podie per height (K22, Bjørn 14.11.2026)',
     expect(stockOf([{ ...s, x: [-250, 500] }])).toBeUndefined();
     expect(stockOf([{ ...s, h: 600 }])).toBeUndefined();
     expect(stockOf([{ ...s, shelves: [250] }])).toBeUndefined();
-    const v = { ...base, objects: [{ id: 'i1', product: '6570', x: 2, y: 1.5, rot: 0, sections: [{ ...s, x: [-250, 500] as [number, number] }] }] };
-    expect(lineOf(v)).toMatchObject({ artnr: '6570', strategy: 'sum' });
+    const v = { ...base, objects: [{ id: 'i1', product: '6571', x: 2, y: 1.5, rot: 0, sections: [{ ...s, x: [-250, 500] as [number, number] }] }] };
+    expect(lineOf(v)).toMatchObject({ artnr: '6571', strategy: 'sum' });
   });
 
   it('«Fri» at height 500, one click: drawn exactly as the podie, it is Podie 50 × 50, 50 cm', () => {
-    const r = podiumAt(base, ctx, { product: '6570', h: 500 }, [2, 1.5]);
+    const r = podiumAt(base, ctx, { product: '6571', h: 500 }, [2, 1.5]);
     if ('error' in r) throw new Error(r.error);
     expect(lineOf(r.v)).toMatchObject({ artnr: '5450-1', price: 380 });
     const shelved = { ...r.v, objects: [{ ...r.v.objects[0], sections: [{ ...r.v.objects[0].sections![0], shelves: [250] }] }] };
-    expect(lineOf(shelved)).toMatchObject({ artnr: '6570' });
+    expect(lineOf(shelved)).toMatchObject({ artnr: '6571' });
   });
 
   it('an old sketch with 2 × 5450-2 counted opens with two podier at CC 750 on the stand', () => {

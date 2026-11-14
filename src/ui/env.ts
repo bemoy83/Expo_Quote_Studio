@@ -6,9 +6,8 @@ import { indexCatalog, placeContext } from '../catalog/lookup'
 import type { Product } from '../catalog/types'
 import { EXAMPLE_BASIS, parseBasis, serializeBasis, type CostBasis } from '../cost/basis'
 import { readHistory, withEntry, type HistoryEntry } from '../cost/history'
-import { podiumName } from '../domain/podiums'
-import { stockOf } from '../domain/podiumStock'
-import type { CounterSection } from '../domain/types'
+import { soldAs } from '../domain/podiumStock'
+import type { PlacedObject } from '../domain/types'
 import { pricingFrom } from '../pricing/data'
 import { KEYS, loadCostBasis, loadJson, saveCostBasis, saveJson } from '../persistence/storage'
 import { ownInFrame, RULES, type InFrameParams, type Rules } from '../rules/rules'
@@ -110,11 +109,13 @@ export const isCounter = (artnr: string) => place.isCounter(artnr)
 
 export const openingProducts = () => catalog.products.filter((p) => p.opening)
 
-/** The name of a counter of Disker og podier: a standard counter's catalog name (K22), else «Disk» or «Podie» by its
- *  shape (K13). */
-export const counterName = (sections: readonly CounterSection[]) => {
-  const s = stockOf(sections)
-  // The catalog name and, with more than one variant, the variant: «Bardisk», «Podie 50 × 50, 75 cm» (Bjørn 14.11.2026)
-  const r = s && idx.byArtnr.get(s.artnr)
-  return r ? `${r.product.name}${r.product.variants.length > 1 ? `, ${r.variant.name}` : ''}` : s ? 'Disk' : podiumName(sections)
+/** A product's name from the product list and, with more than one variant, the variant: «Bardisk», «Podie 50 × 50, 75 cm»
+ *  (Bjørn 14.11.2026: every name comes from the product list). */
+export const artnrName = (artnr: string) => {
+  const r = idx.byArtnr.get(artnr)
+  return r ? `${r.product.name}${r.product.variants.length > 1 ? `, ${r.variant.name}` : ''}` : artnr
 }
+
+/** The name of a counter of Disker og podier: the standard item it is (K22), else the product it is built as on site,
+ *  «Disk» or «Podie» (K13). */
+export const counterName = (o: Pick<PlacedObject, 'product' | 'sections'>) => artnrName(soldAs(o))
