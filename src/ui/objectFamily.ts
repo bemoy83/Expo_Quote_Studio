@@ -11,7 +11,9 @@ export interface ObjectVariant {
 
 export function objectFamily(artnr: string): ObjectVariant[] {
   const own = idx.byArtnr.get(artnr)
-  if (!own) return []
+  // A counter of Disker og podier is what its sections are (K13, K22): its height or shape is changed in the drawer,
+  // never by swapping product, so it has no family (Podie 50 × 50 in four heights showed as swatches)
+  if (!own || own.product.counter) return []
   const f = own.product.footprint
   const same = (p: (typeof catalog.products)[number]) =>
     p === own.product || (!!f && !!p.footprint && p.kind === own.product.kind && p.group === own.product.group && p.footprint.w === f.w && p.footprint.d === f.d && !!p.footprint.round === !!f.round)
