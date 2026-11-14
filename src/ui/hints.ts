@@ -1,6 +1,7 @@
 // What a click or drag does now, after the stand chip (under it when the stage is narrow): a short line for the eye, the full help on hover (title).
 import type { Brush, Tool } from './tools'
-import { productOf } from './env'
+import { stockByArtnr } from '../domain/podiumStock'
+import { counterName, productOf } from './env'
 
 export interface Hint {
   /** One short line, shown after the stand chip. */
@@ -56,15 +57,19 @@ export function hint(tool: Tool, brush: Brush | null, carpet = false): Hint {
     case 'motif':
       return h('Klikk en tekstilvegg eller et veggfelt', 'Klikk en tekstilvegg for trykk, eller et veggfelt for foliedekor')
     case 'podium':
-      // K22: a click places the standard counter chosen in the quick picks
-      if (brush?.kind === 'podium' && brush.stock)
+      // K22: a click places the item behind the function in hand, named, never by art.nr (Bjørn 14.11.2026)
+      if (brush?.kind === 'podium' && brush.stock) {
+        const s = stockByArtnr(brush.stock)
+        const name = s ? counterName(s.sections) : 'disken'
+        const disk = s?.func === 'disker'
         return h(
-          `Klikk for bardisk ${brush.stock}, dra for å tegne disk eller podium`,
-          `Klikk for en bardisk ${brush.stock} med fronten mot gangen, eller dra for å tegne disk eller podium fritt · velg Fri over verktøyene for at et klikk skal sette en seksjon på 500 × 500 · fyll gir alle diskene og podiene fargen · velg en disk for å bytte farge eller rotere den`,
+          disk ? `Klikk setter ${name} med fronten mot gangen · dra tegner fritt` : `Klikk setter ${name} · høyden velger varen · dra tegner fritt`,
+          `${disk ? `Klikk setter ${name} med fronten mot gangen` : `Klikk setter ${name}, høyden i pillen velger varen`} · trykk og dra for å tegne fritt · «…» har de andre i katalogen · velg Fri over verktøyene for å tegne fasongen selv · fyll gir alle diskene og podiene fargen · velg en disk for å bytte farge eller rotere den`,
         )
+      }
       return h(
         'Klikk for en seksjon, dra for å tegne disk eller podium',
-        'Klikk for en seksjon på 500 × 500 (eller velg en standarddisk som 6560 over verktøyene), eller trykk og dra for å gjøre den større i 500-steg i hver retning · seksjonen du trykket i står fast · Shift (eller Fin) gir 250-steg: hold Shift for å låse forhåndsvisningen, og dra i en kant for å flytte den · alle sider er tette · fyll gir alle diskene og podiene fargen · velg en disk for å bytte farge eller rotere den',
+        'Klikk for en seksjon på 500 × 500 (eller velg Disk eller Podie over verktøyene), eller trykk og dra for å gjøre den større i 500-steg i hver retning · seksjonen du trykket i står fast · Shift (eller Fin) gir 250-steg: hold Shift for å låse forhåndsvisningen, og dra i en kant for å flytte den · alle sider er tette · fyll gir alle diskene og podiene fargen · velg en disk for å bytte farge eller rotere den',
       )
     case 'object':
       return h(`Klikk i planen for å sette ut ${productOf(brush?.kind === 'object' ? brush.product : '')?.name.toLowerCase() ?? 'varen'}`)

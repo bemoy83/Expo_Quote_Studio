@@ -2604,6 +2604,11 @@ select.cin {
   white-space: nowrap;
   cursor: pointer;
 }
+.q-btn:disabled {
+  /* Does not apply to what is in hand: grey where it always is, never hidden (Bjørn 14.11.2026) */
+  opacity: 0.35;
+  cursor: default;
+}
 .q-btn[aria-pressed='true'] {
   /* A tool you draw with (door, curtain, beam): ink, like the dock's tools; --chosen is for settings (Bjørn 8.11.2026) */
   background: rgb(var(--ink));

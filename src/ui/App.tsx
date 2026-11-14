@@ -258,6 +258,7 @@ export default function App() {
       onFill={fillWithPen}
       onFillWalls={() => onEdit((x) => paintAllWalls(x, tools.wallRal))}
       onFillPodiums={() => onEdit((x) => paintPodiums(x, tools.podiumRal))}
+      podiumPicks={tools.podiumPicks}
     />
   )
   return (

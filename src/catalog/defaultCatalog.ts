@@ -263,8 +263,9 @@ const products: Product[] = [
 // Colours for drawing placed furniture (product data, not tokens).
 const BLACK = '#2B2C2E';
 export const FURNITURE_WHITE = '#F3F2EE';
-const OBJECT_COLORS: Record<string, string> = { '6560': FURNITURE_WHITE, '5276': BLACK, '5275': FURNITURE_WHITE, '5296': BLACK, '5186': BLACK, '5196': BLACK, '5195': FURNITURE_WHITE };
-for (const p of products) for (const v of p.variants) if (OBJECT_COLORS[v.artnr]) v.color = OBJECT_COLORS[v.artnr];
+// Per art.nr, or per product for all its variants; standard counters and podier are white plates (K6)
+const OBJECT_COLORS: Record<string, string> = { '6560': FURNITURE_WHITE, '5450': FURNITURE_WHITE, '6570': FURNITURE_WHITE, '5276': BLACK, '5275': FURNITURE_WHITE, '5296': BLACK, '5186': BLACK, '5196': BLACK, '5195': FURNITURE_WHITE };
+for (const p of products) for (const v of p.variants) if (OBJECT_COLORS[v.artnr] ?? OBJECT_COLORS[p.id]) v.color = OBJECT_COLORS[v.artnr] ?? OBJECT_COLORS[p.id];
 
 // Cost and handling time of the products without a recipe (furniture, floor, foil, services) come from the kostgrunnlag
 // (`katalog`, src/cost/itemDefs.ts EXAMPLE_CATALOG) until the OMS gives them per product.

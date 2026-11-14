@@ -7,7 +7,10 @@ import { TILE_FULL, type TileSize } from '../domain/floor/tiles'
 import type { GridStep } from '../domain/snapGrid'
 import type { Motif, Variant } from '../domain/types'
 import { COUNTER_STOCK_RAL } from '../domain/objects'
-import { catalog, idx, isCounter, podiumProduct } from './env'
+import { stockByArtnr, stockSize } from '../domain/podiumStock'
+import { HEIGHT } from '../domain/podiums'
+import { catalog, counterName, idx, isCounter, podiumProduct } from './env'
+import { funcOf, type PenPicks } from './podiumPen'
 import { kr } from './format'
 import { findMotif } from './motifs'
 import { dockToolOf, FLOOR_OTHER, penToolOf, type Brush, type DockTool, type PenTool, type Tool } from './tools'
@@ -35,6 +38,8 @@ export function useTools({ v, res, motifs, onPick, onErase }: ToolsInput) {
   const [wallPen, setWallPen] = useState<string | null>(null)
   /** Colour Disker og podier draws with (K6 as for counters): white until a colour is picked. */
   const [podiumRal, setPodiumRal] = useState<string>(COUNTER_STOCK_RAL)
+  /** The item behind each function of Disker og podier: the standard counter last put in hand for it (Bjørn 14.11.2026). */
+  const [podiumPicks, setPodiumPicks] = useState<PenPicks>({})
 
   const rollBrush = brush?.kind === 'floor' && !!idx.byArtnr.get(brush.product)?.product.roll
   const wallRal = wallPen ?? v.defaultPlate
@@ -47,6 +52,8 @@ export function useTools({ v, res, motifs, onPick, onErase }: ToolsInput) {
     setPens((p) => ({ ...p, [penToolOf(b)]: b }))
     if (b.kind === 'wall') setWallPen(b.ral)
     if (b.kind === 'podium') setPodiumRal(b.ral)
+    const func = b.kind === 'podium' ? funcOf(b) : undefined
+    if (func && b.kind === 'podium') setPodiumPicks((p) => ({ ...p, [func]: b.stock }))
     setTool(t)
     onPick()
   }
@@ -85,7 +92,13 @@ export function useTools({ v, res, motifs, onPick, onErase }: ToolsInput) {
     if (b.kind === 'shelf') return { name: 'Hylle', meta: `${kr(idx.byArtnr.get(catalog.system.shelf)?.variant.price ?? 0)} kr` }
     if (b.kind === 'motif') return { name: findMotif(motifs, b.motif)?.name ?? 'Motiv', meta: 'trykk eller folie' }
     const r = idx.byArtnr.get(b.product)
-    if (b.kind === 'podium') return { name: 'Disk eller podium', meta: `RAL ${b.ral} · høyde ${b.h ?? 1000}` }
+    if (b.kind === 'podium') {
+      // The item in hand and its size, or «Fri fasong» with what a click sets (Bjørn 14.11.2026)
+      const s = b.stock ? stockByArtnr(b.stock) : undefined
+      if (!s) return { name: 'Fri fasong', meta: `RAL ${b.ral} · høyde ${b.h ?? HEIGHT}` }
+      const z = stockSize(s)
+      return { name: counterName(s.sections), meta: `${kr(z.length)} × ${kr(z.depth)}` }
+    }
     const name = r ? (r.product.variants.length > 1 ? `${r.product.name.split(' ')[0]} ${r.variant.name.toLowerCase()}` : r.product.name) : b.product
     return { name, meta: r ? `${kr(r.variant.price)} kr${b.kind === 'floor' ? '/m²' : ''}` : undefined }
   }
@@ -101,6 +114,7 @@ export function useTools({ v, res, motifs, onPick, onErase }: ToolsInput) {
     floorPen,
     wallRal,
     podiumRal,
+    podiumPicks,
     floorSize,
     setFloorSize,
     otherSize,

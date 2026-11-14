@@ -10,7 +10,7 @@ import { counterBuildOf, snap, toLocal, toPlan } from './counterShape';
 import { prunedSides } from './podiumFaces';
 import { lowered } from './podiumShelves';
 import { frontRot, snapShift } from './counters';
-import { stockSections } from './podiumStock';
+import { stockByArtnr, stockSections } from './podiumStock';
 import { nextId } from './ids';
 import { addAt, anywhere, blockers, COUNTER_STOCK_RAL, footprintBox, hitsAny, objectBoxes, objectFootprint, type PlaceContext } from './objects';
 import { bounds, covered, edgeRuns, EPS, GRID, overlaps, withSections, type EdgeRun, type Range } from './podiumSections';
@@ -308,9 +308,10 @@ export function podiumAt(v: Variant, ctx: PlaceContext, pen: { product: string; 
   const id = nextId(v.objects.map((o) => o.id), 'i');
   const colour = pen.ral && pen.ral !== COUNTER_STOCK_RAL ? { ral: pen.ral } : {};
   const half = START / 2;
-  // A standard counter as it is in stock, its front toward the aisle (K22); else one section
-  const sections = pen.stock ? stockSections(pen.stock) : [{ x: [-half, half] as [number, number], z: [-half, half] as [number, number], h: pen.h ?? HEIGHT }];
-  const o: PlacedObject = { id, product: pen.product, x: q[0], y: q[1], rot: pen.stock ? frontRot(v, q, true) : 0, ...colour, sections };
+  // A standard counter as it is in stock, a disk with its front toward the aisle, a podie straight (K22); else one section
+  const stock = pen.stock ? stockByArtnr(pen.stock) : undefined;
+  const sections = stock ? stockSections(stock.artnr) : [{ x: [-half, half] as [number, number], z: [-half, half] as [number, number], h: pen.h ?? HEIGHT }];
+  const o: PlacedObject = { id, product: pen.product, x: q[0], y: q[1], rot: stock?.func === 'disker' ? frontRot(v, q, true) : 0, ...colour, sections };
   const f = objectFootprint(ctx, o);
   if (!f) return { error: 'Ukjent disk', o, cell: o };
   // Kept inside the stand

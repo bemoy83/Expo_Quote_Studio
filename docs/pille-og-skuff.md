@@ -96,6 +96,28 @@ R på en bane snur den, som i dag.
 **Ny** `setObjectProduct(v, ctx, id, product)` i `domain/objects.ts`. Den bytter `product` til en annen variant av
 samme produkt og beholder plass og `rot`. Er den nye varianten større, kjøres `settleObject`.
 
+## Hurtigvalget etter funksjon
+
+Bjørn 14.11.2026, først i Disker og podier (K22). Hurtigvalget over verktøylinjen er pennen i hånden og hvordan den er
+stilt inn: et kjapt prisoverslag, ikke et vareutvalg. Katalogen er stedet for spesifikke valg, og valgene er
+funksjoner, ikke artikler.
+
+| Plass i hurtigvalget | Innhold |
+| --- | --- |
+| Navn | Det som er i hånden: varens navn og mål («Bardisk · 1 020 × 520»), eller «Fri fasong» |
+| Hva | «Fri», så én knapp per funksjon (undergruppe med standardvare) med omrisset av varen bak og entallsnavnet |
+| Utseende | Farger og fyll |
+| Mål | Høyde og «Fin» |
+| «…» | Katalogen i venstre skinne, på verktøyets fane. Aldri en egen modal eller meny ved pillen |
+
+- Bak hver funksjon står én vare: den som sist ble hentet fra katalogen for den, i starten katalogens første.
+  Penselen på en rad i katalogen legger varen bak sin funksjon og i hånden, og lyser på raden bak funksjonen i hånden.
+- Varen vises som omriss sett ovenfra (`plan/StockOutline.tsx`), aldri som varenummer.
+- En innstilling som ikke gjelder det som er i hånden, er grå og står der den pleier (`QBtn disabled`). Den
+  forsvinner ikke.
+- Funksjonene er undergruppene i katalogen (`one` og `does` i `catalog/groups.ts`); logikken i `ui/podiumPen.ts`.
+  Samme mønster kan senere gi «Ståbord», «Barkrakker» osv. for møbler.
+
 ## Skuffen
 
 ### Når den åpnes
