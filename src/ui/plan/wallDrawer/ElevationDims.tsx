@@ -11,6 +11,7 @@
 import type { Wall } from '../../../domain/types'
 import type { FaceSide } from '../../../domain/faces'
 import { physicalEnds } from '../../../domain/walls'
+import { moduleCount } from '../../../domain/grid'
 import { rules } from '../../env'
 import { INK_MUTED } from '../../colors'
 import { Chain } from '../DimChain'
@@ -22,10 +23,11 @@ import { elevationHeading } from './face'
 /** Heading size, screen px. */
 const HEAD_FONT = 11.5
 
-export function ElevationDims({ w, s, name, L, H, items, leaders, top, width, right, sc, fields, shelves = [] }: { w: Wall; s: FaceSide; name: string; L: number; H: number; items: ElevationItem[]; leaders: Leader[]; top: number; width: number; /** The drawing's right edge, x: a leader text that would run past it goes to the left of its line. */ right: number; sc: PlanScale; /** Print being laid on the wall: where each plate field starts, for its lysmål. */ fields?: number[]; /** Shelves on the face, a height chain per felt. */ shelves?: ShelfChain[] }) {
+export function ElevationDims({ w, s, name, L, H, items, leaders, top, width, right, sc, fields, fieldCc, shelves = [] }: { w: Wall; s: FaceSide; name: string; L: number; H: number; items: ElevationItem[]; leaders: Leader[]; top: number; width: number; /** The drawing's right edge, x: a leader text that would run past it goes to the left of its line. */ right: number; sc: PlanScale; /** Print being laid on the wall: where each plate field starts, for its lysmål. */ fields?: number[]; /** Each field's module c/c, m (a whole one where none). */ fieldCc?: number[]; /** Shelves on the face, a height chain per felt. */ shelves?: ShelfChain[] }) {
   const px = (n: number) => sizePx(sc, n)
   const head = elevationHeading(w, s, name)
-  const modules = Array.from({ length: Math.round(L) + 1 }, (_, i) => i)
+  // Post centres, as seen from the face: whole metres from the wall's start, a shorter last module (Byggeregel V1)
+  const modules = [...Array.from({ length: moduleCount(w) }, (_, i) => i), L].map((t) => (s === 1 ? t : L - t)).sort((a, b) => a - b)
   const wall = rules.wall.height
   const mode = items.length > 0 ? 'item' : fields ? 'lys' : 'wall'
   // From the outside of the end posts, so the row over the wall adds up to the total (6 040 for a 6 000 c/c wall)
@@ -33,7 +35,7 @@ export function ElevationDims({ w, s, name, L, H, items, leaders, top, width, ri
   const along = row(outer, items.flatMap((i) => [i.x0, i.x1]))
   const heights = row([0, H], items.flatMap((i) => [H - i.top, H - i.bottom]))
   // 960 × 2 420 a plate, standing 80 and 2 500 over the floor
-  const lm = lysmal(rules, fields ?? [], H)
+  const lm = lysmal(rules, fields ?? [], H, fieldCc)
   const uprights = items.find((i) => i.uprights)?.uprights
   const rowY = -px(NEAR)
   // Over the chain over a measured item, or straight over the wall

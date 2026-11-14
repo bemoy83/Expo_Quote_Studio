@@ -31,7 +31,7 @@ export function WallSection({ v, res, brush, tool, pick, onEdit, onAddRoom, onSe
             {def?.name} · <span className="num">{def?.artnr} · {kr(def?.price ?? 0)} kr/lm</span>
           </>
         }
-        result={wallLm ? `${fmt(wallLm)} lm` : null}
+        result={wallLm ? `${fmt(wallLm, 2)} lm` : null}
         action={<IconButton icon={Paintbrush} label="Tegn innervegg i plan" pressed={wallPen && tool === 'brush'} onClick={() => pick({ kind: 'wall', ral: v.defaultPlate })} />}
         chips={
           <VariantChips

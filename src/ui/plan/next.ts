@@ -6,7 +6,7 @@
 import { freeFrames } from '../../calc/textile/free'
 import { DOOR_AIM_MIN, placeOpening } from '../../domain/doors'
 import { paintWalls } from '../../domain/edit'
-import { faceSegment, felt, sideOf, type FaceSide } from '../../domain/faces'
+import { faceSegment, felt, feltCc, sideOf, type FaceSide } from '../../domain/faces'
 import { applyFloor } from '../../domain/floor/brush'
 import { carpetClick, fillCarpet } from '../../domain/floor/rollFill'
 import { tileAt, type Rect } from '../../domain/floor/tiles'
@@ -19,7 +19,7 @@ import { fusePodiums } from '../../domain/podiumLinks'
 import { addShelf, addShelfRow, penHeight } from '../../domain/shelves/edit'
 import { drawTextile, fillFace, type TextileResult } from '../../domain/textile/brush'
 import type { Motif, PlacedObject, Point, Variant } from '../../domain/types'
-import { builtModules, doorAllowed, type BuiltModule } from '../../domain/walls'
+import { builtModules, doorAllowed, doorBlocked, type BuiltModule } from '../../domain/walls'
 import { RECIPES } from '../../foga/recipes'
 import { applyDrop, type DecorDrag } from '../dnd'
 import { place, pricing, productOf, rules } from '../env'
@@ -112,12 +112,10 @@ const area = (o: Omit<NextOutcome, 'strength'>): NextOutcome => ({ strength: PHA
 const line = (o: Omit<NextOutcome, 'strength'>): NextOutcome => ({ strength: PHANTOM.line, ...o })
 const target = (key: string, outcome: () => NextOutcome): NextTarget => ({ key, outcome })
 
-const DOOR_IN_STAND_WALL = 'Dører og forheng kan ikke stå i standveggen'
 
 /** The modules of the stroke a→b that are not built yet: a stroke over walls that exist only adds the rest. */
 function newModules(v: Variant, a: Point, b: Point): Module[] {
-  const n = Math.round(Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1]))
-  if (!n) return []
+  if (Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1]) < 1e-6) return []
   const built = new Set(builtModules(v).map((m) => m.key))
   return wallModules({ id: '', from: a, to: b }).filter((m) => !built.has(m.key))
 }
@@ -164,7 +162,7 @@ function targetOf(p: NextInput): NextTarget | null {
       return target(`wall:${pt(a)}:${pt(b)}:${pressed}`, () => {
         const mods = newModules(v, a, b)
         if (!mods.length) return area({ hint: pressed ? 'Veggen finnes allerede' : null })
-        const text = `${mm(mods.length * rules.wall.cc)} · ${mods.length} ${mods.length === 1 ? 'modul' : 'moduler'}`
+        const text = `${mm(mods.reduce((s, m) => s + m.cc, 0))} · ${mods.length} ${mods.length === 1 ? 'modul' : 'moduler'}`
         return area({ edit: (x) => paintWalls(x, a, b, wallRal), hint: null, pill: pressed ? { a, b, width: 'wall', text } : undefined })
       })
     }
@@ -203,7 +201,7 @@ function targetOf(p: NextInput): NextTarget | null {
     if (!hover || !placeHolds({ v, hits, brush }, placing, hover)) {
       // A door pressed in a stand wall stays hatched with its reason
       const e = placing.module
-      return placing.what === 'opening' && e && !doorAllowed(v, e.a, e.b) ? target(`door:${e.key}`, () => doorInvalid(e)) : null
+      return placing.what === 'opening' && e && !doorAllowed(v, e.a, e.b) ? target(`door:${e.key}`, () => doorInvalid(v, e)) : null
     }
     if (placing.what === 'opening' && placing.module && brush?.kind === 'opening') return doorTarget(v, placing.module, brush, hover, true)
     if (placing.what === 'decor') return decorTarget(p, hover)
@@ -310,7 +308,7 @@ function textilePill(r: Exclude<TextileResult, { error: string }>): Pill {
   return { a: t.from, b: t.to, width: 'textile', text: mm(f ? f.length / 1000 : 0) }
 }
 
-const doorInvalid = (e: Module): NextOutcome => line({ hint: DOOR_IN_STAND_WALL, invalid: { seg: [e.a, e.b], width: 'wall' } })
+const doorInvalid = (v: Variant, e: Module): NextOutcome => line({ hint: doorBlocked(v, e.a, e.b), invalid: { seg: [e.a, e.b], width: 'wall' } })
 
 /**
  * Door or curtain in module e. Held (q), a door turns toward the pointer as a release stores it (placeOpening): the key
@@ -318,7 +316,7 @@ const doorInvalid = (e: Module): NextOutcome => line({ hint: DOOR_IN_STAND_WALL,
  */
 function doorTarget(v: Variant, e: Module, pen: Extract<Brush, { kind: 'opening' }>, q: P | null, held: boolean): NextTarget {
   const { product, ral, fabric } = pen
-  if (!doorAllowed(v, e.a, e.b)) return target(`door:${e.key}`, () => doorInvalid(e))
+  if (!doorAllowed(v, e.a, e.b)) return target(`door:${e.key}`, () => doorInvalid(v, e))
   const door = isDoor(product)
   const h = e.a[1] === e.b[1]
   const across = q ? (h ? q.y - e.a[1] : q.x - e.a[0]) : 0
@@ -340,7 +338,7 @@ function decorTarget(p: NextInput, q: P): NextTarget | null {
     const h = hits.faceHit(q)!
     const r = feltDecor(v, h, brush, ratioOf(p.motifs)(brush.motif))
     if ('error' in r) {
-      const f = felt(rules, h.module)
+      const f = felt(rules, h.module, feltCc(v, rules, h.w.id, h.module))
       return line({ hint: r.error, invalid: { seg: faceSegment(h.w, h.s, f.a, f.b, 0), width: 'print' } })
     }
     return line({ edit: r.v === v ? undefined : () => r.v, hint: null })

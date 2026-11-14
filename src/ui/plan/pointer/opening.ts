@@ -1,7 +1,7 @@
 // The door and curtain pen: a door or curtain in the wall module under the pointer; on an empty edge it draws its own
 // wall. A door also turns the way the pointer is dragged before release (place.ts, domain/doors.ts placeOpening).
 import type { Module } from '../../../domain/grid'
-import { doorAllowed } from '../../../domain/walls'
+import { doorBlocked } from '../../../domain/walls'
 import { placeOpening } from '../../../domain/doors'
 import { productOf } from '../../env'
 import { nearestEdge } from '../geometry'
@@ -19,7 +19,8 @@ export const isDoor = (product: string) => productOf(product)?.opening === 'door
 export function openingAt(c: PointerCtx, e: Module, q: P | null) {
   const { brush } = c
   if (brush?.kind !== 'opening') return
-  if (!doorAllowed(c.v, e.a, e.b)) return c.onToast('Dører og forheng kan ikke stå i standveggen')
+  const why = doorBlocked(c.v, e.a, e.b)
+  if (why) return c.onToast(why)
   const { product, ral, fabric } = brush
   c.onEdit((x) => placeOpening(x, e.a, e.b, product, isDoor(product), q, { ral, fabric }))
 }

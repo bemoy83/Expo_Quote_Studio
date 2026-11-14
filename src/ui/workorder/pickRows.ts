@@ -39,7 +39,7 @@ export function pickRows(res: CalcResult): PickRow[] {
               // Tape is part of laying the carpet: picked, not priced
               { key: `${l.artnr}|teip`, group: l.group, code: '', title: `Teppeteip til ${l.name.toLowerCase()}`, detail: 'omriss og skjøter', qty: `${fmt(Math.ceil(l.roll.tape), 0)} lm` },
             ]
-          : [{ key: l.artnr + l.name, group: l.group, code: l.artnr, title: l.name, qty: `${fmt(l.qty, l.unit === 'stk' ? 0 : 1)} ${l.unit}` }],
+          : [{ key: l.artnr + l.name, group: l.group, code: l.artnr, title: l.name, qty: `${fmt(l.qty, l.unit === 'stk' ? 0 : l.unit === 'lm' ? 2 : 1)} ${l.unit}` }],
       ),
     ...B.lines.map((l) => ({
       key: `${l.name}|${l.detail}`,

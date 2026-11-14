@@ -10,7 +10,7 @@ export const beamSummary = (k: Pick<KeyFigures, 'beamLengths'>) => count(k.beamL
 /** What the organiser delivers, '' when nothing: 'standvegger 10 lm i hvit og takdrager 10 m'. */
 export function fromOrganiser(k: Pick<KeyFigures, 'organiserWallLm' | 'organiserBeamLm'>, colour: string) {
   if (!k.organiserWallLm) return ''
-  return `standvegger ${fmt(k.organiserWallLm)} lm i ${colour.toLowerCase()}${k.organiserBeamLm ? ` og takdrager ${fmt(k.organiserBeamLm)} m` : ''}`
+  return `standvegger ${fmt(k.organiserWallLm, 2)} lm i ${colour.toLowerCase()}${k.organiserBeamLm ? ` og takdrager ${fmt(k.organiserBeamLm)} m` : ''}`
 }
 
 /** Work order stand line: what the exhibitor builds, then what the organiser delivers:
@@ -19,9 +19,9 @@ export function fromOrganiser(k: Pick<KeyFigures, 'organiserWallLm' | 'organiser
 export function standScope(k: Pick<KeyFigures, 'wallLm' | 'organiserWallLm' | 'beamLm' | 'organiserBeamLm'>) {
   const some = (n: number) => n > 1e-9
   const ownBeam = k.beamLm - k.organiserBeamLm
-  const own = [`${fmt(k.wallLm - k.organiserWallLm)} lm vegg`, ...(some(ownBeam) ? [`${fmt(ownBeam)} m takdrager`] : some(k.beamLm) ? [] : ['uten takdrager'])]
+  const own = [`${fmt(k.wallLm - k.organiserWallLm, 2)} lm vegg`, ...(some(ownBeam) ? [`${fmt(ownBeam)} m takdrager`] : some(k.beamLm) ? [] : ['uten takdrager'])]
   const theirs = [
-    ...(some(k.organiserWallLm) ? [`${fmt(k.organiserWallLm)} lm standvegg`] : []),
+    ...(some(k.organiserWallLm) ? [`${fmt(k.organiserWallLm, 2)} lm standvegg`] : []),
     ...(some(k.organiserBeamLm) ? [`${fmt(k.organiserBeamLm)} m takdrager`] : []),
   ]
   return [...own, ...(theirs.length ? [`fra arrangør: ${theirs.join(', ')}`] : [])].join(' · ')

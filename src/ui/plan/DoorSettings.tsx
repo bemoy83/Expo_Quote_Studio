@@ -49,7 +49,7 @@ export function DoorSettings({ v, o, w, onEdit, onRemove, onClose, children }: P
     ? `${roomName(room)} ${roomSize(room)} · ${sideName(out).toLowerCase()}`
     : isStandWall(w)
       ? 'Standvegg'
-      : `Innervegg ${fmt(wallLength(w), 0)} m`
+      : `Innervegg ${fmt(wallLength(w), 2)} m`
   const swing = isPerimeterWall(v.stand, w) ? 'inn i standen' : room ? (s === OUTSIDE ? 'ut av rommet' : 'inn i rommet') : toward(n)
 
   return (

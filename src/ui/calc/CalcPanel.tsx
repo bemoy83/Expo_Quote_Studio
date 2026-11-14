@@ -144,7 +144,7 @@ function Line({ l, onHover }: { l: CalcLine; onHover: (h: Highlight) => void }) 
         <span className="n">{l.name}</span>
         <span className="s">{kr(l.sum)}</span>
         <span className="meta">
-          {fmt(l.qty)} {l.unit} × {kr(l.price)}
+          {fmt(l.qty, l.unit === 'lm' ? 2 : 1)} {l.unit} × {kr(l.price)}
           {l.meta ? ` · ${l.meta}` : ''}
           {l.placeholder && <span className="ph"> · plassholder</span>}
         </span>

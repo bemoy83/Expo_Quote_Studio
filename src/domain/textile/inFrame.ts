@@ -6,7 +6,7 @@
 import type { Rules } from '../../rules/rules';
 import { wallHeight } from '../../rules/rules';
 import { blockedModules, faceNormal, faces, sideOf, type FaceSide } from '../faces';
-import { wallDirection, wallLength } from '../grid';
+import { moduleEnd, wallDirection, wallLength } from '../grid';
 import { nextId } from '../ids';
 import type { TextileFill, TextileWall, Variant, Wall } from '../types';
 import { builtModules } from '../walls';
@@ -74,7 +74,7 @@ export function freeSpans(v: Variant, rules: Rules, wallId: string, s: FaceSide,
   if (!w) return [];
   let spans: Span[] = [[0, wallLength(w)]];
   const { openings, foreign } = blockedModules(v, w);
-  for (const i of new Set([...openings, ...foreign])) spans = subtract(spans, [i, i + 1]);
+  for (const i of new Set([...openings, ...foreign])) spans = subtract(spans, [i, moduleEnd(w, i)]);
   for (const t of junctions(v, w, s)) spans = cut(spans, t);
   for (const t of others) spans = subtract(spans, [t.from, t.from + t.width]);
   return spans.filter(([a, b]) => b - a >= rules.textile.minWidth - EPS);

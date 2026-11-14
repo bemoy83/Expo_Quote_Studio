@@ -52,7 +52,7 @@ export function SketchBand({ variants, current, res, others, layout, fold, onSel
           { label: 'Åpne sider', value: String(k.openSides), sub: TYPE_NAME[v.stand.type] },
           {
             label: 'Vegg',
-            value: fmt(k.wallLm),
+            value: fmt(k.wallLm, 2),
             unit: 'lm',
             sub: [wallSplit(k), k.openings ? count(k.openings, 'åpning', 'åpninger') : ''].filter(Boolean).join(' · ') || undefined,
           },
@@ -80,7 +80,7 @@ function textileSub(p: CalcResult['production']) {
 /** Stand walls apart from inner and room walls, and who pays them. */
 function wallSplit(k: CalcResult['keyFigures']) {
   if (!k.standWallLm || k.standWallLm === k.wallLm) return k.organiserWallLm ? 'standvegg fra arrangør' : ''
-  return `${fmt(k.standWallLm)} standvegg${k.organiserWallLm ? ' fra arrangør' : ''} · ${fmt(k.wallLm - k.standWallLm)} inner`
+  return `${fmt(k.standWallLm, 2)} standvegg${k.organiserWallLm ? ' fra arrangør' : ''} · ${fmt(k.wallLm - k.standWallLm, 2)} inner`
 }
 
 /** Beams the organiser invoices apart from the customer's own: drawn inner beams, and the standard beams when the

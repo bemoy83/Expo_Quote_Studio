@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { RULES } from '../rules/rules';
 import { addFoil, foilCenter, foilSpan } from './decor';
 import { eraseWalls, paintWalls, splitWall } from './edit';
+import { feltBlocked } from './fittings';
+import { doorBlocked } from './walls';
 import { felt } from './faces';
 import { moduleCc, moduleCount, moduleEnd, moduleKey, wallModules } from './grid';
 import type { Variant, Wall } from './types';
@@ -61,5 +63,14 @@ describe('shorter modules (V1)', () => {
     expect(foilCenter(r.v, RULES, f)).toBeCloseTo(1.25);
     expect(f.width).toBeLessThanOrEqual(0.46 + 1e-9);
     expect(foilSpan(r.v, RULES, { ...f, full: true })).toEqual([1, 1.5]);
+  });
+
+  it('a door, curtain or shelf only in a whole module', () => {
+    const v = paintWalls(island(), [1, 2], [2.75, 2]);
+    const w = v.walls.find((x) => x.from[0] === 1)!;
+    expect(doorBlocked(v, [1, 2], [2, 2])).toBeNull();
+    expect(doorBlocked(v, [2, 2], [2.75, 2])).toBe('Dører og forheng står bare i hele moduler');
+    expect(feltBlocked(v, w.id, 0, 1, 'Hylle')).toBeNull();
+    expect(feltBlocked(v, w.id, 1, 1, 'Hylle')).toBe('Hylle står bare i hele moduler');
   });
 });

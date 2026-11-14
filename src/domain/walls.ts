@@ -153,5 +153,16 @@ export function defaultSwing(stand: Stand, w: Wall): 1 | -1 {
  * side, an empty edge on the floor or an open stand edge toward the aisle are all fine.
  */
 export function doorAllowed(v: Variant, a: Point, b: Point): boolean {
-  return !standWallKeys(v).has(moduleKey(a, b));
+  return !doorBlocked(v, a, b);
 }
+
+/** Why a door or curtain cannot stand in the module a–b, or null when it can: not in a stand wall (V6), and only in a
+ *  whole module, its leaf is 95 cm (Byggeregel V1). */
+export function doorBlocked(v: Variant, a: Point, b: Point): string | null {
+  if (standWallKeys(v).has(moduleKey(a, b))) return DOOR_IN_STAND_WALL;
+  if (Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1]) < 1 - 1e-6) return DOOR_IN_SHORT;
+  return null;
+}
+
+export const DOOR_IN_STAND_WALL = 'Dører og forheng kan ikke stå i standveggen';
+export const DOOR_IN_SHORT = 'Dører og forheng står bare i hele moduler';
