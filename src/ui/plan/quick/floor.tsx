@@ -41,42 +41,42 @@ function FloorSizes({ p }: { p: QuickPicksProps }) {
 
 export function FloorPicks({ p, head, more, is }: QuickCtx) {
   const { brush, onPick } = p
-  const rollBrush = brush?.kind === 'floor' && !!idx.byArtnr.get(brush.product)?.product.roll
-    const cur = brush?.kind === 'floor' ? idx.byArtnr.get(brush.product)?.product : undefined
-    const picks = p.picks.floor ?? {}
-    const floors = catalog.products.filter((x) => mainGroupOf(x.group) === 'gulv' && x.kind === 'surface')
-    return (
-      <>
-        {head}
-        {floors.map((x) => {
-          // The colour last in hand for this floor type, else its first
-          const last = picks[x.id] && x.variants.find((v) => v.artnr === picks[x.id])
-          const v = cur?.id === x.id && brush?.kind === 'floor' ? x.variants.find((y) => y.artnr === brush.product)! : (last || x.variants[0])
-          return (
-            <QBtn key={x.id} on={cur?.id === x.id} title={`${x.name} · ${x.dim ?? 'dra et område'}`} label={shortName(x)} onClick={() => onPick({ kind: 'floor', product: v.artnr })}>
-              <i className="q-floor" style={{ background: v.color }} />
-              {shortName(x)}
-            </QBtn>
-          )
+  const cur = brush?.kind === 'floor' ? idx.byArtnr.get(brush.product)?.product : undefined
+  const rollBrush = !!cur?.roll
+  const picks = p.picks.floor ?? {}
+  const floors = catalog.products.filter((x) => mainGroupOf(x.group) === 'gulv' && x.kind === 'surface')
+  return (
+    <>
+      {head}
+      {floors.map((x) => {
+        // The colour last in hand for this floor type, else its first
+        const last = picks[x.id] && x.variants.find((v) => v.artnr === picks[x.id])
+        const v = cur?.id === x.id && brush?.kind === 'floor' ? x.variants.find((y) => y.artnr === brush.product)! : (last || x.variants[0])
+        return (
+          <QBtn key={x.id} on={cur?.id === x.id} title={`${x.name} · ${x.dim ?? 'dra et område'}`} label={shortName(x)} onClick={() => onPick({ kind: 'floor', product: v.artnr })}>
+            <i className="q-floor" style={{ background: v.color }} />
+            {shortName(x)}
+          </QBtn>
+        )
+      })}
+      <Sep />
+      <Palette
+        swatches={(cur?.variants ?? []).slice(0, MAX).map((x) => {
+          const b: Brush = { kind: 'floor', product: x.artnr }
+          return { key: x.artnr, color: x.color, title: `${cur!.name} ${x.name.toLowerCase()} · ${x.artnr}`, on: is(b), onClick: () => onPick(b) }
         })}
-        <Sep />
-        <Palette
-          swatches={(cur?.variants ?? []).slice(0, MAX).map((x) => {
-            const b: Brush = { kind: 'floor', product: x.artnr }
-            return { key: x.artnr, color: x.color, title: `${cur!.name} ${x.name.toLowerCase()} · ${x.artnr}`, on: is(b), onClick: () => onPick(b) }
-          })}
-          fill="Fyll hele standen med denne fargen"
-          onFill={p.onFill}
-        />
-        {/* Tilpasset: the tile size; engangsteppe has one brush, the engine lays the lanes */}
-        {!rollBrush && (
-          <>
-            <Sep />
-            <FloorSizes p={p} />
-          </>
-        )}
-        <Sep />
-        {more}
-      </>
-    )
+        fill="Fyll hele standen med denne fargen"
+        onFill={p.onFill}
+      />
+      {/* Tilpasset: the tile size; engangsteppe has one brush, the engine lays the lanes */}
+      {!rollBrush && (
+        <>
+          <Sep />
+          <FloorSizes p={p} />
+        </>
+      )}
+      <Sep />
+      {more}
+    </>
+  )
 }

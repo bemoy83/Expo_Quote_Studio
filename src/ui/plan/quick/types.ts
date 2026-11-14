@@ -5,8 +5,7 @@ import type { FloorBrushSize } from '../../../domain/floor/brush'
 import type { TileSize } from '../../../domain/floor/tiles'
 import type { GridStep } from '../../../domain/snapGrid'
 import type { Motif } from '../../../domain/types'
-import type { PenPicks } from '../../podiumPen'
-import type { Brush, DockTool, PenTool } from '../../tools'
+import type { Brush, DockTool, PenPicks, PenTool } from '../../tools'
 
 export interface QuickPicksProps {
   tool: DockTool

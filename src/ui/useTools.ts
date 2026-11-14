@@ -7,15 +7,10 @@ import { TILE_FULL, type TileSize } from '../domain/floor/tiles'
 import type { GridStep } from '../domain/snapGrid'
 import type { Motif, Variant } from '../domain/types'
 import { COUNTER_STOCK_RAL } from '../domain/objects'
-import { stockByArtnr, stockSize } from '../domain/podiumStock'
-import { HEIGHT } from '../domain/podiums'
-import { artnrName, builtOf, catalog, idx, isCounter } from './env'
-import { funcOf, type PenPicks } from './podiumPen'
-import { wallPicksOf } from './wallPen'
-import { furniturePicksOf } from './furniturePen'
+import { builtOf, catalog, idx, isCounter } from './env'
+import { penName } from './penName'
+import { rememberPick, type ToolPicks } from './pens'
 import { isProfilePen, withMotif } from './profilePen'
-import { kr } from './format'
-import { findMotif } from './motifs'
 import { dockToolOf, FLOOR_OTHER, penToolOf, type Brush, type DockTool, type PenTool, type Tool } from './tools'
 
 interface ToolsInput {
@@ -43,7 +38,7 @@ export function useTools({ v, res, motifs, onPick, onErase }: ToolsInput) {
   const [podiumRal, setPodiumRal] = useState<string>(COUNTER_STOCK_RAL)
   /** The item behind each function of each pen: the one last put in hand for it, from the quick picks or the catalog
    *  (Bjørn 14.11.2026): Disker og podier per function, Vegg the opening behind Dør and its leaf colour (wallPen.ts). */
-  const [picks, setPicks] = useState<Partial<Record<PenTool, PenPicks>>>({})
+  const [picks, setPicks] = useState<ToolPicks>({})
 
   const rollBrush = brush?.kind === 'floor' && !!idx.byArtnr.get(brush.product)?.product.roll
   const wallRal = wallPen ?? v.defaultPlate
@@ -58,16 +53,7 @@ export function useTools({ v, res, motifs, onPick, onErase }: ToolsInput) {
     setPens((p) => ({ ...p, [penToolOf(b)]: b }))
     if (b.kind === 'wall') setWallPen(b.ral)
     if (b.kind === 'podium') setPodiumRal(b.ral)
-    const func = b.kind === 'podium' ? funcOf(b) : undefined
-    if (func && b.kind === 'podium') setPicks((p) => ({ ...p, podium: { ...p.podium, [func]: b.stock } }))
-    if (b.kind === 'opening') setPicks((p) => ({ ...p, wall: wallPicksOf(b) }))
-    // Gulv: the colour last in hand behind each floor type (Bjørn 14.11.2026)
-    const floorType = b.kind === 'floor' ? idx.byArtnr.get(b.product)?.product.id : undefined
-    if (b.kind === 'floor' && floorType) setPicks((p) => ({ ...p, floor: { ...p.floor, [floorType]: b.product } }))
-    // Profilering: the graphics last in hand, shared by its pens
-    if (isProfilePen(b) && b.motif) setPicks((p) => ({ ...p, profile: { motif: b.motif } }))
-    const single = furniturePicksOf(b, catalog.products)
-    if (single) setPicks((p) => ({ ...p, object: single }))
+    setPicks((p) => rememberPick(p, b, catalog.products))
     setTool(t)
     onPick()
   }
@@ -97,29 +83,8 @@ export function useTools({ v, res, motifs, onPick, onErase }: ToolsInput) {
     pick(penFor(t))
   }
 
-  /** Name of what the pen draws, and a short line under it for the quick picks. */
-  const describeBrush = (): { name: string; meta?: string } => {
-    const b = brush
-    if (!b) return { name: 'Pensel' }
-    if (b.kind === 'wall') return { name: 'Innervegg', meta: `RAL ${b.ral}` }
-    // Profilering: the product of the pen in hand, and the graphics on it (Bjørn 14.11.2026)
-    const motifName = (id: string | undefined) => (id ? (findMotif(motifs, id)?.name ?? 'Motiv') : undefined)
-    if (b.kind === 'textile') return { name: artnrName(catalog.system.textileFill.print), meta: motifName(b.motif) ?? 'uten motiv · vegg eller fritt' }
-    if (b.kind === 'beam') return { name: 'Takdrager', meta: 'innvendig' }
-    if (b.kind === 'shelf') return { name: artnrName(catalog.system.shelf), meta: `${kr(idx.byArtnr.get(catalog.system.shelf)?.variant.price ?? 0)} kr` }
-    if (b.kind === 'motif') return { name: artnrName(b.pen === 'print' ? catalog.system.foilFull : catalog.system.foil), meta: motifName(b.motif) }
-    const r = idx.byArtnr.get(b.product)
-    if (b.kind === 'podium') {
-      // The item in hand and its size, or «Fri fasong» with what a click sets (Bjørn 14.11.2026)
-      const s = b.stock ? stockByArtnr(b.stock) : undefined
-      if (!s) return { name: 'Fri fasong', meta: `RAL ${b.ral} · høyde ${b.h ?? HEIGHT}` }
-      const z = stockSize(s)
-      return { name: artnrName(s.artnr), meta: `${kr(z.length)} × ${kr(z.depth)}` }
-    }
-    if (r?.product.set) return { name: r.product.name, meta: `${r.product.set.length} deler · ${kr(r.variant.price)} kr` }
-    const name = artnrName(b.product)
-    return { name, meta: r ? `${kr(r.variant.price)} kr${b.kind === 'floor' ? '/m²' : ''}` : undefined }
-  }
+  /** Name of what the pen draws, and a short line under it for the quick picks (penName.ts). */
+  const describeBrush = () => penName(brush, motifs)
 
   return {
     tool,
