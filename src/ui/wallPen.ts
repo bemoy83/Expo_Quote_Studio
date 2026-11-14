@@ -50,7 +50,7 @@ export function penColour(b: WallPen, products: readonly Product[], standRal: st
 
 /** A colour picked on the pill: on the item in hand, never another pen. `ral` for a wall or door leaf, else a fabric. */
 export function withColour(b: WallPen, c: { ral: string } | { fabric: string }): WallPen {
-  if (b.kind === 'wall') return 'ral' in c ? { kind: 'wall', ral: c.ral } : b
+  if (b.kind === 'wall') return 'ral' in c ? { ...b, ral: c.ral } : b
   if (b.kind === 'opening') return { ...b, ...c }
   return b
 }

@@ -1,7 +1,7 @@
 // Editing operations on a variant. All pure: they return a new variant and never mutate.
 // Byggeregel V7 (docs/byggeregler.md).
 import { clipTiles } from './floor/edit';
-import { pointAlong, runs, moduleCount, moduleEnd, wallModules } from './grid';
+import { pointAlong, runs, moduleCount, moduleEnd, uncoveredRuns, wallModules } from './grid';
 import { nextId } from './ids';
 import type { Point, Stand, Variant, Wall } from './types';
 import { addRoomGaps, clampRooms, roomOf, syncRooms } from './rooms';
@@ -14,18 +14,14 @@ import { replaceWalls } from './replaceWalls';
  * stand type (a gap someone erased), the wall is a stand wall again; anywhere else it is an inner wall.
  */
 export function paintWalls(v: Variant, a: Point, b: Point, plate?: string): Variant {
-  const existing = new Set(builtModules(v).map((m) => m.key));
-  const seg: Wall = { id: '', from: a, to: b };
-  const n = moduleCount(seg);
-  if (!n) return v;
-  const mods = wallModules(seg);
-  // A straight stroke lies on one stand side or none
-  const side = closedSideAt(v.stand, mods[0].a, mods[0].b);
   const ids = v.walls.map((w) => w.id);
   const added: Wall[] = [];
-  for (const [i, e] of runs(n, (t) => !existing.has(mods[t].key))) {
+  for (const [from, to] of uncoveredRuns(builtModules(v), a, b)) {
+    // A straight stroke lies on one stand side or none
+    const first = wallModules({ id: '', from, to })[0];
+    const side = closedSideAt(v.stand, first.a, first.b);
     const id = nextId([...ids, ...added.map((w) => w.id)], side ? `side-${side}-` : 'w');
-    added.push({ id, from: pointAlong(seg, i), to: pointAlong(seg, moduleEnd(seg, e - 1)), ...ownPlate(v, plate) });
+    added.push({ id, from, to, ...ownPlate(v, plate) });
   }
   return added.length ? { ...v, walls: [...v.walls, ...added] } : v;
 }

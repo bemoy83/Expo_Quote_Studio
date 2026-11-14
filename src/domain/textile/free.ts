@@ -8,7 +8,7 @@
 import type { Rules } from '../../rules/rules';
 import type { FreeTextile, Point, TextileFace, Variant } from '../types';
 import { nextId } from '../ids';
-import { gridStroke, snapTo } from '../snapGrid';
+import { gridStroke, snapTo, strokeStep } from '../snapGrid';
 import { builtModules } from '../walls';
 
 /** Face A is side 1 (left normal of from → to), face B side −1. */
@@ -33,9 +33,11 @@ export function runNormal(t: Pick<FreeTextile, 'from' | 'to'>, face: FaceKey): P
 
 const isHorizontal = (t: Pick<FreeTextile, 'from' | 'to'>) => Math.abs(t.from[1] - t.to[1]) < EPS;
 
-/** A stroke from p0 to p on the drawing grid (domain/snapGrid): from a node of the elevation grid, in cells of `step`. */
-export function freeStroke(v: Variant, rules: Rules, p0: { x: number; y: number }, p: { x: number; y: number }, step = rules.textile.grid): [Point, Point] {
-  return gridStroke(v.stand, rules.textile.grid, step, p0, p);
+/** A stroke from p0 to p on the drawing grid (domain/snapGrid), as the wall pen: from a metre node in 1 m cells, or with
+ *  Shift or «Fin» from a 250 node in 250 cells (Bjørn 14.11.2026). */
+export function freeStroke(v: Variant, p0: { x: number; y: number }, p: { x: number; y: number }, fine = false): [Point, Point] {
+  const step = strokeStep(fine);
+  return gridStroke(v.stand, step, step, p0, p);
 }
 
 /** Along-axis interval of a run, low to high, and the fixed coordinate. */

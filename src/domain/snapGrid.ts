@@ -1,13 +1,7 @@
-// Drawing grid shared by the brushes that draw straight runs: Foga system walls and free-standing textile walls.
-// The elevation grid has cells of 25, 50, 75 and 100 cm (Bjørn 31.10.2026). A stroke starts on a grid node and grows
-// along the axis it is dragged most, one whole cell at a time, and stays inside the stand.
+// Drawing grid shared by the brushes that draw straight runs: Foga system walls and free-standing textile walls. One
+// drawing language with Disker og podier (Bjørn 14.11.2026): 1 m from the metre grid, 250 with Shift or «Fin». A stroke
+// starts on a grid node and grows along the axis it is dragged most, one whole cell at a time, and stays inside the stand.
 import type { Point } from './types';
-
-/** Cell sizes the brush can draw with, m. */
-export const GRID_STEPS = [0.25, 0.5, 0.75, 1] as const;
-export type GridStep = (typeof GRID_STEPS)[number];
-
-export const GRID_LABEL: Record<GridStep, string> = { 0.25: '25 cm', 0.5: '50 cm', 0.75: '75 cm', 1: '1 m' };
 
 export interface Bounds {
   width: number;
@@ -46,4 +40,23 @@ export function gridStroke(b: Bounds, base: number, step: number, p0: { x: numbe
   const cl = (x: number, hi: number) => tidy(Math.max(0, Math.min(hi, snapTo(x, base))));
   const a: Point = [cl(p0.x, b.width), cl(p0.y, b.depth)];
   return alongX(p0, p) ? [a, [cellsTo(a[0], p.x, step, b.width), a[1]]] : [a, [a[0], cellsTo(a[1], p.y, step, b.depth)]];
+}
+
+/** Shift or «Fin» (Bjørn 14.11.2026): wall and textile pens draw in 250 steps from a 250 node, else 1 m from the metre grid. */
+export const FINE_STEP = 0.25;
+export const strokeStep = (fine: boolean) => (fine ? FINE_STEP : 1);
+
+/**
+ * A stroke going on from `s` after Shift was pressed or let go (as K10): what is drawn stays, and the end goes on from
+ * where it was, along the same axis, in cells of `step` toward the pointer. It never turns back past the start.
+ */
+export function continueStroke(b: Bounds, s: [Point, Point], step: number, p: { x: number; y: number }): [Point, Point] {
+  const [a, e] = s;
+  const i = Math.abs(a[1] - e[1]) < EPS ? 0 : 1;
+  const max = i === 0 ? b.width : b.depth;
+  const dir = Math.sign(e[i] - a[i]) || 1;
+  let end = cellsTo(e[i], i === 0 ? p.x : p.y, step, max);
+  if ((end - a[i]) * dir < EPS) end = e[i] - Math.floor(((e[i] - a[i]) * dir - EPS) / step) * step * dir;
+  const out: Point = i === 0 ? [tidy(end), e[1]] : [e[0], tidy(end)];
+  return [a, out];
 }

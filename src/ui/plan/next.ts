@@ -10,7 +10,7 @@ import { faceSegment, felt, feltCc, sideOf, type FaceSide } from '../../domain/f
 import { applyFloor } from '../../domain/floor/brush'
 import { carpetClick, fillCarpet } from '../../domain/floor/rollFill'
 import { tileAt, type Rect } from '../../domain/floor/tiles'
-import { wallModules, type Module } from '../../domain/grid'
+import { uncoveredRuns, wallModules, type Module } from '../../domain/grid'
 import { drawInnerBeam, type Run } from '../../domain/innerBeams'
 import { addObject, placeSet, footprintBox, objectBoxes, objectFootprint } from '../../domain/objects'
 import { NO_ROOM, podiumGrab, podiumHeights, type PodiumDraw } from '../../domain/podiums'
@@ -115,9 +115,15 @@ const target = (key: string, outcome: () => NextOutcome): NextTarget => ({ key, 
 
 /** The modules of the stroke a→b that are not built yet: a stroke over walls that exist only adds the rest. */
 function newModules(v: Variant, a: Point, b: Point): Module[] {
-  if (Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1]) < 1e-6) return []
-  const built = new Set(builtModules(v).map((m) => m.key))
-  return wallModules({ id: '', from: a, to: b }).filter((m) => !built.has(m.key))
+  return uncoveredRuns(builtModules(v), a, b).flatMap(([from, to]) => wallModules({ id: '', from, to }))
+}
+
+/** How a stroke is laid (Byggeregel V1): «3 moduler», or with a shorter one «2 × 1000 + 750». */
+function moduleSplit(mods: Module[]): string {
+  const whole = mods.filter((m) => m.cc > 1 - 1e-6).length
+  const rest = mods.filter((m) => m.cc <= 1 - 1e-6).map((m) => mm(m.cc))
+  if (!rest.length) return `${whole} ${whole === 1 ? 'modul' : 'moduler'}`
+  return [whole > 1 ? `${whole} × 1000` : whole ? '1000' : '', ...rest].filter(Boolean).join(' + ')
 }
 
 /** The target of the pen in hand and what a click or release there stores; null when there is nothing to show. */
@@ -162,7 +168,7 @@ function targetOf(p: NextInput): NextTarget | null {
       return target(`wall:${pt(a)}:${pt(b)}:${pressed}`, () => {
         const mods = newModules(v, a, b)
         if (!mods.length) return area({ hint: pressed ? 'Veggen finnes allerede' : null })
-        const text = `${mm(mods.reduce((s, m) => s + m.cc, 0))} · ${mods.length} ${mods.length === 1 ? 'modul' : 'moduler'}`
+        const text = `${mm(mods.reduce((s, m) => s + m.cc, 0))} · ${moduleSplit(mods)}`
         return area({ edit: (x) => paintWalls(x, a, b, wallRal), hint: null, pill: pressed ? { a, b, width: 'wall', text } : undefined })
       })
     }

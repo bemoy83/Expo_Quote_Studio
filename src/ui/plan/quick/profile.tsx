@@ -1,16 +1,14 @@
 // Profilering by product (Bjørn 14.11.2026): Pensel is Tekstil, Print and Dekal, each its own pen, named from the
-// product list; Farge is the graphics they share: the newest motifs and upload, on the pen in hand; Tilpasset the
-// drawing grid of Tekstil.
+// product list; Farge is the graphics they share: the newest motifs and upload, on the pen in hand; Tilpasset «Fin» for
+// Tekstil (250 steps, as Shift).
 import { Image, Sticker, Upload } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { shortName } from '../../../catalog/lookup'
 import { ImageInput } from '../../controls'
-import { catalog, productOf, rules } from '../../env'
+import { catalog, productOf } from '../../env'
 import { isProfilePen, motifOn, profileKind, profilePen, withMotif, type ProfileKind } from '../../profilePen'
-import { gridSteps } from '../../tools'
-import { GridPicker } from '../GridPicker'
 import { MOTIFS } from './limits'
-import { QBtn, Sep } from './parts'
+import { FinBtn, QBtn, Sep } from './parts'
 import type { QuickCtx } from './types'
 
 const PENS: { kind: ProfileKind; artnr: () => string; title: string }[] = [
@@ -57,13 +55,14 @@ export function ProfilePicks({ p, head, more }: QuickCtx) {
         <Upload size={15} />
         <ImageInput onFile={p.onUpload} />
       </label>
-      {/* Tilpasset: the drawing grid, only Tekstil has one */}
-      {cur?.kind === 'textile' && (
-        <>
-          <Sep />
-          <GridPicker value={p.gridStep} allowed={gridSteps(cur, rules)} onChange={p.onGridStep} />
-        </>
-      )}
+      {/* Tilpasset: «Fin» for Tekstil (250 steps, as Shift and the wall pen); Print and Dekal are clicked on a felt */}
+      <Sep />
+      <FinBtn
+        on={cur?.kind === 'textile' && !!cur.fine}
+        off={cur?.kind === 'textile' ? undefined : 'Fin · gjelder bare Tekstil'}
+        title={cur?.kind === 'textile' && cur.fine ? 'Fin · 250-steg fra en 250-node · trykk for hele meter igjen' : 'Fin · tegn tekstilvegg i 250-steg fra en 250-node · på desktop også Shift'}
+        onClick={() => cur?.kind === 'textile' && onPick({ ...cur, fine: !cur.fine })}
+      />
       {more}
     </>
   )
