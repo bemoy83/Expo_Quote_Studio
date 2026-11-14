@@ -13,6 +13,7 @@ import { artnrName, builtOf, catalog, idx, isCounter } from './env'
 import { funcOf, type PenPicks } from './podiumPen'
 import { wallPicksOf } from './wallPen'
 import { furniturePicksOf } from './furniturePen'
+import { isProfilePen, withMotif } from './profilePen'
 import { kr } from './format'
 import { findMotif } from './motifs'
 import { dockToolOf, FLOOR_OTHER, penToolOf, type Brush, type DockTool, type PenTool, type Tool } from './tools'
@@ -50,7 +51,9 @@ export function useTools({ v, res, motifs, onPick, onErase }: ToolsInput) {
   const floorPen = pens.floor ?? (brush?.kind === 'floor' ? brush : null)
 
   /** Choosing a brush always goes to the plan; the brushes draw there. */
-  const pick = (b: Brush, t: Tool = 'brush') => {
+  const pick = (asked: Brush, t: Tool = 'brush') => {
+    // A motif asked for without its pen (panel, upload) goes on the pen of Profilering (Bjørn 14.11.2026)
+    const b: Brush = asked.kind === 'motif' && !asked.pen ? withMotif(isProfilePen(brush) ? brush : isProfilePen(pens.profile) ? pens.profile : null, asked.motif) : asked
     setBrush(b)
     setPens((p) => ({ ...p, [penToolOf(b)]: b }))
     if (b.kind === 'wall') setWallPen(b.ral)
@@ -61,6 +64,8 @@ export function useTools({ v, res, motifs, onPick, onErase }: ToolsInput) {
     // Gulv: the colour last in hand behind each floor type (Bjørn 14.11.2026)
     const floorType = b.kind === 'floor' ? idx.byArtnr.get(b.product)?.product.id : undefined
     if (b.kind === 'floor' && floorType) setPicks((p) => ({ ...p, floor: { ...p.floor, [floorType]: b.product } }))
+    // Profilering: the graphics last in hand, shared by its pens
+    if (isProfilePen(b) && b.motif) setPicks((p) => ({ ...p, profile: { motif: b.motif } }))
     const single = furniturePicksOf(b, catalog.products)
     if (single) setPicks((p) => ({ ...p, object: single }))
     setTool(t)
@@ -97,10 +102,12 @@ export function useTools({ v, res, motifs, onPick, onErase }: ToolsInput) {
     const b = brush
     if (!b) return { name: 'Pensel' }
     if (b.kind === 'wall') return { name: 'Innervegg', meta: `RAL ${b.ral}` }
-    if (b.kind === 'textile') return { name: 'Tekstilvegg', meta: 'vegg eller fritt' }
+    // Profilering: the product of the pen in hand, and the graphics on it (Bjørn 14.11.2026)
+    const motifName = (id: string | undefined) => (id ? (findMotif(motifs, id)?.name ?? 'Motiv') : undefined)
+    if (b.kind === 'textile') return { name: artnrName(catalog.system.textileFill.print), meta: motifName(b.motif) ?? 'uten motiv · vegg eller fritt' }
     if (b.kind === 'beam') return { name: 'Takdrager', meta: 'innvendig' }
-    if (b.kind === 'shelf') return { name: 'Hylle', meta: `${kr(idx.byArtnr.get(catalog.system.shelf)?.variant.price ?? 0)} kr` }
-    if (b.kind === 'motif') return { name: findMotif(motifs, b.motif)?.name ?? 'Motiv', meta: 'trykk eller folie' }
+    if (b.kind === 'shelf') return { name: artnrName(catalog.system.shelf), meta: `${kr(idx.byArtnr.get(catalog.system.shelf)?.variant.price ?? 0)} kr` }
+    if (b.kind === 'motif') return { name: artnrName(b.pen === 'print' ? catalog.system.foilFull : catalog.system.foil), meta: motifName(b.motif) }
     const r = idx.byArtnr.get(b.product)
     if (b.kind === 'podium') {
       // The item in hand and its size, or «Fri fasong» with what a click sets (Bjørn 14.11.2026)

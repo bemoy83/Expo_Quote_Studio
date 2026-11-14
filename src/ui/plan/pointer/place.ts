@@ -23,7 +23,7 @@ export function placeKey(c: Pick<PointerCtx, 'v' | 'hits' | 'brush'>, what: Plac
   const { v, hits, brush } = c
   if (what === 'opening') return openingEdge(c, q)?.key ?? 'none'
   if (what === 'decor') {
-    const ft = brush?.kind === 'motif' ? freeTextileAt(v, q, 0.15) : undefined
+    const ft = freeTextileAt(v, q, 0.15)
     if (ft) return `ft:${ft.id}:${faceOfPoint(ft, q)}`
     const h = hits.faceHit(q)
     if (!h) return 'none'

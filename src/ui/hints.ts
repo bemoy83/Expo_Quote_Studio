@@ -52,10 +52,12 @@ export function hint(tool: Tool, brush: Brush | null, carpet = false): Hint {
     case 'textile':
       return h(
         'Dra langs en vegg, eller fritt for frittstående',
-        'Dra langs en systemvegg for tekstilvegg på veggen, eller dra fritt for frittstående på fotplater · klikk ved en vegg for å fylle den · én rute av gangen, velg rutestørrelse over verktøyene · start der en frittstående slutter for hjørne',
+        'Dra langs en systemvegg for tekstilvegg på veggen, eller dra fritt for frittstående på fotplater · klikk ved en vegg for å fylle den · én rute av gangen, velg rutestørrelse over verktøyene · start der en frittstående slutter for hjørne · motivet i pillen trykkes på tekstilen, og et klikk på en tekstilvegg gir den motivet',
       )
     case 'motif':
-      return h('Klikk en tekstilvegg eller et veggfelt', 'Klikk en tekstilvegg for trykk, eller et veggfelt for foliedekor')
+      return brush?.kind === 'motif' && brush.pen === 'print'
+        ? h('Klikk et veggfelt for print', 'Klikk et veggfelt for å printe hele feltet med motivet · samme motiv igjen gjør ingenting · tekstilvegger trykkes med Tekstil')
+        : h('Klikk et veggfelt for dekal', 'Klikk et veggfelt for en dekal med motivet · velg dekalen for å flytte eller endre størrelse · tekstilvegger trykkes med Tekstil')
     case 'podium':
       // K22: a click places the item behind the function in hand, named, never by art.nr (Bjørn 14.11.2026)
       if (brush?.kind === 'podium' && brush.stock) {

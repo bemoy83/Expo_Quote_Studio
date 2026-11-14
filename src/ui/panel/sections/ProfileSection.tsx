@@ -8,6 +8,7 @@ import { decorSource } from '../../dnd'
 import { catalog, productOf, rules } from '../../env'
 import { count, fmt, kr } from '../../format'
 import { findMotif, SAMPLE_MOTIFS } from '../../motifs'
+import { motifOn } from '../../profilePen'
 import { penOn } from '../../tools'
 import { ProductRow } from '../ProductRow'
 import type { RailProps } from '../Rail'
@@ -80,7 +81,7 @@ export function ProfileSection({ v, res, brush, tool, pick, motifs, onUpload, on
       <ImageInput ref={file} onFile={onUpload} />
       <div className="gfx-grid">
         {motifs.map((m) => {
-          const on = penOn(tool, brush, 'motif', m.id)
+          const on = tool !== 'select' && motifOn(brush, m.id)
           return (
             <button
               key={m.id}

@@ -4,7 +4,6 @@
 // The key changes only when the target does (edge, module, cell, tile, spot), so the next variant and its calc are
 // worked out again only then.
 import { freeFrames } from '../../calc/textile/free'
-import { addFoil } from '../../domain/decor'
 import { DOOR_AIM_MIN, placeOpening } from '../../domain/doors'
 import { paintWalls } from '../../domain/edit'
 import { faceSegment, felt, sideOf, type FaceSide } from '../../domain/faces'
@@ -19,8 +18,6 @@ import { podiumGrips, type PodiumGripDraw } from '../../domain/podiumGrips'
 import { fusePodiums } from '../../domain/podiumLinks'
 import { addShelf, addShelfRow, penHeight } from '../../domain/shelves/edit'
 import { drawTextile, fillFace, type TextileResult } from '../../domain/textile/brush'
-import { faceOfPoint, freeTextileAt, updateFace } from '../../domain/textile/free'
-import { textileAt, updateTextile } from '../../domain/textile/inFrame'
 import type { Motif, PlacedObject, Point, Variant } from '../../domain/types'
 import { builtModules, doorAllowed, type BuiltModule } from '../../domain/walls'
 import { RECIPES } from '../../foga/recipes'
@@ -33,7 +30,8 @@ import type { FaceHit, TextileLine } from './layers/Previews'
 import type { Box } from './nextArea'
 import type { PlanScale } from './planScale'
 import { beamBody, PHANTOM, printBand, textileWidth, wallWidth } from './planStyle'
-import { ratioOf } from './pointer/decor'
+import { feltDecor, printTextile, ratioOf, TEXTILE_NOT, textileUnder } from './pointer/decor'
+import { withPenMotif } from './pointer/textile'
 import type { FloorBrush } from './pointer/floorBrush'
 import type { PlanHits } from './pointer/hits'
 import { isDoor, openingEdge } from './pointer/opening'
@@ -188,9 +186,12 @@ function targetOf(p: NextInput): NextTarget | null {
     const { a, b, at } = p.textileStroke
     const click = a[0] === b[0] && a[1] === b[1]
     const face = click ? hits.faceHit(at) : null
+    const motif = brush?.kind === 'textile' ? brush.motif : undefined
+    const u = click && motif ? textileUnder(v, hits, at) : null
+    if (u && motif) return target(`held:print:${JSON.stringify(u)}:${motif}`, () => area({ edit: (x) => printTextile(x, u, motif), hint: null }))
     if (click && !face) return null
-    return target(click ? `held:${faceKey(face!)}` : `tline:${pt(a)}:${pt(b)}`, () => {
-      const r = face ? fillFace(v, rules, face.w.id, face.s, face.t) : drawTextile(v, rules, a, b, at)
+    return target(click ? `held:${faceKey(face!)}:${motif ?? ''}` : `tline:${pt(a)}:${pt(b)}:${motif ?? ''}`, () => {
+      const r = withPenMotif(face ? fillFace(v, rules, face.w.id, face.s, face.t) : drawTextile(v, rules, a, b, at), motif)
       if ('error' in r) return area({ hint: r.error, invalid: click ? undefined : { seg: [a, b], width: 'textile' } })
       return area({ edit: () => r.v, hint: null, pill: textilePill(r) })
     })
@@ -259,11 +260,14 @@ function targetOf(p: NextInput): NextTarget | null {
     return strokeTarget(e.a, e.b, false)
   }
   if (pens.textileTool) {
-    // The same face a click finds (pointer/textile.ts)
+    // The same as a click (pointer/textile.ts): a textile under it printed with the pen's motif, else the face filled
+    const motif = brush?.kind === 'textile' ? brush.motif : undefined
+    const u = motif ? textileUnder(v, hits, hover) : null
+    if (u && motif) return target(`print:${JSON.stringify(u)}:${motif}`, () => area({ edit: (x) => printTextile(x, u, motif), hint: null }))
     const face = hits.faceHit(hover)
     if (!face) return null
-    return target(faceKey(face), () => {
-      const r = fillFace(v, rules, face.w.id, face.s, face.t)
+    return target(`${faceKey(face)}:${motif ?? ''}`, () => {
+      const r = withPenMotif(fillFace(v, rules, face.w.id, face.s, face.t), motif)
       return 'error' in r ? area({ hint: r.error }) : area({ edit: () => r.v, hint: null })
     })
   }
@@ -325,28 +329,21 @@ function doorTarget(v: Variant, e: Module, pen: Extract<Brush, { kind: 'opening'
   )
 }
 
-/** Motif: print on the textile at q, or a decal on the wall panel; hatched where foil cannot go. */
+/** Print or Dekal on the wall felt at q; hatched where it cannot go, a textile wall says to use Tekstil. */
 function decorTarget(p: NextInput, q: P): NextTarget | null {
   const { v, brush, hits } = p
   if (brush?.kind !== 'motif') return null
   const key = placeKey({ v, hits, brush }, 'decor', q)
   if (key === 'none') return null
-  const motif = brush.motif
-  return target(`decor:${key}:${motif}`, () => {
-    const ft = freeTextileAt(v, q, 0.15)
-    if (ft) {
-      const face = faceOfPoint(ft, q)
-      return line({ edit: (x) => updateFace(x, ft.id, face, { motif }), hint: null })
-    }
+  return target(`decor:${key}:${brush.motif}:${brush.pen ?? ''}`, () => {
+    if (key.startsWith('ft:')) return line({ hint: TEXTILE_NOT })
     const h = hits.faceHit(q)!
-    const tx = textileAt(v, h.w.id, h.s, h.t)
-    if (tx) return line({ edit: (x) => updateTextile(x, rules, tx.id, { motif }), hint: null })
-    const r = addFoil(v, rules, h.w.id, h.module, h.s, motif, ratioOf(p.motifs)(motif))
+    const r = feltDecor(v, h, brush, ratioOf(p.motifs)(brush.motif))
     if ('error' in r) {
       const f = felt(rules, h.module)
       return line({ hint: r.error, invalid: { seg: faceSegment(h.w, h.s, f.a, f.b, 0), width: 'print' } })
     }
-    return line({ edit: () => r.v, hint: null })
+    return line({ edit: r.v === v ? undefined : () => r.v, hint: null })
   })
 }
 
