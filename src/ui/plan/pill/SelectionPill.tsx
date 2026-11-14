@@ -80,7 +80,7 @@ function content(p: PillActions, second: SecondFace): Content | null {
     case 'lane':
       return lanePill(p, c, del)
     case 'room':
-      return roomPill(c, del)
+      return roomPill(p, c, del)
     case 'beam':
       return beamPill(p, c, del)
     case 'object':

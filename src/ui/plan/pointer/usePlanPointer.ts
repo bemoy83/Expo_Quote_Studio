@@ -149,6 +149,8 @@ export function usePlanPointer(input: PlanPointerInput) {
     if (d?.kind === 'shelfMove') d.copy = e.altKey
     // Shift held (or «Fin» on in the pill): a drawn takdrager moves across in 50 mm steps, off the 1 m grid (Byggeregel T15)
     if (d?.kind === 'beam') d.fine = e.shiftKey || !!d.fineLock
+    // Shift held (or «Fin» on in the pill): a room moves and stretches in 250 (Byggeregel R5)
+    if (d?.kind === 'room') d.fine = e.shiftKey || !!d.fineLock
     if (d?.kind === 'podiumGrip') d.fine = e.shiftKey || penFine(brush)
     if (d) drag.current = d
     // Held without moving counts as dragging too, so the hover preview stops while pressed
@@ -161,7 +163,7 @@ export function usePlanPointer(input: PlanPointerInput) {
     const d = drag.current
     setDragging(d)
     if (!d) return
-    if (d.kind === 'beam') d.fine = e.shiftKey || !!d.fineLock
+    if (d.kind === 'beam' || d.kind === 'room') d.fine = e.shiftKey || !!d.fineLock
     if (d.kind === 'podium') podiumShift(d, fineOf(e.shiftKey))
     if (d.kind === 'run') runShift(d, fineOf(e.shiftKey))
     if (d.kind === 'plates' && d.as) runShift(d.as, fineOf(e.shiftKey))
