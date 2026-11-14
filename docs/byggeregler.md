@@ -32,7 +32,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   selger metrene til veggens meterpris (1,75 m). Kostnaden er de kappede skinnene og platen som sin andel av de hele
   (profilen per meter, platen etter bredde) og kappingen, plassholder 2 min per skinne og 3 per plate. Plukklisten
   viser de kappede lengdene.
-  *Bjørn 31.10.2026, 6.11.2026 og 14.11.2026 · `rules.wall.cc`, `rules.wall.post`, `ITEM.rail`, `ITEM.cutPlate`, `ITEM.railCut`, `ITEM.plateCut` · kode `src/domain/walls.ts`, `src/domain/grid.ts`, `src/domain/faces.ts`, `src/calc/lines/walls.ts`, `src/calc/context.ts`, `src/cost/itemDefs.ts`, `src/foga/engine.ts`, `src/domain/snapGrid.ts`, `src/ui/plan/pointer/stroke.ts` · test `src/foga/engine.test.ts`, `src/domain/shortModules.test.ts`, `src/calc/shortModules.test.ts`, `src/domain/snapGrid.test.ts`*
+  *Bjørn 31.10.2026, 6.11.2026 og 14.11.2026 · `rules.wall.cc`, `rules.wall.post`, `ITEM.rail`, `ITEM.cutPlate`, `ITEM.railCut`, `ITEM.plateCut` · kode `src/domain/walls.ts`, `src/domain/grid.ts`, `src/domain/faces.ts`, `src/calc/lines/walls.ts`, `src/calc/context.ts`, `src/cost/itemDefs.ts`, `src/foga/engine.ts`, `src/domain/runDraw.ts`, `src/ui/plan/pointer/run.ts` · test `src/foga/engine.test.ts`, `src/domain/shortModules.test.ts`, `src/calc/shortModules.test.ts`, `src/domain/runDraw.test.ts`*
 - **V2 Stolpe.** Profil 94 (40 × 40) på 2490 mm i hvert stolpepunkt: ende, rett, hjørne, T og kryss. Moduler som møtes
   deler stolpe. Stolper som bare bærer takdrager er den samme stolpen.
   *Bjørn 31.10.2026 · `rules.wall.height`, `RECIPES.wall.post` · kode `src/foga/engine.ts` · test `src/foga/engine.test.ts`*
