@@ -1,6 +1,6 @@
 // Placed objects (furniture, counters): footprint, collision and placement.
 // They collide with walls (post depth), textile frames (in front of their face), door swings and each other.
-import type { Footprint } from '../catalog/types';
+import type { Footprint, SetPiece } from '../catalog/types';
 import type { Rules } from '../rules/rules';
 import { pointAlong, wallDirection } from './grid';
 import type { PlacedObject, Variant } from './types';
@@ -66,6 +66,11 @@ export function footprintBox(o: Pick<PlacedObject, 'x' | 'y' | 'rot'>, f: Footpr
   return { x0: o.x - w / 2, y0: o.y - d / 2, x1: o.x + w / 2, y1: o.y + d / 2 };
 }
 
+/** The objects that move, turn and settle as one with `o`: its furniture set, else `o` alone. */
+export const setMembers = (v: Variant, o: PlacedObject): PlacedObject[] => (o.set ? v.objects.filter((x) => x.set === o.set) : [o]);
+
+/** What stands in the way of the object `skipId`: walls, textiles, door swings and every other object but those of its
+ *  own set. */
 export function blockers(v: Variant, ctx: PlaceContext, skipId?: string): Box[] {
   const { rules } = ctx;
   const out: Box[] = [];
@@ -105,8 +110,10 @@ export function blockers(v: Variant, ctx: PlaceContext, skipId?: string): Box[] 
     const ys = [a[1], b[1], a[1] + n[1] * r, b[1] + n[1] * r];
     out.push({ x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys), kind: 'door', id: o.id });
   }
+  const self = skipId !== undefined ? v.objects.find((o) => o.id === skipId) : undefined;
+  const own = self?.set;
   for (const o of v.objects) {
-    if (o.id === skipId) continue;
+    if (o.id === skipId || (own && o.set === own)) continue;
     for (const b of objectBoxes(ctx, o)) out.push({ ...b, kind: 'object', id: o.id });
   }
   return out;
@@ -189,8 +196,11 @@ export function addObjectAnywhere(v: Variant, ctx: PlaceContext, product: string
   return addObject(v, ctx, product, ...anywhere(v, f.d));
 }
 
-/** Move an object; it may overlap while dragging, the plan shows the conflict. Kept inside the stand. */
+/** Move an object; it may overlap while dragging, the plan shows the conflict. Kept inside the stand. A piece of a set
+ *  moves its whole set (Bjørn 14.11.2026). */
 export function moveObject(v: Variant, ctx: PlaceContext, id: string, x: number, y: number): Variant {
+  const self = v.objects.find((o) => o.id === id);
+  if (self?.set) return moveSet(v, ctx, self, x - self.x, y - self.y);
   return {
     ...v,
     objects: v.objects.map((o) => {
@@ -199,6 +209,123 @@ export function moveObject(v: Variant, ctx: PlaceContext, id: string, x: number,
       return f ? clampInto(v, { ...o, x, y }, f) : o;
     }),
   };
+}
+
+/** The box round all `boxes`. */
+function union(boxes: Omit<Box, 'kind'>[]): Omit<Box, 'kind'> {
+  return {
+    x0: Math.min(...boxes.map((b) => b.x0)),
+    y0: Math.min(...boxes.map((b) => b.y0)),
+    x1: Math.max(...boxes.map((b) => b.x1)),
+    y1: Math.max(...boxes.map((b) => b.y1)),
+  };
+}
+
+/** Every piece of `self`'s set moved by (dx, dy), on the 5 cm grid, the whole set kept inside the stand. */
+function moveSet(v: Variant, ctx: PlaceContext, self: PlacedObject, dx: number, dy: number): Variant {
+  const members = setMembers(v, self);
+  const u = union(members.flatMap((m) => objectBoxes(ctx, m)));
+  if (!Number.isFinite(u.x0)) return v;
+  const step = (n: number, lo: number, hi: number) => {
+    const q = Math.round(Math.max(lo, Math.min(hi, n)) * 20) / 20;
+    return q > hi + 1e-9 ? Math.floor(hi * 20) / 20 : q < lo - 1e-9 ? Math.ceil(lo * 20) / 20 : q;
+  };
+  const mx = step(dx, -u.x0, v.stand.width - u.x1);
+  const my = step(dy, -u.y0, v.stand.depth - u.y1);
+  return shiftSet(v, self.set!, mx, my);
+}
+
+const shiftSet = (v: Variant, set: string, dx: number, dy: number): Variant =>
+  dx || dy ? { ...v, objects: v.objects.map((o) => (o.set === set ? { ...o, x: r6(o.x + dx), y: r6(o.y + dy) } : o)) } : v;
+const r6 = (n: number) => Math.round(n * 1e6) / 1e6;
+
+/** The pieces of a set overlap something. */
+const setBlocked = (v: Variant, ctx: PlaceContext, set: string) =>
+  v.objects.some((o) => o.set === set && hitsAny(objectBoxes(ctx, o), blockers(v, ctx, o.id)));
+
+/** The nearest shift of a set, within `radius` m, that leaves all its pieces free and inside the stand; null when none. */
+function setSpot(v: Variant, ctx: PlaceContext, set: string, radius: number): [number, number] | null {
+  const members = v.objects.filter((o) => o.set === set);
+  const u = union(members.flatMap((m) => objectBoxes(ctx, m)));
+  const inside = (dx: number, dy: number) => u.x0 + dx >= -1e-9 && u.y0 + dy >= -1e-9 && u.x1 + dx <= v.stand.width + 1e-9 && u.y1 + dy <= v.stand.depth + 1e-9;
+  const free = (dx: number, dy: number) => inside(dx, dy) && !setBlocked(shiftSet(v, set, dx, dy), ctx, set);
+  if (free(0, 0)) return [0, 0];
+  for (let r = 0.05; r <= radius + 1e-9; r += 0.05) {
+    for (let k = 0; k < 24; k++) {
+      const t = (k / 24) * Math.PI * 2;
+      const dx = Math.round(Math.cos(t) * r * 20) / 20;
+      const dy = Math.round(Math.sin(t) * r * 20) / 20;
+      if (free(dx, dy)) return [dx, dy];
+    }
+  }
+  return null;
+}
+
+/** A set of pieces stored together where they fit nearest their given places, or null where the stand has no room
+ *  for all of them (Møbel by use, Bjørn 14.11.2026). Each piece gets its own id and the set's id. */
+export function addSet(v: Variant, ctx: PlaceContext, pieces: Omit<PlacedObject, 'id' | 'set'>[]): Variant | null {
+  if (!pieces.length) return null;
+  const ids = v.objects.map((o) => o.id);
+  const set = nextId(v.objects.flatMap((o) => (o.set ? [o.set] : [])), 's');
+  const added: PlacedObject[] = pieces.map((p) => {
+    const id = nextId(ids, 'i');
+    ids.push(id);
+    return { ...p, id, set };
+  });
+  const placed = { ...v, objects: [...v.objects, ...added] };
+  const s = setSpot(placed, ctx, set, Math.max(v.stand.width, v.stand.depth));
+  return s ? shiftSet(placed, set, s[0], s[1]) : null;
+}
+
+/** A furniture set's pieces placed round (x, y), together where they fit nearest (addSet). */
+export const placeSet = (v: Variant, ctx: PlaceContext, pieces: readonly SetPiece[], x: number, y: number): Variant | null =>
+  addSet(v, ctx, pieces.map((p) => ({ product: p.artnr, x: r6(x + p.x), y: r6(y + p.y), rot: p.rot })));
+
+/** A piece loosened from its set: it stays where it is and is a piece on its own; a set left with one piece is none. */
+export function loosenObject(v: Variant, id: string): Variant {
+  const o = v.objects.find((x) => x.id === id);
+  if (!o?.set) return v;
+  const rest = v.objects.filter((x) => x.set === o.set && x.id !== id);
+  const drop = new Set([id, ...(rest.length < 2 ? rest.map((x) => x.id) : [])]);
+  return { ...v, objects: v.objects.map((x) => (drop.has(x.id) ? withoutSet(x) : x)) };
+}
+
+/** How near a loose piece dropped by a set must be to join it, m (as counters link within 300 mm, K15). */
+export const JOIN = 0.3;
+
+/** The piece of a set that the loose furniture `id` stands within JOIN of, nearest first; none for a counter. */
+export function nearSet(v: Variant, ctx: PlaceContext, id: string): PlacedObject | undefined {
+  const o = v.objects.find((x) => x.id === id);
+  if (!o || o.set || o.sections || ctx.isCounter(o.product)) return undefined;
+  const mine = objectBoxes(ctx, o);
+  const gap = (a: Omit<Box, 'kind'>, b: Omit<Box, 'kind'>) => Math.hypot(Math.max(0, a.x0 - b.x1, b.x0 - a.x1), Math.max(0, a.y0 - b.y1, b.y0 - a.y1));
+  let best: { o: PlacedObject; d: number } | undefined;
+  for (const x of v.objects) {
+    if (!x.set || x.id === id) continue;
+    const d = Math.min(...objectBoxes(ctx, x).flatMap((b) => mine.map((m) => gap(m, b))));
+    if (d <= JOIN + 1e-9 && (!best || d < best.d)) best = { o: x, d };
+  }
+  return best?.o;
+}
+
+/** A loose piece put into the set of `into` (dropped by one of its pieces, as counters link, K15). */
+export function joinSet(v: Variant, id: string, into: string): Variant {
+  const t = v.objects.find((x) => x.id === into);
+  const o = v.objects.find((x) => x.id === id);
+  if (!t || !o || o.set || t.sections || o.sections || t.id === o.id) return v;
+  const set = t.set ?? nextId(v.objects.flatMap((x) => (x.set ? [x.set] : [])), 's');
+  return { ...v, objects: v.objects.map((x) => (x.id === id || x.id === into ? { ...x, set } : x)) };
+}
+
+function withoutSet(o: PlacedObject): PlacedObject {
+  const { set: _, ...rest } = o;
+  return rest;
+}
+
+/** The whole set of `id` removed, or the piece alone when it is loose. */
+export function removeSet(v: Variant, id: string): Variant {
+  const o = v.objects.find((x) => x.id === id);
+  return o?.set ? { ...v, objects: v.objects.filter((x) => x.set !== o.set) } : removeObject(v, id);
 }
 
 export function removeObject(v: Variant, id: string): Variant {
@@ -227,6 +354,12 @@ export function conflicts(v: Variant, ctx: PlaceContext): Set<string> {
  */
 export function settleObject(v: Variant, ctx: PlaceContext, id: string, start: { x: number; y: number }): { v: Variant; ok: boolean } {
   const o = v.objects.find((x) => x.id === id);
+  if (o?.set) {
+    if (!setBlocked(v, ctx, o.set)) return { v, ok: true };
+    const s = setSpot(v, ctx, o.set, 1);
+    if (s) return { v: shiftSet(v, o.set, s[0], s[1]), ok: true };
+    return { v: shiftSet(v, o.set, r6(start.x - o.x), r6(start.y - o.y)), ok: false };
+  }
   if (!o || !conflicts(v, ctx).has(id)) return { v, ok: true };
   const spot = findSpot(v, ctx, o, 1);
   if (spot) return { v: { ...v, objects: v.objects.map((x) => (x.id === id ? spot : x)) }, ok: true };
@@ -250,6 +383,7 @@ export function settleAll(v: Variant, ctx: PlaceContext): Variant {
  */
 export function rotateObject(v: Variant, ctx: PlaceContext, id: string): Variant | null {
   const o = v.objects.find((x) => x.id === id);
+  if (o?.set) return rotateSet(v, ctx, o.set);
   const f = o && objectFootprint(ctx, o);
   if (!o || !f) return null;
   const rot = (o.rot + 90) % 360;
@@ -271,6 +405,17 @@ export function setObjectProduct(v: Variant, ctx: PlaceContext, id: string, prod
   const swapped = clampInto(v, { ...o, product }, f);
   const r = settleObject({ ...v, objects: v.objects.map((x) => (x.id === id ? swapped : x)) }, ctx, id, swapped);
   return r.ok ? r.v : null;
+}
+
+/** A set turned a quarter turn round the middle of its pieces, each piece turned with it, then settled as after a drag.
+ *  Null when it does not fit turned. */
+function rotateSet(v: Variant, ctx: PlaceContext, set: string): Variant | null {
+  const members = v.objects.filter((o) => o.set === set);
+  const u = union(members.flatMap((m) => objectBoxes(ctx, m)));
+  const [cx, cy] = [Math.round(((u.x0 + u.x1) / 2) * 20) / 20, Math.round(((u.y0 + u.y1) / 2) * 20) / 20];
+  const turned = { ...v, objects: v.objects.map((o) => (o.set === set ? { ...o, x: r6(cx - (o.y - cy)), y: r6(cy + (o.x - cx)), rot: (o.rot + 90) % 360 } : o)) };
+  const s = setSpot(turned, ctx, set, 1);
+  return s ? shiftSet(turned, set, s[0], s[1]) : null;
 }
 
 /** The footprint is no wider or deeper than the stand. */

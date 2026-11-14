@@ -252,7 +252,7 @@ og kalkyle med 6560, som er et ferdig oppsett i det (K22).
   `stockOf`: hvilken standarddisk seksjonene er, i hvilken som helst dreining, uten farge og dekor; `stockSections`).
   Kalkylen (`calc/lines/objects.ts`) gir en standarddisk katalogens linje og plukker den hel; `builtCounterParts`
   hopper over den; `soldAs` er varen et objekt selges som (standarddiskens art.nr, ellers produktet). Navnet i pille,
-  skuff og arbeidsordre: `counterName` i `ui/env.ts`. Vegg etter funksjon (Vegg, Dør/Forheng, Takdrager, farge på varen i hånden): `ui/wallPen.ts`. Kortnavn: `short` på produktet, `shortName` i `catalog/lookup.ts`, kolonnen Kortnavn i produktlisten og CSV. Pennen etter funksjon: `ui/podiumPen.ts` (`penFuncs` er
+  skuff og arbeidsordre: `counterName` i `ui/env.ts`. Møbelsett: `Product.set`, `PlacedObject.set`, `placeSet`/`moveObject`/`rotateObject`/`settleObject`/`loosenObject`/`joinSet`/`removeSet` i `domain/objects.ts`, pennen i `ui/furniturePen.ts`. Vegg etter funksjon (Vegg, Dør/Forheng, Takdrager, farge på varen i hånden): `ui/wallPen.ts`. Kortnavn: `short` på produktet, `shortName` i `catalog/lookup.ts`, kolonnen Kortnavn i produktlisten og CSV. Pennen etter funksjon: `ui/podiumPen.ts` (`penFuncs` er
   undergruppene i `disk` med et produkt bygget på stedet, hvis navn er funksjonens, `does` i `catalog/groups.ts`, og
   en standardvare; `builtByShape` gir det «Fri» tegnet produktet etter fasongen; `withFunc`,
   `withHeight`, `penHeights`, `fineApplies`); varen i hånden er `Brush.stock`, Fri sin høyde `Brush.h`, og varen bak

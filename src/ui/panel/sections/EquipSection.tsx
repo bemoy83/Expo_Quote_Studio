@@ -131,11 +131,9 @@ function CatalogRow({ v, product, brush, tool, pick, picks, onEdit, onToast, sho
         <>
           {product.variants.length > 1 && <>{cur.name} · </>}
           {groupName && <>{groupName} · </>}
-          <span className="num">
-            {cur.artnr} · {kr(cur.price)} kr
-          </span>
-          {product.dim && <> · {product.dim}</>}
-          {isObject ? ' · tegnes' : product.unit === 't' ? ' · timer' : ' · plasseres senere'}
+          <span className="num">{product.set ? `sum ${kr(cur.price)} kr` : `${cur.artnr} · ${kr(cur.price)} kr`}</span>
+          {product.dim && !product.set && <> · {product.dim}</>}
+          {product.set ? ` · ${product.set.length} deler, flyttes samlet` : isObject ? ' · tegnes' : product.unit === 't' ? ' · timer' : ' · plasseres senere'}
         </>
       }
       // Disker og podier is drawn, never counted in: each is priced from what it is built of (Byggeregel K13)
@@ -143,7 +141,8 @@ function CatalogRow({ v, product, brush, tool, pick, picks, onEdit, onToast, sho
       chips={<VariantChips chips={product.variants.map((x, k) => ({ name: x.name, color: x.color, count: counts[k] }))} selected={tot > 0 || vi !== null ? i : -1} onSelect={setVi} />}
       action={
         <>
-          {!product.podium && <Counter value={counts[i]} onChange={setCount} label={`Legg til ${product.name.toLowerCase()}`} max={isObject ? 20 : 99} />}
+          {/* A furniture set is placed with the pen; its pieces are counted on their own rows (Bjørn 14.11.2026) */}
+          {!product.podium && !product.set && <Counter value={counts[i]} onChange={setCount} label={`Legg til ${product.name.toLowerCase()}`} max={isObject ? 20 : 99} />}
           {isObject && <IconButton icon={Paintbrush} label={`Plasser ${product.name.toLowerCase()} i plan`} pressed={pen && tool === 'brush'} onClick={() => pick(penBrush())} />}
         </>
       }

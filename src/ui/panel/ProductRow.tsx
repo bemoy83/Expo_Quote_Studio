@@ -6,6 +6,7 @@ import { INK, SURFACE } from '../colors'
 import { MENUS } from './menus'
 import type { decorSource } from '../dnd'
 import { fmt } from '../format'
+import { idx } from '../env'
 
 export interface Chip {
   name: string
@@ -107,6 +108,7 @@ export function Swatch({ color, pattern }: { color?: string; pattern?: 'tiles' |
 
 /** Drawn footprint of a placed object, or its group's icon. */
 export function ObjectThumb({ product, color }: { product: Product; color?: string }) {
+  if (product.set) return <SetThumb product={product} />
   const f = product.footprint
   if (!f) {
     const m = MENUS.find((x) => x.key === mainGroupOf(product.group))
@@ -116,8 +118,38 @@ export function ObjectThumb({ product, color }: { product: Product; color?: stri
   const s = 26 / Math.max(f.w, f.d, 0.5)
   const fill = color ?? (product.name.includes('hvit') ? 'oklch(0.96 0.003 90)' : 'oklch(0.24 0.004 250)')
   return (
-    <svg width="30" height="30" viewBox="-15 -15 30 30" aria-hidden>
+    <svg className="obj-thumb" width="30" height="30" viewBox="-15 -15 30 30" aria-hidden>
       {f.round ? <circle r={(f.w * s) / 2} fill={fill} stroke={INK} strokeWidth={0.6} /> : <rect x={(-f.w * s) / 2} y={(-f.d * s) / 2} width={f.w * s} height={f.d * s} rx={1.5} fill={fill} stroke={INK} strokeWidth={0.6} />}
+    </svg>
+  )
+}
+
+/** A furniture set from above: each piece's footprint where it stands in the set (Bjørn 14.11.2026). */
+function SetThumb({ product }: { product: Product }) {
+  const pieces = (product.set ?? []).flatMap((x) => {
+    const r = idx.byArtnr.get(x.artnr)
+    const f = r?.product.footprint
+    if (!f) return []
+    const q = Math.round(x.rot / 90) % 2 !== 0
+    return [{ ...x, f, w: q ? f.d : f.w, d: q ? f.w : f.d, color: r.variant.color }]
+  })
+  const x0 = Math.min(...pieces.map((p) => p.x - p.w / 2))
+  const x1 = Math.max(...pieces.map((p) => p.x + p.w / 2))
+  const y0 = Math.min(...pieces.map((p) => p.y - p.d / 2))
+  const y1 = Math.max(...pieces.map((p) => p.y + p.d / 2))
+  const s = 26 / Math.max(x1 - x0, y1 - y0, 0.5)
+  const [cx, cy] = [(x0 + x1) / 2, (y0 + y1) / 2]
+  return (
+    <svg className="obj-thumb" width="30" height="30" viewBox="-15 -15 30 30" aria-hidden>
+      {pieces.map((p, i) => {
+        const fill = p.color ?? 'oklch(0.24 0.004 250)'
+        const [px, py] = [(p.x - cx) * s, (p.y - cy) * s]
+        return p.f.round ? (
+          <circle key={i} cx={px} cy={py} r={(p.w * s) / 2} fill={fill} stroke={INK} strokeWidth={0.6} />
+        ) : (
+          <rect key={i} x={px - (p.w * s) / 2} y={py - (p.d * s) / 2} width={p.w * s} height={p.d * s} rx={1.5} fill={fill} stroke={INK} strokeWidth={0.6} />
+        )
+      })}
     </svg>
   )
 }

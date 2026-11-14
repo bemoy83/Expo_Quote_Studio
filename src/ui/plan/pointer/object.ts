@@ -1,6 +1,7 @@
 // Furniture: the object pen places one, Velg drags it (it settles on release) and selects it. A counter of Disker og
-// podier dragged within 300 mm of another lies against it and becomes part of it on release (Byggeregel K15).
-import { addObject, moveObject } from '../../../domain/objects'
+// podier dragged within 300 mm of another lies against it and becomes part of it on release (Byggeregel K15). A loose
+// piece of furniture dropped within 300 mm of a set joins it (Bjørn 14.11.2026); a piece of a set drags its set.
+import { addObject, joinSet, moveObject, nearSet, placeSet, settleObject } from '../../../domain/objects'
 import { fusePodiums, snapBeside } from '../../../domain/podiumLinks'
 import { place, productOf } from '../../env'
 import { dropObject } from '../../drag'
@@ -13,7 +14,8 @@ export function objectClick(c: PointerCtx, q: P) {
   const pen = placedBy(brush)
   if (!pen) return
   const { product } = pen
-  const next = addObject(v, place, product, q.x, q.y)
+  const set = productOf(product)?.set
+  const next = set ? placeSet(v, place, set, q.x, q.y) : addObject(v, place, product, q.x, q.y)
   if (!next) c.onToast(`Ikke plass til ${productOf(product)?.name.toLowerCase() ?? 'varen'} her`)
   else c.onEdit(() => next)
 }
@@ -42,7 +44,12 @@ export const object: DragHandlers<'object'> = {
       }
       c.onToast(r.error)
     }
-    dropObject(c.v, d.id, d.start, c.onEdit, c.onToast)
+    const settled = settleObject(c.v, place, d.id, d.start)
+    const near = settled.ok ? nearSet(settled.v, place, d.id) : undefined
+    if (near) {
+      c.onEdit(() => joinSet(settled.v, d.id, near.id), false)
+      c.onToast('Lagt til i settet · Løsne i pillen tar den ut igjen')
+    } else dropObject(c.v, d.id, d.start, c.onEdit, c.onToast)
     c.onSelect(d.select)
   },
 }
