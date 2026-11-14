@@ -58,6 +58,9 @@ export function useTools({ v, res, motifs, onPick, onErase }: ToolsInput) {
     const func = b.kind === 'podium' ? funcOf(b) : undefined
     if (func && b.kind === 'podium') setPicks((p) => ({ ...p, podium: { ...p.podium, [func]: b.stock } }))
     if (b.kind === 'opening') setPicks((p) => ({ ...p, wall: wallPicksOf(b) }))
+    // Gulv: the colour last in hand behind each floor type (Bjørn 14.11.2026)
+    const floorType = b.kind === 'floor' ? idx.byArtnr.get(b.product)?.product.id : undefined
+    if (b.kind === 'floor' && floorType) setPicks((p) => ({ ...p, floor: { ...p.floor, [floorType]: b.product } }))
     const single = furniturePicksOf(b, catalog.products)
     if (single) setPicks((p) => ({ ...p, object: single }))
     setTool(t)

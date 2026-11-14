@@ -133,6 +133,12 @@ funksjoner, ikke artikler.
   Forhengets farge står på linjen i kalkyle og tilbud («Forheng med overstykke · sort»).
 - Tilpasset: Dør eller Forheng, bare med en åpning i hånden. Bakrom er en handling til slutt.
 
+### Gulv
+
+- Pensel: én knapp per gulvtype (*Fliser · Engangsteppe · Vinyl*, kortnavnet) med fargen sist i hånden bak seg
+  (`picks.floor`). Farge: gulvtypens farger og Fyll. Tilpasset: flisstørrelsen; ingen for engangsteppe, som har én
+  kost og der motoren legger banene.
+
 ### Møbel
 
 - Pensel: én knapp per møbelsett i katalogen (Møte, Lounge, Mingle; kortnavnet). Møte = bord 5221 120 × 60 og 4 konferansestoler med settet sett ovenfra, og
