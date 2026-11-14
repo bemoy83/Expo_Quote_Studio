@@ -518,10 +518,14 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   disken er dette, er den lagervaren: katalogpris 6560 (1320 kr), kostet som én disk, plukket hel som 1 stk, og navnet
   «Bardisk». Farge (K6), print og dekal (K20), snudd, flyttet og mot vegg eller annen disk er fortsatt 6560. Annen
   lengde, dybde, høyde eller hylle, skyvedør, en annen åpen side eller sammenslåing (K15) gjør den til spesialbygg
-  (K13). Pennen viser «Fri» og én knapp per standarddisk over verktøyene: et klikk setter den som er valgt, med
-  fronten mot den åpne siden av standen på tvers av den (den nærmeste når begge er åpne), og «Fri» en seksjon på
-  500 × 500; å dra tegner alltid fritt. Bardisk 6560 i Utstyr er det samme: + setter en 6560 fra Disker og podier, og
-  penselen der velger verktøyet med 6560.
+  (K13). Pennen velger etter funksjon (Bjørn 14.11.2026): «Fri» (en seksjon på 500 × 500 per klikk), så én knapp per
+  undergruppe i katalogen som har en standardvare, «Disk» og «Podie», med omrisset av varen bak. Bak hver funksjon står
+  varen som sist ble hentet fra katalogen for den, i starten den første (for Podie den i høyden Fri har). Et klikk med
+  «Disk» setter disken med fronten mot den åpne siden av standen på tvers av den (den nærmeste når begge er åpne); med
+  «Podie» setter det podiet rett (dreiet 0), i høyden valgt i pillen, som velger varen. Ingen av dem bygger på en disk
+  det peker ved. Høydene varen ikke finnes i, og «Fin», er grå mens en funksjon er i hånden; å dra tegner alltid fritt.
+  Bardisk 6560 i Utstyr er det samme: + setter en 6560 fra Disker og podier, og penselen der legger varen bak sin
+  funksjon og i hånden.
   En skisse lagret før dette gjør disker fra Disker om når den åpnes: disken på lager blir 6560, en tegnet disk én
   seksjon per hel eller halv meter, åpen bak og med hylle i CC 750, bygget og priset likt. Verktøyet Disker finnes ikke
   lenger (K7).
@@ -535,7 +539,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   varenummeret alltid har betydd; et podie som ikke får plass, blir stående talt. Navnet i pille og skuff er
   katalognavnet med varianten, uten varenummer: «Bardisk», «Podie 50 × 50, 75 cm». Ferdig bygget kostes hver
   standardvare som én leid vare (`ITEM.counter` per utvendig mål og høyde).
-  *Bjørn 13.11.2026 · kode `src/domain/podiumStock.ts`, `src/domain/podiums.ts`, `src/calc/lines/objects.ts`, `src/persistence/file.ts`, `src/ui/panel/sections/EquipSection.tsx` · test `src/domain/podiumStock.test.ts`*
+  *Bjørn 13.11.2026 · kode `src/domain/podiumStock.ts`, `src/domain/podiums.ts`, `src/calc/lines/objects.ts`, `src/persistence/file.ts`, `src/ui/panel/sections/EquipSection.tsx`, `src/ui/podiumPen.ts` · test `src/domain/podiumStock.test.ts`, `src/ui/podiumPen.test.ts`*
 
 ## P · Plukkliste og arbeidsordre
 

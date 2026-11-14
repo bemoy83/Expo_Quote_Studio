@@ -1,8 +1,7 @@
 // Quick picks over the active tool in the dock: everything the tool draws, in fixed places so the hand learns where the
 // colours are. The tool's own settings (floor type, tile size, drawing grid) sit here too, and the last
 // button («…») opens the panel on the tool's tab for the rest.
-import { HEIGHT as PODIUM_HEIGHT, HEIGHTS as PODIUM_HEIGHTS } from '../../domain/podiums'
-import { STOCK_COUNTERS } from '../../domain/podiumStock'
+import { stockByArtnr } from '../../domain/podiumStock'
 import { Blinds, Box, DoorClosed, Ellipsis, PaintBucket, Paintbrush, Ruler, Upload } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { mainGroupOf } from '../../catalog/groups'
@@ -14,7 +13,9 @@ import { ImageInput, Segmented } from '../controls'
 import { catalog, idx, rules } from '../env'
 import { ObjectThumb } from '../panel/ProductRow'
 import { FLOOR_MAIN, FLOOR_OTHER, floorSizeLabel, gridSteps, type Brush, type DockTool } from '../tools'
+import { fineApplies, funcOf, PEN_FUNCS, penHeights, stockFor, withFunc, withHeight, type PenPicks } from '../podiumPen'
 import { GridPicker } from './GridPicker'
+import { StockOutline } from './StockOutline'
 import { ralSwatches, type Swatch } from './swatches'
 
 export interface QuickPicksProps {
@@ -41,9 +42,10 @@ export interface QuickPicksProps {
   onFill: () => void
   /** The wall pen's bucket: every wall in the pen's colour. */
   onFillWalls: () => void
-  /** The counter pen's bucket: every counter in the pen's colour. */
   /** The bucket of Disker og podier: every counter and podium it drew in the pen's colour. */
   onFillPodiums: () => void
+  /** The item behind each function of Disker og podier. */
+  podiumPicks: PenPicks
 }
 
 const MAX = 8
@@ -220,21 +222,36 @@ function quickContent(p: QuickPicksProps): ReactNode {
   }
 
   if (tool === 'podium' && brush?.kind === 'podium') {
-    // Disker og podier: the plates in the wall colours and the bucket, as on Vegg (K6), then Høyde (K12)
-    const { ral, fine, stock } = brush
-    const h = brush.h ?? PODIUM_HEIGHT
+    // Disker og podier by function (Bjørn 14.11.2026): «Fri», then one button per function with the outline of the item
+    // behind it; the plates in the wall colours and the bucket, as on Vegg (K6); Høyde (K12) and Fin. What does not apply
+    // to what is in hand is grey where it always is.
+    const { ral, fine } = brush
+    const func = funcOf(brush)
+    const fineOn = fineApplies(brush)
     return (
       <>
         {head}
-        {/* What a click places (K22): «Fri», a section 500 × 500, or a standard counter; a drag always draws free */}
-        <QBtn on={!stock} setting title="Fri · et klikk setter en seksjon 500 × 500, dra for å tegne" label="Fri" onClick={() => onPick({ ...brush, stock: undefined })}>
+        <QBtn on={!func} setting title="Fri · tegn fasongen selv · et klikk setter en seksjon 500 × 500, dra tegner fritt" label="Fri" onClick={() => onPick(withFunc(brush, undefined, p.podiumPicks))}>
           Fri
         </QBtn>
-        {STOCK_COUNTERS.map((s) => (
-          <QBtn key={s.artnr} on={stock === s.artnr} setting title={`${idx.byArtnr.get(s.artnr)?.product.name ?? 'Disk'} ${s.artnr} · et klikk setter den, dra tegner fritt`} label={s.artnr} onClick={() => onPick({ ...brush, stock: s.artnr })}>
-            {s.artnr}
-          </QBtn>
-        ))}
+        {PEN_FUNCS.map((f) => {
+          // The item behind the function: the one in hand, else the one it would put in hand
+          const s = (func === f.func && brush.stock ? stockByArtnr(brush.stock) : undefined) ?? stockFor(f.func, p.podiumPicks, brush.h)
+          const name = s ? idx.byArtnr.get(s.artnr)?.product.name : undefined
+          return (
+            <QBtn
+              key={f.func}
+              on={func === f.func}
+              setting
+              title={`${f.one} · ${f.does.toLowerCase()} · et klikk setter ${name ?? f.one.toLowerCase()}, dra tegner fritt`}
+              label={f.one}
+              onClick={() => onPick(withFunc(brush, f.func, p.podiumPicks))}
+            >
+              {s && <StockOutline sections={s.sections} />}
+              {f.one}
+            </QBtn>
+          )
+        })}
         <Sep />
         <Palette
           swatches={ralSwatches(ral, (n) => `Disk ${n}`, (r) => onPick({ ...brush, ral: r }))}
@@ -242,18 +259,27 @@ function quickContent(p: QuickPicksProps): ReactNode {
           onFill={p.onFillPodiums}
         />
         <Sep />
-        {/* Høyde, CC: what everything drawn gets; a påbygg takes its neighbour's (K12) */}
-        {PODIUM_HEIGHTS.map((x) => (
-          <QBtn key={x} on={x === h} setting title={`Høyde CC ${x} mm (utvendig ${x + 40})`} label={`Høyde ${x}`} onClick={() => onPick({ ...brush, h: x })}>
-            {x}
+        {/* Høyde, CC: what Fri draws (a påbygg takes its neighbour's, K12), or the item's height in hand */}
+        {penHeights(brush).map(({ h, on, off }) => (
+          <QBtn
+            key={h}
+            on={on}
+            setting
+            disabled={off}
+            title={off ? `Høyde CC ${h} mm · finnes ikke for varen i hånden` : `Høyde CC ${h} mm (utvendig ${h + 40})`}
+            label={`Høyde ${h}`}
+            onClick={() => onPick(withHeight(brush, h))}
+          >
+            {h}
           </QBtn>
         ))}
         <Sep />
-        {/* «Fin»: as Shift held, for touch (PR 2) */}
+        {/* «Fin»: as Shift held, for touch; Fri only, a function places its item whole */}
         <QBtn
-          on={fine}
+          on={fine && fineOn}
           setting
-          title={fine ? 'Fin · 250-steg, dra fra en kant flytter den · trykk for 500-steg igjen' : 'Fin · 250-steg, og dra fra en kant for å flytte den · på desktop også Shift'}
+          disabled={!fineOn}
+          title={!fineOn ? 'Fin · gjelder bare Fri' : fine ? 'Fin · 250-steg, dra fra en kant flytter den · trykk for 500-steg igjen' : 'Fin · 250-steg, og dra fra en kant for å flytte den · på desktop også Shift'}
           label="Fin"
           onClick={() => onPick({ ...brush, fine: !fine })}
         >
@@ -321,9 +347,26 @@ export function Sw({ color, title, on, onClick }: { color?: string; title: strin
 
 /** A pill button. `on` marks the tool in hand (ink, like the dock); with `setting` it marks a chosen setting instead
  *  (`--chosen`, like every other choice on a surface). Bjørn 8.11.2026 and 10.11.2026: only drawing tools get ink. */
-export function QBtn({ on, setting, title, label, onClick, children }: { on?: boolean; setting?: boolean; title: string; label?: string; onClick: () => void; children: ReactNode }) {
+export function QBtn({
+  on,
+  setting,
+  disabled,
+  title,
+  label,
+  onClick,
+  children,
+}: {
+  on?: boolean
+  setting?: boolean
+  /** Does not apply to what is in hand: grey, where it always is (Bjørn 14.11.2026). */
+  disabled?: boolean
+  title: string
+  label?: string
+  onClick: () => void
+  children: ReactNode
+}) {
   return (
-    <button type="button" className={setting ? 'q-btn q-set' : 'q-btn'} aria-pressed={on} title={title} aria-label={label} onClick={onClick}>
+    <button type="button" className={setting ? 'q-btn q-set' : 'q-btn'} aria-pressed={on} disabled={disabled} title={title} aria-label={label} onClick={onClick}>
       {children}
     </button>
   )

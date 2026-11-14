@@ -252,10 +252,14 @@ og kalkyle med 6560, som er et ferdig oppsett i det (K22).
   `stockOf`: hvilken standarddisk seksjonene er, i hvilken som helst dreining, uten farge og dekor; `stockSections`).
   Kalkylen (`calc/lines/objects.ts`) gir en standarddisk katalogens linje og plukker den hel; `builtCounterParts`
   hopper over den; `soldAs` er varen et objekt selges som (standarddiskens art.nr, ellers produktet). Navnet i pille,
-  skuff og arbeidsordre: `counterName` i `ui/env.ts`. Pennen: `Brush.stock` (valgt i hurtigvalget, `QuickPicks.tsx`),
-  `podiumAt` setter standarddisken med `frontRot` fra `counters.ts`. I Utstyr (`EquipSection.tsx`) teller raden for 6560
-  standarddiskene (`soldAs`), + setter en med `addStockAnywhere` (podiums.ts), og penselen velger Disker og podier med
-  6560. Gamle skisser: `asSections` (podiumStock.ts) via `countersAsSections` i `persistence/file.ts` gjør disker fra
+  skuff og arbeidsordre: `counterName` i `ui/env.ts`. Pennen etter funksjon: `ui/podiumPen.ts` (`PEN_FUNCS` er
+  undergruppene i `disk` med entallsnavn `one` og `does` i `catalog/groups.ts` og en standardvare; `withFunc`,
+  `withHeight`, `penHeights`, `fineApplies`); varen i hånden er `Brush.stock`, Fri sin høyde `Brush.h`, og varen bak
+  hver funksjon `podiumPicks` i `useTools.ts`, satt i `pick`. Hurtigvalget (`QuickPicks.tsx`) tegner varen med
+  `plan/StockOutline.tsx`, og `QBtn disabled` gjør det som ikke gjelder grått. Mønsteret kan gi funksjoner på andre
+  verktøy (ståbord, barkrakker). `podiumAt` setter en disk med `frontRot` fra `counters.ts`, et podie dreiet 0. I
+  Utstyr (`EquipSection.tsx`) teller raden standarddiskene (`soldAs`), + setter en med `addStockAnywhere` (podiums.ts),
+  og penselen legger varen bak sin funksjon og i hånden. Gamle skisser: `asSections` (podiumStock.ts) via `countersAsSections` i `persistence/file.ts` gjør disker fra
   Disker om til seksjoner når de åpnes, og `countedAsPodier` gjør talte podier (5450) om til podier på standen.
 - Høyde i 3D (K18): `podiumTopAt` og draget `podiumTop` i `scene3d/pointer/drag.ts`, `onUpright` i `pointer/hits.ts`.
   Arbeidsordren: `workorder/PodiumSides.tsx` («Disker sett utenfra», `PodiumElevation` uten håndtak) og

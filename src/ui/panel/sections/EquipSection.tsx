@@ -6,7 +6,7 @@ import type { Product } from '../../../catalog/types'
 import { setCounted } from '../../../domain/edit'
 import { addObjectAnywhere, COUNTER_STOCK_RAL, removeObjects } from '../../../domain/objects'
 import { addStockAnywhere } from '../../../domain/podiums'
-import { isStock, soldAs } from '../../../domain/podiumStock'
+import { isStock, soldAs, stockByArtnr } from '../../../domain/podiumStock'
 import { shelvesOf } from '../../../domain/shelves/model'
 import type { Variant } from '../../../domain/types'
 import { Counter, IconButton } from '../../controls'
@@ -30,6 +30,8 @@ export function EquipSection(p: RailProps & { menu: string }) {
         return (
           <div key={sg.id}>
             {many && <div className="panel-sec eyebrow">{sg.name}</div>}
+            {/* A function of a pen says what it is for (Bjørn 14.11.2026) */}
+            {many && sg.does && <p className="panel-note">{sg.does}.</p>}
             {list.map((x) => (x.id === catalog.system.shelf ? <ShelfRow key={x.id} {...p} product={x} /> : <CatalogRow key={x.id} {...p} product={x} />))}
           </div>
         )
@@ -95,9 +97,12 @@ function CatalogRow({ v, product, brush, tool, pick, onEdit, onToast, showGroup 
   const podium = podiumProduct()!.variants[0].artnr
   /** A counter's pen keeps the colour Disker og podier last drew with (Byggeregel K6). */
   const ral = brush?.kind === 'podium' ? brush.ral : COUNTER_STOCK_RAL
-  const penBrush = (): Brush => (stock ? { kind: 'podium', product: podium, ral, stock: cur.artnr } : product.podium ? { kind: 'podium', product: cur.artnr, ral } : { kind: 'object', product: cur.artnr })
-  // The pen in hand draws this row: its standard counter (K22), «Fri» for Disker og podier, else the product
-  const drawsThis = brush?.kind === 'podium' ? (stock ? brush.stock === cur.artnr : !!product.podium && !brush.stock) : penOn(tool, brush, 'object', cur.artnr)
+  // A standard counter's pen puts it behind its function and in hand, the pen kept as it was (Fri's height, Fin) (K22)
+  const kept = brush?.kind === 'podium' ? brush : { kind: 'podium' as const, product: podium, ral }
+  const penBrush = (): Brush => (stock ? { ...kept, stock: cur.artnr } : product.podium ? { kind: 'podium', product: cur.artnr, ral } : { kind: 'object', product: cur.artnr })
+  // The pen in hand draws this row: the product behind the function in hand (K22), «Fri» for Disker og podier, else the product
+  const inHand = brush?.kind === 'podium' && brush.stock ? stockByArtnr(brush.stock) : undefined
+  const drawsThis = brush?.kind === 'podium' ? (stock ? inHand?.product === product.id : !!product.podium && !brush.stock) : penOn(tool, brush, 'object', cur.artnr)
   const pen = isObject && tool !== 'select' && drawsThis
   const setCount = (n: number) => {
     if (!isObject) return onEdit((x) => setCounted(x, cur.artnr, n))

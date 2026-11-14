@@ -15,7 +15,7 @@ export const PODIUM_DRAG = 0.05
 const penOf = (b: Brush | null) => (b?.kind === 'podium' ? { product: b.product, ral: b.ral, h: b.h, stock: b.stock } : null)
 
 /** «Fin» on in the quick picks: Shift held, for touch, without the preview standing still. */
-export const podiumFine = (b: Brush | null) => b?.kind === 'podium' && !!b.fine
+export const podiumFine = (b: Brush | null) => b?.kind === 'podium' && !!b.fine && !b.stock
 
 /** The counter under q a click chooses, if any. */
 export function counterUnder(c: Pick<PointerCtx, 'hits'>, q: P): string | null {
