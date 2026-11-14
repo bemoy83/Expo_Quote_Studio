@@ -17,10 +17,10 @@ const res = calc(v, RULES, DEFAULT_CATALOG, { payer: 'utstiller', ral: '9010' })
 const lines = res.groups.flatMap((g) => g.lines).filter((l) => l.artnr === '6570');
 
 describe('Disker og podier (Byggeregel K13)', () => {
-  it('one line each, «Disk» when 500 deep, else «Podium», with its outer size and height', () => {
+  it('one line each, «Disk» when 500 deep, else «Podie», with its outer size and height', () => {
     expect(lines.map((l) => [l.name, l.qty, l.meta])).toEqual([
       ['Disk', 1, 'bygget på stedet 1520 × 520 × 1040 mm'],
-      ['Podium', 1, 'bygget på stedet 1020 × 1020 × 1040 mm · RAL 3002'],
+      ['Podie', 1, 'bygget på stedet 1020 × 1020 × 1040 mm · RAL 3002'],
     ]);
     expect(lines.every((l) => l.strategy === 'sum' && l.group === 'disk.disker' && l.price > 0)).toBe(true);
   });

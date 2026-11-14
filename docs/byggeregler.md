@@ -391,7 +391,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   1,0 m bygget på stedet koster omtrent 1320 som 6560 (20–30 min på 1 m, Bjørn). Hvordan tiden telles per seksjon og
   linjen og plukket, står i K13.
   *Bjørn 12.11.2026 (tid forslag) · `ITEM.counterProfile`, `counterWhole`, `counterHalf`, `counterCorner` · kode `src/calc/lines/objects.ts`, `src/cost/itemDefs.ts`, `src/foga/counter.ts`, `src/foga/engine.ts`, `src/domain/counters.ts` · test `src/calc/podium.test.ts`*
-- **K10 Seksjoner.** En disk eller et podium fra Disker og podier er satt sammen av seksjoner på et raster på 250 mm:
+- **K10 Seksjoner.** En disk eller et podie fra Disker og podier er satt sammen av seksjoner på et raster på 250 mm:
   250, 500, 750 eller 1000 c/c i hver retning. Et knutepunkt står i hvert hjørne av hver seksjon. Utvendig mål er
   c/c + 20 (270, 520, 770, 1020 …), skinnene c/c − 40 (210, 460, 710, 960), platene og toppene c/c − 24 (226, 476, 726,
   976). En lengde deles i hele meter først og resten sist, regnet fra seksjonen man startet i (1750 = 1000 + 750).
@@ -431,10 +431,10 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   går til den høye. Høyden står i pillen («H 540») og i linjen i tilbudet, med alle høydene når disken har flere
   («540/1040»). Å endre høyden på en seksjon som står, kommer med skuffen i trinn 2.
   *Bjørn 13.11.2026 · kode `src/foga/counter.ts`, `src/domain/podiums.ts`, `src/ui/plan/QuickPicks.tsx` · test `src/domain/podiums.test.ts`*
-- **K13 Pris og plukk for Disker og podier.** Ett katalogprodukt, «Disk og podium, bygget på stedet»
+- **K13 Pris og plukk for Disker og podier.** Ett katalogprodukt, «Disk og podie, bygget på stedet»
   (varenummer 6570 er midlertidig), priset av kostmotoren fra delene og arbeidet, én linje per disk, «bygget på stedet
   L × D × H mm», og delene plukkes løse under Disker. Linjen heter «Disk» når fasongen ikke er dypere enn 500 noe sted
-  (ingen 750 × 750 får plass i den), ellers «Podium». Toppene har prisartikler for alle målene i K10. Tid, plassholder:
+  (ingen 750 × 750 får plass i den), ellers «Podie». Toppene har prisartikler for alle målene i K10. Tid, plassholder:
   `counterWhole` per seksjon med lengste side over 500, `counterHalf` per seksjon ellers, `counterCorner` per innvendig
   hjørne i omrisset, med tidene i K9.
   *Bjørn 13.11.2026 · `ITEM.counterBoard`, `counterWhole`, `counterHalf`, `counterCorner` · kode `src/calc/lines/objects.ts`, `src/cost/itemDefs.ts`, `src/catalog/defaultCatalog.ts`, `src/domain/podiums.ts` · test `src/calc/podium.test.ts`, `src/domain/podiums.test.ts`*

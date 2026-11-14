@@ -80,7 +80,7 @@ function builtUses(b: CounterBuild, whole: number, half: number, corners: number
 export const podiumKey = (id: string) => `disk:${id}`;
 
 /** A counter or podium of Disker og podier (Byggeregel K13): as K9, built on site and priced by the cost engine from its
- *  parts and the work, one line each, «Disk» when no deeper than 500, else «Podium»; without a complete cost the
+ *  parts and the work, one line each, «Disk» when no deeper than 500, else «Podie»; without a complete cost the
  *  catalog price per m² of top. Its parts are picked loose under Disker. */
 function podiumLine(c: CalcContext, o: PlacedObject): CalcLine {
   const hit = c.idx.byArtnr.get(o.product);
