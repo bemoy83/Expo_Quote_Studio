@@ -106,9 +106,10 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   *Bjørn 31.10.2026 · `rules.beam.max` · kode `src/calc/beams/beamSegments.ts`, `src/calc/beams/beams.ts` · test `src/calc/calc.test.ts`*
 - **T3 Standard takdrager.** Legges langs de åpne sidene av standen. En ende mot en vegg deler veggens stolpe.
   *Bjørn 31.10.2026 · kode `src/calc/beams/beams.ts` · test `src/calc/calc.test.ts`*
-- **T4 Vegg deler drageren.** Der en vegg møter eller krysser en takdrager, også enden av en inner- eller romvegg, deles
-  drageren og deler veggens stolpe. Hver side er egen lengde etter T2.
-  *Bjørn 1.11.2026 · kode `src/calc/beams/beams.ts` · test `src/calc/calc.test.ts`*
+- **T4 Vegg deler drageren.** Der en vegg møter eller krysser en takdrager i en av veggens stolper, også enden av en
+  inner- eller romvegg og også utenfor metrelinjene (V9), deles drageren og deler veggens stolpe. Hver side er egen
+  lengde etter T2. Krysser veggen mellom stolpene, gjelder T17.
+  *Bjørn 1.11.2026 og 14.11.2026 · kode `src/calc/beams/beams.ts`, `src/calc/beams/wallLines.ts` · test `src/calc/calc.test.ts`, `src/calc/beams/offGridWalls.test.ts`*
 - **T5 Tverrdrager.** Fra hver 6 m-skjøt går en tverrdrager inn til motstående vegg eller side. Den går videre forbi en
   vegg som møter eller krysser den, delt på veggens stolpe, og stopper bare der en vegg går langs linjen.
   *Bjørn 1.11.2026 · kode `src/calc/beams/beams.ts` · test `src/calc/calc.test.ts`*
@@ -169,6 +170,12 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   lengre, står skjøten i krysset som før, med 94 × 80 oppå. En ende som henger på en drager (T9) er uendret. To hevede
   dragere ligger i samme høyde og følger T10.
   *Bjørn 10.11.2026 · `rules.beam.max` · kode `src/calc/beams/beamLift.ts`, `src/calc/context.ts` · test `src/calc/beams/beamLift.test.ts`*
+- **T17 Uten stolpe heves.** En standard takdrager (langs siden, tverrdrager) som krysser en vegg mellom veggens
+  stolper, finner ingen stolpe å hvile på: hele løpet heves over veggen som ved T13, med 94 × 80 på stolpene (T14), og
+  ligger løst oppå veggen (T16). En vegg langs drageren stenger den strekningen, også utenfor metrelinjene (T11), og
+  drageren deler veggens endestolpe. En tegnet takdrager henger fortsatt på krok der den møter en vegg mellom stolpene
+  (T15), og en støttedrager (T7) stopper på krok der.
+  *Bjørn 14.11.2026 · kode `src/calc/beams/beamLift.ts`, `src/calc/beams/beams.ts`, `src/calc/beams/supportBeams.ts`, `src/calc/beams/innerBeams.ts`, `src/calc/beams/wallLines.ts` · test `src/calc/beams/offGridWalls.test.ts`*
 ## D · Dør og forheng
 
 - **D1 Dør.** Fogas ferdige dør: karm i 292 med lås 410 ferdig montert, plukkes som ett dørblad. Bladet er 2000 høyt og

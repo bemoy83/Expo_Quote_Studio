@@ -1,11 +1,13 @@
-// Byggeregler T2–T5, T12 (docs/byggeregler.md).
-import { inward, makeModule, pointKey, SIDES, sideLength, sidePoint } from '../../domain/grid';
+// Byggeregler T2–T5, T12, T17 (docs/byggeregler.md).
+import { inward, pointKey, SIDES, sideEnds, sideLength, type Module } from '../../domain/grid';
 import type { Point, Side, Stand, Variant } from '../../domain/types';
 import { standardBeamsOn, standWallSide, type BuiltModule } from '../../domain/walls';
 import { layoutInnerBeams, mergeBeams, type InnerBeamLayout } from './innerBeams';
 import { splitBeamLength, type BeamLayout, type BeamSegment } from './beamSegments';
+import { rayAt, wallCrossings, wallSpans, type Ray } from './wallLines';
 import { layoutSupportBeams, NO_SUPPORT_BEAMS, type SupportBeamLayout } from './supportBeams';
 
+const EPS = 1e-6;
 const lerp = (a: Point, b: Point, t: number): Point => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
 
 export const NO_BEAMS: BeamLayout = { segments: [], posts: new Map(), lm: 0 };
@@ -19,9 +21,8 @@ export function variantBeams(
   wallPoints: ReadonlyMap<string, Point>,
   maxLength: number,
 ): { standard: BeamLayout; inner: InnerBeamLayout; support: SupportBeamLayout; all: BeamLayout } {
-  const moduleKeys = new Set(mods.map((m) => m.key));
-  const frame = standardBeamsOn(v) ? layoutBeams(v.stand, moduleKeys, wallPoints, maxLength) : NO_BEAMS;
-  const drawn = layoutInnerBeams(v.innerBeams ?? [], frame, moduleKeys, wallPoints, maxLength);
+  const frame = standardBeamsOn(v) ? layoutBeams(v.stand, mods, wallPoints, maxLength) : NO_BEAMS;
+  const drawn = layoutInnerBeams(v.innerBeams ?? [], frame, mods, wallPoints, maxLength);
   const wallsById = new Map(v.walls.map((w) => [w.id, w]));
   const sideOf = (m: BuiltModule) => {
     const w = wallsById.get(m.wallId);
@@ -36,21 +37,17 @@ export function variantBeams(
 }
 
 /**
- * Takdrager along the open parts of the perimeter. A perimeter edge with a wall module (an opening included) is closed.
- * Posts go at every joint and every run end; ends resting on a wall share the wall's post. From every joint a cross beam
- * runs inward to the opposite side, or to a wall running along its line. A wall meeting or crossing any run splits it.
+ * Takdrager along the open parts of the perimeter. A stretch of the perimeter a wall lies along (an opening included)
+ * is closed. Posts go at every joint and every run end; ends resting on a wall share the wall's post. From every joint a
+ * cross beam runs inward to the opposite side, or to a wall running along its line. A wall meeting or crossing any run at
+ * one of its posts splits it there (T4), wherever it stands in the 250 grid; one crossing between its posts does not:
+ * the run is lifted over it (T17, calc/beams/beamLift.ts).
  */
-export function layoutBeams(
-  stand: Stand,
-  moduleKeys: ReadonlySet<string>,
-  wallPoints: ReadonlyMap<string, Point>,
-  maxLength: number,
-): BeamLayout {
+export function layoutBeams(stand: Stand, mods: readonly Module[], wallPoints: ReadonlyMap<string, Point>, maxLength: number): BeamLayout {
   const segments: BeamSegment[] = [];
   const posts = new Map<string, Point>();
   const joints: { side: Side; at: Point }[] = [];
   const addPost = (p: Point) => posts.set(pointKey(p), p);
-  const wall = (a: Point, b: Point) => moduleKeys.has(makeModule(a, b).key);
 
   /** One length from `from` to `to`, split by the max length. Returns the joints in between. */
   const pushSplit = (from: Point, to: Point, side: Side, cross: boolean): Point[] => {
@@ -68,18 +65,18 @@ export function layoutBeams(
   };
 
   /**
-   * A run along the grid line `at(t)`, t from `from` to `to`. A wall meeting or crossing the run breaks it: beam and wall
-   * share that post, and each side is its own length, split by the max. Posts at every break and joint; returns the joints.
+   * A run along `r` from t = `from` to `to`. A wall meeting or crossing the run at one of its posts breaks it: beam and
+   * wall share that post, and each side is its own length, split by the max. Posts at every break and joint; returns
+   * the joints.
    */
-  const layRun = (at: (t: number) => Point, from: number, to: number, side: Side, cross: boolean): Point[] => {
+  const layRun = (r: Ray, from: number, to: number, side: Side, cross: boolean): Point[] => {
     const out: Point[] = [];
-    let a = from;
-    for (let t = from + 1; t <= to; t++) {
-      if (t < to && !wallPoints.has(pointKey(at(t)))) continue;
-      out.push(...pushSplit(at(a), at(t), side, cross));
-      addPost(at(a));
-      addPost(at(t));
-      a = t;
+    const breaks = wallCrossings(r, mods, wallPoints).filter((c) => c.post && c.t > from + EPS && c.t < to - EPS);
+    const stops = [from, ...breaks.map((c) => c.t), to];
+    for (let k = 0; k + 1 < stops.length; k++) {
+      out.push(...pushSplit(rayAt(r, stops[k]), rayAt(r, stops[k + 1]), side, cross));
+      addPost(rayAt(r, stops[k]));
+      addPost(rayAt(r, stops[k + 1]));
     }
     out.forEach(addPost);
     return out;
@@ -87,19 +84,14 @@ export function layoutBeams(
 
   for (const side of SIDES) {
     const n = sideLength(stand, side);
-    const at = (t: number) => sidePoint(stand, side, t);
-    const closed = (t: number) => wall(at(t), at(t + 1));
+    const [a, b] = sideEnds(stand, side);
+    const r: Ray = { o: a, d: [Math.sign(b[0] - a[0]), Math.sign(b[1] - a[1])] };
+    // The open stretches between the walls along the side
     let i = 0;
-    while (i < n) {
-      if (closed(i)) {
-        i++;
-        continue;
-      }
-      let e = i;
-      while (e < n && !closed(e)) e++;
+    for (const [lo, hi] of [...wallSpans(r, mods), [n, n] as [number, number]]) {
       // Only the max-length joints get a cross beam; at a wall the wall holds the beam.
-      for (const j of layRun(at, i, e, side, false)) joints.push({ side, at: j });
-      i = e;
+      if (Math.min(lo, n) > i + EPS) for (const j of layRun(r, i, Math.min(lo, n), side, false)) joints.push({ side, at: j });
+      i = Math.max(i, hi);
     }
   }
 
@@ -107,15 +99,14 @@ export function layoutBeams(
   // them, and stop only where a wall runs along their line.
   const seen = new Set<string>();
   for (const { side, at: from } of joints) {
-    const [dx, dy] = inward(side);
-    const at = (t: number): Point => [from[0] + dx * t, from[1] + dy * t];
+    const r: Ray = { o: from, d: inward(side) };
     const reach = side === 'back' || side === 'front' ? stand.depth : stand.width;
-    let stop = 0;
-    while (stop < reach && !wall(at(stop), at(stop + 1))) stop++;
-    const key = [pointKey(from), pointKey(at(stop))].sort().join('|');
-    if (stop === 0 || seen.has(key)) continue;
+    const along = wallSpans(r, mods).find(([, hi]) => hi > EPS);
+    const stop = Math.min(reach, along ? Math.max(0, along[0]) : reach);
+    const key = [pointKey(from), pointKey(rayAt(r, stop))].sort().join('|');
+    if (stop < EPS || seen.has(key)) continue;
     seen.add(key);
-    layRun(at, 0, stop, side, true);
+    layRun(r, 0, stop, side, true);
   }
 
   return { segments, posts, lm: segments.reduce((a, s) => a + s.length, 0) };

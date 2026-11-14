@@ -1,11 +1,12 @@
 // Innvendige takdragere: the beams the customer draws inside the stand, laid out against the standard beams and the
 // walls: hooks, crossings, walls along them, own posts and foot plates. Byggeregler T8–T12, T15 (docs/byggeregler.md).
-// A drawn beam may lie off the 1 m grid across its direction (T15): it then meets walls between their posts, where it
-// hangs on a hook on the top rail 92, and crosses other beams between whole metres.
-import { makeModule, pointKey } from '../../domain/grid';
+// A drawn beam may lie off the 1 m grid across its direction (T15), and a wall anywhere in the 250 grid (V9): where they
+// meet between the wall's posts the beam hangs on a hook on the top rail 92; it crosses other beams between whole metres.
+import { pointKey, type Module } from '../../domain/grid';
 import type { InnerBeam, Point } from '../../domain/types';
 import { splitBeamLength, type BeamLayout, type BeamSegment } from './beamSegments';
 import type { WallSupport } from '../wallSupports';
+import { wallCrossings, wallSpans, type Ray } from './wallLines';
 
 /** Where drawn beams hang on hooks is read from the layout (calc/beams/beamHooks.ts): an end on no post. */
 export interface InnerBeamLayout extends BeamLayout {
@@ -36,58 +37,56 @@ const inside = (l: Line, p: Point) => {
   return Math.abs(across - l.c) < EPS && along > l.lo + EPS && along < l.hi - EPS;
 };
 
-const whole = (v: number) => Math.abs(v - Math.round(v)) < EPS;
+const rayOf = (l: Line): Ray => ({ o: pointOn(l, 0), d: l.o === 'h' ? [1, 0] : [0, 1] });
 
-/** p lies on a built wall between two of its posts: one coordinate on the grid, the other between two grid points. */
-const onWallBetween = (moduleKeys: ReadonlySet<string>, p: Point) => {
-  const [wx, wy] = [whole(p[0]), whole(p[1])];
-  if (wx === wy) return false;
-  const [a, b]: [Point, Point] = wx ? [[p[0], Math.floor(p[1])], [p[0], Math.ceil(p[1])]] : [[Math.floor(p[0]), p[1]], [Math.ceil(p[0]), p[1]]];
-  return moduleKeys.has(makeModule(a, b).key);
-};
+/** p lies on a built wall module, its ends included. */
+const onModule = (m: Module, p: Point) =>
+  p[0] >= Math.min(m.a[0], m.b[0]) - EPS && p[0] <= Math.max(m.a[0], m.b[0]) + EPS && p[1] >= Math.min(m.a[1], m.b[1]) - EPS && p[1] <= Math.max(m.a[1], m.b[1]) + EPS;
 
 /** Of two drawn beams crossing, the one that runs through: the longer, or the first drawn when equal. */
 const runsThrough = (a: Line, ai: number, b: Line, bi: number) => len(a) > len(b) + EPS || (Math.abs(len(a) - len(b)) < EPS && ai < bi);
 
-/** The pieces of a drawn beam not covered by a wall running along it (whole metres from its start). */
-function uncovered(l: Line, moduleKeys: ReadonlySet<string>): Line[] {
+/** The pieces of a drawn beam not covered by a wall running along it. */
+function uncovered(l: Line, mods: readonly Module[]): Line[] {
   const out: Line[] = [];
   let a = l.lo;
-  for (let t = l.lo; t < l.hi - EPS; t++) {
-    const b = Math.min(t + 1, l.hi);
-    if (!moduleKeys.has(makeModule(pointOn(l, t), pointOn(l, b)).key)) continue;
-    if (t > a + EPS) out.push({ ...l, lo: a, hi: t });
-    a = b;
+  for (const [lo, hi] of wallSpans(rayOf(l), mods)) {
+    if (hi < l.lo + EPS || lo > l.hi - EPS) continue;
+    if (lo > a + EPS) out.push({ ...l, lo: a, hi: lo });
+    a = Math.max(a, hi);
   }
   if (l.hi > a + EPS) out.push({ ...l, lo: a, hi: l.hi });
   return out;
 }
 
 /**
- * Lay out the drawn beams. `standard`: the standard beams (empty when turned off); `moduleKeys`: every built wall
- * module (openings included); `wallPoints`: every wall post.
+ * Lay out the drawn beams. `standard`: the standard beams (empty when turned off); `mods`: every built wall module
+ * (openings included), wherever it stands in the 250 grid; `wallPoints`: every wall post.
  * `posts` holds every point a drawn beam rests on a post, the wall's or the standard beam's included, as in layoutBeams.
  */
 export function layoutInnerBeams(
   beams: readonly InnerBeam[],
   standard: BeamLayout,
-  moduleKeys: ReadonlySet<string>,
+  mods: readonly Module[],
   wallPoints: ReadonlyMap<string, Point>,
   maxLength: number,
 ): InnerBeamLayout {
-  const lines = beams.flatMap((b) => uncovered(lineOf(b.from, b.to), moduleKeys)).filter((l) => len(l) > EPS);
+  const lines = beams.flatMap((b) => uncovered(lineOf(b.from, b.to), mods)).filter((l) => len(l) > EPS);
   const outer = standard.segments.map((s) => lineOf(s.from, s.to));
   const sharedPost = (p: Point) => wallPoints.has(pointKey(p)) || standard.posts.has(pointKey(p));
 
-  const onWall = (p: Point) => onWallBetween(moduleKeys, p);
+  // On a wall between its posts
+  const onWall = (p: Point) => !wallPoints.has(pointKey(p)) && mods.some((m) => onModule(m, p));
   // Breaks inside each beam: a post (wall or standard post under it) or a hook (it crosses a wall between its posts, or
-  // is the shorter of a crossing). Looked for at every whole metre and where a beam off the grid crosses it
+  // is the shorter of a crossing). Looked for at every whole metre, where a beam off the grid crosses it and where a
+  // wall crosses it
   type Break = { t: number; hook: boolean };
   const pieces = lines.map((l, i) => {
     const breaks: Break[] = [];
     const at = new Set<number>();
     for (let t = Math.ceil(l.lo + EPS); t < l.hi - EPS; t++) at.add(t);
     for (const o of [...outer, ...lines]) if (o.o !== l.o && o.c > l.lo + EPS && o.c < l.hi - EPS && l.c > o.lo - EPS && l.c < o.hi + EPS) at.add(o.c);
+    for (const w of wallCrossings(rayOf(l), mods, wallPoints)) if (w.t > l.lo + EPS && w.t < l.hi - EPS) at.add(w.t);
     for (const t of [...at].sort((a, b) => a - b)) {
       const p = pointOn(l, t);
       if (sharedPost(p)) breaks.push({ t, hook: false });
