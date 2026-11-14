@@ -51,6 +51,11 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 - **V7 Innervegg.** Tegnes hvor som helst på standen, også ut mot kanten, men blir aldri standvegg. Flyttes i hele
   meter, ikke inn på en standvegg. Frittstående flyttes i begge retninger, inntil en annen innervegg bare til siden.
   *Bjørn 31.10.2026 og 1.11.2026 · kode `src/domain/edit.ts` · test `src/domain/standWalls.test.ts`*
+- **V9 Vegglinje.** En systemvegg eller tekstilvegg kan stå på hvilken som helst linje i 250-rasteret, ikke bare på
+  metrelinjene. Uten Shift tegner penselen i hele meter på metrelinjene; med Shift eller «Fin» viser den 250 på den
+  250-linjen som er nærmest pekeren, og draget svinger på 250-noder. Modulene legges i hele meter fra start og resten
+  sist (V1). Rom (bakrom og frihåndsrom) står foreløpig på metrelinjene.
+  *Bjørn 14.11.2026 · kode `src/domain/grid.ts`, `src/domain/runDraw.ts` · test `src/domain/runDraw.test.ts`*
 
 ## S · Støtte for systemvegg
 

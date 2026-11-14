@@ -15,9 +15,19 @@ describe('run drawing', () => {
     expect(runTo(d, [0.4, 1])).toEqual([[3, 1], [0, 1]]);
   });
 
-  it('with Shift the pen shows 250 under the pointer on the metre line', () => {
+  it('with Shift the pen shows the 250 edge nearest on the 250 grid (V9)', () => {
     expect(shownModule(stand, { x: 2.6, y: 1.05 }, true)).toMatchObject({ a: [2.5, 1], b: [2.75, 1] });
     expect(shownModule(stand, { x: 5.9, y: 1.02 }, true)).toMatchObject({ a: [5.75, 1], b: [6, 1] });
+    // Off the metre lines: y = 1.25, and x = 2.5 upright
+    expect(shownModule(stand, { x: 2.6, y: 1.27 }, true)).toMatchObject({ a: [2.5, 1.25], b: [2.75, 1.25] });
+    expect(shownModule(stand, { x: 2.52, y: 1.6 }, true)).toMatchObject({ a: [2.5, 1.5], b: [2.5, 1.75] });
+  });
+
+  it('with Shift a wall can be drawn off the metre lines, and turns at a 250 node', () => {
+    const d = press([2.6, 1.27], true);
+    expect(runTo(d, [3.6, 1.27])).toEqual([[2.5, 1.25], [3.5, 1.25]]);
+    const f = press([2.7, 1.27], true);
+    expect(runTo(f, [2.8, 2.1])).toEqual([[2.75, 1.25], [2.75, 2]]);
   });
 
   it('with Shift a drag grows the 250 shown in 250 steps, the piece shown staying put', () => {
@@ -31,9 +41,9 @@ describe('run drawing', () => {
     const d = press([2.8, 1]);
     expect(runTo(d, [2.9, 2.6])).toEqual([[3, 1], [3, 3]]);
     expect(runTo(d, [2.9, 0.4])).toEqual([[3, 1], [3, 0]]);
-    // With Shift: the 250 shown turns at the metre line nearest its end (walls stand on metre lines), in 250 steps
+    // With Shift: the 250 shown turns at its end nearest the press, in 250 steps
     const f = press([2.8, 1], true);
-    expect(runTo(f, [2.8, 1.8])).toEqual([[3, 1], [3, 1.75]]);
+    expect(runTo(f, [2.8, 1.8])).toEqual([[2.75, 1], [2.75, 1.75]]);
   });
 
   it('stays in the stand, at least one step', () => {
