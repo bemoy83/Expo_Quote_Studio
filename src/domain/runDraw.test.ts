@@ -1,4 +1,4 @@
-// One drawing tool for straight runs (Bjørn 14.11.2026): the module shown stays put, Shift takes the end pressed by.
+// One drawing tool for straight runs (Bjørn 14.11.2026): the module shown stays put, Shift takes the end nearest the press.
 import { describe, expect, it } from 'vitest';
 import { rebaseRun, runTo, shownModule, startRun } from './runDraw';
 import type { Point, Stand } from './types';
@@ -23,6 +23,14 @@ describe('run drawing', () => {
     // By the low end: 3 stands, laid from there
     const e = press([2.1, 1], true);
     expect(runTo(e, [1.35, 1])).toEqual([[3, 1], [1.25, 1]]);
+  });
+
+  it('with Shift a press near the middle takes the nearest end, as a corner grip (no middle rule)', () => {
+    const d = press([2.45, 1], true);
+    expect(runTo(d, [2.1, 1])).toEqual([[3, 1], [1.75, 1]]);
+    expect(runTo(d, [2.8, 1])).toEqual([[3, 1], [2.25, 1]]);
+    const e = press([2.55, 1], true);
+    expect(runTo(e, [3.3, 1])).toEqual([[2, 1], [3.75, 1]]);
   });
 
   it('dragged across, it turns at the end of the module nearest the press', () => {

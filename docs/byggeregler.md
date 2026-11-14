@@ -24,7 +24,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 - **V1 Modul.** En systemvegg (standvegg, innervegg, romvegg) bygges i moduler på cc 1000 mellom stolpesentrene.
   Fysisk lengde er cc pluss én stolpe: 4000 c/c er 4040. Veggpenselen viser modulen et klikk lagrer, og et drag vokser fra
   den i hele meter (samme tegneverktøy som disk, `domain/runDraw.ts`); med Shift står forhåndsvisningen stille og enden
-  du trykker ved flyttes i 250-steg («Fin» på iPad), på metergitterets linjer; Shift trykket eller sluppet midt i
+  nærmest trykket flyttes i 250-steg, som et hjørnegrep på disken («Fin» på iPad), på metergitterets linjer; Shift trykket eller sluppet midt i
   draget låser det som er tegnet og går videre derfra. En strek over vegger som står legger bare til resten. Tøm tar en hel
   modul, også en kort. Kortere moduler finnes i samme steg som diskene (K10): 250, 500 og 750 c/c. En vegg legges i hele meter fra der den starter, og er lengden ikke
   hel, er den siste modulen kortere (1750 = 1000 + 750). Delene er de samme, kappet: skinnene c/c − 40 (210, 460, 710),
@@ -417,10 +417,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   pekeren går `d` forbi kanten, inne i seksjonen skjer ingenting, og begge retninger gir et rektangel. Der den ikke får
   plass, nektes den med «Ikke plass til disken her». En disk kan stå helt inntil en vegg. Med Shift (som i CAD: det man
   har tak i, avgjøres av hvor man trykker, aldri av hvilken vei man drar) står forhåndsvisningen stille, og pekeren kan
-  flyttes over den. Et trykk ved en kant eller et hjørne (utenfor den midterste tredjedelen) tar tak i den kanten, som
-  vises tykk mens man peker, og flytter den `round(Δ / 250) × 250` ut eller inn til 250; motsatt kant står stille. Et
-  trykk midt i tegner fra rasterlinjen gjennom trykket til den nærmest pekeren, minst 250, og de første 75 mm endrer
-  ingenting. Shift trykket eller sluppet midt i et drag låser det som er tegnet og går videre derfra; tastetrykket alene
+  flyttes over den. Shift-tegning virker som hjørnegrepet på en valgt disk (Bjørn 14.11.2026): et trykk hvor som helst
+  tar tak i hjørnet nærmest trykket, som vises tykt mens man peker, og flytter det `round(Δ / 250) × 250` ut eller inn
+  til 250 i hver retning; hjørnet på tvers står stille. Det er ingen egen regel for et trykk midt i. Shift trykket eller sluppet midt i et drag låser det som er tegnet og går videre derfra; tastetrykket alene
   endrer aldri størrelsen. «Fin» i hurtigvalget gjør det samme som Shift for berøring, uten å fryse forhåndsvisningen.
   Påbygg: er pekeren utenfor en disk fra Disker og podier og innen 300 mm fra yttersiden av en av sidene, legger
   seksjonen seg inntil siden i diskens raster. Den glir langs siden i 500-steg regnet fra sidens ende (250 med Shift
