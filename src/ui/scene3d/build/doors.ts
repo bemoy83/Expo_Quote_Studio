@@ -3,6 +3,7 @@
 // lock 410 the same on both sides. A curtain hangs from the glider in the header's bottom rail.
 // Byggeregler D2, D5 (docs/byggeregler.md).
 import * as THREE from 'three'
+import { fabricOf } from '../../../catalog/lookup'
 import { doorHinge, doorLevels, doorRal, doorSwing, doorWindows } from '../../../domain/doors'
 import { wallDirection } from '../../../domain/grid'
 import type { BuiltModule } from '../../../domain/walls'
@@ -29,14 +30,15 @@ export function buildOpening(c: BuildContext, m: BuiltModule, tag: Tag) {
   g.rotation.y = Math.atan2(-wy, wx)
   root.add(g)
 
-  if (productOf(o.product)?.opening !== 'door') {
+  const product = productOf(o.product)
+  if (product?.opening !== 'door') {
     // Curtain: a folded sheet from the glider down to just above the floor
     const h = lv.header - 0.02
     const geo = new THREE.PlaneGeometry(rules.wall.cc - post - 0.02, h, 24, 1)
     const pos = geo.attributes.position
     for (let k = 0; k < pos.count; k++) pos.setZ(k, Math.sin((pos.getX(k) + 0.5) * Math.PI * 12) * 0.025)
     geo.computeVertexNormals()
-    const mesh = new THREE.Mesh(geo, mat('openings', CURTAIN, { side: THREE.DoubleSide, roughness: 1 }))
+    const mesh = new THREE.Mesh(geo, mat('openings', fabricOf(product, o.fabric)?.color ?? CURTAIN, { side: THREE.DoubleSide, roughness: 1 }))
     mesh.position.y = 0.02 + h / 2
     add(mesh, tag, g)
     return

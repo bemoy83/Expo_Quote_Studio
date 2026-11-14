@@ -1,12 +1,15 @@
-// The pill on a door or curtain: door or curtain, swing and hinge, the leaf's colour; remove makes it wall again
+// The pill on a door or curtain: door or curtain, swing and hinge, the leaf's colour or the curtain's; remove makes it
+// wall again
 // (docs/pille-og-skuff.md).
 import { ArrowLeftRight, Blinds, DoorClosed, FlipHorizontal2 } from 'lucide-react'
-import { canFlipSwing, doorRal, flipHinge, flipSwing, openingRoom, setDoorRal, setOpeningProduct } from '../../../domain/doors'
+import { fabricOf, shortName } from '../../../catalog/lookup'
+import { canFlipSwing, doorRal, flipHinge, flipSwing, openingRoom, setCurtainFabric, setDoorRal, setOpeningProduct } from '../../../domain/doors'
 import { roomName } from '../../../domain/rooms'
 import { isStandWall } from '../../../domain/walls'
 import { openingProducts, productOf, rules } from '../../env'
 import { mm } from '../../format'
-import { QBtn, Sep } from '../quick/parts'
+import { QBtn, Sep, Sw } from '../quick/parts'
+import { fabricSwatches } from '../swatches'
 import type { Chosen } from '../selection'
 import { Colours, type Content, type PillActions } from './parts'
 
@@ -18,6 +21,7 @@ export function doorPill(p: PillActions, c: Extract<Chosen, { kind: 'opening' }>
   const room = openingRoom(v, o)
   const where = room ? roomName(room).toLowerCase() : isStandWall(w) ? 'standvegg' : 'innervegg'
   const ral = doorRal(v, o)
+  const fabric = fabricOf(product, o.fabric)
   return {
     name: product?.name ?? (door ? 'Dør' : 'Forheng'),
     meta: `${where} · ${door ? mm(rules.door.swing) : mm(rules.wall.cc - rules.wall.post)}`,
@@ -26,9 +30,9 @@ export function doorPill(p: PillActions, c: Extract<Chosen, { kind: 'opening' }>
         {openingProducts().map((x) => {
           const a = x.variants[0].artnr
           return (
-            <QBtn key={x.id} setting on={o.product === a} title={x.name} label={x.opening === 'door' ? 'Dør' : 'Forheng'} onClick={() => o.product !== a && onEdit((y) => setOpeningProduct(y, o.id, a))}>
+            <QBtn key={x.id} setting on={o.product === a} title={x.name} label={shortName(x)} onClick={() => o.product !== a && onEdit((y) => setOpeningProduct(y, o.id, a))}>
               {x.opening === 'door' ? <DoorClosed size={15} /> : <Blinds size={15} />}
-              {x.opening === 'door' ? 'Dør' : 'Forheng'}
+              {shortName(x)}
             </QBtn>
           )
         })}
@@ -45,6 +49,14 @@ export function doorPill(p: PillActions, c: Extract<Chosen, { kind: 'opening' }>
             </QBtn>
             <Sep />
             <Colours value={ral} title={(n) => `Dørblad ${n}`} onPick={(r) => onEdit((y) => setDoorRal(y, o.id, r))} />
+          </>
+        )}
+        {!door && product?.fabrics && fabric && (
+          <>
+            <Sep />
+            {fabricSwatches(product.fabrics, fabric.key, (n) => `Forheng ${n}`, (f) => f !== fabric.key && onEdit((y) => setCurtainFabric(y, o.id, f))).map(({ key, ...x }) => (
+              <Sw key={key} {...x} />
+            ))}
           </>
         )}
       </>

@@ -167,6 +167,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   292-rammen (790 × 1840); rammen og skinnene dekker sin stripe av bildet, som stolpene mellom veggplatene.
   Gjelder 3D og veggtegningen i skuffen; døren plukkes fortsatt som én enhet (D1).
   *Bjørn 6.11.2026 · `RECIPES.door` · kode `src/ui/scene3d/build/doors.ts`, `src/ui/plan/elevation.tsx`, `src/domain/doors.ts` · test `src/ui/scene3d/build.test.ts`, `src/domain/doors.test.ts`*
+- **D6 Forhengets farge.** Forheng finnes i sort, grå og blå; sort er standard. Samme art.nr og pris, fargen står på
+  linjen («Forheng med overstykke · sort»), og to forheng i ulik farge er to artikler. Dørbladet tar veggfargene (RAL).
+  *Bjørn 14.11.2026 · `fabrics` på 6131 · kode `src/catalog/defaultCatalog.ts`, `src/calc/lines/doors.ts`, `src/domain/doors.ts` · test `src/domain/doors.test.ts`, `src/ui/wallPen.test.ts`*
 
 ## R · Rom
 

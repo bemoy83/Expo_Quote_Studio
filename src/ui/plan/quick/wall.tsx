@@ -1,12 +1,13 @@
 // Vegg by function (Bjørn 14.11.2026): Pensel is Vegg, the opening behind the Dør button and Takdrager; Farge is the
-// colour of the item in hand and its bucket (hidden for Takdrager, which has none); Tilpasset chooses Dør or Forheng
+// colour of the item in hand and its bucket: wall colours for a wall or door leaf, the fabrics for a curtain, none for
+// Takdrager; Tilpasset chooses Dør or Forheng
 // with an opening in hand; then a bakrom to add.
 import { Blinds, BrickWall, Box, DoorClosed } from 'lucide-react'
 import { shortName } from '../../../catalog/lookup'
 import { catalog } from '../../env'
 import type { Brush } from '../../tools'
 import { openingLabel, openingPen, openingProducts, openingShown, penColour, withColour, withOpening, type WallPen } from '../../wallPen'
-import { ralSwatches } from '../swatches'
+import { fabricSwatches, ralSwatches } from '../swatches'
 import { BeamIcon, Palette, QBtn, Sep } from './parts'
 import type { QuickCtx } from './types'
 
@@ -42,15 +43,24 @@ export function WallPicks({ p, head, more }: QuickCtx) {
         <BeamIcon />
         Takdrager
       </QBtn>
-      {/* Farge: on the item in hand, never another pen. Takdrager has none, so none is shown; Forheng is grey */}
-      {colour.kind !== 'none' && (
+      {/* Farge: on the item in hand, never another pen. Takdrager has none, so none is shown */}
+      {colour.kind === 'ral' && (
         <>
           <Sep />
           <Palette
-            swatches={ralSwatches(colour.kind === 'on' ? colour.ral : undefined, (n) => (colour.kind === 'off' ? `${item} · fargene er ikke avklart ennå` : `${item} ${n}`), (ral) => onPick(withColour(brush, ral)))}
-            disabled={colour.kind === 'off'}
+            swatches={ralSwatches(colour.ral, (n) => `${item} ${n}`, (ral) => onPick(withColour(brush, { ral })))}
             fill={brush.kind === 'wall' ? 'Fyll alle vegger med denne fargen' : 'Fyll alle dører med denne fargen'}
-            onFill={brush.kind === 'wall' ? p.onFillWalls : () => colour.kind === 'on' && p.onFillDoors(colour.ral)}
+            onFill={brush.kind === 'wall' ? p.onFillWalls : () => p.onFillDoors(colour.ral)}
+          />
+        </>
+      )}
+      {colour.kind === 'fabric' && (
+        <>
+          <Sep />
+          <Palette
+            swatches={fabricSwatches(colour.fabrics, colour.fabric, (n) => `${item} ${n}`, (fabric) => onPick(withColour(brush, { fabric })))}
+            fill="Fyll alle forheng med denne fargen"
+            onFill={() => p.onFillCurtains(colour.fabric)}
           />
         </>
       )}

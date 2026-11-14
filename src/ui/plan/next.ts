@@ -204,7 +204,7 @@ function targetOf(p: NextInput): NextTarget | null {
       const e = placing.module
       return placing.what === 'opening' && e && !doorAllowed(v, e.a, e.b) ? target(`door:${e.key}`, () => doorInvalid(e)) : null
     }
-    if (placing.what === 'opening' && placing.module && brush?.kind === 'opening') return doorTarget(v, placing.module, brush.product, hover, true)
+    if (placing.what === 'opening' && placing.module && brush?.kind === 'opening') return doorTarget(v, placing.module, brush, hover, true)
     if (placing.what === 'decor') return decorTarget(p, hover)
     if (placing.what === 'object') return objectTarget(v, brush, hover)
     return null
@@ -270,7 +270,7 @@ function targetOf(p: NextInput): NextTarget | null {
   if (pens.decorTool) return decorTarget(p, hover)
   if (pens.openingTool && brush?.kind === 'opening') {
     const e = openingEdge({ v, hits }, hover)
-    return e ? doorTarget(v, e, brush.product, null, false) : null
+    return e ? doorTarget(v, e, brush, null, false) : null
   }
   if (pens.podiumTool) return podiumHover(p, p.podiumFreeze ?? hover, p.podiumFreeze ? hover : null)
   if (pens.objectTool && hits.onStand(hover)) return objectTarget(v, brush, hover)
@@ -312,15 +312,16 @@ const doorInvalid = (e: Module): NextOutcome => line({ hint: DOOR_IN_STAND_WALL,
  * Door or curtain in module e. Held (q), a door turns toward the pointer as a release stores it (placeOpening): the key
  * follows the side of the wall and the half of the module the pointer is in.
  */
-function doorTarget(v: Variant, e: Module, product: string, q: P | null, held: boolean): NextTarget {
+function doorTarget(v: Variant, e: Module, pen: Extract<Brush, { kind: 'opening' }>, q: P | null, held: boolean): NextTarget {
+  const { product, ral, fabric } = pen
   if (!doorAllowed(v, e.a, e.b)) return target(`door:${e.key}`, () => doorInvalid(e))
   const door = isDoor(product)
   const h = e.a[1] === e.b[1]
   const across = q ? (h ? q.y - e.a[1] : q.x - e.a[0]) : 0
   const along = q ? (h ? q.x - Math.min(e.a[0], e.b[0]) : q.y - Math.min(e.a[1], e.b[1])) : 0
   const turn = door && q ? `${Math.abs(across) < DOOR_AIM_MIN ? 0 : Math.sign(across)}:${along < 0.5 ? 0 : 1}` : ''
-  return target(`door:${e.key}:${product}:${turn}`, () =>
-    line({ edit: (x) => placeOpening(x, e.a, e.b, product, door, door ? q : null), hint: held && door ? 'Dra mot siden døren skal slå · slipp for å sette inn · Esc avbryter' : null }),
+  return target(`door:${e.key}:${product}:${ral ?? ''}:${fabric ?? ''}:${turn}`, () =>
+    line({ edit: (x) => placeOpening(x, e.a, e.b, product, door, door ? q : null, { ral, fabric }), hint: held && door ? 'Dra mot siden døren skal slå · slipp for å sette inn · Esc avbryter' : null }),
   )
 }
 

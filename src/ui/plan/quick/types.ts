@@ -34,6 +34,8 @@ export interface QuickPicksProps {
   onFillWalls: () => void
   /** The bucket with a door in hand: every door leaf in this colour. */
   onFillDoors: (ral: string) => void
+  /** The bucket with a curtain in hand: every curtain in this colour. */
+  onFillCurtains: (fabric: string) => void
   /** The stand's wall colour: what a door with no colour of its own has. */
   standRal: string
   /** The bucket of Disker og podier: every counter and podium it drew in the pen's colour. */
