@@ -1,14 +1,15 @@
-// The textile brush: a stroke stands free on foot plates, a click next to a system wall fills that face's free part. The
-// motif on the pen (Farge, Bjørn 14.11.2026) goes on the textile drawn, and a click on a textile wall prints it.
+// What the textile pen stores; it draws with the same tool as Vegg (run.ts). A run stands free on foot plates, or on a
+// system wall's line is mounted on it; a click next to a system wall fills that face's free part. The motif on the pen
+// (Farge, Bjørn 14.11.2026) goes on the textile drawn, and a click on a textile wall prints it.
 import { drawTextile, fillFace } from '../../../domain/textile/brush'
-import { continueStroke, strokeStep } from '../../../domain/snapGrid'
-import { freeStroke, runLength } from '../../../domain/textile/free'
-import type { Variant } from '../../../domain/types'
+import { shownModule } from '../../../domain/runDraw'
+import { runLength } from '../../../domain/textile/free'
+import type { Point, Variant } from '../../../domain/types'
 import { fmt } from '../../format'
 import { rules } from '../../env'
-import type { TextileLine } from '../layers/Previews'
 import { printTextile, textileUnder } from './decor'
-import type { DragHandlers, Drag, P, PointerCtx, StrokeSteps } from './types'
+import type { PlanHits } from './hits'
+import type { P } from './types'
 import type { TextileResult } from '../../../domain/textile/brush'
 
 /** The textile laid, with the pen's motif on it (both faces of a free-standing one). */
@@ -18,56 +19,28 @@ export function withPenMotif(r: TextileResult, motif: string | undefined): Texti
   return { ...r, v: printTextile(printTextile(r.v, { free: r.free.id, face: 'a' }, motif), { free: r.free.id, face: 'b' }, motif) }
 }
 
-/** The stroke from p0 to q on the drawing grid, with where it started (picks the wall face when it lies on a wall). */
-export const textileLine = (v: Variant, d: Extract<Drag, { kind: 'textile' }>, q: P): TextileLine => {
-  const [a, b] = d.lock ? continueStroke(v.stand, d.lock, strokeStep(!!d.fine), q) : freeStroke(v, d.p0, q, d.fine)
-  return { a, b, at: d.p0 }
+/** What a click with the textile pen at q stores (one drawing tool, Bjørn 14.11.2026): a textile wall under it gets the
+ *  pen's motif; next to a system wall the free part of that face fills; on free floor the module the pen shows stands
+ *  free on foot plates, as a click with Vegg lays one module. */
+export type TextileClick = { print: (v: Variant) => Variant } | TextileResult
+export function textileClick(v: Variant, hits: PlanHits, q: P, motif: string | undefined): TextileClick {
+  const u = motif ? textileUnder(v, hits, q) : null
+  if (u && motif) return { print: (x) => printTextile(x, u, motif) }
+  const h = hits.faceHit(q)
+  if (h) return withPenMotif(fillFace(v, rules, h.w.id, h.s, h.t), motif)
+  const m = shownModule(v.stand, q)
+  return withPenMotif(drawTextile(v, rules, m.a, m.b, q), motif)
 }
 
-/** `fine`: Shift or «Fin», 250 steps from a 250 node, else 1 m from the metre grid (Bjørn 14.11.2026). */
-export function startTextile(c: PointerCtx, q: P, fine = false): Drag | undefined {
-  const d: Extract<Drag, { kind: 'textile' }> = { kind: 'textile', p0: q, fine }
-  c.setTextileStroke(textileLine(c.v, d, q))
-  return d
-}
+/** A run drawn with the textile pen from a to b: on a system wall's line mounted on the face `at` is on, else free. */
+export const textileRun = (v: Variant, a: Point, b: Point, at: P, motif: string | undefined): TextileResult => withPenMotif(drawTextile(v, rules, a, b, at), motif)
 
-/** Shift pressed or let go (or Fin) since the last move: what is drawn stays, and the stroke goes on from it. */
-export function strokeShift(d: StrokeSteps, fine: boolean, drawn: boolean) {
-  if (!!d.fine === fine) return
-  if (drawn && d.at) d.lock = d.at
-  d.fine = fine
-}
-
-/** Drawn: the stroke has length, so Shift pressed or let go locks it and goes on from it. */
-export const textileDrawn = (d: Extract<Drag, { kind: 'textile' }>) => !!d.at && (d.at[0][0] !== d.at[1][0] || d.at[0][1] !== d.at[1][1])
-
-export const textile: DragHandlers<'textile'> = {
-  move(c, d, q) {
-    const l = textileLine(c.v, d, q)
-    d.at = [l.a, l.b]
-    c.setTextileStroke(l)
-  },
-  up(c, d, q) {
-    const { v } = c
-    const { a, b } = textileLine(v, d, q)
-    c.setTextileStroke(null)
-    // A click without a stroke fills the free part of the wall face it is next to
-    const click = a[0] === b[0] && a[1] === b[1]
-    const h = click ? c.hits.faceHit(d.p0) : null
-    const motif = c.brush?.kind === 'textile' ? c.brush.motif : undefined
-    // A click on a textile wall with a motif in hand prints it
-    const u = click && motif ? textileUnder(v, c.hits, d.p0) : null
-    if (u && motif) return c.onEdit((x) => printTextile(x, u, motif))
-    if (click && !h) return c.onToast('Dra en strek for en frittstående tekstilvegg, eller klikk ved en systemvegg')
-    const r = withPenMotif(h ? fillFace(v, rules, h.w.id, h.s, h.t) : drawTextile(v, rules, a, b, d.p0), motif)
-    if ('error' in r) return c.onToast(r.error)
-    c.onEdit(() => r.v)
-    if ('mounted' in r) {
-      const t = r.v.textiles.find((x) => x.id === r.mounted.id)!
-      c.onToast(`Tekstilvegg ${fmt(t.width, 2)} m på systemveggen · Velg den for å justere`)
-    } else {
-      const t = r.v.freeTextiles.find((x) => x.id === r.free.id)!
-      c.onToast(`Tekstilvegg ${fmt(runLength(t), 2)} m frittstående på fotplater · Velg den for trykk og tekstil`)
-    }
-  },
+/** What the plan says once a textile wall is laid. */
+export function textileToast(r: Exclude<TextileResult, { error: string }>): string {
+  if ('mounted' in r) {
+    const t = r.v.textiles.find((x) => x.id === r.mounted.id)!
+    return `Tekstilvegg ${fmt(t.width, 2)} m på systemveggen · Velg den for å justere`
+  }
+  const t = r.v.freeTextiles.find((x) => x.id === r.free.id)!
+  return `Tekstilvegg ${fmt(runLength(t), 2)} m frittstående på fotplater · Velg den for trykk og tekstil`
 }

@@ -18,7 +18,7 @@ import { NO_ROOM, podiumGrab, podiumHeights, type PodiumDraw } from '../../domai
 import { podiumGrips, type PodiumGripDraw } from '../../domain/podiumGrips'
 import { fusePodiums } from '../../domain/podiumLinks'
 import { addShelf, addShelfRow, penHeight } from '../../domain/shelves/edit'
-import { drawTextile, fillFace, type TextileResult } from '../../domain/textile/brush'
+import type { TextileResult } from '../../domain/textile/brush'
 import type { Motif, PlacedObject, Point, Variant } from '../../domain/types'
 import { builtModules, doorAllowed, doorBlocked, type BuiltModule } from '../../domain/walls'
 import { RECIPES } from '../../foga/recipes'
@@ -30,8 +30,8 @@ import type { FaceHit, TextileLine } from './layers/Previews'
 import type { Box } from './nextArea'
 import type { PlanScale } from './planScale'
 import { beamBody, PHANTOM, printBand, textileWidth, wallWidth } from './planStyle'
-import { feltDecor, printTextile, ratioOf, TEXTILE_NOT, textileUnder } from './pointer/decor'
-import { withPenMotif } from './pointer/textile'
+import { feltDecor, ratioOf, TEXTILE_NOT, textileUnder } from './pointer/decor'
+import { textileClick, textileRun, type TextileClick } from './pointer/textile'
 import type { FloorBrush } from './pointer/floorBrush'
 import type { PlanHits } from './pointer/hits'
 import { isDoor, openingEdge } from './pointer/opening'
@@ -185,20 +185,14 @@ function targetOf(p: NextInput): NextTarget | null {
   }
   if (p.stroke) return strokeTarget(p.stroke[0], p.stroke[1], true)
 
-  // Textile brush pressed: the stroke, or a click next to a wall filling that face
+  // Textile pen pressed (run.ts): the run, or held without moving what a click stores
   if (pens.textileTool && p.textileStroke) {
     const { a, b, at } = p.textileStroke
     const click = a[0] === b[0] && a[1] === b[1]
-    const face = click ? hits.faceHit(at) : null
     const motif = brush?.kind === 'textile' ? brush.motif : undefined
-    const u = click && motif ? textileUnder(v, hits, at) : null
-    if (u && motif) return target(`held:print:${JSON.stringify(u)}:${motif}`, () => area({ edit: (x) => printTextile(x, u, motif), hint: null }))
-    if (click && !face) return null
-    return target(click ? `held:${faceKey(face!)}:${motif ?? ''}` : `tline:${pt(a)}:${pt(b)}:${motif ?? ''}`, () => {
-      const r = withPenMotif(face ? fillFace(v, rules, face.w.id, face.s, face.t) : drawTextile(v, rules, a, b, at), motif)
-      if ('error' in r) return area({ hint: r.error, invalid: click ? undefined : { seg: [a, b], width: 'textile' } })
-      return area({ edit: () => r.v, hint: null, pill: textilePill(r) })
-    })
+    return target(click ? `held:${textileClickKey(p, at)}:${motif ?? ''}` : `tline:${pt(a)}:${pt(b)}:${motif ?? ''}`, () =>
+      textileOutcome(click ? textileClick(v, hits, at, motif) : textileRun(v, a, b, at, motif), click ? null : [a, b]),
+    )
   }
 
   // Door, motif and furniture pressed: what a release over the same target stores; dragged off it, nothing
@@ -266,16 +260,11 @@ function targetOf(p: NextInput): NextTarget | null {
     return strokeTarget(e.a, e.b, false)
   }
   if (pens.textileTool) {
-    // The same as a click (pointer/textile.ts): a textile under it printed with the pen's motif, else the face filled
+    // The same as a click (pointer/textile.ts); with Shift held the preview stands still where it was
+    const tat = p.freeze ?? hover
+    if (!hits.onStand(tat) && !hits.faceHit(tat)) return null
     const motif = brush?.kind === 'textile' ? brush.motif : undefined
-    const u = motif ? textileUnder(v, hits, hover) : null
-    if (u && motif) return target(`print:${JSON.stringify(u)}:${motif}`, () => area({ edit: (x) => printTextile(x, u, motif), hint: null }))
-    const face = hits.faceHit(hover)
-    if (!face) return null
-    return target(`${faceKey(face)}:${motif ?? ''}`, () => {
-      const r = withPenMotif(fillFace(v, rules, face.w.id, face.s, face.t), motif)
-      return 'error' in r ? area({ hint: r.error }) : area({ edit: () => r.v, hint: null })
-    })
+    return target(`${textileClickKey(p, tat)}:${motif ?? ''}`, () => textileOutcome(textileClick(v, hits, tat, motif), null))
   }
   if (pens.decorTool) return decorTarget(p, hover)
   if (pens.openingTool && brush?.kind === 'opening') {
@@ -295,6 +284,22 @@ function targetOf(p: NextInput): NextTarget | null {
     return target(`floor:${JSON.stringify(a)}`, () => area({ edit: (x) => applyFloor(x, a, product), hint: null }))
   }
   return null
+}
+
+/** What a click with the textile pen at q does, as a key: the textile it prints, the wall face it fills, or the module
+ *  shown on free floor. */
+function textileClickKey(p: NextInput, q: P): string {
+  const u = textileUnder(p.v, p.hits, q)
+  if (u) return `print:${JSON.stringify(u)}`
+  const face = p.hits.faceHit(q)
+  return face ? faceKey(face) : `tmod:${shownModule(p.v.stand, q).key}`
+}
+
+/** The preview of a textile click or run: hatched along the run where it cannot stand. */
+function textileOutcome(r: TextileClick, run: [Point, Point] | null): NextOutcome {
+  if ('print' in r) return area({ edit: r.print, hint: null })
+  if ('error' in r) return area({ hint: r.error, invalid: run ? { seg: run, width: 'textile' } : undefined })
+  return area({ edit: () => r.v, hint: null, pill: textilePill(r) })
 }
 
 /** On the stand's floor itself (not the margin around its edge walls). */

@@ -323,10 +323,10 @@ systemveggen: den lager ikke rom og kan ikke ha dør (tekstildør med overstykke
   En strek tegnet på en systemveggs linje blir tekstilvegg på veggen (InFrame, festet med 520, på siden streken ble
   startet fra); et klikk ved en vegg fyller den ledige delen. En strek alle andre steder står fritt på fotplater
   (domain/textile/brush.ts). 25 cm foran en vegg er dermed frittstående.
-- Tegnes med pensel som en rett strek, som systemveggen (Bjørn 14.11.2026, ett tegnespråk med disk): fra et
-  punkt på metergitteret i 1 m-steg, eller med **Shift eller «Fin»** fra en 250-node i 250-steg. Shift trykket eller
-  sluppet midt i streken går videre fra det som er tegnet. Minst 0,25 m. Samme tegnerutenett (domain/snapGrid.ts)
-  brukes av systemveggpenselen (V1). Kan stå hvor som helst på standen, men ikke langs eller gjennom en systemvegg (helt inntil er lov). Ender den mot en systemvegg med tekstilramme på den siden, stopper den ved rammens front, 60 mm fra veggens senterlinje (X11).
+- Tegnes med samme verktøy som systemveggen og disken (Bjørn 14.11.2026, ett tegneverktøy, `domain/runDraw.ts`):
+  penselen viser modulen på 1 m et klikk lagrer, et drag vokser fra den i hele meter, og med **Shift eller «Fin»**
+  står forhåndsvisningen stille og enden du trykker ved flyttes i 250-steg. Shift midt i draget går videre fra det
+  som er tegnet. Minst 0,25 m. Alle pensler bruker samme grid. Kan stå hvor som helst på standen, men ikke langs eller gjennom en systemvegg (helt inntil er lov). Ender den mot en systemvegg med tekstilramme på den siden, stopper den ved rammens front, 60 mm fra veggens senterlinje (X11).
 - Høyde **2540** (som systemveggen med føtter). Høye vegger kommer senere.
 - **Topp- og bunnskinne** i 43TX går hele rammen. Over **5000 mm** skjøtes de i like lange stykker; rammen er
   fortsatt ett rektangel, ikke to rygg i rygg. Skjøten er 2 × **609** (871 037 92), eller 4 × **604** i sporet når

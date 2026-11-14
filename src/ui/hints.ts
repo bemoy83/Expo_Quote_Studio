@@ -51,8 +51,8 @@ export function hint(tool: Tool, brush: Brush | null, carpet = false): Hint {
       return h('Klikk en vegg eller en tom kant', 'Klikk en vegg eller en tom kant for å sette inn åpning med overstykke · klikk en åpning for å bytte fyll')
     case 'textile':
       return h(
-        'Dra langs en vegg, eller fritt for frittstående',
-        'Dra langs en systemvegg for tekstilvegg på veggen, eller dra fritt for frittstående på fotplater · klikk ved en vegg for å fylle den · 1 m av gangen, Shift + dra (eller Fin) gir 250-steg · start der en frittstående slutter for hjørne · motivet i pillen trykkes på tekstilen, og et klikk på en tekstilvegg gir den motivet',
+        'Klikk for en modul, dra for lengre · ved en vegg fylles den',
+        'Klikk ved en systemvegg for å fylle den, eller på gulvet for 1 m frittstående på fotplater · trykk og dra for lengre i hele meter, modulen du ser står fast · dra langs en systemvegg for tekstilvegg på veggen · hold Shift for å låse forhåndsvisningen og dra i en ende for 250-steg (Fin på iPad) · start der en frittstående slutter for hjørne · motivet i pillen trykkes på tekstilen, og et klikk på en tekstilvegg gir den motivet',
       )
     case 'motif':
       return brush?.kind === 'motif' && brush.pen === 'print'

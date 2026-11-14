@@ -215,8 +215,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   innsiden, innervegg og romvegg begge. To InFrame-rammer kobles ikke sammen.
   *Bjørn 30.10.2026 · kode `src/domain/textile/inFrame.ts` · test `src/domain/decor.test.ts`*
 - **X5 På fotplater (frittstående).** Samme ramme som X2, på fotplater, med tekstil på begge sider (trykt, hvit eller kundens egen), høyde 2540, minst
-  0,25 m. Tegnes som veggen: 1 m-steg fra metergitteret, med Shift eller «Fin» 250-steg fra en 250-node (Bjørn
-  14.11.2026: Shift erstatter rutenettvelgeren, ett tegnespråk for vegg, tekstil og disk). Ikke langs eller gjennom en systemvegg (helt inntil er lov). Den
+  0,25 m. Tegnes med samme verktøy som veggen og disken (Bjørn 14.11.2026: ett tegneverktøy, alle pensler på samme
+  grid): et klikk på gulvet setter 1 m, et drag vokser fra modulen du ser i hele meter, med Shift eller «Fin» flyttes
+  enden du trykker ved i 250-steg. Ikke langs eller gjennom en systemvegg (helt inntil er lov). Den
   lager ikke rom og kan ikke ha dør.
   *Bjørn 31.10.2026 · `rules.textile` · kode `src/domain/textile/free.ts` · test `src/domain/textile/free.test.ts`*
 - **X6 Skinner.** Gjelder rammen uansett montering. Topp- og bunnskinne går hele rammen; over 5000 skjøtes de i like stykker. Skjøten er 2 × 609 per
