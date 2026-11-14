@@ -32,6 +32,9 @@ export interface Footprint {
 export interface Product {
   id: string;
   name: string;
+  /** Kortnavn (Bjørn 14.11.2026): the name on buttons in the quick picks, e.g. «Dør» for «Dør med overstykke». Empty:
+   *  the full name. The full name is on the name pill (hover, or hold on iPad). */
+  short?: string;
   kind: ProductKind;
   unit: Unit;
   /** Subgroup id in the product grouping (groups.ts). The main group is the panel menu and the quote group. */

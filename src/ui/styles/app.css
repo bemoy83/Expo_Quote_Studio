@@ -1577,7 +1577,7 @@ kbd {
 }
 .cat-grid {
   display: grid;
-  grid-template-columns: minmax(84px, 110px) minmax(0, 1fr) 76px 132px 128px 36px;
+  grid-template-columns: minmax(84px, 110px) minmax(0, 1fr) minmax(72px, 120px) 76px 132px 128px 36px;
   gap: 8px;
   align-items: center;
 }
@@ -2582,6 +2582,11 @@ select.cin {
   border-radius: 8px;
   box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.12);
   cursor: pointer;
+}
+.q-sw:disabled {
+  /* The tool has colours, the item in hand takes none now: grey where they always are (Bjørn 14.11.2026) */
+  opacity: 0.35;
+  cursor: default;
 }
 .q-sw[aria-pressed='true'] {
   /* inside the swatch, so it keeps its size and shape: an ink ring, a light gap, then the colour */

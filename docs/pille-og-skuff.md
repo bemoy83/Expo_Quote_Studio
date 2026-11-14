@@ -113,11 +113,24 @@ funksjoner, ikke artikler.
 - Bak hver funksjon står én vare: den som sist ble hentet fra katalogen for den, i starten katalogens første.
   Penselen på en rad i katalogen legger varen bak sin funksjon og i hånden, og lyser på raden bak funksjonen i hånden.
 - Varen vises som omriss sett ovenfra (`plan/quick/StockOutline.tsx`), aldri som varenummer.
-- En innstilling som ikke gjelder det som er i hånden, er grå og står der den pleier (`QBtn disabled`). Den
-  forsvinner ikke.
+- Rekkefølgen er lik for alle verktøy (Bjørn 14.11.2026): **I hånden · Pensel · Farge · Tilpasset · Alle («…»)**.
+  Tilpasset viser variantene og innstillingene til varen i hånden: høyden på podiet, dør eller forheng.
+- Grå eller skjult: grå (`QBtn disabled`, `Palette disabled`) betyr at verktøyet har innstillingen, men den gjelder ikke
+  varen i hånden nå. Den står der den pleier. Skjult betyr at varen aldri har den, som farge på en takdrager.
+- Knappene bruker kortnavnet fra produktlisten (kolonnen Kortnavn, `shortName` i `catalog/lookup.ts`); tomt gir fullt
+  navn. Navnelappen (hold på iPad) har fullt navn og hva funksjonen er til.
 - Funksjonene er undergruppene i katalogen; navnet er navnet på produktet bygget på stedet i undergruppen («Disk»,
   «Podie»), så alle navn kommer fra produktlisten, og `does` i `catalog/groups.ts`; logikken i `ui/podiumPen.ts`.
   Samme mønster kan senere gi «Ståbord», «Barkrakker» osv. for møbler.
+
+### Vegg
+
+- Pensel: **Vegg**, **Dør** og **Takdrager**. Dør-knappen står for åpningen sist i hånden og heter som den: velges
+  Forheng under Tilpasset, viser og heter knappen Forheng (`ui/wallPen.ts`, husket i `picks.wall`).
+- Farge gjelder varen i hånden: platen på veggen, dørbladet på døren. En farge velger aldri vegg. Fyll fyller alle
+  vegger, eller alle dørblad med en dør i hånden. Takdrager har ingen farge, så fargene skjules. Forheng har farge,
+  men fargene er ikke avklart ennå, så de er grå.
+- Tilpasset: Dør eller Forheng, bare med en åpning i hånden. Bakrom er en handling til slutt.
 
 ## Skuffen
 

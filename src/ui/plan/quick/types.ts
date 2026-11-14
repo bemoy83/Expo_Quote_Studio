@@ -6,7 +6,7 @@ import type { TileSize } from '../../../domain/floor/tiles'
 import type { GridStep } from '../../../domain/snapGrid'
 import type { Motif } from '../../../domain/types'
 import type { PenPicks } from '../../podiumPen'
-import type { Brush, DockTool } from '../../tools'
+import type { Brush, DockTool, PenTool } from '../../tools'
 
 export interface QuickPicksProps {
   tool: DockTool
@@ -32,10 +32,14 @@ export interface QuickPicksProps {
   onFill: () => void
   /** The wall pen's bucket: every wall in the pen's colour. */
   onFillWalls: () => void
+  /** The bucket with a door in hand: every door leaf in this colour. */
+  onFillDoors: (ral: string) => void
+  /** The stand's wall colour: what a door with no colour of its own has. */
+  standRal: string
   /** The bucket of Disker og podier: every counter and podium it drew in the pen's colour. */
   onFillPodiums: () => void
-  /** The item behind each function of the pen in hand. */
-  picks: PenPicks
+  /** The item behind each function, per tool. */
+  picks: Partial<Record<PenTool, PenPicks>>
 }
 
 export interface QuickCtx {

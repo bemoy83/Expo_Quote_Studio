@@ -4,6 +4,7 @@ import { r2 } from '../calc/referenceStands'
 import { addObject } from '../domain/objects'
 import { addDefaultRoom, roomSize } from '../domain/rooms'
 import { paintAllWalls } from '../domain/panels'
+import { paintAllDoors } from '../domain/doors'
 import { paintPodiums } from '../domain/objects'
 import type { StandWallTerms, Variant } from '../domain/types'
 import { customerName, fillFloor, standWallTerms } from '../domain/variant'
@@ -19,7 +20,7 @@ import { CostBasisPage } from './costbasis/CostBasisPage'
 import { BASIS_EVENT } from './costbasis/link'
 import { IconButton, Toast } from './controls'
 import { download } from './download'
-import { catalog, costBasis, getVersion, idx, place, plateColor, pricing, subscribe } from './env'
+import { catalog, costBasis, getVersion, idx, place, plateColor, pricing, productOf, subscribe } from './env'
 import { hint, HINT_3D } from './hints'
 import { motifLibrary, readMotif } from './motifs'
 import { NameTip } from './NameTip'
@@ -258,7 +259,9 @@ export default function App() {
       onFill={fillWithPen}
       onFillWalls={() => onEdit((x) => paintAllWalls(x, tools.wallRal))}
       onFillPodiums={() => onEdit((x) => paintPodiums(x, tools.podiumRal))}
-      picks={tools.picks.podium ?? {}}
+      onFillDoors={(ral) => onEdit((x) => paintAllDoors(x, ral, (a) => productOf(a)?.opening === 'door'))}
+      standRal={v.defaultPlate}
+      picks={tools.picks}
     />
   )
   return (

@@ -13,7 +13,7 @@ describe('catalog edits', () => {
     const plate = rowOf('6290-9010');
     expect(plate).toMatchObject({ article: true, price: 0, placeholder: false });
     expect(rowOf('6120-9010').article).toBe(false);
-    expect(toCSV([plate])).toContain('6290-9010;Veggplate Hvit;stk;Vegger og bakrom;Veggplater;;Artikkel');
+    expect(toCSV([plate])).toContain('6290-9010;Veggplate Hvit;;stk;Vegger og bakrom;Veggplater;;Artikkel');
     const r = importTable(base, NO_EDITS, parseTable('varenr;pris\n6290-9010;330'));
     expect(r).toMatchObject({ updated: 0, skipped: 1 });
   });
@@ -41,6 +41,21 @@ describe('catalog edits', () => {
     expect(c.products.find((p) => p.id === '6130')!.name).toBe('Dør med kodelås');
   });
 
+  it('kortnavn: on the product, kept on its first variant, through CSV; empty is the full name', () => {
+    expect(rowOf('6131').short).toBe('Forheng');
+    const e = editRow(NO_EDITS, rowOf('6120-7012'), { short: 'Vegg' });
+    const c = applyEdits(base, e);
+    expect(c.products.find((p) => p.id === '6120')!.short).toBe('Vegg');
+    expect(e.variants['6120-9010']).toEqual({ short: 'Vegg' });
+    const csv = toCSV(catalogRows(c, e));
+    expect(csv).toContain('6131;Forheng med overstykke;Forheng;stk;');
+    const r = importTable(base, NO_EDITS, parseTable('varenr;kortnavn;pris\n6131;;870\n5276;Bord;100'));
+    if ('error' in r) throw new Error(r.error);
+    const after = applyEdits(base, r.edits);
+    expect(after.products.find((p) => p.id === '6131')!.short).toBe('');
+    expect(after.products.find((p) => p.id === '5276')!.short).toBe('Bord');
+  });
+
   it('adds, edits and removes a product with a free art.nr', () => {
     const { edits, artnr } = addProduct(base, NO_EDITS);
     expect(artnr).toBe('ny1');
@@ -57,8 +72,8 @@ describe('catalog edits', () => {
   it('CSV export and import round-trip prices', () => {
     const e = editRow(NO_EDITS, rowOf('5276'), { price: 525.5 });
     const csv = toCSV(catalogRows(applyEdits(base, e), e));
-    expect(csv.startsWith('\ufeffVarenr;Navn;Enhet;Gruppe;Undergruppe;Pris;Status')).toBe(true);
-    expect(csv).toContain('5276;Ståbord sort, rund;stk;Møbler;Bord;525,5;Plassholder');
+    expect(csv.startsWith('\ufeffVarenr;Navn;Kortnavn;Enhet;Gruppe;Undergruppe;Pris;Status')).toBe(true);
+    expect(csv).toContain('5276;Ståbord sort, rund;;stk;Møbler;Bord;525,5;Plassholder');
     const r = importTable(base, NO_EDITS, parseTable(csv));
     if ('error' in r) throw new Error(r.error);
     expect(r.added).toBe(0);
