@@ -17,16 +17,17 @@ export function PodiumPicks({ p, head, more, brush }: Omit<QuickCtx, 'is'> & { b
     // to what is in hand is grey where it always is.
     const { ral, fine } = brush
     const func = funcOf(brush)
+    const picks = p.picks.podium ?? {}
     const fineOn = fineApplies(brush)
     return (
       <>
         {head}
-        <QBtn on={!func} setting title="Fri · tegn fasongen selv · et klikk setter en seksjon 500 × 500, dra tegner fritt" label="Fri" onClick={() => onPick(withFunc(brush, undefined, p.picks, catalog.products))}>
+        <QBtn on={!func} setting title="Fri · tegn fasongen selv · et klikk setter en seksjon 500 × 500, dra tegner fritt" label="Fri" onClick={() => onPick(withFunc(brush, undefined, picks, catalog.products))}>
           Fri
         </QBtn>
         {penFuncs(catalog.products).map((f) => {
           // The item behind the function: the one in hand, else the one it would put in hand
-          const s = (func === f.func && brush.stock ? stockByArtnr(brush.stock) : undefined) ?? stockFor(f.func, p.picks, brush.h)
+          const s = (func === f.func && brush.stock ? stockByArtnr(brush.stock) : undefined) ?? stockFor(f.func, picks, brush.h)
           const name = s ? idx.byArtnr.get(s.artnr)?.product.name : undefined
           return (
             <QBtn
@@ -35,7 +36,7 @@ export function PodiumPicks({ p, head, more, brush }: Omit<QuickCtx, 'is'> & { b
               setting
               title={`${f.one} · ${f.does.toLowerCase()} · et klikk setter ${name ?? f.one.toLowerCase()}, dra tegner fritt`}
               label={f.one}
-              onClick={() => onPick(withFunc(brush, f.func, p.picks, catalog.products))}
+              onClick={() => onPick(withFunc(brush, f.func, picks, catalog.products))}
             >
               {s && <StockOutline sections={s.sections} />}
               {f.one}

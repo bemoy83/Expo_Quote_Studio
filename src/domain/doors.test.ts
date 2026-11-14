@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_CATALOG, DOOR } from '../catalog/defaultCatalog';
+import { CURTAIN, DEFAULT_CATALOG, DOOR } from '../catalog/defaultCatalog';
 import { calc } from '../calc/calc';
 import { RULES, wallHeight } from '../rules/rules';
 import { r2 } from '../calc/referenceStands';
-import { doorHinge, doorLevels, doorRal, doorWindows, doorSpots, doorSwing, flipHinge, inDoorArea, moveOpening, paintDoors, placeOpening, removeOpening, setDoorRal, setOpening, setOpeningProduct } from './doors';
+import { doorHinge, doorLevels, doorRal, doorWindows, doorSpots, doorSwing, flipHinge, inDoorArea, moveOpening, paintAllDoors, paintDoors, placeOpening, removeOpening, setDoorRal, setOpening, setOpeningProduct } from './doors';
 import { paintWalls } from './edit';
 import { replaceWalls } from './replaceWalls';
 import { moduleKey } from './grid';
@@ -157,6 +157,21 @@ describe('placing a door with the pointer (press shows, release stores)', () => 
     expect(right.o.swing).toBe(-1);
     expect(right.o.hinge).toBe(-1);
     expect(doorHinge(right.w, right.o).a).toEqual([3, 2]);
+  });
+
+  it('the door pen\'s colour goes on the leaf, also over a door already there; a curtain takes none', () => {
+    const v = inner();
+    const red = placeOpening(v, a, b, DOOR, true, null, '3020');
+    expect(red.openings[0].ral).toBe('3020');
+    expect(placeOpening(red, a, b, DOOR, true, null, '7012').openings[0].ral).toBe('7012');
+    expect(placeOpening(v, a, b, DOOR, true, null, v.defaultPlate).openings[0].ral).toBeUndefined();
+    expect(placeOpening(v, a, b, CURTAIN, false, null, '3020').openings[0].ral).toBeUndefined();
+  });
+
+  it('the bucket with a door in hand colours every door leaf, not curtains', () => {
+    const v = placeOpening(placeOpening(inner(), a, b, DOOR, true, null), [3, 2], [3, 3], CURTAIN, false, null);
+    const x = paintAllDoors(v, '7012', (p) => p === DOOR);
+    expect(x.openings.map((o) => [o.product, o.ral])).toEqual([[DOOR, '7012'], [CURTAIN, undefined]]);
   });
 
   it('on the stand edge always swings into the stand, the pointer only picks the hinge', () => {

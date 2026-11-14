@@ -82,6 +82,11 @@ export const setDoorRal = (v: Variant, id: string, ral: string | null): Variant 
     return !ral || ral === v.defaultPlate ? rest : { ...rest, ral };
   });
 
+/** The wall tool's bucket with a door in hand: every door leaf in this colour (curtains have no RAL). */
+export function paintAllDoors(v: Variant, ral: string, isDoor: (product: string) => boolean): Variant {
+  return v.openings.filter((o) => isDoor(o.product)).reduce((x, o) => setDoorRal(x, o.id, ral), v);
+}
+
 /**
  * The paint bucket on a wall colours the door leaves in it too: the door is part of the wall (Bjørn 3.11.2026). A room
  * wall takes the whole room, as setWallPlate does.
@@ -231,8 +236,16 @@ export function inDoorArea(a: Point, b: Point, q: { x: number; y: number }, reac
  * Put a door or curtain on module a–b (setOpening on a wall, drawOpening on an empty edge) and, for a door, turn it
  * the way the pointer at q says (doorAim). Defaults are not stored: hinge only when −1, swing only when it is −1 or
  * differs from the side an omitted swing reads as. On the stand's edge the swing is left as setOpening stored it.
+ * `ral`: the door pen's leaf colour (the wall tool's Farge, Bjørn 14.11.2026), also over a door already there;
+ * omitted, a new door follows the stand's colour. A curtain has no RAL.
  */
-export function placeOpening(v: Variant, a: Point, b: Point, product: string, door: boolean, q: { x: number; y: number } | null): Variant {
+export function placeOpening(v: Variant, a: Point, b: Point, product: string, door: boolean, q: { x: number; y: number } | null, ral?: string): Variant {
+  const placed = aimOpening(v, a, b, product, door, q);
+  const o = door && ral ? builtModules(placed).find((m) => m.key === moduleKey(a, b))?.opening : undefined;
+  return o ? setDoorRal(placed, o.id, ral!) : placed;
+}
+
+function aimOpening(v: Variant, a: Point, b: Point, product: string, door: boolean, q: { x: number; y: number } | null): Variant {
   const key = moduleKey(a, b);
   const onWall = builtModules(v).some((m) => m.key === key);
   const next = onWall ? setOpening(v, key, product) : drawOpening(v, a, b, product);

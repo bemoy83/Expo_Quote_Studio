@@ -128,8 +128,8 @@ const products: Product[] = [
   // A takdrager lifted over a textile wall: the post (or hook point) extended with 94 (Bjørn 6.11.2026). Own line: a beam
   // can be lifted higher later and cost more. Art.nr 6111 is a placeholder.
   one('6111', 'Skjøt takdrager over tekstilvegg', 'system', 'stk', 'vegg.takdrager', 90, { dim: '94 × 80 mm på stolpe eller oppå tverrgående takdrager, montert', pricing: 'fast' }),
-  one('6130', 'Dør med overstykke', 'object', 'stk', 'vegg.dorer', 2620, { opening: 'door', pricing: 'fast' }),
-  one('6131', 'Forheng med overstykke', 'object', 'stk', 'vegg.dorer', 870, { dim: 'i åpning 960 mm', opening: 'curtain', pricing: 'fast' }),
+  one('6130', 'Dør med overstykke', 'object', 'stk', 'vegg.dorer', 2620, { opening: 'door', pricing: 'fast', short: 'Dør' }),
+  one('6131', 'Forheng med overstykke', 'object', 'stk', 'vegg.dorer', 870, { dim: 'i åpning 960 mm', opening: 'curtain', pricing: 'fast', short: 'Forheng' }),
   // Vegger: level 2 articles. No price: an article is never sold on its own, and the kalkyle takes its cost from the
   // cost engine (pricing/data.ts), and the names are the same as there and on the picking list. The product list shows them as «Artikkel · plukkes, selges ikke» (Bjørn 7.11.2026).
   {

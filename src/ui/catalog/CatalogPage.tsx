@@ -29,7 +29,7 @@ export function CatalogPage({ onToast, onBasis }: { onToast: Toast; onBasis: () 
   const placeholders = rows.filter((r) => r.placeholder).length
   const shown = rows.filter((r) => {
     const s = q.trim().toLowerCase()
-    return (!only || r.placeholder) && (!s || `${r.artnr} ${r.product} ${r.variant ?? ''} ${groupText(r.group)}`.toLowerCase().includes(s))
+    return (!only || r.placeholder) && (!s || `${r.artnr} ${r.product} ${r.variant ?? ''} ${r.short} ${groupText(r.group)}`.toLowerCase().includes(s))
   })
   const groups = groupItems(shown, (r) => r.group)
 
@@ -123,6 +123,7 @@ export function CatalogPage({ onToast, onBasis }: { onToast: Toast; onBasis: () 
           <div className="cat-grid tbl-head">
             <span>Varenr</span>
             <span>Navn</span>
+            <span title="Navnet på knapper i hurtigvalget. Tomt: fullt navn.">Kortnavn</span>
             <span>Enhet</span>
             <span className="r">Pris eks. mva.</span>
             <span>Status</span>
@@ -190,6 +191,18 @@ export function CatalogPage({ onToast, onBasis }: { onToast: Toast; onBasis: () 
                           </span>
                         )}
                       </div>
+                      {/* Kortnavn: on buttons in the quick picks, empty for the full name (Bjørn 14.11.2026) */}
+                      <CommitInput
+                        className="cin"
+                        value={r.short}
+                        placeholder={r.product}
+                        aria-label="Kortnavn"
+                        onCommit={(text) => {
+                          const x = text.trim()
+                          if (x === r.short) return false
+                          update(r, { short: x })
+                        }}
+                      />
                       {r.added ? (
                         <select className="cin" value={r.unit} aria-label="Enhet" onChange={(e) => update(r, { unit: e.target.value as Unit })}>
                           {UNITS.map((u) => (

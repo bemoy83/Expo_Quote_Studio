@@ -11,6 +11,7 @@ import { stockByArtnr, stockSize } from '../domain/podiumStock'
 import { HEIGHT } from '../domain/podiums'
 import { artnrName, builtOf, catalog, idx, isCounter } from './env'
 import { funcOf, type PenPicks } from './podiumPen'
+import { wallPicksOf } from './wallPen'
 import { kr } from './format'
 import { findMotif } from './motifs'
 import { dockToolOf, FLOOR_OTHER, penToolOf, type Brush, type DockTool, type PenTool, type Tool } from './tools'
@@ -39,7 +40,7 @@ export function useTools({ v, res, motifs, onPick, onErase }: ToolsInput) {
   /** Colour Disker og podier draws with (K6 as for counters): white until a colour is picked. */
   const [podiumRal, setPodiumRal] = useState<string>(COUNTER_STOCK_RAL)
   /** The item behind each function of each pen: the one last put in hand for it, from the quick picks or the catalog
-   *  (Bjørn 14.11.2026). Disker og podier for now; the other tools take the same pattern. */
+   *  (Bjørn 14.11.2026): Disker og podier per function, Vegg the opening behind Dør and its leaf colour (wallPen.ts). */
   const [picks, setPicks] = useState<Partial<Record<PenTool, PenPicks>>>({})
 
   const rollBrush = brush?.kind === 'floor' && !!idx.byArtnr.get(brush.product)?.product.roll
@@ -55,6 +56,7 @@ export function useTools({ v, res, motifs, onPick, onErase }: ToolsInput) {
     if (b.kind === 'podium') setPodiumRal(b.ral)
     const func = b.kind === 'podium' ? funcOf(b) : undefined
     if (func && b.kind === 'podium') setPicks((p) => ({ ...p, podium: { ...p.podium, [func]: b.stock } }))
+    if (b.kind === 'opening') setPicks((p) => ({ ...p, wall: wallPicksOf(b) }))
     setTool(t)
     onPick()
   }
