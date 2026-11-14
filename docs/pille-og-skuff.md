@@ -150,6 +150,11 @@ funksjoner, ikke artikler.
   innen 300 mm fra et sett, blir med i det (som disker kobles, K15). Tøm fjerner bare møbelet det peker på.
 - Mål på konferansestol, sofa og kafébord er anslag til de er målt.
 
+### I hånden
+
+- Hodet i hver pille er varen pennen tegner, med navn fra produktlisten slik kalkylen og tilbudet bruker det, og én
+  linje under: pris per enhet, eller det som bestemmer varen (farge, motiv, mål). Samme funksjon for alle (`penName`).
+
 ### Profilering
 
 - Pensel: én penn per produkt (Bjørn 14.11.2026: helt ulike produkter, det eneste de har felles er grafikken):

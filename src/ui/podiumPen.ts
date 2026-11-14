@@ -9,7 +9,7 @@ import type { Product } from '../catalog/types';
 import { stockByArtnr, stockOf, stockSize, STOCK_COUNTERS, type StockCounter } from '../domain/podiumStock';
 import { funcByShape, HEIGHT, HEIGHTS } from '../domain/podiums';
 import type { Variant } from '../domain/types';
-import type { Brush } from './tools';
+import type { Brush, PenPicks } from './tools';
 
 type PodiumBrush = Extract<Brush, { kind: 'podium' }>;
 
@@ -31,8 +31,6 @@ export const penFuncs = (products: readonly Product[]): PenFunc[] =>
     return p && STOCK_COUNTERS.some((x) => x.func === func) ? [{ func, built: p.variants[0].artnr, one: p.name, does: s.does ?? '' }] : [];
   });
 
-/** The item behind each function: the art.nr last fetched from the catalog for it. */
-export type PenPicks = Partial<Record<string, string>>;
 
 /** The function in hand, or undefined for «Fri». */
 export const funcOf = (b: PodiumBrush): string | undefined => (b.stock ? stockByArtnr(b.stock)?.func : undefined);

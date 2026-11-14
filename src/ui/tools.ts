@@ -40,6 +40,9 @@ export type Brush =
 export type PenTool = 'wall' | 'floor' | 'profile' | 'fitting' | 'podium' | 'object'
 export type DockTool = 'select' | PenTool | 'erase'
 
+/** What a drawing tool keeps behind its Pensel buttons, by key: the art.nr or motif last in hand (ui/pens.ts). */
+export type PenPicks = Partial<Record<string, string>>
+
 export function penToolOf(b: Brush): PenTool {
   switch (b.kind) {
     case 'wall':

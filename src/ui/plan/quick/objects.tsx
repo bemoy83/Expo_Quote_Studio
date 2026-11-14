@@ -1,6 +1,6 @@
 // Møbel by use (Bjørn 14.11.2026): Pensel is one button per furniture set (Møte, Lounge, Mingle) with the set seen from
 // above, and «Enkelt» with the piece behind it; Tilpasset with a single piece in hand picks which piece.
-import { shortName } from '../../../catalog/lookup'
+import { productWith, shortName } from '../../../catalog/lookup'
 import { catalog } from '../../env'
 import { setContents, setInHand, singlePen, singles, penSets } from '../../furniturePen'
 import { ObjectThumb } from '../../panel/ProductRow'
@@ -15,7 +15,7 @@ export function ObjectPicks({ p, head, more, is }: QuickCtx) {
   const picks = p.picks.object ?? {}
   const set = setInHand(brush, products)
   const single = brush?.kind === 'object' && !set ? brush : singlePen(picks, products)
-  const singleProduct = products.find((x) => x.variants.some((v) => v.artnr === single.product))
+  const singleProduct = productWith(products, single.product)
   return (
     <>
       {head}

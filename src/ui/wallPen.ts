@@ -3,18 +3,19 @@
 // Farge is the colour of the item in hand: the wall's plate, the door's leaf (RAL), the curtain's fabric (sort, grå,
 // blå). A colour never puts the wall in hand.
 // Pure, so the pill, the tool state and the tests read the same rules.
-import { fabricOf, shortName } from '../catalog/lookup'
+import { fabricOf, productWith, shortName } from '../catalog/lookup'
 import type { Fabric, Product } from '../catalog/types'
-import type { PenPicks } from './podiumPen'
-import type { Brush } from './tools'
+import type { Brush, PenPicks } from './tools'
 
 export type WallPen = Extract<Brush, { kind: 'wall' | 'opening' | 'beam' }>
 
 /** The openings in the catalog, doors first as listed. */
 export const openingProducts = (products: readonly Product[]): Product[] => products.filter((x) => x.opening)
 
-const openingOf = (products: readonly Product[], artnr: string | undefined) =>
-  artnr ? products.find((x) => x.opening && x.variants.some((v) => v.artnr === artnr)) : undefined
+const openingOf = (products: readonly Product[], artnr: string | undefined) => {
+  const p = productWith(products, artnr)
+  return p?.opening ? p : undefined
+}
 
 /** What the wall tool remembers behind its Dør button: the opening last in hand, the door leaf's and the curtain's last
  *  colour. */

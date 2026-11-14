@@ -31,6 +31,10 @@ export function displayName({ product, variant }: ResolvedVariant): string {
   return variant.name && variant.name !== product.name ? `${product.name} ${variant.name.toLowerCase()}` : product.name;
 }
 
+/** The product that has a variant with this art.nr, from a plain product list (pure pens; the app has `idx.byArtnr`). */
+export const productWith = (products: readonly Product[], artnr: string | undefined): Product | undefined =>
+  artnr ? products.find((x) => x.variants.some((v) => v.artnr === artnr)) : undefined;
+
 /** Kortnavn: the product's short name for buttons, else its full name. */
 export const shortName = (p: Pick<Product, 'name' | 'short'>): string => p.short?.trim() || p.name;
 
