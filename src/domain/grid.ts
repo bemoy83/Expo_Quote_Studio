@@ -14,6 +14,8 @@ export interface Module {
   a: Point;
   b: Point;
   orientation: 'h' | 'v';
+  /** Length c/c, m: 1 for a whole module, 0.25, 0.5 or 0.75 for a shorter one (Byggeregel V1). */
+  cc: number;
 }
 
 export function moduleKey(a: Point, b: Point): string {
@@ -23,7 +25,7 @@ export function moduleKey(a: Point, b: Point): string {
 }
 
 export function makeModule(a: Point, b: Point): Module {
-  return { key: moduleKey(a, b), a, b, orientation: a[1] === b[1] ? 'h' : 'v' };
+  return { key: moduleKey(a, b), a, b, orientation: a[1] === b[1] ? 'h' : 'v', cc: round3(Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1])) };
 }
 
 export function wallLength(w: Wall): number {

@@ -79,10 +79,15 @@ export interface CalcContext {
   ourShare: number;
   /** Rails, posts and handling of `n` wall modules. */
   moduleUses: (n: number, postShare?: number) => Use[];
+  /** Plates, rails, posts and handling of these walled modules, a shorter one (Byggeregel V1) with its rails and plate
+   *  cut, and the cutting. */
+  wallUses: (mods: readonly { cc: number }[], postShare?: number) => Use[];
   lmOf: (b: BeamLayout) => number;
 }
 
 const r1 = (n: number) => Math.round(n * 10) / 10;
+/** Metres to the centimetre: a wall of 1,75 m is 1,75 (Byggeregel V1); other units to a tenth. */
+const r2 = (n: number) => Math.round(n * 100) / 100;
 
 export function calcContext(v: Variant, rules: Rules, catalog: Catalog, standWalls: StandWallTerms, pricing: PricingData): CalcContext {
   const idx = indexCatalog(catalog);
@@ -92,7 +97,8 @@ export function calcContext(v: Variant, rules: Rules, catalog: Catalog, standWal
 
   const line: CalcContext['line'] = (artnr, qty, { strategy: want, ...extra } = {}, uses = null, own) => {
     const hit = idx.byArtnr.get(artnr);
-    const q = hit?.product.unit === 'stk' ? qty : r1(qty);
+    const unit = hit?.product.unit;
+    const q = unit === 'stk' ? qty : unit === 'lm' ? r2(qty) : r1(qty);
     const o = hit ? catalogOwn(pricing, hit.product, hit.variant) : {};
     const cost = o.cost;
     const t = o.time;
@@ -194,6 +200,27 @@ export function calcContext(v: Variant, rules: Rules, catalog: Catalog, standWal
     { id: ITEM.post, qty: n * postShare },
     { id: ITEM.module, qty: n },
   ];
+  const postW = fogaPart(RECIPES.wall.post).section?.[0] ?? 0;
+  const wallUses = (list: readonly { cc: number }[], postShare = ourShare): Use[] => {
+    const whole = list.filter((m) => m.cc >= rules.wall.cc - 1e-6).length;
+    const short = countBy(list.filter((m) => m.cc < rules.wall.cc - 1e-6).map((m) => String(Math.round(m.cc * 1000))));
+    const cut = [...short].flatMap(([k, n]): Use[] => {
+      const cc = Number(k);
+      return [
+      { id: ITEM.cutPlate(RECIPES.wall.plate.w - (sizes.cc - cc)), qty: n },
+      { id: ITEM.rail(RECIPES.wall.topRail, cc - postW), qty: n },
+      { id: ITEM.rail(RECIPES.wall.bottomRail, cc - postW), qty: n },
+      ];
+    });
+    const nShort = list.length - whole;
+    return [
+      ...(whole ? [{ id: ITEM.plate, qty: whole }, { id: rail(RECIPES.wall.topRail), qty: whole }, { id: rail(RECIPES.wall.bottomRail), qty: whole }] : []),
+      ...cut,
+      { id: ITEM.post, qty: list.length * postShare },
+      { id: ITEM.module, qty: list.length },
+      ...(nShort ? [{ id: ITEM.railCut, qty: 2 * nShort }, { id: ITEM.plateCut, qty: nShort }] : []),
+    ];
+  };
 
   return {
     v,
@@ -228,6 +255,7 @@ export function calcContext(v: Variant, rules: Rules, catalog: Catalog, standWal
     share,
     ourShare,
     moduleUses,
+    wallUses,
     lmOf: (b) => beamSpecs(b).reduce((a, x) => a + x.lengthMm, 0) / 1000,
   };
 }

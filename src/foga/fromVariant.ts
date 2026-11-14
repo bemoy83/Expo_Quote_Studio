@@ -44,7 +44,7 @@ export const beamSpecs = (b: BeamLayout): BeamSpec[] => b.segments.map((s) => ({
 export function structureOf(d: Derived): FogaStructure {
   return {
     posts: d.posts,
-    modules: d.mods.map((m) => ({ plate: m.plate, opening: !!m.opening, ...(m.opening && d.curtain?.(m.opening.product) && { curtain: true }) })),
+    modules: d.mods.map((m) => ({ plate: m.plate, opening: !!m.opening, ...(m.opening && d.curtain?.(m.opening.product) && { curtain: true }), ...(m.cc < 1 - 1e-6 && { cc: Math.round(m.cc * 1000) }) })),
     beams: beamSpecs(d.beams),
     frames: [...d.production.pieces, ...d.production.free].map((f) => ({ pos: f.pos, parts: f.parts })),
     ...(d.production.cornerPosts.qty ? { cornerPosts: d.production.cornerPosts } : {}),
