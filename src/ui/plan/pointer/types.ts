@@ -30,20 +30,13 @@ export interface P {
  * under it, a second click on it or empty floor lets go); a drag never lets go of the selection. A wall dragged away is not
  * selected; furniture and rooms are.
  */
-/** Shift on a straight stroke (Bjørn 14.11.2026): 250 steps while `fine`; Shift pressed or let go mid-stroke locks
- *  what is drawn (`lock`) and goes on from it in the new step. */
-export interface StrokeSteps {
-  fine?: boolean
-  at?: [Point, Point]
-  lock?: [Point, Point]
-}
-
 export type Drag =
   /** Tøm along walls and drawn takdragere (stroke.ts). `beamId`: pressed on a drawn takdrager, so a click takes all of it. */
   | { kind: 'stroke'; p0: P; moved: boolean; beamId?: string }
   /** Vegg or Takdrager pressed (run.ts): the run being drawn from the module the pen showed, `last` the pointer at the
-   *  last move, where Shift pressed or let go goes on from. */
-  | { kind: 'run'; p0: P; last: P; moved: boolean; run: RunDrag }
+   *  last move, where Shift pressed or let go goes on from; `at` where the module shown was (the press, or where Shift
+   *  froze the preview). */
+  | { kind: 'run'; p0: P; at: P; last: P; moved: boolean; run: RunDrag }
   /** A floor stroke: the tiles after the first line up with it (`anchor`). */
   | { kind: 'floor'; last: string | null; anchor: { i: number; j: number } | null }
   /** Fyll with rolled floor: an area from cell `from`; a click without a drag fills the stand. */
@@ -55,8 +48,6 @@ export type Drag =
   /** `fine`: Shift held or «Fin» on in the pill (`fineLock`), it moves across in 50 mm steps off the grid (Byggeregel T15). */
   | ({ kind: 'beam'; moved: boolean; select: PlanSelection; fine?: boolean; fineLock?: boolean } & WallDrag)
   | ({ kind: 'room'; select: PlanSelection | null } & RoomDrag)
-  /** The textile pen pressed (textile.ts), with Shift or «Fin» as the wall stroke. */
-  | ({ kind: 'textile'; p0: P } & StrokeSteps)
   /** Disker og podier pressed (podium.ts): `at`, where the section the pen showed stands (the press, or where Shift froze
    *  it); `click`, what a click there stores (podiumStart); `drag`, what a drag draws from it, none on a counter or where it has no room; `last`, the pointer at the last
    *  move, where Shift pressed or let go goes on from. */
