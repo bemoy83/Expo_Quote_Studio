@@ -33,7 +33,7 @@ export function hint(tool: Tool, brush: Brush | null, carpet = false): Hint {
     case 'wall':
       return h(
         'Klikk en vegg for å farge den · dra for flere plater · klikk en tom kant for ny vegg',
-        'Klikk en vegg for å farge platen · dra langs veggen for flere plater · klikk en tom kant eller dra langs rutenettet for å tegne vegg i hele meter · Esc avbryter',
+        'Klikk en vegg for å farge platen · dra langs veggen for flere plater · klikk en tom kant eller dra langs rutenettet for å tegne vegg i hele meter · Shift + dra (eller Fin) tegner i 250-steg fra en 250-node, og resten blir en kortere modul sist · Esc avbryter',
       )
     case 'beam':
       return h(
@@ -52,7 +52,7 @@ export function hint(tool: Tool, brush: Brush | null, carpet = false): Hint {
     case 'textile':
       return h(
         'Dra langs en vegg, eller fritt for frittstående',
-        'Dra langs en systemvegg for tekstilvegg på veggen, eller dra fritt for frittstående på fotplater · klikk ved en vegg for å fylle den · én rute av gangen, velg rutestørrelse over verktøyene · start der en frittstående slutter for hjørne · motivet i pillen trykkes på tekstilen, og et klikk på en tekstilvegg gir den motivet',
+        'Dra langs en systemvegg for tekstilvegg på veggen, eller dra fritt for frittstående på fotplater · klikk ved en vegg for å fylle den · 1 m av gangen, Shift + dra (eller Fin) gir 250-steg · start der en frittstående slutter for hjørne · motivet i pillen trykkes på tekstilen, og et klikk på en tekstilvegg gir den motivet',
       )
     case 'motif':
       return brush?.kind === 'motif' && brush.pen === 'print'

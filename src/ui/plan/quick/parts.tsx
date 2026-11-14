@@ -1,6 +1,6 @@
 // The building blocks of every quick pill and selection pill (Bjørn 14.11.2026: one pattern for every tool): name
 // first, then what the pen draws, its look, its sizes and «…». A setting that does not apply is grey where it always is.
-import { Ellipsis, PaintBucket } from 'lucide-react'
+import { Ellipsis, PaintBucket, Ruler } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { Swatch } from '../swatches'
 
@@ -59,6 +59,16 @@ export function QBtn({
     <button type="button" className={setting ? 'q-btn q-set' : 'q-btn'} aria-pressed={on} disabled={disabled} title={title} aria-label={label} onClick={onClick}>
       {children}
     </button>
+  )
+}
+
+/** «Fin»: Shift held, for touch (Bjørn 14.11.2026). `off`: what is in hand has no finer step, the button stays grey. */
+export function FinBtn({ on, off, title, onClick }: { on: boolean; off?: string; title: string; onClick: () => void }) {
+  return (
+    <QBtn on={on && !off} setting disabled={!!off} title={off ?? title} label="Fin" onClick={onClick}>
+      <Ruler size={15} />
+      Fin
+    </QBtn>
   )
 }
 

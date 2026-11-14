@@ -54,8 +54,9 @@ export function paintPlates(v: Variant, mods: BuiltModule[], keys: string[], ral
   })
 }
 
-export function startPlates(m: BuiltModule, q: P): Drag {
-  return { kind: 'plates', wallId: m.wallId, i0: m.index, p0: q, moved: false }
+/** `fine`: Shift or «Fin», for the wall a drag across draws. */
+export function startPlates(m: BuiltModule, q: P, fine = false): Drag {
+  return { kind: 'plates', wallId: m.wallId, i0: m.index, p0: q, moved: false, fine }
 }
 
 export const plates: DragHandlers<'plates'> = {
@@ -67,7 +68,7 @@ export const plates: DragHandlers<'plates'> = {
     const w = c.v.walls.find((x) => x.id === d.wallId)
     const across = w && (w.from[1] === w.to[1] ? Math.abs(q.y - d.p0.y) > Math.abs(q.x - d.p0.x) : Math.abs(q.x - d.p0.x) > Math.abs(q.y - d.p0.y))
     if (across) {
-      d.as = startStroke(c, d.p0) as Extract<Drag, { kind: 'stroke' }>
+      d.as = startStroke(c, d.p0, undefined, d.fine) as Extract<Drag, { kind: 'stroke' }>
       stroke.move?.(c, d.as, q)
     }
   },

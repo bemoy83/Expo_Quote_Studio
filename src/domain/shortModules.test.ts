@@ -6,7 +6,8 @@ import { eraseWalls, paintWalls, splitWall } from './edit';
 import { feltBlocked } from './fittings';
 import { doorBlocked } from './walls';
 import { felt } from './faces';
-import { moduleCc, moduleCount, moduleEnd, moduleKey, wallModules } from './grid';
+import { moduleCc, moduleCount, moduleEnd, moduleKey, modulesAlong, uncoveredRuns, wallModules } from './grid';
+import { builtModules } from './walls';
 import type { Variant, Wall } from './types';
 import { createVariant } from './variant';
 
@@ -72,5 +73,26 @@ describe('shorter modules (V1)', () => {
     expect(doorBlocked(v, [2, 2], [2.75, 2])).toBe('Dører og forheng står bare i hele moduler');
     expect(feltBlocked(v, w.id, 0, 1, 'Hylle')).toBeNull();
     expect(feltBlocked(v, w.id, 1, 1, 'Hylle')).toBe('Hylle står bare i hele moduler');
+  });
+
+  it('a stroke over walls only adds what they do not cover, each part whole metres first', () => {
+    const v = paintWalls(island(), [1, 2], [2.75, 2]);
+    expect(uncoveredRuns(builtModules(v), [0, 2], [5, 2])).toEqual([[[0, 2], [1, 2]], [[2.75, 2], [5, 2]]]);
+    expect(uncoveredRuns(builtModules(v), [5, 2], [0, 2])).toEqual([[[5, 2], [2.75, 2]], [[1, 2], [0, 2]]]);
+    const w = paintWalls(v, [0, 2], [5, 2]).walls.find((x) => x.from[0] === 2.75)!;
+    expect(wallModules(w).map((m) => m.cc)).toEqual([1, 1, 0.25]);
+    // Over the same wall: nothing new
+    expect(paintWalls(v, [1, 2], [2.75, 2])).toBe(v);
+    // From a 250 node on a wall that exists: no overlap
+    const v2 = paintWalls(island(), [0, 2], [4, 2]);
+    expect(paintWalls(v2, [1.25, 2], [5.25, 2]).walls.map((x) => [x.from, x.to])).toEqual([[[0, 2], [4, 2]], [[4, 2], [5.25, 2]]]);
+  });
+
+  it('Tøm along a stroke takes a shorter module too', () => {
+    const v = paintWalls(island(), [1, 2], [2.75, 2]);
+    expect(modulesAlong(builtModules(v), [2, 2], [3, 2]).map((m) => m.cc)).toEqual([0.75]);
+    expect(modulesAlong(builtModules(v), [2.75, 2], [3, 2])).toEqual([]);
+    const keys = modulesAlong(builtModules(v), [2, 2], [3, 2]).map((m) => m.key);
+    expect(eraseWalls(v, keys).walls.map((x) => [x.from, x.to])).toEqual([[[1, 2], [2, 2]]]);
   });
 });

@@ -3,7 +3,6 @@
 import type { ReactNode } from 'react'
 import type { FloorBrushSize } from '../../../domain/floor/brush'
 import type { TileSize } from '../../../domain/floor/tiles'
-import type { GridStep } from '../../../domain/snapGrid'
 import type { Motif } from '../../../domain/types'
 import type { Brush, DockTool, PenPicks, PenTool } from '../../tools'
 
@@ -26,8 +25,6 @@ export interface QuickPicksProps {
   onFloorSize: (s: FloorBrushSize) => void
   otherSize: TileSize
   onOtherSize: (s: TileSize) => void
-  gridStep: GridStep
-  onGridStep: (s: GridStep) => void
   onFill: () => void
   /** The wall pen's bucket: every wall in the pen's colour. */
   onFillWalls: () => void

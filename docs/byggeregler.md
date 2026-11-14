@@ -22,14 +22,16 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 ## V · Systemvegg
 
 - **V1 Modul.** En systemvegg (standvegg, innervegg, romvegg) bygges i moduler på cc 1000 mellom stolpesentrene.
-  Fysisk lengde er cc pluss én stolpe: 4000 c/c er 4040. Veggpenselen tegner hele moduler. Kortere moduler finnes i
-  samme steg som diskene (K10): 250, 500 og 750 c/c. En vegg legges i hele meter fra der den starter, og er lengden ikke
+  Fysisk lengde er cc pluss én stolpe: 4000 c/c er 4040. Veggpenselen tegner hele moduler fra metergitteret, og med
+  Shift eller «Fin» fra en 250-node i 250-steg, på metergitterets linjer; Shift trykket eller sluppet midt i streken
+  låser det som er tegnet og går videre derfra. En strek over vegger som står legger bare til resten. Tøm tar en hel
+  modul, også en kort. Kortere moduler finnes i samme steg som diskene (K10): 250, 500 og 750 c/c. En vegg legges i hele meter fra der den starter, og er lengden ikke
   hel, er den siste modulen kortere (1750 = 1000 + 750). Delene er de samme, kappet: skinnene c/c − 40 (210, 460, 710),
   platen c/c − 24 (226, 476, 726) og lysåpningen c/c − 40. Dør, forheng og hyller står bare i hele moduler. Tilbudet
   selger metrene til veggens meterpris (1,75 m). Kostnaden er de kappede skinnene og platen som sin andel av de hele
   (profilen per meter, platen etter bredde) og kappingen, plassholder 2 min per skinne og 3 per plate. Plukklisten
   viser de kappede lengdene.
-  *Bjørn 31.10.2026, 6.11.2026 og 14.11.2026 · `rules.wall.cc`, `rules.wall.post`, `ITEM.rail`, `ITEM.cutPlate`, `ITEM.railCut`, `ITEM.plateCut` · kode `src/domain/walls.ts`, `src/domain/grid.ts`, `src/domain/faces.ts`, `src/calc/lines/walls.ts`, `src/calc/context.ts`, `src/cost/itemDefs.ts`, `src/foga/engine.ts` · test `src/foga/engine.test.ts`, `src/domain/shortModules.test.ts`, `src/calc/shortModules.test.ts`*
+  *Bjørn 31.10.2026, 6.11.2026 og 14.11.2026 · `rules.wall.cc`, `rules.wall.post`, `ITEM.rail`, `ITEM.cutPlate`, `ITEM.railCut`, `ITEM.plateCut` · kode `src/domain/walls.ts`, `src/domain/grid.ts`, `src/domain/faces.ts`, `src/calc/lines/walls.ts`, `src/calc/context.ts`, `src/cost/itemDefs.ts`, `src/foga/engine.ts`, `src/domain/snapGrid.ts`, `src/ui/plan/pointer/stroke.ts` · test `src/foga/engine.test.ts`, `src/domain/shortModules.test.ts`, `src/calc/shortModules.test.ts`, `src/domain/snapGrid.test.ts`*
 - **V2 Stolpe.** Profil 94 (40 × 40) på 2490 mm i hvert stolpepunkt: ende, rett, hjørne, T og kryss. Moduler som møtes
   deler stolpe. Stolper som bare bærer takdrager er den samme stolpen.
   *Bjørn 31.10.2026 · `rules.wall.height`, `RECIPES.wall.post` · kode `src/foga/engine.ts` · test `src/foga/engine.test.ts`*
@@ -212,7 +214,8 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   innsiden, innervegg og romvegg begge. To InFrame-rammer kobles ikke sammen.
   *Bjørn 30.10.2026 · kode `src/domain/textile/inFrame.ts` · test `src/domain/decor.test.ts`*
 - **X5 På fotplater (frittstående).** Samme ramme som X2, på fotplater, med tekstil på begge sider (trykt, hvit eller kundens egen), høyde 2540, minst
-  0,25 m. Tegnes på rutenettet 25, 50, 75 eller 100 cm. Ikke langs eller gjennom en systemvegg (helt inntil er lov). Den
+  0,25 m. Tegnes som veggen: 1 m-steg fra metergitteret, med Shift eller «Fin» 250-steg fra en 250-node (Bjørn
+  14.11.2026: Shift erstatter rutenettvelgeren, ett tegnespråk for vegg, tekstil og disk). Ikke langs eller gjennom en systemvegg (helt inntil er lov). Den
   lager ikke rom og kan ikke ha dør.
   *Bjørn 31.10.2026 · `rules.textile` · kode `src/domain/textile/free.ts` · test `src/domain/textile/free.test.ts`*
 - **X6 Skinner.** Gjelder rammen uansett montering. Topp- og bunnskinne går hele rammen; over 5000 skjøtes de i like stykker. Skjøten er 2 × 609 per

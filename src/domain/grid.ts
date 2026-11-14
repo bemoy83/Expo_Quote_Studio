@@ -86,6 +86,46 @@ export function wallModules(w: Wall): Module[] {
 }
 
 
+/** An axis-aligned run as its line (h or v, the fixed coordinate) and its interval along it, low to high. */
+function lineOf(a: Point, b: Point): { h: boolean; c: number; lo: number; hi: number } {
+  const h = Math.abs(a[1] - b[1]) < MODULE_EPS;
+  const i = h ? 0 : 1;
+  return { h, c: h ? a[1] : a[0], lo: Math.min(a[i], b[i]), hi: Math.max(a[i], b[i]) };
+}
+
+/** The modules lying along the run a–b for some length (a shorter module counts too): what Tøm takes along a stroke. */
+export function modulesAlong<M extends Pick<Module, 'a' | 'b'>>(mods: readonly M[], a: Point, b: Point): M[] {
+  const s = lineOf(a, b);
+  return mods.filter((m) => {
+    const o = lineOf(m.a, m.b);
+    return o.h === s.h && Math.abs(o.c - s.c) < MODULE_EPS && Math.min(o.hi, s.hi) - Math.max(o.lo, s.lo) > MODULE_EPS;
+  });
+}
+
+/**
+ * The parts of the run a→b no module covers, each in the run's direction (Byggeregel V1): a stroke over walls that
+ * exist only adds the rest, and each part is laid in whole metres from where the stroke reaches it, the rest last.
+ */
+export function uncoveredRuns(mods: readonly Pick<Module, 'a' | 'b'>[], a: Point, b: Point): [Point, Point][] {
+  const s = lineOf(a, b);
+  if (s.hi - s.lo < MODULE_EPS) return [];
+  const taken = modulesAlong(mods, a, b)
+    .map((m) => lineOf(m.a, m.b))
+    .sort((x, y) => x.lo - y.lo);
+  const free: [number, number][] = [];
+  let at = s.lo;
+  for (const t of taken) {
+    if (t.lo - at > MODULE_EPS) free.push([at, Math.min(t.lo, s.hi)]);
+    at = Math.max(at, t.hi);
+  }
+  if (s.hi - at > MODULE_EPS) free.push([at, s.hi]);
+  const pt = (t: number): Point => (s.h ? [round3(t), s.c] : [s.c, round3(t)]);
+  const forward = (b[s.h ? 0 : 1] - a[s.h ? 0 : 1]) > 0;
+  const parts = free.map(([lo, hi]): [Point, Point] => (forward ? [pt(lo), pt(hi)] : [pt(hi), pt(lo)]));
+  return forward ? parts : parts.reverse();
+}
+
+
 export const SIDES: readonly Side[] = ['back', 'left', 'right', 'front'];
 
 export function sideLength(stand: Stand, side: Side): number {

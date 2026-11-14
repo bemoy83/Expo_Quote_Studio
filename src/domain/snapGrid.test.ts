@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { cellsTo, gridStroke } from './snapGrid';
-import { strokeFrom } from '../ui/plan/geometry';
+import { cellsTo, continueStroke, gridStroke } from './snapGrid';
+import { fineStrokeFrom, strokeFrom } from '../ui/plan/geometry';
+import { freeStroke } from './textile/free';
+import { createVariant } from './variant';
 import type { Stand } from './types';
 
 const stand: Stand = { width: 6, depth: 3, type: 'row' };
@@ -29,5 +31,29 @@ describe('drawing grid', () => {
     expect(strokeFrom(stand, { x: 1.5, y: 1.05 }, { x: 3.7, y: 1.2 })).toEqual([[1, 1], [4, 1]]);
     expect(strokeFrom(stand, { x: 1.5, y: 1.05 }, { x: 0.2, y: 1 })).toEqual([[2, 1], [0, 1]]);
     expect(strokeFrom(stand, { x: 2.02, y: 0.5 }, { x: 2.1, y: 2.8 })).toEqual([[2, 0], [2, 3]]);
+  });
+
+  it('wall stroke with Shift or Fin: from a 250 node on the metre line, in 250 steps, at least one', () => {
+    expect(fineStrokeFrom(stand, { x: 1.3, y: 1.1 }, { x: 3.0, y: 1.2 })).toEqual([[1.25, 1], [3, 1]]);
+    expect(fineStrokeFrom(stand, { x: 1.3, y: 1.1 }, { x: 1.35, y: 1.1 })).toEqual([[1.25, 1], [1.5, 1]]);
+    expect(fineStrokeFrom(stand, { x: 2.1, y: 0.6 }, { x: 2.1, y: 2.4 })).toEqual([[2, 0.5], [2, 2.5]]);
+    // Dragged back toward 0
+    expect(fineStrokeFrom(stand, { x: 3.0, y: 1 }, { x: 1.2, y: 1 })).toEqual([[3, 1], [1.25, 1]]);
+  });
+
+  it('Shift pressed or let go mid-stroke goes on from what is drawn, never back past the start', () => {
+    // 1 m drawn to 3, then 250 steps: on to 3,75
+    expect(continueStroke(stand, [[1, 1], [3, 1]], 0.25, { x: 3.8, y: 1.4 })).toEqual([[1, 1], [3.75, 1]]);
+    // 250 drawn to 2,25, then 1 m: on to 4,25, or back to 1,25
+    expect(continueStroke(stand, [[1, 1], [2.25, 1]], 1, { x: 4.1, y: 1 })).toEqual([[1, 1], [4.25, 1]]);
+    expect(continueStroke(stand, [[1, 1], [2.25, 1]], 1, { x: 0, y: 1 })).toEqual([[1, 1], [1.25, 1]]);
+    // Stays in the stand
+    expect(continueStroke(stand, [[1, 1], [5.5, 1]], 1, { x: 9, y: 1 })).toEqual([[1, 1], [5.5, 1]]);
+  });
+
+  it('textile: 1 m from the metre grid, 250 with Shift or Fin', () => {
+    const v = createVariant('A', stand);
+    expect(freeStroke(v, { x: 1.3, y: 1.1 }, { x: 3.1, y: 1 })).toEqual([[1, 1], [3, 1]]);
+    expect(freeStroke(v, { x: 1.3, y: 1.1 }, { x: 3.1, y: 1 }, true)).toEqual([[1.25, 1], [3, 1]]);
   });
 });

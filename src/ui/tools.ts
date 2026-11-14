@@ -1,15 +1,14 @@
 // Tool state of the sketch screen. UI only, never stored in the model.
-import { GRID_STEPS, type GridStep } from '../domain/snapGrid';
 import { TILE_FULL, type TileSize } from '../domain/floor/tiles';
 import { type FloorBrushSize } from '../domain/floor/brush';
-import type { Rules } from '../rules/rules';
 
 /** Velg · Pensel · Tøm */
 export type Tool = 'select' | 'brush' | 'erase';
 
 /** What the brush draws. The product chosen in the panel decides it ("produkt styrer pensel"). */
 export type Brush =
-  | { kind: 'wall'; ral: string }
+  /** Innervegg. `fine`: «Fin» on, as Shift held for touch: 250 steps from a 250 node (Byggeregel V1). */
+  | { kind: 'wall'; ral: string; fine?: boolean }
   /** Innvendig takdrager: a straight run on the 1 m grid inside the stand (domain/innerBeams.ts). */
   | { kind: 'beam' }
   | { kind: 'floor'; product: string }
@@ -23,9 +22,9 @@ export type Brush =
    *  click places (K22, its art.nr), none for «Fri» (a section 500 × 500); a drag always draws free. */
   | { kind: 'podium'; product: string; ral: string; fine?: boolean; h?: number; stock?: string }
   /** Tekstilvegg: drawn on a system wall it is mounted there (InFrame), anywhere else it stands free on foot plates.
-   * Drawn on the drawing grid in cells of the chosen grid step; a click next to a wall fills its free part. */
+   * Drawn as the wall: 1 m from the metre grid, 250 steps with Shift or `fine` («Fin»); a click next to a wall fills its free part. */
   /** `motif`: the graphics the textile drawn gets, or a textile clicked; omitted = drawn without (Bjørn 14.11.2026). */
-  | { kind: 'textile'; motif?: string }
+  | { kind: 'textile'; motif?: string; fine?: boolean }
   /** Print (`print`, the whole felt 960 × 2420 in foil) or Dekal (`decal`, a foil decal) on a wall felt, each its own pen
    *  of Profilering (Bjørn 14.11.2026). Omitted `pen` only as asked for (panel, upload): the tool's pen takes the motif
    *  (profilePen.ts withMotif). */
@@ -94,14 +93,6 @@ export const floorSizeLabel = (s: FloorBrushSize) =>
 
 /** Calc group hovered in the calc panel; the plan dims everything else. */
 export type Highlight = 'walls' | 'beams' | 'openings' | 'textile' | 'foil' | 'floor' | 'objects' | null;
-
-/** Grid steps each straight-run brush can draw with (domain/snapGrid). System walls follow the wall cc: only 1 m until
- * the Foga recipe has the parts for cc 25, 50 and 75. */
-export function gridSteps(brush: Brush | null, rules: Rules): readonly GridStep[] {
-  if (brush?.kind === 'textile') return GRID_STEPS
-  if (brush?.kind === 'wall' || brush?.kind === 'beam') return GRID_STEPS.filter((s) => Math.abs(s - rules.wall.cc) < 1e-9)
-  return []
-}
 
 /** A plan layer: the calc groups the plan can dim. */
 export type Layer = Exclude<Highlight, null>

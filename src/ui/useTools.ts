@@ -4,7 +4,6 @@ import { useState } from 'react'
 import type { CalcResult } from '../calc/calc'
 import { type FloorBrushSize } from '../domain/floor/brush'
 import { TILE_FULL, type TileSize } from '../domain/floor/tiles'
-import type { GridStep } from '../domain/snapGrid'
 import type { Motif, Variant } from '../domain/types'
 import { COUNTER_STOCK_RAL } from '../domain/objects'
 import { builtOf, catalog, idx, isCounter } from './env'
@@ -29,7 +28,6 @@ export function useTools({ v, res, motifs, onPick, onErase }: ToolsInput) {
   const [floorSize, setFloorSize] = useState<FloorBrushSize>(TILE_FULL)
   /** Last of the smaller tile sizes, so «Andre» comes back to it. */
   const [otherSize, setOtherSize] = useState<TileSize>(FLOOR_OTHER[0].size)
-  const [gridStep, setGridStep] = useState<GridStep>(1)
   /** The pen each drawing tool last drew with, so switching tools brings it back. */
   const [pens, setPens] = useState<Partial<Record<PenTool, Brush>>>({})
   /** Colour the wall tool draws new inner walls with; follows the stand's wall plate until a colour is picked. */
@@ -103,8 +101,6 @@ export function useTools({ v, res, motifs, onPick, onErase }: ToolsInput) {
     otherSize,
     setOtherSize,
     rollBrush,
-    gridStep,
-    setGridStep,
   }
 }
 

@@ -8,7 +8,7 @@ import { catalog } from '../../env'
 import type { Brush } from '../../tools'
 import { openingLabel, openingPen, openingProducts, openingShown, penColour, withColour, withOpening, type WallPen } from '../../wallPen'
 import { fabricSwatches, ralSwatches } from '../swatches'
-import { BeamIcon, Palette, QBtn, Sep } from './parts'
+import { BeamIcon, FinBtn, Palette, QBtn, Sep } from './parts'
 import type { QuickCtx } from './types'
 
 const isWallPen = (b: Brush | null): b is WallPen => b?.kind === 'wall' || b?.kind === 'opening' || b?.kind === 'beam'
@@ -26,7 +26,7 @@ export function WallPicks({ p, head, more }: QuickCtx) {
   return (
     <>
       {head}
-      <QBtn on={brush.kind === 'wall'} title="Vegg · innervegg på rutenettet · dra langs linjene" label="Vegg" onClick={() => onPick({ kind: 'wall', ral: p.wallRal })}>
+      <QBtn on={brush.kind === 'wall'} title="Vegg · innervegg på rutenettet · dra langs linjene" label="Vegg" onClick={() => onPick(brush.kind === 'wall' ? brush : { kind: 'wall', ral: p.wallRal })}>
         <BrickWall size={15} />
         Vegg
       </QBtn>
@@ -64,10 +64,16 @@ export function WallPicks({ p, head, more }: QuickCtx) {
           />
         </>
       )}
-      {/* Tilpasset: the variants of the opening in hand */}
+      {/* Tilpasset: «Fin» for Vegg (250 steps, as Shift), the variants of the opening in hand */}
+      <Sep />
+      <FinBtn
+        on={brush.kind === 'wall' && !!brush.fine}
+        off={brush.kind === 'wall' ? undefined : 'Fin · gjelder bare Vegg'}
+        title={brush.kind === 'wall' && brush.fine ? 'Fin · 250-steg fra en 250-node · trykk for hele meter igjen' : 'Fin · tegn vegg i 250-steg fra en 250-node · på desktop også Shift'}
+        onClick={() => brush.kind === 'wall' && onPick({ ...brush, fine: !brush.fine })}
+      />
       {opening && (
         <>
-          <Sep />
           {openingProducts(products).map((x) => {
             const a = x.variants[0].artnr
             return (

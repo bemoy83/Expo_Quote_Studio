@@ -31,6 +31,7 @@ import { NextDefs } from './layers/NextDefs'
 import { PickLayer } from './layers/PickLayer'
 import { PreviewLayer } from './layers/PreviewLayer'
 import { SnapDots } from './layers/Previews'
+import { FINE_STEP } from '../../domain/snapGrid'
 import { RoomLayer } from './layers/RoomLayer'
 import { ShelfLayer } from './layers/ShelfLayer'
 import { TextileLayer } from './layers/TextileLayer'
@@ -55,8 +56,6 @@ interface Props {
   tool: Tool
   brush: Brush | null
   floorSize: FloorBrushSize
-  /** Cell size of the drawing grid for the textile brush, m (domain/snapGrid). */
-  gridStep?: number
   highlight: Highlight
   selection: PlanSelection
   onSelect: (s: PlanSelection) => void
@@ -110,7 +109,6 @@ const PEN_DIMMED = 0.45
 
 export function PlanView(p: Props) {
   const { v, res, tool, brush, highlight, selection } = p
-  const step = p.gridStep ?? rules.textile.grid
   const { width: W, depth: D } = v.stand
 
   const mods = useMemo(() => builtModules(v), [v])
@@ -127,8 +125,6 @@ export function PlanView(p: Props) {
   const hits = planHits(v, mods, selection, () => scaleNow)
   const { moduleAt, beamAt, roomEdgeAt, objectAt } = hits
   const fb = floorBrush(v, { tool, brush, floorSize: p.floorSize })
-  /** Snap points show only while a brush snaps to them, at its own grid. */
-  const dotStep = textileTool ? step : wallTool || beamTool ? rules.wall.cc : null
 
   const pointer = usePlanPointer({
     v,
@@ -139,7 +135,6 @@ export function PlanView(p: Props) {
     hits,
     mods,
     floor: fb,
-    step,
     standardRuns,
     standKeys,
     motifs: p.motifs,
@@ -152,6 +147,8 @@ export function PlanView(p: Props) {
     onOpenDrawer: p.onOpenDrawer,
   })
   const { svg, svgRef, svgEl, hover, dragging, stroke, erasing, handlers } = pointer
+  /** Snap points show only while a brush snaps to them: the metre grid, 250 with Shift or «Fin» (wall and textile). */
+  const dotStep = textileTool || wallTool || beamTool ? (pointer.fine ? FINE_STEP : rules.wall.cc) : null
 
   // What the pen would store at the pointer (docs/forhandsvisning.md): worked out again only when the target changes,
   // then drawn through the layers below, dimmed, where the plan changes (nextArea.ts)

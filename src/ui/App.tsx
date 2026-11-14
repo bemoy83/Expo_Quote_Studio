@@ -254,8 +254,6 @@ export default function App() {
       onFloorSize={tools.setFloorSize}
       otherSize={tools.otherSize}
       onOtherSize={tools.setOtherSize}
-      gridStep={tools.gridStep}
-      onGridStep={tools.setGridStep}
       onFill={fillWithPen}
       onFillWalls={() => onEdit((x) => paintAllWalls(x, tools.wallRal))}
       onFillPodiums={() => onEdit((x) => paintPodiums(x, tools.podiumRal))}
@@ -333,7 +331,6 @@ export default function App() {
                       tool={tool}
                       brush={brush}
                       floorSize={tools.floorSize}
-                      gridStep={tools.gridStep}
                       highlight={highlight}
                       selection={selection}
                       onSelect={setSelection}
