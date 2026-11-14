@@ -110,7 +110,7 @@ export const isCounter = (artnr: string) => place.isCounter(artnr)
 
 export const openingProducts = () => catalog.products.filter((p) => p.opening)
 
-/** The name of a counter of Disker og podier: a standard counter's catalog name (K22), else «Disk» or «Podium» by its
+/** The name of a counter of Disker og podier: a standard counter's catalog name (K22), else «Disk» or «Podie» by its
  *  shape (K13). */
 export const counterName = (sections: readonly CounterSection[]) => {
   const s = stockOf(sections)

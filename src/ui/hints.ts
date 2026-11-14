@@ -68,7 +68,7 @@ export function hint(tool: Tool, brush: Brush | null, carpet = false): Hint {
         )
       }
       return h(
-        'Klikk for en seksjon, dra for å tegne disk eller podium',
+        'Klikk for en seksjon, dra for å tegne disk eller podie',
         'Klikk for en seksjon på 500 × 500 (eller velg Disk eller Podie over verktøyene), eller trykk og dra for å gjøre den større i 500-steg i hver retning · seksjonen du trykket i står fast · Shift (eller Fin) gir 250-steg: hold Shift for å låse forhåndsvisningen, og dra i en kant for å flytte den · alle sider er tette · fyll gir alle diskene og podiene fargen · velg en disk for å bytte farge eller rotere den',
       )
     case 'object':

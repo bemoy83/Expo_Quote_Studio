@@ -47,7 +47,7 @@ export function objectPill(p: PillActions, c: Of<'object'>, remove: () => void):
   const f = idx.byArtnr.get(o.product)
   const fp = objectFootprint(place, o)
   const family = objectFamily(o.product)
-  // Disker og podier: «Disk» or «Podium» by its shape, as on the quote (Byggeregel K13)
+  // Disker og podier: «Disk» or «Podie» by its shape, as on the quote (Byggeregel K13)
   const name = o.sections ? counterName(o.sections) : (family.find((x) => x.artnr === o.product)?.name ?? f?.product.name ?? 'Møbel')
   return {
     name,

@@ -229,7 +229,7 @@ const products: Product[] = [
   counted('5285', 'Kafébord ø70', 'mob.bord', 450),
   counted('5300', 'Loungegruppe', 'mob.grupper', 3900),
   counter('6560', 'Bardisk', 1320),
-  podium('6570', 'Disk og podium, bygget på stedet', 2640),
+  podium('6570', 'Disk og podie, bygget på stedet', 2640),
   podie('5450', 'Podie 50 × 50', [
     [4, 25, 290],
     [1, 50, 380],

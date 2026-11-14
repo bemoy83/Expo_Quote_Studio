@@ -85,11 +85,11 @@ describe('tight build (K11)', () => {
     expect(innerCorners(t)).toBe(2);
   });
 
-  it('is «Disk» when no deeper than 500 anywhere, else «Podium»', () => {
+  it('is «Disk» when no deeper than 500 anywhere, else «Podie»', () => {
     expect(podiumName([sec(0, 1000, 0, 500), sec(1000, 1500, 0, 500)])).toBe('Disk');
     expect(podiumName([sec(0, 500, 0, 500), sec(500, 1500, 0, 500), sec(0, 500, 500, 1500)])).toBe('Disk');
-    expect(podiumName([sec(0, 1000, 0, 1000)])).toBe('Podium');
-    expect(podiumName([sec(0, 750, 0, 750)])).toBe('Podium');
+    expect(podiumName([sec(0, 1000, 0, 1000)])).toBe('Podie');
+    expect(podiumName([sec(0, 750, 0, 750)])).toBe('Podie');
   });
 });
 
