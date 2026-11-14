@@ -19,12 +19,6 @@ export interface FaceHit {
   module: number
 }
 
-export interface TextileLine {
-  a: Point
-  b: Point
-  at: { x: number; y: number }
-}
-
 /** The run Tøm sweeps over along walls or takdragere. `centre` is the stand's middle: the pill goes on the side away
  * from it. Wall and takdrager strokes show the next variant instead (next.ts). */
 export function EraseStroke({ a, b, centre }: { a: Point; b: Point; centre: Point }) {

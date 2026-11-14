@@ -13,7 +13,7 @@ import type { PodiumLink } from '../../../domain/podiumLinks'
 import type { RunDrag } from '../../../domain/runDraw'
 import type { RoomDrag, WallDrag } from '../../drag'
 import type { Brush, Tool } from '../../tools'
-import type { TextileLine } from '../layers/Previews'
+import type { DrawPress } from './draw'
 import type { PlanSelection } from '../selection'
 import type { Erasing, EraseTarget } from './erase'
 import type { FloorBrush } from './floorBrush'
@@ -33,10 +33,8 @@ export interface P {
 export type Drag =
   /** Tøm along walls and drawn takdragere (stroke.ts). `beamId`: pressed on a drawn takdrager, so a click takes all of it. */
   | { kind: 'stroke'; p0: P; moved: boolean; beamId?: string }
-  /** Vegg or Takdrager pressed (run.ts): the run being drawn from the module the pen showed, `last` the pointer at the
-   *  last move, where Shift pressed or let go goes on from; `at` where the module shown was (the press, or where Shift
-   *  froze the preview). */
-  | { kind: 'run'; p0: P; at: P; last: P; moved: boolean; run: RunDrag }
+  /** Vegg, Tekstil or Takdrager pressed (run.ts, draw.ts): the run being drawn from the module the pen showed. */
+  | ({ kind: 'run'; run: RunDrag } & DrawPress)
   /** A floor stroke: the tiles after the first line up with it (`anchor`). */
   | { kind: 'floor'; last: string | null; anchor: { i: number; j: number } | null }
   /** Fyll with rolled floor: an area from cell `from`; a click without a drag fills the stand. */
@@ -48,10 +46,9 @@ export type Drag =
   /** `fine`: Shift held or «Fin» on in the pill (`fineLock`), it moves across in 50 mm steps off the grid (Byggeregel T15). */
   | ({ kind: 'beam'; moved: boolean; select: PlanSelection; fine?: boolean; fineLock?: boolean } & WallDrag)
   | ({ kind: 'room'; select: PlanSelection | null } & RoomDrag)
-  /** Disker og podier pressed (podium.ts): `at`, where the section the pen showed stands (the press, or where Shift froze
-   *  it); `click`, what a click there stores (podiumStart); `drag`, what a drag draws from it, none on a counter or where it has no room; `last`, the pointer at the last
-   *  move, where Shift pressed or let go goes on from. */
-  | { kind: 'podium'; p0: P; at: P; click: PodiumDraw | null; drag: PodiumDrag | null; last: P; moved: boolean }
+  /** Disker og podier pressed (podium.ts, draw.ts): `click`, what a click on the section shown stores (podiumStart);
+   *  `drag`, what a drag draws from it, none on a counter or where it has no room. */
+  | ({ kind: 'podium'; click: PodiumDraw | null; drag: PodiumDrag | null } & DrawPress)
   /** A grip of the chosen counter of Disker og podier pressed, in Velg or with its pen (podiumGrip.ts, K14): its side or
    *  corner follows the pointer from the press `p0` in 500 steps, 250 with `fine` (Shift, or «Fin» on the pen). */
   | { kind: 'podiumGrip'; id: string; grip: PodiumGrip; p0: P; moved: boolean; fine: boolean }
@@ -101,7 +98,6 @@ export interface PointerCtx {
   /** A plain click (press and release without moving) in Velg: the click rules in click.ts. Owned by the hook. */
   clickSelect: (s: PlanSelection) => void
   setStroke: Dispatch<SetStateAction<[Point, Point] | null>>
-  setTextileStroke: Dispatch<SetStateAction<TextileLine | null>>
   setFillRect: Dispatch<SetStateAction<Rect | null>>
   /** What a Tøm press will take on release (touch has no hover to show it). */
   setErasing: Dispatch<SetStateAction<Erasing | null>>

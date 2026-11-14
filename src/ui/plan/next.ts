@@ -26,7 +26,7 @@ import { applyDrop, type DecorDrag } from '../dnd'
 import { place, pricing, productOf, rules } from '../env'
 import { placedBy, type Brush, type Tool } from '../tools'
 import { mm } from './dims'
-import type { FaceHit, TextileLine } from './layers/Previews'
+import type { FaceHit } from './layers/Previews'
 import type { Box } from './nextArea'
 import type { PlanScale } from './planScale'
 import { beamBody, PHANTOM, printBand, textileWidth, wallWidth } from './planStyle'
@@ -36,7 +36,9 @@ import type { FloorBrush } from './pointer/floorBrush'
 import type { PlanHits } from './pointer/hits'
 import { isDoor, openingEdge } from './pointer/opening'
 import type { Pens } from './pointer/pens'
-import { counterUnder, drawPodiumAt, podiumFine, podiumStart } from './pointer/podium'
+import { counterUnder, drawPodiumAt, podiumStart } from './pointer/podium'
+import { penFine } from './pointer/draw'
+import { runOf } from './pointer/run'
 import { podiumGripAt } from './pointer/podiumGrip'
 import { placeHolds, placeKey } from './pointer/place'
 import { paintPlates, plateAt, platesAlong } from './pointer/plates'
@@ -99,11 +101,9 @@ export interface NextInput {
   motifs?: Motif[]
   hover: P | null
   dragging: Drag | null
-  stroke: [Point, Point] | null
-  textileStroke: TextileLine | null
   fillRect: Rect | null
   dropHover: { h: FaceHit; d: DecorDrag } | null
-  /** Disker og podier or Vegg with Shift held: where the preview stands still (usePlanPointer). */
+  /** A drawing pen with Shift held: where the preview stands still (usePlanPointer, pointer/draw.ts). */
   freeze?: P | null
 }
 
@@ -183,16 +183,16 @@ function targetOf(p: NextInput): NextTarget | null {
     }
     return null
   }
-  if (p.stroke) return strokeTarget(p.stroke[0], p.stroke[1], true)
+  const motif = brush?.kind === 'textile' ? brush.motif : undefined
 
-  // Textile pen pressed (run.ts): the run, or held without moving what a click stores
-  if (pens.textileTool && p.textileStroke) {
-    const { a, b, at } = p.textileStroke
-    const click = a[0] === b[0] && a[1] === b[1]
-    const motif = brush?.kind === 'textile' ? brush.motif : undefined
-    return target(click ? `held:${textileClickKey(p, at)}:${motif ?? ''}` : `tline:${pt(a)}:${pt(b)}:${motif ?? ''}`, () =>
-      textileOutcome(click ? textileClick(v, hits, at, motif) : textileRun(v, a, b, at, motif), click ? null : [a, b]),
-    )
+  // Vegg, Tekstil or Takdrager pressed (run.ts): what a release stores, from the drag as Disker og podier; the textile
+  // pen held without moving, what a click stores
+  const running = dragging?.kind === 'run' ? dragging : dragging?.kind === 'plates' ? dragging.as : undefined
+  if (running) {
+    const [a, b] = runOf(running, hover ?? running.last)
+    if (!pens.textileTool) return strokeTarget(a, b, true)
+    if (!running.moved) return target(`held:${textileClickKey(p, running.at)}:${motif ?? ''}`, () => textileOutcome(textileClick(v, hits, running.at, motif), null))
+    return target(`tline:${pt(a)}:${pt(b)}:${motif ?? ''}`, () => textileOutcome(textileRun(v, a, b, running.p0, motif), [a, b]))
   }
 
   // Door, motif and furniture pressed: what a release over the same target stores; dragged off it, nothing
@@ -249,8 +249,8 @@ function targetOf(p: NextInput): NextTarget | null {
     const g = hits.podiumGripAt(hover)
     if (g) return target(`grip:${g.at}`, () => line({ hint: GRIP_HINT, hotGrip: g.at }))
   }
-  // Vegg and Takdrager (run.ts): with Shift held the preview stands still where it was
-  const at = (pens.wallTool && p.freeze) || hover
+  // The drawing pens: with Shift held the preview stands still where it was
+  const at = p.freeze ?? hover
   if (pens.wallTool && wallRal) {
     const m = plateAt(p.mods, at)
     if (m) return target(`plate:${m.key}`, () => area({ edit: (x) => paintPlates(x, p.mods, [m.key], wallRal), hint: null }))
@@ -260,18 +260,16 @@ function targetOf(p: NextInput): NextTarget | null {
     return strokeTarget(e.a, e.b, false)
   }
   if (pens.textileTool) {
-    // The same as a click (pointer/textile.ts); with Shift held the preview stands still where it was
-    const tat = p.freeze ?? hover
-    if (!hits.onStand(tat) && !hits.faceHit(tat)) return null
-    const motif = brush?.kind === 'textile' ? brush.motif : undefined
-    return target(`${textileClickKey(p, tat)}:${motif ?? ''}`, () => textileOutcome(textileClick(v, hits, tat, motif), null))
+    // The same as a click (pointer/textile.ts)
+    if (!hits.onStand(at) && !hits.faceHit(at)) return null
+    return target(`${textileClickKey(p, at)}:${motif ?? ''}`, () => textileOutcome(textileClick(v, hits, at, motif), null))
   }
   if (pens.decorTool) return decorTarget(p, hover)
   if (pens.openingTool && brush?.kind === 'opening') {
     const e = openingEdge({ v, hits }, hover)
     return e ? doorTarget(v, e, brush, null, false) : null
   }
-  if (pens.podiumTool) return podiumHover(p, p.freeze ?? hover, p.freeze ? hover : null)
+  if (pens.podiumTool) return podiumHover(p, at, p.freeze ? hover : null)
   if (pens.objectTool && hits.onStand(hover)) return objectTarget(v, brush, hover)
   if (pens.shelfTool) {
     const h = hits.faceHit(hover)
@@ -409,7 +407,7 @@ function gripTarget(r: PodiumGripDraw): NextTarget {
  *  q): the edges a press takes hold of, thick, and the hint for it. */
 function podiumHover(p: NextInput, q: P, over: P | null = null): NextTarget | null {
   if (!over && counterUnder(p, q)) return target(`pod:on`, () => line({ hint: 'Klikk for å velge disken' }))
-  const r = podiumStart(p, q, !!over || podiumFine(p.brush))
+  const r = podiumStart(p, q, !!over || penFine(p.brush))
   if (!r) return null
   const t = podiumTarget(r, false)
   if (!over || 'error' in r) return t

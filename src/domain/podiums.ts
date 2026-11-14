@@ -17,10 +17,6 @@ import { bounds, covered, edgeRuns, EPS, GRID, overlaps, withSections, type Edge
 import type { CounterSection, PlacedObject, Point, Variant } from './types';
 import { axisSpan, rebaseAxis, type DrawAxis, type Grab, grabOf } from './drawAxis';
 
-export { axisSpan, grabOf, type Grab };
-/** One way of a drag of Disker og podier (drawAxis.ts). */
-export type PodiumAxis = DrawAxis;
-
 const R = RECIPES.counter;
 export { GRID };
 /** The largest section each way, mm c/c (K10). */
@@ -68,8 +64,8 @@ export interface PodiumOnto {
  *  held, or «Fin» on. */
 export interface PodiumDrag {
   o: PlacedObject;
-  x: PodiumAxis;
-  z: PodiumAxis;
+  x: DrawAxis;
+  z: DrawAxis;
   fine: boolean;
   onto?: PodiumOnto;
 }
@@ -96,8 +92,8 @@ export function startDrag(o: PlacedObject, q: Point, fine: boolean, onto?: Podiu
   const [u, w] = unitsOf(o, q);
   const g = fine ? podiumGrab(o, q, onto) : { x: 0 as Grab, z: 0 as Grab };
   const fix = (a: 'x' | 'z') => (onto?.side.axis === a ? { fix: (-onto.side.out) as -1 | 1 } : {});
-  const x: PodiumAxis = { lo: s.x[0] / GRID, hi: s.x[1] / GRID, v0: u, g: g.x, ...fix('x') };
-  const z: PodiumAxis = { lo: s.z[0] / GRID, hi: s.z[1] / GRID, v0: w, g: g.z, ...fix('z') };
+  const x: DrawAxis = { lo: s.x[0] / GRID, hi: s.x[1] / GRID, v0: u, g: g.x, ...fix('x') };
+  const z: DrawAxis = { lo: s.z[0] / GRID, hi: s.z[1] / GRID, v0: w, g: g.z, ...fix('z') };
   return { o, fine, x, z, ...(onto && { onto }) };
 }
 

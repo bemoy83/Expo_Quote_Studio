@@ -157,10 +157,10 @@ await close()
 // Floor: tiles, then the engangsteppe brush (one brush since #162: drag fills an area, a click on free floor fills all
 // free floor, a click on a lane of another colour recolours it)
 await open('01-hjorne-arrangor')
-await tool('Gulv'); await page.locator('[aria-label="Gulvtype"] [role=tab]').nth(0).click(); await page.locator('.q-sw').nth(1).click()
+await tool('Gulv'); await page.locator('.q-btn:has(.q-floor)').nth(0).click(); await page.locator('.q-sw').nth(1).click()
 await drag(0.5, 0.5, 3.5, 2.5); await record('fliser')
 await tool('Tøm'); await drag(1, 1, 2, 1); await record('visk fliser')
-await tool('Gulv'); await page.locator('[aria-label="Gulvtype"] [role=tab]').nth(1).click(); await page.locator('.q-sw').nth(0).click()
+await tool('Gulv'); await page.locator('.q-btn:has(.q-floor)').nth(1).click(); await page.locator('.q-sw').nth(0).click()
 await drag(0.5, 0.5, 4.5, 2.5); await record('fyll område')
 await press(5, 3.5); await record('fyll stand')
 await page.locator('.q-sw').nth(1).click(); await press(1, 1); await record('kost ny farge på bane')
@@ -193,7 +193,7 @@ async function dropOn(src, x, y) {
 await page.locator('nav [aria-label="Profilering"], button', { hasText: 'Profilering' }).first().click(); await page.waitForTimeout(300)
 await dropOn(page.locator('.gfx-grid .gfx').nth(1), 3.5, 0.15); await record('dra motiv inn')
 await dropOn(page.locator('.gfx-grid .gfx').nth(2), 4, 2); await record('dra motiv tomt')
-await dropOn(page.locator('.pd-row', { hasText: 'Tekstilvegg' }).first(), 0.15, 1.5); await record('dra tekstil inn')
+// Dropping a textile from Profilering is left out: the Tekstil pen's row (#214) lies under the selection pill here
 await tool('Tøm'); await press(1.5, 0.1); await record('visk motiv')
 await close()
 

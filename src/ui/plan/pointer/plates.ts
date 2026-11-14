@@ -68,7 +68,7 @@ export const plates: DragHandlers<'plates'> = {
     const w = c.v.walls.find((x) => x.id === d.wallId)
     const across = w && (w.from[1] === w.to[1] ? Math.abs(q.y - d.p0.y) > Math.abs(q.x - d.p0.x) : Math.abs(q.x - d.p0.x) > Math.abs(q.y - d.p0.y))
     if (across) {
-      d.as = startRunDrag(c, d.p0, !!d.fine, null) as Extract<Drag, { kind: 'run' }>
+      d.as = startRunDrag(c, d.p0, !!d.fine, null)
       run.move?.(c, d.as, q)
     }
   },
