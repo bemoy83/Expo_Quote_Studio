@@ -85,6 +85,16 @@ export interface CalcContext {
   lmOf: (b: BeamLayout) => number;
 }
 
+/** The whole modules the parts were split from, in the organiser's colour. Parts come in order from a. */
+function splitWholes(parts: readonly BuiltModule[], ral: string): BuiltModule[] {
+  const byWhole = new Map<string, BuiltModule[]>();
+  for (const m of parts) byWhole.set(m.whole!, [...(byWhole.get(m.whole!) ?? []), m]);
+  return [...byWhole].map(([key, ps]) => {
+    const { whole: _, ...first } = ps[0];
+    return { ...first, key, b: ps[ps.length - 1].b, cc: Math.round(ps.reduce((a, m) => a + m.cc, 0) * 1000) / 1000, plate: ral };
+  });
+}
+
 const r1 = (n: number) => Math.round(n * 10) / 10;
 /** Metres to the centimetre: a wall of 1,75 m is 1,75 (Byggeregel V1); other units to a tenth. */
 const r2 = (n: number) => Math.round(n * 100) / 100;
@@ -151,7 +161,10 @@ export function calcContext(v: Variant, rules: Rules, catalog: Catalog, standWal
   };
   const organiserPays = standWalls.payer === 'arrangør';
   // An opening in a stand wall (only in old sketches) stays the exhibitor's door
-  const theirs = mods.filter((m) => organiserPays && !m.opening && kindOf(m) === 'stand');
+  const standOf = (m: BuiltModule) => organiserPays && !m.opening && kindOf(m) === 'stand';
+  // A stand wall module split by a wall meeting it between its posts (Byggeregel V10, V11): the organiser keeps and bills the
+  // whole module it was, the exhibitor pays the split, its parts and the post between them (Bjørn 14.11.2026)
+  const theirs = [...mods.filter((m) => standOf(m) && !m.whole), ...splitWholes(mods.filter((m) => standOf(m) && m.whole), standWalls.ral)];
   const theirSet = new Set(theirs);
   const ours = mods.filter((m) => !theirSet.has(m));
   const theirPoints = wallPoints(theirs);
