@@ -21,15 +21,16 @@ import { plateAt, plates, startPlates } from './plates'
 import { room } from './room'
 import { shelf, startShelf } from './shelf'
 import { startSelect } from './select'
-import { startStroke, stroke, strokeShift } from './stroke'
-import { startTextile, textile, textileDrawn } from './textile'
+import { run, runShift, startRunDrag } from './run'
+import { stroke } from './stroke'
+import { startTextile, strokeShift, textile, textileDrawn } from './textile'
 import { podium, podiumFine, podiumShift, startPodium } from './podium'
 import { podiumGrip, startPodiumGrip } from './podiumGrip'
 import { podiumLink, startPodiumLink } from './podiumLink'
 import type { Drag, DragHandlers, P, PointerCtx } from './types'
 import { wall } from './wall'
 
-const DRAGS: { [K in Drag['kind']]: DragHandlers<K> } = { stroke, plates, floor, carpetFill, click, object, wall, beam, room, textile, podium, podiumGrip, podiumLink, freeMove, erase, shelf, shelfMove, place: placeDrag }
+const DRAGS: { [K in Drag['kind']]: DragHandlers<K> } = { stroke, run, plates, floor, carpetFill, click, object, wall, beam, room, textile, podium, podiumGrip, podiumLink, freeMove, erase, shelf, shelfMove, place: placeDrag }
 const handlersOf = (d: Drag) => DRAGS[d.kind] as DragHandlers<Drag['kind']>
 
 /** What the plan passes in: the context without the previews' setters and state, which the hook owns. */
@@ -62,39 +63,31 @@ export function usePlanPointer(input: PlanPointerInput) {
   const [dropHover, setDropHover] = useState<{ h: FaceHit; d: DecorDrag } | null>(null)
   /** What a Tøm press takes on release. */
   const [erasing, setErasing] = useState<Erasing | null>(null)
-  /** Disker og podier with Shift held and nothing pressed: where the preview stands still, so the pointer can go over it
-   *  and take hold of an edge (podium.ts). */
-  const [podiumFreeze, setPodiumFreeze] = useState<P | null>(null)
+  /** Shift held and nothing pressed, with Disker og podier or Vegg: where the preview stands still, so the pointer can
+   *  go over it and take hold of an end (podium.ts, run.ts). */
+  const [freeze, setFreeze] = useState<P | null>(null)
   /** The hover point for the Shift key listener, set where the hover is. */
   const hoverRef = useRef<P | null>(null)
-  const podiumOn = pens.podiumTool
   /** The wall and textile pens draw in 250 steps with Shift held or «Fin» on (Bjørn 14.11.2026); the snap dots show
    *  the 250 grid while Shift is held. */
   const fineOn = (pens.wallTool && brush?.kind === 'wall') || (pens.textileTool && brush?.kind === 'textile')
   const fineLock = fineOn && !!brush && 'fine' in brush && !!brush.fine
   const fineOf = (shift: boolean) => !!fineOn && (shift || fineLock)
+  /** The pens whose preview Shift freezes (one drawing tool, Bjørn 14.11.2026). */
+  const freezeOn = pens.podiumTool || (pens.wallTool && brush?.kind === 'wall')
+  const shiftOn = freezeOn || fineOn
   const [shiftHeld, setShiftHeld] = useState(false)
   useEffect(() => {
-    if (!fineOn) return
-    const on = (e: KeyboardEvent) => e.key === 'Shift' && setShiftHeld(e.type === 'keydown')
-    const off = () => setShiftHeld(false)
-    window.addEventListener('keydown', on)
-    window.addEventListener('keyup', on)
-    window.addEventListener('blur', off)
-    return () => {
-      window.removeEventListener('keydown', on)
-      window.removeEventListener('keyup', on)
-      window.removeEventListener('blur', off)
-      setShiftHeld(false)
-    }
-  }, [fineOn])
-  useEffect(() => {
-    if (!podiumOn) return
+    if (!shiftOn) return
     const on = (e: KeyboardEvent) => {
-      if (e.key !== 'Shift' || drag.current) return
-      setPodiumFreeze(e.type === 'keydown' ? (f) => f ?? hoverRef.current : null)
+      if (e.key !== 'Shift') return
+      setShiftHeld(e.type === 'keydown')
+      if (freezeOn && !drag.current) setFreeze(e.type === 'keydown' ? (f) => f ?? hoverRef.current : null)
     }
-    const off = () => setPodiumFreeze(null)
+    const off = () => {
+      setShiftHeld(false)
+      setFreeze(null)
+    }
     window.addEventListener('keydown', on)
     window.addEventListener('keyup', on)
     window.addEventListener('blur', off)
@@ -102,9 +95,9 @@ export function usePlanPointer(input: PlanPointerInput) {
       window.removeEventListener('keydown', on)
       window.removeEventListener('keyup', on)
       window.removeEventListener('blur', off)
-      setPodiumFreeze(null)
+      off()
     }
-  }, [podiumOn])
+  }, [shiftOn, freezeOn])
 
   // A new tool or pen drops whatever stroke was under way
   const [penNow, setPenNow] = useState({ tool, brush })
@@ -150,14 +143,14 @@ export function usePlanPointer(input: PlanPointerInput) {
     if (fb.carpetFill) return startCarpetFill(c, q)
     if (pens.floorTool) return startFloor(c, q)
     if (pens.wallTool && brush?.kind === 'wall') {
-      const m = plateAt(input.mods, q)
+      const m = plateAt(input.mods, freeze ?? q)
       if (m) return startPlates(m, q, fineOf(shift))
     }
-    if (pens.wallTool || pens.beamTool) return startStroke(c, q, undefined, fineOf(shift))
+    if (pens.wallTool || pens.beamTool) return startRunDrag(c, q, fineOf(shift), freeze)
     if (pens.openingTool) return startPlace(c, 'opening', q)
     if (pens.decorTool) return startPlace(c, 'decor', q)
     if (pens.textileTool) return startTextile(c, q, fineOf(shift))
-    if (pens.podiumTool) return startPodiumLink(c, q) ?? startPodiumGrip(c, q) ?? startPodium(c, q, shift || podiumFine(brush), podiumFreeze)
+    if (pens.podiumTool) return startPodiumLink(c, q) ?? startPodiumGrip(c, q) ?? startPodium(c, q, shift || podiumFine(brush), freeze)
     if (pens.objectTool) return startPlace(c, 'object', q)
     if (pens.shelfTool) return startShelf(c, q)
     return startSelect(c, q)
@@ -187,8 +180,8 @@ export function usePlanPointer(input: PlanPointerInput) {
     if (!d) return
     if (d.kind === 'beam') d.fine = e.shiftKey || !!d.fineLock
     if (d.kind === 'podium') podiumShift(d, e.shiftKey || podiumFine(brush))
-    if (d.kind === 'stroke' && fineOn) strokeShift(d, fineOf(e.shiftKey), d.moved)
-    if (d.kind === 'plates' && d.as && fineOn) strokeShift(d.as, fineOf(e.shiftKey), d.as.moved)
+    if (d.kind === 'run') runShift(d, fineOf(e.shiftKey))
+    if (d.kind === 'plates' && d.as) runShift(d.as, fineOf(e.shiftKey))
     if (d.kind === 'textile') strokeShift(d, fineOf(e.shiftKey), textileDrawn(d))
     if (d.kind === 'podiumGrip') d.fine = e.shiftKey || podiumFine(brush)
     handlersOf(d).move?.(c, d, q)
@@ -200,7 +193,7 @@ export function usePlanPointer(input: PlanPointerInput) {
     setDragging(null)
     if (!d) return
     // After a press the preview follows the pointer again, until Shift is pressed anew
-    if (d.kind === 'podium') setPodiumFreeze(null)
+    if (d.kind === 'podium' || d.kind === 'run' || d.kind === 'plates') setFreeze(null)
     handlersOf(d).up?.(c, d, toModel(e))
   }
 
@@ -261,7 +254,7 @@ export function usePlanPointer(input: PlanPointerInput) {
     textileStroke,
     dropHover,
     erasing,
-    podiumFreeze,
+    freeze,
     /** 250 steps now: Shift held or «Fin» on, with the wall or textile pen. */
     fine: fineOf(shiftHeld),
     handlers: {

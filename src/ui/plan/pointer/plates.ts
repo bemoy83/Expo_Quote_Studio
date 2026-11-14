@@ -7,7 +7,7 @@ import { setPanels, wallRal } from '../../../domain/panels'
 import type { Variant } from '../../../domain/types'
 import type { BuiltModule } from '../../../domain/walls'
 import { distToSegment } from '../geometry'
-import { startStroke, stroke } from './stroke'
+import { run, startRunDrag } from './run'
 import type { DragHandlers, Drag, P } from './types'
 
 /** How near the plate's line a press must be, and how far from a grid node, m. */
@@ -61,19 +61,19 @@ export function startPlates(m: BuiltModule, q: P, fine = false): Drag {
 
 export const plates: DragHandlers<'plates'> = {
   move(c, d, q) {
-    if (d.as) return stroke.move?.(c, d.as, q)
+    if (d.as) return run.move?.(c, d.as, q)
     if (d.moved || Math.hypot(q.x - d.p0.x, q.y - d.p0.y) < 0.35) return
     d.moved = true
     // Across the wall: a new wall from the press, as the pen always drew
     const w = c.v.walls.find((x) => x.id === d.wallId)
     const across = w && (w.from[1] === w.to[1] ? Math.abs(q.y - d.p0.y) > Math.abs(q.x - d.p0.x) : Math.abs(q.x - d.p0.x) > Math.abs(q.y - d.p0.y))
     if (across) {
-      d.as = startStroke(c, d.p0, undefined, d.fine) as Extract<Drag, { kind: 'stroke' }>
-      stroke.move?.(c, d.as, q)
+      d.as = startRunDrag(c, d.p0, !!d.fine, null) as Extract<Drag, { kind: 'run' }>
+      run.move?.(c, d.as, q)
     }
   },
   up(c, d, q) {
-    if (d.as) return stroke.up?.(c, d.as, q)
+    if (d.as) return run.up?.(c, d.as, q)
     const { brush } = c
     if (brush?.kind !== 'wall') return
     const keys = platesAlong(c.v, c.mods, d.wallId, d.i0, d.moved ? q : d.p0)

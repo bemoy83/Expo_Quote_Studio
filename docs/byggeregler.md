@@ -22,9 +22,10 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 ## V · Systemvegg
 
 - **V1 Modul.** En systemvegg (standvegg, innervegg, romvegg) bygges i moduler på cc 1000 mellom stolpesentrene.
-  Fysisk lengde er cc pluss én stolpe: 4000 c/c er 4040. Veggpenselen tegner hele moduler fra metergitteret, og med
-  Shift eller «Fin» fra en 250-node i 250-steg, på metergitterets linjer; Shift trykket eller sluppet midt i streken
-  låser det som er tegnet og går videre derfra. En strek over vegger som står legger bare til resten. Tøm tar en hel
+  Fysisk lengde er cc pluss én stolpe: 4000 c/c er 4040. Veggpenselen viser modulen et klikk lagrer, og et drag vokser fra
+  den i hele meter (samme tegneverktøy som disk, `domain/runDraw.ts`); med Shift står forhåndsvisningen stille og enden
+  du trykker ved flyttes i 250-steg («Fin» på iPad), på metergitterets linjer; Shift trykket eller sluppet midt i
+  draget låser det som er tegnet og går videre derfra. En strek over vegger som står legger bare til resten. Tøm tar en hel
   modul, også en kort. Kortere moduler finnes i samme steg som diskene (K10): 250, 500 og 750 c/c. En vegg legges i hele meter fra der den starter, og er lengden ikke
   hel, er den siste modulen kortere (1750 = 1000 + 750). Delene er de samme, kappet: skinnene c/c − 40 (210, 460, 710),
   platen c/c − 24 (226, 476, 726) og lysåpningen c/c − 40. Dør, forheng og hyller står bare i hele moduler. Tilbudet

@@ -11,6 +11,7 @@ import { applyFloor } from '../../domain/floor/brush'
 import { carpetClick, fillCarpet } from '../../domain/floor/rollFill'
 import { tileAt, type Rect } from '../../domain/floor/tiles'
 import { uncoveredRuns, wallModules, type Module } from '../../domain/grid'
+import { shownModule } from '../../domain/runDraw'
 import { drawInnerBeam, type Run } from '../../domain/innerBeams'
 import { addObject, placeSet, footprintBox, objectBoxes, objectFootprint } from '../../domain/objects'
 import { NO_ROOM, podiumGrab, podiumHeights, type PodiumDraw } from '../../domain/podiums'
@@ -25,7 +26,6 @@ import { applyDrop, type DecorDrag } from '../dnd'
 import { place, pricing, productOf, rules } from '../env'
 import { placedBy, type Brush, type Tool } from '../tools'
 import { mm } from './dims'
-import { nearestEdge } from './geometry'
 import type { FaceHit, TextileLine } from './layers/Previews'
 import type { Box } from './nextArea'
 import type { PlanScale } from './planScale'
@@ -103,8 +103,8 @@ export interface NextInput {
   textileStroke: TextileLine | null
   fillRect: Rect | null
   dropHover: { h: FaceHit; d: DecorDrag } | null
-  /** Disker og podier with Shift held: where the preview stands still (usePlanPointer). */
-  podiumFreeze?: P | null
+  /** Disker og podier or Vegg with Shift held: where the preview stands still (usePlanPointer). */
+  freeze?: P | null
 }
 
 const pt = (p: Point) => `${p[0]},${p[1]}`
@@ -255,12 +255,14 @@ function targetOf(p: NextInput): NextTarget | null {
     const g = hits.podiumGripAt(hover)
     if (g) return target(`grip:${g.at}`, () => line({ hint: GRIP_HINT, hotGrip: g.at }))
   }
+  // Vegg and Takdrager (run.ts): with Shift held the preview stands still where it was
+  const at = (pens.wallTool && p.freeze) || hover
   if (pens.wallTool && wallRal) {
-    const m = plateAt(p.mods, hover)
+    const m = plateAt(p.mods, at)
     if (m) return target(`plate:${m.key}`, () => area({ edit: (x) => paintPlates(x, p.mods, [m.key], wallRal), hint: null }))
   }
-  if ((pens.wallTool || pens.beamTool) && hits.onStand(hover)) {
-    const e = nearestEdge(v.stand, hover)
+  if ((pens.wallTool || pens.beamTool) && hits.onStand(at)) {
+    const e = shownModule(v.stand, at)
     return strokeTarget(e.a, e.b, false)
   }
   if (pens.textileTool) {
@@ -280,7 +282,7 @@ function targetOf(p: NextInput): NextTarget | null {
     const e = openingEdge({ v, hits }, hover)
     return e ? doorTarget(v, e, brush, null, false) : null
   }
-  if (pens.podiumTool) return podiumHover(p, p.podiumFreeze ?? hover, p.podiumFreeze ? hover : null)
+  if (pens.podiumTool) return podiumHover(p, p.freeze ?? hover, p.freeze ? hover : null)
   if (pens.objectTool && hits.onStand(hover)) return objectTarget(v, brush, hover)
   if (pens.shelfTool) {
     const h = hits.faceHit(hover)
