@@ -8,16 +8,11 @@ import type { Variant } from '../../../domain/types'
 import { catalog, isCounter, place } from '../../env'
 import { builtByShape } from '../../podiumPen'
 import type { Brush } from '../../tools'
+import { pressMove, startPress } from './draw'
 import type { DragHandlers, Drag, P, PointerCtx } from './types'
-
-/** A press that moves this far (m) draws instead of clicking; less than the 75 mm a press in the middle waits with Shift. */
-export const PODIUM_DRAG = 0.05
 
 /** What the pen draws with: its product, colour and height (K12), and the standard counter a click places (K22). */
 const penOf = (b: Brush | null) => (b?.kind === 'podium' ? { product: b.product, ral: b.ral, h: b.h, stock: b.stock } : null)
-
-/** «Fin» on in the quick picks: Shift held, for touch, without the preview standing still. */
-export const podiumFine = (b: Brush | null) => b?.kind === 'podium' && !!b.fine && !b.stock
 
 /** The counter under q a click chooses, if any. */
 export function counterUnder(c: Pick<PointerCtx, 'hits'>, q: P): string | null {
@@ -35,10 +30,10 @@ export function podiumStart(c: Pick<PointerCtx, 'v' | 'brush' | 'hits'>, q: P, f
 
 /** A press at q. `frozen`: where Shift froze the preview, which the press works on wherever it is; `fine`: Shift or Fin. */
 export function startPodium(c: PointerCtx, q: P, fine: boolean, frozen: P | null): Drag {
-  const at = frozen ?? q
-  const click = podiumStart(c, at, fine)
+  const p = startPress(q, frozen)
+  const click = podiumStart(c, p.at, fine)
   const drag = click && !('error' in click) ? startDrag(click.cell, [q.x, q.y], fine, click.onto) : null
-  return { kind: 'podium', p0: q, at, click, drag, last: q, moved: false }
+  return { kind: 'podium', ...p, click, drag }
 }
 
 /** Shift pressed or let go since the last move (or Fin): goes on from what is drawn, at the pointer before this move. */
@@ -47,10 +42,7 @@ export function podiumShift(d: Extract<Drag, { kind: 'podium' }>, fine: boolean)
 }
 
 export const podium: DragHandlers<'podium'> = {
-  move(_c, d, q) {
-    if (!d.moved && Math.hypot(q.x - d.p0.x, q.y - d.p0.y) > PODIUM_DRAG) d.moved = true
-    d.last = q
-  },
+  move: (_c, d, q) => pressMove(d, q),
   up(c, d, q) {
     if (!d.moved) {
       const on = counterUnder(c, d.at)
