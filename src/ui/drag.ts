@@ -3,6 +3,7 @@ import { moveWall } from '../domain/edit'
 import { moveInnerBeam, shiftInnerBeam, type Run } from '../domain/innerBeams'
 import { settleAll, settleObject } from '../domain/objects'
 import { moveRoomDoors, resizeRoomDoors, sideIsHorizontal } from '../domain/rooms'
+import { CELL } from '../domain/outline'
 import type { Variant } from '../domain/types'
 import { place } from './env'
 
@@ -80,17 +81,22 @@ export interface RoomDrag {
   p0: { x: number; y: number }
   /** The variant when the drag started; every step works from here. */
   v0: Variant
-  /** Whole metres applied so far ("dx,dy" or the side's delta). */
+  /** Steps applied so far ("dx,dy" or the side's delta, m). */
   last: string
+  /** Shift held or «Fin» on in the room's pill (`fineLock`): 250 steps instead of whole metres (Byggeregel R5). */
+  fine?: boolean
+  fineLock?: boolean
   moved: boolean
   /** A door had to move to another module of the room to stay out of the stand walls (said on release). */
   doorsMoved?: boolean
 }
 
 /** A room drag starting at p0 on the variant v0. */
-export const roomDrag = (id: string, mode: RoomDrag['mode'], p0: { x: number; y: number }, v0: Variant): RoomDrag => {
+export const roomDrag = (id: string, mode: RoomDrag['mode'], p0: { x: number; y: number }, v0: Variant, fineLock = false): RoomDrag => {
   const room = v0.rooms.find((r) => r.id === id)
   return {
+    fineLock,
+    fine: fineLock,
     id,
     mode,
     horizontal: mode !== 'move' && !!room && sideIsHorizontal(room, mode),
@@ -101,15 +107,18 @@ export const roomDrag = (id: string, mode: RoomDrag['mode'], p0: { x: number; y:
   }
 }
 
-/** Move a room or one of its sides to whole metres under the pointer. A blocked step keeps the last good one. */
+/** Move a room or one of its sides by whole metres under the pointer, or 250 with `fine` (R5): a room off the metre
+ *  lines keeps its offset in whole metres. A blocked step keeps the last good one. */
 export function dragRoom(d: RoomDrag, q: { x: number; y: number }, onEdit: Edit, onCheckpoint: () => void) {
-  const dx = Math.round(q.x - d.p0.x)
-  const dy = Math.round(q.y - d.p0.y)
+  const step = d.fine ? CELL : 1
+  const snap = (n: number) => Math.round(n / step) * step
+  const dx = snap(q.x - d.p0.x)
+  const dy = snap(q.y - d.p0.y)
   const along = d.horizontal ? dy : dx
   const key = d.mode === 'move' ? `${dx},${dy}` : `${along}`
   if (key === d.last) return
   const zero = d.mode === 'move' ? !dx && !dy : !along
-  const r = d.mode === 'move' ? moveRoomDoors(d.v0, d.id, dx, dy) : resizeRoomDoors(d.v0, d.id, d.mode, along)
+  const r = d.mode === 'move' ? moveRoomDoors(d.v0, d.id, dx, dy) : resizeRoomDoors(d.v0, d.id, d.mode, along, step)
   const next = r.v
   if (next === d.v0 && !zero) return
   d.doorsMoved = r.doorsMoved

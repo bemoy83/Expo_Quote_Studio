@@ -1,6 +1,6 @@
 // The pill on what stands on the floor: a room, a drawn takdrager, furniture, a counter and a frittstående tekstilvegg
 // (docs/pille-og-skuff.md).
-import { MoveHorizontal, MoveVertical, RotateCw, Unlink } from 'lucide-react'
+import { Move, MoveHorizontal, MoveVertical, RotateCw, Unlink } from 'lucide-react'
 import { roomName, roomSize } from '../../../domain/rooms'
 import { counterRal, loosenObject, objectFootprint, setCounterRal, setMembers, setObjectProduct } from '../../../domain/objects'
 import { podiumHeights } from '../../../domain/podiums'
@@ -15,7 +15,28 @@ import { Colours, Motifs, type Content, type PillActions } from './parts'
 
 type Of<K extends Chosen['kind']> = Extract<Chosen, { kind: K }>
 
-export const roomPill = (c: Of<'room'>, remove: () => void): Content => ({ name: roomName(c.room), meta: roomSize(c.room), remove })
+/** A room: «Fin» makes the next drags move and stretch it in 250, as Shift + drag on desktop (Byggeregel R5). Touch has
+ *  no Shift; it stays on while the room is selected. */
+export function roomPill(p: PillActions, c: Of<'room'>, remove: () => void): Content {
+  const r = c.room
+  return {
+    name: roomName(r),
+    meta: roomSize(r),
+    body: (
+      <QBtn
+        setting
+        on={c.fine}
+        title={c.fine ? 'Dra flytter og strekker rommet i 250 · trykk for hele meter igjen' : 'Flytt og strekk rommet i 250, utenfor meterrasteret · på desktop også Shift + dra'}
+        label="Fin"
+        onClick={() => p.onSelect({ roomId: r.id, ...(!c.fine && { roomFine: true }) })}
+      >
+        <Move size={15} />
+        Fin
+      </QBtn>
+    ),
+    remove,
+  }
+}
 
 export function beamPill(p: PillActions, c: Of<'beam'>, remove: () => void): Content {
   const b = c.beam

@@ -226,11 +226,13 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 - **R4 Det som står i rommet.** Møbler i rommet følger rommet, og en tekstilvegg som fyller en romside vokser og krymper
   med den.
   *Bjørn 31.10.2026 · kode `src/domain/rooms.ts` · test `src/domain/rooms.test.ts`*
-- **R5 Rom i 250.** Et roms hjørner står i 250-rutenettet, ikke bare på metrelinjene. Ingen side er under 1 m (R2). Hver
+- **R5 Rom i 250.** Et roms hjørner står i 250-rutenettet, ikke bare på metrelinjene. Uten Shift flyttes og strekkes
+  rommet i hele meter fra der det står; med Shift, eller «Fin» i rommets pille, i 250, i planen og i 3D. Ingen side er
+  under 1 m (R2). Hver
   side har hele meter først og resten sist, regnet med klokka rundt rommet, med reglene for korte moduler (V1); dør og
   forheng bare i hele moduler. Flyttes en sides start et stykke som ikke er hel meter, beholder dører og felt på siden
   modulnummeret sitt fra starten.
-  *Bjørn 14.11.2026 · kode `src/domain/outline.ts`, `src/domain/rooms.ts` · test `src/domain/rooms250.test.ts`*
+  *Bjørn 14.11.2026 · kode `src/domain/outline.ts`, `src/domain/rooms.ts`, `src/ui/drag.ts` · test `src/domain/rooms250.test.ts`*
 - **R7 Frihåndsrom i 250.** Området et frihåndsrom (R3) lukker, finnes i 250 × 250-celler, så vegger utenfor
   metrelinjene (V9) lukker rom også. Et lukket område med en side under 1 m forblir vanlige vegger (R2).
   *Bjørn 14.11.2026 · kode `src/domain/enclosures.ts` · test `src/domain/rooms250.test.ts`*

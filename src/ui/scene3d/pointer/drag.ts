@@ -98,7 +98,8 @@ export function startDrag(P: PointerProps, hits: SceneHits, hit: Hit | null, e: 
     const mode = side?.side ?? 'move'
     const y = hit!.point.y
     const q = hits.onFloor(e, y)
-    if (q) return { kind: 'room', ...roomDrag(id, mode, q, P.v), y }
+    const fineLock = P.selection.roomId === id && !!P.selection.roomFine
+    if (q) return { kind: 'room', ...roomDrag(id, mode, q, P.v, fineLock), y }
   } else if (hit?.wallId) {
     const w = P.v.walls.find((x) => x.id === hit.wallId)
     const q = hits.onFloor(e)
@@ -152,6 +153,8 @@ export function moveDrag(P: PointerProps, hits: SceneHits, drag: Exclude<Drag, {
   }
   if (drag.kind === 'room') {
     const q = hits.onFloor(e, drag.y)
+    // Shift held (or «Fin» on in the pill): 250 steps (Byggeregel R5)
+    drag.fine = e.shiftKey || !!drag.fineLock
     if (q) dragRoom(drag, q, P.onEdit, P.onCheckpoint)
     return
   }

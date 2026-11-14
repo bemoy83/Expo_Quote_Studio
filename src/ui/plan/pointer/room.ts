@@ -5,7 +5,10 @@ import type { PlanSelection } from '../selection'
 import type { DragHandlers, Drag, P, PointerCtx } from './types'
 
 export function startRoom(c: PointerCtx, room: Room, mode: RoomDrag['mode'], q: P, select: PlanSelection | null): Drag {
-  return { kind: 'room', ...roomDrag(room.id, mode, q, c.v), select }
+  // «Fin» on in the room's pill: 250 steps (R5), kept on the selection the drag ends with
+  const fineLock = c.selection.roomId === room.id && !!c.selection.roomFine
+  const keep = fineLock && select?.roomId === room.id ? { ...select, roomFine: true } : select
+  return { kind: 'room', ...roomDrag(room.id, mode, q, c.v, fineLock), select: keep }
 }
 
 export const room: DragHandlers<'room'> = {
