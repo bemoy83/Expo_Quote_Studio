@@ -1,7 +1,7 @@
 // Mål til vegger utenfor hele meter (Byggeregel V12, Bjørn 14.11.2026): a wall off the metre lines (V9) is measured out on
 // the work order from the nearest wall or stand edge parallel to what is measured, only where it is not a whole metre:
 // the wall's line once, and each end that is off the metre.
-import type { Module } from './grid';
+import { onSpan, type Module } from './grid';
 import type { Point, Stand, Wall } from './types';
 
 export interface WallOffset {
@@ -45,7 +45,8 @@ export function wallOffsets(stand: Stand, walls: readonly Wall[], mods: readonly
     const key = [p, q].map((x) => x.join(',')).sort().join('|');
     out.set(key, { from: p, to: q, length: Math.round(Math.abs(q[k] - p[k]) * 1000) / 1000 });
   };
-  const onOther = (w: Wall, p: Point) => mods.some((m) => !isOn(w, m) && between(m, p));
+  // On another wall: a module not on this wall's own line that p lies on
+  const onOther = (w: Wall, p: Point) => mods.some((m) => !(onSpan(w.from, w.to, m.a) && onSpan(w.from, w.to, m.b)) && onSpan(m.a, m.b, p));
   for (const w of walls) {
     if (w.room) continue;
     // Along: 0 for a wall along x
@@ -57,15 +58,4 @@ export function wallOffsets(stand: Stand, walls: readonly Wall[], mods: readonly
     for (const e of [w.from, w.to]) if (!whole(e[k])) add(e, k);
   }
   return [...out.values()];
-}
-
-/** The module lies on the wall's line, within it. */
-function isOn(w: Wall, m: Module): boolean {
-  return between({ a: w.from, b: w.to }, m.a) && between({ a: w.from, b: w.to }, m.b);
-}
-
-function between(m: Pick<Module, 'a' | 'b'>, p: Point): boolean {
-  return (
-    p[0] >= Math.min(m.a[0], m.b[0]) - EPS && p[0] <= Math.max(m.a[0], m.b[0]) + EPS && p[1] >= Math.min(m.a[1], m.b[1]) - EPS && p[1] <= Math.max(m.a[1], m.b[1]) + EPS
-  );
 }

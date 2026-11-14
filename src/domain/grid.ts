@@ -28,6 +28,12 @@ export function makeModule(a: Point, b: Point): Module {
   return { key: moduleKey(a, b), a, b, orientation: a[1] === b[1] ? 'h' : 'v', cc: round3(Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1])) };
 }
 
+/** p lies on the axis-aligned segment a–b, its ends included. */
+export function onSpan(a: Point, b: Point, p: Point): boolean {
+  const e = 1e-6;
+  return p[0] >= Math.min(a[0], b[0]) - e && p[0] <= Math.max(a[0], b[0]) + e && p[1] >= Math.min(a[1], b[1]) - e && p[1] <= Math.max(a[1], b[1]) + e;
+}
+
 export function wallLength(w: Wall): number {
   return Math.abs(w.to[0] - w.from[0]) + Math.abs(w.to[1] - w.from[1]);
 }

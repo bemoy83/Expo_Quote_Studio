@@ -1,6 +1,7 @@
 // What a takdrager is, and the two rules every layout of them uses: splitting a run (Byggeregel T2) and whether a point
 // lies on a beam. Shared by calc/beams/beams.ts, innerBeams.ts, supportBeams.ts, wallSupports.ts, beamLift.ts and beamHooks.ts,
 // so none of them imports another's layout.
+import { onSpan } from '../../domain/grid';
 import type { Point, Side } from '../../domain/types';
 
 const EPS = 1e-9;
@@ -43,7 +44,4 @@ export function splitBeamLength(length: number, max: number): number[] {
 }
 
 /** p lies on the beam, its ends included. */
-export const onSegment = (s: BeamSegment, p: Point): boolean => {
-  const within = (x: number, a: number, b: number) => x >= Math.min(a, b) - 1e-6 && x <= Math.max(a, b) + 1e-6;
-  return within(p[0], s.from[0], s.to[0]) && within(p[1], s.from[1], s.to[1]);
-};
+export const onSegment = (s: BeamSegment, p: Point): boolean => onSpan(s.from, s.to, p);

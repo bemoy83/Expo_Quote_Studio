@@ -2,7 +2,7 @@
 // walls: hooks, crossings, walls along them, own posts and foot plates. Byggeregler T8–T12, T15 (docs/byggeregler.md).
 // A drawn beam may lie off the 1 m grid across its direction (T15), and a wall anywhere in the 250 grid (V9): where they
 // meet between the wall's posts the beam hangs on a hook on the top rail 92; it crosses other beams between whole metres.
-import { pointKey, type Module } from '../../domain/grid';
+import { onSpan, pointKey, type Module } from '../../domain/grid';
 import type { InnerBeam, Point } from '../../domain/types';
 import { splitBeamLength, type BeamLayout, type BeamSegment } from './beamSegments';
 import type { WallSupport } from '../wallSupports';
@@ -39,10 +39,6 @@ const inside = (l: Line, p: Point) => {
 
 const rayOf = (l: Line): Ray => ({ o: pointOn(l, 0), d: l.o === 'h' ? [1, 0] : [0, 1] });
 
-/** p lies on a built wall module, its ends included. */
-const onModule = (m: Module, p: Point) =>
-  p[0] >= Math.min(m.a[0], m.b[0]) - EPS && p[0] <= Math.max(m.a[0], m.b[0]) + EPS && p[1] >= Math.min(m.a[1], m.b[1]) - EPS && p[1] <= Math.max(m.a[1], m.b[1]) + EPS;
-
 /** Of two drawn beams crossing, the one that runs through: the longer, or the first drawn when equal. */
 const runsThrough = (a: Line, ai: number, b: Line, bi: number) => len(a) > len(b) + EPS || (Math.abs(len(a) - len(b)) < EPS && ai < bi);
 
@@ -76,7 +72,7 @@ export function layoutInnerBeams(
   const sharedPost = (p: Point) => wallPoints.has(pointKey(p)) || standard.posts.has(pointKey(p));
 
   // On a wall between its posts
-  const onWall = (p: Point) => !wallPoints.has(pointKey(p)) && mods.some((m) => onModule(m, p));
+  const onWall = (p: Point) => !wallPoints.has(pointKey(p)) && mods.some((m) => onSpan(m.a, m.b, p));
   // Breaks inside each beam: a post (wall or standard post under it) or a hook (it crosses a wall between its posts, or
   // is the shorter of a crossing). Looked for at every whole metre, where a beam off the grid crosses it and where a
   // wall crosses it

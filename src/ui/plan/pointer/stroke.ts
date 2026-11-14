@@ -6,7 +6,8 @@ import { modulesAlong } from '../../../domain/grid'
 import { eraseInnerBeams, removeInnerBeam } from '../../../domain/innerBeams'
 import type { Point } from '../../../domain/types'
 import { rules } from '../../env'
-import { distToSegment, nearestEdge, strokeFrom } from '../geometry'
+import { strokeFrom } from '../../../domain/snapGrid'
+import { distToSegment, nearestEdge } from '../geometry'
 import type { DragHandlers, Drag, P, PointerCtx } from './types'
 
 /** Stand walls separate exhibitors and follow the stand type: erasing them is refused. */

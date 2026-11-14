@@ -1,5 +1,5 @@
 // Byggeregler V1, V6, V10, T6, D3 (docs/byggeregler.md).
-import { makeModule, moduleKey, openSides, pointAlong, pointKey, SIDES, sideEnds, wallDirection, wallLength, wallModules, type Module } from './grid';
+import { makeModule, moduleKey, onSpan, openSides, pointAlong, pointKey, SIDES, sideEnds, wallDirection, wallLength, wallModules, type Module } from './grid';
 import { gapKeys, OUTSIDE } from './roomKeys';
 import type { Rules } from '../rules/rules';
 import type { Opening, Point, Side, Stand, Variant, Wall } from './types';
@@ -89,8 +89,19 @@ export function wallParts(w: Wall, built: readonly BuiltModule[]): WallPart[] {
   });
 }
 
+/** The parts of module `i` when another wall split it (V10), in order; none when it is whole. */
+export function splitParts(parts: readonly WallPart[], i: number): WallPart[] {
+  const own = parts.filter((q) => q.index === i);
+  return own.length > 1 ? own : [];
+}
+
+/** Post centres along a wall, m from its start: every module's and part's start, and its end. */
+export function postOffsets(w: Wall, parts: readonly WallPart[]): number[] {
+  return [...new Set([...wallModules(w).map((_, i) => i), ...parts.map((q) => q.at), wallLength(w)])].sort((a, b) => a - b);
+}
+
 /** Where walls meet another wall (Byggeregel V10): the ends of every wall and where two cross, as points. */
-export function meetPoints(walls: readonly Wall[]): Point[] {
+function meetPoints(walls: readonly Wall[]): Point[] {
   const out = new Map<string, Point>();
   for (const w of walls) for (const p of [w.from, w.to]) out.set(pointKey(p), p);
   for (const a of walls) {
@@ -99,17 +110,10 @@ export function meetPoints(walls: readonly Wall[]): Point[] {
       const hb = b.from[1] === b.to[1];
       if (!ha || hb) continue;
       const p: Point = [b.from[0], a.from[1]];
-      if (inside(a, p) && inside(b, p)) out.set(pointKey(p), p);
+      if (onSpan(a.from, a.to, p) && onSpan(b.from, b.to, p)) out.set(pointKey(p), p);
     }
   }
   return [...out.values()];
-}
-
-/** Whether p lies on the wall, ends included. */
-function inside(w: Wall, p: Point): boolean {
-  const [x0, x1] = [Math.min(w.from[0], w.to[0]), Math.max(w.from[0], w.to[0])];
-  const [y0, y1] = [Math.min(w.from[1], w.to[1]), Math.max(w.from[1], w.to[1])];
-  return p[0] >= x0 - EPS && p[0] <= x1 + EPS && p[1] >= y0 - EPS && p[1] <= y1 + EPS;
 }
 
 const EPS = 1e-6;
@@ -241,5 +245,5 @@ export function doorBlocked(v: Variant, a: Point, b: Point): string | null {
   return null;
 }
 
-export const DOOR_IN_STAND_WALL = 'Dører og forheng kan ikke stå i standveggen';
-export const DOOR_IN_SHORT = 'Dører og forheng står bare i hele moduler';
+const DOOR_IN_STAND_WALL = 'Dører og forheng kan ikke stå i standveggen';
+const DOOR_IN_SHORT = 'Dører og forheng står bare i hele moduler';

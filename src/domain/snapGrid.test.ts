@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { cellsTo } from './snapGrid';
-import { strokeFrom } from '../ui/plan/geometry';
+import { cellsTo, strokeFrom } from './snapGrid';
+
 import type { Stand } from './types';
 
 const stand: Stand = { width: 6, depth: 3, type: 'row' };

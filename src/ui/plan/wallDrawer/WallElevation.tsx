@@ -13,16 +13,16 @@ import { cornerLayout } from '../../../domain/shelves/corners'
 import { shelfRow, shelfStacks } from '../../../domain/shelves/model'
 import type { Foil, Motif, Opening, Shelf, TextileWall, Variant, Wall } from '../../../domain/types'
 import { wallRal } from '../../../domain/panels'
-import type { BuiltModule, WallPart } from '../../../domain/walls'
+import { postOffsets, splitParts, type BuiltModule, type WallPart } from '../../../domain/walls'
 import { doorInset } from '../../../rules/rules'
-import { ALU, BORDER_STRONG, INK, INK_FAINT, SUNKEN } from '../../colors'
+import { BORDER_STRONG, INK, INK_FAINT, SUNKEN } from '../../colors'
 import { applyDrop, decorDrag, dropSpot, endDecorDrag, type DropSpot, type FaceTarget } from '../../dnd'
 import { plateColor, productOf, rules } from '../../env'
 import { fmt } from '../../format'
 import { findMotif } from '../../motifs'
 import { Handles, Print } from '../drawerParts'
 import { TXT } from '../drawerText'
-import { FaceRails, Opening as OpeningView, Posts, ShelfFront, TextileFace } from '../elevation'
+import { FaceRails, Opening as OpeningView, Plate, Posts, ShelfFront, TextileFace } from '../elevation'
 import { shelfFront } from '../shelfFront'
 import { type PlanSelection } from '../selection'
 import { RoomLabel } from '../RoomLabel'
@@ -103,9 +103,8 @@ export function WallElevation(p: Props) {
   /** Module i's length c/c: a shorter last module is drawn as long as it is (Byggeregel V1). */
   const ccOf = (i: number) => moduleCc(w, i)
   /** The parts of module i when another wall split it (V10), else none. */
-  const splitParts = (i: number) => (p.parts.filter((q) => q.index === i).length > 1 ? p.parts.filter((q) => q.index === i) : [])
   /** Post centres along the wall: every module's and part's start, and the end. */
-  const postsAt = [...new Set([...mods.map((_, i) => i), ...p.parts.map((q) => q.at), L])].sort((a, b) => a - b)
+  const postsAt = postOffsets(w, p.parts)
   const z = (h: number) => H - h
   // Corner shelves: their boards, brackets and the 01 rails on this face (Byggeregler H10–H12)
   const layout = useMemo(() => cornerLayout(v, rules), [v])
@@ -279,30 +278,16 @@ export function WallElevation(p: Props) {
               )
             }
             // A module another wall split (V10): each part its own plate, in its own colour
-            const split = !m ? splitParts(i) : []
+            const split = !m ? splitParts(p.parts, i) : []
             if (split.length)
               return (
                 <g key={i}>
-                  {split.map((q) => {
-                    const f = felt(rules, q.at, q.cc)
-                    return (
-                      <g key={q.mod.key}>
-                        <rect x={spanX(f.a, f.b)} y={z(H)} width={f.w} height={H - rules.wall.feet} fill={plateColor(q.mod.plate)} />
-                        <rect x={spanX(q.at, q.at + q.cc)} y={z(H)} width={q.cc} height={rules.wall.profile.top} fill={ALU} />
-                        <rect x={spanX(q.at, q.at + q.cc)} y={z(f.y0)} width={q.cc} height={rules.wall.profile.bottom} fill={ALU} />
-                      </g>
-                    )
-                  })}
+                  {split.map((q) => (
+                    <Plate key={q.mod.key} at={q.at} cc={q.cc} fill={plateColor(q.mod.plate)} x={spanX} H={H} />
+                  ))}
                 </g>
               )
-            const f = felt(rules, i, ccOf(i))
-            return (
-              <g key={i}>
-                <rect x={spanX(f.a, f.b)} y={z(H)} width={f.w} height={H - rules.wall.feet} fill={plateColor(m?.plate ?? wallRal(v, w))} />
-                <rect x={x} y={z(H)} width={ccOf(i)} height={rules.wall.profile.top} fill={ALU} />
-                <rect x={x} y={z(f.y0)} width={ccOf(i)} height={rules.wall.profile.bottom} fill={ALU} />
-              </g>
-            )
+            return <Plate key={i} at={i} cc={ccOf(i)} fill={plateColor(m?.plate ?? wallRal(v, w))} x={spanX} H={H} />
           })}
           <Posts xs={postsAt.map(u)} H={H} />
           {/* The chosen door: marked, with its swing (the point of the triangle is the hinge side) */}
@@ -413,7 +398,7 @@ export function WallElevation(p: Props) {
           {painting &&
             mods.map((m, i) => {
               if (!m)
-                return splitParts(i).map((q) => {
+                return splitParts(p.parts, i).map((q) => {
                   const f = felt(rules, q.at, q.cc)
                   return <rect key={`hit${q.mod.key}`} x={spanX(f.a, f.b)} y={z(H)} width={f.w} height={H - rules.wall.feet} fill="transparent" {...paintOn(i, q.mod.key)} />
                 })
