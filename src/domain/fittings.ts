@@ -3,7 +3,7 @@
 // differ). Where such a fitting may sit (H1, H6) and the felts of a face in the order fittings fill them. Shelves are
 // the first fitting (domain/shelves/); heng follow the same rules. Byggeregler H1, H6 (docs/byggeregler.md).
 import { faceNormal, faces, feltWall, type FaceSide } from './faces';
-import { pointKey, wallLength, wallModules } from './grid';
+import { pointKey, moduleCount, wallModules } from './grid';
 import { textilesOn } from './textile/inFrame';
 import type { Point, Variant, Wall } from './types';
 import { builtModules, type BuiltModule } from './walls';
@@ -73,7 +73,7 @@ export function fittingFelts(
 ): number[] {
   const w = v.walls.find((x) => x.id === wallId);
   if (!w) return [];
-  const L = Math.round(wallLength(w));
+  const L = moduleCount(w);
   return Array.from({ length: L }, (_, i) => i)
     .filter((m) => !blocked(v, wallId, m, s))
     .sort((a, b) => Math.abs(a + 0.5 - L / 2) - Math.abs(b + 0.5 - L / 2) || a - b);

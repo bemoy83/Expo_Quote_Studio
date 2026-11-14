@@ -4,7 +4,7 @@
 // domain beside domain/shelves/ (Bjørn 9.11.2026: fastened exactly as shelves, other Foga profile and shape).
 import { AlignVerticalSpaceAround, ArrowLeft, ArrowRight, Copy, Layers, Paintbrush, Plus } from 'lucide-react'
 import type { FaceSide } from '../../../domain/faces'
-import { wallLength } from '../../../domain/grid'
+import { moduleCount } from '../../../domain/grid'
 import { addShelfToFelt } from '../../../domain/shelves/edit'
 import { addShelfRowToFace, addShelfToFace } from '../../../domain/shelves/fill'
 import { gapNote, highWarning, offRow, shelfBlocked, shelvesIn, shelvesOn, tooHigh } from '../../../domain/shelves/model'
@@ -85,7 +85,7 @@ export function ShelfPanel({ v, H, w, s, sel, select, onEdit, onToast }: { v: Va
   const { n, row, what, dir, move } = a
   const stack = shelvesIn(v, H.wallId, H.module, s)
   const sh = rules.shelf
-  const L = Math.round(wallLength(w))
+  const L = moduleCount(w)
   return (
     <>
       <Section title={n > 1 ? `Hyllerad · ${n} hyller` : 'Hylle'} aside={`${mm(H.y)} mm fra gulv`}>

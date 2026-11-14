@@ -114,16 +114,16 @@ export function WallElevation(p: Props) {
   // Measured is what the drawer is open for (Bjørn 6.11.2026): a selected textile frame, or a selected decal or print
   // (a print over several plates as one), with its own dimensions; with the wall itself chosen, the wall's
   const items = T
-    ? elevationItems(rules, [T], [], doorModules, u, pieceOf)
+    ? elevationItems(rules, [T], [], doorModules, u, pieceOf, v.walls)
     : F
-      ? elevationItems(rules, [], F.run ? foils.filter((x) => x.run === F.run) : [F], doorModules, u)
+      ? elevationItems(rules, [], F.run ? foils.filter((x) => x.run === F.run) : [F], doorModules, u, undefined, v.walls)
       : []
   // Print laid on the wall: where each plate field starts (the door modules have none of their own)
   const fields = painting && printing ? mods.map((_, i) => i).filter((i) => !doorModules.has(i)).map((i) => spanX(i, i + 1)) : undefined
   const name = w.room ? 'Romvegg' : label
   // Named with a leader: not what the drawer is open for (its title says it), but the textile frames, decals and prints
   // on the wall when the wall is chosen (a print over several plates as one)
-  const labels = !T && !F && !O && !painting ? elevationItems(rules, tex, foils, doorModules, u, pieceOf) : []
+  const labels = !T && !F && !O && !painting ? elevationItems(rules, tex, foils, doorModules, u, pieceOf, v.walls) : []
   const fr = frame(size, L, H, items, { labels })
   const sc = planScale(1 / fr.u, {})
 
@@ -299,7 +299,7 @@ export function WallElevation(p: Props) {
           {/* Foil decals */}
           {foils.map((f) => {
             if (f.full && doorModules.has(f.module)) return null
-            const c = foilCenter(rules, f)
+            const c = foilCenter(v, rules, f)
             const x = spanX(c - f.width / 2, c + f.width / 2)
             const m = findMotif(motifs, f.motif)
             const on = F?.id === f.id

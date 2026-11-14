@@ -1,5 +1,5 @@
 // Walls and doors in the plan.
-import { pointAlong, wallDirection } from '../../../domain/grid'
+import { pointAlong, wallDirection, moduleEnd } from '../../../domain/grid'
 import type { Point, Variant } from '../../../domain/types'
 import { doorHinge, doorSwing } from '../../../domain/doors'
 import type { BuiltModule } from '../../../domain/walls'
@@ -68,7 +68,7 @@ export function OpeningMark({ v, m, selected }: { v: Variant; m: BuiltModule; se
   const s = doorSwing(v.stand, w, o)
   const n: Point = [-dy * s, dx * s]
   const a = pointAlong(w, o.module)
-  const b = pointAlong(w, o.module + 1)
+  const b = pointAlong(w, moduleEnd(w, o.module))
   const door = productOf(o.product)?.opening === 'door'
   const r = rules.door.swing
   // Hinge: the leaf is centred in the opening, not hung on the post centre; it hangs on either end of the module

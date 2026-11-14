@@ -103,7 +103,7 @@ export function TextileLayer({ v, res, selection, dim }: { v: Variant; res: Calc
         {v.foils.map((f) => {
           const w = v.walls.find((x) => x.id === f.wallId)
           if (!w) return null
-          const [from, to] = foilSpan(rules, f)
+          const [from, to] = foilSpan(v, rules, f)
           const band = printBand(sc)
           const [a, b] = faceSegment(w, sideOf(v, f), from, to, printOffset(sc))
           const sel = selection.foilId === f.id

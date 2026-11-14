@@ -97,7 +97,7 @@ export function changedAreas(a: PlanState, b: PlanState): Areas {
     return segBox(p, q, LINE_PAD, 0.25)
   }
   const textileOf = (s: PlanState) => s.v.textiles.map((t) => ({ t, box: faceBox(s.v)(t, t.from, t.from + t.width) }))
-  const foilOf = (s: PlanState) => s.v.foils.map((f) => ({ f, box: faceBox(s.v)(f, ...foilSpan(rules, f)) }))
+  const foilOf = (s: PlanState) => s.v.foils.map((f) => ({ f, box: faceBox(s.v)(f, ...foilSpan(s.v, rules, f)) }))
   const freeOf = (s: PlanState) => s.res.production.free.map((f) => ({ f, t: s.v.freeTextiles.find((x) => x.id === f.textileId) }))
   const textile = join(
     diff(textileOf(a), textileOf(b), (x) => x.t.id, (x) => [x.t, x.box], (x) => x.box),

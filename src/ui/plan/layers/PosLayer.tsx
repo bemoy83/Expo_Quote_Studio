@@ -4,7 +4,7 @@
 // an article (a plate swap, full-plate print) get one chip for the row.
 import type { CalcResult } from '../../../calc/calc'
 import { positionsOf, type Positioned } from '../../../calc/positions'
-import { foilCenter } from '../../../domain/decor'
+import { foilCenter, foilSpan } from '../../../domain/decor'
 import { defaultFace, faceNormal, sideOf } from '../../../domain/faces'
 import { pointAlong } from '../../../domain/grid'
 import { runNormal, type FaceKey } from '../../../domain/textile/free'
@@ -96,9 +96,11 @@ function chips(v: Variant, res: CalcResult, sc: PlanScale, textileLabels: boolea
         const f = v.foils.find((x) => x.id === i.id)!
         const side = sideOf(v, f)
         const off = printOff + band / 2 + half
-        if (f.full) row(f.wallId, side, f.module, f.module + 1, i.pos, layer, off)
-        else {
-          const at = faceAt(f.wallId, side, foilCenter(rules, f), off)
+        if (f.full) {
+          const [a, b] = foilSpan(v, rules, f)
+          row(f.wallId, side, a, b, i.pos, layer, off)
+        } else {
+          const at = faceAt(f.wallId, side, foilCenter(v, rules, f), off)
           if (at) out.push({ label: String(i.pos), at, layer })
         }
         break

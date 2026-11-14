@@ -2,7 +2,7 @@
 // plan in its middle). Every move goes through moveOpening, so a door never lands in a stand wall or on another opening.
 // Byggeregler D3, D4 (docs/byggeregler.md).
 import { paintWalls } from './edit';
-import { moduleKey, pointAlong, wallDirection, wallModules } from './grid';
+import { moduleKey, pointAlong, wallDirection, wallModules, moduleEnd } from './grid';
 import { nextId } from './ids';
 import { roomOf } from './rooms';
 import { OUTSIDE } from './roomKeys';
@@ -20,7 +20,7 @@ export const openingById = (v: Variant, id: string | undefined): Opening | undef
 export function doorHinge(w: Wall, o: Opening): { a: Point; b: Point; dir: Point } {
   const [dx, dy] = wallDirection(w);
   const s = pointAlong(w, o.module);
-  const e = pointAlong(w, o.module + 1);
+  const e = pointAlong(w, moduleEnd(w, o.module));
   return o.hinge === -1 ? { a: e, b: s, dir: [-dx, -dy] } : { a: s, b: e, dir: [dx, dy] };
 }
 

@@ -17,7 +17,7 @@ export function buildDecor(c: BuildContext) {
     const w = v.walls.find((x) => x.id === f.wallId)
     if (!w) continue
     const s = sideOf(v, f)
-    const c = foilCenter(rules, f)
+    const c = foilCenter(v, rules, f)
     const m = findMotif(opts.motifs, f.motif)
     const glow = selectGlow(sel.foilId === f.id)
     const tag: Tag = { layer: 'foil', pick: { wallId: w.id, foilId: f.id } }

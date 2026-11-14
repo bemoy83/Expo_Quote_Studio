@@ -6,7 +6,7 @@ import type { ProductionPiece } from '../../../calc/textile/production'
 import { frameInset } from '../../../calc/textile/inFrame'
 import { foilCenter } from '../../../domain/decor'
 import { textileBox } from '../../../domain/textile/inFrame'
-import type { Foil, Shelf, TextileWall } from '../../../domain/types'
+import type { Foil, Shelf, TextileWall, Wall } from '../../../domain/types'
 import type { Rules } from '../../../rules/rules'
 import { textPx } from '../planScale'
 
@@ -80,7 +80,15 @@ export const textileLabel = (p: Pick<FrameFacts, 'W' | 'H'>): string => `Tekstil
  * and the leaders. `x` turns an along-wall offset into x in the drawing (the face is seen from in front, so it may run
  * backwards). A full-plate print on a door module is part of the door and not measured.
  */
-export function elevationItems(rules: Rules, tex: TextileWall[], foils: Foil[], doorModules: Set<number>, x: (t: number) => number, facts: (id: string) => FrameFacts | undefined = () => undefined): ElevationItem[] {
+export function elevationItems(
+  rules: Rules,
+  tex: TextileWall[],
+  foils: Foil[],
+  doorModules: Set<number>,
+  x: (t: number) => number,
+  facts: (id: string) => FrameFacts | undefined = () => undefined,
+  walls: Wall[] = [],
+): ElevationItem[] {
   const spanX = (a: number, b: number) => Math.min(x(a), x(b))
   return mergePrints([
     ...tex.map((t): ElevationItem => {
@@ -99,7 +107,7 @@ export function elevationItems(rules: Rules, tex: TextileWall[], foils: Foil[], 
     ...foils
       .filter((f) => !(f.full && doorModules.has(f.module)))
       .map((f): ElevationItem => {
-        const c = foilCenter(rules, f)
+        const c = foilCenter({ walls }, rules, f)
         const x0 = spanX(c - f.width / 2, c + f.width / 2)
         return { kind: f.full ? 'print' : 'decal', x0, x1: x0 + f.width, bottom: f.y - f.height / 2, top: f.y + f.height / 2 }
       }),

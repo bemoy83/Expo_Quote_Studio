@@ -63,10 +63,24 @@ export function runs(n: number, keep: (i: number) => boolean): [number, number][
   return out;
 }
 
-/** Modules of a wall in order from `from`. Index i spans [i, i+1] metres along the wall. */
+/** Shorter than this (m) is float noise, not a module. */
+const MODULE_EPS = 1e-6;
+
+/**
+ * How many modules a wall has (Byggeregel V1): whole metres from `from`, and one shorter module last when the length
+ * is not whole (250, 500 or 750 c/c).
+ */
+export const moduleCount = (w: Wall): number => Math.max(0, Math.ceil(wallLength(w) - MODULE_EPS));
+
+/** Where module i of a wall ends, metres from `from`: a whole metre after its start, or the wall's end for the last. */
+export const moduleEnd = (w: Wall, i: number): number => Math.min(i + 1, wallLength(w));
+
+/** Module i's length c/c, m: 1 for a whole module, less for a shorter last one. */
+export const moduleCc = (w: Wall, i: number): number => moduleEnd(w, i) - i;
+
+/** Modules of a wall in order from `from`. Index i spans [i, moduleEnd(w, i)] metres along the wall. */
 export function wallModules(w: Wall): Module[] {
-  const n = Math.round(wallLength(w));
-  return Array.from({ length: n }, (_, i) => makeModule(pointAlong(w, i), pointAlong(w, i + 1)));
+  return Array.from({ length: moduleCount(w) }, (_, i) => makeModule(pointAlong(w, i), pointAlong(w, moduleEnd(w, i))));
 }
 
 

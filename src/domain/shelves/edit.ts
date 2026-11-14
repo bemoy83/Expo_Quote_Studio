@@ -3,7 +3,7 @@
 // shelf can still leave it. Byggeregler H1, H2, H4, H5, H6, H8 (docs/byggeregler.md). Values: rules.shelf (m), RECIPES.shelf (parts, mm).
 import type { Rules } from '../../rules/rules';
 import { sideOf, type FaceSide } from '../faces';
-import { wallLength } from '../grid';
+import { moduleCount } from '../grid';
 import type { Shelf, Variant } from '../types';
 import { apart, fillHeights, fitsIn, putShelf, shelfBlocked, shelfHeight, shelvesIn, shelvesOf, shelvesOn } from './model';
 
@@ -149,7 +149,7 @@ export function copyShelvesNear(v: Variant, rules: Rules, ids: string[], dir: 1 
   const a = group[0];
   const w = v.walls.find((x) => x.id === a.wallId);
   if (!w) return null;
-  const L = Math.round(wallLength(w));
+  const L = moduleCount(w);
   const ms = group.map((f) => f.module);
   const span = Math.max(...ms) - Math.min(...ms) + 1;
   for (let k = span; k < L; k++) {

@@ -5,7 +5,7 @@
 // side refer to `<id>.<side>` with offsets from the side's start, so they move with the room. Every side runs
 // clockwise round the room, so the room is always on the left of a side and its outside on the right.
 // Byggeregler R1, R2, R4 (docs/byggeregler.md).
-import { moduleKey, pointAlong, runs, wallLength, wallModules } from './grid';
+import { moduleKey, pointAlong, runs, moduleCount, wallModules, moduleEnd } from './grid';
 import { ownPlate } from './panels';
 import { replaceWalls } from './replaceWalls';
 import { gapKeys, roomWallId } from './roomKeys';
@@ -113,7 +113,7 @@ function settleDoors(v: Variant, id: string): { v: Variant; moved: boolean } | n
   const mine = (o: Opening) => isRoomWallId(o.wallId, id);
   const keyOf = (o: Opening) => {
     const w = v.walls.find((x) => x.id === o.wallId);
-    return w ? moduleKey(pointAlong(w, o.module), pointAlong(w, o.module + 1)) : '';
+    return w ? moduleKey(pointAlong(w, o.module), pointAlong(w, moduleEnd(w, o.module))) : '';
   };
   const taken = new Set(v.openings.filter((o) => !mine(o)).map(keyOf));
   const gaps = gapKeys(v);
@@ -126,7 +126,7 @@ function settleDoors(v: Variant, id: string): { v: Variant; moved: boolean } | n
     }
     const w = sides.find((x) => x.id === o.wallId)!;
     const a = pointAlong(w, o.module);
-    const b = pointAlong(w, o.module + 1);
+    const b = pointAlong(w, moduleEnd(w, o.module));
     const key = moduleKey(a, b);
     if (doorAllowed(v, a, b) && !taken.has(key)) {
       taken.add(key);
@@ -163,7 +163,7 @@ export function syncRooms(v: Variant): Variant {
   for (const o of v.openings) {
     const w = byId.get(o.wallId);
     if (!w) continue;
-    const module = w.room ? Math.min(o.module, Math.round(wallLength(w)) - 1) : o.module;
+    const module = w.room ? Math.min(o.module, moduleCount(w) - 1) : o.module;
     const key = `${w.id}#${module}`;
     if (taken.has(key)) continue;
     taken.add(key);
@@ -172,7 +172,7 @@ export function syncRooms(v: Variant): Variant {
   const textiles = v.textiles.filter((t) => byId.has(t.wallId));
   const onWall = (f: { wallId: string; module: number }) => {
     const w = byId.get(f.wallId);
-    return !!w && f.module < Math.round(wallLength(w));
+    return !!w && f.module < moduleCount(w);
   };
   const foils = v.foils.filter(onWall);
   return { ...v, walls, openings, textiles, foils, ...(v.shelves ? { shelves: v.shelves.filter(onWall) } : {}) };
@@ -418,9 +418,9 @@ export function dissolveRoom(v: Variant, id: string): Variant {
   const ids = v.walls.map((w) => w.id);
   const parts: Wall[] = [];
   for (const w of v.walls.filter((x) => x.room?.id === id)) {
-    for (const [i, e] of runs(Math.round(wallLength(w)), (t) => ownAt.has(`${w.id}#${t}`))) {
+    for (const [i, e] of runs(moduleCount(w), (t) => ownAt.has(`${w.id}#${t}`))) {
       const wid = nextId([...ids, ...parts.map((x) => x.id)], 'w');
-      parts.push({ id: wid, from: pointAlong(w, i), to: pointAlong(w, e), ...ownPlate(v, r.plate) });
+      parts.push({ id: wid, from: pointAlong(w, i), to: pointAlong(w, moduleEnd(w, e - 1)), ...ownPlate(v, r.plate) });
     }
   }
   return { ...replaceWalls(v, [...stored, ...parts, ...others]), rooms: v.rooms.filter((x) => x.id !== id) };

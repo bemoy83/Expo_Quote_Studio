@@ -22,8 +22,11 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 ## V · Systemvegg
 
 - **V1 Modul.** En systemvegg (standvegg, innervegg, romvegg) bygges i moduler på cc 1000 mellom stolpesentrene.
-  Fysisk lengde er cc pluss én stolpe: 4000 c/c er 4040. Veggpenselen tegner hele moduler.
-  *Bjørn 31.10.2026 og 6.11.2026 · `rules.wall.cc`, `rules.wall.post` · kode `src/domain/walls.ts` · test `src/foga/engine.test.ts`*
+  Fysisk lengde er cc pluss én stolpe: 4000 c/c er 4040. Veggpenselen tegner hele moduler. Kortere moduler finnes i
+  samme steg som diskene (K10): 250, 500 og 750 c/c. En vegg legges i hele meter fra der den starter, og er lengden ikke
+  hel, er den siste modulen kortere (1750 = 1000 + 750). Delene er de samme, kappet: skinnene c/c − 40 (210, 460, 710),
+  platen c/c − 24 (226, 476, 726) og lysåpningen c/c − 40. Dør, forheng og hyller står bare i hele moduler.
+  *Bjørn 31.10.2026, 6.11.2026 og 14.11.2026 · `rules.wall.cc`, `rules.wall.post` · kode `src/domain/walls.ts`, `src/domain/grid.ts`, `src/domain/faces.ts` · test `src/foga/engine.test.ts`, `src/domain/shortModules.test.ts`*
 - **V2 Stolpe.** Profil 94 (40 × 40) på 2490 mm i hvert stolpepunkt: ende, rett, hjørne, T og kryss. Moduler som møtes
   deler stolpe. Stolper som bare bærer takdrager er den samme stolpen.
   *Bjørn 31.10.2026 · `rules.wall.height`, `RECIPES.wall.post` · kode `src/foga/engine.ts` · test `src/foga/engine.test.ts`*

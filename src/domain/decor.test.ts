@@ -179,9 +179,9 @@ describe('foil decor', () => {
 
   it('a foil centre is its felt centre plus its offset', () => {
     let v = ok(addFoil(row(), RULES, 'side-back', 2, 1, 'a', 1)).v;
-    expect(foilCenter(RULES, v.foils[0])).toBeCloseTo(2.5);
+    expect(foilCenter(v, RULES, v.foils[0])).toBeCloseTo(2.5);
     v = updateFoil(v, RULES, 'f1', { x: 0.1 }, 1);
-    expect(foilCenter(RULES, v.foils[0])).toBeCloseTo(2.6);
+    expect(foilCenter(v, RULES, v.foils[0])).toBeCloseTo(2.6);
   });
 });
 
@@ -195,7 +195,7 @@ describe('drag and drop on a wall (3D)', () => {
     const b = ok(dropMotif(v, RULES, 'side-back', 1, 3.6, 'logo', 2, 1.2));
     expect(b.foilId).toBe('f1');
     expect(b.v.foils[0]).toMatchObject({ module: 3, side: 1, y: 1.2 });
-    expect(foilCenter(RULES, b.v.foils[0])).toBeCloseTo(3.6);
+    expect(foilCenter(b.v, RULES, b.v.foils[0])).toBeCloseTo(3.6);
     // Without a height (the plan) it lands at eye height in the middle of the felt
     expect(ok(dropMotif(v, RULES, 'side-back', 1, 3.6, 'logo', 2)).v.foils[0]).toMatchObject({ x: 0, y: 1.5 });
   });
