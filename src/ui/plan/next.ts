@@ -14,7 +14,7 @@ import { uncoveredRuns, wallModules, type Module } from '../../domain/grid'
 import { shownModule } from '../../domain/runDraw'
 import { drawInnerBeam, type Run } from '../../domain/innerBeams'
 import { addObject, placeSet, footprintBox, objectBoxes, objectFootprint } from '../../domain/objects'
-import { NO_ROOM, podiumGrab, podiumHeights, type PodiumDraw } from '../../domain/podiums'
+import { NO_ROOM, podiumHeights, type PodiumDraw } from '../../domain/podiums'
 import { podiumGrips, type PodiumGripDraw } from '../../domain/podiumGrips'
 import { fusePodiums } from '../../domain/podiumLinks'
 import { addShelf, addShelfRow, penHeight } from '../../domain/shelves/edit'
@@ -37,7 +37,6 @@ import type { PlanHits } from './pointer/hits'
 import { isDoor, openingEdge } from './pointer/opening'
 import type { Pens } from './pointer/pens'
 import { counterUnder, drawPodiumAt, podiumStart } from './pointer/podium'
-import { penFine } from './pointer/draw'
 import { runOf } from './pointer/run'
 import { podiumGripAt } from './pointer/podiumGrip'
 import { placeHolds, placeKey } from './pointer/place'
@@ -75,8 +74,6 @@ export interface NextOutcome {
   hint: string | null
   invalid?: Invalid
   pill?: Pill
-  /** Disker og podier with Shift: the edges of the preview a press here takes hold of, drawn thick (PR 2). */
-  grip?: [Point, Point][]
   /** What a release takes away, hatched (a grip of a counter moved in, K14). */
   erased?: Box[]
   /** The grip of the chosen counter under the pointer, or being dragged (K14); or its link (K15). */
@@ -103,8 +100,8 @@ export interface NextInput {
   dragging: Drag | null
   fillRect: Rect | null
   dropHover: { h: FaceHit; d: DecorDrag } | null
-  /** A drawing pen with Shift held: where the preview stands still (usePlanPointer, pointer/draw.ts). */
-  freeze?: P | null
+  /** A drawing pen with Shift held or «Fin» on: it shows and draws in 250 (usePlanPointer, pointer/draw.ts). */
+  fine?: boolean
 }
 
 const pt = (p: Point) => `${p[0]},${p[1]}`
@@ -191,7 +188,7 @@ function targetOf(p: NextInput): NextTarget | null {
   if (running) {
     const [a, b] = runOf(running, hover ?? running.last)
     if (!pens.textileTool) return strokeTarget(a, b, true)
-    if (!running.moved) return target(`held:${textileClickKey(p, running.at)}:${motif ?? ''}`, () => textileOutcome(textileClick(v, hits, running.at, motif), null))
+    if (!running.moved) return target(`held:${textileClickKey(p, running.at, running.run.shown)}:${motif ?? ''}`, () => textileOutcome(textileClick(v, hits, running.at, motif, running.run.shown), null))
     return target(`tline:${pt(a)}:${pt(b)}:${motif ?? ''}`, () => textileOutcome(textileRun(v, a, b, running.p0, motif), [a, b]))
   }
 
@@ -249,36 +246,27 @@ function targetOf(p: NextInput): NextTarget | null {
     const g = hits.podiumGripAt(hover)
     if (g) return target(`grip:${g.at}`, () => line({ hint: GRIP_HINT, hotGrip: g.at }))
   }
-  // The drawing pens: with Shift held the preview stands still where it was
-  const at = p.freeze ?? hover
+  // The drawing pens: what a click stores, 250 with Shift or Fin
+  const at = hover
+  const shown = shownModule(v.stand, at, !!p.fine)
   if (pens.wallTool && wallRal) {
     const m = plateAt(p.mods, at)
     if (m) return target(`plate:${m.key}`, () => area({ edit: (x) => paintPlates(x, p.mods, [m.key], wallRal), hint: null }))
   }
-  // Shift held over the preview standing still: the end a press takes hold of, thick, as on Disker og podier
-  const gripped = (t: NextTarget | null): NextTarget | null => {
-    if (!t || !p.freeze) return t
-    const e = shownModule(v.stand, at)
-    const g = runGrip(e.a, e.b, hover)
-    return target(`${t.key}:grip:${pt(g[0][0])}`, () => ({ ...t.outcome(), hint: LOCKED_RUN, grip: g }))
-  }
   if ((pens.wallTool || pens.beamTool) && hits.onStand(at)) {
-    const e = shownModule(v.stand, at)
-    return gripped(strokeTarget(e.a, e.b, false))
+    return strokeTarget(shown.a, shown.b, false)
   }
   if (pens.textileTool) {
     // The same as a click (pointer/textile.ts); a drag starts from the module shown, also by a system wall
     if (!hits.onStand(at) && !hits.faceHit(at)) return null
-    const key = textileClickKey(p, at)
-    const t = target(`${key}:${motif ?? ''}`, () => textileOutcome(textileClick(v, hits, at, motif), null))
-    return key.startsWith('tmod:') ? gripped(t) : t
+    return target(`${textileClickKey(p, at, shown)}:${motif ?? ''}`, () => textileOutcome(textileClick(v, hits, at, motif, shown), null))
   }
   if (pens.decorTool) return decorTarget(p, hover)
   if (pens.openingTool && brush?.kind === 'opening') {
     const e = openingEdge({ v, hits }, hover)
     return e ? doorTarget(v, e, brush, null, false) : null
   }
-  if (pens.podiumTool) return podiumHover(p, at, p.freeze ? hover : null)
+  if (pens.podiumTool) return podiumHover(p, at)
   if (pens.objectTool && hits.onStand(hover)) return objectTarget(v, brush, hover)
   if (pens.shelfTool) {
     const h = hits.faceHit(hover)
@@ -295,11 +283,11 @@ function targetOf(p: NextInput): NextTarget | null {
 
 /** What a click with the textile pen at q does, as a key: the textile it prints, the wall face it fills, or the module
  *  shown on free floor. */
-function textileClickKey(p: NextInput, q: P): string {
+function textileClickKey(p: NextInput, q: P, m: Module): string {
   const u = textileUnder(p.v, p.hits, q)
   if (u) return `print:${JSON.stringify(u)}`
   const face = p.hits.faceHit(q)
-  return face ? faceKey(face) : `tmod:${shownModule(p.v.stand, q).key}`
+  return face ? faceKey(face) : `tmod:${m.key}`
 }
 
 /** The preview of a textile click or run: hatched along the run where it cannot stand. */
@@ -391,15 +379,6 @@ function objectTarget(v: Variant, brush: Brush | null, q: P): NextTarget | null 
 }
 
 /** Shift held over Disker og podier (PR 2). */
-/** The end of a run from a to b a press at q takes hold of with Shift (runDraw.ts: the nearest), as a short line across. */
-function runGrip(a: Point, b: Point, q: P): [Point, Point][] {
-  const along = a[1] === b[1] ? 0 : 1
-  const end = Math.abs(q[along === 0 ? 'x' : 'y'] - a[along]) <= Math.abs(q[along === 0 ? 'x' : 'y'] - b[along]) ? a : b
-  const r = 0.12
-  return [along === 0 ? [[end[0], end[1] - r], [end[0], end[1] + r]] : [[end[0] - r, end[1]], [end[0] + r, end[1]]]]
-}
-const LOCKED_RUN = 'Låst plass: dra for å flytte enden nærmest, som et hjørnegrep · 250-steg · slipp Shift for å flytte'
-const LOCKED = 'Låst plass: dra for å flytte hjørnet nærmest, som et hjørnegrep · 250-steg · slipp Shift for å flytte'
 
 /** By a side of a counter of Disker og podier (PR 3). */
 const ONTO_HINT = 'Inntil disken: klikk for å bygge på, dra for å tegne påbygget · kanten mot disken står fast'
@@ -420,21 +399,11 @@ function gripTarget(r: PodiumGripDraw): NextTarget {
 }
 
 /** Disker og podier pointing (K10): on a counter, a click chooses it and nothing is shown; elsewhere the section a click
- *  stores, dimmed, or hatched where it has no room. Shift held (`over`: the pointer over the preview standing still at
- *  q): the edges a press takes hold of, thick, and the hint for it. */
-function podiumHover(p: NextInput, q: P, over: P | null = null): NextTarget | null {
-  if (!over && counterUnder(p, q)) return target(`pod:on`, () => line({ hint: 'Klikk for å velge disken' }))
-  const r = podiumStart(p, q, !!over || penFine(p.brush))
-  if (!r) return null
-  const t = podiumTarget(r, false)
-  if (!over || 'error' in r) return t
-  const g = podiumGrab(r.cell, [over.x, over.y], r.onto)
-  const b = footprintBox(r.cell, objectFootprint(place, r.cell)!)
-  const grip: [Point, Point][] = [
-    ...(g.x ? [[[g.x < 0 ? b.x0 : b.x1, b.y0], [g.x < 0 ? b.x0 : b.x1, b.y1]] as [Point, Point]] : []),
-    ...(g.z ? [[[b.x0, g.z < 0 ? b.y0 : b.y1], [b.x1, g.z < 0 ? b.y0 : b.y1]] as [Point, Point]] : []),
-  ]
-  return target(`${t.key}:grip:${g.x},${g.z}`, () => ({ ...t.outcome(), hint: LOCKED, grip }))
+ *  stores (250 × 250 with Shift or Fin), dimmed, or hatched where it has no room. */
+function podiumHover(p: NextInput, q: P): NextTarget | null {
+  if (counterUnder(p, q)) return target(`pod:on`, () => line({ hint: 'Klikk for å velge disken' }))
+  const r = podiumStart(p, q, !!p.fine)
+  return r ? podiumTarget(r, false) : null
 }
 
 /** What a click or drag of Disker og podier stores (K10), with its outer size in the pill while dragging (a påbygg: its

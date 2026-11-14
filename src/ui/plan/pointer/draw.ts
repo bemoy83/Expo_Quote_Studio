@@ -1,6 +1,6 @@
 // What every drawing pen shares (Bjørn 14.11.2026: one drawing tool, one thing to learn): Vegg, Tekstil and Takdrager
-// (run.ts) and Disker og podier (podium.ts). A press works on what the pen shows (`at`: where Shift froze the preview,
-// else the press); it draws once it has moved DRAW_DRAG, else it is a click. Shift or «Fin» on the pen draws in 250 steps.
+// (run.ts) and Disker og podier (podium.ts). A press works on what the pen shows at `at`; it draws once it has moved
+// DRAW_DRAG, else it is a click. Shift or «Fin» on the pen shows and draws in 250 (Bjørn 14.11.2026).
 import type { Brush } from '../../tools'
 import type { P } from './types'
 
@@ -15,7 +15,7 @@ export interface DrawPress {
   moved: boolean
 }
 
-export const startPress = (q: P, frozen: P | null): DrawPress => ({ p0: q, at: frozen ?? q, last: q, moved: false })
+export const startPress = (q: P): DrawPress => ({ p0: q, at: q, last: q, moved: false })
 
 /** The pointer moved to q while pressed. */
 export function pressMove(d: DrawPress, q: P) {

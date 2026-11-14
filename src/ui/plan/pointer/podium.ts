@@ -1,8 +1,7 @@
 // The pen of Disker og podier (Byggeregel K10): a click on a counter chooses it, elsewhere stores the section the pen
 // shows; a press and drag draws from that section, which stays put from the press. With Shift (or «Fin» in the quick
-// picks) the preview stands still where it is, a press by an edge takes hold of that edge and a press in the middle
-// draws toward the pointer, in 250 steps (PR 2); Shift pressed or let go during a drag goes on from what is drawn. The
-// plan shows what a release stores while dragging (plan/next.ts).
+// picks) the section shown is 250 × 250 and a drag grows it in 250 steps (Bjørn 14.11.2026); Shift pressed or let go
+// during a drag goes on from what is drawn. The plan shows what a release stores while dragging (plan/next.ts).
 import { drawPodium, podiumAt, rebaseDrag, startDrag, type PodiumDrag } from '../../../domain/podiums'
 import type { Variant } from '../../../domain/types'
 import { catalog, isCounter, place } from '../../env'
@@ -28,9 +27,9 @@ export function podiumStart(c: Pick<PointerCtx, 'v' | 'brush' | 'hits'>, q: P, f
   return podiumAt(c.v, place, pen, [q.x, q.y], fine)
 }
 
-/** A press at q. `frozen`: where Shift froze the preview, which the press works on wherever it is; `fine`: Shift or Fin. */
-export function startPodium(c: PointerCtx, q: P, fine: boolean, frozen: P | null): Drag {
-  const p = startPress(q, frozen)
+/** A press at q. `fine`: Shift or Fin. */
+export function startPodium(c: PointerCtx, q: P, fine: boolean): Drag {
+  const p = startPress(q)
   const click = podiumStart(c, p.at, fine)
   const drag = click && !('error' in click) ? startDrag(click.cell, [q.x, q.y], fine, click.onto) : null
   return { kind: 'podium', ...p, click, drag }

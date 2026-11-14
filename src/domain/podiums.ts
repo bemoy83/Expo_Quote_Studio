@@ -15,7 +15,7 @@ import { nextId } from './ids';
 import { addAt, anywhere, blockers, COUNTER_STOCK_RAL, footprintBox, hitsAny, objectBoxes, objectFootprint, type PlaceContext } from './objects';
 import { bounds, covered, edgeRuns, EPS, GRID, overlaps, withSections, type EdgeRun, type Range } from './podiumSections';
 import type { CounterSection, PlacedObject, Point, Variant } from './types';
-import { axisSpan, rebaseAxis, type DrawAxis, type Grab, grabOf } from './drawAxis';
+import { axisSpan, rebaseAxis, type DrawAxis } from './drawAxis';
 
 const R = RECIPES.counter;
 export { GRID };
@@ -76,24 +76,14 @@ const unitsOf = (o: PlacedObject, q: Point): Point => {
   return [u / GRID, w / GRID];
 };
 
-/** Which edges of the section `o` a press at q takes hold of (with Shift): each way −1, 0 or 1; on a påbygg always the
- *  edge away from the counter across the side. */
-export function podiumGrab(o: PlacedObject, q: Point, onto?: PodiumOnto): { x: Grab; z: Grab } {
-  const s = o.sections![0];
-  const [u, w] = unitsOf(o, q);
-  const g = { x: grabOf(s.x[0] / GRID, s.x[1] / GRID, u), z: grabOf(s.z[0] / GRID, s.z[1] / GRID, w) };
-  return onto ? { ...g, [onto.side.axis]: onto.side.out } : g;
-}
-
-/** A drag pressed at q on the section `o` the pen shows. Without Shift a press is always in the middle (the section
- *  stands round the pointer); with Shift it takes the edge it is by. On a påbygg the edge against the counter stays. */
+/** A drag pressed at q on the section `o` the pen shows: it grows past its edges, in 500 or with Shift in 250 (the
+ *  section shown is then 250, podiumAt). On a påbygg the edge against the counter stays. */
 export function startDrag(o: PlacedObject, q: Point, fine: boolean, onto?: PodiumOnto): PodiumDrag {
   const s = o.sections![0];
   const [u, w] = unitsOf(o, q);
-  const g = fine ? podiumGrab(o, q, onto) : { x: 0 as Grab, z: 0 as Grab };
   const fix = (a: 'x' | 'z') => (onto?.side.axis === a ? { fix: (-onto.side.out) as -1 | 1 } : {});
-  const x: DrawAxis = { lo: s.x[0] / GRID, hi: s.x[1] / GRID, v0: u, g: g.x, ...fix('x') };
-  const z: DrawAxis = { lo: s.z[0] / GRID, hi: s.z[1] / GRID, v0: w, g: g.z, ...fix('z') };
+  const x: DrawAxis = { lo: s.x[0] / GRID, hi: s.x[1] / GRID, v0: u, g: 0, ...fix('x') };
+  const z: DrawAxis = { lo: s.z[0] / GRID, hi: s.z[1] / GRID, v0: w, g: 0, ...fix('z') };
   return { o, fine, x, z, ...(onto && { onto }) };
 }
 
@@ -191,11 +181,11 @@ export const ONTO = 300;
 const originOf = (c: PlacedObject): Point => [c.sections![0].x[0], c.sections![0].z[0]];
 
 /**
- * What the pen shows by a counter of its own at q (PR 3): one section of START × START against the nearest side within
- * ONTO of it, in the counter's grid, slid along in `step`s from the side's end and at most GRID past either end; it takes
+ * What the pen shows by a counter of its own at q (PR 3): one section of `size` × `size` (START, GRID with Shift) against
+ * the nearest side within ONTO of it, in the counter's grid, slid along in steps of its size from the side's end and at most GRID past either end; it takes
  * the height of the section it lies against. Null when q is by no side.
  */
-function ontoAt(v: Variant, q: Point, step: number): { c: PlacedObject; side: PodiumSide; cell: CounterSection } | null {
+function ontoAt(v: Variant, q: Point, size: number): { c: PlacedObject; side: PodiumSide; cell: CounterSection } | null {
   let best: { c: PlacedObject; side: PodiumSide; d: number; t: number } | null = null;
   for (const c of v.objects) {
     if (!c.sections?.length) continue;
@@ -209,9 +199,9 @@ function ontoAt(v: Variant, q: Point, step: number): { c: PlacedObject; side: Po
   }
   if (!best) return null;
   const { c, side, t } = best;
-  const a0 = Math.min(Math.max(side.a + Math.round((t - START / 2 - side.a) / step) * step, side.a - GRID), side.b - GRID);
-  const along: [number, number] = [a0, a0 + START];
-  const off: [number, number] = side.out > 0 ? [side.at, side.at + START] : [side.at - START, side.at];
+  const a0 = Math.min(Math.max(side.a + Math.round((t - size / 2 - side.a) / size) * size, side.a - GRID), side.b - GRID);
+  const along: [number, number] = [a0, a0 + size];
+  const off: [number, number] = side.out > 0 ? [side.at, side.at + size] : [side.at - size, side.at];
   const h = against(c.sections!, side, along);
   return { c, side, cell: side.axis === 'x' ? { x: off, z: along, h } : { x: along, z: off, h } };
 }
@@ -247,18 +237,19 @@ function addOnto(v: Variant, ctx: PlaceContext, c: PlacedObject, added: CounterS
   return placed(v, ctx, centred(c, [...c.sections!, ...added]), cell, onto);
 }
 
-/** What the pen shows and a click at q stores: one section of START × START round q, kept inside the stand and moved in
+/** What the pen shows and a click at q stores: one section of START × START (250 × 250 with Shift or Fin) round q, kept inside the stand and moved in
  *  against a wall, counter or the stand edge within 10 cm (K10). Refused where it has no room. */
 export function podiumAt(v: Variant, ctx: PlaceContext, pen: { product: string; ral?: string; h?: number; stock?: string }, q: Point, fine = false): PodiumDraw {
   // A standard counter (K22) stands free; «Fri» builds on a counter it points by
-  const by = pen.stock ? null : ontoAt(v, q, fine ? GRID : START);
+  const size = fine ? GRID : START;
+  const by = pen.stock ? null : ontoAt(v, q, size);
   if (by) {
     const { c, side, cell } = by;
     return addOnto(v, ctx, c, [cell], cellOf(c, cell), { id: c.id, side });
   }
   const id = nextId(v.objects.map((o) => o.id), 'i');
   const colour = pen.ral && pen.ral !== COUNTER_STOCK_RAL ? { ral: pen.ral } : {};
-  const half = START / 2;
+  const half = size / 2;
   // A standard counter as it is in stock, a disk with its front toward the aisle, a podie straight (K22); else one section
   const stock = pen.stock ? stockByArtnr(pen.stock) : undefined;
   const sections = stock ? stockSections(stock.artnr) : [{ x: [-half, half] as [number, number], z: [-half, half] as [number, number], h: pen.h ?? HEIGHT }];
