@@ -61,6 +61,34 @@ export function builtModules(v: Variant): BuiltModule[] {
   return [...byKey.values()];
 }
 
+/** A plate of a wall as built: a module, or a part of one another wall split (V10), where it starts along the wall. */
+export interface WallPart {
+  /** The wall module it is, or was cut from. */
+  index: number;
+  /** Distance from the wall's start to the part's start, m. */
+  at: number;
+  cc: number;
+  mod: BuiltModule;
+}
+
+/** The plates of a wall, module by module and in order along it (V10). A module not built (a gap in a room) has none. */
+export function wallParts(w: Wall, built: readonly BuiltModule[]): WallPart[] {
+  const byKey = new Map<string, BuiltModule>();
+  const byWhole = new Map<string, BuiltModule[]>();
+  for (const m of built) {
+    byKey.set(m.key, m);
+    if (m.whole) byWhole.set(m.whole, [...(byWhole.get(m.whole) ?? []), m]);
+  }
+  const [dx, dy] = wallDirection(w);
+  const off = (p: Point) => (p[0] - w.from[0]) * dx + (p[1] - w.from[1]) * dy;
+  return wallModules(w).flatMap((m, index) => {
+    const own = byKey.get(m.key);
+    return (own ? [own] : (byWhole.get(m.key) ?? []))
+      .map((mod) => ({ index, at: Math.round(Math.min(off(mod.a), off(mod.b)) * 1000) / 1000, cc: mod.cc, mod }))
+      .sort((a, b) => a.at - b.at);
+  });
+}
+
 /** Where walls meet another wall (Byggeregel V10): the ends of every wall and where two cross, as points. */
 export function meetPoints(walls: readonly Wall[]): Point[] {
   const out = new Map<string, Point>();

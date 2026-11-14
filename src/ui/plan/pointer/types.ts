@@ -32,7 +32,7 @@ export interface P {
  */
 export type Drag =
   /** Tøm along walls and drawn takdragere (stroke.ts). `beamId`: pressed on a drawn takdrager, so a click takes all of it. */
-  | { kind: 'stroke'; p0: P; moved: boolean; beamId?: string }
+  | { kind: 'stroke'; p0: P; moved: boolean; beamId?: string; /** On a wall off the metre grid: the stroke runs in 250 along it (V9). */ fine?: boolean }
   /** Vegg, Tekstil or Takdrager pressed (run.ts, draw.ts): the run being drawn from the module the pen showed. */
   | ({ kind: 'run'; run: RunDrag } & DrawPress)
   /** A floor stroke: the tiles after the first line up with it (`anchor`). */

@@ -66,7 +66,7 @@ export function eraseTargetAt(v: Variant, hits: PlanHits, standKeys: ReadonlySet
     const w = v.walls.find((x) => x.id === m.wallId)
     const room = w?.room && v.rooms.find((r) => r.id === w.room!.id)
     if (room) return { group: 'room', id: room.id, erase: (x) => removeRoom(x, room.id) }
-    if (standKeys.has(m.key)) return { group: 'locked', id: m.key, erase: (x) => x }
+    if (standKeys.has(m.whole ?? m.key)) return { group: 'locked', id: m.key, erase: (x) => x }
     return { group: 'wall', id: m.key, erase: (x) => x }
   }
   const room = roomAt(v, q.x, q.y)

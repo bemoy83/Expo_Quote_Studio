@@ -61,8 +61,11 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   vegger som krysser), deles modulen den treffer i to korte moduler med felles stolpe; resten av veggen beholder sine
   hele moduler (0–1, 1–2, 2–2,5, 2,5–3). Veggen som treffer, er da holdt der og står ikke fritt. Delingen avledes av
   hvor veggene står og lagres ikke: flyttes veggen, er modulen hel igjen. En modul med dør deles ikke. De to delene
-  beholder fargen modulen hadde, og er hver sin flate for farge.
-  *Bjørn 14.11.2026 · kode `src/domain/walls.ts` · test `src/domain/wallMeet.test.ts`*
+  beholder fargen modulen hadde, og er hver sin flate for farge. Veggrisset viser delene som egne plater med stolpen
+  mellom og c/c-kjeden gjennom den, og penselen farger én del om gangen. Tøm tar hele modulen delene ble kappet av; langs
+  en vegg utenfor metrelinjene går Tøm-streken på veggens linje i 250. Print og felt (hyller, dekal) per del er ikke
+  bygget ennå: en delt plate tar ikke print.
+  *Bjørn 14.11.2026 · kode `src/domain/walls.ts`, `src/ui/plan/wallDrawer/WallElevation.tsx`, `src/ui/plan/pointer/stroke.ts` · test `src/domain/wallMeet.test.ts`, `src/domain/snapGrid.test.ts`*
 - **V11 Delt standvegg.** Deles en standvegg arrangøren betaler (V10), beholder og fakturerer arrangøren den hele modulen
   den var, med sine stolper. Utstilleren betaler delingen: de korte modulene (V1) og stolpen mellom dem. Delene er
   utstillerens egne plater, så de er ikke platebytte.
