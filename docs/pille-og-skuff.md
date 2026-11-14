@@ -150,6 +150,11 @@ funksjoner, ikke artikler.
   innen 300 mm fra et sett, blir med i det (som disker kobles, K15). Tøm fjerner bare møbelet det peker på.
 - Mål på konferansestol, sofa og kafébord er anslag til de er målt.
 
+### Pennene ser like ut
+
+- Pensel-knappene i alle piller er svarte når pennen er i hånden, slik verktøyene i docken er (Bjørn 14.11.2026:
+  «alle penner like»). Innstillinger (høyde, Fin, Dør/Forheng under Tilpasset, flisstørrelse) bruker `--chosen`.
+
 ### I hånden
 
 - Hodet i hver pille er varen pennen tegner, med navn fra produktlisten slik kalkylen og tilbudet bruker det, og én

@@ -19,7 +19,7 @@ export function PodiumPicks({ p, head, more, brush }: Omit<QuickCtx, 'is'> & { b
   return (
     <>
       {head}
-      <QBtn on={!func} setting title="Fri · tegn fasongen selv · et klikk setter en seksjon 500 × 500, dra tegner fritt" label="Fri" onClick={() => onPick(withFunc(brush, undefined, picks, catalog.products))}>
+      <QBtn on={!func} title="Fri · tegn fasongen selv · et klikk setter en seksjon 500 × 500, dra tegner fritt" label="Fri" onClick={() => onPick(withFunc(brush, undefined, picks, catalog.products))}>
         Fri
       </QBtn>
       {penFuncs(catalog.products).map((f) => {
@@ -30,7 +30,6 @@ export function PodiumPicks({ p, head, more, brush }: Omit<QuickCtx, 'is'> & { b
           <QBtn
             key={f.func}
             on={func === f.func}
-            setting
             title={`${f.one} · ${f.does.toLowerCase()} · et klikk setter ${name ?? f.one.toLowerCase()}, dra tegner fritt`}
             label={f.one}
             onClick={() => onPick(withFunc(brush, f.func, picks, catalog.products))}
