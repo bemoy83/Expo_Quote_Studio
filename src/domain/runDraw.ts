@@ -3,10 +3,10 @@
 // (K10): the pen shows one module of 1 m on the edge nearest the pointer; a press and drag grows it from there, the
 // module shown staying put, in whole metres; dragged across, the run turns at the module's end nearest the press.
 // Shift (or «Fin») changes the size the pen draws with to 250 (Bjørn 14.11.2026): it shows 250 under the pointer on
-// the metre line, and a drag grows that in 250 steps. Shift pressed or let go during a drag goes on from what is drawn
+// the nearest line of the 250 grid (Byggeregel V9), and a drag grows that in 250 steps. Shift pressed or let go during a drag goes on from what is drawn
 // (drawAxis.ts). One grid for every pen: the metre grid, 250 with Shift or Fin. Pure, plan in m.
 import { axisSpan, rebaseAxis, type DrawAxis } from './drawAxis';
-import { makeModule, nearestEdge, type Module } from './grid';
+import { nearestEdge, type Module } from './grid';
 import type { Point, Stand } from './types';
 
 /** One grid unit, m: the fine step. */
@@ -15,15 +15,8 @@ export const RUN_UNIT = 0.25;
 export const RUN_COARSE = 4;
 
 /** The module a pen shows at q, and what a click there stores: the 1 m edge nearest, inside the stand; with Shift or
- *  Fin (`fine`) the 250 under the pointer on that edge's line. */
-export function shownModule(stand: Stand, q: { x: number; y: number }, fine = false): Module {
-  const m = nearestEdge(stand, q);
-  if (!fine) return m;
-  const h = m.orientation === 'h';
-  const max = (h ? stand.width : stand.depth) - RUN_UNIT;
-  const u = Math.max(0, Math.min(max, Math.floor((h ? q.x : q.y) / RUN_UNIT) * RUN_UNIT));
-  return h ? makeModule([u, m.a[1]], [u + RUN_UNIT, m.a[1]]) : makeModule([m.a[0], u], [m.a[0], u + RUN_UNIT]);
-}
+ *  Fin (`fine`) the 250 edge nearest on the 250 grid (V9). */
+export const shownModule = (stand: Stand, q: { x: number; y: number }, fine = false): Module => nearestEdge(stand, q, fine ? RUN_UNIT : 1);
 
 /** A run drawn: along x (`h`) at y = c, or along y at x = c. */
 interface RunLine {
@@ -61,8 +54,7 @@ function turnOf(d: RunDrag, q: Point): { line: RunLine; axis: DrawAxis } {
   const l = lineOf(d.shown);
   const [u0] = coords(l, d.p0);
   const node = Math.abs(u0 - d.along.lo) <= Math.abs(u0 - d.along.hi) ? d.along.lo : d.along.hi;
-  // Walls stand on the metre lines only: with Shift the 250 shown turns at the metre line nearest its end
-  const line: RunLine = { h: !l.h, c: Math.round(node * RUN_UNIT) };
+  const line: RunLine = { h: !l.h, c: node * RUN_UNIT };
   const c0 = Math.round(l.c / RUN_UNIT);
   const [, w] = coords(l, q);
   const dir = w >= c0 ? 1 : -1;

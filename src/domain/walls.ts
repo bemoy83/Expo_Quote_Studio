@@ -1,5 +1,5 @@
-// Byggeregler V1, V6, T6, D3 (docs/byggeregler.md).
-import { moduleKey, openSides, pointAlong, pointKey, SIDES, sideEnds, wallDirection, wallLength, wallModules, type Module } from './grid';
+// Byggeregler V1, V6, V10, T6, D3 (docs/byggeregler.md).
+import { makeModule, moduleKey, openSides, pointAlong, pointKey, SIDES, sideEnds, wallDirection, wallLength, wallModules, type Module } from './grid';
 import { gapKeys, OUTSIDE } from './roomKeys';
 import type { Rules } from '../rules/rules';
 import type { Opening, Point, Side, Stand, Variant, Wall } from './types';
@@ -20,6 +20,8 @@ export interface BuiltModule extends Module {
   index: number;
   plate: string;
   opening: Opening | null;
+  /** A part of a module another wall split (Byggeregel V10): the key of the whole module it was cut from. */
+  whole?: string;
 }
 
 /**
@@ -33,21 +35,68 @@ export function builtModules(v: Variant): BuiltModule[] {
   const openingAt = new Map<string, Opening>();
   for (const o of v.openings) openingAt.set(`${o.wallId}#${o.module}`, o);
   const gaps = gapKeys(v);
+  const cuts = meetPoints(v.walls);
   const byKey = new Map<string, BuiltModule>();
   for (const w of v.walls) {
     wallModules(w).forEach((m, index) => {
       // A module erased from a room is open: no wall, unless another wall covers it
       if (w.room && gaps.has(`${w.id}#${index}`)) return;
       const opening = openingAt.get(`${w.id}#${index}`) ?? null;
-      const existing = byKey.get(m.key);
-      if (existing) {
-        if (!existing.opening && opening) existing.opening = opening;
-        return;
+      const own = w.plate ?? v.defaultPlate;
+      // Another wall meeting it between its posts splits it there, the two sharing a post (V10); a door's is kept whole
+      const parts = opening ? [m] : splitAt(m, cuts);
+      // A part is keyed apart from the whole module, also the one that starts where it does
+      for (const part of parts.length > 1 ? parts.map((x) => ({ ...x, key: `${x.key}~${x.cc}` })) : parts) {
+        const existing = byKey.get(part.key);
+        if (existing) {
+          if (!existing.opening && opening) existing.opening = opening;
+          continue;
+        }
+        // A part keeps the colour of the module it was cut from, and is its own plate for colour and graphics
+        const plate = v.panels?.[part.key] ?? v.panels?.[m.key] ?? own;
+        byKey.set(part.key, { ...part, wallId: w.id, index, plate, opening, ...(part.key !== m.key && { whole: m.key }) });
       }
-      byKey.set(m.key, { ...m, wallId: w.id, index, plate: v.panels?.[m.key] ?? w.plate ?? v.defaultPlate, opening });
     });
   }
   return [...byKey.values()];
+}
+
+/** Where walls meet another wall (Byggeregel V10): the ends of every wall and where two cross, as points. */
+export function meetPoints(walls: readonly Wall[]): Point[] {
+  const out = new Map<string, Point>();
+  for (const w of walls) for (const p of [w.from, w.to]) out.set(pointKey(p), p);
+  for (const a of walls) {
+    for (const b of walls) {
+      const ha = a.from[1] === a.to[1];
+      const hb = b.from[1] === b.to[1];
+      if (!ha || hb) continue;
+      const p: Point = [b.from[0], a.from[1]];
+      if (inside(a, p) && inside(b, p)) out.set(pointKey(p), p);
+    }
+  }
+  return [...out.values()];
+}
+
+/** Whether p lies on the wall, ends included. */
+function inside(w: Wall, p: Point): boolean {
+  const [x0, x1] = [Math.min(w.from[0], w.to[0]), Math.max(w.from[0], w.to[0])];
+  const [y0, y1] = [Math.min(w.from[1], w.to[1]), Math.max(w.from[1], w.to[1])];
+  return p[0] >= x0 - EPS && p[0] <= x1 + EPS && p[1] >= y0 - EPS && p[1] <= y1 + EPS;
+}
+
+const EPS = 1e-6;
+
+/** A module split at the points that lie on it between its ends (V10), in order from a. */
+export function splitAt(m: Module, points: readonly Point[]): Module[] {
+  const h = m.orientation === 'h';
+  const [i, j] = h ? [0, 1] : [1, 0];
+  const [lo, hi] = [Math.min(m.a[i], m.b[i]), Math.max(m.a[i], m.b[i])];
+  const at = [...new Set(points.filter((p) => Math.abs(p[j] - m.a[j]) < EPS && p[i] > lo + EPS && p[i] < hi - EPS).map((p) => p[i]))].sort((x, y) => x - y);
+  if (!at.length) return [m];
+  const dir = m.b[i] > m.a[i] ? 1 : -1;
+  const ts = [m.a[i], ...(dir > 0 ? at : at.reverse()), m.b[i]];
+  const pt = (t: number): Point => (h ? [t, m.a[1]] : [m.a[0], t]);
+  return ts.slice(1).map((t, k) => makeModule(pt(ts[k]), pt(t)));
 }
 
 /** Grid points that carry a wall post: every end of every module. */

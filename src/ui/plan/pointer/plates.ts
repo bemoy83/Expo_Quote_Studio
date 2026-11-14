@@ -36,13 +36,10 @@ export function platesAlong(v: Variant, mods: BuiltModule[], wallId: string, i0:
   if (!w) return []
   const n = wallModules(w).length
   const i1 = Math.max(0, Math.min(n - 1, Math.floor(offsetAlong(w, q))))
-  const built = new Map(mods.map((m) => [m.key, m]))
-  const keys: string[] = []
-  for (let i = Math.min(i0, i1); i <= Math.max(i0, i1); i++) {
-    const m = built.get(wallModules(w)[i].key)
-    if (m && !m.opening) keys.push(m.key)
-  }
-  return keys
+  // Parts of a module another wall split (V10) are plates of their own, all passed
+  const [lo, hi] = [Math.min(i0, i1), Math.max(i0, i1)]
+  const keys = new Set(wallModules(w).slice(lo, hi + 1).map((m) => m.key))
+  return mods.filter((m) => !m.opening && (keys.has(m.key) || (m.whole !== undefined && keys.has(m.whole)))).map((m) => m.key)
 }
 
 /** Plates coloured `ral`; a plate in its wall's own colour has none of its own. */

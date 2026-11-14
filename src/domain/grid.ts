@@ -126,16 +126,19 @@ export function uncoveredRuns(mods: readonly Pick<Module, 'a' | 'b'>[], a: Point
 }
 
 
-/** The grid edge (module) closest to p, clamped to the stand. */
-export function nearestEdge(stand: Stand, p: { x: number; y: number }): Module {
+/** The grid edge (module) closest to p, clamped to the stand: on the metre grid, or with `step` 0.25 on the 250 grid
+ *  (Byggeregel V9). */
+export function nearestEdge(stand: Stand, p: { x: number; y: number }, step = 1): Module {
   const { width: W, depth: D } = stand;
   const x = Math.max(0, Math.min(W, p.x));
   const y = Math.max(0, Math.min(D, p.y));
-  const hy = Math.round(y);
-  const vx = Math.round(x);
-  const i = Math.max(0, Math.min(W - 1, Math.floor(x)));
-  const j = Math.max(0, Math.min(D - 1, Math.floor(y)));
-  return Math.abs(y - hy) <= Math.abs(x - vx) ? makeModule([i, hy], [i + 1, hy]) : makeModule([vx, j], [vx, j + 1]);
+  const on = (v: number) => round3(Math.round(v / step) * step);
+  const cell = (v: number, size: number) => round3(Math.max(0, Math.min(size - step, Math.floor(v / step) * step)));
+  const hy = on(y);
+  const vx = on(x);
+  const i = cell(x, W);
+  const j = cell(y, D);
+  return Math.abs(y - hy) <= Math.abs(x - vx) ? makeModule([i, hy], [round3(i + step), hy]) : makeModule([vx, j], [vx, round3(j + step)]);
 }
 
 export const SIDES: readonly Side[] = ['back', 'left', 'right', 'front'];
