@@ -33,7 +33,7 @@ export function hint(tool: Tool, brush: Brush | null, carpet = false): Hint {
     case 'wall':
       return h(
         'Klikk en vegg for å farge den · dra for flere plater · klikk en tom kant for ny vegg',
-        'Klikk en vegg for å farge platen · dra langs veggen for flere plater · klikk en tom kant eller dra langs rutenettet for å tegne vegg i hele meter · Shift + dra (eller Fin) tegner i 250-steg fra en 250-node, og resten blir en kortere modul sist · Esc avbryter',
+        'Klikk en vegg for å farge platen · dra langs veggen for flere plater · klikk en tom kant for en modul, eller trykk og dra for å gjøre den lengre i hele meter · modulen du ser står fast, dra på tvers for hjørne · hold Shift for å låse forhåndsvisningen og dra i en ende for 250-steg (Fin på iPad), resten blir en kortere modul sist · Esc avbryter',
       )
     case 'beam':
       return h(

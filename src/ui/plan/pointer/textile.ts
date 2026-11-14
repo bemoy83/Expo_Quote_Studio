@@ -8,7 +8,7 @@ import { fmt } from '../../format'
 import { rules } from '../../env'
 import type { TextileLine } from '../layers/Previews'
 import { printTextile, textileUnder } from './decor'
-import type { DragHandlers, Drag, P, PointerCtx } from './types'
+import type { DragHandlers, Drag, P, PointerCtx, StrokeSteps } from './types'
 import type { TextileResult } from '../../../domain/textile/brush'
 
 /** The textile laid, with the pen's motif on it (both faces of a free-standing one). */
@@ -29,6 +29,13 @@ export function startTextile(c: PointerCtx, q: P, fine = false): Drag | undefine
   const d: Extract<Drag, { kind: 'textile' }> = { kind: 'textile', p0: q, fine }
   c.setTextileStroke(textileLine(c.v, d, q))
   return d
+}
+
+/** Shift pressed or let go (or Fin) since the last move: what is drawn stays, and the stroke goes on from it. */
+export function strokeShift(d: StrokeSteps, fine: boolean, drawn: boolean) {
+  if (!!d.fine === fine) return
+  if (drawn && d.at) d.lock = d.at
+  d.fine = fine
 }
 
 /** Drawn: the stroke has length, so Shift pressed or let go locks it and goes on from it. */

@@ -126,6 +126,18 @@ export function uncoveredRuns(mods: readonly Pick<Module, 'a' | 'b'>[], a: Point
 }
 
 
+/** The grid edge (module) closest to p, clamped to the stand. */
+export function nearestEdge(stand: Stand, p: { x: number; y: number }): Module {
+  const { width: W, depth: D } = stand;
+  const x = Math.max(0, Math.min(W, p.x));
+  const y = Math.max(0, Math.min(D, p.y));
+  const hy = Math.round(y);
+  const vx = Math.round(x);
+  const i = Math.max(0, Math.min(W - 1, Math.floor(x)));
+  const j = Math.max(0, Math.min(D - 1, Math.floor(y)));
+  return Math.abs(y - hy) <= Math.abs(x - vx) ? makeModule([i, hy], [i + 1, hy]) : makeModule([vx, j], [vx, j + 1]);
+}
+
 export const SIDES: readonly Side[] = ['back', 'left', 'right', 'front'];
 
 export function sideLength(stand: Stand, side: Side): number {

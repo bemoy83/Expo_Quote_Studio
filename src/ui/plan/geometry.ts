@@ -1,18 +1,9 @@
-import { makeModule, type Module } from '../../domain/grid'
-import { alongX, cellsTo, FINE_STEP, snapTo } from '../../domain/snapGrid'
+import { nearestEdge } from '../../domain/grid'
+import { alongX, cellsTo } from '../../domain/snapGrid'
 import type { Point, Stand } from '../../domain/types'
 
-/** The grid edge (module) closest to p, clamped to the stand. */
-export function nearestEdge(stand: Stand, p: { x: number; y: number }): Module {
-  const { width: W, depth: D } = stand
-  const x = Math.max(0, Math.min(W, p.x))
-  const y = Math.max(0, Math.min(D, p.y))
-  const hy = Math.round(y)
-  const vx = Math.round(x)
-  const i = Math.max(0, Math.min(W - 1, Math.floor(x)))
-  const j = Math.max(0, Math.min(D - 1, Math.floor(y)))
-  return Math.abs(y - hy) <= Math.abs(x - vx) ? makeModule([i, hy], [i + 1, hy]) : makeModule([vx, j], [vx, j + 1])
-}
+/** The grid edge (module) closest to p, clamped to the stand (domain/grid.ts). */
+export { nearestEdge }
 
 /** Distance from p to the segment a–b. */
 export function distToSegment(p: { x: number; y: number }, a: Point, b: Point): number {
@@ -43,22 +34,4 @@ export function strokeFrom(stand: Stand, p0: { x: number; y: number }, p: { x: n
   const j = !e0h ? Math.min(e0.a[1], e0.b[1]) : cl(Math.floor(p0.y), 0, D - 1)
   const a = p.y >= p0.y ? j : j + 1
   return [[x, a], [x, cellsTo(a, p.y, step, D, 1, a > j)]]
-}
-
-/**
- * Wall stroke with Shift or «Fin» (Byggeregel V1): on the metre grid line nearest the press, from the 250 node nearest
- * it, in 250 steps along the drag; at least one step, so the stroke always shows. paintWalls lays it in whole metres
- * from the start, the rest last.
- */
-export function fineStrokeFrom(stand: Stand, p0: { x: number; y: number }, p: { x: number; y: number }): [Point, Point] {
-  const { width: W, depth: D } = stand
-  const cl = (v: number, hi: number) => Math.max(0, Math.min(hi, v))
-  if (alongX(p0, p)) {
-    const y = cl(Math.round(p0.y), D)
-    const a = cl(snapTo(p0.x, FINE_STEP), W)
-    return [[a, y], [cellsTo(a, p.x, FINE_STEP, W, 1, a >= W), y]]
-  }
-  const x = cl(Math.round(p0.x), W)
-  const a = cl(snapTo(p0.y, FINE_STEP), D)
-  return [[x, a], [x, cellsTo(a, p.y, FINE_STEP, D, 1, a >= D)]]
 }

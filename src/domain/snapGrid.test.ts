@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { cellsTo, continueStroke, gridStroke } from './snapGrid';
-import { fineStrokeFrom, strokeFrom } from '../ui/plan/geometry';
+import { strokeFrom } from '../ui/plan/geometry';
 import { freeStroke } from './textile/free';
 import { createVariant } from './variant';
 import type { Stand } from './types';
@@ -31,14 +31,6 @@ describe('drawing grid', () => {
     expect(strokeFrom(stand, { x: 1.5, y: 1.05 }, { x: 3.7, y: 1.2 })).toEqual([[1, 1], [4, 1]]);
     expect(strokeFrom(stand, { x: 1.5, y: 1.05 }, { x: 0.2, y: 1 })).toEqual([[2, 1], [0, 1]]);
     expect(strokeFrom(stand, { x: 2.02, y: 0.5 }, { x: 2.1, y: 2.8 })).toEqual([[2, 0], [2, 3]]);
-  });
-
-  it('wall stroke with Shift or Fin: from a 250 node on the metre line, in 250 steps, at least one', () => {
-    expect(fineStrokeFrom(stand, { x: 1.3, y: 1.1 }, { x: 3.0, y: 1.2 })).toEqual([[1.25, 1], [3, 1]]);
-    expect(fineStrokeFrom(stand, { x: 1.3, y: 1.1 }, { x: 1.35, y: 1.1 })).toEqual([[1.25, 1], [1.5, 1]]);
-    expect(fineStrokeFrom(stand, { x: 2.1, y: 0.6 }, { x: 2.1, y: 2.4 })).toEqual([[2, 0.5], [2, 2.5]]);
-    // Dragged back toward 0
-    expect(fineStrokeFrom(stand, { x: 3.0, y: 1 }, { x: 1.2, y: 1 })).toEqual([[3, 1], [1.25, 1]]);
   });
 
   it('Shift pressed or let go mid-stroke goes on from what is drawn, never back past the start', () => {

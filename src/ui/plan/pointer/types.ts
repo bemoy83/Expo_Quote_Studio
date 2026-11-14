@@ -10,6 +10,7 @@ import type { Motif, Point, Variant } from '../../../domain/types'
 import type { PodiumDraw, PodiumDrag } from '../../../domain/podiums'
 import type { PodiumGrip } from '../../../domain/podiumGrips'
 import type { PodiumLink } from '../../../domain/podiumLinks'
+import type { RunDrag } from '../../../domain/runDraw'
 import type { RoomDrag, WallDrag } from '../../drag'
 import type { Brush, Tool } from '../../tools'
 import type { TextileLine } from '../layers/Previews'
@@ -38,10 +39,11 @@ export interface StrokeSteps {
 }
 
 export type Drag =
-  /** A straight stroke on the wall grid. `beamId`: Tøm pressed on a drawn takdrager, so a click takes all of it. */
-  /** A straight stroke (stroke.ts). `fine`: Shift or «Fin» with the wall pen, 250 steps from a 250 node; `at`, the
-   *  stroke as last shown; `lock`, what was drawn when Shift was pressed or let go, which the stroke goes on from. */
-  | ({ kind: 'stroke'; p0: P; moved: boolean; beamId?: string } & StrokeSteps)
+  /** Tøm along walls and drawn takdragere (stroke.ts). `beamId`: pressed on a drawn takdrager, so a click takes all of it. */
+  | { kind: 'stroke'; p0: P; moved: boolean; beamId?: string }
+  /** Vegg or Takdrager pressed (run.ts): the run being drawn from the module the pen showed, `last` the pointer at the
+   *  last move, where Shift pressed or let go goes on from. */
+  | { kind: 'run'; p0: P; last: P; moved: boolean; run: RunDrag }
   /** A floor stroke: the tiles after the first line up with it (`anchor`). */
   | { kind: 'floor'; last: string | null; anchor: { i: number; j: number } | null }
   /** Fyll with rolled floor: an area from cell `from`; a click without a drag fills the stand. */
@@ -70,7 +72,7 @@ export type Drag =
   | { kind: 'place'; what: 'opening' | 'decor' | 'object'; key: string; module?: Module; door?: boolean }
   /** The wall pen pressed on a plate that stands: colours plates along that wall on release (plates.ts). `as`: the drag
    *  turned across the wall, so it draws a new wall as a stroke. */
-  | { kind: 'plates'; wallId: string; i0: number; p0: P; moved: boolean; as?: Extract<Drag, { kind: 'stroke' }>; fine?: boolean }
+  | { kind: 'plates'; wallId: string; i0: number; p0: P; moved: boolean; as?: Extract<Drag, { kind: 'run' }>; fine?: boolean }
   /** The shelf pen pressed on a wall face: module `m0` to `m1` on that face, laid on release (shelf.ts). */
   | { kind: 'shelf'; wallId: string; s: FaceSide; m0: number; m1: number }
   /** Velg on a shelf: drag moves it and the shelves chosen with it (its row) along the wall or onto another wall face,
