@@ -6,7 +6,7 @@ import { doorRal } from '../../domain/doors'
 import { felt, sideOf, type FaceSide } from '../../domain/faces'
 import { RECIPES } from '../../foga/recipes'
 import type { BoardKind } from '../../foga/structure'
-import { wallLength, wallModules } from '../../domain/grid'
+import { moduleCc, wallLength, wallModules } from '../../domain/grid'
 import { wallRal } from '../../domain/panels'
 import { railsOn, type CornerLayout } from '../../domain/shelves/corners'
 import { shelfStacks, shelvesOf } from '../../domain/shelves/model'
@@ -40,7 +40,8 @@ export function ShelfElevation({ v, wallId, s, shelves, layout }: { v: Variant; 
   return (
     <svg className="wo-elev" viewBox={fr.viewBox} role="img" aria-label={`${name}, ${shelves.length} hyller`}>
       {mods.map((m, i) => {
-        const x = spanX(i, i + 1)
+        const cc = moduleCc(w, i)
+        const x = spanX(i, i + cc)
         if (m?.opening) {
           const o = m.opening
           const door = productOf(o.product)?.opening === 'door'
@@ -55,16 +56,16 @@ export function ShelfElevation({ v, wallId, s, shelves, layout }: { v: Variant; 
             />
           )
         }
-        const f = felt(rules, i)
+        const f = felt(rules, i, cc)
         return (
           <g key={i}>
             <rect x={spanX(f.a, f.b)} y={z(H)} width={f.w} height={H - rules.wall.feet} fill={plateColor(m?.plate ?? wallRal(v, w))} />
-            <rect x={x} y={z(H)} width={1} height={rules.wall.profile.top} fill={ALU} />
-            <rect x={x} y={z(f.y0)} width={1} height={rules.wall.profile.bottom} fill={ALU} />
+            <rect x={x} y={z(H)} width={cc} height={rules.wall.profile.top} fill={ALU} />
+            <rect x={x} y={z(f.y0)} width={cc} height={rules.wall.profile.bottom} fill={ALU} />
           </g>
         )
       })}
-      <Posts xs={Array.from({ length: L + 1 }, (_, i) => u(i))} H={H} />
+      <Posts xs={[...mods.map((_, i) => u(i)), u(L)]} H={H} />
       <line x1={-0.12} y1={H} x2={L + 0.12} y2={H} stroke={BORDER_STRONG} strokeWidth={0.01} />
       <FaceRails wallId={w.id} s={s} layout={layout} x={u} H={H} u={fr.u} />
       {shelves.map((f) => (

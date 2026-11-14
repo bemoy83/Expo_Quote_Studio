@@ -14,6 +14,7 @@ import { removeShelves } from '../../../domain/shelves/edit'
 import { highWarning, shelvesIn, shelvesOn, tooHigh } from '../../../domain/shelves/model'
 import { mm } from '../dims'
 import type { FaceSide } from '../../../domain/faces'
+import { moduleCount } from '../../../domain/grid'
 import type { Shelf, Variant, Wall } from '../../../domain/types'
 import { rules } from '../../env'
 
@@ -135,7 +136,7 @@ export function useShelfBrush({ svg, v, w, s, L, H, on, onEdit, onDone }: Deps) 
     if (!m) return null
     const q = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse())
     const t = s === 1 ? q.x : L - q.x
-    const mod = Math.max(0, Math.min(L - 1, Math.floor(t)))
+    const mod = Math.max(0, Math.min(moduleCount(w) - 1, Math.floor(t)))
     const raw = H - q.y
     const hit = shelfUnder(v, w.id, mod, s, raw, Math.max(rules.shelf.gap / 2, HIT_PX / m.a))?.id
     return { inside: t >= 0 && t <= L && q.y >= 0 && q.y <= H, m: mod, raw, hit }

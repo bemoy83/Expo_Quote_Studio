@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState, type DragEvent as RDragEvent, typ
 import { foilCenter } from '../../../domain/decor'
 import { doorLevels, doorRal, doorWindows } from '../../../domain/doors'
 import { felt, type FaceSide } from '../../../domain/faces'
+import { moduleCc } from '../../../domain/grid'
 import { cropWindow, plateCrop } from '../../../domain/print'
 import { textileBox } from '../../../domain/textile/inFrame'
 import { cornerLayout } from '../../../domain/shelves/corners'
@@ -17,6 +18,7 @@ import { doorInset } from '../../../rules/rules'
 import { ALU, BORDER_STRONG, INK, INK_FAINT, SUNKEN } from '../../colors'
 import { applyDrop, decorDrag, dropSpot, endDecorDrag, type DropSpot, type FaceTarget } from '../../dnd'
 import { plateColor, productOf, rules } from '../../env'
+import { fmt } from '../../format'
 import { findMotif } from '../../motifs'
 import { Handles, Print } from '../drawerParts'
 import { TXT } from '../drawerText'
@@ -96,6 +98,8 @@ export function WallElevation(p: Props) {
   /** Along-wall offset → x in the drawing. The face is drawn as seen standing in front of it. */
   const u = (t: number) => (s === 1 ? t : L - t)
   const spanX = (a: number, b: number) => Math.min(u(a), u(b))
+  /** Module i's length c/c: a shorter last module is drawn as long as it is (Byggeregel V1). */
+  const ccOf = (i: number) => moduleCc(w, i)
   const z = (h: number) => H - h
   // Corner shelves: their boards, brackets and the 01 rails on this face (Byggeregler H10–H12)
   const layout = useMemo(() => cornerLayout(v, rules), [v])
@@ -119,7 +123,9 @@ export function WallElevation(p: Props) {
       ? elevationItems(rules, [], F.run ? foils.filter((x) => x.run === F.run) : [F], doorModules, u, undefined, v.walls)
       : []
   // Print laid on the wall: where each plate field starts (the door modules have none of their own)
-  const fields = painting && printing ? mods.map((_, i) => i).filter((i) => !doorModules.has(i)).map((i) => spanX(i, i + 1)) : undefined
+  const fieldMods = painting && printing ? mods.map((_, i) => i).filter((i) => !doorModules.has(i)) : undefined
+  const fields = fieldMods?.map((i) => spanX(i, i + ccOf(i)))
+  const fieldCc = fieldMods?.map(ccOf)
   const name = w.room ? 'Romvegg' : label
   // Named with a leader: not what the drawer is open for (its title says it), but the textile frames, decals and prints
   // on the wall when the wall is chosen (a print over several plates as one)
@@ -227,11 +233,11 @@ export function WallElevation(p: Props) {
           onDragLeave={() => setSpot(null)}
           onDrop={onDrop}
           role="img"
-          aria-label={`${label}, ${faceName(w, s).toLowerCase()}, ${L} m`}
+          aria-label={`${label}, ${faceName(w, s).toLowerCase()}, ${fmt(L, 2)} m`}
         >
           {/* Wall: plates, openings, profiles, posts, feet */}
           {mods.map((m, i) => {
-            const x = spanX(i, i + 1)
+            const x = spanX(i, i + ccOf(i))
             if (m?.opening) {
               const o = m.opening
               const door = productOf(o.product)?.opening === 'door'
@@ -266,16 +272,16 @@ export function WallElevation(p: Props) {
                 </g>
               )
             }
-            const f = felt(rules, i)
+            const f = felt(rules, i, ccOf(i))
             return (
               <g key={i}>
                 <rect x={spanX(f.a, f.b)} y={z(H)} width={f.w} height={H - rules.wall.feet} fill={plateColor(m?.plate ?? wallRal(v, w))} />
-                <rect x={x} y={z(H)} width={1} height={rules.wall.profile.top} fill={ALU} />
-                <rect x={x} y={z(f.y0)} width={1} height={rules.wall.profile.bottom} fill={ALU} />
+                <rect x={x} y={z(H)} width={ccOf(i)} height={rules.wall.profile.top} fill={ALU} />
+                <rect x={x} y={z(f.y0)} width={ccOf(i)} height={rules.wall.profile.bottom} fill={ALU} />
               </g>
             )
           })}
-          <Posts xs={Array.from({ length: L + 1 }, (_, i) => u(i))} H={H} />
+          <Posts xs={[...mods.map((_, i) => u(i)), u(L)]} H={H} />
           {/* The chosen door: marked, with its swing (the point of the triangle is the hinge side) */}
           {O &&
             O.wallId === w.id &&
@@ -320,7 +326,7 @@ export function WallElevation(p: Props) {
 
           {/* The chosen felt: a tint over its plate, under the shelves */}
           {p.felt !== undefined && mods[p.felt] && (() => {
-            const f = felt(rules, p.felt)
+            const f = felt(rules, p.felt, ccOf(p.felt))
             return <rect x={spanX(f.a, f.b)} y={z(H)} width={f.w} height={H - rules.wall.feet} fill={INK} fillOpacity={0.1} pointerEvents="none" />
           })()}
 
@@ -384,7 +390,7 @@ export function WallElevation(p: Props) {
           {painting &&
             mods.map((m, i) => {
               if (!m) return null
-              const f = felt(rules, i)
+              const f = felt(rules, i, ccOf(i))
               if (m.opening) {
                 // A door is part of the wall: the header is a plate, the leaf below it one more for the brush
                 const lv = doorLevels(rules)
@@ -418,7 +424,7 @@ export function WallElevation(p: Props) {
             />
           )}
 
-          <ElevationDims w={w} s={s} name={name} L={L} H={H} items={items} leaders={fr.leaders} top={fr.top} width={fr.width} right={fr.right} sc={sc} fields={fields} shelves={shelfChains(rules, shelfStacks({ ...v, shelves: brush.shelves ?? shelves }), u)} />
+          <ElevationDims w={w} s={s} name={name} L={L} H={H} items={items} leaders={fr.leaders} top={fr.top} width={fr.width} right={fr.right} sc={sc} fields={fields} fieldCc={fieldCc} shelves={shelfChains(rules, shelfStacks({ ...v, shelves: brush.shelves ?? shelves }), u)} />
         </svg>
       </div>
     </div>

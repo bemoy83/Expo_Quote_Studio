@@ -47,7 +47,7 @@ export function wallMeta(
   }
   if (F) return `Felt ${F.module + 1} · ${mm(F.width)} × ${mm(F.height)} mm${F.run ? ` · del av print over ${v.foils.filter((y) => y.run === F.run).length} plater` : ''}`
   return [
-    `${L} m`,
+    `${fmt(L, 2)} m`,
     count(wallModules(w).length - openings.length, 'plate', 'plater') + (odd ? ` (${odd} i egen farge)` : ''),
     openings.length && count(openings.length, 'åpning', 'åpninger'),
     tex.length && count(tex.length, 'tekstilvegg', 'tekstilvegger'),

@@ -3,7 +3,7 @@
 // differ). Where such a fitting may sit (H1, H6) and the felts of a face in the order fittings fill them. Shelves are
 // the first fitting (domain/shelves/); heng follow the same rules. Byggeregler H1, H6 (docs/byggeregler.md).
 import { faceNormal, faces, feltWall, type FaceSide } from './faces';
-import { pointKey, moduleCount, wallModules } from './grid';
+import { moduleCc, moduleCount, pointKey, wallModules } from './grid';
 import { textilesOn } from './textile/inFrame';
 import type { Point, Variant, Wall } from './types';
 import { builtModules, type BuiltModule } from './walls';
@@ -41,6 +41,8 @@ export function feltBlocked(v: Variant, wallId: string, module: number, s: FaceS
   const { w, blocked } = at;
   if (!faces(v, w).includes(s)) return `${what} kan ikke stå på denne siden av veggen`;
   if (blocked.openings.has(module)) return `${what} kan ikke stå i en åpning`;
+  // A shelf board is 976 long: only in a whole module (Byggeregel V1)
+  if (moduleCc(w, module) < 1 - EPS) return `${what} står bare i hele moduler`;
   // A textile on the face covers the felt, or holds the post's face channel with its bracket (520)
   const [a, b] = [module, module + 1];
   if (textilesOn(v, wallId, s).some((t) => t.from <= b + EPS && t.from + t.width >= a - EPS)) return 'Tekstilveggen holder feltet eller stolpen';

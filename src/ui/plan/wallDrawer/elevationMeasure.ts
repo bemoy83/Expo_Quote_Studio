@@ -28,10 +28,11 @@ export interface ElevationItem {
  * at `fields` (x, m). `along`: the edges of each field (960 apart, 40 between); `heights`: the visible top, the
  * visible bottom and the floor, y down in a drawing H high.
  */
-export function lysmal(rules: Rules, fields: number[], H: number): { along: number[]; heights: number[] } {
+export function lysmal(rules: Rules, fields: number[], H: number, ccs: readonly number[] = []): { along: number[]; heights: number[] } {
   const { cc, feet, height, profile } = rules.wall
   const lip = (cc - profile.length) / 2
-  const along = [...new Set(fields.flatMap((x) => [x + lip, x + cc - lip]))].sort((a, b) => a - b)
+  // A shorter module's field (Byggeregel V1) is as much shorter as the module: `ccs` per field, a whole one where none
+  const along = [...new Set(fields.flatMap((x, i) => [x + lip, x + (ccs[i] ?? cc) - lip]))].sort((a, b) => a - b)
   return { along, heights: [H - (feet + height - profile.top), H - (feet + profile.bottom), H] }
 }
 

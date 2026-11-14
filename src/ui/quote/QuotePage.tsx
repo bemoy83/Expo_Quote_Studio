@@ -66,11 +66,11 @@ export function QuotePage({ project, variants, current, onSelect, calcOf, motifs
   const facts: [string, string][] = [
     [`${v.stand.width} × ${v.stand.depth} m`, `${fmt(k.area)} m² · ${TYPE_NAME[v.stand.type]} · ${k.openSides} åpne sider`],
     [
-      `${fmt(k.wallLm - k.organiserWallLm)} lm vegg`,
+      `${fmt(k.wallLm - k.organiserWallLm, 2)} lm vegg`,
       [
         `veggplate ${plates.map((r) => `${plateName(r).toLowerCase()} RAL ${r}`).join(', ')}`,
         ...openingNames,
-        ...(k.organiserWallLm ? [`${fmt(k.organiserWallLm)} lm standvegg fra arrangøren`] : []),
+        ...(k.organiserWallLm ? [`${fmt(k.organiserWallLm, 2)} lm standvegg fra arrangøren`] : []),
       ].join(' · '),
     ],
     k.beamLm
@@ -199,7 +199,7 @@ export function QuotePage({ project, variants, current, onSelect, calcOf, motifs
                       {l.terms && <span className="muted"> · {l.terms}</span>}
                     </span>
                     <span className="num muted">
-                      {fmt(l.qty)} {l.unit}
+                      {fmt(l.qty, l.unit === 'lm' ? 2 : 1)} {l.unit}
                     </span>
                     <span className="num muted">{kr(l.price)}</span>
                     <span className="num">{kr(l.sum)}</span>

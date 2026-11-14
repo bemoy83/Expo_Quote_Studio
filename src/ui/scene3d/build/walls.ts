@@ -18,7 +18,7 @@ export function buildWalls(c: BuildContext) {
     const selected = sel.wallId === m.wallId && !sel.textileId && !sel.foilId
     const plate = mat('walls', plateColor(m.plate), selectGlow(selected))
     const frame = mat('walls', ALU, ALU_FINISH)
-    const len = rules.wall.cc - post
+    const len = m.cc - post
     rail(m.a, m.b, len, RECIPES.wall.topRail, H - prof.top / 2, frame, wallTag)
     if (!m.opening) {
       rail(m.a, m.b, len, RECIPES.wall.bottomRail, feet + prof.bottom / 2, frame, wallTag, true)
