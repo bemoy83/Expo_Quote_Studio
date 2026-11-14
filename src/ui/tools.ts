@@ -13,8 +13,9 @@ export type Brush =
   /** Innvendig takdrager: a straight run on the 1 m grid inside the stand (domain/innerBeams.ts). */
   | { kind: 'beam' }
   | { kind: 'floor'; product: string }
-  /** A door or curtain; `ral` the door leaf's colour (Farge on the wall tool), omitted = the stand's colour. */
-  | { kind: 'opening'; product: string; ral?: string }
+  /** A door or curtain; `ral` the door leaf's colour (Farge on the wall tool), omitted = the stand's colour; `fabric`
+   *  the curtain's colour, omitted = its first. */
+  | { kind: 'opening'; product: string; ral?: string; fabric?: string }
   | { kind: 'object'; product: string }
   /** Disker og podier (Byggeregler K10–K13): sections on the 250 grid, all sides closed, its plates in a wall colour.
    *  `fine`: «Fin» on, as Shift held for touch (250 steps, a press by an edge takes it). */

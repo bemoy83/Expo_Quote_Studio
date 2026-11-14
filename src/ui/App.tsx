@@ -4,7 +4,7 @@ import { r2 } from '../calc/referenceStands'
 import { addObject } from '../domain/objects'
 import { addDefaultRoom, roomSize } from '../domain/rooms'
 import { paintAllWalls } from '../domain/panels'
-import { paintAllDoors } from '../domain/doors'
+import { paintAllCurtains, paintAllDoors } from '../domain/doors'
 import { paintPodiums } from '../domain/objects'
 import type { StandWallTerms, Variant } from '../domain/types'
 import { customerName, fillFloor, standWallTerms } from '../domain/variant'
@@ -260,6 +260,7 @@ export default function App() {
       onFillWalls={() => onEdit((x) => paintAllWalls(x, tools.wallRal))}
       onFillPodiums={() => onEdit((x) => paintPodiums(x, tools.podiumRal))}
       onFillDoors={(ral) => onEdit((x) => paintAllDoors(x, ral, (a) => productOf(a)?.opening === 'door'))}
+      onFillCurtains={(fabric) => onEdit((x) => paintAllCurtains(x, fabric, (a) => productOf(a)?.opening === 'curtain'))}
       standRal={v.defaultPlate}
       picks={tools.picks}
     />

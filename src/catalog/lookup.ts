@@ -1,6 +1,6 @@
 import type { PlaceContext } from '../domain/objects';
 import type { Rules } from '../rules/rules';
-import type { Catalog, Product, ResolvedVariant } from './types';
+import type { Catalog, Fabric, Product, ResolvedVariant } from './types';
 
 export interface CatalogIndex {
   byArtnr: Map<string, ResolvedVariant>;
@@ -33,6 +33,9 @@ export function displayName({ product, variant }: ResolvedVariant): string {
 
 /** Kortnavn: the product's short name for buttons, else its full name. */
 export const shortName = (p: Pick<Product, 'name' | 'short'>): string => p.short?.trim() || p.name;
+
+/** The fabric colour `key` of a product, else its first (the default). */
+export const fabricOf = (p: Pick<Product, 'fabrics'> | undefined, key?: string): Fabric | undefined => p?.fabrics?.find((f) => f.key === key) ?? p?.fabrics?.[0];
 
 /** Context for placing objects: footprints, which openings swing, which products are counters. */
 export function placeContext(rules: Rules, c: Catalog): PlaceContext {

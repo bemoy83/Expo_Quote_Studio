@@ -20,6 +20,6 @@ export function openingAt(c: PointerCtx, e: Module, q: P | null) {
   const { brush } = c
   if (brush?.kind !== 'opening') return
   if (!doorAllowed(c.v, e.a, e.b)) return c.onToast('Dører og forheng kan ikke stå i standveggen')
-  const { product, ral } = brush
-  c.onEdit((x) => placeOpening(x, e.a, e.b, product, isDoor(product), q, ral))
+  const { product, ral, fabric } = brush
+  c.onEdit((x) => placeOpening(x, e.a, e.b, product, isDoor(product), q, { ral, fabric }))
 }

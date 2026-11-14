@@ -82,6 +82,17 @@ export const setDoorRal = (v: Variant, id: string, ral: string | null): Variant 
     return !ral || ral === v.defaultPlate ? rest : { ...rest, ral };
   });
 
+/** A curtain's colour (one of its fabrics' keys). */
+export const setCurtainFabric = (v: Variant, id: string, fabric: string): Variant => ({
+  ...v,
+  openings: v.openings.map((o) => (o.id === id ? { ...o, fabric } : o)),
+});
+
+/** The wall tool's bucket with a curtain in hand: every curtain in this colour. */
+export function paintAllCurtains(v: Variant, fabric: string, isCurtain: (product: string) => boolean): Variant {
+  return v.openings.filter((o) => isCurtain(o.product)).reduce((x, o) => setCurtainFabric(x, o.id, fabric), v);
+}
+
 /** The wall tool's bucket with a door in hand: every door leaf in this colour (curtains have no RAL). */
 export function paintAllDoors(v: Variant, ral: string, isDoor: (product: string) => boolean): Variant {
   return v.openings.filter((o) => isDoor(o.product)).reduce((x, o) => setDoorRal(x, o.id, ral), v);
@@ -237,12 +248,22 @@ export function inDoorArea(a: Point, b: Point, q: { x: number; y: number }, reac
  * the way the pointer at q says (doorAim). Defaults are not stored: hinge only when −1, swing only when it is −1 or
  * differs from the side an omitted swing reads as. On the stand's edge the swing is left as setOpening stored it.
  * `ral`: the door pen's leaf colour (the wall tool's Farge, Bjørn 14.11.2026), also over a door already there;
- * omitted, a new door follows the stand's colour. A curtain has no RAL.
+ * omitted, a new door follows the stand's colour. `fabric`: the curtain pen's colour, the same way.
  */
-export function placeOpening(v: Variant, a: Point, b: Point, product: string, door: boolean, q: { x: number; y: number } | null, ral?: string): Variant {
+export function placeOpening(
+  v: Variant,
+  a: Point,
+  b: Point,
+  product: string,
+  door: boolean,
+  q: { x: number; y: number } | null,
+  look: { ral?: string; fabric?: string } = {},
+): Variant {
   const placed = aimOpening(v, a, b, product, door, q);
-  const o = door && ral ? builtModules(placed).find((m) => m.key === moduleKey(a, b))?.opening : undefined;
-  return o ? setDoorRal(placed, o.id, ral!) : placed;
+  const o = builtModules(placed).find((m) => m.key === moduleKey(a, b))?.opening;
+  if (!o) return placed;
+  if (door) return look.ral ? setDoorRal(placed, o.id, look.ral) : placed;
+  return look.fabric ? setCurtainFabric(placed, o.id, look.fabric) : placed;
 }
 
 function aimOpening(v: Variant, a: Point, b: Point, product: string, door: boolean, q: { x: number; y: number } | null): Variant {

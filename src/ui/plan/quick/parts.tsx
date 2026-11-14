@@ -17,13 +17,13 @@ export function QName({ name, meta }: { name: string; meta?: string }) {
  * The colours of a pen and its paint bucket right after them (Bjørn 11.11.2026): the same row on the wall, floor and
  * counter pill, the bucket filling the whole stand with the chosen colour.
  */
-export function Palette({ swatches, fill, onFill, disabled }: { swatches: Swatch[]; fill: string; onFill: () => void; disabled?: boolean }) {
+export function Palette({ swatches, fill, onFill }: { swatches: Swatch[]; fill: string; onFill: () => void }) {
   return (
     <>
       {swatches.map(({ key, ...x }) => (
-        <Sw key={key} {...x} disabled={disabled} />
+        <Sw key={key} {...x} />
       ))}
-      <QBtn title={fill} label="Fyll" disabled={disabled} onClick={onFill}>
+      <QBtn title={fill} label="Fyll" onClick={onFill}>
         <PaintBucket size={15} />
       </QBtn>
     </>
@@ -31,8 +31,8 @@ export function Palette({ swatches, fill, onFill, disabled }: { swatches: Swatch
 }
 
 /** A colour as a square swatch, chosen = an ink ring inside it (dock quick picks, stand popover). */
-export function Sw({ color, title, on, onClick, disabled }: { color?: string; title: string; on: boolean; onClick: () => void; disabled?: boolean }) {
-  return <button type="button" className="q-sw" aria-pressed={on} disabled={disabled} title={title} aria-label={title} style={{ background: color }} onClick={onClick} />
+export function Sw({ color, title, on, onClick }: { color?: string; title: string; on: boolean; onClick: () => void }) {
+  return <button type="button" className="q-sw" aria-pressed={on} title={title} aria-label={title} style={{ background: color }} onClick={onClick} />
 }
 
 /** A pill button. `on` marks the tool in hand (ink, like the dock); with `setting` it marks a chosen setting instead

@@ -22,6 +22,13 @@ export interface ProductVariant {
   placeholder?: boolean;
 }
 
+export interface Fabric {
+  key: string;
+  name: string;
+  /** Hex colour for swatches and 3D. */
+  color: string;
+}
+
 export interface Footprint {
   w: number;
   d: number;
@@ -58,6 +65,9 @@ export interface Product {
   time?: Time;
   /** Goes in a wall module. A door swings and blocks its swing area; a curtain does not. */
   opening?: 'door' | 'curtain';
+  /** The colours a fabric comes in (forheng: sort, grå, blå, Bjørn 14.11.2026), the first the default. Same art.nr and
+   *  price; the colour is on the line. A door leaf takes the wall colours (RAL) instead. */
+  fabrics?: Fabric[];
   /** Floor laid as carpet tiles: joints drawn at the tile edges, tiles counted per size for picking. */
   tiles?: true;
   /** Floor laid from a roll this wide, m, in lanes (baner): a joint between lanes, picked in running metres of roll. */

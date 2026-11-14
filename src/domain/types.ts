@@ -82,6 +82,8 @@ export interface Opening {
   hinge?: 1 | -1;
   /** RAL of the door leaf. Omitted: the variant's default plate, so the door follows the stand's colour. */
   ral?: string;
+  /** A curtain's colour: the key of one of its product's fabrics. Omitted: the first, the default. */
+  fabric?: string;
 }
 
 /** A floor tile in 0,5 m cells: starts at cell (i, j), w × h cells (domain/floor/). */

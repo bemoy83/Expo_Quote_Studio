@@ -115,7 +115,7 @@ funksjoner, ikke artikler.
 - Varen vises som omriss sett ovenfra (`plan/quick/StockOutline.tsx`), aldri som varenummer.
 - Rekkefølgen er lik for alle verktøy (Bjørn 14.11.2026): **I hånden · Pensel · Farge · Tilpasset · Alle («…»)**.
   Tilpasset viser variantene og innstillingene til varen i hånden: høyden på podiet, dør eller forheng.
-- Grå eller skjult: grå (`QBtn disabled`, `Palette disabled`) betyr at verktøyet har innstillingen, men den gjelder ikke
+- Grå eller skjult: grå (`QBtn disabled`) betyr at verktøyet har innstillingen, men den gjelder ikke
   varen i hånden nå. Den står der den pleier. Skjult betyr at varen aldri har den, som farge på en takdrager.
 - Knappene bruker kortnavnet fra produktlisten (kolonnen Kortnavn, `shortName` i `catalog/lookup.ts`); tomt gir fullt
   navn. Navnelappen (hold på iPad) har fullt navn og hva funksjonen er til.
@@ -127,9 +127,10 @@ funksjoner, ikke artikler.
 
 - Pensel: **Vegg**, **Dør** og **Takdrager**. Dør-knappen står for åpningen sist i hånden og heter som den: velges
   Forheng under Tilpasset, viser og heter knappen Forheng (`ui/wallPen.ts`, husket i `picks.wall`).
-- Farge gjelder varen i hånden: platen på veggen, dørbladet på døren. En farge velger aldri vegg. Fyll fyller alle
-  vegger, eller alle dørblad med en dør i hånden. Takdrager har ingen farge, så fargene skjules. Forheng har farge,
-  men fargene er ikke avklart ennå, så de er grå.
+- Farge gjelder varen i hånden: platen på veggen og dørbladet i veggfargene (RAL), forhenget i sine stoffarger sort,
+  grå og blå (Bjørn 14.11.2026; `fabrics` på produktet, første er standard). En farge velger aldri vegg. Fyll fyller
+  alle vegger, alle dørblad eller alle forheng, etter det som er i hånden. Takdrager har ingen farge, så fargene skjules.
+  Forhengets farge står på linjen i kalkyle og tilbud («Forheng med overstykke · sort»).
 - Tilpasset: Dør eller Forheng, bare med en åpning i hånden. Bakrom er en handling til slutt.
 
 ## Skuffen

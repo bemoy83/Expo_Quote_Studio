@@ -37,7 +37,7 @@ export interface Positions {
 export function lineKey(catalog: Catalog, l: Pick<CalcLine, 'artnr' | 'meta' | 'quote'>, idx = indexCatalog(catalog)): string {
   if (l.quote?.key) return `quote:${l.quote.key}`;
   const opening = idx.byArtnr.get(l.artnr)?.product.opening;
-  if (opening) return doorKey(l.artnr, opening === 'curtain' ? undefined : l.meta);
+  if (opening) return doorKey(l.artnr, l.meta);
   return l.artnr;
 }
 
