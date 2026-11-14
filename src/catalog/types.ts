@@ -22,6 +22,13 @@ export interface ProductVariant {
   placeholder?: boolean;
 }
 
+export interface SetPiece {
+  artnr: string;
+  x: number;
+  y: number;
+  rot: number;
+}
+
 export interface Fabric {
   key: string;
   name: string;
@@ -68,6 +75,10 @@ export interface Product {
   /** The colours a fabric comes in (forheng: sort, grå, blå, Bjørn 14.11.2026), the first the default. Same art.nr and
    *  price; the colour is on the line. A door leaf takes the wall colours (RAL) instead. */
   fabrics?: Fabric[];
+  /** A furniture set (Møbel by use, Bjørn 14.11.2026): what the pen places together, each piece by art.nr where it
+   *  stands from the set's middle (m, unturned) and its turn. Never a line itself: each piece is its own line, so its
+   *  price is their sum. */
+  set?: SetPiece[];
   /** Floor laid as carpet tiles: joints drawn at the tile edges, tiles counted per size for picking. */
   tiles?: true;
   /** Floor laid from a roll this wide, m, in lanes (baner): a joint between lanes, picked in running metres of roll. */

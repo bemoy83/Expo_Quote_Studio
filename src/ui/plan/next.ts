@@ -13,7 +13,7 @@ import { carpetClick, fillCarpet } from '../../domain/floor/rollFill'
 import { tileAt, type Rect } from '../../domain/floor/tiles'
 import { wallModules, type Module } from '../../domain/grid'
 import { drawInnerBeam, type Run } from '../../domain/innerBeams'
-import { addObject, footprintBox, objectBoxes, objectFootprint } from '../../domain/objects'
+import { addObject, placeSet, footprintBox, objectBoxes, objectFootprint } from '../../domain/objects'
 import { NO_ROOM, podiumGrab, podiumHeights, type PodiumDraw } from '../../domain/podiums'
 import { podiumGrips, type PodiumGripDraw } from '../../domain/podiumGrips'
 import { fusePodiums } from '../../domain/podiumLinks'
@@ -355,6 +355,13 @@ function objectTarget(v: Variant, brush: Brush | null, q: P): NextTarget | null 
   const pen = placedBy(brush)
   if (!pen) return null
   const { product } = pen
+  const set = productOf(product)?.set
+  if (set) {
+    // A furniture set: all its pieces where a click puts them
+    const next = placeSet(v, place, set, q.x, q.y)
+    const key = next ? next.objects.slice(v.objects.length).map((o) => `${o.x},${o.y}`).join(';') : `none:${Math.round(q.x * 20)},${Math.round(q.y * 20)}`
+    return target(`set:${product}:${key}`, () => line({ edit: next ? () => next : undefined, hint: next ? null : `Ikke plass til ${productOf(product)?.name.toLowerCase() ?? 'settet'} her` }))
+  }
   const f = productOf(product)?.footprint
   if (!f) return null
   const next = addObject(v, place, product, q.x, q.y)

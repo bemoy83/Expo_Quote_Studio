@@ -61,6 +61,12 @@ const podie = (id: string, name: string, heights: [suffix: number, cm: number, p
   };
 };
 
+/** A furniture set (Møbel by use, Bjørn 14.11.2026): its pieces and the kortnavn of its function on the pill. The key
+ *  is internal, not an art.nr: a set is never a line, each piece is. Its price is the pieces' sum, filled in below. */
+const furnitureSet = (id: string, name: string, short: string, set: Product['set']): Product => ({
+  ...one(id, name, 'object', 'stk', 'mob.grupper', 0, { short, set, pricing: 'sum', dim: 'sett' }),
+});
+
 /** Counted product with optional named variants ("Sort;Hvit"). Art.nr gets a suffix per variant. */
 const counted = (
   id: string,
@@ -228,12 +234,23 @@ const products: Product[] = [
   one('5195', 'Barstol hvit/krom', 'object', 'stk', 'mob.sitte', 350, {
     dim: 'justerbar 58–78', footprint: { w: 0.42, d: 0.42, h: 0.78, round: true },
   }),
+  // Drawn since the furniture sets (Bjørn 14.11.2026); sizes are estimates until measured
+  { ...counted('5190', 'Konferansestol', 'mob.sitte', 220, ['Sort', 'Hvit', 'Grå']), kind: 'object', dim: '50 × 52 · anslag', footprint: { w: 0.5, d: 0.52, h: 0.82 } },
+  { ...counted('5210', 'Sofa 2-seter', 'mob.sitte', 1450, ['Grå', 'Sort']), kind: 'object', dim: '150 × 80 · anslag', footprint: { w: 1.5, d: 0.8, h: 0.8 } },
   // Counted (placed later)
-  counted('5190', 'Konferansestol', 'mob.sitte', 220, ['Sort', 'Hvit', 'Grå']),
-  counted('5210', 'Sofa 2-seter', 'mob.sitte', 1450, ['Grå', 'Sort']),
   counted('5280', 'Møtebord 120 × 80', 'mob.bord', 690),
-  counted('5285', 'Kafébord ø70', 'mob.bord', 450),
+  { ...counted('5285', 'Kafébord ø70', 'mob.bord', 450), kind: 'object', dim: 'ø 70 · h 74 · anslag', footprint: { w: 0.7, d: 0.7, h: 0.74, round: true } },
   counted('5300', 'Loungegruppe', 'mob.grupper', 3900),
+  // Furniture sets by use (Bjørn 14.11.2026): placed and moved together, each piece its own line
+  furnitureSet('sett-lounge', 'Loungesett', 'Lounge', [
+    { artnr: '5210-1', x: 0, y: -0.4, rot: 0 },
+    { artnr: '5285', x: 0, y: 0.55, rot: 0 },
+  ]),
+  furnitureSet('sett-mingle', 'Minglesett', 'Mingle', [
+    { artnr: '5276', x: 0, y: 0, rot: 0 },
+    { artnr: '5186', x: -0.6, y: 0, rot: 0 },
+    { artnr: '5186', x: 0.6, y: 0, rot: 0 },
+  ]),
   counter('6560', 'Bardisk', 1320),
   podium('6571', 'Disk', 'disk.disker', 2640),
   podie('5450', 'Podie 50 × 50', [
@@ -273,6 +290,13 @@ export const FURNITURE_WHITE = '#F3F2EE';
 // Per art.nr, or per product for all its variants; standard counters and podier are white plates (K6)
 const OBJECT_COLORS: Record<string, string> = { '6560': FURNITURE_WHITE, '5450': FURNITURE_WHITE, '6571': FURNITURE_WHITE, '6572': FURNITURE_WHITE, '5276': BLACK, '5275': FURNITURE_WHITE, '5296': BLACK, '5186': BLACK, '5196': BLACK, '5195': FURNITURE_WHITE };
 for (const p of products) for (const v of p.variants) if (OBJECT_COLORS[v.artnr] ?? OBJECT_COLORS[p.id]) v.color = OBJECT_COLORS[v.artnr] ?? OBJECT_COLORS[p.id];
+
+// A set's price: the sum of its pieces
+for (const p of products) {
+  if (!p.set) continue;
+  const price = p.set.reduce((sum, x) => sum + (products.flatMap((q) => q.variants).find((v) => v.artnr === x.artnr)?.price ?? 0), 0);
+  p.variants = p.variants.map((v) => ({ ...v, price }));
+}
 
 // Cost and handling time of the products without a recipe (furniture, floor, foil, services) come from the kostgrunnlag
 // (`katalog`, src/cost/itemDefs.ts EXAMPLE_CATALOG) until the OMS gives them per product.

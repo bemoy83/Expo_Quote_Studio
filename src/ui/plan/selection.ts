@@ -5,7 +5,7 @@ import { faces, type FaceSide } from '../../domain/faces'
 import { removeLane } from '../../domain/floor/edit'
 import { removeFill } from '../../domain/floor/rollFill'
 import { removeInnerBeam } from '../../domain/innerBeams'
-import { removeObject } from '../../domain/objects'
+import { removeSet } from '../../domain/objects'
 import { removeRoom } from '../../domain/rooms'
 import { removeShelves } from '../../domain/shelves/edit'
 import { shelfRow, shelvesOf } from '../../domain/shelves/model'
@@ -199,8 +199,9 @@ export function deleteSelection(v: Variant, sel: PlanSelection): { edit: (v: Var
     // The wall drawer stays open on the wall the door stood in
     case 'opening':
       return { edit: (x) => removeOpening(x, k.id), select: doorWall(v, sel) }
+    // A piece of a furniture set takes its set with it, as it moves and turns with it (Bjørn 14.11.2026); Tøm erases one
     case 'object':
-      return { edit: (x) => removeObject(x, k.id), select: {} }
+      return { edit: (x) => removeSet(x, k.id), select: {} }
     default:
       return null
   }

@@ -40,6 +40,8 @@ export function ObjectLayer(props: {
   const { v, selection, tool, bad, dim, off, motifs } = props
   const { gone, hatch } = useErasing()
   const sc = usePlanScale()
+  // A piece of a furniture set chosen: its whole set has the halo, as it moves and turns as one (Bjørn 14.11.2026)
+  const chosenSet = v.objects.find((o) => o.id === selection.objectId)?.set
   return (
     <g opacity={dim('objects')}>
       {v.objects.map((o) => {
@@ -49,7 +51,7 @@ export function ObjectLayer(props: {
         const col = counter ? plateColor(counterRal(o)) : (idx.byArtnr.get(o.product)?.variant.color ?? 'oklch(0.3 0.004 250)')
         if (!f) return null
         const isBad = bad.has(o.id)
-        const sel = selection.objectId === o.id
+        const sel = selection.objectId === o.id || (!!chosenSet && o.set === chosenSet)
         const stroke = isBad ? BLOCK : INK
         // A thin ink edge round the furniture's own colour (Bjørn 04.11.2026), red and heavier when colliding; chosen is
         // the plan's halo round it, as for walls, takdrager, textile and shelves (Bjørn 12.11.2026)

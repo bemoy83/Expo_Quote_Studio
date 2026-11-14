@@ -1,8 +1,8 @@
 // The pill on what stands on the floor: a room, a drawn takdrager, furniture, a counter and a frittstående tekstilvegg
 // (docs/pille-og-skuff.md).
-import { MoveHorizontal, MoveVertical, RotateCw } from 'lucide-react'
+import { MoveHorizontal, MoveVertical, RotateCw, Unlink } from 'lucide-react'
 import { roomName, roomSize } from '../../../domain/rooms'
-import { counterRal, objectFootprint, setCounterRal, setObjectProduct } from '../../../domain/objects'
+import { counterRal, loosenObject, objectFootprint, setCounterRal, setMembers, setObjectProduct } from '../../../domain/objects'
 import { podiumHeights } from '../../../domain/podiums'
 import { updateFace } from '../../../domain/textile/free'
 import { counterName, idx, place } from '../../env'
@@ -49,9 +49,12 @@ export function objectPill(p: PillActions, c: Of<'object'>, remove: () => void):
   const family = objectFamily(o.product)
   // Disker og podier: «Disk» or «Podie» by its shape, as on the quote (Byggeregel K13)
   const name = o.sections ? counterName(o) : (family.find((x) => x.artnr === o.product)?.name ?? f?.product.name ?? 'Møbel')
+  // A piece of a furniture set moves and turns with its set until it is loosened (Bjørn 14.11.2026)
+  const set = o.set ? setMembers(v, o).length : 0
+  const turns = (fp && !fp.round) || set > 1
   return {
     name,
-    meta: fp ? `${fp.round ? `ø ${mm(fp.w)}` : `${mm(fp.w)} × ${mm(fp.d)}`}${o.sections ? ` · H ${podiumHeights(o).map((x) => mm(x / 1000)).join('/')}` : ''}${o.rot ? ` · ${o.rot}°` : ''}` : undefined,
+    meta: set > 1 ? `i sett med ${set - 1} til` : fp ? `${fp.round ? `ø ${mm(fp.w)}` : `${mm(fp.w)} × ${mm(fp.d)}`}${o.sections ? ` · H ${podiumHeights(o).map((x) => mm(x / 1000)).join('/')}` : ''}${o.rot ? ` · ${o.rot}°` : ''}` : undefined,
     body: (
       <>
         {/* A counter's plates in the wall colours, as on a wall (Byggeregel K6, Bjørn 11.11.2026) */}
@@ -76,10 +79,16 @@ export function objectPill(p: PillActions, c: Of<'object'>, remove: () => void):
               }}
             />
           ))}
-        {family.length > 1 && fp && !fp.round && <Sep />}
-        {fp && !fp.round && (
-          <QBtn title="Roter 90° (R)" label="Roter" onClick={() => turnObject(p, o.id)}>
+        {family.length > 1 && turns && <Sep />}
+        {turns && (
+          <QBtn title={set > 1 ? 'Roter settet 90° om midten (R)' : 'Roter 90° (R)'} label="Roter" onClick={() => turnObject(p, o.id)}>
             <RotateCw size={15} />
+          </QBtn>
+        )}
+        {set > 1 && (
+          <QBtn title="Løsne fra settet · flyttes og roteres for seg" label="Løsne" onClick={() => onEdit((x) => loosenObject(x, o.id))}>
+            <Unlink size={15} />
+            Løsne
           </QBtn>
         )}
       </>
@@ -87,6 +96,7 @@ export function objectPill(p: PillActions, c: Of<'object'>, remove: () => void):
     // Disker og podier has a drawer: its sides, one at a time (trinn 2)
     more: !!o.sections,
     remove,
+    ...(set > 1 && { removeLabel: 'Slett settet (Delete)' }),
   }
 }
 

@@ -2675,6 +2675,25 @@ select.cin {
 .q-obj svg * {
   stroke-width: 1.4;
 }
+/* Tilpasset on Møbel: which piece «Enkelt» places is a setting, --chosen like every setting (Bjørn 14.11.2026) */
+.q-obj.q-set[aria-pressed='true'] {
+  background: var(--chosen);
+}
+.q-obj.q-set[aria-pressed='true'] svg * {
+  stroke: rgb(var(--ink));
+}
+/* A set or piece seen from above on a pill button, beside its name */
+.q-btn .obj-thumb {
+  flex: none;
+  width: 22px;
+  height: 22px;
+}
+.q-btn .obj-thumb * {
+  stroke-width: 1.4;
+}
+.q-btn[aria-pressed='true'] .obj-thumb * {
+  stroke: rgb(var(--canvas));
+}
 /* Narrower than the widest quick picks (floor, profiling): the pen's name goes first, then the picks wrap to a
    second row instead of hiding off the edge */
 @container (max-width: 820px) {

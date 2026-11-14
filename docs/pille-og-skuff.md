@@ -133,6 +133,17 @@ funksjoner, ikke artikler.
   Forhengets farge står på linjen i kalkyle og tilbud («Forheng med overstykke · sort»).
 - Tilpasset: Dør eller Forheng, bare med en åpning i hånden. Bakrom er en handling til slutt.
 
+### Møbel
+
+- Pensel: én knapp per møbelsett i katalogen (Møte, Lounge, Mingle; kortnavnet) med settet sett ovenfra, og
+  **Enkelt** med møbelet bak seg. Tilpasset med Enkelt i hånden velger hvilket møbel (`ui/furniturePen.ts`).
+- Et sett (`set` på produktet, undergruppe Møbelgrupper) settes ut som sine møbler med felles `set` på hvert møbel.
+  Hvert møbel er sin egen linje i kalkyle og tilbud; settets pris i produktlisten er summen.
+- Satt ut flyttes, roteres og slettes settet samlet (Bjørn 14.11.2026): Velg på ett møbel gir glorie på hele settet,
+  og møblene i settet kolliderer ikke med hverandre. **Løsne** i pillen tar ett møbel ut. Et løst møbel som slippes
+  innen 300 mm fra et sett, blir med i det (som disker kobles, K15). Tøm fjerner bare møbelet det peker på.
+- Mål på konferansestol, sofa og kafébord er anslag til de er målt.
+
 ## Skuffen
 
 ### Når den åpnes

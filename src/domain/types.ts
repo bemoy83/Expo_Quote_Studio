@@ -127,6 +127,10 @@ export interface PlacedObject {
   /** A counter or podium from Disker og podier (Byggeregler K10–K13, domain/podiums.ts): its sections in its own
    *  coordinates around (x, y), mm c/c between nodes on the 250 grid, front toward +y unturned. */
   sections?: CounterSection[];
+  /** A furniture set it was placed with (Møte, Lounge, Mingle; Bjørn 14.11.2026): the objects sharing this id move,
+   *  turn and settle as one, and stay apart from each other's collisions (a chair may tuck under its table). Loosened
+   *  from the set, it is a piece on its own. */
+  set?: string;
 }
 
 /** One section of Disker og podier (K10, K12): x and z from node to node, mm, and its height `h`, CC 250, 500, 750 or

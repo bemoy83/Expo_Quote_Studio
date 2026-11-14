@@ -12,6 +12,7 @@ import { HEIGHT } from '../domain/podiums'
 import { artnrName, builtOf, catalog, idx, isCounter } from './env'
 import { funcOf, type PenPicks } from './podiumPen'
 import { wallPicksOf } from './wallPen'
+import { furniturePicksOf } from './furniturePen'
 import { kr } from './format'
 import { findMotif } from './motifs'
 import { dockToolOf, FLOOR_OTHER, penToolOf, type Brush, type DockTool, type PenTool, type Tool } from './tools'
@@ -57,6 +58,8 @@ export function useTools({ v, res, motifs, onPick, onErase }: ToolsInput) {
     const func = b.kind === 'podium' ? funcOf(b) : undefined
     if (func && b.kind === 'podium') setPicks((p) => ({ ...p, podium: { ...p.podium, [func]: b.stock } }))
     if (b.kind === 'opening') setPicks((p) => ({ ...p, wall: wallPicksOf(b) }))
+    const single = furniturePicksOf(b, catalog.products)
+    if (single) setPicks((p) => ({ ...p, object: single }))
     setTool(t)
     onPick()
   }
@@ -103,6 +106,7 @@ export function useTools({ v, res, motifs, onPick, onErase }: ToolsInput) {
       const z = stockSize(s)
       return { name: artnrName(s.artnr), meta: `${kr(z.length)} × ${kr(z.depth)}` }
     }
+    if (r?.product.set) return { name: r.product.name, meta: `${r.product.set.length} deler · ${kr(r.variant.price)} kr` }
     const name = artnrName(b.product)
     return { name, meta: r ? `${kr(r.variant.price)} kr${b.kind === 'floor' ? '/m²' : ''}` : undefined }
   }

@@ -2,9 +2,10 @@
 // Newer versions are refused with an explanation; older versions are migrated step by step.
 import { DEFAULT_CATALOG, OLD_COUNTERS, OLD_SHELF } from '../catalog/defaultCatalog';
 import { builtProduct } from '../catalog/podium';
+import { addObjectAnywhere } from '../domain/objects';
 import { asSections, isStock } from '../domain/podiumStock';
 import { addStockAnywhere, funcByShape } from '../domain/podiums';
-import { placeContext } from '../catalog/lookup';
+import { indexCatalog, placeContext } from '../catalog/lookup';
 import { RULES } from '../rules/rules';
 import { tilesFromCells } from '../domain/floor/tiles';
 import { nextId } from '../domain/ids';
@@ -159,7 +160,7 @@ export function parse(text: string): ParseResult {
     freeTextiles: Array.isArray(x.freeTextiles) ? x.freeTextiles : [],
     innerBeams: Array.isArray(x.innerBeams) ? x.innerBeams : undefined,
     shelves: Array.isArray(x.shelves) ? x.shelves : undefined,
-  })).map(retiredToLoose).map(countersAsSections).map(countedAsPodier).map(builtAsFunction);
+  })).map(retiredToLoose).map(countersAsSections).map(countedAsPodier).map(countedAsPlaced).map(builtAsFunction);
   return { ok: true, sketch: { project: project as unknown as Project, variants: vs, motifs: motifs as Motif[] } };
 }
 
@@ -198,6 +199,27 @@ function countedAsPodier(v: Variant): Variant {
     let k = 0;
     for (; k < c.qty; k++) {
       const placed = addStockAnywhere(next, ctx, BUILT('podier'), c.product);
+      if (!placed) break;
+      next = placed;
+    }
+    if (k < c.qty) left.push({ ...c, qty: c.qty - k });
+  }
+  return { ...next, counted: left };
+}
+
+/** Furniture counted before it could be drawn (konferansestol, sofa, kafébord; Bjørn 14.11.2026, for the furniture
+ *  sets), placed: one per piece where + in Utstyr puts it. One that finds no room stays counted. */
+function countedAsPlaced(v: Variant): Variant {
+  const idx = indexCatalog(DEFAULT_CATALOG);
+  const drawn = (a: string) => !isStock(a) && idx.byArtnr.get(a)?.product.kind === 'object';
+  if (!v.counted.some((c) => drawn(c.product))) return v;
+  const ctx = placeContext(RULES, DEFAULT_CATALOG);
+  let next: Variant = { ...v, counted: [] };
+  const left: Variant['counted'] = [];
+  for (const c of v.counted) {
+    let k = 0;
+    for (; drawn(c.product) && k < c.qty; k++) {
+      const placed = addObjectAnywhere(next, ctx, c.product);
       if (!placed) break;
       next = placed;
     }
