@@ -1,6 +1,5 @@
-// Drawing grid shared by the brushes that draw straight runs: Foga system walls and free-standing textile walls. One
-// drawing language with Disker og podier (Bjørn 14.11.2026): 1 m from the metre grid, 250 with Shift or «Fin». The pens
-// that draw a run use domain/runDraw.ts; Tøm's stroke grows along the axis it is dragged most (cellsTo).
+// Grid helpers: snapping to a grid and Tøm's stroke along walls, which grows along the axis it is dragged most
+// (cellsTo). The pens that draw a run (wall, textile, takdrager) use domain/runDraw.ts, Disker og podier the same axis.
 const EPS = 1e-9;
 
 /** x on a grid of `g`, rounded to the nearest node. */
@@ -24,6 +23,3 @@ export function cellsTo(a: number, to: number, step: number, max: number, minCel
   const n = Math.min(room, Math.max(minCells, Math.round(Math.abs(d) / step)));
   return tidy(a + dir * n * step);
 }
-
-/** Shift or «Fin» (Bjørn 14.11.2026): the pens draw in 250 steps, else 1 m on the metre grid (runDraw.ts). */
-export const FINE_STEP = 0.25;

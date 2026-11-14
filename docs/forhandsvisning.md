@@ -119,7 +119,7 @@ Tøm (`erase`) følger samme grammatikk, med dempet og skravert det som skal bor
 | --- | --- | --- |
 | Dør eller forheng i standvegg | `doorAllowed`, toast **etter** klikket | Skravert modul og hint allerede ved peking |
 | Vegg dratt over moduler som finnes | `paintWalls` (`domain/edit.ts`) hopper over dem | Ikke ugyldig. Fantomet viser bare de nye modulene, og pillen teller bare dem. Er ingen nye, hint «Veggen finnes allerede». Mockupen skraverte en innervegg oppå en standvegg, men appen gjør ikke dette til en feil, og det er appen som gjelder |
-| Takdrager som ikke kan tegnes (langs en standard takdrager o.l.) | `drawInnerBeam` gir `error`, toast etter slipp (`pointer/stroke.ts`) | Kjør samme sjekk mens man drar. Skravert strek, og feilteksten i hintlinjen |
+| Takdrager som ikke kan tegnes (langs en standard takdrager o.l.) | `drawInnerBeam` gir `error`, toast etter slipp (`pointer/run.ts`) | Kjør samme sjekk mens man drar. Skravert strek, og feilteksten i hintlinjen |
 | Møbel uten plass | `addObject` gir `null`, toast etter klikket | Skravert fotavtrykk og hint ved peking |
 | Dekal eller tekstil der det ikke er plass | toast etter klikket | Ingen sikte der, og hint |
 
