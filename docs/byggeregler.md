@@ -70,6 +70,10 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   den var, med sine stolper. Utstilleren betaler delingen: de korte modulene (V1) og stolpen mellom dem. Delene er
   utstillerens egne plater, så de er ikke platebytte.
   *Bjørn 14.11.2026 · kode `src/calc/context.ts`, `src/calc/lines/walls.ts` · test `src/domain/wallMeet.test.ts`*
+- **V12 Mål utenfor hele meter.** En vegg utenfor metrelinjene (V9) får mål på arbeidsordrens plan, så montøren kan
+  måle den ut: veggens linje én gang (ved en fri ende) og hver ende som ikke står på hel meter, hver fra nærmeste vegg
+  eller standkant på tvers av målet. Mål som er hele meter vises ikke; montøren leser dem av rutenettet.
+  *Bjørn 14.11.2026 · kode `src/domain/wallOffsets.ts`, `src/ui/plan/layers/DimLayer.tsx` · test `src/domain/wallOffsets.test.ts`*
 
 ## S · Støtte for systemvegg
 

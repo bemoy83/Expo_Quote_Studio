@@ -5,6 +5,8 @@ import type { PlanSelection } from '../selection'
 import { sizePx, usePlanScale, type PlanScale } from '../planScale'
 import { counterChains, counterDimSides, DIM_NEAR, DIM_TOTAL, planDims, sideLine, type InnerChain } from '../dims'
 import { objectBoxes } from '../../../domain/objects'
+import { wallOffsets } from '../../../domain/wallOffsets'
+import { builtModules } from '../../../domain/walls'
 import { stockOf } from '../../../domain/podiumStock'
 import { Chain } from '../DimChain'
 import { mainGroupOf } from '../../../catalog/groups'
@@ -12,7 +14,7 @@ import { isCounter, place, productOf, rules } from '../../env'
 import { textileOffset, textileWidth, wallWidth } from '../planStyle'
 
 /** All dimension chains for the current selection. */
-export function DimLayer({ v, selection, counters, off }: { v: Variant; selection: PlanSelection; counters?: boolean; off?: (group: string) => boolean }) {
+export function DimLayer({ v, selection, counters, walls, off }: { v: Variant; selection: PlanSelection; counters?: boolean; /** The measures of the walls off the metre lines (V12), on the work order. */ walls?: boolean; off?: (group: string) => boolean }) {
   const sc = usePlanScale()
   const dims = planDims(v, selection, sc.detail === 'compact')
   return (
@@ -29,8 +31,26 @@ export function DimLayer({ v, selection, counters, off }: { v: Variant; selectio
       })}
       {dims.inner && <Inner sc={sc} c={dims.inner} />}
       <CounterDims sc={sc} v={v} selection={selection} all={counters} off={off} />
+      {walls && !off?.('vegg') && <WallOffsets sc={sc} v={v} />}
     </g>
   )
+}
+
+/** Byggeregel V12: a wall off the metre lines measured out from the nearest wall or stand edge, only what is not a whole
+ *  metre, on the work order, since the montør reads it there (Bjørn 14.11.2026). Each chain just off the line it
+ *  measures, toward the stand's middle. */
+function WallOffsets({ sc, v }: { sc: PlanScale; v: Variant }) {
+  const centre = [v.stand.width / 2, v.stand.depth / 2]
+  // Just off the line, so a measure along a wall is not drawn on it
+  const clear = sizePx(sc, DIM_NEAR)
+  return wallOffsets(v.stand, v.walls, builtModules(v)).map((o) => {
+    // Along x when the two ends share their y
+    const k = Math.abs(o.from[1] - o.to[1]) < 1e-6 ? 1 : 0
+    const at = o.from[k]
+    const dir: 1 | -1 = centre[k] >= at ? 1 : -1
+    const ts = [o.from[1 - k], o.to[1 - k]].sort((a, b) => a - b)
+    return <Chain key={`${o.from}|${o.to}`} sc={sc} axis={k === 1 ? 'x' : 'y'} at={at + dir * clear} ts={ts} dir={dir} keep />
+  })
 }
 
 /** A counter's whole outer width and depth (K8), each on the side toward the stand's middle: the chosen one in the
