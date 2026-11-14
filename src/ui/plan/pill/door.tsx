@@ -6,7 +6,7 @@ import { roomName } from '../../../domain/rooms'
 import { isStandWall } from '../../../domain/walls'
 import { openingProducts, productOf, rules } from '../../env'
 import { mm } from '../../format'
-import { QBtn, Sep } from '../QuickPicks'
+import { QBtn, Sep } from '../quick/parts'
 import type { Chosen } from '../selection'
 import { Colours, type Content, type PillActions } from './parts'
 

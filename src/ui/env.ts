@@ -1,8 +1,9 @@
 // Rules and catalog the UI works with. The product list and the production assumptions can be edited, so these
 // are live bindings: setCatalogEdits and setInFrame replace them, save them and notify subscribers (App re-renders).
 import { DEFAULT_CATALOG } from '../catalog/defaultCatalog'
+import { builtProduct } from '../catalog/podium'
 import { applyEdits, NO_EDITS, type CatalogEdits } from '../catalog/edits'
-import { indexCatalog, placeContext } from '../catalog/lookup'
+import { displayName, indexCatalog, placeContext } from '../catalog/lookup'
 import type { Product } from '../catalog/types'
 import { EXAMPLE_BASIS, parseBasis, serializeBasis, type CostBasis } from '../cost/basis'
 import { readHistory, withEntry, type HistoryEntry } from '../cost/history'
@@ -103,17 +104,17 @@ export const plateName = (ral: string) => idx.wallByRal.get(ral)?.variant.name ?
 /** Wall colours: the variants of the wall product (level 1). */
 export const wallPlates = () => catalog.products.find((p) => p.id === catalog.system.wall)?.variants ?? []
 
-/** Disker og podier (Byggeregler K10–K13): the product the pen draws with. */
-export const podiumProduct = () => catalog.products.find((p) => p.podium)
+/** Disker og podier (Byggeregel K13): the product built on site for a function (`disker`, `podier`). */
+export const builtOf = (func: string) => builtProduct(catalog.products, func)
 export const isCounter = (artnr: string) => place.isCounter(artnr)
 
 export const openingProducts = () => catalog.products.filter((p) => p.opening)
 
-/** A product's name from the product list and, with more than one variant, the variant: «Bardisk», «Podie 50 × 50, 75 cm»
- *  (Bjørn 14.11.2026: every name comes from the product list). */
+/** What an art.nr is called: its name in the product list, the same as the calc and the quote (`displayName`): «Bardisk»,
+ *  «Podie 50 × 50 75 cm» (Bjørn 14.11.2026: every name comes from the product list). */
 export const artnrName = (artnr: string) => {
   const r = idx.byArtnr.get(artnr)
-  return r ? `${r.product.name}${r.product.variants.length > 1 ? `, ${r.variant.name}` : ''}` : artnr
+  return r ? displayName(r) : artnr
 }
 
 /** The name of a counter of Disker og podier: the standard item it is (K22), else the product it is built as on site,

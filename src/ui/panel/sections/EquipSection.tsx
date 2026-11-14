@@ -10,11 +10,12 @@ import { isStock, soldAs, stockByArtnr } from '../../../domain/podiumStock'
 import { shelvesOf } from '../../../domain/shelves/model'
 import type { Variant } from '../../../domain/types'
 import { Counter, IconButton } from '../../controls'
-import { builtProduct } from '../../../catalog/podium'
+import { builtFunc, builtProduct } from '../../../catalog/podium'
+import { withFunc } from '../../podiumPen'
 import { catalog, place } from '../../env'
 import { kr } from '../../format'
 import { penOn, type Brush } from '../../tools'
-import { ShelfIcon } from '../../plan/QuickPicks'
+import { ShelfIcon } from '../../plan/quick/parts'
 import { ObjectThumb, ProductRow, VariantChips } from '../ProductRow'
 import type { RailProps } from '../Rail'
 import { variantTotals } from './variantTotals'
@@ -85,7 +86,7 @@ function ShelfRow({ v, product, brush, tool, pick }: RailProps & { product: Prod
 
 /** A placed object (counter + brush) or a counted item (counter per variant). A standard counter (K22) is placed and
  *  drawn by Disker og podier, its preset chosen. */
-function CatalogRow({ v, product, brush, tool, pick, onEdit, onToast, showGroup }: RailProps & { product: Product; showGroup?: boolean }) {
+function CatalogRow({ v, product, brush, tool, pick, picks, onEdit, onToast, showGroup }: RailProps & { product: Product; showGroup?: boolean }) {
   const [vi, setVi] = useState<number | null>(null)
   const isObject = product.kind === 'object'
   const counts = product.variants.map((x) =>
@@ -101,10 +102,14 @@ function CatalogRow({ v, product, brush, tool, pick, onEdit, onToast, showGroup 
   const ral = brush?.kind === 'podium' ? brush.ral : COUNTER_STOCK_RAL
   // A standard counter's pen puts it behind its function and in hand, the pen kept as it was (Fri's height, Fin) (K22)
   const kept = brush?.kind === 'podium' ? brush : { kind: 'podium' as const, product: podium, ral }
-  const penBrush = (): Brush => (stock ? { ...kept, product: podium, stock: cur.artnr } : product.podium ? { kind: 'podium', product: cur.artnr, ral } : { kind: 'object', product: cur.artnr })
-  // The pen in hand draws this row: the product behind the function in hand (K22), «Fri» for Disker og podier, else the product
+  // A product built on site puts its function in hand, with the item last fetched for it (K13)
+  const func = product.podium ? builtFunc(catalog.products, cur.artnr) : undefined
+  const penBrush = (): Brush =>
+    stock ? { ...kept, product: podium, stock: cur.artnr } : func ? withFunc(kept, func, picks.podium ?? {}, catalog.products) : { kind: 'object', product: cur.artnr }
+  // The pen in hand draws this row: the item behind the function in hand on a click (K22), the product built on site for
+  // it on a drag (K13), else the product
   const inHand = brush?.kind === 'podium' && brush.stock ? stockByArtnr(brush.stock) : undefined
-  const drawsThis = brush?.kind === 'podium' ? (stock ? inHand?.product === product.id : !!product.podium && !brush.stock) : penOn(tool, brush, 'object', cur.artnr)
+  const drawsThis = brush?.kind === 'podium' ? (stock ? inHand?.product === product.id : !!func && inHand?.func === func) : penOn(tool, brush, 'object', cur.artnr)
   const pen = isObject && tool !== 'select' && drawsThis
   const setCount = (n: number) => {
     if (!isObject) return onEdit((x) => setCounted(x, cur.artnr, n))

@@ -1,8 +1,8 @@
 // A standard counter on the quick picks (Bjørn 14.11.2026): its sections seen from above with the lines between them, at
 // one scale for all, so a podie is drawn smaller than a disk. Never its art.nr.
-import { bounds } from '../../domain/podiumSections'
-import type { CounterSection } from '../../domain/types'
-import { RECIPES } from '../../foga/recipes'
+import { bounds } from '../../../domain/podiumSections'
+import type { CounterSection } from '../../../domain/types'
+import { RECIPES } from '../../../foga/recipes'
 
 const F = RECIPES.counter.face
 /** px per mm: Bardisk's 1 020 mm fill 22 px. */

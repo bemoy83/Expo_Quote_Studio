@@ -60,7 +60,7 @@ export function hint(tool: Tool, brush: Brush | null, carpet = false): Hint {
       // K22: a click places the item behind the function in hand, named, never by art.nr (Bjørn 14.11.2026)
       if (brush?.kind === 'podium' && brush.stock) {
         const s = stockByArtnr(brush.stock)
-        const name = s ? artnrName(s.artnr) : 'disken'
+        const name = artnrName(s?.artnr ?? brush.stock)
         const disk = s?.func === 'disker'
         // A drag draws the function's product built on site, named from the product list (K13)
         const built = artnrName(brush.product).toLowerCase()
