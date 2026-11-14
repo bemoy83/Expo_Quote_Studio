@@ -234,6 +234,8 @@ const products: Product[] = [
   one('5195', 'Barstol hvit/krom', 'object', 'stk', 'mob.sitte', 350, {
     dim: 'justerbar 58–78', footprint: { w: 0.42, d: 0.42, h: 0.78, round: true },
   }),
+  // Bjørn 14.11.2026: the table of Møtesett, price from him
+  { ...one('5221', 'Bord, sort plate/krom, 120 × 60', 'object', 'stk', 'mob.bord', 606, { dim: '120 × 60 · h 73', footprint: { w: 1.2, d: 0.6, h: 0.73 } }), variants: [{ artnr: '5221', name: 'Bord, sort plate/krom, 120 × 60', price: 606 }] },
   // Drawn since the furniture sets (Bjørn 14.11.2026); sizes are estimates until measured
   { ...counted('5190', 'Konferansestol', 'mob.sitte', 220, ['Sort', 'Hvit', 'Grå']), kind: 'object', dim: '50 × 52 · anslag', footprint: { w: 0.5, d: 0.52, h: 0.82 } },
   { ...counted('5210', 'Sofa 2-seter', 'mob.sitte', 1450, ['Grå', 'Sort']), kind: 'object', dim: '150 × 80 · anslag', footprint: { w: 1.5, d: 0.8, h: 0.8 } },
@@ -242,6 +244,13 @@ const products: Product[] = [
   { ...counted('5285', 'Kafébord ø70', 'mob.bord', 450), kind: 'object', dim: 'ø 70 · h 74 · anslag', footprint: { w: 0.7, d: 0.7, h: 0.74, round: true } },
   counted('5300', 'Loungegruppe', 'mob.grupper', 3900),
   // Furniture sets by use (Bjørn 14.11.2026): placed and moved together, each piece its own line
+  furnitureSet('sett-mote', 'Møtesett', 'Møte', [
+    { artnr: '5221', x: 0, y: 0, rot: 0 },
+    { artnr: '5190-1', x: -0.3, y: -0.5, rot: 180 },
+    { artnr: '5190-1', x: 0.3, y: -0.5, rot: 180 },
+    { artnr: '5190-1', x: -0.3, y: 0.5, rot: 0 },
+    { artnr: '5190-1', x: 0.3, y: 0.5, rot: 0 },
+  ]),
   furnitureSet('sett-lounge', 'Loungesett', 'Lounge', [
     { artnr: '5210-1', x: 0, y: -0.4, rot: 0 },
     { artnr: '5285', x: 0, y: 0.55, rot: 0 },
