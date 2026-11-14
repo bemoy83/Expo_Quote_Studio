@@ -246,7 +246,9 @@ og kalkyle med 6560, som er et ferdig oppsett i det (K22).
   (`podiumFoil`, egen artikkel 8023 `sys.foilCounter`). Vist i risset (`sideDecor` i `podiumView.ts`,
   `Handles` i `PodiumElevation`), i planen (`PrintMarks` i `layers/ObjectLayer.tsx`) og i 3D (`buildPodiumDecor` i
   `scene3d/build/counter.ts`).
-- Standarddisker (K22): `domain/podiumStock.ts` (`STOCK_COUNTERS`: art.nr og seksjoner per standarddisk, 6560 først;
+- Standarddisker (K22): `domain/podiumStock.ts` (`STOCK_COUNTERS`: art.nr, produkt, funksjon (`func`, undergruppen
+  `disker` eller `podier`) og seksjoner per standardvare, 6560 først, så Podie 50 × 50 i fire høyder; `stockSize` gir
+  utvendig mål og høyde til prisartikkelen `ITEM.counter(l, d, h)` i `cost/itemDefs.ts` (`READY`);
   `stockOf`: hvilken standarddisk seksjonene er, i hvilken som helst dreining, uten farge og dekor; `stockSections`).
   Kalkylen (`calc/lines/objects.ts`) gir en standarddisk katalogens linje og plukker den hel; `builtCounterParts`
   hopper over den; `soldAs` er varen et objekt selges som (standarddiskens art.nr, ellers produktet). Navnet i pille,
@@ -254,7 +256,7 @@ og kalkyle med 6560, som er et ferdig oppsett i det (K22).
   `podiumAt` setter standarddisken med `frontRot` fra `counters.ts`. I Utstyr (`EquipSection.tsx`) teller raden for 6560
   standarddiskene (`soldAs`), + setter en med `addStockAnywhere` (podiums.ts), og penselen velger Disker og podier med
   6560. Gamle skisser: `asSections` (podiumStock.ts) via `countersAsSections` i `persistence/file.ts` gjør disker fra
-  Disker om til seksjoner når de åpnes.
+  Disker om til seksjoner når de åpnes, og `countedAsPodier` gjør talte podier (5450) om til podier på standen.
 - Høyde i 3D (K18): `podiumTopAt` og draget `podiumTop` i `scene3d/pointer/drag.ts`, `onUpright` i `pointer/hits.ts`.
   Arbeidsordren: `workorder/PodiumSides.tsx` («Disker sett utenfra», `PodiumElevation` uten håndtak) og
   `workorder/podiumSideList.ts` (hvilke sider som tegnes).

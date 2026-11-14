@@ -1,7 +1,10 @@
 // Sketch file: JSON `{ format: 'standskisse', versjon, prosjekt, varianter, egneMotiver }`.
 // Newer versions are refused with an explanation; older versions are migrated step by step.
 import { DEFAULT_CATALOG, OLD_COUNTERS, OLD_SHELF } from '../catalog/defaultCatalog';
-import { asSections } from '../domain/podiumStock';
+import { asSections, isStock } from '../domain/podiumStock';
+import { addStockAnywhere } from '../domain/podiums';
+import { placeContext } from '../catalog/lookup';
+import { RULES } from '../rules/rules';
 import { tilesFromCells } from '../domain/floor/tiles';
 import { nextId } from '../domain/ids';
 import { rectOutline } from '../domain/outline';
@@ -155,7 +158,7 @@ export function parse(text: string): ParseResult {
     freeTextiles: Array.isArray(x.freeTextiles) ? x.freeTextiles : [],
     innerBeams: Array.isArray(x.innerBeams) ? x.innerBeams : undefined,
     shelves: Array.isArray(x.shelves) ? x.shelves : undefined,
-  })).map(retiredToLoose).map(countersAsSections);
+  })).map(retiredToLoose).map(countersAsSections).map(countedAsPodier);
   return { ok: true, sketch: { project: project as unknown as Project, variants: vs, motifs: motifs as Motif[] } };
 }
 
@@ -167,6 +170,30 @@ const PODIUM = DEFAULT_CATALOG.products.find((p) => p.podium)!.id;
 function countersAsSections(v: Variant): Variant {
   if (!v.objects.some((o) => asSections(o, PODIUM) !== o)) return v;
   return { ...v, objects: v.objects.map((o) => asSections(o, PODIUM)) };
+}
+
+/** Podier counted before Podie 50 × 50 became a standard podie of Disker og podier (Bjørn 14.11.2026), placed: one per
+ *  piece where + in Utstyr puts it, in the height its art.nr has always meant (K22). One that finds no room stays
+ *  counted. */
+function countedAsPodier(v: Variant): Variant {
+  if (!v.counted.some((c) => isStock(c.product))) return v;
+  const ctx = placeContext(RULES, DEFAULT_CATALOG);
+  let next: Variant = { ...v, counted: [] };
+  const left: Variant['counted'] = [];
+  for (const c of v.counted) {
+    if (!isStock(c.product)) {
+      left.push(c);
+      continue;
+    }
+    let k = 0;
+    for (; k < c.qty; k++) {
+      const placed = addStockAnywhere(next, ctx, PODIUM, c.product);
+      if (!placed) break;
+      next = placed;
+    }
+    if (k < c.qty) left.push({ ...c, qty: c.qty - k });
+  }
+  return { ...next, counted: left };
 }
 
 /** Counted products the catalog no longer has, kept as loose lines at their price so the quote is the same: «Hylle 1 m»

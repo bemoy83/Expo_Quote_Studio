@@ -6,7 +6,7 @@ import { counterBuildOf } from '../../domain/counterShape';
 import { innerCorners, podiumHeights, podiumName, podiumSize } from '../../domain/podiums';
 import { podiumHas } from '../../domain/podiumFaces';
 import { lockedParts } from '../../domain/podiumLocks';
-import { soldAs, stockOf } from '../../domain/podiumStock';
+import { soldAs, stockByArtnr, stockOf, stockSize } from '../../domain/podiumStock';
 import { profileMetres, type CounterBuild } from '../../foga/counter';
 import { RECIPES } from '../../foga/recipes';
 import type { Use } from '../../pricing/model';
@@ -24,14 +24,17 @@ export function objectLines(c: CalcContext): CalcLine[] {
   const objectCounts = countBy(v.objects.filter(stock).map(soldAs));
   for (const x of v.counted) objectCounts.set(x.product, (objectCounts.get(x.product) ?? 0) + x.qty);
   const lines = [...objectCounts].map(([a, n]) => {
-    const counter = c.idx.byArtnr.get(a)?.product.counter;
+    // A standard counter or podie by its own size and height (K22), else the product's
+    const ready = stockByArtnr(a);
+    const counter: { length: number; depth: number; h?: number } | undefined = ready ? stockSize(ready) : c.idx.byArtnr.get(a)?.product.counter;
     if (!counter) return c.line(a, n);
+    const { h } = counter;
     const placed = v.objects.filter((o) => stock(o) && soldAs(o) === a);
     const swapped = placed.filter((o) => o.ral).length;
     const colours = [...countBy(placed.map(counterRal))].sort(([x], [y]) => x.localeCompare(y));
     return c.line(a, n, swapped ? { meta: colours.map(([ral, k]) => `RAL ${ral}${colours.length > 1 ? ` × ${k}` : ''}`).join(' · ') } : {}, [
-      { id: ITEM.counter(counter.length, counter.depth), qty: n },
-      ...(swapped ? [{ id: ITEM.counterPlates(counter.length, counter.depth), qty: swapped }] : []),
+      { id: ITEM.counter(counter.length, counter.depth, h), qty: n },
+      ...(swapped ? [{ id: ITEM.counterPlates(counter.length, counter.depth, h), qty: swapped }] : []),
     ]);
   });
   return [...lines, ...v.objects.filter((o) => !stock(o)).map((o) => podiumLine(c, o))];

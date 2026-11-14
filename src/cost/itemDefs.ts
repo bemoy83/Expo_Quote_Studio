@@ -3,7 +3,9 @@
 // examples here are what the app ships with. Kostmodell: docs/kostmodell.md.
 import type { ItemRecipe, PriceItem } from './items';
 import { railLengths } from '../domain/shelves/corners';
-import { counterBuild, layoutBuild, profileMetres, STOCK_OPEN, stockCounter } from '../foga/counter';
+import { counterBuild, layoutBuild, profileMetres, STOCK_OPEN, stockCounter, type CounterBuild } from '../foga/counter';
+import { counterBuildOf } from '../domain/counterShape';
+import { STOCK_COUNTERS, stockSize } from '../domain/podiumStock';
 import { RECIPES } from '../foga/recipes';
 import { RULES } from '../rules/rules';
 import type { Time } from './time';
@@ -57,10 +59,11 @@ export const ITEM = {
   shelfMount: 'montering-hylle',
   /** Picking shelves for an order, once whatever the number (Bjørn 8.11.2026: 10 min per product type). */
   shelfPick: 'vareplukk-hyller',
-  /** Counter in stock, ready built and picked whole (Byggeregel K1): its profiles, plates and boards, by outer size. */
-  counter: (length: number, depth: number) => `disk-${length}x${depth}`,
+  /** A standard counter or podie, ready built and picked whole (Byggeregler K1, K22): its profiles, plates and boards,
+   *  by outer size and, unless CC 1000, height CC. */
+  counter: (length: number, depth: number, h: number = RECIPES.counter.top) => `disk-${length}x${depth}${h === RECIPES.counter.top ? '' : `-h${h}`}`,
   /** Its plates swapped for plates in another wall colour (Byggeregel K6), and back after the fair. */
-  counterPlates: (length: number, depth: number) => `disk-platebytte-${length}x${depth}`,
+  counterPlates: (length: number, depth: number, h: number = RECIPES.counter.top) => `disk-platebytte-${length}x${depth}${h === RECIPES.counter.top ? '' : `-h${h}`}`,
   /** A counter drawn and built on site (Byggeregler K7–K9): its profiles by the metre, the 600, the plates by the m²
    *  (cut from wall plates), the boards by size, and the work per whole and half metre and per corner. */
   counterProfile: (code: string) => `disk-profil-${code}`,
@@ -82,6 +85,13 @@ const def = (id: string, name: string, unit: PriceItem['unit'], transfer: PriceI
 
 /** The counter in stock (6560). */
 const STOCK = RECIPES.counter.stock;
+
+/** The standard counters and podier (K22), each ready built: its outer size and build. 6560 as the stock build. */
+const READY = STOCK_COUNTERS.map((s) => {
+  const z = stockSize(s);
+  const what = s.func === 'podier' ? 'Podie' : 'Bardisk';
+  return { s, z, what, b: s.artnr === '6560' ? stockCounter({ length: STOCK.length, depth: STOCK.depth }) : counterBuildOf({ sections: [...s.sections] }) };
+});
 
 /** The profiles a counter built on site is built of (K8), and its boards: those of a whole part and a half, as a straight
  *  1,5 m builds them, and the top of every section of Disker og podier, 250 to 1000 c/c each way (K10) (long × short). */
@@ -152,8 +162,10 @@ export const ITEM_DEFS: readonly ItemDef[] = [
   def(ITEM.shelfBoardTwoThirds, '2/3 hylleplate 18 × 300 × 655 mm', 'stk'),
   def(ITEM.shelfMount, 'Montering per hylle', 'stk'),
   def(ITEM.shelfPick, 'Vareplukk hyller, per ordre', 'stk'),
-  def(ITEM.counter(STOCK.length, STOCK.depth), `Bardisk ${STOCK.length} × ${STOCK.depth} mm, ferdig montert`, 'stk'),
-  def(ITEM.counterPlates(STOCK.length, STOCK.depth), `Platebytte bardisk ${STOCK.length} × ${STOCK.depth} mm, plater i RAL`, 'stk'),
+  ...READY.flatMap(({ s, z, what }) => [
+    def(ITEM.counter(z.length, z.depth, z.h), `${what} ${z.length} × ${z.depth} mm, CC ${z.h}, ferdig montert`, 'stk'),
+    def(ITEM.counterPlates(z.length, z.depth, z.h), `Platebytte ${what.toLowerCase()} ${s.artnr}, plater i RAL`, 'stk'),
+  ]),
   ...COUNTER_PROFILES.map((code) => def(ITEM.counterProfile(code), `Disk bygget på stedet: profil ${code}, per meter`, 'm')),
   def(ITEM.counterCoupling, 'Disk bygget på stedet: kobling 600', 'stk'),
   def(ITEM.counterPlateM2, 'Disk bygget på stedet: plate 3 mm, per m²', 'm²'),
@@ -202,11 +214,15 @@ export const EXAMPLE_TIMES: Readonly<Record<string, Time>> = {
   // type and walking per work order are indirect, per order
   [ITEM.shelfMount]: onSite(1.5, 1),
   [ITEM.shelfPick]: { plukk: 10 },
-  // Counter picked, washed and carried whole, set in place and taken back: as furniture until Bjørn gives its own
-  [ITEM.counter(STOCK.length, STOCK.depth)]: { ...pvt(1, 2, 2), ...onSite(1, 1) },
-  // Its plates in a wall colour (K6): the coloured plates picked and washed, the swap in the workshop before and after
-  // the fair as six plates of a stand wall swap. Eksempeltall until Bjørn gives his
-  [ITEM.counterPlates(STOCK.length, STOCK.depth)]: { ...pvt(0.5, 1, 0), ...onSite(6, 4) },
+  // A standard counter or podie picked, washed and carried whole, set in place and taken back: as furniture until Bjørn
+  // gives its own. Its plates in a wall colour (K6): the coloured plates picked and washed, the swap in the workshop
+  // before and after the fair as six plates of a stand wall swap. Eksempeltall until Bjørn gives his
+  ...Object.fromEntries(
+    READY.flatMap(({ z }) => [
+      [ITEM.counter(z.length, z.depth, z.h), { ...pvt(1, 2, 2), ...onSite(1, 1) }],
+      [ITEM.counterPlates(z.length, z.depth, z.h), { ...pvt(0.5, 1, 0), ...onSite(6, 4) }],
+    ]),
+  ),
   // A counter built on site (K9, Bjørn 12.11.2026: 20–30 min on 1 m): placeholders, 26 min in all per whole metre (its
   // parts picked, washed and carried, built up and taken down), half that for a half, 6 more per corner. With 26 a
   // drawn 1,0 m prices at about the 1320 of the counter in stock
@@ -268,8 +284,12 @@ export const EXAMPLE_RECIPES: Readonly<Record<string, ItemRecipe>> = {
   [ITEM.shelfBoardTwoThirds]: { own: [['HYLLEPLATE-655x300', 1, 'plate']], dg: 'utleie' },
   [ITEM.shelfMount]: work,
   [ITEM.shelfPick]: work,
-  [ITEM.counter(STOCK.length, STOCK.depth)]: counterRecipe(STOCK.length, STOCK.depth),
-  [ITEM.counterPlates(STOCK.length, STOCK.depth)]: counterPlatesRecipe(STOCK.length, STOCK.depth),
+  ...Object.fromEntries(
+    READY.flatMap(({ z, b }): [string, ItemRecipe][] => [
+      [ITEM.counter(z.length, z.depth, z.h), counterRecipe(b)],
+      [ITEM.counterPlates(z.length, z.depth, z.h), { own: [['HDF-976x2440', plateShare(b), 'plate']], dg: 'utleie' }],
+    ]),
+  ),
   ...Object.fromEntries(COUNTER_PROFILES.map((code): [string, ItemRecipe] => [ITEM.counterProfile(code), { parts: [[code, 1]], dg: 'utleie' }])),
   [ITEM.counterCoupling]: { parts: [['600', 1]], dg: 'utleie' },
   [ITEM.counterPlateM2]: { own: [['HDF-976x2440', Math.round((1 / WALL_PLATE_M2) * 1000) / 1000, 'plate']], dg: 'utleie' },
@@ -281,25 +301,23 @@ export const EXAMPLE_RECIPES: Readonly<Record<string, ItemRecipe>> = {
   [ITEM.counterShelf]: work,
 };
 
-/** A counter's plates in a wall colour (K6): the coloured plates, rented out like the white ones, and the work. */
-function counterPlatesRecipe(length: number, depth: number): ItemRecipe {
-  return { own: [['HDF-976x2440', plateShare(stockCounter({ length, depth })), 'plate']], dg: 'utleie' };
-}
-
 /** A counter's plates as their share of a whole wall plate, cut from one (K4). */
-function plateShare(b: ReturnType<typeof stockCounter>): number {
+function plateShare(b: CounterBuild): number {
   const plate = RECIPES.wall.plate;
   return Math.round((b.plates.reduce((s, p) => s + p.w * p.h, 0) / (plate.w * plate.h)) * 1000) / 1000;
 }
 
-/** A ready-built counter (Byggeregler K1–K5): its profiles by the metre and the 600, rented out; the plates as their
- *  share of a whole wall plate (cut from one), and the two boards. */
-function counterRecipe(length: number, depth: number): ItemRecipe {
-  const b = stockCounter({ length, depth });
-  const [top] = b.boards;
+/** A ready-built counter or podie (Byggeregler K1–K5, K22): its profiles by the metre and the 600, rented out; the
+ *  plates as their share of a whole wall plate (cut from one), and its boards. */
+function counterRecipe(b: CounterBuild): ItemRecipe {
+  const boards = new Map<string, number>();
+  for (const x of b.boards) {
+    const id = `FIBRAPLAST6-${Math.max(x.w, x.d)}x${Math.min(x.w, x.d)}`;
+    boards.set(id, (boards.get(id) ?? 0) + 1);
+  }
   return {
     parts: [...Object.entries(profileMetres(b)).map(([code, m]): [string, number] => [code, Math.round(m * 1000) / 1000]), ['600', b.couplings]],
-    own: [['HDF-976x2440', plateShare(b), 'plate'], [`FIBRAPLAST6-${top.w}x${top.d}`, b.boards.length, 'plate']],
+    own: [['HDF-976x2440', plateShare(b), 'plate'], ...[...boards].map(([id, n]): [string, number, 'plate'] => [id, n, 'plate'])],
     dg: 'utleie',
   };
 }
