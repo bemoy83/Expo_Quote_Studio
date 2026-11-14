@@ -42,15 +42,15 @@ describe('enclosures', () => {
   it('an L-shaped area gets its six-cornered outline', () => {
     const v = path(row(), [3, 0], [3, 1], [2, 1], [2, 2], [0, 2]);
     const [e] = enclosures(v);
-    expect(e.cells).toHaveLength(5);
+    expect(e.cells).toHaveLength(5 * 16);
     expect(e.outline).toEqual(ell);
   });
   it('an area round another area has a hole and no outline', () => {
     // A 4 × 3 box with a 1 × 1 box inside it
     const box = path(path(row(6, 4), [0, 3], [4, 3], [4, 0]), [1, 1], [2, 1], [2, 2], [1, 2], [1, 1]);
     const areas = enclosures(box);
-    expect(areas.map((e) => e.cells.length).sort()).toEqual([1, 11]);
-    expect(areas.find((e) => e.cells.length === 11)!.outline).toBeNull();
+    expect(areas.map((e) => e.cells.length / 16).sort((a, b) => a - b)).toEqual([1, 11]);
+    expect(areas.find((e) => e.cells.length === 11 * 16)!.outline).toBeNull();
   });
   it('a stand closed all round is not an area of its own', () => {
     const v = paintWalls(row(), [0, 4], [6, 4]);

@@ -1,21 +1,21 @@
 // Frihåndsrom: walls drawn around an area with a door or curtain become a room.
-// The stand is split into 1 × 1 m cells. Two neighbouring cells are connected unless a wall module (a door or curtain
-// included) stands between them. Everything reachable from an open edge of the stand is the stand; the rest falls
+// The stand is split into 250 × 250 cells (R7), so walls off the metre lines close areas too. Two neighbouring cells
+// are connected unless a wall module (a door or curtain included) stands between them. Everything reachable from an open edge of the stand is the stand; the rest falls
 // apart into closed areas. Detection does not care about shape: any area bounded by one loop (a rectangle, an L,
 // a U …) becomes a room with that outline; an area with a hole does not.
-// Byggeregel R3 (docs/byggeregler.md).
+// Byggeregler R3, R7 (docs/byggeregler.md).
 import { wallDirection, wallModules } from './grid';
 import { canMoveWall, splitWall } from './edit';
 import { ownPlate } from './panels';
 import { replaceWalls } from './replaceWalls';
-import { cellId, cellRim, cellSides, outlineOf, outlineSides, rimKeys, type Cell } from './outline';
+import { CELL, MIN_SIDE, cellId, cellRim, cellSides, edgesOf, onOutline, outlineOf, outlineSides, type Cell } from './outline';
 import { overlapsRoom, roomWalls, syncRooms } from './rooms';
 import type { Point, Room, Variant } from './types';
 import { type BuiltModule, builtModules, defaultSwing } from './walls';
 import { nextId } from './ids';
 
 export interface Enclosure {
-  /** Cells `i,j` (back-left corner in metres), sorted: the same area always has the same key. */
+  /** Cells `i,j` (back-left corner, counted in cells), sorted: the same area always has the same key. */
   key: string;
   cells: Cell[];
   /** The outline round the cells (see outline.ts), or null when the area has a hole. */
@@ -24,9 +24,9 @@ export interface Enclosure {
 
 /** Closed areas of the variant: cells that cannot be reached from an open stand edge. */
 export function enclosures(v: Variant, mods: BuiltModule[] = builtModules(v)): Enclosure[] {
-  const W = Math.round(v.stand.width);
-  const D = Math.round(v.stand.depth);
-  const walled = new Set(mods.map((m) => m.key));
+  const W = Math.round(v.stand.width / CELL);
+  const D = Math.round(v.stand.depth / CELL);
+  const walled = new Set(mods.flatMap((m) => edgesOf(m.a, m.b)));
   const onStand = ([i, j]: Cell) => i >= 0 && j >= 0 && i < W && j < D;
   const seen = new Set<string>();
   const flood = (start: Cell[]): Cell[] => {
@@ -69,10 +69,11 @@ const drawn = (v: Variant, wallId: string) => {
 };
 
 /** A closed area that may become a room: not in a room, has a door or curtain, and at least one drawn side. */
-function qualifies(v: Variant, outline: Point[], byKey: Map<string, BuiltModule>): boolean {
-  if (overlapsRoom(v, outline)) return false;
-  const around = rimKeys(outline).map((k) => byKey.get(k));
-  return around.some((m) => m?.opening) && around.some((m) => m && drawn(v, m.wallId));
+function qualifies(v: Variant, outline: Point[], mods: BuiltModule[]): boolean {
+  // No side under 1 m (R2): a narrower nook stays plain walls
+  if (overlapsRoom(v, outline) || outlineSides(outline).some(([p, q]) => Math.abs(q[0] - p[0]) + Math.abs(q[1] - p[1]) < MIN_SIDE - 1e-9)) return false;
+  const around = mods.filter((m) => onOutline(outline, m.a, m.b));
+  return around.some((m) => m.opening) && around.some((m) => drawn(v, m.wallId));
 }
 
 /**
@@ -81,11 +82,10 @@ function qualifies(v: Variant, outline: Point[], byKey: Map<string, BuiltModule>
  */
 export function newlyClosedRooms(before: Variant, after: Variant): Point[][] {
   const was = builtModules(before);
-  const wasOpening = new Set(was.filter((m) => m.opening).map((m) => m.key));
+  const wasOpening = new Set(was.filter((m) => m.opening).flatMap((m) => edgesOf(m.a, m.b)));
   const old = new Set(enclosures(before, was).filter((e) => cellRim(e.cells).some((k) => wasOpening.has(k))).map((e) => e.key));
   const mods = builtModules(after);
-  const byKey = new Map(mods.map((m) => [m.key, m]));
-  return enclosures(after, mods).flatMap((e) => (e.outline && !old.has(e.key) && qualifies(after, e.outline, byKey) ? [e.outline] : []));
+  return enclosures(after, mods).flatMap((e) => (e.outline && !old.has(e.key) && qualifies(after, e.outline, mods) ? [e.outline] : []));
 }
 
 /**
@@ -95,15 +95,10 @@ export function newlyClosedRooms(before: Variant, after: Variant): Point[][] {
  */
 export function wallsToRoom(v: Variant, outline: Point[], label = 'Rom'): Variant | null {
   const mods = builtModules(v);
-  const byKey = new Map(mods.map((m) => [m.key, m]));
-  if (!qualifies(v, outline, byKey)) return null;
-  const edge = new Set(rimKeys(outline));
+  if (!qualifies(v, outline, mods)) return null;
   // The room's colour: what most of its drawn modules have
   const plates = new Map<string, number>();
-  for (const k of edge) {
-    const m = byKey.get(k);
-    if (m && drawn(v, m.wallId)) plates.set(m.plate, (plates.get(m.plate) ?? 0) + 1);
-  }
+  for (const m of mods) if (onOutline(outline, m.a, m.b) && drawn(v, m.wallId)) plates.set(m.plate, (plates.get(m.plate) ?? 0) + 1);
   const plate = [...plates].sort((a, b) => b[1] - a[1])[0]?.[0];
   const room: Room = { id: nextId(v.rooms.map((r) => r.id), 'rom'), outline, label, ...ownPlate(v, plate) };
 
@@ -121,7 +116,7 @@ export function wallsToRoom(v: Variant, outline: Point[], label = 'Rom'): Varian
   const pieces = v.walls.flatMap((w) => {
     if (!drawn(v, w.id)) return [w];
     const mods = wallModules(w);
-    const parts = splitWall(w, (t) => !edge.has(mods[t].key), ids);
+    const parts = splitWall(w, (t) => !onOutline(outline, mods[t].a, mods[t].b), ids);
     ids.push(...parts.map((x) => x.id));
     return parts;
   });

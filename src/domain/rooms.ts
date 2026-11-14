@@ -13,6 +13,7 @@ import {
   area,
   bounds,
   cellBounds,
+  CELL,
   cellsOf,
   contains,
   isHorizontal,
@@ -24,9 +25,8 @@ import {
   outlineSides,
   outlinesOverlap,
   rectOutline,
-  rimKeys,
+  onOutline,
   settle,
-  sideLength,
   translate,
   type Rect,
 } from './outline';
@@ -57,8 +57,7 @@ function sideOfWallId(wallId: string, roomId: string): number | undefined {
 
 /** Doors and curtains around a room, also those in a stand wall or another room's side it shares. */
 export function roomOpenings(v: Variant, r: Room): Opening[] {
-  const rim = new Set(rimKeys(r.outline));
-  return builtModules(v).flatMap((m) => (m.opening && rim.has(m.key) ? [m.opening] : []));
+  return builtModules(v).flatMap((m) => (m.opening && onOutline(r.outline, m.a, m.b) ? [m.opening] : []));
 }
 
 /** The sides of a room as walls. */
@@ -183,8 +182,13 @@ export function syncRooms(v: Variant): Variant {
  * foils keep their place on the side they are on, a door left past an end of its side moves to the nearest module,
  * and things on a side that is gone are dropped. `shift(i)` is how far side i itself moved.
  */
+/** How many modules things on a side move when the side's start moved `offset` m: whole modules, so a side whose start
+ *  moved off the metre (R5) keeps its doors in their module counted from the start, the nearest the world place allows. */
+const steps = (offset: number) => Math.round(offset);
+
 function reshape(v: Variant, r: Room, outline: Point[], shift?: (i: number) => Point): Variant {
   const match = matchSides(r.outline, outline, shift);
+  const sideModules = (side: number) => moduleCount({ id: '', from: outlineSide(outline, side)[0], to: outlineSide(outline, side)[1] });
   const onSide = (wallId: string) => {
     const side = sideOfWallId(wallId, r.id);
     return side === undefined ? undefined : match[side];
@@ -192,8 +196,8 @@ function reshape(v: Variant, r: Room, outline: Point[], shift?: (i: number) => P
   const gaps = (r.gaps ?? []).flatMap((g) => {
     const m = match[g.side];
     if (!m) return [];
-    const module = g.module + m.offset;
-    return module >= 0 && module < sideLength(outline, m.side) ? [{ side: m.side, module }] : [];
+    const module = g.module + steps(m.offset);
+    return module >= 0 && module < sideModules(m.side) ? [{ side: m.side, module }] : [];
   });
   const room: Room = { ...r, outline };
   if (gaps.length) room.gaps = gaps;
@@ -204,7 +208,7 @@ function reshape(v: Variant, r: Room, outline: Point[], shift?: (i: number) => P
     openings: v.openings.flatMap((o) => {
       if (!isRoomWallId(o.wallId, r.id)) return [o];
       const m = onSide(o.wallId);
-      return m ? [{ ...o, wallId: roomWallId(r.id, m.side), module: Math.max(0, o.module + m.offset) }] : [];
+      return m ? [{ ...o, wallId: roomWallId(r.id, m.side), module: Math.max(0, o.module + steps(m.offset)) }] : [];
     }),
     textiles: v.textiles.flatMap((t) => {
       if (!isRoomWallId(t.wallId, r.id)) return [t];
@@ -214,7 +218,7 @@ function reshape(v: Variant, r: Room, outline: Point[], shift?: (i: number) => P
     foils: v.foils.flatMap((f) => {
       if (!isRoomWallId(f.wallId, r.id)) return [f];
       const m = onSide(f.wallId);
-      const module = m ? f.module + m.offset : -1;
+      const module = m ? f.module + steps(m.offset) : -1;
       return m && module >= 0 ? [{ ...f, wallId: roomWallId(r.id, m.side), module }] : [];
     }),
     ...(v.shelves
@@ -222,7 +226,7 @@ function reshape(v: Variant, r: Room, outline: Point[], shift?: (i: number) => P
           shelves: v.shelves.flatMap((f) => {
             if (!isRoomWallId(f.wallId, r.id)) return [f];
             const m = onSide(f.wallId);
-            const module = m ? f.module + m.offset : -1;
+            const module = m ? f.module + steps(m.offset) : -1;
             return m && module >= 0 ? [{ ...f, wallId: roomWallId(r.id, m.side), module }] : [];
           }),
         }
@@ -242,7 +246,7 @@ function carryPanels(before: Variant, after: Variant, id: string, to: (side: num
     if (!before.panels?.[m.key] || side === undefined) continue;
     const t = to(side);
     const w = t && after.walls.find((x) => x.id === roomWallId(id, t.side));
-    const at = w && wallModules(w)[m.index + t.offset];
+    const at = w && wallModules(w)[m.index + steps(t.offset)];
     if (at) moves.set(m.key, at.key);
   }
   return prunePanels(movePanels(after, moves));
@@ -298,7 +302,7 @@ export function addDefaultRoom(v: Variant, doorProduct: string): Variant | null 
 }
 
 /**
- * Move a room by whole metres, kept inside the stand. Furniture standing in it moves along; doors, textiles and
+ * Move a room by dx, dy m (on the 250 grid, R5), kept inside the stand. Furniture standing in it moves along; doors, textiles and
  * foils on its sides keep their offsets and so move too; a door that would land in a stand wall moves to the nearest
  * module of the room where it may stand (settleDoors). Returns v when the room cannot go there.
  */
@@ -312,8 +316,9 @@ export function moveRoomDoors(v: Variant, id: string, dx: number, dy: number): {
   const r = v.rooms.find((x) => x.id === id);
   if (!r) return same;
   const b = bounds(r.outline);
-  const x = Math.max(0, Math.min(v.stand.width - b.w, b.x + Math.round(dx)));
-  const y = Math.max(0, Math.min(v.stand.depth - b.d, b.y + Math.round(dy)));
+  const snap = (n: number) => Math.round(n / CELL) * CELL;
+  const x = Math.max(0, Math.min(v.stand.width - b.w, b.x + snap(dx)));
+  const y = Math.max(0, Math.min(v.stand.depth - b.d, b.y + snap(dy)));
   const outline = translate(r.outline, x - b.x, y - b.y);
   if ((x === b.x && y === b.y) || !fits(v, id, outline)) return same;
   const inside = (o: PlacedObject) => contains(r.outline, o.x, o.y);
@@ -332,18 +337,19 @@ export function moveRoomDoors(v: Variant, id: string, dx: number, dy: number): {
  * Things on the other sides keep their place in the world.
  * Returns v when nothing changes.
  */
-export function resizeRoom(v: Variant, id: string, side: number, delta: number): Variant {
-  return resizeRoomDoors(v, id, side, delta).v;
+export function resizeRoom(v: Variant, id: string, side: number, delta: number, step = 1): Variant {
+  return resizeRoomDoors(v, id, side, delta, step).v;
 }
 
 /** As resizeRoom, and whether a door had to move to another module to stay out of the stand walls. */
-export function resizeRoomDoors(v: Variant, id: string, side: number, delta: number): { v: Variant; doorsMoved: boolean } {
+export function resizeRoomDoors(v: Variant, id: string, side: number, delta: number, step = 1): { v: Variant; doorsMoved: boolean } {
   const same = { v, doorsMoved: false };
   const r = v.rooms.find((x) => x.id === id);
   if (!r || side < 0 || side >= r.outline.length) return same;
   const hz = sideIsHorizontal(r, side);
-  // The furthest step toward `delta` that gives a valid room
-  for (let k = Math.round(delta); k !== 0; k -= Math.sign(k)) {
+  // The furthest step toward `delta` that gives a valid room: whole metres, or 250 with Shift or Fin (R5)
+  for (let n = Math.round(delta / step); n !== 0; n -= Math.sign(n)) {
+    const k = n * step;
     const moved = moveSide(r.outline, side, k);
     const outline = moved && settle(moved);
     if (!outline || !fits(v, id, outline)) continue;
@@ -365,7 +371,7 @@ export function clampRooms(v: Variant): Variant {
     const dy = back(b.y, b.d, D);
     const moved = translate(r.outline, dx, dy);
     const all = cellsOf(moved);
-    const cells = all.filter(([i, j]) => i < W && j < D);
+    const cells = all.filter(([i, j]) => i * CELL < W - 1e-9 && j * CELL < D - 1e-9);
     if (!cells.length) return removeRoom(acc, r.id);
     // The part on the stand, or its bounding rectangle when the cut falls apart
     const outline = cells.length === all.length ? moved : (outlineOf(cells) ?? rectOutline(cellBounds(cells)));
