@@ -24,7 +24,7 @@ const lift = (v: Variant) => {
   const mods = builtModules(v);
   const points = wallPoints(mods);
   const { all: laid } = variantBeams(v, mods, points, RULES.beam.max);
-  const l = liftBeams(v, RULES, laid, points);
+  const l = liftBeams(v, RULES, laid, points, mods);
   return { all: withJoins(laid, l), lift: l };
 };
 const lifted = (v: Variant) => {

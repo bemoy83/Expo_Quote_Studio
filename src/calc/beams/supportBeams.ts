@@ -1,10 +1,11 @@
 // Støttedrager: a takdrager that holds a long stand wall from sagging, byggeregel T7 (docs/byggeregler.md). With
 // takdrager turned off there is nothing to hang it on, and the walls get foot plates (calc/wallSupports.ts).
-import { inward, makeModule, pointKey } from '../../domain/grid';
+import { inward, pointKey } from '../../domain/grid';
 import { RULES } from '../../rules/rules';
 import type { Point, Side, Stand } from '../../domain/types';
 import type { BuiltModule } from '../../domain/walls';
 import { onSegment, splitBeamLength, type BeamLayout, type BeamSegment } from './beamSegments';
+import { wallCrossings, wallSpans, type Ray } from './wallLines';
 import { holdsRun, hookHolds, wallRuns } from '../wallSupports';
 
 /** A free span of a stand wall from this long, m, gets støttedrager. */
@@ -51,7 +52,6 @@ export function layoutSupportBeams(
   maxLength: number,
   span = SUPPORT_SPAN,
 ): SupportBeamLayout {
-  const keys = new Set(mods.map((m) => m.key));
   const holds = holdsRun(mods, beams);
 
   // Where each støttedrager starts, and which way it runs
@@ -77,33 +77,45 @@ export function layoutSupportBeams(
     // Walk in until a wall or beam: stop on it, or before a wall running along the line
     let stop = 0;
     let hook = false;
-    // A drawn beam off the grid (Byggeregel T15) across its way between two whole metres: it hangs on it there
-    const between = (t: number) => {
+    // A drawn beam off the grid (Byggeregel T15) across its way between lo and hi: it hangs on it there
+    const between = (lo: number, hi: number) => {
       let best: number | null = null;
       for (const s of beams.segments) {
         const across = Math.abs((s.to[0] - s.from[0]) * dx + (s.to[1] - s.from[1]) * dy) < EPS;
         if (!across) continue;
         const u = (s.from[0] - from[0]) * dx + (s.from[1] - from[1]) * dy;
-        if (u > t - 1 + EPS && u < t - EPS && onSegment(s, at(u)) && (best === null || u < best)) best = u;
+        if (u > lo + EPS && u < hi - EPS && onSegment(s, at(u)) && (best === null || u < best)) best = u;
       }
       return best;
     };
-    for (let t = 1; t <= reach; t++) {
-      if (keys.has(makeModule(at(t - 1), at(t)).key)) break;
-      const u = between(t);
+    // The first wall on its way, wherever it stands in the 250 grid (V9): one running along the line stops it at its
+    // post; one across it, at its post or, between its posts, on a hook on the top rail as a drawn beam (T15)
+    const r: Ray = { o: from, d: [dx, dy] };
+    const along = wallSpans(r, mods).find(([, hi]) => hi > EPS);
+    if (along && along[0] < EPS) continue;
+    const cross = wallCrossings(r, mods, wallPoints).find((c) => c.t > EPS);
+    const wallAt = Math.min(along?.[0] ?? Infinity, cross?.t ?? Infinity);
+    for (let t = 1; ; t++) {
+      const end = Math.min(t, reach, wallAt);
+      const u = between(t - 1, end);
       if (u !== null) {
         stop = u;
         hook = !beams.posts.has(pointKey(at(u)));
         break;
       }
-      stop = t;
-      const p = at(t);
+      stop = end;
+      if (Math.abs(end - wallAt) < EPS) {
+        hook = !wallPoints.has(pointKey(at(end)));
+        break;
+      }
+      const p = at(end);
       if (wallPoints.has(pointKey(p))) break;
       // A beam across its way (not one running along it)
       if (beams.segments.some((s) => onSegment(s, p) && Math.abs((s.to[0] - s.from[0]) * dx + (s.to[1] - s.from[1]) * dy) < EPS)) {
         hook = !beams.posts.has(pointKey(p));
         break;
       }
+      if (end >= reach - EPS) break;
     }
     if (stop === 0) continue;
     let acc = 0;

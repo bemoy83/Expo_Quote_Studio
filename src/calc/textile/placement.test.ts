@@ -53,7 +53,7 @@ describe('rammer i et innvendig hjørne (X10)', () => {
     const lifted = (v: Variant) => {
       const mods = builtModules(v);
       const points = wallPoints(mods);
-      return liftBeams(v, RULES, variantBeams(v, mods, points, RULES.beam.max).all, points).segments.size;
+      return liftBeams(v, RULES, variantBeams(v, mods, points, RULES.beam.max).all, points, mods).segments.size;
     };
     expect(lifted(variant(CORNER, { innerBeams: [beam], textiles: [frame('t2', 'side-left', 0, 1)] }))).toBe(0);
     expect(lifted(variant(CORNER, { innerBeams: [beam], textiles: [frame('t1', 'side-back', 0, 2), frame('t2', 'side-left', 0, 1)] }))).toBeGreaterThan(0);

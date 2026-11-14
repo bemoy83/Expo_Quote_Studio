@@ -64,7 +64,7 @@ export function fromVariant(v: Variant, rules: Rules): FogaStructure {
   const points = wallPoints(mods);
   const { all: laid } = variantBeams(v, mods, points, rules.beam.max);
   const posts = new Set([...points.keys(), ...laid.posts.keys()]).size;
-  const lift = liftBeams(v, rules, laid, points);
+  const lift = liftBeams(v, rules, laid, points, mods);
   const beams = withJoins(laid, lift);
   const hooks = hookCount(beamHooks(beams, points, lift));
   return structureOf({ mods, posts, beams, hooks, lift: { posts: lift.posts.length, hooks: lift.hooks.length, walls: lift.walls.length }, production: production(v, rules, ''), shelves: shelfBrackets(v, rules), counters: builtCounterParts(v) });

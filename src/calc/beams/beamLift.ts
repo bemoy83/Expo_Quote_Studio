@@ -1,15 +1,16 @@
-// Takdrager over tekstilvegger: which beams are lifted over a 43TX frame, the posts extended under them and the hook
-// points between levels. Byggeregler T13, T14, T15, T16 (docs/byggeregler.md). A clash is the beam's own box (between
+// Takdrager over tekstilvegger: which beams are lifted over a 43TX frame, or over a wall they cross between its posts,
+// the posts extended under them and the hook points between levels. Byggeregler T13–T17 (docs/byggeregler.md). A clash is the beam's own box (between
 // the posts' faces, its width across) overlapping a frame's box in plan, for a frame that reaches the beam's underside.
 // A lifted beam lies one beam height over the others, so where it crosses an unlifted beam, or a wall between its posts,
 // the lengths meeting there are joined into one whole length, up to the max length (T16).
-import { pointKey } from '../../domain/grid';
+import { pointKey, type Module } from '../../domain/grid';
 import { runDirection } from '../../domain/textile/free';
 import type { Point, Variant } from '../../domain/types';
 import { wallHeight, type Rules } from '../../rules/rules';
 import type { BeamLayout, BeamSegment } from './beamSegments';
 import { onSegment } from './beamSegments';
 import { boxOf, overlaps, placement, type Box } from '../textile/placement';
+import { wallCrossings, type Ray } from './wallLines';
 
 export interface BeamLift {
   /** The lifted lengths (the same objects as in the layout). */
@@ -81,17 +82,17 @@ function runsOf(segments: readonly BeamSegment[]): BeamSegment[][] {
 }
 
 /**
- * Which takdrager are lifted over a textile wall, and what that takes. `all`: every beam on the sketch, standard and
- * drawn; `wallPosts`: the wall posts (a beam end there rests on a post, as at a post in `all.posts`).
+ * Which takdrager are lifted, over a textile wall (T13) or over a wall they cross between its posts (T17), and what that
+ * takes. `all`: every beam on the sketch, standard and drawn; `wallPosts`: the wall posts (a beam end there rests on a
+ * post, as at a post in `all.posts`); `mods`: the built wall modules.
  */
-export function liftBeams(v: Variant, rules: Rules, all: BeamLayout, wallPosts: ReadonlyMap<string, Point>): BeamLift {
-  if (!all.segments.length || (!v.textiles.length && !v.freeTextiles.length)) return NO_LIFT;
-  const frames = textileFootprints(v, rules);
-  if (!frames.length) return NO_LIFT;
+export function liftBeams(v: Variant, rules: Rules, all: BeamLayout, wallPosts: ReadonlyMap<string, Point>, mods: readonly Module[]): BeamLift {
+  if (!all.segments.length) return NO_LIFT;
+  const frames = v.textiles.length || v.freeTextiles.length ? textileFootprints(v, rules) : [];
   const half = rules.wall.post / 2;
   const t = rules.beam.thickness / 2;
   // The beam between the posts' faces (cut centres − 40), its width across
-  const clashes = (s: BeamSegment) => {
+  const overTextile = (s: BeamSegment) => {
     const L = s.length;
     const d: Point = [(s.to[0] - s.from[0]) / L, (s.to[1] - s.from[1]) / L];
     const a: Point = [s.from[0] + d[0] * half, s.from[1] + d[1] * half];
@@ -99,6 +100,12 @@ export function liftBeams(v: Variant, rules: Rules, all: BeamLayout, wallPosts: 
     const box = boxOf(a, b, -t, t);
     return frames.some((f) => overlaps(box, f));
   };
+  // A wall across the length between its posts, with no post, hook or joint there to rest on (T17)
+  const overWall = (s: BeamSegment) => {
+    const r: Ray = { o: s.from, d: [(s.to[0] - s.from[0]) / s.length, (s.to[1] - s.from[1]) / s.length] };
+    return wallCrossings(r, mods, wallPosts).some((c) => !c.post && c.t > EPS && c.t < s.length - EPS);
+  };
+  const clashes = (s: BeamSegment) => overTextile(s) || overWall(s);
   const raised = new Set<BeamSegment>();
   const runs = runsOf(all.segments);
   for (const run of runs) if (run.some(clashes)) run.forEach((s) => raised.add(s));
