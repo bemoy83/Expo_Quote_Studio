@@ -62,13 +62,8 @@ export function usePlanPointer(input: PlanPointerInput) {
   const [dropHover, setDropHover] = useState<{ h: FaceHit; d: DecorDrag } | null>(null)
   /** What a Tøm press takes on release. */
   const [erasing, setErasing] = useState<Erasing | null>(null)
-  /** Shift held and nothing pressed, with Disker og podier, Vegg or Tekstil: where the preview stands still, so the pointer can
-   *  go over it and take hold of an end (podium.ts, run.ts). */
-  const [freeze, setFreeze] = useState<P | null>(null)
-  /** The hover point for the Shift key listener, set where the hover is. */
-  const hoverRef = useRef<P | null>(null)
-  /** The drawing pens whose preview Shift freezes and that draw in 250 steps with Shift held or «Fin» on (one drawing
-   *  tool, Bjørn 14.11.2026, draw.ts); the snap dots show the 250 grid while Shift is held. */
+  /** The drawing pens, which show and draw in 250 with Shift held or «Fin» on (one drawing tool, Bjørn 14.11.2026,
+   *  draw.ts); the snap dots show the 250 grid while Shift is held. */
   const drawsFine = pens.wallTool || pens.textileTool || pens.podiumTool
   const fineOf = (shift: boolean) => drawsFine && (shift || penFine(brush))
   const [shiftHeld, setShiftHeld] = useState(false)
@@ -77,12 +72,8 @@ export function usePlanPointer(input: PlanPointerInput) {
     const on = (e: KeyboardEvent) => {
       if (e.key !== 'Shift') return
       setShiftHeld(e.type === 'keydown')
-      if (!drag.current) setFreeze(e.type === 'keydown' ? (f) => f ?? hoverRef.current : null)
     }
-    const off = () => {
-      setShiftHeld(false)
-      setFreeze(null)
-    }
+    const off = () => setShiftHeld(false)
     window.addEventListener('keydown', on)
     window.addEventListener('keyup', on)
     window.addEventListener('blur', off)
@@ -137,13 +128,13 @@ export function usePlanPointer(input: PlanPointerInput) {
     if (fb.carpetFill) return startCarpetFill(c, q)
     if (pens.floorTool) return startFloor(c, q)
     if (pens.wallTool && brush?.kind === 'wall') {
-      const m = plateAt(input.mods, freeze ?? q)
+      const m = plateAt(input.mods, q)
       if (m) return startPlates(m, q, fineOf(shift))
     }
-    if (pens.wallTool || pens.beamTool || pens.textileTool) return startRunDrag(c, q, fineOf(shift), freeze)
+    if (pens.wallTool || pens.beamTool || pens.textileTool) return startRunDrag(c, q, fineOf(shift))
     if (pens.openingTool) return startPlace(c, 'opening', q)
     if (pens.decorTool) return startPlace(c, 'decor', q)
-    if (pens.podiumTool) return startPodiumLink(c, q) ?? startPodiumGrip(c, q) ?? startPodium(c, q, fineOf(shift), freeze)
+    if (pens.podiumTool) return startPodiumLink(c, q) ?? startPodiumGrip(c, q) ?? startPodium(c, q, fineOf(shift))
     if (pens.objectTool) return startPlace(c, 'object', q)
     if (pens.shelfTool) return startShelf(c, q)
     return startSelect(c, q)
@@ -167,7 +158,6 @@ export function usePlanPointer(input: PlanPointerInput) {
   const onPointerMove = (e: RPointerEvent<SVGSVGElement>) => {
     const q = toModel(e)
     setHover(q)
-    hoverRef.current = q
     const d = drag.current
     setDragging(d)
     if (!d) return
@@ -184,8 +174,6 @@ export function usePlanPointer(input: PlanPointerInput) {
     drag.current = null
     setDragging(null)
     if (!d) return
-    // After a press the preview follows the pointer again, until Shift is pressed anew
-    if (d.kind === 'podium' || d.kind === 'run' || d.kind === 'plates') setFreeze(null)
     handlersOf(d).up?.(c, d, toModel(e))
   }
 
@@ -245,7 +233,6 @@ export function usePlanPointer(input: PlanPointerInput) {
     stroke: strokeLine,
     dropHover,
     erasing,
-    freeze,
     /** 250 steps now: Shift held or «Fin» on, with a drawing pen. */
     fine: fineOf(shiftHeld),
     handlers: {
@@ -255,7 +242,6 @@ export function usePlanPointer(input: PlanPointerInput) {
       onPointerCancel,
       onPointerLeave: () => {
         setHover(null)
-        hoverRef.current = null
       },
       onDragOver,
       onDragLeave: () => setDropHover(null),

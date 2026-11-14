@@ -161,8 +161,13 @@ describe('the pen (PR 1)', () => {
   });
 });
 
-describe('Shift: locked place and 250 steps (PR 2)', () => {
-  // A section 500 × 500 round (2, 2), Shift held: what a press there and a move (mm) gives, c/c
+describe('Shift: the pen shows and draws in 250 (Bjørn 14.11.2026)', () => {
+  // With Shift the section shown is 250 × 250 round (2, 2): what a press there and a move (mm) gives, c/c
+  const fineStart = (() => {
+    const r = podiumAt(base, ctx, pen, [2, 2], true);
+    if ('error' in r) throw new Error(r.error);
+    return r.o;
+  })();
   const start = (() => {
     const r = podiumAt(base, ctx, pen, [2, 2]);
     if ('error' in r) throw new Error(r.error);
@@ -179,38 +184,25 @@ describe('Shift: locked place and 250 steps (PR 2)', () => {
     if ('error' in r) throw new Error(r.error);
     return Math.round(Math.min(...objectBoxes(ctx, r.o).map((b) => b.x0)) * 1000) + 10;
   };
-  const top = (d: PodiumDrag, q: [number, number]) => {
-    const r = drawPodium(base, ctx, d, q);
-    if ('error' in r) throw new Error(r.error);
-    return Math.round(Math.min(...objectBoxes(ctx, r.o).map((b) => b.y0)) * 1000) + 10;
-  };
-  const press = (dx: number, dy: number) => startDrag(start, [2 + dx / 1000, 2 + dy / 1000], true);
-  const move = (p: [number, number], dx: number, dy: number): [number, number] => [2 + (p[0] + dx) / 1000, 2 + (p[1] + dy) / 1000];
+  const press = (dx: number, dy: number) => startDrag(fineStart, [2 + dx / 1000, 2 + dy / 1000], true);
+  const move = (dx: number, dy: number): [number, number] => [2 + dx / 1000, 2 + dy / 1000];
+
+  it('shows 250 × 250 round the pointer', () => {
+    expect(podiumSize(fineStart).length - 20).toBe(250);
+    expect(podiumSize(fineStart).depth - 20).toBe(250);
+  });
 
   it.each([
-    ['right edge, 80 right', [240, 0], [80, 0], [500, 500]],
-    ['right edge, 250 in', [240, 0], [-250, 0], [250, 500]],
-    ['right edge, 600 in', [240, 0], [-600, 0], [250, 500]],
-    ['right edge, 800 out', [240, 0], [800, 0], [1250, 500]],
-    ['lower right corner, 500 out and 250 down', [240, 240], [500, 250], [1000, 750]],
-    // As a corner grip (Bjørn 14.11.2026): a press near the middle takes the nearest corner, here the upper left
-    ['near the middle, 100 left', [-10, -10], [-100, 0], [500, 500]],
-    ['near the middle, 150 left', [-10, -10], [-150, 0], [750, 500]],
-    ['near the middle, 150 left and 150 up', [-10, -10], [-150, -150], [750, 750]],
-    ['near the middle, 200 right', [-10, -10], [200, 0], [250, 500]],
-    ['near the middle, 650 right and 200 down', [-10, -10], [650, 200], [250, 250]],
-  ] as const)('%s', (_name, p, d, want) => {
-    expect(cc(press(p[0], p[1]), move([p[0], p[1]], d[0], d[1]))).toEqual(want);
+    ['80 right', [80, 0], [250, 250]],
+    ['400 right', [400, 0], [500, 250]],
+    ['650 right and 300 down', [650, 300], [750, 500]],
+    ['400 left', [-400, 0], [500, 250]],
+  ] as const)('a drag %s grows it past its edges in 250', (_name, d, want) => {
+    expect(cc(press(0, 0), move(d[0], d[1]))).toEqual(want);
   });
 
-  it('keeps the edge it does not hold: the right edge in leaves the left where it was', () => {
-    expect(left(press(240, 0), move([240, 0], -250, 0))).toBe(1750);
-  });
-
-  it('near the middle the nearest corner moves, the one across stays', () => {
-    expect(left(press(-10, -10), move([-10, -10], -150, 0))).toBe(1500);
-    expect(top(press(-10, -10), move([-10, -10], 0, 200))).toBe(2000);
-    expect(left(press(10, 10), move([10, 10], -200, 0))).toBe(1750);
+  it('the section shown stays: grown left, its right edge is where it was', () => {
+    expect(left(press(0, 0), move(-400, 0))).toBe(1625);
   });
 
   it('Shift during a drag locks what is drawn and goes on from the pointer', () => {
@@ -276,7 +268,7 @@ describe('påbygg (PR 3)', () => {
     const along = (x: number, fine = false) => added(ok(podiumAt(v, ctx, pen, [x / 1000, 3.11], fine)).o)[0][0];
     expect(along(2500)).toEqual([2250, 2750]);
     expect(along(2800)).toEqual([2750, 3250]);
-    expect(along(2800, true)).toEqual([2500, 3000]);
+    expect(along(2800, true)).toEqual([2750, 3000]);
     expect(along(3700)).toEqual([3250, 3750]);
     expect(along(3900)).toEqual([3500, 4000]);
     expect(along(2100)).toEqual([2000, 2500]);
@@ -310,16 +302,16 @@ describe('påbygg (PR 3)', () => {
     expect(outer(drag(false, [3.4, 2.2]).o)).toEqual([2020, 1020]);
     // Out and down: 1000 × 1500 c/c from the side, past the counter's front
     expect(outer(drag(false, [4.5, 3.4]).o)).toEqual([2520, 1520]);
-    // With Shift, pressed by the edge against the counter, it is still the far edge that moves
-    expect(outer(drag(true, [4.05, 2.2], [3.8, 2.2]).o)).toEqual([2270, 1020]);
-    expect(drag(true, [4.05, 2.2], [3.8, 2.2]).o.ral).toBe('3002');
+    // With Shift, pressed by the edge against the counter, it is still the far edge that grows, in 250
+    expect(outer(drag(true, [4.55, 2.2], [3.8, 2.2]).o)).toEqual([2270, 1020]);
+    expect(drag(true, [4.55, 2.2], [3.8, 2.2]).o.ral).toBe('3002');
   });
 
   it('a part that would no longer touch the side is refused', () => {
     // Stuck 250 past the end, then with Shift its inner end dragged off the side
     const r = ok(podiumAt(v, ctx, pen, [3.9, 3.11]));
     expect(added(r.o)[0][0]).toEqual([3500, 4000]);
-    const d = startDrag(r.cell, [3.52, 3.4], true, r.onto);
+    const d = rebaseDrag(startDrag(r.cell, [3.52, 3.4], false, r.onto), [3.52, 3.4], true);
     expect(drawPodium(v, ctx, d, [3.77, 3.4])).toMatchObject({ error: 'En del ville stått løst' });
   });
 

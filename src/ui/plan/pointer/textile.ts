@@ -2,8 +2,8 @@
 // system wall's line is mounted on it; a click next to a system wall fills that face's free part. The motif on the pen
 // (Farge, Bjørn 14.11.2026) goes on the textile drawn, and a click on a textile wall prints it.
 import { drawTextile, fillFace } from '../../../domain/textile/brush'
-import { shownModule } from '../../../domain/runDraw'
 import { runLength } from '../../../domain/textile/free'
+import type { Module } from '../../../domain/grid'
 import type { Point, Variant } from '../../../domain/types'
 import { fmt } from '../../format'
 import { rules } from '../../env'
@@ -20,15 +20,14 @@ export function withPenMotif(r: TextileResult, motif: string | undefined): Texti
 }
 
 /** What a click with the textile pen at q stores (one drawing tool, Bjørn 14.11.2026): a textile wall under it gets the
- *  pen's motif; next to a system wall the free part of that face fills; on free floor the module the pen shows stands
- *  free on foot plates, as a click with Vegg lays one module. */
+ *  pen's motif; next to a system wall the free part of that face fills; on free floor the module the pen shows (`m`,
+ *  runDraw.shownModule) stands free on foot plates, as a click with Vegg lays one module. */
 export type TextileClick = { print: (v: Variant) => Variant } | TextileResult
-export function textileClick(v: Variant, hits: PlanHits, q: P, motif: string | undefined): TextileClick {
+export function textileClick(v: Variant, hits: PlanHits, q: P, motif: string | undefined, m: Module): TextileClick {
   const u = motif ? textileUnder(v, hits, q) : null
   if (u && motif) return { print: (x) => printTextile(x, u, motif) }
   const h = hits.faceHit(q)
   if (h) return withPenMotif(fillFace(v, rules, h.w.id, h.s, h.t), motif)
-  const m = shownModule(v.stand, q)
   return withPenMotif(drawTextile(v, rules, m.a, m.b, q), motif)
 }
 

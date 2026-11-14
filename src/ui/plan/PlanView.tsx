@@ -185,9 +185,8 @@ export function PlanView(p: Props) {
       : keep && !layers.some((l) => keep.has(l))
         ? PEN_DIMMED
         : 1
-  // An edge of Disker og podier with Shift (PR 2) is a hand to take hold of, closed while dragging it, and so is a grip
-  // of the chosen counter (K14), in Velg too
-  const grips = !!next?.outcome.grip?.length || !!next?.outcome.hotGrip
+  // A grip of the chosen counter (K14) is a hand to take hold of, closed while dragging it, in Velg too
+  const grips = !!next?.outcome.hotGrip
   const holding = dragging?.kind === 'podium' || dragging?.kind === 'podiumGrip'
   const cursor = dragging?.kind === 'podiumGrip' || (tool === 'select' && next?.outcome.hotGrip) ? (holding ? 'grabbing' : 'grab') : tool !== 'select' ? (grips ? (holding ? 'grabbing' : 'grab') : 'crosshair') : roomCursor()
   function roomCursor() {

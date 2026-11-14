@@ -14,7 +14,7 @@ import { INK } from '../../colors'
 import { idx } from '../../env'
 import type { Brush, Tool } from '../../tools'
 import { widthOf, type NextOutcome } from '../next'
-import { linePx, usePlanScale } from '../planScale'
+import { usePlanScale } from '../planScale'
 import { rollWidthOf } from '../pointer/floorBrush'
 import type { PlanPointer } from '../pointer/usePlanPointer'
 import type { PlanSelection } from '../selection'
@@ -78,7 +78,6 @@ export function PreviewLayer(p: Props) {
       {grips && !(gripDrag && dragging.moved) && <PodiumGrips v={v} o={grips} hot={next?.hotGrip} />}
       {grips && !(gripDrag && dragging.moved) && <PodiumLinks v={v} o={grips} hot={next?.hotGrip} />}
       {/* Disker og podier with Shift: the edge a press takes hold of, thick (PR 2) */}
-      {!mini && next?.grip?.map(([a, b], i) => <line key={`grip${i}`} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke={INK} strokeWidth={linePx(sc, 4)} strokeLinecap="round" />)}
       {pill && <MeasurePill a={pill.a} b={pill.b} centre={centre} stroke={widthOf(sc, pill.width)} text={pill.text} />}
       {tileDrag && brush?.kind === 'floor' && tileAreaMeasures(v, tileDrag, brush.product, centre)}
       {selLanes.length > 0 && (

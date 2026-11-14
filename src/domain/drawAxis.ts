@@ -1,9 +1,10 @@
 // One way of a drawing drag, shared by every pen that draws (Bjørn 14.11.2026: one drawing tool, one thing to learn):
 // Disker og podier along both ways (podiums.ts), walls, textile walls and takdragere along one (runDraw.ts). CAD
 // principle from K10: what you hold is decided by where you press, never by which way you drag. Without Shift a drag
-// grows what the pen showed past its ends in whole coarse steps. With Shift (or «Fin») the drag works as the corner grip
-// of a chosen counter (Bjørn 14.11.2026): the end nearest the press moves with the pointer in fine steps, the other
-// stays; Shift pressed or let go during a drag goes on from what is drawn. Grid units (250 mm).
+// grows what the pen showed past its ends in whole coarse steps; with Shift (or «Fin») the pen shows and draws in fine
+// steps instead (Bjørn 14.11.2026). Shift pressed during a drag goes on from what is drawn, the end nearest the pointer
+// moving with it in fine steps as the corner grip of a chosen counter; let go, it grows again in coarse steps. Grid
+// units (250 mm).
 
 /** Which end a drag holds, one way: −1 the low end, 1 the high, 0 none (without Shift it grows past either). */
 export type Grab = -1 | 0 | 1;

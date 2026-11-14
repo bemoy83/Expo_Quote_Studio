@@ -23,8 +23,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 
 - **V1 Modul.** En systemvegg (standvegg, innervegg, romvegg) bygges i moduler på cc 1000 mellom stolpesentrene.
   Fysisk lengde er cc pluss én stolpe: 4000 c/c er 4040. Veggpenselen viser modulen et klikk lagrer, og et drag vokser fra
-  den i hele meter (samme tegneverktøy som disk, `domain/runDraw.ts`); med Shift står forhåndsvisningen stille og enden
-  nærmest trykket flyttes i 250-steg, som et hjørnegrep på disken («Fin» på iPad), på metergitterets linjer; Shift trykket eller sluppet midt i
+  den i hele meter (samme tegneverktøy som disk, `domain/runDraw.ts`); Shift («Fin» på iPad) bytter tegnestørrelsen til 250
+  (Bjørn 14.11.2026): penselen viser 250 under pekeren, et klikk legger den og et drag vokser fra den i 250-steg, alltid
+  på metergitterets linjer (et hjørne svinger på metrelinjen nærmest); Shift trykket eller sluppet midt i
   draget låser det som er tegnet og går videre derfra. En strek over vegger som står legger bare til resten. Tøm tar en hel
   modul, også en kort. Kortere moduler finnes i samme steg som diskene (K10): 250, 500 og 750 c/c. En vegg legges i hele meter fra der den starter, og er lengden ikke
   hel, er den siste modulen kortere (1750 = 1000 + 750). Delene er de samme, kappet: skinnene c/c − 40 (210, 460, 710),
@@ -216,8 +217,8 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   *Bjørn 30.10.2026 · kode `src/domain/textile/inFrame.ts` · test `src/domain/decor.test.ts`*
 - **X5 På fotplater (frittstående).** Samme ramme som X2, på fotplater, med tekstil på begge sider (trykt, hvit eller kundens egen), høyde 2540, minst
   0,25 m. Tegnes med samme verktøy som veggen og disken (Bjørn 14.11.2026: ett tegneverktøy, alle pensler på samme
-  grid): et klikk på gulvet setter 1 m, et drag vokser fra modulen du ser i hele meter, med Shift eller «Fin» flyttes
-  enden du trykker ved i 250-steg. Ikke langs eller gjennom en systemvegg (helt inntil er lov). Den
+  grid): et klikk på gulvet setter 1 m, et drag vokser fra modulen du ser i hele meter, med Shift eller «Fin» er
+  tegnestørrelsen 250 (som V1). Ikke langs eller gjennom en systemvegg (helt inntil er lov). Den
   lager ikke rom og kan ikke ha dør.
   *Bjørn 31.10.2026 · `rules.textile` · kode `src/domain/textile/free.ts` · test `src/domain/textile/free.test.ts`*
 - **X6 Skinner.** Gjelder rammen uansett montering. Topp- og bunnskinne går hele rammen; over 5000 skjøtes de i like stykker. Skjøten er 2 × 609 per
@@ -415,12 +416,12 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   10 cm, og ingenting over en disk; et klikk lagrer den, et klikk på en disk velger den. Trykk og dra tegner videre fra
   seksjonen, som står fast fra trykket: i hver retning for seg vokser disken `round(d / 500) × 500` på den siden når
   pekeren går `d` forbi kanten, inne i seksjonen skjer ingenting, og begge retninger gir et rektangel. Der den ikke får
-  plass, nektes den med «Ikke plass til disken her». En disk kan stå helt inntil en vegg. Med Shift (som i CAD: det man
-  har tak i, avgjøres av hvor man trykker, aldri av hvilken vei man drar) står forhåndsvisningen stille, og pekeren kan
-  flyttes over den. Shift-tegning virker som hjørnegrepet på en valgt disk (Bjørn 14.11.2026): et trykk hvor som helst
-  tar tak i hjørnet nærmest trykket, som vises tykt mens man peker, og flytter det `round(Δ / 250) × 250` ut eller inn
-  til 250 i hver retning; hjørnet på tvers står stille. Det er ingen egen regel for et trykk midt i. Shift trykket eller sluppet midt i et drag låser det som er tegnet og går videre derfra; tastetrykket alene
-  endrer aldri størrelsen. «Fin» i hurtigvalget gjør det samme som Shift for berøring, uten å fryse forhåndsvisningen.
+  plass, nektes den med «Ikke plass til disken her». En disk kan stå helt inntil en vegg. Shift bytter tegnestørrelsen
+  til 250 (Bjørn 14.11.2026): pennen viser én seksjon 250 × 250 under pekeren, et klikk lagrer den, og et drag vokser
+  fra den `round(d / 250) × 250` på samme måte. Trykker man uten Shift og holder Shift underveis, går draget videre fra
+  det som er tegnet: kanten nærmest pekeren følger den i 250-steg, som et hjørnegrep på en valgt disk; slippes Shift,
+  vokser det igjen i 500. Tastetrykket alene endrer aldri størrelsen. «Fin» i hurtigvalget gjør det samme som Shift for
+  berøring.
   Påbygg: er pekeren utenfor en disk fra Disker og podier og innen 300 mm fra yttersiden av en av sidene, legger
   seksjonen seg inntil siden i diskens raster. Den glir langs siden i 500-steg regnet fra sidens ende (250 med Shift
   eller Fin) og stikker høyst 250 utenfor enden. Et klikk eller drag derfra tegner som over, men kanten mot disken står

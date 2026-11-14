@@ -33,7 +33,7 @@ export function hint(tool: Tool, brush: Brush | null, carpet = false): Hint {
     case 'wall':
       return h(
         'Klikk en vegg for å farge den · dra for flere plater · klikk en tom kant for ny vegg',
-        'Klikk en vegg for å farge platen · dra langs veggen for flere plater · klikk en tom kant for en modul, eller trykk og dra for å gjøre den lengre i hele meter · modulen du ser står fast, dra på tvers for hjørne · hold Shift for å låse forhåndsvisningen og dra i en ende for 250-steg (Fin på iPad), resten blir en kortere modul sist · Esc avbryter',
+        'Klikk en vegg for å farge platen · dra langs veggen for flere plater · klikk en tom kant for en modul, eller trykk og dra for å gjøre den lengre i hele meter · modulen du ser står fast, dra på tvers for hjørne · hold Shift (Fin på iPad) for å tegne i 250, resten blir en kortere modul sist · Esc avbryter',
       )
     case 'beam':
       return h(
@@ -52,7 +52,7 @@ export function hint(tool: Tool, brush: Brush | null, carpet = false): Hint {
     case 'textile':
       return h(
         'Klikk for en modul, dra for lengre · ved en vegg fylles den',
-        'Klikk ved en systemvegg for å fylle den, eller på gulvet for 1 m frittstående på fotplater · trykk og dra for lengre i hele meter, modulen du ser står fast · dra langs en systemvegg for tekstilvegg på veggen · hold Shift for å låse forhåndsvisningen og dra i en ende for 250-steg (Fin på iPad) · start der en frittstående slutter for hjørne · motivet i pillen trykkes på tekstilen, og et klikk på en tekstilvegg gir den motivet',
+        'Klikk ved en systemvegg for å fylle den, eller på gulvet for 1 m frittstående på fotplater · trykk og dra for lengre i hele meter, modulen du ser står fast · dra langs en systemvegg for tekstilvegg på veggen · hold Shift (Fin på iPad) for å tegne i 250 · start der en frittstående slutter for hjørne · motivet i pillen trykkes på tekstilen, og et klikk på en tekstilvegg gir den motivet',
       )
     case 'motif':
       return brush?.kind === 'motif' && brush.pen === 'print'
@@ -73,7 +73,7 @@ export function hint(tool: Tool, brush: Brush | null, carpet = false): Hint {
       }
       return h(
         'Klikk for en seksjon, dra for å tegne disk eller podie',
-        'Klikk for en seksjon på 500 × 500 (eller velg Disk eller Podie over verktøyene), eller trykk og dra for å gjøre den større i 500-steg i hver retning · seksjonen du trykket i står fast · Shift (eller Fin) gir 250-steg: hold Shift for å låse forhåndsvisningen, og dra hjørnet nærmest som et hjørnegrep · alle sider er tette · fyll gir alle diskene og podiene fargen · velg en disk for å bytte farge eller rotere den',
+        'Klikk for en seksjon på 500 × 500 (eller velg Disk eller Podie over verktøyene), eller trykk og dra for å gjøre den større i 500-steg i hver retning · seksjonen du trykket i står fast · Shift (eller Fin) tegner i 250: seksjonen blir 250 × 250 og vokser i 250-steg · alle sider er tette · fyll gir alle diskene og podiene fargen · velg en disk for å bytte farge eller rotere den',
       )
     case 'object':
       return h(`Klikk i planen for å sette ut ${productOf(brush?.kind === 'object' ? brush.product : '')?.name.toLowerCase() ?? 'varen'}`)
