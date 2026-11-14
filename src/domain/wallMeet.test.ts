@@ -57,3 +57,31 @@ describe('walls meeting between posts (V10)', () => {
     expect(builtModules(v).filter((m) => m.whole === whole).map((m) => m.plate)).toEqual(['5012', '3002']);
   });
 });
+
+const lines = (v: Variant, payer: 'arrangør' | 'utstiller' = 'utstiller') => {
+  const r = calc(v, RULES, DEFAULT_CATALOG, { payer, ral: '9010' });
+  return { ours: r.groups.flatMap((g) => g.lines), theirs: r.organiser.lines };
+};
+const qtyOf = (ls: readonly { artnr: string; qty: number }[], artnr: string) => ls.filter((l) => l.artnr === artnr).reduce((a, l) => a + l.qty, 0);
+
+describe('split modules on the quote (V1, V10)', () => {
+  it('a shorter module is its own product per piece, priced as a whole metre', () => {
+    const island = createVariant('A', { width: 6, depth: 4, type: 'island' });
+    const v = paintWalls(paintWalls(island, [1, 2], [4, 2]), [2.5, 2], [2.5, 3.5]);
+    const { ours } = lines(v);
+    const half = ours.find((l) => l.artnr === '6122-9010')!;
+    expect(half).toMatchObject({ qty: 3, unit: 'stk', price: 765 });
+    // The rest by the metre: two whole modules of the long wall, one of the short one
+    expect(qtyOf(ours, '6120-9010')).toBe(3);
+  });
+
+  it('a stand wall split: the organiser keeps the whole metre, the exhibitor pays the parts', () => {
+    const v = paintWalls(row(), [2.5, 0], [2.5, 1]);
+    const { ours, theirs } = lines(v, 'arrangør');
+    const before = lines(row(), 'arrangør').theirs;
+    expect(qtyOf(theirs, '6120-9010')).toBe(qtyOf(before, '6120-9010'));
+    expect(qtyOf(ours, '6122-9010')).toBe(2);
+    // No plate swap for the parts: they are the exhibitor's own plates
+    expect(ours.filter((l) => l.artnr.startsWith('6125'))).toEqual([]);
+  });
+});

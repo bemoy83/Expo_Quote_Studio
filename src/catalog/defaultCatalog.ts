@@ -101,6 +101,13 @@ const PLATES: [ral: string, name: string, color: string][] = [
 // Two levels (Bjørn 31.10.2026). Level 1 is what the customer buys: one line on the quote, with the sales price.
 // Level 2 (article: true) is what the montør picks; the picking list counts it from the drawing. A level 1 product is
 // a nominal bundle of articles (wall: plate, 2 posts, top and bottom rail per metre), never shown on the quote.
+/** Shorter wall modules c/c (mm) and their product (Byggeregel V1). */
+const SHORT_WALLS = [
+  [750, '6121'],
+  [500, '6122'],
+  [250, '6123'],
+] as const;
+
 const products: Product[] = [
   // Vegger: level 1
   {
@@ -114,6 +121,18 @@ const products: Product[] = [
     // 765 kr per m is what a wall sells for today (Bjørn 7.11.2026)
     variants: PLATES.map(([ral, name, color]) => ({ artnr: `6120-${ral}`, name, ral, color, price: 765 })),
   },
+  // Shorter wall modules (Byggeregel V1): one product per length, each priced as a whole metre (Bjørn 14.11.2026: the job
+  // is the same, and a short plate is less often used again; 1 m is the standard). Art.nr 6121–6123 are placeholders.
+  ...SHORT_WALLS.map(([cc, id]): Product => ({
+    id,
+    name: `Rammevegg ${cc} mm m/plate, komplett`,
+    kind: 'system',
+    unit: 'stk',
+    group: 'vegg.vegger',
+    dim: `${String(cc / 1000).replace('.', ',')} × 2,5 m, priset som hel meter`,
+    pricing: 'fast',
+    variants: PLATES.map(([ral, name, color]) => ({ artnr: `${id}-${ral}`, name, ral, color, price: 765 })),
+  })),
   // Coloured plate in a stand wall the organiser pays: the exhibitor pays the plate and swapping it (docs/vegger.md).
   // Art.nr 6125 is a placeholder.
   {
@@ -317,6 +336,7 @@ export const DEFAULT_CATALOG: Catalog = {
   products,
   system: {
     wall: '6120',
+    shortWalls: Object.fromEntries(SHORT_WALLS),
     plateSwap: '6125',
     wallSupport: '6115',
     beam: '6110',

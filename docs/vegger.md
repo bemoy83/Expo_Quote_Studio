@@ -56,6 +56,9 @@ den eksisterende veggen. Rammen, stolpene og løpemeteren vegg er fortsatt arran
 | Standvegg i annen farge | 6125-RAL Platebytte standvegg per lm | Veggen per løpemeter i arrangørens farge |
 | Innervegg eller romvegg | 6120-RAL veggen per løpemeter | Ingenting |
 | Standvegg når utstilleren betaler | 6120-RAL veggen per løpemeter, egen linje «Standvegg» | Ingenting |
+| Standvegg delt av en vegg mellom stolpene (V11) | De korte modulene (6121–6123 per stk) og stolpen mellom dem | Den hele modulen per løpemeter |
+
+En kortere modul (750, 500, 250) har eget produkt og prises som en hel meter (Byggeregel V1).
 
 Platebytte prises som sum: platen i RAL og ledd for platebytte (ut og inn, montering og demontering, med egen tid).
 Art.nr. 6125 er en plassholder.

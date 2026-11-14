@@ -24,13 +24,14 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 - **V1 Modul.** En systemvegg (standvegg, innervegg, romvegg) bygges i moduler på cc 1000 mellom stolpesentrene.
   Fysisk lengde er cc pluss én stolpe: 4000 c/c er 4040. Veggpenselen viser modulen et klikk lagrer, og et drag vokser fra
   den i hele meter (samme tegneverktøy som disk, `domain/runDraw.ts`); Shift («Fin» på iPad) bytter tegnestørrelsen til 250
-  (Bjørn 14.11.2026): penselen viser 250 under pekeren, et klikk legger den og et drag vokser fra den i 250-steg, alltid
-  på metergitterets linjer (et hjørne svinger på metrelinjen nærmest); Shift trykket eller sluppet midt i
+  (Bjørn 14.11.2026): penselen viser 250 under pekeren, et klikk legger den og et drag vokser fra den i 250-steg, på
+  hvilken som helst linje i 250-rasteret (V9); Shift trykket eller sluppet midt i
   draget låser det som er tegnet og går videre derfra. En strek over vegger som står legger bare til resten. Tøm tar en hel
   modul, også en kort. Kortere moduler finnes i samme steg som diskene (K10): 250, 500 og 750 c/c. En vegg legges i hele meter fra der den starter, og er lengden ikke
   hel, er den siste modulen kortere (1750 = 1000 + 750). Delene er de samme, kappet: skinnene c/c − 40 (210, 460, 710),
   platen c/c − 24 (226, 476, 726) og lysåpningen c/c − 40. Dør, forheng og hyller står bare i hele moduler. Tilbudet
-  selger metrene til veggens meterpris (1,75 m). Kostnaden er de kappede skinnene og platen som sin andel av de hele
+  selger hele moduler per meter og hver kortere modul som eget produkt per stykk, priset som en hel meter (6121 for 750,
+  6122 for 500, 6123 for 250; art.nr er plassholdere): jobben er den samme, og en kort plate brukes sjeldnere igjen. Kostnaden er de kappede skinnene og platen som sin andel av de hele
   (profilen per meter, platen etter bredde) og kappingen, plassholder 2 min per skinne og 3 per plate. Plukklisten
   viser de kappede lengdene.
   *Bjørn 31.10.2026, 6.11.2026 og 14.11.2026 · `rules.wall.cc`, `rules.wall.post`, `ITEM.rail`, `ITEM.cutPlate`, `ITEM.railCut`, `ITEM.plateCut` · kode `src/domain/walls.ts`, `src/domain/grid.ts`, `src/domain/faces.ts`, `src/calc/lines/walls.ts`, `src/calc/context.ts`, `src/cost/itemDefs.ts`, `src/foga/engine.ts`, `src/domain/runDraw.ts`, `src/ui/plan/pointer/run.ts` · test `src/foga/engine.test.ts`, `src/domain/shortModules.test.ts`, `src/calc/shortModules.test.ts`, `src/domain/runDraw.test.ts`*
@@ -62,6 +63,10 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   hvor veggene står og lagres ikke: flyttes veggen, er modulen hel igjen. En modul med dør deles ikke. De to delene
   beholder fargen modulen hadde, og er hver sin flate for farge.
   *Bjørn 14.11.2026 · kode `src/domain/walls.ts` · test `src/domain/wallMeet.test.ts`*
+- **V11 Delt standvegg.** Deles en standvegg arrangøren betaler (V10), beholder og fakturerer arrangøren den hele modulen
+  den var, med sine stolper. Utstilleren betaler delingen: de korte modulene (V1) og stolpen mellom dem. Delene er
+  utstillerens egne plater, så de er ikke platebytte.
+  *Bjørn 14.11.2026 · kode `src/calc/context.ts`, `src/calc/lines/walls.ts` · test `src/domain/wallMeet.test.ts`*
 
 ## S · Støtte for systemvegg
 

@@ -90,6 +90,8 @@ export interface Product {
 export interface SystemParts {
   /** Wall per metre, one variant per RAL. */
   wall: string;
+  /** A shorter wall module per piece, by its c/c in mm, one variant per RAL, each priced as a whole metre (V1). */
+  shortWalls?: Record<number, string>;
   /** Plate swap per metre in a stand wall the organiser pays, one variant per RAL. */
   plateSwap: string;
   /** Støtteplate per piece under a post of a system wall that stands free. */

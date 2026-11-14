@@ -1,5 +1,5 @@
-// Byggeregel V1 (Bjørn 14.11.2026): a shorter module is the same parts, cut. The quote sells its metres at the wall's
-// price per metre; the cost is the cut rails and plate as their share of the whole ones, and the cutting.
+// Byggeregel V1 (Bjørn 14.11.2026): a shorter module is the same parts, cut. The quote sells it as its own product per
+// piece, priced as a whole metre; the cost is the cut rails and plate as their share of the whole ones, and the cutting.
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_CATALOG } from '../catalog/defaultCatalog';
 import { paintWalls } from '../domain/edit';
@@ -18,11 +18,14 @@ const sumOf = (uses: [string, number][]) => uses.reduce((a, [id, n]) => a + item
 // An island (no stand walls, no takdrager) with one inner wall of 1 750: 1 000 + 750 on 3 posts
 const v = paintWalls(createVariant('A', { width: 6, depth: 6, type: 'island' }), [1, 2], [2.75, 2]);
 const res = calc(v, RULES, DEFAULT_CATALOG, EXHIBITOR);
-const wall = res.groups.flatMap((g) => g.lines).find((l) => l.artnr === '6120-9010')!;
+const all = res.groups.flatMap((g) => g.lines);
+const wall = all.find((l) => l.artnr === '6120-9010')!;
+const short = all.find((l) => l.artnr === '6121-9010')!;
 
 describe('a wall of 1 750 (V1)', () => {
-  it('sells 1,75 m at the price per metre', () => {
-    expect(wall.qty).toBeCloseTo(1.75);
+  it('sells 1 m by the metre and the 750 as its own product, priced as a whole metre', () => {
+    expect(wall.qty).toBe(1);
+    expect(short).toMatchObject({ qty: 1, unit: 'stk', price: wall.price });
     expect(res.keyFigures).toMatchObject({ wallLm: 1.75, innerWallLm: 1.75, modules: 2 });
   });
 
@@ -39,7 +42,7 @@ describe('a wall of 1 750 (V1)', () => {
       [ITEM.railCut, 2],
       [ITEM.plateCut, 1],
     ];
-    expect(wall.cost).toBeCloseTo(sumOf(uses));
+    expect(wall.cost! + short.cost!).toBeCloseTo(sumOf(uses));
   });
 
   it('a cut rail and plate cost their share of the whole ones', () => {
