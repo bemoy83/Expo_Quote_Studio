@@ -193,11 +193,12 @@ describe('Shift: locked place and 250 steps (PR 2)', () => {
     ['right edge, 600 in', [240, 0], [-600, 0], [250, 500]],
     ['right edge, 800 out', [240, 0], [800, 0], [1250, 500]],
     ['lower right corner, 500 out and 250 down', [240, 240], [500, 250], [1000, 750]],
-    ['middle, 50 left', [0, 0], [-50, 0], [500, 500]],
-    ['middle, 100 left', [0, 0], [-100, 0], [250, 500]],
-    ['middle, 100 left and 100 up', [0, 0], [-100, -100], [250, 250]],
-    ['middle, 400 left', [0, 0], [-400, 0], [500, 500]],
-    ['middle, 650 left', [0, 0], [-650, 0], [750, 500]],
+    // As a corner grip (Bjørn 14.11.2026): a press near the middle takes the nearest corner, here the upper left
+    ['near the middle, 100 left', [-10, -10], [-100, 0], [500, 500]],
+    ['near the middle, 150 left', [-10, -10], [-150, 0], [750, 500]],
+    ['near the middle, 150 left and 150 up', [-10, -10], [-150, -150], [750, 750]],
+    ['near the middle, 200 right', [-10, -10], [200, 0], [250, 500]],
+    ['near the middle, 650 right and 200 down', [-10, -10], [650, 200], [250, 250]],
   ] as const)('%s', (_name, p, d, want) => {
     expect(cc(press(p[0], p[1]), move([p[0], p[1]], d[0], d[1]))).toEqual(want);
   });
@@ -206,10 +207,10 @@ describe('Shift: locked place and 250 steps (PR 2)', () => {
     expect(left(press(240, 0), move([240, 0], -250, 0))).toBe(1750);
   });
 
-  it('from the middle, the half and the quarter toward the pointer', () => {
-    expect(left(press(0, 0), move([0, 0], -100, 0))).toBe(1750);
-    expect(top(press(0, 0), move([0, 0], -100, -100))).toBe(1750);
-    expect(left(press(0, 0), move([0, 0], -400, 0))).toBe(1500);
+  it('near the middle the nearest corner moves, the one across stays', () => {
+    expect(left(press(-10, -10), move([-10, -10], -150, 0))).toBe(1500);
+    expect(top(press(-10, -10), move([-10, -10], 0, 200))).toBe(2000);
+    expect(left(press(10, 10), move([10, 10], -200, 0))).toBe(1750);
   });
 
   it('Shift during a drag locks what is drawn and goes on from the pointer', () => {

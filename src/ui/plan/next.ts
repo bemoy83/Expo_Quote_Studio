@@ -255,14 +255,23 @@ function targetOf(p: NextInput): NextTarget | null {
     const m = plateAt(p.mods, at)
     if (m) return target(`plate:${m.key}`, () => area({ edit: (x) => paintPlates(x, p.mods, [m.key], wallRal), hint: null }))
   }
+  // Shift held over the preview standing still: the end a press takes hold of, thick, as on Disker og podier
+  const gripped = (t: NextTarget | null): NextTarget | null => {
+    if (!t || !p.freeze) return t
+    const e = shownModule(v.stand, at)
+    const g = runGrip(e.a, e.b, hover)
+    return target(`${t.key}:grip:${pt(g[0][0])}`, () => ({ ...t.outcome(), hint: LOCKED_RUN, grip: g }))
+  }
   if ((pens.wallTool || pens.beamTool) && hits.onStand(at)) {
     const e = shownModule(v.stand, at)
-    return strokeTarget(e.a, e.b, false)
+    return gripped(strokeTarget(e.a, e.b, false))
   }
   if (pens.textileTool) {
-    // The same as a click (pointer/textile.ts)
+    // The same as a click (pointer/textile.ts); a drag starts from the module shown, also by a system wall
     if (!hits.onStand(at) && !hits.faceHit(at)) return null
-    return target(`${textileClickKey(p, at)}:${motif ?? ''}`, () => textileOutcome(textileClick(v, hits, at, motif), null))
+    const key = textileClickKey(p, at)
+    const t = target(`${key}:${motif ?? ''}`, () => textileOutcome(textileClick(v, hits, at, motif), null))
+    return key.startsWith('tmod:') ? gripped(t) : t
   }
   if (pens.decorTool) return decorTarget(p, hover)
   if (pens.openingTool && brush?.kind === 'opening') {
@@ -382,7 +391,15 @@ function objectTarget(v: Variant, brush: Brush | null, q: P): NextTarget | null 
 }
 
 /** Shift held over Disker og podier (PR 2). */
-const LOCKED = 'Låst plass: dra i en kant for å flytte den, eller fra midten for å tegne mot pekeren · 250-steg · slipp Shift for å flytte'
+/** The end of a run from a to b a press at q takes hold of with Shift (runDraw.ts: the nearest), as a short line across. */
+function runGrip(a: Point, b: Point, q: P): [Point, Point][] {
+  const along = a[1] === b[1] ? 0 : 1
+  const end = Math.abs(q[along === 0 ? 'x' : 'y'] - a[along]) <= Math.abs(q[along === 0 ? 'x' : 'y'] - b[along]) ? a : b
+  const r = 0.12
+  return [along === 0 ? [[end[0], end[1] - r], [end[0], end[1] + r]] : [[end[0] - r, end[1]], [end[0] + r, end[1]]]]
+}
+const LOCKED_RUN = 'Låst plass: dra for å flytte enden nærmest, som et hjørnegrep · 250-steg · slipp Shift for å flytte'
+const LOCKED = 'Låst plass: dra for å flytte hjørnet nærmest, som et hjørnegrep · 250-steg · slipp Shift for å flytte'
 
 /** By a side of a counter of Disker og podier (PR 3). */
 const ONTO_HINT = 'Inntil disken: klikk for å bygge på, dra for å tegne påbygget · kanten mot disken står fast'

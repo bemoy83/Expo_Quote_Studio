@@ -2,7 +2,7 @@
 // system walls, textile walls and takdragere, later carpentry walls. Only what is stored differs. As Disker og podier
 // (K10): the pen shows one module of 1 m on the edge nearest the pointer; a press and drag grows it from there, the
 // module shown staying put, in whole metres; dragged across, the run turns at the module's end nearest the press. With
-// Shift (or «Fin») an end pressed by moves in 250 steps, the other end stays; Shift pressed or let go during a drag goes
+// Shift (or «Fin») the end nearest the press moves in 250 steps, the other end stays (the corner grip of a counter); Shift pressed or let go during a drag goes
 // on from what is drawn (drawAxis.ts). One grid for every pen: the metre grid, 250 with Shift or Fin. Pure, plan in m.
 import { axisSpan, grabOf, rebaseAxis, type DrawAxis } from './drawAxis';
 import { nearestEdge, type Module } from './grid';
@@ -77,7 +77,7 @@ export function runTo(d: RunDrag, q: Point): [Point, Point] {
   hi = Math.min(max, hi);
   if (hi - lo < 1) [lo, hi] = lo === 0 ? [0, 1] : [max - 1, max];
   // The end that stood still: the one taken hold of moves, without Shift the one the pointer is past
-  const fromHi = axis.g ? axis.g < 0 : axis.fix ? axis.fix > 0 : d.fine ? v < axis.v0 : v < axis.lo;
+  const fromHi = axis.g ? axis.g < 0 : axis.fix ? axis.fix > 0 : v < axis.lo;
   const pt = (t: number): Point => (line.h ? [t * RUN_UNIT, line.c] : [line.c, t * RUN_UNIT]);
   return fromHi ? [pt(hi), pt(lo)] : [pt(lo), pt(hi)];
 }
