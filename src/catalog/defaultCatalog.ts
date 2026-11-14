@@ -159,18 +159,18 @@ const products: Product[] = [
   // Profilering. Textile walls: the frame (rental) and the textile (sale, the customer can bring it back) are two lines
   // in the kalkyle and one on the quote (Bjørn 31.10.2026). One frame whatever it is mounted on, on a wall with 520
   // or on foot plates (Bjørn 7.11.2026), per piece by size (price per m² of B × H); textile per m² of visible face.
-  one('8000', 'Tekstilramme, leie', 'system', 'm²', 'prof.tekstil', 450, { dim: 'på vegg eller fotplater', pricing: 'sum' }),
+  one('8000', 'Tekstilramme, leie', 'system', 'm²', 'prof.tekstil', 450, { dim: 'på vegg eller fotplater', pricing: 'sum', short: 'Tekstil' }),
   one('8040', 'Tekstil med trykk', 'system', 'm²', 'prof.tekstil', 650, { dim: 'silikonkant, montert', pricing: 'sum' }),
   one('8041', 'Tekstil hvit', 'system', 'm²', 'prof.tekstil', 420, { dim: 'uten grafikk, montert', pricing: 'sum' }),
   one('8042', 'Montering av kundens tekstil', 'system', 'm²', 'prof.tekstil', 170, { dim: 'duk i samme størrelse', pricing: 'sum' }),
   // Shelf in a wall module, drawn with its own tool (Bjørn 8.11.2026): same price alone or in a row, like a wall.
   // Brackets and board are on the picking list (Byggeregler H1–H3)
   {
-    ...one('6311', 'Rett hylle, d:30cm', 'system', 'stk', 'hyll.hyller', 247, { dim: '976 × 300 mm i veggfelt', pricing: 'fast' }),
+    ...one('6311', 'Rett hylle, d:30cm', 'system', 'stk', 'hyll.hyller', 247, { dim: '976 × 300 mm i veggfelt', pricing: 'fast', short: 'Hylle' }),
     variants: [{ artnr: '6311', name: 'Rett hylle, d:30cm', price: 247 }],
   },
-  one('8020', 'Foliedekor, dekal', 'system', 'm²', 'prof.folie', 520),
-  one('8021', 'Foliedekor, helt veggfelt 960 × 2420 mm', 'system', 'm²', 'prof.folie', 520),
+  one('8020', 'Foliedekor, dekal', 'system', 'm²', 'prof.folie', 520, { short: 'Dekal' }),
+  one('8021', 'Foliedekor, helt veggfelt 960 × 2420 mm', 'system', 'm²', 'prof.folie', 520, { short: 'Print' }),
   // Print on a counter of Disker og podier: its own article, the sizes cut on the line (Bjørn 13.11.2026, K20)
   one('8023', 'Foliedekor, diskfelt', 'system', 'm²', 'prof.folie', 520, { dim: 'helt felt på disk, kuttet per plate og dør' }),
   one('8022', 'Tilpasning av trykkfil over flere plater', 'system', 'stk', 'prof.folie', 450, { dim: 'ett motiv, delt per plate' }),

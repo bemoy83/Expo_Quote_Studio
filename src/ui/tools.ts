@@ -24,9 +24,12 @@ export type Brush =
   | { kind: 'podium'; product: string; ral: string; fine?: boolean; h?: number; stock?: string }
   /** Tekstilvegg: drawn on a system wall it is mounted there (InFrame), anywhere else it stands free on foot plates.
    * Drawn on the drawing grid in cells of the chosen grid step; a click next to a wall fills its free part. */
-  | { kind: 'textile' }
-  /** A motif: on a textile it becomes the print, on a wall panel a foil decal. */
-  | { kind: 'motif'; motif: string }
+  /** `motif`: the graphics the textile drawn gets, or a textile clicked; omitted = drawn without (Bjørn 14.11.2026). */
+  | { kind: 'textile'; motif?: string }
+  /** Print (`print`, the whole felt 960 × 2420 in foil) or Dekal (`decal`, a foil decal) on a wall felt, each its own pen
+   *  of Profilering (Bjørn 14.11.2026). Omitted `pen` only as asked for (panel, upload): the tool's pen takes the motif
+   *  (profilePen.ts withMotif). */
+  | { kind: 'motif'; motif: string; pen?: 'print' | 'decal' }
   /** Hylle 6311: one board in a wall module, on the face clicked; a drag along the wall lays a row (domain/shelves.ts). */
   | { kind: 'shelf' };
 

@@ -150,6 +150,23 @@ funksjoner, ikke artikler.
   innen 300 mm fra et sett, blir med i det (som disker kobles, K15). Tøm fjerner bare møbelet det peker på.
 - Mål på konferansestol, sofa og kafébord er anslag til de er målt.
 
+### Profilering
+
+- Pensel: én penn per produkt (Bjørn 14.11.2026: helt ulike produkter, det eneste de har felles er grafikken):
+  **Tekstil** (8000), **Print** (8021, hele veggfeltet i folie) og **Dekal** (8020), med kortnavnet fra produktlisten.
+- Farge: grafikken, de nyeste motivene og opplasting. Motivet havner på pennen i hånden, aldri en annen penn. Når du
+  bytter penn, følger motivet med.
+- Tekstil tegner med motivet på (begge sider av en frittstående). Et klikk på en tekstilvegg trykker den. Uten motiv
+  tegnes den som før, uten motiv.
+- Print og Dekal virker bare på veggfelt. På en tekstilvegg sier pillen at du skal bruke Tekstil. Print med samme
+  motiv som feltet har fra før, gjør ingenting.
+- Tilpasset: rutenettet, bare for Tekstil. Monteringsplast hører til i panelet, ikke i pillen.
+- Et motiv valgt i panelet eller lastet opp går på Profilerings penn (`withMotif` i `ui/profilePen.ts`).
+
+### Hyller
+
+- Pensel: **Hylle** (6311, kortnavnet). Heng blir en ny penn her senere, med samme oppbygning.
+
 ## Skuffen
 
 ### Når den åpnes
