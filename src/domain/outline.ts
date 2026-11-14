@@ -1,11 +1,11 @@
-// Room outlines: a closed, right-angled outline on the 1 m grid, without holes. A rectangle has four corners, an L six,
+// Room outlines: a closed, right-angled outline on the 250 grid (R5), without holes. A rectangle has four corners, an L six,
 // a U or T eight. The outline is always kept canonical: it starts at the back-most, then left-most corner, runs
 // clockwise as seen in the plan (back side first, left → right), and has no straight corners. Side i runs from
 // corner i to corner i + 1, so the room is on the left (side 1) of every side and its outside on the right (−1).
-// The 1 m cells inside an outline and the outline around a set of cells convert both ways; every change to an
+// The 250 × 250 cells inside an outline and the outline around a set of cells convert both ways; every change to an
 // outline goes through the cells, so a shape that is not a single loop without holes is refused.
-// Byggeregel R2 (docs/byggeregler.md).
-import { moduleKey, wallModules } from './grid';
+// Byggeregler R2, R5 (docs/byggeregler.md).
+import { onSpan } from './grid';
 import type { Point } from './types';
 
 export interface Rect {
@@ -15,10 +15,19 @@ export interface Rect {
   d: number;
 }
 
-/** A 1 × 1 m cell by its back-left corner. */
+/** Side of a cell, m: rooms stand on the 250 grid (Byggeregel R5). */
+export const CELL = 0.25;
+
+/** A CELL × CELL cell by its back-left corner, counted in cells from the stand's back-left corner. */
 export type Cell = [i: number, j: number];
 
 export const cellId = (i: number, j: number) => `${i},${j}`;
+
+/** The shortest side a room may have, m (Byggeregel R2). */
+export const MIN_SIDE = 1;
+
+/** A length in metres as a whole number of cells. */
+const toCells = (m: number) => Math.round(m / CELL);
 
 export const rectOutline = (r: Rect): Point[] => [
   [r.x, r.y],
@@ -82,32 +91,46 @@ export function nearestSide(o: Point[], x: number, y: number, tol: number): numb
 /** True when the point is on the floor inside the outline (the outline itself excluded). */
 export const contains = (o: Point[], x: number, y: number) => nearestSide(o, x, y, 1e-9) === undefined && inside(o, x, y);
 
-/** The 1 m cells inside the outline. */
+/** The cells inside the outline. */
 export function cellsOf(o: Point[]): Cell[] {
   const b = bounds(o);
   const out: Cell[] = [];
-  for (let i = b.x; i < b.x + b.w; i++) for (let j = b.y; j < b.y + b.d; j++) if (inside(o, i + 0.5, j + 0.5)) out.push([i, j]);
+  const [i0, j0] = [toCells(b.x), toCells(b.y)];
+  for (let i = i0; i < i0 + toCells(b.w); i++)
+    for (let j = j0; j < j0 + toCells(b.d); j++) if (inside(o, (i + 0.5) * CELL, (j + 0.5) * CELL)) out.push([i, j]);
   return out;
 }
 
-/** The bounding rectangle of a set of cells. */
+/** The bounding rectangle of a set of cells, m. */
 export function cellBounds(cells: Cell[]): Rect {
   const xs = cells.map((c) => c[0]);
   const ys = cells.map((c) => c[1]);
   const x = Math.min(...xs);
   const y = Math.min(...ys);
-  return { x, y, w: Math.max(...xs) - x + 1, d: Math.max(...ys) - y + 1 };
+  return { x: x * CELL, y: y * CELL, w: (Math.max(...xs) - x + 1) * CELL, d: (Math.max(...ys) - y + 1) * CELL };
 }
 
-/** The four sides of cell (i, j): the wall module there and the cell across it. */
+/** A cell side by its start corner and direction: `h` runs +x from (i, j), `v` runs +y. */
+const edgeKey = (i: number, j: number, k: 'h' | 'v') => `${i},${j}${k}`;
+
+/** The four sides of cell (i, j): the edge there and the cell across it. */
 export const cellSides = (i: number, j: number): { key: string; to: Cell }[] => [
-  { key: moduleKey([i, j], [i + 1, j]), to: [i, j - 1] },
-  { key: moduleKey([i, j + 1], [i + 1, j + 1]), to: [i, j + 1] },
-  { key: moduleKey([i, j], [i, j + 1]), to: [i - 1, j] },
-  { key: moduleKey([i + 1, j], [i + 1, j + 1]), to: [i + 1, j] },
+  { key: edgeKey(i, j, 'h'), to: [i, j - 1] },
+  { key: edgeKey(i, j + 1, 'h'), to: [i, j + 1] },
+  { key: edgeKey(i, j, 'v'), to: [i - 1, j] },
+  { key: edgeKey(i + 1, j, 'v'), to: [i + 1, j] },
 ];
 
-/** Module keys between the cells and the cells outside them, whatever the shape. */
+/** The cell edges a straight wall stretch a–b covers, on the 250 grid. */
+export function edgesOf(a: Point, b: Point): string[] {
+  const [x0, y0, x1, y1] = [toCells(Math.min(a[0], b[0])), toCells(Math.min(a[1], b[1])), toCells(Math.max(a[0], b[0])), toCells(Math.max(a[1], b[1]))];
+  const out: string[] = [];
+  if (y0 === y1) for (let i = x0; i < x1; i++) out.push(edgeKey(i, y0, 'h'));
+  else for (let j = y0; j < y1; j++) out.push(edgeKey(x0, j, 'v'));
+  return out;
+}
+
+/** Edges between the cells and the cells outside them, whatever the shape. */
 export function cellRim(cells: Cell[]): string[] {
   const set = new Set(cells.map(([i, j]) => cellId(i, j)));
   return cells.flatMap(([i, j]) => cellSides(i, j).filter((e) => !set.has(cellId(...e.to))).map((e) => e.key));
@@ -117,7 +140,7 @@ export function cellRim(cells: Cell[]): string[] {
  * The canonical outline around a set of cells, or null when the cells are not one area bounded by a single loop
  * (an area with a hole, two areas, or two parts touching only at a corner).
  */
-export function outlineOf(cells: Cell[]): Point[] | null {
+export function outlineOf(cells: Cell[], size = CELL): Point[] | null {
   if (!cells.length) return null;
   const set = new Set(cells.map(([i, j]) => cellId(i, j)));
   const has = (i: number, j: number) => set.has(cellId(i, j));
@@ -144,7 +167,7 @@ export function outlineOf(cells: Cell[]): Point[] | null {
     p = next.get(cellId(...p))!;
   } while (p && (p[0] !== start[0] || p[1] !== start[1]) && loop.length <= next.size);
   if (loop.length !== next.size) return null;
-  return corners(loop);
+  return corners(loop).map(([x, y]) => [x * size, y * size]);
 }
 
 /** Drop the points where the outline runs straight on. */
@@ -163,8 +186,10 @@ function corners(pts: Point[]): Point[] {
  * neighbours merge, so an L whose inner side is dragged flush with its outer side becomes a rectangle.
  */
 export function settle(raw: Point[]): Point[] | null {
-  const pts = raw.filter((p, i) => {
-    const q = raw[(i + 1) % raw.length];
+  // On the grid, so the corners compare exactly
+  const snapped = raw.map(([x, y]): Point => [toCells(x) * CELL, toCells(y) * CELL]);
+  const pts = snapped.filter((p, i) => {
+    const q = snapped[(i + 1) % snapped.length];
     return p[0] !== q[0] || p[1] !== q[1];
   });
   if (pts.length < 4) return null;
@@ -178,8 +203,10 @@ export function settle(raw: Point[]): Point[] | null {
     const straight = (a[0] === p[0] && p[0] === b[0]) || (a[1] === p[1] && p[1] === b[1]);
     if (straight && dot < 0) return null;
   }
+  // No side under 1 m (R2)
+  if (outlineSides(corners(pts)).some(([a, b]) => Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1]) < MIN_SIDE - 1e-9)) return null;
   const cells = cellsOf(pts);
-  if (area(pts) !== cells.length) return null;
+  if (Math.round(area(pts) / (CELL * CELL)) !== cells.length) return null;
   const out = outlineOf(cells);
   if (!out) return null;
   const own = corners(pts);
@@ -192,7 +219,7 @@ export function settle(raw: Point[]): Point[] | null {
 export const translate = (o: Point[], dx: number, dy: number): Point[] => o.map(([x, y]) => [x + dx, y + dy]);
 
 /**
- * Move side i by k metres across: along +y for a horizontal side, along +x for a vertical one. Not settled.
+ * Move side i by k metres (a whole number of cells) across: along +y for a horizontal side, along +x for a vertical one. Not settled.
  * Null when a neighbouring side would turn round: a side may be dragged flush with the side beyond its neighbour
  * (the neighbour shrinks to nothing), not past it, so dragging never adds a corner.
  */
@@ -209,10 +236,8 @@ export function moveSide(o: Point[], i: number, k: number): Point[] | null {
   return turns((i + n - 1) % n) || turns(j) ? null : out;
 }
 
-/** Module keys around an outline. */
-export function rimKeys(o: Point[]): string[] {
-  return outlineSides(o).flatMap(([from, to]) => wallModules({ id: '', from, to }).map((m) => m.key));
-}
+/** True when the wall stretch a–b lies on the outline (on one of its sides). */
+export const onOutline = (o: Point[], a: Point, b: Point) => outlineSides(o).some(([p, q]) => onSpan(p, q, a) && onSpan(p, q, b));
 
 /** True when two outlines share floor (touching sides do not count). */
 export function outlinesOverlap(a: Point[], b: Point[]): boolean {
@@ -268,24 +293,26 @@ export function insetOutline(o: Point[], e: number): Point[] {
 }
 
 /**
- * The space for a label: the largest rectangle of the outline's cells (on a tie, the squarer one). A room label is
- * fitted inside it so it never runs over the room's walls.
+ * The space for a label: the largest rectangle inside the outline (on a tie, the squarer one). A room label is
+ * fitted inside it so it never runs over the room's walls. Rectangles run between the outline's own corner lines.
  */
 export function labelRect(o: Point[]): Rect {
-  const b = bounds(o);
-  const cells = new Set(cellsOf(o).map(([i, j]) => cellId(i, j)));
-  let best = { n: 0, m: 0, r: b };
-  // Rooms are small: try every rectangle of cells in the bounding box
-  for (let x0 = b.x; x0 < b.x + b.w; x0++)
-    for (let y0 = b.y; y0 < b.y + b.d; y0++)
-      for (let x1 = x0 + 1; x1 <= b.x + b.w; x1++)
-        for (let y1 = y0 + 1; y1 <= b.y + b.d; y1++) {
-          const n = (x1 - x0) * (y1 - y0);
-          const m = Math.min(x1 - x0, y1 - y0);
-          if (n < best.n || (n === best.n && m <= best.m)) continue;
-          let full = true;
-          for (let i = x0; i < x1 && full; i++) for (let j = y0; j < y1 && full; j++) full = cells.has(cellId(i, j));
-          if (full) best = { n, m, r: { x: x0, y: y0, w: x1 - x0, d: y1 - y0 } };
+  const xs = [...new Set(o.map((p) => p[0]))].sort((a, b) => a - b);
+  const ys = [...new Set(o.map((p) => p[1]))].sort((a, b) => a - b);
+  // Each band between neighbouring corner lines is inside or outside as a whole
+  const full = xs.slice(1).map((x, i) => ys.slice(1).map((y, j) => inside(o, (xs[i] + x) / 2, (ys[j] + y) / 2)));
+  let best = { n: 0, m: 0, r: bounds(o) };
+  for (let a = 0; a < xs.length - 1; a++)
+    for (let c = 0; c < ys.length - 1; c++)
+      for (let b = a + 1; b < xs.length; b++)
+        for (let e = c + 1; e < ys.length; e++) {
+          const [w, d] = [xs[b] - xs[a], ys[e] - ys[c]];
+          const n = w * d;
+          const m = Math.min(w, d);
+          if (n < best.n - 1e-9 || (Math.abs(n - best.n) < 1e-9 && m <= best.m)) continue;
+          let ok = true;
+          for (let i = a; i < b && ok; i++) for (let j = c; j < e && ok; j++) ok = full[i][j];
+          if (ok) best = { n, m, r: { x: xs[a], y: ys[c], w, d } };
         }
   return best.r;
 }

@@ -5,16 +5,17 @@ import type { Point } from './types';
 describe('outline of cells', () => {
   it('a U gets eight corners, clockwise from the back-left', () => {
     const u: [number, number][] = [[0, 0], [0, 1], [1, 1], [2, 1], [2, 0]];
-    expect(outlineOf(u)).toEqual([[0, 0], [1, 0], [1, 1], [2, 1], [2, 0], [3, 0], [3, 2], [0, 2]]);
+    expect(outlineOf(u, 1)).toEqual([[0, 0], [1, 0], [1, 1], [2, 1], [2, 0], [3, 0], [3, 2], [0, 2]]);
   });
   it('two cells touching only at a corner, or a ring, have no single outline', () => {
-    expect(outlineOf([[0, 0], [1, 1]])).toBeNull();
+    expect(outlineOf([[0, 0], [1, 1]], 1)).toBeNull();
     const ring: [number, number][] = [[0, 0], [1, 0], [2, 0], [0, 1], [2, 1], [0, 2], [1, 2], [2, 2]];
-    expect(outlineOf(ring)).toBeNull();
+    expect(outlineOf(ring, 1)).toBeNull();
   });
   it('cells and outline convert both ways', () => {
     const l: Point[] = [[0, 0], [3, 0], [3, 1], [2, 1], [2, 2], [0, 2]];
-    expect(cellsOf(l)).toHaveLength(5);
+    // 250 × 250 cells (R5): 16 to the square metre
+    expect(cellsOf(l)).toHaveLength(5 * 16);
     expect(area(l)).toBe(5);
     expect(outlineOf(cellsOf(l))).toEqual(l);
   });
