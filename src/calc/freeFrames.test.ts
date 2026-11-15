@@ -1,3 +1,4 @@
+// Checks Byggeregler X6, X7, X8 og P2 (docs/byggeregler.md).
 import { describe, expect, it } from 'vitest';
 import { addFreeTextile } from '../domain/textile/free';
 import type { Point, Variant } from '../domain/types';

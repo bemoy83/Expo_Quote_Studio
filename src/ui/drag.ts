@@ -15,15 +15,20 @@ export interface WallDrag {
   p0: { x: number; y: number }
   /** The variant when the drag started; every step moves the wall from here. */
   v0: Variant
-  /** Whole metres moved so far, sideways and along the wall ("side,along"). */
+  /** Steps moved so far, sideways and along the wall ("side,along"). */
   delta: string
   horizontal: boolean
+  /** Shift held or «Fin» on: an inner wall moves in 250 steps instead of whole metres (Byggeregel V7, V9). */
+  fine?: boolean
+  /** «Fin» on when the drag started (3D, where Shift is read per move). */
+  fineLock?: boolean
 }
 
-/** Move an inner wall to whole metres under the pointer, both ways when it stands free, else only sideways. Past the
- *  stand's edge (or onto a stand wall) it stops at the last place it fits. One undo step per drag. */
+/** Move an inner wall to whole metres under the pointer (250 with Shift or «Fin», Byggeregel V7), both ways when it
+ *  stands free, else only sideways. Past the stand's edge (or onto a stand wall) it stops at the last place it fits.
+ *  One undo step per drag. */
 export function dragWall(d: WallDrag, q: { x: number; y: number }, onEdit: Edit, onCheckpoint: () => void) {
-  dragStep(d, q, (v, s, a) => moveWall(v, d.id, s, a), onEdit, onCheckpoint)
+  dragStep(d, q, (v, s, a) => moveWall(v, d.id, s, a), onEdit, onCheckpoint, d.fine ? CELL : 1)
 }
 
 /** Move a drawn takdrager the same way, both ways; it stops at the last place it fits (domain/innerBeams.ts). */
@@ -43,17 +48,19 @@ export function dragInnerBeamFine(d: WallDrag, q: { x: number; y: number }, stan
   onEdit(() => next, false)
 }
 
-/** The furthest whole-metre step toward the pointer that `move` accepts (it returns v when not), sideways first. */
-function dragStep(d: WallDrag, q: { x: number; y: number }, move: (v: Variant, side: number, along: number) => Variant, onEdit: Edit, onCheckpoint: () => void) {
-  const side = Math.round(d.horizontal ? q.y - d.p0.y : q.x - d.p0.x)
-  const along = Math.round(d.horizontal ? q.x - d.p0.x : q.y - d.p0.y)
+/** The furthest step (`step` m, whole metres by default) toward the pointer that `move` accepts (it returns v when
+ *  not), sideways first. */
+function dragStep(d: WallDrag, q: { x: number; y: number }, move: (v: Variant, side: number, along: number) => Variant, onEdit: Edit, onCheckpoint: () => void, step = 1) {
+  const side = Math.round((d.horizontal ? q.y - d.p0.y : q.x - d.p0.x) / step)
+  const along = Math.round((d.horizontal ? q.x - d.p0.x : q.y - d.p0.y) / step)
+  const m = (n: number) => Math.round(n * step * 1000) / 1000
   // Sideways first: a wall that cannot go along still goes across (domain/grips.ts)
   const r = furthest(side, along, (s, a) => {
-    const v = move(d.v0, s, a)
+    const v = move(d.v0, m(s), m(a))
     return v !== d.v0 ? v : null
   })
   const next = r?.value ?? d.v0
-  const key = r ? `${r.a},${r.b}` : '0,0'
+  const key = r ? `${m(r.a)},${m(r.b)}` : '0,0'
   if (key === d.delta) return
   if (d.delta === '0,0') onCheckpoint()
   d.delta = key

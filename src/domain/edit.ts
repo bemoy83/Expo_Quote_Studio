@@ -141,8 +141,8 @@ function touches(a: Wall, b: Wall): boolean {
 export const canMoveWall = (w: Wall) => !w.room && !isStandWall(w);
 
 /**
- * Move an inner wall sideways by `delta` whole metres (along its normal axis: y for horizontal walls, x for vertical),
- * and `along` whole metres in its own direction. Perpendicular drawn walls ending on it stretch or shrink with it
+ * Move an inner wall sideways by `delta` m (along its normal axis: y for horizontal walls, x for vertical), and `along`
+ * m in its own direction: whole metres, or 250 with Shift or «Fin» (Byggeregel V7, V9). Perpendicular drawn walls ending on it stretch or shrink with it
  * sideways, so walls drawn around an area resize like a room. It moves along its length only while no other inner wall
  * touches it, so a joint is never pulled apart (Bjørn 1.11.2026: a free-standing wall moves both ways).
  * Its openings, textiles and foils move with it. It may go all the way out to the stand's edge and stays an inner

@@ -1,3 +1,4 @@
+// Checks Byggeregel V6 (docs/byggeregler.md).
 import { describe, expect, it } from 'vitest';
 import { faces } from './faces';
 import { canMoveWall, eraseWalls, moveWall, paintWalls, setStand, splitWall } from './edit';

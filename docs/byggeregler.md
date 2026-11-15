@@ -13,8 +13,8 @@ i [foga-system.md](foga-system.md), veggbegrepene i [vegger.md](vegger.md), pris
 - **Verdier er data.** Mål, avstander og antall står i `src/rules/rules.ts` (mål i meter) og `src/foga/recipes.ts`
   (deler og mm), aldri i regelkoden. Art.nr. står i `src/foga/parts.ts`.
 - **Ny eller endret regel:** skriv den her først, legg verdiene i rules.ts eller recipes.ts, la koden vise til
-  nummeret, og skriv en test. `src/test/byggeregler.test.ts` sjekker at hver regel har kode som viser til den, at
-  filene finnes, og at koden ikke viser til et nummer som ikke står her.
+  nummeret, og skriv en test som nevner nummeret. `src/test/byggeregler.test.ts` sjekker at hver regel har kode og en
+  test som viser til den, at filene finnes, og at koden ikke viser til et nummer som ikke står her.
 
 Formen er: **Nummer Navn.** Regelen. *Kilde · verdier · kode · test.*
 Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» etter kilden, med hva som mangler.
@@ -50,8 +50,8 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   standvegg fordi den kommer fra standtypen, aldri fordi den står i kanten. Unntaket med nabogodkjenning er ikke bygget.
   *Bjørn 31.10.2026 · kode `src/domain/walls.ts` · test `src/domain/standWalls.test.ts`*
 - **V7 Innervegg.** Tegnes hvor som helst på standen, også ut mot kanten, men blir aldri standvegg. Flyttes i hele
-  meter, ikke inn på en standvegg. Frittstående flyttes i begge retninger, inntil en annen innervegg bare til siden.
-  *Bjørn 31.10.2026 og 1.11.2026 · kode `src/domain/edit.ts` · test `src/domain/standWalls.test.ts`*
+  meter, med Shift eller «Fin» i 250 (V9, Bjørn 15.11.2026), ikke inn på en standvegg. Frittstående flyttes i begge retninger, inntil en annen innervegg bare til siden.
+  *Bjørn 31.10.2026, 1.11.2026 og 15.11.2026 · kode `src/domain/edit.ts`, `src/ui/drag.ts` · test `src/domain/standWalls.test.ts`, `src/ui/drag.test.ts`*
 - **V9 Vegglinje.** En systemvegg eller tekstilvegg kan stå på hvilken som helst linje i 250-rasteret, ikke bare på
   metrelinjene. Uten Shift tegner penselen i hele meter på metrelinjene; med Shift eller «Fin» viser den 250 på den
   250-linjen som er nærmest pekeren, og draget svinger på 250-noder. Modulene legges i hele meter fra start og resten
@@ -92,7 +92,8 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   *Bjørn 1.11.2026 · `RECIPES.wall.support` · kode `src/calc/wallSupports.ts` · test `src/calc/wallSupports.test.ts`*
 - **S3 Avstand.** Per rett strekning: en plate i hver fri ende, maks 3 m mellom to støtter, og en endeplate trekkes inn
   hele stolper (maks 1 m) bare så langt avstanden krever. Minst 2 gjelder bare en rett vegg fri i begge ender, fra 1 m.
-  3 m: endene. 4 m: den ene 1 m inn. 5 m: begge 1 m inn. 6 m: tre.
+  3 m: endene. 4 m: den ene 1 m inn. 5 m: begge 1 m inn. 6 m: tre. Avstandene regnes i meter langs veggen, så en kort
+  modul (V1, V10, D8) teller med sin lengde, og en vegg delt i korte moduler er fortsatt én strekning (Bjørn 15.11.2026).
   *Bjørn 1.11.2026 · `RECIPES.wall.support.rule` · kode `src/calc/supports.ts`, `src/calc/wallSupports.ts` · test `src/calc/wallSupports.test.ts`*
 - **S4 Ut fra hjørne.** Ut fra et hjørne eller en T står veggen av seg selv opptil 1 m (1 × 1 trenger ingen plate). Over
   1 m får den én plate, deretter gjelder S3.
@@ -101,7 +102,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   inntil), og en stolpe under en takdrager.
   *Bjørn 1.11.2026 · kode `src/calc/wallSupports.ts` · test `src/calc/wallSupports.test.ts`*
 - **S6 Fire låste sider.** Med takdrager på får en strekning som er holdt i begge ender, og der endene henger sammen
-  rundt en annen vei med vegger og takdragere (en lukket firkant), ingen plater.
+  rundt en annen vei med vegger og takdragere (en lukket firkant), ingen plater. Det gjelder også vegger og dragere
+  utenfor hele meter (V9, T15): en drager henger sammen med hver stolpe og dragerende som ligger på den, og en drager
+  på krok på veggen mellom stolpene (T15) er et hjørne i firkanten.
   *Bjørn 3.11.2026 · kode `src/calc/wallSupports.ts` · test `src/calc/beams/supportBeams.test.ts`*
 - **S7 Uten takdrager.** Er takdragerne valgt bort, gjelder S3 også mellom to hjørner: en bakvegg på 6 m får én plate
   midt på.

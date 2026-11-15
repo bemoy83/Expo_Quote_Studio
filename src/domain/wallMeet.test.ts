@@ -1,5 +1,6 @@
 // Byggeregel V10 (Bjørn 14.11.2026): a wall meeting another between its posts splits the module it meets, the two
 // sharing a post; the rest keeps its whole modules.
+// Checks Byggeregel V11 (docs/byggeregler.md).
 import { describe, expect, it } from 'vitest';
 import { calc } from '../calc/calc';
 import { DEFAULT_CATALOG } from '../catalog/defaultCatalog';

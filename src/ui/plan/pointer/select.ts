@@ -66,7 +66,7 @@ export function startSelect(c: PointerCtx, q: P): Drag {
     // A room's own wall resizes the room; an inner wall moves
     const room = w.room && v.rooms.find((r) => r.id === w.room!.id)
     if (room) return roomSide(c, room.id, w.room!.side, q, select)
-    if (canMoveWall(w)) return { kind: 'wall', id: w.id, p0: q, v0: v, delta: '0,0', horizontal: w.from[1] === w.to[1], moved: false, select }
+    if (canMoveWall(w)) return { kind: 'wall', id: w.id, p0: q, v0: v, delta: '0,0', horizontal: w.from[1] === w.to[1], moved: false, fine: c.fine, select }
     return { kind: 'click', select }
   }
   const room = roomAt(v, q.x, q.y)

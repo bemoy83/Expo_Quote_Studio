@@ -3,6 +3,7 @@
 // module, takdrager 292 between posts with two 600 per end (pre-assembled), frames 43TX + 4 × 617 + 2 × 520, braces
 // 90 with a 600 in each end (pre-assembled, listed with their frames), header over door or curtain:
 // 2490 − 20 − 2000 − 10 = 460, plate 976 × 410. Lines go under the subgroups of the shared product grouping (catalog/groups.ts).
+// Checks Byggeregler V2, V3, V4, V5, P1 og P4 (docs/byggeregler.md).
 import { describe, expect, it } from 'vitest';
 import { createVariant } from '../domain/variant';
 import { RULES } from '../rules/rules';
