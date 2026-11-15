@@ -63,8 +63,8 @@ export function usePlanPointer(input: PlanPointerInput) {
   /** What a Tøm press takes on release. */
   const [erasing, setErasing] = useState<Erasing | null>(null)
   /** The drawing pens, which show and draw in 250 with Shift held or «Fin» on (one drawing tool, Bjørn 14.11.2026,
-   *  draw.ts); the snap dots show the 250 grid while Shift is held. */
-  const drawsFine = pens.wallTool || pens.textileTool || pens.podiumTool || pens.openingTool
+   *  draw.ts), Takdrager in 500 (Byggeregel T8); the snap dots show that grid while Shift is held. */
+  const drawsFine = pens.wallTool || pens.textileTool || pens.podiumTool || pens.openingTool || pens.beamTool
   const fineOf = (shift: boolean) => drawsFine && (shift || penFine(brush, input.fine))
   const [shiftHeld, setShiftHeld] = useState(false)
   useEffect(() => {
@@ -127,7 +127,7 @@ export function usePlanPointer(input: PlanPointerInput) {
     if (tool === 'erase') return startErase(c, q)
     if (fb.carpetFill) return startCarpetFill(c, q)
     if (pens.floorTool) return startFloor(c, q)
-    if ((pens.wallTool && brush?.kind === 'wall') || pens.textileTool) {
+    if ((pens.wallTool && brush?.kind === 'wall') || pens.textileTool || pens.beamTool) {
       const g = startGrip(c, q)
       if (g) return g
     }

@@ -92,6 +92,10 @@ export interface BeamRecipe {
    *  every post the lifted beam rests on, with `post` down into the post, and at a hook point between a lifted beam and
    *  one that is not, the same piece with `hook` into the other beam. */
   lift: { profile: string; length: number; post: string; hook: string };
+  /** The joint a half metre (a 500 length, cut 460) is put onto a whole length with (Bjørn 15.11.2026, Byggeregel T18):
+   *  a piece of `profile` `length` mm standing between the two, taking the couplings in both beams' ends as a post does;
+   *  no post there. */
+  half: { profile: string; length: number };
 }
 
 /** Opening module (door or curtain): above it a header (overstykke). The Foga door (292 frame, lock 410) is picked as one unit. */
@@ -232,7 +236,7 @@ export const RECIPES: Recipes = {
       support: SUPPORT,
     },
   },
-  beam: { profile: '292', coupling: { code: '600', perEnd: 2 }, hook: { profile: '01', top: 20, leg: 80, screw: 'M5 maskinskrue', nut: '503' }, lift: { profile: '94', length: 80, post: '609', hook: '600' } },
+  beam: { profile: '292', coupling: { code: '600', perEnd: 2 }, hook: { profile: '01', top: 20, leg: 80, screw: 'M5 maskinskrue', nut: '503' }, lift: { profile: '94', length: 80, post: '609', hook: '600' }, half: { profile: '92', length: 80 } },
   door: { leaf: 2000, floorGap: 20, topGap: 10, curtainBottomRail: '92', frame: '292', hinge: { code: '403', fromEnd: 150 }, lock: { code: '410', height: 1000 } },
   // Bjørn 8.11.2026: 91F at the ends, 91FF between, 290 mm, one 600 into the post; board 18 × 300 × 976 into the post's inner corner
   shelf: { end: '91F', twin: '91FF', bracket: 290, coupling: { code: '600', perBracket: 1 }, board: { code: 'HYLLEPLATE', w: 976, d: 300, t: 18 },

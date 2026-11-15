@@ -36,7 +36,7 @@ import type { PlanHits } from './pointer/hits'
 import { isDoor, openingEdge } from './pointer/opening'
 import type { Pens } from './pointer/pens'
 import { counterUnder, drawPodiumAt, podiumStart } from './pointer/podium'
-import { runOf } from './pointer/run'
+import { runOf, runUnit } from './pointer/run'
 import { gripDrawAt } from './pointer/grip'
 import { gripHint, gripWith, sameGrip, type GripDraw } from './grips'
 import { placeHolds, placeKey } from './pointer/place'
@@ -240,15 +240,15 @@ function targetOf(p: NextInput): NextTarget | null {
   if (!hover) return null
   // On a grip of what is chosen (a room's in Velg, a counter's also with its pen) or a link of the counter: what a
   // click or drag does
-  if (tool === 'select' || pens.podiumTool || pens.textileTool || (pens.wallTool && brush?.kind === 'wall')) {
+  if (tool === 'select' || pens.podiumTool || pens.textileTool || pens.beamTool || (pens.wallTool && brush?.kind === 'wall')) {
     const l = hits.podiumLinkAt(hover)
     if (l) return target(`link:${l.at}`, () => line({ hint: l.kind === 'joint' ? 'Klikk for å dele disken her' : 'Klikk for å lenke diskene sammen', hotGrip: l.at }))
     const g = hits.gripAt(hover)
     if (g && gripWith(g.on, tool, brush)) return target(`grip:${g.at}`, () => line({ hint: gripHint(g.on, v), hotGrip: g.at }))
   }
-  // The drawing pens: what a click stores, 250 with Shift or Fin
+  // The drawing pens: what a click stores, 250 with Shift or Fin (500 for Takdrager)
   const at = hover
-  const shown = shownModule(v.stand, at, !!p.fine)
+  const shown = shownModule(v.stand, at, !!p.fine, runUnit(pens))
   if (pens.wallTool && wallRal) {
     const m = plateAt(p.mods, at)
     if (m) return target(`plate:${m.key}`, () => area({ edit: (x) => paintPlates(x, p.mods, [m.key], wallRal), hint: null }))

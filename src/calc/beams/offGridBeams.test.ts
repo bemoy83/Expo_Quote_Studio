@@ -115,5 +115,9 @@ describe('fritt plassert innvendig takdrager', () => {
     // On the grid: none
     expect(beamOffsets(variant(ROW, { innerBeams: [beam('b1', [2, 0], [2, 4])] }), run(variant(ROW, { innerBeams: [beam('b1', [2, 0], [2, 4])] })))).toEqual([]);
   });
-});
 
+  it('mållinje (Byggeregel T8): a free end on a half metre along the beam, to the nearest wall or stand edge', () => {
+    const v = variant(ROW, { innerBeams: [beam('b1', [2, 0], [2, 2.5])] });
+    expect(beamOffsets(v, run(v))).toEqual([{ beamId: 'b1', from: [2, 2.5], to: [2, 4], length: 1.5 }]);
+  });
+});

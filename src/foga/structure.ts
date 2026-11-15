@@ -16,7 +16,10 @@ export interface ModuleSpec {
 
 /** One length of takdrager, post centre to post centre. */
 export interface BeamSpec {
+  /** Post centre to post centre (or to the joint), mm. */
   lengthMm: number;
+  /** The half metre at the end of a length, joined onto the whole length before it with a standing 92 (Byggeregel T18). */
+  joined?: true;
 }
 
 /**

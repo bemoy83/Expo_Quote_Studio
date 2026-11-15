@@ -119,7 +119,8 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   en nede, i ytterkamrene). Underkant 2460, topp i flukt med veggene (2540).
   *Bjørn 31.10.2026 og 6.11.2026 · `rules.beam`, `RECIPES.beam` · kode `src/foga/engine.ts` · test `src/foga/engine.test.ts`*
 - **T2 Deling.** En strekning deles i færrest mulige lengder på maks 6 m, så like som mulig, med skjøter i hele meter:
-  7 → 4 + 3, 13 → 5 + 4 + 4. Det er stolpe i hver skjøt.
+  7 → 4 + 3, 13 → 5 + 4 + 4. Det er stolpe i hver skjøt. En halv meter legges sist på løpet, på den siste lengden
+  (7,5 → 4 + 3,5), og skjøtes på etter T18.
   *Bjørn 31.10.2026 · `rules.beam.max` · kode `src/calc/beams/beamSegments.ts`, `src/calc/beams/beams.ts` · test `src/calc/calc.test.ts`*
 - **T3 Standard takdrager.** Legges langs de åpne sidene av standen. En ende mot en vegg deler veggens stolpe.
   *Bjørn 31.10.2026 · kode `src/calc/beams/beams.ts` · test `src/calc/calc.test.ts`*
@@ -138,9 +139,12 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   takdrager: deler stolpen på en vegg eller stolpe, henger på krok på lengden av en drager, og stopper foran en vegg
   langs linjen. Et lengre spenn får én per 6 m. Den er en standard takdrager. Uten takdrager blir det fotplater (S2).
   *Bjørn 3.11.2026 · `rules.beam.supportSpan` · kode `src/calc/beams/supportBeams.ts` · test `src/calc/beams/supportBeams.test.ts`*
-- **T8 Innvendig takdrager.** Tegnes av kunden, rett og i hele meter innenfor standen, med Shift eller «Fin» i 250 som
-  veggen (V1, V9; da gjelder T15 der den ikke treffer stolper), aldri langs en vegg eller oppå en annen takdrager. Samme profil, høyde og deling (T1, T2) som standard.
-  *Bjørn 1.11.2026 · kode `src/domain/innerBeams.ts`, `src/calc/beams/innerBeams.ts` · test `src/domain/innerBeams.test.ts`*
+- **T8 Innvendig takdrager.** Tegnes av kunden, rett innenfor standen i hele og halve meter: uten Shift i hele meter,
+  med Shift eller «Fin» i 500 fra et punkt på halvmeterrutenettet (da gjelder T15 der den ikke treffer stolper), minst en
+  halv meter, aldri langs en vegg eller oppå en annen takdrager, også når endene står på en halv meter. Dra i Velg flytter
+  den i hele meter, med Shift eller «Fin» i 500 langs drageren (og 50 mm på tvers, T15). Samme profil, høyde og deling
+  (T1, T2) som standard.
+  *Bjørn 1.11.2026 og 15.11.2026 · kode `src/domain/innerBeams.ts`, `src/calc/beams/innerBeams.ts` · test `src/domain/innerBeams.test.ts`*
 - **T9 Krok.** En ende som treffer en annen takdrager henger på den med krok: ingen stolpe der, og drageren den henger
   på deles ikke. Én krok per krokpunkt, i 01 som en T over drageren: enveis (ett ben) når dragere henger fra én side,
   toveis (to ben) fra begge. Festes med M5 maskinskrue i 503. Plukkes hel, uten eget art.nr. og uten kost eller pris.
@@ -153,7 +157,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   bygges ikke den biten. Drageren stopper på veggens stolper, veggen regnes ikke som holdt av den, og drageren kommer
   tilbake når veggen flyttes bort. Over et rom er lov: drageren hviler på romveggene.
   *Bjørn 1.11.2026 · kode `src/calc/beams/innerBeams.ts` · test `src/calc/beams/innerBeams.test.ts`*
-- **T12 Egne stolper.** En tegnet takdrager har stolper bare i frie ender og 6 m-skjøter, og ingen tverrdrager. Under
+- **T12 Egne stolper.** En tegnet takdrager har stolper bare i frie ender og 6 m-skjøter (ikke i halvmeterskjøten, T18), og ingen tverrdrager. Under
   hver egen stolpe står fotplate 750 med 795 på tvers av drageren; den faller bort der en drager fra den andre retningen
   (tegnet eller støttedrager) møter stolpen.
   *Bjørn 1.11.2026 · kode `src/calc/beams/innerBeams.ts`, `src/calc/beams/beams.ts` · test `src/calc/beams/innerBeams.test.ts`*
@@ -193,6 +197,12 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   drageren deler veggens endestolpe. En tegnet takdrager henger fortsatt på krok der den møter en vegg mellom stolpene
   (T15), og en støttedrager (T7) stopper på krok der.
   *Bjørn 14.11.2026 · kode `src/calc/beams/beamLift.ts`, `src/calc/beams/beams.ts`, `src/calc/beams/supportBeams.ts`, `src/calc/beams/innerBeams.ts`, `src/calc/beams/wallLines.ts` · test `src/calc/beams/offGridWalls.test.ts`*
+- **T18 Halv meter skjøtes på.** En takdrager kappes aldri til en lengde som 1460. En lengde i hele og halve meter er en
+  hel lengde og en 500 (kappet 460, med 2 × 600 i hver ende som alle lengder, T1) skjøtet ende mot ende med en stående 92
+  på 80 mm: de 2 × 600 i enden av hver drager går inn i 92-stykket, som i en stolpe. Det står ingen stolpe i den
+  skjøten. Tilbudet har samme meterpris (lm).
+  *Bjørn 15.11.2026 · `RECIPES.beam.half` · kode `src/foga/fromVariant.ts`, `src/foga/engine.ts`, `src/calc/lines/beams.ts` · test `src/calc/beams/halfBeams.test.ts`*
+
 ## D · Dør og forheng
 
 - **D1 Dør.** Fogas ferdige dør: karm i 292 med lås 410 ferdig montert, plukkes som ett dørblad. Bladet er 2000 høyt og

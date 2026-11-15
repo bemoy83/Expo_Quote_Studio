@@ -14,11 +14,13 @@ function beamLine(c: CalcContext, b: BeamLayout, posts: number, hooks: number, w
   const lm = c.lmOf(b);
   const meta = [
     ...(what ? [what] : []),
-    count(specs.length, 'lengde', 'lengder'),
+    count(b.segments.length, 'lengde', 'lengder'),
     ...(hooks ? [count(hooks, 'krok', 'kroker')] : []),
   ];
   const uses: Use[] = [
     ...specs.map((x) => ({ id: ITEM.beam(x.lengthMm - 40), qty: 1 })),
+    // Byggeregel T18: the joint of each half metre
+    ...(specs.some((x) => x.joined) ? [{ id: ITEM.beamHalf, qty: specs.filter((x) => x.joined).length }] : []),
     { id: ITEM.post, qty: posts },
     { id: ITEM.beamLm, qty: lm },
     { id: ITEM.beamPost, qty: posts },

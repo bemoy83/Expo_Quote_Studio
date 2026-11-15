@@ -45,6 +45,8 @@ export const ITEM = {
   beamPost: 'montering-takdragerstolpe',
   /** A post or hook point extended with 94 × 80 so a takdrager passes over a textile wall (Bjørn 6.11.2026). */
   beamLift: 'skjot-takdrager',
+  /** A half metre joined onto a whole takdrager length with a standing 92 × 80 (Byggeregel T18, Bjørn 15.11.2026). */
+  beamHalf: 'skjot-halvmeter-takdrager',
   frame: 'handtering-ramme',
   /** Free-standing frame, up and down, per coupling (Bjørn 31.10.2026). */
   frameCoupling: 'montering-ramme-kobling',
@@ -123,8 +125,9 @@ const WALL_SHORT = WALL_CC.filter((cc) => cc < 1000);
 const railMm = (cc: number) => cc - 40;
 const plateMm = (cc: number) => RECIPES.wall.plate.w - (1000 - cc);
 
-/** Takdrager 292 in every standard length: centres 1–6 m, cut 40 shorter, couplings mounted. */
-const BEAM_M = [1, 2, 3, 4, 5, 6] as const;
+/** Takdrager 292 in every standard length: centres 1–6 m and the half metre joined on (T18), cut 40 shorter, couplings
+ *  mounted. */
+const BEAM_M = [0.5, 1, 2, 3, 4, 5, 6] as const;
 const beamLen = (m: number) => m * 1000 - 40;
 
 export const ITEM_DEFS: readonly ItemDef[] = [
@@ -165,6 +168,7 @@ export const ITEM_DEFS: readonly ItemDef[] = [
   def(ITEM.beamLm, 'Montering takdrager per meter', 'm'),
   def(ITEM.beamPost, 'Montering takdragerstolpe', 'stk'),
   def(ITEM.beamLift, 'Skjøt 94 × 80 mm med kobling, med montering', 'stk'),
+  def(ITEM.beamHalf, 'Skjøt 92 × 80 mm stående, halvmeter på takdrager, med montering', 'stk'),
   def(ITEM.frame, 'Håndtering av løse rammedeler per ramme', 'stk'),
   def(ITEM.frameCoupling, 'Montering ramme per kobling', 'stk'),
   def(ITEM.textileEdge, 'Montering tekstil per meter omkrets', 'm'),
@@ -227,6 +231,7 @@ export const EXAMPLE_TIMES: Readonly<Record<string, Time>> = {
   [ITEM.beamLm]: onSite(0.9, 0.45),
   [ITEM.beamPost]: onSite(1.35, 0.9),
   [ITEM.beamLift]: { ...pvt(0.08, 0.08, 0.08), ...onSite(0.45, 0.3) },
+  [ITEM.beamHalf]: { ...pvt(0.08, 0.08, 0.08), ...onSite(0.45, 0.3) },
   [ITEM.frame]: pvt(3, 2, 2),
   [ITEM.frameCoupling]: onSite(2, 1),
   [ITEM.textileEdge]: onSite(4, 2),
@@ -277,6 +282,7 @@ export const EXAMPLE_RECIPES: Readonly<Record<string, ItemRecipe>> = {
   ...Object.fromEntries(BEAM_M.map((m): [string, ItemRecipe] => [ITEM.beam(beamLen(m)), { parts: [['292', m - 0.04], ['600', 4]], dg: 'utleie' }])),
   [ITEM.foot('750')]: { parts: [['750', 1], ['795', 1]], dg: 'utleie' },
   [ITEM.beamLift]: { parts: [['94', 0.08], ['609', 1]], dg: 'utleie' },
+  [ITEM.beamHalf]: { parts: [['92', 0.08]], dg: 'utleie' },
   // Textile walls (kostmotor, tekstil): the frame parts rented out, the textile bought for the job, the work
   [ITEM.frameProfileM]: { parts: [['43TX', 1]], dg: 'utleie' },
   [ITEM.cornerPostM]: { parts: [['92LTX', 1]], dg: 'utleie' },

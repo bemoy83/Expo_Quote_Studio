@@ -1,8 +1,9 @@
-// Editing innvendige takdragere: drawn straight on the 1 m grid inside the stand, never along a wall or on top of
-// another beam. Layout, posts, hooks and foot plates: calc/beams/innerBeams.ts.
+// Editing innvendige takdragere: drawn straight inside the stand in whole and half metres, never along a wall or on top
+// of another beam. Layout, posts, hooks and foot plates: calc/beams/innerBeams.ts.
 // Byggeregel T8 (docs/byggeregler.md).
+import { movedEnd, type RunEnd } from './grips';
 import { nextId } from './ids';
-import { segmentKeys as keys } from './grid';
+import { modulesAlong, uncoveredRuns } from './grid';
 import type { InnerBeam, Point, Variant } from './types';
 import { builtModules } from './walls';
 
@@ -14,18 +15,21 @@ export interface Run {
 
 export type BeamEdit = { v: Variant; id: string } | { error: string };
 
+/** The shortest takdrager, m: a half metre (Byggeregel T8). */
+const HALF = 0.5;
+const EPS = 1e-6;
+
 const inStand = (v: Variant, [x, y]: Point) => x >= 0 && y >= 0 && x <= v.stand.width && y <= v.stand.depth;
 
 /** Why a beam from a to b can not go there, or null. `others`: drawn beams it must not lie on (itself left out). */
 function refusal(v: Variant, a: Point, b: Point, standard: readonly Run[], others: readonly InnerBeam[]): string | null {
   if (a[0] !== b[0] && a[1] !== b[1]) return 'Takdrageren må gå rett langs rutenettet';
   if (!inStand(v, a) || !inStand(v, b)) return 'Takdrageren må stå innenfor standen';
-  const ks = keys(a, b);
-  if (!ks.length) return 'Takdrageren må være minst 1 m';
-  const walls = new Set(builtModules(v).map((m) => m.key));
-  if (ks.some((k) => walls.has(k))) return 'Takdrageren kan ikke gå langs en vegg';
-  const beams = new Set([...standard, ...others].flatMap((r) => keys(r.from, r.to)));
-  if (ks.some((k) => beams.has(k))) return 'Det går allerede en takdrager her';
+  if (Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1]) < HALF - EPS) return 'Takdrageren må være minst en halv meter';
+  // Along for some length, wherever the wall or beam stands in the grid
+  if (modulesAlong(builtModules(v), a, b).length) return 'Takdrageren kan ikke gå langs en vegg';
+  const beams = [...standard, ...others].map((r) => ({ a: r.from, b: r.to }));
+  if (modulesAlong(beams, a, b).length) return 'Det går allerede en takdrager her';
   return null;
 }
 
@@ -40,32 +44,21 @@ export function drawInnerBeam(v: Variant, a: Point, b: Point, standard: readonly
 
 /** Take the part from a to b out of every drawn beam it lies along: a beam is split where a piece is taken out. */
 export function eraseInnerBeams(v: Variant, a: Point, b: Point): Variant {
-  const gone = new Set(keys(a, b));
   const beams = v.innerBeams ?? [];
+  const gone = [{ a, b }];
   const out: InnerBeam[] = [];
   let changed = false;
   for (const x of beams) {
-    const ks = keys(x.from, x.to);
-    if (!ks.some((k) => gone.has(k))) {
+    if (!modulesAlong(gone, x.from, x.to).length) {
       out.push(x);
       continue;
     }
     changed = true;
-    const dx = Math.sign(x.to[0] - x.from[0]);
-    const dy = Math.sign(x.to[1] - x.from[1]);
-    const at = (t: number): Point => [x.from[0] + dx * t, x.from[1] + dy * t];
-    let start: number | null = null;
-    let first = true;
-    for (let i = 0; i <= ks.length; i++) {
-      const keep = i < ks.length && !gone.has(ks[i]);
-      if (keep && start === null) start = i;
-      if (!keep && start !== null) {
-        const id = first ? x.id : nextId([...beams, ...out].map((y) => y.id), 'td');
-        out.push({ id, from: at(start), to: at(i) });
-        first = false;
-        start = null;
-      }
-    }
+    const kept = uncoveredRuns(gone, x.from, x.to).filter(([p, q]) => Math.abs(q[0] - p[0]) + Math.abs(q[1] - p[1]) > HALF - EPS);
+    kept.forEach(([from, to], q) => {
+      const id = q === 0 ? x.id : nextId([...beams, ...out].map((y) => y.id), 'td');
+      out.push({ id, from, to });
+    });
   }
   return changed ? { ...v, innerBeams: out } : v;
 }
@@ -99,18 +92,38 @@ export const offGrid = (b: InnerBeam) => {
 /**
  * Move a drawn beam `offset` m across its direction (Shift + dra or «Fin» in the pill, Byggeregel T15), in steps of
  * FINE_STEP, from where it is: off the 1 m grid, its ends where it meets the walls and beams across it. A whole metre
- * puts it back on the grid. Returns v when it would not fit.
+ * puts it back on the grid. `along`: m along its own direction too, in half metres (Byggeregel T8). Returns v when it
+ * would not fit.
  */
-export function shiftInnerBeam(v: Variant, id: string, offset: number, standard: readonly Run[]): Variant {
+export function shiftInnerBeam(v: Variant, id: string, offset: number, standard: readonly Run[], along = 0): Variant {
   const beams = v.innerBeams ?? [];
   const x = beams.find((y) => y.id === id);
   const d = round3(Math.round(offset / FINE_STEP) * FINE_STEP);
-  if (!x || !d) return v;
+  const t = round3(Math.round(along / HALF) * HALF);
+  if (!x || (!d && !t)) return v;
   const h = x.from[1] === x.to[1];
-  const shift = ([px, py]: Point): Point => (h ? [px, round3(py + d)] : [round3(px + d), py]);
+  const shift = ([px, py]: Point): Point => (h ? [round3(px + t), round3(py + d)] : [round3(px + d), round3(py + t)]);
   const from = shift(x.from);
   const to = shift(x.to);
   if (refusal(v, from, to, standard, beams.filter((y) => y.id !== id))) return v;
+  return { ...v, innerBeams: beams.map((y) => (y.id === id ? { ...y, from, to } : y)) };
+}
+
+/**
+ * The drawn beam `id` with its end `end` moved `d` m along it (out when d > 0), an end grip (Byggeregel T8): whole metres,
+ * half metres with Shift or «Fin». Null when it cannot: shorter than a half metre, outside the stand, along a wall or
+ * on another beam.
+ */
+export function stretchInnerBeam(v: Variant, id: string, end: RunEnd, d: number, standard: readonly Run[]): Variant | null {
+  const beams = v.innerBeams ?? [];
+  const x = beams.find((y) => y.id === id);
+  if (!x) return null;
+  if (!d) return v;
+  const { from, to } = movedEnd(x, end, d);
+  const len = Math.abs(to[0] - from[0]) + Math.abs(to[1] - from[1]);
+  const dir = (p: Point, q: Point) => [Math.sign(q[0] - p[0]), Math.sign(q[1] - p[1])].join();
+  if (len < HALF - EPS || dir(from, to) !== dir(x.from, x.to)) return null;
+  if (refusal(v, from, to, standard, beams.filter((y) => y.id !== id))) return null;
   return { ...v, innerBeams: beams.map((y) => (y.id === id ? { ...y, from, to } : y)) };
 }
 
