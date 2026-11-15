@@ -186,18 +186,26 @@ export function uncoveredRuns(mods: readonly Pick<Module, 'a' | 'b'>[], a: Point
 
 
 /** The grid edge (module) closest to p, clamped to the stand: on the metre grid, or with `step` 0.25 on the 250 grid
- *  (Byggeregel V9). */
+ *  (Byggeregel V9). The grid starts in the back left corner; on a stand in half metres the last module toward the right
+ *  and the front is the half metre to the stand's edge, and the edge is a line too (Byggeregel V14). */
 export function nearestEdge(stand: Stand, p: { x: number; y: number }, step = 1): Module {
   const { width: W, depth: D } = stand;
   const x = Math.max(0, Math.min(W, p.x));
   const y = Math.max(0, Math.min(D, p.y));
-  const on = (v: number) => round3(Math.round(v / step) * step);
-  const cell = (v: number, size: number) => round3(Math.max(0, Math.min(size - step, Math.floor(v / step) * step)));
-  const hy = on(y);
-  const vx = on(x);
+  // The nearest line: a step, or the stand's edge when that is nearer
+  const on = (v: number, size: number) => {
+    const r = Math.round(v / step) * step;
+    const c = r <= size + 1e-9 ? r : Math.floor(v / step) * step;
+    return round3(size - v < Math.abs(v - c) ? size : c);
+  };
+  const last = (size: number) => (Math.ceil(size / step - 1e-6) - 1) * step;
+  const cell = (v: number, size: number) => round3(Math.max(0, Math.min(last(size), Math.floor(v / step) * step)));
+  const end = (c: number, size: number) => round3(Math.min(c + step, size));
+  const hy = on(y, D);
+  const vx = on(x, W);
   const i = cell(x, W);
   const j = cell(y, D);
-  return Math.abs(y - hy) <= Math.abs(x - vx) ? makeModule([i, hy], [round3(i + step), hy]) : makeModule([vx, j], [vx, round3(j + step)]);
+  return Math.abs(y - hy) <= Math.abs(x - vx) ? makeModule([i, hy], [end(i, W), hy]) : makeModule([vx, j], [vx, end(j, D)]);
 }
 
 export const SIDES: readonly Side[] = ['back', 'left', 'right', 'front'];

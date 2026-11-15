@@ -48,15 +48,18 @@ export function wallOffsets(stand: Stand, walls: readonly Wall[], mods: readonly
   };
   // On another wall: a module not on this wall's own line that p lies on
   const onOther = (w: Wall, p: Point) => mods.some((m) => !(onSpan(w.from, w.to, m.a) && onSpan(w.from, w.to, m.b)) && onSpan(m.a, m.b, p));
+  // The stand's edge is read off the drawing like a metre line, also on a stand in half metres (Byggeregel V14)
+  const size = [stand.width, stand.depth];
+  const on = (p: Point, i: 0 | 1) => whole(p[i]) || Math.abs(p[i] - size[i]) < EPS;
   for (const w of walls) {
     if (w.room) continue;
     // Along: 0 for a wall along x
     const k: 0 | 1 = w.from[1] === w.to[1] ? 0 : 1;
     const j = (1 - k) as 0 | 1;
     // Its line, measured at a free end (else its start)
-    if (!whole(w.from[j])) add([w.from, w.to].find((p) => !onOther(w, p)) ?? w.from, j);
+    if (!on(w.from, j)) add([w.from, w.to].find((p) => !onOther(w, p)) ?? w.from, j);
     // Each end off the metre
-    for (const e of [w.from, w.to]) if (!whole(e[k])) add(e, k);
+    for (const e of [w.from, w.to]) if (!on(e, k)) add(e, k);
   }
   return [...out.values()];
 }
