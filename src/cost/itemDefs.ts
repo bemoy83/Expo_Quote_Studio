@@ -179,7 +179,7 @@ export const ITEM_DEFS: readonly ItemDef[] = [
   def(ITEM.shelfMount, 'Montering per hylle', 'stk'),
   def(ITEM.shelfPick, 'Vareplukk hyller, per ordre', 'stk'),
   ...READY.flatMap(({ s, z, what }) => [
-    def(ITEM.counter(z.length, z.depth, z.h), `${what} ${z.length} × ${z.depth} mm, CC ${z.h}, ferdig montert`, 'stk'),
+    def(ITEM.counter(z.length, z.depth, z.h), `${what} ${z.length} × ${z.depth} × ${z.h + RECIPES.counter.railHeight} mm, ferdig montert`, 'stk'),
     def(ITEM.counterPlates(z.length, z.depth, z.h), `Platebytte ${what.toLowerCase()} ${s.artnr}, plater i RAL`, 'stk'),
   ]),
   ...COUNTER_PROFILES.map((code) => def(ITEM.counterProfile(code), `Disk bygget på stedet: profil ${code}, per meter`, 'm')),
