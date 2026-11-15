@@ -38,16 +38,24 @@ export function strokeFrom(stand: Stand, p0: { x: number; y: number }, p: { x: n
   const e0h = e0.orientation === 'h';
   const cl = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
   const on = (v: number) => Math.round(v / grid) * grid;
-  const cell = (v: number) => Math.floor(v / grid) * grid;
+  const cell = (v: number, size: number): [number, number] => {
+    const lo = cl(Math.floor(v / grid) * grid, 0, (Math.ceil(size / grid - EPS) - 1) * grid);
+    return [lo, Math.min(lo + grid, size)];
+  };
+  // The module under the pointer is always part of the stroke; it grows from its far side in whole cells, and in whole
+  // metres the half metre at the stand's edge is the last one (Byggeregel V14)
+  const grow = ([lo, hi]: [number, number], to: number, max: number): [number, number] => {
+    if (to < lo) return [hi, cellsTo(lo, to, step, max, 0, true)];
+    const end = cellsTo(hi, Math.max(to, hi), step, max);
+    const rest = max - end;
+    return [lo, rest > EPS && rest < step - EPS && to > end + rest / 2 ? max : end];
+  };
   if (alongX(p0, p)) {
     const y = e0h ? e0.a[1] : cl(on(p0.y), 0, D);
-    const i = e0h ? Math.min(e0.a[0], e0.b[0]) : cl(cell(p0.x), 0, W - grid);
-    // The module under the pointer is always part of the stroke: start on its far side from the drag
-    const a = p.x >= p0.x ? i : i + grid;
-    return [[a, y], [cellsTo(a, p.x, step, W, 1, a > i), y]];
+    const [a, b] = grow(e0h ? [Math.min(e0.a[0], e0.b[0]), Math.max(e0.a[0], e0.b[0])] : cell(p0.x, W), p.x, W);
+    return [[a, y], [b, y]];
   }
   const x = !e0h ? e0.a[0] : cl(on(p0.x), 0, W);
-  const j = !e0h ? Math.min(e0.a[1], e0.b[1]) : cl(cell(p0.y), 0, D - grid);
-  const a = p.y >= p0.y ? j : j + grid;
-  return [[x, a], [x, cellsTo(a, p.y, step, D, 1, a > j)]];
+  const [a, b] = grow(!e0h ? [Math.min(e0.a[1], e0.b[1]), Math.max(e0.a[1], e0.b[1])] : cell(p0.y, D), p.y, D);
+  return [[x, a], [x, b]];
 }

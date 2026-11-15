@@ -4,7 +4,7 @@
 // and modules holding another opening have no target. Hover shows the door where it would land.
 import { useState } from 'react'
 import { doorSpots, moveOpening, openingById, openingRoom, sideName, type DoorSpot } from '../../domain/doors'
-import { openSides, sideEnds } from '../../domain/grid'
+import { metreLines, openSides, sideEnds } from '../../domain/grid'
 import { bounds } from '../../domain/outline'
 import { roomSize } from '../../domain/rooms'
 import type { Point, Side, Variant } from '../../domain/types'
@@ -58,8 +58,8 @@ export function DoorMap({ v, openingId, onEdit }: Props) {
       </div>
       <svg style={{ maxWidth: W * c + 2 * P, maxHeight: D * c + 2 * P }} viewBox={`${-P} ${-P} ${W * c + 2 * P} ${D * c + 2 * P}`} role="group" aria-label="Miniplan, flytt døren">
         <rect x={0} y={0} width={W * c} height={D * c} fill={SURFACE} />
-        {Array.from({ length: W - 1 }, (_, i) => bar([i + 1, 0], [i + 1, D], BORDER, 1, 1, `gx${i}`))}
-        {Array.from({ length: D - 1 }, (_, j) => bar([0, j + 1], [W, j + 1], BORDER, 1, 1, `gy${j}`))}
+        {metreLines(W).map((x) => bar([x, 0], [x, D], BORDER, 1, 1, `gx${x}`))}
+        {metreLines(D).map((y) => bar([0, y], [W, y], BORDER, 1, 1, `gy${y}`))}
         {/* Rooms: the door's room in full, the others fainter, with their area when there is room for it */}
         {v.rooms.map((r) => {
           const b = bounds(r.outline)

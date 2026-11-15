@@ -13,9 +13,10 @@ import { fmt } from '../format'
 import { beamSummary } from '../names'
 import { Sw } from '../plan/quick/parts'
 
-/** Stand side, whole metres. */
+/** Stand side, whole and half metres (Byggeregel V14). */
 const SIDE_MIN = 1
 const SIDE_MAX = 40
+const SIDE_STEP = 0.5
 
 const TYPE_TEXT: Record<StandType, string> = {
   row: 'Bare fronten er åpen.',
@@ -72,8 +73,8 @@ export function StandSettings({ v, res, onEdit, terms, onTerms }: StandSettingsP
       big
       label={label}
       value={s[key]}
-      decimals={0}
-      step={1}
+      decimals={1}
+      step={SIDE_STEP}
       min={SIDE_MIN}
       max={SIDE_MAX}
       onChange={(n) => onEdit((x) => setStand(x, { ...x.stand, [key]: n }))}

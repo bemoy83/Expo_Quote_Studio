@@ -5,7 +5,7 @@ import type { CalcResult } from '../../calc/calc'
 import type { Variant } from '../../domain/types'
 import { Button, IconButton } from '../controls'
 import { count, fmt, kr, signed } from '../format'
-import { frameCount, TYPE_NAME } from '../names'
+import { frameCount, standSize, TYPE_NAME } from '../names'
 import { KeyFigures } from './KeyFigures'
 import { VariantTabs } from './VariantTabs'
 
@@ -48,7 +48,7 @@ export function SketchBand({ variants, current, res, others, layout, fold, onSel
       </div>
       <KeyFigures
         figures={[
-          { label: 'Areal', value: fmt(k.area), unit: 'm²', sub: `${v.stand.width} × ${v.stand.depth} m` },
+          { label: 'Areal', value: fmt(k.area), unit: 'm²', sub: standSize(v.stand) },
           { label: 'Åpne sider', value: String(k.openSides), sub: TYPE_NAME[v.stand.type] },
           {
             label: 'Vegg',

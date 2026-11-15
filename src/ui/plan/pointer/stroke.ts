@@ -32,8 +32,11 @@ const whole = (n: number) => Math.abs(n - Math.round(n)) < 1e-6
 /** Where q lies on the nearest wall module that is off the metre grid, when it is that near; else null. */
 function offGridAt(c: PointerCtx, q: P): P | null {
   let best: { d: number; p: P } | null = null
+  // The stand's edge is a metre line too, also on a stand in half metres (Byggeregel V14)
+  const { width: W, depth: D } = c.v.stand
+  const onGrid = (p: Point) => (whole(p[0]) || Math.abs(p[0] - W) < 1e-6) && (whole(p[1]) || Math.abs(p[1] - D) < 1e-6)
   for (const m of c.mods) {
-    if ([...m.a, ...m.b].every(whole)) continue
+    if (onGrid(m.a) && onGrid(m.b)) continue
     const d = distToSegment(q, m.a, m.b)
     if (d > NEAR || (best && d >= best.d)) continue
     best = { d, p: m.orientation === 'h' ? { x: q.x, y: m.a[1] } : { x: m.a[0], y: q.y } }
