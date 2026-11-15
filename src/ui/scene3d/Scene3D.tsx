@@ -1,7 +1,6 @@
 // 3D view. Rebuilds the scene from the model on every change (see build.ts) and keeps only the camera.
 // Velg works as in the plan: click a wall to edit it, drag furniture, drag an inner wall to move it.
-// A room is moved by dragging one of its walls or its see-through roof, and resized by grabbing the top of a side
-// (the top GRIP metres of the wall): nothing is drawn there until the pointer is over it, then the edge lights up.
+// A room is moved by dragging one of its walls or its see-through roof, and resized by its grips when chosen (R5, R8).
 // Textile frames and foil decals are clicked to select and dragged along their face; a frame or a motif dragged
 // from Profilering is dropped on the wall face under the pointer (drop.ts). The brushes draw in the plan.
 // The grips of what is chosen are the plan's, drawn on top (grips.ts) and dragged as there.
@@ -12,18 +11,14 @@ import { useEffect, useLayoutEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import type { CalcResult } from '../../calc/calc'
-import { isHorizontal, outlineSide } from '../../domain/outline'
-import type { Room } from '../../domain/types'
-import { wallHeight } from '../../rules/rules'
 import { IconButton } from '../controls'
-import { rules } from '../env'
 import type { Highlight } from '../tools'
 import { type PlanSelection } from '../plan/selection'
 import { build, dispose } from './build'
 import { AISLE, CAMERA_Y, HOME, setCamera, type Angle } from './camera'
 import { listenForDrops } from './drop'
 import { addLights, aimSun } from './lights'
-import { clearOverlay, dimExcept, gripMesh, showOverlay, type Overlay } from './overlays'
+import { dimExcept } from './overlays'
 import { CLICK_PX, endDrag, hoverCursor, moveDrag, startDrag, type Drag, type PointerProps } from './pointer/drag'
 import { sceneHits, type Hit } from './pointer/hits'
 import { dropGrips, gripAtScreen, gripSprites, sceneGrips, type SceneGrip } from './grips'
@@ -81,26 +76,6 @@ export function Scene3D(p: Props) {
     const unfit = fitToElement(el, renderer, camera, v.render)
 
     const hits = sceneHits(renderer, camera, () => v.content, () => props.current.v)
-    /** The lit top edge of the room side under the pointer. */
-    let grip: Overlay | null = null
-    const clearGrip = () => {
-      grip = clearOverlay(scene, grip, v.render)
-    }
-    const showGrip = (room: Room, side: number) => {
-      const key = `${room.id}|${side}|${room.outline.join(' ')}`
-      grip = showOverlay(scene, grip, key, () => gripMesh(props.current.v.stand, outlineSide(room.outline, side), wallHeight(rules)), v.render)
-    }
-    /** Resize cursor across the side as it appears on screen. */
-    const resizeCursor = (room: Room, side: number) => {
-      const s = props.current.v.stand
-      const [a, b] = outlineSide(room.outline, side)
-      const mid = new THREE.Vector3((a[0] + b[0]) / 2 - s.width / 2, wallHeight(rules), (a[1] + b[1]) / 2 - s.depth / 2)
-      const n = isHorizontal([a, b]) ? new THREE.Vector3(0, 0, 1) : new THREE.Vector3(1, 0, 0)
-      const p0 = mid.clone().project(camera)
-      const p1 = mid.clone().add(n).project(camera)
-      return Math.abs(p1.x - p0.x) * camera.aspect > Math.abs(p1.y - p0.y) ? 'ew-resize' : 'ns-resize'
-    }
-
     // The grips of what is chosen (scene3d/grips.ts), redrawn when the sketch, the choice or the hot one changes (they
     // keep their size on screen as the camera moves)
     let gripGroup: THREE.Group | null = null
@@ -130,7 +105,6 @@ export function Scene3D(p: Props) {
       down = { x: e.clientX, y: e.clientY, hit }
       drag = startDrag(props.current, hits, hit, e, gripAt(e))
       if (drag.kind !== 'orbit') {
-        clearGrip()
         controls.enabled = false
         renderer.domElement.setPointerCapture(e.pointerId)
       }
@@ -143,17 +117,12 @@ export function Scene3D(p: Props) {
           redrawGrips.current()
         }
         if (g) {
-          clearGrip()
           renderer.domElement.style.cursor = 'grab'
           renderer.domElement.title = gripHint(g.on, props.current.v)
           return
         }
         renderer.domElement.title = ''
-        const hit = hits.pick(e)
-        const side = hits.sideAt(hit)
-        if (side) showGrip(side.room, side.side)
-        else clearGrip()
-        renderer.domElement.style.cursor = hoverCursor(props.current.v, hit, side ? resizeCursor(side.room, side.side) : null)
+        renderer.domElement.style.cursor = hoverCursor(props.current.v, hits.pick(e))
         return
       }
       if (drag.kind === 'orbit' || !down) return
@@ -183,7 +152,6 @@ export function Scene3D(p: Props) {
       el.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerup', onUp)
       unlisten()
-      clearGrip()
       unfit()
       controls.dispose()
       if (v.content) dispose(v.content)

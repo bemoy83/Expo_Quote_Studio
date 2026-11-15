@@ -3,15 +3,9 @@
 import * as THREE from 'three'
 import { faceAt, faceNormal, faces, sideOf, type FaceSide } from '../../../domain/faces'
 import { offsetAlong, wallDirection } from '../../../domain/grid'
-import { roomSideAt } from '../../../domain/rooms'
-import type { Room, Variant, Wall } from '../../../domain/types'
-import { wallHeight } from '../../../rules/rules'
+import type { Variant, Wall } from '../../../domain/types'
 import type { FaceTarget } from '../../dnd'
-import { rules } from '../../env'
 import type { Tag } from '../build'
-
-/** Top part of a room wall that resizes the room instead of moving it, m. */
-export const GRIP = 0.2
 
 /** A pickable mesh under the pointer, and where it was hit. */
 export type Hit = NonNullable<Tag['pick']> & { point: THREE.Vector3 }
@@ -90,13 +84,6 @@ export function sceneHits(renderer: THREE.WebGLRenderer, camera: THREE.Perspecti
     return toModel(q)
   }
 
-  /** The room side whose top edge is under the pointer (a stand wall shared with the room counts too). */
-  const sideAt = (hit: Hit | null): { room: Room; side: number } | undefined => {
-    if (!hit?.wallId || hit.point.y < wallHeight(rules) - GRIP) return undefined
-    const q = toModel(hit.point)
-    return roomSideAt(model(), q.x, q.y, 0.12)
-  }
-
   /** Pointer height on the upright plane through `at` (world) that faces the camera: for dragging something up. */
   const onUpright = (e: At, at: THREE.Vector3) => {
     setRay(e)
@@ -109,7 +96,7 @@ export function sceneHits(renderer: THREE.WebGLRenderer, camera: THREE.Perspecti
     return q.y
   }
 
-  return { pick, faceOf, onFace, onFloor, onUpright, sideAt, toModel }
+  return { pick, faceOf, onFace, onFloor, onUpright, toModel }
 }
 
 export type SceneHits = ReturnType<typeof sceneHits>
