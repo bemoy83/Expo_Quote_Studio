@@ -187,13 +187,19 @@ export function PlanView(p: Props) {
       : keep && !layers.some((l) => keep.has(l))
         ? PEN_DIMMED
         : 1
-  // A grip of the chosen counter (K14) is a hand to take hold of, closed while dragging it, in Velg too
+  // A grip of what is chosen (plan/grips.ts) is a hand to take hold of, closed while dragging it, in Velg too; a room's
+  // side taken anywhere along it keeps the resize arrow while dragged
   const grips = !!next?.outcome.hotGrip
   const holding = dragging?.kind === 'podium' || dragging?.kind === 'grip'
-  const cursor = dragging?.kind === 'grip' || (tool === 'select' && next?.outcome.hotGrip) ? (holding ? 'grabbing' : 'grab') : tool !== 'select' ? (grips ? (holding ? 'grabbing' : 'grab') : 'crosshair') : roomCursor()
+  const sideDrag = dragging?.kind === 'grip' && dragging.on.type === 'room' && dragging.on.grip.kind === 'side' && !next?.outcome.hotGrip ? dragging.on : null
+  const cursor = sideDrag ? roomSideCursor(sideDrag.id, sideDrag.grip.kind === 'side' ? sideDrag.grip.side : 0) : dragging?.kind === 'grip' || (tool === 'select' && next?.outcome.hotGrip) ? (holding ? 'grabbing' : 'grab') : tool !== 'select' ? (grips ? (holding ? 'grabbing' : 'grab') : 'crosshair') : roomCursor()
+  function roomSideCursor(id: string, side: number) {
+    const r = v.rooms.find((x) => x.id === id)
+    return r && sideIsHorizontal(r, side) ? 'ns-resize' : 'ew-resize'
+  }
   function roomCursor() {
     const d = dragging
-    if (d?.kind === 'room') return d.mode === 'move' ? 'grabbing' : d.horizontal ? 'ns-resize' : 'ew-resize'
+    if (d?.kind === 'room') return 'grabbing'
     if (!hover || p.mini) return 'default'
     const e = roomEdgeAt(hover)
     if (e) return sideIsHorizontal(e.room, e.side) ? 'ns-resize' : 'ew-resize'
