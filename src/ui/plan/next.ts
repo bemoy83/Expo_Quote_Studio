@@ -13,9 +13,8 @@ import { tileAt, type Rect } from '../../domain/floor/tiles'
 import { uncoveredRuns, wallModules, type Module } from '../../domain/grid'
 import { shownModule } from '../../domain/runDraw'
 import { drawInnerBeam, type Run } from '../../domain/innerBeams'
-import { addObject, placeSet, footprintBox, objectBoxes, objectFootprint } from '../../domain/objects'
-import { NO_ROOM, podiumHeights, type PodiumDraw } from '../../domain/podiums'
-import { podiumGrips, type PodiumGripDraw } from '../../domain/podiumGrips'
+import { addObject, placeSet, footprintBox, objectFootprint } from '../../domain/objects'
+import { podiumHeights, type PodiumDraw } from '../../domain/podiums'
 import { fusePodiums } from '../../domain/podiumLinks'
 import { addShelf, addShelfRow, penHeight } from '../../domain/shelves/edit'
 import type { TextileResult } from '../../domain/textile/brush'
@@ -38,7 +37,8 @@ import { isDoor, openingEdge } from './pointer/opening'
 import type { Pens } from './pointer/pens'
 import { counterUnder, drawPodiumAt, podiumStart } from './pointer/podium'
 import { runOf } from './pointer/run'
-import { podiumGripAt } from './pointer/podiumGrip'
+import { gripDrawAt } from './pointer/grip'
+import { gripHint, sameGrip, type GripDraw } from './grips'
 import { placeHolds, placeKey } from './pointer/place'
 import { paintPlates, plateAt, platesAlong } from './pointer/plates'
 import type { Drag, P } from './pointer/types'
@@ -222,11 +222,10 @@ function targetOf(p: NextInput): NextTarget | null {
   }
 
   // A grip of the chosen counter dragged (K14): what a release stores, with what goes away hatched
-  if (dragging?.kind === 'podiumGrip') {
-    const r = dragging.moved && hover ? podiumGripAt(p, dragging, hover) : null
-    const o = v.objects.find((x) => x.id === dragging.id)
-    const at = o && podiumGrips(o).find((g) => JSON.stringify(g.grip) === JSON.stringify(dragging.grip))?.at
-    return r ? gripTarget(r) : target(`grip:held`, () => line({ hint: GRIP_HINT, hotGrip: at }))
+  if (dragging?.kind === 'grip') {
+    const r = dragging.moved && hover ? gripDrawAt(p, dragging, hover) : null
+    const at = hits.grips().find((g) => sameGrip(g.on, dragging.on))?.at
+    return r ? gripTarget(r) : target(`grip:held`, () => line({ hint: gripHint(dragging.on), hotGrip: at }))
   }
 
   // Floor
@@ -243,8 +242,8 @@ function targetOf(p: NextInput): NextTarget | null {
   if (tool === 'select' || pens.podiumTool) {
     const l = hits.podiumLinkAt(hover)
     if (l) return target(`link:${l.at}`, () => line({ hint: l.kind === 'joint' ? 'Klikk for å dele disken her' : 'Klikk for å lenke diskene sammen', hotGrip: l.at }))
-    const g = hits.podiumGripAt(hover)
-    if (g) return target(`grip:${g.at}`, () => line({ hint: GRIP_HINT, hotGrip: g.at }))
+    const g = hits.gripAt(hover)
+    if (g) return target(`grip:${g.at}`, () => line({ hint: gripHint(g.on), hotGrip: g.at }))
   }
   // The drawing pens: what a click stores, 250 with Shift or Fin
   const at = hover
@@ -384,18 +383,12 @@ function objectTarget(v: Variant, brush: Brush | null, q: P): NextTarget | null 
 const ONTO_HINT = 'Inntil disken: klikk for å bygge på, dra for å tegne påbygget · kanten mot disken står fast'
 
 /** On a grip of the chosen counter (K14). */
-const GRIP_HINT = 'Dra for å flytte kanten · 500-steg, Shift 250'
-
-/** A grip of the chosen counter dragged (K14): the counter after with its outer size in the pill, what goes away
+/** A grip of what is chosen dragged (plan/grips.ts): what a release stores with its outer size in the pill, what goes away
  *  hatched; refused, the reason, hatched where it would stand when it has no room. */
-function gripTarget(r: PodiumGripDraw): NextTarget {
-  const box = (o: PlacedObject) => footprintBox(o, objectFootprint(place, o)!)
-  const erased = r.gone ? objectBoxes(place, r.gone) : undefined
-  const key = `grip:${'error' in r ? r.error : ''}:${JSON.stringify(r.o)}`
-  if ('error' in r) return target(key, () => line({ hint: r.error, ...(r.error === NO_ROOM && { invalid: { rect: box(r.o) } }) }))
-  const b = box(r.o)
-  const text = `${mm(b.x1 - b.x0)} × ${mm(b.y1 - b.y0)}`
-  return target(key, () => line({ edit: () => r.v, hint: null, erased, pill: { a: [b.x0, b.y1], b: [b.x1, b.y1], width: 'wall', text } }))
+function gripTarget(r: GripDraw): NextTarget {
+  const key = `grip:${r.key}`
+  if ('error' in r) return target(key, () => line({ hint: r.error, ...(r.invalid && { invalid: { rect: r.invalid } }) }))
+  return target(key, () => line({ edit: () => r.v, hint: null, erased: r.erased, pill: { ...r.pill, width: 'wall' } }))
 }
 
 /** Disker og podier pointing (K10): on a counter, a click chooses it and nothing is shown; elsewhere the section a click

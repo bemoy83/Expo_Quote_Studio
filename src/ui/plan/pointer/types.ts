@@ -8,12 +8,12 @@ import type { BuiltModule } from '../../../domain/walls'
 import type { Run } from '../../../domain/innerBeams'
 import type { Motif, Point, Variant } from '../../../domain/types'
 import type { PodiumDraw, PodiumDrag } from '../../../domain/podiums'
-import type { PodiumGrip } from '../../../domain/podiumGrips'
 import type { PodiumLink } from '../../../domain/podiumLinks'
 import type { RunDrag } from '../../../domain/runDraw'
 import type { RoomDrag, WallDrag } from '../../drag'
 import type { Brush, Tool } from '../../tools'
 import type { DrawPress } from './draw'
+import type { GripOn } from '../grips'
 import type { PlanSelection } from '../selection'
 import type { Erasing, EraseTarget } from './erase'
 import type { FloorBrush } from './floorBrush'
@@ -49,9 +49,9 @@ export type Drag =
   /** Disker og podier pressed (podium.ts, draw.ts): `click`, what a click on the section shown stores (podiumStart);
    *  `drag`, what a drag draws from it, none on a counter or where it has no room. */
   | ({ kind: 'podium'; click: PodiumDraw | null; drag: PodiumDrag | null } & DrawPress)
-  /** A grip of the chosen counter of Disker og podier pressed, in Velg or with its pen (podiumGrip.ts, K14): its side or
-   *  corner follows the pointer from the press `p0` in 500 steps, 250 with `fine` (Shift, or «Fin» on the pen). */
-  | { kind: 'podiumGrip'; id: string; grip: PodiumGrip; p0: P; moved: boolean; fine: boolean }
+  /** A grip of what is chosen pressed (grip.ts, plan/grips.ts), in Velg or with its pen: its side or corner follows the
+   *  pointer from the press `p0` in coarse steps, 250 with `fine` (Shift, or «Fin»). */
+  | { kind: 'grip'; on: GripOn; p0: P; moved: boolean; fine: boolean }
   /** A link of the chosen counter pressed (podiumLink.ts, K15): a click breaks a joint or links a counter against it. */
   | { kind: 'podiumLink'; id: string; link: PodiumLink; p0: P; moved: boolean }
   | { kind: 'freeMove'; id: string; p0: P; v0: Variant; moved: boolean; select: PlanSelection }

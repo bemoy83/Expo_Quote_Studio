@@ -189,8 +189,8 @@ export function PlanView(p: Props) {
         : 1
   // A grip of the chosen counter (K14) is a hand to take hold of, closed while dragging it, in Velg too
   const grips = !!next?.outcome.hotGrip
-  const holding = dragging?.kind === 'podium' || dragging?.kind === 'podiumGrip'
-  const cursor = dragging?.kind === 'podiumGrip' || (tool === 'select' && next?.outcome.hotGrip) ? (holding ? 'grabbing' : 'grab') : tool !== 'select' ? (grips ? (holding ? 'grabbing' : 'grab') : 'crosshair') : roomCursor()
+  const holding = dragging?.kind === 'podium' || dragging?.kind === 'grip'
+  const cursor = dragging?.kind === 'grip' || (tool === 'select' && next?.outcome.hotGrip) ? (holding ? 'grabbing' : 'grab') : tool !== 'select' ? (grips ? (holding ? 'grabbing' : 'grab') : 'crosshair') : roomCursor()
   function roomCursor() {
     const d = dragging
     if (d?.kind === 'room') return d.mode === 'move' ? 'grabbing' : d.horizontal ? 'ns-resize' : 'ew-resize'
@@ -324,7 +324,7 @@ export function PlanView(p: Props) {
       {!p.mini && tool === 'select' && <PickLayer v={v} mods={mods} picked={pointer.picked} selection={selection} />}
 
       {/* Interaction preview: measure pill, invalid hatch and hint of the pen in hand, Tøm, room handles, the chosen lanes */}
-      <PreviewLayer v={v} tool={tool} brush={brush} selection={selection} floorSize={p.floorSize} pointer={pointer} next={next?.outcome ?? null} mini={p.mini} onHint={p.onHint} />
+      <PreviewLayer v={v} tool={tool} brush={brush} selection={selection} grips={hits.grips()} floorSize={p.floorSize} pointer={pointer} next={next?.outcome ?? null} mini={p.mini} onHint={p.onHint} />
       </PlanScaleContext.Provider>
     </svg>
     {pillPlace && (

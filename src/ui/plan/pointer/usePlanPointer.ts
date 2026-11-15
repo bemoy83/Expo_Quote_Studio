@@ -25,12 +25,12 @@ import { run, runShift, startRunDrag } from './run'
 import { stroke } from './stroke'
 import { podium, podiumShift, startPodium } from './podium'
 import { penFine } from './draw'
-import { podiumGrip, startPodiumGrip } from './podiumGrip'
+import { grip, startGrip } from './grip'
 import { podiumLink, startPodiumLink } from './podiumLink'
 import type { Drag, DragHandlers, P, PointerCtx } from './types'
 import { wall } from './wall'
 
-const DRAGS: { [K in Drag['kind']]: DragHandlers<K> } = { stroke, run, plates, floor, carpetFill, click, object, wall, beam, room, podium, podiumGrip, podiumLink, freeMove, erase, shelf, shelfMove, place: placeDrag }
+const DRAGS: { [K in Drag['kind']]: DragHandlers<K> } = { stroke, run, plates, floor, carpetFill, click, object, wall, beam, room, podium, grip, podiumLink, freeMove, erase, shelf, shelfMove, place: placeDrag }
 const handlersOf = (d: Drag) => DRAGS[d.kind] as DragHandlers<Drag['kind']>
 
 /** What the plan passes in: the context without the previews' setters and state, which the hook owns. */
@@ -134,7 +134,7 @@ export function usePlanPointer(input: PlanPointerInput) {
     if (pens.wallTool || pens.beamTool || pens.textileTool) return startRunDrag(c, q, fineOf(shift))
     if (pens.openingTool) return startPlace(c, 'opening', q)
     if (pens.decorTool) return startPlace(c, 'decor', q)
-    if (pens.podiumTool) return startPodiumLink(c, q) ?? startPodiumGrip(c, q) ?? startPodium(c, q, fineOf(shift))
+    if (pens.podiumTool) return startPodiumLink(c, q) ?? startGrip(c, q) ?? startPodium(c, q, fineOf(shift))
     if (pens.objectTool) return startPlace(c, 'object', q)
     if (pens.shelfTool) return startShelf(c, q)
     return startSelect(c, q)
@@ -151,7 +151,7 @@ export function usePlanPointer(input: PlanPointerInput) {
     if (d?.kind === 'beam') d.fine = e.shiftKey || !!d.fineLock
     // Shift held (or «Fin» on in the pill): a room moves and stretches in 250 (Byggeregel R5)
     if (d?.kind === 'room') d.fine = e.shiftKey || !!d.fineLock
-    if (d?.kind === 'podiumGrip') d.fine = e.shiftKey || penFine(brush)
+    if (d?.kind === 'grip') d.fine = e.shiftKey || penFine(brush)
     if (d) drag.current = d
     // Held without moving counts as dragging too, so the hover preview stops while pressed
     setDragging(d ?? null)
@@ -167,7 +167,7 @@ export function usePlanPointer(input: PlanPointerInput) {
     if (d.kind === 'podium') podiumShift(d, fineOf(e.shiftKey))
     if (d.kind === 'run') runShift(d, fineOf(e.shiftKey))
     if (d.kind === 'plates' && d.as) runShift(d.as, fineOf(e.shiftKey))
-    if (d.kind === 'podiumGrip') d.fine = e.shiftKey || penFine(brush)
+    if (d.kind === 'grip') d.fine = e.shiftKey || penFine(brush)
     handlersOf(d).move?.(c, d, q)
   }
 

@@ -36,6 +36,13 @@ kalkylen trenger hver løs del en prisartikkel i `cost/itemDefs.ts` (`ITEM`, `IT
 pris for, får ingen kost og merkes i kalkylen. Kjøpt til jobben (Samba-duk) legges i egne innkjøp (`cost/own-list.ts`, ekte priser bare i
 kostgrunnlaget). Regel og kilde føres i `docs/byggeregler.md`.
 
+**Grep på noe valgt (felles grepsystem):** stegene og letingen etter lengste lovlige steg er i `domain/grips.ts`.
+Hva som har grep, hvor de står og hva et drag lagrer, står i `ui/plan/grips.ts` (`GripOn`, `gripsOf`, `dragGrip`):
+nytt objekt med grep legges til der, med en ren domenefunksjon som gir objektet etter draget (som `gripPodium` i
+`domain/podiumGrips.ts`). Resten er felles: treff `hits.grips`/`hits.gripAt`, draget `plan/pointer/grip.ts` (Velg i
+`select.ts`, pennen i `usePlanPointer.ts`), forhåndsvisningen `gripTarget` i `plan/next.ts` (`erased` skraveres,
+grunnen i hintet) og tegningen `layers/Grips.tsx` (rund på side, firkant i hjørne).
+
 ## Per produkt
 
 ### Vegger (standvegg, innervegg, romvegg)
@@ -209,9 +216,8 @@ og kalkyle med 6560, som er et ferdig oppsett i det (K22).
   der to seksjoner møtes, `groups`: delene som henger sammen, `edgeRuns`: kanter som rette løp, `lineOf`: endene til en
   linje på tvers av en akse, brukt av deler, sider, dørstreker og miniplanen; brukt av pennen, grepene og lenkene). Grep, lenker og disk-knappene får samme skygge fra `layers/LiftFilter.tsx` (`useLift`).
 - Grep på valgt disk (K14): `domain/podiumGrips.ts` (`podiumGrips`: hvor grepene står; `gripPodium`: disken etter et
-  drag, med `gone`, det som fjernes; `joined` slår sammen seksjoner som får plass i én). Treff i `hits.podiumGripAt`,
-  draget i `plan/pointer/podiumGrip.ts` (Velg i `select.ts` og pennen i `usePlanPointer.ts`), forhåndsvisningen
-  `gripTarget` i `plan/next.ts` (`erased` skraveres), grepene tegnes av `layers/PodiumGrips.tsx`.
+  drag, med `gone`, det som fjernes; `joined` slår sammen seksjoner som får plass i én). Grepet går gjennom det felles
+  grepsystemet (se «Grep» under).
 - Fusjon og lenker (K15): `domain/podiumLinks.ts` (`snapBeside`: en dratt disk inntil en annen; `fusePodiums`: to blir
   én; `podiumJoints`/`breakJoint`: skjøtene og å dele ved en; `podiumLinks`: ikonene for valgt disk; `inFrame`: en disks
   seksjoner i en annens ramme). Draget i `plan/pointer/object.ts` (`fuse` på draget), klikket i

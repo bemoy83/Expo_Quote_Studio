@@ -14,13 +14,14 @@ import { INK } from '../../colors'
 import { idx } from '../../env'
 import type { Brush, Tool } from '../../tools'
 import { widthOf, type NextOutcome } from '../next'
+import type { PlanGrip } from '../grips'
 import { usePlanScale } from '../planScale'
 import { rollWidthOf } from '../pointer/floorBrush'
 import type { PlanPointer } from '../pointer/usePlanPointer'
 import type { PlanSelection } from '../selection'
 import { Offcut } from './FloorLayer'
 import { tileArea, tileAreaMeasures } from './measures'
-import { PodiumGrips } from './PodiumGrips'
+import { Grips } from './Grips'
 import { PodiumLinks } from './PodiumLinks'
 import { AimRect, EraseStroke, InvalidSeg, InvalidShape, MeasurePill } from './Previews'
 import { RoomHandles } from './RoomLayer'
@@ -32,6 +33,8 @@ interface Props {
   selection: PlanSelection
   floorSize: FloorBrushSize
   pointer: Pick<PlanPointer, 'hover' | 'dragging' | 'stroke'>
+  /** The grips of what is chosen (pointer/hits.ts `grips`). */
+  grips: PlanGrip[]
   /** What the pen would store at the pointer (next.ts). */
   next: NextOutcome | null
   mini?: boolean
@@ -60,10 +63,11 @@ export function PreviewLayer(p: Props) {
   useEffect(() => onHint?.(hint), [onHint, hint])
   useEffect(() => () => onHint?.(null), [onHint])
 
-  // The chosen counter of Disker og podier: its grips, in Velg and with its pen (K14)
+  // The grips of what is chosen (plan/grips.ts), in Velg and with the pen of Disker og podier (K14); not while one is
+  // dragged, when the plan shows what the release stores
   const chosen = selection.objectId ? v.objects.find((o) => o.id === selection.objectId) : undefined
-  const grips = !mini && chosen?.sections && (tool === 'select' || brush?.kind === 'podium') ? chosen : null
-  const gripDrag = dragging?.kind === 'podiumGrip'
+  const counter = !mini && chosen?.sections && (tool === 'select' || brush?.kind === 'podium') ? chosen : null
+  const gripsShown = !mini && (tool === 'select' || brush?.kind === 'podium') && !(dragging?.kind === 'grip' && dragging.moved)
 
   const bad = !mini ? next?.invalid : undefined
   const pill = !mini ? next?.pill : undefined
@@ -75,8 +79,8 @@ export function PreviewLayer(p: Props) {
       {bad && 'rect' in bad && <InvalidShape kind="rect" x={bad.rect.x0} y={bad.rect.y0} width={bad.rect.x1 - bad.rect.x0} height={bad.rect.y1 - bad.rect.y0} />}
       {bad && 'circle' in bad && <InvalidShape kind="circle" {...bad.circle} />}
       {!mini && next?.erased?.map((b, i) => <InvalidShape key={`gone${i}`} kind="rect" x={b.x0} y={b.y0} width={b.x1 - b.x0} height={b.y1 - b.y0} />)}
-      {grips && !(gripDrag && dragging.moved) && <PodiumGrips v={v} o={grips} hot={next?.hotGrip} />}
-      {grips && !(gripDrag && dragging.moved) && <PodiumLinks v={v} o={grips} hot={next?.hotGrip} />}
+      {gripsShown && <Grips grips={p.grips} hot={next?.hotGrip} />}
+      {gripsShown && counter && <PodiumLinks v={v} o={counter} hot={next?.hotGrip} />}
       {/* Disker og podier with Shift: the edge a press takes hold of, thick (PR 2) */}
       {pill && <MeasurePill a={pill.a} b={pill.b} centre={centre} stroke={widthOf(sc, pill.width)} text={pill.text} />}
       {tileDrag && brush?.kind === 'floor' && tileAreaMeasures(v, tileDrag, brush.product, centre)}

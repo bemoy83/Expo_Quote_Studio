@@ -332,6 +332,16 @@ await drag(0.5, 0, 2.5, 0); await record('vegg dra farger plater')
 await page.locator('.q-sw').nth(3).click(); await hold(0.5, 0, 2.5, 0, 'escape'); await record('vegg dra farger plater Esc avbryter')
 await close()
 
+// Grips of a chosen counter of Disker og podier (K14, the shared grip system): side out, side in, a box corner, Shift
+await open('13-disker-og-podier')
+await tool('Velg'); await press(1.5, 1.5); await record('grep velg disk')
+await drag(2.01, 1.5, 2.6, 1.5); await record('grep side ut')
+await drag(1.5, 0.99, 1.5, 1.3); await record('grep side inn')
+await press(3.5, 1.5); await record('grep velg L-disk')
+await drag(4.76, 0.74, 5.3, 0.3); await record('grep hjørne')
+await page.keyboard.down('Shift'); await drag(3.24, 1.5, 2.9, 1.5); await page.keyboard.up('Shift'); await record('grep Shift 250')
+await close()
+
 writeFileSync(args[1], JSON.stringify(out, null, 1) + '\n')
 console.log(`${out.length} steg skrevet til ${args[1]}`)
 await browser.close(); server.close()

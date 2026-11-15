@@ -1,6 +1,6 @@
 // The links of the chosen counter of Disker og podier (Byggeregel K15): a link in the middle of each joint (a click
 // parts the counter there), a broken link where a counter stands against it (a click links the two). Drawn by
-// PreviewLayer in Velg and with the pen, beside the grips (PodiumGrips.tsx); a click is pointer/podiumLink.ts.
+// PreviewLayer in Velg and with the pen, beside the grips (Grips.tsx); a click is pointer/podiumLink.ts.
 import { Link2, Unlink2 } from 'lucide-react'
 import { podiumLinks } from '../../../domain/podiumLinks'
 import type { PlacedObject, Point, Variant } from '../../../domain/types'
