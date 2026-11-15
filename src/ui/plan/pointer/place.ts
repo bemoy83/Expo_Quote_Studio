@@ -19,9 +19,9 @@ export type PlaceWhat = 'opening' | 'decor' | 'object'
 const CLICK: Record<Exclude<PlaceWhat, 'opening'>, (c: PointerCtx, q: P) => void> = { decor: decorClick, object: objectClick }
 
 /** What the pen would act on at q, as a key: a release stores only on the same key as the press. */
-export function placeKey(c: Pick<PointerCtx, 'v' | 'hits' | 'brush'>, what: PlaceWhat, q: P): string {
+export function placeKey(c: Pick<PointerCtx, 'v' | 'hits' | 'brush'> & { fine?: boolean }, what: PlaceWhat, q: P): string {
   const { v, hits, brush } = c
-  if (what === 'opening') return openingEdge(c, q)?.key ?? 'none'
+  if (what === 'opening') return openingEdge(c, q, c.fine)?.key ?? 'none'
   if (what === 'decor') {
     const ft = freeTextileAt(v, q, 0.15)
     if (ft) return `ft:${ft.id}:${faceOfPoint(ft, q)}`
@@ -37,9 +37,9 @@ export function placeKey(c: Pick<PointerCtx, 'v' | 'hits' | 'brush'>, what: Plac
 }
 
 export function startPlace(c: PointerCtx, what: PlaceWhat, q: P): Drag {
-  const module = what === 'opening' ? (openingEdge(c, q) ?? undefined) : undefined
+  const module = what === 'opening' ? (openingEdge(c, q, c.fine) ?? undefined) : undefined
   const door = what === 'opening' && c.brush?.kind === 'opening' && isDoor(c.brush.product)
-  return { kind: 'place', what, key: placeKey(c, what, q), module, door }
+  return { kind: 'place', what, key: placeKey(c, what, q), module, door, ...(c.fine && what === 'opening' && { fine: true }) }
 }
 
 /**
@@ -48,7 +48,7 @@ export function startPlace(c: PointerCtx, what: PlaceWhat, q: P): Drag {
  */
 export function placeHolds(c: Pick<PointerCtx, 'v' | 'hits' | 'brush'>, d: Extract<Drag, { kind: 'place' }>, q: P): boolean {
   if (d.door && d.module) return inDoorArea(d.module.a, d.module.b, q, rules.door.swing)
-  return placeKey(c, d.what, q) === d.key
+  return placeKey({ ...c, fine: d.fine }, d.what, q) === d.key
 }
 
 export const placeDrag: DragHandlers<'place'> = {

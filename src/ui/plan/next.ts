@@ -263,7 +263,7 @@ function targetOf(p: NextInput): NextTarget | null {
   }
   if (pens.decorTool) return decorTarget(p, hover)
   if (pens.openingTool && brush?.kind === 'opening') {
-    const e = openingEdge({ v, hits }, hover)
+    const e = openingEdge({ v, hits }, hover, !!p.fine)
     return e ? doorTarget(v, e, brush, null, false) : null
   }
   if (pens.podiumTool) return podiumHover(p, at)

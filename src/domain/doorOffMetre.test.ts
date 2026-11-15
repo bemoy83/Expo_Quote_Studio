@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_CATALOG, DOOR } from '../catalog/defaultCatalog';
 import { calc } from '../calc/calc';
 import { RULES } from '../rules/rules';
-import { moveOpeningAlong, removeOpening, setOpening } from './doors';
+import { moveOpeningAlong, placeOpening, removeOpening, setOpening } from './doors';
 import { moveWall, paintWalls } from './edit';
 import { moduleCc, moduleCount, moduleKey, moduleSpans, moduleStart } from './grid';
 import { fitBreaks } from './replaceWalls';
@@ -93,5 +93,22 @@ describe('an inner wall with a door off the whole metres', () => {
     const w = moved.walls.find((x) => x.id === wallId)!;
     expect(w.breaks).toEqual([1.25]);
     expect(moduleStart(w, moved.openings[0].module)).toBe(1.25);
+  });
+});
+
+describe('the door pen with Fin (D8)', () => {
+  it('puts a new door off the whole metres, the wall laid out round it', () => {
+    const v = paintWalls(row(), [1, 2], [5, 2]);
+    const placed = placeOpening(v, [2.25, 2], [3.25, 2], DOOR, true, null);
+    const o = placed.openings[0];
+    const w = placed.walls.find((x) => x.id === o.wallId)!;
+    expect(w.breaks).toEqual([1.25]);
+    expect(moduleStart(w, o.module)).toBe(1.25);
+    expect(moduleCount(w)).toBe(5);
+  });
+
+  it('not over another door', () => {
+    const { v } = innerWithDoor();
+    expect(placeOpening(v, [2.5, 2], [3.5, 2], DOOR, true, null).openings).toHaveLength(1);
   });
 });

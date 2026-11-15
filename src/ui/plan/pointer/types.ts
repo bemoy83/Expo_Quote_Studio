@@ -60,7 +60,7 @@ export type Drag =
   | { kind: 'freeMove'; id: string; p0: P; v0: Variant; moved: boolean; select: PlanSelection }
   /** Door, decal or furniture pressed: shown until release, stored on release over the same target (place.ts). */
   /** `module`: the door's module, pressed; `door`: a door (not a curtain), turned by where the pointer is dragged. */
-  | { kind: 'place'; what: 'opening' | 'decor' | 'object'; key: string; module?: Module; door?: boolean }
+  | { kind: 'place'; what: 'opening' | 'decor' | 'object'; key: string; module?: Module; door?: boolean; /** A door or curtain off the wall's modules, in 250 (D8). */ fine?: boolean }
   /** The wall pen pressed on a plate that stands: colours plates along that wall on release (plates.ts). `as`: the drag
    *  turned across the wall, so it draws a new wall as a stroke. */
   | { kind: 'plates'; wallId: string; i0: number; p0: P; moved: boolean; as?: Extract<Drag, { kind: 'run' }>; fine?: boolean }

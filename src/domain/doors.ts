@@ -200,20 +200,54 @@ export function moveOpeningAlong(v: Variant, id: string, at: number): Variant {
   if (!o || !w) return v;
   const t = Math.round(at * 1000) / 1000;
   if (Math.abs(t - moduleStart(w, o.module)) < 1e-6) return v;
-  if (t < -1e-6 || t + 1 > wallLength(w) + 1e-6) return v;
-  if (!doorAllowed(v, pointAlong(w, t), pointAlong(w, t + 1))) return v;
+  if (alongBlocked(v, w, t, o)) return v;
   const others = v.openings.filter((x) => x.id !== id);
-  // Not over another opening, nor over a shelf, print or textile wall on the wall (they keep their place: the door stops)
-  const laps = (a: number, b: number) => a < t + 1 - 1e-6 && b > t + 1e-6;
-  const span = (m: number) => [moduleStart(w, m), moduleEnd(w, m)] as const;
-  const here = (x: { wallId: string; module: number }) => x.wallId === w.id && x.module !== o.module && laps(...span(x.module));
-  if (others.some((x) => x.wallId === w.id && laps(moduleStart(w, x.module), moduleStart(w, x.module) + 1))) return v;
-  if ((v.shelves ?? []).some(here) || v.foils.some(here)) return v;
-  if (v.textiles.some((x) => x.wallId === w.id && laps(x.from, x.from + x.width))) return v;
   const next = replaceWalls({ ...v, openings: others }, v.walls, [{ opening: o, wallId: w.id, at: t }]);
   // Keep the opening where it was in the list
   const moved = next.openings.find((x) => x.id === id);
   return moved ? { ...next, openings: v.openings.flatMap((x) => (x.id === id ? [moved] : next.openings.filter((y) => y.id === x.id))) } : v;
+}
+
+/**
+ * Why a door or curtain cannot start `t` m along wall w (Byggeregel D8), or null: past an end, where D3 forbids it, over
+ * another opening, or over a shelf, print or textile wall (they keep their place). `self`: the opening being moved.
+ */
+function alongBlocked(v: Variant, w: Wall, t: number, self?: Opening): boolean {
+  if (t < -1e-6 || t + 1 > wallLength(w) + 1e-6) return true;
+  if (!doorAllowed(v, pointAlong(w, t), pointAlong(w, t + 1))) return true;
+  const laps = (a: number, b: number) => a < t + 1 - 1e-6 && b > t + 1e-6;
+  const span = (m: number) => [moduleStart(w, m), moduleEnd(w, m)] as const;
+  const here = (x: { wallId: string; module: number }) => x.wallId === w.id && !(self && x.module === self.module) && laps(...span(x.module));
+  if (v.openings.some((x) => x !== self && x.wallId === w.id && laps(moduleStart(w, x.module), moduleStart(w, x.module) + 1))) return true;
+  if ((v.shelves ?? []).some(here) || v.foils.some(here)) return true;
+  return v.textiles.some((x) => x.wallId === w.id && laps(x.from, x.from + x.width));
+}
+
+/** The wall a–b lies on, and how far along it a–b starts (its lower end), m; null when no wall covers it. */
+function wallUnder(v: Variant, a: Point, b: Point): { w: Wall; t: number } | null {
+  for (const w of v.walls) {
+    const [dx, dy] = wallDirection(w);
+    const at = (p: Point) => (Math.abs((p[0] - w.from[0]) * dy - (p[1] - w.from[1]) * dx) > 1e-6 ? null : (p[0] - w.from[0]) * dx + (p[1] - w.from[1]) * dy);
+    const ta = at(a);
+    const tb = at(b);
+    if (ta === null || tb === null) continue;
+    const t = Math.min(ta, tb);
+    if (t >= -1e-6 && Math.max(ta, tb) <= wallLength(w) + 1e-6) return { w, t: Math.round(t * 1000) / 1000 };
+  }
+  return null;
+}
+
+/**
+ * A new door or curtain on a wall where a–b is not one of its modules: off the whole metres (Byggeregel D8, the pen
+ * with Fin or Shift). The wall is laid out round it. Unchanged when it cannot stand there.
+ */
+function insertOpening(v: Variant, a: Point, b: Point, product: string): Variant {
+  const on = wallUnder(v, a, b);
+  if (!on || alongBlocked(v, on.w, on.t)) return v;
+  const id = nextId(v.openings.map((o) => o.id), 'o');
+  const swing = defaultSwing(v.stand, on.w);
+  const opening: Opening = { id, wallId: on.w.id, module: 0, product, ...(swing === 1 ? {} : { swing }) };
+  return replaceWalls(v, v.walls, [{ opening, wallId: on.w.id, at: on.t }]);
 }
 
 /** Put a door or curtain on the module a–b, drawing the wall module first when there is none. */
@@ -416,7 +450,8 @@ function clearSwing(v: Variant, key: string, floor?: FloorBoxes): Variant | null
 function aimOpening(v: Variant, a: Point, b: Point, product: string, door: boolean, q: { x: number; y: number } | null): Variant {
   const key = moduleKey(a, b);
   const onWall = builtModules(v).some((m) => m.key === key);
-  const next = onWall ? setOpening(v, key, product) : drawOpening(v, a, b, product);
+  // On a wall but off its modules (D8): the opening goes in there, the wall laid out round it
+  const next = onWall ? setOpening(v, key, product) : wallUnder(v, a, b) ? insertOpening(v, a, b, product) : drawOpening(v, a, b, product);
   if (!door || !q) return next;
   const mod = builtModules(next).find((m) => m.key === key && m.opening);
   const w = mod && next.walls.find((x) => x.id === mod.wallId);

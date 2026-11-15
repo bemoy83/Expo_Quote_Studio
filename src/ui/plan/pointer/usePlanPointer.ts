@@ -64,7 +64,7 @@ export function usePlanPointer(input: PlanPointerInput) {
   const [erasing, setErasing] = useState<Erasing | null>(null)
   /** The drawing pens, which show and draw in 250 with Shift held or «Fin» on (one drawing tool, Bjørn 14.11.2026,
    *  draw.ts); the snap dots show the 250 grid while Shift is held. */
-  const drawsFine = pens.wallTool || pens.textileTool || pens.podiumTool
+  const drawsFine = pens.wallTool || pens.textileTool || pens.podiumTool || pens.openingTool
   const fineOf = (shift: boolean) => drawsFine && (shift || penFine(brush, input.fine))
   const [shiftHeld, setShiftHeld] = useState(false)
   useEffect(() => {
@@ -136,7 +136,7 @@ export function usePlanPointer(input: PlanPointerInput) {
       if (m) return startPlates(m, q, fineOf(shift))
     }
     if (pens.wallTool || pens.beamTool || pens.textileTool) return startRunDrag(c, q, fineOf(shift))
-    if (pens.openingTool) return startPlace(c, 'opening', q)
+    if (pens.openingTool) return startPlace({ ...c, fine: fineOf(shift) }, 'opening', q)
     if (pens.decorTool) return startPlace(c, 'decor', q)
     if (pens.podiumTool) return startPodiumLink(c, q) ?? startGrip(c, q) ?? startPodium(c, q, fineOf(shift))
     if (pens.objectTool) return startPlace(c, 'object', q)
