@@ -5,7 +5,7 @@
 import * as THREE from 'three'
 import { objectFootprint } from '../../domain/objects'
 import type { Variant } from '../../domain/types'
-import { RECIPES } from '../../foga/recipes'
+import { outerHeight } from '../../domain/podiums'
 import { wallHeight } from '../../rules/rules'
 import { place, rules } from '../env'
 import { gripsOf, gripWith, type GripOn, type PlanGrip } from '../plan/grips'
@@ -33,7 +33,7 @@ function gripHeight(v: Variant, on: GripOn): number {
   if (on.type === 'room' || on.type === 'end' || on.type === 'door') return wallHeight(rules)
   const o = v.objects.find((x) => x.id === on.id)
   if (!o) return 0
-  if (o.sections) return (Math.max(...o.sections.map((s) => s.h)) + RECIPES.counter.railHeight) / 1000
+  if (o.sections) return outerHeight(Math.max(...o.sections.map((s) => s.h))) / 1000
   return objectFootprint(place, o)?.h ?? 0
 }
 

@@ -595,7 +595,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   13.11.2026). Tilbudet sier «1 skyvedør», én per lysåpning med dør.
   *Bjørn 13.11.2026 · kode `src/foga/counter.ts` (`doorLeaves`), `src/domain/podiumFaces.ts` (`takesDoor`) · test `src/domain/podiumFaces.test.ts`, `src/calc/podium.test.ts`*
 - **K18 Høyde per seksjon.** Høyden på en seksjon som står, endres i skuffen (CC 250, 500, 750 eller 1000) eller ved å
-  dra toppen av seksjonen i risset (grepet «CC 750») eller i 3D (de øverste 80 mm av seksjonen, pekeren viser ↕);
+  dra toppen av seksjonen i risset (grepet «75 cm») eller i 3D (de øverste 80 mm av seksjonen, pekeren viser ↕);
   draget snapper til de samme fire høydene, vises mens det dras og settes når det slippes. I 3D regnes draget fra
   skissen ved trykket, så hyller en lavere høyde tok bort, kommer tilbake om toppen dras opp igjen før slipp. Bygget følger K12: trinnplate og 94 under den lave toppen mot en høyere nabo. Valget på delene
   (K16, K17) står. Hyller i eller over den nye høyden fjernes, og hintet i skuffen sier hvor mange.
@@ -606,7 +606,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   underkant, like stor som toppen. To naboseksjoner med hylle i samme høyde deler 94-skinnen mellom seg. Skinnen står
   også der delen er åpen eller har skyvedør. Mot en lavere nabo står skinnen over den lave toppen som 93 vendt mot
   den, og trinnplaten deles ved den; i høyde med den lave toppen er 94-en under toppen nok. Hyllene slås av og på i
-  skuffen (for seksjonen bak delen, eller alle langs siden) og dras opp og ned i risset med grepet «Hylle 500»: draget
+  skuffen (for seksjonen bak delen, eller alle langs siden) og dras opp og ned i risset med grepet «Hylle 50 cm»: draget
   snapper til CC-høydene og stopper mot en nabohylle og mot toppen. Risset målsetter hyllene fra gulv i CC. To
   seksjoner slås bare sammen (K14) med like hyller; et grep som legger på seksjoner gir dem hyllene til seksjonen det
   strekker. Tid, plassholder: 1,5 min opp og 1 ned per hylle (som H7, Bjørn 13.11.2026), unntatt hyllen i CC 750 i en

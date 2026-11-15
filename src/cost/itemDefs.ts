@@ -5,6 +5,7 @@ import type { ItemRecipe, PriceItem } from './items';
 import { railLengths } from '../domain/shelves/corners';
 import { counterBuild, layoutBuild, profileMetres, STOCK_OPEN, stockCounter, type CounterBuild } from '../foga/counter';
 import { counterBuildOf } from '../domain/counterShape';
+import { outerHeight } from '../domain/podiums';
 import { STOCK_COUNTERS, stockSize } from '../domain/podiumStock';
 import { RECIPES } from '../foga/recipes';
 import { RULES } from '../rules/rules';
@@ -179,7 +180,7 @@ export const ITEM_DEFS: readonly ItemDef[] = [
   def(ITEM.shelfMount, 'Montering per hylle', 'stk'),
   def(ITEM.shelfPick, 'Vareplukk hyller, per ordre', 'stk'),
   ...READY.flatMap(({ s, z, what }) => [
-    def(ITEM.counter(z.length, z.depth, z.h), `${what} ${z.length} × ${z.depth} × ${z.h + RECIPES.counter.railHeight} mm, ferdig montert`, 'stk'),
+    def(ITEM.counter(z.length, z.depth, z.h), `${what} ${z.length} × ${z.depth} × ${outerHeight(z.h)} mm, ferdig montert`, 'stk'),
     def(ITEM.counterPlates(z.length, z.depth, z.h), `Platebytte ${what.toLowerCase()} ${s.artnr}, plater i RAL`, 'stk'),
   ]),
   ...COUNTER_PROFILES.map((code) => def(ITEM.counterProfile(code), `Disk bygget på stedet: profil ${code}, per meter`, 'm')),
