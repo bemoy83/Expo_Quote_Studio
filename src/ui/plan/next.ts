@@ -23,7 +23,7 @@ import type { Motif, PlacedObject, Point, Variant } from '../../domain/types'
 import { builtModules, doorAllowed, doorBlocked, type BuiltModule } from '../../domain/walls'
 import { RECIPES } from '../../foga/recipes'
 import { applyDrop, type DecorDrag } from '../dnd'
-import { place, pricing, productOf, rules } from '../env'
+import { floorBoxes, place, pricing, productOf, rules } from '../env'
 import { placedBy, type Brush, type Tool } from '../tools'
 import { mm } from './dims'
 import type { FaceHit } from './layers/Previews'
@@ -331,7 +331,7 @@ function doorTarget(v: Variant, e: Module, pen: Extract<Brush, { kind: 'opening'
   const along = q ? (h ? q.x - Math.min(e.a[0], e.b[0]) : q.y - Math.min(e.a[1], e.b[1])) : 0
   const turn = door && q ? `${Math.abs(across) < DOOR_AIM_MIN ? 0 : Math.sign(across)}:${along < 0.5 ? 0 : 1}` : ''
   return target(`door:${e.key}:${product}:${ral ?? ''}:${fabric ?? ''}:${turn}`, () =>
-    line({ edit: (x) => placeOpening(x, e.a, e.b, product, door, door ? q : null, { ral, fabric }), hint: held && door ? 'Dra mot siden døren skal slå · slipp for å sette inn · Esc avbryter' : null }),
+    line({ edit: (x) => placeOpening(x, e.a, e.b, product, door, door ? q : null, { ral, fabric, floor: floorBoxes }), hint: held && door ? 'Dra mot siden døren skal slå · slipp for å sette inn · Esc avbryter' : null }),
   )
 }
 

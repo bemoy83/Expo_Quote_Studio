@@ -203,9 +203,18 @@ export function doorSwing(stand: Stand, w: Wall, o: Opening): 1 | -1 {
  *  (Byggeregel D7, Bjørn 15.11.2026). */
 export const SWING_CLEAR = 1;
 
-/** What stands on the floor, as boxes: furniture and counters, which may not stand in a door's free floor either (D7).
- *  Passed in, since the boxes need the catalog's footprints. */
-export type FloorBoxes = (v: Variant) => readonly { x0: number; y0: number; x1: number; y1: number }[];
+/** A box on the floor, m. `door`: the module key of the door whose free floor it is, so that door skips its own. */
+export interface FloorBox {
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+  door?: string;
+}
+
+/** What stands on the floor, as boxes: furniture and counters, and the free floor of the other doors, none of which
+ *  may stand in a door's free floor (D7). Passed in, since the boxes need the catalog's footprints and door products. */
+export type FloorBoxes = (v: Variant) => readonly FloorBox[];
 
 /** Unit normal of a–b toward side s (1 = left of a → b, as a door's swing). */
 const normalOf = (a: Point, b: Point, s: 1 | -1): Point => {
@@ -213,24 +222,41 @@ const normalOf = (a: Point, b: Point, s: 1 | -1): Point => {
   return [(-(b[1] - a[1]) / L) * s, ((b[0] - a[0]) / L) * s];
 };
 
-/**
- * True when the floor in front of module a–b on side s (1 = left of a → b) is free for a door leaf (Byggeregel D7): the
- * module's width SWING_CLEAR deep, inside the stand, with no wall or free-standing textile running into it, and with
- * `floor`, no furniture or counter standing in it. Walls along
- * its edges do not count (the door's own wall, a wall meeting it at the hinge).
- */
-export function swingFree(v: Variant, a: Point, b: Point, s: 1 | -1, floor?: FloorBoxes): boolean {
+/** The free floor in front of module a–b on side s: the module's width, SWING_CLEAR deep (D7). */
+function swingRect(a: Point, b: Point, s: 1 | -1): FloorBox {
   const n = normalOf(a, b, s);
   const xs = [a[0], b[0], a[0] + n[0] * SWING_CLEAR, b[0] + n[0] * SWING_CLEAR];
   const ys = [a[1], b[1], a[1] + n[1] * SWING_CLEAR, b[1] + n[1] * SWING_CLEAR];
-  const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+  return { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };
+}
+
+/** The free floor of every door, tagged with its module, so two doors' free floors never overlap (D7, Bjørn 15.11.2026:
+ *  safety). `swings`: the product is a door. */
+export function doorFloors(v: Variant, swings: (product: string) => boolean): FloorBox[] {
+  return v.openings.flatMap((o) => {
+    const w = swings(o.product) ? v.walls.find((x) => x.id === o.wallId) : undefined;
+    if (!w) return [];
+    const [a, b] = doorEnds(w, o);
+    return [{ ...swingRect(a, b, doorSwing(v.stand, w, o)), door: moduleKey(a, b) }];
+  });
+}
+
+/**
+ * True when the floor in front of module a–b on side s (1 = left of a → b) is free for a door leaf (Byggeregel D7): the
+ * module's width SWING_CLEAR deep, inside the stand, with no wall or free-standing textile running into it, and with
+ * `floor`, no furniture, counter or other door's free floor in it. Walls along its edges do not count (the door's own
+ * wall, a wall meeting it at the hinge).
+ */
+export function swingFree(v: Variant, a: Point, b: Point, s: 1 | -1, floor?: FloorBoxes): boolean {
+  const { x0, y0, x1, y1 } = swingRect(a, b, s);
+  const self = moduleKey(a, b);
   const e = 1e-6;
   if (x0 < -e || y0 < -e || x1 > v.stand.width + e || y1 > v.stand.depth + e) return false;
   const into = (p: Point, q: Point) =>
     p[1] === q[1]
       ? p[1] > y0 + e && p[1] < y1 - e && Math.max(p[0], q[0]) > x0 + e && Math.min(p[0], q[0]) < x1 - e
       : p[0] > x0 + e && p[0] < x1 - e && Math.max(p[1], q[1]) > y0 + e && Math.min(p[1], q[1]) < y1 - e;
-  const over = (r: { x0: number; y0: number; x1: number; y1: number }) => r.x0 < x1 - e && r.x1 > x0 + e && r.y0 < y1 - e && r.y1 > y0 + e;
+  const over = (r: FloorBox) => r.door !== self && r.x0 < x1 - e && r.x1 > x0 + e && r.y0 < y1 - e && r.y1 > y0 + e;
   return !builtModules(v).some((m) => into(m.a, m.b)) && !v.freeTextiles.some((t) => into(t.from, t.to)) && !(floor?.(v) ?? []).some(over);
 }
 
@@ -326,7 +352,8 @@ export function inDoorArea(a: Point, b: Point, q: { x: number; y: number }, reac
  * the way the pointer at q says (doorAim). Defaults are not stored: hinge only when −1, swing only when it is −1 or
  * differs from the side an omitted swing reads as. On the stand's edge the swing is left as setOpening stored it.
  * `ral`: the door pen's leaf colour (the wall tool's Farge, Bjørn 14.11.2026), also over a door already there;
- * omitted, a new door follows the stand's colour. `fabric`: the curtain pen's colour, the same way.
+ * omitted, a new door follows the stand's colour. `fabric`: the curtain pen's colour, the same way. `floor`: what
+ * else may close a side (D7).
  */
 export function placeOpening(
   v: Variant,
@@ -335,11 +362,11 @@ export function placeOpening(
   product: string,
   door: boolean,
   q: { x: number; y: number } | null,
-  look: { ral?: string; fabric?: string } = {},
+  look: { ral?: string; fabric?: string; floor?: FloorBoxes } = {},
 ): Variant {
   const aimed = aimOpening(v, a, b, product, door, q);
   // A door whose side has no free floor swings the other way, or is not put there (D7)
-  const placed = door ? clearSwing(aimed, moduleKey(a, b)) : aimed;
+  const placed = door ? clearSwing(aimed, moduleKey(a, b), look.floor) : aimed;
   if (!placed) return v;
   const o = builtModules(placed).find((m) => m.key === moduleKey(a, b))?.opening;
   if (!o) return placed;
@@ -348,14 +375,14 @@ export function placeOpening(
 }
 
 /** The door in module `key` turned to a side with free floor (D7): as it is, flipped, or null when neither side is. */
-function clearSwing(v: Variant, key: string): Variant | null {
+function clearSwing(v: Variant, key: string, floor?: FloorBoxes): Variant | null {
   const o = builtModules(v).find((m) => m.key === key)?.opening;
   const w = o && v.walls.find((x) => x.id === o.wallId);
   if (!o || !w) return v;
   const a = pointAlong(w, o.module);
   const b = pointAlong(w, moduleEnd(w, o.module));
-  if (swingFree(v, a, b, doorSwing(v.stand, w, o))) return v;
-  return canFlipDoor(v, w, o) ? flipSwing(v, o.id) : null;
+  if (swingFree(v, a, b, doorSwing(v.stand, w, o), floor)) return v;
+  return canFlipDoor(v, w, o, floor) ? flipSwing(v, o.id, floor) : null;
 }
 
 function aimOpening(v: Variant, a: Point, b: Point, product: string, door: boolean, q: { x: number; y: number } | null): Variant {

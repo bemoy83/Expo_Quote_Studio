@@ -4,7 +4,7 @@ import { DEFAULT_CATALOG } from '../catalog/defaultCatalog'
 import { builtProduct } from '../catalog/podium'
 import { applyEdits, NO_EDITS, type CatalogEdits } from '../catalog/edits'
 import { displayName, indexCatalog, placeContext } from '../catalog/lookup'
-import type { FloorBoxes } from '../domain/doors'
+import { doorFloors, type FloorBoxes } from '../domain/doors'
 import { objectBoxes } from '../domain/objects'
 import type { Product } from '../catalog/types'
 import { EXAMPLE_BASIS, parseBasis, serializeBasis, type CostBasis } from '../cost/basis'
@@ -110,8 +110,8 @@ export const wallPlates = () => catalog.products.find((p) => p.id === catalog.sy
 export const builtOf = (func: string) => builtProduct(catalog.products, func)
 export const isCounter = (artnr: string) => place.isCounter(artnr)
 
-/** Furniture and counters as boxes on the floor: they may not stand in a door's free floor (Byggeregel D7). */
-export const floorBoxes: FloorBoxes = (v) => v.objects.flatMap((o) => objectBoxes(place, o))
+/** Furniture, counters and the doors' own free floor as boxes: none may stand in a door's free floor (Byggeregel D7). */
+export const floorBoxes: FloorBoxes = (v) => [...v.objects.flatMap((o) => objectBoxes(place, o)), ...doorFloors(v, place.swings)]
 
 export const openingProducts = () => catalog.products.filter((p) => p.opening)
 
