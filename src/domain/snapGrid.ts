@@ -1,6 +1,6 @@
 // Grid helpers: snapping to a grid and Tøm's stroke along walls (strokeFrom), which grows along the axis it is dragged
 // most (cellsTo). The pens that draw a run (wall, textile, takdrager) use domain/runDraw.ts, Disker og podier the same axis.
-import { nearestEdge } from './grid';
+import { cellAt, nearestEdge } from './grid';
 import type { Point, Stand } from './types';
 
 const EPS = 1e-9;
@@ -38,10 +38,6 @@ export function strokeFrom(stand: Stand, p0: { x: number; y: number }, p: { x: n
   const e0h = e0.orientation === 'h';
   const cl = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
   const on = (v: number) => Math.round(v / grid) * grid;
-  const cell = (v: number, size: number): [number, number] => {
-    const lo = cl(Math.floor(v / grid) * grid, 0, (Math.ceil(size / grid - EPS) - 1) * grid);
-    return [lo, Math.min(lo + grid, size)];
-  };
   // The module under the pointer is always part of the stroke; it grows from its far side in whole cells, and in whole
   // metres the half metre at the stand's edge is the last one (Byggeregel V14)
   const grow = ([lo, hi]: [number, number], to: number, max: number): [number, number] => {
@@ -52,10 +48,10 @@ export function strokeFrom(stand: Stand, p0: { x: number; y: number }, p: { x: n
   };
   if (alongX(p0, p)) {
     const y = e0h ? e0.a[1] : cl(on(p0.y), 0, D);
-    const [a, b] = grow(e0h ? [Math.min(e0.a[0], e0.b[0]), Math.max(e0.a[0], e0.b[0])] : cell(p0.x, W), p.x, W);
+    const [a, b] = grow(e0h ? [Math.min(e0.a[0], e0.b[0]), Math.max(e0.a[0], e0.b[0])] : cellAt(p0.x, W, grid), p.x, W);
     return [[a, y], [b, y]];
   }
   const x = !e0h ? e0.a[0] : cl(on(p0.x), 0, W);
-  const [a, b] = grow(!e0h ? [Math.min(e0.a[1], e0.b[1]), Math.max(e0.a[1], e0.b[1])] : cell(p0.y, D), p.y, D);
+  const [a, b] = grow(!e0h ? [Math.min(e0.a[1], e0.b[1]), Math.max(e0.a[1], e0.b[1])] : cellAt(p0.y, D, grid), p.y, D);
   return [[x, a], [x, b]];
 }

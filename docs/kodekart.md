@@ -56,6 +56,11 @@ grepene som Velg (`sceneGrips`: på toppen av det de flytter, like store på skj
 midten (`turnOf`) i steg av 90 eller 15, lengste lovlige med `furthest`, `rotateObject(v, ctx, id, by)`.
 Dørgrepet (`door`, D8) flytter en valgt dør langs veggen med `moveOpeningAlong` i `domain/doors.ts`.
 
+**Standen i halve meter (V14):** `Stand.width/depth` er hele og halve meter. Rutenettet starter i 0 bak til venstre;
+den siste ruta mot høyre og fronten er resten ut til kanten. Bruk `cellAt` (ruta et punkt ligger i) og `metreLines`
+(metrelinjene inne i standen) i `domain/grid.ts`, aldri `Array.from({ length: W })` eller `W - 1`; standkanten er en
+linje (`nearestEdge`). Størrelsen vises med `standSize` i `ui/names.ts`.
+
 **Veggens moduler (D8):** `moduleSpans` i `domain/grid.ts` er eneste kilde: hele meter fra `from`, kort rest sist, og
 `Wall.breaks` der en dør utenfor hele meter har sin 1000-modul. Modulnummer er indeks, ikke meter: bruk
 `moduleStart`/`moduleEnd`/`moduleEnds`/`moduleAt`/`moduleCc`, aldri `i` eller `Math.floor(t)`; et drag over moduler

@@ -8,7 +8,7 @@ import { useId, useMemo, type ReactNode } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import { canMoveWall } from '../../domain/edit'
 import type { FloorBrushSize } from '../../domain/floor/brush'
-import { CELL, metreLines, moduleKey, openSides, sideLength, sidePoint } from '../../domain/grid'
+import { CELL, cellAt, metreLines, moduleKey, openSides, sideLength, sidePoint } from '../../domain/grid'
 import type { Run } from '../../domain/innerBeams'
 import { conflicts } from '../../domain/objects'
 import { roomAt, sideIsHorizontal } from '../../domain/rooms'
@@ -242,8 +242,8 @@ export function PlanView(p: Props) {
     // Module by module from the side's start, the half metre last (Byggeregel V14)
     let c = 0
     for (let t = 0; t < n - 1e-6; t++) {
-      const e = Math.min(t + 1, n)
-      if (standKeys.has(moduleKey(sidePoint(v.stand, s, t), sidePoint(v.stand, s, e)))) c += e - t
+      const [a, e] = cellAt(t, n)
+      if (standKeys.has(moduleKey(sidePoint(v.stand, s, a), sidePoint(v.stand, s, e)))) c += e - a
     }
     return c < 1e-6 ? 'gang' : c > n - 1e-6 ? 'standvegg' : 'delvis standvegg'
   }
