@@ -174,6 +174,21 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
 
   // Takdrager: 292 between the posts with two 600 in each end, one piece per length
   for (const b of s.beams) unit(BOM_GROUP.beams, 'Takdrager', r.beam.profile, between(b.lengthMm), r.beam.coupling, 1);
+  // Byggeregel T18: a half metre is joined onto the whole length with a standing 92, the couplings in both beams' ends
+  // going into it as into a post
+  const half = r.beam.half;
+  put(
+    BOM_GROUP.beams,
+    'beam-half-joint',
+    {
+      artnr: '',
+      name: `Skjøt ${half.profile} stående, ${half.length} mm`,
+      detail: `${half.profile} (${fogaPart(half.profile).artnr}) × ${half.length} mm · tar ${2 * r.beam.coupling.perEnd} × ${r.beam.coupling.code} fra dragerne`,
+      note: 'halvmeter på takdrager',
+      preassembled: true,
+    },
+    s.beams.filter((b) => b.joined).length,
+  );
   // A takdrager's end hanging on another beam or a wall's top rail 92 (T15): a hook in 01 with one leg (enveis) or two
   // (toveis), picked whole
   const hook = r.beam.hook;

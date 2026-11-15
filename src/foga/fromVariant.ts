@@ -38,8 +38,18 @@ export interface Derived {
   counters?: CounterParts;
 }
 
-/** Takdrager lengths, post centre to post centre, mm. */
-export const beamSpecs = (b: BeamLayout): BeamSpec[] => b.segments.map((s) => ({ lengthMm: Math.round(s.length * 1000) }));
+/** Takdrager lengths, post centre to post centre, mm. A length in whole and half metres is never cut to it (Byggeregel
+ *  T18, Bjørn 15.11.2026): the whole length and a 500 (cut 460) joined onto its end with a standing 92, no post there. */
+export const beamSpecs = (b: BeamLayout): BeamSpec[] =>
+  b.segments.flatMap((s): BeamSpec[] => {
+    const mm = Math.round(s.length * 1000);
+    const whole = mm - HALF_MM;
+    if (mm % 1000 !== HALF_MM) return [{ lengthMm: mm }];
+    return whole ? [{ lengthMm: whole }, { lengthMm: HALF_MM, joined: true }] : [{ lengthMm: HALF_MM }];
+  });
+
+/** The half metre of a takdrager, centres, mm (Byggeregel T18). */
+const HALF_MM = 500;
 
 export function structureOf(d: Derived): FogaStructure {
   return {
