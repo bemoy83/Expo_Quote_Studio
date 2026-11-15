@@ -13,7 +13,7 @@ import type { Layer } from '../../tools'
 export interface Tag {
   layer: Layer
   /** `roomId`: a room's see-through roof, the handle that moves the room. */
-  pick?: { wallId?: string; objectId?: string; textileId?: string; foilId?: string; roomId?: string; freeTextileId?: string; openingId?: string; shelfId?: string; shelfOnly?: boolean }
+  pick?: { beamId?: string; wallId?: string; objectId?: string; textileId?: string; foilId?: string; roomId?: string; freeTextileId?: string; openingId?: string; shelfId?: string; shelfOnly?: boolean }
 }
 
 /** Colours of the build system. Product colours come from the catalog. */

@@ -1,7 +1,7 @@
 // Byggeregler T2–T5, T12, T17 (docs/byggeregler.md).
 import { inward, pointKey, SIDES, sideEnds, sideLength, type Module } from '../../domain/grid';
 import type { Point, Side, Stand, Variant } from '../../domain/types';
-import { standardBeamsOn, standWallSide, type BuiltModule } from '../../domain/walls';
+import { builtModules, standardBeamsOn, standWallSide, wallPoints, type BuiltModule } from '../../domain/walls';
 import { layoutInnerBeams, mergeBeams, type InnerBeamLayout } from './innerBeams';
 import { splitBeamLength, type BeamLayout, type BeamSegment } from './beamSegments';
 import { rayAt, wallCrossings, wallSpans, type Ray } from './wallLines';
@@ -15,6 +15,13 @@ export const NO_BEAMS: BeamLayout = { segments: [], posts: new Map(), lm: 0 };
 /** The takdrager of a variant. `standard`: none when the customer turned them off, else {@link layoutBeams} and the
  *  støttedrager holding long stand walls (`support`, calc/beams/supportBeams.ts). `inner`: the ones the customer drew
  *  (calc/beams/innerBeams.ts). `all`: both. The hooks: calc/beams/beamHooks.ts. */
+/** The standard beams a drawn one may not lie along (domain/innerBeams.ts): the frame, without støttedragere. */
+export function standardRuns(v: Variant, maxLength: number): BeamSegment[] {
+  if (!standardBeamsOn(v)) return [];
+  const mods = builtModules(v);
+  return layoutBeams(v.stand, mods, wallPoints(mods), maxLength).segments;
+}
+
 export function variantBeams(
   v: Variant,
   mods: readonly BuiltModule[],

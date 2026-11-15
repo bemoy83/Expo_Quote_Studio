@@ -32,8 +32,10 @@ function matcher(v: Variant, sel: PlanSelection): ((p: Pick) => boolean) | null 
     }
     case 'wall':
       return (p) => p.wallId === c.wall.id && !p.textileId && !p.foilId && !p.shelfId && !p.openingId
+    case 'beam':
+      return (p) => p.beamId === c.beam.id
     default:
-      // Not chosen in 3D (floor, takdrager): no pill
+      // Not chosen in 3D (floor): no pill
       return null
   }
 }

@@ -6,8 +6,7 @@ import { furthest, stepsOf, turnOf, type GripKind, type RunEnd } from '../../dom
 import { wallGripEnds, stretchWall } from '../../domain/wallEnds'
 import { stretchInnerBeam } from '../../domain/innerBeams'
 import { BEAM_UNIT } from '../../domain/runDraw'
-import { builtModules, standardBeamsOn, wallPoints } from '../../domain/walls'
-import { layoutBeams } from '../../calc/beams/beams'
+import { standardRuns } from '../../calc/beams/beams'
 import { freeGripEnds, stretchFreeTextile } from '../../domain/textile/free'
 import { footprintBox, objectBoxes, objectFootprint, rotateObject, setMembers, settleAll, union } from '../../domain/objects'
 import { toPlan } from '../../domain/counterShape'
@@ -190,13 +189,6 @@ function dragTurnGrip(v: Variant, id: string, p0: Point, q: Point, fine: boolean
 
 const NO_TURN = 'Ikke plass til å rotere her'
 
-/** The standard beams a drawn one may not lie along (as PlanView's standardRuns): the frame, without støttedragere. */
-const standardRuns = (v: Variant) => {
-  if (!standardBeamsOn(v)) return []
-  const mods = builtModules(v)
-  return layoutBeams(v.stand, mods, wallPoints(mods), rules.beam.max).segments
-}
-
 /** The run an end grip moves: a wall, a free textile wall or a drawn takdrager. */
 const runOf = (v: Variant, on: Extract<GripOn, { type: 'end' }>) =>
   on.what === 'wall' ? v.walls.find((w) => w.id === on.id) : on.what === 'textile' ? v.freeTextiles.find((t) => t.id === on.id) : v.innerBeams?.find((b) => b.id === on.id)
@@ -212,7 +204,7 @@ function dragEndGrip(v: Variant, on: Extract<GripOn, { type: 'end' }>, p0: Point
   const along = (sign * ((q[0] - p0[0]) * (run.to[0] - run.from[0]) + (q[1] - p0[1]) * (run.to[1] - run.from[1]))) / len
   const step = fine ? (on.what === 'beam' ? BEAM_UNIT : CELL) : 1
   let why = on.what === 'wall' ? NO_STRETCH : on.what === 'beam' ? NO_BEAM_STRETCH : ''
-  const standard = on.what === 'beam' ? standardRuns(v) : []
+  const standard = on.what === 'beam' ? standardRuns(v, rules.beam.max) : []
   const at = (d: number): Variant | null => {
     if (on.what === 'wall') return stretchWall(v, on.id, on.end, d)
     if (on.what === 'beam') return stretchInnerBeam(v, on.id, on.end, d, standard)

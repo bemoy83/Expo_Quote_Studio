@@ -18,7 +18,8 @@ import { shelfHeight, shelfRow, shelvesOf } from '../../../domain/shelves/model'
 import type { Foil, Motif, Point, Shelf, TextileWall, Variant, Wall } from '../../../domain/types'
 import { dragGrip, type GripOn } from '../../plan/grips'
 import type { SceneGrip } from '../grips'
-import { dragRoom, dragWall, dropObject, dropRoom, roomDrag, type RoomDrag, type WallDrag } from '../../drag'
+import { dragInnerBeam, dragInnerBeamFine, dragRoom, dragWall, dropObject, dropRoom, roomDrag, type RoomDrag, type WallDrag } from '../../drag'
+import { standardRuns } from '../../../calc/beams/beams'
 import { place, rules } from '../../env'
 import { findMotif } from '../../motifs'
 import { chosenShelves, type PlanSelection } from '../../plan/selection'
@@ -46,6 +47,8 @@ export type Drag =
   | { kind: 'orbit' }
   | { kind: 'object'; id: string; start: { x: number; y: number }; off: { x: number; y: number }; moved: boolean }
   | ({ kind: 'wall'; moved: boolean } & WallDrag)
+  /** A drawn takdrager moved as in the plan (pointer/beam.ts), on a level plane at its height `y`. */
+  | ({ kind: 'beam'; moved: boolean; y: number } & WallDrag)
   /** A room: moved, or one side dragged. Tracked on a level plane at the height it was grabbed. */
   | ({ kind: 'room'; y: number } & RoomDrag)
   /** A textile or foil dragged on its face: deltas from where it was grabbed (t along the wall, h up). */
@@ -107,6 +110,11 @@ export function startDrag(P: PointerProps, hits: SceneHits, hit: Hit | null, e: 
     const o = P.v.objects.find((x) => x.id === hit.objectId)
     const q = hits.onFloor(e)
     if (o && q) return { kind: 'object', id: o.id, start: { x: o.x, y: o.y }, off: { x: q.x - o.x, y: q.y - o.y }, moved: false }
+  } else if (hit?.beamId) {
+    const b = P.v.innerBeams?.find((x) => x.id === hit.beamId)
+    const y = hit.point.y
+    const q = hits.onFloor(e, y)
+    if (b && q) return { kind: 'beam', id: b.id, p0: q, v0: P.v, delta: '0,0', horizontal: b.from[1] === b.to[1], moved: false, fine: P.fine, fineLock: P.fine, y }
   } else if (hit?.roomId || P.v.walls.find((x) => x.id === hit?.wallId)?.room) {
     // Its roof or its own wall moves a room; its grips resize it (R5)
     const w = P.v.walls.find((x) => x.id === hit!.wallId)
@@ -185,6 +193,15 @@ export function moveDrag(P: PointerProps, hits: SceneHits, drag: Exclude<Drag, {
     if (q) dragRoom(drag, q, P.onEdit, P.onCheckpoint)
     return
   }
+  if (drag.kind === 'beam') {
+    const q = hits.onFloor(e, drag.y)
+    if (!q) return
+    drag.moved = true
+    // Shift held (or «Fin» on in the pill): 50 mm across, half metres along (Byggeregler T8, T15)
+    drag.fine = e.shiftKey || !!drag.fineLock
+    ;(drag.fine ? dragInnerBeamFine : dragInnerBeam)(drag, q, standardRuns(drag.v0, rules.beam.max), P.onEdit, P.onCheckpoint)
+    return
+  }
   const q = hits.onFloor(e)
   if (!q) return
   if (drag.kind === 'object') {
@@ -226,6 +243,7 @@ export function endDrag(P0: PointerProps, hits: SceneHits, d: Drag | null, hit: 
     return
   }
   if (hit?.objectId) P.onSelect({ objectId: hit.objectId })
+  else if (hit?.beamId) P.onSelect({ beamId: hit.beamId })
   else if (hit?.freeTextileId) {
     const t = P.v.freeTextiles.find((x) => x.id === hit.freeTextileId)
     if (t) P.onSelect({ freeTextileId: t.id, freeFace: faceOfPoint(t, hits.toModel(hit.point)) })
@@ -239,6 +257,6 @@ export function endDrag(P0: PointerProps, hits: SceneHits, d: Drag | null, hit: 
 export function hoverCursor(v: Variant, hit: Hit | null) {
   const w = hit?.wallId ? v.walls.find((x) => x.id === hit.wallId) : undefined
   if (podiumTopAt(v, hit)) return 'ns-resize'
-  const movable = hit?.objectId || hit?.textileId || hit?.foilId || hit?.shelfId || hit?.roomId || (w && (w.room || canMoveWall(w)))
+  const movable = hit?.beamId || hit?.objectId || hit?.textileId || hit?.foilId || hit?.shelfId || hit?.roomId || (w && (w.room || canMoveWall(w)))
   return movable ? 'move' : hit ? 'pointer' : 'grab'
 }
