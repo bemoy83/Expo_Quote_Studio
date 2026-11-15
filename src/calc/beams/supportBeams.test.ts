@@ -77,6 +77,12 @@ describe('four locked sides', () => {
   it('Bjørn’s corner 4 × 3: a wall from the left stand wall to the right beam, 1 m off the back, gets no plates', () => {
     expect(feet(withWall(corner(4, 3), [0, 1], [4, 1]))).toEqual([]);
   });
+  it('the same off the whole metres (V9): the beam is joined where the wall meets it, not only at metre steps', () => {
+    expect(feet(withWall(corner(4, 3), [0, 1.25], [4, 1.25]))).toEqual([]);
+    // An inner wall off the metre lines, closed by a drawn beam hanging on the front beam between its metres (T15)
+    const v = { ...withWall(corner(4, 5), [2.5, 0], [2.5, 4]), innerBeams: [beam('b1', [2.5, 4], [2.5, 5])] };
+    expect(feet(v)).toEqual([]);
+  });
   it('a 4 m inner wall along a 5 m stand wall with a free end keeps its plate', () => {
     // Today's rule: held at the T, the free end's plate pulled a metre in for the 3 m gap
     expect(feet(withWall(corner(5, 3), [0, 1], [4, 1]))).toEqual(['3,1']);

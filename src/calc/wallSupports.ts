@@ -99,11 +99,13 @@ function joinedWithout(mods: readonly BuiltModule[], beams: BeamLayout) {
     next.set(b, (next.get(b) ?? new Set()).add(a));
   };
   for (const m of mods) link(m.a, m.b);
-  // A beam in metre steps, so an end hanging on its length or a wall under it joins it there
+  // A beam joins every wall post and beam end on its length, wherever they stand (also off the whole metres, V9, T15),
+  // so an end hanging on its length or a wall under it joins it there
+  const stops = [...mods.flatMap((m) => [m.a, m.b]), ...beams.segments.flatMap((s) => [s.from, s.to])];
   for (const s of beams.segments) {
-    const n = Math.max(1, Math.round(s.length));
-    const at = (k: number): Point => [s.from[0] + ((s.to[0] - s.from[0]) * k) / n, s.from[1] + ((s.to[1] - s.from[1]) * k) / n];
-    for (let k = 0; k < n; k++) link(at(k), at(k + 1));
+    const d = (p: Point) => Math.abs(p[0] - s.from[0]) + Math.abs(p[1] - s.from[1]);
+    const on = [...new Map(stops.filter((p) => onSegment(s, p)).map((p) => [pointKey(p), p])).values()].sort((p, q) => d(p) - d(q));
+    for (let k = 1; k < on.length; k++) link(on[k - 1], on[k]);
   }
   return (a: Point, b: Point, without: readonly BuiltModule[]) => {
     const cut = new Set(without.flatMap((m) => [`${pointKey(m.a)}|${pointKey(m.b)}`, `${pointKey(m.b)}|${pointKey(m.a)}`]));

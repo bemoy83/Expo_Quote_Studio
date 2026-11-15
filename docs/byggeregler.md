@@ -102,7 +102,8 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   inntil), og en stolpe under en takdrager.
   *Bjørn 1.11.2026 · kode `src/calc/wallSupports.ts` · test `src/calc/wallSupports.test.ts`*
 - **S6 Fire låste sider.** Med takdrager på får en strekning som er holdt i begge ender, og der endene henger sammen
-  rundt en annen vei med vegger og takdragere (en lukket firkant), ingen plater.
+  rundt en annen vei med vegger og takdragere (en lukket firkant), ingen plater. Det gjelder også vegger og dragere
+  utenfor hele meter (V9, T15): en drager henger sammen med hver stolpe og dragerende som ligger på den.
   *Bjørn 3.11.2026 · kode `src/calc/wallSupports.ts` · test `src/calc/beams/supportBeams.test.ts`*
 - **S7 Uten takdrager.** Er takdragerne valgt bort, gjelder S3 også mellom to hjørner: en bakvegg på 6 m får én plate
   midt på.
