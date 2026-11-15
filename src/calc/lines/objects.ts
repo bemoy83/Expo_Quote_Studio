@@ -49,7 +49,7 @@ const HALF_PART = RECIPES.counter.module.half;
 export function podiumUses(o: PlacedObject, b: CounterBuild = counterBuildOf(o)): Use[] {
   const sections = o.sections ?? [];
   const longest = sections.map((x) => Math.max(x.x[1] - x.x[0], x.z[1] - x.z[0]));
-  // K21: a sliding door is two leaves, fitted as one
+  // K17: a sliding door is two leaves, fitted as one
   const doors = b.plates.filter((p) => p.level === 'door').length / 2;
   // K19: a shelf is fitted on its rails (H7's times, placeholder); the shelf at CC 750 in a section 500 deep is in the
   // work per section, as in 6560 (K9, Bjørn 13.11.2026)

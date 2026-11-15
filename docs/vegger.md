@@ -72,8 +72,8 @@ Låst av Bjørn 31.10.2026. Samme regel for fakturamottaker gjelder takdragere s
   bare de trenger. De er da ute av tilbudet, plukklisten og arbeidsordren, som standveggene.
 - **Åpent areal uten standvegger** (øystand) får som regel ikke takdrager fra arrangøren. Utstilleren betaler dem fullt.
 - **Innvendig takdrager** (tilvalg, 1.11.2026) tegnes med egen pensel for kundens egne ønsker utover det veggene gir.
-  De er alltid utstillerens, på samme måte som innervegger, og har egen klassifisering (`Variant.innerBeams`). Regler i
-  [foga-system.md](foga-system.md).
+  De er alltid utstillerens, på samme måte som innervegger, og har egen klassifisering (`Variant.innerBeams`). Regler
+  T8–T17 i [byggeregler.md](byggeregler.md).
 
 I koden: `organiserBeams` i `calc/calc.ts` og nøkkeltallet `organiserBeamLm`.
 
@@ -184,7 +184,7 @@ siden skuffen viser (domain/print.ts):
 - Platebytte (6125) regnes ikke for en standveggplate som er printet: det er arrangørens plate med print på, også når
   standens farge er en annen enn arrangørens. Slik betales platen aldri både som farge og som print.
 - Platene bak en tekstilramme hoppes over, det samme gjør forheng og plater som tilhører en annen vegg. En dør får
-  trykk på overstykket og dørbladet (dørbladet tegnes enkelt til vi har en nøyaktig beskrivelse av det).
+  trykk på overstykket og dørbladet, bare i lysåpningene (Byggeregel D5).
 - Med hele veggen valgt tømmer søppelbøtta øverst i skuffen veggen for dekor: all folie (print og dekaler) på begge
   sider går, og platene får veggens farge igjen. Tekstilrammer blir stående. På en vegg uten dekor fjerner bøtta veggen
   som før (romvegg: åpner siden).
