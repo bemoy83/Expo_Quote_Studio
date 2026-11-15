@@ -11,7 +11,7 @@ import { counterRal, removeObject } from '../../../domain/objects'
 import { podiumDecals, updatePodiumDecal } from '../../../domain/podiumDecor'
 import { NO_DOOR, setPodiumLight, takesDoor } from '../../../domain/podiumFaces'
 import { partLocks } from '../../../domain/podiumLocks'
-import { HEIGHTS, podiumSize, setSectionHeight } from '../../../domain/podiums'
+import { heightName, HEIGHTS, outerHeight, podiumSize, setSectionHeight } from '../../../domain/podiums'
 import { SHELF_HEIGHTS, lowered, movePodiumShelf, setPodiumShelf } from '../../../domain/podiumShelves'
 import type { CounterLight, Motif, PlacedObject, Variant } from '../../../domain/types'
 import { Button, FlatChoice, FlatToggles, Section } from '../../controls'
@@ -135,13 +135,13 @@ export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect,
             {lockWhy && <p className="set-note">{lockWhy}</p>}
             {!allLocked && !doorable.length && <p className="set-note">{NO_DOOR}</p>}
           </Section>
-          {/* K19: shelves at CC 250, 500 and 750, below the section's height */}
+          {/* K19: shelves at CC 250, 500 and 750, below the section's height, named by their step as the heights (K12) */}
           <Section title={several ? 'Seksjonene · hyller' : 'Seksjonen · hyller'} aside={shelfCount ? count(shelfCount, 'hylle', 'hyller') : 'ingen'}>
-            <FlatToggles<number> label="Hyller, CC" value={shelvesNow} onToggle={toggleShelf} options={SHELF_HEIGHTS.map((y) => ({ value: y, label: mm(y / 1000), disabled: y >= Math.max(...secs.map((i) => o.sections![i].h)), title: y >= lowest ? 'Hyllen må stå lavere enn seksjonen' : undefined }))} />
+            <FlatToggles<number> label="Hyller" value={shelvesNow} onToggle={toggleShelf} options={SHELF_HEIGHTS.map((y) => ({ value: y, label: heightName(y), disabled: y >= Math.max(...secs.map((i) => o.sections![i].h)), title: y >= lowest ? 'Hyllen må stå lavere enn seksjonen' : `Hylle ${heightName(y)} · ${outerHeight(y)} mm over gulvet, topp skinne` }))} />
           </Section>
           {/* K18: the height of the section behind the part, or of every section along the side */}
-          <Section title={several ? 'Seksjonene · høyde' : 'Seksjonen · høyde'} aside={`CC ${heights.map((h) => mm(h / 1000)).join('/')}`}>
-            <FlatChoice<number> label="Høyde CC" value={heights.length === 1 ? heights[0] : 0} onChange={(h) => heightOf(secs, h)} options={HEIGHTS.map((h) => ({ value: h, label: mm(h / 1000) }))} />
+          <Section title={several ? 'Seksjonene · høyde' : 'Seksjonen · høyde'} aside={`${heights.map((h) => mm(outerHeight(h) / 1000)).join('/')} mm`}>
+            <FlatChoice<number> label="Høyde" value={heights.length === 1 ? heights[0] : 0} onChange={(h) => heightOf(secs, h)} options={HEIGHTS.map((h) => ({ value: h, label: heightName(h), title: `${outerHeight(h)} mm utvendig` }))} />
           </Section>
           </>
         ) : (

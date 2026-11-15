@@ -301,7 +301,14 @@ export function drawPodium(v: Variant, ctx: PlaceContext, d: PodiumDrag, q: Poin
 
 
 /** The outer heights of a counter of Disker og podier, mm, low to high (K12: CC + 40). */
-export const podiumHeights = (o: Pick<PlacedObject, 'sections'>): number[] => [...new Set((o.sections ?? []).map((s) => s.h + R.railHeight))].sort((a, b) => a - b);
+/** What the user reads for a height (K12): the step's name for a choice, «50 cm» for CC 500. CC stays inside the model
+ *  and the rules; every measure shows `outerHeight`. */
+export const heightName = (cc: number) => `${cc / 10} cm`;
+/** A section's (or a shelf's, K19) height over the floor as measured, mm (K12): the top of the rail, CC + the rail. CC
+ *  is hard to measure on site, so neither the drawer nor the work order shows it (Bjørn 15.11.2026). */
+export const outerHeight = (cc: number) => cc + R.railHeight;
+
+export const podiumHeights = (o: Pick<PlacedObject, 'sections'>): number[] => [...new Set((o.sections ?? []).map((s) => outerHeight(s.h)))].sort((a, b) => a - b);
 
 /** Outer size of a counter of Disker og podier, mm: length × depth × height (K10, K12). */
 export function podiumSize(o: Pick<PlacedObject, 'sections'>): { length: number; depth: number; height: number } {

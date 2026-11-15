@@ -1,5 +1,6 @@
 // Disker og podier by function (Bjørn 14.11.2026): «Fri», then one button per function with the outline of the item
 // behind it; the plates in the wall colours and the bucket, as on Vegg (K6); Høyde (K12) and Fin.
+import { heightName, outerHeight } from '../../../domain/podiums'
 import { stockByArtnr } from '../../../domain/podiumStock'
 import { artnrName, catalog, idx } from '../../env'
 import { fineApplies, funcOf, penFuncs, penHeights, stockFor, withFunc, withHeight } from '../../podiumPen'
@@ -45,18 +46,18 @@ export function PodiumPicks({ p, head, more, brush }: Omit<QuickCtx, 'is'> & { b
         onFill={p.onFillPodiums}
       />
       <Sep />
-      {/* Høyde, CC: what Fri draws (a påbygg takes its neighbour's, K12), or the item's height in hand */}
+      {/* Høyde, named by its step in cm (K12; the number alone, so the pill keeps one row): what Fri draws (a påbygg takes its neighbour's, K12), or the item's height in hand */}
       {penHeights(brush).map(({ h, on, off }) => (
         <QBtn
           key={h}
           on={on}
           setting
           disabled={off}
-          title={off ? `Høyde CC ${h} mm · finnes ikke for varen i hånden` : `Høyde CC ${h} mm (utvendig ${h + 40})`}
-          label={`Høyde ${h}`}
+          title={off ? `Høyde ${heightName(h)} · finnes ikke for varen i hånden` : `Høyde ${heightName(h)} · ${outerHeight(h)} mm utvendig`}
+          label={`Høyde ${heightName(h)}`}
           onClick={() => onPick(withHeight(brush, h))}
         >
-          {h}
+          {h / 10}
         </QBtn>
       ))}
       <Sep />

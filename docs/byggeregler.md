@@ -526,12 +526,12 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   94 i innerhjørnet).
   *Bjørn 13.11.2026 · kode `src/foga/counter.ts`, `src/domain/counterShape.ts` · test `src/domain/podiums.test.ts`*
 - **K12 Høyde.** CC 250, 500, 750 eller 1000: toppskinnen står med underkant i den høyden, stolpen er CC + 40 (290,
-  540, 790, 1040), og platen CC − 24 høy. Høyden lagres per seksjon. Høyde i hurtigvalget (250, 500, 750, 1000, ved
+  540, 790, 1040), og platen CC − 24 høy. Høyden lagres per seksjon. Høyde i hurtigvalget (25, 50, 75, 100 cm, ved
   siden av fargen, 1000 til noe er valgt) gir høyden alt i ett drag tegnes med; et påbygg arver høyden til seksjonen det
   ligger mot. Der to seksjoner med ulik høyde møtes (etter en fusjon), står en 94 under den lave toppen og en 93 i den
   høyes høyde mot den lave siden, og trinnet lukkes med en plate mellom dem, høydeforskjellen − 24 høy; stolpene der
   går til den høye. Høyden står i pillen («H 540») og i linjen i tilbudet, med alle høydene når disken har flere
-  («540/1040»). Høyden på en seksjon som står, endres etter K18.
+  («540/1040»). Høyden på en seksjon som står, endres etter K18. **Visning (Bjørn 15.11.2026):** CC vises aldri, fordi det er vanskelig å måle på stedet. Et valg (hurtigvalget, skuffen, grepene i risset, også hyllene i K19) heter etter trinnet, «25 / 50 / 75 / 100 cm». Et mål (pille, tilbud, risset og arbeidsordren) er fra gulvet til toppen av skinnen, CC + 40: 290, 540, 790, 1040, og for hyllene 290, 540, 790. Kode `heightName` og `outerHeight` i `src/domain/podiums.ts`.
   *Bjørn 13.11.2026 · kode `src/foga/counter.ts`, `src/domain/podiums.ts`, `src/ui/plan/quick/podium.tsx` · test `src/domain/podiums.test.ts`*
 - **K13 Pris og plukk for Disker og podier.** Ett katalogprodukt per funksjon for det som bygges på stedet: «Disk»
   (6571) under Disker og «Podie» (6572) under Podier (varenumrene er midlertidige). Hver er priset av kostmotoren fra

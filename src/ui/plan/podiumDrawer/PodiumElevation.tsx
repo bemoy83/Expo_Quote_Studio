@@ -1,14 +1,14 @@
 // A side of a counter of Disker og podier seen from outside (trinn 2): its posts, rails and parts, each split by the
 // shelves of its section into light openings (Byggeregler K16, K19), each a plate in the counter's colour, open to the
 // inside or a sliding door (K17), what is chosen toned; under it the parts' outer lengths and the whole, to the left the
-// shelves and the height from the floor (CC) and the outer height. A click on a part chooses the light opening under
+// shelves and their heights from the floor to the top of the rail, and the outer height (K12; never CC, Bjørn 15.11). A click on a part chooses the light opening under
 // the pointer (the part when it has no shelves), a click on what is chosen goes back to the whole side. On top of each
-// section a grip «CC 750» sets its height (K18), on each shelf rail a grip «Hylle 500» moves the shelf (K19): both
+// section a grip «75 cm» sets its height (K18), on each shelf rail a grip «Hylle 50 cm» moves the shelf (K19): both
 // snap to the 250 grid, show live and are set on release. Print (K20) shows its share of the motif in each window of
 // plate and door; a decal is chosen by a click and moved or scaled by its handles, set on release.
 import { useRef, useState, type PointerEvent } from 'react'
 import type { Motif } from '../../../domain/types'
-import { HEIGHTS } from '../../../domain/podiums'
+import { heightName, HEIGHTS, outerHeight } from '../../../domain/podiums'
 import { shelfStop } from '../../../domain/podiumShelves'
 import { RECIPES } from '../../../foga/recipes'
 import { ALU, ALU_POST, BORDER_STRONG, INK, INK_MUTED, SUNKEN, SURFACE } from '../../colors'
@@ -204,7 +204,7 @@ export function PodiumElevation({ parts: given, length, h: hTop, title, fill, ch
       `t${t.section}`,
       t.x,
       yAt(t.h + R.railHeight / 2),
-      `CC ${t.h}`,
+      heightName(t.h),
       drag?.kind === 'top' && drag.section === t.section,
       (y0) => ({ kind: 'top', section: t.section, y0, h0: t.h, h: t.h }),
       (d, mm) => (d.kind === 'top' ? { ...d, h: snap(d.h0 + mm) } : d),
@@ -221,7 +221,7 @@ export function PodiumElevation({ parts: given, length, h: hTop, title, fill, ch
         `s${t.section}:${from}`,
         t.x,
         yAt(y + R.railHeight / 2),
-        `Hylle ${y}`,
+        `Hylle ${heightName(y)}`,
         live,
         (y0) => ({ kind: 'shelf', section: t.section, y0, from: y, to: y, h: t.h, shelves: [...t.shelves] }),
         (d, mm) => (d.kind === 'shelf' ? { ...d, to: shelfStop({ h: d.h, shelves: d.shelves }, d.from, d.from + mm) } : d),
@@ -317,8 +317,8 @@ export function PodiumElevation({ parts: given, length, h: hTop, title, fill, ch
             </text>
             {chainTs.length > 2 && <Chain sc={sc} axis="x" at={H + px(NEAR)} ts={chainTs} dir={1} />}
             <Chain sc={sc} axis="x" at={H + px(chainTs.length > 2 ? TOTAL : NEAR)} ts={[0, L]} dir={1} />
-            <Chain sc={sc} axis="y" at={-px(NEAR)} ts={[yAt(h), ...shelfYs.map(yAt), H]} dir={-1} suffix="CC" />
-            <Chain sc={sc} axis="y" at={-px(TOTAL)} ts={[yAt(h + R.railHeight), H]} dir={-1} suffix="utv." />
+            {shelfYs.length > 0 && <Chain sc={sc} axis="y" at={-px(NEAR)} ts={[yAt(outerHeight(h)), ...shelfYs.map((y) => yAt(outerHeight(y))), H]} dir={-1} />}
+            <Chain sc={sc} axis="y" at={-px(shelfYs.length ? TOTAL : NEAR)} ts={[yAt(outerHeight(h)), H]} dir={-1} />
           </g>
         </svg>
       </div>
