@@ -83,6 +83,12 @@ describe('four locked sides', () => {
     const v = { ...withWall(corner(4, 5), [2.5, 0], [2.5, 4]), innerBeams: [beam('b1', [2.5, 4], [2.5, 5])] };
     expect(feet(v)).toEqual([]);
   });
+  it('a drawn beam on a hook between the wall’s posts closes the ring there too (T15)', () => {
+    // Corner 5 × 4: a wall y = 2 from the left stand wall to the right beam; a drawn beam x = 1,5 hangs on it between its
+    // posts and on the front beam. From the hook to the right beam (3,5 m) the wall closes four locked sides
+    const v = { ...withWall(corner(5, 4), [0, 2], [5, 2]), innerBeams: [beam('b1', [1.5, 2], [1.5, 4])] };
+    expect(feet(v)).toEqual([]);
+  });
   it('a 4 m inner wall along a 5 m stand wall with a free end keeps its plate', () => {
     // Today's rule: held at the T, the free end's plate pulled a metre in for the 3 m gap
     expect(feet(withWall(corner(5, 3), [0, 1], [4, 1]))).toEqual(['3,1']);

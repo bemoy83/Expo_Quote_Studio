@@ -1,7 +1,7 @@
 // Støtteplater: foot plates under a system wall that stands free, by the shared support rule (calc/supports.ts) on
 // the wall's posts. The rules are byggeregler S1–S3, S5–S7, T15 (docs/byggeregler.md); a long stand wall is held by a
 // støttedrager instead (calc/beams/supportBeams.ts).
-import { pointKey } from '../domain/grid';
+import { onSpan, pointKey } from '../domain/grid';
 import type { Point } from '../domain/types';
 import type { BuiltModule } from '../domain/walls';
 import type { SupportRule } from '../foga/recipes';
@@ -90,25 +90,30 @@ export function hookHolds(run: Run, beams: BeamLayout): number[] {
   return [...out].sort((a, b) => a - b);
 }
 
-/** Whether `a` and `b` are joined by walls and takdrager without the given wall modules: a closed ring with them. */
+/** Whether `a` and `b` are joined by walls and takdrager without the wall between them: a closed ring with it. */
 function joinedWithout(mods: readonly BuiltModule[], beams: BeamLayout) {
   const next = new Map<string, Set<string>>();
+  const pts = new Map<string, Point>();
   const link = (p: Point, q: Point) => {
     const [a, b] = [pointKey(p), pointKey(q)];
+    pts.set(a, p).set(b, q);
     next.set(a, (next.get(a) ?? new Set()).add(b));
     next.set(b, (next.get(b) ?? new Set()).add(a));
   };
-  for (const m of mods) link(m.a, m.b);
-  // A beam joins every wall post and beam end on its length, wherever they stand (also off the whole metres, V9, T15),
-  // so an end hanging on its length or a wall under it joins it there
+  // Walls and beams are joined at every wall post and beam end on them, wherever they stand (also off the whole
+  // metres, V9): a beam end hanging on another beam's length, a wall under a beam, and a beam on a hook on a wall
+  // between its posts (T15)
   const stops = [...mods.flatMap((m) => [m.a, m.b]), ...beams.segments.flatMap((s) => [s.from, s.to])];
-  for (const s of beams.segments) {
-    const d = (p: Point) => Math.abs(p[0] - s.from[0]) + Math.abs(p[1] - s.from[1]);
-    const on = [...new Map(stops.filter((p) => onSegment(s, p)).map((p) => [pointKey(p), p])).values()].sort((p, q) => d(p) - d(q));
+  const chain = (from: Point, to: Point) => {
+    const d = (p: Point) => Math.abs(p[0] - from[0]) + Math.abs(p[1] - from[1]);
+    const on = [...new Map(stops.filter((p) => onSpan(from, to, p)).map((p) => [pointKey(p), p])).values()].sort((p, q) => d(p) - d(q));
     for (let k = 1; k < on.length; k++) link(on[k - 1], on[k]);
-  }
-  return (a: Point, b: Point, without: readonly BuiltModule[]) => {
-    const cut = new Set(without.flatMap((m) => [`${pointKey(m.a)}|${pointKey(m.b)}`, `${pointKey(m.b)}|${pointKey(m.a)}`]));
+  };
+  for (const m of mods) chain(m.a, m.b);
+  for (const s of beams.segments) chain(s.from, s.to);
+  return (a: Point, b: Point) => {
+    // Every link on the wall from a to b is taken out
+    const cut = (k: string, n: string) => onSpan(a, b, pts.get(k)!) && onSpan(a, b, pts.get(n)!);
     const goal = pointKey(b);
     const seen = new Set([pointKey(a)]);
     const queue = [pointKey(a)];
@@ -116,7 +121,7 @@ function joinedWithout(mods: readonly BuiltModule[], beams: BeamLayout) {
       const k = queue.pop()!;
       if (k === goal) return true;
       for (const n of next.get(k) ?? []) {
-        if (seen.has(n) || cut.has(`${k}|${n}`)) continue;
+        if (seen.has(n) || cut(k, n)) continue;
         seen.add(n);
         queue.push(n);
       }
@@ -159,7 +164,9 @@ export function wallSupports(
       // Posts on the stretch, metres from its start
       const ks = run.at.flatMap((x, k) => (x > a - 1e-6 && x < b + 1e-6 ? [k] : []));
       const metre = onPosts && ks.every((k, j) => Math.abs(run.at[k] - a - j) < 1e-6) && Math.abs(b - a - (ib - ia)) < 1e-6;
-      const locked = onPosts && framed && ends.from && ends.to && joined(run.points[ia], run.points[ib], run.mods.slice(ia, ib));
+      // On the run's line: a post, or a hook between posts (T15)
+      const pointAt = (t: number): Point => (run.orientation === 'h' ? [run.points[0][0] + t, run.points[0][1]] : [run.points[0][0], run.points[0][1] + t]);
+      const locked = framed && ends.from && ends.to && joined(pointAt(a), pointAt(b));
       const posts = locked
         ? []
         : metre
