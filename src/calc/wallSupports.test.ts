@@ -1,7 +1,10 @@
 // Støtteplater on system walls that stand free (Bjørn 1.11.2026). Rule as for a free-standing textile wall: at least 2
 // supports from 1 m, the outer one at most 1 m from a free end, at most 3 m apart; corners, T's and takdrager count.
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_CATALOG } from '../catalog/defaultCatalog';
+import { DEFAULT_CATALOG, DOOR } from '../catalog/defaultCatalog';
+import { moveOpeningAlong, setOpening } from '../domain/doors';
+import { paintWalls } from '../domain/edit';
+import { moduleKey } from '../domain/grid';
 import { addRoom } from '../domain/rooms';
 import type { Variant, Wall } from '../domain/types';
 import { createVariant } from '../domain/variant';
@@ -102,5 +105,29 @@ describe('inner walls and rooms', () => {
     // Room sides 2 m between corners: none. Left stand wall: held at the back and at the room (0,2), a plate at its free
     // end. Back wall: the room's side (2,0) to the corner (6,0) is 4 m, one plate between. Right wall 4 m: a metre in
     expect(feet(v)).toEqual(['0,4', '4,0', '6,3']);
+  });
+});
+
+// Bjørn 15.11.2026: a short module (V1, V10, D8) is as long as it is; the plates are counted in metres along the wall
+describe('short modules (Byggeregler S3, S4 with V1, V10, D8)', () => {
+  const island = { ...createVariant('A', { width: 8, depth: 6, type: 'island' }), noBeams: true };
+  const on = (v: Variant, y: number) => feet(v).filter((k) => k.endsWith(`,${y}`));
+  it('a 3,75 m wall free at both ends: plates at one end and 3 m from it, on posts', () => {
+    expect(on(paintWalls(island, [1, 3], [4.75, 3]), 3)).toEqual(['1,3', '4,3']);
+  });
+  it('a wall meeting between posts (V10) holds the wall it meets, which stays one run', () => {
+    const v = paintWalls(paintWalls(island, [1, 3], [5, 3]), [2.5, 3], [2.5, 1]);
+    // 1,5 m out from the T to the left: one plate at the end; 2,5 m to the right: one at the end. The wall that meets
+    // is 2 m from the T: one at its end
+    expect(on(v, 3)).toEqual(['1,3', '5,3']);
+    expect(feet(v)).toContain('2.5,1');
+  });
+  it('a door off the whole metres (D8) does not cut the wall into free pieces', () => {
+    const a = paintWalls(island, [1, 3], [5, 3]);
+    const d = setOpening(a, moduleKey([2, 3], [3, 3]), DOOR);
+    const v = moveOpeningAlong(d, d.openings[0].id, 1.25);
+    // Posts at 1, 2, 2,25, 3,25, 4,25 and 5: 4 m free at both ends needs two plates at most 3 m apart, each at most
+    // 1 m from its end; the one at 1 would leave 3,25 m to 4,25, so it is pulled in to 2
+    expect(on(v, 3)).toEqual(['2,3', '5,3']);
   });
 });

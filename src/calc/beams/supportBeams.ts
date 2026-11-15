@@ -18,22 +18,31 @@ const EPS = 1e-6;
 export const NO_SUPPORT_BEAMS: SupportBeamLayout = { segments: [], posts: new Map(), lm: 0 };
 
 /**
- * Points along one run of a stand wall (whole metres from its low end) where it gets a støttedrager: in each free span
- * of at least `span` m between two held points. A stretch out to a free end is left alone.
+ * Points along one run of a stand wall where it gets a støttedrager: in each free span of at least `span` m between two
+ * held points. A stretch out to a free end is left alone. `at`: metres from the low end to each post (a short module is
+ * as long as it is, Byggeregel V1, V10, D8), by default whole metres; returns post indices.
  */
-export function supportBeamPoints(len: number, held: (i: number) => boolean, span = SUPPORT_SPAN, hooks: readonly number[] = []): number[] {
+export function supportBeamPoints(
+  len: number,
+  held: (i: number) => boolean,
+  span = SUPPORT_SPAN,
+  hooks: readonly number[] = [],
+  at: readonly number[] = Array.from({ length: len + 1 }, (_, i) => i),
+): number[] {
   // A takdrager on a hook between two posts holds the wall there too (Byggeregel T15); the støttedrager stays on a post
-  const at = [...new Set([...Array.from({ length: len + 1 }, (_, i) => i).filter(held), ...hooks])].sort((a, b) => a - b);
+  const holds = [...new Set([...at.filter((_, i) => held(i)), ...hooks])].sort((a, b) => a - b);
+  // The post nearest x, the later one on a tie (as rounding half up)
+  const nearest = (x: number) => at.reduce((best, y, i) => (Math.abs(y - x) <= Math.abs(at[best] - x) + EPS ? i : best), 0);
   const out: number[] = [];
   let start = held(0) ? 0 : -1;
-  for (const i of at) {
-    if (i === 0) continue;
-    const L = i - start;
+  for (const t of holds) {
+    if (t === 0) continue;
+    const L = t - start;
     if (start >= 0 && L >= span - EPS) {
       const n = Math.floor(L / span + EPS);
-      for (let k = 1; k <= n; k++) out.push(Math.round(start + (k * L) / (n + 1)));
+      for (let k = 1; k <= n; k++) out.push(nearest(start + (k * L) / (n + 1)));
     }
-    start = i;
+    start = t;
   }
   return out;
 }
@@ -63,7 +72,7 @@ export function layoutSupportBeams(
   }
   for (const [side, ms] of bySide) {
     for (const run of wallRuns(ms)) {
-      for (const i of supportBeamPoints(run.points.length - 1, (k) => holds(run, run.points[k]), span, hookHolds(run, beams))) starts.push({ at: run.points[i], side });
+      for (const i of supportBeamPoints(run.points.length - 1, (k) => holds(run, run.points[k]), span, hookHolds(run, beams), run.at)) starts.push({ at: run.points[i], side });
     }
   }
 

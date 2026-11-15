@@ -92,7 +92,8 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   *Bjørn 1.11.2026 · `RECIPES.wall.support` · kode `src/calc/wallSupports.ts` · test `src/calc/wallSupports.test.ts`*
 - **S3 Avstand.** Per rett strekning: en plate i hver fri ende, maks 3 m mellom to støtter, og en endeplate trekkes inn
   hele stolper (maks 1 m) bare så langt avstanden krever. Minst 2 gjelder bare en rett vegg fri i begge ender, fra 1 m.
-  3 m: endene. 4 m: den ene 1 m inn. 5 m: begge 1 m inn. 6 m: tre.
+  3 m: endene. 4 m: den ene 1 m inn. 5 m: begge 1 m inn. 6 m: tre. Avstandene regnes i meter langs veggen, så en kort
+  modul (V1, V10, D8) teller med sin lengde, og en vegg delt i korte moduler er fortsatt én strekning (Bjørn 15.11.2026).
   *Bjørn 1.11.2026 · `RECIPES.wall.support.rule` · kode `src/calc/supports.ts`, `src/calc/wallSupports.ts` · test `src/calc/wallSupports.test.ts`*
 - **S4 Ut fra hjørne.** Ut fra et hjørne eller en T står veggen av seg selv opptil 1 m (1 × 1 trenger ingen plate). Over
   1 m får den én plate, deretter gjelder S3.

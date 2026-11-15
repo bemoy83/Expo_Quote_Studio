@@ -35,6 +35,8 @@ describe('free spans on one stand wall', () => {
     expect(supportBeamPoints(10, ends(0, 4, 10))).toEqual([7]);
     expect(supportBeamPoints(7, ends(0, 4, 7))).toEqual([]);
     expect(supportBeamPoints(8, ends(8))).toEqual([]);
+    // Posts in metres (a short module, Byggeregel V1): 6,5 m held at both ends, the middle 3,25 is nearest the post at 3
+    expect(supportBeamPoints(7, ends(0, 7), undefined, [], [0, 1, 2, 3, 4, 5, 6, 6.5])).toEqual([3]);
   });
 });
 
