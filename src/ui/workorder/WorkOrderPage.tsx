@@ -20,7 +20,7 @@ import { lanesOf, rollPieces } from '../../domain/floor/lanes'
 import { cornerLayout } from '../../domain/shelves/corners'
 import { shelfFaces } from '../../domain/shelves/model'
 import { hours } from '../format'
-import { standScope, TYPE_NAME } from '../names'
+import { standScope, standSize, TYPE_NAME } from '../names'
 import { pickRows, type PickRow } from './pickRows'
 import { CornerNotes, ShelfElevation } from './ShelfElevation'
 import { PodiumSides } from './PodiumSides'
@@ -142,7 +142,7 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf, mo
               ))}
               <div className="wo-stand">
                 <dt className="num">
-                  {v.stand.width} × {v.stand.depth} m
+                  {standSize(v.stand)}
                 </dt>
                 <dd>
                   {TYPE_NAME[v.stand.type]} · {standScope(k)}

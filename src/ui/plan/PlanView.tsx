@@ -8,7 +8,7 @@ import { useId, useMemo, type ReactNode } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import { canMoveWall } from '../../domain/edit'
 import type { FloorBrushSize } from '../../domain/floor/brush'
-import { CELL, openSides, sideLength, sidePoint } from '../../domain/grid'
+import { CELL, metreLines, moduleKey, openSides, sideLength, sidePoint } from '../../domain/grid'
 import type { Run } from '../../domain/innerBeams'
 import { conflicts } from '../../domain/objects'
 import { roomAt, sideIsHorizontal } from '../../domain/rooms'
@@ -20,7 +20,6 @@ import { place, rules } from '../env'
 import { standardRuns as standardBeamRuns } from '../../calc/beams/beams'
 import { penLayers, type Brush, type Highlight, type Layer, type Tool } from '../tools'
 import { totalSides } from './dims'
-import { nearestEdge } from './geometry'
 import { BeamLayer } from './layers/BeamLayer'
 import { DimLayer } from './layers/DimLayer'
 import { ErasingProvider } from './layers/ErasingProvider'
@@ -240,13 +239,13 @@ export function PlanView(p: Props) {
 
   const sideText = (s: Side) => {
     const n = sideLength(v.stand, s)
+    // Module by module from the side's start, the half metre last (Byggeregel V14)
     let c = 0
-    for (let t = 0; t < n; t++) {
-      const a = sidePoint(v.stand, s, t)
-      const b = sidePoint(v.stand, s, t + 1)
-      if (standKeys.has(nearestEdge(v.stand, { x: (a[0] + b[0]) / 2, y: (a[1] + b[1]) / 2 }).key)) c++
+    for (let t = 0; t < n - 1e-6; t++) {
+      const e = Math.min(t + 1, n)
+      if (standKeys.has(moduleKey(sidePoint(v.stand, s, t), sidePoint(v.stand, s, e)))) c += e - t
     }
-    return c === 0 ? 'gang' : c === n ? 'standvegg' : 'delvis standvegg'
+    return c < 1e-6 ? 'gang' : c > n - 1e-6 ? 'standvegg' : 'delvis standvegg'
   }
 
   return (
@@ -274,11 +273,11 @@ export function PlanView(p: Props) {
 
       {/* Grid, under the floor: a laid floor shows its own joints. Metre lines in faint ink, a hairline */}
       <g pointerEvents="none" stroke={GRID} strokeWidth={linePx(scale, GRID_PX)}>
-        {Array.from({ length: W - 1 }, (_, i) => (
-          <line key={`gx${i}`} x1={i + 1} y1={0} x2={i + 1} y2={D} />
+        {metreLines(W).map((x) => (
+          <line key={`gx${x}`} x1={x} y1={0} x2={x} y2={D} />
         ))}
-        {Array.from({ length: D - 1 }, (_, j) => (
-          <line key={`gy${j}`} x1={0} y1={j + 1} x2={W} y2={j + 1} />
+        {metreLines(D).map((y) => (
+          <line key={`gy${y}`} x1={0} y1={y} x2={W} y2={y} />
         ))}
       </g>
 

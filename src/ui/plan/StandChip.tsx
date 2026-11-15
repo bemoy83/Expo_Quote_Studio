@@ -6,7 +6,7 @@ import { FlatChoice, IconButton } from '../controls'
 import { useLayoutEffect, useRef, useState } from 'react'
 import { useDismiss } from '../useDismiss'
 import { fmt } from '../format'
-import { TYPE_NAME } from '../names'
+import { standSize, TYPE_NAME } from '../names'
 import { StandSettings, type StandSettingsProps } from '../panel/StandSettings'
 import type { Hint } from '../hints'
 
@@ -45,7 +45,7 @@ export function StandChip({ view, onView, hint, ...p }: StandSettingsProps & { v
             <Ruler size={15} />
             <span className="type">{TYPE_NAME[s.type]}</span>
             <span className="size">
-              {s.width} × {s.depth} m
+              {standSize(s)}
             </span>
             <ChevronDown size={14} />
           </button>

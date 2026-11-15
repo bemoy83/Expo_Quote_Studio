@@ -254,6 +254,10 @@ export function openSides(stand: Stand): Side[] {
   }
 }
 
+/** The whole metres inside a stand side of `size` m, its ends left out: 1, 2, 3 on 3,5 and on 4 (the stand is in whole and
+ *  half metres, Byggeregel V14). The plan's metre grid. */
+export const metreLines = (size: number): number[] => Array.from({ length: Math.max(0, Math.ceil(size - 1e-6) - 1) }, (_, i) => i + 1);
+
 /** Floor cell size in metres. */
 export const CELL = RULES.floor.cell;
 

@@ -2,6 +2,9 @@
 import type { KeyFigures } from '../calc/calc'
 import { count, fmt } from './format'
 
+/** The stand's size, width × depth, in whole and half metres with decimal comma: «3,5 × 2,5 m». */
+export const standSize = (s: { width: number; depth: number }) => `${fmt(s.width, 2)} × ${fmt(s.depth, 2)} m`
+
 export const TYPE_NAME = { row: 'Rekkestand', corner: 'Hjørnestand', end: 'Endestand', island: 'Øystand' } as const
 
 /** '2 lengder'. Posts are part of the takdrager, like the wall's: only the picking list counts them. */
