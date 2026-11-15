@@ -181,7 +181,7 @@ export function keptSides(s: CounterSection, t: CounterSection, keep?: SectionSi
   return out;
 }
 
-/** What a counter has beside plates, for its line in the quote (K21): «2 åpne sider · 1 skyvedør · 3 hyller», a side
+/** What a counter has beside plates, for its line in the quote (K16, K17, K19): «2 åpne sider · 1 skyvedør · 3 hyller», a side
  *  of the outline counted once however many of its parts or light openings are open, a sliding door per light opening,
  *  and the shelves; `locked` parts are plates. */
 export function podiumHas(sections: readonly CounterSection[], locked: readonly string[] = []): string[] {

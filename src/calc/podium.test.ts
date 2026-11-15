@@ -43,7 +43,7 @@ describe('Disker og podier (Byggeregel K13)', () => {
     expect(q(ell)).toMatchObject({ [ITEM.counterWhole]: 2, [ITEM.counterHalf]: 1, [ITEM.counterCorner]: 1 });
   });
 
-  it('a sliding door is fitted once, the line says it has one (K17, K21)', () => {
+  it('a sliding door is fitted once, the line says it has one (K17)', () => {
     const door = { ...podium, sections: [{ ...sec(-500, 500, -500, 500), sides: { 'z+': { lights: ['door' as const] } } }] };
     expect(Object.fromEntries(podiumUses(door).map((u) => [u.id, u.qty]))[ITEM.counterDoor]).toBe(1);
     expect(DEFAULT_PRICING.items.get(ITEM.counterDoor)).toBeDefined();
@@ -51,7 +51,7 @@ describe('Disker og podier (Byggeregel K13)', () => {
     expect(r.groups.flatMap((g) => g.lines).find((l) => l.artnr === '6572')!.meta).toBe('bygget på stedet 1020 × 1020 × 1040 mm · 1 skyvedør · RAL 3002');
   });
 
-  it('a shelf is fitted per board, the line says how many (K19, K21)', () => {
+  it('a shelf is fitted per board, the line says how many (K19)', () => {
     const shelf = { ...podium, sections: [sec(-500, 500, -500, 500), sec(500, 1000, -500, 500)].map((s) => ({ ...s, shelves: [500] })) };
     expect(Object.fromEntries(podiumUses(shelf).map((u) => [u.id, u.qty]))[ITEM.counterShelf]).toBe(2);
     expect(DEFAULT_PRICING.items.get(ITEM.counterShelf)).toBeDefined();
