@@ -232,7 +232,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   Gjelder også romsider. Hyller og feltfarge bare på hele 1000-moduler.
   Veggens brudd settes bare ett sted, når veggene skrives på nytt (`replaceWalls`), fra der dørene står; flyttes eller
   endres et rom, beholder dører og forheng sin plass på siden. Kalkylen teller de korte modulene med sine art.nr.
-  *Bjørn 15.11.2026 · `Wall.breaks` · kode `src/domain/grid.ts`, `src/domain/replaceWalls.ts`, `src/domain/rooms.ts`, `src/domain/doors.ts` · test `src/domain/moduleSpans.test.ts`, `src/domain/doorOffMetre.test.ts`*
+  En valgt dør eller et forheng har et flyttegrep midt på: dras langs veggen i hele meter, med Shift eller Fin i 250, i
+  planen og i 3D, med Velg og med Dør-pennen. Døren stopper ved veggens ende, en annen åpning, hylle, print eller tekstil.
+  *Bjørn 15.11.2026 · `Wall.breaks` · kode `src/domain/grid.ts`, `src/domain/replaceWalls.ts`, `src/domain/rooms.ts`, `src/domain/doors.ts`, `src/ui/plan/grips.ts` · test `src/domain/moduleSpans.test.ts`, `src/domain/doorOffMetre.test.ts`, `src/ui/plan/doorGrip.test.ts`*
 ## R · Rom
 
 - **R1 Bare det som mangler.** Et rom bygger bare veggene som ikke finnes. Står det inntil en standvegg, gjenbrukes den;

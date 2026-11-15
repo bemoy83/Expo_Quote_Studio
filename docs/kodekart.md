@@ -54,6 +54,12 @@ disk for Disker og podier), og et rom en vegg-strek lukker, velges (`pointer/run
 grepene som Velg (`sceneGrips`: på toppen av det de flytter, like store på skjermen), og en `grip`-drag i
 `scene3d/pointer/drag.ts` lagrer det `dragGrip` gir, direkte, fra skissen ved trykket. Rotergrepet (`rotate`) går gjennom `dragGrip` som de andre: vinkelen rundt
 midten (`turnOf`) i steg av 90 eller 15, lengste lovlige med `furthest`, `rotateObject(v, ctx, id, by)`.
+Dørgrepet (`door`, D8) flytter en valgt dør langs veggen med `moveOpeningAlong` i `domain/doors.ts`.
+
+**Veggens moduler (D8):** `moduleSpans` i `domain/grid.ts` er eneste kilde: hele meter fra `from`, kort rest sist, og
+`Wall.breaks` der en dør utenfor hele meter har sin 1000-modul. Modulnummer er indeks, ikke meter: bruk
+`moduleStart`/`moduleEnd`/`moduleAt`/`moduleCc`, aldri `i` eller `Math.floor(t)`. Bruddene settes bare i `replaceWalls`
+(fra der åpningene begynner; `add` for en dør satt etter meter), `fitBreaks` i `ui/edits.ts` rydder etter en endring.
 
 ## Per produkt
 

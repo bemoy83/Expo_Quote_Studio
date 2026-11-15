@@ -203,8 +203,13 @@ export function moveOpeningAlong(v: Variant, id: string, at: number): Variant {
   if (t < -1e-6 || t + 1 > wallLength(w) + 1e-6) return v;
   if (!doorAllowed(v, pointAlong(w, t), pointAlong(w, t + 1))) return v;
   const others = v.openings.filter((x) => x.id !== id);
-  const over = others.some((x) => x.wallId === w.id && Math.abs(moduleStart(w, x.module) - t) < 1 - 1e-6);
-  if (over) return v;
+  // Not over another opening, nor over a shelf, print or textile wall on the wall (they keep their place: the door stops)
+  const laps = (a: number, b: number) => a < t + 1 - 1e-6 && b > t + 1e-6;
+  const span = (m: number) => [moduleStart(w, m), moduleEnd(w, m)] as const;
+  const here = (x: { wallId: string; module: number }) => x.wallId === w.id && x.module !== o.module && laps(...span(x.module));
+  if (others.some((x) => x.wallId === w.id && laps(moduleStart(w, x.module), moduleStart(w, x.module) + 1))) return v;
+  if ((v.shelves ?? []).some(here) || v.foils.some(here)) return v;
+  if (v.textiles.some((x) => x.wallId === w.id && laps(x.from, x.from + x.width))) return v;
   const next = replaceWalls({ ...v, openings: others }, v.walls, [{ opening: o, wallId: w.id, at: t }]);
   // Keep the opening where it was in the list
   const moved = next.openings.find((x) => x.id === id);
