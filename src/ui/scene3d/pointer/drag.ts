@@ -14,7 +14,9 @@ import { faceOfPoint } from '../../../domain/textile/free'
 import { moveTextileBy } from '../../../domain/textile/inFrame'
 import { dragShelves, placeShelves } from '../../../domain/shelves/edit'
 import { shelfHeight, shelfRow, shelvesOf } from '../../../domain/shelves/model'
-import type { Foil, Motif, Shelf, TextileWall, Variant, Wall } from '../../../domain/types'
+import type { Foil, Motif, Point, Shelf, TextileWall, Variant, Wall } from '../../../domain/types'
+import { dragGrip, type GripOn } from '../../plan/grips'
+import type { SceneGrip } from '../grips'
 import { dragRoom, dragWall, dropObject, dropRoom, roomDrag, type RoomDrag, type WallDrag } from '../../drag'
 import { place, rules } from '../../env'
 import { findMotif } from '../../motifs'
@@ -48,6 +50,9 @@ export type Drag =
   /** The top of a section of Disker og podier dragged up or down (K18), snapping to CC 250–1000, from the sketch at the
    *  press (shelves a lower height takes away come back when it goes up again before the release). */
   | { kind: 'podiumTop'; id: string; section: number; h0: number; y0: number; at: THREE.Vector3; v0: Variant; moved: boolean }
+  /** A grip of what is chosen (scene3d/grips.ts), on a level plane at its height, from the sketch at the press: what the
+   *  plan's grip stores, shown live; `error`/`toast` told on release. */
+  | { kind: 'grip'; on: GripOn; p0: Point; y: number; v0: Variant; moved: boolean; error?: string; toast?: string }
 
 /** How far down from the top of a section a press grabs it to change its height, m. */
 const TOP_GRIP = 0.08
@@ -66,7 +71,11 @@ export function podiumTopAt(v: Variant, hit: Hit | null): { id: string; section:
 export const CLICK_PX = 4
 
 /** What a press on `hit` starts dragging; orbit when it is nothing that moves. */
-export function startDrag(P: PointerProps, hits: SceneHits, hit: Hit | null, e: PointerEvent): Drag {
+export function startDrag(P: PointerProps, hits: SceneHits, hit: Hit | null, e: PointerEvent, grip?: SceneGrip | null): Drag {
+  if (grip) {
+    const q = hits.onFloor(e, grip.y)
+    if (q) return { kind: 'grip', on: grip.on, p0: [q.x, q.y], y: grip.y, v0: P.v, moved: false }
+  }
   const deco = hit?.textileId ? P.v.textiles.find((x) => x.id === hit.textileId) : hit?.foilId ? P.v.foils.find((x) => x.id === hit.foilId) : undefined
   const w = deco && P.v.walls.find((x) => x.id === deco.wallId)
   const sh = hit?.shelfId ? shelvesOf(P.v).find((x) => x.id === hit.shelfId) : undefined
@@ -152,6 +161,19 @@ export function moveDrag(P: PointerProps, hits: SceneHits, drag: Exclude<Drag, {
     P.onEdit(() => setSectionHeight(v0, id, [section], h), false)
     return
   }
+  if (drag.kind === 'grip') {
+    const q = hits.onFloor(e, drag.y)
+    if (!q) return
+    const r = dragGrip(drag.v0, drag.on, drag.p0, [q.x, q.y], e.shiftKey || P.fine)
+    if (!r) return
+    if (!drag.moved) P.onCheckpoint()
+    drag.moved = true
+    const d = drag
+    d.error = 'error' in r ? r.error : undefined
+    d.toast = 'error' in r ? undefined : r.toast
+    P.onEdit(() => ('error' in r ? d.v0 : r.v), false)
+    return
+  }
   if (drag.kind === 'room') {
     const q = hits.onFloor(e, drag.y)
     // Shift held (or «Fin» on in the pill): 250 steps (Byggeregel R5)
@@ -176,6 +198,11 @@ export function moveDrag(P: PointerProps, hits: SceneHits, drag: Exclude<Drag, {
 export function endDrag(P: PointerProps, hits: SceneHits, d: Drag | null, hit: Hit | null, click: boolean) {
   if (d?.kind === 'object' && d.moved) return dropObject(P.v, d.id, d.start, P.onEdit, P.onToast)
   if (d?.kind === 'room' && d.moved) return dropRoom(d, P.onEdit, P.onToast)
+  if (d?.kind === 'grip') {
+    const say = d.error ?? d.toast
+    if (say) P.onToast(say)
+    return
+  }
   // A drag (also one that came back to where it started) is not a click: the selection stays
   if (!click || (d && 'moved' in d && d.moved)) return
   if (hit?.shelfId) {

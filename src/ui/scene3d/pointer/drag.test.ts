@@ -2,7 +2,10 @@
 // shelf, a frame or a decal leaves the selection (and the drawer) as it was.
 import * as THREE from 'three'
 import { describe, expect, it, vi } from 'vitest'
+import { paintWalls } from '../../../domain/edit'
 import { addShelfRow } from '../../../domain/shelves/edit'
+import { wallHeight } from '../../../rules/rules'
+import { sceneGrips } from '../grips'
 import { createVariant } from '../../../domain/variant'
 import { rules } from '../../env'
 import type { PlanSelection } from '../../plan/selection'
@@ -83,5 +86,35 @@ describe('the top of a section of Disker og podier (K18)', () => {
     expect(low.shelves).toBeUndefined()
     // Up again before the release: the shelf the lower height took is back
     expect(high).toMatchObject({ h: 750, shelves: [250] })
+  })
+})
+
+describe('grips in 3D (Bjørn 15.11.2026)', () => {
+  // A free inner wall chosen: its end grips at the top of the wall; dragging one stores what the plan's grip stores
+  const free = paintWalls(createVariant('A', { width: 6, depth: 4, type: 'row' }), [3, 1], [3, 3])
+  const id = free.walls.find((w) => !w.id.startsWith('side'))!.id
+
+  it('shows the grips of what is chosen at the height of what they move', () => {
+    const g = sceneGrips(free, { wallId: id })
+    expect(g.map((x) => [x.at, x.y])).toEqual([
+      [[3, 1], wallHeight(rules)],
+      [[3, 3], wallHeight(rules)],
+    ])
+  })
+
+  it('a grip dragged stores the plan grip live, and the toast on release', () => {
+    let after = free
+    const P: PointerProps = { v: free, selection: { wallId: id }, onSelect: vi.fn(), onEdit: (fn) => (after = fn(after)), onCheckpoint: vi.fn(), onToast: vi.fn(), motifs: [], fine: false }
+    const floor = (x: number, y: number) => ({ onFloor: () => ({ x, y }) }) as unknown as SceneHits
+    const grip = sceneGrips(free, { wallId: id })[1]
+    const d = startDrag(P, floor(3, 3), null, {} as PointerEvent, grip)
+    expect(d.kind).toBe('grip')
+    moveDrag(P, floor(3, 3.9), d as Exclude<Drag, { kind: 'orbit' }>, { shiftKey: false } as PointerEvent)
+    expect(after.walls.find((w) => w.id === id)!.to).toEqual([3, 4])
+    // Past the stand: stops at the edge, nothing to tell
+    moveDrag(P, floor(3, 6), d as Exclude<Drag, { kind: 'orbit' }>, { shiftKey: false } as PointerEvent)
+    expect(after.walls.find((w) => w.id === id)!.to).toEqual([3, 4])
+    endDrag(P, floor(3, 6), d, null, false)
+    expect(P.onToast).not.toHaveBeenCalled()
   })
 })

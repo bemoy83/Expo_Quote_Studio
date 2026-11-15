@@ -50,7 +50,9 @@ flytt, rund pil for roter). Hvilke grep pennen i hånden viser og tar, avgjør `
 Disker og podier diskens, Vegg rommets). Når en penn velges, beholdes det den har grep for (`keptFor`: rom for Vegg,
 disk for Disker og podier), og et rom en vegg-strek lukker, velges (`pointer/run.ts`). Et flyttegrep (`GripOn` type `move`) starter samme drag som Velg (`room`/`object` med
 `grip: true`, så et klikk ikke velger). Endegrep (`end`) på innervegg (`domain/wallEnds.ts`) og frittstående tekstil
-(`stretchFreeTextile` i `textile/free.ts`) bruker `movedEnd` fra `domain/grips.ts`. Rotergrepet (`rotate`) går gjennom `dragGrip` som de andre: vinkelen rundt
+(`stretchFreeTextile` i `textile/free.ts`) bruker `movedEnd` fra `domain/grips.ts`. I 3D viser `scene3d/grips.ts` de samme
+grepene som Velg (`sceneGrips`: på toppen av det de flytter, like store på skjermen), og en `grip`-drag i
+`scene3d/pointer/drag.ts` lagrer det `dragGrip` gir, direkte, fra skissen ved trykket. Rotergrepet (`rotate`) går gjennom `dragGrip` som de andre: vinkelen rundt
 midten (`turnOf`) i steg av 90 eller 15, lengste lovlige med `furthest`, `rotateObject(v, ctx, id, by)`.
 
 ## Per produkt
