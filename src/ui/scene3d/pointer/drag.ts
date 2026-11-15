@@ -22,6 +22,7 @@ import { dragRoom, dragWall, dropObject, dropRoom, roomDrag, type RoomDrag, type
 import { place, rules } from '../../env'
 import { findMotif } from '../../motifs'
 import { chosenShelves, type PlanSelection } from '../../plan/selection'
+import { clickSelection } from '../../plan/pointer/click'
 import type { Hit, SceneHits } from './hits'
 
 /** What the 3D view hands the pointer: the model now, and how to change it. */
@@ -35,6 +36,8 @@ export interface PointerProps {
   motifs: Motif[]
   /** «Fin» on (ui/fine.tsx): a room moves and stretches in 250, as with Shift. */
   fine: boolean
+  /** The drawer is open: a click on what is chosen keeps it (clickSelection). */
+  drawerOpen?: boolean
 }
 
 export type Drag =
@@ -196,7 +199,9 @@ export function moveDrag(P: PointerProps, hits: SceneHits, drag: Exclude<Drag, {
 }
 
 /** The release: drop what was dragged, or select what was pressed. `click`: let go within CLICK_PX of the press. */
-export function endDrag(P: PointerProps, hits: SceneHits, d: Drag | null, hit: Hit | null, click: boolean) {
+export function endDrag(P0: PointerProps, hits: SceneHits, d: Drag | null, hit: Hit | null, click: boolean) {
+  // A click selects as in the plan: a second click on what is chosen lets go of it (click.ts)
+  const P = { ...P0, onSelect: (s: PlanSelection) => P0.onSelect(clickSelection(P0.selection, s, P0.drawerOpen)) }
   if (d?.kind === 'object' && d.moved) return dropObject(P.v, d.id, d.start, P.onEdit, P.onToast)
   if (d?.kind === 'room' && d.moved) return dropRoom(d, P.onEdit, P.onToast)
   if (d?.kind === 'grip') {

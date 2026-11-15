@@ -47,7 +47,7 @@ import { floorBrush } from './pointer/floorBrush'
 import { planHits } from './pointer/hits'
 import { pens } from './pointer/pens'
 import { usePlanPointer } from './pointer/usePlanPointer'
-import { pillAnchor, type PillPlace } from './pill/pillAnchor'
+import { avoidIn, pillAnchor, type PillPlace } from './pill/pillAnchor'
 import { SelectionPill } from './pill/SelectionPill'
 import { selectionKey, type PlanSelection } from './selection'
 
@@ -353,9 +353,6 @@ export function PlanView(p: Props) {
   )
 }
 
-/** What floats over the plan, which the pill keeps clear of: the stand chip and hint line, the mini map, the dock. */
-const PILL_AVOID = '.stand-top > *, .minimap, .dock .dock-pill, .price-pill'
-
 /** The anchor's box on screen, px from the corner of the plan's box (where the pill is placed). */
 function placeOf(el: SVGSVGElement | null, anchor: ReturnType<typeof pillAnchor>): PillPlace | null {
   const m = el?.getScreenCTM()
@@ -370,10 +367,7 @@ function placeOf(el: SVGSVGElement | null, anchor: ReturnType<typeof pillAnchor>
   }
   const a = at(anchor.x0, anchor.y0)
   const b = at(anchor.x1, anchor.y1)
-  const avoid = [...el.parentElement!.querySelectorAll(PILL_AVOID)].map((x) => {
-    const r = x.getBoundingClientRect()
-    return { left: r.left - box.left, top: r.top - box.top, right: r.right - box.left, bottom: r.bottom - box.top }
-  })
+  const avoid = avoidIn(el.parentElement!)
   return {
     anchor,
     box: { left: Math.min(a.x, b.x), top: Math.min(a.y, b.y), right: Math.max(a.x, b.x), bottom: Math.max(a.y, b.y) },

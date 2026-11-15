@@ -1,5 +1,5 @@
 // 3D view. Rebuilds the scene from the model on every change (see build.ts) and keeps only the camera.
-// Velg works as in the plan: click a wall to edit it, drag furniture, drag an inner wall to move it.
+// Velg works as in the plan: a click selects and shows the selection pill (pill.ts; Detaljer opens the drawer), drag furniture, drag an inner wall to move it.
 // A room is moved by dragging one of its walls or its see-through roof, and resized by its grips when chosen (R5, R8).
 // Textile frames and foil decals are clicked to select and dragged along their face; a frame or a motif dragged
 // from Profilering is dropped on the wall face under the pointer (drop.ts). The brushes draw in the plan.
@@ -7,7 +7,7 @@
 // What the pointer hits and where: pointer/hits.ts; what a press drags: pointer/drag.ts.
 import { useFine } from '../fine'
 import { House, RotateCcw, RotateCw, ScanEye } from 'lucide-react'
-import { useEffect, useLayoutEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import type { CalcResult } from '../../calc/calc'
@@ -24,11 +24,16 @@ import { sceneHits, type Hit } from './pointer/hits'
 import { dropGrips, gripAtScreen, gripSprites, sceneGrips, type SceneGrip } from './grips'
 import { gripHint } from '../plan/grips'
 import { fitToElement, newRenderer, swapContent } from './view'
+import { pillPlace3d } from './pill'
+import { SelectionPill } from '../plan/pill/SelectionPill'
+import type { PillPlace } from '../plan/pill/pillAnchor'
 
 interface Props extends Omit<PointerProps, 'fine'> {
   res: CalcResult
   highlight: Highlight
   selection: PlanSelection
+  /** Detaljer in the pill: open the drawer on the selection. */
+  onOpenDrawer: (s: PlanSelection) => void
 }
 
 const deg = Math.PI / 180
@@ -51,6 +56,11 @@ export function Scene3D(p: Props) {
   const props = useRef<PointerProps>({ ...p, fine })
   /** Draws the grips of what is chosen again (set up with the view). */
   const redrawGrips = useRef(() => {})
+  /** The pill is placed again when the camera has come to rest, the scene is rebuilt or the view changes size. */
+  const [pill, setPill] = useState<PillPlace | null>(null)
+  const placePill = useRef(() => {})
+  /** Something is dragged or the camera turned: no pill until it is let go (docs/pille-og-skuff.md). */
+  const [busy, setBusy] = useState(false)
   useLayoutEffect(() => {
     props.current = { ...p, fine }
   })
@@ -72,8 +82,14 @@ export function Scene3D(p: Props) {
     controls.zoomToCursor = true
     const v: View = { renderer, scene, camera, controls, sun, content: null, render: () => renderer.render(scene, camera) }
     view.current = v
+    placePill.current = () => setPill(pillPlace3d(v.content, camera, el, props.current.v, props.current.selection))
     controls.addEventListener('change', v.render)
-    const unfit = fitToElement(el, renderer, camera, v.render)
+    // A zoom with the wheel or a pinch: the pill follows when it ends
+    controls.addEventListener('end', () => placePill.current())
+    const unfit = fitToElement(el, renderer, camera, () => {
+      v.render()
+      placePill.current()
+    })
 
     const hits = sceneHits(renderer, camera, () => v.content, () => props.current.v)
     // The grips of what is chosen (scene3d/grips.ts), redrawn when the sketch, the choice or the hot one changes (they
@@ -125,8 +141,11 @@ export function Scene3D(p: Props) {
         renderer.domElement.style.cursor = hoverCursor(props.current.v, hits.pick(e))
         return
       }
-      if (drag.kind === 'orbit' || !down) return
-      if (!drag.moved && Math.hypot(e.clientX - down.x, e.clientY - down.y) < CLICK_PX) return
+      if (!down) return
+      if (!('moved' in drag && drag.moved) && Math.hypot(e.clientX - down.x, e.clientY - down.y) < CLICK_PX) return
+      // Past a click: no pill until the release (an orbit too)
+      setBusy(true)
+      if (drag.kind === 'orbit') return
       moveDrag(props.current, hits, drag, e)
     }
     const onUp = (e: PointerEvent) => {
@@ -140,6 +159,8 @@ export function Scene3D(p: Props) {
       down = null
       endDrag(props.current, hits, d, hit, click)
       if (d?.kind === 'grip') redrawGrips.current()
+      setBusy(false)
+      placePill.current()
     }
 
     el.addEventListener('pointerdown', onDown, true)
@@ -157,6 +178,7 @@ export function Scene3D(p: Props) {
       if (v.content) dispose(v.content)
       renderer.dispose()
       el.removeChild(renderer.domElement)
+      placePill.current = () => {}
       view.current = null
     }
   }, [])
@@ -171,6 +193,7 @@ export function Scene3D(p: Props) {
     if (p.highlight) dimExcept(g, p.highlight)
     v.content = swapContent(v.scene, v.content, g, v.render)
     redrawGrips.current()
+    placePill.current()
   }, [p.v, p.res, p.selection, p.highlight, p.motifs])
 
   // Camera and sun follow the stand size
@@ -199,6 +222,19 @@ export function Scene3D(p: Props) {
         <IconButton icon={ScanEye} label="Sett fra gangen" title="Sett fra gangen · slik en besøkende ser standen" onClick={() => view.current && aim(view.current, W, D, AISLE)} />
         <IconButton icon={House} label="Nullstill" title="Nullstill · tilbake til startvinkelen" onClick={() => view.current && aim(view.current, W, D, HOME)} />
       </div>
+      {pill && !busy && !p.drawerOpen && (
+        <SelectionPill
+          place={pill}
+          v={p.v}
+          res={p.res}
+          selection={p.selection}
+          motifs={p.motifs}
+          onEdit={p.onEdit}
+          onSelect={p.onSelect}
+          onOpenDrawer={p.onOpenDrawer}
+          onToast={p.onToast}
+        />
+      )}
     </div>
   )
 }

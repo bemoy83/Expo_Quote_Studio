@@ -106,13 +106,11 @@ export default function App() {
     setSelectionRaw(s)
     if (!hasDrawer(s, 'plan', vRef.current)) setDrawer('closed')
   }, [])
-  /** Select and open the drawer in detail: Detaljer in the pill, a frame chosen in the panel, a click in 3D. */
+  /** Select and open the drawer in detail: Detaljer in the pill (plan and 3D), a frame chosen in the panel. */
   const openDrawer = useCallback((s: PlanSelection) => {
     setSelectionRaw(s)
     setDrawer(hasDrawer(s, 'plan', vRef.current) ? 'detail' : 'closed')
   }, [])
-  /** 3D keeps the drawer on a plain click for now (no pill there). */
-  const select3d = useCallback((s: PlanSelection) => (hasDrawer(s, '3d', vRef.current) ? openDrawer(s) : setSelection(s)), [openDrawer, setSelection])
   const drawerOpen = drawer !== 'closed' && hasDrawer(selection, view, v)
   const [toast, showToast] = useToast()
   const fileInput = useRef<HTMLInputElement>(null)
@@ -366,7 +364,9 @@ export default function App() {
                         res={res}
                         highlight={highlight}
                         selection={selection}
-                        onSelect={select3d}
+                        onSelect={setSelection}
+                        drawerOpen={drawerOpen}
+                        onOpenDrawer={openDrawer}
                         onEdit={onEdit}
                         onCheckpoint={onCheckpoint}
                         onToast={showToast}
