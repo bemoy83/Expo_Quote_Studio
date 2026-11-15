@@ -134,7 +134,7 @@ export function usePlanPointer(input: PlanPointerInput) {
     if (pens.wallTool || pens.beamTool || pens.textileTool) return startRunDrag(c, q, fineOf(shift))
     if (pens.openingTool) return startPlace(c, 'opening', q)
     if (pens.decorTool) return startPlace(c, 'decor', q)
-    if (pens.podiumTool) return startPodiumLink(c, q) ?? startGrip(c, q) ?? startPodium(c, q, fineOf(shift))
+    if (pens.podiumTool) return startPodiumLink(c, q) ?? startGrip(c, q, 'podium') ?? startPodium(c, q, fineOf(shift))
     if (pens.objectTool) return startPlace(c, 'object', q)
     if (pens.shelfTool) return startShelf(c, q)
     return startSelect(c, q)
@@ -151,7 +151,7 @@ export function usePlanPointer(input: PlanPointerInput) {
     if (d?.kind === 'beam') d.fine = e.shiftKey || !!d.fineLock
     // Shift held (or «Fin» on in the pill): a room moves and stretches in 250 (Byggeregel R5)
     if (d?.kind === 'room') d.fine = e.shiftKey || !!d.fineLock
-    if (d?.kind === 'grip') d.fine = e.shiftKey || penFine(brush)
+    if (d?.kind === 'grip') d.fine = e.shiftKey || penFine(brush) || !!d.fineLock
     if (d) drag.current = d
     // Held without moving counts as dragging too, so the hover preview stops while pressed
     setDragging(d ?? null)
@@ -167,7 +167,7 @@ export function usePlanPointer(input: PlanPointerInput) {
     if (d.kind === 'podium') podiumShift(d, fineOf(e.shiftKey))
     if (d.kind === 'run') runShift(d, fineOf(e.shiftKey))
     if (d.kind === 'plates' && d.as) runShift(d.as, fineOf(e.shiftKey))
-    if (d.kind === 'grip') d.fine = e.shiftKey || penFine(brush)
+    if (d.kind === 'grip') d.fine = e.shiftKey || penFine(brush) || !!d.fineLock
     handlersOf(d).move?.(c, d, q)
   }
 
@@ -220,9 +220,9 @@ export function usePlanPointer(input: PlanPointerInput) {
   }
 
   // Velg: what a click would select (the plan marks it faintly): from the hover, or on touch from the press held
-  const held = dragging && 'select' in dragging && !('moved' in dragging && dragging.moved) ? dragging.select : null
+  const held = dragging && 'select' in dragging && !('moved' in dragging && dragging.moved) ? (dragging.select ?? null) : null
   const hovered = !dragging && hover && tool === 'select' && !input.mini ? startSelect(c, hover) : null
-  const picked = tool !== 'select' || input.mini ? null : (held ?? (hovered && 'select' in hovered ? hovered.select : null))
+  const picked = tool !== 'select' || input.mini ? null : (held ?? (hovered && 'select' in hovered ? (hovered.select ?? null) : null))
 
   return {
     svg,

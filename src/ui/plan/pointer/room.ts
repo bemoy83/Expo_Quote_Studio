@@ -1,14 +1,15 @@
-// Velg on a room: its floor moves it, a side resizes it. It settles on release.
+// Velg on a room's floor: it moves the room, settled on release. A side or corner resizes it through the room's grips
+// (grip.ts, plan/grips.ts, R5).
 import type { Room } from '../../../domain/types'
-import { dragRoom, dropRoom, roomDrag, type RoomDrag } from '../../drag'
+import { dragRoom, dropRoom, roomDrag } from '../../drag'
 import type { PlanSelection } from '../selection'
 import type { DragHandlers, Drag, P, PointerCtx } from './types'
 
-export function startRoom(c: PointerCtx, room: Room, mode: RoomDrag['mode'], q: P, select: PlanSelection | null): Drag {
+export function startRoom(c: PointerCtx, room: Room, q: P, select: PlanSelection): Drag {
   // «Fin» on in the room's pill: 250 steps (R5), kept on the selection the drag ends with
   const fineLock = c.selection.roomId === room.id && !!c.selection.roomFine
-  const keep = fineLock && select?.roomId === room.id ? { ...select, roomFine: true } : select
-  return { kind: 'room', ...roomDrag(room.id, mode, q, c.v, fineLock), select: keep }
+  const keep = fineLock ? { ...select, roomFine: true } : select
+  return { kind: 'room', ...roomDrag(room.id, 'move', q, c.v, fineLock), select: keep }
 }
 
 export const room: DragHandlers<'room'> = {
@@ -17,9 +18,8 @@ export const room: DragHandlers<'room'> = {
   },
   up(c, d) {
     dropRoom(d, c.onEdit, c.onToast)
-    // A room moved by its floor stays selected; a resized side selects only on a plain click
-    if (!d.select) return
+    // A room moved by its floor stays selected; a click goes by the click rules
     if (!d.moved) c.clickSelect(d.select)
-    else if (d.mode === 'move') c.onSelect(d.select)
+    else c.onSelect(d.select)
   },
 }

@@ -37,9 +37,9 @@ pris for, får ingen kost og merkes i kalkylen. Kjøpt til jobben (Samba-duk) le
 kostgrunnlaget). Regel og kilde føres i `docs/byggeregler.md`.
 
 **Grep på noe valgt (felles grepsystem):** stegene og letingen etter lengste lovlige steg er i `domain/grips.ts`.
-Hva som har grep, hvor de står og hva et drag lagrer, står i `ui/plan/grips.ts` (`GripOn`, `gripsOf`, `dragGrip`):
+Hva som har grep (rom R8, disk K14), hvor de står og hva et drag lagrer, står i `ui/plan/grips.ts` (`GripOn`, `gripsOf`, `dragGrip`, `gripHint`):
 nytt objekt med grep legges til der, med en ren domenefunksjon som gir objektet etter draget (som `gripPodium` i
-`domain/podiumGrips.ts`). Resten er felles: treff `hits.grips`/`hits.gripAt`, draget `plan/pointer/grip.ts` (Velg i
+`domain/podiumGrips.ts` og `gripRoom` i `domain/roomGrips.ts`). Resten er felles: treff `hits.grips`/`hits.gripAt`, draget `plan/pointer/grip.ts` (Velg i
 `select.ts`, pennen i `usePlanPointer.ts`), forhåndsvisningen `gripTarget` i `plan/next.ts` (`erased` skraveres,
 grunnen i hintet) og tegningen `layers/Grips.tsx` (rund på side, firkant i hjørne).
 
@@ -120,7 +120,7 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 
 - Modell: `Room` · `domain/rooms.ts` · `domain/roomKeys.ts` (romveggenes id, viskede moduler og `OUTSIDE`, lest av `walls.ts`) · `domain/outline.ts` (L-, U-, T-form i 250 × 250-celler `CELL`, R5; `onOutline` finner veggmoduler på omrisset geometrisk) · `domain/enclosures.ts` (frihåndsrom, også fra vegger utenfor metrelinjene, R7)
 - Kalkyle: ingen egen, rommet gir vegger; en romside langs en vegg bygger bare det som mangler (`Covered` i `builtModules`, R6)
-- Plan, 3D: `plan/layers/RoomLayer.tsx` (RoomMark, håndtak), dra `plan/pointer/room.ts` og `dragRoom` i `ui/drag.ts` (hele meter, 250 med Shift eller «Fin» i `roomPill`, `roomFine` på utvalget) · `scene3d/build/rooms.ts`, dra i 3D `scene3d/pointer/drag.ts` · `RoomLabel.tsx`
+- Plan, 3D: `plan/layers/RoomLayer.tsx` (RoomMark), flytt `plan/pointer/room.ts` og `dragRoom` i `ui/drag.ts` (hele meter, 250 med Shift eller «Fin» i `roomPill`, `roomFine` på utvalget) · grep på sider og hjørner (R8) `domain/roomGrips.ts` (`moveRoomSides` i `rooms.ts`) gjennom det felles grepsystemet · `scene3d/build/rooms.ts`, dra i 3D `scene3d/pointer/drag.ts` (sider live med `resizeRoomDoors`) · `RoomLabel.tsx`
 
 ### Dører og forheng
 

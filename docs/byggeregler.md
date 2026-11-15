@@ -247,6 +247,13 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 - **R7 Frihåndsrom i 250.** Området et frihåndsrom (R3) lukker, finnes i 250 × 250-celler, så vegger utenfor
   metrelinjene (V9) lukker rom også, med sider ned til 250 (R2).
   *Bjørn 14.11.2026 · kode `src/domain/enclosures.ts` · test `src/domain/rooms250.test.ts`*
+- **R8 Grep på valgt rom.** Et valgt rom viser grep som en valgt disk (K14), i Velg: ett midt på hver side og ett i
+  hvert hjørne av boksen rundt (flytter de to sidene av boksen som møtes der, med alle sider av omrisset som ligger på
+  dem). Hele siden tar også tak i sidens grep, så en side mot en standvegg kan dras. Et grep flytter i hele meter, 250
+  med Shift eller Fin (R5); hver vei for seg stopper der rommet fortsatt får plass. Under draget vises rommet slik
+  slipp lagrer det, med målet i pillen og det rommet gir fra seg skravert, og møbler som må flytte, der de havner.
+  Går det ikke i noen retning: «Rommet får ikke plass slik».
+  *Bjørn 15.11.2026 · kode `src/domain/roomGrips.ts`, `src/ui/plan/grips.ts` · test `src/domain/roomGrips.test.ts`*
 
 ## X · Tekstilvegg (43TX)
 

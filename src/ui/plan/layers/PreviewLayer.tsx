@@ -24,7 +24,6 @@ import { tileArea, tileAreaMeasures } from './measures'
 import { Grips } from './Grips'
 import { PodiumLinks } from './PodiumLinks'
 import { AimRect, EraseStroke, InvalidSeg, InvalidShape, MeasurePill } from './Previews'
-import { RoomHandles } from './RoomLayer'
 
 interface Props {
   v: Variant
@@ -63,7 +62,8 @@ export function PreviewLayer(p: Props) {
   useEffect(() => onHint?.(hint), [onHint, hint])
   useEffect(() => () => onHint?.(null), [onHint])
 
-  // The grips of what is chosen (plan/grips.ts), in Velg and with the pen of Disker og podier (K14); not while one is
+  // The grips of what is chosen (plan/grips.ts): a room's in Velg (R5), a counter's also with the pen of Disker og podier
+  // (K14); not while one is
   // dragged, when the plan shows what the release stores
   const chosen = selection.objectId ? v.objects.find((o) => o.id === selection.objectId) : undefined
   const counter = !mini && chosen?.sections && (tool === 'select' || brush?.kind === 'podium') ? chosen : null
@@ -73,13 +73,12 @@ export function PreviewLayer(p: Props) {
   const pill = !mini ? next?.pill : undefined
   return (
     <g pointerEvents="none">
-      {!mini && v.rooms.filter((r) => r.id === selection.roomId).map((r) => <RoomHandles key={r.id} r={r} />)}
       {stroke && tool === 'erase' && <EraseStroke a={stroke[0]} b={stroke[1]} centre={centre} />}
       {bad && 'seg' in bad && <InvalidSeg a={bad.seg[0]} b={bad.seg[1]} width={widthOf(sc, bad.width)} />}
       {bad && 'rect' in bad && <InvalidShape kind="rect" x={bad.rect.x0} y={bad.rect.y0} width={bad.rect.x1 - bad.rect.x0} height={bad.rect.y1 - bad.rect.y0} />}
       {bad && 'circle' in bad && <InvalidShape kind="circle" {...bad.circle} />}
       {!mini && next?.erased?.map((b, i) => <InvalidShape key={`gone${i}`} kind="rect" x={b.x0} y={b.y0} width={b.x1 - b.x0} height={b.y1 - b.y0} />)}
-      {gripsShown && <Grips grips={p.grips} hot={next?.hotGrip} />}
+      {gripsShown && <Grips grips={tool === 'select' ? p.grips : p.grips.filter((g) => g.on.type === 'podium')} hot={next?.hotGrip} />}
       {gripsShown && counter && <PodiumLinks v={v} o={counter} hot={next?.hotGrip} />}
       {/* Disker og podier with Shift: the edge a press takes hold of, thick (PR 2) */}
       {pill && <MeasurePill a={pill.a} b={pill.b} centre={centre} stroke={widthOf(sc, pill.width)} text={pill.text} />}

@@ -347,18 +347,34 @@ export function resizeRoomDoors(v: Variant, id: string, side: number, delta: num
   const same = { v, doorsMoved: false };
   const r = v.rooms.find((x) => x.id === id);
   if (!r || side < 0 || side >= r.outline.length) return same;
-  const hz = sideIsHorizontal(r, side);
   // The furthest step toward `delta` that gives a valid room: whole metres, or 250 with Shift or Fin (R5; grips.ts)
-  const r0 = furthest(stepsOf(delta, step), 0, (n) => {
-    if (!n) return null;
-    const k = n * step;
-    const moved = moveSide(r.outline, side, k);
-    const outline = moved && settle(moved);
-    if (!outline || !fits(v, id, outline)) return null;
-    const next = reshape(v, r, outline, (i) => (i === side ? (hz ? [0, k] : [k, 0]) : [0, 0]));
-    return settleDoors(next, id);
-  });
-  return r0 ? { v: r0.value.v, doorsMoved: r0.value.moved } : same;
+  const r0 = furthest(stepsOf(delta, step), 0, (n) => (n ? moveRoomSides(v, id, [{ side, k: n * step }]) : null));
+  return r0 ? { v: r0.value.v, doorsMoved: r0.value.doorsMoved } : same;
+}
+
+/** A side of a room moved `k` m across it (+y for a side running left–right, +x for one running back–front). */
+export interface SideMove {
+  side: number;
+  k: number;
+}
+
+/**
+ * The room with several of its sides moved at once (a corner grip moves the two box sides that meet there, each with
+ * every side of the outline on it): as resizeRoom, but null when the room cannot be so. Sides by their number before.
+ */
+export function moveRoomSides(v: Variant, id: string, moves: readonly SideMove[]): { v: Variant; doorsMoved: boolean } | null {
+  const r = v.rooms.find((x) => x.id === id);
+  if (!r || !moves.length) return null;
+  let raw: Point[] | null = r.outline;
+  for (const m of moves) raw = raw && moveSide(raw, m.side, m.k);
+  const outline = raw && settle(raw);
+  if (!outline || !fits(v, id, outline)) return null;
+  const shift = (i: number): Point => {
+    const m = moves.find((x) => x.side === i);
+    return !m ? [0, 0] : sideIsHorizontal(r, i) ? [0, m.k] : [m.k, 0];
+  };
+  const s = settleDoors(reshape(v, r, outline, shift), id);
+  return s && { v: s.v, doorsMoved: s.moved };
 }
 
 /** Keep every room inside a (new) stand size: moved in where it fits, else cut at the stand's edge. */
