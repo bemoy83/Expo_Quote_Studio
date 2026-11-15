@@ -36,6 +36,10 @@ kalkylen trenger hver løs del en prisartikkel i `cost/itemDefs.ts` (`ITEM`, `IT
 pris for, får ingen kost og merkes i kalkylen. Kjøpt til jobben (Samba-duk) legges i egne innkjøp (`cost/own-list.ts`, ekte priser bare i
 kostgrunnlaget). Regel og kilde føres i `docs/byggeregler.md`.
 
+**«Fin» (én bryter for alt, Bjørn 15.11.2026):** `ui/fine.tsx` (`FineContext`, `useFine`), eid av `App.tsx`. `FinBtn`
+(`plan/quick/parts.tsx`) er bryteren i pennenes hurtigvalg og i pillene til rom og takdrager; planen gir den til pekeren
+som `PointerCtx.fine`, 3D som `PointerProps.fine`. Den gjelder som Shift.
+
 **Grep på noe valgt (felles grepsystem):** stegene og letingen etter lengste lovlige steg er i `domain/grips.ts`.
 Hva som har grep (rom R8, disk K14), hvor de står og hva et drag lagrer, står i `ui/plan/grips.ts` (`GripOn`, `gripsOf`, `dragGrip`, `gripHint`):
 nytt objekt med grep legges til der, med en ren domenefunksjon som gir objektet etter draget (som `gripPodium` i
@@ -59,7 +63,7 @@ grunnen i hintet) og tegningen `layers/Grips.tsx` (rund på side, firkant i hjø
 ### Takdragere
 
 - Standard: `calc/beams/beams.ts` (`variantBeams` setter sammen alle tre) · felles for alle utleggene: `calc/beams/beamSegments.ts` (`BeamSegment`, `BeamLayout`, deling etter T2 og `onSegment`), så utleggene ikke importerer hverandre
-- Innvendige (tegnet av kunden): modell `InnerBeam`, redigering `domain/innerBeams.ts`, utlegg `calc/beams/innerBeams.ts`; Shift + dra eller «Fin» i pillen (`PlanSelection.beamFine`) utenfor rasteret `shiftInnerBeam` + `dragInnerBeamFine` (`ui/drag.ts`), mållinjer `calc/beams/beamOffsets.ts` tegnet med `DimChain` i `layers/BeamLayer.tsx`, på arbeidsordren for alle (`beamMeasures`) (T15)
+- Innvendige (tegnet av kunden): modell `InnerBeam`, redigering `domain/innerBeams.ts`, utlegg `calc/beams/innerBeams.ts`; Shift + dra eller «Fin» (én bryter for alt, `ui/fine.tsx`) utenfor rasteret `shiftInnerBeam` + `dragInnerBeamFine` (`ui/drag.ts`), mållinjer `calc/beams/beamOffsets.ts` tegnet med `DimChain` i `layers/BeamLayer.tsx`, på arbeidsordren for alle (`beamMeasures`) (T15)
 - Støttedrager på lange standvegger: `calc/beams/supportBeams.ts`
 - Vegger hvor som helst i 250-rasteret mot dragerne (vegg langs, kryss i stolpe eller mellom stolper, T4, T11, T17): `calc/beams/wallLines.ts`
 - Kroker i 01, enveis og toveis (der en drager henger på en annen, eller på en vegg mellom stolpene, T15): `calc/beams/beamHooks.ts`, plukk i `foga/engine.ts`, 3D i `scene3d/build/frame.ts`
@@ -120,7 +124,7 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 
 - Modell: `Room` · `domain/rooms.ts` · `domain/roomKeys.ts` (romveggenes id, viskede moduler og `OUTSIDE`, lest av `walls.ts`) · `domain/outline.ts` (L-, U-, T-form i 250 × 250-celler `CELL`, R5; `onOutline` finner veggmoduler på omrisset geometrisk) · `domain/enclosures.ts` (frihåndsrom, også fra vegger utenfor metrelinjene, R7)
 - Kalkyle: ingen egen, rommet gir vegger; en romside langs en vegg bygger bare det som mangler (`Covered` i `builtModules`, R6)
-- Plan, 3D: `plan/layers/RoomLayer.tsx` (RoomMark), flytt `plan/pointer/room.ts` og `dragRoom` i `ui/drag.ts` (hele meter, 250 med Shift eller «Fin» i `roomPill`, `roomFine` på utvalget) · grep på sider og hjørner (R8) `domain/roomGrips.ts` (`moveRoomSides` i `rooms.ts`) gjennom det felles grepsystemet · `scene3d/build/rooms.ts`, dra i 3D `scene3d/pointer/drag.ts` (sider live med `resizeRoomDoors`) · `RoomLabel.tsx`
+- Plan, 3D: `plan/layers/RoomLayer.tsx` (RoomMark), flytt `plan/pointer/room.ts` og `dragRoom` i `ui/drag.ts` (hele meter, 250 med Shift eller «Fin», `ui/fine.tsx`) · grep på sider og hjørner (R8) `domain/roomGrips.ts` (`moveRoomSides` i `rooms.ts`) gjennom det felles grepsystemet · `scene3d/build/rooms.ts`, dra i 3D `scene3d/pointer/drag.ts` (sider live med `resizeRoomDoors`) · `RoomLabel.tsx`
 
 ### Dører og forheng
 

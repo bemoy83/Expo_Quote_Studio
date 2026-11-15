@@ -7,8 +7,8 @@ export type Tool = 'select' | 'brush' | 'erase';
 
 /** What the brush draws. The product chosen in the panel decides it ("produkt styrer pensel"). */
 export type Brush =
-  /** Innervegg. `fine`: «Fin» on, as Shift held for touch: 250 steps from a 250 node (Byggeregel V1). */
-  | { kind: 'wall'; ral: string; fine?: boolean }
+  /** Innervegg. «Fin» (ui/fine.tsx), as Shift held for touch: 250 steps from a 250 node (Byggeregel V1). */
+  | { kind: 'wall'; ral: string }
   /** Innvendig takdrager: a straight run on the 1 m grid inside the stand (domain/innerBeams.ts). */
   | { kind: 'beam' }
   | { kind: 'floor'; product: string }
@@ -17,14 +17,14 @@ export type Brush =
   | { kind: 'opening'; product: string; ral?: string; fabric?: string }
   | { kind: 'object'; product: string }
   /** Disker og podier (Byggeregler K10–K13): sections on the 250 grid, all sides closed, its plates in a wall colour.
-   *  `fine`: «Fin» on, as Shift held for touch (250 steps, a press by an edge takes it). */
+   *  «Fin» (ui/fine.tsx), as Shift held for touch: 250 steps, a press by an edge takes it. */
   /** `h`: the height everything drawn gets, CC mm (K12); a påbygg takes its neighbour's. `stock`: the standard counter a
    *  click places (K22, its art.nr), none for «Fri» (a section 500 × 500); a drag always draws free. */
-  | { kind: 'podium'; product: string; ral: string; fine?: boolean; h?: number; stock?: string }
+  | { kind: 'podium'; product: string; ral: string; h?: number; stock?: string }
   /** Tekstilvegg: drawn on a system wall it is mounted there (InFrame), anywhere else it stands free on foot plates.
-   * Drawn as the wall: 1 m from the metre grid, 250 steps with Shift or `fine` («Fin»); a click next to a wall fills its free part. */
+   * Drawn as the wall: 1 m from the metre grid, 250 steps with Shift or «Fin»; a click next to a wall fills its free part. */
   /** `motif`: the graphics the textile drawn gets, or a textile clicked; omitted = drawn without (Bjørn 14.11.2026). */
-  | { kind: 'textile'; motif?: string; fine?: boolean }
+  | { kind: 'textile'; motif?: string }
   /** Print (`print`, the whole felt 960 × 2420 in foil) or Dekal (`decal`, a foil decal) on a wall felt, each its own pen
    *  of Profilering (Bjørn 14.11.2026). Omitted `pen` only as asked for (panel, upload): the tool's pen takes the motif
    *  (profilePen.ts withMotif). */

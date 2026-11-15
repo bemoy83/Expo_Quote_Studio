@@ -5,6 +5,7 @@
 // Textile frames and foil decals are clicked to select and dragged along their face; a frame or a motif dragged
 // from Profilering is dropped on the wall face under the pointer (drop.ts). The brushes draw in the plan.
 // What the pointer hits and where: pointer/hits.ts; what a press drags: pointer/drag.ts.
+import { useFine } from '../fine'
 import { House, RotateCcw, RotateCw, ScanEye } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef } from 'react'
 import * as THREE from 'three'
@@ -26,7 +27,7 @@ import { CLICK_PX, endDrag, hoverCursor, moveDrag, startDrag, type Drag, type Po
 import { sceneHits, type Hit } from './pointer/hits'
 import { fitToElement, newRenderer, swapContent } from './view'
 
-interface Props extends PointerProps {
+interface Props extends Omit<PointerProps, 'fine'> {
   res: CalcResult
   highlight: Highlight
   selection: PlanSelection
@@ -47,9 +48,11 @@ interface View {
 export function Scene3D(p: Props) {
   const host = useRef<HTMLDivElement>(null)
   const view = useRef<View | null>(null)
-  const props = useRef(p)
+  // «Fin» (ui/fine.tsx) for the drags, as Shift
+  const { fine } = useFine()
+  const props = useRef<PointerProps>({ ...p, fine })
   useLayoutEffect(() => {
-    props.current = p
+    props.current = { ...p, fine }
   })
   const { width: W, depth: D } = p.v.stand
 

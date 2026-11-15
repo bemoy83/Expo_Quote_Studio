@@ -33,9 +33,6 @@ export function gripsOf(v: Variant, selection: PlanSelection): PlanGrip[] {
   return podiumGrips(o).map(({ grip, at }) => ({ on: { type: 'podium', id: o.id, grip }, kind: grip.kind, at }))
 }
 
-/** «Fin» on for what the grip belongs to (a room's pill, R5): every drag of its grips goes in 250. */
-export const gripLocked = (selection: PlanSelection, on: GripOn) => on.type === 'room' && selection.roomId === on.id && !!selection.roomFine
-
 /** The same grip (by what it moves; the place changes while it is dragged). */
 export const sameGrip = (a: GripOn, b: GripOn) => JSON.stringify(a) === JSON.stringify(b)
 

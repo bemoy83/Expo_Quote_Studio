@@ -11,7 +11,7 @@ import type { QuickCtx } from './types'
 
 export function PodiumPicks({ p, head, more, brush }: Omit<QuickCtx, 'is'> & { brush: Extract<Brush, { kind: 'podium' }> }) {
   const { onPick } = p
-  const { ral, fine } = brush
+  const { ral } = brush
   const func = funcOf(brush)
   const picks = p.picks.podium ?? {}
   const fineOn = fineApplies(brush)
@@ -62,10 +62,8 @@ export function PodiumPicks({ p, head, more, brush }: Omit<QuickCtx, 'is'> & { b
       <Sep />
       {/* «Fin»: as Shift held, for touch; Fri only, a function places its item whole */}
       <FinBtn
-        on={!!fine}
         off={fineOn ? undefined : 'Fin · gjelder bare Fri'}
-        title={fine ? 'Fin · 250-steg, dra fra en kant flytter den · trykk for 500-steg igjen' : 'Fin · 250-steg, og dra fra en kant for å flytte den · på desktop også Shift'}
-        onClick={() => onPick({ ...brush, fine: !fine })}
+        title={{ on: 'Fin · 250-steg, dra fra en kant flytter den · trykk for 500-steg igjen', off: 'Fin · 250-steg, og dra fra en kant for å flytte den · på desktop også Shift' }}
       />
       <Sep />
       {more}

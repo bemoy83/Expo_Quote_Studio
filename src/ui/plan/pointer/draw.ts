@@ -23,5 +23,5 @@ export function pressMove(d: DrawPress, q: P) {
   d.last = q
 }
 
-/** «Fin» on in the quick picks: Shift held, for touch, without the preview standing still. A standard counter has none. */
-export const penFine = (b: Brush | null) => !!b && 'fine' in b && !!b.fine && !(b.kind === 'podium' && b.stock)
+/** «Fin» on (ui/fine.tsx): Shift held, for touch, without the preview standing still. A standard counter has none. */
+export const penFine = (b: Brush | null, fine: boolean) => fine && !(b?.kind === 'podium' && b.stock)

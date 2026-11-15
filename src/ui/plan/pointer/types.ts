@@ -43,8 +43,8 @@ export type Drag =
   /** `fuse`: a counter of Disker og podier dragged against another, the one it lies against (K15), or why not. */
   | { kind: 'object'; id: string; dx: number; dy: number; start: P; moved: boolean; select: PlanSelection; fuse?: string }
   | ({ kind: 'wall'; moved: boolean; select: PlanSelection } & WallDrag)
-  /** `fine`: Shift held or «Fin» on in the pill (`fineLock`), it moves across in 50 mm steps off the grid (Byggeregel T15). */
-  | ({ kind: 'beam'; moved: boolean; select: PlanSelection; fine?: boolean; fineLock?: boolean } & WallDrag)
+  /** `fine`: Shift held or «Fin» on, it moves across in 50 mm steps off the grid (Byggeregel T15). */
+  | ({ kind: 'beam'; moved: boolean; select: PlanSelection; fine?: boolean } & WallDrag)
   /** A room moved by its floor (room.ts). */
   | ({ kind: 'room'; select: PlanSelection } & RoomDrag)
   /** Disker og podier pressed (podium.ts, draw.ts): `click`, what a click on the section shown stores (podiumStart);
@@ -52,8 +52,8 @@ export type Drag =
   | ({ kind: 'podium'; click: PodiumDraw | null; drag: PodiumDrag | null } & DrawPress)
   /** A grip of what is chosen pressed (grip.ts, plan/grips.ts), in Velg or with its pen: its side or corner follows the
    *  pointer from the press `p0` in coarse steps, 250 with `fine` (Shift, or «Fin»). */
-  /** `fineLock`: «Fin» on in the pill of what it belongs to (a room). `select`: what a click (no drag) selects. */
-  | { kind: 'grip'; on: GripOn; p0: P; moved: boolean; fine: boolean; fineLock?: boolean; select?: PlanSelection }
+  /** `select`: what a click (no drag) selects. */
+  | { kind: 'grip'; on: GripOn; p0: P; moved: boolean; fine: boolean; select?: PlanSelection }
   /** A link of the chosen counter pressed (podiumLink.ts, K15): a click breaks a joint or links a counter against it. */
   | { kind: 'podiumLink'; id: string; link: PodiumLink; p0: P; moved: boolean }
   | { kind: 'freeMove'; id: string; p0: P; v0: Variant; moved: boolean; select: PlanSelection }
@@ -80,6 +80,8 @@ export interface PointerCtx {
   brush: Brush | null
   selection: PlanSelection
   pens: Pens
+  /** «Fin» on (ui/fine.tsx): pens draw and drags of what is chosen move in their fine steps, as with Shift. */
+  fine: boolean
   hits: PlanHits
   /** The wall modules as built. */
   mods: BuiltModule[]

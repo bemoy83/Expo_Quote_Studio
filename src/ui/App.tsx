@@ -1,3 +1,4 @@
+import { FineContext } from './fine'
 import { Maximize2 } from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore } from 'react'
 import { r2 } from '../calc/referenceStands'
@@ -94,6 +95,9 @@ export default function App() {
   }, [layout])
   const [highlight, setHighlight] = useState<Highlight>(null)
   const [selection, setSelectionRaw] = useState<PlanSelection>({})
+  /** «Fin», one switch for all pens and drags (ui/fine.tsx). */
+  const [fine, setFine] = useState(false)
+  const fineCtx = useMemo(() => ({ fine, setFine }), [fine])
   /** The drawer has its own state: a plain click only selects; Detaljer in the pill opens it (docs/pille-og-skuff.md). */
   const [drawer, setDrawer] = useState<DrawerState>('closed')
   /** Select; the drawer stays open while the selection has one (another wall, a frame on it), else it closes. */
@@ -266,160 +270,162 @@ export default function App() {
     />
   )
   return (
-    <div className="app">
-      <TopNav
-        page={page}
-        setPage={setPage}
-        project={sketch.project}
-        setProject={(project) => dispatch({ type: 'project', project })}
-        onNew={newFile}
-        onOpen={() => fileInput.current?.click()}
-        onSave={saveFile}
-      />
-      <input
-        ref={fileInput}
-        type="file"
-        accept=".json,application/json"
-        hidden
-        onChange={(e) => {
-          const f = e.target.files?.[0]
-          if (f) void openFile(f)
-          e.target.value = ''
-        }}
-      />
-      {page === 'skisse' ? (
-        <>
-          <SketchBand
-            variants={sketch.variants}
-            current={current}
-            res={res}
-            others={others}
-            layout={layout}
-            fold={fold}
-            onSelect={selectVariant}
-            onDuplicate={() => dispatch({ type: 'duplicate' })}
-            onRemove={() => dispatch({ type: 'remove', index: current })}
-          />
-          <div className="workspace">
-            <Rail
-              v={v}
+    <FineContext.Provider value={fineCtx}>
+      <div className="app">
+        <TopNav
+          page={page}
+          setPage={setPage}
+          project={sketch.project}
+          setProject={(project) => dispatch({ type: 'project', project })}
+          onNew={newFile}
+          onOpen={() => fileInput.current?.click()}
+          onSave={saveFile}
+        />
+        <input
+          ref={fileInput}
+          type="file"
+          accept=".json,application/json"
+          hidden
+          onChange={(e) => {
+            const f = e.target.files?.[0]
+            if (f) void openFile(f)
+            e.target.value = ''
+          }}
+        />
+        {page === 'skisse' ? (
+          <>
+            <SketchBand
+              variants={sketch.variants}
+              current={current}
               res={res}
-              tab={tab}
-              setTab={setTab}
-              open={layout.panel}
-              setOpen={(o) => fold('panel', o)}
-              tool={tool}
-              brush={brush}
-              pick={pick}
-              picks={tools.picks}
-              onEdit={onEdit}
-              onToast={showToast}
-              motifs={motifs}
-              onUpload={(f) => void uploadMotif(f, false)}
-              onAddRoom={addRoom}
-              onSelect={(s) => {
-                setTool('select')
-                openDrawer(s)
-              }}
-              selection={selection}
+              others={others}
+              layout={layout}
+              fold={fold}
+              onSelect={selectVariant}
+              onDuplicate={() => dispatch({ type: 'duplicate' })}
+              onRemove={() => dispatch({ type: 'remove', index: current })}
             />
-            <main className="stage">
-              <div className="plan-wrap">
-                {view === 'plan' ? (
-                  <>
-                    <PlanView
+            <div className="workspace">
+              <Rail
+                v={v}
+                res={res}
+                tab={tab}
+                setTab={setTab}
+                open={layout.panel}
+                setOpen={(o) => fold('panel', o)}
+                tool={tool}
+                brush={brush}
+                pick={pick}
+                picks={tools.picks}
+                onEdit={onEdit}
+                onToast={showToast}
+                motifs={motifs}
+                onUpload={(f) => void uploadMotif(f, false)}
+                onAddRoom={addRoom}
+                onSelect={(s) => {
+                  setTool('select')
+                  openDrawer(s)
+                }}
+                selection={selection}
+              />
+              <main className="stage">
+                <div className="plan-wrap">
+                  {view === 'plan' ? (
+                    <>
+                      <PlanView
+                        v={v}
+                        res={res}
+                        tool={tool}
+                        brush={brush}
+                        floorSize={tools.floorSize}
+                        highlight={highlight}
+                        selection={selection}
+                        onSelect={setSelection}
+                        drawerOpen={drawerOpen}
+                        onOpenDrawer={openDrawer}
+                        onEdit={onEdit}
+                        onCheckpoint={onCheckpoint}
+                        onToast={showToast}
+                        motifs={motifs}
+                        onHint={setPlanHint}
+                        preview={preview}
+                      />
+                      <div className="minimap">
+                        <Suspense fallback={null}>
+                          <Scene3DPreview v={v} res={res} motifs={motifs} />
+                        </Suspense>
+                        <IconButton icon={Maximize2} label="Vis 3D" size={14} className="minimap-open" onClick={() => showView('3d')} />
+                      </div>
+                    </>
+                  ) : (
+                    <Suspense fallback={<div className="stage-empty">Laster 3D …</div>}>
+                      <Scene3D
+                        v={v}
+                        res={res}
+                        highlight={highlight}
+                        selection={selection}
+                        onSelect={select3d}
+                        onEdit={onEdit}
+                        onCheckpoint={onCheckpoint}
+                        onToast={showToast}
+                        motifs={motifs}
+                      />
+                      <div className="minimap low">
+                        <PlanPreview mini v={v} res={res} />
+                        <IconButton icon={Maximize2} label="Vis plan" size={14} className="minimap-open" onClick={() => showView('plan')} />
+                      </div>
+                    </Suspense>
+                  )}
+                  <StandChip v={v} res={res} onEdit={onEdit} terms={terms} onTerms={setTerms} view={view} onView={showView} hint={view === '3d' ? HINT_3D : planHint ? { text: planHint, more: planHint } : hint(tool, brush, tools.rollBrush)} />
+                  {view === 'plan' && change?.at && <PriceChangePill key={change.id} change={change} />}
+                  <ToolDock
+                    tools={view === 'plan'}
+                    active={active}
+                    onTool={tools.activate}
+                    stripes={{ wall: plateColor(tools.wallRal), podium: plateColor(tools.podiumRal), floor: tools.floorPen?.kind === 'floor' ? idx.byArtnr.get(tools.floorPen.product)?.variant.color : undefined }}
+                    canUndo={state.past.length > 0}
+                    canRedo={state.future.length > 0}
+                    onUndo={() => dispatch({ type: 'undo' })}
+                    onRedo={() => dispatch({ type: 'redo' })}
+                    change={change && !(view === 'plan' && change.at) ? change : null}
+                  >
+                    {quick}
+                  </ToolDock>
+                </div>
+                {tool === 'select' && drawerOpen && (
+                  <div className={`drawer-frame ${drawer}`}>
+                    <DrawerHandle detail={drawer === 'detail'} onChange={(d) => setDrawer(d ? 'detail' : 'compact')} />
+                    <Drawers
                       v={v}
                       res={res}
-                      tool={tool}
-                      brush={brush}
-                      floorSize={tools.floorSize}
-                      highlight={highlight}
+                      view={view}
                       selection={selection}
                       onSelect={setSelection}
-                      drawerOpen={drawerOpen}
-                      onOpenDrawer={openDrawer}
                       onEdit={onEdit}
                       onCheckpoint={onCheckpoint}
                       onToast={showToast}
                       motifs={motifs}
-                      onHint={setPlanHint}
-                      preview={preview}
+                      onUpload={(f) => void uploadMotif(f, false)}
                     />
-                    <div className="minimap">
-                      <Suspense fallback={null}>
-                        <Scene3DPreview v={v} res={res} motifs={motifs} />
-                      </Suspense>
-                      <IconButton icon={Maximize2} label="Vis 3D" size={14} className="minimap-open" onClick={() => showView('3d')} />
-                    </div>
-                  </>
-                ) : (
-                  <Suspense fallback={<div className="stage-empty">Laster 3D …</div>}>
-                    <Scene3D
-                      v={v}
-                      res={res}
-                      highlight={highlight}
-                      selection={selection}
-                      onSelect={select3d}
-                      onEdit={onEdit}
-                      onCheckpoint={onCheckpoint}
-                      onToast={showToast}
-                      motifs={motifs}
-                    />
-                    <div className="minimap low">
-                      <PlanPreview mini v={v} res={res} />
-                      <IconButton icon={Maximize2} label="Vis plan" size={14} className="minimap-open" onClick={() => showView('plan')} />
-                    </div>
-                  </Suspense>
+                  </div>
                 )}
-                <StandChip v={v} res={res} onEdit={onEdit} terms={terms} onTerms={setTerms} view={view} onView={showView} hint={view === '3d' ? HINT_3D : planHint ? { text: planHint, more: planHint } : hint(tool, brush, tools.rollBrush)} />
-                {view === 'plan' && change?.at && <PriceChangePill key={change.id} change={change} />}
-                <ToolDock
-                  tools={view === 'plan'}
-                  active={active}
-                  onTool={tools.activate}
-                  stripes={{ wall: plateColor(tools.wallRal), podium: plateColor(tools.podiumRal), floor: tools.floorPen?.kind === 'floor' ? idx.byArtnr.get(tools.floorPen.product)?.variant.color : undefined }}
-                  canUndo={state.past.length > 0}
-                  canRedo={state.future.length > 0}
-                  onUndo={() => dispatch({ type: 'undo' })}
-                  onRedo={() => dispatch({ type: 'redo' })}
-                  change={change && !(view === 'plan' && change.at) ? change : null}
-                >
-                  {quick}
-                </ToolDock>
-              </div>
-              {tool === 'select' && drawerOpen && (
-                <div className={`drawer-frame ${drawer}`}>
-                  <DrawerHandle detail={drawer === 'detail'} onChange={(d) => setDrawer(d ? 'detail' : 'compact')} />
-                  <Drawers
-                    v={v}
-                    res={res}
-                    view={view}
-                    selection={selection}
-                    onSelect={setSelection}
-                    onEdit={onEdit}
-                    onCheckpoint={onCheckpoint}
-                    onToast={showToast}
-                    motifs={motifs}
-                    onUpload={(f) => void uploadMotif(f, false)}
-                  />
-                </div>
-              )}
-            </main>
-            {layout.calc && <CalcPanel res={res} name={v.name} onHover={setHighlight} onQuote={() => setPage('tilbud')} />}
-          </div>
-        </>
-      ) : page === 'tilbud' ? (
-        <QuotePage project={sketch.project} variants={sketch.variants} current={current} onSelect={selectVariant} calcOf={calcFor} motifs={motifs} />
-      ) : page === 'arbeidsordre' ? (
-        <WorkOrderPage project={sketch.project} variants={sketch.variants} current={current} onSelect={selectVariant} calcOf={calcFor} motifs={motifs} />
-      ) : page === 'kostgrunnlag' ? (
-        <CostBasisPage key={basisFocus?.n ?? 0} focus={basisFocus?.path ?? null} onToast={showToast} />
-      ) : (
-        <CatalogPage onToast={showToast} onBasis={() => setPage('kostgrunnlag')} />
-      )}
-      <Toast msg={toast} />
-      <NameTip />
-    </div>
+              </main>
+              {layout.calc && <CalcPanel res={res} name={v.name} onHover={setHighlight} onQuote={() => setPage('tilbud')} />}
+            </div>
+          </>
+        ) : page === 'tilbud' ? (
+          <QuotePage project={sketch.project} variants={sketch.variants} current={current} onSelect={selectVariant} calcOf={calcFor} motifs={motifs} />
+        ) : page === 'arbeidsordre' ? (
+          <WorkOrderPage project={sketch.project} variants={sketch.variants} current={current} onSelect={selectVariant} calcOf={calcFor} motifs={motifs} />
+        ) : page === 'kostgrunnlag' ? (
+          <CostBasisPage key={basisFocus?.n ?? 0} focus={basisFocus?.path ?? null} onToast={showToast} />
+        ) : (
+          <CatalogPage onToast={showToast} onBasis={() => setPage('kostgrunnlag')} />
+        )}
+        <Toast msg={toast} />
+        <NameTip />
+      </div>
+    </FineContext.Provider>
   )
 }
 
