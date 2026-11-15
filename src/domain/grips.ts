@@ -35,3 +35,15 @@ export function furthest<T>(na: number, nb: number, at: (a: number, b: number) =
     }
   return null;
 }
+
+/** An end of a straight run (a wall, a textile wall): its `from` or its `to`. */
+export type RunEnd = 'from' | 'to';
+
+/** The run with its end `end` moved `d` m along it, out from the other end when d > 0 (an end grip). */
+export function movedEnd<R extends { from: readonly [number, number]; to: readonly [number, number] }>(r: R, end: RunEnd, d: number): { from: [number, number]; to: [number, number] } {
+  const len = Math.hypot(r.to[0] - r.from[0], r.to[1] - r.from[1]);
+  const [dx, dy] = [(r.to[0] - r.from[0]) / len, (r.to[1] - r.from[1]) / len];
+  const r3 = (n: number) => Math.round(n * 1000) / 1000;
+  if (end === 'to') return { from: [r.from[0], r.from[1]], to: [r3(r.to[0] + dx * d), r3(r.to[1] + dy * d)] };
+  return { from: [r3(r.from[0] - dx * d), r3(r.from[1] - dy * d)], to: [r.to[0], r.to[1]] };
+}
