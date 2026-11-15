@@ -1,5 +1,6 @@
 // 3D view. Rebuilds the scene from the model on every change (see build.ts) and keeps only the camera.
-// Velg works as in the plan: a click selects and shows the selection pill (pill.ts; Detaljer opens the drawer), drag furniture, drag an inner wall to move it.
+// Velg works as in the plan: a click selects and shows the selection pill (pill.ts; Detaljer opens the drawer),
+// drag furniture, drag an inner wall to move it.
 // A room is moved by dragging one of its walls or its see-through roof, and resized by its grips when chosen (R5, R8).
 // Textile frames and foil decals are clicked to select and dragged along their face; a frame or a motif dragged
 // from Profilering is dropped on the wall face under the pointer (drop.ts). The brushes draw in the plan.

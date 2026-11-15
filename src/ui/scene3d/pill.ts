@@ -40,15 +40,24 @@ function matcher(v: Variant, sel: PlanSelection): ((p: Pick) => boolean) | null 
 
 const corner = new THREE.Vector3()
 
-/** The pill's place for `sel` in the 3D view, or null when nothing chosen is in sight. `wrap`: the view's box. */
-export function pillPlace3d(root: THREE.Object3D | null, camera: THREE.Camera, wrap: HTMLElement | null, v: Variant, sel: PlanSelection): PillPlace | null {
-  const match = root && wrap ? matcher(v, sel) : null
-  if (!root || !wrap || !match) return null
+/** The box around what is chosen in the built scene, world metres; empty when none of it is drawn. */
+export function chosenBox(root: THREE.Object3D, v: Variant, sel: PlanSelection): THREE.Box3 {
   const box = new THREE.Box3()
+  const match = matcher(v, sel)
+  if (!match) return box
+  // Placed groups (furniture, counters) move their meshes: world matrices as drawn, also before the first render
+  root.updateMatrixWorld()
   root.traverse((o) => {
     const p = (o.userData as Partial<Tag>).pick
     if (p && o.visible && match(p)) box.expandByObject(o)
   })
+  return box
+}
+
+/** The pill's place for `sel` in the 3D view, or null when nothing chosen is in sight. `wrap`: the view's box. */
+export function pillPlace3d(root: THREE.Object3D | null, camera: THREE.Camera, wrap: HTMLElement | null, v: Variant, sel: PlanSelection): PillPlace | null {
+  if (!root || !wrap) return null
+  const box = chosenBox(root, v, sel)
   if (box.isEmpty()) return null
   const w = wrap.clientWidth
   const h = wrap.clientHeight
