@@ -13,8 +13,8 @@ i [foga-system.md](foga-system.md), veggbegrepene i [vegger.md](vegger.md), pris
 - **Verdier er data.** Mål, avstander og antall står i `src/rules/rules.ts` (mål i meter) og `src/foga/recipes.ts`
   (deler og mm), aldri i regelkoden. Art.nr. står i `src/foga/parts.ts`.
 - **Ny eller endret regel:** skriv den her først, legg verdiene i rules.ts eller recipes.ts, la koden vise til
-  nummeret, og skriv en test. `src/test/byggeregler.test.ts` sjekker at hver regel har kode som viser til den, at
-  filene finnes, og at koden ikke viser til et nummer som ikke står her.
+  nummeret, og skriv en test som nevner nummeret. `src/test/byggeregler.test.ts` sjekker at hver regel har kode og en
+  test som viser til den, at filene finnes, og at koden ikke viser til et nummer som ikke står her.
 
 Formen er: **Nummer Navn.** Regelen. *Kilde · verdier · kode · test.*
 Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» etter kilden, med hva som mangler.
@@ -51,7 +51,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   *Bjørn 31.10.2026 · kode `src/domain/walls.ts` · test `src/domain/standWalls.test.ts`*
 - **V7 Innervegg.** Tegnes hvor som helst på standen, også ut mot kanten, men blir aldri standvegg. Flyttes i hele
   meter, med Shift eller «Fin» i 250 (V9, Bjørn 15.11.2026), ikke inn på en standvegg. Frittstående flyttes i begge retninger, inntil en annen innervegg bare til siden.
-  *Bjørn 31.10.2026 og 1.11.2026 · kode `src/domain/edit.ts` · test `src/domain/standWalls.test.ts`*
+  *Bjørn 31.10.2026, 1.11.2026 og 15.11.2026 · kode `src/domain/edit.ts`, `src/ui/drag.ts` · test `src/domain/standWalls.test.ts`, `src/ui/drag.test.ts`*
 - **V9 Vegglinje.** En systemvegg eller tekstilvegg kan stå på hvilken som helst linje i 250-rasteret, ikke bare på
   metrelinjene. Uten Shift tegner penselen i hele meter på metrelinjene; med Shift eller «Fin» viser den 250 på den
   250-linjen som er nærmest pekeren, og draget svinger på 250-noder. Modulene legges i hele meter fra start og resten

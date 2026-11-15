@@ -1,5 +1,6 @@
 // Takdrager over tekstilvegger (Bjørn 6.11.2026): a beam that runs into a 43TX frame, InFrame or free-standing, is lifted
 // with its whole run; every post under it gets a 94 × 80 with 609, a hook point between levels a 94 × 80 with 600.
+// Checks Byggeregler T13 og T14 (docs/byggeregler.md).
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_CATALOG } from '../../catalog/defaultCatalog';
 import type { FreeTextile, InnerBeam, Point, Stand, TextileWall, Variant } from '../../domain/types';

@@ -1,3 +1,4 @@
+// Checks Byggeregel X5 (docs/byggeregler.md).
 import { describe, expect, it } from 'vitest';
 import { RULES } from '../../rules/rules';
 import { addFreeTextile, cornerEnds, fitFreeTextiles, moveFreeTextile, rotateFreeTextile, updateFace } from './free';

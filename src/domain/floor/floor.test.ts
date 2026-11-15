@@ -1,3 +1,4 @@
+// Checks Byggeregler G1, G2, G3 og G5 (docs/byggeregler.md).
 import { describe, expect, it } from 'vitest';
 import { applyFloor, floorAction, type FloorTouch } from './brush';
 import { cutTiles } from './edit';

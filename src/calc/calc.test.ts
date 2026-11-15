@@ -1,5 +1,6 @@
 // Expected values are derived by hand from the approved rules (rules.ts) and the InFrame rules (fabric.ts),
 // not copied from the mockup's calc. Each case shows the arithmetic.
+// Checks Byggeregler T2, T3, T5 og P3 (docs/byggeregler.md).
 import { describe, expect, it } from 'vitest';
 import { CURTAIN, DEFAULT_CATALOG, DOOR } from '../catalog/defaultCatalog';
 import type { FloorTile, Point, Variant } from '../domain/types';

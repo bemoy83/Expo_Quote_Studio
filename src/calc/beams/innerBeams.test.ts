@@ -1,5 +1,6 @@
 // Innvendige takdragere (Bjørn 1.11.2026): hooks on other beams, the longer span runs through a crossing, posts only
 // at free ends and 6 m joints, a foot plate under each free post unless a beam drawn the other way meets it.
+// Checks Byggeregler T10, T11, T12 og B2 (docs/byggeregler.md).
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_CATALOG } from '../../catalog/defaultCatalog';
 import { pointKey } from '../../domain/grid';

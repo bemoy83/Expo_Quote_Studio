@@ -1,3 +1,4 @@
+// Checks Byggeregel D3 (docs/byggeregler.md).
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_CATALOG, DOOR, CURTAIN } from '../catalog/defaultCatalog';
 import { placeContext } from '../catalog/lookup';

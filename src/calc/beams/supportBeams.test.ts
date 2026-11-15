@@ -1,4 +1,5 @@
 // Støttedrager on long stand walls, and no foot plates on a wall closing four locked sides (Bjørn 3.11.2026).
+// Checks Byggeregler S6, T6, T7 og B1 (docs/byggeregler.md).
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_CATALOG } from '../../catalog/defaultCatalog';
 import type { InnerBeam, Point, Stand, Variant } from '../../domain/types';

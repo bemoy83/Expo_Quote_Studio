@@ -1,3 +1,4 @@
+// Checks Byggeregel H1 (docs/byggeregler.md).
 import { describe, expect, it } from 'vitest';
 import { DOOR } from '../../catalog/defaultCatalog';
 import { RULES } from '../../rules/rules';

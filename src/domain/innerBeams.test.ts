@@ -1,3 +1,4 @@
+// Checks Byggeregel T8 (docs/byggeregler.md).
 import { describe, expect, it } from 'vitest';
 import type { Point, Variant } from './types';
 import { createVariant } from './variant';

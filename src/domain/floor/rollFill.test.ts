@@ -1,3 +1,4 @@
+// Checks Byggeregel G4 (docs/byggeregler.md).
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_PRICING } from '../../pricing/data';
 import { carpetClick, carpetMetrics, fillCarpet, fillProposals, layouts, offered, relayFill, removeFill } from './rollFill';

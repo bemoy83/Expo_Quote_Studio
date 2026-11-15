@@ -1,5 +1,5 @@
 // Keeps docs/byggeregler.md and the code in step: every rule names code and a test that exist, the code it names cites
-// it («Byggeregel T7»), and no code cites a rule that is not in the register.
+// it («Byggeregel T7»), a test it names names it, and no code cites a rule that is not in the register.
 import { describe, expect, it } from 'vitest';
 
 const DOC = Object.values(import.meta.glob<string>('../../docs/byggeregler.md', { query: '?raw', import: 'default', eager: true }))[0];
@@ -63,6 +63,11 @@ describe('docs/byggeregler.md', () => {
 
   it.each(RULES.map((r) => [r.id, r] as const))('%s is cited by the code it names', (id, r) => {
     expect(r.code.some((f) => citedIds(files.get(f) ?? '').includes(id)), `${id} in ${r.code.join(', ')}`).toBe(true);
+  });
+
+  // A test that names the rule, so a rule cannot lose its test without the register noticing (Bjørn 15.11.2026)
+  it.each(RULES.map((r) => [r.id, r] as const))('%s is named by a test it lists', (id, r) => {
+    expect(r.tests.some((f) => new RegExp(`\\b${id}\\b`).test(files.get(f) ?? '')), `${id} in ${r.tests.join(', ')}`).toBe(true);
   });
 
   it('the code cites no rule that is not in the register', () => {

@@ -1,5 +1,6 @@
 // Støtteplater on system walls that stand free (Bjørn 1.11.2026). Rule as for a free-standing textile wall: at least 2
 // supports from 1 m, the outer one at most 1 m from a free end, at most 3 m apart; corners, T's and takdrager count.
+// Checks Byggeregler S1, S2, S5, S7 og S8 (docs/byggeregler.md).
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_CATALOG, DOOR } from '../catalog/defaultCatalog';
 import { moveOpeningAlong, setOpening } from '../domain/doors';

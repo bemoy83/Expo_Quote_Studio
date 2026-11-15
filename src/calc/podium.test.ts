@@ -1,4 +1,5 @@
 // Disker og podier in the kalkyle and on the picking list (Byggeregel K13).
+// Checks Byggeregel K9 (docs/byggeregler.md).
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_CATALOG } from '../catalog/defaultCatalog';
 import { createVariant } from '../domain/variant';
