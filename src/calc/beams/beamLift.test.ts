@@ -173,11 +173,11 @@ describe('takdrager over tekstilvegg', () => {
       const run = (x: Variant) => calc(x, RULES, DEFAULT_CATALOG, { payer: 'utstiller', ral: '9010' });
       expect(run(v).hooks.filter((h) => h.at[1] === 2)).toEqual([]);
       // Lying loose on the wall, not on a post, a hook or a joint piece, it does not hold it: 3 m from the T at x = 0
-      // to a free end takes a plate at the end. Hung on the hook (not lifted), the wall is held at x = 1,5 and the plate
-      // for the last 1,5 m is pulled in one post
+      // to a free end takes a plate at the end. Hung on the hook (not lifted), the wall is held at x = 1,5, and the last
+      // 1,5 m out to the free end takes its plate at the end too (S3, S4)
       const plates = (x: Variant) => run(x).wallSupports.filter((f) => f.at[1] === 2);
       expect(plates(v)).toEqual([{ at: [3, 2], orientation: 'h' }]);
-      expect(plates(base)).toEqual([{ at: [2, 2], orientation: 'h' }]);
+      expect(plates(base)).toEqual([{ at: [3, 2], orientation: 'h' }]);
     });
   });
 });

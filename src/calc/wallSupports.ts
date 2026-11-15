@@ -164,7 +164,7 @@ export function wallSupports(
         ? []
         : metre
           ? stretchPosts(ib - ia, ends, rule).map((k) => ia + k)
-          : bestPosts(a, b, ks.map((k) => run.at[k]), ends, rule, !onPosts).map((x) => postAt(x));
+          : bestPosts(a, b, ks.map((k) => run.at[k]), ends, rule).map((x) => postAt(x));
       for (const k of posts) out.set(pointKey(run.points[k]), { at: run.points[k], orientation: run.orientation });
     }
   }
@@ -194,7 +194,7 @@ export function stretchPosts(len: number, ends: Ends, rule: SupportRule): number
 
 /** A stretch from `a` to `b` (metres from the run's first post) with an end on a hook between posts, or with a short
  *  module: the fewest of its posts (`at`, metres) that keep the rule. Returns post positions. */
-function bestPosts(a: number, b: number, at: readonly number[], ends: Ends, rule: SupportRule, hooked: boolean): number[] {
+function bestPosts(a: number, b: number, at: readonly number[], ends: Ends, rule: SupportRule): number[] {
   const len = b - a;
   const posts = at.filter((k) => !(Math.abs(k - a) < 1e-6 && ends.from) && !(Math.abs(k - b) < 1e-6 && ends.to));
   const min = minSupports(len * 1000, rule, ends);
@@ -204,9 +204,8 @@ function bestPosts(a: number, b: number, at: readonly number[], ends: Ends, rule
     const all = [...(ends.from ? [a] : []), ...at, ...(ends.to ? [b] : [])];
     return all.slice(1).map((x, i) => x - all[i]);
   };
-  // Without a hook: a plate at each free end, pulled in only as far as the gaps need (S3), then the most even. With
-  // an end on a hook (T15): the most even
-  const pull = (at: number[]) => (hooked ? 0 : (ends.from ? 0 : at[0] - a) + (ends.to ? 0 : b - at[at.length - 1]));
+  // A plate at each free end, pulled in only as far as the gaps need (S3), also beside a hook (T15); then the most even
+  const pull = (at: number[]) => (ends.from ? 0 : at[0] - a) + (ends.to ? 0 : b - at[at.length - 1]);
   const even = (at: number[]) => gaps(at).reduce((s, g) => s + g * g, 0);
   const better = (x: number[], y: number[]) => pull(x) < pull(y) - 1e-6 || (Math.abs(pull(x) - pull(y)) < 1e-6 && even(x) < even(y) - 1e-9);
   for (let n = min; n <= posts.length; n++) {
