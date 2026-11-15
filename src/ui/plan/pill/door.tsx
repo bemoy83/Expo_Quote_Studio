@@ -6,7 +6,7 @@ import { fabricOf, shortName } from '../../../catalog/lookup'
 import { canFlipDoor, doorRal, flipHinge, flipSwing, openingRoom, setCurtainFabric, setDoorRal, setOpeningProduct } from '../../../domain/doors'
 import { roomName } from '../../../domain/rooms'
 import { isStandWall } from '../../../domain/walls'
-import { openingProducts, productOf, rules } from '../../env'
+import { floorBoxes, openingProducts, productOf, rules } from '../../env'
 import { mm } from '../../format'
 import { QBtn, Sep, Sw } from '../quick/parts'
 import { fabricSwatches } from '../swatches'
@@ -39,8 +39,8 @@ export function doorPill(p: PillActions, c: Extract<Chosen, { kind: 'opening' }>
         {door && (
           <>
             <Sep />
-            {canFlipDoor(v, w, o) && (
-              <QBtn title="Snu slagretning" label="Snu slag" onClick={() => onEdit((y) => flipSwing(y, o.id))}>
+            {canFlipDoor(v, w, o, floorBoxes) && (
+              <QBtn title="Snu slagretning" label="Snu slag" onClick={() => onEdit((y) => flipSwing(y, o.id, floorBoxes))}>
                 <FlipHorizontal2 size={15} />
               </QBtn>
             )}

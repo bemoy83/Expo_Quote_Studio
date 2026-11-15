@@ -214,10 +214,11 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 
 - **D7 Fri slagside.** En dør trenger 1 m² fri gulvflate på siden bladet slår til: modulens 1 m bredde og 1 m ut fra
   veggen, innenfor standen, uten vegg eller frittstående tekstil inn i flaten (vegger langs kantene, som dørens egen
-  og en vegg som møter ved hengslet, teller ikke). Møbler og disker holdes allerede unna slagflaten. Er siden ikke fri,
+  og en vegg som møter ved hengslet, teller ikke) og uten møbel eller disk i den. Møbler og disker kan heller ikke
+  settes eller flyttes inn i flaten, så de ikke stenger for folk som går (Bjørn 15.11.2026). Er siden ikke fri,
   snus dørbladet; er ingen side fri, settes ikke døren. En senere endring som ville stengt begge sider av en dør,
   nektes med melding. Mot gangen slår døren alltid inn (D3), så der må innsiden være fri.
-  *Bjørn 15.11.2026 · kode `src/domain/doors.ts`, `src/ui/edits.ts` · test `src/domain/doorSwing.test.ts`*
+  *Bjørn 15.11.2026 · kode `src/domain/doors.ts`, `src/domain/objects.ts`, `src/ui/edits.ts` · test `src/domain/doorSwing.test.ts`*
 ## R · Rom
 
 - **R1 Bare det som mangler.** Et rom bygger bare veggene som ikke finnes. Står det inntil en standvegg, gjenbrukes den;

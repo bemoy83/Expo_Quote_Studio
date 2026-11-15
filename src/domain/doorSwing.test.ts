@@ -47,4 +47,14 @@ describe('free floor on the swing side (D7)', () => {
     expect(shutsDoor(v, east, swings)).toBe(false);
     expect(shutsDoor(east, paintWalls(east, [0.5, 1.5], [1.5, 1.5]), swings)).toBe(true);
   });
+  it('furniture and counters in the square close that side too (Bjørn 15.11.2026)', () => {
+    const chair = () => [{ x0: 2.4, y0: 1.2, x1: 2.9, y1: 1.7 }];
+    expect(swingFree(wall(), a, b, EAST, chair)).toBe(false);
+    expect(swingFree(wall(), a, b, WEST, chair)).toBe(true);
+    // Touching the square's edge from outside is fine
+    expect(swingFree(wall(), a, b, EAST, () => [{ x0: 3, y0: 1, x1: 3.5, y1: 2 }])).toBe(true);
+    const v = placeOpening(wall(), a, b, DOOR, true, { x: 2.6, y: 1.5 });
+    const turned = settleSwings(v, swings, chair);
+    expect(doorSwing(turned.stand, turned.walls.find((x) => x.id === turned.openings[0].wallId)!, turned.openings[0])).toBe(WEST);
+  });
 });
