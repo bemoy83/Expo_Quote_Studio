@@ -4,6 +4,7 @@
 // (the top GRIP metres of the wall): nothing is drawn there until the pointer is over it, then the edge lights up.
 // Textile frames and foil decals are clicked to select and dragged along their face; a frame or a motif dragged
 // from Profilering is dropped on the wall face under the pointer (drop.ts). The brushes draw in the plan.
+// The grips of what is chosen are the plan's, drawn on top (grips.ts) and dragged as there.
 // What the pointer hits and where: pointer/hits.ts; what a press drags: pointer/drag.ts.
 import { useFine } from '../fine'
 import { House, RotateCcw, RotateCw, ScanEye } from 'lucide-react'
@@ -25,6 +26,8 @@ import { addLights, aimSun } from './lights'
 import { clearOverlay, dimExcept, gripMesh, showOverlay, type Overlay } from './overlays'
 import { CLICK_PX, endDrag, hoverCursor, moveDrag, startDrag, type Drag, type PointerProps } from './pointer/drag'
 import { sceneHits, type Hit } from './pointer/hits'
+import { dropGrips, gripAtScreen, gripSprites, sceneGrips, type SceneGrip } from './grips'
+import { gripHint } from '../plan/grips'
 import { fitToElement, newRenderer, swapContent } from './view'
 
 interface Props extends Omit<PointerProps, 'fine'> {
@@ -51,6 +54,8 @@ export function Scene3D(p: Props) {
   // «Fin» (ui/fine.tsx) for the drags, as Shift
   const { fine } = useFine()
   const props = useRef<PointerProps>({ ...p, fine })
+  /** Draws the grips of what is chosen again (set up with the view). */
+  const redrawGrips = useRef(() => {})
   useLayoutEffect(() => {
     props.current = { ...p, fine }
   })
@@ -96,6 +101,26 @@ export function Scene3D(p: Props) {
       return Math.abs(p1.x - p0.x) * camera.aspect > Math.abs(p1.y - p0.y) ? 'ew-resize' : 'ns-resize'
     }
 
+    // The grips of what is chosen (scene3d/grips.ts), redrawn when the sketch, the choice or the hot one changes (they
+    // keep their size on screen as the camera moves)
+    let gripGroup: THREE.Group | null = null
+    let hot: SceneGrip | null = null
+    const drawGrips = () => {
+      dropGrips(scene, gripGroup)
+      gripGroup = null
+      const P = props.current
+      const list = drag?.kind === 'grip' && drag.moved ? [] : sceneGrips(P.v, P.selection)
+      if (list.length) {
+        gripGroup = gripSprites(P.v, list, camera, renderer.domElement.clientHeight, hot)
+        scene.add(gripGroup)
+      }
+    }
+    redrawGrips.current = () => {
+      drawGrips()
+      v.render()
+    }
+    const gripAt = (e: PointerEvent) => gripAtScreen(props.current.v, sceneGrips(props.current.v, props.current.selection), camera, renderer.domElement, e)
+
     // Pointer: runs in the capture phase so a drag on furniture or a wall can switch off orbiting first.
     let drag: Drag | null = null
     let down: { x: number; y: number; hit: Hit | null } | null = null
@@ -103,7 +128,7 @@ export function Scene3D(p: Props) {
       if (e.button !== 0) return
       const hit = hits.pick(e)
       down = { x: e.clientX, y: e.clientY, hit }
-      drag = startDrag(props.current, hits, hit, e)
+      drag = startDrag(props.current, hits, hit, e, gripAt(e))
       if (drag.kind !== 'orbit') {
         clearGrip()
         controls.enabled = false
@@ -112,6 +137,18 @@ export function Scene3D(p: Props) {
     }
     const onMove = (e: PointerEvent) => {
       if (!drag) {
+        const g = gripAt(e)
+        if (!!g !== !!hot || (g && hot && (g.at[0] !== hot.at[0] || g.at[1] !== hot.at[1]))) {
+          hot = g
+          redrawGrips.current()
+        }
+        if (g) {
+          clearGrip()
+          renderer.domElement.style.cursor = 'grab'
+          renderer.domElement.title = gripHint(g.on, props.current.v)
+          return
+        }
+        renderer.domElement.title = ''
         const hit = hits.pick(e)
         const side = hits.sideAt(hit)
         if (side) showGrip(side.room, side.side)
@@ -133,6 +170,7 @@ export function Scene3D(p: Props) {
       const hit = down.hit
       down = null
       endDrag(props.current, hits, d, hit, click)
+      if (d?.kind === 'grip') redrawGrips.current()
     }
 
     el.addEventListener('pointerdown', onDown, true)
@@ -140,6 +178,7 @@ export function Scene3D(p: Props) {
     window.addEventListener('pointerup', onUp)
     const unlisten = listenForDrops(el, scene, hits, () => props.current, v.render)
     return () => {
+      dropGrips(scene, gripGroup)
       el.removeEventListener('pointerdown', onDown, true)
       el.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerup', onUp)
@@ -163,6 +202,7 @@ export function Scene3D(p: Props) {
     const g = build(p.v, p.res, { selection: p.selection, labels: true, motifs: p.motifs, onLoad })
     if (p.highlight) dimExcept(g, p.highlight)
     v.content = swapContent(v.scene, v.content, g, v.render)
+    redrawGrips.current()
   }, [p.v, p.res, p.selection, p.highlight, p.motifs])
 
   // Camera and sun follow the stand size
