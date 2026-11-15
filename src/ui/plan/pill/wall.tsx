@@ -1,10 +1,10 @@
 // The pill on a wall and on a frame or decal on it (docs/pille-og-skuff.md): the wall's colour, print and a textile wall;
 // the frame's motif and Fyll ledig vegg; the decal's motif. On a wall with textile walls one button steps between them.
-import { Image as ImageIcon, Layers, MoveHorizontal } from 'lucide-react'
+import { Image as ImageIcon, Layers, Move, MoveHorizontal } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { updateFoil } from '../../../domain/decor'
 import { paintDoors } from '../../../domain/doors'
-import { eraseWalls, setWallPlate } from '../../../domain/edit'
+import { canMoveWall, eraseWalls, setWallPlate } from '../../../domain/edit'
 import { faces, sideOf } from '../../../domain/faces'
 import { wallLength, wallModules } from '../../../domain/grid'
 import { wallRal } from '../../../domain/panels'
@@ -16,7 +16,7 @@ import { isStandWall, wallLabel } from '../../../domain/walls'
 import { rules } from '../../env'
 import { fmt } from '../../format'
 import { findMotif } from '../../motifs'
-import { QBtn, Sep } from '../quick/parts'
+import { FinBtn, QBtn, Sep } from '../quick/parts'
 import type { Chosen, PlanSelection } from '../selection'
 import { faceName } from '../wallDrawer/face'
 import { Colours, Motifs, type Content, type PillActions, type SecondFace } from './parts'
@@ -111,6 +111,15 @@ export function wallPill(p: PillActions, c: Of<'wall'>, graphics: SecondFace): C
           <ImageIcon size={15} />
           Grafikk
         </QBtn>
+        {canMoveWall(w) && (
+          <>
+            <Sep />
+            {/* Byggeregel V7: an inner wall moves in 250 with Shift or Fin */}
+            <FinBtn title={{ on: 'Dra flytter veggen i 250 · trykk for hele meter igjen', off: 'Flytt veggen i 250, utenfor metrelinjene · på desktop også Shift + dra' }}>
+              <Move size={15} />
+            </FinBtn>
+          </>
+        )}
       </>
     ),
     more: true,

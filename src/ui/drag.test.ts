@@ -19,4 +19,10 @@ describe('dragging an inner wall', () => {
     expect(run([-5, 2])).toMatchObject({ from: [0, 2], to: [2, 2] });
     expect(run([9, 9])).toMatchObject({ from: [4, 4], to: [6, 4] });
   });
+  it('with Shift or Fin it moves in 250 (Byggeregel V7, V9), both ways while it stands free', () => {
+    const d: WallDrag = { id, p0: { x: 2, y: 2 }, v0, delta: '0,0', horizontal: true, fine: true };
+    let v: Variant = v0;
+    dragWall(d, { x: 2.3, y: 2.6 }, (fn) => (v = fn(v)), () => {});
+    expect(v.walls.find((w) => w.id === id)).toMatchObject({ from: [1.25, 2.5], to: [3.25, 2.5] });
+  });
 });

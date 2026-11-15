@@ -114,7 +114,7 @@ export function startDrag(P: PointerProps, hits: SceneHits, hit: Hit | null, e: 
   } else if (hit?.wallId) {
     const w = P.v.walls.find((x) => x.id === hit.wallId)
     const q = hits.onFloor(e)
-    if (w && q && canMoveWall(w)) return { kind: 'wall', id: w.id, p0: q, v0: P.v, delta: '0,0', horizontal: w.from[1] === w.to[1], moved: false }
+    if (w && q && canMoveWall(w)) return { kind: 'wall', id: w.id, p0: q, v0: P.v, delta: '0,0', horizontal: w.from[1] === w.to[1], moved: false, fine: P.fine, fineLock: P.fine }
   }
   return { kind: 'orbit' }
 }
@@ -191,6 +191,8 @@ export function moveDrag(P: PointerProps, hits: SceneHits, drag: Exclude<Drag, {
     P.onEdit((x) => moveObject(x, place, d.id, q.x - d.off.x, q.y - d.off.y), false)
   } else {
     drag.moved = true
+    // Shift held (or «Fin» on in the pill): 250 steps (Byggeregel V7)
+    drag.fine = e.shiftKey || !!drag.fineLock
     dragWall(drag, q, P.onEdit, P.onCheckpoint)
   }
 }
