@@ -19,7 +19,7 @@ describe('the grip of a chosen door (Byggeregel D8)', () => {
     expect(g.on).toEqual({ type: 'door', id })
     expect(g.at).toEqual([2.5, 2])
     expect(gripWith(g.on, 'select', null)).toBe(true)
-    expect(gripWith(g.on, 'draw', { kind: 'opening', product: DOOR } as never)).toBe(true)
+    expect(gripWith(g.on, 'brush', { kind: 'opening', product: DOOR } as never)).toBe(true)
   })
 
   it('moves the door in whole metres, 250 with Fin, and says where it stands', () => {
