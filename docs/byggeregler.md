@@ -274,7 +274,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   Går det ikke i noen retning: «Rommet får ikke plass slik». Midt i rommet (der navnet står) står et flyttegrep, et
   større rundt grep med fire piler, under navnet: det flytter hele rommet som et drag i gulvet. Det vises med en penn i
   hånden, ikke i Velg, der hele rommet flyttes ved å dra i gulvet. Grepene virker også med Vegg-pennen, som på en disk
-  (K14): et valgt rom forblir valgt når Vegg velges, og et rom som en vegg-strek lukker, blir valgt.
+  (K14): et valgt rom forblir valgt når Vegg velges, og et rom som en vegg-strek lukker, blir valgt. Grepene er den
+  eneste måten å endre størrelsen på i 3D også: toppkanten av en romvegg lyser ikke lenger ved hover, og et drag i en
+  romvegg flytter rommet (Bjørn 15.11.2026).
   *Bjørn 15.11.2026 · kode `src/domain/roomGrips.ts`, `src/ui/plan/grips.ts` · test `src/domain/roomGrips.test.ts`*
 
 ## X · Tekstilvegg (43TX)

@@ -102,15 +102,13 @@ export function startDrag(P: PointerProps, hits: SceneHits, hit: Hit | null, e: 
     const o = P.v.objects.find((x) => x.id === hit.objectId)
     const q = hits.onFloor(e)
     if (o && q) return { kind: 'object', id: o.id, start: { x: o.x, y: o.y }, off: { x: q.x - o.x, y: q.y - o.y }, moved: false }
-  } else if (hits.sideAt(hit) || hit?.roomId || P.v.walls.find((x) => x.id === hit?.wallId)?.room) {
-    // The top of a room side resizes the room; its roof or its own wall moves it
-    const side = hits.sideAt(hit)
+  } else if (hit?.roomId || P.v.walls.find((x) => x.id === hit?.wallId)?.room) {
+    // Its roof or its own wall moves a room; its grips resize it (R5)
     const w = P.v.walls.find((x) => x.id === hit!.wallId)
-    const id = side?.room.id ?? hit!.roomId ?? w!.room!.id
-    const mode = side?.side ?? 'move'
+    const id = hit!.roomId ?? w!.room!.id
     const y = hit!.point.y
     const q = hits.onFloor(e, y)
-    if (q) return { kind: 'room', ...roomDrag(id, mode, q, P.v, P.fine), y }
+    if (q) return { kind: 'room', ...roomDrag(id, 'move', q, P.v, P.fine), y }
   } else if (hit?.wallId) {
     const w = P.v.walls.find((x) => x.id === hit.wallId)
     const q = hits.onFloor(e)
@@ -231,9 +229,9 @@ export function endDrag(P: PointerProps, hits: SceneHits, d: Drag | null, hit: H
 }
 
 /** The cursor over what is under the pointer while nothing is pressed. */
-export function hoverCursor(v: Variant, hit: Hit | null, resizing: string | null) {
+export function hoverCursor(v: Variant, hit: Hit | null) {
   const w = hit?.wallId ? v.walls.find((x) => x.id === hit.wallId) : undefined
   if (podiumTopAt(v, hit)) return 'ns-resize'
   const movable = hit?.objectId || hit?.textileId || hit?.foilId || hit?.shelfId || hit?.roomId || (w && (w.room || canMoveWall(w)))
-  return resizing ?? (movable ? 'move' : hit ? 'pointer' : 'grab')
+  return movable ? 'move' : hit ? 'pointer' : 'grab'
 }
