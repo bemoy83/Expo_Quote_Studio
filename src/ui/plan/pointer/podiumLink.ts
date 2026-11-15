@@ -1,6 +1,7 @@
 // A link of the chosen counter of Disker og podier clicked (Byggeregel K15): a joint breaks, the counter becoming two
 // standing against each other; a counter standing against it is linked into it. A press that moves does nothing.
 import { breakJoint, fusePodiums } from '../../../domain/podiumLinks'
+import { GRIP_MOVE } from '../../../domain/grips'
 import { place } from '../../env'
 import type { Drag, DragHandlers, P, PointerCtx } from './types'
 
@@ -12,7 +13,7 @@ export function startPodiumLink(c: Pick<PointerCtx, 'hits'>, q: P): Drag | null 
 
 export const podiumLink: DragHandlers<'podiumLink'> = {
   move(_c, d, q) {
-    if (Math.hypot(q.x - d.p0.x, q.y - d.p0.y) > 0.03) d.moved = true
+    if (Math.hypot(q.x - d.p0.x, q.y - d.p0.y) > GRIP_MOVE) d.moved = true
   },
   up(c, d) {
     if (d.moved) return

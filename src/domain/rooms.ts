@@ -8,6 +8,7 @@
 import { moduleKey, pointAlong, runs, moduleCount, wallModules, moduleEnd } from './grid';
 import { ownPlate } from './panels';
 import { replaceWalls } from './replaceWalls';
+import { furthest, stepsOf } from './grips';
 import { gapKeys, roomWallId } from './roomKeys';
 import {
   area,
@@ -347,17 +348,17 @@ export function resizeRoomDoors(v: Variant, id: string, side: number, delta: num
   const r = v.rooms.find((x) => x.id === id);
   if (!r || side < 0 || side >= r.outline.length) return same;
   const hz = sideIsHorizontal(r, side);
-  // The furthest step toward `delta` that gives a valid room: whole metres, or 250 with Shift or Fin (R5)
-  for (let n = Math.round(delta / step); n !== 0; n -= Math.sign(n)) {
+  // The furthest step toward `delta` that gives a valid room: whole metres, or 250 with Shift or Fin (R5; grips.ts)
+  const r0 = furthest(stepsOf(delta, step), 0, (n) => {
+    if (!n) return null;
     const k = n * step;
     const moved = moveSide(r.outline, side, k);
     const outline = moved && settle(moved);
-    if (!outline || !fits(v, id, outline)) continue;
+    if (!outline || !fits(v, id, outline)) return null;
     const next = reshape(v, r, outline, (i) => (i === side ? (hz ? [0, k] : [k, 0]) : [0, 0]));
-    const s = settleDoors(next, id);
-    if (s) return { v: s.v, doorsMoved: s.moved };
-  }
-  return same;
+    return settleDoors(next, id);
+  });
+  return r0 ? { v: r0.value.v, doorsMoved: r0.value.moved } : same;
 }
 
 /** Keep every room inside a (new) stand size: moved in where it fits, else cut at the stand's edge. */
