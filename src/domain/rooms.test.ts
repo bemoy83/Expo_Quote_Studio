@@ -1,3 +1,4 @@
+// Checks Byggeregler R1 og R4 (docs/byggeregler.md).
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_CATALOG, DOOR } from '../catalog/defaultCatalog';
 import { placeContext } from '../catalog/lookup';

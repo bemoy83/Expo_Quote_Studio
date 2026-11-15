@@ -1,3 +1,4 @@
+// Checks Byggeregler D1, D4 og D6 (docs/byggeregler.md).
 import { describe, expect, it } from 'vitest';
 import { CURTAIN, DEFAULT_CATALOG, DOOR } from '../catalog/defaultCatalog';
 import { calc } from '../calc/calc';

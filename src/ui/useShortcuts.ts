@@ -1,5 +1,5 @@
 // Keyboard on the sketch screen: V S G T H D M E (dock tools), P (last pen), R (turn a lane, furniture or a frittstående
-// tekstilvegg, or the roll direction of the pen), Escape, ⌘Z / ⇧⌘Z, and Delete or Backspace on the selection (plan/selection.ts says what goes).
+// tekstilvegg), Escape, ⌘Z / ⇧⌘Z, and Delete or Backspace on the selection (plan/selection.ts says what goes).
 import { useEffect } from 'react'
 import { rotateLane } from '../domain/floor/edit'
 import type { Variant } from '../domain/types'

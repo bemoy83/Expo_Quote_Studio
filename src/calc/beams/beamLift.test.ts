@@ -1,5 +1,6 @@
 // Takdrager over tekstilvegger (Bjørn 6.11.2026): a beam that runs into a 43TX frame, InFrame or free-standing, is lifted
 // with its whole run; every post under it gets a 94 × 80 with 609, a hook point between levels a 94 × 80 with 600.
+// Checks Byggeregler T13 og T14 (docs/byggeregler.md).
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_CATALOG } from '../../catalog/defaultCatalog';
 import type { FreeTextile, InnerBeam, Point, Stand, TextileWall, Variant } from '../../domain/types';
@@ -173,11 +174,11 @@ describe('takdrager over tekstilvegg', () => {
       const run = (x: Variant) => calc(x, RULES, DEFAULT_CATALOG, { payer: 'utstiller', ral: '9010' });
       expect(run(v).hooks.filter((h) => h.at[1] === 2)).toEqual([]);
       // Lying loose on the wall, not on a post, a hook or a joint piece, it does not hold it: 3 m from the T at x = 0
-      // to a free end takes a plate at the end. Hung on the hook (not lifted), the wall is held at x = 1,5 and the plate
-      // for the last 1,5 m is pulled in one post
+      // to a free end takes a plate at the end. Hung on the hook (not lifted), the wall is held at x = 1,5, and the last
+      // 1,5 m out to the free end takes its plate at the end too (S3, S4)
       const plates = (x: Variant) => run(x).wallSupports.filter((f) => f.at[1] === 2);
       expect(plates(v)).toEqual([{ at: [3, 2], orientation: 'h' }]);
-      expect(plates(base)).toEqual([{ at: [2, 2], orientation: 'h' }]);
+      expect(plates(base)).toEqual([{ at: [3, 2], orientation: 'h' }]);
     });
   });
 });

@@ -157,7 +157,7 @@ Systemhøyde fra gulv: 2490 + 50 = 2540 mm.
 Bjørn 1.11.2026. Kunden kan tegne egne takdragere inne på standen med en egen pensel (`Variant.innerBeams`,
 `calc/beams/innerBeams.ts`). Samme profil 292, høyde og 6 m-regel som standard takdrager, og alltid utstillerens.
 
-- Tegnes rett i hele meter innenfor standen, aldri langs en vegg eller oppå en annen takdrager. Kan flyttes i plan og
+- Tegnes rett i hele meter innenfor standen (250 med Shift eller «Fin», T8), aldri langs en vegg eller oppå en annen takdrager. Kan flyttes i plan og
   fjernes med Tøm (også bare en del av den) eller Delete.
 - **Krok:** en ende som treffer en annen takdrager (standard eller tegnet) henger på den med krok. Ingen stolpe der, og
   standarddrageren deles ikke. Én krok per krokpunkt (`calc/beams/beamHooks.ts`): **enveis** når dragere henger fra én side,
@@ -282,7 +282,7 @@ romvegger som takdragerne ikke holder, også når takdragerne er på (`calc/wall
 - **Senere:** støttevaier i stedet for plater. Et V-oppheng fra taket i hallen ned til toppen av systemveggen, ett punkt
   på veggen og to i taket på tvers av veggen, etter samme regel som platene. Også vaieren faktureres utstilleren.
 
-### Dør · D1–D4
+### Dør · D1–D8
 
 - Fogas ferdige dør: karm i **292** med ferdig montert lås **410** (876 410 94). Plukkes som **1 stk dørblad**,
   ferdig montert.
@@ -299,8 +299,7 @@ romvegger som takdragerne ikke holder, også når takdragerne er på (`calc/wall
   3D eller i veggtegningen, så åpnes veggskuffen for veggen med døren valgt. Innstillingene står til venstre med miniplanen
   under (i detaljhøyden, der grafikkhylla ellers står) og døren i hele veggen til høyre; dørinnstillingene har ingen fargepalett eller grafikk; knappen «Farge og profilering» nederst (eller Esc, eller klikk døren igjen) gir paletten, og knappen «Dør» ved veggen går tilbake til døren. Miniplan for å flytte døren (klikk ruten utenfor en
   modul: alle egne moduler på rommet, eller langs innerveggen; aldri standvegg eller en annen åpning), dør/forheng,
-  slagretning, hengselside, farge, gjør om til vegg (`domain/doors.ts`). Døren dras ikke i plan og 3D; der dras romsidene
-  som før. Flyttes eller endres et rom slik at døren ville havnet i standveggen, flyttes døren til nærmeste modul på
+  slagretning, hengselside, farge, gjør om til vegg (`domain/doors.ts`). En valgt dør har et flyttegrep midt på i plan og 3D: hele meter, 250 med Shift eller «Fin» (D8). Flyttes eller endres et rom slik at døren ville havnet i standveggen, flyttes døren til nærmeste modul på
   rommet der den kan stå, med beskjed; flyttet nektes bare når rommet ikke har noen slik modul.
 
 ### Tekstilramme (43TX) · X2–X4, X10
@@ -325,7 +324,7 @@ systemveggen: den lager ikke rom og kan ikke ha dør (tekstildør med overstykke
   (domain/textile/brush.ts). 25 cm foran en vegg er dermed frittstående.
 - Tegnes med samme verktøy som systemveggen og disken (Bjørn 14.11.2026, ett tegneverktøy, `domain/runDraw.ts`):
   penselen viser modulen på 1 m et klikk lagrer, et drag vokser fra den i hele meter, og med **Shift eller «Fin»**
-  står forhåndsvisningen stille og enden du trykker ved flyttes i 250-steg. Shift midt i draget går videre fra det
+  viser den 250 under pekeren og draget vokser i 250-steg (X5, V1). Shift midt i draget går videre fra det
   som er tegnet. Minst 0,25 m. Alle pensler bruker samme grid. Kan stå hvor som helst på standen, men ikke langs eller gjennom en systemvegg (helt inntil er lov). Ender den mot en systemvegg med tekstilramme på den siden, stopper den ved rammens front, 60 mm fra veggens senterlinje (X11).
 - Høyde **2540** (som systemveggen med føtter). Høye vegger kommer senere.
 - **Topp- og bunnskinne** i 43TX går hele rammen. Over **5000 mm** skjøtes de i like lange stykker; rammen er
@@ -492,22 +491,20 @@ setter sammen Foga-stykklisten og kalkylelinjene som ikke er bygget av Foga-dele
   linje i tilbudet. Gulv, møbler og resten er allerede salgsprodukter.
 - Der det ikke finnes en artikkel, plukkes bestanddelene direkte (tekstilvegg: 43TX, 92LTX, 617, 609, 604, 520, 740, 730).
 
-## 6. Mål og prisfilosofi (Bjørn 31.10.2026)
+## 6. Mål og prisfilosofi (Bjørn 31.10.2026, pris 7.11.2026)
 
-Målet er én Foga-motor med felles profilbibliotek, oppskrifter og byggeregler. Den skal sette sammen vegger nå,
-og disker og podier senere. Disker og podier bygges på samme måte som vegger, med noen nye profiler og noen
+Målet er én Foga-motor med felles profilbibliotek, oppskrifter og byggeregler. Den setter sammen vegger og
+disker og podier (K-reglene). Disker og podier bygges på samme måte som vegger, med noen nye profiler og noen
 eksisterende, for eksempel 92.
 
 Til slutt skal appen vise et varesortiment av ferdigprodukter som kan tegnes eller dras inn, for eksempel
 «Vegg hvit 1 × 2,5 m», priset per løpemeter. Et ferdigprodukt består av byggesystemprofiler og plater, og
 motoren regner ut delelisten for det.
 
-- Prisen i tilbudet kommer fra ferdigproduktet, ikke fra delelisten.
-- Delelisten gir bare pris for en kombinasjon av deler som ikke dekkes av et ferdigprodukt.
-  Dette er en filosofi, ikke en hardkodet regel. En frihåndstegnet disk kan for eksempel prises fra deler,
-  men det avgjøres når vi kommer dit.
+Slik prises det (Bjørn 7.11.2026, detaljer i [prismodell.md](prismodell.md) og [kostmodell.md](kostmodell.md)):
 
-Oppdatert 31.10.2026: Bjørn vil at sum av artikler skal være standard. Se [prismodell.md](prismodell.md).
-
-Senere kan delen få innkjøpspris i profilbiblioteket. Da gir delelisten en estimert kost per leveranse. Det er
-internt, og tilbudsprisen kommer fortsatt fra ferdigproduktet.
+- Alt som finnes i katalogen (vegg, dør, forheng, takdrager, hylle, bardisk 6560, standardpodier) har fast pris fra
+  katalogen, senere fra OMS. Delelisten gir bare kost, DG og tid for dem, aldri prisen.
+- Kostmotoren setter prisen bare for det katalogen ikke dekker: tekstilvegg alltid, og spesialbygg som egne mål og
+  disker og podier bygget på stedet. Katalogprisene på tekstilvegg er bare mål for kalibreringen.
+- Tilbudsprisen bygger aldri på Fogas virkelige innkjøpspriser; repoet har bare eksempelpriser.

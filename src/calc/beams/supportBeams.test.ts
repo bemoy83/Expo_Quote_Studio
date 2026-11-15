@@ -1,4 +1,5 @@
 // Støttedrager on long stand walls, and no foot plates on a wall closing four locked sides (Bjørn 3.11.2026).
+// Checks Byggeregler S6, T6, T7 og B1 (docs/byggeregler.md).
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_CATALOG } from '../../catalog/defaultCatalog';
 import type { InnerBeam, Point, Stand, Variant } from '../../domain/types';
@@ -35,6 +36,8 @@ describe('free spans on one stand wall', () => {
     expect(supportBeamPoints(10, ends(0, 4, 10))).toEqual([7]);
     expect(supportBeamPoints(7, ends(0, 4, 7))).toEqual([]);
     expect(supportBeamPoints(8, ends(8))).toEqual([]);
+    // Posts in metres (a short module, Byggeregel V1): 6,5 m held at both ends, the middle 3,25 is nearest the post at 3
+    expect(supportBeamPoints(7, ends(0, 7), undefined, [], [0, 1, 2, 3, 4, 5, 6, 6.5])).toEqual([3]);
   });
 });
 
@@ -74,6 +77,18 @@ describe('støttedrager', () => {
 describe('four locked sides', () => {
   it('Bjørn’s corner 4 × 3: a wall from the left stand wall to the right beam, 1 m off the back, gets no plates', () => {
     expect(feet(withWall(corner(4, 3), [0, 1], [4, 1]))).toEqual([]);
+  });
+  it('the same off the whole metres (V9): the beam is joined where the wall meets it, not only at metre steps', () => {
+    expect(feet(withWall(corner(4, 3), [0, 1.25], [4, 1.25]))).toEqual([]);
+    // An inner wall off the metre lines, closed by a drawn beam hanging on the front beam between its metres (T15)
+    const v = { ...withWall(corner(4, 5), [2.5, 0], [2.5, 4]), innerBeams: [beam('b1', [2.5, 4], [2.5, 5])] };
+    expect(feet(v)).toEqual([]);
+  });
+  it('a drawn beam on a hook between the wall’s posts closes the ring there too (T15)', () => {
+    // Corner 5 × 4: a wall y = 2 from the left stand wall to the right beam; a drawn beam x = 1,5 hangs on it between its
+    // posts and on the front beam. From the hook to the right beam (3,5 m) the wall closes four locked sides
+    const v = { ...withWall(corner(5, 4), [0, 2], [5, 2]), innerBeams: [beam('b1', [1.5, 2], [1.5, 4])] };
+    expect(feet(v)).toEqual([]);
   });
   it('a 4 m inner wall along a 5 m stand wall with a free end keeps its plate', () => {
     // Today's rule: held at the T, the free end's plate pulled a metre in for the 3 m gap

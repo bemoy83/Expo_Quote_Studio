@@ -13,8 +13,8 @@ i [foga-system.md](foga-system.md), veggbegrepene i [vegger.md](vegger.md), pris
 - **Verdier er data.** Mål, avstander og antall står i `src/rules/rules.ts` (mål i meter) og `src/foga/recipes.ts`
   (deler og mm), aldri i regelkoden. Art.nr. står i `src/foga/parts.ts`.
 - **Ny eller endret regel:** skriv den her først, legg verdiene i rules.ts eller recipes.ts, la koden vise til
-  nummeret, og skriv en test. `src/test/byggeregler.test.ts` sjekker at hver regel har kode som viser til den, at
-  filene finnes, og at koden ikke viser til et nummer som ikke står her.
+  nummeret, og skriv en test som nevner nummeret. `src/test/byggeregler.test.ts` sjekker at hver regel har kode og en
+  test som viser til den, at filene finnes, og at koden ikke viser til et nummer som ikke står her.
 
 Formen er: **Nummer Navn.** Regelen. *Kilde · verdier · kode · test.*
 Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» etter kilden, med hva som mangler.
@@ -28,7 +28,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   hvilken som helst linje i 250-rasteret (V9); Shift trykket eller sluppet midt i
   draget låser det som er tegnet og går videre derfra. En strek over vegger som står legger bare til resten. Tøm tar en hel
   modul, også en kort. Kortere moduler finnes i samme steg som diskene (K10): 250, 500 og 750 c/c. En vegg legges i hele meter fra der den starter, og er lengden ikke
-  hel, er den siste modulen kortere (1750 = 1000 + 750). Delene er de samme, kappet: skinnene c/c − 40 (210, 460, 710),
+  hel, er den siste modulen kortere (1750 = 1000 + 750); står en dør utenfor hele meter, ligger den korte modulen nærmest døren (D8). Delene er de samme, kappet: skinnene c/c − 40 (210, 460, 710),
   platen c/c − 24 (226, 476, 726) og lysåpningen c/c − 40. Dør, forheng og hyller står bare i hele moduler. Tilbudet
   selger hele moduler per meter og hver kortere modul som eget produkt per stykk, priset som en hel meter (6121 for 750,
   6122 for 500, 6123 for 250; art.nr er plassholdere): jobben er den samme, og en kort plate brukes sjeldnere igjen. Kostnaden er de kappede skinnene og platen som sin andel av de hele
@@ -50,12 +50,12 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   standvegg fordi den kommer fra standtypen, aldri fordi den står i kanten. Unntaket med nabogodkjenning er ikke bygget.
   *Bjørn 31.10.2026 · kode `src/domain/walls.ts` · test `src/domain/standWalls.test.ts`*
 - **V7 Innervegg.** Tegnes hvor som helst på standen, også ut mot kanten, men blir aldri standvegg. Flyttes i hele
-  meter, ikke inn på en standvegg. Frittstående flyttes i begge retninger, inntil en annen innervegg bare til siden.
-  *Bjørn 31.10.2026 og 1.11.2026 · kode `src/domain/edit.ts` · test `src/domain/standWalls.test.ts`*
+  meter, med Shift eller «Fin» i 250 (V9, Bjørn 15.11.2026), ikke inn på en standvegg. Frittstående flyttes i begge retninger, inntil en annen innervegg bare til siden.
+  *Bjørn 31.10.2026, 1.11.2026 og 15.11.2026 · kode `src/domain/edit.ts`, `src/ui/drag.ts` · test `src/domain/standWalls.test.ts`, `src/ui/drag.test.ts`*
 - **V9 Vegglinje.** En systemvegg eller tekstilvegg kan stå på hvilken som helst linje i 250-rasteret, ikke bare på
   metrelinjene. Uten Shift tegner penselen i hele meter på metrelinjene; med Shift eller «Fin» viser den 250 på den
   250-linjen som er nærmest pekeren, og draget svinger på 250-noder. Modulene legges i hele meter fra start og resten
-  sist (V1). Rom (bakrom og frihåndsrom) står foreløpig på metrelinjene.
+  sist (V1). Rom står også i 250-rasteret (R5, R7).
   *Bjørn 14.11.2026 · kode `src/domain/grid.ts`, `src/domain/runDraw.ts` · test `src/domain/runDraw.test.ts`*
 - **V10 Møte mellom stolper.** Treffer en vegg en annen vegg der den andre ikke har stolpe (en ende mot den, eller to
   vegger som krysser), deles modulen den treffer i to korte moduler med felles stolpe; resten av veggen beholder sine
@@ -92,7 +92,8 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   *Bjørn 1.11.2026 · `RECIPES.wall.support` · kode `src/calc/wallSupports.ts` · test `src/calc/wallSupports.test.ts`*
 - **S3 Avstand.** Per rett strekning: en plate i hver fri ende, maks 3 m mellom to støtter, og en endeplate trekkes inn
   hele stolper (maks 1 m) bare så langt avstanden krever. Minst 2 gjelder bare en rett vegg fri i begge ender, fra 1 m.
-  3 m: endene. 4 m: den ene 1 m inn. 5 m: begge 1 m inn. 6 m: tre.
+  3 m: endene. 4 m: den ene 1 m inn. 5 m: begge 1 m inn. 6 m: tre. Avstandene regnes i meter langs veggen, så en kort
+  modul (V1, V10, D8) teller med sin lengde, og en vegg delt i korte moduler er fortsatt én strekning (Bjørn 15.11.2026).
   *Bjørn 1.11.2026 · `RECIPES.wall.support.rule` · kode `src/calc/supports.ts`, `src/calc/wallSupports.ts` · test `src/calc/wallSupports.test.ts`*
 - **S4 Ut fra hjørne.** Ut fra et hjørne eller en T står veggen av seg selv opptil 1 m (1 × 1 trenger ingen plate). Over
   1 m får den én plate, deretter gjelder S3.
@@ -101,7 +102,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   inntil), og en stolpe under en takdrager.
   *Bjørn 1.11.2026 · kode `src/calc/wallSupports.ts` · test `src/calc/wallSupports.test.ts`*
 - **S6 Fire låste sider.** Med takdrager på får en strekning som er holdt i begge ender, og der endene henger sammen
-  rundt en annen vei med vegger og takdragere (en lukket firkant), ingen plater.
+  rundt en annen vei med vegger og takdragere (en lukket firkant), ingen plater. Det gjelder også vegger og dragere
+  utenfor hele meter (V9, T15): en drager henger sammen med hver stolpe og dragerende som ligger på den, og en drager
+  på krok på veggen mellom stolpene (T15) er et hjørne i firkanten.
   *Bjørn 3.11.2026 · kode `src/calc/wallSupports.ts` · test `src/calc/beams/supportBeams.test.ts`*
 - **S7 Uten takdrager.** Er takdragerne valgt bort, gjelder S3 også mellom to hjørner: en bakvegg på 6 m får én plate
   midt på.
@@ -135,8 +138,8 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   takdrager: deler stolpen på en vegg eller stolpe, henger på krok på lengden av en drager, og stopper foran en vegg
   langs linjen. Et lengre spenn får én per 6 m. Den er en standard takdrager. Uten takdrager blir det fotplater (S2).
   *Bjørn 3.11.2026 · `rules.beam.supportSpan` · kode `src/calc/beams/supportBeams.ts` · test `src/calc/beams/supportBeams.test.ts`*
-- **T8 Innvendig takdrager.** Tegnes av kunden, rett og i hele meter innenfor standen, aldri langs en vegg eller oppå en
-  annen takdrager. Samme profil, høyde og deling (T1, T2) som standard.
+- **T8 Innvendig takdrager.** Tegnes av kunden, rett og i hele meter innenfor standen, med Shift eller «Fin» i 250 som
+  veggen (V1, V9; da gjelder T15 der den ikke treffer stolper), aldri langs en vegg eller oppå en annen takdrager. Samme profil, høyde og deling (T1, T2) som standard.
   *Bjørn 1.11.2026 · kode `src/domain/innerBeams.ts`, `src/calc/beams/innerBeams.ts` · test `src/domain/innerBeams.test.ts`*
 - **T9 Krok.** En ende som treffer en annen takdrager henger på den med krok: ingen stolpe der, og drageren den henger
   på deles ikke. Én krok per krokpunkt, i 01 som en T over drageren: enveis (ett ben) når dragere henger fra én side,
@@ -392,11 +395,12 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 - **H6 Hvor hyller kan stå.** Ikke i dørfelt eller åpning, ikke der en tekstilvegg dekker feltet eller holder stolpen,
   ikke på frittstående tekstil (43TX er ikke 94). Hver stolpe må ha ledig kanal mot hyllens side, eller være et
   innvendig hjørne (H9): går en annen vegg ut fra stolpen mot den siden, står hyllen i hjørnet på 01-skinne. Foran print
-  og dekal er lov. Heng står bare mellom stolper med ledig kanal.
+  og dekal er lov. Heng skal stå bare mellom stolper med ledig kanal (heng er ikke bygget ennå).
   *Bjørn 8.11.2026, endret 10.11.2026 · kode `src/domain/fittings.ts`, `src/domain/shelves/corners.ts` · test `src/domain/shelves/shelves.test.ts`, `src/domain/shelves/corners.test.ts`*
 - **H7 Pris per hylle.** Samme pris per hylle alene og i rad, som systemvegg (fast katalogpris; kostmotoren gir kost og
   tid). Direkte tid 1,5 min opp og 1 min ned per hylle, også i hjørner. Indirekte tid per ordre kommer i tillegg:
-  vareplukk 10 min én gang per ordre med hyller, og gange per arbeidsordre (ikke bygget ennå). Stolpene er en del av
+  vareplukk 10 min én gang per ordre med hyller, og gange 20 min til og fra montering (på arbeidsordren) og 20
+  til og fra demontering, én gang per ordre for alle produkter (`gange-montering`, `gange-demontering`). Stolpene er en del av
   veggen: bare plukklisten bryter ut knekter, skinner, 600 og plater.
   *Bjørn 8.11.2026, endret 10.11.2026 · `EXAMPLE_TIMES` (`montering-hylle`, `vareplukk-hyller`) · kode `src/calc/lines/shelves.ts` · test `src/calc/shelves.test.ts`*
 - **H8 Veggriss med hyller.** Arbeidsordren har et veggriss for hver veggside med hyller: hyllene målsatt fra gulv
@@ -453,7 +457,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   *Bjørn 11.11.2026 · `RECIPES.counter.rail`, `bottomRail`, `middle`, `top`, `coupling` · kode `src/foga/counter.ts` · test `src/foga/counter.test.ts`*
 - **K4 Plater.** Samme veggplate som systemveggen (V5, 3 mm) i kanalene foran og i begge ender, delt ved midtskinnen:
   976 × 726 og 976 × 226 foran, 476 × 726 og 476 × 226 i hver ende. Platen går ned i kanalen og står 2 mm kort i hver
-  ende og 4 mm kort i toppen. RAL, print eller dekal på lysmålet i disken er bestemt, men ikke bygget (egen PR).
+  ende og 4 mm kort i toppen. Farge står i K6, print og dekal i K20.
   *Bjørn 11.11.2026 · `RECIPES.counter.plate`, `channel`, `platePlay` · kode `src/foga/counter.ts` · test `src/foga/counter.test.ts`*
 - **K5 Topp og hylle.** MDF malingsmelamin Fibraplast H Barnizable hvit/hvit 6 mm, 976 × 476, ikke Foga. Toppen ligger i
   falsen på den øverste 93 (1030–1036, 4 mm under skinnens overkant), hyllen i falsen på den midterste (780–786). Platen
@@ -516,7 +520,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   *Bjørn 13.11.2026 · kode `src/domain/podiums.ts`, `src/domain/counterShape.ts`, `src/domain/types.ts` · test `src/domain/podiums.test.ts`*
 - **K11 Tett bygg.** Alle utvendige sider er tette: bunnskinne 92 og toppskinne 93 på hver utvendig kant, og én
   veggplate i hele høyden i kanalene, mellom bunnskinne og toppskinne. Det er ingen midtskinne og ingen hylle i
-  grunnbygget; hyller kommer senere på egne skinner. Inne i disken står ingen plater og ingen bunnskinne; mellom to
+  grunnbygget; hyller står på egne skinner (K19). Inne i disken står ingen plater og ingen bunnskinne; mellom to
   seksjoner går en 94 øverst som bærer toppen fra begge sider. Hver seksjon har sin topp, MDF 6 mm som K5, også på
   podier. Profilen i knutepunktet følger K8: to retninger 92L, tre 93, fire 94 (en L av 500 × 500 med to ben på 1000 har
   94 i innerhjørnet).
@@ -527,7 +531,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   ligger mot. Der to seksjoner med ulik høyde møtes (etter en fusjon), står en 94 under den lave toppen og en 93 i den
   høyes høyde mot den lave siden, og trinnet lukkes med en plate mellom dem, høydeforskjellen − 24 høy; stolpene der
   går til den høye. Høyden står i pillen («H 540») og i linjen i tilbudet, med alle høydene når disken har flere
-  («540/1040»). Å endre høyden på en seksjon som står, kommer med skuffen i trinn 2.
+  («540/1040»). Høyden på en seksjon som står, endres etter K18.
   *Bjørn 13.11.2026 · kode `src/foga/counter.ts`, `src/domain/podiums.ts`, `src/ui/plan/quick/podium.tsx` · test `src/domain/podiums.test.ts`*
 - **K13 Pris og plukk for Disker og podier.** Ett katalogprodukt per funksjon for det som bygges på stedet: «Disk»
   (6571) under Disker og «Podie» (6572) under Podier (varenumrene er midlertidige). Hver er priset av kostmotoren fra
@@ -678,5 +682,4 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 ## Ikke bygget ennå
 
 Bestemt eller nevnt, men ikke i koden: støttevaier fra hallens tak i stedet for fotplater (samme regel som S3), tekstildør
-med overstykke, høye tekstilvegger, systemvegg på cc 250, 500 og 750 (delene finnes), og endring av standvegg med
-nabogodkjenning. Samba-duk foran LED (appen tegner ikke LED ennå).
+med overstykke, høye tekstilvegger, heng (H6), og endring av standvegg med nabogodkjenning. Samba-duk foran LED (appen tegner ikke LED ennå).

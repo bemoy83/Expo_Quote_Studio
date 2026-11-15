@@ -1,4 +1,5 @@
 // Grips on a chosen room (R5, the shared grip system): sides and box corners, whole metres or 250.
+// Checks Byggeregel R8 (docs/byggeregler.md).
 import { describe, expect, it } from 'vitest';
 import { bounds } from './outline';
 import { addRoom, RECT_SIDE } from './rooms';

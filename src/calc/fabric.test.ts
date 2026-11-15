@@ -1,3 +1,4 @@
+// Checks Byggeregler X2, X3 og X9 (docs/byggeregler.md).
 import { describe, expect, it } from 'vitest';
 import { RULES } from '../rules/rules';
 import { splitBeamLength } from './beams/beamSegments';

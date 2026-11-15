@@ -1,4 +1,5 @@
-// Takdrager per metre, its own posts included in the price; the hooks are only picked, at no cost (Bjørn 10.11.2026).
+// Takdrager per metre, its own posts included in the price and never named in the text: the posts are part of the beam,
+// as of the wall (Bjørn 15.11.2026); the hooks are only picked, at no cost (Bjørn 10.11.2026).
 // The standard ones are the organiser's when they follow its stand walls: then the drawn ones are a line of their own,
 // so the customer sees what they pay for. Byggeregel B2 (docs/byggeregler.md).
 import { beamSpecs } from '../../foga/fromVariant';
@@ -14,7 +15,6 @@ function beamLine(c: CalcContext, b: BeamLayout, posts: number, hooks: number, w
   const meta = [
     ...(what ? [what] : []),
     count(specs.length, 'lengde', 'lengder'),
-    ...(posts ? [`${count(posts, 'stolpe', 'stolper')} inkludert`] : []),
     ...(hooks ? [count(hooks, 'krok', 'kroker')] : []),
   ];
   const uses: Use[] = [

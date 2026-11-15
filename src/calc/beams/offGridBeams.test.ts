@@ -100,8 +100,9 @@ describe('fritt plassert innvendig takdrager', () => {
     const hung = run({ ...variant(ISLAND, { noBeams: true, innerBeams: [beam('b1', [4.5, 3], [4.5, 6])] }), walls: [wall] });
     const plates = hung.wallSupports.filter((f) => f.at[1] === 3).map((f) => f.at[0]);
     expect(alone).toEqual([1, 4, 7]);
-    // Each side a stretch of 3,5 m with one free end: the end plate pulled in one post to keep 3 m to the hook
-    expect(plates).toEqual([2, 6]);
+    // Each side a stretch of 3,5 m with one free end: on the left the end plate is pulled in one post to keep 3 m to
+    // the hook; on the right 2,5 m from the hook, so the plate stays at the free end (S3)
+    expect(plates).toEqual([2, 7]);
   });
 
   it('mållinjer: from each hung end to the nearest post or hook along the wall or beam', () => {
