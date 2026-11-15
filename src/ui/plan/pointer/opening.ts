@@ -2,7 +2,7 @@
 // wall. A door also turns the way the pointer is dragged before release (place.ts, domain/doors.ts placeOpening).
 import type { Module } from '../../../domain/grid'
 import { doorBlocked } from '../../../domain/walls'
-import { placeOpening } from '../../../domain/doors'
+import { placeOpening, swingBlocked } from '../../../domain/doors'
 import { productOf } from '../../env'
 import { nearestEdge } from '../geometry'
 import type { P, PointerCtx } from './types'
@@ -19,8 +19,9 @@ export const isDoor = (product: string) => productOf(product)?.opening === 'door
 export function openingAt(c: PointerCtx, e: Module, q: P | null) {
   const { brush } = c
   if (brush?.kind !== 'opening') return
-  const why = doorBlocked(c.v, e.a, e.b)
-  if (why) return c.onToast(why)
   const { product, ral, fabric } = brush
+  // A door also needs 1 m² free floor on a side it can swing to (Byggeregel D7)
+  const why = doorBlocked(c.v, e.a, e.b) ?? (isDoor(product) ? swingBlocked(c.v, e.a, e.b) : null)
+  if (why) return c.onToast(why)
   c.onEdit((x) => placeOpening(x, e.a, e.b, product, isDoor(product), q, { ral, fabric }))
 }

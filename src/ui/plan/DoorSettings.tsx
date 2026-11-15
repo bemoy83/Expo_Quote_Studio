@@ -4,7 +4,7 @@
 // mini plan (DoorMap) in the middle to move the door, and the door in its wall in the drawing.
 import type { ReactNode } from 'react'
 import { ArrowLeftRight, FlipHorizontal2 } from 'lucide-react'
-import { canFlipSwing, doorRal, doorSwing, flipHinge, flipSwing, openingRoom, setOpeningProduct, sideName } from '../../domain/doors'
+import { canFlipDoor, doorRal, doorSwing, flipHinge, flipSwing, openingRoom, setOpeningProduct, sideName } from '../../domain/doors'
 import { wallDirection, wallLength } from '../../domain/grid'
 import { roomName, roomSize } from '../../domain/rooms'
 import { OUTSIDE } from '../../domain/roomKeys'
@@ -82,7 +82,7 @@ export function DoorSettings({ v, o, w, onEdit, onRemove, onClose, children }: P
           aside={swing}
           tools={
             <>
-              {canFlipSwing(v.stand, w) && <IconButton icon={FlipHorizontal2} label="Snu slagretning" size={15} onClick={() => onEdit((x) => flipSwing(x, o.id))} />}
+              {canFlipDoor(v, w, o) && <IconButton icon={FlipHorizontal2} label="Snu slagretning" size={15} onClick={() => onEdit((x) => flipSwing(x, o.id))} />}
               <IconButton icon={ArrowLeftRight} label="Bytt hengselside" size={15} onClick={() => onEdit((x) => flipHinge(x, o.id))} />
             </>
           }
