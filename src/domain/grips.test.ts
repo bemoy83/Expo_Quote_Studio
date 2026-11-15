@@ -1,8 +1,14 @@
 // The steps every grip shares (domain/grips.ts).
 import { describe, expect, it } from 'vitest';
-import { furthest, stepsOf, toward0 } from './grips';
+import { furthest, stepsOf, toward0, turnOf } from './grips';
 
 describe('grips', () => {
+  it('measures a turn round a middle clockwise in the plan, the short way round', () => {
+    expect(turnOf([0, 0], [1, 0], [0, 1])).toBeCloseTo(90);
+    expect(turnOf([0, 0], [1, 0], [0, -1])).toBeCloseTo(-90);
+    expect(turnOf([0, 0], [-1, 0.01], [-1, -0.01])).toBeCloseTo(1.15, 1);
+  });
+
   it('counts down toward 0 either way', () => {
     expect(toward0(3)).toEqual([3, 2, 1, 0]);
     expect(toward0(-2)).toEqual([-2, -1, 0]);

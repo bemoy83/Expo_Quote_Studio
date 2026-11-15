@@ -3,9 +3,16 @@
 // with Shift or «Fin». Each thing that has grips says where they stand and what it becomes when one is dragged
 // (podiumGrips.ts, roomGrips.ts); the steps and the search for the furthest step that works are here. Pure.
 
-/** Where a grip stands on its thing: a straight side, a corner of the box round it, an end of a run, or its middle
- *  (moves the whole thing, also with a pen in hand). */
-export type GripKind = 'side' | 'corner' | 'end' | 'move';
+/** Where a grip stands on its thing: a straight side, a corner of the box round it, an end of a run, its middle (moves
+ *  the whole thing, also with a pen in hand), or out from a corner (turns it). */
+export type GripKind = 'side' | 'corner' | 'end' | 'move' | 'rotate';
+
+/** The turn from p0 to q round c, degrees clockwise in the plan (y down), in (−180, 180]. */
+export function turnOf(c: readonly [number, number], p0: readonly [number, number], q: readonly [number, number]): number {
+  const deg = ((Math.atan2(q[1] - c[1], q[0] - c[0]) - Math.atan2(p0[1] - c[1], p0[0] - c[0])) * 180) / Math.PI;
+  const d = ((deg % 360) + 360) % 360;
+  return d > 180 ? d - 360 : d;
+}
 
 /** How far a press must travel before it is a drag of a grip, not a click, plan m. */
 export const GRIP_MOVE = 0.03;

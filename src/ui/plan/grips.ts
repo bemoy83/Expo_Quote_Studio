@@ -2,8 +2,8 @@
 // domain/grips.ts): each kind of thing says here where its grips stand and what a drag of one stores. The pointer
 // (pointer/grip.ts), the hits (pointer/hits.ts), the preview (next.ts) and the drawing (layers/Grips.tsx) go through
 // this file only. To give a new kind of thing grips: add it to GripOn, gripsOf, dragGrip and gripHint.
-import type { GripKind } from '../../domain/grips'
-import { footprintBox, objectBoxes, objectFootprint, settleAll } from '../../domain/objects'
+import { furthest, stepsOf, turnOf, type GripKind } from '../../domain/grips'
+import { footprintBox, objectBoxes, objectFootprint, rotateObject, setMembers, settleAll, union } from '../../domain/objects'
 import { toPlan } from '../../domain/counterShape'
 import { podiumLinks } from '../../domain/podiumLinks'
 import { bounds, cellId, cellsOf, CELL, labelRect } from '../../domain/outline'
@@ -24,6 +24,9 @@ export type GripOn =
   /** The middle of a room or a piece of furniture (a counter too): moves it, as dragging it in Velg does (Bjørn
    *  15.11.2026: also without Velg). */
   | { type: 'move'; what: 'room' | 'object'; id: string }
+  /** Out from the bottom right corner of a piece of furniture or a counter: turns it round its middle, 90° a step, 15° with
+   *  Shift or Fin (furniture only; a counter turns by quarters). */
+  | { type: 'rotate'; id: string }
 
 /** A grip as the plan shows it: what it moves, its kind (the shape drawn) and where it stands, plan m. */
 export interface PlanGrip {
@@ -45,10 +48,20 @@ export function gripsOf(v: Variant, selection: PlanSelection): PlanGrip[] {
   const o = selection.objectId ? v.objects.find((x) => x.id === selection.objectId) : undefined
   if (!o) return []
   const on: GripOn = { type: 'move', what: 'object', id: o.id }
-  if (!o.sections) return [{ on, kind: 'move', at: [o.x, o.y] }]
+  const u = turnBox(v, o)
+  // A round piece alone looks the same whatever its turn: no turn grip
+  const turns = !!o.set || !objectFootprint(place, o)?.round
+  const rotate: PlanGrip[] = turns ? [{ on: { type: 'rotate', id: o.id }, kind: 'rotate', at: [u.x1 + ROTATE_OUT, u.y1 + ROTATE_OUT] }] : []
+  if (!o.sections) return [{ on, kind: 'move', at: [o.x, o.y] }, ...rotate]
   const grips = podiumGrips(o).map(({ grip, at }): PlanGrip => ({ on: { type: 'podium', id: o.id, grip }, kind: grip.kind, at }))
-  return [...grips, { on, kind: 'move', at: counterMiddle(v, o, grips) }]
+  return [...grips, { on, kind: 'move', at: counterMiddle(v, o, grips) }, ...rotate]
 }
+
+/** How far out from the box's corner the turn grip stands, each way, plan m. */
+const ROTATE_OUT = 0.25
+
+/** The box round what turns with `o`: its set, else itself. */
+const turnBox = (v: Variant, o: PlacedObject) => union(setMembers(v, o).flatMap((m) => objectBoxes(place, m)))
 
 /** Where a counter's move grip stands: on the counter also for an L or a T, as far as it goes from its links (which come
  *  first, K15) and its other grips; the middle of a section or of one of its 500 modules, the first of the furthest. */
@@ -64,11 +77,11 @@ function counterMiddle(v: Variant, o: PlacedObject, grips: PlanGrip[]): Point {
   return local.map((p) => toPlan(o, p)).reduce((best, p) => (room(p) > room(best) + 1e-9 ? p : best))
 }
 
-/** Whether a grip is shown and taken with the pen in hand: in Velg all of them; with Disker og podier those of the chosen
- *  counter. */
+/** Whether a grip is shown and taken with the pen in hand: in Velg all but the move grip (there the whole thing is one:
+ *  a drag of it moves it, and a small piece would hide under it); with Disker og podier those of the chosen counter. */
 export function gripWith(on: GripOn, tool: Tool, brush: Brush | null): boolean {
-  if (tool === 'select') return true
-  if (brush?.kind === 'podium') return on.type === 'podium' || (on.type === 'move' && on.what === 'object')
+  if (tool === 'select') return on.type !== 'move'
+  if (brush?.kind === 'podium') return on.type === 'podium' || on.type === 'rotate' || (on.type === 'move' && on.what === 'object')
   return false
 }
 
@@ -88,6 +101,7 @@ export function dragGrip(v: Variant, on: GripOn, p0: Point, q: Point, fine: bool
   // A move grip starts the drag Velg does (pointer/grip.ts), not this one
   if (on.type === 'move') return null
   if (on.type === 'room') return dragRoomGrip(v, on, p0, q, fine)
+  if (on.type === 'rotate') return dragTurnGrip(v, on.id, p0, q, fine)
   const o = v.objects.find((x) => x.id === on.id)
   if (!o) return null
   const r = gripPodium(v, place, o, on.grip, p0, q, fine)
@@ -97,6 +111,23 @@ export function dragGrip(v: Variant, on: GripOn, p0: Point, q: Point, fine: bool
   const erased = r.gone ? objectBoxes(place, r.gone) : undefined
   return { v: r.v, key, pill: { a: [b.x0, b.y1], b: [b.x1, b.y1], text: `${mm(b.x1 - b.x0)} × ${mm(b.y1 - b.y0)}` }, erased }
 }
+
+/** The turn grip dragged round the middle of what turns: whole steps of 90°, 15° with Shift or Fin for furniture; the
+ *  furthest that has room, else why not. */
+function dragTurnGrip(v: Variant, id: string, p0: Point, q: Point, fine: boolean): GripDraw | null {
+  const o = v.objects.find((x) => x.id === id)
+  if (!o) return null
+  const u = turnBox(v, o)
+  const step = fine && !o.sections ? 15 : 90
+  const n = stepsOf(turnOf([(u.x0 + u.x1) / 2, (u.y0 + u.y1) / 2], p0, q), step)
+  const r = furthest(n, 0, (a) => (a ? rotateObject(v, place, id, a * step) : v))
+  if (!r || (n && !r.a)) return { error: NO_TURN, key: `${NO_TURN}:${n}` }
+  const after = r.value.objects.find((x) => x.id === id)!
+  const b = turnBox(r.value, after)
+  return { v: r.value, key: `${id}:${after.rot}`, pill: { a: [b.x0, b.y1], b: [b.x1, b.y1], text: `${after.rot}°` } }
+}
+
+const NO_TURN = 'Ikke plass til å rotere her'
 
 /** A room's grip dragged (R5): furniture it pushes into moved clear, as a release stores it; what the room gives up
  *  hatched, cell by cell; a door that had to move is told on release. */
@@ -120,8 +151,12 @@ function dragRoomGrip(v: Variant, on: Extract<GripOn, { type: 'room' }>, p0: Poi
 }
 
 /** The hint on a grip, pointed at or held. */
-export const gripHint = (on: GripOn) =>
-  on.type === 'move'
+export const gripHint = (on: GripOn, v?: Variant) =>
+  on.type === 'rotate'
+    ? v?.objects.find((o) => o.id === on.id)?.sections
+      ? 'Dra for å rotere · 90°'
+      : 'Dra for å rotere · 90°, Shift eller Fin 15°'
+    : on.type === 'move'
     ? on.what === 'room'
       ? 'Dra for å flytte rommet · hele meter, Shift eller Fin 250'
       : 'Dra for å flytte'

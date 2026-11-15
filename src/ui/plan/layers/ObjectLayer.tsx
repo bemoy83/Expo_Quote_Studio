@@ -8,7 +8,7 @@ import { lightsOf, partKey, podiumParts, type PodiumPart } from '../../../domain
 import { lineOf } from '../../../domain/podiumSections'
 import { toPlan } from '../../../domain/counterShape'
 import { RECIPES } from '../../../foga/recipes'
-import { counterRal, footprintBox, objectBoxes, objectFootprint } from '../../../domain/objects'
+import { counterRal, objectBoxes, objectFootprint } from '../../../domain/objects'
 import type { Motif, PlacedObject, Variant } from '../../../domain/types'
 import { podiumDecals, podiumPrints } from '../../../domain/podiumDecor'
 import type { Crop } from '../../../domain/print'
@@ -67,12 +67,12 @@ export function ObjectLayer(props: {
               <CounterLines b={placedBuild(v, place, o, counter)} at={o} divide={linePx(sc, 0.75)} opacity={op} />
             </g>
           )
-        const b = footprintBox(o, f)
+        // Turned round its middle: also between the quarters (15° steps, the turn grip)
         const shape = (fill: string, props: object) =>
           f.round ? (
             <circle cx={o.x} cy={o.y} r={f.w / 2} fill={fill} {...props} />
           ) : (
-            <rect x={b.x0} y={b.y0} width={b.x1 - b.x0} height={b.y1 - b.y0} rx={0.03} fill={fill} {...props} />
+            <rect x={-f.w / 2} y={-f.d / 2} width={f.w} height={f.d} rx={0.03} transform={`translate(${o.x} ${o.y}) rotate(${o.rot})`} fill={fill} {...props} />
           )
         return (
           <g key={o.id}>

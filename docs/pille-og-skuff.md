@@ -84,7 +84,9 @@ R på en bane snur den, som i dag.
 
 - **Møbel:** `rot` øker med 90 (0, 90, 180, 270). `footprintBox` og 3D (`scene3d/build/objects.ts`) bruker allerede
   `rot`. Etter rotering kjøres samme plassering som etter et drag (`settleObject`). Går det ikke, roteres det ikke, og
-  hintet sier hvorfor. Markeringen rundt møbelet skal følge rotasjonen.
+  hintet sier hvorfor. Markeringen rundt møbelet skal følge rotasjonen. Rotergrepet (Bjørn 15.11.2026) dreier i
+  90°-steg, 15° med Shift eller Fin (`rotateObject(v, ctx, id, by)`); planen tegner møbelet dreid, og `footprintBox`
+  er boksen rundt det dreide fotavtrykket, så kollisjon og plassering er som før, bare litt romsligere mellom kvartene.
 - **Frittstående tekstil:** **ny** `rotateFreeTextile(v, rules, id)` i `domain/textile/free.ts`. Den dreier `from`/`to`
   90° om midtpunktet, på tegnerutenettet, og holder veggen innenfor standen. Gyldigheten sjekkes med de samme reglene
   som når veggen tegnes (`addFreeTextile`). Går det ikke, roteres den ikke, og hintet sier hvorfor. Sidene A og B

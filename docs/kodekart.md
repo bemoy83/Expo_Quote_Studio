@@ -46,9 +46,10 @@ nytt objekt med grep legges til der, med en ren domenefunksjon som gir objektet 
 `domain/podiumGrips.ts` og `gripRoom` i `domain/roomGrips.ts`). Resten er felles: treff `hits.grips`/`hits.gripAt`, draget `plan/pointer/grip.ts` (Velg i
 `select.ts`, pennen i `usePlanPointer.ts`), forhåndsvisningen `gripTarget` i `plan/next.ts` (`erased` skraveres,
 grunnen i hintet) og tegningen `layers/Grips.tsx` (rund på side, firkant i hjørne, større rund med fire piler for
-flytt). Hvilke grep pennen i hånden viser og tar, avgjør `gripWith` (Velg alle; Disker og podier diskens). Et flyttegrep
-(`GripOn` type `move`) starter samme drag som Velg (`room`/`object` med `grip: true`, så et klikk ikke velger); i Velg
-tar `startGrip` det ikke, så trykket der er et vanlig trykk på rommet eller møbelet.
+flytt, rund pil for roter). Hvilke grep pennen i hånden viser og tar, avgjør `gripWith` (Velg alle unntatt flytt;
+Disker og podier diskens). Et flyttegrep (`GripOn` type `move`) starter samme drag som Velg (`room`/`object` med
+`grip: true`, så et klikk ikke velger). Rotergrepet (`rotate`) går gjennom `dragGrip` som de andre: vinkelen rundt
+midten (`turnOf`) i steg av 90 eller 15, lengste lovlige med `furthest`, `rotateObject(v, ctx, id, by)`.
 
 ## Per produkt
 

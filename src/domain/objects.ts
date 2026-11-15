@@ -60,9 +60,12 @@ const shifted = (b: Omit<Box, 'kind'>, dx: number, dy: number) => ({ x0: b.x0 + 
 
 /** Axis-aligned footprint. A quarter turn swaps width and depth. */
 export function footprintBox(o: Pick<PlacedObject, 'x' | 'y' | 'rot'>, f: Footprint): Omit<Box, 'kind'> {
-  const quarter = Math.round(o.rot / 90) % 2 !== 0;
-  const w = quarter ? f.d : f.w;
-  const d = quarter ? f.w : f.d;
+  // The box round the footprint turned: across and along swapped on a quarter turn, larger between (a piece of
+  // furniture turned 15°, Bjørn 15.11.2026), round ones the same whatever the turn
+  const t = (o.rot * Math.PI) / 180;
+  const [c, s] = f.round ? [1, 0] : [Math.abs(Math.cos(t)), Math.abs(Math.sin(t))];
+  const w = r6(f.w * c + f.d * s);
+  const d = r6(f.w * s + f.d * c);
   return { x0: o.x - w / 2, y0: o.y - d / 2, x1: o.x + w / 2, y1: o.y + d / 2 };
 }
 
@@ -213,7 +216,7 @@ export function moveObject(v: Variant, ctx: PlaceContext, id: string, x: number,
 }
 
 /** The box round all `boxes`. */
-function union(boxes: Omit<Box, 'kind'>[]): Omit<Box, 'kind'> {
+export function union(boxes: Omit<Box, 'kind'>[]): Omit<Box, 'kind'> {
   return {
     x0: Math.min(...boxes.map((b) => b.x0)),
     y0: Math.min(...boxes.map((b) => b.y0)),
@@ -382,12 +385,14 @@ export function settleAll(v: Variant, ctx: PlaceContext): Variant {
  * Turn an object a quarter turn (rot 0, 90, 180, 270), settled as after a drag: moved to the nearest free spot within
  * 1 m when it collides. Null when it does not fit turned.
  */
-export function rotateObject(v: Variant, ctx: PlaceContext, id: string): Variant | null {
+export function rotateObject(v: Variant, ctx: PlaceContext, id: string, by = 90): Variant | null {
   const o = v.objects.find((x) => x.id === id);
-  if (o?.set) return rotateSet(v, ctx, o.set);
+  // A counter of Disker og podier turns only by quarters: its sides, joints and stock shape follow the stand's lines
+  if (o?.sections && by % 90) return null;
+  if (o?.set) return rotateSet(v, ctx, o.set, by);
   const f = o && objectFootprint(ctx, o);
   if (!o || !f) return null;
-  const rot = (o.rot + 90) % 360;
+  const rot = turnBy(o.rot, by);
   if (!fitsStand(v, footprintBox({ x: 0, y: 0, rot }, f))) return null;
   const turned = clampInto(v, { ...o, rot }, f);
   const r = settleObject({ ...v, objects: v.objects.map((x) => (x.id === id ? turned : x)) }, ctx, id, turned);
@@ -408,13 +413,22 @@ export function setObjectProduct(v: Variant, ctx: PlaceContext, id: string, prod
   return r.ok ? r.v : null;
 }
 
-/** A set turned a quarter turn round the middle of its pieces, each piece turned with it, then settled as after a drag.
- *  Null when it does not fit turned. */
-function rotateSet(v: Variant, ctx: PlaceContext, set: string): Variant | null {
+/** A turn `by` degrees added to `rot`, in [0, 360). */
+export const turnBy = (rot: number, by: number) => (((rot + by) % 360) + 360) % 360;
+
+/** A set turned `by` degrees (clockwise in the plan) round the middle of its pieces, each piece turned with it, then
+ *  settled as after a drag. Null when it does not fit turned. */
+function rotateSet(v: Variant, ctx: PlaceContext, set: string, by: number): Variant | null {
   const members = v.objects.filter((o) => o.set === set);
   const u = union(members.flatMap((m) => objectBoxes(ctx, m)));
   const [cx, cy] = [Math.round(((u.x0 + u.x1) / 2) * 20) / 20, Math.round(((u.y0 + u.y1) / 2) * 20) / 20];
-  const turned = { ...v, objects: v.objects.map((o) => (o.set === set ? { ...o, x: r6(cx - (o.y - cy)), y: r6(cy + (o.x - cx)), rot: (o.rot + 90) % 360 } : o)) };
+  const t = (by * Math.PI) / 180;
+  const [cos, sin] = [Math.cos(t), Math.sin(t)];
+  const turn = (o: PlacedObject): PlacedObject => {
+    const [dx, dy] = [o.x - cx, o.y - cy];
+    return { ...o, x: r6(cx + dx * cos - dy * sin), y: r6(cy + dx * sin + dy * cos), rot: turnBy(o.rot, by) };
+  };
+  const turned = { ...v, objects: v.objects.map((o) => (o.set === set ? turn(o) : o)) };
   const s = setSpot(turned, ctx, set, 1);
   return s ? shiftSet(turned, set, s[0], s[1]) : null;
 }
