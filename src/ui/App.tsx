@@ -133,8 +133,23 @@ export default function App() {
     onErase: () => setView('plan'),
   })
   const { tool, setTool, brush, active, pick } = tools
+  /** The sketch when the drag under way began: a drag stores its steps without history, from one checkpoint. */
+  const dragFrom = useRef<Variant | null>(null)
   // Every edit keeps textiles and foils valid: on a wall, off openings, inside their felt.
-  // An edit that walls in an area with a door turns it into a room (frihåndsrom), as its own undo step.
+  // An edit that walls in an area with a door turns it into a room (frihåndsrom), as its own undo step, and the room
+  // is chosen with its grips (R3, R8).
+  const closeSince = useCallback(
+    (before: Variant, after: Variant, ratio: (id: string | undefined) => number) => {
+      const areas = closeRooms(before, after, ratio)?.areas
+      if (!areas) return
+      const made = roomsFrom(after, areas, ratio).rooms.filter((r) => !after.rooms.some((x) => x.id === r.id))
+      dispatch({ type: 'edit', fn: (x) => roomsFrom(x, areas, ratio) })
+      if (made.length === 1) setSelection({ roomId: made[0].id })
+      const size = areas.map((outline) => roomSize({ outline })).join(' og ')
+      showToast({ text: `Gjort om til rom ${size}`, action: 'Angre', onAction: () => dispatch({ type: 'undo' }) })
+    },
+    [setSelection, showToast],
+  )
   const onEdit = useCallback(
     (fn: (v: Variant) => Variant, history = true) => {
       const ratio = ratioFor(motifs)
@@ -143,17 +158,32 @@ export default function App() {
       if (shutsDoor(vRef.current, settle(fn(vRef.current), ratio), place.swings, floorBoxes)) showToast({ text: DOOR_NO_SWING })
       dispatch({ type: 'edit', fn: apply, history })
       if (!history) return
-      const areas = closeRooms(vRef.current, apply(vRef.current), ratio)?.areas
-      if (!areas) return
-      dispatch({ type: 'edit', fn: (x) => roomsFrom(x, areas, ratio) })
-      const size = areas.map((outline) => roomSize({ outline })).join(' og ')
-      showToast({ text: `Gjort om til rom ${size}`, action: 'Angre', onAction: () => dispatch({ type: 'undo' }) })
+      dragFrom.current = null
+      closeSince(vRef.current, apply(vRef.current), ratio)
     },
-    [motifs, showToast],
+    [motifs, showToast, closeSince],
   )
   /** What an edit on the sketch shown would store, and its calc: the plan shows it dimmed before the click. */
   const preview = useMemo(() => ({ result: (fn: (x: Variant) => Variant) => editResult(v, fn, motifs), calc: calcFor }), [v, motifs, calcFor])
-  const onCheckpoint = useCallback(() => dispatch({ type: 'checkpoint' }), [])
+  const onCheckpoint = useCallback(() => {
+    dragFrom.current = vRef.current
+    dispatch({ type: 'checkpoint' })
+  }, [])
+  /** A drag let go: what it walled in since it began becomes a room, as for a wall drawn (R3). Looked at once the
+   *  sketch holds the drag's last step (a step stored on release counts too), so in an effect after the next render. */
+  const dropped = useRef<Variant | null>(null)
+  const [drops, setDrops] = useState(0)
+  const onDragEnd = useCallback(() => {
+    if (!dragFrom.current) return
+    dropped.current = dragFrom.current
+    dragFrom.current = null
+    setDrops((n) => n + 1)
+  }, [])
+  useEffect(() => {
+    const from = dropped.current
+    dropped.current = null
+    if (from) closeSince(from, v, ratioFor(motifs))
+  }, [drops, v, motifs, closeSince])
   const selectVariant = (index: number) => dispatch({ type: 'select', index })
 
   /** Changing panel tab always returns to Velg. */
@@ -345,6 +375,7 @@ export default function App() {
                         onOpenDrawer={openDrawer}
                         onEdit={onEdit}
                         onCheckpoint={onCheckpoint}
+                        onDragEnd={onDragEnd}
                         onToast={showToast}
                         motifs={motifs}
                         onHint={setPlanHint}
@@ -369,6 +400,7 @@ export default function App() {
                         onOpenDrawer={openDrawer}
                         onEdit={onEdit}
                         onCheckpoint={onCheckpoint}
+                        onDragEnd={onDragEnd}
                         onToast={showToast}
                         motifs={motifs}
                       />

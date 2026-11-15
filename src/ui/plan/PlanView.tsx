@@ -66,6 +66,8 @@ interface Props {
   onOpenDrawer?: (s: PlanSelection) => void
   onEdit: (fn: (v: Variant) => Variant, history?: boolean) => void
   onCheckpoint: () => void
+  /** A drag let go (any kind): what it walled in since its checkpoint becomes a room (App, Byggeregel R3). */
+  onDragEnd?: () => void
   onToast: (text: string) => void
   /** Small overview (the 3D view's mini plan): no labels, tighter margin. */
   mini?: boolean
@@ -146,6 +148,7 @@ export function PlanView(p: Props) {
     mini: p.mini,
     onEdit: p.onEdit,
     onCheckpoint: p.onCheckpoint,
+    onDragEnd: p.onDragEnd,
     onToast: p.onToast,
     onSelect: p.onSelect,
     drawerOpen: p.drawerOpen,

@@ -181,6 +181,7 @@ export function usePlanPointer(input: PlanPointerInput) {
     setDragging(null)
     if (!d) return
     handlersOf(d).up?.(c, d, toModel(e))
+    c.onDragEnd?.()
   }
 
   const onPointerCancel = () => {

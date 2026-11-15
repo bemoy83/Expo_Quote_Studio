@@ -248,8 +248,11 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   250, rutenettets minste steg (R5; Bjørn 15.11.2026: et frihåndsrom med en side på 500 skal bli rom). En L kan dras til et rektangel; et rektangel blir L bare ved å tegne vegger.
   *Bjørn 31.10.2026 · kode `src/domain/outline.ts`, `src/domain/rooms.ts` · test `src/domain/rooms.test.ts`*
 - **R3 Frihåndsrom.** Vegger som lukker et område med en dør, blir et rom. Siden en dør ikke kan stå i en standvegg, kan
-  ikke en standvegg alene lukke et rom.
-  *Bjørn 31.10.2026 · kode `src/domain/enclosures.ts` · test `src/domain/enclosures.test.ts`*
+  ikke en standvegg alene lukke et rom. Det gjelder uansett hvordan området blir lukket: en vegg tegnet, en dør satt,
+  en vegg dratt på plass (i planen eller i 3D) eller dratt i et endegrep. Et drag ses som én endring fra der det begynte,
+  så et område som var lukket med dør før draget, forblir vegger. Rommet blir eget angresteg og velges med gripene sine
+  (R8) (Bjørn 15.11.2026).
+  *Bjørn 31.10.2026 · kode `src/domain/enclosures.ts`, `src/ui/App.tsx` (`closeSince`, `onDragEnd`) · test `src/domain/enclosures.test.ts`*
 - **R4 Det som står i rommet.** Møbler i rommet følger rommet, og en tekstilvegg som fyller en romside vokser og krymper
   med den.
   *Bjørn 31.10.2026 · kode `src/domain/rooms.ts` · test `src/domain/rooms.test.ts`*
