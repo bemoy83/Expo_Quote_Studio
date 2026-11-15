@@ -1,5 +1,6 @@
 // Drag steps shared by the plan and the 3D view, so both move walls and furniture the same way.
 import { moveWall } from '../domain/edit'
+import { furthest } from '../domain/grips'
 import { moveInnerBeam, shiftInnerBeam, type Run } from '../domain/innerBeams'
 import { settleAll, settleObject } from '../domain/objects'
 import { moveRoomDoors, resizeRoomDoors, sideIsHorizontal } from '../domain/rooms'
@@ -46,19 +47,13 @@ export function dragInnerBeamFine(d: WallDrag, q: { x: number; y: number }, stan
 function dragStep(d: WallDrag, q: { x: number; y: number }, move: (v: Variant, side: number, along: number) => Variant, onEdit: Edit, onCheckpoint: () => void) {
   const side = Math.round(d.horizontal ? q.y - d.p0.y : q.x - d.p0.x)
   const along = Math.round(d.horizontal ? q.x - d.p0.x : q.y - d.p0.y)
-  const toward0 = (n: number) => Array.from({ length: Math.abs(n) + 1 }, (_, i) => Math.sign(n) * (Math.abs(n) - i))
-  let next = d.v0
-  let key = '0,0'
-  search: for (const s of toward0(side)) {
-    for (const a of toward0(along)) {
-      const v = move(d.v0, s, a)
-      if (v !== d.v0) {
-        next = v
-        key = `${s},${a}`
-        break search
-      }
-    }
-  }
+  // Sideways first: a wall that cannot go along still goes across (domain/grips.ts)
+  const r = furthest(side, along, (s, a) => {
+    const v = move(d.v0, s, a)
+    return v !== d.v0 ? v : null
+  })
+  const next = r?.value ?? d.v0
+  const key = r ? `${r.a},${r.b}` : '0,0'
   if (key === d.delta) return
   if (d.delta === '0,0') onCheckpoint()
   d.delta = key

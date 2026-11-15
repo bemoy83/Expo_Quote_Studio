@@ -2,6 +2,7 @@
 // (plan/next.ts), with what goes away hatched; the release stores it, or says why not. A press that does not move does
 // nothing: the counter stays chosen.
 import { gripPodium } from '../../../domain/podiumGrips'
+import { GRIP_MOVE } from '../../../domain/grips'
 import { place } from '../../env'
 import type { Drag, DragHandlers, P, PointerCtx } from './types'
 
@@ -19,7 +20,7 @@ export function podiumGripAt(c: Pick<PointerCtx, 'v'>, d: Extract<Drag, { kind: 
 
 export const podiumGrip: DragHandlers<'podiumGrip'> = {
   move(_c, d, q) {
-    if (!d.moved && Math.hypot(q.x - d.p0.x, q.y - d.p0.y) > 0.03) d.moved = true
+    if (!d.moved && Math.hypot(q.x - d.p0.x, q.y - d.p0.y) > GRIP_MOVE) d.moved = true
   },
   up(c, d, q) {
     if (!d.moved) return

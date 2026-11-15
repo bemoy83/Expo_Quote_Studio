@@ -4,6 +4,7 @@
 // one is laid; in, the sections are shrunk and taken away, and what is left joined again where two fit in one. Pure,
 // sections in the counter's own frame, mm.
 import { RECIPES } from '../foga/recipes';
+import { stepsOf } from './grips';
 import { keptSides, sideKey, withSide } from './podiumFaces';
 import { toLocal, toPlan } from './counterShape';
 import type { PlaceContext } from './objects';
@@ -151,7 +152,7 @@ function shifts(o: PlacedObject, lines: Line[], p0: Point, q: Point, fine: boole
   const [u0, w0] = toLocal(o, p0);
   const [u, w] = toLocal(o, q);
   const step = gripStep(fine);
-  return lines.map((l) => Math.round((((l.axis === 'x' ? u - u0 : w - w0) * l.out) / step)) * step);
+  return lines.map((l) => stepsOf((l.axis === 'x' ? u - u0 : w - w0) * l.out, step) * step);
 }
 
 /** A grip of `o` dragged (K14): the counter after, and `gone`, what is taken away (in o's frame), or the reason it is
