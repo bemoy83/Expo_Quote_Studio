@@ -240,7 +240,7 @@ function targetOf(p: NextInput): NextTarget | null {
   if (!hover) return null
   // On a grip of what is chosen (a room's in Velg, a counter's also with its pen) or a link of the counter: what a
   // click or drag does
-  if (tool === 'select' || pens.podiumTool) {
+  if (tool === 'select' || pens.podiumTool || (pens.wallTool && brush?.kind === 'wall')) {
     const l = hits.podiumLinkAt(hover)
     if (l) return target(`link:${l.at}`, () => line({ hint: l.kind === 'joint' ? 'Klikk for å dele disken her' : 'Klikk for å lenke diskene sammen', hotGrip: l.at }))
     const g = hits.gripAt(hover)

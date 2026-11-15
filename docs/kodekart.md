@@ -47,7 +47,8 @@ nytt objekt med grep legges til der, med en ren domenefunksjon som gir objektet 
 `select.ts`, pennen i `usePlanPointer.ts`), forhåndsvisningen `gripTarget` i `plan/next.ts` (`erased` skraveres,
 grunnen i hintet) og tegningen `layers/Grips.tsx` (rund på side, firkant i hjørne, større rund med fire piler for
 flytt, rund pil for roter). Hvilke grep pennen i hånden viser og tar, avgjør `gripWith` (Velg alle unntatt flytt;
-Disker og podier diskens). Et flyttegrep (`GripOn` type `move`) starter samme drag som Velg (`room`/`object` med
+Disker og podier diskens, Vegg rommets). Når en penn velges, beholdes det den har grep for (`keptFor`: rom for Vegg,
+disk for Disker og podier), og et rom en vegg-strek lukker, velges (`pointer/run.ts`). Et flyttegrep (`GripOn` type `move`) starter samme drag som Velg (`room`/`object` med
 `grip: true`, så et klikk ikke velger). Rotergrepet (`rotate`) går gjennom `dragGrip` som de andre: vinkelen rundt
 midten (`turnOf`) i steg av 90 eller 15, lengste lovlige med `furthest`, `rotateObject(v, ctx, id, by)`.
 

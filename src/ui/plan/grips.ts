@@ -40,9 +40,10 @@ export interface PlanGrip {
 export function gripsOf(v: Variant, selection: PlanSelection): PlanGrip[] {
   const r = selection.roomId ? v.rooms.find((x) => x.id === selection.roomId) : undefined
   if (r) {
-    // In the middle of the largest free rectangle, where its name stands: inside the room also for an L
+    // In the largest free rectangle, inside the room also for an L: under its name, which stands in the middle
     const l = labelRect(r.outline)
-    const move: PlanGrip = { on: { type: 'move', what: 'room', id: r.id }, kind: 'move', at: [l.x + l.w / 2, l.y + l.d / 2] }
+    const under = Math.max(0, Math.min(MOVE_UNDER_NAME, l.d / 2 - 0.2))
+    const move: PlanGrip = { on: { type: 'move', what: 'room', id: r.id }, kind: 'move', at: [l.x + l.w / 2, l.y + l.d / 2 + under] }
     return [...roomGrips(r).map(({ grip, at }): PlanGrip => ({ on: { type: 'room', id: r.id, grip }, kind: grip.kind, at })), move]
   }
   const o = selection.objectId ? v.objects.find((x) => x.id === selection.objectId) : undefined
@@ -56,6 +57,9 @@ export function gripsOf(v: Variant, selection: PlanSelection): PlanGrip[] {
   const grips = podiumGrips(o).map(({ grip, at }): PlanGrip => ({ on: { type: 'podium', id: o.id, grip }, kind: grip.kind, at }))
   return [...grips, { on, kind: 'move', at: counterMiddle(v, o, grips) }, ...rotate]
 }
+
+/** How far under the middle of a room (its name) its move grip stands, plan m, less in a small room. */
+const MOVE_UNDER_NAME = 0.5
 
 /** How far out from the box's corner the turn grip stands, each way, plan m. */
 const ROTATE_OUT = 0.25
@@ -78,11 +82,21 @@ function counterMiddle(v: Variant, o: PlacedObject, grips: PlanGrip[]): Point {
 }
 
 /** Whether a grip is shown and taken with the pen in hand: in Velg all but the move grip (there the whole thing is one:
- *  a drag of it moves it, and a small piece would hide under it); with Disker og podier those of the chosen counter. */
+ *  a drag of it moves it, and a small piece would hide under it); with Disker og podier those of the chosen counter;
+ *  with Vegg those of the chosen room (R8). */
 export function gripWith(on: GripOn, tool: Tool, brush: Brush | null): boolean {
   if (tool === 'select') return on.type !== 'move'
+  if (brush?.kind === 'wall') return on.type === 'room' || (on.type === 'move' && on.what === 'room')
   if (brush?.kind === 'podium') return on.type === 'podium' || on.type === 'rotate' || (on.type === 'move' && on.what === 'object')
   return false
+}
+
+/** What stays chosen when the pen `b` is picked: what it has grips for (a room for Vegg, a counter for Disker og
+ *  podier), else nothing. */
+export function keptFor(selection: PlanSelection, b: Brush, v: Variant): PlanSelection {
+  if (b.kind === 'wall' && selection.roomId) return { roomId: selection.roomId }
+  if (b.kind === 'podium' && selection.objectId && v.objects.find((o) => o.id === selection.objectId)?.sections) return { objectId: selection.objectId }
+  return {}
 }
 
 /** The same grip (by what it moves; the place changes while it is dragged). */

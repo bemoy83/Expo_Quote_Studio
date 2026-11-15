@@ -17,7 +17,8 @@ interface ToolsInput {
   res: CalcResult
   motifs: Motif[]
   /** A pen was chosen: the brushes draw in the plan, and nothing stays selected. */
-  onPick: () => void
+  /** A pen chosen: `b`. */
+  onPick: (b: Brush) => void
   /** Tøm was chosen: it erases in the plan. */
   onErase: () => void
 }
@@ -53,7 +54,7 @@ export function useTools({ v, res, motifs, onPick, onErase }: ToolsInput) {
     if (b.kind === 'podium') setPodiumRal(b.ral)
     setPicks((p) => rememberPick(p, b, catalog.products))
     setTool(t)
-    onPick()
+    onPick(b)
   }
 
   /** The pen a drawing tool starts with: the one it last drew, else the first in use on the stand. */

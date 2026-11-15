@@ -128,6 +128,8 @@ export function usePlanPointer(input: PlanPointerInput) {
     if (fb.carpetFill) return startCarpetFill(c, q)
     if (pens.floorTool) return startFloor(c, q)
     if (pens.wallTool && brush?.kind === 'wall') {
+      const g = startGrip(c, q)
+      if (g) return g
       const m = plateAt(input.mods, q)
       if (m) return startPlates(m, q, fineOf(shift))
     }
