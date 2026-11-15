@@ -252,7 +252,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   en vegg dratt på plass (i planen eller i 3D) eller dratt i et endegrep. Et drag ses som én endring fra der det begynte,
   så et område som var lukket med dør før draget, forblir vegger. Rommet blir eget angresteg og velges med gripene sine
   (R8) (Bjørn 15.11.2026).
-  *Bjørn 31.10.2026 · kode `src/domain/enclosures.ts`, `src/ui/App.tsx` (`closeSince`, `onDragEnd`) · test `src/domain/enclosures.test.ts`*
+  *Bjørn 31.10.2026 · kode `src/domain/enclosures.ts`, `src/ui/useCloseRooms.ts` · test `src/domain/enclosures.test.ts`*
 - **R4 Det som står i rommet.** Møbler i rommet følger rommet, og en tekstilvegg som fyller en romside vokser og krymper
   med den.
   *Bjørn 31.10.2026 · kode `src/domain/rooms.ts` · test `src/domain/rooms.test.ts`*

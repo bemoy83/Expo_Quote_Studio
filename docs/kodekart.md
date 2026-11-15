@@ -48,7 +48,7 @@ nytt objekt med grep legges til der, med en ren domenefunksjon som gir objektet 
 grunnen i hintet) og tegningen `layers/Grips.tsx` (rund på side, firkant i hjørne, større rund med fire piler for
 flytt, rund pil for roter). Hvilke grep pennen i hånden viser og tar, avgjør `gripWith` (Velg alle unntatt flytt;
 Disker og podier diskens, Vegg rommets). Når en penn velges, beholdes det den har grep for (`keptFor`: rom for Vegg,
-disk for Disker og podier), og et rom en redigering lukker, velges (`closeSince` i `App.tsx`). Et flyttegrep (`GripOn` type `move`) starter samme drag som Velg (`room`/`object` med
+disk for Disker og podier), og et rom en redigering eller et drag lukker, velges (`ui/useCloseRooms.ts`, R3). Et flyttegrep (`GripOn` type `move`) starter samme drag som Velg (`room`/`object` med
 `grip: true`, så et klikk ikke velger). Endegrep (`end`) på innervegg (`domain/wallEnds.ts`) og frittstående tekstil
 (`stretchFreeTextile` i `textile/free.ts`) bruker `movedEnd` fra `domain/grips.ts`. I 3D viser `scene3d/grips.ts` de samme
 grepene som Velg (`sceneGrips`: på toppen av det de flytter, like store på skjermen), og en `grip`-drag i
