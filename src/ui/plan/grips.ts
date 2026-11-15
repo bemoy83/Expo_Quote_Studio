@@ -4,6 +4,10 @@
 // this file only. To give a new kind of thing grips: add it to GripOn, gripsOf, dragGrip and gripHint.
 import { furthest, stepsOf, turnOf, type GripKind, type RunEnd } from '../../domain/grips'
 import { wallGripEnds, stretchWall } from '../../domain/wallEnds'
+import { stretchInnerBeam } from '../../domain/innerBeams'
+import { BEAM_UNIT } from '../../domain/runDraw'
+import { builtModules, standardBeamsOn, wallPoints } from '../../domain/walls'
+import { layoutBeams } from '../../calc/beams/beams'
 import { freeGripEnds, stretchFreeTextile } from '../../domain/textile/free'
 import { footprintBox, objectBoxes, objectFootprint, rotateObject, setMembers, settleAll, union } from '../../domain/objects'
 import { toPlan } from '../../domain/counterShape'
@@ -28,8 +32,9 @@ export type GripOn =
   /** The middle of a room or a piece of furniture (a counter too): moves it, as dragging it in Velg does (Bjørn
    *  15.11.2026: also without Velg). */
   | { type: 'move'; what: 'room' | 'object'; id: string }
-  /** A free end of a chosen inner wall or free-standing textile wall: moves along it (wallEnds.ts, textile/free.ts). */
-  | { type: 'end'; what: 'wall' | 'textile'; id: string; end: RunEnd }
+  /** A free end of a chosen inner wall or free-standing textile wall, or either end of a drawn takdrager: moves along
+   *  it (wallEnds.ts, textile/free.ts, innerBeams.ts). */
+  | { type: 'end'; what: 'wall' | 'textile' | 'beam'; id: string; end: RunEnd }
   /** Out from the bottom right corner of a piece of furniture or a counter: turns it round its middle, 90° a step, 15° with
    *  Shift or Fin (furniture only; a counter turns by quarters). */
   | { type: 'rotate'; id: string }
@@ -85,6 +90,9 @@ function endGrips(v: Variant, s: PlanSelection): PlanGrip[] | null {
   if (wall) return wallGripEnds(v, wall).map((end): PlanGrip => ({ on: { type: 'end', what: 'wall', id: wall.id, end }, kind: 'end', at: wall[end] }))
   const t = s.freeTextileId ? v.freeTextiles.find((x) => x.id === s.freeTextileId) : undefined
   if (t) return freeGripEnds(v, t).map((end): PlanGrip => ({ on: { type: 'end', what: 'textile', id: t.id, end }, kind: 'end', at: t[end] }))
+  // A drawn takdrager: both ends (Byggeregel T8)
+  const b = s.beamId ? v.innerBeams?.find((x) => x.id === s.beamId) : undefined
+  if (b) return (['from', 'to'] as const).map((end): PlanGrip => ({ on: { type: 'end', what: 'beam', id: b.id, end }, kind: 'end', at: b[end] }))
   return null
 }
 
@@ -119,6 +127,7 @@ export function gripWith(on: GripOn, tool: Tool, brush: Brush | null): boolean {
   if (brush?.kind === 'opening') return on.type === 'door'
   if (brush?.kind === 'wall') return on.type === 'room' || (on.type === 'move' && on.what === 'room') || (on.type === 'end' && on.what === 'wall')
   if (brush?.kind === 'textile') return on.type === 'end' && on.what === 'textile'
+  if (brush?.kind === 'beam') return on.type === 'end' && on.what === 'beam'
   if (brush?.kind === 'podium') return on.type === 'podium' || on.type === 'rotate' || (on.type === 'move' && on.what === 'object')
   return false
 }
@@ -130,6 +139,7 @@ export function keptFor(selection: PlanSelection, b: Brush, v: Variant): PlanSel
   if (b.kind === 'wall' && selection.wallId) return { wallId: selection.wallId }
   if (b.kind === 'opening' && selection.openingId) return { openingId: selection.openingId }
   if (b.kind === 'textile' && selection.freeTextileId) return { freeTextileId: selection.freeTextileId }
+  if (b.kind === 'beam' && selection.beamId) return { beamId: selection.beamId }
   if (b.kind === 'podium' && selection.objectId && v.objects.find((o) => o.id === selection.objectId)?.sections) return { objectId: selection.objectId }
   return {}
 }
@@ -180,18 +190,32 @@ function dragTurnGrip(v: Variant, id: string, p0: Point, q: Point, fine: boolean
 
 const NO_TURN = 'Ikke plass til å rotere her'
 
-/** An end grip dragged along its run: whole metres, 250 with Shift or Fin; the furthest step that works, else why not. */
+/** The standard beams a drawn one may not lie along (as PlanView's standardRuns): the frame, without støttedragere. */
+const standardRuns = (v: Variant) => {
+  if (!standardBeamsOn(v)) return []
+  const mods = builtModules(v)
+  return layoutBeams(v.stand, mods, wallPoints(mods), rules.beam.max).segments
+}
+
+/** The run an end grip moves: a wall, a free textile wall or a drawn takdrager. */
+const runOf = (v: Variant, on: Extract<GripOn, { type: 'end' }>) =>
+  on.what === 'wall' ? v.walls.find((w) => w.id === on.id) : on.what === 'textile' ? v.freeTextiles.find((t) => t.id === on.id) : v.innerBeams?.find((b) => b.id === on.id)
+
+/** An end grip dragged along its run: whole metres, 250 with Shift or Fin (500 for a takdrager, T8); the furthest step
+ *  that works, else why not. */
 function dragEndGrip(v: Variant, on: Extract<GripOn, { type: 'end' }>, p0: Point, q: Point, fine: boolean): GripDraw | null {
-  const run = on.what === 'wall' ? v.walls.find((w) => w.id === on.id) : v.freeTextiles.find((t) => t.id === on.id)
+  const run = runOf(v, on)
   if (!run) return null
   // Out from the other end is plus
   const len = Math.hypot(run.to[0] - run.from[0], run.to[1] - run.from[1])
   const sign = on.end === 'to' ? 1 : -1
   const along = (sign * ((q[0] - p0[0]) * (run.to[0] - run.from[0]) + (q[1] - p0[1]) * (run.to[1] - run.from[1]))) / len
-  const step = fine ? CELL : 1
-  let why = on.what === 'wall' ? NO_STRETCH : ''
+  const step = fine ? (on.what === 'beam' ? BEAM_UNIT : CELL) : 1
+  let why = on.what === 'wall' ? NO_STRETCH : on.what === 'beam' ? NO_BEAM_STRETCH : ''
+  const standard = on.what === 'beam' ? standardRuns(v) : []
   const at = (d: number): Variant | null => {
     if (on.what === 'wall') return stretchWall(v, on.id, on.end, d)
+    if (on.what === 'beam') return stretchInnerBeam(v, on.id, on.end, d, standard)
     const r = stretchFreeTextile(v, rules, on.id, on.end, d)
     if ('error' in r) why = r.error
     return 'error' in r ? null : r.v
@@ -199,7 +223,7 @@ function dragEndGrip(v: Variant, on: Extract<GripOn, { type: 'end' }>, p0: Point
   const n = stepsOf(along, step)
   const r = furthest(n, 0, (a) => at(a * step))
   if (!r || (n && !r.a)) return { error: why, key: `${why}:${n}` }
-  const after = on.what === 'wall' ? r.value.walls.find((w) => w.id === on.id)! : r.value.freeTextiles.find((t) => t.id === on.id)!
+  const after = runOf(r.value, on)!
   const L = Math.hypot(after.to[0] - after.from[0], after.to[1] - after.from[1])
   return { v: r.value, key: `${on.id}:${after.from}:${after.to}`, pill: { a: after.from, b: after.to, text: mm(L) } }
 }
@@ -235,6 +259,8 @@ const NO_DOOR_MOVE = 'Døren kan ikke stå der: veggens ende, en annen dør, hyl
 
 const NO_STRETCH = 'Veggen kan ikke gå dit: en dør, en annen vegg eller standkanten er i veien'
 
+const NO_BEAM_STRETCH = 'Takdrageren kan ikke gå dit: en vegg eller takdrager langs linjen, eller standkanten, er i veien'
+
 /** A room's grip dragged (R5): furniture it pushes into moved clear, as a release stores it; what the room gives up
  *  hatched, cell by cell; a door that had to move is told on release. */
 function dragRoomGrip(v: Variant, on: Extract<GripOn, { type: 'room' }>, p0: Point, q: Point, fine: boolean): GripDraw | null {
@@ -261,7 +287,9 @@ export const gripHint = (on: GripOn, v?: Variant) =>
   on.type === 'door'
     ? 'Dra for å flytte døren langs veggen · hele meter, Shift eller Fin 250'
     : on.type === 'end'
-    ? `Dra for å forlenge eller korte ${on.what === 'wall' ? 'veggen' : 'tekstilveggen'} · hele meter, Shift eller Fin 250`
+    ? on.what === 'beam'
+      ? 'Dra for å forlenge eller korte takdrageren · hele meter, Shift eller Fin halve meter'
+      : `Dra for å forlenge eller korte ${on.what === 'wall' ? 'veggen' : 'tekstilveggen'} · hele meter, Shift eller Fin 250`
     : on.type === 'rotate'
     ? v?.objects.find((o) => o.id === on.id)?.sections
       ? 'Dra for å rotere · 90°'

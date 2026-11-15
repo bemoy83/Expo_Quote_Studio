@@ -1,6 +1,7 @@
 // Editing innvendige takdragere: drawn straight inside the stand in whole and half metres, never along a wall or on top
 // of another beam. Layout, posts, hooks and foot plates: calc/beams/innerBeams.ts.
 // Byggeregel T8 (docs/byggeregler.md).
+import { movedEnd, type RunEnd } from './grips';
 import { nextId } from './ids';
 import { modulesAlong, uncoveredRuns } from './grid';
 import type { InnerBeam, Point, Variant } from './types';
@@ -105,6 +106,24 @@ export function shiftInnerBeam(v: Variant, id: string, offset: number, standard:
   const from = shift(x.from);
   const to = shift(x.to);
   if (refusal(v, from, to, standard, beams.filter((y) => y.id !== id))) return v;
+  return { ...v, innerBeams: beams.map((y) => (y.id === id ? { ...y, from, to } : y)) };
+}
+
+/**
+ * The drawn beam `id` with its end `end` moved `d` m along it (out when d > 0), an end grip (Byggeregel T8): whole metres,
+ * half metres with Shift or «Fin». Null when it cannot: shorter than a half metre, outside the stand, along a wall or
+ * on another beam.
+ */
+export function stretchInnerBeam(v: Variant, id: string, end: RunEnd, d: number, standard: readonly Run[]): Variant | null {
+  const beams = v.innerBeams ?? [];
+  const x = beams.find((y) => y.id === id);
+  if (!x) return null;
+  if (!d) return v;
+  const { from, to } = movedEnd(x, end, d);
+  const len = Math.abs(to[0] - from[0]) + Math.abs(to[1] - from[1]);
+  const dir = (p: Point, q: Point) => [Math.sign(q[0] - p[0]), Math.sign(q[1] - p[1])].join();
+  if (len < HALF - EPS || dir(from, to) !== dir(x.from, x.to)) return null;
+  if (refusal(v, from, to, standard, beams.filter((y) => y.id !== id))) return null;
   return { ...v, innerBeams: beams.map((y) => (y.id === id ? { ...y, from, to } : y)) };
 }
 

@@ -20,7 +20,7 @@ const whole = (n: number) => Math.abs(n - Math.round(n)) < EPS;
  * From p along axis k (0: x, 1: y) to the nearest line a wall module lies on across that axis (one through p's other
  * coordinate) or the stand edge, leaving out the line p itself is on.
  */
-function nearestAcross(stand: Stand, mods: readonly Module[], p: Point, k: 0 | 1): Point | null {
+export function nearestAcross(stand: Stand, mods: readonly Module[], p: Point, k: 0 | 1): Point | null {
   const j = 1 - k;
   const size = k === 0 ? stand.width : stand.depth;
   const lines = [0, size];

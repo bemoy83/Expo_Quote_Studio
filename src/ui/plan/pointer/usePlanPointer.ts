@@ -127,7 +127,7 @@ export function usePlanPointer(input: PlanPointerInput) {
     if (tool === 'erase') return startErase(c, q)
     if (fb.carpetFill) return startCarpetFill(c, q)
     if (pens.floorTool) return startFloor(c, q)
-    if ((pens.wallTool && brush?.kind === 'wall') || pens.textileTool) {
+    if ((pens.wallTool && brush?.kind === 'wall') || pens.textileTool || pens.beamTool) {
       const g = startGrip(c, q)
       if (g) return g
     }

@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Point, Variant } from './types';
 import { createVariant } from './variant';
-import { drawInnerBeam, eraseInnerBeams, innerBeamAt, moveInnerBeam, offGrid, shiftInnerBeam } from './innerBeams';
+import { drawInnerBeam, eraseInnerBeams, innerBeamAt, moveInnerBeam, offGrid, shiftInnerBeam, stretchInnerBeam } from './innerBeams';
 
 const ROW = createVariant('A', { width: 6, depth: 4, type: 'row' });
 // The standard front beam of the row stand
@@ -99,5 +99,21 @@ describe('whole and half metres (Byggeregel T8)', () => {
     const v = draw(ROW, [1, 2], [3, 2]);
     expect(shiftInnerBeam(v, 'td1', 0, FRONT, 0.6).innerBeams?.[0]).toMatchObject({ from: [1.5, 2], to: [3.5, 2] });
     expect(moveInnerBeam(shiftInnerBeam(v, 'td1', 0, FRONT, 0.5), 'td1', 0, 1, FRONT).innerBeams?.[0]).toMatchObject({ from: [2.5, 2], to: [4.5, 2] });
+  });
+});
+
+describe('end grips (Byggeregel T8)', () => {
+  const v = draw(ROW, [1, 2], [3, 2]);
+  it('moves an end along in whole or half metres, the other end still', () => {
+    expect(stretchInnerBeam(v, 'td1', 'to', 1.5, FRONT)?.innerBeams?.[0]).toMatchObject({ from: [1, 2], to: [4.5, 2] });
+    expect(stretchInnerBeam(v, 'td1', 'from', 0.5, FRONT)?.innerBeams?.[0]).toMatchObject({ from: [0.5, 2], to: [3, 2] });
+    expect(stretchInnerBeam(v, 'td1', 'to', -1.5, FRONT)?.innerBeams?.[0]).toMatchObject({ from: [1, 2], to: [1.5, 2] });
+  });
+  it('never shorter than a half metre, past the stand or onto another beam', () => {
+    expect(stretchInnerBeam(v, 'td1', 'to', -2, FRONT)).toBeNull();
+    expect(stretchInnerBeam(v, 'td1', 'to', 3.5, FRONT)).toBeNull();
+    const two = draw(v, [4, 2], [5, 2]);
+    expect(stretchInnerBeam(two, 'td1', 'to', 1.5, FRONT)).toBeNull();
+    expect(stretchInnerBeam(two, 'td1', 'to', 1, FRONT)?.innerBeams?.[0]).toMatchObject({ to: [4, 2] });
   });
 });
