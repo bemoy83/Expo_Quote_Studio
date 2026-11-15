@@ -198,14 +198,19 @@ export function nearestEdge(stand: Stand, p: { x: number; y: number }, step = 1)
     const c = r <= size + 1e-9 ? r : Math.floor(v / step) * step;
     return round3(size - v < Math.abs(v - c) ? size : c);
   };
-  const last = (size: number) => (Math.ceil(size / step - 1e-6) - 1) * step;
-  const cell = (v: number, size: number) => round3(Math.max(0, Math.min(last(size), Math.floor(v / step) * step)));
-  const end = (c: number, size: number) => round3(Math.min(c + step, size));
   const hy = on(y, D);
   const vx = on(x, W);
-  const i = cell(x, W);
-  const j = cell(y, D);
-  return Math.abs(y - hy) <= Math.abs(x - vx) ? makeModule([i, hy], [end(i, W), hy]) : makeModule([vx, j], [vx, end(j, D)]);
+  const [i, i1] = cellAt(x, W, step);
+  const [j, j1] = cellAt(y, D, step);
+  return Math.abs(y - hy) <= Math.abs(x - vx) ? makeModule([i, hy], [i1, hy]) : makeModule([vx, j], [vx, j1]);
+}
+
+/** The grid cell [start, end] of `step` m that v lies in along a stand side of `size` m, clamped to the side: the grid
+ *  starts at 0, and on a stand in half metres the last cell is the rest out to the edge (Byggeregel V14). */
+export function cellAt(v: number, size: number, step = 1): [number, number] {
+  const last = (Math.ceil(size / step - 1e-6) - 1) * step;
+  const lo = round3(Math.max(0, Math.min(last, Math.floor(v / step) * step)));
+  return [lo, round3(Math.min(lo + step, size))];
 }
 
 export const SIDES: readonly Side[] = ['back', 'left', 'right', 'front'];
