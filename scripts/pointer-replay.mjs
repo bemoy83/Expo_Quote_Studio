@@ -151,6 +151,12 @@ await tool('Velg'); await press(7, 1); await tool('Vegg'); await record('vegg-pe
 await drag(6, 2, 5, 3.1); await record('vegg-penn romhjørne')
 await drag(6.5, 2, 6.5, 3.1); await record('vegg-penn flyttegrep rom')
 await close()
+// The grip of a chosen door moves it along its wall, in 250 with Shift (D8): the wall is laid out round it
+await open('03-rom')
+await tool('Velg'); await press(2, 1.5); await record('velg dør i rom')
+await page.keyboard.down('Shift'); await drag(2, 1.5, 2, 1.8); await page.keyboard.up('Shift'); await record('dørgrep Shift 250')
+await drag(2, 1.75, 2, 2.6); await record('dørgrep forbi enden')
+await close()
 await open('02-hjorne-utstiller')
 await tool('Velg'); await drag(4, 1, 3, 1); await record('dra romvegg')
 await press(5, 2); await record('klikk romvegg')

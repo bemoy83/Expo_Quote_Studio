@@ -13,6 +13,8 @@ import { gripRoom, roomGrips, type RoomGrip } from '../../domain/roomGrips'
 import { NO_ROOM } from '../../domain/podiums'
 import { gripPodium, podiumGrips, type PodiumGrip } from '../../domain/podiumGrips'
 import type { PlacedObject, Point, Variant } from '../../domain/types'
+import { moduleStart, pointAlong, wallDirection, wallLength } from '../../domain/grid'
+import { moveOpeningAlong } from '../../domain/doors'
 import { place, rules } from '../env'
 import type { Brush, Tool } from '../tools'
 import { mm } from './dims'
@@ -31,6 +33,8 @@ export type GripOn =
   /** Out from the bottom right corner of a piece of furniture or a counter: turns it round its middle, 90° a step, 15° with
    *  Shift or Fin (furniture only; a counter turns by quarters). */
   | { type: 'rotate'; id: string }
+  /** The middle of a chosen door or curtain: moves it along its wall, whole metres, 250 with Shift or Fin (Byggeregel D8). */
+  | { type: 'door'; id: string }
 
 /** A grip as the plan shows it: what it moves, its kind (the shape drawn) and where it stands, plan m. */
 export interface PlanGrip {
@@ -42,6 +46,8 @@ export interface PlanGrip {
 /** The grips of what is chosen, if it has any: a room (R8), a counter of Disker og podier (K14), a piece of furniture;
  *  each with a move grip in its middle. */
 export function gripsOf(v: Variant, selection: PlanSelection): PlanGrip[] {
+  const door = doorGrip(v, selection)
+  if (door) return [door]
   const ends = endGrips(v, selection)
   if (ends) return ends
   const r = selection.roomId ? v.rooms.find((x) => x.id === selection.roomId) : undefined
@@ -62,6 +68,14 @@ export function gripsOf(v: Variant, selection: PlanSelection): PlanGrip[] {
   if (!o.sections) return [{ on, kind: 'move', at: [o.x, o.y] }, ...rotate]
   const grips = podiumGrips(o).map(({ grip, at }): PlanGrip => ({ on: { type: 'podium', id: o.id, grip }, kind: grip.kind, at }))
   return [...grips, { on, kind: 'move', at: counterMiddle(v, o, grips) }, ...rotate]
+}
+
+/** The grip of a chosen door or curtain, in the middle of its module on the wall. */
+function doorGrip(v: Variant, s: PlanSelection): PlanGrip | null {
+  const o = s.openingId ? v.openings.find((x) => x.id === s.openingId) : undefined
+  const w = o && v.walls.find((x) => x.id === o.wallId)
+  if (!o || !w) return null
+  return { on: { type: 'door', id: o.id }, kind: 'move', at: pointAlong(w, moduleStart(w, o.module) + 0.5) }
 }
 
 /** The end grips of what is chosen (Byggeregler V13, X12), when it is an inner wall (alone, not a door or felt on it) or a free textile wall;
@@ -102,6 +116,7 @@ function counterMiddle(v: Variant, o: PlacedObject, grips: PlanGrip[]): Point {
  *  with Vegg those of the chosen room (R8). */
 export function gripWith(on: GripOn, tool: Tool, brush: Brush | null): boolean {
   if (tool === 'select') return on.type !== 'move'
+  if (brush?.kind === 'opening') return on.type === 'door'
   if (brush?.kind === 'wall') return on.type === 'room' || (on.type === 'move' && on.what === 'room') || (on.type === 'end' && on.what === 'wall')
   if (brush?.kind === 'textile') return on.type === 'end' && on.what === 'textile'
   if (brush?.kind === 'podium') return on.type === 'podium' || on.type === 'rotate' || (on.type === 'move' && on.what === 'object')
@@ -113,6 +128,7 @@ export function gripWith(on: GripOn, tool: Tool, brush: Brush | null): boolean {
 export function keptFor(selection: PlanSelection, b: Brush, v: Variant): PlanSelection {
   if (b.kind === 'wall' && selection.roomId) return { roomId: selection.roomId }
   if (b.kind === 'wall' && selection.wallId) return { wallId: selection.wallId }
+  if (b.kind === 'opening' && selection.openingId) return { openingId: selection.openingId }
   if (b.kind === 'textile' && selection.freeTextileId) return { freeTextileId: selection.freeTextileId }
   if (b.kind === 'podium' && selection.objectId && v.objects.find((o) => o.id === selection.objectId)?.sections) return { objectId: selection.objectId }
   return {}
@@ -136,6 +152,7 @@ export function dragGrip(v: Variant, on: GripOn, p0: Point, q: Point, fine: bool
   if (on.type === 'room') return dragRoomGrip(v, on, p0, q, fine)
   if (on.type === 'rotate') return dragTurnGrip(v, on.id, p0, q, fine)
   if (on.type === 'end') return dragEndGrip(v, on, p0, q, fine)
+  if (on.type === 'door') return dragDoorGrip(v, on.id, p0, q, fine)
   const o = v.objects.find((x) => x.id === on.id)
   if (!o) return null
   const r = gripPodium(v, place, o, on.grip, p0, q, fine)
@@ -187,6 +204,35 @@ function dragEndGrip(v: Variant, on: Extract<GripOn, { type: 'end' }>, p0: Point
   return { v: r.value, key: `${on.id}:${after.from}:${after.to}`, pill: { a: after.from, b: after.to, text: mm(L) } }
 }
 
+/** A door's grip dragged along its wall (Byggeregel D8): whole metres from where it stands, 250 with Shift or Fin; the
+ *  furthest step that works, else why not. The pill says how far it stands from the wall's left or back end. */
+function dragDoorGrip(v: Variant, id: string, p0: Point, q: Point, fine: boolean): GripDraw | null {
+  const o = v.openings.find((x) => x.id === id)
+  const w = o && v.walls.find((x) => x.id === o.wallId)
+  if (!o || !w) return null
+  const [dx, dy] = wallDirection(w)
+  const t0 = moduleStart(w, o.module)
+  const step = fine ? CELL : 1
+  const n = stepsOf((q[0] - p0[0]) * dx + (q[1] - p0[1]) * dy, step)
+  const r = furthest(n, 0, (a) => {
+    if (!a) return v
+    const m = moveOpeningAlong(v, id, t0 + a * step)
+    return m === v ? null : m
+  })
+  if (!r || (n && !r.a)) return { error: NO_DOOR_MOVE, key: `${NO_DOOR_MOVE}:${n}` }
+  const after = r.value.openings.find((x) => x.id === id)!
+  const aw = r.value.walls.find((x) => x.id === after.wallId)!
+  const t = moduleStart(aw, after.module)
+  const a = pointAlong(aw, t)
+  const b = pointAlong(aw, t + 1)
+  // From the left end of a wall running across, the back end of one running back to front
+  const back = dx < 0 || dy < 0 ? wallLength(aw) - t - 1 : t
+  const from = Math.abs(dy) > 0.5 ? 'bak' : 'venstre'
+  return { v: r.value, key: `${id}:${t}`, pill: { a, b, text: `${mm(back)} fra ${from}` } }
+}
+
+const NO_DOOR_MOVE = 'Døren kan ikke stå der: veggens ende, en annen dør, hylle, print, tekstil eller standvegg er i veien'
+
 const NO_STRETCH = 'Veggen kan ikke gå dit: en dør, en annen vegg eller standkanten er i veien'
 
 /** A room's grip dragged (R5): furniture it pushes into moved clear, as a release stores it; what the room gives up
@@ -212,7 +258,9 @@ function dragRoomGrip(v: Variant, on: Extract<GripOn, { type: 'room' }>, p0: Poi
 
 /** The hint on a grip, pointed at or held. */
 export const gripHint = (on: GripOn, v?: Variant) =>
-  on.type === 'end'
+  on.type === 'door'
+    ? 'Dra for å flytte døren langs veggen · hele meter, Shift eller Fin 250'
+    : on.type === 'end'
     ? `Dra for å forlenge eller korte ${on.what === 'wall' ? 'veggen' : 'tekstilveggen'} · hele meter, Shift eller Fin 250`
     : on.type === 'rotate'
     ? v?.objects.find((o) => o.id === on.id)?.sections
