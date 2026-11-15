@@ -5,7 +5,7 @@ import type { Rules } from '../rules/rules';
 import { pointAlong, wallDirection, moduleEnd } from './grid';
 import type { PlacedObject, Variant } from './types';
 import { builtModules } from './walls';
-import { doorSwing } from './doors';
+import { doorSwing, SWING_CLEAR } from './doors';
 import { nextId } from './ids';
 import { faceSegment, sideOf } from './faces';
 import { RECIPES } from '../foga/recipes';
@@ -105,7 +105,8 @@ export function blockers(v: Variant, ctx: PlaceContext, skipId?: string): Box[] 
     const n = [-dy * s, dx * s];
     const a = pointAlong(w, o.module);
     const b = pointAlong(w, moduleEnd(w, o.module));
-    const r = rules.door.swing;
+    // The door's free floor, module wide and SWING_CLEAR deep: furniture and counters keep out of it (Byggeregel D7)
+    const r = SWING_CLEAR;
     const xs = [a[0], b[0], a[0] + n[0] * r, b[0] + n[0] * r];
     const ys = [a[1], b[1], a[1] + n[1] * r, b[1] + n[1] * r];
     out.push({ x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys), kind: 'door', id: o.id });

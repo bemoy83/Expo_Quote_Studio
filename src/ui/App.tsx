@@ -20,7 +20,7 @@ import { CostBasisPage } from './costbasis/CostBasisPage'
 import { BASIS_EVENT } from './costbasis/link'
 import { IconButton, Toast } from './controls'
 import { download } from './download'
-import { catalog, costBasis, getVersion, idx, place, plateColor, pricing, productOf, subscribe } from './env'
+import { catalog, costBasis, floorBoxes, getVersion, idx, place, plateColor, pricing, productOf, subscribe } from './env'
 import { hint, HINT_3D } from './hints'
 import { motifLibrary, readMotif } from './motifs'
 import { NameTip } from './NameTip'
@@ -136,7 +136,7 @@ export default function App() {
       const ratio = ratioFor(motifs)
       const apply = (x: Variant) => guarded(x, fn, ratio)
       // A door left with no free floor on either side refuses the edit (Byggeregel D7)
-      if (shutsDoor(vRef.current, settle(fn(vRef.current), ratio), place.swings)) showToast({ text: DOOR_NO_SWING })
+      if (shutsDoor(vRef.current, settle(fn(vRef.current), ratio), place.swings, floorBoxes)) showToast({ text: DOOR_NO_SWING })
       dispatch({ type: 'edit', fn: apply, history })
       if (!history) return
       const areas = closeRooms(vRef.current, apply(vRef.current), ratio)?.areas

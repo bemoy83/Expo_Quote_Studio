@@ -12,7 +12,7 @@ import type { Opening, Point, Variant, Wall } from '../../domain/types'
 import { isPerimeterWall, isStandWall } from '../../domain/walls'
 import { LAYER_COLOR } from '../colors'
 import { FlatChoice, IconButton, Section } from '../controls'
-import { openingProducts, plateColor, productOf, rules } from '../env'
+import { floorBoxes, openingProducts, plateColor, productOf, rules } from '../env'
 import { fmt } from '../format'
 import { DrawerHead} from './drawerParts'
 
@@ -82,7 +82,7 @@ export function DoorSettings({ v, o, w, onEdit, onRemove, onClose, children }: P
           aside={swing}
           tools={
             <>
-              {canFlipDoor(v, w, o) && <IconButton icon={FlipHorizontal2} label="Snu slagretning" size={15} onClick={() => onEdit((x) => flipSwing(x, o.id))} />}
+              {canFlipDoor(v, w, o, floorBoxes) && <IconButton icon={FlipHorizontal2} label="Snu slagretning" size={15} onClick={() => onEdit((x) => flipSwing(x, o.id, floorBoxes))} />}
               <IconButton icon={ArrowLeftRight} label="Bytt hengselside" size={15} onClick={() => onEdit((x) => flipHinge(x, o.id))} />
             </>
           }
