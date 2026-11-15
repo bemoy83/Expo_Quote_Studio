@@ -45,13 +45,15 @@ export type Drag =
   | ({ kind: 'wall'; moved: boolean; select: PlanSelection } & WallDrag)
   /** `fine`: Shift held or «Fin» on in the pill (`fineLock`), it moves across in 50 mm steps off the grid (Byggeregel T15). */
   | ({ kind: 'beam'; moved: boolean; select: PlanSelection; fine?: boolean; fineLock?: boolean } & WallDrag)
-  | ({ kind: 'room'; select: PlanSelection | null } & RoomDrag)
+  /** A room moved by its floor (room.ts). */
+  | ({ kind: 'room'; select: PlanSelection } & RoomDrag)
   /** Disker og podier pressed (podium.ts, draw.ts): `click`, what a click on the section shown stores (podiumStart);
    *  `drag`, what a drag draws from it, none on a counter or where it has no room. */
   | ({ kind: 'podium'; click: PodiumDraw | null; drag: PodiumDrag | null } & DrawPress)
   /** A grip of what is chosen pressed (grip.ts, plan/grips.ts), in Velg or with its pen: its side or corner follows the
    *  pointer from the press `p0` in coarse steps, 250 with `fine` (Shift, or «Fin»). */
-  | { kind: 'grip'; on: GripOn; p0: P; moved: boolean; fine: boolean }
+  /** `fineLock`: «Fin» on in the pill of what it belongs to (a room). `select`: what a click (no drag) selects. */
+  | { kind: 'grip'; on: GripOn; p0: P; moved: boolean; fine: boolean; fineLock?: boolean; select?: PlanSelection }
   /** A link of the chosen counter pressed (podiumLink.ts, K15): a click breaks a joint or links a counter against it. */
   | { kind: 'podiumLink'; id: string; link: PodiumLink; p0: P; moved: boolean }
   | { kind: 'freeMove'; id: string; p0: P; v0: Variant; moved: boolean; select: PlanSelection }

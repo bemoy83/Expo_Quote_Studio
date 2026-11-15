@@ -10,7 +10,7 @@ import { faceOfPoint, freeTextileAt } from '../../../domain/textile/free'
 import { textileAt } from '../../../domain/textile/inFrame'
 import { chosenShelves, type PlanSelection } from '../selection'
 import { shelfRow } from '../../../domain/shelves/model'
-import { startGrip } from './grip'
+import { gripPress, startGrip } from './grip'
 import { startPodiumLink } from './podiumLink'
 import { startRoom } from './room'
 import { nearestSide } from '../podiumDrawer/podiumView'
@@ -22,12 +22,14 @@ export function startSelect(c: PointerCtx, q: P): Drag {
   // A plain click on a door or curtain chooses it (the wall drawer with the door); a drag does what it does on the wall.
   const door = hits.moduleAt(q)?.opening
   const doorSelect: PlanSelection | null = door ? { openingId: door.id } : null
-  // A side of the selected room comes first, so a side shared with a stand wall can still be dragged.
-  const selEdge = selection.roomId ? hits.roomEdgeAt(q) : null
-  if (selEdge && selEdge.room.id === selection.roomId) return startRoom(c, selEdge.room, selEdge.side, q, doorSelect)
-  // A link or grip of the chosen counter of Disker og podier (K15, K14) comes before the counter itself, which would move
+  // A grip of what is chosen (a corner or side of the selected room, R5; of the chosen counter, K14), or a link of the
+  // counter (K15), comes before the thing itself, which would move
   const grip = startPodiumLink(c, q) ?? startGrip(c, q)
   if (grip) return grip
+  // Anywhere along a side of the selected room takes hold of that side's grip, so a side shared with a stand wall can
+  // still be dragged; a click selects the wall or door there
+  const selEdge = selection.roomId ? hits.roomEdgeAt(q) : null
+  if (selEdge && selEdge.room.id === selection.roomId) return roomSide(c, selEdge.room.id, selEdge.side, q, doorSelect)
   const ft = freeTextileAt(v, q, 0.15)
   if (ft) return { kind: 'freeMove', id: ft.id, p0: q, v0: v, moved: false, select: { freeTextileId: ft.id, freeFace: faceOfPoint(ft, q) } }
   const o = hits.objectAt(q)
@@ -64,14 +66,18 @@ export function startSelect(c: PointerCtx, q: P): Drag {
     const select: PlanSelection = doorSelect ?? (tx && h ? { wallId: w.id, side: h.s, textileId: tx.id } : { wallId: w.id, side: w.room ? OUTSIDE : h?.s })
     // A room's own wall resizes the room; an inner wall moves
     const room = w.room && v.rooms.find((r) => r.id === w.room!.id)
-    if (room) return startRoom(c, room, w.room!.side, q, select)
+    if (room) return roomSide(c, room.id, w.room!.side, q, select)
     if (canMoveWall(w)) return { kind: 'wall', id: w.id, p0: q, v0: v, delta: '0,0', horizontal: w.from[1] === w.to[1], moved: false, select }
     return { kind: 'click', select }
   }
   const room = roomAt(v, q.x, q.y)
-  if (room) return startRoom(c, room, 'move', q, { roomId: room.id })
+  if (room) return startRoom(c, room, q, { roomId: room.id })
   // Engangsteppe: a fill is chosen as a whole, a lane placed on its own by itself
   const lt = q.x >= 0 && q.y >= 0 && q.x < W && q.y < D ? laneAt(v, Math.floor(q.x / CELL), Math.floor(q.y / CELL)) : undefined
   if (lt) return { kind: 'click', select: lt.fill ? { fill: lt.fill } : { lane: { i: lt.i, j: lt.j } } }
   return { kind: 'click', select: {} }
 }
+
+/** A press on a side of a room: its side grip (R5), a click selecting `select` (the wall or door there). */
+const roomSide = (c: PointerCtx, id: string, side: number, q: P, select: PlanSelection | null): Drag =>
+  gripPress(c, { type: 'room', id, grip: { kind: 'side', side } }, q, select ?? undefined)

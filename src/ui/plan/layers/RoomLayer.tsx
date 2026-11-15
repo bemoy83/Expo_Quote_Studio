@@ -1,9 +1,9 @@
-// Rooms in the plan: name and floor area fitted into the room, and the grips on the selected room's sides.
+// Rooms in the plan: name and floor area fitted into the room. The selected room's grips: Grips.tsx.
 import type { Room, Variant } from '../../../domain/types'
 import { RoomLabel } from '../RoomLabel'
 import { roomLabelSize } from '../roomLabelSize'
-import { CANVAS, INK } from '../../colors'
-import { insetOutline, isHorizontal, labelRect, outlineSides } from '../../../domain/outline'
+import { INK } from '../../colors'
+import { insetOutline, labelRect } from '../../../domain/outline'
 import type { PlanSelection } from '../selection'
 import { PLAN_WALL } from '../planStyle'
 import { GONE, useErasing } from './erasing'
@@ -69,18 +69,4 @@ function fitRoomLabel(r: Room) {
   const one = two.k >= LABEL_MIN ? two : measure(false)
   if (one.k < LABEL_MIN * 0.75) return null
   return { ...one, cx: box.x + box.w / 2, cy: box.y + box.d / 2 }
-}
-
-/** Grips at the middle of each side of the selected room: drag a side to resize. */
-export function RoomHandles({ r }: { r: Room }) {
-  return (
-    <g>
-      {outlineSides(r.outline).map(([a, b], i) => {
-        const mx = (a[0] + b[0]) / 2
-        const my = (a[1] + b[1]) / 2
-        const hz = isHorizontal([a, b])
-        return <rect key={i} x={mx - (hz ? 0.2 : 0.06)} y={my - (hz ? 0.06 : 0.2)} width={hz ? 0.4 : 0.12} height={hz ? 0.12 : 0.4} rx={0.05} fill={CANVAS} stroke={INK} strokeWidth={0.03} />
-      })}
-    </g>
-  )
 }

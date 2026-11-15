@@ -238,12 +238,13 @@ function targetOf(p: NextInput): NextTarget | null {
 
   // Hovering: what a click here stores
   if (!hover) return null
-  // On a link or grip of the chosen counter of Disker og podier, in Velg or with its pen: what a click or drag does
+  // On a grip of what is chosen (a room's in Velg, a counter's also with its pen) or a link of the counter: what a
+  // click or drag does
   if (tool === 'select' || pens.podiumTool) {
     const l = hits.podiumLinkAt(hover)
     if (l) return target(`link:${l.at}`, () => line({ hint: l.kind === 'joint' ? 'Klikk for å dele disken her' : 'Klikk for å lenke diskene sammen', hotGrip: l.at }))
     const g = hits.gripAt(hover)
-    if (g) return target(`grip:${g.at}`, () => line({ hint: gripHint(g.on), hotGrip: g.at }))
+    if (g && (tool === 'select' || g.on.type === 'podium')) return target(`grip:${g.at}`, () => line({ hint: gripHint(g.on), hotGrip: g.at }))
   }
   // The drawing pens: what a click stores, 250 with Shift or Fin
   const at = hover
