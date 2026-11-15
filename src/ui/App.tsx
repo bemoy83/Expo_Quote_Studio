@@ -133,11 +133,11 @@ export default function App() {
     onErase: () => setView('plan'),
   })
   const { tool, setTool, brush, active, pick } = tools
+  /** The sketch when the drag under way began: a drag stores its steps without history, from one checkpoint. */
+  const dragFrom = useRef<Variant | null>(null)
   // Every edit keeps textiles and foils valid: on a wall, off openings, inside their felt.
   // An edit that walls in an area with a door turns it into a room (frihåndsrom), as its own undo step, and the room
   // is chosen with its grips (R3, R8).
-  /** The sketch when the drag under way began: a drag stores its steps without history, from one checkpoint. */
-  const dragFrom = useRef<Variant | null>(null)
   const closeSince = useCallback(
     (before: Variant, after: Variant, ratio: (id: string | undefined) => number) => {
       const areas = closeRooms(before, after, ratio)?.areas
