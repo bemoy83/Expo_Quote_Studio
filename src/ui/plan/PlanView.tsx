@@ -17,6 +17,7 @@ import type { Motif, Side, Variant } from '../../domain/types'
 import { builtModules, standWallKeys } from '../../domain/walls'
 import { SURFACE } from '../colors'
 import { place, rules } from '../env'
+import { standardRuns as standardBeamRuns } from '../../calc/beams/beams'
 import { penLayers, type Brush, type Highlight, type Layer, type Tool } from '../tools'
 import { totalSides } from './dims'
 import { nearestEdge } from './geometry'
@@ -121,7 +122,7 @@ export function PlanView(p: Props) {
   /** Edges carrying a stand wall: locked, and the only ones the side labels count (an inner wall leaves a side open). */
   const standKeys = useMemo(() => standWallKeys(v), [v])
   /** Standard beams: a drawn one may not lie along them. A støttedrager may be drawn over: the drawn beam replaces it. */
-  const standardRuns: Run[] = useMemo(() => res.beams.segments.filter((s) => !s.inner && !s.support), [res])
+  const standardRuns: Run[] = useMemo(() => standardBeamRuns(v, rules.beam.max), [v])
 
   const pen = pens(tool, brush)
   const { wallTool, floorTool, textileTool, beamTool } = pen

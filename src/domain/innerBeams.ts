@@ -18,6 +18,7 @@ export type BeamEdit = { v: Variant; id: string } | { error: string };
 /** The shortest takdrager, m: a half metre (Byggeregel T8). */
 const HALF = 0.5;
 const EPS = 1e-6;
+const round3 = (x: number) => Math.round(x * 1000) / 1000;
 
 const inStand = (v: Variant, [x, y]: Point) => x >= 0 && y >= 0 && x <= v.stand.width && y <= v.stand.depth;
 
@@ -65,23 +66,30 @@ export function eraseInnerBeams(v: Variant, a: Point, b: Point): Variant {
 
 export const removeInnerBeam = (v: Variant, id: string): Variant => ({ ...v, innerBeams: (v.innerBeams ?? []).filter((x) => x.id !== id) });
 
+/** The drawn beam `id` laid from `from` to `to` instead, or null when it can not go there (T8). */
+function relaid(v: Variant, id: string, from: Point, to: Point, standard: readonly Run[]): Variant | null {
+  const beams = v.innerBeams ?? [];
+  if (refusal(v, from, to, standard, beams.filter((y) => y.id !== id))) return null;
+  return { ...v, innerBeams: beams.map((y) => (y.id === id ? { ...y, from, to } : y)) };
+}
+
+/** The beam moved `across` its direction and `along` it, m. */
+function shifted(x: InnerBeam, across: number, along: number): [Point, Point] {
+  const h = x.from[1] === x.to[1];
+  const shift = ([px, py]: Point): Point => (h ? [round3(px + along), round3(py + across)] : [round3(px + across), round3(py + along)]);
+  return [shift(x.from), shift(x.to)];
+}
+
 /** Move a drawn beam `delta` whole metres sideways and `along` in its own direction. Returns v when it would not fit. */
 export function moveInnerBeam(v: Variant, id: string, delta: number, along: number, standard: readonly Run[]): Variant {
-  const beams = v.innerBeams ?? [];
-  const x = beams.find((y) => y.id === id);
+  const x = v.innerBeams?.find((y) => y.id === id);
   if (!x || (!delta && !along)) return v;
-  const h = x.from[1] === x.to[1];
-  const shift = ([px, py]: Point): Point => (h ? [px + along, py + delta] : [px + delta, py + along]);
-  const from = shift(x.from);
-  const to = shift(x.to);
-  if (refusal(v, from, to, standard, beams.filter((y) => y.id !== id))) return v;
-  return { ...v, innerBeams: beams.map((y) => (y.id === id ? { ...y, from, to } : y)) };
+  return relaid(v, id, ...shifted(x, delta, along), standard) ?? v;
 }
 
 /** Steps a drawn beam moves in off the grid (Byggeregel T15), m. */
 export const FINE_STEP = 0.05;
 
-const round3 = (x: number) => Math.round(x * 1000) / 1000;
 
 /** The beam lies off the 1 m grid across its direction (Byggeregel T15). */
 export const offGrid = (b: InnerBeam) => {
@@ -96,17 +104,11 @@ export const offGrid = (b: InnerBeam) => {
  * would not fit.
  */
 export function shiftInnerBeam(v: Variant, id: string, offset: number, standard: readonly Run[], along = 0): Variant {
-  const beams = v.innerBeams ?? [];
-  const x = beams.find((y) => y.id === id);
+  const x = v.innerBeams?.find((y) => y.id === id);
   const d = round3(Math.round(offset / FINE_STEP) * FINE_STEP);
   const t = round3(Math.round(along / HALF) * HALF);
   if (!x || (!d && !t)) return v;
-  const h = x.from[1] === x.to[1];
-  const shift = ([px, py]: Point): Point => (h ? [round3(px + t), round3(py + d)] : [round3(px + d), round3(py + t)]);
-  const from = shift(x.from);
-  const to = shift(x.to);
-  if (refusal(v, from, to, standard, beams.filter((y) => y.id !== id))) return v;
-  return { ...v, innerBeams: beams.map((y) => (y.id === id ? { ...y, from, to } : y)) };
+  return relaid(v, id, ...shifted(x, d, t), standard) ?? v;
 }
 
 /**
@@ -115,16 +117,14 @@ export function shiftInnerBeam(v: Variant, id: string, offset: number, standard:
  * on another beam.
  */
 export function stretchInnerBeam(v: Variant, id: string, end: RunEnd, d: number, standard: readonly Run[]): Variant | null {
-  const beams = v.innerBeams ?? [];
-  const x = beams.find((y) => y.id === id);
+  const x = v.innerBeams?.find((y) => y.id === id);
   if (!x) return null;
   if (!d) return v;
   const { from, to } = movedEnd(x, end, d);
-  const len = Math.abs(to[0] - from[0]) + Math.abs(to[1] - from[1]);
+  // Not turned round past the other end (refusal sees the length)
   const dir = (p: Point, q: Point) => [Math.sign(q[0] - p[0]), Math.sign(q[1] - p[1])].join();
-  if (len < HALF - EPS || dir(from, to) !== dir(x.from, x.to)) return null;
-  if (refusal(v, from, to, standard, beams.filter((y) => y.id !== id))) return null;
-  return { ...v, innerBeams: beams.map((y) => (y.id === id ? { ...y, from, to } : y)) };
+  if (dir(from, to) !== dir(x.from, x.to)) return null;
+  return relaid(v, id, from, to, standard);
 }
 
 /** The drawn beam nearest p within `within` m. */

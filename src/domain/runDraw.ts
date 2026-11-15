@@ -3,8 +3,9 @@
 // (K10): the pen shows one module of 1 m on the edge nearest the pointer; a press and drag grows it from there, the
 // module shown staying put, in whole metres; dragged across, the run turns at the module's end nearest the press.
 // Shift (or «Fin») changes the size the pen draws with to 250 (Bjørn 14.11.2026): it shows 250 under the pointer on
-// the nearest line of the 250 grid (Byggeregel V9), and a drag grows that in 250 steps. Shift pressed or let go during a drag goes on from what is drawn
-// (drawAxis.ts). One grid for every pen: the metre grid, 250 with Shift or Fin. Pure, plan in m.
+// the nearest line of the 250 grid (Byggeregel V9), and a drag grows that in 250 steps; the takdrager pen in 500, as
+// takdragere are built in whole and half metres (T8). Shift pressed or let go during a drag goes on from what is drawn
+// (drawAxis.ts). One grid for every pen: the metre grid, the fine step (`unit`) with Shift or Fin. Pure, plan in m.
 import { axisSpan, rebaseAxis, type DrawAxis } from './drawAxis';
 import { nearestEdge, type Module } from './grid';
 import type { Point, Stand } from './types';

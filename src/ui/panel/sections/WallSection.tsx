@@ -56,7 +56,7 @@ export function WallSection({ v, res, brush, tool, pick, onEdit, onAddRoom, onSe
           </svg>
         }
         title="Takdrager tilvalg"
-        meta={`${mm(rules.beam.height)} × ${mm(rules.beam.thickness)} mm, alltid utstillerens. En ende på en annen takdrager henger på krok, ellers stolpe med fotplate. Deles i hele meter (maks ${fmt(rules.beam.max)} m).`}
+        meta={`${mm(rules.beam.height)} × ${mm(rules.beam.thickness)} mm, alltid utstillerens. En ende på en annen takdrager henger på krok, ellers stolpe med fotplate. Hele og halve meter, deles i lengder på maks ${fmt(rules.beam.max)} m.`}
         result={res.keyFigures.innerBeamLm ? `${fmt(res.keyFigures.innerBeamLm)} m` : null}
         action={<IconButton icon={Paintbrush} label="Tegn innvendig takdrager i plan" pressed={beamPen && tool === 'brush'} onClick={() => pick({ kind: 'beam' })} />}
       />

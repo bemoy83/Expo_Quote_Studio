@@ -18,7 +18,7 @@ import { shelfHeight, shelfRow, shelvesOf } from '../../../domain/shelves/model'
 import type { Foil, Motif, Point, Shelf, TextileWall, Variant, Wall } from '../../../domain/types'
 import { dragGrip, type GripOn } from '../../plan/grips'
 import type { SceneGrip } from '../grips'
-import { dragInnerBeam, dragInnerBeamFine, dragRoom, dragWall, dropObject, dropRoom, roomDrag, type RoomDrag, type WallDrag } from '../../drag'
+import { dragBeam, dragRoom, dragWall, dropObject, dropRoom, roomDrag, type RoomDrag, type WallDrag } from '../../drag'
 import { standardRuns } from '../../../calc/beams/beams'
 import { place, rules } from '../../env'
 import { findMotif } from '../../motifs'
@@ -199,7 +199,7 @@ export function moveDrag(P: PointerProps, hits: SceneHits, drag: Exclude<Drag, {
     drag.moved = true
     // Shift held (or «Fin» on in the pill): 50 mm across, half metres along (Byggeregler T8, T15)
     drag.fine = e.shiftKey || !!drag.fineLock
-    ;(drag.fine ? dragInnerBeamFine : dragInnerBeam)(drag, q, standardRuns(drag.v0, rules.beam.max), P.onEdit, P.onCheckpoint)
+    dragBeam(drag, q, standardRuns(drag.v0, rules.beam.max), P.onEdit, P.onCheckpoint)
     return
   }
   const q = hits.onFloor(e)

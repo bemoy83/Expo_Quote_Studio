@@ -78,13 +78,14 @@ Dørgrepet (`door`, D8) flytter en valgt dør langs veggen med `moveOpeningAlong
 ### Takdragere
 
 - Standard: `calc/beams/beams.ts` (`variantBeams` setter sammen alle tre) · felles for alle utleggene: `calc/beams/beamSegments.ts` (`BeamSegment`, `BeamLayout`, deling etter T2 og `onSegment`), så utleggene ikke importerer hverandre
-- Innvendige (tegnet av kunden): modell `InnerBeam`, redigering `domain/innerBeams.ts`, utlegg `calc/beams/innerBeams.ts`; Shift + dra eller «Fin» (én bryter for alt, `ui/fine.tsx`) utenfor rasteret `shiftInnerBeam` + `dragInnerBeamFine` (`ui/drag.ts`), mållinjer `calc/beams/beamOffsets.ts` tegnet med `DimChain` i `layers/BeamLayer.tsx`, på arbeidsordren for alle (`beamMeasures`) (T15)
+- Innvendige (tegnet av kunden): modell `InnerBeam`, redigering `domain/innerBeams.ts` (alt som flytter eller strekker går gjennom `relaid`, som sier nei langs vegg eller drager), utlegg `calc/beams/innerBeams.ts`; hele og halve meter (T8): pennen tegner i 500 med Shift eller «Fin» (`BEAM_UNIT` i `domain/runDraw.ts`, `runUnit` i `pointer/run.ts`), endegrep `stretchInnerBeam` (`plan/grips.ts`, også i 3D); dra i plan og 3D med `dragBeam` (`ui/drag.ts`): hele meter, med Shift eller «Fin» (én bryter for alt, `ui/fine.tsx`) 50 mm på tvers (`shiftInnerBeam`, T15) og halve meter langs; standarddragerne den ikke kan ligge langs: `standardRuns` i `calc/beams/beams.ts`; mållinjer `calc/beams/beamOffsets.ts` (utenfor rasteret og fri halvmeter-ende) tegnet med `DimChain` i `layers/BeamLayer.tsx`, på arbeidsordren for alle (`beamMeasures`) (T15)
+- Halv meter skjøtes på (T18): `beamSpecs` i `foga/fromVariant.ts` deler en lengde på n,5 m i n m og en 500 (`joined`), skjøten 92 × 80 i `foga/engine.ts` (`RECIPES.beam.half`), kost `ITEM.beamHalf` i `cost/itemDefs.ts`
 - Støttedrager på lange standvegger: `calc/beams/supportBeams.ts`
 - Vegger hvor som helst i 250-rasteret mot dragerne (vegg langs, kryss i stolpe eller mellom stolper, T4, T11, T17): `calc/beams/wallLines.ts`
 - Kroker i 01, enveis og toveis (der en drager henger på en annen, eller på en vegg mellom stolpene, T15): `calc/beams/beamHooks.ts`, plukk i `foga/engine.ts`, 3D i `scene3d/build/frame.ts`
 - Hevet over tekstilvegg eller over en vegg uten stolpe (skjøtet stolpe og krok, hel lengde over et annet nivå T16, T17): `calc/beams/beamLift.ts` (`withJoins`), linjen `beamLiftLines` i `calc/lines/beams.ts`, 3D i `scene3d/build/frame.ts`
 - Linjen og hvem som betaler: `calc/lines/beams.ts` · `calc/context.ts` (`organiserBeams`)
-- Plan og 3D: `plan/layers/BeamLayer.tsx`, tegne `plan/pointer/run.ts`, dra `pointer/beam.ts` · `scene3d/build/frame.ts`
+- Plan og 3D: `plan/layers/BeamLayer.tsx`, tegne `plan/pointer/run.ts`, dra `pointer/beam.ts` · `scene3d/build/frame.ts` (en tegnet drager er valgbar som `pick.beamId`), dra i 3D `scene3d/pointer/drag.ts`
 
 ### Fotplater (støtteplater)
 
