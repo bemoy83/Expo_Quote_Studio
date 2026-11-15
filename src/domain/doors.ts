@@ -2,7 +2,7 @@
 // plan in its middle). Every move goes through moveOpening, so a door never lands in a stand wall or on another opening.
 // Byggeregler D3, D4, D7 (docs/byggeregler.md).
 import { paintWalls } from './edit';
-import { moduleKey, pointAlong, wallDirection, wallLength, wallModules, moduleEnd, moduleStart } from './grid';
+import { moduleKey, pointAlong, wallDirection, wallLength, wallModules, moduleEnd, moduleStart, moduleEnds } from './grid';
 import { replaceWalls } from './replaceWalls';
 import { nextId } from './ids';
 import { roomOf } from './rooms';
@@ -330,7 +330,7 @@ export function canFlipDoor(v: Variant, w: Wall, o: Opening, floor?: FloorBoxes)
   if (!canFlipSwing(v.stand, w)) return false;
   const cur = doorSwing(v.stand, w, o);
   const other = cur === 1 ? -1 : 1;
-  return swingFree(v, pointAlong(w, moduleStart(w, o.module)), pointAlong(w, moduleEnd(w, o.module)), other, floor);
+  return swingFree(v, ...moduleEnds(w, o.module), other, floor);
 }
 
 /** Why a door can not stand in module a–b, or null: neither side has 1 m² free floor (D7). On the stand's edge the
@@ -342,7 +342,7 @@ export function swingBlocked(v: Variant, a: Point, b: Point, floor?: FloorBoxes)
 export const DOOR_NO_SWING = 'Døren trenger 1 m² fri gulvflate på siden den slår til';
 
 /** The ends of the module a door stands in. */
-const doorEnds = (w: Wall, o: Opening): [Point, Point] => [pointAlong(w, moduleStart(w, o.module)), pointAlong(w, moduleEnd(w, o.module))];
+const doorEnds = (w: Wall, o: Opening): [Point, Point] => moduleEnds(w, o.module);
 
 /** Doors whose side lost its free floor swing the other way where that is free (D7). `swings`: the product is a door. */
 export function settleSwings(v: Variant, swings: (product: string) => boolean, floor?: FloorBoxes): Variant {

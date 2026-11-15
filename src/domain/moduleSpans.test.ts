@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { moduleAt, moduleCc, moduleCount, moduleFrom, moduleSpans, moduleStart } from './grid'
+import { moduleAt, moduleCc, moduleCount, moduleEnds, moduleFrom, moduleMovedBy, moduleSpans, moduleStart } from './grid'
 import type { Wall } from './types'
 
 const wall = (L: number, breaks?: number[]): Wall => ({ id: 'w', from: [0, 0], to: [L, 0], ...(breaks ? { breaks } : {}) }) as Wall
@@ -23,5 +23,14 @@ describe('moduleSpans (Byggeregel D8)', () => {
 
   it('ignores a break that does not fit', () => {
     expect(moduleSpans(wall(2, [1.5]))).toEqual([[0, 1], [1, 2]])
+  })
+
+  it('a drag across modules counts them as they lie, past an end out of range', () => {
+    const w = wall(4, [1.25])
+    expect(moduleEnds(w, 2)).toEqual([[1.25, 0], [2.25, 0]])
+    expect(moduleMovedBy(w, 0, 1)).toBe(2)
+    expect(moduleMovedBy(w, 2, 1)).toBe(3)
+    expect(moduleMovedBy(w, 0, -1)).toBe(-1)
+    expect(moduleMovedBy(w, 4, 1)).toBe(5)
   })
 })

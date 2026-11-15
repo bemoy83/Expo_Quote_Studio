@@ -1,4 +1,5 @@
 // Dragging in the wall drawer's drawing: move a textile frame or a decal, or drag the edge or corner of one; move a shelf.
+import { moduleMovedBy } from '../../../domain/grid'
 import type { PointerEvent as RPointerEvent, RefObject } from 'react'
 import { moveFoilBy, updateFoil } from '../../../domain/decor'
 import type { FaceSide } from '../../../domain/faces'
@@ -122,7 +123,8 @@ export function useShelfDrag({ svg, s, select, onEdit, onCheckpoint }: Pick<Drag
         moved = true
         onCheckpoint()
       }
-      const module = f.module + Math.round(du * dir)
+      const w = v.walls.find((x) => x.id === f.wallId)
+      const module = w ? moduleMovedBy(w, f.module, du * dir) : f.module + Math.round(du * dir)
       const y = shelfHeight(rules, f.y + dz)
       if (!copy) return onEdit((x) => dragShelves(x, rules, f.id, ids, module, y), false)
       // A copy where it goes; where it cannot stand, the last copy that could (or none)

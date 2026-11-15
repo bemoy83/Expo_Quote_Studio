@@ -125,6 +125,17 @@ export function moduleFrom(w: Wall, t: number): number | undefined {
   return i < 0 ? undefined : i;
 }
 
+/** The module `d` m along the wall from the middle of module i (a drag across modules, which beside a door off the
+ *  whole metres are not all a metre, D8); −1 or the count when it goes past an end. */
+export function moduleMovedBy(w: Wall, i: number, d: number): number {
+  const t = moduleStart(w, i) + moduleCc(w, i) / 2 + d;
+  if (t < 0) return -1;
+  return t > wallLength(w) ? moduleCount(w) : moduleAt(w, t);
+}
+
+/** Where module i of a wall starts and ends, plan m (moduleStart, moduleEnd). */
+export const moduleEnds = (w: Wall, i: number): [Point, Point] => [pointAlong(w, moduleStart(w, i)), pointAlong(w, moduleEnd(w, i))];
+
 /** Module i's length c/c, m: 1 for a whole module, less for a shorter one. */
 export const moduleCc = (w: Wall, i: number): number => round3(moduleEnd(w, i) - moduleStart(w, i));
 
