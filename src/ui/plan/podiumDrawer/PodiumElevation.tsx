@@ -90,7 +90,7 @@ export function PodiumElevation({ parts: given, length, h: hTop, title, fill, ch
     : given
   const h = drag ? Math.max(...parts.map((p) => p.h)) : hTop
   const L = length / 1000
-  const H = ((drag ? HEIGHTS[HEIGHTS.length - 1] : h) + R.railHeight) / 1000
+  const H = outerHeight(drag ? HEIGHTS[HEIGHTS.length - 1] : h) / 1000
   const view = frame(size, L, H, [], { chainOver: true })
   const sc = planScale(1 / view.u, {})
   const px = (n: number) => sizePx(sc, n)
@@ -103,7 +103,7 @@ export function PodiumElevation({ parts: given, length, h: hTop, title, fill, ch
     const x0 = Math.min(Math.max(c - POST / 2, 0), L - POST)
     // As high as the highest part it holds
     const hi = Math.max(...parts.filter((p) => Math.abs(p.n0 - n) < 1e-6 || Math.abs(p.n1 - n) < 1e-6).map((p) => p.h))
-    return <rect key={`n${n}`} x={x0} y={yAt(hi + R.railHeight)} width={POST} height={(hi + R.railHeight) / 1000} fill={ALU_POST} />
+    return <rect key={`n${n}`} x={x0} y={yAt(outerHeight(hi))} width={POST} height={outerHeight(hi) / 1000} fill={ALU_POST} />
   }
   const chainTs = [0, ...nodes.slice(1, -1).map(x), L]
   // The shelves from the floor, then the top (K19): one chain to the left
@@ -155,13 +155,13 @@ export function PodiumElevation({ parts: given, length, h: hTop, title, fill, ch
    *  or the floor when it is open at the bottom. */
   const lightY = (p: ElevationPart, li: number): [number, number] => {
     const [c0, c1] = lightBands(p)[li]
-    return [yAt(c1), li === 0 ? (kindsOf(p)[0] === 'open' ? H : H - RAIL) : yAt(c0 + R.railHeight)]
+    return [yAt(c1), li === 0 ? (kindsOf(p)[0] === 'open' ? H : H - RAIL) : yAt(outerHeight(c0))]
   }
   // The chosen part or light opening, toned over the print
   const tint = (() => {
     const p = chosen && parts[chosen.part]
     if (!p) return null
-    const [y0, y1] = chosen.light === undefined ? [yAt(p.h + R.railHeight), H] : lightY(p, chosen.light)
+    const [y0, y1] = chosen.light === undefined ? [yAt(outerHeight(p.h)), H] : lightY(p, chosen.light)
     return <rect x={x(p.x0)} y={y0} width={x(p.x1 - p.x0)} height={y1 - y0} />
   })()
   const pick = (i: number, light: number | undefined) => onPick?.(chosen?.part === i && chosen.light === light ? undefined : { part: i, light })
@@ -269,9 +269,9 @@ export function PodiumElevation({ parts: given, length, h: hTop, title, fill, ch
                 })}
                 {/* Top rail, the shelves' rails (K19), and the bottom rail where it is not open from the floor */}
                 <g pointerEvents="none" fill={ALU}>
-                  <rect x={x0} y={yAt(p.h + R.railHeight)} width={w} height={RAIL} />
+                  <rect x={x0} y={yAt(outerHeight(p.h))} width={w} height={RAIL} />
                   {p.shelves.map((y) => (
-                    <rect key={y} x={x0} y={yAt(y + R.railHeight)} width={w} height={RAIL} />
+                    <rect key={y} x={x0} y={yAt(outerHeight(y))} width={w} height={RAIL} />
                   ))}
                   {!lowOpen && <rect x={x0} y={H - RAIL} width={w} height={RAIL} />}
                 </g>

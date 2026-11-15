@@ -8,7 +8,7 @@ import { canMoveWall } from '../../../domain/edit'
 import { sideOf, type FaceSide } from '../../../domain/faces'
 import { toLocal } from '../../../domain/counterShape'
 import { moveObject } from '../../../domain/objects'
-import { HEIGHTS, setSectionHeight } from '../../../domain/podiums'
+import { HEIGHTS, outerHeight, setSectionHeight } from '../../../domain/podiums'
 import { RECIPES } from '../../../foga/recipes'
 import type * as THREE from 'three'
 import { faceOfPoint } from '../../../domain/textile/free'
@@ -67,7 +67,7 @@ export function podiumTopAt(v: Variant, hit: Hit | null): { id: string; section:
   if (!o?.sections || !hit) return undefined
   const [x, z] = toLocal(o, [hit.point.x + v.stand.width / 2, hit.point.z + v.stand.depth / 2])
   const f = RECIPES.counter.face
-  const i = o.sections.findIndex((s) => x > s.x[0] - f && x < s.x[1] + f && z > s.z[0] - f && z < s.z[1] + f && hit.point.y > (s.h + RECIPES.counter.railHeight) / 1000 - TOP_GRIP)
+  const i = o.sections.findIndex((s) => x > s.x[0] - f && x < s.x[1] + f && z > s.z[0] - f && z < s.z[1] + f && hit.point.y > outerHeight(s.h) / 1000 - TOP_GRIP)
   return i < 0 ? undefined : { id: o.id, section: i, h: o.sections[i].h }
 }
 
