@@ -2,7 +2,8 @@
 // pens end at the stand's edge: in the half metre toward the right and the front a click lays a 500 module out to the
 // edge, and a drag in whole metres gets the half metre last.
 import { describe, expect, it } from 'vitest';
-import { nearestEdge, type Module } from './grid';
+import { nearestEdge, onMetreLine, toEdge, type Module } from './grid';
+import { offGrid } from './innerBeams';
 import { strokeFrom } from './snapGrid';
 import { wallOffsets } from './wallOffsets';
 import { runTo, shownModule, startRun } from './runDraw';
@@ -70,5 +71,25 @@ describe('Byggeregel V14: measures off the metre lines', () => {
   it('V14 gives a wall to the stand edge no measure: the edge is read off the drawing', () => {
     const walls = [{ id: 'w', from: [1, 1] as const, to: [3.5, 1] as const }];
     expect(wallOffsets(stand, walls, [])).toEqual([]);
+  });
+});
+
+describe('Byggeregel V14: the stand edge is a metre line', () => {
+  it('V14 counts a whole metre and the edge, nothing between', () => {
+    expect(onMetreLine(stand, [3.5, 2.5], 0)).toBe(true);
+    expect(onMetreLine(stand, [3.5, 2.5], 1)).toBe(true);
+    expect(onMetreLine(stand, [2.5, 1.5], 0)).toBe(false);
+    expect(onMetreLine(stand, [3, 2], 1)).toBe(true);
+  });
+
+  it('V14 takes the edge as the last step once past the middle of the rest', () => {
+    expect(toEdge(3, 3.2, 3.5, 1)).toBe(3);
+    expect(toEdge(3, 3.3, 3.5, 1)).toBe(3.5);
+    expect(toEdge(3, 3.9, 4, 1)).toBe(3);
+  });
+
+  it('V14 T15 does not count a takdrager along the front edge as off the grid', () => {
+    expect(offGrid(stand, { id: 'b', from: [0, 2.5], to: [3, 2.5] })).toBe(false);
+    expect(offGrid(stand, { id: 'b', from: [0, 1.5], to: [3, 1.5] })).toBe(true);
   });
 });

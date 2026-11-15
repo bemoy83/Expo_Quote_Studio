@@ -1,7 +1,7 @@
 // Mål til vegger utenfor hele meter (Byggeregel V12, Bjørn 14.11.2026): a wall off the metre lines (V9) is measured out on
 // the work order from the nearest wall or stand edge parallel to what is measured, only where it is not a whole metre:
 // the wall's line once, and each end that is off the metre.
-import { onSpan, type Module } from './grid';
+import { onMetreLine, onSpan, type Module } from './grid';
 import type { Point, Stand, Wall } from './types';
 
 export interface WallOffset {
@@ -14,8 +14,6 @@ export interface WallOffset {
 }
 
 const EPS = 1e-6;
-/** On a whole metre. */
-export const whole = (n: number) => Math.abs(n - Math.round(n)) < EPS;
 
 /**
  * From p along axis k (0: x, 1: y) to the nearest line a wall module lies on across that axis (one through p's other
@@ -48,9 +46,8 @@ export function wallOffsets(stand: Stand, walls: readonly Wall[], mods: readonly
   };
   // On another wall: a module not on this wall's own line that p lies on
   const onOther = (w: Wall, p: Point) => mods.some((m) => !(onSpan(w.from, w.to, m.a) && onSpan(w.from, w.to, m.b)) && onSpan(m.a, m.b, p));
-  // The stand's edge is read off the drawing like a metre line, also on a stand in half metres (Byggeregel V14)
-  const size = [stand.width, stand.depth];
-  const on = (p: Point, i: 0 | 1) => whole(p[i]) || Math.abs(p[i] - size[i]) < EPS;
+  // The stand's edge is read off the drawing like a metre line (Byggeregel V14)
+  const on = (p: Point, i: 0 | 1) => onMetreLine(stand, p, i);
   for (const w of walls) {
     if (w.room) continue;
     // Along: 0 for a wall along x

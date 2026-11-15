@@ -2,7 +2,7 @@
 // off the metre lines (V9) on its line in 250. The pens that
 // draw a run (wall, takdrager) use the drawing tool in run.ts.
 import { eraseWalls } from '../../../domain/edit'
-import { modulesAlong } from '../../../domain/grid'
+import { modulesAlong, onMetreLine } from '../../../domain/grid'
 import { eraseInnerBeams, removeInnerBeam } from '../../../domain/innerBeams'
 import type { Point } from '../../../domain/types'
 import { rules } from '../../env'
@@ -27,14 +27,12 @@ export function startStroke(c: PointerCtx, q: P, beamId?: string): Drag {
 const FINE = 0.25
 /** How near a wall the pointer must be to take it, m. */
 const NEAR = 0.2
-const whole = (n: number) => Math.abs(n - Math.round(n)) < 1e-6
 
 /** Where q lies on the nearest wall module that is off the metre grid, when it is that near; else null. */
 function offGridAt(c: PointerCtx, q: P): P | null {
   let best: { d: number; p: P } | null = null
-  // The stand's edge is a metre line too, also on a stand in half metres (Byggeregel V14)
-  const { width: W, depth: D } = c.v.stand
-  const onGrid = (p: Point) => (whole(p[0]) || Math.abs(p[0] - W) < 1e-6) && (whole(p[1]) || Math.abs(p[1] - D) < 1e-6)
+  // The stand's edge is a metre line too (Byggeregel V14)
+  const onGrid = (p: Point) => onMetreLine(c.v.stand, p, 0) && onMetreLine(c.v.stand, p, 1)
   for (const m of c.mods) {
     if (onGrid(m.a) && onGrid(m.b)) continue
     const d = distToSegment(q, m.a, m.b)

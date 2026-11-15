@@ -4,8 +4,8 @@
 // along the beam to the nearest wall or stand edge across it, as V12. The plan shows them on the beam being moved or
 // selected, the work order for every one.
 import { offGrid } from '../../domain/innerBeams';
-import { onSpan, pointKey } from '../../domain/grid';
-import { nearestAcross, whole } from '../../domain/wallOffsets';
+import { onMetreLine, onSpan, pointKey } from '../../domain/grid';
+import { nearestAcross } from '../../domain/wallOffsets';
 import { builtModules } from '../../domain/walls';
 import type { Point, Variant } from '../../domain/types';
 import type { CalcResult } from '../calc';
@@ -35,11 +35,11 @@ export function beamOffsets(v: Variant, res: Pick<CalcResult, 'posts' | 'hooks' 
     const k = h ? 0 : 1;
     for (const e of [b.from, b.to]) {
       // A free end on a half metre: on no wall, beam or hook
-      if (whole(e[k]) || hung.has(pointKey(e)) || mods.some((m) => onSpan(m.a, m.b, e))) continue;
+      if (onMetreLine(v.stand, e, k) || hung.has(pointKey(e)) || mods.some((m) => onSpan(m.a, m.b, e))) continue;
       const q = nearestAcross(v.stand, mods, e, k);
       if (q) out.push({ beamId: b.id, from: e, to: q, length: Math.round(Math.abs(q[k] - e[k]) * 1000) / 1000 });
     }
-    if (!offGrid(b)) continue;
+    if (!offGrid(v.stand, b)) continue;
     // Across the beam: x for a beam along y, y for one along x
     const ax = h ? 1 : 0;
     for (const e of [b.from, b.to]) {

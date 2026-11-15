@@ -91,7 +91,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   Takdragerreglene gjelder som før: langs en åpen side hele meter og halvmeteren sist (T2, T18), en tverrdrager fra en
   skjøt likedan, støttedrageren 3 m fra hjørnet (T7) og fotplater når veggene står fritt (S2).
   Andre mål og diagonaler kan komme senere, men ikke nå.
-  *Bjørn 15.11.2026 · kode `src/ui/panel/StandSettings.tsx`, `src/domain/grid.ts`, `src/calc/lines/walls.ts`, `src/ui/plan/PlanView.tsx`, `src/domain/runDraw.ts`, `src/domain/snapGrid.ts`, `src/ui/plan/pointer/stroke.ts`, `src/domain/wallOffsets.ts` · test `src/calc/halfMetreStand.test.ts`, `src/domain/halfMetreStand.test.ts`, `src/calc/halfMetreBeams.test.ts`*
+  *Bjørn 15.11.2026 · kode `src/ui/panel/StandSettings.tsx`, `src/domain/grid.ts`, `src/calc/lines/walls.ts`, `src/ui/plan/PlanView.tsx`, `src/domain/runDraw.ts`, `src/domain/snapGrid.ts`, `src/ui/plan/pointer/stroke.ts`, `src/domain/wallOffsets.ts`, `src/domain/innerBeams.ts` · test `src/calc/halfMetreStand.test.ts`, `src/domain/halfMetreStand.test.ts`, `src/calc/halfMetreBeams.test.ts`*
 
 ## S · Støtte for systemvegg
 

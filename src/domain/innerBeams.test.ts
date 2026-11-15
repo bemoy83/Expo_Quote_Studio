@@ -60,10 +60,10 @@ describe('Shift + dra (Byggeregel T15)', () => {
   it('moves across in 50 mm steps off the grid, and back onto it on a whole metre', () => {
     const v = shiftInnerBeam(base, 'td1', 0.37, []);
     expect(v.innerBeams?.[0]).toMatchObject({ from: [2.35, 0], to: [2.35, 4] });
-    expect(offGrid(v.innerBeams![0])).toBe(true);
+    expect(offGrid(v.stand, v.innerBeams![0])).toBe(true);
     const back = shiftInnerBeam(v, 'td1', 0.65, []);
     expect(back.innerBeams?.[0]).toMatchObject({ from: [3, 0], to: [3, 4] });
-    expect(offGrid(back.innerBeams![0])).toBe(false);
+    expect(offGrid(back.stand, back.innerBeams![0])).toBe(false);
   });
   it('never onto a wall or out of the stand', () => {
     expect(shiftInnerBeam(base, 'td1', -2, [])).toBe(base);
