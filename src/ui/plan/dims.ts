@@ -84,16 +84,11 @@ function onSide(v: Variant, w: Wall, s: Side): boolean {
   return Math.abs(w.from[k] - line.at) < EPS && Math.abs(w.to[k] - line.at) < EPS
 }
 
-/** A chain of whole modules (1 000 each) along a wall, as positions along its axis. */
+/** The wall's modules as a chain, as positions along its axis: post to post as they stand (moduleSpans: whole metres
+ *  from its start, a shorter one last, and round a door off the whole metres, Byggeregler V1, D8). */
 function moduleChain(w: Wall): number[] {
   const k = horizontal(w) ? 0 : 1
-  const a = Math.min(w.from[k], w.to[k])
-  const b = Math.max(w.from[k], w.to[k])
-  const ts: number[] = []
-  // Beside a door off whole metres the modules follow the door (Byggeregel D8)
-  if (w.breaks?.length) for (const [s] of moduleSpans(w)) ts.push(pointAlong(w, s)[k])
-  else for (let t = Math.ceil(a - EPS); t <= b + EPS; t++) ts.push(t)
-  return chainPoints([a, b, ...ts])
+  return chainPoints([w.from[k], w.to[k], ...moduleSpans(w).map(([s]) => pointAlong(w, s)[k])])
 }
 
 /** A chain drawn beside a wall or run inside the stand. */

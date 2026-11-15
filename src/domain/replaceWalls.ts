@@ -1,6 +1,6 @@
 // Replacing the walls of a variant while openings, textiles, foils and shelves follow onto the new walls. Used by every
 // edit that redraws walls (domain/edit.ts, rooms.ts, enclosures.ts).
-import { moduleKey, pointAlong, wallDirection, wallLength, moduleEnd, moduleStart, moduleAt, moduleFrom } from './grid';
+import { moduleKey, pointAlong, wallDirection, wallLength, moduleEnd, moduleStart, moduleAt, moduleFrom, moduleEnds } from './grid';
 import type { Opening, Point, TextileWall, Variant, Wall } from './types';
 import { defaultSwing } from './walls';
 
@@ -153,7 +153,7 @@ function dedupeOpenings(walls: Wall[], openings: Opening[]): Opening[] {
   return openings.filter((o) => {
     const w = walls.find((x) => x.id === o.wallId);
     if (!w) return false;
-    const key = moduleKey(pointAlong(w, moduleStart(w, o.module)), pointAlong(w, moduleEnd(w, o.module)));
+    const key = moduleKey(...moduleEnds(w, o.module));
     if (seen.has(key)) return false;
     seen.add(key);
     return true;

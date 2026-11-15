@@ -58,7 +58,8 @@ Dørgrepet (`door`, D8) flytter en valgt dør langs veggen med `moveOpeningAlong
 
 **Veggens moduler (D8):** `moduleSpans` i `domain/grid.ts` er eneste kilde: hele meter fra `from`, kort rest sist, og
 `Wall.breaks` der en dør utenfor hele meter har sin 1000-modul. Modulnummer er indeks, ikke meter: bruk
-`moduleStart`/`moduleEnd`/`moduleAt`/`moduleCc`, aldri `i` eller `Math.floor(t)`. Bruddene settes bare i `replaceWalls`
+`moduleStart`/`moduleEnd`/`moduleEnds`/`moduleAt`/`moduleCc`, aldri `i` eller `Math.floor(t)`; et drag over moduler
+`moduleMovedBy` (hyller i veggriss og 3D). Bruddene settes bare i `replaceWalls`
 (fra der åpningene begynner; `add` for en dør satt etter meter), `fitBreaks` i `ui/edits.ts` rydder etter en endring.
 
 ## Per produkt

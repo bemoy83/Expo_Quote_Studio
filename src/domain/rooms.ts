@@ -5,7 +5,7 @@
 // side refer to `<id>.<side>` with offsets from the side's start, so they move with the room. Every side runs
 // clockwise round the room, so the room is always on the left of a side and its outside on the right.
 // Byggeregler R1, R2, R4 (docs/byggeregler.md).
-import { moduleKey, pointAlong, runs, moduleCount, wallModules, moduleEnd, moduleStart, wallLength } from './grid';
+import { moduleKey, pointAlong, runs, moduleCount, wallModules, moduleEnd, moduleStart, wallLength, moduleEnds } from './grid';
 import { ownPlate } from './panels';
 import { replaceWalls, type PlacedOpening } from './replaceWalls';
 import { furthest, stepsOf } from './grips';
@@ -113,7 +113,7 @@ function settleDoors(v: Variant, id: string): { v: Variant; moved: boolean } | n
   const mine = (o: Opening) => isRoomWallId(o.wallId, id);
   const keyOf = (o: Opening) => {
     const w = v.walls.find((x) => x.id === o.wallId);
-    return w ? moduleKey(pointAlong(w, moduleStart(w, o.module)), pointAlong(w, moduleEnd(w, o.module))) : '';
+    return w ? moduleKey(...moduleEnds(w, o.module)) : '';
   };
   const taken = new Set(v.openings.filter((o) => !mine(o)).map(keyOf));
   const gaps = gapKeys(v);

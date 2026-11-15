@@ -2,6 +2,7 @@
 // a section of Disker og podier (its height, Byggeregel K18), a room, an inner wall), a move drags it, a release drops it or, without moving, selects what was pressed. Anything else orbits
 // the camera. A click is a click, a drag is never one (Bjørn 9.11.2026): letting go after a drag (or an orbit) leaves the
 // selection as it was, so the drawer does not open when something is only moved.
+import { moduleMovedBy } from '../../../domain/grid'
 import { moveFoilBy } from '../../../domain/decor'
 import { canMoveWall } from '../../../domain/edit'
 import { sideOf, type FaceSide } from '../../../domain/faces'
@@ -138,7 +139,7 @@ export function moveDrag(P: PointerProps, hits: SceneHits, drag: Exclude<Drag, {
     if (!drag.moved) P.onCheckpoint()
     drag.moved = true
     const { shelf } = drag
-    const module = shelf.module + Math.round(f.t - drag.t0)
+    const module = moduleMovedBy(drag.w, shelf.module, f.t - drag.t0)
     const y = shelfHeight(rules, shelf.y + f.h - drag.h0)
     if (!drag.copy) {
       P.onEdit((x) => dragShelves(x, rules, shelf.id, drag.ids, module, y), false)

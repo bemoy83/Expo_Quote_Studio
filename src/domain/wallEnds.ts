@@ -2,7 +2,7 @@
 // FREE end, one no other wall or textile wall touches; a drag of it moves that end along the wall, in whole metres, 250
 // with Shift or «Fin», the other end still. Room walls and stand walls have none. A door (or a foil, shelf or InFrame
 // textile) the move would cut off or shift stops it. Free-standing textile walls: textile/free.ts. Pure.
-import { onSpan, uncoveredRuns, wallDirection, wallLength, wallModules, pointAlong, moduleEnd, moduleStart } from './grid';
+import { onSpan, uncoveredRuns, wallDirection, wallLength, wallModules, moduleEnds } from './grid';
 import { canMoveWall } from './edit';
 import { replaceWalls } from './replaceWalls';
 import { movedEnd, type RunEnd } from './grips';
@@ -49,7 +49,7 @@ export function stretchWall(v: Variant, id: string, end: RunEnd, d: number): Var
 
 /** Every door, foil, shelf and textile on the wall stays where it stood, on a module the same length. */
 function keepsFelts(v: Variant, next: Variant, w: Wall, moved: Wall): boolean {
-  const at = (x: Wall, i: number) => [pointAlong(x, moduleStart(x, i)), pointAlong(x, moduleEnd(x, i))];
+  const at = moduleEnds;
   const sameModule = (i: number, j: number) => {
     const [a, b] = at(w, i);
     const [c, e] = at(moved, j);
