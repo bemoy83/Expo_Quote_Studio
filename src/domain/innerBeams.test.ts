@@ -70,3 +70,34 @@ describe('Shift + dra (Byggeregel T15)', () => {
     expect(shiftInnerBeam(base, 'td1', 4.5, [])).toBe(base);
   });
 });
+
+describe('whole and half metres (Byggeregel T8)', () => {
+  it('draws half-metre lengths and ends, at least a half metre', () => {
+    expect(draw(ROW, [3, 0], [3, 2.5]).innerBeams).toEqual([{ id: 'td1', from: [3, 0], to: [3, 2.5] }]);
+    expect(draw(ROW, [0.5, 2], [5.5, 2]).innerBeams?.[0]).toMatchObject({ from: [0.5, 2], to: [5.5, 2] });
+    const r = drawInnerBeam(ROW, [3, 1], [3, 1.25], FRONT);
+    expect('error' in r && r.error).toBe('Takdrageren må være minst en halv meter');
+  });
+  it('refuses along a wall or beam also when the ends are on half metres', () => {
+    const v = draw(ROW, [0.5, 2], [2.5, 2]);
+    const why = (a: Point, b: Point) => {
+      const r = drawInnerBeam(v, a, b, FRONT);
+      return 'error' in r ? r.error : null;
+    };
+    expect(why([1.5, 0], [3.5, 0])).toBe('Takdrageren kan ikke gå langs en vegg');
+    expect(why([2, 2], [4, 2])).toBe('Det går allerede en takdrager her');
+    expect(why([2.5, 2], [4, 2])).toBeNull();
+  });
+  it('Tøm takes the part stroked, a half-metre rest stays', () => {
+    const v = draw(ROW, [0, 2], [3.5, 2]);
+    expect(eraseInnerBeams(v, [1, 2], [3, 2]).innerBeams).toEqual([
+      { id: 'td1', from: [0, 2], to: [1, 2] },
+      { id: 'td2', from: [3, 2], to: [3.5, 2] },
+    ]);
+  });
+  it('Shift + dra moves along in half metres', () => {
+    const v = draw(ROW, [1, 2], [3, 2]);
+    expect(shiftInnerBeam(v, 'td1', 0, FRONT, 0.6).innerBeams?.[0]).toMatchObject({ from: [1.5, 2], to: [3.5, 2] });
+    expect(moveInnerBeam(shiftInnerBeam(v, 'td1', 0, FRONT, 0.5), 'td1', 0, 1, FRONT).innerBeams?.[0]).toMatchObject({ from: [2.5, 2], to: [4.5, 2] });
+  });
+});

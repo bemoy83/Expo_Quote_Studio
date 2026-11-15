@@ -138,9 +138,12 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   takdrager: deler stolpen på en vegg eller stolpe, henger på krok på lengden av en drager, og stopper foran en vegg
   langs linjen. Et lengre spenn får én per 6 m. Den er en standard takdrager. Uten takdrager blir det fotplater (S2).
   *Bjørn 3.11.2026 · `rules.beam.supportSpan` · kode `src/calc/beams/supportBeams.ts` · test `src/calc/beams/supportBeams.test.ts`*
-- **T8 Innvendig takdrager.** Tegnes av kunden, rett og i hele meter innenfor standen, med Shift eller «Fin» i 250 som
-  veggen (V1, V9; da gjelder T15 der den ikke treffer stolper), aldri langs en vegg eller oppå en annen takdrager. Samme profil, høyde og deling (T1, T2) som standard.
-  *Bjørn 1.11.2026 · kode `src/domain/innerBeams.ts`, `src/calc/beams/innerBeams.ts` · test `src/domain/innerBeams.test.ts`*
+- **T8 Innvendig takdrager.** Tegnes av kunden, rett innenfor standen i hele og halve meter: uten Shift i hele meter,
+  med Shift eller «Fin» i 500 fra et punkt på halvmeterrutenettet (da gjelder T15 der den ikke treffer stolper), minst en
+  halv meter, aldri langs en vegg eller oppå en annen takdrager, også når endene står på en halv meter. Dra i Velg flytter
+  den i hele meter, med Shift eller «Fin» i 500 langs drageren (og 50 mm på tvers, T15). Samme profil, høyde og deling
+  (T1, T2) som standard.
+  *Bjørn 1.11.2026 og 15.11.2026 · kode `src/domain/innerBeams.ts`, `src/calc/beams/innerBeams.ts` · test `src/domain/innerBeams.test.ts`*
 - **T9 Krok.** En ende som treffer en annen takdrager henger på den med krok: ingen stolpe der, og drageren den henger
   på deles ikke. Én krok per krokpunkt, i 01 som en T over drageren: enveis (ett ben) når dragere henger fra én side,
   toveis (to ben) fra begge. Festes med M5 maskinskrue i 503. Plukkes hel, uten eget art.nr. og uten kost eller pris.

@@ -32,7 +32,7 @@ import { NextDefs } from './layers/NextDefs'
 import { PickLayer } from './layers/PickLayer'
 import { PreviewLayer } from './layers/PreviewLayer'
 import { SnapDots } from './layers/Previews'
-import { RUN_UNIT } from '../../domain/runDraw'
+import { BEAM_UNIT, RUN_UNIT } from '../../domain/runDraw'
 import { RoomLayer } from './layers/RoomLayer'
 import { ShelfLayer } from './layers/ShelfLayer'
 import { TextileLayer } from './layers/TextileLayer'
@@ -155,8 +155,9 @@ export function PlanView(p: Props) {
     onOpenDrawer: p.onOpenDrawer,
   })
   const { svg, svgRef, svgEl, hover, dragging, stroke, erasing, handlers } = pointer
-  /** Snap points show only while a brush snaps to them: the metre grid, 250 with Shift or «Fin» (wall and textile). */
-  const dotStep = textileTool || wallTool || beamTool ? (pointer.fine ? RUN_UNIT : rules.wall.cc) : null
+  /** Snap points show only while a brush snaps to them: the metre grid, 250 with Shift or «Fin» (wall and textile),
+   *  500 for Takdrager (Byggeregel T8). */
+  const dotStep = textileTool || wallTool || beamTool ? (pointer.fine ? (beamTool ? BEAM_UNIT : RUN_UNIT) : rules.wall.cc) : null
 
   // What the pen would store at the pointer (docs/forhandsvisning.md): worked out again only when the target changes,
   // then drawn through the layers below, dimmed, where the plan changes (nextArea.ts)

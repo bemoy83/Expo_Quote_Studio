@@ -5,7 +5,7 @@
 // stores from the drag itself (plan/next.ts).
 import { paintWalls } from '../../../domain/edit'
 import { drawInnerBeam } from '../../../domain/innerBeams'
-import { rebaseRun, runTo, shownModule, startRun } from '../../../domain/runDraw'
+import { BEAM_UNIT, RUN_UNIT, rebaseRun, runTo, shownModule, startRun } from '../../../domain/runDraw'
 import type { Point } from '../../../domain/types'
 import { pressMove, startPress } from './draw'
 import { textileClick, textileRun, textileToast } from './textile'
@@ -15,9 +15,13 @@ export type RunPress = Extract<Drag, { kind: 'run' }>
 
 const pt = (q: P): Point => [q.x, q.y]
 
+/** The fine step a pen draws in with Shift or Fin, m: 500 for Takdrager (whole and half metres, Byggeregel T8), else 250. */
+export const runUnit = (pens: { beamTool: boolean }) => (pens.beamTool ? BEAM_UNIT : RUN_UNIT)
+
 /** A press at q. `fine`: Shift or Fin. */
 export function startRunDrag(c: PointerCtx, q: P, fine: boolean): RunPress {
-  return { kind: 'run', ...startPress(q), run: startRun(c.v.stand, shownModule(c.v.stand, q, fine), pt(q), fine) }
+  const u = runUnit(c.pens)
+  return { kind: 'run', ...startPress(q), run: startRun(c.v.stand, shownModule(c.v.stand, q, fine, u), pt(q), fine, u) }
 }
 
 /** Shift pressed or let go since the last move (or Fin): goes on from what is drawn, at the pointer before this move. */

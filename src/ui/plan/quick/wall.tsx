@@ -64,12 +64,16 @@ export function WallPicks({ p, head, more }: QuickCtx) {
           />
         </>
       )}
-      {/* Tilpasset: «Fin» for Vegg (250 steps, as Shift), the variants of the opening in hand */}
+      {/* Tilpasset: «Fin» for Vegg (250 steps, as Shift) and Takdrager (500, Byggeregel T8), the variants of the opening in hand */}
       <Sep />
-      <FinBtn
-        off={brush.kind === 'wall' ? undefined : 'Fin · gjelder bare Vegg'}
-        title={{ on: 'Fin · 250-steg fra en 250-node · trykk for hele meter igjen', off: 'Fin · tegn vegg i 250-steg fra en 250-node · på desktop også Shift' }}
-      />
+      {brush.kind === 'beam' ? (
+        <FinBtn title={{ on: 'Fin · halve meter fra en 500-node · trykk for hele meter igjen', off: 'Fin · tegn takdrager i halve meter · på desktop også Shift' }} />
+      ) : (
+        <FinBtn
+          off={brush.kind === 'wall' ? undefined : 'Fin · gjelder bare Vegg og Takdrager'}
+          title={{ on: 'Fin · 250-steg fra en 250-node · trykk for hele meter igjen', off: 'Fin · tegn vegg i 250-steg fra en 250-node · på desktop også Shift' }}
+        />
+      )}
       {opening && (
         <>
           {openingProducts(products).map((x) => {

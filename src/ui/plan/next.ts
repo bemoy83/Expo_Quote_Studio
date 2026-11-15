@@ -36,7 +36,7 @@ import type { PlanHits } from './pointer/hits'
 import { isDoor, openingEdge } from './pointer/opening'
 import type { Pens } from './pointer/pens'
 import { counterUnder, drawPodiumAt, podiumStart } from './pointer/podium'
-import { runOf } from './pointer/run'
+import { runOf, runUnit } from './pointer/run'
 import { gripDrawAt } from './pointer/grip'
 import { gripHint, gripWith, sameGrip, type GripDraw } from './grips'
 import { placeHolds, placeKey } from './pointer/place'
@@ -246,9 +246,9 @@ function targetOf(p: NextInput): NextTarget | null {
     const g = hits.gripAt(hover)
     if (g && gripWith(g.on, tool, brush)) return target(`grip:${g.at}`, () => line({ hint: gripHint(g.on, v), hotGrip: g.at }))
   }
-  // The drawing pens: what a click stores, 250 with Shift or Fin
+  // The drawing pens: what a click stores, 250 with Shift or Fin (500 for Takdrager)
   const at = hover
-  const shown = shownModule(v.stand, at, !!p.fine)
+  const shown = shownModule(v.stand, at, !!p.fine, runUnit(pens))
   if (pens.wallTool && wallRal) {
     const m = plateAt(p.mods, at)
     if (m) return target(`plate:${m.key}`, () => area({ edit: (x) => paintPlates(x, p.mods, [m.key], wallRal), hint: null }))

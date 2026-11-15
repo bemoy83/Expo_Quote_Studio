@@ -1,6 +1,6 @@
 // One drawing tool for straight runs (Bjørn 14.11.2026): the module shown stays put; with Shift it is 250 and grows in 250.
 import { describe, expect, it } from 'vitest';
-import { rebaseRun, runTo, shownModule, startRun } from './runDraw';
+import { BEAM_UNIT, rebaseRun, runTo, shownModule, startRun } from './runDraw';
 import type { Point, Stand } from './types';
 
 const stand: Stand = { width: 6, depth: 3, type: 'row' };
@@ -62,5 +62,18 @@ describe('run drawing', () => {
     d = rebaseRun(d, [4.7, 1], false);
     expect(runTo(d, [4.7, 1])).toEqual([[2, 1], [4.5, 1]]);
     expect(runTo(d, [5.6, 1])).toEqual([[2, 1], [5.5, 1]]);
+  });
+});
+
+describe('Takdrager in half metres (Byggeregel T8)', () => {
+  const beamPress = (q: Point, fine = false) => startRun(stand, shownModule(stand, { x: q[0], y: q[1] }, fine, BEAM_UNIT), q, fine, BEAM_UNIT);
+  it('without Shift whole metres as the other pens', () => {
+    expect(runTo(beamPress([2.5, 1.05]), [4.7, 1.1])).toEqual([[2, 1], [5, 1]]);
+  });
+  it('with Shift or Fin it shows 500 on the 500 grid and grows in 500 steps', () => {
+    expect(shownModule(stand, { x: 2.6, y: 1.05 }, true, BEAM_UNIT)).toMatchObject({ a: [2.5, 1], b: [3, 1] });
+    const d = beamPress([2.6, 1.05], true);
+    expect(runTo(d, [3.3, 1])).toEqual([[2.5, 1], [3.5, 1]]);
+    expect(runTo(d, [4.8, 1])).toEqual([[2.5, 1], [5, 1]]);
   });
 });
