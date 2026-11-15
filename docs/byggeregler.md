@@ -75,6 +75,12 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   eller standkant på tvers av målet. Mål som er hele meter vises ikke; montøren leser dem av rutenettet.
   Slått av foreløpig (Bjørn 14.11.2026): koden ligger klar, men arbeidsordren viser ikke målene (`wallMeasures`).
   *Bjørn 14.11.2026 · kode `src/domain/wallOffsets.ts`, `src/ui/plan/layers/DimLayer.tsx` · test `src/domain/wallOffsets.test.ts`*
+- **V13 Endegrep på innervegg.** En valgt innervegg har et grep på hver fri ende (en ende ingen annen vegg eller
+  tekstilvegg står mot), i Velg og med Vegg-pennen. Grepet flytter enden langs veggen i hele meter, 250 med Shift eller
+  Fin; den andre enden står. Veggen kan gå inntil en annen vegg, ikke langs eller gjennom den, ikke utenfor standen og
+  ikke kortere enn 250. En dør, folie, hylle eller tekstil som da ville falt utenfor eller havnet i en annen modul,
+  stopper grepet (det stopper ved siste steg som går). Standvegger og romvegger har ingen endegrep.
+  *Bjørn 14.11.2026 og 15.11.2026 · kode `src/domain/wallEnds.ts`, `src/ui/plan/grips.ts` · test `src/domain/wallEnds.test.ts`*
 
 ## S · Støtte for systemvegg
 
@@ -322,6 +328,10 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   stopper mot rammens flate (60 mm fra veggens senterlinje) og står ikke inntil systemveggen der. Den blir like mye
   kortere.
   *Bjørn 6.11.2026 · kode `src/calc/textile/placement.ts`, `src/calc/textile/free.ts` · test `src/calc/textile/placement.test.ts`*
+- **X12 Endegrep på frittstående tekstilvegg.** En valgt frittstående tekstilvegg har grep på hver fri ende, i Velg og
+  med Tekstil-pennen, som innervegger (V13): hele meter, 250 med Shift eller Fin, kontrollert som når den tegnes, og
+  grunnen vises når det ikke går. InFrame-tekstil på systemvegg har ingen endegrep ennå.
+  *Bjørn 14.11.2026 og 15.11.2026 · kode `src/domain/textile/free.ts`, `src/ui/plan/grips.ts` · test `src/domain/wallEnds.test.ts`*
 
 ## G · Gulv
 

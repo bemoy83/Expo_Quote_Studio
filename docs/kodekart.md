@@ -49,7 +49,8 @@ grunnen i hintet) og tegningen `layers/Grips.tsx` (rund på side, firkant i hjø
 flytt, rund pil for roter). Hvilke grep pennen i hånden viser og tar, avgjør `gripWith` (Velg alle unntatt flytt;
 Disker og podier diskens, Vegg rommets). Når en penn velges, beholdes det den har grep for (`keptFor`: rom for Vegg,
 disk for Disker og podier), og et rom en vegg-strek lukker, velges (`pointer/run.ts`). Et flyttegrep (`GripOn` type `move`) starter samme drag som Velg (`room`/`object` med
-`grip: true`, så et klikk ikke velger). Rotergrepet (`rotate`) går gjennom `dragGrip` som de andre: vinkelen rundt
+`grip: true`, så et klikk ikke velger). Endegrep (`end`) på innervegg (`domain/wallEnds.ts`) og frittstående tekstil
+(`stretchFreeTextile` i `textile/free.ts`) bruker `movedEnd` fra `domain/grips.ts`. Rotergrepet (`rotate`) går gjennom `dragGrip` som de andre: vinkelen rundt
 midten (`turnOf`) i steg av 90 eller 15, lengste lovlige med `furthest`, `rotateObject(v, ctx, id, by)`.
 
 ## Per produkt

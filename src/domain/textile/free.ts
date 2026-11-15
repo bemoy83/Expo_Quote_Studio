@@ -10,6 +10,8 @@ import type { FreeTextile, Point, TextileFace, Variant } from '../types';
 import { nextId } from '../ids';
 import { snapTo } from '../snapGrid';
 import { builtModules } from '../walls';
+import { onSpan } from '../grid';
+import { movedEnd, type RunEnd } from '../grips';
 
 /** Face A is side 1 (left normal of from → to), face B side −1. */
 export type FaceKey = 'a' | 'b';
@@ -237,6 +239,28 @@ export function rotateFreeTextile(v: Variant, rules: Rules, id: string): { v: Va
   const dx = lo(0) < 0 ? -lo(0) : hi(0) > v.stand.width ? v.stand.width - hi(0) : 0;
   const dy = lo(1) < 0 ? -lo(1) : hi(1) > v.stand.depth ? v.stand.depth - hi(1) : 0;
   const run: FreeTextile = { ...t, from: [from[0] + dx, from[1] + dy], to: [to[0] + dx, to[1] + dy] };
+  const why = blocked(v, rules, run, v.freeTextiles.filter((x) => x.id !== id));
+  if (why) return { error: why };
+  return { v: { ...v, freeTextiles: v.freeTextiles.map((x) => (x.id === id ? run : x)) } };
+}
+
+/** Byggeregel X12: the ends of a free-standing textile wall that have a grip: those that touch neither a wall nor another textile wall
+ *  (Bjørn 14.11.2026: free ends first). */
+export function freeGripEnds(v: Variant, t: FreeTextile): RunEnd[] {
+  const mods = builtModules(v);
+  const free = (p: Point) => !mods.some((m) => onSpan(m.a, m.b, p)) && !v.freeTextiles.some((o) => o.id !== t.id && onSpan(o.from, o.to, p));
+  return (['from', 'to'] as const).filter((e) => free(t[e]));
+}
+
+/** The run `id` with its end `end` moved `d` m along it (out when d > 0), checked as when drawn; or why not. */
+export function stretchFreeTextile(v: Variant, rules: Rules, id: string, end: RunEnd, d: number): { v: Variant } | { error: string } {
+  const t = v.freeTextiles.find((x) => x.id === id);
+  if (!t) return { error: 'Tekstilveggen finnes ikke' };
+  if (!d) return { v };
+  const run = { ...t, ...movedEnd(t, end, d) };
+  const inside = (p: Point) => p[0] >= -EPS && p[1] >= -EPS && p[0] <= v.stand.width + EPS && p[1] <= v.stand.depth + EPS;
+  if (!inside(run.from) || !inside(run.to)) return { error: 'Tekstilveggen må stå på standen' };
+  if (d < 0 && runLength(t) + d < rules.textile.freeMin - EPS) return { error: `Tekstilveggen må være minst ${String(rules.textile.freeMin).replace('.', ',')} m` };
   const why = blocked(v, rules, run, v.freeTextiles.filter((x) => x.id !== id));
   if (why) return { error: why };
   return { v: { ...v, freeTextiles: v.freeTextiles.map((x) => (x.id === id ? run : x)) } };

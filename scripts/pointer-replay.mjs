@@ -342,6 +342,17 @@ await drag(0.5, 0, 2.5, 0); await record('vegg dra farger plater')
 await page.locator('.q-sw').nth(3).click(); await hold(0.5, 0, 2.5, 0, 'escape'); await record('vegg dra farger plater Esc avbryter')
 await close()
 
+// End grips on a free inner wall and a free textile wall (V13, X12): out a metre, in 250 with Shift, a textile shortened
+await open('05-takdrager-av')
+await tool('Velg'); await press(2, 2); await record('endegrep velg vegg')
+await drag(2, 3, 2, 3.7); await record('endegrep vegg ut')
+await page.keyboard.down('Shift'); await drag(2, 1, 2, 1.3); await page.keyboard.up('Shift'); await record('endegrep vegg Shift 250')
+await close()
+await open('08-tekstil')
+await tool('Velg'); await press(4.5, 3); await record('endegrep velg tekstil')
+await drag(5.5, 3, 4.4, 3); await record('endegrep tekstil inn')
+await close()
+
 // The turn grip out from the bottom right corner (Bjørn 15.11.2026): 90° a step, 15° with Shift; a counter by quarters
 await open('10-mobler-utstyr')
 await tool('Velg'); await press(3, 2.2); await record('rotergrep velg ståbord')

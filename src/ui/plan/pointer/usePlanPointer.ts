@@ -127,9 +127,11 @@ export function usePlanPointer(input: PlanPointerInput) {
     if (tool === 'erase') return startErase(c, q)
     if (fb.carpetFill) return startCarpetFill(c, q)
     if (pens.floorTool) return startFloor(c, q)
-    if (pens.wallTool && brush?.kind === 'wall') {
+    if ((pens.wallTool && brush?.kind === 'wall') || pens.textileTool) {
       const g = startGrip(c, q)
       if (g) return g
+    }
+    if (pens.wallTool && brush?.kind === 'wall') {
       const m = plateAt(input.mods, q)
       if (m) return startPlates(m, q, fineOf(shift))
     }
