@@ -6,6 +6,7 @@ import { INK } from '../../colors'
 import { insetOutline, labelRect } from '../../../domain/outline'
 import type { PlanSelection } from '../selection'
 import { PLAN_WALL } from '../planStyle'
+import { linePx, sizePx, usePlanScale } from '../planScale'
 import { GONE, useErasing } from './erasing'
 
 /** Room names and sizes over the floor and furniture, the selected room outlined. */
@@ -25,6 +26,7 @@ export function RoomLayer({ v, selection }: { v: Variant; selection: PlanSelecti
 
 /** Room name and floor area on its floor; a dashed outline when selected. */
 function RoomMark({ r, selected }: { r: Room; selected: boolean }) {
+  const sc = usePlanScale()
   const fit = fitRoomLabel(r)
   return (
     <g>
@@ -34,8 +36,9 @@ function RoomMark({ r, selected }: { r: Room; selected: boolean }) {
           fill={INK}
           fillOpacity={0.04}
           stroke={INK}
-          strokeWidth={0.025}
-          strokeDasharray=".1 .06"
+          strokeOpacity={ROOM_MARK.opacity}
+          strokeWidth={linePx(sc, ROOM_MARK.width)}
+          strokeDasharray={`${sizePx(sc, ROOM_MARK.dash)} ${sizePx(sc, ROOM_MARK.gap)}`}
           strokeLinejoin="round"
         />
       )}
@@ -43,6 +46,10 @@ function RoomMark({ r, selected }: { r: Room; selected: boolean }) {
     </g>
   )
 }
+
+/** The chosen room's dashed outline, screen px (Bjørn 15.11.2026: the old one in metres was too heavy): a hairline,
+ *  short dashes, half ink, the same however far one zooms. */
+const ROOM_MARK = { width: 1, dash: 4, gap: 3, opacity: 0.55 }
 
 /** Clearance kept between a room label and the room's wall lines, m. */
 const LABEL_GAP = PLAN_WALL / 2 + 0.06
