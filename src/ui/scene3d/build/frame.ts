@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { fogaPart } from '../../../foga/parts'
 import { RECIPES } from '../../../foga/recipes'
-import { pointKey } from '../../../domain/grid'
+import { onSpan, pointKey } from '../../../domain/grid'
 import type { Point } from '../../../domain/types'
 import { wallPoints } from '../../../domain/walls'
 import { rules } from '../../env'
@@ -52,13 +52,16 @@ export function buildFrame(c: BuildContext) {
   // Beams (takdrager) in 292, top flush with the walls, cut between the posts (centres − 40). A beam lifted over a
   // textile wall (calc/beams/beamLift.ts) is one piece of 94 higher
   const lift = RECIPES.beam.lift.length / 1000
+  // A drawn one is picked as its beam (Byggeregel T8): the pill and grips as in the plan
+  const drawnOf = (s: (typeof res.beams.segments)[number]) => (s.inner ? c.v.innerBeams?.find((x) => onSpan(x.from, x.to, s.from) && onSpan(x.from, x.to, s.to))?.id : undefined)
   for (const s of res.beams.segments) {
     const [a, b] = [s.from, s.to]
+    const beamId = drawnOf(s)
     const mesh = new THREE.Mesh(unitProfile('292'), mat('beams', BEAM, ALU_FINISH))
     mesh.scale.x = Math.max(0.001, Math.hypot(b[0] - a[0], b[1] - a[1]) - rules.wall.post)
     mesh.position.copy(at([(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], H - rules.beam.height / 2 + (s.lifted ? lift : 0)))
     mesh.rotation.y = Math.atan2(-(b[1] - a[1]), b[0] - a[0])
-    add(mesh, { layer: 'beams' })
+    add(mesh, { layer: 'beams', ...(beamId && { pick: { beamId } }) })
   }
   // Hooks in 01 where a beam hangs on another (calc/beams/beamHooks.ts): set as a T over the beam it hangs on, a 20 mm piece
   // lying on top with its channel up, and an 80 mm leg down the side each hanging beam comes from, channel out to it

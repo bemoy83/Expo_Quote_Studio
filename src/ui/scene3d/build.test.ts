@@ -87,3 +87,15 @@ describe('3D scene from the model', () => {
     expect(named(c, 'foga-92')).toHaveLength(mods + 1)
   })
 })
+
+describe('drawn takdrager in 3D (Byggeregel T8)', () => {
+  it('each of its lengths is picked as the beam, the standard ones are not', () => {
+    const v = { ...r2(), innerBeams: [{ id: 'td1', from: [1, 1] as [number, number], to: [3.5, 1] as [number, number] }] }
+    const res = calc(v, rules, catalog)
+    const beams = meshes(build(v, res)).filter((o) => (o as THREE.Mesh).geometry?.name === 'foga-292')
+    const picked = beams.filter((o) => (o.userData as Tag).pick?.beamId === 'td1')
+    expect(picked).toHaveLength(res.beams.segments.filter((x) => x.inner).length)
+    expect(beams.length).toBeGreaterThan(picked.length)
+  })
+})
+

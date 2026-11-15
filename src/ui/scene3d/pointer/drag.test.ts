@@ -118,3 +118,16 @@ describe('grips in 3D (Bjørn 15.11.2026)', () => {
     expect(P.onToast).not.toHaveBeenCalled()
   })
 })
+
+describe('takdrager in 3D (Byggeregel T8)', () => {
+  it('a click on a drawn takdrager selects it; a drag of it does not', () => {
+    const { P, onSelect } = props()
+    endDrag(P, hits, { kind: 'orbit' }, at({ beamId: 'td1' }), true)
+    expect(onSelect).toHaveBeenCalledWith({ beamId: 'td1' })
+    const moved = props()
+    const d: Drag = { kind: 'beam', id: 'td1', p0: { x: 0, y: 0 }, v0: v, delta: '1,0', horizontal: true, moved: true, y: 2.5 }
+    endDrag(moved.P, hits, d, at({ beamId: 'td1' }), false)
+    expect(moved.onSelect).not.toHaveBeenCalled()
+  })
+})
+
