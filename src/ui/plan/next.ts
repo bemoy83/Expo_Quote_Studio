@@ -225,7 +225,7 @@ function targetOf(p: NextInput): NextTarget | null {
   if (dragging?.kind === 'grip') {
     const r = dragging.moved && hover ? gripDrawAt(p, dragging, hover) : null
     const at = hits.grips().find((g) => sameGrip(g.on, dragging.on))?.at
-    return r ? gripTarget(r) : target(`grip:held`, () => line({ hint: gripHint(dragging.on), hotGrip: at }))
+    return r ? gripTarget(r) : target(`grip:held`, () => line({ hint: gripHint(dragging.on, v), hotGrip: at }))
   }
 
   // Floor
@@ -244,7 +244,7 @@ function targetOf(p: NextInput): NextTarget | null {
     const l = hits.podiumLinkAt(hover)
     if (l) return target(`link:${l.at}`, () => line({ hint: l.kind === 'joint' ? 'Klikk for å dele disken her' : 'Klikk for å lenke diskene sammen', hotGrip: l.at }))
     const g = hits.gripAt(hover)
-    if (g && gripWith(g.on, tool, brush)) return target(`grip:${g.at}`, () => line({ hint: gripHint(g.on), hotGrip: g.at }))
+    if (g && gripWith(g.on, tool, brush)) return target(`grip:${g.at}`, () => line({ hint: gripHint(g.on, v), hotGrip: g.at }))
   }
   // The drawing pens: what a click stores, 250 with Shift or Fin
   const at = hover

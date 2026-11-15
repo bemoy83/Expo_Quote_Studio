@@ -253,7 +253,8 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   med Shift eller Fin (R5); hver vei for seg stopper der rommet fortsatt får plass. Under draget vises rommet slik
   slipp lagrer det, med målet i pillen og det rommet gir fra seg skravert, og møbler som må flytte, der de havner.
   Går det ikke i noen retning: «Rommet får ikke plass slik». Midt i rommet (der navnet står) står et flyttegrep, et
-  større rundt grep med fire piler: det flytter hele rommet som et drag i gulvet.
+  større rundt grep med fire piler: det flytter hele rommet som et drag i gulvet. Det vises med en penn i hånden, ikke i
+  Velg, der hele rommet flyttes ved å dra i gulvet.
   *Bjørn 15.11.2026 · kode `src/domain/roomGrips.ts`, `src/ui/plan/grips.ts` · test `src/domain/roomGrips.test.ts`*
 
 ## X · Tekstilvegg (43TX)
@@ -520,7 +521,11 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   pennen: ett midt på hver rette side av omrisset (hele siden, også over flere seksjoner) og ett i hvert hjørne av
   boksen rundt (flytter de to sidene av boksen som møtes der). Et flyttegrep (rundt, fire piler) står på disken, også
   på en L eller T, så langt fra lenker og andre grep som det går: det flytter hele disken, også med pennen (Bjørn
-  15.11.2026: flytte uten Velg); et klikk på det gjør ingenting. Et valgt møbel har bare flyttegrepet, i Velg. Et grep flytter kanten i 500-steg, 250 med Shift eller
+  15.11.2026: flytte uten Velg); et klikk på det gjør ingenting. I Velg vises det ikke: der er hele disken et
+  flyttegrep. Et rotergrep (rund pil) ut fra boksens nedre høyre hjørne dreier disken om midten i 90°-steg; en disk
+  dreies bare i kvarte omdreininger, siden sider, skjøter og standardform følger standens linjer. Et valgt møbel har
+  rotergrepet også (ikke et rundt møbel alene), i 90°-steg og 15° med Shift eller Fin, og står det i veien, dreies det
+  så langt det går. Et grep flytter kanten i 500-steg, 250 med Shift eller
   Fin. Ut: seksjonen ved siden strekkes til 1000 før en ny legges til, hele meter først og resten sist; en seksjon som
   bare delvis ligger langs siden, strekkes ikke, det legges en ny ved siden av. Inn: seksjoner krympes og fjernes, vist
   med skravur før slipp; to seksjoner som da får plass i én (samme spenn, samme høyde, til sammen høyst 1000), blir én.

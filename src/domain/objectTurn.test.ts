@@ -38,6 +38,23 @@ describe('turning furniture', () => {
     expect(conflicts(t, ctx).size).toBe(0);
   });
 
+  it('turns 15° at a time with the turn grip, its box the one round the turned footprint (Bjørn 15.11.2026)', () => {
+    const v = rotateObject(withBench(createVariant('A', { width: 6, depth: 4, type: 'row' }), 3, 2), ctx, 'i1', 45)!;
+    expect(v.objects[0].rot).toBe(45);
+    const b = footprintBox(v.objects[0], BENCH);
+    expect(b.x1 - b.x0).toBeCloseTo(2.5 / Math.SQRT2);
+    expect(rotateObject(v, ctx, 'i1', -60)!.objects[0].rot).toBe(345);
+  });
+
+  it('turns a counter of Disker og podier by quarters only', () => {
+    const v: Variant = {
+      ...createVariant('A', { width: 6, depth: 4, type: 'row' }),
+      objects: [{ id: 'i1', product: '6571', x: 3, y: 2, rot: 0, sections: [{ x: [-500, 500], z: [-250, 250], h: 1000 }] }],
+    };
+    expect(rotateObject(v, ctx, 'i1', 15)).toBeNull();
+    expect(rotateObject(v, ctx, 'i1', -90)!.objects[0].rot).toBe(270);
+  });
+
   it('does not turn when there is no room turned', () => {
     // 3 × 1,2 m row stand: lengthwise the bench fits, turned (2 m deep) it cannot
     const v = withBench(createVariant('A', { width: 3, depth: 1.2, type: 'row' }), 1.5, 0.6);

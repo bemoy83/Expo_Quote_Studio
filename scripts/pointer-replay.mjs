@@ -336,6 +336,14 @@ await drag(0.5, 0, 2.5, 0); await record('vegg dra farger plater')
 await page.locator('.q-sw').nth(3).click(); await hold(0.5, 0, 2.5, 0, 'escape'); await record('vegg dra farger plater Esc avbryter')
 await close()
 
+// The turn grip out from the bottom right corner (Bjørn 15.11.2026): 90° a step, 15° with Shift; a counter by quarters
+await open('10-mobler-utstyr')
+await tool('Velg'); await press(3, 2.2); await record('rotergrep velg ståbord')
+await drag(3.6, 2.8, 2.15, 2.8); await record('rotergrep 90')
+await page.keyboard.down('Shift'); await drag(3.6, 2.8, 3, 3.05); await page.keyboard.up('Shift'); await record('rotergrep Shift 45')
+await press(1.2, 2.5); await drag(1.95, 3, 0.7, 3.25); await record('rotergrep disk 90')
+await close()
+
 // Grips of a chosen counter of Disker og podier (K14, the shared grip system): side out, side in, a box corner, Shift
 await open('13-disker-og-podier')
 await tool('Velg'); await press(1.5, 1.5); await record('grep velg disk')
