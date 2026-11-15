@@ -492,22 +492,20 @@ setter sammen Foga-stykklisten og kalkylelinjene som ikke er bygget av Foga-dele
   linje i tilbudet. Gulv, møbler og resten er allerede salgsprodukter.
 - Der det ikke finnes en artikkel, plukkes bestanddelene direkte (tekstilvegg: 43TX, 92LTX, 617, 609, 604, 520, 740, 730).
 
-## 6. Mål og prisfilosofi (Bjørn 31.10.2026)
+## 6. Mål og prisfilosofi (Bjørn 31.10.2026, pris 7.11.2026)
 
-Målet er én Foga-motor med felles profilbibliotek, oppskrifter og byggeregler. Den skal sette sammen vegger nå,
-og disker og podier senere. Disker og podier bygges på samme måte som vegger, med noen nye profiler og noen
+Målet er én Foga-motor med felles profilbibliotek, oppskrifter og byggeregler. Den setter sammen vegger og
+disker og podier (K-reglene). Disker og podier bygges på samme måte som vegger, med noen nye profiler og noen
 eksisterende, for eksempel 92.
 
 Til slutt skal appen vise et varesortiment av ferdigprodukter som kan tegnes eller dras inn, for eksempel
 «Vegg hvit 1 × 2,5 m», priset per løpemeter. Et ferdigprodukt består av byggesystemprofiler og plater, og
 motoren regner ut delelisten for det.
 
-- Prisen i tilbudet kommer fra ferdigproduktet, ikke fra delelisten.
-- Delelisten gir bare pris for en kombinasjon av deler som ikke dekkes av et ferdigprodukt.
-  Dette er en filosofi, ikke en hardkodet regel. En frihåndstegnet disk kan for eksempel prises fra deler,
-  men det avgjøres når vi kommer dit.
+Slik prises det (Bjørn 7.11.2026, detaljer i [prismodell.md](prismodell.md) og [kostmodell.md](kostmodell.md)):
 
-Oppdatert 31.10.2026: Bjørn vil at sum av artikler skal være standard. Se [prismodell.md](prismodell.md).
-
-Senere kan delen få innkjøpspris i profilbiblioteket. Da gir delelisten en estimert kost per leveranse. Det er
-internt, og tilbudsprisen kommer fortsatt fra ferdigproduktet.
+- Alt som finnes i katalogen (vegg, dør, forheng, takdrager, hylle, bardisk 6560, standardpodier) har fast pris fra
+  katalogen, senere fra OMS. Delelisten gir bare kost, DG og tid for dem, aldri prisen.
+- Kostmotoren setter prisen bare for det katalogen ikke dekker: tekstilvegg alltid, og spesialbygg som egne mål og
+  disker og podier bygget på stedet. Katalogprisene på tekstilvegg er bare mål for kalibreringen.
+- Tilbudsprisen bygger aldri på Fogas virkelige innkjøpspriser; repoet har bare eksempelpriser.
