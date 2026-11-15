@@ -3,8 +3,8 @@
 // textile on the same face. Faces and felts: domain/faces.ts; textile walls: domain/textile/inFrame.ts (this file
 // imports from there, never the other way).
 import type { Rules } from '../rules/rules';
-import { faceNormal, faces, felt, feltCc, feltWall, sideOf, type FaceSide } from './faces';
-import { pointAlong, moduleCount } from './grid';
+import { faceNormal, faces, feltCc, wallFelt, feltWall, sideOf, type FaceSide } from './faces';
+import { pointAlong, moduleAt, moduleCount, moduleStart, wallLength } from './grid';
 import { nextId } from './ids';
 import { roomAt } from './rooms';
 import { freeSpans, fullTextileHeight, spanFor, textileAt, textileBox, textilesOn, updateTextile, type Span } from './textile/inFrame';
@@ -16,14 +16,18 @@ const r3 = (n: number) => Math.round(n * 1000) / 1000;
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
 
 /** The felt a foil sits in, as long as its module (a shorter last module has a narrower panel, V1). */
-export const foilFelt = (v: Pick<Variant, 'walls'>, rules: Rules, f: Foil) => felt(rules, f.module, feltCc(v, rules, f.wallId, f.module));
+export const foilFelt = (v: Pick<Variant, 'walls'>, rules: Rules, f: Foil) => wallFelt(v, rules, f.wallId, f.module);
 
 /** Centre of a foil along the wall, metres from the wall start. */
 export const foilCenter = (v: Pick<Variant, 'walls'>, rules: Rules, f: Foil) => foilFelt(v, rules, f).center + f.x;
 
 /** Where a foil runs along its wall: the whole module when full, else its width about its centre. */
 export function foilSpan(v: Pick<Variant, 'walls'>, rules: Rules, f: Foil): [number, number] {
-  if (f.full) return [f.module, f.module + feltCc(v, rules, f.wallId, f.module)];
+  if (f.full) {
+    const w = v.walls.find((x) => x.id === f.wallId);
+    const a = w ? moduleStart(w, f.module) : f.module;
+    return [a, a + feltCc(v, rules, f.wallId, f.module)];
+  }
   const c = foilCenter(v, rules, f);
   return [c - f.width / 2, c + f.width / 2];
 }
@@ -35,7 +39,7 @@ export function foilBlocked(v: Variant, rules: Rules, wallId: string, module: nu
   const { blocked } = at;
   // A print over the whole plate may cover a door (leaf and header); a decal never sits on an opening
   if (blocked.openings.has(module) && !(full && blocked.doors.has(module))) return 'Folie kan ikke ligge på en åpning';
-  const f = felt(rules, module, feltCc(v, rules, wallId, module));
+  const f = wallFelt(v, rules, wallId, module);
   if (textilesOn(v, wallId, s).some((t) => t.from < f.b - EPS && t.from + t.width > f.a + EPS)) return 'Feltet er dekket av en tekstilvegg';
   return null;
 }
@@ -88,7 +92,7 @@ export function addFoil(
     return { v: { ...v, foils: v.foils.map((f) => (f.id === full.id ? { ...rest, ...(motif ? { motif } : {}) } : f)) }, id: full.id };
   }
   const id = nextId(v.foils.map((f) => f.id), 'f');
-  const fe = felt(rules, module, feltCc(v, rules, wallId, module));
+  const fe = wallFelt(v, rules, wallId, module);
   const f = fitFoil(v, { id, wallId, module, side: s, full: false, width: fe.w * 0.8, height: 0, x: 0, y: DECAL_Y, ...(motif ? { motif } : {}) }, rules, ratio);
   return { v: { ...v, foils: [...v.foils, f] }, id };
 }
@@ -124,7 +128,7 @@ export function updateFoil(v: Variant, rules: Rules, id: string, patch: FoilPatc
     side,
     module,
     full,
-    width: patch.width ?? (wasFull && !full ? felt(rules, module, feltCc(v, rules, f.wallId, module)).w * 0.8 : f.width),
+    width: patch.width ?? (wasFull && !full ? wallFelt(v, rules, f.wallId, module).w * 0.8 : f.width),
     height: f.height,
     x: patch.x ?? (wasFull && !full ? 0 : f.x),
     y: patch.y ?? (wasFull && !full ? DECAL_Y : f.y),
@@ -259,9 +263,9 @@ export function moveFoilBy(v: Variant, rules: Rules, start: Foil, dt: number, dh
   const w = v.walls.find((x) => x.id === start.wallId);
   if (!w) return v;
   const c = foilCenter(v, rules, start) + dt;
-  const module = clamp(Math.floor(c), 0, moduleCount(w) - 1);
+  const module = moduleAt(w, clamp(c, 0, wallLength(w)));
   const y = start.y + dh;
-  const next = updateFoil(v, rules, start.id, { module, x: c - felt(rules, module, feltCc(v, rules, w.id, module)).center, y }, ratio);
+  const next = updateFoil(v, rules, start.id, { module, x: c - wallFelt(v, rules, w.id, module).center, y }, ratio);
   return next !== v || module === start.module ? next : updateFoil(v, rules, start.id, { x: c - foilFelt(v, rules, start).center, y }, ratio);
 }
 
@@ -283,10 +287,10 @@ export function dropMotif(
   if (tx) return { v: updateTextile(v, rules, tx.id, { motif }), textileId: tx.id };
   const w = v.walls.find((x) => x.id === wallId);
   if (!w) return { error: 'Ingen vegg her' };
-  const module = clamp(Math.floor(t), 0, moduleCount(w) - 1);
+  const module = moduleAt(w, clamp(t, 0, wallLength(w)));
   const r = addFoil(v, rules, wallId, module, s, motif, ratio);
   if ('error' in r) return r;
   const f = r.v.foils.find((x) => x.id === r.id)!;
   if (y === undefined || f.full) return { v: r.v, foilId: r.id };
-  return { v: updateFoil(r.v, rules, r.id, { x: t - felt(rules, module, feltCc(v, rules, wallId, module)).center, y }, ratio), foilId: r.id };
+  return { v: updateFoil(r.v, rules, r.id, { x: t - wallFelt(v, rules, wallId, module).center, y }, ratio), foilId: r.id };
 }

@@ -1,7 +1,7 @@
 // Editing operations on a variant. All pure: they return a new variant and never mutate.
 // Byggeregel V7 (docs/byggeregler.md).
 import { clipTiles } from './floor/edit';
-import { pointAlong, runs, moduleCount, moduleEnd, uncoveredRuns, wallModules } from './grid';
+import { pointAlong, runs, moduleCount, moduleEnd, moduleStart, uncoveredRuns, wallModules } from './grid';
 import { nextId } from './ids';
 import type { Point, Stand, Variant, Wall } from './types';
 import { addRoomGaps, clampRooms, roomOf, syncRooms } from './rooms';
@@ -37,7 +37,7 @@ export function splitWall(w: Wall, keep: (module: number) => boolean, taken: str
   return runs(moduleCount(w), keep).map(([i, e], n) => {
     const id = n ? nextId(ids, prefix) : w.id;
     ids.push(id);
-    return { ...w, id, from: pointAlong(w, i), to: pointAlong(w, moduleEnd(w, e - 1)) };
+    return { ...w, id, from: pointAlong(w, moduleStart(w, i)), to: pointAlong(w, moduleEnd(w, e - 1)) };
   });
 }
 

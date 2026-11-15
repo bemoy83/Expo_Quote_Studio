@@ -209,12 +209,13 @@ export interface ShelfChain {
   ts: number[]
 }
 
-/** The height chains of the shelves on a face, one per felt (Byggeregler H5, H8). `x` turns an along-wall offset into x in the drawing. */
-export function shelfChains(rules: Rules, stacks: Shelf[][], x: (t: number) => number): ShelfChain[] {
+/** The height chains of the shelves on a face, one per felt (Byggeregler H5, H8). `x` turns an along-wall offset into x in the drawing;
+ *  `start`: where a module starts along the wall (moduleStart). */
+export function shelfChains(rules: Rules, stacks: Shelf[][], x: (t: number) => number, start: (module: number) => number = (m) => m): ShelfChain[] {
   const t = rules.shelf.board.thickness
   return stacks.map((st) => {
-    const a = x(st[0].module)
-    const b = x(st[0].module + 1)
+    const a = x(start(st[0].module))
+    const b = x(start(st[0].module) + 1)
     const ts = [0, ...st.flatMap((f, i) => (i === 0 ? [f.y] : [f.y - t, f.y]))]
     return { x0: Math.min(a, b), x1: Math.max(a, b), ts }
   })

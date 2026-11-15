@@ -3,11 +3,12 @@
 import type { DragEvent } from 'react'
 import { dropMotif, foilBlocked, updateFoil } from '../domain/decor'
 import type { Variant } from '../domain/types'
+import { moduleAt } from '../domain/grid'
 import { type PlanSelection } from './plan/selection'
 import { fmt } from './format'
 import { rules } from './env'
 import { addTextile, freeSpans, fullTextileHeight, textileAt, textileBox } from '../domain/textile/inFrame'
-import { type FaceSide, felt, feltCc } from '../domain/faces'
+import { type FaceSide, wallFelt } from '../domain/faces'
 
 /** A textile frame (InFrame) or a motif from the graphics library. */
 export type DecorDrag = { kind: 'textile' } | { kind: 'motif'; motif: string }
@@ -75,10 +76,11 @@ export function dropSpot(v: Variant, d: DecorDrag, h: FaceTarget): DropSpot | nu
     return { on: 'textile', from: tx!.from, to: tx!.from + tx!.width, y0: b.bottom, y1: b.bottom + b.height, error }
   }
   const onFelt = (module: number, error?: string): DropSpot => {
-    const f = felt(rules, module, feltCc(v, rules, h.wallId, module))
+    const f = wallFelt(v, rules, h.wallId, module)
     return { on: 'wall', from: f.a, to: f.b, y0: f.y0, y1: f.y1, error }
   }
-  const module = Math.floor(h.t)
+  const w = v.walls.find((x) => x.id === h.wallId)
+  const module = w ? moduleAt(w, h.t) : Math.floor(h.t)
   if (d.kind === 'textile') {
     if (tx) return onTextile('Det står allerede en tekstilvegg her')
     const sp = freeSpans(v, rules, h.wallId, h.s).find(([a, b]) => h.t >= a && h.t <= b)

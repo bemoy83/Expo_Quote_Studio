@@ -2,7 +2,7 @@
 // plate colours it in the pen's RAL, a drag along the wall colours the plates it passes, stored on release (Esc
 // cancels). A drag that turns off across the wall draws a new wall from there, as before; so does a press on an
 // empty edge or near a grid node (where a new wall starts at a T).
-import { offsetAlong, wallModules } from '../../../domain/grid'
+import { moduleAt, offsetAlong, wallModules } from '../../../domain/grid'
 import { setPanels, wallRal } from '../../../domain/panels'
 import type { Variant } from '../../../domain/types'
 import type { BuiltModule } from '../../../domain/walls'
@@ -35,7 +35,7 @@ export function platesAlong(v: Variant, mods: BuiltModule[], wallId: string, i0:
   const w = v.walls.find((x) => x.id === wallId)
   if (!w) return []
   const n = wallModules(w).length
-  const i1 = Math.max(0, Math.min(n - 1, Math.floor(offsetAlong(w, q))))
+  const i1 = Math.max(0, Math.min(n - 1, moduleAt(w, offsetAlong(w, q))))
   // Parts of a module another wall split (V10) are plates of their own, all passed
   const [lo, hi] = [Math.min(i0, i1), Math.max(i0, i1)]
   const keys = new Set(wallModules(w).slice(lo, hi + 1).map((m) => m.key))

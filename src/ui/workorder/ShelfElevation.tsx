@@ -6,7 +6,7 @@ import { doorRal } from '../../domain/doors'
 import { sideOf, type FaceSide } from '../../domain/faces'
 import { RECIPES } from '../../foga/recipes'
 import type { BoardKind } from '../../foga/structure'
-import { moduleCc, wallLength, wallModules } from '../../domain/grid'
+import { moduleCc, moduleStart, wallLength, wallModules } from '../../domain/grid'
 import { wallRal } from '../../domain/panels'
 import { railsOn, type CornerLayout } from '../../domain/shelves/corners'
 import { shelfStacks, shelvesOf } from '../../domain/shelves/model'
@@ -43,7 +43,8 @@ export function ShelfElevation({ v, wallId, s, shelves, layout }: { v: Variant; 
     <svg className="wo-elev" viewBox={fr.viewBox} role="img" aria-label={`${name}, ${shelves.length} hyller`}>
       {mods.map((m, i) => {
         const cc = moduleCc(w, i)
-        const x = spanX(i, i + cc)
+        const at = moduleStart(w, i)
+        const x = spanX(at, at + cc)
         if (m?.opening) {
           const o = m.opening
           const door = productOf(o.product)?.opening === 'door'
@@ -54,7 +55,7 @@ export function ShelfElevation({ v, wallId, s, shelves, layout }: { v: Variant; 
               x={x}
               H={H}
               plate={{ fill: plateColor(m.plate) }}
-              door={door ? { color: plateColor(doorRal(v, o)), hinge: u(o.hinge === -1 ? i + 1 - k : i + k), free: u(o.hinge === -1 ? i + k : i + 1 - k) } : undefined}
+              door={door ? { color: plateColor(doorRal(v, o)), hinge: u(o.hinge === -1 ? at + 1 - k : at + k), free: u(o.hinge === -1 ? at + k : at + 1 - k) } : undefined}
             />
           )
         }
@@ -68,7 +69,7 @@ export function ShelfElevation({ v, wallId, s, shelves, layout }: { v: Variant; 
               ))}
             </g>
           )
-        return <Plate key={i} at={i} cc={cc} fill={plateColor(m?.plate ?? wallRal(v, w))} x={spanX} H={H} />
+        return <Plate key={i} at={at} cc={cc} fill={plateColor(m?.plate ?? wallRal(v, w))} x={spanX} H={H} />
       })}
       <Posts xs={posts.map(u)} H={H} />
       <line x1={-0.12} y1={H} x2={L + 0.12} y2={H} stroke={BORDER_STRONG} strokeWidth={0.01} />
@@ -76,7 +77,7 @@ export function ShelfElevation({ v, wallId, s, shelves, layout }: { v: Variant; 
       {shelves.map((f) => (
         <ShelfFront key={f.id} {...shelfFront(v, f, layout, spanX)} y={f.y} H={H} u={fr.u} />
       ))}
-      <ElevationDims w={w} s={s} name={name} L={L} H={H} posts={posts} items={[]} leaders={[]} top={fr.top} width={fr.width} right={fr.right} sc={sc} shelves={shelfChains(rules, shelfStacks({ ...v, shelves }), u)} />
+      <ElevationDims w={w} s={s} name={name} L={L} H={H} posts={posts} items={[]} leaders={[]} top={fr.top} width={fr.width} right={fr.right} sc={sc} shelves={shelfChains(rules, shelfStacks({ ...v, shelves }), u, (i) => moduleStart(w, i))} />
     </svg>
   )
 }
@@ -100,8 +101,8 @@ export function CornerNotes({ v, wallId, s, layout }: { v: Variant; wallId: stri
   const L = w ? wallLength(w) : 0
   const u = (t: number) => (s === 1 ? t : L - t)
   /** The corner felt on this face, by module; `left` when it lies left of its corner post as drawn. */
-  const at = (felt: { module: number; end: 0 | 1 }, other: string) => {
-    const c: Notes = corners.get(felt.module) ?? { other, left: u(felt.module + 0.5) < u(felt.module + felt.end), rails: [], boards: new Map() }
+  const at = (felt: { module: number; end: 0 | 1; at: number }, other: string) => {
+    const c: Notes = corners.get(felt.module) ?? { other, left: u(felt.at + 0.5) < u(felt.at + felt.end), rails: [], boards: new Map() }
     corners.set(felt.module, c)
     return c
   }

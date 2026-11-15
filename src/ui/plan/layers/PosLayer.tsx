@@ -6,7 +6,7 @@ import type { CalcResult } from '../../../calc/calc'
 import { positionsOf, type Positioned } from '../../../calc/positions'
 import { foilCenter, foilSpan } from '../../../domain/decor'
 import { defaultFace, faceNormal, sideOf } from '../../../domain/faces'
-import { pointAlong } from '../../../domain/grid'
+import { moduleStart, pointAlong } from '../../../domain/grid'
 import { runNormal, type FaceKey } from '../../../domain/textile/free'
 import type { Point, Variant } from '../../../domain/types'
 import { builtModules } from '../../../domain/walls'
@@ -110,7 +110,7 @@ function chips(v: Variant, res: CalcResult, sc: PlanScale, textileLabels: boolea
         const o = v.openings.find((x) => x.id === i.id)!
         const w = wallOf(o.wallId)
         if (!w) break
-        const at = faceAt(o.wallId, o.swing ?? defaultFace(v, w), o.module + 0.5, Math.min(0.45, ww / 2 + half + px(10)))
+        const at = faceAt(o.wallId, o.swing ?? defaultFace(v, w), moduleStart(w, o.module) + 0.5, Math.min(0.45, ww / 2 + half + px(10)))
         if (at) out.push({ label: String(i.pos), at, layer })
         break
       }

@@ -5,7 +5,7 @@
 // side refer to `<id>.<side>` with offsets from the side's start, so they move with the room. Every side runs
 // clockwise round the room, so the room is always on the left of a side and its outside on the right.
 // Byggeregler R1, R2, R4 (docs/byggeregler.md).
-import { moduleKey, pointAlong, runs, moduleCount, wallModules, moduleEnd } from './grid';
+import { moduleKey, pointAlong, runs, moduleCount, wallModules, moduleEnd, moduleStart } from './grid';
 import { ownPlate } from './panels';
 import { replaceWalls } from './replaceWalls';
 import { furthest, stepsOf } from './grips';
@@ -113,7 +113,7 @@ function settleDoors(v: Variant, id: string): { v: Variant; moved: boolean } | n
   const mine = (o: Opening) => isRoomWallId(o.wallId, id);
   const keyOf = (o: Opening) => {
     const w = v.walls.find((x) => x.id === o.wallId);
-    return w ? moduleKey(pointAlong(w, o.module), pointAlong(w, moduleEnd(w, o.module))) : '';
+    return w ? moduleKey(pointAlong(w, moduleStart(w, o.module)), pointAlong(w, moduleEnd(w, o.module))) : '';
   };
   const taken = new Set(v.openings.filter((o) => !mine(o)).map(keyOf));
   const gaps = gapKeys(v);
@@ -125,7 +125,7 @@ function settleDoors(v: Variant, id: string): { v: Variant; moved: boolean } | n
       continue;
     }
     const w = sides.find((x) => x.id === o.wallId)!;
-    const a = pointAlong(w, o.module);
+    const a = pointAlong(w, moduleStart(w, o.module));
     const b = pointAlong(w, moduleEnd(w, o.module));
     const key = moduleKey(a, b);
     if (doorAllowed(v, a, b) && !taken.has(key)) {
@@ -443,7 +443,7 @@ export function dissolveRoom(v: Variant, id: string): Variant {
   for (const w of v.walls.filter((x) => x.room?.id === id)) {
     for (const [i, e] of runs(moduleCount(w), (t) => ownAt.has(`${w.id}#${t}`))) {
       const wid = nextId([...ids, ...parts.map((x) => x.id)], 'w');
-      parts.push({ id: wid, from: pointAlong(w, i), to: pointAlong(w, moduleEnd(w, e - 1)), ...ownPlate(v, r.plate) });
+      parts.push({ id: wid, from: pointAlong(w, moduleStart(w, i)), to: pointAlong(w, moduleEnd(w, e - 1)), ...ownPlate(v, r.plate) });
     }
   }
   return { ...replaceWalls(v, [...stored, ...parts, ...others]), rooms: v.rooms.filter((x) => x.id !== id) };

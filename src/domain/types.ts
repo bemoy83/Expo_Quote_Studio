@@ -33,6 +33,9 @@ export interface Wall {
   plate?: string;
   /** Set on the walls a room generates (see rooms.ts). They are rewritten whenever the room changes. */
   room?: { id: string; side: number };
+  /** Where a door or curtain off the whole metres starts its 1000 module, metres from `from` (Byggeregel D8). Kept in
+   *  step with the openings on the wall by replaceWalls; omitted when none is off them. */
+  breaks?: number[];
 }
 
 /** An optional takdrager drawn inside the stand: a straight run on the 1 m grid (calc/beams/innerBeams.ts). */
