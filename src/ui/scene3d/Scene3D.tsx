@@ -159,6 +159,7 @@ export function Scene3D(p: Props) {
       const hit = down.hit
       down = null
       endDrag(props.current, hits, d, hit, click)
+      props.current.onDragEnd?.()
       if (d?.kind === 'grip') redrawGrips.current()
       setBusy(false)
       placePill.current()

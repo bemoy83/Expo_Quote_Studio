@@ -46,10 +46,7 @@ export const run: DragHandlers<'run'> = {
       return c.onEdit(() => r.v)
     }
     if (brush?.kind !== 'wall') return
-    // A room the stroke closes is chosen, with its grips, as a counter the pen of Disker og podier stores (R8)
-    const after = paintWalls(v, a, b, brush.ral)
-    c.onEdit(() => after)
-    const room = after.rooms.find((r) => !v.rooms.some((x) => x.id === r.id))
-    if (room) c.onSelect({ roomId: room.id })
+    // A room the stroke closes is chosen by App's onEdit, with its grips (R8)
+    c.onEdit(() => paintWalls(v, a, b, brush.ral))
   },
 }

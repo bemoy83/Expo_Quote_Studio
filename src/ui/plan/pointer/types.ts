@@ -94,6 +94,8 @@ export interface PointerCtx {
   motifs?: Motif[]
   onEdit: Edit
   onCheckpoint: () => void
+  /** A drag let go (any kind): what it walled in since its checkpoint becomes a room (App, Byggeregel R3). */
+  onDragEnd?: () => void
   onToast: (text: string) => void
   onSelect: (s: PlanSelection) => void
   /** The drawer is open: a click on the selected object keeps it (the drawer follows the selection). */

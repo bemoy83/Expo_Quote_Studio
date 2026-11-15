@@ -32,6 +32,8 @@ export interface PointerProps {
   onSelect: (s: PlanSelection) => void
   onEdit: (fn: (v: Variant) => Variant, history?: boolean) => void
   onCheckpoint: () => void
+  /** A drag let go (any kind): what it walled in since its checkpoint becomes a room (App, Byggeregel R3). */
+  onDragEnd?: () => void
   onToast: (text: string) => void
   motifs: Motif[]
   /** «Fin» on (ui/fine.tsx): a room moves and stretches in 250, as with Shift. */

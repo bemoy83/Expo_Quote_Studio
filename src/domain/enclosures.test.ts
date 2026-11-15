@@ -4,7 +4,7 @@ import { DEFAULT_CATALOG, DOOR } from '../catalog/defaultCatalog';
 import { calc } from '../calc/calc';
 import { RULES } from '../rules/rules';
 import { addTextile } from './textile/inFrame';
-import { paintWalls } from './edit';
+import { moveWall, paintWalls } from './edit';
 import { enclosures, newlyClosedRooms, wallsToRoom } from './enclosures';
 import { moduleKey } from './grid';
 import { bounds, rectOutline } from './outline';
@@ -83,6 +83,26 @@ describe('newlyClosedRooms', () => {
     const v = wallsToRoom(door(corner(), [0, 2], [1, 2]), sq)!;
     const plain = dissolveRoom(v, v.rooms[0].id);
     expect(newlyClosedRooms(v, plain)).toEqual([]);
+  });
+  // A drag stores its steps without history; on release App compares the sketch with the one the drag began on
+  const idAt = (v: Variant, a: Point) => v.walls.find((w) => w.from[0] === a[0] && w.from[1] === a[1])!.id;
+  it('a wall dragged into the gap closes the area, as if it were drawn there', () => {
+    const v = paintWalls(door(paintWalls(row(), [0, 2], [2, 2]), [0, 2], [1, 2]), [3, 0], [3, 2]);
+    expect(newlyClosedRooms(v, v)).toEqual([]);
+    expect(newlyClosedRooms(v, moveWall(v, idAt(v, [3, 0]), -1))).toEqual([sq]);
+  });
+  it('a wall with the door dragged up to the others closes it too, also off the metre lines', () => {
+    const v = paintWalls(door(paintWalls(row(), [0, 3], [2, 3]), [0, 3], [1, 3]), [2, 0], [2, 2]);
+    expect(newlyClosedRooms(v, moveWall(v, idAt(v, [0, 3]), -1))).toEqual([sq]);
+    const half = paintWalls(v, [2, 2], [2, 2.5]);
+    expect(newlyClosedRooms(half, moveWall(half, idAt(half, [0, 3]), -0.5))).toEqual([rectOutline({ x: 0, y: 0, w: 2, d: 2.5 })]);
+  });
+  it('a drag that opens an area and closes it again leaves it as it was', () => {
+    const room = wallsToRoom(door(corner(), [0, 2], [1, 2]), sq)!;
+    const plain = dissolveRoom(room, room.rooms[0].id);
+    const id = idAt(plain, [2, 0]);
+    const away = moveWall(plain, id, 1);
+    expect(newlyClosedRooms(plain, moveWall(away, id, -1))).toEqual([]);
   });
 });
 
