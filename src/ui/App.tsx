@@ -32,6 +32,7 @@ import { PlanPreview } from './plan/PlanPreview'
 import { PlanView } from './plan/PlanView'
 import { PriceChangePill } from './plan/PriceChangePill'
 import { QuickPicks } from './plan/quick/QuickPicks'
+import { keptFor } from './plan/grips'
 import { hasDrawer, type DrawerState, type PlanSelection } from './plan/selection'
 import { StandChip } from './plan/StandChip'
 import { ToolDock } from './plan/ToolDock'
@@ -126,9 +127,10 @@ export default function App() {
     v,
     res,
     motifs,
-    onPick: () => {
+    onPick: (b) => {
       setView('plan')
-      setSelection({})
+      // What the pen has grips for stays chosen: a room for Vegg, a counter for Disker og podier (R8, K14)
+      setSelection(keptFor(selection, b, v))
     },
     onErase: () => setView('plan'),
   })

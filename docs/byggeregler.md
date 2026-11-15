@@ -253,8 +253,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   med Shift eller Fin (R5); hver vei for seg stopper der rommet fortsatt får plass. Under draget vises rommet slik
   slipp lagrer det, med målet i pillen og det rommet gir fra seg skravert, og møbler som må flytte, der de havner.
   Går det ikke i noen retning: «Rommet får ikke plass slik». Midt i rommet (der navnet står) står et flyttegrep, et
-  større rundt grep med fire piler: det flytter hele rommet som et drag i gulvet. Det vises med en penn i hånden, ikke i
-  Velg, der hele rommet flyttes ved å dra i gulvet.
+  større rundt grep med fire piler, under navnet: det flytter hele rommet som et drag i gulvet. Det vises med en penn i
+  hånden, ikke i Velg, der hele rommet flyttes ved å dra i gulvet. Grepene virker også med Vegg-pennen, som på en disk
+  (K14): et valgt rom forblir valgt når Vegg velges, og et rom som en vegg-strek lukker, blir valgt.
   *Bjørn 15.11.2026 · kode `src/domain/roomGrips.ts`, `src/ui/plan/grips.ts` · test `src/domain/roomGrips.test.ts`*
 
 ## X · Tekstilvegg (43TX)

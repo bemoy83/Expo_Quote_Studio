@@ -45,6 +45,11 @@ export const run: DragHandlers<'run'> = {
       if ('error' in r) return c.onToast(r.error)
       return c.onEdit(() => r.v)
     }
-    if (brush?.kind === 'wall') c.onEdit((x) => paintWalls(x, a, b, brush.ral))
+    if (brush?.kind !== 'wall') return
+    // A room the stroke closes is chosen, with its grips, as a counter the pen of Disker og podier stores (R8)
+    const after = paintWalls(v, a, b, brush.ral)
+    c.onEdit(() => after)
+    const room = after.rooms.find((r) => !v.rooms.some((x) => x.id === r.id))
+    if (room) c.onSelect({ roomId: room.id })
   },
 }
