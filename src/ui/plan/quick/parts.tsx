@@ -2,6 +2,7 @@
 // first, then what the pen draws, its look, its sizes and «…». A setting that does not apply is grey where it always is.
 import { Ellipsis, PaintBucket, Ruler } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { useFine } from '../../fine'
 import type { Swatch } from '../swatches'
 
 export function QName({ name, meta }: { name: string; meta?: string }) {
@@ -63,10 +64,13 @@ export function QBtn({
 }
 
 /** «Fin»: Shift held, for touch (Bjørn 14.11.2026). `off`: what is in hand has no finer step, the button stays grey. */
-export function FinBtn({ on, off, title, onClick }: { on: boolean; off?: string; title: string; onClick: () => void }) {
+/** «Fin», the one switch for the whole app (ui/fine.tsx). `title`: what it does on and off here; `off`: why it does
+ *  nothing here (greyed). */
+export function FinBtn({ off, title, children }: { off?: string; title: { on: string; off: string }; children?: ReactNode }) {
+  const { fine, setFine } = useFine()
   return (
-    <QBtn on={on && !off} setting disabled={!!off} title={off ?? title} label="Fin" onClick={onClick}>
-      <Ruler size={15} />
+    <QBtn on={fine && !off} setting disabled={!!off} title={off ?? (fine ? title.on : title.off)} label="Fin" onClick={() => setFine(!fine)}>
+      {children ?? <Ruler size={15} />}
       Fin
     </QBtn>
   )

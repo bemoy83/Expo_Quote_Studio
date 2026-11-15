@@ -3,6 +3,7 @@
 // draw order never decides what can be clicked. Each product's layer is drawn in plan/layers/ (FloorLayer, WallLayer,
 // TextileLayer, BeamLayer, ObjectLayer, RoomLayer, Labels, PreviewLayer), and the pointer handling lives in plan/pointer/
 // (usePlanPointer, one file per drag kind). This file puts them together with the cursor.
+import { useFine } from '../fine'
 import { useId, useMemo, type ReactNode } from 'react'
 import type { CalcResult } from '../../calc/calc'
 import { canMoveWall } from '../../domain/edit'
@@ -124,6 +125,7 @@ export function PlanView(p: Props) {
   const { wallTool, floorTool, textileTool, beamTool } = pen
   // The scale is worked out further down, from the svg the pointer hook gives; the hit tests read it when called
   let scaleNow: PlanScale | undefined
+  const { fine } = useFine()
   const hits = planHits(v, mods, selection, () => scaleNow)
   const { moduleAt, beamAt, roomEdgeAt, objectAt } = hits
   const fb = floorBrush(v, { tool, brush, floorSize: p.floorSize })
@@ -132,6 +134,7 @@ export function PlanView(p: Props) {
     v,
     tool,
     brush,
+    fine,
     selection,
     pens: pen,
     hits,

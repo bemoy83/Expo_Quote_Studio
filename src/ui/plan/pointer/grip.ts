@@ -2,7 +2,7 @@
 // stores (plan/next.ts), with what goes away hatched; the release stores it, or says why not. A press that does not move
 // does nothing: what is chosen stays chosen.
 import { GRIP_MOVE } from '../../../domain/grips'
-import { dragGrip, gripLocked, type GripOn } from '../grips'
+import { dragGrip, type GripOn } from '../grips'
 import type { PlanSelection } from '../selection'
 import type { Drag, DragHandlers, P, PointerCtx } from './types'
 
@@ -10,15 +10,14 @@ export type GripDrag = Extract<Drag, { kind: 'grip' }>
 
 /** A press on a grip of what is chosen, if there is one under q; with a pen, only one of the kind that pen shows
  *  (`only`: Disker og podier shows a counter's). */
-export function startGrip(c: Pick<PointerCtx, 'hits' | 'selection'>, q: P, only?: GripOn['type']): Drag | null {
+export function startGrip(c: Pick<PointerCtx, 'hits' | 'fine'>, q: P, only?: GripOn['type']): Drag | null {
   const g = c.hits.gripAt(q)
   return g && (!only || g.on.type === only) ? gripPress(c, g.on, q) : null
 }
 
 /** A press that takes hold of `on` at q; `select`: what a click there (no drag) selects instead. */
-export function gripPress(c: Pick<PointerCtx, 'selection'>, on: GripOn, q: P, select?: PlanSelection): GripDrag {
-  const fineLock = gripLocked(c.selection, on)
-  return { kind: 'grip', on, p0: q, moved: false, fine: fineLock, fineLock, ...(select && { select }) }
+export function gripPress(c: Pick<PointerCtx, 'fine'>, on: GripOn, q: P, select?: PlanSelection): GripDrag {
+  return { kind: 'grip', on, p0: q, moved: false, fine: c.fine, ...(select && { select }) }
 }
 
 /** What the drag stores with the pointer at q. */

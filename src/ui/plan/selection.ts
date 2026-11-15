@@ -26,10 +26,6 @@ export interface PlanSelection {
   freeFace?: FaceKey
   /** An innvendig takdrager. */
   beamId?: string
-  /** «Fin» on in its pill: a drag moves it across in 50 mm steps, as Shift + drag does on desktop (Byggeregel T15). */
-  beamFine?: boolean
-  /** «Fin» on in the room's pill: a drag moves or stretches it in 250, as Shift + drag does on desktop (Byggeregel R5). */
-  roomFine?: boolean
   /** A shelf (hylle 6311), chosen in the wall drawer of its wall, on its face. With it comes its row (the shelves beside it
    *  at its height), unless `shelfOnly`: then only this one (chosenShelves). */
   shelfId?: string
@@ -111,8 +107,8 @@ export const isOnWall = (c: Chosen | null): c is OnWall => !!c && ON_WALL.has(c.
 export type Chosen =
   | { kind: 'fill'; fill: string; tiles: FloorTile[] }
   | { kind: 'lane'; lane: { i: number; j: number }; tile: FloorTile }
-  | { kind: 'room'; room: Room; fine: boolean }
-  | { kind: 'beam'; beam: InnerBeam; fine: boolean }
+  | { kind: 'room'; room: Room }
+  | { kind: 'beam'; beam: InnerBeam }
   | { kind: 'object'; object: PlacedObject }
   | { kind: 'free'; textile: FreeTextile; face: FaceKey }
   | OnWall
@@ -137,11 +133,11 @@ export function chosen(v: Variant, sel: PlanSelection): Chosen | null {
     }
     case 'room': {
       const room = v.rooms.find((x) => x.id === k.id)
-      return room ? { kind: 'room', room, fine: !!sel.roomFine } : null
+      return room ? { kind: 'room', room } : null
     }
     case 'beam': {
       const beam = v.innerBeams?.find((x) => x.id === k.id)
-      return beam ? { kind: 'beam', beam, fine: !!sel.beamFine } : null
+      return beam ? { kind: 'beam', beam } : null
     }
     case 'object': {
       const object = v.objects.find((x) => x.id === k.id)

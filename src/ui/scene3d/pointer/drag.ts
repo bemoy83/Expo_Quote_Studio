@@ -30,6 +30,8 @@ export interface PointerProps {
   onCheckpoint: () => void
   onToast: (text: string) => void
   motifs: Motif[]
+  /** «Fin» on (ui/fine.tsx): a room moves and stretches in 250, as with Shift. */
+  fine: boolean
 }
 
 export type Drag =
@@ -98,8 +100,7 @@ export function startDrag(P: PointerProps, hits: SceneHits, hit: Hit | null, e: 
     const mode = side?.side ?? 'move'
     const y = hit!.point.y
     const q = hits.onFloor(e, y)
-    const fineLock = P.selection.roomId === id && !!P.selection.roomFine
-    if (q) return { kind: 'room', ...roomDrag(id, mode, q, P.v, fineLock), y }
+    if (q) return { kind: 'room', ...roomDrag(id, mode, q, P.v, P.fine), y }
   } else if (hit?.wallId) {
     const w = P.v.walls.find((x) => x.id === hit.wallId)
     const q = hits.onFloor(e)

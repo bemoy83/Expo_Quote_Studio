@@ -74,7 +74,7 @@ Kolonnen «Finnes» sier hvor funksjonen ligger i dag. **Ny** betyr at den må l
 | Disk fra Disker og podier | «Disk · 1 520 × 1 020 · H 1 040», en standarddisk «Bardisk 6560» (K22) | Platefarge for hele disken (K6) | 90° | `PodiumDrawer` (trinn 2): én side om gangen sett utenfra, «Sider og hyller» (hva delen eller lysåpningen er, hyllene og høyden på seksjonen, K16–K19) og «Farge og profilering» (farge for hele disken, print og dekal på siden eller delen, malerspann, motivhylla med + Dekal i detalj, K20), miniplan i detalj; et klikk i risset velger lysåpningen, toppen av en seksjon og en hylle dras i risset; et klikk på disken i planen velger siden nærmest | ✓ | `setPodiumLight` (`domain/podiumFaces.ts`), `plan/podiumDrawer/` |
 | Møbel | Produktnavn og mål | Fargevariant (de andre variantene av samme produkt i katalogen) | **Ny:** 90° | – | ✓ | **Ny:** bytt variant. `PlacedObject.rot` finnes |
 | Rom | «Bakrom · 2 × 2 m» | – | – | – | ✓ | `removeRoom` |
-| Innvendig takdrager | «Takdrager · 3 500» | «Fin»: dra på tvers i 50 mm-steg, på til drageren slippes (Shift + dra på desktop, T15) | – | – | ✓ | `removeInnerBeam` |
+| Innvendig takdrager | «Takdrager · 3 500» | «Fin»: dra på tvers i 50 mm-steg (Shift + dra på desktop, T15); samme Fin-bryter som pennene og de andre pillene | – | – | ✓ | `removeInnerBeam` |
 | Engangsteppe | «Bane 2 · 6 000» | Snu (som R) | – | `CarpetDrawer` | ✓ | `rotateLane`, `removeLane`/`removeFill` |
 
 Delete og Backspace fjerner valget som i dag (`deleteSelection`). R roterer valgt møbel eller frittstående tekstil.

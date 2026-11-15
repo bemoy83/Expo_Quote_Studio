@@ -67,10 +67,8 @@ export function WallPicks({ p, head, more }: QuickCtx) {
       {/* Tilpasset: «Fin» for Vegg (250 steps, as Shift), the variants of the opening in hand */}
       <Sep />
       <FinBtn
-        on={brush.kind === 'wall' && !!brush.fine}
         off={brush.kind === 'wall' ? undefined : 'Fin · gjelder bare Vegg'}
-        title={brush.kind === 'wall' && brush.fine ? 'Fin · 250-steg fra en 250-node · trykk for hele meter igjen' : 'Fin · tegn vegg i 250-steg fra en 250-node · på desktop også Shift'}
-        onClick={() => brush.kind === 'wall' && onPick({ ...brush, fine: !brush.fine })}
+        title={{ on: 'Fin · 250-steg fra en 250-node · trykk for hele meter igjen', off: 'Fin · tegn vegg i 250-steg fra en 250-node · på desktop også Shift' }}
       />
       {opening && (
         <>

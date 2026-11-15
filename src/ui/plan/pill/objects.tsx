@@ -8,55 +8,39 @@ import { updateFace } from '../../../domain/textile/free'
 import { counterName, idx, place } from '../../env'
 import { fmt, mm } from '../../format'
 import { objectFamily } from '../../objectFamily'
-import { QBtn, Sep, Sw } from '../quick/parts'
+import { FinBtn, QBtn, Sep, Sw } from '../quick/parts'
 import type { Chosen } from '../selection'
 import { turnFree, turnObject } from '../turn'
 import { Colours, Motifs, type Content, type PillActions } from './parts'
 
 type Of<K extends Chosen['kind']> = Extract<Chosen, { kind: K }>
 
-/** A room: «Fin» makes the next drags move and stretch it in 250, as Shift + drag on desktop (Byggeregel R5). Touch has
- *  no Shift; it stays on while the room is selected. */
-export function roomPill(p: PillActions, c: Of<'room'>, remove: () => void): Content {
+/** A room: «Fin» (ui/fine.tsx) makes its drags move and stretch it in 250, as Shift + drag on desktop (Byggeregel R5). */
+export function roomPill(_p: PillActions, c: Of<'room'>, remove: () => void): Content {
   const r = c.room
   return {
     name: roomName(r),
     meta: roomSize(r),
     body: (
-      <QBtn
-        setting
-        on={c.fine}
-        title={c.fine ? 'Dra flytter og strekker rommet i 250 · trykk for hele meter igjen' : 'Flytt og strekk rommet i 250, utenfor meterrasteret · på desktop også Shift + dra'}
-        label="Fin"
-        onClick={() => p.onSelect({ roomId: r.id, ...(!c.fine && { roomFine: true }) })}
-      >
+      <FinBtn title={{ on: 'Dra flytter og strekker rommet i 250 · trykk for hele meter igjen', off: 'Flytt og strekk rommet i 250, utenfor meterrasteret · på desktop også Shift + dra' }}>
         <Move size={15} />
-        Fin
-      </QBtn>
+      </FinBtn>
     ),
     remove,
   }
 }
 
-export function beamPill(p: PillActions, c: Of<'beam'>, remove: () => void): Content {
+export function beamPill(_p: PillActions, c: Of<'beam'>, remove: () => void): Content {
   const b = c.beam
-  // «Fin»: the next drags move it across in 50 mm steps, off the 1 m grid, as Shift + drag on desktop (Byggeregel T15).
-  // Touch has no Shift; it stays on while the beam is selected
+  // «Fin» (ui/fine.tsx): drags move it across in 50 mm steps, off the 1 m grid, as Shift + drag on desktop (Byggeregel T15)
   const Across = b.from[1] === b.to[1] ? MoveVertical : MoveHorizontal
   return {
     name: 'Takdrager',
     meta: mm(Math.abs(b.to[0] - b.from[0]) + Math.abs(b.to[1] - b.from[1])),
     body: (
-      <QBtn
-        setting
-        on={c.fine}
-        title={c.fine ? 'Dra flytter i 50 mm-steg på tvers · trykk for hele meter igjen' : 'Flytt på tvers i 50 mm-steg, utenfor meterrasteret · på desktop også Shift + dra'}
-        label="Fin"
-        onClick={() => p.onSelect({ beamId: b.id, ...(!c.fine && { beamFine: true }) })}
-      >
+      <FinBtn title={{ on: 'Dra flytter i 50 mm-steg på tvers · trykk for hele meter igjen', off: 'Flytt på tvers i 50 mm-steg, utenfor meterrasteret · på desktop også Shift + dra' }}>
         <Across size={15} />
-        Fin
-      </QBtn>
+      </FinBtn>
     ),
     remove,
   }

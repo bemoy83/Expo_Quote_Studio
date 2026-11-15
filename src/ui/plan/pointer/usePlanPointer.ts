@@ -65,7 +65,7 @@ export function usePlanPointer(input: PlanPointerInput) {
   /** The drawing pens, which show and draw in 250 with Shift held or «Fin» on (one drawing tool, Bjørn 14.11.2026,
    *  draw.ts); the snap dots show the 250 grid while Shift is held. */
   const drawsFine = pens.wallTool || pens.textileTool || pens.podiumTool
-  const fineOf = (shift: boolean) => drawsFine && (shift || penFine(brush))
+  const fineOf = (shift: boolean) => drawsFine && (shift || penFine(brush, input.fine))
   const [shiftHeld, setShiftHeld] = useState(false)
   useEffect(() => {
     if (!drawsFine) return
@@ -147,11 +147,11 @@ export function usePlanPointer(input: PlanPointerInput) {
     const d = press(q, e.shiftKey)
     // Alt (Option) held: a shelf dragged leaves a copy where it goes (desktop; the pill's Kopier on touch)
     if (d?.kind === 'shelfMove') d.copy = e.altKey
-    // Shift held (or «Fin» on in the pill): a drawn takdrager moves across in 50 mm steps, off the 1 m grid (Byggeregel T15)
-    if (d?.kind === 'beam') d.fine = e.shiftKey || !!d.fineLock
-    // Shift held (or «Fin» on in the pill): a room moves and stretches in 250 (Byggeregel R5)
-    if (d?.kind === 'room') d.fine = e.shiftKey || !!d.fineLock
-    if (d?.kind === 'grip') d.fine = e.shiftKey || penFine(brush) || !!d.fineLock
+    // Shift held (or «Fin» on): a drawn takdrager moves across in 50 mm steps, off the 1 m grid (Byggeregel T15)
+    if (d?.kind === 'beam') d.fine = e.shiftKey || input.fine
+    // Shift held (or «Fin» on): a room moves and stretches in 250 (Byggeregel R5)
+    if (d?.kind === 'room') d.fine = e.shiftKey || input.fine
+    if (d?.kind === 'grip') d.fine = e.shiftKey || input.fine
     if (d) drag.current = d
     // Held without moving counts as dragging too, so the hover preview stops while pressed
     setDragging(d ?? null)
@@ -163,11 +163,11 @@ export function usePlanPointer(input: PlanPointerInput) {
     const d = drag.current
     setDragging(d)
     if (!d) return
-    if (d.kind === 'beam' || d.kind === 'room') d.fine = e.shiftKey || !!d.fineLock
+    if (d.kind === 'beam' || d.kind === 'room') d.fine = e.shiftKey || input.fine
     if (d.kind === 'podium') podiumShift(d, fineOf(e.shiftKey))
     if (d.kind === 'run') runShift(d, fineOf(e.shiftKey))
     if (d.kind === 'plates' && d.as) runShift(d.as, fineOf(e.shiftKey))
-    if (d.kind === 'grip') d.fine = e.shiftKey || penFine(brush) || !!d.fineLock
+    if (d.kind === 'grip') d.fine = e.shiftKey || input.fine
     handlersOf(d).move?.(c, d, q)
   }
 

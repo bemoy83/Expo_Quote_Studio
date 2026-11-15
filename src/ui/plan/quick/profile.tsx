@@ -58,10 +58,8 @@ export function ProfilePicks({ p, head, more }: QuickCtx) {
       {/* Tilpasset: «Fin» for Tekstil (250 steps, as Shift and the wall pen); Print and Dekal are clicked on a felt */}
       <Sep />
       <FinBtn
-        on={cur?.kind === 'textile' && !!cur.fine}
         off={cur?.kind === 'textile' ? undefined : 'Fin · gjelder bare Tekstil'}
-        title={cur?.kind === 'textile' && cur.fine ? 'Fin · 250-steg fra en 250-node · trykk for hele meter igjen' : 'Fin · tegn tekstilvegg i 250-steg fra en 250-node · på desktop også Shift'}
-        onClick={() => cur?.kind === 'textile' && onPick({ ...cur, fine: !cur.fine })}
+        title={{ on: 'Fin · 250-steg fra en 250-node · trykk for hele meter igjen', off: 'Fin · tegn tekstilvegg i 250-steg fra en 250-node · på desktop også Shift' }}
       />
       {more}
     </>

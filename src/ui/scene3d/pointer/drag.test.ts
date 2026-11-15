@@ -13,7 +13,7 @@ const v = addShelfRow(createVariant('A', { width: 6, depth: 3, type: 'row' }), r
 const wall = v.walls.find((x) => x.id === 'side-back')!
 const props = (selection: PlanSelection = {}) => {
   const onSelect = vi.fn()
-  const P: PointerProps = { v, selection, onSelect, onEdit: vi.fn(), onCheckpoint: vi.fn(), onToast: vi.fn(), motifs: [] }
+  const P: PointerProps = { v, selection, onSelect, onEdit: vi.fn(), onCheckpoint: vi.fn(), onToast: vi.fn(), motifs: [], fine: false }
   return { P, onSelect }
 }
 const hits = { toModel: (p: THREE.Vector3) => p, faceOf: () => null } as unknown as SceneHits
