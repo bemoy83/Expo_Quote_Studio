@@ -81,6 +81,12 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   ikke kortere enn 250. En dør, folie, hylle eller tekstil som da ville falt utenfor eller havnet i en annen modul,
   stopper grepet (det stopper ved siste steg som går). Standvegger og romvegger har ingen endegrep.
   *Bjørn 14.11.2026 og 15.11.2026 · kode `src/domain/wallEnds.ts`, `src/ui/plan/grips.ts` · test `src/domain/wallEnds.test.ts`*
+- **V14 Standareal i halve meter.** Standen er hele og halve meter på hver led, 1–40 m i steg på 0,5 i standbrikken.
+  Metergitteret starter i hjørnet bak til venstre, så halvmeteren ligger mot høyre og mot fronten (gangen), og standveggene
+  legges i hele meter fra hjørnet med halvmeteren sist (V1). En standvegg selges per løpemeter også med halvmeteren: 3,5 m
+  standvegg er 3,5 lm, også til arrangøren. Innervegger og romvegger selger korte moduler per stykk som før (V1), og en
+  standvegg delt av en annen vegg følger V11. Andre mål og diagonaler kan komme senere, men ikke nå.
+  *Bjørn 15.11.2026 · kode `src/ui/panel/StandSettings.tsx`, `src/domain/grid.ts`, `src/calc/lines/walls.ts`, `src/ui/plan/PlanView.tsx` · test `src/calc/halfMetreStand.test.ts`*
 
 ## S · Støtte for systemvegg
 
