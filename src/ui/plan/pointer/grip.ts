@@ -2,17 +2,28 @@
 // stores (plan/next.ts), with what goes away hatched; the release stores it, or says why not. A press that does not move
 // does nothing: what is chosen stays chosen.
 import { GRIP_MOVE } from '../../../domain/grips'
-import { dragGrip, type GripOn } from '../grips'
+import { dragGrip, gripWith, type GripOn } from '../grips'
+import { startRoom } from './room'
 import type { PlanSelection } from '../selection'
 import type { Drag, DragHandlers, P, PointerCtx } from './types'
 
 export type GripDrag = Extract<Drag, { kind: 'grip' }>
 
-/** A press on a grip of what is chosen, if there is one under q; with a pen, only one of the kind that pen shows
- *  (`only`: Disker og podier shows a counter's). */
-export function startGrip(c: Pick<PointerCtx, 'hits' | 'fine'>, q: P, only?: GripOn['type']): Drag | null {
+/** A press on a grip of what is chosen that the pen in hand shows (gripWith), if there is one under q. A move grip
+ *  starts the drag Velg starts on the thing itself: a room moved (room.ts), furniture or a counter moved (object.ts). */
+export function startGrip(c: PointerCtx, q: P): Drag | null {
   const g = c.hits.gripAt(q)
-  return g && (!only || g.on.type === only) ? gripPress(c, g.on, q) : null
+  if (!g || !gripWith(g.on, c.tool, c.brush)) return null
+  if (g.on.type !== 'move') return gripPress(c, g.on, q)
+  // In Velg a press there is a press on the room or piece itself (select.ts): the same drag, and a click selects as ever
+  if (c.tool === 'select') return null
+  const { id } = g.on
+  if (g.on.what === 'room') {
+    const room = c.v.rooms.find((r) => r.id === id)
+    return room ? { ...startRoom(c, room, q, { roomId: id }), grip: true } : null
+  }
+  const o = c.v.objects.find((x) => x.id === id)
+  return o ? { kind: 'object', id, dx: q.x - o.x, dy: q.y - o.y, start: { x: o.x, y: o.y }, moved: false, select: c.selection, grip: true } : null
 }
 
 /** A press that takes hold of `on` at q; `select`: what a click there (no drag) selects instead. */

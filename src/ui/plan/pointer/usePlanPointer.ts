@@ -134,7 +134,7 @@ export function usePlanPointer(input: PlanPointerInput) {
     if (pens.wallTool || pens.beamTool || pens.textileTool) return startRunDrag(c, q, fineOf(shift))
     if (pens.openingTool) return startPlace(c, 'opening', q)
     if (pens.decorTool) return startPlace(c, 'decor', q)
-    if (pens.podiumTool) return startPodiumLink(c, q) ?? startGrip(c, q, 'podium') ?? startPodium(c, q, fineOf(shift))
+    if (pens.podiumTool) return startPodiumLink(c, q) ?? startGrip(c, q) ?? startPodium(c, q, fineOf(shift))
     if (pens.objectTool) return startPlace(c, 'object', q)
     if (pens.shelfTool) return startShelf(c, q)
     return startSelect(c, q)

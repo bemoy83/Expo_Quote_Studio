@@ -35,7 +35,7 @@ export const object: DragHandlers<'object'> = {
     }, false)
   },
   up(c, d) {
-    if (!d.moved) return c.clickSelect(d.select)
+    if (!d.moved) return d.grip ? undefined : c.clickSelect(d.select)
     if (d.fuse) {
       const r = fusePodiums(c.v, place, d.fuse, d.id)
       if (!('error' in r)) {
