@@ -73,7 +73,7 @@ describe('R2 · corner stand 6 × 4, backroom 2 × 2, textile wall 4 m', () => {
     // Back 7 + left 4 + backroom (2,1),(2,2),(1,2) = 14 wall posts; free front-right corner of the beams = 1.
     expect(res.keyFigures.posts).toBe(15);
     expect(res.keyFigures.beamPosts).toBe(1);
-    expect(lines(res).find((l) => l.artnr === S.beam)?.meta).toBe('2 lengder · 1 stolpe inkludert');
+    expect(lines(res).find((l) => l.artnr === S.beam)?.meta).toBe('2 lengder');
   });
   it('beams on the two open sides', () => {
     expect(qty(res, S.beam)).toBe(10);
@@ -446,7 +446,7 @@ describe('stand walls the organiser pays (docs/vegger.md)', () => {
       ['6120-9010', 10],
       [S.beam, 10],
     ]);
-    expect(res.organiser.lines[1].meta).toBe('2 lengder · 1 stolpe inkludert');
+    expect(res.organiser.lines[1].meta).toBe('2 lengder');
     expect(qty(res, '6120-9010')).toBe(3);
     // Room posts (2,1), (2,2), (1,2); the free beam post is the organiser's
     expect(res.foga.posts).toBe(3);
