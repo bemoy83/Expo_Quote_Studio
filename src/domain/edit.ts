@@ -197,6 +197,8 @@ export function moveWall(v: Variant, wallId: string, delta: number, along = 0): 
   );
   const next: Variant = {
     ...rest,
+    // Moved as a whole, it keeps where its doors split it (Byggeregel D8)
+    walls: w.breaks ? rest.walls.map((x) => (x.id === w.id ? { ...x, breaks: w.breaks } : x)) : rest.walls,
     openings: [...rest.openings, ...carried.openings],
     textiles: [...rest.textiles, ...carried.textiles],
     foils: [...rest.foils, ...carried.foils],

@@ -2,7 +2,8 @@
 // plan in its middle). Every move goes through moveOpening, so a door never lands in a stand wall or on another opening.
 // Byggeregler D3, D4, D7 (docs/byggeregler.md).
 import { paintWalls } from './edit';
-import { moduleKey, pointAlong, wallDirection, wallModules, moduleEnd, moduleStart } from './grid';
+import { moduleKey, pointAlong, wallDirection, wallLength, wallModules, moduleEnd, moduleStart } from './grid';
+import { replaceWalls } from './replaceWalls';
 import { nextId } from './ids';
 import { roomOf } from './rooms';
 import { OUTSIDE } from './roomKeys';
@@ -186,6 +187,28 @@ export function setOpening(v: Variant, key: string, product: string | null): Var
   const id = mod.opening?.id ?? nextId(v.openings.map((o) => o.id), 'o');
   const swing = mod.opening?.swing ?? defaultSwing(v.stand, v.walls.find((w) => w.id === mod.wallId)!);
   return { ...v, openings: [...others, { id, wallId: mod.wallId, module: mod.index, product, ...(swing === 1 ? {} : { swing }) }] };
+}
+
+/**
+ * The door or curtain moved along its own wall to start `at` metres from the wall's start, off the whole metres too
+ * (Byggeregel D8): the wall is laid out round it again, the rest nearest the door. Unchanged when it would not fit
+ * (past an end, over another opening) or may not stand there (D3).
+ */
+export function moveOpeningAlong(v: Variant, id: string, at: number): Variant {
+  const o = openingById(v, id);
+  const w = o && v.walls.find((x) => x.id === o.wallId);
+  if (!o || !w) return v;
+  const t = Math.round(at * 1000) / 1000;
+  if (Math.abs(t - moduleStart(w, o.module)) < 1e-6) return v;
+  if (t < -1e-6 || t + 1 > wallLength(w) + 1e-6) return v;
+  if (!doorAllowed(v, pointAlong(w, t), pointAlong(w, t + 1))) return v;
+  const others = v.openings.filter((x) => x.id !== id);
+  const over = others.some((x) => x.wallId === w.id && Math.abs(moduleStart(w, x.module) - t) < 1 - 1e-6);
+  if (over) return v;
+  const next = replaceWalls({ ...v, openings: others }, v.walls, [{ opening: o, wallId: w.id, at: t }]);
+  // Keep the opening where it was in the list
+  const moved = next.openings.find((x) => x.id === id);
+  return moved ? { ...next, openings: v.openings.flatMap((x) => (x.id === id ? [moved] : next.openings.filter((y) => y.id === x.id))) } : v;
 }
 
 /** Put a door or curtain on the module a–b, drawing the wall module first when there is none. */

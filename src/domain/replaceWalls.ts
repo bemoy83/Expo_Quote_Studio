@@ -49,24 +49,75 @@ function reanchor(walls: Wall[], { a, b }: Anchor): { wallId: string; from: numb
   return null;
 }
 
+/** A door or curtain to put on one of the new walls `at` metres from its start (Byggeregel D8: off the whole metres too). */
+export interface PlacedOpening {
+  /** The opening; its wallId and module are set here (kept in their place in it). */
+  opening: Opening;
+  wallId: string;
+  at: number;
+}
+
+/** A start off the whole metres, m (Byggeregel D8). */
+const offMetre = (t: number) => Math.abs(t - Math.round(t)) > 1e-6;
+
+/**
+ * Where the doors and curtains on a wall start, when one of them is off the whole metres (Byggeregel D8): the wall's
+ * `breaks`. Undefined when all start on whole metres, so the wall is laid out as without them.
+ */
+function breaksFor(starts: number[]): number[] | undefined {
+  return starts.some(offMetre) ? [...new Set(starts.map(round3))].sort((a, b) => a - b) : undefined;
+}
+
+const round3 = (n: number) => Math.round(n * 1000) / 1000;
+
+/** The wall without breaks. */
+const plain = (w: Wall): Wall => {
+  if (!w.breaks) return w;
+  const { breaks: _b, ...rest } = w;
+  return rest;
+};
+
 /**
  * Replace the walls of a variant and carry openings, textiles and foils over to whichever new wall
  * now covers their position. Things whose wall is gone are dropped. Door swing and hinge keep their world side.
+ * The one place a wall's `breaks` are set (Byggeregel D8): from where the openings it carries start. `add`: openings
+ * to put on the new walls by their offset (a door moved or put off the whole metres).
  */
-export function replaceWalls(v: Variant, walls: Wall[]): Variant {
+export function replaceWalls(v: Variant, next: Wall[], add: PlacedOpening[] = []): Variant {
   const old = v.walls;
-  const openings: Opening[] = [];
-  for (const o of v.openings) {
-    const at = locateModule(old, o.wallId, o.module);
-    const hit = at && reanchor(walls, at);
-    if (!hit) continue;
-    const oldW = old.find((w) => w.id === o.wallId)!;
+  const bare = next.map(plain);
+  const placed: { make: (module: number) => Opening; wallId: string; from: number }[] = [];
+  const carry = (o: Opening, at: Anchor | null, on?: { wall: Wall; from: number }) => {
+    const hit = on ? { ...on, wallId: on.wall.id } : at && reanchor(bare, at);
+    if (!hit) return;
+    const oldW = on ? hit.wall : old.find((w) => w.id === o.wallId)!;
     const sameDir = dot(wallDirection(oldW), wallDirection(hit.wall)) > 0;
     const swing = o.swing === undefined ? undefined : sameDir ? o.swing : (-o.swing as 1 | -1);
     const hinge = sameDir ? o.hinge : o.hinge === -1 ? undefined : (-1 as const);
     const { hinge: _h, ...rest } = o;
-    openings.push({ ...rest, wallId: hit.wallId, module: moduleOn(hit.wall, hit.from), ...(swing === undefined ? {} : { swing }), ...(hinge === -1 ? { hinge } : {}) });
+    const make = (module: number): Opening => ({ ...rest, wallId: hit.wallId, module, ...(swing === undefined ? {} : { swing }), ...(hinge === -1 ? { hinge } : {}) });
+    placed.push({ make, wallId: hit.wallId, from: round3(hit.from) });
+  };
+  for (const o of v.openings) carry(o, locateModule(old, o.wallId, o.module));
+  for (const p of add) {
+    const wall = bare.find((w) => w.id === p.wallId);
+    if (wall) carry(p.opening, null, { wall, from: p.at });
   }
+  // The walls laid out round their doors (D8), then everything on them counted in that layout
+  const laid = new Map(bare.map((w) => {
+    const breaks = breaksFor(placed.filter((p) => p.wallId === w.id).map((p) => p.from));
+    return [w.id, breaks ? { ...w, breaks } : w];
+  }));
+  // A door that does not fit (past the end, over another) is dropped; its break never split the wall (moduleSpans)
+  const kept = placed.flatMap((p) => {
+    const module = moduleFrom(laid.get(p.wallId)!, p.from);
+    return module === undefined ? [] : [{ ...p, module }];
+  });
+  const walls = bare.map((w) => {
+    const breaks = breaksFor(kept.filter((p) => p.wallId === w.id).map((p) => p.from));
+    return breaks ? { ...w, breaks } : w;
+  });
+  const openings: Opening[] = kept.map((p) => p.make(p.module));
   // Textiles and foils keep their world face: the side flips when the new wall runs the other way.
   const faceOn = (x: { wallId: string; side?: 1 | -1 }, hit: { wall: Wall }): 1 | -1 => {
     const oldW = old.find((w) => w.id === x.wallId)!;
@@ -107,4 +158,16 @@ function dedupeOpenings(walls: Wall[], openings: Opening[]): Opening[] {
     seen.add(key);
     return true;
   });
+}
+
+/**
+ * The walls' `breaks` set again from the openings they carry (Byggeregel D8), after an edit that put, moved or took away
+ * a door without redrawing the walls. The variant itself when nothing changes.
+ */
+export function fitBreaks(v: Variant): Variant {
+  const stale = v.walls.some((w) => {
+    const want = breaksFor(v.openings.filter((o) => o.wallId === w.id).map((o) => moduleStart(w, o.module)));
+    return (want ?? []).join(' ') !== (w.breaks ?? []).join(' ');
+  });
+  return stale ? replaceWalls(v, v.walls) : v;
 }
