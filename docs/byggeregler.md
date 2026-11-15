@@ -252,7 +252,8 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   dem). Hele siden tar også tak i sidens grep, så en side mot en standvegg kan dras. Et grep flytter i hele meter, 250
   med Shift eller Fin (R5); hver vei for seg stopper der rommet fortsatt får plass. Under draget vises rommet slik
   slipp lagrer det, med målet i pillen og det rommet gir fra seg skravert, og møbler som må flytte, der de havner.
-  Går det ikke i noen retning: «Rommet får ikke plass slik».
+  Går det ikke i noen retning: «Rommet får ikke plass slik». Midt i rommet (der navnet står) står et flyttegrep, et
+  større rundt grep med fire piler: det flytter hele rommet som et drag i gulvet.
   *Bjørn 15.11.2026 · kode `src/domain/roomGrips.ts`, `src/ui/plan/grips.ts` · test `src/domain/roomGrips.test.ts`*
 
 ## X · Tekstilvegg (43TX)
@@ -517,7 +518,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   *Bjørn 13.11.2026 · `ITEM.counterBoard`, `counterWhole`, `counterHalf`, `counterCorner` · kode `src/calc/lines/objects.ts`, `src/cost/itemDefs.ts`, `src/catalog/defaultCatalog.ts`, `src/catalog/podium.ts`, `src/domain/podiums.ts`, `src/ui/podiumPen.ts`, `src/persistence/file.ts` · test `src/calc/podium.test.ts`, `src/domain/podiums.test.ts`, `src/ui/podiumPen.test.ts`, `src/persistence/file.test.ts`*
 - **K14 Grep på valgt disk.** En valgt disk fra Disker og podier viser grep som i et CAD-verktøy, i Velg og med
   pennen: ett midt på hver rette side av omrisset (hele siden, også over flere seksjoner) og ett i hvert hjørne av
-  boksen rundt (flytter de to sidene av boksen som møtes der). Et grep flytter kanten i 500-steg, 250 med Shift eller
+  boksen rundt (flytter de to sidene av boksen som møtes der). Et flyttegrep (rundt, fire piler) står på disken, også
+  på en L eller T, så langt fra lenker og andre grep som det går: det flytter hele disken, også med pennen (Bjørn
+  15.11.2026: flytte uten Velg); et klikk på det gjør ingenting. Et valgt møbel har bare flyttegrepet, i Velg. Et grep flytter kanten i 500-steg, 250 med Shift eller
   Fin. Ut: seksjonen ved siden strekkes til 1000 før en ny legges til, hele meter først og resten sist; en seksjon som
   bare delvis ligger langs siden, strekkes ikke, det legges en ny ved siden av. Inn: seksjoner krympes og fjernes, vist
   med skravur før slipp; to seksjoner som da får plass i én (samme spenn, samme høyde, til sammen høyst 1000), blir én.

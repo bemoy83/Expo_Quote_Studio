@@ -5,7 +5,7 @@ import { dragRoom, dropRoom, roomDrag } from '../../drag'
 import type { PlanSelection } from '../selection'
 import type { DragHandlers, Drag, P, PointerCtx } from './types'
 
-export function startRoom(c: PointerCtx, room: Room, q: P, select: PlanSelection): Drag {
+export function startRoom(c: PointerCtx, room: Room, q: P, select: PlanSelection): Extract<Drag, { kind: 'room' }> {
   // «Fin» on (ui/fine.tsx): 250 steps (R5)
   return { kind: 'room', ...roomDrag(room.id, 'move', q, c.v, c.fine), select }
 }
@@ -17,7 +17,7 @@ export const room: DragHandlers<'room'> = {
   up(c, d) {
     dropRoom(d, c.onEdit, c.onToast)
     // A room moved by its floor stays selected; a click goes by the click rules
-    if (!d.moved) c.clickSelect(d.select)
+    if (!d.moved) return d.grip ? undefined : c.clickSelect(d.select)
     else c.onSelect(d.select)
   },
 }

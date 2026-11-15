@@ -41,12 +41,13 @@ export type Drag =
   | { kind: 'carpetFill'; from: { i: number; j: number }; moved: boolean }
   | { kind: 'click'; select: PlanSelection }
   /** `fuse`: a counter of Disker og podier dragged against another, the one it lies against (K15), or why not. */
-  | { kind: 'object'; id: string; dx: number; dy: number; start: P; moved: boolean; select: PlanSelection; fuse?: string }
+  /** `grip`: taken by its move grip (plan/grips.ts): a click there does nothing. */
+  | { kind: 'object'; id: string; dx: number; dy: number; start: P; moved: boolean; select: PlanSelection; fuse?: string; grip?: boolean }
   | ({ kind: 'wall'; moved: boolean; select: PlanSelection } & WallDrag)
   /** `fine`: Shift held or «Fin» on, it moves across in 50 mm steps off the grid (Byggeregel T15). */
   | ({ kind: 'beam'; moved: boolean; select: PlanSelection; fine?: boolean } & WallDrag)
   /** A room moved by its floor (room.ts). */
-  | ({ kind: 'room'; select: PlanSelection } & RoomDrag)
+  | ({ kind: 'room'; select: PlanSelection; grip?: boolean } & RoomDrag)
   /** Disker og podier pressed (podium.ts, draw.ts): `click`, what a click on the section shown stores (podiumStart);
    *  `drag`, what a drag draws from it, none on a counter or where it has no room. */
   | ({ kind: 'podium'; click: PodiumDraw | null; drag: PodiumDrag | null } & DrawPress)

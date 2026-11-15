@@ -38,7 +38,7 @@ import type { Pens } from './pointer/pens'
 import { counterUnder, drawPodiumAt, podiumStart } from './pointer/podium'
 import { runOf } from './pointer/run'
 import { gripDrawAt } from './pointer/grip'
-import { gripHint, sameGrip, type GripDraw } from './grips'
+import { gripHint, gripWith, sameGrip, type GripDraw } from './grips'
 import { placeHolds, placeKey } from './pointer/place'
 import { paintPlates, plateAt, platesAlong } from './pointer/plates'
 import type { Drag, P } from './pointer/types'
@@ -244,7 +244,7 @@ function targetOf(p: NextInput): NextTarget | null {
     const l = hits.podiumLinkAt(hover)
     if (l) return target(`link:${l.at}`, () => line({ hint: l.kind === 'joint' ? 'Klikk for å dele disken her' : 'Klikk for å lenke diskene sammen', hotGrip: l.at }))
     const g = hits.gripAt(hover)
-    if (g && (tool === 'select' || g.on.type === 'podium')) return target(`grip:${g.at}`, () => line({ hint: gripHint(g.on), hotGrip: g.at }))
+    if (g && gripWith(g.on, tool, brush)) return target(`grip:${g.at}`, () => line({ hint: gripHint(g.on), hotGrip: g.at }))
   }
   // The drawing pens: what a click stores, 250 with Shift or Fin
   const at = hover
