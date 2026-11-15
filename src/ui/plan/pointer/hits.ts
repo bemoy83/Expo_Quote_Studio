@@ -2,23 +2,23 @@
 // by the pointer handlers and the plan's cursor and hover previews.
 import { innerBeamAt } from '../../../domain/innerBeams'
 import { objectBoxes } from '../../../domain/objects'
-import { podiumGrips } from '../../../domain/podiumGrips'
 import { podiumLinks } from '../../../domain/podiumLinks'
 import { roomSideAt } from '../../../domain/rooms'
 import { shelfBox, shelvesOf } from '../../../domain/shelves/model'
 import { faceAt } from '../../../domain/faces'
 import { moduleCount, offsetAlong } from '../../../domain/grid'
-import type { PlacedObject, Point, Room, Variant } from '../../../domain/types'
+import type { Point, Room, Variant } from '../../../domain/types'
 import type { BuiltModule } from '../../../domain/walls'
 import { place, rules } from '../../env'
 import { sizePx, type PlanScale } from '../planScale'
 import { wallWidth } from '../planStyle'
 import { distToSegment } from '../geometry'
 import type { FaceHit } from '../layers/Previews'
+import { gripsOf, type PlanGrip } from '../grips'
 import type { PlanSelection } from '../selection'
 import type { P } from './types'
 
-/** How near a grip of the chosen counter (K14) the pointer takes hold of it, screen px: a finger's width across. */
+/** How near a grip of what is chosen (plan/grips.ts) the pointer takes hold of it, screen px: a finger's width across. */
 export const GRIP_HIT_PX = 16
 
 /** Half the wall's own band across its line in Velg, screen px at least: wide enough for a finger between two textiles. */
@@ -100,31 +100,37 @@ export function planHits(v: Variant, mods: BuiltModule[], selection: PlanSelecti
     return sc ? sizePx(sc, GRIP_HIT_PX) : 0.15
   }
 
-  /** A link of the chosen counter of Disker og podier under the pointer (Byggeregel K15), the nearest. */
-  /** Of things drawn at `at`, the one nearest q within a grip's reach, with the counter it belongs to. */
-  const nearestOf = <T extends { at: Point }>(o: PlacedObject, items: T[], q: P): (T & { o: PlacedObject }) | null => {
+  /** Of things drawn at `at`, the one nearest q within a grip's reach. */
+  const nearest = <T extends { at: Point }>(items: T[], q: P): T | null => {
     let bd = gripReach()
     let best: T | null = null
     for (const x of items) {
       const d = Math.hypot(q.x - x.at[0], q.y - x.at[1])
       if (d < bd) [bd, best] = [d, x]
     }
-    return best && { ...best, o }
+    return best
   }
 
+  /** A link of the chosen counter of Disker og podier under the pointer (Byggeregel K15), the nearest, with the counter. */
   const podiumLinkAt = (q: P) => {
     const o = chosenPodium()
-    return o ? nearestOf(o, podiumLinks(v, o), q) : null
+    const l = o ? nearest(podiumLinks(v, o), q) : null
+    return l && o ? { ...l, o } : null
   }
 
-  /** A grip of the chosen counter of Disker og podier under the pointer (Byggeregel K14), the nearest; a link there
-   *  comes first (K15). */
-  const podiumGripAt = (q: P) => {
+  /** The grips of what is chosen (plan/grips.ts), but none where a link of the chosen counter stands (K15: the link
+   *  comes first). */
+  const grips = (): PlanGrip[] => {
     const o = chosenPodium()
-    return o && !podiumLinkAt(q) ? nearestOf(o, podiumGrips(o), q) : null
+    const links = o ? podiumLinks(v, o) : []
+    const reach = gripReach()
+    return gripsOf(v, selection).filter((g) => !links.some((l) => Math.hypot(l.at[0] - g.at[0], l.at[1] - g.at[1]) < reach))
   }
 
-  return { onStand, moduleAt, beamAt, faceHit, onWallBand, roomEdgeAt, objectAt, shelfAt, podiumGripAt, podiumLinkAt }
+  /** The grip of what is chosen under the pointer, the nearest; a link there comes first (K15). */
+  const gripAt = (q: P) => (podiumLinkAt(q) ? null : nearest(grips(), q))
+
+  return { onStand, moduleAt, beamAt, faceHit, onWallBand, roomEdgeAt, objectAt, shelfAt, grips, gripAt, podiumLinkAt }
 }
 
 export type PlanHits = ReturnType<typeof planHits>

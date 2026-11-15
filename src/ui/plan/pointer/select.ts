@@ -10,7 +10,7 @@ import { faceOfPoint, freeTextileAt } from '../../../domain/textile/free'
 import { textileAt } from '../../../domain/textile/inFrame'
 import { chosenShelves, type PlanSelection } from '../selection'
 import { shelfRow } from '../../../domain/shelves/model'
-import { startPodiumGrip } from './podiumGrip'
+import { startGrip } from './grip'
 import { startPodiumLink } from './podiumLink'
 import { startRoom } from './room'
 import { nearestSide } from '../podiumDrawer/podiumView'
@@ -26,7 +26,7 @@ export function startSelect(c: PointerCtx, q: P): Drag {
   const selEdge = selection.roomId ? hits.roomEdgeAt(q) : null
   if (selEdge && selEdge.room.id === selection.roomId) return startRoom(c, selEdge.room, selEdge.side, q, doorSelect)
   // A link or grip of the chosen counter of Disker og podier (K15, K14) comes before the counter itself, which would move
-  const grip = startPodiumLink(c, q) ?? startPodiumGrip(c, q)
+  const grip = startPodiumLink(c, q) ?? startGrip(c, q)
   if (grip) return grip
   const ft = freeTextileAt(v, q, 0.15)
   if (ft) return { kind: 'freeMove', id: ft.id, p0: q, v0: v, moved: false, select: { freeTextileId: ft.id, freeFace: faceOfPoint(ft, q) } }
