@@ -75,20 +75,62 @@ export function runs(n: number, keep: (i: number) => boolean): [number, number][
 const MODULE_EPS = 1e-6;
 
 /**
- * How many modules a wall has (Byggeregel V1): whole metres from `from`, and one shorter module last when the length
- * is not whole (250, 500 or 750 c/c).
+ * The modules of a wall as [start, end], metres from `from` (Byggeregler V1, Byggeregel D8): whole metres from `from` and one
+ * shorter module last when the length is not whole (250, 500 or 750 c/c). A door standing off the whole metres
+ * (`breaks`: where its 1000 module starts) splits the wall there: the stretch before it is laid in whole metres with its
+ * rest last, next to the door; the door's module; then on again from its end.
  */
-export const moduleCount = (w: Wall): number => Math.max(0, Math.ceil(wallLength(w) - MODULE_EPS));
+export function moduleSpans(w: Wall): readonly (readonly [number, number])[] {
+  const have = SPANS.get(w);
+  if (have) return have;
+  const L = wallLength(w);
+  const out: [number, number][] = [];
+  const lay = (from: number, to: number) => {
+    for (let t = from; to - t > MODULE_EPS; t = Math.min(t + 1, to)) out.push([round3(t), round3(Math.min(t + 1, to))]);
+  };
+  let at = 0;
+  for (const b of [...(w.breaks ?? [])].sort((x, y) => x - y)) {
+    if (b < at - MODULE_EPS || b + 1 > L + MODULE_EPS) continue;
+    lay(at, b);
+    out.push([round3(b), round3(b + 1)]);
+    at = b + 1;
+  }
+  lay(at, L);
+  SPANS.set(w, out);
+  return out;
+}
 
-/** Where module i of a wall ends, metres from `from`: a whole metre after its start, or the wall's end for the last. */
-export const moduleEnd = (w: Wall, i: number): number => Math.min(i + 1, wallLength(w));
+/** Walls are never changed in place: their module spans are kept with them. */
+const SPANS = new WeakMap<Wall, [number, number][]>();
 
-/** Module i's length c/c, m: 1 for a whole module, less for a shorter last one. */
-export const moduleCc = (w: Wall, i: number): number => moduleEnd(w, i) - i;
+/** How many modules a wall has (moduleSpans). */
+export const moduleCount = (w: Wall): number => moduleSpans(w).length;
 
-/** Modules of a wall in order from `from`. Index i spans [i, moduleEnd(w, i)] metres along the wall. */
+/** Where module i of a wall starts, metres from `from`. */
+export const moduleStart = (w: Wall, i: number): number => moduleSpans(w)[i]?.[0] ?? i;
+
+/** Where module i of a wall ends, metres from `from`: a whole metre after its start, or less for a shorter one. */
+export const moduleEnd = (w: Wall, i: number): number => moduleSpans(w)[i]?.[1] ?? Math.min(i + 1, wallLength(w));
+
+/** The module of a wall that `t` metres from `from` lies in (the last at the very end). */
+export function moduleAt(w: Wall, t: number): number {
+  const spans = moduleSpans(w);
+  const i = spans.findIndex(([, e]) => t < e - MODULE_EPS);
+  return i < 0 ? Math.max(0, spans.length - 1) : i;
+}
+
+/** The module of a wall that starts exactly `t` metres from `from`, if any. */
+export function moduleFrom(w: Wall, t: number): number | undefined {
+  const i = moduleSpans(w).findIndex(([a]) => Math.abs(a - t) < MODULE_EPS);
+  return i < 0 ? undefined : i;
+}
+
+/** Module i's length c/c, m: 1 for a whole module, less for a shorter one. */
+export const moduleCc = (w: Wall, i: number): number => round3(moduleEnd(w, i) - moduleStart(w, i));
+
+/** Modules of a wall in order from `from`. Index i spans [moduleStart, moduleEnd] metres along the wall. */
 export function wallModules(w: Wall): Module[] {
-  return Array.from({ length: moduleCount(w) }, (_, i) => makeModule(pointAlong(w, i), pointAlong(w, moduleEnd(w, i))));
+  return moduleSpans(w).map(([a, b]) => makeModule(pointAlong(w, a), pointAlong(w, b)));
 }
 
 

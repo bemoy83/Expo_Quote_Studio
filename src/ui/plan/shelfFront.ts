@@ -7,6 +7,6 @@ import { rules } from '../env'
  *  the wall turned into drawing x by `spanX` (the face is drawn as seen standing in front of it). */
 export function shelfFront(v: Variant, f: Shelf, layout: CornerLayout, spanX: (a: number, b: number) => number) {
   const span = shelfSpan(v, rules, f, layout)
-  const brackets = bracketSpans(rules, f, span).map(([a, b]): [number, number] => [spanX(a, b), spanX(a, b) + Math.abs(b - a)])
+  const brackets = bracketSpans(rules, span).map(([a, b]): [number, number] => [spanX(a, b), spanX(a, b) + Math.abs(b - a)])
   return { x: spanX(span.a, span.b), width: span.b - span.a, brackets }
 }

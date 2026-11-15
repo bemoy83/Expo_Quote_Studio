@@ -1,7 +1,7 @@
 // What the plan's dimension lines measure (docs/arbeidstegning.md, «Mål»): pure geometry, drawn by layers/DimLayer.tsx.
 // Positions are metres along a side or a wall; the layer turns them into chains in millimetres.
 import { faceNormal, sideOf } from '../../domain/faces'
-import { openSides, pointAlong, sideLength, wallLength } from '../../domain/grid'
+import { moduleSpans, moduleStart, openSides, pointAlong, sideLength, wallLength } from '../../domain/grid'
 import type { Point, Side, Variant, Wall } from '../../domain/types'
 import { isStandWall, physicalEnds } from '../../domain/walls'
 import { runNormal } from '../../domain/textile/free'
@@ -90,7 +90,9 @@ function moduleChain(w: Wall): number[] {
   const a = Math.min(w.from[k], w.to[k])
   const b = Math.max(w.from[k], w.to[k])
   const ts: number[] = []
-  for (let t = Math.ceil(a - EPS); t <= b + EPS; t++) ts.push(t)
+  // Beside a door off whole metres the modules follow the door (Byggeregel D8)
+  if (w.breaks?.length) for (const [s] of moduleSpans(w)) ts.push(pointAlong(w, s)[k])
+  else for (let t = Math.ceil(a - EPS); t <= b + EPS; t++) ts.push(t)
   return chainPoints([a, b, ...ts])
 }
 
@@ -163,7 +165,7 @@ export function planDims(v: Variant, selection: PlanSelection, compact: boolean)
     const hz = horizontal(under)
     const k = hz ? 0 : 1
     const ms = chosenShelves(v, selection).flatMap((id) => shelvesOf(v).filter((f) => f.id === id).map((f) => f.module))
-    const ends = [...physicalEnds(rules, wallLength(under)), Math.min(...ms), Math.max(...ms) + 1].map((t) => pointAlong(under, t)[k])
+    const ends = [...physicalEnds(rules, wallLength(under)), moduleStart(under, Math.min(...ms)), moduleStart(under, Math.max(...ms)) + 1].map((t) => pointAlong(under, t)[k])
     inner = { axis: hz ? 'x' : 'y', at: hz ? under.from[1] : under.from[0], dir: toward(faceNormal(under, sideOf(v, shelf)), hz), ts: chainPoints(ends), clear: 'shelf' }
   }
   return { sides, inner }

@@ -9,7 +9,7 @@ import type { BoardKind } from '../../foga/structure';
 import { wallHeight, type Rules } from '../../rules/rules';
 import { faceNormal, faces, sideOf, type FaceSide } from '../faces';
 import { CHANNEL_TAKEN, channelTakers, feltBlocked, modulePosts } from '../fittings';
-import { pointAlong, pointKey } from '../grid';
+import { moduleStart, pointAlong, pointKey } from '../grid';
 import type { Point, Shelf, Variant } from '../types';
 
 const C = RECIPES.shelf.corner;
@@ -32,10 +32,12 @@ export interface CornerFelt {
   module: number;
   s: FaceSide;
   end: 0 | 1;
+  /** Where the felt's module starts, m from the wall's start (moduleStart: off whole metres beside a door, D8). */
+  at: number;
 }
 
 /** A point `x` m along a corner felt's wall from its corner post's centre, as m from the wall's start. */
-const fromCorner = (f: Pick<CornerFelt, 'module' | 'end'>, x: number) => (f.end === 0 ? f.module + x : f.module + 1 - x);
+const fromCorner = (f: Pick<CornerFelt, 'at' | 'end'>, x: number) => (f.end === 0 ? f.at + x : f.at + 1 - x);
 
 /** An inner corner seen from one of its two felts: the corner post, and the felt on the other wall that faces it. */
 export interface Corner {
@@ -66,8 +68,8 @@ function postEnds(v: Variant, wallId: string, module: number, s: FaceSide): ('fr
       return (q[0] - p[0]) * on[0] + (q[1] - p[1]) * on[1] > EPS;
     })!;
     if (!faces(v, ow).includes(os)) return 'taken';
-    const end: 0 | 1 = pointKey(pointAlong(ow, m.index)) === pointKey(p) ? 0 : 1;
-    return { post: p, felt: { wallId, module, s, end: i as 0 | 1 }, other: { wallId: ow.id, module: m.index, s: os, end } };
+    const end: 0 | 1 = pointKey(pointAlong(ow, moduleStart(ow, m.index))) === pointKey(p) ? 0 : 1;
+    return { post: p, felt: { wallId, module, s, end: i as 0 | 1, at: moduleStart(w, module) }, other: { wallId: ow.id, module: m.index, s: os, end, at: moduleStart(ow, m.index) } };
   });
 }
 
@@ -220,12 +222,14 @@ export function shelfSpan(
   rules: Rules,
   f: Shelf,
   layout: Pick<CornerLayout, 'shelves'> = cornerLayout(v, rules),
-): { a: number; b: number; depth: number; board: BoardKind; corner: CornerShelf | null } {
+): { a: number; b: number; depth: number; board: BoardKind; corner: CornerShelf | null; at: number } {
   const c = layout.shelves.get(f.id);
   const inset = (rules.wall.cc - rules.shelf.board.width) / 2;
-  if (!c) return { a: f.module + inset, b: f.module + 1 - inset, depth: rules.shelf.board.depth, board: 'standard', corner: null };
+  const w = v.walls.find((x) => x.id === f.wallId);
+  const at = w ? moduleStart(w, f.module) : f.module;
+  if (!c) return { a: at + inset, b: at + 1 - inset, depth: rules.shelf.board.depth, board: 'standard', corner: null, at };
   const [a, b] = [fromCorner(c.corner.felt, c.from), fromCorner(c.corner.felt, c.to)].sort((p, q) => p - q);
-  return { a, b, depth: c.depth, board: c.board, corner: c };
+  return { a, b, depth: c.depth, board: c.board, corner: c, at };
 }
 
 /** A rail's centre along the wall it hangs on, m from that wall's start. */
@@ -255,10 +259,10 @@ export function railBox(v: Variant, rules: Rules, r: ShelfRail): { x0: number; y
  * standing out from the rail on the other wall, seen from the side, or for a 2/3 board the twin in its own wall's rail,
  * seen end on (H10, H11).
  */
-export function bracketSpans(rules: Rules, f: Shelf, span: ReturnType<typeof shelfSpan>): [number, number][] {
+export function bracketSpans(rules: Rules, span: ReturnType<typeof shelfSpan>): [number, number][] {
   const half = rules.wall.post / 2;
   const c = span.corner;
-  const posts = [f.module, f.module + 1].filter((_, i) => !c || c.corner.felt.end !== i).map((t): [number, number] => [t - half, t + half]);
+  const posts = [span.at, span.at + 1].filter((_, i) => !c || c.corner.felt.end !== i).map((t): [number, number] => [t - half, t + half]);
   if (!c) return posts;
   const t = (x: number) => fromCorner(c.corner.felt, x);
   if (c.board === 'twoThirds') {

@@ -3,7 +3,7 @@
 // convention: 1 = the wall's left normal (−dy, dx), −1 = the other. Perimeter walls only have the face toward the stand.
 import { CURTAIN } from '../catalog/defaultCatalog';
 import type { Rules } from '../rules/rules';
-import { moduleCc, moduleCount, pointAlong, wallDirection, wallModules } from './grid';
+import { moduleCc, moduleCount, pointAlong, wallDirection, wallModules, moduleStart } from './grid';
 import { OUTSIDE } from './roomKeys';
 import type { Point, Variant, Wall } from './types';
 import { builtModules, defaultSwing, isStandWall } from './walls';
@@ -50,14 +50,21 @@ export function faceAt(v: Variant, w: Wall, p: { x: number; y: number }): FaceSi
   return faces(v, w).includes(s) ? s : faces(v, w)[0];
 }
 
-/** Wall panel inside one module: along-wall span and height above the floor, metres. `cc`: the module's length c/c
- *  (V1), less than a whole one for a shorter last module, whose panel is that much narrower. */
+/** Wall panel inside one module starting `module` metres along the wall (moduleStart): along-wall span and height above
+ *  the floor, metres. `cc`: the module's length c/c (V1), less than a whole one for a shorter module, whose panel is
+ *  that much narrower. */
 export function felt(rules: Rules, module: number, cc = rules.wall.cc) {
   const post = rules.wall.post;
   const w = rules.wall.plate.width / 1000 - (rules.wall.cc - cc);
   const h = rules.wall.plate.height / 1000;
   const y0 = rules.wall.feet + rules.wall.profile.bottom;
   return { a: module + post / 2, b: module + post / 2 + w, w, y0, y1: y0 + h, h, center: module + cc / 2 };
+}
+
+/** The panel of module `module` (an index) of the wall `wallId`, where the wall lays it (moduleStart, D8). */
+export function wallFelt(v: Pick<Variant, 'walls'>, rules: Rules, wallId: string, module: number) {
+  const w = v.walls.find((x) => x.id === wallId);
+  return felt(rules, w && module < moduleCount(w) ? moduleStart(w, module) : module, feltCc(v, rules, wallId, module));
 }
 
 /** The length c/c of module `module` of the wall `wallId` (V1): a whole module when the wall is not there. */

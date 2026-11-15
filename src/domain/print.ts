@@ -8,7 +8,7 @@
 // Textile frames are skipped; doors take print on leaf and header; curtains and plates of another wall do not. The
 // bucket also leaves the stretch inside a bakrom that stands against the face; the brush can still print there.
 import type { Rules } from '../rules/rules';
-import { moduleCc, pointAlong, wallLength, wallModules } from './grid';
+import { moduleCc, moduleStart, pointAlong, wallLength, wallModules } from './grid';
 import { fitFoil, freeFelts } from './decor';
 import { clearPanels } from './panels';
 import { roomAt, roomOf } from './rooms';
@@ -55,7 +55,7 @@ function otherRoom(v: Variant, w: Wall, s: FaceSide, t: number): boolean {
 export const printPlates = (v: Variant, rules: Rules, w: Wall, s: FaceSide): number[] => freeFelts(v, rules, w.id, s, true);
 
 /** Plates the paint bucket fills: those that can take print, except where a bakrom stands against the face (Bjørn 2.11.2026). */
-export const fillPlates = (v: Variant, rules: Rules, w: Wall, s: FaceSide): number[] => printPlates(v, rules, w, s).filter((i) => !otherRoom(v, w, s, i + moduleCc(w, i) / 2));
+export const fillPlates = (v: Variant, rules: Rules, w: Wall, s: FaceSide): number[] => printPlates(v, rules, w, s).filter((i) => !otherRoom(v, w, s, moduleStart(w, i) + moduleCc(w, i) / 2));
 
 /** A face's print: the foils covering whole plates on it. */
 export const printsOn = (v: Variant, wallId: string, s: FaceSide): Foil[] => v.foils.filter((f) => f.full && f.wallId === wallId && sideOf(v, f) === s);
@@ -69,7 +69,7 @@ export function stretchCrops(rules: Rules, w: Wall, s: FaceSide, modules: number
   const L = wallLength(w);
   // Along the face as seen standing in front of it: left to right
   const span = modules.map((i) => {
-    const f = felt(rules, i, moduleCc(w, i));
+    const f = felt(rules, moduleStart(w, i), moduleCc(w, i));
     return { i, x0: s === 1 ? f.a : L - f.b, x1: s === 1 ? f.b : L - f.a, h: f.h };
   });
   const out = new Map<number, Crop>();

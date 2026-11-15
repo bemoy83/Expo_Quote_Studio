@@ -6,7 +6,7 @@
 import { freeFrames } from '../../calc/textile/free'
 import { DOOR_AIM_MIN, placeOpening } from '../../domain/doors'
 import { paintWalls } from '../../domain/edit'
-import { faceSegment, felt, feltCc, sideOf, type FaceSide } from '../../domain/faces'
+import { faceSegment, wallFelt, sideOf, type FaceSide } from '../../domain/faces'
 import { applyFloor } from '../../domain/floor/brush'
 import { carpetClick, fillCarpet } from '../../domain/floor/rollFill'
 import { tileAt, type Rect } from '../../domain/floor/tiles'
@@ -346,7 +346,7 @@ function decorTarget(p: NextInput, q: P): NextTarget | null {
     const h = hits.faceHit(q)!
     const r = feltDecor(v, h, brush, ratioOf(p.motifs)(brush.motif))
     if ('error' in r) {
-      const f = felt(rules, h.module, feltCc(v, rules, h.w.id, h.module))
+      const f = wallFelt(v, rules, h.w.id, h.module)
       return line({ hint: r.error, invalid: { seg: faceSegment(h.w, h.s, f.a, f.b, 0), width: 'print' } })
     }
     return line({ edit: r.v === v ? undefined : () => r.v, hint: null })

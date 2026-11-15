@@ -1,5 +1,5 @@
 // Byggeregler V1, V6, V10, T6, D3, R6 (docs/byggeregler.md).
-import { makeModule, moduleKey, onSpan, openSides, pointAlong, pointKey, SIDES, sideEnds, wallDirection, wallLength, wallModules, type Module } from './grid';
+import { makeModule, moduleKey, moduleSpans, onSpan, openSides, pointAlong, pointKey, SIDES, sideEnds, wallDirection, wallLength, wallModules, type Module } from './grid';
 import { gapKeys, OUTSIDE } from './roomKeys';
 import type { Rules } from '../rules/rules';
 import type { Opening, Point, Side, Stand, Variant, Wall } from './types';
@@ -139,7 +139,7 @@ export function splitParts(parts: readonly WallPart[], i: number): WallPart[] {
 
 /** Post centres along a wall, m from its start: every module's and part's start, and its end. */
 export function postOffsets(w: Wall, parts: readonly WallPart[]): number[] {
-  return [...new Set([...wallModules(w).map((_, i) => i), ...parts.map((q) => q.at), wallLength(w)])].sort((a, b) => a - b);
+  return [...new Set([...moduleSpans(w).map(([a]) => a), ...parts.map((q) => q.at), wallLength(w)])].sort((a, b) => a - b);
 }
 
 /** Where walls meet another wall (Byggeregel V10): the ends of every wall and where two cross, as points. */

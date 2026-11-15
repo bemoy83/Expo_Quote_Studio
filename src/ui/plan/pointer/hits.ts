@@ -6,7 +6,7 @@ import { podiumLinks } from '../../../domain/podiumLinks'
 import { roomSideAt } from '../../../domain/rooms'
 import { shelfBox, shelvesOf } from '../../../domain/shelves/model'
 import { faceAt } from '../../../domain/faces'
-import { moduleCount, offsetAlong } from '../../../domain/grid'
+import { moduleAt as moduleOf, offsetAlong } from '../../../domain/grid'
 import type { Point, Room, Variant } from '../../../domain/types'
 import type { BuiltModule } from '../../../domain/walls'
 import { place, rules } from '../../env'
@@ -53,7 +53,7 @@ export function planHits(v: Variant, mods: BuiltModule[], selection: PlanSelecti
     if (!m) return null
     const w = v.walls.find((x) => x.id === m.wallId)!
     const t = offsetAlong(w, q)
-    return { w, s: faceAt(v, w, q), t, module: Math.min(Math.floor(t), moduleCount(w) - 1) }
+    return { w, s: faceAt(v, w, q), t, module: moduleOf(w, t) }
   }
 
   /**

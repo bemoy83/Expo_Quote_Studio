@@ -226,6 +226,11 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   snus dørbladet; er ingen side fri, settes ikke døren. En senere endring som ville stengt begge sider av en dør,
   nektes med melding. Mot gangen slår døren alltid inn (D3), så der må innsiden være fri.
   *Bjørn 15.11.2026 · kode `src/domain/doors.ts`, `src/domain/objects.ts`, `src/ui/edits.ts` · test `src/domain/doorSwing.test.ts`*
+- **D8 Dør utenfor hele meter.** En dør eller et forheng kan stå utenfor metrerutenettet (i 250). Døren har alltid sin
+  egen 1000-modul; resten av veggen legges i hele moduler med den korte modulen (250, 500 eller 750) nærmest døren, for
+  eksempel 1000 · 250 · dør · 1000 · 750. Korte moduler har egne art.nr (6121–6123), plassholderpris som hel meter.
+  Gjelder også romsider. Hyller og feltfarge bare på hele 1000-moduler.
+  *Bjørn 15.11.2026 · `Wall.breaks` · kode `src/domain/grid.ts` · test `src/domain/moduleSpans.test.ts`*
 ## R · Rom
 
 - **R1 Bare det som mangler.** Et rom bygger bare veggene som ikke finnes. Står det inntil en standvegg, gjenbrukes den;

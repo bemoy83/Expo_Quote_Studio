@@ -61,7 +61,7 @@ export function buildShelves(c: BuildContext) {
     grip.castShadow = false
     grip.receiveShadow = false
     // Its two brackets: at the module's start the board lies ahead along the wall (+1), at its end behind (−1)
-    for (const [k, d, i] of [[f.module, 1, 0], [f.module + 1, -1, 1]] as const) {
+    for (const [k, d, i] of [[span.at, 1, 0], [span.at + 1, -1, 1]] as const) {
       // Not at the corner post: there the board rests on its rail's bracket (below)
       if (span.corner?.corner.felt.end === i) continue
       const p = pointAlong(w, k)

@@ -1,10 +1,13 @@
 // Replacing the walls of a variant while openings, textiles, foils and shelves follow onto the new walls. Used by every
 // edit that redraws walls (domain/edit.ts, rooms.ts, enclosures.ts).
-import { moduleKey, pointAlong, wallDirection, wallLength, moduleEnd } from './grid';
+import { moduleKey, pointAlong, wallDirection, wallLength, moduleEnd, moduleStart, moduleAt, moduleFrom } from './grid';
 import type { Opening, Point, TextileWall, Variant, Wall } from './types';
 import { defaultSwing } from './walls';
 
 const EPS = 1e-9;
+
+/** The module of `w` that starts `t` metres along it, or the one t lies in. */
+const moduleOn = (w: Wall, t: number) => moduleFrom(w, t) ?? moduleAt(w, t + 1e-3);
 
 /** Where an opening, textile or foil sits, independent of which wall carries it. */
 interface Anchor {
@@ -21,7 +24,7 @@ function locate(walls: Wall[], wallId: string, from: number, to: number): Anchor
 /** Where module i of a wall lies: from its start to its end, which for a shorter last module is the wall's end (V1). */
 function locateModule(walls: Wall[], wallId: string, module: number): Anchor | null {
   const w = walls.find((x) => x.id === wallId);
-  return w ? locate(walls, wallId, module, moduleEnd(w, module)) : null;
+  return w ? locate(walls, wallId, moduleStart(w, module), moduleEnd(w, module)) : null;
 }
 
 /** Find a wall that contains the segment a→b and return the offsets along it. */
@@ -62,7 +65,7 @@ export function replaceWalls(v: Variant, walls: Wall[]): Variant {
     const swing = o.swing === undefined ? undefined : sameDir ? o.swing : (-o.swing as 1 | -1);
     const hinge = sameDir ? o.hinge : o.hinge === -1 ? undefined : (-1 as const);
     const { hinge: _h, ...rest } = o;
-    openings.push({ ...rest, wallId: hit.wallId, module: Math.round(hit.from), ...(swing === undefined ? {} : { swing }), ...(hinge === -1 ? { hinge } : {}) });
+    openings.push({ ...rest, wallId: hit.wallId, module: moduleOn(hit.wall, hit.from), ...(swing === undefined ? {} : { swing }), ...(hinge === -1 ? { hinge } : {}) });
   }
   // Textiles and foils keep their world face: the side flips when the new wall runs the other way.
   const faceOn = (x: { wallId: string; side?: 1 | -1 }, hit: { wall: Wall }): 1 | -1 => {
@@ -82,12 +85,12 @@ export function replaceWalls(v: Variant, walls: Wall[]): Variant {
     if (!hit) return [];
     const side = faceOn(f, hit);
     const flipped = side !== (f.side ?? defaultSwing(v.stand, old.find((w) => w.id === f.wallId)!));
-    return [{ ...f, wallId: hit.wallId, module: Math.round(hit.from), side, x: flipped ? -f.x : f.x }];
+    return [{ ...f, wallId: hit.wallId, module: moduleOn(hit.wall, hit.from), side, x: flipped ? -f.x : f.x }];
   });
   const shelves = v.shelves?.flatMap((f) => {
     const at = locateModule(old, f.wallId, f.module);
     const hit = at && reanchor(walls, at);
-    return hit ? [{ ...f, wallId: hit.wallId, module: Math.round(hit.from), side: faceOn(f, hit) }] : [];
+    return hit ? [{ ...f, wallId: hit.wallId, module: moduleOn(hit.wall, hit.from), side: faceOn(f, hit) }] : [];
   });
   return { ...v, walls, openings: dedupeOpenings(walls, openings), textiles, foils, ...(shelves ? { shelves } : {}) };
 }
@@ -99,7 +102,7 @@ function dedupeOpenings(walls: Wall[], openings: Opening[]): Opening[] {
   return openings.filter((o) => {
     const w = walls.find((x) => x.id === o.wallId);
     if (!w) return false;
-    const key = moduleKey(pointAlong(w, o.module), pointAlong(w, moduleEnd(w, o.module)));
+    const key = moduleKey(pointAlong(w, moduleStart(w, o.module)), pointAlong(w, moduleEnd(w, o.module)));
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
