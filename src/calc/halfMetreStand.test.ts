@@ -4,7 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_CATALOG } from '../catalog/defaultCatalog';
 import { paintWalls } from '../domain/edit';
-import { metreLines } from '../domain/grid';
+import { cellsUpTo, metreLines } from '../domain/grid';
 import { createVariant } from '../domain/variant';
 import { builtModules } from '../domain/walls';
 import { RULES } from '../rules/rules';
@@ -48,5 +48,7 @@ describe('Byggeregel V14: a stand of 3,5 × 2,5', () => {
     expect(metreLines(4)).toEqual([1, 2, 3]);
     expect(metreLines(1)).toEqual([]);
     expect(metreLines(1.5)).toEqual([1]);
+    expect(cellsUpTo(3.5)).toEqual([[0, 1], [1, 2], [2, 3], [3, 3.5]]);
+    expect(cellsUpTo(1, 0.25)).toEqual([[0, 0.25], [0.25, 0.5], [0.5, 0.75], [0.75, 1]]);
   });
 });

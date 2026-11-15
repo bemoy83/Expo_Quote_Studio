@@ -7,7 +7,7 @@
 // takdragere are built in whole and half metres (T8). Shift pressed or let go during a drag goes on from what is drawn
 // (drawAxis.ts). One grid for every pen: the metre grid, the fine step (`unit`) with Shift or Fin. Pure, plan in m.
 import { axisSpan, rebaseAxis, type DrawAxis } from './drawAxis';
-import { nearestEdge, type Module } from './grid';
+import { nearestEdge, toEdge, type Module } from './grid';
 import type { Point, Stand } from './types';
 
 /** One grid unit, m: the fine step. */
@@ -83,9 +83,8 @@ export function runTo(d: RunDrag, q: Point): [Point, Point] {
   let [lo, hi] = axisSpan(axis, v, d.fine, coarseOf(u));
   lo = Math.max(0, lo);
   hi = Math.min(max, hi);
-  // In whole metres the half metre at the stand's edge is the last step: taken once the pointer is past its middle (Byggeregel V14)
-  const rest = max - hi;
-  if (!d.fine && rest > 0 && rest < coarseOf(u) && v > hi + rest / 2) hi = max;
+  // In whole metres the half metre at the stand's edge is the last step (Byggeregel V14)
+  if (!d.fine) hi = toEdge(hi, v, max, coarseOf(u));
   if (hi - lo < 1) [lo, hi] = lo === 0 ? [0, 1] : [max - 1, max];
   // The end that stood still: the one taken hold of moves, without Shift the one the pointer is past
   const fromHi = axis.g ? axis.g < 0 : axis.fix ? axis.fix > 0 : v < axis.lo;

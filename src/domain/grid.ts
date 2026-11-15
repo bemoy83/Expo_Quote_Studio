@@ -267,9 +267,27 @@ export function openSides(stand: Stand): Side[] {
   }
 }
 
+/** Coordinate k of p (0: x, 1: y) lies on a metre line of the stand: a whole metre, or the stand's edge, which is a
+ *  line too on a stand in half metres (Byggeregel V14). */
+export function onMetreLine(stand: Pick<Stand, 'width' | 'depth'>, p: Point, k: 0 | 1): boolean {
+  const v = p[k];
+  return Math.abs(v - Math.round(v)) < 1e-6 || Math.abs(v - (k === 0 ? stand.width : stand.depth)) < 1e-6;
+}
+
+/** The end of a run grown in whole steps that stops short of the stand's edge `max`: the edge once the pointer `to` is
+ *  past the middle of the rest, so in whole metres the half metre is the last step (Byggeregel V14). Any unit. */
+export function toEdge(end: number, to: number, max: number, step: number): number {
+  const rest = max - end;
+  return rest > 1e-9 && rest < step - 1e-9 && to > end + rest / 2 ? max : end;
+}
+
+/** The cells of `step` m along a stand side of `size` m, from 0: the last is the rest out to the edge (Byggeregel V14). */
+export const cellsUpTo = (size: number, step = 1): [number, number][] =>
+  Array.from({ length: Math.max(0, Math.ceil(size / step - 1e-6)) }, (_, i) => cellAt(i * step, size, step));
+
 /** The whole metres inside a stand side of `size` m, its ends left out: 1, 2, 3 on 3,5 and on 4 (the stand is in whole and
  *  half metres, Byggeregel V14). The plan's metre grid. */
-export const metreLines = (size: number): number[] => Array.from({ length: Math.max(0, Math.ceil(size - 1e-6) - 1) }, (_, i) => i + 1);
+export const metreLines = (size: number): number[] => cellsUpTo(size).slice(0, -1).map(([, e]) => e);
 
 /** Floor cell size in metres. */
 export const CELL = RULES.floor.cell;

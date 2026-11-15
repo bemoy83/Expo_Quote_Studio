@@ -3,8 +3,8 @@
 // Byggeregel T8 (docs/byggeregler.md).
 import { movedEnd, type RunEnd } from './grips';
 import { nextId } from './ids';
-import { modulesAlong, uncoveredRuns } from './grid';
-import type { InnerBeam, Point, Variant } from './types';
+import { modulesAlong, onMetreLine, uncoveredRuns } from './grid';
+import type { InnerBeam, Point, Stand, Variant } from './types';
 import { builtModules } from './walls';
 
 /** A straight run the brush refuses to lie along: a standard beam (from the calc). */
@@ -91,11 +91,8 @@ export function moveInnerBeam(v: Variant, id: string, delta: number, along: numb
 export const FINE_STEP = 0.05;
 
 
-/** The beam lies off the 1 m grid across its direction (Byggeregel T15). */
-export const offGrid = (b: InnerBeam) => {
-  const c = b.from[1] === b.to[1] ? b.from[1] : b.from[0];
-  return Math.abs(c - Math.round(c)) > 1e-6;
-};
+/** The beam lies off the 1 m grid across its direction (Byggeregel T15); the stand's edge is on it (Byggeregel V14). */
+export const offGrid = (stand: Stand, b: InnerBeam) => !onMetreLine(stand, b.from, b.from[1] === b.to[1] ? 1 : 0);
 
 /**
  * Move a drawn beam `offset` m across its direction (Shift + dra or «Fin» in the pill, Byggeregel T15), in steps of

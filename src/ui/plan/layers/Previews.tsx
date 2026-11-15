@@ -2,6 +2,7 @@
 // stroke with its rings, the dashed outline of the chosen engangsteppe lanes, and the snap dots. What the pen would
 // store is not drawn here: PlanView draws the next variant through the plan's own layers, dimmed (next.ts, nextArea.ts).
 import { useId, type SVGProps } from 'react'
+import { cellsUpTo, onMetreLine } from '../../../domain/grid'
 import type { Point, Wall } from '../../../domain/types'
 import { CANVAS, INK, INK_FAINT, SURFACE } from '../../colors'
 import { type FaceSide } from '../../../domain/faces'
@@ -35,21 +36,22 @@ export function EraseStroke({ a, b, centre }: { a: Point; b: Point; centre: Poin
   )
 }
 
-/** True on a whole metre, give or take float noise from stepping in 0.25 m. */
-const onMetre = (t: number) => Number.isInteger(Math.round(t * 1000) / 1000)
-
-/** The points a wall or textile brush snaps to; whole metres are drawn a little larger. Sized in screen pixels. */
+/** The points a wall or textile brush snaps to; whole metres and the stand's edge (a metre line too, Byggeregel V14)
+ *  are drawn a little larger. Sized in screen pixels. */
 export function SnapDots({ W, D, step }: { W: number; D: number; step: number }) {
   const sc = usePlanScale()
   const big = sizePx(sc, SNAP_DOT.metre)
   const small = sizePx(sc, SNAP_DOT.other)
-  const nx = Math.round(W / step)
-  const ny = Math.round(D / step)
-  return Array.from({ length: (nx + 1) * (ny + 1) }, (_, n) => {
-    const x = (n % (nx + 1)) * step
-    const y = Math.floor(n / (nx + 1)) * step
-    return <circle key={n} cx={x} cy={y} r={onMetre(x) && onMetre(y) ? big : small} fill={SNAP_DOT.fill} />
-  })
+  const stand = { width: W, depth: D }
+  // Every step from 0, and the edge where a stand in half metres ends between two steps
+  const along = (size: number) => [0, ...cellsUpTo(size, step).map(([, e]) => e)]
+  const xs = along(W)
+  return along(D).flatMap((y) =>
+    xs.map((x) => {
+      const metre = onMetreLine(stand, [x, y], 0) && onMetreLine(stand, [x, y], 1)
+      return <circle key={`${x},${y}`} cx={x} cy={y} r={metre ? big : small} fill={SNAP_DOT.fill} />
+    }),
+  )
 }
 
 /** A ring at an end point or snap point: surface fill, ink edge. */

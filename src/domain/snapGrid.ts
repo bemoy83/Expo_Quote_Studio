@@ -1,6 +1,6 @@
 // Grid helpers: snapping to a grid and Tøm's stroke along walls (strokeFrom), which grows along the axis it is dragged
 // most (cellsTo). The pens that draw a run (wall, textile, takdrager) use domain/runDraw.ts, Disker og podier the same axis.
-import { cellAt, nearestEdge } from './grid';
+import { cellAt, nearestEdge, toEdge } from './grid';
 import type { Point, Stand } from './types';
 
 const EPS = 1e-9;
@@ -42,9 +42,7 @@ export function strokeFrom(stand: Stand, p0: { x: number; y: number }, p: { x: n
   // metres the half metre at the stand's edge is the last one (Byggeregel V14)
   const grow = ([lo, hi]: [number, number], to: number, max: number): [number, number] => {
     if (to < lo) return [hi, cellsTo(lo, to, step, max, 0, true)];
-    const end = cellsTo(hi, Math.max(to, hi), step, max);
-    const rest = max - end;
-    return [lo, rest > EPS && rest < step - EPS && to > end + rest / 2 ? max : end];
+    return [lo, toEdge(cellsTo(hi, Math.max(to, hi), step, max), to, max, step)];
   };
   if (alongX(p0, p)) {
     const y = e0h ? e0.a[1] : cl(on(p0.y), 0, D);
