@@ -1,8 +1,9 @@
 // The selection pill (docs/pille-og-skuff.md): quick grips on what is selected in Velg, over the object on the plan.
 // One build for all: name and size · colour or motif · rotate (where it makes sense) · Detaljer (the drawer) · remove.
-// Shown as soon as a click selects; hidden while dragging, while the drawer is open, with a pen in hand and in 3D
-// (PlanView decides). Where it stands: pillAnchor.ts. What it holds per kind of selection: floor.tsx (engangsteppe),
-// objects.tsx (room, takdrager, furniture, frittstående tekstilvegg), door.tsx, wall.tsx (wall, frame, decal), shelf.tsx.
+// Shown as soon as a click selects; hidden while dragging, while the drawer is open and with a pen in hand (PlanView
+// decides; in 3D Scene3D, placed by scene3d/pill.ts). Where it stands: pillAnchor.ts. What it holds per kind of
+// selection: floor.tsx (engangsteppe), objects.tsx (room, takdrager, furniture, frittstående tekstilvegg), door.tsx,
+// wall.tsx (wall, frame, decal), shelf.tsx.
 import { PanelBottomOpen, Trash2 } from 'lucide-react'
 import { useLayoutEffect, useRef, useState } from 'react'
 import { QBtn, QName, Sep } from '../quick/parts'

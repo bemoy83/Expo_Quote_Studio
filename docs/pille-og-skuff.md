@@ -54,7 +54,9 @@ ikon som ikke sier seg selv har tekst ved siden av (lag, Detaljer, Fyll ledig ve
   midtpunkt, så pillen står bort fra det). Posisjonen regnes fra modellkoordinater til skjermen med samme
   `getScreenCTM` som planen bruker.
 - **Skjules** mens man drar, mens skuffen er åpen, og når et annet verktøy enn Velg er i hånden.
-- **Bare i planen.** 3D beholder skuffen inntil videre.
+- **Også i 3D** (Bjørn 15.11.2026): samme pille og samme klikkregler. Et klikk i 3D åpner ikke lenger skuffen, så dra og grep
+  avbrytes ikke. Pillen står over det valgte slik det ligger på skjermen (boksen rundt de valgte flatene, `scene3d/pill.ts`),
+  ellers under, og skjules mens man drar, bruker et grep eller snur kameraet.
 - **Stil:** som `QuickPicks` og de flytende linjene ellers. Panelfarge, `--pop`-skygge, radius 10, knapper 30 px,
   skillestreker. Lucide-ikoner.
 - **Ingen flytt-knapp.** Dra finnes allerede.
@@ -268,6 +270,5 @@ Når en PR er inne, oppdateres [kodekart.md](kodekart.md).
 
 ## Utenfor denne bestillingen
 
-- Pille i 3D.
 - Flytt-knapp og dupliser. Dupliser finnes ikke i appen.
 - Pille for flere valgte objekter samtidig.

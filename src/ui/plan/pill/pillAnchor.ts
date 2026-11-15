@@ -138,6 +138,20 @@ export interface Rect {
   bottom: number
 }
 
+/** What floats over the plan or the 3D view, which the pill keeps clear of: the stand chip and hint line, the mini map,
+ *  the dock. */
+const PILL_AVOID = '.stand-top > *, .minimap, .dock .dock-pill, .price-pill'
+
+/** Where what floats over `wrap` (the plan's or 3D view's box) lies, px from its corner. */
+export function avoidIn(wrap: HTMLElement): Rect[] {
+  const box = wrap.getBoundingClientRect()
+  const root = wrap.closest('.plan-wrap') ?? wrap
+  return [...root.querySelectorAll(PILL_AVOID)].map((x) => {
+    const r = x.getBoundingClientRect()
+    return { left: r.left - box.left, top: r.top - box.top, right: r.right - box.left, bottom: r.bottom - box.top }
+  })
+}
+
 /** Space kept to the plan's edge, px. */
 const EDGE = 8
 
