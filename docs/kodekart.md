@@ -57,7 +57,7 @@ midten (`turnOf`) i steg av 90 eller 15, lengste lovlige med `furthest`, `rotate
 Dørgrepet (`door`, D8) flytter en valgt dør langs veggen med `moveOpeningAlong` i `domain/doors.ts`.
 
 **Standen i halve meter (V14):** `Stand.width/depth` er hele og halve meter. Rutenettet starter i 0 bak til venstre;
-den siste ruta mot høyre og fronten er resten ut til kanten. Bruk `cellAt` (ruta et punkt ligger i) og `metreLines`
+den siste ruta mot høyre og fronten er resten ut til kanten. Bruk `cellAt` (ruta et punkt ligger i), `cellsUpTo` (alle rutene langs en side) og `metreLines`
 (metrelinjene inne i standen) i `domain/grid.ts`, aldri `Array.from({ length: W })` eller `W - 1`; standkanten er en
 linje (`nearestEdge`, `onMetreLine` for mål, Tøm og takdrager utenfor rasteret). Et drag i hele meter tar halvmeteren
 som siste steg med `toEdge` (pensler i `runDraw.ts`, Tøm i `snapGrid.ts`). Størrelsen vises med `standSize` i `ui/names.ts`.
