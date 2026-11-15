@@ -5,9 +5,9 @@
 // side refer to `<id>.<side>` with offsets from the side's start, so they move with the room. Every side runs
 // clockwise round the room, so the room is always on the left of a side and its outside on the right.
 // Byggeregler R1, R2, R4 (docs/byggeregler.md).
-import { moduleKey, pointAlong, runs, moduleCount, wallModules, moduleEnd, moduleStart } from './grid';
+import { moduleKey, pointAlong, runs, moduleCount, wallModules, moduleEnd, moduleStart, wallLength } from './grid';
 import { ownPlate } from './panels';
-import { replaceWalls } from './replaceWalls';
+import { replaceWalls, type PlacedOpening } from './replaceWalls';
 import { furthest, stepsOf } from './grips';
 import { gapKeys, roomWallId } from './roomKeys';
 import {
@@ -156,7 +156,13 @@ function settleDoors(v: Variant, id: string): { v: Variant; moved: boolean } | n
  * shortened side moves to its last module. Textiles and foils are refitted afterwards by fitDecor, shelves by fitShelves.
  */
 export function syncRooms(v: Variant): Variant {
-  const walls = [...v.walls.filter((w) => !w.room), ...v.rooms.flatMap(roomWalls)];
+  // A room side as long as before keeps where its doors split it (Byggeregel D8): it was only moved or kept
+  const was = new Map(v.walls.map((w) => [w.id, w]));
+  const keep = (w: Wall): Wall => {
+    const o = was.get(w.id);
+    return o?.breaks && Math.abs(wallLength(o) - wallLength(w)) < 1e-9 ? { ...w, breaks: o.breaks } : w;
+  };
+  const walls = [...v.walls.filter((w) => !w.room), ...v.rooms.flatMap(roomWalls).map(keep)];
   const byId = new Map(walls.map((w) => [w.id, w]));
   const taken = new Set<string>();
   const openings: Opening[] = [];
@@ -206,11 +212,7 @@ function reshape(v: Variant, r: Room, outline: Point[], shift?: (i: number) => P
   const next = syncRooms({
     ...v,
     rooms: v.rooms.map((o) => (o.id === r.id ? room : o)),
-    openings: v.openings.flatMap((o) => {
-      if (!isRoomWallId(o.wallId, r.id)) return [o];
-      const m = onSide(o.wallId);
-      return m ? [{ ...o, wallId: roomWallId(r.id, m.side), module: Math.max(0, o.module + steps(m.offset)) }] : [];
-    }),
+    openings: v.openings.filter((o) => !isRoomWallId(o.wallId, r.id)),
     textiles: v.textiles.flatMap((t) => {
       if (!isRoomWallId(t.wallId, r.id)) return [t];
       const m = onSide(t.wallId);
@@ -233,7 +235,22 @@ function reshape(v: Variant, r: Room, outline: Point[], shift?: (i: number) => P
         }
       : {}),
   });
-  return carryPanels(v, next, r.id, (side) => match[side] ?? undefined);
+  // Doors and curtains keep their place on the side, off the whole metres too (Byggeregel D8); one left past an end
+  // of its side stops at that end
+  const doors: PlacedOpening[] = v.openings.flatMap((o) => {
+    const w = isRoomWallId(o.wallId, r.id) ? v.walls.find((x) => x.id === o.wallId) : undefined;
+    const m = w && onSide(o.wallId);
+    if (!w || !m) return [];
+    const wallId = roomWallId(r.id, m.side);
+    const L = wallLength(next.walls.find((x) => x.id === wallId)!);
+    const at = Math.max(0, Math.min(L - 1, moduleStart(w, o.module) + m.offset));
+    return L >= 1 ? [{ opening: o, wallId, at }] : [];
+  });
+  const laid = doors.length ? replaceWalls(next, next.walls, doors) : next;
+  // In the order they had
+  const order = new Map(v.openings.map((o, i) => [o.id, i]));
+  const placed = { ...laid, openings: [...laid.openings].sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0)) };
+  return carryPanels(v, placed, r.id, (side) => match[side] ?? undefined);
 }
 
 /**

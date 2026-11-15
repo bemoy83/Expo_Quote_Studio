@@ -230,7 +230,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   egen 1000-modul; resten av veggen legges i hele moduler med den korte modulen (250, 500 eller 750) nærmest døren, for
   eksempel 1000 · 250 · dør · 1000 · 750. Korte moduler har egne art.nr (6121–6123), plassholderpris som hel meter.
   Gjelder også romsider. Hyller og feltfarge bare på hele 1000-moduler.
-  *Bjørn 15.11.2026 · `Wall.breaks` · kode `src/domain/grid.ts` · test `src/domain/moduleSpans.test.ts`*
+  Veggens brudd settes bare ett sted, når veggene skrives på nytt (`replaceWalls`), fra der dørene står; flyttes eller
+  endres et rom, beholder dører og forheng sin plass på siden. Kalkylen teller de korte modulene med sine art.nr.
+  *Bjørn 15.11.2026 · `Wall.breaks` · kode `src/domain/grid.ts`, `src/domain/replaceWalls.ts`, `src/domain/rooms.ts`, `src/domain/doors.ts` · test `src/domain/moduleSpans.test.ts`, `src/domain/doorOffMetre.test.ts`*
 ## R · Rom
 
 - **R1 Bare det som mangler.** Et rom bygger bare veggene som ikke finnes. Står det inntil en standvegg, gjenbrukes den;
@@ -246,9 +248,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   med den.
   *Bjørn 31.10.2026 · kode `src/domain/rooms.ts` · test `src/domain/rooms.test.ts`*
 - **R5 Rom i 250.** Et roms hjørner står i 250-rutenettet, ikke bare på metrelinjene. Uten Shift flyttes og strekkes
-  rommet i hele meter fra der det står; med Shift, eller «Fin» i rommets pille, i 250, i planen og i 3D. Hver side har hele meter først og resten sist, regnet med klokka rundt rommet, med reglene for korte moduler (V1); dør og
-  forheng bare i hele moduler. Flyttes en sides start et stykke som ikke er hel meter, beholder dører og felt på siden
-  modulnummeret sitt fra starten.
+  rommet i hele meter fra der det står; med Shift, eller «Fin» i rommets pille, i 250, i planen og i 3D. Hver side har hele meter først og resten sist, regnet med klokka rundt rommet, med reglene for korte moduler (V1); dører og
+  forheng har alltid en hel 1000-modul. Flyttes en sides start et stykke som ikke er hel meter, beholder dører og forheng
+  plassen sin (D8), mens felt beholder modulnummeret sitt fra starten.
   *Bjørn 14.11.2026 · kode `src/domain/outline.ts`, `src/domain/rooms.ts`, `src/ui/drag.ts` · test `src/domain/rooms250.test.ts`*
 - **R6 Romside langs en vegg.** Ligger en romside på samme linje som en vegg med andre modulgrenser, bygger rommet bare
   strekningen som mangler, regnet etter hvor veggene står og ikke etter modulene (R1). Det som bygges av en modul som

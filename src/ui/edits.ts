@@ -2,6 +2,7 @@
 // area turned into a room. App's onEdit stores it; the plan's preview (docs/forhandsvisning.md) shows the same thing
 // before the click, so the two never differ.
 import { fitDecor } from '../domain/decor'
+import { fitBreaks } from '../domain/replaceWalls'
 import { settleSwings, shutsDoor } from '../domain/doors'
 import { newlyClosedRooms, wallsToRoom } from '../domain/enclosures'
 import { fitShelves } from '../domain/shelves/edit'
@@ -13,9 +14,9 @@ import { findMotif } from './motifs'
 /** A decal's width over height, by motif; 0 for an unknown motif. */
 export const ratioFor = (motifs: Motif[] | undefined) => (id: string | undefined) => findMotif(motifs, id)?.ratio ?? 0
 
-/** The change with decor, free-standing textile and shelves fitted to it, and doors turned to a side with free floor (D7). */
+/** The change with walls laid out round their doors (D8), decor, free-standing textile and shelves fitted to it, and doors turned to a side with free floor (D7). */
 export const settle = (x: Variant, ratio: (id: string | undefined) => number) =>
-  settleSwings(fitShelves(fitFreeTextiles(fitDecor(x, rules, ratio), rules), rules), place.swings, floorBoxes)
+  settleSwings(fitShelves(fitFreeTextiles(fitDecor(fitBreaks(x), rules, ratio), rules), rules), place.swings, floorBoxes)
 
 /** `fn` on v settled, or v itself when it would leave a door with no free floor on either side (Byggeregel D7). */
 export function guarded(v: Variant, fn: (v: Variant) => Variant, ratio: (id: string | undefined) => number): Variant {
