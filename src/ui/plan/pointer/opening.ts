@@ -23,5 +23,5 @@ export function openingAt(c: PointerCtx, e: Module, q: P | null) {
   // A door also needs 1 m² free floor on a side it can swing to (Byggeregel D7)
   const why = doorBlocked(c.v, e.a, e.b) ?? (isDoor(product) ? swingBlocked(c.v, e.a, e.b, floorBoxes) : null)
   if (why) return c.onToast(why)
-  c.onEdit((x) => placeOpening(x, e.a, e.b, product, isDoor(product), q, { ral, fabric }))
+  c.onEdit((x) => placeOpening(x, e.a, e.b, product, isDoor(product), q, { ral, fabric, floor: floorBoxes }))
 }
