@@ -4,7 +4,7 @@ import { r2 } from '../calc/referenceStands'
 import { addObject } from '../domain/objects'
 import { addDefaultRoom, roomSize } from '../domain/rooms'
 import { paintAllWalls } from '../domain/panels'
-import { paintAllCurtains, paintAllDoors } from '../domain/doors'
+import { DOOR_NO_SWING, paintAllCurtains, paintAllDoors, shutsDoor } from '../domain/doors'
 import { paintPodiums } from '../domain/objects'
 import type { StandWallTerms, Variant } from '../domain/types'
 import { customerName, fillFloor, standWallTerms } from '../domain/variant'
@@ -14,7 +14,7 @@ import { KEYS, loadJson, loadSketch, saveJson, saveSketch } from '../persistence
 import { initState, reduce } from '../state/history'
 import { CalcPanel } from './calc/CalcPanel'
 import { calcOf } from './calcCache'
-import { closeRooms, editResult, ratioFor, roomsFrom, settle } from './edits'
+import { closeRooms, editResult, guarded, ratioFor, roomsFrom, settle } from './edits'
 import { CatalogPage } from './catalog/CatalogPage'
 import { CostBasisPage } from './costbasis/CostBasisPage'
 import { BASIS_EVENT } from './costbasis/link'
@@ -134,7 +134,9 @@ export default function App() {
   const onEdit = useCallback(
     (fn: (v: Variant) => Variant, history = true) => {
       const ratio = ratioFor(motifs)
-      const apply = (x: Variant) => settle(fn(x), ratio)
+      const apply = (x: Variant) => guarded(x, fn, ratio)
+      // A door left with no free floor on either side refuses the edit (Byggeregel D7)
+      if (shutsDoor(vRef.current, settle(fn(vRef.current), ratio), place.swings)) showToast({ text: DOOR_NO_SWING })
       dispatch({ type: 'edit', fn: apply, history })
       if (!history) return
       const areas = closeRooms(vRef.current, apply(vRef.current), ratio)?.areas

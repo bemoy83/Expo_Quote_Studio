@@ -3,7 +3,7 @@
 // (docs/pille-og-skuff.md).
 import { ArrowLeftRight, Blinds, DoorClosed, FlipHorizontal2 } from 'lucide-react'
 import { fabricOf, shortName } from '../../../catalog/lookup'
-import { canFlipSwing, doorRal, flipHinge, flipSwing, openingRoom, setCurtainFabric, setDoorRal, setOpeningProduct } from '../../../domain/doors'
+import { canFlipDoor, doorRal, flipHinge, flipSwing, openingRoom, setCurtainFabric, setDoorRal, setOpeningProduct } from '../../../domain/doors'
 import { roomName } from '../../../domain/rooms'
 import { isStandWall } from '../../../domain/walls'
 import { openingProducts, productOf, rules } from '../../env'
@@ -39,7 +39,7 @@ export function doorPill(p: PillActions, c: Extract<Chosen, { kind: 'opening' }>
         {door && (
           <>
             <Sep />
-            {canFlipSwing(v.stand, w) && (
+            {canFlipDoor(v, w, o) && (
               <QBtn title="Snu slagretning" label="Snu slag" onClick={() => onEdit((y) => flipSwing(y, o.id))}>
                 <FlipHorizontal2 size={15} />
               </QBtn>
