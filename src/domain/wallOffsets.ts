@@ -14,7 +14,8 @@ export interface WallOffset {
 }
 
 const EPS = 1e-6;
-const whole = (n: number) => Math.abs(n - Math.round(n)) < EPS;
+/** On a whole metre. */
+export const whole = (n: number) => Math.abs(n - Math.round(n)) < EPS;
 
 /**
  * From p along axis k (0: x, 1: y) to the nearest line a wall module lies on across that axis (one through p's other

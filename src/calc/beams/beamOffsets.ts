@@ -5,7 +5,7 @@
 // selected, the work order for every one.
 import { offGrid } from '../../domain/innerBeams';
 import { onSpan, pointKey } from '../../domain/grid';
-import { nearestAcross } from '../../domain/wallOffsets';
+import { nearestAcross, whole } from '../../domain/wallOffsets';
 import { builtModules } from '../../domain/walls';
 import type { Point, Variant } from '../../domain/types';
 import type { CalcResult } from '../calc';
@@ -28,7 +28,6 @@ export function beamOffsets(v: Variant, res: Pick<CalcResult, 'posts' | 'hooks' 
   const hung = new Set([...res.hooks.map((h) => h.at), ...(res.lift?.walls ?? []), ...(res.lift?.hooks ?? [])].map(pointKey));
   const out: BeamOffset[] = [];
   const mods = builtModules(v);
-  const whole = (n: number) => Math.abs(n - Math.round(n)) < EPS;
   for (const b of v.innerBeams ?? []) {
     if (id && b.id !== id) continue;
     const h = b.from[1] === b.to[1];

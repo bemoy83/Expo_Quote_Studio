@@ -31,15 +31,21 @@ export function dragWall(d: WallDrag, q: { x: number; y: number }, onEdit: Edit,
   dragStep(d, q, (v, s, a) => moveWall(v, d.id, s, a), onEdit, onCheckpoint, d.fine ? CELL : 1)
 }
 
+/** Move a drawn takdrager, plan and 3D alike: whole metres, or with Shift or «Fin» (`d.fine`) 50 mm across and half
+ *  metres along (Byggeregler T8, T15). */
+export function dragBeam(d: WallDrag, q: { x: number; y: number }, standard: readonly Run[], onEdit: Edit, onCheckpoint: () => void) {
+  ;(d.fine ? dragInnerBeamFine : dragInnerBeam)(d, q, standard, onEdit, onCheckpoint)
+}
+
 /** Move a drawn takdrager the same way, both ways; it stops at the last place it fits (domain/innerBeams.ts). */
-export function dragInnerBeam(d: WallDrag, q: { x: number; y: number }, standard: readonly Run[], onEdit: Edit, onCheckpoint: () => void) {
+function dragInnerBeam(d: WallDrag, q: { x: number; y: number }, standard: readonly Run[], onEdit: Edit, onCheckpoint: () => void) {
   dragStep(d, q, (v, s, a) => moveInnerBeam(v, d.id, s, a, standard), onEdit, onCheckpoint)
 }
 
 /** Shift + dra, or «Fin» on in the pill (Byggeregel T15): move a drawn takdrager across its direction in 50 mm steps,
  *  off the 1 m grid, and along it in half metres (T8); a whole metre puts it back on the grid. Where it would not fit
  *  it stays at the last place it did. */
-export function dragInnerBeamFine(d: WallDrag, q: { x: number; y: number }, standard: readonly Run[], onEdit: Edit, onCheckpoint: () => void) {
+function dragInnerBeamFine(d: WallDrag, q: { x: number; y: number }, standard: readonly Run[], onEdit: Edit, onCheckpoint: () => void) {
   const off = d.horizontal ? q.y - d.p0.y : q.x - d.p0.x
   const along = d.horizontal ? q.x - d.p0.x : q.y - d.p0.y
   const next = shiftInnerBeam(d.v0, d.id, off, standard, along)
