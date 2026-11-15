@@ -234,7 +234,8 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   endres et rom, beholder dører og forheng sin plass på siden. Kalkylen teller de korte modulene med sine art.nr.
   En valgt dør eller et forheng har et flyttegrep midt på: dras langs veggen i hele meter, med Shift eller Fin i 250, i
   planen og i 3D, med Velg og med Dør-pennen. Døren stopper ved veggens ende, en annen åpning, hylle, print eller tekstil.
-  *Bjørn 15.11.2026 · `Wall.breaks` · kode `src/domain/grid.ts`, `src/domain/replaceWalls.ts`, `src/domain/rooms.ts`, `src/domain/doors.ts`, `src/ui/plan/grips.ts` · test `src/domain/moduleSpans.test.ts`, `src/domain/doorOffMetre.test.ts`, `src/ui/plan/doorGrip.test.ts`*
+  Dør-pennen med Shift eller Fin setter en ny dør eller et forheng på en vegg i 250, midt på pekeren, med de samme grensene.
+  *Bjørn 15.11.2026 · `Wall.breaks` · kode `src/domain/grid.ts`, `src/domain/replaceWalls.ts`, `src/domain/rooms.ts`, `src/domain/doors.ts`, `src/ui/plan/grips.ts`, `src/ui/plan/pointer/opening.ts` · test `src/domain/moduleSpans.test.ts`, `src/domain/doorOffMetre.test.ts`, `src/ui/plan/doorGrip.test.ts`*
 ## R · Rom
 
 - **R1 Bare det som mangler.** Et rom bygger bare veggene som ikke finnes. Står det inntil en standvegg, gjenbrukes den;
