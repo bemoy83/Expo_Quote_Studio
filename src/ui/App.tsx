@@ -3,7 +3,7 @@ import { Maximize2 } from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore } from 'react'
 import { r2 } from '../calc/referenceStands'
 import { addObject } from '../domain/objects'
-import { addDefaultRoom, roomSize } from '../domain/rooms'
+import { addDefaultRoom } from '../domain/rooms'
 import { paintAllWalls } from '../domain/panels'
 import { DOOR_NO_SWING, paintAllCurtains, paintAllDoors, shutsDoor } from '../domain/doors'
 import { paintPodiums } from '../domain/objects'
@@ -15,7 +15,7 @@ import { KEYS, loadJson, loadSketch, saveJson, saveSketch } from '../persistence
 import { initState, reduce } from '../state/history'
 import { CalcPanel } from './calc/CalcPanel'
 import { calcOf } from './calcCache'
-import { closeRooms, editResult, guarded, ratioFor, roomsFrom, settle } from './edits'
+import { editResult, guarded, ratioFor, settle } from './edits'
 import { CatalogPage } from './catalog/CatalogPage'
 import { CostBasisPage } from './costbasis/CostBasisPage'
 import { BASIS_EVENT } from './costbasis/link'
@@ -41,6 +41,7 @@ import { QuotePage } from './quote/QuotePage'
 import { SketchBand, type Layout } from './shell/SketchBand'
 import { TopNav, type Page } from './shell/TopNav'
 import type { Highlight, PenTool } from './tools'
+import { useCloseRooms } from './useCloseRooms'
 import { useShortcuts } from './useShortcuts'
 import { useToast } from './useToast'
 import { useTools } from './useTools'
@@ -133,57 +134,24 @@ export default function App() {
     onErase: () => setView('plan'),
   })
   const { tool, setTool, brush, active, pick } = tools
-  /** The sketch when the drag under way began: a drag stores its steps without history, from one checkpoint. */
-  const dragFrom = useRef<Variant | null>(null)
-  // Every edit keeps textiles and foils valid: on a wall, off openings, inside their felt.
-  // An edit that walls in an area with a door turns it into a room (frihåndsrom), as its own undo step, and the room
-  // is chosen with its grips (R3, R8).
-  const closeSince = useCallback(
-    (before: Variant, after: Variant, ratio: (id: string | undefined) => number) => {
-      const areas = closeRooms(before, after, ratio)?.areas
-      if (!areas) return
-      const made = roomsFrom(after, areas, ratio).rooms.filter((r) => !after.rooms.some((x) => x.id === r.id))
-      dispatch({ type: 'edit', fn: (x) => roomsFrom(x, areas, ratio) })
-      if (made.length === 1) setSelection({ roomId: made[0].id })
-      const size = areas.map((outline) => roomSize({ outline })).join(' og ')
-      showToast({ text: `Gjort om til rom ${size}`, action: 'Angre', onAction: () => dispatch({ type: 'undo' }) })
-    },
-    [setSelection, showToast],
-  )
+  const ratio = useMemo(() => ratioFor(motifs), [motifs])
+  const { closeSince, editDone, onCheckpoint, onDragEnd } = useCloseRooms({ v, vRef, ratio, dispatch, setSelection, showToast })
+  // Every edit keeps textiles and foils valid: on a wall, off openings, inside their felt; an area it walls in with a
+  // door becomes a room (useCloseRooms.ts).
   const onEdit = useCallback(
     (fn: (v: Variant) => Variant, history = true) => {
-      const ratio = ratioFor(motifs)
       const apply = (x: Variant) => guarded(x, fn, ratio)
       // A door left with no free floor on either side refuses the edit (Byggeregel D7)
       if (shutsDoor(vRef.current, settle(fn(vRef.current), ratio), place.swings, floorBoxes)) showToast({ text: DOOR_NO_SWING })
       dispatch({ type: 'edit', fn: apply, history })
       if (!history) return
-      dragFrom.current = null
+      editDone()
       closeSince(vRef.current, apply(vRef.current), ratio)
     },
-    [motifs, showToast, closeSince],
+    [ratio, showToast, editDone, closeSince],
   )
   /** What an edit on the sketch shown would store, and its calc: the plan shows it dimmed before the click. */
   const preview = useMemo(() => ({ result: (fn: (x: Variant) => Variant) => editResult(v, fn, motifs), calc: calcFor }), [v, motifs, calcFor])
-  const onCheckpoint = useCallback(() => {
-    dragFrom.current = vRef.current
-    dispatch({ type: 'checkpoint' })
-  }, [])
-  /** A drag let go: what it walled in since it began becomes a room, as for a wall drawn (R3). Looked at once the
-   *  sketch holds the drag's last step (a step stored on release counts too), so in an effect after the next render. */
-  const dropped = useRef<Variant | null>(null)
-  const [drops, setDrops] = useState(0)
-  const onDragEnd = useCallback(() => {
-    if (!dragFrom.current) return
-    dropped.current = dragFrom.current
-    dragFrom.current = null
-    setDrops((n) => n + 1)
-  }, [])
-  useEffect(() => {
-    const from = dropped.current
-    dropped.current = null
-    if (from) closeSince(from, v, ratioFor(motifs))
-  }, [drops, v, motifs, closeSince])
   const selectVariant = (index: number) => dispatch({ type: 'select', index })
 
   /** Changing panel tab always returns to Velg. */
