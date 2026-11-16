@@ -4,6 +4,7 @@
 // during a drag goes on from what is drawn. The plan shows what a release stores while dragging (plan/next.ts).
 // With «Disk» in hand a drag draws a disk built as the one in stock, in its depth and in half metres (K22, Bjørn 16.11.2026).
 import { dragLike, drawPodium, podiumAt, rebaseDrag, startDrag, type PodiumDrag } from '../../../domain/podiums'
+import { fusedBeside } from '../../../domain/podiumLinks'
 import type { Variant } from '../../../domain/types'
 import { catalog, isCounter, place } from '../../env'
 import { builtByShape } from '../../podiumPen'
@@ -25,7 +26,9 @@ export function counterUnder(c: Pick<PointerCtx, 'hits'>, q: P): string | null {
 export function podiumStart(c: Pick<PointerCtx, 'v' | 'brush' | 'hits'>, q: P, fine = false) {
   const pen = penOf(c.brush)
   if (!pen || !c.hits.onStand(q) || counterUnder(c, q)) return null
-  return podiumAt(c.v, place, pen, [q.x, q.y], fine)
+  const r = podiumAt(c.v, place, pen, [q.x, q.y], fine)
+  // A standard counter clicked beside another becomes part of it (K15, K22)
+  return pen.stock ? fusedBeside(c.v, place, r) : r
 }
 
 /** A press at q. `fine`: Shift or Fin. */
@@ -67,4 +70,8 @@ const shaped = (c: Pick<PointerCtx, 'v' | 'brush'>, v: Variant, id: string) =>
   c.brush?.kind === 'podium' ? builtByShape(v, id, !c.v.objects.some((o) => o.id === id), c.brush, catalog.products) : v
 
 /** What the drag draws with the pointer at q. */
-export const drawPodiumAt = (c: Pick<PointerCtx, 'v'>, d: PodiumDrag, q: P) => drawPodium(c.v, place, d, [q.x, q.y])
+export function drawPodiumAt(c: Pick<PointerCtx, 'v' | 'brush'>, d: PodiumDrag, q: P) {
+  const r = drawPodium(c.v, place, d, [q.x, q.y])
+  // With a standard counter in hand, drawn beside another it becomes part of it (K15, K22)
+  return c.brush?.kind === 'podium' && c.brush.stock ? fusedBeside(c.v, place, r) : r
+}

@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { RULES } from '../rules/rules';
 import type { PlaceContext } from './objects';
 import { counterBuildOf } from './counterShape';
-import { breakJoint, fusePodiums, NOT_ALONE, podiumJoints, podiumLinks, snapBeside } from './podiumLinks';
-import { podiumSize } from './podiums';
+import { breakJoint, fusedBeside, fusePodiums, NOT_ALONE, podiumJoints, podiumLinks, snapBeside } from './podiumLinks';
+import { drawPodium, dragLike, podiumAt, podiumSize, startDrag, type PodiumDraw } from './podiums';
 import type { CounterSection, PlacedObject, Variant } from './types';
 import { createVariant } from './variant';
 
@@ -95,5 +95,38 @@ describe('joints and links (K15)', () => {
 
   it('the chosen counter shows a link in the middle of each joint', () => {
     expect(podiumLinks(vOf(bar), bar)).toEqual([{ kind: 'joint', joint: { axis: 'x', at: 250, a: -250, b: 250 }, at: [2.25, 2.5] }]);
+  });
+});
+
+describe('a Disk drawn beside a counter becomes part of it (K15, K22, Bjørn 16.11.2026)', () => {
+  const stand = (x: number) => ({ id: 'a', product: 'P', x, y: 2.5, rot: 0, sections: [{ ...sec(-500, 500, -250, 250), shelves: [750] }] }) as PlacedObject;
+  const v = vOf(stand(1.5));
+  const got = (r: PodiumDraw) => {
+    if ('error' in r) throw new Error(r.error);
+    return r;
+  };
+  const click = (x: number) => fusedBeside(v, ctx, podiumAt(v, ctx, { product: 'P', stock: '6560' }, [x, 2.5]));
+
+  it('a click within 300 mm of its end lies against it and joins it: one counter of 2 m', () => {
+    const r = got(click(2.75));
+    expect(r.fused).toBe(true);
+    expect(r.v.objects.map((o) => o.id)).toEqual(['a']);
+    expect(outer(r.o)).toEqual([2020, 520]);
+  });
+
+  it('also where it would have overlapped the end a little', () => {
+    expect(got(click(2.45)).v.objects).toHaveLength(1);
+  });
+
+  it('farther off it stands on its own', () => {
+    const r = got(click(3.4));
+    expect(r.fused).toBeUndefined();
+    expect(r.v.objects).toHaveLength(2);
+  });
+
+  it('a drag ending beside it joins it too', () => {
+    const o = got(podiumAt(v, ctx, { product: 'P', stock: '6560' }, [4.5, 2.5])).o;
+    const r = got(fusedBeside(v, ctx, drawPodium(v, ctx, startDrag(o, [o.x, o.y], false, undefined, dragLike('6560')), [2.1, 2.5])));
+    expect(r.v.objects).toHaveLength(1);
   });
 });

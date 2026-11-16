@@ -592,7 +592,10 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   bryt også skjøten ved siden av». Mot en disk som står inntil, vises en brutt lenke, og et klikk lenker dem. Disker med
   ulik høyde slås sammen også; hver seksjon beholder sin høyde, og trinnet bygges etter K12. To disker som står inntil hverandre uten lenke, er
   to linjer i tilbudet og har plater mot hverandre.
-  *Bjørn 13.11.2026 · kode `src/domain/podiumLinks.ts` · test `src/domain/podiumLinks.test.ts`*
+  Med «Disk» eller «Podie» i hånden er det det samme (Bjørn 16.11.2026): et klikk eller et drag som ender innen 300 mm
+  fra en annen disk, eller som går inntil 250 inn i den, legger seg inntil den i dens raster og blir en del av den. Det
+  vises før man slipper. Disken som sto, beholder farge og plass.
+  *Bjørn 13.11.2026 · kode `src/domain/podiumLinks.ts`, `src/ui/plan/pointer/podium.ts` · test `src/domain/podiumLinks.test.ts`*
 - **K16 Sider og lysåpninger.** Hver del av omrisset, mellom to knutepunkter, hører til seksjonen bak og er delt i
   lysåpninger av hylleskinnene i seksjonen (K19): en under den nederste skinnen og en over hver; uten hyller er delen én
   lysåpning. Hver lysåpning er plate, åpen eller (K17) skyvedør. Plate er standard (K11) og lagres ikke; platen går fra
