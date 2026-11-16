@@ -2277,6 +2277,14 @@ select.cin {
   display: flex;
   gap: 2px;
 }
+/* A line between groups of sections (the counter's drawer: the side · the sections behind · the whole counter) */
+.set-rule {
+  flex: none;
+  width: 100%;
+  margin: 4px 0;
+  border: 0;
+  border-top: 1px solid var(--g-row);
+}
 .set-note {
   margin: 0;
   font: 400 13px var(--font-ui);

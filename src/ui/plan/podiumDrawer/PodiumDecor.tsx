@@ -77,6 +77,7 @@ export function PodiumDecor({ v, o, parts, part, scope, partNav, decal, motifs, 
       >
         <PlatePalette value={scopePrint ? PRINT : ral} onPick={pickSwatch} print={{ motif }} />
       </Section>
+      <hr className="set-rule" />
       {/* Always there, so the motif library under it stands still; why print and decals do not go on what is chosen is
           in the hint */}
       {decal ? (
