@@ -4,7 +4,7 @@ import { EXAMPLE_LIST } from './example-list';
 import { EXAMPLE_OWN_LIST } from './own-list';
 import { DEFAULT_COST_PARAMS as P, ORDER_COSTS } from './params';
 
-const file = (x: Record<string, unknown>) => JSON.stringify({ format: 'kostgrunnlag', versjon: 1, kostversjon: '2026-11 A', dato: '2026-11-07', ...x });
+const file = (x: Record<string, unknown>) => JSON.stringify({ format: 'kostgrunnlag', versjon: 2, kostversjon: '2026-11 A', dato: '2026-11-07', ...x });
 const list = { supplier: 'Foga', name: 'Prislista A', date: '2022-06', currency: 'SEK', items: [{ artnr: '873 805 22', unit: 'm', price: 10, broken: 13 }] };
 
 describe('kostgrunnlag', () => {
@@ -79,22 +79,6 @@ describe('kostgrunnlag', () => {
     expect(bare.ok && JSON.parse(serializeBasis(bare.basis)).prislister).toBeUndefined();
   });
 
-  it('a basis stored the old way (everything written out) gives up what it marked as example numbers', () => {
-    // As the browser stored it before: the example's numbers frozen from the app version that loaded it
-    const frozen = { ...P, indirect: 0.5, owned: { ...P.owned, interest: 0.09 } };
-    const old = file({ parametere: frozen, ordrekost: [{ id: 'x', name: 'Gammel', cost: 1 }], prislister: [list], fraEksempel: ['parametere.indirect', 'ordrekost', 'prisliste Egne innkjøp'] });
-    const r = parseBasis(old);
-    if (!r.ok) throw new Error(r.error);
-    expect(r.basis.params.indirect).toBe(P.indirect);
-    expect(r.basis.params.owned.interest).toBe(0.09);
-    expect(r.basis.orderCosts).toBe(ORDER_COSTS);
-    expect(r.basis.fromExample).toEqual(['parametere.indirect', 'ordrekost', 'prisliste Egne innkjøp', 'tider', 'oppskrifter', 'katalog']);
-    // Everything marked, the whole part goes
-    const all = parseBasis(file({ parametere: frozen, prislister: [EXAMPLE_LIST, EXAMPLE_OWN_LIST], fraEksempel: ['parametere', 'prisliste', 'ordrekost'] }));
-    expect(all.ok && all.basis.params).toBe(P);
-    expect(all.ok && supplierList(all.basis)).toBe(EXAMPLE_LIST);
-  });
-
   it('times, recipes and catalog rates: per item from the file, the rest from the example, noted', () => {
     const r = parseBasis(
       file({
@@ -132,12 +116,11 @@ describe('kostgrunnlag', () => {
     expect(r.ok && r.basis.fromExample).toEqual([]);
   });
 
-  it('same basis: same version and, when both have one, same code', () => {
+  it('same basis: same version and same code', () => {
     const a = { version: '2026-11 A', date: '2026-11-07', example: false, code: 'a3f9' };
     expect(sameBasis(a, { ...a })).toBe(true);
     expect(sameBasis(a, { ...a, code: '0b12' })).toBe(false);
     expect(sameBasis(a, { ...a, version: '2026-11 B' })).toBe(false);
-    expect(sameBasis({ ...a, code: undefined }, a)).toBe(true);
   });
 
   it('refuses what it cannot read, with a reason', () => {
@@ -148,6 +131,7 @@ describe('kostgrunnlag', () => {
     expect(err('nei')).toMatch(/JSON/);
     expect(err(JSON.stringify({ format: 'standskisse' }))).toMatch(/ikke et kostgrunnlag/);
     expect(err(file({ versjon: 3 }))).toMatch(/filversjon 3/);
+    expect(err(file({ versjon: 1 }))).toMatch(/filversjon 1/);
     expect(err(file({ tider: { 'stolpe-95': { plukk: 1 } } }))).toMatch(/stolpe-95 er ikke en prisartikkel/);
     expect(err(file({ tider: { 'stolpe-94': { lunsj: 1 } } }))).toMatch(/lunsj er ikke et steg/);
     expect(err(file({ oppskrifter: { 'stolpe-94': { parts: [['94X', 1]], dg: 'utleie' } } }))).toMatch(/94X er ikke en Foga-del/);

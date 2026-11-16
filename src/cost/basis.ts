@@ -21,7 +21,6 @@ import type { Currency, SupplierItem, SupplierList } from './prices';
 
 export const BASIS_FORMAT = 'kostgrunnlag';
 export const BASIS_FILE_VERSION = 2;
-const READS = [1, 2];
 
 /** Who set a number: Bjørn (confirmed), kalibrert (fitted to real jobs), forslag (a starting value), eksempel. */
 export type FieldStatus = 'Bjørn' | 'kalibrert' | 'forslag' | 'eksempel';
@@ -110,8 +109,8 @@ const ownRows = (b: CostBasis) =>
 
 export const basisRef = (b: CostBasis, code: string): CostBasisRef => ({ version: b.version, date: b.date, example: usesExample(b), code });
 
-/** Same version and same numbers. A ref without a code (older file) is judged by its version alone. */
-export const sameBasis = (a: CostBasisRef, b: CostBasisRef) => a.version === b.version && (!a.code || !b.code || a.code === b.code);
+/** Same version and same numbers. */
+export const sameBasis = (a: CostBasisRef, b: CostBasisRef) => a.version === b.version && a.code === b.code;
 
 /** The basis' list from this supplier ("Foga", "Egne innkjøp"; the name starts with it), else the example's. */
 export const supplierList = (b: CostBasis, supplier = 'Foga'): SupplierList =>
@@ -404,24 +403,13 @@ export function parseBasis(text: string): BasisResult {
     return { ok: false, error: 'Filen er ikke gyldig JSON.' };
   }
   if (!isObj(data) || data.format !== BASIS_FORMAT) return { ok: false, error: 'Filen er ikke et kostgrunnlag.' };
-  if (!READS.includes(data.versjon as number)) {
-    return { ok: false, error: `Kostgrunnlaget har filversjon ${String(data.versjon)}; appen leser versjon ${READS.join(' og ')}.` };
+  if (data.versjon !== BASIS_FILE_VERSION) {
+    return { ok: false, error: `Kostgrunnlaget har filversjon ${String(data.versjon)}; appen leser versjon ${BASIS_FILE_VERSION}.` };
   }
   if (!isStr(data.kostversjon)) return { ok: false, error: 'Kostgrunnlaget mangler kostversjon (for eksempel "2026-11 A").' };
   if (data.kostversjon === EXAMPLE_BASIS.version) return { ok: false, error: '«eksempel» er appens egne tall; gi kostgrunnlaget en annen kostversjon.' };
   if (typeof data.dato !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(data.dato)) return { ok: false, error: 'dato må være ÅÅÅÅ-MM-DD.' };
-  // A basis stored before the browser kept only own numbers wrote everything out, with `fraEksempel` saying which were
-  // example numbers. Those are dropped here, so they come from the current example like the rest
-  const old: string[] = Array.isArray(data.fraEksempel) ? data.fraEksempel.filter(isStr) : [];
-  const f: Obj = {
-    ...data,
-    parametere: without(data.parametere, 'parametere', old),
-    ordrekost: old.includes('ordrekost') ? undefined : data.ordrekost,
-    prislister: old.includes('prisliste') ? undefined : data.prislister,
-    tider: without(data.tider, 'tider', old),
-    oppskrifter: without(data.oppskrifter, 'oppskrifter', old),
-    katalog: without(data.katalog, 'katalog', old),
-  };
+  const f: Obj = data;
   const fromExample: string[] = [];
   try {
     const params = mergeParams(DEFAULT_COST_PARAMS as unknown as Obj, f.parametere, 'parametere', fromExample) as unknown as CostParams;

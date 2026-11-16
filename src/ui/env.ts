@@ -25,7 +25,7 @@ const loadEdits = (): CatalogEdits => {
 const withInFrame = (p: Partial<InFrameParams>): Rules => ({ ...RULES, textile: { ...RULES.textile, inFrame: { ...RULES.textile.inFrame, ...p } } })
 
 export let edits: CatalogEdits = loadEdits()
-export let rules: Rules = withInFrame(ownInFrame(loadJson<Partial<InFrameParams>>(KEYS.inFrame, {}), true))
+export let rules: Rules = withInFrame(ownInFrame(loadJson<Partial<InFrameParams>>(KEYS.inFrame, {})))
 export let catalog = applyEdits(DEFAULT_CATALOG, edits)
 export let idx = indexCatalog(catalog)
 export let place = withPosts(placeContext(rules, catalog))

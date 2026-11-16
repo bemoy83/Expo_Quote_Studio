@@ -24,8 +24,7 @@ ved siden av (`src/cost/fields.ts`). Eksempeltall har en prikk og kan filtreres 
 ikke bruker ennå, er merket «ikke i bruk». Status, kilde og dato for egne tall står i filen under `merknader`, per sti.
 En sti i «Slik er det regnet» er en lenke til radene den peker på. Nettleseren og «Last ned» holder bare
 eierens egne tall; resten fylles fra appens gjeldende eksempeltall hver gang grunnlaget leses, så et nytt eksempeltall
-i appen når fram i stedet for å fryses fra appversjonen som lastet filen. Et grunnlag lagret på den gamle måten (alt
-skrevet ut, med `fraEksempel`) gir fra seg det `fraEksempel` peker på når det leses.
+i appen når fram i stedet for å fryses fra appversjonen som lastet filen. Appen leser bare filversjon 2.
 
 Ved versjonsnavnet står en kode på fire tegn, for eksempel `a3f9`: et fingeravtrykk av alt kalkylen regner med, egne
 tall og eksempeltall, prislistene som faktisk brukes og prisartiklene de gir (`code` fra `pricingFrom` i `src/pricing/data.ts`,
