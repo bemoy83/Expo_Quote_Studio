@@ -200,23 +200,22 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 
 - Oppskriften: `RECIPES.counter` (`foga/recipes.ts`), og hver profil, plate og topp med mål og plass i `foga/counter.ts`:
   `layoutBuild(recipe, layout)` bygger en disk av deler (`CounterLayout`: deler mellom knutepunkter og åpne strekk),
-  finner knutepunktene og velger profil etter retningene de kobler (K8); `counterBuild(recipe, shape)` er en rett disk
-  (`straightLayout`, hele meter og en halv til slutt, K7), `stockCounter(size)` disken på lager (åpen bak), bygget én
-  gang og delt av plan, 3D og kost (med tester). Reglene K1–K9 i [byggeregler.md](byggeregler.md). Profilene 92L og 93 i `foga/parts.ts`,
+  finner knutepunktene og velger profil etter retningene de kobler (K8). Det er den eneste byggeren: 6560 er seksjonene
+  `stockSections('6560')` (`domain/podiumStock.ts`) bygget av den, delt av plan, 3D og kost via `counterBuildOf`
+  (`domain/counterShape.ts`). Reglene K1–K9 i [byggeregler.md](byggeregler.md). Profilene 92L og 93 i `foga/parts.ts`,
   omrisset i `scene3d/build/profiles.ts`
 - Katalogen: `counter('6560', …)` i `catalog/defaultCatalog.ts` (`Product.counter`: utvendig mål, fotavtrykket følger);
   de gamle diskene 5410, 5415 og 5420 blir løse linjer i gamle skisser (`OLD_COUNTERS`, `retiredToLoose` i `persistence/file.ts`)
 - Kalkyle: `calc/lines/objects.ts` (fast pris, kost fra prisartikkelen `ITEM.counter` i `cost/itemDefs.ts`, bygget av
-  `counterBuild`). Plukkes hel, 1 stk (K1)
+  `counterBuildOf`). Plukkes hel, 1 stk (K1)
 - Plan, 3D: omrisset (hel strek lukket, lys hårstrek åpen) fra `plan/counterOutline.ts` i `CounterShape`, delelinjene i
   `plan/layers/CounterLines.tsx` (fra `ObjectLayer.tsx`) · `scene3d/build/counter.ts` (`buildCounter` tar en
   `CounterBuild`, kalt fra `buildObjects`; profilen i et knutepunkt dreies etter de lukkede sidene den har, `outward`),
   profilen snudd etter omrisset med `turnedProfile` (`build/profiles.ts`). Begge tegner i diskens egne koordinater og
   plasseres og snus utenfra (`toPlan`, `toLocal`, `turn` i `domain/counterShape.ts`). Om et møbel er en disk, sier
   `PlaceContext.isCounter`.
-- 6560 settes ut som et ferdig oppsett i Disker og podier (K22, se under). Verktøyet Disker med `pieces`, endegrep og
-  `drawCounter` er tatt bort (K7); `PlacedObject.pieces`, `layoutOf` og `piecesOf` lever bare for å gjøre gamle skisser
-  om (`asSections`).
+- 6560 settes ut som et ferdig oppsett i Disker og podier (K22, se under). `PlacedObject.pieces` fra det gamle verktøyet
+  Disker lever bare for å gjøre gamle skisser om (`asSections` i `domain/podiumStock.ts`).
 - Farge (K6): `PlacedObject.ral`, uten = som på lager (`counterRal`, `COUNTER_STOCK_RAL` i `domain/objects.ts`). Planen
   fyller disken med platefargen, 3D farger platene (`buildCounter` tar fargen). Kalkylen legger prisartikkelen
   `ITEM.counterPlates` til linjen for hver farget disk, prisen er den samme. Veggfargene som rad er én funksjon,
@@ -228,17 +227,17 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 Verktøyet for alle disker og podier (tast D), K10–K23 i [byggeregler.md](byggeregler.md). Det deler bygger, omriss, 3D
 og kalkyle med 6560, som er et ferdig oppsett i det (K22).
 
-- Modell: `PlacedObject.sections` (`CounterSection`: x og z mellom knutepunkter, mm på 250-raster, og høyden `h`). Bygget: `layoutBuild(recipe, layout, 'tight')` i `foga/counter.ts` (ingen midtskinne eller hylle,
+- Modell: `PlacedObject.sections` (`CounterSection`: x og z mellom knutepunkter, mm på 250-raster, og høyden `h`). Bygget: `layoutBuild(recipe, layout)` i `foga/counter.ts` (ingen midtskinne eller hylle,
   én plate i hele høyden, høyde per del), lest via `counterBuildOf`, `sectionsLayout`, `counterLayoutOf` og
   `sectionRects` i `domain/counterShape.ts` (én boks per seksjon i `objectBoxes`)
 - Pennen, ren og testet: `domain/podiums.ts` (`podiumAt`: én seksjon under pekeren, inntil vegg og standkant innen 10 cm;
-  `drawPodium` og `dragSpan`: et drag fra seksjonen man trykket i; `rectSections`/`runNodes`: hele meter først, resten
-  lengst unna; Shift og Fin: `grabOf`/`podiumGrab` (hvilken kant et trykk tar), `axisSpan` (rektangelet et drag gir,
+  `drawPodium` og `dragSpan`: et drag fra seksjonen man trykket i; `rectSections`/`runNodes` (i `podiumSections.ts`): hele
+  meter først, resten lengst unna; Shift og Fin: `grabOf`/`podiumGrab` (hvilken kant et trykk tar), `axisSpan` (rektangelet et drag gir,
   bestillingens referanse), `startDrag`, `rebaseDrag` (Shift midt i et drag); `funcByShape` (K13: disk eller podie etter fasongen), `innerCorners`, `podiumSize`).
   Påbygg (PR 3): `podiumSides` (omrisset som rette sider), `ontoAt` (siden innen `ONTO` og plassen langs den), og
   `PodiumDraw.cell`/`onto`: det som legges til, i en ramme dreid som disken med knutepunkter på hele rasterenheter, og
   disken og siden det ligger mot. `DrawAxis.fix` holder kanten mot disken fast i `axisSpan`.
-- Felles geometri for seksjonene: `domain/podiumSections.ts` (`GRID`, `bounds`, `covered`, `overlaps`, `meet`: knutelinjen
+- Felles geometri for seksjonene: `domain/podiumSections.ts` (`GRID`, `SECTION_MAX`, `runNodes`, `bounds`, `covered`, `overlaps`, `meet`: knutelinjen
   der to seksjoner møtes, `groups`: delene som henger sammen, `edgeRuns`: kanter som rette løp, `lineOf`: endene til en
   linje på tvers av en akse, brukt av deler, sider, dørstreker og miniplanen; brukt av pennen, grepene og lenkene). Grep, lenker og disk-knappene får samme skygge fra `layers/LiftFilter.tsx` (`useLift`).
 - Grep på valgt disk (K14): `domain/podiumGrips.ts` (`podiumGrips`: hvor grepene står; `gripPodium`: disken etter et
