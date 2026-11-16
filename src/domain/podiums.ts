@@ -161,7 +161,8 @@ export function centred(o: PlacedObject, sections: CounterSection[]): PlacedObje
  * or refused with the reason. `cell`: what is added, in the frame a drag goes on in (a free counter is all of it);
  * `onto`: the counter and side a påbygg lies against (PR 3).
  */
-export type PodiumDraw = ({ v: Variant; id: string } | { error: string }) & { o: PlacedObject; cell: PlacedObject; onto?: PodiumOnto };
+/** `fused`: made part of a counter it was drawn beside (K15, fusedBeside). */
+export type PodiumDraw = ({ v: Variant; id: string; fused?: boolean } | { error: string }) & { o: PlacedObject; cell: PlacedObject; onto?: PodiumOnto };
 
 /** Whether a counter of Disker og podier has room where it stands (K10): inside the stand, clear of everything but
  *  itself (an earlier version of it, by id). */

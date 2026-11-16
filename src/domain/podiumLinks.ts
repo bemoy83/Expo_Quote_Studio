@@ -8,7 +8,7 @@ import { toLocal, toPlan, turn } from './counterShape';
 import { nextId } from './ids';
 import { turnedSides } from './podiumFaces';
 import type { PlaceContext } from './objects';
-import { centred, hasRoom, NO_ROOM, ONTO, podiumSides, type PodiumSide } from './podiums';
+import { centred, hasRoom, NO_ROOM, ONTO, podiumSides, type PodiumDraw, type PodiumSide } from './podiums';
 import { covered, edgeRuns, EPS, GRID, groups, meet, overlaps, shared, shifted, type EdgeRun, type Range } from './podiumSections';
 import type { CounterSection, PlacedObject, Point, Variant } from './types';
 
@@ -161,4 +161,18 @@ export function podiumLinks(v: Variant, o: PlacedObject): PodiumLink[] {
     }
   }
   return [...joints, ...near];
+}
+
+/** What a pen with a standard counter in hand stores (K15, K22, Bjørn 16.11.2026): drawn or clicked within ONTO of
+ *  another counter of Disker og podier, it lies against it as a drag in Velg does and becomes part of it, the one that
+ *  stood keeping its colour and place. Also where it would have overlapped the other a little (no room before). Else
+ *  `r` as it is. `v`: the sketch before. */
+export function fusedBeside(v: Variant, ctx: PlaceContext, r: PodiumDraw): PodiumDraw {
+  if (r.onto || v.objects.some((x) => x.id === r.o.id)) return r;
+  const withIt = { ...v, objects: [...v.objects, r.o] };
+  const s = snapBeside(withIt, ctx, r.o);
+  if (!s) return r;
+  const f = fusePodiums({ ...v, objects: [...v.objects, s.o] }, ctx, s.onto, r.o.id);
+  if ('error' in f) return r;
+  return { v: f.v, id: f.id, o: f.v.objects.find((x) => x.id === f.id)!, cell: s.o, fused: true };
 }
