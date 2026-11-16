@@ -10,12 +10,11 @@ import { useState } from 'react'
 import { counterRal, removeObject } from '../../../domain/objects'
 import { podiumDecals, updatePodiumDecal } from '../../../domain/podiumDecor'
 import { NO_DOOR, setPodiumLight, takesDoor } from '../../../domain/podiumFaces'
-import { partLocks } from '../../../domain/podiumLocks'
 import { heightName, HEIGHTS, outerHeight, podiumSize, setSectionHeight } from '../../../domain/podiums'
 import { SHELF_HEIGHTS, lowered, movePodiumShelf, setPodiumShelf } from '../../../domain/podiumShelves'
 import type { CounterLight, Motif, PlacedObject, Variant } from '../../../domain/types'
 import { Button, FlatChoice, FlatToggles, Section } from '../../controls'
-import { counterName, place, plateColor } from '../../env'
+import { counterName, plateColor } from '../../env'
 import { count, mm } from '../../format'
 import { findMotif } from '../../motifs'
 import { DrawerHead, PrevNext } from '../drawerParts'
@@ -48,7 +47,7 @@ const KIND_NAME: Record<Kind, string> = { plate: 'plate', open: 'åpen', door: '
 
 /** What the parts are, as one (in light opening `light`, or in all): the kind they share, or null when they differ. */
 const shared = (ps: ElevationPart[], light?: number): Kind | null => {
-  const ks = [...new Set(ps.flatMap((p) => (light === undefined ? p.lights : [p.lights[light] ?? null]).map((k): Kind => (p.locked ? 'plate' : (k ?? 'plate')))))]
+  const ks = [...new Set(ps.flatMap((p) => (light === undefined ? p.lights : [p.lights[light] ?? null]).map((k): Kind => k ?? 'plate')))]
   return ks.length === 1 ? ks[0] : null
 }
 
@@ -60,8 +59,7 @@ export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect,
   if (!sides.length) return null
   const si = chosenSide(sides, sel.podiumSide)
   const S = sides[si]
-  const locks = partLocks(v, place, o)
-  const el = sideElevation(o, S.side, new Set(locks.keys()))
+  const el = sideElevation(o, S.side)
   const pi = sel.podiumPart !== undefined && sel.podiumPart < el.parts.length ? sel.podiumPart : undefined
   const parts = pi === undefined ? el.parts : [el.parts[pi]]
   const li = pi !== undefined && sel.podiumLight !== undefined && sel.podiumLight < parts[0].lights.length ? sel.podiumLight : undefined
@@ -74,25 +72,15 @@ export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect,
   const pickPart = (i: number | undefined, light?: number) => (setGone(0), select({ podiumPart: i, podiumLight: light }))
   // Every change but a lower height clears the hint of shelves it took away
   const edit = (fn: (v: Variant) => Variant) => (setGone(0), onEdit(fn))
-  const decor = sideDecor(o, S.side, new Set(locks.keys()), (id) => findMotif(motifs, id)?.ratio ?? 0)
+  const decor = sideDecor(o, S.side, (id) => findMotif(motifs, id)?.ratio ?? 0)
   const decals = podiumDecals(o.sections ?? [])
   const chosenDecal = decals.find((d) => d.decal.id === sel.podiumDecal)
 
-  // A part against a wall or another counter stays a plate (K16): its choice is greyed out, with why
-  const lockedHere = parts.filter((p) => p.locked)
-  const lockWhy = (() => {
-    if (!lockedHere.length) return null
-    const kinds = new Set(lockedHere.map((p) => locks.get(p.key)))
-    const what = kinds.size > 1 ? 'en vegg eller en annen disk' : kinds.has('wall') ? 'en vegg' : 'en annen disk'
-    if (lockedHere.length === parts.length) return pi === undefined && parts.length > 1 ? `Siden står mot ${what}` : `Delen står mot ${what}`
-    return `${count(lockedHere.length, 'del', 'deler')} står mot ${what} og blir plate`
-  })()
-  const allLocked = lockedHere.length === parts.length
   // K17: no sliding door on a part of 250; with the whole side chosen, on the parts that take one
-  const doorable = parts.filter((p) => !p.locked && takesDoor(p.part))
+  const doorable = parts.filter((p) => takesDoor(p.part))
   const options = KINDS.map((k) => (k.value === 'door' && !doorable.length ? { ...k, disabled: true, title: NO_DOOR } : k))
   const setKind = (k: Kind) => {
-    const keys = (k === 'door' ? doorable : parts.filter((p) => !p.locked)).map((p) => p.key)
+    const keys = (k === 'door' ? doorable : parts).map((p) => p.key)
     edit((x) => setPodiumLight(x, o.id, keys, k === 'plate' ? null : k, li))
   }
 
@@ -116,7 +104,7 @@ export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect,
   const hint =
     page === 'sides'
       ? `${gone ? `Lavere høyde tok bort ${count(gone, 'hylle', 'hyller')} · ` : ''}${pi === undefined ? 'Klikk en del eller en åpning i risset for bare den' : 'Klikk den igjen for hele siden'} · dra toppen av en seksjon for høyden, en hylle for hyllehøyden · ‹ › bytter del · åpen: ingen plate · skyvedør: to plater i sporet · velg side i miniplanen eller ved å klikke disken i planen`
-      : `Fargen gjelder hele disken, også dørene · Print og motiv gjelder ${pi === undefined ? 'hele siden' : 'delen'} · ${chosenDecal ? 'dra dekalen for å flytte, håndtakene for å skalere' : 'klikk en dekal i risset for å flytte og skalere den'} · aldri på åpen del eller del mot vegg`
+      : `Fargen gjelder hele disken, også dørene · Print og motiv gjelder ${pi === undefined ? 'hele siden' : 'delen'} · ${chosenDecal ? 'dra dekalen for å flytte, håndtakene for å skalere' : 'klikk en dekal i risset for å flytte og skalere den'} · aldri på åpen del`
 
   return (
     <section className="wall-drawer drawer2" aria-label={`${name} sett utenfra`}>
@@ -131,9 +119,8 @@ export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect,
         {page === 'sides' ? (
           <>
           <Section title={scope} aside={kind ? KIND_NAME[kind] : 'blandet'} tools={partNav}>
-            <FlatChoice<Kind> label="Hva delen er" value={kind ?? ('' as Kind)} onChange={setKind} options={options} disabled={allLocked} />
-            {lockWhy && <p className="set-note">{lockWhy}</p>}
-            {!allLocked && !doorable.length && <p className="set-note">{NO_DOOR}</p>}
+            <FlatChoice<Kind> label="Hva delen er" value={kind ?? ('' as Kind)} onChange={setKind} options={options} />
+            {!doorable.length && <p className="set-note">{NO_DOOR}</p>}
           </Section>
           {/* K19: shelves at CC 250, 500 and 750, below the section's height, named by their step as the heights (K12) */}
           <Section title={several ? 'Seksjonene · hyller' : 'Seksjonen · hyller'} aside={shelfCount ? count(shelfCount, 'hylle', 'hyller') : 'ingen'}>

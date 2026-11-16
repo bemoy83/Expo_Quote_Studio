@@ -3,10 +3,9 @@
 // (CounterLines.tsx).
 import { useId } from 'react'
 import { mainGroupOf } from '../../../catalog/groups'
-import { lockedParts, placedBuild } from '../../../domain/podiumLocks'
 import { lightsOf, partKey, podiumParts, type PodiumPart } from '../../../domain/podiumFaces'
 import { lineOf } from '../../../domain/podiumSections'
-import { toPlan } from '../../../domain/counterShape'
+import { counterBuildOf, toPlan } from '../../../domain/counterShape'
 import { RECIPES } from '../../../foga/recipes'
 import { counterRal, objectBoxes, objectFootprint } from '../../../domain/objects'
 import type { Motif, PlacedObject, Variant } from '../../../domain/types'
@@ -63,8 +62,8 @@ export function ObjectLayer(props: {
         if (counter)
           return (
             <g key={o.id}>
-              <CounterShape v={v} o={o} fill={col} stroke={stroke} bad={isBad} sel={sel} gone={g ? hatch : null} opacity={op} motifs={motifs} />
-              <CounterLines b={placedBuild(v, place, o, counter)} at={o} divide={linePx(sc, 0.75)} opacity={op} />
+              <CounterShape o={o} fill={col} stroke={stroke} bad={isBad} sel={sel} gone={g ? hatch : null} opacity={op} motifs={motifs} />
+              <CounterLines b={counterBuildOf(o, counter)} at={o} divide={linePx(sc, 0.75)} opacity={op} />
             </g>
           )
         // Turned round its middle: also between the quarters (15° steps, the turn grip)
@@ -92,11 +91,10 @@ export function ObjectLayer(props: {
  * the open ones (Bjørn 13.11.2026). Both strokes lie inside the outer edge, so the counter is drawn no
  * wider than it is: each is twice as wide and clipped to the counter.
  */
-function CounterShape({ v, o, fill, stroke, bad, sel, gone, opacity, motifs }: { v: Variant; o: PlacedObject; fill: string; stroke: string; bad: boolean; sel: boolean; gone: string | null; opacity?: number; motifs?: Motif[] }) {
+function CounterShape({ o, fill, stroke, bad, sel, gone, opacity, motifs }: { o: PlacedObject; fill: string; stroke: string; bad: boolean; sel: boolean; gone: string | null; opacity?: number; motifs?: Motif[] }) {
   const sc = usePlanScale()
   const clip = `counter${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`
   const boxes = objectBoxes(place, o)
-  const locked = lockedParts(v, place, o)
   const each = (props: object) => boxes.map((r, i) => <rect key={i} x={r.x0} y={r.y0} width={r.x1 - r.x0} height={r.y1 - r.y0} {...props} />)
   const closed = bad ? Math.max(0.03, linePx(sc, 2)) : linePx(sc, COUNTER_EDGE.closed)
   const open = linePx(sc, COUNTER_EDGE.open)
@@ -109,9 +107,9 @@ function CounterShape({ v, o, fill, stroke, bad, sel, gone, opacity, motifs }: {
       {each({ fill, fillOpacity: gone ? GONE_FILL : undefined })}
       {gone && each({ fill: gone })}
       <g clipPath={`url(#${clip})`}>
-        <PrintMarks o={o} locked={locked} motifs={motifs} />
-        <DoorMarks o={o} locked={locked} stroke={stroke} />
-        {counterOutline(place, o, locked).map((s, i) => (
+        <PrintMarks o={o} motifs={motifs} />
+        <DoorMarks o={o} stroke={stroke} />
+        {counterOutline(place, o).map((s, i) => (
           <line key={i} x1={s.a[0]} y1={s.a[1]} x2={s.b[0]} y2={s.b[1]} stroke={stroke} strokeWidth={2 * (s.open ? open : closed)} strokeOpacity={s.open ? COUNTER_EDGE.openOpacity : undefined} />
         ))}
       </g>
@@ -121,10 +119,9 @@ function CounterShape({ v, o, fill, stroke, bad, sel, gone, opacity, motifs }: {
 
 /** Print and decals on the sides of a counter of Disker og podier seen from above (K20): a thin band of the motif just
  *  inside the outer face, as long as the print or decal. Drawn in the counter's own frame, mm. */
-function PrintMarks({ o, locked, motifs }: { o: PlacedObject; locked: readonly string[]; motifs?: Motif[] }) {
+function PrintMarks({ o, motifs }: { o: PlacedObject; motifs?: Motif[] }) {
   const sc = usePlanScale()
   if (!o.sections?.some((s) => s.sides) || !motifs?.length) return null
-  const off = new Set(locked)
   const ratio = (id: string) => findMotif(motifs, id)?.ratio ?? 0
   const t = linePx(sc, 3) * 1000
   const { face } = RECIPES.counter
@@ -139,19 +136,18 @@ function PrintMarks({ o, locked, motifs }: { o: PlacedObject; locked: readonly s
   }
   return (
     <g transform={`translate(${o.x} ${o.y}) rotate(${o.rot}) scale(0.001)`} pointerEvents="none">
-      {podiumPrints(o.sections, off, ratio).map((w, i) => band(`p${i}`, w.part, w.t0, w.t1, w.motif, [w.crop[0], (w.crop[1] + w.crop[3]) / 2 - 0.02, w.crop[2], (w.crop[1] + w.crop[3]) / 2 + 0.02]))}
-      {podiumDecals(o.sections, off).map((d) => band(d.decal.id, d.part, d.t0, d.t1, d.decal.motif))}
+      {podiumPrints(o.sections, ratio).map((w, i) => band(`p${i}`, w.part, w.t0, w.t1, w.motif, [w.crop[0], (w.crop[1] + w.crop[3]) / 2 - 0.02, w.crop[2], (w.crop[1] + w.crop[3]) / 2 + 0.02]))}
+      {podiumDecals(o.sections).map((d) => band(d.decal.id, d.part, d.t0, d.t1, d.decal.motif))}
     </g>
   )
 }
 
 /** A sliding door in a side of Disker og podier seen from above (K17): its two leaves as two lines just inside the outer
  *  face, overlapping in the middle. */
-function DoorMarks({ o, locked, stroke }: { o: PlacedObject; locked: readonly string[]; stroke: string }) {
+function DoorMarks({ o, stroke }: { o: PlacedObject; stroke: string }) {
   const sc = usePlanScale()
   if (!o.sections?.some((s) => s.sides)) return null
-  const off = new Set(locked)
-  const doors = podiumParts(o.sections).filter((p) => lightsOf(o.sections!, p).includes('door') && !off.has(partKey(p)))
+  const doors = podiumParts(o.sections).filter((p) => lightsOf(o.sections!, p).includes('door'))
   const { face, door } = RECIPES.counter
   return (
     <g stroke={stroke} strokeWidth={linePx(sc, 0.75)}>

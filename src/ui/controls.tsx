@@ -97,7 +97,6 @@ export function FlatChoice<T extends string | number | boolean>({
   label,
   tiles,
   className = '',
-  disabled,
 }: {
   /** `disabled`: this choice cannot be made here; `title` says why. */
   options: { value: T; label: ReactNode; title?: string; disabled?: boolean }[]
@@ -106,13 +105,11 @@ export function FlatChoice<T extends string | number | boolean>({
   label: string
   tiles?: boolean
   className?: string
-  /** Shown, but not to be changed (a side of a counter held to a plate, K16). */
-  disabled?: boolean
 }) {
   return (
     <div role="radiogroup" aria-label={label} className={['flat-choice', tiles && 'tiles', className].filter(Boolean).join(' ')}>
       {options.map((o) => (
-        <button key={String(o.value)} type="button" role="radio" aria-checked={o.value === value} title={o.title} disabled={disabled || o.disabled} onClick={() => onChange(o.value)}>
+        <button key={String(o.value)} type="button" role="radio" aria-checked={o.value === value} title={o.title} disabled={o.disabled} onClick={() => onChange(o.value)}>
           {o.label}
         </button>
       ))}

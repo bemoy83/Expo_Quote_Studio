@@ -1,7 +1,7 @@
 // «Farge og profilering» in the drawer for a counter of Disker og podier (trinn 2, Byggeregler K6, K20): the counter's
 // colour, print on the side or the part chosen (Print last in the palette, the paint bucket for the whole counter), the
 // decal chosen, and in the detail height the motif library with + Dekal. Print and decals go only on the parts that
-// take them: not open all over, not against a wall or another counter.
+// take them: not open all over.
 import { PaintBucket, Plus, Trash2 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { addPodiumDecal, printOf, setPodiumPrint, takesDecor, updatePodiumDecal, type PlacedDecal } from '../../../domain/podiumDecor'
@@ -35,8 +35,8 @@ export function PodiumDecor({ v, o, parts, part, scope, partNav, decal, motifs, 
   // The motif for print and decals, chosen in the library
   const [motifId, setMotifId] = useState<string | undefined>(undefined)
   const ral = counterRal(o)
-  // K20: print and decals go on the parts that take them: not open all over, not against a wall or another counter
-  const decorParts = parts.filter((p) => !p.locked && takesDecor(o.sections!, p.part))
+  // K20: print and decals go on the parts that take them: not open all over
+  const decorParts = parts.filter((p) => takesDecor(o.sections!, p.part))
   const printed = [...new Set(decorParts.map((p) => printOf(o.sections!, p.part) ?? null))]
   const scopePrint = printed.length === 1 ? printed[0] : null
   const motif = findMotif(motifs, motifId ?? scopePrint ?? decal?.decal.motif) ?? motifs[0]
@@ -75,7 +75,7 @@ export function PodiumDecor({ v, o, parts, part, scope, partNav, decal, motifs, 
         }
       >
         <PlatePalette value={scopePrint ? PRINT : ral} onPick={pickSwatch} print={{ motif }} />
-        {!decorParts.length && <p className="set-note">{parts.some((p) => p.locked) ? 'Mot vegg eller disk: ingen print eller dekal' : 'Åpen del: ingen print eller dekal'}</p>}
+        {!decorParts.length && <p className="set-note">Åpen del: ingen print eller dekal</p>}
         <p className="set-note">Fargen gjelder hele disken (K6). Print dekker platene og dørene i {part === undefined ? 'siden' : 'delen'}.</p>
       </Section>
       {decal && (

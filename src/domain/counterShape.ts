@@ -49,25 +49,22 @@ export function layoutOf(pieces: readonly CounterPiece[]): CounterLayout {
 }
 
 /** Sections of Disker og podier as parts (K10, K11): each its own cell with its height, open or with a sliding door
- *  where a side is (K16, K17) and
- *  not `locked` against a wall or another counter (podiumLocks.ts, by partKey). */
-function sectionsLayout(sections: readonly CounterSection[], locked: readonly string[] = []): CounterLayout {
-  const off = new Set(locked);
-  return { cells: sections.map((c) => ({ x: c.x, z: c.z, h: c.h, ...(c.shelves?.length && { shelves: c.shelves }) })), ...podiumLights(sections, off) };
+ *  where a side is (K16, K17). */
+function sectionsLayout(sections: readonly CounterSection[]): CounterLayout {
+  return { cells: sections.map((c) => ({ x: c.x, z: c.z, h: c.h, ...(c.shelves?.length && { shelves: c.shelves }) })), ...podiumLights(sections) };
 }
 
 /** The parts and open stretches of a counter: its sections, or the counter in stock. */
-export const counterLayoutOf = (o: Pick<PlacedObject, 'sections'>, locked: readonly string[] = []): CounterLayout => (o.sections ? sectionsLayout(o.sections, locked) : layoutOf([STOCK_PIECE]));
+export const counterLayoutOf = (o: Pick<PlacedObject, 'sections'>): CounterLayout => (o.sections ? sectionsLayout(o.sections) : layoutOf([STOCK_PIECE]));
 
 const built = new Map<string, CounterBuild>();
-/** Every piece of a counter (K1–K5, K10–K12, K16): its sections (tight), built once per shape, or the stock build;
- *  `locked`: the parts of its sides kept plates against a wall or another counter (podiumLocks.ts). */
-export function counterBuildOf(o: Pick<PlacedObject, 'sections'>, size = { length: R.stock.length, depth: R.stock.depth }, locked: readonly string[] = []): CounterBuild {
+/** Every piece of a counter (K1–K5, K10–K12, K16): its sections (tight), built once per shape, or the stock build. */
+export function counterBuildOf(o: Pick<PlacedObject, 'sections'>, size = { length: R.stock.length, depth: R.stock.depth }): CounterBuild {
   if (!o.sections) return stockCounter(size);
-  const key = `${JSON.stringify(o.sections)}|${locked.join(';')}`;
+  const key = JSON.stringify(o.sections);
   let b = built.get(key);
   if (!b) {
-    b = layoutBuild(R, sectionsLayout(o.sections, locked), 'tight');
+    b = layoutBuild(R, sectionsLayout(o.sections), 'tight');
     built.set(key, b);
   }
   return b;

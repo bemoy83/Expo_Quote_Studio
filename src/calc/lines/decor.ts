@@ -3,7 +3,6 @@
 // print on its own article by the m² of the plates and doors it covers, with the sizes cut (Bjørn 13.11.2026), its
 // decals on the decal line by their m², a setup per print stretched over more than one part.
 import { podiumDecorAreas } from '../../domain/podiumDecor';
-import { lockedParts } from '../../domain/podiumLocks';
 import { stretchedRuns } from '../../domain/print';
 import type { CalcContext } from '../context';
 import type { CalcLine } from '../types';
@@ -18,12 +17,12 @@ export function foilAreas(c: CalcContext): { decal: number; full: number; fullCo
   return { decal: foils.filter((f) => !f.full).reduce((a, f) => a + f.width * f.height, 0), full: fullCount * fullFelt, fullCount };
 }
 
-/** Print and decals on the counters of Disker og podier, as they stand (a part against a wall is a plate, K16). */
+/** Print and decals on the counters of Disker og podier (K20). */
 export function podiumFoil(c: CalcContext): { decal: number; full: number; parts: number; runs: number; sizes: Map<string, number> } {
   const out = { decal: 0, full: 0, parts: 0, runs: 0, sizes: new Map<string, number>() };
   for (const o of c.v.objects) {
     if (!o.sections?.some((s) => s.sides)) continue;
-    const a = podiumDecorAreas(o.sections, new Set(lockedParts(c.v, c.place, o)));
+    const a = podiumDecorAreas(o.sections);
     out.decal += a.decal;
     out.full += a.full;
     out.parts += a.parts;

@@ -1,7 +1,7 @@
 // The work order's «Disker sett utenfra» (trinn 2, Byggeregler K16–K20): every side of a counter of Disker og podier
 // that is more than plates, seen from outside as in its drawer but fixed, so the stand builder can build it: open
 // light openings, sliding doors, shelves with their heights from the floor to the top of the rail (never CC: hard to measure, Bjørn 15.11.2026), and print and decals. Sides of plates
-// only, and parts against a wall or another counter (plates, K16), are left out.
+// only are left out.
 import { counterRal } from '../../domain/objects'
 import type { Motif, Variant } from '../../domain/types'
 import { plateColor } from '../env'
