@@ -293,7 +293,8 @@ og kalkyle med 6560, som er et ferdig oppsett i det (K22).
   og penselen legger varen bak sin funksjon og i hånden. Gamle skisser: `asSections` (podiumStock.ts) via `countersAsSections` i `persistence/file.ts` gjør disker fra
   Disker om til seksjoner når de åpnes, og `countedAsPodier` gjør talte podier (5450) om til podier på standen.
 - Disk over fotplate (K23): `counterInserts` i `domain/counters.ts` (stolpene som ikke står på platen), platene fra
-  `footPlateRect` i `calc/wallSupports.ts`, `CalcContext.inserts`, `ITEM.counterInsert` på disklinjen og
+  `footPlateRect` i `calc/wallSupports.ts` og `textileFootRects` i `calc/textile/free.ts`, `CalcContext.inserts` og
+  `CalcResult.inserts` (stolpene, for 3D: `buildInserts` i `scene3d/build/counter.ts`), `ITEM.counterInsert` på disklinjen og
   `FogaStructure.counterInserts` (linjen under Disker i `foga/engine.ts`).
 - Høyde i 3D (K18): `podiumTopAt` og draget `podiumTop` i `scene3d/pointer/drag.ts`, `onUpright` i `pointer/hits.ts`.
   Arbeidsordren: `workorder/PodiumSides.tsx` («Disker sett utenfra», `PodiumElevation` uten håndtak) og

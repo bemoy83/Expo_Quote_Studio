@@ -3,6 +3,7 @@ import type { BeamHook } from './beams/beamHooks';
 import type { Unit } from '../catalog/types';
 import type { Payer, Point } from '../domain/types';
 import type { Bom } from '../foga/engine';
+import type { CounterProfile } from '../foga/counter';
 import type { FogaStructure } from '../foga/structure';
 import type { Strategy, Use } from '../pricing/model';
 import type { Transfer } from '../cost/items';
@@ -146,6 +147,9 @@ export interface CalcResult {
   /** Støtteplater under free-standing system walls and drawn takdrager's own posts: always the exhibitor's, also under
    *  the organiser's stand walls. */
   wallSupports: WallSupport[];
+  /** The uprights of each counter over a foot plate that stand on an insert 700, by counter id (Byggeregel K23): 3D. Only
+   *  when there are any. */
+  inserts?: ReadonlyMap<string, readonly CounterProfile[]>;
   production: Production;
   /** What is built, in Foga terms: the quote counts from it and the picking list lists its parts. */
   foga: FogaStructure;

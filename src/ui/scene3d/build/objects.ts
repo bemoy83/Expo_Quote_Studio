@@ -4,7 +4,7 @@ import { FURNITURE_WHITE } from '../../../catalog/defaultCatalog'
 import { conflicts, counterRal } from '../../../domain/objects'
 import { idx, place } from '../../env'
 import { CHROME, CONFLICT, NO_COLOR, SELECT, type BuildContext, type Tag } from './context'
-import { buildCounter, buildPodiumDecor } from './counter'
+import { buildCounter, buildInserts, buildPodiumDecor } from './counter'
 import { counterBuildOf } from '../../../domain/counterShape'
 
 export function buildObjects(c: BuildContext) {
@@ -26,6 +26,8 @@ export function buildObjects(c: BuildContext) {
     if (counter) {
       buildCounter(c, g, counterBuildOf(o, counter), counterRal(o), tag, warn)
       if (o.sections) buildPodiumDecor(c, g, o.sections, tag, warn)
+      const inserts = c.res.inserts?.get(o.id)
+      if (inserts) buildInserts(c, g, inserts, tag)
       continue
     }
     const body = mat('objects', color, { roughness: 0.6, ...warn })

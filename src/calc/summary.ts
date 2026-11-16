@@ -64,6 +64,7 @@ export function summary(c: CalcContext, lines: CalcLine[], organiserLines: CalcL
     hooks: beams.hooks,
     posts: [...allPosts.values()],
     wallSupports: wallFeet,
+    ...(c.inserts.size ? { inserts: c.inserts } : {}),
     production: prod,
     foga,
     bom: bom(foga, RECIPES, c.sizes),

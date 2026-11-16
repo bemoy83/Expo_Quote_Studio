@@ -8,12 +8,13 @@ import { RULES } from '../rules/rules';
 import { calc } from './calc';
 import { calcContext } from './context';
 import { pickRows } from '../ui/workorder/pickRows';
+import { textileFootRects } from './textile/free';
 
 const TERMS = { payer: 'utstiller', ral: '9010' } as const;
 // 6 × 3 without takdrager: the back wall stands free and gets a foot plate 750 under its post at (3, 0), 250 into the stand
 const bare = { ...createVariant('A', { width: 6, depth: 3, type: 'row' }), noBeams: true };
 const at = (x: number, y = 0.02 + 0.26): PlacedObject => ({ id: 'd', product: '6560', x, y, rot: 0 });
-const inserts = (o: PlacedObject) => calcContext({ ...bare, objects: [o] }, RULES, DEFAULT_CATALOG, TERMS, DEFAULT_PRICING).inserts.get('d') ?? 0;
+const inserts = (o: PlacedObject) => calcContext({ ...bare, objects: [o] }, RULES, DEFAULT_CATALOG, TERMS, DEFAULT_PRICING).inserts.get('d')?.length ?? 0;
 
 describe('inserts 700 under a counter over a foot plate (K23)', () => {
   it('the plate is there', () => {
@@ -40,5 +41,23 @@ describe('inserts 700 under a counter over a foot plate (K23)', () => {
     const line = (r: typeof res) => r.groups.flatMap((g) => g.lines).find((l) => l.artnr === '6560')!;
     expect(line(res).price).toBe(line(away).price);
     expect(line(res).cost).toBeCloseTo(line(away).cost! + 4 * DEFAULT_PRICING.items.get(ITEM.counterInsert)!.cost, 6);
+  });
+
+  it('over the foot plate 740 of a free-standing textile wall too (X8)', () => {
+    const v = { ...createVariant('A', { width: 6, depth: 4, type: 'row' }), freeTextiles: [{ id: 't', from: [1, 2] as [number, number], to: [5, 2] as [number, number] }] };
+    const ctx = calcContext(v, RULES, DEFAULT_CATALOG, TERMS, DEFAULT_PRICING);
+    const feet = textileFootRects(v, ctx.prod.free);
+    expect(feet.length).toBeGreaterThan(1);
+    // 400 × 400 on the run's line; a counter 100 mm in over the first
+    const f = feet[0];
+    expect([f.x1 - f.x0, f.y1 - f.y0].map((n) => Math.round(n * 1000))).toEqual([400, 400]);
+    const o = { ...at((f.x0 + f.x1) / 2 + 0.6), y: f.y1 + 0.26 - 0.1 };
+    const res = calcContext({ ...v, objects: [o] }, RULES, DEFAULT_CATALOG, TERMS, DEFAULT_PRICING);
+    expect(res.inserts.get('d')?.length).toBe(3);
+  });
+
+  it('3D gets the uprights on inserts', () => {
+    const res = calc({ ...bare, objects: [at(3)] }, RULES, DEFAULT_CATALOG, TERMS);
+    expect(res.inserts?.get('d')?.map((p) => p.code)).toEqual(['92L', '92L', '92L', '92L']);
   });
 });
