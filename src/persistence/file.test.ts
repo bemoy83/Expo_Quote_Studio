@@ -20,69 +20,25 @@ describe('sketch file', () => {
     const res = parse(serialize(s));
     expect(res).toEqual({ ok: true, sketch: s });
   });
-  it('a sketch saved before free-standing textile walls has none', () => {
-    const f = JSON.parse(serialize(sketch()));
-    for (const v of f.varianter) delete v.freeTextiles;
-    const res = parse(JSON.stringify(f));
-    expect(res.ok && res.sketch.variants.map((v) => v.freeTextiles)).toEqual([[], []]);
-  });
-  it('«Hylle 1 m» (6180) from before the drawn shelf is kept as a loose line at its price', () => {
-    const f = JSON.parse(serialize(sketch()));
-    f.varianter[0].counted = [{ product: '6180-1', qty: 2 }, { product: '5280', qty: 1 }, { product: '6180-2', qty: 1 }];
-    const res = parse(JSON.stringify(f));
-    const v = res.ok ? res.sketch.variants[0] : null;
-    expect(v?.counted).toEqual([{ product: '5280', qty: 1 }]);
-    expect(v?.loose).toEqual([
-      { id: 'l1', name: 'Hylle 1 m, rett', qty: 2, price: 290 },
-      { id: 'l2', name: 'Hylle 1 m, skrå', qty: 1, price: 290 },
-    ]);
-  });
-  it('the made-up counters before 6560 are kept as loose lines at their price', () => {
-    const f = JSON.parse(serialize(sketch()));
-    f.varianter[0].counted = [{ product: '5415', qty: 1 }, { product: '5280', qty: 1 }, { product: '5420', qty: 2 }];
-    const res = parse(JSON.stringify(f));
-    const v = res.ok ? res.sketch.variants[0] : null;
-    expect(v?.counted).toEqual([{ product: '5280', qty: 1 }]);
-    expect(v?.loose).toEqual([
-      { id: 'l1', name: 'Disk 100, høy med lås', qty: 1, price: 1890 },
-      { id: 'l2', name: 'Bardisk, buet', qty: 2, price: 2950 },
-    ]);
-  });
   it('refuses a newer version with an explanation', () => {
     const f = JSON.parse(serialize(sketch()));
     const res = parse(JSON.stringify({ ...f, versjon: VERSION + 1 }));
     expect(res.ok).toBe(false);
     if (!res.ok) expect(res.error).toMatch(/nyere versjon/);
   });
+  it('refuses an older version with an explanation', () => {
+    const f = JSON.parse(serialize(sketch()));
+    const res = parse(JSON.stringify({ ...f, versjon: VERSION - 1 }));
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.error).toMatch(/eldre versjon/);
+  });
   it.each([
     ['not JSON', '{'],
-    ['wrong format', JSON.stringify({ format: 'annet', versjon: 1 })],
-    ['no variants', JSON.stringify({ format: 'standskisse', versjon: 1, prosjekt: { fields: [] }, varianter: [] })],
-    ['broken variant', JSON.stringify({ format: 'standskisse', versjon: 1, prosjekt: { fields: [] }, varianter: [{ name: 'A' }] })],
+    ['wrong format', JSON.stringify({ format: 'annet', versjon: VERSION })],
+    ['no variants', JSON.stringify({ format: 'standskisse', versjon: VERSION, prosjekt: { fields: [] }, varianter: [] })],
+    ['broken variant', JSON.stringify({ format: 'standskisse', versjon: VERSION, prosjekt: { fields: [] }, varianter: [{ name: 'A' }] })],
   ])('refuses %s', (_, text) => {
     expect(parse(text).ok).toBe(false);
-  });
-});
-
-describe('version 1 files', () => {
-  it('rectangle rooms become outlines; doors and frames on the turned sides keep their place', () => {
-    const v2 = r2();
-    // R2 as version 1 wrote it: room bk {0, 0, 2 × 2}, door in its front module 1 (x 1..2), sides named
-    const v1 = {
-      ...v2,
-      rooms: [{ id: 'bk', x: 0, y: 0, w: 2, d: 2, gaps: [{ face: 'left', module: 0 }] }],
-      walls: v2.walls.filter((w) => !w.room),
-      openings: [{ id: 'o1', wallId: 'bk.front', module: 1, product: v2.openings[0].product }],
-      textiles: [...v2.textiles, { id: 't9', wallId: 'bk.front', from: 0, width: 1, side: 1 }],
-    };
-    const res = parse(JSON.stringify({ format: 'standskisse', versjon: 1, prosjekt: createProject(), varianter: [v1], egneMotiver: [] }));
-    expect(res.ok).toBe(true);
-    if (!res.ok) return;
-    const [v] = res.sketch.variants;
-    expect(v.rooms[0]).toEqual({ id: 'bk', outline: [[0, 0], [2, 0], [2, 2], [0, 2]], gaps: [{ side: 3, module: 1 }] });
-    expect(v.openings).toEqual([{ id: 'o1', wallId: 'bk.2', module: 0, product: v2.openings[0].product, hinge: -1 }]);
-    expect(v.textiles.at(-1)).toEqual({ id: 't9', wallId: 'bk.2', from: 1, width: 1, side: -1 });
-    expect(v.walls.filter((w) => w.room).map((w) => w.id)).toEqual(['bk.0', 'bk.1', 'bk.2', 'bk.3']);
   });
 });
 
@@ -99,28 +55,5 @@ describe('new sketch', () => {
   it('round-trips through the file format', () => {
     const s = newSketch();
     expect(parse(serialize(s))).toEqual({ ok: true, sketch: s });
-  });
-});
-
-describe('Disker og podier: a disk and a podie each their own product (Bjørn 14.11.2026)', () => {
-  it('opens a counter of the old 6570 as the one its shape is (K13)', () => {
-    const sec = (x0: number, x1: number, z0: number, z1: number) => ({ x: [x0, x1] as [number, number], z: [z0, z1] as [number, number], h: 1000 });
-    const s = newSketch();
-    const v = s.variants[0];
-    const old = {
-      ...s,
-      variants: [
-        {
-          ...v,
-          objects: [
-            { id: 'i1', product: '6570', x: 1, y: 1, rot: 0, sections: [sec(-750, 250, -250, 250), sec(250, 750, -250, 250)] },
-            { id: 'i2', product: '6570', x: 3, y: 1.5, rot: 0, sections: [sec(-500, 500, -500, 500)] },
-          ],
-        },
-      ],
-    };
-    const r = parse(serialize(old as Sketch));
-    if (!r.ok) throw new Error(r.error);
-    expect(r.sketch.variants[0].objects.map((o) => o.product)).toEqual(['6571', '6572']);
   });
 });

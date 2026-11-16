@@ -77,7 +77,7 @@ export const PRODUCT_GROUPS: ProductGroup[] = [
   ]),
 ];
 
-/** Where a product goes when its group is unknown (e.g. an old saved product or an import without a group). */
+/** Where a product goes when its group is unknown (an import without a group). */
 export const FALLBACK_SUBGROUP = 'tilb.tilbehor';
 
 interface Resolved {

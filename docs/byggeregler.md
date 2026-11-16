@@ -560,10 +560,10 @@ K22 standardvarene og K23 disker over en fotplate.
   arbeidsordren og hurtigvalget heter det produktet heter. Det som tegnes med «Disk» i hånden, er en disk, og med
   «Podie» et podie. Det «Fri» tegner, er standardvaren det er (K22) sin funksjon, ellers en disk når fasongen ikke er
   dypere enn 500 noe sted (ingen 750 × 750 får plass i den), ellers et podie; det bestemmes når det tegnes, og et påbygg
-  beholder sitt. En skisse lagret med det gamle 6570 gjøres om etter fasongen når den åpnes. Toppene har prisartikler
+  beholder sitt. Toppene har prisartikler
   for alle målene i K7. Tid (K9): `counterWhole` per seksjon med lengste side over 500, `counterHalf` per seksjon
   ellers, `counterCorner` per innvendig hjørne i omrisset.
-  *Bjørn 13.11.2026 · `ITEM.counterBoard`, `counterWhole`, `counterHalf`, `counterCorner` · kode `src/calc/lines/objects.ts`, `src/cost/itemDefs.ts`, `src/catalog/defaultCatalog.ts`, `src/catalog/podium.ts`, `src/domain/podiums.ts`, `src/ui/podiumPen.ts`, `src/persistence/file.ts` · test `src/calc/podium.test.ts`, `src/domain/podiums.test.ts`, `src/ui/podiumPen.test.ts`, `src/persistence/file.test.ts`*
+  *Bjørn 13.11.2026 · `ITEM.counterBoard`, `counterWhole`, `counterHalf`, `counterCorner` · kode `src/calc/lines/objects.ts`, `src/cost/itemDefs.ts`, `src/catalog/defaultCatalog.ts`, `src/catalog/podium.ts`, `src/domain/podiums.ts`, `src/ui/podiumPen.ts` · test `src/calc/podium.test.ts`, `src/domain/podiums.test.ts`, `src/ui/podiumPen.test.ts`*
 - **K14 Grep på valgt disk.** En valgt disk viser grep som i et CAD-verktøy, i Velg og med pennen: ett midt på hver
   rette side av omrisset (hele siden, også over flere seksjoner) og ett i hvert hjørne av boksen rundt (flytter de to
   sidene av boksen som møtes der). **Flytt:** et flyttegrep (rundt, fire piler) står på disken så langt fra lenker og
@@ -658,10 +658,7 @@ K22 standardvarene og K23 disker over en fotplate.
   endrer ikke steget); blir den 1 m, er den 6560. «Roter» i pillen (tast R på desktop) dreier varen i hånden 90° per
   trykk; knappen er grå for «Fri» og Podie 50 × 50, som er kvadratiske. I Utstyr setter + en vare fra Disker og podier,
   og penselen der legger varen bak sin funksjon og i hånden.
-  **Eldre skisser** gjøres om når de åpnes: en disk fra det gamle verktøyet Disker blir 6560 eller én seksjon per hel
-  eller halv meter, åpen bak og med hylle i CC 750; talte podier blir ett podie per stykk der + ville satt det, i høyden
-  varenummeret alltid har betydd, og et podie som ikke får plass, blir stående talt.
-  *Bjørn 13.11.2026 · kode `src/domain/podiumStock.ts`, `src/domain/podiums.ts`, `src/calc/lines/objects.ts`, `src/persistence/file.ts`, `src/ui/panel/sections/EquipSection.tsx`, `src/ui/podiumPen.ts`, `src/ui/plan/pointer/podium.ts`, `src/ui/plan/quick/podium.tsx`, `src/ui/useShortcuts.ts` · test `src/domain/podiumStock.test.ts`, `src/domain/podiums.test.ts`, `src/ui/podiumPen.test.ts`*
+  *Bjørn 13.11.2026 · kode `src/domain/podiumStock.ts`, `src/domain/podiums.ts`, `src/calc/lines/objects.ts`, `src/ui/panel/sections/EquipSection.tsx`, `src/ui/podiumPen.ts`, `src/ui/plan/pointer/podium.ts`, `src/ui/plan/quick/podium.tsx`, `src/ui/useShortcuts.ts` · test `src/domain/podiumStock.test.ts`, `src/domain/podiums.test.ts`, `src/ui/podiumPen.test.ts`*
 - **K23 Disk over fotplate.** En disk som står over en fotplate (750 under vegg og takdragerstolpe, S2 og T12, eller
   740/730 under frittstående tekstilvegg, X8), også en standardvare (K22), får en innsats 700 uten settskrue i midtrøret
   på hver stolpe (alle profilene i 90-serien har midtrør). Innsatsen bygger om lag 7 mm, så bunnskinnene går fri av

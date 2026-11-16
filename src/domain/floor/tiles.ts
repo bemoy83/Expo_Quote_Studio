@@ -3,7 +3,7 @@
 // joints shown in plan and 3D are the tile edges. Rolled products (engangsteppe, vinyl) use the same tiles, drawn
 // without joints: their lanes are in lanes.ts, the brush that lays both in brush.ts.
 // Byggeregel G1 (docs/byggeregler.md).
-import { CELL, cellKey, parseCellKey } from '../grid';
+import { CELL, cellKey } from '../grid';
 import type { FloorTile, Stand } from '../types';
 
 /** Brush size in cells. */
@@ -72,17 +72,6 @@ export function standCellList(s: Stand): [number, number][] {
  * Rolled floor is laid by `fillCarpet` (domain/carpet.ts). */
 export function fillTiles(s: Stand, product: string): FloorTile[] {
   return tileCells(standCellList(s), product);
-}
-
-/** Version 2 files: one product per 0,5 m cell. */
-export function tilesFromCells(cells: Record<string, string>): FloorTile[] {
-  const byProduct = new Map<string, [number, number][]>();
-  for (const [k, a] of Object.entries(cells)) {
-    const c = parseCellKey(k);
-    if (!c || !a) continue;
-    byProduct.set(a, [...(byProduct.get(a) ?? []), c]);
-  }
-  return [...byProduct].flatMap(([a, cs]) => tileCells(cs, a));
 }
 
 /** m² per floor product. */

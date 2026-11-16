@@ -14,7 +14,7 @@ const one = (
 ): Product => ({ id, name, kind, unit, group, variants: [{ artnr: id, name, price, placeholder: true }], ...extra });
 
 /** Counter built of Foga profiles, the size in stock (Byggeregler K1–K5), placed and colliding like furniture. Price
- *  from Bjørn (11.11.2026). It replaces the made-up counters 5410, 5415 and 5420 (OLD_COUNTERS). */
+ *  from Bjørn (11.11.2026). */
 const counter = (id: string, name: string, price: number): Product => {
   const { length, depth } = RECIPES.counter.stock;
   const h = RECIPES.counter.height;
@@ -350,18 +350,6 @@ export const DEFAULT_CATALOG: Catalog = {
     floorProtection: '5911',
     shelf: '6311',
   },
-};
-
-/** «Hylle 1 m» (6180, Rett and Skrå) was a counted product until the drawn shelf 6311 replaced it (Bjørn 8.11.2026). A
- *  sketch that has it keeps it as a loose line at its price then (persistence/file.ts). */
-export const OLD_SHELF = { prefix: '6180-', name: 'Hylle 1 m', price: 290, variants: ['Rett', 'Skrå'] } as const;
-
-/** The made-up counters before 6560 (Bjørn 11.11.2026): a sketch that has them keeps them as loose lines at their
- *  price (persistence/file.ts). */
-export const OLD_COUNTERS: Readonly<Record<string, { name: string; price: number }>> = {
-  '5410': { name: 'Disk 100, lav', price: 1350 },
-  '5415': { name: 'Disk 100, høy med lås', price: 1890 },
-  '5420': { name: 'Bardisk, buet', price: 2950 },
 };
 
 export const DOOR = '6130';

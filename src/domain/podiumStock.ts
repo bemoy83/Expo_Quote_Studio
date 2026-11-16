@@ -5,9 +5,9 @@
 // decals (K20), turning and moving keep it; another size, height or shelf,
 // a sliding door, another open side or a fusion makes it built on site (K13). Pure, mm in the counter's frame.
 import { RECIPES } from '../foga/recipes';
-import { prunedSides, turnedSides } from './podiumFaces';
-import { bounds, EPS, runNodes } from './podiumSections';
-import type { CounterLight, CounterPiece, CounterSection, PlacedObject, Point, SectionSide } from './types';
+import { turnedSides } from './podiumFaces';
+import { bounds } from './podiumSections';
+import type { CounterSection, PlacedObject, SectionSide } from './types';
 
 const R = RECIPES.counter;
 
@@ -95,49 +95,3 @@ export const soldAs = (o: Pick<PlacedObject, 'product' | 'sections'>): string =>
 
 /** This art.nr is a standard counter (K22). */
 export const isStock = (artnr: string): boolean => !!stockByArtnr(artnr);
-
-/**
- * A counter from before Disker og podier took over Disker (Bjørn 13.11.2026) as sections (K22): the counter in stock as
- * its standard counter, a drawn counter (K7) one section per whole or half metre, open at its back in both light
- * openings, with the shelf at CC 750 as in 6560. Built the same, so it costs and is picked the same; colour and place
- * kept. `product`: the product of Disker og podier. Other objects as they are.
- */
-export function asSections(o: PlacedObject, product: string): PlacedObject {
-  const stock = !o.pieces && !o.sections && STOCK_COUNTERS.find((s) => s.artnr === o.product);
-  if (!o.pieces && !stock) return o;
-  const sections = stock ? stockSections(stock.artnr) : piecesAsSections(o.pieces!);
-  const { pieces: _, ...rest } = o;
-  return { ...rest, product, sections: prunedSides(sections) };
-}
-
-/** The straight pieces Disker drew (K7) as sections: one per whole metre from the piece's start and a half last, 500
- *  deep, CC 1000 with the shelf at CC 750, open in both light openings where the piece's back is. */
-function piecesAsSections(pieces: readonly CounterPiece[]): CounterSection[] {
-  const half = R.module.half / 2;
-  const cells: { x: Range2; z: Range2 }[] = [];
-  const open: [Point, Point][] = [];
-  for (const p of pieces) {
-    const i = Math.abs(p.a[1] - p.b[1]) < EPS ? 0 : 1;
-    const c = p.a[1 - i];
-    const ts = runNodes(Math.min(p.a[i], p.b[i]), Math.max(p.a[i], p.b[i]), p.a[i] <= p.b[i] ? 'lo' : 'hi');
-    for (let k = 1; k < ts.length; k++) {
-      const along: Range2 = [ts[k - 1], ts[k]];
-      const across: Range2 = [c - half, c + half];
-      cells.push(i === 0 ? { x: along, z: across } : { x: across, z: along });
-    }
-    const off = c + p.back[1 - i] * half;
-    open.push(i === 0 ? [[p.a[0], off], [p.b[0], off]] : [[off, p.a[1]], [off, p.b[1]]]);
-  }
-  const onOpen = (a: Point, b: Point) =>
-    open.some(([p, q]) => [a, b].every(([x, z]) => x > Math.min(p[0], q[0]) - EPS && x < Math.max(p[0], q[0]) + EPS && z > Math.min(p[1], q[1]) - EPS && z < Math.max(p[1], q[1]) + EPS));
-  const both = { lights: ['open', 'open'] as CounterLight[] };
-  return cells.map((c): CounterSection => {
-    const sides: CounterSection['sides'] = {};
-    if (onOpen([c.x[0], c.z[0]], [c.x[0], c.z[1]])) sides['x-'] = both;
-    if (onOpen([c.x[1], c.z[0]], [c.x[1], c.z[1]])) sides['x+'] = both;
-    if (onOpen([c.x[0], c.z[0]], [c.x[1], c.z[0]])) sides['z-'] = both;
-    if (onOpen([c.x[0], c.z[1]], [c.x[1], c.z[1]])) sides['z+'] = both;
-    return { x: c.x, z: c.z, h: R.top, shelves: [R.middle], ...(Object.keys(sides).length && { sides }) };
-  });
-}
-type Range2 = [number, number];

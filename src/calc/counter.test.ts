@@ -8,7 +8,9 @@ import { pickRows } from '../ui/workorder/pickRows';
 import { calc } from './calc';
 import { podiumUses } from './lines/objects';
 import { sumItems } from '../pricing/model';
-import { asSections, stockSections } from '../domain/podiumStock';
+import { stockSections } from '../domain/podiumStock';
+import { ellCounter, straightCounter } from '../test/counterSections';
+import type { CounterSection } from '../domain/types';
 
 const v = {
   ...createVariant('A', { width: 4, depth: 3, type: 'row' }),
@@ -57,17 +59,12 @@ describe('counter colour (Byggeregel K6)', () => {
   });
 });
 
-describe('a counter built on site, as Disker drew it (Byggeregler K7–K9, K22)', () => {
-  type Piece = { a: [number, number]; b: [number, number]; back: [number, number] };
-  const straight = (mm: number): Piece[] => [{ a: [-mm / 2, 0], b: [mm / 2, 0], back: [0, -1] }];
-  // Two parts of 1000 c/c, the second's short side against the first's long side
-  const ell: Piece[] = [
-    { a: [-500, 0], b: [500, 0], back: [0, -1] },
-    { a: [-250, -250], b: [-250, -1250], back: [1, 0] },
-  ];
-  /** A counter of these pieces from an old sketch, as sections when it opens (K22). */
-  const drawn = (pieces: Piece[], ral?: string) => {
-    const o = asSections({ id: 'd1', product: '6560', x: 2, y: 2, rot: 0, pieces, ...(ral && { ral }) }, '6571');
+describe('a counter built on site (Byggeregler K9, K13)', () => {
+  const straight = straightCounter;
+  const ell = ellCounter();
+  /** A counter of these sections built on site. */
+  const drawn = (sections: CounterSection[], ral?: string) => {
+    const o = { id: 'd1', product: '6571', x: 2, y: 2, rot: 0, sections, ...(ral && { ral }) };
     const s = { ...createVariant('A', { width: 6, depth: 5, type: 'row' }), walls: [], objects: [o] };
     const r = calc(s, RULES, DEFAULT_CATALOG, { payer: 'utstiller', ral: '9010' });
     return { o, r, l: r.groups.flatMap((g) => g.lines).find((x) => x.artnr === '6571')! };
@@ -89,7 +86,7 @@ describe('a counter built on site, as Disker drew it (Byggeregler K7–K9, K22)'
   });
 
   it('counts the work per whole and half metre and per corner', () => {
-    const ids = (p: Piece[]) => Object.fromEntries((drawn(p).l.uses ?? []).map((u) => [u.id, u.qty]));
+    const ids = (p: CounterSection[]) => Object.fromEntries((drawn(p).l.uses ?? []).map((u) => [u.id, u.qty]));
     expect(ids(straight(1500))).toMatchObject({ [ITEM.counterWhole]: 1, [ITEM.counterHalf]: 1 });
     expect(ids(ell)).toMatchObject({ [ITEM.counterWhole]: 2, [ITEM.counterCorner]: 1 });
     expect(drawn(ell).l.meta).toBe('bygget på stedet 1020 × 1520 × 1040 mm · 2 åpne sider · 2 hyller');
