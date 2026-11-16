@@ -611,15 +611,14 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   en lysåpning i to som begge beholder valget, og en hylle som tas bort slår de to sammen til den nederste, som beholder
   sitt. Valget lagres på seksjonens side, så det følger delen: flytt og roter
   endrer ingenting, et grep som strekker en seksjon strekker valget med, en ny del er plate, og en side som blir
-  innvendig (påbygg, fusjon) mister valget. To seksjoner slås bare sammen (K14) når sidene langs dem har samme valg. En
-  del med en vegg eller en annen disk nærmere enn 60 mm utenfor seg er alltid plate; valget beholdes og kommer tilbake
-  når disken flyttes ut. Det gjelder ikke en standardvare (K22) som 6560: den plukkes ferdig bygget og står som den
-  er, også inntil en vegg (Bjørn 16.11.2026). Trinnplaten (K12) er alltid plate. I planen er en del som er åpen i hele høyden en tynn, lys
+  innvendig (påbygg, fusjon) mister valget. To seksjoner slås bare sammen (K14) når sidene langs dem har samme valg. Valget
+  gjelder også mot en vegg eller en annen disk: en side inntil en vegg bygges som valgt (Bjørn 16.11.2026: låsen mot
+  vegg er fjernet, siden er utilgjengelig uansett, og montøren slipper å bygge om). Trinnplaten (K12) er alltid plate. I planen er en del som er åpen i hele høyden en tynn, lys
   hårstrek (som 6560), og en del med skyvedør i en lysåpning hel strek med dørstreker. Valget gjøres i skuffen for
   disken. Tilbudet sier hvor mange sider som har en åpen lysåpning: «1 åpen side». Arbeidsordren tegner hver side som
   har annet enn plate, hyller bak seg, eller print eller dekal, sett utenfra og målsatt som i skuffen («Disker sett
   utenfra»).
-  *Bjørn 13.11.2026 · kode `src/domain/podiumFaces.ts`, `src/domain/podiumLocks.ts` · test `src/domain/podiumFaces.test.ts`*
+  *Bjørn 13.11.2026 · kode `src/domain/podiumFaces.ts` · test `src/domain/podiumFaces.test.ts`*
 - **K17 Skyvedør.** To plater i sporet i skinnen under og skinnen over lysåpningen, i stedet for én plate. Hver dør er
   lysåpningen / 2 + 10 (overlapp) + 10 (skinnespor) bred: 500 i lysåpning 960, 375 i 710 og 250 i 460, og like høy
   som platen ville vært. En dør skjøvet helt inn i sporet går da fortsatt 10 forbi midten. Den andre døren står rett
@@ -646,8 +645,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   strekker. Tid, plassholder: 1,5 min opp og 1 ned per hylle (som H7, Bjørn 13.11.2026), unntatt hyllen i CC 750 i en
   seksjon som er 500 dyp: den er med i tiden per seksjon (K9), som i 6560. Tilbudet sier «3 hyller».
   *Bjørn 13.11.2026 · kode `src/foga/counter.ts` (`shelfRails`), `src/domain/podiumShelves.ts` · test `src/domain/podiumShelves.test.ts`, `src/calc/podium.test.ts`*
-- **K20 Print og dekal på disk.** På plate og skyvedør, aldri på åpen lysåpning, trinnplate eller del mot vegg eller
-  annen disk (valget står og kommer tilbake når disken flyttes ut). Print er heldekkende dekal, ikke trykk på platen, og
+- **K20 Print og dekal på disk.** På plate og skyvedør, aldri på åpen lysåpning eller trinnplate. Print er heldekkende dekal, ikke trykk på platen, og
   dekker platene og dørene i delen mellom stolpene og skinnene. Deler på rad på samme side med samme motiv viser ett
   motiv strukket over dem (som `printWall`): bildet dekker fra første dels venstre stolpe til siste dels høyre og fra
   bunnskinnen til den høyeste toppen, beskåret, aldri strukket ut av form. En dekal har mål og plass på delen (fra
@@ -662,7 +660,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 - **K22 6560 i Disker og podier.** Bardisk 6560 er et ferdig oppsett i Disker og podier: én seksjon 1000 × 500 c/c,
   CC 1000, hylle i CC 750 og baksiden åpen i begge lysåpningene, bygget nøyaktig som disken på lager (K1–K5). Så lenge
   disken er dette, er den lagervaren: katalogpris 6560 (1320 kr), kostet som én disk, plukket hel som 1 stk, og navnet
-  «Bardisk». Farge (K6), print og dekal (K20), snudd, flyttet og mot vegg eller annen disk er fortsatt 6560. Annen
+  «Bardisk». Farge (K6), print og dekal (K20), snudd og flyttet er fortsatt 6560. Annen
   lengde, dybde, høyde eller hylle, skyvedør, en annen åpen side eller sammenslåing (K15) gjør den til spesialbygg
   (K13). Pennen velger etter funksjon (Bjørn 14.11.2026): «Fri» (en seksjon på 500 × 500 per klikk), så én knapp per
   undergruppe i katalogen som har en standardvare, «Disk» og «Podie», med omrisset av varen bak. Bak hver funksjon står

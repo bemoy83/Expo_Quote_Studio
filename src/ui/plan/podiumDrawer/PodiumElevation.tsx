@@ -149,8 +149,8 @@ export function PodiumElevation({ parts: given, length, h: hTop, title, fill, ch
     const ps = parts.filter((p) => p.part.section === section)
     return { section, h: ps[0].h, shelves: ps[0].shelves, x: x((Math.min(...ps.map((p) => p.x0)) + Math.max(...ps.map((p) => p.x1))) / 2) }
   })
-  /** What each light opening of a part is as drawn: plates where it is held to a plate (K16). */
-  const kindsOf = (p: ElevationPart) => (p.locked ? p.lights.map(() => null) : p.lights)
+  /** What each light opening of a part is as drawn (K16). */
+  const kindsOf = (p: ElevationPart) => p.lights
   /** A light opening's box in the drawing: from the underside of the rail over it down to the top of the rail under it,
    *  or the floor when it is open at the bottom. */
   const lightY = (p: ElevationPart, li: number): [number, number] => {

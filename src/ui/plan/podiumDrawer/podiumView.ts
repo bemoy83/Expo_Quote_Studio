@@ -103,11 +103,10 @@ export interface ElevationPart {
   h: number
   shelves: readonly number[]
   lights: (CounterLight | null)[]
-  locked: boolean
 }
 
 /** The side seen from outside, left to right: its parts, the outer length (mm) and the highest section's CC. */
-export function sideElevation(o: PlacedObject, side: PodiumSide, locked: ReadonlySet<string> = new Set()): { parts: ElevationPart[]; length: number; h: number } {
+export function sideElevation(o: PlacedObject, side: PodiumSide): { parts: ElevationPart[]; length: number; h: number } {
   const sections = o.sections ?? []
   const len = side.b - side.a
   const x = fromLeft(side)
@@ -116,7 +115,7 @@ export function sideElevation(o: PlacedObject, side: PodiumSide, locked: Readonl
       const [n0, n1] = [x(p.a), x(p.b)].sort((a, b) => a - b)
       const key = partKey(p)
       const s = sections[p.section]
-      return { part: p, key, n0, n1, x0: n0, x1: n1, h: s.h, shelves: s.shelves ?? [], lights: lightsOf(sections, p), locked: locked.has(key) }
+      return { part: p, key, n0, n1, x0: n0, x1: n1, h: s.h, shelves: s.shelves ?? [], lights: lightsOf(sections, p) }
     })
     .sort((p, q) => p.n0 - q.n0)
   // The ends out to the outer face
@@ -154,19 +153,19 @@ export interface ElevationDecal {
 }
 
 /** The print windows and decals of a side, as the drawing shows them. `ratio`: a motif's width / height. */
-export function sideDecor(o: PlacedObject, side: PodiumSide, locked: ReadonlySet<string>, ratio: (motif: string) => number): { prints: ElevationPrint[]; decals: ElevationDecal[] } {
+export function sideDecor(o: PlacedObject, side: PodiumSide, ratio: (motif: string) => number): { prints: ElevationPrint[]; decals: ElevationDecal[] } {
   const sections = o.sections ?? []
   const x = fromLeft(side)
   const on = onSide(side)
   const span = (t0: number, t1: number) => [x(t0), x(t1)].sort((a, b) => a - b)
   return {
-    prints: podiumPrints(sections, locked, ratio)
+    prints: podiumPrints(sections, ratio)
       .filter((w) => on(w.part))
       .map((w) => {
         const [x0, x1] = span(w.t0, w.t1)
         return { x0, x1, y0: w.y0, y1: w.y1, motif: w.motif, crop: w.crop }
       }),
-    decals: podiumDecals(sections, locked)
+    decals: podiumDecals(sections)
       .filter((d) => on(d.part))
       .map((d) => {
         const [x0, x1] = span(d.t0, d.t1)

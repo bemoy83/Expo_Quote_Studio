@@ -1,6 +1,5 @@
 // Print og dekal på disk (Byggeregel K20, trinn 2): print is a decal over the whole of a part, every plate and sliding
-// door of it, never on an open light opening, a step plate or a part held to a plate against a wall or another counter
-// (K16; the choice stays and comes back when the counter is moved out). Parts in a row on the same side with the same
+// door of it, never on an open light opening or a step plate. Parts in a row on the same side with the same
 // motif show one motif stretched over them, as `printWall`. A decal has a size and a place on its part and is moved and
 // scaled as on a wall. The colour stays the counter's (K6). Stored on the section's side (`SectionSide.print`,
 // `decals`), so it follows the part as the lights do. Pure, mm in the counter's frame.
@@ -26,14 +25,14 @@ export interface PartWindow {
 }
 
 /** The plates of a part seen from outside (K16, K19): one window per light opening that is not open, between the posts
- *  and the rails. `locked`: all plates. */
-export function partWindows(sections: readonly CounterSection[], p: PodiumPart, locked = false): PartWindow[] {
+ *  and the rails. */
+export function partWindows(sections: readonly CounterSection[], p: PodiumPart): PartWindow[] {
   const s = sections[p.section];
   const cuts = [0, ...(s.shelves ?? []), s.h];
   const kinds = lightsOf(sections, p);
   const t0 = p.a + R.joint;
   const t1 = p.b - R.joint;
-  return cuts.slice(1).flatMap((c1, i) => (!locked && kinds[i] === 'open' ? [] : [{ t0, t1, y0: cuts[i] + R.railHeight, y1: c1 }]));
+  return cuts.slice(1).flatMap((c1, i) => (kinds[i] === 'open' ? [] : [{ t0, t1, y0: cuts[i] + R.railHeight, y1: c1 }]));
 }
 
 /** Whether a part can take print or a decal: not open in every light opening (K20). */
@@ -64,9 +63,9 @@ export interface PrintWindow extends PartWindow {
  * over the box from the first part's left post to the last part's right and from the bottom rail up to the highest
  * top, cropped (never stretched) to cover it; each window shows its share. `ratio`: a motif's width / height.
  */
-export function podiumPrints(sections: readonly CounterSection[], locked: ReadonlySet<string>, ratio: (motif: string) => number): PrintWindow[] {
+export function podiumPrints(sections: readonly CounterSection[], ratio: (motif: string) => number): PrintWindow[] {
   if (!sections.some((s) => s.sides)) return [];
-  const parts = podiumParts(sections).filter((p) => !locked.has(partKey(p)) && printOf(sections, p) && takesDecor(sections, p));
+  const parts = podiumParts(sections).filter((p) => printOf(sections, p) && takesDecor(sections, p));
   const line = (p: PodiumPart) => `${p.axis}${p.out}:${p.at}`;
   const out: PrintWindow[] = [];
   const done = new Set<PodiumPart>();
@@ -118,12 +117,12 @@ export interface PlacedDecal {
   y1: number;
 }
 
-/** Every decal on a counter as it stands (K20): on a part that is not held to a plate and not open all over. */
-export function podiumDecals(sections: readonly CounterSection[], locked: ReadonlySet<string> = new Set()): PlacedDecal[] {
+/** Every decal on a counter as it stands (K20): on a part that is not open all over. */
+export function podiumDecals(sections: readonly CounterSection[]): PlacedDecal[] {
   if (!sections.some((s) => s.sides)) return [];
   const out: PlacedDecal[] = [];
   for (const p of podiumParts(sections)) {
-    if (locked.has(partKey(p)) || !takesDecor(sections, p)) continue;
+    if (!takesDecor(sections, p)) continue;
     for (const d of sideOf(sections, p)?.decals ?? []) {
       const c = sideMid(sections, p) + rightOf(p.axis, p.out) * d.x;
       // A decal belongs to the part its centre is in front of; on a node, to the part after it
@@ -211,10 +210,10 @@ function kept(sections: readonly CounterSection[], p: PodiumPart, d: PodiumDecal
 
 /** What a counter's print and decals cost (K20, as on a wall): m² of print over its plates and doors, the decals' m²,
  *  the parts printed, and the prints stretched over more than one part (a print setup each). */
-export function podiumDecorAreas(sections: readonly CounterSection[], locked: ReadonlySet<string> = new Set()): { full: number; decal: number; parts: number; runs: number; sizes: Map<string, number> } {
-  const prints = podiumPrints(sections, locked, () => 1);
+export function podiumDecorAreas(sections: readonly CounterSection[]): { full: number; decal: number; parts: number; runs: number; sizes: Map<string, number> } {
+  const prints = podiumPrints(sections, () => 1);
   const full = prints.reduce((a, w) => a + ((w.t1 - w.t0) * (w.y1 - w.y0)) / 1e6, 0);
-  const decal = podiumDecals(sections, locked).reduce((a, d) => a + (d.decal.w * d.decal.h) / 1e6, 0);
+  const decal = podiumDecals(sections).reduce((a, d) => a + (d.decal.w * d.decal.h) / 1e6, 0);
   const parts = new Set(prints.map((w) => partKey(w.part)));
   // The foil is cut per plate or door it covers: how many of each size, B × H in mm (Byggeregel K20)
   const sizes = new Map<string, number>();

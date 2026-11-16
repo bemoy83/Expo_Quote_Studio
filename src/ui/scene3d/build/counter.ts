@@ -57,8 +57,8 @@ export function buildCounter(c: BuildContext, g: THREE.Group, b: CounterBuild, r
 }
 
 /** Print and decals on a counter of Disker og podier (Byggeregel K20), a thin sheet just outside the plates, facing
- *  out: print its share of the motif in each window of plate and door, decals whole. `locked`: parts held to a plate. */
-export function buildPodiumDecor(c: BuildContext, g: THREE.Group, sections: readonly CounterSection[], locked: ReadonlySet<string>, tag: Tag, warn: THREE.MeshStandardMaterialParameters) {
+ *  out: print its share of the motif in each window of plate and door, decals whole. */
+export function buildPodiumDecor(c: BuildContext, g: THREE.Group, sections: readonly CounterSection[], tag: Tag, warn: THREE.MeshStandardMaterialParameters) {
   const { opts, add } = c
   const ratio = (id: string) => findMotif(opts.motifs, id)?.ratio ?? 0
   const R = RECIPES.counter
@@ -72,11 +72,11 @@ export function buildPodiumDecor(c: BuildContext, g: THREE.Group, sections: read
     mesh.rotation.y = p.axis === 'z' ? (p.out > 0 ? 0 : Math.PI) : p.out > 0 ? Math.PI / 2 : -Math.PI / 2
     add(mesh, tag, g)
   }
-  for (const w of podiumPrints(sections, locked, ratio)) {
+  for (const w of podiumPrints(sections, ratio)) {
     const m = findMotif(opts.motifs, w.motif)
     if (m) sheet(w.part, w.t0, w.t1, w.y0, w.y1, cropMaterial(m, w.crop, opts.onLoad, warn))
   }
-  for (const d of podiumDecals(sections, locked)) {
+  for (const d of podiumDecals(sections)) {
     const m = findMotif(opts.motifs, d.decal.motif)
     if (m) sheet(d.part, d.t0, d.t1, d.y0, d.y1, printMaterial(m, d.decal.w / d.decal.h, opts.onLoad, { ...warn, polygonOffset: true, polygonOffsetFactor: -2 }))
   }

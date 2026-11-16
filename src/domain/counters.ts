@@ -4,8 +4,7 @@ import { stockOf } from './podiumStock';
 import { addParts, counterParts, type CounterParts } from '../foga/counter';
 import { counterBuildOf } from './counterShape';
 import { openSides } from './grid';
-import { placedBuild } from './podiumLocks';
-import { counterRal, type PlaceContext } from './objects';
+import { counterRal } from './objects';
 import type { Point, Variant } from './types';
 
 const EPS = 1e-6;
@@ -14,12 +13,11 @@ const SNAP = 0.1;
 
 /** The parts of every counter built on site, picked loose (K13); none when there is none. A standard counter is picked
  *  whole (K22). */
-export function builtCounterParts(v: Variant, ctx?: PlaceContext): CounterParts | undefined {
+export function builtCounterParts(v: Variant): CounterParts | undefined {
   // A standard counter of Disker og podier is picked whole (K22)
   const drawn = v.objects.filter((o) => o.sections && !stockOf(o.sections));
   if (!drawn.length) return undefined;
-  // With the catalog, a side of Disker og podier against a wall or another counter is a plate (K16)
-  return drawn.map((o) => counterParts(ctx ? placedBuild(v, ctx, o) : counterBuildOf(o), counterRal(o))).reduce(addParts);
+  return drawn.map((o) => counterParts(counterBuildOf(o), counterRal(o))).reduce(addParts);
 }
 
 /** Which way a standard counter placed at `a` faces (K22): toward the open side of the stand across it (the aisle, where the

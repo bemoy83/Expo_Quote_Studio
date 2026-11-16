@@ -2,7 +2,7 @@
 // Bardisk 6560 or Podie 50 × 50 in one of its heights, is a preset of sections built exactly as the one in stock. Drawn
 // freely and built exactly so, it is that product too. While a counter of Disker og podier is exactly a preset, in
 // any turn and place, it is that stock product: the catalog price, picked whole as one piece. Colour (K6), print and
-// decals (K20), turning, moving and standing against a wall or another counter keep it; another size, height or shelf,
+// decals (K20), turning and moving keep it; another size, height or shelf,
 // a sliding door, another open side or a fusion makes it built on site (K13). Pure, mm in the counter's frame.
 import { RECIPES } from '../foga/recipes';
 import { layoutOf, piecesOf } from './counterShape';

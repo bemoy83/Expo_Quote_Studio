@@ -11,43 +11,40 @@ const two = [sec(-500, 500, -250, 250), sec(500, 1000, -250, 250)];
 const vOf = (sections: CounterSection[]): Variant => ({ ...createVariant('A', { width: 6, depth: 5, type: 'row' }), walls: [], objects: [{ id: 'a', product: 'P', x: 3, y: 2.5, rot: 0, sections } as PlacedObject] });
 const front = (s: CounterSection[]) => podiumParts(s).filter((p) => p.axis === 'z' && p.out === 1);
 const sectionsOf = (v: Variant) => v.objects[0].sections!;
-const none = new Set<string>();
 
 describe('print (K20)', () => {
   it('covers the plates of a part between posts and rails; a part of 1000 at CC 1000: 960 × 960', () => {
     const v = setPodiumPrint(vOf(two), 'a', front(two).map(partKey).slice(0, 1), 'm1');
-    const ws = podiumPrints(sectionsOf(v), none, () => 1);
+    const ws = podiumPrints(sectionsOf(v), () => 1);
     expect(ws).toHaveLength(1);
     expect([ws[0].t1 - ws[0].t0, ws[0].y1 - ws[0].y0]).toEqual([960, 960]);
-    expect(podiumDecorAreas(sectionsOf(v), none).full).toBeCloseTo(0.9216);
+    expect(podiumDecorAreas(sectionsOf(v)).full).toBeCloseTo(0.9216);
     // Cut per plate: the sizes go on its own article's line (8023)
-    expect([...podiumDecorAreas(sectionsOf(v), none).sizes]).toEqual([['960 × 960', 1]]);
+    expect([...podiumDecorAreas(sectionsOf(v)).sizes]).toEqual([['960 × 960', 1]]);
   });
 
   it('parts in a row with the same motif show one motif stretched over them, left to right as seen from outside', () => {
     const v = setPodiumPrint(vOf(two), 'a', front(two).map(partKey), 'm1');
-    const ws = podiumPrints(sectionsOf(v), none, () => 1).sort((p, q) => p.t0 - q.t0);
+    const ws = podiumPrints(sectionsOf(v), () => 1).sort((p, q) => p.t0 - q.t0);
     expect(ws).toHaveLength(2);
     // The left window shows the left of the picture and the right the right: the crops meet in order
     expect(ws[0].crop[0]).toBeLessThan(ws[1].crop[0]);
     expect(ws[0].run).toBe(ws[1].run);
-    expect(podiumDecorAreas(sectionsOf(v), none).runs).toBe(1);
+    expect(podiumDecorAreas(sectionsOf(v)).runs).toBe(1);
   });
 
-  it('never on an open light opening, nor on a part open all over or held to a plate', () => {
+  it('never on an open light opening, nor on a part open all over', () => {
     const shelf = [sec(-500, 500, -250, 250, 1000, [500])];
     const open = setLight(shelf, front(shelf), 'open', 1);
     const v = setPodiumPrint(vOf(open), 'a', front(open).map(partKey), 'm1');
-    expect(podiumPrints(sectionsOf(v), none, () => 1)).toHaveLength(1);
+    expect(podiumPrints(sectionsOf(v), () => 1)).toHaveLength(1);
     const all = setLight(two, front(two), 'open');
     expect(setPodiumPrint(vOf(all), 'a', front(all).map(partKey), 'm1').objects[0].sections).toEqual(all);
-    const p = setPodiumPrint(vOf(two), 'a', 'all', 'm1');
-    expect(podiumPrints(sectionsOf(p), new Set([partKey(front(two)[0])]), () => 1).some((w) => partKey(w.part) === partKey(front(two)[0]))).toBe(false);
   });
 
   it('the paint bucket prints every part that takes it; null takes it off', () => {
     const v = setPodiumPrint(vOf(two), 'a', 'all', 'm1');
-    expect(new Set(podiumPrints(sectionsOf(v), none, () => 1).map((w) => partKey(w.part))).size).toBe(podiumParts(two).length);
+    expect(new Set(podiumPrints(sectionsOf(v), () => 1).map((w) => partKey(w.part))).size).toBe(podiumParts(two).length);
     expect(setPodiumPrint(v, 'a', 'all', null).objects[0].sections).toEqual(two);
   });
 });
@@ -61,8 +58,8 @@ describe('decal (K20)', () => {
     expect(d.decal.id).toBe(decal);
     expect([d.decal.w, d.decal.h]).toEqual([600, 300]);
     expect((d.t0 + d.t1) / 2).toBe(0);
-    expect(podiumPrints(sectionsOf(v), none, () => 1)).toHaveLength(0);
-    expect(podiumDecorAreas(sectionsOf(v), none).decal).toBeCloseTo(0.18);
+    expect(podiumPrints(sectionsOf(v), () => 1)).toHaveLength(0);
+    expect(podiumDecorAreas(sectionsOf(v)).decal).toBeCloseTo(0.18);
   });
 
   it('moved and scaled, it is kept within its part; null takes it off', () => {

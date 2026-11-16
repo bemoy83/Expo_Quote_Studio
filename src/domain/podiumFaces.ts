@@ -114,14 +114,12 @@ export const partLine = (p: PodiumPart) => lineOf(p.axis, p.at, p.a, p.b);
 
 type Stretch = [[number, number], [number, number]];
 /** What the build reads of the sides (K16, K17): the parts open in every light opening (`open`, drawn as a hairline in
- *  the plan), and the other parts with an open light opening or a sliding door, with what each light opening is. A part
- *  against a wall or another counter (`locked`, by partKey) stays a plate. */
-export function podiumLights(sections: readonly CounterSection[], locked: ReadonlySet<string> = new Set()): { open: Stretch[]; lights: { a: [number, number]; b: [number, number]; kinds: (CounterLight | null)[] }[] } {
+ *  the plan), and the other parts with an open light opening or a sliding door, with what each light opening is. */
+export function podiumLights(sections: readonly CounterSection[]): { open: Stretch[]; lights: { a: [number, number]; b: [number, number]; kinds: (CounterLight | null)[] }[] } {
   const open: Stretch[] = [];
   const lights: { a: [number, number]; b: [number, number]; kinds: (CounterLight | null)[] }[] = [];
   if (!sections.some((s) => s.sides)) return { open, lights };
   for (const p of podiumParts(sections)) {
-    if (locked.has(partKey(p))) continue;
     const kinds = lightsOf(sections, p);
     const [a, b] = partLine(p);
     if (kinds.every((k) => k === 'open')) open.push([a, b]);
@@ -183,10 +181,9 @@ export function keptSides(s: CounterSection, t: CounterSection, keep?: SectionSi
 
 /** What a counter has beside plates, for its line in the quote (K16, K17, K19): «2 åpne sider · 1 skyvedør · 3 hyller», a side
  *  of the outline counted once however many of its parts or light openings are open, a sliding door per light opening,
- *  and the shelves; `locked` parts are plates. */
-export function podiumHas(sections: readonly CounterSection[], locked: readonly string[] = []): string[] {
-  const off = new Set(locked);
-  const live = podiumParts(sections).filter((p) => !off.has(partKey(p)));
+ *  and the shelves. */
+export function podiumHas(sections: readonly CounterSection[]): string[] {
+  const live = podiumParts(sections);
   const sides = new Set(live.filter((p) => lightsOf(sections, p).includes('open')).map((p) => `${p.axis}${p.out}:${p.at}:${runOf(sections, p)}`));
   const doors = live.reduce((n, p) => n + lightsOf(sections, p).filter((k) => k === 'door').length, 0);
   const shelves = sections.reduce((n, s) => n + (s.shelves?.length ?? 0), 0);

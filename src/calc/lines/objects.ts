@@ -5,7 +5,6 @@
 import { counterBuildOf } from '../../domain/counterShape';
 import { innerCorners, podiumHeights, podiumSize } from '../../domain/podiums';
 import { podiumHas } from '../../domain/podiumFaces';
-import { lockedParts } from '../../domain/podiumLocks';
 import { soldAs, stockByArtnr, stockOf, stockSize } from '../../domain/podiumStock';
 import { profileMetres, type CounterBuild } from '../../foga/counter';
 import { RECIPES } from '../../foga/recipes';
@@ -44,8 +43,7 @@ export function objectLines(c: CalcContext): CalcLine[] {
 const HALF_PART = RECIPES.counter.module.half;
 
 /** What a counter or podium of Disker og podier costs (K13): its parts as K9, the work per section, whole when
- *  its longest side is over 500, else half, and per inner corner of its outline (placeholders). `b`: its build as it
- *  stands (podiumLocks.ts placedBuild: a side against a wall a plate, K16). */
+ *  its longest side is over 500, else half, and per inner corner of its outline (placeholders). `b`: its build. */
 export function podiumUses(o: PlacedObject, b: CounterBuild = counterBuildOf(o)): Use[] {
   const sections = o.sections ?? [];
   const longest = sections.map((x) => Math.max(x.x[1] - x.x[0], x.z[1] - x.z[0]));
@@ -87,12 +85,11 @@ function podiumLine(c: CalcContext, o: PlacedObject): CalcLine {
   const s = podiumSize(o);
   const top = (o.sections ?? []).reduce((a, x) => a + ((x.x[1] - x.x[0]) * (x.z[1] - x.z[0])) / 1e6, 0);
   // Two heights or more after a fusion: each, low to high (K12)
-  const locked = lockedParts(c.v, c.place, o);
-  const meta = [`bygget på stedet ${s.length} × ${s.depth} × ${podiumHeights(o).join('/')} mm`, ...podiumHas(o.sections ?? [], locked), ...(o.ral ? [`RAL ${o.ral}`] : [])].join(' · ');
+  const meta = [`bygget på stedet ${s.length} × ${s.depth} × ${podiumHeights(o).join('/')} mm`, ...podiumHas(o.sections ?? []), ...(o.ral ? [`RAL ${o.ral}`] : [])].join(' · ');
   // Its name from the product list: the product it is built as, «Disk» or «Podie» (Bjørn 14.11.2026)
   const name = hit?.product.name ?? o.product;
   // Each its own article, so each gets its own position number (calc/positions.ts)
-  return c.line(o.product, 1, { name, meta, strategy: 'sum', foga: true, quote: { key: podiumKey(o.id), name, lead: true } }, podiumUses(o, counterBuildOf(o, undefined, locked)), (hit?.variant.price ?? 0) * top);
+  return c.line(o.product, 1, { name, meta, strategy: 'sum', foga: true, quote: { key: podiumKey(o.id), name, lead: true } }, podiumUses(o, counterBuildOf(o)), (hit?.variant.price ?? 0) * top);
 }
 
 export function looseLines(c: CalcContext): CalcLine[] {

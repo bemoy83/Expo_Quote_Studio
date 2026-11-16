@@ -262,8 +262,6 @@ og kalkyle med 6560, som er et ferdig oppsett i det (K22).
   en del som flyttes til en ny linje blir plate), `podiumHas` (tilbudslinjen). `joined` slår bare sammen like sider.
   Skyvedør (K17): `CounterLayout.doors` (`doorStretches`), to plater `level: 'door'` i `layoutBuild` (`doorLeaves`),
   `takesDoor` (ikke på 250), dørstrekene i planen `DoorMarks` i `layers/ObjectLayer.tsx`, `ITEM.counterDoor` i kalkylen.
-  `domain/podiumLocks.ts`: `partLocks`/`lockedParts` (vegg eller annen disk nærmere enn 60 mm) og `placedBuild`, bygget
-  slik disken står, brukt av planen (`ObjectLayer`, `counterOutline`), 3D, kalkylen (`CalcContext.place`) og plukket.
 - Høyde per seksjon (K18): `setSectionHeight` i `domain/podiums.ts`, fra skuffen og grepet øverst i risset
   (`PodiumElevation`, `onHeight`, snapper til `HEIGHTS`).
 - Hyller og lysåpninger (K19, K16): `CounterSection.shelves`; `domain/podiumShelves.ts` (`withShelf`/`withoutShelf` deler

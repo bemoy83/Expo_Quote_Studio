@@ -1,5 +1,5 @@
 // Sider på disk (Byggeregel K16, trinn 2 PR 1): what each part of the outline of a counter of Disker og podier is, kept
-// with the part when the counter is stretched, fused or parted, and held to a plate against a wall or another counter.
+// with the part when the counter is stretched, fused or parted.
 import { describe, expect, it } from 'vitest';
 import { RULES } from '../rules/rules';
 import { counterBuildOf } from './counterShape';
@@ -7,7 +7,6 @@ import type { PlaceContext } from './objects';
 import { lightOf, partKey, partsOn, podiumHas, podiumLights, podiumParts, prunedSides, setLight, setPodiumLight } from './podiumFaces';
 import { gripPodium, joined, podiumGrips } from './podiumGrips';
 import { fusePodiums, inFrame, snapBeside } from './podiumLinks';
-import { lockedParts, partLocks, placedBuild } from './podiumLocks';
 import { podiumSides, setSectionHeight } from './podiums';
 import type { CounterSection, PlacedObject, Variant } from './types';
 import { createVariant } from './variant';
@@ -118,30 +117,7 @@ describe('the choice follows the part', () => {
   });
 });
 
-describe('held to a plate against a wall or another counter (K16)', () => {
-  const walled: Variant = { ...createVariant('A', { width: 6, depth: 5, type: 'row' }), objects: [] };
-
-  it('a part nearer than 60 mm to a wall is a plate, its choice kept for when it is moved out', () => {
-    // Back face 20 mm from the wall's face, then 100 mm out
-    const o = at(openBack(two), 3, 0.02 + 0.02 + 0.26);
-    const v = { ...walled, objects: [o] };
-    expect(lockedParts(v, ctx, o)).toHaveLength(2);
-    expect([...partLocks(v, ctx, o).values()]).toEqual(['wall', 'wall']);
-    expect(placedBuild(v, ctx, o).plates).toHaveLength(counterBuildOf({ sections: two }).plates.length);
-    const away = { ...o, y: 0.04 + 0.06 + 0.26 };
-    expect(lockedParts({ ...walled, objects: [away] }, ctx, away)).toEqual([]);
-    expect(podiumHas(away.sections!)).toEqual(['1 åpen side']);
-    expect(podiumHas(o.sections!, lockedParts(v, ctx, o))).toEqual([]);
-  });
-
-  it('against another counter face to face; a counter only at its corner does not lock it', () => {
-    const o = at(openBack(two), 3, 2.5);
-    const behind: PlacedObject = { id: 'b', product: 'P', x: 2.74, y: 2.5 - 0.52, rot: 0, sections: [sec(-500, 500, -250, 250)] };
-    expect([...partLocks(vOf(o, behind), ctx, o).values()]).toEqual(['counter']);
-    const corner: PlacedObject = { ...behind, x: 2.24 - 0.51 };
-    expect(partLocks(vOf(o, corner), ctx, o).size).toBe(0);
-  });
-
+describe('the quote (K16)', () => {
   it('counts sides, not parts, for the quote', () => {
     expect(podiumHas(openBack(two))).toEqual(['1 åpen side']);
     const ends = podiumParts(two).filter((p) => p.axis === 'x');
