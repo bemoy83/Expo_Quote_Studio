@@ -36,6 +36,8 @@ export interface Derived {
   shelves?: ShelfSpec;
   /** Counters drawn and built on site (domain/counters.ts). */
   counters?: CounterParts;
+  /** Inserts 700 under counters over a foot plate (domain/counters.ts counterInserts, K23). */
+  counterInserts?: number;
 }
 
 /** Takdrager lengths, post centre to post centre, mm. A length in whole and half metres is never cut to it (Byggeregel
@@ -65,6 +67,7 @@ export function structureOf(d: Derived): FogaStructure {
     ...(d.barePosts ? { barePosts: d.barePosts } : {}),
     ...(d.shelves?.boards ? { shelves: d.shelves } : {}),
     ...(d.counters ? { counters: d.counters } : {}),
+    ...(d.counterInserts ? { counterInserts: d.counterInserts } : {}),
   };
 }
 

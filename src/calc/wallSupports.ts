@@ -15,6 +15,12 @@ export interface WallSupport {
   orientation: 'h' | 'v';
 }
 
+/** The foot plate 750 under a post, on the plan (m): `across` the wall, `along` it, centred on the post (S2). */
+export function footPlateRect(f: WallSupport, foot: { along: number; across: number }): { x0: number; y0: number; x1: number; y1: number } {
+  const [hx, hy] = f.orientation === 'h' ? [foot.along / 2000, foot.across / 2000] : [foot.across / 2000, foot.along / 2000];
+  return { x0: f.at[0] - hx, y0: f.at[1] - hy, x1: f.at[0] + hx, y1: f.at[1] + hy };
+}
+
 /** A straight run of wall modules, post by post from its low end. */
 export interface Run {
   orientation: 'h' | 'v';
