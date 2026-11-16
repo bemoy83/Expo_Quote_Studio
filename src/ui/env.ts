@@ -5,12 +5,13 @@ import { builtProduct } from '../catalog/podium'
 import { applyEdits, NO_EDITS, type CatalogEdits } from '../catalog/edits'
 import { displayName, indexCatalog, placeContext } from '../catalog/lookup'
 import { doorFloors, type FloorBoxes } from '../domain/doors'
-import { objectBoxes } from '../domain/objects'
+import { objectBoxes, type PlaceContext } from '../domain/objects'
+import { calc } from '../calc/calc'
 import type { Product } from '../catalog/types'
 import { EXAMPLE_BASIS, parseBasis, serializeBasis, type CostBasis } from '../cost/basis'
 import { readHistory, withEntry, type HistoryEntry } from '../cost/history'
 import { soldAs } from '../domain/podiumStock'
-import type { PlacedObject } from '../domain/types'
+import type { PlacedObject, Point, Variant } from '../domain/types'
 import { pricingFrom } from '../pricing/data'
 import { KEYS, loadCostBasis, loadJson, saveCostBasis, saveJson } from '../persistence/storage'
 import { ownInFrame, RULES, type InFrameParams, type Rules } from '../rules/rules'
@@ -25,7 +26,7 @@ export let edits: CatalogEdits = loadEdits()
 export let rules: Rules = withInFrame(ownInFrame(loadJson<Partial<InFrameParams>>(KEYS.inFrame, {}), true))
 export let catalog = applyEdits(DEFAULT_CATALOG, edits)
 export let idx = indexCatalog(catalog)
-export let place = placeContext(rules, catalog)
+export let place = withPosts(placeContext(rules, catalog))
 /** The kostgrunnlag the cost engine runs on: a file loaded in this browser, else the example. */
 export let costBasis: CostBasis = loadCostBasis() ?? EXAMPLE_BASIS
 /** The price items, with wall and takdrager costed from the kostgrunnlag. */
@@ -40,7 +41,7 @@ export const subscribe = (fn: () => void) => {
 export const getVersion = () => version
 const changed = () => {
   idx = indexCatalog(catalog)
-  place = placeContext(rules, catalog)
+  place = withPosts(placeContext(rules, catalog))
   version++
   listeners.forEach((fn) => fn())
 }
@@ -125,3 +126,20 @@ export const artnrName = (artnr: string) => {
 /** The name of a counter of Disker og podier: the standard item it is (K22), else the product it is built as on site,
  *  «Disk» or «Podie» (K13). */
 export const counterName = (o: Pick<PlacedObject, 'product' | 'sections'>) => artnrName(soldAs(o))
+
+/** The posts of a variant's walls and takdrager (calc), kept while what they stand on is unchanged: a drag moves only
+ *  objects, so the walls, beams, textiles and stand stay the same arrays and the posts are not counted again. */
+const postCache = new WeakMap<Variant['walls'], { keys: unknown[]; posts: readonly Point[] }>()
+function postsOf(v: Variant): readonly Point[] {
+  const keys = [v.stand, v.innerBeams, v.noBeams, v.textiles, v.freeTextiles, v.openings, rules, catalog]
+  const hit = postCache.get(v.walls)
+  if (hit && hit.keys.every((k, i) => k === keys[i])) return hit.posts
+  const posts = calc({ ...v, objects: [] }, rules, catalog).posts
+  postCache.set(v.walls, { keys, posts })
+  return posts
+}
+
+/** The place context of the app: with the posts of takdrager standing free (Byggeregel K10, Bjørn 16.11.2026). */
+function withPosts(c: PlaceContext): PlaceContext {
+  return { ...c, posts: postsOf }
+}

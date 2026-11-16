@@ -1,7 +1,7 @@
 // A counter of Disker og podier against a stand wall (Byggeregel K10, Bjørn 16.11.2026): it lies flush against the
 // wall, never into it, and only the part facing the wall stands against it (K16); a standard counter never (K22).
 import { describe, expect, it } from 'vitest';
-import { conflicts, moveObject, objectBoxes } from '../domain/objects';
+import { blockers, conflicts, moveObject, objectBoxes } from '../domain/objects';
 import { podiumAt } from '../domain/podiums';
 import { partLocks } from '../domain/podiumLocks';
 import { parse } from '../persistence/file';
@@ -36,3 +36,19 @@ describe('a counter moved against the back wall', () => {
     expect([...partLocks(v, place, o).keys()].map((k) => k.split(':')[0]).sort()).toEqual(['z-1', 'z-1']);
   });
 });
+
+describe('a counter in the corner of a takdrager’s free post (Bjørn 16.11.2026)', () => {
+  // Example 02: the standard takdrager along the open sides stand on a post of their own at (0, 4)
+  it('is in the way of what stands there', () => {
+    expect(blockers(v0, place).filter((b) => b.kind === 'post').map((b) => [(b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2])).toEqual([[0, 4]]);
+  });
+  it('a counter pushed into the corner stands clear of it, not over it', () => {
+    const c = podiumAt(v0, place, { product: '6571', stock: '6560' }, [0.6, 3.6]);
+    if ('error' in c) throw new Error(c.error);
+    const v = moveObject(c.v, place, c.id, 0.5, 3.75);
+    expect(conflicts(v, place).has(c.id)).toBe(false);
+    const b = objectBoxes(place, v.objects.find((x) => x.id === c.id)!)[0];
+    expect(b.x0 >= 0.02 - 1e-9 || b.y1 <= 3.98 + 1e-9).toBe(true);
+  });
+});
+

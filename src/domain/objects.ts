@@ -3,7 +3,7 @@
 import type { Footprint, SetPiece } from '../catalog/types';
 import type { Rules } from '../rules/rules';
 import { pointAlong, wallDirection, moduleEnd, moduleStart } from './grid';
-import type { PlacedObject, Variant } from './types';
+import type { PlacedObject, Point, Variant } from './types';
 import { builtModules } from './walls';
 import { doorSwing, SWING_CLEAR } from './doors';
 import { nextId } from './ids';
@@ -16,7 +16,7 @@ export interface Box {
   y0: number;
   x1: number;
   y1: number;
-  kind: 'wall' | 'door' | 'object';
+  kind: 'wall' | 'door' | 'object' | 'post';
   id?: string;
 }
 
@@ -28,6 +28,9 @@ export interface PlaceContext {
   swings: (product: string) => boolean;
   /** A counter (Byggeregel K1): built of Foga profiles, of Disker og podier or the counter in stock (K10, K22). */
   isCounter: (product: string) => boolean;
+  /** The posts that stand on the floor of their own, outside the walls: under takdrager that follow the stand walls or
+   *  are drawn (T12), plan m. Furniture and counters keep clear of them. Omitted: none known (pure domain tests). */
+  posts?: (v: Variant) => readonly Point[];
 }
 
 const GAP = 0.02;
@@ -113,6 +116,11 @@ export function blockers(v: Variant, ctx: PlaceContext, skipId?: string): Box[] 
     const xs = [a[0], b[0], a[0] + n[0] * r, b[0] + n[0] * r];
     const ys = [a[1], b[1], a[1] + n[1] * r, b[1] + n[1] * r];
     out.push({ x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys), kind: 'door', id: o.id });
+  }
+  // A takdrager's own post standing free (94 with its foot, T12): outside the wall boxes it is in the way too
+  for (const [x, y] of ctx.posts?.(v) ?? []) {
+    const p = { x0: x - half, y0: y - half, x1: x + half, y1: y + half };
+    if (!out.some((r) => r.kind === 'wall' && p.x0 >= r.x0 - 1e-9 && p.x1 <= r.x1 + 1e-9 && p.y0 >= r.y0 - 1e-9 && p.y1 <= r.y1 + 1e-9)) out.push({ ...p, kind: 'post' });
   }
   const self = skipId !== undefined ? v.objects.find((o) => o.id === skipId) : undefined;
   const own = self?.set;
