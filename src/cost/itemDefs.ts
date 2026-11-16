@@ -3,7 +3,7 @@
 // examples here are what the app ships with. Kostmodell: docs/kostmodell.md.
 import type { ItemRecipe, PriceItem } from './items';
 import { railLengths } from '../domain/shelves/corners';
-import { counterBuild, layoutBuild, profileMetres, STOCK_OPEN, stockCounter, type CounterBuild } from '../foga/counter';
+import { layoutBuild, profileMetres, type CounterBuild } from '../foga/counter';
 import { counterBuildOf } from '../domain/counterShape';
 import { outerHeight } from '../domain/podiums';
 import { STOCK_COUNTERS, stockSize } from '../domain/podiumStock';
@@ -92,26 +92,23 @@ export type ItemDef = Pick<PriceItem, 'id' | 'name' | 'unit' | 'transfer'>;
 
 const def = (id: string, name: string, unit: PriceItem['unit'], transfer: PriceItem['transfer'] = 'leie'): ItemDef => ({ id, name, unit, transfer });
 
-/** The counter in stock (6560). */
-const STOCK = RECIPES.counter.stock;
 
-/** The standard counters and podier (K22), each ready built: its outer size and build. 6560 as the stock build. */
+/** The standard counters and podier (K22), each ready built: its outer size and build. */
 const READY = STOCK_COUNTERS.map((s) => {
   const z = stockSize(s);
   const what = s.func === 'podier' ? 'Podie' : 'Bardisk';
-  return { s, z, what, b: s.artnr === '6560' ? stockCounter({ length: STOCK.length, depth: STOCK.depth }) : counterBuildOf({ sections: [...s.sections] }) };
+  return { s, z, what, b: counterBuildOf({ sections: [...s.sections] }) };
 });
 
-/** The profiles a counter built on site is built of (K8), and its boards: those of a whole part and a half, as a straight
- *  1,5 m builds them, and the top of every section of Disker og podier, 250 to 1000 c/c each way (K10) (long × short). */
+/** The profiles a counter built on site is built of (K8), and its boards: the top of every section of Disker og podier,
+ *  250 to 1000 c/c each way (K10) (long × short). */
 const C = RECIPES.counter;
 const COUNTER_PROFILES = [...new Set([...Object.values(C.nodes), C.rail, C.innerRail.code, C.bottomRail])];
 const SECTION_CC = [250, 500, 750, 1000];
 const COUNTER_BOARDS = [
   ...new Map(
     [
-      ...counterBuild(C, { length: C.module.whole + C.module.half + 2 * C.face, depth: STOCK.depth, open: STOCK_OPEN }).boards,
-      ...SECTION_CC.flatMap((a) => SECTION_CC.filter((b) => b <= a).flatMap((b) => layoutBuild(C, { cells: [{ x: [0, a], z: [0, b], h: C.top }], open: [] }, 'tight').boards)),
+      ...SECTION_CC.flatMap((a) => SECTION_CC.filter((b) => b <= a).flatMap((b) => layoutBuild(C, { cells: [{ x: [0, a], z: [0, b], h: C.top }], open: [] }).boards)),
     ].map((b) => {
       const size = [Math.max(b.w, b.d), Math.min(b.w, b.d)] as const;
       return [size.join('x'), size] as const;

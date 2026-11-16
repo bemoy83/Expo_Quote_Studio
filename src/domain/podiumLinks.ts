@@ -4,7 +4,7 @@
 // standing against each other; two counters standing against each other are linked into one. Pure, mm in a counter's
 // own frame, m on the plan.
 import { RECIPES } from '../foga/recipes';
-import { toLocal, toPlan, turn } from './counterShape';
+import { snap, toLocal, toPlan, turn } from './counterShape';
 import { nextId } from './ids';
 import { turnedSides } from './podiumFaces';
 import type { PlaceContext } from './objects';
@@ -15,7 +15,7 @@ import type { CounterSection, PlacedObject, Point, Variant } from './types';
 const FACE = RECIPES.counter.face;
 /** Node lines of two counters standing against each other: face against face. */
 const APART = 2 * FACE;
-const mm = (n: number) => Math.round(n * 1000) / 1000 + 0;
+const mm = (n: number) => snap(n) + 0;
 const isPodium = (o: PlacedObject) => !!o.sections?.length;
 
 /** The sections of `o` in the frame of `c`, mm, their sides turned with them (K16), keeping their height and shelves (K19). */

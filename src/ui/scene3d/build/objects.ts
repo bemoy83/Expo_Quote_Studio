@@ -24,7 +24,7 @@ export function buildObjects(c: BuildContext) {
     root.add(g)
     const counter = r.product.counter
     if (counter) {
-      buildCounter(c, g, counterBuildOf(o, counter), counterRal(o), tag, warn)
+      buildCounter(c, g, counterBuildOf(o), counterRal(o), tag, warn)
       if (o.sections) buildPodiumDecor(c, g, o.sections, tag, warn)
       const inserts = c.res.inserts?.get(o.id)
       if (inserts) buildInserts(c, g, inserts, tag)

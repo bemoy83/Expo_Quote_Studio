@@ -13,29 +13,17 @@ import { frontRot } from './counters';
 import { stockByArtnr, stockSections } from './podiumStock';
 import { nextId } from './ids';
 import { addAt, anywhere, counterSpot, gapOf, blockers, COUNTER_STOCK_RAL, footprintBox, hitsAny, objectBoxes, objectFootprint, type PlaceContext } from './objects';
-import { bounds, covered, edgeRuns, EPS, GRID, overlaps, withSections, type EdgeRun, type Range } from './podiumSections';
+import { bounds, covered, edgeRuns, EPS, GRID, overlaps, runNodes, withSections, type EdgeRun, type Range } from './podiumSections';
 import type { CounterSection, PlacedObject, Point, Variant } from './types';
 import { axisSpan, rebaseAxis, type DrawAxis } from './drawAxis';
 
 const R = RECIPES.counter;
 export { GRID };
-/** The largest section each way, mm c/c (K10). */
-export const SECTION_MAX = R.module.whole;
 /** The section the pen shows and a click stores, mm c/c; a drag grows the counter in steps of this (250 with Shift). */
 const START = 500;
 /** Heights a section can have, CC mm (K12): Høyde in the quick picks; the highest when none is picked. */
 export const HEIGHTS = [250, 500, 750, 1000] as const;
 export const HEIGHT = 1000;
-
-/** Where the nodes of a run from `a` to `b` fall (K10): whole metres from the side it starts from, the rest last. */
-export function runNodes(a: number, b: number, from: 'lo' | 'hi' = 'lo'): number[] {
-  const steps = [0];
-  for (let at = 0; b - a - at > EPS; ) {
-    at += Math.min(SECTION_MAX, b - a - at);
-    steps.push(at);
-  }
-  return from === 'lo' ? steps.map((t) => a + t) : steps.map((t) => b - t).reverse();
-}
 
 /** A rectangle from `x` to `z` as sections (K10): each way whole metres from the side the drag started, the rest last. */
 export function rectSections(x: Range, z: Range, from: { x: 'lo' | 'hi'; z: 'lo' | 'hi' }, h = HEIGHT): CounterSection[] {

@@ -1,10 +1,13 @@
 // The sections of a counter of Disker og podier as rectangles on the 250 grid (Byggeregler K10–K15): the geometry the
 // pen (podiums.ts), the grips (podiumGrips.ts) and the links (podiumLinks.ts) share. Pure, mm in the counter's frame.
+import { RECIPES } from '../foga/recipes';
 import type { CounterSection, Variant } from './types';
 
 export const EPS = 1e-6;
 /** The grid sections are drawn on, mm (K10). */
 export const GRID = 250;
+/** The largest section each way, mm c/c (K10). */
+export const SECTION_MAX = RECIPES.counter.module.whole;
 export type Range = readonly [number, number];
 export type Axis = 'x' | 'z';
 
@@ -26,6 +29,16 @@ export const lineOf = (axis: Axis, at: number, a: number, b: number): [[number, 
 export const shared = (p: Range, q: Range) => Math.min(p[1], q[1]) - Math.max(p[0], q[0]);
 
 /** The box round some sections, node to node. */
+/** Where the nodes of a run from `a` to `b` fall (K7, K10): whole metres from the side it starts from, the rest last. */
+export function runNodes(a: number, b: number, from: 'lo' | 'hi' = 'lo'): number[] {
+  const steps = [0];
+  for (let at = 0; b - a - at > EPS; ) {
+    at += Math.min(SECTION_MAX, b - a - at);
+    steps.push(at);
+  }
+  return from === 'lo' ? steps.map((t) => a + t) : steps.map((t) => b - t).reverse();
+}
+
 export function bounds(sections: readonly CounterSection[]): { x: [number, number]; z: [number, number] } {
   return {
     x: [Math.min(...sections.map((s) => s.x[0])), Math.max(...sections.map((s) => s.x[1]))],

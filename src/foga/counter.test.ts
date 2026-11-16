@@ -1,11 +1,22 @@
-// Counter 6560 against Bjørn's STL (11.11.2026): 1020 × 520 × 1040, Byggeregler K1–K5.
+// Counter 6560 against Bjørn's STL (11.11.2026): 1020 × 520 × 1040, Byggeregler K1–K5, built as one section of
+// Disker og podier (K22): CC 1000, a shelf at CC 750, open at the back.
 import { describe, expect, it } from 'vitest';
-import { counterBuild, layoutBuild, profileMetres, runBreaks, sideOf, STOCK_OPEN } from './counter';
+import { counterParts, layoutBuild, profileMetres, type CounterCell, type CounterLayout } from './counter';
 import { RECIPES } from './recipes';
 
 const r = RECIPES.counter;
-const b = counterBuild(r, { ...r.stock, open: STOCK_OPEN });
+type Pt = [number, number];
+/** A part as 6560's, from x to z (node to node, mm). */
+const cell = (x: Pt, z: Pt): CounterCell => ({ x, z, h: r.top, shelves: [r.middle] });
+/** A straight counter `cc` long between its end nodes, centred, whole metres from the left, open at the back (K7). */
+const straight = (cc: number, open = true): CounterLayout => {
+  const xs = cc > 1000 ? [-cc / 2, 1000 - cc / 2, cc / 2] : [-cc / 2, cc / 2];
+  return { cells: xs.slice(1).map((x, i) => cell([xs[i], x], [-250, 250])), open: open ? [[[-cc / 2, -250], [cc / 2, -250]]] : [] };
+};
+const b = layoutBuild(r, straight(1000));
 const span = (x: readonly [number, number]) => x[1] - x[0];
+const sideOf = (out: readonly [number, number]) => (out[1] > 0 ? 'front' : out[1] < 0 ? 'back' : out[0] < 0 ? 'left' : 'right');
+const sorted = (xs: string[]) => [...xs].sort();
 
 describe('counter 6560 (K1–K5)', () => {
   it('has a 92L in each corner, full height (K2)', () => {
@@ -31,13 +42,13 @@ describe('counter 6560 (K1–K5)', () => {
   });
 
   it('has the wall plate in the channels of the front and both ends, split at the middle rail (K4)', () => {
-    expect(b.plates.map((p) => `${sideOf(p.out)} ${p.w} × ${p.h}`)).toEqual([
-      'front 976 × 726', 'front 976 × 226', 'left 476 × 726', 'left 476 × 226', 'right 476 × 726', 'right 476 × 226',
+    expect(sorted(b.plates.map((p) => `${sideOf(p.out)} ${p.w} × ${p.h}`))).toEqual([
+      'front 976 × 226', 'front 976 × 726', 'left 476 × 226', 'left 476 × 726', 'right 476 × 226', 'right 476 × 726',
     ]);
-    const front = b.plates[0].box;
-    expect(front.z).toEqual([248.5, 251.5]);
-    expect(front.y).toEqual([30, 756]);
-    expect(b.plates[1].box.y).toEqual([780, 1006]);
+    const front = b.plates.filter((p) => sideOf(p.out) === 'front').sort((p, q) => p.box.y[0] - q.box.y[0]);
+    expect(front[0].box.z).toEqual([248.5, 251.5]);
+    expect(front[0].box.y).toEqual([30, 756]);
+    expect(front[1].box.y).toEqual([780, 1006]);
     expect(b.plates.some((p) => sideOf(p.out) === 'back')).toBe(false);
   });
 
@@ -52,7 +63,7 @@ describe('counter 6560 (K1–K5)', () => {
   });
 
   it('closes the sides it is not told to leave open: plates and a bottom rail on each, the rails all round whatever', () => {
-    const island = counterBuild(r, { ...r.stock, open: [] });
+    const island = layoutBuild(r, straight(1000, false));
     expect(island.plates).toHaveLength(8);
     expect(island.profiles.filter((x) => x.role === 'bottomRail').map((x) => x.len)).toEqual([960, 960, 460, 460]);
     expect(island.profiles.filter((x) => x.role === 'rail')).toHaveLength(8);
@@ -65,15 +76,8 @@ describe('drawn counters: nodes 500 or 1000 apart, the profile in a node by the 
   const posts = (x: ReturnType<typeof layoutBuild>) => x.profiles.filter((p) => p.role === 'post');
   const codes = (x: ReturnType<typeof layoutBuild>) => posts(x).map((p) => p.code).sort();
 
-  it('builds 1,0 m as the counter in stock, and only adds nodes past it', () => {
-    expect(runBreaks(r, 1000)).toEqual([0, 1000]);
-    expect(runBreaks(r, 1500)).toEqual([0, 1000, 1500]);
-    expect(runBreaks(r, 2000)).toEqual([0, 1000, 2000]);
-    expect(runBreaks(r, 500)).toEqual([0, 500]);
-  });
-
   it('joins 1,5 m with a 93 front and back: whole metre first, then a half, rails 960 and 460', () => {
-    const x = counterBuild(r, { length: 1520, depth: 520, open: STOCK_OPEN });
+    const x = layoutBuild(r, straight(1500));
     expect([x.length, x.depth]).toEqual([1520, 520]);
     expect(codes(x)).toEqual(['92L', '92L', '92L', '92L', '93', '93']);
     // The 93 in the front: 40 along, 30 deep, flush with the 92L
@@ -83,8 +87,8 @@ describe('drawn counters: nodes 500 or 1000 apart, the profile in a node by the 
     expect(outer).toEqual([460, 460, 460, 460, 460, 460, 460, 460, 960, 960, 960, 960]);
     // Inside, between the two parts: a rail that carries a top and a shelf on both sides
     expect(x.profiles.filter((p) => p.code === r.innerRail.code && p.role === 'rail').map((p) => p.len)).toEqual([460, 460]);
-    expect(x.plates.map((p) => `${sideOf(p.out)} ${p.w}`)).toEqual(['front 976', 'front 976', 'left 476', 'left 476', 'front 476', 'front 476', 'right 476', 'right 476']);
-    expect(x.boards.map((b) => `${b.role} ${b.w} × ${b.d}`)).toEqual(['shelf 976 × 476', 'top 976 × 476', 'shelf 476 × 476', 'top 476 × 476']);
+    expect(sorted(x.plates.map((p) => `${sideOf(p.out)} ${p.w}`))).toEqual(['front 476', 'front 476', 'front 976', 'front 976', 'left 476', 'left 476', 'right 476', 'right 476']);
+    expect(sorted(x.boards.map((b) => `${b.role} ${b.w} × ${b.d}`))).toEqual(['shelf 476 × 476', 'shelf 976 × 476', 'top 476 × 476', 'top 976 × 476']);
     expect(x.profiles.filter((p) => p.role === 'bottomRail').map((p) => p.len).sort((a, b) => a - b)).toEqual([460, 460, 460, 960]);
   });
 
@@ -92,8 +96,8 @@ describe('drawn counters: nodes 500 or 1000 apart, the profile in a node by the 
     // Bjørn 12.11.2026: one counter's short side joined to the other's long side
     const l = layoutBuild(r, {
       cells: [
-        { x: [-500, 500], z: [-250, 250] },
-        { x: [-500, 0], z: [-1250, -250] },
+        cell([-500, 500], [-250, 250]),
+        cell([-500, 0], [-1250, -250]),
       ],
       open: [
         [[0, -250], [500, -250]],
@@ -108,7 +112,15 @@ describe('drawn counters: nodes 500 or 1000 apart, the profile in a node by the 
     // Every rail 460 or 960 whatever stands in the node
     expect(new Set(l.profiles.filter((p) => p.role !== 'post').map((p) => p.len))).toEqual(new Set([460, 960]));
     // Closed: the front, both ends of the first, the outer side and the end of the second
-    expect(l.plates.filter((p) => p.level === 'lower').map((p) => `${sideOf(p.out)} ${p.w}`).sort()).toEqual(['back 476', 'front 976', 'left 476', 'left 976', 'right 476']);
+    expect(l.plates.filter((p) => p.box.y[0] < r.middle).map((p) => `${sideOf(p.out)} ${p.w}`).sort()).toEqual(['back 476', 'front 976', 'left 476', 'left 976', 'right 476']);
     expect(l.boards).toHaveLength(4);
+  });
+});
+
+describe('picking a counter built on site (K7, K12)', () => {
+  it('names each post by its own length: a podium at CC 500 picks 540 mm posts', () => {
+    const low: CounterLayout = { cells: [{ x: [-250, 250], z: [-250, 250], h: 500, shelves: [] }], open: [] };
+    expect(counterParts(layoutBuild(r, low), '9010').posts).toEqual({ '92L|540': 4 });
+    expect(counterParts(b, '9010').posts).toEqual({ '92L|1040': 4 });
   });
 });

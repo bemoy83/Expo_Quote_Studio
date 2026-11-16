@@ -318,8 +318,11 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   const larger = (a: string, b: string) => sizes(b)[0] - sizes(a)[0] || sizes(b)[1] - sizes(a)[1];
   const split = (k: string) => k.split('|') as [string, string];
   const of = (m?: Record<string, number>) => Object.entries(m ?? {});
-  for (const [code, qty] of of(cp?.posts).sort(([a], [b]) => a.localeCompare(b)))
-    put(BOM_GROUP.counters, `post|${code}`, { artnr: '', name: `Diskstolpe ${code}, ${dk.height} mm`, detail: `${code} (${fogaPart(code).artnr}) × ${dk.height} mm`, preassembled: false }, qty);
+  // Posts by profile, then longest first: a podium's posts are as high as its parts (K12)
+  for (const [k, qty] of of(cp?.posts).sort(([a], [b]) => split(a)[0].localeCompare(split(b)[0]) || +split(b)[1] - +split(a)[1])) {
+    const [code, len] = split(k);
+    put(BOM_GROUP.counters, `post|${k}`, { artnr: '', name: `Diskstolpe ${code}, ${len} mm`, detail: `${code} (${fogaPart(code).artnr}) × ${len} mm`, preassembled: false }, qty);
+  }
   for (const [k, qty] of of(cp?.rails).sort(([a], [b]) => split(a)[0].localeCompare(split(b)[0]) || +split(b)[1] - +split(a)[1])) {
     const [code, len] = split(k);
     const name = code === dk.bottomRail ? 'Bunnskinne' : code === dk.innerRail.code ? 'Tverrskinne' : 'Skinne';

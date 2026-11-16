@@ -63,7 +63,7 @@ export function ObjectLayer(props: {
           return (
             <g key={o.id}>
               <CounterShape o={o} fill={col} stroke={stroke} bad={isBad} sel={sel} gone={g ? hatch : null} opacity={op} motifs={motifs} />
-              <CounterLines b={counterBuildOf(o, counter)} at={o} divide={linePx(sc, 0.75)} opacity={op} />
+              <CounterLines b={counterBuildOf(o)} at={o} divide={linePx(sc, 0.75)} opacity={op} />
             </g>
           )
         // Turned round its middle: also between the quarters (15° steps, the turn grip)

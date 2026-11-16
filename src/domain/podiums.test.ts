@@ -1,7 +1,8 @@
 // Disker og podier (Byggeregler K10–K12): sections on the 250 grid, built tight, drawn from one section by a drag.
 import { describe, expect, it } from 'vitest';
 import { counterBuildOf } from './counterShape';
-import { dragLike, drawPodium, dragSpan, innerCorners, podiumAt, funcByShape, podiumSides, podiumSize, rebaseDrag, rectSections, runNodes, startDrag, type PodiumDraw, type PodiumDrag } from './podiums';
+import { runNodes } from './podiumSections';
+import { dragLike, drawPodium, dragSpan, innerCorners, podiumAt, funcByShape, podiumSides, podiumSize, rebaseDrag, rectSections, startDrag, type PodiumDraw, type PodiumDrag } from './podiums';
 import { moveObject, objectBoxes, type PlaceContext } from './objects';
 import { createVariant } from './variant';
 import { RULES } from '../rules/rules';
