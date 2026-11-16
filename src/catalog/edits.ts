@@ -1,6 +1,6 @@
 // Edits to the product list (Produktliste), stored apart from the built-in catalog so code updates to the
 // example catalog still come through. Pure: apply, list as rows, CSV export and import.
-import { FALLBACK_SUBGROUP, isSubgroup, resolveGroup, subgroupByName } from './groups';
+import { FALLBACK_SUBGROUP, resolveGroup, subgroupByName } from './groups';
 import type { Catalog, Product, ProductVariant, Unit } from './types';
 import { toCsvText } from '../persistence/csv';
 
@@ -42,9 +42,7 @@ export function applyEdits(base: Catalog, e: CatalogEdits): Catalog {
     const single = p.variants.length === 1 ? e.variants[p.variants[0].artnr]?.name : undefined;
     return { ...p, ...(single !== undefined ? { name: single } : {}), ...(short !== undefined ? { short } : {}), variants };
   });
-  // Added products saved before the shared grouping have no valid group: they go to the fallback
-  const added = e.added.map((p) => (isSubgroup(p.group) ? p : { ...p, group: FALLBACK_SUBGROUP }));
-  return { ...base, products: [...products, ...added] };
+  return { ...base, products: [...products, ...e.added] };
 }
 
 export interface CatalogRow {

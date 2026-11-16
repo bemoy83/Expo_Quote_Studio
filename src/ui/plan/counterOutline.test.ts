@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { PlacedObject } from '../../domain/types'
 import { place } from '../env'
 import { counterOutline } from './counterOutline'
-import { asSections } from '../../domain/podiumStock'
+import { ellCounter } from '../../test/counterSections'
 
 const at = (o: Partial<PlacedObject>): PlacedObject => ({ id: 'd', product: '6560', x: 2, y: 2, rot: 0, ...o })
 const len = (s: { a: readonly number[]; b: readonly number[] }) => Math.round(Math.hypot(s.b[0] - s.a[0], s.b[1] - s.a[1]) * 1000)
@@ -20,16 +20,7 @@ describe('a counter outline in the plan (K7, K8)', () => {
   })
 
   it('an L: one figure of six sides, no side where the pieces meet; open are the back and the inside', () => {
-    // As Disker drew it, made sections when the sketch opens (K22)
-    const o = asSections(
-      at({
-        pieces: [
-          { a: [-500, 0], b: [500, 0], back: [0, -1] },
-          { a: [-250, -250], b: [-250, -1250], back: [1, 0] },
-        ],
-      }),
-      '6571',
-    )
+    const o = at({ product: '6571', sections: ellCounter() })
     const s = counterOutline(place, o)
     expect(s).toHaveLength(6)
     expect(s.reduce((n, x) => n + len(x), 0)).toBe(2 * (1020 + 1520))

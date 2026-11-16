@@ -5,8 +5,8 @@ import { describe, expect, it } from 'vitest'
 import { calc } from '../../../calc/calc'
 import { createVariant } from '../../../domain/variant'
 import { counterBuildOf } from '../../../domain/counterShape'
-import { asSections } from '../../../domain/podiumStock'
-import type { CounterPiece, Variant } from '../../../domain/types'
+import type { CounterSection, PlacedObject, Variant } from '../../../domain/types'
+import { ellCounter, straightCounter } from '../../../test/counterSections'
 import { catalog, rules } from '../../env'
 import { build, type Tag } from '../build'
 
@@ -65,9 +65,9 @@ describe('counter in 3D', () => {
     expect([size.min.x, size.max.x, size.min.z, size.max.z].map(mm)).toEqual([-260, 260, -510, 510])
   })
 
-  /** The meshes of a counter of these pieces as an old sketch with Disker had it, as sections (K22), and that counter. */
-  const drawn = (...pieces: CounterPiece[]) => {
-    const o = asSections({ id: 'i1', product: '6560', x: 2, y: 2, rot: 0, pieces }, '6571')
+  /** The meshes of a counter of these sections built on site, and that counter. */
+  const drawn = (sections: CounterSection[]) => {
+    const o: PlacedObject = { id: 'i1', product: '6571', x: 2, y: 2, rot: 0, sections }
     const v: Variant = { ...createVariant('A', { width: 4, depth: 4, type: 'row' }), walls: [], objects: [o] }
     const g = build(v, calc(v, rules, catalog))
     g.updateMatrixWorld(true)
@@ -85,7 +85,7 @@ describe('counter in 3D', () => {
   })
 
   it('draws every profile of a drawn counter in its box: 93 in the joints, 94 across between the parts (K8)', () => {
-    const d = drawn({ a: [-1250, 0], b: [1250, 0], back: [0, -1] })
+    const d = drawn(straightCounter(2500))
     expect(d.b.length).toBe(2520)
     expect(d.ms.filter((m) => m.geometry.name.startsWith('foga-94'))).toHaveLength(4)
     const { drawn: got, built } = boxes(d)
@@ -94,7 +94,7 @@ describe('counter in 3D', () => {
   })
 
   it('turns a 93 in a joint with its closed face out and its third channel in, toward the rail across', () => {
-    const d = drawn({ a: [-750, 0], b: [750, 0], back: [0, -1] })
+    const d = drawn(straightCounter(1500))
     const tee = d.ms.find((m) => m.geometry.name.startsWith('foga-93') && d.at(m)[3] === 1040 && d.at(m)[5] === 260)!
     const pts = (() => {
       const p = tee.geometry.attributes.position
@@ -107,7 +107,7 @@ describe('counter in 3D', () => {
   })
 
   it('draws a drawn L the same way (Bjørn 12.11.2026)', () => {
-    const d = drawn({ a: [-500, 0], b: [500, 0], back: [0, -1] }, { a: [-250, -250], b: [-250, -1250], back: [1, 0] })
+    const d = drawn(ellCounter())
     expect(d.ms).toHaveLength(d.b.profiles.length)
     const { drawn: got, built } = boxes(d)
     expect(got).toEqual(built)

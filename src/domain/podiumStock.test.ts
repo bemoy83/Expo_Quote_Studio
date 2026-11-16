@@ -11,13 +11,11 @@ import { counterBuildOf } from './counterShape';
 import { setPodiumPrint } from './podiumDecor';
 import { setPodiumLight, partKey, podiumParts } from './podiumFaces';
 import { addStockAnywhere, podiumAt } from './podiums';
-import { asSections, soldAs, stockOf, stockSections } from './podiumStock';
+import { soldAs, stockOf, stockSections } from './podiumStock';
 import { removeObjects } from './objects';
-import { podiumUses } from '../calc/lines/objects';
 const isStock6560 = (s: CounterSection[]) => stockOf(s)?.artnr === '6560';
 import type { CounterSection, PlacedObject, Variant } from './types';
-import { createProject, createVariant } from './variant';
-import { parse, serialize } from '../persistence/file';
+import { createVariant } from './variant';
 
 const stock = (): PlacedObject => ({ id: 'i1', product: '6571', x: 2, y: 1.5, rot: 0, sections: stockSections() });
 const vOf = (...objects: PlacedObject[]): Variant => ({ ...createVariant('A', { width: 5, depth: 3, type: 'row' }), objects });
@@ -108,46 +106,6 @@ describe('the pen places a standard counter (K22)', () => {
   });
 });
 
-describe('counters from Disker as sections when a sketch opens (K22)', () => {
-  type Piece = NonNullable<PlacedObject['pieces']>[number];
-  const shapes: Record<string, Piece[]> = {
-    'straight 1,5 m': [{ a: [-750, 0], b: [750, 0], back: [0, -1] }],
-    'straight 2,5 m': [{ a: [-1250, 0], b: [1250, 0], back: [0, -1] }],
-    L: [
-      { a: [-500, 0], b: [500, 0], back: [0, -1] },
-      { a: [-250, -250], b: [-250, -1250], back: [1, 0] },
-    ],
-  };
-  // As Disker built them (K7): whole metres from the piece's start, a half last, open at its back, a shelf at CC 750
-  const open = { lights: ['open', 'open'] };
-  const part = (x: [number, number], z: [number, number], side: string) => ({ x, z, h: 1000, shelves: [750], sides: { [side]: open } });
-  const built: Record<string, unknown> = {
-    'straight 1,5 m': [part([-750, 250], [-250, 250], 'z-'), part([250, 750], [-250, 250], 'z-')],
-    'straight 2,5 m': [part([-1250, -250], [-250, 250], 'z-'), part([-250, 750], [-250, 250], 'z-'), part([750, 1250], [-250, 250], 'z-')],
-    L: [part([-500, 500], [-250, 250], 'z-'), part([-500, 0], [-1250, -250], 'x+')],
-  };
-  const uses = (u: { id: string; qty: number }[]) => Object.fromEntries(u.map((x) => [x.id, x.qty]));
-
-  for (const [name, pieces] of Object.entries(shapes))
-    it(`a drawn ${name} is built and costed the same`, () => {
-      const o: PlacedObject = { id: 'i1', product: '6560', x: 2, y: 1.5, rot: 90, ral: '7012', pieces };
-      const s = asSections(o, '6571');
-      expect([s.product, s.pieces, s.ral, s.rot, s.x, s.y]).toEqual(['6571', undefined, '7012', 90, 2, 1.5]);
-      expect(s.sections).toEqual(built[name]);
-      // The work as Disker costed it (K9): per whole and half part, per corner
-      const cells = s.sections!.map((x) => Math.max(x.x[1] - x.x[0], x.z[1] - x.z[0]));
-      const u = uses(podiumUses(s));
-      expect([u[ITEM.counterWhole] ?? 0, u[ITEM.counterHalf] ?? 0, u[ITEM.counterCorner] ?? 0]).toEqual([cells.filter((n) => n > 500).length, cells.filter((n) => n <= 500).length, pieces.length - 1]);
-    });
-
-  it('the counter in stock becomes its standard counter; other objects stay as they are', () => {
-    const s = asSections({ id: 'i1', product: '6560', x: 2, y: 1.5, rot: 180 }, '6571');
-    expect([s.product, stockOf(s.sections)?.artnr, s.rot]).toEqual(['6571', '6560', 180]);
-    const chair: PlacedObject = { id: 'i2', product: '5276', x: 1, y: 1, rot: 0 };
-    expect(asSections(chair, '6571')).toBe(chair);
-  });
-});
-
 describe('Podie 50 × 50, a standard podie per height (K22, Bjørn 14.11.2026)', () => {
   const ctx = { rules: RULES, footprint: () => ({ w: 0.52, d: 0.52, h: 1.04 }), swings: () => false, isCounter: () => true };
   const base: Variant = { ...createVariant('A', { width: 5, depth: 3, type: 'row' }), walls: [] };
@@ -185,18 +143,5 @@ describe('Podie 50 × 50, a standard podie per height (K22, Bjørn 14.11.2026)',
     expect(lineOf(r.v)).toMatchObject({ artnr: '5450-1', price: 380 });
     const shelved = { ...r.v, objects: [{ ...r.v.objects[0], sections: [{ ...r.v.objects[0].sections![0], shelves: [250] }] }] };
     expect(lineOf(shelved)).toMatchObject({ artnr: '6571' });
-  });
-
-  it('an old sketch with 2 × 5450-2 counted opens with two podier at CC 750 on the stand', () => {
-    const old = { ...base, counted: [{ product: '5450-2', qty: 2 }] };
-    const text = serialize({ project: createProject(), variants: [old], motifs: [] });
-    const r = parse(text);
-    if (!r.ok) throw new Error(r.error);
-    const [v] = r.sketch.variants;
-    expect(v.counted).toEqual([]);
-    expect(v.objects.map((o) => [soldAs(o), o.sections![0].h])).toEqual([
-      ['5450-2', 750],
-      ['5450-2', 750],
-    ]);
   });
 });

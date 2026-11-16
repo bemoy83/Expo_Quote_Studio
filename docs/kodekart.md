@@ -21,7 +21,7 @@ Alt avledes fra modellen (`Variant` i `src/domain/types.ts`). Rekkefølgen er al
 | Skjermen | `src/ui/App.tsx` | Setter sammen sidene og Standskisse. Verktøy, penn og penninnstillinger: `useTools.ts`. Tastatur: `useShortcuts.ts`, og hva Delete fjerner i `deleteSelection` (`plan/selection.ts`, med test). Båndet med varianter og nøkkeltall: `shell/SketchBand.tsx`. Nøkkeltallene (`shell/KeyFigures.tsx`) viser detaljlinjene bare når hele raden får plass på én linje (målt med en usynlig kopi); ellers vises kort rad, og et trykk åpner et kort med alle detaljer. Skuffene for det som er valgt: `plan/Drawers.tsx`. Skuffen har egen tilstand (`drawer` i `App.tsx`, `DrawerState` i `plan/selection.ts`): et vanlig valg åpner den ikke, Mer i pillen og et valg fra panelet åpner den i detalj, og den lukkes når valget ikke har skuff (`hasDrawer`). 3D gjør det samme: et klikk viser pillen (`scene3d/pill.ts` plasserer den), Detaljer åpner skuffen. Skuffen står i `.drawer-frame` med to høyder: kompakt (270 px) og detalj (omtrent 60 % av tegneflaten, minst 420 px). Kanten øverst (`plan/DrawerHandle.tsx`) bytter ved klikk eller drag, og Mer åpner alltid i detalj. Skuffen har to deler: innstillinger (med grafikkhylla eller dørens miniplan under, bare i detalj) og veggrisset, som fyller det som er igjen (`wd-fit`). Planen over blir kartet. Kalkylen per variant, bufret: `calcCache.ts`. Navnepillen over ikonknappene (i stedet for nettleserens title-boble): `NameTip.tsx`, én forekomst i App som leser `title` i formen «Navn · forklaring (tast)»; oppdeling og plassering i `tip.ts` (med test) |
 | Skuffer og panel | `src/ui/plan/*Drawer.tsx`, `src/ui/panel/Rail.tsx` | Innstillinger per produkt. Veggskuffen: `WallDrawer.tsx` setter sammen det `wallDrawer/focus.ts` sier skal vises, delene ligger i `plan/wallDrawer/` (se Vegger). Innstillingene i skuffene og standbrikken (`panel/StandSettings.tsx`) er bygd av `Section` i `controls.tsx`: tittel i dempede versaler med verdien når innholdet ikke viser den («HELE VEGGEN · HVIT 9010»), ikonknapper til høyre, innholdet rett på flaten; valg med `FlatChoice`, valgt fyll `--chosen` (verktøy man tegner med beholder ink); en side som kan speiles (dørens slag, hjørnestandens åpne side) er verdien i tittelen og én ikonknapp. Duk og motiv: `FabricSection`, trykkfilene: `Shelf` (begge i `plan/drawerParts.tsx`). Panelet: `Rail.tsx` har stripen og fanevalget, hver fane ligger i `panel/sections/` (`WallSection`, `FloorSection`, `ProfileSection`, `EquipSection` med søk) |
 | Sider | `src/ui/quote`, `workorder` | Tilbud (med trykkfilene kunden leverer og CSV-eksport av trykklisten i `quote/printCsv.ts`, filene fra `printFiles` i `calc/textile/production.ts`) og Arbeidsordre (plukkradene i `workorder/pickRows.ts`). Antakelsene for tekstilrammen redigeres på Kostgrunnlag › Regler (`costbasis/InFrame.tsx`). Produksjon og Plukkliste er fjernet (Bjørn 8.11.2026) |
-| Lagring | `src/persistence/file.ts` | Filformat, versjoner og migrering |
+| Lagring | `src/persistence/file.ts` | Filformat og versjon (bare gjeldende versjon åpnes) |
 
 **Ny eller endret linje i kalkylen:** finn produktets blokk i `calc/lines/` (eller `calc/textile/lines.ts`). Det som
 er bygget (moduler, stolper, takdragere, fotplater, produksjon) og hvem som betaler, ligger i `calc/context.ts`.
@@ -204,8 +204,7 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
   `stockSections('6560')` (`domain/podiumStock.ts`) bygget av den, delt av plan, 3D og kost via `counterBuildOf`
   (`domain/counterShape.ts`). Reglene K1–K9 i [byggeregler.md](byggeregler.md). Profilene 92L og 93 i `foga/parts.ts`,
   omrisset i `scene3d/build/profiles.ts`
-- Katalogen: `counter('6560', …)` i `catalog/defaultCatalog.ts` (`Product.counter`: utvendig mål, fotavtrykket følger);
-  de gamle diskene 5410, 5415 og 5420 blir løse linjer i gamle skisser (`OLD_COUNTERS`, `retiredToLoose` i `persistence/file.ts`)
+- Katalogen: `counter('6560', …)` i `catalog/defaultCatalog.ts` (`Product.counter`: utvendig mål, fotavtrykket følger)
 - Kalkyle: `calc/lines/objects.ts` (fast pris, kost fra prisartikkelen `ITEM.counter` i `cost/itemDefs.ts`, bygget av
   `counterBuildOf`). Plukkes hel, 1 stk (K1)
 - Plan, 3D: omrisset (hel strek lukket, lys hårstrek åpen) fra `plan/counterOutline.ts` i `CounterShape`, delelinjene i
@@ -214,8 +213,7 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
   profilen snudd etter omrisset med `turnedProfile` (`build/profiles.ts`). Begge tegner i diskens egne koordinater og
   plasseres og snus utenfra (`toPlan`, `toLocal`, `turn` i `domain/counterShape.ts`). Om et møbel er en disk, sier
   `PlaceContext.isCounter`.
-- 6560 settes ut som et ferdig oppsett i Disker og podier (K22, se under). `PlacedObject.pieces` fra det gamle verktøyet
-  Disker lever bare for å gjøre gamle skisser om (`asSections` i `domain/podiumStock.ts`).
+- 6560 settes ut som et ferdig oppsett i Disker og podier (K22, se under).
 - Farge (K6): `PlacedObject.ral`, uten = som på lager (`counterRal`, `COUNTER_STOCK_RAL` i `domain/objects.ts`). Planen
   fyller disken med platefargen, 3D farger platene (`buildCounter` tar fargen). Kalkylen legger prisartikkelen
   `ITEM.counterPlates` til linjen for hver farget disk, prisen er den samme. Veggfargene som rad er én funksjon,
@@ -289,8 +287,7 @@ og kalkyle med 6560, som er et ferdig oppsett i det (K22).
   `plan/quick/StockOutline.tsx`, og `QBtn disabled` gjør det som ikke gjelder grått. Mønsteret kan gi funksjoner på andre
   verktøy (ståbord, barkrakker). `podiumAt` setter en disk med `frontRot` fra `counters.ts`, et podie dreiet 0. I
   Utstyr (`EquipSection.tsx`) teller raden standarddiskene (`soldAs`), + setter en med `addStockAnywhere` (podiums.ts),
-  og penselen legger varen bak sin funksjon og i hånden. Gamle skisser: `asSections` (podiumStock.ts) via `countersAsSections` i `persistence/file.ts` gjør disker fra
-  Disker om til seksjoner når de åpnes, og `countedAsPodier` gjør talte podier (5450) om til podier på standen.
+  og penselen legger varen bak sin funksjon og i hånden.
 - Disk over fotplate (K23): `counterInserts`, `overPlate` og `setCounterInserts` (`PlacedObject.inserts`, valget i skuffen, platene fra `footPlatesOf` i `ui/env.ts`) i `domain/counters.ts` (stolpene som ikke står på platen), platene fra
   `footPlateRect` i `calc/wallSupports.ts` og `textileFootRects` i `calc/textile/free.ts`, `CalcContext.inserts` og
   `CalcResult.inserts` (stolpene, for 3D: `buildInserts` i `scene3d/build/counter.ts`), `ITEM.counterInsert` på disklinjen og
@@ -305,7 +302,6 @@ og kalkyle med 6560, som er et ferdig oppsett i det (K22).
 - Katalogen: `podium('6571', 'Disk', …)` og `podium('6572', 'Podie', …)` i `catalog/defaultCatalog.ts` (`Product.podium`,
   ett per funksjon, varenumre midlertidige; `counter` er én seksjon, så plan, pille og 3D tegner den som en disk);
   `builtProduct`/`builtFunc` i `catalog/podium.ts`. Alle navn fra produktlisten: `artnrName`/`counterName` i `ui/env.ts`.
-  Gamle 6570 gjøres om i `builtAsFunction` (`persistence/file.ts`)
 - Kalkyle: `podiumLine`/`podiumUses` i `calc/lines/objects.ts` (tidene i K9, navnet fra produktet); toppene i alle mål i
   `COUNTER_BOARDS` (`cost/itemDefs.ts`) med eksempelpriser i `cost/own-list.ts`. Delene plukkes under Disker
   (`builtCounterParts`). Eksempelskisse: `test/fixtures/13-disker-og-podier.json`

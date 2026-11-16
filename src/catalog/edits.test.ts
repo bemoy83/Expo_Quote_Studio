@@ -95,9 +95,4 @@ describe('catalog edits', () => {
     if ('error' in r) throw new Error(r.error);
     expect(['B1', 'B2', 'B3'].map((a) => rowOf(a, r.edits).group)).toEqual(['mob.bord', 'av.skjermer', 'tilb.tilbehor']);
   });
-
-  it('an added product saved with an old category gets the fallback group', () => {
-    const old = { ...NO_EDITS, added: [{ id: 'X', name: 'X', kind: 'counted', unit: 'stk', category: 'Annet', variants: [{ artnr: 'X', name: 'X', price: 1 }] }] };
-    expect(applyEdits(base, old as unknown as typeof NO_EDITS).products.at(-1)!.group).toBe('tilb.tilbehor');
-  });
 });

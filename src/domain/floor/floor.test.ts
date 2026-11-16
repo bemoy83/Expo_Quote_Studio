@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { applyFloor, floorAction, type FloorTouch } from './brush';
 import { cutTiles } from './edit';
 import { lanesOf, rollUsage } from './lanes';
-import { tileAreas, tilesFromCells } from './tiles';
+import { tileAreas } from './tiles';
 import type { Variant } from '../types';
 import { createVariant, fillFloor } from '../variant';
 
@@ -85,12 +85,6 @@ describe('floor tiles', () => {
       const e = applyFloor(v, floorAction(v, { x: 1.9, y: 0.2, size: 'auto', erase: true, product: A }), A);
       expect(e.floor.tiles).toHaveLength(5);
     });
-  });
-
-  it('version 2 cells become 1 × 1 tiles where they line up', () => {
-    const cells: Record<string, string> = {};
-    for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) cells[`${i},${j}`] = A;
-    expect(tilesFromCells(cells).map(({ i, j, w, h }) => [i, j, w, h])).toEqual([[0, 0, 2, 2], [2, 0, 1, 2]]);
   });
 });
 
