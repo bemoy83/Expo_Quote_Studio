@@ -18,13 +18,14 @@ const APART = 2 * FACE;
 const mm = (n: number) => Math.round(n * 1000) / 1000 + 0;
 const isPodium = (o: PlacedObject) => !!o.sections?.length;
 
-/** The sections of `o` in the frame of `c`, mm, their sides turned with them (K16). */
+/** The sections of `o` in the frame of `c`, mm, their sides turned with them (K16), keeping their height and shelves (K19). */
 export function inFrame(c: PlacedObject, o: PlacedObject): CounterSection[] {
   return (o.sections ?? []).map((s) => {
     const p = toLocal(c, toPlan(o, [s.x[0], s.z[0]]));
     const q = toLocal(c, toPlan(o, [s.x[1], s.z[1]]));
     const sides = turnedSides(s.sides, o.rot - c.rot);
-    return { x: [mm(Math.min(p[0], q[0])), mm(Math.max(p[0], q[0]))], z: [mm(Math.min(p[1], q[1])), mm(Math.max(p[1], q[1]))], h: s.h, ...(sides && { sides }) };
+    const { sides: _, ...rest } = s;
+    return { ...rest, x: [mm(Math.min(p[0], q[0])), mm(Math.max(p[0], q[0]))], z: [mm(Math.min(p[1], q[1])), mm(Math.max(p[1], q[1]))], ...(sides && { sides }) };
   });
 }
 
