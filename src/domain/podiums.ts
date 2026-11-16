@@ -12,7 +12,7 @@ import { lowered } from './podiumShelves';
 import { frontRot, snapShift } from './counters';
 import { stockByArtnr, stockSections } from './podiumStock';
 import { nextId } from './ids';
-import { addAt, anywhere, blockers, COUNTER_STOCK_RAL, footprintBox, hitsAny, objectBoxes, objectFootprint, type PlaceContext } from './objects';
+import { addAt, anywhere, onNodeGrid, blockers, COUNTER_STOCK_RAL, footprintBox, hitsAny, objectBoxes, objectFootprint, type PlaceContext } from './objects';
 import { bounds, covered, edgeRuns, EPS, GRID, overlaps, withSections, type EdgeRun, type Range } from './podiumSections';
 import type { CounterSection, PlacedObject, Point, Variant } from './types';
 import { axisSpan, rebaseAxis, type DrawAxis } from './drawAxis';
@@ -279,7 +279,8 @@ export function podiumAt(v: Variant, ctx: PlaceContext, pen: { product: string; 
   const into = (lo: number, hi: number, size: number) => (lo < 0 ? -lo : hi > size ? size - hi : 0);
   const kept = { ...o, x: o.x + into(b.x0, b.x1, v.stand.width), y: o.y + into(b.y0, b.y1, v.stand.depth) };
   const s = snapShift(v, footprintBox(kept, f), blockers(v, ctx, id));
-  const at = { ...kept, x: snap(kept.x + s.x), y: snap(kept.y + s.y) };
+  // Against a wall, counter or the stand edge within 10 cm, else its node lines on whole 5 cm (K10)
+  const at = onNodeGrid(v, { ...kept, x: snap(kept.x + s.x), y: snap(kept.y + s.y) }, f, { x: !s.x, y: !s.y });
   return placed(v, ctx, at, at);
 }
 

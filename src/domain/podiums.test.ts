@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { counterBuildOf } from './counterShape';
 import { dragLike, drawPodium, dragSpan, innerCorners, podiumAt, funcByShape, podiumSides, podiumSize, rebaseDrag, rectSections, runNodes, startDrag, type PodiumDraw, type PodiumDrag } from './podiums';
-import { objectBoxes, type PlaceContext } from './objects';
+import { moveObject, objectBoxes, type PlaceContext } from './objects';
 import { createVariant } from './variant';
 import { RULES } from '../rules/rules';
 import type { CounterSection, PlacedObject, Variant } from './types';
@@ -203,7 +203,7 @@ describe('Shift: the pen shows and draws in 250 (Bjørn 14.11.2026)', () => {
   });
 
   it('the section shown stays: grown left, its right edge is where it was', () => {
-    expect(left(press(0, 0), move(-400, 0))).toBe(1625);
+    expect(left(press(0, 0), move(-400, 0))).toBe(1650); // the section shown with its node lines on 5 cm (K10): 1 900–2 150
   });
 
   it('Shift during a drag locks what is drawn and goes on from the pointer', () => {
@@ -364,5 +364,28 @@ describe('Disk in hand draws a disk built as 6560 (K22, Bjørn 16.11.2026)', () 
 
   it('turns 90° on top of the turn toward the aisle', () => {
     expect((start(90).rot - start().rot + 360) % 360).toBe(90);
+  });
+});
+
+describe('node lines on whole 5 cm (K10, Bjørn 16.11.2026)', () => {
+  const nodes = (o: PlacedObject) => {
+    const b = objectBoxes(ctx, o);
+    return [Math.min(...b.map((x) => x.x0)) + 0.01, Math.min(...b.map((x) => x.y0)) + 0.01].map((n) => Math.round(n * 1000));
+  };
+  it('a click puts them on 5 cm; against the stand edge it stays flush', () => {
+    const r = podiumAt(base, ctx, { product: 'P', stock: '6560' }, [2.013, 2.537]);
+    if ('error' in r) throw new Error(r.error);
+    expect(nodes(r.o).map((n) => n % 50)).toEqual([0, 0]);
+    const e = podiumAt(base, ctx, { product: 'P', stock: '6560' }, [2.013, 0.3]);
+    if ('error' in e) throw new Error(e.error);
+    expect(Math.min(...objectBoxes(ctx, e.o).map((x) => x.y0))).toBeCloseTo(0);
+  });
+
+  it('a move puts them on 5 cm too, also turned', () => {
+    for (const rot of [0, 90]) {
+      const o: PlacedObject = { id: 'm', product: 'P', x: 3, y: 2.5, rot, sections: [sec(-500, 500, -250, 250)] };
+      const w = moveObject({ ...base, objects: [o] }, ctx, 'm', 2.437, 2.618);
+      expect(nodes(w.objects[0]).map((n) => n % 50)).toEqual([0, 0]);
+    }
   });
 });
