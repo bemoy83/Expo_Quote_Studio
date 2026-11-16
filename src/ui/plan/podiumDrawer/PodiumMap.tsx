@@ -1,5 +1,6 @@
-// «Velg side» in the drawer for a counter of Disker og podier (detail only): the counter from above, turned as on the
-// plan, its sides as lines; the chosen one thick, a click on another shows it.
+// The map that picks a side in the drawer for a counter of Disker og podier (detail only): the counter from above,
+// turned as on the plan, its sides as lines; the chosen one thick, a click on another shows it. Always as large, in
+// the top left corner of the drawing, the counter scaled into it.
 import { useState } from 'react'
 import { toPlan } from '../../../domain/counterShape'
 import type { PlacedObject } from '../../../domain/types'
@@ -8,8 +9,9 @@ import { INK, INK_FAINT, SURFACE } from '../../colors'
 import { sideOnPlan, type DrawerSide } from './podiumView'
 
 const F = RECIPES.counter.face
-/** The map's largest size, px. */
-const MAX = { w: 190, h: 90 }
+/** The map's size, px, and the room round the counter in it (for the thick line and the pointer). */
+const BOX = { w: 148, h: 116 }
+const P = 10
 
 export function PodiumMap({ o, sides, chosen, onPick }: { o: PlacedObject; sides: DrawerSide[]; chosen: number; onPick: (i: number) => void }) {
   const [hover, setHover] = useState<number | null>(null)
@@ -24,12 +26,13 @@ export function PodiumMap({ o, sides, chosen, onPick }: { o: PlacedObject; sides
   if (!rects.length) return null
   const bx = [Math.min(...rects.map((r) => r.x0)), Math.max(...rects.map((r) => r.x1))]
   const by = [Math.min(...rects.map((r) => r.y0)), Math.max(...rects.map((r) => r.y1))]
-  const k = Math.min(MAX.w / (bx[1] - bx[0]), MAX.h / (by[1] - by[0]))
-  const P = 8
-  const X = (m: number) => (m - bx[0]) * k + P
-  const Y = (m: number) => (m - by[0]) * k + P
-  const W = (bx[1] - bx[0]) * k + 2 * P
-  const H = (by[1] - by[0]) * k + 2 * P
+  const k = Math.min((BOX.w - 2 * P) / (bx[1] - bx[0]), (BOX.h - 2 * P) / (by[1] - by[0]))
+  // In the middle of the box
+  const ox = (BOX.w - (bx[1] - bx[0]) * k) / 2
+  const oy = (BOX.h - (by[1] - by[0]) * k) / 2
+  const X = (m: number) => (m - bx[0]) * k + ox
+  const Y = (m: number) => (m - by[0]) * k + oy
+  const { w: W, h: H } = BOX
   const line = (d: DrawerSide) => {
     const [p, q] = sideOnPlan(mid, d.side, F)
     return { x1: X(p[0]), y1: Y(p[1]), x2: X(q[0]), y2: Y(q[1]) }
