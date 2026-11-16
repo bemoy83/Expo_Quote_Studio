@@ -1,8 +1,8 @@
 // Drawer for a counter of Disker og podier (trinn 2, mockup «Standskisse v10»): one side at a time, seen from outside.
 // Laid out like the wall drawer: settings on the left with two pages, «Sider og hyller» (what each part or light opening
 // of the side is, K16, K17; the shelves and height of the sections behind, K18, K19) and «Farge og profilering»
-// (PodiumDecor.tsx: the counter's colour, K6, print and decals, K20), in the order the counter is built and nothing in
-// it that changes length, so the column stands still; the side's drawing on the right, every side in the counter's
+// (PodiumDecor.tsx: the counter's colour, K6, print and decals, K20), in the order the counter is built, in three groups parted
+// by a line (the side · the sections behind · the whole counter), and nothing in it that changes length, so the column stands still; the side's drawing on the right, every side in the counter's
 // scale, with the map that picks a side in its top left corner (detail only); the hint across the bottom. Without a part chosen the settings act on the
 // whole side; a click in the drawing chooses the light opening under it (the part when it has no shelves), a click on
 // it again the whole side.
@@ -104,7 +104,7 @@ export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect,
   const several = pi === undefined && secs.length > 1
   const scope = pi === undefined ? 'Hele siden' : li === undefined ? `Del ${pi + 1} av ${el.parts.length}` : `Del ${pi + 1} · åpning ${li + 1}/${parts[0].lights.length}`
   const foot = (
-    <FlatToggles<'insert'> label="Hele disken på innsats" value={raised ? ['insert'] : []} onToggle={(_, on) => edit((x) => setCounterInserts(x, o.id, on))} options={[{ value: 'insert', label: 'Innsats', disabled: over, title: over ? 'Står over en fotplate: alltid på innsats 700, 7 mm opp' : 'Hele disken på innsats 700: 7 mm opp, like høy som en disk over fotplate' }]} />
+    <FlatToggles<'insert'> label="Hele disken på innsats" value={raised ? ['insert'] : []} onToggle={(_, on) => edit((x) => setCounterInserts(x, o.id, on))} options={[{ value: 'insert', label: 'Innsats 700', disabled: over, title: over ? 'Står over en fotplate: alltid på innsats 700, 7 mm opp' : 'Hele disken på innsats 700: 7 mm opp, like høy som en disk over fotplate' }]} />
   )
   const partNav =
     el.parts.length > 1 ? (
@@ -130,15 +130,19 @@ export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect,
           <Section title={scope} aside={kind ? KIND_NAME[kind] : 'blandet'} tools={partNav}>
             <FlatChoice<Kind> label="Hva delen er" value={kind ?? ('' as Kind)} onChange={setKind} options={options} />
           </Section>
-          {/* K18: the height of the section behind the part, or of every section along the side, before the shelves that
-              must stand lower. K23: the whole counter on inserts 700, a small switch beside the title; always on over a
-              foot plate */}
-          <Section title={several ? 'Seksjonene · høyde' : 'Seksjonen · høyde'} aside={`${heights.map((h) => mm(outerHeight(h) / 1000)).join('/')} mm`} tools={foot}>
+          <hr className="set-rule" />
+          {/* The sections behind: K18 their height first, then K19 the shelves that must stand lower, at CC 250, 500 and
+              750, named by their step as the heights (K12) */}
+          <Section title={several ? `Seksjonene bak · ${secs.length} · høyde` : 'Seksjonen bak · høyde'} aside={`${heights.map((h) => mm(outerHeight(h) / 1000)).join('/')} mm`}>
             <FlatChoice<number> label="Høyde" value={heights.length === 1 ? heights[0] : 0} onChange={(h) => heightOf(secs, h)} options={HEIGHTS.map((h) => ({ value: h, label: heightName(h), title: `${outerHeight(h)} mm utvendig` }))} />
           </Section>
-          {/* K19: shelves at CC 250, 500 and 750, below the section's height, named by their step as the heights (K12) */}
-          <Section title={several ? 'Seksjonene · hyller' : 'Seksjonen · hyller'} aside={shelfCount ? count(shelfCount, 'hylle', 'hyller') : 'ingen'}>
+          <Section title="Hyller" aside={shelfCount ? count(shelfCount, 'hylle', 'hyller') : 'ingen'}>
             <FlatToggles<number> label="Hyller" value={shelvesNow} onToggle={toggleShelf} options={SHELF_HEIGHTS.map((y) => ({ value: y, label: heightName(y), disabled: y >= Math.max(...secs.map((i) => o.sections![i].h)), title: y >= lowest ? 'Hyllen må stå lavere enn seksjonen' : `Hylle ${heightName(y)} · ${outerHeight(y)} mm over gulvet, topp skinne` }))} />
+          </Section>
+          <hr className="set-rule" />
+          {/* K23: the whole counter on inserts 700; always on over a foot plate, and the title says why */}
+          <Section title="Hele disken" aside={over ? 'over fotplate' : raised ? 'på innsats' : 'på gulvet'}>
+            {foot}
           </Section>
           </>
         ) : (
