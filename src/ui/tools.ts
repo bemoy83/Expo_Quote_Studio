@@ -20,7 +20,7 @@ export type Brush =
    *  «Fin» (ui/fine.tsx), as Shift held for touch: 250 steps, a press by an edge takes it. */
   /** `h`: the height everything drawn gets, CC mm (K12); a påbygg takes its neighbour's. `stock`: the standard counter a
    *  click places (K22, its art.nr), none for «Fri» (a section 500 × 500); a drag always draws free. */
-  | { kind: 'podium'; product: string; ral: string; h?: number; stock?: string }
+  | { kind: 'podium'; product: string; ral: string; h?: number; stock?: string; turn?: number }
   /** Tekstilvegg: drawn on a system wall it is mounted there (InFrame), anywhere else it stands free on foot plates.
    * Drawn as the wall: 1 m from the metre grid, 250 steps with Shift or «Fin»; a click next to a wall fills its free part. */
   /** `motif`: the graphics the textile drawn gets, or a textile clicked; omitted = drawn without (Bjørn 14.11.2026). */

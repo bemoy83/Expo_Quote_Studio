@@ -68,6 +68,8 @@ export interface PodiumDrag {
   z: DrawAxis;
   fine: boolean;
   onto?: PodiumOnto;
+  /** With «Disk» in hand (K22, Bjørn 16.11.2026): the standard counter's section a drag repeats, its depth kept. */
+  like?: CounterSection;
 }
 
 /** A plan point in grid units of the section's frame. */
@@ -78,19 +80,34 @@ const unitsOf = (o: PlacedObject, q: Point): Point => {
 
 /** A drag pressed at q on the section `o` the pen shows: it grows past its edges, in 500 or with Shift in 250 (the
  *  section shown is then 250, podiumAt). On a påbygg the edge against the counter stays. */
-export function startDrag(o: PlacedObject, q: Point, fine: boolean, onto?: PodiumOnto): PodiumDrag {
+export function startDrag(o: PlacedObject, q: Point, fine: boolean, onto?: PodiumOnto, like?: CounterSection): PodiumDrag {
   const s = o.sections![0];
+  if (like) fine = false;
   const [u, w] = unitsOf(o, q);
   const fix = (a: 'x' | 'z') => (onto?.side.axis === a ? { fix: (-onto.side.out) as -1 | 1 } : {});
   const x: DrawAxis = { lo: s.x[0] / GRID, hi: s.x[1] / GRID, v0: u, g: 0, ...fix('x') };
   const z: DrawAxis = { lo: s.z[0] / GRID, hi: s.z[1] / GRID, v0: w, g: 0, ...fix('z') };
-  return { o, fine, x, z, ...(onto && { onto }) };
+  return { o, fine, x, z, ...(onto && { onto }), ...(like && { like }) };
 }
+
+/** What a drag with this standard counter in hand repeats (K22, Bjørn 16.11.2026): a disk's one section, so the drag
+ *  draws a disk built as the disk in stock, in its depth and in half metres; a podie draws freely in its height. */
+export function dragLike(artnr: string | undefined): CounterSection | undefined {
+  const s = artnr ? stockByArtnr(artnr) : undefined;
+  return s?.func === 'disker' && s.sections.length === 1 ? s.sections[0] : undefined;
+}
+
+/** A section drawn with `like` in hand: its height, shelves and the sides along the length (the open back) as `like`. */
+const builtLike = (t: CounterSection, like: CounterSection): CounterSection => {
+  const sides = Object.fromEntries(Object.entries(like.sides ?? {}).filter(([k]) => k[0] === 'z'));
+  return { ...t, h: like.h, ...(like.shelves && { shelves: [...like.shelves] }), ...(Object.keys(sides).length && { sides: structuredClone(sides) }) };
+};
 
 /** The spans a drag gives with the pointer at q, grid units. */
 export function dragSpans(d: PodiumDrag, q: Point): { x: [number, number]; z: [number, number] } {
   const [u, w] = unitsOf(d.o, q);
-  return { x: axisSpan(d.x, u, d.fine), z: axisSpan(d.z, w, d.fine) };
+  // With a disk in hand the depth stays the disk's (K22)
+  return { x: axisSpan(d.x, u, d.fine), z: d.like ? [d.z.lo, d.z.hi] : axisSpan(d.z, w, d.fine) };
 }
 
 /** Shift pressed or let go during a drag, the pointer at q: what is drawn now is where it goes on from, measured from q,
@@ -239,7 +256,7 @@ function addOnto(v: Variant, ctx: PlaceContext, c: PlacedObject, added: CounterS
 
 /** What the pen shows and a click at q stores: one section of START × START (250 × 250 with Shift or Fin) round q, kept inside the stand and moved in
  *  against a wall, counter or the stand edge within 10 cm (K10). Refused where it has no room. */
-export function podiumAt(v: Variant, ctx: PlaceContext, pen: { product: string; ral?: string; h?: number; stock?: string }, q: Point, fine = false): PodiumDraw {
+export function podiumAt(v: Variant, ctx: PlaceContext, pen: { product: string; ral?: string; h?: number; stock?: string; turn?: number }, q: Point, fine = false): PodiumDraw {
   // A standard counter (K22) stands free; «Fri» builds on a counter it points by
   const size = fine ? GRID : START;
   const by = pen.stock ? null : ontoAt(v, q, size);
@@ -253,7 +270,7 @@ export function podiumAt(v: Variant, ctx: PlaceContext, pen: { product: string; 
   // A standard counter as it is in stock, a disk with its front toward the aisle, a podie straight (K22); else one section
   const stock = pen.stock ? stockByArtnr(pen.stock) : undefined;
   const sections = stock ? stockSections(stock.artnr) : [{ x: [-half, half] as [number, number], z: [-half, half] as [number, number], h: pen.h ?? HEIGHT }];
-  const o: PlacedObject = { id, product: pen.product, x: q[0], y: q[1], rot: stock?.func === 'disker' ? frontRot(v, q, true) : 0, ...colour, sections };
+  const o: PlacedObject = { id, product: pen.product, x: q[0], y: q[1], rot: ((stock?.func === 'disker' ? frontRot(v, q, true) : 0) + (stock ? (pen.turn ?? 0) : 0)) % 360, ...colour, sections };
   const f = objectFootprint(ctx, o);
   if (!f) return { error: 'Ukjent disk', o, cell: o };
   // Kept inside the stand
@@ -286,7 +303,8 @@ export function drawPodium(v: Variant, ctx: PlaceContext, d: PodiumDrag, q: Poin
   const span = dragSpans(d, q);
   const mm = ([a, b]: [number, number]): [number, number] => [a * GRID, b * GRID];
   const from = { x: span.x[0] === d.x.lo ? ('lo' as const) : ('hi' as const), z: span.z[0] === d.z.lo ? ('lo' as const) : ('hi' as const) };
-  const drawn = rectSections(mm(span.x), mm(span.z), from, s.h);
+  const rect = rectSections(mm(span.x), mm(span.z), from, s.h);
+  const drawn = d.like ? rect.map((t) => builtLike(t, d.like!)) : rect;
   if (!d.onto) {
     const o = centred(d.o, drawn);
     return placed(v, ctx, o, o);

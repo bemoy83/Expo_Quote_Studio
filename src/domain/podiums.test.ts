@@ -1,11 +1,12 @@
 // Disker og podier (Byggeregler K10–K12): sections on the 250 grid, built tight, drawn from one section by a drag.
 import { describe, expect, it } from 'vitest';
 import { counterBuildOf } from './counterShape';
-import { drawPodium, dragSpan, innerCorners, podiumAt, funcByShape, podiumSides, podiumSize, rebaseDrag, rectSections, runNodes, startDrag, type PodiumDraw, type PodiumDrag } from './podiums';
+import { dragLike, drawPodium, dragSpan, innerCorners, podiumAt, funcByShape, podiumSides, podiumSize, rebaseDrag, rectSections, runNodes, startDrag, type PodiumDraw, type PodiumDrag } from './podiums';
 import { objectBoxes, type PlaceContext } from './objects';
 import { createVariant } from './variant';
 import { RULES } from '../rules/rules';
 import type { CounterSection, PlacedObject, Variant } from './types';
+import { stockOf } from './podiumStock';
 
 const ctx: PlaceContext = { rules: RULES, footprint: () => ({ w: 0.52, d: 0.52, h: 1.04 }), swings: () => false, isCounter: () => true };
 const base: Variant = { ...createVariant('A', { width: 6, depth: 5, type: 'row' }), walls: [] };
@@ -323,5 +324,45 @@ describe('påbygg (PR 3)', () => {
     expect(outer(r.o)).toEqual([2020, 1020]);
     const b = objectBoxes(ctx, r.o);
     expect(Math.max(...b.map((x) => x.y1))).toBeCloseTo(3.76);
+  });
+});
+
+describe('Disk in hand draws a disk built as 6560 (K22, Bjørn 16.11.2026)', () => {
+  const disk = { product: 'P', stock: '6560' };
+  const start = (turn = 0) => {
+    const r = podiumAt(base, ctx, { ...disk, turn }, [3, 2]);
+    if ('error' in r) throw new Error(r.error);
+    return r.o;
+  };
+  const drag = (o: PlacedObject, q: [number, number]) => {
+    const r = drawPodium(base, ctx, startDrag(o, [o.x, o.y], true, undefined, dragLike('6560')), q);
+    if ('error' in r) throw new Error(r.error);
+    return r.o;
+  };
+
+  it('repeats only a disk; a podie draws freely', () => {
+    expect(dragLike('6560')?.shelves).toEqual([750]);
+    expect(dragLike('5450-1')).toBeUndefined();
+    expect(dragLike(undefined)).toBeUndefined();
+  });
+
+  it('grows in half metres along its length, open at the back with the shelf in every section, depth kept', () => {
+    const o = drag(start(), [5.0, 3.5]);
+    expect(podiumSize(o)).toMatchObject({ length: 2520, depth: 520, height: 1040 });
+    expect(o.sections!.map((s) => s.x[1] - s.x[0]).sort((a, b) => b - a)).toEqual([1000, 1000, 500]);
+    for (const s of o.sections!) {
+      expect(s.h).toBe(1000);
+      expect(s.shelves).toEqual([750]);
+      expect(s.sides?.['z-']?.lights).toEqual(['open', 'open']);
+    }
+    expect(stockOf(o.sections)).toBeUndefined();
+  });
+
+  it('a drag that stays within one metre is the stock 6560, Fin and Shift do not change the step', () => {
+    expect(stockOf(drag(start(), [3.2, 3.5]).sections)?.artnr).toBe('6560');
+  });
+
+  it('turns 90° on top of the turn toward the aisle', () => {
+    expect((start(90).rot - start().rot + 360) % 360).toBe(90);
   });
 });
