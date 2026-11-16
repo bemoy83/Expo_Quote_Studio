@@ -1,7 +1,7 @@
 // Counters of Disker og podier on the stand (Byggeregler K10–K13, K22): the parts of those built on site, picked loose, which
 // way a counter faces when placed, and how it moves in against what is near. Their sections and pen are in podiums.ts.
 import { stockOf } from './podiumStock';
-import { addParts, counterParts, type CounterParts } from '../foga/counter';
+import { addParts, counterParts, type CounterParts, type CounterProfile } from '../foga/counter';
 import { counterBuildOf, toPlan } from './counterShape';
 import { openSides } from './grid';
 import { counterRal, objectBoxes, type PlaceContext } from './objects';
@@ -31,13 +31,13 @@ export interface PlanRect {
 const overlaps = (a: PlanRect, b: PlanRect) => a.x0 < b.x1 - EPS && b.x0 < a.x1 - EPS && a.y0 < b.y1 - EPS && b.y0 < a.y1 - EPS;
 
 /**
- * Inserts 700 under the counters that stand over a foot plate (Byggeregel K23, Bjørn 16.11.2026), by counter id: a
+ * The uprights that stand on inserts 700, of the counters over a foot plate (Byggeregel K23, Bjørn 16.11.2026), by counter id: a
  * counter with a plate under it gets an insert 700 without its set screw in the centre tube of each of its uprights,
  * about 7 mm, so its bottom rails clear the 5 mm plate; an upright standing on the plate itself gets none. A counter
  * clear of every plate is not here. Standard counters too, at the same price (K22).
  */
-export function counterInserts(v: Variant, ctx: Pick<PlaceContext, 'footprint' | 'isCounter'>, plates: readonly PlanRect[]): Map<string, number> {
-  const out = new Map<string, number>();
+export function counterInserts(v: Variant, ctx: Pick<PlaceContext, 'footprint' | 'isCounter'>, plates: readonly PlanRect[]): Map<string, CounterProfile[]> {
+  const out = new Map<string, CounterProfile[]>();
   if (!plates.length) return out;
   for (const o of v.objects) {
     if (!ctx.isCounter(o.product) || !objectBoxes(ctx, o).some((b) => plates.some((p) => overlaps(b, p)))) continue;
@@ -47,8 +47,8 @@ export function counterInserts(v: Variant, ctx: Pick<PlaceContext, 'footprint' |
         const [a, b] = [toPlan(o, [p.box.x[0], p.box.z[0]]), toPlan(o, [p.box.x[1], p.box.z[1]])];
         const r = { x0: Math.min(a[0], b[0]), y0: Math.min(a[1], b[1]), x1: Math.max(a[0], b[0]), y1: Math.max(a[1], b[1]) };
         return !plates.some((q) => overlaps(r, q));
-      }).length;
-    if (n) out.set(o.id, n);
+      });
+    if (n.length) out.set(o.id, n);
   }
   return out;
 }

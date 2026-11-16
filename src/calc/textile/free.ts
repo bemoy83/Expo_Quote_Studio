@@ -224,6 +224,22 @@ export function cornerPosts(v: Variant): Point[] {
   return [...out.values()];
 }
 
+/** The foot plates under free-standing textile walls on the plan, m (X8): 740, or 730 on a short frame, at each support,
+ *  `along` the run and `across` it. */
+export function textileFootRects(v: Variant, frames: readonly FreeFrame[]): { x0: number; y0: number; x1: number; y1: number }[] {
+  return frames.flatMap((f) => {
+    const t = v.freeTextiles.find((x) => x.id === f.textileId);
+    if (!t) return [];
+    const [dx, dy] = runDirection(t);
+    const hx = (Math.abs(dx) * f.foot.along + Math.abs(dy) * f.foot.across) / 2000;
+    const hy = (Math.abs(dy) * f.foot.along + Math.abs(dx) * f.foot.across) / 2000;
+    return f.supports.map((at) => {
+      const [x, y] = alongRun(t, at, f);
+      return { x0: x - hx, y0: y - hy, x1: x + hx, y1: y + hy };
+    });
+  });
+}
+
 /** Plan position of a point `at` mm along the run from its `from` end; with `f`, from the frame's own start. */
 export function alongRun(t: FreeTextile, at: number, f?: Pick<FreeFrame, 'start'>): Point {
   at += f?.start ?? 0;

@@ -689,12 +689,14 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   katalognavnet med varianten, uten varenummer: «Bardisk», «Podie 50 × 50, 75 cm». Ferdig bygget kostes hver
   standardvare som én leid vare (`ITEM.counter` per utvendig mål og høyde).
   *Bjørn 13.11.2026 · kode `src/domain/podiumStock.ts`, `src/domain/podiums.ts`, `src/calc/lines/objects.ts`, `src/persistence/file.ts`, `src/ui/panel/sections/EquipSection.tsx`, `src/ui/podiumPen.ts`, `src/ui/plan/pointer/podium.ts`, `src/ui/plan/quick/podium.tsx`, `src/ui/useShortcuts.ts` · test `src/domain/podiumStock.test.ts`, `src/domain/podiums.test.ts`, `src/ui/podiumPen.test.ts`*
-- **K23 Disk over fotplate.** En disk som står over en fotplate 750 (S2, T12), også en standardvare (K22), får en
+- **K23 Disk over fotplate.** En disk som står over en fotplate (750 under vegg og takdragerstolpe, S2 og T12, eller
+  740/730 under frittstående tekstilvegg, X8), også en standardvare (K22), får en
   innsats 700 uten settskrue i midtrøret på hver stolpe (alle profilene i 90-serien har midtrør). Innsatsen bygger om
   lag 7 mm, så bunnskinnene går fri av platen på 5 mm. En stolpe som står på selve platen får ingen; den står da om lag
   2 mm lavere, og det er greit. Fotplaten blokkerer ikke disken. Prisen er den samme, også for 6560; innsatsene er i
-  kostnaden og plukkes under Disker på arbeidsordren.
-  *Bjørn 16.11.2026 · `RECIPES.counter.insert` · kode `src/domain/counters.ts`, `src/calc/context.ts`, `src/calc/lines/objects.ts`, `src/foga/engine.ts` · test `src/calc/counterInserts.test.ts`*
+  kostnaden og plukkes under Disker på arbeidsordren. I 3D står disken 7 mm opp på en svart kloss 20 × 20 × 7 mm under
+  hver stolpe med innsats.
+  *Bjørn 16.11.2026 · `RECIPES.counter.insert` · kode `src/domain/counters.ts`, `src/calc/context.ts`, `src/calc/textile/free.ts`, `src/calc/lines/objects.ts`, `src/foga/engine.ts`, `src/ui/scene3d/build/counter.ts` · test `src/calc/counterInserts.test.ts`*
 
 ## P · Plukkliste og arbeidsordre
 

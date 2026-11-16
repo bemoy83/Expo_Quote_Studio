@@ -56,6 +56,21 @@ export function buildCounter(c: BuildContext, g: THREE.Group, b: CounterBuild, r
   for (const x of b.boards) box(x.box, board)
 }
 
+/** A counter over a foot plate (Byggeregel K23): lifted on its inserts 700, a black block under each upright that has
+ *  one (the uprights on the plate itself rest on it). */
+export function buildInserts(c: BuildContext, g: THREE.Group, posts: readonly CounterProfile[], tag: Tag) {
+  const { lift, block } = RECIPES.counter.insert
+  g.position.y += lift / 1000
+  const black = c.mat('objects', INSERT, { roughness: 0.9 })
+  for (const p of posts) {
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(block / 1000, lift / 1000, block / 1000), black)
+    const m = mid(p.box)
+    mesh.position.set(m.x, -lift / 2000, m.z)
+    c.add(mesh, tag, g)
+  }
+}
+const INSERT = '#1f2023'
+
 /** Print and decals on a counter of Disker og podier (Byggeregel K20), a thin sheet just outside the plates, facing
  *  out: print its share of the motif in each window of plate and door, decals whole. */
 export function buildPodiumDecor(c: BuildContext, g: THREE.Group, sections: readonly CounterSection[], tag: Tag, warn: THREE.MeshStandardMaterialParameters) {
