@@ -123,17 +123,21 @@ export function blockers(v: Variant, ctx: PlaceContext, skipId?: string): Box[] 
   return out;
 }
 
-/** The first of `others` any of `boxes` hits. */
-export function hitsAny(boxes: Omit<Box, 'kind'>[], others: Box[]): Box | null {
+/** How much of `o` may overlap what it stands by, m: furniture GAP; a counter of Disker og podier none, its outer faces
+ *  are its real size (Byggeregel K10, Bjørn 16.11.2026: never into a wall). */
+export const gapOf = (o: Pick<PlacedObject, 'sections'>) => (o.sections?.length ? 1e-6 : GAP);
+
+/** The first of `others` any of `boxes` hits, overlapping more than `gap`. */
+export function hitsAny(boxes: Omit<Box, 'kind'>[], others: Box[], gap = GAP): Box | null {
   for (const b of boxes) {
-    const h = hits(b, others);
+    const h = hits(b, others, gap);
     if (h) return h;
   }
   return null;
 }
 
-export function hits(box: Omit<Box, 'kind'>, others: Box[]): Box | null {
-  const a = { x0: box.x0 + GAP, y0: box.y0 + GAP, x1: box.x1 - GAP, y1: box.y1 - GAP };
+export function hits(box: Omit<Box, 'kind'>, others: Box[], gap = GAP): Box | null {
+  const a = { x0: box.x0 + gap, y0: box.y0 + gap, x1: box.x1 - gap, y1: box.y1 - gap };
   return others.find((r) => a.x0 < r.x1 && a.x1 > r.x0 && a.y0 < r.y1 && a.y1 > r.y0) ?? null;
 }
 
@@ -141,27 +145,41 @@ export function hits(box: Omit<Box, 'kind'>, others: Box[]): Box | null {
 export const NODE_GRID = 0.05;
 const r6n = (n: number) => Math.round(n * 1e6) / 1e6;
 
-/** `o`, a counter of Disker og podier, moved so its node lines lie on NODE_GRID on the axes asked (K10): the outer face
- *  is RECIPES.counter.face out from the node line. Kept inside the stand, flush with its edge where the grid would put it
- *  out. Other objects as they are. */
-export function onNodeGrid(v: Variant, o: PlacedObject, f: Footprint, axes = { x: true, y: true }): PlacedObject {
+/** How near a counter of Disker og podier lies against a wall, another counter or the stand edge, m (K10). */
+export const COUNTER_SNAP = 0.1;
+
+/**
+ * Where `o`, a counter of Disker og podier, stands near where it is (Byggeregel K10, Bjørn 16.11.2026): on each axis
+ * against the nearest wall, counter or stand edge within COUNTER_SNAP where it has room there, else with its node lines
+ * on whole NODE_GRID (the outer face RECIPES.counter.face out from the node line). Kept inside the stand. Other objects
+ * as they are. Without `ctx`, the grid alone.
+ */
+export function counterSpot(v: Variant, o: PlacedObject, f: Footprint, ctx?: PlaceContext): PlacedObject {
   if (!o.sections?.length) return o;
-  const b = footprintBox({ ...o, x: 0, y: 0 }, f);
+  const h = footprintBox({ ...o, x: 0, y: 0 }, f);
   const face = RECIPES.counter.face / 1000;
-  const put = (n: number, half: number, size: number) => {
-    const node = n - half + face;
-    const c = r6n(Math.round(node / NODE_GRID) * NODE_GRID + half - face);
-    return Math.max(half, Math.min(size - half, c));
+  const bl = ctx ? blockers(v, ctx, o.id) : [];
+  const boxes = ctx ? objectBoxes(ctx, { ...o, x: 0, y: 0 }) : [];
+  const free = (x: number, y: number) => !hitsAny(boxes.map((b) => shifted(b, x, y)), bl, gapOf(o));
+  const inside = (n: number, half: number, size: number) => Math.max(half, Math.min(size - half, n));
+  const grid = (n: number, half: number) => r6n(Math.round((n - half + face) / NODE_GRID) * NODE_GRID + half - face);
+  const axis = (n: number, half: number, size: number, edges: number[], room: (n: number) => boolean) => {
+    const near = edges.flatMap((e) => [e + half, e - half]).filter((c) => Math.abs(c - n) <= COUNTER_SNAP + 1e-9 && c >= half - 1e-9 && c <= size - half + 1e-9);
+    near.sort((a, b) => Math.abs(a - n) - Math.abs(b - n));
+    return r6n(near.find(room) ?? inside(grid(n, half), half, size));
   };
-  return { ...o, x: axes.x ? put(o.x, b.x1, v.stand.width) : o.x, y: axes.y ? put(o.y, b.y1, v.stand.depth) : o.y };
+  const across = (r: Box, a: 'x' | 'y', at: number, half: number) => (a === 'x' ? r.y0 < at + half && r.y1 > at - half : r.x0 < at + half && r.x1 > at - half);
+  const x = axis(o.x, h.x1, v.stand.width, [0, v.stand.width, ...bl.filter((r) => across(r, 'x', o.y, h.y1)).flatMap((r) => [r.x0, r.x1])], (c) => free(c, o.y));
+  const y = axis(o.y, h.y1, v.stand.depth, [0, v.stand.depth, ...bl.filter((r) => across(r, 'y', x, h.x1)).flatMap((r) => [r.y0, r.y1])], (c) => free(x, c));
+  return { ...o, x, y };
 }
 
-function clampInto(v: Variant, o: PlacedObject, f: Footprint): PlacedObject {
+function clampInto(v: Variant, o: PlacedObject, f: Footprint, ctx?: PlaceContext): PlacedObject {
   const b = footprintBox({ ...o, x: 0, y: 0 }, f);
   const hw = b.x1;
   const hd = b.y1;
-  // A counter of Disker og podier on its node grid (K10)
-  if (o.sections?.length) return onNodeGrid(v, o, f);
+  // A counter of Disker og podier against what is near, else on its node grid (K10)
+  if (o.sections?.length) return counterSpot(v, o, f, ctx);
   // On the 5 cm grid, never rounded out past the edge (a 1020 counter at the edge: 5,49 is 5,45, not 5,50)
   const r = (n: number, lo: number, hi: number) => {
     const q = Math.round(Math.max(lo, Math.min(hi, n)) * 20) / 20;
@@ -178,15 +196,15 @@ export function findSpot(v: Variant, ctx: PlaceContext, o: PlacedObject, radius:
   if (!f) return null;
   const bl = blockers(v, ctx, o.id);
   const boxes = objectBoxes(ctx, o);
-  const free = (q: PlacedObject) => !hitsAny(boxes.map((b) => shifted(b, q.x - o.x, q.y - o.y)), bl);
-  const start = clampInto(v, o, f);
+  const free = (q: PlacedObject) => !hitsAny(boxes.map((b) => shifted(b, q.x - o.x, q.y - o.y)), bl, gapOf(o));
+  const start = clampInto(v, o, f, ctx);
   if (free(start)) return start;
   for (let r = 0.05; r <= radius + 1e-9; r += 0.05) {
     let best: PlacedObject | null = null;
     let bd = Infinity;
     for (let k = 0; k < 24; k++) {
       const t = (k / 24) * Math.PI * 2;
-      const q = clampInto(v, { ...o, x: o.x + Math.cos(t) * r, y: o.y + Math.sin(t) * r }, f);
+      const q = clampInto(v, { ...o, x: o.x + Math.cos(t) * r, y: o.y + Math.sin(t) * r }, f, ctx);
       if (!free(q)) continue;
       const d = Math.hypot(q.x - o.x, q.y - o.y);
       if (d < bd) {
@@ -231,7 +249,7 @@ export function moveObject(v: Variant, ctx: PlaceContext, id: string, x: number,
     objects: v.objects.map((o) => {
       if (o.id !== id) return o;
       const f = objectFootprint(ctx, o);
-      return f ? clampInto(v, { ...o, x, y }, f) : o;
+      return f ? clampInto(v, { ...o, x, y }, f, ctx) : o;
     }),
   };
 }
@@ -368,7 +386,7 @@ export function removeObjects(v: Variant, product: string, n: number, soldAs = (
 export function conflicts(v: Variant, ctx: PlaceContext): Set<string> {
   const out = new Set<string>();
   for (const o of v.objects) {
-    if (hitsAny(objectBoxes(ctx, o), blockers(v, ctx, o.id))) out.add(o.id);
+    if (hitsAny(objectBoxes(ctx, o), blockers(v, ctx, o.id), gapOf(o))) out.add(o.id);
   }
   return out;
 }
@@ -415,7 +433,7 @@ export function rotateObject(v: Variant, ctx: PlaceContext, id: string, by = 90)
   if (!o || !f) return null;
   const rot = turnBy(o.rot, by);
   if (!fitsStand(v, footprintBox({ x: 0, y: 0, rot }, f))) return null;
-  const turned = clampInto(v, { ...o, rot }, f);
+  const turned = clampInto(v, { ...o, rot }, f, ctx);
   const r = settleObject({ ...v, objects: v.objects.map((x) => (x.id === id ? turned : x)) }, ctx, id, turned);
   return r.ok ? r.v : null;
 }
@@ -429,7 +447,7 @@ export function setObjectProduct(v: Variant, ctx: PlaceContext, id: string, prod
   const f = ctx.footprint(product);
   if (!o || !f) return null;
   if (!fitsStand(v, footprintBox({ x: 0, y: 0, rot: o.rot }, f))) return null;
-  const swapped = clampInto(v, { ...o, product }, f);
+  const swapped = clampInto(v, { ...o, product }, f, ctx);
   const r = settleObject({ ...v, objects: v.objects.map((x) => (x.id === id ? swapped : x)) }, ctx, id, swapped);
   return r.ok ? r.v : null;
 }

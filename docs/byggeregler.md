@@ -528,7 +528,8 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   10 cm, og ingenting over en disk; et klikk lagrer den, et klikk på en disk velger den. Knutepunktlinjene står på hele 5 cm i
   standen (Bjørn 16.11.2026), både når disken settes, tegnes og flyttes, og ytterflaten 10 mm utenfor. Unntaket er når
   magneten legger den inntil en vegg, en disk eller standkanten; da står den inntil, og ved standkanten står den
-  alltid inntil. Trykk og dra tegner videre fra
+  alltid inntil. Magneten virker også når disken flyttes. Ytterflaten er diskens virkelige mål: den går aldri inn i en
+  vegg eller en annen disk, og mot en standvegg står den mot veggens flate, ikke mot standkanten under veggen. Trykk og dra tegner videre fra
   seksjonen, som står fast fra trykket: i hver retning for seg vokser disken `round(d / 500) × 500` på den siden når
   pekeren går `d` forbi kanten, inne i seksjonen skjer ingenting, og begge retninger gir et rektangel. Der den ikke får
   plass, nektes den med «Ikke plass til disken her». En disk kan stå helt inntil en vegg. Shift bytter tegnestørrelsen

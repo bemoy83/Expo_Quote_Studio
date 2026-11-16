@@ -9,10 +9,10 @@ import { RECIPES } from '../foga/recipes';
 import { counterBuildOf, snap, toLocal, toPlan } from './counterShape';
 import { prunedSides } from './podiumFaces';
 import { lowered } from './podiumShelves';
-import { frontRot, snapShift } from './counters';
+import { frontRot } from './counters';
 import { stockByArtnr, stockSections } from './podiumStock';
 import { nextId } from './ids';
-import { addAt, anywhere, onNodeGrid, blockers, COUNTER_STOCK_RAL, footprintBox, hitsAny, objectBoxes, objectFootprint, type PlaceContext } from './objects';
+import { addAt, anywhere, counterSpot, gapOf, blockers, COUNTER_STOCK_RAL, footprintBox, hitsAny, objectBoxes, objectFootprint, type PlaceContext } from './objects';
 import { bounds, covered, edgeRuns, EPS, GRID, overlaps, withSections, type EdgeRun, type Range } from './podiumSections';
 import type { CounterSection, PlacedObject, Point, Variant } from './types';
 import { axisSpan, rebaseAxis, type DrawAxis } from './drawAxis';
@@ -171,7 +171,7 @@ export function hasRoom(v: Variant, ctx: PlaceContext, o: PlacedObject): boolean
   if (!f) return false;
   const b = footprintBox(o, f);
   const inside = b.x0 > -EPS && b.y0 > -EPS && b.x1 < v.stand.width + EPS && b.y1 < v.stand.depth + EPS;
-  return inside && !hitsAny(objectBoxes(ctx, o), blockers(v, ctx, o.id));
+  return inside && !hitsAny(objectBoxes(ctx, o), blockers(v, ctx, o.id), gapOf(o));
 }
 
 /** No room for the counter here (K10). */
@@ -278,9 +278,8 @@ export function podiumAt(v: Variant, ctx: PlaceContext, pen: { product: string; 
   const b = footprintBox(o, f);
   const into = (lo: number, hi: number, size: number) => (lo < 0 ? -lo : hi > size ? size - hi : 0);
   const kept = { ...o, x: o.x + into(b.x0, b.x1, v.stand.width), y: o.y + into(b.y0, b.y1, v.stand.depth) };
-  const s = snapShift(v, footprintBox(kept, f), blockers(v, ctx, id));
   // Against a wall, counter or the stand edge within 10 cm, else its node lines on whole 5 cm (K10)
-  const at = onNodeGrid(v, { ...kept, x: snap(kept.x + s.x), y: snap(kept.y + s.y) }, f, { x: !s.x, y: !s.y });
+  const at = counterSpot(v, kept, f, ctx);
   return placed(v, ctx, at, at);
 }
 
