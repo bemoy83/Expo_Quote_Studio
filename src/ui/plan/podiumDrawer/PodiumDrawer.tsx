@@ -1,14 +1,15 @@
 // Drawer for a counter of Disker og podier (trinn 2, mockup «Standskisse v10»): one side at a time, seen from outside.
 // Laid out like the wall drawer: settings on the left with two pages, «Sider og hyller» (what each part or light opening
 // of the side is, K16, K17; the shelves and height of the sections behind, K18, K19) and «Farge og profilering»
-// (PodiumDecor.tsx: the counter's colour, K6, print and decals, K20); the mini plan or the motif library in the detail
-// height, the side's drawing on the right and the hint across the bottom. Without a part chosen the settings act on the
+// (PodiumDecor.tsx: the counter's colour, K6, print and decals, K20), in the order the counter is built and nothing in
+// it that changes length, so the column stands still; the side's drawing on the right, every side in the counter's
+// scale, with the map that picks a side in its top left corner (detail only); the hint across the bottom. Without a part chosen the settings act on the
 // whole side; a click in the drawing chooses the light opening under it (the part when it has no shelves), a click on
 // it again the whole side.
 import { LibraryBig, Palette } from 'lucide-react'
 import { useState } from 'react'
 import { counterRal, removeObject } from '../../../domain/objects'
-import { podiumDecals, updatePodiumDecal } from '../../../domain/podiumDecor'
+import { podiumDecals, takesDecor, updatePodiumDecal } from '../../../domain/podiumDecor'
 import { NO_DOOR, setPodiumLight, takesDoor } from '../../../domain/podiumFaces'
 import { heightName, HEIGHTS, outerHeight, podiumSize, setSectionHeight } from '../../../domain/podiums'
 import { SHELF_HEIGHTS, lowered, movePodiumShelf, setPodiumShelf } from '../../../domain/podiumShelves'
@@ -23,7 +24,7 @@ import type { PlanSelection } from '../selection'
 import { PodiumDecor } from './PodiumDecor'
 import { PodiumElevation } from './PodiumElevation'
 import { PodiumMap } from './PodiumMap'
-import { chosenSide, drawerSides, sideDecor, sideElevation, type ElevationPart } from './podiumView'
+import { chosenSide, counterFrame, drawerSides, sideDecor, sideElevation, type ElevationPart } from './podiumView'
 
 interface Props {
   v: Variant
@@ -77,6 +78,8 @@ export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect,
   const edit = (fn: (v: Variant) => Variant) => (setGone(0), onEdit(fn))
   const decor = sideDecor(o, S.side, (id) => findMotif(motifs, id)?.ratio ?? 0)
   const decals = podiumDecals(o.sections ?? [])
+  // K20: nothing chosen takes print or a decal (open all over)
+  const decorOpen = !parts.some((p) => takesDecor(o.sections!, p.part))
   const chosenDecal = decals.find((d) => d.decal.id === sel.podiumDecal)
 
   // K17: no sliding door on a part of 250; with the whole side chosen, on the parts that take one
@@ -109,8 +112,8 @@ export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect,
     ) : undefined
   const hint =
     page === 'sides'
-      ? `${gone ? `Lavere høyde tok bort ${count(gone, 'hylle', 'hyller')} · ` : ''}${pi === undefined ? 'Klikk en del eller en åpning i risset for bare den' : 'Klikk den igjen for hele siden'} · dra toppen av en seksjon for høyden, en hylle for hyllehøyden · ‹ › bytter del · åpen: ingen plate · skyvedør: to plater i sporet · velg side i miniplanen eller ved å klikke disken i planen`
-      : `Fargen gjelder hele disken, også dørene · Print og motiv gjelder ${pi === undefined ? 'hele siden' : 'delen'} · ${chosenDecal ? 'dra dekalen for å flytte, håndtakene for å skalere' : 'klikk en dekal i risset for å flytte og skalere den'} · aldri på åpen del`
+      ? `${gone ? `Lavere høyde tok bort ${count(gone, 'hylle', 'hyller')} · ` : ''}${doorable.length ? '' : `${NO_DOOR} · `}${pi === undefined ? 'Klikk en del eller en åpning i risset for bare den' : 'Klikk den igjen for hele siden'} · dra toppen av en seksjon for høyden, en hylle for hyllehøyden · ‹ › bytter del · åpen: ingen plate · skyvedør: to plater i sporet · velg side i kartet eller ved å klikke disken i planen`
+      : `${decorOpen ? 'Åpen: ingen print eller dekal · ' : ''}Fargen gjelder hele disken, også dørene · Print og motiv gjelder ${pi === undefined ? 'hele siden' : 'delen'} · ${chosenDecal ? 'dra dekalen for å flytte, håndtakene for å skalere' : 'klikk en dekal i risset for å flytte og skalere den'} · aldri på åpen del`
 
   return (
     <section className="wall-drawer drawer2" aria-label={`${name} sett utenfra`}>
@@ -126,27 +129,20 @@ export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect,
           <>
           <Section title={scope} aside={kind ? KIND_NAME[kind] : 'blandet'} tools={partNav}>
             <FlatChoice<Kind> label="Hva delen er" value={kind ?? ('' as Kind)} onChange={setKind} options={options} />
-            {!doorable.length && <p className="set-note">{NO_DOOR}</p>}
+          </Section>
+          {/* K18: the height of the section behind the part, or of every section along the side, before the shelves that
+              must stand lower. K23: the whole counter on inserts 700, a small switch beside the title; always on over a
+              foot plate */}
+          <Section title={several ? 'Seksjonene · høyde' : 'Seksjonen · høyde'} aside={`${heights.map((h) => mm(outerHeight(h) / 1000)).join('/')} mm`} tools={foot}>
+            <FlatChoice<number> label="Høyde" value={heights.length === 1 ? heights[0] : 0} onChange={(h) => heightOf(secs, h)} options={HEIGHTS.map((h) => ({ value: h, label: heightName(h), title: `${outerHeight(h)} mm utvendig` }))} />
           </Section>
           {/* K19: shelves at CC 250, 500 and 750, below the section's height, named by their step as the heights (K12) */}
           <Section title={several ? 'Seksjonene · hyller' : 'Seksjonen · hyller'} aside={shelfCount ? count(shelfCount, 'hylle', 'hyller') : 'ingen'}>
             <FlatToggles<number> label="Hyller" value={shelvesNow} onToggle={toggleShelf} options={SHELF_HEIGHTS.map((y) => ({ value: y, label: heightName(y), disabled: y >= Math.max(...secs.map((i) => o.sections![i].h)), title: y >= lowest ? 'Hyllen må stå lavere enn seksjonen' : `Hylle ${heightName(y)} · ${outerHeight(y)} mm over gulvet, topp skinne` }))} />
           </Section>
-          {/* K18: the height of the section behind the part, or of every section along the side. K23: the whole counter on
-              inserts 700, a small switch beside the title so the mini plan keeps its room; always on over a foot plate */}
-          <Section title={several ? 'Seksjonene · høyde' : 'Seksjonen · høyde'} aside={`${heights.map((h) => mm(outerHeight(h) / 1000)).join('/')} mm`} tools={foot}>
-            <FlatChoice<number> label="Høyde" value={heights.length === 1 ? heights[0] : 0} onChange={(h) => heightOf(secs, h)} options={HEIGHTS.map((h) => ({ value: h, label: heightName(h), title: `${outerHeight(h)} mm utvendig` }))} />
-          </Section>
           </>
         ) : (
           <PodiumDecor v={v} o={o} parts={parts} part={pi} scope={scope} partNav={partNav} decal={chosenDecal} motifs={motifs} onUpload={onUpload} select={select} onEdit={onEdit} />
-        )}
-
-        {/* The mini plan on «Sider og hyller», the motif library on «Farge og profilering»: one under the settings, as in the wall drawer */}
-        {page === 'sides' && sides.length > 1 && (
-          <Section title="Velg side" aside={`${S.name} · ${si + 1} av ${sides.length}`} className="wd-sec">
-            <PodiumMap o={o} sides={sides} chosen={si} onPick={showSide} />
-          </Section>
         )}
 
         <div className="wd-foot">
@@ -163,6 +159,8 @@ export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect,
         length={el.length}
         h={el.h}
         title={`${S.name[0].toUpperCase()}${S.name.slice(1)} · sett utenfra`}
+        fit={counterFrame(o)}
+        map={sides.length > 1 ? <PodiumMap o={o} sides={sides} chosen={si} onPick={showSide} /> : undefined}
         fill={plateColor(ral)}
         chosen={pi === undefined ? undefined : { part: pi, light: li }}
         onPick={(p) => pickPart(p?.part, p?.light)}

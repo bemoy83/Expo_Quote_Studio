@@ -2896,14 +2896,17 @@ select.cin {
 .drawer-frame.compact .wd-sec {
   display: none;
 }
-/* The counter's mini plan shrinks with the drawer instead of being cut off, keeping its shape (K16: pick a side) */
-.wd-sec .podium-map {
-  flex: 0 1 auto;
-  min-height: 0;
-  width: auto;
-  height: auto;
-  max-width: 100%;
-  align-self: flex-start;
+/* The map that picks a counter's side: fixed in the top left corner of its drawing, which gives way to it (detail only).
+   No card: it lies on the drawer like the drawing. */
+.podium-map-slot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  line-height: 0;
+}
+.drawer-frame.compact .podium-map-slot {
+  display: none;
 }
 /* A switch beside a section's title stays as tall as the title row */
 .set-tools .flat-choice > button {

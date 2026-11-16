@@ -126,6 +126,16 @@ export function sideElevation(o: PlacedObject, side: PodiumSide): { parts: Eleva
   return { parts, length: len + 2 * R.face, h: Math.max(...parts.map((p) => p.h), 0) }
 }
 
+/** What every side of a counter is drawn by, so they share one scale: the longest side's outer length and the highest
+ *  section's CC, mm. A short side is drawn narrow, not larger, and sides as high look as high. */
+export function counterFrame(o: PlacedObject): { length: number; h: number } {
+  const sides = podiumSides(o.sections ?? [])
+  return {
+    length: Math.max(0, ...sides.map((s) => s.b - s.a + 2 * R.face)),
+    h: Math.max(0, ...(o.sections ?? []).map((s) => s.h)),
+  }
+}
+
 /** The light openings of a part as CC bands from the floor (K16): [0, first shelf], …, [last shelf, top]. */
 export const lightBands = (p: Pick<ElevationPart, 'h' | 'shelves'>): [number, number][] => {
   const cuts = [0, ...p.shelves, p.h]

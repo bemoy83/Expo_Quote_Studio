@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest'
 import { setLight, podiumParts } from '../../../domain/podiumFaces'
 import type { CounterSection, PlacedObject } from '../../../domain/types'
-import { chosenSide, drawerSides, nearestSide, sideElevation } from './podiumView'
+import { chosenSide, counterFrame, drawerSides, nearestSide, sideElevation } from './podiumView'
 
 const sec = (x0: number, x1: number, z0: number, z1: number, h = 1000): CounterSection => ({ x: [x0, x1], z: [z0, z1], h })
 const at = (sections: CounterSection[], rot = 0): PlacedObject => ({ id: 'a', product: 'P', x: 3, y: 2, rot, sections })
@@ -37,5 +37,14 @@ describe('the drawer for Disker og podier', () => {
     expect(back.parts.map((p) => p.x1 - p.x0)).toEqual([510, 1010])
     const open = { ...two, sections: setLight(two.sections!, podiumParts(two.sections!).filter((p) => p.axis === 'z' && p.out === 1 && p.a === 250), 'open') }
     expect(sideElevation(open, s[0].side).parts.map((p) => p.lights)).toEqual([[null], ['open']])
+  })
+
+  it('every side of a counter is drawn by its longest side and highest section, so they share one scale', () => {
+    const ell = at([sec(0, 1000, 0, 500), sec(0, 500, 500, 1000, 500)])
+    expect(counterFrame(ell)).toEqual({ length: 1020, h: 1000 })
+    const sides = drawerSides(ell)
+    // Each side is no longer than the frame, the short ones narrow in it
+    expect(Math.max(...sides.map((s) => sideElevation(ell, s.side).length))).toBe(1020)
+    expect(Math.min(...sides.map((s) => sideElevation(ell, s.side).length))).toBe(520)
   })
 })

@@ -64,8 +64,9 @@ export function PodiumDecor({ v, o, parts, part, scope, partNav, decal, motifs, 
 
   return (
     <>
+      {/* K6: the colour is the whole counter's, print the side's or the part's: the title says which the swatch is */}
       <Section
-        title={scope}
+        title={scopePrint ? scope : 'Hele disken'}
         aside={scopePrint ? `print · ${findMotif(motifs, scopePrint)?.name ?? 'motiv'}` : `${plateName(ral)} ${ral}`}
         tools={
           <>
@@ -75,11 +76,13 @@ export function PodiumDecor({ v, o, parts, part, scope, partNav, decal, motifs, 
         }
       >
         <PlatePalette value={scopePrint ? PRINT : ral} onPick={pickSwatch} print={{ motif }} />
-        {!decorParts.length && <p className="set-note">Åpen del: ingen print eller dekal</p>}
-        <p className="set-note">Fargen gjelder hele disken (K6). Print dekker platene og dørene i {part === undefined ? 'siden' : 'delen'}.</p>
       </Section>
-      {decal && (
+      {/* Always there, so the motif library under it stands still; why print and decals do not go on what is chosen is
+          in the hint */}
+      {decal ? (
         <Section title="Dekal" aside={`${findMotif(motifs, decal.decal.motif)?.name ?? 'motiv'} · ${mm(decal.decal.w / 1000)} × ${mm(decal.decal.h / 1000)}`} tools={<IconButton icon={Trash2} label="Fjern dekalen" size={14} onClick={() => (onEdit((x) => updatePodiumDecal(x, o.id, decal.decal.id, null)), select({ podiumPart: part }))} />} />
+      ) : (
+        <Section title="Dekal" aside={decorParts.length ? 'ingen' : 'åpen'} />
       )}
       <Shelf title="Profilering" aside={motif?.name} motifs={motifs} value={motif?.id} onPick={pickMotif} onUpload={onUpload}>
         <Button variant="ghost" icon={Plus} disabled={!decorParts.length || !motif} onClick={addDecal}>

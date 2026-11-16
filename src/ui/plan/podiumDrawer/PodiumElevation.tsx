@@ -6,7 +6,7 @@
 // section a grip «75 cm» sets its height (K18), on each shelf rail a grip «Hylle 50 cm» moves the shelf (K19): both
 // snap to the 250 grid, show live and are set on release. Print (K20) shows its share of the motif in each window of
 // plate and door; a decal is chosen by a click and moved or scaled by its handles, set on release.
-import { useRef, useState, type PointerEvent } from 'react'
+import { useRef, useState, type PointerEvent, type ReactNode } from 'react'
 import type { Motif } from '../../../domain/types'
 import { heightName, HEIGHTS, outerHeight } from '../../../domain/podiums'
 import { shelfStop } from '../../../domain/podiumShelves'
@@ -57,7 +57,16 @@ interface Props {
   onDecal?: (id: string | undefined) => void
   /** Decal `id` moved or scaled: its new size and centre height (mm) and how far its centre went right. */
   onDecalBox?: (id: string, box: { w: number; h: number; dx: number; y: number }) => void
+  /** The counter's longest side and highest CC, mm (counterFrame): every side drawn in its scale, in the middle with the
+   *  floor in the same place. Left out: the side fills the drawing (the work order). */
+  fit?: { length: number; h: number }
+  /** The map that picks a side, fixed in the top left corner (detail only); the drawing gives way right or down,
+   *  whichever leaves it larger. */
+  map?: ReactNode
 }
+
+/** Room between the map and the drawing, px. */
+const MAP_GAP = 12
 
 /** A decal being moved (`move`) or scaled by an edge, from where the pointer went down (m in the drawing). */
 interface DecalDrag {
@@ -74,8 +83,32 @@ type Drag = { section: number; y0: number } & ({ kind: 'top'; h0: number; h: num
 /** The nearest height on the grid (K18). */
 const snap = (mm: number) => HEIGHTS.reduce((a, b) => (Math.abs(b - mm) < Math.abs(a - mm) ? b : a))
 
-export function PodiumElevation({ parts: given, length, h: hTop, title, fill, chosen, onPick, onHeight, onShelf, prints = [], decals = [], motifs = [], decal, onDecal, onDecalBox }: Props) {
+/** The drawing's view box: a frame `Lf` long (the counter's longest side) and `H` high, the side `L` long in its middle;
+ *  with a map in the top left corner the room it takes is left out to its right or under it, whichever leaves the
+ *  drawing larger. `top`: the drawing's own top, for the title. */
+function place(size: { w: number; h: number } | null, Lf: number, L: number, H: number, map: { w: number; h: number } | null) {
+  const fit = (s: typeof size) => {
+    const f = frame(s, Lf, H, [], { chainOver: true })
+    const [x0, y0, w, h] = f.viewBox.split(' ').map(Number)
+    return { x0, y0, w, h, u: f.u, top: y0 }
+  }
+  let b = fit(size)
+  if (size && map) {
+    const rw = map.w + MAP_GAP
+    const rh = map.h + MAP_GAP
+    const right = fit({ w: Math.max(1, size.w - rw), h: size.h })
+    const down = fit({ w: size.w, h: Math.max(1, size.h - rh) })
+    // The smaller unit is the larger drawing
+    b = right.u <= down.u ? { ...right, x0: right.x0 - rw * right.u, w: right.w + rw * right.u } : { ...down, y0: down.y0 - rh * down.u, h: down.h + rh * down.u }
+  }
+  // The side in the middle of the frame
+  return { viewBox: `${b.x0 - (Lf - L) / 2} ${b.y0} ${b.w} ${b.h}`, u: b.u, top: b.top }
+}
+
+export function PodiumElevation({ parts: given, length, h: hTop, title, fill, chosen, onPick, onHeight, onShelf, prints = [], decals = [], motifs = [], decal, onDecal, onDecalBox, fit, map }: Props) {
   const box = useRef<HTMLDivElement>(null)
+  const mapBox = useRef<HTMLDivElement>(null)
+  const mapSize = useElementSize(mapBox, true)
   const svg = useRef<SVGSVGElement>(null)
   const size = useElementSize(box, true)
   const [drag, setDrag] = useState<Drag | null>(null)
@@ -90,8 +123,10 @@ export function PodiumElevation({ parts: given, length, h: hTop, title, fill, ch
     : given
   const h = drag ? Math.max(...parts.map((p) => p.h)) : hTop
   const L = length / 1000
-  const H = outerHeight(drag ? HEIGHTS[HEIGHTS.length - 1] : h) / 1000
-  const view = frame(size, L, H, [], { chainOver: true })
+  // One scale for every side of the counter: its longest side and highest section (as high as the highest step while a
+  // top or shelf is dragged, so the drawing does not rescale under the pointer)
+  const H = outerHeight(drag ? HEIGHTS[HEIGHTS.length - 1] : Math.max(h, fit?.h ?? 0)) / 1000
+  const view = place(size, Math.max(L, (fit?.length ?? 0) / 1000), L, H, mapSize?.w ? mapSize : null)
   const sc = planScale(1 / view.u, {})
   const px = (n: number) => sizePx(sc, n)
   const x = (mm: number) => mm / 1000
@@ -234,6 +269,11 @@ export function PodiumElevation({ parts: given, length, h: hTop, title, fill, ch
   return (
     <div className="wd-view">
       <div ref={box} className="wd-fit">
+        {map && (
+          <div ref={mapBox} className="podium-map-slot">
+            {map}
+          </div>
+        )}
         <svg ref={svg} className="wd-svg" viewBox={view.viewBox} preserveAspectRatio="xMidYMid meet" role="img" aria-label={`${title}, ${length} mm`} onPointerMove={decalMove} onPointerUp={decalUp} onPointerCancel={() => setDd(null)}>
           {parts.map((p, i) => {
             const w = x(p.x1 - p.x0)
