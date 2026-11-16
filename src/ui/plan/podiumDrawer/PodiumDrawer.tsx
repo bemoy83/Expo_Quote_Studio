@@ -67,6 +67,7 @@ export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect,
   const kind = shared(parts, li)
   const ral = counterRal(o)
   const over = overPlate(place, o, footPlatesOf(v))
+  const raised = over || !!o.inserts
   const name = counterName(o)
   const size = podiumSize(o)
   const select = (x: Partial<PlanSelection>) => onSelect({ objectId: o.id, podiumSide: S.key, ...x })
@@ -99,6 +100,9 @@ export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect,
   const toggleShelf = (y: number, on: boolean) => edit((x) => setPodiumShelf(x, o.id, secs, y, on))
   const several = pi === undefined && secs.length > 1
   const scope = pi === undefined ? 'Hele siden' : li === undefined ? `Del ${pi + 1} av ${el.parts.length}` : `Del ${pi + 1} · åpning ${li + 1}/${parts[0].lights.length}`
+  const foot = (
+    <FlatToggles<'insert'> label="Hele disken på innsats" value={raised ? ['insert'] : []} onToggle={(_, on) => edit((x) => setCounterInserts(x, o.id, on))} options={[{ value: 'insert', label: 'Innsats', disabled: over, title: over ? 'Står over en fotplate: alltid på innsats 700, 7 mm opp' : 'Hele disken på innsats 700: 7 mm opp, like høy som en disk over fotplate' }]} />
+  )
   const partNav =
     el.parts.length > 1 ? (
       <PrevNext what="del" onPrev={() => pickPart(pi === undefined ? el.parts.length - 1 : pi === 0 ? undefined : pi - 1)} onNext={() => pickPart(pi === undefined ? 0 : pi === el.parts.length - 1 ? undefined : pi + 1)} />
@@ -128,13 +132,10 @@ export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect,
           <Section title={several ? 'Seksjonene · hyller' : 'Seksjonen · hyller'} aside={shelfCount ? count(shelfCount, 'hylle', 'hyller') : 'ingen'}>
             <FlatToggles<number> label="Hyller" value={shelvesNow} onToggle={toggleShelf} options={SHELF_HEIGHTS.map((y) => ({ value: y, label: heightName(y), disabled: y >= Math.max(...secs.map((i) => o.sections![i].h)), title: y >= lowest ? 'Hyllen må stå lavere enn seksjonen' : `Hylle ${heightName(y)} · ${outerHeight(y)} mm over gulvet, topp skinne` }))} />
           </Section>
-          {/* K18: the height of the section behind the part, or of every section along the side */}
-          <Section title={several ? 'Seksjonene · høyde' : 'Seksjonen · høyde'} aside={`${heights.map((h) => mm(outerHeight(h) / 1000)).join('/')} mm`}>
+          {/* K18: the height of the section behind the part, or of every section along the side. K23: the whole counter on
+              inserts 700, a small switch beside the title so the mini plan keeps its room; always on over a foot plate */}
+          <Section title={several ? 'Seksjonene · høyde' : 'Seksjonen · høyde'} aside={`${heights.map((h) => mm(outerHeight(h) / 1000)).join('/')} mm`} tools={foot}>
             <FlatChoice<number> label="Høyde" value={heights.length === 1 ? heights[0] : 0} onChange={(h) => heightOf(secs, h)} options={HEIGHTS.map((h) => ({ value: h, label: heightName(h), title: `${outerHeight(h)} mm utvendig` }))} />
-          </Section>
-          {/* K23: on inserts 700 over a foot plate always; elsewhere by choice, as high as one over a plate */}
-          <Section title="Hele disken · fot" aside={over ? 'over fotplate · +7 mm' : o.inserts ? 'innsats · +7 mm' : 'rett på gulvet'}>
-            <FlatToggles<'insert'> label="Fot" value={over || o.inserts ? ['insert'] : []} onToggle={(_, on) => edit((x) => setCounterInserts(x, o.id, on))} options={[{ value: 'insert', label: 'Innsats 700', disabled: over, title: over ? 'Står over en fotplate: alltid på innsats' : 'Løfter disken 7 mm, like høy som en disk over fotplate' }]} />
           </Section>
           </>
         ) : (
