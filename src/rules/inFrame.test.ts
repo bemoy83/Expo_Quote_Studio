@@ -7,12 +7,10 @@ describe('InFrame assumptions kept in the browser', () => {
     expect(ownInFrame({ ...def })).toEqual({});
     expect(ownInFrame({ ...def, bleed: 14 })).toEqual({ bleed: 14 });
   });
-  it('a stored old default gives way to today’s', () => {
-    expect(ownInFrame({ ...def, stag: 1000, bleed: 14 }, true)).toEqual({ bleed: 14 });
-    // Set on Kostgrunnlag now, it is a choice
+  it('a value other than the default is a choice', () => {
     expect(ownInFrame({ ...def, stag: 1000 })).toEqual({ stag: 1000 });
   });
   it('reads nothing from what is not an object', () => {
-    expect(ownInFrame(null, true)).toEqual({});
+    expect(ownInFrame(null)).toEqual({});
   });
 });

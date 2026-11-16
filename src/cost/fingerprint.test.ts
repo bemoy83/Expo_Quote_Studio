@@ -15,7 +15,7 @@ describe('fingerprint', () => {
   it('the calc code changes with any number the calc runs on, own or example', () => {
     expect(pricingFrom(EXAMPLE_BASIS).code).toBe(DEFAULT_PRICING.code);
     const file = (parametere: unknown) =>
-      JSON.stringify({ format: 'kostgrunnlag', versjon: 1, kostversjon: '2026-11 A', dato: '2026-11-07', parametere });
+      JSON.stringify({ format: 'kostgrunnlag', versjon: 2, kostversjon: '2026-11 A', dato: '2026-11-07', parametere });
     const a = parseBasis(file({ indirect: P.indirect }));
     const b = parseBasis(file({ indirect: 0.2 }));
     if (!a.ok || !b.ok) throw new Error('parse');

@@ -355,6 +355,6 @@ export interface CostBasisRef {
   version: string;
   date: string;
   example: boolean;
-  /** Fingerprint of everything the calc ran on (`PricingData.code`, src/pricing/data.ts). Missing in older files. */
-  code?: string;
+  /** Fingerprint of everything the calc ran on (`PricingData.code`, src/pricing/data.ts). */
+  code: string;
 }
