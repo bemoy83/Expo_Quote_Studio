@@ -137,10 +137,31 @@ export function hits(box: Omit<Box, 'kind'>, others: Box[]): Box | null {
   return others.find((r) => a.x0 < r.x1 && a.x1 > r.x0 && a.y0 < r.y1 && a.y1 > r.y0) ?? null;
 }
 
+/** The grid a counter of Disker og podier stands on (Byggeregel K10, Bjørn 16.11.2026): its node lines on whole 5 cm. */
+export const NODE_GRID = 0.05;
+const r6n = (n: number) => Math.round(n * 1e6) / 1e6;
+
+/** `o`, a counter of Disker og podier, moved so its node lines lie on NODE_GRID on the axes asked (K10): the outer face
+ *  is RECIPES.counter.face out from the node line. Kept inside the stand, flush with its edge where the grid would put it
+ *  out. Other objects as they are. */
+export function onNodeGrid(v: Variant, o: PlacedObject, f: Footprint, axes = { x: true, y: true }): PlacedObject {
+  if (!o.sections?.length) return o;
+  const b = footprintBox({ ...o, x: 0, y: 0 }, f);
+  const face = RECIPES.counter.face / 1000;
+  const put = (n: number, half: number, size: number) => {
+    const node = n - half + face;
+    const c = r6n(Math.round(node / NODE_GRID) * NODE_GRID + half - face);
+    return Math.max(half, Math.min(size - half, c));
+  };
+  return { ...o, x: axes.x ? put(o.x, b.x1, v.stand.width) : o.x, y: axes.y ? put(o.y, b.y1, v.stand.depth) : o.y };
+}
+
 function clampInto(v: Variant, o: PlacedObject, f: Footprint): PlacedObject {
   const b = footprintBox({ ...o, x: 0, y: 0 }, f);
   const hw = b.x1;
   const hd = b.y1;
+  // A counter of Disker og podier on its node grid (K10)
+  if (o.sections?.length) return onNodeGrid(v, o, f);
   // On the 5 cm grid, never rounded out past the edge (a 1020 counter at the edge: 5,49 is 5,45, not 5,50)
   const r = (n: number, lo: number, hi: number) => {
     const q = Math.round(Math.max(lo, Math.min(hi, n)) * 20) / 20;
