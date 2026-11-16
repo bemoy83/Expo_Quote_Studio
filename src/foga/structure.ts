@@ -75,6 +75,8 @@ export interface FogaStructure {
   /** Counters built on site (Byggeregler K10–K13): their parts, picked loose. A standard counter is picked whole and is
    *  not here (K22). */
   counters?: CounterParts;
+  /** Inserts 700 under counters standing over a foot plate, without set screw (Byggeregel K23). */
+  counterInserts?: number;
 }
 
 /** A shelf board: standard 976 × 300, corner 960 × 300, narrow corner 960 × 290, 2/3 655 × 300 (Byggeregler H10–H12). */

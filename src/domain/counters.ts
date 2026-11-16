@@ -2,9 +2,9 @@
 // way a counter faces when placed, and how it moves in against what is near. Their sections and pen are in podiums.ts.
 import { stockOf } from './podiumStock';
 import { addParts, counterParts, type CounterParts } from '../foga/counter';
-import { counterBuildOf } from './counterShape';
+import { counterBuildOf, toPlan } from './counterShape';
 import { openSides } from './grid';
-import { counterRal } from './objects';
+import { counterRal, objectBoxes, type PlaceContext } from './objects';
 import type { Point, Variant } from './types';
 
 const EPS = 1e-6;
@@ -18,6 +18,39 @@ export function builtCounterParts(v: Variant): CounterParts | undefined {
   const drawn = v.objects.filter((o) => o.sections && !stockOf(o.sections));
   if (!drawn.length) return undefined;
   return drawn.map((o) => counterParts(counterBuildOf(o), counterRal(o))).reduce(addParts);
+}
+
+/** A rectangle on the plan, m. */
+export interface PlanRect {
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+}
+
+const overlaps = (a: PlanRect, b: PlanRect) => a.x0 < b.x1 - EPS && b.x0 < a.x1 - EPS && a.y0 < b.y1 - EPS && b.y0 < a.y1 - EPS;
+
+/**
+ * Inserts 700 under the counters that stand over a foot plate (Byggeregel K23, Bjørn 16.11.2026), by counter id: a
+ * counter with a plate under it gets an insert 700 without its set screw in the centre tube of each of its uprights,
+ * about 7 mm, so its bottom rails clear the 5 mm plate; an upright standing on the plate itself gets none. A counter
+ * clear of every plate is not here. Standard counters too, at the same price (K22).
+ */
+export function counterInserts(v: Variant, ctx: Pick<PlaceContext, 'footprint' | 'isCounter'>, plates: readonly PlanRect[]): Map<string, number> {
+  const out = new Map<string, number>();
+  if (!plates.length) return out;
+  for (const o of v.objects) {
+    if (!ctx.isCounter(o.product) || !objectBoxes(ctx, o).some((b) => plates.some((p) => overlaps(b, p)))) continue;
+    const n = counterBuildOf(o)
+      .profiles.filter((p) => p.role === 'post')
+      .filter((p) => {
+        const [a, b] = [toPlan(o, [p.box.x[0], p.box.z[0]]), toPlan(o, [p.box.x[1], p.box.z[1]])];
+        const r = { x0: Math.min(a[0], b[0]), y0: Math.min(a[1], b[1]), x1: Math.max(a[0], b[0]), y1: Math.max(a[1], b[1]) };
+        return !plates.some((q) => overlaps(r, q));
+      }).length;
+    if (n) out.set(o.id, n);
+  }
+  return out;
 }
 
 /** Which way a standard counter placed at `a` faces (K22): toward the open side of the stand across it (the aisle, where the

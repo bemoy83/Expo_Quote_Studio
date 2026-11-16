@@ -158,6 +158,8 @@ export interface ShelfRecipe {
 export interface CounterRecipe {
   /** The profile standing in a node, by the directions it joins (K8): two at a right angle, three, four. */
   nodes: { corner: string; tee: string; cross: string };
+  /** In the centre tube of each upright of a counter over a foot plate, without its set screw: about 7 mm (K23). */
+  insert: string;
   rail: string;
   /** A rail inside the counter, between two parts: a 94, carrying a top and a shelf on both sides, no plate (K8). Its
    *  section across, mm. */
@@ -263,6 +265,7 @@ export const RECIPES: Recipes = {
   // rail ends, wall plate 3 mm, Fibraplast 6 mm top and shelf, straight on the floor (no feet)
   counter: {
     nodes: { corner: '92L', tee: '93', cross: '94' },
+    insert: '700',
     rail: '93',
     innerRail: { code: '94', size: 40 },
     module: { whole: 1000, half: 500 },

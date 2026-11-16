@@ -3,12 +3,12 @@
 // textile production and the Foga structure, split by who pays.
 // Byggeregler B1, B2 (docs/byggeregler.md).
 import { resolveGroup } from '../catalog/groups';
-import { displayName, indexCatalog, type CatalogIndex } from '../catalog/lookup';
+import { displayName, indexCatalog, placeContext, type CatalogIndex } from '../catalog/lookup';
 import type { Catalog } from '../catalog/types';
 import { pointKey } from '../domain/grid';
 import { hiddenPlates } from '../domain/print';
 import { shelfBrackets } from '../domain/shelves/brackets';
-import { builtCounterParts } from '../domain/counters';
+import { builtCounterParts, counterInserts } from '../domain/counters';
 import type { Point, StandWallTerms, Variant } from '../domain/types';
 import { builtModules, wallKind, wallPoints, type BuiltModule, type WallKind } from '../domain/walls';
 import { bomSizes, beamSpecs, structureOf } from '../foga/fromVariant';
@@ -27,7 +27,7 @@ import type { InnerBeamLayout } from './beams/innerBeams';
 import { production, type Production } from './textile/production';
 import type { SupportBeamLayout } from './beams/supportBeams';
 import type { CalcLine } from './types';
-import { wallSupports, type WallSupport } from './wallSupports';
+import { footPlateRect, wallSupports, type WallSupport } from './wallSupports';
 
 export interface CalcContext {
   v: Variant;
@@ -68,6 +68,8 @@ export interface CalcContext {
   /** Foot plates under walls that stand free, and all of them (with those under drawn takdrager's own posts). */
   freeWallFeet: WallSupport[];
   wallFeet: WallSupport[];
+  /** Inserts 700 under the counters over a foot plate, by counter id (Byggeregel K23). */
+  inserts: ReadonlyMap<string, number>;
   prod: Production;
   /** Foga structure of what the exhibitor orders. */
   foga: FogaStructure;
@@ -195,9 +197,11 @@ export function calcContext(v: Variant, rules: Rules, catalog: Catalog, standWal
   const framed = standard.segments.length > 0;
   const freeWallFeet = wallSupports(mods, all, RECIPES.wall.support.rule, (m) => framed && kindOf(m) === 'stand', framed);
   const wallFeet = [...freeWallFeet, ...inner.feet];
+  // K23: a counter over a foot plate stands on inserts 700
+  const inserts = counterInserts(v, placeContext(rules, catalog), wallFeet.map((f) => footPlateRect(f, RECIPES.wall.support.foot)));
   const prod = production(v, rules, '');
   // Foga structure of what the exhibitor orders: posts, walled modules, headers and beam lengths are counted from it
-  const foga = structureOf({ mods: ours, posts: ourPoints.size + (organiserBeams ? innerPosts : beamPosts), beams: ourBeams, hooks: hookCount(organiserBeams ? hooks.filter((h) => h.inner) : hooks), lift: { posts: lift.posts.length, hooks: lift.hooks.length, walls: lift.walls.length }, production: prod, swaps, wallFeet: wallFeet.length, barePosts: wallFeet.filter((f) => ourPoints.has(pointKey(f.at))).length + inner.feet.length, curtain: (a) => idx.byArtnr.get(a)?.product.opening === 'curtain', shelves: shelfBrackets(v, rules), counters: builtCounterParts(v) });
+  const foga = structureOf({ mods: ours, posts: ourPoints.size + (organiserBeams ? innerPosts : beamPosts), beams: ourBeams, hooks: hookCount(organiserBeams ? hooks.filter((h) => h.inner) : hooks), lift: { posts: lift.posts.length, hooks: lift.hooks.length, walls: lift.walls.length }, production: prod, swaps, wallFeet: wallFeet.length, barePosts: wallFeet.filter((f) => ourPoints.has(pointKey(f.at))).length + inner.feet.length, curtain: (a) => idx.byArtnr.get(a)?.product.opening === 'curtain', shelves: shelfBrackets(v, rules), counters: builtCounterParts(v), counterInserts: [...inserts.values()].reduce((a, n) => a + n, 0) });
   // Wall posts are shared between modules: each module (door and curtain included) carries an equal share of the
   // posts of its builder
   const share = (nPosts: number, nMods: number) => (nMods ? nPosts / nMods : 0);
@@ -258,6 +262,7 @@ export function calcContext(v: Variant, rules: Rules, catalog: Catalog, standWal
     swaps,
     freeWallFeet,
     wallFeet,
+    inserts,
     prod,
     foga,
     share,

@@ -225,7 +225,7 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 
 ### Disker og podier
 
-Verktøyet for alle disker og podier (tast D), K10–K22 i [byggeregler.md](byggeregler.md). Det deler bygger, omriss, 3D
+Verktøyet for alle disker og podier (tast D), K10–K23 i [byggeregler.md](byggeregler.md). Det deler bygger, omriss, 3D
 og kalkyle med 6560, som er et ferdig oppsett i det (K22).
 
 - Modell: `PlacedObject.sections` (`CounterSection`: x og z mellom knutepunkter, mm på 250-raster, og høyden `h`). Bygget: `layoutBuild(recipe, layout, 'tight')` i `foga/counter.ts` (ingen midtskinne eller hylle,
@@ -292,6 +292,9 @@ og kalkyle med 6560, som er et ferdig oppsett i det (K22).
   Utstyr (`EquipSection.tsx`) teller raden standarddiskene (`soldAs`), + setter en med `addStockAnywhere` (podiums.ts),
   og penselen legger varen bak sin funksjon og i hånden. Gamle skisser: `asSections` (podiumStock.ts) via `countersAsSections` i `persistence/file.ts` gjør disker fra
   Disker om til seksjoner når de åpnes, og `countedAsPodier` gjør talte podier (5450) om til podier på standen.
+- Disk over fotplate (K23): `counterInserts` i `domain/counters.ts` (stolpene som ikke står på platen), platene fra
+  `footPlateRect` i `calc/wallSupports.ts`, `CalcContext.inserts`, `ITEM.counterInsert` på disklinjen og
+  `FogaStructure.counterInserts` (linjen under Disker i `foga/engine.ts`).
 - Høyde i 3D (K18): `podiumTopAt` og draget `podiumTop` i `scene3d/pointer/drag.ts`, `onUpright` i `pointer/hits.ts`.
   Arbeidsordren: `workorder/PodiumSides.tsx` («Disker sett utenfra», `PodiumElevation` uten håndtak) og
   `workorder/podiumSideList.ts` (hvilke sider som tegnes).

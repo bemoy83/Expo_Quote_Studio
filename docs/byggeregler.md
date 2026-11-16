@@ -472,8 +472,8 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   Disker og podier (K22). Kunder bestiller også andre lengder og hjørner, som bygges på stedet (K10–K13).
   *Bjørn 11.11.2026 · `RECIPES.counter.stock` · kode `src/foga/recipes.ts`, `src/catalog/defaultCatalog.ts`, `src/calc/lines/objects.ts`, `src/cost/itemDefs.ts` · test `src/foga/counter.test.ts`, `src/calc/counter.test.ts`*
 - **K2 Hjørnestolpe.** 92L (873 050 22, 30 × 30, kanal på de to innersidene) i hvert hjørne, hele høyden 1040 mm, med de
-  lukkede sidene ut. Disken står rett på gulvet uten justeringsfot, så disker kan settes helt inntil hverandre. Trengs
-  justeringsfot, bygges den utenfor 92L (ikke bygget).
+  lukkede sidene ut. Disken står rett på gulvet uten justeringsfot, så disker kan settes helt inntil hverandre. Over en
+  fotplate står den på innsats 700 (K23).
   *Bjørn 11.11.2026 · `RECIPES.counter.post`, `height`, `postSize` · kode `src/foga/counter.ts` · test `src/foga/counter.test.ts`*
 - **K3 Skinner.** 93 (873 060 22, 30 × 40, kanal i begge ender og på innsiden) rundt alle fire sidene i midten (750–790)
   og øverst (1000–1040), og 92 på gulvet foran og i begge ender; bak er det ingen bunnskinne. Skinnene står mellom
@@ -689,6 +689,12 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   katalognavnet med varianten, uten varenummer: «Bardisk», «Podie 50 × 50, 75 cm». Ferdig bygget kostes hver
   standardvare som én leid vare (`ITEM.counter` per utvendig mål og høyde).
   *Bjørn 13.11.2026 · kode `src/domain/podiumStock.ts`, `src/domain/podiums.ts`, `src/calc/lines/objects.ts`, `src/persistence/file.ts`, `src/ui/panel/sections/EquipSection.tsx`, `src/ui/podiumPen.ts`, `src/ui/plan/pointer/podium.ts`, `src/ui/plan/quick/podium.tsx`, `src/ui/useShortcuts.ts` · test `src/domain/podiumStock.test.ts`, `src/domain/podiums.test.ts`, `src/ui/podiumPen.test.ts`*
+- **K23 Disk over fotplate.** En disk som står over en fotplate 750 (S2, T12), også en standardvare (K22), får en
+  innsats 700 uten settskrue i midtrøret på hver stolpe (alle profilene i 90-serien har midtrør). Innsatsen bygger om
+  lag 7 mm, så bunnskinnene går fri av platen på 5 mm. En stolpe som står på selve platen får ingen; den står da om lag
+  2 mm lavere, og det er greit. Fotplaten blokkerer ikke disken. Prisen er den samme, også for 6560; innsatsene er i
+  kostnaden og plukkes under Disker på arbeidsordren.
+  *Bjørn 16.11.2026 · `RECIPES.counter.insert` · kode `src/domain/counters.ts`, `src/calc/context.ts`, `src/calc/lines/objects.ts`, `src/foga/engine.ts` · test `src/calc/counterInserts.test.ts`*
 
 ## P · Plukkliste og arbeidsordre
 

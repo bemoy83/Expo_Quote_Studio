@@ -331,6 +331,9 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   }
   for (const [size, qty] of of(cp?.boards).sort(([a], [b]) => larger(a, b)))
     put(BOM_GROUP.counters, `board|${size}`, { artnr: '', name: `Topp- og hylleplate, ${fogaPart(dk.board.code).name}`, detail: `${size.replace('×', ' × ')} mm`, preassembled: false }, qty);
+  // K23: under a counter over a foot plate, standard counters too, an insert 700 without set screw in each upright
+  const ins = fogaPart(dk.insert);
+  put(BOM_GROUP.counters, 'insert', { artnr: ins.artnr, name: `${ins.code} · ${ins.name}`, detail: 'Under disk over fotplate, uten settskrue: i stolpene på gulvet, ikke på platen', preassembled: false }, s.counterInserts ?? 0);
 
   // Tree order; inside a subgroup beams longest first, plates tallest first then by RAL, the rest as added
   const order = (l: BomLine) => resolveGroup(l.group).order;

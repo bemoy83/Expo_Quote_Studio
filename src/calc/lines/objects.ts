@@ -30,10 +30,13 @@ export function objectLines(c: CalcContext): CalcLine[] {
     const { h } = counter;
     const placed = v.objects.filter((o) => stock(o) && soldAs(o) === a);
     const swapped = placed.filter((o) => o.ral).length;
+    // K23: over a foot plate on inserts 700, at the same price
+    const inserts = placed.reduce((s, o) => s + (c.inserts.get(o.id) ?? 0), 0);
     const colours = [...countBy(placed.map(counterRal))].sort(([x], [y]) => x.localeCompare(y));
     return c.line(a, n, swapped ? { meta: colours.map(([ral, k]) => `RAL ${ral}${colours.length > 1 ? ` × ${k}` : ''}`).join(' · ') } : {}, [
       { id: ITEM.counter(counter.length, counter.depth, h), qty: n },
       ...(swapped ? [{ id: ITEM.counterPlates(counter.length, counter.depth, h), qty: swapped }] : []),
+      ...(inserts ? [{ id: ITEM.counterInsert, qty: inserts }] : []),
     ]);
   });
   return [...lines, ...v.objects.filter((o) => !stock(o)).map((o) => podiumLine(c, o))];
@@ -89,7 +92,7 @@ function podiumLine(c: CalcContext, o: PlacedObject): CalcLine {
   // Its name from the product list: the product it is built as, «Disk» or «Podie» (Bjørn 14.11.2026)
   const name = hit?.product.name ?? o.product;
   // Each its own article, so each gets its own position number (calc/positions.ts)
-  return c.line(o.product, 1, { name, meta, strategy: 'sum', foga: true, quote: { key: podiumKey(o.id), name, lead: true } }, podiumUses(o, counterBuildOf(o)), (hit?.variant.price ?? 0) * top);
+  return c.line(o.product, 1, { name, meta, strategy: 'sum', foga: true, quote: { key: podiumKey(o.id), name, lead: true } }, [...podiumUses(o, counterBuildOf(o)), ...(c.inserts.get(o.id) ? [{ id: ITEM.counterInsert, qty: c.inserts.get(o.id)! }] : [])], (hit?.variant.price ?? 0) * top);
 }
 
 export function looseLines(c: CalcContext): CalcLine[] {

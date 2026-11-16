@@ -76,6 +76,7 @@ export const ITEM = {
    *  (cut from wall plates), the boards by size, and the work per whole and half metre and per corner. */
   counterProfile: (code: string) => `disk-profil-${code}`,
   counterCoupling: 'disk-kobling-600',
+  counterInsert: 'disk-innsats-700',
   counterPlateM2: 'disk-plate-m2',
   counterBoard: (w: number, d: number) => `disk-plate-${w}x${d}`,
   counterWhole: 'montering-disk-meter',
@@ -189,6 +190,7 @@ export const ITEM_DEFS: readonly ItemDef[] = [
   ]),
   ...COUNTER_PROFILES.map((code) => def(ITEM.counterProfile(code), `Disk bygget på stedet: profil ${code}, per meter`, 'm')),
   def(ITEM.counterCoupling, 'Disk bygget på stedet: kobling 600', 'stk'),
+  def(ITEM.counterInsert, 'Innsats 700 under disk over fotplate', 'stk'),
   def(ITEM.counterPlateM2, 'Disk bygget på stedet: plate 3 mm, per m²', 'm²'),
   ...COUNTER_BOARDS.map(([w, d]) => def(ITEM.counterBoard(w, d), `Disk bygget på stedet: topp- og hylleplate ${w} × ${d} mm`, 'stk')),
   def(ITEM.counterWhole, 'Montering disk per hel meter', 'stk'),
@@ -257,6 +259,8 @@ export const EXAMPLE_TIMES: Readonly<Record<string, Time>> = {
   // Disker og podier (Bjørn 13.11.2026, placeholders): a sliding door 2 min up and 1 down, a shelf as H7 (1,5 and 1)
   [ITEM.counterDoor]: onSite(2, 1),
   [ITEM.counterShelf]: onSite(1.5, 1),
+  // K23: an insert 700 put in and taken out with the counter (placeholder)
+  [ITEM.counterInsert]: onSite(0.25, 0.25),
 };
 
 const POST_M = RULES.wall.height;
@@ -322,6 +326,7 @@ export const EXAMPLE_RECIPES: Readonly<Record<string, ItemRecipe>> = {
   ),
   ...Object.fromEntries(COUNTER_PROFILES.map((code): [string, ItemRecipe] => [ITEM.counterProfile(code), { parts: [[code, 1]], dg: 'utleie' }])),
   [ITEM.counterCoupling]: { parts: [['600', 1]], dg: 'utleie' },
+  [ITEM.counterInsert]: { parts: [['700', 1]], dg: 'utleie' },
   [ITEM.counterPlateM2]: { own: [['HDF-976x2440', Math.round((1 / WALL_PLATE_M2) * 1000) / 1000, 'plate']], dg: 'utleie' },
   ...Object.fromEntries(COUNTER_BOARDS.map(([w, d]): [string, ItemRecipe] => [ITEM.counterBoard(w, d), { own: [[`FIBRAPLAST6-${w}x${d}`, 1, 'plate']], dg: 'utleie' }])),
   [ITEM.counterWhole]: work,
