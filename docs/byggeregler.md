@@ -694,9 +694,10 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   innsats 700 uten settskrue i midtrøret på hver stolpe (alle profilene i 90-serien har midtrør). Innsatsen bygger om
   lag 7 mm, så bunnskinnene går fri av platen på 5 mm. En stolpe som står på selve platen får ingen; den står da om lag
   2 mm lavere, og det er greit. Fotplaten blokkerer ikke disken. Prisen er den samme, også for 6560; innsatsene er i
-  kostnaden og plukkes under Disker på arbeidsordren. I 3D står disken 7 mm opp på en svart kloss 20 × 20 × 7 mm under
+  kostnaden og plukkes under Disker på arbeidsordren. En disk som ikke står over en plate kan settes på innsats i skuffen
+  («Hele disken · fot», Innsats 700), så den blir like høy som diskene over en plate (Bjørn 16.11.2026). I 3D står disken 7 mm opp på en svart kloss 20 × 20 × 7 mm under
   hver stolpe med innsats.
-  *Bjørn 16.11.2026 · `RECIPES.counter.insert` · kode `src/domain/counters.ts`, `src/calc/context.ts`, `src/calc/textile/free.ts`, `src/calc/lines/objects.ts`, `src/foga/engine.ts`, `src/ui/scene3d/build/counter.ts` · test `src/calc/counterInserts.test.ts`*
+  *Bjørn 16.11.2026 · `RECIPES.counter.insert` · kode `src/domain/counters.ts`, `src/calc/context.ts`, `src/calc/textile/free.ts`, `src/calc/lines/objects.ts`, `src/foga/engine.ts`, `src/ui/scene3d/build/counter.ts`, `src/ui/plan/podiumDrawer/PodiumDrawer.tsx` · test `src/calc/counterInserts.test.ts`*
 
 ## P · Plukkliste og arbeidsordre
 

@@ -5,7 +5,7 @@ import { addParts, counterParts, type CounterParts, type CounterProfile } from '
 import { counterBuildOf, toPlan } from './counterShape';
 import { openSides } from './grid';
 import { counterRal, objectBoxes, type PlaceContext } from './objects';
-import type { Point, Variant } from './types';
+import type { PlacedObject, Point, Variant } from './types';
 
 const EPS = 1e-6;
 /** A counter this close to a wall or another counter (m) moves in against it. */
@@ -34,13 +34,13 @@ const overlaps = (a: PlanRect, b: PlanRect) => a.x0 < b.x1 - EPS && b.x0 < a.x1 
  * The uprights that stand on inserts 700, of the counters over a foot plate (Byggeregel K23, Bjørn 16.11.2026), by counter id: a
  * counter with a plate under it gets an insert 700 without its set screw in the centre tube of each of its uprights,
  * about 7 mm, so its bottom rails clear the 5 mm plate; an upright standing on the plate itself gets none. A counter
- * clear of every plate is not here. Standard counters too, at the same price (K22).
+ * clear of every plate is not here, unless chosen on inserts (`inserts`) to stand as high. Standard counters too, at the
+ * same price (K22).
  */
 export function counterInserts(v: Variant, ctx: Pick<PlaceContext, 'footprint' | 'isCounter'>, plates: readonly PlanRect[]): Map<string, CounterProfile[]> {
   const out = new Map<string, CounterProfile[]>();
-  if (!plates.length) return out;
   for (const o of v.objects) {
-    if (!ctx.isCounter(o.product) || !objectBoxes(ctx, o).some((b) => plates.some((p) => overlaps(b, p)))) continue;
+    if (!ctx.isCounter(o.product) || !(o.inserts || overPlate(ctx, o, plates))) continue;
     const n = counterBuildOf(o)
       .profiles.filter((p) => p.role === 'post')
       .filter((p) => {
@@ -51,6 +51,14 @@ export function counterInserts(v: Variant, ctx: Pick<PlaceContext, 'footprint' |
     if (n.length) out.set(o.id, n);
   }
   return out;
+}
+
+/** Whether a counter stands over a foot plate (K23): then it is always on inserts. */
+export const overPlate = (ctx: Pick<PlaceContext, 'footprint'>, o: PlacedObject, plates: readonly PlanRect[]) => objectBoxes(ctx, o).some((b) => plates.some((p) => overlaps(b, p)));
+
+/** A counter on inserts 700 where no plate is under it too, or not (K23). */
+export function setCounterInserts(v: Variant, id: string, on: boolean): Variant {
+  return { ...v, objects: v.objects.map((o) => (o.id !== id ? o : on ? { ...o, inserts: true as const } : (({ inserts: _, ...x }) => x)(o))) };
 }
 
 /** Which way a standard counter placed at `a` faces (K22): toward the open side of the stand across it (the aisle, where the
