@@ -2896,6 +2896,19 @@ select.cin {
 .drawer-frame.compact .wd-sec {
   display: none;
 }
+/* The counter's mini plan shrinks with the drawer instead of being cut off, keeping its shape (K16: pick a side) */
+.wd-sec .podium-map {
+  flex: 0 1 auto;
+  min-height: 0;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  align-self: flex-start;
+}
+/* A switch beside a section's title stays as tall as the title row */
+.set-tools .flat-choice > button {
+  height: 28px;
+}
 .wd-foot {
   margin-top: auto;
   display: flex;
