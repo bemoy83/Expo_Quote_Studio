@@ -1,9 +1,10 @@
 // Parts of a counter of Disker og podier locked to a plate (Byggeregel K16): a part with a wall or another counter nearer
 // than 60 mm outside it is built, drawn and priced as a plate whatever its side says; the choice is kept, and comes back
-// when the counter is moved out. Pure, on the variant.
+// when the counter is moved out. Never a standard counter (K22), which is picked built. Pure, on the variant.
 import { counterBuildOf, toPlan } from './counterShape';
 import { blockers, type PlaceContext } from './objects';
 import { partKey, podiumParts, type PodiumPart } from './podiumFaces';
+import { stockOf } from './podiumStock';
 import { RECIPES } from '../foga/recipes';
 import type { CounterBuild } from '../foga/counter';
 import type { PlacedObject, Variant } from './types';
@@ -18,7 +19,8 @@ export type PartLock = 'wall' | 'counter' | null;
 /** What stands within AGAINST outside each part of `o`, by partKey; parts with nothing against them are left out. */
 export function partLocks(v: Variant, ctx: Pick<PlaceContext, 'rules' | 'footprint' | 'swings' | 'isCounter'>, o: PlacedObject): Map<string, Exclude<PartLock, null>> {
   const out = new Map<string, Exclude<PartLock, null>>();
-  if (!o.sections?.length) return out;
+  // A standard counter (K22) is picked built as it is in stock: nothing of it is held to a plate (Bjørn 16.11.2026)
+  if (!o.sections?.length || stockOf(o.sections)) return out;
   const others = blockers(v, ctx as PlaceContext, o.id).filter((b) => b.kind === 'wall' || (b.kind === 'object' && isCounterId(v, ctx, b.id)));
   if (!others.length) return out;
   for (const p of podiumParts(o.sections)) {

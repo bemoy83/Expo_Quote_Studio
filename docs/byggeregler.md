@@ -611,7 +611,8 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   endrer ingenting, et grep som strekker en seksjon strekker valget med, en ny del er plate, og en side som blir
   innvendig (påbygg, fusjon) mister valget. To seksjoner slås bare sammen (K14) når sidene langs dem har samme valg. En
   del med en vegg eller en annen disk nærmere enn 60 mm utenfor seg er alltid plate; valget beholdes og kommer tilbake
-  når disken flyttes ut. Trinnplaten (K12) er alltid plate. I planen er en del som er åpen i hele høyden en tynn, lys
+  når disken flyttes ut. Det gjelder ikke en standardvare (K22) som 6560: den plukkes ferdig bygget og står som den
+  er, også inntil en vegg (Bjørn 16.11.2026). Trinnplaten (K12) er alltid plate. I planen er en del som er åpen i hele høyden en tynn, lys
   hårstrek (som 6560), og en del med skyvedør i en lysåpning hel strek med dørstreker. Valget gjøres i skuffen for
   disken. Tilbudet sier hvor mange sider som har en åpen lysåpning: «1 åpen side». Arbeidsordren tegner hver side som
   har annet enn plate, hyller bak seg, eller print eller dekal, sett utenfra og målsatt som i skuffen («Disker sett
