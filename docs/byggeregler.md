@@ -590,7 +590,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   midt på hver skjøt. Et klikk bryter lenken: den største delen blir stående, de andre blir egne disker med samme farge,
   flyttet 20 mm ut slik at de står flate mot flate. Deler ikke skjøten disken alene: «Skjøten deler ikke disken alene:
   bryt også skjøten ved siden av». Mot en disk som står inntil, vises en brutt lenke, og et klikk lenker dem. Disker med
-  ulik høyde slås sammen også; hver seksjon beholder sin høyde, og trinnet bygges etter K12. To disker som står inntil hverandre uten lenke, er
+  ulik høyde slås sammen også; hver seksjon beholder sin høyde, sine hyller og sine åpne sider, og trinnet bygges etter K12. To disker som står inntil hverandre uten lenke, er
   to linjer i tilbudet og har plater mot hverandre.
   Med «Disk» eller «Podie» i hånden er det det samme (Bjørn 16.11.2026): et klikk eller et drag som ender innen 300 mm
   fra en annen disk, eller som går inntil 250 inn i den, legger seg inntil den i dens raster og blir en del av den. Det

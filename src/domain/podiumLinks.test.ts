@@ -130,3 +130,17 @@ describe('a Disk drawn beside a counter becomes part of it (K15, K22, Bjørn 16.
     expect(r.v.objects).toHaveLength(1);
   });
 });
+
+describe('fusion keeps what each counter is built with', () => {
+  it('two 6560 joined keep their shelves and open backs, also the one turned round (Bjørn 16.11.2026)', () => {
+    const s = (): CounterSection => ({ ...sec(-500, 500, -250, 250), shelves: [750], sides: { 'z-': { lights: ['open', 'open'] } } });
+    const p: PlacedObject = { id: 'p', product: 'P', x: 1.5, y: 2.5, rot: 0, sections: [s()] };
+    for (const rot of [0, 180]) {
+      const q: PlacedObject = { id: 'q', product: 'P', x: 2.52, y: 2.5, rot, sections: [s()] };
+      const r = ok(fusePodiums(vOf(p, q), ctx, 'p', 'q'));
+      const o = r.v.objects.find((x) => x.id === 'p')!;
+      expect(o.sections!.map((x) => x.shelves)).toEqual([[750], [750]]);
+      expect(o.sections!.map((x) => Object.keys(x.sides ?? {}))).toEqual(rot ? [['z-'], ['z+']] : [['z-'], ['z-']]);
+    }
+  });
+});
