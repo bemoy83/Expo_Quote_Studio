@@ -4,7 +4,6 @@ import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import { calc } from '../../../calc/calc'
 import { createVariant } from '../../../domain/variant'
-import { stockCounter } from '../../../foga/counter'
 import { counterBuildOf } from '../../../domain/counterShape'
 import { asSections } from '../../../domain/podiumStock'
 import type { CounterPiece, Variant } from '../../../domain/types'
@@ -27,7 +26,7 @@ const world = (m: THREE.Mesh) => {
   const p = m.geometry.attributes.position
   return Array.from({ length: p.count }, (_, i) => new THREE.Vector3().fromBufferAttribute(p, i).applyMatrix4(m.matrixWorld))
 }
-const b = stockCounter({ length: 1020, depth: 520 })
+const b = counterBuildOf({})
 const all = meshesOf(0)
 const profiles = all.filter((m) => m.geometry.name.startsWith('foga-'))
 

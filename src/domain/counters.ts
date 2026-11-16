@@ -4,12 +4,10 @@ import { stockOf } from './podiumStock';
 import { addParts, counterParts, type CounterParts, type CounterProfile } from '../foga/counter';
 import { counterBuildOf, toPlan } from './counterShape';
 import { openSides } from './grid';
-import { counterRal, objectBoxes, type PlaceContext } from './objects';
+import { counterRal, objectBoxes, type Box, type PlaceContext } from './objects';
 import type { PlacedObject, Point, Variant } from './types';
 
 const EPS = 1e-6;
-/** A counter this close to a wall or another counter (m) moves in against it. */
-const SNAP = 0.1;
 
 /** The parts of every counter built on site, picked loose (K13); none when there is none. A standard counter is picked
  *  whole (K22). */
@@ -21,12 +19,7 @@ export function builtCounterParts(v: Variant): CounterParts | undefined {
 }
 
 /** A rectangle on the plan, m. */
-export interface PlanRect {
-  x0: number;
-  y0: number;
-  x1: number;
-  y1: number;
-}
+export type PlanRect = Omit<Box, 'kind'>;
 
 const overlaps = (a: PlanRect, b: PlanRect) => a.x0 < b.x1 - EPS && b.x0 < a.x1 - EPS && a.y0 < b.y1 - EPS && b.y0 < a.y1 - EPS;
 
@@ -58,7 +51,13 @@ export const overPlate = (ctx: Pick<PlaceContext, 'footprint'>, o: PlacedObject,
 
 /** A counter on inserts 700 where no plate is under it too, or not (K23). */
 export function setCounterInserts(v: Variant, id: string, on: boolean): Variant {
-  return { ...v, objects: v.objects.map((o) => (o.id !== id ? o : on ? { ...o, inserts: true as const } : (({ inserts: _, ...x }) => x)(o))) };
+  const set = (o: PlacedObject): PlacedObject => {
+    if (on) return { ...o, inserts: true };
+    const x = { ...o };
+    delete x.inserts;
+    return x;
+  };
+  return { ...v, objects: v.objects.map((o) => (o.id === id ? set(o) : o)) };
 }
 
 /** Which way a standard counter placed at `a` faces (K22): toward the open side of the stand across it (the aisle, where the
@@ -69,28 +68,4 @@ export function frontRot(v: Variant, a: Point, horizontal: boolean): number {
   const toHi = open.includes(hi) && !open.includes(lo) ? true : open.includes(lo) && !open.includes(hi) ? false : open.includes(hi) ? d >= size / 2 : d < size / 2;
   if (horizontal) return toHi ? 0 : 180;
   return toHi ? 270 : 90;
-}
-
-/** How far to move a box so its edges meet a wall, counter or the stand edge within SNAP. */
-export function snapShift(v: Variant, b: { x0: number; y0: number; x1: number; y1: number }, others: { x0: number; y0: number; x1: number; y1: number }[]) {
-  const xs = [0, v.stand.width];
-  const ys = [0, v.stand.depth];
-  for (const r of others) {
-    if (r.y0 < b.y1 && r.y1 > b.y0) xs.push(r.x0, r.x1);
-    if (r.x0 < b.x1 && r.x1 > b.x0) ys.push(r.y0, r.y1);
-  }
-  const best = (edges: number[], lo: number, hi: number) => {
-    let s = 0;
-    let d = SNAP + EPS;
-    for (const e of edges) {
-      for (const k of [e - lo, e - hi]) {
-        if (Math.abs(k) < d) {
-          d = Math.abs(k);
-          s = k;
-        }
-      }
-    }
-    return s;
-  };
-  return { x: best(xs, b.x0, b.x1), y: best(ys, b.y0, b.y1) };
 }

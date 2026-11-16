@@ -6,7 +6,6 @@ import { applyEdits, NO_EDITS, type CatalogEdits } from '../catalog/edits'
 import { displayName, indexCatalog, placeContext } from '../catalog/lookup'
 import { doorFloors, type FloorBoxes } from '../domain/doors'
 import { objectBoxes, type PlaceContext } from '../domain/objects'
-import { calc } from '../calc/calc'
 import { calcContext } from '../calc/context'
 import type { PlanRect } from '../domain/counters'
 import { DEFAULT_STAND_WALLS } from '../domain/variant'
@@ -130,30 +129,25 @@ export const artnrName = (artnr: string) => {
  *  «Disk» or «Podie» (K13). */
 export const counterName = (o: Pick<PlacedObject, 'product' | 'sections'>) => artnrName(soldAs(o))
 
-/** The posts of a variant's walls and takdrager (calc), kept while what they stand on is unchanged: a drag moves only
- *  objects, so the walls, beams, textiles and stand stay the same arrays and the posts are not counted again. */
-const postCache = new WeakMap<Variant['walls'], { keys: unknown[]; posts: readonly Point[] }>()
-function postsOf(v: Variant): readonly Point[] {
-  const keys = [v.stand, v.innerBeams, v.noBeams, v.textiles, v.freeTextiles, v.openings, rules, catalog]
-  const hit = postCache.get(v.walls)
-  if (hit && hit.keys.every((k, i) => k === keys[i])) return hit.posts
-  const posts = calc({ ...v, objects: [] }, rules, catalog).posts
-  postCache.set(v.walls, { keys, posts })
-  return posts
+/** What the counters of a variant stand among (calc): every post of its walls and takdrager, and every foot plate
+ *  (Byggeregel K10, K23). Kept while that is unchanged: a drag moves only objects, so the walls, beams, textiles and stand
+ *  stay the same arrays and nothing is counted again. */
+type Built = { posts: readonly Point[]; plates: readonly PlanRect[] }
+const builtCache = new WeakMap<Variant['walls'], { keys: unknown[]; built: Built }>()
+function standsOn(v: Variant): Built {
+  const keys = [v.stand, v.innerBeams, v.noBeams, v.textiles, v.freeTextiles, v.openings, rules, catalog, pricing]
+  const hit = builtCache.get(v.walls)
+  if (hit && hit.keys.every((k, i) => k === keys[i])) return hit.built
+  const c = calcContext({ ...v, objects: [] }, rules, catalog, DEFAULT_STAND_WALLS, pricing)
+  const built = { posts: [...c.allPosts.values()], plates: c.plates }
+  builtCache.set(v.walls, { keys, built })
+  return built
 }
 
-/** Every foot plate of a variant (calc, Byggeregel K23), kept as the posts are. */
-const plateCache = new WeakMap<Variant['walls'], { keys: unknown[]; plates: readonly PlanRect[] }>()
-export function footPlatesOf(v: Variant): readonly PlanRect[] {
-  const keys = [v.stand, v.innerBeams, v.noBeams, v.textiles, v.freeTextiles, v.openings, rules, catalog]
-  const hit = plateCache.get(v.walls)
-  if (hit && hit.keys.every((k, i) => k === keys[i])) return hit.plates
-  const plates = calcContext({ ...v, objects: [] }, rules, catalog, DEFAULT_STAND_WALLS, pricing).plates
-  plateCache.set(v.walls, { keys, plates })
-  return plates
-}
+/** Every foot plate of a variant (Byggeregel K23). */
+export const footPlatesOf = (v: Variant): readonly PlanRect[] => standsOn(v).plates
 
 /** The place context of the app: with the posts of takdrager standing free (Byggeregel K10, Bjørn 16.11.2026). */
 function withPosts(c: PlaceContext): PlaceContext {
-  return { ...c, posts: postsOf }
+  return { ...c, posts: (v) => standsOn(v).posts }
 }

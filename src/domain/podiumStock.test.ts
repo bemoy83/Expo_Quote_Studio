@@ -14,9 +14,6 @@ import { addStockAnywhere, podiumAt } from './podiums';
 import { asSections, soldAs, stockOf, stockSections } from './podiumStock';
 import { removeObjects } from './objects';
 import { podiumUses } from '../calc/lines/objects';
-import { layoutBuild } from '../foga/counter';
-import { RECIPES } from '../foga/recipes';
-import { layoutOf } from './counterShape';
 const isStock6560 = (s: CounterSection[]) => stockOf(s)?.artnr === '6560';
 import type { CounterSection, PlacedObject, Variant } from './types';
 import { createProject, createVariant } from './variant';
@@ -121,7 +118,14 @@ describe('counters from Disker as sections when a sketch opens (K22)', () => {
       { a: [-250, -250], b: [-250, -1250], back: [1, 0] },
     ],
   };
-  const sum = (b: ReturnType<typeof counterBuildOf>) => ({ prof: profileMetres(b), couplings: b.couplings, plates: b.plates.map((p) => `${p.w}×${p.h}`).sort(), boards: b.boards.map((x) => `${x.w}×${x.d}`).sort() });
+  // As Disker built them (K7): whole metres from the piece's start, a half last, open at its back, a shelf at CC 750
+  const open = { lights: ['open', 'open'] };
+  const part = (x: [number, number], z: [number, number], side: string) => ({ x, z, h: 1000, shelves: [750], sides: { [side]: open } });
+  const built: Record<string, unknown> = {
+    'straight 1,5 m': [part([-750, 250], [-250, 250], 'z-'), part([250, 750], [-250, 250], 'z-')],
+    'straight 2,5 m': [part([-1250, -250], [-250, 250], 'z-'), part([-250, 750], [-250, 250], 'z-'), part([750, 1250], [-250, 250], 'z-')],
+    L: [part([-500, 500], [-250, 250], 'z-'), part([-500, 0], [-1250, -250], 'x+')],
+  };
   const uses = (u: { id: string; qty: number }[]) => Object.fromEntries(u.map((x) => [x.id, x.qty]));
 
   for (const [name, pieces] of Object.entries(shapes))
@@ -129,10 +133,9 @@ describe('counters from Disker as sections when a sketch opens (K22)', () => {
       const o: PlacedObject = { id: 'i1', product: '6560', x: 2, y: 1.5, rot: 90, ral: '7012', pieces };
       const s = asSections(o, '6571');
       expect([s.product, s.pieces, s.ral, s.rot, s.x, s.y]).toEqual(['6571', undefined, '7012', 90, 2, 1.5]);
-      // As Disker built it (K7): whole metres from its start, a half last, open at its back
-      expect(sum(counterBuildOf(s))).toEqual(sum(layoutBuild(RECIPES.counter, layoutOf(pieces))));
+      expect(s.sections).toEqual(built[name]);
       // The work as Disker costed it (K9): per whole and half part, per corner
-      const cells = layoutOf(pieces).cells.map((x) => Math.max(x.x[1] - x.x[0], x.z[1] - x.z[0]));
+      const cells = s.sections!.map((x) => Math.max(x.x[1] - x.x[0], x.z[1] - x.z[0]));
       const u = uses(podiumUses(s));
       expect([u[ITEM.counterWhole] ?? 0, u[ITEM.counterHalf] ?? 0, u[ITEM.counterCorner] ?? 0]).toEqual([cells.filter((n) => n > 500).length, cells.filter((n) => n <= 500).length, pieces.length - 1]);
     });

@@ -8,8 +8,8 @@ import { stepsOf } from './grips';
 import { keptSides, sideKey, withSide } from './podiumFaces';
 import { toLocal, toPlan } from './counterShape';
 import type { PlaceContext } from './objects';
-import { centred, hasRoom, NO_ROOM, podiumSides, runNodes, SECTION_MAX, type PodiumSide } from './podiums';
-import { along, bounds as box, EPS, GRID, groups, meet, overlaps, shared, withAlong, withAxis, type Axis } from './podiumSections';
+import { centred, hasRoom, NO_ROOM, podiumSides, type PodiumSide } from './podiums';
+import { along, bounds as box, EPS, GRID, groups, meet, overlaps, runNodes, SECTION_MAX, shared, withAlong, withAxis, type Axis } from './podiumSections';
 import type { CounterSection, PlacedObject, Point, Variant } from './types';
 
 const FACE = RECIPES.counter.face;

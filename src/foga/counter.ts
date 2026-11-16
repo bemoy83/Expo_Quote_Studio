@@ -1,12 +1,12 @@
-// Counter (bardisk 6560) from its recipe, Byggeregler K1–K8 (docs/byggeregler.md): every profile, plate and board with
-// its size and where it sits, so plan, 3D and the kalkyle read the same pieces. A counter is a grid of nodes, 500 or
-// 1000 apart (K7), with a rail between each two (K3). The profile in a node follows the directions it joins (K8): two
-// at a right angle a 92L, three a 93, four a 94; the rails are as long whatever stands in the node. Local coordinates
-// in mm: x along the counter, z across it with the closed front at +z, y up from the floor. Nodes sit 10 mm in from
-// the outer face, so the outer size is the nodes' c/c + 20. Disker og podier is built tight from the same nodes
-// (Byggeregler K10–K12): no middle rail, each part as high as its own; a shelf where the section has one (K19), on four
-// rails round it that split its plates into light openings (K16), each a plate, open or a sliding door (K17).
-import { RECIPES, type CounterRecipe } from './recipes';
+// Counters of Disker og podier from their recipe, Byggeregler K1–K12, K16–K19 (docs/byggeregler.md): every profile,
+// plate and board with its size and where it sits, so plan, 3D and the kalkyle read the same pieces. A counter is
+// parts (sections) between nodes (K10), with a rail between each two (K3). The profile in a node follows the
+// directions it joins (K8): two at a right angle a 92L, three a 93, four a 94; the rails are as long whatever stands
+// in the node. Each part is as high as its own (K12), with a shelf where it has one (K19) on four rails round it that
+// split its plates into light openings (K16), each a plate, open or a sliding door (K17). Bardisk 6560 is one such part
+// (K22). Local coordinates in mm: x along the counter, z across it with the front at +z, y up from the floor. Nodes
+// sit 10 mm in from the outer face, so the outer size is the nodes' c/c + 20.
+import type { CounterRecipe } from './recipes';
 
 export type Range = readonly [number, number];
 export interface Box3 {
@@ -14,20 +14,6 @@ export interface Box3 {
   y: Range;
   z: Range;
 }
-
-/** Sides of a box-shaped counter. An open side has no plates and no bottom rail (K3, K4): the counter in stock is open
- *  at the back. */
-export type CounterSide = 'front' | 'back' | 'left' | 'right';
-
-/** A straight counter: its outer size, mm, and the sides left open (K7). */
-export interface CounterShape {
-  length: number;
-  depth: number;
-  open: readonly CounterSide[];
-}
-
-/** The counter in stock: open at the back, where the staff stand (K1). */
-export const STOCK_OPEN: readonly CounterSide[] = ['back'];
 
 /** A part of the counter between four nodes, carrying a top and a shelf (K5), in node coordinates, mm. A section of
  *  Disker og podier (K10–K12) carries its own height `h`: CC, the underside of its top rail, mm. */
@@ -79,7 +65,7 @@ export interface CounterPlate {
   /** Outward from the counter, along x or z. */
   out: Dir;
   /** Split at the middle rail (K4), or one plate the whole height (K11); a step (K12); one leaf of a sliding door (K17). */
-  level: 'lower' | 'upper' | 'full' | 'step' | 'door';
+  level: 'full' | 'step' | 'door';
   /** Order size, mm: along the side × high. */
   w: number;
   h: number;
@@ -106,33 +92,6 @@ export interface CounterBuild {
 
 const EPS = 1e-6;
 const key = (p: Pt) => `${Math.round(p[0] * 1000) / 1000},${Math.round(p[1] * 1000) / 1000}`;
-
-/** The side of a box-shaped counter a plate or rail faces. */
-export function sideOf(out: readonly [number, number]): CounterSide {
-  return out[1] > 0 ? 'front' : out[1] < 0 ? 'back' : out[0] < 0 ? 'left' : 'right';
-}
-
-/** Where the nodes of a straight run fall, from 0 to `cc`: whole metres first, then a half (K7). */
-export function runBreaks(r: CounterRecipe, cc: number): number[] {
-  const out = [0];
-  let at = 0;
-  while (cc - at > EPS) {
-    at += cc - at >= r.module.whole - EPS ? r.module.whole : r.module.half;
-    out.push(Math.min(at, cc));
-  }
-  return out;
-}
-
-/** A straight counter as parts, centred on the origin, its front at +z (K7). */
-export function straightLayout(r: CounterRecipe, shape: CounterShape): CounterLayout {
-  const cc = shape.length - 2 * r.face;
-  const D = (shape.depth - 2 * r.face) / 2;
-  const xs = runBreaks(r, cc).map((x) => x - cc / 2);
-  const cells = xs.slice(1).map((x, i): CounterCell => ({ x: [xs[i], x], z: [-D, D] }));
-  const L = cc / 2;
-  const sides: Record<CounterSide, [Pt, Pt]> = { front: [[-L, D], [L, D]], back: [[-L, -D], [L, -D]], left: [[-L, -D], [-L, D]], right: [[L, -D], [L, D]] };
-  return { cells, open: shape.open.map((s) => sides[s]) };
-}
 
 interface Edge {
   a: Pt;
@@ -192,21 +151,16 @@ function nodeProfile(r: CounterRecipe, dirs: Dir[]): string {
   return r.nodes.corner;
 }
 
-/** How a counter is built: as 6560 (K2–K5: a middle rail, a shelf in each part, the plates split at the middle, one
- *  height), or tight (Disker og podier, K11, K12: no middle rail and no shelf, one plate the whole height, each part as
- *  high as its own `h`). */
-export type CounterBuildKind = 'stock' | 'tight';
-
-/** Every piece of a counter made of these parts (K2–K5, K7, K8; tight K10–K12). */
-export function layoutBuild(r: CounterRecipe, l: CounterLayout, kind: CounterBuildKind = 'stock'): CounterBuild {
+/** Every piece of a counter made of these parts (K2–K5, K7, K8, K10–K12): each part as high as its own `h`, a shelf
+ *  where it has one (K19), one plate in each light opening (K16). 6560 is one such part (K22). */
+export function layoutBuild(r: CounterRecipe, l: CounterLayout): CounterBuild {
   const { nodes, edges } = edgesOf(l);
   const j = r.joint;
   const f = r.face;
   const rh = r.railHeight;
   const { inset, depth: ch } = r.channel;
-  const tight = kind === 'tight';
-  // K12: a tight part's top rail stands with its underside at the part's height; a post shared by parts of two heights
-  // goes to the higher. As 6560 all at `top`
+  // K12: a part's top rail stands with its underside at the part's height; a post shared by parts of two heights goes
+  // to the higher
   const onEdge = (e: Edge, c: CounterCell) => {
     const alongX = Math.abs(e.a[1] - e.b[1]) < EPS;
     const [i, k] = alongX ? [0, 1] : [1, 0];
@@ -216,14 +170,14 @@ export function layoutBuild(r: CounterRecipe, l: CounterLayout, kind: CounterBui
     const ar = k === 0 ? c.x : c.z;
     return lo > cr[0] - EPS && hi < cr[1] + EPS && (Math.abs(e.a[k] - ar[0]) < EPS || Math.abs(e.a[k] - ar[1]) < EPS);
   };
-  const cellTop = (c: CounterCell) => (tight ? (c.h ?? r.top) : r.top);
+  const cellTop = (c: CounterCell) => c.h ?? r.top;
   const edgeTop = (e: Edge) => Math.max(...l.cells.filter((c) => onEdge(e, c)).map(cellTop));
   /** K19: the CC heights of the shelves along an edge, of the part behind it or of both parts inside. */
-  const shelvesOn = (e: Edge) => (tight ? [...new Set(l.cells.filter((c) => onEdge(e, c)).flatMap((c) => c.shelves ?? []))].sort((a, b) => a - b) : []);
-  /** K12: an edge inside a tight counter between parts of two heights, a step: the low height, and the way down to the
+  const shelvesOn = (e: Edge) => [...new Set(l.cells.filter((c) => onEdge(e, c)).flatMap((c) => c.shelves ?? []))].sort((a, b) => a - b);
+  /** K12: an edge inside the counter between parts of two heights, a step: the low height, and the way down to the
    *  low part (the step's face). */
   const stepOf = (e: Edge): { lo: number; out: [number, number] } | null => {
-    if (!tight || e.out) return null;
+    if (e.out) return null;
     const by = l.cells.filter((c) => onEdge(e, c));
     if (by.length < 2) return null;
     const low = by.reduce((m, c) => (cellTop(c) < cellTop(m) ? c : m));
@@ -251,7 +205,7 @@ export function layoutBuild(r: CounterRecipe, l: CounterLayout, kind: CounterBui
     // Closed faces: the way it does not join (both for a 92L, one for a 93, none for a 94)
     const ox = has([1, 0]) && has([-1, 0]) ? 0 : has([1, 0]) ? -1 : 1;
     const oz = has([0, 1]) && has([0, -1]) ? 0 : has([0, 1]) ? -1 : 1;
-    const len = tight ? nodeTop(p) + rh : r.height;
+    const len = nodeTop(p) + rh;
     return { code: nodeProfile(r, dirs), role: 'post', len, axis: 'y', out: [ox, oz], box: { x: reach(0), y: [0, len], z: reach(1) } };
   });
 
@@ -277,11 +231,10 @@ export function layoutBuild(r: CounterRecipe, l: CounterLayout, kind: CounterBui
     box: { ...band(e, 0, deep, j), y },
   });
 
-  // K3: rails on every side of every part at the middle and the top, on the floor on the closed sides only. A rail
-  // inside the counter carries a top and a shelf on both sides (K8). Tight (K11): the top only, a 94 between two parts.
-  // A step (K12): the high part's top rail as on an outer side, facing the low part, and a 94 under the low top
+  // K3, K11: a top rail on every side of every part, a 94 between two parts carrying the top on both sides (K8), on the
+  // floor on the closed sides only. A step (K12): the high part's top rail as on an outer side, facing the low part, and a 94 under the low top
   const railsAt = (e: Edge, y0: number) => (e.out ? rail(r.rail, 'rail', e, r.postSize, [y0, y0 + rh]) : rail(r.innerRail.code, 'rail', e, r.innerRail.size, [y0, y0 + rh]));
-  const tightRails = (e: Edge) => {
+  const topRails = (e: Edge) => {
     const s = stepOf(e);
     if (!s) return [railsAt(e, edgeTop(e))];
     const hi = edgeTop(e);
@@ -300,25 +253,19 @@ export function layoutBuild(r: CounterRecipe, l: CounterLayout, kind: CounterBui
   };
   // K16: no bottom rail where the part is open from the floor
   const rails = [
-    ...(tight ? edges.flatMap((e) => [...tightRails(e), ...shelfRails(e)]) : [r.middle, r.top].flatMap((y0) => edges.map((e) => railsAt(e, y0)))),
+    ...edges.flatMap((e) => [...topRails(e), ...shelfRails(e)]),
     ...edges.filter((e) => e.closed && e.kinds?.[0] !== 'open').map((e) => rail(r.bottomRail, 'bottomRail', e, r.bottomRailDepth, [0, rh])),
   ];
 
-  // K4: the wall plate in the channels of the closed sides, split at the middle rail. Tight (K11, K16): a plate in each
-  // light opening, from the rail under it to the rail over it; without shelves one the whole height
+  // K4, K11, K16: the wall plate in the channels of the closed sides, one in each light opening, from the rail under it
+  // to the rail over it; without shelves one the whole height
   const t = r.plateThickness / 2;
   const into = ch - r.platePlay / 2;
   /** The plate's height between two rails with their undersides at CC y0 and y1 (y0 0: the bottom rail). */
   const between = (y0: number, y1: number): Range => [y0 + rh - ch, y1 + ch - r.platePlay];
-  const plateLevels = (e: Edge): { level: CounterPlate['level']; y: Range; kind: LightKind }[] => {
-    if (tight) {
-      const cuts = [0, ...shelvesOn(e), edgeTop(e)];
-      return cuts.slice(1).map((y, i) => ({ level: 'full', y: between(cuts[i], y), kind: e.kinds?.[i] ?? null }));
-    }
-    return [
-      { level: 'lower', y: between(0, r.middle), kind: null },
-      { level: 'upper', y: between(r.middle, r.top), kind: null },
-    ];
+  const plateLevels = (e: Edge): { y: Range; kind: LightKind }[] => {
+    const cuts = [0, ...shelvesOn(e), edgeTop(e)];
+    return cuts.slice(1).map((y, i) => ({ y: between(cuts[i], y), kind: e.kinds?.[i] ?? null }));
   };
   const plateOf = (e: Edge, level: CounterPlate['level'], y: Range): CounterPlate => ({
     out: e.out!,
@@ -349,15 +296,14 @@ export function layoutBuild(r: CounterRecipe, l: CounterLayout, kind: CounterBui
     return [leaf([run[0], run[0] + w], across), leaf([run[1] - w, run[1]], inner)];
   };
   const plates = [
-    ...edges.filter((e) => e.closed).flatMap((e) => plateLevels(e).flatMap(({ level, y, kind }) => (kind === 'open' ? [] : kind === 'door' ? doorLeaves(e, y) : [plateOf(e, level, y)]))),
+    ...edges.filter((e) => e.closed).flatMap((e) => plateLevels(e).flatMap(({ y, kind }) => (kind === 'open' ? [] : kind === 'door' ? doorLeaves(e, y) : [plateOf(e, 'full', y)]))),
     ...steps,
   ];
 
-  // K5: a top and a shelf on each part, in the rails' notch, short of the rail body by the play. Tight (K11, K19): the
-  // top and the part's own shelves
+  // K5, K19: a top on each part and its own shelves, in the rails' notch, short of the rail body by the play
   const body = r.postSize - ch + r.boardPlay - f;
   const boards = l.cells.flatMap((c) =>
-    (tight ? [...(c.shelves ?? []).map((y) => ['shelf', y] as const), ['top', cellTop(c)] as const] : ([['shelf', r.middle], ['top', r.top]] as const)).map(([role, at]): CounterBoard => {
+    [...(c.shelves ?? []).map((y) => ['shelf', y] as const), ['top', cellTop(c)] as const].map(([role, at]): CounterBoard => {
       const y0 = at + rh - ch;
       const x: Range = [c.x[0] + body, c.x[1] - body];
       const z: Range = [c.z[0] + body, c.z[1] - body];
@@ -377,26 +323,8 @@ export function layoutBuild(r: CounterRecipe, l: CounterLayout, kind: CounterBui
   };
 }
 
-/** Every piece of a straight counter of this shape (K1–K5, K7). */
-export function counterBuild(r: CounterRecipe, shape: CounterShape): CounterBuild {
-  return layoutBuild(r, straightLayout(r, shape));
-}
-
-const built = new Map<string, CounterBuild>();
-/** The counter of a catalog product (`Product.counter`): the stock shape, open at the back, built once and shared by the
- *  plan, 3D and the cost. */
-export function stockCounter(size: { length: number; depth: number }): CounterBuild {
-  const key = `${size.length}x${size.depth}`;
-  let b = built.get(key);
-  if (!b) {
-    b = counterBuild(RECIPES.counter, { ...size, open: STOCK_OPEN });
-    built.set(key, b);
-  }
-  return b;
-}
-
 /** What a counter built on site is picked as (Byggeregel K7): posts by profile, rails by profile and cut length (with
- *  their 600), plates by colour and size, tops and shelves by size. Keys: code, `code|len`, `ral|w×h`, `long×short`. */
+ *  their 600), plates by colour and size, tops and shelves by size. Keys: `code|len` for posts and rails, `ral|w×h`, `long×short`. */
 export interface CounterParts {
   posts: Record<string, number>;
   rails: Record<string, number>;
@@ -412,7 +340,7 @@ const bump = (m: Record<string, number>, k: string, n = 1) => {
 export function counterParts(b: CounterBuild, ral: string): CounterParts {
   const out: CounterParts = { posts: {}, rails: {}, plates: {}, boards: {} };
   for (const p of b.profiles) {
-    if (p.role === 'post') bump(out.posts, p.code);
+    if (p.role === 'post') bump(out.posts, `${p.code}|${p.len}`);
     else bump(out.rails, `${p.code}|${p.len}`);
   }
   for (const p of b.plates) bump(out.plates, `${ral}|${p.w}×${p.h}`);
