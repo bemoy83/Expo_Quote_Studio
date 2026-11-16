@@ -7,6 +7,9 @@ import { displayName, indexCatalog, placeContext } from '../catalog/lookup'
 import { doorFloors, type FloorBoxes } from '../domain/doors'
 import { objectBoxes, type PlaceContext } from '../domain/objects'
 import { calc } from '../calc/calc'
+import { calcContext } from '../calc/context'
+import type { PlanRect } from '../domain/counters'
+import { DEFAULT_STAND_WALLS } from '../domain/variant'
 import type { Product } from '../catalog/types'
 import { EXAMPLE_BASIS, parseBasis, serializeBasis, type CostBasis } from '../cost/basis'
 import { readHistory, withEntry, type HistoryEntry } from '../cost/history'
@@ -137,6 +140,17 @@ function postsOf(v: Variant): readonly Point[] {
   const posts = calc({ ...v, objects: [] }, rules, catalog).posts
   postCache.set(v.walls, { keys, posts })
   return posts
+}
+
+/** Every foot plate of a variant (calc, Byggeregel K23), kept as the posts are. */
+const plateCache = new WeakMap<Variant['walls'], { keys: unknown[]; plates: readonly PlanRect[] }>()
+export function footPlatesOf(v: Variant): readonly PlanRect[] {
+  const keys = [v.stand, v.innerBeams, v.noBeams, v.textiles, v.freeTextiles, v.openings, rules, catalog]
+  const hit = plateCache.get(v.walls)
+  if (hit && hit.keys.every((k, i) => k === keys[i])) return hit.plates
+  const plates = calcContext({ ...v, objects: [] }, rules, catalog, DEFAULT_STAND_WALLS, pricing).plates
+  plateCache.set(v.walls, { keys, plates })
+  return plates
 }
 
 /** The place context of the app: with the posts of takdrager standing free (Byggeregel K10, Bjørn 16.11.2026). */

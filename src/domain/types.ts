@@ -130,6 +130,9 @@ export interface PlacedObject {
   /** A counter or podium from Disker og podier (Byggeregler K10–K13, domain/podiums.ts): its sections in its own
    *  coordinates around (x, y), mm c/c between nodes on the 250 grid, front toward +y unturned. */
   sections?: CounterSection[];
+  /** A counter on inserts 700 also where no foot plate is under it, so it stands as high as one over a plate
+   *  (Byggeregel K23, Bjørn 16.11.2026). */
+  inserts?: true;
   /** A furniture set it was placed with (Møte, Lounge, Mingle; Bjørn 14.11.2026): the objects sharing this id move,
    *  turn and settle as one, and stay apart from each other's collisions (a chair may tuck under its table). Loosened
    *  from the set, it is a piece on its own. */

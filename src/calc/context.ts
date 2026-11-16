@@ -72,6 +72,8 @@ export interface CalcContext {
   wallFeet: WallSupport[];
   /** Inserts 700 under the counters over a foot plate, by counter id (Byggeregel K23). */
   inserts: ReadonlyMap<string, readonly CounterProfile[]>;
+  /** Every foot plate on the plan, m: 750 under walls and takdrager posts, 740/730 under textile walls (K23). */
+  plates: { x0: number; y0: number; x1: number; y1: number }[];
   prod: Production;
   /** Foga structure of what the exhibitor orders. */
   foga: FogaStructure;
@@ -267,6 +269,7 @@ export function calcContext(v: Variant, rules: Rules, catalog: Catalog, standWal
     freeWallFeet,
     wallFeet,
     inserts,
+    plates,
     prod,
     foga,
     share,

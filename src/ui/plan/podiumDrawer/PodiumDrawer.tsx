@@ -14,7 +14,8 @@ import { heightName, HEIGHTS, outerHeight, podiumSize, setSectionHeight } from '
 import { SHELF_HEIGHTS, lowered, movePodiumShelf, setPodiumShelf } from '../../../domain/podiumShelves'
 import type { CounterLight, Motif, PlacedObject, Variant } from '../../../domain/types'
 import { Button, FlatChoice, FlatToggles, Section } from '../../controls'
-import { counterName, plateColor } from '../../env'
+import { counterName, footPlatesOf, place, plateColor } from '../../env'
+import { overPlate, setCounterInserts } from '../../../domain/counters'
 import { count, mm } from '../../format'
 import { findMotif } from '../../motifs'
 import { DrawerHead, PrevNext } from '../drawerParts'
@@ -65,6 +66,7 @@ export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect,
   const li = pi !== undefined && sel.podiumLight !== undefined && sel.podiumLight < parts[0].lights.length ? sel.podiumLight : undefined
   const kind = shared(parts, li)
   const ral = counterRal(o)
+  const over = overPlate(place, o, footPlatesOf(v))
   const name = counterName(o)
   const size = podiumSize(o)
   const select = (x: Partial<PlanSelection>) => onSelect({ objectId: o.id, podiumSide: S.key, ...x })
@@ -129,6 +131,10 @@ export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect,
           {/* K18: the height of the section behind the part, or of every section along the side */}
           <Section title={several ? 'Seksjonene · høyde' : 'Seksjonen · høyde'} aside={`${heights.map((h) => mm(outerHeight(h) / 1000)).join('/')} mm`}>
             <FlatChoice<number> label="Høyde" value={heights.length === 1 ? heights[0] : 0} onChange={(h) => heightOf(secs, h)} options={HEIGHTS.map((h) => ({ value: h, label: heightName(h), title: `${outerHeight(h)} mm utvendig` }))} />
+          </Section>
+          {/* K23: on inserts 700 over a foot plate always; elsewhere by choice, as high as one over a plate */}
+          <Section title="Hele disken · fot" aside={over ? 'over fotplate · +7 mm' : o.inserts ? 'innsats · +7 mm' : 'rett på gulvet'}>
+            <FlatToggles<'insert'> label="Fot" value={over || o.inserts ? ['insert'] : []} onToggle={(_, on) => edit((x) => setCounterInserts(x, o.id, on))} options={[{ value: 'insert', label: 'Innsats 700', disabled: over, title: over ? 'Står over en fotplate: alltid på innsats' : 'Løfter disken 7 mm, like høy som en disk over fotplate' }]} />
           </Section>
           </>
         ) : (

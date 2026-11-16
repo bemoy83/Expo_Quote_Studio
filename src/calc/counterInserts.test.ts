@@ -9,6 +9,7 @@ import { calc } from './calc';
 import { calcContext } from './context';
 import { pickRows } from '../ui/workorder/pickRows';
 import { textileFootRects } from './textile/free';
+import { setCounterInserts } from '../domain/counters';
 
 const TERMS = { payer: 'utstiller', ral: '9010' } as const;
 // 6 × 3 without takdrager: the back wall stands free and gets a foot plate 750 under its post at (3, 0), 250 into the stand
@@ -54,6 +55,17 @@ describe('inserts 700 under a counter over a foot plate (K23)', () => {
     const o = { ...at((f.x0 + f.x1) / 2 + 0.6), y: f.y1 + 0.26 - 0.1 };
     const res = calcContext({ ...v, objects: [o] }, RULES, DEFAULT_CATALOG, TERMS, DEFAULT_PRICING);
     expect(res.inserts.get('d')?.length).toBe(3);
+  });
+
+  it('chosen on inserts away from a plate too, as high as one over it; off again', () => {
+    const v = setCounterInserts({ ...bare, objects: [at(1.5)] }, 'd', true);
+    expect(v.objects[0].inserts).toBe(true);
+    expect(calcContext(v, RULES, DEFAULT_CATALOG, TERMS, DEFAULT_PRICING).inserts.get('d')?.length).toBe(4);
+    const off = setCounterInserts(v, 'd', false);
+    expect('inserts' in off.objects[0]).toBe(false);
+    expect(inserts(off.objects[0])).toBe(0);
+    // Over a plate the choice changes nothing: on the plate's post still none
+    expect(calcContext(setCounterInserts({ ...bare, objects: [at(3.49)] }, 'd', true), RULES, DEFAULT_CATALOG, TERMS, DEFAULT_PRICING).inserts.get('d')?.length).toBe(3);
   });
 
   it('3D gets the uprights on inserts', () => {

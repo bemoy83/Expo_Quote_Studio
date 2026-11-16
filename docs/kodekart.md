@@ -292,7 +292,7 @@ og kalkyle med 6560, som er et ferdig oppsett i det (K22).
   Utstyr (`EquipSection.tsx`) teller raden standarddiskene (`soldAs`), + setter en med `addStockAnywhere` (podiums.ts),
   og penselen legger varen bak sin funksjon og i hånden. Gamle skisser: `asSections` (podiumStock.ts) via `countersAsSections` i `persistence/file.ts` gjør disker fra
   Disker om til seksjoner når de åpnes, og `countedAsPodier` gjør talte podier (5450) om til podier på standen.
-- Disk over fotplate (K23): `counterInserts` i `domain/counters.ts` (stolpene som ikke står på platen), platene fra
+- Disk over fotplate (K23): `counterInserts`, `overPlate` og `setCounterInserts` (`PlacedObject.inserts`, valget i skuffen, platene fra `footPlatesOf` i `ui/env.ts`) i `domain/counters.ts` (stolpene som ikke står på platen), platene fra
   `footPlateRect` i `calc/wallSupports.ts` og `textileFootRects` i `calc/textile/free.ts`, `CalcContext.inserts` og
   `CalcResult.inserts` (stolpene, for 3D: `buildInserts` i `scene3d/build/counter.ts`), `ITEM.counterInsert` på disklinjen og
   `FogaStructure.counterInserts` (linjen under Disker i `foga/engine.ts`).
