@@ -529,7 +529,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   standen (Bjørn 16.11.2026), både når disken settes, tegnes og flyttes, og ytterflaten 10 mm utenfor. Unntaket er når
   magneten legger den inntil en vegg, en disk eller standkanten; da står den inntil, og ved standkanten står den
   alltid inntil. Magneten virker også når disken flyttes. Ytterflaten er diskens virkelige mål: den går aldri inn i en
-  vegg eller en annen disk, og mot en standvegg står den mot veggens flate, ikke mot standkanten under veggen. Trykk og dra tegner videre fra
+  vegg eller en annen disk, og mot en standvegg står den mot veggens flate, ikke mot standkanten under veggen. En
+  stolpe som står fritt på gulvet under en takdrager (T12), også de som følger standveggene, er i veien på samme måte
+  som en vegg, for disker og møbler (Bjørn 16.11.2026). Trykk og dra tegner videre fra
   seksjonen, som står fast fra trykket: i hver retning for seg vokser disken `round(d / 500) × 500` på den siden når
   pekeren går `d` forbi kanten, inne i seksjonen skjer ingenting, og begge retninger gir et rektangel. Der den ikke får
   plass, nektes den med «Ikke plass til disken her». En disk kan stå helt inntil en vegg. Shift bytter tegnestørrelsen
@@ -545,7 +547,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   seksjonen det ligger mot. Nektes med «Disken kan ikke gå over seg selv», «En del ville stått løst» (deler mindre enn
   250 med siden) eller «Ikke plass til disken her». Pillen viser påbygget c/c og disken utvendig etterpå:
   «+ 500 × 500 · 2 020 × 1 020».
-  *Bjørn 13.11.2026 · kode `src/domain/podiums.ts`, `src/domain/counterShape.ts`, `src/domain/types.ts`, `src/domain/objects.ts` · test `src/domain/podiums.test.ts`*
+  *Bjørn 13.11.2026 · kode `src/domain/podiums.ts`, `src/domain/counterShape.ts`, `src/domain/types.ts`, `src/domain/objects.ts`, `src/ui/env.ts` · test `src/domain/podiums.test.ts`*
 - **K11 Tett bygg.** Alle utvendige sider er tette: bunnskinne 92 og toppskinne 93 på hver utvendig kant, og én
   veggplate i hele høyden i kanalene, mellom bunnskinne og toppskinne. Det er ingen midtskinne og ingen hylle i
   grunnbygget; hyller står på egne skinner (K19). Inne i disken står ingen plater og ingen bunnskinne; mellom to
