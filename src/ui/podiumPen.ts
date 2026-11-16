@@ -76,6 +76,18 @@ export function withHeight(b: PodiumBrush, h: number): PodiumBrush {
   return t ? { ...b, stock: t.artnr } : b;
 }
 
+/** «Roter» (Bjørn 16.11.2026): the item in hand turns 90° per press, on top of the turn it gets toward the aisle (K22).
+ *  Only an item that is not square has anything to turn; «Fri» and Podie 50 × 50 have not. */
+export function turnApplies(b: PodiumBrush): boolean {
+  const s = b.stock ? stockByArtnr(b.stock) : undefined;
+  if (!s) return false;
+  const size = stockSize(s);
+  return size.length !== size.depth;
+}
+
+/** The pen turned 90° more, round to 0 after 270. */
+export const turned = (b: PodiumBrush): PodiumBrush => ({ ...b, turn: ((b.turn ?? 0) + 90) % 360 });
+
 /** «Fin» (250 steps) applies to «Fri» only: a function places its item whole. */
 export const fineApplies = (b: PodiumBrush): boolean => !b.stock;
 

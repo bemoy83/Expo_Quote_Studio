@@ -659,7 +659,12 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   varen som sist ble hentet fra katalogen for den, i starten den første (for Podie den i høyden Fri har). Et klikk med
   «Disk» setter disken med fronten mot den åpne siden av standen på tvers av den (den nærmeste når begge er åpne); med
   «Podie» setter det podiet rett (dreiet 0), i høyden valgt i pillen, som velger varen. Ingen av dem bygger på en disk
-  det peker ved. Høydene varen ikke finnes i, og «Fin», er grå mens en funksjon er i hånden; å dra tegner alltid fritt.
+  det peker ved. Høydene varen ikke finnes i, og «Fin», er grå mens en funksjon er i hånden. Å dra med «Podie» tegner
+  fritt i podiets høyde. Å dra med «Disk» tegner en disk bygget som disken i hånden (Bjørn 16.11.2026): samme dybde,
+  høyde og hylle og åpen bak i hver seksjon, og den vokser bare i lengden, i steg på 0,5 m (Shift og «Fin» endrer ikke
+  steget). Blir den 1 m, er den 6560; ellers er den en disk bygget på stedet (K13), priset av kostmotoren. «Roter» i
+  pillen (tast R på desktop) dreier varen i hånden 90° per trykk, i tillegg til at disken vender fronten mot gangen;
+  knappen er grå for «Fri» og Podie 50 × 50, som er kvadratiske.
   Bardisk 6560 i Utstyr er det samme: + setter en 6560 fra Disker og podier, og penselen der legger varen bak sin
   funksjon og i hånden.
   En skisse lagret før dette gjør disker fra Disker om når den åpnes: disken på lager blir 6560, en tegnet disk én
@@ -675,7 +680,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   varenummeret alltid har betydd; et podie som ikke får plass, blir stående talt. Navnet i pille og skuff er
   katalognavnet med varianten, uten varenummer: «Bardisk», «Podie 50 × 50, 75 cm». Ferdig bygget kostes hver
   standardvare som én leid vare (`ITEM.counter` per utvendig mål og høyde).
-  *Bjørn 13.11.2026 · kode `src/domain/podiumStock.ts`, `src/domain/podiums.ts`, `src/calc/lines/objects.ts`, `src/persistence/file.ts`, `src/ui/panel/sections/EquipSection.tsx`, `src/ui/podiumPen.ts` · test `src/domain/podiumStock.test.ts`, `src/ui/podiumPen.test.ts`*
+  *Bjørn 13.11.2026 · kode `src/domain/podiumStock.ts`, `src/domain/podiums.ts`, `src/calc/lines/objects.ts`, `src/persistence/file.ts`, `src/ui/panel/sections/EquipSection.tsx`, `src/ui/podiumPen.ts`, `src/ui/plan/pointer/podium.ts`, `src/ui/plan/quick/podium.tsx`, `src/ui/useShortcuts.ts` · test `src/domain/podiumStock.test.ts`, `src/domain/podiums.test.ts`, `src/ui/podiumPen.test.ts`*
 
 ## P · Plukkliste og arbeidsordre
 

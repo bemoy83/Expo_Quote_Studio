@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Variant } from '../domain/types';
 import { DEFAULT_CATALOG } from '../catalog/defaultCatalog';
-import { builtByShape, fineApplies, funcOf, penFuncs, penHeights, stockFor, withFunc, withHeight } from './podiumPen';
+import { builtByShape, fineApplies, turnApplies, turned, funcOf, penFuncs, penHeights, stockFor, withFunc, withHeight } from './podiumPen';
 import type { Brush } from './tools';
 
 const P = DEFAULT_CATALOG.products;
@@ -59,5 +59,13 @@ describe('what «Fri» stores is built as its function (K13)', () => {
     expect(builtByShape(at([sec(-250, 250, -250, 250, 750)]), 'i1', true, fri, P).objects[0].product).toBe('6572');
     expect(builtByShape(at([sec(-500, 500, -500, 500)]), 'i1', false, fri, P).objects[0].product).toBe('6571');
     expect(builtByShape(at([sec(-500, 500, -500, 500)]), 'i1', true, withFunc(fri, 'disker', {}, P), P).objects[0].product).toBe('6571');
+  });
+
+  it('Roter turns Bardisk 90° per press; Fri and the square podie have nothing to turn (Bjørn 16.11.2026)', () => {
+    const b = withFunc(fri, 'disker', {}, P);
+    expect(turnApplies(b)).toBe(true);
+    expect([1, 2, 3, 4].map((n) => Array.from({ length: n }).reduce<B>((x) => turned(x), b).turn)).toEqual([90, 180, 270, 0]);
+    expect(turnApplies(fri)).toBe(false);
+    expect(turnApplies(withFunc(fri, 'podier', {}, P))).toBe(false);
   });
 });

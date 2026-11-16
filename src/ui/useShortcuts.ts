@@ -1,10 +1,11 @@
 // Keyboard on the sketch screen: V S G T H D M E (dock tools), P (last pen), R (turn a lane, furniture or a frittstående
-// tekstilvegg), Escape, ⌘Z / ⇧⌘Z, and Delete or Backspace on the selection (plan/selection.ts says what goes).
+// tekstilvegg, or the counter in hand on the Disker og podier pen), Escape, ⌘Z / ⇧⌘Z, and Delete or Backspace on the selection (plan/selection.ts says what goes).
 import { useEffect } from 'react'
 import { rotateLane } from '../domain/floor/edit'
 import type { Variant } from '../domain/types'
 import { deleteSelection, doorWall, type PlanSelection } from './plan/selection'
 import { turnFree, turnObject } from './plan/turn'
+import { turnApplies, turned } from './podiumPen'
 import type { DockTool } from './tools'
 import type { Tools } from './useTools'
 
@@ -56,6 +57,7 @@ export function useShortcuts(s: Shortcuts) {
         }
       } else if (k === 'r' && selection.objectId && tools.tool === 'select') turnObject({ v, onEdit, onToast: s.onToast }, selection.objectId)
       else if (k === 'r' && selection.freeTextileId && tools.tool === 'select') turnFree({ v, onEdit, onToast: s.onToast }, selection.freeTextileId)
+      else if (k === 'r' && tools.tool === 'brush' && tools.brush?.kind === 'podium' && turnApplies(tools.brush)) tools.pick(turned(tools.brush))
       else if (k === 'p' && tools.brush) {
         tools.setTool('brush')
         s.toPlan()

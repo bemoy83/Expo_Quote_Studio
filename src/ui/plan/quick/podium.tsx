@@ -1,9 +1,10 @@
 // Disker og podier by function (Bjørn 14.11.2026): «Fri», then one button per function with the outline of the item
 // behind it; the plates in the wall colours and the bucket, as on Vegg (K6); Høyde (K12) and Fin.
+import { RotateCw } from 'lucide-react'
 import { heightName, outerHeight } from '../../../domain/podiums'
 import { stockByArtnr } from '../../../domain/podiumStock'
 import { artnrName, catalog, idx } from '../../env'
-import { fineApplies, funcOf, penFuncs, penHeights, stockFor, withFunc, withHeight } from '../../podiumPen'
+import { fineApplies, funcOf, penFuncs, penHeights, stockFor, turnApplies, turned, withFunc, withHeight } from '../../podiumPen'
 import type { Brush } from '../../tools'
 import { ralSwatches } from '../swatches'
 import { StockOutline } from './StockOutline'
@@ -16,6 +17,7 @@ export function PodiumPicks({ p, head, more, brush }: Omit<QuickCtx, 'is'> & { b
   const func = funcOf(brush)
   const picks = p.picks.podium ?? {}
   const fineOn = fineApplies(brush)
+  const turnOn = turnApplies(brush)
   return (
     <>
       {head}
@@ -30,7 +32,7 @@ export function PodiumPicks({ p, head, more, brush }: Omit<QuickCtx, 'is'> & { b
           <QBtn
             key={f.func}
             on={func === f.func}
-            title={`${f.one} · ${f.does.toLowerCase()} · et klikk setter ${name ?? f.one.toLowerCase()}, dra tegner fritt`}
+            title={`${f.one} · ${f.does.toLowerCase()} · et klikk setter ${name ?? f.one.toLowerCase()}, dra ${f.func === 'disker' ? 'gjør den lengre' : 'tegner fritt'}`}
             label={f.one}
             onClick={() => onPick(withFunc(brush, f.func, picks, catalog.products))}
           >
@@ -61,6 +63,16 @@ export function PodiumPicks({ p, head, more, brush }: Omit<QuickCtx, 'is'> & { b
         </QBtn>
       ))}
       <Sep />
+      {/* «Roter» (Bjørn 16.11.2026): 90° per press, also key R; grey when what is in hand is square */}
+      <QBtn
+        disabled={!turnOn}
+        title={turnOn ? 'Roter 90° · også tast R' : 'Roter · bare for en vare som ikke er kvadratisk'}
+        label="Roter"
+        onClick={() => onPick(turned(brush))}
+      >
+        <RotateCw size={15} />
+        Roter
+      </QBtn>
       {/* «Fin»: as Shift held, for touch; Fri only, a function places its item whole */}
       <FinBtn
         off={fineOn ? undefined : 'Fin · gjelder bare Fri'}
