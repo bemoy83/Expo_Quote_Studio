@@ -24,7 +24,7 @@ import { INK_FAINT, LAYER_COLOR } from '../colors'
 import { Button, IconButton, Section } from '../controls'
 import { productOf, rules } from '../env'
 import { findMotif } from '../motifs'
-import { DrawerHead} from './drawerParts'
+import { DrawerHead } from './drawerParts'
 import { DoorMap } from './DoorMap'
 import { chosen, chosenShelves, isOnWall, type PlanSelection } from './selection'
 import { addTextile, fillTextile, removeTextile, textilesOn, updateTextile } from '../../domain/textile/inFrame'
@@ -35,7 +35,8 @@ import { FeltFittings, ShelfPanel, WallFittings } from './wallDrawer/fittings'
 import { focusOf, layoutOf } from './wallDrawer/focus'
 import { useWallTools } from './wallDrawer/useWallTools'
 import { ColourPanel, DoorPanel, FeltPanel, FoilPanel, TextilePanel, WallShelf } from './wallDrawer/panels'
-import { BRUSH_HINT, wallHint, wallMeta, wallTitle } from './wallDrawer/text'
+import { BRUSH_HINT, wallHint, wallMeta, wallTitle, wallWhy } from './wallDrawer/text'
+import { hintLine } from './drawerText'
 import { WallElevation } from './wallDrawer/WallElevation'
 
 interface Props {
@@ -158,7 +159,8 @@ export function WallDrawer(p: Props) {
     t.setShelfBrush(on)
     if (on && Fe !== undefined) select({})
   }
-  const hint0 = wallHint({ O, door: !!O && doorModules.has(O.module), painting, tool, printing, T, F, S, felt: focus === 'felt' ? page : undefined, extras: ui.panel === 'wall-extras', w })
+  const why = wallWhy(v, rules, w, s, { felt: focus === 'felt' && Fe !== undefined ? { m: Fe, page } : undefined, twoFaces: fs.length > 1, T, F, S, shelves: chosenShelves(v, sel).length })
+  const hint0 = hintLine(why, wallHint({ O, door: !!O && doorModules.has(O.module), painting, tool, printing, T, F, S, felt: focus === 'felt' ? page : undefined, extras: ui.panel === 'wall-extras', w }))
 
   const hint = brushOn ? (t.brushHint ?? BRUSH_HINT) : hint0
 
@@ -237,7 +239,7 @@ export function WallDrawer(p: Props) {
             {ui.panel === 'felt-extras' && Fe !== undefined && <FeltFittings v={v} w={w} s={s} m={Fe} mods={mods} onBrush={() => takeBrush(true)} select={select} onEdit={p.onEdit} onToast={p.onToast} />}
 
             {ui.panel === 'felt-decor' && Fe !== undefined && (
-              <FeltPanel v={v} w={w} s={s} m={Fe} mods={mods} motifs={motifs} pm={pm} base={base} twoFaces={fs.length > 1} setTool={setTool} select={select} onEdit={p.onEdit} onToast={p.onToast} />
+              <FeltPanel v={v} w={w} s={s} m={Fe} mods={mods} motifs={motifs} pm={pm} base={base} setTool={setTool} select={select} onEdit={p.onEdit} onToast={p.onToast} />
             )}
 
             {ui.panel === 'wall-extras' && <WallFittings v={v} w={w} s={s} brush={brushOn} onBrush={takeBrush} onEdit={p.onEdit} onToast={p.onToast} />}
@@ -245,6 +247,9 @@ export function WallDrawer(p: Props) {
             {ui.panel === 'wall-decor' && <ColourPanel painting={painting} tool={tool} setTool={setTool} printing={printing} pm={pm} paint={paint} ral={ral} setPaint={t.setPaint} />}
           </>
         )}
+        {/* Groups in the order the wall is built, parted by a line (Bjørn 17.11.2026, as in the counter drawer): what is
+            chosen (the plate, the whole wall, the decal) · the motif library on it */}
+        {ui.library && <hr className="set-rule" />}
         {ui.library && (
           <WallShelf F={F} felt={feltShelf} printing={printing} pm={pm} motifs={motifs} ratioOf={ratioOf} setPrintMotif={t.setPrintMotif} onEdit={p.onEdit} onUpload={p.onUpload}>
             {ui.library.add === 'decal' && Fe !== undefined && (

@@ -25,6 +25,13 @@ Brukeren skal gjøre det meste rett på tegneflaten. **Pillen** gir rask tilgang
   frittstående tekstil til `FreeTextileDrawer`, og engangsteppe til `CarpetDrawer`.
 - Møbel, rom og innvendig takdrager har ingen pille og ingen skuff. Bare markering i planen og Delete
   (`deleteSelection` i `plan/selection.ts`).
+- Kolonnen i skuffene står stille (Bjørn 17.11.2026, som i diskskuffen): ingen hjelpeavsnitt som kommer og går. Grunner
+  og forklaringer («Feltet kan ikke ta hylle», «Dekker hele platen», «Fargen gjelder platen på begge sider», kundens duk,
+  hyllevarsler) står først i hintlinja, eller kort i tittelraden. Seksjonene står i grupper i byggeorden med tynn strek
+  (`.set-rule`): det som er valgt · Profilering, ramme · duk, hylle · feltet, dør · miniplan.
+- Én målestokk per vegg: veggrisset gir plass til alt som står på veggen, på begge sider (`steady` i `frame`,
+  `wallDrawer/elevationMeasure.ts`), så risset ikke endrer størrelse når noe velges, en malerpensel tas fram eller siden
+  snus.
 - Skuffen er fast 270 px høy (`.wall-drawer.drawer3` i `styles/app.css`).
 - Hva et trykk velger, står i `plan/pointer/select.ts`. Valget skjer når man slipper.
 

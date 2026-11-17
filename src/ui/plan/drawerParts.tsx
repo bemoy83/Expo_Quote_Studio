@@ -86,12 +86,11 @@ const FILLS: { value: TextileFill; label: string }[] = [
 /**
  * A textile's fabric and its motif in one section (Bjørn 8.11.2026): the title names the motif («DUK · HOVEDMOTIV»,
  * «DUK · MOTIV IKKE VALGT»), upload sits fixed in the title row, then print, white or the customer's own, then the
- * motifs, only for print. `note`: a line under the choice.
+ * motifs, only for print. No line under the choice, so the column stands still: what «Kundens» means is in the hint.
  */
 export function FabricSection(p: {
   value: TextileFill
   onChange: (f: TextileFill) => void
-  note?: ReactNode
   motifs: Motif[]
   motif?: string | null
   onPick: (id: string) => void
@@ -100,9 +99,8 @@ export function FabricSection(p: {
   const print = p.value === 'print'
   const name = p.motifs.find((m) => m.id === p.motif)?.name
   return (
-    <Section title="Duk" aside={print ? (name ?? 'motiv ikke valgt') : undefined} className="wd-sec" tools={<UploadButton onUpload={p.onUpload} />}>
+    <Section title="Duk" aside={print ? (name ?? 'motiv ikke valgt') : p.value === 'reuse' ? 'bare montering' : 'hvit'} className="wd-sec" tools={<UploadButton onUpload={p.onUpload} />}>
       <FlatChoice<TextileFill> label="Duk" value={p.value} onChange={p.onChange} options={FILLS} />
-      {p.value === 'reuse' ? <p className="set-note">Kunden har duken fra før, i samme størrelse. Bare montering.</p> : p.note && <p className="set-note">{p.note}</p>}
       {print && <MotifGrid motifs={p.motifs} value={p.motif} onPick={p.onPick} onUpload={p.onUpload} />}
     </Section>
   )

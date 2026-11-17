@@ -2,7 +2,13 @@
 import type { ProductionPiece } from '../../../calc/textile/production'
 import { wallModules } from '../../../domain/grid'
 import { roomName, roomSize } from '../../../domain/rooms'
+import { foilBlocked } from '../../../domain/decor'
+import type { FaceSide } from '../../../domain/faces'
+import { printsOn } from '../../../domain/print'
+import { highWarning, offRow, shelfBlocked, tooHigh } from '../../../domain/shelves/model'
 import type { Foil, Opening, Shelf, TextileWall, Variant, Wall } from '../../../domain/types'
+import type { Rules } from '../../../rules/rules'
+import { hintLine, REUSE_NOTE } from '../drawerText'
 import { isStandWall, wallLabel } from '../../../domain/walls'
 import { RECIPES } from '../../../foga/recipes'
 import { count, fmt, mm } from '../../format'
@@ -87,4 +93,28 @@ export function wallHint(x: { O?: Opening; door: boolean; painting: boolean; too
       : 'Dra for å flytte innenfor platen · hjørnene endrer størrelsen · klikk et motiv for å bytte · Delete fjerner'
   if (isStandWall(w)) return `Standveggen står fast · ${TAIL}`
   return w.room ? `Dra veggen i planen for å endre rommet · ${TAIL}` : `Dra veggen i planen for å flytte den · ${TAIL}`
+}
+
+/**
+ * Why the panel cannot do what it shows, or what a choice there means, for the front of the hint line: never a line in
+ * the settings column, so the column stands still (Bjørn 17.11.2026, as in the counter drawer). `felt`: the chosen felt
+ * and its page; `shelves`: how many shelves are chosen with S.
+ */
+export function wallWhy(
+  v: Variant,
+  rules: Rules,
+  w: Wall,
+  s: FaceSide,
+  x: { felt?: { m: number; page: 'decor' | 'extras' }; twoFaces: boolean; T?: TextileWall; F?: Foil; S?: Shelf; shelves: number },
+): string | null {
+  const { felt, T, F, S } = x
+  if (felt) {
+    if (felt.page === 'extras') return shelfBlocked(v, w.id, felt.m, s)
+    const printed = printsOn(v, w.id, s).some((f) => f.module === felt.m)
+    return foilBlocked(v, rules, w.id, felt.m, s, true) ?? (x.twoFaces && !printed ? 'Fargen gjelder platen på begge sider' : null)
+  }
+  if (F?.full) return `Dekker hele platen, ${rules.wall.plate.width} × ${rules.wall.plate.height} mm`
+  if (T?.fill === 'reuse') return REUSE_NOTE
+  if (S) return hintLine(tooHigh(rules, S.y) && highWarning(rules), x.shelves === 1 && offRow(v, S.id) && 'Avviker fra raden') || null
+  return null
 }

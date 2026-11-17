@@ -7,7 +7,7 @@ import type { FaceSide } from '../../../domain/faces'
 import { moduleCount } from '../../../domain/grid'
 import { addShelfToFelt } from '../../../domain/shelves/edit'
 import { addShelfRowToFace, addShelfToFace } from '../../../domain/shelves/fill'
-import { gapNote, highWarning, offRow, shelfBlocked, shelvesIn, shelvesOn, tooHigh } from '../../../domain/shelves/model'
+import { gapNote, shelfBlocked, shelvesIn, shelvesOn } from '../../../domain/shelves/model'
 import type { Shelf as Board, Variant, Wall } from '../../../domain/types'
 import type { BuiltModule } from '../../../domain/walls'
 import { Button, Dim, FlatChoice, IconButton, Section } from '../../controls'
@@ -32,14 +32,13 @@ export function FeltFittings({ v, w, s, m, mods, onBrush, select, onEdit, onToas
   const n = shelvesIn(v, w.id, m, s).length
   const why = shelfBlocked(v, w.id, m, s)
   return (
-    <Section title={`Felt ${m + 1} · hyller`} aside={n ? `${n} i feltet` : 'ingen'} tools={
+    <Section title={`Felt ${m + 1} · hyller`} aside={n ? `${n} i feltet` : why ? 'kan ikke ta hylle' : 'ingen'} tools={
         <>
           <IconButton icon={Paintbrush} label={BRUSH_LABEL} size={15} className="ink" onClick={onBrush} />
           <FeltArrows m={m} s={s} mods={mods} select={select} />
         </>
       }
     >
-      {why && <p className="set-note">{why}</p>}
       <div className="wd-actions">
         <Button variant="ghost" icon={Plus} onClick={() => added(onEdit, onToast)(addShelfToFelt(v, rules, w.id, m, s))} disabled={!!why}>
           Hylle til i feltet
@@ -100,8 +99,6 @@ export function ShelfPanel({ v, H, w, s, sel, select, onEdit, onToast }: { v: Va
         />
         <p className="set-note">
           Overkant · {mm(sh.min)}–{mm(sh.max)} mm · steg {mm(sh.step)} mm
-          {tooHigh(rules, H.y) && <> · {highWarning(rules)}</>}
-          {n === 1 && offRow(v, H.id) && <> · avviker fra raden</>}
         </p>
         {row > 1 && (
           <div className="wd-actions">
@@ -111,6 +108,7 @@ export function ShelfPanel({ v, H, w, s, sel, select, onEdit, onToast }: { v: Va
           </div>
         )}
       </Section>
+      <hr className="set-rule" />
       <Section
         title="Felt"
         aside={`${H.module + 1} av ${L}`}

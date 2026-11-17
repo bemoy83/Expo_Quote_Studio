@@ -33,6 +33,7 @@ export function TextilePanel({ T, motifs, onEdit, onUpload }: { T: TextileWall; 
         <Dim big label="Fra gulv" value={textileBox(T, rules).bottom} onChange={(n) => onEdit((x) => updateTextile(x, rules, T.id, { bottom: n }))} />
         </div>
       </Section>
+      <hr className="set-rule" />
       <FabricSection
         value={T.fill ?? 'print'}
         onChange={(f) => onEdit((x) => updateTextile(x, rules, T.id, { fill: f }))}
@@ -59,11 +60,6 @@ export function FoilPanel({ F, ratioOf, onEdit }: { F: Foil; ratioOf: (id?: stri
             { value: true, label: 'Hel plate' },
           ]}
         />
-        {F.full && (
-          <p className="set-note">
-            Dekker platen mellom stolpene, {rules.wall.plate.width} × {rules.wall.plate.height} mm
-          </p>
-        )}
       </Section>
       {!F.full && (
         <Section title="Mål">
@@ -174,6 +170,7 @@ export function DoorPanel(props: {
       >
         {flip !== undefined && <IconButton icon={Repeat2} label={`Vis ${faceName(w, flip).toLowerCase()}`} size={14} onClick={() => selectDoor(O.id, flip)} />}
       </DoorSettings>
+      <hr className="set-rule" />
       <div className="wd-sec">{children}</div>
       {/* The way back to the palette: colour and graphics for the door are the wall's, and a 1 × 1 room's side is
           only the door, so the drawing has nothing else to click (Bjørn 3.11.2026) */}
@@ -204,13 +201,12 @@ export function FeltPanel(props: {
   motifs: Motif[]
   pm: Motif | undefined
   base: (key: string) => string
-  twoFaces: boolean
   setTool: (t: PaintTool) => void
   select: (x: Partial<PlanSelection>) => void
   onEdit: Edit
   onToast: (t: string) => void
 }) {
-  const { v, w, s, m, mods, motifs, pm, base, twoFaces, setTool, select, onEdit, onToast } = props
+  const { v, w, s, m, mods, motifs, pm, base, setTool, select, onEdit, onToast } = props
   const key = mods[m]!.key
   const plate = mods[m]!.plate
   const printed = printsOn(v, w.id, s).find((f) => f.module === m)
@@ -242,7 +238,6 @@ export function FeltPanel(props: {
       }
     >
       <PlatePalette value={printed ? PRINT : plate} print={{ motif: pm }} onPick={pick} />
-      {noPrint ? <p className="set-note">{noPrint}</p> : twoFaces && !printed && <p className="set-note">Fargen gjelder platen på begge sider</p>}
     </Section>
   )
 }

@@ -173,22 +173,44 @@ export function margins(items: ElevationItem[], levels: number, opts: FrameOpts 
 export interface FrameOpts {
   chainOver?: boolean
   labels?: ElevationItem[]
+  /**
+   * Everything on the wall, one list per face (each in its own face's x): the margins are made room for all of it, as
+   * if any of it were measured or named, so the wall keeps one scale whatever is chosen on it, with a paint tool out
+   * and on either face (Bjørn 17.11.2026, as the counter drawer's one scale per counter).
+   */
+  steady?: ElevationItem[][]
 }
+
+type Margins = ReturnType<typeof margins>
+
+/** The larger of each margin. */
+const widest = (ms: Margins[]): Margins => ({
+  left: Math.max(...ms.map((m) => m.left)),
+  right: Math.max(...ms.map((m) => m.right)),
+  top: Math.max(...ms.map((m) => m.top)),
+  bottom: Math.max(...ms.map((m) => m.bottom)),
+})
 
 /**
  * The drawing's view box and scale for an svg of `size` px: the wall L × H m with the margins round it. The leader
  * lines decide the top margin and depend on the scale, so it is worked out twice.
  */
 export function frame(size: { w: number; h: number } | null, L: number, H: number, items: ElevationItem[], opts: FrameOpts = {}) {
-  const fit = (levels: number) => {
-    const m = margins(items, levels, opts)
+  const labels = opts.labels ?? []
+  /** Lines of leader text for `list` at `k` px per m (one before the scale is known). */
+  const levelsOf = (list: ElevationItem[], k: number | null) => (!list.length ? 0 : k === null ? 1 : Math.max(1, ...leaders(list, H, 1 / k).map((l) => l.level + 1)))
+  const fit = (k0: number | null) => {
+    let m = margins(items, levelsOf(labels, k0), opts)
+    if (opts.steady) {
+      const all = opts.steady.flat()
+      const named = margins([], Math.max(0, ...opts.steady.map((f) => levelsOf(f, k0))), { ...opts, labels: all })
+      m = widest([m, named, ...(all.length ? [margins(all, 0, { ...opts, labels: [] })] : [])])
+    }
     const k = size ? Math.max(20, Math.min((size.w - m.left - m.right) / L, (size.h - m.top - m.bottom) / H)) : 60
     return { m, k }
   }
-  let { m, k } = fit(1)
-  const labels = opts.labels ?? []
-  const levels = Math.max(1, ...leaders(labels, H, 1 / k).map((l) => l.level + 1))
-  ;({ m, k } = fit(labels.length ? levels : 0))
+  let { m, k } = fit(null)
+  ;({ m, k } = fit(k))
   const u = 1 / k
   const ls = leaders(labels, H, u)
   // Centred in the svg like preserveAspectRatio meet would, with the margins kept

@@ -4,7 +4,7 @@ import { isStandWall } from '../../../domain/walls'
 import { RULES } from '../../../rules/rules'
 import { framePiece } from '../../../calc/textile/inFrame'
 import { textileNote } from '../../textileNote'
-import { elevationItems, leaders, lysmal, row, shelfChains, textileLabel } from './elevationMeasure'
+import { elevationItems, frame, leaders, lysmal, row, shelfChains, textileLabel } from './elevationMeasure'
 import { elevationHeading } from './face'
 
 describe('wall drawing dimensions', () => {
@@ -13,6 +13,21 @@ describe('wall drawing dimensions', () => {
     const { along, heights } = lysmal(RULES, [0, 1, 3], 2.54)
     expect(along.map(r)).toEqual([20, 980, 1020, 1980, 3020, 3980])
     expect(heights.map((h) => r(2.54 - h))).toEqual([2500, 80, 0])
+  })
+
+  it('one scale per wall: the same whatever on it is chosen, named or painted, on either face', () => {
+    const size = { w: 900, h: 300 }
+    const frameItem = { kind: 'textile' as const, x0: 1, x1: 3, bottom: 0.1, top: 2.4, uprights: [1, 2, 3], label: 'Tekstil 1 970 × 2 300' }
+    const decal = { kind: 'decal' as const, x0: 3.2, x1: 3.6, bottom: 1, top: 1.4 }
+    const steady = [[frameItem], [decal]]
+    const k = (items: (typeof frameItem | typeof decal)[], labels: (typeof frameItem | typeof decal)[]) => frame(size, 4, 2.54, items, { labels, steady }).u
+    const wall = k([], [frameItem])
+    expect(k([frameItem], [])).toBe(wall)
+    expect(k([decal], [])).toBe(wall)
+    expect(k([], [])).toBe(wall)
+    expect(k([], [decal])).toBe(wall)
+    // Without it the wall shrinks or grows as things are chosen
+    expect(frame(size, 4, 2.54, [frameItem], {}).u).not.toBe(frame(size, 4, 2.54, [], { labels: [frameItem] }).u)
   })
 
   it('a row runs through both ends and every edge, once each', () => {
