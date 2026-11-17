@@ -15,7 +15,7 @@ import { eraseWalls } from '../../domain/edit'
 import { wallRal } from '../../domain/panels'
 import { clearDecor, clearFelt, printPlate, printsOn } from '../../domain/print'
 import { moveShelves, removeShelves } from '../../domain/shelves/edit'
-import { highWarning, offRow, shelfBlocked, shelvesOn, tooHigh } from '../../domain/shelves/model'
+import { shelvesOn } from '../../domain/shelves/model'
 import { wallLength, wallModules } from '../../domain/grid'
 import type { Motif, Variant } from '../../domain/types'
 import { builtModules, isStandWall, wallLabel, wallParts } from '../../domain/walls'
@@ -24,7 +24,7 @@ import { INK_FAINT, LAYER_COLOR } from '../colors'
 import { Button, IconButton, Section } from '../controls'
 import { productOf, rules } from '../env'
 import { findMotif } from '../motifs'
-import { DrawerHead} from './drawerParts'
+import { DrawerHead } from './drawerParts'
 import { DoorMap } from './DoorMap'
 import { chosen, chosenShelves, isOnWall, type PlanSelection } from './selection'
 import { addTextile, fillTextile, removeTextile, textilesOn, updateTextile } from '../../domain/textile/inFrame'
@@ -35,7 +35,8 @@ import { FeltFittings, ShelfPanel, WallFittings } from './wallDrawer/fittings'
 import { focusOf, layoutOf } from './wallDrawer/focus'
 import { useWallTools } from './wallDrawer/useWallTools'
 import { ColourPanel, DoorPanel, FeltPanel, FoilPanel, TextilePanel, WallShelf } from './wallDrawer/panels'
-import { BRUSH_HINT, wallHint, wallMeta, wallTitle } from './wallDrawer/text'
+import { BRUSH_HINT, wallHint, wallMeta, wallTitle, wallWhy } from './wallDrawer/text'
+import { hintLine } from './drawerText'
 import { WallElevation } from './wallDrawer/WallElevation'
 
 interface Props {
@@ -158,24 +159,8 @@ export function WallDrawer(p: Props) {
     t.setShelfBrush(on)
     if (on && Fe !== undefined) select({})
   }
-  /**
-   * Why the panel cannot do what it shows, or what a choice there means, first in the hint and never as a line in the
-   * column, so the column stands still (Bjørn 17.11.2026, as in the counter drawer).
-   */
-  const why = (() => {
-    if (focus === 'felt' && Fe !== undefined) {
-      if (page === 'extras') return shelfBlocked(v, w.id, Fe, s)
-      return foilBlocked(v, rules, w.id, Fe, s, true) ?? (fs.length > 1 && !printsOn(v, w.id, s).some((f) => f.module === Fe) ? 'Fargen gjelder platen på begge sider' : null)
-    }
-    if (F?.full) return `Dekker hele platen, ${rules.wall.plate.width} × ${rules.wall.plate.height} mm`
-    if (T?.fill === 'reuse') return 'Kunden har duken fra før, i samme størrelse: bare montering'
-    if (S) {
-      const n = chosenShelves(v, sel).length
-      return [tooHigh(rules, S.y) ? highWarning(rules) : '', n === 1 && offRow(v, S.id) ? 'Avviker fra raden' : ''].filter(Boolean).join(' · ') || null
-    }
-    return null
-  })()
-  const hint0 = [why, wallHint({ O, door: !!O && doorModules.has(O.module), painting, tool, printing, T, F, S, felt: focus === 'felt' ? page : undefined, extras: ui.panel === 'wall-extras', w })].filter(Boolean).join(' · ')
+  const why = wallWhy(v, rules, w, s, { felt: focus === 'felt' && Fe !== undefined ? { m: Fe, page } : undefined, twoFaces: fs.length > 1, T, F, S, shelves: chosenShelves(v, sel).length })
+  const hint0 = hintLine(why, wallHint({ O, door: !!O && doorModules.has(O.module), painting, tool, printing, T, F, S, felt: focus === 'felt' ? page : undefined, extras: ui.panel === 'wall-extras', w }))
 
   const hint = brushOn ? (t.brushHint ?? BRUSH_HINT) : hint0
 

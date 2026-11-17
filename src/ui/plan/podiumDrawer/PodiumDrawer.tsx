@@ -20,6 +20,7 @@ import { overPlate, setCounterInserts } from '../../../domain/counters'
 import { count, mm } from '../../format'
 import { findMotif } from '../../motifs'
 import { DrawerHead, PrevNext } from '../drawerParts'
+import { hintLine } from '../drawerText'
 import type { PlanSelection } from '../selection'
 import { PodiumDecor } from './PodiumDecor'
 import { PodiumElevation } from './PodiumElevation'
@@ -112,8 +113,19 @@ export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect,
     ) : undefined
   const hint =
     page === 'sides'
-      ? `${gone ? `Lavere høyde tok bort ${count(gone, 'hylle', 'hyller')} · ` : ''}${doorable.length ? '' : `${NO_DOOR} · `}${pi === undefined ? 'Klikk en del eller en åpning i risset for bare den' : 'Klikk den igjen for hele siden'} · dra toppen av en seksjon for høyden, en hylle for hyllehøyden · ‹ › bytter del · åpen: ingen plate · skyvedør: to plater i sporet · velg side i kartet eller ved å klikke disken i planen`
-      : `${decorOpen ? 'Åpen: ingen print eller dekal · ' : ''}Fargen gjelder hele disken, også dørene · Print og motiv gjelder ${pi === undefined ? 'hele siden' : 'delen'} · ${chosenDecal ? 'dra dekalen for å flytte, håndtakene for å skalere' : 'klikk en dekal i risset for å flytte og skalere den'} · aldri på åpen del`
+      ? hintLine(
+          gone > 0 && `Lavere høyde tok bort ${count(gone, 'hylle', 'hyller')}`,
+          !doorable.length && NO_DOOR,
+          pi === undefined ? 'Klikk en del eller en åpning i risset for bare den' : 'Klikk den igjen for hele siden',
+          'dra toppen av en seksjon for høyden, en hylle for hyllehøyden · ‹ › bytter del · åpen: ingen plate · skyvedør: to plater i sporet · velg side i kartet eller ved å klikke disken i planen',
+        )
+      : hintLine(
+          decorOpen && 'Åpen: ingen print eller dekal',
+          'Fargen gjelder hele disken, også dørene',
+          `Print og motiv gjelder ${pi === undefined ? 'hele siden' : 'delen'}`,
+          chosenDecal ? 'dra dekalen for å flytte, håndtakene for å skalere' : 'klikk en dekal i risset for å flytte og skalere den',
+          'aldri på åpen del',
+        )
 
   return (
     <section className="wall-drawer drawer2" aria-label={`${name} sett utenfra`}>

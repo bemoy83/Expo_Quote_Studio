@@ -14,6 +14,7 @@ import { findMotif } from '../motifs'
 import { type PlanSelection } from './selection'
 import { DrawerHead, FabricSection } from './drawerParts'
 import { TextileFace } from './elevation'
+import { hintLine, REUSE_NOTE } from './drawerText'
 import { planScale } from './planScale'
 import { useElementSize } from '../useElementSize'
 import { FreeElevationDims } from './wallDrawer/ElevationDims'
@@ -125,7 +126,7 @@ export function FreeTextileDrawer(p: Props) {
           </svg>
         </div>
       </div>
-      <div className="wd-hint">{F.fill === 'reuse' ? 'Kunden har duken fra før, i samme størrelse: bare montering · ' : ''}Dra veggen i planen for å flytte den · målene under viser hvor føttene står · Delete fjerner</div>
+      <div className="wd-hint">{hintLine(F.fill === 'reuse' && REUSE_NOTE, 'Dra veggen i planen for å flytte den', 'målene under viser hvor føttene står', 'Delete fjerner')}</div>
     </section>
   )
 }
