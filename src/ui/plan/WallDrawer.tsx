@@ -15,7 +15,7 @@ import { eraseWalls } from '../../domain/edit'
 import { wallRal } from '../../domain/panels'
 import { clearDecor, clearFelt, printPlate, printsOn } from '../../domain/print'
 import { moveShelves, removeShelves } from '../../domain/shelves/edit'
-import { shelvesOn } from '../../domain/shelves/model'
+import { highWarning, offRow, shelfBlocked, shelvesOn, tooHigh } from '../../domain/shelves/model'
 import { wallLength, wallModules } from '../../domain/grid'
 import type { Motif, Variant } from '../../domain/types'
 import { builtModules, isStandWall, wallLabel, wallParts } from '../../domain/walls'
@@ -158,7 +158,24 @@ export function WallDrawer(p: Props) {
     t.setShelfBrush(on)
     if (on && Fe !== undefined) select({})
   }
-  const hint0 = wallHint({ O, door: !!O && doorModules.has(O.module), painting, tool, printing, T, F, S, felt: focus === 'felt' ? page : undefined, extras: ui.panel === 'wall-extras', w })
+  /**
+   * Why the panel cannot do what it shows, or what a choice there means, first in the hint and never as a line in the
+   * column, so the column stands still (Bjørn 17.11.2026, as in the counter drawer).
+   */
+  const why = (() => {
+    if (focus === 'felt' && Fe !== undefined) {
+      if (page === 'extras') return shelfBlocked(v, w.id, Fe, s)
+      return foilBlocked(v, rules, w.id, Fe, s, true) ?? (fs.length > 1 && !printsOn(v, w.id, s).some((f) => f.module === Fe) ? 'Fargen gjelder platen på begge sider' : null)
+    }
+    if (F?.full) return `Dekker hele platen, ${rules.wall.plate.width} × ${rules.wall.plate.height} mm`
+    if (T?.fill === 'reuse') return 'Kunden har duken fra før, i samme størrelse: bare montering'
+    if (S) {
+      const n = chosenShelves(v, sel).length
+      return [tooHigh(rules, S.y) ? highWarning(rules) : '', n === 1 && offRow(v, S.id) ? 'Avviker fra raden' : ''].filter(Boolean).join(' · ') || null
+    }
+    return null
+  })()
+  const hint0 = [why, wallHint({ O, door: !!O && doorModules.has(O.module), painting, tool, printing, T, F, S, felt: focus === 'felt' ? page : undefined, extras: ui.panel === 'wall-extras', w })].filter(Boolean).join(' · ')
 
   const hint = brushOn ? (t.brushHint ?? BRUSH_HINT) : hint0
 
@@ -237,7 +254,7 @@ export function WallDrawer(p: Props) {
             {ui.panel === 'felt-extras' && Fe !== undefined && <FeltFittings v={v} w={w} s={s} m={Fe} mods={mods} onBrush={() => takeBrush(true)} select={select} onEdit={p.onEdit} onToast={p.onToast} />}
 
             {ui.panel === 'felt-decor' && Fe !== undefined && (
-              <FeltPanel v={v} w={w} s={s} m={Fe} mods={mods} motifs={motifs} pm={pm} base={base} twoFaces={fs.length > 1} setTool={setTool} select={select} onEdit={p.onEdit} onToast={p.onToast} />
+              <FeltPanel v={v} w={w} s={s} m={Fe} mods={mods} motifs={motifs} pm={pm} base={base} setTool={setTool} select={select} onEdit={p.onEdit} onToast={p.onToast} />
             )}
 
             {ui.panel === 'wall-extras' && <WallFittings v={v} w={w} s={s} brush={brushOn} onBrush={takeBrush} onEdit={p.onEdit} onToast={p.onToast} />}
@@ -245,6 +262,9 @@ export function WallDrawer(p: Props) {
             {ui.panel === 'wall-decor' && <ColourPanel painting={painting} tool={tool} setTool={setTool} printing={printing} pm={pm} paint={paint} ral={ral} setPaint={t.setPaint} />}
           </>
         )}
+        {/* Groups in the order the wall is built, parted by a line (Bjørn 17.11.2026, as in the counter drawer): what is
+            chosen (the plate, the whole wall, the decal) · the motif library on it */}
+        {ui.library && <hr className="set-rule" />}
         {ui.library && (
           <WallShelf F={F} felt={feltShelf} printing={printing} pm={pm} motifs={motifs} ratioOf={ratioOf} setPrintMotif={t.setPrintMotif} onEdit={p.onEdit} onUpload={p.onUpload}>
             {ui.library.add === 'decal' && Fe !== undefined && (

@@ -88,6 +88,7 @@ export function FreeTextileDrawer(p: Props) {
             <Dim big label="Lengde" value={f.length / 1000} decimals={2} onChange={setLength} />
           </div>
         </Section>
+        <hr className="set-rule" />
         <FabricSection
           value={F.fill}
           onChange={(fill) => p.onEdit((x) => updateFace(x, t.id, face, { fill, ...(fill === 'print' ? {} : { motif: null }) }))}
@@ -124,7 +125,7 @@ export function FreeTextileDrawer(p: Props) {
           </svg>
         </div>
       </div>
-      <div className="wd-hint">Dra veggen i planen for å flytte den · målene under viser hvor føttene står · Delete fjerner</div>
+      <div className="wd-hint">{F.fill === 'reuse' ? 'Kunden har duken fra før, i samme størrelse: bare montering · ' : ''}Dra veggen i planen for å flytte den · målene under viser hvor føttene står · Delete fjerner</div>
     </section>
   )
 }

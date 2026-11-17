@@ -3,12 +3,12 @@
 // down and sideways, motifs and frames dropped from the motif library (Profilering), and while a paint tool is out each plate is a
 // target for it.
 import { useEffect, useMemo, useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent } from 'react'
-import { foilCenter } from '../../../domain/decor'
+import { foilCenter, foilsOn } from '../../../domain/decor'
 import { doorLevels, doorRal, doorWindows } from '../../../domain/doors'
 import { felt, type FaceSide } from '../../../domain/faces'
 import { moduleCc, moduleStart } from '../../../domain/grid'
 import { cropWindow, plateCrop } from '../../../domain/print'
-import { textileBox } from '../../../domain/textile/inFrame'
+import { textileBox, textilesOn } from '../../../domain/textile/inFrame'
 import { cornerLayout } from '../../../domain/shelves/corners'
 import { shelfRow, shelfStacks } from '../../../domain/shelves/model'
 import type { Foil, Motif, Opening, Shelf, TextileWall, Variant, Wall } from '../../../domain/types'
@@ -137,7 +137,9 @@ export function WallElevation(p: Props) {
   // Named with a leader: not what the drawer is open for (its title says it), but the textile frames, decals and prints
   // on the wall when the wall is chosen (a print over several plates as one)
   const labels = !T && !F && !O && !painting ? elevationItems(rules, tex, foils, doorModules, u, pieceOf, v.walls) : []
-  const fr = frame(size, L, H, items, { labels })
+  // One scale for the wall (Bjørn 17.11.2026): room for every frame, decal and print on both faces, whatever is chosen
+  const steady = p.fs.map((f) => elevationItems(rules, textilesOn(v, w.id, f), foilsOn(v, w.id, f), doorModules, (t) => (f === 1 ? t : L - t), pieceOf, v.walls))
+  const fr = frame(size, L, H, items, { labels, steady })
   const sc = planScale(1 / fr.u, {})
 
   /** Pointer handlers for a plate (or a door) in the drawing while a tool is out: click, or with the brush press and sweep. */

@@ -2277,7 +2277,9 @@ select.cin {
   display: flex;
   gap: 2px;
 }
-/* A line between groups of sections (the counter's drawer: the side · the sections behind · the whole counter) */
+/* A line between groups of sections, in the order things are built (the counter's drawer: the side · the sections behind ·
+   the whole counter; the wall drawer: the plate or wall · Profilering, a frame · its cloth, a shelf · its felt, a door ·
+   its mini plan) */
 .set-rule {
   flex: none;
   width: 100%;
@@ -2901,7 +2903,8 @@ select.cin {
   gap: 6px;
   padding-top: 6px;
 }
-.drawer-frame.compact .wd-sec {
+.drawer-frame.compact .wd-sec,
+.drawer-frame.compact .set-rule:has(+ .wd-sec) {
   display: none;
 }
 /* The map that picks a counter's side: fixed in the top left corner of its drawing, which gives way to it (detail only).
