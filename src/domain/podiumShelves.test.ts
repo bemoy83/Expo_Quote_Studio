@@ -2,7 +2,7 @@
 // part of 1000 c/c at CC 1000, and how the choices follow a shelf put in, moved and taken out.
 import { describe, expect, it } from 'vitest';
 import { counterBuildOf } from './counterShape';
-import { lightOf, lightsOf, podiumHas, podiumParts, setLight } from './podiumFaces';
+import { lightOf, lightsOf, podiumHas, podiumParts, setLight, setPlateRal } from './podiumFaces';
 import { joined } from './podiumGrips';
 import { setSectionHeight } from './podiums';
 import { lowered, movedShelf, shelfStop, withoutShelf, withShelf } from './podiumShelves';
@@ -90,6 +90,17 @@ describe('the choice follows the light opening', () => {
     expect(withoutShelf(s[0], 500).sides).toBeUndefined();
     const d = door(one([500]));
     expect(withoutShelf(d[0], 500).sides?.['z+']?.lights).toEqual(['door']);
+  });
+
+  it('the colour of a light opening (K6) follows it too, beside what it is', () => {
+    // Top light opening in 3020, one under it as it was: a shelf under both splits the lower one, the top stays 3020
+    const s = setPlateRal(one([500]), front(one([500])), '3020', 1);
+    const t = withShelf(s[0], 250);
+    expect(t.sides?.['z+']?.ral).toEqual([null, null, '3020']);
+    // Split in two, both halves keep its colour; taken out again, the lower one keeps it
+    const red = setPlateRal(one(), front(one()), '3020', 0);
+    expect(withShelf(red[0], 500).sides?.['z+']?.ral).toEqual(['3020', '3020']);
+    expect(withoutShelf(t, 250).sides?.['z+']?.ral).toEqual([null, '3020']);
   });
 
   it('only at 250, 500 and 750, below the section; moved, it stops at a neighbour and the top', () => {

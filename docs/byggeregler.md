@@ -650,8 +650,10 @@ K22 standardvarene og K23 disker over en fotplate.
   seksjonen bak delen, eller alle langs siden) og dras opp og ned i risset med grepet «Hylle 50 cm»: draget snapper til
   CC-høydene og stopper mot en nabohylle og mot toppen. Et grep som legger på seksjoner gir dem hyllene til seksjonen det
   strekker. Tid, plassholder: 1,5 min opp og 1 ned per hylle (som H7, Bjørn 13.11.2026), unntatt hyllen i CC 750 i en
-  seksjon som er 500 dyp: den er med i tiden per seksjon (K9), som i 6560. Tilbudet sier «3 hyller».
-  *Bjørn 13.11.2026 · kode `src/foga/counter.ts` (`shelfRails`), `src/domain/podiumShelves.ts` · test `src/domain/podiumShelves.test.ts`, `src/calc/podium.test.ts`*
+  seksjon som er 500 dyp: den er med i tiden per seksjon (K9), som i 6560. Tilbudet sier «3 hyller». Det lysåpningen
+  er (K16) og fargen dens (K6) følger den: en ny hylle deler den i to, og begge halvdelene beholder valget og fargen; tas
+  hyllen ut, blir de to til den nederste, som beholder sitt.
+  *Bjørn 13.11.2026 og 18.11.2026 · kode `src/foga/counter.ts` (`shelfRails`), `src/domain/podiumShelves.ts` · test `src/domain/podiumShelves.test.ts`, `src/calc/podium.test.ts`*
 - **K20 Print og dekal på disk.** På plate og skyvedør, aldri på åpen lysåpning eller trinnplate. Print er heldekkende
   dekal, ikke trykk på platen, og dekker platene og dørene i delen mellom stolpene og skinnene. Deler på rad på samme
   side med samme motiv viser ett motiv strukket over dem (som `printWall`): bildet dekker fra første dels venstre stolpe

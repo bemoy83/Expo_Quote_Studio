@@ -1,7 +1,8 @@
 // Shelves in a counter of Disker og podier (Byggeregel K19, trinn 2): a shelf belongs to a section and stands at CC 250,
 // 500 or 750, below the section's height, on four rails round it that split the section's sides into light openings
-// (K16). What each light opening is stays with it: a new shelf splits one in two, both keeping its choice; a shelf
-// taken away joins the two round it into the lower one, which keeps its choice (bestilling, «Modell»). Pure, mm.
+// (K16). What each light opening is and its colour (K6) stay with it: a new shelf splits one in two, both keeping its
+// choice; a shelf taken away joins the two round it into the lower one, which keeps its choice (bestilling, «Modell»).
+// Pure, mm.
 import { withSide } from './podiumFaces';
 import { withSections } from './podiumSections';
 import type { CounterLight, CounterSection, SectionSide, SectionSideKey, Variant } from './types';
@@ -9,17 +10,25 @@ import type { CounterLight, CounterSection, SectionSide, SectionSideKey, Variant
 /** The heights a shelf stands at (K19): CC 250, 500 and 750; at 1000 stands the top. */
 export const SHELF_HEIGHTS = [250, 500, 750] as const;
 
-/** A side's light openings with `fn` done to them; empty when only plates are left. */
-function withLights(s: CounterSection, fn: (lights: (CounterLight | null)[]) => void): CounterSection {
+/** What each light opening of a side has, from the floor: what it is (K16) and its colour of its own (K6). */
+const PER_LIGHT = ['lights', 'ral'] as const;
+
+/** A side's light openings with `fn` done to what each has (what it is and its colour), so the two stay with the
+ *  light opening they belong to; a list left with only nulls goes. */
+function withLights(s: CounterSection, fn: (per: (CounterLight | string | null)[]) => void): CounterSection {
   if (!s.sides) return s;
   let out = s;
   for (const [key, side] of Object.entries(s.sides) as [SectionSideKey, SectionSide][]) {
-    if (!side.lights) continue;
-    const lights = [...side.lights];
-    fn(lights);
-    while (lights.length && lights[lights.length - 1] === null) lights.pop();
-    const { lights: _, ...rest } = side;
-    out = withSide(out, key, lights.length ? { ...rest, lights } : Object.keys(rest).length ? rest : undefined);
+    let next: SectionSide = side;
+    for (const k of PER_LIGHT) {
+      if (!side[k]) continue;
+      const per = [...side[k]];
+      fn(per);
+      while (per.length && per[per.length - 1] === null) per.pop();
+      const { [k]: _, ...rest } = next;
+      next = per.length ? { ...rest, [k]: per } : rest;
+    }
+    if (next !== side) out = withSide(out, key, Object.keys(next).length ? next : undefined);
   }
   return out;
 }
