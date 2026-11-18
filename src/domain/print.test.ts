@@ -65,17 +65,17 @@ describe('print on whole plates', () => {
     expect(v.foils.map((f) => f.module).sort()).toEqual(plates.sort());
   });
 
-  it('replaces decals, and clicked again with the same motif takes the print off', () => {
+  it('replaces decals, and clicked again with the same motif does nothing', () => {
     let v = ok(addFoil(row(), RULES, 'side-back', 2, 1, 'small', 1)).v;
     v = printWall(v, RULES, 'side-back', 1, 'logo', 2);
     expect(v.foils.some((f) => f.motif === 'small')).toBe(false);
-    expect(printWall(v, RULES, 'side-back', 1, 'logo', 2).foils).toHaveLength(0);
+    expect(printWall(v, RULES, 'side-back', 1, 'logo', 2)).toBe(v);
     // Another motif replaces it
     const other = printWall(v, RULES, 'side-back', 1, 'b', 2);
     expect(other.foils.every((f) => f.motif === 'b')).toBe(true);
   });
 
-  it('the brush puts the whole motif on one plate, and takes it off again', () => {
+  it('the brush puts the whole motif on one plate; the same motif again does nothing', () => {
     let v = printWall(row(), RULES, 'side-back', 1, 'logo', 2);
     v = printPlate(v, RULES, 'side-back', 3, 1, 'b');
     const f = v.foils.find((x) => x.module === 3)!;
@@ -84,8 +84,10 @@ describe('print on whole plates', () => {
     expect(f.crop).toBeUndefined();
     // The others keep their part of the stretched picture
     expect(v.foils.filter((x) => x.run)).toHaveLength(5);
-    v = printPlate(v, RULES, 'side-back', 3, 1, 'b');
-    expect(v.foils.find((x) => x.module === 3)).toBeUndefined();
+    expect(printPlate(v, RULES, 'side-back', 3, 1, 'b')).toBe(v);
+    // On a plate of the stretched print the same motif puts the whole of it there
+    const whole = printPlate(v, RULES, 'side-back', 2, 1, 'logo').foils.find((x) => x.module === 2)!;
+    expect(whole.run).toBeUndefined();
   });
 
   it('a colour takes the print off its face, decals stay', () => {
