@@ -1,5 +1,5 @@
 // Byggeregler V1, V6, V10, T6, D3, R6 (docs/byggeregler.md).
-import { makeModule, moduleKey, moduleSpans, onSpan, openSides, pointAlong, pointKey, SIDES, sideEnds, wallDirection, wallLength, wallModules, type Module } from './grid';
+import { makeModule, moduleKey, plateLocal, moduleSpans, onSpan, openSides, pointAlong, pointKey, SIDES, sideEnds, wallDirection, wallLength, wallModules, type Module } from './grid';
 import { gapKeys, OUTSIDE } from './roomKeys';
 import type { Rules } from '../rules/rules';
 import type { Opening, Point, Side, Stand, Variant, Wall } from './types';
@@ -18,6 +18,8 @@ export interface BuiltModule extends Module {
   wallId: string;
   /** Index within the owning wall. */
   index: number;
+  /** Its owner address (Variant.decor): the wall and mm from its start. */
+  local: string;
   plate: string;
   opening: Opening | null;
   /** A part of a module another wall split (Byggeregel V10): the key of the whole module it was cut from. */
@@ -28,7 +30,7 @@ export interface BuiltModule extends Module {
  * All wall modules of a variant, deduplicated by edge.
  * When two walls cover the same edge the first wall wins (plate and opening). Where a later wall lies on an earlier one
  * with other module lines (a room side on the 250 grid along a wall, R6), only the stretch not yet built is built. A plate coloured on its own
- * (Variant.panels) keeps that colour whichever wall owns it. Room walls come last, so a room
+ * (Variant.decor) has it by the address on the wall that builds it. Room walls come last, so a room
  * side on a stand wall or a drawn wall shares it.
  * An opening on a later, overlapping wall still applies to the shared module.
  */
@@ -59,8 +61,9 @@ export function builtModules(v: Variant): BuiltModule[] {
         const pieces = rest.length === 1 && rest[0] === part ? rest : rest.map((x) => ({ ...x, key: `${x.key}~${x.cc}` }));
         for (const piece of pieces) {
           // A part keeps the colour of the module it was cut from, and is its own plate for colour and graphics
-          const plate = v.panels?.[piece.key] ?? v.panels?.[m.key] ?? own;
-          byKey.set(piece.key, { ...piece, wallId: w.id, index, plate, opening: piece === part ? opening : null, ...(piece.key !== m.key && { whole: m.key }) });
+          const local = plateLocal(w, piece.a, piece.b);
+          const plate = v.decor?.[local]?.ral ?? v.decor?.[plateLocal(w, m.a, m.b)]?.ral ?? own;
+          byKey.set(piece.key, { ...piece, wallId: w.id, index, local, plate, opening: piece === part ? opening : null, ...(piece.key !== m.key && { whole: m.key }) });
           built.add(piece);
         }
       }

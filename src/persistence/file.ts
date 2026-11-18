@@ -4,7 +4,7 @@ import type { Motif, Project, Variant } from '../domain/types';
 import { createProject, createVariant } from '../domain/variant';
 
 export const FORMAT = 'standskisse';
-export const VERSION = 3;
+export const VERSION = 4;
 
 export interface SketchFile {
   format: typeof FORMAT;

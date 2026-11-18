@@ -1,7 +1,7 @@
 // Felles plateregel, trinn A1 and A2 (Bjørn 18.11.2026). A1: every plate the stand has, from what is built, counted the
 // same as the picking list counts it. A2: how well each way of addressing a plate (`id` by where it stands in the plan,
 // `local` by its owner) survives the edits the app makes, measured on the example sketches; the numbers are kept as a
-// snapshot (plates.test.ts.snap) and summed up in the PR.
+// snapshot (plates.test.ts.snap) and summed up in the PR. B1: how many colours the decor register carries through them.
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_CATALOG } from '../catalog/defaultCatalog';
 import { indexCatalog, placeContext } from '../catalog/lookup';
@@ -21,7 +21,8 @@ import { setPodiumShelf } from './podiumShelves';
 import { moveRoom, resizeRoom } from './rooms';
 import type { Variant } from './types';
 import { stretchWall } from './wallEnds';
-import { isStandWall } from './walls';
+import { builtModules, isStandWall } from './walls';
+import { carryDecor, colourPlates, setLeafRal } from './plateDecor';
 
 const TEXTS = import.meta.glob<string>('../test/fixtures/*.json', { query: '?raw', import: 'default', eager: true });
 const idx = indexCatalog(DEFAULT_CATALOG);
@@ -104,9 +105,22 @@ const EDITS: Edit[] = [
   { name: 'Roter disk 90°', expect: 'alle beholdes', run: (v) => { const o = counterOf(v); return o ? changed(v, rotateObject(v, ctx, o.id)) : null; } },
 ];
 
-/** For one edit over every sketch it applies to: plates before, how many kept their address by each way, how many new. */
+/** Every wall plate and door leaf of v with a colour of its own, so what the decor register carries can be counted. */
+function colourAll(v: Variant): Variant {
+  const mods = builtModules(v);
+  let x = colourPlates(v, mods.map((m) => m.key), RED, () => v.defaultPlate);
+  for (const o of v.openings) x = setLeafRal(x, o.id, RED);
+  return x;
+}
+const RED = '3020';
+const colouredCount = (v: Variant) => Object.values(v.decor ?? {}).filter((d) => d.ral).length;
+
+/**
+ * For one edit over every sketch it applies to: plates before, how many kept their address by each way, how many new;
+ * and with every plate coloured (trinn B1): how many colours the register carries through the edit.
+ */
 function measure(e: Edit) {
-  const out = { sketches: 0, before: 0, keptId: 0, keptLocal: 0, after: 0 };
+  const out = { sketches: 0, before: 0, keptId: 0, keptLocal: 0, after: 0, colours: 0, coloursCarried: 0 };
   for (const { v } of variants) {
     const next = e.run(v);
     if (!next) continue;
@@ -119,6 +133,9 @@ function measure(e: Edit) {
     out.after += b.length;
     out.keptId += a.filter((p) => ids.has(p.id)).length;
     out.keptLocal += a.filter((p) => locals.has(p.local)).length;
+    const c = colourAll(v);
+    out.colours += colouredCount(c);
+    out.coloursCarried += colouredCount(carryDecor(c, e.run(c) ?? c));
   }
   return out;
 }

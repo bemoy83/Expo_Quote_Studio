@@ -11,7 +11,7 @@
 import type { Rules } from '../rules/rules';
 import { moduleCc, moduleStart, pointAlong, wallLength, wallModules } from './grid';
 import { fitFoil, freeFelts } from './decor';
-import { clearPanels } from './panels';
+import { uncolourPlates } from './plateDecor';
 import { roomAt, roomOf } from './rooms';
 import { builtModules } from './walls';
 import { setWallPlate } from './edit';
@@ -196,7 +196,7 @@ export function uncolourHidden(v: Variant, wallId: string): Variant {
   const room = roomOf(v, w);
   const walls = new Set((room ? v.walls.filter((x) => x.room?.id === room.id) : [w]).map((x) => x.id));
   const own = builtModules(v).filter((m) => walls.has(m.wallId) && !m.opening);
-  const next = clearPanels(v, own.filter((m) => hidden.has(m.key)).map((m) => m.key));
+  const next = uncolourPlates(v, own.filter((m) => hidden.has(m.key)).map((m) => m.key));
   const coloured = (room ? room.plate : w.plate) !== undefined;
   return coloured && own.length && own.every((m) => hidden.has(m.key)) ? setWallPlate(next, w.id, next.defaultPlate) : next;
 }
@@ -220,7 +220,7 @@ export function clearDecor(v: Variant, wallId: string): Variant {
   if (!w) return v;
   const foils = v.foils.filter((f) => f.wallId !== w.id);
   const own = new Set(builtModules(v).filter((m) => m.wallId === w.id).map((m) => m.key));
-  const cleared = clearPanels(v, wallModules(w).map((m) => m.key).filter((k) => own.has(k)));
+  const cleared = uncolourPlates(v, wallModules(w).map((m) => m.key).filter((k) => own.has(k)));
   return foils.length === v.foils.length && cleared === v ? v : { ...cleared, foils };
 }
 
@@ -233,7 +233,7 @@ export function clearFelt(v: Variant, wallId: string, module: number, s: FaceSid
   const key = w && wallModules(w)[module]?.key;
   if (!w || !key) return v;
   const own = builtModules(v).some((m) => m.key === key && m.wallId === w.id);
-  return clearPrint(own ? clearPanels(v, [key]) : v, w.id, s, [module]);
+  return clearPrint(own ? uncolourPlates(v, [key]) : v, w.id, s, [module]);
 }
 
 /** Stretched prints that still cover more than one plate: each needs its print file fitted and cut per plate. */

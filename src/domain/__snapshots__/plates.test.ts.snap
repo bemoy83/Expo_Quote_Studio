@@ -5,6 +5,8 @@ exports[`A2: how each address survives the edits > the numbers 1`] = `
   {
     "after": 70,
     "before": 70,
+    "colours": 70,
+    "coloursCarried": 70,
     "edit": "Flytt innervegg 1 m",
     "expect": "alle beholdes",
     "keptId": 58,
@@ -14,6 +16,8 @@ exports[`A2: how each address survives the edits > the numbers 1`] = `
   {
     "after": 60,
     "before": 56,
+    "colours": 56,
+    "coloursCarried": 56,
     "edit": "Endegrep innervegg +1 m",
     "expect": "alle beholdes, én ny",
     "keptId": 56,
@@ -23,6 +27,8 @@ exports[`A2: how each address survives the edits > the numbers 1`] = `
   {
     "after": 230,
     "before": 202,
+    "colours": 197,
+    "coloursCarried": 197,
     "edit": "Ny vegg deler en modul (V10)",
     "expect": "én blir to, resten beholdes",
     "keptId": 188,
@@ -32,6 +38,8 @@ exports[`A2: how each address survives the edits > the numbers 1`] = `
   {
     "after": 15,
     "before": 16,
+    "colours": 16,
+    "coloursCarried": 15,
     "edit": "Tøm en modul midt i en vegg",
     "expect": "én borte, resten beholdes",
     "keptId": 15,
@@ -41,6 +49,8 @@ exports[`A2: how each address survives the edits > the numbers 1`] = `
   {
     "after": 75,
     "before": 70,
+    "colours": 70,
+    "coloursCarried": 70,
     "edit": "Dør inn i en modul",
     "expect": "felt blir overstykke og blad, resten beholdes",
     "keptId": 65,
@@ -50,6 +60,8 @@ exports[`A2: how each address survives the edits > the numbers 1`] = `
   {
     "after": 55,
     "before": 58,
+    "colours": 59,
+    "coloursCarried": 56,
     "edit": "Dør ut",
     "expect": "overstykke og blad blir felt, resten beholdes",
     "keptId": 52,
@@ -59,6 +71,8 @@ exports[`A2: how each address survives the edits > the numbers 1`] = `
   {
     "after": 32,
     "before": 29,
+    "colours": 30,
+    "coloursCarried": 30,
     "edit": "Flytt bakrom 1 m",
     "expect": "alle beholdes",
     "keptId": 23,
@@ -68,6 +82,8 @@ exports[`A2: how each address survives the edits > the numbers 1`] = `
   {
     "after": 30,
     "before": 29,
+    "colours": 30,
+    "coloursCarried": 30,
     "edit": "Gjør bakrom 1 m større",
     "expect": "alle beholdes, nye kommer til",
     "keptId": 28,
@@ -77,6 +93,8 @@ exports[`A2: how each address survives the edits > the numbers 1`] = `
   {
     "after": 54,
     "before": 47,
+    "colours": 10,
+    "coloursCarried": 10,
     "edit": "Hylle 500 i disk",
     "expect": "hver plate blir to",
     "keptId": 47,
@@ -86,6 +104,8 @@ exports[`A2: how each address survives the edits > the numbers 1`] = `
   {
     "after": 44,
     "before": 47,
+    "colours": 10,
+    "coloursCarried": 10,
     "edit": "Senk disk ett steg",
     "expect": "alle beholdes, lavere",
     "keptId": 44,
@@ -95,6 +115,8 @@ exports[`A2: how each address survives the edits > the numbers 1`] = `
   {
     "after": 47,
     "before": 47,
+    "colours": 10,
+    "coloursCarried": 10,
     "edit": "Flytt disk 1 m",
     "expect": "alle beholdes",
     "keptId": 47,
@@ -104,6 +126,8 @@ exports[`A2: how each address survives the edits > the numbers 1`] = `
   {
     "after": 47,
     "before": 47,
+    "colours": 10,
+    "coloursCarried": 10,
     "edit": "Roter disk 90°",
     "expect": "alle beholdes",
     "keptId": 47,

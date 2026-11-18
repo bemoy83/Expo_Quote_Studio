@@ -5,7 +5,7 @@ import { CURTAIN, DEFAULT_CATALOG, DOOR } from '../catalog/defaultCatalog';
 import { RULES } from '../rules/rules';
 import { addFoil, fitDecor, updateFoil } from './decor';
 import { paintWalls, setWallPlate } from './edit';
-import { setPanels } from './panels';
+import { colourPlates, plateColours } from './plateDecor';
 import { clearDecor, clearFelt, clearPrint, cropWindow, fillPlates, hiddenPlates, printPlate, printPlates, printWall, stretchCrops, stretchedRuns } from './print';
 import { r2 } from '../calc/referenceStands';
 import { wallModules } from './grid';
@@ -145,10 +145,10 @@ describe('bucket and reset', () => {
     let v = ok(addFoil(row(), RULES, 'side-back', 0, 1, 'small', 1)).v;
     v = printPlate(v, RULES, 'side-back', 3, 1, 'logo');
     v = ok(addTextile(v, RULES, 'side-back', 1, 5.5)).v;
-    v = { ...v, panels: Object.fromEntries(wallModules(back(v)).slice(0, 2).map((m) => [m.key, '9005'])) };
+    v = colourPlates(v, wallModules(back(v)).slice(0, 2).map((m) => m.key), '9005', () => v.defaultPlate);
     const r = clearDecor(v, 'side-back');
     expect(r.foils).toHaveLength(0);
-    expect(r.panels).toBeUndefined();
+    expect(r.decor).toBeUndefined();
     expect(r.textiles).toHaveLength(1);
   });
 });
@@ -156,16 +156,16 @@ describe('bucket and reset', () => {
 describe('the trash on one felt (Bjørn 9.11.2026)', () => {
   it('takes the plate\'s own colour and this face\'s print off, decals and the neighbours stay', () => {
     const keys = wallModules(back(row())).map((m) => m.key);
-    let v = setPanels(row(), keys.slice(1, 3), '3020', () => row().defaultPlate);
+    let v = colourPlates(row(), keys.slice(1, 3), '3020', () => row().defaultPlate);
     v = printPlate(v, RULES, 'side-back', 1, 1, 'logo');
-    v = setPanels(v, [keys[1]], '3020', () => v.defaultPlate);
+    v = colourPlates(v, [keys[1]], '3020', () => v.defaultPlate);
     v = ok(addFoil(v, RULES, 'side-back', 2, 1, 'small', 1)).v;
     v = printPlate(v, RULES, 'side-back', 3, 1, 'logo');
     const r1 = clearFelt(v, 'side-back', 1, 1);
-    expect(r1.panels).toEqual({ [keys[2]]: '3020' });
+    expect(plateColours(r1)).toEqual({ [keys[2]]: '3020' });
     expect(r1.foils.map((f) => f.module).sort()).toEqual([2, 3]);
     const r2 = clearFelt(r1, 'side-back', 2, 1);
-    expect(r2.panels).toBeUndefined();
+    expect(r2.decor).toBeUndefined();
     expect(r2.foils.filter((f) => !f.full).map((f) => f.module)).toEqual([2]);
     expect(clearFelt(r2, 'side-back', 0, 1)).toBe(r2);
   });
@@ -176,13 +176,13 @@ describe('the last stroke wins between colour and print (V15, Bjørn 3.11.2026)'
   const plain = (v: Variant) => () => v.defaultPlate;
 
   it('print on a plate takes its own colour away, a colour takes the print off again', () => {
-    let v = setPanels(row(), keys(row()).slice(2, 4), '3020', plain(row()));
+    let v = colourPlates(row(), keys(row()).slice(2, 4), '3020', plain(row()));
     v = printPlate(v, RULES, 'side-back', 2, 1, 'logo');
-    expect(v.panels).toEqual({ [keys(v)[3]]: '3020' });
+    expect(plateColours(v)).toEqual({ [keys(v)[3]]: '3020' });
     v = printWall(v, RULES, 'side-back', 1, 'logo', 2);
-    expect(v.panels).toBeUndefined();
-    v = clearPrint(setPanels(v, [keys(v)[0]], '3020', plain(v)), 'side-back', 1, [0]);
-    expect(v.panels).toEqual({ [keys(v)[0]]: '3020' });
+    expect(v.decor).toBeUndefined();
+    v = clearPrint(colourPlates(v, [keys(v)[0]], '3020', plain(v)), 'side-back', 1, [0]);
+    expect(plateColours(v)).toEqual({ [keys(v)[0]]: '3020' });
     expect(v.foils.map((f) => f.module)).not.toContain(0);
   });
 

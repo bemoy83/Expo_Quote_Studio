@@ -140,6 +140,13 @@ export const moduleEnds = (w: Wall, i: number): [Point, Point] => [pointAlong(w,
 export const moduleCc = (w: Wall, i: number): number => round3(moduleEnd(w, i) - moduleStart(w, i));
 
 /** Modules of a wall in order from `from`. Index i spans [moduleStart, moduleEnd] metres along the wall. */
+/** The owner address of the plate between a and b on wall w (Variant.decor): the wall and mm from its start. */
+export function plateLocal(w: Wall, a: Point, b: Point): string {
+  const d = (p: Point) => Math.round((Math.abs(p[0] - w.from[0]) + Math.abs(p[1] - w.from[1])) * 1000);
+  const [x, y] = [d(a), d(b)];
+  return `${w.id}@${Math.min(x, y)}-${Math.max(x, y)}`;
+}
+
 export function wallModules(w: Wall): Module[] {
   return moduleSpans(w).map(([a, b]) => makeModule(pointAlong(w, a), pointAlong(w, b)));
 }

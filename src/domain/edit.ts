@@ -6,7 +6,7 @@ import { nextId } from './ids';
 import type { Point, Stand, Variant, Wall } from './types';
 import { addRoomGaps, clampRooms, roomOf, syncRooms } from './rooms';
 import { builtModules, closedSideAt, isStandWall, moduleKeys, standardWalls, standWallKeys, standWallSide } from './walls';
-import { clearPanels, movePanels, ownPlate, panelMoves, prunePanels } from './panels';
+import { ownPlate, uncolourPlates } from './plateDecor';
 import { replaceWalls } from './replaceWalls';
 
 /**
@@ -72,7 +72,7 @@ export function eraseWalls(v: Variant, keys: Iterable<string>): Variant {
   }
   let next = changed ? replaceWalls(v, out) : v;
   for (const [id, mods] of roomGaps) next = addRoomGaps(next, id, mods);
-  return prunePanels(next);
+  return next;
 }
 
 /** Set the plate colour of one wall (a room's wall: the whole room). The default plate clears the override. */
@@ -81,7 +81,7 @@ export function setWallPlate(v: Variant, wallId: string, ral: string): Variant {
   const room = roomOf(v, w);
   // The whole wall gets one colour: its plates coloured one by one take it too (not a plate another wall owns)
   const walls = new Set((room ? v.walls.filter((x) => x.room?.id === room.id) : w ? [w] : []).map((x) => x.id));
-  const plain = clearPanels(v, builtModules(v).filter((m) => walls.has(m.wallId)).map((m) => m.key));
+  const plain = uncolourPlates(v, builtModules(v).filter((m) => walls.has(m.wallId)).map((m) => m.key));
   if (room) {
     const rooms = plain.rooms.map((r) => {
       if (r.id !== room.id) return r;
@@ -204,6 +204,6 @@ export function moveWall(v: Variant, wallId: string, delta: number, along = 0): 
     foils: [...rest.foils, ...carried.foils],
     ...(v.shelves ? { shelves: [...(rest.shelves ?? []), ...(carried.shelves ?? [])] } : {}),
   };
-  // Plates coloured one by one move with the wall
-  return prunePanels(movePanels(next, panelMoves(w, moved)));
+  // Plates coloured one by one go with it (plateDecor.ts carryDecor, after the edit)
+  return next;
 }

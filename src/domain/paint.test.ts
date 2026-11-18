@@ -13,7 +13,7 @@ import { paintAllCounters, paintAllDoors, paintAllWalls, paintCounter, paintCoun
 import { printOf, setPodiumPrint, takesDecor } from './podiumDecor';
 import { partKey, podiumParts, ralsOf, setPodiumLight } from './podiumFaces';
 import { stockSections } from './podiumStock';
-import { setPanels } from './panels';
+import { colourPlates, leafRal } from './plateDecor';
 import { printDoorPart, printPlate, printsOn, printWall } from './print';
 import { addRoom } from './rooms';
 import { roomWallId } from './roomKeys';
@@ -51,7 +51,7 @@ describe('the paint bucket on a face: print is a choice made on purpose (V16, Bj
     v = printPlate(v, RULES, 'side-back', 2, 1, 'logo');
     const r = paintWallFace(v, 'side-back', 1, '3020');
     expect(r.skipped).toBe(1);
-    expect(r.v.panels).toBeUndefined();
+    expect(r.v.decor).toBeUndefined();
     expect(r.v.foils).toHaveLength(1);
   });
 
@@ -68,7 +68,7 @@ describe('the paint bucket on a face: print is a choice made on purpose (V16, Bj
     const painted = paintWallFace(v, o.wallId, 1, '5010').v;
     expect(doorRal(painted, painted.openings[0])).toBe('5010');
     // Back to the stand colour: stored as nothing, so the door follows the stand again
-    expect(paintWallFace(painted, o.wallId, 1, v.defaultPlate).v.openings[0].ral).toBeUndefined();
+    expect(leafRal(paintWallFace(painted, o.wallId, 1, v.defaultPlate).v, o.id)).toBeUndefined();
     const other = v.walls.find((w) => w.room?.id === v.walls.find((x) => x.id === o.wallId)!.room?.id && w.id !== o.wallId)!;
     const y = paintWallFace(v, other.id, 1, '3020').v;
     expect(doorRal(y, y.openings[0])).toBe('3020');
@@ -127,7 +127,7 @@ describe('Fyll on the whole stand', () => {
     v = setWallPlate(v, v.walls.find((w) => w.from[0] === 4)!.id, '5010');
     v = addRoom(v, { x: 1, y: 2, w: 2, d: 2 })!;
     v = setWallPlate(v, roomWallId(v.rooms[0].id, 0), '3002');
-    v = setPanels(v, [moduleKey([0, 0], [1, 0])], '9005', () => v.defaultPlate);
+    v = colourPlates(v, [moduleKey([0, 0], [1, 0])], '9005', () => v.defaultPlate);
     const foil = { wallId: 'side-back', module: 1, side: 1 as const, width: 0.96, height: 2.42, x: 0, y: 1.29, motif: 'logo' };
     return { ...v, foils: [{ ...foil, id: 'p', full: true }, { ...foil, id: 'd', module: 3, full: false, width: 0.5, height: 0.5 }] };
   };
@@ -144,19 +144,19 @@ describe('Fyll on the whole stand', () => {
 
   it('«Farg også dem» colours the printed plates too and takes their print off; decals stay', () => {
     const r = paintAllWalls(decorated(), '5012', 'off');
-    expect(r.v.panels).toBeUndefined();
+    expect(r.v.decor).toBeUndefined();
     expect(r.v.foils.map((f) => f.id)).toEqual(['d']);
   });
 
   it('with a door in hand colours every door leaf, not curtains; a printed door stays unless asked', () => {
     let v = placeOpening(placeOpening(inner(), [3, 1], [3, 2], DOOR, true, null), [3, 2], [3, 3], CURTAIN, false, null);
     const isDoor = (p: string) => p === DOOR;
-    expect(paintAllDoors(v, '7012', isDoor).v.openings.map((o) => [o.product, o.ral])).toEqual([[DOOR, '7012'], [CURTAIN, undefined]]);
+    expect(((x) => x.openings.map((o) => [o.product, leafRal(x, o.id)]))(paintAllDoors(v, '7012', isDoor).v)).toEqual([[DOOR, '7012'], [CURTAIN, undefined]]);
     v = printPlate(v, RULES, innerWall(v).id, 0, 1, 'logo');
     const kept = paintAllDoors(v, '7012', isDoor);
-    expect([kept.skipped, kept.v.openings[0].ral, kept.v.foils.length]).toEqual([1, undefined, 1]);
+    expect([kept.skipped, leafRal(kept.v, v.openings[0].id), kept.v.foils.length]).toEqual([1, undefined, 1]);
     const off = paintAllDoors(v, '7012', isDoor, 'off');
-    expect([off.v.openings[0].ral, off.v.foils.length]).toEqual(['7012', 0]);
+    expect([leafRal(off.v, v.openings[0].id), off.v.foils.length]).toEqual(['7012', 0]);
   });
 });
 

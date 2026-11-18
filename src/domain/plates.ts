@@ -1,11 +1,12 @@
 // Every plate of a stand, from what is built (felles plateregel, trinn A1, Bjørn 18.11.2026): the walls' modules and
 // their parts (V1, V10), the header and the leaf of a door (D5), the light openings and sliding leaves of a counter (K4,
 // K16, K17). Each has an address made of measures, so decor can later be looked up by it whatever product the plate is
-// in; today's stores (panels, foils, SectionSide) are not changed by this. Two ways of addressing a plate are given:
-// - `id`: by where it stands in the plan (a wall plate by its edge, as Variant.panels; a counter's in the counter's own
-//   frame, mm), which survives a wall being split, merged or shared;
-// - `local`: by its owner and its place along it (a wall's id and mm from its start), which survives the owner moving.
-// Which one to keep is decided from the numbers of trinn A2 (plates.test.ts).
+// in. Two ways of addressing a plate are given:
+// - `id`: by where it stands in the plan (a wall plate by its edge; a counter's in the counter's own frame, mm), which
+//   survives a wall being split, merged or shared;
+// - `local`: by its owner and its place along it (a wall's id and mm from its start, a door leaf by its door), which
+//   survives the owner moving. Trinn A2 (plates.test.ts) measured both; the colour of a wall's plates and door leaves
+//   is kept by `local` (Variant.decor, trinn B1), and carried by `id` where the owner is gone (plateDecor.ts).
 // The sales product (6120, 6560, 6570) is a combination of plates and profiles; the price stays with it (Bjørn 18.11.2026).
 import { counterBuildOf } from './counterShape';
 import { doorRal, doorWindows } from './doors';
@@ -14,7 +15,8 @@ import { modulePlate } from '../foga/plates';
 import { RECIPES } from '../foga/recipes';
 import type { Rules } from '../rules/rules';
 import type { PlacedObject, Variant } from './types';
-import { builtModules, type BuiltModule } from './walls';
+import { leafLocal } from './plateDecor';
+import { builtModules } from './walls';
 
 /** What a plate is in its product. */
 export type PlateKind = 'felt' | 'header' | 'leaf' | 'counter' | 'step' | 'slide';
@@ -41,23 +43,14 @@ export interface Plate {
 
 const mm = (m: number) => Math.round(m * 1000);
 
-/** Where a built module lies along its owning wall, mm from the wall's start. */
-function along(v: Variant, m: BuiltModule): [number, number] {
-  const w = v.walls.find((x) => x.id === m.wallId)!;
-  const d = (p: readonly [number, number]) => Math.abs(p[0] - w.from[0]) + Math.abs(p[1] - w.from[1]);
-  const [a, b] = [d(m.a), d(m.b)];
-  return [mm(Math.min(a, b)), mm(Math.max(a, b))];
-}
-
 /** The plates of every wall: a felt per module or part, a header and a leaf (a door) or a header (a curtain). */
 export function wallPlates(v: Variant, rules: Rules, isCurtain: (product: string) => boolean): Plate[] {
   const z = { postLength: mm(rules.wall.height), cc: mm(rules.wall.cc) };
   const leaf = doorWindows(rules).leaf;
   return builtModules(v).flatMap((m): Plate[] => {
     const w = v.walls.find((x) => x.id === m.wallId)!;
-    const [a, b] = along(v, m);
     const base = { owner: { wall: m.wallId }, faces: faces(v, w) };
-    const local = `${m.wallId}@${a}-${b}`;
+    const local = m.local;
     const curtain = !!m.opening && isCurtain(m.opening.product);
     const spec = modulePlate({ plate: m.plate, opening: !!m.opening, ...(curtain && { curtain: true }), ...(m.cc < 1 - 1e-6 && { cc: mm(m.cc) }) }, RECIPES, z);
     if (!m.opening) {
@@ -68,7 +61,7 @@ export function wallPlates(v: Variant, rules: Rules, isCurtain: (product: string
     const header: Plate = { ...base, id: `${m.key}/header`, local: `${local}/header`, kind: 'header', ral: m.plate, w: spec.w, h: spec.h, noPrint: curtain ? 'Forheng har ikke print' : null, noDecal: 'Folie kan ikke ligge på en åpning' };
     if (curtain) return [header];
     const o = m.opening;
-    return [header, { ...base, id: `${m.key}/leaf`, local: `${local}/leaf`, kind: 'leaf', ral: doorRal(v, o), w: mm(leaf.w), h: mm(leaf.y1 - leaf.y0), noPrint: null, noDecal: 'Folie kan ikke ligge på en åpning' }];
+    return [header, { ...base, id: `${m.key}/leaf`, local: leafLocal(o.id), kind: 'leaf', ral: doorRal(v, o), w: mm(leaf.w), h: mm(leaf.y1 - leaf.y0), noPrint: null, noDecal: 'Folie kan ikke ligge på en åpning' }];
   });
 }
 

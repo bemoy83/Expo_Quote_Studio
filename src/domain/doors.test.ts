@@ -1,4 +1,5 @@
 // Checks Byggeregler D1, D4 og D6 (docs/byggeregler.md).
+import { leafRal } from './plateDecor';
 import { describe, expect, it } from 'vitest';
 import { CURTAIN, DEFAULT_CATALOG, DOOR } from '../catalog/defaultCatalog';
 import { calc } from '../calc/calc';
@@ -79,8 +80,8 @@ describe('door settings', () => {
     const v = r2();
     const id = v.openings[0].id;
     const red = setDoorRal(v, id, '3020');
-    expect(red.openings[0].ral).toBe('3020');
-    expect(setDoorRal(red, id, v.defaultPlate).openings[0].ral).toBeUndefined();
+    expect(leafRal(red, red.openings[0].id)).toBe('3020');
+    expect(setDoorRal(red, id, v.defaultPlate).decor).toBeUndefined();
   });
   it('the calc has a door line per leaf colour', () => {
     let v = r2();
@@ -148,11 +149,11 @@ describe('placing a door with the pointer (press shows, release stores)', () => 
   it('the door pen\'s colour goes on the leaf, also over a door already there; a curtain its fabric', () => {
     const v = inner();
     const red = placeOpening(v, a, b, DOOR, true, null, { ral: '3020' });
-    expect(red.openings[0].ral).toBe('3020');
-    expect(placeOpening(red, a, b, DOOR, true, null, { ral: '7012' }).openings[0].ral).toBe('7012');
-    expect(placeOpening(v, a, b, DOOR, true, null, { ral: v.defaultPlate }).openings[0].ral).toBeUndefined();
-    const blue = placeOpening(v, a, b, CURTAIN, false, null, { ral: '3020', fabric: 'bla' }).openings[0];
-    expect([blue.ral, blue.fabric]).toEqual([undefined, 'bla']);
+    expect(leafRal(red, red.openings[0].id)).toBe('3020');
+    expect(leafRal(placeOpening(red, a, b, DOOR, true, null, { ral: '7012' }), red.openings[0].id)).toBe('7012');
+    expect(placeOpening(v, a, b, DOOR, true, null, { ral: v.defaultPlate }).decor).toBeUndefined();
+    const blue = placeOpening(v, a, b, CURTAIN, false, null, { ral: '3020', fabric: 'bla' });
+    expect([blue.decor, blue.openings[0].fabric]).toEqual([undefined, 'bla']);
   });
 
   it('the bucket with a curtain in hand gives every curtain its fabric, not doors', () => {

@@ -106,11 +106,17 @@ En vegg har én farge (`Wall.plate`, rommets `Room.plate`, ellers standens `defa
 farge i veggskuffen. Det virker som i et tegneprogram: velg malerspannet (hele veggen) eller malerkosten (én og én plate),
 velg farge, og klikk veggen. Med kosten kan du også dra over flere plater. Velger du en farge uten verktøy, tar du opp
 malerspannet. Uten verktøy velger og flytter tegningen som før. Fargen
-lagres per modul i `Variant.panels` (domain/panels.ts), nøklet på platens kant i planen:
+lagres i dekorregisteret `Variant.decor` (domain/plateDecor.ts, felles plateregel trinn B1, Bjørn 18.11.2026), på
+platens eieradresse: veggen og mm fra veggens start (`side-back@1000-2000`), et dørblad på døren (`o1/leaf`).
+Overstykket er modulens plate og har modulens farge:
 
 - Én plate er én HDF-plate, så fargen gjelder begge sider. Skal én side ha noe annet, blir det folie på hele platen.
 - Der en romside står på en standvegg, er platen standveggens, og fargen også.
-- Fargen følger med når en innervegg eller et rom flyttes eller endrer form, og forsvinner når platen fjernes.
+- Etter hver endring flyttes fargene dit platene gikk (`carryDecor`, én gang for alle redigeringer i ui/edits.ts):
+  en vegg som flyttes hel, tar platene med, også når den skyves langs linjen sin; en vegg som strekkes eller kuttes,
+  lar hver plate stå der den står langs linjen; er veggen borte eller snudd (delt i to, blitt romside), beholder
+  platen fargen der den står i planen. En romside som flyttes tar fargene med. Fargen forsvinner når platen fjernes,
+  dørbladets når døren fjernes.
 - Hel-vegg-farge tar over: platene på veggen får veggens nye farge.
 - «Fyll» i veggpillen i planen (malerspann, Bjørn 11.11.2026) og standfargen i panelet Vegger (Bjørn 18.11.2026) gir
   alle vegger på standen samme farge: den blir standens farge (`defaultPlate`), og egne farger på vegger, rom,

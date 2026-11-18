@@ -9,14 +9,14 @@
 //   Fyll) leaves the printed plates as they are, print and colour, so the rest can be recoloured without laying the
 //   print on again. Fyll on the whole stand can be asked to colour them too (`paintAllWalls` with `prints: 'off'`).
 // - The same motif again does nothing (printWall, printPlate in print.ts).
-import { setDoorRal } from './doors';
+import { doorRal, setDoorRal } from './doors';
 import { COUNTER_STOCK_RAL, counterRal } from './objects';
 import { printOf, setPodiumPrint } from './podiumDecor';
 import { partKey, podiumParts, ralsOf, setPlateRal } from './podiumFaces';
 import { withSections } from './podiumSections';
 import { setWallPlate } from './edit';
 import type { FaceSide } from './faces';
-import { setPanels, wallRal } from './panels';
+import { colourPlates, uncolourAll, wallRal } from './plateDecor';
 import { clearPrint, hiddenPlates, printsOn, uncolourHidden, withoutDoorPart } from './print';
 import { roomOf } from './rooms';
 import type { CounterSection, PlacedObject, Variant, Wall } from './types';
@@ -53,18 +53,11 @@ function keepPrinted(before: Variant, after: Variant, mods: readonly BuiltModule
   let x = after;
   const base = plateBase(x);
   for (const m of mods) {
-    if (m.opening) {
-      const ral = m.opening.ral ?? before.defaultPlate;
-      x = { ...x, openings: x.openings.map((o) => (o.id === m.opening!.id ? withRal(o, ral, x.defaultPlate) : o)) };
-    } else if (!hidden.has(m.key)) x = setPanels(x, [m.key], m.plate, base);
+    if (m.opening) x = setDoorRal(x, m.opening.id, doorRal(before, m.opening));
+    else if (!hidden.has(m.key)) x = colourPlates(x, [m.key], m.plate, base);
   }
   return x;
 }
-
-const withRal = <T extends { ral?: string }>(o: T, ral: string, def: string): T => {
-  const { ral: _r, ...rest } = o;
-  return (ral === def ? rest : { ...rest, ral }) as T;
-};
 
 /**
  * The paint bucket on a face (the wall drawer's bucket, the wall pill's colours): the whole wall in `ral`, its door
@@ -86,12 +79,12 @@ export function paintWallFace(v: Variant, wallId: string, s: FaceSide, ral: stri
 
 /** Nothing changed that a stroke could: the walls, rooms, plates and doors are as they were. */
 const sameWalls = (a: Variant, b: Variant) =>
-  JSON.stringify([a.walls, a.rooms, a.panels, a.openings]) === JSON.stringify([b.walls, b.rooms, b.panels, b.openings]);
+  JSON.stringify([a.walls, a.rooms, a.decor, a.openings]) === JSON.stringify([b.walls, b.rooms, b.decor, b.openings]);
 
 /** A colour on one plate of a face (the brush, a felt's palette, the wall pen): the last stroke wins, so its print on
  *  this face comes off. Decals stay. `ral` back to the wall's own colour drops the plate's own. */
 export function paintPlate(v: Variant, wallId: string, s: FaceSide, module: number, key: string, ral: string): Variant {
-  const x = setPanels(v, [key], ral, plateBase(v));
+  const x = colourPlates(v, [key], ral, plateBase(v));
   // A door's header is a surface of its own: only its print comes off, the leaf keeps its share (Bjørn 18.11.2026)
   if (builtModules(v).some((m) => m.key === key && m.opening)) return withoutDoorPart(x, wallId, s, module, 'header');
   return clearPrint(x, wallId, s, [module]);
@@ -112,7 +105,7 @@ export function paintLeaf(v: Variant, openingId: string, s: FaceSide, ral: strin
 export function paintPlatesAlong(v: Variant, wallId: string, s: FaceSide, keys: readonly string[], ral: string): Variant {
   const set = new Set(keys);
   const mods = builtModules(v).filter((m) => set.has(m.key));
-  const x = setPanels(v, keys, ral, plateBase(v));
+  const x = colourPlates(v, keys, ral, plateBase(v));
   return clearPrint(x, wallId, s, mods.filter((m) => m.wallId === wallId).map((m) => m.index));
 }
 
@@ -136,13 +129,11 @@ export const printedCount = (v: Variant): number => printedModules(v).length;
  * their print (`off`). Decals and textile frames stay.
  */
 export function paintAllWalls(v: Variant, ral: string, prints: PrintChoice = 'keep'): Painted {
-  const { panels: _p, ...rest } = v;
   const all: Variant = {
-    ...rest,
+    ...uncolourAll(v),
     defaultPlate: ral,
     walls: v.walls.map(({ plate: _w, ...w }) => w),
     rooms: v.rooms.map(({ plate: _r, ...r }) => r),
-    openings: v.openings.map(({ ral: _o, ...o }) => o),
   };
   const printed = printedModules(v);
   if (prints === 'off') return { v: { ...all, foils: v.foils.filter((f) => !f.full) }, skipped: 0 };

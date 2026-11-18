@@ -108,6 +108,11 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   sier «N felt med print står som før» med valget «Farg også dem». Valget står over tegningen som en toast, aldri i
   skuffen eller panelet, så ingen innstilling skyves ut av syne.
   *Bjørn 18.11.2026 · kode `src/domain/paint.ts`, `src/ui/fillKeeping.ts` · test `src/domain/paint.test.ts`*
+- **V17 Fargen følger platen.** En plates egen farge hører til platen, ikke til stedet i planen. Flyttes veggen hel,
+  også langs linjen sin, går fargene med; strekkes eller kuttes den, står hver plate med sin farge der den står; blir
+  veggen delt i to eller til en romside, beholder platen fargen der den står. Dørbladets farge følger døren. Fjernes
+  platen eller døren, går fargen også, så en vegg tegnet der senere får sin egen farge.
+  *Bjørn 18.11.2026 (felles plateregel, trinn B1) · kode `src/domain/plateDecor.ts` · test `src/domain/plateDecor.test.ts`, `src/domain/plates.test.ts`*
 ## S · Støtte for systemvegg
 
 - **S1 Rammen holder.** Med takdrager på står standveggene i takdragerrammen og får ingen fotplater.

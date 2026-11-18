@@ -1,10 +1,11 @@
-// What an edit stores: the change itself, then decor and free-standing textile fitted to it, and walls that close an
+// What an edit stores: the change itself, then decor and free-standing textile fitted to it, the plates' own colours carried along, and walls that close an
 // area turned into a room. App's onEdit stores it; the plan's preview (docs/forhandsvisning.md) shows the same thing
 // before the click, so the two never differ.
 import { fitDecor } from '../domain/decor'
 import { fitBreaks } from '../domain/replaceWalls'
 import { settleSwings, shutsDoor } from '../domain/doors'
 import { newlyClosedRooms, wallsToRoom } from '../domain/enclosures'
+import { carryDecor } from '../domain/plateDecor'
 import { fitShelves } from '../domain/shelves/edit'
 import { fitFreeTextiles } from '../domain/textile/free'
 import type { Motif, Point, Variant } from '../domain/types'
@@ -18,9 +19,10 @@ export const ratioFor = (motifs: Motif[] | undefined) => (id: string | undefined
 export const settle = (x: Variant, ratio: (id: string | undefined) => number) =>
   settleSwings(fitShelves(fitFreeTextiles(fitDecor(fitBreaks(x), rules, ratio), rules), rules), place.swings, floorBoxes)
 
-/** `fn` on v settled, or v itself when it would leave a door with no free floor on either side (Byggeregel D7). */
+/** `fn` on v settled and the plates' decor carried to where they went, or v itself when it would leave a door with no
+ *  free floor on either side (Byggeregel D7). */
 export function guarded(v: Variant, fn: (v: Variant) => Variant, ratio: (id: string | undefined) => number): Variant {
-  const after = settle(fn(v), ratio)
+  const after = carryDecor(v, settle(fn(v), ratio))
   return shutsDoor(v, after, place.swings, floorBoxes) ? v : after
 }
 
@@ -30,9 +32,9 @@ export function closeRooms(before: Variant, after: Variant, ratio: (id: string |
   return areas.length ? { v: roomsFrom(after, areas, ratio), areas } : null
 }
 
-/** The areas made into rooms on x, decor and shelves fitted again. */
+/** The areas made into rooms on x, decor and shelves fitted again, the plates' decor carried to the room sides. */
 export const roomsFrom = (x: Variant, areas: Point[][], ratio: (id: string | undefined) => number) =>
-  fitShelves(fitDecor(areas.reduce((y, o) => wallsToRoom(y, o) ?? y, x), rules, ratio), rules)
+  carryDecor(x, fitShelves(fitDecor(areas.reduce((y, o) => wallsToRoom(y, o) ?? y, x), rules, ratio), rules))
 
 /** What onEdit with history stores for `fn` on v. */
 export function editResult(v: Variant, fn: (v: Variant) => Variant, motifs: Motif[] | undefined): Variant {
