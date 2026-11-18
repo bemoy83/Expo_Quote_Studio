@@ -4,7 +4,8 @@
 import { describe, expect, it } from 'vitest';
 import { addPodiumDecal, partWindows, podiumDecals, podiumDecorAreas, podiumPrints, printAt, printCounterPlate, printCounterSide, unprintCounter, updatePodiumDecal } from './podiumDecor';
 import { withShelf } from './podiumShelves';
-import { partKey, podiumParts, setLight } from './podiumFaces';
+import { partKey, podiumParts, ralsOf, setLight, setPlateRal } from './podiumFaces';
+import { withSections } from './podiumSections';
 import type { CounterSection, PlacedObject, Variant } from './types';
 import { createVariant } from './variant';
 
@@ -110,5 +111,19 @@ describe('decal (K20)', () => {
     const { v } = addPodiumDecal(vOf(two), 'a', partKey(front(two)[1]), 'm2', 1);
     // The second section's front is its whole side: the decal is in its middle
     expect(sectionsOf(v)[1].sides?.['z+']?.decals?.[0].x).toBe(0);
+  });
+});
+
+describe('a colour no one sees (V15)', () => {
+  it('a printed plate keeps no colour of its own; printed all over, the counter takes its stock colour', () => {
+    const k = partKey(front(two)[0]);
+    const v0 = { ...vOf(two), objects: [{ ...vOf(two).objects[0], ral: '3020' }] };
+    const coloured = withSections(v0, 'a', (ss) => setPlateRal(ss, front(ss), '5010', 0));
+    const one = printCounterPlate(coloured, 'a', k, 0, 'm1');
+    const p = front(sectionsOf(one))[0];
+    expect(ralsOf(sectionsOf(one), p)).toEqual([null]);
+    expect(one.objects[0].ral).toBe('3020');
+    const all = printCounterSide(one, 'a', 'all', 'm1');
+    expect('ral' in all.objects[0]).toBe(false);
   });
 });

@@ -193,15 +193,17 @@ describe('a counter of Disker og podier: a colour per plate (Byggeregel K6, Bjø
     expect(ralsOf(r.v.objects[0].sections!, front(v0())).every((x) => x === null)).toBe(true);
   });
 
-  it('the counter colour (pill, Fyll) takes the colours of their own off, a printed part keeps the colour it had; nothing else is painted', () => {
+  it('the counter colour (pill, Fyll) takes the colours of their own off, a printed part keeps its print; nothing else is painted', () => {
     const k = partKey(front(v0()));
     let v = paintCounterPlates(v0(), 'c1', keys(v0()), '5010');
     v = printCounterSide(v, 'c1', [k], 'logo');
+    // V15: the print hides the plates' colour, so they keep none of their own
+    expect(ralsOf(v.objects[0].sections!, front(v0())).every((x) => x === null)).toBe(true);
     const r = paintAllCounters(v, '7012');
     expect(r.skipped).toBe(2);
     expect(r.v.objects.map((o) => o.ral)).toEqual(['7012', undefined]);
-    expect(new Set(rals(r.v))).toEqual(new Set(['7012', '5010']));
-    expect(ralsOf(r.v.objects[0].sections!, front(v0())).every((x) => x === '5010')).toBe(true);
+    expect(new Set(rals(r.v))).toEqual(new Set(['7012']));
+    expect(printOf(r.v.objects[0].sections!, front(v0()))).toBe('logo');
     // Back to stock: no colour stored on the counter
     expect('ral' in paintCounter(v0(), 'c1', counterRal(counter)).v.objects[0]).toBe(false);
   });

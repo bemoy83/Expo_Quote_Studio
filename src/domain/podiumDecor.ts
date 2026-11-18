@@ -171,12 +171,32 @@ function printEach(ss: readonly CounterSection[], p: PodiumPart, side: SectionSi
 }
 
 /**
+ * A colour no one sees is neither priced nor picked (V15, as `uncolourHidden` on a wall): a printed plate of counter
+ * `id` has no colour of its own, and when every plate and sliding door of it is printed the counter takes its stock
+ * colour again.
+ */
+export function uncolourPrinted(v: Variant, id: string): Variant {
+  const x = withSections(v, id, (ss) =>
+    podiumParts(ss).reduce((acc, p) => {
+      const lights = printedLights(acc, p).filter((i) => acc[p.section]?.sides?.[sideKey(p.axis, p.out)]?.ral?.[i]);
+      return onSides(acc, [p], (side) => lights.reduce((sd, i) => withAt(sd, 'ral', i, null), side));
+    }, ss),
+  );
+  const o = x.objects.find((q) => q.id === id);
+  if (!o?.sections || o.ral === undefined) return x;
+  const plates = podiumParts(o.sections).flatMap((p) => partWindows(o.sections!, p).map((w) => printAt(o.sections!, p, w.light)));
+  if (!plates.length || !plates.every(Boolean)) return x;
+  const { ral: _r, ...rest } = o;
+  return { ...x, objects: x.objects.map((q) => (q.id === id ? rest : q)) };
+}
+
+/**
  * The paint bucket with «Print» (K20, as `printWall`): one picture of `motif` over every plate and sliding door of the
  * parts `keys` (partKey) of counter `id`, or of every part that takes it (`all`), replacing their print and decals. On
  * plates that already show this one picture together it does nothing.
  */
 export function printCounterSide(v: Variant, id: string, keys: readonly string[] | 'all', motif: string): Variant {
-  return withSections(v, id, (ss) => {
+  const x = withSections(v, id, (ss) => {
     const parts = partsBy(ss, keys);
     const at = parts.flatMap((p) => partWindows(ss, p).map((w) => printAt(ss, p, w.light)));
     if (!at.length) return ss;
@@ -185,6 +205,7 @@ export function printCounterSide(v: Variant, id: string, keys: readonly string[]
     const print: PodiumPrint = one ? { motif } : { motif, run: nextId(runsOf(ss), 'p') };
     return onSides(ss, parts, (side, p) => printEach(ss, p, withSideField(side, 'decals', undefined), () => print));
   });
+  return uncolourPrinted(x, id);
 }
 
 /**
@@ -193,7 +214,7 @@ export function printCounterSide(v: Variant, id: string, keys: readonly string[]
  * a share of a picture over more gets the whole motif.
  */
 export function printCounterPlate(v: Variant, id: string, key: string, light: number, motif: string): Variant {
-  return withSections(v, id, (ss) => {
+  const x = withSections(v, id, (ss) => {
     const p = podiumParts(ss).find((q) => partKey(q) === key);
     const w = p && partWindows(ss, p).find((x) => x.light === light);
     if (!p || !w) return ss;
@@ -205,6 +226,7 @@ export function printCounterPlate(v: Variant, id: string, key: string, light: nu
       return printEach(ss, p, withSideField(side, 'decals', decals), () => ({ motif }), [light]);
     });
   });
+  return uncolourPrinted(x, id);
 }
 
 /** The print taken off the parts `keys` of counter `id`: off light opening `light` of them, or all of them. */

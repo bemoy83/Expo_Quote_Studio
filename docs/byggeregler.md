@@ -664,7 +664,9 @@ K22 standardvarene og K23 disker over en fotplate.
   midten av seksjonens side, sett utenfra) og flyttes og skaleres i risset som på vegg, holdt innenfor delen. Print med
   spannet tar bort dekalene på siden, print med kosten dekalene på platen, og en dekal tar bort printen. Fargen står i
   K6: en farge med kosten eller i paletten tar printen av platene den farger (siste strøk vinner), men spannet og
-  fargen på hele siden lar plater med print stå; print er et bevisst valg (V16). Vist i risset, i planen (en tynn stripe av motivet innenfor ytterkanten) og i 3D. Print prises
+  fargen på hele siden lar plater med print stå; print er et bevisst valg (V16). En printet plate har ingen egen farge, for
+  printen skjuler den (V15): den prises og plukkes ikke som platebytte, og er alle platene på disken printet, får disken
+  lagerfargen igjen. Vist i risset, i planen (en tynn stripe av motivet innenfor ytterkanten) og i 3D. Print prises
   på eget artikkelnummer 8023 «Foliedekor, diskfelt» per m², med målene som kuttes på linjen («2 × 960 × 960 mm»), dekal
   som m² dekal (8020) og en oppstart per print strukket over flere deler (8022).
   *Bjørn 13.11.2026, 18.11.2026 · kode `src/domain/podiumDecor.ts`, `src/calc/lines/decor.ts`, `src/ui/plan/podiumDrawer/paint.ts` · test `src/domain/podiumDecor.test.ts`, `src/ui/plan/podiumDrawer/paint.test.ts`*
