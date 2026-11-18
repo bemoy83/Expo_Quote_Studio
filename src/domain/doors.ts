@@ -1,6 +1,7 @@
 // A door or curtain as a thing of its own: chosen in the plan or 3D, edited and moved in the wall drawer (the mini
 // plan in its middle). Every move goes through moveOpening, so a door never lands in a stand wall or on another opening.
 // Byggeregler D3, D4, D7 (docs/byggeregler.md).
+import { leafRal, setLeafRal } from './plateDecor';
 import { paintWalls } from './edit';
 import { moduleKey, pointAlong, wallDirection, wallLength, wallModules, moduleEnd, moduleStart, moduleEnds } from './grid';
 import { replaceWalls } from './replaceWalls';
@@ -76,12 +77,9 @@ export const flipHinge = (v: Variant, id: string): Variant =>
     return o.hinge === -1 ? rest : { ...rest, hinge: -1 };
   });
 
-/** Colour of the door leaf. The stand's own colour (or null) is stored as nothing, so the door keeps following it. */
-export const setDoorRal = (v: Variant, id: string, ral: string | null): Variant =>
-  update(v, id, (o) => {
-    const { ral: _r, ...rest } = o;
-    return !ral || ral === v.defaultPlate ? rest : { ...rest, ral };
-  });
+/** Colour of the door leaf (its address in Variant.decor). The stand's own colour (or null) is stored as nothing, so
+ *  the door keeps following it. */
+export const setDoorRal = (v: Variant, id: string, ral: string | null): Variant => (v.openings.some((o) => o.id === id) ? setLeafRal(v, id, ral) : v);
 
 /** A curtain's colour (one of its fabrics' keys). */
 export const setCurtainFabric = (v: Variant, id: string, fabric: string): Variant => ({
@@ -98,7 +96,7 @@ export function paintAllCurtains(v: Variant, fabric: string, isCurtain: (product
 export const doorFace = (v: Variant, w: Wall, o: Opening): 1 | -1 => (w.room ? OUTSIDE : doorSwing(v.stand, w, o));
 
 /** RAL of the door leaf: its own, else the stand's. */
-export const doorRal = (v: Variant, o: Opening): string => o.ral ?? v.defaultPlate;
+export const doorRal = (v: Variant, o: Opening): string => leafRal(v, o.id) ?? v.defaultPlate;
 
 /** Turn the module back into wall. */
 export const removeOpening = (v: Variant, id: string): Variant =>

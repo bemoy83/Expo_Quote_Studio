@@ -1,6 +1,7 @@
 // Byggeregel V10 (Bjørn 14.11.2026): a wall meeting another between its posts splits the module it meets, the two
 // sharing a post; the rest keeps its whole modules.
 // Checks Byggeregel V11 (docs/byggeregler.md).
+import { colourPlates } from './plateDecor';
 import { describe, expect, it } from 'vitest';
 import { calc } from '../calc/calc';
 import { DEFAULT_CATALOG } from '../catalog/defaultCatalog';
@@ -50,11 +51,11 @@ describe('walls meeting between posts (V10)', () => {
   it('a part keeps the colour of the module it was cut from, and can be coloured on its own', () => {
     let v = paintWalls(row(), [1, 2], [4, 2]);
     const whole = moduleKey([2, 2], [3, 2]);
-    v = { ...v, panels: { [whole]: '3002' } };
+    v = colourPlates(v, [whole], '3002', () => v.defaultPlate);
     v = paintWalls(v, [2.5, 2], [2.5, 3.5]);
     const parts = builtModules(v).filter((m) => m.whole === whole);
     expect(parts.map((m) => m.plate)).toEqual(['3002', '3002']);
-    v = { ...v, panels: { ...v.panels, [parts[0].key]: '5012' } };
+    v = colourPlates(v, [parts[0].key], '5012', () => '3002');
     expect(builtModules(v).filter((m) => m.whole === whole).map((m) => m.plate)).toEqual(['5012', '3002']);
   });
 });

@@ -1,6 +1,6 @@
 {
   "format": "standskisse",
-  "versjon": 3,
+  "versjon": 4,
   "prosjekt": {
     "fields": [
       {
@@ -223,9 +223,13 @@
       "foils": [],
       "counted": [],
       "loose": [],
-      "panels": {
-        "h:1:0": "3002",
-        "h:2:0": "3002"
+      "decor": {
+        "side-back@1000-2000": {
+          "ral": "3002"
+        },
+        "side-back@2000-3000": {
+          "ral": "3002"
+        }
       }
     }
   ],

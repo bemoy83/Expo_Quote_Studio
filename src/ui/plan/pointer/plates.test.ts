@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { plateColours } from '../../../domain/plateDecor'
 import { paintWalls } from '../../../domain/edit'
 import { wallModules } from '../../../domain/grid'
 import type { Variant } from '../../../domain/types'
@@ -36,9 +37,9 @@ describe('the wall pen on walls that stand', () => {
     const key = wallModules(w)[1].key
     const at = { x: 2.1, y: 2.5 }
     const red = paintPlates(v, w.id, at, [key], '3020')
-    expect(red.panels?.[key]).toBe('3020')
+    expect(plateColours(red)[key]).toBe('3020')
     const back = paintPlates(red, w.id, at, [key], v.defaultPlate)
-    expect(back.panels?.[key]).toBeUndefined()
+    expect(plateColours(back)[key]).toBeUndefined()
   })
 
   it('the last stroke wins: a printed plate coloured with the pen loses its print on the face pressed, not on the other', () => {
@@ -49,6 +50,6 @@ describe('the wall pen on walls that stand', () => {
     v = printPlate(printPlate(v, RULES, w.id, 1, right, 'logo'), RULES, w.id, 1, right === 1 ? -1 : 1, 'logo')
     const x = paintPlates(v, w.id, { x: 2.1, y: 2.5 }, [key], '3020')
     expect(x.foils.map((f) => sideOf(x, f))).toEqual([right === 1 ? -1 : 1])
-    expect(x.panels?.[key]).toBe('3020')
+    expect(plateColours(x)[key]).toBe('3020')
   })
 })

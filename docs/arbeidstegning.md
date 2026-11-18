@@ -294,5 +294,5 @@ Når en PR er inne, oppdateres [kodekart.md](kodekart.md) med nye filer.
 
 - Snekret vegg som produkt (A3).
 - `Pos.` i kalkylepanelet.
-- Farge per plate er bygget i appen (`v.panels`). Mockupen hadde bare farge per vegg, så her er appen foran.
+- Farge per plate er bygget i appen (`v.decor`). Mockupen hadde bare farge per vegg, så her er appen foran.
 - Trykksiden: mockupen antok at trykket alltid sitter på standsiden. Appen har `side` på folien og skal bruke den.

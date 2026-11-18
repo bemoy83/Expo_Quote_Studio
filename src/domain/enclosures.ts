@@ -6,7 +6,7 @@
 // Byggeregler R3, R7 (docs/byggeregler.md).
 import { wallDirection, wallModules } from './grid';
 import { canMoveWall, splitWall } from './edit';
-import { ownPlate } from './panels';
+import { ownPlate } from './plateDecor';
 import { replaceWalls } from './replaceWalls';
 import { CELL, cellId, cellRim, cellSides, edgesOf, onOutline, outlineOf, outlineSides, type Cell } from './outline';
 import { overlapsRoom, roomWalls, syncRooms } from './rooms';

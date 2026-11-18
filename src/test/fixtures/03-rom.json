@@ -1,6 +1,6 @@
 {
   "format": "standskisse",
-  "versjon": 3,
+  "versjon": 4,
   "prosjekt": {
     "fields": [
       {
@@ -278,7 +278,6 @@
           "wallId": "L.3",
           "module": 0,
           "product": "6130",
-          "ral": "5007",
           "swing": -1
         },
         {
@@ -299,7 +298,12 @@
       "freeTextiles": [],
       "foils": [],
       "counted": [],
-      "loose": []
+      "loose": [],
+      "decor": {
+        "o1/leaf": {
+          "ral": "5007"
+        }
+      }
     }
   ],
   "egneMotiver": []

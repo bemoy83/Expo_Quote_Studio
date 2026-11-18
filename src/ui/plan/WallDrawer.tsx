@@ -12,7 +12,7 @@ import { AlignVerticalSpaceAround, DoorOpen, FlipHorizontal2, MoveHorizontal, Pa
 import { production } from '../../calc/textile/production'
 import { addFoil, foilBlocked, foilsOn, removeFoil, updateFoil } from '../../domain/decor'
 import { eraseWalls } from '../../domain/edit'
-import { wallRal } from '../../domain/panels'
+import { wallRal } from '../../domain/plateDecor'
 import { clearDecor, clearFelt, printPlate, printsOn } from '../../domain/print'
 import { moveShelves, removeShelves } from '../../domain/shelves/edit'
 import { shelvesOn } from '../../domain/shelves/model'
