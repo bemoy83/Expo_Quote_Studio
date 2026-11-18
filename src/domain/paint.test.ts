@@ -6,12 +6,18 @@ import { addFoil } from './decor';
 import { doorRal, placeOpening } from './doors';
 import { paintWalls, setWallPlate } from './edit';
 import { moduleKey, wallModules } from './grid';
-import { paintAllDoors, paintAllWalls, paintLeaf, paintPlate, paintWallFace, printedCount } from './paint';
+import { counterParts } from '../foga/counter';
+import { counterBuildOf } from './counterShape';
+import { counterRal } from './objects';
+import { paintAllCounters, paintAllDoors, paintAllWalls, paintCounter, paintCounterPlates, paintCounterSide, paintLeaf, paintPlate, paintWallFace, printedCount } from './paint';
+import { printOf, setPodiumPrint, takesDecor } from './podiumDecor';
+import { partKey, podiumParts, ralsOf, setPodiumLight } from './podiumFaces';
+import { stockSections } from './podiumStock';
 import { setPanels } from './panels';
 import { printPlate, printsOn, printWall } from './print';
 import { addRoom } from './rooms';
 import { roomWallId } from './roomKeys';
-import type { Variant } from './types';
+import type { PlacedObject, Variant } from './types';
 import { createVariant } from './variant';
 import { builtModules } from './walls';
 
@@ -136,5 +142,52 @@ describe('Fyll on the whole stand', () => {
     expect([kept.skipped, kept.v.openings[0].ral, kept.v.foils.length]).toEqual([1, undefined, 1]);
     const off = paintAllDoors(v, '7012', isDoor, 'off');
     expect([off.v.openings[0].ral, off.v.foils.length]).toEqual(['7012', 0]);
+  });
+});
+
+describe('a counter of Disker og podier: a colour per plate (Byggeregel K6, Bjørn 18.11.2026)', () => {
+  const counter: PlacedObject = { id: 'c1', product: '6571', x: 2, y: 1.5, rot: 0, sections: stockSections() };
+  const v0 = (): Variant => ({ ...createVariant('A', { width: 4, depth: 3, type: 'row' }), objects: [counter, { id: 'i2', product: '5276', x: 3, y: 1, rot: 0 }] });
+  const keys = (v: Variant) => podiumParts(v.objects[0].sections!).map(partKey);
+  const rals = (v: Variant) => counterBuildOf(v.objects[0]).plates.map((p) => p.ral ?? counterRal(v.objects[0]));
+  const front = (v: Variant) => podiumParts(v.objects[0].sections!).filter((p) => takesDecor(v.objects[0].sections!, p))[0];
+
+  it('one light opening of a part takes its own colour, built, picked and drawn; the counter colour stored as none', () => {
+    const k = partKey(front(v0()));
+    const v = paintCounterPlates(v0(), 'c1', [k], '3020', 0);
+    expect(rals(v).filter((r) => r === '3020')).toHaveLength(1);
+    expect(Object.keys(counterParts(counterBuildOf(v.objects[0]), counterRal(v.objects[0])).plates).some((x) => x.startsWith('3020|'))).toBe(true);
+    // Back to the counter's colour: nothing of its own
+    expect(paintCounterPlates(v, 'c1', [k], counterRal(counter), 0).objects[0]).toEqual(counter);
+  });
+
+  it('a sliding door is one surface: both its leaves take the colour of its light opening', () => {
+    const k = partKey(front(v0()));
+    const v = paintCounterPlates(setPodiumLight(v0(), 'c1', [k], 'door', 0), 'c1', [k], '3020', 0);
+    const leaves = counterBuildOf(v.objects[0]).plates.filter((p) => p.level === 'door');
+    expect(leaves.map((p) => p.ral)).toEqual(['3020', '3020']);
+  });
+
+  it('a colour on a part takes its print off; on the side shown the printed part stays as it is', () => {
+    const k = partKey(front(v0()));
+    const printed = setPodiumPrint(v0(), 'c1', [k], 'logo');
+    expect(printOf(paintCounterPlates(printed, 'c1', [k], '3020').objects[0].sections!, front(v0()))).toBeUndefined();
+    const r = paintCounterSide(printed, 'c1', keys(printed), '3020');
+    expect(r.skipped).toBe(1);
+    expect(printOf(r.v.objects[0].sections!, front(v0()))).toBe('logo');
+    expect(ralsOf(r.v.objects[0].sections!, front(v0())).every((x) => x === null)).toBe(true);
+  });
+
+  it('the counter colour (pill, Fyll) takes the colours of their own off, a printed part keeps the colour it had; nothing else is painted', () => {
+    const k = partKey(front(v0()));
+    let v = paintCounterPlates(v0(), 'c1', keys(v0()), '5010');
+    v = setPodiumPrint(v, 'c1', [k], 'logo');
+    const r = paintAllCounters(v, '7012');
+    expect(r.skipped).toBe(1);
+    expect(r.v.objects.map((o) => o.ral)).toEqual(['7012', undefined]);
+    expect(new Set(rals(r.v))).toEqual(new Set(['7012', '5010']));
+    expect(ralsOf(r.v.objects[0].sections!, front(v0())).every((x) => x === '5010')).toBe(true);
+    // Back to stock: no colour stored on the counter
+    expect('ral' in paintCounter(v0(), 'c1', counterRal(counter)).v.objects[0]).toBe(false);
   });
 });

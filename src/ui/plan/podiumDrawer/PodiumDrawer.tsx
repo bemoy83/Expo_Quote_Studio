@@ -121,8 +121,8 @@ export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect,
         )
       : hintLine(
           decorOpen && 'Åpen: ingen print eller dekal',
-          'Fargen gjelder hele disken, også dørene',
-          `Print og motiv gjelder ${pi === undefined ? 'hele siden' : 'delen'}`,
+          pi === undefined ? 'Farge og print gjelder hele siden, deler med print står som før' : li === undefined ? 'Farge og print gjelder delen' : 'Fargen gjelder åpningen, også skyvedøren der, print hele delen',
+          'bøtta fyller hele siden',
           chosenDecal ? 'dra dekalen for å flytte, håndtakene for å skalere' : 'klikk en dekal i risset for å flytte og skalere den',
           'aldri på åpen del',
         )
@@ -158,7 +158,7 @@ export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect,
           </Section>
           </>
         ) : (
-          <PodiumDecor v={v} o={o} parts={parts} part={pi} scope={scope} partNav={partNav} decal={chosenDecal} motifs={motifs} onUpload={onUpload} select={select} onEdit={onEdit} />
+          <PodiumDecor v={v} o={o} side={el.parts} parts={parts} part={pi} light={li} scope={scope} partNav={partNav} decal={chosenDecal} motifs={motifs} onUpload={onUpload} select={select} onEdit={onEdit} />
         )}
 
         <div className="wd-foot">

@@ -2,7 +2,7 @@
 // side each faces, the side chosen, and that side seen from outside, left to right, part by part. Pure, with tests.
 import { toPlan, turn } from '../../../domain/counterShape'
 import { podiumDecals, podiumPrints, rightOf } from '../../../domain/podiumDecor'
-import { lightsOf, onSide, partKey, partsOn, type PodiumPart } from '../../../domain/podiumFaces'
+import { lightsOf, onSide, partKey, partsOn, ralsOf, type PodiumPart } from '../../../domain/podiumFaces'
 import { EPS, lineOf } from '../../../domain/podiumSections'
 import type { Crop } from '../../../domain/print'
 import { podiumSides, type PodiumSide } from '../../../domain/podiums'
@@ -92,7 +92,7 @@ const fromLeft = (side: PodiumSide) => (t: number) => (rightOf(side.axis, side.o
 
 /** One part of the side seen from outside: from x0 to x1 (mm from the outer face at the left end), its node line ends
  *  n0 and n1, how high its section is (CC, the underside of the top rail), its section's shelves (CC, low to high),
- *  what each light opening is from the floor (K16) and whether it is held a plate. */
+ *  what each light opening is from the floor (K16) and its colour of its own (K6; null: the counter's). */
 export interface ElevationPart {
   part: PodiumPart
   key: string
@@ -103,6 +103,7 @@ export interface ElevationPart {
   h: number
   shelves: readonly number[]
   lights: (CounterLight | null)[]
+  rals: (string | null)[]
 }
 
 /** The side seen from outside, left to right: its parts, the outer length (mm) and the highest section's CC. */
@@ -115,7 +116,7 @@ export function sideElevation(o: PlacedObject, side: PodiumSide): { parts: Eleva
       const [n0, n1] = [x(p.a), x(p.b)].sort((a, b) => a - b)
       const key = partKey(p)
       const s = sections[p.section]
-      return { part: p, key, n0, n1, x0: n0, x1: n1, h: s.h, shelves: s.shelves ?? [], lights: lightsOf(sections, p) }
+      return { part: p, key, n0, n1, x0: n0, x1: n1, h: s.h, shelves: s.shelves ?? [], lights: lightsOf(sections, p), rals: ralsOf(sections, p) }
     })
     .sort((p, q) => p.n0 - q.n0)
   // The ends out to the outer face

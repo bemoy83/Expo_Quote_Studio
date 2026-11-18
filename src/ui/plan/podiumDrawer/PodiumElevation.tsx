@@ -18,6 +18,7 @@ import { DIM_NEAR as NEAR, DIM_TOTAL as TOTAL } from '../dims'
 import { planScale, sizePx } from '../planScale'
 import { frame } from '../wallDrawer/elevationMeasure'
 import { findMotif } from '../../motifs'
+import { plateColor } from '../../env'
 import { Handles, Print, type Edge } from '../drawerParts'
 import { lightBands, type ElevationDecal, type ElevationPart, type ElevationPrint } from './podiumView'
 
@@ -290,7 +291,7 @@ export function PodiumElevation({ parts: given, length, h: hTop, title, fill, ch
                   return (
                     <g key={li} style={{ cursor: onPick ? 'pointer' : undefined }} onClick={() => pick(i, bands.length > 1 ? li : undefined)}>
                       {/* The plate, or the inside seen through an open light opening (no plates between the sections, K16) */}
-                      <rect x={x0} y={y0} width={w} height={y1 - y0} fill={open ? SUNKEN : fill} />
+                      <rect x={x0} y={y0} width={w} height={y1 - y0} fill={open ? SUNKEN : p.rals?.[li] ? plateColor(p.rals[li]!) : fill} />
                       {open && <rect x={x0} y={y0} width={w} height={y1 - y0} fill={INK} fillOpacity={0.06} />}
                       {/* K17: two leaves in the channel, overlapping in the middle */}
                       {kind === 'door' && (

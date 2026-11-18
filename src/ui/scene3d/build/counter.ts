@@ -1,6 +1,6 @@
 // Counter (bardisk 6560, Byggeregler K1–K8) from the same pieces the kalkyle costs (foga/counter.ts): in each node
 // the profile for the directions it joins (92L, 93, 94), 93 and 92 rails round the outside and 94 between two parts,
-// all from their measured outlines; the wall plates in the counter's colour (K6), the white tops and shelves. The 600 couplings sit inside the profiles and are not drawn. The closed front faces the object's +y.
+// all from their measured outlines; the wall plates in their own colour or the counter's (K6), the white tops and shelves. The 600 couplings sit inside the profiles and are not drawn. The closed front faces the object's +y.
 import * as THREE from 'three'
 import { podiumDecals, podiumPrints } from '../../../domain/podiumDecor'
 import type { PodiumPart } from '../../../domain/podiumFaces'
@@ -49,9 +49,10 @@ export function buildCounter(c: BuildContext, g: THREE.Group, b: CounterBuild, r
     mesh.position.copy(mid(bx))
     add(mesh, tag, g)
   }
-  // K4, K6: the wall plate in the counter's colour (print and decal over it: buildPodiumDecor)
-  const plate = mat('objects', plateColor(ral), { roughness: 0.6, ...warn })
-  for (const p of b.plates) box(p.box, plate)
+  // K4, K6: the wall plate in its own colour, else the counter's (print and decal over it: buildPodiumDecor)
+  const plates = new Map<string, THREE.Material>()
+  const plate = (r: string) => plates.get(r) ?? plates.set(r, mat('objects', plateColor(r), { roughness: 0.6, ...warn })).get(r)!
+  for (const p of b.plates) box(p.box, plate(p.ral ?? ral))
   const board = mat('objects', BOARD, { roughness: 0.55, ...warn })
   for (const x of b.boards) box(x.box, board)
 }

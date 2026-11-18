@@ -158,6 +158,9 @@ export type CounterLight = 'open' | 'door';
  *  is outside the counter; a side that becomes inner loses it (domain/podiumFaces.ts). */
 export interface SectionSide {
   lights?: (CounterLight | null)[];
+  /** A colour of its own on each light opening, from the floor (Byggeregel K6, Bjørn 18.11.2026): the plate, or both
+   *  leaves of the sliding door there. null or none: the counter's colour. */
+  ral?: (string | null)[];
   /** Print over the whole of its parts (Byggeregel K20): the motif, as a decal over every plate and door. */
   print?: string;
   /** Decals on it (K20). */

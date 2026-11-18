@@ -486,20 +486,5 @@ const fitsStand = (v: Variant, b: Omit<Box, 'kind'>) => b.x1 - b.x0 <= v.stand.w
 /** Colour of a counter's plates in stock (Byggeregel K6). */
 export const COUNTER_STOCK_RAL = RECIPES.counter.stock.ral;
 
-/** The colour of a counter's plates (K6): its own, else as in stock. */
+/** The colour of a counter's plates (K6): its own, else as in stock. A plate may have one of its own (paint.ts). */
 export const counterRal = (o: Pick<PlacedObject, 'ral'>): string => o.ral ?? COUNTER_STOCK_RAL;
-
-/** A counter's plates in `ral`, all of them (K6). The stock colour is stored as none. */
-export function setCounterRal(v: Variant, id: string, ral: string): Variant {
-  return { ...v, objects: v.objects.map((o) => (o.id === id ? withRal(o, ral) : o)) };
-}
-
-/** The bucket of Disker og podier: every counter and podium it drew, in `ral` (K6). */
-export function paintPodiums(v: Variant, ral: string): Variant {
-  return { ...v, objects: v.objects.map((o) => (o.sections ? withRal(o, ral) : o)) };
-}
-
-function withRal(o: PlacedObject, ral: string): PlacedObject {
-  const { ral: _, ...rest } = o;
-  return ral === COUNTER_STOCK_RAL ? rest : { ...rest, ral };
-}

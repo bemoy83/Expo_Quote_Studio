@@ -70,8 +70,9 @@ export const ITEM = {
   /** A standard counter or podie, ready built and picked whole (Byggeregler K1, K22): its profiles, plates and boards,
    *  by outer size and, unless CC 1000, height CC. */
   counter: (length: number, depth: number, h: number = RECIPES.counter.top) => `disk-${length}x${depth}${h === RECIPES.counter.top ? '' : `-h${h}`}`,
-  /** Its plates swapped for plates in another wall colour (Byggeregel K6), and back after the fair. */
-  counterPlates: (length: number, depth: number, h: number = RECIPES.counter.top) => `disk-platebytte-${length}x${depth}${h === RECIPES.counter.top ? '' : `-h${h}`}`,
+  /** One of its plates swapped for a plate in another wall colour (Byggeregel K6), and back after the fair: per plate,
+   *  as each plate may have its own colour (Bjørn 18.11.2026). */
+  counterPlates: (length: number, depth: number, h: number = RECIPES.counter.top) => `disk-platebytte-plate-${length}x${depth}${h === RECIPES.counter.top ? '' : `-h${h}`}`,
   /** A counter drawn and built on site (Byggeregler K7–K9): its profiles by the metre, the 600, the plates by the m²
    *  (cut from wall plates), the boards by size, and the work per whole and half metre and per corner. */
   counterProfile: (code: string) => `disk-profil-${code}`,
@@ -183,7 +184,7 @@ export const ITEM_DEFS: readonly ItemDef[] = [
   def(ITEM.shelfPick, 'Vareplukk hyller, per ordre', 'stk'),
   ...READY.flatMap(({ s, z, what }) => [
     def(ITEM.counter(z.length, z.depth, z.h), `${what} ${z.length} × ${z.depth} × ${outerHeight(z.h)} mm, ferdig montert`, 'stk'),
-    def(ITEM.counterPlates(z.length, z.depth, z.h), `Platebytte ${what.toLowerCase()} ${s.artnr}, plater i RAL`, 'stk'),
+    def(ITEM.counterPlates(z.length, z.depth, z.h), `Platebytte ${what.toLowerCase()} ${s.artnr}, per plate i RAL`, 'stk'),
   ]),
   ...COUNTER_PROFILES.map((code) => def(ITEM.counterProfile(code), `Disk bygget på stedet: profil ${code}, per meter`, 'm')),
   def(ITEM.counterCoupling, 'Disk bygget på stedet: kobling 600', 'stk'),
@@ -200,6 +201,8 @@ export const ITEM_DEFS: readonly ItemDef[] = [
 /** Minutes per handling step. Picking, washing and transport of one article; on site up (montering) and down (demontering). */
 const pvt = (plukk: number, vask: number, transport: number): Time => ({ plukk, vask, transport });
 const onSite = (montering: number, demontering: number): Time => ({ montering, demontering });
+/** The time of a counter's whole set of plates, per plate. */
+const perPlate = (b: CounterBuild, t: Time): Time => Object.fromEntries(Object.entries(t).map(([k, n]) => [k, Math.round(((n as number) / b.plates.length) * 100) / 100])) as Time;
 
 /**
  * Person-minutes per unit and handling step. Wall and takdrager items are calibrated against three stands Bjørn priced
@@ -242,9 +245,10 @@ export const EXAMPLE_TIMES: Readonly<Record<string, Time>> = {
   // gives its own. Its plates in a wall colour (K6): the coloured plates picked and washed, the swap in the workshop
   // before and after the fair as six plates of a stand wall swap. Eksempeltall until Bjørn gives his
   ...Object.fromEntries(
-    READY.flatMap(({ z }) => [
+    READY.flatMap(({ z, b }) => [
       [ITEM.counter(z.length, z.depth, z.h), { ...pvt(1, 2, 2), ...onSite(1, 1) }],
-      [ITEM.counterPlates(z.length, z.depth, z.h), { ...pvt(0.5, 1, 0), ...onSite(6, 4) }],
+      // The swap of a whole counter (½, 1, 0 and 6, 4 min), shared by its plates
+      [ITEM.counterPlates(z.length, z.depth, z.h), perPlate(b, { ...pvt(0.5, 1, 0), ...onSite(6, 4) })],
     ]),
   ),
   // A counter built on site (K9, Bjørn 12.11.2026: 20–30 min on 1 m): placeholders, 26 min in all per whole metre (its
@@ -318,7 +322,7 @@ export const EXAMPLE_RECIPES: Readonly<Record<string, ItemRecipe>> = {
   ...Object.fromEntries(
     READY.flatMap(({ z, b }): [string, ItemRecipe][] => [
       [ITEM.counter(z.length, z.depth, z.h), counterRecipe(b)],
-      [ITEM.counterPlates(z.length, z.depth, z.h), { own: [['HDF-976x2440', plateShare(b), 'plate']], dg: 'utleie' }],
+      [ITEM.counterPlates(z.length, z.depth, z.h), { own: [['HDF-976x2440', Math.round((plateShare(b) / b.plates.length) * 1000) / 1000, 'plate']], dg: 'utleie' }],
     ]),
   ),
   ...Object.fromEntries(COUNTER_PROFILES.map((code): [string, ItemRecipe] => [ITEM.counterProfile(code), { parts: [[code, 1]], dg: 'utleie' }])),
