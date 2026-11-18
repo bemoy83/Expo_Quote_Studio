@@ -3,7 +3,8 @@
 // cancels). A drag that turns off across the wall draws a new wall from there, as before; so does a press on an
 // empty edge or near a grid node (where a new wall starts at a T).
 import { moduleAt, offsetAlong, wallModules } from '../../../domain/grid'
-import { setPanels, wallRal } from '../../../domain/panels'
+import { faceAt } from '../../../domain/faces'
+import { paintPlatesAlong } from '../../../domain/paint'
 import type { Variant } from '../../../domain/types'
 import type { BuiltModule } from '../../../domain/walls'
 import { distToSegment } from '../geometry'
@@ -42,13 +43,13 @@ export function platesAlong(v: Variant, mods: BuiltModule[], wallId: string, i0:
   return mods.filter((m) => !m.opening && (keys.has(m.key) || (m.whole !== undefined && keys.has(m.whole)))).map((m) => m.key)
 }
 
-/** Plates coloured `ral`; a plate in its wall's own colour has none of its own. */
-export function paintPlates(v: Variant, mods: BuiltModule[], keys: string[], ral: string): Variant {
-  const owner = new Map(mods.map((m) => [m.key, v.walls.find((w) => w.id === m.wallId)]))
-  return setPanels(v, keys, ral, (k) => {
-    const w = owner.get(k)
-    return w ? wallRal(v, w) : v.defaultPlate
-  })
+/**
+ * The wall pen on plates of wall `wallId`, pressed at `p0`: each plate in `ral` (none of its own where that is its
+ * wall's colour), and the print on the face pressed comes off them, as the drawer's brush (the last stroke wins).
+ */
+export function paintPlates(v: Variant, wallId: string, p0: P, keys: readonly string[], ral: string): Variant {
+  const w = v.walls.find((x) => x.id === wallId)
+  return w ? paintPlatesAlong(v, w.id, faceAt(v, w, p0), keys, ral) : v
 }
 
 /** `fine`: Shift or «Fin», for the wall a drag across draws. */
@@ -74,6 +75,6 @@ export const plates: DragHandlers<'plates'> = {
     const { brush } = c
     if (brush?.kind !== 'wall') return
     const keys = platesAlong(c.v, c.mods, d.wallId, d.i0, d.moved ? q : d.p0)
-    if (keys.length) c.onEdit((x) => paintPlates(x, c.mods, keys, brush.ral))
+    if (keys.length) c.onEdit((x) => paintPlates(x, d.wallId, d.p0, keys, brush.ral))
   },
 }

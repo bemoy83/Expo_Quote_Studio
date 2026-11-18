@@ -137,8 +137,11 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 ### Print, dekal og farge
 
 - Dekal: `Foil` · `domain/decor.ts` (folie og `fitDecor`) · veggflater og felt: `domain/faces.ts`
-- Print med spann og kost: `domain/print.ts` · i veggskuffen: `plan/wallDrawer/paint.ts`
+- Print med spann og kost: `domain/print.ts` · i veggskuffen: `plan/wallDrawer/paint.ts` · i diskskuffen: `plan/podiumDrawer/paint.ts`
+- Malerspann og malerkost i alle skuffer: `plan/paintTools.ts` (`PaintTool` bucket/brush, `usePaintTools` verktøy, farge og motiv, `brushTo` kostens regel, `applyFill` spannets toast, `useSweep` trykk og dra over platene, også på iPad). En ny skuff som farger plater bruker disse og `ColourSection`, ikke egne
 - Farge per plate: `domain/panels.ts`
+- Én regel for farge og print (Bjørn 18.11.2026): `domain/paint.ts` (spann over en side, farge på én plate eller ett dørblad, diskens plater (K6), veggpennen i planen, Fyll på hele standen med valget om print i toasten via `ui/fillKeeping.ts`). Skuff, pille, planpenn og panel går gjennom den, aldri `setWallPlate` + `clearPrint` hver for seg
+- Én fargerad og én seksjon (Bjørn 18.11.2026): `ralSwatches` i `plan/swatches.ts` er veggfargene overalt (dock, piller, skuffens `PlatePalette`, arrangørens farge i standinnstillingene); `ColourSection` i `plan/drawerParts.tsx` er «Farge og profilering» i vegg-, felt- og diskskuffen (tittel, verdi, pil, spann, kost, palett); `MotifRow` i `plan/quick/parts.tsx` er motivraden i pillene og Profilering-hurtigvalget
 - Kalkyle: `calc/lines/decor.ts` (folie, print-oppsett) · `calc/lines/swaps.ts` (platebytte) · `calc/textile/production.ts` (`foilRows`)
 - 3D: `scene3d/build/decor.ts` · teksturbuffer for motiver: `scene3d/build/motifs.ts` · motiver `ui/motifs.ts` · dra inn: `ui/dnd.ts` · motivpensel i planen: `plan/pointer/decor.ts`
 
@@ -214,9 +217,12 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
   plasseres og snus utenfra (`toPlan`, `toLocal`, `turn` i `domain/counterShape.ts`). Om et møbel er en disk, sier
   `PlaceContext.isCounter`.
 - 6560 settes ut som et ferdig oppsett i Disker og podier (K22, se under).
-- Farge (K6): `PlacedObject.ral`, uten = som på lager (`counterRal`, `COUNTER_STOCK_RAL` i `domain/objects.ts`). Planen
-  fyller disken med platefargen, 3D farger platene (`buildCounter` tar fargen). Kalkylen legger prisartikkelen
-  `ITEM.counterPlates` til linjen for hver farget disk, prisen er den samme. Veggfargene som rad er én funksjon,
+- Farge (K6): `PlacedObject.ral` er diskens, uten = som på lager (`counterRal`, `COUNTER_STOCK_RAL` i `domain/objects.ts`);
+  hver lysåpning i en del kan ha sin egen, `SectionSide.ral` (`ralsOf`, `setPlateRal` i `domain/podiumFaces.ts`), som
+  bygget gir videre som `CounterPlate.ral` (skyvedørens to blad samme). Strøkene går gjennom `domain/paint.ts`
+  (`paintCounterPlates`, `paintCounterSide`, `paintCounter`, `paintAllCounters`). Planen fyller disken med diskens farge,
+  risset (`ElevationPart.rals`) og 3D (`buildCounter`) hver plate med sin. Kalkylen legger prisartikkelen
+  `ITEM.counterPlates` til linjen per plate som ikke er i lagerfargen, prisen er den samme. Veggfargene som rad er én funksjon,
   `ralSwatches` i `plan/swatches.ts`, brukt av Vegg, Disker og podier og pillens `Colours`
 - Tester: `foga/counter.test.ts`, `calc/counter.test.ts`, `scene3d/build/counter.test.ts`; eksempel i `src/test/fixtures/10-mobler-utstyr.json`
 
@@ -250,7 +256,7 @@ og kalkyle med 6560, som er et ferdig oppsett i det (K22).
   pillen og linjen i tilbudet.
   Med Shift eller Fin viser pennen 250 × 250 (`podiumAt` med `fine`, `fine` fra `usePlanPointer.ts`). Pekeren: `plan/pointer/podium.ts`, forhåndsvisningen
   `podiumHover`/`podiumTarget` i `plan/next.ts`. Verktøyet: `Brush` `podium` og `PenTool` `podium` i `ui/tools.ts`,
-  docken, hurtigvalget (farger og Fyll, `paintPodiums`) og hintet
+  docken, hurtigvalget (farger og Fyll, `paintAllCounters` i domain/paint.ts) og hintet
 - Sider (K16, trinn 2): valget per del står på seksjonen (`CounterSection.sides`, nøklet `x-`/`x+`/`z-`/`z+`, en liste
   per lysåpning fra gulvet). `domain/podiumFaces.ts`: `podiumParts` (delene, knutepunkt til knutepunkt), `partsOn`/`onSide`,
   `withSideField` (ett felt på en side: lysåpningene, print, dekaler),

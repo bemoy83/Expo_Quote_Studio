@@ -123,7 +123,7 @@ export function foilRows(v: Variant, plate: { width: number; height: number }, c
     const pos = `F${i + 1}`;
     const run = f.run ? runs.get(f.run) : undefined;
     const part = run && run.length > 1 ? ` · ${run.indexOf(f) + 1} av ${run.length}` : '';
-    const door = doors.has(`${f.wallId}|${f.module}`) ? ', dør' : '';
+    const door = doors.has(`${f.wallId}|${f.module}`) ? (f.door === 'header' ? ', overstykke' : f.door === 'leaf' ? ', dørblad' : ', dør') : '';
     const size = { W: plate.width, H: plate.height };
     return { pos, where: `${wallLabel(walls.get(f.wallId)!)}, plate ${f.module + 1}${door}${part}`, ...size, pw: size.W, ph: size.H, fill: 'print' as const, fileName: printFileName(customer, pos, size), foil: true };
   });

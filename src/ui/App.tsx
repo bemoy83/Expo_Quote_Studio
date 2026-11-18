@@ -4,9 +4,9 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useRef, us
 import { r2 } from '../calc/referenceStands'
 import { addObject } from '../domain/objects'
 import { addDefaultRoom } from '../domain/rooms'
-import { paintAllWalls } from '../domain/panels'
-import { DOOR_NO_SWING, paintAllCurtains, paintAllDoors, shutsDoor } from '../domain/doors'
-import { paintPodiums } from '../domain/objects'
+import { paintAllCounters, paintAllDoors, paintAllWalls } from '../domain/paint'
+import { fillKeeping } from './fillKeeping'
+import { DOOR_NO_SWING, paintAllCurtains, shutsDoor } from '../domain/doors'
 import type { StandWallTerms, Variant } from '../domain/types'
 import { customerName, fillFloor, standWallTerms } from '../domain/variant'
 import { basisLabel, basisRef, sameBasis } from '../cost/basis'
@@ -259,9 +259,9 @@ export default function App() {
       otherSize={tools.otherSize}
       onOtherSize={tools.setOtherSize}
       onFill={fillWithPen}
-      onFillWalls={() => onEdit((x) => paintAllWalls(x, tools.wallRal))}
-      onFillPodiums={() => onEdit((x) => paintPodiums(x, tools.podiumRal))}
-      onFillDoors={(ral) => onEdit((x) => paintAllDoors(x, ral, (a) => productOf(a)?.opening === 'door'))}
+      onFillWalls={() => fillKeeping(v, (x, prints) => paintAllWalls(x, tools.wallRal, prints), onEdit, showToast)}
+      onFillPodiums={() => onEdit((x) => paintAllCounters(x, tools.podiumRal).v)}
+      onFillDoors={(ral) => fillKeeping(v, (x, prints) => paintAllDoors(x, ral, (a) => productOf(a)?.opening === 'door', prints), onEdit, showToast)}
       onFillCurtains={(fabric) => onEdit((x) => paintAllCurtains(x, fabric, (a) => productOf(a)?.opening === 'curtain'))}
       standRal={v.defaultPlate}
       picks={tools.picks}

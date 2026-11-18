@@ -1,19 +1,17 @@
 // Colouring in the wall drawer, as in a paint program: the paint bucket (the whole face) or the brush (one plate at a
 // time, press and sweep) lays a plate colour or «Print» on the plates of the face shown (Bjørn 2.11.2026).
 import { foilBlocked } from '../../../domain/decor'
-import { setDoorRal, doorRal, paintDoors } from '../../../domain/doors'
-import { setWallPlate } from '../../../domain/edit'
+import { doorRal } from '../../../domain/doors'
 import type { FaceSide } from '../../../domain/faces'
-import { setPanels } from '../../../domain/panels'
-import { clearPrint, fillPlates, printPlate, printsOn, printWall } from '../../../domain/print'
+import { paintLeaf, paintPlate, paintWallFace } from '../../../domain/paint'
+import { fillPlates, printDoorPart, printPlate, printsOn, printWall } from '../../../domain/print'
 import type { Motif, Variant, Wall } from '../../../domain/types'
 import type { BuiltModule } from '../../../domain/walls'
 import { rules } from '../../env'
+import { printKept } from '../../fillKeeping'
 import { findMotif } from '../../motifs'
 import { PRINT } from '../drawerParts'
-
-/** Which tool is out: the paint bucket (the whole face), the brush (plate by plate), or none. */
-export type PaintTool = 'wall' | 'plate' | null
+import { applyFill, brushTo, NO_MOTIF, type PaintTool } from '../paintTools'
 
 export interface PaintDeps {
   v: Variant
@@ -27,7 +25,7 @@ export interface PaintDeps {
   /** What the tools lay on: a plate colour (RAL) or PRINT. Unset: the wall's own colour. */
   paintSel: string | null
   /** The motif «Print» lays on, chosen in the motif library (Profilering). Unset: the first in the library. */
-  printSel: string | null
+  motifSel: string | null
   /** The wall's own colour. */
   ral: string
   /** Nothing else is chosen (no frame, decal or door), so the tools are live. */
@@ -39,37 +37,34 @@ export interface PaintDeps {
   onToast: (text: string) => void
 }
 
-export function wallPaint({ v, w, s, built, mods, motifs, tool, paintSel, printSel, ral, free, base, onEdit, onCheckpoint, onToast }: PaintDeps) {
+export function wallPaint({ v, w, s, built, mods, motifs, tool, paintSel, motifSel, ral, free, base, onEdit, onCheckpoint, onToast }: PaintDeps) {
   const painting = tool !== null && free
   const paint = paintSel ?? ral
-  const pm = findMotif(motifs, printSel ?? undefined) ?? motifs[0]
+  const pm = findMotif(motifs, motifSel ?? undefined) ?? motifs[0]
   const printing = paint === PRINT
   const printedAt = (x: Variant, i: number) => printsOn(x, w.id, s).find((f) => f.module === i)
   /**
    * Brush on a plate: its colour, or the wall's again when it already has the brush's colour. A print on this face of
    * the plate comes off (the colour shows again); decals stay.
    */
-  const paintPlate = (i: number, key: string, first: boolean) => {
+  const brushPlate = (i: number, key: string, first: boolean) => {
     const cur = built.get(key)?.plate
-    const printed = !!printedAt(v, i)
-    const to = first && cur === paint && !printed ? base(key) : paint
-    if (!first && cur === to && !printed) return
+    const to = brushTo(cur ?? base(key), paint, base(key), !!printedAt(v, i), first)
+    if (to === null) return
     if (first) onCheckpoint()
-    onEdit((x) => clearPrint(setPanels(x, [key], to, base), w.id, s, [i]), false)
+    onEdit((x) => paintPlate(x, w.id, s, i, key, to), false)
   }
   /**
    * Brush on a door leaf: as on a plate, the leaf has a colour of its own; the header above it is a plate. A print on the
    * door (header and leaf as one picture) comes off.
    */
-  const paintLeaf = (i: number, key: string, first: boolean) => {
+  const brushLeaf = (i: number, key: string, first: boolean) => {
     const o = mods[i]?.opening
     if (!o) return
-    const printed = !!printedAt(v, i)
-    const cur = doorRal(v, o)
-    const to = first && cur === paint && !printed ? base(key) : paint
-    if (!first && cur === to && !printed) return
+    const to = brushTo(doorRal(v, o), paint, base(key), !!printedAt(v, i), first)
+    if (to === null) return
     if (first) onCheckpoint()
-    onEdit((x) => clearPrint(setDoorRal(x, o.id, to), w.id, s, [i]), false)
+    onEdit((x) => paintLeaf(x, o.id, s, to), false)
   }
   /**
    * The chosen tool on plate `i` (module key `key`): `first` on press, then for each plate swept over (brush only).
@@ -77,18 +72,19 @@ export function wallPaint({ v, w, s, built, mods, motifs, tool, paintSel, printS
    */
   const paintAt = (i: number, key: string, first: boolean, leaf = false) => {
     if (printing && !pm) {
-      if (first) onToast('Last opp et motiv i Profilering først')
+      if (first) onToast(NO_MOTIF)
       return
     }
-    if (tool === 'wall') {
+    if (tool === 'bucket') {
       if (!first) return
       if (printing) {
         if (!fillPlates(v, rules, w, s).length) return onToast('Ingen plate på denne siden kan ha print')
         return onEdit((x) => printWall(x, rules, w.id, s, pm!.id, pm!.ratio))
       }
-      return onEdit((x) => clearPrint(paintDoors(setWallPlate(x, w.id, paint), w.id, paint), w.id, s))
+      // Print is a choice made on purpose (Bjørn 18.11.2026): the bucket leaves printed plates as they are
+      return applyFill(v, paintWallFace(v, w.id, s, paint), onEdit, onToast, printKept)
     }
-    if (!printing) return leaf ? paintLeaf(i, key, first) : paintPlate(i, key, first)
+    if (!printing) return leaf ? brushLeaf(i, key, first) : brushPlate(i, key, first)
     // Print is laid per module: a part of a split module (V10) takes none yet
     if (built.get(key)?.whole) {
       if (first) onToast('Delte plater kan ikke ha print ennå')
@@ -99,7 +95,14 @@ export function wallPaint({ v, w, s, built, mods, motifs, tool, paintSel, printS
       if (first) onToast(why)
       return
     }
-    // Sweeping on over a plate that already has the motif leaves it; a click on it takes the motif off
+    // A door: the header and the leaf are surfaces of their own, the brush prints the one pressed (Bjørn 18.11.2026)
+    if (mods[i]?.opening) {
+      const part = leaf ? 'leaf' : 'header'
+      if (printDoorPart(v, rules, w.id, i, s, pm!.id, part) === v) return
+      if (first) onCheckpoint()
+      return onEdit((x) => printDoorPart(x, rules, w.id, i, s, pm!.id, part), false)
+    }
+    // A plate that already has the whole motif is left as it is (the same motif again does nothing)
     if (!first && printedAt(v, i)?.motif === pm!.id) return
     if (first) onCheckpoint()
     onEdit((x) => printPlate(x, rules, w.id, i, s, pm!.id), false)

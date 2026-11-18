@@ -13,7 +13,7 @@ import { isStandWall, wallLabel } from '../../../domain/walls'
 import { RECIPES } from '../../../foga/recipes'
 import { count, fmt, mm } from '../../format'
 import type { RoomRun } from './face'
-import type { PaintTool } from './paint'
+import type { PaintTool } from '../paintTools'
 
 /** The drawer's title: the frame or decal chosen, else the wall (a room's wall, an inner wall or a stand wall). */
 export function wallTitle(v: Variant, w: Wall, T?: TextileWall, F?: Foil, S?: Shelf): string {
@@ -71,17 +71,18 @@ const TAIL = 'dra tekstilvegg eller motiv til veggen, klikk det for å endre'
 export const BRUSH_HINT =
   'Klikk der hyllen skal stå · dra sideveis for rad, opp og ned for høyde · Shift: klikk gir en hylle til i feltet, dra opp for flere, sideveis for samme fordeling i flere felt · Esc legger bort pensla'
 
-export function wallHint(x: { O?: Opening; door: boolean; painting: boolean; tool: PaintTool; printing: boolean; T?: TextileWall; F?: Foil; S?: Shelf; felt?: 'decor' | 'extras'; extras?: boolean; w: Wall }): string {
+export function wallHint(x: { O?: Opening; door: boolean; surface?: 'header' | 'leaf'; painting: boolean; tool: PaintTool; printing: boolean; T?: TextileWall; F?: Foil; S?: Shelf; felt?: 'decor' | 'extras'; extras?: boolean; w: Wall }): string {
   const { O, door, painting, tool, printing, T, F, S, felt, extras, w } = x
+  if (O && x.surface) return `Farge og print gjelder ${x.surface === 'leaf' ? 'dørbladet' : 'overstykket'} · ‹ › bytter flate · klikk den igjen for veggen · malerspannet legger ett bilde over begge`
   if (O) return `Klikk en rute i miniplanen for å flytte ${door ? 'døren' : 'forhenget'} · «Farge og profilering» eller Esc gir paletten · Delete gjør om til vegg`
-  if (painting && tool === 'wall')
+  if (painting && tool === 'bucket')
     return printing
-      ? 'Klikk veggen: motivet strekkes over platene på denne siden, ikke inne i bakrom · klikk én gang til: printen fjernes fra hele siden'
-      : 'Klikk veggen for å farge alle platene · print på denne siden går bort, dekaler blir'
+      ? 'Klikk veggen: motivet strekkes over platene på denne siden, ikke inne i bakrom · en farge eller søppelbøtta tar printen av'
+      : 'Klikk veggen for å farge alle platene · felt med print står som før · kosten tar printen av ett felt'
   if (painting)
     return printing
-      ? 'Klikk eller dra over platene: hele motivet på hver plate · klikk en plate som har motivet: printen fjernes fra den platen'
-      : 'Klikk eller dra over platene for å farge dem · klikk en farget plate igjen for veggens farge'
+      ? 'Klikk eller dra over platene: hele motivet på hver plate · en farge med kosten tar printen av igjen'
+      : 'Klikk eller dra over platene for å farge dem · printen på platen går av, dekaler blir · klikk en farget plate igjen for veggens farge'
   if (felt === 'extras') return 'Hylle til i feltet: først på 1300 eller nabohyllens høyde, så over og under · trykk en hylle for å endre den · ← → bytter felt · «Farge og profilering» tilbake · klikk feltet igjen for hele veggen'
   if (extras) return 'Hylle: felt for felt, rad for rad fra midten · Hyllerad: én hylle i alle felt i neste ledige høyde · trykk en hylle for å endre den · «Farge og profilering» tilbake'
   if (felt) return 'Fargen eller et motiv i Profilering dekker dette feltet · «+ Dekal» legger en dekal på · ← → bytter felt · «Hyller og heng» for tilbehør · klikk feltet igjen for hele veggen'

@@ -2,7 +2,8 @@
 // (docs/pille-og-skuff.md).
 import { Move, MoveHorizontal, MoveVertical, RotateCw, Unlink } from 'lucide-react'
 import { roomName, roomSize } from '../../../domain/rooms'
-import { counterRal, loosenObject, objectFootprint, setCounterRal, setMembers, setObjectProduct } from '../../../domain/objects'
+import { counterRal, loosenObject, objectFootprint, setMembers, setObjectProduct } from '../../../domain/objects'
+import { paintCounter } from '../../../domain/paint'
 import { podiumHeights } from '../../../domain/podiums'
 import { updateFace } from '../../../domain/textile/free'
 import { counterName, idx, place } from '../../env'
@@ -62,10 +63,10 @@ export function objectPill(p: PillActions, c: Of<'object'>, remove: () => void):
     meta: set > 1 ? `i sett med ${set - 1} til` : fp ? `${fp.round ? `ø ${mm(fp.w)}` : `${mm(fp.w)} × ${mm(fp.d)}`}${o.sections ? ` · H ${podiumHeights(o).map((x) => mm(x / 1000)).join('/')}` : ''}${o.rot ? ` · ${o.rot}°` : ''}` : undefined,
     body: (
       <>
-        {/* A counter's plates in the wall colours, as on a wall (Byggeregel K6, Bjørn 11.11.2026) */}
+        {/* A counter's plates in the wall colours, as on a wall (Byggeregel K6): the whole counter, a printed part stays as it is */}
         {f?.product.counter && (
           <>
-            <Colours value={counterRal(o)} title={(n) => `Disken ${n}`} onPick={(r) => onEdit((x) => setCounterRal(x, o.id, r))} />
+            <Colours value={counterRal(o)} title={(n) => `Disken ${n}`} onPick={(r) => onEdit((x) => paintCounter(x, o.id, r).v)} />
             {!fp?.round && <Sep />}
           </>
         )}

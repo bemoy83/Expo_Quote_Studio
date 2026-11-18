@@ -158,6 +158,9 @@ export type CounterLight = 'open' | 'door';
  *  is outside the counter; a side that becomes inner loses it (domain/podiumFaces.ts). */
 export interface SectionSide {
   lights?: (CounterLight | null)[];
+  /** A colour of its own on each light opening, from the floor (Byggeregel K6, Bjørn 18.11.2026): the plate, or both
+   *  leaves of the sliding door there. null or none: the counter's colour. */
+  ral?: (string | null)[];
   /** Print over the whole of its parts (Byggeregel K20): the motif, as a decal over every plate and door. */
   print?: string;
   /** Decals on it (K20). */
@@ -245,7 +248,16 @@ export interface Foil {
   run?: string;
   /** Part of the motif on this plate, as fractions of the image seen from the face: [left, top, right, bottom]. */
   crop?: [number, number, number, number];
+  /**
+   * On a door: the one surface the print shows on (Bjørn 18.11.2026: the header and the leaf are surfaces of their own,
+   * the brush prints each by itself). Its picture is still laid over the box `width` × `height` at `y`; only this
+   * surface's window of it shows. None: one picture over both (the paint bucket).
+   */
+  door?: DoorSurface;
 }
+
+/** The two surfaces of a door module: the header plate (overstykke) and the door leaf. */
+export type DoorSurface = 'header' | 'leaf';
 
 /**
  * A shelf (hylle 6311): one board in one wall module, on brackets in the posts' face channels (byggeregler H1–H6,

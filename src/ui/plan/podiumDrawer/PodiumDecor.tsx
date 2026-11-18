@@ -1,57 +1,87 @@
-// «Farge og profilering» in the drawer for a counter of Disker og podier (trinn 2, Byggeregler K6, K20): the counter's
-// colour, print on the side or the part chosen (Print last in the palette, the paint bucket for the whole counter), the
-// decal chosen, and in the detail height the motif library with + Dekal. Print and decals go only on the parts that
-// take them: not open all over.
-import { PaintBucket, Plus, Trash2 } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
-import { addPodiumDecal, printOf, setPodiumPrint, takesDecor, updatePodiumDecal, type PlacedDecal } from '../../../domain/podiumDecor'
+// «Farge og profilering» in the drawer for a counter of Disker og podier (Byggeregler K6, K20), laid out and used as the
+// wall drawer's (Bjørn 18.11.2026): with nothing chosen the paint bucket (the side shown) and the brush (plate by plate)
+// with the palette, a colour or «Print» last, then a click in the drawing; with a part or a light opening chosen, the
+// palette on it at once, and the bucket and brush let it go. Then the decal chosen, and in the detail height the motif
+// library with + Dekal. The rules are domain/paint.ts's: a colour on a part or an opening takes its print off, the
+// bucket leaves the printed parts as they are. Print and decals go only on the parts that take them: not open all over.
+import { Plus, Trash2 } from 'lucide-react'
+import type { ReactNode } from 'react'
+import { addPodiumDecal, setPodiumPrint, takesDecor, updatePodiumDecal, type PlacedDecal } from '../../../domain/podiumDecor'
 import type { Motif, PlacedObject, Variant } from '../../../domain/types'
-import { counterRal, setCounterRal } from '../../../domain/objects'
+import { counterRal } from '../../../domain/objects'
+import { paintCounterPlates } from '../../../domain/paint'
 import { Button, IconButton, Section } from '../../controls'
-import { plateName } from '../../env'
 import { mm } from '../../format'
 import { findMotif } from '../../motifs'
-import { PlatePalette, PRINT, Shelf } from '../drawerParts'
+import { ColourSection, PRINT, Shelf } from '../drawerParts'
 import type { PlanSelection } from '../selection'
-import type { ElevationPart } from './podiumView'
+import { motifAside } from '../drawerText'
+import type { usePaintTools } from '../paintTools'
+import { coloursShown, printShown, type ElevationPart } from './podiumView'
 
 interface Props {
   v: Variant
   o: PlacedObject
-  /** The parts chosen: the whole side, or the part `part`. */
+  /** The parts chosen: the whole side, or the part `part` (its light opening `light`). */
   parts: ElevationPart[]
   part?: number
+  light?: number
   scope: string
   partNav?: ReactNode
   /** The decal chosen in the drawing. */
   decal?: PlacedDecal
   motifs: Motif[]
+  /** The paint tools (the tool out, what it lays on, the motif chosen in the library for print and decals). */
+  tools: ReturnType<typeof usePaintTools>
+  /** What the tools lay on: the colour or PRINT picked, else what the side has. */
+  pen: string
   onUpload: (f: File) => void
   select: (x: Partial<PlanSelection>) => void
   onEdit: (fn: (v: Variant) => Variant, history?: boolean) => void
 }
 
-export function PodiumDecor({ v, o, parts, part, scope, partNav, decal, motifs, onUpload, select, onEdit }: Props) {
-  // The motif for print and decals, chosen in the library
-  const [motifId, setMotifId] = useState<string | undefined>(undefined)
+export function PodiumDecor(props: Props) {
+  const { v, o, parts, part, light, scope, partNav, decal, motifs, tools, pen, onUpload, select, onEdit } = props
+  const { tool, setTool, setPaint, motifSel, setMotif } = tools
   const ral = counterRal(o)
   // K20: print and decals go on the parts that take them: not open all over
   const decorParts = parts.filter((p) => takesDecor(o.sections!, p.part))
-  const printed = [...new Set(decorParts.map((p) => printOf(o.sections!, p.part) ?? null))]
-  const scopePrint = printed.length === 1 ? printed[0] : null
-  const motif = findMotif(motifs, motifId ?? scopePrint ?? decal?.decal.motif) ?? motifs[0]
-  const print = (keys: string[] | 'all', id: string | null) => onEdit((x) => setPodiumPrint(x, o.id, keys, id))
+  const scopePrint = printShown(o, parts)
+  // K6: the colour of what is chosen, of its plates and sliding doors (not of what is open); none when they differ
+  const colours = coloursShown(parts, ral, light)
+  const colour = colours.length === 1 ? colours[0] : undefined
+  const motif = findMotif(motifs, motifSel ?? scopePrint ?? decal?.decal.motif) ?? motifs[0]
+  const print = (keys: string[], id: string | null) => onEdit((x) => setPodiumPrint(x, o.id, keys, id))
+  const chosen = part !== undefined
+  const painting = tool !== null && !chosen
+  /** What the swatch shows: the pen while a tool is out, else what is chosen has (none when it differs). */
+  const shown = painting ? pen : scopePrint ? PRINT : colour
   const pickSwatch = (r: string) => {
-    if (r === PRINT) return motif && print(decorParts.map((p) => p.key), motif.id)
-    // K6: the colour is the whole counter's; the last stroke wins, so it takes the print off what is chosen
-    onEdit((x) => setPodiumPrint(setCounterRal(x, o.id, r), o.id, decorParts.map((p) => p.key), null))
+    // Nothing chosen: the swatch is the pen, and picking one takes up the bucket when no tool is out (as on a wall)
+    if (!chosen) {
+      setPaint(r)
+      if (!tool) setTool('bucket')
+      return
+    }
+    // On a part or an opening at once: the last stroke wins and the part's print comes off
+    if (r === PRINT) return motif && scopePrint !== motif.id && print(decorParts.map((p) => p.key), motif.id)
+    onEdit((x) => paintCounterPlates(x, o.id, parts.map((p) => p.key), r, light))
   }
-  const fillAll = () => (scopePrint && motif ? print('all', motif.id) : onEdit((x) => setPodiumPrint(x, o.id, 'all', null)))
+  /** The bucket or brush: what is chosen lets go and the side is coloured as with nothing chosen. */
+  const take = (t: 'bucket' | 'brush') => {
+    if (chosen) {
+      setPaint(scopePrint ? PRINT : (colour ?? null))
+      select({})
+      setTool(t)
+    } else setTool(tool === t ? null : t)
+  }
   const pickMotif = (id: string) => {
-    setMotifId(id)
+    setMotif(id)
     if (decal) return onEdit((x) => updatePodiumDecal(x, o.id, decal.decal.id, { motif: id }))
-    // As on a wall: a motif tapped prints what is chosen at once, like a colour in the palette
-    if (decorParts.length) print(decorParts.map((p) => p.key), id)
+    // As on a wall: a motif tapped prints a part chosen at once, like a colour in the palette; with nothing chosen it is
+    // the motif «Print» lays on
+    if (!chosen) return
+    if (decorParts.length && scopePrint !== id) print(decorParts.map((p) => p.key), id)
   }
   const addDecal = () => {
     const target = decorParts[0]
@@ -64,19 +94,16 @@ export function PodiumDecor({ v, o, parts, part, scope, partNav, decal, motifs, 
 
   return (
     <>
-      {/* K6: the colour is the whole counter's, print the side's or the part's: the title says which the swatch is */}
-      <Section
-        title={scopePrint ? scope : 'Hele disken'}
-        aside={scopePrint ? `print · ${findMotif(motifs, scopePrint)?.name ?? 'motiv'}` : `${plateName(ral)} ${ral}`}
-        tools={
-          <>
-            {partNav}
-            <IconButton icon={PaintBucket} label={scopePrint ? 'Fyll: print på hele disken' : 'Fyll: fargen på hele disken, uten print'} size={15} className="ink" onClick={fillAll} />
-          </>
-        }
-      >
-        <PlatePalette value={scopePrint ? PRINT : ral} onPick={pickSwatch} print={{ motif }} />
-      </Section>
+      {/* K6, K20: colour and print on what is chosen, or the pen with nothing chosen: the title says what, the value what
+          it has or lays on */}
+      <ColourSection
+        title={chosen ? scope : painting && tool === 'brush' ? 'Plate' : 'Hele siden'}
+        value={shown}
+        motif={motif}
+        nav={partNav}
+        tools={{ what: 'siden', tool: painting ? tool : null, onTool: take }}
+        onPick={pickSwatch}
+      />
       <hr className="set-rule" />
       {/* Always there, so the motif library under it stands still; why print and decals do not go on what is chosen is
           in the hint */}
@@ -85,7 +112,7 @@ export function PodiumDecor({ v, o, parts, part, scope, partNav, decal, motifs, 
       ) : (
         <Section title="Dekal" aside={decorParts.length ? 'ingen' : 'åpen'} />
       )}
-      <Shelf title="Profilering" aside={motif?.name} motifs={motifs} value={motif?.id} onPick={pickMotif} onUpload={onUpload}>
+      <Shelf title="Profilering" aside={motifAside(motif)} motifs={motifs} value={motif?.id} onPick={pickMotif} onUpload={onUpload}>
         <Button variant="ghost" icon={Plus} disabled={!decorParts.length || !motif} onClick={addDecal}>
           Dekal
         </Button>

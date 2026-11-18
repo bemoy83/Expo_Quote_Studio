@@ -69,13 +69,13 @@ export const lightsOf = (sections: readonly CounterSection[], p: PodiumPart): (C
     return k === 'door' && !takesDoor(p) ? null : k;
   });
 
-/** A side with its light opening `i` set (null: a plate again); empty when it holds nothing. */
-function withLightAt(side: SectionSide | undefined, i: number, kind: CounterLight | null): SectionSide | undefined {
-  const lights = [...(side?.lights ?? [])];
-  while (lights.length <= i) lights.push(null);
-  lights[i] = kind;
-  while (lights.length && lights[lights.length - 1] === null) lights.pop();
-  return withSideField(side, 'lights', lights);
+/** A side with item `i` of a list set (null: as by default again); empty when it holds nothing. */
+function withAt<K extends 'lights' | 'ral'>(side: SectionSide | undefined, k: K, i: number, value: NonNullable<SectionSide[K]>[number]): SectionSide | undefined {
+  const list: (typeof value)[] = [...((side?.[k] ?? []) as (typeof value)[])];
+  while (list.length <= i) list.push(null);
+  list[i] = value;
+  while (list.length && list[list.length - 1] === null) list.pop();
+  return withSideField(side, k, list as SectionSide[K]);
 }
 
 /** A side with one field set, or taken off when `value` is left out or an empty list; none when nothing is left. */
@@ -103,7 +103,26 @@ export function setLight(sections: readonly CounterSection[], parts: readonly Po
     if (!s) continue;
     const key = sideKey(p.axis, p.out);
     let side = s.sides?.[key];
-    for (const at of i === undefined ? Array.from({ length: lightCount(out, p) }, (_, k) => k) : [i]) side = withLightAt(side, at, kind);
+    for (const at of i === undefined ? Array.from({ length: lightCount(out, p) }, (_, k) => k) : [i]) side = withAt(side, 'lights', at, kind);
+    out[p.section] = withSide(s, key, side);
+  }
+  return out;
+}
+
+/** The colour of its own of each light opening of a part, from the floor (K6): null, the counter's colour. */
+export const ralsOf = (sections: readonly CounterSection[], p: PodiumPart): (string | null)[] =>
+  Array.from({ length: lightCount(sections, p) }, (_, i) => sections[p.section]?.sides?.[sideKey(p.axis, p.out)]?.ral?.[i] ?? null);
+
+/** The sections with light opening `i` of each of `parts` in `ral` (null: the counter's colour), or every light opening
+ *  of them when `i` is left out (K6). Parts in front of the same section's side share it. */
+export function setPlateRal(sections: readonly CounterSection[], parts: readonly PodiumPart[], ral: string | null, i?: number): CounterSection[] {
+  const out = [...sections];
+  for (const p of parts) {
+    const s = out[p.section];
+    if (!s) continue;
+    const key = sideKey(p.axis, p.out);
+    let side = s.sides?.[key];
+    for (const at of i === undefined ? Array.from({ length: lightCount(out, p) }, (_, k) => k) : [i]) side = withAt(side, 'ral', at, ral);
     out[p.section] = withSide(s, key, side);
   }
   return out;
@@ -113,17 +132,20 @@ export function setLight(sections: readonly CounterSection[], parts: readonly Po
 export const partLine = (p: PodiumPart) => lineOf(p.axis, p.at, p.a, p.b);
 
 type Stretch = [[number, number], [number, number]];
-/** What the build reads of the sides (K16, K17): the parts open in every light opening (`open`, drawn as a hairline in
- *  the plan), and the other parts with an open light opening or a sliding door, with what each light opening is. */
-export function podiumLights(sections: readonly CounterSection[]): { open: Stretch[]; lights: { a: [number, number]; b: [number, number]; kinds: (CounterLight | null)[] }[] } {
+/** What the build reads of the sides (K6, K16, K17): the parts open in every light opening (`open`, drawn as a hairline
+ *  in the plan), and the other parts with an open light opening, a sliding door or a colour of their own, with what
+ *  each light opening is and its colour. */
+export function podiumLights(sections: readonly CounterSection[]): { open: Stretch[]; lights: { a: [number, number]; b: [number, number]; kinds: (CounterLight | null)[]; rals?: (string | null)[] }[] } {
   const open: Stretch[] = [];
-  const lights: { a: [number, number]; b: [number, number]; kinds: (CounterLight | null)[] }[] = [];
+  const lights: { a: [number, number]; b: [number, number]; kinds: (CounterLight | null)[]; rals?: (string | null)[] }[] = [];
   if (!sections.some((s) => s.sides)) return { open, lights };
   for (const p of podiumParts(sections)) {
     const kinds = lightsOf(sections, p);
+    const rals = ralsOf(sections, p);
     const [a, b] = partLine(p);
+    const coloured = rals.some((r, i) => r && kinds[i] !== 'open');
     if (kinds.every((k) => k === 'open')) open.push([a, b]);
-    else if (kinds.some((k) => k)) lights.push({ a, b, kinds });
+    else if (kinds.some((k) => k) || coloured) lights.push({ a, b, kinds, ...(coloured && { rals }) });
   }
   return { open, lights };
 }

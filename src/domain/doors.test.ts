@@ -4,7 +4,7 @@ import { CURTAIN, DEFAULT_CATALOG, DOOR } from '../catalog/defaultCatalog';
 import { calc } from '../calc/calc';
 import { RULES, wallHeight } from '../rules/rules';
 import { r2 } from '../calc/referenceStands';
-import { doorHinge, doorLevels, doorRal, doorWindows, doorSpots, doorSwing, flipHinge, inDoorArea, moveOpening, paintAllCurtains, paintAllDoors, paintDoors, placeOpening, removeOpening, setDoorRal, setOpening, setOpeningProduct } from './doors';
+import { doorHinge, doorLevels, doorWindows, doorSpots, doorSwing, flipHinge, inDoorArea, moveOpening, paintAllCurtains, placeOpening, removeOpening, setDoorRal, setOpening, setOpeningProduct } from './doors';
 import { paintWalls } from './edit';
 import { replaceWalls } from './replaceWalls';
 import { moduleKey } from './grid';
@@ -118,21 +118,6 @@ describe('a room moved or resized takes its door along', () => {
   });
 });
 
-describe('the door is part of the wall', () => {
-  it('takes the colour of the paint bucket on its wall, for a room every side', () => {
-    const v = r2();
-    const o = v.openings[0];
-    const painted = paintDoors(v, o.wallId, '5010');
-    expect(doorRal(painted, painted.openings[0])).toBe('5010');
-    // Back to the stand colour: stored as nothing, so the door follows the stand again
-    const back = paintDoors(painted, o.wallId, v.defaultPlate);
-    expect(back.openings[0].ral).toBeUndefined();
-    // Another wall of the same room colours the door too
-    const other = v.walls.find((w) => w.room?.id === v.walls.find((x) => x.id === o.wallId)!.room?.id && w.id !== o.wallId)!;
-    expect(doorRal(paintDoors(v, other.id, '3020'), paintDoors(v, other.id, '3020').openings[0])).toBe('3020');
-  });
-});
-
 describe('placing a door with the pointer (press shows, release stores)', () => {
   const inner = () => paintWalls(row(), [3, 1], [3, 3]);
   const a: [number, number] = [3, 1];
@@ -170,10 +155,8 @@ describe('placing a door with the pointer (press shows, release stores)', () => 
     expect([blue.ral, blue.fabric]).toEqual([undefined, 'bla']);
   });
 
-  it('the bucket with a door in hand colours every door leaf, not curtains', () => {
+  it('the bucket with a curtain in hand gives every curtain its fabric, not doors', () => {
     const v = placeOpening(placeOpening(inner(), a, b, DOOR, true, null), [3, 2], [3, 3], CURTAIN, false, null);
-    const x = paintAllDoors(v, '7012', (p) => p === DOOR);
-    expect(x.openings.map((o) => [o.product, o.ral])).toEqual([[DOOR, '7012'], [CURTAIN, undefined]]);
     const y = paintAllCurtains(v, 'gra', (p) => p === CURTAIN);
     expect(y.openings.map((o) => [o.product, o.fabric])).toEqual([[DOOR, undefined], [CURTAIN, 'gra']]);
   });

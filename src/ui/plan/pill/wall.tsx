@@ -3,18 +3,19 @@
 import { Image as ImageIcon, Layers, Move, MoveHorizontal } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { updateFoil } from '../../../domain/decor'
-import { paintDoors } from '../../../domain/doors'
-import { canMoveWall, eraseWalls, setWallPlate } from '../../../domain/edit'
+import { canMoveWall, eraseWalls } from '../../../domain/edit'
 import { faces, sideOf } from '../../../domain/faces'
 import { wallLength, wallModules } from '../../../domain/grid'
 import { wallRal } from '../../../domain/panels'
-import { clearPrint, fillPlates, printWall } from '../../../domain/print'
+import { paintWallFace } from '../../../domain/paint'
+import { fillPlates, printWall } from '../../../domain/print'
 import { roomName } from '../../../domain/rooms'
 import { addTextile, fillTextile, textileBox, textilesOn, updateTextile } from '../../../domain/textile/inFrame'
 import type { TextileWall, Variant, Wall } from '../../../domain/types'
 import { isStandWall, wallLabel } from '../../../domain/walls'
 import { rules } from '../../env'
 import { fmt } from '../../format'
+import { printKept } from '../../fillKeeping'
 import { findMotif } from '../../motifs'
 import { FinBtn, QBtn, Sep } from '../quick/parts'
 import type { Chosen, PlanSelection } from '../selection'
@@ -80,6 +81,12 @@ export function wallPill(p: PillActions, c: Of<'wall'>, graphics: SecondFace): C
     onEdit(() => r.v)
     onSelect({ wallId: w.id, side: s, textileId: r.id })
   }
+  /** The whole wall in a colour, as the drawer's paint bucket: printed plates on this face stay as they are. */
+  const colour = (r: string) => {
+    const x = paintWallFace(v, w.id, s, r)
+    if (x.v !== v) onEdit(() => x.v)
+    if (x.skipped) p.onToast(printKept(x.skipped))
+  }
   const print = (m: string) => {
     if (!fillPlates(v, rules, w, s).length) return p.onToast('Ingen plate på denne siden kan ha print')
     onEdit((x) => printWall(x, rules, w.id, s, m, ratioOf(p, m)))
@@ -98,7 +105,7 @@ export function wallPill(p: PillActions, c: Of<'wall'>, graphics: SecondFace): C
     ) : (
       <>
         {layerSwitch(v, w, p.selection, undefined, onSelect)}
-        <Colours value={ral} title={(n) => `Hele veggen ${n}`} onPick={(r) => onEdit((x) => clearPrint(paintDoors(setWallPlate(x, w.id, r), w.id, r), w.id, s))} />
+        <Colours value={ral} title={(n) => `Hele veggen ${n}`} onPick={colour} />
         <Sep />
         {/* With textile walls on the wall the switch picks them; the button adds one on a face without */}
         {!tex.length && (

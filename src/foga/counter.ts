@@ -32,6 +32,8 @@ export interface CounterLights {
   a: Pt;
   b: Pt;
   kinds: readonly LightKind[];
+  /** A colour of its own on each light opening, from the floor (K6); null or none: the counter's. */
+  rals?: readonly (string | null)[];
 }
 
 /** What a counter is made of, in node coordinates (mm): its parts, and the stretches of its outside left open, each
@@ -70,6 +72,8 @@ export interface CounterPlate {
   w: number;
   h: number;
   box: Box3;
+  /** Its colour of its own (K6); none: the counter's. A step takes the counter's. */
+  ral?: string;
 }
 
 export interface CounterBoard {
@@ -101,6 +105,8 @@ interface Edge {
   closed: boolean;
   /** What its light openings are, from the floor (K16, K17); none: plates. */
   kinds?: readonly LightKind[];
+  /** Their colours of their own (K6); none: the counter's. */
+  rals?: readonly (string | null)[];
 }
 
 /** Every rail of the layout: the sides of its parts, split where another node lies on them, each once (K3). */
@@ -138,8 +144,8 @@ function edgesOf(l: CounterLayout): { nodes: Map<string, Pt>; edges: Edge[] } {
   const edges = [...seen.values()].map(({ a, b, out, n }): Edge => {
     if (n > 1) return { a, b, closed: false };
     const closed = !onOpen(a, b);
-    const kinds = closed ? l.lights?.find((x) => onStretch(a, b, x.a, x.b))?.kinds : undefined;
-    return { a, b, out, closed, ...(kinds?.some((k) => k) && { kinds }) };
+    const lit = closed ? l.lights?.find((x) => onStretch(a, b, x.a, x.b)) : undefined;
+    return { a, b, out, closed, ...(lit?.kinds.some((k) => k) && { kinds: lit.kinds }), ...(lit?.rals?.some((r) => r) && { rals: lit.rals }) };
   });
   return { nodes, edges };
 }
@@ -263,16 +269,17 @@ export function layoutBuild(r: CounterRecipe, l: CounterLayout): CounterBuild {
   const into = ch - r.platePlay / 2;
   /** The plate's height between two rails with their undersides at CC y0 and y1 (y0 0: the bottom rail). */
   const between = (y0: number, y1: number): Range => [y0 + rh - ch, y1 + ch - r.platePlay];
-  const plateLevels = (e: Edge): { y: Range; kind: LightKind }[] => {
+  const plateLevels = (e: Edge): { y: Range; kind: LightKind; ral?: string }[] => {
     const cuts = [0, ...shelvesOn(e), edgeTop(e)];
-    return cuts.slice(1).map((y, i) => ({ y: between(cuts[i], y), kind: e.kinds?.[i] ?? null }));
+    return cuts.slice(1).map((y, i) => ({ y: between(cuts[i], y), kind: e.kinds?.[i] ?? null, ...(e.rals?.[i] && { ral: e.rals[i]! }) }));
   };
-  const plateOf = (e: Edge, level: CounterPlate['level'], y: Range): CounterPlate => ({
+  const plateOf = (e: Edge, level: CounterPlate['level'], y: Range, ral?: string): CounterPlate => ({
     out: e.out!,
     level,
     w: lenOf(e) + 2 * into,
     h: y[1] - y[0],
     box: { ...band(e, inset - t, inset + t, j - into), y },
+    ...(ral && { ral }),
   });
   // K12: a step is closed with a plate on the high side, from the low top rail up to the high one, split at a shelf's
   // rail between them (K19)
@@ -284,8 +291,8 @@ export function layoutBuild(r: CounterRecipe, l: CounterLayout): CounterBuild {
   });
   // K17: a sliding door, two leaves in the channel instead of the plate, each half the light opening + 10 overlap + 10
   // into the channel; the second just inside the first, so the two slide past each other
-  const doorLeaves = (e: Edge, y: Range): CounterPlate[] => {
-    const whole = plateOf(e, 'door', y);
+  const doorLeaves = (e: Edge, y: Range, ral?: string): CounterPlate[] => {
+    const whole = plateOf(e, 'door', y, ral);
     const w = lenOf(e) / 2 + r.door.overlap + r.door.track;
     const alongX = Math.abs(e.a[1] - e.b[1]) < EPS;
     const run = alongX ? whole.box.x : whole.box.z;
@@ -296,7 +303,7 @@ export function layoutBuild(r: CounterRecipe, l: CounterLayout): CounterBuild {
     return [leaf([run[0], run[0] + w], across), leaf([run[1] - w, run[1]], inner)];
   };
   const plates = [
-    ...edges.filter((e) => e.closed).flatMap((e) => plateLevels(e).flatMap(({ y, kind }) => (kind === 'open' ? [] : kind === 'door' ? doorLeaves(e, y) : [plateOf(e, 'full', y)]))),
+    ...edges.filter((e) => e.closed).flatMap((e) => plateLevels(e).flatMap(({ y, kind, ral }) => (kind === 'open' ? [] : kind === 'door' ? doorLeaves(e, y, ral) : [plateOf(e, 'full', y, ral)]))),
     ...steps,
   ];
 
@@ -336,14 +343,14 @@ const bump = (m: Record<string, number>, k: string, n = 1) => {
   m[k] = (m[k] ?? 0) + n;
 };
 
-/** The parts of a counter, its plates in `ral` (K6). */
+/** The parts of a counter, its plates in their own colour or else `ral`, the counter's (K6). */
 export function counterParts(b: CounterBuild, ral: string): CounterParts {
   const out: CounterParts = { posts: {}, rails: {}, plates: {}, boards: {} };
   for (const p of b.profiles) {
     if (p.role === 'post') bump(out.posts, `${p.code}|${p.len}`);
     else bump(out.rails, `${p.code}|${p.len}`);
   }
-  for (const p of b.plates) bump(out.plates, `${ral}|${p.w}×${p.h}`);
+  for (const p of b.plates) bump(out.plates, `${p.ral ?? ral}|${p.w}×${p.h}`);
   for (const x of b.boards) bump(out.boards, `${Math.max(x.w, x.d)}×${Math.min(x.w, x.d)}`);
   return out;
 }

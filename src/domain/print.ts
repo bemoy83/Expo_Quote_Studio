@@ -1,3 +1,4 @@
+// Byggeregel V15: the last stroke wins, the same motif again does nothing, door parts print apart.
 // Print på hele plater: «Print» last in the wall drawer's palette, with the motif chosen in the graphics shelf.
 // The paint bucket stretches one motif over every plate of the face that can take it: one picture, cut per plate,
 // running on behind the posts and over a door, so it lines up across the joints. The brush puts the whole motif on
@@ -14,7 +15,8 @@ import { clearPanels } from './panels';
 import { roomAt, roomOf } from './rooms';
 import { builtModules } from './walls';
 import { setWallPlate } from './edit';
-import type { Foil, Variant, Wall } from './types';
+import type { DoorSurface, Foil, Variant, Wall } from './types';
+import { doorWindows } from './doors';
 import { nextId } from './ids';
 import { faceNormal, faces, type FaceSide, felt, sideOf } from './faces';
 
@@ -86,15 +88,15 @@ export function stretchCrops(rules: Rules, w: Wall, s: FaceSide, modules: number
 
 const plateFoil = (id: string, w: Wall, module: number, s: FaceSide, motif: string): Foil => ({ id, wallId: w.id, module, side: s, full: true, width: 0, height: 0, x: 0, y: 0, motif });
 
-/** Take foil off these plates of a face: the prints (`decals` too) go, the rest stays. */
-function strip(v: Variant, w: Wall, s: FaceSide, modules: ReadonlySet<number>, decals: boolean): Foil[] {
-  return v.foils.filter((f) => !(f.wallId === w.id && sideOf(v, f) === s && modules.has(f.module) && (decals || f.full)));
+/** Take all foil off these plates of a face, prints and decals: a print replaces them. */
+function strip(v: Variant, w: Wall, s: FaceSide, modules: ReadonlySet<number>): Foil[] {
+  return v.foils.filter((f) => !(f.wallId === w.id && sideOf(v, f) === s && modules.has(f.module)));
 }
 
 /**
  * The paint bucket with «Print»: the motif stretched over every plate of the face that can take it (not inside a
  * bakrom standing against it), replacing the prints and decals there. Clicked again on a face that already carries
- * this print, it takes the print off.
+ * this print, it does nothing: the same motif again never takes a print off (Bjørn 18.11.2026); a colour or the trash does.
  */
 export function printWall(v: Variant, rules: Rules, wallId: string, s: FaceSide, motif: string, ratio: number): Variant {
   const w = v.walls.find((x) => x.id === wallId);
@@ -104,8 +106,8 @@ export function printWall(v: Variant, rules: Rules, wallId: string, s: FaceSide,
   const on = printsOn(v, w.id, s);
   const same = plates.every((i) => on.some((f) => f.module === i && f.motif === motif && (plates.length === 1 || f.run)));
   const runs = new Set(on.filter((f) => plates.includes(f.module)).map((f) => f.run));
-  if (same && runs.size === 1) return { ...v, foils: strip(v, w, s, new Set(plates), false) };
-  const kept = strip(v, w, s, new Set(plates), true);
+  if (same && runs.size === 1) return v;
+  const kept = strip(v, w, s, new Set(plates));
   const ids = kept.map((f) => f.id);
   const run = plates.length > 1 ? nextId([...new Set(v.foils.map((f) => f.run).filter((x): x is string => !!x))], 'p') : undefined;
   const crops = stretchCrops(rules, w, s, plates, ratio);
@@ -119,16 +121,52 @@ export function printWall(v: Variant, rules: Rules, wallId: string, s: FaceSide,
 
 /**
  * The brush with «Print» on one plate: the whole motif on it, replacing its print and decals. A plate that already
- * carries this motif loses it (as the brush gives a plate its wall's colour back).
+ * carries the whole of this motif is left as it is (Bjørn 18.11.2026); a part of a stretched print gets the whole motif.
  */
 export function printPlate(v: Variant, rules: Rules, wallId: string, module: number, s: FaceSide, motif: string): Variant {
   const w = v.walls.find((x) => x.id === wallId);
   if (!w || !printPlates(v, rules, w, s).includes(module)) return v;
   const cur = printsOn(v, w.id, s).find((f) => f.module === module);
-  if (cur?.motif === motif) return { ...v, foils: v.foils.filter((f) => f.id !== cur.id) };
-  const kept = strip(v, w, s, new Set([module]), true);
+  if (cur?.motif === motif && !cur.run) return v;
+  const kept = strip(v, w, s, new Set([module]));
   const id = nextId(kept.map((f) => f.id), 'f');
   return uncolourHidden({ ...v, foils: [...kept, fitFoil(v, plateFoil(id, w, module, s, motif), rules, 0)] }, w.id);
+}
+
+const OTHER: Record<DoorSurface, DoorSurface> = { header: 'leaf', leaf: 'header' };
+
+/** Whether a print shows on a door's surface `part`: one over both does, one on a single surface only there. */
+export const onDoorPart = (f: Pick<Foil, 'door'>, part: DoorSurface) => !f.door || f.door === part;
+
+/**
+ * Print with the brush on one surface of a door (Bjørn 18.11.2026): the whole motif on the header or the leaf, its
+ * window of the plate. A picture over both keeps showing on the other surface; the same motif again does nothing.
+ */
+export function printDoorPart(v: Variant, rules: Rules, wallId: string, module: number, s: FaceSide, motif: string, part: DoorSurface): Variant {
+  const w = v.walls.find((x) => x.id === wallId);
+  if (!w || !printPlates(v, rules, w, s).includes(module)) return v;
+  const here = printsOn(v, w.id, s).filter((f) => f.module === module);
+  if (here.some((f) => f.door === part && f.motif === motif)) return v;
+  const kept = withoutDoorPart(v, w.id, s, module, part).foils;
+  const win = doorWindows(rules)[part];
+  const id = nextId(v.foils.map((f) => f.id), 'f');
+  const foil: Foil = { id, wallId: w.id, module, side: s, full: true, width: r4(win.w), height: r4(win.y1 - win.y0), x: 0, y: r4((win.y0 + win.y1) / 2), motif, door: part };
+  // Decals on the door go, as on a plate
+  return { ...v, foils: [...kept.filter((f) => !(f.wallId === w.id && f.module === module && sideOf(v, f) === s && !f.full)), foil] };
+}
+
+/**
+ * The print taken off one surface of a door on face s (a colour on the header or the leaf: the last stroke wins): a
+ * print on that surface goes, a picture over both stays on the other surface only.
+ */
+export function withoutDoorPart(v: Variant, wallId: string, s: FaceSide, module: number, part: DoorSurface): Variant {
+  let changed = false;
+  const foils = v.foils.flatMap((f) => {
+    if (!(f.full && f.wallId === wallId && f.module === module && sideOf(v, f) === s && onDoorPart(f, part))) return [f];
+    changed = true;
+    return f.door ? [] : [{ ...f, door: OTHER[part] }];
+  });
+  return changed ? { ...v, foils } : v;
 }
 
 /**
@@ -151,7 +189,7 @@ export function hiddenPlates(v: Variant): Set<string> {
  * Print over a colour: the plates of this wall that the print now hides lose their own colour, and when it hides all
  * of the wall (a room: all of the room) the wall's own colour goes too. They take the stand's colour again.
  */
-function uncolourHidden(v: Variant, wallId: string): Variant {
+export function uncolourHidden(v: Variant, wallId: string): Variant {
   const w = v.walls.find((x) => x.id === wallId);
   if (!w) return v;
   const hidden = hiddenPlates(v);

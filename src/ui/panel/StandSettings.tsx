@@ -11,7 +11,7 @@ import { Dim, FlatChoice, IconButton, Section } from '../controls'
 import { wallPlates } from '../env'
 import { fmt } from '../format'
 import { beamSummary } from '../names'
-import { Sw } from '../plan/quick/parts'
+import { PlatePalette } from '../plan/drawerParts'
 
 /** Stand side, whole and half metres (Byggeregel V14). */
 const SIDE_MIN = 1
@@ -145,11 +145,7 @@ export function StandSettings({ v, res, onEdit, terms, onTerms }: StandSettingsP
 
       {s.type !== 'island' && terms.payer === 'arrangør' && (
         <Section title="Arrangørens farge" aside={plate ? `${plate.name} ${plate.ral}` : undefined}>
-          <div className="stand-swatches">
-            {wallPlates().map((x) => (
-              <Sw key={x.ral} color={x.color} title={`${x.name} · RAL ${x.ral}`} on={terms.ral === x.ral} onClick={() => onTerms({ ral: x.ral! })} />
-            ))}
-          </div>
+          <PlatePalette value={terms.ral} onPick={(ral) => onTerms({ ral })} />
           <p className="set-note">Annen farge belastes utstiller.</p>
         </Section>
       )}

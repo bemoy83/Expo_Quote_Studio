@@ -9,6 +9,7 @@ import { calc } from './calc';
 import { podiumUses } from './lines/objects';
 import { sumItems } from '../pricing/model';
 import { stockSections } from '../domain/podiumStock';
+import { podiumParts, setPlateRal } from '../domain/podiumFaces';
 import { ellCounter, straightCounter } from '../test/counterSections';
 import type { CounterSection } from '../domain/types';
 
@@ -46,16 +47,25 @@ describe('counter colour (Byggeregel K6)', () => {
   const r = calc(coloured, RULES, DEFAULT_CATALOG, { payer: 'utstiller', ral: '9010' });
   const l = r.groups.flatMap((g) => g.lines).find((x) => x.artnr === '6560')!;
 
-  it('keeps the same price in every colour and says which colours', () => {
-    expect(l).toMatchObject({ qty: 2, price: 1320, sum: 2640, meta: 'RAL 3002 × 1 · RAL 9010 × 1' });
+  it('keeps the same price in every colour and says which colours, plate by plate', () => {
+    expect(l).toMatchObject({ qty: 2, price: 1320, sum: 2640, meta: 'RAL 3002 × 6 plater · RAL 9010 × 6 plater' });
     expect(line.meta).toBeUndefined();
   });
 
-  it('costs the plate swap for each coloured counter', () => {
+  it('costs the plate swap for each plate in another colour (Bjørn 18.11.2026)', () => {
     const swap = DEFAULT_PRICING.items.get(ITEM.counterPlates(1020, 520))!;
     expect(swap.cost).toBeGreaterThan(0);
-    expect(l.cost).toBeCloseTo(line.cost! + swap.cost, 6);
+    expect(l.cost).toBeCloseTo(line.cost! + 6 * swap.cost, 6);
     expect(DEFAULT_PRICING.missing.map((m) => m.id)).not.toContain(ITEM.counterPlates(1020, 520));
+  });
+
+  it('one plate of its own colour swaps that plate only', () => {
+    const sections = setPlateRal(stockSections(), podiumParts(stockSections()).slice(0, 1), '3002', 0);
+    const one = { ...v, objects: [v.objects[0], { ...v.objects[1], sections }] };
+    const x = calc(one, RULES, DEFAULT_CATALOG, { payer: 'utstiller', ral: '9010' }).groups.flatMap((g) => g.lines).find((y) => y.artnr === '6560')!;
+    const swap = DEFAULT_PRICING.items.get(ITEM.counterPlates(1020, 520))!;
+    expect(x).toMatchObject({ qty: 2, price: 1320, meta: 'RAL 3002 × 1 plate · RAL 9010 × 11 plater' });
+    expect(x.cost).toBeCloseTo(line.cost! + swap.cost, 6);
   });
 });
 

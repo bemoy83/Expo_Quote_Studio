@@ -1,13 +1,15 @@
 // Controls shared by the drawers (skuffer): wall, free-standing textile wall, door, roll carpet.
-import { ChevronLeft, ChevronRight, Trash2, Upload, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, PaintBucket, Paintbrush, Trash2, Upload, X } from 'lucide-react'
 import type { PointerEvent as RPointerEvent, ReactNode } from 'react'
 import type { Crop } from '../../domain/print'
 import type { Motif, TextileFill } from '../../domain/types'
 import { FlatChoice, IconButton, ImageInput, Section } from '../controls'
-import { wallPlates } from '../env'
 import { decorSource } from '../dnd'
+import { plateName } from '../env'
 import { INK } from '../colors'
+import type { PaintTool } from './paintTools'
 import { Sw } from './quick/parts'
+import { ralSwatches } from './swatches'
 
 /**
  * The top of every drawer: a dot in the colour of what is chosen, its name, the drawer's own icon buttons (`children`),
@@ -43,12 +45,13 @@ export const PRINT = 'print'
  * in Profilering and picks `PRINT` (the wall drawer's paint bucket and brush lay it on whole plates).
  */
 export function PlatePalette({ value, onPick, print }: { value: string; onPick: (ral: string) => void; print?: { motif?: Motif } }) {
-  // Square swatches as in the stand settings and the dock, no track (flat drawer, Bjørn 8.11.2026)
+  // Square swatches as in the stand settings and the dock, no track (flat drawer, Bjørn 8.11.2026): the same row as the
+  // pills' and the dock's (ralSwatches), every colour
   const m = print?.motif
   return (
     <div className="stand-swatches">
-      {wallPlates().map((x) => (
-        <Sw key={x.ral} color={x.color} title={`${x.name} · RAL ${x.ral}`} on={value === x.ral} onClick={() => onPick(x.ral!)} />
+      {ralSwatches(value, (n) => n[0].toUpperCase() + n.slice(1), onPick, Infinity).map(({ key, ...x }) => (
+        <Sw key={key} {...x} />
       ))}
       {print && (
         <Sw
@@ -59,6 +62,44 @@ export function PlatePalette({ value, onPick, print }: { value: string; onPick: 
         />
       )}
     </div>
+  )
+}
+
+/** What the paint bucket and the brush say on a surface: «klikk veggen», «klikk siden». */
+const bucketLabel = (what: string) => `Malerspann: klikk ${what} for å farge hele siden`
+const BRUSH_LABEL = 'Malerkost: klikk én og én plate, eller dra over dem'
+
+/**
+ * «Farge og profilering» in every drawer that colours plates (Bjørn 18.11.2026: the wall drawer is the template): one
+ * section, its title what is chosen («Hele veggen», «Felt 3», «Del 2 av 3»), the value inside it (the colour, «print ·
+ * motif», «blandet»), in its title row the way to the plate beside (`nav`) and then the paint bucket and the brush,
+ * and under it the palette with «Print» last. `value`: the RAL, PRINT, or none when what is chosen differs.
+ */
+export function ColourSection(p: {
+  title: string
+  value?: string
+  motif?: Motif
+  nav?: ReactNode
+  /** The bucket and the brush: `tool` is pressed (the one out on what is shown); `what` names what the bucket fills
+   *  («veggen», «siden»). */
+  tools: { what: string; tool: PaintTool; onTool: (t: 'bucket' | 'brush') => void }
+  onPick: (ral: string) => void
+}) {
+  const { title, value, motif, nav, tools: t, onPick } = p
+  return (
+    <Section
+      title={title}
+      aside={value === PRINT ? `print · ${motif?.name ?? 'motiv'}` : value ? `${plateName(value)} ${value}` : 'blandet'}
+      tools={
+        <>
+          {nav}
+          <IconButton icon={PaintBucket} label={bucketLabel(t.what)} size={15} className="ink" pressed={t.tool === 'bucket'} onClick={() => t.onTool('bucket')} />
+          <IconButton icon={Paintbrush} label={BRUSH_LABEL} size={15} className="ink" pressed={t.tool === 'brush'} onClick={() => t.onTool('brush')} />
+        </>
+      }
+    >
+      <PlatePalette value={value ?? ''} onPick={onPick} print={{ motif }} />
+    </Section>
   )
 }
 

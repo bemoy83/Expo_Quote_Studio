@@ -93,6 +93,21 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   Andre mål og diagonaler kan komme senere, men ikke nå.
   *Bjørn 15.11.2026 · kode `src/ui/panel/StandSettings.tsx`, `src/domain/grid.ts`, `src/calc/lines/walls.ts`, `src/ui/plan/PlanView.tsx`, `src/domain/runDraw.ts`, `src/domain/snapGrid.ts`, `src/ui/plan/pointer/stroke.ts`, `src/domain/wallOffsets.ts`, `src/domain/innerBeams.ts` · test `src/calc/halfMetreStand.test.ts`, `src/domain/halfMetreStand.test.ts`, `src/calc/halfMetreBeams.test.ts`*
 
+- **V15 Farge og print.** En flate er en plate (et felt), en dørs overstykke og dørblad (hver for seg) og en disks plate
+  (K6). Siste strøk vinner på det du peker på: en farge med kosten, på et valgt felt, med veggpennen i planen eller på et
+  dørblad tar printen av den flaten på siden du ser; fargen gjelder begge sider. Dekaler blir: de dekker ikke hele platen.
+  Print over en farge tar fargen bort der den ikke lenger synes (en plate printet på alle sider som kan ha dekor), så
+  platen blir aldri betalt både som farge og som print. Samme motiv igjen gjør ingenting, med spann, kost, Print-pennen og
+  motivtrykk i et felt. På en dør legger kosten motivet på overstykket eller dørbladet hver for seg, spannet ett bilde
+  over begge; en farge på den ene flaten tar bare dens del. Tekstilveggene husker motivet når duken blir Hvit eller
+  Kundens, så det kommer tilbake med Trykk.
+  *Bjørn 3.11.2026 og 18.11.2026 · kode `src/domain/paint.ts`, `src/domain/print.ts`, `src/domain/textile/free.ts` · test `src/domain/paint.test.ts`, `src/domain/print.test.ts`, `src/domain/textile/free.test.ts`*
+- **V16 Print er et valg.** Et strøk over mange flater lar print stå: malerspannet i skuffen farger resten av siden og
+  hopper alltid over felt og dørflater med print, print og farge, så de øvrige kan få ny farge uten å legge printen på
+  igjen. Fyll på hele standen (Vegg-pillens spann og standfargen i panelet, som er det samme) gjør likedan, og toasten
+  sier «N felt med print står som før» med valget «Farg også dem». Valget står over tegningen som en toast, aldri i
+  skuffen eller panelet, så ingen innstilling skyves ut av syne.
+  *Bjørn 18.11.2026 · kode `src/domain/paint.ts`, `src/ui/fillKeeping.ts` · test `src/domain/paint.test.ts`*
 ## S · Støtte for systemvegg
 
 - **S1 Rammen holder.** Med takdrager på står standveggene i takdragerrammen og får ingen fotplater.
@@ -488,12 +503,16 @@ K22 standardvarene og K23 disker over en fotplate.
   falsen på den øverste 93 (1030–1036, 4 mm under skinnens overkant), hyllen i falsen på den midterste (780–786). Platen
   står 2 mm fra skinnens kropp på alle sider.
   *Bjørn 11.11.2026 · `RECIPES.counter.board`, `boardPlay` · kode `src/foga/counter.ts` · test `src/foga/counter.test.ts`*
-- **K6 Farge på disken.** Alle platene på en disk har samme farge, en av veggfargene (RAL som systemveggen). Disken på
-  lager er hvit 9010; en annen farge betyr at platene byttes på lageret før messen og tilbake etter. Prisen er den samme
-  i alle farger (1320 kr), kalkylen tar med kostnaden for platebyttet (prisartikkelen platebytte bardisk), og linjen sier
-  hvilke farger montøren skal ha med. Fargen følger ikke veggenes standardfarge, og spannet på veggene farger ikke
-  diskene: Disker og podier har sitt eget spann.
-  *Bjørn 11.11.2026 · `RECIPES.counter.stock.ral` · kode `src/domain/objects.ts`, `src/calc/lines/objects.ts`, `src/cost/itemDefs.ts` · test `src/calc/counter.test.ts`, `src/domain/objects.test.ts`*
+- **K6 Farge på disken.** Platene er veggplater i veggfargene (RAL som systemveggen). Disken har en farge, og hver plate
+  kan få sin egen (Bjørn 18.11.2026): en plate er én lysåpning i en del, under, mellom eller over hyllene, og en
+  skyvedør er én flate med begge bladene. Disken på lager er hvit 9010; en plate i en annen farge byttes på lageret før
+  messen og tilbake etter. Prisen er den samme i alle farger (1320 kr), kalkylen tar med platebyttet per plate som
+  byttes (prisartikkelen platebytte bardisk, per plate), og linjen sier hvilke farger montøren skal ha med. En disk
+  bygget på stedet kuttes av veggplater i fargen, uten tillegg. Farge og print følger reglene for vegg (`domain/paint.ts`):
+  en farge på en del eller en åpning tar printen av delen (siste strøk vinner); fargen på hele siden, malerspannet på
+  siden som vises, fargen i pillen og Fyll lar deler med print stå som de er. Fargen følger ikke veggenes standardfarge,
+  og spannet på veggene farger ikke diskene: Disker og podier har sitt eget spann.
+  *Bjørn 11.11.2026, 18.11.2026 · `RECIPES.counter.stock.ral`, `SectionSide.ral` · kode `src/domain/paint.ts`, `src/domain/podiumFaces.ts`, `src/foga/counter.ts`, `src/calc/lines/objects.ts`, `src/cost/itemDefs.ts` · test `src/calc/counter.test.ts`, `src/domain/paint.test.ts`*
 - **K7 Mål.** Knutepunktene står på et raster på 250 mm: en seksjon er 250, 500, 750 eller 1000 c/c i hver retning. En
   lengde deles i hele meter først og resten sist, regnet fra seksjonen man startet i (1520 = 1000 + 500, 1750 =
   1000 + 750). Knutepunktet står 10 mm inn fra ytterflaten, så utvendig er c/c + 20 (270, 520, 770, 1020), skinnene
@@ -633,8 +652,9 @@ K22 standardvarene og K23 disker over en fotplate.
   side med samme motiv viser ett motiv strukket over dem (som `printWall`): bildet dekker fra første dels venstre stolpe
   til siste dels høyre og fra bunnskinnen til den høyeste toppen, beskåret, aldri strukket ut av form. En dekal har mål
   og plass på delen (fra midten av seksjonens side, sett utenfra) og flyttes og skaleres i risset som på vegg, holdt
-  innenfor delen. Print tar bort dekalene på siden, og en dekal tar bort printen. Fargen er diskens (K6): en farge valgt
-  i paletten tar printen av det som er valgt (siste strøk vinner), og malerspannet farger hele disken eller printer alle
+  innenfor delen. Print tar bort dekalene på siden, og en dekal tar bort printen. Fargen står i K6: en farge valgt
+  i paletten tar printen av delen som er valgt (siste strøk vinner), men lar print stå når hele siden er valgt; print er
+  et bevisst valg (Bjørn 18.11.2026). Malerspannet legger det som er valgt på hele siden som vises: printen på alle
   delene som kan ta det. Vist i risset, i planen (en tynn stripe av motivet innenfor ytterkanten) og i 3D. Print prises
   på eget artikkelnummer 8023 «Foliedekor, diskfelt» per m², med målene som kuttes på linjen («2 × 960 × 960 mm»), dekal
   som m² dekal (8020) og en oppstart per print strukket over flere deler (8022).

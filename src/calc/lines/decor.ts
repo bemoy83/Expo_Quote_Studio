@@ -14,7 +14,9 @@ export function foilAreas(c: CalcContext): { decal: number; full: number; fullCo
   const fullFelt = (rules.wall.plate.width * rules.wall.plate.height) / 1e6;
   const foils = v.foils.filter((f) => wallIds.has(f.wallId));
   const fullCount = foils.filter((f) => f.full).length;
-  return { decal: foils.filter((f) => !f.full).reduce((a, f) => a + f.width * f.height, 0), full: fullCount * fullFelt, fullCount };
+  // A print on one surface of a door (its header or leaf, the brush) is that window of the plate; the rest a whole felt
+  const full = foils.filter((f) => f.full).reduce((a, f) => a + (f.door ? f.width * f.height : fullFelt), 0);
+  return { decal: foils.filter((f) => !f.full).reduce((a, f) => a + f.width * f.height, 0), full, fullCount };
 }
 
 /** Print and decals on the counters of Disker og podier (K20). */

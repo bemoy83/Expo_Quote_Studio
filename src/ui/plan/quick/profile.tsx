@@ -7,8 +7,7 @@ import { shortName } from '../../../catalog/lookup'
 import { ImageInput } from '../../controls'
 import { catalog, productOf } from '../../env'
 import { isProfilePen, motifOn, profileKind, profilePen, withMotif, type ProfileKind } from '../../profilePen'
-import { MOTIFS } from './limits'
-import { FinBtn, QBtn, Sep } from './parts'
+import { FinBtn, MotifRow, QBtn, Sep } from './parts'
 import type { QuickCtx } from './types'
 
 const PENS: { kind: ProfileKind; artnr: () => string; title: string }[] = [
@@ -44,13 +43,7 @@ export function ProfilePicks({ p, head, more }: QuickCtx) {
       })}
       {/* Farge: the graphics, on the pen in hand */}
       <Sep />
-      {p.motifs
-        .filter((m, i) => i >= p.motifs.length - MOTIFS || motifOn(brush, m.id))
-        .map((m) => (
-          <button key={m.id} type="button" className="q-motif" aria-pressed={motifOn(brush, m.id)} title={`Motiv: ${m.name}`} onClick={() => onPick(withMotif(cur, m.id))}>
-            <img src={m.src} alt={m.name} draggable={false} />
-          </button>
-        ))}
+      <MotifRow motifs={p.motifs} on={(id) => motifOn(brush, id)} onPick={(id) => onPick(withMotif(cur, id))} />
       <label className="q-btn" title="Last opp kundens eget motiv" aria-label="Last opp motiv">
         <Upload size={15} />
         <ImageInput onFile={p.onUpload} />

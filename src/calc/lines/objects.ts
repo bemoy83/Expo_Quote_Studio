@@ -1,7 +1,8 @@
 // Placed objects and counted items (Arbeidstimer too: hours counted in the panel), in catalog order, then the loose
 // lines typed in the panel. A standard counter (6560, K22) keeps its catalog price and is costed from what it is built
-// of (Byggeregler K1–K5): one price item per counter, picked whole. Its plates in another wall colour (K6) cost the swap,
-// the price stays the same in every colour (Bjørn 11.11.2026); the line says which colours, for the montør.
+// of (Byggeregler K1–K5): one price item per counter, picked whole. Each of its plates in another wall colour (K6) costs
+// the swap of that plate, the price stays the same in every colour (Bjørn 11.11.2026, 18.11.2026); the line says which
+// colours, for the montør.
 import { counterBuildOf } from '../../domain/counterShape';
 import { innerCorners, podiumHeights, podiumSize } from '../../domain/podiums';
 import { podiumHas } from '../../domain/podiumFaces';
@@ -9,7 +10,7 @@ import { soldAs, stockByArtnr, stockOf, stockSize } from '../../domain/podiumSto
 import { profileMetres, type CounterBuild } from '../../foga/counter';
 import { RECIPES } from '../../foga/recipes';
 import type { Use } from '../../pricing/model';
-import { counterRal } from '../../domain/objects';
+import { COUNTER_STOCK_RAL, counterRal } from '../../domain/objects';
 import type { PlacedObject } from '../../domain/types';
 import { ITEM } from '../../pricing/data';
 import { countBy, type CalcContext } from '../context';
@@ -29,11 +30,13 @@ export function objectLines(c: CalcContext): CalcLine[] {
     if (!counter) return c.line(a, n);
     const { h } = counter;
     const placed = v.objects.filter((o) => stock(o) && soldAs(o) === a);
-    const swapped = placed.filter((o) => o.ral).length;
+    // K6: the colour of every plate, its own or its counter's; a plate not in the stock colour is swapped
+    const rals = placed.flatMap(plateRals);
+    const swapped = rals.filter((r) => r !== COUNTER_STOCK_RAL).length;
     // K23: over a foot plate on inserts 700, at the same price
     const inserts = placed.reduce((s, o) => s + (c.inserts.get(o.id)?.length ?? 0), 0);
-    const colours = [...countBy(placed.map(counterRal))].sort(([x], [y]) => x.localeCompare(y));
-    return c.line(a, n, swapped ? { meta: colours.map(([ral, k]) => `RAL ${ral}${colours.length > 1 ? ` × ${k}` : ''}`).join(' · ') } : {}, [
+    const colours = [...countBy(rals)].sort(([x], [y]) => x.localeCompare(y));
+    return c.line(a, n, swapped ? { meta: colours.map(([ral, k]) => `RAL ${ral}${colours.length > 1 ? ` × ${k} ${k === 1 ? 'plate' : 'plater'}` : ''}`).join(' · ') } : {}, [
       { id: ITEM.counter(counter.length, counter.depth, h), qty: n },
       ...(swapped ? [{ id: ITEM.counterPlates(counter.length, counter.depth, h), qty: swapped }] : []),
       ...(inserts ? [{ id: ITEM.counterInsert, qty: inserts }] : []),
@@ -41,6 +44,9 @@ export function objectLines(c: CalcContext): CalcLine[] {
   });
   return [...lines, ...v.objects.filter((o) => !stock(o)).map((o) => podiumLine(c, o))];
 }
+
+/** The colour of each plate of a counter (K6): its own, else the counter's. */
+const plateRals = (o: PlacedObject): string[] => counterBuildOf(o).plates.map((p) => p.ral ?? counterRal(o));
 
 /** A section this long (mm, its longest side) or shorter is a half (K13). */
 const HALF_PART = RECIPES.counter.module.half;
@@ -88,7 +94,9 @@ function podiumLine(c: CalcContext, o: PlacedObject): CalcLine {
   const s = podiumSize(o);
   const top = (o.sections ?? []).reduce((a, x) => a + ((x.x[1] - x.x[0]) * (x.z[1] - x.z[0])) / 1e6, 0);
   // Two heights or more after a fusion: each, low to high (K12)
-  const meta = [`bygget på stedet ${s.length} × ${s.depth} × ${podiumHeights(o).join('/')} mm`, ...podiumHas(o.sections ?? []), ...(o.ral ? [`RAL ${o.ral}`] : [])].join(' · ');
+  // K6: the colours of its plates, all but the stock colour named
+  const rals = [...new Set(plateRals(o))].filter((r) => r !== COUNTER_STOCK_RAL).sort();
+  const meta = [`bygget på stedet ${s.length} × ${s.depth} × ${podiumHeights(o).join('/')} mm`, ...podiumHas(o.sections ?? []), ...(rals.length ? [`RAL ${rals.join('/')}`] : [])].join(' · ');
   // Its name from the product list: the product it is built as, «Disk» or «Podie» (Bjørn 14.11.2026)
   const name = hit?.product.name ?? o.product;
   // Each its own article, so each gets its own position number (calc/positions.ts)

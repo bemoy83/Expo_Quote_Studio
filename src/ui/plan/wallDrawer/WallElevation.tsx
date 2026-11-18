@@ -2,16 +2,16 @@
 // against it, textile frames and shelves (hylle 6311). Frames and decals are moved and resized here, shelves moved up,
 // down and sideways, motifs and frames dropped from the motif library (Profilering), and while a paint tool is out each plate is a
 // target for it.
-import { useEffect, useMemo, useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type DragEvent as RDragEvent } from 'react'
 import { foilCenter, foilsOn } from '../../../domain/decor'
 import { doorLevels, doorRal, doorWindows } from '../../../domain/doors'
 import { felt, type FaceSide } from '../../../domain/faces'
 import { moduleCc, moduleStart } from '../../../domain/grid'
-import { cropWindow, plateCrop } from '../../../domain/print'
+import { cropWindow, onDoorPart, plateCrop } from '../../../domain/print'
 import { textileBox, textilesOn } from '../../../domain/textile/inFrame'
 import { cornerLayout } from '../../../domain/shelves/corners'
 import { shelfRow, shelfStacks } from '../../../domain/shelves/model'
-import type { Foil, Motif, Opening, Shelf, TextileWall, Variant, Wall } from '../../../domain/types'
+import type { DoorSurface, Foil, Motif, Opening, Shelf, TextileWall, Variant, Wall } from '../../../domain/types'
 import { wallRal } from '../../../domain/panels'
 import { postOffsets, splitParts, type BuiltModule, type WallPart } from '../../../domain/walls'
 import { doorInset } from '../../../rules/rules'
@@ -33,7 +33,7 @@ import { ElevationDims } from './ElevationDims'
 import { elevationItems, frame, shelfChains, textileDrawing, type FrameFacts } from './elevationMeasure'
 import { planScale } from '../planScale'
 import { useElementSize } from '../../useElementSize'
-import type { PaintTool } from './paint'
+import { useSweep, type PaintTool } from '../paintTools'
 import { BrushPreview } from './BrushPreview'
 import { useShelfBrush } from './shelfBrush'
 
@@ -84,7 +84,9 @@ interface Props {
   doorModules: Set<number>
   ratioOf: (id?: string) => number
   select: (x: Partial<PlanSelection>) => void
-  selectDoor: (id: string, side?: FaceSide) => void
+  selectDoor: (id: string, side?: FaceSide, surface?: DoorSurface) => void
+  /** The surface of the chosen door chosen in the drawing (its header or its leaf). */
+  doorSurface?: DoorSurface
   onSelect: (s: PlanSelection) => void
   onEdit: (fn: (v: Variant) => Variant, history?: boolean) => void
   onCheckpoint: () => void
@@ -95,8 +97,7 @@ export function WallElevation(p: Props) {
   const { v, w, s, L, H, mods, tex, pieceOf, foils, shelves, rooms, T, F, O, motifs, label, painting, printing, tool, paintAt, doorModules, ratioOf, select, selectDoor } = p
   const svg = useRef<SVGSVGElement>(null)
   const [spot, setSpot] = useState<DropSpot | null>(null)
-  /** True from a press on a plate until it is let go: the brush sweeps over the plates entered meanwhile. */
-  const sweeping = useRef(false)
+  const sweep = useSweep()
   /** Along-wall offset → x in the drawing. The face is drawn as seen standing in front of it. */
   const u = (t: number) => (s === 1 ? t : L - t)
   const spanX = (a: number, b: number) => Math.min(u(a), u(b))
@@ -143,33 +144,7 @@ export function WallElevation(p: Props) {
   const sc = planScale(1 / fr.u, {})
 
   /** Pointer handlers for a plate (or a door) in the drawing while a tool is out: click, or with the brush press and sweep. */
-  const paintOn = (i: number, key: string, leaf = false) =>
-    painting
-      ? {
-          style: { cursor: tool === 'wall' ? 'copy' : 'crosshair' },
-          onPointerDown: (e: RPointerEvent) => {
-            e.stopPropagation()
-            // A finger enters the plate (with the button down) just before it presses it, so a sweep only counts once
-            // the press has begun: else the brush printed the plate on enter and the press took the print off again.
-            sweeping.current = true
-            const end = () => {
-              sweeping.current = false
-              window.removeEventListener('pointerup', end)
-              window.removeEventListener('pointercancel', end)
-            }
-            window.addEventListener('pointerup', end)
-            window.addEventListener('pointercancel', end)
-            // Touch (iPad) holds the pointer on the plate it went down on, so the next plates would never see it
-            // enter. Letting go of it makes a sweep with a finger or pen work like one with the mouse.
-            const t = e.currentTarget as Element
-            if (t.hasPointerCapture(e.pointerId)) t.releasePointerCapture(e.pointerId)
-            if (e.button === 0) paintAt(i, key, true, leaf)
-          },
-          onPointerEnter: (e: RPointerEvent) => {
-            if (tool === 'plate' && sweeping.current && e.buttons === 1) paintAt(i, key, false, leaf)
-          },
-        }
-      : {}
+  const paintOn = (i: number, key: string, leaf = false) => (painting ? sweep(tool, (first) => paintAt(i, key, first, leaf)) : {})
   /** A print over a door: its part of the picture on the header plate and on the leaf plate. */
   const doorPrint = (f: Foil, x: number, leafX: number) => {
     const m = findMotif(motifs, f.motif)
@@ -253,7 +228,10 @@ export function WallElevation(p: Props) {
               const k = doorInset(rules)
               const hinge = u(o.hinge === -1 ? st(i) + 1 - k : st(i) + k)
               const free = u(o.hinge === -1 ? st(i) + k : st(i) + 1 - k)
-              const fp = door ? foils.find((f) => f.full && f.module === i) : undefined
+              // Print on the door: one picture over header and leaf, or one on each surface (the brush)
+              const fps = door ? foils.filter((f) => f.full && f.module === i) : []
+              const parts = fps.map((f) => ({ f, at: doorPrint(f, x, Math.min(hinge, free)) }))
+              const fp = fps.length > 0
               return (
                 <g
                   key={i}
@@ -262,8 +240,13 @@ export function WallElevation(p: Props) {
                     // The door is chosen here, in the wall drawer; chosen, a click takes colour and graphics back (while a tool
                     // is out, the plate targets on top take the press)
                     e.stopPropagation()
-                    if (O?.id === o.id) select({})
-                    else selectDoor(o.id)
+                    // A door: the header or the leaf under the pointer, each a surface of its own (Bjørn 18.11.2026);
+                    // clicked again, the wall's colour and graphics come back
+                    const at = svg.current?.getScreenCTM()
+                    const y = at ? H - new DOMPoint(e.clientX, e.clientY).matrixTransform(at.inverse()).y : 0
+                    const surface: DoorSurface | undefined = door ? (y > doorLevels(rules).header ? 'header' : 'leaf') : undefined
+                    if (O?.id === o.id && p.doorSurface === surface) select({})
+                    else selectDoor(o.id, s, surface)
                   }}
                 >
                   <OpeningView
@@ -271,7 +254,14 @@ export function WallElevation(p: Props) {
                     H={H}
                     plate={{ fill: plateColor(m.plate) }}
                     door={door ? { color: plateColor(doorRal(v, o)), hinge, free } : undefined}
-                    print={fp && doorPrint(fp, x, Math.min(hinge, free))}
+                    print={
+                      fp
+                        ? {
+                            header: parts.map(({ f, at }) => onDoorPart(f, 'header') && <g key={f.id}>{at?.header}</g>),
+                            leaf: parts.map(({ f, at }) => onDoorPart(f, 'leaf') && <g key={f.id}>{at?.leaf}</g>),
+                          }
+                        : undefined
+                    }
                   />
                   {!fp && (
                     <text x={x + 0.5} y={z(1.4)} textAnchor="middle" style={TXT}>
@@ -309,6 +299,9 @@ export function WallElevation(p: Props) {
                     <path d={`M${fx} ${z(lv.top)} L${hx} ${z((lv.top + lv.leaf) / 2)} L${fx} ${z(lv.leaf)}`} fill="none" stroke={INK_FAINT} strokeWidth={0.01} strokeDasharray=".04 .03" />
                   )}
                   <rect x={x - 0.012} y={z(H) - 0.012} width={1.024} height={H + 0.012} fill="none" stroke={INK} strokeWidth={0.016} />
+                  {/* The surface chosen, toned: the header between its rails, or the leaf */}
+                  {p.doorSurface === 'header' && <rect x={x + rules.wall.post / 2} y={0} width={1 - rules.wall.post} height={z(lv.header)} fill={INK} fillOpacity={0.12} />}
+                  {p.doorSurface === 'leaf' && doorModules.has(O.module) && <rect x={Math.min(hx, fx)} y={z(lv.top)} width={rules.door.swing} height={lv.top - lv.leaf} fill={INK} fillOpacity={0.12} />}
                 </g>
               )
             })()}

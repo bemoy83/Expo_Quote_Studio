@@ -14,7 +14,8 @@ export function useToast(): [ToastMsg | null, (m: ToastMsg | string) => void] {
   const show = useCallback((m: ToastMsg | string) => {
     window.clearTimeout(t.current)
     setMsg(typeof m === 'string' ? { text: m } : m)
-    t.current = window.setTimeout(() => setMsg(null), 3500)
+    // A toast with an action stays a little longer, so there is time to take it
+    t.current = window.setTimeout(() => setMsg(null), typeof m !== 'string' && m.action ? 6000 : 3500)
   }, [])
   useEffect(() => () => window.clearTimeout(t.current), [])
   return [msg, show]

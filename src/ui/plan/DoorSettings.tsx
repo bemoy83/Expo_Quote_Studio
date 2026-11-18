@@ -1,10 +1,11 @@
 // Door settings in the wall drawer: a door or curtain chosen in the plan, 3D or the wall drawing. Door or curtain,
-// swing and hinge side. No colour or graphics here: the door is part of the wall, so the wall's paint bucket and brush
-// colour and print the header and the leaf (Bjørn 3.11.2026). The wall drawer shows these in its settings column, the
+// swing and hinge side, a curtain's fabric (sort, grå, blå: a curtain is no surface, Bjørn 18.11.2026). A door's colour
+// and print are on its surfaces, the header and the leaf, chosen in the drawing (DoorSurfacePanel). The wall drawer shows these in its settings column, the
 // mini plan (DoorMap) in the middle to move the door, and the door in its wall in the drawing.
 import type { ReactNode } from 'react'
 import { ArrowLeftRight, FlipHorizontal2 } from 'lucide-react'
-import { canFlipDoor, doorRal, doorSwing, flipHinge, flipSwing, openingRoom, setOpeningProduct, sideName } from '../../domain/doors'
+import { fabricOf } from '../../catalog/lookup'
+import { canFlipDoor, doorRal, doorSwing, flipHinge, flipSwing, openingRoom, setCurtainFabric, setOpeningProduct, sideName } from '../../domain/doors'
 import { wallDirection, wallLength } from '../../domain/grid'
 import { roomName, roomSize } from '../../domain/rooms'
 import { OUTSIDE } from '../../domain/roomKeys'
@@ -14,7 +15,9 @@ import { LAYER_COLOR } from '../colors'
 import { FlatChoice, IconButton, Section } from '../controls'
 import { floorBoxes, openingProducts, plateColor, productOf, rules } from '../env'
 import { fmt } from '../format'
-import { DrawerHead} from './drawerParts'
+import { DrawerHead } from './drawerParts'
+import { Sw } from './quick/parts'
+import { fabricSwatches } from './swatches'
 
 interface Props {
   v: Variant
@@ -44,6 +47,7 @@ export function DoorSettings({ v, o, w, onEdit, onRemove, onClose, children }: P
   const n: Point = [-dy * s, dx * s]
   const out: Point = [-dy * OUTSIDE, dx * OUTSIDE]
   const ral = doorRal(v, o)
+  const fabric = fabricOf(product, o.fabric)
 
   const where = room
     ? `${roomName(room)} ${roomSize(room)} · ${sideName(out).toLowerCase()}`
@@ -76,6 +80,15 @@ export function DoorSettings({ v, o, w, onEdit, onRemove, onClose, children }: P
           options={openingProducts().map((x) => ({ value: x.variants[0].artnr, label: x.opening === 'door' ? 'Dør' : 'Forheng' }))}
         />
       </Section>
+      {!door && product?.fabrics && fabric && (
+        <Section title="Stoff" aside={fabric.name.toLowerCase()}>
+          <div className="stand-swatches">
+            {fabricSwatches(product.fabrics, fabric.key, (n) => `Forheng ${n}`, (f) => f !== fabric.key && onEdit((x) => setCurtainFabric(x, o.id, f))).map(({ key, ...x }) => (
+              <Sw key={key} {...x} />
+            ))}
+          </div>
+        </Section>
+      )}
       {door && (
         <Section
           title="Slag"
