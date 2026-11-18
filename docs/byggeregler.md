@@ -514,8 +514,8 @@ K22 standardvarene og K23 disker over en fotplate.
   messen og tilbake etter. Prisen er den samme i alle farger (1320 kr), kalkylen tar med platebyttet per plate som
   byttes (prisartikkelen platebytte bardisk, per plate), og linjen sier hvilke farger montøren skal ha med. En disk
   bygget på stedet kuttes av veggplater i fargen, uten tillegg. Farge og print følger reglene for vegg (`domain/paint.ts`):
-  en farge på en del eller en åpning tar printen av delen (siste strøk vinner); fargen på hele siden, malerspannet på
-  siden som vises, fargen i pillen og Fyll lar deler med print stå som de er. Fargen følger ikke veggenes standardfarge,
+  en farge på en del eller en åpning tar printen av platene den farger (siste strøk vinner); fargen på hele siden,
+  malerspannet på siden som vises, fargen i pillen og Fyll lar plater med print stå som de er. Fargen følger ikke veggenes standardfarge,
   og spannet på veggene farger ikke diskene: Disker og podier har sitt eget spann.
   *Bjørn 11.11.2026, 18.11.2026 · `RECIPES.counter.stock.ral`, `SectionSide.ral` · kode `src/domain/paint.ts`, `src/domain/podiumFaces.ts`, `src/foga/counter.ts`, `src/calc/lines/objects.ts`, `src/cost/itemDefs.ts` · test `src/calc/counter.test.ts`, `src/domain/paint.test.ts`*
 - **K7 Mål.** Knutepunktene står på et raster på 250 mm: en seksjon er 250, 500, 750 eller 1000 c/c i hver retning. En
@@ -655,17 +655,19 @@ K22 standardvarene og K23 disker over en fotplate.
   hyllen ut, blir de to til den nederste, som beholder sitt.
   *Bjørn 13.11.2026 og 18.11.2026 · kode `src/foga/counter.ts` (`shelfRails`), `src/domain/podiumShelves.ts` · test `src/domain/podiumShelves.test.ts`, `src/calc/podium.test.ts`*
 - **K20 Print og dekal på disk.** På plate og skyvedør, aldri på åpen lysåpning eller trinnplate. Print er heldekkende
-  dekal, ikke trykk på platen, og dekker platene og dørene i delen mellom stolpene og skinnene. Deler på rad på samme
-  side med samme motiv viser ett motiv strukket over dem (som `printWall`): bildet dekker fra første dels venstre stolpe
-  til siste dels høyre og fra bunnskinnen til den høyeste toppen, beskåret, aldri strukket ut av form. En dekal har mål
-  og plass på delen (fra midten av seksjonens side, sett utenfra) og flyttes og skaleres i risset som på vegg, holdt
-  innenfor delen. Print tar bort dekalene på siden, og en dekal tar bort printen. Fargen står i K6: en farge valgt
-  i paletten tar printen av delen som er valgt (siste strøk vinner), men lar print stå når hele siden er valgt; print er
-  et bevisst valg (Bjørn 18.11.2026). Malerspannet legger det som er valgt på hele siden som vises: printen på alle
-  delene som kan ta det. Vist i risset, i planen (en tynn stripe av motivet innenfor ytterkanten) og i 3D. Print prises
+  dekal, ikke trykk på platen, og ligger per plate (lysåpning) mellom stolpene og skinnene, som på vegg (Bjørn
+  18.11.2026): malerkosten legger hele motivet på platen den treffer, beskåret, aldri strukket ut av form; malerspannet
+  legger ett bilde over alle platene på siden som vises (som `printWall`), fra første dels venstre stolpe til siste dels
+  høyre og fra bunnskinnen til den høyeste toppen, og hver plate viser sin del. Kosten på en plate i et slikt bilde gir
+  den hele motivet. Samme motiv igjen gjør ingenting. En del valgt i skuffen får ett bilde over platene sine, en
+  lysåpning valgt hele motivet. En ny hylle deler printen med lysåpningen (K19). En dekal har mål og plass på delen (fra
+  midten av seksjonens side, sett utenfra) og flyttes og skaleres i risset som på vegg, holdt innenfor delen. Print med
+  spannet tar bort dekalene på siden, print med kosten dekalene på platen, og en dekal tar bort printen. Fargen står i
+  K6: en farge med kosten eller i paletten tar printen av platene den farger (siste strøk vinner), men spannet og
+  fargen på hele siden lar plater med print stå; print er et bevisst valg (V16). Vist i risset, i planen (en tynn stripe av motivet innenfor ytterkanten) og i 3D. Print prises
   på eget artikkelnummer 8023 «Foliedekor, diskfelt» per m², med målene som kuttes på linjen («2 × 960 × 960 mm»), dekal
   som m² dekal (8020) og en oppstart per print strukket over flere deler (8022).
-  *Bjørn 13.11.2026 · kode `src/domain/podiumDecor.ts`, `src/calc/lines/decor.ts` · test `src/domain/podiumDecor.test.ts`*
+  *Bjørn 13.11.2026, 18.11.2026 · kode `src/domain/podiumDecor.ts`, `src/calc/lines/decor.ts`, `src/ui/plan/podiumDrawer/paint.ts` · test `src/domain/podiumDecor.test.ts`, `src/ui/plan/podiumDrawer/paint.test.ts`*
 - **K22 Standardvarer i Disker og podier.** Det som er tegnet og bygget nøyaktig som en standardvare, *er* den varen:
   katalogpris, kostet som én leid vare (`ITEM.counter` per utvendig mål og høyde), plukket hel som 1 stk, og navnet fra
   katalogen med varianten, uten varenummer: «Bardisk», «Podie 50 × 50, 75 cm». Farge (K6), print og dekal (K20), snudd

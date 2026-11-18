@@ -11,8 +11,8 @@
 // - The same motif again does nothing (printWall, printPlate in print.ts).
 import { doorRal, setDoorRal } from './doors';
 import { COUNTER_STOCK_RAL, counterRal } from './objects';
-import { printOf, setPodiumPrint } from './podiumDecor';
-import { partKey, podiumParts, ralsOf, setPlateRal } from './podiumFaces';
+import { printAt, unprintCounter } from './podiumDecor';
+import { partKey, podiumParts, ralsOf, setPlateRal, type PodiumPart } from './podiumFaces';
 import { withSections } from './podiumSections';
 import { setWallPlate } from './edit';
 import type { FaceSide } from './faces';
@@ -158,8 +158,8 @@ export function paintAllDoors(v: Variant, ral: string, isDoor: (product: string)
 }
 
 // ---- Counters of Disker og podier (Byggeregel K6, Bjørn 18.11.2026): the same rules on a counter's plates. The counter
-// has a colour (`PlacedObject.ral`), and each light opening of a part may have its own (`SectionSide.ral`). Print covers
-// a whole part (K20), so a part with print is one printed surface.
+// has a colour (`PlacedObject.ral`), and each light opening of a part may have its own (`SectionSide.ral`) and its own
+// print (`SectionSide.print`, K20), so each plate is a surface on its own, as on a wall.
 
 const own = (o: Pick<PlacedObject, 'ral'>, ral: string) => (ral === counterRal(o) ? null : ral);
 const partsOf = (ss: readonly CounterSection[], keys: readonly string[]) => {
@@ -167,47 +167,53 @@ const partsOf = (ss: readonly CounterSection[], keys: readonly string[]) => {
   return podiumParts(ss).filter((p) => want.has(partKey(p)));
 };
 
+/** The plates (part and light opening) of `parts` with print, and the ones without. */
+function byPrint(ss: readonly CounterSection[], parts: readonly PodiumPart[]) {
+  const printed: [PodiumPart, number][] = [];
+  const plain: [PodiumPart, number][] = [];
+  for (const p of parts) ralsOf(ss, p).forEach((_, i) => (printAt(ss, p, i) ? printed : plain).push([p, i]));
+  return { printed, plain };
+}
+
+/** The sections with each of `plates` in its colour from `ral`. */
+const ralEach = (ss: readonly CounterSection[], plates: readonly [PodiumPart, number][], ral: (p: PodiumPart, i: number) => string | null) =>
+  plates.reduce((x, [p, i]) => setPlateRal(x, [p], ral(p, i), i), ss as CounterSection[]);
+
 /** A colour on what is chosen on a counter (a part, or light opening `light` of it): the last stroke wins, so the
- *  part's print comes off. Decals stay. The counter's own colour is stored as none. */
+ *  print comes off the plates coloured. Decals stay. The counter's own colour is stored as none. */
 export function paintCounterPlates(v: Variant, id: string, keys: readonly string[], ral: string, light?: number): Variant {
   const o = v.objects.find((x) => x.id === id);
   if (!o?.sections) return v;
   const x = withSections(v, id, (ss) => setPlateRal(ss, partsOf(ss, keys), own(o, ral), light));
-  return setPodiumPrint(x, id, keys, null);
+  return unprintCounter(x, id, keys, light);
 }
 
 /**
- * The paint bucket on the side shown, or its colour with nothing chosen: every part `keys` in `ral`, all its light
- * openings; a part with print is left as it is, print and colour.
+ * The paint bucket on the side shown, or its colour with nothing chosen: every plate of the parts `keys` in `ral`; a
+ * plate with print is left as it is, print and colour (V16).
  */
 export function paintCounterSide(v: Variant, id: string, keys: readonly string[], ral: string): Painted {
   const o = v.objects.find((x) => x.id === id);
   if (!o?.sections) return { v, skipped: 0 };
-  const parts = partsOf(o.sections, keys);
-  const printed = parts.filter((p) => printOf(o.sections!, p));
-  const rest = parts.filter((p) => !printOf(o.sections!, p));
-  return { v: withSections(v, id, (ss) => setPlateRal(ss, rest, own(o, ral))), skipped: printed.length };
+  const { printed, plain } = byPrint(o.sections, partsOf(o.sections, keys));
+  return { v: withSections(v, id, (ss) => ralEach(ss, plain, () => own(o, ral))), skipped: printed.length };
 }
 
-/** A counter's sections with its colour `ral` and its parts' colours of their own off, except the printed parts:
+/** A counter's sections with its colour `ral` and its plates' colours of their own off, except the printed plates:
  *  they keep the colours they had. */
 function recoloured(o: PlacedObject, ral: string): { o: PlacedObject; skipped: number } {
   const { ral: _r, ...rest } = o;
   const next: PlacedObject = ral === COUNTER_STOCK_RAL ? rest : { ...rest, ral };
   if (!o.sections) return { o: next, skipped: 0 };
   const ss0 = o.sections;
-  const parts = podiumParts(ss0);
-  const printed = parts.filter((p) => printOf(ss0, p));
-  let ss = setPlateRal(ss0, parts.filter((p) => !printOf(ss0, p)), null);
+  const { printed, plain } = byPrint(ss0, podiumParts(ss0));
   const was = counterRal(o);
-  for (const p of printed)
-    ralsOf(ss0, p).forEach((r, i) => {
-      ss = setPlateRal(ss, [p], own(next, r ?? was), i);
-    });
+  let ss = ralEach(ss0, plain, () => null);
+  ss = ralEach(ss, printed, (p, i) => own(next, ralsOf(ss0, p)[i] ?? was));
   return { o: { ...next, sections: ss }, skipped: printed.length };
 }
 
-/** The counter's colour (the pill's colours): every plate of it in `ral`, colours of their own off; a printed part
+/** The counter's colour (the pill's colours): every plate of it in `ral`, colours of their own off; a printed plate
  *  stays as it is. */
 export function paintCounter(v: Variant, id: string, ral: string): Painted {
   const o = v.objects.find((x) => x.id === id);

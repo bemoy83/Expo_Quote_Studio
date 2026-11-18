@@ -127,9 +127,10 @@ export function sideElevation(o: PlacedObject, side: PodiumSide): { parts: Eleva
   return { parts, length: len + 2 * R.face, h: Math.max(...parts.map((p) => p.h), 0) }
 }
 
-/** The motif printed on the parts that take print (K20), as one: null when none is or they differ. */
-export function printShown(o: PlacedObject, parts: ElevationPart[]): string | null {
-  const ps = [...new Set(parts.filter((p) => takesDecor(o.sections ?? [], p.part)).map((p) => printOf(o.sections ?? [], p.part) ?? null))]
+/** The motif printed on the plates of the parts that take print (K20), in light opening `light` or in all, as one:
+ *  null when none is or they differ. */
+export function printShown(o: PlacedObject, parts: ElevationPart[], light?: number): string | null {
+  const ps = [...new Set(parts.filter((p) => takesDecor(o.sections ?? [], p.part)).map((p) => printOf(o.sections ?? [], p.part, light) ?? null))]
   return ps.length === 1 ? ps[0] : null
 }
 

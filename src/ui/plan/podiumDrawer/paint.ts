@@ -1,10 +1,11 @@
 // Colouring in the drawer for a counter of Disker og podier, as in the wall drawer (Bjørn 18.11.2026: the wall drawer is
 // the template): the paint bucket lays a plate colour or «Print» on the whole side shown, the brush on one plate at a
-// time, pressed and swept. A plate is a light opening of a part, its sliding door one surface (K6); print covers a whole
-// part (K20). The rules are domain/paint.ts's: the bucket leaves printed parts as they are, the brush is the last stroke.
+// time, pressed and swept. A plate is a light opening of a part, its sliding door one surface (K6), and takes print on
+// its own (K20): the brush the whole motif, the bucket one picture over the side. The rules are domain/paint.ts's: the
+// bucket leaves printed plates as they are, the brush is the last stroke.
 import { counterRal } from '../../../domain/objects'
 import { paintCounterPlates, paintCounterSide } from '../../../domain/paint'
-import { printOf, setPodiumPrint, takesDecor } from '../../../domain/podiumDecor'
+import { printAt, printCounterPlate, printCounterSide, takesDecor } from '../../../domain/podiumDecor'
 import type { Motif, PlacedObject, Variant } from '../../../domain/types'
 import { count } from '../../format'
 import { PRINT } from '../drawerParts'
@@ -12,7 +13,7 @@ import { applyFill, brushTo, NO_MOTIF, type PaintTool } from '../paintTools'
 import type { ElevationPart } from './podiumView'
 
 /** What a stroke over the side left as it was. */
-export const partsKept = (n: number) => `${count(n, 'del', 'deler')} med print står som før`
+export const partsKept = (n: number) => `${count(n, 'plate', 'plater')} med print står som før`
 
 export interface CounterPaintDeps {
   v: Variant
@@ -46,23 +47,24 @@ export function counterPaintAt({ v, o, side, tool, paint, pm, onEdit, onCheckpoi
       if (printing) {
         const keys = side.filter((q) => takesDecor(sections, q.part)).map((q) => q.key)
         if (!keys.length) return onToast('Ingen del på denne siden kan ha print')
-        return onEdit((x) => setPodiumPrint(x, o.id, keys, pm!.id))
+        return onEdit((x) => printCounterSide(x, o.id, keys, pm!.id))
       }
       return applyFill(v, paintCounterSide(v, o.id, side.map((q) => q.key), paint), onEdit, onToast, partsKept)
     }
-    // The brush: print on the whole part, the same motif again does nothing
+    // The brush: the whole motif on the plate, the same motif again does nothing
     if (printing) {
-      if (!takesDecor(sections, p.part)) {
+      if (p.lights[light] === 'open') {
         if (first) onToast('Åpen: ingen print')
         return
       }
-      if (printOf(sections, p.part) === pm!.id) return
+      const cur = printAt(sections, p.part, light)
+      if (cur?.motif === pm!.id && !cur.run) return
       if (first) onCheckpoint()
-      return onEdit((x) => setPodiumPrint(x, o.id, [p.key], pm!.id), false)
+      return onEdit((x) => printCounterPlate(x, o.id, p.key, light, pm!.id), false)
     }
     // A colour on the plate, or the counter's again when it already has the brush's; nothing where it is open
     if (p.lights[light] === 'open') return
-    const to = brushTo(p.rals[light] ?? ral, paint, ral, !!printOf(sections, p.part), first)
+    const to = brushTo(p.rals[light] ?? ral, paint, ral, !!printAt(sections, p.part, light), first)
     if (to === null) return
     if (first) onCheckpoint()
     onEdit((x) => paintCounterPlates(x, o.id, [p.key], to, light), false)

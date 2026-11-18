@@ -159,10 +159,18 @@ export interface SectionSide {
   /** A colour of its own on each light opening, from the floor (Byggeregel K6, Bjørn 18.11.2026): the plate, or both
    *  leaves of the sliding door there. null or none: the counter's colour. */
   ral?: (string | null)[];
-  /** Print over the whole of its parts (Byggeregel K20): the motif, as a decal over every plate and door. */
-  print?: string;
+  /** Print on each light opening, from the floor (Byggeregel K20, Bjørn 18.11.2026: as on a wall): the motif, as a decal
+   *  over the plate or sliding door there. null or none: no print. */
+  print?: (PodiumPrint | null)[];
   /** Decals on it (K20). */
   decals?: PodiumDecal[];
+}
+
+/** Print on one plate of a counter (K20): the whole motif on it, or with `run` its share of one picture over every plate
+ *  of the counter with the same `run` (the paint bucket, as `Foil.run` on a wall). */
+export interface PodiumPrint {
+  motif: string;
+  run?: string;
 }
 
 /** A decal on a side of a counter of Disker og podier (K20), mm: its size, its centre from the middle of the section's
