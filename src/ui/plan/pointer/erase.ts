@@ -40,7 +40,7 @@ export function eraseTargetAt(v: Variant, hits: PlanHits, standKeys: ReadonlySet
   const ft = freeTextileAt(v, q, 0.15)
   if (ft) {
     const face = faceOfPoint(ft, q)
-    if (ft[face]?.motif) return { group: 'graphic', id: `${ft.id}.${face}`, erase: (x) => updateFace(x, ft.id, face, { motif: null }) }
+    if (ft[face]?.motif && !ft[face]?.fill) return { group: 'graphic', id: `${ft.id}.${face}`, erase: (x) => updateFace(x, ft.id, face, { motif: null }) }
     return { group: 'textile', id: ft.id, erase: (x) => removeFreeTextile(x, ft.id) }
   }
   // Drawn takdrager (not where a wall is closer)

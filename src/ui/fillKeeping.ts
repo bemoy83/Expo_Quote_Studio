@@ -1,4 +1,4 @@
-// Fyll over the whole stand, and the paint bucket over a face, with print as a choice made on purpose (Bjørn 18.11.2026):
+// Fyll over the whole stand, and the paint bucket over a face, with print as a choice made on purpose (Byggeregel V16, Bjørn 18.11.2026):
 // the stroke leaves printed plates and doors as they are, and the toast says so. Fyll on the whole stand (the Vegg pill,
 // the stand colour in the panel) offers in the toast to colour them too: over the drawing, never inside a drawer or the
 // panel, so no setting is pushed out of place.

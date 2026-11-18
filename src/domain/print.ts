@@ -1,3 +1,4 @@
+// Byggeregel V15: the last stroke wins, the same motif again does nothing, door parts print apart.
 // Print på hele plater: «Print» last in the wall drawer's palette, with the motif chosen in the graphics shelf.
 // The paint bucket stretches one motif over every plate of the face that can take it: one picture, cut per plate,
 // running on behind the posts and over a door, so it lines up across the joints. The brush puts the whole motif on

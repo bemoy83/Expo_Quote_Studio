@@ -65,6 +65,15 @@ describe('frittstående tekstilvegg', () => {
     v = updateFace(v, id, 'b', { motif: null });
     expect(v.freeTextiles[0].b).toBeUndefined();
   });
+  it('remembers the motif when the face turns white, and prints it again with Trykk (V15)', () => {
+    let v = draw(base(), [1, 2], [3, 2]);
+    const id = v.freeTextiles[0].id;
+    v = updateFace(v, id, 'a', { motif: 'hoved' });
+    v = updateFace(v, id, 'a', { fill: 'white' });
+    expect(v.freeTextiles[0].a).toEqual({ fill: 'white', motif: 'hoved' });
+    v = updateFace(v, id, 'a', { fill: 'print' });
+    expect(v.freeTextiles[0].a).toEqual({ motif: 'hoved' });
+  });
   it('moves on the grid, not onto a wall', () => {
     const v = draw(base(), [1, 2], [3, 2]);
     const id = v.freeTextiles[0].id;

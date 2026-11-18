@@ -171,7 +171,7 @@ describe('the trash on one felt (Bjørn 9.11.2026)', () => {
   });
 });
 
-describe('the last stroke wins between colour and print (Bjørn 3.11.2026)', () => {
+describe('the last stroke wins between colour and print (V15, Bjørn 3.11.2026)', () => {
   const keys = (v: Variant) => wallModules(back(v)).map((m) => m.key);
   const plain = (v: Variant) => () => v.defaultPlate;
 

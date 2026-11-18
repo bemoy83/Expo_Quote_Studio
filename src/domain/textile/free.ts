@@ -133,7 +133,8 @@ export function addFreeTextile(v: Variant, rules: Rules, a: Point, b: Point): { 
 
 export const removeFreeTextile = (v: Variant, id: string): Variant => ({ ...v, freeTextiles: v.freeTextiles.filter((t) => t.id !== id) });
 
-/** Change one face: print, white or the customer's own textile, and the motif shown. */
+/** Change one face: print, white or the customer's own textile, and the motif shown. The motif is kept when the face
+ *  turns white or the customer's, so it comes back with print (Byggeregel V15, Bjørn 18.11.2026, as on a textile in a wall). */
 export function updateFace(v: Variant, id: string, face: FaceKey, patch: { fill?: TextileFace['fill']; motif?: string | null }): Variant {
   return {
     ...v,
@@ -146,8 +147,8 @@ export function updateFace(v: Variant, id: string, face: FaceKey, patch: { fill?
       }
       if (patch.motif === null) delete f.motif;
       else if (patch.motif !== undefined) f.motif = patch.motif;
-      // A motif is a print
-      if (f.motif && f.fill) delete f.fill;
+      // A motif picked is a print
+      if (patch.motif) delete f.fill;
       const out: FreeTextile = { ...t, [face]: f };
       if (!Object.keys(f).length) delete out[face];
       return out;

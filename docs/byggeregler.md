@@ -93,6 +93,21 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   Andre mål og diagonaler kan komme senere, men ikke nå.
   *Bjørn 15.11.2026 · kode `src/ui/panel/StandSettings.tsx`, `src/domain/grid.ts`, `src/calc/lines/walls.ts`, `src/ui/plan/PlanView.tsx`, `src/domain/runDraw.ts`, `src/domain/snapGrid.ts`, `src/ui/plan/pointer/stroke.ts`, `src/domain/wallOffsets.ts`, `src/domain/innerBeams.ts` · test `src/calc/halfMetreStand.test.ts`, `src/domain/halfMetreStand.test.ts`, `src/calc/halfMetreBeams.test.ts`*
 
+- **V15 Farge og print.** En flate er en plate (et felt), en dørs overstykke og dørblad (hver for seg) og en disks plate
+  (K6). Siste strøk vinner på det du peker på: en farge med kosten, på et valgt felt, med veggpennen i planen eller på et
+  dørblad tar printen av den flaten på siden du ser; fargen gjelder begge sider. Dekaler blir: de dekker ikke hele platen.
+  Print over en farge tar fargen bort der den ikke lenger synes (en plate printet på alle sider som kan ha dekor), så
+  platen blir aldri betalt både som farge og som print. Samme motiv igjen gjør ingenting, med spann, kost, Print-pennen og
+  motivtrykk i et felt. På en dør legger kosten motivet på overstykket eller dørbladet hver for seg, spannet ett bilde
+  over begge; en farge på den ene flaten tar bare dens del. Tekstilveggene husker motivet når duken blir Hvit eller
+  Kundens, så det kommer tilbake med Trykk.
+  *Bjørn 3.11.2026 og 18.11.2026 · kode `src/domain/paint.ts`, `src/domain/print.ts`, `src/domain/textile/free.ts` · test `src/domain/paint.test.ts`, `src/domain/print.test.ts`, `src/domain/textile/free.test.ts`*
+- **V16 Print er et valg.** Et strøk over mange flater lar print stå: malerspannet i skuffen farger resten av siden og
+  hopper alltid over felt og dørflater med print, print og farge, så de øvrige kan få ny farge uten å legge printen på
+  igjen. Fyll på hele standen (Vegg-pillens spann og standfargen i panelet, som er det samme) gjør likedan, og toasten
+  sier «N felt med print står som før» med valget «Farg også dem». Valget står over tegningen som en toast, aldri i
+  skuffen eller panelet, så ingen innstilling skyves ut av syne.
+  *Bjørn 18.11.2026 · kode `src/domain/paint.ts`, `src/ui/fillKeeping.ts` · test `src/domain/paint.test.ts`*
 ## S · Støtte for systemvegg
 
 - **S1 Rammen holder.** Med takdrager på står standveggene i takdragerrammen og får ingen fotplater.

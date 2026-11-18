@@ -32,7 +32,7 @@ const innerWall = (v: Variant) => v.walls.find((w) => w.from[0] === 3 && w.to[0]
 const plate = (v: Variant, key: string) => builtModules(v).find((m) => m.key === key)!.plate;
 const door = (v: Variant) => placeOpening(v, [3, 1], [3, 2], DOOR, true, null);
 
-describe('the paint bucket on a face: print is a choice made on purpose (Bjørn 18.11.2026)', () => {
+describe('the paint bucket on a face: print is a choice made on purpose (V16, Bjørn 18.11.2026)', () => {
   it('colours the whole wall but leaves a printed plate as it was, print and colour', () => {
     let v = inner();
     const w = innerWall(v);
@@ -82,7 +82,7 @@ describe('the paint bucket on a face: print is a choice made on purpose (Bjørn 
   });
 });
 
-describe('a colour on what is pointed at: the last stroke wins', () => {
+describe('a colour on what is pointed at: the last stroke wins (V15)', () => {
   it('a plate loses its print on the face shown, decals and the other face stay', () => {
     let v = inner();
     const w = innerWall(v);

@@ -92,7 +92,7 @@ export function FreeTextileDrawer(p: Props) {
         <hr className="set-rule" />
         <FabricSection
           value={F.fill}
-          onChange={(fill) => p.onEdit((x) => updateFace(x, t.id, face, { fill, ...(fill === 'print' ? {} : { motif: null }) }))}
+          onChange={(fill) => p.onEdit((x) => updateFace(x, t.id, face, { fill }))}
           motifs={motifs}
           motif={F.motif}
           onPick={(mo) => p.onEdit((x) => updateFace(x, t.id, face, { motif: mo }))}

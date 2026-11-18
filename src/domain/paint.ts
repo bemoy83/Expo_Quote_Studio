@@ -1,4 +1,4 @@
-// Colour and print on the surfaces of a wall, in one place (Bjørn 18.11.2026): every way of colouring goes through here,
+// Colour and print on the surfaces of a wall, in one place (Byggeregler V15 og V16, Bjørn 18.11.2026): every way of colouring goes through here,
 // the drawer, the pill, the wall pen in the plan and Fyll, so they follow the same rules.
 //
 // - A surface is a plate (a felt), a door's header and its leaf (each with its own colour and print), a counter's plate (each light opening of a part, its sliding door one
