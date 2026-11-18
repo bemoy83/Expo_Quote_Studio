@@ -70,7 +70,7 @@ export const lightsOf = (sections: readonly CounterSection[], p: PodiumPart): (C
   });
 
 /** A side with item `i` of a list set (null: as by default again); empty when it holds nothing. */
-function withAt<K extends 'lights' | 'ral'>(side: SectionSide | undefined, k: K, i: number, value: NonNullable<SectionSide[K]>[number]): SectionSide | undefined {
+export function withAt<K extends 'lights' | 'ral' | 'print'>(side: SectionSide | undefined, k: K, i: number, value: NonNullable<SectionSide[K]>[number]): SectionSide | undefined {
   const list: (typeof value)[] = [...((side?.[k] ?? []) as (typeof value)[])];
   while (list.length <= i) list.push(null);
   list[i] = value;

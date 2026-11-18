@@ -10,7 +10,7 @@ import { counterParts } from '../foga/counter';
 import { counterBuildOf } from './counterShape';
 import { counterRal } from './objects';
 import { paintAllCounters, paintAllDoors, paintAllWalls, paintCounter, paintCounterPlates, paintCounterSide, paintLeaf, paintPlate, paintWallFace, printedCount } from './paint';
-import { printOf, setPodiumPrint, takesDecor } from './podiumDecor';
+import { printCounterSide, printOf, takesDecor } from './podiumDecor';
 import { partKey, podiumParts, ralsOf, setPodiumLight } from './podiumFaces';
 import { stockSections } from './podiumStock';
 import { colourPlates, leafRal } from './plateDecor';
@@ -183,12 +183,12 @@ describe('a counter of Disker og podier: a colour per plate (Byggeregel K6, Bjø
     expect(leaves.map((p) => p.ral)).toEqual(['3020', '3020']);
   });
 
-  it('a colour on a part takes its print off; on the side shown the printed part stays as it is', () => {
+  it('a colour on a part takes its print off; on the side shown the printed plates (both of the part) stay as they are', () => {
     const k = partKey(front(v0()));
-    const printed = setPodiumPrint(v0(), 'c1', [k], 'logo');
+    const printed = printCounterSide(v0(), 'c1', [k], 'logo');
     expect(printOf(paintCounterPlates(printed, 'c1', [k], '3020').objects[0].sections!, front(v0()))).toBeUndefined();
     const r = paintCounterSide(printed, 'c1', keys(printed), '3020');
-    expect(r.skipped).toBe(1);
+    expect(r.skipped).toBe(2);
     expect(printOf(r.v.objects[0].sections!, front(v0()))).toBe('logo');
     expect(ralsOf(r.v.objects[0].sections!, front(v0())).every((x) => x === null)).toBe(true);
   });
@@ -196,9 +196,9 @@ describe('a counter of Disker og podier: a colour per plate (Byggeregel K6, Bjø
   it('the counter colour (pill, Fyll) takes the colours of their own off, a printed part keeps the colour it had; nothing else is painted', () => {
     const k = partKey(front(v0()));
     let v = paintCounterPlates(v0(), 'c1', keys(v0()), '5010');
-    v = setPodiumPrint(v, 'c1', [k], 'logo');
+    v = printCounterSide(v, 'c1', [k], 'logo');
     const r = paintAllCounters(v, '7012');
-    expect(r.skipped).toBe(1);
+    expect(r.skipped).toBe(2);
     expect(r.v.objects.map((o) => o.ral)).toEqual(['7012', undefined]);
     expect(new Set(rals(r.v))).toEqual(new Set(['7012', '5010']));
     expect(ralsOf(r.v.objects[0].sections!, front(v0())).every((x) => x === '5010')).toBe(true);

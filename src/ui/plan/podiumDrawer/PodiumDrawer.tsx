@@ -140,7 +140,7 @@ export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect,
           )
         : hintLine(
           decorOpen && 'Åpen: ingen print eller dekal',
-          pi === undefined ? 'Farge og print gjelder hele siden, deler med print står som før' : li === undefined ? 'Farge og print gjelder delen' : 'Fargen gjelder åpningen, også skyvedøren der, print hele delen',
+          pi === undefined ? 'Farge og print gjelder hele siden, plater med print står som før' : li === undefined ? 'Farge og print gjelder delen, print som ett bilde' : 'Farge og print gjelder åpningen, også skyvedøren der',
           pi === undefined && 'Velg en farge, så malerspann eller malerkost, og klikk risset',
           chosenDecal ? 'dra dekalen for å flytte, håndtakene for å skalere' : 'klikk en dekal i risset for å flytte og skalere den',
           'aldri på åpen del',

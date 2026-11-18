@@ -1,6 +1,6 @@
 // The counter drawer's paint tools, as the wall drawer's (Bjørn 18.11.2026).
 import { describe, expect, it } from 'vitest';
-import { printOf, setPodiumPrint, takesDecor } from '../../../domain/podiumDecor';
+import { printAt, printCounterSide, printOf, takesDecor } from '../../../domain/podiumDecor';
 import { partKey, podiumParts } from '../../../domain/podiumFaces';
 import { stockSections } from '../../../domain/podiumStock';
 import type { PlacedObject, Variant } from '../../../domain/types';
@@ -34,16 +34,20 @@ describe('the counter drawer: bucket and brush', () => {
   it('the bucket colours the side shown and leaves a printed part as it is, saying so', () => {
     const o = start().objects[0];
     const front = sideElevation(o, drawerSides(o)[0].side).parts.find((p) => takesDecor(o.sections!, p.part))!;
-    const v = setPodiumPrint(start(), 'c1', [front.key], 'logo');
+    const v = printCounterSide(start(), 'c1', [front.key], 'logo');
     const r = stroke(v, 'bucket', '3020');
-    expect(r.toasts).toEqual(['1 del med print står som før']);
+    expect(r.toasts).toEqual(['2 plater med print står som før']);
     expect(printOf(r.v.objects[0].sections!, front.part)).toBe('logo');
   });
 
-  it('the print brush prints a part, the same motif again does nothing', () => {
+  it('the print brush lays the whole motif on one plate, the same motif again does nothing', () => {
     const a = stroke(start(), 'brush', PRINT);
-    const key = partKey(podiumParts(a.v.objects[0].sections!).find((p) => printOf(a.v.objects[0].sections!, p))!);
-    expect(key).toBeTruthy();
+    const ss = a.v.objects[0].sections!;
+    const p = podiumParts(ss).find((q) => printOf(ss, q, 0))!;
+    expect(partKey(p)).toBeTruthy();
+    // Only the plate brushed: the one over it on the same part has none
+    expect(printOf(ss, p, 1)).toBeUndefined();
+    expect(printAt(ss, p, 0)).toEqual({ motif: 'logo' });
     expect(stroke(a.v, 'brush', PRINT, 0, false).v).toBe(a.v);
   });
 });

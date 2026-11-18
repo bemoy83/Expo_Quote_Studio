@@ -275,7 +275,7 @@ og kalkyle med 6560, som er et ferdig oppsett i det (K22).
   og hyllene (`boards` med `role: 'shelf'`). `ITEM.counterShelf` i kalkylen. I skuffen `PlanSelection.podiumLight`,
   `FlatToggles` i `controls.tsx`, og `lightBands` i `podiumView.ts`.
 - Print og dekal (K20): `SectionSide.print`/`decals` (`PodiumDecal`); `domain/podiumDecor.ts` (`partWindows`,
-  `podiumPrints` med beskjæring per vindu, `podiumDecals`, `setPodiumPrint`, `addPodiumDecal`, `updatePodiumDecal`,
+  `podiumPrints` med beskjæring per vindu, `podiumDecals`, `printCounterSide` (spannet), `printCounterPlate` (kosten), `unprintCounter`, `addPodiumDecal`, `updatePodiumDecal`,
   `podiumDecorAreas` med målene som kuttes, `decalRoom`: hvor en dekal kan stå). Kalkylen i `calc/lines/decor.ts`
   (`podiumFoil`, egen artikkel 8023 `sys.foilCounter`). Vist i risset (`sideDecor` i `podiumView.ts`,
   `Handles` i `PodiumElevation`), i planen (`PrintMarks` i `layers/ObjectLayer.tsx`) og i 3D (`buildPodiumDecor` i

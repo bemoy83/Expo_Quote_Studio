@@ -3,10 +3,10 @@
 // with the palette, a colour or «Print» last, then a click in the drawing; with a part or a light opening chosen, the
 // palette on it at once, and the bucket and brush let it go. Then the decal chosen, and in the detail height the motif
 // library with + Dekal. The rules are domain/paint.ts's: a colour on a part or an opening takes its print off, the
-// bucket leaves the printed parts as they are. Print and decals go only on the parts that take them: not open all over.
+// bucket leaves the printed plates as they are. Print and decals go only on the parts that take them: not open all over.
 import { Plus, Trash2 } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { addPodiumDecal, setPodiumPrint, takesDecor, updatePodiumDecal, type PlacedDecal } from '../../../domain/podiumDecor'
+import { addPodiumDecal, printCounterPlate, printCounterSide, takesDecor, updatePodiumDecal, type PlacedDecal } from '../../../domain/podiumDecor'
 import type { Motif, PlacedObject, Variant } from '../../../domain/types'
 import { counterRal } from '../../../domain/objects'
 import { paintCounterPlates } from '../../../domain/paint'
@@ -46,12 +46,14 @@ export function PodiumDecor(props: Props) {
   const ral = counterRal(o)
   // K20: print and decals go on the parts that take them: not open all over
   const decorParts = parts.filter((p) => takesDecor(o.sections!, p.part))
-  const scopePrint = printShown(o, parts)
+  const scopePrint = printShown(o, parts, light)
   // K6: the colour of what is chosen, of its plates and sliding doors (not of what is open); none when they differ
   const colours = coloursShown(parts, ral, light)
   const colour = colours.length === 1 ? colours[0] : undefined
   const motif = findMotif(motifs, motifSel ?? scopePrint ?? decal?.decal.motif) ?? motifs[0]
-  const print = (keys: string[], id: string | null) => onEdit((x) => setPodiumPrint(x, o.id, keys, id))
+  // A plate chosen takes the whole motif, a part one picture over its plates (as the brush and the bucket, K20)
+  const print = (keys: string[], id: string) =>
+    onEdit((x) => (light !== undefined && keys.length === 1 ? printCounterPlate(x, o.id, keys[0], light, id) : printCounterSide(x, o.id, keys, id)))
   const chosen = part !== undefined
   const painting = tool !== null && !chosen
   /** What the swatch shows: the pen while a tool is out, else what is chosen has (none when it differs). */

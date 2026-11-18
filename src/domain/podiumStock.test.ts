@@ -8,7 +8,7 @@ import { DEFAULT_PRICING, ITEM } from '../pricing/data';
 import { RULES } from '../rules/rules';
 import { pickRows } from '../ui/workorder/pickRows';
 import { counterBuildOf } from './counterShape';
-import { setPodiumPrint } from './podiumDecor';
+import { printCounterSide } from './podiumDecor';
 import { setPodiumLight, partKey, podiumParts } from './podiumFaces';
 import { addStockAnywhere, podiumAt } from './podiums';
 import { soldAs, stockOf, stockSections } from './podiumStock';
@@ -51,7 +51,7 @@ describe('6560 in Disker og podier (K22)', () => {
     expect(isStock6560([{ ...stockSections()[0], sides: { 'z+': { lights: ['open', 'open'] } } }])).toBe(true);
     const v = vOf({ ...stock(), ral: '3002', rot: 90 });
     const front = podiumParts(sectionsOf(v)).find((p) => p.axis === 'z' && p.out === 1)!;
-    const printed = setPodiumPrint(v, 'i1', [partKey(front)], 'm1');
+    const printed = printCounterSide(v, 'i1', [partKey(front)], 'm1');
     expect(isStock6560(sectionsOf(printed))).toBe(true);
     const lines = linesOf(printed);
     expect(lines.find((x) => x.artnr === '6560')?.price).toBe(1320);

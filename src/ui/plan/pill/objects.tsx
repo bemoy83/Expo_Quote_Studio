@@ -63,7 +63,7 @@ export function objectPill(p: PillActions, c: Of<'object'>, remove: () => void):
     meta: set > 1 ? `i sett med ${set - 1} til` : fp ? `${fp.round ? `ø ${mm(fp.w)}` : `${mm(fp.w)} × ${mm(fp.d)}`}${o.sections ? ` · H ${podiumHeights(o).map((x) => mm(x / 1000)).join('/')}` : ''}${o.rot ? ` · ${o.rot}°` : ''}` : undefined,
     body: (
       <>
-        {/* A counter's plates in the wall colours, as on a wall (Byggeregel K6): the whole counter, a printed part stays as it is */}
+        {/* A counter's plates in the wall colours, as on a wall (Byggeregel K6): the whole counter, a printed plate stays as it is */}
         {f?.product.counter && (
           <>
             <Colours value={counterRal(o)} title={(n) => `Disken ${n}`} onPick={(r) => onEdit((x) => paintCounter(x, o.id, r).v)} />

@@ -1,6 +1,6 @@
 {
   "format": "standskisse",
-  "versjon": 4,
+  "versjon": 5,
   "prosjekt": {
     "fields": [
       {
@@ -66,10 +66,18 @@
               "h": 1000,
               "sides": {
                 "z+": {
-                  "print": "banner"
+                  "print": [
+                    {
+                      "motif": "banner"
+                    }
+                  ]
                 },
                 "x+": {
-                  "print": "banner"
+                  "print": [
+                    {
+                      "motif": "banner"
+                    }
+                  ]
                 }
               }
             }
