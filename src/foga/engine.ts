@@ -4,6 +4,7 @@
 // Byggeregler V2–V5, S8, T1, D2, P1, P2, H2, H3 (docs/byggeregler.md).
 import { resolveGroup } from '../catalog/groups';
 import { fogaPart } from './parts';
+import { modulePlate, swapPlate, type PlateSpec } from './plates';
 import type { Recipes } from './recipes';
 import type { FogaStructure, ModuleSpec } from './structure';
 
@@ -54,9 +55,6 @@ export const BOM_GROUP = {
 } as const;
 
 type BomGroup = (typeof BOM_GROUP)[keyof typeof BOM_GROUP];
-
-/** Height a rail takes up in the wall: the long side of its section (92: 40, 91: 30). */
-const railHeight = (code: string) => Math.max(...(fogaPart(code).section ?? [0]));
 
 const mmList = (cuts: Map<number, number>) =>
   [...cuts]
@@ -116,12 +114,15 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   const postW = fogaPart(r.wall.post).section?.[0] ?? 0;
   const between = (centres: number) => centres - postW;
   const rail = between(z.cc);
-  const plate = r.wall.plate;
-  const railsH = railHeight(r.wall.topRail) + railHeight(r.wall.bottomRail);
-  const plateExtra = plate.h - (z.postLength - railsH);
-  const header = z.postLength - r.door.floorGap - r.door.leaf - r.door.topGap;
-  const addPlate = (group: BomGroup, ral: string, h: number, note: string, w = plate.w) =>
-    put(group, `${ral}|${w}|${h}|${note}`, { artnr: '', name: fogaPart(plate.code).name, detail: `${w} × ${h} mm${note}`, preassembled: false, ral }, 1, h);
+  /** Every plate goes through here, a wall's, a header's and a counter's (plates.ts): by colour and cut size, in its group. */
+  const putPlate = (p: PlateSpec) => {
+    if (p.group === 'counter') {
+      const k = `${p.ral}|${p.w}×${p.h}`;
+      return put(BOM_GROUP.counters, `plate|${k}`, { artnr: '', name: `Diskplate, ${fogaPart(r.counter.plate).name}`, detail: `${p.w} × ${p.h} mm`, preassembled: false, ral: p.ral }, 1);
+    }
+    const note = p.note ?? '';
+    put(p.group === 'header' ? BOM_GROUP.header : BOM_GROUP.plates, `${p.ral}|${p.w}|${p.h}|${note}`, { artnr: '', name: fogaPart(r.wall.plate.code).name, detail: `${p.w} × ${p.h} mm${note}`, preassembled: false, ral: p.ral }, 1, p.h);
+  };
   /** A module's c/c, mm: a shorter one is cut (Byggeregel V1), its rails c/c − 40 and its plate that much narrower. */
   const ccOf = (m: ModuleSpec) => m.cc ?? z.cc;
 
@@ -167,10 +168,9 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
     unit(BOM_GROUP.header, 'Toppskinne', r.wall.topRail, rail, r.wall.railCoupling, 1, 'overstykke');
     unit(BOM_GROUP.header, 'Bunnskinne', bottomRail(m), rail, r.wall.railCoupling, 1, 'overstykke');
   }
-  for (const m of walled) addPlate(BOM_GROUP.plates, m.plate, plate.h, '', plate.w - (z.cc - ccOf(m)));
-  for (const ral of s.swaps ?? []) addPlate(BOM_GROUP.plates, ral, plate.h, ' · platebytte i standvegg');
-  const headerRails = (m: ModuleSpec) => railHeight(r.wall.topRail) + railHeight(bottomRail(m));
-  for (const m of headers) addPlate(BOM_GROUP.header, m.plate, header - headerRails(m) + plateExtra, ' · overstykke');
+  for (const m of walled) putPlate(modulePlate(m, r, z));
+  for (const ral of s.swaps ?? []) putPlate(swapPlate(ral, r));
+  for (const m of headers) putPlate(modulePlate(m, r, z));
 
   // Takdrager: 292 between the posts with two 600 in each end, one piece per length
   for (const b of s.beams) unit(BOM_GROUP.beams, 'Takdrager', r.beam.profile, between(b.lengthMm), r.beam.coupling, 1);
@@ -330,7 +330,8 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   }
   for (const [k, qty] of of(cp?.plates).sort(([a], [b]) => split(a)[0].localeCompare(split(b)[0]) || larger(split(a)[1], split(b)[1]))) {
     const [ral, size] = split(k);
-    put(BOM_GROUP.counters, `plate|${k}`, { artnr: '', name: `Diskplate, ${fogaPart(dk.plate).name}`, detail: `${size.replace('×', ' × ')} mm`, preassembled: false, ral }, qty);
+    const [w, h] = sizes(size);
+    for (let i = 0; i < qty; i++) putPlate({ group: 'counter', ral, w, h });
   }
   for (const [size, qty] of of(cp?.boards).sort(([a], [b]) => larger(a, b)))
     put(BOM_GROUP.counters, `board|${size}`, { artnr: '', name: `Topp- og hylleplate, ${fogaPart(dk.board.code).name}`, detail: `${size.replace('×', ' × ')} mm`, preassembled: false }, qty);
