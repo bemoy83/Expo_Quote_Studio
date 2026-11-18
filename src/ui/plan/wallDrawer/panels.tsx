@@ -4,8 +4,8 @@
 import { ArrowLeft, ArrowRight, PaintBucket, Paintbrush, Palette, Repeat2 } from 'lucide-react'
 import type { Dispatch, ReactNode, SetStateAction } from 'react'
 import { foilBlocked, updateFoil } from '../../../domain/decor'
-import { setPanels } from '../../../domain/panels'
-import { clearPrint, printPlate, printsOn } from '../../../domain/print'
+import { paintPlate } from '../../../domain/paint'
+import { printPlate, printsOn } from '../../../domain/print'
 import { removeOpening } from '../../../domain/doors'
 import type { FaceSide } from '../../../domain/faces'
 import { textileBox, updateTextile } from '../../../domain/textile/inFrame'
@@ -200,13 +200,12 @@ export function FeltPanel(props: {
   mods: (BuiltModule | undefined)[]
   motifs: Motif[]
   pm: Motif | undefined
-  base: (key: string) => string
   setTool: (t: PaintTool) => void
   select: (x: Partial<PlanSelection>) => void
   onEdit: Edit
   onToast: (t: string) => void
 }) {
-  const { v, w, s, m, mods, motifs, pm, base, setTool, select, onEdit, onToast } = props
+  const { v, w, s, m, mods, motifs, pm, setTool, select, onEdit, onToast } = props
   const key = mods[m]!.key
   const plate = mods[m]!.plate
   const printed = printsOn(v, w.id, s).find((f) => f.module === m)
@@ -215,7 +214,7 @@ export function FeltPanel(props: {
   const noPrint = foilBlocked(v, rules, w.id, m, s, true)
   /** A colour on this plate (the print on this face comes off: the last stroke wins), or the chosen motif over it. */
   const pick = (r: string) => {
-    if (r !== PRINT) return onEdit((x) => clearPrint(setPanels(x, [key], r, base), w.id, s, [m]))
+    if (r !== PRINT) return onEdit((x) => paintPlate(x, w.id, s, m, key, r))
     if (!pm) return onToast('Last opp et motiv i Profilering først')
     if (noPrint) return onToast(noPrint)
     if (printed?.motif !== pm.id || printed.run) onEdit((x) => printPlate(x, rules, w.id, m, s, pm.id))

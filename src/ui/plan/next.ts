@@ -155,7 +155,7 @@ function targetOf(p: NextInput): NextTarget | null {
       const lo: Point = [Math.min(...ends.map((q) => q[0])), Math.min(...ends.map((q) => q[1]))]
       const hi: Point = [Math.max(...ends.map((q) => q[0])), Math.max(...ends.map((q) => q[1]))]
       const text = `${ms.length} ${ms.length === 1 ? 'plate' : 'plater'} · RAL ${wallRal}`
-      return area({ edit: (x) => paintPlates(x, p.mods, keys, wallRal), hint: null, pill: { a: lo, b: hi, width: 'wall', text } })
+      return area({ edit: (x) => paintPlates(x, dragging.wallId, dragging.p0, keys, wallRal), hint: null, pill: { a: lo, b: hi, width: 'wall', text } })
     })
   }
 
@@ -251,7 +251,7 @@ function targetOf(p: NextInput): NextTarget | null {
   const shown = shownModule(v.stand, at, !!p.fine, runUnit(pens))
   if (pens.wallTool && wallRal) {
     const m = plateAt(p.mods, at)
-    if (m) return target(`plate:${m.key}`, () => area({ edit: (x) => paintPlates(x, p.mods, [m.key], wallRal), hint: null }))
+    if (m) return target(`plate:${m.key}`, () => area({ edit: (x) => paintPlates(x, m.wallId, at, [m.key], wallRal), hint: null }))
   }
   if ((pens.wallTool || pens.beamTool) && hits.onStand(at)) {
     return strokeTarget(shown.a, shown.b, false)

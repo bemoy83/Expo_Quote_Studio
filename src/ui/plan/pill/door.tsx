@@ -3,7 +3,8 @@
 // (docs/pille-og-skuff.md).
 import { ArrowLeftRight, Blinds, DoorClosed, FlipHorizontal2 } from 'lucide-react'
 import { fabricOf, shortName } from '../../../catalog/lookup'
-import { canFlipDoor, doorRal, flipHinge, flipSwing, openingRoom, setCurtainFabric, setDoorRal, setOpeningProduct } from '../../../domain/doors'
+import { canFlipDoor, doorFace, doorRal, flipHinge, flipSwing, openingRoom, setCurtainFabric, setOpeningProduct } from '../../../domain/doors'
+import { paintLeaf } from '../../../domain/paint'
 import { roomName } from '../../../domain/rooms'
 import { isStandWall } from '../../../domain/walls'
 import { floorBoxes, openingProducts, productOf, rules } from '../../env'
@@ -48,7 +49,8 @@ export function doorPill(p: PillActions, c: Extract<Chosen, { kind: 'opening' }>
               <ArrowLeftRight size={15} />
             </QBtn>
             <Sep />
-            <Colours value={ral} title={(n) => `Dørblad ${n}`} onPick={(r) => onEdit((y) => setDoorRal(y, o.id, r))} />
+            {/* The leaf is what is chosen, so the last stroke wins: its print on the face shown comes off */}
+            <Colours value={ral} title={(n) => `Dørblad ${n}`} onPick={(r) => onEdit((y) => paintLeaf(y, o.id, p.selection.side ?? doorFace(v, w, o), r))} />
           </>
         )}
         {!door && product?.fabrics && fabric && (

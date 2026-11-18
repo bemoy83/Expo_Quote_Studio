@@ -11,6 +11,7 @@ import { EquipSection, SearchResults } from './sections/EquipSection'
 import { FloorSection } from './sections/FloorSection'
 import { ProfileSection } from './sections/ProfileSection'
 import { WallSection } from './sections/WallSection'
+import type { ToastMsg } from '../useToast'
 
 export interface RailProps {
   v: Variant
@@ -27,7 +28,7 @@ export interface RailProps {
   /** The item behind each function of each pen (quick picks by function). */
   picks: Partial<Record<PenTool, PenPicks>>
   onEdit: (fn: (v: Variant) => Variant) => void
-  onToast: (t: string) => void
+  onToast: (t: ToastMsg | string) => void
   /** Motif library: samples and the customer's own. */
   motifs: Motif[]
   /** Add the customer's own motif to the library (same as upload on the profiling quick picks). */

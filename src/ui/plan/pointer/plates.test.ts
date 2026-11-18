@@ -4,6 +4,9 @@ import { wallModules } from '../../../domain/grid'
 import type { Variant } from '../../../domain/types'
 import { createVariant } from '../../../domain/variant'
 import { builtModules } from '../../../domain/walls'
+import { faceAt, sideOf } from '../../../domain/faces'
+import { printPlate } from '../../../domain/print'
+import { RULES } from '../../../rules/rules'
 import { paintPlates, plateAt, platesAlong } from './plates'
 
 // 6 × 4 row stand with an inner wall from (2, 1) to (2, 4): stand walls back (y 0) and both sides
@@ -29,11 +32,23 @@ describe('the wall pen on walls that stand', () => {
 
   it('colours plates in the pen colour, and takes the colour off where it is the wall own', () => {
     const v = base()
-    const mods = builtModules(v)
-    const key = wallModules(inner(v))[1].key
-    const red = paintPlates(v, mods, [key], '3020')
+    const w = inner(v)
+    const key = wallModules(w)[1].key
+    const at = { x: 2.1, y: 2.5 }
+    const red = paintPlates(v, w.id, at, [key], '3020')
     expect(red.panels?.[key]).toBe('3020')
-    const back = paintPlates(red, builtModules(red), [key], v.defaultPlate)
+    const back = paintPlates(red, w.id, at, [key], v.defaultPlate)
     expect(back.panels?.[key]).toBeUndefined()
+  })
+
+  it('the last stroke wins: a printed plate coloured with the pen loses its print on the face pressed, not on the other', () => {
+    let v = base()
+    const w = inner(v)
+    const key = wallModules(w)[1].key
+    const right = faceAt(v, w, { x: 2.1, y: 2.5 })
+    v = printPlate(printPlate(v, RULES, w.id, 1, right, 'logo'), RULES, w.id, 1, right === 1 ? -1 : 1, 'logo')
+    const x = paintPlates(v, w.id, { x: 2.1, y: 2.5 }, [key], '3020')
+    expect(x.foils.map((f) => sideOf(x, f))).toEqual([right === 1 ? -1 : 1])
+    expect(x.panels?.[key]).toBe('3020')
   })
 })

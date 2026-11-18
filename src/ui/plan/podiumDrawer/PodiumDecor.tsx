@@ -43,10 +43,13 @@ export function PodiumDecor({ v, o, parts, part, scope, partNav, decal, motifs, 
   const print = (keys: string[] | 'all', id: string | null) => onEdit((x) => setPodiumPrint(x, o.id, keys, id))
   const pickSwatch = (r: string) => {
     if (r === PRINT) return motif && print(decorParts.map((p) => p.key), motif.id)
-    // K6: the colour is the whole counter's; the last stroke wins, so it takes the print off what is chosen
-    onEdit((x) => setPodiumPrint(setCounterRal(x, o.id, r), o.id, decorParts.map((p) => p.key), null))
+    // K6: the colour is the whole counter's. With a part chosen the last stroke wins and its print comes off; over the
+    // whole side the prints stay, as print is a choice made on purpose (Bjørn 18.11.2026)
+    onEdit((x) => (part === undefined ? setCounterRal(x, o.id, r) : setPodiumPrint(setCounterRal(x, o.id, r), o.id, decorParts.map((p) => p.key), null)))
   }
-  const fillAll = () => (scopePrint && motif ? print('all', motif.id) : onEdit((x) => setPodiumPrint(x, o.id, 'all', null)))
+  // The bucket prints every part that takes it. The colour is already the whole counter's (K6), and the bucket leaves
+  // prints as they are, so with a colour it has nothing to do until a counter has a colour per plate
+  const fillAll = () => scopePrint && motif && print('all', motif.id)
   const pickMotif = (id: string) => {
     setMotifId(id)
     if (decal) return onEdit((x) => updatePodiumDecal(x, o.id, decal.decal.id, { motif: id }))
@@ -71,7 +74,7 @@ export function PodiumDecor({ v, o, parts, part, scope, partNav, decal, motifs, 
         tools={
           <>
             {partNav}
-            <IconButton icon={PaintBucket} label={scopePrint ? 'Fyll: print på hele disken' : 'Fyll: fargen på hele disken, uten print'} size={15} className="ink" onClick={fillAll} />
+            <IconButton icon={PaintBucket} label={scopePrint ? 'Fyll: print på hele disken' : 'Fyll: fargen gjelder alt på disken, deler med print står som før'} size={15} className="ink" disabled={!scopePrint} onClick={fillAll} />
           </>
         }
       >

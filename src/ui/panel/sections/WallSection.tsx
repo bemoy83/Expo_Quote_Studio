@@ -1,16 +1,18 @@
 // Panel tab Vegger: the wall plate for all walls, drawn inner beams, back rooms and openings.
 import { Blinds, Box, DoorClosed, Paintbrush, Trash2, Ungroup } from 'lucide-react'
 import { bounds } from '../../../domain/outline'
+import { paintAllWalls } from '../../../domain/paint'
 import { dissolveRoom, isRoomWallId, removeRoom, ROOM_LABELS, roomName, roomOpenings, roomSize, updateRoom } from '../../../domain/rooms'
 import { INK, LAYER_COLOR, SUNKEN } from '../../colors'
 import { IconButton } from '../../controls'
 import { catalog, productOf, rules, wallPlates } from '../../env'
 import { count, fmt, kr, mm } from '../../format'
+import { fillKeeping } from '../../fillKeeping'
 import { penOn } from '../../tools'
 import { ProductRow, Swatch, VariantChips } from '../ProductRow'
 import type { RailProps } from '../Rail'
 
-export function WallSection({ v, res, brush, tool, pick, onEdit, onAddRoom, onSelect, selection }: RailProps) {
+export function WallSection({ v, res, brush, tool, pick, onEdit, onToast, onAddRoom, onSelect, selection }: RailProps) {
   const plates = wallPlates()
   const di = Math.max(0, plates.findIndex((p) => p.ral === v.defaultPlate))
   const def = plates[di]
@@ -38,13 +40,14 @@ export function WallSection({ v, res, brush, tool, pick, onEdit, onAddRoom, onSe
             chips={plates.map((p) => ({ name: `${p.name} · RAL ${p.ral}`, color: p.color }))}
             selected={di}
             onSelect={(i) => {
-              onEdit((x) => ({ ...x, defaultPlate: plates[i].ral! }))
+              // The stand's colour is Fyll on every wall (Bjørn 18.11.2026): own colours off, printed plates as they are
+              fillKeeping(v, (x, prints) => paintAllWalls(x, plates[i].ral!, prints), onEdit, onToast)
               if (wallPen) pick({ kind: 'wall', ral: plates[i].ral! })
             }}
           />
         }
       />
-      <p className="panel-note">Gjelder alle vegger. Velg en vegg i planen for å gi den egen farge.</p>
+      <p className="panel-note">Gjelder alle vegger, også de med egen farge. Felt med print står som før. Velg en vegg i planen for å gi den egen farge.</p>
 
       <div className="panel-sec eyebrow">Innvendig takdrager</div>
       <ProductRow

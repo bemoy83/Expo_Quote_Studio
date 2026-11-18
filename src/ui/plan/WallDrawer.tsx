@@ -175,8 +175,8 @@ export function WallDrawer(p: Props) {
           t.setPrintMotif(id)
           const no = foilBlocked(v, rules, w.id, Fe, s, true)
           if (no) return p.onToast(no)
-          const on = printsOn(v, w.id, s).find((f) => f.module === Fe)
-          if (on?.motif !== id || on.run) p.onEdit((x) => printPlate(x, rules, w.id, Fe, s, id))
+          // The same motif again does nothing (printPlate)
+          p.onEdit((x) => printPlate(x, rules, w.id, Fe, s, id))
         }
 
   /** The chosen felt has a colour of its own or a print on this face, which its trash takes off. */
@@ -239,7 +239,7 @@ export function WallDrawer(p: Props) {
             {ui.panel === 'felt-extras' && Fe !== undefined && <FeltFittings v={v} w={w} s={s} m={Fe} mods={mods} onBrush={() => takeBrush(true)} select={select} onEdit={p.onEdit} onToast={p.onToast} />}
 
             {ui.panel === 'felt-decor' && Fe !== undefined && (
-              <FeltPanel v={v} w={w} s={s} m={Fe} mods={mods} motifs={motifs} pm={pm} base={base} setTool={setTool} select={select} onEdit={p.onEdit} onToast={p.onToast} />
+              <FeltPanel v={v} w={w} s={s} m={Fe} mods={mods} motifs={motifs} pm={pm} setTool={setTool} select={select} onEdit={p.onEdit} onToast={p.onToast} />
             )}
 
             {ui.panel === 'wall-extras' && <WallFittings v={v} w={w} s={s} brush={brushOn} onBrush={takeBrush} onEdit={p.onEdit} onToast={p.onToast} />}
