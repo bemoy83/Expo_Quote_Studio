@@ -6,7 +6,7 @@
 // bucket leaves the printed parts as they are. Print and decals go only on the parts that take them: not open all over.
 import { Plus, Trash2 } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { addPodiumDecal, printOf, setPodiumPrint, takesDecor, updatePodiumDecal, type PlacedDecal } from '../../../domain/podiumDecor'
+import { addPodiumDecal, setPodiumPrint, takesDecor, updatePodiumDecal, type PlacedDecal } from '../../../domain/podiumDecor'
 import type { Motif, PlacedObject, Variant } from '../../../domain/types'
 import { counterRal } from '../../../domain/objects'
 import { paintCounterPlates } from '../../../domain/paint'
@@ -15,8 +15,9 @@ import { mm } from '../../format'
 import { findMotif } from '../../motifs'
 import { ColourSection, PRINT, Shelf } from '../drawerParts'
 import type { PlanSelection } from '../selection'
-import type { CounterTool } from './paint'
-import type { ElevationPart } from './podiumView'
+import { motifAside } from '../drawerText'
+import type { usePaintTools } from '../paintTools'
+import { coloursShown, printShown, type ElevationPart } from './podiumView'
 
 interface Props {
   v: Variant
@@ -30,31 +31,26 @@ interface Props {
   /** The decal chosen in the drawing. */
   decal?: PlacedDecal
   motifs: Motif[]
-  /** The paint tool out, and what it lays on (unset: the colour of the side). */
-  tool: CounterTool
-  setTool: (t: CounterTool) => void
+  /** The paint tools (the tool out, what it lays on, the motif chosen in the library for print and decals). */
+  tools: ReturnType<typeof usePaintTools>
   /** What the tools lay on: the colour or PRINT picked, else what the side has. */
   pen: string
-  setPaint: (r: string | null) => void
-  /** The motif for print and decals, chosen in the library (unset: the print shown, else the first). */
-  motifId: string | undefined
-  setMotifId: (id: string) => void
   onUpload: (f: File) => void
   select: (x: Partial<PlanSelection>) => void
   onEdit: (fn: (v: Variant) => Variant, history?: boolean) => void
 }
 
 export function PodiumDecor(props: Props) {
-  const { v, o, parts, part, light, scope, partNav, decal, motifs, tool, setTool, pen, setPaint, motifId, setMotifId, onUpload, select, onEdit } = props
+  const { v, o, parts, part, light, scope, partNav, decal, motifs, tools, pen, onUpload, select, onEdit } = props
+  const { tool, setTool, setPaint, motifSel, setMotif } = tools
   const ral = counterRal(o)
   // K20: print and decals go on the parts that take them: not open all over
   const decorParts = parts.filter((p) => takesDecor(o.sections!, p.part))
-  const printed = [...new Set(decorParts.map((p) => printOf(o.sections!, p.part) ?? null))]
-  const scopePrint = printed.length === 1 ? printed[0] : null
+  const scopePrint = printShown(o, parts)
   // K6: the colour of what is chosen, of its plates and sliding doors (not of what is open); none when they differ
-  const colours = [...new Set(parts.flatMap((p) => p.lights.flatMap((k, i) => (k === 'open' || (light !== undefined && i !== light) ? [] : [p.rals[i] ?? ral]))))]
+  const colours = coloursShown(parts, ral, light)
   const colour = colours.length === 1 ? colours[0] : undefined
-  const motif = findMotif(motifs, motifId ?? scopePrint ?? decal?.decal.motif) ?? motifs[0]
+  const motif = findMotif(motifs, motifSel ?? scopePrint ?? decal?.decal.motif) ?? motifs[0]
   const print = (keys: string[], id: string | null) => onEdit((x) => setPodiumPrint(x, o.id, keys, id))
   const chosen = part !== undefined
   const painting = tool !== null && !chosen
@@ -64,15 +60,15 @@ export function PodiumDecor(props: Props) {
     // Nothing chosen: the swatch is the pen, and picking one takes up the bucket when no tool is out (as on a wall)
     if (!chosen) {
       setPaint(r)
-      if (!tool) setTool('side')
+      if (!tool) setTool('bucket')
       return
     }
     // On a part or an opening at once: the last stroke wins and the part's print comes off
-    if (r === PRINT) return motif && printed[0] !== motif.id && print(decorParts.map((p) => p.key), motif.id)
+    if (r === PRINT) return motif && scopePrint !== motif.id && print(decorParts.map((p) => p.key), motif.id)
     onEdit((x) => paintCounterPlates(x, o.id, parts.map((p) => p.key), r, light))
   }
   /** The bucket or brush: what is chosen lets go and the side is coloured as with nothing chosen. */
-  const take = (t: CounterTool) => {
+  const take = (t: 'bucket' | 'brush') => {
     if (chosen) {
       setPaint(scopePrint ? PRINT : (colour ?? null))
       select({})
@@ -80,12 +76,12 @@ export function PodiumDecor(props: Props) {
     } else setTool(tool === t ? null : t)
   }
   const pickMotif = (id: string) => {
-    setMotifId(id)
+    setMotif(id)
     if (decal) return onEdit((x) => updatePodiumDecal(x, o.id, decal.decal.id, { motif: id }))
     // As on a wall: a motif tapped prints a part chosen at once, like a colour in the palette; with nothing chosen it is
     // the motif «Print» lays on
     if (!chosen) return
-    if (decorParts.length && printed[0] !== id) print(decorParts.map((p) => p.key), id)
+    if (decorParts.length && scopePrint !== id) print(decorParts.map((p) => p.key), id)
   }
   const addDecal = () => {
     const target = decorParts[0]
@@ -101,11 +97,11 @@ export function PodiumDecor(props: Props) {
       {/* K6, K20: colour and print on what is chosen, or the pen with nothing chosen: the title says what, the value what
           it has or lays on */}
       <ColourSection
-        title={chosen ? scope : painting && tool === 'plate' ? 'Plate' : 'Hele siden'}
+        title={chosen ? scope : painting && tool === 'brush' ? 'Plate' : 'Hele siden'}
         value={shown}
         motif={motif}
         nav={partNav}
-        tools={{ what: 'siden', bucket: painting && tool === 'side', brush: painting && tool === 'plate', onBucket: () => take('side'), onBrush: () => take('plate') }}
+        tools={{ what: 'siden', tool: painting ? tool : null, onTool: take }}
         onPick={pickSwatch}
       />
       <hr className="set-rule" />
@@ -116,7 +112,7 @@ export function PodiumDecor(props: Props) {
       ) : (
         <Section title="Dekal" aside={decorParts.length ? 'ingen' : 'åpen'} />
       )}
-      <Shelf title="Profilering" aside={motif ? `motiv ${motif.name}` : 'last opp et motiv'} motifs={motifs} value={motif?.id} onPick={pickMotif} onUpload={onUpload}>
+      <Shelf title="Profilering" aside={motifAside(motif)} motifs={motifs} value={motif?.id} onPick={pickMotif} onUpload={onUpload}>
         <Button variant="ghost" icon={Plus} disabled={!decorParts.length || !motif} onClick={addDecal}>
           Dekal
         </Button>

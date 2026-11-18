@@ -1,7 +1,7 @@
 // What the drawer for a counter of Disker og podier shows (trinn 2): its sides in order round it, named after the stand
 // side each faces, the side chosen, and that side seen from outside, left to right, part by part. Pure, with tests.
 import { toPlan, turn } from '../../../domain/counterShape'
-import { podiumDecals, podiumPrints, rightOf } from '../../../domain/podiumDecor'
+import { podiumDecals, podiumPrints, printOf, rightOf, takesDecor } from '../../../domain/podiumDecor'
 import { lightsOf, onSide, partKey, partsOn, ralsOf, type PodiumPart } from '../../../domain/podiumFaces'
 import { EPS, lineOf } from '../../../domain/podiumSections'
 import type { Crop } from '../../../domain/print'
@@ -126,6 +126,18 @@ export function sideElevation(o: PlacedObject, side: PodiumSide): { parts: Eleva
   }
   return { parts, length: len + 2 * R.face, h: Math.max(...parts.map((p) => p.h), 0) }
 }
+
+/** The motif printed on the parts that take print (K20), as one: null when none is or they differ. */
+export function printShown(o: PlacedObject, parts: ElevationPart[]): string | null {
+  const ps = [...new Set(parts.filter((p) => takesDecor(o.sections ?? [], p.part)).map((p) => printOf(o.sections ?? [], p.part) ?? null))]
+  return ps.length === 1 ? ps[0] : null
+}
+
+/** The colours of the plates and sliding doors of the parts (K6), in light opening `light` or in all, not of what is open:
+ *  `ral` where a plate has none of its own. */
+export const coloursShown = (parts: ElevationPart[], ral: string, light?: number): string[] => [
+  ...new Set(parts.flatMap((p) => p.lights.flatMap((k, i) => (k === 'open' || (light !== undefined && i !== light) ? [] : [p.rals[i] ?? ral])))),
+]
 
 /** What every side of a counter is drawn by, so they share one scale: the longest side's outer length and the highest
  *  section's CC, mm. A short side is drawn narrow, not larger, and sides as high look as high. */

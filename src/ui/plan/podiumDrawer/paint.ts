@@ -8,10 +8,8 @@ import { printOf, setPodiumPrint, takesDecor } from '../../../domain/podiumDecor
 import type { Motif, PlacedObject, Variant } from '../../../domain/types'
 import { count } from '../../format'
 import { PRINT } from '../drawerParts'
+import { applyFill, brushTo, NO_MOTIF, type PaintTool } from '../paintTools'
 import type { ElevationPart } from './podiumView'
-
-/** Which tool is out: the paint bucket (the side shown), the brush (plate by plate), or none. */
-export type CounterTool = 'side' | 'plate' | null
 
 /** What a stroke over the side left as it was. */
 export const partsKept = (n: number) => `${count(n, 'del', 'deler')} med print står som før`
@@ -21,7 +19,7 @@ export interface CounterPaintDeps {
   o: PlacedObject
   /** The parts of the side shown, left to right. */
   side: ElevationPart[]
-  tool: CounterTool
+  tool: PaintTool
   /** What the tools lay on: a plate colour (RAL) or PRINT. */
   paint: string
   /** The motif «Print» lays on. */
@@ -40,20 +38,17 @@ export function counterPaintAt({ v, o, side, tool, paint, pm, onEdit, onCheckpoi
     const p = side[i]
     if (!p || !tool) return
     if (printing && !pm) {
-      if (first) onToast('Last opp et motiv i Profilering først')
+      if (first) onToast(NO_MOTIF)
       return
     }
-    if (tool === 'side') {
+    if (tool === 'bucket') {
       if (!first) return
       if (printing) {
         const keys = side.filter((q) => takesDecor(sections, q.part)).map((q) => q.key)
         if (!keys.length) return onToast('Ingen del på denne siden kan ha print')
         return onEdit((x) => setPodiumPrint(x, o.id, keys, pm!.id))
       }
-      const r = paintCounterSide(v, o.id, side.map((q) => q.key), paint)
-      if (r.v !== v) onEdit(() => r.v)
-      if (r.skipped) onToast(partsKept(r.skipped))
-      return
+      return applyFill(v, paintCounterSide(v, o.id, side.map((q) => q.key), paint), onEdit, onToast, partsKept)
     }
     // The brush: print on the whole part, the same motif again does nothing
     if (printing) {
@@ -67,10 +62,8 @@ export function counterPaintAt({ v, o, side, tool, paint, pm, onEdit, onCheckpoi
     }
     // A colour on the plate, or the counter's again when it already has the brush's; nothing where it is open
     if (p.lights[light] === 'open') return
-    const cur = p.rals[light] ?? ral
-    const printed = !!printOf(sections, p.part)
-    const to = first && cur === paint && !printed ? ral : paint
-    if (!first && cur === to && !printed) return
+    const to = brushTo(p.rals[light] ?? ral, paint, ral, !!printOf(sections, p.part), first)
+    if (to === null) return
     if (first) onCheckpoint()
     onEdit((x) => paintCounterPlates(x, o.id, [p.key], to, light), false)
   }

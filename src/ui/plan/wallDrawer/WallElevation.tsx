@@ -2,7 +2,7 @@
 // against it, textile frames and shelves (hylle 6311). Frames and decals are moved and resized here, shelves moved up,
 // down and sideways, motifs and frames dropped from the motif library (Profilering), and while a paint tool is out each plate is a
 // target for it.
-import { useEffect, useMemo, useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type DragEvent as RDragEvent } from 'react'
 import { foilCenter, foilsOn } from '../../../domain/decor'
 import { doorLevels, doorRal, doorWindows } from '../../../domain/doors'
 import { felt, type FaceSide } from '../../../domain/faces'
@@ -33,7 +33,7 @@ import { ElevationDims } from './ElevationDims'
 import { elevationItems, frame, shelfChains, textileDrawing, type FrameFacts } from './elevationMeasure'
 import { planScale } from '../planScale'
 import { useElementSize } from '../../useElementSize'
-import type { PaintTool } from './paint'
+import { useSweep, type PaintTool } from '../paintTools'
 import { BrushPreview } from './BrushPreview'
 import { useShelfBrush } from './shelfBrush'
 
@@ -97,8 +97,7 @@ export function WallElevation(p: Props) {
   const { v, w, s, L, H, mods, tex, pieceOf, foils, shelves, rooms, T, F, O, motifs, label, painting, printing, tool, paintAt, doorModules, ratioOf, select, selectDoor } = p
   const svg = useRef<SVGSVGElement>(null)
   const [spot, setSpot] = useState<DropSpot | null>(null)
-  /** True from a press on a plate until it is let go: the brush sweeps over the plates entered meanwhile. */
-  const sweeping = useRef(false)
+  const sweep = useSweep()
   /** Along-wall offset → x in the drawing. The face is drawn as seen standing in front of it. */
   const u = (t: number) => (s === 1 ? t : L - t)
   const spanX = (a: number, b: number) => Math.min(u(a), u(b))
@@ -145,33 +144,7 @@ export function WallElevation(p: Props) {
   const sc = planScale(1 / fr.u, {})
 
   /** Pointer handlers for a plate (or a door) in the drawing while a tool is out: click, or with the brush press and sweep. */
-  const paintOn = (i: number, key: string, leaf = false) =>
-    painting
-      ? {
-          style: { cursor: tool === 'wall' ? 'copy' : 'crosshair' },
-          onPointerDown: (e: RPointerEvent) => {
-            e.stopPropagation()
-            // A finger enters the plate (with the button down) just before it presses it, so a sweep only counts once
-            // the press has begun: else the brush printed the plate on enter and the press took the print off again.
-            sweeping.current = true
-            const end = () => {
-              sweeping.current = false
-              window.removeEventListener('pointerup', end)
-              window.removeEventListener('pointercancel', end)
-            }
-            window.addEventListener('pointerup', end)
-            window.addEventListener('pointercancel', end)
-            // Touch (iPad) holds the pointer on the plate it went down on, so the next plates would never see it
-            // enter. Letting go of it makes a sweep with a finger or pen work like one with the mouse.
-            const t = e.currentTarget as Element
-            if (t.hasPointerCapture(e.pointerId)) t.releasePointerCapture(e.pointerId)
-            if (e.button === 0) paintAt(i, key, true, leaf)
-          },
-          onPointerEnter: (e: RPointerEvent) => {
-            if (tool === 'plate' && sweeping.current && e.buttons === 1) paintAt(i, key, false, leaf)
-          },
-        }
-      : {}
+  const paintOn = (i: number, key: string, leaf = false) => (painting ? sweep(tool, (first) => paintAt(i, key, first, leaf)) : {})
   /** A print over a door: its part of the picture on the header plate and on the leaf plate. */
   const doorPrint = (f: Foil, x: number, leafX: number) => {
     const m = findMotif(motifs, f.motif)

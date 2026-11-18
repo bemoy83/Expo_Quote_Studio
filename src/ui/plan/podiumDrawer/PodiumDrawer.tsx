@@ -9,7 +9,7 @@
 import { LibraryBig, Palette } from 'lucide-react'
 import { useState } from 'react'
 import { counterRal, removeObject } from '../../../domain/objects'
-import { podiumDecals, printOf, takesDecor, updatePodiumDecal } from '../../../domain/podiumDecor'
+import { podiumDecals, takesDecor, updatePodiumDecal } from '../../../domain/podiumDecor'
 import { NO_DOOR, setPodiumLight, takesDoor } from '../../../domain/podiumFaces'
 import { heightName, HEIGHTS, outerHeight, podiumSize, setSectionHeight } from '../../../domain/podiums'
 import { SHELF_HEIGHTS, lowered, movePodiumShelf, setPodiumShelf } from '../../../domain/podiumShelves'
@@ -23,10 +23,11 @@ import { DrawerHead, PrevNext, PRINT } from '../drawerParts'
 import { hintLine } from '../drawerText'
 import type { PlanSelection } from '../selection'
 import { PodiumDecor } from './PodiumDecor'
-import { counterPaintAt, type CounterTool } from './paint'
+import { usePaintTools } from '../paintTools'
+import { counterPaintAt } from './paint'
 import { PodiumElevation } from './PodiumElevation'
 import { PodiumMap } from './PodiumMap'
-import { chosenSide, counterFrame, drawerSides, sideDecor, sideElevation, type ElevationPart } from './podiumView'
+import { chosenSide, coloursShown, counterFrame, drawerSides, printShown, sideDecor, sideElevation, type ElevationPart } from './podiumView'
 
 interface Props {
   v: Variant
@@ -60,9 +61,8 @@ const shared = (ps: ElevationPart[], light?: number): Kind | null => {
 export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect, onEdit, onCheckpoint, onToast, onClose }: Props) {
   const [page, setPage] = useState<Page>('sides')
   // Colouring as in the wall drawer: the tool out, what it lays on and the motif «Print» uses (paint.ts)
-  const [tool, setTool] = useState<CounterTool>(null)
-  const [paintSel, setPaint] = useState<string | null>(null)
-  const [motifId, setMotifId] = useState<string | undefined>(undefined)
+  const tools = usePaintTools()
+  const { tool, setTool, paintSel, motifSel } = tools
   // K18: how many shelves the last lower height took away, for the hint
   const [gone, setGone] = useState(0)
   const sides = drawerSides(o)
@@ -91,13 +91,10 @@ export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect,
   const chosenDecal = decals.find((d) => d.decal.id === sel.podiumDecal)
   // A tool is out on «Farge og profilering» with nothing chosen: the drawing paints instead of choosing
   const painting = page === 'decor' && tool !== null && pi === undefined && !chosenDecal
-  const scopePrint = (() => {
-    const ps = [...new Set(el.parts.filter((p) => takesDecor(o.sections!, p.part)).map((p) => printOf(o.sections!, p.part) ?? null))]
-    return ps.length === 1 ? ps[0] : null
-  })()
-  const sideColours = [...new Set(el.parts.flatMap((p) => p.lights.flatMap((k, i) => (k === 'open' ? [] : [p.rals[i] ?? ral]))))]
+  const scopePrint = printShown(o, el.parts)
+  const sideColours = coloursShown(el.parts, ral)
   const pen = paintSel ?? (scopePrint ? PRINT : sideColours.length === 1 ? sideColours[0] : ral)
-  const pm = findMotif(motifs, motifId ?? scopePrint ?? undefined) ?? motifs[0]
+  const pm = findMotif(motifs, motifSel ?? scopePrint ?? undefined) ?? motifs[0]
   const paintAt = counterPaintAt({ v, o, side: el.parts, tool, paint: pen, pm, onEdit, onCheckpoint, onToast })
 
   // K17: no sliding door on a part of 250; with the whole side chosen, on the parts that take one
@@ -138,7 +135,7 @@ export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect,
         )
       : painting
         ? hintLine(
-            tool === 'side' ? 'Klikk siden for å fylle den, deler med print står som før' : 'Klikk eller dra over platene, samme farge igjen gir diskens farge',
+            tool === 'bucket' ? 'Klikk siden for å fylle den, deler med print står som før' : 'Klikk eller dra over platene, samme farge igjen gir diskens farge',
             'velg verktøyet igjen for å legge det bort',
           )
         : hintLine(
@@ -190,12 +187,8 @@ export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect,
             partNav={partNav}
             decal={chosenDecal}
             motifs={motifs}
-            tool={tool}
-            setTool={setTool}
+            tools={tools}
             pen={pen}
-            setPaint={setPaint}
-            motifId={motifId}
-            setMotifId={setMotifId}
             onUpload={onUpload}
             select={select}
             onEdit={onEdit}

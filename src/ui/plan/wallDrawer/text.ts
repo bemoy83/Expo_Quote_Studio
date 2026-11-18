@@ -13,7 +13,7 @@ import { isStandWall, wallLabel } from '../../../domain/walls'
 import { RECIPES } from '../../../foga/recipes'
 import { count, fmt, mm } from '../../format'
 import type { RoomRun } from './face'
-import type { PaintTool } from './paint'
+import type { PaintTool } from '../paintTools'
 
 /** The drawer's title: the frame or decal chosen, else the wall (a room's wall, an inner wall or a stand wall). */
 export function wallTitle(v: Variant, w: Wall, T?: TextileWall, F?: Foil, S?: Shelf): string {
@@ -75,7 +75,7 @@ export function wallHint(x: { O?: Opening; door: boolean; surface?: 'header' | '
   const { O, door, painting, tool, printing, T, F, S, felt, extras, w } = x
   if (O && x.surface) return `Farge og print gjelder ${x.surface === 'leaf' ? 'dørbladet' : 'overstykket'} · ‹ › bytter flate · klikk den igjen for veggen · malerspannet legger ett bilde over begge`
   if (O) return `Klikk en rute i miniplanen for å flytte ${door ? 'døren' : 'forhenget'} · «Farge og profilering» eller Esc gir paletten · Delete gjør om til vegg`
-  if (painting && tool === 'wall')
+  if (painting && tool === 'bucket')
     return printing
       ? 'Klikk veggen: motivet strekkes over platene på denne siden, ikke inne i bakrom · en farge eller søppelbøtta tar printen av'
       : 'Klikk veggen for å farge alle platene · felt med print står som før · kosten tar printen av ett felt'

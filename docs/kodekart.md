@@ -137,7 +137,8 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 ### Print, dekal og farge
 
 - Dekal: `Foil` · `domain/decor.ts` (folie og `fitDecor`) · veggflater og felt: `domain/faces.ts`
-- Print med spann og kost: `domain/print.ts` · i veggskuffen: `plan/wallDrawer/paint.ts`
+- Print med spann og kost: `domain/print.ts` · i veggskuffen: `plan/wallDrawer/paint.ts` · i diskskuffen: `plan/podiumDrawer/paint.ts`
+- Malerspann og malerkost i alle skuffer: `plan/paintTools.ts` (`PaintTool` bucket/brush, `usePaintTools` verktøy, farge og motiv, `brushTo` kostens regel, `applyFill` spannets toast, `useSweep` trykk og dra over platene, også på iPad). En ny skuff som farger plater bruker disse og `ColourSection`, ikke egne
 - Farge per plate: `domain/panels.ts`
 - Én regel for farge og print (Bjørn 18.11.2026): `domain/paint.ts` (spann over en side, farge på én plate eller ett dørblad, diskens plater (K6), veggpennen i planen, Fyll på hele standen med valget om print i toasten via `ui/fillKeeping.ts`). Skuff, pille, planpenn og panel går gjennom den, aldri `setWallPlate` + `clearPrint` hver for seg
 - Én fargerad og én seksjon (Bjørn 18.11.2026): `ralSwatches` i `plan/swatches.ts` er veggfargene overalt (dock, piller, skuffens `PlatePalette`, arrangørens farge i standinnstillingene); `ColourSection` i `plan/drawerParts.tsx` er «Farge og profilering» i vegg-, felt- og diskskuffen (tittel, verdi, pil, spann, kost, palett); `MotifRow` i `plan/quick/parts.tsx` er motivraden i pillene og Profilering-hurtigvalget

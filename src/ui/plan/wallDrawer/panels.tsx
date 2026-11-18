@@ -1,7 +1,7 @@
 // The settings column of the wall drawer: one panel for what is chosen, and the motif library (Profilering) under it. A
 // textile frame, a decal or print, a door, a felt's colour, or nothing (the wall itself: colour and print with the paint
 // bucket and brush). «Hyller og heng» and a chosen shelf are in fittings.tsx.
-import { ArrowLeft, ArrowRight, DoorOpen, Palette, Repeat2 } from 'lucide-react'
+import { DoorOpen, Palette, Repeat2 } from 'lucide-react'
 import type { Dispatch, ReactNode, SetStateAction } from 'react'
 import { foilBlocked, updateFoil } from '../../../domain/decor'
 import { paintLeaf, paintPlate } from '../../../domain/paint'
@@ -18,7 +18,8 @@ import { ColourSection, DrawerHead, FabricSection, PrevNext, PRINT, Shelf } from
 import { findMotif } from '../../motifs'
 import { type PlanSelection } from '../selection'
 import { faceName } from './face'
-import type { PaintTool } from './paint'
+import { NO_MOTIF, type PaintTool } from '../paintTools'
+import { motifAside } from '../drawerText'
 
 type Edit = (fn: (v: Variant) => Variant, history?: boolean) => void
 
@@ -86,19 +87,19 @@ export function WallShelf(props: {
   pm: Motif | undefined
   motifs: Motif[]
   ratioOf: (id?: string) => number
-  setPrintMotif: (id: string) => void
+  setMotif: (id: string) => void
   onEdit: Edit
   onUpload: (f: File) => void
   children?: ReactNode
 }) {
-  const { F, felt, printing, pm, motifs, ratioOf, setPrintMotif, onEdit, onUpload, children } = props
+  const { F, felt, printing, pm, motifs, ratioOf, setMotif, onEdit, onUpload, children } = props
   const [title, aside] = F
     ? ['Motiv', findMotif(motifs, F.motif)?.name ?? 'ikke valgt']
-    : ['Profilering', felt || printing ? (pm ? `motiv ${pm.name}` : 'last opp et motiv') : 'dra til veggen']
+    : ['Profilering', felt || printing ? motifAside(pm) : 'dra til veggen']
   const value = F ? (F.motif ?? null) : printing || felt ? pm?.id : undefined
   const onPick = F
     ? (m: string) => onEdit((x) => updateFoil(x, rules, F.id, { motif: m }, ratioOf(m)))
-    : (felt ?? (printing ? setPrintMotif : undefined))
+    : (felt ?? (printing ? setMotif : undefined))
   return (
     <Shelf title={title} aside={aside} motifs={motifs} value={value} onPick={onPick} onUpload={onUpload}>
       {children}
@@ -120,14 +121,14 @@ export function ColourPanel(props: {
   const value = painting ? paint : ral
   return (
     <ColourSection
-      title={painting && tool === 'plate' ? 'Plate' : 'Hele veggen'}
+      title={painting && tool === 'brush' ? 'Plate' : 'Hele veggen'}
       value={value}
       motif={pm}
-      tools={{ what: 'veggen', bucket: tool === 'wall', brush: tool === 'plate', onBucket: () => setTool(tool === 'wall' ? null : 'wall'), onBrush: () => setTool(tool === 'plate' ? null : 'plate') }}
+      tools={{ what: 'veggen', tool, onTool: (x) => setTool(tool === x ? null : x) }}
       onPick={(r) => {
         setPaint(r)
         // Picking a colour takes up the paint bucket when no tool is out
-        if (!tool) setTool('wall')
+        if (!tool) setTool('bucket')
       }}
     />
   )
@@ -192,7 +193,7 @@ export function DoorSurfacePanel(props: {
   motifs: Motif[]
   pm: Motif | undefined
   setTool: (t: PaintTool) => void
-  setPrintMotif: (id: string) => void
+  setMotif: (id: string) => void
   select: (x: Partial<PlanSelection>) => void
   selectDoor: (id: string, side?: FaceSide, surface?: DoorSurface) => void
   onEdit: Edit
@@ -200,7 +201,7 @@ export function DoorSurfacePanel(props: {
   onUpload: (f: File) => void
   onClose: () => void
 }) {
-  const { v, O, w, s, part, mods, motifs, pm, setTool, setPrintMotif, select, selectDoor, onEdit, onToast, onUpload, onClose } = props
+  const { v, O, w, s, part, mods, motifs, pm, setTool, setMotif, select, selectDoor, onEdit, onToast, onUpload, onClose } = props
   const m = O.module
   const key = mods[m]?.key
   const printed = printsOn(v, w.id, s).find((f) => f.module === m && onDoorPart(f, part))
@@ -212,7 +213,7 @@ export function DoorSurfacePanel(props: {
     onEdit((x) => printDoorPart(x, rules, w.id, m, s, id, part))
   }
   const pick = (r: string) => {
-    if (r === PRINT) return pm ? print(pm.id) : onToast('Last opp et motiv i Profilering først')
+    if (r === PRINT) return pm ? print(pm.id) : onToast(NO_MOTIF)
     if (part === 'leaf') onEdit((x) => paintLeaf(x, O.id, s, r))
     else if (key) onEdit((x) => paintPlate(x, w.id, s, m, key, r))
   }
@@ -230,17 +231,17 @@ export function DoorSurfacePanel(props: {
         value={printed ? PRINT : colour}
         motif={printed ? (findMotif(motifs, printed.motif) ?? pm) : pm}
         nav={<PrevNext what="flate" onPrev={() => selectDoor(O.id, s, other)} onNext={() => selectDoor(O.id, s, other)} />}
-        tools={{ what: 'veggen', bucket: false, brush: false, onBucket: () => take('wall'), onBrush: () => take('plate') }}
+        tools={{ what: 'veggen', tool: null, onTool: take }}
         onPick={pick}
       />
       <hr className="set-rule" />
       <Shelf
         title="Profilering"
-        aside={pm ? `motiv ${pm.name}` : 'last opp et motiv'}
+        aside={motifAside(pm)}
         motifs={motifs}
         value={printed?.motif ?? pm?.id}
         onPick={(id) => {
-          setPrintMotif(id)
+          setMotif(id)
           print(id)
         }}
         onUpload={onUpload}
@@ -286,7 +287,7 @@ export function FeltPanel(props: {
   /** A colour on this plate (the print on this face comes off: the last stroke wins), or the chosen motif over it. */
   const pick = (r: string) => {
     if (r !== PRINT) return onEdit((x) => paintPlate(x, w.id, s, m, key, r))
-    if (!pm) return onToast('Last opp et motiv i Profilering først')
+    if (!pm) return onToast(NO_MOTIF)
     if (noPrint) return onToast(noPrint)
     if (printed?.motif !== pm.id || printed.run) onEdit((x) => printPlate(x, rules, w.id, m, s, pm.id))
   }
@@ -301,22 +302,18 @@ export function FeltPanel(props: {
       value={printed ? PRINT : plate}
       motif={printed ? (findMotif(motifs, printed.motif) ?? pm) : pm}
       nav={arrows}
-      tools={{ what: 'veggen', bucket: false, brush: false, onBucket: () => take('wall'), onBrush: () => take('plate') }}
+      tools={{ what: 'veggen', tool: null, onTool: take }}
       onPick={pick}
     />
   )
 }
 
-/** The arrows to the felt beside, as seen from in front of the face (the modules run the other way on face −1). Doors are no felts. */
+/** ‹ › to the felt beside, as seen from in front of the face (the modules run the other way on face −1), as ‹ › go to
+ *  the part beside in the counter drawer; arrows move a thing (a shelf). Doors are no felts. */
 export function FeltArrows({ m, s, mods, select }: { m: number; s: FaceSide; mods: (BuiltModule | undefined)[]; select: (x: Partial<PlanSelection>) => void }) {
   const dir = s === 1 ? 1 : -1
   const step = (d: number) => {
     for (let i = m + d; i >= 0 && i < mods.length; i += d) if (mods[i] && !mods[i]!.opening) return select({ felt: i })
   }
-  return (
-    <>
-      <IconButton icon={ArrowLeft} label="Feltet til venstre" size={15} onClick={() => step(-dir)} />
-      <IconButton icon={ArrowRight} label="Feltet til høyre" size={15} onClick={() => step(dir)} />
-    </>
-  )
+  return <PrevNext what="felt" onPrev={() => step(-dir)} onNext={() => step(dir)} />
 }

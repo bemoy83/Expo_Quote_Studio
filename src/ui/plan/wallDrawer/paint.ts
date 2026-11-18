@@ -11,9 +11,7 @@ import { rules } from '../../env'
 import { printKept } from '../../fillKeeping'
 import { findMotif } from '../../motifs'
 import { PRINT } from '../drawerParts'
-
-/** Which tool is out: the paint bucket (the whole face), the brush (plate by plate), or none. */
-export type PaintTool = 'wall' | 'plate' | null
+import { applyFill, brushTo, NO_MOTIF, type PaintTool } from '../paintTools'
 
 export interface PaintDeps {
   v: Variant
@@ -27,7 +25,7 @@ export interface PaintDeps {
   /** What the tools lay on: a plate colour (RAL) or PRINT. Unset: the wall's own colour. */
   paintSel: string | null
   /** The motif «Print» lays on, chosen in the motif library (Profilering). Unset: the first in the library. */
-  printSel: string | null
+  motifSel: string | null
   /** The wall's own colour. */
   ral: string
   /** Nothing else is chosen (no frame, decal or door), so the tools are live. */
@@ -39,10 +37,10 @@ export interface PaintDeps {
   onToast: (text: string) => void
 }
 
-export function wallPaint({ v, w, s, built, mods, motifs, tool, paintSel, printSel, ral, free, base, onEdit, onCheckpoint, onToast }: PaintDeps) {
+export function wallPaint({ v, w, s, built, mods, motifs, tool, paintSel, motifSel, ral, free, base, onEdit, onCheckpoint, onToast }: PaintDeps) {
   const painting = tool !== null && free
   const paint = paintSel ?? ral
-  const pm = findMotif(motifs, printSel ?? undefined) ?? motifs[0]
+  const pm = findMotif(motifs, motifSel ?? undefined) ?? motifs[0]
   const printing = paint === PRINT
   const printedAt = (x: Variant, i: number) => printsOn(x, w.id, s).find((f) => f.module === i)
   /**
@@ -51,9 +49,8 @@ export function wallPaint({ v, w, s, built, mods, motifs, tool, paintSel, printS
    */
   const brushPlate = (i: number, key: string, first: boolean) => {
     const cur = built.get(key)?.plate
-    const printed = !!printedAt(v, i)
-    const to = first && cur === paint && !printed ? base(key) : paint
-    if (!first && cur === to && !printed) return
+    const to = brushTo(cur ?? base(key), paint, base(key), !!printedAt(v, i), first)
+    if (to === null) return
     if (first) onCheckpoint()
     onEdit((x) => paintPlate(x, w.id, s, i, key, to), false)
   }
@@ -64,10 +61,8 @@ export function wallPaint({ v, w, s, built, mods, motifs, tool, paintSel, printS
   const brushLeaf = (i: number, key: string, first: boolean) => {
     const o = mods[i]?.opening
     if (!o) return
-    const printed = !!printedAt(v, i)
-    const cur = doorRal(v, o)
-    const to = first && cur === paint && !printed ? base(key) : paint
-    if (!first && cur === to && !printed) return
+    const to = brushTo(doorRal(v, o), paint, base(key), !!printedAt(v, i), first)
+    if (to === null) return
     if (first) onCheckpoint()
     onEdit((x) => paintLeaf(x, o.id, s, to), false)
   }
@@ -77,20 +72,17 @@ export function wallPaint({ v, w, s, built, mods, motifs, tool, paintSel, printS
    */
   const paintAt = (i: number, key: string, first: boolean, leaf = false) => {
     if (printing && !pm) {
-      if (first) onToast('Last opp et motiv i Profilering først')
+      if (first) onToast(NO_MOTIF)
       return
     }
-    if (tool === 'wall') {
+    if (tool === 'bucket') {
       if (!first) return
       if (printing) {
         if (!fillPlates(v, rules, w, s).length) return onToast('Ingen plate på denne siden kan ha print')
         return onEdit((x) => printWall(x, rules, w.id, s, pm!.id, pm!.ratio))
       }
       // Print is a choice made on purpose (Bjørn 18.11.2026): the bucket leaves printed plates as they are
-      const r = paintWallFace(v, w.id, s, paint)
-      if (r.v !== v) onEdit(() => r.v)
-      if (r.skipped) onToast(printKept(r.skipped))
-      return
+      return applyFill(v, paintWallFace(v, w.id, s, paint), onEdit, onToast, printKept)
     }
     if (!printing) return leaf ? brushLeaf(i, key, first) : brushPlate(i, key, first)
     // Print is laid per module: a part of a split module (V10) takes none yet

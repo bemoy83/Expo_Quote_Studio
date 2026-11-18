@@ -144,7 +144,7 @@ export function WallDrawer(p: Props) {
     motifs,
     tool,
     paintSel: t.paintSel,
-    printSel: t.printSel,
+    motifSel: t.motifSel,
     ral,
     free: ui.paint,
     base,
@@ -174,7 +174,7 @@ export function WallDrawer(p: Props) {
     Fe === undefined
       ? undefined
       : (id: string) => {
-          t.setPrintMotif(id)
+          t.setMotif(id)
           const no = foilBlocked(v, rules, w.id, Fe, s, true)
           if (no) return p.onToast(no)
           // The same motif again does nothing (printPlate)
@@ -215,7 +215,7 @@ export function WallDrawer(p: Props) {
             motifs={motifs}
             pm={pm}
             setTool={setTool}
-            setPrintMotif={t.setPrintMotif}
+            setMotif={t.setMotif}
             select={select}
             selectDoor={selectDoor}
             onEdit={p.onEdit}
@@ -272,7 +272,7 @@ export function WallDrawer(p: Props) {
             chosen (the plate, the whole wall, the decal) · the motif library on it */}
         {ui.library && <hr className="set-rule" />}
         {ui.library && (
-          <WallShelf F={F} felt={feltShelf} printing={printing} pm={pm} motifs={motifs} ratioOf={ratioOf} setPrintMotif={t.setPrintMotif} onEdit={p.onEdit} onUpload={p.onUpload}>
+          <WallShelf F={F} felt={feltShelf} printing={printing} pm={pm} motifs={motifs} ratioOf={ratioOf} setMotif={t.setMotif} onEdit={p.onEdit} onUpload={p.onUpload}>
             {ui.library.add === 'decal' && Fe !== undefined && (
               <Button variant="ghost" icon={Plus} onClick={addDecal} disabled={!!feltFoil(Fe)}>
                 Dekal

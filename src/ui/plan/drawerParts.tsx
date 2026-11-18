@@ -7,6 +7,7 @@ import { FlatChoice, IconButton, ImageInput, Section } from '../controls'
 import { decorSource } from '../dnd'
 import { plateName } from '../env'
 import { INK } from '../colors'
+import type { PaintTool } from './paintTools'
 import { Sw } from './quick/parts'
 import { ralSwatches } from './swatches'
 
@@ -79,8 +80,9 @@ export function ColourSection(p: {
   value?: string
   motif?: Motif
   nav?: ReactNode
-  /** The bucket and the brush: pressed while out; `what` names what the bucket fills («veggen», «siden»). */
-  tools: { what: string; bucket: boolean; brush: boolean; onBucket: () => void; onBrush: () => void }
+  /** The bucket and the brush: `tool` is pressed (the one out on what is shown); `what` names what the bucket fills
+   *  («veggen», «siden»). */
+  tools: { what: string; tool: PaintTool; onTool: (t: 'bucket' | 'brush') => void }
   onPick: (ral: string) => void
 }) {
   const { title, value, motif, nav, tools: t, onPick } = p
@@ -91,8 +93,8 @@ export function ColourSection(p: {
       tools={
         <>
           {nav}
-          <IconButton icon={PaintBucket} label={bucketLabel(t.what)} size={15} className="ink" pressed={t.bucket} onClick={t.onBucket} />
-          <IconButton icon={Paintbrush} label={BRUSH_LABEL} size={15} className="ink" pressed={t.brush} onClick={t.onBrush} />
+          <IconButton icon={PaintBucket} label={bucketLabel(t.what)} size={15} className="ink" pressed={t.tool === 'bucket'} onClick={() => t.onTool('bucket')} />
+          <IconButton icon={Paintbrush} label={BRUSH_LABEL} size={15} className="ink" pressed={t.tool === 'brush'} onClick={() => t.onTool('brush')} />
         </>
       }
     >

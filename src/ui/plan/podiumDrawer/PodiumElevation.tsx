@@ -8,6 +8,7 @@
 // plate and door; a decal is chosen by a click and moved or scaled by its handles, set on release.
 import { useRef, useState, type PointerEvent, type ReactNode } from 'react'
 import type { Motif } from '../../../domain/types'
+import { useSweep, type PaintTool } from '../paintTools'
 import { heightName, HEIGHTS, outerHeight } from '../../../domain/podiums'
 import { shelfStop } from '../../../domain/podiumShelves'
 import { RECIPES } from '../../../foga/recipes'
@@ -63,7 +64,7 @@ interface Props {
   fit?: { length: number; h: number }
   /** A paint tool out (Farge og profilering, as the wall drawer's): pressing a light opening calls `at` (`first`), and so
    *  does each one swept over while pressed with the brush; no part is chosen by a click then. */
-  paint?: { tool: 'side' | 'plate'; at: (part: number, light: number, first: boolean) => void }
+  paint?: { tool: PaintTool; at: (part: number, light: number, first: boolean) => void }
   /** The map that picks a side, fixed in the top left corner (detail only); the drawing gives way right or down,
    *  whichever leaves it larger. */
   map?: ReactNode
@@ -110,7 +111,7 @@ function place(size: { w: number; h: number } | null, Lf: number, L: number, H: 
 }
 
 export function PodiumElevation({ parts: given, length, h: hTop, title, fill, chosen, onPick, onHeight, onShelf, prints = [], decals = [], motifs = [], decal, onDecal, onDecalBox, fit, map, paint }: Props) {
-  const sweeping = useRef(false)
+  const sweep = useSweep()
   const box = useRef<HTMLDivElement>(null)
   const mapBox = useRef<HTMLDivElement>(null)
   const mapSize = useElementSize(mapBox, true)
@@ -287,9 +288,8 @@ export function PodiumElevation({ parts: given, length, h: hTop, title, fill, ch
           role="img"
           aria-label={`${title}, ${length} mm`}
           onPointerMove={decalMove}
-          onPointerUp={() => ((sweeping.current = false), decalUp())}
-          onPointerLeave={() => (sweeping.current = false)}
-          onPointerCancel={() => ((sweeping.current = false), setDd(null))}
+          onPointerUp={decalUp}
+          onPointerCancel={() => setDd(null)}
         >
           {parts.map((p, i) => {
             const w = x(p.x1 - p.x0)
@@ -306,18 +306,9 @@ export function PodiumElevation({ parts: given, length, h: hTop, title, fill, ch
                   return (
                     <g
                       key={li}
-                      style={{ cursor: paint ? (paint.tool === 'side' ? 'copy' : 'crosshair') : onPick ? 'pointer' : undefined, touchAction: paint ? 'none' : undefined }}
+                      style={{ cursor: onPick ? 'pointer' : undefined }}
                       onClick={() => !paint && pick(i, bands.length > 1 ? li : undefined)}
-                      onPointerDown={
-                        paint &&
-                        ((e) => {
-                          // Let the pointer go, so sweeping reaches the plates beside (touch captures it to the first)
-                          ;(e.target as Element).releasePointerCapture?.(e.pointerId)
-                          sweeping.current = true
-                          paint.at(i, li, true)
-                        })
-                      }
-                      onPointerEnter={paint && ((e) => paint.tool === 'plate' && sweeping.current && e.buttons === 1 && paint.at(i, li, false))}
+                      {...(paint && sweep(paint.tool, (first) => paint.at(i, li, first)))}
                     >
                       {/* The plate, or the inside seen through an open light opening (no plates between the sections, K16) */}
                       <rect x={x0} y={y0} width={w} height={y1 - y0} fill={open ? SUNKEN : p.rals?.[li] ? plateColor(p.rals[li]!) : fill} />
