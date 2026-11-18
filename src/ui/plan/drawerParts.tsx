@@ -7,7 +7,7 @@ import { FlatChoice, IconButton, ImageInput, Section } from '../controls'
 import { decorSource } from '../dnd'
 import { plateName } from '../env'
 import { INK } from '../colors'
-import type { PaintTool } from './paintTools'
+import { PRINT, type PaintTool } from './paintTools'
 import { Sw } from './quick/parts'
 import { ralSwatches } from './swatches'
 
@@ -37,8 +37,7 @@ export function PrevNext({ what, onPrev, onNext }: { what: string; onPrev: () =>
   )
 }
 
-/** «Print» as the last choice of the palette: the motif chosen in Profilering, foil over whole plates. */
-export const PRINT = 'print'
+export { PRINT } from './paintTools'
 
 /**
  * The wall plate colours as dots, for a wall, a plate or a door leaf. With `print`, a last dot shows the motif chosen

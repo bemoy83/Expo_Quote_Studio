@@ -30,7 +30,7 @@ export interface Painted {
 }
 
 /** The colour a plate has without its own: its owning wall's. */
-export const plateBase = (v: Variant) => {
+const plateBase = (v: Variant) => {
   const byKey = new Map(builtModules(v).map((m) => [m.key, m]));
   return (key: string) => {
     const w = v.walls.find((x) => x.id === byKey.get(key)?.wallId);

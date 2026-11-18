@@ -43,7 +43,7 @@ const sideOf = (sections: readonly CounterSection[], p: PodiumPart): SectionSide
 export const printAt = (sections: readonly CounterSection[], p: PodiumPart, light: number): PodiumPrint | null =>
   lightsOf(sections, p)[light] === 'open' ? null : (sideOf(sections, p)?.print?.[light] ?? null);
 /** The light openings of a part with print. */
-export const printedLights = (sections: readonly CounterSection[], p: PodiumPart): number[] =>
+const printedLights = (sections: readonly CounterSection[], p: PodiumPart): number[] =>
   lightsOf(sections, p).flatMap((_, i) => (printAt(sections, p, i) ? [i] : []));
 /** The motif printed on light opening `light` of a part, or on all of it that takes print when `light` is left out:
  *  none when one of them has none or they differ. */

@@ -93,17 +93,27 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   Andre mål og diagonaler kan komme senere, men ikke nå.
   *Bjørn 15.11.2026 · kode `src/ui/panel/StandSettings.tsx`, `src/domain/grid.ts`, `src/calc/lines/walls.ts`, `src/ui/plan/PlanView.tsx`, `src/domain/runDraw.ts`, `src/domain/snapGrid.ts`, `src/ui/plan/pointer/stroke.ts`, `src/domain/wallOffsets.ts`, `src/domain/innerBeams.ts` · test `src/calc/halfMetreStand.test.ts`, `src/domain/halfMetreStand.test.ts`, `src/calc/halfMetreBeams.test.ts`*
 
-- **V15 Farge og print.** En flate er en plate (et felt), en dørs overstykke og dørblad (hver for seg) og en disks plate
-  (K6). Siste strøk vinner på det du peker på: en farge med kosten, på et valgt felt, med veggpennen i planen eller på et
-  dørblad tar printen av den flaten på siden du ser; fargen gjelder begge sider. Dekaler blir: de dekker ikke hele platen.
-  Print over en farge tar fargen bort der den ikke lenger synes (en plate printet på alle sider som kan ha dekor), så
-  platen blir aldri betalt både som farge og som print. Samme motiv igjen gjør ingenting, med spann, kost, Print-pennen og
-  motivtrykk i et felt. På en dør legger kosten motivet på overstykket eller dørbladet hver for seg, spannet ett bilde
-  over begge; en farge på den ene flaten tar bare dens del. Tekstilveggene husker motivet når duken blir Hvit eller
-  Kundens, så det kommer tilbake med Trykk.
-  *Bjørn 3.11.2026 og 18.11.2026 · kode `src/domain/paint.ts`, `src/domain/print.ts`, `src/domain/textile/free.ts` · test `src/domain/paint.test.ts`, `src/domain/print.test.ts`, `src/domain/textile/free.test.ts`*
-- **V16 Print er et valg.** Et strøk over mange flater lar print stå: malerspannet i skuffen farger resten av siden og
-  hopper alltid over felt og dørflater med print, print og farge, så de øvrige kan få ny farge uten å legge printen på
+- **V15 Plateregelen: farge og print på plater.** Én regel for alle plater av Foga-profiler og veggplater, hva produktet
+  enn er (felles plateregel, Bjørn 18.11.2026). Produktet (6120, 6130, 6560, 6570) er en kombinasjon av plater og
+  profiler og bærer prisen; platen bærer fargen og printen. En plate er et felt i en vegg (også en del av en delt modul,
+  V10), en dørs overstykke og dørblad (hver for seg) og en disks lysåpning (skyvedøren der er én flate, K6);
+  `domain/plates.ts` lister dem alle.
+  - *Siste strøk vinner* på det du peker på: en farge med kosten, på en valgt plate, med veggpennen i planen eller på et
+    dørblad tar printen av den platen på siden du ser. Fargen gjelder begge sider av platen. Dekaler blir: de dekker
+    ikke hele platen.
+  - *Print skjuler fargen:* en plate printet på alle sider som kan ha dekor (en standvegg innsiden, en disk utsiden) har
+    ingen egen farge, og er hele veggen eller disken printet, får den sin grunnfarge igjen. En plate betales aldri både
+    som farge og som print, og et platebytte regnes aldri for en farge ingen ser.
+  - *Kosten* legger hele motivet på platen den treffer, beskåret, aldri strukket ut av form. *Spannet* legger ett bilde
+    over alle platene på siden som vises, og hver plate viser sin del; kosten på en plate i bildet gir den hele motivet.
+    På en dør gjelder det overstykket og bladet hver for seg, og spannet ett bilde over begge.
+  - *Samme motiv igjen gjør ingenting*, med spann, kost, Print-pennen og motivtrykk på en valgt plate.
+  - Spann og kost virker likt i alle skuffer: veggskuffen og diskskuffen sier bare hva platen er (`strokeAt`).
+  Tekstilveggene husker motivet når duken blir Hvit eller Kundens, så det kommer tilbake med Trykk. Det som er eget for
+  disken står i K6 og K20.
+  *Bjørn 3.11.2026 og 18.11.2026 · kode `src/domain/paint.ts`, `src/domain/print.ts`, `src/domain/podiumDecor.ts`, `src/ui/plan/paintTools.ts`, `src/domain/plates.ts`, `src/domain/textile/free.ts` · test `src/domain/paint.test.ts`, `src/domain/print.test.ts`, `src/domain/podiumDecor.test.ts`, `src/ui/plan/paintTools.test.ts`, `src/domain/plates.test.ts`, `src/domain/textile/free.test.ts`*
+- **V16 Print er et valg.** Et strøk over mange plater lar print stå: malerspannet i skuffen farger resten av siden og
+  hopper alltid over plater og dørflater med print, på vegg og disk, så de øvrige kan få ny farge uten å legge printen på
   igjen. Fyll på hele standen (Vegg-pillens spann og standfargen i panelet, som er det samme) gjør likedan, og toasten
   sier «N felt med print står som før» med valget «Farg også dem». Valget står over tegningen som en toast, aldri i
   skuffen eller panelet, så ingen innstilling skyves ut av syne.
@@ -111,7 +121,8 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 - **V17 Fargen følger platen.** En plates egen farge hører til platen, ikke til stedet i planen. Flyttes veggen hel,
   også langs linjen sin, går fargene med; strekkes eller kuttes den, står hver plate med sin farge der den står; blir
   veggen delt i to eller til en romside, beholder platen fargen der den står. Dørbladets farge følger døren. Fjernes
-  platen eller døren, går fargen også, så en vegg tegnet der senere får sin egen farge.
+  platen eller døren, går fargen også, så en vegg tegnet der senere får sin egen farge. På disken følger farge og print
+  lysåpningen når en hylle settes inn eller tas ut (K19).
   *Bjørn 18.11.2026 (felles plateregel, trinn B1) · kode `src/domain/plateDecor.ts` · test `src/domain/plateDecor.test.ts`, `src/domain/plates.test.ts`*
 ## S · Støtte for systemvegg
 
@@ -513,10 +524,8 @@ K22 standardvarene og K23 disker over en fotplate.
   skyvedør er én flate med begge bladene. Disken på lager er hvit 9010; en plate i en annen farge byttes på lageret før
   messen og tilbake etter. Prisen er den samme i alle farger (1320 kr), kalkylen tar med platebyttet per plate som
   byttes (prisartikkelen platebytte bardisk, per plate), og linjen sier hvilke farger montøren skal ha med. En disk
-  bygget på stedet kuttes av veggplater i fargen, uten tillegg. Farge og print følger reglene for vegg (`domain/paint.ts`):
-  en farge på en del eller en åpning tar printen av platene den farger (siste strøk vinner); fargen på hele siden,
-  malerspannet på siden som vises, fargen i pillen og Fyll lar plater med print stå som de er. Fargen følger ikke veggenes standardfarge,
-  og spannet på veggene farger ikke diskene: Disker og podier har sitt eget spann.
+  bygget på stedet kuttes av veggplater i fargen, uten tillegg. Farge og print følger plateregelen (V15, V16). Fargen
+  følger ikke veggenes standardfarge, og spannet på veggene farger ikke diskene: Disker og podier har sitt eget spann.
   *Bjørn 11.11.2026, 18.11.2026 · `RECIPES.counter.stock.ral`, `SectionSide.ral` · kode `src/domain/paint.ts`, `src/domain/podiumFaces.ts`, `src/foga/counter.ts`, `src/calc/lines/objects.ts`, `src/cost/itemDefs.ts` · test `src/calc/counter.test.ts`, `src/domain/paint.test.ts`*
 - **K7 Mål.** Knutepunktene står på et raster på 250 mm: en seksjon er 250, 500, 750 eller 1000 c/c i hver retning. En
   lengde deles i hele meter først og resten sist, regnet fra seksjonen man startet i (1520 = 1000 + 500, 1750 =
@@ -655,18 +664,13 @@ K22 standardvarene og K23 disker over en fotplate.
   hyllen ut, blir de to til den nederste, som beholder sitt.
   *Bjørn 13.11.2026 og 18.11.2026 · kode `src/foga/counter.ts` (`shelfRails`), `src/domain/podiumShelves.ts` · test `src/domain/podiumShelves.test.ts`, `src/calc/podium.test.ts`*
 - **K20 Print og dekal på disk.** På plate og skyvedør, aldri på åpen lysåpning eller trinnplate. Print er heldekkende
-  dekal, ikke trykk på platen, og ligger per plate (lysåpning) mellom stolpene og skinnene, som på vegg (Bjørn
-  18.11.2026): malerkosten legger hele motivet på platen den treffer, beskåret, aldri strukket ut av form; malerspannet
-  legger ett bilde over alle platene på siden som vises (som `printWall`), fra første dels venstre stolpe til siste dels
-  høyre og fra bunnskinnen til den høyeste toppen, og hver plate viser sin del. Kosten på en plate i et slikt bilde gir
-  den hele motivet. Samme motiv igjen gjør ingenting. En del valgt i skuffen får ett bilde over platene sine, en
-  lysåpning valgt hele motivet. En ny hylle deler printen med lysåpningen (K19). En dekal har mål og plass på delen (fra
-  midten av seksjonens side, sett utenfra) og flyttes og skaleres i risset som på vegg, holdt innenfor delen. Print med
-  spannet tar bort dekalene på siden, print med kosten dekalene på platen, og en dekal tar bort printen. Fargen står i
-  K6: en farge med kosten eller i paletten tar printen av platene den farger (siste strøk vinner), men spannet og
-  fargen på hele siden lar plater med print stå; print er et bevisst valg (V16). En printet plate har ingen egen farge, for
-  printen skjuler den (V15): den prises og plukkes ikke som platebytte, og er alle platene på disken printet, får disken
-  lagerfargen igjen. Vist i risset, i planen (en tynn stripe av motivet innenfor ytterkanten) og i 3D. Print prises
+  dekal, ikke trykk på platen, og ligger per plate (lysåpning) mellom stolpene og skinnene etter plateregelen (V15):
+  kosten hele motivet på én plate, spannet ett bilde over platene på siden som vises, fra første dels venstre stolpe til
+  siste dels høyre og fra bunnskinnen til den høyeste toppen. En del valgt i skuffen får ett bilde over platene sine, en
+  lysåpning valgt hele motivet. En printet plate har ingen egen farge, og er alle platene printet, får disken
+  lagerfargen. En dekal har mål og plass på delen (fra midten av seksjonens side, sett utenfra) og flyttes og skaleres i
+  risset som på vegg, holdt innenfor delen. Print med spannet tar bort dekalene på siden, print med kosten dekalene på
+  platen, og en dekal tar bort printen. Vist i risset, i planen (en tynn stripe av motivet innenfor ytterkanten) og i 3D. Print prises
   på eget artikkelnummer 8023 «Foliedekor, diskfelt» per m², med målene som kuttes på linjen («2 × 960 × 960 mm»), dekal
   som m² dekal (8020) og en oppstart per print strukket over flere deler (8022).
   *Bjørn 13.11.2026, 18.11.2026 · kode `src/domain/podiumDecor.ts`, `src/calc/lines/decor.ts`, `src/ui/plan/podiumDrawer/paint.ts` · test `src/domain/podiumDecor.test.ts`, `src/ui/plan/podiumDrawer/paint.test.ts`*
