@@ -14,7 +14,7 @@ import { printOf, setPodiumPrint, takesDecor } from './podiumDecor';
 import { partKey, podiumParts, ralsOf, setPodiumLight } from './podiumFaces';
 import { stockSections } from './podiumStock';
 import { setPanels } from './panels';
-import { printPlate, printsOn, printWall } from './print';
+import { printDoorPart, printPlate, printsOn, printWall } from './print';
 import { addRoom } from './rooms';
 import { roomWallId } from './roomKeys';
 import type { PlacedObject, Variant } from './types';
@@ -96,13 +96,28 @@ describe('a colour on what is pointed at: the last stroke wins', () => {
     expect(x.foils.some((f) => !f.full)).toBe(true);
   });
 
-  it('a door leaf loses the print on the face shown', () => {
+  it('a door leaf loses the print on the face shown; the header keeps its share of a picture over both', () => {
     let v = door(inner());
     const w = innerWall(v);
     v = printPlate(v, RULES, w.id, 0, 1, 'logo');
     const x = paintLeaf(v, v.openings[0].id, 1, '3020');
     expect(doorRal(x, x.openings[0])).toBe('3020');
-    expect(x.foils).toHaveLength(0);
+    expect(x.foils.map((f) => [f.door, f.width])).toEqual([['header', v.foils[0].width]]);
+    // The header painted too: nothing printed is left
+    expect(paintPlate(x, w.id, 1, 0, builtModules(x).find((m) => m.opening)!.key, '3020').foils).toHaveLength(0);
+  });
+
+  it('the brush prints the header and the leaf each by itself; the same motif again does nothing (Bjørn 18.11.2026)', () => {
+    let v = door(inner());
+    const w = innerWall(v);
+    v = printDoorPart(v, RULES, w.id, 0, 1, 'logo', 'header');
+    expect(v.foils.map((f) => f.door)).toEqual(['header']);
+    expect(printDoorPart(v, RULES, w.id, 0, 1, 'logo', 'header')).toBe(v);
+    v = printDoorPart(v, RULES, w.id, 0, 1, 'banner', 'leaf');
+    expect(v.foils.map((f) => [f.door, f.motif])).toEqual([['header', 'logo'], ['leaf', 'banner']]);
+    // Over a picture over both: that picture stays on the other surface
+    const both = printDoorPart(printPlate(door(inner()), RULES, w.id, 0, 1, 'logo'), RULES, w.id, 0, 1, 'banner', 'leaf');
+    expect(both.foils.map((f) => [f.door, f.motif])).toEqual([['header', 'logo'], ['leaf', 'banner']]);
   });
 });
 

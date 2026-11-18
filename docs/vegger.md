@@ -161,7 +161,10 @@ vei tilbake til paletten (`FeltPanel` i ui/plan/wallDrawer/panels.tsx):
   aldri hyller som sto der før. Shift-dra sideveis kopierer feltets hyller til feltene du drar over, som «Kopier
   feltet»; et felt beholder en hylle det alt har på en av høydene, og et felt med hyller for nær får ingen og
   skraveres. Shift finnes ikke på iPad; der gjelder knappene i skuffen.
-- ← → bytter felt og beholder siden. Dører er ikke felt: klikk på en dør velger døren.
+- ← → bytter felt og beholder siden. Dører er ikke felt, men døren har to flater (Bjørn 18.11.2026): klikk på
+  overstykket eller dørbladet i risset velger den flaten, med egen farge og print, ‹ › bytter flate, og «Dør og slag»
+  nederst gir dørens innstillinger. Klikk på et forheng velger forhenget; det er ingen flate, bare stoff (sort, grå,
+  blå) i skuffen.
 - Malerspann og malerkost ligger også på fargesiden. Velger du ett av dem, slipper feltet, og du farger hele veggen eller
   plate for plate som før, uten å gå ut av skuffen.
 - Søppelbøtta med et felt valgt tar bare feltets egen farge og printen på denne siden (`clearFelt` i domain/print.ts).
@@ -194,7 +197,10 @@ siden skuffen viser (domain/print.ts):
 - Platebytte (6125) regnes ikke for en standveggplate som er printet: det er arrangørens plate med print på, også når
   standens farge er en annen enn arrangørens. Slik betales platen aldri både som farge og som print.
 - Platene bak en tekstilramme hoppes over, det samme gjør forheng og plater som tilhører en annen vegg. En dør får
-  trykk på overstykket og dørbladet, bare i lysåpningene (Byggeregel D5).
+  trykk på overstykket og dørbladet, bare i lysåpningene (Byggeregel D5). Malerspannet legger ett bilde over begge;
+  kosten (og en valgt flate) legger hele motivet på overstykket eller dørbladet hver for seg (`Foil.door`,
+  `printDoorPart`). En farge på den ene flaten tar bare dens print, så et bilde over begge blir stående på den andre
+  (`withoutDoorPart`). En print på én flate prises etter sitt areal.
 - Med hele veggen valgt tømmer søppelbøtta øverst i skuffen veggen for dekor: all folie (print og dekaler) på begge
   sider går, og platene får veggens farge igjen. Tekstilrammer blir stående. På en vegg uten dekor fjerner bøtta veggen
   som før (romvegg: åpner siden).

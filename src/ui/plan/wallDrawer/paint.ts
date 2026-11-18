@@ -4,7 +4,7 @@ import { foilBlocked } from '../../../domain/decor'
 import { doorRal } from '../../../domain/doors'
 import type { FaceSide } from '../../../domain/faces'
 import { paintLeaf, paintPlate, paintWallFace } from '../../../domain/paint'
-import { fillPlates, printPlate, printsOn, printWall } from '../../../domain/print'
+import { fillPlates, printDoorPart, printPlate, printsOn, printWall } from '../../../domain/print'
 import type { Motif, Variant, Wall } from '../../../domain/types'
 import type { BuiltModule } from '../../../domain/walls'
 import { rules } from '../../env'
@@ -102,6 +102,13 @@ export function wallPaint({ v, w, s, built, mods, motifs, tool, paintSel, printS
     if (why) {
       if (first) onToast(why)
       return
+    }
+    // A door: the header and the leaf are surfaces of their own, the brush prints the one pressed (Bjørn 18.11.2026)
+    if (mods[i]?.opening) {
+      const part = leaf ? 'leaf' : 'header'
+      if (printDoorPart(v, rules, w.id, i, s, pm!.id, part) === v) return
+      if (first) onCheckpoint()
+      return onEdit((x) => printDoorPart(x, rules, w.id, i, s, pm!.id, part), false)
     }
     // A plate that already has the whole motif is left as it is (the same motif again does nothing)
     if (!first && printedAt(v, i)?.motif === pm!.id) return

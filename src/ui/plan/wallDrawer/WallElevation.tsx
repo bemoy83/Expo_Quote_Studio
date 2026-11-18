@@ -7,11 +7,11 @@ import { foilCenter, foilsOn } from '../../../domain/decor'
 import { doorLevels, doorRal, doorWindows } from '../../../domain/doors'
 import { felt, type FaceSide } from '../../../domain/faces'
 import { moduleCc, moduleStart } from '../../../domain/grid'
-import { cropWindow, plateCrop } from '../../../domain/print'
+import { cropWindow, onDoorPart, plateCrop } from '../../../domain/print'
 import { textileBox, textilesOn } from '../../../domain/textile/inFrame'
 import { cornerLayout } from '../../../domain/shelves/corners'
 import { shelfRow, shelfStacks } from '../../../domain/shelves/model'
-import type { Foil, Motif, Opening, Shelf, TextileWall, Variant, Wall } from '../../../domain/types'
+import type { DoorSurface, Foil, Motif, Opening, Shelf, TextileWall, Variant, Wall } from '../../../domain/types'
 import { wallRal } from '../../../domain/panels'
 import { postOffsets, splitParts, type BuiltModule, type WallPart } from '../../../domain/walls'
 import { doorInset } from '../../../rules/rules'
@@ -84,7 +84,9 @@ interface Props {
   doorModules: Set<number>
   ratioOf: (id?: string) => number
   select: (x: Partial<PlanSelection>) => void
-  selectDoor: (id: string, side?: FaceSide) => void
+  selectDoor: (id: string, side?: FaceSide, surface?: DoorSurface) => void
+  /** The surface of the chosen door chosen in the drawing (its header or its leaf). */
+  doorSurface?: DoorSurface
   onSelect: (s: PlanSelection) => void
   onEdit: (fn: (v: Variant) => Variant, history?: boolean) => void
   onCheckpoint: () => void
@@ -253,7 +255,10 @@ export function WallElevation(p: Props) {
               const k = doorInset(rules)
               const hinge = u(o.hinge === -1 ? st(i) + 1 - k : st(i) + k)
               const free = u(o.hinge === -1 ? st(i) + k : st(i) + 1 - k)
-              const fp = door ? foils.find((f) => f.full && f.module === i) : undefined
+              // Print on the door: one picture over header and leaf, or one on each surface (the brush)
+              const fps = door ? foils.filter((f) => f.full && f.module === i) : []
+              const parts = fps.map((f) => ({ f, at: doorPrint(f, x, Math.min(hinge, free)) }))
+              const fp = fps.length > 0
               return (
                 <g
                   key={i}
@@ -262,8 +267,13 @@ export function WallElevation(p: Props) {
                     // The door is chosen here, in the wall drawer; chosen, a click takes colour and graphics back (while a tool
                     // is out, the plate targets on top take the press)
                     e.stopPropagation()
-                    if (O?.id === o.id) select({})
-                    else selectDoor(o.id)
+                    // A door: the header or the leaf under the pointer, each a surface of its own (Bjørn 18.11.2026);
+                    // clicked again, the wall's colour and graphics come back
+                    const at = svg.current?.getScreenCTM()
+                    const y = at ? H - new DOMPoint(e.clientX, e.clientY).matrixTransform(at.inverse()).y : 0
+                    const surface: DoorSurface | undefined = door ? (y > doorLevels(rules).header ? 'header' : 'leaf') : undefined
+                    if (O?.id === o.id && p.doorSurface === surface) select({})
+                    else selectDoor(o.id, s, surface)
                   }}
                 >
                   <OpeningView
@@ -271,7 +281,14 @@ export function WallElevation(p: Props) {
                     H={H}
                     plate={{ fill: plateColor(m.plate) }}
                     door={door ? { color: plateColor(doorRal(v, o)), hinge, free } : undefined}
-                    print={fp && doorPrint(fp, x, Math.min(hinge, free))}
+                    print={
+                      fp
+                        ? {
+                            header: parts.map(({ f, at }) => onDoorPart(f, 'header') && <g key={f.id}>{at?.header}</g>),
+                            leaf: parts.map(({ f, at }) => onDoorPart(f, 'leaf') && <g key={f.id}>{at?.leaf}</g>),
+                          }
+                        : undefined
+                    }
                   />
                   {!fp && (
                     <text x={x + 0.5} y={z(1.4)} textAnchor="middle" style={TXT}>
@@ -309,6 +326,9 @@ export function WallElevation(p: Props) {
                     <path d={`M${fx} ${z(lv.top)} L${hx} ${z((lv.top + lv.leaf) / 2)} L${fx} ${z(lv.leaf)}`} fill="none" stroke={INK_FAINT} strokeWidth={0.01} strokeDasharray=".04 .03" />
                   )}
                   <rect x={x - 0.012} y={z(H) - 0.012} width={1.024} height={H + 0.012} fill="none" stroke={INK} strokeWidth={0.016} />
+                  {/* The surface chosen, toned: the header between its rails, or the leaf */}
+                  {p.doorSurface === 'header' && <rect x={x + rules.wall.post / 2} y={0} width={1 - rules.wall.post} height={z(lv.header)} fill={INK} fillOpacity={0.12} />}
+                  {p.doorSurface === 'leaf' && doorModules.has(O.module) && <rect x={Math.min(hx, fx)} y={z(lv.top)} width={rules.door.swing} height={lv.top - lv.leaf} fill={INK} fillOpacity={0.12} />}
                 </g>
               )
             })()}

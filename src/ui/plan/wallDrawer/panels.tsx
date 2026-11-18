@@ -1,20 +1,20 @@
 // The settings column of the wall drawer: one panel for what is chosen, and the motif library (Profilering) under it. A
 // textile frame, a decal or print, a door, a felt's colour, or nothing (the wall itself: colour and print with the paint
 // bucket and brush). «Hyller og heng» and a chosen shelf are in fittings.tsx.
-import { ArrowLeft, ArrowRight, Palette, Repeat2 } from 'lucide-react'
+import { ArrowLeft, ArrowRight, DoorOpen, Palette, Repeat2 } from 'lucide-react'
 import type { Dispatch, ReactNode, SetStateAction } from 'react'
 import { foilBlocked, updateFoil } from '../../../domain/decor'
-import { paintPlate } from '../../../domain/paint'
-import { printPlate, printsOn } from '../../../domain/print'
-import { removeOpening } from '../../../domain/doors'
+import { paintLeaf, paintPlate } from '../../../domain/paint'
+import { onDoorPart, printDoorPart, printPlate, printsOn } from '../../../domain/print'
+import { doorRal, removeOpening } from '../../../domain/doors'
 import type { FaceSide } from '../../../domain/faces'
 import { textileBox, updateTextile } from '../../../domain/textile/inFrame'
-import type { Foil, Motif, Opening, TextileWall, Variant, Wall } from '../../../domain/types'
+import type { DoorSurface, Foil, Motif, Opening, TextileWall, Variant, Wall } from '../../../domain/types'
 import type { BuiltModule } from '../../../domain/walls'
 import { Button, Dim, FlatChoice, IconButton, Section } from '../../controls'
-import { rules } from '../../env'
+import { plateColor, productOf, rules } from '../../env'
 import { DoorSettings } from '../DoorSettings'
-import { ColourSection, FabricSection, PRINT, Shelf } from '../drawerParts'
+import { ColourSection, DrawerHead, FabricSection, PrevNext, PRINT, Shelf } from '../drawerParts'
 import { findMotif } from '../../motifs'
 import { type PlanSelection } from '../selection'
 import { faceName } from './face'
@@ -140,12 +140,13 @@ export function DoorPanel(props: {
   w: Wall
   flip: FaceSide | undefined
   select: (x: Partial<PlanSelection>) => void
-  selectDoor: (id: string, side?: FaceSide) => void
+  selectDoor: (id: string, side?: FaceSide, surface?: DoorSurface) => void
   onEdit: Edit
   onClose: () => void
   children?: ReactNode
 }) {
   const { v, O, w, flip, select, selectDoor, onEdit, onClose, children } = props
+  const door = productOf(O.product)?.opening === 'door'
   return (
     <>
       <DoorSettings
@@ -163,12 +164,91 @@ export function DoorPanel(props: {
       </DoorSettings>
       <hr className="set-rule" />
       <div className="wd-sec">{children}</div>
-      {/* The way back to the palette: colour and graphics for the door are the wall's, and a 1 × 1 room's side is
-          only the door, so the drawing has nothing else to click (Bjørn 3.11.2026) */}
+      {/* A door's colour and print: its leaf and header, each a surface (Bjørn 18.11.2026); a curtain's: the wall's
+          palette, as a 1 × 1 room's side is only the door, so the drawing has nothing else to click (Bjørn 3.11.2026) */}
       <div className="wd-foot">
         <div className="wd-actions">
-          <Button variant="ghost" icon={Palette} onClick={() => select({})}>
+          <Button variant="ghost" icon={Palette} onClick={() => (door ? selectDoor(O.id, undefined, 'leaf') : select({}))}>
             Farge og profilering
+          </Button>
+        </div>
+      </div>
+    </>
+  )
+}
+
+/**
+ * A door's header or leaf chosen in the drawing (Bjørn 18.11.2026): each a surface of its own, as a felt. Its colour
+ * and print (the palette on it at once, the last stroke wins; ‹ › to the other surface; bucket and brush let it go),
+ * the motif library (a motif prints it at once), and the way back to the door's own settings.
+ */
+export function DoorSurfacePanel(props: {
+  v: Variant
+  O: Opening
+  w: Wall
+  s: FaceSide
+  part: DoorSurface
+  mods: (BuiltModule | undefined)[]
+  motifs: Motif[]
+  pm: Motif | undefined
+  setTool: (t: PaintTool) => void
+  setPrintMotif: (id: string) => void
+  select: (x: Partial<PlanSelection>) => void
+  selectDoor: (id: string, side?: FaceSide, surface?: DoorSurface) => void
+  onEdit: Edit
+  onToast: (t: string) => void
+  onUpload: (f: File) => void
+  onClose: () => void
+}) {
+  const { v, O, w, s, part, mods, motifs, pm, setTool, setPrintMotif, select, selectDoor, onEdit, onToast, onUpload, onClose } = props
+  const m = O.module
+  const key = mods[m]?.key
+  const printed = printsOn(v, w.id, s).find((f) => f.module === m && onDoorPart(f, part))
+  const colour = part === 'leaf' ? doorRal(v, O) : (mods[m]?.plate ?? v.defaultPlate)
+  const name = part === 'leaf' ? 'Dørblad' : 'Overstykke'
+  const print = (id: string) => {
+    const noPrint = foilBlocked(v, rules, w.id, m, s, true)
+    if (noPrint) return onToast(noPrint)
+    onEdit((x) => printDoorPart(x, rules, w.id, m, s, id, part))
+  }
+  const pick = (r: string) => {
+    if (r === PRINT) return pm ? print(pm.id) : onToast('Last opp et motiv i Profilering først')
+    if (part === 'leaf') onEdit((x) => paintLeaf(x, O.id, s, r))
+    else if (key) onEdit((x) => paintPlate(x, w.id, s, m, key, r))
+  }
+  const take = (t: PaintTool) => {
+    setTool(t)
+    select({})
+  }
+  const other: DoorSurface = part === 'leaf' ? 'header' : 'leaf'
+  return (
+    <>
+      <DrawerHead dot={plateColor(colour)} title={`Dør · ${name.toLowerCase()}`} remove={{ label: 'Gjør om til vegg (Delete)', onClick: () => (onEdit((x) => removeOpening(x, O.id)), select({})) }} onClose={onClose} />
+      <p className="wd-meta num">{part === 'leaf' ? 'Dørbladet i 292-rammen' : 'Platen over døren'} · {faceName(w, s).toLowerCase()}</p>
+      <ColourSection
+        title={name}
+        value={printed ? PRINT : colour}
+        motif={printed ? (findMotif(motifs, printed.motif) ?? pm) : pm}
+        nav={<PrevNext what="flate" onPrev={() => selectDoor(O.id, s, other)} onNext={() => selectDoor(O.id, s, other)} />}
+        tools={{ what: 'veggen', bucket: false, brush: false, onBucket: () => take('wall'), onBrush: () => take('plate') }}
+        onPick={pick}
+      />
+      <hr className="set-rule" />
+      <Shelf
+        title="Profilering"
+        aside={pm ? `motiv ${pm.name}` : 'last opp et motiv'}
+        motifs={motifs}
+        value={printed?.motif ?? pm?.id}
+        onPick={(id) => {
+          setPrintMotif(id)
+          print(id)
+        }}
+        onUpload={onUpload}
+      />
+      <div className="wd-foot">
+        <div className="wd-actions">
+          <Button variant="ghost" icon={DoorOpen} onClick={() => selectDoor(O.id, s)}>
+            Dør og slag
           </Button>
         </div>
       </div>

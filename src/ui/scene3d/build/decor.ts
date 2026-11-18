@@ -1,7 +1,7 @@
 // Foil decor and stretched print on the wall plates, over the door leaf and header where a print covers a door.
 import { foilCenter } from '../../../domain/decor'
 import { doorWindows } from '../../../domain/doors'
-import { cropWindow, plateCrop } from '../../../domain/print'
+import { cropWindow, onDoorPart, plateCrop } from '../../../domain/print'
 import { pointAlong } from '../../../domain/grid'
 import { productOf, rules } from '../../env'
 import { findMotif } from '../../motifs'
@@ -44,7 +44,8 @@ export function buildDecor(c: BuildContext) {
     // Door: the picture shows through the header plate between its rails and the leaf plate inside its 292 frame
     // (lysåpning); rails and frame hide their strip of it. The leaf plate sits in the middle of the 20 mm frame.
     const { header, leaf } = doorWindows(rules)
-    band(header.y0, header.y1, header.w, face)
-    band(leaf.y0, leaf.y1, leaf.w, s * (0.0015 + 0.001))
+    // One picture over both, or a print on one of them (the brush)
+    if (onDoorPart(f, 'header')) band(header.y0, header.y1, header.w, face)
+    if (onDoorPart(f, 'leaf')) band(leaf.y0, leaf.y1, leaf.w, s * (0.0015 + 0.001))
   }
 }

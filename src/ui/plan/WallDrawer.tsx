@@ -17,7 +17,7 @@ import { clearDecor, clearFelt, printPlate, printsOn } from '../../domain/print'
 import { moveShelves, removeShelves } from '../../domain/shelves/edit'
 import { shelvesOn } from '../../domain/shelves/model'
 import { wallLength, wallModules } from '../../domain/grid'
-import type { Motif, Variant } from '../../domain/types'
+import type { DoorSurface, Motif, Variant } from '../../domain/types'
 import { builtModules, isStandWall, wallLabel, wallParts } from '../../domain/walls'
 import { wallHeight } from '../../rules/rules'
 import { INK_FAINT, LAYER_COLOR } from '../colors'
@@ -34,7 +34,7 @@ import { wallPaint } from './wallDrawer/paint'
 import { FeltFittings, ShelfPanel, WallFittings } from './wallDrawer/fittings'
 import { focusOf, layoutOf } from './wallDrawer/focus'
 import { useWallTools } from './wallDrawer/useWallTools'
-import { ColourPanel, DoorPanel, FeltPanel, FoilPanel, TextilePanel, WallShelf } from './wallDrawer/panels'
+import { ColourPanel, DoorPanel, DoorSurfacePanel, FeltPanel, FoilPanel, TextilePanel, WallShelf } from './wallDrawer/panels'
 import { BRUSH_HINT, wallHint, wallMeta, wallTitle, wallWhy } from './wallDrawer/text'
 import { hintLine } from './drawerText'
 import { WallElevation } from './wallDrawer/WallElevation'
@@ -86,7 +86,7 @@ export function WallDrawer(p: Props) {
   const label = wallLabel(w)
   const select = (x: Partial<PlanSelection>) => p.onSelect({ wallId: w.id, side: s, ...x })
   /** A door is chosen without its wall, so the plan and 3D mark the door and not the whole wall. */
-  const selectDoor = (id: string, side: FaceSide = s) => p.onSelect({ openingId: id, side })
+  const selectDoor = (id: string, side: FaceSide = s, surface?: DoorSurface) => p.onSelect({ openingId: id, side, ...(surface && { doorSurface: surface }) })
 
   /** With a frame or decal selected, the face control moves it to the other face of the wall. */
   const moveToSide = (side: FaceSide) => {
@@ -122,6 +122,8 @@ export function WallDrawer(p: Props) {
   const doors = openings.filter((o) => productOf(o.product)?.opening === 'door')
   const ral = wallRal(v, w)
   const flip = fs.length > 1 ? fs.find((x) => x !== s) : undefined
+  /** A door's header or leaf chosen in the drawing (a curtain has none). */
+  const surface = O && productOf(O.product)?.opening === 'door' ? sel.doorSurface : undefined
   /** The colour a plate has without its own: that of the wall that owns it (a stand wall under a room side). */
   const base = (key: string) => {
     const owner = v.walls.find((x) => x.id === built.get(key)?.wallId)
@@ -160,7 +162,7 @@ export function WallDrawer(p: Props) {
     if (on && Fe !== undefined) select({})
   }
   const why = wallWhy(v, rules, w, s, { felt: focus === 'felt' && Fe !== undefined ? { m: Fe, page } : undefined, twoFaces: fs.length > 1, T, F, S, shelves: chosenShelves(v, sel).length })
-  const hint0 = hintLine(why, wallHint({ O, door: !!O && doorModules.has(O.module), painting, tool, printing, T, F, S, felt: focus === 'felt' ? page : undefined, extras: ui.panel === 'wall-extras', w }))
+  const hint0 = hintLine(why, wallHint({ O, door: !!O && doorModules.has(O.module), surface, painting, tool, printing, T, F, S, felt: focus === 'felt' ? page : undefined, extras: ui.panel === 'wall-extras', w }))
 
   const hint = brushOn ? (t.brushHint ?? BRUSH_HINT) : hint0
 
@@ -202,7 +204,26 @@ export function WallDrawer(p: Props) {
   return (
     <section className="wall-drawer drawer2" aria-label="Vegg sett forfra">
       <div className="wd-insp">
-        {ui.panel === 'door' && O ? (
+        {ui.panel === 'door' && O && surface ? (
+          <DoorSurfacePanel
+            v={v}
+            O={O}
+            w={w}
+            s={s}
+            part={surface}
+            mods={mods}
+            motifs={motifs}
+            pm={pm}
+            setTool={setTool}
+            setPrintMotif={t.setPrintMotif}
+            select={select}
+            selectDoor={selectDoor}
+            onEdit={p.onEdit}
+            onToast={p.onToast}
+            onUpload={p.onUpload}
+            onClose={p.onClose}
+          />
+        ) : ui.panel === 'door' && O ? (
           <DoorPanel v={v} O={O} w={w} flip={flip} select={select} selectDoor={selectDoor} onEdit={p.onEdit} onClose={p.onClose}>
             <DoorMap v={v} openingId={O.id} onEdit={p.onEdit} />
           </DoorPanel>
@@ -350,6 +371,7 @@ export function WallDrawer(p: Props) {
         ratioOf={ratioOf}
         select={select}
         selectDoor={selectDoor}
+        doorSurface={O ? sel.doorSurface : undefined}
         onSelect={p.onSelect}
         onEdit={p.onEdit}
         onCheckpoint={p.onCheckpoint}

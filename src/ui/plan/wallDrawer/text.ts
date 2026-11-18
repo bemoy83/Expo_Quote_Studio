@@ -71,8 +71,9 @@ const TAIL = 'dra tekstilvegg eller motiv til veggen, klikk det for å endre'
 export const BRUSH_HINT =
   'Klikk der hyllen skal stå · dra sideveis for rad, opp og ned for høyde · Shift: klikk gir en hylle til i feltet, dra opp for flere, sideveis for samme fordeling i flere felt · Esc legger bort pensla'
 
-export function wallHint(x: { O?: Opening; door: boolean; painting: boolean; tool: PaintTool; printing: boolean; T?: TextileWall; F?: Foil; S?: Shelf; felt?: 'decor' | 'extras'; extras?: boolean; w: Wall }): string {
+export function wallHint(x: { O?: Opening; door: boolean; surface?: 'header' | 'leaf'; painting: boolean; tool: PaintTool; printing: boolean; T?: TextileWall; F?: Foil; S?: Shelf; felt?: 'decor' | 'extras'; extras?: boolean; w: Wall }): string {
   const { O, door, painting, tool, printing, T, F, S, felt, extras, w } = x
+  if (O && x.surface) return `Farge og print gjelder ${x.surface === 'leaf' ? 'dørbladet' : 'overstykket'} · ‹ › bytter flate · klikk den igjen for veggen · malerspannet legger ett bilde over begge`
   if (O) return `Klikk en rute i miniplanen for å flytte ${door ? 'døren' : 'forhenget'} · «Farge og profilering» eller Esc gir paletten · Delete gjør om til vegg`
   if (painting && tool === 'wall')
     return printing

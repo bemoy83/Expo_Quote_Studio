@@ -1,6 +1,7 @@
 // What is selected in the plan (and 3D): one wall, room, object, frame, decal, shelf, door, beam or lane, and the wall face shown.
 import { removeFoil } from '../../domain/decor'
 import { doorFace, openingById, removeOpening } from '../../domain/doors'
+import type { DoorSurface } from '../../domain/types'
 import { faces, type FaceSide } from '../../domain/faces'
 import { removeLane } from '../../domain/floor/edit'
 import { removeFill } from '../../domain/floor/rollFill'
@@ -34,6 +35,9 @@ export interface PlanSelection {
   felt?: number
   /** A door or curtain, chosen in the wall drawer of the wall it stands in. */
   openingId?: string
+  /** With a door: the surface chosen in the wall drawing, its header or its leaf, to colour and print (Bjørn 18.11.2026);
+   *  none: the door itself (type, swing, where it stands). */
+  doorSurface?: DoorSurface
   /** A lane of engangsteppe placed on its own: its top left cell. */
   lane?: { i: number; j: number }
   /** Engangsteppe laid by Fyll (domain/floor/rollFill.ts). */

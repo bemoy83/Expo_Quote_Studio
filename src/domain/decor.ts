@@ -56,6 +56,8 @@ export const foilsOn = (v: Variant, wallId: string, s: FaceSide) => v.foils.filt
 /** A decal kept inside its felt: size limited by the felt with the motif's ratio, centre clamped. A full foil covers the felt. */
 export function fitFoil(v: Pick<Variant, 'walls'>, f: Foil, rules: Rules, ratio: number): Foil {
   const fe = foilFelt(v, rules, f);
+  // A print on one surface of a door keeps the box its picture was laid over (its window of it shows)
+  if (f.full && f.door) return f;
   if (f.full) return { ...f, width: fe.w, height: fe.h, x: 0, y: r3((fe.y0 + fe.y1) / 2) };
   const r = ratio > 0 ? ratio : f.width && f.height ? f.width / f.height : 1;
   let w = clamp(f.width || fe.w * 0.8, 0.1, fe.w);

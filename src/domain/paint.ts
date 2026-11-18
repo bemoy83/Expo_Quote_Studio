@@ -1,7 +1,7 @@
 // Colour and print on the surfaces of a wall, in one place (Bjørn 18.11.2026): every way of colouring goes through here,
 // the drawer, the pill, the wall pen in the plan and Fyll, so they follow the same rules.
 //
-// - A surface is a plate (a felt), a door leaf, a counter's plate (each light opening of a part, its sliding door one
+// - A surface is a plate (a felt), a door's header and its leaf (each with its own colour and print), a counter's plate (each light opening of a part, its sliding door one
 //   surface: K6) or, later, a header.
 // - The last stroke wins on what you point at: a colour on one plate or door leaf takes the print off it on the face
 //   shown (decals stay: they do not cover the whole plate).
@@ -17,7 +17,7 @@ import { withSections } from './podiumSections';
 import { setWallPlate } from './edit';
 import type { FaceSide } from './faces';
 import { setPanels, wallRal } from './panels';
-import { clearPrint, hiddenPlates, printsOn, uncolourHidden } from './print';
+import { clearPrint, hiddenPlates, printsOn, uncolourHidden, withoutDoorPart } from './print';
 import { roomOf } from './rooms';
 import type { CounterSection, PlacedObject, Variant, Wall } from './types';
 import { builtModules, type BuiltModule } from './walls';
@@ -91,14 +91,18 @@ const sameWalls = (a: Variant, b: Variant) =>
 /** A colour on one plate of a face (the brush, a felt's palette, the wall pen): the last stroke wins, so its print on
  *  this face comes off. Decals stay. `ral` back to the wall's own colour drops the plate's own. */
 export function paintPlate(v: Variant, wallId: string, s: FaceSide, module: number, key: string, ral: string): Variant {
-  return clearPrint(setPanels(v, [key], ral, plateBase(v)), wallId, s, [module]);
+  const x = setPanels(v, [key], ral, plateBase(v));
+  // A door's header is a surface of its own: only its print comes off, the leaf keeps its share (Bjørn 18.11.2026)
+  if (builtModules(v).some((m) => m.key === key && m.opening)) return withoutDoorPart(x, wallId, s, module, 'header');
+  return clearPrint(x, wallId, s, [module]);
 }
 
-/** A colour on a door leaf (the brush on the leaf, the door's pill): as a plate, its print on this face comes off. */
+/** A colour on a door leaf (the brush on the leaf, the door's pill): as a plate, its print on this face comes off; the
+ *  header keeps its share of a picture over both. */
 export function paintLeaf(v: Variant, openingId: string, s: FaceSide, ral: string | null): Variant {
   const o = v.openings.find((x) => x.id === openingId);
   if (!o) return v;
-  return clearPrint(setDoorRal(v, o.id, ral), o.wallId, s, [o.module]);
+  return withoutDoorPart(setDoorRal(v, o.id, ral), o.wallId, s, o.module, 'leaf');
 }
 
 /**

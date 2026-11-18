@@ -14,7 +14,8 @@ import { clearPanels } from './panels';
 import { roomAt, roomOf } from './rooms';
 import { builtModules } from './walls';
 import { setWallPlate } from './edit';
-import type { Foil, Variant, Wall } from './types';
+import type { DoorSurface, Foil, Variant, Wall } from './types';
+import { doorWindows } from './doors';
 import { nextId } from './ids';
 import { faceNormal, faces, type FaceSide, felt, sideOf } from './faces';
 
@@ -129,6 +130,42 @@ export function printPlate(v: Variant, rules: Rules, wallId: string, module: num
   const kept = strip(v, w, s, new Set([module]));
   const id = nextId(kept.map((f) => f.id), 'f');
   return uncolourHidden({ ...v, foils: [...kept, fitFoil(v, plateFoil(id, w, module, s, motif), rules, 0)] }, w.id);
+}
+
+const OTHER: Record<DoorSurface, DoorSurface> = { header: 'leaf', leaf: 'header' };
+
+/** Whether a print shows on a door's surface `part`: one over both does, one on a single surface only there. */
+export const onDoorPart = (f: Pick<Foil, 'door'>, part: DoorSurface) => !f.door || f.door === part;
+
+/**
+ * Print with the brush on one surface of a door (Bjørn 18.11.2026): the whole motif on the header or the leaf, its
+ * window of the plate. A picture over both keeps showing on the other surface; the same motif again does nothing.
+ */
+export function printDoorPart(v: Variant, rules: Rules, wallId: string, module: number, s: FaceSide, motif: string, part: DoorSurface): Variant {
+  const w = v.walls.find((x) => x.id === wallId);
+  if (!w || !printPlates(v, rules, w, s).includes(module)) return v;
+  const here = printsOn(v, w.id, s).filter((f) => f.module === module);
+  if (here.some((f) => f.door === part && f.motif === motif)) return v;
+  const kept = withoutDoorPart(v, w.id, s, module, part).foils;
+  const win = doorWindows(rules)[part];
+  const id = nextId(v.foils.map((f) => f.id), 'f');
+  const foil: Foil = { id, wallId: w.id, module, side: s, full: true, width: r4(win.w), height: r4(win.y1 - win.y0), x: 0, y: r4((win.y0 + win.y1) / 2), motif, door: part };
+  // Decals on the door go, as on a plate
+  return { ...v, foils: [...kept.filter((f) => !(f.wallId === w.id && f.module === module && sideOf(v, f) === s && !f.full)), foil] };
+}
+
+/**
+ * The print taken off one surface of a door on face s (a colour on the header or the leaf: the last stroke wins): a
+ * print on that surface goes, a picture over both stays on the other surface only.
+ */
+export function withoutDoorPart(v: Variant, wallId: string, s: FaceSide, module: number, part: DoorSurface): Variant {
+  let changed = false;
+  const foils = v.foils.flatMap((f) => {
+    if (!(f.full && f.wallId === wallId && f.module === module && sideOf(v, f) === s && onDoorPart(f, part))) return [f];
+    changed = true;
+    return f.door ? [] : [{ ...f, door: OTHER[part] }];
+  });
+  return changed ? { ...v, foils } : v;
 }
 
 /**
