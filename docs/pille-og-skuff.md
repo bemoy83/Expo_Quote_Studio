@@ -242,6 +242,8 @@ I dag hopper `paintWalls` over moduler som finnes, så et klikk med veggverktøy
   vises veggsymbolet i den nye fargen med 40 % styrke og pillen «3 plater · RAL 5007». Lagres ved slipp, og Esc
   avbryter.
 - Er fargen den samme som veggens egen farge, fjernes platens egen farge (`clearPanels`).
+- Siste strøk vinner som med kosten i skuffen (Bjørn 18.11.2026): printen på siden du trykket, går av platene som
+  farges (`paintPlates` → `paintPlatesAlong` i domain/paint.ts). Dekaler blir.
 - Et klikk på en tom kant tegner ny vegg som før. Et drag som starter på tom kant, tegner også som før.
 - Hintlinjen: «Klikk en vegg for å farge den · dra for flere plater · klikk en tom kant for ny vegg».
 - Platebytte på standvegg prises som i dag (`calc/lines/swaps.ts`).

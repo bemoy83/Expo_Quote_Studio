@@ -112,9 +112,12 @@ lagres per modul i `Variant.panels` (domain/panels.ts), nøklet på platens kant
 - Der en romside står på en standvegg, er platen standveggens, og fargen også.
 - Fargen følger med når en innervegg eller et rom flyttes eller endrer form, og forsvinner når platen fjernes.
 - Hel-vegg-farge tar over: platene på veggen får veggens nye farge.
-- «Fyll» i veggpillen i planen (malerspann, Bjørn 11.11.2026) gir alle vegger på standen pennens farge: den blir
-  standens farge (`defaultPlate`), og egne farger på vegger, rom, enkeltplater og dørblad går av (`paintAllWalls`).
-  Siste strøk vinner, så print på hele plater går også; dekaler og tekstilrammer blir stående. Ett angre tar alt tilbake.
+- «Fyll» i veggpillen i planen (malerspann, Bjørn 11.11.2026) og standfargen i panelet Vegger (Bjørn 18.11.2026) gir
+  alle vegger på standen samme farge: den blir standens farge (`defaultPlate`), og egne farger på vegger, rom,
+  enkeltplater og dørblad går av (`paintAllWalls` i domain/paint.ts). Felt og dører med print står som før, print og
+  farge, for print er et bevisst valg (Bjørn 18.11.2026). Toasten sier hvor mange, og «Farg også dem» farger dem også og
+  tar printen av. Valget ligger i toasten over tegneflaten, aldri i skuffen eller panelet, så ingen innstilling flyttes.
+  Dekaler og tekstilrammer blir stående. Ett angre tar alt tilbake.
 - Kalkylen har én linje per farge. En farget plate i en standvegg arrangøren betaler blir platebytte for akkurat den
   platen (6125-RAL). Plukklisten teller plater per RAL, og overstykket over en dør har platens farge.
 
@@ -175,9 +178,15 @@ siden skuffen viser (domain/print.ts):
   (beskjæres, strekkes aldri), og kuttes per plate. Bildet går videre bak stolpene, så skjøtene ligger på linje.
   Hver plate husker sin del av bildet (`Foil.crop`), og platene i samme motiv deler `Foil.run`.
 - Malerkosten legger hele motivet på én plate, som «Hel plate» i dag.
-- Klikker du igjen med samme motiv, forsvinner det (spannet: hele siden, kosten: platen).
-- Print erstatter dekalene på platen. En farge malt på siden tar bort printen der, men dekalene blir (Bjørn 2.11.2026).
-  Fargen gjelder fortsatt begge sider, så den andre siden beholder sin print.
+- Samme motiv igjen gjør ingenting, med spann, kost, Print-pennen og motivtrykk i et felt (Bjørn 18.11.2026). Printen
+  tas av med en farge på feltet eller søppelbøtta.
+- Print erstatter dekalene på platen. Dekaler blir når en plate får ny farge: de dekker ikke hele platen (Bjørn 2.11.2026).
+- Siste strøk vinner på det du peker på: en farge med kosten, på et valgt felt, med veggpennen i planen eller på et
+  dørblad tar printen av den platen på siden du ser (domain/paint.ts). Fargen gjelder fortsatt begge sider, så den
+  andre siden beholder sin print.
+- Et strøk over mange flater lar print stå (Bjørn 18.11.2026): malerspannet med en farge og fargene i veggpillen farger
+  resten av veggen, mens felt og dører med print på siden står som før, print og farge. Slik kan alle øvrige felt få ny
+  farge uten å legge printen på igjen. Toasten sier hvor mange felt som ble hoppet over.
 - Siste strøk vinner (Bjørn 3.11.2026). Print over en farge tar fargen bort der den ikke lenger synes: en plate der alle
   sidene som kan ha dekor er printet (standvegg: innsiden, innervegg og romvegg: begge sider) mister sin egen farge, og
   er hele veggen (rommet) dekket, går veggens farge også. Platen får standens farge igjen. En innervegg printet på én

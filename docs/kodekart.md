@@ -139,6 +139,7 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 - Dekal: `Foil` · `domain/decor.ts` (folie og `fitDecor`) · veggflater og felt: `domain/faces.ts`
 - Print med spann og kost: `domain/print.ts` · i veggskuffen: `plan/wallDrawer/paint.ts`
 - Farge per plate: `domain/panels.ts`
+- Én regel for farge og print (Bjørn 18.11.2026): `domain/paint.ts` (spann over en side, farge på én plate eller ett dørblad, veggpennen i planen, Fyll på hele standen med valget om print i toasten via `ui/fillKeeping.ts`). Skuff, pille, planpenn og panel går gjennom den, aldri `setWallPlate` + `clearPrint` hver for seg
 - Kalkyle: `calc/lines/decor.ts` (folie, print-oppsett) · `calc/lines/swaps.ts` (platebytte) · `calc/textile/production.ts` (`foilRows`)
 - 3D: `scene3d/build/decor.ts` · teksturbuffer for motiver: `scene3d/build/motifs.ts` · motiver `ui/motifs.ts` · dra inn: `ui/dnd.ts` · motivpensel i planen: `plan/pointer/decor.ts`
 
