@@ -61,6 +61,9 @@ interface Props {
   /** The counter's longest side and highest CC, mm (counterFrame): every side drawn in its scale, in the middle with the
    *  floor in the same place. Left out: the side fills the drawing (the work order). */
   fit?: { length: number; h: number }
+  /** A paint tool out (Farge og profilering, as the wall drawer's): pressing a light opening calls `at` (`first`), and so
+   *  does each one swept over while pressed with the brush; no part is chosen by a click then. */
+  paint?: { tool: 'side' | 'plate'; at: (part: number, light: number, first: boolean) => void }
   /** The map that picks a side, fixed in the top left corner (detail only); the drawing gives way right or down,
    *  whichever leaves it larger. */
   map?: ReactNode
@@ -106,7 +109,8 @@ function place(size: { w: number; h: number } | null, Lf: number, L: number, H: 
   return { viewBox: `${b.x0 - (Lf - L) / 2} ${b.y0} ${b.w} ${b.h}`, u: b.u, top: b.top }
 }
 
-export function PodiumElevation({ parts: given, length, h: hTop, title, fill, chosen, onPick, onHeight, onShelf, prints = [], decals = [], motifs = [], decal, onDecal, onDecalBox, fit, map }: Props) {
+export function PodiumElevation({ parts: given, length, h: hTop, title, fill, chosen, onPick, onHeight, onShelf, prints = [], decals = [], motifs = [], decal, onDecal, onDecalBox, fit, map, paint }: Props) {
+  const sweeping = useRef(false)
   const box = useRef<HTMLDivElement>(null)
   const mapBox = useRef<HTMLDivElement>(null)
   const mapSize = useElementSize(mapBox, true)
@@ -275,7 +279,18 @@ export function PodiumElevation({ parts: given, length, h: hTop, title, fill, ch
             {map}
           </div>
         )}
-        <svg ref={svg} className="wd-svg" viewBox={view.viewBox} preserveAspectRatio="xMidYMid meet" role="img" aria-label={`${title}, ${length} mm`} onPointerMove={decalMove} onPointerUp={decalUp} onPointerCancel={() => setDd(null)}>
+        <svg
+          ref={svg}
+          className="wd-svg"
+          viewBox={view.viewBox}
+          preserveAspectRatio="xMidYMid meet"
+          role="img"
+          aria-label={`${title}, ${length} mm`}
+          onPointerMove={decalMove}
+          onPointerUp={() => ((sweeping.current = false), decalUp())}
+          onPointerLeave={() => (sweeping.current = false)}
+          onPointerCancel={() => ((sweeping.current = false), setDd(null))}
+        >
           {parts.map((p, i) => {
             const w = x(p.x1 - p.x0)
             const x0 = x(p.x0)
@@ -289,7 +304,21 @@ export function PodiumElevation({ parts: given, length, h: hTop, title, fill, ch
                   const [y0, y1] = lightY(p, li)
                   const open = kind === 'open'
                   return (
-                    <g key={li} style={{ cursor: onPick ? 'pointer' : undefined }} onClick={() => pick(i, bands.length > 1 ? li : undefined)}>
+                    <g
+                      key={li}
+                      style={{ cursor: paint ? (paint.tool === 'side' ? 'copy' : 'crosshair') : onPick ? 'pointer' : undefined, touchAction: paint ? 'none' : undefined }}
+                      onClick={() => !paint && pick(i, bands.length > 1 ? li : undefined)}
+                      onPointerDown={
+                        paint &&
+                        ((e) => {
+                          // Let the pointer go, so sweeping reaches the plates beside (touch captures it to the first)
+                          ;(e.target as Element).releasePointerCapture?.(e.pointerId)
+                          sweeping.current = true
+                          paint.at(i, li, true)
+                        })
+                      }
+                      onPointerEnter={paint && ((e) => paint.tool === 'plate' && sweeping.current && e.buttons === 1 && paint.at(i, li, false))}
+                    >
                       {/* The plate, or the inside seen through an open light opening (no plates between the sections, K16) */}
                       <rect x={x0} y={y0} width={w} height={y1 - y0} fill={open ? SUNKEN : p.rals?.[li] ? plateColor(p.rals[li]!) : fill} />
                       {open && <rect x={x0} y={y0} width={w} height={y1 - y0} fill={INK} fillOpacity={0.06} />}
@@ -332,7 +361,7 @@ export function PodiumElevation({ parts: given, length, h: hTop, title, fill, ch
               const m = findMotif(motifs, d.motif)
               const b = dd?.id === d.id ? dd.box : d
               return (
-                <g key={d.id} style={{ cursor: onDecalBox ? 'move' : undefined }} onClick={(e) => e.stopPropagation()} onPointerDown={onDecalBox && ((e) => decalDown(e, d, 'move'))}>
+                <g key={d.id} pointerEvents={paint ? 'none' : undefined} style={{ cursor: onDecalBox ? 'move' : undefined }} onClick={(e) => e.stopPropagation()} onPointerDown={onDecalBox && ((e) => decalDown(e, d, 'move'))}>
                   {m ? <Print m={m} x={x(b.x0)} y={yAt(b.y1)} width={x(b.x1 - b.x0)} height={(b.y1 - b.y0) / 1000} /> : <rect x={x(b.x0)} y={yAt(b.y1)} width={x(b.x1 - b.x0)} height={(b.y1 - b.y0) / 1000} fill={SUNKEN} />}
                 </g>
               )

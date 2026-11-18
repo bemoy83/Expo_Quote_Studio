@@ -9,7 +9,7 @@
 import { LibraryBig, Palette } from 'lucide-react'
 import { useState } from 'react'
 import { counterRal, removeObject } from '../../../domain/objects'
-import { podiumDecals, takesDecor, updatePodiumDecal } from '../../../domain/podiumDecor'
+import { podiumDecals, printOf, takesDecor, updatePodiumDecal } from '../../../domain/podiumDecor'
 import { NO_DOOR, setPodiumLight, takesDoor } from '../../../domain/podiumFaces'
 import { heightName, HEIGHTS, outerHeight, podiumSize, setSectionHeight } from '../../../domain/podiums'
 import { SHELF_HEIGHTS, lowered, movePodiumShelf, setPodiumShelf } from '../../../domain/podiumShelves'
@@ -19,10 +19,11 @@ import { counterName, footPlatesOf, place, plateColor } from '../../env'
 import { overPlate, setCounterInserts } from '../../../domain/counters'
 import { count, mm } from '../../format'
 import { findMotif } from '../../motifs'
-import { DrawerHead, PrevNext } from '../drawerParts'
+import { DrawerHead, PrevNext, PRINT } from '../drawerParts'
 import { hintLine } from '../drawerText'
 import type { PlanSelection } from '../selection'
 import { PodiumDecor } from './PodiumDecor'
+import { counterPaintAt, type CounterTool } from './paint'
 import { PodiumElevation } from './PodiumElevation'
 import { PodiumMap } from './PodiumMap'
 import { chosenSide, counterFrame, drawerSides, sideDecor, sideElevation, type ElevationPart } from './podiumView'
@@ -35,6 +36,8 @@ interface Props {
   onUpload: (f: File) => void
   onSelect: (s: PlanSelection) => void
   onEdit: (fn: (v: Variant) => Variant, history?: boolean) => void
+  onCheckpoint: () => void
+  onToast: (text: string) => void
   onClose: () => void
 }
 
@@ -54,8 +57,12 @@ const shared = (ps: ElevationPart[], light?: number): Kind | null => {
   return ks.length === 1 ? ks[0] : null
 }
 
-export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect, onEdit, onClose }: Props) {
+export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect, onEdit, onCheckpoint, onToast, onClose }: Props) {
   const [page, setPage] = useState<Page>('sides')
+  // Colouring as in the wall drawer: the tool out, what it lays on and the motif «Print» uses (paint.ts)
+  const [tool, setTool] = useState<CounterTool>(null)
+  const [paintSel, setPaint] = useState<string | null>(null)
+  const [motifId, setMotifId] = useState<string | undefined>(undefined)
   // K18: how many shelves the last lower height took away, for the hint
   const [gone, setGone] = useState(0)
   const sides = drawerSides(o)
@@ -82,6 +89,16 @@ export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect,
   // K20: nothing chosen takes print or a decal (open all over)
   const decorOpen = !parts.some((p) => takesDecor(o.sections!, p.part))
   const chosenDecal = decals.find((d) => d.decal.id === sel.podiumDecal)
+  // A tool is out on «Farge og profilering» with nothing chosen: the drawing paints instead of choosing
+  const painting = page === 'decor' && tool !== null && pi === undefined && !chosenDecal
+  const scopePrint = (() => {
+    const ps = [...new Set(el.parts.filter((p) => takesDecor(o.sections!, p.part)).map((p) => printOf(o.sections!, p.part) ?? null))]
+    return ps.length === 1 ? ps[0] : null
+  })()
+  const sideColours = [...new Set(el.parts.flatMap((p) => p.lights.flatMap((k, i) => (k === 'open' ? [] : [p.rals[i] ?? ral]))))]
+  const pen = paintSel ?? (scopePrint ? PRINT : sideColours.length === 1 ? sideColours[0] : ral)
+  const pm = findMotif(motifs, motifId ?? scopePrint ?? undefined) ?? motifs[0]
+  const paintAt = counterPaintAt({ v, o, side: el.parts, tool, paint: pen, pm, onEdit, onCheckpoint, onToast })
 
   // K17: no sliding door on a part of 250; with the whole side chosen, on the parts that take one
   const doorable = parts.filter((p) => takesDoor(p.part))
@@ -119,10 +136,15 @@ export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect,
           pi === undefined ? 'Klikk en del eller en åpning i risset for bare den' : 'Klikk den igjen for hele siden',
           'dra toppen av en seksjon for høyden, en hylle for hyllehøyden · ‹ › bytter del · åpen: ingen plate · skyvedør: to plater i sporet · velg side i kartet eller ved å klikke disken i planen',
         )
-      : hintLine(
+      : painting
+        ? hintLine(
+            tool === 'side' ? 'Klikk siden for å fylle den, deler med print står som før' : 'Klikk eller dra over platene, samme farge igjen gir diskens farge',
+            'velg verktøyet igjen for å legge det bort',
+          )
+        : hintLine(
           decorOpen && 'Åpen: ingen print eller dekal',
           pi === undefined ? 'Farge og print gjelder hele siden, deler med print står som før' : li === undefined ? 'Farge og print gjelder delen' : 'Fargen gjelder åpningen, også skyvedøren der, print hele delen',
-          'bøtta fyller hele siden',
+          pi === undefined && 'Velg en farge, så malerspann eller malerkost, og klikk risset',
           chosenDecal ? 'dra dekalen for å flytte, håndtakene for å skalere' : 'klikk en dekal i risset for å flytte og skalere den',
           'aldri på åpen del',
         )
@@ -158,12 +180,31 @@ export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect,
           </Section>
           </>
         ) : (
-          <PodiumDecor v={v} o={o} side={el.parts} parts={parts} part={pi} light={li} scope={scope} partNav={partNav} decal={chosenDecal} motifs={motifs} onUpload={onUpload} select={select} onEdit={onEdit} />
+          <PodiumDecor
+            v={v}
+            o={o}
+            parts={parts}
+            part={pi}
+            light={li}
+            scope={scope}
+            partNav={partNav}
+            decal={chosenDecal}
+            motifs={motifs}
+            tool={tool}
+            setTool={setTool}
+            pen={pen}
+            setPaint={setPaint}
+            motifId={motifId}
+            setMotifId={setMotifId}
+            onUpload={onUpload}
+            select={select}
+            onEdit={onEdit}
+          />
         )}
 
         <div className="wd-foot">
           <div className="wd-actions">
-            <Button variant="ghost" icon={page === 'sides' ? Palette : LibraryBig} onClick={() => setPage(page === 'sides' ? 'decor' : 'sides')}>
+            <Button variant="ghost" icon={page === 'sides' ? Palette : LibraryBig} onClick={() => (setTool(null), setPage(page === 'sides' ? 'decor' : 'sides'))}>
               {page === 'sides' ? 'Farge og profilering' : 'Sider og hyller'}
             </Button>
           </div>
@@ -180,6 +221,7 @@ export function PodiumDrawer({ v, o, selection: sel, motifs, onUpload, onSelect,
         fill={plateColor(ral)}
         chosen={pi === undefined ? undefined : { part: pi, light: li }}
         onPick={(p) => pickPart(p?.part, p?.light)}
+        paint={painting && tool ? { tool, at: paintAt } : undefined}
         onHeight={(sec, h) => heightOf([sec], h)}
         onShelf={(sec, from, to) => edit((x) => movePodiumShelf(x, o.id, sec, from, to))}
         prints={decor.prints}
