@@ -1,7 +1,7 @@
 // The settings column of the wall drawer: one panel for what is chosen, and the motif library (Profilering) under it. A
 // textile frame, a decal or print, a door, a felt's colour, or nothing (the wall itself: colour and print with the paint
 // bucket and brush). «Hyller og heng» and a chosen shelf are in fittings.tsx.
-import { ArrowLeft, ArrowRight, PaintBucket, Paintbrush, Palette, Repeat2 } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Palette, Repeat2 } from 'lucide-react'
 import type { Dispatch, ReactNode, SetStateAction } from 'react'
 import { foilBlocked, updateFoil } from '../../../domain/decor'
 import { paintPlate } from '../../../domain/paint'
@@ -12,9 +12,9 @@ import { textileBox, updateTextile } from '../../../domain/textile/inFrame'
 import type { Foil, Motif, Opening, TextileWall, Variant, Wall } from '../../../domain/types'
 import type { BuiltModule } from '../../../domain/walls'
 import { Button, Dim, FlatChoice, IconButton, Section } from '../../controls'
-import { plateName, rules } from '../../env'
+import { rules } from '../../env'
 import { DoorSettings } from '../DoorSettings'
-import { FabricSection, PlatePalette, PRINT, Shelf } from '../drawerParts'
+import { ColourSection, FabricSection, PRINT, Shelf } from '../drawerParts'
 import { findMotif } from '../../motifs'
 import { type PlanSelection } from '../selection'
 import { faceName } from './face'
@@ -111,34 +111,25 @@ export function ColourPanel(props: {
   painting: boolean
   tool: PaintTool
   setTool: Dispatch<SetStateAction<PaintTool>>
-  printing: boolean
   pm: Motif | undefined
   paint: string
   ral: string
   setPaint: Dispatch<SetStateAction<string | null>>
 }) {
-  const { painting, tool, setTool, printing, pm, paint, ral, setPaint } = props
+  const { painting, tool, setTool, pm, paint, ral, setPaint } = props
+  const value = painting ? paint : ral
   return (
-    <Section
+    <ColourSection
       title={painting && tool === 'plate' ? 'Plate' : 'Hele veggen'}
-      aside={painting ? (printing ? `print ${pm?.name ?? ''}` : `${plateName(paint)} ${paint}`) : `${plateName(ral)} ${ral}`}
-      tools={
-        <>
-        <IconButton icon={PaintBucket} label="Malerspann: klikk veggen for å farge hele siden" size={15} className="ink" pressed={tool === 'wall'} onClick={() => setTool(tool === 'wall' ? null : 'wall')} />
-        <IconButton icon={Paintbrush} label="Malerkost: klikk én og én plate" size={15} className="ink" pressed={tool === 'plate'} onClick={() => setTool(tool === 'plate' ? null : 'plate')} />
-        </>
-      }
-    >
-      <PlatePalette
-        value={painting ? paint : ral}
-        print={{ motif: pm }}
-        onPick={(r) => {
-          setPaint(r)
-          // Picking a colour takes up the paint bucket when no tool is out
-          if (!tool) setTool('wall')
-        }}
-      />
-    </Section>
+      value={value}
+      motif={pm}
+      tools={{ what: 'veggen', bucket: tool === 'wall', brush: tool === 'plate', onBucket: () => setTool(tool === 'wall' ? null : 'wall'), onBrush: () => setTool(tool === 'plate' ? null : 'plate') }}
+      onPick={(r) => {
+        setPaint(r)
+        // Picking a colour takes up the paint bucket when no tool is out
+        if (!tool) setTool('wall')
+      }}
+    />
   )
 }
 
@@ -225,19 +216,14 @@ export function FeltPanel(props: {
     select({})
   }
   return (
-    <Section
+    <ColourSection
       title={`Felt ${m + 1}`}
-      aside={printed ? `print ${findMotif(motifs, printed.motif)?.name ?? ''}`.trim() : `${plateName(plate)} ${plate}`}
-      tools={
-        <>
-          {arrows}
-          <IconButton icon={PaintBucket} label="Malerspann: klikk veggen for å farge hele siden" size={15} className="ink" onClick={() => take('wall')} />
-          <IconButton icon={Paintbrush} label="Malerkost: klikk én og én plate" size={15} className="ink" onClick={() => take('plate')} />
-        </>
-      }
-    >
-      <PlatePalette value={printed ? PRINT : plate} print={{ motif: pm }} onPick={pick} />
-    </Section>
+      value={printed ? PRINT : plate}
+      motif={printed ? (findMotif(motifs, printed.motif) ?? pm) : pm}
+      nav={arrows}
+      tools={{ what: 'veggen', bucket: false, brush: false, onBucket: () => take('wall'), onBrush: () => take('plate') }}
+      onPick={pick}
+    />
   )
 }
 

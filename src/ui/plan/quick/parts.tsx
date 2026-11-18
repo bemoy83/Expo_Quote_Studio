@@ -3,7 +3,9 @@
 import { Ellipsis, PaintBucket, Ruler } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useFine } from '../../fine'
+import type { Motif } from '../../../domain/types'
 import type { Swatch } from '../swatches'
+import { MOTIFS } from './limits'
 
 export function QName({ name, meta }: { name: string; meta?: string }) {
   return (
@@ -27,6 +29,25 @@ export function Palette({ swatches, fill, onFill }: { swatches: Swatch[]; fill: 
       <QBtn title={fill} label="Fyll" onClick={onFill}>
         <PaintBucket size={15} />
       </QBtn>
+    </>
+  )
+}
+
+/**
+ * The motifs on a pill, the same row on the dock's Profilering pens and on every selection pill (wall, frame, decal,
+ * textile): the newest of the library (the customer's own come last), and the one chosen. Tapping the one chosen does
+ * nothing (the same motif again does nothing, Bjørn 18.11.2026).
+ */
+export function MotifRow({ motifs, on, onPick }: { motifs: Motif[]; on: (id: string) => boolean; onPick: (id: string) => void }) {
+  return (
+    <>
+      {motifs
+        .filter((m, i) => i >= motifs.length - MOTIFS || on(m.id))
+        .map((m) => (
+          <button key={m.id} type="button" className="q-motif" aria-pressed={on(m.id)} title={`Motiv: ${m.name}`} onClick={() => !on(m.id) && onPick(m.id)}>
+            <img src={m.src} alt={m.name} draggable={false} />
+          </button>
+        ))}
     </>
   )
 }

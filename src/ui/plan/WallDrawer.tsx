@@ -244,7 +244,7 @@ export function WallDrawer(p: Props) {
 
             {ui.panel === 'wall-extras' && <WallFittings v={v} w={w} s={s} brush={brushOn} onBrush={takeBrush} onEdit={p.onEdit} onToast={p.onToast} />}
 
-            {ui.panel === 'wall-decor' && <ColourPanel painting={painting} tool={tool} setTool={setTool} printing={printing} pm={pm} paint={paint} ral={ral} setPaint={t.setPaint} />}
+            {ui.panel === 'wall-decor' && <ColourPanel painting={painting} tool={tool} setTool={setTool} pm={pm} paint={paint} ral={ral} setPaint={t.setPaint} />}
           </>
         )}
         {/* Groups in the order the wall is built, parted by a line (Bjørn 17.11.2026, as in the counter drawer): what is

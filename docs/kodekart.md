@@ -140,6 +140,7 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 - Print med spann og kost: `domain/print.ts` · i veggskuffen: `plan/wallDrawer/paint.ts`
 - Farge per plate: `domain/panels.ts`
 - Én regel for farge og print (Bjørn 18.11.2026): `domain/paint.ts` (spann over en side, farge på én plate eller ett dørblad, diskens plater (K6), veggpennen i planen, Fyll på hele standen med valget om print i toasten via `ui/fillKeeping.ts`). Skuff, pille, planpenn og panel går gjennom den, aldri `setWallPlate` + `clearPrint` hver for seg
+- Én fargerad og én seksjon (Bjørn 18.11.2026): `ralSwatches` i `plan/swatches.ts` er veggfargene overalt (dock, piller, skuffens `PlatePalette`, arrangørens farge i standinnstillingene); `ColourSection` i `plan/drawerParts.tsx` er «Farge og profilering» i vegg-, felt- og diskskuffen (tittel, verdi, pil, spann, kost, palett); `MotifRow` i `plan/quick/parts.tsx` er motivraden i pillene og Profilering-hurtigvalget
 - Kalkyle: `calc/lines/decor.ts` (folie, print-oppsett) · `calc/lines/swaps.ts` (platebytte) · `calc/textile/production.ts` (`foilRows`)
 - 3D: `scene3d/build/decor.ts` · teksturbuffer for motiver: `scene3d/build/motifs.ts` · motiver `ui/motifs.ts` · dra inn: `ui/dnd.ts` · motivpensel i planen: `plan/pointer/decor.ts`
 

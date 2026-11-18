@@ -4,23 +4,19 @@
 // palette on it at once, and the bucket and brush let it go. Then the decal chosen, and in the detail height the motif
 // library with + Dekal. The rules are domain/paint.ts's: a colour on a part or an opening takes its print off, the
 // bucket leaves the printed parts as they are. Print and decals go only on the parts that take them: not open all over.
-import { PaintBucket, Paintbrush, Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2 } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { addPodiumDecal, printOf, setPodiumPrint, takesDecor, updatePodiumDecal, type PlacedDecal } from '../../../domain/podiumDecor'
 import type { Motif, PlacedObject, Variant } from '../../../domain/types'
 import { counterRal } from '../../../domain/objects'
 import { paintCounterPlates } from '../../../domain/paint'
 import { Button, IconButton, Section } from '../../controls'
-import { plateName } from '../../env'
 import { mm } from '../../format'
 import { findMotif } from '../../motifs'
-import { PlatePalette, PRINT, Shelf } from '../drawerParts'
+import { ColourSection, PRINT, Shelf } from '../drawerParts'
 import type { PlanSelection } from '../selection'
 import type { CounterTool } from './paint'
 import type { ElevationPart } from './podiumView'
-
-const BUCKET = 'Malerspann: klikk siden for å farge hele siden'
-const BRUSH = 'Malerkost: klikk én og én plate, eller dra over dem'
 
 interface Props {
   v: Variant
@@ -104,19 +100,14 @@ export function PodiumDecor(props: Props) {
     <>
       {/* K6, K20: colour and print on what is chosen, or the pen with nothing chosen: the title says what, the value what
           it has or lays on */}
-      <Section
+      <ColourSection
         title={chosen ? scope : painting && tool === 'plate' ? 'Plate' : 'Hele siden'}
-        aside={shown === PRINT ? `print · ${motif?.name ?? 'motiv'}` : shown ? `${plateName(shown)} ${shown}` : 'blandet'}
-        tools={
-          <>
-            {partNav}
-            <IconButton icon={PaintBucket} label={BUCKET} size={15} className="ink" pressed={painting && tool === 'side'} onClick={() => take('side')} />
-            <IconButton icon={Paintbrush} label={BRUSH} size={15} className="ink" pressed={painting && tool === 'plate'} onClick={() => take('plate')} />
-          </>
-        }
-      >
-        <PlatePalette value={shown ?? ''} onPick={pickSwatch} print={{ motif }} />
-      </Section>
+        value={shown}
+        motif={motif}
+        nav={partNav}
+        tools={{ what: 'siden', bucket: painting && tool === 'side', brush: painting && tool === 'plate', onBucket: () => take('side'), onBrush: () => take('plate') }}
+        onPick={pickSwatch}
+      />
       <hr className="set-rule" />
       {/* Always there, so the motif library under it stands still; why print and decals do not go on what is chosen is
           in the hint */}
@@ -125,7 +116,7 @@ export function PodiumDecor(props: Props) {
       ) : (
         <Section title="Dekal" aside={decorParts.length ? 'ingen' : 'åpen'} />
       )}
-      <Shelf title="Profilering" aside={motif?.name} motifs={motifs} value={motif?.id} onPick={pickMotif} onUpload={onUpload}>
+      <Shelf title="Profilering" aside={motif ? `motiv ${motif.name}` : 'last opp et motiv'} motifs={motifs} value={motif?.id} onPick={pickMotif} onUpload={onUpload}>
         <Button variant="ghost" icon={Plus} disabled={!decorParts.length || !motif} onClick={addDecal}>
           Dekal
         </Button>
