@@ -30,7 +30,7 @@ export interface Painted {
 }
 
 /** The colour a plate has without its own: its owning wall's. */
-export const plateBase = (v: Variant) => {
+const plateBase = (v: Variant) => {
   const byKey = new Map(builtModules(v).map((m) => [m.key, m]));
   return (key: string) => {
     const w = v.walls.find((x) => x.id === byKey.get(key)?.wallId);
@@ -199,18 +199,14 @@ export function paintCounterSide(v: Variant, id: string, keys: readonly string[]
   return { v: withSections(v, id, (ss) => ralEach(ss, plain, () => own(o, ral))), skipped: printed.length };
 }
 
-/** A counter's sections with its colour `ral` and its plates' colours of their own off, except the printed plates:
- *  they keep the colours they had. */
+/** A counter's sections with its colour `ral` and its plates' colours of their own off. The printed plates keep their
+ *  print, and no colour: the print hides it (V15, `uncolourPrinted`). */
 function recoloured(o: PlacedObject, ral: string): { o: PlacedObject; skipped: number } {
   const { ral: _r, ...rest } = o;
   const next: PlacedObject = ral === COUNTER_STOCK_RAL ? rest : { ...rest, ral };
   if (!o.sections) return { o: next, skipped: 0 };
-  const ss0 = o.sections;
-  const { printed, plain } = byPrint(ss0, podiumParts(ss0));
-  const was = counterRal(o);
-  let ss = ralEach(ss0, plain, () => null);
-  ss = ralEach(ss, printed, (p, i) => own(next, ralsOf(ss0, p)[i] ?? was));
-  return { o: { ...next, sections: ss }, skipped: printed.length };
+  const { printed, plain } = byPrint(o.sections, podiumParts(o.sections));
+  return { o: { ...next, sections: ralEach(o.sections, [...plain, ...printed], () => null) }, skipped: printed.length };
 }
 
 /** The counter's colour (the pill's colours): every plate of it in `ral`, colours of their own off; a printed plate

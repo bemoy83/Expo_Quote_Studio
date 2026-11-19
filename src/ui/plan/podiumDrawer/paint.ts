@@ -8,8 +8,7 @@ import { paintCounterPlates, paintCounterSide } from '../../../domain/paint'
 import { printAt, printCounterPlate, printCounterSide, takesDecor } from '../../../domain/podiumDecor'
 import type { Motif, PlacedObject, Variant } from '../../../domain/types'
 import { count } from '../../format'
-import { PRINT } from '../drawerParts'
-import { applyFill, brushTo, NO_MOTIF, type PaintTool } from '../paintTools'
+import { strokeAt, type PaintTool, type StrokePlate } from '../paintTools'
 import type { ElevationPart } from './podiumView'
 
 /** What a stroke over the side left as it was. */
@@ -30,43 +29,32 @@ export interface CounterPaintDeps {
   onToast: (text: string) => void
 }
 
-/** The chosen tool on light opening `light` of part `i` of the side: `first` on press, then each one swept over. */
+/** The chosen tool on light opening `light` of part `i` of the side: `first` on press, then each one swept over. The
+ *  stroke rule is the one of every drawer (paintTools.strokeAt); this says what a counter's plate is. */
 export function counterPaintAt({ v, o, side, tool, paint, pm, onEdit, onCheckpoint, onToast }: CounterPaintDeps) {
   const sections = o.sections ?? []
   const ral = counterRal(o)
-  const printing = paint === PRINT
+  const deps = { v, tool, paint, motif: pm?.id, kept: partsKept, onEdit, onCheckpoint, onToast }
+  const plate = (p: ElevationPart, light: number): StrokePlate => {
+    const open = p.lights[light] === 'open'
+    return {
+      fill: (r) => paintCounterSide(v, o.id, side.map((q) => q.key), r),
+      printSide: (m) => {
+        const keys = side.filter((q) => takesDecor(sections, q.part)).map((q) => q.key)
+        return keys.length ? (x) => printCounterSide(x, o.id, keys, m) : 'Ingen del på denne siden kan ha print'
+      },
+      noPrint: () => (open ? 'Åpen: ingen print' : null),
+      printOne: (m) => {
+        const cur = printAt(sections, p.part, light)
+        return cur?.motif === m && !cur.run ? null : (x) => printCounterPlate(x, o.id, p.key, light, m)
+      },
+      // Nothing where it is open
+      colour: () => (open ? null : { cur: p.rals[light] ?? ral, base: ral, printed: !!printAt(sections, p.part, light) }),
+      paintOne: (r) => (x) => paintCounterPlates(x, o.id, [p.key], r, light),
+    }
+  }
   return (i: number, light: number, first: boolean) => {
     const p = side[i]
-    if (!p || !tool) return
-    if (printing && !pm) {
-      if (first) onToast(NO_MOTIF)
-      return
-    }
-    if (tool === 'bucket') {
-      if (!first) return
-      if (printing) {
-        const keys = side.filter((q) => takesDecor(sections, q.part)).map((q) => q.key)
-        if (!keys.length) return onToast('Ingen del på denne siden kan ha print')
-        return onEdit((x) => printCounterSide(x, o.id, keys, pm!.id))
-      }
-      return applyFill(v, paintCounterSide(v, o.id, side.map((q) => q.key), paint), onEdit, onToast, partsKept)
-    }
-    // The brush: the whole motif on the plate, the same motif again does nothing
-    if (printing) {
-      if (p.lights[light] === 'open') {
-        if (first) onToast('Åpen: ingen print')
-        return
-      }
-      const cur = printAt(sections, p.part, light)
-      if (cur?.motif === pm!.id && !cur.run) return
-      if (first) onCheckpoint()
-      return onEdit((x) => printCounterPlate(x, o.id, p.key, light, pm!.id), false)
-    }
-    // A colour on the plate, or the counter's again when it already has the brush's; nothing where it is open
-    if (p.lights[light] === 'open') return
-    const to = brushTo(p.rals[light] ?? ral, paint, ral, !!printAt(sections, p.part, light), first)
-    if (to === null) return
-    if (first) onCheckpoint()
-    onEdit((x) => paintCounterPlates(x, o.id, [p.key], to, light), false)
+    if (p) strokeAt(deps, plate(p, light), first)
   }
 }

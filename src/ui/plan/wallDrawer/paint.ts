@@ -1,5 +1,6 @@
 // Colouring in the wall drawer, as in a paint program: the paint bucket (the whole face) or the brush (one plate at a
-// time, press and sweep) lays a plate colour or «Print» on the plates of the face shown (Bjørn 2.11.2026).
+// time, press and sweep) lays a plate colour or «Print» on the plates of the face shown (Bjørn 2.11.2026). The stroke
+// rule is the one of every drawer (paintTools.strokeAt); this file says what a wall's plate is.
 import { foilBlocked } from '../../../domain/decor'
 import { doorRal } from '../../../domain/doors'
 import type { FaceSide } from '../../../domain/faces'
@@ -11,7 +12,7 @@ import { rules } from '../../env'
 import { printKept } from '../../fillKeeping'
 import { findMotif } from '../../motifs'
 import { PRINT } from '../drawerParts'
-import { applyFill, brushTo, NO_MOTIF, type PaintTool } from '../paintTools'
+import { strokeAt, type PaintTool, type StrokePlate } from '../paintTools'
 
 export interface PaintDeps {
   v: Variant
@@ -43,69 +44,37 @@ export function wallPaint({ v, w, s, built, mods, motifs, tool, paintSel, motifS
   const pm = findMotif(motifs, motifSel ?? undefined) ?? motifs[0]
   const printing = paint === PRINT
   const printedAt = (x: Variant, i: number) => printsOn(x, w.id, s).find((f) => f.module === i)
+  const deps = { v, tool, paint, motif: pm?.id, kept: printKept, onEdit, onCheckpoint, onToast }
   /**
-   * Brush on a plate: its colour, or the wall's again when it already has the brush's colour. A print on this face of
-   * the plate comes off (the colour shows again); decals stay.
+   * Plate `i` of the wall (module key `key`) for the one stroke rule (paintTools.strokeAt). `leaf`: the door leaf of a
+   * door module, a surface of its own beside the header (Bjørn 18.11.2026).
    */
-  const brushPlate = (i: number, key: string, first: boolean) => {
-    const cur = built.get(key)?.plate
-    const to = brushTo(cur ?? base(key), paint, base(key), !!printedAt(v, i), first)
-    if (to === null) return
-    if (first) onCheckpoint()
-    onEdit((x) => paintPlate(x, w.id, s, i, key, to), false)
-  }
-  /**
-   * Brush on a door leaf: as on a plate, the leaf has a colour of its own; the header above it is a plate. A print on the
-   * door (header and leaf as one picture) comes off.
-   */
-  const brushLeaf = (i: number, key: string, first: boolean) => {
-    const o = mods[i]?.opening
-    if (!o) return
-    const to = brushTo(doorRal(v, o), paint, base(key), !!printedAt(v, i), first)
-    if (to === null) return
-    if (first) onCheckpoint()
-    onEdit((x) => paintLeaf(x, o.id, s, to), false)
+  const plate = (i: number, key: string, leaf: boolean): StrokePlate => {
+    const door = mods[i]?.opening
+    return {
+      fill: (r) => paintWallFace(v, w.id, s, r),
+      printSide: (m) => (fillPlates(v, rules, w, s).length ? (x) => printWall(x, rules, w.id, s, m, pm!.ratio) : 'Ingen plate på denne siden kan ha print'),
+      // Print is laid per module: a part of a split module (V10) takes none yet
+      noPrint: () => (built.get(key)?.whole ? 'Delte plater kan ikke ha print ennå' : foilBlocked(v, rules, w.id, i, s, true)),
+      printOne: (m, first) => {
+        // A door: the brush prints the surface pressed, header or leaf
+        if (door) return printDoorPart(v, rules, w.id, i, s, m, leaf ? 'leaf' : 'header') === v ? null : (x) => printDoorPart(x, rules, w.id, i, s, m, leaf ? 'leaf' : 'header')
+        // Swept over, a plate with this motif already (also its share of a picture over more) is left as it is
+        if (!first && printedAt(v, i)?.motif === m) return null
+        return printPlate(v, rules, w.id, i, s, m) === v ? null : (x) => printPlate(x, rules, w.id, i, s, m)
+      },
+      colour: () => {
+        if (leaf && !door) return null
+        const cur = leaf ? doorRal(v, door!) : (built.get(key)?.plate ?? base(key))
+        return { cur, base: base(key), printed: !!printedAt(v, i) }
+      },
+      paintOne: (r) => (leaf ? (x) => paintLeaf(x, door!.id, s, r) : (x) => paintPlate(x, w.id, s, i, key, r)),
+    }
   }
   /**
    * The chosen tool on plate `i` (module key `key`): `first` on press, then for each plate swept over (brush only).
    * `leaf`: the door leaf of a door module, which the brush colours on its own.
    */
-  const paintAt = (i: number, key: string, first: boolean, leaf = false) => {
-    if (printing && !pm) {
-      if (first) onToast(NO_MOTIF)
-      return
-    }
-    if (tool === 'bucket') {
-      if (!first) return
-      if (printing) {
-        if (!fillPlates(v, rules, w, s).length) return onToast('Ingen plate på denne siden kan ha print')
-        return onEdit((x) => printWall(x, rules, w.id, s, pm!.id, pm!.ratio))
-      }
-      // Print is a choice made on purpose (Bjørn 18.11.2026): the bucket leaves printed plates as they are
-      return applyFill(v, paintWallFace(v, w.id, s, paint), onEdit, onToast, printKept)
-    }
-    if (!printing) return leaf ? brushLeaf(i, key, first) : brushPlate(i, key, first)
-    // Print is laid per module: a part of a split module (V10) takes none yet
-    if (built.get(key)?.whole) {
-      if (first) onToast('Delte plater kan ikke ha print ennå')
-      return
-    }
-    const why = foilBlocked(v, rules, w.id, i, s, true)
-    if (why) {
-      if (first) onToast(why)
-      return
-    }
-    // A door: the header and the leaf are surfaces of their own, the brush prints the one pressed (Bjørn 18.11.2026)
-    if (mods[i]?.opening) {
-      const part = leaf ? 'leaf' : 'header'
-      if (printDoorPart(v, rules, w.id, i, s, pm!.id, part) === v) return
-      if (first) onCheckpoint()
-      return onEdit((x) => printDoorPart(x, rules, w.id, i, s, pm!.id, part), false)
-    }
-    // A plate that already has the whole motif is left as it is (the same motif again does nothing)
-    if (!first && printedAt(v, i)?.motif === pm!.id) return
-    if (first) onCheckpoint()
-    onEdit((x) => printPlate(x, rules, w.id, i, s, pm!.id), false)
-  }
+  const paintAt = (i: number, key: string, first: boolean, leaf = false) => strokeAt(deps, plate(i, key, leaf), first)
   return { painting, paint, printing, pm, paintAt }
 }

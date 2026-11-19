@@ -129,7 +129,7 @@ export function setPlateRal(sections: readonly CounterSection[], parts: readonly
 }
 
 /** The parts' end nodes in the counter's frame (x, z). */
-export const partLine = (p: PodiumPart) => lineOf(p.axis, p.at, p.a, p.b);
+const partLine = (p: PodiumPart) => lineOf(p.axis, p.at, p.a, p.b);
 
 type Stretch = [[number, number], [number, number]];
 /** What the build reads of the sides (K6, K16, K17): the parts open in every light opening (`open`, drawn as a hairline
