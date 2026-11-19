@@ -16,10 +16,11 @@ import { partKey, podiumParts, ralsOf, setPlateRal, type PodiumPart } from './po
 import { withSections } from './podiumSections';
 import { setWallPlate } from './edit';
 import type { FaceSide } from './faces';
-import { colourPlates, uncolourAll, wallRal } from './plateDecor';
+import { wallModules } from './grid';
+import { colourPlates, uncolourAll, uncolourPlates, wallRal } from './plateDecor';
 import { clearPrint, hiddenPlates, printsOn, uncolourHidden, withoutDoorPart } from './print';
 import { roomOf } from './rooms';
-import type { CounterSection, PlacedObject, Variant, Wall } from './types';
+import type { CounterSection, DoorSurface, PlacedObject, Variant, Wall } from './types';
 import { builtModules, type BuiltModule } from './walls';
 
 /** A stroke and how many printed surfaces it left as they were (for the toast). */
@@ -229,3 +230,53 @@ export function paintAllCounters(v: Variant, ral: string): Painted {
   });
   return { v: { ...v, objects }, skipped };
 }
+
+// ---- «Fjern farge og print» (Bjørn 19.11.2026): one way, in every drawer and on every build system, to take a surface
+// back to plain. What is chosen loses its colour of its own and its print on the face shown, and so shows the colour of
+// what it is part of: a plate its wall's, a wall the stand's, a door leaf the stand's, a counter's plate or side the
+// counter's. Decals, shelves and textile frames stay: each is removed on its own.
+
+/** What «Fjern farge og print» takes back to plain. */
+export type ClearAt =
+  /** A plate (`module`) of a wall, or with none the whole wall (a room wall: the whole room's colour). */
+  | { kind: 'wall'; wallId: string; side: FaceSide; module?: number }
+  /** A door's leaf or its header. */
+  | { kind: 'door'; openingId: string; side: FaceSide; part: DoorSurface }
+  /** The parts `keys` of a counter (the side shown), or light opening `light` of them. */
+  | { kind: 'counter'; id: string; keys: readonly string[]; light?: number };
+
+/** The surface `at` back to plain (see above). Nothing to take off leaves the sketch as it is. */
+export function clearSurface(v: Variant, at: ClearAt): Variant {
+  if (at.kind === 'counter') {
+    const o = v.objects.find((x) => x.id === at.id);
+    if (!o?.sections) return v;
+    const x = withSections(v, at.id, (ss) => setPlateRal(ss, partsOf(ss, at.keys), null, at.light));
+    return same(unprintCounter(x, at.id, at.keys, at.light), v);
+  }
+  if (at.kind === 'door') {
+    const o = v.openings.find((x) => x.id === at.openingId);
+    if (!o) return v;
+    const key = builtModules(v).find((m) => m.opening?.id === o.id)?.key;
+    const x = at.part === 'leaf' ? setDoorRal(v, o.id, null) : key ? uncolourPlates(v, [key]) : v;
+    return same(withoutDoorPart(x, o.wallId, at.side, o.module, at.part), v);
+  }
+  const w = v.walls.find((x) => x.id === at.wallId);
+  if (!w) return v;
+  if (at.module !== undefined) {
+    const key = wallModules(w)[at.module]?.key;
+    if (!key) return v;
+    const owned = builtModules(v).some((m) => m.key === key && m.wallId === w.id);
+    return same(clearPrint(owned ? uncolourPlates(v, [key]) : v, w.id, at.side, [at.module]), v);
+  }
+  // The whole wall in the stand's colour, its doors too (the door is part of the wall), the print off the face shown
+  const walls = reach(v, w);
+  let x = setWallPlate(v, w.id, v.defaultPlate);
+  x = v.openings.filter((o) => walls.has(o.wallId)).reduce((y, o) => setDoorRal(y, o.id, null), x);
+  return same(clearPrint(x, w.id, at.side), v);
+}
+
+/** The surface `at` has something «Fjern farge og print» takes off (the button is grey otherwise). */
+export const hasOwnDecor = (v: Variant, at: ClearAt): boolean => clearSurface(v, at) !== v;
+
+/** `x`, or `v` itself when nothing a stroke can change did. */
+const same = (x: Variant, v: Variant) => (x === v || (sameWalls(x, v) && JSON.stringify([x.foils, x.objects]) === JSON.stringify([v.foils, v.objects])) ? v : x);

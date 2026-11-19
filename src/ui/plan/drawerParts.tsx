@@ -1,5 +1,5 @@
 // Controls shared by the drawers (skuffer): wall, free-standing textile wall, door, roll carpet.
-import { ChevronLeft, ChevronRight, PaintBucket, Paintbrush, Trash2, Upload, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Eraser, PaintBucket, Paintbrush, Trash2, Upload, X } from 'lucide-react'
 import type { PointerEvent as RPointerEvent, ReactNode } from 'react'
 import type { Crop } from '../../domain/print'
 import type { Motif, TextileFill } from '../../domain/types'
@@ -7,7 +7,7 @@ import { FlatChoice, IconButton, ImageInput, Section } from '../controls'
 import { decorSource } from '../dnd'
 import { plateName } from '../env'
 import { INK } from '../colors'
-import { PRINT, type PaintTool } from './paintTools'
+import { CLEAR_LABEL, PRINT, type PaintTool } from './paintTools'
 import { Sw } from './quick/parts'
 import { ralSwatches } from './swatches'
 
@@ -67,12 +67,11 @@ export function PlatePalette({ value, onPick, print }: { value: string; onPick: 
 /** What the paint bucket and the brush say on a surface: «klikk veggen», «klikk siden». */
 const bucketLabel = (what: string) => `Malerspann: klikk ${what} for å farge hele siden`
 const BRUSH_LABEL = 'Malerkost: klikk én og én plate, eller dra over dem'
-
 /**
  * «Farge og profilering» in every drawer that colours plates (Bjørn 18.11.2026: the wall drawer is the template): one
  * section, its title what is chosen («Hele veggen», «Felt 3», «Del 2 av 3»), the value inside it (the colour, «print ·
- * motif», «blandet»), in its title row the way to the plate beside (`nav`) and then the paint bucket and the brush,
- * and under it the palette with «Print» last. `value`: the RAL, PRINT, or none when what is chosen differs.
+ * motif», «blandet»), in its title row the way to the plate beside (`nav`) and then the paint bucket, the brush and
+ * «Fjern farge og print», and under it the palette with «Print» last. `value`: the RAL, PRINT, or none when what is chosen differs.
  */
 export function ColourSection(p: {
   title: string
@@ -83,8 +82,11 @@ export function ColourSection(p: {
    *  («veggen», «siden»). */
   tools: { what: string; tool: PaintTool; onTool: (t: 'bucket' | 'brush') => void }
   onPick: (ral: string) => void
+  /** «Fjern farge og print» on what the section is about (domain/paint.ts `clearSurface`, the same in every drawer); grey
+   *  when it has nothing of its own. */
+  clear?: { off: boolean; onClick: () => void }
 }) {
-  const { title, value, motif, nav, tools: t, onPick } = p
+  const { title, value, motif, nav, tools: t, onPick, clear } = p
   return (
     <Section
       title={title}
@@ -94,6 +96,7 @@ export function ColourSection(p: {
           {nav}
           <IconButton icon={PaintBucket} label={bucketLabel(t.what)} size={15} className="ink" pressed={t.tool === 'bucket'} onClick={() => t.onTool('bucket')} />
           <IconButton icon={Paintbrush} label={BRUSH_LABEL} size={15} className="ink" pressed={t.tool === 'brush'} onClick={() => t.onTool('brush')} />
+          {clear && <IconButton icon={Eraser} label={CLEAR_LABEL} size={15} disabled={clear.off} onClick={clear.onClick} />}
         </>
       }
     >

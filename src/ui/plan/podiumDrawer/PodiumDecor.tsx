@@ -14,6 +14,7 @@ import { Button, IconButton, Section } from '../../controls'
 import { mm } from '../../format'
 import { findMotif } from '../../motifs'
 import { ColourSection, PRINT, Shelf } from '../drawerParts'
+import { clearOf } from '../paintTools'
 import type { PlanSelection } from '../selection'
 import { motifAside } from '../drawerText'
 import type { usePaintTools } from '../paintTools'
@@ -105,6 +106,7 @@ export function PodiumDecor(props: Props) {
         nav={partNav}
         tools={{ what: 'siden', tool: painting ? tool : null, onTool: take }}
         onPick={pickSwatch}
+        clear={clearOf(v, { kind: 'counter', id: o.id, keys: parts.map((p) => p.key), light }, onEdit)}
       />
       <hr className="set-rule" />
       {/* Always there, so the motif library under it stands still; why print and decals do not go on what is chosen is

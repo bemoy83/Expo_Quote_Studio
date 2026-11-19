@@ -15,6 +15,7 @@ import { Button, Dim, FlatChoice, IconButton, Section } from '../../controls'
 import { plateColor, productOf, rules } from '../../env'
 import { DoorSettings } from '../DoorSettings'
 import { ColourSection, DrawerHead, FabricSection, PrevNext, PRINT, Shelf } from '../drawerParts'
+import { clearOf } from '../paintTools'
 import { findMotif } from '../../motifs'
 import { type PlanSelection } from '../selection'
 import { faceName } from './face'
@@ -116,8 +117,10 @@ export function ColourPanel(props: {
   paint: string
   ral: string
   setPaint: Dispatch<SetStateAction<string | null>>
+  /** «Fjern farge og print» on the whole wall. */
+  clear: { off: boolean; onClick: () => void }
 }) {
-  const { painting, tool, setTool, pm, paint, ral, setPaint } = props
+  const { painting, tool, setTool, pm, paint, ral, setPaint, clear } = props
   const value = painting ? paint : ral
   return (
     <ColourSection
@@ -125,6 +128,7 @@ export function ColourPanel(props: {
       value={value}
       motif={pm}
       tools={{ what: 'veggen', tool, onTool: (x) => setTool(tool === x ? null : x) }}
+      clear={clear}
       onPick={(r) => {
         setPaint(r)
         // Picking a colour takes up the paint bucket when no tool is out
@@ -233,6 +237,7 @@ export function DoorSurfacePanel(props: {
         nav={<PrevNext what="flate" onPrev={() => selectDoor(O.id, s, other)} onNext={() => selectDoor(O.id, s, other)} />}
         tools={{ what: 'veggen', tool: null, onTool: take }}
         onPick={pick}
+        clear={clearOf(v, { kind: 'door', openingId: O.id, side: s, part }, onEdit)}
       />
       <hr className="set-rule" />
       <Shelf
@@ -304,6 +309,7 @@ export function FeltPanel(props: {
       nav={arrows}
       tools={{ what: 'veggen', tool: null, onTool: take }}
       onPick={pick}
+      clear={clearOf(v, { kind: 'wall', wallId: w.id, side: s, module: m }, onEdit)}
     />
   )
 }

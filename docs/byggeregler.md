@@ -109,9 +109,14 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
     På en dør gjelder det overstykket og bladet hver for seg, og spannet ett bilde over begge.
   - *Samme motiv igjen gjør ingenting*, med spann, kost, Print-pennen og motivtrykk på en valgt plate.
   - Spann og kost virker likt i alle skuffer: veggskuffen og diskskuffen sier bare hva platen er (`strokeAt`).
+  - *Fjern farge og print* (viskelæret i fargeseksjonen, Bjørn 19.11.2026) virker likt i alle skuffer og på alle
+    byggesystem (`clearSurface`): det som er valgt mister sin egen farge og printen på siden du ser, og får fargen til
+    det det er en del av. Et felt får veggens farge, hele veggen (rommet) og dørbladet standens, overstykket veggens, og
+    en diskplate eller hele siden diskens. Dekaler, hyller og tekstilrammer blir: de fjernes én og én. Viskelæret er grått
+    når det ikke er noe å ta av. Søppelbøtta øverst i skuffen fjerner bare tingen selv (vegg, dør, disk, dekal, hylle).
   Tekstilveggene husker motivet når duken blir Hvit eller Kundens, så det kommer tilbake med Trykk. Det som er eget for
   disken står i K6 og K20.
-  *Bjørn 3.11.2026 og 18.11.2026 · kode `src/domain/paint.ts`, `src/domain/print.ts`, `src/domain/podiumDecor.ts`, `src/ui/plan/paintTools.ts`, `src/domain/plates.ts`, `src/domain/textile/free.ts` · test `src/domain/paint.test.ts`, `src/domain/print.test.ts`, `src/domain/podiumDecor.test.ts`, `src/ui/plan/paintTools.test.ts`, `src/domain/plates.test.ts`, `src/domain/textile/free.test.ts`*
+  *Bjørn 3.11.2026, 18.11.2026 og 19.11.2026 · kode `src/domain/paint.ts`, `src/domain/print.ts`, `src/domain/podiumDecor.ts`, `src/ui/plan/paintTools.ts`, `src/domain/plates.ts`, `src/domain/textile/free.ts` · test `src/domain/paint.test.ts`, `src/domain/print.test.ts`, `src/domain/podiumDecor.test.ts`, `src/ui/plan/paintTools.test.ts`, `src/domain/plates.test.ts`, `src/domain/textile/free.test.ts`*
 - **V16 Print er et valg.** Et strøk over mange plater lar print stå: malerspannet i skuffen farger resten av siden og
   hopper alltid over plater og dørflater med print, på vegg og disk, så de øvrige kan få ny farge uten å legge printen på
   igjen. Fyll på hele standen (Vegg-pillens spann og standfargen i panelet, som er det samme) gjør likedan, og toasten

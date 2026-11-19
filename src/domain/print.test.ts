@@ -6,7 +6,8 @@ import { RULES } from '../rules/rules';
 import { addFoil, fitDecor, updateFoil } from './decor';
 import { paintWalls, setWallPlate } from './edit';
 import { colourPlates, plateColours } from './plateDecor';
-import { clearDecor, clearFelt, clearPrint, cropWindow, fillPlates, hiddenPlates, printPlate, printPlates, printWall, stretchCrops, stretchedRuns } from './print';
+import { clearPrint, cropWindow, fillPlates, hiddenPlates, printPlate, printPlates, printWall, stretchCrops, stretchedRuns } from './print';
+import { clearSurface, hasOwnDecor } from './paint';
 import { r2 } from '../calc/referenceStands';
 import { wallModules } from './grid';
 import type { Variant } from './types';
@@ -141,19 +142,26 @@ describe('bucket and reset', () => {
     expect(printPlate(v, RULES, 'side-back', 0, s, 'logo').foils).toHaveLength(1);
   });
 
-  it('the trash takes foil and plate colours off the wall, textile frames stay', () => {
+  it('«Fjern farge og print» on the whole wall: plate colours and the print off, decals and textile frames stay', () => {
     let v = ok(addFoil(row(), RULES, 'side-back', 0, 1, 'small', 1)).v;
     v = printPlate(v, RULES, 'side-back', 3, 1, 'logo');
     v = ok(addTextile(v, RULES, 'side-back', 1, 5.5)).v;
     v = colourPlates(v, wallModules(back(v)).slice(0, 2).map((m) => m.key), '9005', () => v.defaultPlate);
-    const r = clearDecor(v, 'side-back');
-    expect(r.foils).toHaveLength(0);
+    const r = clearSurface(v, { kind: 'wall', wallId: 'side-back', side: 1 });
+    expect(r.foils.map((f) => f.full)).toEqual([false]);
     expect(r.decor).toBeUndefined();
     expect(r.textiles).toHaveLength(1);
+    expect(hasOwnDecor(r, { kind: 'wall', wallId: 'side-back', side: 1 })).toBe(false);
+  });
+
+  it('«Fjern farge og print» on the whole wall takes its own colour back to the stand\'s', () => {
+    const v = setWallPlate(row(), 'side-back', '5010');
+    const r = clearSurface(v, { kind: 'wall', wallId: 'side-back', side: 1 });
+    expect(back(r).plate).toBeUndefined();
   });
 });
 
-describe('the trash on one felt (Bjørn 9.11.2026)', () => {
+describe('«Fjern farge og print» on one felt (Bjørn 9.11.2026, 19.11.2026)', () => {
   it('takes the plate\'s own colour and this face\'s print off, decals and the neighbours stay', () => {
     const keys = wallModules(back(row())).map((m) => m.key);
     let v = colourPlates(row(), keys.slice(1, 3), '3020', () => row().defaultPlate);
@@ -161,13 +169,15 @@ describe('the trash on one felt (Bjørn 9.11.2026)', () => {
     v = colourPlates(v, [keys[1]], '3020', () => v.defaultPlate);
     v = ok(addFoil(v, RULES, 'side-back', 2, 1, 'small', 1)).v;
     v = printPlate(v, RULES, 'side-back', 3, 1, 'logo');
-    const r1 = clearFelt(v, 'side-back', 1, 1);
+    const felt = (m: number) => ({ kind: 'wall' as const, wallId: 'side-back', side: 1 as const, module: m });
+    const r1 = clearSurface(v, felt(1));
     expect(plateColours(r1)).toEqual({ [keys[2]]: '3020' });
     expect(r1.foils.map((f) => f.module).sort()).toEqual([2, 3]);
-    const r2 = clearFelt(r1, 'side-back', 2, 1);
+    const r2 = clearSurface(r1, felt(2));
     expect(r2.decor).toBeUndefined();
     expect(r2.foils.filter((f) => !f.full).map((f) => f.module)).toEqual([2]);
-    expect(clearFelt(r2, 'side-back', 0, 1)).toBe(r2);
+    expect(clearSurface(r2, felt(0))).toBe(r2);
+    expect(hasOwnDecor(r2, felt(2))).toBe(false);
   });
 });
 

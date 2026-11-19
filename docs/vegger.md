@@ -173,8 +173,9 @@ vei tilbake til paletten (`FeltPanel` i ui/plan/wallDrawer/panels.tsx):
   blå) i skuffen.
 - Malerspann og malerkost ligger også på fargesiden. Velger du ett av dem, slipper feltet, og du farger hele veggen eller
   plate for plate som før, uten å gå ut av skuffen.
-- Søppelbøtta med et felt valgt tar bare feltets egen farge og printen på denne siden (`clearFelt` i domain/print.ts).
-  Dekaler og hyller fjernes én og én.
+- Viskelæret i fargeseksjonen («Fjern farge og print», Byggeregel V15) tar feltets egen farge og printen på denne siden
+  (`clearSurface` i domain/paint.ts). Dekaler og hyller fjernes én og én. Et felt har ingen søppelbøtte øverst: det kan
+  ikke fjernes.
 - Ikke bygget (parkert): velge flere felt samtidig, og velge felt ved klikk i planen eller 3D.
 
 ## Print på hele plater
@@ -188,7 +189,7 @@ siden skuffen viser (domain/print.ts):
   Hver plate husker sin del av bildet (`Foil.crop`), og platene i samme motiv deler `Foil.run`.
 - Malerkosten legger hele motivet på én plate, som «Hel plate» i dag.
 - Samme motiv igjen gjør ingenting, med spann, kost, Print-pennen og motivtrykk i et felt (Bjørn 18.11.2026). Printen
-  tas av med en farge på feltet eller søppelbøtta.
+  tas av med en farge på feltet eller viskelæret.
 - Print erstatter dekalene på platen. Dekaler blir når en plate får ny farge: de dekker ikke hele platen (Bjørn 2.11.2026).
 - Siste strøk vinner på det du peker på: en farge med kosten, på et valgt felt, med veggpennen i planen eller på et
   dørblad tar printen av den platen på siden du ser (domain/paint.ts). Fargen gjelder fortsatt begge sider, så den
@@ -207,9 +208,9 @@ siden skuffen viser (domain/print.ts):
   kosten (og en valgt flate) legger hele motivet på overstykket eller dørbladet hver for seg (`Foil.door`,
   `printDoorPart`). En farge på den ene flaten tar bare dens print, så et bilde over begge blir stående på den andre
   (`withoutDoorPart`). En print på én flate prises etter sitt areal.
-- Med hele veggen valgt tømmer søppelbøtta øverst i skuffen veggen for dekor: all folie (print og dekaler) på begge
-  sider går, og platene får veggens farge igjen. Tekstilrammer blir stående. På en vegg uten dekor fjerner bøtta veggen
-  som før (romvegg: åpner siden).
+- Med hele veggen valgt tar viskelæret veggen tilbake til standens farge (et rom: rommets farge går), platenes og
+  dørbladenes egne farger av, og printen på siden du ser. Dekaler og tekstilrammer blir (Bjørn 19.11.2026, V15).
+  Søppelbøtta øverst i skuffen fjerner alltid veggen (romvegg: åpner siden); angre tar den tilbake.
 - Pris: 8021 per plate. Et motiv strukket over flere plater gir i tillegg én linje 8022 «Tilpasning av trykkfil over
   flere plater» per motiv. Trykklisten i arbeidsordren har én fil per plate, med «2 av 6» for strukne motiv.
 

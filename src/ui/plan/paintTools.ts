@@ -3,7 +3,7 @@
 // toast, the one stroke rule (`strokeAt`, Byggeregel V15) and press-and-sweep in the drawing. The colour and print
 // rules on each kind of plate are domain/paint.ts's, print.ts's and podiumDecor.ts's.
 import { useRef, useState, type PointerEvent as RPointerEvent } from 'react'
-import type { Painted } from '../../domain/paint'
+import { clearSurface, hasOwnDecor, type ClearAt, type Painted } from '../../domain/paint'
 import type { Variant } from '../../domain/types'
 
 /** The tool out: the paint bucket (the whole side shown), the brush (plate by plate, press and sweep), or none. */
@@ -150,3 +150,11 @@ export function useSweep() {
     },
   })
 }
+
+/** The one name of «Fjern farge og print» (Bjørn 19.11.2026): back to the colour of what it is part of; decals stay. */
+export const CLEAR_LABEL = 'Fjern farge og print (dekaler blir)'
+/** ColourSection's `clear` for the surface `at`. */
+export const clearOf = (v: Variant, at: ClearAt, onEdit: (fn: (v: Variant) => Variant) => void) => ({
+  off: !hasOwnDecor(v, at),
+  onClick: () => onEdit((x) => clearSurface(x, at)),
+})
