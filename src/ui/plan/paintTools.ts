@@ -105,6 +105,19 @@ export function strokeAt(d: StrokeDeps, plate: StrokePlate, first: boolean) {
   onEdit(plate.paintOne(to), false)
 }
 
+/**
+ * A pick on one chosen plate (a felt, a door's leaf or header): a colour in the palette lays it at once, «Print» or a
+ * motif tapped in Profilering lays `motif` as the brush's press would. Unlike the brush, the palette never toggles back.
+ */
+export function pickOn(plate: StrokePlate, pick: string, motif: string | undefined, onEdit: (fn: Edit) => void, onToast: (text: string) => void) {
+  if (pick !== PRINT) return onEdit(plate.paintOne(pick))
+  if (!motif) return onToast(NO_MOTIF)
+  const why = plate.noPrint()
+  if (why) return onToast(why)
+  const edit = plate.printOne(motif, true)
+  if (edit) onEdit(edit)
+}
+
 /** What a drawer keeps for its paint tools between renders: the tool, what it lays on, the motif «Print» lays. */
 export function usePaintTools() {
   const [tool, setTool] = useState<PaintTool>(null)

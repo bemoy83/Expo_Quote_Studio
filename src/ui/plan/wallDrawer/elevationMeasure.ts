@@ -116,7 +116,7 @@ export function elevationItems(
 }
 
 /** Prints on plates side by side are one print to measure and name: merged into one item across the posts. */
-export function mergePrints(items: ElevationItem[], gap = 0.1): ElevationItem[] {
+function mergePrints(items: ElevationItem[], gap = 0.1): ElevationItem[] {
   const out: ElevationItem[] = []
   for (const it of [...items].sort((a, b) => a.x0 - b.x0)) {
     const last = out[out.length - 1]

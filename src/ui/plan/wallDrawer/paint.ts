@@ -12,7 +12,7 @@ import { rules } from '../../env'
 import { printKept } from '../../fillKeeping'
 import { findMotif } from '../../motifs'
 import { PRINT } from '../drawerParts'
-import { strokeAt, type PaintTool, type StrokePlate } from '../paintTools'
+import { pickOn, strokeAt, type PaintTool, type StrokePlate } from '../paintTools'
 
 export interface PaintDeps {
   v: Variant
@@ -76,5 +76,7 @@ export function wallPaint({ v, w, s, built, mods, motifs, tool, paintSel, motifS
    * `leaf`: the door leaf of a door module, which the brush colours on its own.
    */
   const paintAt = (i: number, key: string, first: boolean, leaf = false) => strokeAt(deps, plate(i, key, leaf), first)
-  return { painting, paint, printing, pm, paintAt }
+  /** A colour or «Print» picked on chosen plate `i` (the felt, or a door's leaf or header): the palette's way (pickOn). */
+  const pickAt = (i: number, key: string, leaf = false) => (r: string, motif = pm?.id) => pickOn(plate(i, key, leaf), r, motif, onEdit, onToast)
+  return { painting, paint, printing, pm, paintAt, pickAt }
 }

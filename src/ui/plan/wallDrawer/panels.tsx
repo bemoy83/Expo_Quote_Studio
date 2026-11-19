@@ -3,9 +3,8 @@
 // bucket and brush). «Hyller og heng» and a chosen shelf are in fittings.tsx.
 import { DoorOpen, Palette, Repeat2 } from 'lucide-react'
 import type { Dispatch, ReactNode, SetStateAction } from 'react'
-import { foilBlocked, updateFoil } from '../../../domain/decor'
-import { paintLeaf, paintPlate } from '../../../domain/paint'
-import { onDoorPart, printDoorPart, printPlate, printsOn } from '../../../domain/print'
+import { updateFoil } from '../../../domain/decor'
+import { onDoorPart, printsOn } from '../../../domain/print'
 import { doorRal, removeOpening } from '../../../domain/doors'
 import type { FaceSide } from '../../../domain/faces'
 import { textileBox, updateTextile } from '../../../domain/textile/inFrame'
@@ -15,11 +14,10 @@ import { Button, Dim, FlatChoice, IconButton, Section } from '../../controls'
 import { plateColor, productOf, rules } from '../../env'
 import { DoorSettings } from '../DoorSettings'
 import { ColourSection, DrawerHead, FabricSection, PrevNext, PRINT, Shelf } from '../drawerParts'
-import { clearOf } from '../paintTools'
 import { findMotif } from '../../motifs'
 import { type PlanSelection } from '../selection'
 import { faceName } from './face'
-import { NO_MOTIF, type PaintTool } from '../paintTools'
+import { clearOf, type PaintTool } from '../paintTools'
 import { motifAside } from '../drawerText'
 
 type Edit = (fn: (v: Variant) => Variant, history?: boolean) => void
@@ -198,29 +196,19 @@ export function DoorSurfacePanel(props: {
   pm: Motif | undefined
   setTool: (t: PaintTool) => void
   setMotif: (id: string) => void
+  /** A colour or «Print» (with a motif) on this surface: the wall's plate pick (wallDrawer/paint.ts `pickAt`). */
+  pick: (r: string, motif?: string) => void
   select: (x: Partial<PlanSelection>) => void
   selectDoor: (id: string, side?: FaceSide, surface?: DoorSurface) => void
   onEdit: Edit
-  onToast: (t: string) => void
   onUpload: (f: File) => void
   onClose: () => void
 }) {
-  const { v, O, w, s, part, mods, motifs, pm, setTool, setMotif, select, selectDoor, onEdit, onToast, onUpload, onClose } = props
+  const { v, O, w, s, part, mods, motifs, pm, setTool, setMotif, pick, select, selectDoor, onEdit, onUpload, onClose } = props
   const m = O.module
-  const key = mods[m]?.key
   const printed = printsOn(v, w.id, s).find((f) => f.module === m && onDoorPart(f, part))
   const colour = part === 'leaf' ? doorRal(v, O) : (mods[m]?.plate ?? v.defaultPlate)
   const name = part === 'leaf' ? 'Dørblad' : 'Overstykke'
-  const print = (id: string) => {
-    const noPrint = foilBlocked(v, rules, w.id, m, s, true)
-    if (noPrint) return onToast(noPrint)
-    onEdit((x) => printDoorPart(x, rules, w.id, m, s, id, part))
-  }
-  const pick = (r: string) => {
-    if (r === PRINT) return pm ? print(pm.id) : onToast(NO_MOTIF)
-    if (part === 'leaf') onEdit((x) => paintLeaf(x, O.id, s, r))
-    else if (key) onEdit((x) => paintPlate(x, w.id, s, m, key, r))
-  }
   const take = (t: PaintTool) => {
     setTool(t)
     select({})
@@ -247,7 +235,7 @@ export function DoorSurfacePanel(props: {
         value={printed?.motif ?? pm?.id}
         onPick={(id) => {
           setMotif(id)
-          print(id)
+          pick(PRINT, id)
         }}
         onUpload={onUpload}
       />
@@ -278,24 +266,15 @@ export function FeltPanel(props: {
   motifs: Motif[]
   pm: Motif | undefined
   setTool: (t: PaintTool) => void
+  /** A colour or «Print» on this plate, the print on this face off (the last stroke wins): wallDrawer/paint.ts `pickAt`. */
+  pick: (r: string) => void
   select: (x: Partial<PlanSelection>) => void
   onEdit: Edit
-  onToast: (t: string) => void
 }) {
-  const { v, w, s, m, mods, motifs, pm, setTool, select, onEdit, onToast } = props
-  const key = mods[m]!.key
+  const { v, w, s, m, mods, motifs, pm, setTool, pick, select, onEdit } = props
   const plate = mods[m]!.plate
   const printed = printsOn(v, w.id, s).find((f) => f.module === m)
   const arrows = <FeltArrows m={m} s={s} mods={mods} select={select} />
-
-  const noPrint = foilBlocked(v, rules, w.id, m, s, true)
-  /** A colour on this plate (the print on this face comes off: the last stroke wins), or the chosen motif over it. */
-  const pick = (r: string) => {
-    if (r !== PRINT) return onEdit((x) => paintPlate(x, w.id, s, m, key, r))
-    if (!pm) return onToast(NO_MOTIF)
-    if (noPrint) return onToast(noPrint)
-    if (printed?.motif !== pm.id || printed.run) onEdit((x) => printPlate(x, rules, w.id, m, s, pm.id))
-  }
   /** The bucket or brush: the felt lets go and the wall is coloured as with nothing chosen. */
   const take = (t: PaintTool) => {
     setTool(t)

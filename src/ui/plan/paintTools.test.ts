@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Variant } from '../../domain/types'
 import { createVariant } from '../../domain/variant'
-import { brushTo, PRINT, strokeAt, type PaintTool, type StrokePlate } from './paintTools'
+import { brushTo, NO_MOTIF, pickOn, PRINT, strokeAt, type PaintTool, type StrokePlate } from './paintTools'
 
 describe('the brush, the same in the wall and the counter drawer', () => {
   it('lays its colour, and on the press gives a plate that has it its own again', () => {
@@ -63,5 +63,32 @@ describe('strokeAt: the bucket and the brush on any plate', () => {
     expect(run('brush', '3020', { colour: () => ({ cur: '3020', base: '9010', printed: false }) }, false).edits).toEqual([])
     expect(run('brush', '3020', { colour: () => null }).edits).toEqual([])
     expect(run(null, '3020', {}).edits).toEqual([])
+  })
+})
+
+describe('pickOn: the palette or a motif on one chosen plate (felt, door leaf, header)', () => {
+  const plate = (p: Partial<StrokePlate> = {}): StrokePlate => ({
+    fill: () => ({ v, skipped: 0 }),
+    printSide: () => 'none',
+    noPrint: () => null,
+    printOne: (m) => mark(`one ${m}`),
+    colour: () => ({ cur: '3020', base: '9010', printed: false }),
+    paintOne: (r) => mark(`paint ${r}`),
+    ...p,
+  })
+  const pick = (pl: StrokePlate, r: string, motif?: string) => {
+    const edits: string[] = []
+    const toasts: string[] = []
+    pickOn(pl, r, motif, (fn) => edits.push(fn(v).name), (t) => toasts.push(t))
+    return { edits, toasts }
+  }
+  it('a colour lays at once and never toggles back, as the brush does', () => {
+    expect(pick(plate(), '3020').edits).toEqual(['paint 3020'])
+  })
+  it('«Print» lays the motif; no motif, a plate that takes none or the same motif again do nothing but say so', () => {
+    expect(pick(plate(), PRINT, 'logo').edits).toEqual(['one logo'])
+    expect(pick(plate(), PRINT).toasts).toEqual([NO_MOTIF])
+    expect(pick(plate({ noPrint: () => 'Nei' }), PRINT, 'logo')).toEqual({ edits: [], toasts: ['Nei'] })
+    expect(pick(plate({ printOne: () => null }), PRINT, 'logo')).toEqual({ edits: [], toasts: [] })
   })
 })

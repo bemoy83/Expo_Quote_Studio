@@ -13,7 +13,7 @@ import { production } from '../../calc/textile/production'
 import { addFoil, foilBlocked, foilsOn, removeFoil, updateFoil } from '../../domain/decor'
 import { eraseWalls } from '../../domain/edit'
 import { wallRal } from '../../domain/plateDecor'
-import { printPlate, printsOn } from '../../domain/print'
+import { printsOn } from '../../domain/print'
 import { moveShelves, removeShelves } from '../../domain/shelves/edit'
 import { shelvesOn } from '../../domain/shelves/model'
 import { wallLength, wallModules } from '../../domain/grid'
@@ -25,7 +25,7 @@ import { Button, IconButton, Section } from '../controls'
 import { productOf, rules } from '../env'
 import { findMotif } from '../motifs'
 import { DrawerHead } from './drawerParts'
-import { clearOf } from './paintTools'
+import { clearOf, PRINT } from './paintTools'
 import { DoorMap } from './DoorMap'
 import { chosen, chosenShelves, isOnWall, type PlanSelection } from './selection'
 import { addTextile, fillTextile, removeTextile, textilesOn, updateTextile } from '../../domain/textile/inFrame'
@@ -131,7 +131,7 @@ export function WallDrawer(p: Props) {
     return owner ? wallRal(v, owner) : v.defaultPlate
   }
   const odd = parts.filter((q) => !q.mod.opening && q.mod.plate !== base(q.mod.key)).length
-  const { painting, paint, printing, pm, paintAt } = wallPaint({
+  const { painting, paint, printing, pm, paintAt, pickAt } = wallPaint({
     v,
     w,
     s,
@@ -171,10 +171,8 @@ export function WallDrawer(p: Props) {
       ? undefined
       : (id: string) => {
           t.setMotif(id)
-          const no = foilBlocked(v, rules, w.id, Fe, s, true)
-          if (no) return p.onToast(no)
-          // The same motif again does nothing (printPlate)
-          p.onEdit((x) => printPlate(x, rules, w.id, Fe, s, id))
+          // As «Print» in the palette: the same motif again does nothing
+          pickAt(Fe, mods[Fe]!.key)(PRINT, id)
         }
 
   const remove = () => {
@@ -209,10 +207,10 @@ export function WallDrawer(p: Props) {
             pm={pm}
             setTool={setTool}
             setMotif={t.setMotif}
+            pick={pickAt(O.module, mods[O.module]?.key ?? '', surface === 'leaf')}
             select={select}
             selectDoor={selectDoor}
             onEdit={p.onEdit}
-            onToast={p.onToast}
             onUpload={p.onUpload}
             onClose={p.onClose}
           />
@@ -249,7 +247,7 @@ export function WallDrawer(p: Props) {
             {ui.panel === 'felt-extras' && Fe !== undefined && <FeltFittings v={v} w={w} s={s} m={Fe} mods={mods} onBrush={() => takeBrush(true)} select={select} onEdit={p.onEdit} onToast={p.onToast} />}
 
             {ui.panel === 'felt-decor' && Fe !== undefined && (
-              <FeltPanel v={v} w={w} s={s} m={Fe} mods={mods} motifs={motifs} pm={pm} setTool={setTool} select={select} onEdit={p.onEdit} onToast={p.onToast} />
+              <FeltPanel v={v} w={w} s={s} m={Fe} mods={mods} motifs={motifs} pm={pm} setTool={setTool} pick={pickAt(Fe, mods[Fe]!.key)} select={select} onEdit={p.onEdit} />
             )}
 
             {ui.panel === 'wall-extras' && <WallFittings v={v} w={w} s={s} brush={brushOn} onBrush={takeBrush} onEdit={p.onEdit} onToast={p.onToast} />}
