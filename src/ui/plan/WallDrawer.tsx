@@ -13,7 +13,7 @@ import { production } from '../../calc/textile/production'
 import { addFoil, foilBlocked, foilsOn, removeFoil, updateFoil } from '../../domain/decor'
 import { eraseWalls } from '../../domain/edit'
 import { wallRal } from '../../domain/plateDecor'
-import { clearDecor, clearFelt, printPlate, printsOn } from '../../domain/print'
+import { printsOn } from '../../domain/print'
 import { moveShelves, removeShelves } from '../../domain/shelves/edit'
 import { shelvesOn } from '../../domain/shelves/model'
 import { wallLength, wallModules } from '../../domain/grid'
@@ -25,6 +25,7 @@ import { Button, IconButton, Section } from '../controls'
 import { productOf, rules } from '../env'
 import { findMotif } from '../motifs'
 import { DrawerHead } from './drawerParts'
+import { clearOf, PRINT } from './paintTools'
 import { DoorMap } from './DoorMap'
 import { chosen, chosenShelves, isOnWall, type PlanSelection } from './selection'
 import { addTextile, fillTextile, removeTextile, textilesOn, updateTextile } from '../../domain/textile/inFrame'
@@ -130,12 +131,7 @@ export function WallDrawer(p: Props) {
     return owner ? wallRal(v, owner) : v.defaultPlate
   }
   const odd = parts.filter((q) => !q.mod.opening && q.mod.plate !== base(q.mod.key)).length
-  /**
-   * The wall carries decor (foil on either face, or plates in their own colour). With the whole wall chosen the trash
-   * then clears that first; on a plain wall it removes the wall as before (Bjørn 2.11.2026).
-   */
-  const decorated = odd > 0 || v.foils.some((f) => f.wallId === w.id)
-  const { painting, paint, printing, pm, paintAt } = wallPaint({
+  const { painting, paint, printing, pm, paintAt, pickAt } = wallPaint({
     v,
     w,
     s,
@@ -175,14 +171,9 @@ export function WallDrawer(p: Props) {
       ? undefined
       : (id: string) => {
           t.setMotif(id)
-          const no = foilBlocked(v, rules, w.id, Fe, s, true)
-          if (no) return p.onToast(no)
-          // The same motif again does nothing (printPlate)
-          p.onEdit((x) => printPlate(x, rules, w.id, Fe, s, id))
+          // As «Print» in the palette: the same motif again does nothing
+          pickAt(Fe, mods[Fe]!.key)(PRINT, id)
         }
-
-  /** The chosen felt has a colour of its own or a print on this face, which its trash takes off. */
-  const feltDecor = Fe !== undefined && (mods[Fe]!.plate !== base(mods[Fe]!.key) || printsOn(v, w.id, s).some((f) => f.module === Fe))
 
   const remove = () => {
     if (T) p.onEdit((x) => removeTextile(x, T.id))
@@ -216,10 +207,10 @@ export function WallDrawer(p: Props) {
             pm={pm}
             setTool={setTool}
             setMotif={t.setMotif}
+            pick={pickAt(O.module, mods[O.module]?.key ?? '', surface === 'leaf')}
             select={select}
             selectDoor={selectDoor}
             onEdit={p.onEdit}
-            onToast={p.onToast}
             onUpload={p.onUpload}
             onClose={p.onClose}
           />
@@ -236,11 +227,7 @@ export function WallDrawer(p: Props) {
                 T || F || S
                   ? { label: T ? 'Fjern tekstilvegg (Delete)' : F ? 'Fjern grafikk (Delete)' : 'Fjern hyllen (Delete)', onClick: remove }
                   : Fe !== undefined
-                    ? feltDecor
-                      ? { label: 'Fjern farge og print fra feltet (dekaler og hyller blir)', onClick: () => p.onEdit((x) => clearFelt(x, w.id, Fe, s)) }
-                      : undefined
-                  : decorated
-                    ? { label: 'Fjern print, dekaler og platefarger fra hele veggen, begge sider', onClick: () => p.onEdit((x) => clearDecor(x, w.id)) }
+                    ? undefined
                     : !isStandWall(w)
                       ? { label: w.room ? 'Åpne siden' : 'Fjern veggen', onClick: remove }
                       : undefined
@@ -260,12 +247,12 @@ export function WallDrawer(p: Props) {
             {ui.panel === 'felt-extras' && Fe !== undefined && <FeltFittings v={v} w={w} s={s} m={Fe} mods={mods} onBrush={() => takeBrush(true)} select={select} onEdit={p.onEdit} onToast={p.onToast} />}
 
             {ui.panel === 'felt-decor' && Fe !== undefined && (
-              <FeltPanel v={v} w={w} s={s} m={Fe} mods={mods} motifs={motifs} pm={pm} setTool={setTool} select={select} onEdit={p.onEdit} onToast={p.onToast} />
+              <FeltPanel v={v} w={w} s={s} m={Fe} mods={mods} motifs={motifs} pm={pm} setTool={setTool} pick={pickAt(Fe, mods[Fe]!.key)} select={select} onEdit={p.onEdit} />
             )}
 
             {ui.panel === 'wall-extras' && <WallFittings v={v} w={w} s={s} brush={brushOn} onBrush={takeBrush} onEdit={p.onEdit} onToast={p.onToast} />}
 
-            {ui.panel === 'wall-decor' && <ColourPanel painting={painting} tool={tool} setTool={setTool} pm={pm} paint={paint} ral={ral} setPaint={t.setPaint} />}
+            {ui.panel === 'wall-decor' && <ColourPanel painting={painting} tool={tool} setTool={setTool} pm={pm} paint={paint} ral={ral} setPaint={t.setPaint} clear={clearOf(v, { kind: 'wall', wallId: w.id, side: s }, p.onEdit)} />}
           </>
         )}
         {/* Groups in the order the wall is built, parted by a line (Bjørn 17.11.2026, as in the counter drawer): what is

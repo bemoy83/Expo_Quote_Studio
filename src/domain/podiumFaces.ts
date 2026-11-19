@@ -60,7 +60,7 @@ export const partsOn = (sections: readonly CounterSection[], side: Line): Podium
 export const lightOf = (sections: readonly CounterSection[], p: PodiumPart, i = 0): CounterLight | null => sections[p.section]?.sides?.[sideKey(p.axis, p.out)]?.lights?.[i] ?? null;
 
 /** How many light openings a part has: one over each shelf of its section and one under the lowest (K16, K19). */
-export const lightCount = (sections: readonly CounterSection[], p: PodiumPart) => (sections[p.section]?.shelves?.length ?? 0) + 1;
+const lightCount = (sections: readonly CounterSection[], p: PodiumPart) => (sections[p.section]?.shelves?.length ?? 0) + 1;
 
 /** What each light opening of a part is as built, from the floor: no sliding door on a part of 250 (K17). */
 export const lightsOf = (sections: readonly CounterSection[], p: PodiumPart): (CounterLight | null)[] =>

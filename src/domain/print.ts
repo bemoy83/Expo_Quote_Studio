@@ -9,7 +9,7 @@
 // Textile frames are skipped; doors take print on leaf and header; curtains and plates of another wall do not. The
 // bucket also leaves the stretch inside a bakrom that stands against the face; the brush can still print there.
 import type { Rules } from '../rules/rules';
-import { moduleCc, moduleStart, pointAlong, wallLength, wallModules } from './grid';
+import { moduleCc, moduleStart, pointAlong, wallLength } from './grid';
 import { fitFoil, freeFelts } from './decor';
 import { uncolourPlates } from './plateDecor';
 import { roomAt, roomOf } from './rooms';
@@ -208,32 +208,6 @@ export function clearPrint(v: Variant, wallId: string, s: FaceSide, modules?: It
   const set = modules ? new Set(modules) : null;
   const foils = v.foils.filter((f) => !(f.full && f.wallId === w.id && sideOf(v, f) === s && (!set || set.has(f.module))));
   return foils.length === v.foils.length ? v : { ...v, foils };
-}
-
-/**
- * The wall drawer's trash with the whole wall chosen: the wall back to plain. Its foil goes from both faces, prints
- * and decals, and its plates lose their own colours, so they take the wall's again. Textile frames stay: they are
- * things of their own.
- */
-export function clearDecor(v: Variant, wallId: string): Variant {
-  const w = v.walls.find((x) => x.id === wallId);
-  if (!w) return v;
-  const foils = v.foils.filter((f) => f.wallId !== w.id);
-  const own = new Set(builtModules(v).filter((m) => m.wallId === w.id).map((m) => m.key));
-  const cleared = uncolourPlates(v, wallModules(w).map((m) => m.key).filter((k) => own.has(k)));
-  return foils.length === v.foils.length && cleared === v ? v : { ...cleared, foils };
-}
-
-/**
- * The wall drawer's trash with one felt chosen (Bjørn 9.11.2026): the plate's own colour and the print on this face go,
- * so the plate shows its wall's colour again. Decals and shelves stay; they are removed one by one.
- */
-export function clearFelt(v: Variant, wallId: string, module: number, s: FaceSide): Variant {
-  const w = v.walls.find((x) => x.id === wallId);
-  const key = w && wallModules(w)[module]?.key;
-  if (!w || !key) return v;
-  const own = builtModules(v).some((m) => m.key === key && m.wallId === w.id);
-  return clearPrint(own ? uncolourPlates(v, [key]) : v, w.id, s, [module]);
 }
 
 /** Stretched prints that still cover more than one plate: each needs its print file fitted and cut per plate. */

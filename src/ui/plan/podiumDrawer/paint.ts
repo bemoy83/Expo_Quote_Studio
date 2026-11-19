@@ -12,7 +12,7 @@ import { strokeAt, type PaintTool, type StrokePlate } from '../paintTools'
 import type { ElevationPart } from './podiumView'
 
 /** What a stroke over the side left as it was. */
-export const partsKept = (n: number) => `${count(n, 'plate', 'plater')} med print står som før`
+const partsKept = (n: number) => `${count(n, 'plate', 'plater')} med print står som før`
 
 export interface CounterPaintDeps {
   v: Variant

@@ -2,7 +2,8 @@
 import { describe, expect, it } from 'vitest';
 import { counterBuildOf } from './counterShape';
 import { runNodes } from './podiumSections';
-import { dragLike, drawPodium, dragSpan, innerCorners, podiumAt, funcByShape, podiumSides, podiumSize, rebaseDrag, rectSections, startDrag, type PodiumDraw, type PodiumDrag } from './podiums';
+import { axisSpan } from './drawAxis';
+import { dragLike, drawPodium, GRID, innerCorners, podiumAt, funcByShape, podiumSides, podiumSize, rebaseDrag, rectSections, startDrag, type PodiumDraw, type PodiumDrag } from './podiums';
 import { moveObject, objectBoxes, type PlaceContext } from './objects';
 import { createVariant } from './variant';
 import { RULES } from '../rules/rules';
@@ -156,7 +157,8 @@ describe('the pen (PR 1)', () => {
     expect('error' in r && r.error).toBe('Ikke plass til disken her');
   });
 
-  it('dragSpan follows the reference', () => {
+  it('a drag without Shift follows the reference: past an edge whole steps of 500, inside nothing changes', () => {
+    const dragSpan = (lo: number, hi: number, v: number) => axisSpan({ lo: lo / GRID, hi: hi / GRID, v0: 0, g: 0 }, v / GRID, false).map((x) => x * GRID);
     expect(dragSpan(-250, 250, 1200)).toEqual([-250, 1250]);
     expect(dragSpan(-250, 250, 400)).toEqual([-250, 250]);
     expect(dragSpan(-250, 250, -600)).toEqual([-750, 250]);

@@ -34,13 +34,6 @@ export function rectSections(x: Range, z: Range, from: { x: 'lo' | 'hi'; z: 'lo'
   return out;
 }
 
-/** One way of a drag without Shift (the order's reference): the section pressed spans lo–hi, and the pointer at `v` past
- *  an edge grows it on that side by whole steps of 500, rounded; inside the section nothing changes. mm. */
-export function dragSpan(lo: number, hi: number, v: number): [number, number] {
-  const [a, b] = axisSpan({ lo: lo / GRID, hi: hi / GRID, v0: 0, g: 0 }, v / GRID, false);
-  return [a * GRID, b * GRID];
-}
-
 /** A påbygg (PR 3): the counter `id` it becomes part of, and the side of it the påbygg lies against. */
 export interface PodiumOnto {
   id: string;
@@ -92,7 +85,7 @@ const builtLike = (t: CounterSection, like: CounterSection): CounterSection => {
 };
 
 /** The spans a drag gives with the pointer at q, grid units. */
-export function dragSpans(d: PodiumDrag, q: Point): { x: [number, number]; z: [number, number] } {
+function dragSpans(d: PodiumDrag, q: Point): { x: [number, number]; z: [number, number] } {
   const [u, w] = unitsOf(d.o, q);
   // With a disk in hand the depth stays the disk's (K22)
   return { x: axisSpan(d.x, u, d.fine), z: d.like ? [d.z.lo, d.z.hi] : axisSpan(d.z, w, d.fine) };

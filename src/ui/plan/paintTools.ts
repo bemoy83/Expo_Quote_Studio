@@ -3,7 +3,7 @@
 // toast, the one stroke rule (`strokeAt`, Byggeregel V15) and press-and-sweep in the drawing. The colour and print
 // rules on each kind of plate are domain/paint.ts's, print.ts's and podiumDecor.ts's.
 import { useRef, useState, type PointerEvent as RPointerEvent } from 'react'
-import type { Painted } from '../../domain/paint'
+import { clearSurface, hasOwnDecor, type ClearAt, type Painted } from '../../domain/paint'
 import type { Variant } from '../../domain/types'
 
 /** The tool out: the paint bucket (the whole side shown), the brush (plate by plate, press and sweep), or none. */
@@ -105,6 +105,19 @@ export function strokeAt(d: StrokeDeps, plate: StrokePlate, first: boolean) {
   onEdit(plate.paintOne(to), false)
 }
 
+/**
+ * A pick on one chosen plate (a felt, a door's leaf or header): a colour in the palette lays it at once, «Print» or a
+ * motif tapped in Profilering lays `motif` as the brush's press would. Unlike the brush, the palette never toggles back.
+ */
+export function pickOn(plate: StrokePlate, pick: string, motif: string | undefined, onEdit: (fn: Edit) => void, onToast: (text: string) => void) {
+  if (pick !== PRINT) return onEdit(plate.paintOne(pick))
+  if (!motif) return onToast(NO_MOTIF)
+  const why = plate.noPrint()
+  if (why) return onToast(why)
+  const edit = plate.printOne(motif, true)
+  if (edit) onEdit(edit)
+}
+
 /** What a drawer keeps for its paint tools between renders: the tool, what it lays on, the motif «Print» lays. */
 export function usePaintTools() {
   const [tool, setTool] = useState<PaintTool>(null)
@@ -150,3 +163,11 @@ export function useSweep() {
     },
   })
 }
+
+/** The one name of «Fjern farge og print» (Bjørn 19.11.2026): back to the colour of what it is part of; decals stay. */
+export const CLEAR_LABEL = 'Fjern farge og print (dekaler blir)'
+/** ColourSection's `clear` for the surface `at`. */
+export const clearOf = (v: Variant, at: ClearAt, onEdit: (fn: (v: Variant) => Variant) => void) => ({
+  off: !hasOwnDecor(v, at),
+  onClick: () => onEdit((x) => clearSurface(x, at)),
+})

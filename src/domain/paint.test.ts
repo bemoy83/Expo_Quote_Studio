@@ -9,7 +9,7 @@ import { moduleKey, wallModules } from './grid';
 import { counterParts } from '../foga/counter';
 import { counterBuildOf } from './counterShape';
 import { counterRal } from './objects';
-import { paintAllCounters, paintAllDoors, paintAllWalls, paintCounter, paintCounterPlates, paintCounterSide, paintLeaf, paintPlate, paintWallFace, printedCount } from './paint';
+import { clearSurface, hasOwnDecor, paintAllCounters, paintAllDoors, paintAllWalls, paintCounter, paintCounterPlates, paintCounterSide, paintLeaf, paintPlate, paintWallFace, printedCount } from './paint';
 import { printCounterSide, printOf, takesDecor } from './podiumDecor';
 import { partKey, podiumParts, ralsOf, setPodiumLight } from './podiumFaces';
 import { stockSections } from './podiumStock';
@@ -142,7 +142,7 @@ describe('Fyll on the whole stand', () => {
     expect(r.v.foils.map((f) => f.id)).toEqual(['p', 'd']);
   });
 
-  it('«Farg også dem» colours the printed plates too and takes their print off; decals stay', () => {
+  it('«Farg også dem» colours the printed plates too and takes their print off', () => {
     const r = paintAllWalls(decorated(), '5012', 'off');
     expect(r.v.decor).toBeUndefined();
     expect(r.v.foils.map((f) => f.id)).toEqual(['d']);
@@ -206,5 +206,39 @@ describe('a counter of Disker og podier: a colour per plate (Byggeregel K6, Bjø
     expect(printOf(r.v.objects[0].sections!, front(v0()))).toBe('logo');
     // Back to stock: no colour stored on the counter
     expect('ral' in paintCounter(v0(), 'c1', counterRal(counter)).v.objects[0]).toBe(false);
+  });
+});
+
+describe('«Fjern farge og print»: one way back to plain on every surface (Bjørn 19.11.2026)', () => {
+  it('a door leaf back to the stand\'s colour, its print off; the header keeps its share', () => {
+    let v = door(inner());
+    const w = innerWall(v);
+    v = printPlate(paintLeaf(v, v.openings[0].id, 1, '3020'), RULES, w.id, 0, 1, 'logo');
+    const leaf = { kind: 'door' as const, openingId: v.openings[0].id, side: 1 as const, part: 'leaf' as const };
+    const x = clearSurface(v, leaf);
+    expect(leafRal(x, x.openings[0].id)).toBeUndefined();
+    expect(x.foils.map((f) => f.door)).toEqual(['header']);
+    expect(hasOwnDecor(x, leaf)).toBe(false);
+    // The header: its print off, and the plate over the door loses its own colour
+    const key = builtModules(x).find((m) => m.opening)!.key;
+    const y = clearSurface(paintPlate(x, w.id, 1, 0, key, '5010'), { ...leaf, part: 'header' });
+    expect(y.foils).toHaveLength(0);
+    expect(y.decor).toBeUndefined();
+  });
+
+  it('a counter\'s light opening or the side shown back to the counter\'s colour, print off', () => {
+    const counter: PlacedObject = { id: 'c1', product: '6571', x: 2, y: 1.5, rot: 0, sections: stockSections() };
+    const v0: Variant = { ...createVariant('A', { width: 4, depth: 3, type: 'row' }), objects: [counter] };
+    const all = podiumParts(counter.sections!).map(partKey);
+    const front = podiumParts(counter.sections!).filter((p) => takesDecor(counter.sections!, p))[0];
+    const k = partKey(front);
+    let v = paintCounterPlates(v0, 'c1', [k], '3020', 0);
+    v = printCounterSide(v, 'c1', [podiumParts(counter.sections!).filter((p) => takesDecor(counter.sections!, p))[1]!].map(partKey), 'logo');
+    const one = clearSurface(v, { kind: 'counter', id: 'c1', keys: [k], light: 0 });
+    expect(ralsOf(one.objects[0].sections!, front).every((x) => x === null)).toBe(true);
+    expect(hasOwnDecor(one, { kind: 'counter', id: 'c1', keys: [k], light: 0 })).toBe(false);
+    const side = clearSurface(v, { kind: 'counter', id: 'c1', keys: all });
+    expect(side.objects[0]).toEqual(counter);
+    expect(clearSurface(side, { kind: 'counter', id: 'c1', keys: all })).toBe(side);
   });
 });

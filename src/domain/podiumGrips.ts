@@ -145,7 +145,7 @@ export const connected = (sections: readonly CounterSection[]): boolean =>
   sections.length > 0 && groups(sections, (p, q) => meet(p, q, 'x') !== null || meet(p, q, 'z') !== null).length === 1;
 
 /** The step a grip moves in (K14): 500, 250 with Shift. */
-export const gripStep = (fine: boolean) => (fine ? GRID : 2 * GRID);
+const gripStep = (fine: boolean) => (fine ? GRID : 2 * GRID);
 
 /** How far (mm, + out) a grip on each line has moved with the pointer gone from p0 to q, in whole steps. */
 function shifts(o: PlacedObject, lines: Line[], p0: Point, q: Point, fine: boolean): number[] {
