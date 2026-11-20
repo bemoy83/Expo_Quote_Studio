@@ -152,7 +152,6 @@ export function PlanView(p: Props) {
     onToast: p.onToast,
     onSelect: p.onSelect,
     drawerOpen: p.drawerOpen,
-    onOpenDrawer: p.onOpenDrawer,
   })
   const { svg, svgRef, svgEl, hover, dragging, stroke, erasing, handlers } = pointer
   /** Snap points show only while a brush snaps to them: the metre grid, 250 with Shift or «Fin» (wall and textile),

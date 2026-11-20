@@ -2,6 +2,7 @@
 // (run.ts) and Disker og podier (podium.ts). A press works on what the pen shows at `at`; it draws once it has moved
 // DRAW_DRAG, else it is a click. Shift or «Fin» on the pen shows and draws in 250 (Bjørn 14.11.2026).
 import type { Brush } from '../../tools'
+import { goneFrom } from './moved'
 import type { P } from './types'
 
 /** A press that moves this far (m) draws instead of clicking; less than the 75 mm a press in the middle waits with Shift. */
@@ -19,7 +20,7 @@ export const startPress = (q: P): DrawPress => ({ p0: q, at: q, last: q, moved: 
 
 /** The pointer moved to q while pressed. */
 export function pressMove(d: DrawPress, q: P) {
-  if (!d.moved && Math.hypot(q.x - d.p0.x, q.y - d.p0.y) > DRAW_DRAG) d.moved = true
+  goneFrom(d, q, DRAW_DRAG)
   d.last = q
 }
 

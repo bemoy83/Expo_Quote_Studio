@@ -5,7 +5,9 @@ import { GRIP_MOVE } from '../../../domain/grips'
 import { dragGrip, gripWith, type GripOn } from '../grips'
 import { startRoom } from './room'
 import type { PlanSelection } from '../selection'
+import { wallDrag } from '../../drag'
 import type { Drag, DragHandlers, P, PointerCtx } from './types'
+import { goneFrom } from './moved'
 import { freeTextiles } from '../../../domain/textile/mounts'
 
 export type GripDrag = Extract<Drag, { kind: 'grip' }>
@@ -22,7 +24,7 @@ export function startGrip(c: PointerCtx, q: P): Drag | null {
   // An inner wall or textile wall with its group (Byggeregel M6): the drag Velg starts on it
   if (g.on.what === 'wall') {
     const w = c.v.walls.find((x) => x.id === id)
-    return w ? { kind: 'wall', id, p0: q, v0: c.v, delta: '0,0', horizontal: w.from[1] === w.to[1], moved: false, fine: c.fine, select: c.selection } : null
+    return w ? { kind: 'wall', ...wallDrag(w, q, c.v, c.fine), select: c.selection } : null
   }
   if (g.on.what === 'textile') return freeTextiles(c.v).some((t) => t.id === id) ? { kind: 'freeMove', id, p0: q, v0: c.v, moved: false, select: c.selection } : null
   if (g.on.what === 'room') {
@@ -43,7 +45,7 @@ export const gripDrawAt = (c: Pick<PointerCtx, 'v'>, d: GripDrag, q: P) => dragG
 
 export const grip: DragHandlers<'grip'> = {
   move(_c, d, q) {
-    if (!d.moved && Math.hypot(q.x - d.p0.x, q.y - d.p0.y) > GRIP_MOVE) d.moved = true
+    goneFrom(d, q, GRIP_MOVE)
   },
   up(c, d, q) {
     // A click: what was pressed is selected (a room's side: its wall or door), else what is chosen stays chosen

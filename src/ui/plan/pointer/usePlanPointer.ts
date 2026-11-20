@@ -54,11 +54,10 @@ export function usePlanPointer(input: PlanPointerInput) {
   // The drag under way as of the last pointer move, for rendering (hover previews pause, the cursor grabs): the ref
   // itself is only read in the handlers
   const [dragging, setDragging] = useState<Drag | null>(null)
-  /** What the roll stroke in progress will lay on release: the preview shows it, the floor is untouched until then. */
   /** Fyll area being dragged, in cells. */
   const [fillRect, setFillRect] = useState<Rect | null>(null)
+  /** Tøm's stroke along walls and drawn takdragere (stroke.ts). */
   const [strokeLine, setStroke] = useState<[Point, Point] | null>(null)
-  /** Textile stroke being drawn, with where it started (picks the wall face when it lies on a wall). */
   /** A frame or motif dragged from Profilering, over a wall face. */
   const [dropHover, setDropHover] = useState<{ h: FaceHit; d: DecorDrag } | null>(null)
   /** What a Tøm press takes on release. */
@@ -145,21 +144,28 @@ export function usePlanPointer(input: PlanPointerInput) {
     return startSelect(c, q)
   }
 
+  /** Alt at the press: a shelf dragged leaves a copy where it goes (desktop; the pill's Kopier on touch); an inner wall
+   *  or textile wall moves alone, out of its group (Byggeregel M5). */
+  const pressKeys = (d: Drag, e: { altKey: boolean }) => {
+    if (d.kind === 'shelfMove') d.copy = e.altKey
+    if ((d.kind === 'wall' || d.kind === 'freeMove') && e.altKey) d.loose = true
+  }
+  /** Shift held or «Fin» on, read again on every move: a drawn takdrager across in 50 mm steps off the 1 m grid
+   *  (Byggeregel T15), a room (R5), an inner wall (V7) and a grip in 250. The drawing pens read it in their own way below. */
+  const moveKeys = (d: Drag, e: { shiftKey: boolean }) => {
+    if (d.kind === 'beam' || d.kind === 'room' || d.kind === 'wall' || d.kind === 'grip') d.fine = e.shiftKey || input.fine
+  }
+
   const onPointerDown = (e: RPointerEvent<SVGSVGElement>) => {
     if (e.button !== 0) return
     const q = toModel(e)
     svg.current!.setPointerCapture(e.pointerId)
     const d = press(q, e.shiftKey)
-    // Alt (Option) held: a shelf dragged leaves a copy where it goes (desktop; the pill's Kopier on touch)
-    if (d?.kind === 'shelfMove') d.copy = e.altKey
-    // Shift held (or «Fin» on): a drawn takdrager moves across in 50 mm steps, off the 1 m grid (Byggeregel T15)
-    if (d?.kind === 'beam') d.fine = e.shiftKey || input.fine
-    // Shift held (or «Fin» on): a room moves and stretches in 250 (Byggeregel R5)
-    if (d?.kind === 'room' || d?.kind === 'wall') d.fine = e.shiftKey || input.fine
-    // Alt + dra: an inner wall or textile wall alone, out of its group (Byggeregel M5)
-    if ((d?.kind === 'wall' || d?.kind === 'freeMove') && e.altKey) d.loose = true
-    if (d?.kind === 'grip') d.fine = e.shiftKey || input.fine
-    if (d) drag.current = d
+    if (d) {
+      pressKeys(d, e)
+      moveKeys(d, e)
+      drag.current = d
+    }
     // Held without moving counts as dragging too, so the hover preview stops while pressed
     setDragging(d ?? null)
   }
@@ -170,11 +176,10 @@ export function usePlanPointer(input: PlanPointerInput) {
     const d = drag.current
     setDragging(d)
     if (!d) return
-    if (d.kind === 'beam' || d.kind === 'room' || d.kind === 'wall') d.fine = e.shiftKey || input.fine
+    moveKeys(d, e)
     if (d.kind === 'podium') podiumShift(d, fineOf(e.shiftKey))
     if (d.kind === 'run') runShift(d, fineOf(e.shiftKey))
     if (d.kind === 'plates' && d.as) runShift(d.as, fineOf(e.shiftKey))
-    if (d.kind === 'grip') d.fine = e.shiftKey || input.fine
     handlersOf(d).move?.(c, d, q)
   }
 

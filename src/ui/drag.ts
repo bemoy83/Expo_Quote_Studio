@@ -5,7 +5,7 @@ import { moveInnerBeam, shiftInnerBeam, type Run } from '../domain/innerBeams'
 import { settleAll, settleObject } from '../domain/objects'
 import { moveRoomDoors, resizeRoomDoors, sideIsHorizontal } from '../domain/rooms'
 import { CELL } from '../domain/outline'
-import type { Variant } from '../domain/types'
+import type { Point, Variant } from '../domain/types'
 import { place, rules } from './env'
 
 type Edit = (fn: (v: Variant) => Variant, history?: boolean) => void
@@ -25,6 +25,18 @@ export interface WallDrag {
   /** «Løsne» on the chosen wall, or Alt held: the wall moves alone, out of its group (Byggeregel M5). */
   loose?: boolean
 }
+
+/** A drag of the inner wall or drawn takdrager `line` (by its id) from the press p0 on the variant v0, plan and 3D alike;
+ *  `fine` as Shift or «Fin». */
+export const wallDrag = (line: { id: string; from: Point; to: Point }, p0: { x: number; y: number }, v0: Variant, fine: boolean) => ({
+  id: line.id,
+  p0,
+  v0,
+  delta: '0,0',
+  horizontal: line.from[1] === line.to[1],
+  moved: false,
+  fine,
+})
 
 /** Move an inner wall to whole metres under the pointer (250 with Shift or «Fin», Byggeregel V7), both ways when it
  *  stands free, else only sideways. Past the stand's edge (or onto a stand wall) it stops at the last place it fits.

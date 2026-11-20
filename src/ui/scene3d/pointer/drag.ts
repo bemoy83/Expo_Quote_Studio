@@ -18,7 +18,7 @@ import { shelfHeight, shelfRow, shelvesOf } from '../../../domain/shelves/model'
 import type { Foil, Motif, Point, Shelf, TextileWall, Variant, Wall } from '../../../domain/types'
 import { dragGrip, type GripOn } from '../../plan/grips'
 import type { SceneGrip } from '../grips'
-import { dragBeam, dragRoom, dragWall, dropObject, dropRoom, roomDrag, type RoomDrag, type WallDrag } from '../../drag'
+import { dragBeam, dragRoom, dragWall, dropObject, dropRoom, roomDrag, wallDrag, type RoomDrag, type WallDrag } from '../../drag'
 import { standardRuns } from '../../../calc/beams/beams'
 import { place, rules } from '../../env'
 import { findMotif } from '../../motifs'
@@ -115,7 +115,7 @@ export function startDrag(P: PointerProps, hits: SceneHits, hit: Hit | null, e: 
     const b = P.v.innerBeams?.find((x) => x.id === hit.beamId)
     const y = hit.point.y
     const q = hits.onFloor(e, y)
-    if (b && q) return { kind: 'beam', id: b.id, p0: q, v0: P.v, delta: '0,0', horizontal: b.from[1] === b.to[1], moved: false, fine: P.fine, fineLock: P.fine, y }
+    if (b && q) return { kind: 'beam', ...wallDrag(b, q, P.v, P.fine), fineLock: P.fine, y }
   } else if (hit?.roomId || P.v.walls.find((x) => x.id === hit?.wallId)?.room) {
     // Its roof or its own wall moves a room; its grips resize it (R5)
     const w = P.v.walls.find((x) => x.id === hit!.wallId)
@@ -126,9 +126,15 @@ export function startDrag(P: PointerProps, hits: SceneHits, hit: Hit | null, e: 
   } else if (hit?.wallId) {
     const w = P.v.walls.find((x) => x.id === hit.wallId)
     const q = hits.onFloor(e)
-    if (w && q && canMoveWall(w)) return { kind: 'wall', id: w.id, p0: q, v0: P.v, delta: '0,0', horizontal: w.from[1] === w.to[1], moved: false, fine: P.fine, fineLock: P.fine }
+    if (w && q && canMoveWall(w)) return { kind: 'wall', ...wallDrag(w, q, P.v, P.fine), fineLock: P.fine }
   }
   return { kind: 'orbit' }
+}
+
+/** The first move of a drag that edits the sketch marks the undo step; from then on it is not a click. */
+function started(P: PointerProps, d: { moved: boolean }) {
+  if (!d.moved) P.onCheckpoint()
+  d.moved = true
 }
 
 /** A move of a drag that has gone past the click distance. */
@@ -136,8 +142,7 @@ export function moveDrag(P: PointerProps, hits: SceneHits, drag: Exclude<Drag, {
   if (drag.kind === 'decor') {
     const f = hits.onFace(e, drag.w, drag.s)
     if (!f) return
-    if (!drag.moved) P.onCheckpoint()
-    drag.moved = true
+    started(P, drag)
     const { item, t0, h0 } = drag
     const dt = f.t - t0
     const dh = f.h - h0
@@ -148,8 +153,7 @@ export function moveDrag(P: PointerProps, hits: SceneHits, drag: Exclude<Drag, {
   if (drag.kind === 'shelf') {
     const f = hits.onFace(e, drag.w, drag.s)
     if (!f) return
-    if (!drag.moved) P.onCheckpoint()
-    drag.moved = true
+    started(P, drag)
     const { shelf } = drag
     const module = moduleMovedBy(drag.w, shelf.module, f.t - drag.t0)
     const y = shelfHeight(rules, shelf.y + f.h - drag.h0)
@@ -168,8 +172,7 @@ export function moveDrag(P: PointerProps, hits: SceneHits, drag: Exclude<Drag, {
     if (y === null) return
     const mm = drag.h0 + (y - drag.y0) * 1000
     const h = HEIGHTS.reduce((a, b) => (Math.abs(b - mm) < Math.abs(a - mm) ? b : a))
-    if (!drag.moved) P.onCheckpoint()
-    drag.moved = true
+    started(P, drag)
     const { v0, id, section } = drag
     P.onEdit(() => setSectionHeight(v0, id, [section], h), false)
     return
@@ -179,8 +182,7 @@ export function moveDrag(P: PointerProps, hits: SceneHits, drag: Exclude<Drag, {
     if (!q) return
     const r = dragGrip(drag.v0, drag.on, drag.p0, [q.x, q.y], e.shiftKey || P.fine)
     if (!r) return
-    if (!drag.moved) P.onCheckpoint()
-    drag.moved = true
+    started(P, drag)
     const d = drag
     d.error = 'error' in r ? r.error : undefined
     d.toast = 'error' in r ? undefined : r.toast
@@ -206,8 +208,7 @@ export function moveDrag(P: PointerProps, hits: SceneHits, drag: Exclude<Drag, {
   const q = hits.onFloor(e)
   if (!q) return
   if (drag.kind === 'object') {
-    if (!drag.moved) P.onCheckpoint()
-    drag.moved = true
+    started(P, drag)
     const d = drag
     P.onEdit((x) => moveObject(x, place, d.id, q.x - d.off.x, q.y - d.off.y), false)
   } else {

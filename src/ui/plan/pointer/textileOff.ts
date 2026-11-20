@@ -5,13 +5,12 @@ import { unmountDrag } from '../../../domain/textile/mount'
 import { wallDirection } from '../../../domain/grid'
 import { rules } from '../../env'
 import type { DragHandlers } from './types'
+import { goneFrom } from './moved'
 import { wallTextiles } from '../../../domain/textile/mounts'
 
 export const textileOff: DragHandlers<'textileOff'> = {
   move(c, d, q) {
-    if (!d.moved && Math.hypot(q.x - d.p0.x, q.y - d.p0.y) < 0.15) return
-    if (!d.moved) c.onCheckpoint()
-    d.moved = true
+    if (!goneFrom(d, q, 0.15, c.onCheckpoint)) return
     const dx = q.x - d.p0.x
     const dy = q.y - d.p0.y
     const r = unmountDrag(d.v0, rules, d.id, dx, dy)

@@ -18,6 +18,7 @@ import { rules } from '../../env'
 import type { PlanHits } from './hits'
 import { startStroke } from './stroke'
 import type { Drag, DragHandlers, P, PointerCtx } from './types'
+import { goneFrom } from './moved'
 
 /** What lies on top under the pointer. `group` is what a drag goes on erasing; `id` tells the things apart. */
 export interface EraseTarget {
@@ -97,9 +98,9 @@ export function startErase(c: PointerCtx, q: P): Drag | undefined {
 
 export const erase: DragHandlers<'erase'> = {
   move(c, d, q) {
-    if (!d.moved) {
-      if (Math.hypot(q.x - d.p0.x, q.y - d.p0.y) < 0.2) return
-      d.moved = true
+    const first = !d.moved
+    if (!goneFrom(d, q, 0.2)) return
+    if (first) {
       c.setErasing(null)
       c.onCheckpoint()
       take(c, d, d.first)

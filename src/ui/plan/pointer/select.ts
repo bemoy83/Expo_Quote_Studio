@@ -14,13 +14,16 @@ import { gripPress, startGrip } from './grip'
 import { startPodiumLink } from './podiumLink'
 import { startRoom } from './room'
 import { nearestSide } from '../podiumDrawer/podiumView'
+import { wallDrag } from '../../drag'
 import type { Drag, P, PointerCtx } from './types'
 
 export function startSelect(c: PointerCtx, q: P): Drag {
   const { v, selection, hits } = c
   const { width: W, depth: D } = v.stand
+  // The wall module under the pointer, if any
+  const m = hits.moduleAt(q)
   // A plain click on a door or curtain chooses it (the wall drawer with the door); a drag does what it does on the wall.
-  const door = hits.moduleAt(q)?.opening
+  const door = m?.opening
   const doorSelect: PlanSelection | null = door ? { openingId: door.id } : null
   // A grip of what is chosen (a corner or side of the selected room, R5; of the chosen counter, K14), or a link of the
   // counter (K15), comes before the thing itself, which would move
@@ -40,8 +43,7 @@ export function startSelect(c: PointerCtx, q: P): Drag {
   if (o) return { kind: 'object', id: o.id, dx: q.x - o.x, dy: q.y - o.y, start: { x: o.x, y: o.y }, moved: false, select: { objectId: o.id, ...(side && { podiumSide: side }) } }
   // A shelf on a wall face: the wall drawer on that face, with the shelf and its row chosen. A drag moves them (Alt: copies)
   // Zones as for a textile wall (Bjørn 9.11.2026): the wall's own band picks the wall, the board in front of it the shelf
-  const band = hits.moduleAt(q)
-  const sh = band && hits.onWallBand(q, band) ? undefined : hits.shelfAt(q)
+  const sh = m && hits.onWallBand(q, m) ? undefined : hits.shelfAt(q)
   if (sh) {
     const w = v.walls.find((x) => x.id === sh.wallId)
     const chosen = chosenShelves(v, selection)
@@ -54,9 +56,8 @@ export function startSelect(c: PointerCtx, q: P): Drag {
   const ib = hits.beamAt(q)
   if (ib) {
     // «Fin» on (ui/fine.tsx): every drag of it goes in 50 mm steps (touch has no Shift)
-    return { kind: 'beam', id: ib.id, p0: q, v0: v, delta: '0,0', horizontal: ib.from[1] === ib.to[1], moved: false, fine: c.fine, select: { beamId: ib.id } }
+    return { kind: 'beam', ...wallDrag(ib, q, v, c.fine), select: { beamId: ib.id } }
   }
-  const m = hits.moduleAt(q)
   if (m) {
     const w = v.walls.find((x) => x.id === m.wallId)!
     const h = hits.faceHit(q)
@@ -71,7 +72,7 @@ export function startSelect(c: PointerCtx, q: P): Drag {
     const room = w.room && v.rooms.find((r) => r.id === w.room!.id)
     if (room) return roomSide(c, room.id, w.room!.side, q, select)
     const loose = !!selection.loose && selection.wallId === w.id && !selection.textileId && !tx
-    if (canMoveWall(w)) return { kind: 'wall', id: w.id, p0: q, v0: v, delta: '0,0', horizontal: w.from[1] === w.to[1], moved: false, fine: c.fine, loose, select: loose ? { ...select, loose } : select }
+    if (canMoveWall(w)) return { kind: 'wall', ...wallDrag(w, q, v, c.fine), loose, select: loose ? { ...select, loose } : select }
     return { kind: 'click', select }
   }
   const room = roomAt(v, q.x, q.y)

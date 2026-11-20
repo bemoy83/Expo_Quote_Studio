@@ -6,12 +6,11 @@
 import { placeShelves } from '../../../domain/shelves/edit'
 import { rules } from '../../env'
 import type { DragHandlers } from './types'
+import { goneFrom } from './moved'
 
 export const shelfMove: DragHandlers<'shelfMove'> = {
   move(c, d, q) {
-    if (!d.moved && Math.hypot(q.x - d.p0.x, q.y - d.p0.y) < 0.15) return
-    if (!d.moved) c.onCheckpoint()
-    d.moved = true
+    if (!goneFrom(d, q, 0.15, c.onCheckpoint)) return
     const h = c.hits.faceHit(q, 0.6)
     if (!h) return
     const r = placeShelves(d.v0, rules, d.ids, d.anchor, { wallId: h.w.id, s: h.s, module: h.module }, d.copy)

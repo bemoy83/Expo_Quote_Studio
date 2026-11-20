@@ -9,6 +9,7 @@ import { rules } from '../../env'
 import { strokeFrom } from '../../../domain/snapGrid'
 import { distToSegment, nearestEdge } from '../geometry'
 import type { DragHandlers, Drag, P, PointerCtx } from './types'
+import { goneFrom } from './moved'
 
 /** Stand walls separate exhibitors and follow the stand type: erasing them is refused. */
 const STAND_WALL_LOCKED = 'Standvegger følger standtypen og kan ikke fjernes'
@@ -47,8 +48,7 @@ const strokeTo = (c: PointerCtx, d: Extract<Drag, { kind: 'stroke' }>, q: P): [P
 
 export const stroke: DragHandlers<'stroke'> = {
   move(c, d, q) {
-    if (!d.moved && Math.hypot(q.x - d.p0.x, q.y - d.p0.y) > 0.35) d.moved = true
-    if (d.moved) c.setStroke(strokeTo(c, d, q))
+    if (goneFrom(d, q, 0.35)) c.setStroke(strokeTo(c, d, q))
   },
   up(c, d, q) {
     const m = nearestEdge(c.v.stand, d.p0, d.fine ? FINE : 1)

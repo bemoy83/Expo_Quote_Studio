@@ -39,12 +39,15 @@ export type Drag =
   | { kind: 'floor'; last: string | null; anchor: { i: number; j: number } | null }
   /** Fyll with rolled floor: an area from cell `from`; a click without a drag fills the stand. */
   | { kind: 'carpetFill'; from: { i: number; j: number }; moved: boolean }
+  /** Velg on something that does not move: selects on release (click.ts). */
   | { kind: 'click'; select: PlanSelection }
-  /** `fuse`: a counter of Disker og podier dragged against another, the one it lies against (K15), or why not. */
-  /** `grip`: taken by its move grip (plan/grips.ts): a click there does nothing. */
+  /** Furniture or a counter moved (object.ts). `fuse`: a counter of Disker og podier dragged against another, the one it
+   *  lies against (K15). `grip`: taken by its move grip (plan/grips.ts), so a click there does nothing. */
   | { kind: 'object'; id: string; dx: number; dy: number; start: P; moved: boolean; select: PlanSelection; fuse?: string; grip?: boolean }
+  /** An inner wall moved, with its group (wall.ts, M2). */
   | ({ kind: 'wall'; moved: boolean; select: PlanSelection } & WallDrag)
-  /** `fine`: Shift held or «Fin» on, it moves across in 50 mm steps off the grid (Byggeregel T15). */
+  /** A drawn takdrager moved (beam.ts). `fine`: Shift held or «Fin» on, it moves across in 50 mm steps off the grid
+   *  (Byggeregel T15). */
   | ({ kind: 'beam'; moved: boolean; select: PlanSelection; fine?: boolean } & WallDrag)
   /** A room moved by its floor (room.ts). */
   | ({ kind: 'room'; select: PlanSelection; grip?: boolean } & RoomDrag)
@@ -52,16 +55,16 @@ export type Drag =
    *  `drag`, what a drag draws from it, none on a counter or where it has no room. */
   | ({ kind: 'podium'; click: PodiumDraw | null; drag: PodiumDrag | null } & DrawPress)
   /** A grip of what is chosen pressed (grip.ts, plan/grips.ts), in Velg or with its pen: its side or corner follows the
-   *  pointer from the press `p0` in coarse steps, 250 with `fine` (Shift, or «Fin»). */
-  /** `select`: what a click (no drag) selects. */
+   *  pointer from the press `p0` in coarse steps, 250 with `fine` (Shift, or «Fin»). `select`: what a click selects. */
   | { kind: 'grip'; on: GripOn; p0: P; moved: boolean; fine: boolean; select?: PlanSelection }
   /** A link of the chosen counter pressed (podiumLink.ts, K15): a click breaks a joint or links a counter against it. */
   | { kind: 'podiumLink'; id: string; link: PodiumLink; p0: P; moved: boolean }
+  /** A free-standing textile wall moved with its group (freeMove.ts, M2), or onto a system wall (X13). */
   | { kind: 'freeMove'; id: string; p0: P; v0: Variant; moved: boolean; select: PlanSelection; /** «Løsne» or Alt: alone, out of its group (M5). */ loose?: boolean; /** Mounted on a wall by this drag (X13): the textile's id there. */ mounted?: string }
   /** A textile wall on a system wall dragged: off the wall onto foot plates, or along its face (X13). */
   | { kind: 'textileOff'; id: string; p0: P; v0: Variant; moved: boolean; select: PlanSelection; freeId?: string; heightKept?: boolean }
-  /** Door, decal or furniture pressed: shown until release, stored on release over the same target (place.ts). */
-  /** `module`: the door's module, pressed; `door`: a door (not a curtain), turned by where the pointer is dragged. */
+  /** Door, decal or furniture pressed: shown until release, stored on release over the same target (place.ts).
+   *  `module`: the door's module, pressed; `door`: a door (not a curtain), turned by where the pointer is dragged. */
   | { kind: 'place'; what: 'opening' | 'decor' | 'object'; key: string; module?: Module; door?: boolean; /** A door or curtain off the wall's modules, in 250 (D8). */ fine?: boolean }
   /** The wall pen pressed on a plate that stands: colours plates along that wall on release (plates.ts). `as`: the drag
    *  turned across the wall, so it draws a new wall as a stroke. */
@@ -102,8 +105,6 @@ export interface PointerCtx {
   onSelect: (s: PlanSelection) => void
   /** The drawer is open: a click on the selected object keeps it (the drawer follows the selection). */
   drawerOpen?: boolean
-  /** Double click: select this and open its drawer in detail. */
-  onOpenDrawer?: (s: PlanSelection) => void
   /** A plain click (press and release without moving) in Velg: the click rules in click.ts. Owned by the hook. */
   clickSelect: (s: PlanSelection) => void
   setStroke: Dispatch<SetStateAction<[Point, Point] | null>>
