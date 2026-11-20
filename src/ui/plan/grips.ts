@@ -8,6 +8,8 @@ import { stretchInnerBeam } from '../../domain/innerBeams'
 import { BEAM_UNIT } from '../../domain/runDraw'
 import { standardRuns } from '../../calc/beams/beams'
 import { freeGripEnds, stretchFreeTextile } from '../../domain/textile/free'
+import { groupOf, type Part } from '../../domain/joints'
+import { cornerGrips, dragCorner, groupBox, segOf, turnGroup } from '../../domain/groupGrips'
 import { footprintBox, objectBoxes, objectFootprint, rotateObject, setMembers, settleAll, union } from '../../domain/objects'
 import { toPlan } from '../../domain/counterShape'
 import { podiumLinks } from '../../domain/podiumLinks'
@@ -30,7 +32,13 @@ export type GripOn =
   | { type: 'room'; id: string; grip: RoomGrip }
   /** The middle of a room or a piece of furniture (a counter too): moves it, as dragging it in Velg does (Bjørn
    *  15.11.2026: also without Velg). */
-  | { type: 'move'; what: 'room' | 'object'; id: string }
+  | { type: 'move'; what: 'room' | 'object' | 'wall' | 'textile'; id: string }
+  /** Where two arms of a group of inner walls or textile walls meet (Byggeregel M6): moves the corner, both arms
+   *  stretch. */
+  | { type: 'corner'; h: Part; v: Part; at: Point }
+  /** Out from the bottom right corner of a group of inner walls or textile walls that stands free: turns the whole
+   *  group round its middle, 90° a step (M6). */
+  | { type: 'turn'; part: Part }
   /** A free end of a chosen inner wall or free-standing textile wall, or either end of a drawn takdrager: moves along
    *  it (wallEnds.ts, textile/free.ts, innerBeams.ts). */
   | { type: 'end'; what: 'wall' | 'textile' | 'beam'; id: string; end: RunEnd }
@@ -82,17 +90,35 @@ function doorGrip(v: Variant, s: PlanSelection): PlanGrip | null {
   return { on: { type: 'door', id: o.id }, kind: 'move', at: pointAlong(w, moduleStart(w, o.module) + 0.5) }
 }
 
-/** The end grips of what is chosen (Byggeregler V13, X12), when it is an inner wall (alone, not a door or felt on it) or a free textile wall;
- *  else null. */
+/** The end grips of what is chosen (Byggeregler V13, X12), when it is an inner wall (alone, not a door or felt on it) or a free textile wall,
+ *  with the grips of its group (M6); else null. */
 function endGrips(v: Variant, s: PlanSelection): PlanGrip[] | null {
   const wall = s.wallId && !s.openingId && !s.textileId && !s.foilId && !s.shelfId && s.felt === undefined ? v.walls.find((w) => w.id === s.wallId) : undefined
-  if (wall) return wallGripEnds(v, wall).map((end): PlanGrip => ({ on: { type: 'end', what: 'wall', id: wall.id, end }, kind: 'end', at: wall[end] }))
+  if (wall && !wall.room && !wall.id.startsWith('side'))
+    return [...wallGripEnds(v, wall).map((end): PlanGrip => ({ on: { type: 'end', what: 'wall', id: wall.id, end }, kind: 'end', at: wall[end] })), ...groupGrips(v, { kind: 'wall', id: wall.id })]
+  if (wall) return []
   const t = s.freeTextileId ? v.freeTextiles.find((x) => x.id === s.freeTextileId) : undefined
-  if (t) return freeGripEnds(v, t).map((end): PlanGrip => ({ on: { type: 'end', what: 'textile', id: t.id, end }, kind: 'end', at: t[end] }))
+  if (t) return [...freeGripEnds(v, t).map((end): PlanGrip => ({ on: { type: 'end', what: 'textile', id: t.id, end }, kind: 'end', at: t[end] })), ...groupGrips(v, { kind: 'textile', id: t.id })]
   // A drawn takdrager: both ends (Byggeregel T8)
   const b = s.beamId ? v.innerBeams?.find((x) => x.id === s.beamId) : undefined
   if (b) return (['from', 'to'] as const).map((end): PlanGrip => ({ on: { type: 'end', what: 'beam', id: b.id, end }, kind: 'end', at: b[end] }))
   return null
+}
+
+/** Byggeregel M6: the grips of the group a chosen inner wall or textile wall is in: a corner grip where two arms meet,
+ *  and when it stands free a move grip in the middle of the part chosen and a turn grip out from its box. */
+function groupGrips(v: Variant, part: Part): PlanGrip[] {
+  const g = groupOf(v, part)
+  const s = segOf(v, part)
+  if (!s) return []
+  const corners = cornerGrips(v, g).map(({ at, h, v: vt }): PlanGrip => ({ on: { type: 'corner', h, v: vt, at }, kind: 'corner', at }))
+  if (g.anchored) return corners
+  const b = groupBox(v, g)
+  return [
+    ...corners,
+    { on: { type: 'move', what: part.kind, id: part.id }, kind: 'move', at: [(s.from[0] + s.to[0]) / 2, (s.from[1] + s.to[1]) / 2] },
+    { on: { type: 'turn', part }, kind: 'rotate', at: [b.x1 + ROTATE_OUT, b.y1 + ROTATE_OUT] },
+  ]
 }
 
 /** How far under the middle of a room (its name) its move grip stands, plan m, less in a small room. */
@@ -124,12 +150,16 @@ function counterMiddle(v: Variant, o: PlacedObject, grips: PlanGrip[]): Point {
 export function gripWith(on: GripOn, tool: Tool, brush: Brush | null): boolean {
   if (tool === 'select') return on.type !== 'move'
   if (brush?.kind === 'opening') return on.type === 'door'
-  if (brush?.kind === 'wall') return on.type === 'room' || (on.type === 'move' && on.what === 'room') || (on.type === 'end' && on.what === 'wall')
-  if (brush?.kind === 'textile') return on.type === 'end' && on.what === 'textile'
+  if (brush?.kind === 'wall') return on.type === 'room' || (on.type === 'move' && (on.what === 'room' || on.what === 'wall')) || (on.type === 'end' && on.what === 'wall') || groupGripOf(on, 'wall')
+  if (brush?.kind === 'textile') return (on.type === 'end' && on.what === 'textile') || (on.type === 'move' && on.what === 'textile') || groupGripOf(on, 'textile')
   if (brush?.kind === 'beam') return on.type === 'end' && on.what === 'beam'
   if (brush?.kind === 'podium') return on.type === 'podium' || on.type === 'rotate' || (on.type === 'move' && on.what === 'object')
   return false
 }
+
+/** A corner or turn grip (M6) of a group with a part of this kind in it where the grip is. */
+const groupGripOf = (on: GripOn, kind: Part['kind']) =>
+  (on.type === 'corner' && (on.h.kind === kind || on.v.kind === kind)) || (on.type === 'turn' && on.part.kind === kind)
 
 /** What stays chosen when the pen `b` is picked: what it has grips for (a room for Vegg, a counter for Disker og
  *  podier), else nothing. */
@@ -160,6 +190,8 @@ export function dragGrip(v: Variant, on: GripOn, p0: Point, q: Point, fine: bool
   if (on.type === 'move') return null
   if (on.type === 'room') return dragRoomGrip(v, on, p0, q, fine)
   if (on.type === 'rotate') return dragTurnGrip(v, on.id, p0, q, fine)
+  if (on.type === 'corner') return dragCornerGrip(v, on, p0, q, fine)
+  if (on.type === 'turn') return dragGroupTurn(v, on.part, p0, q)
   if (on.type === 'end') return dragEndGrip(v, on, p0, q, fine)
   if (on.type === 'door') return dragDoorGrip(v, on.id, p0, q, fine)
   const o = v.objects.find((x) => x.id === on.id)
@@ -188,6 +220,35 @@ function dragTurnGrip(v: Variant, id: string, p0: Point, q: Point, fine: boolean
 }
 
 const NO_TURN = 'Ikke plass til å rotere her'
+
+/** A corner grip of a group dragged (Byggeregel M6): whole metres each way, 250 with Shift or Fin; the furthest step
+ *  that works, else why not. The pill gives both arms. */
+function dragCornerGrip(v: Variant, on: Extract<GripOn, { type: 'corner' }>, p0: Point, q: Point, fine: boolean): GripDraw | null {
+  if (!segOf(v, on.h) || !segOf(v, on.v)) return null
+  const step = fine ? CELL : 1
+  const nx = stepsOf(q[0] - p0[0], step)
+  const ny = stepsOf(q[1] - p0[1], step)
+  const r = furthest(nx, ny, (a, b) => (a || b ? dragCorner(v, rules, on, a * step, b * step) : v))
+  if (!r || ((nx || ny) && !r.a && !r.b)) return { error: NO_CORNER, key: `${NO_CORNER}:${nx},${ny}` }
+  const h = segOf(r.value, on.h)!
+  const vt = segOf(r.value, on.v)!
+  const len = (x: { from: Point; to: Point }) => Math.hypot(x.to[0] - x.from[0], x.to[1] - x.from[1])
+  return { v: r.value, key: `corner:${r.a},${r.b}`, pill: { a: h.from, b: h.to, text: `${mm(len(h))} × ${mm(len(vt))}` } }
+}
+
+const NO_CORNER = 'Hjørnet kan ikke gå dit: en dør, en annen vegg, standkanten eller et minste mål er i veien'
+
+/** The turn grip of a group dragged round the middle of its box (Byggeregel M6): 90° a step, the furthest that has room. */
+function dragGroupTurn(v: Variant, part: Part, p0: Point, q: Point): GripDraw | null {
+  if (!segOf(v, part)) return null
+  const g = groupOf(v, part)
+  const b = groupBox(v, g)
+  const n = stepsOf(turnOf([(b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2], p0, q), 90)
+  const r = furthest(n, 0, (a) => (a ? turnGroup(v, rules, g, a) : v))
+  if (!r || (n && !r.a)) return { error: NO_TURN, key: `${NO_TURN}:${n}` }
+  const after = groupBox(r.value, groupOf(r.value, part))
+  return { v: r.value, key: `turn:${r.a}`, pill: { a: [after.x0, after.y1], b: [after.x1, after.y1], text: `${(((r.a * 90) % 360) + 360) % 360}°` } }
+}
 
 /** The run an end grip moves: a wall, a free textile wall or a drawn takdrager. */
 const runOf = (v: Variant, on: Extract<GripOn, { type: 'end' }>) =>
@@ -289,7 +350,13 @@ export const gripHint = (on: GripOn, v?: Variant) =>
     : on.type === 'move'
     ? on.what === 'room'
       ? 'Dra for å flytte rommet · hele meter, Shift eller Fin 250'
+      : on.what === 'wall' || on.what === 'textile'
+      ? 'Dra for å flytte med det den er koblet til · hele meter, Shift eller Fin 250'
       : 'Dra for å flytte'
+    : on.type === 'corner'
+    ? 'Dra for å flytte hjørnet · begge armene blir lengre eller kortere · hele meter, Shift eller Fin 250'
+    : on.type === 'turn'
+    ? 'Dra for å rotere med det den er koblet til · 90°'
     : on.type === 'room'
     ? `Dra for å flytte ${on.grip.kind === 'corner' ? 'hjørnet' : 'siden'} · hele meter, Shift eller Fin 250`
     : 'Dra for å flytte kanten · 500-steg, Shift 250'
