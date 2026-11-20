@@ -14,6 +14,7 @@ import type { Point, Variant } from './types';
 import { createVariant } from './variant';
 import { builtModules, defaultSwing } from './walls';
 import { drawOpening, setOpening } from './doors';
+import { wallTextiles } from './textile/mounts';
 
 const row = (w = 6, d = 4) => createVariant('A', { width: w, depth: d, type: 'row' });
 const kf = (v: Variant) => calc(v, RULES, DEFAULT_CATALOG).keyFigures;
@@ -150,8 +151,8 @@ describe('wallsToRoom', () => {
     const v = closed();
     const t = addTextile(v, RULES, 'w1', 1, 1)!.v;
     const r = wallsToRoom(t, sq)!;
-    expect(r.textiles).toHaveLength(1);
-    expect(r.textiles[0].wallId).toBe(roomWallId(r.rooms[0].id, RECT_SIDE.right));
+    expect(wallTextiles(r)).toHaveLength(1);
+    expect(wallTextiles(r)[0].wallId).toBe(roomWallId(r.rooms[0].id, RECT_SIDE.right));
   });
   it('a door can not go in the stand wall, so that closes no room', () => {
     const v = path(row(), [2, 0], [2, 2], [0, 2]);

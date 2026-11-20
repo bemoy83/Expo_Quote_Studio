@@ -6,6 +6,7 @@ import { dragGrip, gripWith, type GripOn } from '../grips'
 import { startRoom } from './room'
 import type { PlanSelection } from '../selection'
 import type { Drag, DragHandlers, P, PointerCtx } from './types'
+import { freeTextiles } from '../../../domain/textile/mounts'
 
 export type GripDrag = Extract<Drag, { kind: 'grip' }>
 
@@ -23,7 +24,7 @@ export function startGrip(c: PointerCtx, q: P): Drag | null {
     const w = c.v.walls.find((x) => x.id === id)
     return w ? { kind: 'wall', id, p0: q, v0: c.v, delta: '0,0', horizontal: w.from[1] === w.to[1], moved: false, fine: c.fine, select: c.selection } : null
   }
-  if (g.on.what === 'textile') return c.v.freeTextiles.some((t) => t.id === id) ? { kind: 'freeMove', id, p0: q, v0: c.v, moved: false, select: c.selection } : null
+  if (g.on.what === 'textile') return freeTextiles(c.v).some((t) => t.id === id) ? { kind: 'freeMove', id, p0: q, v0: c.v, moved: false, select: c.selection } : null
   if (g.on.what === 'room') {
     const room = c.v.rooms.find((r) => r.id === id)
     return room ? { ...startRoom(c, room, q, { roomId: id }), grip: true } : null

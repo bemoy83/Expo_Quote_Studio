@@ -3,6 +3,7 @@
 import { moduleKey, pointAlong, wallDirection, wallLength, moduleEnd, moduleStart, moduleAt, moduleFrom, moduleEnds } from './grid';
 import type { Opening, Point, TextileWall, Variant, Wall } from './types';
 import { defaultSwing } from './walls';
+import { wallTextiles, withOnWall } from './textile/mounts';
 
 const EPS = 1e-9;
 
@@ -125,7 +126,7 @@ export function replaceWalls(v: Variant, next: Wall[], add: PlacedOpening[] = []
     return dot(wallDirection(oldW), wallDirection(hit.wall)) > 0 ? s : s === 1 ? -1 : 1;
   };
   const textiles: TextileWall[] = [];
-  for (const t of v.textiles) {
+  for (const t of wallTextiles(v)) {
     const at = locate(old, t.wallId, t.from, t.from + t.width);
     const hit = at && reanchor(walls, at);
     if (hit) textiles.push({ ...t, wallId: hit.wallId, from: hit.from, side: faceOn(t, hit) });
@@ -143,7 +144,7 @@ export function replaceWalls(v: Variant, next: Wall[], add: PlacedOpening[] = []
     const hit = at && reanchor(walls, at);
     return hit ? [{ ...f, wallId: hit.wallId, module: moduleOn(hit.wall, hit.from), side: faceOn(f, hit) }] : [];
   });
-  return { ...v, walls, openings: dedupeOpenings(walls, openings), textiles, foils, ...(shelves ? { shelves } : {}) };
+  return withOnWall({ ...v, walls, openings: dedupeOpenings(walls, openings), foils, ...(shelves ? { shelves } : {}) }, textiles);
 }
 
 const dot = (a: Point, b: Point) => a[0] * b[0] + a[1] * b[1];

@@ -34,6 +34,7 @@ import {
 import type { Opening, PlacedObject, Point, Room, Variant, Wall } from './types';
 import { builtModules, doorAllowed } from './walls';
 import { nextId } from './ids';
+import { wallTextiles, withOnWall } from './textile/mounts';
 
 /** Side numbers of a rectangular room. */
 export const RECT_SIDE = { back: 0, right: 1, front: 2, left: 3 } as const;
@@ -174,13 +175,13 @@ export function syncRooms(v: Variant): Variant {
     taken.add(key);
     openings.push(module === o.module ? o : { ...o, module });
   }
-  const textiles = v.textiles.filter((t) => byId.has(t.wallId));
+  const textiles = wallTextiles(v).filter((t) => byId.has(t.wallId));
   const onWall = (f: { wallId: string; module: number }) => {
     const w = byId.get(f.wallId);
     return !!w && f.module < moduleCount(w);
   };
   const foils = v.foils.filter(onWall);
-  return { ...v, walls, openings, textiles, foils, ...(v.shelves ? { shelves: v.shelves.filter(onWall) } : {}) };
+  return withOnWall({ ...v, walls, openings, foils, ...(v.shelves ? { shelves: v.shelves.filter(onWall) } : {}) }, textiles);
 }
 
 /**
@@ -213,7 +214,7 @@ function reshape(v: Variant, r: Room, outline: Point[], shift?: (i: number) => P
     rooms: v.rooms.map((o) => (o.id === r.id ? room : o)),
     openings: v.openings.filter((o) => !isRoomWallId(o.wallId, r.id)),
     textiles: v.textiles.flatMap((t) => {
-      if (!isRoomWallId(t.wallId, r.id)) return [t];
+      if (t.mount !== 'wall' || !isRoomWallId(t.wallId, r.id)) return [t];
       const m = onSide(t.wallId);
       return m ? [{ ...t, wallId: roomWallId(r.id, m.side), from: t.from + m.offset }] : [];
     }),

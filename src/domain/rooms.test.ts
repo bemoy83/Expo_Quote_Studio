@@ -18,6 +18,7 @@ import { builtModules, defaultSwing } from './walls';
 import { doorSwing } from './doors';
 import { addTextile, freeSpans, updateTextile } from './textile/inFrame';
 import { faces } from './faces';
+import { wallTextiles } from './textile/mounts';
 
 const kf = (v: Variant) => calc(v, RULES, DEFAULT_CATALOG).keyFigures;
 const ctx = placeContext(RULES, DEFAULT_CATALOG);
@@ -146,22 +147,22 @@ describe('textile and furniture', () => {
     const v = r2();
     // The back wall right of the room: 2 .. 6. Click places a filling textile.
     const t = addTextile({ ...v, textiles: [] }, RULES, 'side-back', 1, 4)!;
-    expect(t.v.textiles[0]).toMatchObject({ from: 2, width: 4, fit: true });
+    expect(wallTextiles(t.v)[0]).toMatchObject({ from: 2, width: 4, fit: true });
     const bigger = fitDecor(resizeRoom(t.v, 'bk', RECT_SIDE.right, 1), RULES);
-    expect(bigger.textiles[0]).toMatchObject({ from: 3, width: 3 });
+    expect(wallTextiles(bigger)[0]).toMatchObject({ from: 3, width: 3 });
     const smaller = fitDecor(resizeRoom(bigger, 'bk', RECT_SIDE.right, -2), RULES);
-    expect(smaller.textiles[0]).toMatchObject({ from: 1, width: 5 });
+    expect(wallTextiles(smaller)[0]).toMatchObject({ from: 1, width: 5 });
   });
   it('a textile sized by hand keeps its width while it fits, and stops at other frames', () => {
     const v = r2();
     let t = addTextile({ ...v, textiles: [] }, RULES, 'side-back', 1, 4)!.v;
     t = updateTextile(t, RULES, 't1', { width: 2 });
-    expect(t.textiles[0].fit).toBeUndefined();
+    expect(wallTextiles(t)[0].fit).toBeUndefined();
     const moved = fitDecor(moveRoom(t, 'bk', 0, 1), RULES);
-    expect(moved.textiles[0]).toMatchObject({ from: 2, width: 2 });
+    expect(wallTextiles(moved)[0]).toMatchObject({ from: 2, width: 2 });
     // A second filling frame next to it stops at the first one
     const b = addTextile(moved, RULES, 'side-back', 1, 5)!;
-    expect(b.v.textiles[1]).toMatchObject({ from: 4, width: 2 });
+    expect(wallTextiles(b.v)[1]).toMatchObject({ from: 4, width: 2 });
   });
   it('the inside of a room can be profiled; the outside is the default face', () => {
     const v = r2();
@@ -189,16 +190,16 @@ describe('textile and furniture', () => {
 describe('fixed-width frames', () => {
   it('pushed by a room, a frame keeps to the side outside the room', () => {
     const v = r2();
-    const fixed = { ...v, textiles: v.textiles.map((t) => ({ ...t, fit: undefined })) };
+    const fixed = { ...v, textiles: wallTextiles(v).map((t) => ({ ...t, fit: undefined })) };
     const moved = fitDecor(moveRoom(fixed, 'bk', 2, 0), RULES);
-    expect(moved.textiles[0]).toMatchObject({ from: 4, width: 2 });
+    expect(wallTextiles(moved)[0]).toMatchObject({ from: 4, width: 2 });
   });
 });
 
 describe('filling frames and rooms', () => {
   it('a room growing over half a filling frame leaves it on the outside', () => {
     const v = fitDecor(resizeRoom(r2(), 'bk', RECT_SIDE.right, 2), RULES);
-    expect(v.textiles[0]).toMatchObject({ from: 4, width: 2 });
+    expect(wallTextiles(v)[0]).toMatchObject({ from: 4, width: 2 });
   });
 });
 

@@ -14,6 +14,7 @@ import { addTextile } from '../textile/inFrame';
 import type { Point, Variant } from '../types';
 import { createVariant } from '../variant';
 import { builtModules } from '../walls';
+import { wallTextiles } from '../textile/mounts';
 
 /** Row stand 6 × 3: back wall from (0,0) to (6,0), its face toward the stand is 1; side walls in both corners. A door
  *  in each side wall's corner module closes the corners: the back wall's felts 0 and 5 cannot take a shelf (the side
@@ -63,7 +64,7 @@ describe('where a shelf may stand (Byggeregel H6)', () => {
   it('not where a textile wall covers the felt or holds the post', () => {
     // The textile fills the whole back wall: every felt is covered
     const v = addTextile(row(), RULES, 'side-back', 1, 2)!.v;
-    expect(v.textiles[0]).toMatchObject({ from: 0, width: 6 });
+    expect(wallTextiles(v)[0]).toMatchObject({ from: 0, width: 6 });
     for (let m = 0; m < 6; m++) expect(shelfBlocked(v, 'side-back', m, 1)).toMatch(/Tekstil|01-skinne/);
   });
 });

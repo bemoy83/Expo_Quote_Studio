@@ -184,8 +184,16 @@ export interface PodiumDecal {
   y: number;
 }
 
+/**
+ * A textile wall (Byggeregel X1, X13: one product however it is mounted): a 43TX frame with fabric, either mounted on a
+ * system wall (`mount: 'wall'`, InFrame) or standing free on foot plates (`mount: 'feet'`). Moving it on or off a wall
+ * changes only its mount; its id stays (domain/textile/mount.ts).
+ */
+export type Textile = TextileWall | FreeTextile;
+
 /** InFrame: fabric stretched in an aluminium frame, mounted against a wall (not in it). */
 export interface TextileWall {
+  mount: 'wall';
   id: string;
   wallId: string;
   /** Offset along the wall from `from`, metres. */
@@ -226,6 +234,7 @@ export interface TextileFace {
  * post (see textile/free.ts).
  */
 export interface FreeTextile {
+  mount: 'feet';
   id: string;
   from: Point;
   to: Point;
@@ -320,9 +329,8 @@ export interface Variant {
   openings: Opening[];
   floor: Floor;
   objects: PlacedObject[];
-  textiles: TextileWall[];
-  /** Frittstående tekstilvegger. */
-  freeTextiles: FreeTextile[];
+  /** Textile walls, on system walls and on foot plates alike (read them with onWall/onFeet, domain/textile/mounts.ts). */
+  textiles: Textile[];
   foils: Foil[];
   counted: CountedItem[];
   loose: LooseLine[];

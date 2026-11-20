@@ -1,10 +1,11 @@
 // Sketch file: JSON `{ format: 'standskisse', versjon, prosjekt, varianter, egneMotiver }`.
-// Only the current version opens; other versions are refused with an explanation.
+// The current version opens, and version 5 (textile walls in two lists, read into one: Byggeregel X13); older versions
+// are refused with an explanation.
 import type { Motif, Project, Variant } from '../domain/types';
 import { createProject, createVariant } from '../domain/variant';
 
 export const FORMAT = 'standskisse';
-export const VERSION = 5;
+export const VERSION = 6;
 
 export interface SketchFile {
   format: typeof FORMAT;
@@ -49,7 +50,7 @@ export function parse(text: string): ParseResult {
   if (v > VERSION) {
     return { ok: false, error: `Filen er laget i en nyere versjon (${v}) enn denne appen støtter (${VERSION}). Oppdater appen.` };
   }
-  if (v < VERSION) return { ok: false, error: `Filen er laget i en eldre versjon (${v}) som appen ikke lenger åpner.` };
+  if (v < VERSION - 1) return { ok: false, error: `Filen er laget i en eldre versjon (${v}) som appen ikke lenger åpner.` };
   const project = data.prosjekt;
   const variants = data.varianter;
   const motifs = data.egneMotiver ?? [];
@@ -59,12 +60,21 @@ export function parse(text: string): ParseResult {
   }
   if (!Array.isArray(motifs)) return { ok: false, error: 'Egne motiver er ugyldige.' };
   // Drawn takdrager and shelves are left out when there are none
-  const vs = (variants as Variant[]).map((x) => ({
+  const vs = (variants as Version5[]).map(({ freeTextiles, ...x }) => ({
     ...x,
+    textiles: v === VERSION ? x.textiles : fromVersion5(x.textiles, freeTextiles),
     innerBeams: Array.isArray(x.innerBeams) ? x.innerBeams : undefined,
     shelves: Array.isArray(x.shelves) ? x.shelves : undefined,
   }));
   return { ok: true, sketch: { project: project as unknown as Project, variants: vs, motifs: motifs as Motif[] } };
+}
+
+/** A variant as version 5 stored it: textile walls on system walls in `textiles`, free-standing ones in `freeTextiles`. */
+type Version5 = Variant & { freeTextiles?: object[] };
+
+/** Version 5's two lists of textile walls as one (Byggeregel X13). */
+function fromVersion5(onWall: object[], onFeet: object[] = []): Variant['textiles'] {
+  return [...onWall.map((t) => ({ mount: 'wall', ...t })), ...onFeet.map((t) => ({ mount: 'feet', ...t }))] as Variant['textiles'];
 }
 
 const isObject = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null && !Array.isArray(x);
@@ -72,7 +82,7 @@ const isObject = (x: unknown): x is Record<string, unknown> => typeof x === 'obj
 function isVariant(x: unknown): boolean {
   if (!isObject(x) || !isObject(x.stand) || !isObject(x.floor)) return false;
   const { width, depth } = x.stand;
-  const arrays = ['walls', 'rooms', 'openings', 'objects', 'textiles', 'freeTextiles', 'foils', 'counted', 'loose'];
+  const arrays = ['walls', 'rooms', 'openings', 'objects', 'textiles', 'foils', 'counted', 'loose'];
   return (
     typeof x.name === 'string' &&
     typeof width === 'number' &&

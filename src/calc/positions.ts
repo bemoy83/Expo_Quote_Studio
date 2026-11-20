@@ -11,6 +11,7 @@ import { doorKey, openingKey } from './lines/doors';
 import { podiumKey } from './lines/objects';
 import { stockOf } from '../domain/podiumStock';
 import type { CalcLine, CalcResult } from './types';
+import { freeTextiles, wallTextiles } from '../domain/textile/mounts';
 
 /** A drawn thing with a number: what it is, its id in the variant, and its article. */
 export interface Positioned {
@@ -55,8 +56,8 @@ export function positions(v: Variant, lines: CalcLine[], catalog: Catalog): Posi
   // A textile wall's article is its frame size: the first frame drawn for it (a run with corners can have several)
   const textileKey = new Map<string, string>();
   for (const l of lines) for (const id of l.drawn ?? []) if (!textileKey.has(id)) textileKey.set(id, keyOf(l));
-  for (const t of v.textiles) if (walls.has(t.wallId) && textileKey.has(t.id)) drawn.push({ kind: 'textile', id: t.id, key: textileKey.get(t.id)! });
-  for (const t of v.freeTextiles) if (textileKey.has(t.id)) drawn.push({ kind: 'freeTextile', id: t.id, key: textileKey.get(t.id)! });
+  for (const t of wallTextiles(v)) if (walls.has(t.wallId) && textileKey.has(t.id)) drawn.push({ kind: 'textile', id: t.id, key: textileKey.get(t.id)! });
+  for (const t of freeTextiles(v)) if (textileKey.has(t.id)) drawn.push({ kind: 'freeTextile', id: t.id, key: textileKey.get(t.id)! });
   const hidden = hiddenPlates(v);
   const stand = new Set(v.walls.filter(isStandWall).map((w) => w.id));
   const mods = builtModules(v);

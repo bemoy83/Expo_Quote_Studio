@@ -21,6 +21,7 @@ import { FinBtn, QBtn, Sep } from '../quick/parts'
 import type { Chosen, PlanSelection } from '../selection'
 import { faceName } from '../wallDrawer/face'
 import { Colours, LooseBtn, Motifs, type Content, type PillActions, type SecondFace } from './parts'
+import { wallTextiles } from '../../../domain/textile/mounts'
 
 type Of<K extends Chosen['kind']> = Extract<Chosen, { kind: K }>
 
@@ -30,7 +31,7 @@ export function textilePill(p: PillActions, c: Of<'textile'>, remove: () => void
   const { v, onEdit } = p
   const T = c.textile
   const filled = fillTextile(v, rules, T.id)
-  const fills = filled.textiles.find((x) => x.id === T.id)?.width === T.width
+  const fills = wallTextiles(filled).find((x) => x.id === T.id)?.width === T.width
   const motif = T.fill === 'print' || T.fill === undefined ? (T.motif ?? null) : undefined
   return {
     name: 'Tekstilvegg',

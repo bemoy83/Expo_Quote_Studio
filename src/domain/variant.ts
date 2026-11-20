@@ -19,7 +19,6 @@ export function createVariant(name: VariantName, stand: Stand): Variant {
     floor: { tiles: [], protection: false },
     objects: [],
     textiles: [],
-    freeTextiles: [],
     foils: [],
     counted: [],
     loose: [],

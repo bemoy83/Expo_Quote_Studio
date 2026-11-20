@@ -6,6 +6,7 @@ import { createVariant } from '../domain/variant';
 import { RECIPES } from '../foga/recipes';
 import { RULES } from '../rules/rules';
 import { bracePoints, freeFrames, splitRail, supportPoints } from './textile/free';
+import { freeTextiles } from '../domain/textile/mounts';
 
 const S = RECIPES.textileFrame.feet.support;
 const draw = (v: Variant, a: Point, b: Point) => {
@@ -110,7 +111,7 @@ describe('free-standing frame', () => {
   });
   it('a splice between held ends is a 604 in the channel, not a threaded 609', () => {
     const v = draw(island(), [1, 2], [7, 2]);
-    const id = v.freeTextiles[0].id;
+    const id = freeTextiles(v)[0].id;
     const [f] = freeFrames(v, RECIPES.textileFrame, RULES.textile.inFrame, 'Firma', new Map(), new Map([[id, { from: true, to: true }]]));
     expect(f.spliceCode).toBe('604');
     // Two 604 in each of the two rails
@@ -159,7 +160,7 @@ describe('free-standing frame', () => {
   });
   it('white and the customer’s own textile have no print file', () => {
     let v = draw(island(), [1, 2], [3, 2]);
-    v = { ...v, freeTextiles: [{ ...v.freeTextiles[0], a: { fill: 'white' }, b: { fill: 'reuse' } }] };
+    v = { ...v, textiles: [{ ...freeTextiles(v)[0], a: { fill: 'white' }, b: { fill: 'reuse' } }] };
     const [f] = frames(v);
     expect(f.faces.map((x) => [x.fill, x.fileName])).toEqual([
       ['white', null],

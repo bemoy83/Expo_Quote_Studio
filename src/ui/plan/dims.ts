@@ -11,6 +11,7 @@ import { chosenShelves, type PlanSelection } from './selection'
 import { shelvesOf } from '../../domain/shelves/model'
 import { sizePx, type PlanScale } from './planScale'
 import { PLAN_MARGIN } from './planStyle'
+import { freeTextiles, wallTextiles } from '../../domain/textile/mounts'
 
 const EPS = 1e-6
 
@@ -65,7 +66,7 @@ export function placementRow(v: Variant, s: Side): number[] {
   const L = sideLength(v.stand, s)
   const line = sideLine(v, s)
   const meets: number[] = []
-  const runs: { from: Point; to: Point }[] = [...v.walls.filter((w) => !isStandWall(w)), ...v.freeTextiles]
+  const runs: { from: Point; to: Point }[] = [...v.walls.filter((w) => !isStandWall(w)), ...freeTextiles(v)]
   for (const r of runs) {
     // Perpendicular to the side, with one end on it
     if (horizontal(r) === (line.axis === 'x')) continue
@@ -119,7 +120,7 @@ export interface Dims {
  */
 export function planDims(v: Variant, selection: PlanSelection, compact: boolean): Dims {
   // A selected textile wall on a wall face is measured on its own, not as the wall it hangs on (Bjørn 6.11.2026)
-  const mounted = selection.textileId ? v.textiles.find((t) => t.id === selection.textileId) : undefined
+  const mounted = selection.textileId ? wallTextiles(v).find((t) => t.id === selection.textileId) : undefined
   // So are selected shelves: the wall's own chain shows only when the wall itself is chosen (Bjørn 9.11.2026)
   const shelf = selection.shelfId ? shelvesOf(v).find((f) => f.id === selection.shelfId) : undefined
   const wall = !mounted && !shelf && selection.wallId ? v.walls.find((w) => w.id === selection.wallId) : undefined
@@ -136,7 +137,7 @@ export function planDims(v: Variant, selection: PlanSelection, compact: boolean)
     const mid = hz ? v.stand.depth / 2 : v.stand.width / 2
     inner = { axis: hz ? 'x' : 'y', at, dir: at < mid ? 1 : -1, ts: moduleChain(wall), clear: 'wall' }
   }
-  const free = selection.freeTextileId ? v.freeTextiles.find((t) => t.id === selection.freeTextileId) : undefined
+  const free = selection.freeTextileId ? freeTextiles(v).find((t) => t.id === selection.freeTextileId) : undefined
   if (free) {
     const hz = horizontal(free)
     const k = hz ? 0 : 1

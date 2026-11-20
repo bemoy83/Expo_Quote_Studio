@@ -15,8 +15,8 @@ import { freeTrims, placeFrames } from './placement';
 const CORNER: Stand = { width: 6, depth: 4, type: 'corner', cornerSide: 'right' };
 const SQUARE: Stand = { width: 4, depth: 4, type: 'corner', cornerSide: 'right' };
 const ROW: Stand = { width: 6, depth: 4, type: 'row' };
-const frame = (id: string, wallId: string, from: number, width: number): TextileWall => ({ id, wallId, from, width });
-const free = (id: string, from: Point, to: Point): FreeTextile => ({ id, from, to });
+const frame = (id: string, wallId: string, from: number, width: number): TextileWall => ({ mount: 'wall', id, wallId, from, width });
+const free = (id: string, from: Point, to: Point): FreeTextile => ({ mount: 'feet', id, from, to });
 const variant = (stand: Stand, x: Partial<Variant>): Variant => ({ ...createVariant('A', stand), ...x });
 const shifts = (v: Variant) => Object.fromEntries(placeFrames(v, RULES).map((f) => [f.t.id, Math.round(f.shift * 1000)]));
 
@@ -66,16 +66,16 @@ describe('frittstående mot ramme (X11)', () => {
   const frames = (v: Variant) => freeFrames(v, RECIPES.textileFrame, RULES.textile.inFrame, '', freeTrims(v, RULES, placeFrames(v, RULES)));
 
   it('stops at the frame’s face, 60 mm from the wall line, and is that much shorter', () => {
-    const v = variant(ROW, { freeTextiles: [run], textiles: [frame('t1', 'side-back', 2, 2)] });
+    const v = variant(ROW, { textiles: [frame('t1', 'side-back', 2, 2), run] });
     const [f] = frames(v);
     expect([f.length, f.start]).toEqual([1940, 60]);
   });
 
   it('without a frame there it runs to the wall as before', () => {
-    const [f] = frames(variant(ROW, { freeTextiles: [run] }));
+    const [f] = frames(variant(ROW, { textiles: [run] }));
     expect([f.length, f.start]).toEqual([2000, undefined]);
     // A frame on the other face of the wall is not in its way
-    const [g] = frames(variant(ROW, { freeTextiles: [run], textiles: [{ ...frame('t1', 'side-back', 2, 2), side: -1 }] }));
+    const [g] = frames(variant(ROW, { textiles: [{ ...frame('t1', 'side-back', 2, 2), side: -1 }, run] }));
     expect(g.length).toBe(2000);
   });
 });

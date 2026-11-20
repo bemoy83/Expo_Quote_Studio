@@ -15,6 +15,7 @@ import { catalog, rules } from '../../env'
 import type { Layer } from '../../tools'
 import { linePx, sizePx, usePlanScale, type PlanScale } from '../planScale'
 import { printBand, printOffset, textileOffset, textileWidth, wallWidth } from '../planStyle'
+import { freeTextiles, wallTextiles } from '../../../domain/textile/mounts'
 
 /** Chip size and its gap to what it marks, screen px. */
 const CHIP = 13
@@ -67,14 +68,14 @@ function chips(v: Variant, res: CalcResult, sc: PlanScale, textileLabels: boolea
     const layer = LAYER[i.kind]
     switch (i.kind) {
       case 'textile': {
-        const t = v.textiles.find((x) => x.id === i.id)!
+        const t = wallTextiles(v).find((x) => x.id === i.id)!
         const at = faceAt(t.wallId, sideOf(v, t), t.from + t.width / 2, textOff + tw / 2 + half)
         const label = textileLabels ? frameLabel.get(t.id) : String(i.pos)
         if (at && label) out.push({ label, at, layer })
         break
       }
       case 'freeTextile': {
-        const t = v.freeTextiles.find((x) => x.id === i.id)!
+        const t = freeTextiles(v).find((x) => x.id === i.id)!
         // At the middle of a face, like a textile wall's chip beside its wall face
         const beside = (face: FaceKey): Point => {
           const [nx, ny] = runNormal(t, face)

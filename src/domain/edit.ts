@@ -11,6 +11,7 @@ import { replaceWalls } from './replaceWalls';
 import { alone, groupOf, moveGroupNear } from './joints';
 import { blocked, runLength } from './textile/free';
 import { RULES, type Rules } from '../rules/rules';
+import { freeTextiles, wallTextiles } from './textile/mounts';
 
 /**
  * Draw wall modules from a to b. Edges that already have a wall are left as they are. Drawn on a closed side of the
@@ -202,14 +203,14 @@ export function slideWall(v: Variant, wallId: string, delta: number, along = 0, 
     others.push({ ...o, from, to });
   }
   // Textile walls ending on it across grow or shrink with it the same way (M3)
-  const freeTextiles = v.freeTextiles.map((t) => {
+  const runs = freeTextiles(v).map((t) => {
     if ((t.from[1] === t.to[1]) === horizontal) return t;
     return { ...t, from: onIt(t.from) ? shift(t.from) : t.from, to: onIt(t.to) ? shift(t.to) : t.to };
   });
   const keep = (id: string) => id === w.id;
   const carried = {
     openings: v.openings.filter((o) => keep(o.wallId)),
-    textiles: v.textiles.filter((t) => keep(t.wallId)),
+    textiles: wallTextiles(v).filter((t) => keep(t.wallId)),
     foils: v.foils.filter((f) => keep(f.wallId)),
     shelves: v.shelves?.filter((f) => keep(f.wallId)),
   };
@@ -217,7 +218,7 @@ export function slideWall(v: Variant, wallId: string, delta: number, along = 0, 
     {
       ...v,
       openings: v.openings.filter((o) => !keep(o.wallId)),
-      textiles: v.textiles.filter((t) => !keep(t.wallId)),
+      textiles: wallTextiles(v).filter((t) => !keep(t.wallId)),
       foils: v.foils.filter((f) => !keep(f.wallId)),
       ...(v.shelves ? { shelves: v.shelves.filter((f) => !keep(f.wallId)) } : {}),
     },
@@ -225,18 +226,17 @@ export function slideWall(v: Variant, wallId: string, delta: number, along = 0, 
   );
   const next: Variant = {
     ...rest,
-    freeTextiles,
     // Moved as a whole, it keeps where its doors split it (Byggeregel D8)
     walls: w.breaks ? rest.walls.map((x) => (x.id === w.id ? { ...x, breaks: w.breaks } : x)) : rest.walls,
     openings: [...rest.openings, ...carried.openings],
-    textiles: [...rest.textiles, ...carried.textiles],
+    textiles: [...rest.textiles, ...carried.textiles, ...runs],
     foils: [...rest.foils, ...carried.foils],
     ...(v.shelves ? { shelves: [...(rest.shelves ?? []), ...(carried.shelves ?? [])] } : {}),
   };
   // Plates coloured one by one go with it (plateDecor.ts carryDecor, after the edit). A textile wall it would cross,
   // or one that would get too short, stops it.
-  const stands = next.freeTextiles.every(
-    (t) => runLength(t) >= rules.textile.freeMin - 1e-6 && !blocked(next, rules, t, next.freeTextiles.filter((o) => o.id !== t.id)),
+  const stands = freeTextiles(next).every(
+    (t) => runLength(t) >= rules.textile.freeMin - 1e-6 && !blocked(next, rules, t, freeTextiles(next).filter((o) => o.id !== t.id)),
   );
   return stands ? next : v;
 }

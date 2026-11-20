@@ -6,6 +6,7 @@ import { freeTrims, placeFrames } from './placement';
 import { framePiece, type FramePiece } from './inFrame';
 import { cornerPosts, freeFrames, type FreeFrame, type HeldEnds } from './free';
 import { fullHeight, partsLm, printFileName } from './common';
+import { freeTextiles, wallTextiles } from '../../domain/textile/mounts';
 
 export interface ProductionPiece extends FramePiece {
   pos: string;
@@ -52,7 +53,7 @@ export function production(v: Variant, rules: Rules, customer: string): Producti
   const pieces: ProductionPiece[] = [];
   const placed = placeFrames(v, rules);
   const shiftOf = new Map(placed.map((f) => [f.t.id, f.shift]));
-  v.textiles.forEach((t) => {
+  wallTextiles(v).forEach((t) => {
     const w = walls.get(t.wallId);
     if (!w) return;
     const pos = `T${pieces.length + 1}`;
@@ -142,7 +143,7 @@ export function textileRows(P: Production): TextileRow[] {
 }
 
 /** A point on a wall line, ends included. */
-function onWall(w: Wall, p: readonly [number, number]): boolean {
+function onWallLine(w: Wall, p: readonly [number, number]): boolean {
   const [ax, ay] = w.from;
   const [bx, by] = w.to;
   const len = Math.hypot(bx - ax, by - ay);
@@ -155,9 +156,9 @@ function onWall(w: Wall, p: readonly [number, number]): boolean {
 /** Ends of free-standing runs that stand against a wall or a frame on it: a splice there has no room to be threaded. */
 function heldEnds(v: Variant, trims: ReadonlyMap<string, { from: number; to: number }>): HeldEnds {
   const out = new Map<string, { from: boolean; to: boolean }>();
-  for (const t of v.freeTextiles) {
+  for (const t of freeTextiles(v)) {
     const trim = trims.get(t.id);
-    const at = (p: readonly [number, number], cut = 0) => cut > 0 || v.walls.some((w) => onWall(w, p));
+    const at = (p: readonly [number, number], cut = 0) => cut > 0 || v.walls.some((w) => onWallLine(w, p));
     out.set(t.id, { from: at(t.from, trim?.from), to: at(t.to, trim?.to) });
   }
   return out;

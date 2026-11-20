@@ -11,6 +11,7 @@ import { printTextile, textileUnder } from './decor'
 import type { PlanHits } from './hits'
 import type { P } from './types'
 import type { TextileResult } from '../../../domain/textile/brush'
+import { freeTextiles, wallTextiles } from '../../../domain/textile/mounts'
 
 /** The textile laid, with the pen's motif on it (both faces of a free-standing one). */
 export function withPenMotif(r: TextileResult, motif: string | undefined): TextileResult {
@@ -37,9 +38,9 @@ export const textileRun = (v: Variant, a: Point, b: Point, at: P, motif: string 
 /** What the plan says once a textile wall is laid. */
 export function textileToast(r: Exclude<TextileResult, { error: string }>): string {
   if ('mounted' in r) {
-    const t = r.v.textiles.find((x) => x.id === r.mounted.id)!
+    const t = wallTextiles(r.v).find((x) => x.id === r.mounted.id)!
     return `Tekstilvegg ${fmt(t.width, 2)} m på systemveggen · Velg den for å justere`
   }
-  const t = r.v.freeTextiles.find((x) => x.id === r.free.id)!
+  const t = freeTextiles(r.v).find((x) => x.id === r.free.id)!
   return `Tekstilvegg ${fmt(runLength(t), 2)} m frittstående på fotplater · Velg den for trykk og tekstil`
 }

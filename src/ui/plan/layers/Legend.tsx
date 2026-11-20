@@ -12,6 +12,7 @@ import { beamBody, PLAN_MARGIN } from '../planStyle'
 import { DIM_NEAR, DIM_TOTAL, FRONT_NAME_DROP, sideNameOffset, totalSides } from '../dims'
 import { BeamStroke } from './BeamLayer'
 import { RasterPattern, TextileStroke } from './TextileLayer'
+import { freeTextiles, wallTextiles } from '../../../domain/textile/mounts'
 
 /** Gap from the aisle's edges, row height and type sizes, screen px. */
 const PAD = 12
@@ -46,7 +47,7 @@ function legendBlocks(v: Variant, res: CalcResult, doc: boolean): { keys: Row[];
     const hit = idx.byArtnr.get(a)
     keys.push({ kind: 'floor', colour: hit?.variant.color, text: `${productOf(a)?.name ?? a} ${hit?.variant.name.toLowerCase() ?? ''} · ${fmt(m2)} m²` })
   }
-  const textiles = v.textiles.length + v.freeTextiles.length
+  const textiles = wallTextiles(v).length + freeTextiles(v).length
   if (textiles) keys.push({ kind: 'textile', text: `Tekstilvegg · ${textiles} stk` })
   if (v.foils.length) keys.push({ kind: 'print', text: 'Print og dekal' })
   if (k.beamLm > 1e-9) keys.push({ kind: 'beam', text: beamText(k) })

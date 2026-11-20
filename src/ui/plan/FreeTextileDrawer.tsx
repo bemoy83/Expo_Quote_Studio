@@ -19,6 +19,7 @@ import { planScale } from './planScale'
 import { useElementSize } from '../useElementSize'
 import { FreeElevationDims } from './wallDrawer/ElevationDims'
 import { frame } from './wallDrawer/elevationMeasure'
+import { freeTextiles } from '../../domain/textile/mounts'
 
 interface Props {
   v: Variant
@@ -37,7 +38,7 @@ export function FreeTextileDrawer(p: Props) {
   // Measured on a box the svg fills, as in the wall drawer (WallElevation): the dimension margins are screen px
   const box = useRef<HTMLDivElement>(null)
   const size = useElementSize(box, true)
-  const t = v.freeTextiles.find((x) => x.id === f.textileId)
+  const t = freeTextiles(v).find((x) => x.id === f.textileId)
   if (!t) return null
   const face: FaceKey = p.selection.freeFace ?? 'a'
   const F = f.faces[face === 'a' ? 0 : 1]

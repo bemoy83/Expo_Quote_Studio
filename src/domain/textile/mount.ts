@@ -11,6 +11,7 @@ import { groupOf, groupSize } from '../joints';
 import type { FreeTextile, Point, TextileFace, TextileWall, Variant, Wall } from '../types';
 import { addFreeTextile, removeFreeTextile, runNormal, type FaceKey } from './free';
 import { addTextileSpan, fullTextileHeight } from './inFrame';
+import { freeTextiles, wallTextiles } from './mounts';
 
 const EPS = 1e-6;
 
@@ -48,7 +49,7 @@ function wallUnder(v: Variant, run: Seg): { wall: Wall; t0: number; t1: number }
  * a wall's line (then it moves as M2 says), or when it is joined to other textile walls or walls (unless `loose`, M5).
  */
 export function mountDrag(v: Variant, rules: Rules, id: string, dx: number, dy: number, loose = false): { v: Variant; id: string } | { error: string } | null {
-  const t = v.freeTextiles.find((x) => x.id === id);
+  const t = freeTextiles(v).find((x) => x.id === id);
   if (!t) return null;
   if (!loose && groupSize(groupOf(v, { kind: 'textile', id })) > 1) return null;
   const g = rules.textile.grid;
@@ -64,22 +65,18 @@ export function mountDrag(v: Variant, rules: Rules, id: string, dx: number, dy: 
 
 /** The free-standing textile wall `id` mounted on face `s` of wall `w` over t0–t1, its faces kept (X13). */
 export function mountFree(v: Variant, rules: Rules, id: string, w: Wall, s: FaceSide, t0: number, t1: number): { v: Variant; id: string } | { error: string } {
-  const t = v.freeTextiles.find((x) => x.id === id);
+  const t = freeTextiles(v).find((x) => x.id === id);
   if (!t) return { error: 'Tekstilveggen finnes ikke' };
   const r = addTextileSpan(removeFreeTextile(v, id), rules, w.id, s, t0, t1);
   if ('error' in r) return r;
   const key = outward(t, w, s);
   const out = t[key];
   const back = t[other(key)];
-  const textiles = r.v.textiles.map((x): TextileWall => {
-    if (x.id !== r.id) return x;
-    const m: TextileWall = { ...x };
-    if (out?.fill) m.fill = out.fill;
-    if (out?.motif) m.motif = out.motif;
-    if (hasFace(back)) m.back = back;
-    return m;
-  });
-  return { v: { ...r.v, textiles }, id: r.id };
+  const m: TextileWall = { ...wallTextiles(r.v).find((x) => x.id === r.id)!, id };
+  if (out?.fill) m.fill = out.fill;
+  if (out?.motif) m.motif = out.motif;
+  if (hasFace(back)) m.back = back;
+  return { v: { ...r.v, textiles: v.textiles.map((x) => (x.id === id ? m : x)) }, id };
 }
 
 /**
@@ -95,7 +92,7 @@ export function unmountDrag(
   dx: number,
   dy: number,
 ): { v: Variant; id: string; heightKept: boolean } | { error: string } | null {
-  const t = v.textiles.find((x) => x.id === id);
+  const t = wallTextiles(v).find((x) => x.id === id);
   const w = t && v.walls.find((x) => x.id === t.wallId);
   if (!t || !w) return null;
   const s = sideOf(v, t);
@@ -109,15 +106,18 @@ export function unmountDrag(
   const b = shift(pointAlong(w, t.from + t.width));
   const r = addFreeTextile({ ...v, textiles: v.textiles.filter((x) => x.id !== id) }, rules, a, b);
   if ('error' in r) return r;
+  // A new run keeps the id and place it had on the wall; one that joined a standing run in line is part of it (X13)
+  const fresh = !v.textiles.some((x) => x.id === r.id);
   // The run goes the wall's way, so face s of the wall is its face A when s = 1
-  const run = r.v.freeTextiles.find((x) => x.id === r.id)!;
+  const run = freeTextiles(r.v).find((x) => x.id === r.id)!;
   const key = outward(run, w, s);
   const out: TextileFace = { ...(t.fill && t.fill !== 'print' ? { fill: t.fill } : {}), ...(t.motif ? { motif: t.motif } : {}) };
-  const placed: FreeTextile = { ...run };
+  const placed: FreeTextile = { ...run, ...(fresh ? { id } : {}) };
   delete placed.a;
   delete placed.b;
   if (hasFace(out)) placed[key] = out;
   if (hasFace(t.back)) placed[other(key)] = t.back;
   const heightKept = !t.bottom && (t.height === undefined || Math.abs(t.height - fullTextileHeight(rules)) < EPS);
-  return { v: { ...r.v, freeTextiles: r.v.freeTextiles.map((x) => (x.id === r.id ? placed : x)) }, id: r.id, heightKept };
+  const textiles = fresh ? v.textiles.map((x) => (x.id === id ? placed : x)) : r.v.textiles.map((x) => (x.id === r.id ? placed : x));
+  return { v: { ...r.v, textiles }, id: placed.id, heightKept };
 }

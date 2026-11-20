@@ -8,6 +8,7 @@ import { fillFloor } from '../../domain/variant'
 import { builtModules } from '../../domain/walls'
 import { catalog, place, rules } from '../env'
 import { build, type Tag } from './build'
+import { wallTextiles } from '../../domain/textile/mounts'
 
 const meshes = (g: THREE.Object3D) => {
   const out: THREE.Object3D[] = []
@@ -59,9 +60,9 @@ describe('3D scene from the model', () => {
   it('a 43TX frame (four profiles, one textile out from the wall, a 90 per brace) per textile wall, and floor tiles are instanced per product, carpet tiles over a joint bed', () => {
     const textile = layer('textile')
     const braces = res.production.pieces.reduce((a, p) => a + (p.braces?.qty ?? 0), 0)
-    expect(textile).toHaveLength(5 * v.textiles.length + braces)
+    expect(textile).toHaveLength(5 * wallTextiles(v).length + braces)
     expect(textile.filter((o) => (o as THREE.Mesh).geometry?.name === 'foga-90')).toHaveLength(braces)
-    expect(textile.filter((o) => (o as THREE.Mesh).geometry.type === 'PlaneGeometry')).toHaveLength(v.textiles.length)
+    expect(textile.filter((o) => (o as THREE.Mesh).geometry.type === 'PlaneGeometry')).toHaveLength(wallTextiles(v).length)
     const inst = layer('floor').filter((o) => (o as THREE.InstancedMesh).isInstancedMesh) as THREE.InstancedMesh[]
     // Carpet tiles: the tiles over a bed in the joint shade
     expect(inst).toHaveLength(2)

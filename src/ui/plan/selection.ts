@@ -13,6 +13,7 @@ import { shelfRow, shelvesOf } from '../../domain/shelves/model'
 import { removeFreeTextile, type FaceKey } from '../../domain/textile/free'
 import { removeTextile } from '../../domain/textile/inFrame'
 import type { FloorTile, Foil, FreeTextile, InnerBeam, Opening, PlacedObject, Room, Shelf, TextileWall, Variant, Wall } from '../../domain/types'
+import { freeTextiles, wallTextiles } from '../../domain/textile/mounts'
 
 export interface PlanSelection {
   wallId?: string
@@ -151,7 +152,7 @@ export function chosen(v: Variant, sel: PlanSelection): Chosen | null {
       return object ? { kind: 'object', object } : null
     }
     case 'free': {
-      const textile = v.freeTextiles.find((x) => x.id === k.id)
+      const textile = freeTextiles(v).find((x) => x.id === k.id)
       return textile ? { kind: 'free', textile, face: sel.freeFace ?? 'a' } : null
     }
   }
@@ -163,7 +164,7 @@ export function chosen(v: Variant, sel: PlanSelection): Chosen | null {
   const want = sel.side ?? (opening && doorFace(v, wall, opening))
   const side = want && fs.includes(want) ? want : fs[0]
   if (opening) return { kind: 'opening', wall, side, opening }
-  const textile = sel.textileId ? v.textiles.find((x) => x.id === sel.textileId && x.wallId === wall.id) : undefined
+  const textile = sel.textileId ? wallTextiles(v).find((x) => x.id === sel.textileId && x.wallId === wall.id) : undefined
   if (textile) return { kind: 'textile', wall, side, textile }
   const foil = sel.foilId ? v.foils.find((x) => x.id === sel.foilId && x.wallId === wall.id) : undefined
   if (foil) return { kind: 'foil', wall, side, foil }

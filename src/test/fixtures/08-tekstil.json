@@ -1,6 +1,6 @@
 {
   "format": "standskisse",
-  "versjon": 5,
+  "versjon": 6,
   "prosjekt": {
     "fields": [
       {
@@ -68,6 +68,7 @@
       "objects": [],
       "textiles": [
         {
+          "mount": "wall",
           "id": "t1",
           "wallId": "side-back",
           "side": 1,
@@ -76,16 +77,16 @@
           "motif": "hoved"
         },
         {
+          "mount": "wall",
           "id": "t2",
           "wallId": "side-left",
           "side": -1,
           "from": 1,
           "width": 2,
           "fill": "white"
-        }
-      ],
-      "freeTextiles": [
+        },
         {
+          "mount": "feet",
           "id": "ft1",
           "from": [
             3,
@@ -103,6 +104,7 @@
           }
         },
         {
+          "mount": "feet",
           "id": "ft2",
           "from": [
             3,

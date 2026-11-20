@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { r2, r3 } from '../calc/referenceStands';
 import { createProject, fillFloor } from '../domain/variant';
 import { newSketch, parse, serialize, VERSION, type Sketch } from './file';
+import { wallTextiles } from '../domain/textile/mounts';
 
 const sketch = (): Sketch => {
   const project = createProject();
@@ -28,9 +29,27 @@ describe('sketch file', () => {
   });
   it('refuses an older version with an explanation', () => {
     const f = JSON.parse(serialize(sketch()));
-    const res = parse(JSON.stringify({ ...f, versjon: VERSION - 1 }));
+    const res = parse(JSON.stringify({ ...f, versjon: VERSION - 2 }));
     expect(res.ok).toBe(false);
     if (!res.ok) expect(res.error).toMatch(/eldre versjon/);
+  });
+  it('opens version 5: textile walls on system walls and on foot plates read into one list (X13)', () => {
+    const f = JSON.parse(serialize(sketch()));
+    const [v] = f.varianter;
+    const old = {
+      ...f,
+      versjon: 5,
+      varianter: [{ ...v, textiles: [{ id: 't1', wallId: 'side-back', from: 1, width: 2 }], freeTextiles: [{ id: 'ft1', from: [1, 2], to: [3, 2] }] }],
+    };
+    const res = parse(JSON.stringify(old));
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    const x = res.sketch.variants[0];
+    expect(x.textiles.map((t) => [t.id, t.mount])).toEqual([
+      ['t1', 'wall'],
+      ['ft1', 'feet'],
+    ]);
+    expect('freeTextiles' in x).toBe(false);
   });
   it.each([
     ['not JSON', '{'],
@@ -47,7 +66,7 @@ describe('new sketch', () => {
     const s = newSketch();
     expect(s.variants.map((v) => v.name)).toEqual(['A']);
     const [v] = s.variants;
-    expect([v.objects, v.textiles, v.foils, v.rooms, v.openings]).toEqual([[], [], [], [], []]);
+    expect([v.objects, wallTextiles(v), v.foils, v.rooms, v.openings]).toEqual([[], [], [], [], []]);
     expect(v.floor.tiles).toEqual([]);
     expect(s.project.fields.every((f) => f.value === '')).toBe(true);
     expect(s.motifs).toEqual([]);

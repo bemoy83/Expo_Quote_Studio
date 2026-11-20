@@ -15,6 +15,7 @@ import { place, rules } from '../../env'
 import { usePlanScale } from '../planScale'
 import { beamBody, textileOffset, textileWidth, wallWidth } from '../planStyle'
 import { selectionKey, type PlanSelection } from '../selection'
+import { freeTextiles, wallTextiles } from '../../../domain/textile/mounts'
 
 /** How strong the mark is: a shade of ink over the thing's own width, it only says «this one». */
 const PICK_OPACITY = 0.28
@@ -39,13 +40,13 @@ export function PickLayer({ v, mods, picked, selection }: { v: Variant; mods: Bu
     if (picked.fill) return cells(fillTilesOf(v, picked.fill))
     const lane = picked.lane ? laneAt(v, picked.lane.i, picked.lane.j) : undefined
     if (lane) return cells([lane])
-    const t = picked.textileId ? v.textiles.find((x) => x.id === picked.textileId) : undefined
+    const t = picked.textileId ? wallTextiles(v).find((x) => x.id === picked.textileId) : undefined
     const tw = t && v.walls.find((w) => w.id === t.wallId)
     if (t && tw) {
       const [a, b] = faceSegment(tw, sideOf(v, t), t.from, t.from + t.width, textileOffset(sc))
       return band(a, b, textileWidth(sc))
     }
-    const ft = picked.freeTextileId ? v.freeTextiles.find((x) => x.id === picked.freeTextileId) : undefined
+    const ft = picked.freeTextileId ? freeTextiles(v).find((x) => x.id === picked.freeTextileId) : undefined
     if (ft) return band(ft.from, ft.to, textileWidth(sc))
     const sh = picked.shelfId ? shelvesOf(v).find((x) => x.id === picked.shelfId) : undefined
     const sb = sh && shelfBox(v, rules, sh)

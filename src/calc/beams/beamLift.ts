@@ -11,6 +11,7 @@ import type { BeamLayout, BeamSegment } from './beamSegments';
 import { onSegment } from './beamSegments';
 import { boxOf, overlaps, placement, type Box } from '../textile/placement';
 import { wallCrossings, type Ray } from './wallLines';
+import { freeTextiles, wallTextiles } from '../../domain/textile/mounts';
 
 export interface BeamLift {
   /** The lifted lengths (the same objects as in the layout). */
@@ -43,7 +44,7 @@ export function textileFootprints(v: Variant, rules: Rules): Box[] {
   const { frames, trims } = placement(v, rules);
   const out = frames.filter((f) => f.top > underside + EPS).map((f) => f.box);
   // Free-standing frames are full height
-  for (const t of v.freeTextiles) {
+  for (const t of freeTextiles(v)) {
     const [dx, dy] = runDirection(t);
     const trim = trims.get(t.id);
     // A 92LTX corner reaches a little past the run's end: let the box run half a frame depth further at a free end
@@ -88,7 +89,7 @@ function runsOf(segments: readonly BeamSegment[]): BeamSegment[][] {
  */
 export function liftBeams(v: Variant, rules: Rules, all: BeamLayout, wallPosts: ReadonlyMap<string, Point>, mods: readonly Module[]): BeamLift {
   if (!all.segments.length) return NO_LIFT;
-  const frames = v.textiles.length || v.freeTextiles.length ? textileFootprints(v, rules) : [];
+  const frames = wallTextiles(v).length || freeTextiles(v).length ? textileFootprints(v, rules) : [];
   const half = rules.wall.post / 2;
   const t = rules.beam.thickness / 2;
   // The beam between the posts' faces (cut centres − 40), its width across

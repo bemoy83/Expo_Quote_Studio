@@ -10,6 +10,7 @@ import { textileBox, textileOffset } from '../../domain/textile/inFrame';
 import type { Point, TextileWall, Variant, Wall } from '../../domain/types';
 import type { Rules } from '../../rules/rules';
 import { frameInset } from './inFrame';
+import { freeTextiles, wallTextiles } from '../../domain/textile/mounts';
 
 export interface Box {
   x0: number;
@@ -77,7 +78,7 @@ export function placeFrames(v: Variant, rules: Rules): PlacedFrame[] {
   const inset = frameInset(rules.textile.inFrame) / 1000;
   const depth = rules.textile.depth;
   const frames: PlacedFrame[] = [];
-  for (const t of v.textiles) {
+  for (const t of wallTextiles(v)) {
     const w = v.walls.find((x) => x.id === t.wallId);
     if (!w) continue;
     const side = sideOf(v, t);
@@ -146,7 +147,7 @@ export function freeTrims(v: Variant, rules: Rules, frames: readonly PlacedFrame
     }
     return 0;
   };
-  for (const t of v.freeTextiles) {
+  for (const t of freeTextiles(v)) {
     const [dx, dy] = runDirection(t);
     const from = trimAt(t.from, [dx, dy]);
     const to = trimAt(t.to, [-dx, -dy]);

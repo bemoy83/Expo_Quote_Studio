@@ -12,6 +12,7 @@ import { snapTo } from '../snapGrid';
 import { builtModules } from '../walls';
 import { onSpan } from '../grid';
 import { movedEnd, type RunEnd } from '../grips';
+import { freeTextiles, withOnFeet } from './mounts';
 
 /** Face A is side 1 (left normal of from → to), face B side −1. */
 export type FaceKey = 'a' | 'b';
@@ -65,9 +66,9 @@ export interface CornerEnds {
 
 export function cornerEnds(v: Variant): Map<string, CornerEnds> {
   const out = new Map<string, CornerEnds>();
-  for (const t of v.freeTextiles) {
+  for (const t of freeTextiles(v)) {
     const ends: CornerEnds = {};
-    for (const o of v.freeTextiles) {
+    for (const o of freeTextiles(v)) {
       if (o.id === t.id) continue;
       const c = contact(t, o);
       if (c.kind !== 'point') continue;
@@ -110,8 +111,8 @@ export function blocked(v: Variant, rules: Rules, t: Pick<FreeTextile, 'from' | 
 export function addFreeTextile(v: Variant, rules: Rules, a: Point, b: Point): { v: Variant; id: string } | { error: string } {
   if (same(a, b)) return { error: 'Dra en strek for å tegne tekstilveggen' };
   if (Math.abs(a[0] - b[0]) > EPS && Math.abs(a[1] - b[1]) > EPS) return { error: 'Tekstilvegger tegnes rett, langs rutenettet' };
-  let run: FreeTextile = { id: nextId(v.freeTextiles.map((t) => t.id), 'ft'), from: a, to: b };
-  let rest = v.freeTextiles;
+  let run: FreeTextile = { mount: 'feet', id: nextId(v.textiles.map((t) => t.id), 'ft'), from: a, to: b };
+  let rest = freeTextiles(v);
   for (;;) {
     const join = rest.find((o) => contact(run, o).kind === 'line');
     if (!join) break;
@@ -127,19 +128,18 @@ export function addFreeTextile(v: Variant, rules: Rules, a: Point, b: Point): { 
   }
   const why = blocked(v, rules, run, rest);
   if (why) return { error: why };
-  const others = v.freeTextiles.filter((x) => rest.includes(x));
-  return { v: { ...v, freeTextiles: [...others, run] }, id: run.id };
+  return { v: { ...v, textiles: [...v.textiles.filter((x) => x.mount === 'wall' || rest.includes(x)), run] }, id: run.id };
 }
 
-export const removeFreeTextile = (v: Variant, id: string): Variant => ({ ...v, freeTextiles: v.freeTextiles.filter((t) => t.id !== id) });
+export const removeFreeTextile = (v: Variant, id: string): Variant => ({ ...v, textiles: v.textiles.filter((t) => t.id !== id) });
 
 /** Change one face: print, white or the customer's own textile, and the motif shown. The motif is kept when the face
  *  turns white or the customer's, so it comes back with print (Byggeregel V15, Bjørn 18.11.2026, as on a textile in a wall). */
 export function updateFace(v: Variant, id: string, face: FaceKey, patch: { fill?: TextileFace['fill']; motif?: string | null }): Variant {
   return {
     ...v,
-    freeTextiles: v.freeTextiles.map((t) => {
-      if (t.id !== id) return t;
+    textiles: v.textiles.map((t) => {
+      if (t.id !== id || t.mount !== 'feet') return t;
       const f: TextileFace = { ...t[face] };
       if (patch.fill !== undefined) {
         if (patch.fill === 'print') delete f.fill;
@@ -160,7 +160,7 @@ export function updateFace(v: Variant, id: string, face: FaceKey, patch: { fill?
 export function freeTextileAt(v: Variant, q: { x: number; y: number }, within = 0.2): FreeTextile | undefined {
   let best: FreeTextile | undefined;
   let bd = within;
-  for (const t of v.freeTextiles) {
+  for (const t of freeTextiles(v)) {
     const s = span(t);
     const along = s.h ? q.x : q.y;
     const across = s.h ? q.y : q.x;
@@ -181,7 +181,7 @@ export function faceOfPoint(t: FreeTextile, q: { x: number; y: number }): FaceKe
 
 /** Move a run by (dx, dy), snapped to the grid. Null when it cannot stand there; corners it shared come apart. */
 export function moveFreeTextile(v: Variant, rules: Rules, id: string, dx: number, dy: number): Variant | null {
-  const t = v.freeTextiles.find((x) => x.id === id);
+  const t = freeTextiles(v).find((x) => x.id === id);
   if (!t) return null;
   const g = rules.textile.grid;
   const ox = snapTo(dx, g);
@@ -189,29 +189,29 @@ export function moveFreeTextile(v: Variant, rules: Rules, id: string, dx: number
   const run: FreeTextile = { ...t, from: [t.from[0] + ox, t.from[1] + oy], to: [t.to[0] + ox, t.to[1] + oy] };
   const inside = (p: Point) => p[0] >= -EPS && p[1] >= -EPS && p[0] <= v.stand.width + EPS && p[1] <= v.stand.depth + EPS;
   if (!inside(run.from) || !inside(run.to)) return null;
-  const others = v.freeTextiles.filter((x) => x.id !== id);
+  const others = freeTextiles(v).filter((x) => x.id !== id);
   if (blocked(v, rules, run, others)) return null;
-  return { ...v, freeTextiles: v.freeTextiles.map((x) => (x.id === id ? run : x)) };
+  return { ...v, textiles: v.textiles.map((x) => (x.id === id ? run : x)) };
 }
 
 /** Runs that no longer can stand where they are after a wall edit (a wall drawn through them) are taken away. */
 export function fitFreeTextiles(v: Variant, rules: Rules): Variant {
   const keep: FreeTextile[] = [];
-  for (const t of v.freeTextiles) if (!blocked(v, rules, t, keep)) keep.push(t);
-  return keep.length === v.freeTextiles.length ? v : { ...v, freeTextiles: keep };
+  for (const t of freeTextiles(v)) if (!blocked(v, rules, t, keep)) keep.push(t);
+  return keep.length === freeTextiles(v).length ? v : withOnFeet(v, keep);
 }
 
 /** Set a run's length on the grid, keeping its `from` end. Null when it cannot stand there. */
 export function resizeFreeTextile(v: Variant, rules: Rules, id: string, length: number): Variant | null {
-  const t = v.freeTextiles.find((x) => x.id === id);
+  const t = freeTextiles(v).find((x) => x.id === id);
   if (!t) return null;
   const L = Math.max(rules.textile.freeMin, snapTo(length, rules.textile.grid));
   const [dx, dy] = runDirection(t);
   const to: Point = [t.from[0] + dx * L, t.from[1] + dy * L];
   if (to[0] < -EPS || to[1] < -EPS || to[0] > v.stand.width + EPS || to[1] > v.stand.depth + EPS) return null;
   const run = { ...t, to };
-  if (blocked(v, rules, run, v.freeTextiles.filter((x) => x.id !== id))) return null;
-  return { ...v, freeTextiles: v.freeTextiles.map((x) => (x.id === id ? run : x)) };
+  if (blocked(v, rules, run, freeTextiles(v).filter((x) => x.id !== id))) return null;
+  return { ...v, textiles: v.textiles.map((x) => (x.id === id ? run : x)) };
 }
 
 /**
@@ -220,7 +220,7 @@ export function resizeFreeTextile(v: Variant, rules: Rules, id: string, length: 
  * when it cannot stand there.
  */
 export function rotateFreeTextile(v: Variant, rules: Rules, id: string): { v: Variant } | { error: string } {
-  const t = v.freeTextiles.find((x) => x.id === id);
+  const t = freeTextiles(v).find((x) => x.id === id);
   if (!t) return { error: 'Tekstilveggen finnes ikke' };
   const g = rules.textile.grid;
   const cx = (t.from[0] + t.to[0]) / 2;
@@ -240,29 +240,29 @@ export function rotateFreeTextile(v: Variant, rules: Rules, id: string): { v: Va
   const dx = lo(0) < 0 ? -lo(0) : hi(0) > v.stand.width ? v.stand.width - hi(0) : 0;
   const dy = lo(1) < 0 ? -lo(1) : hi(1) > v.stand.depth ? v.stand.depth - hi(1) : 0;
   const run: FreeTextile = { ...t, from: [from[0] + dx, from[1] + dy], to: [to[0] + dx, to[1] + dy] };
-  const why = blocked(v, rules, run, v.freeTextiles.filter((x) => x.id !== id));
+  const why = blocked(v, rules, run, freeTextiles(v).filter((x) => x.id !== id));
   if (why) return { error: why };
-  return { v: { ...v, freeTextiles: v.freeTextiles.map((x) => (x.id === id ? run : x)) } };
+  return { v: { ...v, textiles: v.textiles.map((x) => (x.id === id ? run : x)) } };
 }
 
 /** Byggeregel X12: the ends of a free-standing textile wall that have a grip: those that touch neither a wall nor another textile wall
  *  (Bjørn 14.11.2026: free ends first). */
 export function freeGripEnds(v: Variant, t: FreeTextile): RunEnd[] {
   const mods = builtModules(v);
-  const free = (p: Point) => !mods.some((m) => onSpan(m.a, m.b, p)) && !v.freeTextiles.some((o) => o.id !== t.id && onSpan(o.from, o.to, p));
+  const free = (p: Point) => !mods.some((m) => onSpan(m.a, m.b, p)) && !freeTextiles(v).some((o) => o.id !== t.id && onSpan(o.from, o.to, p));
   return (['from', 'to'] as const).filter((e) => free(t[e]));
 }
 
 /** The run `id` with its end `end` moved `d` m along it (out when d > 0), checked as when drawn; or why not. */
 export function stretchFreeTextile(v: Variant, rules: Rules, id: string, end: RunEnd, d: number): { v: Variant } | { error: string } {
-  const t = v.freeTextiles.find((x) => x.id === id);
+  const t = freeTextiles(v).find((x) => x.id === id);
   if (!t) return { error: 'Tekstilveggen finnes ikke' };
   if (!d) return { v };
   const run = { ...t, ...movedEnd(t, end, d) };
   const inside = (p: Point) => p[0] >= -EPS && p[1] >= -EPS && p[0] <= v.stand.width + EPS && p[1] <= v.stand.depth + EPS;
   if (!inside(run.from) || !inside(run.to)) return { error: 'Tekstilveggen må stå på standen' };
   if (d < 0 && runLength(t) + d < rules.textile.freeMin - EPS) return { error: `Tekstilveggen må være minst ${String(rules.textile.freeMin).replace('.', ',')} m` };
-  const why = blocked(v, rules, run, v.freeTextiles.filter((x) => x.id !== id));
+  const why = blocked(v, rules, run, freeTextiles(v).filter((x) => x.id !== id));
   if (why) return { error: why };
-  return { v: { ...v, freeTextiles: v.freeTextiles.map((x) => (x.id === id ? run : x)) } };
+  return { v: { ...v, textiles: v.textiles.map((x) => (x.id === id ? run : x)) } };
 }

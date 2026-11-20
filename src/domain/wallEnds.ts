@@ -8,6 +8,7 @@ import { replaceWalls } from './replaceWalls';
 import { movedEnd, type RunEnd } from './grips';
 import type { Point, Variant, Wall } from './types';
 import { builtModules, standWallKeys } from './walls';
+import { freeTextiles, wallTextiles } from './textile/mounts';
 
 const EPS = 1e-6;
 const same = (a: Point, b: Point) => Math.abs(a[0] - b[0]) < EPS && Math.abs(a[1] - b[1]) < EPS;
@@ -17,7 +18,7 @@ const same = (a: Point, b: Point) => Math.abs(a[0] - b[0]) < EPS && Math.abs(a[1
 export function wallGripEnds(v: Variant, w: Wall): RunEnd[] {
   if (!canMoveWall(w)) return [];
   const others = builtModules(v).filter((m) => m.wallId !== w.id);
-  const free = (p: Point) => !others.some((m) => onSpan(m.a, m.b, p)) && !v.freeTextiles.some((t) => onSpan(t.from, t.to, p));
+  const free = (p: Point) => !others.some((m) => onSpan(m.a, m.b, p)) && !freeTextiles(v).some((t) => onSpan(t.from, t.to, p));
   return (['from', 'to'] as const).filter((e) => free(w[e]));
 }
 
@@ -65,5 +66,5 @@ function keepsFelts(v: Variant, next: Variant, w: Wall, moved: Wall): boolean {
     if (before.length !== after.length) return false;
     if (!before.every((x, k) => sameModule(x.module, after[k].module))) return false;
   }
-  return on(v.textiles).length === on(next.textiles).length;
+  return on(wallTextiles(v)).length === on(wallTextiles(next)).length;
 }

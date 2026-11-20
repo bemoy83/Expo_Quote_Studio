@@ -13,6 +13,7 @@ import { createVariant } from './variant';
 import { builtModules } from './walls';
 import { addTextile, freeSpans, moveTextileBy, textileBox, updateTextile } from './textile/inFrame';
 import { faces } from './faces';
+import { wallTextiles } from './textile/mounts';
 
 /** A door in a stand wall: no longer allowed (see opensInside), but older sketches can hold one. */
 const oldDoor = (v: Variant, a: Point, b: Point): Variant => {
@@ -38,7 +39,7 @@ describe('textile walls', () => {
 
   it('a new textile fills the free part of the wall', () => {
     const { v, id } = ok(addTextile(row(), RULES, 'side-back', 1, 2));
-    expect(v.textiles.find((t) => t.id === id)).toMatchObject({ from: 0, width: 6, side: 1 });
+    expect(wallTextiles(v).find((t) => t.id === id)).toMatchObject({ from: 0, width: 6, side: 1 });
   });
 
   it('stops at openings and at walls meeting the face', () => {
@@ -60,7 +61,7 @@ describe('textile walls', () => {
     // A pointer over the first textile finds no free span there; the drawer button takes the nearest
     expect(addTextile(v, RULES, 'side-back', 1, 1)).toBeNull();
     const b = ok(addTextile(v, RULES, 'side-back', 1, 1, true));
-    expect(b.v.textiles[1]).toMatchObject({ from: 2, width: 4 });
+    expect(wallTextiles(b.v)[1]).toMatchObject({ from: 2, width: 4 });
     expect(addTextile(b.v, RULES, 'side-back', 1, 1, true)).toBeNull();
   });
 
@@ -74,47 +75,47 @@ describe('textile walls', () => {
   it('moves keep the width, resizes clip, all in 0,1 m steps with a minimum width', () => {
     let v = ok(addTextile(row(), RULES, 'side-back', 1, 1)).v;
     v = updateTextile(v, RULES, 't1', { width: 2.34 });
-    expect(v.textiles[0]).toMatchObject({ from: 0, width: 2.3 });
+    expect(wallTextiles(v)[0]).toMatchObject({ from: 0, width: 2.3 });
     v = updateTextile(v, RULES, 't1', { from: 5 }, 'move');
-    expect(v.textiles[0]).toMatchObject({ from: 3.7, width: 2.3 });
+    expect(wallTextiles(v)[0]).toMatchObject({ from: 3.7, width: 2.3 });
     v = updateTextile(v, RULES, 't1', { width: 9 });
-    expect(v.textiles[0]).toMatchObject({ from: 3.7, width: 2.3 });
+    expect(wallTextiles(v)[0]).toMatchObject({ from: 3.7, width: 2.3 });
     v = updateTextile(v, RULES, 't1', { width: 0.1 });
-    expect(v.textiles[0].width).toBe(0.5);
+    expect(wallTextiles(v)[0].width).toBe(0.5);
   });
 
   it('height and distance from the floor stay inside the wall height', () => {
     let v = ok(addTextile(row(), RULES, 'side-back', 1, 1)).v;
-    expect(textileBox(v.textiles[0], RULES)).toEqual({ bottom: 0, height: 2.54 });
+    expect(textileBox(wallTextiles(v)[0], RULES)).toEqual({ bottom: 0, height: 2.54 });
     v = updateTextile(v, RULES, 't1', { height: 1.5 });
     v = updateTextile(v, RULES, 't1', { bottom: 1.5 });
-    expect(textileBox(v.textiles[0], RULES)).toEqual({ bottom: 1.5, height: 1.04 });
+    expect(textileBox(wallTextiles(v)[0], RULES)).toEqual({ bottom: 1.5, height: 1.04 });
     v = updateTextile(v, RULES, 't1', { bottom: 0 });
     v = updateTextile(v, RULES, 't1', { height: 9 });
-    expect(v.textiles[0].height).toBeUndefined();
+    expect(wallTextiles(v)[0].height).toBeUndefined();
   });
 
   it('an opening put under a textile clips it, removing the wall removes it', () => {
     let v = ok(addTextile(row(), RULES, 'side-back', 1, 1)).v;
     v = fitDecor(oldDoor(v, [4, 0], [5, 0]), RULES);
-    expect(v.textiles[0]).toMatchObject({ from: 0, width: 4 });
+    expect(wallTextiles(v)[0]).toMatchObject({ from: 0, width: 4 });
     expect(fitDecor(v, RULES)).toBe(v);
     v = fitDecor({ ...v, walls: v.walls.filter((w) => w.id !== 'side-back') }, RULES);
-    expect(v.textiles).toHaveLength(0);
+    expect(wallTextiles(v)).toHaveLength(0);
   });
 
   it('keeps its world face when the wall is redrawn the other way', () => {
     let v = createVariant('A', { width: 6, depth: 4, type: 'row' });
     v = paintWalls(v, [3, 3], [3, 1]);
     const w = v.walls.find((x) => x.from[0] === 3)!;
-    v = { ...v, textiles: [{ id: 't1', wallId: w.id, from: 0, width: 2, side: 1 }] };
+    v = { ...v, textiles: [{ mount: 'wall', id: 't1', wallId: w.id, from: 0, width: 2, side: 1 }] };
     v = replaceWalls(v, [...v.walls.filter((x) => x.id !== w.id), { id: 'n', from: [3, 1], to: [3, 3] }]);
-    expect(v.textiles[0]).toMatchObject({ wallId: 'n', from: 0, side: -1 });
+    expect(wallTextiles(v)[0]).toMatchObject({ wallId: 'n', from: 0, side: -1 });
   });
 
   it('furniture collides with the frame only along its span and on its face', () => {
     let v = createVariant('A', { width: 6, depth: 4, type: 'row' });
-    v = { ...v, textiles: [{ id: 't1', wallId: 'side-back', from: 0, width: 2, side: 1 }] };
+    v = { ...v, textiles: [{ mount: 'wall', id: 't1', wallId: 'side-back', from: 0, width: 2, side: 1 }] };
     // A chair 3 cm from the back wall fits beside the 40 mm (43TX) frame, but not in front of it
     const d = ctx.footprint('5186')!.d;
     const at = (x: number): Variant => ({ ...v, objects: [{ id: 'i1', product: '5186', x, y: 0.03 + d / 2, rot: 0 }] });
@@ -132,7 +133,7 @@ describe('moving to the other face', () => {
     expect(v.foils[0].side).toBe(-1);
     v = ok(addTextile(v, RULES, inner.id, 1, 1)).v;
     v = updateTextile(v, RULES, 't1', { side: -1 });
-    expect(v.textiles[0].side).toBe(-1);
+    expect(wallTextiles(v)[0].side).toBe(-1);
     // The frame left face 1, so the foil can go back there
     expect(updateFoil(v, RULES, 'f1', { side: 1 }, 2)).not.toBe(v);
     let p = ok(addFoil(row(), RULES, 'side-back', 1, 1, 'logo', 2)).v;
@@ -192,7 +193,7 @@ describe('drag and drop on a wall (3D)', () => {
     v = updateTextile(v, RULES, 't1', { width: 2 });
     const a = ok(dropMotif(v, RULES, 'side-back', 1, 1.2, 'logo', 2));
     expect(a.textileId).toBe('t1');
-    expect(a.v.textiles[0].motif).toBe('logo');
+    expect(wallTextiles(a.v)[0].motif).toBe('logo');
     const b = ok(dropMotif(v, RULES, 'side-back', 1, 3.6, 'logo', 2, 1.2));
     expect(b.foilId).toBe('f1');
     expect(b.v.foils[0]).toMatchObject({ module: 3, side: 1, y: 1.2 });
@@ -209,7 +210,7 @@ describe('drag and drop on a wall (3D)', () => {
   it('dragging a textile keeps its width and stops at the free span', () => {
     let v = ok(addTextile(row(), RULES, 'side-back', 1, 1)).v;
     v = updateTextile(v, RULES, 't1', { width: 2, height: 1.5 });
-    const start = v.textiles[0];
+    const start = wallTextiles(v)[0];
     expect(moveTextileBy(v, RULES, start, 1.04, 0.5).textiles[0]).toMatchObject({ from: 1, width: 2, bottom: 0.5 });
     expect(moveTextileBy(v, RULES, start, 9, 9).textiles[0]).toMatchObject({ from: 4, width: 2, bottom: 1 });
   });

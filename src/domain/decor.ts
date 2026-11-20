@@ -9,6 +9,7 @@ import { nextId } from './ids';
 import { roomAt } from './rooms';
 import { freeSpans, fullTextileHeight, spanFor, textileAt, textileBox, textilesOn, updateTextile, type Span } from './textile/inFrame';
 import type { Foil, TextileWall, Variant, Wall } from './types';
+import { wallTextiles, withOnWall } from './textile/mounts';
 
 const EPS = 1e-6;
 const r1 = (n: number) => Math.round(n * 10) / 10;
@@ -161,12 +162,12 @@ export function foilAt(v: Variant, rules: Rules, wallId: string, s: FaceSide, t:
  * Returns the same variant when nothing changed.
  */
 export function fitDecor(v: Variant, rules: Rules, ratio: (motif: string | undefined) => number = () => 0): Variant {
-  if (!v.textiles.length && !v.foils.length) return v;
+  if (!wallTextiles(v).length && !v.foils.length) return v;
   let changed = false;
   const kept: TextileWall[] = [];
   const full = fullTextileHeight(rules);
   const min = rules.textile.minWidth;
-  v.textiles.forEach((t, ti) => {
+  wallTextiles(v).forEach((t, ti) => {
     const w = v.walls.find((x) => x.id === t.wallId);
     if (!w) {
       changed = true;
@@ -176,7 +177,7 @@ export function fitDecor(v: Variant, rules: Rules, ratio: (motif: string | undef
     const s0 = sideOf(v, t);
     const s = allowed.includes(s0) ? s0 : allowed[0];
     // Other frames on this face, where they are now (earlier ones already refitted)
-    const others = [...kept, ...v.textiles.slice(ti + 1)].filter((k) => k.wallId === t.wallId && sideOf(v, k) === s);
+    const others = [...kept, ...wallTextiles(v).slice(ti + 1)].filter((k) => k.wallId === t.wallId && sideOf(v, k) === s);
     const spans = freeSpans(v, rules, t.wallId, s, others);
     let from = t.from;
     let width = t.width;
@@ -218,7 +219,7 @@ export function fitDecor(v: Variant, rules: Rules, ratio: (motif: string | undef
     if (next !== t) changed = true;
     kept.push(next);
   });
-  const withTex = changed ? { ...v, textiles: kept } : v;
+  const withTex = changed ? withOnWall(v, kept) : v;
   const foils: Foil[] = [];
   for (const f of v.foils) {
     const w = v.walls.find((x) => x.id === f.wallId);
@@ -232,7 +233,7 @@ export function fitDecor(v: Variant, rules: Rules, ratio: (motif: string | undef
     if (!same) changed = true;
     foils.push(same ? f : fit);
   }
-  return changed ? { ...v, textiles: kept, foils } : v;
+  return changed ? { ...withOnWall(v, kept), foils } : v;
 }
 
 /** The span a frame overlaps most. On a tie it stays out of a room, so a frame pushed by a room keeps to its side. */

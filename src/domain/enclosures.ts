@@ -13,6 +13,7 @@ import { overlapsRoom, roomWalls, syncRooms } from './rooms';
 import type { Point, Room, Variant } from './types';
 import { type BuiltModule, builtModules, defaultSwing } from './walls';
 import { nextId } from './ids';
+import { wallTextiles } from './textile/mounts';
 
 export interface Enclosure {
   /** Cells `i,j` (back-left corner, counted in cells), sorted: the same area always has the same key. */
@@ -127,7 +128,7 @@ export function wallsToRoom(v: Variant, outline: Point[], label = 'Rom'): Varian
 
 /** A textile running past one of the room's corners is cut to the longer of its parts, so it lands on one wall. */
 function clipTextiles(v: Variant, outline: Point[]): Variant {
-  const textiles = v.textiles.map((t) => {
+  const textiles = wallTextiles(v).map((t) => {
     const w = v.walls.find((x) => x.id === t.wallId);
     if (!w) return t;
     const [dx, dy] = wallDirection(w);

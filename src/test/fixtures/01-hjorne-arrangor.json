@@ -1,6 +1,6 @@
 {
   "format": "standskisse",
-  "versjon": 5,
+  "versjon": 6,
   "prosjekt": {
     "fields": [
       {
@@ -266,7 +266,6 @@
       },
       "objects": [],
       "textiles": [],
-      "freeTextiles": [],
       "foils": [],
       "counted": [],
       "loose": [],

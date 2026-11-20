@@ -9,6 +9,7 @@ import { replaceWalls } from './replaceWalls';
 import { blocked, runLength } from './textile/free';
 import type { FreeTextile, Point, Variant, Wall } from './types';
 import { isStandWall, standWallKeys } from './walls';
+import { freeTextiles, wallTextiles, withOnFeet } from './textile/mounts';
 
 const EPS = 1e-6;
 
@@ -37,7 +38,7 @@ export function groupOf(v: Variant, start: Part): Group {
   const fixed = v.walls.filter((w) => !movable(w));
   const all: { part: Part; seg: Seg }[] = [
     ...walls.map((w) => ({ part: { kind: 'wall', id: w.id } as Part, seg: w as Seg })),
-    ...v.freeTextiles.map((t) => ({ part: { kind: 'textile', id: t.id } as Part, seg: t as Seg })),
+    ...freeTextiles(v).map((t) => ({ part: { kind: 'textile', id: t.id } as Part, seg: t as Seg })),
   ];
   const key = (p: Part) => `${p.kind}:${p.id}`;
   const first = all.find((x) => key(x.part) === key(start));
@@ -67,7 +68,7 @@ const inStand = (v: Variant, p: Point) => p[0] >= -EPS && p[1] >= -EPS && p[0] <
 
 /** True when every free-standing textile wall can stand where it is (none crossed by a wall that moved). */
 function textilesStand(v: Variant, rules: Rules): boolean {
-  return v.freeTextiles.every((t) => !blocked(v, rules, t, v.freeTextiles.filter((o) => o.id !== t.id)));
+  return freeTextiles(v).every((t) => !blocked(v, rules, t, freeTextiles(v).filter((o) => o.id !== t.id)));
 }
 
 /**
@@ -91,7 +92,7 @@ export function placeGroup(v: Variant, rules: Rules, g: Group, to: (p: Point) =>
   const ws = new Set(g.walls);
   const ts = new Set(g.textiles);
   const moved = v.walls.filter((w) => ws.has(w.id)).map((w) => ({ ...w, from: shift(w.from), to: shift(w.to) }));
-  const runs = v.freeTextiles.map((t) => (ts.has(t.id) ? { ...t, from: shift(t.from), to: shift(t.to) } : t));
+  const runs = freeTextiles(v).map((t) => (ts.has(t.id) ? { ...t, from: shift(t.from), to: shift(t.to) } : t));
   if (![...moved, ...runs.filter((t) => ts.has(t.id))].every((s) => inStand(v, s.from) && inStand(v, s.to))) return null;
   const locked = standWallKeys(v);
   if (moved.some((w) => wallModules(w).some((m) => locked.has(m.key)))) return null;
@@ -101,7 +102,7 @@ export function placeGroup(v: Variant, rules: Rules, g: Group, to: (p: Point) =>
     {
       ...v,
       openings: off(v.openings),
-      textiles: off(v.textiles),
+      textiles: off(wallTextiles(v)),
       foils: off(v.foils),
       ...(v.shelves ? { shelves: off(v.shelves) } : {}),
     },
@@ -112,10 +113,9 @@ export function placeGroup(v: Variant, rules: Rules, g: Group, to: (p: Point) =>
     ...rest,
     walls: rest.walls.map((w) => (breaks.has(w.id) ? { ...w, breaks: breaks.get(w.id) } : w)),
     openings: [...rest.openings, ...on(v.openings)],
-    textiles: [...rest.textiles, ...on(v.textiles)],
+    textiles: [...rest.textiles, ...on(wallTextiles(v)), ...runs],
     foils: [...rest.foils, ...on(v.foils)],
     ...(v.shelves ? { shelves: [...(rest.shelves ?? []), ...on(v.shelves)] } : {}),
-    freeTextiles: runs,
   };
   return textilesStand(next, rules) ? next : null;
 }
@@ -130,8 +130,8 @@ export const MAGNET = 0.3;
 export function magnet(v: Variant, g: Group, dx: number, dy: number): Point {
   const ws = new Set(g.walls);
   const ts = new Set(g.textiles);
-  const mine: Seg[] = [...v.walls.filter((w) => ws.has(w.id)), ...v.freeTextiles.filter((t) => ts.has(t.id))];
-  const others: Seg[] = [...v.walls.filter((w) => !ws.has(w.id)), ...v.freeTextiles.filter((t) => !ts.has(t.id))];
+  const mine: Seg[] = [...v.walls.filter((w) => ws.has(w.id)), ...freeTextiles(v).filter((t) => ts.has(t.id))];
+  const others: Seg[] = [...v.walls.filter((w) => !ws.has(w.id)), ...freeTextiles(v).filter((t) => !ts.has(t.id))];
   const clamp = (x: number, a: number, b: number) => Math.min(Math.max(x, Math.min(a, b)), Math.max(a, b));
   let best: Point | null = null;
   let bd = Infinity;
@@ -205,7 +205,7 @@ const samePoint = (p: Point, q: Point) => Math.abs(p[0] - q[0]) < EPS && Math.ab
  * grow or shrink, and an end against a wall stays on that wall. Null when it cannot stand there.
  */
 export function moveTextileGroup(v: Variant, rules: Rules, id: string, dx: number, dy: number, fine = false, loose = false): Variant | null {
-  const t = v.freeTextiles.find((x) => x.id === id);
+  const t = freeTextiles(v).find((x) => x.id === id);
   if (!t) return null;
   const g = loose ? alone({ kind: 'textile', id }) : groupOf(v, { kind: 'textile', id });
   const step = g.walls.length && !fine ? 1 : rules.textile.grid;
@@ -222,7 +222,7 @@ export function moveTextileGroup(v: Variant, rules: Rules, id: string, dx: numbe
  * and so does an arm dragged by a corner grip (M6). Null when it cannot stand there.
  */
 export function slideTextile(v: Variant, rules: Rules, id: string, ox: number, oy: number): Variant | null {
-  const t = v.freeTextiles.find((x) => x.id === id);
+  const t = freeTextiles(v).find((x) => x.id === id);
   if (!t) return null;
   if (horizontal(t) ? ox : oy) return null;
   if (!ox && !oy) return v;
@@ -235,7 +235,7 @@ export function slideTextile(v: Variant, rules: Rules, id: string, ox: number, o
     if (w && !onSpan(w.from, w.to, run[e])) return null;
   }
   // Corners at its ends grow or shrink with it
-  const runs = v.freeTextiles.map((o) => {
+  const runs = freeTextiles(v).map((o) => {
     if (o.id === id) return run;
     let next = o;
     for (const e of ['from', 'to'] as const) {
@@ -245,6 +245,6 @@ export function slideTextile(v: Variant, rules: Rules, id: string, ox: number, o
     return next;
   });
   if (runs.some((o) => runLength(o) < rules.textile.freeMin - EPS)) return null;
-  const next = { ...v, freeTextiles: runs };
+  const next = withOnFeet(v, runs);
   return textilesStand(next, rules) ? next : null;
 }

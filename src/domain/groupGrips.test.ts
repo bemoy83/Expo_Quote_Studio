@@ -7,6 +7,7 @@ import { groupOf } from './joints';
 import { addFreeTextile } from './textile/free';
 import type { Point, Variant } from './types';
 import { createVariant } from './variant';
+import { freeTextiles } from './textile/mounts';
 
 const row = () => createVariant('A', { width: 8, depth: 6, type: 'row' });
 const inner = (v: Variant) => v.walls.filter((w) => !w.id.startsWith('side'));
@@ -15,13 +16,13 @@ const free = (v: Variant, a: Point, b: Point) => {
   if ('error' in r) throw new Error(r.error);
   return r.v;
 };
-const runs = (v: Variant) => v.freeTextiles.map((t) => [t.from, t.to]);
+const runs = (v: Variant) => freeTextiles(v).map((t) => [t.from, t.to]);
 
 describe('corner grip (M6)', () => {
   it('a textile L has one corner; dragging it moves the corner and both arms grow or shrink', () => {
     let v = free(row(), [2, 2], [4, 2]);
     v = free(v, [4, 2], [4, 4]);
-    const g = groupOf(v, { kind: 'textile', id: v.freeTextiles[0].id });
+    const g = groupOf(v, { kind: 'textile', id: freeTextiles(v)[0].id });
     const [c] = cornerGrips(v, g);
     expect(c.at).toEqual([4, 2]);
     expect(runs(dragCorner(v, RULES, c, 1, -1)!)).toEqual([
@@ -51,11 +52,11 @@ describe('turn grip (M6)', () => {
   it('a group turns a quarter round the middle of its box, on the grid and inside the stand', () => {
     let v = free(row(), [2, 2], [4, 2]);
     v = free(v, [4, 2], [4, 3]);
-    const g = groupOf(v, { kind: 'textile', id: v.freeTextiles[0].id });
+    const g = groupOf(v, { kind: 'textile', id: freeTextiles(v)[0].id });
     const next = turnGroup(v, RULES, g, 1)!;
-    const b = groupBox(next, groupOf(next, { kind: 'textile', id: v.freeTextiles[0].id }));
+    const b = groupBox(next, groupOf(next, { kind: 'textile', id: freeTextiles(v)[0].id }));
     expect([b.x1 - b.x0, b.y1 - b.y0]).toEqual([1, 2]);
-    expect(groupOf(next, { kind: 'textile', id: v.freeTextiles[0].id }).textiles).toHaveLength(2);
+    expect(groupOf(next, { kind: 'textile', id: freeTextiles(v)[0].id }).textiles).toHaveLength(2);
     expect(turnGroup(v, RULES, g, 4)).toBe(v);
   });
 
