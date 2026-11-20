@@ -1,5 +1,8 @@
-// Velg on a free-standing textile wall: drag moves it with what it is joined to (Byggeregel M2), release selects it.
+// Velg on a free-standing textile wall: drag moves it with what it is joined to (Byggeregel M2), onto a system wall's
+// line mounts it there (X13); release selects it.
 import { moveTextileGroup } from '../../../domain/joints'
+import { mountDrag } from '../../../domain/textile/mount'
+import { sideOf } from '../../../domain/faces'
 import { rules } from '../../env'
 import type { DragHandlers } from './types'
 
@@ -8,10 +11,20 @@ export const freeMove: DragHandlers<'freeMove'> = {
     if (!d.moved && Math.hypot(q.x - d.p0.x, q.y - d.p0.y) < 0.15) return
     if (!d.moved) c.onCheckpoint()
     d.moved = true
+    // Onto a system wall's line: mounted on it (Byggeregel X13)
+    const m = mountDrag(d.v0, rules, d.id, q.x - d.p0.x, q.y - d.p0.y, d.loose)
+    if (m && !('error' in m)) {
+      d.mounted = m.id
+      c.onEdit(() => m.v, false)
+      return
+    }
+    d.mounted = undefined
     const next = moveTextileGroup(d.v0, rules, d.id, q.x - d.p0.x, q.y - d.p0.y, c.fine, d.loose)
     if (next) c.onEdit(() => next, false)
   },
   up(c, d) {
+    const t = d.mounted ? c.v.textiles.find((x) => x.id === d.mounted) : undefined
+    if (t) return c.onSelect({ wallId: t.wallId, side: sideOf(c.v, t), textileId: t.id })
     if (d.moved) c.onSelect(d.select)
     else c.clickSelect(d.select)
   },

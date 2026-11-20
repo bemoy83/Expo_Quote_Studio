@@ -203,6 +203,9 @@ export interface TextileWall {
   fit?: boolean;
   /** What the textile is. Omitted: printed. */
   fill?: TextileFill;
+  /** The face toward the wall, kept from when it stood free on foot plates, so it comes back when it is taken off the
+   *  wall again (Byggeregel X13). */
+  back?: TextileFace;
 }
 
 /** trykt · hvit uten grafikk · kundens egen duk i samme størrelse (bare montering) */

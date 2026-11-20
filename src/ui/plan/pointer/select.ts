@@ -65,6 +65,8 @@ export function startSelect(c: PointerCtx, q: P): Drag {
     const tx = h && !hits.onWallBand(q, m) && inFrontOf(w, h.s, q) ? textileAt(v, w.id, h.s, h.t) : undefined
     // A room's wall opens on its outside, so print does not land inside the room unnoticed (Bjørn 2.11.2026)
     const select: PlanSelection = doorSelect ?? (tx && h ? { wallId: w.id, side: h.s, textileId: tx.id } : { wallId: w.id, side: w.room ? OUTSIDE : h?.s })
+    // A textile wall on it: dragged off the wall or along it (Byggeregel X13)
+    if (tx && h) return { kind: 'textileOff', id: tx.id, p0: q, v0: v, moved: false, select }
     // A room's own wall resizes the room; an inner wall moves
     const room = w.room && v.rooms.find((r) => r.id === w.room!.id)
     if (room) return roomSide(c, room.id, w.room!.side, q, select)

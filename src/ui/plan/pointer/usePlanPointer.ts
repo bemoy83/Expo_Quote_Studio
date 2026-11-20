@@ -14,6 +14,7 @@ import { ratioOf } from './decor'
 import { erase, startErase, type Erasing } from './erase'
 import { floor, startFloor } from './floor'
 import { freeMove } from './freeMove'
+import { textileOff } from './textileOff'
 import { shelfMove } from './shelfMove'
 import { object } from './object'
 import { placeDrag, startPlace } from './place'
@@ -30,7 +31,7 @@ import { podiumLink, startPodiumLink } from './podiumLink'
 import type { Drag, DragHandlers, P, PointerCtx } from './types'
 import { wall } from './wall'
 
-const DRAGS: { [K in Drag['kind']]: DragHandlers<K> } = { stroke, run, plates, floor, carpetFill, click, object, wall, beam, room, podium, grip, podiumLink, freeMove, erase, shelf, shelfMove, place: placeDrag }
+const DRAGS: { [K in Drag['kind']]: DragHandlers<K> } = { stroke, run, plates, floor, carpetFill, click, object, wall, beam, room, podium, grip, podiumLink, freeMove, textileOff, erase, shelf, shelfMove, place: placeDrag }
 const handlersOf = (d: Drag) => DRAGS[d.kind] as DragHandlers<Drag['kind']>
 
 /** What the plan passes in: the context without the previews' setters and state, which the hook owns. */

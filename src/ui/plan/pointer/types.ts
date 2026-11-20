@@ -57,7 +57,9 @@ export type Drag =
   | { kind: 'grip'; on: GripOn; p0: P; moved: boolean; fine: boolean; select?: PlanSelection }
   /** A link of the chosen counter pressed (podiumLink.ts, K15): a click breaks a joint or links a counter against it. */
   | { kind: 'podiumLink'; id: string; link: PodiumLink; p0: P; moved: boolean }
-  | { kind: 'freeMove'; id: string; p0: P; v0: Variant; moved: boolean; select: PlanSelection; /** «Løsne» or Alt: alone, out of its group (M5). */ loose?: boolean }
+  | { kind: 'freeMove'; id: string; p0: P; v0: Variant; moved: boolean; select: PlanSelection; /** «Løsne» or Alt: alone, out of its group (M5). */ loose?: boolean; /** Mounted on a wall by this drag (X13): the textile's id there. */ mounted?: string }
+  /** A textile wall on a system wall dragged: off the wall onto foot plates, or along its face (X13). */
+  | { kind: 'textileOff'; id: string; p0: P; v0: Variant; moved: boolean; select: PlanSelection; freeId?: string; heightKept?: boolean }
   /** Door, decal or furniture pressed: shown until release, stored on release over the same target (place.ts). */
   /** `module`: the door's module, pressed; `door`: a door (not a curtain), turned by where the pointer is dragged. */
   | { kind: 'place'; what: 'opening' | 'decor' | 'object'; key: string; module?: Module; door?: boolean; /** A door or curtain off the wall's modules, in 250 (D8). */ fine?: boolean }
