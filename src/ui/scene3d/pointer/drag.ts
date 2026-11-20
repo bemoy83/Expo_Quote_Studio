@@ -25,6 +25,7 @@ import { findMotif } from '../../motifs'
 import { chosenShelves, type PlanSelection } from '../../plan/selection'
 import { clickSelection } from '../../plan/pointer/click'
 import type { Hit, SceneHits } from './hits'
+import { freeTextiles, wallTextiles } from '../../../domain/textile/mounts'
 
 /** What the 3D view hands the pointer: the model now, and how to change it. */
 export interface PointerProps {
@@ -85,7 +86,7 @@ export function startDrag(P: PointerProps, hits: SceneHits, hit: Hit | null, e: 
     const q = hits.onFloor(e, grip.y)
     if (q) return { kind: 'grip', on: grip.on, p0: [q.x, q.y], y: grip.y, v0: P.v, moved: false }
   }
-  const deco = hit?.textileId ? P.v.textiles.find((x) => x.id === hit.textileId) : hit?.foilId ? P.v.foils.find((x) => x.id === hit.foilId) : undefined
+  const deco = hit?.textileId ? wallTextiles(P.v).find((x) => x.id === hit.textileId) : hit?.foilId ? P.v.foils.find((x) => x.id === hit.foilId) : undefined
   const w = deco && P.v.walls.find((x) => x.id === deco.wallId)
   const sh = hit?.shelfId ? shelvesOf(P.v).find((x) => x.id === hit.shelfId) : undefined
   const sw = sh && P.v.walls.find((x) => x.id === sh.wallId)
@@ -238,14 +239,14 @@ export function endDrag(P0: PointerProps, hits: SceneHits, d: Drag | null, hit: 
     return
   }
   if (hit?.textileId || hit?.foilId) {
-    const deco = P.v.textiles.find((x) => x.id === hit.textileId) ?? P.v.foils.find((x) => x.id === hit.foilId)
+    const deco = wallTextiles(P.v).find((x) => x.id === hit.textileId) ?? P.v.foils.find((x) => x.id === hit.foilId)
     if (deco) P.onSelect({ wallId: deco.wallId, side: sideOf(P.v, deco), ...(hit.textileId ? { textileId: deco.id } : { foilId: deco.id }) })
     return
   }
   if (hit?.objectId) P.onSelect({ objectId: hit.objectId })
   else if (hit?.beamId) P.onSelect({ beamId: hit.beamId })
   else if (hit?.freeTextileId) {
-    const t = P.v.freeTextiles.find((x) => x.id === hit.freeTextileId)
+    const t = freeTextiles(P.v).find((x) => x.id === hit.freeTextileId)
     if (t) P.onSelect({ freeTextileId: t.id, freeFace: faceOfPoint(t, hits.toModel(hit.point)) })
   } else if (hit?.openingId) P.onSelect({ openingId: hit.openingId })
   else if (hit?.roomId) P.onSelect({ roomId: hit.roomId })

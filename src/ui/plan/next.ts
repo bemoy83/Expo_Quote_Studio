@@ -43,6 +43,7 @@ import { gripHint, gripWith, sameGrip, type GripDraw } from './grips'
 import { placeHolds, placeKey } from './pointer/place'
 import { paintPlates, plateAt, platesAlong } from './pointer/plates'
 import type { Drag, P } from './pointer/types'
+import { freeTextiles, wallTextiles } from '../../domain/textile/mounts'
 
 /** The symbol's width a hatched invalid target or a measure pill goes by. */
 export type Width = 'wall' | 'beam' | 'textile' | 'print'
@@ -315,12 +316,12 @@ const faceKey = (h: FaceHit) => `face:${h.w.id}:${h.s}:${Math.floor(h.t * 20)}`
 /** The pill of the textile a stroke or click lays: on a wall its width on the face, free-standing its frame length. */
 function textilePill(r: Exclude<TextileResult, { error: string }>): Pill {
   if ('mounted' in r) {
-    const t = r.v.textiles.find((x) => x.id === r.mounted.id)!
+    const t = wallTextiles(r.v).find((x) => x.id === r.mounted.id)!
     const w = r.v.walls.find((x) => x.id === t.wallId)!
     const [a, b] = faceSegment(w, sideOf(r.v, t), t.from, t.from + t.width, 0)
     return { a, b, width: 'textile', text: `${mm(t.width)} på vegg` }
   }
-  const t = r.v.freeTextiles.find((x) => x.id === r.free.id)!
+  const t = freeTextiles(r.v).find((x) => x.id === r.free.id)!
   const f = freeFrames(r.v, RECIPES.textileFrame, rules.textile.inFrame, '').find((x) => x.textileId === t.id)
   return { a: t.from, b: t.to, width: 'textile', text: mm(f ? f.length / 1000 : 0) }
 }

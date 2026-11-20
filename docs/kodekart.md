@@ -129,6 +129,7 @@ Tre filer med «support» i navnet, med hver sin jobb:
 
 Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 
+- Én liste `Variant.textiles` (`Textile` = `TextileWall` | `FreeTextile`, skilt på `mount: 'wall' | 'feet'`): les og skriv én montering med `wallTextiles`/`freeTextiles` og `withOnWall`/`withOnFeet` i `domain/textile/mounts.ts`. Av og på systemvegg (X13): `domain/textile/mount.ts`, samme id
 - InFrame på systemvegg: modell `TextileWall` · `domain/textile/inFrame.ts` (ledige spenn, legge til, endre, flytte)
 - Frittstående: modell `FreeTextile` · `domain/textile/free.ts`
 - Penselen for begge: `domain/textile/brush.ts`

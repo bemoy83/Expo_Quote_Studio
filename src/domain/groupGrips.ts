@@ -5,6 +5,7 @@ import type { Rules } from '../rules/rules';
 import { slideWall } from './edit';
 import { placeGroup, slideTextile, type Group, type Part } from './joints';
 import type { Point, Variant } from './types';
+import { freeTextiles } from './textile/mounts';
 
 const EPS = 1e-6;
 
@@ -12,7 +13,7 @@ type Seg = { from: Point; to: Point };
 
 /** Where a part stands, if it is there. */
 export function segOf(v: Variant, p: Part): Seg | undefined {
-  return p.kind === 'wall' ? v.walls.find((w) => w.id === p.id) : v.freeTextiles.find((t) => t.id === p.id);
+  return p.kind === 'wall' ? v.walls.find((w) => w.id === p.id) : freeTextiles(v).find((t) => t.id === p.id);
 }
 
 const horizontal = (s: Seg) => Math.abs(s.from[1] - s.to[1]) < EPS;

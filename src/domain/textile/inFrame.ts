@@ -10,6 +10,7 @@ import { moduleEnd, moduleStart, wallDirection, wallLength } from '../grid';
 import { nextId } from '../ids';
 import type { TextileFill, TextileWall, Variant, Wall } from '../types';
 import { builtModules } from '../walls';
+import { wallTextiles } from './mounts';
 
 const EPS = 1e-6;
 const r1 = (n: number) => Math.round(n * 10) / 10;
@@ -81,7 +82,7 @@ export function freeSpans(v: Variant, rules: Rules, wallId: string, s: FaceSide,
 }
 
 export function textilesOn(v: Variant, wallId: string, s: FaceSide, skipId?: string): TextileWall[] {
-  return v.textiles.filter((t) => t.wallId === wallId && t.id !== skipId && sideOf(v, t) === s);
+  return wallTextiles(v).filter((t) => t.wallId === wallId && t.id !== skipId && sideOf(v, t) === s);
 }
 
 /** The span that contains t, else the nearest one. */
@@ -107,7 +108,7 @@ export function addTextile(v: Variant, rules: Rules, wallId: string, s: FaceSide
   const sp = near ? spanFor(spans, at) : (spans.find((x) => at >= x[0] - 1e-6 && at <= x[1] + 1e-6) ?? null);
   if (!sp) return null;
   const id = nextId(v.textiles.map((t) => t.id), 't');
-  const t: TextileWall = { id, wallId, side: s, from: r1(sp[0]), width: r1(sp[1] - sp[0]), fit: true };
+  const t: TextileWall = { mount: 'wall', id, wallId, side: s, from: r1(sp[0]), width: r1(sp[1] - sp[0]), fit: true };
   return { v: { ...v, textiles: [...v.textiles, t] }, id };
 }
 
@@ -130,7 +131,7 @@ export function addTextileSpan(v: Variant, rules: Rules, wallId: string, s: Face
   if (width < rules.textile.minWidth - EPS) return { error: `Tekstilvegg på systemvegg må være minst ${String(rules.textile.minWidth).replace('.', ',')} m` };
   const fit = from <= best[0] + EPS && from + width >= best[1] - EPS;
   const id = nextId(v.textiles.map((t) => t.id), 't');
-  const t: TextileWall = { id, wallId, side: s, from, width, ...(fit ? { fit: true } : {}) };
+  const t: TextileWall = { mount: 'wall', id, wallId, side: s, from, width, ...(fit ? { fit: true } : {}) };
   return { v: { ...v, textiles: [...v.textiles, t] }, id };
 }
 
@@ -149,7 +150,7 @@ export interface TextilePatch {
  * 'size' keeps the start and clips the width. Height and bottom are kept inside the wall height.
  */
 export function updateTextile(v: Variant, rules: Rules, id: string, patch: TextilePatch, mode: 'move' | 'size' = 'size'): Variant {
-  const t = v.textiles.find((x) => x.id === id);
+  const t = wallTextiles(v).find((x) => x.id === id);
   if (!t) return v;
   const s = patch.side ?? sideOf(v, t);
   const w = v.walls.find((x) => x.id === t.wallId);
@@ -187,13 +188,13 @@ export function updateTextile(v: Variant, rules: Rules, id: string, patch: Texti
 
 /** Fill the free span the textile sits in, and keep filling it when walls or rooms change ("Fyll veggen"). */
 export function fillTextile(v: Variant, rules: Rules, id: string): Variant {
-  const t = v.textiles.find((x) => x.id === id);
+  const t = wallTextiles(v).find((x) => x.id === id);
   if (!t) return v;
   const s = sideOf(v, t);
   const sp = spanFor(freeSpans(v, rules, t.wallId, s, textilesOn(v, t.wallId, s, id)), t.from + t.width / 2);
   if (!sp) return v;
   const next = updateTextile(v, rules, id, { from: sp[0], width: sp[1] - sp[0] });
-  return { ...next, textiles: next.textiles.map((x) => (x.id === id ? { ...x, fit: true } : x)) };
+  return { ...next, textiles: next.textiles.map((x) => (x.id === id && x.mount === 'wall' ? { ...x, fit: true } : x)) };
 }
 
 function place(spans: Span[], from: number, width: number, min: number, mode: 'move' | 'size'): [number, number] | null {

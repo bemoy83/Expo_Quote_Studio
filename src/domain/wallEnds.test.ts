@@ -6,6 +6,7 @@ import { freeGripEnds, stretchFreeTextile } from './textile/free';
 import type { Variant } from './types';
 import { createVariant } from './variant';
 import { stretchWall, wallGripEnds } from './wallEnds';
+import { freeTextiles } from './textile/mounts';
 
 const row = () => createVariant('A', { width: 6, depth: 4, type: 'row' });
 const inner = (v: Variant) => v.walls.find((w) => !w.id.startsWith('side'))!;
@@ -53,21 +54,21 @@ describe('end grips on an inner wall (V13)', () => {
 describe('end grips on a free-standing textile wall (X12)', () => {
   const twoRuns = (): Variant => ({
     ...row(),
-    freeTextiles: [
-      { id: 'ft1', from: [2, 2], to: [4, 2] },
-      { id: 'ft2', from: [2, 2], to: [2, 3.5] },
+    textiles: [
+      { mount: 'feet', id: 'ft1', from: [2, 2], to: [4, 2] },
+      { mount: 'feet', id: 'ft2', from: [2, 2], to: [2, 3.5] },
     ],
   });
 
   it('has a grip only on an end that touches nothing', () => {
     const v = twoRuns();
-    expect(freeGripEnds(v, v.freeTextiles[0])).toEqual(['to']);
+    expect(freeGripEnds(v, freeTextiles(v)[0])).toEqual(['to']);
   });
 
   it('grows and shrinks as when drawn, and says why not', () => {
     const v = twoRuns();
     const r = stretchFreeTextile(v, RULES, 'ft1', 'to', 0.75);
-    expect('v' in r && r.v.freeTextiles[0].to).toEqual([4.75, 2]);
+    expect('v' in r && freeTextiles(r.v)[0].to).toEqual([4.75, 2]);
     expect(stretchFreeTextile(v, RULES, 'ft1', 'to', 3)).toEqual({ error: 'Tekstilveggen må stå på standen' });
     expect('error' in stretchFreeTextile(v, RULES, 'ft1', 'to', -2)).toBe(true);
   });

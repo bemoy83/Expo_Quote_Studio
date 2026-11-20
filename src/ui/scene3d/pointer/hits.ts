@@ -6,6 +6,7 @@ import { offsetAlong, wallDirection } from '../../../domain/grid'
 import type { Variant, Wall } from '../../../domain/types'
 import type { FaceTarget } from '../../dnd'
 import type { Tag } from '../build'
+import { wallTextiles } from '../../../domain/textile/mounts'
 
 /** A pickable mesh under the pointer, and where it was hit. */
 export type Hit = NonNullable<Tag['pick']> & { point: THREE.Vector3 }
@@ -55,7 +56,7 @@ export function sceneHits(renderer: THREE.WebGLRenderer, camera: THREE.Perspecti
     const w = hit?.wallId && V.walls.find((x) => x.id === hit.wallId)
     if (!hit || !w) return null
     const q = toModel(hit.point)
-    const deco = V.textiles.find((x) => x.id === hit.textileId) ?? V.foils.find((x) => x.id === hit.foilId)
+    const deco = wallTextiles(V).find((x) => x.id === hit.textileId) ?? V.foils.find((x) => x.id === hit.foilId)
     const t = offsetAlong(w, q)
     if (deco) return { wallId: w.id, s: sideOf(V, deco), t, y: hit.point.y, foilId: hit.foilId }
     const n = faceNormal(w, 1)

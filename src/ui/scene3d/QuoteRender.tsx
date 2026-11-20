@@ -14,6 +14,7 @@ import { HOME } from './camera'
 import { addLights, aimSun } from './lights'
 import { useElementSize } from '../useElementSize'
 import { newRenderer } from './view'
+import { freeTextiles, wallTextiles } from '../../domain/textile/mounts'
 
 /** Picture size in CSS px is the box's; drawn at twice that for print. */
 const SCALE = 2
@@ -90,12 +91,12 @@ function textileChips(v: Variant, res: CalcResult): { pos: number; p: Point }[] 
   const p = positionsOf(v, res, catalog)
   return p.items.flatMap((i) => {
     if (i.kind === 'textile') {
-      const t = v.textiles.find((x) => x.id === i.id)!
+      const t = wallTextiles(v).find((x) => x.id === i.id)!
       const w = v.walls.find((x) => x.id === t.wallId)
       return w ? [{ pos: i.pos, p: pointAlong(w, t.from + t.width / 2) }] : []
     }
     if (i.kind === 'freeTextile') {
-      const t = v.freeTextiles.find((x) => x.id === i.id)!
+      const t = freeTextiles(v).find((x) => x.id === i.id)!
       return [{ pos: i.pos, p: [(t.from[0] + t.to[0]) / 2, (t.from[1] + t.to[1]) / 2] as Point }]
     }
     return []

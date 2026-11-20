@@ -5,6 +5,7 @@ import { mountDrag } from '../../../domain/textile/mount'
 import { sideOf } from '../../../domain/faces'
 import { rules } from '../../env'
 import type { DragHandlers } from './types'
+import { wallTextiles } from '../../../domain/textile/mounts'
 
 export const freeMove: DragHandlers<'freeMove'> = {
   move(c, d, q) {
@@ -23,7 +24,7 @@ export const freeMove: DragHandlers<'freeMove'> = {
     if (next) c.onEdit(() => next, false)
   },
   up(c, d) {
-    const t = d.mounted ? c.v.textiles.find((x) => x.id === d.mounted) : undefined
+    const t = d.mounted ? wallTextiles(c.v).find((x) => x.id === d.mounted) : undefined
     if (t) return c.onSelect({ wallId: t.wallId, side: sideOf(c.v, t), textileId: t.id })
     if (d.moved) c.onSelect(d.select)
     else c.clickSelect(d.select)

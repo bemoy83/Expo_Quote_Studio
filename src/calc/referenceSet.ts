@@ -20,7 +20,7 @@ export interface ReferenceCase {
 const textile = (w: number): ReferenceCase => ({
   id: `tekstil-${w}`,
   name: `Frittstående tekstilvegg ${w} m`,
-  variant: () => ({ ...createVariant('A', { width: 8, depth: 6, type: 'island' }), freeTextiles: [{ id: 'f1', from: [1, 3], to: [1 + w, 3] }] }),
+  variant: () => ({ ...createVariant('A', { width: 8, depth: 6, type: 'island' }), textiles: [{ mount: 'feet', id: 'f1', from: [1, 3], to: [1 + w, 3] }] }),
 });
 
 export const REFERENCE_CASES: readonly ReferenceCase[] = [

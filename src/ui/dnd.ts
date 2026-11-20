@@ -9,6 +9,7 @@ import { fmt } from './format'
 import { rules } from './env'
 import { addTextile, freeSpans, fullTextileHeight, textileAt, textileBox } from '../domain/textile/inFrame'
 import { type FaceSide, wallFelt } from '../domain/faces'
+import { wallTextiles } from '../domain/textile/mounts'
 
 /** A textile frame (InFrame) or a motif from the graphics library. */
 export type DecorDrag = { kind: 'textile' } | { kind: 'motif'; motif: string }
@@ -99,7 +100,7 @@ export function applyDrop(v: Variant, d: DecorDrag, h: FaceTarget, ratio: (motif
     if (textileAt(v, h.wallId, h.s, h.t)) return { error: 'Det står allerede en tekstilvegg her' }
     const r = addTextile(v, rules, h.wallId, h.s, h.t)
     if (!r) return { error: 'Ingen ledig veggflate her' }
-    const t = r.v.textiles.find((x) => x.id === r.id)!
+    const t = wallTextiles(r.v).find((x) => x.id === r.id)!
     return { v: r.v, select: { wallId: h.wallId, side: h.s, textileId: r.id }, toast: `Tekstilvegg ${fmt(t.width)} m lagt til` }
   }
   if (h.foilId && v.foils.some((x) => x.id === h.foilId)) {

@@ -6,6 +6,7 @@ import { groupOf, joinsNew, moveTextileGroup } from './joints';
 import { addFreeTextile, cornerEnds } from './textile/free';
 import type { Point, Variant } from './types';
 import { createVariant } from './variant';
+import { freeTextiles } from './textile/mounts';
 
 const row = () => createVariant('A', { width: 8, depth: 6, type: 'row' });
 const inner = (v: Variant) => v.walls.filter((w) => !w.id.startsWith('side'));
@@ -14,7 +15,7 @@ const free = (v: Variant, a: Point, b: Point) => {
   if ('error' in r) throw new Error(r.error);
   return r.v;
 };
-const runs = (v: Variant) => v.freeTextiles.map((t) => [t.from, t.to]);
+const runs = (v: Variant) => freeTextiles(v).map((t) => [t.from, t.to]);
 
 describe('what is joined (M1)', () => {
   it('a corner, a T and a textile wall against a wall are one group; a wall against a stand wall anchors it', () => {
@@ -26,13 +27,13 @@ describe('what is joined (M1)', () => {
     expect(g.textiles).toHaveLength(1);
     expect(g.anchored).toBe(false);
     v = paintWalls(v, [2, 0], [2, 2]);
-    expect(groupOf(v, { kind: 'textile', id: v.freeTextiles[0].id }).anchored).toBe(true);
+    expect(groupOf(v, { kind: 'textile', id: freeTextiles(v)[0].id }).anchored).toBe(true);
   });
 
   it('parts apart are not joined', () => {
     let v = paintWalls(row(), [2, 2], [4, 2]);
     v = free(v, [5, 3], [7, 3]);
-    expect(groupOf(v, { kind: 'textile', id: v.freeTextiles[0].id })).toMatchObject({ walls: [], anchored: false });
+    expect(groupOf(v, { kind: 'textile', id: freeTextiles(v)[0].id })).toMatchObject({ walls: [], anchored: false });
   });
 });
 
@@ -40,7 +41,7 @@ describe('moving a group (M2)', () => {
   it('a textile corner moves as one and keeps its 92LTX', () => {
     let v = free(row(), [2, 2], [4, 2]);
     v = free(v, [4, 2], [4, 4]);
-    const id = v.freeTextiles[0].id;
+    const id = freeTextiles(v)[0].id;
     const moved = moveTextileGroup(v, RULES, id, 1, 0.5)!;
     expect(runs(moved)).toEqual([
       [[3, 2.5], [5, 2.5]],
@@ -57,22 +58,22 @@ describe('moving a group (M2)', () => {
     expect(inner(byWall)[0]).toMatchObject({ from: [3, 3], to: [3, 5] });
     expect(runs(byWall)).toEqual([[[3, 4], [5, 4]]]);
     // Dragged by the textile wall: whole metres, since a wall goes with it; 250 with «Fin»
-    const byTextile = moveTextileGroup(v, RULES, v.freeTextiles[0].id, 0.4, 0, false)!;
+    const byTextile = moveTextileGroup(v, RULES, freeTextiles(v)[0].id, 0.4, 0, false)!;
     expect(byTextile).toBe(v);
-    expect(inner(moveTextileGroup(v, RULES, v.freeTextiles[0].id, 0.6, 0, false)!)[0].from).toEqual([3, 2]);
-    expect(inner(moveTextileGroup(v, RULES, v.freeTextiles[0].id, 0.25, 0, true)!)[0].from).toEqual([2.25, 2]);
+    expect(inner(moveTextileGroup(v, RULES, freeTextiles(v)[0].id, 0.6, 0, false)!)[0].from).toEqual([3, 2]);
+    expect(inner(moveTextileGroup(v, RULES, freeTextiles(v)[0].id, 0.25, 0, true)!)[0].from).toEqual([2.25, 2]);
   });
 
   it('stops where a part would not stand: outside the stand or a wall through a textile wall', () => {
     let v = free(row(), [5, 2], [7, 2]);
     v = free(v, [7, 2], [7, 4]);
-    expect(moveTextileGroup(v, RULES, v.freeTextiles[0].id, 2, 0)).toBeNull();
+    expect(moveTextileGroup(v, RULES, freeTextiles(v)[0].id, 2, 0)).toBeNull();
     let w = paintWalls(row(), [2, 2], [2, 4]);
     w = paintWalls(w, [2, 4], [3, 4]);
     w = free(w, [4, 3], [6, 3]);
     expect(moveWall(w, inner(w)[0].id, 3, 0, RULES)).toBe(w);
     // Up against its end is fine: then they are joined
-    expect(groupOf(moveWall(w, inner(w)[0].id, 2, 0, RULES), { kind: 'textile', id: w.freeTextiles[0].id }).walls).toHaveLength(2);
+    expect(groupOf(moveWall(w, inner(w)[0].id, 2, 0, RULES), { kind: 'textile', id: freeTextiles(w)[0].id }).walls).toHaveLength(2);
   });
 });
 
@@ -100,7 +101,7 @@ describe('joined to a wall that stands still (M3)', () => {
     let v = paintWalls(row(), [2, 0], [2, 4]);
     v = free(v, [2, 2], [4, 2]);
     v = free(v, [4, 2], [4, 4]);
-    const id = v.freeTextiles[0].id;
+    const id = freeTextiles(v)[0].id;
     const next = moveTextileGroup(v, RULES, id, 3, 1)!;
     expect(runs(next)).toEqual([
       [[2, 3], [4, 3]],
@@ -115,7 +116,7 @@ describe('magnet and «Løsne» (M4, M5)', () => {
   it('an end within 300 mm snaps onto another part, its end before its line', () => {
     let v = free(row(), [2, 2], [4, 2]);
     v = free(v, [5, 3], [5, 5]);
-    const id = v.freeTextiles[0].id;
+    const id = freeTextiles(v)[0].id;
     // Dragged 0,75 right and 0,75 down: its end lands 250 short of the other's end and snaps onto it
     const moved = moveTextileGroup(v, RULES, id, 0.75, 0.75)!;
     expect(runs(moved)[0]).toEqual([[3, 3], [5, 3]]);
@@ -127,7 +128,7 @@ describe('magnet and «Løsne» (M4, M5)', () => {
   it('the plan says «Slipp for å koble» only when the drag joins it to a new part', () => {
     let v = free(row(), [2, 2], [4, 2]);
     v = free(v, [5, 3], [5, 5]);
-    const id = v.freeTextiles[0].id;
+    const id = freeTextiles(v)[0].id;
     expect(joinsNew(v, moveTextileGroup(v, RULES, id, 0.75, 0.75)!, { kind: 'textile', id })).toBe(true);
     expect(joinsNew(v, moveTextileGroup(v, RULES, id, -1, 2)!, { kind: 'textile', id })).toBe(false);
     // A corner moved as one joins nothing new
@@ -149,7 +150,7 @@ describe('magnet and «Løsne» (M4, M5)', () => {
   it('«Løsne» moves one part alone: the corner comes apart', () => {
     let v = free(row(), [2, 2], [4, 2]);
     v = free(v, [4, 2], [4, 4]);
-    const id = v.freeTextiles[0].id;
+    const id = freeTextiles(v)[0].id;
     const moved = moveTextileGroup(v, RULES, id, -1, 0, false, true)!;
     expect(runs(moved)).toEqual([
       [[1, 2], [3, 2]],

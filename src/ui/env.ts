@@ -17,6 +17,7 @@ import type { PlacedObject, Point, Variant } from '../domain/types'
 import { pricingFrom } from '../pricing/data'
 import { KEYS, loadCostBasis, loadJson, saveCostBasis, saveJson } from '../persistence/storage'
 import { ownInFrame, RULES, type InFrameParams, type Rules } from '../rules/rules'
+import { freeTextiles, wallTextiles } from '../domain/textile/mounts'
 
 const loadEdits = (): CatalogEdits => {
   const e = loadJson<CatalogEdits>(KEYS.catalog, NO_EDITS)
@@ -135,7 +136,7 @@ export const counterName = (o: Pick<PlacedObject, 'product' | 'sections'>) => ar
 type Built = { posts: readonly Point[]; plates: readonly PlanRect[] }
 const builtCache = new WeakMap<Variant['walls'], { keys: unknown[]; built: Built }>()
 function standsOn(v: Variant): Built {
-  const keys = [v.stand, v.innerBeams, v.noBeams, v.textiles, v.freeTextiles, v.openings, rules, catalog, pricing]
+  const keys = [v.stand, v.innerBeams, v.noBeams, wallTextiles(v), freeTextiles(v), v.openings, rules, catalog, pricing]
   const hit = builtCache.get(v.walls)
   if (hit && hit.keys.every((k, i) => k === keys[i])) return hit.built
   const c = calcContext({ ...v, objects: [] }, rules, catalog, DEFAULT_STAND_WALLS, pricing)

@@ -11,6 +11,7 @@ import { RULES } from '../rules/rules';
 import { calc, type CalcResult } from './calc';
 import { quoteLines } from './quoteLines';
 import { r1, r2, r3 } from './referenceStands';
+import { wallTextiles } from '../domain/textile/mounts';
 
 // The exhibitor pays every wall, stand walls too: the whole drawing is theirs. Organiser-paid stand walls below.
 const EXHIBITOR = { payer: 'utstiller', ral: '9010' } as const;
@@ -121,7 +122,7 @@ describe('R2 · corner stand 6 × 4, backroom 2 × 2, textile wall 4 m', () => {
   });
   it("the customer's own textile is only mounted", () => {
     const v = r2();
-    const res2 = run({ ...v, textiles: v.textiles.map((t) => ({ ...t, fill: 'reuse' as const })) });
+    const res2 = run({ ...v, textiles: wallTextiles(v).map((t) => ({ ...t, fill: 'reuse' as const })) });
     expect(qty(res2, S.textileFill.print)).toBe(0);
     expect(lines(res2).find((x) => x.artnr === S.textileFill.reuse)).toMatchObject({ qty: 10.1, price: Math.round(sumOf([[ITEM.textileEdge, EDGE]], 'price') / 10.1) });
     expect(res2.production.pieces[0]).toMatchObject({ fill: 'reuse', fileName: null });
@@ -494,7 +495,7 @@ describe('ordrekost', () => {
 describe('frittstående tekstilvegg mellom to vegger', () => {
   it('the splice has no room to be threaded: 604 in the channel', () => {
     const v = createVariant('A', { width: 8, depth: 3, type: 'row' });
-    const res = run({ ...v, freeTextiles: [{ id: 'f1', from: [0, 1.5], to: [8, 1.5] }] });
+    const res = run({ ...v, textiles: [{ mount: 'feet', id: 'f1', from: [0, 1.5], to: [8, 1.5] }] });
     const [f] = res.production.free;
     expect(f.spliceCode).toBe('604');
     const tx = res.bom.lines.filter((l) => l.group === 'prof.tekstil');
@@ -506,7 +507,7 @@ describe('frittstående tekstilvegg mellom to vegger', () => {
 
 describe('frittstående tekstilvegg', () => {
   const v = createVariant('A', { width: 10, depth: 8, type: 'island' });
-  const res = run({ ...v, freeTextiles: [{ id: 'f1', from: [1, 2], to: [7, 2], b: { fill: 'white' } }] });
+  const res = run({ ...v, textiles: [{ mount: 'feet', id: 'f1', from: [1, 2], to: [7, 2], b: { fill: 'white' } }] });
   it('the same frame as on a wall, per piece by size, on foot plates; textile per face', () => {
     const frame = lines(res).find((x) => x.artnr === S.textile)!;
     expect(frame).toMatchObject({ name: 'Tekstilramme, leie, 6000 × 2540 mm, på fotplater', qty: 1, unit: 'stk', strategy: 'sum' });

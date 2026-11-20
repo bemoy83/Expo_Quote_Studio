@@ -12,6 +12,7 @@ import { motifOn } from '../../profilePen'
 import { penOn } from '../../tools'
 import { ProductRow } from '../ProductRow'
 import type { RailProps } from '../Rail'
+import { freeTextiles, wallTextiles } from '../../../domain/textile/mounts'
 
 const FILL_SHORT = { print: 'trykk', white: 'hvit', reuse: 'kundens' } as const
 
@@ -25,7 +26,7 @@ export function ProfileSection({ v, res, brush, tool, pick, motifs, onUpload, on
     <>
       <div className="panel-sec eyebrow">Tekstilvegg</div>
       <ProductRow
-        on={v.textiles.length + v.freeTextiles.length > 0}
+        on={wallTextiles(v).length + freeTextiles(v).length > 0}
         pen={pen}
         thumb={<i className="tex-thumb" />}
         drag={decorSource({ kind: 'textile' })}
@@ -38,7 +39,7 @@ export function ProfileSection({ v, res, brush, tool, pick, motifs, onUpload, on
         }
         result={
           [
-            v.textiles.length ? `${v.textiles.length} på vegg · ${fmt(k.textileM2)} m²` : '',
+            wallTextiles(v).length ? `${wallTextiles(v).length} på vegg · ${fmt(k.textileM2)} m²` : '',
             res.production.free.length ? `${res.production.free.length} frittstående · ${fmt(res.production.freeLm, 2)} lm` : '',
           ]
             .filter(Boolean)
@@ -46,7 +47,7 @@ export function ProfileSection({ v, res, brush, tool, pick, motifs, onUpload, on
         }
         action={<IconButton icon={Paintbrush} label="Tegn tekstilvegg i plan" pressed={pen && tool === 'brush'} onClick={() => pick({ kind: 'textile' })} />}
       />
-      {v.textiles.map((t) => {
+      {wallTextiles(v).map((t) => {
         const w = v.walls.find((x) => x.id === t.wallId)
         if (!w) return null
         const m = findMotif(motifs, t.motif)?.name

@@ -20,6 +20,7 @@ import type { FootPlate, SupportRule, TextileFrameRecipe } from '../../foga/reci
 import type { InFrameParams } from '../../rules/rules';
 import { minSupports, spreadSupports, type Ends } from '../supports';
 import { bracePoints, buttEnds, frameParts, fullHeight, printFileName, splitRail, type FrameParts } from './common';
+import { freeTextiles } from '../../domain/textile/mounts';
 
 export { bracePoints, splitRail };
 
@@ -124,7 +125,7 @@ export function freeFrames(
   const H = fullHeight(s);
   const k = s.scale / 100;
   const r1 = (x: number) => Math.round(x * k * 10) / 10;
-  return v.freeTextiles.map((t, i) => {
+  return freeTextiles(v).map((t, i) => {
     const pos = `F${i + 1}`;
     const ends = corners.get(t.id) ?? {};
     const trim = trims.get(t.id);
@@ -216,7 +217,7 @@ export function freeFrames(
 export function cornerPosts(v: Variant): Point[] {
   const out = new Map<string, Point>();
   const corners = cornerEnds(v);
-  for (const t of v.freeTextiles) {
+  for (const t of freeTextiles(v)) {
     const e = corners.get(t.id);
     if (e?.from) out.set(`${t.from[0]},${t.from[1]}`, t.from);
     if (e?.to) out.set(`${t.to[0]},${t.to[1]}`, t.to);
@@ -228,7 +229,7 @@ export function cornerPosts(v: Variant): Point[] {
  *  `along` the run and `across` it. */
 export function textileFootRects(v: Variant, frames: readonly FreeFrame[]): { x0: number; y0: number; x1: number; y1: number }[] {
   return frames.flatMap((f) => {
-    const t = v.freeTextiles.find((x) => x.id === f.textileId);
+    const t = freeTextiles(v).find((x) => x.id === f.textileId);
     if (!t) return [];
     const [dx, dy] = runDirection(t);
     const hx = (Math.abs(dx) * f.foot.along + Math.abs(dy) * f.foot.across) / 2000;

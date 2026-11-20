@@ -30,6 +30,7 @@ import {
 } from '../planStyle'
 import { Seg } from './Seg'
 import { GONE, useErasing } from './erasing'
+import { freeTextiles, wallTextiles } from '../../../domain/textile/mounts'
 
 /** Frittstående tekstilvegger, textile walls on a wall face, and the print and decal bands. */
 export function TextileLayer({ v, res, selection, dim }: { v: Variant; res: CalcResult; selection: PlanSelection; dim: (...layers: Layer[]) => number }) {
@@ -48,7 +49,7 @@ export function TextileLayer({ v, res, selection, dim }: { v: Variant; res: Calc
       {/* Frittstående tekstilvegger: foot plates under the frame, corner posts, the frame */}
       <g opacity={dim('textile')} pointerEvents="none">
         {res.production.free.map((f) => {
-          const t = v.freeTextiles.find((x) => x.id === f.textileId)
+          const t = freeTextiles(v).find((x) => x.id === f.textileId)
           if (!t) return null
           const sel = selection.freeTextileId === t.id
           const g = gone('textile', t.id)
@@ -78,7 +79,7 @@ export function TextileLayer({ v, res, selection, dim }: { v: Variant; res: Calc
 
       {/* Textile walls: drawn in front of their face */}
       <g opacity={dim('textile')} pointerEvents="none">
-        {v.textiles.map((t) => {
+        {wallTextiles(v).map((t) => {
           const w = v.walls.find((x) => x.id === t.wallId)
           if (!w) return null
           // Where it stands: moved in an inner corner (byggeregel X10)

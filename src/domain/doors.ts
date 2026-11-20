@@ -13,6 +13,7 @@ import { builtModules, defaultSwing, doorAllowed, isPerimeterWall, type BuiltMod
 import { RECIPES } from '../foga/recipes';
 import { fogaPart } from '../foga/parts';
 import { wallHeight, type Rules } from '../rules/rules';
+import { freeTextiles, wallTextiles } from './textile/mounts';
 
 const dot = (a: Point, b: Point) => a[0] * b[0] + a[1] * b[1];
 
@@ -203,7 +204,7 @@ function alongBlocked(v: Variant, w: Wall, t: number, self?: Opening): boolean {
   const here = (x: { wallId: string; module: number }) => x.wallId === w.id && !(self && x.module === self.module) && laps(...span(x.module));
   if (v.openings.some((x) => x !== self && x.wallId === w.id && laps(moduleStart(w, x.module), moduleStart(w, x.module) + 1))) return true;
   if ((v.shelves ?? []).some(here) || v.foils.some(here)) return true;
-  return v.textiles.some((x) => x.wallId === w.id && laps(x.from, x.from + x.width));
+  return wallTextiles(v).some((x) => x.wallId === w.id && laps(x.from, x.from + x.width));
 }
 
 /** The wall a–b lies on, and how far along it a–b starts (its lower end), m; null when no wall covers it. */
@@ -302,7 +303,7 @@ export function swingFree(v: Variant, a: Point, b: Point, s: 1 | -1, floor?: Flo
       ? p[1] > y0 + e && p[1] < y1 - e && Math.max(p[0], q[0]) > x0 + e && Math.min(p[0], q[0]) < x1 - e
       : p[0] > x0 + e && p[0] < x1 - e && Math.max(p[1], q[1]) > y0 + e && Math.min(p[1], q[1]) < y1 - e;
   const over = (r: FloorBox) => r.door !== self && r.x0 < x1 - e && r.x1 > x0 + e && r.y0 < y1 - e && r.y1 > y0 + e;
-  return !builtModules(v).some((m) => into(m.a, m.b)) && !v.freeTextiles.some((t) => into(t.from, t.to)) && !(floor?.(v) ?? []).some(over);
+  return !builtModules(v).some((m) => into(m.a, m.b)) && !freeTextiles(v).some((t) => into(t.from, t.to)) && !(floor?.(v) ?? []).some(over);
 }
 
 /** A door on the stand's edge can not be turned: it swings into the stand. */

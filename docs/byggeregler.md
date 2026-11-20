@@ -414,7 +414,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   lang; langs veggen flyttes den som før. Siden som vender ut beholder duk og motiv. Siden mot veggen huskes og kommer
   tilbake når den tas av igjen. En tekstilvegg i et hjørne (M1) monteres ikke alene, bare med Løsne (M5). På fotplater
   er høyden foreløpig 2540 fra gulvet (X5): har den en annen høyde eller står høyere på veggen, sier en melding det.
-  *Bjørn 20.11.2026 · kode `src/domain/textile/mount.ts`, `src/ui/plan/pointer/freeMove.ts`, `src/ui/plan/pointer/textileOff.ts` · test `src/domain/textile/mount.test.ts`*
+  I skissen er alle tekstilvegger én liste med montering vegg eller fotplater; av og på veggen endres bare monteringen,
+  og tekstilveggen beholder sin id (filversjon 6, versjon 5 leses inn).
+  *Bjørn 20.11.2026 · kode `src/domain/textile/mount.ts`, `src/domain/textile/mounts.ts`, `src/ui/plan/pointer/freeMove.ts`, `src/ui/plan/pointer/textileOff.ts` · test `src/domain/textile/mount.test.ts`, `src/domain/textile/mounts.test.ts`*
 
 ## M · Magnet og kobling
 

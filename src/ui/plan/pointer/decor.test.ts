@@ -1,5 +1,6 @@
 // Print and Dekal are each their own pen of Profilering (Bjørn 14.11.2026): on a wall felt only, a textile wall is
 // printed with Tekstil.
+import { wallTextiles } from '../../../domain/textile/mounts'
 import { describe, expect, it } from 'vitest';
 import type { Variant } from '../../../domain/types';
 import { builtModules } from '../../../domain/walls';
@@ -45,6 +46,6 @@ describe('Profilering pens on the plan', () => {
   it('Tekstil with a motif prints the textile clicked', () => {
     const u = textileUnder(v, hits, { x: 3, y: 0.1 });
     expect(u).toEqual({ mounted: 't1' });
-    expect(printTextile(v, u!, 'm').textiles.find((t) => t.id === 't1')?.motif).toBe('m');
+    expect(wallTextiles(printTextile(v, u!, 'm')).find((t) => t.id === 't1')?.motif).toBe('m');
   });
 });

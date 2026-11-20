@@ -14,6 +14,7 @@ import type { Variant } from './types';
 import { createVariant } from './variant';
 import { addTextile } from './textile/inFrame';
 import { faces } from './faces';
+import { wallTextiles } from './textile/mounts';
 
 const ok = <T,>(r: T | { error: string } | null): T => {
   if (!r || (typeof r === 'object' && 'error' in r)) throw new Error('expected a result');
@@ -61,7 +62,7 @@ describe('print on whole plates', () => {
     const plates = printPlates(v, RULES, back(v), 1);
     expect(plates).toContain(1);
     expect(plates).not.toContain(4);
-    expect(plates.some((i) => v.textiles[0].from <= i && i < v.textiles[0].from + v.textiles[0].width)).toBe(false);
+    expect(plates.some((i) => wallTextiles(v)[0].from <= i && i < wallTextiles(v)[0].from + wallTextiles(v)[0].width)).toBe(false);
     v = printWall(v, RULES, 'side-back', 1, 'logo', 2);
     expect(v.foils.map((f) => f.module).sort()).toEqual(plates.sort());
   });
@@ -150,7 +151,7 @@ describe('bucket and reset', () => {
     const r = clearSurface(v, { kind: 'wall', wallId: 'side-back', side: 1 });
     expect(r.foils.map((f) => f.full)).toEqual([false]);
     expect(r.decor).toBeUndefined();
-    expect(r.textiles).toHaveLength(1);
+    expect(wallTextiles(r)).toHaveLength(1);
     expect(hasOwnDecor(r, { kind: 'wall', wallId: 'side-back', side: 1 })).toBe(false);
   });
 

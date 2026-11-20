@@ -10,6 +10,7 @@ import { nextId } from './ids';
 import { faceSegment, sideOf } from './faces';
 import { RECIPES } from '../foga/recipes';
 import { counterFootprint, sectionRects, toPlan } from './counterShape';
+import { wallTextiles } from './textile/mounts';
 
 export interface Box {
   x0: number;
@@ -93,7 +94,7 @@ export function blockers(v: Variant, ctx: PlaceContext, skipId?: string): Box[] 
     }
   }
   // A textile frame adds its depth in front of its face, along its span only
-  for (const t of v.textiles) {
+  for (const t of wallTextiles(v)) {
     const w = v.walls.find((x) => x.id === t.wallId);
     if (!w) continue;
     const s = sideOf(v, t);

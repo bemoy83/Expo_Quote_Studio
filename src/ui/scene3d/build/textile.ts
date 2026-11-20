@@ -15,13 +15,14 @@ import { noteMaterial } from './note'
 import { textileNote } from '../../textileNote'
 import { ALU, ALU_FINISH, selectGlow, type BuildContext, type Tag } from './context'
 import { CAP_92LTX, CAP_THICKNESS, CORNER_92LTX, OUTLINES, mitredProfile, shared, unitProfile } from './profiles'
+import { freeTextiles, wallTextiles } from '../../../domain/textile/mounts'
 
 export function buildTextile(c: BuildContext) {
   const { v, res, opts, H, at, mat, add, along, sel } = c
   const depth = rules.textile.depth
   // Textile walls (InFrame): a 43TX frame with textile over both faces, standing in front of its wall face. The motif is
   // printed on the front.
-  for (const t of v.textiles) {
+  for (const t of wallTextiles(v)) {
     const w = v.walls.find((x) => x.id === t.wallId)
     if (!w) continue
     const L = wallLength(w)
@@ -52,7 +53,7 @@ export function buildTextile(c: BuildContext) {
 
   // Frittstående tekstilvegger: a frame with textile on both faces (face A toward side 1), on foot plates
   for (const f of res.production.free) {
-    const t = v.freeTextiles.find((x) => x.id === f.textileId)
+    const t = freeTextiles(v).find((x) => x.id === f.textileId)
     if (!t) continue
     const glow = selectGlow(sel.freeTextileId === t.id)
     const alu = mat('textile', ALU, { ...ALU_FINISH, ...glow })
@@ -148,7 +149,7 @@ function cornerPosts(c: BuildContext) {
   const done = new Set<string>()
   const foot = rules.wall.feet / 10
   for (const f of res.production.free) {
-    const t = v.freeTextiles.find((x) => x.id === f.textileId)
+    const t = freeTextiles(v).find((x) => x.id === f.textileId)
     const ends = corners.get(f.textileId)
     if (!t || !ends) continue
     const [dx, dy] = runDirection(t)

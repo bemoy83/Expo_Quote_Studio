@@ -11,7 +11,7 @@ import { beamOffsets } from './beamOffsets';
 import { calc } from '../calc';
 
 const beam = (id: string, from: Point, to: Point): InnerBeam => ({ id, from, to });
-const free = (id: string, from: Point, to: Point): FreeTextile => ({ id, from, to });
+const free = (id: string, from: Point, to: Point): FreeTextile => ({ mount: 'feet', id, from, to });
 const variant = (stand: Stand, x: Partial<Variant>): Variant => ({ ...createVariant('A', stand), ...x });
 const run = (v: Variant) => calc(v, RULES, DEFAULT_CATALOG, { payer: 'utstiller', ral: '9010' });
 const inner = (v: Variant) => run(v).beams.segments.filter((s) => s.inner).map((s) => [s.from, s.to, s.length]);
@@ -77,7 +77,7 @@ describe('fritt plassert innvendig takdrager', () => {
   });
 
   it('lifted over a textile wall: the piece with 600 on top of the wall and on top of the front beam, no hooks', () => {
-    const v = variant(ROW, { innerBeams: [beam('b1', [3.5, 0], [3.5, 4])], freeTextiles: [free('f1', [2, 2], [5, 2])] });
+    const v = variant(ROW, { innerBeams: [beam('b1', [3.5, 0], [3.5, 4])], textiles: [free('f1', [2, 2], [5, 2])] });
     const res = run(v);
     expect(res.lift?.walls).toEqual([[3.5, 0]]);
     expect(res.lift?.hooks).toEqual([[3.5, 4]]);

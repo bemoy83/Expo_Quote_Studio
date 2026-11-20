@@ -25,6 +25,7 @@ import type { Brush, Tool } from '../tools'
 import { mm } from './dims'
 import type { Box } from './nextArea'
 import type { PlanSelection } from './selection'
+import { freeTextiles } from '../../domain/textile/mounts'
 
 /** What a grip belongs to, and which of its grips it is. */
 export type GripOn =
@@ -97,7 +98,7 @@ function endGrips(v: Variant, s: PlanSelection): PlanGrip[] | null {
   if (wall && !wall.room && !wall.id.startsWith('side'))
     return [...wallGripEnds(v, wall).map((end): PlanGrip => ({ on: { type: 'end', what: 'wall', id: wall.id, end }, kind: 'end', at: wall[end] })), ...groupGrips(v, { kind: 'wall', id: wall.id })]
   if (wall) return []
-  const t = s.freeTextileId ? v.freeTextiles.find((x) => x.id === s.freeTextileId) : undefined
+  const t = s.freeTextileId ? freeTextiles(v).find((x) => x.id === s.freeTextileId) : undefined
   if (t) return [...freeGripEnds(v, t).map((end): PlanGrip => ({ on: { type: 'end', what: 'textile', id: t.id, end }, kind: 'end', at: t[end] })), ...groupGrips(v, { kind: 'textile', id: t.id })]
   // A drawn takdrager: both ends (Byggeregel T8)
   const b = s.beamId ? v.innerBeams?.find((x) => x.id === s.beamId) : undefined
@@ -252,7 +253,7 @@ function dragGroupTurn(v: Variant, part: Part, p0: Point, q: Point): GripDraw | 
 
 /** The run an end grip moves: a wall, a free textile wall or a drawn takdrager. */
 const runOf = (v: Variant, on: Extract<GripOn, { type: 'end' }>) =>
-  on.what === 'wall' ? v.walls.find((w) => w.id === on.id) : on.what === 'textile' ? v.freeTextiles.find((t) => t.id === on.id) : v.innerBeams?.find((b) => b.id === on.id)
+  on.what === 'wall' ? v.walls.find((w) => w.id === on.id) : on.what === 'textile' ? freeTextiles(v).find((t) => t.id === on.id) : v.innerBeams?.find((b) => b.id === on.id)
 
 /** An end grip dragged along its run: whole metres, 250 with Shift or Fin (500 for a takdrager, T8); the furthest step
  *  that works, else why not. */

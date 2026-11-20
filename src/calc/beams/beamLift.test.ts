@@ -17,8 +17,8 @@ import { calc } from '../calc';
 const ROW: Stand = { width: 6, depth: 4, type: 'row' };
 const ISLAND: Stand = { width: 10, depth: 6, type: 'island' };
 const beam = (id: string, from: Point, to: Point): InnerBeam => ({ id, from, to });
-const free = (id: string, from: Point, to: Point): FreeTextile => ({ id, from, to });
-const inFrame = (id: string, wallId: string, from: number, width: number, extra: Partial<TextileWall> = {}): TextileWall => ({ id, wallId, from, width, ...extra });
+const free = (id: string, from: Point, to: Point): FreeTextile => ({ mount: 'feet', id, from, to });
+const inFrame = (id: string, wallId: string, from: number, width: number, extra: Partial<TextileWall> = {}): TextileWall => ({ ...extra, mount: 'wall', id, wallId, from, width });
 
 const variant = (stand: Stand, x: Partial<Variant>): Variant => ({ ...createVariant('A', stand), ...x });
 const lift = (v: Variant) => {
@@ -44,7 +44,7 @@ describe('takdrager over tekstilvegg', () => {
   });
 
   it('a free-standing textile wall across the beam lifts it: the wall post is extended, the hook gets a piece with 600', () => {
-    const v = variant(ROW, { innerBeams: drawn, freeTextiles: [free('f1', [2, 2], [4, 2])] });
+    const v = variant(ROW, { innerBeams: drawn, textiles: [free('f1', [2, 2], [4, 2])] });
     const { lift: l } = lift(v);
     expect(lifted(v)).toEqual([[[3, 0], [3, 4]]]);
     expect(l.posts).toEqual([[3, 0]]);
@@ -54,9 +54,9 @@ describe('takdrager over tekstilvegg', () => {
   });
 
   it('a textile wall beside the beam, not under it, does not lift it', () => {
-    expect(lifted(variant(ROW, { innerBeams: drawn, freeTextiles: [free('f1', [3.25, 1], [3.25, 3])] }))).toEqual([]);
+    expect(lifted(variant(ROW, { innerBeams: drawn, textiles: [free('f1', [3.25, 1], [3.25, 3])] }))).toEqual([]);
     // Ending just short of the beam (frame end and beam side clear of each other)
-    expect(lifted(variant(ROW, { innerBeams: drawn, freeTextiles: [free('f1', [1, 2], [2.75, 2])] }))).toEqual([]);
+    expect(lifted(variant(ROW, { innerBeams: drawn, textiles: [free('f1', [1, 2], [2.75, 2])] }))).toEqual([]);
   });
 
   it('InFrame on the wall the beam rests on lifts it, unless the frame ends at that post', () => {
@@ -71,7 +71,7 @@ describe('takdrager over tekstilvegg', () => {
 
   it('the whole run is lifted, with every post under it', () => {
     // Island, beams off: a drawn beam 1 → 9 is laid as 4 + 4 with a post at 5. The textile wall crosses only the first.
-    const v = variant(ISLAND, { noBeams: true, innerBeams: [beam('b1', [1, 3], [9, 3])], freeTextiles: [free('f1', [2, 2], [2, 4])] });
+    const v = variant(ISLAND, { noBeams: true, innerBeams: [beam('b1', [1, 3], [9, 3])], textiles: [free('f1', [2, 2], [2, 4])] });
     const { lift: l } = lift(v);
     expect(lifted(v)).toHaveLength(2);
     expect(l.posts.map((p) => p.join(',')).sort()).toEqual(['1,3', '5,3', '9,3']);
@@ -81,14 +81,14 @@ describe('takdrager over tekstilvegg', () => {
   it('a beam hanging on a lifted beam gets the piece too; two lifted beams hang as before', () => {
     // Island, beams off: b1 1 → 9 at y = 3 runs through, b2 x = 4 from y = 1 hangs on it by a hook at (4,3)
     const base = { noBeams: true as const, innerBeams: [beam('b1', [1, 3], [9, 3]), beam('b2', [4, 1], [4, 3])] };
-    const one = lift(variant(ISLAND, { ...base, freeTextiles: [free('f1', [2, 2], [2, 4])] })).lift;
+    const one = lift(variant(ISLAND, { ...base, textiles: [free('f1', [2, 2], [2, 4])] })).lift;
     expect(one.hooks).toEqual([[4, 3]]);
-    const both = lift(variant(ISLAND, { ...base, freeTextiles: [free('f1', [2, 2], [2, 4]), free('f2', [3, 2], [5, 2])] })).lift;
+    const both = lift(variant(ISLAND, { ...base, textiles: [free('f1', [2, 2], [2, 4]), free('f2', [3, 2], [5, 2])] })).lift;
     expect(both.hooks).toEqual([]);
   });
 
   it('quote, picking list: an own line per piece, and the pieces with their coupling', () => {
-    const v = variant(ROW, { innerBeams: drawn, freeTextiles: [free('f1', [2, 2], [4, 2])] });
+    const v = variant(ROW, { innerBeams: drawn, textiles: [free('f1', [2, 2], [4, 2])] });
     const res = calc(v, RULES, DEFAULT_CATALOG);
     const line = res.groups.flatMap((g) => g.lines).find((l) => l.artnr === DEFAULT_CATALOG.system.beamLift);
     expect(line?.qty).toBe(2);
@@ -126,7 +126,7 @@ describe('takdrager over tekstilvegg', () => {
     });
 
     it('the split beam lifted: one whole length over the crossing beam, no piece on top of it', () => {
-      const v = variant(ROW, { innerBeams: cross, freeTextiles: [free('f1', [1.5, 1], [1.5, 3])] });
+      const v = variant(ROW, { innerBeams: cross, textiles: [free('f1', [1.5, 1], [1.5, 3])] });
       const { lift: l } = lift(v);
       expect(inner(v)).toEqual([
         [[3, 0], [3, 4], 4],
@@ -142,7 +142,7 @@ describe('takdrager over tekstilvegg', () => {
     });
 
     it('the through beam lifted: the shorter one under it is whole too', () => {
-      const v = variant(ROW, { innerBeams: cross, freeTextiles: [free('f1', [2.5, 1], [3.5, 1])] });
+      const v = variant(ROW, { innerBeams: cross, textiles: [free('f1', [2.5, 1], [3.5, 1])] });
       expect(inner(v)).toEqual([
         [[3, 0], [3, 4], 4],
         [[1, 2], [5, 2], 4],
@@ -155,7 +155,7 @@ describe('takdrager over tekstilvegg', () => {
     it('longer than 6 m: the joint stays at the crossing, with the piece on top', () => {
       // Island 12 × 10: b1 y = 5 (10 m, 5 + 5 with its joint post at x = 7) runs through, b2 x = 6 (8 m) split 4 + 4
       const BIG: Stand = { width: 12, depth: 10, type: 'island' };
-      const v = variant(BIG, { innerBeams: [beam('b1', [2, 5], [12, 5]), beam('b2', [6, 1], [6, 9])], freeTextiles: [free('f1', [5, 2], [7, 2])] });
+      const v = variant(BIG, { innerBeams: [beam('b1', [2, 5], [12, 5]), beam('b2', [6, 1], [6, 9])], textiles: [free('f1', [5, 2], [7, 2])] });
       expect(inner(v).filter(([a, b]) => (a as Point)[0] === 6 && (b as Point)[0] === 6)).toEqual([
         [[6, 1], [6, 5], 4],
         [[6, 5], [6, 9], 4],
@@ -167,7 +167,7 @@ describe('takdrager over tekstilvegg', () => {
       // Inner wall x = 0..3 at y = 2; b1 x = 1,5 crosses it between the posts at x = 1 and x = 2
       const wall = { id: 'w1', from: [0, 2] as Point, to: [3, 2] as Point };
       const base = { ...variant(ROW, { innerBeams: [beam('b1', [1.5, 0], [1.5, 4])] }), walls: [...createVariant('A', ROW).walls, wall] };
-      const v = { ...base, freeTextiles: [free('f1', [1, 3], [2, 3])] };
+      const v = { ...base, textiles: [free('f1', [1, 3], [2, 3])] };
       expect(inner(v)).toEqual([[[1.5, 0], [1.5, 4], 4]]);
       const { lift: l } = lift(v);
       expect(l.walls).toEqual([[1.5, 0]]);

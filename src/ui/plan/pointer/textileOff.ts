@@ -5,6 +5,7 @@ import { unmountDrag } from '../../../domain/textile/mount'
 import { wallDirection } from '../../../domain/grid'
 import { rules } from '../../env'
 import type { DragHandlers } from './types'
+import { wallTextiles } from '../../../domain/textile/mounts'
 
 export const textileOff: DragHandlers<'textileOff'> = {
   move(c, d, q) {
@@ -22,7 +23,7 @@ export const textileOff: DragHandlers<'textileOff'> = {
     }
     d.freeId = undefined
     // Along its face, on the textile grid
-    const t = d.v0.textiles.find((x) => x.id === d.id)
+    const t = wallTextiles(d.v0).find((x) => x.id === d.id)
     const w = t && d.v0.walls.find((x) => x.id === t.wallId)
     if (!t || !w) return
     const [ux, uy] = wallDirection(w)

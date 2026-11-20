@@ -4,6 +4,7 @@ import type { Variant } from '../../domain/types'
 import { chosen, deleteSelection, doorWall, hasDrawer, selectionKey } from './selection'
 import { doorFace } from '../../domain/doors'
 import { faces } from '../../domain/faces'
+import { freeTextiles, wallTextiles } from '../../domain/textile/mounts'
 
 const TEXTS = import.meta.glob<string>('../../test/fixtures/*.json', { query: '?raw', import: 'default', eager: true })
 const variants: Variant[] = Object.values(TEXTS).flatMap((t) => {
@@ -40,7 +41,7 @@ describe('Delete on the selection', () => {
   })
 
   it('removes a textile frame and keeps its wall face', () => {
-    const { v, x } = first((v) => v.textiles[0])
+    const { v, x } = first((v) => wallTextiles(v)[0])
     const d = deleteSelection(v, { wallId: x.wallId, side: 1, textileId: x.id })!
     expect(d.edit(v).textiles.map((t) => t.id)).not.toContain(x.id)
     expect(d.select).toEqual({ wallId: x.wallId, side: 1 })
@@ -54,8 +55,8 @@ describe('Delete on the selection', () => {
   })
 
   it('removes a free-standing textile wall, a room and a drawn beam', () => {
-    const ft = first((v) => v.freeTextiles[0])
-    expect(deleteSelection(ft.v, { freeTextileId: ft.x.id })!.edit(ft.v).freeTextiles.map((t) => t.id)).not.toContain(ft.x.id)
+    const ft = first((v) => freeTextiles(v)[0])
+    expect(freeTextiles(deleteSelection(ft.v, { freeTextileId: ft.x.id })!.edit(ft.v)).map((t) => t.id)).not.toContain(ft.x.id)
     const room = first((v) => v.rooms[0])
     expect(deleteSelection(room.v, { roomId: room.x.id })!.edit(room.v).rooms.map((r) => r.id)).not.toContain(room.x.id)
     const beam = first((v) => v.innerBeams?.[0])
@@ -101,7 +102,7 @@ describe('What is chosen', () => {
   })
 
   it('a frame, decal or shelf on its wall; one that is gone leaves the wall chosen', () => {
-    const { v, x } = first((v) => v.textiles[0])
+    const { v, x } = first((v) => wallTextiles(v)[0])
     expect(chosen(v, { wallId: x.wallId, textileId: x.id })).toMatchObject({ kind: 'textile', textile: x, wall: { id: x.wallId } })
     expect(chosen(v, { wallId: x.wallId, textileId: 'gone' })).toMatchObject({ kind: 'wall', wall: { id: x.wallId } })
     const f = first((v) => v.foils[0])
@@ -123,7 +124,7 @@ describe('What is chosen', () => {
     expect(chosen(r.v, { roomId: r.x.id })).toEqual({ kind: 'room', room: r.x })
     const b = first((v) => v.innerBeams?.[0])
     expect(chosen(b.v, { beamId: b.x.id })).toEqual({ kind: 'beam', beam: b.x })
-    const ft = first((v) => v.freeTextiles[0])
+    const ft = first((v) => freeTextiles(v)[0])
     expect(chosen(ft.v, { freeTextileId: ft.x.id })).toEqual({ kind: 'free', textile: ft.x, face: 'a' })
     const t = first((v) => v.floor.tiles.find((x) => x.fill))
     const c = chosen(t.v, { fill: t.x.fill })

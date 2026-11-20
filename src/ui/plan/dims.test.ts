@@ -50,7 +50,7 @@ describe('plan dimensions', () => {
   it('a selected textile on a wall face is measured on its own, in front of that face', () => {
     const v = corner()
     const back = v.walls.find((w) => w.from[1] === 0 && w.to[1] === 0)!
-    const t = { id: 't1', wallId: back.id, side: faceAt(v, back, { x: 1, y: 0.5 }), from: 1, width: 2 }
+    const t = { mount: 'wall' as const, id: 't1', wallId: back.id, side: faceAt(v, back, { x: 1, y: 0.5 }), from: 1, width: 2 }
     const x = { ...v, textiles: [t] }
     const d = planDims(x, { wallId: back.id, textileId: 't1' }, false)
     expect(d.inner).toMatchObject({ axis: 'x', at: 0, dir: 1, clear: 'mounted' })
