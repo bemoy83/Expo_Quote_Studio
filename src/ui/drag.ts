@@ -22,13 +22,15 @@ export interface WallDrag {
   fine?: boolean
   /** «Fin» on when the drag started (3D, where Shift is read per move). */
   fineLock?: boolean
+  /** «Løsne» on the chosen wall, or Alt held: the wall moves alone, out of its group (Byggeregel M5). */
+  loose?: boolean
 }
 
 /** Move an inner wall to whole metres under the pointer (250 with Shift or «Fin», Byggeregel V7), both ways when it
  *  stands free, else only sideways. Past the stand's edge (or onto a stand wall) it stops at the last place it fits.
  *  One undo step per drag. */
 export function dragWall(d: WallDrag, q: { x: number; y: number }, onEdit: Edit, onCheckpoint: () => void) {
-  dragStep(d, q, (v, s, a) => moveWall(v, d.id, s, a, rules), onEdit, onCheckpoint, d.fine ? CELL : 1)
+  dragStep(d, q, (v, s, a) => moveWall(v, d.id, s, a, rules, d.loose), onEdit, onCheckpoint, d.fine ? CELL : 1)
 }
 
 /** Move a drawn takdrager, plan and 3D alike: whole metres, or with Shift or «Fin» (`d.fine`) 50 mm across and half

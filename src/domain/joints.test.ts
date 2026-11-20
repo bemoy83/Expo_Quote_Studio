@@ -110,3 +110,46 @@ describe('joined to a wall that stands still (M3)', () => {
     expect(moveTextileGroup(v, RULES, id, 0, 3)).toBeNull();
   });
 });
+
+describe('magnet and «Løsne» (M4, M5)', () => {
+  it('an end within 300 mm snaps onto another part, its end before its line', () => {
+    let v = free(row(), [2, 2], [4, 2]);
+    v = free(v, [5, 3], [5, 5]);
+    const id = v.freeTextiles[0].id;
+    // Dragged 0,75 right and 0,75 down: its end lands 250 short of the other's end and snaps onto it
+    const moved = moveTextileGroup(v, RULES, id, 0.75, 0.75)!;
+    expect(runs(moved)[0]).toEqual([[3, 3], [5, 3]]);
+    expect(groupOf(moved, { kind: 'textile', id }).textiles).toHaveLength(2);
+    // Far from anything it moves as dragged
+    expect(runs(moveTextileGroup(v, RULES, id, -1, 2)!)[0]).toEqual([[1, 4], [3, 4]]);
+  });
+
+  it('a wall snaps onto a wall end, never along another wall', () => {
+    let v = paintWalls(row(), [2, 2], [2, 4]);
+    v = paintWalls(v, [3.25, 4], [5, 4]);
+    const w = inner(v)[0].id;
+    expect(moveWall(v, w, 1, 0, RULES).walls.find((x) => x.id === w)).toMatchObject({ from: [3.25, 2], to: [3.25, 4] });
+    let p = paintWalls(row(), [2, 2], [4, 2]);
+    p = paintWalls(p, [2, 3.25], [4, 3.25]);
+    const a = inner(p)[0].id;
+    expect(moveWall(p, a, 1, 0, RULES).walls.find((x) => x.id === a)).toMatchObject({ from: [2, 3], to: [4, 3] });
+  });
+
+  it('«Løsne» moves one part alone: the corner comes apart', () => {
+    let v = free(row(), [2, 2], [4, 2]);
+    v = free(v, [4, 2], [4, 4]);
+    const id = v.freeTextiles[0].id;
+    const moved = moveTextileGroup(v, RULES, id, -1, 0, false, true)!;
+    expect(runs(moved)).toEqual([
+      [[1, 2], [3, 2]],
+      [[4, 2], [4, 4]],
+    ]);
+    let w = paintWalls(row(), [2, 2], [4, 2]);
+    w = paintWalls(w, [4, 2], [4, 4]);
+    const bar = inner(w)[0].id;
+    expect(inner(moveWall(w, bar, 1, 0, RULES, true)).map((x) => [x.from, x.to])).toEqual([
+      [[4, 2], [4, 4]],
+      [[2, 3], [4, 3]],
+    ]);
+  });
+});

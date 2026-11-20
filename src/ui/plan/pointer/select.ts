@@ -31,7 +31,9 @@ export function startSelect(c: PointerCtx, q: P): Drag {
   const selEdge = selection.roomId ? hits.roomEdgeAt(q) : null
   if (selEdge && selEdge.room.id === selection.roomId) return roomSide(c, selEdge.room.id, selEdge.side, q, doorSelect)
   const ft = freeTextileAt(v, q, 0.15)
-  if (ft) return { kind: 'freeMove', id: ft.id, p0: q, v0: v, moved: false, select: { freeTextileId: ft.id, freeFace: faceOfPoint(ft, q) } }
+  // «Løsne» (M5) stays on while the same textile wall is chosen
+  const looseFt = !!ft && !!selection.loose && selection.freeTextileId === ft.id
+  if (ft) return { kind: 'freeMove', id: ft.id, p0: q, v0: v, moved: false, loose: looseFt, select: { freeTextileId: ft.id, freeFace: faceOfPoint(ft, q), ...(looseFt && { loose: true }) } }
   const o = hits.objectAt(q)
   // A counter of Disker og podier: the side clicked is the one its drawer shows (trinn 2)
   const side = o?.sections ? nearestSide(o, [q.x, q.y]) : undefined
@@ -66,7 +68,8 @@ export function startSelect(c: PointerCtx, q: P): Drag {
     // A room's own wall resizes the room; an inner wall moves
     const room = w.room && v.rooms.find((r) => r.id === w.room!.id)
     if (room) return roomSide(c, room.id, w.room!.side, q, select)
-    if (canMoveWall(w)) return { kind: 'wall', id: w.id, p0: q, v0: v, delta: '0,0', horizontal: w.from[1] === w.to[1], moved: false, fine: c.fine, select }
+    const loose = !!selection.loose && selection.wallId === w.id && !selection.textileId && !tx
+    if (canMoveWall(w)) return { kind: 'wall', id: w.id, p0: q, v0: v, delta: '0,0', horizontal: w.from[1] === w.to[1], moved: false, fine: c.fine, loose, select: loose ? { ...select, loose } : select }
     return { kind: 'click', select }
   }
   const room = roomAt(v, q.x, q.y)

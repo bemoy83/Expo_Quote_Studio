@@ -8,7 +8,7 @@ import { addRoomGaps, clampRooms, roomOf, syncRooms } from './rooms';
 import { builtModules, closedSideAt, isStandWall, moduleKeys, standardWalls, standWallKeys, standWallSide } from './walls';
 import { ownPlate, uncolourPlates } from './plateDecor';
 import { replaceWalls } from './replaceWalls';
-import { groupOf, groupSize, moveGroup } from './joints';
+import { alone, groupOf, moveGroupNear } from './joints';
 import { blocked, runLength } from './textile/free';
 import { RULES, type Rules } from '../rules/rules';
 
@@ -146,7 +146,8 @@ export const canMoveWall = (w: Wall) => !w.room && !isStandWall(w);
 /**
  * Move an inner wall sideways by `delta` m (along its normal axis: y for horizontal walls, x for vertical), and `along`
  * m in its own direction: whole metres, or 250 with Shift or «Fin» (Byggeregel V7, V9). Joined to other inner walls or
- * textile walls that stand free of stand walls and rooms, the whole group moves as one (Byggeregel M2, Bjørn 20.11.2026).
+ * textile walls that stand free of stand walls and rooms, the whole group moves as one (Byggeregel M2, Bjørn 20.11.2026),
+ * snapping onto a part near it (M4); `loose` («Løsne», M5) moves it alone.
  * Joined to a wall that stands still (M3), perpendicular inner walls and textile walls ending on it (a corner or a T)
  * stretch or shrink with it sideways, so walls drawn around an area resize like a room. It moves along its length only
  * while no other inner wall touches it, so a joint is never pulled apart (Bjørn 1.11.2026: a free-standing wall moves both ways).
@@ -154,12 +155,13 @@ export const canMoveWall = (w: Wall) => !w.room && !isStandWall(w);
  * wall there. Refused (returns v) for stand walls, room walls (see rooms.ts), moves outside the stand and moves onto a
  * stand wall.
  */
-export function moveWall(v: Variant, wallId: string, delta: number, along = 0, rules: Rules = RULES): Variant {
+export function moveWall(v: Variant, wallId: string, delta: number, along = 0, rules: Rules = RULES, loose = false): Variant {
   const w = v.walls.find((x) => x.id === wallId);
   if (!w || (!delta && !along) || !canMoveWall(w)) return v;
   const horizontal = w.from[1] === w.to[1];
-  const g = groupOf(v, { kind: 'wall', id: wallId });
-  if (!g.anchored && groupSize(g) > 1) return moveGroup(v, rules, g, horizontal ? along : delta, horizontal ? delta : along) ?? v;
+  // «Løsne» (M5): alone, as if nothing were joined to it. A group standing free moves as one and snaps onto a part near it (M4).
+  const g = loose ? alone({ kind: 'wall', id: wallId }) : groupOf(v, { kind: 'wall', id: wallId });
+  if (!g.anchored) return moveGroupNear(v, rules, g, horizontal ? along : delta, horizontal ? delta : along) ?? v;
   if (along && v.walls.some((o) => o.id !== w.id && canMoveWall(o) && touches(w, o))) return v;
   const shift = (p: Point): Point => (horizontal ? [p[0], p[1] + delta] : [p[0] + delta, p[1]]);
   const slide = (p: Point): Point => (horizontal ? [p[0] + along, p[1]] : [p[0], p[1] + along]);

@@ -429,6 +429,15 @@ Felles for innervegger og frittstående tekstilvegger (Bjørn 20.11.2026, plan
   eller T) blir lengre eller kortere. En tekstilvegg flyttes bare på tvers av seg selv: tekstilveggen i hjørnet blir
   lengre eller kortere, og en ende mot en vegg blir stående på den veggen. Ingen del blir kortere enn sitt minste mål.
   *Bjørn 20.11.2026 · kode `src/domain/joints.ts`, `src/domain/edit.ts` · test `src/domain/joints.test.ts`, `src/domain/standWalls.test.ts`*
+- **M4 Magnet.** Under draget hopper en ende av gruppen som står fritt, inn på en annen del når den kommer innenfor
+  300 mm på hver led, samme avstand som når diskene slås sammen: helst på enden (hjørne eller ende mot ende), ellers på linjen (T).
+  Den hopper aldri slik at en vegg legger seg langs en annen, og står den ikke der, flyttes den som du drar. Står en ende
+  allerede mot noe, hopper ingenting. Slippes den der, er de koblet (M1).
+  *Bjørn 20.11.2026 · kode `src/domain/joints.ts`, `src/domain/edit.ts` · test `src/domain/joints.test.ts`*
+- **M5 Løsne.** «Løsne» i pillen på en innervegg eller frittstående tekstilvegg som er koblet til noe, er en innstilling
+  så lenge den er valgt: dra flytter da bare den, som om ingenting var koblet til, og hjørnet blir fri ende igjen. På PC
+  gjør Alt + dra det samme.
+  *Bjørn 20.11.2026 · kode `src/domain/joints.ts`, `src/domain/edit.ts`, `src/ui/plan/pill/parts.tsx`, `src/ui/plan/pointer/select.ts` · test `src/domain/joints.test.ts`*
 
 ## G · Gulv
 

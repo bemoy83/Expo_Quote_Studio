@@ -8,7 +8,7 @@ export const freeMove: DragHandlers<'freeMove'> = {
     if (!d.moved && Math.hypot(q.x - d.p0.x, q.y - d.p0.y) < 0.15) return
     if (!d.moved) c.onCheckpoint()
     d.moved = true
-    const next = moveTextileGroup(d.v0, rules, d.id, q.x - d.p0.x, q.y - d.p0.y, c.fine)
+    const next = moveTextileGroup(d.v0, rules, d.id, q.x - d.p0.x, q.y - d.p0.y, c.fine, d.loose)
     if (next) c.onEdit(() => next, false)
   },
   up(c, d) {
