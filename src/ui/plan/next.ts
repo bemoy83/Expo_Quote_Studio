@@ -16,6 +16,7 @@ import { drawInnerBeam, type Run } from '../../domain/innerBeams'
 import { addObject, placeSet, footprintBox, objectFootprint } from '../../domain/objects'
 import { podiumHeights, type PodiumDraw } from '../../domain/podiums'
 import { fusePodiums } from '../../domain/podiumLinks'
+import { joinsNew } from '../../domain/joints'
 import { addShelf, addShelfRow, penHeight } from '../../domain/shelves/edit'
 import type { TextileResult } from '../../domain/textile/brush'
 import type { Motif, PlacedObject, Point, Variant } from '../../domain/types'
@@ -219,6 +220,14 @@ function targetOf(p: NextInput): NextTarget | null {
   if (dragging?.kind === 'object' && dragging.moved && dragging.fuse) {
     const r = fusePodiums(v, place, dragging.fuse, dragging.id)
     return target(`fuse:${dragging.fuse}:${'error' in r ? r.error : ''}`, () => line({ hint: 'error' in r ? r.error : 'Slipp for å slå diskene sammen' }))
+  }
+
+  // An inner wall or free-standing textile wall dragged onto another part (M4), or onto a system wall's line (X13): a
+  // release couples or mounts it
+  if ((dragging?.kind === 'wall' || dragging?.kind === 'freeMove') && dragging.moved) {
+    const mounted = dragging.kind === 'freeMove' && !!dragging.mounted
+    const joins = !mounted && joinsNew(dragging.v0, v, { kind: dragging.kind === 'wall' ? 'wall' : 'textile', id: dragging.id })
+    if (mounted || joins) return target(`join:${dragging.id}:${mounted}`, () => line({ hint: mounted ? 'Slipp for å montere på veggen' : 'Slipp for å koble' }))
   }
 
   // A grip of the chosen counter dragged (K14): what a release stores, with what goes away hatched

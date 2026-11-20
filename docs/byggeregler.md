@@ -408,8 +408,8 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   grunnen vises når det ikke går. InFrame-tekstil på systemvegg har ingen endegrep ennå.
   *Bjørn 14.11.2026 og 15.11.2026 · kode `src/domain/textile/free.ts`, `src/ui/plan/grips.ts` · test `src/domain/wallEnds.test.ts`*
 - **X13 Av og på systemveggen.** Tekstilveggen er ett produkt uansett montering (X1), så den kan flyttes mellom
-  fotplater og systemvegg. Dras en frittstående tekstilvegg inn på en systemveggs linje, monteres den på veggen på
-  siden den kom fra, over det ledige spennet den dekker mest (X2, X4), som en strek langs veggen. Dras en tekstilvegg på
+  fotplater og systemvegg. Dras en frittstående tekstilvegg inn på en systemveggs linje, sier planen «Slipp for å montere på veggen», og
+  slippes den, monteres den på veggen på siden den kom fra, over det ledige spennet den dekker mest (X2, X4), som en strek langs veggen. Dras en tekstilvegg på
   systemvegg ut fra veggen (minst ett rutesteg på sin egen side), står den fritt på fotplater der den slippes, like
   lang; langs veggen flyttes den som før. Siden som vender ut beholder duk og motiv. Siden mot veggen huskes og kommer
   tilbake når den tas av igjen. En tekstilvegg i et hjørne (M1) monteres ikke alene, bare med Løsne (M5). På fotplater
@@ -440,7 +440,7 @@ Felles for innervegger og frittstående tekstilvegger (Bjørn 20.11.2026, plan
 - **M4 Magnet.** Under draget hopper en ende av gruppen som står fritt, inn på en annen del når den kommer innenfor
   300 mm på hver led, samme avstand som når diskene slås sammen: helst på enden (hjørne eller ende mot ende), ellers på linjen (T).
   Den hopper aldri slik at en vegg legger seg langs en annen, og står den ikke der, flyttes den som du drar. Står en ende
-  allerede mot noe, hopper ingenting. Slippes den der, er de koblet (M1).
+  allerede mot noe, hopper ingenting. Slippes den der, er de koblet (M1); mens den står der, sier planen «Slipp for å koble».
   *Bjørn 20.11.2026 · kode `src/domain/joints.ts`, `src/domain/edit.ts` · test `src/domain/joints.test.ts`*
 - **M5 Løsne.** «Løsne» i pillen på en innervegg eller frittstående tekstilvegg som er koblet til noe, er en innstilling
   så lenge den er valgt: dra flytter da bare den, som om ingenting var koblet til, og hjørnet blir fri ende igjen. På PC

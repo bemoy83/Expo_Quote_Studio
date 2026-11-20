@@ -179,6 +179,18 @@ export function moveGroupNear(v: Variant, rules: Rules, g: Group, dx: number, dy
   return ((mx !== dx || my !== dy) && moveGroup(v, rules, g, mx, my)) || moveGroup(v, rules, g, dx, dy);
 }
 
+/**
+ * Byggeregel M4: true when `part`, as it stands in `after`, is joined to a part it was not joined to in `before`: a
+ * release here couples them, which the plan says while dragging («Slipp for å koble»).
+ */
+export function joinsNew(before: Variant, after: Variant, part: Part): boolean {
+  const was = groupOf(before, part);
+  const now = groupOf(after, part);
+  const w = new Set(was.walls);
+  const t = new Set(was.textiles);
+  return now.walls.some((id) => !w.has(id)) || now.textiles.some((id) => !t.has(id));
+}
+
 /** Byggeregel M5: a part on its own, as if nothing were joined to it («Løsne», Alt + dra). */
 export const alone = (p: Part): Group => ({ walls: p.kind === 'wall' ? [p.id] : [], textiles: p.kind === 'textile' ? [p.id] : [], anchored: false });
 

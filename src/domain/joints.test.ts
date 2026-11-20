@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { RULES } from '../rules/rules';
 import { moveWall, paintWalls } from './edit';
-import { groupOf, moveTextileGroup } from './joints';
+import { groupOf, joinsNew, moveTextileGroup } from './joints';
 import { addFreeTextile, cornerEnds } from './textile/free';
 import type { Point, Variant } from './types';
 import { createVariant } from './variant';
@@ -122,6 +122,17 @@ describe('magnet and «Løsne» (M4, M5)', () => {
     expect(groupOf(moved, { kind: 'textile', id }).textiles).toHaveLength(2);
     // Far from anything it moves as dragged
     expect(runs(moveTextileGroup(v, RULES, id, -1, 2)!)[0]).toEqual([[1, 4], [3, 4]]);
+  });
+
+  it('the plan says «Slipp for å koble» only when the drag joins it to a new part', () => {
+    let v = free(row(), [2, 2], [4, 2]);
+    v = free(v, [5, 3], [5, 5]);
+    const id = v.freeTextiles[0].id;
+    expect(joinsNew(v, moveTextileGroup(v, RULES, id, 0.75, 0.75)!, { kind: 'textile', id })).toBe(true);
+    expect(joinsNew(v, moveTextileGroup(v, RULES, id, -1, 2)!, { kind: 'textile', id })).toBe(false);
+    // A corner moved as one joins nothing new
+    const l = free(v, [4, 2], [4, 1]);
+    expect(joinsNew(l, moveTextileGroup(l, RULES, id, -1, 2)!, { kind: 'textile', id })).toBe(false);
   });
 
   it('a wall snaps onto a wall end, never along another wall', () => {
