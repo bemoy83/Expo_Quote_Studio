@@ -407,6 +407,14 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   med Tekstil-pennen, som innervegger (V13): hele meter, 250 med Shift eller Fin, kontrollert som når den tegnes, og
   grunnen vises når det ikke går. InFrame-tekstil på systemvegg har ingen endegrep ennå.
   *Bjørn 14.11.2026 og 15.11.2026 · kode `src/domain/textile/free.ts`, `src/ui/plan/grips.ts` · test `src/domain/wallEnds.test.ts`*
+- **X13 Av og på systemveggen.** Tekstilveggen er ett produkt uansett montering (X1), så den kan flyttes mellom
+  fotplater og systemvegg. Dras en frittstående tekstilvegg inn på en systemveggs linje, monteres den på veggen på
+  siden den kom fra, over det ledige spennet den dekker mest (X2, X4), som en strek langs veggen. Dras en tekstilvegg på
+  systemvegg ut fra veggen (minst ett rutesteg på sin egen side), står den fritt på fotplater der den slippes, like
+  lang; langs veggen flyttes den som før. Siden som vender ut beholder duk og motiv. Siden mot veggen huskes og kommer
+  tilbake når den tas av igjen. En tekstilvegg i et hjørne (M1) monteres ikke alene, bare med Løsne (M5). På fotplater
+  er høyden foreløpig 2540 fra gulvet (X5): har den en annen høyde eller står høyere på veggen, sier en melding det.
+  *Bjørn 20.11.2026 · kode `src/domain/textile/mount.ts`, `src/ui/plan/pointer/freeMove.ts`, `src/ui/plan/pointer/textileOff.ts` · test `src/domain/textile/mount.test.ts`*
 
 ## M · Magnet og kobling
 
