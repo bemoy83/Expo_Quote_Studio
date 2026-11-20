@@ -50,7 +50,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   standvegg fordi den kommer fra standtypen, aldri fordi den står i kanten. Unntaket med nabogodkjenning er ikke bygget.
   *Bjørn 31.10.2026 · kode `src/domain/walls.ts` · test `src/domain/standWalls.test.ts`*
 - **V7 Innervegg.** Tegnes hvor som helst på standen, også ut mot kanten, men blir aldri standvegg. Flyttes i hele
-  meter, med Shift eller «Fin» i 250 (V9, Bjørn 15.11.2026), ikke inn på en standvegg. Frittstående flyttes i begge retninger, inntil en annen innervegg bare til siden.
+  meter, med Shift eller «Fin» i 250 (V9, Bjørn 15.11.2026), ikke inn på en standvegg. Frittstående flyttes i begge retninger. Koblet til andre vegger eller tekstilvegger flyttes den med dem som én gruppe (M2), og er gruppen koblet til en standvegg eller romvegg, bare til siden (M3).
   *Bjørn 31.10.2026, 1.11.2026 og 15.11.2026 · kode `src/domain/edit.ts`, `src/ui/drag.ts` · test `src/domain/standWalls.test.ts`, `src/ui/drag.test.ts`*
 - **V9 Vegglinje.** En systemvegg eller tekstilvegg kan stå på hvilken som helst linje i 250-rasteret, ikke bare på
   metrelinjene. Uten Shift tegner penselen i hele meter på metrelinjene; med Shift eller «Fin» viser den 250 på den
@@ -408,6 +408,28 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   grunnen vises når det ikke går. InFrame-tekstil på systemvegg har ingen endegrep ennå.
   *Bjørn 14.11.2026 og 15.11.2026 · kode `src/domain/textile/free.ts`, `src/ui/plan/grips.ts` · test `src/domain/wallEnds.test.ts`*
 
+## M · Magnet og kobling
+
+Felles for innervegger og frittstående tekstilvegger (Bjørn 20.11.2026, plan
+[Magnetisme og kobling](https://claude.ai/artifact/4s5tA5NuNQjQkQV5AztFi2)).
+
+- **M1 Hva som er koblet.** To deler er koblet når en ende står på den andre: et hjørne (også 92LTX-hjørnet mellom to
+  tekstilvegger, X7), en T, to vegger ende mot ende, eller en tekstilvegg som ender mot en vegg. Koblingen lagres ikke,
+  den leses av hvor delene står (som V10). Delene som henger sammen slik, er en gruppe. En gruppe som er koblet til en
+  vegg som står fast (standvegg eller romvegg), er forankret.
+  *Bjørn 20.11.2026 · kode `src/domain/joints.ts` · test `src/domain/joints.test.ts`*
+- **M2 Gruppen flyttes som én ting.** Klikk og dra i en del av en gruppe som står fritt, flytter hele gruppen: to 1 m
+  vegger koblet i et hjørne flyttes som et hjørne, en tekstilvegg som står mot en innervegg følger veggen, og veggen
+  følger tekstilveggen. Dører, folie, hyller og tekstil på veggene går med. Går en vegg med, flyttes gruppen i hele
+  meter som en innervegg (V7), 250 med Shift eller Fin; ellers i tekstilens rutenett. Kan en del ikke stå der (utenfor
+  standen, inn på en standvegg, en vegg gjennom en tekstilvegg), stopper draget ved siste sted som går.
+  *Bjørn 20.11.2026 · kode `src/domain/joints.ts`, `src/domain/edit.ts`, `src/ui/plan/pointer/freeMove.ts` · test `src/domain/joints.test.ts`, `src/domain/standWalls.test.ts`*
+- **M3 Forankret gruppe.** Er gruppen koblet til en vegg som står fast, flyttes bare det du drar, og naboene tar det
+  opp så koblingene holder: en innervegg flyttes sidelengs, og innervegger og tekstilvegger som ender på den (hjørne
+  eller T) blir lengre eller kortere. En tekstilvegg flyttes bare på tvers av seg selv: tekstilveggen i hjørnet blir
+  lengre eller kortere, og en ende mot en vegg blir stående på den veggen. Ingen del blir kortere enn sitt minste mål.
+  *Bjørn 20.11.2026 · kode `src/domain/joints.ts`, `src/domain/edit.ts` · test `src/domain/joints.test.ts`, `src/domain/standWalls.test.ts`*
+
 ## G · Gulv
 
 - **G1 Teppefliser.** Legges i rutenettet på 0,5 m: 1 × 1 som standard, 1 × 0,5 og 0,5 × 0,5. En flis kan starte i
@@ -737,5 +759,5 @@ K22 standardvarene og K23 disker over en fotplate.
 
 ## Ikke bygget ennå
 
-Bestemt eller nevnt, men ikke i koden: støttevaier fra hallens tak i stedet for fotplater (samme regel som S3), tekstildør
+Bestemt eller nevnt, men ikke i koden: velge type hjørne der en frittstående tekstilvegg møter en ramme på vegg (Bjørn 20.11.2026: 92LTX er bedre enn å stoppe mot rammen etter X11, fordi alle profilkanalene for tekstil er tilgjengelige, mens en utenpåliggende ramme sperrer kanalene og må monteres etter tekstilen), flere høyder på frittstående tekstilvegg (over 2540 tas i egen utredning om høye vegger), støttevaier fra hallens tak i stedet for fotplater (samme regel som S3), tekstildør
 med overstykke, høye tekstilvegger, heng (H6), og endring av standvegg med nabogodkjenning. Samba-duk foran LED (appen tegner ikke LED ennå).

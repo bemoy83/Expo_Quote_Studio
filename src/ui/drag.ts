@@ -6,7 +6,7 @@ import { settleAll, settleObject } from '../domain/objects'
 import { moveRoomDoors, resizeRoomDoors, sideIsHorizontal } from '../domain/rooms'
 import { CELL } from '../domain/outline'
 import type { Variant } from '../domain/types'
-import { place } from './env'
+import { place, rules } from './env'
 
 type Edit = (fn: (v: Variant) => Variant, history?: boolean) => void
 
@@ -28,7 +28,7 @@ export interface WallDrag {
  *  stands free, else only sideways. Past the stand's edge (or onto a stand wall) it stops at the last place it fits.
  *  One undo step per drag. */
 export function dragWall(d: WallDrag, q: { x: number; y: number }, onEdit: Edit, onCheckpoint: () => void) {
-  dragStep(d, q, (v, s, a) => moveWall(v, d.id, s, a), onEdit, onCheckpoint, d.fine ? CELL : 1)
+  dragStep(d, q, (v, s, a) => moveWall(v, d.id, s, a, rules), onEdit, onCheckpoint, d.fine ? CELL : 1)
 }
 
 /** Move a drawn takdrager, plan and 3D alike: whole metres, or with Shift or «Fin» (`d.fine`) 50 mm across and half

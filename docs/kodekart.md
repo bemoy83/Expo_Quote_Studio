@@ -54,6 +54,12 @@ disk for Disker og podier), og et rom en redigering eller et drag lukker, velges
 grepene som Velg (`sceneGrips`: på toppen av det de flytter, like store på skjermen), og en `grip`-drag i
 `scene3d/pointer/drag.ts` lagrer det `dragGrip` gir, direkte, fra skissen ved trykket. Rotergrepet (`rotate`) går gjennom `dragGrip` som de andre: vinkelen rundt
 midten (`turnOf`) i steg av 90 eller 15, lengste lovlige med `furthest`, `rotateObject(v, ctx, id, by)`.
+
+Kobling mellom innervegger og frittstående tekstilvegger (byggeregler M1–M3): `domain/joints.ts`. `groupOf` leser
+gruppen av hvor delene står (en ende på den andre), og om den er forankret i en standvegg eller romvegg; ingenting
+lagres. `moveGroup` flytter en fri gruppe som én ting (dører, folie, hyller og tekstil på veggene går med).
+`moveWall` (`domain/edit.ts`) og `moveTextileGroup` (Velg-drag i `pointer/freeMove.ts`) bruker den; en forankret
+gruppe tar flyttet opp i naboene som ender på det som dras.
 Dørgrepet (`door`, D8) flytter en valgt dør langs veggen med `moveOpeningAlong` i `domain/doors.ts`.
 
 **Standen i halve meter (V14):** `Stand.width/depth` er hele og halve meter. Rutenettet starter i 0 bak til venstre;
