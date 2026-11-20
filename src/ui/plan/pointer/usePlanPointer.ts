@@ -155,6 +155,8 @@ export function usePlanPointer(input: PlanPointerInput) {
     if (d?.kind === 'beam') d.fine = e.shiftKey || input.fine
     // Shift held (or «Fin» on): a room moves and stretches in 250 (Byggeregel R5)
     if (d?.kind === 'room' || d?.kind === 'wall') d.fine = e.shiftKey || input.fine
+    // Alt + dra: an inner wall or textile wall alone, out of its group (Byggeregel M5)
+    if ((d?.kind === 'wall' || d?.kind === 'freeMove') && e.altKey) d.loose = true
     if (d?.kind === 'grip') d.fine = e.shiftKey || input.fine
     if (d) drag.current = d
     // Held without moving counts as dragging too, so the hover preview stops while pressed

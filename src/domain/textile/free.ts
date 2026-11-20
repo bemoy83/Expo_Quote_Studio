@@ -85,7 +85,7 @@ export function cornerEnds(v: Variant): Map<string, CornerEnds> {
 }
 
 /** Why a run cannot stand there, or null. `others` are the runs already standing (the run itself left out). */
-function blocked(v: Variant, rules: Rules, t: Pick<FreeTextile, 'from' | 'to'>, others: FreeTextile[]): string | null {
+export function blocked(v: Variant, rules: Rules, t: Pick<FreeTextile, 'from' | 'to'>, others: FreeTextile[]): string | null {
   if (runLength(t) < rules.textile.freeMin - EPS) return `Tekstilveggen må være minst ${String(rules.textile.freeMin).replace('.', ',')} m`;
   for (const m of builtModules(v)) {
     const c = contact(t, { from: m.a, to: m.b });

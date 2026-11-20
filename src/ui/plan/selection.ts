@@ -24,6 +24,9 @@ export interface PlanSelection {
   foilId?: string
   /** A frittstående tekstilvegg, and the face shown in its drawer. */
   freeTextileId?: string
+  /** «Løsne» on the chosen inner wall or free-standing textile wall (Byggeregel M5): its drags move it alone, out of
+   *  the group it is joined to. */
+  loose?: boolean
   freeFace?: FaceKey
   /** An innvendig takdrager. */
   beamId?: string

@@ -20,7 +20,7 @@ import { findMotif } from '../../motifs'
 import { FinBtn, QBtn, Sep } from '../quick/parts'
 import type { Chosen, PlanSelection } from '../selection'
 import { faceName } from '../wallDrawer/face'
-import { Colours, Motifs, type Content, type PillActions, type SecondFace } from './parts'
+import { Colours, LooseBtn, Motifs, type Content, type PillActions, type SecondFace } from './parts'
 
 type Of<K extends Chosen['kind']> = Extract<Chosen, { kind: K }>
 
@@ -125,6 +125,7 @@ export function wallPill(p: PillActions, c: Of<'wall'>, graphics: SecondFace): C
             <FinBtn title={{ on: 'Dra flytter veggen i 250 · trykk for hele meter igjen', off: 'Flytt veggen i 250, utenfor metrelinjene · på desktop også Shift + dra' }}>
               <Move size={15} />
             </FinBtn>
+            <LooseBtn p={p} part={{ kind: 'wall', id: w.id }} />
           </>
         )}
       </>

@@ -36,10 +36,17 @@ describe('stand walls and inner walls', () => {
     expect(at(moveWall(v, id, -1, 1))).toMatchObject({ from: [2, 1], to: [4, 1] });
     // Not past the stand's edge
     expect(moveWall(v, id, 0, 4)).toBe(v);
-    // A second inner wall at its end: along the length would pull the corner apart
-    v = paintWalls(v, [3, 2], [3, 3]);
+    // A second inner wall at its end, the two standing free: they move as one corner (Byggeregel M2, Bjørn 20.11.2026)
+    const free = paintWalls(v, [3, 2], [3, 3]);
+    const leg = (x: Variant) => x.walls.find((w) => w.from[0] === w.to[0] && !w.id.startsWith('side'))!;
+    expect(at(moveWall(free, id, 0, 1))).toMatchObject({ from: [2, 2], to: [4, 2] });
+    expect(leg(moveWall(free, id, 0, 1))).toMatchObject({ from: [4, 2], to: [4, 3] });
+    expect(leg(moveWall(free, id, 1))).toMatchObject({ from: [3, 3], to: [3, 4] });
+    // Joined to the back stand wall (M3): along the length would pull the corner apart, sideways the leg stretches
+    v = paintWalls(v, [3, 0], [3, 2]);
     expect(moveWall(v, id, 0, 1)).toBe(v);
     expect(at(moveWall(v, id, 1))).toMatchObject({ from: [1, 3], to: [3, 3] });
+    expect(leg(moveWall(v, id, 1))).toMatchObject({ from: [3, 0], to: [3, 3] });
   });
 
   it('an inner wall can not be moved onto a stand wall', () => {

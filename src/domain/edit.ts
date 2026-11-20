@@ -1,13 +1,16 @@
 // Editing operations on a variant. All pure: they return a new variant and never mutate.
 // Byggeregel V7 (docs/byggeregler.md).
 import { clipTiles } from './floor/edit';
-import { pointAlong, runs, moduleCount, moduleEnd, moduleStart, uncoveredRuns, wallModules } from './grid';
+import { onSpan, pointAlong, runs, moduleCount, moduleEnd, moduleStart, uncoveredRuns, wallModules } from './grid';
 import { nextId } from './ids';
 import type { Point, Stand, Variant, Wall } from './types';
 import { addRoomGaps, clampRooms, roomOf, syncRooms } from './rooms';
 import { builtModules, closedSideAt, isStandWall, moduleKeys, standardWalls, standWallKeys, standWallSide } from './walls';
 import { ownPlate, uncolourPlates } from './plateDecor';
 import { replaceWalls } from './replaceWalls';
+import { alone, groupOf, moveGroupNear } from './joints';
+import { blocked, runLength } from './textile/free';
+import { RULES, type Rules } from '../rules/rules';
 
 /**
  * Draw wall modules from a to b. Edges that already have a wall are left as they are. Drawn on a closed side of the
@@ -142,17 +145,23 @@ export const canMoveWall = (w: Wall) => !w.room && !isStandWall(w);
 
 /**
  * Move an inner wall sideways by `delta` m (along its normal axis: y for horizontal walls, x for vertical), and `along`
- * m in its own direction: whole metres, or 250 with Shift or «Fin» (Byggeregel V7, V9). Perpendicular drawn walls ending on it stretch or shrink with it
- * sideways, so walls drawn around an area resize like a room. It moves along its length only while no other inner wall
- * touches it, so a joint is never pulled apart (Bjørn 1.11.2026: a free-standing wall moves both ways).
+ * m in its own direction: whole metres, or 250 with Shift or «Fin» (Byggeregel V7, V9). Joined to other inner walls or
+ * textile walls that stand free of stand walls and rooms, the whole group moves as one (Byggeregel M2, Bjørn 20.11.2026),
+ * snapping onto a part near it (M4); `loose` («Løsne», M5) moves it alone.
+ * Joined to a wall that stands still (M3), perpendicular inner walls and textile walls ending on it (a corner or a T)
+ * stretch or shrink with it sideways, so walls drawn around an area resize like a room. It moves along its length only
+ * while no other inner wall touches it, so a joint is never pulled apart (Bjørn 1.11.2026: a free-standing wall moves both ways).
  * Its openings, textiles and foils move with it. It may go all the way out to the stand's edge and stays an inner
  * wall there. Refused (returns v) for stand walls, room walls (see rooms.ts), moves outside the stand and moves onto a
  * stand wall.
  */
-export function moveWall(v: Variant, wallId: string, delta: number, along = 0): Variant {
+export function moveWall(v: Variant, wallId: string, delta: number, along = 0, rules: Rules = RULES, loose = false): Variant {
   const w = v.walls.find((x) => x.id === wallId);
   if (!w || (!delta && !along) || !canMoveWall(w)) return v;
   const horizontal = w.from[1] === w.to[1];
+  // «Løsne» (M5): alone, as if nothing were joined to it. A group standing free moves as one and snaps onto a part near it (M4).
+  const g = loose ? alone({ kind: 'wall', id: wallId }) : groupOf(v, { kind: 'wall', id: wallId });
+  if (!g.anchored) return moveGroupNear(v, rules, g, horizontal ? along : delta, horizontal ? delta : along) ?? v;
   if (along && v.walls.some((o) => o.id !== w.id && canMoveWall(o) && touches(w, o))) return v;
   const shift = (p: Point): Point => (horizontal ? [p[0], p[1] + delta] : [p[0] + delta, p[1]]);
   const slide = (p: Point): Point => (horizontal ? [p[0] + along, p[1]] : [p[0], p[1] + along]);
@@ -162,7 +171,8 @@ export function moveWall(v: Variant, wallId: string, delta: number, along = 0): 
   const locked = standWallKeys(v);
   if (wallModules(moved).some((m) => locked.has(m.key))) return v;
   const same = (a: Point, b: Point) => a[0] === b[0] && a[1] === b[1];
-  const ends = [w.from, w.to];
+  // A corner or a T: the end stands on the wall
+  const onIt = (p: Point) => onSpan(w.from, w.to, p);
   const others: Wall[] = [];
   for (const o of v.walls) {
     if (o.id === w.id) continue;
@@ -173,11 +183,16 @@ export function moveWall(v: Variant, wallId: string, delta: number, along = 0): 
     }
     let from = o.from;
     let to = o.to;
-    if (ends.some((p) => same(p, o.from))) from = shift(o.from);
-    if (ends.some((p) => same(p, o.to))) to = shift(o.to);
+    if (onIt(o.from)) from = shift(o.from);
+    if (onIt(o.to)) to = shift(o.to);
     if (same(from, to)) continue;
     others.push({ ...o, from, to });
   }
+  // Textile walls ending on it across grow or shrink with it the same way (M3)
+  const freeTextiles = v.freeTextiles.map((t) => {
+    if ((t.from[1] === t.to[1]) === horizontal) return t;
+    return { ...t, from: onIt(t.from) ? shift(t.from) : t.from, to: onIt(t.to) ? shift(t.to) : t.to };
+  });
   const keep = (id: string) => id === w.id;
   const carried = {
     openings: v.openings.filter((o) => keep(o.wallId)),
@@ -197,6 +212,7 @@ export function moveWall(v: Variant, wallId: string, delta: number, along = 0): 
   );
   const next: Variant = {
     ...rest,
+    freeTextiles,
     // Moved as a whole, it keeps where its doors split it (Byggeregel D8)
     walls: w.breaks ? rest.walls.map((x) => (x.id === w.id ? { ...x, breaks: w.breaks } : x)) : rest.walls,
     openings: [...rest.openings, ...carried.openings],
@@ -204,6 +220,10 @@ export function moveWall(v: Variant, wallId: string, delta: number, along = 0): 
     foils: [...rest.foils, ...carried.foils],
     ...(v.shelves ? { shelves: [...(rest.shelves ?? []), ...(carried.shelves ?? [])] } : {}),
   };
-  // Plates coloured one by one go with it (plateDecor.ts carryDecor, after the edit)
-  return next;
+  // Plates coloured one by one go with it (plateDecor.ts carryDecor, after the edit). A textile wall it would cross,
+  // or one that would get too short, stops it.
+  const stands = next.freeTextiles.every(
+    (t) => runLength(t) >= rules.textile.freeMin - 1e-6 && !blocked(next, rules, t, next.freeTextiles.filter((o) => o.id !== t.id)),
+  );
+  return stands ? next : v;
 }

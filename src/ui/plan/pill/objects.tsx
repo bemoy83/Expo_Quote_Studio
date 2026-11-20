@@ -12,7 +12,7 @@ import { objectFamily } from '../../objectFamily'
 import { FinBtn, QBtn, Sep, Sw } from '../quick/parts'
 import type { Chosen } from '../selection'
 import { turnFree, turnObject } from '../turn'
-import { Colours, Motifs, type Content, type PillActions } from './parts'
+import { Colours, LooseBtn, Motifs, type Content, type PillActions } from './parts'
 
 type Of<K extends Chosen['kind']> = Extract<Chosen, { kind: K }>
 
@@ -120,6 +120,7 @@ export function freePill(p: PillActions, c: Of<'free'>, remove: () => void): Con
         <QBtn title="Roter 90° om midten (R)" label="Roter" onClick={() => turnFree(p, t.id)}>
           <RotateCw size={15} />
         </QBtn>
+        <LooseBtn p={p} part={{ kind: 'textile', id: t.id }} />
       </>
     ),
     more: true,
