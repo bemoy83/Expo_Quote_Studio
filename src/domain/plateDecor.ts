@@ -8,7 +8,7 @@
 // moved as a whole takes its plates along; a wall stretched or cut keeps each plate where it stands along its line;
 // a plate whose wall is gone or turned (split in two, made a room side) keeps its decor where it stands in the plan.
 // Decor on a plate no wall has any more is dropped, so a wall drawn there later starts in its own colour.
-import { plateLocal, wallModules } from './grid';
+import { plateLocal, wallLength, wallModules } from './grid';
 import type { PlateDecor, Variant, Wall } from './types';
 import { builtModules } from './walls';
 
@@ -130,6 +130,8 @@ export function carryDecor(before: Variant, after: Variant): Variant {
       const to = `${id}@${a + s}-${b + s}`;
       if (valid.has(to)) return to;
     }
+    // Turned as a whole (Byggeregel M6): the same length another way, its plates along it as before
+    if (aw && !sameDir(bw, aw) && wallLength(aw) === wallLength(bw) && valid.has(k)) return k;
     // Where it stands in the plan, on whichever wall has it now
     const key = wasAt.get(k);
     const to = key === undefined ? undefined : nowAt.get(key);

@@ -162,6 +162,19 @@ export function moveWall(v: Variant, wallId: string, delta: number, along = 0, r
   // «Løsne» (M5): alone, as if nothing were joined to it. A group standing free moves as one and snaps onto a part near it (M4).
   const g = loose ? alone({ kind: 'wall', id: wallId }) : groupOf(v, { kind: 'wall', id: wallId });
   if (!g.anchored) return moveGroupNear(v, rules, g, horizontal ? along : delta, horizontal ? delta : along) ?? v;
+  return slideWall(v, wallId, delta, along, rules);
+}
+
+/**
+ * Byggeregel M3: an inner wall moved by itself, `delta` m sideways and `along` m in its own direction, while what is
+ * joined to it stays: perpendicular inner walls and textile walls ending on it (a corner or a T) stretch or shrink with
+ * it sideways. Along its length only while no other inner wall touches it. A forankret group moves this way, and so
+ * does an arm dragged by a corner grip (M6). Returns v when it cannot.
+ */
+export function slideWall(v: Variant, wallId: string, delta: number, along = 0, rules: Rules = RULES): Variant {
+  const w = v.walls.find((x) => x.id === wallId);
+  if (!w || (!delta && !along) || !canMoveWall(w)) return v;
+  const horizontal = w.from[1] === w.to[1];
   if (along && v.walls.some((o) => o.id !== w.id && canMoveWall(o) && touches(w, o))) return v;
   const shift = (p: Point): Point => (horizontal ? [p[0], p[1] + delta] : [p[0] + delta, p[1]]);
   const slide = (p: Point): Point => (horizontal ? [p[0] + along, p[1]] : [p[0], p[1] + along]);

@@ -438,6 +438,15 @@ Felles for innervegger og frittstående tekstilvegger (Bjørn 20.11.2026, plan
   så lenge den er valgt: dra flytter da bare den, som om ingenting var koblet til, og hjørnet blir fri ende igjen. På PC
   gjør Alt + dra det samme.
   *Bjørn 20.11.2026 · kode `src/domain/joints.ts`, `src/domain/edit.ts`, `src/ui/plan/pill/parts.tsx`, `src/ui/plan/pointer/select.ts` · test `src/domain/joints.test.ts`*
+- **M6 Grep på vegger og tekstilvegger.** Innervegger og frittstående tekstilvegger har de samme grepene som disker,
+  rom og møbler, i det felles grepsystemet: endegrep på frie ender (V13, X12), et hjørnegrep der to armer møtes, som
+  flytter hjørnet så begge armene blir lengre eller kortere (resten som M3), og for en gruppe som står fritt et
+  flyttegrep (fire piler, midt på delen som er valgt) og et rotergrep (ut fra hjørnet nede til høyre av boksen rundt
+  gruppen) som snur hele gruppen 90° om midten, på 250-rasteret og innenfor standen. Dører, hyller, tekstil og
+  platefarger følger veggene. Grepene virker i Velg, med Vegg- eller Tekstil-pennen og i 3D; flyttegrepet vises bare
+  med pennen, i Velg er hele delen grepet. En forankret gruppe (M3) har ikke flytte- eller rotergrep. «Roter» i pillen
+  på en frittstående tekstilvegg snur gruppen den er i.
+  *Bjørn 20.11.2026 · kode `src/domain/groupGrips.ts`, `src/ui/plan/grips.ts`, `src/domain/plateDecor.ts` · test `src/domain/groupGrips.test.ts`*
 
 ## G · Gulv
 

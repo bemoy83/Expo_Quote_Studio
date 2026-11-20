@@ -30,7 +30,8 @@ export function sceneGrips(v: Variant, selection: PlanSelection): SceneGrip[] {
 
 /** On top of what the grip moves: a room or a wall at the top of its walls, a counter on its top, furniture on its own. */
 function gripHeight(v: Variant, on: GripOn): number {
-  if (on.type === 'room' || on.type === 'end' || on.type === 'door') return wallHeight(rules)
+  if (on.type === 'room' || on.type === 'end' || on.type === 'door' || on.type === 'corner' || on.type === 'turn' || (on.type === 'move' && (on.what === 'wall' || on.what === 'textile')))
+    return wallHeight(rules)
   const o = v.objects.find((x) => x.id === on.id)
   if (!o) return 0
   if (o.sections) return outerHeight(Math.max(...o.sections.map((s) => s.h))) / 1000

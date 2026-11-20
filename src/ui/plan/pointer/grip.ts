@@ -18,6 +18,12 @@ export function startGrip(c: PointerCtx, q: P): Drag | null {
   // In Velg a press there is a press on the room or piece itself (select.ts): the same drag, and a click selects as ever
   if (c.tool === 'select') return null
   const { id } = g.on
+  // An inner wall or textile wall with its group (Byggeregel M6): the drag Velg starts on it
+  if (g.on.what === 'wall') {
+    const w = c.v.walls.find((x) => x.id === id)
+    return w ? { kind: 'wall', id, p0: q, v0: c.v, delta: '0,0', horizontal: w.from[1] === w.to[1], moved: false, fine: c.fine, select: c.selection } : null
+  }
+  if (g.on.what === 'textile') return c.v.freeTextiles.some((t) => t.id === id) ? { kind: 'freeMove', id, p0: q, v0: c.v, moved: false, select: c.selection } : null
   if (g.on.what === 'room') {
     const room = c.v.rooms.find((r) => r.id === id)
     return room ? { ...startRoom(c, room, q, { roomId: id }), grip: true } : null

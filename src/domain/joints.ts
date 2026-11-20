@@ -77,7 +77,17 @@ function textilesStand(v: Variant, rules: Rules): boolean {
  */
 export function moveGroup(v: Variant, rules: Rules, g: Group, dx: number, dy: number): Variant | null {
   if (!dx && !dy) return v;
-  const shift = (p: Point): Point => [Math.round((p[0] + dx) * 1000) / 1000, Math.round((p[1] + dy) * 1000) / 1000];
+  return placeGroup(v, rules, g, (p) => [p[0] + dx, p[1] + dy]);
+}
+
+/** The group with every point of its walls and textile walls put where `to` says (a move, or a turn, M6); what stands
+ *  on its walls goes with them. Null when it cannot stand there. */
+export function placeGroup(v: Variant, rules: Rules, g: Group, to: (p: Point) => Point): Variant | null {
+  const r = (x: number) => Math.round(x * 1000) / 1000;
+  const shift = (p: Point): Point => {
+    const q = to(p);
+    return [r(q[0]), r(q[1])];
+  };
   const ws = new Set(g.walls);
   const ts = new Set(g.textiles);
   const moved = v.walls.filter((w) => ws.has(w.id)).map((w) => ({ ...w, from: shift(w.from), to: shift(w.to) }));
@@ -191,8 +201,18 @@ export function moveTextileGroup(v: Variant, rules: Rules, id: string, dx: numbe
   if (!g.anchored) return moveGroupNear(v, rules, g, snap(dx), snap(dy));
   // Anchored: across itself only
   const h = horizontal(t);
-  const ox = h ? 0 : snap(dx);
-  const oy = h ? snap(dy) : 0;
+  return slideTextile(v, rules, id, h ? 0 : snap(dx), h ? snap(dy) : 0);
+}
+
+/**
+ * Byggeregel M3: a free-standing textile wall moved across itself by (ox, oy) while what is joined to it stays: textile
+ * walls cornered to it grow or shrink, and an end against a wall stays on that wall. A forankret group moves this way,
+ * and so does an arm dragged by a corner grip (M6). Null when it cannot stand there.
+ */
+export function slideTextile(v: Variant, rules: Rules, id: string, ox: number, oy: number): Variant | null {
+  const t = v.freeTextiles.find((x) => x.id === id);
+  if (!t) return null;
+  if (horizontal(t) ? ox : oy) return null;
   if (!ox && !oy) return v;
   const shift = (p: Point): Point => [Math.round((p[0] + ox) * 1000) / 1000, Math.round((p[1] + oy) * 1000) / 1000];
   const run: FreeTextile = { ...t, from: shift(t.from), to: shift(t.to) };

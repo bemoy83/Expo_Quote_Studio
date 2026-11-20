@@ -99,6 +99,8 @@ describe('grips in 3D (Bjørn 15.11.2026)', () => {
     expect(g.map((x) => [x.at, x.y])).toEqual([
       [[3, 1], wallHeight(rules)],
       [[3, 3], wallHeight(rules)],
+      // The turn grip of a wall standing free (Byggeregel M6); the move grip is the wall itself
+      [[3.25, 3.25], wallHeight(rules)],
     ])
   })
 
