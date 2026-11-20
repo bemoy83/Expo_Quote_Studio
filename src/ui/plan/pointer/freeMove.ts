@@ -5,13 +5,12 @@ import { mountDrag } from '../../../domain/textile/mount'
 import { sideOf } from '../../../domain/faces'
 import { rules } from '../../env'
 import type { DragHandlers } from './types'
+import { goneFrom } from './moved'
 import { wallTextiles } from '../../../domain/textile/mounts'
 
 export const freeMove: DragHandlers<'freeMove'> = {
   move(c, d, q) {
-    if (!d.moved && Math.hypot(q.x - d.p0.x, q.y - d.p0.y) < 0.15) return
-    if (!d.moved) c.onCheckpoint()
-    d.moved = true
+    if (!goneFrom(d, q, 0.15, c.onCheckpoint)) return
     // Onto a system wall's line: mounted on it (Byggeregel X13)
     const m = mountDrag(d.v0, rules, d.id, q.x - d.p0.x, q.y - d.p0.y, d.loose)
     if (m && !('error' in m)) {

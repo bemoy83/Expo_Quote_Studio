@@ -10,6 +10,7 @@ import type { BuiltModule } from '../../../domain/walls'
 import { distToSegment } from '../geometry'
 import { run, startRunDrag } from './run'
 import type { DragHandlers, Drag, P } from './types'
+import { goneFrom } from './moved'
 
 /** How near the plate's line a press must be, and how far from a grid node, m. */
 const ON_PLATE = 0.14
@@ -60,8 +61,7 @@ export function startPlates(m: BuiltModule, q: P, fine = false): Drag {
 export const plates: DragHandlers<'plates'> = {
   move(c, d, q) {
     if (d.as) return run.move?.(c, d.as, q)
-    if (d.moved || Math.hypot(q.x - d.p0.x, q.y - d.p0.y) < 0.35) return
-    d.moved = true
+    if (d.moved || !goneFrom(d, q, 0.35)) return
     // Across the wall: a new wall from the press, as the pen always drew
     const w = c.v.walls.find((x) => x.id === d.wallId)
     const across = w && (w.from[1] === w.to[1] ? Math.abs(q.y - d.p0.y) > Math.abs(q.x - d.p0.x) : Math.abs(q.x - d.p0.x) > Math.abs(q.y - d.p0.y))

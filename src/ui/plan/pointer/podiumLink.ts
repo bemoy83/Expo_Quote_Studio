@@ -4,6 +4,7 @@ import { breakJoint, fusePodiums } from '../../../domain/podiumLinks'
 import { GRIP_MOVE } from '../../../domain/grips'
 import { place } from '../../env'
 import type { Drag, DragHandlers, P, PointerCtx } from './types'
+import { goneFrom } from './moved'
 
 /** A press on a link of the chosen counter, if there is one under q. */
 export function startPodiumLink(c: Pick<PointerCtx, 'hits'>, q: P): Drag | null {
@@ -13,7 +14,7 @@ export function startPodiumLink(c: Pick<PointerCtx, 'hits'>, q: P): Drag | null 
 
 export const podiumLink: DragHandlers<'podiumLink'> = {
   move(_c, d, q) {
-    if (Math.hypot(q.x - d.p0.x, q.y - d.p0.y) > GRIP_MOVE) d.moved = true
+    goneFrom(d, q, GRIP_MOVE)
   },
   up(c, d) {
     if (d.moved) return
