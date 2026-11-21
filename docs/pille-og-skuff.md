@@ -86,7 +86,7 @@ Kolonnen «Finnes» sier hvor funksjonen ligger i dag. **Ny** betyr at den må l
 | Innvendig takdrager | «Takdrager · 3 500» | «Fin»: dra på tvers i 50 mm-steg (Shift + dra på desktop, T15); samme Fin-bryter som pennene og de andre pillene | – | – | ✓ | `removeInnerBeam` |
 | Engangsteppe | «Bane 2 · 6 000» | Snu (som R) | – | `CarpetDrawer` | ✓ | `rotateLane`, `removeLane`/`removeFill` |
 
-Delete og Backspace fjerner valget som i dag (`deleteSelection`). R roterer valgt møbel, innervegg eller frittstående tekstil (`turnPart` i `plan/turn.ts`, samme for vegg og tekstil). I 3D dras en frittstående tekstilvegg som i planen (`dragFreeTextile` i `ui/drag.ts`, delt av plan og 3D): med gruppen sin, Shift eller Fin gir 250, Alt eller Løsne flytter den alene, og inn på en systemvegg monteres den (X13). Innerveggen i 3D tar også Løsne og Alt.
+Delete og Backspace fjerner valget som i dag (`deleteSelection`). R roterer valgt møbel, innervegg eller frittstående tekstil (`turnPart` i `plan/turn.ts`, samme for vegg og tekstil). I 3D dras en frittstående tekstilvegg som i planen (`dragFreeTextile` i `ui/drag.ts`, delt av plan og 3D): med gruppen sin i 250, Alt eller Løsne flytter den alene og forbi magneten, og parallelt innenfor 300 mm av en systemvegg monteres den (X13). Innerveggen i 3D tar også Løsne og Alt.
 R på en bane snur den, som i dag.
 
 ### Rotering (ny)
