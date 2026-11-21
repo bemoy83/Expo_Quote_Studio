@@ -10,10 +10,10 @@ import { faceAt, faceNormal, sideOf, type FaceSide } from '../faces';
 import { moduleCount, moduleStart, pointAlong, wallDirection, wallLength } from '../grid';
 import { groupOf, groupSize, MAGNET } from '../joints';
 import type { FreeTextile, Point, TextileFace, TextileWall, Variant, Wall } from '../types';
-import { addFreeTextile, removeFreeTextile, runNormal, textileStep, wallClearance, type FaceKey } from './free';
+import { addFreeTextile, blocked, removeFreeTextile, runNormal, textileStep, wallClearance, type FaceKey } from './free';
 import { addTextileSpan, freeSpans, fullTextileHeight } from './inFrame';
 import { MOUNT_OFFSET, freeTextiles, mountedOn, wallTextiles, withOnWall } from './mounts';
-import { same } from './corners';
+import { cornerEnds, same } from './corners';
 
 const EPS = 1e-6;
 
@@ -101,7 +101,60 @@ export function unmountDrag(v: Variant, rules: Rules, id: string, dx: number, dy
   const n = faceNormal(w, sideOf(v, t));
   const [ox, oy] = [textileStep(rules, dx), textileStep(rules, dy)];
   if (ox * n[0] + oy * n[1] <= MAGNET + EPS) return null;
-  return takeOff(v, rules, id, ox, oy);
+  return cornerGroup(v, id).length > 1 ? groupOff(v, rules, id, ox, oy) : takeOff(v, rules, id, ox, oy);
+}
+
+/** The textile walls joined to `id` through 92LTX corners, mounted or not, `id` first (X7). */
+function cornerGroup(v: Variant, id: string): string[] {
+  const corners = cornerEnds(v);
+  const out = [id];
+  for (let i = 0; i < out.length; i++) {
+    const t = v.textiles.find((x) => x.id === out[i])!;
+    const ends = [t.from, t.to].filter((_, k) => corners.get(t.id)?.[k ? 'to' : 'from']);
+    for (const o of v.textiles) if (!out.includes(o.id) && ends.some((p) => same(o.from, p) || same(o.to, p))) out.push(o.id);
+  }
+  return out;
+}
+
+/**
+ * Byggeregler X13, M4: a frame on a wall in a 92LTX corner dragged out past the magnet takes the textile walls it is
+ * joined to with it, the corners kept: each moves (ox, oy) and stands where it lands, free on foot plates or still
+ * along a wall (read from where it stands). A frame that comes off spans what it did on the wall, its free ends to the
+ * posts its span ended at. Free-standing ones are 2540 from the floor for now (X5).
+ */
+function groupOff(v: Variant, rules: Rules, id: string, ox: number, oy: number): Unmounted | { error: string } {
+  const ids = cornerGroup(v, id);
+  const corners = cornerEnds(v);
+  const views = new Map(wallTextiles(v).map((t) => [t.id, t]));
+  const r3 = (x: number) => Math.round(x * 1000) / 1000;
+  let heightKept = true;
+  const moved = ids.map((tid): FreeTextile => {
+    const t = v.textiles.find((x) => x.id === tid)!;
+    const m = mountedOn(v, tid);
+    const view = views.get(tid);
+    let { from, to } = t;
+    if (m && view) {
+      // A free end out to where its span ended, on the frame's centre line
+      const [ux, uy] = wallDirection(m.wall);
+      const along = (p: Point) => (p[0] - m.wall.from[0]) * ux + (p[1] - m.wall.from[1]) * uy;
+      const out = (p: Point) => (along(p) < (along(t.from) + along(t.to)) / 2 ? view.from : view.from + view.width);
+      const n = faceNormal(m.wall, m.side);
+      const line = (u: number): Point => [m.wall.from[0] + ux * u + n[0] * MOUNT_OFFSET, m.wall.from[1] + uy * u + n[1] * MOUNT_OFFSET];
+      if (!corners.get(tid)?.from) from = line(out(t.from));
+      if (!corners.get(tid)?.to) to = line(out(t.to));
+    }
+    if (t.bottom || (t.height !== undefined && Math.abs(t.height - fullTextileHeight(rules)) > EPS)) heightKept = false;
+    const { fit: _f, height: _h, bottom: _b, ...rest } = t;
+    const shift = (p: Point): Point => [r3(p[0] + ox), r3(p[1] + oy)];
+    return { ...rest, from: shift(from), to: shift(to) };
+  });
+  const next: Variant = { ...v, textiles: [...v.textiles.filter((t) => !ids.includes(t.id)), ...moved] };
+  // Each one that stands free must have room (F1, F2)
+  for (const t of freeTextiles(next).filter((x) => ids.includes(x.id))) {
+    const why = blocked(next, rules, t, freeTextiles(next).filter((x) => x.id !== t.id && !ids.includes(x.id)));
+    if (why) return { error: why };
+  }
+  return { v: next, id, heightKept };
 }
 
 /**

@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import type { Stand, Textile, TextileWall, Variant } from '../../domain/types';
 import { drawTextile } from '../../domain/textile/brush';
 import { joinFreeToFrames } from '../../domain/textile/free';
-import { groupMountDrag } from '../../domain/textile/mount';
+import { groupMountDrag, unmountDrag } from '../../domain/textile/mount';
 import { groupOf, magnet } from '../../domain/joints';
 import { createVariant } from '../../domain/variant';
 import { paintWalls } from '../../domain/edit';
@@ -289,5 +289,36 @@ describe('A joined free-standing corner dragged onto system walls (X13, M4)', ()
     expect(groupMountDrag(v, RULES, 'a', 0, -0.25)).toBeNull();
     const one = { ...createVariant('A', CORNER), textiles: [free('a', [2, 1], [4, 1])] };
     expect(groupMountDrag(one, RULES, 'a', 0, -0.75)).toBeNull();
+  });
+});
+
+describe('A corner on walls dragged off them takes the group with it (X13, M4)', () => {
+  it('a frame in a wall corner dragged out past the magnet: both arms come off, still joined at a 92LTX', () => {
+    const v = on(CORNER, [frame('a', 'side-back', 0, 2), frame('b', 'side-left', 0, 2)]);
+    const r = unmountDrag(v, RULES, 'a', 1, 1);
+    if (!r || 'error' in r) throw new Error(r ? r.error : 'held');
+    expect(wallTextiles(r.v)).toEqual([]);
+    const [a, b] = ['a', 'b'].map((id) => r.v.textiles.find((t) => t.id === id)!);
+    expect(a.from).toEqual(b.from);
+    expect(cornerEnds(r.v).get('a')?.from).toBeDefined();
+    // Each spans what it did on the wall: from the corner to the post its span ended at
+    expect(Math.hypot(a.to[0] - a.from[0], a.to[1] - a.from[1])).toBeCloseTo(2 - MOUNT_OFFSET, 6);
+    expect(posts(r.v)[0].qty).toBe(1);
+  });
+
+  it('a frame with a free-standing arm at its end: the arm comes along', () => {
+    const v = on(CORNER, [frame('a', 'side-back', 2, 2)]);
+    const end = v.textiles[0].from;
+    const w = { ...v, textiles: [...v.textiles, { id: 'f', from: end, to: [end[0], 2] } as Textile] };
+    const r = unmountDrag(w, RULES, 'a', 0, 1);
+    if (!r || 'error' in r) throw new Error(r ? r.error : 'held');
+    const f = r.v.textiles.find((t) => t.id === 'f')!;
+    expect(f.from).toEqual([end[0], end[1] + 1]);
+    expect(cornerEnds(r.v).get('f')?.from).toBeDefined();
+  });
+
+  it('within the magnet it is held on the wall', () => {
+    const v = on(CORNER, [frame('a', 'side-back', 0, 2), frame('b', 'side-left', 0, 2)]);
+    expect(unmountDrag(v, RULES, 'a', 0, 0.25)).toBeNull();
   });
 });

@@ -463,8 +463,12 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
     hver tekstilvegg som da står langs en vegg monteres der; inn i et hjørne av systemvegger monteres begge armene. En
     montert arm dekker spennet den står over: en fri ende på nærmeste stolpe, en ende i hjørnet på den andre armens
     linje, så 92LTX-en blir stående (X7). En arm som står ut i standen beholder lengden og møter rammen i enden (X11).
-    Er det ikke plass på veggen (X4), flyttes gruppen som før. Bjørn 21.11.2026 · kode `src/domain/textile/mount.ts`
-    (`groupMountDrag`), `src/ui/drag.ts` · test `src/calc/textile/corners.test.ts`
+    Er det ikke plass på veggen (X4), flyttes gruppen som før. Dras en ramme i et 92LTX-hjørne ut forbi magneten på sin
+    egen side, følger alle tekstilveggene den er koblet til gjennom hjørnene med, like langt, og hjørnene blir stående.
+    Hver står der den havner: fritt på fotplater, eller fortsatt langs en vegg. En ramme som tas av, spenner det den
+    gjorde på veggen, med den frie enden til stolpen spennet endte på. «Løsne» tar fortsatt bare den ene av (M5).
+    Bjørn 21.11.2026 · kode `src/domain/textile/mount.ts`
+    (`groupMountDrag`, `unmountDrag`), `src/ui/drag.ts`, `src/ui/plan/pointer/textileOff.ts` · test `src/calc/textile/corners.test.ts`
   - *Lest av plasseringen:* en tekstilvegg er montert på en veggflate når streken står parallelt med veggen, med
     midtlinjen en halv stolpe pluss en halv ramme fra veggens linje (rammen står rett mot stolpen, X2; 40 mm med dagens
     mål), og innenfor veggens ender. Alle andre står på fotplater. De to kan ikke blandes: en frittstående kan ikke stå så
