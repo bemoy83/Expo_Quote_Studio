@@ -10,7 +10,7 @@ import { ITEM } from '../../pricing/data';
 import type { Use } from '../../pricing/model';
 import { count, type CalcContext } from '../context';
 import type { CalcLine } from '../types';
-import type { FrameMount } from './common';
+import { postHeight, type FrameMount } from './common';
 
 /** One quote line per frame size: frame and textile of that size, with its own price (Bjørn 7.11.2026). */
 const quoteOf = (size: string, lead: boolean) => ({ key: `tekstil:${size}`, name: `Tekstilvegg ${size}`, lead });
@@ -70,16 +70,20 @@ function frameUses(p: FrameParts): Use[] {
  * Textile frames per piece by size B × H and mounting. The frame is the same either way (its parts,
  * calc/textile/common.ts); on foot plates two frames that meet share a 92LTX (half to each). Fast price: m² rate × B × H.
  */
+/** A frame's half of each 92LTX it shares with the run on the other side of a corner, m. */
+const postShare = (corners: number, H: number) => ({ id: ITEM.cornerPostM, qty: (corners * postHeight(H)) / 2 / 1000 });
+const nCorners = (c: { from: boolean; to: boolean }) => (c.from ? 1 : 0) + (c.to ? 1 : 0);
+
 export function frameLines(c: CalcContext): CalcLine[] {
   const { prod, sys, idx } = c;
   const builds: FrameBuild[] = [
-    ...prod.pieces.map((p) => ({ W: p.W, H: p.H, mount: p.mount, textileId: p.textileId, uses: frameUses(p.parts) })),
+    ...prod.pieces.map((p) => ({ W: p.W, H: p.H, mount: p.mount, textileId: p.textileId, uses: [...frameUses(p.parts), postShare(nCorners(p.corners), p.H)] })),
     ...prod.free.map((f) => ({
       W: f.length,
       H: f.H,
       mount: f.mount,
       textileId: f.textileId,
-      uses: [...frameUses(f.parts), { id: ITEM.cornerPostM, qty: (f.nCorners * prod.cornerPosts.H) / 2 / 1000 }],
+      uses: [...frameUses(f.parts), postShare(f.nCorners, f.H)],
     })),
   ];
   const groups = new Map<string, FrameBuild[]>();

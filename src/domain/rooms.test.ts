@@ -18,7 +18,7 @@ import { builtModules, defaultSwing } from './walls';
 import { doorSwing } from './doors';
 import { addTextile, freeSpans, updateTextile } from './textile/inFrame';
 import { faces } from './faces';
-import { wallTextiles } from './textile/mounts';
+import { wallTextiles, withOnWall } from './textile/mounts';
 
 const kf = (v: Variant) => calc(v, RULES, DEFAULT_CATALOG).keyFigures;
 const ctx = placeContext(RULES, DEFAULT_CATALOG);
@@ -190,7 +190,7 @@ describe('textile and furniture', () => {
 describe('fixed-width frames', () => {
   it('pushed by a room, a frame keeps to the side outside the room', () => {
     const v = r2();
-    const fixed = { ...v, textiles: wallTextiles(v).map((t) => ({ ...t, fit: undefined })) };
+    const fixed = withOnWall(v, wallTextiles(v).map((t) => ({ ...t, fit: undefined })));
     const moved = fitDecor(moveRoom(fixed, 'bk', 2, 0), RULES);
     expect(wallTextiles(moved)[0]).toMatchObject({ from: 4, width: 2 });
   });

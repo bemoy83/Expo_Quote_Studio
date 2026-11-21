@@ -59,7 +59,7 @@ export function structureOf(d: Derived): FogaStructure {
     modules: d.mods.map((m) => ({ plate: m.plate, opening: !!m.opening, ...(m.opening && d.curtain?.(m.opening.product) && { curtain: true }), ...(m.cc < 1 - 1e-6 && { cc: Math.round(m.cc * 1000) }) })),
     beams: beamSpecs(d.beams),
     frames: [...d.production.pieces, ...d.production.free].map((f) => ({ pos: f.pos, parts: f.parts })),
-    ...(d.production.cornerPosts.qty ? { cornerPosts: d.production.cornerPosts } : {}),
+    ...(d.production.cornerPosts.length ? { cornerPosts: d.production.cornerPosts } : {}),
     ...(d.hooks && d.hooks.oneWay + d.hooks.twoWay ? { beamHooks: d.hooks } : {}),
     ...(d.lift && d.lift.posts + d.lift.hooks + (d.lift.walls ?? 0) ? { beamLift: { posts: d.lift.posts, hooks: d.lift.hooks, ...(d.lift.walls ? { walls: d.lift.walls } : {}) } } : {}),
     ...(d.swaps?.length ? { swaps: d.swaps } : {}),

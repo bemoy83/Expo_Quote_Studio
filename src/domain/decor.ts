@@ -9,7 +9,7 @@ import { nextId } from './ids';
 import { roomAt } from './rooms';
 import { freeSpans, fullTextileHeight, spanFor, textileAt, textileBox, textilesOn, updateTextile, type Span } from './textile/inFrame';
 import type { Foil, TextileWall, Variant, Wall } from './types';
-import { wallTextiles, withOnWall } from './textile/mounts';
+import { SPAN_REACH, wallTextiles, withOnWall } from './textile/mounts';
 
 const EPS = 1e-6;
 const r1 = (n: number) => Math.round(n * 10) / 10;
@@ -181,7 +181,13 @@ export function fitDecor(v: Variant, rules: Rules, ratio: (motif: string | undef
     const spans = freeSpans(v, rules, t.wallId, s, others);
     let from = t.from;
     let width = t.width;
-    const inside = spans.some(([a, b]) => from >= a - EPS && from + width <= b + EPS);
+    // A frame may reach past its wall's end to a frame round the corner (a corner let go, X10)
+    const L = wallLength(w);
+    const reach = (a: number, b: number): Span => [a <= EPS ? a - SPAN_REACH : a, b >= L - EPS ? b + SPAN_REACH : b];
+    const inside = spans.some(([a, b]) => {
+      const [p, q] = reach(a, b);
+      return from >= p - EPS && from + width <= q + EPS;
+    });
     if (t.fit) {
       // "Fyll veggen": the whole free span it overlaps most (outside a room on a tie), growing and shrinking with it
       const sp = bestSpan(v, w, s, spans, from, width) ?? spanFor(spans, from + width / 2);

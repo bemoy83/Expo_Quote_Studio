@@ -14,7 +14,7 @@ import { beamPill, freePill, objectPill, roomPill } from './objects'
 import type { Content, PillActions, SecondFace } from './parts'
 import { placePill, type PillPlace } from './pillAnchor'
 import { shelfPill } from './shelf'
-import { foilPill, textilePill, wallPill } from './wall'
+import { cornerPill, foilPill, textilePill, wallPill } from './wall'
 
 export function SelectionPill(p: PillActions & { place: PillPlace }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -76,6 +76,8 @@ function content(p: PillActions, second: SecondFace): Content | null {
     p.onSelect({})
   }
   switch (c.kind) {
+    case 'corner':
+      return cornerPill(p, c)
     case 'fill':
       return fillPill(c, del)
     case 'lane':

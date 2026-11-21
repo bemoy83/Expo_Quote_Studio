@@ -68,7 +68,7 @@ meldingen onEdit viser, som for D7.
 Av og på vegg (X13) står i `domain/textile/mount.ts`: `mountDrag` (magnet 300 mm), `unmountDrag` og `loosenMounted`
 («Løsne» i pillen på tekstil på vegg). `moveGroup` flytter en fri gruppe som én ting (dører, folie, hyller og tekstil på veggene går med).
 `moveWall` (`domain/edit.ts`) og `moveTextileGroup` (Velg-drag i `pointer/freeMove.ts`) bruker den; en forankret
-gruppe tar flyttet opp i naboene som ender på det som dras. `magnet`/`moveGroupNear` lar en fri gruppe hoppe inn på en del innenfor 300 mm (M4), og `alone` er «Løsne» (M5: `PlanSelection.loose`, `LooseBtn` i `pill/parts.tsx`, Alt + dra i `pointer/usePlanPointer.ts`). Grepene (M6) står i `domain/groupGrips.ts`: hjørnegrep (`cornerGrips`, `dragCorner` skyver hver arm med `slideWall`/`slideTextile`), rotergrep (`turnGroup` via `placeGroup`) og flyttegrep; `ui/plan/grips.ts` viser dem (`groupGrips`) med typene `corner`, `turn` og `move` med `what: 'wall' | 'textile'`.
+gruppe tar flyttet opp i naboene som ender på det som dras. `magnet`/`moveGroupNear` lar en fri gruppe hoppe inn på en del innenfor 300 mm (M4), og `alone` er «Løsne» (M5: `PlanSelection.loose`, `LooseBtn` i `pill/parts.tsx`, Alt + dra i `pointer/usePlanPointer.ts`). Grepene (M6) står i `domain/groupGrips.ts`: hjørnegrep (`cornerGrips`, `dragCorner` skyver hver arm med `slideWall`/`slideTextile`), rotergrep (`turnGroup` via `placeGroup`) og flyttegrep; `ui/plan/grips.ts` viser dem (`groupGrips`) med typene `corner`, `turn` og `move` med `what: 'wall' | 'textile'`; endegrepene `end` med `what: 'wall' | 'textile' | 'frame' | 'beam'`.
 Dørgrepet (`door`, D8) flytter en valgt dør langs veggen med `moveOpeningAlong` i `domain/doors.ts`.
 
 **Standen i halve meter (V14):** `Stand.width/depth` er hele og halve meter. Rutenettet starter i 0 bak til venstre;
@@ -138,13 +138,24 @@ Tre filer med «support» i navnet, med hver sin jobb:
 
 Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 
-- Én liste `Variant.textiles` (`Textile` = `TextileWall` | `FreeTextile`, skilt på `mount: 'wall' | 'feet'`): les og skriv én montering med `wallTextiles`/`freeTextiles` og `withOnWall`/`withOnFeet` i `domain/textile/mounts.ts`. Av og på systemvegg (X13): `domain/textile/mount.ts`, samme id
-- InFrame på systemvegg: modell `TextileWall` · `domain/textile/inFrame.ts` (ledige spenn, legge til, endre, flytte)
-- Frittstående: modell `FreeTextile` · `domain/textile/free.ts`
+- Én type: hver tekstilvegg er et løp `Textile` (`from`/`to` i planen, side A og B, høyde, avstand fra gulvet) i
+  `Variant.textiles`. Montert på systemvegg leses av plassen (senterlinjen `MOUNT_OFFSET` fra veggens linje, X1, M1) i
+  `domain/textile/mounts.ts`: `wallTextiles` gir rammene på vegg som visningen `TextileWall` (vegg, side, spenn langs
+  veggen, aldri lagret), `freeTextiles` de frittstående (`FreeTextile` = `Textile`), og `withOnWall`/`putOnWall`/
+  `withOnFeet` skriver dem tilbake. `carryTextiles` (i `ui/edits.ts` `edited`) lar veggendringer ta med rammene sine.
+  Av og på systemvegg (X13): `domain/textile/mount.ts`, samme id
+- 92LTX-hjørner (X7): `cornerEnds` i `domain/textile/corners.ts` for alle løp; rammer på vegg kobles i `coupleCorners`
+  (i `withOnWall`) og leses tilbake i `cornerLine`, `settleCorners` i `ui/edits.ts` `settle`. «Løs opp hjørnet» og
+  «Koble hjørnet» (X10, M5): `domain/textile/cornerJoin.ts` (`wallCorners`, `letGoCorner`, `joinCorner`), pillen
+  `cornerPill` i `plan/pill/wall.tsx`, knappen `CornerButton` i `pill/parts.tsx`, valget `corner` i `selection.ts`
+- InFrame på systemvegg: `domain/textile/inFrame.ts` (ledige spenn, legge til, endre, flytte, `stretchFrame` for
+  endegrepene, X12)
+- Frittstående: `domain/textile/free.ts`; enden tas inn på en rammeende av `toFrameEnd` (`brush.ts`) og `magnet`
+  (`domain/joints.ts`), X11, M4
 - Penselen for begge: `domain/textile/brush.ts`
 - Veggflater og felt (deles med folie): `domain/faces.ts` · tekstil holdes gyldig etter andre endringer i
   `fitDecor` (`domain/decor.ts`)
-- Kalkyle: `calc/textile/inFrame.ts` (rammemål og trykk), `calc/textile/free.ts` (frittstående: skinner, hjørner,
+- Kalkyle: én beregning for rammen, `runFrame` i `calc/textile/free.ts`, for begge monteringene (monteringen gir bare festet: 520 til stolpene etter fotplateregelen, eller fotplater). `calc/textile/placement.ts`: `placeFrames` flytter bare rammer som ikke er koblet (ulik høyde, X10), `freeTrims` korter en frittstående mot en ramme i en T (X11). `calc/textile/inFrame.ts` (rammemål og trykk), `calc/textile/free.ts` (frittstående: skinner, hjørner,
   fotplater, stag `bracePoints`, skjøt 609 eller 604), holdte ender i `heldEnds` (`calc/textile/production.ts`), `calc/textile/common.ts` (full høyde, filnavn, og `FrameParts`: hva én ramme er bygget av, telt én gang og lest av både plukklisten i `foga/engine.ts` og kalkylen i `calc/textile/lines.ts`; oppskriften `RECIPES.textileFrame` har monteringene `wall` og `feet`) · linjene: `calc/textile/lines.ts`, kost og pris fra motoren via oppskriftene i kostgrunnlaget (`cost/itemDefs.ts`) · produksjonsrader:
   `calc/textile/production.ts` (lager også folierader)
 - Plan, 3D: `plan/layers/TextileLayer.tsx`, pensel `plan/pointer/run.ts` (det tekstilen lagrer: `plan/pointer/textile.ts`), flytte frittstående `pointer/freeMove.ts` · `scene3d/build/textile.ts`, dra i 3D `scene3d/pointer/drag.ts`

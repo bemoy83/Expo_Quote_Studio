@@ -86,6 +86,8 @@ export function pillAnchor(v: Variant, sel: PlanSelection): PillAnchor | null {
   const c = chosen(v, sel)
   if (!c) return null
   switch (c.kind) {
+    case 'corner':
+      return over(v, box([c.corner.at]))
     case 'opening': {
       const m = moduleStart(c.wall, c.opening.module)
       return wallAnchor(v, c.wall, m, m + place.rules.wall.cc)

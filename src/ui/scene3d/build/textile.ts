@@ -1,57 +1,54 @@
-// Textile walls: InFrame in front of a wall face, and free-standing frames on foot plates. The frames are real 43TX
-// (mitred in the corners, build/profiles.ts) with the textile stretched over both faces; free-standing runs that meet
-// share a 92LTX corner post on its end caps.
+// Textile walls: InFrame in front of a wall face, and free-standing frames on foot plates, each built from its run as
+// the calc cuts it (one frame, X1). The frames are real 43TX (mitred in the corners, build/profiles.ts) with the textile
+// on the face out from the wall, or both faces on foot plates; runs that meet share a 92LTX on its end caps (X7).
 import * as THREE from 'three'
 import { alongRun } from '../../../calc/textile/free'
-import { cornerEnds, runDirection } from '../../../domain/textile/free'
+import { cornerEnds, runDirection, runLength } from '../../../domain/textile/free'
 import type { Point, TextileFill } from '../../../domain/types'
-import { pointAlong, wallLength } from '../../../domain/grid'
+import { wallDirection } from '../../../domain/grid'
 import { rules } from '../../env'
 import { findMotif } from '../../motifs'
-import { sideOf } from '../../../domain/faces'
-import { textileBox, textileOffset } from '../../../domain/textile/inFrame'
-import { frameInset } from '../../../calc/textile/inFrame'
+import { textileBox } from '../../../domain/textile/inFrame'
 import { printMaterial } from './motifs'
 import { noteMaterial } from './note'
 import { textileNote } from '../../textileNote'
 import { ALU, ALU_FINISH, selectGlow, type BuildContext, type Tag } from './context'
 import { CAP_92LTX, CAP_THICKNESS, CORNER_92LTX, OUTLINES, mitredProfile, shared, unitProfile } from './profiles'
-import { freeTextiles, wallTextiles } from '../../../domain/textile/mounts'
+import { freeTextiles, mountedOn, outFace, wallTextiles } from '../../../domain/textile/mounts'
 
 export function buildTextile(c: BuildContext) {
   const { v, res, opts, H, at, mat, add, along, sel } = c
   const depth = rules.textile.depth
   // Textile walls (InFrame): a 43TX frame with textile over both faces, standing in front of its wall face. The motif is
   // printed on the front.
-  for (const t of wallTextiles(v)) {
-    const w = v.walls.find((x) => x.id === t.wallId)
-    if (!w) continue
-    const L = wallLength(w)
-    // Where it stands: moved in an inner corner (byggeregel X10), past the wall's end within tolerance
-    const piece = res.production.pieces.find((p) => p.textileId === t.id)
-    const shift = (piece?.shift ?? 0) / 1000
-    const from = Math.max(0, Math.min(L, t.from)) + shift
-    const to = Math.max(from, Math.min(L, t.from + t.width) + shift)
-    const s = sideOf(v, t)
-    // Against the posts' face, as the calc places it (X10): 20–60 mm out from the wall line
-    const off = s * textileOffset(rules)
-    const { bottom, height } = textileBox(t, rules)
+  for (const p of res.production.pieces) {
+    const t = v.textiles.find((x) => x.id === p.textileId)
+    const on = mountedOn(v, p.textileId)
+    const view = wallTextiles(v).find((x) => x.id === p.textileId)
+    if (!t || !on || !view) continue
+    // Where it stands: its run, against the posts' face (20–60 mm out from the wall line, X2), moved in an inner corner
+    // where two frames would clash (X10)
+    const [dx, dy] = wallDirection(on.wall)
+    const shift = (p.shift ?? 0) / 1000
+    const moved = (q: Point): Point => [q[0] + dx * shift, q[1] + dy * shift]
+    const L = runLength(t)
+    const { bottom, height } = textileBox(view, rules)
     const h = Math.min(height, H - bottom)
     const glow = selectGlow(sel.textileId === t.id)
     const alu = mat('textile', ALU, { ...ALU_FINISH, ...glow })
-    const fill = t.fill ?? 'print'
-    const m = fill === 'print' ? findMotif(opts.motifs, t.motif) : undefined
-    // The frame's width as the calc cuts it: the span less the frame side and air (X2), centred
-    const fw = to - from - 2 * (frameInset(rules.textile.inFrame) / 1000)
-    const print = m ? printMaterial(m, (to - from) / h, opts.onLoad, glow) : fill === 'white' ? white(glow) : bare(fill, fw, h, glow)
-    const g = frame(pointAlong(w, from), pointAlong(w, to), off)
-    const tag: Tag = { layer: 'textile', pick: { wallId: w.id, textileId: t.id } }
-    profiles(g, fw, h, bottom, { from: true, to: true }, -fw / 2, fw / 2, alu, tag)
+    const m = p.fill === 'print' ? findMotif(opts.motifs, p.motif ?? undefined) : undefined
+    const W = p.W / 1000
+    const print = m ? printMaterial(m, W / h, opts.onLoad, glow) : p.fill === 'white' ? white(glow) : bare(p.fill, W, h, glow)
+    const g = frame(moved(t.from), moved(t.to), 0)
+    const tag: Tag = { layer: 'textile', pick: { wallId: on.wall.id, textileId: t.id } }
+    // Rails run between the uprights at free ends, or stop at a 92LTX's leg (X7)
+    const railFrom = -L / 2 + p.railStart / 1000
+    const railTo = railFrom + p.railCuts.reduce((a, x) => a + x, 0) / 1000
+    profiles(g, L, h, bottom, { from: !p.corners.from, to: !p.corners.to }, railFrom, railTo, alu, tag)
     // One textile, on the face out from the wall
-    textile(g, -fw / 2, fw, h, bottom, print, s === 1 ? 1 : -1, tag)
+    textile(g, -L / 2 + p.faceStart / 1000, W, h, bottom, print, outFace(t, on.wall, on.side) === 'a' ? 1 : -1, tag)
     // Upright braces (90) where the calc puts them, as on foot plates: by a splice and at most 2 m apart
-    const W = piece?.W ?? fw * 1000
-    for (const at of piece?.braceAt ?? []) brace(g, -fw / 2 + (fw * at) / W, h, bottom, alu, tag)
+    for (const at of p.braceAt) brace(g, -L / 2 + at / 1000, h, bottom, alu, tag)
   }
 
   // Frittstående tekstilvegger: a frame with textile on both faces (face A toward side 1), on foot plates
@@ -145,16 +142,24 @@ export function buildTextile(c: BuildContext) {
   }
 }
 
-/** 92LTX where two free-standing runs meet, on an end cap with one on top (the post is cut 14 mm shorter). */
+/** 92LTX where two runs meet, on walls or on foot plates (X7), on an end cap with one on top (the post is cut 14 mm
+ *  shorter), as tall as the frames it joins. */
 function cornerPosts(c: BuildContext) {
   const { v, res, at, mat, add, root } = c
   const corners = cornerEnds(v)
   const done = new Set<string>()
   const foot = rules.wall.feet / 10
-  for (const f of res.production.free) {
-    const t = freeTextiles(v).find((x) => x.id === f.textileId)
-    const ends = corners.get(f.textileId)
-    if (!t || !ends) continue
+  // How each run's frame stands: its height and how far up it starts
+  const stands = new Map<string, { h: number; y0: number; pick: Tag['pick'] }>()
+  for (const p of res.production.pieces) {
+    const view = wallTextiles(v).find((x) => x.id === p.textileId)
+    if (view) stands.set(p.textileId, { h: p.H / 1000, y0: textileBox(view, rules).bottom, pick: { wallId: view.wallId, textileId: view.id } })
+  }
+  for (const f of res.production.free) stands.set(f.textileId, { h: f.H / 1000, y0: foot, pick: { freeTextileId: f.textileId } })
+  for (const t of v.textiles) {
+    const ends = corners.get(t.id)
+    const st = stands.get(t.id)
+    if (!ends || !st) continue
     const [dx, dy] = runDirection(t)
     const at0: [Point, Point, Point | undefined][] = [
       [t.from, [dx, dy], ends.from],
@@ -166,18 +171,18 @@ function cornerPosts(c: BuildContext) {
       done.add(key)
       // The legs run along +x and −y of the outline; turn it so they follow the two runs, never mirrored
       const [a, b] = a0[0] * b0[1] - a0[1] * b0[0] < 0 ? [a0, b0] : [b0, a0]
-      const m = mat('textile', ALU, { ...ALU_FINISH, ...selectGlow(c.sel.freeTextileId === t.id) })
-      const h = f.H / 1000
+      const chosen = c.sel.freeTextileId === t.id || c.sel.textileId === t.id
+      const m = mat('textile', ALU, { ...ALU_FINISH, ...selectGlow(chosen) })
       const upright = (part: 'post' | 'cap', y: number, len: number) => {
         const mesh = new THREE.Mesh(cornerGeometry(part, a, b), m)
         mesh.scale.y = len
         mesh.position.copy(at(p, y))
-        add(mesh, { layer: 'textile', pick: { freeTextileId: t.id } }, root)
+        add(mesh, { layer: 'textile', pick: st.pick }, root)
       }
       // Cap on the floor, the post on it, and a cap on top
-      upright('cap', foot, CAP_THICKNESS)
-      upright('post', foot + CAP_THICKNESS, h - 2 * CAP_THICKNESS)
-      upright('cap', foot + h - CAP_THICKNESS, CAP_THICKNESS)
+      upright('cap', st.y0, CAP_THICKNESS)
+      upright('post', st.y0 + CAP_THICKNESS, st.h - 2 * CAP_THICKNESS)
+      upright('cap', st.y0 + st.h - CAP_THICKNESS, CAP_THICKNESS)
     }
   }
 }

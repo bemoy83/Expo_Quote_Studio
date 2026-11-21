@@ -1,7 +1,8 @@
 // What the textile frame is whatever it is mounted on (on a wall with 520, or on foot plates; Bjørn 7.11.2026: one
 // product): the full frame height, the rails spliced past maxRail, the upright braces, the parts it is built of
 // (counted once, here), and the print file name (also on the quote and the work order).
-import type { TextileFrameRecipe } from '../../foga/recipes';
+import { fogaPart } from '../../foga/parts';
+import { RECIPES, type TextileFrameRecipe } from '../../foga/recipes';
 import type { FrameParts } from '../../foga/structure';
 import type { InFrameParams } from '../../rules/rules';
 import type { FramePiece } from './inFrame';
@@ -42,6 +43,16 @@ export function buttEnds(railCuts: readonly number[], corner: { from: boolean; t
 export const partsLm = (p: FrameParts) => (p.cuts.reduce((a, [l, q]) => a + l * q, 0) + p.braces.qty * p.braces.length) / 1000;
 
 export const fullHeight = (s: InFrameParams) => s.wallH + s.feet;
+
+/** Byggeregel X7: from a corner point (where the runs' centre lines cross) to where the rails start, mm: the 92LTX's
+ *  leg reaches this far from the outer corner, which is half a frame depth outside the centre line (57 − 20 today). */
+export function cornerLeg(r: TextileFrameRecipe = RECIPES.textileFrame): number {
+  const depth = fogaPart(r.profile).section?.[0] ?? 40;
+  return (fogaPart(r.feet.cornerPost).section?.[0] ?? depth) - depth / 2;
+}
+
+/** A 92LTX between frames `frameH` mm tall: it stands on an end cap and has one on top (X7). */
+export const postHeight = (frameH: number, r: TextileFrameRecipe = RECIPES.textileFrame) => frameH - 2 * r.feet.cornerPostCap;
 
 /** `Kunde_T1_970x2540mm.pdf`. Strips everything but letters and digits from the customer name. */
 export function printFileName(customer: string, pos: string, p: Pick<FramePiece, 'W' | 'H'>): string {

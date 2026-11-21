@@ -13,16 +13,18 @@ import type { FreeTextile, Point, TextileFace, Variant } from '../types';
 import { nextId } from '../ids';
 import { snapTo } from '../snapGrid';
 import { builtModules } from '../walls';
-import { onSpan } from '../grid';
 import { movedEnd, type RunEnd } from '../grips';
-import { freeTextiles, withOnFeet } from './mounts';
+import { MOUNT_INSET, MOUNT_OFFSET, freeTextiles, mountedOn, wallTextiles, withOnFeet } from './mounts';
+import { onSpan, wallDirection } from '../grid';
+import { contact, cornerEnds, isEnd, same, span, type CornerEnds } from './corners';
+
+export { cornerEnds, type CornerEnds };
 import { RECIPES } from '../../foga/recipes';
 
 /** Face A is side 1 (left normal of from → to), face B side −1. */
 export type FaceKey = 'a' | 'b';
 
 const EPS = 1e-6;
-const same = (p: Point, q: Point) => Math.abs(p[0] - q[0]) < EPS && Math.abs(p[1] - q[1]) < EPS;
 
 export const runLength = (t: Pick<FreeTextile, 'from' | 'to'>) => Math.hypot(t.to[0] - t.from[0], t.to[1] - t.from[1]);
 
@@ -45,57 +47,6 @@ export const textileStep = (rules: Rules, d: number) => Math.round(snapTo(d, rul
 export function frameRect(t: Pick<FreeTextile, 'from' | 'to'>, rules: Rules): { x0: number; y0: number; x1: number; y1: number } {
   const d = rules.textile.depth / 2;
   return { x0: Math.min(t.from[0], t.to[0]) - d, y0: Math.min(t.from[1], t.to[1]) - d, x1: Math.max(t.from[0], t.to[0]) + d, y1: Math.max(t.from[1], t.to[1]) + d };
-}
-
-const isHorizontal = (t: Pick<FreeTextile, 'from' | 'to'>) => Math.abs(t.from[1] - t.to[1]) < EPS;
-
-/** Along-axis interval of a run, low to high, and the fixed coordinate. */
-function span(t: Pick<FreeTextile, 'from' | 'to'>): { h: boolean; c: number; lo: number; hi: number } {
-  const h = isHorizontal(t);
-  const i = h ? 0 : 1;
-  return { h, c: t.from[h ? 1 : 0], lo: Math.min(t.from[i], t.to[i]), hi: Math.max(t.from[i], t.to[i]) };
-}
-
-/** How two axis-aligned segments touch: not at all, at a single point, or along a stretch (in line). */
-function contact(a: Pick<FreeTextile, 'from' | 'to'>, b: Pick<FreeTextile, 'from' | 'to'>): { kind: 'none' } | { kind: 'point'; p: Point } | { kind: 'line'; touchOnly: boolean } {
-  const s = span(a);
-  const o = span(b);
-  if (s.h === o.h) {
-    if (Math.abs(s.c - o.c) > EPS || o.lo > s.hi + EPS || o.hi < s.lo - EPS) return { kind: 'none' };
-    return { kind: 'line', touchOnly: Math.abs(o.lo - s.hi) < EPS || Math.abs(o.hi - s.lo) < EPS };
-  }
-  // Perpendicular: they meet where a's fixed coordinate crosses b's interval and the other way round
-  if (o.c < s.lo - EPS || o.c > s.hi + EPS || s.c < o.lo - EPS || s.c > o.hi + EPS) return { kind: 'none' };
-  return { kind: 'point', p: s.h ? [o.c, s.c] : [s.c, o.c] };
-}
-
-const isEnd = (t: Pick<FreeTextile, 'from' | 'to'>, p: Point) => same(t.from, p) || same(t.to, p);
-
-/** A run's ends that meet another run's end at a right angle, with the direction the other run leaves the corner. */
-export interface CornerEnds {
-  from?: Point;
-  to?: Point;
-}
-
-export function cornerEnds(v: Variant): Map<string, CornerEnds> {
-  const out = new Map<string, CornerEnds>();
-  for (const t of freeTextiles(v)) {
-    const ends: CornerEnds = {};
-    for (const o of freeTextiles(v)) {
-      if (o.id === t.id) continue;
-      const c = contact(t, o);
-      if (c.kind !== 'point') continue;
-      const away = (p: Point): Point => {
-        const far = same(o.from, p) ? o.to : o.from;
-        const L = runLength(o) || 1;
-        return [(far[0] - p[0]) / L, (far[1] - p[1]) / L];
-      };
-      if (same(t.from, c.p) && isEnd(o, c.p)) ends.from = away(c.p);
-      if (same(t.to, c.p) && isEnd(o, c.p)) ends.to = away(c.p);
-    }
-    out.set(t.id, ends);
-  }
-  return out;
 }
 
 /**
@@ -172,7 +123,7 @@ export function blocked(v: Variant, rules: Rules, t: Pick<FreeTextile, 'from' | 
 export function addFreeTextile(v: Variant, rules: Rules, a: Point, b: Point): { v: Variant; id: string } | { error: string } {
   if (same(a, b)) return { error: 'Dra en strek for å tegne tekstilveggen' };
   if (Math.abs(a[0] - b[0]) > EPS && Math.abs(a[1] - b[1]) > EPS) return { error: 'Tekstilvegger tegnes rett, langs rutenettet' };
-  let run: FreeTextile = { mount: 'feet', id: nextId(v.textiles.map((t) => t.id), 'ft'), from: a, to: b };
+  let run: FreeTextile = { id: nextId(v.textiles.map((t) => t.id), 'ft'), from: a, to: b };
   let rest = freeTextiles(v);
   for (;;) {
     const join = rest.find((o) => contact(run, o).kind === 'line');
@@ -189,7 +140,7 @@ export function addFreeTextile(v: Variant, rules: Rules, a: Point, b: Point): { 
   }
   const why = blocked(v, rules, run, rest);
   if (why) return { error: why };
-  return { v: { ...v, textiles: [...v.textiles.filter((x) => x.mount === 'wall' || rest.includes(x)), run] }, id: run.id };
+  return { v: { ...v, textiles: [...v.textiles.filter((x) => mountedOn(v, x.id) || rest.includes(x)), run] }, id: run.id };
 }
 
 export const removeFreeTextile = (v: Variant, id: string): Variant => ({ ...v, textiles: v.textiles.filter((t) => t.id !== id) });
@@ -200,7 +151,7 @@ export function updateFace(v: Variant, id: string, face: FaceKey, patch: { fill?
   return {
     ...v,
     textiles: v.textiles.map((t) => {
-      if (t.id !== id || t.mount !== 'feet') return t;
+      if (t.id !== id) return t;
       const f: TextileFace = { ...t[face] };
       if (patch.fill !== undefined) {
         if (patch.fill === 'print') delete f.fill;
@@ -327,4 +278,49 @@ export function stretchFreeTextile(v: Variant, rules: Rules, id: string, end: Ru
   const why = blocked(v, rules, run, freeTextiles(v).filter((x) => x.id !== id));
   if (why) return { error: why };
   return { v: { ...v, textiles: v.textiles.map((x) => (x.id === id ? run : x)) } };
+}
+
+/**
+ * Byggeregler X7, X11: a free-standing run that ends up against a system wall, at a right angle, where a frame on that
+ * face has a free end (its span ends on the run's line, as drawn on the same grid), meets that frame at a 92LTX
+ * instead of stopping at the wall: the run moves across onto the frame's end, and its end comes out to it. Either may
+ * have been drawn first. v itself when no run meets a frame so.
+ */
+export function joinFreeToFrames(v: Variant): Variant {
+  const frames = wallTextiles(v);
+  if (frames.length === 0) return v;
+  const corners = cornerEnds(v);
+  let changed = false;
+  const height = (t: { height?: number; bottom?: number }) => `${t.height ?? ''}|${t.bottom ?? 0}`;
+  const runs = freeTextiles(v).map((t) => {
+    for (const key of ['from', 'to'] as const) {
+      if (corners.get(t.id)?.[key]) continue;
+      const p = t[key];
+      const [dx, dy] = runDirection(t);
+      const out: Point = key === 'from' ? [dx, dy] : [-dx, -dy];
+      for (const f of frames) {
+        const m = mountedOn(v, f.id);
+        const run = v.textiles.find((x) => x.id === f.id);
+        if (!m || !run || height(run) !== height(t) || corners.get(f.id)?.from && corners.get(f.id)?.to) continue;
+        const [wx, wy] = wallDirection(m.wall);
+        const n: Point = [-wy * m.side, wx * m.side];
+        // The run leaves the face straight out, its end between the wall line and the frame's centre line
+        if (Math.abs(out[0] * n[0] + out[1] * n[1] - 1) > EPS) continue;
+        const across = (p[0] - m.wall.from[0]) * n[0] + (p[1] - m.wall.from[1]) * n[1];
+        if (across < -EPS || across > MOUNT_OFFSET + EPS) continue;
+        const along = (q: Point) => (q[0] - m.wall.from[0]) * wx + (q[1] - m.wall.from[1]) * wy;
+        const u = along(p);
+        // The frame's span ends on the run's line: its free end is half the side deduction and air past it
+        const end = (['from', 'to'] as const).find((k) => !corners.get(f.id)?.[k] && Math.abs(Math.abs(along(run[k]) - u) - MOUNT_INSET) < EPS);
+        if (!end || (along(run[end]) > u) !== (along(run[end === 'from' ? 'to' : 'from']) > u)) continue;
+        const q = run[end];
+        const shift = along(q) - u;
+        const moved: FreeTextile = { ...t, from: [t.from[0] + wx * shift, t.from[1] + wy * shift], to: [t.to[0] + wx * shift, t.to[1] + wy * shift] };
+        changed = true;
+        return { ...moved, [key]: q };
+      }
+    }
+    return t;
+  });
+  return changed ? withOnFeet(v, runs) : v;
 }

@@ -1,12 +1,14 @@
 import type { Foil, TextileFill, TextileWall, Variant, Wall } from '../../domain/types';
 import { wallLabel } from '../../domain/walls';
+import { wallDirection } from '../../domain/grid';
 import { RECIPES } from '../../foga/recipes';
 import type { InFrameParams, Rules } from '../../rules/rules';
 import { freeTrims, placeFrames } from './placement';
-import { framePiece, type FramePiece } from './inFrame';
-import { cornerPosts, freeFrames, type FreeFrame, type HeldEnds } from './free';
-import { fullHeight, partsLm, printFileName } from './common';
-import { freeTextiles, wallTextiles } from '../../domain/textile/mounts';
+import { onWallMount, wallPiece, type FramePiece } from './inFrame';
+import { cornerPosts, freeFrames, runFrame, type FreeFrame, type HeldEnds } from './free';
+import { cornerEnds } from '../../domain/textile/free';
+import { fullHeight, partsLm, postHeight, printFileName } from './common';
+import { freeTextiles, mountedOn, outFace, wallTextiles } from '../../domain/textile/mounts';
 
 export interface ProductionPiece extends FramePiece {
   pos: string;
@@ -17,6 +19,12 @@ export interface ProductionPiece extends FramePiece {
   /** Moved along the wall in an inner corner so it does not overlap another frame, mm, from → to positive
    *  (byggeregel X10). Only when moved. */
   shift?: number;
+  /** Ends at a 92LTX corner post, the run's from end being the span's low end (X7). */
+  corners: { from: boolean; to: boolean };
+  /** Where the rails start, mm from the run's from end (past the corner post's leg). */
+  railStart: number;
+  /** Where the run's from end is, mm along the wall from its start: braces, rails and textile are measured from it. */
+  runAt: number;
   fill: TextileFill;
   motif: string | null;
   /** Print file name, for a printed textile only. */
@@ -30,8 +38,8 @@ export interface Production {
   free: FreeFrame[];
   /** Their length in all, m. */
   freeLm: number;
-  /** 92LTX corner posts, each shared by two free-standing runs, `H` long (mm). */
-  cornerPosts: { qty: number; H: number };
+  /** 92LTX corner posts, each shared by the two runs meeting there (on walls or foot plates), by length `H` (mm). */
+  cornerPosts: { qty: number; H: number }[];
   /** Textile to produce (printed and white, not the customer's own), including bleed, m². */
   area: number;
   /** Aluminium profile including braces and corner posts, all frames, m. */
@@ -39,6 +47,12 @@ export interface Production {
 }
 
 const mm = (m: number) => Math.round(m * 1000);
+
+/** How far along wall w point p lies, m from its start. */
+function alongWall(w: Wall, p: readonly [number, number]): number {
+  const [dx, dy] = wallDirection(w);
+  return (p[0] - w.from[0]) * dx + (p[1] - w.from[1]) * dy;
+}
 
 /** Height in mm for the frame: the textile's own height when lower than the full wall, else full height. */
 export function textileHeightMm(t: TextileWall, s: InFrameParams): number | undefined {
@@ -49,33 +63,46 @@ export function textileHeightMm(t: TextileWall, s: InFrameParams): number | unde
 
 export function production(v: Variant, rules: Rules, customer: string): Production {
   const s = rules.textile.inFrame;
-  const walls = new Map(v.walls.map((w) => [w.id, w]));
+  const r = RECIPES.textileFrame;
   const pieces: ProductionPiece[] = [];
   const placed = placeFrames(v, rules);
   const shiftOf = new Map(placed.map((f) => [f.t.id, f.shift]));
-  wallTextiles(v).forEach((t) => {
-    const w = walls.get(t.wallId);
-    if (!w) return;
+  const corners = cornerEnds(v);
+  const runs = new Map(v.textiles.map((t) => [t.id, t]));
+  // One frame calc for every run (X1): on a wall it has one face with textile and 520 to the posts
+  for (const t of wallTextiles(v)) {
+    const m = mountedOn(v, t.id);
+    const run = runs.get(t.id);
+    if (!m || !run) continue;
     const pos = `T${pieces.length + 1}`;
-    const p = framePiece(mm(t.width), s, textileHeightMm(t, s));
-    const fill = t.fill ?? 'print';
+    const H = textileHeightMm(t, s) ?? fullHeight(s);
+    const x = runFrame(run, onWallMount(r, outFace(run, m.wall, m.side), pos, H), r, s, customer, corners.get(t.id));
+    const f = x.faces[0];
     pieces.push({
-      ...p,
+      ...wallPiece(x, mm(t.width)),
       pos,
       textileId: t.id,
-      wall: wallLabel(w),
+      wall: wallLabel(m.wall),
       at: mm(t.from),
       ...(shiftOf.get(t.id) ? { shift: mm(shiftOf.get(t.id)!) } : {}),
-      fill,
-      motif: fill === 'print' ? (t.motif ?? null) : null,
-      fileName: fill === 'print' ? printFileName(customer, pos, p) : null,
+      corners: x.corners,
+      railStart: x.railStart,
+      runAt: mm(alongWall(m.wall, run.from)),
+      fill: f.fill,
+      motif: f.motif,
+      fileName: f.fileName,
     });
-  });
+  }
   // Free-standing runs stop at a frame on the wall they end at (byggeregel X11)
   const trims = freeTrims(v, rules, placed);
-  const free = freeFrames(v, RECIPES.textileFrame, s, customer, trims, heldEnds(v, trims));
-  // The 92LTX stands on an end cap and has one on top, so it is cut shorter than the frame
-  const posts = { qty: cornerPosts(v).length, H: fullHeight(s) - 2 * RECIPES.textileFrame.feet.cornerPostCap };
+  const free = freeFrames(v, r, s, customer, trims, heldEnds(v, trims));
+  // The 92LTX stands on an end cap and has one on top, so it is cut shorter than the frames it joins
+  const heights = new Map<number, number>();
+  for (const p of cornerPosts(v)) {
+    const H = postHeight(p.H);
+    heights.set(H, (heights.get(H) ?? 0) + 1);
+  }
+  const posts = [...heights].map(([H, qty]) => ({ qty, H }));
   return {
     pieces,
     free,
@@ -87,7 +114,7 @@ export function production(v: Variant, rules: Rules, customer: string): Producti
     lm:
       pieces.reduce((a, p) => a + p.lm, 0) +
       free.reduce((a, f) => a + partsLm(f.parts), 0) +
-      (posts.qty * posts.H) / 1000,
+      posts.reduce((a, p) => a + p.qty * p.H, 0) / 1000,
   };
 }
 

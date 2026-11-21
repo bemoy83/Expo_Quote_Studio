@@ -34,7 +34,7 @@ import {
 import type { Opening, PlacedObject, Point, Room, Variant, Wall } from './types';
 import { builtModules, doorAllowed } from './walls';
 import { nextId } from './ids';
-import { wallTextiles, withOnWall } from './textile/mounts';
+import { mountedOn, wallTextiles, withOnWall } from './textile/mounts';
 
 /** Side numbers of a rectangular room. */
 export const RECT_SIDE = { back: 0, right: 1, front: 2, left: 3 } as const;
@@ -209,15 +209,17 @@ function reshape(v: Variant, r: Room, outline: Point[], shift?: (i: number) => P
   const room: Room = { ...r, outline };
   if (gaps.length) room.gaps = gaps;
   else delete room.gaps;
-  const next = syncRooms({
+  // Frames on its sides keep their place on the side (X13)
+  const frames = wallTextiles(v).flatMap((t) => {
+    if (!isRoomWallId(t.wallId, r.id)) return [];
+    const m = onSide(t.wallId);
+    return m ? [{ ...t, wallId: roomWallId(r.id, m.side), from: t.from + m.offset }] : [];
+  });
+  const synced = syncRooms({
     ...v,
     rooms: v.rooms.map((o) => (o.id === r.id ? room : o)),
     openings: v.openings.filter((o) => !isRoomWallId(o.wallId, r.id)),
-    textiles: v.textiles.flatMap((t) => {
-      if (t.mount !== 'wall' || !isRoomWallId(t.wallId, r.id)) return [t];
-      const m = onSide(t.wallId);
-      return m ? [{ ...t, wallId: roomWallId(r.id, m.side), from: t.from + m.offset }] : [];
-    }),
+    textiles: v.textiles.filter((t) => !isRoomWallId(mountedOn(v, t.id)?.wall.id ?? '', r.id)),
     foils: v.foils.flatMap((f) => {
       if (!isRoomWallId(f.wallId, r.id)) return [f];
       const m = onSide(f.wallId);
@@ -235,6 +237,7 @@ function reshape(v: Variant, r: Room, outline: Point[], shift?: (i: number) => P
         }
       : {}),
   });
+  const next = frames.length ? withOnWall(synced, [...wallTextiles(synced), ...frames]) : synced;
   // Doors and curtains keep their place on the side, off the whole metres too (Byggeregel D8); one left past an end
   // of its side stops at that end
   const doors: PlacedOpening[] = v.openings.flatMap((o) => {

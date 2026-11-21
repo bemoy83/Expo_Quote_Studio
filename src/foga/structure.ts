@@ -61,8 +61,8 @@ export interface FogaStructure {
   beamLift?: { posts: number; hooks: number; walls?: number };
   /** Textile frames, on walls and on foot plates. */
   frames: FrameSpec[];
-  /** 92LTX corner posts shared by two free-standing runs, each `H` long. */
-  cornerPosts?: { qty: number; H: number };
+  /** 92LTX corner posts, each shared by the two runs meeting there, by length `H`. */
+  cornerPosts?: { qty: number; H: number }[];
   /** Støtteplater under the posts of system walls that stand free (calc/wallSupports.ts), and of drawn takdrager. */
   wallFeet?: number;
   /** Of `posts`, those standing on a støtteplate: picked without the adjustable foot (Bjørn 1.11.2026). */

@@ -185,15 +185,31 @@ export interface PodiumDecal {
 }
 
 /**
- * A textile wall (Byggeregel X1, X13: one product however it is mounted): a 43TX frame with fabric, either mounted on a
- * system wall (`mount: 'wall'`, InFrame) or standing free on foot plates (`mount: 'feet'`). Moving it on or off a wall
- * changes only its mount; its id stays (domain/textile/mount.ts).
+ * A textile wall (Byggeregel X1, X13: one product however it is mounted): a 43TX frame with fabric on both faces, a
+ * straight run in plan from `from` to `to`. Nothing says how it is mounted: a run standing up against a system wall's
+ * face (its centre line half a post plus half a frame from the wall line) is mounted on that wall, any other run stands
+ * on foot plates (Bjørn 21.11.2026: «veggmontert er bare enda en kobling»; domain/textile/mounts.ts reads it). Two runs
+ * whose ends meet at a right angle share a 92LTX corner post (X7).
  */
-export type Textile = TextileWall | FreeTextile;
+export interface Textile {
+  id: string;
+  /** The frame's ends in plan, m, on its centre line. */
+  from: Point;
+  to: Point;
+  /** Face A: left normal of from → to (as door swing, side 1). Face B: the other (side −1). */
+  a?: TextileFace;
+  b?: TextileFace;
+  /** Height in metres. Omitted means full wall height (less `bottom`). Only on a wall for now (X13). */
+  height?: number;
+  /** Distance from the floor to the frame, metres. Omitted means on the floor. Only on a wall for now (X13). */
+  bottom?: number;
+  /** On a wall: fills the free span it sits in and grows or shrinks with it ("Fyll veggen"). */
+  fit?: boolean;
+}
 
-/** InFrame: fabric stretched in an aluminium frame, mounted against a wall (not in it). */
+/** A textile wall as it stands on a system wall (InFrame), read from where its run stands (mounts.ts): on wall
+ *  `wallId`, face `side`, over the span `from`–`from + width` along the wall. A view, never stored. */
 export interface TextileWall {
-  mount: 'wall';
   id: string;
   wallId: string;
   /** Offset along the wall from `from`, metres. */
@@ -211,15 +227,14 @@ export interface TextileWall {
   fit?: boolean;
   /** What the textile is. Omitted: printed. */
   fill?: TextileFill;
-  /** The face toward the wall, kept from when it stood free on foot plates, so it comes back when it is taken off the
-   *  wall again (Byggeregel X13). */
+  /** The face toward the wall, kept so it comes back when it is taken off the wall again (Byggeregel X13). */
   back?: TextileFace;
 }
 
 /** trykt · hvit uten grafikk · kundens egen duk i samme størrelse (bare montering) */
 export type TextileFill = 'print' | 'white' | 'reuse';
 
-/** One face of a free-standing textile wall. Textile is always on both faces. */
+/** One face of a textile wall. Textile is always on both faces of a free-standing one. */
 export interface TextileFace {
   /** Omitted: printed. */
   fill?: TextileFill;
@@ -228,20 +243,11 @@ export interface TextileFace {
 }
 
 /**
- * Frittstående tekstilvegg: a 43TX frame standing on foot plates, textile on both faces, not part of the Foga wall
- * system (no rooms or doors). A straight run on the 0,25 m grid, axis-aligned. A run longer than the max rail length
- * stays one frame with spliced top and bottom rails. Two runs whose ends meet at a right angle share a 92LTX corner
- * post (see textile/free.ts).
+ * Frittstående tekstilvegg: a textile wall standing on foot plates, textile on both faces, not part of the Foga wall
+ * system (no rooms or doors). Axis-aligned. A run longer than the max rail length stays one frame with spliced top
+ * and bottom rails. The stored run itself (mounts.ts `freeTextiles`).
  */
-export interface FreeTextile {
-  mount: 'feet';
-  id: string;
-  from: Point;
-  to: Point;
-  /** Face A: left normal of from → to (as door swing, side 1). Face B: the other (side −1). */
-  a?: TextileFace;
-  b?: TextileFace;
-}
+export type FreeTextile = Textile;
 
 /** Foil decor inside a single wall panel (960 × 2420), never across a post. A print covering the panel may sit on a door. */
 export interface Foil {

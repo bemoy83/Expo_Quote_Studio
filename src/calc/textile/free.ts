@@ -13,14 +13,15 @@
 //   Print = face + 2 × bleed, mounted along its whole perimeter (silicone edge pressed into the channel)
 //   A run that ends at a wall with a frame on that face stops at the frame's face (`trims`, calc/textile/placement.ts)
 // Byggeregler X6–X8, X11 (docs/byggeregler.md).
-import { cornerEnds, runDirection, runLength, runNormal, type FaceKey } from '../../domain/textile/free';
+import { cornerEnds, runDirection, runLength, runNormal, type CornerEnds, type FaceKey } from '../../domain/textile/free';
 import type { FreeTextile, Point, TextileFill, Variant } from '../../domain/types';
 import { fogaPart } from '../../foga/parts';
 import type { FootPlate, SupportRule, TextileFrameRecipe } from '../../foga/recipes';
 import type { InFrameParams } from '../../rules/rules';
 import { minSupports, spreadSupports, type Ends } from '../supports';
-import { bracePoints, buttEnds, frameParts, fullHeight, printFileName, splitRail, type FrameParts } from './common';
+import { bracePoints, buttEnds, cornerLeg, frameParts, fullHeight, printFileName, splitRail, type FrameParts } from './common';
 import { freeTextiles } from '../../domain/textile/mounts';
+import { RULES } from '../../rules/rules';
 
 export { bracePoints, splitRail };
 
@@ -109,6 +110,132 @@ export function supportPoints(len: number, s: SupportRule, corners: Ends = { fro
 /** Which ends of each run are held (a corner post, a wall or a frame on a wall), so a splice there cannot be threaded. */
 export type HeldEnds = ReadonlyMap<string, { from: boolean; to: boolean }>;
 
+/** What one run's frame is, mounted on a wall or on foot plates: the parts common to both (Bjørn 7.11.2026: one product). */
+export interface RunFrame {
+  textileId: string;
+  /** Run length, centre of the frame end or corner to the other, mm. */
+  length: number;
+  H: number;
+  corners: { from: boolean; to: boolean };
+  nCorners: number;
+  railCuts: number[];
+  /** Where the rails start, mm from the `from` end (past the corner post's leg). */
+  railStart: number;
+  /** Where the supports stand, mm from the `from` end: feet on foot plates, 520 on a wall. */
+  supports: number[];
+  braces: number[];
+  braceLength: number;
+  spliceCode: string;
+  faces: FreeFace[];
+  parts: FrameParts;
+}
+
+/** How a run's frame stands: on foot plates (both faces textile), or on a wall face (one face, 520 to the posts). */
+export interface RunMount {
+  kind: 'fotplater' | 'vegg';
+  /** The faces with textile, and their position names. */
+  faces: { key: FaceKey; pos: string }[];
+  /** How many supports, and the part at each. */
+  support: SupportRule;
+  supportCode: string;
+  /** A free end keeps its support this far in, mm (half the foot plate). */
+  inset: number;
+  H: number;
+}
+
+/**
+ * Byggeregler X2, X7, X8: the frame of run t, the same whatever it stands on. Top and bottom rail spliced in equal pieces
+ * past maxRail, 43TX uprights at the free ends, a 92LTX corner post shared with the other run at a corner (the rails
+ * stop at its leg, the face inside the corner half a frame depth shorter, the one outside as much longer), braces by
+ * the splices and between, and supports by the foot plate rule, a corner post counting as one.
+ */
+export function runFrame(
+  t: FreeTextile,
+  mount: RunMount,
+  r: TextileFrameRecipe,
+  s: InFrameParams,
+  customer: string,
+  ends: CornerEnds = {},
+  trim?: { from: number; to: number },
+  held?: { from: boolean; to: boolean },
+): RunFrame {
+  const depth = fogaPart(r.profile).section?.[0] ?? 40;
+  const leg = cornerLeg(r);
+  const H = mount.H;
+  const k = s.scale / 100;
+  const r1 = (x: number) => Math.round(x * k * 10) / 10;
+  const length = mm(runLength(t) - (trim ? trim.from + trim.to : 0));
+  const nCorners = (ends.from ? 1 : 0) + (ends.to ? 1 : 0);
+  // Rails stop where the corner post's leg ends
+  const rail = length - nCorners * leg;
+  const railCuts = splitRail(rail, r.maxRail);
+  const corner = { from: !!ends.from, to: !!ends.to };
+  const railStart = ends.from ? leg : 0;
+  const splices = railCuts.slice(0, -1).map((_, j) => railStart + railCuts.slice(0, j + 1).reduce((a, x) => a + x, 0));
+  const supports = supportPoints(length, mount.support, corner, mount.inset);
+  const face = (side: FaceKey, fpos: string): FreeFace => {
+    const n = runNormal(t, side);
+    // The other run leaves the corner toward the inner face: that face is shorter, the outer one longer
+    const at = (away: Point | undefined) => (away ? (away[0] * n[0] + away[1] * n[1] > 0 ? -depth / 2 : depth / 2) : 0);
+    const W = length + at(ends.from) + at(ends.to);
+    const pw = W + 2 * s.bleed;
+    const ph = H + 2 * s.bleed;
+    const tf = t[side];
+    const fill = tf?.fill ?? 'print';
+    return {
+      face: side,
+      pos: fpos,
+      W,
+      H,
+      start: -at(ends.from) || 0,
+      pw,
+      ph,
+      fw: r1(pw),
+      fh: r1(ph),
+      area: (W * H) / 1e6,
+      printArea: (pw * ph) / 1e6,
+      perimeter: (2 * (W + H)) / 1000,
+      fill,
+      motif: fill === 'print' ? (tf?.motif ?? null) : null,
+      fileName: fill === 'print' ? printFileName(customer, fpos, { W, H }) : null,
+    };
+  };
+  const freeEnds = 2 - nCorners;
+  const braces = bracePoints(length, splices, s.stag, r.spliceBrace);
+  // Held at both ends (corner posts, walls) there is no room to thread a splice: 604 in the channel
+  const bothHeld = (corner.from || !!held?.from) && (corner.to || !!held?.to);
+  const spliceCode = bothHeld ? r.splice.slide.code : r.splice.thread;
+  const perSplice = 2 * (bothHeld ? r.splice.slide.perRail : 1);
+  const braceLength = Math.max(0, H - 2 * s.prof);
+  const parts = frameParts(
+    r,
+    railCuts,
+    { qty: freeEnds, length: H },
+    { qty: braces.length, length: braces.length ? braceLength : 0 },
+    [
+      [r.corner, 2 * (freeEnds + nCorners)],
+      [spliceCode, perSplice * splices.length],
+      [mount.supportCode, supports.length],
+    ],
+    buttEnds(railCuts, corner),
+  );
+  return {
+    textileId: t.id,
+    length,
+    H,
+    corners: corner,
+    nCorners,
+    railCuts,
+    railStart,
+    supports,
+    braces,
+    braceLength,
+    spliceCode,
+    faces: mount.faces.map((f) => face(f.key, f.pos)),
+    parts,
+  };
+}
+
 export function freeFrames(
   v: Variant,
   r: TextileFrameRecipe,
@@ -119,108 +246,38 @@ export function freeFrames(
 ): FreeFrame[] {
   const corners = cornerEnds(v);
   const f = r.feet;
-  const depth = fogaPart(r.profile).section?.[0] ?? 40;
-  // The corner post's legs reach this far along each run from the outer corner (92LTX: 57), so the rails stop there
-  const postLeg = fogaPart(f.cornerPost).section?.[0] ?? depth;
   const H = fullHeight(s);
-  const k = s.scale / 100;
-  const r1 = (x: number) => Math.round(x * k * 10) / 10;
   return freeTextiles(v).map((t, i) => {
     const pos = `F${i + 1}`;
-    const ends = corners.get(t.id) ?? {};
     const trim = trims.get(t.id);
     const length = mm(runLength(t) - (trim ? trim.from + trim.to : 0));
-    const nCorners = (ends.from ? 1 : 0) + (ends.to ? 1 : 0);
-    // Rails stop where the corner post's leg ends: the leg starts at the outer corner, half a frame depth outside the
-    // run's centre line
-    const rail = length - nCorners * (postLeg - depth / 2);
-    const railCuts = splitRail(rail, r.maxRail);
-    const corner = { from: !!ends.from, to: !!ends.to };
     const foot = length < f.support.minFrom ? f.smallFoot : f.foot;
-    // Splices along the run, from the `from` end
-    const railStart = ends.from ? postLeg - depth / 2 : 0;
-    const splices = railCuts.slice(0, -1).map((_, j) => railStart + railCuts.slice(0, j + 1).reduce((a, x) => a + x, 0));
+    const faces = (['a', 'b'] as const).map((key) => ({ key, pos: `${pos}${key.toUpperCase()}` }));
     // A foot at a free end stands flush with the frame end, not past it (Bjørn 1.11.2026)
-    const supports = supportPoints(length, f.support, corner, foot.along / 2);
-    const face = (side: FaceKey): FreeFace => {
-      const n = runNormal(t, side);
-      // The other run leaves the corner toward the inner face: that face is shorter, the outer one longer
-      const at = (away: Point | undefined) => (away ? (away[0] * n[0] + away[1] * n[1] > 0 ? -depth / 2 : depth / 2) : 0);
-      const W = length + at(ends.from) + at(ends.to);
-      const pw = W + 2 * s.bleed;
-      const ph = H + 2 * s.bleed;
-      const tf = t[side];
-      const fill = tf?.fill ?? 'print';
-      const fpos = `${pos}${side.toUpperCase()}`;
-      return {
-        face: side,
-        pos: fpos,
-        W,
-        H,
-        start: -at(ends.from),
-        pw,
-        ph,
-        fw: r1(pw),
-        fh: r1(ph),
-        area: (W * H) / 1e6,
-        printArea: (pw * ph) / 1e6,
-        perimeter: (2 * (W + H)) / 1000,
-        fill,
-        motif: fill === 'print' ? (tf?.motif ?? null) : null,
-        fileName: fill === 'print' ? printFileName(customer, fpos, { W, H }) : null,
-      };
-    };
-    const freeEnds = 2 - nCorners;
-    const braces = bracePoints(length, splices, s.stag, r.spliceBrace);
-    const h = held.get(t.id);
-    const bothHeld = (corner.from || !!h?.from) && (corner.to || !!h?.to);
-    const spliceCode = bothHeld ? r.splice.slide.code : r.splice.thread;
-    const perSplice = 2 * (bothHeld ? r.splice.slide.perRail : 1);
-    const braceLength = H - 2 * s.prof;
-    const butt = buttEnds(railCuts, corner);
-    const parts = frameParts(
-      r,
-      railCuts,
-      { qty: freeEnds, length: H },
-      { qty: braces.length, length: braceLength },
-      [
-        [r.corner, 2 * (freeEnds + nCorners)],
-        [spliceCode, perSplice * splices.length],
-        [foot.code, supports.length],
-      ],
-      butt,
-    );
+    const mount: RunMount = { kind: 'fotplater', faces, support: f.support, supportCode: foot.code, inset: foot.along / 2, H };
+    const x = runFrame(t, mount, r, s, customer, corners.get(t.id), trim, held.get(t.id));
     return {
+      ...x,
       pos,
-      textileId: t.id,
-      length,
       ...(trim?.from ? { start: mm(trim.from) } : {}),
-      H,
-      corners: corner,
-      nCorners,
-      railCuts,
-      railStart,
       foot,
-      uprights: freeEnds,
-      supports,
-      braces,
-      braceLength,
-      spliceCode,
-      faces: [face('a'), face('b')],
+      uprights: 2 - x.nCorners,
+      faces: x.faces as [FreeFace, FreeFace],
       mount: 'fotplater',
-      parts,
     };
   });
 }
 
-/** Corner posts: one per corner, shared by the two runs meeting there. */
-export function cornerPosts(v: Variant): Point[] {
-  const out = new Map<string, Point>();
+/** Byggeregel X7: the 92LTX corner posts, one per corner, shared by the two runs meeting there (on walls or foot
+ *  plates), with the height of the frames they join, mm. */
+export function cornerPosts(v: Pick<Variant, 'textiles'>, full = fullHeight(RULES.textile.inFrame)): { p: Point; H: number }[] {
+  const out = new Map<string, { p: Point; H: number }>();
   const corners = cornerEnds(v);
-  for (const t of freeTextiles(v)) {
+  for (const t of v.textiles) {
     const e = corners.get(t.id);
-    if (e?.from) out.set(`${t.from[0]},${t.from[1]}`, t.from);
-    if (e?.to) out.set(`${t.to[0]},${t.to[1]}`, t.to);
+    const H = t.height !== undefined ? Math.min(full, mm(t.height)) : full;
+    if (e?.from) out.set(`${t.from[0]},${t.from[1]}`, { p: t.from, H });
+    if (e?.to) out.set(`${t.to[0]},${t.to[1]}`, { p: t.to, H });
   }
   return [...out.values()];
 }
