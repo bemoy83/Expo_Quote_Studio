@@ -1,6 +1,6 @@
 // The pill on a wall and on a frame or decal on it (docs/pille-og-skuff.md): the wall's colour, print and a textile wall;
 // the frame's motif and Fyll ledig vegg; the decal's motif. On a wall with textile walls one button steps between them.
-import { Image as ImageIcon, Layers, Move, MoveHorizontal } from 'lucide-react'
+import { Image as ImageIcon, Layers, MoveHorizontal } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { updateFoil } from '../../../domain/decor'
 import { canMoveWall, eraseWalls } from '../../../domain/edit'
@@ -17,10 +17,10 @@ import { rules } from '../../env'
 import { fmt } from '../../format'
 import { printKept } from '../../fillKeeping'
 import { findMotif } from '../../motifs'
-import { FinBtn, QBtn, Sep } from '../quick/parts'
+import { QBtn, Sep } from '../quick/parts'
 import type { Chosen, PlanSelection } from '../selection'
 import { faceName } from '../wallDrawer/face'
-import { Colours, LooseBtn, Motifs, type Content, type PillActions, type SecondFace } from './parts'
+import { Colours, Motifs, MoveTools, type Content, type PillActions, type SecondFace } from './parts'
 import { wallTextiles } from '../../../domain/textile/mounts'
 
 type Of<K extends Chosen['kind']> = Extract<Chosen, { kind: K }>
@@ -119,16 +119,8 @@ export function wallPill(p: PillActions, c: Of<'wall'>, graphics: SecondFace): C
           <ImageIcon size={15} />
           Grafikk
         </QBtn>
-        {canMoveWall(w) && (
-          <>
-            <Sep />
-            {/* Byggeregel V7: an inner wall moves in 250 with Shift or Fin */}
-            <FinBtn title={{ on: 'Dra flytter veggen i 250 · trykk for hele meter igjen', off: 'Flytt veggen i 250, utenfor metrelinjene · på desktop også Shift + dra' }}>
-              <Move size={15} />
-            </FinBtn>
-            <LooseBtn p={p} part={{ kind: 'wall', id: w.id }} />
-          </>
-        )}
+        {/* Byggeregel V7: an inner wall moves in 250 with Shift or Fin, as a free textile wall does */}
+        {canMoveWall(w) && <MoveTools p={p} part={{ kind: 'wall', id: w.id }} />}
       </>
     ),
     more: true,
