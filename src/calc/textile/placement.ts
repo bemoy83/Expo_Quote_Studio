@@ -6,8 +6,6 @@
 import { sideOf } from '../../domain/faces';
 import { onSpan, wallDirection, wallLength } from '../../domain/grid';
 import { builtModules } from '../../domain/walls';
-import { fogaPart } from '../../foga/parts';
-import { RECIPES } from '../../foga/recipes';
 import { runDirection, runLength } from '../../domain/textile/free';
 import { textileBox, textileOffset } from '../../domain/textile/inFrame';
 import type { Point, TextileWall, Variant, Wall } from '../../domain/types';
@@ -139,7 +137,8 @@ export function placeFrames(v: Variant, rules: Rules): PlacedFrame[] {
 export function freeTrims(v: Variant, rules: Rules, frames: readonly PlacedFrame[]): Map<string, { from: number; to: number }> {
   const out = new Map<string, { from: number; to: number }>();
   const reach = textileOffset(rules) + rules.textile.depth / 2;
-  const post = (fogaPart(RECIPES.wall.post).section?.[0] ?? 40) / 2000;
+  // Half a post, as the frame on a wall stands out from (textileOffset)
+  const post = rules.wall.post / 2;
   const mods = builtModules(v);
   const trimAt = (p: Point, away: Point): number => {
     for (const f of frames) {
