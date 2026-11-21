@@ -1,9 +1,7 @@
 // Velg on a free-standing textile wall: drag moves it with what it is joined to (Byggeregel M2), onto a system wall's
 // line mounts it there (X13); release selects it.
-import { moveTextileGroup } from '../../../domain/joints'
-import { mountDrag } from '../../../domain/textile/mount'
 import { sideOf } from '../../../domain/faces'
-import { rules } from '../../env'
+import { dragFreeTextile } from '../../drag'
 import type { DragHandlers } from './types'
 import { goneFrom } from './moved'
 import { wallTextiles } from '../../../domain/textile/mounts'
@@ -11,16 +9,7 @@ import { wallTextiles } from '../../../domain/textile/mounts'
 export const freeMove: DragHandlers<'freeMove'> = {
   move(c, d, q) {
     if (!goneFrom(d, q, 0.15, c.onCheckpoint)) return
-    // Onto a system wall's line: mounted on it (Byggeregel X13)
-    const m = mountDrag(d.v0, rules, d.id, q.x - d.p0.x, q.y - d.p0.y, d.loose)
-    if (m && !('error' in m)) {
-      d.mounted = m.id
-      c.onEdit(() => m.v, false)
-      return
-    }
-    d.mounted = undefined
-    const next = moveTextileGroup(d.v0, rules, d.id, q.x - d.p0.x, q.y - d.p0.y, c.fine, d.loose)
-    if (next) c.onEdit(() => next, false)
+    dragFreeTextile(d, q, c.fine, c.onEdit)
   },
   up(c, d) {
     const t = d.mounted ? wallTextiles(c.v).find((x) => x.id === d.mounted) : undefined

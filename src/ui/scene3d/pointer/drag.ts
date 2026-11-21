@@ -1,5 +1,5 @@
 // Velg in the 3D view, as in the plan: a press picks what to drag (decor or a shelf on its face, furniture, the top of
-// a section of Disker og podier (its height, Byggeregel K18), a room, an inner wall), a move drags it, a release drops it or, without moving, selects what was pressed. Anything else orbits
+// a section of Disker og podier (its height, Byggeregel K18), a room, an inner wall, a free-standing textile wall), a move drags it, a release drops it or, without moving, selects what was pressed. Anything else orbits
 // the camera. A click is a click, a drag is never one (Bjørn 9.11.2026): letting go after a drag (or an orbit) leaves the
 // selection as it was, so the drawer does not open when something is only moved.
 import { moduleMovedBy } from '../../../domain/grid'
@@ -18,7 +18,7 @@ import { shelfHeight, shelfRow, shelvesOf } from '../../../domain/shelves/model'
 import type { Foil, Motif, Point, Shelf, TextileWall, Variant, Wall } from '../../../domain/types'
 import { dragGrip, type GripOn } from '../../plan/grips'
 import type { SceneGrip } from '../grips'
-import { dragBeam, dragRoom, dragWall, dropObject, dropRoom, roomDrag, wallDrag, type RoomDrag, type WallDrag } from '../../drag'
+import { dragBeam, dragFreeTextile, dragRoom, dragWall, dropObject, dropRoom, roomDrag, wallDrag, type FreeDrag, type RoomDrag, type WallDrag } from '../../drag'
 import { standardRuns } from '../../../calc/beams/beams'
 import { place, rules } from '../../env'
 import { findMotif } from '../../motifs'
@@ -48,6 +48,8 @@ export type Drag =
   | { kind: 'orbit' }
   | { kind: 'object'; id: string; start: { x: number; y: number }; off: { x: number; y: number }; moved: boolean }
   | ({ kind: 'wall'; moved: boolean } & WallDrag)
+  /** A free-standing textile wall, as in the plan (freeMove): with its group, onto a system wall mounted (M2, X13). */
+  | ({ kind: 'free'; moved: boolean; fineLock: boolean } & FreeDrag)
   /** A drawn takdrager moved as in the plan (pointer/beam.ts), on a level plane at its height `y`. */
   | ({ kind: 'beam'; moved: boolean; y: number } & WallDrag)
   /** A room: moved, or one side dragged. Tracked on a level plane at the height it was grabbed. */
@@ -111,6 +113,11 @@ export function startDrag(P: PointerProps, hits: SceneHits, hit: Hit | null, e: 
     const o = P.v.objects.find((x) => x.id === hit.objectId)
     const q = hits.onFloor(e)
     if (o && q) return { kind: 'object', id: o.id, start: { x: o.x, y: o.y }, off: { x: q.x - o.x, y: q.y - o.y }, moved: false }
+  } else if (hit?.freeTextileId) {
+    const q = hits.onFloor(e)
+    // «Løsne» on it, or Alt held: alone, out of its group (M5), as in the plan
+    const loose = e.altKey || (!!P.selection.loose && P.selection.freeTextileId === hit.freeTextileId)
+    if (q) return { kind: 'free', id: hit.freeTextileId, p0: q, v0: P.v, moved: false, loose, fineLock: P.fine }
   } else if (hit?.beamId) {
     const b = P.v.innerBeams?.find((x) => x.id === hit.beamId)
     const y = hit.point.y
@@ -126,7 +133,8 @@ export function startDrag(P: PointerProps, hits: SceneHits, hit: Hit | null, e: 
   } else if (hit?.wallId) {
     const w = P.v.walls.find((x) => x.id === hit.wallId)
     const q = hits.onFloor(e)
-    if (w && q && canMoveWall(w)) return { kind: 'wall', ...wallDrag(w, q, P.v, P.fine), fineLock: P.fine }
+    const loose = e.altKey || (!!P.selection.loose && P.selection.wallId === w?.id && !P.selection.textileId)
+    if (w && q && canMoveWall(w)) return { kind: 'wall', ...wallDrag(w, q, P.v, P.fine), fineLock: P.fine, loose }
   }
   return { kind: 'orbit' }
 }
@@ -207,7 +215,11 @@ export function moveDrag(P: PointerProps, hits: SceneHits, drag: Exclude<Drag, {
   }
   const q = hits.onFloor(e)
   if (!q) return
-  if (drag.kind === 'object') {
+  if (drag.kind === 'free') {
+    started(P, drag)
+    // Shift held (or «Fin» on in the pill): 250 steps, as an inner wall (Byggeregel V7)
+    dragFreeTextile(drag, q, e.shiftKey || drag.fineLock, P.onEdit)
+  } else if (drag.kind === 'object') {
     started(P, drag)
     const d = drag
     P.onEdit((x) => moveObject(x, place, d.id, q.x - d.off.x, q.y - d.off.y), false)
@@ -225,6 +237,12 @@ export function endDrag(P0: PointerProps, hits: SceneHits, d: Drag | null, hit: 
   const P = { ...P0, onSelect: (s: PlanSelection) => P0.onSelect(clickSelection(P0.selection, s, P0.drawerOpen)) }
   if (d?.kind === 'object' && d.moved) return dropObject(P.v, d.id, d.start, P.onEdit, P.onToast)
   if (d?.kind === 'room' && d.moved) return dropRoom(d, P.onEdit, P.onToast)
+  // Mounted on a wall by the drag: the selection follows it there when it was the one chosen (X13)
+  if (d?.kind === 'free' && d.moved) {
+    const t = d.mounted ? wallTextiles(P.v).find((x) => x.id === d.mounted) : undefined
+    if (t && P0.selection.freeTextileId === d.id) P0.onSelect({ wallId: t.wallId, side: sideOf(P.v, t), textileId: t.id })
+    return
+  }
   if (d?.kind === 'grip') {
     const say = d.error ?? d.toast
     if (say) P.onToast(say)
@@ -259,6 +277,6 @@ export function endDrag(P0: PointerProps, hits: SceneHits, d: Drag | null, hit: 
 export function hoverCursor(v: Variant, hit: Hit | null) {
   const w = hit?.wallId ? v.walls.find((x) => x.id === hit.wallId) : undefined
   if (podiumTopAt(v, hit)) return 'ns-resize'
-  const movable = hit?.beamId || hit?.objectId || hit?.textileId || hit?.foilId || hit?.shelfId || hit?.roomId || (w && (w.room || canMoveWall(w)))
+  const movable = hit?.beamId || hit?.objectId || hit?.freeTextileId || hit?.textileId || hit?.foilId || hit?.shelfId || hit?.roomId || (w && (w.room || canMoveWall(w)))
   return movable ? 'move' : hit ? 'pointer' : 'grab'
 }
