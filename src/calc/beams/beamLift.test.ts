@@ -19,7 +19,7 @@ const ROW: Stand = { width: 6, depth: 4, type: 'row' };
 const ISLAND: Stand = { width: 10, depth: 6, type: 'island' };
 const beam = (id: string, from: Point, to: Point): InnerBeam => ({ id, from, to });
 const free = (id: string, from: Point, to: Point): FreeTextile => ({ id, from, to });
-const inFrame = (id: string, wallId: string, from: number, width: number, extra: Partial<TextileWall> = {}): TextileWall => ({ ...extra, mount: 'wall', id, wallId, from, width });
+const inFrame = (id: string, wallId: string, from: number, width: number, extra: Partial<TextileWall> = {}): TextileWall => ({ ...extra, id, wallId, from, width });
 
 type Draft = Omit<Partial<Variant>, 'textiles'> & { textiles?: (TextileWall | FreeTextile)[] };
 const variant = (stand: Stand, { textiles = [], ...x }: Draft): Variant => withTextiles({ ...createVariant('A', stand), ...x }, textiles);

@@ -109,14 +109,14 @@ describe('textile walls', () => {
     let v = createVariant('A', { width: 6, depth: 4, type: 'row' });
     v = paintWalls(v, [3, 3], [3, 1]);
     const w = v.walls.find((x) => x.from[0] === 3)!;
-    v = withTextiles(v, [{ mount: 'wall', id: 't1', wallId: w.id, from: 0, width: 2, side: 1 }]);
+    v = withTextiles(v, [{ id: 't1', wallId: w.id, from: 0, width: 2, side: 1 }]);
     v = replaceWalls(v, [...v.walls.filter((x) => x.id !== w.id), { id: 'n', from: [3, 1], to: [3, 3] }]);
     expect(wallTextiles(v)[0]).toMatchObject({ wallId: 'n', from: 0, side: -1 });
   });
 
   it('furniture collides with the frame only along its span and on its face', () => {
     let v = createVariant('A', { width: 6, depth: 4, type: 'row' });
-    v = withTextiles(v, [{ mount: 'wall', id: 't1', wallId: 'side-back', from: 0, width: 2, side: 1 }]);
+    v = withTextiles(v, [{ id: 't1', wallId: 'side-back', from: 0, width: 2, side: 1 }]);
     // A chair 3 cm from the back wall fits beside the 40 mm (43TX) frame, but not in front of it
     const d = ctx.footprint('5186')!.d;
     const at = (x: number): Variant => ({ ...v, objects: [{ id: 'i1', product: '5186', x, y: 0.03 + d / 2, rot: 0 }] });

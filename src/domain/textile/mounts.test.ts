@@ -10,7 +10,7 @@ import { createVariant } from '../variant';
 
 const wall: Wall = { id: 'w', from: [0, 0], to: [4, 0] };
 const stand: Stand = { width: 6, depth: 4, type: 'island' };
-const view: TextileWall = { mount: 'wall', id: 't1', wallId: 'w', from: 1, width: 2 };
+const view: TextileWall = { id: 't1', wallId: 'w', from: 1, width: 2 };
 const onFeet: FreeTextile = { id: 'ft1', from: [0, 1], to: [2, 1] };
 
 describe('mounted by where it stands (X13)', () => {
@@ -70,7 +70,7 @@ describe('wall edits carry their frames (M1)', () => {
   const inner = () => {
     const v = paintWalls(row(), [1, 2], [5, 2]);
     const w = v.walls.find((x) => x.from[1] === 2 && x.to[1] === 2)!;
-    return { v: withOnWall(v, [{ mount: 'wall', id: 't1', wallId: w.id, side: 1, from: 1, width: 2 }]), id: w.id };
+    return { v: withOnWall(v, [{ id: 't1', wallId: w.id, side: 1, from: 1, width: 2 }]), id: w.id };
   };
 
   it('an inner wall moved by itself takes its frame along', () => {
@@ -88,7 +88,7 @@ describe('wall edits carry their frames (M1)', () => {
   });
 
   it('a stand made deeper takes the frame on the back wall along', () => {
-    const v = withOnWall(row(), [{ mount: 'wall', id: 't1', wallId: 'side-back', from: 1, width: 2 }]);
+    const v = withOnWall(row(), [{ id: 't1', wallId: 'side-back', from: 1, width: 2 }]);
     const deeper = carryTextiles(v, setStand(v, { ...v.stand, depth: 5 }));
     expect(wallTextiles(deeper)).toMatchObject([{ id: 't1', from: 1, width: 2 }]);
   });

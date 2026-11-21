@@ -19,7 +19,7 @@ import { cornerLeg } from './common';
 
 const r3 = (x: number) => Math.round(x * 1000) / 1000;
 const CORNER: Stand = { width: 6, depth: 4, type: 'corner', cornerSide: 'right' };
-const frame = (id: string, wallId: string, from: number, width: number, extra: Partial<TextileWall> = {}): TextileWall => ({ mount: 'wall', id, wallId, from, width, ...extra });
+const frame = (id: string, wallId: string, from: number, width: number, extra: Partial<TextileWall> = {}): TextileWall => ({ id, wallId, from, width, ...extra });
 const on = (stand: Stand, list: TextileWall[], v: Variant = createVariant('A', stand)) => withOnWall(v, list);
 const posts = (v: Variant) => production(v, RULES, '').cornerPosts;
 

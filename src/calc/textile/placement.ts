@@ -1,5 +1,6 @@
-// Where the 43TX frames physically stand, in plan: InFrame in front of its wall face, moved where two frames would
-// clash in an inner corner, and free-standing runs stopped where a wall they end against begins. Byggeregler X10, X11, F1
+// Where the 43TX frames physically stand, in plan: InFrame in front of its wall face, moved where two frames not joined
+// at a 92LTX (different heights) would clash in an inner corner, and free-standing runs stopped where a wall or frame
+// they end against in a T begins. Byggeregler X7, X10, X11, F1
 // (docs/byggeregler.md). The sketch keeps the frames where they were drawn; this is derived, like the beam layout, so
 // a frame comes back when the other one goes. Used by the beam lift (calc/beams/beamLift.ts), the free frames
 // (calc/textile/free.ts), the plan and 3D.

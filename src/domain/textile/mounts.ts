@@ -99,7 +99,7 @@ function asWall(walls: readonly Wall[], t: Textile, m: MountedOn): TextileWall {
   const lo = cornerLine(walls, m.wall, onLine(m.wall, m.side, m.t0)) ?? m.t0 - MOUNT_INSET;
   const hi = cornerLine(walls, m.wall, onLine(m.wall, m.side, m.t1)) ?? m.t1 + MOUNT_INSET;
   return {
-    mount: 'wall',
+    
     id: t.id,
     wallId: m.wall.id,
     side: m.side,
@@ -285,10 +285,6 @@ export function frameCorners(v: Pick<Variant, 'textiles' | 'walls'>, id: string)
   }
   return out;
 }
-
-/** A textile wall by id: as it stands on a wall, or the free-standing run. */
-export const textileById = (v: Pick<Variant, 'textiles' | 'walls'>, id: string): TextileWall | FreeTextile | undefined =>
-  wallTextiles(v).find((t) => t.id === id) ?? freeTextiles(v).find((t) => t.id === id);
 
 /**
  * Byggeregel X13, M1: the textile walls mounted in `before` go with their walls into `after`. One the edit left as it

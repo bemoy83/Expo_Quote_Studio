@@ -210,7 +210,6 @@ export interface Textile {
 /** A textile wall as it stands on a system wall (InFrame), read from where its run stands (mounts.ts): on wall
  *  `wallId`, face `side`, over the span `from`–`from + width` along the wall. A view, never stored. */
 export interface TextileWall {
-  mount: 'wall';
   id: string;
   wallId: string;
   /** Offset along the wall from `from`, metres. */

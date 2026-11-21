@@ -16,7 +16,7 @@ import { withTextiles } from '../../test/textiles';
 const CORNER: Stand = { width: 6, depth: 4, type: 'corner', cornerSide: 'right' };
 const SQUARE: Stand = { width: 4, depth: 4, type: 'corner', cornerSide: 'right' };
 const ROW: Stand = { width: 6, depth: 4, type: 'row' };
-const frame = (id: string, wallId: string, from: number, width: number): TextileWall => ({ mount: 'wall', id, wallId, from, width });
+const frame = (id: string, wallId: string, from: number, width: number): TextileWall => ({ id, wallId, from, width });
 const free = (id: string, from: Point, to: Point): FreeTextile => ({ id, from, to });
 type Draft = Omit<Partial<Variant>, 'textiles'> & { textiles?: (TextileWall | FreeTextile)[] };
 const variant = (stand: Stand, { textiles = [], ...x }: Draft): Variant => withTextiles({ ...createVariant('A', stand), ...x }, textiles);

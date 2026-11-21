@@ -108,7 +108,7 @@ export function addTextile(v: Variant, rules: Rules, wallId: string, s: FaceSide
   const sp = near ? spanFor(spans, at) : (spans.find((x) => at >= x[0] - 1e-6 && at <= x[1] + 1e-6) ?? null);
   if (!sp) return null;
   const id = nextId(v.textiles.map((t) => t.id), 't');
-  const t: TextileWall = { mount: 'wall', id, wallId, side: s, from: r1(sp[0]), width: r1(sp[1] - sp[0]), fit: true };
+  const t: TextileWall = { id, wallId, side: s, from: r1(sp[0]), width: r1(sp[1] - sp[0]), fit: true };
   return { v: putOnWall(v, t), id };
 }
 
@@ -131,7 +131,7 @@ export function addTextileSpan(v: Variant, rules: Rules, wallId: string, s: Face
   if (width < rules.textile.minWidth - EPS) return { error: `Tekstilvegg på systemvegg må være minst ${String(rules.textile.minWidth).replace('.', ',')} m` };
   const fit = from <= best[0] + EPS && from + width >= best[1] - EPS;
   const id = nextId(v.textiles.map((t) => t.id), 't');
-  const t: TextileWall = { mount: 'wall', id, wallId, side: s, from, width, ...(fit ? { fit: true } : {}) };
+  const t: TextileWall = { id, wallId, side: s, from, width, ...(fit ? { fit: true } : {}) };
   return { v: putOnWall(v, t), id };
 }
 

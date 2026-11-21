@@ -34,7 +34,6 @@ describe('on and off a system wall (X13)', () => {
     expect(r.id).toBe(id);
     expect(r.v.textiles).toHaveLength(1);
     const t = wallTextiles(r.v).find((x) => x.id === r.id)!;
-    expect(t.mount).toBe('wall');
     expect(t).toMatchObject({ from: 0, width: 2, motif: 'm-out', back: { motif: 'm-back' } });
     expect(sideOf(r.v, t)).toBe(1);
     // And off again: free where it is let go, both faces as before
