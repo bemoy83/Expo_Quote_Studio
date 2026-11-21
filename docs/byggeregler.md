@@ -394,12 +394,13 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 
 - **X10 Rammer overlapper aldri.** To rammer på vegger i rett vinkel som ville tatt samme plass (et innvendig hjørne:
   begge står 20–60 mm ut fra veggen) overlapper ikke. Rammen på den lengste veggen blir stående (like lange: den langs
-  x, i planen bakveggen). Den andre beholder standardlengden (X9) og flyttes én rammedybde, 40 mm, langs veggen bort
-  fra hjørnet, så den står inntil den andre rammens flate. Rammene etter den på samme side flyttes like mye så langt de
+  x, i planen bakveggen). Den andre beholder standardlengden (X9) og flyttes langs veggen bort fra hjørnet til den står
+  inntil den andre rammens flate: 60 mm fra veggens linje, minus sin egen avstand fra stolpemidten (rammeside og luft,
+  15 mm), altså 45 mm (Bjørn 21.11.2026: 40 mm ga 5 mm overlapp). Rammene etter den på samme side flyttes like mye så langt de
   ellers ville overlappet. Går det forbi veggens ende eller en åpning, er det innenfor toleransen. En flyttet ramme går
-  40 mm forbi stolpen, så en takdrager som hviler der heves (T13). Vil ikke kunden ha det, kan rammemålet settes kortere
+  forbi stolpen, så en takdrager som hviler der heves (T13). Vil ikke kunden ha det, kan rammemålet settes kortere
   i veggskuffen; da blir det en kapplengde (X9).
-  *Bjørn 6.11.2026 · ikke bygget: pris for kapp · `rules.textile.depth` · kode `src/calc/textile/placement.ts` · test `src/calc/textile/placement.test.ts`*
+  *Bjørn 6.11.2026 og 21.11.2026 · ikke bygget: pris for kapp · `rules.textile.depth`, `rules.textile.inFrame` · kode `src/calc/textile/placement.ts` · test `src/calc/textile/placement.test.ts`*
 - **X11 Frittstående mot ramme.** En frittstående tekstilvegg som ender mot en systemvegg med ramme på den siden,
   stopper mot rammens flate (60 mm fra veggens senterlinje) og står ikke inntil systemveggen der. Den blir like mye
   kortere. Det er F1 for en ramme på vegg; uten ramme stopper den mot stolpene.

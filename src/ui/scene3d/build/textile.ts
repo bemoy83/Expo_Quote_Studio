@@ -10,6 +10,7 @@ import { rules } from '../../env'
 import { findMotif } from '../../motifs'
 import { sideOf } from '../../../domain/faces'
 import { textileBox, textileOffset } from '../../../domain/textile/inFrame'
+import { frameInset } from '../../../calc/textile/inFrame'
 import { printMaterial } from './motifs'
 import { noteMaterial } from './note'
 import { textileNote } from '../../textileNote'
@@ -32,14 +33,16 @@ export function buildTextile(c: BuildContext) {
     const from = Math.max(0, Math.min(L, t.from)) + shift
     const to = Math.max(from, Math.min(L, t.from + t.width) + shift)
     const s = sideOf(v, t)
-    const off = s * (textileOffset(rules) + 0.005)
+    // Against the posts' face, as the calc places it (X10): 20–60 mm out from the wall line
+    const off = s * textileOffset(rules)
     const { bottom, height } = textileBox(t, rules)
     const h = Math.min(height, H - bottom)
     const glow = selectGlow(sel.textileId === t.id)
     const alu = mat('textile', ALU, { ...ALU_FINISH, ...glow })
     const fill = t.fill ?? 'print'
     const m = fill === 'print' ? findMotif(opts.motifs, t.motif) : undefined
-    const fw = to - from - 0.02
+    // The frame's width as the calc cuts it: the span less the frame side and air (X2), centred
+    const fw = to - from - 2 * (frameInset(rules.textile.inFrame) / 1000)
     const print = m ? printMaterial(m, (to - from) / h, opts.onLoad, glow) : fill === 'white' ? white(glow) : bare(fill, fw, h, glow)
     const g = frame(pointAlong(w, from), pointAlong(w, to), off)
     const tag: Tag = { layer: 'textile', pick: { wallId: w.id, textileId: t.id } }
