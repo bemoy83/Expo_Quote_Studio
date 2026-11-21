@@ -1,5 +1,5 @@
-// Byggeregler X10, X11: frames never overlap. In an inner corner the frame on the shorter wall moves 45 mm, with the
-// frames after it; a free-standing run stops at a frame on the wall it ends at.
+// Byggeregler X10, X11: frames never overlap. In an inner corner the frame on the shorter wall moves as far as the frames
+// overlap (45 mm with today's sizes), with the frames after it; a free-standing run stops at a frame on the wall it ends at.
 import { describe, expect, it } from 'vitest';
 import type { FreeTextile, InnerBeam, Point, Stand, TextileWall, Variant } from '../../domain/types';
 import { createVariant } from '../../domain/variant';
@@ -22,13 +22,22 @@ const shifts = (v: Variant) => Object.fromEntries(placeFrames(v, RULES).map((f) 
 
 describe('rammer i et innvendig hjørne (X10)', () => {
   // Corner stand 6 × 4: back wall (0,0)–(6,0), left wall (0,0)–(0,4)
-  it('the frame on the shorter wall moves 45 mm away from the corner, right against the other frame; the longer wall keeps its frame', () => {
+  it('the frame on the shorter wall moves away from the corner until it stands against the other frame (45 mm today); the longer wall keeps its frame', () => {
     const v = variant(CORNER, { textiles: [frame('t1', 'side-back', 0, 2), frame('t2', 'side-left', 0, 1)] });
     expect(shifts(v)).toEqual({ t1: 0, t2: 45 });
     // The back frame stands 20–60 mm out from its wall; the moved one starts at 60, touching, not overlapping (Bjørn 21.11.2026)
     const [a, b] = placeFrames(v, RULES).map((f) => f.box);
     expect([a.y1, b.y0].map((x) => Math.round(x * 1000))).toEqual([60, 60]);
     expect(overlaps(a, b)).toBe(false);
+  });
+
+  it('the move follows the frames’ volume, not a number: a deeper frame moves further and still only touches', () => {
+    const deep = { ...RULES, textile: { ...RULES.textile, depth: 0.06 } };
+    const v = variant(CORNER, { textiles: [frame('t1', 'side-back', 0, 2), frame('t2', 'side-left', 0, 1)] });
+    const [a, b] = placeFrames(v, deep).map((f) => f.box);
+    expect(overlaps(a, b)).toBe(false);
+    expect(Math.round(b.y0 * 1000)).toBe(Math.round(a.y1 * 1000));
+    expect(Math.round(placeFrames(v, deep)[1].shift * 1000)).toBeGreaterThan(45);
   });
 
   it('the frames after it on the same face move with it, as far as they would clash', () => {

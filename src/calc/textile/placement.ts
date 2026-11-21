@@ -109,8 +109,8 @@ export function placeFrames(v: Variant, rules: Rules): PlacedFrame[] {
       const [dx, dy] = wallDirection(b.w);
       const [ca, cb] = [centre(a.box), centre(b.box)];
       const sign = (cb[0] - ca[0]) * dx + (cb[1] - ca[1]) * dy >= 0 ? 1 : -1;
-      // As far as it overlaps a along b's wall, so it stands right against a's face: a's depth and its own inset
-      // (rammeside and air) from the post's middle, 45 mm with today's sizes
+      // Byggeregel X10: the rule is no overlap, not a distance. b moves exactly as far as the two boxes overlap along
+      // b's wall, so it ends against a's face; never write the result (45 mm today) as a constant
       const [a0, a1, b0, b1] = isHorizontal(b.w) ? [a.box.x0, a.box.x1, b.box.x0, b.box.x1] : [a.box.y0, a.box.y1, b.box.y0, b.box.y1];
       const by = sign > 0 ? a1 - b0 : b1 - a0;
       move(b, sign * by);

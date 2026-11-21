@@ -309,8 +309,8 @@ romvegger som takdragerne ikke holder, også når takdragerne er på (`calc/wall
 - Rammen festes til veggen med **2 × 520** (876 520 22) per ramme, låst med bevel nut **503** i profilsystemet:
   én side i 43TX, den andre i veggstolpen 94. Ifølge guiden leveres 520 med skrue og 503.
 - **Innvendig hjørne** (Bjørn 6.11.2026): to rammer overlapper aldri. Rammen på den lengste veggen står (like lange:
-  den langs x), den andre beholder standardlengden og flyttes 45 mm bort fra hjørnet, til den står inntil den andre
-  rammens flate (X10), og rammene etter den på samme
+  den langs x), den andre beholder standardlengden og flyttes bort fra hjørnet akkurat så langt at rammene ikke overlapper, til den
+  står inntil den andre rammens flate (X10, regnet av rammenes volum, ikke et fast tall), og rammene etter den på samme
   side så langt de ellers ville kollidert (calc/textile/placement.ts). Går den forbi en stolpe, heves drageren der.
 
 ### Frittstående tekstilvegg (43TX) · X1, X5–X8, X11
