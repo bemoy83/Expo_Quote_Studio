@@ -11,7 +11,7 @@ import { chosenShelves, type PlanSelection } from './selection'
 import { shelvesOf } from '../../domain/shelves/model'
 import { sizePx, type PlanScale } from './planScale'
 import { PLAN_MARGIN } from './planStyle'
-import { freeTextiles, wallTextiles } from '../../domain/textile/mounts'
+import { freeTextiles, mountedOn, wallTextiles } from '../../domain/textile/mounts'
 
 const EPS = 1e-6
 
@@ -149,10 +149,13 @@ export function planDims(v: Variant, selection: PlanSelection, compact: boolean)
     const hz = horizontal(on)
     const k = hz ? 0 : 1
     const along = (t: number) => pointAlong(on, t)[k]
-    // The physical frame, as in calc and production (970 in a 1 000 span), not the span it fills
+    // The physical frame, as in calc and production (970 in a 1 000 span), not the span it fills: its run, to the
+    // 92LTX's centre in a corner (X7)
+    const m = mountedOn(v, mounted.id)
     const inset = frameInset(rules.textile.inFrame) / 1000
+    const [lo, hi] = m ? [m.t0, m.t1] : [mounted.from + inset, mounted.from + mounted.width - inset]
     // From the outside of the end posts, as on the wall drawing
-    const ends = [...physicalEnds(rules, wallLength(on)), mounted.from + inset, mounted.from + mounted.width - inset].map(along)
+    const ends = [...physicalEnds(rules, wallLength(on)), lo, hi].map(along)
     inner = { axis: hz ? 'x' : 'y', at: hz ? on.from[1] : on.from[0], dir: toward(faceNormal(on, sideOf(v, mounted)), hz), ts: chainPoints(ends), clear: 'mounted' }
   }
   const under = shelf && v.walls.find((w) => w.id === shelf.wallId)

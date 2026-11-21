@@ -55,8 +55,8 @@ describe('end grips on a free-standing textile wall (X12)', () => {
   const twoRuns = (): Variant => ({
     ...row(),
     textiles: [
-      { mount: 'feet', id: 'ft1', from: [2, 2], to: [4, 2] },
-      { mount: 'feet', id: 'ft2', from: [2, 2], to: [2, 3.5] },
+      { id: 'ft1', from: [2, 2], to: [4, 2] },
+      { id: 'ft2', from: [2, 2], to: [2, 3.5] },
     ],
   });
 

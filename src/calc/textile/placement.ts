@@ -1,5 +1,6 @@
-// Where the 43TX frames physically stand, in plan: InFrame in front of its wall face, moved where two frames would
-// clash in an inner corner, and free-standing runs stopped where a wall they end against begins. Byggeregler X10, X11, F1
+// Where the 43TX frames physically stand, in plan: InFrame in front of its wall face, moved where two frames not joined
+// at a 92LTX (different heights) would clash in an inner corner, and free-standing runs stopped where a wall or frame
+// they end against in a T begins. Byggeregler X7, X10, X11, F1
 // (docs/byggeregler.md). The sketch keeps the frames where they were drawn; this is derived, like the beam layout, so
 // a frame comes back when the other one goes. Used by the beam lift (calc/beams/beamLift.ts), the free frames
 // (calc/textile/free.ts), the plan and 3D.
@@ -11,7 +12,9 @@ import { textileBox, textileOffset } from '../../domain/textile/inFrame';
 import type { Point, TextileWall, Variant, Wall } from '../../domain/types';
 import type { Rules } from '../../rules/rules';
 import { frameInset } from './inFrame';
-import { freeTextiles, wallTextiles } from '../../domain/textile/mounts';
+import { frameCorners, freeTextiles, mountedOn, wallTextiles } from '../../domain/textile/mounts';
+import { cornerEnds } from '../../domain/textile/corners';
+import { cornerLeg } from './common';
 
 export interface Box {
   x0: number;
@@ -48,6 +51,8 @@ export interface PlacedFrame {
   bottom: number;
   top: number;
   box: Box;
+  /** Joined to another frame at a 92LTX (X7): it stays where it is drawn. */
+  corner: boolean;
 }
 
 export interface Placement {
@@ -77,15 +82,19 @@ const centre = (b: Box): Point => [(b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2];
  */
 export function placeFrames(v: Variant, rules: Rules): PlacedFrame[] {
   const inset = frameInset(rules.textile.inFrame) / 1000;
+  // At a 92LTX the frame itself starts at the post's leg; the post is between the two frames, so they never meet (X7)
+  const leg = cornerLeg() / 1000;
   const frames: PlacedFrame[] = [];
   for (const t of wallTextiles(v)) {
-    const w = v.walls.find((x) => x.id === t.wallId);
-    if (!w) continue;
+    const m = mountedOn(v, t.id);
+    if (!m) continue;
+    const w = m.wall;
     const side = sideOf(v, t);
     const { bottom, height } = textileBox(t, rules);
-    const lo = t.from + inset;
-    const hi = t.from + t.width - inset;
-    frames.push({ t, w, side, shift: 0, lo, hi, bottom, top: bottom + height, box: frameBox(rules, w, side, lo, hi) });
+    const c = frameCorners(v, t.id);
+    const lo = c.lo ? m.t0 + leg : t.from + inset;
+    const hi = c.hi ? m.t1 - leg : t.from + t.width - inset;
+    frames.push({ t, w, side, shift: 0, lo, hi, bottom, top: bottom + height, box: frameBox(rules, w, side, lo, hi), corner: !!(c.lo || c.hi) });
   }
   const move = (f: PlacedFrame, by: number) => {
     f.shift += by;
@@ -102,7 +111,7 @@ export function placeFrames(v: Variant, rules: Rules): PlacedFrame[] {
   for (let i = 0; i < frames.length; i++) {
     for (let j = 0; j < frames.length; j++) {
       const [a, b] = [frames[i], frames[j]];
-      if (i === j || isHorizontal(a.w) === isHorizontal(b.w) || !keeps(a, b) || b.shift || !clash(a, b)) continue;
+      if (i === j || isHorizontal(a.w) === isHorizontal(b.w) || !keeps(a, b) || b.shift || b.corner || !clash(a, b)) continue;
       // b moves away from a, along its own wall
       const [dx, dy] = wallDirection(b.w);
       const [ca, cb] = [centre(a.box), centre(b.box)];
@@ -114,7 +123,7 @@ export function placeFrames(v: Variant, rules: Rules): PlacedFrame[] {
       move(b, sign * by);
       // The frames after it on the same face move with it while they would clash
       const row = frames
-        .filter((f) => f !== b && f.w === b.w && f.side === b.side && !f.shift)
+        .filter((f) => f !== b && f.w === b.w && f.side === b.side && !f.shift && !f.corner)
         .sort((p, q) => sign * (p.lo - q.lo));
       let prev = b;
       for (const f of row) {
@@ -155,10 +164,13 @@ export function freeTrims(v: Variant, rules: Rules, frames: readonly PlacedFrame
     }
     return mods.some((m) => onSpan(m.a, m.b, p)) ? post : 0;
   };
+  const corners = cornerEnds(v);
   for (const t of freeTextiles(v)) {
     const [dx, dy] = runDirection(t);
-    const from = trimAt(t.from, [dx, dy]);
-    const to = trimAt(t.to, [-dx, -dy]);
+    // An end at a 92LTX with a frame on a wall is joined there, not stopped (Bjørn 21.11.2026, answer 7)
+    const c = corners.get(t.id);
+    const from = c?.from ? 0 : trimAt(t.from, [dx, dy]);
+    const to = c?.to ? 0 : trimAt(t.to, [-dx, -dy]);
     if ((from || to) && runLength(t) - from - to > EPS) out.set(t.id, { from, to });
   }
   return out;

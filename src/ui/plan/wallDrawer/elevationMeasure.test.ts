@@ -53,14 +53,14 @@ describe('wall drawing dimensions', () => {
   })
 
   it('a textile frame is measured at its physical width, as in production', () => {
-    const [t] = elevationItems(RULES, [{ mount: 'wall', id: 't1', wallId: 'w', side: 1, from: 1, width: 4 }], [], new Set(), (x) => x)
+    const [t] = elevationItems(RULES, [{ id: 't1', wallId: 'w', side: 1, from: 1, width: 4 }], [], new Set(), (x) => x)
     expect(t.x0).toBeCloseTo(1.015)
     expect(t.x1 - t.x0).toBeCloseTo(3.97)
   })
 
   it('a spliced frame is drawn as built: braces, the splice, moved in a corner (X10), and named in the leader', () => {
-    const p = { ...framePiece(6000, RULES.textile.inFrame), shift: 45 }
-    const [t] = elevationItems(RULES, [{ mount: 'wall', id: 't1', wallId: 'w', side: 1, from: 1, width: 6 }], [], new Set(), (x) => x, () => p)
+    const p = { ...framePiece(6000, RULES.textile.inFrame), shift: 45, runAt: 1015, railStart: 0 }
+    const [t] = elevationItems(RULES, [{ id: 't1', wallId: 'w', side: 1, from: 1, width: 6 }], [], new Set(), (x) => x, () => p)
     const r = (n: number) => Math.round(n * 1000)
     expect(r(t.x0)).toBe(1060)
     // Between the uprights: none more than 2 000 apart, 150 each side of the splice

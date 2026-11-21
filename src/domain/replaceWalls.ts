@@ -1,9 +1,9 @@
 // Replacing the walls of a variant while openings, textiles, foils and shelves follow onto the new walls. Used by every
 // edit that redraws walls (domain/edit.ts, rooms.ts, enclosures.ts).
 import { moduleKey, pointAlong, wallDirection, wallLength, moduleEnd, moduleStart, moduleAt, moduleFrom, moduleEnds } from './grid';
-import type { Opening, Point, TextileWall, Variant, Wall } from './types';
+import type { Opening, Point, Variant, Wall } from './types';
 import { defaultSwing } from './walls';
-import { wallTextiles, withOnWall } from './textile/mounts';
+import { mountedOn, mountOf } from './textile/mounts';
 
 const EPS = 1e-9;
 
@@ -125,12 +125,8 @@ export function replaceWalls(v: Variant, next: Wall[], add: PlacedOpening[] = []
     const s = x.side ?? defaultSwing(v.stand, oldW);
     return dot(wallDirection(oldW), wallDirection(hit.wall)) > 0 ? s : s === 1 ? -1 : 1;
   };
-  const textiles: TextileWall[] = [];
-  for (const t of wallTextiles(v)) {
-    const at = locate(old, t.wallId, t.from, t.from + t.width);
-    const hit = at && reanchor(walls, at);
-    if (hit) textiles.push({ ...t, wallId: hit.wallId, from: hit.from, side: faceOn(t, hit) });
-  }
+  // A textile wall stands in plan by itself (X13): one still against a wall face stays where it is, one whose wall is gone goes
+  const textiles = v.textiles.filter((t) => !mountedOn(v, t.id) || mountOf(walls, t));
   const foils = v.foils.flatMap((f) => {
     const at = locateModule(old, f.wallId, f.module);
     const hit = at && reanchor(walls, at);
@@ -144,7 +140,7 @@ export function replaceWalls(v: Variant, next: Wall[], add: PlacedOpening[] = []
     const hit = at && reanchor(walls, at);
     return hit ? [{ ...f, wallId: hit.wallId, module: moduleOn(hit.wall, hit.from), side: faceOn(f, hit) }] : [];
   });
-  return withOnWall({ ...v, walls, openings: dedupeOpenings(walls, openings), foils, ...(shelves ? { shelves } : {}) }, textiles);
+  return { ...v, walls, openings: dedupeOpenings(walls, openings), textiles, foils, ...(shelves ? { shelves } : {}) };
 }
 
 const dot = (a: Point, b: Point) => a[0] * b[0] + a[1] * b[1];

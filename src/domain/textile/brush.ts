@@ -8,6 +8,9 @@ import { faceAt, type FaceSide } from '../faces';
 import { addFreeTextile } from './free';
 import { wallDirection, wallLength } from '../grid';
 import type { Point, Variant, Wall } from '../types';
+import { MAGNET } from '../joints';
+import { cornerEnds } from './corners';
+import { wallTextiles } from './mounts';
 
 const EPS = 1e-6;
 
@@ -47,11 +50,42 @@ export function drawTextile(v: Variant, rules: Rules, a: Point, b: Point, at: { 
     const r = addTextileSpan(v, rules, plan.wall.id, plan.s, plan.t0, plan.t1);
     return 'error' in r ? r : { v: r.v, mounted: { id: r.id } };
   }
+  [a, b] = toFrameEnd(v, a, b);
   const r = addFreeTextile(v, rules, a, b);
   if (!('error' in r)) return { v: r.v, free: { id: r.id } };
   // Stopped by a system wall or another textile wall: as far as it can stand from where the stroke started
   const s = longestFree(v, rules, a, b);
   return s ?? r;
+}
+
+/**
+ * Byggeregler X11, M4: a free-standing stroke with an end within the magnet of the free end of a frame on a system
+ * wall, at a right angle to it, drawn onto that end so the two meet at a 92LTX (X7). The stroke keeps its direction;
+ * the other end only moves across with it. As drawn when no such end is near.
+ */
+export function toFrameEnd(v: Variant, a: Point, b: Point): [Point, Point] {
+  const h = Math.abs(a[1] - b[1]) < EPS;
+  const corners = cornerEnds(v);
+  let best: [Point, Point] | null = null;
+  let bd = Infinity;
+  for (const t of wallTextiles(v)) {
+    const run = v.textiles.find((x) => x.id === t.id)!;
+    // The frame at a right angle to the stroke
+    if ((Math.abs(run.from[1] - run.to[1]) < EPS) === h) continue;
+    for (const key of ['from', 'to'] as const) {
+      if (corners.get(t.id)?.[key]) continue;
+      const q = run[key];
+      for (const [p, o] of [[a, b], [b, a]] as const) {
+        if (Math.abs(q[0] - p[0]) > MAGNET + EPS || Math.abs(q[1] - p[1]) > MAGNET + EPS) continue;
+        const d = Math.hypot(q[0] - p[0], q[1] - p[1]);
+        if (d >= bd) continue;
+        bd = d;
+        const other: Point = h ? [o[0], q[1]] : [q[0], o[1]];
+        best = p === a ? [q, other] : [other, q];
+      }
+    }
+  }
+  return best ?? [a, b];
 }
 
 /**

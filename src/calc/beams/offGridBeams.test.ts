@@ -11,7 +11,7 @@ import { beamOffsets } from './beamOffsets';
 import { calc } from '../calc';
 
 const beam = (id: string, from: Point, to: Point): InnerBeam => ({ id, from, to });
-const free = (id: string, from: Point, to: Point): FreeTextile => ({ mount: 'feet', id, from, to });
+const free = (id: string, from: Point, to: Point): FreeTextile => ({ id, from, to });
 const variant = (stand: Stand, x: Partial<Variant>): Variant => ({ ...createVariant('A', stand), ...x });
 const run = (v: Variant) => calc(v, RULES, DEFAULT_CATALOG, { payer: 'utstiller', ral: '9010' });
 const inner = (v: Variant) => run(v).beams.segments.filter((s) => s.inner).map((s) => [s.from, s.to, s.length]);

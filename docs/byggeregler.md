@@ -346,20 +346,28 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   fotplater. Bare monteringen er ulik: på en systemvegg festes rammen med 520 til stolpene og har duk på siden ut fra
   veggen; på fotplater står den fritt og har duk på begge sider. Reglene for selve rammen (mål, stag, skjøt, hjørner i
   rammen, duk og trykkfil) er de samme. En strek på en systemveggs linje monteres på veggen (på siden streken startet
-  fra), en strek alle andre steder står på fotplater.
-  *Bjørn 31.10.2026, 6.11.2026 og 7.11.2026 («frittstående er InFrame på fotplater») · kode `src/domain/textile/brush.ts` · test `src/domain/textile/brush.test.ts`*
+  fra), en strek alle andre steder står på fotplater. I skissen er hver tekstilvegg derfor lagret likt: én strek i
+  planen (fra, til, side A og B, høyde, bunn), uten adresse på en vegg. Hvordan den er montert, leses av hvor den står
+  (X13). Slik tegnes, kobles og løses alle tekstilvegger med samme system (Bjørn 21.11.2026: «veggmontert er bare enda
+  en kobling»).
+  *Bjørn 31.10.2026, 6.11.2026, 7.11.2026 («frittstående er InFrame på fotplater») og 21.11.2026 · kode `src/domain/textile/brush.ts`, `src/domain/textile/mounts.ts` · test `src/domain/textile/brush.test.ts`, `src/domain/textile/mounts.test.ts`*
 - **X2 Ramme på systemvegg.** Bredde = spenn − 20 − 10 (sentrert i spennet), høyde 2540 eller tekstilens egen. 43TX gjæret,
-  2B + 2H, 617 i alle fire hjørner, festet med 2 × 520 (med 503) til stolpe 94,
-  inntil stolpens flate uten luft (rammen står 20–60 mm ut fra veggens linje). Stående stag i 90 maks 2000 fra hverandre
-  (rammesidene teller), lengde H − 80, med 600 i hver ende: duken trekker mest på midten.
-  *Bjørn 31.10.2026 (fabric.js er fasit), stag 2 m 7.11.2026, ingen luft mot stolpen 21.11.2026 · `rules.textile.inFrame`, `RECIPES.textileFrame` · kode `src/calc/textile/inFrame.ts` · test `src/calc/fabric.test.ts`*
+  2B + 2H, 617 i alle fire hjørner, festet med 520 (med 503) til stolpe 94, inntil stolpens flate uten luft (rammen
+  står 20–60 mm ut fra veggens linje). Antall 520 følger fotplateregelen (S3, S4, X8): ingen mer enn 3 m fra hverandre,
+  og en 92LTX teller som én (Bjørn 21.11.2026). Forskjellen fra fotplater: på vegg har rammen alltid minst to 520, også
+  under 1 m, for én brakett holder den ikke oppreist slik én bred fotplate holder en kort ramme; i et koblet hjørne
+  faller én bort. Vi antar at en 520 alltid sitter på en stolpe. Stående stag i 90 maks 2000 fra hverandre
+  (rammesidene teller), lengde H − 80, med 600 i hver ende: duken trekker mest på midten. Rammen regnes med samme
+  funksjon som på fotplater (X1, `runFrame`); bare duk på én side og 520 i stedet for fotplater skiller.
+  *Bjørn 31.10.2026 (fabric.js er fasit), stag 2 m 7.11.2026, ingen luft mot stolpen og 520 etter fotplateregelen 21.11.2026 · `rules.textile.inFrame`, `RECIPES.textileFrame` · kode `src/calc/textile/inFrame.ts`, `src/calc/textile/free.ts` · test `src/calc/fabric.test.ts`, `src/calc/textile/corners.test.ts`*
 - **X3 Trykkfil.** Ramme + 2 × bleed (20), levert i 10 %. Tilbudet lister trykkfilene kunden leverer, med filmål og
   filnavn, og trykklisten kan lastes ned som CSV der. Bleed, filskala og de andre målene for rammen endres under Regler på
   Kostgrunnlag og gjelder også kalkylen.
   *Bjørn 31.10.2026 · `rules.textile.inFrame` · kode `src/calc/textile/inFrame.ts` · test `src/calc/fabric.test.ts`*
 - **X4 Plass på veggen.** InFrame står aldri over en åpning og overlapper ikke en annen på samme side. Standvegg har bare
-  innsiden, innervegg og romvegg begge. To InFrame-rammer kobles ikke sammen.
-  *Bjørn 30.10.2026 · kode `src/domain/textile/inFrame.ts` · test `src/domain/decor.test.ts`*
+  innsiden, innervegg og romvegg begge. To rammer på samme flate kobles ikke sammen; to rammer på vegger i rett vinkel
+  møtes i et 92LTX-hjørne (X7).
+  *Bjørn 30.10.2026 og 21.11.2026 · kode `src/domain/textile/inFrame.ts` · test `src/domain/decor.test.ts`*
 - **X5 På fotplater (frittstående).** Samme ramme som X2, på fotplater, med tekstil på begge sider (trykt, hvit eller kundens egen), høyde 2540, minst
   0,25 m. Tegnes med samme verktøy som veggen og disken (Bjørn 14.11.2026: ett tegneverktøy, alle pensler på samme
   grid): et klikk på gulvet setter 1 m, et drag vokser fra modulen du ser i hele meter, med Shift eller «Fin» er
@@ -370,14 +378,25 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 - **X6 Skinner.** Gjelder rammen uansett montering. Topp- og bunnskinne går hele rammen; over 5000 skjøtes de i like stykker. Skjøten er 2 × 609 per
   skjøt (tres inn, krever plass i enden), eller 4 × 604 i sporet når begge ender er holdt av en vegg, en ramme på vegg
   eller en 92LTX, så profilen ikke kan tres. Stående 43TX i hver fri ende, 617 i hvert hjørne. En ramme på
-  systemvegg settes sammen før den henges opp, så den skjøtes med 609.
+  systemvegg settes sammen før den henges opp, så den skjøtes med 609, unntatt når den står i en 92LTX i begge ender.
   *Bjørn 31.10.2026, skjøt 7.11.2026 · `RECIPES.textileFrame` · kode `src/calc/textile/free.ts`, `src/calc/textile/inFrame.ts` · test `src/calc/freeFrames.test.ts`, `src/calc/fabric.test.ts`*
-- **X7 Hjørne.** To frittstående vegger møtes bare ende mot ende i rett vinkel (ingen T) og deler en 92LTX, kappet
-  2526 (endelokk 7 mm under og over, ikke plukket). Skinnene stopper 37 mm før hjørnepunktet; utvendig duk er 20 mm
-  lengre og innvendig 20 mm kortere per hjørne. En strek i forlengelsen blir samme vegg. 43TX er gjæret i rammens
-  hjørner; mot en 92LTX og i en skinneskjøt (X6) er enden butt. Plukklisten på arbeidsordren sier hvilke lengder som
-  har butte ender.
-  *Bjørn 31.10.2026, 6.11.2026 og 8.11.2026 · `RECIPES.textileFrame` · kode `src/calc/textile/free.ts`, `src/domain/textile/free.ts` · test `src/calc/freeFrames.test.ts`*
+- **X7 Hjørne.** To tekstilvegger som møtes ende mot ende i rett vinkel, deler en 92LTX, kappet 2526 for full høyde
+  (endelokk 7 mm under og over, ikke plukket). Det gjelder uansett montering (Bjørn 21.11.2026: «veggmontert er bare
+  enda en kobling»): to frittstående, to rammer på systemvegger, og en frittstående som møter en ramme på vegg ende mot
+  ende. En 92LTX lager hjørner, aldri en T: en ende mot midt på en annen står bare der (X11). Retningen respekteres:
+  hjørnet er der to ender møtes, ikke der to vegger krysser.
+  - *På systemvegger* er 92LTX standard i alle hjørner der rammer møtes: innvendig og utvendig hjørne, og på begge
+    sider av en T i systemveggen (to innvendige hjørner). Hjørnet kobles når hver ramme er tegnet helt til den andre
+    veggens linje, på flater som danner samme hjørne. 92LTX står inntil begge stolpeflatene, uten beslag. Rammene
+    løper da til der senterlinjene krysses, og ingen 520 trengs i den enden (X2). Til brukeren løser opp hjørnet (M5)
+    står rammene slik; en ramme alene i hjørnet stopper som før (X2).
+  - Bare rammer med samme høyde kobles, foreløpig (Bjørn 21.11.2026). En ramme med hjørneende er en kapplengde (X9).
+  - Skinnene stopper der 92LTX-ens ben slutter: benet regnes fra ytterhjørnet, en halv rammedybde utenfor senterlinjen
+    (37 mm fra hjørnepunktet med dagens mål). Duken på utsiden av hjørnet er en halv rammedybde lengre og på innsiden
+    like mye kortere per hjørne. Målene regnes av profilene, aldri som faste tall.
+  - En strek i forlengelsen blir samme vegg. 43TX er gjæret i rammens hjørner; mot en 92LTX og i en skinneskjøt (X6) er
+    enden butt. Plukklisten på arbeidsordren sier hvilke lengder som har butte ender.
+  *Bjørn 31.10.2026, 6.11.2026, 8.11.2026 og 21.11.2026 · `RECIPES.textileFrame` · kode `src/domain/textile/corners.ts`, `src/domain/textile/mounts.ts` (`coupleCorners`), `src/calc/textile/free.ts` · test `src/calc/freeFrames.test.ts`, `src/calc/textile/corners.test.ts`*
 - **X8 Føtter og stag.** Fotplate 740 under bunnskinnen etter S3 og S4; en 92LTX teller som støtte. Stagene er rammens
   egne (som X2) og står uavhengig av føttene: en fotplate har ikke stag.
   En fot i en fri ende står i flukt med rammeenden (200 mm inn for 740), resten jevnt fordelt. Under 1 m: én 730 midt på.
@@ -390,30 +409,41 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   lengder for rammer som henger utenpå én enkelt vegg, med bruttomål over cc (for eksempel 1040). Standardlengder ligger
   på lager og plukkes bare; andre lengder må kappes og skal koste mer. En skjøtt lengde er som regel én standardlengde
   pluss ett kapp. Rammer på systemvegg bruker standardlengdene (X2). Frittstående tegnes fritt som før (X5), men appen
-  kan foreslå en standardlengde for å spare penger. Mot en 92LTX kappes skinnen fortsatt (X7), til den får egen
-  standard. Standard høyde er 2540; rammer kan skjøtes til om lag 5 m høyde.
+  kan foreslå en standardlengde for å spare penger. Mot en 92LTX kappes skinnen fortsatt (X7), også på systemvegg, til
+  den kanskje får egen standard (Bjørn 21.11.2026). Standard høyde er 2540; rammer kan skjøtes til om lag 5 m høyde.
   *Bjørn 6.11.2026 · ikke bygget: forslag om standardlengde, pris for kapp, andre standardlengder · kode `src/calc/textile/inFrame.ts` · test `src/calc/fabric.test.ts`*
 
 - **X10 Rammer overlapper aldri.** Det regelen hindrer, er at to rammer tar samme plass (F1). Hver ramme har et
   volum i plan: langs veggen rammens egen bredde (X2), ut fra veggen rammedybden fra stolpens flate (inntil stolpen,
-  uten luft). To rammer på vegger i rett vinkel møtes i et innvendig hjørne, og der overlapper volumene. Da blir rammen
-  på den lengste veggen stående (like lange: den langs x, i planen bakveggen). Den andre beholder standardlengden (X9)
-  og flyttes langs sin vegg bort fra hjørnet, akkurat så langt at volumene ikke lenger overlapper: den står da inntil
-  den andre rammens flate. Flyttet er ikke et fast tall, det regnes av volumene (`placeFrames`), så det følger med
-  hvis rammedybde, sidefradrag eller luft endres. Med dagens mål blir det 45 mm, og testen sjekker at rammene møtes
-  uten overlapp, ikke tallet alene. Rammene etter den på samme side flyttes like mye så langt de ellers ville
-  overlappet. Går det forbi veggens ende eller en åpning, er det innenfor toleransen. En flyttet ramme går forbi
-  stolpen, så en takdrager som hviler der heves (T13). Vil ikke kunden ha det, kan rammemålet settes kortere i
-  veggskuffen; da blir det en kapplengde (X9).
+  uten luft). I et koblet hjørne (X7) står 92LTX mellom rammene, og rammene starter ved benet: de overlapper ikke.
+  Løses hjørnet opp (M5), flyttes rammen på den korteste veggen i skissen etter denne regelen, så den står inntil den
+  andres flate. To rammer på vegger i rett vinkel som ikke er koblet av andre grunner (ulik høyde), ville tatt samme plass
+  i et innvendig hjørne. Da blir rammen på den lengste veggen stående (like lange: den langs x, i planen bakveggen). Den
+  andre beholder standardlengden (X9) og flyttes langs sin vegg bort fra hjørnet, akkurat så langt at volumene ikke
+  lenger overlapper: den står da inntil den andre rammens flate. Flyttet er ikke et fast tall, det regnes av volumene
+  (`placeFrames`), så det følger med hvis rammedybde, sidefradrag eller luft endres. Med dagens mål blir det 45 mm, og
+  testen sjekker at rammene møtes uten overlapp, ikke tallet alene. Rammene etter den på samme side flyttes like mye
+  så langt de ellers ville overlappet. Går det forbi veggens ende eller en åpning, er det innenfor toleransen. En
+  flyttet ramme går forbi stolpen, så en takdrager som hviler der heves (T13). Vil ikke kunden ha det, kan rammemålet
+  settes kortere i veggskuffen; da blir det en kapplengde (X9).
   *Bjørn 6.11.2026 og 21.11.2026 («det som skal unngås er overlapp av rammer») · ikke bygget: pris for kapp · `rules.textile.depth`, `rules.textile.inFrame` · kode `src/calc/textile/placement.ts` · test `src/calc/textile/placement.test.ts`*
-- **X11 Frittstående mot ramme.** En frittstående tekstilvegg som ender mot en systemvegg med ramme på den siden,
+- **X11 Frittstående mot ramme.** En frittstående tekstilvegg som ender mot midten av en ramme på systemvegg (en T),
   stopper mot rammens flate (60 mm fra veggens senterlinje) og står ikke inntil systemveggen der. Den blir like mye
-  kortere. Det er F1 for en ramme på vegg; uten ramme stopper den mot stolpene.
-  *Bjørn 6.11.2026 · kode `src/calc/textile/placement.ts`, `src/calc/textile/free.ts` · test `src/calc/textile/placement.test.ts`*
-- **X12 Endegrep på frittstående tekstilvegg.** En valgt frittstående tekstilvegg har grep på hver ende som ikke står i
+  kortere. Det er F1 for en ramme på vegg; uten ramme stopper den mot stolpene. Møter den en rammes ende i rett vinkel,
+  er det et hjørne med 92LTX (X7), og den stopper ikke. Tegnes eller dras den med enden innenfor magneten (M4) av en fri
+  rammeende, i rett vinkel, tar magneten enden inn på rammens ende. Står den inntil systemveggen der en ramme på samme
+  flate har en fri ende (rammens spenn ender på løpets linje, som når begge er tegnet på rutenettet), flyttes løpet på
+  tvers inn på rammens ende og møter den i 92LTX, uansett hvilken som ble tegnet først (`joinFreeToFrames`). Planen tegner
+  hjørnet der rammens strek ender.
+  *Bjørn 6.11.2026 og 21.11.2026 · kode `src/calc/textile/placement.ts`, `src/calc/textile/free.ts`, `src/domain/textile/brush.ts` (`toFrameEnd`), `src/domain/joints.ts` (`magnet`), `src/domain/textile/free.ts` (`joinFreeToFrames`), `src/ui/plan/layers/TextileLayer.tsx` · test `src/calc/textile/placement.test.ts`, `src/calc/textile/corners.test.ts`*
+- **X12 Endegrep på tekstilvegg.** En valgt frittstående tekstilvegg har grep på hver ende som ikke står i
   et 92LTX-hjørne, også en ende inntil en systemvegg (den står bare der, M1), i Velg og med Tekstil-pennen, som innervegger (V13): hele meter, 250 med Shift eller Fin, kontrollert som når den tegnes, og
-  grunnen vises når det ikke går. InFrame-tekstil på systemvegg har ingen endegrep ennå.
-  *Bjørn 14.11.2026, 15.11.2026 og 21.11.2026 · kode `src/domain/textile/free.ts`, `src/ui/plan/grips.ts` · test `src/domain/wallEnds.test.ts`*
+  grunnen vises når det ikke går. En ramme på systemvegg har grep på begge ender, også en ende i et 92LTX-hjørne, i Velg
+  og med Tekstil-pennen: den dras langs veggen i hele meter, 250 med Shift eller Fin, og stopper ved åpninger, vegger som
+  møter flaten, andre rammer og veggens ende. Dras enden inn i hjørnet der det står en ramme på den andre veggen, møtes de
+  i 92LTX (X7); dras den ut, er enden fri igjen (X2). Begge leses av hvor endene står. «Fyll ledig vegg» fyller på samme
+  måte helt inn i et slikt hjørne.
+  *Bjørn 14.11.2026, 15.11.2026 og 21.11.2026 · kode `src/domain/textile/free.ts`, `src/domain/textile/inFrame.ts` (`stretchFrame`), `src/ui/plan/grips.ts` · test `src/domain/wallEnds.test.ts`, `src/calc/textile/corners.test.ts`*
 - **X13 Av og på systemveggen.** Tekstilveggen er ett produkt uansett montering (X1). Montert på en systemvegg er den
   koblet til veggen, ikke et annet produkt (Bjørn 21.11.2026), så den tas av og settes på som andre koblinger:
   - *På:* dras en frittstående tekstilvegg parallelt med en systemvegg og kommer innenfor magneten (M4, 300 mm) av en
@@ -428,8 +458,12 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   - Siden som vender ut beholder duk og motiv. Siden mot veggen huskes og kommer tilbake når den tas av igjen. En
     tekstilvegg i et 92LTX-hjørne (M1) monteres ikke alene, bare med Løsne (M5). På fotplater er høyden foreløpig 2540
     fra gulvet (X5): har den en annen høyde eller står høyere på veggen, sier en melding det.
-  I skissen er alle tekstilvegger én liste med montering vegg eller fotplater; av og på veggen endres bare monteringen,
-  og tekstilveggen beholder sin id (filversjon 6, versjon 5 leses inn).
+  - *Lest av plasseringen:* en tekstilvegg er montert på en veggflate når streken står parallelt med veggen, med
+    midtlinjen en halv stolpe pluss en halv ramme fra veggens linje (rammen står rett mot stolpen, X2; 40 mm med dagens
+    mål), og innenfor veggens ender. Alle andre står på fotplater. De to kan ikke blandes: en frittstående kan ikke stå så
+    nær en vegg (fotplatene, F2). Avstanden regnes av målene i reglene, aldri som et fast tall.
+  Av og på veggen flyttes bare streken, og tekstilveggen beholder sin id. Skisser fra før filversjon 7, der en
+  tekstilvegg på systemvegg hadde adresse på veggen, åpnes ikke (ingen bakoverkompatibilitet, Bjørn 21.11.2026).
   *Bjørn 20.11.2026 og 21.11.2026 · kode `src/domain/textile/mount.ts`, `src/domain/textile/mounts.ts`, `src/ui/plan/pointer/freeMove.ts`, `src/ui/plan/pointer/textileOff.ts`, `src/ui/plan/pill/wall.tsx` · test `src/domain/textile/mount.test.ts`, `src/domain/textile/mounts.test.ts`*
 
 ## M · Magnet og kobling
@@ -444,7 +478,10 @@ ellers står delene bare ved hverandre (Bjørn 21.11.2026, [Fysiske regler](http
   tekstilvegg, står bare inntil: det finnes ikke beslag for den T-en (Bjørn 21.11.2026). Koblingen lagres ikke, den
   leses av hvor delene står (som V10). Delene som henger sammen slik, er en gruppe: vegger eller tekstilvegger, aldri
   begge. En gruppe vegger koblet til en vegg som står fast (standvegg eller romvegg), er forankret.
-  *Bjørn 20.11.2026 og 21.11.2026 · kode `src/domain/joints.ts` · test `src/domain/joints.test.ts`*
+  En vegg tar med seg tekstilveggene som er montert på den: flyttes, snus, strekkes eller kortes den, følger de med på
+  samme sted langs veggen (en ramme som stikker ut over en kortere vegg, kortes til veggen); fjernes veggen, går de med.
+  Én funksjon gjør dette for alle redigeringer av vegger (flytt, grupper, rom, standstørrelse).
+  *Bjørn 20.11.2026 og 21.11.2026 · kode `src/domain/joints.ts`, `src/domain/textile/mounts.ts` (`carryTextiles`), `src/ui/edits.ts` · test `src/domain/joints.test.ts`, `src/domain/textile/mounts.test.ts`*
 - **M2 Gruppen flyttes som én ting.** Klikk og dra i en del av en gruppe som står fritt, flytter hele gruppen: to 1 m
   vegger koblet i et hjørne flyttes som et hjørne, et tekstilhjørne som et hjørne. Dører, folie, hyller og tekstil på
   veggene går med. Vegger flyttes i hele meter som en innervegg (V7), 250 med Shift eller Fin; tekstilvegger alltid i 250
@@ -468,15 +505,22 @@ ellers står delene bare ved hverandre (Bjørn 21.11.2026, [Fysiske regler](http
   så lenge den er valgt: dra flytter da bare den, som om ingenting var koblet til, og hjørnet blir fri ende igjen. På PC
   gjør Alt + dra det samme, og begge slipper forbi magneten (M4). På en tekstilvegg montert på vegg tar «Løsne» den av
   veggen med en gang, så den står fritt foran veggen (X13).
-  *Bjørn 20.11.2026 og 21.11.2026 · kode `src/domain/joints.ts`, `src/domain/edit.ts`, `src/ui/plan/pill/parts.tsx`, `src/ui/plan/pointer/select.ts` · test `src/domain/joints.test.ts`*
+  Et 92LTX-hjørne mellom to rammer på systemvegger (X7) har sin egen pille: klikk på hjørnet. «Løs opp hjørnet» tar
+  92LTX bort: rammen på den lengste veggen blir stående og stopper som en ramme alene (X2), den andre beholder lengden og
+  flyttes langs veggen til den står inntil den første rammens flate, bort fra et innvendig hjørne og ut forbi enden rundt
+  et utvendig (X10). Flyttet er geometri, ikke noe som lagres om hjørnet, og regnes av volumene. «Koble hjørnet» på et
+  løst opp hjørne tegner begge rammene inn til den andres veggs linje igjen, så de møtes i 92LTX. Samme knapper finnes i
+  pillen på en ramme som står i hjørnet.
+  *Bjørn 20.11.2026 og 21.11.2026 · kode `src/domain/joints.ts`, `src/domain/edit.ts`, `src/domain/textile/cornerJoin.ts`, `src/ui/plan/pill/parts.tsx`, `src/ui/plan/pill/wall.tsx`, `src/ui/plan/pointer/select.ts` · test `src/domain/joints.test.ts`, `src/calc/textile/corners.test.ts`*
 - **M6 Grep på vegger og tekstilvegger.** Innervegger og frittstående tekstilvegger har de samme grepene som disker,
-  rom og møbler, i det felles grepsystemet: endegrep på frie ender (V13, X12), et hjørnegrep der to armer møtes, som
+  rom og møbler, i det felles grepsystemet: endegrep på frie ender (V13, X12; en ramme på systemvegg på begge ender), et hjørnegrep der to armer møtes, som
   flytter hjørnet så begge armene blir lengre eller kortere (resten som M3), og for en gruppe som står fritt et
   flyttegrep (fire piler, midt på delen som er valgt) og et rotergrep (ut fra hjørnet nede til høyre av boksen rundt
   gruppen) som snur hele gruppen 90° om midten, på 250-rasteret og innenfor standen. Dører, hyller, tekstil og
   platefarger følger veggene. Grepene virker i Velg, med Vegg- eller Tekstil-pennen og i 3D; flyttegrepet vises bare
   med pennen, i Velg er hele delen grepet. En forankret gruppe (M3) har ikke flytte- eller rotergrep. «Roter» i pillen
-  på en frittstående tekstilvegg snur gruppen den er i.
+  på en frittstående tekstilvegg snur gruppen den er i. Et hjørne mellom to rammer på systemvegger står der veggene står,
+  så det har ikke hjørnegrep; det velges med et trykk og har pillen i M5.
   *Bjørn 20.11.2026 · kode `src/domain/groupGrips.ts`, `src/ui/plan/grips.ts`, `src/domain/plateDecor.ts` · test `src/domain/groupGrips.test.ts`*
 
 ## F · Fysisk volum

@@ -8,9 +8,9 @@ import { wallHeight } from '../../rules/rules';
 import { blockedModules, faceNormal, faces, sideOf, type FaceSide } from '../faces';
 import { moduleEnd, moduleStart, wallDirection, wallLength } from '../grid';
 import { nextId } from '../ids';
-import type { TextileFill, TextileWall, Variant, Wall } from '../types';
+import type { Point, TextileFill, TextileWall, Variant, Wall } from '../types';
 import { builtModules } from '../walls';
-import { wallTextiles } from './mounts';
+import { mountedOn, putOnWall, wallTextiles } from './mounts';
 
 const EPS = 1e-6;
 const r1 = (n: number) => Math.round(n * 10) / 10;
@@ -108,8 +108,8 @@ export function addTextile(v: Variant, rules: Rules, wallId: string, s: FaceSide
   const sp = near ? spanFor(spans, at) : (spans.find((x) => at >= x[0] - 1e-6 && at <= x[1] + 1e-6) ?? null);
   if (!sp) return null;
   const id = nextId(v.textiles.map((t) => t.id), 't');
-  const t: TextileWall = { mount: 'wall', id, wallId, side: s, from: r1(sp[0]), width: r1(sp[1] - sp[0]), fit: true };
-  return { v: { ...v, textiles: [...v.textiles, t] }, id };
+  const t: TextileWall = { id, wallId, side: s, from: r1(sp[0]), width: r1(sp[1] - sp[0]), fit: true };
+  return { v: putOnWall(v, t), id };
 }
 
 /**
@@ -131,8 +131,8 @@ export function addTextileSpan(v: Variant, rules: Rules, wallId: string, s: Face
   if (width < rules.textile.minWidth - EPS) return { error: `Tekstilvegg på systemvegg må være minst ${String(rules.textile.minWidth).replace('.', ',')} m` };
   const fit = from <= best[0] + EPS && from + width >= best[1] - EPS;
   const id = nextId(v.textiles.map((t) => t.id), 't');
-  const t: TextileWall = { mount: 'wall', id, wallId, side: s, from, width, ...(fit ? { fit: true } : {}) };
-  return { v: { ...v, textiles: [...v.textiles, t] }, id };
+  const t: TextileWall = { id, wallId, side: s, from, width, ...(fit ? { fit: true } : {}) };
+  return { v: putOnWall(v, t), id };
 }
 
 export interface TextilePatch {
@@ -183,7 +183,7 @@ export function updateTextile(v: Variant, rules: Rules, id: string, patch: Texti
     ...(motif ? { motif } : {}),
     ...(fill !== 'print' ? { fill } : {}),
   };
-  return { ...v, textiles: v.textiles.map((x) => (x.id === id ? next : x)) };
+  return putOnWall(v, next);
 }
 
 /** Fill the free span the textile sits in, and keep filling it when walls or rooms change ("Fyll veggen"). */
@@ -194,7 +194,7 @@ export function fillTextile(v: Variant, rules: Rules, id: string): Variant {
   const sp = spanFor(freeSpans(v, rules, t.wallId, s, textilesOn(v, t.wallId, s, id)), t.from + t.width / 2);
   if (!sp) return v;
   const next = updateTextile(v, rules, id, { from: sp[0], width: sp[1] - sp[0] });
-  return { ...next, textiles: next.textiles.map((x) => (x.id === id && x.mount === 'wall' ? { ...x, fit: true } : x)) };
+  return { ...next, textiles: next.textiles.map((x) => (x.id === id ? { ...x, fit: true } : x)) };
 }
 
 function place(spans: Span[], from: number, width: number, min: number, mode: 'move' | 'size'): [number, number] | null {
@@ -229,4 +229,36 @@ export function moveTextileBy(v: Variant, rules: Rules, start: TextileWall, dt: 
   const { bottom, height } = textileBox(start, rules);
   const top = Math.floor((fullTextileHeight(rules) - height + EPS) * 10) / 10;
   return updateTextile(moved, rules, start.id, { bottom: clamp(bottom + dh, 0, Math.max(0, top)) });
+}
+
+/** Which end of its span along the wall the run end `end` of frame `id` is: the low one (at `from`) or the high one. */
+export function spanEnd(v: Variant, id: string, end: 'from' | 'to'): 'lo' | 'hi' | null {
+  const m = mountedOn(v, id);
+  const t = v.textiles.find((x) => x.id === id);
+  if (!m || !t) return null;
+  const [dx, dy] = wallDirection(m.wall);
+  const along = (p: Point) => (p[0] - m.wall.from[0]) * dx + (p[1] - m.wall.from[1]) * dy;
+  const other = end === 'from' ? t.to : t.from;
+  return along(t[end]) < along(other) ? 'lo' : 'hi';
+}
+
+const NO_FRAME_STRETCH = 'Tekstilveggen kan ikke gå dit: en åpning, en vegg som møter flaten, en annen ramme eller veggens ende er i veien';
+
+/**
+ * Byggeregel X12: the end `end` of frame `id` on a system wall moved `d` m along its wall (out when d > 0), its other
+ * end kept; or why not. Dragged into a corner where a frame stands on the other wall it meets it at a 92LTX (X7),
+ * dragged out it is a free end again (X2): both read from where the ends stand.
+ */
+export function stretchFrame(v: Variant, rules: Rules, id: string, end: 'from' | 'to', d: number): { v: Variant } | { error: string } {
+  const t = wallTextiles(v).find((x) => x.id === id);
+  const e = spanEnd(v, id, end);
+  if (!t || !e) return { error: 'Tekstilveggen finnes ikke' };
+  if (!d) return { v };
+  const want: Span = e === 'hi' ? [t.from, t.from + t.width + d] : [t.from - d, t.from + t.width];
+  if (want[1] - want[0] < rules.textile.minWidth - EPS) return { error: `Tekstilvegg på systemvegg må være minst ${String(rules.textile.minWidth).replace('.', ',')} m` };
+  const s = sideOf(v, t);
+  const fits = freeSpans(v, rules, t.wallId, s, textilesOn(v, t.wallId, s, id)).some(([a, b]) => want[0] >= a - EPS && want[1] <= b + EPS);
+  if (!fits) return { error: NO_FRAME_STRETCH };
+  const { fit: _f, ...rest } = t;
+  return { v: putOnWall(v, { ...rest, from: r3(want[0]), width: r3(want[1] - want[0]) }) };
 }

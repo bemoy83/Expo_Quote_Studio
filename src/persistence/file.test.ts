@@ -33,23 +33,10 @@ describe('sketch file', () => {
     expect(res.ok).toBe(false);
     if (!res.ok) expect(res.error).toMatch(/eldre versjon/);
   });
-  it('opens version 5: textile walls on system walls and on foot plates read into one list (X13)', () => {
+  it('refuses version 6, where a textile wall on a system wall had an address on it (X13)', () => {
     const f = JSON.parse(serialize(sketch()));
-    const [v] = f.varianter;
-    const old = {
-      ...f,
-      versjon: 5,
-      varianter: [{ ...v, textiles: [{ id: 't1', wallId: 'side-back', from: 1, width: 2 }], freeTextiles: [{ id: 'ft1', from: [1, 2], to: [3, 2] }] }],
-    };
-    const res = parse(JSON.stringify(old));
-    expect(res.ok).toBe(true);
-    if (!res.ok) return;
-    const x = res.sketch.variants[0];
-    expect(x.textiles.map((t) => [t.id, t.mount])).toEqual([
-      ['t1', 'wall'],
-      ['ft1', 'feet'],
-    ]);
-    expect('freeTextiles' in x).toBe(false);
+    const res = parse(JSON.stringify({ ...f, versjon: 6 }));
+    expect(res.ok).toBe(false);
   });
   it.each([
     ['not JSON', '{'],

@@ -11,7 +11,7 @@ import { replaceWalls } from './replaceWalls';
 import { blocked, runLength, textileStep } from './textile/free';
 import type { FreeTextile, Point, Variant, Wall } from './types';
 import { isStandWall, standWallKeys } from './walls';
-import { freeTextiles, wallTextiles, withOnFeet } from './textile/mounts';
+import { freeTextiles, mountedOn, withOnFeet } from './textile/mounts';
 
 const EPS = 1e-6;
 
@@ -100,12 +100,15 @@ export function placeGroup(v: Variant, rules: Rules, g: Group, to: (p: Point) =>
   const locked = standWallKeys(v);
   if (moved.some((w) => wallModules(w).some((m) => locked.has(m.key)))) return null;
   const on = <T extends { wallId: string }>(xs: readonly T[]) => xs.filter((x) => ws.has(x.wallId));
+  // Frames mounted on its walls go with them (X13)
+  const onMoved = (id: string) => ws.has(mountedOn(v, id)?.wall.id ?? '');
+  const mounted = v.textiles.filter((t) => onMoved(t.id)).map((t) => ({ ...t, from: shift(t.from), to: shift(t.to) }));
   const off = <T extends { wallId: string }>(xs: readonly T[]) => xs.filter((x) => !ws.has(x.wallId));
   const rest = replaceWalls(
     {
       ...v,
       openings: off(v.openings),
-      textiles: off(wallTextiles(v)),
+      textiles: v.textiles.filter((t) => mountedOn(v, t.id) && !onMoved(t.id)),
       foils: off(v.foils),
       ...(v.shelves ? { shelves: off(v.shelves) } : {}),
     },
@@ -116,7 +119,7 @@ export function placeGroup(v: Variant, rules: Rules, g: Group, to: (p: Point) =>
     ...rest,
     walls: rest.walls.map((w) => (breaks.has(w.id) ? { ...w, breaks: breaks.get(w.id) } : w)),
     openings: [...rest.openings, ...on(v.openings)],
-    textiles: [...rest.textiles, ...on(wallTextiles(v)), ...runs],
+    textiles: [...rest.textiles, ...mounted, ...runs],
     foils: [...rest.foils, ...on(v.foils)],
     ...(v.shelves ? { shelves: [...(rest.shelves ?? []), ...on(v.shelves)] } : {}),
   };
@@ -129,7 +132,7 @@ export const MAGNET = 0.3;
 /**
  * Byggeregel M4: (dx, dy) with the small extra shift, at most MAGNET on each axis, that brings an end of the moved group
  * onto a part it can be joined to (M1): a wall's end onto another wall, its end first, else its line; a textile wall's
- * end onto another textile wall's end (a 92LTX corner). Never a wall onto a textile wall or the other way: they may
+ * end onto another textile wall's end, also a frame's on a system wall (a 92LTX corner, X11). Never a wall onto a textile wall or the other way: they may
  * stand up against each other, but the magnet does not pull them there. Unchanged when an end already meets one, or
  * none is near.
  */
@@ -138,7 +141,7 @@ export function magnet(v: Variant, g: Group, dx: number, dy: number): Point {
   const ts = new Set(g.textiles);
   type Kinded = { seg: Seg; wall: boolean };
   const mine: Kinded[] = [...v.walls.filter((w) => ws.has(w.id)).map((seg) => ({ seg, wall: true })), ...freeTextiles(v).filter((t) => ts.has(t.id)).map((seg) => ({ seg, wall: false }))];
-  const others: Kinded[] = [...v.walls.filter((w) => !ws.has(w.id)).map((seg) => ({ seg, wall: true })), ...freeTextiles(v).filter((t) => !ts.has(t.id)).map((seg) => ({ seg, wall: false }))];
+  const others: Kinded[] = [...v.walls.filter((w) => !ws.has(w.id)).map((seg) => ({ seg, wall: true })), ...v.textiles.filter((t) => !ts.has(t.id)).map((seg) => ({ seg, wall: false }))];
   const clamp = (x: number, a: number, b: number) => Math.min(Math.max(x, Math.min(a, b)), Math.max(a, b));
   let best: Point | null = null;
   let bd = Infinity;

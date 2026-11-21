@@ -3,6 +3,7 @@ import { DOOR } from '../catalog/defaultCatalog';
 import type { Variant } from '../domain/types';
 import { createVariant } from '../domain/variant';
 import { addRoom, RECT_SIDE } from '../domain/rooms';
+import { withOnWall } from '../domain/textile/mounts';
 
 /** R1 · Row stand 3 × 3 m, nothing added. */
 export function r1(): Variant {
@@ -13,7 +14,7 @@ export function r1(): Variant {
 export function r2(): Variant {
   const base = createVariant('A', { width: 6, depth: 4, type: 'corner', cornerSide: 'right' });
   const v = addRoom(base, { x: 0, y: 0, w: 2, d: 2 }, { side: RECT_SIDE.front, module: 0, product: DOOR }, 'bk')!;
-  return { ...v, textiles: [{ mount: 'wall', id: 't1', wallId: 'side-back', from: 2, width: 4, motif: 'hoved', fit: true }] };
+  return withOnWall(v, [{ id: 't1', wallId: 'side-back', from: 2, width: 4, motif: 'hoved', fit: true }]);
 }
 
 /** R3 · Island stand 8 × 6 m, beams only: an island has none by default, the exhibitor chose them. */

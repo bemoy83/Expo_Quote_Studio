@@ -45,7 +45,7 @@ describe('inserts 700 under a counter over a foot plate (K23)', () => {
   });
 
   it('over the foot plate 740 of a free-standing textile wall too (X8)', () => {
-    const v = { ...createVariant('A', { width: 6, depth: 4, type: 'row' }), textiles: [{ mount: 'feet' as const, id: 't', from: [1, 2] as [number, number], to: [5, 2] as [number, number] }] };
+    const v = { ...createVariant('A', { width: 6, depth: 4, type: 'row' }), textiles: [{ id: 't', from: [1, 2] as [number, number], to: [5, 2] as [number, number] }] };
     const ctx = calcContext(v, RULES, DEFAULT_CATALOG, TERMS, DEFAULT_PRICING);
     const feet = textileFootRects(v, ctx.prod.free);
     expect(feet.length).toBeGreaterThan(1);

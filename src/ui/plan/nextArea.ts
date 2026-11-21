@@ -112,7 +112,7 @@ export function changedAreas(a: PlanState, b: PlanState): Areas {
     diff(textileOf(a), textileOf(b), (x) => x.t.id, (x) => [x.t, x.box], (x) => x.box),
     diff(foilOf(a), foilOf(b), (x) => x.f.id, (x) => [x.f, x.box], (x) => x.box),
     diff(freeOf(a), freeOf(b), (x) => x.f.textileId, (x) => [x.t, x.f.supports, x.f.length, x.f.pos], (x) => (x.t ? segBox(x.t.from, x.t.to, FREE_PAD) : null)),
-    diff(cornerPosts(a.v), cornerPosts(b.v), pt, pt, (p) => pointBox(p, POST_PAD)),
+    diff(cornerPosts(a.v).map((x) => x.p), cornerPosts(b.v).map((x) => x.p), pt, pt, (p) => pointBox(p, POST_PAD)),
   )
 
   // Shelves by their board; one more in a stacked felt changes the count drawn there

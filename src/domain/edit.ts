@@ -11,7 +11,7 @@ import { replaceWalls } from './replaceWalls';
 import { alone, groupOf, moveGroupNear } from './joints';
 import { blocked, runLength } from './textile/free';
 import { RULES, type Rules } from '../rules/rules';
-import { freeTextiles, wallTextiles } from './textile/mounts';
+import { freeTextiles, mountedOn } from './textile/mounts';
 
 /**
  * Draw wall modules from a to b. Edges that already have a wall are left as they are. Drawn on a closed side of the
@@ -207,7 +207,8 @@ export function slideWall(v: Variant, wallId: string, delta: number, along = 0, 
   const keep = (id: string) => id === w.id;
   const carried = {
     openings: v.openings.filter((o) => keep(o.wallId)),
-    textiles: wallTextiles(v).filter((t) => keep(t.wallId)),
+    // Frames mounted on it move with it (X13)
+    textiles: v.textiles.flatMap((t) => (mountedOn(v, t.id)?.wall.id === w.id ? [{ ...t, from: slide(shift(t.from)), to: slide(shift(t.to)) }] : [])),
     foils: v.foils.filter((f) => keep(f.wallId)),
     shelves: v.shelves?.filter((f) => keep(f.wallId)),
   };
@@ -215,7 +216,7 @@ export function slideWall(v: Variant, wallId: string, delta: number, along = 0, 
     {
       ...v,
       openings: v.openings.filter((o) => !keep(o.wallId)),
-      textiles: wallTextiles(v).filter((t) => !keep(t.wallId)),
+      textiles: v.textiles.filter((t) => (mountedOn(v, t.id)?.wall.id ?? w.id) !== w.id),
       foils: v.foils.filter((f) => !keep(f.wallId)),
       ...(v.shelves ? { shelves: v.shelves.filter((f) => !keep(f.wallId)) } : {}),
     },
