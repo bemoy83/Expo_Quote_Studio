@@ -12,7 +12,7 @@ import { fitShelves } from '../domain/shelves/edit'
 import { blocked, fitFreeTextiles } from '../domain/textile/free'
 import { freeTextiles } from '../domain/textile/mounts'
 import type { Motif, Point, Variant } from '../domain/types'
-import { floorBoxes, footPlatesOf, place, rules } from './env'
+import { floorBoxes, floorOfVariant, footPlatesOf, place, rules } from './env'
 import { findMotif } from './motifs'
 
 /** A decal's width over height, by motif; 0 for an unknown motif. */
@@ -48,7 +48,7 @@ function physical(before: Variant, raw: Variant, after: Variant): string | null 
     const sat = new Set(furnitureOnPlates(before, place, footPlatesOf(before)))
     if (furnitureOnPlates(after, place, footPlatesOf(after)).some((id) => !sat.has(id))) return 'Fotplatene treffer et møbel'
   }
-  return newFootClash(before, after, rules)
+  return newFootClash(floorOfVariant(before), floorOfVariant(after))
 }
 
 /** Why `fn` on v is refused, said in a toast: a door left without free floor (D7), a textile wall where something

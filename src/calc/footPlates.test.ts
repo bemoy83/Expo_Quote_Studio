@@ -9,6 +9,8 @@ import { addFreeTextile } from '../domain/textile/free';
 import type { Point, Variant } from '../domain/types';
 import { createVariant } from '../domain/variant';
 import { RULES } from '../rules/rules';
+import { DEFAULT_PRICING } from '../pricing/data';
+import { calcContext } from './context';
 import { footClashes, newFootClash } from './footPlates';
 
 const row = () => createVariant('A', { width: 8, depth: 6, type: 'row' });
@@ -17,16 +19,19 @@ const free = (v: Variant, a: Point, b: Point) => {
   if ('error' in r) throw new Error(r.error);
   return r.v;
 };
-const what = (v: Variant) => footClashes(v, RULES).map((c) => c.what);
+const floor = (v: Variant) => calcContext(v, RULES, DEFAULT_CATALOG, { payer: 'utstiller', ral: '9010' }, DEFAULT_PRICING).floor;
+const clashes = (v: Variant) => footClashes(floor(v));
+const what = (v: Variant) => clashes(v).map((c) => c.what);
+const refusal = (a: Variant, b: Variant) => newFootClash(floor(a), floor(b));
 
 describe('foot plates on the floor (F2)', () => {
   it('two textile walls 250 apart: their 740 plates, 400 across, meet', () => {
     const a = free(row(), [2, 3], [5, 3]);
-    expect(footClashes(a, RULES)).toEqual([]);
+    expect(clashes(a)).toEqual([]);
     const b = free(a, [2, 3.25], [5, 3.25]);
     expect(what(b)).toHaveLength(1);
     // 500 apart they stand clear
-    expect(footClashes(free(a, [2, 3.5], [5, 3.5]), RULES)).toEqual([]);
+    expect(clashes(free(a, [2, 3.5], [5, 3.5]))).toEqual([]);
   });
 
   it('250 from an inner wall that stands free: its support plate 750, 500 across, is in the way', () => {
@@ -34,16 +39,16 @@ describe('foot plates on the floor (F2)', () => {
     const w = { ...paintWalls(row(), [2, 2], [2, 4]), noBeams: true };
     expect(what(free(w, [2.25, 2], [2.25, 4]))).toContain('support');
     // Further out, clear
-    expect(footClashes(free(w, [2.5, 2], [2.5, 4]), RULES)).toEqual([]);
+    expect(clashes(free(w, [2.5, 2], [2.5, 4]))).toEqual([]);
   });
 
   it('an edit is refused only for a clash it makes, and says what is in the way', () => {
     const a = free(row(), [2, 3], [5, 3]);
     const b = free(a, [2, 3.25], [5, 3.25]);
-    expect(newFootClash(a, b, RULES)).toMatch(/en annen tekstilvegg/);
-    expect(newFootClash(b, b, RULES)).toBeNull();
+    expect(refusal(a, b)).toMatch(/en annen tekstilvegg/);
+    expect(refusal(b, b)).toBeNull();
     const w = { ...paintWalls(row(), [2, 2], [2, 4]), noBeams: true };
-    expect(newFootClash(w, free(w, [2.25, 2], [2.25, 4]), RULES)).toMatch(/støtteplate/);
+    expect(refusal(w, free(w, [2.25, 2], [2.25, 4]))).toMatch(/støtteplate/);
   });
 });
 
