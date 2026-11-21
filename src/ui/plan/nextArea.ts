@@ -5,6 +5,7 @@
 import type { CalcResult } from '../../calc/calc'
 import { cornerPosts } from '../../calc/textile/free'
 import { foilSpan } from '../../domain/decor'
+import { openingPose } from '../../domain/doors'
 import { faceSegment, sideOf } from '../../domain/faces'
 import { CELL } from '../../domain/grid'
 import { footprintBox, objectFootprint } from '../../domain/objects'
@@ -87,7 +88,14 @@ const pt = (p: Point) => `${p[0]},${p[1]}`
 /** What differs between the sketch `a` and the next variant `b`, per plan layer. */
 export function changedAreas(a: PlanState, b: PlanState): Areas {
   const modBox = (m: BuiltModule) => segBox(m.a, m.b, WALL_PAD, m.opening ? SWING_PAD : WALL_PAD)
-  const walls = diff(a.mods, b.mods, (m) => m.key, (m) => [m.a, m.b, m.plate, m.opening], modBox)
+  // A door by where it lies and swings, not by how it is stored: a room made of the walls round it keeps it as it was
+  const modsOf = ({ v, mods }: PlanState) =>
+    mods.map((m) => {
+      const w = m.opening && v.walls.find((x) => x.id === m.opening!.wallId)
+      const opening = m.opening && w && { product: m.opening.product, fabric: m.opening.fabric, pose: openingPose(v.stand, w, m.opening) }
+      return { m, look: [m.a, m.b, m.plate, opening ?? m.opening] }
+    })
+  const walls = diff(modsOf(a), modsOf(b), (x) => x.m.key, (x) => x.look, (x) => modBox(x.m))
 
   const floor = floorDiff(a.v, b.v)
 

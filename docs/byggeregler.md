@@ -308,7 +308,8 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   ikke en standvegg alene lukke et rom. Det gjelder uansett hvordan området blir lukket: en vegg tegnet, en dør satt,
   en vegg dratt på plass (i planen eller i 3D) eller dratt i et endegrep. Et drag ses som én endring fra der det begynte,
   så et område som var lukket med dør før draget, forblir vegger. Rommet blir eget angresteg og velges med gripene sine
-  (R8) (Bjørn 15.11.2026).
+  (R8) (Bjørn 15.11.2026). Tekstilvegger på veggene følger med til romsidene; en frittstående tekstilvegg står på
+  egne fotplater og blir stående som den er, inne i rommet eller utenfor (Bjørn 21.11.2026: den forsvant).
   *Bjørn 31.10.2026 · kode `src/domain/enclosures.ts`, `src/ui/useCloseRooms.ts` · test `src/domain/enclosures.test.ts`*
 - **R4 Det som står i rommet.** Møbler i rommet følger rommet, og en tekstilvegg som fyller en romside vokser og krymper
   med den.

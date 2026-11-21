@@ -126,7 +126,8 @@ export function wallsToRoom(v: Variant, outline: Point[], label = 'Rom'): Varian
   return syncRooms(next);
 }
 
-/** A textile running past one of the room's corners is cut to the longer of its parts, so it lands on one wall. */
+/** A textile running past one of the room's corners is cut to the longer of its parts, so it lands on one wall. The
+ *  free-standing ones stand on their own foot plates and stay as they are. */
 function clipTextiles(v: Variant, outline: Point[]): Variant {
   const textiles = wallTextiles(v).map((t) => {
     const w = v.walls.find((x) => x.id === t.wallId);

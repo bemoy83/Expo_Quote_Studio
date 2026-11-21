@@ -14,7 +14,8 @@ import type { Point, Variant } from './types';
 import { createVariant } from './variant';
 import { builtModules, defaultSwing } from './walls';
 import { drawOpening, setOpening } from './doors';
-import { wallTextiles } from './textile/mounts';
+import { freeTextiles, wallTextiles } from './textile/mounts';
+import { addFreeTextile } from './textile/free';
 
 const row = (w = 6, d = 4) => createVariant('A', { width: w, depth: d, type: 'row' });
 const kf = (v: Variant) => calc(v, RULES, DEFAULT_CATALOG).keyFigures;
@@ -153,6 +154,18 @@ describe('wallsToRoom', () => {
     const r = wallsToRoom(t, sq)!;
     expect(wallTextiles(r)).toHaveLength(1);
     expect(wallTextiles(r)[0].wallId).toBe(roomWallId(r.rooms[0].id, RECT_SIDE.right));
+  });
+  it('a free-standing textile wall stays when the walls round it become a room (R3)', () => {
+    const free = (a: Point, b: Point) => {
+      const r = addFreeTextile(closed(), RULES, a, b);
+      if (!('v' in r)) throw new Error(r.error);
+      return r.v;
+    };
+    const out = free([4, 3], [5, 3]);
+    const r = wallsToRoom(out, sq)!;
+    expect(freeTextiles(r)).toEqual(freeTextiles(out));
+    const inside = free([0.5, 1], [1.5, 1]);
+    expect(freeTextiles(wallsToRoom(inside, sq)!)).toEqual(freeTextiles(inside));
   });
   it('a door can not go in the stand wall, so that closes no room', () => {
     const v = path(row(), [2, 0], [2, 2], [0, 2]);

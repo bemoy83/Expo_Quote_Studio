@@ -1,7 +1,11 @@
 // Where the preview of the next variant is drawn: only what changes, consequences included.
 import { describe, expect, it } from 'vitest';
 import { calc } from '../../calc/calc';
+import { DOOR } from '../../catalog/defaultCatalog';
+import { drawOpening } from '../../domain/doors';
 import { paintWalls } from '../../domain/edit';
+import { createVariant } from '../../domain/variant';
+import { editResult } from '../edits';
 import { applyFloor, floorAction } from '../../domain/floor/brush';
 import { conflicts } from '../../domain/objects';
 import type { Variant } from '../../domain/types';
@@ -54,5 +58,18 @@ describe('changedAreas', () => {
     const a = changedAreas(state(v), state(next));
     const area = a.floor.clip.reduce((s, b) => s + (b.x1 - b.x0 - 0.04) * (b.y1 - b.y0 - 0.04), 0);
     expect(area).toBeCloseTo(1, 5);
+  });
+
+  it('a wall that makes a room of a door drawn first only changes the new wall, not the stand walls by the door', () => {
+    // Door on its own module first, then the wall that closes the corner: the door is stored again on the room side
+    const corner = createVariant('A', { width: 4, depth: 3, type: 'corner', cornerSide: 'right' });
+    const v = drawOpening(corner, [1, 0], [1, 1], DOOR);
+    const next = editResult(v, (x) => paintWalls(x, [0, 1], [1, 1]), undefined);
+    expect(next.rooms).toHaveLength(1);
+    const a = changedAreas(state(v), state(next));
+    expect(a.walls.mask).toEqual([]);
+    // Only round the new wall: the back stand wall and the door's swing are not drawn again
+    expect(a.walls.clip).toHaveLength(1);
+    expect(a.walls.clip[0].y0).toBeGreaterThan(0.5);
   });
 });
