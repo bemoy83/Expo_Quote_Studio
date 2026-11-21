@@ -1,7 +1,8 @@
 // Drag steps shared by the plan and the 3D view, so both move walls and furniture the same way.
 import { moveWall } from '../domain/edit'
 import { moveTextileGroup } from '../domain/joints'
-import { groupMountDrag, mountDrag } from '../domain/textile/mount'
+import { groupMountDrag, mountDrag, moveCornerGroup } from '../domain/textile/mount'
+import { textileStep } from '../domain/textile/free'
 import { furthest } from '../domain/grips'
 import { moveInnerBeam, shiftInnerBeam, type Run } from '../domain/innerBeams'
 import { settleAll, settleObject } from '../domain/objects'
@@ -64,6 +65,13 @@ export interface FreeDrag {
 export function dragFreeTextile(d: FreeDrag, q: { x: number; y: number }, onEdit: Edit) {
   const dx = q.x - d.p0.x
   const dy = q.y - d.p0.y
+  // In a 92LTX corner with a frame on a wall: the whole corner follows (X13, M4)
+  const corner = d.loose ? null : moveCornerGroup(d.v0, rules, d.id, textileStep(rules, dx), textileStep(rules, dy))
+  if (corner) {
+    d.mounted = undefined
+    if (!('error' in corner)) onEdit(() => corner.v, false)
+    return
+  }
   const m = mountDrag(d.v0, rules, d.id, dx, dy, d.loose) ?? (d.loose ? null : groupMountDrag(d.v0, rules, d.id, dx, dy))
   if (m && !('error' in m)) {
     d.mounted = m.id

@@ -101,7 +101,7 @@ export function unmountDrag(v: Variant, rules: Rules, id: string, dx: number, dy
   const n = faceNormal(w, sideOf(v, t));
   const [ox, oy] = [textileStep(rules, dx), textileStep(rules, dy)];
   if (ox * n[0] + oy * n[1] <= MAGNET + EPS) return null;
-  return cornerGroup(v, id).length > 1 ? groupOff(v, rules, id, ox, oy) : takeOff(v, rules, id, ox, oy);
+  return moveCornerGroup(v, rules, id, ox, oy) ?? takeOff(v, rules, id, ox, oy);
 }
 
 /** The textile walls joined to `id` through 92LTX corners, mounted or not, `id` first (X7). */
@@ -117,13 +117,29 @@ function cornerGroup(v: Variant, id: string): string[] {
 }
 
 /**
- * Byggeregler X13, M4: a frame on a wall in a 92LTX corner dragged out past the magnet takes the textile walls it is
- * joined to with it, the corners kept: each moves (ox, oy) and stands where it lands, free on foot plates or still
- * along a wall (read from where it stands). A frame that comes off spans what it did on the wall, its free ends to the
- * posts its span ended at. Free-standing ones are 2540 from the floor for now (X5).
+ * Byggeregler X13, M4: a textile wall in a 92LTX corner dragged (ox, oy) takes the textile walls it is joined to through
+ * the corners with it, mounted or not (Bjørn 21.11.2026: «hele hjørnet følger med draget så lenge det er sammenkoblet
+ * som et hjørne, også når en drar i en arm»), the corners kept. A frame on a wall holds the group on it until the drag
+ * goes out past the magnet on its own face: within it the group only moves along that wall. A frame that comes off
+ * spans what it did on the wall, its free ends to the posts its span ended at; free-standing ones are 2540 from the
+ * floor for now (X5). Each stands where it lands, free on foot plates or still along a wall. Null when the group has no
+ * frame on a wall (then it moves as M2 says) or the drag does not move it; why not when it has no room there.
  */
-function groupOff(v: Variant, rules: Rules, id: string, ox: number, oy: number): Unmounted | { error: string } {
+export function moveCornerGroup(v: Variant, rules: Rules, id: string, ox: number, oy: number): Unmounted | { error: string } | null {
   const ids = cornerGroup(v, id);
+  const mounted = ids.filter((x) => mountedOn(v, x));
+  if (ids.length < 2 || !mounted.length) return null;
+  // Held across by each frame the drag does not take out past the magnet
+  let [mx, my] = [ox, oy];
+  const off = new Set<string>();
+  for (const tid of mounted) {
+    const m = mountedOn(v, tid)!;
+    const n = faceNormal(m.wall, m.side);
+    if (ox * n[0] + oy * n[1] > MAGNET + EPS) off.add(tid);
+    else if (Math.abs(n[0]) > 0.5) mx = 0;
+    else my = 0;
+  }
+  if (Math.abs(mx) < EPS && Math.abs(my) < EPS) return null;
   const corners = cornerEnds(v);
   const views = new Map(wallTextiles(v).map((t) => [t.id, t]));
   const r3 = (x: number) => Math.round(x * 1000) / 1000;
@@ -133,7 +149,9 @@ function groupOff(v: Variant, rules: Rules, id: string, ox: number, oy: number):
     const m = mountedOn(v, tid);
     const view = views.get(tid);
     let { from, to } = t;
-    if (m && view) {
+    // Moved by hand: no longer «Fyll veggen»
+    let rest: FreeTextile = { ...t, fit: undefined };
+    if (m && view && off.has(tid)) {
       // A free end out to where its span ended, on the frame's centre line
       const [ux, uy] = wallDirection(m.wall);
       const along = (p: Point) => (p[0] - m.wall.from[0]) * ux + (p[1] - m.wall.from[1]) * uy;
@@ -143,16 +161,24 @@ function groupOff(v: Variant, rules: Rules, id: string, ox: number, oy: number):
       if (!corners.get(tid)?.from) from = line(out(t.from));
       if (!corners.get(tid)?.to) to = line(out(t.to));
     }
-    if (t.bottom || (t.height !== undefined && Math.abs(t.height - fullTextileHeight(rules)) > EPS)) heightKept = false;
-    const { fit: _f, height: _h, bottom: _b, ...rest } = t;
-    const shift = (p: Point): Point => [r3(p[0] + ox), r3(p[1] + oy)];
+    if (!m || off.has(tid)) {
+      if (t.bottom || (t.height !== undefined && Math.abs(t.height - fullTextileHeight(rules)) > EPS)) heightKept = false;
+      const { fit: _f, height: _h, bottom: _b, ...free } = t;
+      rest = free;
+    }
+    const shift = (p: Point): Point => [r3(p[0] + mx), r3(p[1] + my)];
     return { ...rest, from: shift(from), to: shift(to) };
   });
   const next: Variant = { ...v, textiles: [...v.textiles.filter((t) => !ids.includes(t.id)), ...moved] };
-  // Each one that stands free must have room (F1, F2)
+  // Each one that stands free must have room (F1, F2), and each frame still on a wall room on it (X4)
   for (const t of freeTextiles(next).filter((x) => ids.includes(x.id))) {
     const why = blocked(next, rules, t, freeTextiles(next).filter((x) => x.id !== t.id && !ids.includes(x.id)));
     if (why) return { error: why };
+  }
+  for (const view of wallTextiles(next).filter((x) => ids.includes(x.id))) {
+    const s = sideOf(next, view);
+    const spans = freeSpans(next, rules, view.wallId, s, wallTextiles(next).filter((x) => x.id !== view.id && x.wallId === view.wallId && sideOf(next, x) === s));
+    if (!spans.some(([a, b]) => view.from >= a - EPS && view.from + view.width <= b + EPS)) return { error: 'Ikke plass til tekstilveggen langs veggen her' };
   }
   return { v: next, id, heightKept };
 }

@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import type { Stand, Textile, TextileWall, Variant } from '../../domain/types';
 import { drawTextile } from '../../domain/textile/brush';
 import { joinFreeToFrames } from '../../domain/textile/free';
-import { groupMountDrag, unmountDrag } from '../../domain/textile/mount';
+import { groupMountDrag, moveCornerGroup, unmountDrag } from '../../domain/textile/mount';
 import { groupOf, magnet } from '../../domain/joints';
 import { createVariant } from '../../domain/variant';
 import { paintWalls } from '../../domain/edit';
@@ -320,5 +320,36 @@ describe('A corner on walls dragged off them takes the group with it (X13, M4)',
   it('within the magnet it is held on the wall', () => {
     const v = on(CORNER, [frame('a', 'side-back', 0, 2), frame('b', 'side-left', 0, 2)]);
     expect(unmountDrag(v, RULES, 'a', 0, 0.25)).toBeNull();
+  });
+});
+
+describe('The whole corner follows a drag of any arm (X13, M4)', () => {
+  const withArm = () => {
+    const v = on(CORNER, [frame('a', 'side-back', 2, 2)]);
+    const end = v.textiles[0].from;
+    return { v: { ...v, textiles: [...v.textiles, { id: 'f', from: end, to: [end[0], 2] } as Textile] }, end };
+  };
+
+  it('the free-standing arm dragged along the wall: the frame slides along it, joined', () => {
+    const { v, end } = withArm();
+    const r = moveCornerGroup(v, RULES, 'f', 1, 0);
+    if (!r || 'error' in r) throw new Error(r ? r.error : 'null');
+    expect(wallTextiles(r.v).find((t) => t.id === 'a')).toMatchObject({ from: 3, width: 2 });
+    expect(r.v.textiles.find((t) => t.id === 'f')!.from).toEqual([end[0] + 1, end[1]]);
+    expect(cornerEnds(r.v).get('f')?.from).toBeDefined();
+  });
+
+  it('the arm dragged out from the wall within the magnet: held; past it the frame comes off with it', () => {
+    const { v } = withArm();
+    expect(moveCornerGroup(v, RULES, 'f', 0, 0.25)).toBeNull();
+    const r = moveCornerGroup(v, RULES, 'f', 0, 1);
+    if (!r || 'error' in r) throw new Error(r ? r.error : 'null');
+    expect(wallTextiles(r.v)).toEqual([]);
+    expect(cornerEnds(r.v).get('a')?.from ?? cornerEnds(r.v).get('a')?.to).toBeDefined();
+  });
+
+  it('a group past the wall’s end has no room and says so', () => {
+    const { v } = withArm();
+    expect(moveCornerGroup(v, RULES, 'f', 3, 0)).toHaveProperty('error');
   });
 });
