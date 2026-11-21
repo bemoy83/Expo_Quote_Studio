@@ -431,8 +431,11 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   stopper mot rammens flate (60 mm fra veggens senterlinje) og står ikke inntil systemveggen der. Den blir like mye
   kortere. Det er F1 for en ramme på vegg; uten ramme stopper den mot stolpene. Møter den en rammes ende i rett vinkel,
   er det et hjørne med 92LTX (X7), og den stopper ikke. Tegnes eller dras den med enden innenfor magneten (M4) av en fri
-  rammeende, i rett vinkel, tar magneten enden inn på rammens ende.
-  *Bjørn 6.11.2026 og 21.11.2026 · kode `src/calc/textile/placement.ts`, `src/calc/textile/free.ts`, `src/domain/textile/brush.ts` (`toFrameEnd`), `src/domain/joints.ts` (`magnet`) · test `src/calc/textile/placement.test.ts`, `src/calc/textile/corners.test.ts`*
+  rammeende, i rett vinkel, tar magneten enden inn på rammens ende. Står den inntil systemveggen der en ramme på samme
+  flate har en fri ende (rammens spenn ender på løpets linje, som når begge er tegnet på rutenettet), flyttes løpet på
+  tvers inn på rammens ende og møter den i 92LTX, uansett hvilken som ble tegnet først (`joinFreeToFrames`). Planen tegner
+  hjørnet der rammens strek ender.
+  *Bjørn 6.11.2026 og 21.11.2026 · kode `src/calc/textile/placement.ts`, `src/calc/textile/free.ts`, `src/domain/textile/brush.ts` (`toFrameEnd`), `src/domain/joints.ts` (`magnet`), `src/domain/textile/free.ts` (`joinFreeToFrames`), `src/ui/plan/layers/TextileLayer.tsx` · test `src/calc/textile/placement.test.ts`, `src/calc/textile/corners.test.ts`*
 - **X12 Endegrep på tekstilvegg.** En valgt frittstående tekstilvegg har grep på hver ende som ikke står i
   et 92LTX-hjørne, også en ende inntil en systemvegg (den står bare der, M1), i Velg og med Tekstil-pennen, som innervegger (V13): hele meter, 250 med Shift eller Fin, kontrollert som når den tegnes, og
   grunnen vises når det ikke går. En ramme på systemvegg har grep på begge ender, også en ende i et 92LTX-hjørne, i Velg

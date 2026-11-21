@@ -3,6 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Stand, Textile, TextileWall, Variant } from '../../domain/types';
 import { drawTextile } from '../../domain/textile/brush';
+import { joinFreeToFrames } from '../../domain/textile/free';
 import { groupOf, magnet } from '../../domain/joints';
 import { createVariant } from '../../domain/variant';
 import { paintWalls } from '../../domain/edit';
@@ -214,5 +215,42 @@ describe('A free-standing run onto a frame’s end (X11, M4)', () => {
     const w = { ...v, textiles: [...v.textiles, { id: 'f', from: [3, 0.5], to: [3, 2] } as Textile] };
     const [dx, dy] = magnet(w, groupOf(w, { kind: 'textile', id: 'f' }), 0, -0.25);
     expect([r3(3 + dx), r3(0.5 + dy)]).toEqual(v.textiles[0].to.map(r3));
+  });
+});
+
+describe('A free-standing run against a wall meets a frame on it (X7, X11)', () => {
+  // Corner stand: left wall (0,0)–(0,4). A run from the wall out into the stand at y = 2, a frame on the face below it
+  const run = { id: 'f', from: [0, 2], to: [3, 2] } as Textile;
+  const below = () => on(CORNER, [frame('l', 'side-left', 2, 2)]);
+  const above = () => on(CORNER, [frame('l', 'side-left', 0, 2)]);
+
+  it('the frame there first, the run drawn from the wall: they meet at a 92LTX on the frame’s end', () => {
+    const v = below();
+    const r = drawTextile(v, RULES, [0, 2], [3, 2], { x: 1, y: 2.1 });
+    if (!('free' in r)) throw new Error('error' in r ? r.error : 'mounted');
+    const f = r.v.textiles.find((t) => t.id === r.free.id)!;
+    expect(f.from).toEqual(v.textiles[0].from);
+    expect(cornerEnds(r.v).get(r.free.id)?.from).toBeDefined();
+    expect(posts(r.v)[0].qty).toBe(1);
+  });
+
+  it('the run there first, the frame drawn after: the run moves onto the frame’s end, below or above it', () => {
+    for (const v of [below(), above()]) {
+      const x = joinFreeToFrames({ ...v, textiles: [...v.textiles, run] });
+      const f = x.textiles.find((t) => t.id === 'f')!;
+      const end = x.textiles.find((t) => t.id === 'l')!;
+      expect([end.from, end.to]).toContainEqual(f.from);
+      expect(f.to[1]).toBe(f.from[1]);
+      expect(cornerEnds(x).get('f')?.from).toBeDefined();
+      expect(posts(x)[0].qty).toBe(1);
+      // Settled again: nothing moves
+      expect(joinFreeToFrames(x)).toBe(x);
+    }
+  });
+
+  it('a run that ends in the middle of a frame is a T and stays (X11)', () => {
+    const v = on(CORNER, [frame('l', 'side-left', 1, 2)]);
+    const x = { ...v, textiles: [...v.textiles, run] };
+    expect(joinFreeToFrames(x)).toBe(x);
   });
 });

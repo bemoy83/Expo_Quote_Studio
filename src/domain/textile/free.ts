@@ -13,9 +13,9 @@ import type { FreeTextile, Point, TextileFace, Variant } from '../types';
 import { nextId } from '../ids';
 import { snapTo } from '../snapGrid';
 import { builtModules } from '../walls';
-import { onSpan } from '../grid';
 import { movedEnd, type RunEnd } from '../grips';
-import { freeTextiles, mountedOn, withOnFeet } from './mounts';
+import { MOUNT_INSET, MOUNT_OFFSET, freeTextiles, mountedOn, wallTextiles, withOnFeet } from './mounts';
+import { onSpan, wallDirection } from '../grid';
 import { contact, cornerEnds, isEnd, same, span, type CornerEnds } from './corners';
 
 export { cornerEnds, type CornerEnds };
@@ -278,4 +278,49 @@ export function stretchFreeTextile(v: Variant, rules: Rules, id: string, end: Ru
   const why = blocked(v, rules, run, freeTextiles(v).filter((x) => x.id !== id));
   if (why) return { error: why };
   return { v: { ...v, textiles: v.textiles.map((x) => (x.id === id ? run : x)) } };
+}
+
+/**
+ * Byggeregler X7, X11: a free-standing run that ends up against a system wall, at a right angle, where a frame on that
+ * face has a free end (its span ends on the run's line, as drawn on the same grid), meets that frame at a 92LTX
+ * instead of stopping at the wall: the run moves across onto the frame's end, and its end comes out to it. Either may
+ * have been drawn first. v itself when no run meets a frame so.
+ */
+export function joinFreeToFrames(v: Variant): Variant {
+  const frames = wallTextiles(v);
+  if (frames.length === 0) return v;
+  const corners = cornerEnds(v);
+  let changed = false;
+  const height = (t: { height?: number; bottom?: number }) => `${t.height ?? ''}|${t.bottom ?? 0}`;
+  const runs = freeTextiles(v).map((t) => {
+    for (const key of ['from', 'to'] as const) {
+      if (corners.get(t.id)?.[key]) continue;
+      const p = t[key];
+      const [dx, dy] = runDirection(t);
+      const out: Point = key === 'from' ? [dx, dy] : [-dx, -dy];
+      for (const f of frames) {
+        const m = mountedOn(v, f.id);
+        const run = v.textiles.find((x) => x.id === f.id);
+        if (!m || !run || height(run) !== height(t) || corners.get(f.id)?.from && corners.get(f.id)?.to) continue;
+        const [wx, wy] = wallDirection(m.wall);
+        const n: Point = [-wy * m.side, wx * m.side];
+        // The run leaves the face straight out, its end between the wall line and the frame's centre line
+        if (Math.abs(out[0] * n[0] + out[1] * n[1] - 1) > EPS) continue;
+        const across = (p[0] - m.wall.from[0]) * n[0] + (p[1] - m.wall.from[1]) * n[1];
+        if (across < -EPS || across > MOUNT_OFFSET + EPS) continue;
+        const along = (q: Point) => (q[0] - m.wall.from[0]) * wx + (q[1] - m.wall.from[1]) * wy;
+        const u = along(p);
+        // The frame's span ends on the run's line: its free end is half the side deduction and air past it
+        const end = (['from', 'to'] as const).find((k) => !corners.get(f.id)?.[k] && Math.abs(Math.abs(along(run[k]) - u) - MOUNT_INSET) < EPS);
+        if (!end || (along(run[end]) > u) !== (along(run[end === 'from' ? 'to' : 'from']) > u)) continue;
+        const q = run[end];
+        const shift = along(q) - u;
+        const moved: FreeTextile = { ...t, from: [t.from[0] + wx * shift, t.from[1] + wy * shift], to: [t.to[0] + wx * shift, t.to[1] + wy * shift] };
+        changed = true;
+        return { ...moved, [key]: q };
+      }
+    }
+    return t;
+  });
+  return changed ? withOnFeet(v, runs) : v;
 }

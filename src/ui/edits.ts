@@ -10,7 +10,7 @@ import { carryDecor } from '../domain/plateDecor'
 import { carryTextiles, freeTextiles, settleCorners } from '../domain/textile/mounts'
 import { framesInObjects, furnitureOnPlates } from '../domain/objects'
 import { fitShelves } from '../domain/shelves/edit'
-import { blocked, fitFreeTextiles } from '../domain/textile/free'
+import { blocked, fitFreeTextiles, joinFreeToFrames } from '../domain/textile/free'
 import type { Motif, Point, Variant } from '../domain/types'
 import { floorBoxes, floorOfVariant, footPlatesOf, place, rules } from './env'
 import { findMotif } from './motifs'
@@ -18,9 +18,9 @@ import { findMotif } from './motifs'
 /** A decal's width over height, by motif; 0 for an unknown motif. */
 export const ratioFor = (motifs: Motif[] | undefined) => (id: string | undefined) => findMotif(motifs, id)?.ratio ?? 0
 
-/** The change with walls laid out round their doors (D8), decor, frames in corners joined (X7), free-standing textile and shelves fitted to it, and doors turned to a side with free floor (D7). */
+/** The change with walls laid out round their doors (D8), decor, frames in corners joined (X7) also with free-standing runs ending at them (X11), free-standing textile and shelves fitted to it, and doors turned to a side with free floor (D7). */
 export const settle = (x: Variant, ratio: (id: string | undefined) => number) =>
-  settleSwings(fitShelves(fitFreeTextiles(settleCorners(fitDecor(fitBreaks(x), rules, ratio)), rules), rules), place.swings, floorBoxes)
+  settleSwings(fitShelves(fitFreeTextiles(joinFreeToFrames(settleCorners(fitDecor(fitBreaks(x), rules, ratio))), rules), rules), place.swings, floorBoxes)
 
 /** `fn` on v, the textile walls mounted on walls it moved taken along (Byggeregler X13, M1). */
 const edited = (v: Variant, fn: (v: Variant) => Variant) => carryTextiles(v, fn(v))
