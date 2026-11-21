@@ -245,6 +245,18 @@ export function doorSwing(stand: Stand, w: Wall, o: Opening): 1 | -1 {
   return isPerimeterWall(stand, w) ? defaultSwing(stand, w) : (o.swing ?? defaultSwing(stand, w));
 }
 
+/**
+ * Where a door or curtain lies in the world, as the plan draws it: its module, the hinge with the way the closed leaf
+ * runs, and the unit normal it swings to. The stored opening can say the same with other words (another wall id, module
+ * number, explicit swing or hinge on a wall running the other way), so compare this, not the opening.
+ */
+export function openingPose(stand: Stand, w: Wall, o: Opening): { ends: [Point, Point]; hinge: { a: Point; dir: Point }; normal: Point } {
+  const [dx, dy] = wallDirection(w);
+  const s = doorSwing(stand, w, o);
+  const { a, dir } = doorHinge(w, o);
+  return { ends: moduleEnds(w, o.module), hinge: { a, dir }, normal: [-dy * s, dx * s] };
+}
+
 /** How deep the floor in front of a door must be free on the side it swings to, m: with the module's 1 m, 1 m²
  *  (Byggeregel D7, Bjørn 15.11.2026). */
 export const SWING_CLEAR = 1;

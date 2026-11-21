@@ -16,6 +16,9 @@
 >   møbel) styrke. `plan/nextArea.ts` finner per lag hva som er forskjellig: neste variant klippes til området rundt
 >   det (`clipPath`), og det som står der nå skjules (`mask`), så resten av planen ikke tegnes dobbelt. Konsekvenser
 >   kommer med: stolper, fotplater, delte takdragere, og møbler som kommer i konflikt med en ny vegg.
+>   Ting sammenlignes etter det som tegnes, ikke slik de er lagret: en dør etter modul, hengsel og slagside
+>   (`openingPose`). Når vegger blir rom, lagres døren på romsiden med ny vegg-id og eksplisitt slag, men den står likt,
+>   så den og standveggene rundt tegnes ikke svakt på nytt (Bjørn 21.11.2026: standveggene så viskede ut).
 > - **Motiv:** selve motivet vises aldri i planen. Det som forhåndsvises er det som lander i planen: dekalen på et
 >   veggfelt (også på frittstående systemvegg). Trykk på tekstil er en del av tekstilveggen og tegnes ikke, så der
 >   vises ingenting (Bjørn 6.11.2026).

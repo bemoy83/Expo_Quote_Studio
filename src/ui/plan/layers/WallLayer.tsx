@@ -1,7 +1,6 @@
 // Walls and doors in the plan.
-import { moduleEnds, wallDirection } from '../../../domain/grid'
 import type { Point, Variant } from '../../../domain/types'
-import { doorHinge, doorSwing } from '../../../domain/doors'
+import { openingPose } from '../../../domain/doors'
 import type { BuiltModule } from '../../../domain/walls'
 import { INK } from '../../colors'
 import { plateColor, productOf, rules } from '../../env'
@@ -64,16 +63,12 @@ export function WallLayer({ v, mods, selection, dim }: { v: Variant; mods: Built
 export function OpeningMark({ v, m, selected }: { v: Variant; m: BuiltModule; selected: boolean }) {
   const o = m.opening!
   const w = v.walls.find((x) => x.id === o.wallId)!
-  const [dx, dy] = wallDirection(w)
-  const s = doorSwing(v.stand, w, o)
-  const n: Point = [-dy * s, dx * s]
-  // Where its module lies, off the whole metres too (Byggeregel D8)
-  const [a, b] = moduleEnds(w, o.module)
+  // Where its module lies (off the whole metres too, Byggeregel D8), the hinge and the side it swings to
+  const { ends: [a, b], hinge: hg, normal: n } = openingPose(v.stand, w, o)
   const door = productOf(o.product)?.opening === 'door'
   const r = rules.door.swing
   // Hinge: the leaf is centred in the opening, not hung on the post centre; it hangs on either end of the module
   const k = doorInset(rules)
-  const hg = doorHinge(w, o)
   const [ex, ey] = hg.dir
   const h: Point = [hg.a[0] + ex * k, hg.a[1] + ey * k]
   // The arc runs from the closed leaf (along the wall) to the open one (along n); its turn depends on both
