@@ -59,6 +59,10 @@ Kobling mellom innervegger og frittstående tekstilvegger (byggeregler M1–M5):
 gruppen av hvor delene står (en ende på den andre, bare vegg med vegg og tekstil med tekstil), og om en veggruppe er
 forankret i en standvegg eller romvegg; ingenting lagres. Hva som kan stå hvor er fysisk volum (F1, F2): `blocked` og
 `wallClearance` i `domain/textile/free.ts`, endene mot vegg kortes i `freeTrims` (`calc/textile/placement.ts`).
+Fotplater mot støtteplater, føtter og andre tekstilveggers fotplater (F2) leses av kalkylens utlegg i
+`calc/footPlates.ts` (`footClashes`, `newFootClash`), og en tekstilvegg i en disk eller et møbel av `framesInObjects`
+(`domain/objects.ts`). `guarded` i `ui/edits.ts` avviser en endring som gir et nytt slikt treff, og `refused` gir
+meldingen onEdit viser, som for D7.
 Av og på vegg (X13) står i `domain/textile/mount.ts`: `mountDrag` (magnet 300 mm), `unmountDrag` og `loosenMounted`
 («Løsne» i pillen på tekstil på vegg). `moveGroup` flytter en fri gruppe som én ting (dører, folie, hyller og tekstil på veggene går med).
 `moveWall` (`domain/edit.ts`) og `moveTextileGroup` (Velg-drag i `pointer/freeMove.ts`) bruker den; en forankret
