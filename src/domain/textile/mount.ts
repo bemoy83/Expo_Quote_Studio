@@ -116,6 +116,10 @@ export function loosenMounted(v: Variant, rules: Rules, id: string): Unmounted |
   return takeOff(v, rules, id, n[0] * out, n[1] * out);
 }
 
+/** Said when a textile wall taken off its wall had a height or place up the wall that foot plates cannot have yet (X5, X13). */
+export const onFeetHeight = (rules: Rules) =>
+  `Tekstilveggen står nå på fotplater i full høyde, ${Math.round(fullTextileHeight(rules) * 1000)}: andre høyder på fotplater kommer senere`;
+
 export interface Unmounted {
   v: Variant;
   id: string;

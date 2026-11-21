@@ -22,8 +22,7 @@ import type { Chosen, PlanSelection } from '../selection'
 import { faceName } from '../wallDrawer/face'
 import { Colours, Motifs, MoveTools, type Content, type PillActions, type SecondFace } from './parts'
 import { wallTextiles } from '../../../domain/textile/mounts'
-import { loosenMounted } from '../../../domain/textile/mount'
-import { ON_FEET_HEIGHT } from '../pointer/textileOff'
+import { loosenMounted, onFeetHeight } from '../../../domain/textile/mount'
 
 type Of<K extends Chosen['kind']> = Extract<Chosen, { kind: K }>
 
@@ -40,7 +39,7 @@ export function textilePill(p: PillActions, c: Of<'textile'>, remove: () => void
     if ('error' in r) return p.onToast(r.error)
     onEdit(() => r.v)
     p.onSelect({ freeTextileId: r.id })
-    if (!r.heightKept) p.onToast(ON_FEET_HEIGHT)
+    if (!r.heightKept) p.onToast(onFeetHeight(rules))
   }
   return {
     name: 'Tekstilvegg',
