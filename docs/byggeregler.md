@@ -443,8 +443,8 @@ ellers står delene bare ved hverandre (Bjørn 21.11.2026, [Fysiske regler](http
   *Bjørn 20.11.2026 og 21.11.2026 · kode `src/domain/joints.ts` · test `src/domain/joints.test.ts`*
 - **M2 Gruppen flyttes som én ting.** Klikk og dra i en del av en gruppe som står fritt, flytter hele gruppen: to 1 m
   vegger koblet i et hjørne flyttes som et hjørne, et tekstilhjørne som et hjørne. Dører, folie, hyller og tekstil på
-  veggene går med. Vegger flyttes i hele meter som en innervegg (V7), 250 med Shift eller Fin; tekstilvegger i
-  tekstilens rutenett. Det som bare står inntil, blir stående. Kan en del ikke stå der (utenfor standen, inn på en
+  veggene går med. Vegger flyttes i hele meter som en innervegg (V7), 250 med Shift eller Fin; tekstilvegger alltid i 250
+  (`rules.textile.grid`, så Shift og Fin endrer ingenting). Det som bare står inntil, blir stående. Kan en del ikke stå der (utenfor standen, inn på en
   standvegg, en vegg gjennom en tekstilvegg, F1), stopper draget ved siste sted som går.
   *Bjørn 20.11.2026 og 21.11.2026 · kode `src/domain/joints.ts`, `src/domain/edit.ts`, `src/ui/plan/pointer/freeMove.ts` · test `src/domain/joints.test.ts`, `src/domain/standWalls.test.ts`*
 - **M3 Forankret gruppe.** Er en gruppe vegger koblet til en vegg som står fast, flyttes bare det du drar, og naboene
