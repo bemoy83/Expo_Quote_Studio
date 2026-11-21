@@ -10,7 +10,7 @@ import { moduleEnd, moduleStart, wallDirection, wallLength } from '../grid';
 import { nextId } from '../ids';
 import type { TextileFill, TextileWall, Variant, Wall } from '../types';
 import { builtModules } from '../walls';
-import { wallTextiles } from './mounts';
+import { putOnWall, wallTextiles } from './mounts';
 
 const EPS = 1e-6;
 const r1 = (n: number) => Math.round(n * 10) / 10;
@@ -109,7 +109,7 @@ export function addTextile(v: Variant, rules: Rules, wallId: string, s: FaceSide
   if (!sp) return null;
   const id = nextId(v.textiles.map((t) => t.id), 't');
   const t: TextileWall = { mount: 'wall', id, wallId, side: s, from: r1(sp[0]), width: r1(sp[1] - sp[0]), fit: true };
-  return { v: { ...v, textiles: [...v.textiles, t] }, id };
+  return { v: putOnWall(v, t), id };
 }
 
 /**
@@ -132,7 +132,7 @@ export function addTextileSpan(v: Variant, rules: Rules, wallId: string, s: Face
   const fit = from <= best[0] + EPS && from + width >= best[1] - EPS;
   const id = nextId(v.textiles.map((t) => t.id), 't');
   const t: TextileWall = { mount: 'wall', id, wallId, side: s, from, width, ...(fit ? { fit: true } : {}) };
-  return { v: { ...v, textiles: [...v.textiles, t] }, id };
+  return { v: putOnWall(v, t), id };
 }
 
 export interface TextilePatch {
@@ -183,7 +183,7 @@ export function updateTextile(v: Variant, rules: Rules, id: string, patch: Texti
     ...(motif ? { motif } : {}),
     ...(fill !== 'print' ? { fill } : {}),
   };
-  return { ...v, textiles: v.textiles.map((x) => (x.id === id ? next : x)) };
+  return putOnWall(v, next);
 }
 
 /** Fill the free span the textile sits in, and keep filling it when walls or rooms change ("Fyll veggen"). */
@@ -194,7 +194,7 @@ export function fillTextile(v: Variant, rules: Rules, id: string): Variant {
   const sp = spanFor(freeSpans(v, rules, t.wallId, s, textilesOn(v, t.wallId, s, id)), t.from + t.width / 2);
   if (!sp) return v;
   const next = updateTextile(v, rules, id, { from: sp[0], width: sp[1] - sp[0] });
-  return { ...next, textiles: next.textiles.map((x) => (x.id === id && x.mount === 'wall' ? { ...x, fit: true } : x)) };
+  return { ...next, textiles: next.textiles.map((x) => (x.id === id ? { ...x, fit: true } : x)) };
 }
 
 function place(spans: Span[], from: number, width: number, min: number, mode: 'move' | 'size'): [number, number] | null {

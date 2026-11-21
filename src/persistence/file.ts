@@ -5,7 +5,7 @@ import type { Motif, Project, Variant } from '../domain/types';
 import { createProject, createVariant } from '../domain/variant';
 
 export const FORMAT = 'standskisse';
-export const VERSION = 6;
+export const VERSION = 7;
 
 export interface SketchFile {
   format: typeof FORMAT;
@@ -50,7 +50,7 @@ export function parse(text: string): ParseResult {
   if (v > VERSION) {
     return { ok: false, error: `Filen er laget i en nyere versjon (${v}) enn denne appen støtter (${VERSION}). Oppdater appen.` };
   }
-  if (v < VERSION - 1) return { ok: false, error: `Filen er laget i en eldre versjon (${v}) som appen ikke lenger åpner.` };
+  if (v < VERSION) return { ok: false, error: `Filen er laget i en eldre versjon (${v}) som appen ikke lenger åpner.` };
   const project = data.prosjekt;
   const variants = data.varianter;
   const motifs = data.egneMotiver ?? [];
@@ -60,21 +60,12 @@ export function parse(text: string): ParseResult {
   }
   if (!Array.isArray(motifs)) return { ok: false, error: 'Egne motiver er ugyldige.' };
   // Drawn takdrager and shelves are left out when there are none
-  const vs = (variants as Version5[]).map(({ freeTextiles, ...x }) => ({
+  const vs = (variants as Variant[]).map((x) => ({
     ...x,
-    textiles: v === VERSION ? x.textiles : fromVersion5(x.textiles, freeTextiles),
     innerBeams: Array.isArray(x.innerBeams) ? x.innerBeams : undefined,
     shelves: Array.isArray(x.shelves) ? x.shelves : undefined,
   }));
   return { ok: true, sketch: { project: project as unknown as Project, variants: vs, motifs: motifs as Motif[] } };
-}
-
-/** A variant as version 5 stored it: textile walls on system walls in `textiles`, free-standing ones in `freeTextiles`. */
-type Version5 = Variant & { freeTextiles?: object[] };
-
-/** Version 5's two lists of textile walls as one (Byggeregel X13). */
-function fromVersion5(onWall: object[], onFeet: object[] = []): Variant['textiles'] {
-  return [...onWall.map((t) => ({ mount: 'wall', ...t })), ...onFeet.map((t) => ({ mount: 'feet', ...t }))] as Variant['textiles'];
 }
 
 const isObject = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null && !Array.isArray(x);

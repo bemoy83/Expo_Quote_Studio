@@ -345,8 +345,11 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   fotplater. Bare monteringen er ulik: på en systemvegg festes rammen med 520 til stolpene og har duk på siden ut fra
   veggen; på fotplater står den fritt og har duk på begge sider. Reglene for selve rammen (mål, stag, skjøt, hjørner i
   rammen, duk og trykkfil) er de samme. En strek på en systemveggs linje monteres på veggen (på siden streken startet
-  fra), en strek alle andre steder står på fotplater.
-  *Bjørn 31.10.2026, 6.11.2026 og 7.11.2026 («frittstående er InFrame på fotplater») · kode `src/domain/textile/brush.ts` · test `src/domain/textile/brush.test.ts`*
+  fra), en strek alle andre steder står på fotplater. I skissen er hver tekstilvegg derfor lagret likt: én strek i
+  planen (fra, til, side A og B, høyde, bunn), uten adresse på en vegg. Hvordan den er montert, leses av hvor den står
+  (X13). Slik tegnes, kobles og løses alle tekstilvegger med samme system (Bjørn 21.11.2026: «veggmontert er bare enda
+  en kobling»).
+  *Bjørn 31.10.2026, 6.11.2026, 7.11.2026 («frittstående er InFrame på fotplater») og 21.11.2026 · kode `src/domain/textile/brush.ts`, `src/domain/textile/mounts.ts` · test `src/domain/textile/brush.test.ts`, `src/domain/textile/mounts.test.ts`*
 - **X2 Ramme på systemvegg.** Bredde = spenn − 20 − 10 (sentrert i spennet), høyde 2540 eller tekstilens egen. 43TX gjæret,
   2B + 2H, 617 i alle fire hjørner, festet med 2 × 520 (med 503) til stolpe 94,
   inntil stolpens flate uten luft (rammen står 20–60 mm ut fra veggens linje). Stående stag i 90 maks 2000 fra hverandre
@@ -427,8 +430,12 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   - Siden som vender ut beholder duk og motiv. Siden mot veggen huskes og kommer tilbake når den tas av igjen. En
     tekstilvegg i et 92LTX-hjørne (M1) monteres ikke alene, bare med Løsne (M5). På fotplater er høyden foreløpig 2540
     fra gulvet (X5): har den en annen høyde eller står høyere på veggen, sier en melding det.
-  I skissen er alle tekstilvegger én liste med montering vegg eller fotplater; av og på veggen endres bare monteringen,
-  og tekstilveggen beholder sin id (filversjon 6, versjon 5 leses inn).
+  - *Lest av plasseringen:* en tekstilvegg er montert på en veggflate når streken står parallelt med veggen, med
+    midtlinjen en halv stolpe pluss en halv ramme fra veggens linje (rammen står rett mot stolpen, X2; 40 mm med dagens
+    mål), og innenfor veggens ender. Alle andre står på fotplater. De to kan ikke blandes: en frittstående kan ikke stå så
+    nær en vegg (fotplatene, F2). Avstanden regnes av målene i reglene, aldri som et fast tall.
+  Av og på veggen flyttes bare streken, og tekstilveggen beholder sin id. Skisser fra før filversjon 7, der en
+  tekstilvegg på systemvegg hadde adresse på veggen, åpnes ikke (ingen bakoverkompatibilitet, Bjørn 21.11.2026).
   *Bjørn 20.11.2026 og 21.11.2026 · kode `src/domain/textile/mount.ts`, `src/domain/textile/mounts.ts`, `src/ui/plan/pointer/freeMove.ts`, `src/ui/plan/pointer/textileOff.ts`, `src/ui/plan/pill/wall.tsx` · test `src/domain/textile/mount.test.ts`, `src/domain/textile/mounts.test.ts`*
 
 ## M · Magnet og kobling
@@ -443,7 +450,10 @@ ellers står delene bare ved hverandre (Bjørn 21.11.2026, [Fysiske regler](http
   tekstilvegg, står bare inntil: det finnes ikke beslag for den T-en (Bjørn 21.11.2026). Koblingen lagres ikke, den
   leses av hvor delene står (som V10). Delene som henger sammen slik, er en gruppe: vegger eller tekstilvegger, aldri
   begge. En gruppe vegger koblet til en vegg som står fast (standvegg eller romvegg), er forankret.
-  *Bjørn 20.11.2026 og 21.11.2026 · kode `src/domain/joints.ts` · test `src/domain/joints.test.ts`*
+  En vegg tar med seg tekstilveggene som er montert på den: flyttes, snus, strekkes eller kortes den, følger de med på
+  samme sted langs veggen (en ramme som stikker ut over en kortere vegg, kortes til veggen); fjernes veggen, går de med.
+  Én funksjon gjør dette for alle redigeringer av vegger (flytt, grupper, rom, standstørrelse).
+  *Bjørn 20.11.2026 og 21.11.2026 · kode `src/domain/joints.ts`, `src/domain/textile/mounts.ts` (`carryTextiles`), `src/ui/edits.ts` · test `src/domain/joints.test.ts`, `src/domain/textile/mounts.test.ts`*
 - **M2 Gruppen flyttes som én ting.** Klikk og dra i en del av en gruppe som står fritt, flytter hele gruppen: to 1 m
   vegger koblet i et hjørne flyttes som et hjørne, et tekstilhjørne som et hjørne. Dører, folie, hyller og tekstil på
   veggene går med. Vegger flyttes i hele meter som en innervegg (V7), 250 med Shift eller Fin; tekstilvegger alltid i 250

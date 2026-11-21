@@ -1,6 +1,6 @@
 {
   "format": "standskisse",
-  "versjon": 6,
+  "versjon": 7,
   "prosjekt": {
     "fields": [
       {
@@ -68,25 +68,34 @@
       "objects": [],
       "textiles": [
         {
-          "mount": "wall",
           "id": "t1",
-          "wallId": "side-back",
-          "side": 1,
-          "from": 1,
-          "width": 4,
-          "motif": "hoved"
+          "from": [
+            1.015,
+            0.04
+          ],
+          "to": [
+            4.985,
+            0.04
+          ],
+          "a": {
+            "motif": "hoved"
+          }
         },
         {
-          "mount": "wall",
           "id": "t2",
-          "wallId": "side-left",
-          "side": -1,
-          "from": 1,
-          "width": 2,
-          "fill": "white"
+          "from": [
+            0.04,
+            1.015
+          ],
+          "to": [
+            0.04,
+            2.985
+          ],
+          "b": {
+            "fill": "white"
+          }
         },
         {
-          "mount": "feet",
           "id": "ft1",
           "from": [
             3,
@@ -104,7 +113,6 @@
           }
         },
         {
-          "mount": "feet",
           "id": "ft2",
           "from": [
             3,

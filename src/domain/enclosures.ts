@@ -13,7 +13,7 @@ import { overlapsRoom, roomWalls, syncRooms } from './rooms';
 import type { Point, Room, Variant } from './types';
 import { type BuiltModule, builtModules, defaultSwing } from './walls';
 import { nextId } from './ids';
-import { wallTextiles } from './textile/mounts';
+import { wallTextiles, withOnWall } from './textile/mounts';
 
 export interface Enclosure {
   /** Cells `i,j` (back-left corner, counted in cells), sorted: the same area always has the same key. */
@@ -155,5 +155,5 @@ function clipTextiles(v: Variant, outline: Point[]): Variant {
     if (inside >= before && inside >= after) return { ...t, from: Math.max(t0, a), width: inside };
     return before >= after ? { ...t, width: before } : { ...t, from: b, width: after };
   });
-  return { ...v, textiles };
+  return withOnWall(v, textiles);
 }

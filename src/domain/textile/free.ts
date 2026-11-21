@@ -15,7 +15,7 @@ import { snapTo } from '../snapGrid';
 import { builtModules } from '../walls';
 import { onSpan } from '../grid';
 import { movedEnd, type RunEnd } from '../grips';
-import { freeTextiles, withOnFeet } from './mounts';
+import { freeTextiles, mountedOn, withOnFeet } from './mounts';
 import { RECIPES } from '../../foga/recipes';
 
 /** Face A is side 1 (left normal of from → to), face B side −1. */
@@ -172,7 +172,7 @@ export function blocked(v: Variant, rules: Rules, t: Pick<FreeTextile, 'from' | 
 export function addFreeTextile(v: Variant, rules: Rules, a: Point, b: Point): { v: Variant; id: string } | { error: string } {
   if (same(a, b)) return { error: 'Dra en strek for å tegne tekstilveggen' };
   if (Math.abs(a[0] - b[0]) > EPS && Math.abs(a[1] - b[1]) > EPS) return { error: 'Tekstilvegger tegnes rett, langs rutenettet' };
-  let run: FreeTextile = { mount: 'feet', id: nextId(v.textiles.map((t) => t.id), 'ft'), from: a, to: b };
+  let run: FreeTextile = { id: nextId(v.textiles.map((t) => t.id), 'ft'), from: a, to: b };
   let rest = freeTextiles(v);
   for (;;) {
     const join = rest.find((o) => contact(run, o).kind === 'line');
@@ -189,7 +189,7 @@ export function addFreeTextile(v: Variant, rules: Rules, a: Point, b: Point): { 
   }
   const why = blocked(v, rules, run, rest);
   if (why) return { error: why };
-  return { v: { ...v, textiles: [...v.textiles.filter((x) => x.mount === 'wall' || rest.includes(x)), run] }, id: run.id };
+  return { v: { ...v, textiles: [...v.textiles.filter((x) => mountedOn(v, x.id) || rest.includes(x)), run] }, id: run.id };
 }
 
 export const removeFreeTextile = (v: Variant, id: string): Variant => ({ ...v, textiles: v.textiles.filter((t) => t.id !== id) });
@@ -200,7 +200,7 @@ export function updateFace(v: Variant, id: string, face: FaceKey, patch: { fill?
   return {
     ...v,
     textiles: v.textiles.map((t) => {
-      if (t.id !== id || t.mount !== 'feet') return t;
+      if (t.id !== id) return t;
       const f: TextileFace = { ...t[face] };
       if (patch.fill !== undefined) {
         if (patch.fill === 'print') delete f.fill;

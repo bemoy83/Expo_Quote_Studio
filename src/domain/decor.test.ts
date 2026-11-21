@@ -14,6 +14,7 @@ import { builtModules } from './walls';
 import { addTextile, freeSpans, moveTextileBy, textileBox, updateTextile } from './textile/inFrame';
 import { faces } from './faces';
 import { wallTextiles } from './textile/mounts';
+import { withTextiles } from '../test/textiles';
 
 /** A door in a stand wall: no longer allowed (see opensInside), but older sketches can hold one. */
 const oldDoor = (v: Variant, a: Point, b: Point): Variant => {
@@ -69,7 +70,7 @@ describe('textile walls', () => {
     let v = ok(addTextile(row(), RULES, 'side-back', 1, 1)).v;
     v = updateTextile(v, RULES, 't1', { width: 2 });
     expect(addTextile(v, RULES, 'side-back', 1, 1.5)).toBeNull();
-    expect(ok(addTextile(v, RULES, 'side-back', 1, 3)).v.textiles[1]).toMatchObject({ from: 2, width: 4 });
+    expect(wallTextiles(ok(addTextile(v, RULES, 'side-back', 1, 3)).v)[1]).toMatchObject({ from: 2, width: 4 });
   });
 
   it('moves keep the width, resizes clip, all in 0,1 m steps with a minimum width', () => {
@@ -108,14 +109,14 @@ describe('textile walls', () => {
     let v = createVariant('A', { width: 6, depth: 4, type: 'row' });
     v = paintWalls(v, [3, 3], [3, 1]);
     const w = v.walls.find((x) => x.from[0] === 3)!;
-    v = { ...v, textiles: [{ mount: 'wall', id: 't1', wallId: w.id, from: 0, width: 2, side: 1 }] };
+    v = withTextiles(v, [{ mount: 'wall', id: 't1', wallId: w.id, from: 0, width: 2, side: 1 }]);
     v = replaceWalls(v, [...v.walls.filter((x) => x.id !== w.id), { id: 'n', from: [3, 1], to: [3, 3] }]);
     expect(wallTextiles(v)[0]).toMatchObject({ wallId: 'n', from: 0, side: -1 });
   });
 
   it('furniture collides with the frame only along its span and on its face', () => {
     let v = createVariant('A', { width: 6, depth: 4, type: 'row' });
-    v = { ...v, textiles: [{ mount: 'wall', id: 't1', wallId: 'side-back', from: 0, width: 2, side: 1 }] };
+    v = withTextiles(v, [{ mount: 'wall', id: 't1', wallId: 'side-back', from: 0, width: 2, side: 1 }]);
     // A chair 3 cm from the back wall fits beside the 40 mm (43TX) frame, but not in front of it
     const d = ctx.footprint('5186')!.d;
     const at = (x: number): Variant => ({ ...v, objects: [{ id: 'i1', product: '5186', x, y: 0.03 + d / 2, rot: 0 }] });
@@ -211,8 +212,8 @@ describe('drag and drop on a wall (3D)', () => {
     let v = ok(addTextile(row(), RULES, 'side-back', 1, 1)).v;
     v = updateTextile(v, RULES, 't1', { width: 2, height: 1.5 });
     const start = wallTextiles(v)[0];
-    expect(moveTextileBy(v, RULES, start, 1.04, 0.5).textiles[0]).toMatchObject({ from: 1, width: 2, bottom: 0.5 });
-    expect(moveTextileBy(v, RULES, start, 9, 9).textiles[0]).toMatchObject({ from: 4, width: 2, bottom: 1 });
+    expect(wallTextiles(moveTextileBy(v, RULES, start, 1.04, 0.5))[0]).toMatchObject({ from: 1, width: 2, bottom: 0.5 });
+    expect(wallTextiles(moveTextileBy(v, RULES, start, 9, 9))[0]).toMatchObject({ from: 4, width: 2, bottom: 1 });
   });
 
   it('dragging a decal moves it to the felt under it, never onto an opening', () => {

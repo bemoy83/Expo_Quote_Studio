@@ -13,14 +13,16 @@ import { RULES } from '../../rules/rules';
 import { liftBeams, withJoins } from './beamLift';
 import { variantBeams } from './beams';
 import { calc } from '../calc';
+import { withTextiles } from '../../test/textiles';
 
 const ROW: Stand = { width: 6, depth: 4, type: 'row' };
 const ISLAND: Stand = { width: 10, depth: 6, type: 'island' };
 const beam = (id: string, from: Point, to: Point): InnerBeam => ({ id, from, to });
-const free = (id: string, from: Point, to: Point): FreeTextile => ({ mount: 'feet', id, from, to });
+const free = (id: string, from: Point, to: Point): FreeTextile => ({ id, from, to });
 const inFrame = (id: string, wallId: string, from: number, width: number, extra: Partial<TextileWall> = {}): TextileWall => ({ ...extra, mount: 'wall', id, wallId, from, width });
 
-const variant = (stand: Stand, x: Partial<Variant>): Variant => ({ ...createVariant('A', stand), ...x });
+type Draft = Omit<Partial<Variant>, 'textiles'> & { textiles?: (TextileWall | FreeTextile)[] };
+const variant = (stand: Stand, { textiles = [], ...x }: Draft): Variant => withTextiles({ ...createVariant('A', stand), ...x }, textiles);
 const lift = (v: Variant) => {
   const mods = builtModules(v);
   const points = wallPoints(mods);

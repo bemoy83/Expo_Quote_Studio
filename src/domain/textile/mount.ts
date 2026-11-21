@@ -12,7 +12,7 @@ import { groupOf, groupSize, MAGNET } from '../joints';
 import type { FreeTextile, Point, TextileFace, TextileWall, Variant, Wall } from '../types';
 import { addFreeTextile, removeFreeTextile, runNormal, textileStep, wallClearance, type FaceKey } from './free';
 import { addTextileSpan, fullTextileHeight } from './inFrame';
-import { freeTextiles, wallTextiles } from './mounts';
+import { freeTextiles, wallTextiles, withOnWall } from './mounts';
 
 const EPS = 1e-6;
 
@@ -84,7 +84,7 @@ export function mountFree(v: Variant, rules: Rules, id: string, w: Wall, s: Face
   if (out?.fill) m.fill = out.fill;
   if (out?.motif) m.motif = out.motif;
   if (hasFace(back)) m.back = back;
-  return { v: { ...r.v, textiles: v.textiles.map((x) => (x.id === id ? m : x)) }, id };
+  return { v: withOnWall(r.v, wallTextiles(r.v).map((x) => (x.id === r.id ? m : x))), id };
 }
 
 /**

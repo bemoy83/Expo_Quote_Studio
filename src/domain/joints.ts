@@ -11,7 +11,7 @@ import { replaceWalls } from './replaceWalls';
 import { blocked, runLength, textileStep } from './textile/free';
 import type { FreeTextile, Point, Variant, Wall } from './types';
 import { isStandWall, standWallKeys } from './walls';
-import { freeTextiles, wallTextiles, withOnFeet } from './textile/mounts';
+import { freeTextiles, mountedOn, withOnFeet } from './textile/mounts';
 
 const EPS = 1e-6;
 
@@ -100,12 +100,15 @@ export function placeGroup(v: Variant, rules: Rules, g: Group, to: (p: Point) =>
   const locked = standWallKeys(v);
   if (moved.some((w) => wallModules(w).some((m) => locked.has(m.key)))) return null;
   const on = <T extends { wallId: string }>(xs: readonly T[]) => xs.filter((x) => ws.has(x.wallId));
+  // Frames mounted on its walls go with them (X13)
+  const onMoved = (id: string) => ws.has(mountedOn(v, id)?.wall.id ?? '');
+  const mounted = v.textiles.filter((t) => onMoved(t.id)).map((t) => ({ ...t, from: shift(t.from), to: shift(t.to) }));
   const off = <T extends { wallId: string }>(xs: readonly T[]) => xs.filter((x) => !ws.has(x.wallId));
   const rest = replaceWalls(
     {
       ...v,
       openings: off(v.openings),
-      textiles: off(wallTextiles(v)),
+      textiles: v.textiles.filter((t) => mountedOn(v, t.id) && !onMoved(t.id)),
       foils: off(v.foils),
       ...(v.shelves ? { shelves: off(v.shelves) } : {}),
     },
@@ -116,7 +119,7 @@ export function placeGroup(v: Variant, rules: Rules, g: Group, to: (p: Point) =>
     ...rest,
     walls: rest.walls.map((w) => (breaks.has(w.id) ? { ...w, breaks: breaks.get(w.id) } : w)),
     openings: [...rest.openings, ...on(v.openings)],
-    textiles: [...rest.textiles, ...on(wallTextiles(v)), ...runs],
+    textiles: [...rest.textiles, ...mounted, ...runs],
     foils: [...rest.foils, ...on(v.foils)],
     ...(v.shelves ? { shelves: [...(rest.shelves ?? []), ...on(v.shelves)] } : {}),
   };
