@@ -49,7 +49,7 @@ export type Drag =
   | { kind: 'object'; id: string; start: { x: number; y: number }; off: { x: number; y: number }; moved: boolean }
   | ({ kind: 'wall'; moved: boolean } & WallDrag)
   /** A free-standing textile wall, as in the plan (freeMove): with its group, onto a system wall mounted (M2, X13). */
-  | ({ kind: 'free'; moved: boolean; fineLock: boolean } & FreeDrag)
+  | ({ kind: 'free'; moved: boolean } & FreeDrag)
   /** A drawn takdrager moved as in the plan (pointer/beam.ts), on a level plane at its height `y`. */
   | ({ kind: 'beam'; moved: boolean; y: number } & WallDrag)
   /** A room: moved, or one side dragged. Tracked on a level plane at the height it was grabbed. */
@@ -117,7 +117,7 @@ export function startDrag(P: PointerProps, hits: SceneHits, hit: Hit | null, e: 
     const q = hits.onFloor(e)
     // «Løsne» on it, or Alt held: alone, out of its group (M5), as in the plan
     const loose = e.altKey || (!!P.selection.loose && P.selection.freeTextileId === hit.freeTextileId)
-    if (q) return { kind: 'free', id: hit.freeTextileId, p0: q, v0: P.v, moved: false, loose, fineLock: P.fine }
+    if (q) return { kind: 'free', id: hit.freeTextileId, p0: q, v0: P.v, moved: false, loose }
   } else if (hit?.beamId) {
     const b = P.v.innerBeams?.find((x) => x.id === hit.beamId)
     const y = hit.point.y
@@ -217,8 +217,7 @@ export function moveDrag(P: PointerProps, hits: SceneHits, drag: Exclude<Drag, {
   if (!q) return
   if (drag.kind === 'free') {
     started(P, drag)
-    // Shift held (or «Fin» on in the pill): 250 steps, as an inner wall (Byggeregel V7)
-    dragFreeTextile(drag, q, e.shiftKey || drag.fineLock, P.onEdit)
+    dragFreeTextile(drag, q, P.onEdit)
   } else if (drag.kind === 'object') {
     started(P, drag)
     const d = drag

@@ -54,6 +54,9 @@ export function TextileLayer({ v, res, selection, dim }: { v: Variant; res: Calc
           const sel = selection.freeTextileId === t.id
           const g = gone('textile', t.id)
           const motif = (['a', 'b'] as const).find((k) => gone('graphic', `${t.id}.${k}`))
+          // The frame as it stands: an end up against a wall stops where the wall begins (Byggeregel F1)
+          const a = alongRun(t, 0, f)
+          const b = alongRun(t, f.length, f)
           return (
             <g key={t.id} opacity={g ? GONE : undefined}>
               {f.supports.map((at, i) => {
@@ -63,10 +66,10 @@ export function TextileLayer({ v, res, selection, dim }: { v: Variant; res: Calc
                 const d = (h ? f.foot.across : f.foot.along) / 1000
                 return <rect key={i} x={x - w / 2} y={y - d / 2} width={w} height={d} fill="none" stroke={INK_MUTED} strokeWidth={footStroke(sc)} strokeDasharray={footDash(sc)} />
               })}
-              {sel && <Seg a={t.from} b={t.to} stroke={HALO} strokeOpacity={HALO_OPACITY} strokeWidth={haloWidth(sc, tw)} />}
-              <TextileStroke a={t.from} b={t.to} sc={sc} />
+              {sel && <Seg a={a} b={b} stroke={HALO} strokeOpacity={HALO_OPACITY} strokeWidth={haloWidth(sc, tw)} />}
+              <TextileStroke a={a} b={b} sc={sc} />
               {sel && selection.freeFace && <FaceMark t={t} face={selection.freeFace} sc={sc} />}
-              {g && <Seg a={t.from} b={t.to} stroke={hatch} strokeWidth={tw} />}
+              {g && <Seg a={a} b={b} stroke={hatch} strokeWidth={tw} />}
               {motif && <FaceMark t={t} face={motif} stroke={hatch} width={linePx(sc, 4)} sc={sc} />}
             </g>
           )

@@ -6,6 +6,8 @@ export interface WallRecipe {
   post: string;
   /** Feet per post: threaded insert + set screw, 50 mm from the floor, adjustable. Stored mounted: the post with feet is picked as one piece. */
   feet: { code: string; qty: number }[];
+  /** What the adjustable foot takes on the floor, mm, under the post (Byggeregel F2, Bjørn 21.11.2026: 40 × 40). */
+  footprint: { along: number; across: number };
   /** Rails sit between two posts: length = cc − post width. */
   topRail: string;
   bottomRail: string;
@@ -216,6 +218,7 @@ export const RECIPES: Recipes = {
       { code: '700', qty: 1 },
       { code: 'M10x65', qty: 1 },
     ],
+    footprint: { along: 40, across: 40 },
     topRail: '92',
     bottomRail: '91',
     railCoupling: { code: '600', perEnd: 1 },

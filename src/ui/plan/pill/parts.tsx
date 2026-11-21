@@ -56,21 +56,20 @@ export function Motifs({ motifs, value, onPick }: { motifs: Motif[]; value: stri
   return <MotifRow motifs={motifs} on={(id) => id === value} onPick={onPick} />
 }
 
-/** «Løsne» (Byggeregel M5) on an inner wall or a free-standing textile wall joined to something: a setting while it stays
- *  chosen, its drags then move it alone, out of the group (as Alt + dra on desktop). None on a part that stands alone. */
 /**
  * Flytt, Roter and Løsne, the same on an inner wall and a free-standing textile wall (Bjørn 21.11.2026): «Fin» makes a
- * drag move it in 250 off the metre lines (Byggeregel V7, X12), Roter turns it 90° with what it is joined to (M6), Løsne
- * lets it go alone (M5).
+ * wall's drag move it in 250 off the metre lines (Byggeregel V7; a textile wall moves in 250 anyway, X12), Roter turns it
+ * 90° with what it is joined to (M6), Løsne lets it go alone (M5).
  */
 export function MoveTools({ p, part }: { p: PillActions; part: Part }) {
-  const what = part.kind === 'wall' ? 'veggen' : 'tekstilveggen'
   return (
     <>
       <Sep />
-      <FinBtn title={{ on: `Dra flytter ${what} i 250 · trykk for hele meter igjen`, off: `Flytt ${what} i 250, utenfor metrelinjene · på desktop også Shift + dra` }}>
-        <Move size={15} />
-      </FinBtn>
+      {part.kind === 'wall' && (
+        <FinBtn title={{ on: 'Dra flytter veggen i 250 · trykk for hele meter igjen', off: 'Flytt veggen i 250, utenfor metrelinjene · på desktop også Shift + dra' }}>
+          <Move size={15} />
+        </FinBtn>
+      )}
       <QBtn title="Roter 90° om midten (R)" label="Roter" onClick={() => turnPart(p, part, !!p.selection.loose)}>
         <RotateCw size={15} />
       </QBtn>
@@ -79,9 +78,13 @@ export function MoveTools({ p, part }: { p: PillActions; part: Part }) {
   )
 }
 
+/** «Løsne» (Byggeregel M5) on an inner wall joined to something, and on every free-standing textile wall: a setting
+ *  while it stays chosen, its drags then move it alone, out of the group and past the magnet (as Alt + dra on desktop).
+ *  None on a wall that stands alone. */
 export function LooseBtn({ p, part }: { p: PillActions; part: Part }) {
   const g = groupOf(p.v, part)
-  if (groupSize(g) < 2 && !g.anchored) return null
+  // A textile wall always has it: it also lets the drag past the magnet that would mount it on a wall (M4)
+  if (part.kind !== 'textile' && groupSize(g) < 2 && !g.anchored) return null
   const on = !!p.selection.loose
   return (
     <>
@@ -89,7 +92,7 @@ export function LooseBtn({ p, part }: { p: PillActions; part: Part }) {
       <QBtn
         on={on}
         setting
-        title={on ? 'Dra flytter bare denne · trykk for å flytte med det den er koblet til' : 'Løsne: dra flytter bare denne, ut av det den er koblet til · på desktop også Alt + dra'}
+        title={on ? 'Dra flytter bare denne, forbi magneten · trykk for å flytte med det den er koblet til' : 'Løsne: dra flytter bare denne, ut av det den er koblet til og forbi magneten · på desktop også Alt + dra'}
         label="Løsne"
         onClick={() => p.onSelect({ ...p.selection, loose: !on })}
       >

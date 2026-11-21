@@ -45,12 +45,24 @@ describe('frittstående tekstilvegg', () => {
     // In line with the second run through the corner: joins it, which then crosses the first run
     expect(err(v, [3, 2], [3, 1])).toMatch(/ende mot ende/);
   });
-  it('never along or across a system wall, but may stop at one', () => {
-    expect(err(base(), [1, 0], [3, 0])).toMatch(/langs/);
-    expect(err(base(), [0, 1], [0, 3])).toMatch(/langs/);
+  it('never in or through a system wall, but may stand up against one (F1)', () => {
+    expect(err(base(), [1, 0], [3, 0])).toMatch(/står i systemveggen/);
+    expect(err(base(), [0, 1], [0, 3])).toMatch(/står i systemveggen/);
     expect(err(base(), [2, 0], [2, 2])).toBeNull();
     const inner = { ...base(), walls: [...base().walls, { id: 'w1', from: [3, 1] as Point, to: [3, 3] as Point }] };
-    expect(err(inner, [2, 2], [4, 2])).toMatch(/krysse/);
+    expect(err(inner, [2, 2], [4, 2])).toMatch(/gjennom/);
+    // A T on the inner wall, and end to end in line with it
+    expect(err(inner, [3, 2], [5, 2])).toBeNull();
+    expect(err(inner, [3, 3], [3, 4])).toBeNull();
+  });
+  it('parallel to a system wall its foot plates stand clear of the adjustable feet (F2)', () => {
+    // 740 is 400 across, the foot 40 × 40: the run's line at least 220 mm out
+    expect(err(base(), [1, 0.2], [3, 0.2])).toMatch(/Fotplatene/);
+    expect(err(base(), [1, 0.25], [3, 0.25])).toBeNull();
+    // A short frame stands on a 730, 300 across: 170 mm is enough
+    expect(err(base(), [1, 0.2], [1.5, 0.2])).toBeNull();
+    // Past the wall's end nothing is in the way
+    expect(err(base(), [-1, 0.1], [0, 0.1])).toBeNull();
   });
   it('at least the minimum width', () => {
     expect(err(base(), [1, 2], [1.25, 2])).toBeNull();

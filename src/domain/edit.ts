@@ -146,10 +146,10 @@ export const canMoveWall = (w: Wall) => !w.room && !isStandWall(w);
 
 /**
  * Move an inner wall sideways by `delta` m (along its normal axis: y for horizontal walls, x for vertical), and `along`
- * m in its own direction: whole metres, or 250 with Shift or «Fin» (Byggeregel V7, V9). Joined to other inner walls or
- * textile walls that stand free of stand walls and rooms, the whole group moves as one (Byggeregel M2, Bjørn 20.11.2026),
+ * m in its own direction: whole metres, or 250 with Shift or «Fin» (Byggeregel V7, V9). Joined to other inner walls
+ * that stand free of stand walls and rooms, the whole group moves as one (Byggeregel M2, Bjørn 20.11.2026),
  * snapping onto a part near it (M4); `loose` («Løsne», M5) moves it alone.
- * Joined to a wall that stands still (M3), perpendicular inner walls and textile walls ending on it (a corner or a T)
+ * Joined to a wall that stands still (M3), perpendicular inner walls ending on it (a corner or a T)
  * stretch or shrink with it sideways, so walls drawn around an area resize like a room. It moves along its length only
  * while no other inner wall touches it, so a joint is never pulled apart (Bjørn 1.11.2026: a free-standing wall moves both ways).
  * Its openings, textiles and foils move with it. It may go all the way out to the stand's edge and stays an inner
@@ -168,8 +168,8 @@ export function moveWall(v: Variant, wallId: string, delta: number, along = 0, r
 
 /**
  * Byggeregel M3: an inner wall moved by itself, `delta` m sideways and `along` m in its own direction, while what is
- * joined to it stays: perpendicular inner walls and textile walls ending on it (a corner or a T) stretch or shrink with
- * it sideways. Along its length only while no other inner wall touches it. A forankret group moves this way, and so
+ * joined to it stays: perpendicular inner walls ending on it (a corner or a T) stretch or shrink with it sideways.
+ * Textile walls are never joined to it (M1). Along its length only while no other inner wall touches it. A forankret group moves this way, and so
  * does an arm dragged by a corner grip (M6). Returns v when it cannot.
  */
 export function slideWall(v: Variant, wallId: string, delta: number, along = 0, rules: Rules = RULES): Variant {
@@ -202,11 +202,8 @@ export function slideWall(v: Variant, wallId: string, delta: number, along = 0, 
     if (same(from, to)) continue;
     others.push({ ...o, from, to });
   }
-  // Textile walls ending on it across grow or shrink with it the same way (M3)
-  const runs = freeTextiles(v).map((t) => {
-    if ((t.from[1] === t.to[1]) === horizontal) return t;
-    return { ...t, from: onIt(t.from) ? shift(t.from) : t.from, to: onIt(t.to) ? shift(t.to) : t.to };
-  });
+  // Textile walls up against it only stand there (M1): they stay, and one it would run into stops it (F1)
+  const runs = freeTextiles(v);
   const keep = (id: string) => id === w.id;
   const carried = {
     openings: v.openings.filter((o) => keep(o.wallId)),

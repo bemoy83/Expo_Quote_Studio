@@ -1,5 +1,5 @@
-// Velg on a free-standing textile wall: drag moves it with what it is joined to (Byggeregel M2), onto a system wall's
-// line mounts it there (X13); release selects it.
+// Velg on a free-standing textile wall: drag moves it with what it is joined to (Byggeregel M2), parallel to a system
+// wall within the magnet mounts it there (X13); release selects it.
 import { sideOf } from '../../../domain/faces'
 import { dragFreeTextile } from '../../drag'
 import type { DragHandlers } from './types'
@@ -9,7 +9,7 @@ import { wallTextiles } from '../../../domain/textile/mounts'
 export const freeMove: DragHandlers<'freeMove'> = {
   move(c, d, q) {
     if (!goneFrom(d, q, 0.15, c.onCheckpoint)) return
-    dragFreeTextile(d, q, c.fine, c.onEdit)
+    dragFreeTextile(d, q, c.onEdit)
   },
   up(c, d) {
     const t = d.mounted ? wallTextiles(c.v).find((x) => x.id === d.mounted) : undefined

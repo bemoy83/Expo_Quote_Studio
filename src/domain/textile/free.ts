@@ -2,9 +2,12 @@
 // A run is straight and axis-aligned on the 0,25 m grid (the elevation grid, Bjørn 31.10.2026). Drawing along or onto
 // a run in line with it extends that run: a long wall stays one frame with spliced top and bottom rails. Two runs may
 // only meet end to end at a right angle, where they share a 92LTX corner post. It is not part of the Foga wall system:
-// it never closes a room or carries a door, and it may not cross a system wall. A stroke along one becomes a textile on
-// that wall instead (brush.ts).
-// Byggeregler X5, X7 (docs/byggeregler.md).
+// it never closes a room or carries a door. Where it may stand is physical (Bjørn 21.11.2026: «regler basert på
+// byggesystem og fysiske lover, ikke kunstige begrensninger»): it may not stand in or through a system wall, and its
+// foot plates may not meet the wall's adjustable feet, so parallel to a wall it stands at least that far out; up
+// against a wall (a T, or end to end) is fine, it only stands there, not coupled. A stroke along a wall becomes a
+// textile on that wall instead (brush.ts).
+// Byggeregler X5, X7, F1, F2 (docs/byggeregler.md).
 import type { Rules } from '../../rules/rules';
 import type { FreeTextile, Point, TextileFace, Variant } from '../types';
 import { nextId } from '../ids';
@@ -13,6 +16,7 @@ import { builtModules } from '../walls';
 import { onSpan } from '../grid';
 import { movedEnd, type RunEnd } from '../grips';
 import { freeTextiles, withOnFeet } from './mounts';
+import { RECIPES } from '../../foga/recipes';
 
 /** Face A is side 1 (left normal of from → to), face B side −1. */
 export type FaceKey = 'a' | 'b';
@@ -85,14 +89,42 @@ export function cornerEnds(v: Variant): Map<string, CornerEnds> {
   return out;
 }
 
-/** Why a run cannot stand there, or null. `others` are the runs already standing (the run itself left out). */
+/**
+ * Byggeregel F2: how far the centre line of a run must stand from a system wall's line it runs parallel to, m, so its
+ * foot plates (740, or 730 on a short frame, centred under the frame) lie clear of the wall's adjustable feet
+ * (Bjørn 21.11.2026: the frame moves out so the plates lie outside the feet, not between them; closer, it is mounted).
+ */
+export function wallClearance(t: Pick<FreeTextile, 'from' | 'to'>): number {
+  const f = RECIPES.textileFrame.feet;
+  const foot = runLength(t) * 1000 < f.support.minFrom - EPS ? f.smallFoot : f.foot;
+  return (foot.across + RECIPES.wall.footprint.across) / 2000;
+}
+
+/** Across distance between two parallel axis-aligned segments that overlap along, or null. */
+function parallelGap(a: Pick<FreeTextile, 'from' | 'to'>, b: Pick<FreeTextile, 'from' | 'to'>): number | null {
+  const s = span(a);
+  const o = span(b);
+  if (s.h !== o.h || Math.min(s.hi, o.hi) - Math.max(s.lo, o.lo) <= EPS) return null;
+  return Math.abs(s.c - o.c);
+}
+
+/**
+ * Why a run cannot stand there, or null (Byggeregler F1, F2, X5, X7). `others` are the runs already standing (the run
+ * itself left out). Only what is physically in the way: a system wall it stands in or goes through, a wall's adjustable
+ * feet its foot plates would meet, another run.
+ */
 export function blocked(v: Variant, rules: Rules, t: Pick<FreeTextile, 'from' | 'to'>, others: FreeTextile[]): string | null {
   if (runLength(t) < rules.textile.freeMin - EPS) return `Tekstilveggen må være minst ${String(rules.textile.freeMin).replace('.', ',')} m`;
+  const clear = wallClearance(t);
   for (const m of builtModules(v)) {
-    const c = contact(t, { from: m.a, to: m.b });
-    if (c.kind === 'line' && !c.touchOnly) return 'Tekstilveggen kan ikke stå langs en systemvegg';
-    // Up against a wall is fine; through it is not
-    if (c.kind === 'point' && !isEnd(t, c.p)) return 'Tekstilveggen kan ikke krysse en systemvegg';
+    const seg = { from: m.a, to: m.b };
+    const c = contact(t, seg);
+    // F1: in the wall's own volume. Up against it (a T, or end to end in line) is fine: it only stands there
+    if (c.kind === 'line' && !c.touchOnly) return 'Tekstilveggen står i systemveggen · dra den inntil for å montere den på veggen';
+    if (c.kind === 'point' && !isEnd(t, c.p)) return 'Tekstilveggen kan ikke stå gjennom en systemvegg';
+    // F2: the foot plates on the wall's adjustable feet
+    const gap = parallelGap(t, seg);
+    if (gap !== null && gap > EPS && gap < clear - EPS) return 'Fotplatene treffer justeringsføttene på systemveggen · nærmere veggen monteres den på veggen';
   }
   // Runs in line are always joined into one, so at most two runs (at a right angle) can end at the same point
   for (const o of others) {
@@ -245,11 +277,11 @@ export function rotateFreeTextile(v: Variant, rules: Rules, id: string): { v: Va
   return { v: { ...v, textiles: v.textiles.map((x) => (x.id === id ? run : x)) } };
 }
 
-/** Byggeregel X12: the ends of a free-standing textile wall that have a grip: those that touch neither a wall nor another textile wall
- *  (Bjørn 14.11.2026: free ends first). */
+/** Byggeregel X12: the ends of a free-standing textile wall that have a grip: those not in a 92LTX corner with another
+ *  textile wall (Bjørn 14.11.2026: free ends first). An end up against a system wall only stands there (M1), so it has
+ *  one too. */
 export function freeGripEnds(v: Variant, t: FreeTextile): RunEnd[] {
-  const mods = builtModules(v);
-  const free = (p: Point) => !mods.some((m) => onSpan(m.a, m.b, p)) && !freeTextiles(v).some((o) => o.id !== t.id && onSpan(o.from, o.to, p));
+  const free = (p: Point) => !freeTextiles(v).some((o) => o.id !== t.id && onSpan(o.from, o.to, p));
   return (['from', 'to'] as const).filter((e) => free(t[e]));
 }
 

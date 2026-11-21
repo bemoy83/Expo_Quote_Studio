@@ -59,9 +59,9 @@ export interface FreeDrag {
   mounted?: string
 }
 
-/** Move a free-standing textile wall with what it is joined to (Byggeregel M2), whole metres or 250 with Shift or «Fin»;
- *  onto a system wall's line it is mounted there (X13). */
-export function dragFreeTextile(d: FreeDrag, q: { x: number; y: number }, fine: boolean, onEdit: Edit) {
+/** Move a free-standing textile wall with what it is joined to (Byggeregel M2), on the textile grid (250); parallel to a
+ *  system wall within the magnet it is mounted there (X13, M4). */
+export function dragFreeTextile(d: FreeDrag, q: { x: number; y: number }, onEdit: Edit) {
   const dx = q.x - d.p0.x
   const dy = q.y - d.p0.y
   const m = mountDrag(d.v0, rules, d.id, dx, dy, d.loose)
@@ -70,7 +70,7 @@ export function dragFreeTextile(d: FreeDrag, q: { x: number; y: number }, fine: 
     return onEdit(() => m.v, false)
   }
   d.mounted = undefined
-  const next = moveTextileGroup(d.v0, rules, d.id, dx, dy, fine, d.loose)
+  const next = moveTextileGroup(d.v0, rules, d.id, dx, dy, d.loose)
   if (next) onEdit(() => next, false)
 }
 

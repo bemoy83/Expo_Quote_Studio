@@ -71,11 +71,11 @@ describe('frittstående mot ramme (X11)', () => {
     expect([f.length, f.start]).toEqual([1940, 60]);
   });
 
-  it('without a frame there it runs to the wall as before', () => {
+  it('without a frame there it stops at the face of the posts and feet, 20 mm from the wall line (F1)', () => {
     const [f] = frames(variant(ROW, { textiles: [run] }));
-    expect([f.length, f.start]).toEqual([2000, undefined]);
+    expect([f.length, f.start]).toEqual([1980, 20]);
     // A frame on the other face of the wall is not in its way
     const [g] = frames(variant(ROW, { textiles: [{ ...frame('t1', 'side-back', 2, 2), side: -1 }, run] }));
-    expect(g.length).toBe(2000);
+    expect(g.length).toBe(1980);
   });
 });
