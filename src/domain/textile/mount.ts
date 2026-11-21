@@ -10,7 +10,7 @@ import { faceAt, faceNormal, sideOf, type FaceSide } from '../faces';
 import { pointAlong, wallDirection, wallLength } from '../grid';
 import { groupOf, groupSize, MAGNET } from '../joints';
 import type { FreeTextile, Point, TextileFace, TextileWall, Variant, Wall } from '../types';
-import { addFreeTextile, removeFreeTextile, runNormal, wallClearance, type FaceKey } from './free';
+import { addFreeTextile, removeFreeTextile, runNormal, textileStep, wallClearance, type FaceKey } from './free';
 import { addTextileSpan, fullTextileHeight } from './inFrame';
 import { freeTextiles, wallTextiles } from './mounts';
 
@@ -60,9 +60,7 @@ export function mountDrag(v: Variant, rules: Rules, id: string, dx: number, dy: 
   const t = freeTextiles(v).find((x) => x.id === id);
   if (!t) return null;
   if (!loose && groupSize(groupOf(v, { kind: 'textile', id })) > 1) return null;
-  const g = rules.textile.grid;
-  const snap = (x: number) => Math.round(Math.round(x / g) * g * 1000) / 1000;
-  const [ox, oy] = [snap(dx), snap(dy)];
+  const [ox, oy] = [textileStep(rules, dx), textileStep(rules, dy)];
   const run: Seg = { from: [t.from[0] + ox, t.from[1] + oy], to: [t.to[0] + ox, t.to[1] + oy] };
   const near = wallNear(v, run, loose ? 0 : MAGNET);
   if (!near) return null;
@@ -100,9 +98,7 @@ export function unmountDrag(v: Variant, rules: Rules, id: string, dx: number, dy
   const w = t && v.walls.find((x) => x.id === t.wallId);
   if (!t || !w) return null;
   const n = faceNormal(w, sideOf(v, t));
-  const g = rules.textile.grid;
-  const snap = (x: number) => Math.round(Math.round(x / g) * g * 1000) / 1000;
-  const [ox, oy] = [snap(dx), snap(dy)];
+  const [ox, oy] = [textileStep(rules, dx), textileStep(rules, dy)];
   if (ox * n[0] + oy * n[1] <= MAGNET + EPS) return null;
   return takeOff(v, rules, id, ox, oy);
 }
@@ -119,6 +115,10 @@ export function loosenMounted(v: Variant, rules: Rules, id: string): Unmounted |
   const out = wallClearance({ from: pointAlong(w, t.from), to: pointAlong(w, t.from + t.width) });
   return takeOff(v, rules, id, n[0] * out, n[1] * out);
 }
+
+/** Said when a textile wall taken off its wall had a height or place up the wall that foot plates cannot have yet (X5, X13). */
+export const onFeetHeight = (rules: Rules) =>
+  `Tekstilveggen står nå på fotplater i full høyde, ${Math.round(fullTextileHeight(rules) * 1000)}: andre høyder på fotplater kommer senere`;
 
 export interface Unmounted {
   v: Variant;

@@ -492,7 +492,7 @@ sammen der byggesystemet kan feste dem (M1), og ellers bare står plassert ved h
   midt på en tekstilvegg, for endestolpen ville stått i rammen; en vegg som tegnes, dras eller strekkes dit, stopper,
   og tekstilveggen blir stående (den tas aldri bort av en endring på veggene). Disker og møbler holder seg utenfor
   rammen, og en tekstilvegg som flyttes, tegnes eller roteres inn i en disk eller et møbel, stopper.
-  *Bjørn 21.11.2026 · `RECIPES.wall.post`, `rules.textile.depth` · kode `src/domain/textile/free.ts`, `src/calc/textile/placement.ts`, `src/domain/objects.ts`, `src/ui/edits.ts` · test `src/domain/textile/free.test.ts`, `src/calc/textile/placement.test.ts`, `src/calc/footPlates.test.ts`, `src/ui/edits.test.ts`*
+  *Bjørn 21.11.2026 · `rules.wall.post`, `rules.textile.depth` · kode `src/domain/textile/free.ts`, `src/calc/textile/placement.ts`, `src/domain/objects.ts`, `src/ui/edits.ts` · test `src/domain/textile/free.test.ts`, `src/calc/textile/placement.test.ts`, `src/calc/footPlates.test.ts`, `src/ui/edits.test.ts`*
 - **F2 Fotplater og justeringsføtter.** På gulvet tar justeringsfoten under en stolpe 40 × 40. En frittstående
   tekstilveggs fotplater (740, 400 × 400, toveis med skruehull i senter, eller 730) ligger utenfor føttene, ikke inne
   mellom dem under veggen: parallelt med en systemvegg står rammen minst en halv fotplate pluss en halv fot ut fra

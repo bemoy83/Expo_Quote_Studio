@@ -12,6 +12,7 @@ import { faceSegment, sideOf } from './faces';
 import { RECIPES } from '../foga/recipes';
 import { counterFootprint, sectionRects, toPlan } from './counterShape';
 import { freeTextiles, wallTextiles } from './textile/mounts';
+import { frameRect } from './textile/free';
 
 export interface Box {
   x0: number;
@@ -110,12 +111,7 @@ export function blockers(v: Variant, ctx: PlaceContext, skipId?: string): Box[] 
   }
   // A free-standing textile wall's frame, its depth across its line (F1). Its foot plates are low: a counter stands
   // over them on inserts (K23)
-  const td = rules.textile.depth / 2;
-  for (const t of freeTextiles(v)) {
-    const [x0, x1] = [Math.min(t.from[0], t.to[0]), Math.max(t.from[0], t.to[0])];
-    const [y0, y1] = [Math.min(t.from[1], t.to[1]), Math.max(t.from[1], t.to[1])];
-    out.push({ x0: x0 - td, y0: y0 - td, x1: x1 + td, y1: y1 + td, kind: 'wall', id: t.id });
-  }
+  for (const t of freeTextiles(v)) out.push({ ...frameRect(t, rules), kind: 'wall', id: t.id });
   for (const o of v.openings) {
     const w = v.walls.find((x) => x.id === o.wallId);
     if (!w || !ctx.swings(o.product)) continue;
@@ -169,13 +165,9 @@ export function furnitureOnPlates(v: Variant, ctx: Pick<PlaceContext, 'footprint
 /** Byggeregel F1: the free-standing textile walls whose frame stands in a placed object (furniture or a counter), by id.
  *  An object never moves into one (blockers); this is the other way, a textile wall moved, drawn or turned into it. */
 export function framesInObjects(v: Variant, ctx: Pick<PlaceContext, 'footprint' | 'rules'>): string[] {
-  const td = ctx.rules.textile.depth / 2;
   const objects: Box[] = v.objects.flatMap((o) => objectBoxes(ctx, o).map((b) => ({ ...b, kind: 'object' as const, id: o.id })));
   if (!objects.length) return [];
-  return freeTextiles(v).flatMap((t) => {
-    const box = { x0: Math.min(t.from[0], t.to[0]) - td, y0: Math.min(t.from[1], t.to[1]) - td, x1: Math.max(t.from[0], t.to[0]) + td, y1: Math.max(t.from[1], t.to[1]) + td };
-    return hits(box, objects, 1e-6) ? [t.id] : [];
-  });
+  return freeTextiles(v).flatMap((t) => (hits(frameRect(t, ctx.rules), objects, 1e-6) ? [t.id] : []));
 }
 
 export function hits(box: Omit<Box, 'kind'>, others: Box[], gap = GAP): Box | null {

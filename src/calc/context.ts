@@ -29,8 +29,8 @@ import { textileFootRects } from './textile/free';
 import type { CounterProfile } from '../foga/counter';
 import type { SupportBeamLayout } from './beams/supportBeams';
 import type { CalcLine } from './types';
-import { footPlateRect, type WallSupport } from './wallSupports';
-import { freeWallSupports } from './footPlates';
+import type { WallSupport } from './wallSupports';
+import { floorOf, freeWallSupports, type Floor } from './footPlates';
 
 export interface CalcContext {
   v: Variant;
@@ -73,6 +73,8 @@ export interface CalcContext {
   wallFeet: WallSupport[];
   /** Inserts 700 under the counters over a foot plate, by counter id (Byggeregel K23). */
   inserts: ReadonlyMap<string, readonly CounterProfile[]>;
+  /** What lies on the floor: support plates, adjustable feet and textile walls' foot plates (Byggeregel F2). */
+  floor: Floor;
   /** Every foot plate on the plan, m: 750 under walls and takdrager posts, 740/730 under textile walls (K23). */
   plates: { x0: number; y0: number; x1: number; y1: number }[];
   prod: Production;
@@ -204,7 +206,8 @@ export function calcContext(v: Variant, rules: Rules, catalog: Catalog, standWal
   const prod = production(v, rules, '');
   // K23: a counter over a foot plate stands on inserts 700
   // (under walls and takdrager posts, S2 and T12, and under free-standing textile walls, X8)
-  const plates = [...wallFeet.map((f) => footPlateRect(f, RECIPES.wall.support.foot)), ...textileFootRects(v, prod.free)];
+  const floor = floorOf(wallFeet, allPosts.values(), textileFootRects(v, prod.free));
+  const plates = [...floor.supports, ...floor.textile];
   const inserts = counterInserts(v, placeContext(rules, catalog), plates);
   // Foga structure of what the exhibitor orders: posts, walled modules, headers and beam lengths are counted from it
   const foga = structureOf({ mods: ours, posts: ourPoints.size + (organiserBeams ? innerPosts : beamPosts), beams: ourBeams, hooks: hookCount(organiserBeams ? hooks.filter((h) => h.inner) : hooks), lift: { posts: lift.posts.length, hooks: lift.hooks.length, walls: lift.walls.length }, production: prod, swaps, wallFeet: wallFeet.length, barePosts: wallFeet.filter((f) => ourPoints.has(pointKey(f.at))).length + inner.feet.length, curtain: (a) => idx.byArtnr.get(a)?.product.opening === 'curtain', shelves: shelfBrackets(v, rules), counters: builtCounterParts(v), counterInserts: [...inserts.values()].reduce((a, n) => a + n.length, 0) });
@@ -269,6 +272,7 @@ export function calcContext(v: Variant, rules: Rules, catalog: Catalog, standWal
     freeWallFeet,
     wallFeet,
     inserts,
+    floor,
     plates,
     prod,
     foga,

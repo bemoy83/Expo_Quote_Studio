@@ -7,6 +7,7 @@ import { displayName, indexCatalog, placeContext } from '../catalog/lookup'
 import { doorFloors, type FloorBoxes } from '../domain/doors'
 import { objectBoxes, type PlaceContext } from '../domain/objects'
 import { calcContext } from '../calc/context'
+import type { Floor } from '../calc/footPlates'
 import type { PlanRect } from '../domain/counters'
 import { DEFAULT_STAND_WALLS } from '../domain/variant'
 import type { Product } from '../catalog/types'
@@ -133,20 +134,23 @@ export const counterName = (o: Pick<PlacedObject, 'product' | 'sections'>) => ar
 /** What the counters of a variant stand among (calc): every post of its walls and takdrager, and every foot plate
  *  (Byggeregel K10, K23). Kept while that is unchanged: a drag moves only objects, so the walls, beams, textiles and stand
  *  stay the same arrays and nothing is counted again. */
-type Built = { posts: readonly Point[]; plates: readonly PlanRect[] }
+type Built = { posts: readonly Point[]; plates: readonly PlanRect[]; floor: Floor }
 const builtCache = new WeakMap<Variant['walls'], { keys: unknown[]; built: Built }>()
 function standsOn(v: Variant): Built {
   const keys = [v.stand, v.innerBeams, v.noBeams, wallTextiles(v), freeTextiles(v), v.openings, rules, catalog, pricing]
   const hit = builtCache.get(v.walls)
   if (hit && hit.keys.every((k, i) => k === keys[i])) return hit.built
   const c = calcContext({ ...v, objects: [] }, rules, catalog, DEFAULT_STAND_WALLS, pricing)
-  const built = { posts: [...c.allPosts.values()], plates: c.plates }
+  const built = { posts: [...c.allPosts.values()], plates: c.plates, floor: c.floor }
   builtCache.set(v.walls, { keys, built })
   return built
 }
 
 /** Every foot plate of a variant (Byggeregel K23). */
 export const footPlatesOf = (v: Variant): readonly PlanRect[] => standsOn(v).plates
+
+/** What lies on the floor of a variant, as the calc lays it out (Byggeregel F2). */
+export const floorOfVariant = (v: Variant): Floor => standsOn(v).floor
 
 /** The place context of the app: with the posts of takdrager standing free (Byggeregel K10, Bjørn 16.11.2026) and the
  *  foot plates furniture keeps off (F2). */
