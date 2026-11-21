@@ -148,7 +148,8 @@ function standsOn(v: Variant): Built {
 /** Every foot plate of a variant (Byggeregel K23). */
 export const footPlatesOf = (v: Variant): readonly PlanRect[] => standsOn(v).plates
 
-/** The place context of the app: with the posts of takdrager standing free (Byggeregel K10, Bjørn 16.11.2026). */
+/** The place context of the app: with the posts of takdrager standing free (Byggeregel K10, Bjørn 16.11.2026) and the
+ *  foot plates furniture keeps off (F2). */
 function withPosts(c: PlaceContext): PlaceContext {
-  return { ...c, posts: (v) => standsOn(v).posts }
+  return { ...c, posts: (v) => standsOn(v).posts, plates: (v) => standsOn(v).plates }
 }
