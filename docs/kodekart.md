@@ -152,6 +152,11 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
   endegrepene, X12)
 - Frittstående: `domain/textile/free.ts`; enden tas inn på en rammeende av `toFrameEnd` (`brush.ts`) og `magnet`
   (`domain/joints.ts`), X11, M4
+- Grupper i 92LTX-hjørner og systemvegg (X13, M4), i `domain/textile/mount.ts`: `groupMountDrag` (magneten tar en
+  fri gruppe inn på veggflaten, armene langs vegg monteres) og `moveCornerGroup` (hele hjørnet følger et drag av hvilken
+  som helst arm; en ramme holder gruppen på veggen til draget går forbi magneten), begge fra `dragFreeTextile` i
+  `ui/drag.ts`, `moveCornerGroup` også fra `unmountDrag`. Plass på flaten sjekkes med `fitsFace` (`inFrame.ts`), og en
+  frittstående som står inntil en vegg kobles til en fri rammeende av `joinFreeToFrames` (`free.ts`, i `settle`)
 - Penselen for begge: `domain/textile/brush.ts`
 - Veggflater og felt (deles med folie): `domain/faces.ts` · tekstil holdes gyldig etter andre endringer i
   `fitDecor` (`domain/decor.ts`)

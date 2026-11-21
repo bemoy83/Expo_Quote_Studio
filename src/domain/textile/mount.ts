@@ -7,12 +7,12 @@
 // toward the wall is kept and comes back when it is taken off again. Pure.
 import type { Rules } from '../../rules/rules';
 import { faceAt, faceNormal, sideOf, type FaceSide } from '../faces';
-import { moduleCount, moduleStart, pointAlong, wallDirection, wallLength } from '../grid';
+import { crossingOn, moduleCount, moduleStart, pointAlong, wallDirection, wallLength } from '../grid';
 import { groupOf, groupSize, MAGNET } from '../joints';
 import type { FreeTextile, Point, TextileFace, TextileWall, Variant, Wall } from '../types';
 import { addFreeTextile, blocked, removeFreeTextile, runNormal, textileStep, wallClearance, type FaceKey } from './free';
-import { addTextileSpan, freeSpans, fullTextileHeight } from './inFrame';
-import { MOUNT_OFFSET, freeTextiles, mountedOn, wallTextiles, withOnWall } from './mounts';
+import { addTextileSpan, fitsFace, fullTextileHeight } from './inFrame';
+import { MOUNT_OFFSET, freeTextiles, mountedOn, onLine, wallTextiles, withOnWall } from './mounts';
 import { cornerEnds, same } from './corners';
 
 const EPS = 1e-6;
@@ -156,13 +156,11 @@ export function moveCornerGroup(v: Variant, rules: Rules, id: string, ox: number
       const [ux, uy] = wallDirection(m.wall);
       const along = (p: Point) => (p[0] - m.wall.from[0]) * ux + (p[1] - m.wall.from[1]) * uy;
       const out = (p: Point) => (along(p) < (along(t.from) + along(t.to)) / 2 ? view.from : view.from + view.width);
-      const n = faceNormal(m.wall, m.side);
-      const line = (u: number): Point => [m.wall.from[0] + ux * u + n[0] * MOUNT_OFFSET, m.wall.from[1] + uy * u + n[1] * MOUNT_OFFSET];
-      if (!corners.get(tid)?.from) from = line(out(t.from));
-      if (!corners.get(tid)?.to) to = line(out(t.to));
+      if (!corners.get(tid)?.from) from = onLine(m.wall, m.side, out(t.from));
+      if (!corners.get(tid)?.to) to = onLine(m.wall, m.side, out(t.to));
     }
     if (!m || off.has(tid)) {
-      if (t.bottom || (t.height !== undefined && Math.abs(t.height - fullTextileHeight(rules)) > EPS)) heightKept = false;
+      heightKept &&= onFeetFits(t, rules);
       const { fit: _f, height: _h, bottom: _b, ...free } = t;
       rest = free;
     }
@@ -175,11 +173,7 @@ export function moveCornerGroup(v: Variant, rules: Rules, id: string, ox: number
     const why = blocked(next, rules, t, freeTextiles(next).filter((x) => x.id !== t.id && !ids.includes(x.id)));
     if (why) return { error: why };
   }
-  for (const view of wallTextiles(next).filter((x) => ids.includes(x.id))) {
-    const s = sideOf(next, view);
-    const spans = freeSpans(next, rules, view.wallId, s, wallTextiles(next).filter((x) => x.id !== view.id && x.wallId === view.wallId && sideOf(next, x) === s));
-    if (!spans.some(([a, b]) => view.from >= a - EPS && view.from + view.width <= b + EPS)) return { error: 'Ikke plass til tekstilveggen langs veggen her' };
-  }
+  for (const view of wallTextiles(next).filter((x) => ids.includes(x.id))) if (!fitsFace(next, rules, view)) return { error: 'Ikke plass til tekstilveggen langs veggen her' };
   return { v: next, id, heightKept };
 }
 
@@ -199,6 +193,9 @@ export function loosenMounted(v: Variant, rules: Rules, id: string): Unmounted |
 /** Said when a textile wall taken off its wall had a height or place up the wall that foot plates cannot have yet (X5, X13). */
 export const onFeetHeight = (rules: Rules) =>
   `Tekstilveggen står nå på fotplater i full høyde, ${Math.round(fullTextileHeight(rules) * 1000)}: andre høyder på fotplater kommer senere`;
+
+/** Whether a textile wall keeps its height on foot plates: on the floor, full height (X5). */
+const onFeetFits = (t: { height?: number; bottom?: number }, rules: Rules) => !t.bottom && (t.height === undefined || Math.abs(t.height - fullTextileHeight(rules)) < EPS);
 
 export interface Unmounted {
   v: Variant;
@@ -227,7 +224,7 @@ function takeOff(v: Variant, rules: Rules, id: string, ox: number, oy: number): 
   delete placed.b;
   if (hasFace(out)) placed[key] = out;
   if (hasFace(t.back)) placed[other(key)] = t.back;
-  const heightKept = !t.bottom && (t.height === undefined || Math.abs(t.height - fullTextileHeight(rules)) < EPS);
+  const heightKept = onFeetFits(t, rules);
   const textiles = fresh ? v.textiles.map((x) => (x.id === id ? placed : x)) : r.v.textiles.map((x) => (x.id === r.id ? placed : x));
   return { v: { ...r.v, textiles }, id: placed.id, heightKept };
 }
@@ -247,25 +244,25 @@ export function groupMountDrag(v: Variant, rules: Rules, id: string, dx: number,
   const runs = freeTextiles(v).filter((t) => g.textiles.includes(t.id));
   const [ox, oy] = [textileStep(rules, dx), textileStep(rules, dy)];
   let moved: FreeTextile[] = runs.map((t) => ({ ...t, from: [t.from[0] + ox, t.from[1] + oy], to: [t.to[0] + ox, t.to[1] + oy] }));
-  // Across onto a wall face: the nearest catch for runs along x, and on its own for runs along y
+  // Across onto a wall face, along x and along y each on its own: the run nearest a wall decides
   let caught = false;
   for (const h of [true, false]) {
-    let best: { shift: number; off: number } | null = null;
+    let best: { by: Point; off: number } | null = null;
     for (const t of moved) {
       if ((Math.abs(t.from[1] - t.to[1]) < EPS) !== h) continue;
       const near = wallNear(v, t, MAGNET);
-      if (!near) continue;
+      if (!near || (best && Math.abs(near.off) >= Math.abs(best.off))) continue;
+      // Out along the wall's left normal; on its line, to the face it came from
       const [ux, uy] = wallDirection(near.wall);
-      // On the line: the face it came from
       const was = runs.find((r) => r.id === t.id)!;
-      const side = Math.abs(near.off) > EPS ? Math.sign(near.off) : Math.sign((was.from[0] - near.wall.from[0]) * -uy + (was.from[1] - near.wall.from[1]) * ux) || 1;
-      const shift = side * MOUNT_OFFSET - near.off;
-      if (!best || Math.abs(near.off) < Math.abs(best.off)) best = { shift: shift * (h ? ux : -uy), off: near.off };
+      const side = (Math.abs(near.off) > EPS ? Math.sign(near.off) : 0) || Math.sign((was.from[0] - near.wall.from[0]) * -uy + (was.from[1] - near.wall.from[1]) * ux) || 1;
+      const d = side * MOUNT_OFFSET - near.off;
+      best = { by: [-uy * d, ux * d], off: near.off };
     }
     if (!best) continue;
     caught = true;
-    // The left normal of a wall along x is (0, ux), of one along y (−uy, 0): `shift` is along that axis
-    moved = moved.map((t) => (h ? { ...t, from: [t.from[0], r6(t.from[1] + best!.shift)], to: [t.to[0], r6(t.to[1] + best!.shift)] } : { ...t, from: [r6(t.from[0] + best!.shift), t.from[1]], to: [r6(t.to[0] + best!.shift), t.to[1]] }));
+    const [bx, by] = best.by;
+    moved = moved.map((t) => ({ ...t, from: [r6(t.from[0] + bx), r6(t.from[1] + by)], to: [r6(t.to[0] + bx), r6(t.to[1] + by)] }));
   }
   if (!caught) return null;
   const placed = { ...v, textiles: [...v.textiles.filter((t) => !g.textiles.includes(t.id)), ...moved] };
@@ -284,7 +281,7 @@ export function groupMountDrag(v: Variant, rules: Rules, id: string, dx: number,
       if (!partner) return posts.reduce((a, b) => (Math.abs(b - along(p)) < Math.abs(a - along(p)) ? b : a));
       // The other run's line along this wall: a wall's own line when that run goes on a wall too
       const pm = mountedOn(placed, partner.id);
-      return r6(along(p) + (pm ? lineOffset(w, pm.wall, p) : 0));
+      return pm ? crossingOn(w, pm.wall) : along(p);
     };
     const [a, b] = [end(t.from), end(t.to)];
     const { fit: _f, ...rest } = view;
@@ -292,18 +289,9 @@ export function groupMountDrag(v: Variant, rules: Rules, id: string, dx: number,
   });
   // Room on the walls for them (X4)
   for (const view of views.filter((x) => on.some((t) => t.id === x.id))) {
-    const s = sideOf(placed, view);
-    const others = views.filter((x) => x.id !== view.id && x.wallId === view.wallId && sideOf(placed, x) === s);
-    const free = freeSpans(placed, rules, view.wallId, s, others);
-    if (view.width < rules.textile.minWidth - EPS || !free.some(([a, b]) => view.from >= a - EPS && view.from + view.width <= b + EPS)) return { error: 'Ikke plass til tekstilveggene på veggen her' };
+    if (!fitsFace(placed, rules, view, views.filter((x) => x.id !== view.id && x.wallId === view.wallId && sideOf(placed, x) === sideOf(placed, view)))) return { error: 'Ikke plass til tekstilveggene på veggen her' };
   }
   return { v: withOnWall(placed, views), id };
-}
-
-/** How far along wall w the line of wall o lies from point p, when o crosses w at a right angle. */
-function lineOffset(w: Wall, o: Wall, p: Point): number {
-  const [ux, uy] = wallDirection(w);
-  return (o.from[0] - p[0]) * ux + (o.from[1] - p[1]) * uy;
 }
 
 const r6 = (x: number) => Math.round(x * 1e6) / 1e6 + 0;

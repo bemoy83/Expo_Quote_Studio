@@ -307,3 +307,9 @@ export function segmentKeys(a: Point, b: Point): string[] {
   const w: Wall = { id: '', from: a, to: b };
   return n ? wallModules(w).map((m) => m.key) : [];
 }
+
+/** Where along wall `on` the line of wall `o` crosses it, m from its `from` (walls at a right angle). */
+export function crossingOn(on: Wall, o: Wall): number {
+  const [dx, dy] = wallDirection(on);
+  return (o.from[0] - on.from[0]) * dx + (o.from[1] - on.from[1]) * dy;
+}

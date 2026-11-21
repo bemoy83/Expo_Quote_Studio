@@ -3,7 +3,7 @@
 // along its wall until it stands against the other frame's face, keeping its length; joined, it moves back so each frame
 // is drawn to the other wall's line, and the frames meet at a 92LTX again (coupleCorners). Pure.
 import { RULES } from '../../rules/rules';
-import { wallDirection, wallLength } from '../grid';
+import { crossingOn, wallDirection, wallLength } from '../grid';
 import { sideOf } from '../faces';
 import type { Point, TextileWall, Variant, Wall } from '../types';
 import { cornerEnds, same } from './corners';
@@ -22,15 +22,9 @@ export interface WallCorner {
 
 const isHorizontal = (w: Wall) => Math.abs(w.from[1] - w.to[1]) < EPS;
 
-/** Where along wall `on` the line of wall `o` crosses it, m. */
-function lineOn(on: Wall, o: Wall): number {
-  const [dx, dy] = wallDirection(on);
-  return (o.from[0] - on.from[0]) * dx + (o.from[1] - on.from[1]) * dy;
-}
-
 /** The frame with the end of its span nearest the other wall's line moved there, its width kept. */
 function drawnTo(t: TextileWall, on: Wall, o: Wall): TextileWall {
-  const j = lineOn(on, o);
+  const j = crossingOn(on, o);
   const lo = Math.abs(t.from - j) <= Math.abs(t.from + t.width - j);
   return { ...t, from: r6(lo ? j : j - t.width) };
 }
@@ -57,7 +51,7 @@ export function wallCorners(v: Variant): WallCorner[] {
       }
       // Let go: each span ends no further from the other's wall line than a dissolve moves it
       const near = (t: TextileWall, on: Wall, o: Wall) => {
-        const k = lineOn(on, o);
+        const k = crossingOn(on, o);
         return Math.min(Math.abs(t.from - k), Math.abs(t.from + t.width - k)) <= SPAN_REACH + EPS;
       };
       if (!near(a, wa, wb) || !near(b, wb, wa)) continue;
