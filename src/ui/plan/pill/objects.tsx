@@ -11,8 +11,8 @@ import { fmt, mm } from '../../format'
 import { objectFamily } from '../../objectFamily'
 import { FinBtn, QBtn, Sep, Sw } from '../quick/parts'
 import type { Chosen } from '../selection'
-import { turnFree, turnObject } from '../turn'
-import { Colours, LooseBtn, Motifs, type Content, type PillActions } from './parts'
+import { turnObject } from '../turn'
+import { Colours, Motifs, MoveTools, type Content, type PillActions } from './parts'
 
 type Of<K extends Chosen['kind']> = Extract<Chosen, { kind: K }>
 
@@ -116,11 +116,7 @@ export function freePill(p: PillActions, c: Of<'free'>, remove: () => void): Con
     body: (
       <>
         <Motifs motifs={p.motifs} value={t[face]?.fill ? undefined : (t[face]?.motif ?? null)} onPick={(m) => p.onEdit((x) => updateFace(x, t.id, face, { motif: m }))} />
-        <Sep />
-        <QBtn title="Roter 90° om midten (R)" label="Roter" onClick={() => turnFree(p, t.id)}>
-          <RotateCw size={15} />
-        </QBtn>
-        <LooseBtn p={p} part={{ kind: 'textile', id: t.id }} />
+        <MoveTools p={p} part={{ kind: 'textile', id: t.id }} />
       </>
     ),
     more: true,

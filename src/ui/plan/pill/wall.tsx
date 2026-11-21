@@ -1,6 +1,6 @@
 // The pill on a wall and on a frame or decal on it (docs/pille-og-skuff.md): the wall's colour, print and a textile wall;
 // the frame's motif and Fyll ledig vegg; the decal's motif. On a wall with textile walls one button steps between them.
-import { Image as ImageIcon, Layers, Move, MoveHorizontal } from 'lucide-react'
+import { Image as ImageIcon, Layers, MoveHorizontal, Unlink } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { updateFoil } from '../../../domain/decor'
 import { canMoveWall, eraseWalls } from '../../../domain/edit'
@@ -17,11 +17,13 @@ import { rules } from '../../env'
 import { fmt } from '../../format'
 import { printKept } from '../../fillKeeping'
 import { findMotif } from '../../motifs'
-import { FinBtn, QBtn, Sep } from '../quick/parts'
+import { QBtn, Sep } from '../quick/parts'
 import type { Chosen, PlanSelection } from '../selection'
 import { faceName } from '../wallDrawer/face'
-import { Colours, LooseBtn, Motifs, type Content, type PillActions, type SecondFace } from './parts'
+import { Colours, Motifs, MoveTools, type Content, type PillActions, type SecondFace } from './parts'
 import { wallTextiles } from '../../../domain/textile/mounts'
+import { loosenMounted } from '../../../domain/textile/mount'
+import { ON_FEET_HEIGHT } from '../pointer/textileOff'
 
 type Of<K extends Chosen['kind']> = Extract<Chosen, { kind: K }>
 
@@ -33,6 +35,13 @@ export function textilePill(p: PillActions, c: Of<'textile'>, remove: () => void
   const filled = fillTextile(v, rules, T.id)
   const fills = wallTextiles(filled).find((x) => x.id === T.id)?.width === T.width
   const motif = T.fill === 'print' || T.fill === undefined ? (T.motif ?? null) : undefined
+  const loosen = () => {
+    const r = loosenMounted(v, rules, T.id)
+    if ('error' in r) return p.onToast(r.error)
+    onEdit(() => r.v)
+    p.onSelect({ freeTextileId: r.id })
+    if (!r.heightKept) p.onToast(ON_FEET_HEIGHT)
+  }
   return {
     name: 'Tekstilvegg',
     meta: `${fmt(T.width, 2)} × ${fmt(textileBox(T, rules).height, 2)} m`,
@@ -49,6 +58,12 @@ export function textilePill(p: PillActions, c: Of<'textile'>, remove: () => void
             </QBtn>
           </>
         )}
+        {/* Byggeregel X13: mounted is a coupling, so «Løsne» takes it off as it takes walls apart (Bjørn 21.11.2026) */}
+        <Sep />
+        <QBtn title="Løsne fra veggen · står fritt på fotplater foran veggen" label="Løsne" onClick={loosen}>
+          <Unlink size={15} />
+          Løsne
+        </QBtn>
       </>
     ),
     more: true,
@@ -119,16 +134,8 @@ export function wallPill(p: PillActions, c: Of<'wall'>, graphics: SecondFace): C
           <ImageIcon size={15} />
           Grafikk
         </QBtn>
-        {canMoveWall(w) && (
-          <>
-            <Sep />
-            {/* Byggeregel V7: an inner wall moves in 250 with Shift or Fin */}
-            <FinBtn title={{ on: 'Dra flytter veggen i 250 · trykk for hele meter igjen', off: 'Flytt veggen i 250, utenfor metrelinjene · på desktop også Shift + dra' }}>
-              <Move size={15} />
-            </FinBtn>
-            <LooseBtn p={p} part={{ kind: 'wall', id: w.id }} />
-          </>
-        )}
+        {/* Byggeregel V7: an inner wall moves in 250 with Shift or Fin, as a free textile wall does */}
+        {canMoveWall(w) && <MoveTools p={p} part={{ kind: 'wall', id: w.id }} />}
       </>
     ),
     more: true,

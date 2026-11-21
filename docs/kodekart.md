@@ -56,8 +56,11 @@ grepene som Velg (`sceneGrips`: på toppen av det de flytter, like store på skj
 midten (`turnOf`) i steg av 90 eller 15, lengste lovlige med `furthest`, `rotateObject(v, ctx, id, by)`.
 
 Kobling mellom innervegger og frittstående tekstilvegger (byggeregler M1–M5): `domain/joints.ts`. `groupOf` leser
-gruppen av hvor delene står (en ende på den andre), og om den er forankret i en standvegg eller romvegg; ingenting
-lagres. `moveGroup` flytter en fri gruppe som én ting (dører, folie, hyller og tekstil på veggene går med).
+gruppen av hvor delene står (en ende på den andre, bare vegg med vegg og tekstil med tekstil), og om en veggruppe er
+forankret i en standvegg eller romvegg; ingenting lagres. Hva som kan stå hvor er fysisk volum (F1, F2): `blocked` og
+`wallClearance` i `domain/textile/free.ts`, endene mot vegg kortes i `freeTrims` (`calc/textile/placement.ts`).
+Av og på vegg (X13) står i `domain/textile/mount.ts`: `mountDrag` (magnet 300 mm), `unmountDrag` og `loosenMounted`
+(«Løsne» i pillen på tekstil på vegg). `moveGroup` flytter en fri gruppe som én ting (dører, folie, hyller og tekstil på veggene går med).
 `moveWall` (`domain/edit.ts`) og `moveTextileGroup` (Velg-drag i `pointer/freeMove.ts`) bruker den; en forankret
 gruppe tar flyttet opp i naboene som ender på det som dras. `magnet`/`moveGroupNear` lar en fri gruppe hoppe inn på en del innenfor 300 mm (M4), og `alone` er «Løsne» (M5: `PlanSelection.loose`, `LooseBtn` i `pill/parts.tsx`, Alt + dra i `pointer/usePlanPointer.ts`). Grepene (M6) står i `domain/groupGrips.ts`: hjørnegrep (`cornerGrips`, `dragCorner` skyver hver arm med `slideWall`/`slideTextile`), rotergrep (`turnGroup` via `placeGroup`) og flyttegrep; `ui/plan/grips.ts` viser dem (`groupGrips`) med typene `corner`, `turn` og `move` med `what: 'wall' | 'textile'`.
 Dørgrepet (`door`, D8) flytter en valgt dør langs veggen med `moveOpeningAlong` i `domain/doors.ts`.

@@ -1,5 +1,7 @@
 // Drag steps shared by the plan and the 3D view, so both move walls and furniture the same way.
 import { moveWall } from '../domain/edit'
+import { moveTextileGroup } from '../domain/joints'
+import { mountDrag } from '../domain/textile/mount'
 import { furthest } from '../domain/grips'
 import { moveInnerBeam, shiftInnerBeam, type Run } from '../domain/innerBeams'
 import { settleAll, settleObject } from '../domain/objects'
@@ -43,6 +45,33 @@ export const wallDrag = (line: { id: string; from: Point; to: Point }, p0: { x: 
  *  One undo step per drag. */
 export function dragWall(d: WallDrag, q: { x: number; y: number }, onEdit: Edit, onCheckpoint: () => void) {
   dragStep(d, q, (v, s, a) => moveWall(v, d.id, s, a, rules, d.loose), onEdit, onCheckpoint, d.fine ? CELL : 1)
+}
+
+/** A drag of a free-standing textile wall, plan and 3D alike (Bjørn 21.11.2026: the same as an inner wall). */
+export interface FreeDrag {
+  id: string
+  p0: { x: number; y: number }
+  /** The variant when the drag started; every step moves the textile from here. */
+  v0: Variant
+  /** «Løsne» on the chosen textile, or Alt held: it moves alone, out of its group (Byggeregel M5). */
+  loose?: boolean
+  /** Mounted on a system wall by this drag (X13): the textile's id there. */
+  mounted?: string
+}
+
+/** Move a free-standing textile wall with what it is joined to (Byggeregel M2), on the textile grid (250); parallel to a
+ *  system wall within the magnet it is mounted there (X13, M4). */
+export function dragFreeTextile(d: FreeDrag, q: { x: number; y: number }, onEdit: Edit) {
+  const dx = q.x - d.p0.x
+  const dy = q.y - d.p0.y
+  const m = mountDrag(d.v0, rules, d.id, dx, dy, d.loose)
+  if (m && !('error' in m)) {
+    d.mounted = m.id
+    return onEdit(() => m.v, false)
+  }
+  d.mounted = undefined
+  const next = moveTextileGroup(d.v0, rules, d.id, dx, dy, d.loose)
+  if (next) onEdit(() => next, false)
 }
 
 /** Move a drawn takdrager, plan and 3D alike: whole metres, or with Shift or «Fin» (`d.fine`) 50 mm across and half

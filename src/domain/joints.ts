@@ -1,8 +1,10 @@
 // Byggeregler M1–M5: what hangs together among inner walls and free-standing textile walls, and moving it as one.
-// A coupling is never stored: two parts are joined when an end of one stands on the other (a corner, also a 92LTX corner
-// between textile walls, a T, two walls end to end, a textile wall against a wall), read from where they stand like
-// V10. The parts joined that way are a group. A group joined to something that stands still (a stand wall or a room
-// wall) is anchored. Pure.
+// Only what the building system fastens is joined (Bjørn 21.11.2026): two system walls where an end of one stands on
+// the other (a corner, a T, end to end), and two free-standing textile walls in a 92LTX corner. A textile wall up against
+// a system wall, or a wall up against a textile wall, only stands there: no fitting holds them together. A textile wall
+// mounted on a wall is a coupling too, but it is part of that wall (X13), not a part of its own here. A coupling is
+// never stored, it is read from where they stand like V10. The parts joined that way are a group: walls only, or
+// textile walls only. A group of walls joined to a wall that stands still (a stand wall or a room wall) is anchored. Pure.
 import type { Rules } from '../rules/rules';
 import { onSpan, wallModules } from './grid';
 import { replaceWalls } from './replaceWalls';
@@ -50,7 +52,8 @@ export function groupOf(v: Variant, start: Part): Group {
     const x = queue.shift()!;
     members.push(x);
     for (const y of all) {
-      if (seen.has(key(y.part)) || !joined(x.seg, y.seg)) continue;
+      // Only like with like: a wall and a textile wall are never joined (M1)
+      if (seen.has(key(y.part)) || y.part.kind !== x.part.kind || !joined(x.seg, y.seg)) continue;
       seen.add(key(y.part));
       queue.push(y);
     }
@@ -58,7 +61,7 @@ export function groupOf(v: Variant, start: Part): Group {
   return {
     walls: members.filter((x) => x.part.kind === 'wall').map((x) => x.part.id),
     textiles: members.filter((x) => x.part.kind === 'textile').map((x) => x.part.id),
-    anchored: members.some((x) => fixed.some((f) => joined(x.seg, f))),
+    anchored: members.some((x) => x.part.kind === 'wall' && fixed.some((f) => joined(x.seg, f))),
   };
 }
 
@@ -125,23 +128,29 @@ export const MAGNET = 0.3;
 
 /**
  * Byggeregel M4: (dx, dy) with the small extra shift, at most MAGNET on each axis, that brings an end of the moved group
- * onto another part: an end first, else its line. Unchanged when an end already meets one, or none is near.
+ * onto a part it can be joined to (M1): a wall's end onto another wall, its end first, else its line; a textile wall's
+ * end onto another textile wall's end (a 92LTX corner). Never a wall onto a textile wall or the other way: they may
+ * stand up against each other, but the magnet does not pull them there. Unchanged when an end already meets one, or
+ * none is near.
  */
 export function magnet(v: Variant, g: Group, dx: number, dy: number): Point {
   const ws = new Set(g.walls);
   const ts = new Set(g.textiles);
-  const mine: Seg[] = [...v.walls.filter((w) => ws.has(w.id)), ...freeTextiles(v).filter((t) => ts.has(t.id))];
-  const others: Seg[] = [...v.walls.filter((w) => !ws.has(w.id)), ...freeTextiles(v).filter((t) => !ts.has(t.id))];
+  type Kinded = { seg: Seg; wall: boolean };
+  const mine: Kinded[] = [...v.walls.filter((w) => ws.has(w.id)).map((seg) => ({ seg, wall: true })), ...freeTextiles(v).filter((t) => ts.has(t.id)).map((seg) => ({ seg, wall: false }))];
+  const others: Kinded[] = [...v.walls.filter((w) => !ws.has(w.id)).map((seg) => ({ seg, wall: true })), ...freeTextiles(v).filter((t) => !ts.has(t.id)).map((seg) => ({ seg, wall: false }))];
   const clamp = (x: number, a: number, b: number) => Math.min(Math.max(x, Math.min(a, b)), Math.max(a, b));
   let best: Point | null = null;
   let bd = Infinity;
-  for (const s of mine) {
+  for (const { seg: s, wall } of mine) {
     for (const e of [s.from, s.to]) {
       const p: Point = [e[0] + dx, e[1] + dy];
-      for (const o of others) {
+      for (const { seg: o, wall: ow } of others) {
+        if (ow !== wall) continue;
         const line: Point = [clamp(p[0], o.from[0], o.to[0]), clamp(p[1], o.from[1], o.to[1])];
-        // Its ends pull a little harder than its line, so a corner closes rather than a T
-        for (const [q, bias] of [[o.from, 0.05], [o.to, 0.05], [line, 0]] as [Point, number][]) {
+        // Its ends pull a little harder than its line, so a corner closes rather than a T. A textile wall has no T
+        const targets: [Point, number][] = wall ? [[o.from, 0.05], [o.to, 0.05], [line, 0]] : [[o.from, 0.05], [o.to, 0.05]];
+        for (const [q, bias] of targets) {
           const ex = q[0] - p[0];
           const ey = q[1] - p[1];
           if (Math.abs(ex) > MAGNET + EPS || Math.abs(ey) > MAGNET + EPS) continue;
@@ -198,28 +207,23 @@ const horizontal = (s: Seg) => Math.abs(s.from[1] - s.to[1]) < EPS;
 const samePoint = (p: Point, q: Point) => Math.abs(p[0] - q[0]) < EPS && Math.abs(p[1] - q[1]) < EPS;
 
 /**
- * Byggeregel M2, M3: drag a free-standing textile wall by (dx, dy), snapped to whole metres when walls go with it and
- * to the textile grid when not (250 with Shift or «Fin»). A group that stands free moves as one, and snaps onto a part
- * near it (M4); `loose` («Løsne», M5) moves the textile wall alone. One joined to a wall
- * that stands still moves only across itself, so its ends stay where they are joined: textile walls cornered to it
- * grow or shrink, and an end against a wall stays on that wall. Null when it cannot stand there.
+ * Byggeregel M2: drag a free-standing textile wall by (dx, dy) on the textile grid (250, so Shift or «Fin» changes
+ * nothing). Its group (textile walls in 92LTX corners, M1) moves as one and snaps onto a textile wall
+ * near it (M4); `loose` («Løsne», M5) moves it alone. A textile group is never anchored: nothing holds it to a wall.
+ * Null when it cannot stand there.
  */
-export function moveTextileGroup(v: Variant, rules: Rules, id: string, dx: number, dy: number, fine = false, loose = false): Variant | null {
+export function moveTextileGroup(v: Variant, rules: Rules, id: string, dx: number, dy: number, loose = false): Variant | null {
   const t = freeTextiles(v).find((x) => x.id === id);
   if (!t) return null;
   const g = loose ? alone({ kind: 'textile', id }) : groupOf(v, { kind: 'textile', id });
-  const step = g.walls.length && !fine ? 1 : rules.textile.grid;
+  const step = rules.textile.grid;
   const snap = (x: number) => Math.round(Math.round(x / step) * step * 1000) / 1000;
-  if (!g.anchored) return moveGroupNear(v, rules, g, snap(dx), snap(dy));
-  // Anchored: across itself only
-  const h = horizontal(t);
-  return slideTextile(v, rules, id, h ? 0 : snap(dx), h ? snap(dy) : 0);
+  return moveGroupNear(v, rules, g, snap(dx), snap(dy));
 }
 
 /**
- * Byggeregel M3: a free-standing textile wall moved across itself by (ox, oy) while what is joined to it stays: textile
- * walls cornered to it grow or shrink, and an end against a wall stays on that wall. A forankret group moves this way,
- * and so does an arm dragged by a corner grip (M6). Null when it cannot stand there.
+ * Byggeregel M6: a free-standing textile wall moved across itself by (ox, oy) while the textile walls cornered to it
+ * grow or shrink, so the corner holds: an arm dragged by a corner grip. Null when it cannot stand there.
  */
 export function slideTextile(v: Variant, rules: Rules, id: string, ox: number, oy: number): Variant | null {
   const t = freeTextiles(v).find((x) => x.id === id);
@@ -229,11 +233,6 @@ export function slideTextile(v: Variant, rules: Rules, id: string, ox: number, o
   const shift = (p: Point): Point => [Math.round((p[0] + ox) * 1000) / 1000, Math.round((p[1] + oy) * 1000) / 1000];
   const run: FreeTextile = { ...t, from: shift(t.from), to: shift(t.to) };
   if (!inStand(v, run.from) || !inStand(v, run.to)) return null;
-  // An end against a wall stays on it
-  for (const e of ['from', 'to'] as const) {
-    const w = v.walls.find((x) => onSpan(x.from, x.to, t[e]));
-    if (w && !onSpan(w.from, w.to, run[e])) return null;
-  }
   // Corners at its ends grow or shrink with it
   const runs = freeTextiles(v).map((o) => {
     if (o.id === id) return run;

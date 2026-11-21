@@ -8,6 +8,9 @@ import type { DragHandlers } from './types'
 import { goneFrom } from './moved'
 import { wallTextiles } from '../../../domain/textile/mounts'
 
+/** Said when a textile wall taken off its wall had a height or place up the wall that foot plates cannot have yet (X13). */
+export const ON_FEET_HEIGHT = 'Tekstilveggen står nå på fotplater i full høyde, 2540: andre høyder på fotplater kommer senere'
+
 export const textileOff: DragHandlers<'textileOff'> = {
   move(c, d, q) {
     if (!goneFrom(d, q, 0.15, c.onCheckpoint)) return
@@ -34,6 +37,6 @@ export const textileOff: DragHandlers<'textileOff'> = {
     if (!d.moved) return c.clickSelect(d.select)
     if (!d.freeId) return c.onSelect(d.select)
     c.onSelect({ freeTextileId: d.freeId })
-    if (!d.heightKept) c.onToast('Tekstilveggen står nå på fotplater i full høyde, 2540: andre høyder på fotplater kommer senere')
+    if (!d.heightKept) c.onToast(ON_FEET_HEIGHT)
   },
 }

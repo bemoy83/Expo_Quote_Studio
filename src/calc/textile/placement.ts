@@ -1,10 +1,13 @@
 // Where the 43TX frames physically stand, in plan: InFrame in front of its wall face, moved where two frames would
-// clash in an inner corner, and free-standing runs stopped at a frame on the wall they end at. Byggeregler X10, X11
+// clash in an inner corner, and free-standing runs stopped where a wall they end against begins. Byggeregler X10, X11, F1
 // (docs/byggeregler.md). The sketch keeps the frames where they were drawn; this is derived, like the beam layout, so
 // a frame comes back when the other one goes. Used by the beam lift (calc/beams/beamLift.ts), the free frames
 // (calc/textile/free.ts), the plan and 3D.
 import { sideOf } from '../../domain/faces';
-import { wallDirection, wallLength } from '../../domain/grid';
+import { onSpan, wallDirection, wallLength } from '../../domain/grid';
+import { builtModules } from '../../domain/walls';
+import { fogaPart } from '../../foga/parts';
+import { RECIPES } from '../../foga/recipes';
 import { runDirection, runLength } from '../../domain/textile/free';
 import { textileBox, textileOffset } from '../../domain/textile/inFrame';
 import type { Point, TextileWall, Variant, Wall } from '../../domain/types';
@@ -126,12 +129,15 @@ export function placeFrames(v: Variant, rules: Rules): PlacedFrame[] {
 }
 
 /**
- * Free-standing runs that end at a system wall with a frame on that face stop at the frame's face, so they do not
- * stand into it (X11): the end is pulled back the frame's offset and depth from the wall line.
+ * Free-standing runs that end up against a system wall stop where its volume begins (Byggeregel F1): at the face of a
+ * frame on that face of the wall (X11), else at the face of its posts and adjustable feet, half a post (20 mm) from the
+ * wall line. The end only stands there, it is not coupled (M1). The run is that much shorter.
  */
 export function freeTrims(v: Variant, rules: Rules, frames: readonly PlacedFrame[]): Map<string, { from: number; to: number }> {
   const out = new Map<string, { from: number; to: number }>();
   const reach = textileOffset(rules) + rules.textile.depth / 2;
+  const post = (fogaPart(RECIPES.wall.post).section?.[0] ?? 40) / 2000;
+  const mods = builtModules(v);
   const trimAt = (p: Point, away: Point): number => {
     for (const f of frames) {
       const [dx, dy] = wallDirection(f.w);
@@ -145,7 +151,7 @@ export function freeTrims(v: Variant, rules: Rules, frames: readonly PlacedFrame
       if (away[0] * n[0] + away[1] * n[1] <= EPS) continue;
       return reach;
     }
-    return 0;
+    return mods.some((m) => onSpan(m.a, m.b, p)) ? post : 0;
   };
   for (const t of freeTextiles(v)) {
     const [dx, dy] = runDirection(t);

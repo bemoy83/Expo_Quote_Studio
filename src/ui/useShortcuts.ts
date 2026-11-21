@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { rotateLane } from '../domain/floor/edit'
 import type { Variant } from '../domain/types'
 import { deleteSelection, doorWall, type PlanSelection } from './plan/selection'
-import { turnFree, turnObject } from './plan/turn'
+import { turnObject, turnPart, turnableWall } from './plan/turn'
 import { turnApplies, turned } from './podiumPen'
 import type { DockTool } from './tools'
 import type { Tools } from './useTools'
@@ -56,7 +56,8 @@ export function useShortcuts(s: Shortcuts) {
           setSelection({ lane: { i: r.lane.i, j: r.lane.j } })
         }
       } else if (k === 'r' && selection.objectId && tools.tool === 'select') turnObject({ v, onEdit, onToast: s.onToast }, selection.objectId)
-      else if (k === 'r' && selection.freeTextileId && tools.tool === 'select') turnFree({ v, onEdit, onToast: s.onToast }, selection.freeTextileId)
+      else if (k === 'r' && selection.freeTextileId && tools.tool === 'select') turnPart({ v, onEdit, onToast: s.onToast }, { kind: 'textile', id: selection.freeTextileId }, !!selection.loose)
+      else if (k === 'r' && turnableWall(v, selection) && tools.tool === 'select') turnPart({ v, onEdit, onToast: s.onToast }, { kind: 'wall', id: selection.wallId! }, !!selection.loose)
       else if (k === 'r' && tools.tool === 'brush' && tools.brush?.kind === 'podium' && turnApplies(tools.brush)) tools.pick(turned(tools.brush))
       else if (k === 'p' && tools.brush) {
         tools.setTool('brush')
