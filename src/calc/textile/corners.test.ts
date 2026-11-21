@@ -1,12 +1,14 @@
 // Byggeregler X2, X7, X10, X11: frames on system walls meet in a 92LTX corner like free-standing runs do: inside and
 // outside corners and both sides of a T, at the same height; the rails stop at the post's leg, 520 by the foot plate rule.
 import { describe, expect, it } from 'vitest';
-import type { Stand, TextileWall, Variant } from '../../domain/types';
+import type { Stand, Textile, TextileWall, Variant } from '../../domain/types';
+import { drawTextile } from '../../domain/textile/brush';
+import { groupOf, magnet } from '../../domain/joints';
 import { createVariant } from '../../domain/variant';
 import { paintWalls } from '../../domain/edit';
 import { MOUNT_OFFSET, mountedOn, settleCorners, wallTextiles, withOnWall } from '../../domain/textile/mounts';
 import { joinCorner, letGoCorner, wallCorners } from '../../domain/textile/cornerJoin';
-import { removeTextile } from '../../domain/textile/inFrame';
+import { fillTextile, removeTextile, stretchFrame } from '../../domain/textile/inFrame';
 import { cornerEnds } from '../../domain/textile/corners';
 import { RECIPES } from '../../foga/recipes';
 import { fogaPart } from '../../foga/parts';
@@ -15,6 +17,7 @@ import { production } from './production';
 import { overlaps, placeFrames, freeTrims } from './placement';
 import { cornerLeg } from './common';
 
+const r3 = (x: number) => Math.round(x * 1000) / 1000;
 const CORNER: Stand = { width: 6, depth: 4, type: 'corner', cornerSide: 'right' };
 const frame = (id: string, wallId: string, from: number, width: number, extra: Partial<TextileWall> = {}): TextileWall => ({ mount: 'wall', id, wallId, from, width, ...extra });
 const on = (stand: Stand, list: TextileWall[], v: Variant = createVariant('A', stand)) => withOnWall(v, list);
@@ -156,5 +159,60 @@ describe('«Løs opp hjørnet» and «Koble hjørnet» (X10, M5)', () => {
     expect(mountedOn(loose, 'b')).toBeDefined();
     expect(posts(loose)).toEqual([]);
     expect(joinCorner(loose, c.at).textiles).toEqual(v.textiles);
+  });
+});
+
+describe('Grips on frames on system walls (X12, M6)', () => {
+  const lone = () => on(CORNER, [frame('t1', 'side-back', 0, 2), frame('t2', 'side-left', 1, 1)]);
+  const end = (v: Variant, id: string, at: 'from' | 'to') => {
+    const t = v.textiles.find((x) => x.id === id)!;
+    // The run end nearest the corner (0,0)
+    const near = Math.hypot(...t.from) < Math.hypot(...t.to) ? 'from' : 'to';
+    return at === 'from' ? near : near === 'from' ? 'to' : 'from';
+  };
+
+  it('an end dragged into the corner meets the other frame at a 92LTX; dragged out it is free again', () => {
+    const v = lone();
+    expect(wallCorners(v).filter((c) => c.joined)).toEqual([]);
+    const r = stretchFrame(v, RULES, 't2', end(v, 't2', 'from'), 1);
+    if (!('v' in r)) throw new Error(r.error);
+    expect(wallTextiles(r.v).find((t) => t.id === 't2')).toMatchObject({ from: 0, width: 2 });
+    expect(wallCorners(r.v).filter((c) => c.joined).map((c) => c.at)).toEqual([[MOUNT_OFFSET, MOUNT_OFFSET]]);
+    const back = stretchFrame(r.v, RULES, 't2', end(r.v, 't2', 'from'), -1);
+    if (!('v' in back)) throw new Error(back.error);
+    expect(wallCorners(back.v).filter((c) => c.joined)).toEqual([]);
+    expect(wallTextiles(back.v).find((t) => t.id === 't2')).toMatchObject({ from: 1, width: 1 });
+  });
+
+  it('an end stops at what is in the way and at the minimum width, and says why', () => {
+    const v = lone();
+    expect(stretchFrame(v, RULES, 't1', end(v, 't1', 'to'), 5)).toHaveProperty('error');
+    expect(stretchFrame(v, RULES, 't2', end(v, 't2', 'to'), -1)).toHaveProperty('error');
+  });
+
+  it('«Fyll ledig vegg» fills into the corner where a frame stands on the other wall (X7)', () => {
+    const v = fillTextile(lone(), RULES, 't2');
+    expect(wallTextiles(v).find((t) => t.id === 't2')).toMatchObject({ from: 0, width: 4 });
+    expect(wallCorners(v).filter((c) => c.joined)).toHaveLength(1);
+  });
+});
+
+describe('A free-standing run onto a frame’s end (X11, M4)', () => {
+  it('drawn with its end within the magnet of a frame’s free end, at a right angle, it meets it at a 92LTX', () => {
+    const v = on(CORNER, [frame('t1', 'side-back', 1, 2)]);
+    const end = v.textiles[0].to;
+    const r = drawTextile(v, RULES, [3, 0.25], [3, 2], { x: 3.1, y: 1 });
+    if (!('free' in r)) throw new Error('error' in r ? r.error : 'mounted');
+    const f = r.v.textiles.find((t) => t.id === r.free.id)!;
+    expect(f.from).toEqual(end);
+    expect(cornerEnds(r.v).get(r.free.id)?.from).toBeDefined();
+    expect(posts(r.v)[0].qty).toBe(1);
+  });
+
+  it('dragged near it, the magnet takes the end onto the frame’s end', () => {
+    const v = on(CORNER, [frame('t1', 'side-back', 1, 2)]);
+    const w = { ...v, textiles: [...v.textiles, { id: 'f', from: [3, 0.5], to: [3, 2] } as Textile] };
+    const [dx, dy] = magnet(w, groupOf(w, { kind: 'textile', id: 'f' }), 0, -0.25);
+    expect([r3(3 + dx), r3(0.5 + dy)]).toEqual(v.textiles[0].to.map(r3));
   });
 });

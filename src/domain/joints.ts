@@ -132,7 +132,7 @@ export const MAGNET = 0.3;
 /**
  * Byggeregel M4: (dx, dy) with the small extra shift, at most MAGNET on each axis, that brings an end of the moved group
  * onto a part it can be joined to (M1): a wall's end onto another wall, its end first, else its line; a textile wall's
- * end onto another textile wall's end (a 92LTX corner). Never a wall onto a textile wall or the other way: they may
+ * end onto another textile wall's end, also a frame's on a system wall (a 92LTX corner, X11). Never a wall onto a textile wall or the other way: they may
  * stand up against each other, but the magnet does not pull them there. Unchanged when an end already meets one, or
  * none is near.
  */
@@ -141,7 +141,7 @@ export function magnet(v: Variant, g: Group, dx: number, dy: number): Point {
   const ts = new Set(g.textiles);
   type Kinded = { seg: Seg; wall: boolean };
   const mine: Kinded[] = [...v.walls.filter((w) => ws.has(w.id)).map((seg) => ({ seg, wall: true })), ...freeTextiles(v).filter((t) => ts.has(t.id)).map((seg) => ({ seg, wall: false }))];
-  const others: Kinded[] = [...v.walls.filter((w) => !ws.has(w.id)).map((seg) => ({ seg, wall: true })), ...freeTextiles(v).filter((t) => !ts.has(t.id)).map((seg) => ({ seg, wall: false }))];
+  const others: Kinded[] = [...v.walls.filter((w) => !ws.has(w.id)).map((seg) => ({ seg, wall: true })), ...v.textiles.filter((t) => !ts.has(t.id)).map((seg) => ({ seg, wall: false }))];
   const clamp = (x: number, a: number, b: number) => Math.min(Math.max(x, Math.min(a, b)), Math.max(a, b));
   let best: Point | null = null;
   let bd = Infinity;

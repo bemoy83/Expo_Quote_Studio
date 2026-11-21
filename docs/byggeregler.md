@@ -429,12 +429,17 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 - **X11 Frittstående mot ramme.** En frittstående tekstilvegg som ender mot midten av en ramme på systemvegg (en T),
   stopper mot rammens flate (60 mm fra veggens senterlinje) og står ikke inntil systemveggen der. Den blir like mye
   kortere. Det er F1 for en ramme på vegg; uten ramme stopper den mot stolpene. Møter den en rammes ende i rett vinkel,
-  er det et hjørne med 92LTX (X7), og den stopper ikke.
-  *Bjørn 6.11.2026 og 21.11.2026 · kode `src/calc/textile/placement.ts`, `src/calc/textile/free.ts` · test `src/calc/textile/placement.test.ts`*
-- **X12 Endegrep på frittstående tekstilvegg.** En valgt frittstående tekstilvegg har grep på hver ende som ikke står i
+  er det et hjørne med 92LTX (X7), og den stopper ikke. Tegnes eller dras den med enden innenfor magneten (M4) av en fri
+  rammeende, i rett vinkel, tar magneten enden inn på rammens ende.
+  *Bjørn 6.11.2026 og 21.11.2026 · kode `src/calc/textile/placement.ts`, `src/calc/textile/free.ts`, `src/domain/textile/brush.ts` (`toFrameEnd`), `src/domain/joints.ts` (`magnet`) · test `src/calc/textile/placement.test.ts`, `src/calc/textile/corners.test.ts`*
+- **X12 Endegrep på tekstilvegg.** En valgt frittstående tekstilvegg har grep på hver ende som ikke står i
   et 92LTX-hjørne, også en ende inntil en systemvegg (den står bare der, M1), i Velg og med Tekstil-pennen, som innervegger (V13): hele meter, 250 med Shift eller Fin, kontrollert som når den tegnes, og
-  grunnen vises når det ikke går. InFrame-tekstil på systemvegg har ingen endegrep ennå.
-  *Bjørn 14.11.2026, 15.11.2026 og 21.11.2026 · kode `src/domain/textile/free.ts`, `src/ui/plan/grips.ts` · test `src/domain/wallEnds.test.ts`*
+  grunnen vises når det ikke går. En ramme på systemvegg har grep på begge ender, også en ende i et 92LTX-hjørne, i Velg
+  og med Tekstil-pennen: den dras langs veggen i hele meter, 250 med Shift eller Fin, og stopper ved åpninger, vegger som
+  møter flaten, andre rammer og veggens ende. Dras enden inn i hjørnet der det står en ramme på den andre veggen, møtes de
+  i 92LTX (X7); dras den ut, er enden fri igjen (X2). Begge leses av hvor endene står. «Fyll ledig vegg» fyller på samme
+  måte helt inn i et slikt hjørne.
+  *Bjørn 14.11.2026, 15.11.2026 og 21.11.2026 · kode `src/domain/textile/free.ts`, `src/domain/textile/inFrame.ts` (`stretchFrame`), `src/ui/plan/grips.ts` · test `src/domain/wallEnds.test.ts`, `src/calc/textile/corners.test.ts`*
 - **X13 Av og på systemveggen.** Tekstilveggen er ett produkt uansett montering (X1). Montert på en systemvegg er den
   koblet til veggen, ikke et annet produkt (Bjørn 21.11.2026), så den tas av og settes på som andre koblinger:
   - *På:* dras en frittstående tekstilvegg parallelt med en systemvegg og kommer innenfor magneten (M4, 300 mm) av en
@@ -504,13 +509,14 @@ ellers står delene bare ved hverandre (Bjørn 21.11.2026, [Fysiske regler](http
   pillen på en ramme som står i hjørnet.
   *Bjørn 20.11.2026 og 21.11.2026 · kode `src/domain/joints.ts`, `src/domain/edit.ts`, `src/domain/textile/cornerJoin.ts`, `src/ui/plan/pill/parts.tsx`, `src/ui/plan/pill/wall.tsx`, `src/ui/plan/pointer/select.ts` · test `src/domain/joints.test.ts`, `src/calc/textile/corners.test.ts`*
 - **M6 Grep på vegger og tekstilvegger.** Innervegger og frittstående tekstilvegger har de samme grepene som disker,
-  rom og møbler, i det felles grepsystemet: endegrep på frie ender (V13, X12), et hjørnegrep der to armer møtes, som
+  rom og møbler, i det felles grepsystemet: endegrep på frie ender (V13, X12; en ramme på systemvegg på begge ender), et hjørnegrep der to armer møtes, som
   flytter hjørnet så begge armene blir lengre eller kortere (resten som M3), og for en gruppe som står fritt et
   flyttegrep (fire piler, midt på delen som er valgt) og et rotergrep (ut fra hjørnet nede til høyre av boksen rundt
   gruppen) som snur hele gruppen 90° om midten, på 250-rasteret og innenfor standen. Dører, hyller, tekstil og
   platefarger følger veggene. Grepene virker i Velg, med Vegg- eller Tekstil-pennen og i 3D; flyttegrepet vises bare
   med pennen, i Velg er hele delen grepet. En forankret gruppe (M3) har ikke flytte- eller rotergrep. «Roter» i pillen
-  på en frittstående tekstilvegg snur gruppen den er i.
+  på en frittstående tekstilvegg snur gruppen den er i. Et hjørne mellom to rammer på systemvegger står der veggene står,
+  så det har ikke hjørnegrep; det velges med et trykk og har pillen i M5.
   *Bjørn 20.11.2026 · kode `src/domain/groupGrips.ts`, `src/ui/plan/grips.ts`, `src/domain/plateDecor.ts` · test `src/domain/groupGrips.test.ts`*
 
 ## F · Fysisk volum
