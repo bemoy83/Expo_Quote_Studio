@@ -15,6 +15,10 @@ import { startPodiumLink } from './podiumLink'
 import { startRoom } from './room'
 import { nearestSide } from '../podiumDrawer/podiumView'
 import { wallDrag } from '../../drag'
+import { wallCorners } from '../../../domain/textile/cornerJoin'
+
+/** How near a 92LTX between frames on walls a press picks it, m: about the post and the frames' ends at it. */
+const CORNER_HIT = 0.08
 import type { Drag, P, PointerCtx } from './types'
 
 export function startSelect(c: PointerCtx, q: P): Drag {
@@ -33,6 +37,9 @@ export function startSelect(c: PointerCtx, q: P): Drag {
   // still be dragged; a click selects the wall or door there
   const selEdge = selection.roomId ? hits.roomEdgeAt(q) : null
   if (selEdge && selEdge.room.id === selection.roomId) return roomSide(c, selEdge.room.id, selEdge.side, q, doorSelect)
+  // A corner between frames on walls, its 92LTX or where it was let go (X7, M5): its own pill
+  const corner = wallCorners(v).find((k) => Math.hypot(k.at[0] - q.x, k.at[1] - q.y) <= CORNER_HIT)
+  if (corner) return { kind: 'click', select: { corner: corner.at } }
   const ft = freeTextileAt(v, q, 0.15)
   // «Løsne» (M5) stays on while the same textile wall is chosen
   const looseFt = !!ft && !!selection.loose && selection.freeTextileId === ft.id

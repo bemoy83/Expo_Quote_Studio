@@ -4,7 +4,8 @@ import { describe, expect, it } from 'vitest';
 import type { Stand, TextileWall, Variant } from '../../domain/types';
 import { createVariant } from '../../domain/variant';
 import { paintWalls } from '../../domain/edit';
-import { MOUNT_OFFSET, settleCorners, wallTextiles, withOnWall } from '../../domain/textile/mounts';
+import { MOUNT_OFFSET, mountedOn, settleCorners, wallTextiles, withOnWall } from '../../domain/textile/mounts';
+import { joinCorner, letGoCorner, wallCorners } from '../../domain/textile/cornerJoin';
 import { removeTextile } from '../../domain/textile/inFrame';
 import { cornerEnds } from '../../domain/textile/corners';
 import { RECIPES } from '../../foga/recipes';
@@ -110,5 +111,50 @@ describe('92LTX between frames on system walls (X7)', () => {
     expect(cornerEnds(w).get('f')?.from).toBeDefined();
     expect(freeTrims(w, RULES, placeFrames(w, RULES)).has('f')).toBe(false);
     expect(posts(w)[0].qty).toBe(1);
+  });
+});
+
+describe('«Løs opp hjørnet» and «Koble hjørnet» (X10, M5)', () => {
+  const inner = () => on(CORNER, [frame('t1', 'side-back', 0, 2), frame('t2', 'side-left', 0, 1)]);
+
+  it('let go, the frame on the shorter wall keeps its length and stands against the other’s face; joined again, as before', () => {
+    const v = inner();
+    const [c] = wallCorners(v);
+    expect(c).toMatchObject({ ids: ['t1', 't2'], joined: true });
+    const loose = settleCorners(letGoCorner(v, c.at));
+    expect(posts(loose)).toEqual([]);
+    const [a, b] = placeFrames(loose, RULES);
+    // No overlap, touching: the moved frame's end at the other's face; nothing left for X10 to move
+    expect(overlaps(a.box, b.box)).toBe(false);
+    expect(b.shift).toBe(0);
+    expect(b.lo).toBeCloseTo(MOUNT_OFFSET + RULES.textile.depth / 2, 9);
+    // Same length as a frame alone in the span (X9)
+    expect(b.hi - b.lo).toBeCloseTo(0.97, 9);
+    expect(wallCorners(loose)).toMatchObject([{ joined: false }]);
+    const back = joinCorner(loose, wallCorners(loose)[0].at);
+    expect(back.textiles).toEqual(v.textiles);
+  });
+
+  it('the move is worked out from the volumes: post, frame depth, side deduction and air', () => {
+    const v = inner();
+    const at = wallCorners(v)[0].at;
+    const moved = (x: Variant) => wallTextiles(letGoCorner(x, at)).find((t) => t.id === 't2')!.from;
+    expect(moved(v)).toBeCloseTo(MOUNT_OFFSET + RULES.textile.depth / 2 - 0.015, 9);
+  });
+
+  it('round the outside, the frame on the shorter wall reaches past the end to the other frame’s outer face', () => {
+    let v = createVariant('A', { width: 8, depth: 6, type: 'island' });
+    v = paintWalls(paintWalls(v, [2, 2], [5, 2]), [2, 2], [2, 4]);
+    const h = v.walls.find((x) => x.from[1] === 2 && x.to[1] === 2)!;
+    const w = v.walls.find((x) => x.from[0] === 2 && x.to[0] === 2)!;
+    v = withOnWall(v, [frame('a', h.id, 0, 2, { side: -1 }), frame('b', w.id, 0, 2, { side: 1 })]);
+    const [c] = wallCorners(v);
+    expect(c?.joined).toBe(true);
+    const loose = settleCorners(letGoCorner(v, c.at));
+    const b = loose.textiles.find((t) => t.id === 'b')!;
+    expect(Math.min(b.from[1], b.to[1])).toBeCloseTo(2 - MOUNT_OFFSET - RULES.textile.depth / 2, 9);
+    expect(mountedOn(loose, 'b')).toBeDefined();
+    expect(posts(loose)).toEqual([]);
+    expect(joinCorner(loose, c.at).textiles).toEqual(v.textiles);
   });
 });

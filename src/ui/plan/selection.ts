@@ -12,7 +12,8 @@ import { removeShelves } from '../../domain/shelves/edit'
 import { shelfRow, shelvesOf } from '../../domain/shelves/model'
 import { removeFreeTextile, type FaceKey } from '../../domain/textile/free'
 import { removeTextile } from '../../domain/textile/inFrame'
-import type { FloorTile, Foil, FreeTextile, InnerBeam, Opening, PlacedObject, Room, Shelf, TextileWall, Variant, Wall } from '../../domain/types'
+import type { FloorTile, Foil, FreeTextile, InnerBeam, Opening, PlacedObject, Point, Room, Shelf, TextileWall, Variant, Wall } from '../../domain/types'
+import { wallCorners, type WallCorner } from '../../domain/textile/cornerJoin'
 import { freeTextiles, wallTextiles } from '../../domain/textile/mounts'
 
 export interface PlanSelection {
@@ -23,6 +24,9 @@ export interface PlanSelection {
   side?: FaceSide
   textileId?: string
   foilId?: string
+  /** A corner between two frames on system walls, joined by a 92LTX or let go (Byggeregel X7, M5): where their centre
+   *  lines cross. */
+  corner?: Point
   /** A frittstående tekstilvegg, and the face shown in its drawer. */
   freeTextileId?: string
   /** «Løsne» on the chosen inner wall or free-standing textile wall (Byggeregel M5): its drags move it alone, out of
@@ -62,10 +66,11 @@ export type DrawerState = 'closed' | 'compact' | 'detail'
 
 /** What a selection is about. The one order a selection is read in: the first field set says it (a selection made by a
  *  click sets only one of these, besides the wall and face a frame, decal or shelf is on). */
-export type Kind = 'fill' | 'lane' | 'textile' | 'foil' | 'shelf' | 'free' | 'beam' | 'opening' | 'object' | 'room' | 'wall'
+export type Kind = 'corner' | 'fill' | 'lane' | 'textile' | 'foil' | 'shelf' | 'free' | 'beam' | 'opening' | 'object' | 'room' | 'wall'
 
 /** The kind and id of what a selection is about, without looking it up; null when nothing is selected. */
 export function kindOf(s: PlanSelection): { kind: Kind; id: string } | null {
+  if (s.corner) return { kind: 'corner', id: `${s.corner[0]},${s.corner[1]}` }
   if (s.fill) return { kind: 'fill', id: s.fill }
   if (s.lane) return { kind: 'lane', id: `${s.lane.i},${s.lane.j}` }
   if (s.textileId) return { kind: 'textile', id: s.textileId }
@@ -113,6 +118,7 @@ export const isOnWall = (c: Chosen | null): c is OnWall => !!c && ON_WALL.has(c.
 
 /** What is selected, looked up in the sketch: one place that reads a selection, for the pill, its anchor and the drawers. */
 export type Chosen =
+  | { kind: 'corner'; corner: WallCorner }
   | { kind: 'fill'; fill: string; tiles: FloorTile[] }
   | { kind: 'lane'; lane: { i: number; j: number }; tile: FloorTile }
   | { kind: 'room'; room: Room }
@@ -130,6 +136,11 @@ export function chosen(v: Variant, sel: PlanSelection): Chosen | null {
   const k = kindOf(sel)
   if (!k) return null
   switch (k.kind) {
+    case 'corner': {
+      const at = sel.corner!
+      const corner = wallCorners(v).find((c) => Math.abs(c.at[0] - at[0]) < 1e-6 && Math.abs(c.at[1] - at[1]) < 1e-6)
+      return corner ? { kind: 'corner', corner } : null
+    }
     case 'fill': {
       const tiles = v.floor.tiles.filter((t) => t.fill === sel.fill)
       return tiles.length ? { kind: 'fill', fill: k.id, tiles } : null

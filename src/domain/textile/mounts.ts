@@ -18,6 +18,11 @@ const r6 = (x: number) => Math.round(x * 1e6) / 1e6 + 0;
 export const MOUNT_OFFSET = RULES.wall.post / 2 + RULES.textile.depth / 2;
 /** From each end of a mounted frame's span to the frame's end, m: half the side deduction and air (X2). */
 export const MOUNT_INSET = (RULES.textile.inFrame.side + RULES.textile.inFrame.air) / 2000;
+/** How far past its wall's end a mounted frame may reach, m: to the outer face of a frame on the other wall (a 92LTX
+ *  round the outside, or a corner let go, X7, X10). */
+export const MOUNT_REACH = MOUNT_OFFSET + RULES.textile.depth / 2;
+/** The same for the span the frame is drawn in. */
+export const SPAN_REACH = MOUNT_REACH + MOUNT_INSET;
 
 /** Where a run stands on a wall: the wall, the face, and the frame's ends along the wall, m. */
 export interface MountedOn {
@@ -40,15 +45,15 @@ export function mountOf(walls: readonly Wall[], t: Pick<Textile, 'from' | 'to'>)
     const [a, b] = [along(t.from), along(t.to)];
     const t0 = Math.min(a, b);
     const t1 = Math.max(a, b);
-    // Over the wall: a frame stands on a wall's own posts only, out to a 92LTX round its end (X7)
-    if (t0 < -MOUNT_OFFSET - EPS || t1 > wallLength(w) + MOUNT_OFFSET + EPS || t1 - t0 <= EPS) continue;
+    // Over the wall: a frame stands on a wall's own posts, reaching past its end at most to a frame round the corner
+    if (t0 < -MOUNT_REACH - EPS || t1 > wallLength(w) + MOUNT_REACH + EPS || t1 - t0 <= EPS) continue;
     if (!best || t1 - t0 > best.t1 - best.t0) best = { wall: w, side: off > 0 ? 1 : -1, t0, t1 };
   }
   return best;
 }
 
 /** The point `u` m along wall w on the centre line of a frame mounted on face `side`. */
-function onLine(w: Wall, side: 1 | -1, u: number): Point {
+export function onLine(w: Wall, side: 1 | -1, u: number): Point {
   const [dx, dy] = wallDirection(w);
   const p = pointAlong(w, u);
   return [r6(p[0] - dy * side * MOUNT_OFFSET), r6(p[1] + dx * side * MOUNT_OFFSET)];
@@ -111,12 +116,12 @@ function asWall(walls: readonly Wall[], t: Textile, m: MountedOn): TextileWall {
 
 /** Byggeregel X13: the run of a textile wall on a wall face, as `t` says, its faces on the run (out from the wall, and
  *  the one toward it). The run goes the wall's way, so face A is the wall's side 1. A frame past an end of the wall
- *  keeps the part still on it; null when the wall is gone or none of it is left. */
+ *  keeps the part still on it, out to SPAN_REACH; null when the wall is gone or none of it is left. */
 export function runOnWall(v: Pick<Variant, 'walls' | 'stand'>, t: TextileWall): Textile | null {
   const w = v.walls.find((x) => x.id === t.wallId);
   if (!w) return null;
-  const lo = Math.max(0, t.from);
-  const hi = Math.min(wallLength(w), t.from + t.width);
+  const lo = Math.max(-SPAN_REACH, t.from);
+  const hi = Math.min(wallLength(w) + SPAN_REACH, t.from + t.width);
   if (hi - lo <= 2 * MOUNT_INSET + EPS) return null;
   // Without a face it goes on the default one: into the stand, outside a room (as faces.ts defaultFace)
   const s = t.side ?? (w.room ? OUTSIDE : defaultSwing(v.stand, w));
@@ -207,8 +212,8 @@ function coupleCorners(v: Pick<Variant, 'walls' | 'stand'>, list: TextileWall[])
     const i = runs.push(r) - 1;
     const side = t.side ?? (w.room ? OUTSIDE : defaultSwing(v.stand, w));
     const height = `${t.height ?? ''}|${t.bottom ?? 0}`;
-    const lo = Math.max(0, t.from);
-    const hi = Math.min(wallLength(w), t.from + t.width);
+    const lo = Math.max(-SPAN_REACH, t.from);
+    const hi = Math.min(wallLength(w) + SPAN_REACH, t.from + t.width);
     // The run goes the wall's way (runOnWall): its from end is the span's low end
     ends.push({ i, key: 'from', w, side, at: lo, into: 1, height }, { i, key: 'to', w, side, at: hi, into: -1, height });
   }
@@ -299,7 +304,13 @@ export function carryTextiles<V extends Pick<Variant, 'textiles' | 'walls' | 'st
   const textiles = after.textiles.flatMap((t) => {
     if (!was.on.has(t.id) || old.get(t.id) !== t || mountOf(after.walls, t)) return [t];
     changed = true;
-    return runOnWall(after, was.walls.find((x) => x.id === t.id)!) ?? [];
+    // On a wall shorter than the frame, the part still on it
+    const view = was.walls.find((x) => x.id === t.id)!;
+    const w = after.walls.find((x) => x.id === view.wallId);
+    if (!w) return [];
+    const lo = Math.max(0, view.from);
+    const hi = Math.min(wallLength(w), view.from + view.width);
+    return runOnWall(after, { ...view, from: lo, width: hi - lo }) ?? [];
   });
   return changed ? { ...after, textiles } : after;
 }

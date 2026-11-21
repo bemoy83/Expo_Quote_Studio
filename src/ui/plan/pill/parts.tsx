@@ -1,6 +1,6 @@
 // What every pill is built from (docs/pille-og-skuff.md): its content, the actions it gets, and the colour and motif rows
 // the wall, door, frame and decal pills share.
-import { Move, RotateCw, Unlink } from 'lucide-react'
+import { Link, Move, RotateCw, Unlink } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { CalcResult } from '../../../calc/calc'
 import { groupOf, groupSize, type Part } from '../../../domain/joints'
@@ -100,5 +100,20 @@ export function LooseBtn({ p, part }: { p: PillActions; part: Part }) {
         Løsne
       </QBtn>
     </>
+  )
+}
+
+/** «Løs opp hjørnet» or «Koble hjørnet», on the corner's pill and on the pill of a frame in a corner. */
+export function CornerButton({ joined, onClick }: { joined: boolean; onClick: () => void }) {
+  return joined ? (
+    <QBtn title="Løs opp hjørnet · rammen på den korteste veggen flyttes inntil den andre, uten 92LTX" label="Løs opp hjørnet" onClick={onClick}>
+      <Unlink size={15} />
+      Løs opp hjørnet
+    </QBtn>
+  ) : (
+    <QBtn title="Koble hjørnet · rammene møtes i en 92LTX" label="Koble hjørnet" onClick={onClick}>
+      <Link size={15} />
+      Koble hjørnet
+    </QBtn>
   )
 }

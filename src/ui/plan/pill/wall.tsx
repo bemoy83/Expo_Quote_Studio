@@ -20,9 +20,10 @@ import { findMotif } from '../../motifs'
 import { QBtn, Sep } from '../quick/parts'
 import type { Chosen, PlanSelection } from '../selection'
 import { faceName } from '../wallDrawer/face'
-import { Colours, Motifs, MoveTools, type Content, type PillActions, type SecondFace } from './parts'
+import { Colours, CornerButton, Motifs, MoveTools, type Content, type PillActions, type SecondFace } from './parts'
 import { wallTextiles } from '../../../domain/textile/mounts'
 import { loosenMounted, onFeetHeight } from '../../../domain/textile/mount'
+import { joinCorner, letGoCorner, wallCorners } from '../../../domain/textile/cornerJoin'
 
 type Of<K extends Chosen['kind']> = Extract<Chosen, { kind: K }>
 
@@ -34,6 +35,7 @@ export function textilePill(p: PillActions, c: Of<'textile'>, remove: () => void
   const filled = fillTextile(v, rules, T.id)
   const fills = wallTextiles(filled).find((x) => x.id === T.id)?.width === T.width
   const motif = T.fill === 'print' || T.fill === undefined ? (T.motif ?? null) : undefined
+  const corners = wallCorners(v).filter((k) => k.ids.includes(T.id))
   const loosen = () => {
     const r = loosenMounted(v, rules, T.id)
     if ('error' in r) return p.onToast(r.error)
@@ -57,6 +59,13 @@ export function textilePill(p: PillActions, c: Of<'textile'>, remove: () => void
             </QBtn>
           </>
         )}
+        {/* Byggeregel M5: a corner it is in, joined or let go, from its pill too */}
+        {corners.map((k) => (
+          <span key={`${k.at[0]},${k.at[1]}`} style={{ display: 'contents' }}>
+            <Sep />
+            <CornerButton joined={k.joined} onClick={() => onEdit((x) => (k.joined ? letGoCorner(x, k.at) : joinCorner(x, k.at)))} />
+          </span>
+        ))}
         {/* Byggeregel X13: mounted is a coupling, so «Løsne» takes it off as it takes walls apart (Bjørn 21.11.2026) */}
         <Sep />
         <QBtn title="Løsne fra veggen · står fritt på fotplater foran veggen" label="Løsne" onClick={loosen}>
@@ -67,6 +76,17 @@ export function textilePill(p: PillActions, c: Of<'textile'>, remove: () => void
     ),
     more: true,
     remove,
+  }
+}
+
+/** Byggeregler X7, X10, M5: the pill on a corner between two frames on system walls: «Løs opp hjørnet» lets the 92LTX
+ *  go (the frame on the shorter wall moves against the other's face), «Koble hjørnet» joins them again. */
+export function cornerPill(p: PillActions, c: Of<'corner'>): Content {
+  const { at, joined } = c.corner
+  return {
+    name: joined ? 'Hjørne · 92LTX' : 'Hjørne · løst opp',
+    meta: joined ? 'rammene deler stolpen' : 'rammen står inntil den andre',
+    body: <CornerButton joined={joined} onClick={() => p.onEdit((x) => (joined ? letGoCorner(x, at) : joinCorner(x, at)))} />,
   }
 }
 

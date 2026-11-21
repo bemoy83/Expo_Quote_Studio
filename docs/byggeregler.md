@@ -415,8 +415,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 - **X10 Rammer overlapper aldri.** Det regelen hindrer, er at to rammer tar samme plass (F1). Hver ramme har et
   volum i plan: langs veggen rammens egen bredde (X2), ut fra veggen rammedybden fra stolpens flate (inntil stolpen,
   uten luft). I et koblet hjørne (X7) står 92LTX mellom rammene, og rammene starter ved benet: de overlapper ikke.
-  To rammer på vegger i rett vinkel som ikke er koblet (ulik høyde, eller hjørnet løst opp, M5), ville tatt samme plass i
-  et innvendig hjørne. Da blir rammen på den lengste veggen stående (like lange: den langs x, i planen bakveggen). Den
+  Løses hjørnet opp (M5), flyttes rammen på den korteste veggen i skissen etter denne regelen, så den står inntil den
+  andres flate. To rammer på vegger i rett vinkel som ikke er koblet av andre grunner (ulik høyde), ville tatt samme plass
+  i et innvendig hjørne. Da blir rammen på den lengste veggen stående (like lange: den langs x, i planen bakveggen). Den
   andre beholder standardlengden (X9) og flyttes langs sin vegg bort fra hjørnet, akkurat så langt at volumene ikke
   lenger overlapper: den står da inntil den andre rammens flate. Flyttet er ikke et fast tall, det regnes av volumene
   (`placeFrames`), så det følger med hvis rammedybde, sidefradrag eller luft endres. Med dagens mål blir det 45 mm, og
@@ -495,7 +496,13 @@ ellers står delene bare ved hverandre (Bjørn 21.11.2026, [Fysiske regler](http
   så lenge den er valgt: dra flytter da bare den, som om ingenting var koblet til, og hjørnet blir fri ende igjen. På PC
   gjør Alt + dra det samme, og begge slipper forbi magneten (M4). På en tekstilvegg montert på vegg tar «Løsne» den av
   veggen med en gang, så den står fritt foran veggen (X13).
-  *Bjørn 20.11.2026 og 21.11.2026 · kode `src/domain/joints.ts`, `src/domain/edit.ts`, `src/ui/plan/pill/parts.tsx`, `src/ui/plan/pointer/select.ts` · test `src/domain/joints.test.ts`*
+  Et 92LTX-hjørne mellom to rammer på systemvegger (X7) har sin egen pille: klikk på hjørnet. «Løs opp hjørnet» tar
+  92LTX bort: rammen på den lengste veggen blir stående og stopper som en ramme alene (X2), den andre beholder lengden og
+  flyttes langs veggen til den står inntil den første rammens flate, bort fra et innvendig hjørne og ut forbi enden rundt
+  et utvendig (X10). Flyttet er geometri, ikke noe som lagres om hjørnet, og regnes av volumene. «Koble hjørnet» på et
+  løst opp hjørne tegner begge rammene inn til den andres veggs linje igjen, så de møtes i 92LTX. Samme knapper finnes i
+  pillen på en ramme som står i hjørnet.
+  *Bjørn 20.11.2026 og 21.11.2026 · kode `src/domain/joints.ts`, `src/domain/edit.ts`, `src/domain/textile/cornerJoin.ts`, `src/ui/plan/pill/parts.tsx`, `src/ui/plan/pill/wall.tsx`, `src/ui/plan/pointer/select.ts` · test `src/domain/joints.test.ts`, `src/calc/textile/corners.test.ts`*
 - **M6 Grep på vegger og tekstilvegger.** Innervegger og frittstående tekstilvegger har de samme grepene som disker,
   rom og møbler, i det felles grepsystemet: endegrep på frie ender (V13, X12), et hjørnegrep der to armer møtes, som
   flytter hjørnet så begge armene blir lengre eller kortere (resten som M3), og for en gruppe som står fritt et

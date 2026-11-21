@@ -75,6 +75,10 @@ export function TextileLayer({ v, res, selection, dim }: { v: Variant; res: Calc
             </g>
           )
         })}
+        {/* A chosen corner between frames on walls (X7, M5): the soft halo, round the post or where it was */}
+        {selection.corner && (
+          <circle cx={selection.corner[0]} cy={selection.corner[1]} r={postSize(sc) * 1.2} fill={HALO} fillOpacity={HALO_OPACITY} />
+        )}
         {/* 92LTX corner posts: white squares with an ink edge, like the system wall posts; those between frames on walls
             are drawn with them, where their strokes meet */}
         {cornerPosts(v)
