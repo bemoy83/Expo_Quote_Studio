@@ -309,7 +309,8 @@ romvegger som takdragerne ikke holder, også når takdragerne er på (`calc/wall
 - Rammen festes til veggen med **2 × 520** (876 520 22) per ramme, låst med bevel nut **503** i profilsystemet:
   én side i 43TX, den andre i veggstolpen 94. Ifølge guiden leveres 520 med skrue og 503.
 - **Innvendig hjørne** (Bjørn 6.11.2026): to rammer overlapper aldri. Rammen på den lengste veggen står (like lange:
-  den langs x), den andre beholder standardlengden og flyttes 40 mm bort fra hjørnet, og rammene etter den på samme
+  den langs x), den andre beholder standardlengden og flyttes bort fra hjørnet akkurat så langt at rammene ikke overlapper, til den
+  står inntil den andre rammens flate (X10, regnet av rammenes volum, ikke et fast tall), og rammene etter den på samme
   side så langt de ellers ville kollidert (calc/textile/placement.ts). Går den forbi en stolpe, heves drageren der.
 
 ### Frittstående tekstilvegg (43TX) · X1, X5–X8, X11
@@ -325,7 +326,7 @@ systemveggen: den lager ikke rom og kan ikke ha dør (tekstildør med overstykke
 - Tegnes med samme verktøy som systemveggen og disken (Bjørn 14.11.2026, ett tegneverktøy, `domain/runDraw.ts`):
   penselen viser modulen på 1 m et klikk lagrer, et drag vokser fra den i hele meter, og med **Shift eller «Fin»**
   viser den 250 under pekeren og draget vokser i 250-steg (X5, V1). Shift midt i draget går videre fra det
-  som er tegnet. Minst 0,25 m. Alle pensler bruker samme grid. Kan stå hvor som helst på standen, men ikke langs eller gjennom en systemvegg (helt inntil er lov). Ender den mot en systemvegg med tekstilramme på den siden, stopper den ved rammens front, 60 mm fra veggens senterlinje (X11).
+  som er tegnet. Minst 0,25 m. Alle pensler bruker samme grid. Kan stå hvor som helst på standen der volumet tillater det (F1, F2): langs en systemvegg med fotplatene utenfor justeringsføttene (minst 220 mm fra veggens linje med 740), i T mot den eller ende mot ende, men ikke gjennom den. Nærmere enn fotplatene tillater monteres den på veggen (X13). Ender den mot en systemvegg, stopper den mot stolpenes flate, 20 mm fra veggens senterlinje (F1); med tekstilramme på den siden ved rammens front, 60 mm (X11).
 - Høyde **2540** (som systemveggen med føtter). Høye vegger kommer senere.
 - **Topp- og bunnskinne** i 43TX går hele rammen. Over **5000 mm** skjøtes de i like lange stykker; rammen er
   fortsatt ett rektangel, ikke to rygg i rygg. Skjøten er 2 × **609** (871 037 92), eller 4 × **604** i sporet når
@@ -343,7 +344,8 @@ systemveggen: den lager ikke rom og kan ikke ha dør (tekstildør med overstykke
   plate inn, 200 mm for 740): 3 m gir føtter 200 mm inn, 4 m 500 mm inn, 6 m tre føtter, 200 mm inn og midt på. Vegger
   under 1 m står på én liten fotplate **730** (876 730 92, 250 × 300 × 5) midt på. Ut fra en hjørnestolpe står veggen
   av seg selv opptil 1 m, uten fot (Bjørn 3.11.2026); et hjørne på 1 × 1 trenger ingen.
-- Tegnes en strek i forlengelsen av en vegg, blir de én vegg. Vegger møtes bare ende mot ende i hjørner (ingen T).
+- Tegnes en strek i forlengelsen av en vegg, blir de én vegg. To frittstående tekstilvegger møtes bare ende mot ende i
+  hjørner (ingen T, X7).
 - **Tekstil på begge sider, alltid.** Hver side er trykt, hvit uten grafikk, eller kundens egen duk i samme
   størrelse (bare montering, ingen trykkfil).
 - Duk = synlig flate + 2 × bleed, montert langs hele omkretsen (silikonlisten trykkes ned i kanalen).

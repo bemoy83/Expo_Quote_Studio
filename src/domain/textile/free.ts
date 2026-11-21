@@ -100,6 +100,22 @@ export function wallClearance(t: Pick<FreeTextile, 'from' | 'to'>): number {
   return (foot.across + RECIPES.wall.footprint.across) / 2000;
 }
 
+/** True when system wall reaches out from p on both sides of run t: it goes through there rather than ending. */
+function wallGoesOn(v: Variant, t: Pick<FreeTextile, 'from' | 'to'>, p: Point): boolean {
+  const [nx, ny] = runNormal(t, 'a');
+  const sides = new Set<number>();
+  for (const m of builtModules(v)) {
+    for (const [q, o] of [[m.a, m.b], [m.b, m.a]] as const) {
+      if (!same(q, p)) continue;
+      const d = (o[0] - p[0]) * nx + (o[1] - p[1]) * ny;
+      if (Math.abs(d) > EPS) sides.add(Math.sign(d));
+    }
+    // A module across p, p between its posts
+    if (!same(m.a, p) && !same(m.b, p) && onSpan(m.a, m.b, p)) return true;
+  }
+  return sides.size > 1;
+}
+
 /** Across distance between two parallel axis-aligned segments that overlap along, or null. */
 function parallelGap(a: Pick<FreeTextile, 'from' | 'to'>, b: Pick<FreeTextile, 'from' | 'to'>): number | null {
   const s = span(a);
@@ -121,7 +137,11 @@ export function blocked(v: Variant, rules: Rules, t: Pick<FreeTextile, 'from' | 
     const c = contact(t, seg);
     // F1: in the wall's own volume. Up against it (a T, or end to end in line) is fine: it only stands there
     if (c.kind === 'line' && !c.touchOnly) return 'Tekstilveggen står i systemveggen · dra den inntil for å montere den på veggen';
-    if (c.kind === 'point' && !isEnd(t, c.p)) return 'Tekstilveggen kan ikke stå gjennom en systemvegg';
+    if (c.kind === 'point' && !isEnd(t, c.p)) {
+      // A wall that ends on its middle, its modules on one side only: the end post would stand 20 mm into the frame
+      if (!wallGoesOn(v, t, c.p)) return 'En systemvegg kan ikke ende midt på en tekstilvegg · endestolpen står i rammen';
+      return 'Tekstilveggen kan ikke stå gjennom en systemvegg';
+    }
     // F2: the foot plates on the wall's adjustable feet
     const gap = parallelGap(t, seg);
     if (gap !== null && gap > EPS && gap < clear - EPS) return 'Fotplatene treffer justeringsføttene på systemveggen · nærmere veggen monteres den på veggen';
@@ -226,7 +246,8 @@ export function moveFreeTextile(v: Variant, rules: Rules, id: string, dx: number
   return { ...v, textiles: v.textiles.map((x) => (x.id === id ? run : x)) };
 }
 
-/** Runs that no longer can stand where they are after a wall edit (a wall drawn through them) are taken away. */
+/** Runs that no longer can stand where they are after a wall edit are taken away. A safety net only: an edit in the app
+ *  that would put a wall in or through one is refused before it is stored (Byggeregel F1, ui/edits.ts). */
 export function fitFreeTextiles(v: Variant, rules: Rules): Variant {
   const keep: FreeTextile[] = [];
   for (const t of freeTextiles(v)) if (!blocked(v, rules, t, keep)) keep.push(t);

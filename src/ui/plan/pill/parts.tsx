@@ -58,7 +58,7 @@ export function Motifs({ motifs, value, onPick }: { motifs: Motif[]; value: stri
 
 /**
  * Flytt, Roter and Løsne, the same on an inner wall and a free-standing textile wall (Bjørn 21.11.2026): «Fin» makes a
- * wall's drag move it in 250 off the metre lines (Byggeregel V7; a textile wall moves in 250 anyway, X12), Roter turns it
+ * wall's drag move it in 250 off the metre lines (Byggeregel V7; a textile wall moves in 250 anyway, M2), Roter turns it
  * 90° with what it is joined to (M6), Løsne lets it go alone (M5).
  */
 export function MoveTools({ p, part }: { p: PillActions; part: Part }) {

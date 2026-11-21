@@ -74,12 +74,11 @@ const centre = (b: Box): Point => [(b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2];
 /**
  * InFrame frames where they stand. Two frames on walls at a right angle that would take the same place (an inner
  * corner) do not overlap: the one on the longer wall stays (on equal walls the one along x), the other keeps its
- * standard length and moves one frame depth along its wall, away from the corner. The frames after it on the same face
+ * standard length and moves along its wall, away from the corner, until it stands right against the other's face. The frames after it on the same face
  * move with it as far as they would otherwise clash. Past a wall's end or an opening that is within tolerance (X10).
  */
 export function placeFrames(v: Variant, rules: Rules): PlacedFrame[] {
   const inset = frameInset(rules.textile.inFrame) / 1000;
-  const depth = rules.textile.depth;
   const frames: PlacedFrame[] = [];
   for (const t of wallTextiles(v)) {
     const w = v.walls.find((x) => x.id === t.wallId);
@@ -110,7 +109,11 @@ export function placeFrames(v: Variant, rules: Rules): PlacedFrame[] {
       const [dx, dy] = wallDirection(b.w);
       const [ca, cb] = [centre(a.box), centre(b.box)];
       const sign = (cb[0] - ca[0]) * dx + (cb[1] - ca[1]) * dy >= 0 ? 1 : -1;
-      move(b, sign * depth);
+      // Byggeregel X10: the rule is no overlap, not a distance. b moves exactly as far as the two boxes overlap along
+      // b's wall, so it ends against a's face; never write the result (45 mm today) as a constant
+      const [a0, a1, b0, b1] = isHorizontal(b.w) ? [a.box.x0, a.box.x1, b.box.x0, b.box.x1] : [a.box.y0, a.box.y1, b.box.y0, b.box.y1];
+      const by = sign > 0 ? a1 - b0 : b1 - a0;
+      move(b, sign * by);
       // The frames after it on the same face move with it while they would clash
       const row = frames
         .filter((f) => f !== b && f.w === b.w && f.side === b.side && !f.shift)
@@ -120,7 +123,7 @@ export function placeFrames(v: Variant, rules: Rules): PlacedFrame[] {
         if (sign > 0 ? f.lo < prev.lo : f.hi > prev.hi) continue;
         const gap = sign > 0 ? f.lo - prev.hi : prev.lo - f.hi;
         if (gap > -HAIR) break;
-        move(f, sign * depth);
+        move(f, sign * by);
         prev = f;
       }
     }

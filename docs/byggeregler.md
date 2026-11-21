@@ -348,9 +348,10 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   fra), en strek alle andre steder står på fotplater.
   *Bjørn 31.10.2026, 6.11.2026 og 7.11.2026 («frittstående er InFrame på fotplater») · kode `src/domain/textile/brush.ts` · test `src/domain/textile/brush.test.ts`*
 - **X2 Ramme på systemvegg.** Bredde = spenn − 20 − 10 (sentrert i spennet), høyde 2540 eller tekstilens egen. 43TX gjæret,
-  2B + 2H, 617 i alle fire hjørner, festet med 2 × 520 (med 503) til stolpe 94. Stående stag i 90 maks 2000 fra hverandre
+  2B + 2H, 617 i alle fire hjørner, festet med 2 × 520 (med 503) til stolpe 94,
+  inntil stolpens flate uten luft (rammen står 20–60 mm ut fra veggens linje). Stående stag i 90 maks 2000 fra hverandre
   (rammesidene teller), lengde H − 80, med 600 i hver ende: duken trekker mest på midten.
-  *Bjørn 31.10.2026 (fabric.js er fasit), stag 2 m 7.11.2026 · `rules.textile.inFrame`, `RECIPES.textileFrame` · kode `src/calc/textile/inFrame.ts` · test `src/calc/fabric.test.ts`*
+  *Bjørn 31.10.2026 (fabric.js er fasit), stag 2 m 7.11.2026, ingen luft mot stolpen 21.11.2026 · `rules.textile.inFrame`, `RECIPES.textileFrame` · kode `src/calc/textile/inFrame.ts` · test `src/calc/fabric.test.ts`*
 - **X3 Trykkfil.** Ramme + 2 × bleed (20), levert i 10 %. Tilbudet lister trykkfilene kunden leverer, med filmål og
   filnavn, og trykklisten kan lastes ned som CSV der. Bleed, filskala og de andre målene for rammen endres under Regler på
   Kostgrunnlag og gjelder også kalkylen.
@@ -392,14 +393,18 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   standard. Standard høyde er 2540; rammer kan skjøtes til om lag 5 m høyde.
   *Bjørn 6.11.2026 · ikke bygget: forslag om standardlengde, pris for kapp, andre standardlengder · kode `src/calc/textile/inFrame.ts` · test `src/calc/fabric.test.ts`*
 
-- **X10 Rammer overlapper aldri.** To rammer på vegger i rett vinkel som ville tatt samme plass (et innvendig hjørne:
-  begge står 20–60 mm ut fra veggen) overlapper ikke. Rammen på den lengste veggen blir stående (like lange: den langs
-  x, i planen bakveggen). Den andre beholder standardlengden (X9) og flyttes én rammedybde, 40 mm, langs veggen bort
-  fra hjørnet, så den står inntil den andre rammens flate. Rammene etter den på samme side flyttes like mye så langt de
-  ellers ville overlappet. Går det forbi veggens ende eller en åpning, er det innenfor toleransen. En flyttet ramme går
-  40 mm forbi stolpen, så en takdrager som hviler der heves (T13). Vil ikke kunden ha det, kan rammemålet settes kortere
-  i veggskuffen; da blir det en kapplengde (X9).
-  *Bjørn 6.11.2026 · ikke bygget: pris for kapp · `rules.textile.depth` · kode `src/calc/textile/placement.ts` · test `src/calc/textile/placement.test.ts`*
+- **X10 Rammer overlapper aldri.** Det regelen hindrer, er at to rammer tar samme plass (F1). Hver ramme har et
+  volum i plan: langs veggen rammens egen bredde (X2), ut fra veggen rammedybden fra stolpens flate (inntil stolpen,
+  uten luft). To rammer på vegger i rett vinkel møtes i et innvendig hjørne, og der overlapper volumene. Da blir rammen
+  på den lengste veggen stående (like lange: den langs x, i planen bakveggen). Den andre beholder standardlengden (X9)
+  og flyttes langs sin vegg bort fra hjørnet, akkurat så langt at volumene ikke lenger overlapper: den står da inntil
+  den andre rammens flate. Flyttet er ikke et fast tall, det regnes av volumene (`placeFrames`), så det følger med
+  hvis rammedybde, sidefradrag eller luft endres. Med dagens mål blir det 45 mm, og testen sjekker at rammene møtes
+  uten overlapp, ikke tallet alene. Rammene etter den på samme side flyttes like mye så langt de ellers ville
+  overlappet. Går det forbi veggens ende eller en åpning, er det innenfor toleransen. En flyttet ramme går forbi
+  stolpen, så en takdrager som hviler der heves (T13). Vil ikke kunden ha det, kan rammemålet settes kortere i
+  veggskuffen; da blir det en kapplengde (X9).
+  *Bjørn 6.11.2026 og 21.11.2026 («det som skal unngås er overlapp av rammer») · ikke bygget: pris for kapp · `rules.textile.depth`, `rules.textile.inFrame` · kode `src/calc/textile/placement.ts` · test `src/calc/textile/placement.test.ts`*
 - **X11 Frittstående mot ramme.** En frittstående tekstilvegg som ender mot en systemvegg med ramme på den siden,
   stopper mot rammens flate (60 mm fra veggens senterlinje) og står ikke inntil systemveggen der. Den blir like mye
   kortere. Det er F1 for en ramme på vegg; uten ramme stopper den mot stolpene.
@@ -441,8 +446,8 @@ ellers står delene bare ved hverandre (Bjørn 21.11.2026, [Fysiske regler](http
   *Bjørn 20.11.2026 og 21.11.2026 · kode `src/domain/joints.ts` · test `src/domain/joints.test.ts`*
 - **M2 Gruppen flyttes som én ting.** Klikk og dra i en del av en gruppe som står fritt, flytter hele gruppen: to 1 m
   vegger koblet i et hjørne flyttes som et hjørne, et tekstilhjørne som et hjørne. Dører, folie, hyller og tekstil på
-  veggene går med. Vegger flyttes i hele meter som en innervegg (V7), 250 med Shift eller Fin; tekstilvegger i
-  tekstilens rutenett. Det som bare står inntil, blir stående. Kan en del ikke stå der (utenfor standen, inn på en
+  veggene går med. Vegger flyttes i hele meter som en innervegg (V7), 250 med Shift eller Fin; tekstilvegger alltid i 250
+  (`rules.textile.grid`, så Shift og Fin endrer ingenting). Det som bare står inntil, blir stående. Kan en del ikke stå der (utenfor standen, inn på en
   standvegg, en vegg gjennom en tekstilvegg, F1), stopper draget ved siste sted som går.
   *Bjørn 20.11.2026 og 21.11.2026 · kode `src/domain/joints.ts`, `src/domain/edit.ts`, `src/ui/plan/pointer/freeMove.ts` · test `src/domain/joints.test.ts`, `src/domain/standWalls.test.ts`*
 - **M3 Forankret gruppe.** Er en gruppe vegger koblet til en vegg som står fast, flyttes bare det du drar, og naboene
@@ -483,18 +488,21 @@ sammen der byggesystemet kan feste dem (M1), og ellers bare står plassert ved h
   40 mm ved stolpe 94, en tekstilramme 40 mm, en disk eller et møbel sitt fotavtrykk. Der to volum ville overlappe, kan
   delene ikke stå, og pennen, grepet eller draget stopper og sier hvorfor; inntil hverandre er lov. En frittstående
   tekstilvegg som ender mot en systemvegg, stopper mot stolpenes flate, 20 mm fra veggens linje (mot en ramme på
-  veggen: X11), og blir like mye kortere. Planen tegner den der den står, som kalkylen. Disker og møbler holder seg
-  utenfor rammen, og en tekstilvegg som flyttes, tegnes eller roteres inn i en disk eller et møbel, stopper.
+  veggen: X11), og blir like mye kortere. Planen tegner den der den står, som kalkylen. En systemvegg kan ikke ende
+  midt på en tekstilvegg, for endestolpen ville stått i rammen; en vegg som tegnes, dras eller strekkes dit, stopper,
+  og tekstilveggen blir stående (den tas aldri bort av en endring på veggene). Disker og møbler holder seg utenfor
+  rammen, og en tekstilvegg som flyttes, tegnes eller roteres inn i en disk eller et møbel, stopper.
   *Bjørn 21.11.2026 · `RECIPES.wall.post`, `rules.textile.depth` · kode `src/domain/textile/free.ts`, `src/calc/textile/placement.ts`, `src/domain/objects.ts`, `src/ui/edits.ts` · test `src/domain/textile/free.test.ts`, `src/calc/textile/placement.test.ts`, `src/calc/footPlates.test.ts`, `src/ui/edits.test.ts`*
 - **F2 Fotplater og justeringsføtter.** På gulvet tar justeringsfoten under en stolpe 40 × 40. En frittstående
   tekstilveggs fotplater (740, 400 × 400, toveis med skruehull i senter, eller 730) ligger utenfor føttene, ikke inne
   mellom dem under veggen: parallelt med en systemvegg står rammen minst en halv fotplate pluss en halv fot ut fra
   veggens linje (220 mm med 740, 170 med 730). Nærmere monteres den på veggen (X13). Fotplatene kan heller ikke ligge
   på en støtteplate 750 (under en vegg som står fritt, S2, eller under en takdragers egen stolpe, T12), på fotplatene
-  under en annen tekstilvegg eller på en justeringsfot. En endring som ville lagt dem der, avvises med en melding som
-  sier hva som er i veien; det som alt lå slik, blir stående. Disker står over fotplater på innsatser (K23). Enveis
+  under en annen tekstilvegg eller på en justeringsfot. Møbler står ikke på en fotplate, verken under tekstilvegger
+  eller systemvegger; disker står over fotplater på innsatser (K23). En endring som ville lagt noe der, avvises med en
+  melding som sier hva som er i veien; det som alt lå slik, blir stående. Enveis
   fotplater finnes om det trengs senere.
-  *Bjørn 21.11.2026 · `RECIPES.wall.footprint`, `RECIPES.textileFrame.feet`, `RECIPES.wall.support.foot` · kode `src/domain/textile/free.ts`, `src/domain/textile/mount.ts`, `src/calc/footPlates.ts`, `src/ui/edits.ts` · test `src/domain/textile/free.test.ts`, `src/domain/textile/mount.test.ts`, `src/calc/footPlates.test.ts`, `src/ui/edits.test.ts`*
+  *Bjørn 21.11.2026 · `RECIPES.wall.footprint`, `RECIPES.textileFrame.feet`, `RECIPES.wall.support.foot` · kode `src/domain/textile/free.ts`, `src/domain/textile/mount.ts`, `src/calc/footPlates.ts`, `src/domain/objects.ts`, `src/ui/edits.ts` · test `src/domain/textile/free.test.ts`, `src/domain/textile/mount.test.ts`, `src/calc/footPlates.test.ts`, `src/ui/edits.test.ts`*
 
 ## G · Gulv
 

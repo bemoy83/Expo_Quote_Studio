@@ -1,5 +1,5 @@
-// Byggeregler X10, X11: frames never overlap. In an inner corner the frame on the shorter wall moves 40 mm, with the
-// frames after it; a free-standing run stops at a frame on the wall it ends at.
+// Byggeregler X10, X11: frames never overlap. In an inner corner the frame on the shorter wall moves as far as the frames
+// overlap (45 mm with today's sizes), with the frames after it; a free-standing run stops at a frame on the wall it ends at.
 import { describe, expect, it } from 'vitest';
 import type { FreeTextile, InnerBeam, Point, Stand, TextileWall, Variant } from '../../domain/types';
 import { createVariant } from '../../domain/variant';
@@ -10,7 +10,7 @@ import { liftBeams } from '../beams/beamLift';
 import { variantBeams } from '../beams/beams';
 import { production } from './production';
 import { freeFrames } from './free';
-import { freeTrims, placeFrames } from './placement';
+import { freeTrims, overlaps, placeFrames } from './placement';
 
 const CORNER: Stand = { width: 6, depth: 4, type: 'corner', cornerSide: 'right' };
 const SQUARE: Stand = { width: 4, depth: 4, type: 'corner', cornerSide: 'right' };
@@ -22,13 +22,27 @@ const shifts = (v: Variant) => Object.fromEntries(placeFrames(v, RULES).map((f) 
 
 describe('rammer i et innvendig hjørne (X10)', () => {
   // Corner stand 6 × 4: back wall (0,0)–(6,0), left wall (0,0)–(0,4)
-  it('the frame on the shorter wall moves 40 mm away from the corner; the longer wall keeps its frame', () => {
-    expect(shifts(variant(CORNER, { textiles: [frame('t1', 'side-back', 0, 2), frame('t2', 'side-left', 0, 1)] }))).toEqual({ t1: 0, t2: 40 });
+  it('the frame on the shorter wall moves away from the corner until it stands against the other frame (45 mm today); the longer wall keeps its frame', () => {
+    const v = variant(CORNER, { textiles: [frame('t1', 'side-back', 0, 2), frame('t2', 'side-left', 0, 1)] });
+    expect(shifts(v)).toEqual({ t1: 0, t2: 45 });
+    // The back frame stands 20–60 mm out from its wall; the moved one starts at 60, touching, not overlapping (Bjørn 21.11.2026)
+    const [a, b] = placeFrames(v, RULES).map((f) => f.box);
+    expect([a.y1, b.y0].map((x) => Math.round(x * 1000))).toEqual([60, 60]);
+    expect(overlaps(a, b)).toBe(false);
+  });
+
+  it('the move follows the frames’ volume, not a number: a deeper frame moves further and still only touches', () => {
+    const deep = { ...RULES, textile: { ...RULES.textile, depth: 0.06 } };
+    const v = variant(CORNER, { textiles: [frame('t1', 'side-back', 0, 2), frame('t2', 'side-left', 0, 1)] });
+    const [a, b] = placeFrames(v, deep).map((f) => f.box);
+    expect(overlaps(a, b)).toBe(false);
+    expect(Math.round(b.y0 * 1000)).toBe(Math.round(a.y1 * 1000));
+    expect(Math.round(placeFrames(v, deep)[1].shift * 1000)).toBeGreaterThan(45);
   });
 
   it('the frames after it on the same face move with it, as far as they would clash', () => {
     const v = variant(CORNER, { textiles: [frame('t1', 'side-back', 0, 2), frame('t2', 'side-left', 0, 1), frame('t3', 'side-left', 1, 1), frame('t4', 'side-left', 3, 1)] });
-    expect(shifts(v)).toEqual({ t1: 0, t2: 40, t3: 40, t4: 0 });
+    expect(shifts(v)).toEqual({ t1: 0, t2: 45, t3: 45, t4: 0 });
   });
 
   it('no clash, no move: a frame that does not reach the corner, or a wall without a frame there', () => {
@@ -37,13 +51,13 @@ describe('rammer i et innvendig hjørne (X10)', () => {
   });
 
   it('equal walls: the one along x (the back wall) stays', () => {
-    expect(shifts(variant(SQUARE, { textiles: [frame('t1', 'side-back', 0, 2), frame('t2', 'side-left', 0, 2)] }))).toEqual({ t1: 0, t2: 40 });
+    expect(shifts(variant(SQUARE, { textiles: [frame('t1', 'side-back', 0, 2), frame('t2', 'side-left', 0, 2)] }))).toEqual({ t1: 0, t2: 45 });
   });
 
   it('the frame keeps its standard length; production and plan get the move', () => {
     const p = production(variant(CORNER, { textiles: [frame('t1', 'side-back', 0, 2), frame('t2', 'side-left', 0, 1)] }), RULES, '');
     const t2 = p.pieces.find((x) => x.textileId === 't2')!;
-    expect([t2.W, t2.shift]).toEqual([970, 40]);
+    expect([t2.W, t2.shift]).toEqual([970, 45]);
     expect(p.pieces.find((x) => x.textileId === 't1')!.shift).toBeUndefined();
   });
 

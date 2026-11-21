@@ -51,6 +51,9 @@ describe('frittstående tekstilvegg', () => {
     expect(err(base(), [2, 0], [2, 2])).toBeNull();
     const inner = { ...base(), walls: [...base().walls, { id: 'w1', from: [3, 1] as Point, to: [3, 3] as Point }] };
     expect(err(inner, [2, 2], [4, 2])).toMatch(/gjennom/);
+    // A wall ending on its middle: the end post would stand in the frame
+    const ends = { ...base(), walls: [...base().walls, { id: 'w1', from: [3, 1] as Point, to: [3, 2] as Point }] };
+    expect(err(ends, [2, 2], [4, 2])).toMatch(/ende midt på/);
     // A T on the inner wall, and end to end in line with it
     expect(err(inner, [3, 2], [5, 2])).toBeNull();
     expect(err(inner, [3, 3], [3, 4])).toBeNull();

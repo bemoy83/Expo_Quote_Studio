@@ -18,7 +18,7 @@ export interface Box {
   y0: number;
   x1: number;
   y1: number;
-  kind: 'wall' | 'door' | 'object' | 'post';
+  kind: 'wall' | 'door' | 'object' | 'post' | 'plate';
   id?: string;
 }
 
@@ -33,6 +33,9 @@ export interface PlaceContext {
   /** The posts that stand on the floor of their own, outside the walls: under takdrager that follow the stand walls or
    *  are drawn (T12), plan m. Furniture and counters keep clear of them. Omitted: none known (pure domain tests). */
   posts?: (v: Variant) => readonly Point[];
+  /** Every foot plate on the floor, plan m: under walls that stand free, takdrager posts and free-standing textile walls
+   *  (K23). Furniture keeps off them (Byggeregel F2); a counter stands over them on inserts. Omitted: none known. */
+  plates?: (v: Variant) => readonly { x0: number; y0: number; x1: number; y1: number }[];
 }
 
 const GAP = 0.02;
@@ -133,6 +136,8 @@ export function blockers(v: Variant, ctx: PlaceContext, skipId?: string): Box[] 
     if (!out.some((r) => r.kind === 'wall' && p.x0 >= r.x0 - 1e-9 && p.x1 <= r.x1 + 1e-9 && p.y0 >= r.y0 - 1e-9 && p.y1 <= r.y1 + 1e-9)) out.push({ ...p, kind: 'post' });
   }
   const self = skipId !== undefined ? v.objects.find((o) => o.id === skipId) : undefined;
+  // Furniture stands on the floor, not on a foot plate (F2); a counter stands over one on inserts (K23)
+  if (self && !self.sections && !ctx.isCounter(self.product)) for (const p of ctx.plates?.(v) ?? []) out.push({ ...p, kind: 'plate' });
   const own = self?.set;
   for (const o of v.objects) {
     if (o.id === skipId || (own && o.set === own)) continue;
@@ -152,6 +157,13 @@ export function hitsAny(boxes: Omit<Box, 'kind'>[], others: Box[], gap = GAP): B
     if (h) return h;
   }
   return null;
+}
+
+/** Byggeregel F2: furniture (not counters, K23) standing on a foot plate in `plates`, by id. */
+export function furnitureOnPlates(v: Variant, ctx: Pick<PlaceContext, 'footprint' | 'isCounter'>, plates: readonly { x0: number; y0: number; x1: number; y1: number }[]): string[] {
+  if (!plates.length) return [];
+  const boxes = plates.map((p) => ({ ...p, kind: 'plate' as const }));
+  return v.objects.filter((o) => !o.sections && !ctx.isCounter(o.product) && hitsAny(objectBoxes(ctx, o), boxes)).map((o) => o.id);
 }
 
 /** Byggeregel F1: the free-standing textile walls whose frame stands in a placed object (furniture or a counter), by id.

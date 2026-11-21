@@ -59,10 +59,10 @@ describe('wall drawing dimensions', () => {
   })
 
   it('a spliced frame is drawn as built: braces, the splice, moved in a corner (X10), and named in the leader', () => {
-    const p = { ...framePiece(6000, RULES.textile.inFrame), shift: 40 }
+    const p = { ...framePiece(6000, RULES.textile.inFrame), shift: 45 }
     const [t] = elevationItems(RULES, [{ mount: 'wall', id: 't1', wallId: 'w', side: 1, from: 1, width: 6 }], [], new Set(), (x) => x, () => p)
     const r = (n: number) => Math.round(n * 1000)
-    expect(r(t.x0)).toBe(1055)
+    expect(r(t.x0)).toBe(1060)
     // Between the uprights: none more than 2 000 apart, 150 each side of the splice
     expect(t.uprights!.map((x) => r(x - t.x0))).toEqual([0, 1418, 2835, 3135, 4553, 5970])
     expect(textileLabel(p)).toBe('Tekstil 5\u00a0970 × 2\u00a0540')

@@ -7,11 +7,12 @@ import { DOOR_NO_SWING, settleSwings, shutsDoor } from '../domain/doors'
 import { newFootClash } from '../calc/footPlates'
 import { newlyClosedRooms, wallsToRoom } from '../domain/enclosures'
 import { carryDecor } from '../domain/plateDecor'
-import { framesInObjects } from '../domain/objects'
+import { framesInObjects, furnitureOnPlates } from '../domain/objects'
 import { fitShelves } from '../domain/shelves/edit'
-import { fitFreeTextiles } from '../domain/textile/free'
+import { blocked, fitFreeTextiles } from '../domain/textile/free'
+import { freeTextiles } from '../domain/textile/mounts'
 import type { Motif, Point, Variant } from '../domain/types'
-import { floorBoxes, place, rules } from './env'
+import { floorBoxes, footPlatesOf, place, rules } from './env'
 import { findMotif } from './motifs'
 
 /** A decal's width over height, by motif; 0 for an unknown motif. */
@@ -24,25 +25,39 @@ export const settle = (x: Variant, ratio: (id: string | undefined) => number) =>
 /** `fn` on v settled and the plates' decor carried to where they went, or v itself when it would leave a door with no
  *  free floor on either side (Byggeregel D7), or put a free-standing textile wall where something stands (F1, F2). */
 export function guarded(v: Variant, fn: (v: Variant) => Variant, ratio: (id: string | undefined) => number): Variant {
-  const after = carryDecor(v, settle(fn(v), ratio))
-  return shutsDoor(v, after, place.swings, floorBoxes) || physical(v, after) ? v : after
+  const raw = fn(v)
+  const after = carryDecor(v, settle(raw, ratio))
+  return shutsDoor(v, after, place.swings, floorBoxes) || physical(v, raw, after) ? v : after
 }
 
 /** Byggeregler F1, F2: why `after` puts a free-standing textile wall where something already stands, that `before` did
  *  not: its frame in a counter or furniture, or its foot plates on a plate or foot. Null when nothing new is in the way. */
-function physical(before: Variant, after: Variant): string | null {
-  if (before === after) return null
+function physical(before: Variant, raw: Variant, after: Variant): string | null {
+  if (before === raw) return null
+  // A textile wall the edit would put a wall in or through (F1) is not taken away: the edit stops (Bjørn 21.11.2026)
+  const stood = new Set(freeTextiles(before).filter((t) => !blocked(before, rules, t, freeTextiles(before).filter((o) => o.id !== t.id))).map((t) => t.id))
+  for (const t of freeTextiles(raw)) {
+    if (!stood.has(t.id)) continue
+    const why = blocked(raw, rules, t, freeTextiles(raw).filter((o) => o.id !== t.id))
+    if (why) return why
+  }
   const was = new Set(framesInObjects(before, place))
   if (framesInObjects(after, place).some((id) => !was.has(id))) return 'Tekstilveggen står i en disk eller et møbel'
+  // Furniture on a foot plate (F2): only worked out when there is furniture, as it lays out every plate
+  if (after.objects.some((o) => !o.sections && !place.isCounter(o.product))) {
+    const sat = new Set(furnitureOnPlates(before, place, footPlatesOf(before)))
+    if (furnitureOnPlates(after, place, footPlatesOf(after)).some((id) => !sat.has(id))) return 'Fotplatene treffer et møbel'
+  }
   return newFootClash(before, after, rules)
 }
 
 /** Why `fn` on v is refused, said in a toast: a door left without free floor (D7), a textile wall where something
  *  stands (F1, F2); or null. */
 export function refused(v: Variant, fn: (v: Variant) => Variant, ratio: (id: string | undefined) => number): string | null {
-  const after = settle(fn(v), ratio)
+  const raw = fn(v)
+  const after = settle(raw, ratio)
   if (shutsDoor(v, after, place.swings, floorBoxes)) return DOOR_NO_SWING
-  return physical(v, after)
+  return physical(v, raw, after)
 }
 
 /** Areas the walls of `after` close that `before` did not, made into rooms (null when there are none). */
