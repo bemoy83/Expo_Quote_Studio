@@ -8,7 +8,7 @@
 import type { Rules } from '../rules/rules';
 import { onSpan, wallModules } from './grid';
 import { replaceWalls } from './replaceWalls';
-import { blocked, runLength } from './textile/free';
+import { blocked, runLength, textileStep } from './textile/free';
 import type { FreeTextile, Point, Variant, Wall } from './types';
 import { isStandWall, standWallKeys } from './walls';
 import { freeTextiles, wallTextiles, withOnFeet } from './textile/mounts';
@@ -216,9 +216,7 @@ export function moveTextileGroup(v: Variant, rules: Rules, id: string, dx: numbe
   const t = freeTextiles(v).find((x) => x.id === id);
   if (!t) return null;
   const g = loose ? alone({ kind: 'textile', id }) : groupOf(v, { kind: 'textile', id });
-  const step = rules.textile.grid;
-  const snap = (x: number) => Math.round(Math.round(x / step) * step * 1000) / 1000;
-  return moveGroupNear(v, rules, g, snap(dx), snap(dy));
+  return moveGroupNear(v, rules, g, textileStep(rules, dx), textileStep(rules, dy));
 }
 
 /**

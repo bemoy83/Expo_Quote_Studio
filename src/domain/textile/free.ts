@@ -38,6 +38,15 @@ export function runNormal(t: Pick<FreeTextile, 'from' | 'to'>, face: FaceKey): P
   return face === 'a' ? [-dy, dx] : [dy, -dx];
 }
 
+/** Byggeregel M2: a drag of a textile wall, m, snapped to the textile grid (`rules.textile.grid`). */
+export const textileStep = (rules: Rules, d: number) => Math.round(snapTo(d, rules.textile.grid) * 1000) / 1000;
+
+/** Byggeregel F1: the frame of a run in plan, m: its length, and its depth across its line. */
+export function frameRect(t: Pick<FreeTextile, 'from' | 'to'>, rules: Rules): { x0: number; y0: number; x1: number; y1: number } {
+  const d = rules.textile.depth / 2;
+  return { x0: Math.min(t.from[0], t.to[0]) - d, y0: Math.min(t.from[1], t.to[1]) - d, x1: Math.max(t.from[0], t.to[0]) + d, y1: Math.max(t.from[1], t.to[1]) + d };
+}
+
 const isHorizontal = (t: Pick<FreeTextile, 'from' | 'to'>) => Math.abs(t.from[1] - t.to[1]) < EPS;
 
 /** Along-axis interval of a run, low to high, and the fixed coordinate. */
