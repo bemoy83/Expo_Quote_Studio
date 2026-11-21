@@ -7,12 +7,13 @@
 // toward the wall is kept and comes back when it is taken off again. Pure.
 import type { Rules } from '../../rules/rules';
 import { faceAt, faceNormal, sideOf, type FaceSide } from '../faces';
-import { pointAlong, wallDirection, wallLength } from '../grid';
+import { moduleCount, moduleStart, pointAlong, wallDirection, wallLength } from '../grid';
 import { groupOf, groupSize, MAGNET } from '../joints';
 import type { FreeTextile, Point, TextileFace, TextileWall, Variant, Wall } from '../types';
 import { addFreeTextile, removeFreeTextile, runNormal, textileStep, wallClearance, type FaceKey } from './free';
-import { addTextileSpan, fullTextileHeight } from './inFrame';
-import { freeTextiles, wallTextiles, withOnWall } from './mounts';
+import { addTextileSpan, freeSpans, fullTextileHeight } from './inFrame';
+import { MOUNT_OFFSET, freeTextiles, mountedOn, wallTextiles, withOnWall } from './mounts';
+import { same } from './corners';
 
 const EPS = 1e-6;
 
@@ -151,3 +152,79 @@ function takeOff(v: Variant, rules: Rules, id: string, ox: number, oy: number): 
   const textiles = fresh ? v.textiles.map((x) => (x.id === id ? placed : x)) : r.v.textiles.map((x) => (x.id === r.id ? placed : x));
   return { v: { ...r.v, textiles }, id: placed.id, heightKept };
 }
+
+/**
+ * Byggeregler X13, M4: a group of free-standing textile walls joined at 92LTX corners (no inner walls in it), dragged by
+ * (dx, dy) on the textile grid so that a run lies parallel to a system wall within the magnet: the magnet takes the
+ * whole group across onto that wall's face, and each run that then stands along a wall is mounted there; into a corner
+ * of system walls both arms are. A mounted run spans what it covers on its wall, its free ends on the nearest module
+ * post, an end in a corner on the other run's line, so the 92LTX stays (X7); runs that stand out into the stand keep
+ * their length and meet the frame at its end (joinFreeToFrames). Null when no wall catches it, or it is not such a
+ * group; then it moves as M2 says. The error says why when the walls it would go on have no room for it.
+ */
+export function groupMountDrag(v: Variant, rules: Rules, id: string, dx: number, dy: number): { v: Variant; id: string } | { error: string } | null {
+  const g = groupOf(v, { kind: 'textile', id });
+  if (g.walls.length || g.textiles.length < 2) return null;
+  const runs = freeTextiles(v).filter((t) => g.textiles.includes(t.id));
+  const [ox, oy] = [textileStep(rules, dx), textileStep(rules, dy)];
+  let moved: FreeTextile[] = runs.map((t) => ({ ...t, from: [t.from[0] + ox, t.from[1] + oy], to: [t.to[0] + ox, t.to[1] + oy] }));
+  // Across onto a wall face: the nearest catch for runs along x, and on its own for runs along y
+  let caught = false;
+  for (const h of [true, false]) {
+    let best: { shift: number; off: number } | null = null;
+    for (const t of moved) {
+      if ((Math.abs(t.from[1] - t.to[1]) < EPS) !== h) continue;
+      const near = wallNear(v, t, MAGNET);
+      if (!near) continue;
+      const [ux, uy] = wallDirection(near.wall);
+      // On the line: the face it came from
+      const was = runs.find((r) => r.id === t.id)!;
+      const side = Math.abs(near.off) > EPS ? Math.sign(near.off) : Math.sign((was.from[0] - near.wall.from[0]) * -uy + (was.from[1] - near.wall.from[1]) * ux) || 1;
+      const shift = side * MOUNT_OFFSET - near.off;
+      if (!best || Math.abs(near.off) < Math.abs(best.off)) best = { shift: shift * (h ? ux : -uy), off: near.off };
+    }
+    if (!best) continue;
+    caught = true;
+    // The left normal of a wall along x is (0, ux), of one along y (−uy, 0): `shift` is along that axis
+    moved = moved.map((t) => (h ? { ...t, from: [t.from[0], r6(t.from[1] + best!.shift)], to: [t.to[0], r6(t.to[1] + best!.shift)] } : { ...t, from: [r6(t.from[0] + best!.shift), t.from[1]], to: [r6(t.to[0] + best!.shift), t.to[1]] }));
+  }
+  if (!caught) return null;
+  const placed = { ...v, textiles: [...v.textiles.filter((t) => !g.textiles.includes(t.id)), ...moved] };
+  const on = moved.filter((t) => mountedOn(placed, t.id));
+  if (!on.length) return null;
+  // Each mounted run over what it covers: an end in a corner on the other run's line, a free end on the nearest post
+  const views = wallTextiles(placed).map((view) => {
+    const t = on.find((x) => x.id === view.id);
+    if (!t) return view;
+    const w = v.walls.find((x) => x.id === view.wallId)!;
+    const [ux, uy] = wallDirection(w);
+    const along = (p: Point) => (p[0] - w.from[0]) * ux + (p[1] - w.from[1]) * uy;
+    const posts = [...Array.from({ length: moduleCount(w) }, (_, i) => moduleStart(w, i)), wallLength(w)];
+    const end = (p: Point) => {
+      const partner = moved.find((o) => o.id !== t.id && (same(o.from, p) || same(o.to, p)));
+      if (!partner) return posts.reduce((a, b) => (Math.abs(b - along(p)) < Math.abs(a - along(p)) ? b : a));
+      // The other run's line along this wall: a wall's own line when that run goes on a wall too
+      const pm = mountedOn(placed, partner.id);
+      return r6(along(p) + (pm ? lineOffset(w, pm.wall, p) : 0));
+    };
+    const [a, b] = [end(t.from), end(t.to)];
+    const { fit: _f, ...rest } = view;
+    return { ...rest, from: Math.min(a, b), width: r6(Math.abs(b - a)) };
+  });
+  // Room on the walls for them (X4)
+  for (const view of views.filter((x) => on.some((t) => t.id === x.id))) {
+    const s = sideOf(placed, view);
+    const others = views.filter((x) => x.id !== view.id && x.wallId === view.wallId && sideOf(placed, x) === s);
+    const free = freeSpans(placed, rules, view.wallId, s, others);
+    if (view.width < rules.textile.minWidth - EPS || !free.some(([a, b]) => view.from >= a - EPS && view.from + view.width <= b + EPS)) return { error: 'Ikke plass til tekstilveggene på veggen her' };
+  }
+  return { v: withOnWall(placed, views), id };
+}
+
+/** How far along wall w the line of wall o lies from point p, when o crosses w at a right angle. */
+function lineOffset(w: Wall, o: Wall, p: Point): number {
+  const [ux, uy] = wallDirection(w);
+  return (o.from[0] - p[0]) * ux + (o.from[1] - p[1]) * uy;
+}
+
+const r6 = (x: number) => Math.round(x * 1e6) / 1e6 + 0;

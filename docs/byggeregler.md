@@ -458,6 +458,13 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   - Siden som vender ut beholder duk og motiv. Siden mot veggen huskes og kommer tilbake når den tas av igjen. En
     tekstilvegg i et 92LTX-hjørne (M1) monteres ikke alene, bare med Løsne (M5). På fotplater er høyden foreløpig 2540
     fra gulvet (X5): har den en annen høyde eller står høyere på veggen, sier en melding det.
+  - *En gruppe:* frittstående tekstilvegger koblet i 92LTX-hjørner (uten innervegger i gruppen) dras sammen. Ligger en
+    av dem parallelt med en systemvegg innenfor magneten, tar magneten hele gruppen på tvers inn til veggflaten, og
+    hver tekstilvegg som da står langs en vegg monteres der; inn i et hjørne av systemvegger monteres begge armene. En
+    montert arm dekker spennet den står over: en fri ende på nærmeste stolpe, en ende i hjørnet på den andre armens
+    linje, så 92LTX-en blir stående (X7). En arm som står ut i standen beholder lengden og møter rammen i enden (X11).
+    Er det ikke plass på veggen (X4), flyttes gruppen som før. Bjørn 21.11.2026 · kode `src/domain/textile/mount.ts`
+    (`groupMountDrag`), `src/ui/drag.ts` · test `src/calc/textile/corners.test.ts`
   - *Lest av plasseringen:* en tekstilvegg er montert på en veggflate når streken står parallelt med veggen, med
     midtlinjen en halv stolpe pluss en halv ramme fra veggens linje (rammen står rett mot stolpen, X2; 40 mm med dagens
     mål), og innenfor veggens ender. Alle andre står på fotplater. De to kan ikke blandes: en frittstående kan ikke stå så

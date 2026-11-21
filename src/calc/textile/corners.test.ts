@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import type { Stand, Textile, TextileWall, Variant } from '../../domain/types';
 import { drawTextile } from '../../domain/textile/brush';
 import { joinFreeToFrames } from '../../domain/textile/free';
+import { groupMountDrag } from '../../domain/textile/mount';
 import { groupOf, magnet } from '../../domain/joints';
 import { createVariant } from '../../domain/variant';
 import { paintWalls } from '../../domain/edit';
@@ -252,5 +253,41 @@ describe('A free-standing run against a wall meets a frame on it (X7, X11)', () 
     const v = on(CORNER, [frame('l', 'side-left', 1, 2)]);
     const x = { ...v, textiles: [...v.textiles, run] };
     expect(joinFreeToFrames(x)).toBe(x);
+  });
+});
+
+describe('A joined free-standing corner dragged onto system walls (X13, M4)', () => {
+  const free = (id: string, from: [number, number], to: [number, number]) => ({ id, from, to }) as Textile;
+
+  it('into a corner of system walls: the magnet takes the group, both arms are mounted and stay joined at a 92LTX', () => {
+    const v = { ...createVariant('A', CORNER), textiles: [free('a', [1, 1], [3.25, 1]), free('b', [1, 1], [1, 3])] };
+    const r = groupMountDrag(v, RULES, 'a', -0.75, -0.75);
+    if (!r || 'error' in r) throw new Error(r ? r.error : 'not caught');
+    expect(wallTextiles(r.v).map((t) => [t.id, t.wallId, t.from, t.width])).toEqual([
+      ['a', 'side-back', 0, 2],
+      ['b', 'side-left', 0, 2],
+    ]);
+    expect(wallCorners(r.v).filter((c) => c.joined).map((c) => c.at)).toEqual([[MOUNT_OFFSET, MOUNT_OFFSET]]);
+    expect(posts(r.v)[0].qty).toBe(1);
+  });
+
+  it('one arm along a wall: it is mounted, the other stands out into the stand and meets it at its end', () => {
+    const v = { ...createVariant('A', CORNER), textiles: [free('a', [2, 1], [4, 1]), free('b', [2, 1], [2, 3])] };
+    const r = groupMountDrag(v, RULES, 'b', 0, -0.75);
+    if (!r || 'error' in r) throw new Error(r ? r.error : 'not caught');
+    const x = joinFreeToFrames(r.v);
+    expect(wallTextiles(x).map((t) => [t.id, t.from, t.width])).toEqual([['a', 2, 2]]);
+    const b = x.textiles.find((t) => t.id === 'b')!;
+    expect(cornerEnds(x).get('b')?.from).toBeDefined();
+    // Its length kept: the whole group moved across with the magnet
+    expect(Math.abs(b.to[1] - b.from[1])).toBeCloseTo(2, 6);
+    expect(posts(x)[0].qty).toBe(1);
+  });
+
+  it('out of the magnet it is not caught, and a single run is mountDrag’s', () => {
+    const v = { ...createVariant('A', CORNER), textiles: [free('a', [2, 1], [4, 1]), free('b', [2, 1], [2, 3])] };
+    expect(groupMountDrag(v, RULES, 'a', 0, -0.25)).toBeNull();
+    const one = { ...createVariant('A', CORNER), textiles: [free('a', [2, 1], [4, 1])] };
+    expect(groupMountDrag(one, RULES, 'a', 0, -0.75)).toBeNull();
   });
 });

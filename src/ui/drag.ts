@@ -1,7 +1,7 @@
 // Drag steps shared by the plan and the 3D view, so both move walls and furniture the same way.
 import { moveWall } from '../domain/edit'
 import { moveTextileGroup } from '../domain/joints'
-import { mountDrag } from '../domain/textile/mount'
+import { groupMountDrag, mountDrag } from '../domain/textile/mount'
 import { furthest } from '../domain/grips'
 import { moveInnerBeam, shiftInnerBeam, type Run } from '../domain/innerBeams'
 import { settleAll, settleObject } from '../domain/objects'
@@ -60,11 +60,11 @@ export interface FreeDrag {
 }
 
 /** Move a free-standing textile wall with what it is joined to (Byggeregel M2), on the textile grid (250); parallel to a
- *  system wall within the magnet it is mounted there (X13, M4). */
+ *  system wall within the magnet it is mounted there (X13, M4), and a group of them joined at 92LTX corners with it. */
 export function dragFreeTextile(d: FreeDrag, q: { x: number; y: number }, onEdit: Edit) {
   const dx = q.x - d.p0.x
   const dy = q.y - d.p0.y
-  const m = mountDrag(d.v0, rules, d.id, dx, dy, d.loose)
+  const m = mountDrag(d.v0, rules, d.id, dx, dy, d.loose) ?? (d.loose ? null : groupMountDrag(d.v0, rules, d.id, dx, dy))
   if (m && !('error' in m)) {
     d.mounted = m.id
     return onEdit(() => m.v, false)
