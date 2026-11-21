@@ -1,5 +1,6 @@
 // Placed objects (furniture, counters): footprint, collision and placement.
-// They collide with walls (post depth), textile frames (in front of their face), door swings and each other.
+// They collide with walls (post depth), textile frames (in front of their face, and free-standing ones, Byggeregel F1),
+// door swings and each other.
 import type { Footprint, SetPiece } from '../catalog/types';
 import type { Rules } from '../rules/rules';
 import { pointAlong, wallDirection, moduleEnd, moduleStart } from './grid';
@@ -10,7 +11,7 @@ import { nextId } from './ids';
 import { faceSegment, sideOf } from './faces';
 import { RECIPES } from '../foga/recipes';
 import { counterFootprint, sectionRects, toPlan } from './counterShape';
-import { wallTextiles } from './textile/mounts';
+import { freeTextiles, wallTextiles } from './textile/mounts';
 
 export interface Box {
   x0: number;
@@ -104,6 +105,14 @@ export function blockers(v: Variant, ctx: PlaceContext, skipId?: string): Box[] 
     const ys = [a[1], b[1], c[1], d[1]];
     out.push({ x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys), kind: 'wall', id: t.id });
   }
+  // A free-standing textile wall's frame, its depth across its line (F1). Its foot plates are low: a counter stands
+  // over them on inserts (K23)
+  const td = rules.textile.depth / 2;
+  for (const t of freeTextiles(v)) {
+    const [x0, x1] = [Math.min(t.from[0], t.to[0]), Math.max(t.from[0], t.to[0])];
+    const [y0, y1] = [Math.min(t.from[1], t.to[1]), Math.max(t.from[1], t.to[1])];
+    out.push({ x0: x0 - td, y0: y0 - td, x1: x1 + td, y1: y1 + td, kind: 'wall', id: t.id });
+  }
   for (const o of v.openings) {
     const w = v.walls.find((x) => x.id === o.wallId);
     if (!w || !ctx.swings(o.product)) continue;
@@ -143,6 +152,18 @@ export function hitsAny(boxes: Omit<Box, 'kind'>[], others: Box[], gap = GAP): B
     if (h) return h;
   }
   return null;
+}
+
+/** Byggeregel F1: the free-standing textile walls whose frame stands in a placed object (furniture or a counter), by id.
+ *  An object never moves into one (blockers); this is the other way, a textile wall moved, drawn or turned into it. */
+export function framesInObjects(v: Variant, ctx: Pick<PlaceContext, 'footprint' | 'rules'>): string[] {
+  const td = ctx.rules.textile.depth / 2;
+  const objects: Box[] = v.objects.flatMap((o) => objectBoxes(ctx, o).map((b) => ({ ...b, kind: 'object' as const, id: o.id })));
+  if (!objects.length) return [];
+  return freeTextiles(v).flatMap((t) => {
+    const box = { x0: Math.min(t.from[0], t.to[0]) - td, y0: Math.min(t.from[1], t.to[1]) - td, x1: Math.max(t.from[0], t.to[0]) + td, y1: Math.max(t.from[1], t.to[1]) + td };
+    return hits(box, objects, 1e-6) ? [t.id] : [];
+  });
 }
 
 export function hits(box: Omit<Box, 'kind'>, others: Box[], gap = GAP): Box | null {

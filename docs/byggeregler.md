@@ -480,17 +480,21 @@ basert på byggesystem og fysiske lover, ikke kunstige begrensinger»). Tegnever
 sammen der byggesystemet kan feste dem (M1), og ellers bare står plassert ved hverandre.
 
 - **F1 Fysisk volum.** Hver del tar plass: en systemvegg 20 mm dyp mellom stolpene (skinne 92 og 91 med plate) og
-  40 mm ved stolpe 94, en tekstilramme 40 mm. Der to volum ville overlappe, kan delene ikke stå, og pennen, grepet
-  eller draget stopper og sier hvorfor; inntil hverandre er lov. En frittstående tekstilvegg som ender mot en
-  systemvegg, stopper mot stolpenes flate, 20 mm fra veggens linje (mot en ramme på veggen: X11), og blir like mye
-  kortere. Planen tegner den der den står, som kalkylen. Ikke bygget: disker, podier og møbler mot tekstilvegger.
-  *Bjørn 21.11.2026 · `RECIPES.wall.post`, `rules.textile.depth` · kode `src/domain/textile/free.ts`, `src/calc/textile/placement.ts` · test `src/domain/textile/free.test.ts`, `src/calc/textile/placement.test.ts`*
+  40 mm ved stolpe 94, en tekstilramme 40 mm, en disk eller et møbel sitt fotavtrykk. Der to volum ville overlappe, kan
+  delene ikke stå, og pennen, grepet eller draget stopper og sier hvorfor; inntil hverandre er lov. En frittstående
+  tekstilvegg som ender mot en systemvegg, stopper mot stolpenes flate, 20 mm fra veggens linje (mot en ramme på
+  veggen: X11), og blir like mye kortere. Planen tegner den der den står, som kalkylen. Disker og møbler holder seg
+  utenfor rammen, og en tekstilvegg som flyttes, tegnes eller roteres inn i en disk eller et møbel, stopper.
+  *Bjørn 21.11.2026 · `RECIPES.wall.post`, `rules.textile.depth` · kode `src/domain/textile/free.ts`, `src/calc/textile/placement.ts`, `src/domain/objects.ts`, `src/ui/edits.ts` · test `src/domain/textile/free.test.ts`, `src/calc/textile/placement.test.ts`, `src/calc/footPlates.test.ts`, `src/ui/edits.test.ts`*
 - **F2 Fotplater og justeringsføtter.** På gulvet tar justeringsfoten under en stolpe 40 × 40. En frittstående
   tekstilveggs fotplater (740, 400 × 400, toveis med skruehull i senter, eller 730) ligger utenfor føttene, ikke inne
   mellom dem under veggen: parallelt med en systemvegg står rammen minst en halv fotplate pluss en halv fot ut fra
-  veggens linje (220 mm med 740, 170 med 730). Nærmere monteres den på veggen (X13). Enveis fotplater finnes om det
-  trengs senere. Ikke bygget: fotplater mot støtteplate 750 og mot fotplater under en annen tekstilvegg.
-  *Bjørn 21.11.2026 · `RECIPES.wall.footprint`, `RECIPES.textileFrame.feet` · kode `src/domain/textile/free.ts`, `src/domain/textile/mount.ts` · test `src/domain/textile/free.test.ts`, `src/domain/textile/mount.test.ts`*
+  veggens linje (220 mm med 740, 170 med 730). Nærmere monteres den på veggen (X13). Fotplatene kan heller ikke ligge
+  på en støtteplate 750 (under en vegg som står fritt, S2, eller under en takdragers egen stolpe, T12), på fotplatene
+  under en annen tekstilvegg eller på en justeringsfot. En endring som ville lagt dem der, avvises med en melding som
+  sier hva som er i veien; det som alt lå slik, blir stående. Disker står over fotplater på innsatser (K23). Enveis
+  fotplater finnes om det trengs senere.
+  *Bjørn 21.11.2026 · `RECIPES.wall.footprint`, `RECIPES.textileFrame.feet`, `RECIPES.wall.support.foot` · kode `src/domain/textile/free.ts`, `src/domain/textile/mount.ts`, `src/calc/footPlates.ts`, `src/ui/edits.ts` · test `src/domain/textile/free.test.ts`, `src/domain/textile/mount.test.ts`, `src/calc/footPlates.test.ts`, `src/ui/edits.test.ts`*
 
 ## G · Gulv
 

@@ -29,7 +29,8 @@ import { textileFootRects } from './textile/free';
 import type { CounterProfile } from '../foga/counter';
 import type { SupportBeamLayout } from './beams/supportBeams';
 import type { CalcLine } from './types';
-import { footPlateRect, wallSupports, type WallSupport } from './wallSupports';
+import { footPlateRect, type WallSupport } from './wallSupports';
+import { freeWallSupports } from './footPlates';
 
 export interface CalcContext {
   v: Variant;
@@ -198,8 +199,7 @@ export function calcContext(v: Variant, rules: Rules, catalog: Catalog, standWal
   // A wall stands free without the takdrager frame: foot plates on its posts. With beams the stand walls are in the
   // frame. The plates are the customer's choice (no beams), so the exhibitor's even under the organiser's walls.
   // A drawn takdrager's own posts stand on plates too, across the beam, unless a beam drawn the other way meets them.
-  const framed = standard.segments.length > 0;
-  const freeWallFeet = wallSupports(mods, all, RECIPES.wall.support.rule, (m) => framed && kindOf(m) === 'stand', framed);
+  const freeWallFeet = freeWallSupports(mods, all, standard, kindOf);
   const wallFeet = [...freeWallFeet, ...inner.feet];
   const prod = production(v, rules, '');
   // K23: a counter over a foot plate stands on inserts 700
