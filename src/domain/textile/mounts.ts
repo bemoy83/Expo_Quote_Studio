@@ -8,6 +8,7 @@ import { RULES } from '../../rules/rules';
 import { pointAlong, wallDirection, wallLength } from '../grid';
 import { OUTSIDE } from '../roomKeys';
 import { defaultSwing } from '../walls';
+import { cornerEnds } from './corners';
 import type { FreeTextile, Point, Textile, TextileFace, TextileWall, Variant, Wall } from '../types';
 
 const EPS = 1e-6;
@@ -39,11 +40,18 @@ export function mountOf(walls: readonly Wall[], t: Pick<Textile, 'from' | 'to'>)
     const [a, b] = [along(t.from), along(t.to)];
     const t0 = Math.min(a, b);
     const t1 = Math.max(a, b);
-    // Over the wall: a frame stands on a wall's own posts only
-    if (t0 < -MOUNT_INSET - EPS || t1 > wallLength(w) + MOUNT_INSET + EPS || t1 - t0 <= EPS) continue;
+    // Over the wall: a frame stands on a wall's own posts only, out to a 92LTX round its end (X7)
+    if (t0 < -MOUNT_OFFSET - EPS || t1 > wallLength(w) + MOUNT_OFFSET + EPS || t1 - t0 <= EPS) continue;
     if (!best || t1 - t0 > best.t1 - best.t0) best = { wall: w, side: off > 0 ? 1 : -1, t0, t1 };
   }
   return best;
+}
+
+/** The point `u` m along wall w on the centre line of a frame mounted on face `side`. */
+function onLine(w: Wall, side: 1 | -1, u: number): Point {
+  const [dx, dy] = wallDirection(w);
+  const p = pointAlong(w, u);
+  return [r6(p[0] - dy * side * MOUNT_OFFSET), r6(p[1] + dx * side * MOUNT_OFFSET)];
 }
 
 /** The face of run t that looks away from the wall it is mounted on (face `side`). */
@@ -57,18 +65,41 @@ export function outFace(t: Pick<Textile, 'from' | 'to'>, w: Wall, side: 1 | -1):
 
 const hasFace = (f?: TextileFace): f is TextileFace => !!f && Object.keys(f).length > 0;
 
-/** A mounted run read as the span along its wall (InFrame). */
-function asWall(t: Textile, m: MountedOn): TextileWall {
+/**
+ * Byggeregel X7: where a frame end at `p`, on the centre line of a frame on wall w, would meet a frame on a wall at a
+ * right angle in a 92LTX corner: p lies on that wall's mount line (either face, out to its ends). Then the span ends at
+ * that wall's line, m along w; null when p is no such point.
+ */
+function cornerLine(walls: readonly Wall[], w: Wall, p: Point): number | null {
+  const [dx, dy] = wallDirection(w);
+  for (const o of walls) {
+    const [ox, oy] = wallDirection(o);
+    if (Math.abs(ox * dx + oy * dy) > EPS) continue;
+    const across = (p[0] - o.from[0]) * -oy + (p[1] - o.from[1]) * ox;
+    const along = (p[0] - o.from[0]) * ox + (p[1] - o.from[1]) * oy;
+    if (Math.abs(Math.abs(across) - MOUNT_OFFSET) > EPS || along < -MOUNT_OFFSET - EPS || along > wallLength(o) + MOUNT_OFFSET + EPS) continue;
+    // The point on o's line straight across from p, along w
+    const q: Point = [p[0] + oy * across, p[1] - ox * across];
+    return (q[0] - w.from[0]) * dx + (q[1] - w.from[1]) * dy;
+  }
+  return null;
+}
+
+/** A mounted run read as the span along its wall (InFrame). An end in a 92LTX corner spans to the other wall's line,
+ *  as it was drawn (X7); any other end is half the side deduction and air past the frame (X2). */
+function asWall(walls: readonly Wall[], t: Textile, m: MountedOn): TextileWall {
   const out = outFace(t, m.wall, m.side);
   const face = t[out];
   const back = t[out === 'a' ? 'b' : 'a'];
+  const lo = cornerLine(walls, m.wall, onLine(m.wall, m.side, m.t0)) ?? m.t0 - MOUNT_INSET;
+  const hi = cornerLine(walls, m.wall, onLine(m.wall, m.side, m.t1)) ?? m.t1 + MOUNT_INSET;
   return {
     mount: 'wall',
     id: t.id,
     wallId: m.wall.id,
     side: m.side,
-    from: r6(m.t0 - MOUNT_INSET),
-    width: r6(m.t1 - m.t0 + 2 * MOUNT_INSET),
+    from: r6(lo),
+    width: r6(hi - lo),
     ...(t.height !== undefined ? { height: t.height } : {}),
     ...(t.bottom !== undefined ? { bottom: t.bottom } : {}),
     ...(face?.motif ? { motif: face.motif } : {}),
@@ -89,12 +120,7 @@ export function runOnWall(v: Pick<Variant, 'walls' | 'stand'>, t: TextileWall): 
   if (hi - lo <= 2 * MOUNT_INSET + EPS) return null;
   // Without a face it goes on the default one: into the stand, outside a room (as faces.ts defaultFace)
   const s = t.side ?? (w.room ? OUTSIDE : defaultSwing(v.stand, w));
-  const [dx, dy] = wallDirection(w);
-  const n: Point = [-dy * s * MOUNT_OFFSET, dx * s * MOUNT_OFFSET];
-  const at = (u: number): Point => {
-    const p = pointAlong(w, u);
-    return [r6(p[0] + n[0]), r6(p[1] + n[1])];
-  };
+  const at = (u: number): Point => onLine(w, s, u);
   const face: TextileFace = { ...(t.fill && t.fill !== 'print' ? { fill: t.fill } : {}), ...(t.motif ? { motif: t.motif } : {}) };
   const [out, back] = s === 1 ? (['a', 'b'] as const) : (['b', 'a'] as const);
   return {
@@ -124,7 +150,7 @@ function split(v: Pick<Variant, 'textiles' | 'walls'>): Split {
     for (const t of v.textiles) {
       const m = mountOf(v.walls, t);
       if (m) {
-        r.walls.push(asWall(t, m));
+        r.walls.push(asWall(v.walls, t, m));
         r.on.set(t.id, m);
       } else r.feet.push(t);
     }
@@ -147,8 +173,79 @@ export const mountedOn = (v: Pick<Variant, 'textiles' | 'walls'>, id: string): M
  *  gone is left out. */
 export function withOnWall<V extends Pick<Variant, 'textiles' | 'walls' | 'stand'>>(v: V, list: TextileWall[]): V {
   const keep = freeTextiles(v);
-  const runs = list.flatMap((t) => runOnWall(v, t) ?? []);
+  const runs = coupleCorners(v, list);
   return { ...v, textiles: keep.length ? [...runs, ...keep] : runs };
+}
+
+/** One end of a frame written on a wall: where its span ends, m along the wall, and which way the frame goes from it. */
+interface SpanEnd {
+  i: number;
+  key: 'from' | 'to';
+  w: Wall;
+  side: 1 | -1;
+  /** The span's end along w. */
+  at: number;
+  /** +1 when the frame goes on up the wall from this end, −1 down. */
+  into: 1 | -1;
+  /** Frames meet in a corner only at the same height (Bjørn 21.11.2026, for now). */
+  height: string;
+}
+
+/**
+ * Byggeregel X7: the runs of the frames in `list`, two frames that meet at a right angle in a corner of system walls
+ * (inside or outside, both sides of a T) joined there with a 92LTX: each runs to where the two centre lines cross.
+ * They meet when each one's span ends at the other's wall line, on faces that make one corner, at the same height.
+ * Every other end stops half the side deduction and air short of its span (X2).
+ */
+function coupleCorners(v: Pick<Variant, 'walls' | 'stand'>, list: TextileWall[]): Textile[] {
+  const runs: Textile[] = [];
+  const ends: SpanEnd[] = [];
+  for (const t of list) {
+    const r = runOnWall(v, t);
+    const w = r && v.walls.find((x) => x.id === t.wallId);
+    if (!r || !w) continue;
+    const i = runs.push(r) - 1;
+    const side = t.side ?? (w.room ? OUTSIDE : defaultSwing(v.stand, w));
+    const height = `${t.height ?? ''}|${t.bottom ?? 0}`;
+    const lo = Math.max(0, t.from);
+    const hi = Math.min(wallLength(w), t.from + t.width);
+    // The run goes the wall's way (runOnWall): its from end is the span's low end
+    ends.push({ i, key: 'from', w, side, at: lo, into: 1, height }, { i, key: 'to', w, side, at: hi, into: -1, height });
+  }
+  // Where a corner would put this end: on its centre line, half a post and half a frame into the frame from the other
+  // wall's line (inside the corner), or as far out past it (round the outside)
+  const corner = (e: SpanEnd, k: 1 | -1) => onLine(e.w, e.side, e.at + k * e.into * MOUNT_OFFSET);
+  const same = (p: Point, q: Point) => Math.abs(p[0] - q[0]) < EPS && Math.abs(p[1] - q[1]) < EPS;
+  for (let a = 0; a < ends.length; a++) {
+    for (let b = a + 1; b < ends.length; b++) {
+      const [e, f] = [ends[a], ends[b]];
+      if (e.i === f.i || e.height !== f.height) continue;
+      const [ex, ey] = wallDirection(e.w);
+      const [fx, fy] = wallDirection(f.w);
+      if (Math.abs(ex * fx + ey * fy) > EPS) continue;
+      for (const k of [1, -1] as const) {
+        const p = corner(e, k);
+        if (!same(p, corner(f, k))) continue;
+        // Each span ends on the other's wall line: the corner is where both were drawn to
+        const near = (x: number | null, at: number) => x !== null && Math.abs(x - at) < EPS;
+        if (!near(cornerLine([f.w], e.w, p), e.at) || !near(cornerLine([e.w], f.w, p), f.at)) continue;
+        runs[e.i] = { ...runs[e.i], [e.key]: p };
+        runs[f.i] = { ...runs[f.i], [f.key]: p };
+      }
+    }
+  }
+  return runs;
+}
+
+/** Byggeregel X7: the textile walls on system walls written again, so frames that meet in a corner are joined there and
+ *  one left alone in a corner (the other gone) stops short of it again. v itself when nothing changes. */
+export function settleCorners<V extends Pick<Variant, 'textiles' | 'walls' | 'stand'>>(v: V): V {
+  const list = wallTextiles(v);
+  if (list.length === 0) return v;
+  const next = withOnWall(v, list);
+  const key = (x: Textile) => JSON.stringify(x);
+  const was = new Map(v.textiles.map((t) => [t.id, key(t)]));
+  return next.textiles.length === v.textiles.length && next.textiles.every((t) => was.get(t.id) === key(t)) ? v : next;
 }
 
 /** The variant with textile wall `t` on its wall face: in place of the one with its id, or added. */
@@ -162,6 +259,26 @@ export function putOnWall<V extends Pick<Variant, 'textiles' | 'walls' | 'stand'
 export function withOnFeet<V extends Pick<Variant, 'textiles' | 'walls'>>(v: V, list: FreeTextile[]): V {
   const keep = v.textiles.filter((t) => split(v).on.has(t.id));
   return { ...v, textiles: keep.length ? [...keep, ...list] : list };
+}
+
+/** Byggeregel X7: which ends of mounted frame `id` stand in a 92LTX corner, by the low and high end of its span along
+ *  the wall: 1 inside the corner (the span runs on past the frame to the other wall's line), −1 round the outside. */
+export function frameCorners(v: Pick<Variant, 'textiles' | 'walls'>, id: string): { lo?: 1 | -1; hi?: 1 | -1 } {
+  const m = mountedOn(v, id);
+  const t = v.textiles.find((x) => x.id === id);
+  const view = wallTextiles(v).find((x) => x.id === id);
+  const ends = cornerEnds(v).get(id);
+  if (!m || !t || !view || !ends) return {};
+  const [dx, dy] = wallDirection(m.wall);
+  const along = (p: Point) => (p[0] - m.wall.from[0]) * dx + (p[1] - m.wall.from[1]) * dy;
+  const out: { lo?: 1 | -1; hi?: 1 | -1 } = {};
+  for (const key of ['from', 'to'] as const) {
+    if (!ends[key]) continue;
+    const a = along(t[key]);
+    if (Math.abs(a - m.t0) < EPS) out.lo = a > view.from ? 1 : -1;
+    else out.hi = a < view.from + view.width ? 1 : -1;
+  }
+  return out;
 }
 
 /** A textile wall by id: as it stands on a wall, or the free-standing run. */

@@ -59,7 +59,7 @@ describe('wall drawing dimensions', () => {
   })
 
   it('a spliced frame is drawn as built: braces, the splice, moved in a corner (X10), and named in the leader', () => {
-    const p = { ...framePiece(6000, RULES.textile.inFrame), shift: 45 }
+    const p = { ...framePiece(6000, RULES.textile.inFrame), shift: 45, runAt: 1015, railStart: 0 }
     const [t] = elevationItems(RULES, [{ mount: 'wall', id: 't1', wallId: 'w', side: 1, from: 1, width: 6 }], [], new Set(), (x) => x, () => p)
     const r = (n: number) => Math.round(n * 1000)
     expect(r(t.x0)).toBe(1060)

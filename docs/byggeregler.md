@@ -351,17 +351,22 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   en kobling»).
   *Bjørn 31.10.2026, 6.11.2026, 7.11.2026 («frittstående er InFrame på fotplater») og 21.11.2026 · kode `src/domain/textile/brush.ts`, `src/domain/textile/mounts.ts` · test `src/domain/textile/brush.test.ts`, `src/domain/textile/mounts.test.ts`*
 - **X2 Ramme på systemvegg.** Bredde = spenn − 20 − 10 (sentrert i spennet), høyde 2540 eller tekstilens egen. 43TX gjæret,
-  2B + 2H, 617 i alle fire hjørner, festet med 2 × 520 (med 503) til stolpe 94,
-  inntil stolpens flate uten luft (rammen står 20–60 mm ut fra veggens linje). Stående stag i 90 maks 2000 fra hverandre
-  (rammesidene teller), lengde H − 80, med 600 i hver ende: duken trekker mest på midten.
-  *Bjørn 31.10.2026 (fabric.js er fasit), stag 2 m 7.11.2026, ingen luft mot stolpen 21.11.2026 · `rules.textile.inFrame`, `RECIPES.textileFrame` · kode `src/calc/textile/inFrame.ts` · test `src/calc/fabric.test.ts`*
+  2B + 2H, 617 i alle fire hjørner, festet med 520 (med 503) til stolpe 94, inntil stolpens flate uten luft (rammen
+  står 20–60 mm ut fra veggens linje). Antall 520 følger fotplateregelen (S3, S4, X8): ingen mer enn 3 m fra hverandre,
+  og en 92LTX teller som én (Bjørn 21.11.2026). Forskjellen fra fotplater: på vegg har rammen alltid minst to 520, også
+  under 1 m, for én brakett holder den ikke oppreist slik én bred fotplate holder en kort ramme; i et koblet hjørne
+  faller én bort. Vi antar at en 520 alltid sitter på en stolpe. Stående stag i 90 maks 2000 fra hverandre
+  (rammesidene teller), lengde H − 80, med 600 i hver ende: duken trekker mest på midten. Rammen regnes med samme
+  funksjon som på fotplater (X1, `runFrame`); bare duk på én side og 520 i stedet for fotplater skiller.
+  *Bjørn 31.10.2026 (fabric.js er fasit), stag 2 m 7.11.2026, ingen luft mot stolpen og 520 etter fotplateregelen 21.11.2026 · `rules.textile.inFrame`, `RECIPES.textileFrame` · kode `src/calc/textile/inFrame.ts`, `src/calc/textile/free.ts` · test `src/calc/fabric.test.ts`, `src/calc/textile/corners.test.ts`*
 - **X3 Trykkfil.** Ramme + 2 × bleed (20), levert i 10 %. Tilbudet lister trykkfilene kunden leverer, med filmål og
   filnavn, og trykklisten kan lastes ned som CSV der. Bleed, filskala og de andre målene for rammen endres under Regler på
   Kostgrunnlag og gjelder også kalkylen.
   *Bjørn 31.10.2026 · `rules.textile.inFrame` · kode `src/calc/textile/inFrame.ts` · test `src/calc/fabric.test.ts`*
 - **X4 Plass på veggen.** InFrame står aldri over en åpning og overlapper ikke en annen på samme side. Standvegg har bare
-  innsiden, innervegg og romvegg begge. To InFrame-rammer kobles ikke sammen.
-  *Bjørn 30.10.2026 · kode `src/domain/textile/inFrame.ts` · test `src/domain/decor.test.ts`*
+  innsiden, innervegg og romvegg begge. To rammer på samme flate kobles ikke sammen; to rammer på vegger i rett vinkel
+  møtes i et 92LTX-hjørne (X7).
+  *Bjørn 30.10.2026 og 21.11.2026 · kode `src/domain/textile/inFrame.ts` · test `src/domain/decor.test.ts`*
 - **X5 På fotplater (frittstående).** Samme ramme som X2, på fotplater, med tekstil på begge sider (trykt, hvit eller kundens egen), høyde 2540, minst
   0,25 m. Tegnes med samme verktøy som veggen og disken (Bjørn 14.11.2026: ett tegneverktøy, alle pensler på samme
   grid): et klikk på gulvet setter 1 m, et drag vokser fra modulen du ser i hele meter, med Shift eller «Fin» er
@@ -372,14 +377,25 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 - **X6 Skinner.** Gjelder rammen uansett montering. Topp- og bunnskinne går hele rammen; over 5000 skjøtes de i like stykker. Skjøten er 2 × 609 per
   skjøt (tres inn, krever plass i enden), eller 4 × 604 i sporet når begge ender er holdt av en vegg, en ramme på vegg
   eller en 92LTX, så profilen ikke kan tres. Stående 43TX i hver fri ende, 617 i hvert hjørne. En ramme på
-  systemvegg settes sammen før den henges opp, så den skjøtes med 609.
+  systemvegg settes sammen før den henges opp, så den skjøtes med 609, unntatt når den står i en 92LTX i begge ender.
   *Bjørn 31.10.2026, skjøt 7.11.2026 · `RECIPES.textileFrame` · kode `src/calc/textile/free.ts`, `src/calc/textile/inFrame.ts` · test `src/calc/freeFrames.test.ts`, `src/calc/fabric.test.ts`*
-- **X7 Hjørne.** To frittstående vegger møtes bare ende mot ende i rett vinkel (ingen T) og deler en 92LTX, kappet
-  2526 (endelokk 7 mm under og over, ikke plukket). Skinnene stopper 37 mm før hjørnepunktet; utvendig duk er 20 mm
-  lengre og innvendig 20 mm kortere per hjørne. En strek i forlengelsen blir samme vegg. 43TX er gjæret i rammens
-  hjørner; mot en 92LTX og i en skinneskjøt (X6) er enden butt. Plukklisten på arbeidsordren sier hvilke lengder som
-  har butte ender.
-  *Bjørn 31.10.2026, 6.11.2026 og 8.11.2026 · `RECIPES.textileFrame` · kode `src/calc/textile/free.ts`, `src/domain/textile/free.ts` · test `src/calc/freeFrames.test.ts`*
+- **X7 Hjørne.** To tekstilvegger som møtes ende mot ende i rett vinkel, deler en 92LTX, kappet 2526 for full høyde
+  (endelokk 7 mm under og over, ikke plukket). Det gjelder uansett montering (Bjørn 21.11.2026: «veggmontert er bare
+  enda en kobling»): to frittstående, to rammer på systemvegger, og en frittstående som møter en ramme på vegg ende mot
+  ende. En 92LTX lager hjørner, aldri en T: en ende mot midt på en annen står bare der (X11). Retningen respekteres:
+  hjørnet er der to ender møtes, ikke der to vegger krysser.
+  - *På systemvegger* er 92LTX standard i alle hjørner der rammer møtes: innvendig og utvendig hjørne, og på begge
+    sider av en T i systemveggen (to innvendige hjørner). Hjørnet kobles når hver ramme er tegnet helt til den andre
+    veggens linje, på flater som danner samme hjørne. 92LTX står inntil begge stolpeflatene, uten beslag. Rammene
+    løper da til der senterlinjene krysses, og ingen 520 trengs i den enden (X2). Til brukeren løser opp hjørnet (M5)
+    står rammene slik; en ramme alene i hjørnet stopper som før (X2).
+  - Bare rammer med samme høyde kobles, foreløpig (Bjørn 21.11.2026). En ramme med hjørneende er en kapplengde (X9).
+  - Skinnene stopper der 92LTX-ens ben slutter: benet regnes fra ytterhjørnet, en halv rammedybde utenfor senterlinjen
+    (37 mm fra hjørnepunktet med dagens mål). Duken på utsiden av hjørnet er en halv rammedybde lengre og på innsiden
+    like mye kortere per hjørne. Målene regnes av profilene, aldri som faste tall.
+  - En strek i forlengelsen blir samme vegg. 43TX er gjæret i rammens hjørner; mot en 92LTX og i en skinneskjøt (X6) er
+    enden butt. Plukklisten på arbeidsordren sier hvilke lengder som har butte ender.
+  *Bjørn 31.10.2026, 6.11.2026, 8.11.2026 og 21.11.2026 · `RECIPES.textileFrame` · kode `src/domain/textile/corners.ts`, `src/domain/textile/mounts.ts` (`coupleCorners`), `src/calc/textile/free.ts` · test `src/calc/freeFrames.test.ts`, `src/calc/textile/corners.test.ts`*
 - **X8 Føtter og stag.** Fotplate 740 under bunnskinnen etter S3 og S4; en 92LTX teller som støtte. Stagene er rammens
   egne (som X2) og står uavhengig av føttene: en fotplate har ikke stag.
   En fot i en fri ende står i flukt med rammeenden (200 mm inn for 740), resten jevnt fordelt. Under 1 m: én 730 midt på.
@@ -392,26 +408,28 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   lengder for rammer som henger utenpå én enkelt vegg, med bruttomål over cc (for eksempel 1040). Standardlengder ligger
   på lager og plukkes bare; andre lengder må kappes og skal koste mer. En skjøtt lengde er som regel én standardlengde
   pluss ett kapp. Rammer på systemvegg bruker standardlengdene (X2). Frittstående tegnes fritt som før (X5), men appen
-  kan foreslå en standardlengde for å spare penger. Mot en 92LTX kappes skinnen fortsatt (X7), til den får egen
-  standard. Standard høyde er 2540; rammer kan skjøtes til om lag 5 m høyde.
+  kan foreslå en standardlengde for å spare penger. Mot en 92LTX kappes skinnen fortsatt (X7), også på systemvegg, til
+  den kanskje får egen standard (Bjørn 21.11.2026). Standard høyde er 2540; rammer kan skjøtes til om lag 5 m høyde.
   *Bjørn 6.11.2026 · ikke bygget: forslag om standardlengde, pris for kapp, andre standardlengder · kode `src/calc/textile/inFrame.ts` · test `src/calc/fabric.test.ts`*
 
 - **X10 Rammer overlapper aldri.** Det regelen hindrer, er at to rammer tar samme plass (F1). Hver ramme har et
   volum i plan: langs veggen rammens egen bredde (X2), ut fra veggen rammedybden fra stolpens flate (inntil stolpen,
-  uten luft). To rammer på vegger i rett vinkel møtes i et innvendig hjørne, og der overlapper volumene. Da blir rammen
-  på den lengste veggen stående (like lange: den langs x, i planen bakveggen). Den andre beholder standardlengden (X9)
-  og flyttes langs sin vegg bort fra hjørnet, akkurat så langt at volumene ikke lenger overlapper: den står da inntil
-  den andre rammens flate. Flyttet er ikke et fast tall, det regnes av volumene (`placeFrames`), så det følger med
-  hvis rammedybde, sidefradrag eller luft endres. Med dagens mål blir det 45 mm, og testen sjekker at rammene møtes
-  uten overlapp, ikke tallet alene. Rammene etter den på samme side flyttes like mye så langt de ellers ville
-  overlappet. Går det forbi veggens ende eller en åpning, er det innenfor toleransen. En flyttet ramme går forbi
-  stolpen, så en takdrager som hviler der heves (T13). Vil ikke kunden ha det, kan rammemålet settes kortere i
-  veggskuffen; da blir det en kapplengde (X9).
+  uten luft). I et koblet hjørne (X7) står 92LTX mellom rammene, og rammene starter ved benet: de overlapper ikke.
+  To rammer på vegger i rett vinkel som ikke er koblet (ulik høyde, eller hjørnet løst opp, M5), ville tatt samme plass i
+  et innvendig hjørne. Da blir rammen på den lengste veggen stående (like lange: den langs x, i planen bakveggen). Den
+  andre beholder standardlengden (X9) og flyttes langs sin vegg bort fra hjørnet, akkurat så langt at volumene ikke
+  lenger overlapper: den står da inntil den andre rammens flate. Flyttet er ikke et fast tall, det regnes av volumene
+  (`placeFrames`), så det følger med hvis rammedybde, sidefradrag eller luft endres. Med dagens mål blir det 45 mm, og
+  testen sjekker at rammene møtes uten overlapp, ikke tallet alene. Rammene etter den på samme side flyttes like mye
+  så langt de ellers ville overlappet. Går det forbi veggens ende eller en åpning, er det innenfor toleransen. En
+  flyttet ramme går forbi stolpen, så en takdrager som hviler der heves (T13). Vil ikke kunden ha det, kan rammemålet
+  settes kortere i veggskuffen; da blir det en kapplengde (X9).
   *Bjørn 6.11.2026 og 21.11.2026 («det som skal unngås er overlapp av rammer») · ikke bygget: pris for kapp · `rules.textile.depth`, `rules.textile.inFrame` · kode `src/calc/textile/placement.ts` · test `src/calc/textile/placement.test.ts`*
-- **X11 Frittstående mot ramme.** En frittstående tekstilvegg som ender mot en systemvegg med ramme på den siden,
+- **X11 Frittstående mot ramme.** En frittstående tekstilvegg som ender mot midten av en ramme på systemvegg (en T),
   stopper mot rammens flate (60 mm fra veggens senterlinje) og står ikke inntil systemveggen der. Den blir like mye
-  kortere. Det er F1 for en ramme på vegg; uten ramme stopper den mot stolpene.
-  *Bjørn 6.11.2026 · kode `src/calc/textile/placement.ts`, `src/calc/textile/free.ts` · test `src/calc/textile/placement.test.ts`*
+  kortere. Det er F1 for en ramme på vegg; uten ramme stopper den mot stolpene. Møter den en rammes ende i rett vinkel,
+  er det et hjørne med 92LTX (X7), og den stopper ikke.
+  *Bjørn 6.11.2026 og 21.11.2026 · kode `src/calc/textile/placement.ts`, `src/calc/textile/free.ts` · test `src/calc/textile/placement.test.ts`*
 - **X12 Endegrep på frittstående tekstilvegg.** En valgt frittstående tekstilvegg har grep på hver ende som ikke står i
   et 92LTX-hjørne, også en ende inntil en systemvegg (den står bare der, M1), i Velg og med Tekstil-pennen, som innervegger (V13): hele meter, 250 med Shift eller Fin, kontrollert som når den tegnes, og
   grunnen vises når det ikke går. InFrame-tekstil på systemvegg har ingen endegrep ennå.

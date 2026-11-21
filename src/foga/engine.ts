@@ -249,9 +249,12 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
     const lm = [...cuts].reduce((a, [len, qty]) => a + (len * qty) / 1000, 0);
     put(BOM_GROUP.textile, p.code, { artnr: p.artnr, name: `${p.code} · ${p.name}`, detail: cutDetail(cuts, butt), preassembled: false, lm }, pieces);
   }
-  if (s.cornerPosts?.qty) {
+  if (s.cornerPosts?.length) {
     const p = fogaPart(tf.feet.cornerPost);
-    put(BOM_GROUP.textile, p.code, { artnr: p.artnr, name: `${p.code} · ${p.name}`, detail: `${s.cornerPosts.qty} × ${s.cornerPosts.H} mm`, preassembled: false, lm: (s.cornerPosts.qty * s.cornerPosts.H) / 1000 }, s.cornerPosts.qty);
+    const qty = s.cornerPosts.reduce((a, x) => a + x.qty, 0);
+    const detail = s.cornerPosts.map((x) => `${x.qty} × ${x.H} mm`).join(', ');
+    const lm = s.cornerPosts.reduce((a, x) => a + x.qty * x.H, 0) / 1000;
+    put(BOM_GROUP.textile, p.code, { artnr: p.artnr, name: `${p.code} · ${p.name}`, detail, preassembled: false, lm }, qty);
   }
   for (const [len, b] of braces) unit(BOM_GROUP.textile, 'Støttestag', tf.brace, len, tf.braceCoupling, b.qty, `til ${b.frames.join(', ')}`);
   // Loose parts in a fixed order (connectors, splices, brackets), then the foot plates as they come

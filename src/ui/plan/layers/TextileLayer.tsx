@@ -30,7 +30,7 @@ import {
 } from '../planStyle'
 import { Seg } from './Seg'
 import { GONE, useErasing } from './erasing'
-import { freeTextiles, wallTextiles } from '../../../domain/textile/mounts'
+import { frameCorners, freeTextiles, mountedOn, wallTextiles } from '../../../domain/textile/mounts'
 
 /** Frittstående tekstilvegger, textile walls on a wall face, and the print and decal bands. */
 export function TextileLayer({ v, res, selection, dim }: { v: Variant; res: CalcResult; selection: PlanSelection; dim: (...layers: Layer[]) => number }) {
@@ -39,7 +39,8 @@ export function TextileLayer({ v, res, selection, dim }: { v: Variant; res: Calc
   const sc = usePlanScale()
   const tw = textileWidth(sc)
   const raster = `raster${useId().replace(/:/g, '')}`
-  const ps = postSize(sc)
+  // The ends of frames on walls: a 92LTX there is drawn with the frame, at the plan's offset from the wall
+  const onWallEnds = new Set(v.textiles.filter((t) => mountedOn(v, t.id)).flatMap((t) => [`${t.from[0]},${t.from[1]}`, `${t.to[0]},${t.to[1]}`]))
   return (
     <>
       <defs>
@@ -74,10 +75,13 @@ export function TextileLayer({ v, res, selection, dim }: { v: Variant; res: Calc
             </g>
           )
         })}
-        {/* 92LTX corner posts: white squares with an ink edge, like the system wall posts */}
-        {cornerPosts(v).map(([x, y]) => (
-          <rect key={`${x},${y}`} x={x - ps / 2} y={y - ps / 2} width={ps} height={ps} fill={SURFACE} stroke={INK} strokeWidth={linePx(sc, 1)} />
-        ))}
+        {/* 92LTX corner posts: white squares with an ink edge, like the system wall posts; those between frames on walls
+            are drawn with them, where their strokes meet */}
+        {cornerPosts(v)
+          .filter(({ p }) => !onWallEnds.has(`${p[0]},${p[1]}`))
+          .map(({ p: [x, y] }) => (
+            <CornerPost key={`${x},${y}`} p={[x, y]} sc={sc} />
+          ))}
       </g>
 
       {/* Textile walls: drawn in front of their face */}
@@ -85,9 +89,14 @@ export function TextileLayer({ v, res, selection, dim }: { v: Variant; res: Calc
         {wallTextiles(v).map((t) => {
           const w = v.walls.find((x) => x.id === t.wallId)
           if (!w) return null
-          // Where it stands: moved in an inner corner (byggeregel X10)
+          // Where it stands: moved in an inner corner (byggeregel X10), or on to the 92LTX it shares with the frame on
+          // the other wall, where the two strokes meet (X7)
           const shift = (res.production.pieces.find((p) => p.textileId === t.id)?.shift ?? 0) / 1000
-          const [a, b] = faceSegment(w, sideOf(v, t), t.from + shift + 0.02, t.from + shift + t.width - 0.02, textileOffset(sc))
+          const o = textileOffset(sc)
+          const c = frameCorners(v, t.id)
+          const lo = c.lo ? t.from + c.lo * o : t.from + shift + 0.02
+          const hi = c.hi ? t.from + t.width - c.hi * o : t.from + shift + t.width - 0.02
+          const [a, b] = faceSegment(w, sideOf(v, t), lo, hi, o)
           const sel = selection.textileId === t.id
           const g = gone('textile', t.id)
           return (
@@ -97,6 +106,8 @@ export function TextileLayer({ v, res, selection, dim }: { v: Variant; res: Calc
                 <TextileStroke a={a} b={b} sc={sc} />
               </g>
               {(g || gone('graphic', `${t.id}.motif`)) && <Seg a={a} b={b} stroke={hatch} strokeWidth={tw} />}
+              {c.lo && <CornerPost p={a} sc={sc} />}
+              {c.hi && <CornerPost p={b} sc={sc} />}
             </g>
           )
         })}
@@ -159,4 +170,10 @@ function FaceMark({ t, face, sc, stroke = INK, width }: { t: { from: Point; to: 
   const wd = width ?? linePx(sc, 1.5)
   const o = textileWidth(sc) / 2 + sizePx(sc, 1.5) + wd / 2
   return <Seg a={[t.from[0] + nx * o, t.from[1] + ny * o]} b={[t.to[0] + nx * o, t.to[1] + ny * o]} stroke={stroke} strokeWidth={wd} />
+}
+
+/** A 92LTX corner post in plan: a white square with an ink edge, like a system wall post. */
+function CornerPost({ p: [x, y], sc }: { p: Point; sc: PlanScale }) {
+  const ps = postSize(sc)
+  return <rect x={x - ps / 2} y={y - ps / 2} width={ps} height={ps} fill={SURFACE} stroke={INK} strokeWidth={linePx(sc, 1)} />
 }

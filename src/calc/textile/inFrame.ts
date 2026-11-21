@@ -11,7 +11,9 @@
 // Byggeregler X2, X3, X6, X9 (docs/byggeregler.md): the frame widths are the 43TX standard lengths, cc − 30.
 import { RECIPES, type TextileFrameRecipe } from '../../foga/recipes';
 import type { InFrameParams } from '../../rules/rules';
-import { bracePoints, buttEnds, frameParts, fullHeight, partsLm, splitRail, type FrameParts } from './common';
+import { fullHeight, partsLm, type FrameParts } from './common';
+import { runFrame, type RunFrame, type RunMount } from './free';
+import type { FaceKey } from '../../domain/textile/free';
 
 export interface FramePiece {
   /** Span along the wall, mm. */
@@ -38,42 +40,48 @@ export interface FramePiece {
   /** What it is built of: 43TX, 617 in the corners, 609 in every splice (put together before it goes on the wall),
    *  520 to the posts, braces. */
   parts: FrameParts;
+  /** Where the textile starts, mm from the run's from end: short of a 92LTX inside a corner, past one outside (X7). */
+  faceStart: number;
 }
 
 /** From each end of the span to the frame's edge, mm: the frame sits centred in its span (W = span − side − air). */
 export const frameInset = (s: InFrameParams) => (s.side + s.air) / 2;
 
-export function framePiece(spanMm: number, s: InFrameParams, heightMm?: number, r: TextileFrameRecipe = RECIPES.textileFrame): FramePiece {
-  const W = spanMm - s.side - s.air;
-  const H = heightMm ?? fullHeight(s);
-  const pw = W + 2 * s.bleed;
-  const ph = H + 2 * s.bleed;
-  const railCuts = splitRail(W, r.maxRail);
-  const at = railCuts.slice(0, -1).map((_, j) => railCuts.slice(0, j + 1).reduce((a, x) => a + x, 0));
-  const braceAt = bracePoints(W, at, s.stag, r.spliceBrace);
-  const n = braceAt.length;
-  const k = s.scale / 100;
-  const r1 = (v: number) => Math.round(v * k * 10) / 10;
-  const braces = n ? { qty: n, length: Math.max(0, H - 2 * s.prof) } : null;
-  const parts = frameParts(r, railCuts, { qty: 2, length: H }, braces ?? { qty: 0, length: 0 }, [
-    [r.corner, 4],
-    [r.splice.thread, 2 * at.length],
-    [r.wall.fixing.code, r.wall.fixing.perFrame],
-  ], buttEnds(railCuts));
+/** A frame on a wall as a piece of the production: its one face with textile, read from the run's frame (runFrame). */
+export function wallPiece(x: RunFrame, spanMm: number): FramePiece {
+  const f = x.faces[0];
   return {
     span: spanMm,
-    W,
-    H,
-    pw,
-    ph,
-    fw: r1(pw),
-    fh: r1(ph),
-    area: (pw * ph) / 1e6,
-    railCuts,
-    braces,
-    braceAt,
-    lm: partsLm(parts),
+    W: f.W,
+    H: x.H,
+    pw: f.pw,
+    ph: f.ph,
+    fw: f.fw,
+    fh: f.fh,
+    area: f.printArea,
+    railCuts: x.railCuts,
+    braces: x.braces.length ? { qty: x.braces.length, length: x.braceLength } : null,
+    braceAt: x.braces,
+    lm: partsLm(x.parts),
     mount: 'vegg',
-    parts,
+    parts: x.parts,
+    faceStart: f.start,
   };
+}
+
+/** How a frame stands on a wall face: textile on face `key`, fixed with 520 by the foot plate rule (X2). */
+export const onWallMount = (r: TextileFrameRecipe, key: FaceKey, pos: string, H: number): RunMount => ({
+  kind: 'vegg',
+  faces: [{ key, pos }],
+  support: r.wall.fixing.support,
+  supportCode: r.wall.fixing.code,
+  inset: 0,
+  H,
+});
+
+/** The frame of a straight span of `spanMm` on a wall, ends free: W = span − side deduction − air (X2). */
+export function framePiece(spanMm: number, s: InFrameParams, heightMm?: number, r: TextileFrameRecipe = RECIPES.textileFrame): FramePiece {
+  const W = spanMm - s.side - s.air;
+  const run = { id: '', from: [0, 0] as [number, number], to: [W / 1000, 0] as [number, number] };
+  return wallPiece(runFrame(run, onWallMount(r, 'a', '', heightMm ?? fullHeight(s)), r, s, ''), spanMm);
 }

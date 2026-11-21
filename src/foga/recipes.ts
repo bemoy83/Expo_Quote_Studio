@@ -51,8 +51,10 @@ export interface TextileFrameRecipe {
   spliceBrace: number;
   braceCoupling: { code: string; perEnd: number };
   /** On a system wall: brackets fixing the frame to the wall post (one side in 43TX, the other in 94). Supplied with
-   *  screw and 503. */
-  wall: { fixing: { code: string; perFrame: number } };
+   *  screw and 503. As many as foot plates by the same rule (Bjørn 21.11.2026), except that a frame on a wall always
+   *  has two of its own: one bracket cannot hold it upright the way one wide foot plate holds a short frame; a 92LTX
+   *  corner counts as one (X2). */
+  wall: { fixing: { code: string; support: SupportRule } };
   /** Free-standing on foot plates, textile on both faces (Bjørn 31.10.2026). */
   feet: {
     /** Shared upright where two runs meet at a right angle. It replaces both runs' uprights there, and is a support
@@ -233,7 +235,7 @@ export const RECIPES: Recipes = {
     brace: '90',
     spliceBrace: 150,
     braceCoupling: { code: '600', perEnd: 1 },
-    wall: { fixing: { code: '520', perFrame: 2 } },
+    wall: { fixing: { code: '520', support: { ...SUPPORT, minFrom: 0 } } },
     feet: {
       cornerPost: '92LTX',
       cornerPostCap: 7,

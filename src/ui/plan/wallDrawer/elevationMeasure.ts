@@ -55,21 +55,23 @@ const LABEL: Record<ElevationItem['kind'], string> = { textile: 'Tekstil', decal
 
 /** What the drawing takes from production for a frame on a wall: its size, rails, braces, print and its move in an inner
  *  corner (byggeregel X10). */
-export type FrameFacts = Pick<ProductionPiece, 'W' | 'H' | 'railCuts' | 'braceAt' | 'shift'>
+export type FrameFacts = Pick<ProductionPiece, 'W' | 'H' | 'railCuts' | 'braceAt' | 'shift' | 'runAt' | 'railStart' | 'faceStart'>
 
 /** A frame on a wall as built, x in the drawing: the physical frame (970 in a 1 000 span, moved where X10 moves it), the
  *  braces and the rail splices. Without production facts, the frame as the span gives it, with no braces. */
 export function textileDrawing(rules: Rules, t: TextileWall, p: FrameFacts | undefined, x: (t: number) => number): { x0: number; x1: number; braces: number[]; splices: number[] } {
   const inset = frameInset(rules.textile.inFrame) / 1000
-  const a = t.from + inset + (p?.shift ?? 0) / 1000
+  // Measured from the run's from end, moved where X10 moves it; the textile at a 92LTX stops short of it or runs past (X7)
+  const a = p ? (p.runAt + (p.shift ?? 0)) / 1000 : t.from + inset
+  const f = a + (p?.faceStart ?? 0) / 1000
   const W = p ? p.W / 1000 : t.width - 2 * inset
   const at = (d: number) => x(a + d / 1000)
   const cuts = p?.railCuts ?? []
   return {
-    x0: Math.min(x(a), x(a + W)),
-    x1: Math.max(x(a), x(a + W)),
+    x0: Math.min(x(f), x(f + W)),
+    x1: Math.max(x(f), x(f + W)),
     braces: (p?.braceAt ?? []).map(at),
-    splices: cuts.slice(0, -1).map((_, j) => at(cuts.slice(0, j + 1).reduce((s, c) => s + c, 0))),
+    splices: cuts.slice(0, -1).map((_, j) => at((p?.railStart ?? 0) + cuts.slice(0, j + 1).reduce((s, c) => s + c, 0))),
   }
 }
 

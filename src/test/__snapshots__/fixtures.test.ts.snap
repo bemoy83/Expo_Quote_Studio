@@ -659,10 +659,7 @@ exports[`01-hjorne-arrangor.json > variant A > calculation 1`] = `
   ],
   "production": {
     "area": 0,
-    "cornerPosts": {
-      "H": 2526,
-      "qty": 0,
-    },
+    "cornerPosts": [],
     "free": [],
     "freeLm": 0,
     "lm": 0,
@@ -846,10 +843,7 @@ exports[`01-hjorne-arrangor.json > variant A > production: textile and print row
   "foil": [],
   "production": {
     "area": 0,
-    "cornerPosts": {
-      "H": 2526,
-      "qty": 0,
-    },
+    "cornerPosts": [],
     "free": [],
     "freeLm": 0,
     "lm": 0,
@@ -1700,10 +1694,7 @@ exports[`02-hjorne-utstiller.json > variant A > calculation 1`] = `
   ],
   "production": {
     "area": 0,
-    "cornerPosts": {
-      "H": 2526,
-      "qty": 0,
-    },
+    "cornerPosts": [],
     "free": [],
     "freeLm": 0,
     "lm": 0,
@@ -1853,10 +1844,7 @@ exports[`02-hjorne-utstiller.json > variant A > production: textile and print ro
   "foil": [],
   "production": {
     "area": 0,
-    "cornerPosts": {
-      "H": 2526,
-      "qty": 0,
-    },
+    "cornerPosts": [],
     "free": [],
     "freeLm": 0,
     "lm": 0,
@@ -2422,10 +2410,7 @@ exports[`02-hjorne-utstiller.json > variant B > calculation 1`] = `
   ],
   "production": {
     "area": 0,
-    "cornerPosts": {
-      "H": 2526,
-      "qty": 0,
-    },
+    "cornerPosts": [],
     "free": [],
     "freeLm": 0,
     "lm": 0,
@@ -2542,10 +2527,7 @@ exports[`02-hjorne-utstiller.json > variant B > production: textile and print ro
   "foil": [],
   "production": {
     "area": 0,
-    "cornerPosts": {
-      "H": 2526,
-      "qty": 0,
-    },
+    "cornerPosts": [],
     "free": [],
     "freeLm": 0,
     "lm": 0,
@@ -3271,10 +3253,7 @@ exports[`03-rom.json > variant A > calculation 1`] = `
   ],
   "production": {
     "area": 0,
-    "cornerPosts": {
-      "H": 2526,
-      "qty": 0,
-    },
+    "cornerPosts": [],
     "free": [],
     "freeLm": 0,
     "lm": 0,
@@ -3419,10 +3398,7 @@ exports[`03-rom.json > variant A > production: textile and print rows 1`] = `
   "foil": [],
   "production": {
     "area": 0,
-    "cornerPosts": {
-      "H": 2526,
-      "qty": 0,
-    },
+    "cornerPosts": [],
     "free": [],
     "freeLm": 0,
     "lm": 0,
@@ -4097,10 +4073,7 @@ exports[`04-oy-takdrager.json > variant A > calculation 1`] = `
   ],
   "production": {
     "area": 0,
-    "cornerPosts": {
-      "H": 2526,
-      "qty": 0,
-    },
+    "cornerPosts": [],
     "free": [],
     "freeLm": 0,
     "lm": 0,
@@ -4219,10 +4192,7 @@ exports[`04-oy-takdrager.json > variant A > production: textile and print rows 1
   "foil": [],
   "production": {
     "area": 0,
-    "cornerPosts": {
-      "H": 2526,
-      "qty": 0,
-    },
+    "cornerPosts": [],
     "free": [],
     "freeLm": 0,
     "lm": 0,
@@ -4844,10 +4814,7 @@ exports[`05-takdrager-av.json > variant A > calculation 1`] = `
   ],
   "production": {
     "area": 0,
-    "cornerPosts": {
-      "H": 2526,
-      "qty": 0,
-    },
+    "cornerPosts": [],
     "free": [],
     "freeLm": 0,
     "lm": 0,
@@ -4976,10 +4943,7 @@ exports[`05-takdrager-av.json > variant A > production: textile and print rows 1
   "foil": [],
   "production": {
     "area": 0,
-    "cornerPosts": {
-      "H": 2526,
-      "qty": 0,
-    },
+    "cornerPosts": [],
     "free": [],
     "freeLm": 0,
     "lm": 0,
@@ -5556,10 +5520,7 @@ exports[`06-stottedrager.json > variant A > calculation 1`] = `
   ],
   "production": {
     "area": 0,
-    "cornerPosts": {
-      "H": 2526,
-      "qty": 0,
-    },
+    "cornerPosts": [],
     "free": [],
     "freeLm": 0,
     "lm": 0,
@@ -5579,10 +5540,7 @@ exports[`06-stottedrager.json > variant A > production: textile and print rows 1
   "foil": [],
   "production": {
     "area": 0,
-    "cornerPosts": {
-      "H": 2526,
-      "qty": 0,
-    },
+    "cornerPosts": [],
     "free": [],
     "freeLm": 0,
     "lm": 0,
@@ -5936,10 +5894,7 @@ exports[`07-engangsteppe.json > variant A > calculation 1`] = `
   ],
   "production": {
     "area": 0,
-    "cornerPosts": {
-      "H": 2526,
-      "qty": 0,
-    },
+    "cornerPosts": [],
     "free": [],
     "freeLm": 0,
     "lm": 0,
@@ -5994,10 +5949,7 @@ exports[`07-engangsteppe.json > variant A > production: textile and print rows 1
   "foil": [],
   "production": {
     "area": 0,
-    "cornerPosts": {
-      "H": 2526,
-      "qty": 0,
-    },
+    "cornerPosts": [],
     "free": [],
     "freeLm": 0,
     "lm": 0,
@@ -6479,10 +6431,7 @@ exports[`07-engangsteppe.json > variant B > calculation 1`] = `
   ],
   "production": {
     "area": 0,
-    "cornerPosts": {
-      "H": 2526,
-      "qty": 0,
-    },
+    "cornerPosts": [],
     "free": [],
     "freeLm": 0,
     "lm": 0,
@@ -6566,10 +6515,7 @@ exports[`07-engangsteppe.json > variant B > production: textile and print rows 1
   "foil": [],
   "production": {
     "area": 0,
-    "cornerPosts": {
-      "H": 2526,
-      "qty": 0,
-    },
+    "cornerPosts": [],
     "free": [],
     "freeLm": 0,
     "lm": 0,
@@ -6831,10 +6777,12 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
       "posts": 1,
     },
     "beams": [],
-    "cornerPosts": {
-      "H": 2526,
-      "qty": 1,
-    },
+    "cornerPosts": [
+      {
+        "H": 2526,
+        "qty": 1,
+      },
+    ],
     "frames": [
       {
         "parts": {
@@ -6936,7 +6884,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
       {
         "parts": {
           "braces": {
-            "length": 2460,
+            "length": 0,
             "qty": 0,
           },
           "butt": [
@@ -7710,10 +7658,12 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
   ],
   "production": {
     "area": 32.5596,
-    "cornerPosts": {
-      "H": 2526,
-      "qty": 1,
-    },
+    "cornerPosts": [
+      {
+        "H": 2526,
+        "qty": 1,
+      },
+    ],
     "free": [
       {
         "H": 2540,
@@ -7869,7 +7819,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         "nCorners": 1,
         "parts": {
           "braces": {
-            "length": 2460,
+            "length": 0,
             "qty": 0,
           },
           "butt": [
@@ -7929,6 +7879,11 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
           "length": 2460,
           "qty": 1,
         },
+        "corners": {
+          "from": false,
+          "to": false,
+        },
+        "faceStart": 0,
         "fh": 258,
         "fileName": "Firma_T1_3970x2540mm.pdf",
         "fill": "print",
@@ -7969,6 +7924,8 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         "railCuts": [
           3970,
         ],
+        "railStart": 0,
+        "runAt": 1015,
         "span": 4000,
         "textileId": "t1",
         "wall": "Bak",
@@ -7980,6 +7937,11 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         "at": 1000,
         "braceAt": [],
         "braces": null,
+        "corners": {
+          "from": false,
+          "to": false,
+        },
+        "faceStart": 0,
         "fh": 258,
         "fileName": null,
         "fill": "white",
@@ -8020,6 +7982,8 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         "railCuts": [
           1970,
         ],
+        "railStart": 0,
+        "runAt": 1015,
         "span": 2000,
         "textileId": "t2",
         "wall": "Venstre",
@@ -8187,10 +8151,12 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
   "foil": [],
   "production": {
     "area": 32.5596,
-    "cornerPosts": {
-      "H": 2526,
-      "qty": 1,
-    },
+    "cornerPosts": [
+      {
+        "H": 2526,
+        "qty": 1,
+      },
+    ],
     "free": [
       {
         "H": 2540,
@@ -8346,7 +8312,7 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
         "nCorners": 1,
         "parts": {
           "braces": {
-            "length": 2460,
+            "length": 0,
             "qty": 0,
           },
           "butt": [
@@ -8406,6 +8372,11 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
           "length": 2460,
           "qty": 1,
         },
+        "corners": {
+          "from": false,
+          "to": false,
+        },
+        "faceStart": 0,
         "fh": 258,
         "fileName": "TekstilAS_T1_3970x2540mm.pdf",
         "fill": "print",
@@ -8446,6 +8417,8 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
         "railCuts": [
           3970,
         ],
+        "railStart": 0,
+        "runAt": 1015,
         "span": 4000,
         "textileId": "t1",
         "wall": "Bak",
@@ -8457,6 +8430,11 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
         "at": 1000,
         "braceAt": [],
         "braces": null,
+        "corners": {
+          "from": false,
+          "to": false,
+        },
+        "faceStart": 0,
         "fh": 258,
         "fileName": null,
         "fill": "white",
@@ -8497,6 +8475,8 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
         "railCuts": [
           1970,
         ],
+        "railStart": 0,
+        "runAt": 1015,
         "span": 2000,
         "textileId": "t2",
         "wall": "Venstre",
@@ -9297,10 +9277,7 @@ exports[`09-dekor.json > variant A > calculation 1`] = `
   ],
   "production": {
     "area": 0,
-    "cornerPosts": {
-      "H": 2526,
-      "qty": 0,
-    },
+    "cornerPosts": [],
     "free": [],
     "freeLm": 0,
     "lm": 0,
@@ -9483,10 +9460,7 @@ exports[`09-dekor.json > variant A > production: textile and print rows 1`] = `
   ],
   "production": {
     "area": 0,
-    "cornerPosts": {
-      "H": 2526,
-      "qty": 0,
-    },
+    "cornerPosts": [],
     "free": [],
     "freeLm": 0,
     "lm": 0,
@@ -10076,10 +10050,7 @@ exports[`10-mobler-utstyr.json > variant A > calculation 1`] = `
   ],
   "production": {
     "area": 0,
-    "cornerPosts": {
-      "H": 2526,
-      "qty": 0,
-    },
+    "cornerPosts": [],
     "free": [],
     "freeLm": 0,
     "lm": 0,
@@ -10137,10 +10108,7 @@ exports[`10-mobler-utstyr.json > variant A > production: textile and print rows 
   "foil": [],
   "production": {
     "area": 0,
-    "cornerPosts": {
-      "H": 2526,
-      "qty": 0,
-    },
+    "cornerPosts": [],
     "free": [],
     "freeLm": 0,
     "lm": 0,
@@ -10856,10 +10824,7 @@ exports[`11-hyller.json > variant A > calculation 1`] = `
   ],
   "production": {
     "area": 0,
-    "cornerPosts": {
-      "H": 2526,
-      "qty": 0,
-    },
+    "cornerPosts": [],
     "free": [],
     "freeLm": 0,
     "lm": 0,
@@ -11005,10 +10970,7 @@ exports[`11-hyller.json > variant A > production: textile and print rows 1`] = `
   "foil": [],
   "production": {
     "area": 0,
-    "cornerPosts": {
-      "H": 2526,
-      "qty": 0,
-    },
+    "cornerPosts": [],
     "free": [],
     "freeLm": 0,
     "lm": 0,
@@ -11752,10 +11714,7 @@ exports[`12-hjornehyller.json > variant A > calculation 1`] = `
   ],
   "production": {
     "area": 0,
-    "cornerPosts": {
-      "H": 2526,
-      "qty": 0,
-    },
+    "cornerPosts": [],
     "free": [],
     "freeLm": 0,
     "lm": 0,
@@ -11990,10 +11949,7 @@ exports[`12-hjornehyller.json > variant A > production: textile and print rows 1
   "foil": [],
   "production": {
     "area": 0,
-    "cornerPosts": {
-      "H": 2526,
-      "qty": 0,
-    },
+    "cornerPosts": [],
     "free": [],
     "freeLm": 0,
     "lm": 0,
@@ -12763,10 +12719,7 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
   "posts": [],
   "production": {
     "area": 0,
-    "cornerPosts": {
-      "H": 2526,
-      "qty": 0,
-    },
+    "cornerPosts": [],
     "free": [],
     "freeLm": 0,
     "lm": 0,
@@ -13050,10 +13003,7 @@ exports[`13-disker-og-podier.json > variant A > production: textile and print ro
   "foil": [],
   "production": {
     "area": 0,
-    "cornerPosts": {
-      "H": 2526,
-      "qty": 0,
-    },
+    "cornerPosts": [],
     "free": [],
     "freeLm": 0,
     "lm": 0,
@@ -14020,10 +13970,7 @@ exports[`14-halv-meter.json > variant A > calculation 1`] = `
   ],
   "production": {
     "area": 0,
-    "cornerPosts": {
-      "H": 2526,
-      "qty": 0,
-    },
+    "cornerPosts": [],
     "free": [],
     "freeLm": 0,
     "lm": 0,
@@ -14209,10 +14156,7 @@ exports[`14-halv-meter.json > variant A > production: textile and print rows 1`]
   "foil": [],
   "production": {
     "area": 0,
-    "cornerPosts": {
-      "H": 2526,
-      "qty": 0,
-    },
+    "cornerPosts": [],
     "free": [],
     "freeLm": 0,
     "lm": 0,
@@ -14464,6 +14408,2587 @@ exports[`14-halv-meter.json > variant A > quote lines 1`] = `
     ],
     "name": "Tepper og gulv",
     "sum": 2844,
+  },
+]
+`;
+
+exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
+{
+  "beams": {
+    "lm": 10,
+    "posts": Map {
+      "6,0" => [
+        6,
+        0,
+      ],
+      "6,4" => [
+        6,
+        4,
+      ],
+      "0,4" => [
+        0,
+        4,
+      ],
+    },
+    "segments": [
+      {
+        "cross": false,
+        "from": [
+          6,
+          0,
+        ],
+        "length": 4,
+        "side": "right",
+        "to": [
+          6,
+          4,
+        ],
+      },
+      {
+        "cross": false,
+        "from": [
+          0,
+          4,
+        ],
+        "length": 6,
+        "side": "front",
+        "to": [
+          6,
+          4,
+        ],
+      },
+    ],
+  },
+  "bom": {
+    "lines": [
+      {
+        "artnr": "",
+        "detail": "976 × 2440 mm",
+        "group": "vegg.plater",
+        "name": "Lakkert HDF-plate 3 mm",
+        "preassembled": false,
+        "qty": 2,
+        "ral": "9010",
+      },
+      {
+        "artnr": "",
+        "detail": "94 × 2490 mm · 1 × 700 (876 700 95) · 1 × M10x65 (896 232 95)",
+        "group": "vegg.stolper",
+        "name": "Stolpe 94 med justeringsfot",
+        "preassembled": true,
+        "qty": 1,
+      },
+      {
+        "artnr": "",
+        "detail": "94 × 2490 mm · til fotplate",
+        "group": "vegg.stolper",
+        "name": "Stolpe 94 uten fot",
+        "note": "til fotplate",
+        "preassembled": true,
+        "qty": 1,
+      },
+      {
+        "artnr": "",
+        "detail": "1 × 750 (876 750 93) · 1 × 795 (876 745 92)",
+        "group": "vegg.stolper",
+        "name": "Fotplate 750 med 795",
+        "preassembled": true,
+        "qty": 1,
+      },
+      {
+        "artnr": "",
+        "detail": "92 × 960 mm · 2 × 600 (871 003 92)",
+        "group": "vegg.skinner",
+        "name": "Toppskinne 92, 960 mm, med 600",
+        "preassembled": true,
+        "qty": 2,
+      },
+      {
+        "artnr": "",
+        "detail": "91 × 960 mm · 2 × 600 (871 003 92)",
+        "group": "vegg.skinner",
+        "name": "Bunnskinne 91, 960 mm, med 600",
+        "preassembled": true,
+        "qty": 2,
+      },
+      {
+        "artnr": "873 805 22",
+        "detail": "2 × 2846 · 4 × 2540 · 2 × 1923 · 6 × 1908 · 2 × 1871 mm · 2 × 1923 og 6 × 1908 har én butt ende · 2 × 2846 og 2 × 1871 har to butte ender, resten gjæret",
+        "group": "prof.tekstil",
+        "lm": 34.888000000000005,
+        "name": "43TX · Tekstilprofil",
+        "preassembled": false,
+        "qty": 16,
+      },
+      {
+        "artnr": "873 809 22",
+        "detail": "4 × 2526 mm",
+        "group": "prof.tekstil",
+        "lm": 10.104,
+        "name": "92LTX · Tekstilprofil, hjørne",
+        "preassembled": false,
+        "qty": 4,
+      },
+      {
+        "artnr": "",
+        "detail": "90 × 2460 mm · 2 × 600 (871 003 92) · til T2",
+        "group": "prof.tekstil",
+        "name": "Støttestag 90, 2460 mm, med 600",
+        "note": "til T2",
+        "preassembled": true,
+        "qty": 1,
+      },
+      {
+        "artnr": "871 045 92",
+        "detail": "",
+        "group": "prof.tekstil",
+        "name": "617 · Vinkelkobling i kanal",
+        "preassembled": false,
+        "qty": 24,
+      },
+      {
+        "artnr": "876 520 22",
+        "detail": "",
+        "group": "prof.tekstil",
+        "name": "520 · Universalbrakett / hyllebrakett",
+        "preassembled": false,
+        "qty": 3,
+      },
+      {
+        "artnr": "876 740 92",
+        "detail": "",
+        "group": "prof.tekstil",
+        "name": "740 · Fotplate 400 × 400 × 5 mm",
+        "preassembled": false,
+        "qty": 1,
+      },
+    ],
+  },
+  "foga": {
+    "barePosts": 1,
+    "beams": [],
+    "cornerPosts": [
+      {
+        "H": 2526,
+        "qty": 4,
+      },
+    ],
+    "frames": [
+      {
+        "parts": {
+          "braces": {
+            "length": 0,
+            "qty": 0,
+          },
+          "butt": [
+            [
+              1908,
+              1,
+              2,
+            ],
+          ],
+          "couplings": 4,
+          "cuts": [
+            [
+              1908,
+              2,
+            ],
+            [
+              2540,
+              1,
+            ],
+          ],
+          "loose": [
+            [
+              "617",
+              4,
+            ],
+            [
+              "520",
+              1,
+            ],
+          ],
+        },
+        "pos": "T1",
+      },
+      {
+        "parts": {
+          "braces": {
+            "length": 2460,
+            "qty": 1,
+          },
+          "butt": [
+            [
+              2846,
+              2,
+              2,
+            ],
+          ],
+          "couplings": 6,
+          "cuts": [
+            [
+              2846,
+              2,
+            ],
+          ],
+          "loose": [
+            [
+              "617",
+              4,
+            ],
+          ],
+        },
+        "pos": "T2",
+      },
+      {
+        "parts": {
+          "braces": {
+            "length": 0,
+            "qty": 0,
+          },
+          "butt": [
+            [
+              1871,
+              2,
+              2,
+            ],
+          ],
+          "couplings": 4,
+          "cuts": [
+            [
+              1871,
+              2,
+            ],
+          ],
+          "loose": [
+            [
+              "617",
+              4,
+            ],
+          ],
+        },
+        "pos": "T3",
+      },
+      {
+        "parts": {
+          "braces": {
+            "length": 0,
+            "qty": 0,
+          },
+          "butt": [
+            [
+              1908,
+              1,
+              2,
+            ],
+          ],
+          "couplings": 4,
+          "cuts": [
+            [
+              1908,
+              2,
+            ],
+            [
+              2540,
+              1,
+            ],
+          ],
+          "loose": [
+            [
+              "617",
+              4,
+            ],
+            [
+              "520",
+              1,
+            ],
+          ],
+        },
+        "pos": "T4",
+      },
+      {
+        "parts": {
+          "braces": {
+            "length": 0,
+            "qty": 0,
+          },
+          "butt": [
+            [
+              1908,
+              1,
+              2,
+            ],
+          ],
+          "couplings": 4,
+          "cuts": [
+            [
+              1908,
+              2,
+            ],
+            [
+              2540,
+              1,
+            ],
+          ],
+          "loose": [
+            [
+              "617",
+              4,
+            ],
+            [
+              "520",
+              1,
+            ],
+          ],
+        },
+        "pos": "T5",
+      },
+      {
+        "parts": {
+          "braces": {
+            "length": 0,
+            "qty": 0,
+          },
+          "butt": [
+            [
+              1923,
+              1,
+              2,
+            ],
+          ],
+          "couplings": 4,
+          "cuts": [
+            [
+              1923,
+              2,
+            ],
+            [
+              2540,
+              1,
+            ],
+          ],
+          "loose": [
+            [
+              "617",
+              4,
+            ],
+            [
+              "740",
+              1,
+            ],
+          ],
+        },
+        "pos": "F1",
+      },
+    ],
+    "modules": [
+      {
+        "opening": false,
+        "plate": "9010",
+      },
+      {
+        "opening": false,
+        "plate": "9010",
+      },
+    ],
+    "posts": 2,
+    "wallFeet": 1,
+  },
+  "groups": [
+    {
+      "cost": 457.36,
+      "id": "vegg",
+      "lines": [
+        {
+          "artnr": "6120-9010",
+          "cost": 410.92,
+          "dg": 0.7314248366013072,
+          "foga": true,
+          "group": "vegg.vegger",
+          "meta": "Innervegg · RAL 9010",
+          "name": "Rammevegg m/plate, komplett hvit",
+          "payer": "utstiller",
+          "placeholder": false,
+          "price": 765,
+          "qty": 2,
+          "strategy": "fast",
+          "sum": 1530,
+          "time": {
+            "demontering": 8.16,
+            "montering": 12.24,
+            "plukk": 2.04,
+            "transport": 2.04,
+            "vask": 3.4,
+          },
+          "transfer": "leie",
+          "unit": "lm",
+          "uses": [
+            {
+              "id": "veggplate",
+              "qty": 2,
+            },
+            {
+              "id": "skinne-92-960",
+              "qty": 2,
+            },
+            {
+              "id": "skinne-91-960",
+              "qty": 2,
+            },
+            {
+              "id": "stolpe-94",
+              "qty": 2,
+            },
+            {
+              "id": "montering-modul",
+              "qty": 2,
+            },
+          ],
+        },
+        {
+          "artnr": "6115",
+          "cost": 46.44,
+          "dg": 0.613,
+          "foga": true,
+          "group": "vegg.vegger",
+          "meta": "Fotplate 500 × 80 × 5 mm · frittstående vegg",
+          "name": "Støtteplate systemvegg",
+          "payer": "utstiller",
+          "placeholder": true,
+          "price": 120,
+          "qty": 1,
+          "strategy": "fast",
+          "sum": 120,
+          "time": {
+            "demontering": 0.68,
+            "montering": 1.02,
+            "plukk": 0.17,
+            "transport": 0.17,
+            "vask": 0.17,
+          },
+          "transfer": "leie",
+          "unit": "stk",
+          "uses": [
+            {
+              "id": "fotplate-750",
+              "qty": 1,
+            },
+            {
+              "id": "montering-stotteplate",
+              "qty": 1,
+            },
+          ],
+        },
+      ],
+      "name": "Vegger og bakrom",
+      "sum": 1650,
+    },
+    {
+      "cost": 14312.37148,
+      "id": "prof",
+      "lines": [
+        {
+          "artnr": "8000",
+          "cost": 1819.29063,
+          "dg": 0.7423830883602379,
+          "drawn": [
+            "t1",
+            "t4",
+            "t5",
+          ],
+          "foga": true,
+          "group": "prof.tekstil",
+          "name": "Tekstilramme, leie, 1925 × 2540 mm, på vegg",
+          "payer": "utstiller",
+          "placeholder": false,
+          "price": 2354,
+          "qty": 3,
+          "quote": {
+            "key": "tekstil:1925 × 2540 mm",
+            "lead": true,
+            "name": "Tekstilvegg 1925 × 2540 mm",
+          },
+          "strategy": "sum",
+          "sum": 7062,
+          "time": {
+            "demontering": 12,
+            "montering": 24,
+            "plukk": 9,
+            "transport": 6,
+            "vask": 6,
+          },
+          "transfer": "leie",
+          "unit": "stk",
+          "uses": [
+            {
+              "id": "43TX",
+              "qty": 19.067999999999998,
+            },
+            {
+              "id": "617",
+              "qty": 12,
+            },
+            {
+              "id": "520",
+              "qty": 3,
+            },
+            {
+              "id": "montering-ramme-kobling",
+              "qty": 12,
+            },
+            {
+              "id": "handtering-ramme",
+              "qty": 3,
+            },
+            {
+              "id": "92LTX",
+              "qty": 3.7889999999999997,
+            },
+          ],
+        },
+        {
+          "artnr": "8000",
+          "cost": 763.34262,
+          "dg": 0.7408004685908319,
+          "drawn": [
+            "t2",
+          ],
+          "foga": true,
+          "group": "prof.tekstil",
+          "name": "Tekstilramme, leie, 2880 × 2540 mm, på vegg",
+          "payer": "utstiller",
+          "placeholder": false,
+          "price": 2945,
+          "qty": 1,
+          "quote": {
+            "key": "tekstil:2880 × 2540 mm",
+            "lead": true,
+            "name": "Tekstilvegg 2880 × 2540 mm",
+          },
+          "strategy": "sum",
+          "sum": 2945,
+          "time": {
+            "demontering": 6,
+            "montering": 12,
+            "plukk": 3.5,
+            "transport": 2.5,
+            "vask": 2.5,
+          },
+          "transfer": "leie",
+          "unit": "stk",
+          "uses": [
+            {
+              "id": "43TX",
+              "qty": 5.692,
+            },
+            {
+              "id": "617",
+              "qty": 4,
+            },
+            {
+              "id": "stag-90-m",
+              "qty": 2.46,
+            },
+            {
+              "id": "stag-90-stk",
+              "qty": 1,
+            },
+            {
+              "id": "montering-ramme-kobling",
+              "qty": 6,
+            },
+            {
+              "id": "handtering-ramme",
+              "qty": 1,
+            },
+            {
+              "id": "92LTX",
+              "qty": 2.526,
+            },
+          ],
+        },
+        {
+          "artnr": "8000",
+          "cost": 554.93742,
+          "dg": 0.7390985331452751,
+          "drawn": [
+            "t3",
+          ],
+          "foga": true,
+          "group": "prof.tekstil",
+          "name": "Tekstilramme, leie, 1905 × 2540 mm, på vegg",
+          "payer": "utstiller",
+          "placeholder": false,
+          "price": 2127,
+          "qty": 1,
+          "quote": {
+            "key": "tekstil:1905 × 2540 mm",
+            "lead": true,
+            "name": "Tekstilvegg 1905 × 2540 mm",
+          },
+          "strategy": "sum",
+          "sum": 2127,
+          "time": {
+            "demontering": 4,
+            "montering": 8,
+            "plukk": 3,
+            "transport": 2,
+            "vask": 2,
+          },
+          "transfer": "leie",
+          "unit": "stk",
+          "uses": [
+            {
+              "id": "43TX",
+              "qty": 3.742,
+            },
+            {
+              "id": "617",
+              "qty": 4,
+            },
+            {
+              "id": "montering-ramme-kobling",
+              "qty": 4,
+            },
+            {
+              "id": "handtering-ramme",
+              "qty": 1,
+            },
+            {
+              "id": "92LTX",
+              "qty": 2.526,
+            },
+          ],
+        },
+        {
+          "artnr": "8000",
+          "cost": 647.00721,
+          "dg": 0.7444679265402844,
+          "drawn": [
+            "f1",
+          ],
+          "foga": true,
+          "group": "prof.tekstil",
+          "name": "Tekstilramme, leie, 1960 × 2540 mm, på fotplater",
+          "payer": "utstiller",
+          "placeholder": false,
+          "price": 2532,
+          "qty": 1,
+          "quote": {
+            "key": "tekstil:1960 × 2540 mm",
+            "lead": true,
+            "name": "Tekstilvegg 1960 × 2540 mm",
+          },
+          "strategy": "sum",
+          "sum": 2532,
+          "time": {
+            "demontering": 4,
+            "montering": 8,
+            "plukk": 3.5,
+            "transport": 2.5,
+            "vask": 2.5,
+          },
+          "transfer": "leie",
+          "unit": "stk",
+          "uses": [
+            {
+              "id": "43TX",
+              "qty": 6.386,
+            },
+            {
+              "id": "617",
+              "qty": 4,
+            },
+            {
+              "id": "fotplate-740",
+              "qty": 1,
+            },
+            {
+              "id": "montering-ramme-kobling",
+              "qty": 4,
+            },
+            {
+              "id": "handtering-ramme",
+              "qty": 1,
+            },
+            {
+              "id": "92LTX",
+              "qty": 1.263,
+            },
+          ],
+        },
+        {
+          "artnr": "8040",
+          "cost": 4257.4196999999995,
+          "dg": 0.43433518016581635,
+          "foga": true,
+          "group": "prof.tekstil",
+          "meta": "3 duker · 1925 × 2540 mm",
+          "name": "Tekstil med trykk",
+          "payer": "utstiller",
+          "placeholder": false,
+          "price": 512,
+          "qty": 14.7,
+          "quote": {
+            "key": "tekstil:1925 × 2540 mm",
+            "lead": false,
+            "name": "Tekstilvegg 1925 × 2540 mm",
+          },
+          "strategy": "sum",
+          "sum": 7526.4,
+          "terms": "Kjøp av tekstil, montering inkludert",
+          "time": {
+            "demontering": 53.58,
+            "montering": 107.16,
+          },
+          "transfer": "blandet",
+          "unit": "m²",
+          "uses": [
+            {
+              "id": "trykk",
+              "qty": 15.2091,
+            },
+            {
+              "id": "montering-tekstil-omkrets",
+              "qty": 26.79,
+            },
+          ],
+        },
+        {
+          "artnr": "8040",
+          "cost": 1983.4112,
+          "dg": 0.42068195227385574,
+          "foga": true,
+          "group": "prof.tekstil",
+          "meta": "1 duk · 2880 × 2540 mm",
+          "name": "Tekstil med trykk",
+          "payer": "utstiller",
+          "placeholder": false,
+          "price": 469,
+          "qty": 7.3,
+          "quote": {
+            "key": "tekstil:2880 × 2540 mm",
+            "lead": false,
+            "name": "Tekstilvegg 2880 × 2540 mm",
+          },
+          "strategy": "sum",
+          "sum": 3423.7,
+          "terms": "Kjøp av tekstil, montering inkludert",
+          "time": {
+            "demontering": 21.68,
+            "montering": 43.36,
+          },
+          "transfer": "blandet",
+          "unit": "m²",
+          "uses": [
+            {
+              "id": "trykk",
+              "qty": 7.5336,
+            },
+            {
+              "id": "montering-tekstil-omkrets",
+              "qty": 10.84,
+            },
+          ],
+        },
+        {
+          "artnr": "8040",
+          "cost": 1407.3227,
+          "dg": 0.43508241008349385,
+          "foga": true,
+          "group": "prof.tekstil",
+          "meta": "1 duk · 1905 × 2540 mm",
+          "name": "Tekstil med trykk",
+          "payer": "utstiller",
+          "placeholder": false,
+          "price": 519,
+          "qty": 4.8,
+          "quote": {
+            "key": "tekstil:1905 × 2540 mm",
+            "lead": false,
+            "name": "Tekstilvegg 1905 × 2540 mm",
+          },
+          "strategy": "sum",
+          "sum": 2491.2,
+          "terms": "Kjøp av tekstil, montering inkludert",
+          "time": {
+            "demontering": 17.78,
+            "montering": 35.56,
+          },
+          "transfer": "blandet",
+          "unit": "m²",
+          "uses": [
+            {
+              "id": "trykk",
+              "qty": 5.0181,
+            },
+            {
+              "id": "montering-tekstil-omkrets",
+              "qty": 8.89,
+            },
+          ],
+        },
+        {
+          "artnr": "8040",
+          "cost": 2879.64,
+          "dg": 0.4342554027504912,
+          "foga": true,
+          "group": "prof.tekstil",
+          "meta": "2 duker · 1960 × 2540 mm",
+          "name": "Tekstil med trykk",
+          "payer": "utstiller",
+          "placeholder": false,
+          "price": 509,
+          "qty": 10,
+          "quote": {
+            "key": "tekstil:1960 × 2540 mm",
+            "lead": false,
+            "name": "Tekstilvegg 1960 × 2540 mm",
+          },
+          "strategy": "sum",
+          "sum": 5090,
+          "terms": "Kjøp av tekstil, montering inkludert",
+          "time": {
+            "demontering": 36,
+            "montering": 72,
+          },
+          "transfer": "blandet",
+          "unit": "m²",
+          "uses": [
+            {
+              "id": "trykk",
+              "qty": 10.32,
+            },
+            {
+              "id": "montering-tekstil-omkrets",
+              "qty": 18,
+            },
+          ],
+        },
+      ],
+      "name": "Profilering",
+      "sum": 33197.3,
+    },
+  ],
+  "hooks": [],
+  "keyFigures": {
+    "area": 24,
+    "beamHooks": 0,
+    "beamLengths": 2,
+    "beamLm": 10,
+    "beamPosts": 1,
+    "floor": {},
+    "floorTotal": 0,
+    "foilM2": 0,
+    "innerBeamLm": 0,
+    "innerWallLm": 2,
+    "modules": 12,
+    "openSides": 2,
+    "openings": 0,
+    "organiserBeamLm": 10,
+    "organiserWallLm": 10,
+    "posts": 14,
+    "roomWallLm": 0,
+    "standWallLm": 10,
+    "swapLm": 0,
+    "textileM2": 38.0808,
+    "time": {
+      "demontering": 163.88,
+      "montering": 323.34,
+      "plukk": 21.21,
+      "transport": 15.21,
+      "vask": 16.57,
+    },
+    "wallLm": 12,
+    "wallSupports": 1,
+  },
+  "margin": {
+    "cost": 15813.405519848,
+    "db": 19033.894480152005,
+    "dg": 0.54620858660935,
+    "order": [
+      {
+        "cost": 527.5077279999999,
+        "id": "startkost-trykk",
+        "name": "Startkost trykk",
+      },
+      {
+        "cost": 172.05543728266665,
+        "id": "administrasjon",
+        "name": "Administrasjon og vareplukk",
+      },
+      {
+        "cost": 172.05543728266665,
+        "id": "gange-montering",
+        "minutes": 20,
+        "name": "Gange til og fra montering",
+      },
+      {
+        "cost": 172.05543728266665,
+        "id": "gange-demontering",
+        "name": "Gange til og fra demontering",
+      },
+    ],
+    "sum": 34847.3,
+    "unknown": 0,
+  },
+  "organiser": {
+    "cost": 2419.7,
+    "lines": [
+      {
+        "artnr": "6120-9010",
+        "cost": 2091.97,
+        "dg": 0.7265398692810459,
+        "foga": true,
+        "group": "vegg.vegger",
+        "meta": "Standvegg · RAL 9010",
+        "name": "Rammevegg m/plate, komplett hvit",
+        "payer": "arrangør",
+        "placeholder": false,
+        "price": 765,
+        "qty": 10,
+        "strategy": "fast",
+        "sum": 7650,
+        "time": {
+          "demontering": 40.8,
+          "montering": 61.2,
+          "plukk": 10.540000000000001,
+          "transport": 10.540000000000001,
+          "vask": 17.339999999999996,
+        },
+        "transfer": "leie",
+        "unit": "lm",
+        "uses": [
+          {
+            "id": "veggplate",
+            "qty": 10,
+          },
+          {
+            "id": "skinne-92-960",
+            "qty": 10,
+          },
+          {
+            "id": "skinne-91-960",
+            "qty": 10,
+          },
+          {
+            "id": "stolpe-94",
+            "qty": 11,
+          },
+          {
+            "id": "montering-modul",
+            "qty": 10,
+          },
+        ],
+      },
+      {
+        "artnr": "6110",
+        "cost": 327.73,
+        "dg": 0.7291487603305785,
+        "foga": true,
+        "group": "vegg.takdrager",
+        "meta": "2 lengder",
+        "name": "Takdrager 80 × 20 mm",
+        "payer": "arrangør",
+        "placeholder": true,
+        "price": 121,
+        "qty": 10,
+        "strategy": "fast",
+        "sum": 1210,
+        "time": {
+          "demontering": 5.4,
+          "montering": 10.35,
+          "plukk": 0.64,
+          "transport": 0.64,
+          "vask": 0.64,
+        },
+        "transfer": "leie",
+        "unit": "lm",
+        "uses": [
+          {
+            "id": "takdrager-292-3960",
+            "qty": 1,
+          },
+          {
+            "id": "takdrager-292-5960",
+            "qty": 1,
+          },
+          {
+            "id": "stolpe-94",
+            "qty": 1,
+          },
+          {
+            "id": "montering-takdrager",
+            "qty": 10,
+          },
+          {
+            "id": "montering-takdragerstolpe",
+            "qty": 1,
+          },
+        ],
+      },
+    ],
+    "sum": 8860,
+  },
+  "posts": [
+    [
+      0,
+      0,
+    ],
+    [
+      1,
+      0,
+    ],
+    [
+      2,
+      0,
+    ],
+    [
+      3,
+      0,
+    ],
+    [
+      4,
+      0,
+    ],
+    [
+      5,
+      0,
+    ],
+    [
+      6,
+      0,
+    ],
+    [
+      0,
+      1,
+    ],
+    [
+      0,
+      2,
+    ],
+    [
+      0,
+      3,
+    ],
+    [
+      0,
+      4,
+    ],
+    [
+      3,
+      1,
+    ],
+    [
+      3,
+      2,
+    ],
+    [
+      6,
+      4,
+    ],
+  ],
+  "production": {
+    "area": 38.0808,
+    "cornerPosts": [
+      {
+        "H": 2526,
+        "qty": 4,
+      },
+    ],
+    "free": [
+      {
+        "H": 2540,
+        "braceLength": 2460,
+        "braces": [],
+        "corners": {
+          "from": true,
+          "to": false,
+        },
+        "faces": [
+          {
+            "H": 2540,
+            "W": 1940,
+            "area": 4.9276,
+            "face": "a",
+            "fh": 258,
+            "fileName": "Firma_F1A_1940x2540mm.pdf",
+            "fill": "print",
+            "fw": 198,
+            "motif": null,
+            "perimeter": 8.96,
+            "ph": 2580,
+            "pos": "F1A",
+            "printArea": 5.1084,
+            "pw": 1980,
+            "start": 20,
+          },
+          {
+            "H": 2540,
+            "W": 1980,
+            "area": 5.0292,
+            "face": "b",
+            "fh": 258,
+            "fileName": "Firma_F1B_1980x2540mm.pdf",
+            "fill": "print",
+            "fw": 202,
+            "motif": null,
+            "perimeter": 9.04,
+            "ph": 2580,
+            "pos": "F1B",
+            "printArea": 5.2116,
+            "pw": 2020,
+            "start": -20,
+          },
+        ],
+        "foot": {
+          "across": 400,
+          "along": 400,
+          "code": "740",
+        },
+        "length": 1960,
+        "mount": "fotplater",
+        "nCorners": 1,
+        "parts": {
+          "braces": {
+            "length": 0,
+            "qty": 0,
+          },
+          "butt": [
+            [
+              1923,
+              1,
+              2,
+            ],
+          ],
+          "couplings": 4,
+          "cuts": [
+            [
+              1923,
+              2,
+            ],
+            [
+              2540,
+              1,
+            ],
+          ],
+          "loose": [
+            [
+              "617",
+              4,
+            ],
+            [
+              "740",
+              1,
+            ],
+          ],
+        },
+        "pos": "F1",
+        "railCuts": [
+          1923,
+        ],
+        "railStart": 37,
+        "spliceCode": "609",
+        "supports": [
+          1760,
+        ],
+        "textileId": "f1",
+        "uprights": 1,
+      },
+    ],
+    "freeLm": 1.96,
+    "lm": 47.452000000000005,
+    "pieces": [
+      {
+        "H": 2540,
+        "W": 1925,
+        "area": 5.0697,
+        "at": 0,
+        "braceAt": [],
+        "braces": null,
+        "corners": {
+          "from": true,
+          "to": false,
+        },
+        "faceStart": 20,
+        "fh": 258,
+        "fileName": "Firma_T1_1925x2540mm.pdf",
+        "fill": "print",
+        "fw": 196.5,
+        "lm": 6.356,
+        "motif": "hoved",
+        "mount": "vegg",
+        "parts": {
+          "braces": {
+            "length": 0,
+            "qty": 0,
+          },
+          "butt": [
+            [
+              1908,
+              1,
+              2,
+            ],
+          ],
+          "couplings": 4,
+          "cuts": [
+            [
+              1908,
+              2,
+            ],
+            [
+              2540,
+              1,
+            ],
+          ],
+          "loose": [
+            [
+              "617",
+              4,
+            ],
+            [
+              "520",
+              1,
+            ],
+          ],
+        },
+        "ph": 2580,
+        "pos": "T1",
+        "pw": 1965,
+        "railCuts": [
+          1908,
+        ],
+        "railStart": 37,
+        "runAt": 40,
+        "span": 2000,
+        "textileId": "t1",
+        "wall": "Venstre",
+      },
+      {
+        "H": 2540,
+        "W": 2880,
+        "area": 7.5336,
+        "at": 0,
+        "braceAt": [
+          1460,
+        ],
+        "braces": {
+          "length": 2460,
+          "qty": 1,
+        },
+        "corners": {
+          "from": true,
+          "to": true,
+        },
+        "faceStart": 20,
+        "fh": 258,
+        "fileName": "Firma_T2_2880x2540mm.pdf",
+        "fill": "print",
+        "fw": 292,
+        "lm": 8.152,
+        "motif": null,
+        "mount": "vegg",
+        "parts": {
+          "braces": {
+            "length": 2460,
+            "qty": 1,
+          },
+          "butt": [
+            [
+              2846,
+              2,
+              2,
+            ],
+          ],
+          "couplings": 6,
+          "cuts": [
+            [
+              2846,
+              2,
+            ],
+          ],
+          "loose": [
+            [
+              "617",
+              4,
+            ],
+          ],
+        },
+        "ph": 2580,
+        "pos": "T2",
+        "pw": 2920,
+        "railCuts": [
+          2846,
+        ],
+        "railStart": 37,
+        "runAt": 40,
+        "span": 3000,
+        "textileId": "t2",
+        "wall": "Bak",
+      },
+      {
+        "H": 2540,
+        "W": 1905,
+        "area": 5.0181,
+        "at": 3000,
+        "braceAt": [],
+        "braces": null,
+        "corners": {
+          "from": true,
+          "to": true,
+        },
+        "faceStart": 20,
+        "fh": 258,
+        "fileName": "Firma_T3_1905x2540mm.pdf",
+        "fill": "print",
+        "fw": 194.5,
+        "lm": 3.742,
+        "motif": null,
+        "mount": "vegg",
+        "parts": {
+          "braces": {
+            "length": 0,
+            "qty": 0,
+          },
+          "butt": [
+            [
+              1871,
+              2,
+              2,
+            ],
+          ],
+          "couplings": 4,
+          "cuts": [
+            [
+              1871,
+              2,
+            ],
+          ],
+          "loose": [
+            [
+              "617",
+              4,
+            ],
+          ],
+        },
+        "ph": 2580,
+        "pos": "T3",
+        "pw": 1945,
+        "railCuts": [
+          1871,
+        ],
+        "railStart": 37,
+        "runAt": 3040,
+        "span": 2000,
+        "textileId": "t3",
+        "wall": "Bak",
+      },
+      {
+        "H": 2540,
+        "W": 1925,
+        "area": 5.0697,
+        "at": 0,
+        "braceAt": [],
+        "braces": null,
+        "corners": {
+          "from": true,
+          "to": false,
+        },
+        "faceStart": 20,
+        "fh": 258,
+        "fileName": "Firma_T4_1925x2540mm.pdf",
+        "fill": "print",
+        "fw": 196.5,
+        "lm": 6.356,
+        "motif": null,
+        "mount": "vegg",
+        "parts": {
+          "braces": {
+            "length": 0,
+            "qty": 0,
+          },
+          "butt": [
+            [
+              1908,
+              1,
+              2,
+            ],
+          ],
+          "couplings": 4,
+          "cuts": [
+            [
+              1908,
+              2,
+            ],
+            [
+              2540,
+              1,
+            ],
+          ],
+          "loose": [
+            [
+              "617",
+              4,
+            ],
+            [
+              "520",
+              1,
+            ],
+          ],
+        },
+        "ph": 2580,
+        "pos": "T4",
+        "pw": 1965,
+        "railCuts": [
+          1908,
+        ],
+        "railStart": 37,
+        "runAt": 40,
+        "span": 2000,
+        "textileId": "t4",
+        "wall": "Innervegg",
+      },
+      {
+        "H": 2540,
+        "W": 1925,
+        "area": 5.0697,
+        "at": 0,
+        "braceAt": [],
+        "braces": null,
+        "corners": {
+          "from": true,
+          "to": false,
+        },
+        "faceStart": 20,
+        "fh": 258,
+        "fileName": "Firma_T5_1925x2540mm.pdf",
+        "fill": "print",
+        "fw": 196.5,
+        "lm": 6.356,
+        "motif": null,
+        "mount": "vegg",
+        "parts": {
+          "braces": {
+            "length": 0,
+            "qty": 0,
+          },
+          "butt": [
+            [
+              1908,
+              1,
+              2,
+            ],
+          ],
+          "couplings": 4,
+          "cuts": [
+            [
+              1908,
+              2,
+            ],
+            [
+              2540,
+              1,
+            ],
+          ],
+          "loose": [
+            [
+              "617",
+              4,
+            ],
+            [
+              "520",
+              1,
+            ],
+          ],
+        },
+        "ph": 2580,
+        "pos": "T5",
+        "pw": 1965,
+        "railCuts": [
+          1908,
+        ],
+        "railStart": 37,
+        "runAt": 40,
+        "span": 2000,
+        "textileId": "t5",
+        "wall": "Innervegg",
+      },
+    ],
+  },
+  "sum": 34847.3,
+  "wallSupports": [
+    {
+      "at": [
+        3,
+        2,
+      ],
+      "orientation": "v",
+    },
+  ],
+}
+`;
+
+exports[`15-tekstilhjorner.json > variant A > engangsteppe cut list 1`] = `[]`;
+
+exports[`15-tekstilhjorner.json > variant A > picking list 1`] = `
+[
+  {
+    "code": "RAL 9010",
+    "detail": "976 × 2440 mm",
+    "group": "vegg.plater",
+    "key": "Lakkert HDF-plate 3 mm|976 × 2440 mm",
+    "lm": undefined,
+    "nobb": false,
+    "note": undefined,
+    "preassembled": false,
+    "qty": "2 stk",
+    "title": "Lakkert HDF-plate 3 mm · Hvit",
+  },
+  {
+    "code": "",
+    "detail": "94 × 2490 mm · 1 × 700 (876 700 95) · 1 × M10x65 (896 232 95)",
+    "group": "vegg.stolper",
+    "key": "Stolpe 94 med justeringsfot|94 × 2490 mm · 1 × 700 (876 700 95) · 1 × M10x65 (896 232 95)",
+    "lm": undefined,
+    "nobb": false,
+    "note": undefined,
+    "preassembled": true,
+    "qty": "1 stk",
+    "title": "Stolpe 94 med justeringsfot",
+  },
+  {
+    "code": "",
+    "detail": "94 × 2490 mm · til fotplate",
+    "group": "vegg.stolper",
+    "key": "Stolpe 94 uten fot|94 × 2490 mm · til fotplate",
+    "lm": undefined,
+    "nobb": false,
+    "note": "til fotplate",
+    "preassembled": true,
+    "qty": "1 stk",
+    "title": "Stolpe 94 uten fot",
+  },
+  {
+    "code": "",
+    "detail": "1 × 750 (876 750 93) · 1 × 795 (876 745 92)",
+    "group": "vegg.stolper",
+    "key": "Fotplate 750 med 795|1 × 750 (876 750 93) · 1 × 795 (876 745 92)",
+    "lm": undefined,
+    "nobb": false,
+    "note": undefined,
+    "preassembled": true,
+    "qty": "1 stk",
+    "title": "Fotplate 750 med 795",
+  },
+  {
+    "code": "",
+    "detail": "92 × 960 mm · 2 × 600 (871 003 92)",
+    "group": "vegg.skinner",
+    "key": "Toppskinne 92, 960 mm, med 600|92 × 960 mm · 2 × 600 (871 003 92)",
+    "lm": undefined,
+    "nobb": false,
+    "note": undefined,
+    "preassembled": true,
+    "qty": "2 stk",
+    "title": "Toppskinne 92, 960 mm, med 600",
+  },
+  {
+    "code": "",
+    "detail": "91 × 960 mm · 2 × 600 (871 003 92)",
+    "group": "vegg.skinner",
+    "key": "Bunnskinne 91, 960 mm, med 600|91 × 960 mm · 2 × 600 (871 003 92)",
+    "lm": undefined,
+    "nobb": false,
+    "note": undefined,
+    "preassembled": true,
+    "qty": "2 stk",
+    "title": "Bunnskinne 91, 960 mm, med 600",
+  },
+  {
+    "code": "873 805 22",
+    "detail": "2 × 2846 · 4 × 2540 · 2 × 1923 · 6 × 1908 · 2 × 1871 mm · 2 × 1923 og 6 × 1908 har én butt ende · 2 × 2846 og 2 × 1871 har to butte ender, resten gjæret",
+    "group": "prof.tekstil",
+    "key": "43TX · Tekstilprofil|2 × 2846 · 4 × 2540 · 2 × 1923 · 6 × 1908 · 2 × 1871 mm · 2 × 1923 og 6 × 1908 har én butt ende · 2 × 2846 og 2 × 1871 har to butte ender, resten gjæret",
+    "lm": 34.888000000000005,
+    "nobb": true,
+    "note": undefined,
+    "preassembled": false,
+    "qty": "16 stk",
+    "title": "43TX · Tekstilprofil",
+  },
+  {
+    "code": "873 809 22",
+    "detail": "4 × 2526 mm",
+    "group": "prof.tekstil",
+    "key": "92LTX · Tekstilprofil, hjørne|4 × 2526 mm",
+    "lm": 10.104,
+    "nobb": true,
+    "note": undefined,
+    "preassembled": false,
+    "qty": "4 stk",
+    "title": "92LTX · Tekstilprofil, hjørne",
+  },
+  {
+    "code": "",
+    "detail": "90 × 2460 mm · 2 × 600 (871 003 92) · til T2",
+    "group": "prof.tekstil",
+    "key": "Støttestag 90, 2460 mm, med 600|90 × 2460 mm · 2 × 600 (871 003 92) · til T2",
+    "lm": undefined,
+    "nobb": false,
+    "note": "til T2",
+    "preassembled": true,
+    "qty": "1 stk",
+    "title": "Støttestag 90, 2460 mm, med 600",
+  },
+  {
+    "code": "871 045 92",
+    "detail": "",
+    "group": "prof.tekstil",
+    "key": "617 · Vinkelkobling i kanal|",
+    "lm": undefined,
+    "nobb": true,
+    "note": undefined,
+    "preassembled": false,
+    "qty": "24 stk",
+    "title": "617 · Vinkelkobling i kanal",
+  },
+  {
+    "code": "876 520 22",
+    "detail": "",
+    "group": "prof.tekstil",
+    "key": "520 · Universalbrakett / hyllebrakett|",
+    "lm": undefined,
+    "nobb": true,
+    "note": undefined,
+    "preassembled": false,
+    "qty": "3 stk",
+    "title": "520 · Universalbrakett / hyllebrakett",
+  },
+  {
+    "code": "876 740 92",
+    "detail": "",
+    "group": "prof.tekstil",
+    "key": "740 · Fotplate 400 × 400 × 5 mm|",
+    "lm": undefined,
+    "nobb": true,
+    "note": undefined,
+    "preassembled": false,
+    "qty": "1 stk",
+    "title": "740 · Fotplate 400 × 400 × 5 mm",
+  },
+  {
+    "code": "T1",
+    "detail": "1965 × 2580 mm inkl. bleed · Venstre",
+    "group": "prof.tekstil",
+    "key": "textile|T1",
+    "qty": "1 stk",
+    "title": "Trykt tekstil",
+  },
+  {
+    "code": "T2",
+    "detail": "2920 × 2580 mm inkl. bleed · Bak",
+    "group": "prof.tekstil",
+    "key": "textile|T2",
+    "qty": "1 stk",
+    "title": "Trykt tekstil",
+  },
+  {
+    "code": "T3",
+    "detail": "1945 × 2580 mm inkl. bleed · Bak",
+    "group": "prof.tekstil",
+    "key": "textile|T3",
+    "qty": "1 stk",
+    "title": "Trykt tekstil",
+  },
+  {
+    "code": "T4",
+    "detail": "1965 × 2580 mm inkl. bleed · Innervegg",
+    "group": "prof.tekstil",
+    "key": "textile|T4",
+    "qty": "1 stk",
+    "title": "Trykt tekstil",
+  },
+  {
+    "code": "T5",
+    "detail": "1965 × 2580 mm inkl. bleed · Innervegg",
+    "group": "prof.tekstil",
+    "key": "textile|T5",
+    "qty": "1 stk",
+    "title": "Trykt tekstil",
+  },
+  {
+    "code": "F1A",
+    "detail": "1980 × 2580 mm inkl. bleed · Frittstående F1, side A",
+    "group": "prof.tekstil",
+    "key": "textile|F1A",
+    "qty": "1 stk",
+    "title": "Trykt tekstil",
+  },
+  {
+    "code": "F1B",
+    "detail": "2020 × 2580 mm inkl. bleed · Frittstående F1, side B",
+    "group": "prof.tekstil",
+    "key": "textile|F1B",
+    "qty": "1 stk",
+    "title": "Trykt tekstil",
+  },
+]
+`;
+
+exports[`15-tekstilhjorner.json > variant A > production: textile and print rows 1`] = `
+{
+  "foil": [],
+  "production": {
+    "area": 38.0808,
+    "cornerPosts": [
+      {
+        "H": 2526,
+        "qty": 4,
+      },
+    ],
+    "free": [
+      {
+        "H": 2540,
+        "braceLength": 2460,
+        "braces": [],
+        "corners": {
+          "from": true,
+          "to": false,
+        },
+        "faces": [
+          {
+            "H": 2540,
+            "W": 1940,
+            "area": 4.9276,
+            "face": "a",
+            "fh": 258,
+            "fileName": "TekstilAS_F1A_1940x2540mm.pdf",
+            "fill": "print",
+            "fw": 198,
+            "motif": null,
+            "perimeter": 8.96,
+            "ph": 2580,
+            "pos": "F1A",
+            "printArea": 5.1084,
+            "pw": 1980,
+            "start": 20,
+          },
+          {
+            "H": 2540,
+            "W": 1980,
+            "area": 5.0292,
+            "face": "b",
+            "fh": 258,
+            "fileName": "TekstilAS_F1B_1980x2540mm.pdf",
+            "fill": "print",
+            "fw": 202,
+            "motif": null,
+            "perimeter": 9.04,
+            "ph": 2580,
+            "pos": "F1B",
+            "printArea": 5.2116,
+            "pw": 2020,
+            "start": -20,
+          },
+        ],
+        "foot": {
+          "across": 400,
+          "along": 400,
+          "code": "740",
+        },
+        "length": 1960,
+        "mount": "fotplater",
+        "nCorners": 1,
+        "parts": {
+          "braces": {
+            "length": 0,
+            "qty": 0,
+          },
+          "butt": [
+            [
+              1923,
+              1,
+              2,
+            ],
+          ],
+          "couplings": 4,
+          "cuts": [
+            [
+              1923,
+              2,
+            ],
+            [
+              2540,
+              1,
+            ],
+          ],
+          "loose": [
+            [
+              "617",
+              4,
+            ],
+            [
+              "740",
+              1,
+            ],
+          ],
+        },
+        "pos": "F1",
+        "railCuts": [
+          1923,
+        ],
+        "railStart": 37,
+        "spliceCode": "609",
+        "supports": [
+          1760,
+        ],
+        "textileId": "f1",
+        "uprights": 1,
+      },
+    ],
+    "freeLm": 1.96,
+    "lm": 47.452000000000005,
+    "pieces": [
+      {
+        "H": 2540,
+        "W": 1925,
+        "area": 5.0697,
+        "at": 0,
+        "braceAt": [],
+        "braces": null,
+        "corners": {
+          "from": true,
+          "to": false,
+        },
+        "faceStart": 20,
+        "fh": 258,
+        "fileName": "TekstilAS_T1_1925x2540mm.pdf",
+        "fill": "print",
+        "fw": 196.5,
+        "lm": 6.356,
+        "motif": "hoved",
+        "mount": "vegg",
+        "parts": {
+          "braces": {
+            "length": 0,
+            "qty": 0,
+          },
+          "butt": [
+            [
+              1908,
+              1,
+              2,
+            ],
+          ],
+          "couplings": 4,
+          "cuts": [
+            [
+              1908,
+              2,
+            ],
+            [
+              2540,
+              1,
+            ],
+          ],
+          "loose": [
+            [
+              "617",
+              4,
+            ],
+            [
+              "520",
+              1,
+            ],
+          ],
+        },
+        "ph": 2580,
+        "pos": "T1",
+        "pw": 1965,
+        "railCuts": [
+          1908,
+        ],
+        "railStart": 37,
+        "runAt": 40,
+        "span": 2000,
+        "textileId": "t1",
+        "wall": "Venstre",
+      },
+      {
+        "H": 2540,
+        "W": 2880,
+        "area": 7.5336,
+        "at": 0,
+        "braceAt": [
+          1460,
+        ],
+        "braces": {
+          "length": 2460,
+          "qty": 1,
+        },
+        "corners": {
+          "from": true,
+          "to": true,
+        },
+        "faceStart": 20,
+        "fh": 258,
+        "fileName": "TekstilAS_T2_2880x2540mm.pdf",
+        "fill": "print",
+        "fw": 292,
+        "lm": 8.152,
+        "motif": null,
+        "mount": "vegg",
+        "parts": {
+          "braces": {
+            "length": 2460,
+            "qty": 1,
+          },
+          "butt": [
+            [
+              2846,
+              2,
+              2,
+            ],
+          ],
+          "couplings": 6,
+          "cuts": [
+            [
+              2846,
+              2,
+            ],
+          ],
+          "loose": [
+            [
+              "617",
+              4,
+            ],
+          ],
+        },
+        "ph": 2580,
+        "pos": "T2",
+        "pw": 2920,
+        "railCuts": [
+          2846,
+        ],
+        "railStart": 37,
+        "runAt": 40,
+        "span": 3000,
+        "textileId": "t2",
+        "wall": "Bak",
+      },
+      {
+        "H": 2540,
+        "W": 1905,
+        "area": 5.0181,
+        "at": 3000,
+        "braceAt": [],
+        "braces": null,
+        "corners": {
+          "from": true,
+          "to": true,
+        },
+        "faceStart": 20,
+        "fh": 258,
+        "fileName": "TekstilAS_T3_1905x2540mm.pdf",
+        "fill": "print",
+        "fw": 194.5,
+        "lm": 3.742,
+        "motif": null,
+        "mount": "vegg",
+        "parts": {
+          "braces": {
+            "length": 0,
+            "qty": 0,
+          },
+          "butt": [
+            [
+              1871,
+              2,
+              2,
+            ],
+          ],
+          "couplings": 4,
+          "cuts": [
+            [
+              1871,
+              2,
+            ],
+          ],
+          "loose": [
+            [
+              "617",
+              4,
+            ],
+          ],
+        },
+        "ph": 2580,
+        "pos": "T3",
+        "pw": 1945,
+        "railCuts": [
+          1871,
+        ],
+        "railStart": 37,
+        "runAt": 3040,
+        "span": 2000,
+        "textileId": "t3",
+        "wall": "Bak",
+      },
+      {
+        "H": 2540,
+        "W": 1925,
+        "area": 5.0697,
+        "at": 0,
+        "braceAt": [],
+        "braces": null,
+        "corners": {
+          "from": true,
+          "to": false,
+        },
+        "faceStart": 20,
+        "fh": 258,
+        "fileName": "TekstilAS_T4_1925x2540mm.pdf",
+        "fill": "print",
+        "fw": 196.5,
+        "lm": 6.356,
+        "motif": null,
+        "mount": "vegg",
+        "parts": {
+          "braces": {
+            "length": 0,
+            "qty": 0,
+          },
+          "butt": [
+            [
+              1908,
+              1,
+              2,
+            ],
+          ],
+          "couplings": 4,
+          "cuts": [
+            [
+              1908,
+              2,
+            ],
+            [
+              2540,
+              1,
+            ],
+          ],
+          "loose": [
+            [
+              "617",
+              4,
+            ],
+            [
+              "520",
+              1,
+            ],
+          ],
+        },
+        "ph": 2580,
+        "pos": "T4",
+        "pw": 1965,
+        "railCuts": [
+          1908,
+        ],
+        "railStart": 37,
+        "runAt": 40,
+        "span": 2000,
+        "textileId": "t4",
+        "wall": "Innervegg",
+      },
+      {
+        "H": 2540,
+        "W": 1925,
+        "area": 5.0697,
+        "at": 0,
+        "braceAt": [],
+        "braces": null,
+        "corners": {
+          "from": true,
+          "to": false,
+        },
+        "faceStart": 20,
+        "fh": 258,
+        "fileName": "TekstilAS_T5_1925x2540mm.pdf",
+        "fill": "print",
+        "fw": 196.5,
+        "lm": 6.356,
+        "motif": null,
+        "mount": "vegg",
+        "parts": {
+          "braces": {
+            "length": 0,
+            "qty": 0,
+          },
+          "butt": [
+            [
+              1908,
+              1,
+              2,
+            ],
+          ],
+          "couplings": 4,
+          "cuts": [
+            [
+              1908,
+              2,
+            ],
+            [
+              2540,
+              1,
+            ],
+          ],
+          "loose": [
+            [
+              "617",
+              4,
+            ],
+            [
+              "520",
+              1,
+            ],
+          ],
+        },
+        "ph": 2580,
+        "pos": "T5",
+        "pw": 1965,
+        "railCuts": [
+          1908,
+        ],
+        "railStart": 37,
+        "runAt": 40,
+        "span": 2000,
+        "textileId": "t5",
+        "wall": "Innervegg",
+      },
+    ],
+  },
+  "textile": [
+    {
+      "H": 2540,
+      "W": 1925,
+      "fh": 258,
+      "fileName": "TekstilAS_T1_1925x2540mm.pdf",
+      "fill": "print",
+      "fw": 196.5,
+      "ph": 2580,
+      "pos": "T1",
+      "pw": 1965,
+      "where": "Venstre",
+    },
+    {
+      "H": 2540,
+      "W": 2880,
+      "fh": 258,
+      "fileName": "TekstilAS_T2_2880x2540mm.pdf",
+      "fill": "print",
+      "fw": 292,
+      "ph": 2580,
+      "pos": "T2",
+      "pw": 2920,
+      "where": "Bak",
+    },
+    {
+      "H": 2540,
+      "W": 1905,
+      "fh": 258,
+      "fileName": "TekstilAS_T3_1905x2540mm.pdf",
+      "fill": "print",
+      "fw": 194.5,
+      "ph": 2580,
+      "pos": "T3",
+      "pw": 1945,
+      "where": "Bak",
+    },
+    {
+      "H": 2540,
+      "W": 1925,
+      "fh": 258,
+      "fileName": "TekstilAS_T4_1925x2540mm.pdf",
+      "fill": "print",
+      "fw": 196.5,
+      "ph": 2580,
+      "pos": "T4",
+      "pw": 1965,
+      "where": "Innervegg",
+    },
+    {
+      "H": 2540,
+      "W": 1925,
+      "fh": 258,
+      "fileName": "TekstilAS_T5_1925x2540mm.pdf",
+      "fill": "print",
+      "fw": 196.5,
+      "ph": 2580,
+      "pos": "T5",
+      "pw": 1965,
+      "where": "Innervegg",
+    },
+    {
+      "H": 2540,
+      "W": 1940,
+      "fh": 258,
+      "fileName": "TekstilAS_F1A_1940x2540mm.pdf",
+      "fill": "print",
+      "fw": 198,
+      "ph": 2580,
+      "pos": "F1A",
+      "pw": 1980,
+      "where": "Frittstående F1, side A",
+    },
+    {
+      "H": 2540,
+      "W": 1980,
+      "fh": 258,
+      "fileName": "TekstilAS_F1B_1980x2540mm.pdf",
+      "fill": "print",
+      "fw": 202,
+      "ph": 2580,
+      "pos": "F1B",
+      "pw": 2020,
+      "where": "Frittstående F1, side B",
+    },
+  ],
+}
+`;
+
+exports[`15-tekstilhjorner.json > variant A > quote lines 1`] = `
+[
+  {
+    "cost": 457.36,
+    "id": "vegg",
+    "lines": [
+      {
+        "artnr": "6120-9010",
+        "cost": 410.92,
+        "dg": 0.7314248366013072,
+        "foga": true,
+        "group": "vegg.vegger",
+        "meta": "Innervegg · RAL 9010",
+        "name": "Rammevegg m/plate, komplett hvit",
+        "payer": "utstiller",
+        "placeholder": false,
+        "price": 765,
+        "qty": 2,
+        "strategy": "fast",
+        "sum": 1530,
+        "time": {
+          "demontering": 8.16,
+          "montering": 12.24,
+          "plukk": 2.04,
+          "transport": 2.04,
+          "vask": 3.4,
+        },
+        "transfer": "leie",
+        "unit": "lm",
+        "uses": [
+          {
+            "id": "veggplate",
+            "qty": 2,
+          },
+          {
+            "id": "skinne-92-960",
+            "qty": 2,
+          },
+          {
+            "id": "skinne-91-960",
+            "qty": 2,
+          },
+          {
+            "id": "stolpe-94",
+            "qty": 2,
+          },
+          {
+            "id": "montering-modul",
+            "qty": 2,
+          },
+        ],
+      },
+      {
+        "artnr": "6115",
+        "cost": 46.44,
+        "dg": 0.613,
+        "foga": true,
+        "group": "vegg.vegger",
+        "meta": "Fotplate 500 × 80 × 5 mm · frittstående vegg",
+        "name": "Støtteplate systemvegg",
+        "payer": "utstiller",
+        "placeholder": true,
+        "price": 120,
+        "qty": 1,
+        "strategy": "fast",
+        "sum": 120,
+        "time": {
+          "demontering": 0.68,
+          "montering": 1.02,
+          "plukk": 0.17,
+          "transport": 0.17,
+          "vask": 0.17,
+        },
+        "transfer": "leie",
+        "unit": "stk",
+        "uses": [
+          {
+            "id": "fotplate-750",
+            "qty": 1,
+          },
+          {
+            "id": "montering-stotteplate",
+            "qty": 1,
+          },
+        ],
+      },
+    ],
+    "name": "Vegger og bakrom",
+    "sum": 1650,
+  },
+  {
+    "cost": 14312.37148,
+    "id": "prof",
+    "lines": [
+      {
+        "artnr": "8000+8040",
+        "cost": 6076.71033,
+        "dg": 0.583456010940199,
+        "drawn": [
+          "t1",
+          "t4",
+          "t5",
+        ],
+        "foga": true,
+        "group": "prof.tekstil",
+        "meta": undefined,
+        "name": "Tekstilvegg 1925 × 2540 mm",
+        "payer": "utstiller",
+        "placeholder": false,
+        "price": 4862.8,
+        "qty": 3,
+        "quote": {
+          "key": "tekstil:1925 × 2540 mm",
+          "lead": true,
+          "name": "Tekstilvegg 1925 × 2540 mm",
+        },
+        "strategy": "sum",
+        "sum": 14588.4,
+        "terms": "Leie av ramme, kjøp av tekstil",
+        "time": {
+          "demontering": 12,
+          "montering": 24,
+          "plukk": 9,
+          "transport": 6,
+          "vask": 6,
+        },
+        "transfer": "leie",
+        "unit": "stk",
+        "uses": [
+          {
+            "id": "43TX",
+            "qty": 19.067999999999998,
+          },
+          {
+            "id": "617",
+            "qty": 12,
+          },
+          {
+            "id": "520",
+            "qty": 3,
+          },
+          {
+            "id": "montering-ramme-kobling",
+            "qty": 12,
+          },
+          {
+            "id": "handtering-ramme",
+            "qty": 3,
+          },
+          {
+            "id": "92LTX",
+            "qty": 3.7889999999999997,
+          },
+        ],
+      },
+      {
+        "artnr": "8000+8040",
+        "cost": 2746.75382,
+        "dg": 0.5687104401212179,
+        "drawn": [
+          "t2",
+        ],
+        "foga": true,
+        "group": "prof.tekstil",
+        "meta": undefined,
+        "name": "Tekstilvegg 2880 × 2540 mm",
+        "payer": "utstiller",
+        "placeholder": false,
+        "price": 6368.7,
+        "qty": 1,
+        "quote": {
+          "key": "tekstil:2880 × 2540 mm",
+          "lead": true,
+          "name": "Tekstilvegg 2880 × 2540 mm",
+        },
+        "strategy": "sum",
+        "sum": 6368.7,
+        "terms": "Leie av ramme, kjøp av tekstil",
+        "time": {
+          "demontering": 6,
+          "montering": 12,
+          "plukk": 3.5,
+          "transport": 2.5,
+          "vask": 2.5,
+        },
+        "transfer": "leie",
+        "unit": "stk",
+        "uses": [
+          {
+            "id": "43TX",
+            "qty": 5.692,
+          },
+          {
+            "id": "617",
+            "qty": 4,
+          },
+          {
+            "id": "stag-90-m",
+            "qty": 2.46,
+          },
+          {
+            "id": "stag-90-stk",
+            "qty": 1,
+          },
+          {
+            "id": "montering-ramme-kobling",
+            "qty": 6,
+          },
+          {
+            "id": "handtering-ramme",
+            "qty": 1,
+          },
+          {
+            "id": "92LTX",
+            "qty": 2.526,
+          },
+        ],
+      },
+      {
+        "artnr": "8000+8040",
+        "cost": 1962.26012,
+        "dg": 0.5751028279416223,
+        "drawn": [
+          "t3",
+        ],
+        "foga": true,
+        "group": "prof.tekstil",
+        "meta": undefined,
+        "name": "Tekstilvegg 1905 × 2540 mm",
+        "payer": "utstiller",
+        "placeholder": false,
+        "price": 4618.2,
+        "qty": 1,
+        "quote": {
+          "key": "tekstil:1905 × 2540 mm",
+          "lead": true,
+          "name": "Tekstilvegg 1905 × 2540 mm",
+        },
+        "strategy": "sum",
+        "sum": 4618.2,
+        "terms": "Leie av ramme, kjøp av tekstil",
+        "time": {
+          "demontering": 4,
+          "montering": 8,
+          "plukk": 3,
+          "transport": 2,
+          "vask": 2,
+        },
+        "transfer": "leie",
+        "unit": "stk",
+        "uses": [
+          {
+            "id": "43TX",
+            "qty": 3.742,
+          },
+          {
+            "id": "617",
+            "qty": 4,
+          },
+          {
+            "id": "montering-ramme-kobling",
+            "qty": 4,
+          },
+          {
+            "id": "handtering-ramme",
+            "qty": 1,
+          },
+          {
+            "id": "92LTX",
+            "qty": 2.526,
+          },
+        ],
+      },
+      {
+        "artnr": "8000+8040",
+        "cost": 3526.64721,
+        "dg": 0.5373068472841773,
+        "drawn": [
+          "f1",
+        ],
+        "foga": true,
+        "group": "prof.tekstil",
+        "meta": undefined,
+        "name": "Tekstilvegg 1960 × 2540 mm",
+        "payer": "utstiller",
+        "placeholder": false,
+        "price": 7622,
+        "qty": 1,
+        "quote": {
+          "key": "tekstil:1960 × 2540 mm",
+          "lead": true,
+          "name": "Tekstilvegg 1960 × 2540 mm",
+        },
+        "strategy": "sum",
+        "sum": 7622,
+        "terms": "Leie av ramme, kjøp av tekstil",
+        "time": {
+          "demontering": 4,
+          "montering": 8,
+          "plukk": 3.5,
+          "transport": 2.5,
+          "vask": 2.5,
+        },
+        "transfer": "leie",
+        "unit": "stk",
+        "uses": [
+          {
+            "id": "43TX",
+            "qty": 6.386,
+          },
+          {
+            "id": "617",
+            "qty": 4,
+          },
+          {
+            "id": "fotplate-740",
+            "qty": 1,
+          },
+          {
+            "id": "montering-ramme-kobling",
+            "qty": 4,
+          },
+          {
+            "id": "handtering-ramme",
+            "qty": 1,
+          },
+          {
+            "id": "92LTX",
+            "qty": 1.263,
+          },
+        ],
+      },
+    ],
+    "name": "Profilering",
+    "sum": 33197.3,
   },
 ]
 `;

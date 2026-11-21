@@ -27,7 +27,8 @@ describe('InFrame frame piece', () => {
     expect(p.parts.loose).toEqual([
       ['617', 4],
       ['609', 2],
-      ['520', 2],
+      // Byggeregel X2: 520 by the foot plate rule, no more than 3 m apart
+      ['520', 3],
     ]);
     expect(p.braceAt).toEqual([1418, 2835, 3135, 4553]);
     expect(framePiece(4000, S)).toMatchObject({ railCuts: [3970], braceAt: [1985] });
