@@ -7,6 +7,8 @@ import { joinFreeToFrames } from '../../domain/textile/free';
 import { groupMountDrag, moveCornerGroup, unmountDrag } from '../../domain/textile/mount';
 import { groupOf, magnet } from '../../domain/joints';
 import { createVariant } from '../../domain/variant';
+import { addDefaultRoom, moveRoom } from '../../domain/rooms';
+import { DOOR } from '../../catalog/defaultCatalog';
 import { paintWalls } from '../../domain/edit';
 import { MOUNT_OFFSET, mountedOn, settleCorners, wallTextiles, withOnWall } from '../../domain/textile/mounts';
 import { joinCorner, letGoCorner, wallCorners } from '../../domain/textile/cornerJoin';
@@ -351,5 +353,28 @@ describe('The whole corner follows a drag of any arm (X13, M4)', () => {
   it('a group past the wall’s end has no room and says so', () => {
     const { v } = withArm();
     expect(moveCornerGroup(v, RULES, 'f', 3, 0)).toHaveProperty('error');
+  });
+});
+
+describe('A room moved takes its frames along, and leaves nothing behind (X13, R5)', () => {
+  // Bjørn 22.11.2026: a 1 × 1 bakrom in the stand's corner, a frame on its front side and one on the left stand wall
+  // meeting it at a 92LTX; the room moved, a third textile wall turned up that was never drawn
+  const start = () => {
+    const v = addDefaultRoom(createVariant('A', { width: 4, depth: 3, type: 'corner', cornerSide: 'right' }), DOOR)!;
+    const front = v.walls.find((w) => w.room && Math.abs(w.from[1] - 1) < 1e-9 && Math.abs(w.to[1] - 1) < 1e-9)!;
+    return withOnWall(v, [frame('r', front.id, 0, 1, { side: front.to[0] > front.from[0] ? 1 : -1 }), frame('l', 'side-left', 1, 2)]);
+  };
+
+  it('each textile wall is there once, and the room’s frame goes with it', () => {
+    const v = start();
+    expect(cornerEnds(v).get('r')).toBeDefined();
+    for (const [dx, dy] of [[1, 1], [2, 0], [0, 1]]) {
+      const x = moveRoom(v, v.rooms[0].id, dx, dy);
+      expect(x.textiles.map((t) => t.id).sort()).toEqual(['l', 'r']);
+      expect(wallTextiles(x).map((t) => t.id).sort()).toEqual(['l', 'r']);
+      // The frame on the stand wall keeps its span, its end free where the room was
+      expect(wallTextiles(x).find((t) => t.id === 'l')).toMatchObject({ from: 1, width: 2 });
+      expect(cornerEnds(x).get('l')?.to ?? cornerEnds(x).get('l')?.from).toBeUndefined();
+    }
   });
 });
