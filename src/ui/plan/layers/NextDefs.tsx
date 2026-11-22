@@ -10,17 +10,30 @@ const rect = (b: Box, i: number, fill?: string) => <rect key={i} x={b.x0} y={b.y
 export function NextDefs({ id, areas }: { id: string; areas: Areas }) {
   return (
     <defs>
-      {AREA_LAYERS.filter((k) => areas[k].clip.length).map((k) => (
-        <g key={k}>
-          <clipPath id={`${id}-c-${k}`}>{areas[k].clip.map((b, i) => rect(b, i))}</clipPath>
-          {areas[k].mask.length > 0 && (
-            <mask id={`${id}-m-${k}`} maskUnits="userSpaceOnUse" x={-FAR} y={-FAR} width={2 * FAR} height={2 * FAR}>
-              <rect x={-FAR} y={-FAR} width={2 * FAR} height={2 * FAR} fill="white" />
-              {areas[k].mask.map((b, i) => rect(b, i, 'black'))}
-            </mask>
-          )}
-        </g>
-      ))}
+      {AREA_LAYERS.filter((k) => areas[k].clip.length || areas[k].follow?.length).map((k) => {
+        const follow = areas[k].follow ?? []
+        return (
+          <g key={k}>
+            <clipPath id={`${id}-c-${k}`}>{areas[k].clip.map((b, i) => rect(b, i))}</clipPath>
+            {areas[k].mask.length > 0 && (
+              <mask id={`${id}-m-${k}`} maskUnits="userSpaceOnUse" x={-FAR} y={-FAR} width={2 * FAR} height={2 * FAR}>
+                <rect x={-FAR} y={-FAR} width={2 * FAR} height={2 * FAR} fill="white" />
+                {areas[k].mask.map((b, i) => rect(b, i, 'black'))}
+              </mask>
+            )}
+            {/* What only follows from the edit is drawn at full strength, so the dimmed drawing leaves it out */}
+            {follow.length > 0 && (
+              <>
+                <clipPath id={`${id}-f-${k}`}>{follow.map((b, i) => rect(b, i))}</clipPath>
+                <mask id={`${id}-n-${k}`} maskUnits="userSpaceOnUse" x={-FAR} y={-FAR} width={2 * FAR} height={2 * FAR}>
+                  <rect x={-FAR} y={-FAR} width={2 * FAR} height={2 * FAR} fill="white" />
+                  {follow.map((b, i) => rect(b, i, 'black'))}
+                </mask>
+              </>
+            )}
+          </g>
+        )
+      })}
     </defs>
   )
 }

@@ -15,6 +15,7 @@ import type { BuiltModule } from '../../domain/walls'
 import { RECIPES } from '../../foga/recipes'
 import { place, rules } from '../env'
 import { freeTextiles, wallTextiles } from '../../domain/textile/mounts'
+import { textileFollows, type Follow } from './nextFollow'
 
 /** A box in the plan, metres. */
 export interface Box {
@@ -37,6 +38,8 @@ export interface PlanState {
 export interface LayerArea {
   mask: Box[]
   clip: Box[]
+  /** Where the next variant is drawn at full strength: what only follows from the edit (nextFollow.ts). */
+  follow?: Box[]
 }
 
 export const AREA_LAYERS = ['floor', 'walls', 'textile', 'shelves', 'beams', 'objects', 'rooms'] as const
@@ -84,36 +87,50 @@ function diff<T>(a: readonly T[], b: readonly T[], key: (x: T) => string, look: 
 
 const overlaps = (p: Box, q: Box) => p.x0 < q.x1 && q.x0 < p.x1 && p.y0 < q.y1 && q.y0 < p.y1
 
+/** A free-standing textile run's box in the sketch and in the next variant. */
+interface RunBoxes {
+  id: string
+  boxes: { before?: Box; after?: Box }
+}
+
 /**
- * A free-standing textile run is never cut by the preview: one whose room the changed area reaches is hidden and drawn
- * again whole, and so on through the runs it reaches in turn. Otherwise the other arm of a corner would show half
- * dimmed, half as it is, where a changed run's room (foot plates, label) reaches over it.
+ * A free-standing textile run is never cut by the preview. One whose room a dimmed change reaches is hidden and drawn
+ * again whole, dimmed, and so on through the runs it reaches in turn; otherwise the other arm of a corner would show
+ * half dimmed, half as it is. A run that only follows from the change (nextFollow.ts) is drawn as it will be at full
+ * strength (`follow`), and so are the runs its room reaches, unless they are dimmed already.
  */
-function wholeRuns(area: LayerArea, before: Box[], after: Box[]): LayerArea {
-  if (!area.clip.length) return area
+function wholeRuns(area: LayerArea, runs: RunBoxes[], follows: ReadonlySet<string>): LayerArea {
   const mask = [...area.mask]
   const clip = [...area.clip]
-  const old = new Set<Box>()
-  const now = new Set<Box>()
-  for (let grew = true; grew; ) {
-    grew = false
-    for (const [list, done, into] of [[before, old, [mask, clip]], [after, now, [clip]]] as const) {
-      for (const bx of list) {
-        if (done.has(bx) || !clip.some((c) => overlaps(c, bx))) continue
-        done.add(bx)
-        for (const xs of into) xs.push(bx)
+  const follow: Box[] = []
+  const taken = new Set<string>()
+  const take = (r: RunBoxes, into: Box[]) => {
+    taken.add(r.id)
+    const { before, after } = r.boxes
+    if (before) mask.push(before)
+    into.push(...[before, after].filter((x): x is Box => !!x))
+  }
+  const spread = (into: Box[]) => {
+    for (let grew = true; grew; ) {
+      grew = false
+      for (const r of runs) {
+        if (taken.has(r.id) || ![r.boxes.before, r.boxes.after].some((bx) => bx && into.some((c) => overlaps(c, bx)))) continue
+        take(r, into)
         grew = true
       }
     }
   }
-  return { mask, clip }
+  spread(clip)
+  for (const r of runs) if (follows.has(r.id) && !taken.has(r.id)) take(r, follow)
+  spread(follow)
+  return { mask, clip, follow }
 }
 
 const join = (...xs: LayerArea[]): LayerArea => ({ mask: xs.flatMap((x) => x.mask), clip: xs.flatMap((x) => x.clip) })
 const pt = (p: Point) => `${p[0]},${p[1]}`
 
 /** What differs between the sketch `a` and the next variant `b`, per plan layer. */
-export function changedAreas(a: PlanState, b: PlanState): Areas {
+export function changedAreas(a: PlanState, b: PlanState, follows: readonly Follow[] = textileFollows(a, b)): Areas {
   const modBox = (m: BuiltModule) => segBox(m.a, m.b, WALL_PAD, m.opening ? SWING_PAD : WALL_PAD)
   // A door by where it lies and swings, not by how it is stored: a room made of the walls round it keeps it as it was
   const modsOf = ({ v, mods }: PlanState) =>
@@ -136,15 +153,25 @@ export function changedAreas(a: PlanState, b: PlanState): Areas {
   const foilOf = (s: PlanState) => s.v.foils.map((f) => ({ f, box: faceBox(s.v)(f, ...foilSpan(s.v, rules, f)) }))
   const freeOf = (s: PlanState) => s.res.production.free.map((f) => ({ f, t: freeTextiles(s.v).find((x) => x.id === f.textileId) }))
   const freeBox = (x: { t?: FreeTextile }) => (x.t ? segBox(x.t.from, x.t.to, FREE_PAD) : null)
+  // A run stored as it was but built differently is a consequence, drawn as it will be, not dimmed (nextFollow.ts)
+  const followIds = new Set(follows.map((f) => f.id))
+  const own = (s: PlanState) => freeOf(s).filter((x) => !followIds.has(x.f.textileId))
+  const runs = new Map<string, RunBoxes>()
+  for (const [s, when] of [[a, 'before'], [b, 'after']] as const)
+    for (const t of freeTextiles(s.v)) {
+      const r = runs.get(t.id) ?? { id: t.id, boxes: {} }
+      r.boxes[when] = freeBox({ t }) ?? undefined
+      runs.set(t.id, r)
+    }
   const textile = wholeRuns(
     join(
       diff(textileOf(a), textileOf(b), (x) => x.t.id, (x) => [x.t, x.box], (x) => x.box),
       diff(foilOf(a), foilOf(b), (x) => x.f.id, (x) => [x.f, x.box], (x) => x.box),
-      diff(freeOf(a), freeOf(b), (x) => x.f.textileId, (x) => [x.t, x.f.supports, x.f.length, x.f.pos], freeBox),
+      diff(own(a), own(b), (x) => x.f.textileId, (x) => [x.t, x.f.supports, x.f.length, x.f.pos], freeBox),
       diff(cornerPosts(a.v).map((x) => x.p), cornerPosts(b.v).map((x) => x.p), pt, pt, (p) => pointBox(p, POST_PAD)),
     ),
-    freeTextiles(a.v).flatMap((t) => freeBox({ t }) ?? []),
-    freeTextiles(b.v).flatMap((t) => freeBox({ t }) ?? []),
+    [...runs.values()],
+    followIds,
   )
 
   // Shelves by their board; one more in a stacked felt changes the count drawn there
@@ -218,4 +245,4 @@ function floorDiff(a: Variant, b: Variant): LayerArea {
 }
 
 /** Nothing on the plan changes. */
-export const unchanged = (x: Areas) => AREA_LAYERS.every((k) => !x[k].clip.length)
+export const unchanged = (x: Areas) => AREA_LAYERS.every((k) => !x[k].clip.length && !x[k].follow?.length)

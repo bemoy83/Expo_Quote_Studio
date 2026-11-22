@@ -8,6 +8,7 @@ import { builtModules } from '../../domain/walls'
 import { place } from '../env'
 import type { NextOutcome, NextTarget } from './next'
 import { changedAreas, unchanged, type Areas, type PlanState } from './nextArea'
+import { textileFollows, type Follow } from './nextFollow'
 
 /** What an edit would store (App's onEdit without storing it) and its calc. */
 export interface Preview {
@@ -18,7 +19,7 @@ export interface Preview {
 /** What the pen would store, and the next variant as the plan draws it with where it differs (null: nothing changes). */
 export interface NextState {
   outcome: NextOutcome
-  scene: (PlanState & { areas: Areas }) | null
+  scene: (PlanState & { areas: Areas; follows: Follow[] }) | null
 }
 
 /** The last next state worked out per sketch: moving the pointer within the same target reuses it. */
@@ -39,8 +40,9 @@ function nextStateOf(outcome: NextOutcome, base: PlanState, preview: Preview): N
   const nv = preview.result(outcome.edit)
   if (nv === v) return { outcome, scene: null }
   const scene: PlanState = { v: nv, res: onlyObjects(v, nv) ? res : preview.calc(nv), mods: builtModules(nv), bad: conflicts(nv, place) }
-  const areas = changedAreas(base, scene)
-  return { outcome, scene: unchanged(areas) ? null : { ...scene, areas } }
+  const follows = textileFollows(base, scene)
+  const areas = changedAreas(base, scene, follows)
+  return { outcome, scene: unchanged(areas) ? null : { ...scene, areas, follows } }
 }
 
 /** Only the furniture differs: the calc's frame (beams, posts, foot plates, free-standing textile) is the same. */

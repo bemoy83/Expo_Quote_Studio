@@ -73,16 +73,29 @@ describe('changedAreas', () => {
     expect(a.walls.clip[0].y0).toBeGreaterThan(0.5);
   });
 
-  it('a wall that shortens one arm of a free-standing textile corner redraws the whole corner, not half the other arm', () => {
-    // Inner wall up to where the corner's top run starts: the top run stops at the wall (X11), the right run is unchanged
-    // but lies partly in the top run's room, so it is hidden and drawn again whole, never cut across
+  it('a wall that shortens one arm of a free-standing textile corner draws the whole corner as it will be, not dimmed', () => {
+    // Inner wall up to where the corner's top run starts: the top run stops at the wall (X11) but is stored as it was,
+    // so it only follows from the wall: drawn at full strength (follow), and the other arm with it, never cut across
     const s = createVariant('A', { width: 4, depth: 3, type: 'corner', cornerSide: 'right' });
     const v: Variant = { ...s, textiles: [{ id: 't1', from: [1, 2], to: [2, 2] }, { id: 't2', from: [2, 2], to: [2, 3] }] };
     const next = editResult(v, (x) => paintWalls(x, [1, 2], [1, 3]), undefined);
     const a = changedAreas(state(v), state(next));
-    // The right arm's far end, near the aisle, is both hidden and redrawn
-    expect(a.textile.mask.some((b) => inside(b, 2, 2.95))).toBe(true);
+    expect(a.textile.clip).toEqual([]);
+    // Both arms, the right one to its far end by the aisle, are hidden and drawn again as they will be
+    for (const [x, y] of [[1.5, 2], [2, 2.95]]) {
+      expect(a.textile.mask.some((b) => inside(b, x, y))).toBe(true);
+      expect(a.textile.follow?.some((b) => inside(b, x, y))).toBe(true);
+    }
+  });
+
+  it('a corner arm reached by a dimmed change is dimmed whole', () => {
+    // A textile drawn on from the corner's free end changes the corner itself: the corner is dimmed, all of it
+    const s = createVariant('A', { width: 4, depth: 3, type: 'corner', cornerSide: 'right' });
+    const v: Variant = { ...s, textiles: [{ id: 't1', from: [1, 2], to: [2, 2] }, { id: 't2', from: [2, 2], to: [2, 3] }] };
+    const next: Variant = { ...v, textiles: [{ id: 't1', from: [0.5, 2], to: [2, 2] }, v.textiles[1]] };
+    const a = changedAreas(state(v), state(next));
     expect(a.textile.clip.some((b) => inside(b, 2, 2.95))).toBe(true);
+    expect(a.textile.mask.some((b) => inside(b, 2, 2.95))).toBe(true);
   });
 
   it('a free-standing textile run out of reach of the change is left alone', () => {
