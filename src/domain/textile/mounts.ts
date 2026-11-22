@@ -175,9 +175,11 @@ export const freeTextiles = (v: Pick<Variant, 'textiles' | 'walls'>): FreeTextil
 export const mountedOn = (v: Pick<Variant, 'textiles' | 'walls'>, id: string): MountedOn | undefined => split(v).on.get(id);
 
 /** The variant with `list` as its textile walls on system walls, the free-standing ones kept. A textile whose wall is
- *  gone is left out. */
+ *  gone is left out. Each textile wall is there once: a run in `list` is not kept as free-standing too, though its old
+ *  run in v may stand free of the walls v has now (a room moved: syncRooms). */
 export function withOnWall<V extends Pick<Variant, 'textiles' | 'walls' | 'stand'>>(v: V, list: TextileWall[]): V {
-  const keep = freeTextiles(v);
+  const ids = new Set(list.map((t) => t.id));
+  const keep = freeTextiles(v).filter((t) => !ids.has(t.id));
   const runs = coupleCorners(v, list);
   return { ...v, textiles: keep.length ? [...runs, ...keep] : runs };
 }

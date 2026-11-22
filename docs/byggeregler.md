@@ -475,9 +475,11 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
     midtlinjen en halv stolpe pluss en halv ramme fra veggens linje (rammen står rett mot stolpen, X2; 40 mm med dagens
     mål), og innenfor veggens ender. Alle andre står på fotplater. De to kan ikke blandes: en frittstående kan ikke stå så
     nær en vegg (fotplatene, F2). Avstanden regnes av målene i reglene, aldri som et fast tall.
-  Av og på veggen flyttes bare streken, og tekstilveggen beholder sin id. Skisser fra før filversjon 7, der en
+  Av og på veggen flyttes bare streken, og tekstilveggen beholder sin id. Flyttes eller endres en vegg (også et rom som
+  flyttes), skrives rammene på den på nytt der veggen står nå, og den gamle streken går bort: en ramme blir aldri stående
+  igjen som frittstående der veggen var, og hver tekstilvegg finnes én gang (Bjørn 22.11.2026). Skisser fra før filversjon 7, der en
   tekstilvegg på systemvegg hadde adresse på veggen, åpnes ikke (ingen bakoverkompatibilitet, Bjørn 21.11.2026).
-  *Bjørn 20.11.2026 og 21.11.2026 · kode `src/domain/textile/mount.ts`, `src/domain/textile/mounts.ts`, `src/ui/plan/pointer/freeMove.ts`, `src/ui/plan/pointer/textileOff.ts`, `src/ui/plan/pill/wall.tsx` · test `src/domain/textile/mount.test.ts`, `src/domain/textile/mounts.test.ts`*
+  *Bjørn 20.11.2026 og 21.11.2026 · kode `src/domain/textile/mount.ts`, `src/domain/textile/mounts.ts`, `src/ui/plan/pointer/freeMove.ts`, `src/ui/plan/pointer/textileOff.ts`, `src/ui/plan/pill/wall.tsx` · test `src/domain/textile/mount.test.ts`, `src/domain/textile/mounts.test.ts`, `src/calc/textile/corners.test.ts`*
 
 ## M · Magnet og kobling
 

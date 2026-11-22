@@ -175,13 +175,16 @@ export function syncRooms(v: Variant): Variant {
     taken.add(key);
     openings.push(module === o.module ? o : { ...o, module });
   }
+  // Frames on the walls as they were, written again on the walls as they are now; their old runs go (Byggeregel X13):
+  // a frame left behind where its wall was would stand free there, a textile wall never drawn (Bjørn 22.11.2026)
   const textiles = wallTextiles(v).filter((t) => byId.has(t.wallId));
   const onWall = (f: { wallId: string; module: number }) => {
     const w = byId.get(f.wallId);
     return !!w && f.module < moduleCount(w);
   };
   const foils = v.foils.filter(onWall);
-  return withOnWall({ ...v, walls, openings, foils, ...(v.shelves ? { shelves: v.shelves.filter(onWall) } : {}) }, textiles);
+  const free = v.textiles.filter((t) => !mountedOn(v, t.id));
+  return withOnWall({ ...v, walls, openings, foils, textiles: free, ...(v.shelves ? { shelves: v.shelves.filter(onWall) } : {}) }, textiles);
 }
 
 /**
