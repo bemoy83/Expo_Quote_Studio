@@ -10,7 +10,7 @@ import { faceSegment, sideOf } from '../../domain/faces'
 import { CELL } from '../../domain/grid'
 import { footprintBox, objectFootprint } from '../../domain/objects'
 import { shelfBox, shelvesOf } from '../../domain/shelves/model'
-import type { Point, Variant } from '../../domain/types'
+import type { FreeTextile, Point, Variant } from '../../domain/types'
 import type { BuiltModule } from '../../domain/walls'
 import { RECIPES } from '../../foga/recipes'
 import { place, rules } from '../env'
@@ -82,6 +82,33 @@ function diff<T>(a: readonly T[], b: readonly T[], key: (x: T) => string, look: 
   return { mask, clip: [...mask, ...clip] }
 }
 
+const overlaps = (p: Box, q: Box) => p.x0 < q.x1 && q.x0 < p.x1 && p.y0 < q.y1 && q.y0 < p.y1
+
+/**
+ * A free-standing textile run is never cut by the preview: one whose room the changed area reaches is hidden and drawn
+ * again whole, and so on through the runs it reaches in turn. Otherwise the other arm of a corner would show half
+ * dimmed, half as it is, where a changed run's room (foot plates, label) reaches over it.
+ */
+function wholeRuns(area: LayerArea, before: Box[], after: Box[]): LayerArea {
+  if (!area.clip.length) return area
+  const mask = [...area.mask]
+  const clip = [...area.clip]
+  const old = new Set<Box>()
+  const now = new Set<Box>()
+  for (let grew = true; grew; ) {
+    grew = false
+    for (const [list, done, into] of [[before, old, [mask, clip]], [after, now, [clip]]] as const) {
+      for (const bx of list) {
+        if (done.has(bx) || !clip.some((c) => overlaps(c, bx))) continue
+        done.add(bx)
+        for (const xs of into) xs.push(bx)
+        grew = true
+      }
+    }
+  }
+  return { mask, clip }
+}
+
 const join = (...xs: LayerArea[]): LayerArea => ({ mask: xs.flatMap((x) => x.mask), clip: xs.flatMap((x) => x.clip) })
 const pt = (p: Point) => `${p[0]},${p[1]}`
 
@@ -108,11 +135,16 @@ export function changedAreas(a: PlanState, b: PlanState): Areas {
   const textileOf = (s: PlanState) => wallTextiles(s.v).map((t) => ({ t, box: faceBox(s.v)(t, t.from, t.from + t.width) }))
   const foilOf = (s: PlanState) => s.v.foils.map((f) => ({ f, box: faceBox(s.v)(f, ...foilSpan(s.v, rules, f)) }))
   const freeOf = (s: PlanState) => s.res.production.free.map((f) => ({ f, t: freeTextiles(s.v).find((x) => x.id === f.textileId) }))
-  const textile = join(
-    diff(textileOf(a), textileOf(b), (x) => x.t.id, (x) => [x.t, x.box], (x) => x.box),
-    diff(foilOf(a), foilOf(b), (x) => x.f.id, (x) => [x.f, x.box], (x) => x.box),
-    diff(freeOf(a), freeOf(b), (x) => x.f.textileId, (x) => [x.t, x.f.supports, x.f.length, x.f.pos], (x) => (x.t ? segBox(x.t.from, x.t.to, FREE_PAD) : null)),
-    diff(cornerPosts(a.v).map((x) => x.p), cornerPosts(b.v).map((x) => x.p), pt, pt, (p) => pointBox(p, POST_PAD)),
+  const freeBox = (x: { t?: FreeTextile }) => (x.t ? segBox(x.t.from, x.t.to, FREE_PAD) : null)
+  const textile = wholeRuns(
+    join(
+      diff(textileOf(a), textileOf(b), (x) => x.t.id, (x) => [x.t, x.box], (x) => x.box),
+      diff(foilOf(a), foilOf(b), (x) => x.f.id, (x) => [x.f, x.box], (x) => x.box),
+      diff(freeOf(a), freeOf(b), (x) => x.f.textileId, (x) => [x.t, x.f.supports, x.f.length, x.f.pos], freeBox),
+      diff(cornerPosts(a.v).map((x) => x.p), cornerPosts(b.v).map((x) => x.p), pt, pt, (p) => pointBox(p, POST_PAD)),
+    ),
+    freeTextiles(a.v).flatMap((t) => freeBox({ t }) ?? []),
+    freeTextiles(b.v).flatMap((t) => freeBox({ t }) ?? []),
   )
 
   // Shelves by their board; one more in a stacked felt changes the count drawn there
