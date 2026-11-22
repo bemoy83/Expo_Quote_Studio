@@ -235,7 +235,8 @@ function takeOff(v: Variant, rules: Rules, id: string, ox: number, oy: number): 
  * whole group across onto that wall's face, and each run that then stands along a wall is mounted there; into a corner
  * of system walls both arms are. A mounted run spans what it covers on its wall, its free ends on the nearest module
  * post, an end in a corner on the other run's line, so the 92LTX stays (X7); runs that stand out into the stand keep
- * their length and meet the frame at its end (joinFreeToFrames). Null when no wall catches it, or it is not such a
+ * their length and meet the frame at its end (joinFreeToFrames). Into a niche, an arm still within the magnet of a
+ * face goes onto it and the runs it meets stretch or shorten with it. Null when no wall catches it, or it is not such a
  * group; then it moves as M2 says. The error says why when the walls it would go on have no room for it.
  */
 export function groupMountDrag(v: Variant, rules: Rules, id: string, dx: number, dy: number): { v: Variant; id: string } | { error: string } | null {
@@ -244,25 +245,43 @@ export function groupMountDrag(v: Variant, rules: Rules, id: string, dx: number,
   const runs = freeTextiles(v).filter((t) => g.textiles.includes(t.id));
   const [ox, oy] = [textileStep(rules, dx), textileStep(rules, dy)];
   let moved: FreeTextile[] = runs.map((t) => ({ ...t, from: [t.from[0] + ox, t.from[1] + oy], to: [t.to[0] + ox, t.to[1] + oy] }));
-  // Across onto a wall face, along x and along y each on its own: the run nearest a wall decides
+  // How far across a run goes onto the face of the wall within the magnet: on its line, to the face it came from
+  // (or, given, to the face looking toward `inward`)
+  const across = (t: FreeTextile, inward?: Point): { by: Point; off: number } | null => {
+    const near = wallNear(v, t, MAGNET);
+    if (!near) return null;
+    const [ux, uy] = wallDirection(near.wall);
+    const was = runs.find((r) => r.id === t.id)!;
+    const sideOf = (p: Point) => Math.sign((p[0] - near.wall.from[0]) * -uy + (p[1] - near.wall.from[1]) * ux);
+    const side = (inward && sideOf(inward)) || (Math.abs(near.off) > EPS ? Math.sign(near.off) : 0) || sideOf(was.from) || 1;
+    const d = side * MOUNT_OFFSET - near.off;
+    return { by: [-uy * d, ux * d], off: near.off };
+  };
+  const shift = (p: Point, [bx, by]: Point): Point => [r6(p[0] + bx), r6(p[1] + by)];
+  // Along x and along y each on its own: the run nearest a wall takes the whole group across
   let caught = false;
   for (const h of [true, false]) {
     let best: { by: Point; off: number } | null = null;
     for (const t of moved) {
       if ((Math.abs(t.from[1] - t.to[1]) < EPS) !== h) continue;
-      const near = wallNear(v, t, MAGNET);
-      if (!near || (best && Math.abs(near.off) >= Math.abs(best.off))) continue;
-      // Out along the wall's left normal; on its line, to the face it came from
-      const [ux, uy] = wallDirection(near.wall);
-      const was = runs.find((r) => r.id === t.id)!;
-      const side = (Math.abs(near.off) > EPS ? Math.sign(near.off) : 0) || Math.sign((was.from[0] - near.wall.from[0]) * -uy + (was.from[1] - near.wall.from[1]) * ux) || 1;
-      const d = side * MOUNT_OFFSET - near.off;
-      best = { by: [-uy * d, ux * d], off: near.off };
+      const c = across(t);
+      if (c && (!best || Math.abs(c.off) < Math.abs(best.off))) best = c;
     }
     if (!best) continue;
     caught = true;
-    const [bx, by] = best.by;
-    moved = moved.map((t) => ({ ...t, from: [r6(t.from[0] + bx), r6(t.from[1] + by)], to: [r6(t.to[0] + bx), r6(t.to[1] + by)] }));
+    const by = best.by;
+    moved = moved.map((t) => ({ ...t, from: shift(t.from, by), to: shift(t.to, by) }));
+  }
+  // Into a niche: a run that still has a wall face within the magnet goes onto it alone, and the runs it meets in its
+  // corners stretch or shorten with it. A textile wall is a whole span, not a grid (Bjørn 22.11.2026)
+  for (const tid of g.textiles) {
+    const t = moved.find((x) => x.id === tid)!;
+    const at = (p: Point) => same(p, t.from) || same(p, t.to);
+    // On the face looking into the niche: toward the far end of a run it meets
+    const partner = moved.find((o) => o.id !== tid && (at(o.from) || at(o.to)));
+    const c = partner && across(t, at(partner.from) ? partner.to : partner.from);
+    if (!c || Math.hypot(...c.by) < EPS) continue;
+    moved = moved.map((o) => (o.id === t.id ? { ...o, from: shift(o.from, c.by), to: shift(o.to, c.by) } : { ...o, from: at(o.from) ? shift(o.from, c.by) : o.from, to: at(o.to) ? shift(o.to, c.by) : o.to }));
   }
   if (!caught) return null;
   const placed = { ...v, textiles: [...v.textiles.filter((t) => !g.textiles.includes(t.id)), ...moved] };

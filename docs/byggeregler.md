@@ -463,6 +463,10 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
     hver tekstilvegg som da står langs en vegg monteres der; inn i et hjørne av systemvegger monteres begge armene. En
     montert arm dekker spennet den står over: en fri ende på nærmeste stolpe, en ende i hjørnet på den andre armens
     linje, så 92LTX-en blir stående (X7). En arm som står ut i standen beholder lengden og møter rammen i enden (X11).
+    Inn i en nisje (en U mellom to vegger): har en arm fortsatt en veggflate innenfor magneten, tas den inn på flaten
+    som vender inn i nisjen, og tekstilveggene den møter i hjørnene blir like mye lengre eller kortere. Ryggen får da
+    nisjens bredde og blir en kapplengde (X9). En tekstilvegg er et helt spenn; rutenettet er bare en hjelp til å
+    treffe ender og hjørner når en tegner (Bjørn 22.11.2026).
     Er det ikke plass på veggen (X4), flyttes gruppen som før. Dras en tekstilvegg i et 92LTX-hjørne, montert eller
     ikke, følger hele hjørnet med, alle tekstilveggene den er koblet til gjennom hjørnene, like langt, og hjørnene blir
     stående (Bjørn 21.11.2026: «også når en drar i en arm»). En ramme på vegg holder gruppen på veggen til draget går ut
