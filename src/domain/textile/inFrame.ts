@@ -256,9 +256,14 @@ export function stretchFrame(v: Variant, rules: Rules, id: string, end: 'from' |
   if (!d) return { v };
   const want: Span = e === 'hi' ? [t.from, t.from + t.width + d] : [t.from - d, t.from + t.width];
   if (want[1] - want[0] < rules.textile.minWidth - EPS) return { error: `Tekstilvegg på systemvegg må være minst ${String(rules.textile.minWidth).replace('.', ',')} m` };
-  const s = sideOf(v, t);
-  const fits = freeSpans(v, rules, t.wallId, s, textilesOn(v, t.wallId, s, id)).some(([a, b]) => want[0] >= a - EPS && want[1] <= b + EPS);
-  if (!fits) return { error: NO_FRAME_STRETCH };
+  if (!fitsFace(v, rules, { ...t, from: want[0], width: want[1] - want[0] })) return { error: NO_FRAME_STRETCH };
   const { fit: _f, ...rest } = t;
   return { v: putOnWall(v, { ...rest, from: r3(want[0]), width: r3(want[1] - want[0]) }) };
+}
+
+/** Byggeregel X4: whether frame `t` stands in a free span of its face, clear of openings, walls meeting the face and
+ *  the other frames there (`others`, by default those standing in `v`), at least the minimum width. */
+export function fitsFace(v: Variant, rules: Rules, t: TextileWall, others: TextileWall[] = textilesOn(v, t.wallId, sideOf(v, t), t.id)): boolean {
+  if (t.width < rules.textile.minWidth - EPS) return false;
+  return freeSpans(v, rules, t.wallId, sideOf(v, t), others).some(([a, b]) => t.from >= a - EPS && t.from + t.width <= b + EPS);
 }

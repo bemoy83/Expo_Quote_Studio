@@ -7,12 +7,13 @@
 // toward the wall is kept and comes back when it is taken off again. Pure.
 import type { Rules } from '../../rules/rules';
 import { faceAt, faceNormal, sideOf, type FaceSide } from '../faces';
-import { pointAlong, wallDirection, wallLength } from '../grid';
+import { crossingOn, moduleCount, moduleStart, pointAlong, wallDirection, wallLength } from '../grid';
 import { groupOf, groupSize, MAGNET } from '../joints';
 import type { FreeTextile, Point, TextileFace, TextileWall, Variant, Wall } from '../types';
-import { addFreeTextile, removeFreeTextile, runNormal, textileStep, wallClearance, type FaceKey } from './free';
-import { addTextileSpan, fullTextileHeight } from './inFrame';
-import { freeTextiles, wallTextiles, withOnWall } from './mounts';
+import { addFreeTextile, blocked, removeFreeTextile, runNormal, textileStep, wallClearance, type FaceKey } from './free';
+import { addTextileSpan, fitsFace, fullTextileHeight } from './inFrame';
+import { MOUNT_OFFSET, freeTextiles, mountedOn, onLine, wallTextiles, withOnWall } from './mounts';
+import { cornerEnds, same } from './corners';
 
 const EPS = 1e-6;
 
@@ -100,7 +101,80 @@ export function unmountDrag(v: Variant, rules: Rules, id: string, dx: number, dy
   const n = faceNormal(w, sideOf(v, t));
   const [ox, oy] = [textileStep(rules, dx), textileStep(rules, dy)];
   if (ox * n[0] + oy * n[1] <= MAGNET + EPS) return null;
-  return takeOff(v, rules, id, ox, oy);
+  return moveCornerGroup(v, rules, id, ox, oy) ?? takeOff(v, rules, id, ox, oy);
+}
+
+/** The textile walls joined to `id` through 92LTX corners, mounted or not, `id` first (X7). */
+function cornerGroup(v: Variant, id: string): string[] {
+  const corners = cornerEnds(v);
+  const out = [id];
+  for (let i = 0; i < out.length; i++) {
+    const t = v.textiles.find((x) => x.id === out[i])!;
+    const ends = [t.from, t.to].filter((_, k) => corners.get(t.id)?.[k ? 'to' : 'from']);
+    for (const o of v.textiles) if (!out.includes(o.id) && ends.some((p) => same(o.from, p) || same(o.to, p))) out.push(o.id);
+  }
+  return out;
+}
+
+/**
+ * Byggeregler X13, M4: a textile wall in a 92LTX corner dragged (ox, oy) takes the textile walls it is joined to through
+ * the corners with it, mounted or not (Bjørn 21.11.2026: «hele hjørnet følger med draget så lenge det er sammenkoblet
+ * som et hjørne, også når en drar i en arm»), the corners kept. A frame on a wall holds the group on it until the drag
+ * goes out past the magnet on its own face: within it the group only moves along that wall. A frame that comes off
+ * spans what it did on the wall, its free ends to the posts its span ended at; free-standing ones are 2540 from the
+ * floor for now (X5). Each stands where it lands, free on foot plates or still along a wall. Null when the group has no
+ * frame on a wall (then it moves as M2 says) or the drag does not move it; why not when it has no room there.
+ */
+export function moveCornerGroup(v: Variant, rules: Rules, id: string, ox: number, oy: number): Unmounted | { error: string } | null {
+  const ids = cornerGroup(v, id);
+  const mounted = ids.filter((x) => mountedOn(v, x));
+  if (ids.length < 2 || !mounted.length) return null;
+  // Held across by each frame the drag does not take out past the magnet
+  let [mx, my] = [ox, oy];
+  const off = new Set<string>();
+  for (const tid of mounted) {
+    const m = mountedOn(v, tid)!;
+    const n = faceNormal(m.wall, m.side);
+    if (ox * n[0] + oy * n[1] > MAGNET + EPS) off.add(tid);
+    else if (Math.abs(n[0]) > 0.5) mx = 0;
+    else my = 0;
+  }
+  if (Math.abs(mx) < EPS && Math.abs(my) < EPS) return null;
+  const corners = cornerEnds(v);
+  const views = new Map(wallTextiles(v).map((t) => [t.id, t]));
+  const r3 = (x: number) => Math.round(x * 1000) / 1000;
+  let heightKept = true;
+  const moved = ids.map((tid): FreeTextile => {
+    const t = v.textiles.find((x) => x.id === tid)!;
+    const m = mountedOn(v, tid);
+    const view = views.get(tid);
+    let { from, to } = t;
+    // Moved by hand: no longer «Fyll veggen»
+    let rest: FreeTextile = { ...t, fit: undefined };
+    if (m && view && off.has(tid)) {
+      // A free end out to where its span ended, on the frame's centre line
+      const [ux, uy] = wallDirection(m.wall);
+      const along = (p: Point) => (p[0] - m.wall.from[0]) * ux + (p[1] - m.wall.from[1]) * uy;
+      const out = (p: Point) => (along(p) < (along(t.from) + along(t.to)) / 2 ? view.from : view.from + view.width);
+      if (!corners.get(tid)?.from) from = onLine(m.wall, m.side, out(t.from));
+      if (!corners.get(tid)?.to) to = onLine(m.wall, m.side, out(t.to));
+    }
+    if (!m || off.has(tid)) {
+      heightKept &&= onFeetFits(t, rules);
+      const { fit: _f, height: _h, bottom: _b, ...free } = t;
+      rest = free;
+    }
+    const shift = (p: Point): Point => [r3(p[0] + mx), r3(p[1] + my)];
+    return { ...rest, from: shift(from), to: shift(to) };
+  });
+  const next: Variant = { ...v, textiles: [...v.textiles.filter((t) => !ids.includes(t.id)), ...moved] };
+  // Each one that stands free must have room (F1, F2), and each frame still on a wall room on it (X4)
+  for (const t of freeTextiles(next).filter((x) => ids.includes(x.id))) {
+    const why = blocked(next, rules, t, freeTextiles(next).filter((x) => x.id !== t.id && !ids.includes(x.id)));
+    if (why) return { error: why };
+  }
+  for (const view of wallTextiles(next).filter((x) => ids.includes(x.id))) if (!fitsFace(next, rules, view)) return { error: 'Ikke plass til tekstilveggen langs veggen her' };
+  return { v: next, id, heightKept };
 }
 
 /**
@@ -119,6 +193,9 @@ export function loosenMounted(v: Variant, rules: Rules, id: string): Unmounted |
 /** Said when a textile wall taken off its wall had a height or place up the wall that foot plates cannot have yet (X5, X13). */
 export const onFeetHeight = (rules: Rules) =>
   `Tekstilveggen står nå på fotplater i full høyde, ${Math.round(fullTextileHeight(rules) * 1000)}: andre høyder på fotplater kommer senere`;
+
+/** Whether a textile wall keeps its height on foot plates: on the floor, full height (X5). */
+const onFeetFits = (t: { height?: number; bottom?: number }, rules: Rules) => !t.bottom && (t.height === undefined || Math.abs(t.height - fullTextileHeight(rules)) < EPS);
 
 export interface Unmounted {
   v: Variant;
@@ -147,7 +224,74 @@ function takeOff(v: Variant, rules: Rules, id: string, ox: number, oy: number): 
   delete placed.b;
   if (hasFace(out)) placed[key] = out;
   if (hasFace(t.back)) placed[other(key)] = t.back;
-  const heightKept = !t.bottom && (t.height === undefined || Math.abs(t.height - fullTextileHeight(rules)) < EPS);
+  const heightKept = onFeetFits(t, rules);
   const textiles = fresh ? v.textiles.map((x) => (x.id === id ? placed : x)) : r.v.textiles.map((x) => (x.id === r.id ? placed : x));
   return { v: { ...r.v, textiles }, id: placed.id, heightKept };
 }
+
+/**
+ * Byggeregler X13, M4: a group of free-standing textile walls joined at 92LTX corners (no inner walls in it), dragged by
+ * (dx, dy) on the textile grid so that a run lies parallel to a system wall within the magnet: the magnet takes the
+ * whole group across onto that wall's face, and each run that then stands along a wall is mounted there; into a corner
+ * of system walls both arms are. A mounted run spans what it covers on its wall, its free ends on the nearest module
+ * post, an end in a corner on the other run's line, so the 92LTX stays (X7); runs that stand out into the stand keep
+ * their length and meet the frame at its end (joinFreeToFrames). Null when no wall catches it, or it is not such a
+ * group; then it moves as M2 says. The error says why when the walls it would go on have no room for it.
+ */
+export function groupMountDrag(v: Variant, rules: Rules, id: string, dx: number, dy: number): { v: Variant; id: string } | { error: string } | null {
+  const g = groupOf(v, { kind: 'textile', id });
+  if (g.walls.length || g.textiles.length < 2) return null;
+  const runs = freeTextiles(v).filter((t) => g.textiles.includes(t.id));
+  const [ox, oy] = [textileStep(rules, dx), textileStep(rules, dy)];
+  let moved: FreeTextile[] = runs.map((t) => ({ ...t, from: [t.from[0] + ox, t.from[1] + oy], to: [t.to[0] + ox, t.to[1] + oy] }));
+  // Across onto a wall face, along x and along y each on its own: the run nearest a wall decides
+  let caught = false;
+  for (const h of [true, false]) {
+    let best: { by: Point; off: number } | null = null;
+    for (const t of moved) {
+      if ((Math.abs(t.from[1] - t.to[1]) < EPS) !== h) continue;
+      const near = wallNear(v, t, MAGNET);
+      if (!near || (best && Math.abs(near.off) >= Math.abs(best.off))) continue;
+      // Out along the wall's left normal; on its line, to the face it came from
+      const [ux, uy] = wallDirection(near.wall);
+      const was = runs.find((r) => r.id === t.id)!;
+      const side = (Math.abs(near.off) > EPS ? Math.sign(near.off) : 0) || Math.sign((was.from[0] - near.wall.from[0]) * -uy + (was.from[1] - near.wall.from[1]) * ux) || 1;
+      const d = side * MOUNT_OFFSET - near.off;
+      best = { by: [-uy * d, ux * d], off: near.off };
+    }
+    if (!best) continue;
+    caught = true;
+    const [bx, by] = best.by;
+    moved = moved.map((t) => ({ ...t, from: [r6(t.from[0] + bx), r6(t.from[1] + by)], to: [r6(t.to[0] + bx), r6(t.to[1] + by)] }));
+  }
+  if (!caught) return null;
+  const placed = { ...v, textiles: [...v.textiles.filter((t) => !g.textiles.includes(t.id)), ...moved] };
+  const on = moved.filter((t) => mountedOn(placed, t.id));
+  if (!on.length) return null;
+  // Each mounted run over what it covers: an end in a corner on the other run's line, a free end on the nearest post
+  const views = wallTextiles(placed).map((view) => {
+    const t = on.find((x) => x.id === view.id);
+    if (!t) return view;
+    const w = v.walls.find((x) => x.id === view.wallId)!;
+    const [ux, uy] = wallDirection(w);
+    const along = (p: Point) => (p[0] - w.from[0]) * ux + (p[1] - w.from[1]) * uy;
+    const posts = [...Array.from({ length: moduleCount(w) }, (_, i) => moduleStart(w, i)), wallLength(w)];
+    const end = (p: Point) => {
+      const partner = moved.find((o) => o.id !== t.id && (same(o.from, p) || same(o.to, p)));
+      if (!partner) return posts.reduce((a, b) => (Math.abs(b - along(p)) < Math.abs(a - along(p)) ? b : a));
+      // The other run's line along this wall: a wall's own line when that run goes on a wall too
+      const pm = mountedOn(placed, partner.id);
+      return pm ? crossingOn(w, pm.wall) : along(p);
+    };
+    const [a, b] = [end(t.from), end(t.to)];
+    const { fit: _f, ...rest } = view;
+    return { ...rest, from: Math.min(a, b), width: r6(Math.abs(b - a)) };
+  });
+  // Room on the walls for them (X4)
+  for (const view of views.filter((x) => on.some((t) => t.id === x.id))) {
+    if (!fitsFace(placed, rules, view, views.filter((x) => x.id !== view.id && x.wallId === view.wallId && sideOf(placed, x) === sideOf(placed, view)))) return { error: 'Ikke plass til tekstilveggene på veggen her' };
+  }
+  return { v: withOnWall(placed, views), id };
+}
+
+const r6 = (x: number) => Math.round(x * 1e6) / 1e6 + 0;
