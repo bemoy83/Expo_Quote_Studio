@@ -19,6 +19,13 @@
 >   Ting sammenlignes etter det som tegnes, ikke slik de er lagret: en dør etter modul, hengsel og slagside
 >   (`openingPose`). Når vegger blir rom, lagres døren på romsiden med ny vegg-id og eksplisitt slag, men den står likt,
 >   så den og standveggene rundt tegnes ikke svakt på nytt (Bjørn 21.11.2026: standveggene så viskede ut).
+> - **Følger tegnes som de blir, ikke dempet** (Bjørn 22.11.2026). En frittstående tekstilvegg som er lagret som før,
+>   men bygges annerledes på grunn av det pennen legger til (en ramme som stopper ved en ny innervegg, X11, og får
+>   annen fotplate), er en følge (`plan/nextFollow.ts`). Den tegnes slik den blir med full styrke (`follow` i
+>   `nextArea.ts`), en ring står der den endres (rammeenden, fotplater som kommer, går eller byttes), og hintlinjen sier
+>   hva som skjer: «Tekstilvegg F1 kortes 20 mm · fotplater 2 → 1 · fotplate 740 → 730». Bare det pennen selv lagrer,
+>   dempes. En frittstående ramme klippes aldri: når et endret område når inn over den, tas hele rammen med, dempet
+>   eller som følge, og videre gjennom rammene den igjen når (hele hjørnet, #311).
 > - **Motiv:** selve motivet vises aldri i planen. Det som forhåndsvises er det som lander i planen: dekalen på et
 >   veggfelt (også på frittstående systemvegg). Trykk på tekstil er en del av tekstilveggen og tegnes ikke, så der
 >   vises ingenting (Bjørn 6.11.2026).

@@ -172,14 +172,17 @@ export function PlanView(p: Props) {
   const twin = (layer: AreaLayer, draw: (s: PlanState) => ReactNode) => {
     const a = ghost?.areas[layer]
     const on = !!a && a.clip.length > 0
+    const follow = !!a?.follow?.length
     return (
       <>
-        <g mask={on && a.mask.length ? `url(#${ids}-m-${layer})` : undefined}>{draw(base)}</g>
+        <g mask={(on || follow) && a!.mask.length ? `url(#${ids}-m-${layer})` : undefined}>{draw(base)}</g>
         {on && (
-          <g clipPath={`url(#${ids}-c-${layer})`} opacity={next!.outcome.strength}>
+          <g clipPath={`url(#${ids}-c-${layer})`} mask={follow ? `url(#${ids}-n-${layer})` : undefined} opacity={next!.outcome.strength}>
             {draw(ghost!)}
           </g>
         )}
+        {/* What only follows from the edit, as it will be (nextFollow.ts) */}
+        {follow && <g clipPath={`url(#${ids}-f-${layer})`}>{draw(ghost!)}</g>}
       </>
     )
   }
@@ -333,7 +336,7 @@ export function PlanView(p: Props) {
       {!p.mini && tool === 'select' && <PickLayer v={v} mods={mods} picked={pointer.picked} selection={selection} />}
 
       {/* Interaction preview: measure pill, invalid hatch and hint of the pen in hand, Tøm, room handles, the chosen lanes */}
-      <PreviewLayer v={v} tool={tool} brush={brush} selection={selection} grips={hits.grips()} floorSize={p.floorSize} pointer={pointer} next={next?.outcome ?? null} mini={p.mini} onHint={p.onHint} />
+      <PreviewLayer v={v} tool={tool} brush={brush} selection={selection} grips={hits.grips()} floorSize={p.floorSize} pointer={pointer} next={next?.outcome ?? null} follows={ghost?.follows} mini={p.mini} onHint={p.onHint} />
       </PlanScaleContext.Provider>
     </svg>
     {pillPlace && (

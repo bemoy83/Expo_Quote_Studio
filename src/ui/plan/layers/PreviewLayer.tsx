@@ -23,7 +23,8 @@ import { Offcut } from './FloorLayer'
 import { tileArea, tileAreaMeasures } from './measures'
 import { Grips } from './Grips'
 import { PodiumLinks } from './PodiumLinks'
-import { AimRect, EraseStroke, InvalidSeg, InvalidShape, MeasurePill } from './Previews'
+import { AimRect, EraseStroke, InvalidSeg, InvalidShape, MeasurePill, Ring } from './Previews'
+import { followHint, type Follow } from '../nextFollow'
 
 interface Props {
   v: Variant
@@ -36,6 +37,8 @@ interface Props {
   grips: PlanGrip[]
   /** What the pen would store at the pointer (next.ts). */
   next: NextOutcome | null
+  /** What the edit changes as a consequence (nextFollow.ts): ringed where it changes, told in the hint line. */
+  follows?: readonly Follow[]
   mini?: boolean
   onHint?: (text: string | null) => void
 }
@@ -57,7 +60,8 @@ export function PreviewLayer(p: Props) {
   const selLane = tool === 'select' && !mini && selection.lane ? laneAt(v, selection.lane.i, selection.lane.j) : undefined
   const selLanes = tool !== 'select' || mini ? [] : selection.fill ? fillTilesOf(v, selection.fill) : selLane ? [selLane] : []
 
-  const hint = mini ? null : (next?.hint ?? null)
+  const follows = mini ? [] : (p.follows ?? [])
+  const hint = mini ? null : followHint(next?.hint ?? null, follows)
   const onHint = p.onHint
   useEffect(() => onHint?.(hint), [onHint, hint])
   useEffect(() => () => onHint?.(null), [onHint])
@@ -77,6 +81,7 @@ export function PreviewLayer(p: Props) {
       {bad && 'rect' in bad && <InvalidShape kind="rect" x={bad.rect.x0} y={bad.rect.y0} width={bad.rect.x1 - bad.rect.x0} height={bad.rect.y1 - bad.rect.y0} />}
       {bad && 'circle' in bad && <InvalidShape kind="circle" {...bad.circle} />}
       {!mini && next?.erased?.map((b, i) => <InvalidShape key={`gone${i}`} kind="rect" x={b.x0} y={b.y0} width={b.x1 - b.x0} height={b.y1 - b.y0} />)}
+      {follows.flatMap((f) => f.marks.map((at, i) => <Ring key={`${f.id}.${i}`} at={at} />))}
       {gripsShown && <Grips grips={p.grips.filter((g) => gripWith(g.on, tool, brush))} hot={next?.hotGrip} />}
       {gripsShown && counter && <PodiumLinks v={v} o={counter} hot={next?.hotGrip} />}
       {/* Disker og podier with Shift: the edge a press takes hold of, thick (PR 2) */}
