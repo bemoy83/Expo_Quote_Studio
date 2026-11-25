@@ -286,6 +286,27 @@ describe('A joined free-standing corner dragged onto system walls (X13, M4)', ()
     expect(posts(x)[0].qty).toBe(1);
   });
 
+  it('a U into a niche: the magnet takes both arms onto their walls and the back gets the niche’s width (Bjørn 22.11.2026)', () => {
+    const niche = paintWalls(createVariant('A', CORNER), [2, 0], [2, 2]);
+    // 1.75 wide, the niche 2: the right arm is caught by the inner wall on its own, the back stretches
+    const v = { ...niche, textiles: [free('a', [0.5, 0.5], [2.25, 0.5]), free('b', [0.5, 0.5], [0.5, 1.5]), free('c', [2.25, 0.5], [2.25, 1.5])] };
+    const r = groupMountDrag(v, RULES, 'a', -0.5, -0.5);
+    if (!r || 'error' in r) throw new Error(r ? r.error : 'not caught');
+    const inner = niche.walls.find((w) => w.from[0] === 2)!.id;
+    expect(wallTextiles(r.v).map((t) => [t.id, t.wallId, t.from, t.width])).toEqual([
+      ['a', 'side-back', 0, 2],
+      ['b', 'side-left', 0, 1],
+      ['c', inner, 0, 1],
+    ]);
+    expect(wallCorners(r.v).filter((c) => c.joined)).toHaveLength(2);
+    expect(posts(r.v)[0].qty).toBe(2);
+    // 2.25 wide, past the inner wall: the right arm goes onto the face inside the niche, the back shortens
+    const wide = { ...niche, textiles: [free('a', [0.5, 0.5], [2.75, 0.5]), free('b', [0.5, 0.5], [0.5, 1.5]), free('c', [2.75, 0.5], [2.75, 1.5])] };
+    const w = groupMountDrag(wide, RULES, 'a', -0.5, -0.5);
+    if (!w || 'error' in w) throw new Error(w ? w.error : 'not caught');
+    expect(wallTextiles(w.v).map((t) => [t.id, t.wallId, t.from, t.width])).toEqual(wallTextiles(r.v).map((t) => [t.id, t.wallId, t.from, t.width]));
+  });
+
   it('out of the magnet it is not caught, and a single run is mountDrag’s', () => {
     const v = { ...createVariant('A', CORNER), textiles: [free('a', [2, 1], [4, 1]), free('b', [2, 1], [2, 3])] };
     expect(groupMountDrag(v, RULES, 'a', 0, -0.25)).toBeNull();
