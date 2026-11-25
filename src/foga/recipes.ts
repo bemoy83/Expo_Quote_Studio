@@ -134,7 +134,7 @@ export interface ShelfRecipe {
    *  `bracket` (91) in the rail, `single` mm out from the corner post's face to the rail's centre, under a `corner`
    *  board, `endPlay` between its end and the rail. A corner board also rests on a short 91 in a second rail at its back
    *  edge, next to the corner post (H13). Two shelves meeting: a twin (91FF) in the rail at the corner board's front
-   *  edge (`play` between), the corner board on the wall drawn first, `twoThirds` on the other, `twoThirdsPlay` from the
+   *  edge (`play` between), the corner board on one wall (H11), `twoThirds` on the other, `twoThirdsPlay` from the
    *  rail. `narrow` where the other wall's rail passes behind
    *  the board. `behind`: the board's back lies this far behind the post's face (H1, into its inner corner). The
    *  twin's flange top is `flange` above the bottom of its `body`. mm. */

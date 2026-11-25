@@ -173,8 +173,9 @@ const feltKey = (f: Pick<CornerFelt, 'wallId' | 'module' | 's'>) => `${f.wallId}
 
 /**
  * Every shelf in a corner with its board, and the rails the corners take (H9–H12). In each corner: two shelves at the
- * same height on its two felts meet; the wall drawn first gets the corner board, the other the 2/3 board and the
- * rail with the twins (H11). Every other shelf there is alone: a corner board on a short 91 in a rail on the other
+ * same height on its two felts meet; one wall gets the corner board, the other the 2/3 board and the rail with the
+ * twins (H11): the wall with shelves alone in the corner when only one has them, so all the rails hang on the
+ * other wall and are shared (Bjørn 25.11.2026: fewest rails to pick), else the wall drawn first. Every other shelf there is alone: a corner board on a short 91 in a rail on the other
  * wall (H10). Every corner board, alone or meeting, also rests at its back edge on a short 91 in a back rail on the
  * other wall (H13, Bjørn 25.11.2026: a shelf is always held at the back). Shelves of one kind on one felt share a rail
  * (H12, Bjørn 10.11.2026: a lone shelf on a twin swings out); the back rail carries every corner board on its felt.
@@ -200,12 +201,16 @@ export function cornerLayout(v: Variant, rules: Rules): CornerLayout {
   };
   // The corner board starts by the face of the rail on the other wall, which stands out from that wall's rails
   const cornerFrom = rules.wall.post / 2 - mm(C.behind) + RAIL_T + END_PLAY;
+  const alone = (xs: Shelf[], ys: Shelf[]) => xs.some((f) => !ys.some((o) => Math.abs(o.y - f.y) < EPS));
   for (const c of corners.values()) {
+    const own = onFelt(c.felt);
     const across = onFelt(c.other);
-    for (const f of onFelt(c.felt)) {
+    // Which wall gets the corner boards where shelves meet (H11): the one with shelves alone, else the one drawn first
+    const [a, b] = [alone(own, across), alone(across, own)];
+    const cornerBoards = a !== b ? a : order(c.felt.wallId) < order(c.other.wallId);
+    for (const f of own) {
       const m = across.find((o) => Math.abs(o.y - f.y) < EPS);
-      const last = m && order(c.felt.wallId) > order(c.other.wallId);
-      if (m && last) {
+      if (m && !cornerBoards) {
         const from = railAlong(rules, 'meet') + RAIL_W / 2 + TWO_THIRDS_PLAY;
         shelves.set(f.id, { corner: c, meets: m.id, board: 'twoThirds', from, to: from + mm(C.boards.twoThirds.w), depth: rules.shelf.board.depth });
         rail(c, c.felt, 'meet', f);

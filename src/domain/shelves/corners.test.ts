@@ -115,7 +115,7 @@ describe('shelves meeting in a corner (Byggeregel H11)', () => {
   const v = corner([1.3], [1.3]);
   const { shelves, rails } = cornerLayout(v, RULES);
 
-  it('the wall drawn first gets the corner board, the other the 2/3 board and the rail', () => {
+  it('with no shelves alone, the wall drawn first gets the corner board, the other the 2/3 board and the rail', () => {
     expect(shelves.get(shelfAt(v, 'side-back', 1.3).id)).toMatchObject({ board: 'corner', meets: shelfAt(v, 'side-left', 1.3).id });
     expect(shelves.get(shelfAt(v, 'side-left', 1.3).id)).toMatchObject({ board: 'twoThirds', from: 0.333, to: 0.988 });
     expect(rails.find((r) => r.kind === 'meet')).toEqual(expect.objectContaining({ felt: expect.objectContaining({ wallId: 'side-left' }), along: 0.321 }));
@@ -123,6 +123,19 @@ describe('shelves meeting in a corner (Byggeregel H11)', () => {
 
   it('one twin in the rail, ends in both far posts, one short 91 at the corner board’s back (H13)', () => {
     expect(shelfBrackets(v, RULES)).toEqual({ boards: 2, kinds: { corner: 1, twoThirds: 1 }, end: 2, twin: 1, short: 1, rails: { 1290: 2 } });
+  });
+
+  it('with shelves alone on only one wall, that wall gets the corner boards so all rails hang on the other and are shared (Bjørn 25.11.2026)', () => {
+    // The left wall (drawn after the back) has a shelf alone at 500: it gets the corner board at 1300
+    const v = corner([1.3], [1.3, 0.5]);
+    const { shelves, rails } = cornerLayout(v, RULES);
+    expect(shelves.get(shelfAt(v, 'side-left', 1.3).id)).toMatchObject({ board: 'corner' });
+    expect(shelves.get(shelfAt(v, 'side-back', 1.3).id)).toMatchObject({ board: 'twoThirds' });
+    expect(rails.map((r) => [r.felt.wallId, r.kind]).sort()).toEqual([['side-back', 'back'], ['side-back', 'meet'], ['side-back', 'single']]);
+    // Alone on both walls: the wall drawn first keeps them, as before
+    const both = corner([1.3, 0.5], [1.3, 2.1]);
+    expect(cornerLayout(both, RULES).shelves.get(shelfAt(both, 'side-back', 1.3).id)).toMatchObject({ board: 'corner' });
+    expect(cornerLayout(both, RULES).rails).toHaveLength(5);
   });
 
   it('moved apart, they are two shelves alone again', () => {

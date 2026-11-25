@@ -645,11 +645,13 @@ sammen der byggesystemet kan feste dem (M1), og ellers bare står plassert ved h
   klaring fra plateenden til skinnen. Skinnen skal stå minst 50 mm innenfor platens forkant, så hyllen ikke skyves av. I
   bakkant står platen på en skinne til (H13). I den andre enden står en vanlig knekt (H2).
   *Bjørn 10.11.2026 · `RECIPES.shelf.corner` (`short`, `single`, `boards.corner`) · kode `src/domain/shelves/corners.ts`, `src/domain/shelves/brackets.ts`, `src/foga/engine.ts`, `src/calc/lines/shelves.ts` · test `src/domain/shelves/corners.test.ts`*
-- **H11 Hyller som møtes i hjørnet.** Veggen som er tegnet først får hjørne hylleplate 960 × 300, veggen som er tegnet
-  sist 2/3 hylleplate 655 × 300 og 01-skinnen. Skinnen står rett foran hjørneplatens forkant (1 mm klaring), med en 91FF
+- **H11 Hyller som møtes i hjørnet.** Den ene veggen får hjørne hylleplate 960 × 300, den andre 2/3 hylleplate
+  655 × 300 og 01-skinnen. Hjørneplatene går til veggen som har hyller alene i hjørnefeltet, når bare den ene har det:
+  da henger alle skinnene i hjørnet (H10, H12, H13) på den andre veggen og deles, så det plukkes færrest mulig. Har
+  begge eller ingen hyller alene, får veggen som er tegnet først hjørneplatene. Skinnen står rett foran hjørneplatens forkant (1 mm klaring), med en 91FF
   290 mm: én flens bærer hjørneplatens forkant, den andre enden av 2/3-platen (2 mm klaring). Hjørneplaten står også i
   bakkant på en skinne (H13); 2/3-platen trenger ingen, 91FF bærer hele enden. I de ytre stolpene står vanlige knekter (H2).
-  *Bjørn 10.11.2026 · `RECIPES.shelf.corner` (`play`, `boards.twoThirds`) · kode `src/domain/shelves/corners.ts`, `src/domain/shelves/brackets.ts`, `src/calc/lines/shelves.ts` · test `src/domain/shelves/corners.test.ts`*
+  *Bjørn 10.11.2026, endret 25.11.2026 · `RECIPES.shelf.corner` (`play`, `boards.twoThirds`) · kode `src/domain/shelves/corners.ts`, `src/domain/shelves/brackets.ts`, `src/calc/lines/shelves.ts` · test `src/domain/shelves/corners.test.ts`*
 - **H12 01-skinne i hjørnet.** 01 (873 001 22) henger fra toppskinnen 92 med en 01-kanal-krok og plukkes som enhet med
   kroken. Skinnen finnes i én lengde per hurtigvalg i H4 og laveste høyde, fra veggens topp ned under knekten til en
   hylle der (490, 890, 1290, 1690, 2090 og 2490 mm); den korteste som rekker ned under den laveste knekten den bærer
