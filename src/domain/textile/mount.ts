@@ -252,8 +252,8 @@ export function groupMountDrag(v: Variant, rules: Rules, id: string, dx: number,
     if (!near) return null;
     const [ux, uy] = wallDirection(near.wall);
     const was = runs.find((r) => r.id === t.id)!;
-    const sideOf = (p: Point) => Math.sign((p[0] - near.wall.from[0]) * -uy + (p[1] - near.wall.from[1]) * ux);
-    const side = (inward && sideOf(inward)) || (Math.abs(near.off) > EPS ? Math.sign(near.off) : 0) || sideOf(was.from) || 1;
+    const sideAt = (p: Point) => Math.sign((p[0] - near.wall.from[0]) * -uy + (p[1] - near.wall.from[1]) * ux);
+    const side = (inward && sideAt(inward)) || (Math.abs(near.off) > EPS ? Math.sign(near.off) : 0) || sideAt(was.from) || 1;
     const d = side * MOUNT_OFFSET - near.off;
     return { by: [-uy * d, ux * d], off: near.off };
   };
@@ -269,7 +269,7 @@ export function groupMountDrag(v: Variant, rules: Rules, id: string, dx: number,
     }
     if (!best) continue;
     caught = true;
-    const by = best.by;
+    const { by } = best;
     moved = moved.map((t) => ({ ...t, from: shift(t.from, by), to: shift(t.to, by) }));
   }
   // Into a niche: a run that still has a wall face within the magnet goes onto it alone, and the runs it meets in its
@@ -281,7 +281,9 @@ export function groupMountDrag(v: Variant, rules: Rules, id: string, dx: number,
     const partner = moved.find((o) => o.id !== tid && (at(o.from) || at(o.to)));
     const c = partner && across(t, at(partner.from) ? partner.to : partner.from);
     if (!c || Math.hypot(...c.by) < EPS) continue;
-    moved = moved.map((o) => (o.id === t.id ? { ...o, from: shift(o.from, c.by), to: shift(o.to, c.by) } : { ...o, from: at(o.from) ? shift(o.from, c.by) : o.from, to: at(o.to) ? shift(o.to, c.by) : o.to }));
+    // The run itself goes across whole; a run it meets moves only the end in that corner
+    const move = (o: FreeTextile, p: Point) => (o.id === tid || at(p) ? shift(p, c.by) : p);
+    moved = moved.map((o) => ({ ...o, from: move(o, o.from), to: move(o, o.to) }));
   }
   if (!caught) return null;
   const placed = { ...v, textiles: [...v.textiles.filter((t) => !g.textiles.includes(t.id)), ...moved] };
