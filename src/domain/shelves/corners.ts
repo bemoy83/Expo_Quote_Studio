@@ -22,9 +22,9 @@ export const [RAIL_W, RAIL_T] = fogaPart(C.rail).section!.map(mm);
  *  twins, m (Bjørn's STL). */
 const END_PLAY = mm(C.endPlay);
 const TWO_THIRDS_PLAY = mm(C.twoThirdsPlay);
-/** The kinds of 01 rail in a corner: under shelves alone at the front (H10), with the twins where two meet (H11), and
- *  at the back edge of every corner board (H13). */
-export type RailKind = 'single' | 'meet' | 'back';
+/** The kinds of 01 rail in a corner: with short 91s, 200 mm out on each wall, carrying a lone corner board's front on
+ *  the other wall (H10) and every corner board's back on its own wall (H13); with the twins where two meet (H11). */
+export type RailKind = 'short' | 'meet';
 const shelvesOf = (v: Variant): Shelf[] => v.shelves ?? [];
 const shelvesIn = (v: Variant, wallId: string, module: number, s: FaceSide, skipId?: string) =>
   shelvesOf(v).filter((x) => x.wallId === wallId && x.module === module && sideOf(v, x) === s && x.id !== skipId);
@@ -135,20 +135,17 @@ export interface CornerLayout {
   rails: ShelfRail[];
 }
 
-/**
- * From the corner post's centre to a 01 rail's centre along the wall it hangs on, m (H10, H11, H13). The back rail
- * stands as close to the corner as it can: clear of the corner post, and clear of a rail hung on the other wall's face
- * there (which stands out to that wall's rails' face + the rail's depth). Worked out from those volumes, never a constant.
- */
+/** From the corner post's centre to a 01 rail's centre along the wall it hangs on, m (H10, H11, H13): the rail with
+ *  short 91s at the same distance on both walls, so one rail carries a corner board's back on its own wall and a lone
+ *  corner board's front from the other wall. */
 export function railAlong(rules: Rules, kind: RailKind): number {
   const half = rules.wall.post / 2;
-  if (kind === 'single') return half + mm(C.single);
-  if (kind === 'back') return Math.max(half, half - mm(C.behind) + RAIL_T) + RAIL_W / 2;
+  if (kind === 'short') return half + mm(C.single);
   return half - mm(C.behind) + rules.shelf.board.depth + mm(C.play) + RAIL_W / 2;
 }
 
-/** The underside of the bracket a corner shelf at `y` rests on in its rail: a short 91 under the board when alone (H10)
- *  and at the back (H13), the twin's body around the flange when it meets another (H11), m above the floor. */
+/** The underside of the bracket a corner shelf at `y` rests on in its rail: a short 91 under the board (H10, H13), the
+ *  twin's body around the flange when it meets another (H11), m above the floor. */
 const bracketBottom = (rules: Rules, y: number, kind: RailKind) =>
   y - rules.shelf.board.thickness - mm(kind === 'meet' ? C.flange : C.body);
 
@@ -159,7 +156,7 @@ const bracketBottom = (rules: Rules, y: number, kind: RailKind) =>
 export function railLengths(rules: Rules): number[] {
   const top = wallHeight(rules);
   const ys = [...new Set([rules.shelf.min, ...rules.shelf.heights])];
-  return ys.map((y) => Math.ceil(Math.round((top - bracketBottom(rules, y, 'single')) * 1000) / 10) * 10).sort((a, b) => b - a);
+  return ys.map((y) => Math.ceil(Math.round((top - bracketBottom(rules, y, 'short')) * 1000) / 10) * 10).sort((a, b) => b - a);
 }
 
 /** The shortest standard rail reaching from the wall's top down to `bottom`, mm (H12). */
@@ -172,14 +169,14 @@ function railLength(rules: Rules, bottom: number): number {
 const feltKey = (f: Pick<CornerFelt, 'wallId' | 'module' | 's'>) => `${f.wallId}|${f.module}|${f.s}`;
 
 /**
- * Every shelf in a corner with its board, and the rails the corners take (H9–H12). In each corner: two shelves at the
- * same height on its two felts meet; one wall gets the corner board, the other the 2/3 board and the rail with the
- * twins (H11): the wall with shelves alone in the corner when only one has them, so all the rails hang on the
- * other wall and are shared (Bjørn 25.11.2026: fewest rails to pick), else the wall drawn first. Every other shelf there is alone: a corner board on a short 91 in a rail on the other
- * wall (H10). Every corner board, alone or meeting, also rests at its back edge on a short 91 in a back rail on the
- * other wall (H13, Bjørn 25.11.2026: a shelf is always held at the back). Shelves of one kind on one felt share a rail
- * (H12, Bjørn 10.11.2026: a lone shelf on a twin swings out); the back rail carries every corner board on its felt.
- * A corner board with a rail from the other wall passing behind it is narrow (290).
+ * Every shelf in a corner with its board, and the rails the corners take (H9–H13). In each corner: two shelves at the
+ * same height on its two felts meet; the wall drawn first gets the corner board, the other the 2/3 board and the
+ * rail with the twins (H11). Every other shelf there is alone: a corner board whose front rests on a short 91 in a
+ * rail on the other wall (H10). Every corner board, alone or meeting, rests at its back on a short 91 in a rail on its
+ * own wall, 200 mm from the corner like the front one on the other wall (H13, Bjørn 25.11.2026: a shelf is always held
+ * at the back), so one rail on a felt carries both: the backs of its own corner boards and the fronts of the other
+ * wall's lone ones. The twins have their own rail (H12, Bjørn 10.11.2026: a lone shelf on a twin swings out). A corner
+ * board with a rail on its own felt passing behind it is narrow (290): every corner board, since its back rail does.
  */
 export function cornerLayout(v: Variant, rules: Rules): CornerLayout {
   const shelves = new Map<string, CornerShelf>();
@@ -201,23 +198,20 @@ export function cornerLayout(v: Variant, rules: Rules): CornerLayout {
   };
   // The corner board starts by the face of the rail on the other wall, which stands out from that wall's rails
   const cornerFrom = rules.wall.post / 2 - mm(C.behind) + RAIL_T + END_PLAY;
-  const alone = (xs: Shelf[], ys: Shelf[]) => xs.some((f) => !ys.some((o) => Math.abs(o.y - f.y) < EPS));
   for (const c of corners.values()) {
-    const own = onFelt(c.felt);
     const across = onFelt(c.other);
-    // Which wall gets the corner boards where shelves meet (H11): the one with shelves alone, else the one drawn first
-    const [a, b] = [alone(own, across), alone(across, own)];
-    const cornerBoards = a !== b ? a : order(c.felt.wallId) < order(c.other.wallId);
-    for (const f of own) {
+    for (const f of onFelt(c.felt)) {
       const m = across.find((o) => Math.abs(o.y - f.y) < EPS);
-      if (m && !cornerBoards) {
+      const last = m && order(c.felt.wallId) > order(c.other.wallId);
+      if (m && last) {
         const from = railAlong(rules, 'meet') + RAIL_W / 2 + TWO_THIRDS_PLAY;
         shelves.set(f.id, { corner: c, meets: m.id, board: 'twoThirds', from, to: from + mm(C.boards.twoThirds.w), depth: rules.shelf.board.depth });
         rail(c, c.felt, 'meet', f);
       } else {
         shelves.set(f.id, { corner: c, meets: m?.id ?? null, board: 'corner', from: cornerFrom, to: cornerFrom + mm(C.boards.corner.w), depth: rules.shelf.board.depth });
-        if (!m) rail(c, c.other, 'single', f);
-        rail(c, c.other, 'back', f);
+        // Front on the other wall when alone (H10), back on its own (H13): the same rail where both walls have them
+        if (!m) rail(c, c.other, 'short', f);
+        rail(c, c.felt, 'short', f);
       }
     }
   }
@@ -274,7 +268,7 @@ export function railBox(v: Variant, rules: Rules, r: ShelfRail): { x0: number; y
  * The brackets under a shelf as seen from in front, spans along its wall (m from the wall's start): a post's width at
  * each post that holds one (H2), and at a corner what the board rests on there: the short 91 (80) or the twin (290)
  * standing out from the rail on the other wall, seen from the side, or for a 2/3 board the twin in its own wall's rail,
- * seen end on (H10, H11). The short 91 in the back rail (H13) lies behind the front one, so it is not drawn again.
+ * seen end on (H10, H11), and the short 91 at its back in its own wall's rail, seen end on (H13).
  */
 export function bracketSpans(rules: Rules, span: ReturnType<typeof shelfSpan>): [number, number][] {
   const half = rules.wall.post / 2;
@@ -289,5 +283,7 @@ export function bracketSpans(rules: Rules, span: ReturnType<typeof shelfSpan>): 
   }
   const from = half - mm(C.behind) + RAIL_T;
   const [a, b] = [t(from), t(from + mm(c.meets ? RECIPES.shelf.bracket : C.short))].sort((p, q) => p - q);
-  return [...posts, [a, b]];
+  const back = t(railAlong(rules, 'short'));
+  const w = mm(fogaPart(C.bracket).section![0]);
+  return [...posts, [a, b], [back - w / 2, back + w / 2]];
 }

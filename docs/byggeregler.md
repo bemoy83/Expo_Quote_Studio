@@ -640,35 +640,32 @@ sammen der byggesystemet kan feste dem (M1), og ellers bare står plassert ved h
   på tvers av hjørnet, ellers treffer platene hverandre. Et felt med hjørne i begge ender (1 m mellom to vegger) kommer
   senere. Samme artikkel 6311 og pris per hylle som ellers (H7); forskjellene står på plukklisten og arbeidsordren.
   *Bjørn 10.11.2026 · `RECIPES.shelf.corner` · kode `src/domain/shelves/corners.ts`, `src/domain/shelves/model.ts` · test `src/domain/shelves/corners.test.ts`*
-- **H10 Hjørnehylle alene.** Hjørne hylleplate 960 × 300 på hjørnefeltet. Ved hjørnet ligger platen oppå en 91 kappet
-  80 mm (uten flens) i en 01-skinne på den andre veggen, 200 mm ut fra hjørnestolpen til skinnens senter, med 4,5 mm
-  klaring fra plateenden til skinnen. Skinnen skal stå minst 50 mm innenfor platens forkant, så hyllen ikke skyves av. I
-  bakkant står platen på en skinne til (H13). I den andre enden står en vanlig knekt (H2).
-  *Bjørn 10.11.2026 · `RECIPES.shelf.corner` (`short`, `single`, `boards.corner`) · kode `src/domain/shelves/corners.ts`, `src/domain/shelves/brackets.ts`, `src/foga/engine.ts`, `src/calc/lines/shelves.ts` · test `src/domain/shelves/corners.test.ts`*
-- **H11 Hyller som møtes i hjørnet.** Den ene veggen får hjørne hylleplate 960 × 300, den andre 2/3 hylleplate
-  655 × 300 og 01-skinnen. Hjørneplatene går til veggen som har hyller alene i hjørnefeltet, når bare den ene har det:
-  da henger alle skinnene i hjørnet (H10, H12, H13) på den andre veggen og deles, så det plukkes færrest mulig. Har
-  begge eller ingen hyller alene, får veggen som er tegnet først hjørneplatene. Skinnen står rett foran hjørneplatens forkant (1 mm klaring), med en 91FF
-  290 mm: én flens bærer hjørneplatens forkant, den andre enden av 2/3-platen (2 mm klaring). Hjørneplaten står også i
-  bakkant på en skinne (H13); 2/3-platen trenger ingen, 91FF bærer hele enden. I de ytre stolpene står vanlige knekter (H2).
+- **H10 Hjørnehylle alene.** Hjørne hylleplate 960 × 290 (smal, H13) på hjørnefeltet. Ved hjørnet ligger platens
+  forkant oppå en 91 kappet 80 mm (uten flens) i en 01-skinne på den andre veggen, 200 mm ut fra hjørnestolpen til
+  skinnens senter, med 4,5 mm klaring fra plateenden til skinnen. Skinnen skal stå minst 50 mm innenfor platens forkant,
+  så hyllen ikke skyves av. I bakkant står platen på en skinne på sin egen vegg (H13). I den andre enden står en vanlig
+  knekt (H2).
+  *Bjørn 10.11.2026, endret 25.11.2026 · `RECIPES.shelf.corner` (`short`, `single`, `boards.corner`) · kode `src/domain/shelves/corners.ts`, `src/domain/shelves/brackets.ts`, `src/foga/engine.ts`, `src/calc/lines/shelves.ts` · test `src/domain/shelves/corners.test.ts`*
+- **H11 Hyller som møtes i hjørnet.** Veggen som er tegnet først får hjørne hylleplate (smal, H13), veggen som er tegnet
+  sist 2/3 hylleplate 655 × 300 og 01-skinnen med twins. Skinnen står rett foran hjørneplatens forkant (1 mm klaring),
+  med en 91FF 290 mm: én flens bærer hjørneplatens forkant, den andre enden av 2/3-platen (2 mm klaring). Hjørneplaten
+  står også i bakkant på en skinne på sin egen vegg (H13); 2/3-platen trenger ingen, 91FF bærer hele enden. I de ytre
+  stolpene står vanlige knekter (H2).
   *Bjørn 10.11.2026, endret 25.11.2026 · `RECIPES.shelf.corner` (`play`, `boards.twoThirds`) · kode `src/domain/shelves/corners.ts`, `src/domain/shelves/brackets.ts`, `src/calc/lines/shelves.ts` · test `src/domain/shelves/corners.test.ts`*
 - **H12 01-skinne i hjørnet.** 01 (873 001 22) henger fra toppskinnen 92 med en 01-kanal-krok og plukkes som enhet med
   kroken. Skinnen finnes i én lengde per hurtigvalg i H4 og laveste høyde, fra veggens topp ned under knekten til en
   hylle der (490, 890, 1290, 1690, 2090 og 2490 mm); den korteste som rekker ned under den laveste knekten den bærer
-  brukes. Alle hyller av samme slag i ett hjørnefelt deler skinne: én for hyller alene og én for hyller som møtes, to når
-  de blandes (en hylle alene på 91FF har ingenting som holder skinnen, så den svinger ut), og én bakre skinne for alle
-  hjørneplatene (H13). Går en skinne fra den andre
-  veggen bak en hjørne hylleplate, blir platen smal, 960 × 290: forkanten står der den alltid gjør, og skinnen har nok
-  gi til de 1,5 mm som mangler.
-  *Bjørn 10.11.2026 · `RECIPES.shelf.corner` (`rail`, `hook`, `boards.narrow`), `railLengths` · kode `src/domain/shelves/corners.ts`, `src/domain/shelves/brackets.ts`, `src/foga/engine.ts`, `src/cost/itemDefs.ts` · test `src/domain/shelves/corners.test.ts`, `src/calc/shelves.test.ts`*
+  brukes. I hvert hjørnefelt er det høyst to skinner: én 200 mm fra hjørnet med korte 91 (H10, H13), som bærer både
+  bakkanten av hjørneplatene på veggen selv og forkanten av hjørneplatene som står alene på den andre veggen, og én
+  med twins for hyller som møtes (H11). De holdes adskilt fordi en hylle alene på 91FF har ingenting som holder
+  skinnen, så den svinger ut. Et hjørne trenger dermed høyst tre skinner (Bjørn 25.11.2026: færrest mulig å plukke).
+  *Bjørn 10.11.2026, endret 25.11.2026 · `RECIPES.shelf.corner` (`rail`, `hook`, `boards.narrow`), `railLengths` · kode `src/domain/shelves/corners.ts`, `src/domain/shelves/brackets.ts`, `src/foga/engine.ts`, `src/cost/itemDefs.ts` · test `src/domain/shelves/corners.test.ts`, `src/calc/shelves.test.ts`*
 - **H13 Hjørneplate sikres i bakkant.** En hylle skal alltid være sikret i bakkant. I hjørnet mangler knekten i
-  hjørnestolpen, så hver hjørneplate (alene, smal eller den som møter en 2/3-plate) står også i bakkant på en kort 91
-  (80 mm) i en egen 01-skinne på den andre veggen, så nær hjørnet som den får plass. Skinnen må gå klar av hjørnestolpen
-  og av en skinne som henger på hyllens egen vegg i det samme hjørnet; plasseringen regnes ut fra stolpens og skinnenes
-  mål (senter 11,5 mm fra stolpens side med dagens mål). Platen beholder dybden, fordi enden ligger foran skinnen
-  og ikke over den. Skinnen er identisk med de andre (H12): samme lengderegel, og én bakre skinne i hvert hjørnefelt deler
-  alle hjørneplatene den bærer. Går den bak en hjørneplate på sin egen vegg, blir den platen smal (H12).
-  *Bjørn 25.11.2026 · `RECIPES.shelf.corner` (`short`, `behind`), `railAlong` · kode `src/domain/shelves/corners.ts`, `src/domain/shelves/brackets.ts`, `src/foga/engine.ts`, `src/ui/workorder/ShelfElevation.tsx` · test `src/domain/shelves/corners.test.ts`, `src/calc/shelves.test.ts`*
+  hjørnestolpen, så hver hjørneplate (alene eller den som møter en 2/3-plate) står i bakkant på en kort 91 (80 mm) i en
+  01-skinne på sin egen vegg, speilet av den fremre: 200 mm fra hjørnestolpen til skinnens senter. Skinnen står bak
+  platen, så hjørneplaten er alltid smal, 960 × 290: forkanten står der den alltid gjør, og skinnen har nok gi til de
+  1,5 mm som mangler. Den samme skinnen bærer forkanten av en hjørnehylle alene på den andre veggen (H10, H12).
+  *Bjørn 25.11.2026 · `RECIPES.shelf.corner` (`short`, `single`, `boards.narrow`), `railAlong` · kode `src/domain/shelves/corners.ts`, `src/domain/shelves/brackets.ts`, `src/foga/engine.ts`, `src/ui/workorder/ShelfElevation.tsx` · test `src/domain/shelves/corners.test.ts`, `src/calc/shelves.test.ts`*
 
 ## K · Disk
 

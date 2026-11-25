@@ -6,7 +6,7 @@ import { paintWalls } from '../edit';
 import type { Variant } from '../types';
 import { createVariant } from '../variant';
 import { shelfBrackets } from './brackets';
-import { cornerLayout, feltCorner, railAlong, railBox, railLengths, shelfBlocked } from './corners';
+import { cornerLayout, feltCorner, railAlong, railLengths, shelfBlocked } from './corners';
 import { addShelf, addShelfRow, fitShelves, moveShelves } from './edit';
 import { addShelfToFace } from './fill';
 import { fitsIn, putShelf, shelfFaces, shelfFits, shelvesOf } from './model';
@@ -90,24 +90,25 @@ describe('where a corner shelf may stand (Byggeregler H6, H9)', () => {
 describe('a corner shelf alone (Byggeregel H10)', () => {
   const v = corner([1.3], []);
   const { shelves, rails } = cornerLayout(v, RULES);
+  const onWall = (id: string) => rails.find((r) => r.felt.wallId === id);
 
-  it('a corner board 960 on a short 91 in a rail on the other wall, 200 mm out from the corner post', () => {
-    expect(shelves.get(shelvesOf(v)[0].id)).toMatchObject({ board: 'corner', meets: null, depth: 0.3 });
-    expect(rails.find((r) => r.kind === 'single')).toEqual(expect.objectContaining({ felt: expect.objectContaining({ wallId: 'side-left', module: 0 }), along: 0.22, length: 1290 }));
+  it('its front on a short 91 in a rail on the other wall, 200 mm out from the corner post', () => {
+    expect(shelves.get(shelvesOf(v)[0].id)).toMatchObject({ meets: null });
+    expect(onWall('side-left')).toEqual(expect.objectContaining({ felt: expect.objectContaining({ module: 0 }), kind: 'short', along: 0.22, length: 1290 }));
   });
 
   it('the rail stands at least 50 mm inside the board’s front edge', () => {
     const front = RULES.wall.post / 2 - 0.01 + RULES.shelf.board.depth;
-    expect(front - (railAlong(RULES, 'single') + 0.01)).toBeGreaterThanOrEqual(0.05);
+    expect(front - (railAlong(RULES, 'short') + 0.01)).toBeGreaterThanOrEqual(0.05);
   });
 
-  it('one corner board, two short 91 (front and back, H13), two rails and an end bracket in the far post', () => {
-    expect(shelfBrackets(v, RULES)).toEqual({ boards: 1, kinds: { corner: 1 }, end: 1, twin: 0, short: 2, rails: { 1290: 2 } });
+  it('one corner board, two short 91 (front, and back H13), two rails and an end bracket in the far post', () => {
+    expect(shelfBrackets(v, RULES)).toEqual({ boards: 1, kinds: { narrow: 1 }, end: 1, twin: 0, short: 2, rails: { 1290: 2 } });
   });
 
   it('a row on from the corner shares the twin in the next post as usual', () => {
     const r = put(v, 'side-back', 1, 1, 1.3);
-    expect(shelfBrackets(r, RULES)).toMatchObject({ boards: 2, kinds: { corner: 1, standard: 1 }, end: 1, twin: 1, short: 2 });
+    expect(shelfBrackets(r, RULES)).toMatchObject({ boards: 2, kinds: { narrow: 1, standard: 1 }, end: 1, twin: 1, short: 2 });
   });
 });
 
@@ -115,32 +116,19 @@ describe('shelves meeting in a corner (Byggeregel H11)', () => {
   const v = corner([1.3], [1.3]);
   const { shelves, rails } = cornerLayout(v, RULES);
 
-  it('with no shelves alone, the wall drawn first gets the corner board, the other the 2/3 board and the rail', () => {
-    expect(shelves.get(shelfAt(v, 'side-back', 1.3).id)).toMatchObject({ board: 'corner', meets: shelfAt(v, 'side-left', 1.3).id });
+  it('the wall drawn first gets the corner board, the other the 2/3 board and the rail with the twin', () => {
+    expect(shelves.get(shelfAt(v, 'side-back', 1.3).id)).toMatchObject({ board: 'narrow', meets: shelfAt(v, 'side-left', 1.3).id });
     expect(shelves.get(shelfAt(v, 'side-left', 1.3).id)).toMatchObject({ board: 'twoThirds', from: 0.333, to: 0.988 });
     expect(rails.find((r) => r.kind === 'meet')).toEqual(expect.objectContaining({ felt: expect.objectContaining({ wallId: 'side-left' }), along: 0.321 }));
   });
 
   it('one twin in the rail, ends in both far posts, one short 91 at the corner board’s back (H13)', () => {
-    expect(shelfBrackets(v, RULES)).toEqual({ boards: 2, kinds: { corner: 1, twoThirds: 1 }, end: 2, twin: 1, short: 1, rails: { 1290: 2 } });
-  });
-
-  it('with shelves alone on only one wall, that wall gets the corner boards so all rails hang on the other and are shared (Bjørn 25.11.2026)', () => {
-    // The left wall (drawn after the back) has a shelf alone at 500: it gets the corner board at 1300
-    const v = corner([1.3], [1.3, 0.5]);
-    const { shelves, rails } = cornerLayout(v, RULES);
-    expect(shelves.get(shelfAt(v, 'side-left', 1.3).id)).toMatchObject({ board: 'corner' });
-    expect(shelves.get(shelfAt(v, 'side-back', 1.3).id)).toMatchObject({ board: 'twoThirds' });
-    expect(rails.map((r) => [r.felt.wallId, r.kind]).sort()).toEqual([['side-back', 'back'], ['side-back', 'meet'], ['side-back', 'single']]);
-    // Alone on both walls: the wall drawn first keeps them, as before
-    const both = corner([1.3, 0.5], [1.3, 2.1]);
-    expect(cornerLayout(both, RULES).shelves.get(shelfAt(both, 'side-back', 1.3).id)).toMatchObject({ board: 'corner' });
-    expect(cornerLayout(both, RULES).rails).toHaveLength(5);
+    expect(shelfBrackets(v, RULES)).toEqual({ boards: 2, kinds: { narrow: 1, twoThirds: 1 }, end: 2, twin: 1, short: 1, rails: { 1290: 2 } });
   });
 
   it('moved apart, they are two shelves alone again', () => {
     const moved = moveShelves(v, RULES, [shelfAt(v, 'side-left', 1.3).id], { y: 0.9 });
-    expect(shelfBrackets(moved, RULES)).toMatchObject({ kinds: { corner: 1, narrow: 1 }, short: 4, twin: 0 });
+    expect(shelfBrackets(moved, RULES)).toMatchObject({ kinds: { narrow: 2 }, short: 4, twin: 0, rails: { 1690: 2 } });
   });
 });
 
@@ -154,57 +142,49 @@ describe('01 rails in a corner (Byggeregel H12)', () => {
     expect(cornerLayout(corner([1.2], []), RULES).rails.map((r) => r.length)).toEqual([1690, 1690]);
   });
 
-  it('shelves of one kind share a rail, two rails when shelves alone and meeting are mixed', () => {
+  it('at most two rails on a felt: the short 91s (backs of its own, fronts of the other wall’s lone ones) and the twins', () => {
     const one = cornerLayout(corner([0.5, 0.9, 1.3], []), RULES).rails;
-    expect(one.map((r) => [r.kind, r.carries.length])).toEqual([['single', 3], ['back', 3]]);
-    const mixed = cornerLayout(corner([0.5, 1.3], [1.3]), RULES).rails;
-    expect(mixed.map((r) => [r.kind, r.carries.length]).sort()).toEqual([['back', 2], ['meet', 1], ['single', 1]]);
+    expect(one.map((r) => [r.felt.wallId, r.kind, r.carries.length])).toEqual([['side-left', 'short', 3], ['side-back', 'short', 3]]);
+    const mixed = cornerLayout(corner([0.5, 1.3], [1.3, 2.1]), RULES).rails;
+    expect(mixed.map((r) => [r.felt.wallId, r.kind, r.carries.length]).sort()).toEqual([
+      ['side-back', 'short', 3],
+      ['side-left', 'meet', 1],
+      ['side-left', 'short', 2],
+    ]);
   });
 
-  it('a corner board with the other wall’s rail passing behind it is narrow (960 × 290)', () => {
-    // Back alone at 1700, left alone at 900: the left shelf's rail on the back wall reaches up past 1700
-    const v = corner([1.7], [0.9]);
-    const { shelves } = cornerLayout(v, RULES);
-    expect(shelves.get(shelfAt(v, 'side-back', 1.7).id)).toMatchObject({ board: 'narrow', depth: 0.29 });
-    // The back shelf's rail on the left wall ends under 1700, above the left shelf: that board keeps 300
-    expect(shelves.get(shelfAt(v, 'side-left', 0.9).id)).toMatchObject({ board: 'corner', depth: 0.3 });
+  it('at most three rails in a corner, however the shelves are mixed (Bjørn 25.11.2026: fewest to pick)', () => {
+    for (const [a, b] of [[[1.3], [1.3]], [[1.3, 0.5], [1.3]], [[1.3], [1.3, 0.5]], [[1.3, 0.5], [1.3, 2.1]], [[0.5], [1.3]], [[0.5, 0.9], []]] as const) {
+      expect(cornerLayout(corner([...a], [...b]), RULES).rails.length).toBeLessThanOrEqual(3);
+    }
+    expect(cornerLayout(corner([0.5], [1.3]), RULES).rails).toHaveLength(2);
   });
 });
 
 describe('a corner board held at the back (Byggeregel H13)', () => {
-  type Box = { x0: number; y0: number; x1: number; y1: number };
-  const overlap = (a: Box, b: Box) => Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0) > 1e-9 && Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0) > 1e-9;
-  const backRails = (v: Variant, rules = RULES) => cornerLayout(v, rules).rails.filter((r) => r.kind === 'back');
-
-  it('every corner board, alone or meeting, rests on a short 91 in a back rail on the other wall; the 2/3 board needs none', () => {
-    const alone = corner([1.3], []);
-    expect(backRails(alone)).toEqual([expect.objectContaining({ felt: expect.objectContaining({ wallId: 'side-left' }), carries: [shelvesOf(alone)[0].id] })]);
+  it('every corner board, alone or meeting, rests at its back on a short 91 in a rail on its own wall; the 2/3 board needs none', () => {
     const meet = corner([1.3], [1.3]);
-    expect(backRails(meet).map((r) => [r.felt.wallId, r.carries])).toEqual([['side-left', [shelfAt(meet, 'side-back', 1.3).id]]]);
+    const own = cornerLayout(meet, RULES).rails.filter((r) => r.kind === 'short');
+    expect(own.map((r) => [r.felt.wallId, r.carries])).toEqual([['side-back', [shelfAt(meet, 'side-back', 1.3).id]]]);
   });
 
-  it('as close to the corner as it fits: clear of the corner post, and of the back rail the other wall’s shelf hangs on this wall', () => {
-    const v = corner([1.3], [0.9]);
-    const [a, b] = backRails(v).map((r) => railBox(v, RULES, r)!);
-    const h = RULES.wall.post / 2;
-    const post = { x0: -h, y0: -h, x1: h, y1: h };
-    expect(overlap(a, post) || overlap(b, post) || overlap(a, b)).toBe(false);
-    // Touching, not further out than it needs: with today's sizes 11.5 mm from the post's side to the rail's centre
-    expect(railAlong(RULES, 'back') - h).toBeCloseTo(0.0115, 6);
-  });
-
-  it('worked out from the volumes: a wider post moves it out', () => {
-    const wide = { ...RULES, wall: { ...RULES.wall, post: 0.06 } };
-    expect(railAlong(wide, 'back') - railAlong(RULES, 'back')).toBeCloseTo(0.01, 6);
-  });
-
-  it('the board keeps its depth: its end lies in front of the rail, not over it', () => {
+  it('mirrored: 200 mm from the corner post, as the front rail on the other wall', () => {
     const v = corner([1.3], []);
-    expect(cornerLayout(v, RULES).shelves.get(shelvesOf(v)[0].id)).toMatchObject({ board: 'corner', depth: 0.3 });
+    const rs = cornerLayout(v, RULES).rails;
+    expect(rs.map((r) => r.along)).toEqual([0.22, 0.22]);
+    expect(rs.map((r) => r.felt.wallId).sort()).toEqual(['side-back', 'side-left']);
   });
 
-  it('one back rail per corner felt for all its corner boards, as long as the lowest needs', () => {
-    expect(backRails(corner([0.5, 1.3], [1.3])).map((r) => [r.carries.length, r.length])).toEqual([[2, 2090]]);
+  it('the rail stands behind the board, so a corner board is always narrow (960 × 290)', () => {
+    const v = corner([1.3], []);
+    expect(cornerLayout(v, RULES).shelves.get(shelvesOf(v)[0].id)).toMatchObject({ board: 'narrow', depth: 0.29 });
+  });
+
+  it('one rail carries both its own wall’s corner boards at the back and the other wall’s lone ones at the front', () => {
+    const v = corner([0.5], [1.3]);
+    const back = cornerLayout(v, RULES).rails.find((r) => r.felt.wallId === 'side-back')!;
+    expect(back.carries.sort()).toEqual([shelfAt(v, 'side-back', 0.5).id, shelfAt(v, 'side-left', 1.3).id].sort());
+    expect(back.length).toBe(2090);
   });
 });
 
