@@ -132,10 +132,12 @@ export interface ShelfRecipe {
   /** In an inner corner (Byggeregler H9–H12): the post's face channel there is taken by the other wall, so the corner
    *  end rests on `rail` (01) hung on the other wall's face with `hook` over its top rail. Alone: a `short` piece of
    *  `bracket` (91) in the rail, `single` mm out from the corner post's face to the rail's centre, under a `corner`
-   *  board. Two shelves meeting: a twin (91FF) in the rail at the corner board's front edge (`play` between), the
-   *  corner board on the wall drawn first, `twoThirds` on the other. `narrow` where the other wall's rail passes behind
-   *  the board. `behind`: the board's back lies this far behind the post's face (H1, into its inner corner). The
-   *  twin's flange top is `flange` above the bottom of its `body`. mm. */
+   *  board, `endPlay` between its end and the rail. A corner board rests at its back on a short 91 in a rail on its own
+   *  wall, `single` mm out like the front one (H13): one rail there carries both, and the corner board is less deep to
+   *  leave room for it. Two shelves meeting: a twin (91FF) in the rail at the corner board's front edge (`play`
+   *  between), the corner board on the wall drawn first (H11), `twoThirds` on the other, `twoThirdsPlay` from the rail.
+   *  `behind`: the board's back lies this far behind the post's face (H1, into its inner corner). The twin's flange top
+   *  is `flange` above the bottom of its `body`. mm. */
   corner: {
     rail: string;
     hook: string;
@@ -143,10 +145,12 @@ export interface ShelfRecipe {
     short: number;
     single: number;
     play: number;
+    endPlay: number;
+    twoThirdsPlay: number;
     behind: number;
     flange: number;
     body: number;
-    boards: Record<'corner' | 'narrow' | 'twoThirds', { name: string; w: number; d: number }>;
+    boards: Record<'corner' | 'twoThirds', { name: string; w: number; d: number }>;
   };
 }
 
@@ -249,7 +253,7 @@ export const RECIPES: Recipes = {
   // Bjørn 8.11.2026: 91F at the ends, 91FF between, 290 mm, one 600 into the post; board 18 × 300 × 976 into the post's inner corner
   shelf: { end: '91F', twin: '91FF', bracket: 290, coupling: { code: '600', perBracket: 1 }, board: { code: 'HYLLEPLATE', w: 976, d: 300, t: 18 },
     // Bjørn 10.11.2026 (STL «enkel hylle» and «hjørnehyller» in a system corner): 01 with 01-kanal-krok, 91 × 80 or
-    // 91FF; boards 960 × 300 («hjørne hylleplate»), 960 × 290 where the other rail passes behind, 655 × 300 («2/3»)
+    // 91FF; boards 960 × 290 («hjørne hylleplate», Bjørn 25.11.2026: its back rail stands behind it), 655 × 300 («2/3»)
     corner: {
       rail: '01',
       hook: '01-kanal-krok',
@@ -257,12 +261,14 @@ export const RECIPES: Recipes = {
       short: 80,
       single: 200,
       play: 1,
+      endPlay: 4.5,
+      twoThirdsPlay: 2,
       behind: 10,
       flange: 10.5,
       body: 30,
       boards: {
-        corner: { name: 'Hjørne hylleplate', w: 960, d: 300 },
-        narrow: { name: 'Hjørne hylleplate, smal', w: 960, d: 290 },
+        // 290 deep: its back rail stands behind it (H13)
+        corner: { name: 'Hjørne hylleplate', w: 960, d: 290 },
         twoThirds: { name: '2/3 hylleplate', w: 655, d: 300 },
       },
     },

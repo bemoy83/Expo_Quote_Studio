@@ -4,9 +4,9 @@ import { describe, expect, it } from 'vitest';
 import { RULES } from '../../rules/rules';
 import type { Variant } from '../types';
 import { createVariant } from '../variant';
-import { brushBlocked, brushHeight, paintShelves, shelfUnder, spreadFelt, stackFelt } from './brush';
+import { brushHeight, paintShelves, shelfUnder, spreadFelt, stackFelt } from './brush';
 import { addShelf } from './edit';
-import { shelvesIn, shelvesOf } from './model';
+import { shelvesIn, shelvesOf, shelfFits } from './model';
 
 /** Row stand 6 × 3: back wall from (0,0) to (6,0), its face toward the stand is 1; side walls in both corners. A door
  *  in each side wall's corner module closes the corners: the back wall's felts 0 and 5 cannot take a shelf (the side
@@ -72,9 +72,9 @@ describe('a brush stroke', () => {
 
   it('keeps the clear height to a shelf in the felt (H5)', () => {
     const v = at(row(), 2, 1.3);
-    expect(brushBlocked(v, RULES, 'side-back', 2, 1, 1.25)).toBe('Hylle her fra før');
-    expect(brushBlocked(v, RULES, 'side-back', 2, 1, 1.2)).toMatch(/For nær/);
-    expect(brushBlocked(v, RULES, 'side-back', 2, 1, 1.15)).toBeNull();
+    expect(shelfFits(v, RULES, 'side-back', 2, 1, 1.25)).toBe('Hylle her fra før');
+    expect(shelfFits(v, RULES, 'side-back', 2, 1, 1.2)).toMatch(/For nær/);
+    expect(shelfFits(v, RULES, 'side-back', 2, 1, 1.15)).toBeNull();
     expect(paintShelves(v, RULES, 'side-back', 1, 2, 2, 1.2).ids).toEqual([]);
   });
 });

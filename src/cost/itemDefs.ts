@@ -60,6 +60,7 @@ export const ITEM = {
    *  with its 01-kanal-krok, and the boards cut for the corner. */
   shelfShort: 'hylleknekt-91-80',
   shelfRail: (lengthMm: number) => `hylleskinne-01-${lengthMm}`,
+  /** 960 × 300: no longer used since every corner board is 960 × 290 (H13); kept so saved kostgrunnlag files load. */
   shelfBoardCorner: 'hylleplate-hjorne',
   shelfBoardNarrow: 'hylleplate-hjorne-smal',
   shelfBoardTwoThirds: 'hylleplate-2-3',

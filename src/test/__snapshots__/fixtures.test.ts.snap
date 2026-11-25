@@ -11229,9 +11229,9 @@ exports[`12-hjornehyller.json > variant A > calculation 1`] = `
         "detail": "91 (873 042 22) × 80 mm · 1 × 600 (871 003 92) · i 01-skinne under hjørnehylle",
         "group": "hyll.hyller",
         "name": "Hylleknekt 91, 80 mm, med 600",
-        "note": "hjørnehylle alene",
+        "note": "bak under hjørneplate, og foran når den står alene",
         "preassembled": true,
-        "qty": 4,
+        "qty": 10,
       },
       {
         "artnr": "",
@@ -11239,7 +11239,7 @@ exports[`12-hjornehyller.json > variant A > calculation 1`] = `
         "group": "hyll.hyller",
         "name": "Hylleskinne 01, 2090 mm, med 01-kanal-krok",
         "preassembled": true,
-        "qty": 1,
+        "qty": 2,
       },
       {
         "artnr": "",
@@ -11275,19 +11275,11 @@ exports[`12-hjornehyller.json > variant A > calculation 1`] = `
       },
       {
         "artnr": "",
-        "detail": "960 × 300 mm · Hobbyplate melamin hvit 18 mm",
+        "detail": "960 × 290 mm · Hobbyplate melamin hvit 18 mm",
         "group": "hyll.hyller",
         "name": "Hjørne hylleplate",
         "preassembled": false,
-        "qty": 3,
-      },
-      {
-        "artnr": "",
-        "detail": "960 × 290 mm · Hobbyplate melamin hvit 18 mm",
-        "group": "hyll.hyller",
-        "name": "Hjørne hylleplate, smal",
-        "preassembled": false,
-        "qty": 3,
+        "qty": 6,
       },
       {
         "artnr": "",
@@ -11318,18 +11310,17 @@ exports[`12-hjornehyller.json > variant A > calculation 1`] = `
       "boards": 9,
       "end": 8,
       "kinds": {
-        "corner": 3,
-        "narrow": 3,
+        "corner": 6,
         "standard": 1,
         "twoThirds": 2,
       },
       "rails": {
         "1290": 1,
         "1690": 2,
-        "2090": 1,
+        "2090": 2,
         "890": 2,
       },
-      "short": 4,
+      "short": 10,
       "twin": 3,
     },
     "wallFeet": 1,
@@ -11424,13 +11415,13 @@ exports[`12-hjornehyller.json > variant A > calculation 1`] = `
       "sum": 1650,
     },
     {
-      "cost": 449.51,
+      "cost": 469.5,
       "id": "hyll",
       "lines": [
         {
           "artnr": "6311",
-          "cost": 449.51,
-          "dg": 0.797791273054431,
+          "cost": 469.5,
+          "dg": 0.7887989203778677,
           "foga": true,
           "group": "hyll.hyller",
           "name": "Rett hylle, d:30cm",
@@ -11458,7 +11449,7 @@ exports[`12-hjornehyller.json > variant A > calculation 1`] = `
             },
             {
               "id": "hylleknekt-91-80",
-              "qty": 4,
+              "qty": 10,
             },
             {
               "id": "hylleskinne-01-890",
@@ -11474,19 +11465,15 @@ exports[`12-hjornehyller.json > variant A > calculation 1`] = `
             },
             {
               "id": "hylleskinne-01-2090",
-              "qty": 1,
+              "qty": 2,
             },
             {
               "id": "hylleplate",
               "qty": 1,
             },
             {
-              "id": "hylleplate-hjorne",
-              "qty": 3,
-            },
-            {
               "id": "hylleplate-hjorne-smal",
-              "qty": 3,
+              "qty": 6,
             },
             {
               "id": "hylleplate-2-3",
@@ -11540,9 +11527,9 @@ exports[`12-hjornehyller.json > variant A > calculation 1`] = `
     "wallSupports": 1,
   },
   "margin": {
-    "cost": 1423.036311848,
-    "db": 2449.963688152,
-    "dg": 0.6325751841342628,
+    "cost": 1443.026311848,
+    "db": 2429.9736881520002,
+    "dg": 0.627413810522076,
     "order": [
       {
         "cost": 172.05543728266665,
@@ -11840,9 +11827,9 @@ exports[`12-hjornehyller.json > variant A > picking list 1`] = `
     "key": "Hylleknekt 91, 80 mm, med 600|91 (873 042 22) × 80 mm · 1 × 600 (871 003 92) · i 01-skinne under hjørnehylle",
     "lm": undefined,
     "nobb": false,
-    "note": "hjørnehylle alene",
+    "note": "bak under hjørneplate, og foran når den står alene",
     "preassembled": true,
-    "qty": "4 stk",
+    "qty": "10 stk",
     "title": "Hylleknekt 91, 80 mm, med 600",
   },
   {
@@ -11854,7 +11841,7 @@ exports[`12-hjornehyller.json > variant A > picking list 1`] = `
     "nobb": false,
     "note": undefined,
     "preassembled": true,
-    "qty": "1 stk",
+    "qty": "2 stk",
     "title": "Hylleskinne 01, 2090 mm, med 01-kanal-krok",
   },
   {
@@ -11907,27 +11894,15 @@ exports[`12-hjornehyller.json > variant A > picking list 1`] = `
   },
   {
     "code": "",
-    "detail": "960 × 300 mm · Hobbyplate melamin hvit 18 mm",
-    "group": "hyll.hyller",
-    "key": "Hjørne hylleplate|960 × 300 mm · Hobbyplate melamin hvit 18 mm",
-    "lm": undefined,
-    "nobb": false,
-    "note": undefined,
-    "preassembled": false,
-    "qty": "3 stk",
-    "title": "Hjørne hylleplate",
-  },
-  {
-    "code": "",
     "detail": "960 × 290 mm · Hobbyplate melamin hvit 18 mm",
     "group": "hyll.hyller",
-    "key": "Hjørne hylleplate, smal|960 × 290 mm · Hobbyplate melamin hvit 18 mm",
+    "key": "Hjørne hylleplate|960 × 290 mm · Hobbyplate melamin hvit 18 mm",
     "lm": undefined,
     "nobb": false,
     "note": undefined,
     "preassembled": false,
-    "qty": "3 stk",
-    "title": "Hjørne hylleplate, smal",
+    "qty": "6 stk",
+    "title": "Hjørne hylleplate",
   },
   {
     "code": "",
@@ -12050,13 +12025,13 @@ exports[`12-hjornehyller.json > variant A > quote lines 1`] = `
     "sum": 1650,
   },
   {
-    "cost": 449.51,
+    "cost": 469.5,
     "id": "hyll",
     "lines": [
       {
         "artnr": "6311",
-        "cost": 449.51,
-        "dg": 0.797791273054431,
+        "cost": 469.5,
+        "dg": 0.7887989203778677,
         "foga": true,
         "group": "hyll.hyller",
         "name": "Rett hylle, d:30cm",
@@ -12084,7 +12059,7 @@ exports[`12-hjornehyller.json > variant A > quote lines 1`] = `
           },
           {
             "id": "hylleknekt-91-80",
-            "qty": 4,
+            "qty": 10,
           },
           {
             "id": "hylleskinne-01-890",
@@ -12100,19 +12075,15 @@ exports[`12-hjornehyller.json > variant A > quote lines 1`] = `
           },
           {
             "id": "hylleskinne-01-2090",
-            "qty": 1,
+            "qty": 2,
           },
           {
             "id": "hylleplate",
             "qty": 1,
           },
           {
-            "id": "hylleplate-hjorne",
-            "qty": 3,
-          },
-          {
             "id": "hylleplate-hjorne-smal",
-            "qty": 3,
+            "qty": 6,
           },
           {
             "id": "hylleplate-2-3",

@@ -278,7 +278,8 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
     );
   bracket(sh.end, s.shelves?.end ?? 0, 'ende');
   bracket(sh.twin, s.shelves?.twin ?? 0, 'mellom to hylleplater');
-  // In inner corners (Byggeregler H10–H12): the short 91 under a lone corner shelf, the 01 rails with their krok
+  // In inner corners (Byggeregler H10–H13): the short 91 under a corner board at the back and under a lone one at the
+  // front, the 01 rails with their krok
   const co = sh.corner;
   put(
     BOM_GROUP.shelves,
@@ -287,7 +288,7 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
       artnr: '',
       name: `Hylleknekt ${co.bracket}, ${co.short} mm, med ${sh.coupling.code}`,
       detail: `${co.bracket} (${fogaPart(co.bracket).artnr}) × ${co.short} mm · ${sh.coupling.perBracket} × ${sh.coupling.code} (${fogaPart(sh.coupling.code).artnr}) · i 01-skinne under hjørnehylle`,
-      note: 'hjørnehylle alene',
+      note: 'bak under hjørneplate, og foran når den står alene',
       preassembled: true,
     },
     s.shelves?.short ?? 0,
@@ -307,7 +308,7 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   const kinds = s.shelves?.kinds ?? { standard: s.shelves?.boards ?? 0 };
   const board = fogaPart(sh.board.code).name;
   put(BOM_GROUP.shelves, 'board', { artnr: '', name: board, detail: `${sh.board.w} × ${sh.board.d} mm`, preassembled: false }, kinds.standard ?? 0);
-  for (const k of ['corner', 'narrow', 'twoThirds'] as const) {
+  for (const k of ['corner', 'twoThirds'] as const) {
     const b = co.boards[k];
     put(BOM_GROUP.shelves, `board|${k}`, { artnr: '', name: b.name, detail: `${b.w} × ${b.d} mm · ${board}`, preassembled: false }, kinds[k] ?? 0);
   }

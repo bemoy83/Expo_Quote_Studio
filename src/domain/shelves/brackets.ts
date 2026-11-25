@@ -1,7 +1,7 @@
 // Shelves (hylle 6311): what a set of shelves is built of. Brackets: one in each of a shelf's two posts, a twin (91FF)
 // where two shelves side by side at one height share a post, else an end (91F). In an inner corner the corner end rests
 // on a 01 rail instead: a short 91 for a shelf alone, a twin for two that meet; the boards there are cut to fit.
-// Byggeregler H2, H3, H10, H11, H12.
+// Byggeregler H2, H3, H10, H11, H12, H13.
 import { faceNormal, sideOf } from '../faces';
 import { modulePosts } from '../fittings';
 import { pointKey, moduleCount } from '../grid';
@@ -15,7 +15,7 @@ import { shelvesOf } from './model';
  * The brackets, boards and rails the shelves take (H2, H10–H12): each shelf has a bracket at each of its posts. Two
  * shelves side by side at the same height on the same face share the bracket in the post between them, a twin (91FF);
  * every other bracket in a post is an end (91F). At a corner post there is none: a lone shelf rests on a short 91 in
- * its rail, two that meet share a twin in theirs.
+ * its rail, two that meet share a twin in theirs. Every corner board also has a short 91 in a back rail (H13).
  */
 export function shelfBrackets(v: Variant, rules: Rules): ShelfSpec {
   const at = new Map<string, number>();
@@ -31,7 +31,8 @@ export function shelfBrackets(v: Variant, rules: Rules): ShelfSpec {
     const c = inCorner.get(f.id);
     const kind = c?.board ?? 'standard';
     kinds[kind] = (kinds[kind] ?? 0) + 1;
-    if (c && !c.meets) short++;
+    // A corner board rests on a short 91 at its back edge (H13), and alone also at its front (H10)
+    if (c && c.board !== 'twoThirds') short += c.meets ? 1 : 2;
     if (c?.board === 'twoThirds') meet++;
     const n = faceNormal(w, sideOf(v, f));
     modulePosts(w, f.module).forEach((p, i) => {

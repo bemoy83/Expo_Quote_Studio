@@ -18,8 +18,8 @@ export function shelfLines(c: CalcContext): CalcLine[] {
       { id: ITEM.shelfShort, qty: short ?? 0 },
       ...Object.entries(rails ?? {}).map(([l, qty]) => ({ id: ITEM.shelfRail(Number(l)), qty })),
       { id: ITEM.shelfBoard, qty: k.standard ?? 0 },
-      { id: ITEM.shelfBoardCorner, qty: k.corner ?? 0 },
-      { id: ITEM.shelfBoardNarrow, qty: k.narrow ?? 0 },
+      // The corner board is the 960 × 290 one (H13)
+      { id: ITEM.shelfBoardNarrow, qty: k.corner ?? 0 },
       { id: ITEM.shelfBoardTwoThirds, qty: k.twoThirds ?? 0 },
       { id: ITEM.shelfMount, qty: boards },
       { id: ITEM.shelfPick, qty: 1 },

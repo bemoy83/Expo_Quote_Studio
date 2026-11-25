@@ -79,8 +79,8 @@ export interface FogaStructure {
   counterInserts?: number;
 }
 
-/** A shelf board: standard 976 × 300, corner 960 × 300, narrow corner 960 × 290, 2/3 655 × 300 (Byggeregler H10–H12). */
-export type BoardKind = 'standard' | 'corner' | 'narrow' | 'twoThirds';
+/** A shelf board: standard 976 × 300, corner 960 × 290, 2/3 655 × 300 (Byggeregler H10–H13). */
+export type BoardKind = 'standard' | 'corner' | 'twoThirds';
 
 export interface ShelfSpec {
   /** All boards, and by kind when any is not standard. */
@@ -88,7 +88,7 @@ export interface ShelfSpec {
   kinds?: Partial<Record<BoardKind, number>>;
   end: number;
   twin: number;
-  /** Short 91 under a lone corner shelf, in its rail. */
+  /** Short 91 under a corner board, in its rails: at its back, and at its front when alone (H10, H13). */
   short?: number;
   /** 01 rails by standard length, mm. */
   rails?: Record<number, number>;
