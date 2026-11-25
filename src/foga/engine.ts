@@ -308,7 +308,7 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   const kinds = s.shelves?.kinds ?? { standard: s.shelves?.boards ?? 0 };
   const board = fogaPart(sh.board.code).name;
   put(BOM_GROUP.shelves, 'board', { artnr: '', name: board, detail: `${sh.board.w} × ${sh.board.d} mm`, preassembled: false }, kinds.standard ?? 0);
-  for (const k of ['corner', 'narrow', 'twoThirds'] as const) {
+  for (const k of ['corner', 'twoThirds'] as const) {
     const b = co.boards[k];
     put(BOM_GROUP.shelves, `board|${k}`, { artnr: '', name: b.name, detail: `${b.w} × ${b.d} mm · ${board}`, preassembled: false }, kinds[k] ?? 0);
   }

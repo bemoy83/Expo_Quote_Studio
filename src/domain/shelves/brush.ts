@@ -37,10 +37,6 @@ export function brushHeight(v: Variant, rules: Rules, wallId: string, s: FaceSid
   return shelfHeight(rules, y);
 }
 
-/** Why felt `module` takes no shelf at `y`: the felt is blocked (H1, H6), a shelf is there already, or too close (H5, H9). */
-export const brushBlocked = (v: Variant, rules: Rules, wallId: string, module: number, s: FaceSide, y: number): string | null =>
-  shelfFits(v, rules, wallId, module, s, y);
-
 /**
  * The shelf in felt `module` the pointer is on at height `raw`: the nearest within `within` (m) of its board's top, so a
  * click with the brush takes it off. Undefined where the pointer is on none.
@@ -70,7 +66,7 @@ export function paintShelves(v: Variant, rules: Rules, wallId: string, s: FaceSi
   let x = v;
   const h = shelfHeight(rules, y);
   for (let m = Math.min(m0, m1); m <= Math.max(m0, m1); m++) {
-    const why = brushBlocked(x, rules, wallId, m, s, h);
+    const why = shelfFits(x, rules, wallId, m, s, h);
     if (why) {
       out.push({ module: m, why });
       continue;

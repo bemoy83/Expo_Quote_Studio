@@ -71,7 +71,7 @@ describe('shelves in a corner on the picking list (Byggeregler H10–H13)', () =
       ['Hylleknekt 91, 80 mm, med 600', 3],
       ['Hylleskinne 01, 2090 mm, med 01-kanal-krok', 2],
       ['Hylleskinne 01, 1290 mm, med 01-kanal-krok', 1],
-      ['Hjørne hylleplate, smal', 2],
+      ['Hjørne hylleplate', 2],
       ['2/3 hylleplate', 1],
     ]);
   });

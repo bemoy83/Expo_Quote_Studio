@@ -196,17 +196,17 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 - Veggtilbehør (hyller nå, heng senere; festes likt med lås i 94-stolpenes kanal, Bjørn 9.11.2026): `domain/fittings.ts`
   (hvor tilbehør kan stå `fittingBlocked` H1/H6, stolpene `modulePosts`, feltene fra midten `fittingFelts`). Heng får
   sin egen mappe ved siden av `domain/shelves/` og bruker de samme reglene.
-- Modell: `Shelf` (vegg, side, felt, høyde over gulv) · `domain/shelves/`: `model.ts` (hyllene på en side og i et felt,
-  høyde og lysmål, raden `shelfRow`, `offRow`, brettet i planen `shelfBox`,
+- Modell: `Shelf` (vegg, side, felt, høyde over gulv) · `domain/shelves/`: `base.ts` (hyllene på en side og i et felt), `model.ts`
+  (høyde og lysmål, den ene sjekken for hvor en hylle kan stå `shelfFits` som alle redigeringer og `fitShelves` går gjennom, raden `shelfRow`, `offRow`, brettet i planen `shelfBox`,
   sidene med hyller `shelfFaces`), `edit.ts` (legge til `addShelf` og `addShelfRow` med høyden fra `penHeight`, en til
   (eller en rad til) `addShelvesAbove`, i et felt `addShelfToFelt`, raden flyttes, dras og slettes samlet med `moveShelves`,
   `dragShelves` og `removeShelves`, flytte eller kopiere til et felt `placeShelves`, kopi i nærmeste ledige felt
   `copyShelvesNear` (med stabelen: `feltShelves`), `spreadShelves` (Fordel jevnt), `fitShelves` etter hver redigering i
   `ui/edits.ts`), `fill.ts` (fylle en hel side fra skuffen: `addShelfToFace` felt for felt, rad for rad,
   `addShelfRowToFace`), `corners.ts` (hvor en hylle kan stå `shelfBlocked`, også i innvendige hjørner og T-kryss
-  `feltCorner`; hvilken plate hver hjørnehylle får og 01-skinnene `cornerLayout`, skinnelengdene `railLengths`, alt utledet
+  `feltCorner`; hvilken plate hver hjørnehylle får og 01-skinnene `cornerLayout` (høyst tre per hjørne: korte 91 200 mm ut på hver vegg, og twins), skinnelengdene `railLengths`, alt utledet
   av hyllene som er tegnet), `brackets.ts` (knekter, plater og skinner `shelfBrackets`) · verdiene i `rules.shelf` og
-  `RECIPES.shelf` (hjørner: `RECIPES.shelf.corner`), reglene H1–H12 i [byggeregler.md](byggeregler.md). Tegnet: platen
+  `RECIPES.shelf` (hjørner: `RECIPES.shelf.corner`), reglene H1–H13 i [byggeregler.md](byggeregler.md). Tegnet: platen
   langs veggen `shelfSpan`, knektene sett forfra `bracketSpans` (`ui/plan/shelfFront.ts`), skinnene `FaceRails` i
   `ui/plan/elevation.tsx` og `railBox` i planen, 3D i `scene3d/build/shelves.ts`, hjørnene på arbeidsordren `CornerNotes`
   (`ui/workorder/ShelfElevation.tsx`). Eksempel: `src/test/fixtures/12-hjornehyller.json`. Hyllene følger veggen i `replaceWalls` (`domain/replaceWalls.ts`) og `moveWall` (`domain/edit.ts`) og rommet

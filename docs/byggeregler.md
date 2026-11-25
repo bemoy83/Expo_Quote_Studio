@@ -640,13 +640,13 @@ sammen der byggesystemet kan feste dem (M1), og ellers bare står plassert ved h
   på tvers av hjørnet, ellers treffer platene hverandre. Et felt med hjørne i begge ender (1 m mellom to vegger) kommer
   senere. Samme artikkel 6311 og pris per hylle som ellers (H7); forskjellene står på plukklisten og arbeidsordren.
   *Bjørn 10.11.2026 · `RECIPES.shelf.corner` · kode `src/domain/shelves/corners.ts`, `src/domain/shelves/model.ts` · test `src/domain/shelves/corners.test.ts`*
-- **H10 Hjørnehylle alene.** Hjørne hylleplate 960 × 290 (smal, H13) på hjørnefeltet. Ved hjørnet ligger platens
+- **H10 Hjørnehylle alene.** Hjørne hylleplate 960 × 290 (H13) på hjørnefeltet. Ved hjørnet ligger platens
   forkant oppå en 91 kappet 80 mm (uten flens) i en 01-skinne på den andre veggen, 200 mm ut fra hjørnestolpen til
   skinnens senter, med 4,5 mm klaring fra plateenden til skinnen. Skinnen skal stå minst 50 mm innenfor platens forkant,
   så hyllen ikke skyves av. I bakkant står platen på en skinne på sin egen vegg (H13). I den andre enden står en vanlig
   knekt (H2).
   *Bjørn 10.11.2026, endret 25.11.2026 · `RECIPES.shelf.corner` (`short`, `single`, `boards.corner`) · kode `src/domain/shelves/corners.ts`, `src/domain/shelves/brackets.ts`, `src/foga/engine.ts`, `src/calc/lines/shelves.ts` · test `src/domain/shelves/corners.test.ts`*
-- **H11 Hyller som møtes i hjørnet.** Veggen som er tegnet først får hjørne hylleplate (smal, H13), veggen som er tegnet
+- **H11 Hyller som møtes i hjørnet.** Veggen som er tegnet først får hjørne hylleplate 960 × 290 (H13), veggen som er tegnet
   sist 2/3 hylleplate 655 × 300 og 01-skinnen med twins. Skinnen står rett foran hjørneplatens forkant (1 mm klaring),
   med en 91FF 290 mm: én flens bærer hjørneplatens forkant, den andre enden av 2/3-platen (2 mm klaring). Hjørneplaten
   står også i bakkant på en skinne på sin egen vegg (H13); 2/3-platen trenger ingen, 91FF bærer hele enden. I de ytre
@@ -659,13 +659,13 @@ sammen der byggesystemet kan feste dem (M1), og ellers bare står plassert ved h
   bakkanten av hjørneplatene på veggen selv og forkanten av hjørneplatene som står alene på den andre veggen, og én
   med twins for hyller som møtes (H11). De holdes adskilt fordi en hylle alene på 91FF har ingenting som holder
   skinnen, så den svinger ut. Et hjørne trenger dermed høyst tre skinner (Bjørn 25.11.2026: færrest mulig å plukke).
-  *Bjørn 10.11.2026, endret 25.11.2026 · `RECIPES.shelf.corner` (`rail`, `hook`, `boards.narrow`), `railLengths` · kode `src/domain/shelves/corners.ts`, `src/domain/shelves/brackets.ts`, `src/foga/engine.ts`, `src/cost/itemDefs.ts` · test `src/domain/shelves/corners.test.ts`, `src/calc/shelves.test.ts`*
+  *Bjørn 10.11.2026, endret 25.11.2026 · `RECIPES.shelf.corner` (`rail`, `hook`, `boards.corner`), `railLengths` · kode `src/domain/shelves/corners.ts`, `src/domain/shelves/brackets.ts`, `src/foga/engine.ts`, `src/cost/itemDefs.ts` · test `src/domain/shelves/corners.test.ts`, `src/calc/shelves.test.ts`*
 - **H13 Hjørneplate sikres i bakkant.** En hylle skal alltid være sikret i bakkant. I hjørnet mangler knekten i
   hjørnestolpen, så hver hjørneplate (alene eller den som møter en 2/3-plate) står i bakkant på en kort 91 (80 mm) i en
   01-skinne på sin egen vegg, speilet av den fremre: 200 mm fra hjørnestolpen til skinnens senter. Skinnen står bak
-  platen, så hjørneplaten er alltid smal, 960 × 290: forkanten står der den alltid gjør, og skinnen har nok gi til de
+  platen, så hjørneplaten er 10 mm grunnere enn en vanlig plate, 960 × 290: forkanten står der den alltid gjør, og skinnen har nok gi til de
   1,5 mm som mangler. Den samme skinnen bærer forkanten av en hjørnehylle alene på den andre veggen (H10, H12).
-  *Bjørn 25.11.2026 · `RECIPES.shelf.corner` (`short`, `single`, `boards.narrow`), `railAlong` · kode `src/domain/shelves/corners.ts`, `src/domain/shelves/brackets.ts`, `src/foga/engine.ts`, `src/ui/workorder/ShelfElevation.tsx` · test `src/domain/shelves/corners.test.ts`, `src/calc/shelves.test.ts`*
+  *Bjørn 25.11.2026 · `RECIPES.shelf.corner` (`short`, `single`, `boards.corner`), `railAlong` · kode `src/domain/shelves/corners.ts`, `src/domain/shelves/brackets.ts`, `src/foga/engine.ts`, `src/ui/workorder/ShelfElevation.tsx` · test `src/domain/shelves/corners.test.ts`, `src/calc/shelves.test.ts`*
 
 ## K · Disk
 

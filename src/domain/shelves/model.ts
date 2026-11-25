@@ -7,14 +7,13 @@ import { faceNormal, sideOf, type FaceSide } from '../faces';
 import { pointAlong } from '../grid';
 import { nextId } from '../ids';
 import type { Shelf, Variant } from '../types';
+import { EPS, shelvesIn, shelvesOf, shelvesOn } from './base';
 import { acrossCorner, cornerLayout, railsOn, shelfBlocked, shelfSpan, type CornerLayout } from './corners';
 
 export { shelfBlocked };
+export { EPS, shelvesIn, shelvesOf, shelvesOn };
 
-export const EPS = 1e-6;
 const r3 = (n: number) => Math.round(n * 1000) / 1000;
-
-export const shelvesOf = (v: Variant): Shelf[] => v.shelves ?? [];
 
 /** A new shelf in felt `module` on face `s` at `y` (snapped and kept within H4), with the next free id. No checks: the
  *  callers have made sure it may stand there (shelfFits). */
@@ -23,13 +22,6 @@ export function putShelf(v: Variant, rules: Rules, wallId: string, module: numbe
   return { v: { ...v, shelves: [...shelvesOf(v), { id, wallId, module, side: s, y: shelfHeight(rules, y) }] }, id };
 }
 
-export const shelvesOn = (v: Variant, wallId: string, s: FaceSide) => shelvesOf(v).filter((x) => x.wallId === wallId && sideOf(v, x) === s);
-
-/** Shelves in one felt (module and face), lowest first. */
-export const shelvesIn = (v: Variant, wallId: string, module: number, s: FaceSide, skipId?: string) =>
-  shelvesOn(v, wallId, s)
-    .filter((x) => x.module === module && x.id !== skipId)
-    .sort((a, b) => a.y - b.y);
 
 /** Shelves by felt (wall, face, module), each lowest first. */
 export function shelfStacks(v: Variant): Shelf[][] {

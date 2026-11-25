@@ -11,10 +11,10 @@ import { faceNormal, faces, sideOf, type FaceSide } from '../faces';
 import { CHANNEL_TAKEN, channelTakers, feltBlocked, modulePosts } from '../fittings';
 import { moduleStart, pointAlong, pointKey } from '../grid';
 import type { Point, Shelf, Variant } from '../types';
+import { EPS, shelvesIn, shelvesOf } from './base';
 
 const C = RECIPES.shelf.corner;
 const mm = (n: number) => n / 1000;
-const EPS = 1e-6;
 /** The 01 rail's width along the wall it hangs on and how far it stands out from that wall's rails, m (drawn in the
  *  plan, the elevations and 3D). */
 export const [RAIL_W, RAIL_T] = fogaPart(C.rail).section!.map(mm);
@@ -25,9 +25,6 @@ const TWO_THIRDS_PLAY = mm(C.twoThirdsPlay);
 /** The kinds of 01 rail in a corner: with short 91s, 200 mm out on each wall, carrying a lone corner board's front on
  *  the other wall (H10) and every corner board's back on its own wall (H13); with the twins where two meet (H11). */
 export type RailKind = 'short' | 'meet';
-const shelvesOf = (v: Variant): Shelf[] => v.shelves ?? [];
-const shelvesIn = (v: Variant, wallId: string, module: number, s: FaceSide, skipId?: string) =>
-  shelvesOf(v).filter((x) => x.wallId === wallId && x.module === module && sideOf(v, x) === s && x.id !== skipId);
 
 /** A felt by wall, module and face. `end` is the post of the module at the corner: 0 its start, 1 its end. */
 export interface CornerFelt {
@@ -175,8 +172,8 @@ const feltKey = (f: Pick<CornerFelt, 'wallId' | 'module' | 's'>) => `${f.wallId}
  * rail on the other wall (H10). Every corner board, alone or meeting, rests at its back on a short 91 in a rail on its
  * own wall, 200 mm from the corner like the front one on the other wall (H13, Bjørn 25.11.2026: a shelf is always held
  * at the back), so one rail on a felt carries both: the backs of its own corner boards and the fronts of the other
- * wall's lone ones. The twins have their own rail (H12, Bjørn 10.11.2026: a lone shelf on a twin swings out). A corner
- * board with a rail on its own felt passing behind it is narrow (290): every corner board, since its back rail does.
+ * wall's lone ones. The twins have their own rail (H12, Bjørn 10.11.2026: a lone shelf on a twin swings out). The back
+ * rail stands behind the corner board, so it is 290 deep.
  */
 export function cornerLayout(v: Variant, rules: Rules): CornerLayout {
   const shelves = new Map<string, CornerShelf>();
@@ -208,22 +205,15 @@ export function cornerLayout(v: Variant, rules: Rules): CornerLayout {
         shelves.set(f.id, { corner: c, meets: m.id, board: 'twoThirds', from, to: from + mm(C.boards.twoThirds.w), depth: rules.shelf.board.depth });
         rail(c, c.felt, 'meet', f);
       } else {
-        shelves.set(f.id, { corner: c, meets: m?.id ?? null, board: 'corner', from: cornerFrom, to: cornerFrom + mm(C.boards.corner.w), depth: rules.shelf.board.depth });
+        // Its back rail stands behind it, so the corner board is the narrow one (H13)
+        shelves.set(f.id, { corner: c, meets: m?.id ?? null, board: 'corner', from: cornerFrom, to: cornerFrom + mm(C.boards.corner.w), depth: mm(C.boards.corner.d) });
         // Front on the other wall when alone (H10), back on its own (H13): the same rail where both walls have them
         if (!m) rail(c, c.other, 'short', f);
         rail(c, c.felt, 'short', f);
       }
     }
   }
-  const out = [...rails.values()].map((r) => ({ ...r, length: railLength(rules, r.bottom) }));
-  // A corner board with a rail on its own felt (the other wall's, or the twins') passing behind it is narrow
-  for (const [id, x] of shelves) {
-    if (x.board !== 'corner') continue;
-    const f = all.find((o) => o.id === id)!;
-    const behind = out.some((r) => feltKey(r.felt) === feltKey(x.corner.felt) && r.along > x.from && r.along < x.to && f.y > r.bottom + EPS);
-    if (behind) shelves.set(id, { ...x, board: 'narrow', depth: mm(C.boards.narrow.d) });
-  }
-  return { shelves, rails: out };
+  return { shelves, rails: [...rails.values()].map((r) => ({ ...r, length: railLength(rules, r.bottom) })) };
 }
 
 /** Where a shelf's board lies along its wall (a to b, m from the wall's start), how deep it is and which board it is:
