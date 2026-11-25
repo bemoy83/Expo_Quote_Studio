@@ -11,7 +11,7 @@ import type { Rules } from '../../rules/rules';
 import type { FaceSide } from '../faces';
 import { addShelfToFelt } from './edit';
 import type { Shelf, Variant } from '../types';
-import { EPS, fitsIn, gapNote, putShelf, shelfBlocked, shelfHeight, shelvesIn, shelvesOn } from './model';
+import { EPS, fitsIn, gapNote, putShelf, shelfBlocked, shelfFits, shelfHeight, shelvesIn, shelvesOn } from './model';
 
 /** How far from the pointer a height catches the brush, m: a shelf in a felt beside it, and a quick pick. */
 export const BRUSH_CATCH = { row: 0.06, quick: 0.04 } as const;
@@ -37,14 +37,9 @@ export function brushHeight(v: Variant, rules: Rules, wallId: string, s: FaceSid
   return shelfHeight(rules, y);
 }
 
-/** Why felt `module` takes no shelf at `y`: the felt is blocked (H1, H6), a shelf is there already, or too close (H5). */
-export function brushBlocked(v: Variant, rules: Rules, wallId: string, module: number, s: FaceSide, y: number): string | null {
-  const why = shelfBlocked(v, wallId, module, s);
-  if (why) return why;
-  if (fitsIn(v, rules, wallId, module, s, y)) return null;
-  const on = shelvesIn(v, wallId, module, s).some((o) => Math.abs(o.y - y) <= rules.shelf.gap / 2 + EPS);
-  return on ? 'Hylle her fra før' : `For nær en annen hylle · ${gapNote(rules)}`;
-}
+/** Why felt `module` takes no shelf at `y`: the felt is blocked (H1, H6), a shelf is there already, or too close (H5, H9). */
+export const brushBlocked = (v: Variant, rules: Rules, wallId: string, module: number, s: FaceSide, y: number): string | null =>
+  shelfFits(v, rules, wallId, module, s, y);
 
 /**
  * The shelf in felt `module` the pointer is on at height `raw`: the nearest within `within` (m) of its board's top, so a

@@ -50,7 +50,7 @@ describe('shelf line (Byggeregel H7)', () => {
   });
 });
 
-describe('shelves in a corner on the picking list (Byggeregler H10–H12)', () => {
+describe('shelves in a corner on the picking list (Byggeregler H10–H13)', () => {
   // Back wall's corner felt: one alone at 500, one meeting the side wall's at 1300
   const v = (() => {
     let x = row();
@@ -63,13 +63,13 @@ describe('shelves in a corner on the picking list (Byggeregler H10–H12)', () =
     expect(res.groups.flatMap((g) => g.lines).find((l) => l.artnr === '6311')).toMatchObject({ qty: 3, price: 247, sum: 741 });
   });
 
-  it('the short 91, one rail per kind, and the boards cut for the corner', () => {
+  it('the short 91 (front alone, back under every corner board), one rail per kind, and the boards cut for the corner', () => {
     const rows = res.bom.lines.filter((l) => l.group === 'hyll.hyller').map((l) => [l.name, l.qty]);
     expect(rows).toEqual([
       ['Hylleknekt 91F, 290 mm, med 600', 3],
       ['Hylleknekt 91FF, 290 mm, med 600', 1],
-      ['Hylleknekt 91, 80 mm, med 600', 1],
-      ['Hylleskinne 01, 2090 mm, med 01-kanal-krok', 1],
+      ['Hylleknekt 91, 80 mm, med 600', 3],
+      ['Hylleskinne 01, 2090 mm, med 01-kanal-krok', 2],
       ['Hylleskinne 01, 1290 mm, med 01-kanal-krok', 1],
       ['Hjørne hylleplate', 2],
       ['2/3 hylleplate', 1],
@@ -79,7 +79,7 @@ describe('shelves in a corner on the picking list (Byggeregler H10–H12)', () =
   it('costs the rails and the corner boards', () => {
     const line = res.groups.flatMap((g) => g.lines).find((l) => l.artnr === '6311')!;
     const cost =
-      3 * item(ITEM.shelfEnd).cost + item(ITEM.shelfTwin).cost + item(ITEM.shelfShort).cost + item(ITEM.shelfRail(2090)).cost + item(ITEM.shelfRail(1290)).cost +
+      3 * item(ITEM.shelfEnd).cost + item(ITEM.shelfTwin).cost + 3 * item(ITEM.shelfShort).cost + 2 * item(ITEM.shelfRail(2090)).cost + item(ITEM.shelfRail(1290)).cost +
       2 * item(ITEM.shelfBoardCorner).cost + item(ITEM.shelfBoardTwoThirds).cost + 3 * item(ITEM.shelfMount).cost + item(ITEM.shelfPick).cost;
     expect(line.cost).toBeCloseTo(cost, 6);
     expect(item(ITEM.shelfRail(1290)).cost).toBeGreaterThan(0);

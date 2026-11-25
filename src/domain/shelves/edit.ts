@@ -5,7 +5,8 @@ import type { Rules } from '../../rules/rules';
 import { sideOf, type FaceSide } from '../faces';
 import { moduleCount } from '../grid';
 import type { Shelf, Variant } from '../types';
-import { apart, fillHeights, fitsIn, putShelf, shelfBlocked, shelfHeight, shelvesIn, shelvesOf, shelvesOn } from './model';
+import { acrossCorner } from './corners';
+import { apart, fillHeights, fitsIn, putShelf, shelfBlocked, shelfFits, shelfHeight, shelvesIn, shelvesOf, shelvesOn } from './model';
 
 /**
  * Put a shelf in a felt at `y` (default the start height). A felt that already has shelves keeps them: the result is the
@@ -24,6 +25,9 @@ export function addShelf(
   if (why) return { error: why };
   const there = shelvesIn(v, wallId, module, s);
   if (there.length) return { v, id: there[0].id, existing: true };
+  // In a corner the shelves on the other wall's felt there count too (H9)
+  const no = shelfFits(v, rules, wallId, module, s, shelfHeight(rules, y));
+  if (no) return { error: no };
   return { ...putShelf(v, rules, wallId, module, s, y), existing: false };
 }
 
@@ -120,8 +124,7 @@ export function placeShelves(v: Variant, rules: Rules, ids: string[], anchorId: 
   if (same && !copy) return null;
   const others = copy ? v : { ...v, shelves: shelvesOf(v).filter((x) => !set.has(x.id)) };
   for (const m of moved) {
-    if (shelfBlocked(v, m.wallId, m.module, m.side)) return null;
-    if (!fitsIn(others, rules, m.wallId, m.module, m.side, m.y)) return null;
+    if (shelfFits(others, rules, m.wallId, m.module, m.side, m.y)) return null;
   }
   if (!copy) {
     const at = new Map(moved.map((m) => [m.f.id, m]));
@@ -187,7 +190,11 @@ export function spreadShelves(v: Variant, rules: Rules, ids: string[]): Variant 
     const lo = stack[0].y;
     const hi = stack[stack.length - 1].y;
     const ys = stack.map((_, i) => shelfHeight(rules, lo + ((hi - lo) * i) / (stack.length - 1)));
-    if (ys.slice(1).every((y, i) => apart(rules, ys[i], y))) stack.forEach((f, i) => to.set(f.id, ys[i]));
+    // In a corner the new heights keep the clear height to the other wall's felt too, or meet it (H9)
+    const f0 = stack[0];
+    const across = acrossCorner(v, f0.wallId, f0.module, sideOf(v, f0));
+    const clear = ys.every((y) => across.every((o) => Math.abs(o.y - y) < 1e-6 || apart(rules, o.y, y)));
+    if (clear && ys.slice(1).every((y, i) => apart(rules, ys[i], y))) stack.forEach((f, i) => to.set(f.id, ys[i]));
   }
   if (!to.size) return null;
   return { ...v, shelves: shelvesOf(v).map((x) => (to.has(x.id) ? { ...x, y: to.get(x.id)! } : x)) };
@@ -231,7 +238,7 @@ export function removeShelves(v: Variant, ids: string[]): Variant {
 /**
  * Shelves kept valid after any edit: one whose felt can no longer take a shelf (wall gone or shortened, a door, a
  * textile, a wall built against its post) is removed, a height outside the limits is brought inside, and of two too
- * close in one felt the later one goes.
+ * close in one felt, or in the two felts of a corner, the later one goes (shelfFits).
  */
 export function fitShelves(v: Variant, rules: Rules): Variant {
   if (!v.shelves?.length) return v;
@@ -240,8 +247,8 @@ export function fitShelves(v: Variant, rules: Rules): Variant {
   for (const f of v.shelves) {
     const s = sideOf(v, f);
     const y = shelfHeight(rules, f.y);
-    const crowded = kept.some((o) => o.wallId === f.wallId && o.module === f.module && sideOf(v, o) === s && !apart(rules, o.y, y));
-    if (shelfBlocked(v, f.wallId, f.module, s) || crowded) {
+    // Against those kept so far, in its felt and across a corner (H5, H9): of two too close the later one goes
+    if (shelfFits({ ...v, shelves: kept }, rules, f.wallId, f.module, s, y)) {
       changed = true;
       continue;
     }

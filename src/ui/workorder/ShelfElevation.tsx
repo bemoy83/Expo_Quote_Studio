@@ -119,7 +119,7 @@ export function CornerNotes({ v, wallId, s, layout }: { v: Variant; wallId: stri
     const other = c ? (c.corner.felt.wallId === wallId ? c.corner.other.wallId : c.corner.felt.wallId) : ''
     const n = r.carries.length
     at(r.felt, other).rails.push(
-      `${co.rail}-skinne ${r.length} mm med ${co.hook}, senter ${mm(r.along - rules.wall.post / 2)} mm fra hjørnestolpen, ${n} ${n === 1 ? 'hylle' : 'hyller'} ${r.kind === 'single' ? `alene på ${co.bracket} × ${co.short}` : `som møtes, på ${RECIPES.shelf.twin}`}`,
+      `${co.rail}-skinne ${r.length} mm med ${co.hook}, senter ${mm(r.along - rules.wall.post / 2)} mm fra hjørnestolpen, ${n} ${n === 1 ? 'hylle' : 'hyller'} ${r.kind === 'single' ? `alene på ${co.bracket} × ${co.short}` : r.kind === 'back' ? `i bakkant på ${co.bracket} × ${co.short}` : `som møtes, på ${RECIPES.shelf.twin}`}`,
     )
   }
   if (!corners.size) return null

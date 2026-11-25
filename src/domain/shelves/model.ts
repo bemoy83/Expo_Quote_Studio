@@ -17,7 +17,7 @@ const r3 = (n: number) => Math.round(n * 1000) / 1000;
 export const shelvesOf = (v: Variant): Shelf[] => v.shelves ?? [];
 
 /** A new shelf in felt `module` on face `s` at `y` (snapped and kept within H4), with the next free id. No checks: the
- *  callers have made sure it may stand there (shelfBlocked, fitsIn). */
+ *  callers have made sure it may stand there (shelfFits). */
 export function putShelf(v: Variant, rules: Rules, wallId: string, module: number, s: FaceSide, y: number): { v: Variant; id: string } {
   const id = nextId(shelvesOf(v).map((x) => x.id), 'h');
   return { v: { ...v, shelves: [...shelvesOf(v), { id, wallId, module, side: s, y: shelfHeight(rules, y) }] }, id };
@@ -90,6 +90,23 @@ export function fillHeights(rules: Rules, from: number, there: number[]): number
 export const fitsIn = (v: Variant, rules: Rules, wallId: string, module: number, s: FaceSide, y: number, skipId?: string) =>
   shelvesIn(v, wallId, module, s, skipId).every((o) => apart(rules, o.y, y)) &&
   acrossCorner(v, wallId, module, s, skipId).every((o) => Math.abs(o.y - y) < EPS || apart(rules, o.y, y));
+
+/**
+ * The one check for a shelf at height `y` in a felt (H1, H5, H6, H9), the reason it cannot stand there or null: the felt
+ * can take a shelf (shelfBlocked), and it keeps the clear height to the shelves in the felt and, in a corner, to those
+ * on the other wall's felt there, unless at the same height (they meet). Every edit that places a shelf asks this, and
+ * fitShelves keeps the shelves to it after any edit. `y` is taken as given (snap it with shelfHeight first, H4).
+ */
+export function shelfFits(v: Variant, rules: Rules, wallId: string, module: number, s: FaceSide, y: number, skipId?: string): string | null {
+  const why = shelfBlocked(v, wallId, module, s);
+  if (why) return why;
+  const own = shelvesIn(v, wallId, module, s, skipId);
+  if (own.some((o) => Math.abs(o.y - y) <= rules.shelf.gap / 2 + EPS)) return 'Hylle her fra før';
+  if (!own.every((o) => apart(rules, o.y, y))) return `For nær en annen hylle · ${gapNote(rules)}`;
+  if (!acrossCorner(v, wallId, module, s, skipId).every((o) => Math.abs(o.y - y) < EPS || apart(rules, o.y, y)))
+    return `For nær hyllen på naboveggen i hjørnet · ${gapNote(rules)}`;
+  return null;
+}
 
 /**
  * The row `id` stands in (H2): it and the shelves beside it, module by module, on the same face at the same height, in

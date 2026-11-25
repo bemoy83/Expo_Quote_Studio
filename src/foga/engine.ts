@@ -278,7 +278,8 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
     );
   bracket(sh.end, s.shelves?.end ?? 0, 'ende');
   bracket(sh.twin, s.shelves?.twin ?? 0, 'mellom to hylleplater');
-  // In inner corners (Byggeregler H10–H12): the short 91 under a lone corner shelf, the 01 rails with their krok
+  // In inner corners (Byggeregler H10–H13): the short 91 under a corner board at the back and under a lone one at the
+  // front, the 01 rails with their krok
   const co = sh.corner;
   put(
     BOM_GROUP.shelves,
@@ -287,7 +288,7 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
       artnr: '',
       name: `Hylleknekt ${co.bracket}, ${co.short} mm, med ${sh.coupling.code}`,
       detail: `${co.bracket} (${fogaPart(co.bracket).artnr}) × ${co.short} mm · ${sh.coupling.perBracket} × ${sh.coupling.code} (${fogaPart(sh.coupling.code).artnr}) · i 01-skinne under hjørnehylle`,
-      note: 'hjørnehylle alene',
+      note: 'bak under hjørneplate, og foran når den står alene',
       preassembled: true,
     },
     s.shelves?.short ?? 0,

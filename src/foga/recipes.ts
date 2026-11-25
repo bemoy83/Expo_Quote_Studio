@@ -132,8 +132,10 @@ export interface ShelfRecipe {
   /** In an inner corner (Byggeregler H9–H12): the post's face channel there is taken by the other wall, so the corner
    *  end rests on `rail` (01) hung on the other wall's face with `hook` over its top rail. Alone: a `short` piece of
    *  `bracket` (91) in the rail, `single` mm out from the corner post's face to the rail's centre, under a `corner`
-   *  board. Two shelves meeting: a twin (91FF) in the rail at the corner board's front edge (`play` between), the
-   *  corner board on the wall drawn first, `twoThirds` on the other. `narrow` where the other wall's rail passes behind
+   *  board, `endPlay` between its end and the rail. A corner board also rests on a short 91 in a second rail at its back
+   *  edge, next to the corner post (H13). Two shelves meeting: a twin (91FF) in the rail at the corner board's front
+   *  edge (`play` between), the corner board on the wall drawn first, `twoThirds` on the other, `twoThirdsPlay` from the
+   *  rail. `narrow` where the other wall's rail passes behind
    *  the board. `behind`: the board's back lies this far behind the post's face (H1, into its inner corner). The
    *  twin's flange top is `flange` above the bottom of its `body`. mm. */
   corner: {
@@ -143,6 +145,8 @@ export interface ShelfRecipe {
     short: number;
     single: number;
     play: number;
+    endPlay: number;
+    twoThirdsPlay: number;
     behind: number;
     flange: number;
     body: number;
@@ -257,6 +261,8 @@ export const RECIPES: Recipes = {
       short: 80,
       single: 200,
       play: 1,
+      endPlay: 4.5,
+      twoThirdsPlay: 2,
       behind: 10,
       flange: 10.5,
       body: 30,
