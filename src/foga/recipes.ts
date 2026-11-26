@@ -158,7 +158,7 @@ export interface ShelfRecipe {
  * Counter (bardisk 6560), Byggeregler K1–K5 (docs/byggeregler.md): a box of Foga profiles with plates in its channels,
  * closed on the front and both ends, open at the back where the staff stand. `post` in every corner, full height, its
  * closed faces outward. `rail` all round at `middle` and `top` (bottom of the rail, mm from the floor), `bottomRail` on
- * the floor on the closed sides only. Rails sit between the posts: side − 2 × post. `coupling` in each rail end. `plate`
+ * the floor all round, also at the open back (Bjørn 26.11.2026). Rails sit between the posts: side − 2 × post. `coupling` in each rail end. `plate`
  * is the wall plate (V5) in the channels, split at the middle rail; `board` lies in the rail's notch, the top and
  * a shelf on the middle rail. The counter is one box of one size now; a brush
  * that draws counters of any length and with corners is a later step (K1), with the joints it needs. mm.
@@ -273,7 +273,7 @@ export const RECIPES: Recipes = {
       },
     },
   },
-  // Bjørn 11.11.2026 (STL «6560 barinformasjonsdisk»): 92L corners, 93 top and middle, 92 at the bottom, 600 in the
+  // Bjørn 11.11.2026 (STL «6560 barinformasjonsdisk»): 92L corners, 93 top and middle, 92 at the bottom all round (also at the open back, Bjørn 26.11.2026), 600 in the
   // rail ends, wall plate 3 mm, Fibraplast 6 mm top and shelf, straight on the floor (no feet)
   counter: {
     nodes: { corner: '92L', tee: '93', cross: '94' },

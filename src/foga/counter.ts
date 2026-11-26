@@ -237,8 +237,8 @@ export function layoutBuild(r: CounterRecipe, l: CounterLayout): CounterBuild {
     box: { ...band(e, 0, deep, j), y },
   });
 
-  // K3, K11: a top rail on every side of every part, a 94 between two parts carrying the top on both sides (K8), on the
-  // floor on the closed sides only. A step (K12): the high part's top rail as on an outer side, facing the low part, and a 94 under the low top
+  // K3, K11: a top rail on every side of every part, a 94 between two parts carrying the top on both sides (K8), and
+  // a bottom rail on every outer side (below). A step (K12): the high part's top rail as on an outer side, facing the low part, and a 94 under the low top
   const railsAt = (e: Edge, y0: number) => (e.out ? rail(r.rail, 'rail', e, r.postSize, [y0, y0 + rh]) : rail(r.innerRail.code, 'rail', e, r.innerRail.size, [y0, y0 + rh]));
   const topRails = (e: Edge) => {
     const s = stepOf(e);
@@ -257,10 +257,10 @@ export function layoutBuild(r: CounterRecipe, l: CounterLayout): CounterBuild {
       return [railsAt(e, y)];
     });
   };
-  // K16: no bottom rail where the part is open from the floor
+  // K3, K11, K16: a bottom rail on every outer side, also where the part is open from the floor (the back of 6560)
   const rails = [
     ...edges.flatMap((e) => [...topRails(e), ...shelfRails(e)]),
-    ...edges.filter((e) => e.closed && e.kinds?.[0] !== 'open').map((e) => rail(r.bottomRail, 'bottomRail', e, r.bottomRailDepth, [0, rh])),
+    ...edges.filter((e) => e.out).map((e) => rail(r.bottomRail, 'bottomRail', e, r.bottomRailDepth, [0, rh])),
   ];
 
   // K4, K11, K16: the wall plate in the channels of the closed sides, one in each light opening, from the rail under it

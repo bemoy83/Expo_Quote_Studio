@@ -192,11 +192,11 @@ export function PodiumElevation({ parts: given, length, h: hTop, title, fill, ch
   })
   /** What each light opening of a part is as drawn (K16). */
   const kindsOf = (p: ElevationPart) => p.lights
-  /** A light opening's box in the drawing: from the underside of the rail over it down to the top of the rail under it,
-   *  or the floor when it is open at the bottom. */
+  /** A light opening's box in the drawing: from the underside of the rail over it down to the top of the rail under it
+   *  (the bottom rail stands also where it is open, K16). */
   const lightY = (p: ElevationPart, li: number): [number, number] => {
     const [c0, c1] = lightBands(p)[li]
-    return [yAt(c1), li === 0 ? (kindsOf(p)[0] === 'open' ? H : H - RAIL) : yAt(outerHeight(c0))]
+    return [yAt(c1), li === 0 ? H - RAIL : yAt(outerHeight(c0))]
   }
   // The chosen part or light opening, toned over the print
   const tint = (() => {
@@ -296,7 +296,6 @@ export function PodiumElevation({ parts: given, length, h: hTop, title, fill, ch
             const x0 = x(p.x0)
             const kinds = kindsOf(p)
             const bands = lightBands(p)
-            const lowOpen = kinds[0] === 'open'
             return (
               <g key={p.key}>
                 {bands.map((_, li) => {
@@ -328,13 +327,13 @@ export function PodiumElevation({ parts: given, length, h: hTop, title, fill, ch
                     </g>
                   )
                 })}
-                {/* Top rail, the shelves' rails (K19), and the bottom rail where it is not open from the floor */}
+                {/* Top rail, the shelves' rails (K19), and the bottom rail, also where it is open (K16) */}
                 <g pointerEvents="none" fill={ALU}>
                   <rect x={x0} y={yAt(outerHeight(p.h))} width={w} height={RAIL} />
                   {p.shelves.map((y) => (
                     <rect key={y} x={x0} y={yAt(outerHeight(y))} width={w} height={RAIL} />
                   ))}
-                  {!lowOpen && <rect x={x0} y={H - RAIL} width={w} height={RAIL} />}
+                  <rect x={x0} y={H - RAIL} width={w} height={RAIL} />
                 </g>
               </g>
             )

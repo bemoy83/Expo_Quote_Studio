@@ -9758,13 +9758,13 @@ exports[`10-mobler-utstyr.json > variant A > calculation 1`] = `
       "sum": 1400,
     },
     {
-      "cost": 233.85,
+      "cost": 243.74,
       "id": "disk",
       "lines": [
         {
           "artnr": "6560",
-          "cost": 233.85,
-          "dg": 0.8228409090909091,
+          "cost": 243.74,
+          "dg": 0.8153484848484849,
           "group": "disk.disker",
           "name": "Bardisk",
           "payer": "utstiller",
@@ -9892,9 +9892,9 @@ exports[`10-mobler-utstyr.json > variant A > calculation 1`] = `
     "wallSupports": 0,
   },
   "margin": {
-    "cost": 2760.016311848,
-    "db": 2209.983688152,
-    "dg": 0.4446647259863179,
+    "cost": 2769.906311848,
+    "db": 2200.093688152,
+    "dg": 0.442674786348491,
     "order": [
       {
         "cost": 172.05543728266665,
@@ -10195,13 +10195,13 @@ exports[`10-mobler-utstyr.json > variant A > quote lines 1`] = `
     "sum": 1400,
   },
   {
-    "cost": 233.85,
+    "cost": 243.74,
     "id": "disk",
     "lines": [
       {
         "artnr": "6560",
-        "cost": 233.85,
-        "dg": 0.8228409090909091,
+        "cost": 243.74,
+        "dg": 0.8153484848484849,
         "group": "disk.disker",
         "name": "Bardisk",
         "payer": "utstiller",
@@ -12145,7 +12145,7 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
         "group": "disk.disker",
         "name": "Disk bunnskinne 92, 960 mm, med 600",
         "preassembled": true,
-        "qty": 9,
+        "qty": 10,
       },
       {
         "artnr": "",
@@ -12153,7 +12153,7 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
         "group": "disk.disker",
         "name": "Disk bunnskinne 92, 460 mm, med 600",
         "preassembled": true,
-        "qty": 11,
+        "qty": 12,
       },
       {
         "artnr": "",
@@ -12311,8 +12311,8 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
         "94|1040": 3,
       },
       "rails": {
-        "92|460": 11,
-        "92|960": 9,
+        "92|460": 12,
+        "92|960": 10,
         "93|460": 14,
         "93|960": 12,
         "94|460": 9,
@@ -12324,13 +12324,13 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
   },
   "groups": [
     {
-      "cost": 2730.73314,
+      "cost": 2757.0197399999997,
       "id": "disk",
       "lines": [
         {
           "artnr": "6560",
-          "cost": 233.85,
-          "dg": 0.8228409090909091,
+          "cost": 243.74,
+          "dg": 0.8153484848484849,
           "group": "disk.disker",
           "name": "Bardisk",
           "payer": "utstiller",
@@ -12357,15 +12357,15 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
         },
         {
           "artnr": "6571",
-          "cost": 981.3106600000001,
-          "dg": 0.6835502547565301,
+          "cost": 997.70726,
+          "dg": 0.6855634226284273,
           "foga": true,
           "group": "disk.disker",
           "meta": "bygget på stedet 1520 × 1520 × 1040 mm · 1 åpen side · 1 hylle · RAL 7012",
           "name": "Disk",
           "payer": "utstiller",
           "placeholder": false,
-          "price": 3101,
+          "price": 3173,
           "qty": 1,
           "quote": {
             "key": "disk:i2",
@@ -12373,7 +12373,7 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
             "name": "Disk",
           },
           "strategy": "sum",
-          "sum": 3101,
+          "sum": 3173,
           "time": {
             "demontering": 21,
             "montering": 37.5,
@@ -12386,7 +12386,7 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
           "uses": [
             {
               "id": "disk-profil-92",
-              "qty": 4.26,
+              "qty": 5.68,
             },
             {
               "id": "disk-profil-93",
@@ -12402,7 +12402,7 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
             },
             {
               "id": "disk-kobling-600",
-              "qty": 40,
+              "qty": 44,
             },
             {
               "id": "disk-plate-m2",
@@ -12574,7 +12574,7 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
         },
       ],
       "name": "Disker og podier",
-      "sum": 9335,
+      "sum": 9407,
     },
     {
       "cost": 543.4000000000001,
@@ -12658,9 +12658,9 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
     "wallSupports": 0,
   },
   "margin": {
-    "cost": 3790.299451848,
-    "db": 6532.700548152,
-    "dg": 0.6328296568974136,
+    "cost": 3816.586051848,
+    "db": 6578.413948152,
+    "dg": 0.632844054656277,
     "order": [
       {
         "cost": 172.05543728266665,
@@ -12679,7 +12679,7 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
         "name": "Gange til og fra demontering",
       },
     ],
-    "sum": 10323,
+    "sum": 10395,
     "unknown": 0,
   },
   "organiser": {
@@ -12696,7 +12696,7 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
     "lm": 0,
     "pieces": [],
   },
-  "sum": 10323,
+  "sum": 10395,
   "wallSupports": [],
 }
 `;
@@ -12771,7 +12771,7 @@ exports[`13-disker-og-podier.json > variant A > picking list 1`] = `
     "nobb": false,
     "note": undefined,
     "preassembled": true,
-    "qty": "9 stk",
+    "qty": "10 stk",
     "title": "Disk bunnskinne 92, 960 mm, med 600",
   },
   {
@@ -12783,7 +12783,7 @@ exports[`13-disker-og-podier.json > variant A > picking list 1`] = `
     "nobb": false,
     "note": undefined,
     "preassembled": true,
-    "qty": "11 stk",
+    "qty": "12 stk",
     "title": "Disk bunnskinne 92, 460 mm, med 600",
   },
   {
@@ -12987,13 +12987,13 @@ exports[`13-disker-og-podier.json > variant A > production: textile and print ro
 exports[`13-disker-og-podier.json > variant A > quote lines 1`] = `
 [
   {
-    "cost": 2730.73314,
+    "cost": 2757.0197399999997,
     "id": "disk",
     "lines": [
       {
         "artnr": "6560",
-        "cost": 233.85,
-        "dg": 0.8228409090909091,
+        "cost": 243.74,
+        "dg": 0.8153484848484849,
         "group": "disk.disker",
         "name": "Bardisk",
         "payer": "utstiller",
@@ -13020,15 +13020,15 @@ exports[`13-disker-og-podier.json > variant A > quote lines 1`] = `
       },
       {
         "artnr": "6571",
-        "cost": 981.3106600000001,
-        "dg": 0.6835502547565301,
+        "cost": 997.70726,
+        "dg": 0.6855634226284273,
         "foga": true,
         "group": "disk.disker",
         "meta": "bygget på stedet 1520 × 1520 × 1040 mm · 1 åpen side · 1 hylle · RAL 7012",
         "name": "Disk",
         "payer": "utstiller",
         "placeholder": false,
-        "price": 3101,
+        "price": 3173,
         "qty": 1,
         "quote": {
           "key": "disk:i2",
@@ -13036,7 +13036,7 @@ exports[`13-disker-og-podier.json > variant A > quote lines 1`] = `
           "name": "Disk",
         },
         "strategy": "sum",
-        "sum": 3101,
+        "sum": 3173,
         "time": {
           "demontering": 21,
           "montering": 37.5,
@@ -13049,7 +13049,7 @@ exports[`13-disker-og-podier.json > variant A > quote lines 1`] = `
         "uses": [
           {
             "id": "disk-profil-92",
-            "qty": 4.26,
+            "qty": 5.68,
           },
           {
             "id": "disk-profil-93",
@@ -13065,7 +13065,7 @@ exports[`13-disker-og-podier.json > variant A > quote lines 1`] = `
           },
           {
             "id": "disk-kobling-600",
-            "qty": 40,
+            "qty": 44,
           },
           {
             "id": "disk-plate-m2",
@@ -13237,7 +13237,7 @@ exports[`13-disker-og-podier.json > variant A > quote lines 1`] = `
       },
     ],
     "name": "Disker og podier",
-    "sum": 9335,
+    "sum": 9407,
   },
   {
     "cost": 543.4000000000001,

@@ -683,9 +683,10 @@ K22 standardvarene og K23 disker over en fotplate.
   fotplate står den på innsats 700 (K23).
   *Bjørn 11.11.2026 · `RECIPES.counter.post`, `height`, `postSize` · kode `src/foga/counter.ts` · test `src/foga/counter.test.ts`*
 - **K3 Skinner.** 93 (873 060 22, 30 × 40, kanal i begge ender og på innsiden) rundt alle fire sidene i midten (750–790)
-  og øverst (1000–1040), og 92 på gulvet foran og i begge ender; bak er det ingen bunnskinne. Skinnene står mellom
-  stolpene: sidens lengde − 2 × 30, altså 960 og 460. Én 600 i hver skinneende, 22 per disk.
-  *Bjørn 11.11.2026 · `RECIPES.counter.rail`, `bottomRail`, `middle`, `top`, `coupling` · kode `src/foga/counter.ts` · test `src/foga/counter.test.ts`*
+  og øverst (1000–1040), og 92 på gulvet rundt alle fire sidene, også bak der disken er åpen (Bjørn 26.11.2026, rettet
+  fra 11.11.2026). Skinnene står mellom stolpene: sidens lengde − 2 × 30, altså 960 og 460. Én 600 i hver skinneende,
+  24 per disk.
+  *Bjørn 11.11.2026, 26.11.2026 · `RECIPES.counter.rail`, `bottomRail`, `middle`, `top`, `coupling` · kode `src/foga/counter.ts` · test `src/foga/counter.test.ts`*
 - **K4 Plater.** Samme veggplate som systemveggen (V5, 3 mm) i kanalene foran og i begge ender, delt ved midtskinnen:
   976 × 726 og 976 × 226 foran, 476 × 726 og 476 × 226 i hver ende. Platen går ned i kanalen og står 2 mm kort i hver ende og 4 mm kort i toppen. Farge står i K6, print og dekal i K20.
   *Bjørn 11.11.2026 · `RECIPES.counter.plate`, `channel`, `platePlay` · kode `src/foga/counter.ts` · test `src/foga/counter.test.ts`*
@@ -799,8 +800,8 @@ K22 standardvarene og K23 disker over en fotplate.
 - **K16 Sider og lysåpninger.** Hver del av omrisset, mellom to knutepunkter, hører til seksjonen bak og er delt i
   lysåpninger av hylleskinnene i seksjonen (K19): en under den nederste skinnen og en over hver; uten hyller er delen én
   lysåpning. Hver lysåpning er plate, åpen eller skyvedør (K17). Plate er standard (K11) og lagres ikke; platen går fra
-  skinnen under til skinnen over. Åpen: ingen plate, og ingen bunnskinne når det er den nederste lysåpningen (som
-  baksiden på 6560); de andre skinnene og stolpene står. Trinnplaten (K12) er alltid plate. **Valget** gjøres i skuffen:
+  skinnen under til skinnen over. Åpen: ingen plate; skinnene og stolpene står, også bunnskinnen når det er den
+  nederste lysåpningen (som baksiden på 6560, Bjørn 26.11.2026). Trinnplaten (K12) er alltid plate. **Valget** gjøres i skuffen:
   med hele siden eller en del valgt gjelder det alle lysåpningene i den, et klikk på én lysåpning i risset velger bare
   den. En ny hylle deler en lysåpning i to som begge beholder valget, og en hylle som tas bort slår de to sammen til den
   nederste, som beholder sitt. Valget lagres på seksjonens side, så det følger delen: flytt og roter endrer ingenting,
