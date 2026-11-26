@@ -717,9 +717,9 @@ K22 standardvarene og K23 disker over en fotplate.
   ytre lengder. Arbeidsordren viser helmålene på alle disker som bygges på stedet; en standardvare (K22) får ingen.
   *Bjørn 12.11.2026 · `RECIPES.counter.nodes`, `innerRail` · kode `src/foga/counter.ts` · test `src/foga/counter.test.ts`*
 - **K9 Tid for disk bygget på stedet.** Plassholder til Bjørn har målt: 24 min i alt per hel meter (plukk, vask og
-  transport 2 + 2 + 2, montering 12, demontering 6; 13 og 7 før bunnskinnen bak kom til, Bjørn 26.11.2026), omtrent halvparten per halv meter (1 + 1 + 1, 6, 4) og 6 til per hjørne
-  (4, 2), så en disk på 1,0 m bygget på stedet koster omtrent 1320 som 6560 (20–30 min på 1 m, Bjørn). Tiden er lik i
-  alle farger. Hvordan den telles per seksjon, står i K13.
+  transport 2 + 2 + 2, montering 12, demontering 6; 13 og 7 før bunnskinnen bak kom til, Bjørn 26.11.2026), omtrent
+  halvparten per halv meter (1 + 1 + 1, 6, 4) og 6 til per hjørne (4, 2), så en disk på 1,0 m bygget på stedet koster
+  omtrent 1320 som 6560 (20–30 min på 1 m, Bjørn). Tiden er lik i alle farger. Hvordan den telles per seksjon, står i K13.
   *Bjørn 12.11.2026 (tid forslag) · `ITEM.counterProfile`, `counterWhole`, `counterHalf`, `counterCorner` · kode `src/calc/lines/objects.ts`, `src/cost/itemDefs.ts`, `src/foga/counter.ts`, `src/foga/engine.ts`, `src/domain/counters.ts` · test `src/calc/podium.test.ts`*
 - **K10 Seksjoner og pennen.** En disk eller et podie er satt sammen av seksjoner (K7), med et knutepunkt i hvert hjørne
   av hver seksjon.
@@ -801,8 +801,8 @@ K22 standardvarene og K23 disker over en fotplate.
   lysåpninger av hylleskinnene i seksjonen (K19): en under den nederste skinnen og en over hver; uten hyller er delen én
   lysåpning. Hver lysåpning er plate, åpen eller skyvedør (K17). Plate er standard (K11) og lagres ikke; platen går fra
   skinnen under til skinnen over. Åpen: ingen plate; skinnene og stolpene står, også bunnskinnen når det er den
-  nederste lysåpningen (som baksiden på 6560, Bjørn 26.11.2026). Trinnplaten (K12) er alltid plate. **Valget** gjøres i skuffen:
-  med hele siden eller en del valgt gjelder det alle lysåpningene i den, et klikk på én lysåpning i risset velger bare
+  nederste lysåpningen (som baksiden på 6560, Bjørn 26.11.2026). Trinnplaten (K12) er alltid plate. **Valget** gjøres
+  i skuffen: med hele siden eller en del valgt gjelder det alle lysåpningene i den, et klikk på én lysåpning i risset velger bare
   den. En ny hylle deler en lysåpning i to som begge beholder valget, og en hylle som tas bort slår de to sammen til den
   nederste, som beholder sitt. Valget lagres på seksjonens side, så det følger delen: flytt og roter endrer ingenting,
   et grep som strekker en seksjon strekker valget med, en ny del er plate, og en side som blir innvendig (påbygg, fusjon)

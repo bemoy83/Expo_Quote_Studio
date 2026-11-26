@@ -237,8 +237,9 @@ export function layoutBuild(r: CounterRecipe, l: CounterLayout): CounterBuild {
     box: { ...band(e, 0, deep, j), y },
   });
 
-  // K3, K11: a top rail on every side of every part, a 94 between two parts carrying the top on both sides (K8), and
-  // a bottom rail on every outer side (below). A step (K12): the high part's top rail as on an outer side, facing the low part, and a 94 under the low top
+  // K3, K11: a top rail on every side of every part, a 94 between two parts carrying the top on both sides (K8), and a
+  // bottom rail on every outer side (below). A step (K12): the high part's top rail as on an outer side, facing the
+  // low part, and a 94 under the low top
   const railsAt = (e: Edge, y0: number) => (e.out ? rail(r.rail, 'rail', e, r.postSize, [y0, y0 + rh]) : rail(r.innerRail.code, 'rail', e, r.innerRail.size, [y0, y0 + rh]));
   const topRails = (e: Edge) => {
     const s = stepOf(e);
