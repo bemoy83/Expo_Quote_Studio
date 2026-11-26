@@ -716,8 +716,8 @@ K22 standardvarene og K23 disker over en fotplate.
   94-skinnen mellom dem. Valgt disk viser utvendig helmål: bredde og dybde på siden mot midten av standen, en L sine to
   ytre lengder. Arbeidsordren viser helmålene på alle disker som bygges på stedet; en standardvare (K22) får ingen.
   *Bjørn 12.11.2026 · `RECIPES.counter.nodes`, `innerRail` · kode `src/foga/counter.ts` · test `src/foga/counter.test.ts`*
-- **K9 Tid for disk bygget på stedet.** Plassholder til Bjørn har målt: 26 min i alt per hel meter (plukk, vask og
-  transport 2 + 2 + 2, montering 13, demontering 7), halvparten per halv meter (1 + 1 + 1, 6, 4) og 6 til per hjørne
+- **K9 Tid for disk bygget på stedet.** Plassholder til Bjørn har målt: 24 min i alt per hel meter (plukk, vask og
+  transport 2 + 2 + 2, montering 12, demontering 6; 13 og 7 før bunnskinnen bak kom til, Bjørn 26.11.2026), omtrent halvparten per halv meter (1 + 1 + 1, 6, 4) og 6 til per hjørne
   (4, 2), så en disk på 1,0 m bygget på stedet koster omtrent 1320 som 6560 (20–30 min på 1 m, Bjørn). Tiden er lik i
   alle farger. Hvordan den telles per seksjon, står i K13.
   *Bjørn 12.11.2026 (tid forslag) · `ITEM.counterProfile`, `counterWhole`, `counterHalf`, `counterCorner` · kode `src/calc/lines/objects.ts`, `src/cost/itemDefs.ts`, `src/foga/counter.ts`, `src/foga/engine.ts`, `src/domain/counters.ts` · test `src/calc/podium.test.ts`*

@@ -252,10 +252,10 @@ export const EXAMPLE_TIMES: Readonly<Record<string, Time>> = {
       [ITEM.counterPlates(z.length, z.depth, z.h), perPlate(b, { ...pvt(0.5, 1, 0), ...onSite(6, 4) })],
     ]),
   ),
-  // A counter built on site (K9, Bjørn 12.11.2026: 20–30 min on 1 m): placeholders, 26 min in all per whole metre (its
-  // parts picked, washed and carried, built up and taken down), half that for a half, 6 more per corner. With 26 a
-  // drawn 1,0 m prices at about the 1320 of the counter in stock
-  [ITEM.counterWhole]: { ...pvt(2, 2, 2), ...onSite(13, 7) },
+  // A counter built on site (K9, Bjørn 12.11.2026: 20–30 min on 1 m): placeholders, 24 min in all per whole metre (its
+  // parts picked, washed and carried, built up and taken down), about half that for a half, 6 more per corner. With 24 a
+  // drawn 1,0 m prices at about the 1320 of the counter in stock (26 before the bottom rail at the back, 26.11.2026)
+  [ITEM.counterWhole]: { ...pvt(2, 2, 2), ...onSite(12, 6) },
   [ITEM.counterHalf]: { ...pvt(1, 1, 1), ...onSite(6, 4) },
   [ITEM.counterCorner]: onSite(4, 2),
   // Disker og podier (Bjørn 13.11.2026, placeholders): a sliding door 2 min up and 1 down, a shelf as H7 (1,5 and 1)
