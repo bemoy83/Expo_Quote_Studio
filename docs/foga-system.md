@@ -398,8 +398,9 @@ Slik henger det sammen:
   `src/foga/recipes.ts`). Endelokkene plukkes ikke (Bjørn 6.11.2026).
 
 - **Disk 6560** (STL 11.11.2026, K1–K5): 92L i hjørnene med de lukkede sidene ut, 93 mellom dem i midten og øverst,
-  92 på gulvet foran og i endene. Veggplaten står i kanalene 10 mm inn fra yttersiden, som i veggen. Topp og hylle
-  (6 mm) ligger i falsen på 93, så toppen ender 4 mm under skinnens overkant. Oppskriften er i `src/foga/counter.ts`.
+  92 på gulvet rundt alle fire sidene, også bak der den er åpen (Bjørn 26.11.2026). Veggplaten står i kanalene 10 mm
+  inn fra yttersiden, som i veggen. Topp og hylle (6 mm) ligger i falsen på 93, så toppen ender 4 mm under skinnens
+  overkant. Oppskriften er i `src/foga/counter.ts`.
 
 ### 3D-visning med ekte profiler (bygget 6.11.2026)
 

@@ -54,9 +54,9 @@ describe('the table of the order (K16, K17, K19)', () => {
     expect([...new Set(plates(one([750])).map((p) => p.split('×')[1]))].sort()).toEqual(['226', '726']);
   });
 
-  it('open under the shelf: no bottom rail; open in every light opening is open as in PR 1', () => {
+  it('open under the shelf: the bottom rail stands (K16); open in every light opening is open as in PR 1', () => {
     const low = setLight(one([500]), front(one([500])), 'open', 0);
-    expect(bottoms(low)).toBe(bottoms(one([500])) - 1);
+    expect(bottoms(low)).toBe(bottoms(one([500])));
     const all = setLight(one([500]), front(one([500])), 'open');
     expect(lightsOf(all, front(all)[0])).toEqual(['open', 'open']);
     expect(build(all).plates.filter((p) => p.w === 976)).toHaveLength(2);

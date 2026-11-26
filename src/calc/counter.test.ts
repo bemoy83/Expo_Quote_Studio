@@ -114,7 +114,7 @@ describe('a counter built on site (Byggeregler K9, K13)', () => {
     expect(q('Diskstolpe 92L')).toEqual(['4 stk']);
     expect(q('Diskstolpe 93')).toEqual(['2 stk']);
     expect(q('Disk tverrskinne 94, 460 mm')).toEqual(['2 stk']);
-    expect(q('Disk bunnskinne 92, 960 mm')).toEqual(['1 stk']);
+    expect(q('Disk bunnskinne 92, 960 mm')).toEqual(['2 stk']);
     expect(q('Topp- og hylleplate', '976 × 476')).toEqual(['2 stk']);
     expect(q('Topp- og hylleplate', '476 × 476')).toEqual(['2 stk']);
     expect(rows.filter((x) => x.title.startsWith('Diskplate')).every((x) => x.code === 'RAL 3002')).toBe(true);

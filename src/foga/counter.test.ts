@@ -27,18 +27,20 @@ describe('counter 6560 (K1–K5)', () => {
     expect(posts.find((x) => x.out[0] < 0 && x.out[1] > 0)?.box).toEqual({ x: [-510, -480], y: [0, 1040], z: [230, 260] });
   });
 
-  it('has 93 all round at the middle and the top, 92 on the floor only on the closed sides (K3)', () => {
+  it('has 93 all round at the middle and the top, 92 on the floor all round, also at the open back (K3)', () => {
     const rails = b.profiles.filter((x) => x.role === 'rail');
     expect(rails).toHaveLength(8);
     expect(rails.filter((x) => x.len === 960)).toHaveLength(4);
     expect(rails.filter((x) => x.len === 460)).toHaveLength(4);
     expect(new Set(rails.map((x) => x.box.y[0]))).toEqual(new Set([750, 1000]));
     const bottom = b.profiles.filter((x) => x.role === 'bottomRail');
-    expect(bottom.map((x) => [x.code, x.len, x.out])).toEqual([['92', 960, [0, 1]], ['92', 460, [-1, 0]], ['92', 460, [1, 0]]]);
+    expect(bottom.map((x) => [x.code, x.len, x.out])).toEqual([['92', 960, [0, 1]], ['92', 960, [0, -1]], ['92', 460, [-1, 0]], ['92', 460, [1, 0]]]);
     // Flush with the outer face, 20 deep
     expect(bottom[0].box.z).toEqual([240, 260]);
-    expect(b.couplings).toBe(22);
-    expect(profileMetres(b)).toEqual({ '92L': 4.16, '93': 5.68, '92': 1.88 });
+    // The back's bottom rail is on the floor behind the open back too (Bjørn 26.11.2026)
+    expect(bottom[1].box.z).toEqual([-260, -240]);
+    expect(b.couplings).toBe(24);
+    expect(profileMetres(b)).toEqual({ '92L': 4.16, '93': 5.68, '92': 2.84 });
   });
 
   it('has the wall plate in the channels of the front and both ends, split at the middle rail (K4)', () => {
@@ -89,7 +91,7 @@ describe('drawn counters: nodes 500 or 1000 apart, the profile in a node by the 
     expect(x.profiles.filter((p) => p.code === r.innerRail.code && p.role === 'rail').map((p) => p.len)).toEqual([460, 460]);
     expect(sorted(x.plates.map((p) => `${sideOf(p.out)} ${p.w}`))).toEqual(['front 476', 'front 476', 'front 976', 'front 976', 'left 476', 'left 476', 'right 476', 'right 476']);
     expect(sorted(x.boards.map((b) => `${b.role} ${b.w} × ${b.d}`))).toEqual(['shelf 476 × 476', 'shelf 976 × 476', 'top 476 × 476', 'top 976 × 476']);
-    expect(x.profiles.filter((p) => p.role === 'bottomRail').map((p) => p.len).sort((a, b) => a - b)).toEqual([460, 460, 460, 960]);
+    expect(x.profiles.filter((p) => p.role === 'bottomRail').map((p) => p.len).sort((a, b) => a - b)).toEqual([460, 460, 460, 460, 960, 960]);
   });
 
   it('makes an L of two 6560: the end of one against the back of the other, a 93 where three directions meet', () => {

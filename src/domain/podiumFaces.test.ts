@@ -46,17 +46,17 @@ describe('parts and their choice (K16)', () => {
     expect(back).toEqual(two);
   });
 
-  it('an open part has no plate and no bottom rail; its top rail and posts stand (K16, as the back of 6560)', () => {
+  it('an open part has no plate; its bottom rail, top rail and posts stand (K16, as the back of 6560)', () => {
     const closed = counterBuildOf({ sections: two });
     const open = counterBuildOf({ sections: openBack(two) });
     expect(closed.plates.length - open.plates.length).toBe(2);
     const bottoms = (b: typeof open) => b.profiles.filter((p) => p.role === 'bottomRail').map((p) => p.len).sort();
     expect(bottoms(closed)).toEqual([460, 460, 460, 460, 960, 960]);
-    expect(bottoms(open)).toEqual([460, 460, 460, 960]);
+    expect(bottoms(open)).toEqual(bottoms(closed));
     expect(open.profiles.filter((p) => p.role === 'post')).toHaveLength(closed.profiles.filter((p) => p.role === 'post').length);
   });
 
-  it('table: one part of 1000 c/c, CC 1000, open: one plate 976 × 976 and one bottom rail 960 less', () => {
+  it('table: one part of 1000 c/c, CC 1000, open: one plate 976 × 976 less, the bottom rail stands (K16)', () => {
     const one = [sec(-500, 500, -250, 250)];
     const front = podiumParts(one).filter((p) => p.axis === 'z' && p.out === 1);
     const a = counterBuildOf({ sections: one });
@@ -65,7 +65,7 @@ describe('parts and their choice (K16)', () => {
     expect(big(a) - big(b)).toBe(1);
     expect(a.plates.length - b.plates.length).toBe(1);
     const rails = (x: typeof a) => x.profiles.filter((p) => p.role === 'bottomRail' && p.len === 960).length;
-    expect(rails(a) - rails(b)).toBe(1);
+    expect(rails(a)).toBe(rails(b));
   });
 });
 
