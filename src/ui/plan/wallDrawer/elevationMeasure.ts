@@ -36,12 +36,17 @@ export function lysmal(rules: Rules, fields: number[], H: number, ccs: readonly 
   return { along, heights: [H - (feet + height - profile.top), H - (feet + profile.bottom), H] }
 }
 
-/** A leader text: its dot on the item's top, and the line of text it stands on (0 = lowest). */
+/**
+ * A leader text: its dot on the item's top, and the line of text it stands on. Over the wall, 0 is the lowest line;
+ * `under` the middle rail of a raised wall, 0 is the line nearest the rail and the next ones go down.
+ */
 export interface Leader {
   text: string
   x: number
   y: number
   level: number
+  /** In the lower felt's own row, just under the middle rail (a raised wall, Byggeregel V20). */
+  under?: boolean
 }
 
 /** Px: a leader line of text, the numbers of a chain, the heading. Chains stand as in the plan (DIM_NEAR, DIM_TOTAL). */
@@ -134,9 +139,13 @@ export const row = (ends: [number, number], edges: number[]): number[] => chainP
 /**
  * The leader texts, left to right: one per item, from the middle of its top. A text that would run into the one
  * before it goes one line up (`u` metres per px, for the text widths).
+ *
+ * On a `raised` wall (Byggeregel V20, Bjørn 27.11.2026) each storey names its own: what reaches over the middle rail
+ * is named over the wall as before, what stays under it in a row of its own just under the rail, so no leader goes
+ * across the middle rail into the other felt. That row stacks downward.
  */
-export function leaders(items: ElevationItem[], H: number, u: number): Leader[] {
-  const ends: number[] = []
+export function leaders(items: ElevationItem[], H: number, u: number, raised = false): Leader[] {
+  const ends: Record<'over' | 'under', number[]> = { over: [], under: [] }
   return [...items]
     .sort((a, b) => a.x0 + a.x1 - (b.x0 + b.x1))
     .map((it) => {
@@ -144,10 +153,12 @@ export function leaders(items: ElevationItem[], H: number, u: number): Leader[] 
       // Text from just right of the line, about 0,6 em a letter
       const text = it.label ?? LABEL[it.kind]
       const width = (textPx(text, LEADER_FONT) + 8) * u
+      const under = raised && it.top <= H + 1e-6
+      const row = ends[under ? 'under' : 'over']
       let level = 0
-      while (ends[level] !== undefined && ends[level] > x) level++
-      ends[level] = x + width
-      return { text, x, y: H - it.top, level }
+      while (row[level] !== undefined && row[level] > x) level++
+      row[level] = x + width
+      return { text, x, y: H - it.top, level, ...(under ? { under } : {}) }
     })
 }
 
@@ -205,7 +216,9 @@ export function frame(size: { w: number; h: number } | null, L: number, H: numbe
   /** The whole height drawn: the wall and what a raise puts over it. */
   const Ht = H + above
   /** Lines of leader text for `list` at `k` px per m (one before the scale is known). */
-  const levelsOf = (list: ElevationItem[], k: number | null) => (!list.length ? 0 : k === null ? 1 : Math.max(1, ...leaders(list, H, 1 / k).map((l) => l.level + 1)))
+  // Only the lines over the wall take room in the margin; a raised wall's lower felt names its own under the rail
+  const levelsOf = (list: ElevationItem[], k: number | null) =>
+    !list.length ? 0 : k === null ? 1 : Math.max(1, ...leaders(list, H, 1 / k, above > 0).flatMap((l) => (l.under ? [] : [l.level + 1])))
   const fit = (k0: number | null) => {
     let m = margins(items, levelsOf(labels, k0), opts)
     if (opts.steady) {
@@ -219,7 +232,7 @@ export function frame(size: { w: number; h: number } | null, L: number, H: numbe
   let { m, k } = fit(null)
   ;({ m, k } = fit(k))
   const u = 1 / k
-  const ls = leaders(labels, H, u)
+  const ls = leaders(labels, H, u, above > 0)
   // Centred in the svg like preserveAspectRatio meet would, with the margins kept
   const vbW = size ? size.w * u : L + (m.left + m.right) * u
   const vbH = size ? size.h * u : Ht + (m.top + m.bottom) * u

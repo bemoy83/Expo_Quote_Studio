@@ -205,6 +205,9 @@ Veggskuffens tegning blir arbeidstegning for én vegg. Se bilde 3.
   - **Tekstilramme, dekal eller print:** over veggen plasseringsraden fra hver veggende og bredden (tekstil med
     rammens fysiske bredde, 3 970 i et felt på 4 000), til høyre høyderaden (bunn, høyde, rest til topp), og
     veggens total under. Ingen modulkjede og ingen vegghøyder. Print over flere plater måles som ett.
+    På hevet vegg (V20, Bjørn 27.11.2026) står plasseringsraden over hele veggen og vaiermerkene, og høyderaden går
+    fra gulvet til toppen av hevingen med mellomskinnen som eget punkt: bunn, høyde, rest til mellomskinnen og
+    hevingen (dekal nede), eller rest til mellomskinnen, høyde og rest til topp (dekal oppe).
   - **Modulmål** (Bjørn 6.11.2026): en modul er 1 000 senter til senter stolpe, og veggene i et løp deler stolper.
     Modulkjeden står derfor merket «c/c». Totalen er fysisk, fra utsiden av endestolpene: 4 000 c/c er 4 040.
     Plasseringsraden over veggen regnes fra de samme utsidene, så den går opp i totalen (1 035 + 3 970 + 1 035 =
@@ -214,6 +217,10 @@ Veggskuffens tegning blir arbeidstegning for én vegg. Se bilde 3.
   hårstrek (0,6 px, `--ink-muted`) opp til en tekst i målskriften (mono 10,5 px): produkttypen, med nummeret foran
   når «Vis posisjoner» er på. Tekstene står på én linje over plasseringsraden. Linjene forskyves 13 px om de
   overlapper.
+  **Hevet vegg (V20, Bjørn 27.11.2026):** hver etasje navngir sitt eget, og ingen henvisningslinje krysser
+  mellomskinnen. Det som når over mellomskinnen (dekal på øvre felt, høy tekstilramme) står over hele veggen, over
+  vaiermerkene. Det som står under, får en egen rad rett under mellomskinnen, og raden forskyves nedover. Når toppen
+  av tingen når helt opp til skinnen (helplateprint), står teksten rett ved prikken.
 - Rommet bak veggen («Bakrom») står i en `--sunken` flate som i dag.
 - **Tekstilrammen slik den bygges** (Bjørn 8.11.2026, i planens oransje tekstilfarge, `TextileFace` i `plan/elevation.tsx`, mål i
   `wallDrawer/elevationMeasure.ts`): samme tegning på vegg og på fotplater. Rammen tegnes i fysisk mål (970 i et

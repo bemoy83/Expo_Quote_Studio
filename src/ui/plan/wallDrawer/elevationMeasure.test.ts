@@ -44,6 +44,20 @@ describe('wall drawing dimensions', () => {
     ])
   })
 
+  it('on a raised wall each felt names its own: under the middle rail, or over the wall (V20)', () => {
+    const it = (x0: number, x1: number, bottom: number, top: number) => ({ kind: 'decal' as const, x0, x1, bottom, top })
+    const ls = leaders([it(0, 0.2, 2.8, 3.2), it(0.1, 0.3, 1, 1.4), it(0.2, 0.4, 0.5, 0.9), it(2, 2.2, 1, 2.54)], 2.54, 0.01, true)
+    // The upper decal over the wall, the lower ones under the rail, stacking down when they run into each other
+    expect(ls.map((l) => [!!l.under, l.level])).toEqual([
+      [false, 0],
+      [true, 0],
+      [true, 1],
+      [true, 0],
+    ])
+    // A wall that is not raised names everything over it, as before
+    expect(leaders([it(0.1, 0.3, 1, 1.4)], 2.54, 0.01).some((l) => l.under)).toBe(false)
+  })
+
   it('the heading names the face and where each end points', () => {
     const v = createVariant('A', { width: 6, depth: 4, type: 'corner' })
     const left = v.walls.find((w) => isStandWall(w) && w.from[0] === 0 && w.to[0] === 0)!
