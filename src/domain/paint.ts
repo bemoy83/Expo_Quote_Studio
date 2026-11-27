@@ -17,7 +17,7 @@ import { withSections } from './podiumSections';
 import { setWallPlate } from './edit';
 import type { FaceSide } from './faces';
 import { wallModules } from './grid';
-import { colourPlates, uncolourAll, uncolourPlates, wallRal } from './plateDecor';
+import { colourPlates, colourUpper, uncolourAll, uncolourPlates, uncolourUpper, wallRal } from './plateDecor';
 import { clearPrint, hiddenPlates, printsOn, uncolourHidden, withoutDoorPart } from './print';
 import { roomOf } from './rooms';
 import type { CounterSection, DoorSurface, PlacedObject, Variant, Wall } from './types';
@@ -90,6 +90,10 @@ export function paintPlate(v: Variant, wallId: string, s: FaceSide, module: numb
   if (builtModules(v).some((m) => m.key === key && m.opening)) return withoutDoorPart(x, wallId, s, module, 'header');
   return clearPrint(x, wallId, s, [module]);
 }
+
+/** A colour on the upper felt of raised plate `key` (Byggeregel V20, the felt's palette): a plate of its own over the
+ *  middle rail. `ral` back to the wall's own colour drops its own. */
+export const paintUpper = (v: Variant, key: string, ral: string): Variant => colourUpper(v, [key], ral, plateBase(v));
 
 /** A colour on a door leaf (the brush on the leaf, the door's pill): as a plate, its print on this face comes off; the
  *  header keeps its share of a picture over both. */
@@ -238,8 +242,9 @@ export function paintAllCounters(v: Variant, ral: string): Painted {
 
 /** What «Fjern farge og print» takes back to plain. */
 export type ClearAt =
-  /** A plate (`module`) of a wall, or with none the whole wall (a room wall: the whole room's colour). */
-  | { kind: 'wall'; wallId: string; side: FaceSide; module?: number }
+  /** A plate (`module`) of a wall, its upper felt with `upper` (V20), or with none the whole wall (a room wall: the
+   *  whole room's colour). */
+  | { kind: 'wall'; wallId: string; side: FaceSide; module?: number; upper?: boolean }
   /** A door's leaf or its header. */
   | { kind: 'door'; openingId: string; side: FaceSide; part: DoorSurface }
   /** The parts `keys` of a counter (the side shown), or light opening `light` of them. */
@@ -266,6 +271,7 @@ export function clearSurface(v: Variant, at: ClearAt): Variant {
     const key = wallModules(w)[at.module]?.key;
     if (!key) return v;
     const owned = builtModules(v).some((m) => m.key === key && m.wallId === w.id);
+    if (at.upper) return same(uncolourUpper(v, [key]), v);
     return same(clearPrint(owned ? uncolourPlates(v, [key]) : v, w.id, at.side, [at.module]), v);
   }
   // The whole wall in the stand's colour, its doors too (the door is part of the wall), the print off the face shown

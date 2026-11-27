@@ -1,14 +1,16 @@
 // The decor register (felles plateregel, trinn B1, Bjørn 18.11.2026): the colour a single plate has of its own, kept by
 // the plate's owner address. A wall's plate is `wallId@a-b`, mm from the wall's start (a part of a module another wall
 // split, V10, by its own stretch); a door leaf is `openingId/leaf`. A door's header is its module's plate. A wall has
-// one colour (Wall.plate, Room.plate, else the variant's defaultPlate); a plate here is over it. One plate is one HDF
+// one colour (Wall.plate, Room.plate, else the variant's defaultPlate); a plate here is over it. A raised plate's upper
+// felt (V20) is a plate of its own, `wallId@a-b/upper`: without its own colour it has the wall's, also when the felt below
+// has its own. One plate is one HDF
 // sheet, so the colour is the same on both faces; a different face is print over the plate (foils, for now).
 //
 // Byggeregel V17. After any edit `carryDecor` takes each plate's decor to where the plate went, from the numbers of trinn A2: a wall
 // moved as a whole takes its plates along; a wall stretched or cut keeps each plate where it stands along its line;
 // a plate whose wall is gone or turned (split in two, made a room side) keeps its decor where it stands in the plan.
 // Decor on a plate no wall has any more is dropped, so a wall drawn there later starts in its own colour.
-import { plateLocal, wallLength, wallModules } from './grid';
+import { plateLocal, UPPER, upperLocal, wallLength, wallModules } from './grid';
 import type { PlateDecor, Variant, Wall } from './types';
 import { builtModules } from './walls';
 
@@ -55,6 +57,23 @@ export function colourPlates(v: Variant, keys: Iterable<string>, ral: string, ba
   return setRal(v, [...keys].flatMap((k) => (local.has(k) ? [[local.get(k)!, base(k)] as [string, string]] : [])), ral);
 }
 
+/** Colour the upper felts of these raised plates (module keys, V20); `base` as in `colourPlates`. A plate not raised
+ *  is left as it is. */
+export function colourUpper(v: Variant, keys: Iterable<string>, ral: string, base: (key: string) => string): Variant {
+  const local = upperByKey(v);
+  return setRal(v, [...keys].flatMap((k) => (local.has(k) ? [[local.get(k)!, base(k)] as [string, string]] : [])), ral);
+}
+
+/** Drop the colours of their own on the upper felts of these plates (module keys, V20). */
+export function uncolourUpper(v: Variant, keys: Iterable<string>): Variant {
+  if (!v.decor) return v;
+  const local = upperByKey(v);
+  return setRal(v, [...keys].flatMap((k) => (local.has(k) ? [[local.get(k)!, ''] as [string, string]] : [])), null);
+}
+
+/** The owner address of each raised plate's upper felt, by its module key. */
+const upperByKey = (v: Variant) => new Map(builtModules(v).flatMap((m) => (m.raise ? [[m.key, upperLocal(m.local)] as const] : [])));
+
 /** Drop the colours of their own on these plates (module keys): they take their wall's colour again. */
 export function uncolourPlates(v: Variant, keys: Iterable<string>): Variant {
   if (!v.decor) return v;
@@ -81,6 +100,8 @@ export function plateColours(v: Variant): Record<string, string> {
   for (const m of builtModules(v)) {
     const ral = v.decor?.[m.local]?.ral;
     if (ral) out[m.key] = ral;
+    const up = v.decor?.[upperLocal(m.local)]?.ral;
+    if (up && m.raise) out[upperLocal(m.key)] = up;
   }
   return out;
 }
@@ -103,6 +124,8 @@ export function carryDecor(before: Variant, after: Variant): Variant {
   // A plate stands where a module is built, also a whole module only its parts are built of (V10: they take its colour)
   const standing = new Set(built.flatMap((m) => [m.key, ...(m.whole ? [m.whole] : [])]));
   const valid = new Set(built.map((m) => m.local));
+  // An upper felt only stands on a plate still raised (V20): lowered to 2540 its decor goes (undo brings it back)
+  const raised = new Set(built.flatMap((m) => (m.raise ? [upperLocal(m.local)] : [])));
   for (const w of after.walls) for (const m of wallModules(w)) if (standing.has(m.key)) valid.add(plateLocal(w, m.a, m.b));
   const nowAt = new Map<string, string>();
   for (const w of after.walls) for (const m of wallModules(w)) nowAt.set(m.key, plateLocal(w, m.a, m.b));
@@ -115,6 +138,10 @@ export function carryDecor(before: Variant, after: Variant): Variant {
   const wallsAfter = new Map(after.walls.map((w) => [w.id, w]));
 
   const carried = (k: string): string | null => {
+    if (k.endsWith(UPPER)) {
+      const to = carried(k.slice(0, -UPPER.length));
+      return to && raised.has(upperLocal(to)) ? upperLocal(to) : null;
+    }
     if (k.endsWith(LEAF)) return doors.has(k.slice(0, -LEAF.length)) ? k : null;
     const at = k.lastIndexOf('@');
     const id = k.slice(0, at);

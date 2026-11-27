@@ -41,6 +41,8 @@ export interface PlanSelection {
   shelfOnly?: boolean
   /** A felt (module) of the wall, chosen in the wall drawer to put shelves in it (Bjørn 9.11.2026). Only with `wallId`. */
   felt?: number
+  /** With `felt`: its upper felt over the middle rail, on a raised wall (Byggeregel V20). */
+  upper?: boolean
   /** A door or curtain, chosen in the wall drawer of the wall it stands in. */
   openingId?: string
   /** With a door: the surface chosen in the wall drawing, its header or its leaf, to colour and print (Bjørn 18.11.2026);
@@ -110,7 +112,7 @@ export type OnWall = { wall: Wall; side: FaceSide } & (
   | { kind: 'foil'; foil: Foil }
   | { kind: 'shelf'; shelf: Shelf }
   /** The wall itself, with the felt chosen in its drawer (unchecked: the drawer knows which felts take one). */
-  | { kind: 'wall'; felt?: number }
+  | { kind: 'wall'; felt?: number; upper?: boolean }
 )
 
 /** Whether what is chosen opens in the wall drawer. */
@@ -181,7 +183,7 @@ export function chosen(v: Variant, sel: PlanSelection): Chosen | null {
   if (foil) return { kind: 'foil', wall, side, foil }
   const shelf = sel.shelfId ? shelvesOf(v).find((x) => x.id === sel.shelfId && x.wallId === wall.id) : undefined
   if (shelf) return { kind: 'shelf', wall, side, shelf }
-  return { kind: 'wall', wall, side, felt: sel.felt }
+  return { kind: 'wall', wall, side, felt: sel.felt, ...(sel.upper && { upper: true }) }
 }
 
 /** The wall a chosen door stands in, on the face its drawer showed: the wall drawer with colour and graphics. */

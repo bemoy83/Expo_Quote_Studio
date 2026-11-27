@@ -147,6 +147,10 @@ export function plateLocal(w: Wall, a: Point, b: Point): string {
   return `${w.id}@${Math.min(x, y)}-${Math.max(x, y)}`;
 }
 
+/** The owner address of a raised plate's upper felt (Byggeregel V20): the plate's own (`plateLocal`) with `/upper`. */
+export const upperLocal = (local: string) => `${local}${UPPER}`;
+export const UPPER = '/upper';
+
 export function wallModules(w: Wall): Module[] {
   return moduleSpans(w).map(([a, b]) => makeModule(pointAlong(w, a), pointAlong(w, b)));
 }

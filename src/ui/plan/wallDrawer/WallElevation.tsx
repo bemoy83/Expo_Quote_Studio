@@ -2,6 +2,8 @@
 // against it, textile frames and shelves (hylle 6311). Frames and decals are moved and resized here, shelves moved up,
 // down and sideways, motifs and frames dropped from the motif library (Profilering), and while a paint tool is out each plate is a
 // target for it.
+import { railHeight } from '../../../foga/plates'
+import { RECIPES } from '../../../foga/recipes'
 import { useEffect, useMemo, useRef, useState, type DragEvent as RDragEvent } from 'react'
 import { foilCenter, foilsOn } from '../../../domain/decor'
 import { doorLevels, doorRal, doorWindows } from '../../../domain/doors'
@@ -67,6 +69,8 @@ interface Props {
   shelfOnly?: boolean
   /** The chosen felt (module), when the wall's felt and nothing on it is chosen. */
   felt?: number
+  /** With `felt`: its upper felt is chosen (Byggeregel V20). */
+  upper?: boolean
   motifs: Motif[]
   label: string
   painting: boolean
@@ -214,9 +218,15 @@ export function WallElevation(p: Props) {
             // A press on a plate (not on what lies on it) chooses its felt, a second press the wall again (Bjørn 9.11.2026)
             const m = svg.current?.getScreenCTM()
             const q = m ? new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse()) : null
-            const i = q && q.y >= 0 && q.y <= H ? Math.floor(s === 1 ? q.x : L - q.x) : -1
-            const plate = i >= 0 && i < L && !!mods[i] && !mods[i]!.opening
-            select(plate && p.felt !== i ? { felt: i } : {})
+            const i = q ? Math.floor(s === 1 ? q.x : L - q.x) : -1
+            const mod = i >= 0 && i < L ? mods[i] : undefined
+            // Over the middle rail of a raised plate: its upper felt (V20), over a door too
+            if (q && q.y < 0) {
+              const up = !!mod?.raise && q.y >= -mod.raise.len / 1000
+              return select(up && !(p.upper && p.felt === i) ? { felt: i, upper: true } : {})
+            }
+            const plate = !!q && q.y <= H && !!mod && !mod.opening
+            select(plate && (p.felt !== i || p.upper) ? { felt: i } : {})
           }}
           onDragOver={onDragOver}
           onDragLeave={() => setSpot(null)}
@@ -338,6 +348,11 @@ export function WallElevation(p: Props) {
           {/* The chosen felt: a tint over its plate, under the shelves */}
           {p.felt !== undefined && mods[p.felt] && (() => {
             const f = felt(rules, st(p.felt), ccOf(p.felt))
+            const r = mods[p.felt]!.raise
+            if (p.upper && r) {
+              const top = railHeight(RECIPES.wall.raise.topRail) / 1000
+              return <rect x={spanX(f.a, f.b)} y={-r.len / 1000 + top} width={f.w} height={r.len / 1000 - top} fill={INK} fillOpacity={0.1} pointerEvents="none" />
+            }
             return <rect x={spanX(f.a, f.b)} y={z(H)} width={f.w} height={H - rules.wall.feet} fill={INK} fillOpacity={0.1} pointerEvents="none" />
           })()}
 

@@ -40,7 +40,10 @@ export function focusOf(kind: OnWall['kind'], felt: number | undefined): Focus {
   return kind
 }
 
-export function layoutOf(focus: Focus, page: FeltPage): Layout {
+/** `upper`: the felt chosen is a raised plate's upper felt (Byggeregel V20), which takes no shelves: colour and profilering
+ *  only. */
+export function layoutOf(focus: Focus, page: FeltPage, upper = false): Layout {
+  if (upper && focus === 'felt') page = 'decor'
   const paged = focus === 'felt' || focus === 'wall'
   const panel: Panel = paged ? `${focus}-${page}` : focus
   return {
@@ -48,7 +51,7 @@ export function layoutOf(focus: Focus, page: FeltPage): Layout {
     library: focus === 'foil' ? { add: null } : paged && page === 'decor' ? { add: focus === 'felt' ? 'decal' : 'frame' } : null,
     foot: focus !== 'door',
     moves: focus === 'textile' || focus === 'foil' || focus === 'shelf',
-    pageSwitch: paged,
+    pageSwitch: paged && !(upper && focus === 'felt'),
     backToFelt: focus === 'shelf',
     doors: focus === 'wall',
     fill: focus === 'textile',

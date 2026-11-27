@@ -32,7 +32,7 @@ import { chosen, chosenShelves, isOnWall, type PlanSelection } from './selection
 import { addTextile, fillTextile, removeTextile, textilesOn, updateTextile } from '../../domain/textile/inFrame'
 import { faces, type FaceSide } from '../../domain/faces'
 import { faceName, roomsAgainst } from './wallDrawer/face'
-import { wallPaint } from './wallDrawer/paint'
+import { UPPER_PRINT, wallPaint } from './wallDrawer/paint'
 import { FeltFittings, ShelfPanel, WallFittings } from './wallDrawer/fittings'
 import { focusOf, layoutOf } from './wallDrawer/focus'
 import { useWallTools } from './wallDrawer/useWallTools'
@@ -79,10 +79,12 @@ export function WallDrawer(p: Props) {
   // The plates as built: a module another wall split (V10) is its parts
   const parts = wallParts(w, builtList)
   /** A felt chosen in the drawing (a plate, not a door), when nothing on the wall is. */
-  const Fe = c.kind === 'wall' && c.felt !== undefined && mods[c.felt] && !mods[c.felt]!.opening ? c.felt : undefined
+  /** The upper felt of a raised plate chosen instead (Byggeregel V20): over a door too, the door being below. */
+  const Up = c.kind === 'wall' && c.upper && c.felt !== undefined && mods[c.felt]?.raise ? c.felt : undefined
+  const Fe = Up ?? (c.kind === 'wall' && !c.upper && c.felt !== undefined && mods[c.felt] && !mods[c.felt]!.opening ? c.felt : undefined)
   /** What the drawer shows: one answer for the panel, the motif library and the buttons (focus.ts). */
   const focus = focusOf(c.kind, Fe)
-  const ui = layoutOf(focus, page)
+  const ui = layoutOf(focus, page, Up !== undefined)
   const rooms = roomsAgainst(v, w, s)
   const ratioOf = (id?: string) => findMotif(motifs, id)?.ratio ?? 0
   const label = wallLabel(w)
@@ -99,7 +101,7 @@ export function WallDrawer(p: Props) {
   }
 
   /** Why the chosen felt takes no decal: blocked (an opening, a textile frame over it) or printed over the whole plate. */
-  const feltFoil = (m: number) => foilBlocked(v, rules, w.id, m, s) ?? (printsOn(v, w.id, s).some((f) => f.module === m) ? 'Feltet har print' : null)
+  const feltFoil = (m: number) => Up !== undefined ? UPPER_PRINT : foilBlocked(v, rules, w.id, m, s) ?? (printsOn(v, w.id, s).some((f) => f.module === m) ? 'Feltet har print' : null)
   /** A decal in the middle of the chosen felt, with the motif chosen in Profilering; it is then chosen. */
   const addDecal = () => {
     if (Fe === undefined) return
@@ -132,7 +134,7 @@ export function WallDrawer(p: Props) {
     return owner ? wallRal(v, owner) : v.defaultPlate
   }
   const odd = parts.filter((q) => !q.mod.opening && q.mod.plate !== base(q.mod.key)).length
-  const { painting, paint, printing, pm, paintAt, pickAt } = wallPaint({
+  const { painting, paint, printing, pm, paintAt, pickAt, pickUpper } = wallPaint({
     v,
     w,
     s,
@@ -159,7 +161,7 @@ export function WallDrawer(p: Props) {
     if (on && Fe !== undefined) select({})
   }
   const why = wallWhy(v, rules, w, s, { felt: focus === 'felt' && Fe !== undefined ? { m: Fe, page } : undefined, twoFaces: fs.length > 1, T, F, S, shelves: chosenShelves(v, sel).length })
-  const hint0 = hintLine(why, wallHint({ O, door: !!O && doorModules.has(O.module), surface, painting, tool, printing, T, F, S, felt: focus === 'felt' ? page : undefined, extras: ui.panel === 'wall-extras', w }))
+  const hint0 = hintLine(why, wallHint({ O, door: !!O && doorModules.has(O.module), surface, painting, tool, printing, T, F, S, felt: focus === 'felt' ? ui.panel === 'felt-extras' ? 'extras' : 'decor' : undefined, upper: Up !== undefined, extras: ui.panel === 'wall-extras', w }))
 
   const hint = brushOn ? (t.brushHint ?? BRUSH_HINT) : hint0
 
@@ -173,7 +175,7 @@ export function WallDrawer(p: Props) {
       : (id: string) => {
           t.setMotif(id)
           // As «Print» in the palette: the same motif again does nothing
-          pickAt(Fe, mods[Fe]!.key)(PRINT, id)
+          ;(Up !== undefined ? pickUpper : pickAt)(Fe, mods[Fe]!.key)(PRINT, id)
         }
 
   const remove = () => {
@@ -248,7 +250,7 @@ export function WallDrawer(p: Props) {
             {ui.panel === 'felt-extras' && Fe !== undefined && <FeltFittings v={v} w={w} s={s} m={Fe} mods={mods} onBrush={() => takeBrush(true)} select={select} onEdit={p.onEdit} onToast={p.onToast} />}
 
             {ui.panel === 'felt-decor' && Fe !== undefined && (
-              <FeltPanel v={v} w={w} s={s} m={Fe} mods={mods} motifs={motifs} pm={pm} setTool={setTool} pick={pickAt(Fe, mods[Fe]!.key)} select={select} onEdit={p.onEdit} />
+              <FeltPanel v={v} w={w} s={s} m={Fe} upper={Up !== undefined} mods={mods} motifs={motifs} pm={pm} setTool={setTool} pick={(Up !== undefined ? pickUpper : pickAt)(Fe, mods[Fe]!.key)} select={select} onEdit={p.onEdit} />
             )}
 
             {ui.panel === 'wall-extras' && <WallFittings v={v} w={w} s={s} brush={brushOn} onBrush={takeBrush} onEdit={p.onEdit} onToast={p.onToast} />}
@@ -358,6 +360,7 @@ export function WallDrawer(p: Props) {
         chosen={chosenShelves(v, sel)}
         shelfOnly={sel.shelfOnly}
         felt={Fe}
+        upper={Up !== undefined}
         motifs={motifs}
         label={label}
         painting={painting}

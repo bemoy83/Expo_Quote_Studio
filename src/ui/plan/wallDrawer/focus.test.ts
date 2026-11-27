@@ -33,4 +33,8 @@ describe('What the wall drawer shows', () => {
     expect(layoutOf('wall', 'decor')).toMatchObject({ panel: 'wall-decor', library: { add: 'frame' }, pageSwitch: true, doors: true, paint: true, moves: false, backToFelt: false })
     expect(layoutOf('wall', 'extras')).toMatchObject({ panel: 'wall-extras', library: null, doors: true, paint: true })
   })
+
+  it('V20: an upper felt has colour and profilering only, no shelves page', () => {
+    expect(layoutOf('felt', 'extras', true)).toMatchObject({ panel: 'felt-decor', library: { add: 'decal' }, pageSwitch: false })
+  })
 })

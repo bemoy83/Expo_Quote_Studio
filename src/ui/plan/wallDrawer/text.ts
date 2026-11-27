@@ -71,7 +71,7 @@ const TAIL = 'dra tekstilvegg eller motiv til veggen, klikk det for å endre'
 export const BRUSH_HINT =
   'Klikk der hyllen skal stå · dra sideveis for rad, opp og ned for høyde · Shift: klikk gir en hylle til i feltet, dra opp for flere, sideveis for samme fordeling i flere felt · Esc legger bort pensla'
 
-export function wallHint(x: { O?: Opening; door: boolean; surface?: 'header' | 'leaf'; painting: boolean; tool: PaintTool; printing: boolean; T?: TextileWall; F?: Foil; S?: Shelf; felt?: 'decor' | 'extras'; extras?: boolean; w: Wall }): string {
+export function wallHint(x: { O?: Opening; door: boolean; surface?: 'header' | 'leaf'; painting: boolean; tool: PaintTool; printing: boolean; T?: TextileWall; F?: Foil; S?: Shelf; felt?: 'decor' | 'extras'; upper?: boolean; extras?: boolean; w: Wall }): string {
   const { O, door, painting, tool, printing, T, F, S, felt, extras, w } = x
   if (O && x.surface) return `Farge og print gjelder ${x.surface === 'leaf' ? 'dørbladet' : 'overstykket'} · ‹ › bytter flate · klikk den igjen for veggen · malerspannet legger ett bilde over begge`
   if (O) return `Klikk en rute i miniplanen for å flytte ${door ? 'døren' : 'forhenget'} · «Farge og profilering» eller Esc gir paletten · Delete gjør om til vegg`
@@ -85,6 +85,7 @@ export function wallHint(x: { O?: Opening; door: boolean; surface?: 'header' | '
       : 'Klikk eller dra over platene for å farge dem · printen på platen går av, dekaler blir · klikk en farget plate igjen for veggens farge'
   if (felt === 'extras') return 'Hylle til i feltet: først på 1300 eller nabohyllens høyde, så over og under · trykk en hylle for å endre den · ← → bytter felt · «Farge og profilering» tilbake · klikk feltet igjen for hele veggen'
   if (extras) return 'Hylle: felt for felt, rad for rad fra midten · Hyllerad: én hylle i alle felt i neste ledige høyde · trykk en hylle for å endre den · «Farge og profilering» tilbake'
+  if (felt && x.upper) return 'Fargen gjelder det øvre feltet over mellomskinnen · uten egen farge har det veggens · ← → bytter øvre felt · klikk feltet igjen for hele veggen'
   if (felt) return 'Fargen eller et motiv i Profilering dekker dette feltet · «+ Dekal» legger en dekal på · ← → bytter felt · «Hyller og heng» for tilbehør · klikk feltet igjen for hele veggen'
   if (S) return 'Dra hyllen opp eller ned i steg på 50 mm, eller til et annet felt · en rad flyttes samlet, «Bare denne» tar én hylle ut · Alt + dra kopierer · minst 100 mm lysmål mellom hyller · Delete fjerner'
   if (T) return 'Dra rammen for å flytte · håndtakene endrer størrelsen · klikk et motiv for trykk · Delete fjerner'

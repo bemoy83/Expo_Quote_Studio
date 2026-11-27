@@ -4,7 +4,7 @@
 import { foilBlocked } from '../../../domain/decor'
 import { doorRal } from '../../../domain/doors'
 import type { FaceSide } from '../../../domain/faces'
-import { paintLeaf, paintPlate, paintWallFace } from '../../../domain/paint'
+import { paintLeaf, paintPlate, paintUpper, paintWallFace } from '../../../domain/paint'
 import { fillPlates, printDoorPart, printPlate, printsOn, printWall } from '../../../domain/print'
 import type { Motif, Variant, Wall } from '../../../domain/types'
 import type { BuiltModule } from '../../../domain/walls'
@@ -13,6 +13,9 @@ import { printKept } from '../../fillKeeping'
 import { findMotif } from '../../motifs'
 import { PRINT } from '../drawerParts'
 import { pickOn, strokeAt, type PaintTool, type StrokePlate } from '../paintTools'
+
+/** Why the upper felt takes no print or decal yet (V20). */
+export const UPPER_PRINT = 'Print og dekal på øvre felt kommer snart'
 
 export interface PaintDeps {
   v: Variant
@@ -78,5 +81,15 @@ export function wallPaint({ v, w, s, built, mods, motifs, tool, paintSel, motifS
   const paintAt = (i: number, key: string, first: boolean, leaf = false) => strokeAt(deps, plate(i, key, leaf), first)
   /** A colour or «Print» picked on chosen plate `i` (the felt, or a door's leaf or header): the palette's way (pickOn). */
   const pickAt = (i: number, key: string, leaf = false) => (r: string, motif = pm?.id) => pickOn(plate(i, key, leaf), r, motif, onEdit, onToast)
-  return { painting, paint, printing, pm, paintAt, pickAt }
+  /** A colour picked on the upper felt of raised plate `i` (Byggeregel V20): a plate of its own over the middle rail. */
+  const pickUpper = (i: number, key: string) => (r: string, motif = pm?.id) => pickOn(upper(i, key), r, motif, onEdit, onToast)
+  /** The upper felt of raised plate `i` for the stroke rule: colour only, for now (print and decals come with V20 step 2). */
+  const upper = (i: number, key: string): StrokePlate => ({
+    ...plate(i, key, false),
+    noPrint: () => UPPER_PRINT,
+    printOne: () => null,
+    colour: () => ({ cur: mods[i]?.raise?.ral ?? base(key), base: base(key), printed: false }),
+    paintOne: (r) => (x) => paintUpper(x, key, r),
+  })
+  return { painting, paint, printing, pm, paintAt, pickAt, pickUpper }
 }
