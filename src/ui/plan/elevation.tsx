@@ -5,6 +5,7 @@ import { doorLevels, doorWindows } from '../../domain/doors'
 import { felt } from '../../domain/faces'
 import { RAIL_W, railsOn, railT, type CornerLayout } from '../../domain/shelves/corners'
 import type { Motif, TextileFill } from '../../domain/types'
+import { railHeight } from '../../foga/plates'
 import { RECIPES } from '../../foga/recipes'
 import { ALU, ALU_POST, BORDER_STRONG, FEET, INK, INK_MUTED, LAYER_COLOR, SURFACE } from '../colors'
 import { NOTE_ICON, NOTE_PILL, noteAngle, textileNote, type TextileNote } from '../textileNote'
@@ -26,6 +27,42 @@ export function Plate({ at, cc, fill, x, H }: { at: number; cc: number; fill: st
     </g>
   )
 }
+
+/**
+ * What a raise puts over the wall (Byggeregler V18, V20), above y = 0 (the top of the old top rail, now the middle
+ * rail): each raised felt's plate and its 292 top rail, and the 94 joined onto the posts. Lengths in m.
+ */
+export function Raise({ felts, posts, wires = [], x }: { felts: { at: number; cc: number; len: number; fill: string }[]; posts: { x: number; len: number }[]; wires?: { x: number; len: number }[]; x: (a: number, b: number) => number }) {
+  const { post } = rules.wall
+  const top = railHeight(RECIPES.wall.raise.topRail) / 1000
+  return (
+    <g>
+      {felts.map((f) => {
+        const fe = felt(rules, f.at, f.cc)
+        return (
+          <g key={f.at}>
+            <rect x={x(fe.a, fe.b)} y={-f.len + top} width={fe.w} height={f.len - top} fill={f.fill} />
+            <rect x={x(f.at, f.at + f.cc)} y={-f.len} width={f.cc} height={top} fill={ALU} />
+          </g>
+        )
+      })}
+      {posts.map((p) => (
+        <rect key={p.x} x={p.x - post / 2} y={-p.len} width={post} height={p.len} fill={ALU_POST} />
+      ))}
+      {/* A ceiling wire (Byggeregel S9, Bjørn 27.11.2026): a circle with a cross, the hanefot's gathering point over the
+          eyebolt in the top rail */}
+      {wires.map((p) => (
+        <g key={`w${p.x}`} stroke={INK} strokeWidth={0.015} fill="none">
+          <circle cx={p.x} cy={-p.len - WIRE_R} r={WIRE_R} fill={SURFACE} />
+          <path d={`M${p.x - WIRE_R * 0.7} ${-p.len - WIRE_R * 1.7}L${p.x + WIRE_R * 0.7} ${-p.len - WIRE_R * 0.3}M${p.x + WIRE_R * 0.7} ${-p.len - WIRE_R * 1.7}L${p.x - WIRE_R * 0.7} ${-p.len - WIRE_R * 0.3}`} />
+        </g>
+      ))}
+    </g>
+  )
+}
+
+/** The wire mark's radius, m. */
+const WIRE_R = 0.1
 
 export function Posts({ xs, H }: { xs: number[]; H: number }) {
   const { post, feet } = rules.wall

@@ -5,11 +5,11 @@
 //   3 Bought for the job      purchase × (1 + waste)
 //   4 Labour                  person-minutes × hourly cost / 60, overtime surcharge on the wage part of its share
 //   5 Per order               fixed, once per quote
-//   6 Height                  lift per day, and montering minutes above the limit × factor
+//   6 Height                  work above the limit takes × factor, and a lift per hour for that time, once per order
 // Indirect cost (admin, premises, storage, vans) is one share of direct cost, its own line, never inside the rules.
 // Price for what the engine prices: direct cost × (1 + indirect) / (1 − DG target) (src/cost/items.ts). Cost and price
 // follow the same index, so DG holds when a discount is given. The app owns this engine; the OMS only hands over fixed
-// per-piece prices (Bjørn 7.11.2026). Rules 2 and 6 are here and tested, not yet used by the calc.
+// per-piece prices (Bjørn 7.11.2026). Rule 2 is here and tested, not yet used by the calc.
 import { FOGA_PARTS, type PartKind } from '../foga/parts';
 import type { CostParams, IndexSeries } from './params';
 import { supplierItem, type SupplierList } from './prices';
@@ -86,11 +86,15 @@ export function orderCost(items: readonly OrderCost[], year: number, p: CostPara
   );
 }
 
-/** 6 Height: montering minutes for what reaches above the limit take longer. */
-export const heightMinutes = (minutes: number, topMm: number, p: CostParams) => (topMm > p.height.limit ? minutes * p.height.factor : minutes);
-
 /** 6 Height: a lift is needed when anything reaches above the limit. */
-export const needsLift = (topMm: number, p: CostParams) => topMm > p.height.limit;
+export const needsLift = (topMm: number, h: CostParams['height']) => topMm > h.limit;
+
+/** 6 Height: montering and demontering above the limit take `factor` times as long (Bjørn 7.11 and 27.11.2026). */
+export const heightExtra = (minutes: number, h: CostParams['height']) => minutes * (h.factor - 1);
+
+/** 6 Height: the lift's hours for an order: the minutes of the work above the limit, already slowed by the factor (the
+ *  lift stands as long as the montør works from it), rounded up to whole hours once per order (Bjørn 27.11.2026). */
+export const liftHours = (minutes: number) => (minutes > 0 ? Math.ceil(minutes / 60 - 1e-9) : 0);
 
 /** Indirect cost on top of a direct cost: its own line in the kalkyle. */
 export const indirectCost = (direct: number, p: CostParams) => direct * p.indirect;

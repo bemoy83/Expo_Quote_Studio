@@ -242,6 +242,9 @@ Veggskuffens tegning blir arbeidstegning for én vegg. Se bilde 3.
   Posisjonslisten under planen fra en tidligere mockup er forkastet.
 - **Tegneflaten:** ingen nummer som standard. Innstillingen «Vis posisjoner i skissen» (av som standard) slår dem på.
   Peker man på et nummer, vises en mørk brikk med «4 Dør med lås · 960» og «2 stk i tegningen».
+- **Ingen brikke over en annen** (Bjørn 27.11.2026, f.eks. platebytte og dekal på samme vegg): en brikke som ville
+  dekke en annen, flyttes langs veggen den hører til, én brikkebredde om gangen, til nærmeste ledige plass, og beholder
+  avstanden til veggen (`apart` i `plan/layers/PosLayer.tsx`). Gjelder tilbud og arbeidsordre.
 - **3D på tilbudet:** nummer på tekstilveggene.
 - Kalkylepanelet får `Pos.` senere. Ikke i denne bestillingen.
 

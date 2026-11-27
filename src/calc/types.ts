@@ -14,6 +14,8 @@ import type { WallSupport } from './wallSupports';
 
 export interface CalcLine {
   name: string;
+  /** How high the work on the line reaches, mm, when above the walls' top: over the limit it needs a lift (cost rule 6). */
+  top?: number;
   meta?: string;
   qty: number;
   unit: Unit;
@@ -84,6 +86,8 @@ export interface KeyFigures {
   standWallLm: number;
   /** Part of standWallLm the organiser pays: not on the exhibitor's quote, picking list or work order. */
   organiserWallLm: number;
+  /** Wall raised over 2540 (Byggeregel V18), m, doors included: always the exhibitor's. */
+  raisedLm?: number;
   /** Takdrager the organiser pays (the standard ones, or none), with the posts only they need. */
   organiserBeamLm: number;
   /** Part of beamLm in innvendige takdragere the customer draws: always the exhibitor's. */
@@ -147,6 +151,8 @@ export interface CalcResult {
   /** Støtteplater under free-standing system walls and drawn takdrager's own posts: always the exhibitor's, also under
    *  the organiser's stand walls. */
   wallSupports: WallSupport[];
+  /** Ceiling wires on raised walls, one per post (Byggeregel S9): 3D. */
+  wires?: WallSupport[];
   /** The uprights of each counter over a foot plate that stand on an insert 700, by counter id (Byggeregel K23): 3D. Only
    *  when there are any. */
   inserts?: ReadonlyMap<string, readonly CounterProfile[]>;

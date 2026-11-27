@@ -2,6 +2,8 @@
 // drawer but fixed, so the stand builder can mount them: the plates and doors, the shelves, and in each felt with
 // shelves its height chain from the floor with the lysmål between boards (ElevationDims). The module chain under the
 // wall counts the felts from the end the heading names. Corner shelves with their cut boards and 01 rails (H10–H12).
+// A raised wall is drawn with its raise (V18) and the ceiling wires as a circle with a cross (S9), also when it has no
+// shelves, so the montør sees where the wires hang.
 import { doorRal } from '../../domain/doors'
 import { sideOf, type FaceSide } from '../../domain/faces'
 import { RECIPES } from '../../foga/recipes'
@@ -15,7 +17,8 @@ import { builtModules, postOffsets, splitParts, wallLabel, wallParts } from '../
 import { doorInset, wallHeight } from '../../rules/rules'
 import { BORDER_STRONG } from '../colors'
 import { plateColor, productOf, rules } from '../env'
-import { FaceRails, Opening as OpeningView, Plate, Posts, ShelfFront } from '../plan/elevation'
+import { FaceRails, Opening as OpeningView, Plate, Posts, Raise, ShelfFront } from '../plan/elevation'
+import { raiseDrawing } from '../plan/raiseDrawing'
 import { shelfFront } from '../plan/shelfFront'
 import { planScale } from '../plan/planScale'
 import { ElevationDims } from '../plan/wallDrawer/ElevationDims'
@@ -24,7 +27,7 @@ import { frame, shelfChains } from '../plan/wallDrawer/elevationMeasure'
 /** The drawing's box on the page, px: wide as the work order's column, low enough for two on a page. */
 const SIZE = { w: 680, h: 250 }
 
-export function ShelfElevation({ v, wallId, s, shelves, layout }: { v: Variant; wallId: string; s: FaceSide; shelves: Shelf[]; layout: CornerLayout }) {
+export function ShelfElevation({ v, wallId, s, shelves, layout, wired }: { v: Variant; wallId: string; s: FaceSide; shelves: Shelf[]; layout: CornerLayout; wired: ReadonlySet<string> }) {
   const w = v.walls.find((x) => x.id === wallId)
   if (!w) return null
   const L = wallLength(w)
@@ -36,11 +39,12 @@ export function ShelfElevation({ v, wallId, s, shelves, layout }: { v: Variant; 
   const mods = wallModules(w).map((m) => built.get(m.key))
   const parts = wallParts(w, all)
   const posts = postOffsets(w, parts)
-  const fr = frame(SIZE, L, H, [])
+  const raise = raiseDrawing(w, mods, parts, u, wired)
+  const fr = frame(SIZE, L, H, [], { above: raise.headroom })
   const sc = planScale(1 / fr.u, { doc: true })
   const name = w.room ? 'Romvegg' : wallLabel(w)
   return (
-    <svg className="wo-elev" viewBox={fr.viewBox} role="img" aria-label={`${name}, ${shelves.length} hyller`}>
+    <svg className="wo-elev" viewBox={fr.viewBox} role="img" aria-label={[name, shelves.length && `${shelves.length} hyller`, raise.wires.length && `${raise.wires.length} vaier`].filter(Boolean).join(', ')}>
       {mods.map((m, i) => {
         const cc = moduleCc(w, i)
         const at = moduleStart(w, i)
@@ -72,12 +76,13 @@ export function ShelfElevation({ v, wallId, s, shelves, layout }: { v: Variant; 
         return <Plate key={i} at={at} cc={cc} fill={plateColor(m?.plate ?? wallRal(v, w))} x={spanX} H={H} />
       })}
       <Posts xs={posts.map(u)} H={H} />
+      {raise.felts.length > 0 && <Raise felts={raise.felts} posts={raise.posts} wires={raise.wires} x={spanX} />}
       <line x1={-0.12} y1={H} x2={L + 0.12} y2={H} stroke={BORDER_STRONG} strokeWidth={0.01} />
       <FaceRails wallId={w.id} s={s} layout={layout} x={u} H={H} u={fr.u} />
       {shelves.map((f) => (
         <ShelfFront key={f.id} {...shelfFront(v, f, layout, spanX)} y={f.y} H={H} u={fr.u} />
       ))}
-      <ElevationDims w={w} s={s} name={name} L={L} H={H} posts={posts} items={[]} leaders={[]} top={fr.top} width={fr.width} right={fr.right} sc={sc} shelves={shelfChains(rules, shelfStacks({ ...v, shelves }), u, (i) => moduleStart(w, i))} />
+      <ElevationDims w={w} s={s} name={name} L={L} H={H} posts={posts} items={[]} leaders={[]} top={fr.top} width={fr.width} right={fr.right} sc={sc} above={raise.above} shelves={shelfChains(rules, shelfStacks({ ...v, shelves }), u, (i) => moduleStart(w, i))} />
     </svg>
   )
 }

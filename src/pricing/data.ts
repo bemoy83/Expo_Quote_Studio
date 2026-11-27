@@ -6,7 +6,7 @@ import { EXAMPLE_BASIS, supplierList, type CatalogRates, type CostBasis } from '
 import { fingerprint } from '../cost/fingerprint';
 import { basisYear, costItems, type MissingItem, type PriceList } from '../cost/items';
 import { hourlyCost, orderCost } from '../cost/model';
-import type { CarpetRates } from '../cost/params';
+import type { CarpetRates, CostParams } from '../cost/params';
 import { OWN_SUPPLIER } from '../cost/own-list';
 import type { Product, ProductVariant } from '../catalog/types';
 import { ITEM_DEFS } from '../cost/itemDefs';
@@ -30,6 +30,8 @@ export interface PricingData {
   catalog: CatalogRates;
   /** Engangsteppe: the rates to rank fills by, the work at the montør's hourly cost for the basis year. */
   carpet: CarpetRates;
+  /** Height (cost rule 6): above `limit` mm the work needs a lift, its hours from the minutes there × `factor`. */
+  height: CostParams['height'];
 }
 
 /** The price items with the costed ones from this kostgrunnlag. */
@@ -39,7 +41,7 @@ export function pricingFrom(b: CostBasis): PricingData {
   // The lists the engine looks up, so an example list filling in for a missing one counts too
   const used = { date: b.date, params: b.params, orderCosts: b.orderCosts, lists: [supplierList(b, 'Foga'), supplierList(b, OWN_SUPPLIER)], items, missing, catalog: b.catalog, terms: DEFAULT_TERMS };
   const carpet = { ...b.params.carpet, hour: hourlyCost(basisYear(b), b.params) };
-  return { ...DEFAULT_TERMS, items, orderCosts, missing, catalog: b.catalog, carpet, code: fingerprint(used) };
+  return { ...DEFAULT_TERMS, items, orderCosts, missing, catalog: b.catalog, carpet, height: b.params.height, code: fingerprint(used) };
 }
 
 const DEFAULT_TERMS: Pick<PricingData, 'terms'> = {

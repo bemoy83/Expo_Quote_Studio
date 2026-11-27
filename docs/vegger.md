@@ -84,7 +84,7 @@ I koden: `organiserBeams` i `calc/calc.ts` og nøkkeltallet `organiserBeamLm`.
 
 Bjørn 1.11.2026. Velger kunden bort takdragerne, står veggene fritt og får støtteplater (se
 [foga-system.md](foga-system.md)). Platene er kundens valg og faktureres alltid utstilleren, også under standvegger
-arrangøren betaler, og de plukkes og monteres hos utstilleren. Det samme vil gjelde støttevaier når den kommer.
+arrangøren betaler, og de plukkes og monteres hos utstilleren. Det samme gjelder støttevaier på hevet vegg (S9).
 
 ### Hva utstilleren får, og hva arrangøren får
 

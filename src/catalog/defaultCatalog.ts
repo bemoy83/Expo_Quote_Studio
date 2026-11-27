@@ -1,6 +1,7 @@
 // Example catalog for the PoC. Art.nr are made up, groups are subgroup ids from groups.ts; prices are examples eks. mva. (F1, H6).
 // Later this comes from the OMS export (Bærer, Art.nr, Beskrivelse, Pris).
 import { RECIPES } from '../foga/recipes';
+import { raiseTop, RULES } from '../rules/rules';
 import type { Catalog, Product, ProductKind, Unit } from './types';
 
 const one = (
@@ -145,6 +146,22 @@ const products: Product[] = [
     pricing: 'fast',
     variants: PLATES.map(([ral, name, color]) => ({ artnr: `6125-${ral}`, name, ral, color, price: 400, placeholder: true })),
   },
+  // Raised system wall (Byggeregler V18, V22, Bjørn 27.11.2026): per metre, one variant per 94 length joined onto the posts,
+  // priced by the cost engine; always the exhibitor's, also over the organiser's stand walls. Art.nr 6124 is a
+  // placeholder, the price used only when the cost basis lacks one.
+  {
+    id: '6124',
+    name: 'Forhøyning systemvegg',
+    kind: 'system',
+    unit: 'lm',
+    group: 'vegg.vegger',
+    dim: 'skjøtet opp med øvre felt, montert',
+    pricing: 'sum',
+    variants: RULES.wall.raise.lengths.map((len) => ({ artnr: `6124-${len}`, name: `til ${raiseTop(len)} mm`, price: 600, placeholder: true })),
+  },
+  // Ceiling wire on a raised wall (Byggeregler S9, S10, Bjørn 27.11.2026): a V from the top rail to two points in the
+  // ceiling, per piece, always the exhibitor's
+  one('4300', 'Vaieroppheng', 'system', 'stk', 'vegg.vegger', 1570, { dim: 'støttevaier for vegg', pricing: 'fast' }),
   // Foot plate under a post of a system wall that stands free (no takdrager): always the exhibitor's (Bjørn 1.11.2026).
   // Art.nr 6115 is a placeholder.
   one('6115', 'Støtteplate systemvegg', 'system', 'stk', 'vegg.vegger', 120, { dim: '500 × 80 mm under stolpe, montert', pricing: 'fast' }),
@@ -341,6 +358,8 @@ export const DEFAULT_CATALOG: Catalog = {
     wallSupport: '6115',
     beam: '6110',
     beamLift: '6111',
+    wallRaise: '6124',
+    wallWire: '4300',
     textile: '8000',
     textileFill: { print: '8040', white: '8041', reuse: '8042' },
     foil: '8020',

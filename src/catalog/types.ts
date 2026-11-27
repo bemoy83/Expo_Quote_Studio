@@ -100,6 +100,11 @@ export interface SystemParts {
   beam: string;
   /** Lifting a takdrager over a textile wall, per extended post or hook point. */
   beamLift: string;
+  /** Raising a system wall per metre (Byggeregel V18), one variant per 94 length joined on (`<id>-<mm>`), priced by the
+   *  cost engine. */
+  wallRaise?: string;
+  /** Ceiling wire for a raised wall, per V (Byggeregler S9, S10). */
+  wallWire?: string;
   /** Textile frame (rental), on a system wall or on foot plates: one product, price per m² of B × H, sold per piece. */
   textile: string;
   /** Textile per m² of visible face, by what it is: printed, white, or the customer's own (mounting only). */

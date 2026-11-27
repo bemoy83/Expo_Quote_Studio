@@ -7,6 +7,7 @@ import { foilCenter, foilsOn } from '../../../domain/decor'
 import { doorLevels, doorRal, doorWindows } from '../../../domain/doors'
 import { felt, type FaceSide } from '../../../domain/faces'
 import { moduleCc, moduleStart } from '../../../domain/grid'
+import { raiseDrawing, wiredPosts } from '../raiseDrawing'
 import { cropWindow, onDoorPart, plateCrop } from '../../../domain/print'
 import { textileBox, textilesOn } from '../../../domain/textile/inFrame'
 import { cornerLayout } from '../../../domain/shelves/corners'
@@ -22,7 +23,7 @@ import { fmt } from '../../format'
 import { findMotif } from '../../motifs'
 import { Handles, Print } from '../drawerParts'
 import { TXT } from '../drawerText'
-import { FaceRails, Opening as OpeningView, Plate, Posts, ShelfFront, TextileFace } from '../elevation'
+import { FaceRails, Opening as OpeningView, Plate, Posts, Raise, ShelfFront, TextileFace } from '../elevation'
 import { shelfFront } from '../shelfFront'
 import { type PlanSelection } from '../selection'
 import { RoomLabel } from '../RoomLabel'
@@ -140,7 +141,11 @@ export function WallElevation(p: Props) {
   const labels = !T && !F && !O && !painting ? elevationItems(rules, tex, foils, doorModules, u, pieceOf, v.walls) : []
   // One scale for the wall (Bjørn 17.11.2026): room for every frame, decal and print on both faces, whatever is chosen
   const steady = p.fs.map((f) => elevationItems(rules, textilesOn(v, w.id, f), foilsOn(v, w.id, f), doorModules, (t) => (f === 1 ? t : L - t), pieceOf, v.walls))
-  const fr = frame(size, L, H, items, { labels, steady })
+  // A raised wall (Byggeregler V18, V21) and its ceiling wires (S9)
+  const wired = useMemo(() => wiredPosts(v), [v])
+  const raise = raiseDrawing(w, mods, p.parts, u, wired)
+  const above = raise.above
+  const fr = frame(size, L, H, items, { labels, steady, above: raise.headroom })
   const sc = planScale(1 / fr.u, {})
 
   /** Pointer handlers for a plate (or a door) in the drawing while a tool is out: click, or with the brush press and sweep. */
@@ -284,6 +289,7 @@ export function WallElevation(p: Props) {
             return <Plate key={i} at={st(i)} cc={ccOf(i)} fill={plateColor(m?.plate ?? wallRal(v, w))} x={spanX} H={H} />
           })}
           <Posts xs={postsAt.map(u)} H={H} />
+          {raise.felts.length > 0 && <Raise felts={raise.felts} posts={raise.posts} wires={raise.wires} x={spanX} />}
           {/* The chosen door: marked, with its swing (the point of the triangle is the hinge side) */}
           {O &&
             O.wallId === w.id &&
@@ -433,7 +439,7 @@ export function WallElevation(p: Props) {
             />
           )}
 
-          <ElevationDims w={w} s={s} name={name} L={L} H={H} posts={postsAt} items={items} leaders={fr.leaders} top={fr.top} width={fr.width} right={fr.right} sc={sc} fields={fields} fieldCc={fieldCc} shelves={shelfChains(rules, shelfStacks({ ...v, shelves: brush.shelves ?? shelves }), u, st)} />
+          <ElevationDims above={above} w={w} s={s} name={name} L={L} H={H} posts={postsAt} items={items} leaders={fr.leaders} top={fr.top} width={fr.width} right={fr.right} sc={sc} fields={fields} fieldCc={fieldCc} shelves={shelfChains(rules, shelfStacks({ ...v, shelves: brush.shelves ?? shelves }), u, st)} />
         </svg>
       </div>
     </div>

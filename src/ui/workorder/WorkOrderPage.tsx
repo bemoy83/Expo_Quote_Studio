@@ -23,6 +23,7 @@ import { hours } from '../format'
 import { standScope, standSize, TYPE_NAME } from '../names'
 import { pickRows, type PickRow } from './pickRows'
 import { CornerNotes, ShelfElevation } from './ShelfElevation'
+import { wiredPosts } from '../plan/raiseDrawing'
 import { PodiumSides } from './PodiumSides'
 import { PLAN_MARGIN } from '../plan/planStyle'
 import { PlanPreview } from '../plan/PlanPreview'
@@ -84,7 +85,12 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf, mo
       })
     : []
   // Shelves: each wall face with shelves seen straight on, measured from the floor (Byggeregel H8)
-  const shelfWalls = shown.has('hyll') ? shelfFaces(v, rules) : []
+  const shelfFacesShown = shown.has('hyll') ? shelfFaces(v, rules) : []
+  // Raised walls (Byggeregler V18, S9): one face each with its raise and where the ceiling wires hang, unless the wall is
+  // already drawn for its shelves
+  const raisedWalls = shown.has('vegg') ? v.walls.filter((w) => w.raise && !shelfFacesShown.some((f) => f.wallId === w.id)).map((w) => ({ wallId: w.id, s: 1 as const, shelves: [] })) : []
+  const shelfWalls = [...shelfFacesShown, ...raisedWalls]
+  const wired = wiredPosts(v)
   const shelfLayout = cornerLayout(v, rules)
   const prints = shown.has('prof') ? [...textileRows(production(v, rules, customer)), ...foilRows(v, rules.wall.plate, customer)] : []
   const groupName = (id: string) => PRODUCT_GROUPS.find((g) => g.id === id)?.name ?? id
@@ -205,14 +211,15 @@ export function WorkOrderPage({ project, variants, current, onSelect, calcOf, mo
 
           {shelfWalls.length > 0 && (
             <section className="wo-sec wo-shelves">
-              <div className="eyebrow">Veggriss med hyller</div>
+              <div className="eyebrow">{raisedWalls.length ? (shelfFacesShown.length ? 'Veggriss med hyller og hevede vegger' : 'Veggriss, hevede vegger') : 'Veggriss med hyller'}</div>
               {shelfWalls.map((f) => (
                 <div key={`${f.wallId}${f.s}`} className="wo-elev-box">
-                  <ShelfElevation v={v} wallId={f.wallId} s={f.s} shelves={f.shelves} layout={shelfLayout} />
+                  <ShelfElevation v={v} wallId={f.wallId} s={f.s} shelves={f.shelves} layout={shelfLayout} wired={wired} />
                   <CornerNotes v={v} wallId={f.wallId} s={f.s} layout={shelfLayout} />
                 </div>
               ))}
-              <p className="foot">Høyde er overkant hylle fra gulvet. Lysmål er fri høyde mellom hyllene over hverandre.</p>
+              {shelfFacesShown.length > 0 && <p className="foot">Høyde er overkant hylle fra gulvet. Lysmål er fri høyde mellom hyllene over hverandre.</p>}
+              {wired.size > 0 && <p className="foot">Sirkel med kryss: vaier fra taket, V-oppheng i øyebolt M5 i toppskinnen.</p>}
             </section>
           )}
 

@@ -7,6 +7,7 @@ import { layoutBuild, profileMetres, type CounterBuild } from '../foga/counter';
 import { counterBuildOf } from '../domain/counterShape';
 import { outerHeight } from '../domain/podiums';
 import { STOCK_COUNTERS, stockSize } from '../domain/podiumStock';
+import { railHeight } from '../foga/plates';
 import { RECIPES } from '../foga/recipes';
 import { RULES } from '../rules/rules';
 import type { Time } from './time';
@@ -22,6 +23,17 @@ export const ITEM = {
   railCut: 'kapp-skinne',
   plateCut: 'kapp-veggplate',
   headerPlate: 'veggplate-overstykke',
+  /** Raised wall (Byggeregel V18): the 94 joined onto a post with its 609, by length; the upper felt's plate by its cut
+   *  size (a stock size in CC 250, no cutting, Bjørn 27.11.2026); putting up and taking down one upper felt. */
+  raisePost: (lengthMm: number) => `stolpeskjot-94-${lengthMm}`,
+  raisePlate: (widthMm: number, heightMm: number) => `veggplate-ovre-${widthMm}x${heightMm}`,
+  raiseModule: 'montering-ovre-felt',
+  /** A ceiling wire on a raised wall (Byggeregler S9, S10): the V, its eyebolt and 503, and hanging it. */
+  wire: 'vaieroppheng',
+  wireMount: 'montering-vaier',
+  /** One person-minute of montering or demontering more, for work above the height limit (cost rule 6). */
+  heightMontering: 'hoyde-montering',
+  heightDemontering: 'hoyde-demontering',
   door: 'dor',
   curtain: 'forheng',
   beam: (lengthMm: number) => `takdrager-292-${lengthMm}`,
@@ -124,6 +136,12 @@ const WALL_CC = [1000, 750, 500, 250] as const;
 const WALL_SHORT = WALL_CC.filter((cc) => cc < 1000);
 const railMm = (cc: number) => cc - 40;
 const plateMm = (cc: number) => RECIPES.wall.plate.w - (1000 - cc);
+/** Raised wall (Byggeregler V18, V20): the 94 lengths offered, and the upper plate of each module length and raise: as tall as the 94
+ *  less the 292 top rail (80), plus 20 into the rails (plates.ts raisePlate). */
+const RAISE = RULES.wall.raise.lengths;
+const RAISE_RAIL = RECIPES.wall.raise.topRail;
+const raisePlateH = (len: number) => len - railHeight(RAISE_RAIL) + (RECIPES.wall.plate.h - RULES.wall.plate.height);
+const RAISE_PLATES = WALL_CC.flatMap((cc) => RAISE.map((len) => [plateMm(cc), raisePlateH(len)] as const));
 
 /** Takdrager 292 in every standard length: centres 1–6 m and the half metre joined on (T18), cut 40 shorter, couplings
  *  mounted. */
@@ -142,6 +160,14 @@ export const ITEM_DEFS: readonly ItemDef[] = [
   def(ITEM.railCut, 'Kapp av skinne til kort modul', 'stk'),
   def(ITEM.plateCut, 'Kapp av veggplate til kort modul', 'stk'),
   def(ITEM.headerPlate, 'Veggplate, overstykke', 'stk'),
+  ...RAISE.map((len) => def(ITEM.raisePost(len), `Stolpeskjøt 94, ${len} mm, med 609`, 'stk')),
+  ...WALL_CC.map((cc) => def(ITEM.rail(RAISE_RAIL, railMm(cc)), `Toppskinne ${RAISE_RAIL}, ${railMm(cc)} mm, med 600, hevet vegg`, 'stk')),
+  ...RAISE_PLATES.map(([w, h]) => def(ITEM.raisePlate(w, h), `Veggplate ${w} × ${h} mm, øvre felt`, 'stk')),
+  def(ITEM.raiseModule, 'Montering per øvre felt, hevet vegg', 'stk'),
+  def(ITEM.wire, 'Vaieroppheng med øyebolt M5 og 503', 'stk'),
+  def(ITEM.wireMount, 'Montering av vaieroppheng', 'stk'),
+  def(ITEM.heightMontering, 'Arbeid i høyden, montering, per minutt', 'stk'),
+  def(ITEM.heightDemontering, 'Arbeid i høyden, demontering, per minutt', 'stk'),
   def(ITEM.door, 'Dør 292 med lås 410', 'stk'),
   def(ITEM.curtain, 'Forheng', 'stk'),
   ...BEAM_M.map((m) => def(ITEM.beam(beamLen(m)), `Takdrager 292, ${beamLen(m)} mm, med 600`, 'stk')),
@@ -221,6 +247,17 @@ export const EXAMPLE_TIMES: Readonly<Record<string, Time>> = {
   [ITEM.railCut]: { forhåndsmontering: 2 },
   [ITEM.plateCut]: { forhåndsmontering: 3 },
   [ITEM.headerPlate]: pvt(0.17, 0.51, 0.17),
+  // Raised wall (V18), placeholders until Bjørn gives his: a joined post as a post, the 292 rail as a rail, the upper
+  // plate as a wall plate, and an upper felt up and down as a module
+  ...Object.fromEntries(RAISE.map((len) => [ITEM.raisePost(len), pvt(0.34, 0.34, 0.34)])),
+  ...Object.fromEntries(WALL_CC.map((cc) => [ITEM.rail(RAISE_RAIL, railMm(cc)), pvt(0.17, 0.17, 0.17)])),
+  ...Object.fromEntries(RAISE_PLATES.map(([w, h]) => [ITEM.raisePlate(w, h), pvt(0.34, 1.02, 0.34)])),
+  [ITEM.raiseModule]: onSite(6.12, 4.08),
+  // A ceiling wire (S9, S10), placeholders: picked and carried as a small part, 10 min up and 5 down
+  [ITEM.wire]: pvt(0.5, 0.5, 0.5),
+  [ITEM.wireMount]: onSite(10, 5),
+  [ITEM.heightMontering]: onSite(1, 0),
+  [ITEM.heightDemontering]: onSite(0, 1),
   [ITEM.door]: pvt(0.68, 1.02, 0.68),
   [ITEM.curtain]: pvt(0.34, 1.7, 0.34),
   ...Object.fromEntries(BEAM_M.map((m) => [ITEM.beam(beamLen(m)), pvt(0.15, 0.15, 0.15)])),
@@ -283,6 +320,17 @@ export const EXAMPLE_RECIPES: Readonly<Record<string, ItemRecipe>> = {
   [ITEM.plateCut]: work,
   // The header over a door or curtain is cut from a plate: about a fifth of it
   [ITEM.headerPlate]: { own: [['HDF-976x2440', 0.2, 'plate']], dg: 'utleie' },
+  // Raised wall (V18): the 94 piece by its metres and its 609; the 292 rail with two 600 in each end; the upper plate its
+  // share of a whole one by area, no cutting (a stock size, Bjørn 27.11.2026)
+  ...Object.fromEntries(RAISE.map((len): [string, ItemRecipe] => [ITEM.raisePost(len), { parts: [['94', len / 1000], ['609', 1]], dg: 'utleie' }])),
+  ...Object.fromEntries(WALL_CC.map((cc): [string, ItemRecipe] => [ITEM.rail(RAISE_RAIL, railMm(cc)), { parts: [[RAISE_RAIL, railMm(cc) / 1000], ['600', 4]], dg: 'utleie' }])),
+  ...Object.fromEntries(RAISE_PLATES.map(([w, h]): [string, ItemRecipe] => [ITEM.raisePlate(w, h), { own: [['HDF-976x2440', Math.round(((w * h) / (RECIPES.wall.plate.w * RECIPES.wall.plate.h)) * 1000) / 1000, 'plate']], dg: 'utleie' }])),
+  [ITEM.raiseModule]: work,
+  // The V of wire and the eyebolt are own purchases (placeholders), the 503 Foga's
+  [ITEM.wire]: { own: [['VAIER-V', 1, 'accessory'], ['OYEBOLT-M5', 1, 'accessory']], parts: [['503', 1]], dg: 'utleie' },
+  [ITEM.wireMount]: work,
+  [ITEM.heightMontering]: work,
+  [ITEM.heightDemontering]: work,
   [ITEM.door]: { own: [['DOR-292-410', 1, 'accessory']], dg: 'utleie' },
   [ITEM.curtain]: { own: [['FORHENG', 1, 'accessory']], dg: 'utleie' },
   ...Object.fromEntries(BEAM_M.map((m): [string, ItemRecipe] => [ITEM.beam(beamLen(m)), { parts: [['292', m - 0.04], ['600', 4]], dg: 'utleie' }])),

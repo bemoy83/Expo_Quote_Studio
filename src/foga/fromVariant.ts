@@ -9,7 +9,7 @@ import { production, type Production } from '../calc/textile/production';
 import { builtCounterParts } from '../domain/counters';
 import { shelfBrackets } from '../domain/shelves/brackets';
 import type { Variant } from '../domain/types';
-import { builtModules, wallPoints, type BuiltModule } from '../domain/walls';
+import { builtModules, raisedPosts, wallPoints, type BuiltModule } from '../domain/walls';
 import type { Rules } from '../rules/rules';
 import type { CounterParts } from './counter';
 import type { BomSizes } from './engine';
@@ -38,6 +38,22 @@ export interface Derived {
   counters?: CounterParts;
   /** Inserts 700 under counters over a foot plate (domain/counters.ts counterInserts, K23). */
   counterInserts?: number;
+  /** Ceiling wires on raised walls (Byggeregel S10): an eyebolt with its 503 in the top rail for each. */
+  wires?: number;
+  /** Every built module, the organiser's too: a raise is always the exhibitor's (Byggeregel V18). Defaults to `mods`. */
+  all?: BuiltModule[];
+}
+
+/** The raised modules and the 94 joined onto their posts (Byggeregel V18). */
+export function raisesOf(mods: readonly BuiltModule[]): FogaStructure['raises'] | undefined {
+  const raised = mods.filter((m) => m.raise);
+  if (!raised.length) return undefined;
+  const byLen = new Map<number, number>();
+  for (const { len } of raisedPosts(raised).values()) byLen.set(len, (byLen.get(len) ?? 0) + 1);
+  return {
+    modules: raised.map((m) => ({ plate: m.raise!.ral, len: m.raise!.len, ...(m.cc < 1 - 1e-6 && { cc: Math.round(m.cc * 1000) }) })),
+    posts: [...byLen].sort(([a], [b]) => b - a).map(([len, qty]) => ({ len, qty })),
+  };
 }
 
 /** Takdrager lengths, post centre to post centre, mm. A length in whole and half metres is never cut to it (Byggeregel
@@ -54,6 +70,7 @@ export const beamSpecs = (b: BeamLayout): BeamSpec[] =>
 const HALF_MM = 500;
 
 export function structureOf(d: Derived): FogaStructure {
+  const raises = raisesOf(d.all ?? d.mods);
   return {
     posts: d.posts,
     modules: d.mods.map((m) => ({ plate: m.plate, opening: !!m.opening, ...(m.opening && d.curtain?.(m.opening.product) && { curtain: true }), ...(m.cc < 1 - 1e-6 && { cc: Math.round(m.cc * 1000) }) })),
@@ -68,6 +85,8 @@ export function structureOf(d: Derived): FogaStructure {
     ...(d.shelves?.boards ? { shelves: d.shelves } : {}),
     ...(d.counters ? { counters: d.counters } : {}),
     ...(d.counterInserts ? { counterInserts: d.counterInserts } : {}),
+    ...(raises ? { raises } : {}),
+    ...(d.wires ? { wires: d.wires } : {}),
   };
 }
 

@@ -5,10 +5,13 @@ import { fogaPart } from '../../../foga/parts'
 import { RECIPES } from '../../../foga/recipes'
 import { onSpan, pointKey } from '../../../domain/grid'
 import type { Point } from '../../../domain/types'
-import { wallPoints } from '../../../domain/walls'
+import { raisedPosts, wallPoints } from '../../../domain/walls'
 import { rules } from '../../env'
 import { profile, shared, unitProfile } from './profiles'
 import { ALU, ALU_FINISH, BEAM, FOOT_PLATE, type BuildContext } from './context'
+
+/** A ceiling wire's colour. */
+const WIRE = 0x6b6f75
 
 export function buildFrame(c: BuildContext) {
   const { res, H, at, mat, add, along, mods } = c
@@ -16,6 +19,24 @@ export function buildFrame(c: BuildContext) {
   const wallPts = wallPoints(mods)
   // A post over a foot plate is picked without its adjustable foot
   const onPlate = new Set(res.wallSupports.map((f) => pointKey(f.at)))
+  // Raised walls (Byggeregler V18, V21): a 94 joined on top of each of their posts, the higher at a step
+  for (const { at: p, len } of raisedPosts(mods).values()) {
+    const mesh = new THREE.Mesh(unitProfile('94'), mat('walls', ALU, ALU_FINISH))
+    mesh.scale.x = len / 1000
+    mesh.rotation.z = Math.PI / 2
+    mesh.position.copy(at(p, H + len / 2000))
+    add(mesh, { layer: 'walls' })
+  }
+  // Ceiling wires (Byggeregel S9, Bjørn 27.11.2026): a V from the eyebolt on the post's top to two points in the ceiling,
+  // one on each side of the wall (the ceiling's height is not known: drawn 1.5 m up, 1 m out)
+  const tops = raisedPosts(mods)
+  for (const f of res.wires ?? []) {
+    const top = H + (tops.get(pointKey(f.at))?.len ?? 0) / 1000
+    const [x, y] = f.at
+    const out: [Point, Point] = f.orientation === 'h' ? [[x, y - 1], [x, y + 1]] : [[x - 1, y], [x + 1, y]]
+    const pts = [at(out[0], top + 1.5), at(f.at, top), at(out[1], top + 1.5)]
+    add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: WIRE })), { layer: 'walls' })
+  }
   for (const p of res.posts) {
     const onWall = wallPts.has(pointKey(p))
     const layer = onWall ? 'walls' : 'beams'

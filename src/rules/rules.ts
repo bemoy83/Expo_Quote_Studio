@@ -32,6 +32,10 @@ export interface Rules {
     profile: { length: number; top: number; bottom: number; thickness: number };
     /** Wall plate size, mm. */
     plate: { width: number; height: number };
+    /** Raised wall (Byggeregel V18): the stock lengths of 94 the drawer offers to join onto the posts, mm. The top is
+     *  then 2540 + the length. Bjørn 27.11.2026: the sales steps 3–5 m, not confirmed before building. `wireAbove`: with
+     *  takdrager, a raised wall whose top is higher than this (mm) gets ceiling wires (Byggeregel S9). */
+    raise: { lengths: number[]; wireAbove: number };
   };
   /** `max`: longest beam length (byggeregel T2); `supportSpan`: a free stand-wall span this long gets a støttedrager (T7). */
   beam: { max: number; height: number; thickness: number; supportSpan: number };
@@ -72,6 +76,7 @@ export const RULES: Rules = {
     post: 0.04,
     profile: { length: 0.96, top: 0.04, bottom: 0.03, thickness: 0.02 },
     plate: { width: 960, height: 2420 },
+    raise: { lengths: [540, 1040, 1540, 2040, 2490], wireAbove: 3080 },
   },
   beam: { max: 6, height: 0.08, thickness: 0.02, supportSpan: 6 },
   textile: {
@@ -97,6 +102,8 @@ export const doorInset = (r: Rules) => (r.wall.cc - r.door.swing) / 2;
 
 /** Full wall height including feet (2540 mm). */
 export const wallHeight = (r: Rules) => r.wall.height + r.wall.feet;
+/** Top of a wall raised with a 94 of `len` mm joined on (Byggeregler V18, V19), mm from the floor: 2540 + len. */
+export const raiseTop = (len: number, r: Rules = RULES) => Math.round(wallHeight(r) * 1000) + len;
 
 /** Only the assumptions set on Kostgrunnlag › Regler: the rest follow the app's current defaults, so a new default reaches a
  *  browser that has stored assumptions (it did not before: the whole set was stored and frozen). */
