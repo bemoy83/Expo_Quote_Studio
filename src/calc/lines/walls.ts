@@ -74,26 +74,26 @@ export function raiseLines(c: CalcContext): CalcLine[] {
   const posts = raisedPosts(raised);
   const r = RECIPES.wall;
   const postW = fogaPart(r.post).section?.[0] ?? 0;
-  return [...countBy(raised.map((m) => String(m.raise!.len))).keys()]
-    .map(Number)
-    .sort((a, b) => a - b)
-    .map((len) => {
-      const mods = raised.filter((m) => m.raise!.len === len);
-      const nPosts = [...posts.values()].filter((p) => p.len === len).length;
-      const ccMm = (cc: number) => Math.round(cc * 1000);
-      const uses: Use[] = [
-        { id: ITEM.raisePost(len), qty: nPosts },
-        ...[...countBy(mods.map((m) => String(ccMm(m.cc))))].flatMap(([cc, n]): Use[] => {
-          const plate = raisePlate({ plate: '', len, cc: +cc }, RECIPES, c.sizes);
-          return [
-            { id: ITEM.rail(r.raise.topRail, +cc - postW), qty: n },
-            { id: ITEM.raisePlate(plate.w, plate.h), qty: n },
-            ...(+cc < c.sizes.cc ? [{ id: ITEM.railCut, qty: n }] : []),
-          ];
-        }),
-        { id: ITEM.raiseModule, qty: mods.length },
-      ];
-      const lm = mods.reduce((a, m) => a + m.cc, 0);
-      return { ...c.line(`${id}-${len}`, lm, { ...c.built, meta: `+${len} mm` }, uses), top: raiseTop(len, c.rules) };
-    });
+  const lengths = [...new Set(raised.map((m) => m.raise!.len))].sort((a, b) => a - b);
+  return lengths.map((len) => {
+    const mods = raised.filter((m) => m.raise!.len === len);
+    const nPosts = [...posts.values()].filter((p) => p.len === len).length;
+    // Per module width (mm): its 292 top rail, upper plate, and the rail's cut in a short module (V1)
+    const widths = countBy(mods.map((m) => String(Math.round(m.cc * 1000))));
+    const uses: Use[] = [
+      { id: ITEM.raisePost(len), qty: nPosts },
+      ...[...widths].flatMap(([mm, n]): Use[] => {
+        const cc = Number(mm);
+        const plate = raisePlate({ plate: '', len, cc }, RECIPES, c.sizes);
+        return [
+          { id: ITEM.rail(r.raise.topRail, cc - postW), qty: n },
+          { id: ITEM.raisePlate(plate.w, plate.h), qty: n },
+          ...(cc < c.sizes.cc ? [{ id: ITEM.railCut, qty: n }] : []),
+        ];
+      }),
+      { id: ITEM.raiseModule, qty: mods.length },
+    ];
+    const lm = mods.reduce((a, m) => a + m.cc, 0);
+    return { ...c.line(`${id}-${len}`, lm, { ...c.built, meta: `+${len} mm` }, uses), top: raiseTop(len, c.rules) };
+  });
 }

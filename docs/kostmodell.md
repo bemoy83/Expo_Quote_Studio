@@ -92,8 +92,9 @@ DG regnes på direkte kost, og kalkylen viser hva som er igjen etter indirekte k
 | 5 | Per ordre: startkost trykk, administrasjon, transport | fast, én gang per tilbud |
 | 6 | Høyde: over 3080 mm, der 5-trinns stige ikke rekker (en vegg til 3040 eller 3080 teller som 3 m, Bjørn 27.11.2026) | sakselift 4304 per time som ordrekost: monterings- og demonteringsminutter for arbeid over grensen × faktor, rundet opp til hele timer per ordre. Bare i kalkylen, aldri på tilbudet. En linje merker arbeid over grensen med `top` (i dag hevet vegg og vaier, senere høy tekstil og snekkervegg) |
 
-Regel 2 (spesialkapp) og 6 (høyde) finnes i `model.ts` med tester, men kalkylen bruker dem ikke ennå: tekstilrammer
-kappes alltid til mål og har i stedet egen slitasje (gruppen `frame`, under), og appen tegner ikke over 3,0 m ennå.
+Regel 2 (spesialkapp) finnes i `model.ts` med tester, men kalkylen bruker den ikke ennå: tekstilrammer kappes alltid
+til mål og har i stedet egen slitasje (gruppen `frame`, under). Regel 6 (høyde) brukes for hevet vegg og vaier
+(`liftCost` i `calc/summary.ts`).
 
 `timekost = timelønn med sosiale kostnader × lønnsindeks fra basisåret / fakturerbar andel`
 

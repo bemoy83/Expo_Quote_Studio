@@ -130,22 +130,22 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   lysåpningen når en hylle settes inn eller tas ut (K19).
   *Bjørn 18.11.2026 (felles plateregel, trinn B1) · kode `src/domain/plateDecor.ts` · test `src/domain/plateDecor.test.ts`, `src/domain/plates.test.ts`*
 - **V18 Hevet vegg.** En systemvegg heves ved å bygge opp fra veggen som står: en 94 i lagerlengde skjøtes oppå hver
-  stolpe med 609 inni som avstiving, den gamle toppskinnen 92 blir mellomskinne, og en ny toppskinne 292 (80 høy, 960
-  med 2 × 600 i hver ende, som en takdrager) lukker det øvre feltet. Veggen under er uendret, også dører, forheng og
+  stolpe med 609 inni som avstiving, den gamle toppskinnen 92 blir mellomskinne, og en ny toppskinne 292 (80 høy, CC − 40
+  lang med 2 × 600 i hver ende, som en takdrager) lukker det øvre feltet. Veggen under er uendret, også dører, forheng og
   overstykker. Høyden velges per vegg i veggskuffen («Høyde»); en hevet bakvegg hever ikke et rom, og et roms sider
   heves ikke ennå. Motoren regner høyden per modul (`BuiltModule.raise`), så trinn i en vegg kan komme. Stolpeskjøten
   plukkes som ferdig enhet (94 med 609). Veggrisset og 3D viser det øvre feltet, 292 og stolpeskjøtene, med
-  høydekjeden 2540 + stykket, og arbeidsordren sier hvor mange meter som er hevet. Å bygge en høy vegg fra bunnen (92 i bunn, uten fot, topp 3040) er ikke med nå.
+  høydekjeden 2540 + stykket. Arbeidsordren sier hvor mange meter som er hevet og tegner veggriss av hver hevet vegg. Å bygge en høy vegg fra bunnen (92 i bunn, uten fot, topp 3040) er ikke med nå.
   *Bjørn 27.11.2026 · `rules.wall.raise`, `RECIPES.wall.raise` · kode `src/domain/raise.ts`, `src/domain/walls.ts`, `src/foga/fromVariant.ts`, `src/foga/engine.ts`, `src/ui/plan/elevation.tsx`, `src/ui/scene3d/build/walls.ts`, `src/ui/scene3d/build/frame.ts`, `src/ui/names.ts` · test `src/domain/raise.test.ts`, `src/calc/raisedWall.test.ts`, `src/ui/names.test.ts`*
 - **V19 Høyder.** Toppen er 2540 pluss lagerlengden på stykket som skjøtes på: 540 → 3080, 1040 → 3580, 1540 → 4080,
-  2040 → 4580 og 2490 → 5030 (salgstrinnene 3–5 m, ikke bekreftet før bygging). Lengdene ligger som data. Lagerlengdene
+  2040 → 4580 og 2490 → 5030 (salgstrinnene 3–5 m). Lengdene ligger som data. Lagerlengdene
   går i CC 250 (290, 540, 790 …), så flere kan legges til uten kode.
   *Bjørn 27.11.2026 · `rules.wall.raise.lengths`, `raiseTop` · kode `src/rules/rules.ts`, `src/domain/raise.ts` · test `src/calc/raisedWall.test.ts`*
 - **V20 Øvre felt.** Lysåpningen mellom mellomskinnen og 292 er stykket − 80 (CC − 40, som i bredden), og platen er
   10 mm inn i hver skinne, som veggplaten (V5): 976 × (stykket − 60), smalere i en kort modul (V1). Med dagens mål:
   540 gir 976 × 480 og 2490 gir 976 × 2430. Platene i CC 250-størrelser er lagervarer og kostes som sin andel av en hel
-  plate etter flaten, uten kapp. Feltet har veggens egen farge. Farge, print og dekal per øvre felt og at det ikke tar
-  hyller (H4 står), kommer med veggrisset.
+  plate etter flaten, uten kapp. Feltet har veggens egen farge. Det tar ikke hyller: H4 setter
+  øverste hylle til 2400, under mellomskinnen. Egen farge, print og dekal per øvre felt er ikke bygget ennå.
   *Bjørn 27.11.2026 · `RECIPES.wall.raise.topRail`, `ITEM.raisePlate` · kode `src/foga/plates.ts`, `src/cost/itemDefs.ts` · test `src/calc/raisedWall.test.ts`*
 - **V21 Trinn.** Der høyden skifter, står den høye delens stolpe skjøtt i stolpen under som ellers: en stolpe mellom to
   høyder får stykket til den høyeste, og det trengs ikke noe ekstra.
@@ -940,11 +940,11 @@ K22 standardvarene og K23 disker over en fotplate.
   stolpene bare de trenger, og støttedragerne). De er da ute av utstillerens tilbud, plukkliste og arbeidsordre. En
   stolpe i arrangørens standvegg er arrangørens, også når en innervegg står inntil. Detaljer i [vegger.md](vegger.md).
   *Bjørn 31.10.2026 · kode `src/calc/context.ts` · test `src/calc/beams/supportBeams.test.ts`*
-- **B2 Alltid utstillerens.** Innvendige takdragere, fotplater (også under arrangørens vegger), skjøt over tekstilvegg og
-  platebytte i en standvegg bygges og betales av utstilleren. En øy uten standvegger: utstilleren betaler takdragerne.
+- **B2 Alltid utstillerens.** Innvendige takdragere, fotplater (også under arrangørens vegger), skjøt over tekstilvegg,
+  platebytte i en standvegg, forhøyning av vegg (V22) og vaier (S9) bygges og betales av utstilleren. En øy uten standvegger: utstilleren betaler takdragerne.
   *Bjørn 31.10.2026, 1.11.2026 og 6.11.2026 · kode `src/calc/context.ts`, `src/calc/lines/beams.ts` · test `src/calc/beams/innerBeams.test.ts`*
 
 ## Ikke bygget ennå
 
-Bestemt eller nevnt, men ikke i koden: farge, print og dekal per øvre felt (V20), forslag om å heve veggen når tekstil tegnes over 2540, velge type hjørne der en frittstående tekstilvegg møter en ramme på vegg (Bjørn 20.11.2026: 92LTX er bedre enn å stoppe mot rammen etter X11, fordi alle profilkanalene for tekstil er tilgjengelige, mens en utenpåliggende ramme sperrer kanalene og må monteres etter tekstilen), flere høyder på frittstående tekstilvegg (over 2540 tas i egen utredning om høye vegger), tekstildør
+Bestemt eller nevnt, men ikke i koden: farge, print og dekal per øvre felt (V20), forslag om å heve veggen når tekstil tegnes over 2540 (kommer med høye tekstilvegger: tekstil på vegg kan ikke gå over 2540 i dag), velge type hjørne der en frittstående tekstilvegg møter en ramme på vegg (Bjørn 20.11.2026: 92LTX er bedre enn å stoppe mot rammen etter X11, fordi alle profilkanalene for tekstil er tilgjengelige, mens en utenpåliggende ramme sperrer kanalene og må monteres etter tekstilen), flere høyder på frittstående tekstilvegg (over 2540 tas i egen utredning om høye vegger), tekstildør
 med overstykke, høye tekstilvegger, heng (H6), og endring av standvegg med nabogodkjenning. Samba-duk foran LED (appen tegner ikke LED ennå).

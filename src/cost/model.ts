@@ -86,11 +86,8 @@ export function orderCost(items: readonly OrderCost[], year: number, p: CostPara
   );
 }
 
-/** 6 Height: montering minutes for what reaches above the limit take longer. */
-export const heightMinutes = (minutes: number, topMm: number, p: CostParams) => (topMm > p.height.limit ? minutes * p.height.factor : minutes);
-
 /** 6 Height: a lift is needed when anything reaches above the limit. */
-export const needsLift = (topMm: number, p: CostParams) => topMm > p.height.limit;
+export const needsLift = (topMm: number, h: CostParams['height']) => topMm > h.limit;
 
 /** 6 Height: the lift's hours for an order, from the montering and demontering minutes of the work above the limit ×
  *  the factor, rounded up to whole hours once per order (Bjørn 27.11.2026). */

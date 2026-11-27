@@ -5,7 +5,7 @@ import { beamSpecs } from '../foga/fromVariant';
 import { bom } from '../foga/engine';
 import { RECIPES } from '../foga/recipes';
 import { dgOf } from '../pricing/model';
-import { liftHours } from '../cost/model';
+import { liftHours, needsLift } from '../cost/model';
 import type { CostParams } from '../cost/params';
 import { addTime, type Time } from '../cost/time';
 import type { CalcContext } from './context';
@@ -85,7 +85,7 @@ export function summary(c: CalcContext, lines: CalcLine[], organiserLines: CalcL
  * and snekkervegger can do the same).
  */
 export function liftCost(lines: readonly CalcLine[], h: CostParams['height']): { id: string; name: string; cost: number } | undefined {
-  const minutes = lines.filter((l) => (l.top ?? 0) > h.limit).reduce((a, l) => a + (l.time.montering ?? 0) + (l.time.demontering ?? 0), 0);
+  const minutes = lines.filter((l) => l.top !== undefined && needsLift(l.top, h)).reduce((a, l) => a + (l.time.montering ?? 0) + (l.time.demontering ?? 0), 0);
   const hours = liftHours(minutes, h);
   return hours ? { id: 'lift', name: `Sakselift ${hours} t`, cost: hours * h.liftPerHour } : undefined;
 }

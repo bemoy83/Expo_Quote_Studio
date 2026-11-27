@@ -1,5 +1,7 @@
 // Støtteplater, per piece: the plate and putting it on. Under walls that stand free and under drawn takdrager's own
 // posts (calc/wallSupports.ts, calc/beams/innerBeams.ts), always the exhibitor's.
+import { pointKey } from '../../domain/grid';
+import { raisedPosts } from '../../domain/walls';
 import { fogaPart } from '../../foga/parts';
 import { RECIPES } from '../../foga/recipes';
 import { ITEM } from '../../pricing/data';
@@ -23,8 +25,9 @@ export function footLines(c: CalcContext): CalcLine[] {
 export function wireLines(c: CalcContext): CalcLine[] {
   const n = c.wires.length;
   if (!n || !c.sys.wallWire) return [];
-  // Hung from the top of the highest raised wall: worked from the lift (cost rule 6)
-  const top = Math.max(...c.mods.map((m) => (m.raise ? raiseTop(m.raise.len, c.rules) : 0)));
+  // Hung from the top of the posts they hang from, the highest one: worked from the lift above the limit (cost rule 6)
+  const posts = raisedPosts(c.mods);
+  const top = Math.max(...c.wires.map((w) => raiseTop(posts.get(pointKey(w.at))?.len ?? 0, c.rules)));
   const line = c.line(c.sys.wallWire, n, { ...c.built, meta: 'hevet vegg' }, [
     { id: ITEM.wire, qty: n },
     { id: ITEM.wireMount, qty: n },
