@@ -34,11 +34,13 @@ export function ElevationDims({ w, s, name, L, H, posts, items, leaders, top, wi
   // From the outside of the end posts, so the row over the wall adds up to the total (6 040 for a 6 000 c/c wall)
   const outer = physicalEnds(rules, L)
   const along = row(outer, items.flatMap((i) => [i.x0, i.x1]))
-  const heights = row([0, H], items.flatMap((i) => [H - i.top, H - i.bottom]))
+  // On a raised wall from its top, with the middle rail between (V20): what is left over a decal to the rail, and to the top
+  const heights = row([-above, H], [...items.flatMap((i) => [H - i.top, H - i.bottom]), ...(above ? [0] : [])])
   // 960 × 2 420 a plate, standing 80 and 2 500 over the floor
   const lm = lysmal(rules, fields ?? [], H, fieldCc)
   const uprights = items.find((i) => i.uprights)?.uprights
-  const rowY = -px(NEAR)
+  // Over the whole wall: over a raise and its wire marks (V20)
+  const rowY = -headroom - px(NEAR)
   // Over the chain over a measured item, or straight over the wall (over a raise and its wire marks); in a raised
   // wall's lower felt, in its own row just under the middle rail (V20)
   const railFoot = rules.wall.profile.top

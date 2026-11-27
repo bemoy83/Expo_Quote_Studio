@@ -205,6 +205,9 @@ Veggskuffens tegning blir arbeidstegning for én vegg. Se bilde 3.
   - **Tekstilramme, dekal eller print:** over veggen plasseringsraden fra hver veggende og bredden (tekstil med
     rammens fysiske bredde, 3 970 i et felt på 4 000), til høyre høyderaden (bunn, høyde, rest til topp), og
     veggens total under. Ingen modulkjede og ingen vegghøyder. Print over flere plater måles som ett.
+    På hevet vegg (V20, Bjørn 27.11.2026) står plasseringsraden over hele veggen og vaiermerkene, og høyderaden går
+    fra gulvet til toppen av hevingen med mellomskinnen som eget punkt: bunn, høyde, rest til mellomskinnen og
+    hevingen (dekal nede), eller rest til mellomskinnen, høyde og rest til topp (dekal oppe).
   - **Modulmål** (Bjørn 6.11.2026): en modul er 1 000 senter til senter stolpe, og veggene i et løp deler stolper.
     Modulkjeden står derfor merket «c/c». Totalen er fysisk, fra utsiden av endestolpene: 4 000 c/c er 4 040.
     Plasseringsraden over veggen regnes fra de samme utsidene, så den går opp i totalen (1 035 + 3 970 + 1 035 =
