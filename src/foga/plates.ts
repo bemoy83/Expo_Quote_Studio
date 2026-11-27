@@ -5,7 +5,7 @@
 import { fogaPart } from './parts';
 import type { Recipes } from './recipes';
 import type { BomSizes } from './engine';
-import type { ModuleSpec } from './structure';
+import type { ModuleSpec, RaiseSpec } from './structure';
 
 /** Where the picking list puts a plate: with the walls, with the doors (a header), or with the counters built on site. */
 export type PlateGroup = 'wall' | 'header' | 'counter';
@@ -35,6 +35,18 @@ export function modulePlate(m: ModuleSpec, r: Recipes, z: BomSizes): PlateSpec {
   const header = z.postLength - r.door.floorGap - r.door.leaf - r.door.topGap;
   const bottom = m.curtain ? r.door.curtainBottomRail : r.wall.bottomRail;
   return { group: 'header', ral: m.plate, w: plate.w, h: header - railHeight(r.wall.topRail) - railHeight(bottom) + plateExtra, note: ' · overstykke' };
+}
+
+/**
+ * The plate of a raised module's upper felt (Byggeregler V18, V20): between the old top rail (now the middle rail) and the new
+ * top rail, as tall as the 94 joined on less the new rail, plus what a plate goes into its rails (the same as the wall
+ * plate's: 2440 in 2420). A shorter module's is narrower, as its wall plate (V1).
+ */
+export function raisePlate(m: RaiseSpec, r: Recipes, z: BomSizes): PlateSpec {
+  const plate = r.wall.plate;
+  const railsH = railHeight(r.wall.topRail) + railHeight(r.wall.bottomRail);
+  const into = plate.h - (z.postLength - railsH);
+  return { group: 'wall', ral: m.plate, w: plate.w - (z.cc - (m.cc ?? z.cc)), h: m.len - railHeight(r.wall.raise.topRail) + into, note: ' · øvre felt' };
 }
 
 /** A plate swapped into a stand wall the organiser builds: the full plate in the exhibitor's colour. */

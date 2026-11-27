@@ -19,9 +19,10 @@ import { shelvesOn } from '../../domain/shelves/model'
 import { wallLength, wallModules } from '../../domain/grid'
 import type { DoorSurface, Motif, Variant } from '../../domain/types'
 import { builtModules, isStandWall, wallLabel, wallParts } from '../../domain/walls'
-import { wallHeight } from '../../rules/rules'
+import { canRaise, setWallRaise } from '../../domain/raise'
+import { raiseTop, wallHeight } from '../../rules/rules'
 import { INK_FAINT, LAYER_COLOR } from '../colors'
-import { Button, IconButton, Section } from '../controls'
+import { Button, FlatChoice, IconButton, Section } from '../controls'
 import { productOf, rules } from '../env'
 import { findMotif } from '../motifs'
 import { DrawerHead } from './drawerParts'
@@ -251,6 +252,18 @@ export function WallDrawer(p: Props) {
             )}
 
             {ui.panel === 'wall-extras' && <WallFittings v={v} w={w} s={s} brush={brushOn} onBrush={takeBrush} onEdit={p.onEdit} onToast={p.onToast} />}
+
+            {/* V18: the whole wall raised with a 94 joined onto its posts, or the standard 2540 */}
+            {(ui.panel === 'wall-decor' || ui.panel === 'wall-extras') && canRaise(w) && (
+              <Section title="Høyde" aside={`${w.raise ? raiseTop(w.raise, rules) : Math.round(H * 1000)} mm`}>
+                <FlatChoice<number>
+                  label="Veggens høyde"
+                  value={w.raise ?? 0}
+                  onChange={(len) => p.onEdit((x) => setWallRaise(x, w.id, len || undefined))}
+                  options={[0, ...rules.wall.raise.lengths].map((len) => ({ value: len, label: String(len ? raiseTop(len, rules) : Math.round(H * 1000)), title: len ? `Hevet: 94 på ${len} mm skjøtt oppå stolpene` : 'Standard systemvegg' }))}
+                />
+              </Section>
+            )}
 
             {ui.panel === 'wall-decor' && <ColourPanel painting={painting} tool={tool} setTool={setTool} pm={pm} paint={paint} ral={ral} setPaint={t.setPaint} clear={clearOf(v, { kind: 'wall', wallId: w.id, side: s }, p.onEdit)} />}
           </>

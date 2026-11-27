@@ -15,7 +15,7 @@ import { floorLines } from './lines/floor';
 import { looseLines, objectLines } from './lines/objects';
 import { swapLines } from './lines/swaps';
 import { shelfLines } from './lines/shelves';
-import { organiserWallLines, wallLines } from './lines/walls';
+import { organiserWallLines, raiseLines, wallLines } from './lines/walls';
 import { summary } from './summary';
 import { frameLines, textileWallLines } from './textile/lines';
 import type { CalcLine, CalcResult } from './types';
@@ -32,6 +32,7 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
   const beams = beamLines(c);
   const lines: CalcLine[] = [
     ...wallLines(c),
+    ...raiseLines(c),
     ...footLines(c),
     ...swapLines(c),
     ...beams.lines,

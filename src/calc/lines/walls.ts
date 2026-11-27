@@ -2,6 +2,12 @@
 // ones per piece (Byggeregel V1), except a stand wall's half metre on a stand in half metres: by the metre (V14). The
 // organiser's stand walls,
 // when it pays them, are a line of their own for the organiser.
+import { raisedPosts } from '../../domain/walls';
+import { fogaPart } from '../../foga/parts';
+import { raisePlate } from '../../foga/plates';
+import { RECIPES } from '../../foga/recipes';
+import { ITEM } from '../../pricing/data';
+import type { Use } from '../../pricing/model';
 import { countBy, toOrganiser, type CalcContext } from '../context';
 import type { CalcLine } from '../types';
 
@@ -52,4 +58,41 @@ export function wallLines(c: CalcContext): CalcLine[] {
 export function organiserWallLines(c: CalcContext): CalcLine[] {
   const { theirs, theirPoints, standWalls } = c;
   return theirs.length ? wallLine(c, standWalls.ral, theirs, 'Standvegg', true, c.share(theirPoints.size, theirs.length)).map(toOrganiser) : [];
+}
+
+/**
+ * Raised walls (Byggeregler V18, V22, Bjørn 27.11.2026): one line per height, per metre of raised wall, priced by the cost
+ * engine from what is built: the 94 joined onto the posts (a post between two heights counts with the higher), the 292
+ * top rail and the plate of each upper felt, and putting the felt up and down. Always the exhibitor's, also over the
+ * organiser's stand walls (B2).
+ */
+export function raiseLines(c: CalcContext): CalcLine[] {
+  const raised = c.mods.filter((m) => m.raise);
+  const id = c.sys.wallRaise;
+  if (!raised.length || !id) return [];
+  const posts = raisedPosts(raised);
+  const r = RECIPES.wall;
+  const postW = fogaPart(r.post).section?.[0] ?? 0;
+  return [...countBy(raised.map((m) => String(m.raise!.len))).keys()]
+    .map(Number)
+    .sort((a, b) => a - b)
+    .map((len) => {
+      const mods = raised.filter((m) => m.raise!.len === len);
+      const nPosts = [...posts.values()].filter((p) => p.len === len).length;
+      const ccMm = (cc: number) => Math.round(cc * 1000);
+      const uses: Use[] = [
+        { id: ITEM.raisePost(len), qty: nPosts },
+        ...[...countBy(mods.map((m) => String(ccMm(m.cc))))].flatMap(([cc, n]): Use[] => {
+          const plate = raisePlate({ plate: '', len, cc: +cc }, RECIPES, c.sizes);
+          return [
+            { id: ITEM.rail(r.raise.topRail, +cc - postW), qty: n },
+            { id: ITEM.raisePlate(plate.w, plate.h), qty: n },
+            ...(+cc < c.sizes.cc ? [{ id: ITEM.railCut, qty: n }] : []),
+          ];
+        }),
+        { id: ITEM.raiseModule, qty: mods.length },
+      ];
+      const lm = mods.reduce((a, m) => a + m.cc, 0);
+      return c.line(`${id}-${len}`, lm, { ...c.built, meta: `+${len} mm` }, uses);
+    });
 }

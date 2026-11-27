@@ -24,6 +24,8 @@ export interface BuiltModule extends Module {
   opening: Opening | null;
   /** A part of a module another wall split (Byggeregel V10): the key of the whole module it was cut from. */
   whole?: string;
+  /** Raised (Byggeregel V18): the 94 joined onto its posts, mm, and the colour of the upper felt (the wall's own). */
+  raise?: { len: number; ral: string };
 }
 
 /**
@@ -54,6 +56,8 @@ export function builtModules(v: Variant): BuiltModule[] {
         const existing = byKey.get(part.key);
         if (existing) {
           if (!existing.opening && opening) existing.opening = opening;
+          // Two walls on one module: the higher raise builds it (V18)
+          if (w.raise && w.raise > (existing.raise?.len ?? 0)) existing.raise = { len: w.raise, ral: own };
           continue;
         }
         // Only what no earlier wall covers (R6); a stretch cut short is a part of its module too
@@ -63,7 +67,7 @@ export function builtModules(v: Variant): BuiltModule[] {
           // A part keeps the colour of the module it was cut from, and is its own plate for colour and graphics
           const local = plateLocal(w, piece.a, piece.b);
           const plate = v.decor?.[local]?.ral ?? v.decor?.[plateLocal(w, m.a, m.b)]?.ral ?? own;
-          byKey.set(piece.key, { ...piece, wallId: w.id, index, local, plate, opening: piece === part ? opening : null, ...(piece.key !== m.key && { whole: m.key }) });
+          byKey.set(piece.key, { ...piece, wallId: w.id, index, local, plate, opening: piece === part ? opening : null, ...(piece.key !== m.key && { whole: m.key }), ...(w.raise && { raise: { len: w.raise, ral: own } }) });
           built.add(piece);
         }
       }
@@ -182,6 +186,22 @@ export function wallPoints(mods: readonly Module[]): Map<string, Point> {
   for (const m of mods) {
     out.set(pointKey(m.a), m.a);
     out.set(pointKey(m.b), m.b);
+  }
+  return out;
+}
+
+/**
+ * The 94 joined onto the posts of raised modules (Byggeregler V18, V21), mm, by post: a post between two heights (a step,
+ * V21) takes the higher, the lower module's felt ending against it.
+ */
+export function raisedPosts(mods: readonly BuiltModule[]): Map<string, { at: Point; len: number }> {
+  const out = new Map<string, { at: Point; len: number }>();
+  for (const m of mods) {
+    if (!m.raise) continue;
+    for (const p of [m.a, m.b]) {
+      const k = pointKey(p);
+      if ((out.get(k)?.len ?? 0) < m.raise.len) out.set(k, { at: p, len: m.raise.len });
+    }
   }
   return out;
 }

@@ -4,7 +4,7 @@
 // Byggeregler V2–V5, S8, T1, D2, P1, P2, H2, H3 (docs/byggeregler.md).
 import { resolveGroup } from '../catalog/groups';
 import { fogaPart } from './parts';
-import { modulePlate, swapPlate, type PlateSpec } from './plates';
+import { modulePlate, raisePlate, swapPlate, type PlateSpec } from './plates';
 import type { Recipes } from './recipes';
 import type { FogaStructure, ModuleSpec } from './structure';
 
@@ -171,6 +171,22 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   for (const m of walled) putPlate(modulePlate(m, r, z));
   for (const ral of s.swaps ?? []) putPlate(swapPlate(ral, r));
   for (const m of headers) putPlate(modulePlate(m, r, z));
+
+  // Raised walls (Byggeregel V18): a piece of 94 joined onto each post with a 609, stored mounted; the old top rail is
+  // the middle rail, and each upper felt gets a 292 top rail (couplings mounted) and its plate
+  const rz = r.wall.raise;
+  for (const { len, qty } of s.raises?.posts ?? [])
+    put(
+      BOM_GROUP.posts,
+      `raise|${len}`,
+      { artnr: '', name: `Stolpeskjøt ${r.wall.post}, ${len} mm, med ${rz.joint}`, detail: `${r.wall.post} × ${len} mm · 1 × ${rz.joint} (${fogaPart(rz.joint).artnr}) · skjøtes oppå stolpen`, note: 'hevet vegg', preassembled: true },
+      qty,
+      len,
+    );
+  const raisedCc = new Map<number, number>();
+  for (const m of s.raises?.modules ?? []) raisedCc.set(m.cc ?? z.cc, (raisedCc.get(m.cc ?? z.cc) ?? 0) + 1);
+  for (const [cc, n] of [...raisedCc].sort(([a], [b]) => b - a)) unit(BOM_GROUP.rails, 'Toppskinne', rz.topRail, between(cc), rz.coupling, n, 'hevet vegg');
+  for (const m of s.raises?.modules ?? []) putPlate(raisePlate(m, r, z));
 
   // Takdrager: 292 between the posts with two 600 in each end, one piece per length
   for (const b of s.beams) unit(BOM_GROUP.beams, 'Takdrager', r.beam.profile, between(b.lengthMm), r.beam.coupling, 1);

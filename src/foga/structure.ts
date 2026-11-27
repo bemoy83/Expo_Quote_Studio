@@ -14,6 +14,16 @@ export interface ModuleSpec {
   cc?: number;
 }
 
+/** The upper felt of a raised module (Byggeregel V18): its 292 top rail and its plate. */
+export interface RaiseSpec {
+  /** RAL of the upper plate: the wall's own colour. */
+  plate: string;
+  /** The 94 joined onto its posts, mm (stock length). */
+  len: number;
+  /** Length c/c, mm, of a shorter module; omitted for a whole one. */
+  cc?: number;
+}
+
 /** One length of takdrager, post centre to post centre. */
 export interface BeamSpec {
   /** Post centre to post centre (or to the joint), mm. */
@@ -77,6 +87,9 @@ export interface FogaStructure {
   counters?: CounterParts;
   /** Inserts 700 under counters standing over a foot plate, without set screw (Byggeregel K23). */
   counterInserts?: number;
+  /** Raised walls (Byggeregel V18): the upper felts, and the 94 pieces joined onto the posts by length. Always the
+   *  exhibitor's, also over the organiser's stand walls. */
+  raises?: { modules: RaiseSpec[]; posts: { len: number; qty: number }[] };
 }
 
 /** A shelf board: standard 976 × 300, corner 960 × 290, 2/3 655 × 300 (Byggeregler H10–H13). */

@@ -36,6 +36,9 @@ export interface Wall {
   /** Where a door or curtain off the whole metres starts its 1000 module, metres from `from` (Byggeregel D8). Kept in
    *  step with the openings on the wall by replaceWalls; omitted when none is off them. */
   breaks?: number[];
+  /** Raised wall (Byggeregel V18): the stock length of 94, mm, joined onto every post of the wall, with an upper felt
+   *  above the old top rail. Omitted: the standard 2540. */
+  raise?: number;
 }
 
 /** An optional takdrager drawn inside the stand: a straight run on the 1 m grid (calc/beams/innerBeams.ts). */
