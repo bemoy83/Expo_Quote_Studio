@@ -34,12 +34,13 @@ export function frameParts(r: TextileFrameRecipe, railCuts: readonly number[], s
   };
 }
 
-/** Rail pieces with butt ends, two rails (top and bottom) each: every end at a splice and every end at a 92LTX corner
- *  post is cut straight; the frame's own corners are mitred (Bjørn 8.11.2026). */
+/** Rail pieces with butt ends, two rails (top and bottom) each: every end at a 92LTX corner post is cut straight; the
+ *  frame's own corners are mitred (Bjørn 8.11.2026), and so is every splice, so a standard length can be used in a
+ *  spliced rail (Byggeregel X9, Bjørn 27.11.2026). */
 export function buttEnds(railCuts: readonly number[], corner: { from: boolean; to: boolean } = { from: false, to: false }): NonNullable<FrameParts['butt']> {
   const last = railCuts.length - 1;
   return railCuts.flatMap((len, j) => {
-    const ends = (j > 0 || corner.from ? 1 : 0) + (j < last || corner.to ? 1 : 0);
+    const ends = (j === 0 && corner.from ? 1 : 0) + (j === last && corner.to ? 1 : 0);
     return ends ? [[len, ends, 2] as const] : [];
   });
 }
@@ -71,7 +72,7 @@ export function printFileName(customer: string, pos: string, p: Pick<FramePiece,
  * spliced onto each other). Longer than one such pair: equal pairs, standard and splice piece in turn. The standard is
  * the longest one that leaves the splice piece at least `minSplice`.
  */
-export function splitRail(len: number, max: number, standard: readonly number[] = RECIPES.textileFrame.standard, minSplice: number = RECIPES.textileFrame.minSplice): number[] {
+export function splitRail(len: number, max: number, standard: readonly number[] = RECIPES.textileFrame.standard, minSplice: number = shortestSplice()): number[] {
   if (len <= max + 1e-9) return [len];
   const longest = Math.max(...standard.filter((x) => x <= max));
   const pairs = Math.max(1, Math.ceil(len / (longest + max) - 1e-9));
@@ -82,6 +83,12 @@ export function splitRail(len: number, max: number, standard: readonly number[] 
   const out = Array.from({ length: pairs }, () => [s, cut]).flat();
   out[out.length - 1] = len - out.slice(0, -1).reduce((a, x) => a + x, 0);
   return out;
+}
+
+/** Byggeregel X9: the shortest splice piece, measured like every rail piece, over its two mitred ends: `minSplice`
+ *  without the mitres, plus one frame depth for each (Bjørn 27.11.2026: about 50 mm, not counting the mitre). */
+export function shortestSplice(r: TextileFrameRecipe = RECIPES.textileFrame): number {
+  return r.minSplice + 2 * (fogaPart(r.profile).section?.[0] ?? 40);
 }
 
 /** Byggeregel X9: a 43TX piece of this length is on the shelf; any other is cut for the job. */

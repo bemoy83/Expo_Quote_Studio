@@ -77,10 +77,12 @@ describe('rails', () => {
     expect(splitRail(7000, 5000)).toEqual([4970, 2030]);
     // The splice piece is cut even at a standard length: two standard lengths cannot be spliced onto each other
     expect(splitRail(5940, 5000)).toEqual([4970, 970]);
-    // The splice piece is at least minSplice (300): 4970 would leave 230
-    expect(splitRail(5200, 5000)).toEqual([3970, 1230]);
+    // The splice piece is at least minSplice (50) over its two mitres (2 × 40): 4970 leaves 230, 5040 would leave 30
+    expect(splitRail(5200, 5000)).toEqual([4970, 230]);
+    expect(splitRail(5100, 5000)).toEqual([4970, 130]);
+    expect(splitRail(5090, 5000)).toEqual([3970, 1120]);
     // Past one pair: equal pairs, standard and splice piece in turn, never two standard lengths side by side
-    expect(splitRail(10250, 5000)).toEqual([3970, 1155, 3970, 1155]);
+    expect(splitRail(10250, 5000)).toEqual([4970, 155, 4970, 155]);
   });
 });
 

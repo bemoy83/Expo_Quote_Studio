@@ -7,6 +7,8 @@ import { EXAMPLE_BASIS } from '../../cost/basis';
 import { cutMaterial, labourCost } from '../../cost/model';
 import { frameParts, isStandardLength } from './common';
 import { frameUses } from './lines';
+import { framePiece } from './inFrame';
+import { RULES } from '../../rules/rules';
 
 const R = RECIPES.textileFrame;
 const qty = (uses: { id: string; qty: number }[], id: string) => uses.find((u) => u.id === id)?.qty ?? 0;
@@ -54,5 +56,16 @@ describe('Byggeregel X9: standard lengths and cuts', () => {
     const rented = DEFAULT_PRICING.items.get(ITEM.frameProfileM)!.price;
     expect(metre.price + cut.price).toBeGreaterThan(rented);
     expect(metre.price + cut.price).toBeLessThan(2 * rented);
+  });
+});
+
+describe('Byggeregel X9: a short splice piece takes 604', () => {
+  it('too short for 609: 604 in pairs, as when held at both ends', () => {
+    const short = framePiece(5130, RULES.textile.inFrame);
+    expect(short.railCuts).toEqual([4970, 130]);
+    expect(short.parts.loose).toContainEqual(['604', 4]);
+    const long = framePiece(6000, RULES.textile.inFrame);
+    expect(long.railCuts).toEqual([4970, 1000]);
+    expect(long.parts.loose).toContainEqual(['609', 2]);
   });
 });

@@ -434,8 +434,8 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   - Skinnene stopper der 92LTX-ens ben slutter: benet regnes fra ytterhjørnet, en halv rammedybde utenfor senterlinjen
     (37 mm fra hjørnepunktet med dagens mål). Duken på utsiden av hjørnet er en halv rammedybde lengre og på innsiden
     like mye kortere per hjørne. Målene regnes av profilene, aldri som faste tall.
-  - En strek i forlengelsen blir samme vegg. 43TX er gjæret i rammens hjørner; mot en 92LTX og i en skinneskjøt (X6) er
-    enden butt. Plukklisten på arbeidsordren sier hvilke lengder som har butte ender.
+  - En strek i forlengelsen blir samme vegg. 43TX er gjæret i rammens hjørner; mot en 92LTX er
+    enden butt; en skinneskjøt er gjæret (X9, Bjørn 27.11.2026). Plukklisten på arbeidsordren sier hvilke lengder som har butte ender.
   *Bjørn 31.10.2026, 6.11.2026, 8.11.2026 og 21.11.2026 · `RECIPES.textileFrame` · kode `src/domain/textile/corners.ts`, `src/domain/textile/mounts.ts` (`coupleCorners`), `src/calc/textile/free.ts` · test `src/calc/freeFrames.test.ts`, `src/calc/textile/corners.test.ts`*
 - **X8 Føtter og stag.** Fotplate 740 under bunnskinnen etter S3 og S4; en 92LTX teller som støtte. Stagene er rammens
   egne (som X2) og står uavhengig av føttene: en fotplate har ikke stag.
@@ -453,8 +453,10 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   kapp. Prisen per tekstilstørrelse stiger, uten egen linje på tilbudet, og «Slik er det regnet» viser kappet. En skinne
   over 5 m skjøtes som nærmeste standardlengde og én skjøtebit, gjæret motsatt så den skjøtes på den ferdig gjærede
   lengden (Bjørn 27.11.2026). Skjøtebiten er alltid kapp, også når den har en standardlengdes mål, fordi to
-  standardlengder ikke kan skjøtes på hverandre. Standardlengden er den lengste som lar skjøtebiten være minst
-  `minSplice` (300, plassholder til korteste skjøtbare bit er kjent). Lengre enn ett slikt par: like par, standard og
+  standardlengder ikke kan skjøtes på hverandre. Skjøten er gjæret, så standardlengder kan brukes i en skjøtt
+  skinne; bare enden mot en 92LTX er butt. Standardlengden er den lengste som lar skjøtebiten være minst 50 mm uten
+  gjæringene (`minSplice`, Bjørn 27.11.2026). En skjøtebit for kort for 609 skjøtes med 604, én på hver side i de
+  utvendige kanalene (`splice.threadMin`, 300 mm er plassholder). Lengre enn ett slikt par: like par, standard og
   skjøtebit annenhver. Skjøten og stagene ved den (X8) følger. Rammer på
   systemvegg bruker standardlengdene (X2). Frittstående tegnes fritt som før (X5), og en lengde utenfor listen blir kapp.
   Mot en 92LTX kappes skinnen fortsatt (X7), også på systemvegg, til den kanskje får egen standard (Bjørn 21.11.2026);

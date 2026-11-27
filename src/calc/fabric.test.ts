@@ -50,23 +50,13 @@ describe('InFrame frame piece', () => {
   });
 });
 
-describe('butt ends (Bjørn 8.11.2026)', () => {
-  it('mitred frame corners, butt at a splice and at a 92LTX', () => {
+describe('butt ends (Bjørn 8.11.2026, splices mitred 27.11.2026)', () => {
+  it('mitred frame corners and splices, butt only at a 92LTX', () => {
     expect(buttEnds([3970])).toEqual([]);
-    expect(buttEnds([3000, 3000])).toEqual([
-      [3000, 1, 2],
-      [3000, 1, 2],
-    ]);
-    expect(buttEnds([2000, 2000, 2000])).toEqual([
-      [2000, 1, 2],
-      [2000, 2, 2],
-      [2000, 1, 2],
-    ]);
+    // Byggeregel X9: a splice is mitred, so a standard length can be used in a spliced rail
+    expect(buttEnds([4970, 1000])).toEqual([]);
     expect(buttEnds([2963], { from: false, to: true })).toEqual([[2963, 1, 2]]);
-    expect(buttEnds([2463, 2463], { from: true, to: false })).toEqual([
-      [2463, 2, 2],
-      [2463, 1, 2],
-    ]);
+    expect(buttEnds([2463, 2463], { from: true, to: false })).toEqual([[2463, 1, 2]]);
   });
 });
 
