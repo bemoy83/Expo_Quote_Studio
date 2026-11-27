@@ -3031,6 +3031,18 @@ select.cin {
   background: rgb(var(--panel));
   box-shadow: var(--pop);
 }
+/* Byggeregel X9: a standard length offered on a cut frame, the length over what it does to the quote */
+.sel-pill .q-std {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.1;
+}
+.sel-pill .q-std small {
+  font-size: 10px;
+  color: rgb(var(--ink-muted));
+}
+
 .sel-pill .q-name {
   max-width: 220px;
 }

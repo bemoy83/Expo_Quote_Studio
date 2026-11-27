@@ -7,6 +7,7 @@ import { EXAMPLE_BASIS } from '../../cost/basis';
 import { cutMaterial, labourCost } from '../../cost/model';
 import { frameParts, isStandardLength } from './common';
 import { frameUses } from './lines';
+import { lengthKind, standardChoices } from './standard';
 import { framePiece } from './inFrame';
 import { RULES } from '../../rules/rules';
 
@@ -67,5 +68,21 @@ describe('Byggeregel X9: a short splice piece takes 604', () => {
     const long = framePiece(6000, RULES.textile.inFrame);
     expect(long.railCuts).toEqual([4970, 1000]);
     expect(long.parts.loose).toContainEqual(['609', 2]);
+  });
+});
+
+describe('Byggeregel X9: suggesting a standard length', () => {
+  const f = (railCuts: number[], nCorners = 0) => ({ length: railCuts.reduce((a, x) => a + x, 0), nCorners, railCuts });
+  it('a cut frame gets the nearest standard length on each side', () => {
+    expect(lengthKind(f([2500]))).toBe('kapp');
+    expect(standardChoices(f([2500]), 250)).toEqual([2040, 2540]);
+    expect(standardChoices(f([3000]), 250)).toEqual([2970, 3040]);
+    expect(standardChoices(f([250]), 250)).toEqual([470]);
+  });
+  it('none for a standard frame, or one that is always cut (92LTX corner, spliced)', () => {
+    expect(lengthKind(f([2970]))).toBe('standard');
+    expect(standardChoices(f([2970]), 250)).toEqual([]);
+    expect(lengthKind(f([2463], 1))).toBeNull();
+    expect(lengthKind(f([4970, 1030]))).toBeNull();
   });
 });
