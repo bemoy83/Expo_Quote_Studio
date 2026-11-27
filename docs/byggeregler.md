@@ -452,8 +452,10 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   materialet per meter med svinn og gjenbruk, i DG-gruppen for salg fordi biten stort sett brukes opp, og kappetiden per
   kapp. Prisen per tekstilstørrelse stiger, uten egen linje på tilbudet, og «Slik er det regnet» viser kappet. En skinne
   over 5 m skjøtes som nærmeste standardlengde og én skjøtebit, gjæret motsatt så den skjøtes på den ferdig gjærede
-  lengden (Bjørn 27.11.2026): den lengste standardlengden som lar minst 470 (den korteste standarden) være igjen, så
-  resten; er resten også en standardlengde, er ingenting kappet. Skjøten og stagene ved den (X8) følger. Rammer på
+  lengden (Bjørn 27.11.2026). Skjøtebiten er alltid kapp, også når den har en standardlengdes mål, fordi to
+  standardlengder ikke kan skjøtes på hverandre. Standardlengden er den lengste som lar skjøtebiten være minst
+  `minSplice` (300, plassholder til korteste skjøtbare bit er kjent). Lengre enn ett slikt par: like par, standard og
+  skjøtebit annenhver. Skjøten og stagene ved den (X8) følger. Rammer på
   systemvegg bruker standardlengdene (X2). Frittstående tegnes fritt som før (X5), og en lengde utenfor listen blir kapp.
   Mot en 92LTX kappes skinnen fortsatt (X7), også på systemvegg, til den kanskje får egen standard (Bjørn 21.11.2026);
   hjørnet sparer samtidig to stendere. Standard høyde er 2540; rammer kan skjøtes til om lag 5 m høyde.

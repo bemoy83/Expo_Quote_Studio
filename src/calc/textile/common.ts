@@ -18,11 +18,16 @@ export function frameParts(r: TextileFrameRecipe, railCuts: readonly number[], s
   const add = (len: number, qty: number) => qty && cuts.set(len, (cuts.get(len) ?? 0) + qty);
   for (const c of railCuts) add(c, 2);
   add(sides.length, sides.qty);
+  // Byggeregel X9: in a spliced rail every other piece (from the first) is a standard length, the ones between are
+  // splice pieces, cut for the job
+  const spliced = new Map<number, number>();
+  if (railCuts.length > 1) railCuts.forEach((c, i) => i % 2 && spliced.set(c, (spliced.get(c) ?? 0) + 2));
   const kept = loose.filter(([, q]) => q > 0);
   const connectors = new Set([r.corner, r.splice.thread, r.splice.slide.code]);
   return {
     cuts: [...cuts],
     ...(butt.length ? { butt } : {}),
+    ...(spliced.size ? { spliced: [...spliced] } : {}),
     braces,
     loose: kept,
     couplings: kept.filter(([c]) => connectors.has(c)).reduce((a, [, q]) => a + q, 0) + braces.qty * 2 * r.braceCoupling.perEnd,
@@ -61,21 +66,22 @@ export function printFileName(customer: string, pos: string, p: Pick<FramePiece,
 }
 
 /**
- * Byggeregel X9: a rail of `len` mm in pieces of at most `max`. Longer than `max`: the longest standard length that
- * leaves at least the shortest standard length, again while the rest is longer than `max`, and the rest last (a cut
- * piece unless it is a standard length too). Bjørn 27.11.2026: nearest standard whole length and a splice piece.
+ * Byggeregel X9: a rail of `len` mm in pieces of at most `max`. Longer than `max`: a standard length and a splice piece
+ * cut for the job (Bjørn 27.11.2026: nearest standard whole length and a splice piece; two standard lengths cannot be
+ * spliced onto each other). Longer than one such pair: equal pairs, standard and splice piece in turn. The standard is
+ * the longest one that leaves the splice piece at least `minSplice`.
  */
-export function splitRail(len: number, max: number, standard: readonly number[] = RECIPES.textileFrame.standard): number[] {
-  const out: number[] = [];
-  const least = Math.min(...standard);
-  let rest = len;
-  while (rest > max + 1e-9) {
-    const s = [...standard].filter((x) => x <= max && rest - x >= least).sort((a, b) => b - a)[0];
-    if (s === undefined) break;
-    out.push(s);
-    rest -= s;
-  }
-  return [...out, rest];
+export function splitRail(len: number, max: number, standard: readonly number[] = RECIPES.textileFrame.standard, minSplice: number = RECIPES.textileFrame.minSplice): number[] {
+  if (len <= max + 1e-9) return [len];
+  const longest = Math.max(...standard.filter((x) => x <= max));
+  const pairs = Math.max(1, Math.ceil(len / (longest + max) - 1e-9));
+  const pair = len / pairs;
+  const s = [...standard].filter((x) => x <= max && pair - x >= minSplice && pair - x <= max).sort((a, b) => b - a)[0];
+  if (s === undefined) return Array.from({ length: 2 * pairs }, () => Math.round(len / (2 * pairs)));
+  const cut = Math.round(pair - s);
+  const out = Array.from({ length: pairs }, () => [s, cut]).flat();
+  out[out.length - 1] = len - out.slice(0, -1).reduce((a, x) => a + x, 0);
+  return out;
 }
 
 /** Byggeregel X9: a 43TX piece of this length is on the shelf; any other is cut for the job. */

@@ -34,6 +34,14 @@ describe('Byggeregel X9: standard lengths and cuts', () => {
     expect(qty(u, ITEM.frameCut)).toBe(2);
   });
 
+  it('a splice piece is cut even at a standard length', () => {
+    const p = frameParts(R, [4970, 970], { qty: 2, length: 2540 }, { qty: 4, length: 2460 }, []);
+    const u = frameUses(p);
+    expect(qty(u, ITEM.frameProfileM)).toBeCloseTo((2 * 4970 + 2 * 2540) / 1000);
+    expect(qty(u, ITEM.frameCutM)).toBeCloseTo((2 * 970) / 1000);
+    expect(qty(u, ITEM.frameCut)).toBe(2);
+  });
+
   it('cost rule 2: the cut metre is material with waste and reuse, the cut is labour', () => {
     const p = EXAMPLE_BASIS.params;
     const metre = DEFAULT_PRICING.items.get(ITEM.frameCutM)!;

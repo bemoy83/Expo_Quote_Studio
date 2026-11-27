@@ -43,6 +43,9 @@ export interface FrameParts {
   /** The pieces among `cuts` with a butt end, at a rail splice or a 92LTX corner post; the rest are mitred (Bjørn 8.11.2026):
    *  length, butt ends per piece (1 or 2), qty. */
   butt?: readonly (readonly [length: number, ends: number, qty: number])[];
+  /** The splice pieces among `cuts` (Byggeregel X9): always cut for the job, also where the length is a standard one,
+   *  since a standard length cannot be spliced onto another. Length, qty. */
+  spliced?: readonly (readonly [length: number, qty: number])[];
   /** Upright braces, each stored with its couplings. */
   braces: { qty: number; length: number };
   /** Loose parts by Foga code: corner and splice connectors, wall brackets, foot plates. */

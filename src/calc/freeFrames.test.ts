@@ -72,13 +72,15 @@ describe('braces', () => {
 });
 
 describe('rails', () => {
-  it('Byggeregel X9: past 5 m the longest standard length, then a cut splice piece', () => {
+  it('Byggeregel X9: past 5 m the longest standard length, then a splice piece, always cut', () => {
     expect(splitRail(5000, 5000)).toEqual([5000]);
     expect(splitRail(7000, 5000)).toEqual([4970, 2030]);
+    // The splice piece is cut even at a standard length: two standard lengths cannot be spliced onto each other
     expect(splitRail(5940, 5000)).toEqual([4970, 970]);
-    // The splice piece is at least the shortest standard length (470)
+    // The splice piece is at least minSplice (300): 4970 would leave 230
     expect(splitRail(5200, 5000)).toEqual([3970, 1230]);
-    expect(splitRail(10250, 5000)).toEqual([4970, 3970, 1310]);
+    // Past one pair: equal pairs, standard and splice piece in turn, never two standard lengths side by side
+    expect(splitRail(10250, 5000)).toEqual([3970, 1155, 3970, 1155]);
   });
 });
 

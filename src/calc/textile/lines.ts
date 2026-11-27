@@ -57,9 +57,11 @@ interface FrameBuild {
  *  mounting per coupling and the handling of the frame. */
 export function frameUses(p: FrameParts): Use[] {
   // Byggeregel X9: standard lengths are rented as metres of 43TX, any other length is cut for the job (cost rule 2)
-  const std = p.cuts.filter(([l]) => isStandardLength(l));
-  const cut = p.cuts.filter(([l]) => !isStandardLength(l));
-  const lm = (xs: typeof p.cuts) => xs.reduce((a, [l, q]) => a + l * q, 0) / 1000;
+  // and a splice piece is always cut
+  const spliced = new Map(p.spliced ?? []);
+  const cut = p.cuts.map(([l, q]) => [l, isStandardLength(l) ? (spliced.get(l) ?? 0) : q] as const);
+  const std = p.cuts.map(([l, q], i) => [l, q - cut[i][1]] as const);
+  const lm = (xs: readonly (readonly [number, number])[]) => xs.reduce((a, [l, q]) => a + l * q, 0) / 1000;
   return [
     { id: ITEM.frameProfileM, qty: lm(std) },
     { id: ITEM.frameCutM, qty: lm(cut) },
