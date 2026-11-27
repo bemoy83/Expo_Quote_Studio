@@ -27,7 +27,8 @@ describe('kostgrunnlag fields', () => {
     expect(fields.every((f) => !f.own)).toBe(true);
     expect(fields.find((f) => f.path === 'parametere.labour.baseRate')).toMatchObject({ status: 'Bjørn', value: 391.4 });
     expect(fields.find((f) => f.path === 'parametere.owned.groups.profile.usesPerYear')).toMatchObject({ status: 'kalibrert' });
-    expect(fields.find((f) => f.path === 'parametere.cut.waste')).toMatchObject({ unused: true, rule: 2 });
+    expect(fields.find((f) => f.path === 'parametere.cut.waste')).toMatchObject({ rule: 2 });
+    expect(fields.find((f) => f.path === 'parametere.cut.waste')?.unused).toBeFalsy();
     expect(fields.find((f) => f.path === 'tider.stolpe-94.plukk')).toMatchObject({ status: 'kalibrert', value: 0.34 });
   });
 

@@ -49,9 +49,8 @@ export const FORMULAS: readonly Formula[] = [
     rule: 2,
     title: 'Spesialkapp',
     formula: 'kost = innkjøp per m × lengde × (1 + svinn) × (1 − gjenbruk) + kappetid',
-    text: 'Profil kappet utenfor sortimentet (X9). Tekstilrammer kappes alltid til mål og har i stedet egen slitasje.',
+    text: 'Profil kappet utenfor sortimentet (X9): 43TX i en lengde som ikke er standard. Standardlengder er eid og leid ut (regel 1).',
     tab: 'avskrivning',
-    unused: true,
   },
   { rule: 3, title: 'Kjøpt til jobben', formula: 'kost = innkjøp × (1 + svinn)', text: 'Trykt tekstil, folie, teip.', tab: 'avskrivning' },
   {

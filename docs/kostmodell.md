@@ -92,8 +92,10 @@ DG regnes på direkte kost, og kalkylen viser hva som er igjen etter indirekte k
 | 5 | Per ordre: startkost trykk, administrasjon, transport | fast, én gang per tilbud |
 | 6 | Høyde: over 3080 mm, der 5-trinns stige ikke rekker (en vegg til 3040 eller 3080 teller som 3 m, Bjørn 27.11.2026) | monterings- og demonteringsminutter over grensen × faktor (de ekstra minuttene som egne arbeidsposter på linjen, `atHeight` i `calc/height.ts`, så kost, pris og arbeidsordre følger), og sakselift 4304 per time like lenge som det arbeidet, rundet opp til hele timer per ordre, som ordrekost. Liften står bare i kalkylen. En linje merker arbeid over grensen med `top` (i dag hevet vegg og vaier, senere høy tekstil og snekkervegg) |
 
-Regel 2 (spesialkapp) finnes i `model.ts` med tester, men kalkylen bruker den ikke ennå: tekstilrammer kappes alltid
-til mål og har i stedet egen slitasje (gruppen `frame`, under). Regel 6 (høyde) brukes for hevet vegg og vaier
+Regel 2 (spesialkapp) gjelder 43TX i en lengde som ikke er standard (byggeregel X9): materialet per meter i
+prisartikkelen «43TX kappet til mål» (`cut` i oppskriften, DG-gruppe salg, fordi biten stort sett brukes opp) og
+kappetiden i «Kapp av 43TX» (`cuts`, minuttene fra `parametere.cut.minutes`). Standardlengdene er eid og leid ut per
+meter (regel 1, gruppen `frame`). Regel 6 (høyde) brukes for hevet vegg og vaier
 (`atHeight` i `calc/height.ts`, `liftCost` i `calc/summary.ts`).
 
 `timekost = timelønn med sosiale kostnader × lønnsindeks fra basisåret / fakturerbar andel`
@@ -154,8 +156,8 @@ per kobling (617 og begge ender av hvert stag) og montering av duk per meter omk
 (type 3): trykk på Blackback som standard, hvit duk, og kundens egen duk bare montert. Tidene for tekstil er ikke
 kalibrert ennå.
 
-Rammeprofilene (43TX, 92LTX og stag 90) har egen slitasje, gruppen `frame`: 4 bruk, som i Bjørns kalkulator. De
-kappes til mål for jobben og brukes sjeldnere om igjen enn veggens standardlengder. Eksempeltall som må sjekkes mot
+Rammeprofilene (43TX, 92LTX og stag 90) har egen slitasje, gruppen `frame`: 4 bruk, som i Bjørns kalkulator. 43TX i
+en lengde utenfor standardlengdene (X9) kostes som spesialkapp (regel 2), ikke som utleie. Eksempeltall som må sjekkes mot
 lageret (Bjørn 7.11.2026).
 
 ## Ordrekost

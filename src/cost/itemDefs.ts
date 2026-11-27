@@ -40,6 +40,9 @@ export const ITEM = {
   braceM: 'stag-90-m',
   bracePiece: 'stag-90-stk',
   frameProfileM: '43TX',
+  /** 43TX cut for the job (Byggeregel X9, cost rule 2), per metre, and per cut. */
+  frameCutM: '43TX-kapp',
+  frameCut: 'kapp-43TX',
   cornerPostM: '92LTX',
   corner: '617',
   splice: '609',
@@ -176,6 +179,8 @@ export const ITEM_DEFS: readonly ItemDef[] = [
   def(ITEM.bracePiece, 'Støttestag 90, kobling og håndtering per stk', 'stk'),
   // Level 3 picked directly (textile walls have no article)
   def(ITEM.frameProfileM, '43TX, per meter', 'm'),
+  def(ITEM.frameCutM, '43TX kappet til mål, per meter', 'm'),
+  def(ITEM.frameCut, 'Kapp av 43TX, per kapp', 'stk'),
   def(ITEM.cornerPostM, '92LTX hjørnestolpe, per meter', 'm'),
   def(ITEM.corner, '617 kobling i kanal (hjørner)', 'stk'),
   def(ITEM.splice, '609 skjøtekobling', 'stk'),
@@ -339,6 +344,9 @@ export const EXAMPLE_RECIPES: Readonly<Record<string, ItemRecipe>> = {
   [ITEM.beamHalf]: { parts: [['92', 0.08]], dg: 'utleie' },
   // Textile walls (kostmotor, tekstil): the frame parts rented out, the textile bought for the job, the work
   [ITEM.frameProfileM]: { parts: [['43TX', 1]], dg: 'utleie' },
+  // The cut piece is mostly used up on the job: the DG of what is sold, so a cut costs more by its cut, not threefold
+  [ITEM.frameCutM]: { cut: [['43TX', 1]], dg: 'salg' },
+  [ITEM.frameCut]: { cuts: 1, dg: 'arbeid' },
   [ITEM.cornerPostM]: { parts: [['92LTX', 1]], dg: 'utleie' },
   [ITEM.corner]: { parts: [['617', 1]], dg: 'utleie' },
   [ITEM.splice]: { parts: [['609', 1]], dg: 'utleie' },

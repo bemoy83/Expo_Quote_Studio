@@ -56,10 +56,13 @@ export function labourCost(personMinutes: number, year: number, p: CostParams, o
   return (personMinutes / 60) * hourlyCost(year, p) * (1 + overtime * l.overtimeSurcharge * l.wageShare);
 }
 
+/** 2 A profile cut to a length outside the range, per metre of it: the cut piece, less what is expected to be used
+ *  again. The cut itself is labour (`cut.minutes` per cut). */
+export const cutMaterial = (purchasePerM: number, p: CostParams) => purchasePerM * (1 + p.cut.waste) * (1 - p.cut.reuse);
+
 /** 2 A profile cut to a length outside the range: the cut piece, less what is expected to be used again, and the cut. */
 export function specialCutCost(purchasePerM: number, lengthM: number, year: number, p: CostParams): number {
-  const c = p.cut;
-  return purchasePerM * lengthM * (1 + c.waste) * (1 - c.reuse) + labourCost(c.minutes, year, p);
+  return cutMaterial(purchasePerM, p) * lengthM + labourCost(p.cut.minutes, year, p);
 }
 
 /** 3 Bought for the job. */

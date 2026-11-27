@@ -60,12 +60,26 @@ export function printFileName(customer: string, pos: string, p: Pick<FramePiece,
   return `${name}_${pos}_${p.W}x${p.H}mm.pdf`;
 }
 
-/** `len` in the fewest equal pieces of at most `max` (the last takes the rounding). */
-export function splitRail(len: number, max: number): number[] {
-  const k = Math.max(1, Math.ceil(len / max - 1e-9));
-  const piece = Math.round(len / k);
-  return Array.from({ length: k }, (_, i) => (i < k - 1 ? piece : len - piece * (k - 1)));
+/**
+ * Byggeregel X9: a rail of `len` mm in pieces of at most `max`. Longer than `max`: the longest standard length that
+ * leaves at least the shortest standard length, again while the rest is longer than `max`, and the rest last (a cut
+ * piece unless it is a standard length too). Bjørn 27.11.2026: nearest standard whole length and a splice piece.
+ */
+export function splitRail(len: number, max: number, standard: readonly number[] = RECIPES.textileFrame.standard): number[] {
+  const out: number[] = [];
+  const least = Math.min(...standard);
+  let rest = len;
+  while (rest > max + 1e-9) {
+    const s = [...standard].filter((x) => x <= max && rest - x >= least).sort((a, b) => b - a)[0];
+    if (s === undefined) break;
+    out.push(s);
+    rest -= s;
+  }
+  return [...out, rest];
 }
+
+/** Byggeregel X9: a 43TX piece of this length is on the shelf; any other is cut for the job. */
+export const isStandardLength = (len: number, r: TextileFrameRecipe = RECIPES.textileFrame) => r.standard.includes(Math.round(len));
 
 /**
  * Upright braces along a run of `len` mm: `spliceBrace` from each side of every splice, and more evenly between so no

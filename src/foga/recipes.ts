@@ -49,6 +49,9 @@ export interface TextileFrameRecipe {
   splice: { thread: string; slide: { code: string; perRail: number } };
   /** Longest top or bottom rail before it is spliced in its length (the frame stays one rectangle), mm. */
   maxRail: number;
+  /** Byggeregel X9: 43TX lengths on the shelf, mm (picked only). Any other length is cut for the job (cost rule 2). A
+   *  rail longer than `maxRail` is the longest of these that leaves at least the shortest one, then the rest, cut. */
+  standard: readonly number[];
   /** Upright brace, length H − 2 × frame profile, and its couplings: at most `rules.textile.inFrame.stag` mm apart (the
    *  textile pulls most in the middle), and one `spliceBrace` mm from each side of a splice, as a frame side while long
    *  motifs go up in sections (Bjørn 7.11.2026: 100–200 mm). Not at the feet. Stored mounted, brace + couplings. */
@@ -242,6 +245,8 @@ export const RECIPES: Recipes = {
     corner: '617',
     splice: { thread: '609', slide: { code: '604', perRail: 2 } },
     maxRail: 5000,
+    // Bjørn 27.11.2026: cc − 30 on the wall grid, 470, and gross lengths for a frame outside one wall; 2540 full height
+    standard: [470, 970, 1040, 1970, 2040, 2540, 2970, 3040, 3970, 4970],
     brace: '90',
     spliceBrace: 150,
     braceCoupling: { code: '600', perEnd: 1 },

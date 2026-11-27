@@ -72,21 +72,24 @@ describe('braces', () => {
 });
 
 describe('rails', () => {
-  it('spliced in equal pieces past 5 m', () => {
+  it('Byggeregel X9: past 5 m the longest standard length, then a cut splice piece', () => {
     expect(splitRail(5000, 5000)).toEqual([5000]);
-    expect(splitRail(7000, 5000)).toEqual([3500, 3500]);
-    expect(splitRail(10250, 5000)).toEqual([3417, 3417, 3416]);
+    expect(splitRail(7000, 5000)).toEqual([4970, 2030]);
+    expect(splitRail(5940, 5000)).toEqual([4970, 970]);
+    // The splice piece is at least the shortest standard length (470)
+    expect(splitRail(5200, 5000)).toEqual([3970, 1230]);
+    expect(splitRail(10250, 5000)).toEqual([4970, 3970, 1310]);
   });
 });
 
 describe('free-standing frame', () => {
   it('a straight run: two free ends, textile both sides', () => {
     const [f] = frames(draw(island(), [1, 2], [7, 2]));
-    // 6000 long, H = 2540. Rails 1 × 6000 is more than 5000: 2 × 3000 each
-    expect(f).toMatchObject({ pos: 'F1', length: 6000, H: 2540, railCuts: [3000, 3000], uprights: 2, supports: [200, 3000, 5800], braceLength: 2460 });
-    // The splice at 3000 gets a brace 150 each side; between, braces so none are more than 2 m apart. The feet get
+    // 6000 long, H = 2540. Rails 1 × 6000 is more than 5000: 4970 and a 1030 splice piece (X9)
+    expect(f).toMatchObject({ pos: 'F1', length: 6000, H: 2540, railCuts: [4970, 1030], uprights: 2, supports: [200, 3000, 5800], braceLength: 2460 });
+    // The splice at 4970 gets a brace 150 each side; between, braces so none are more than 2 m apart. The feet get
     // none (Bjørn 7.11.2026)
-    expect(f.braces).toEqual([1425, 2850, 3150, 4575]);
+    expect(f.braces).toEqual([1607, 3213, 4820, 5120]);
     // Both ends free: the splice is threaded with 609
     expect(f.spliceCode).toBe('609');
     // Couplings: 2 × 2 corner 617 + 4 braces × 2 × 600 + 2 × 609
@@ -96,9 +99,10 @@ describe('free-standing frame', () => {
       ['609', 2],
       ['740', 3],
     ]);
-    // 43TX: rails 2 × 2 × 3000 and the two uprights
+    // 43TX: rails 2 × (4970 + 1030) and the two uprights
     expect(f.parts.cuts).toEqual([
-      [3000, 4],
+      [4970, 2],
+      [1030, 2],
       [2540, 2],
     ]);
     expect(f.parts.braces).toEqual({ qty: 4, length: 2460 });

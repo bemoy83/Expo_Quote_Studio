@@ -10,7 +10,7 @@ import { ITEM } from '../../pricing/data';
 import type { Use } from '../../pricing/model';
 import { count, type CalcContext } from '../context';
 import type { CalcLine } from '../types';
-import { postHeight, type FrameMount } from './common';
+import { isStandardLength, postHeight, type FrameMount } from './common';
 
 /** One quote line per frame size: frame and textile of that size, with its own price (Bjørn 7.11.2026). */
 const quoteOf = (size: string, lead: boolean) => ({ key: `tekstil:${size}`, name: `Tekstilvegg ${size}`, lead });
@@ -53,11 +53,17 @@ interface FrameBuild {
   uses: Use[];
 }
 
-/** A frame's parts as price items: the frame profile per metre, the loose parts, braces per metre and per piece, a
+/** A frame's parts as price items: the frame profile per metre (standard lengths rented, other lengths cut, X9), the loose parts, braces per metre and per piece, a
  *  mounting per coupling and the handling of the frame. */
-function frameUses(p: FrameParts): Use[] {
+export function frameUses(p: FrameParts): Use[] {
+  // Byggeregel X9: standard lengths are rented as metres of 43TX, any other length is cut for the job (cost rule 2)
+  const std = p.cuts.filter(([l]) => isStandardLength(l));
+  const cut = p.cuts.filter(([l]) => !isStandardLength(l));
+  const lm = (xs: typeof p.cuts) => xs.reduce((a, [l, q]) => a + l * q, 0) / 1000;
   return [
-    { id: ITEM.frameProfileM, qty: p.cuts.reduce((a, [l, q]) => a + l * q, 0) / 1000 },
+    { id: ITEM.frameProfileM, qty: lm(std) },
+    { id: ITEM.frameCutM, qty: lm(cut) },
+    { id: ITEM.frameCut, qty: cut.reduce((a, [, q]) => a + q, 0) },
     ...p.loose.map(([code, qty]) => ({ id: LOOSE_ITEM[code] ?? code, qty })),
     { id: ITEM.braceM, qty: (p.braces.qty * p.braces.length) / 1000 },
     { id: ITEM.bracePiece, qty: p.braces.qty },

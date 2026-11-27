@@ -5,7 +5,7 @@
 import { FOGA_PARTS, type PartKind } from '../foga/parts';
 import type { ItemDef } from './itemDefs';
 import { supplierList, type CostBasis } from './basis';
-import { boughtCost, labourCost, ownedPerUse, priceAtDg, purchaseCost } from './model';
+import { boughtCost, cutMaterial, labourCost, ownedPerUse, priceAtDg, purchaseCost } from './model';
 import { OWN_SUPPLIER } from './own-list';
 import { supplierItem } from './prices';
 import { HANDLING_STEPS, type Time } from './time';
@@ -42,6 +42,10 @@ export interface ItemRecipe {
   own?: readonly (readonly [artnr: string, qty: number, kind: PartKind])[];
   /** Bought for the job (printed textile), by art.nr in the own list, with waste on top. */
   bought?: readonly (readonly [artnr: string, qty: number])[];
+  /** Foga profiles cut to a length outside the range for the job (rule 2, byggeregel X9), metres. */
+  cut?: readonly (readonly [code: string, qty: number])[];
+  /** Cuts per unit (rule 2): each takes `parametere.cut.minutes` person-minutes. */
+  cuts?: number;
   dg: DgGroup;
 }
 
@@ -60,6 +64,8 @@ export type TraceHow =
   | { kind: 'owned'; buy: number; lifetimeYears: number; usesPerYear: number; interest: number; lossPerUse: number }
   /** Bought for the job (rule 3): purchase today and waste. */
   | { kind: 'bought'; buy: number; waste: number }
+  /** Special cut (rule 2): purchase today, waste and the share used again. */
+  | { kind: 'cut'; buy: number; waste: number; reuse: number }
   /** Labour (rule 4): person-minutes at the hourly cost for the basis year. */
   | { kind: 'labour'; hourly: number; baseRate: number; baseYear: number; year: number };
 
@@ -92,7 +98,8 @@ const round2 = (x: number) => Math.round(x * 100) / 100;
 /** The year the kostgrunnlag's numbers are for: cost is moved by the index from each list's date to this. */
 export const basisYear = (b: CostBasis) => Number(b.date.slice(0, 4));
 
-/** Cost of one price item from its recipe and minutes, with the explanation of it. */
+/** Cost of one price item from its recipe and minutes, with the explanation of it. A `cut` row is a profile cut for
+ *  the job (cost rule 2, Byggeregel X9). */
 export function costItem(base: PriceItem, r: ItemRecipe, b: CostBasis): CostedItem {
   // `base` brings name, unit and time; cost and price are set here
   const year = basisYear(b);
@@ -135,13 +142,24 @@ export function costItem(base: PriceItem, r: ItemRecipe, b: CostBasis): CostedIt
     const each = boughtCost(buy, p);
     rows.push({ label: supplierItem(ownList, artnr)?.name || artnr, qty, unit: base.unit, each, sum: each * qty, how: { kind: 'bought', buy, waste: p.boughtWaste }, from: [recipe, `prisliste ${ownList.supplier} ${artnr}`, 'parametere.boughtWaste', 'parametere.materialIndex'] });
   }
-  const material = rows.reduce((a, x) => a + x.sum, 0);
-  const minutes = HANDLING_STEPS.reduce((a, s) => a + (base.time?.[s] ?? 0), 0);
-  const labour = labourCost(minutes, year, p);
-  if (minutes > 0) {
-    const hourly = labourCost(60, year, p);
-    rows.push({ label: 'Arbeid', qty: minutes, unit: 'personmin', each: hourly / 60, sum: labour, how: { kind: 'labour', hourly, baseRate: p.labour.baseRate, baseYear: p.labour.baseYear, year }, from: [`tider.${base.id}`, 'parametere.labour', 'parametere.labourIndex'] });
+  for (const [code, qty] of r.cut ?? []) {
+    const part = FOGA_PARTS.find((x) => x.code === code);
+    const buy = part && purchaseCost(fogaList, part.artnr, year, p);
+    if (buy === undefined || !part) {
+      missing.push(code);
+      continue;
+    }
+    const each = cutMaterial(buy, p);
+    rows.push({ label: `${part.name} (${code}), kappet`, qty, unit: 'm', each, sum: each * qty, how: { kind: 'cut', buy, waste: p.cut.waste, reuse: p.cut.reuse }, from: [recipe, `prisliste ${fogaList.supplier} ${part.artnr}`, 'parametere.cut.waste', 'parametere.cut.reuse', 'parametere.materialIndex'] });
   }
+  const material = rows.reduce((a, x) => a + x.sum, 0);
+  const hourly = labourCost(60, year, p);
+  const labourHow: TraceHow = { kind: 'labour', hourly, baseRate: p.labour.baseRate, baseYear: p.labour.baseYear, year };
+  const minutes = HANDLING_STEPS.reduce((a, s) => a + (base.time?.[s] ?? 0), 0);
+  const cutMinutes = (r.cuts ?? 0) * p.cut.minutes;
+  const labour = labourCost(minutes + cutMinutes, year, p);
+  if (minutes > 0) rows.push({ label: 'Arbeid', qty: minutes, unit: 'personmin', each: hourly / 60, sum: labourCost(minutes, year, p), how: labourHow, from: [`tider.${base.id}`, 'parametere.labour', 'parametere.labourIndex'] });
+  if (cutMinutes > 0) rows.push({ label: 'Kapp', qty: cutMinutes, unit: 'personmin', each: hourly / 60, sum: labourCost(cutMinutes, year, p), how: labourHow, from: ['parametere.cut.minutes', 'parametere.labour', 'parametere.labourIndex'] });
   if (missing.length) return { item: base, material, labour, missing };
   const cost = material + labour;
   // The price carries the indirect cost on top (admin, premises, vans; Bjørn 7.11.2026: catalog = calculator + 10 %

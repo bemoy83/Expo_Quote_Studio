@@ -444,14 +444,20 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   seksjoner. Ellers jevnt fordelt, så ingen stående (rammeende, 92LTX, stag) står mer enn 2000 fra hverandre.
   *Bjørn 1.11.2026, 3.11.2026 og 7.11.2026 · `rules.textile.inFrame.stag`, `RECIPES.textileFrame.spliceBrace` · `RECIPES.textileFrame.feet.support` · kode `src/calc/textile/free.ts`, `src/calc/supports.ts` · test `src/calc/freeFrames.test.ts`*
 
-- **X9 Standardlengder (veiledende).** Fordi systemveggene på messer er standardisert, har 43TX standardlengder som
-  passer på veggene: cc − 30, det vil si 970, 1970, 2970 og så videre (X2). I tillegg finnes noen andre, som 470, og
-  lengder for rammer som henger utenpå én enkelt vegg, med bruttomål over cc (for eksempel 1040). Standardlengder ligger
-  på lager og plukkes bare; andre lengder må kappes og skal koste mer. En skjøtt lengde er som regel én standardlengde
-  pluss ett kapp. Rammer på systemvegg bruker standardlengdene (X2). Frittstående tegnes fritt som før (X5), men appen
-  kan foreslå en standardlengde for å spare penger. Mot en 92LTX kappes skinnen fortsatt (X7), også på systemvegg, til
-  den kanskje får egen standard (Bjørn 21.11.2026). Standard høyde er 2540; rammer kan skjøtes til om lag 5 m høyde.
-  *Bjørn 6.11.2026 · ikke bygget: forslag om standardlengde, pris for kapp, andre standardlengder · kode `src/calc/textile/inFrame.ts` · test `src/calc/fabric.test.ts`*
+- **X9 Standardlengder.** Fordi systemveggene på messer er standardisert, har 43TX standardlengder som passer på
+  veggene: cc − 30, det vil si 970, 1970, 2970, 3970 og 4970 (X2). I tillegg 470, bruttomålene 1040, 2040 og 3040 for
+  rammer som henger utenpå én enkelt vegg, og full høyde 2540 for stendere. Lengdene ligger som data
+  (`RECIPES.textileFrame.standard`). Standardlengder ligger på lager, plukkes bare og er leid ut per løpemeter som i dag
+  (kostregel 1, ingen egen pris for en hel lengde). Alle andre lengder kappes til jobben og koster mer (kostregel 2):
+  materialet per meter med svinn og gjenbruk, i DG-gruppen for salg fordi biten stort sett brukes opp, og kappetiden per
+  kapp. Prisen per tekstilstørrelse stiger, uten egen linje på tilbudet, og «Slik er det regnet» viser kappet. En skinne
+  over 5 m skjøtes som nærmeste standardlengde og én skjøtebit, gjæret motsatt så den skjøtes på den ferdig gjærede
+  lengden (Bjørn 27.11.2026): den lengste standardlengden som lar minst 470 (den korteste standarden) være igjen, så
+  resten; er resten også en standardlengde, er ingenting kappet. Skjøten og stagene ved den (X8) følger. Rammer på
+  systemvegg bruker standardlengdene (X2). Frittstående tegnes fritt som før (X5), og en lengde utenfor listen blir kapp.
+  Mot en 92LTX kappes skinnen fortsatt (X7), også på systemvegg, til den kanskje får egen standard (Bjørn 21.11.2026);
+  hjørnet sparer samtidig to stendere. Standard høyde er 2540; rammer kan skjøtes til om lag 5 m høyde.
+  *Bjørn 6.11.2026 og 27.11.2026 · ikke bygget: forslag om nærmeste standardlengde når en ramme tegnes · `RECIPES.textileFrame.standard`, `ITEM.frameCutM`, `ITEM.frameCut` · kode `src/calc/textile/common.ts`, `src/calc/textile/lines.ts`, `src/cost/items.ts` · test `src/calc/freeFrames.test.ts`, `src/calc/textile/cutLengths.test.ts`*
 
 - **X10 Rammer overlapper aldri.** Det regelen hindrer, er at to rammer tar samme plass (F1). Hver ramme har et
   volum i plan: langs veggen rammens egen bredde (X2), ut fra veggen rammedybden fra stolpens flate (inntil stolpen,
@@ -466,7 +472,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   så langt de ellers ville overlappet. Går det forbi veggens ende eller en åpning, er det innenfor toleransen. En
   flyttet ramme går forbi stolpen, så en takdrager som hviler der heves (T13). Vil ikke kunden ha det, kan rammemålet
   settes kortere i veggskuffen; da blir det en kapplengde (X9).
-  *Bjørn 6.11.2026 og 21.11.2026 («det som skal unngås er overlapp av rammer») · ikke bygget: pris for kapp · `rules.textile.depth`, `rules.textile.inFrame` · kode `src/calc/textile/placement.ts` · test `src/calc/textile/placement.test.ts`*
+  *Bjørn 6.11.2026 og 21.11.2026 («det som skal unngås er overlapp av rammer») · `rules.textile.depth`, `rules.textile.inFrame` · kode `src/calc/textile/placement.ts` · test `src/calc/textile/placement.test.ts`*
 - **X11 Frittstående mot ramme.** En frittstående tekstilvegg som ender mot midten av en ramme på systemvegg (en T),
   stopper mot rammens flate (60 mm fra veggens senterlinje) og står ikke inntil systemveggen der. Den blir like mye
   kortere. Det er F1 for en ramme på vegg; uten ramme stopper den mot stolpene. Møter den en rammes ende i rett vinkel,
@@ -969,7 +975,7 @@ i regelen og strykes her.
   stoppe mot rammen, fordi alle profilkanalene for tekstil er tilgjengelige, mens en utenpåliggende ramme sperrer
   kanalene og må monteres etter tekstilen).
 - X7: hjørne mellom rammer med ulik høyde (bare like høyder kobles, foreløpig), og tekstil i T (hoppet over for nå).
-- X9: forslag om standardlengde, pris for kapp og andre standardlengder. X10: pris for kapp når rammen kortes.
+- X9: forslag om nærmeste standardlengde når en ramme tegnes, så frittstående ikke blir kapp uten at selgeren vet det.
 - Tekstildør med overstykke, «Kun ramme» (ramme uten duk), og LED med Samba-duk foran (appen tegner ikke LED ennå).
 
 **Disk og podie**
@@ -986,7 +992,6 @@ i regelen og strykes her.
 - F2: enveis fotplater om det trengs.
 
 **Kost og pris**
-- Kostregel 2 (spesialkapp) finnes i `model.ts`, men kalkylen bruker den ikke.
 - Plassholder-art.nr: øyebolt M5 (S9), korte moduler 6121–6123 (V1), forhøyning 6124 (V22).
 - Kuber (frittstående eller hengende fra taket), ikke et veggprodukt.
 - Fra OMS senere: standtype og kjøpt areal, arrangørens farge, lagerstatus, kunderabatter, ramme og trykk solgt hver

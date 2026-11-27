@@ -63,8 +63,8 @@ describe('wall drawing dimensions', () => {
     const [t] = elevationItems(RULES, [{ id: 't1', wallId: 'w', side: 1, from: 1, width: 6 }], [], new Set(), (x) => x, () => p)
     const r = (n: number) => Math.round(n * 1000)
     expect(r(t.x0)).toBe(1060)
-    // Between the uprights: none more than 2 000 apart, 150 each side of the splice
-    expect(t.uprights!.map((x) => r(x - t.x0))).toEqual([0, 1418, 2835, 3135, 4553, 5970])
+    // Between the uprights: none more than 2 000 apart, 150 each side of the splice at 4970 (X9: standard + splice piece)
+    expect(t.uprights!.map((x) => r(x - t.x0))).toEqual([0, 1607, 3213, 4820, 5120, 5970])
     expect(textileLabel(p)).toBe('Tekstil 5\u00a0970 × 2\u00a0540')
   })
 
