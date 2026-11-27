@@ -31,6 +31,9 @@ export const ITEM = {
   /** A ceiling wire on a raised wall (Byggeregler S9, S10): the V, its eyebolt and 503, and hanging it. */
   wire: 'vaieroppheng',
   wireMount: 'montering-vaier',
+  /** One person-minute of montering or demontering more, for work above the height limit (cost rule 6). */
+  heightMontering: 'hoyde-montering',
+  heightDemontering: 'hoyde-demontering',
   door: 'dor',
   curtain: 'forheng',
   beam: (lengthMm: number) => `takdrager-292-${lengthMm}`,
@@ -163,6 +166,8 @@ export const ITEM_DEFS: readonly ItemDef[] = [
   def(ITEM.raiseModule, 'Montering per øvre felt, hevet vegg', 'stk'),
   def(ITEM.wire, 'Vaieroppheng med øyebolt M5 og 503', 'stk'),
   def(ITEM.wireMount, 'Montering av vaieroppheng', 'stk'),
+  def(ITEM.heightMontering, 'Arbeid i høyden, montering, per minutt', 'stk'),
+  def(ITEM.heightDemontering, 'Arbeid i høyden, demontering, per minutt', 'stk'),
   def(ITEM.door, 'Dør 292 med lås 410', 'stk'),
   def(ITEM.curtain, 'Forheng', 'stk'),
   ...BEAM_M.map((m) => def(ITEM.beam(beamLen(m)), `Takdrager 292, ${beamLen(m)} mm, med 600`, 'stk')),
@@ -251,6 +256,8 @@ export const EXAMPLE_TIMES: Readonly<Record<string, Time>> = {
   // A ceiling wire (S9, S10), placeholders: picked and carried as a small part, 10 min up and 5 down
   [ITEM.wire]: pvt(0.5, 0.5, 0.5),
   [ITEM.wireMount]: onSite(10, 5),
+  [ITEM.heightMontering]: onSite(1, 0),
+  [ITEM.heightDemontering]: onSite(0, 1),
   [ITEM.door]: pvt(0.68, 1.02, 0.68),
   [ITEM.curtain]: pvt(0.34, 1.7, 0.34),
   ...Object.fromEntries(BEAM_M.map((m) => [ITEM.beam(beamLen(m)), pvt(0.15, 0.15, 0.15)])),
@@ -322,6 +329,8 @@ export const EXAMPLE_RECIPES: Readonly<Record<string, ItemRecipe>> = {
   // The V of wire and the eyebolt are own purchases (placeholders), the 503 Foga's
   [ITEM.wire]: { own: [['VAIER-V', 1, 'accessory'], ['OYEBOLT-M5', 1, 'accessory']], parts: [['503', 1]], dg: 'utleie' },
   [ITEM.wireMount]: work,
+  [ITEM.heightMontering]: work,
+  [ITEM.heightDemontering]: work,
   [ITEM.door]: { own: [['DOR-292-410', 1, 'accessory']], dg: 'utleie' },
   [ITEM.curtain]: { own: [['FORHENG', 1, 'accessory']], dg: 'utleie' },
   ...Object.fromEntries(BEAM_M.map((m): [string, ItemRecipe] => [ITEM.beam(beamLen(m)), { parts: [['292', m - 0.04], ['600', 4]], dg: 'utleie' }])),

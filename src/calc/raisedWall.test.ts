@@ -101,9 +101,20 @@ describe('cost rule 6: the lift', () => {
     const res = calc(raise(island, () => true, 1040), RULES, DEFAULT_CATALOG, EXHIBITOR);
     const high = res.groups.flatMap((g) => g.lines).filter((l) => (l.top ?? 0) > DEFAULT_PRICING.height.limit);
     const minutes = high.reduce((a, l) => a + (l.time.montering ?? 0) + (l.time.demontering ?? 0), 0);
-    const hours = Math.ceil((minutes * DEFAULT_PRICING.height.factor) / 60);
+    const hours = Math.ceil(minutes / 60);
     expect(res.margin.order.find((o) => o.id === 'lift')).toEqual({ id: 'lift', name: `Sakselift ${hours} t`, cost: hours * 967 });
     expect(res.groups.flatMap((g) => g.lines).some((l) => l.name.includes('lift'))).toBe(false);
+  });
+
+  it('work up there takes × the factor: the extra minutes are on the line, in its cost, price and time', () => {
+    const at = (len: number) => lines(raise(island, () => true, len)).find((l) => l.artnr === `6124-${len}`)!;
+    const high = at(1040);
+    const extra = high.uses!.find((u) => u.id === ITEM.heightMontering)!.qty;
+    const base = high.time.montering! - extra;
+    expect(extra).toBeCloseTo(base * (DEFAULT_PRICING.height.factor - 1), 1);
+    expect(high.uses!.some((u) => u.id === ITEM.heightDemontering)).toBe(true);
+    // At 3080, not over the limit: no extra
+    expect(at(540).uses!.some((u) => u.id === ITEM.heightMontering)).toBe(false);
   });
 
   it('nothing above 3080 mm, no lift: a wall to 3080 counts as 3 m (Bjørn 27.11.2026)', () => {

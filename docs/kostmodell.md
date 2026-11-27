@@ -90,11 +90,11 @@ DG regnes på direkte kost, og kalkylen viser hva som er igjen etter indirekte k
 | 3 | Kjøpt til jobben: trykt tekstil, folie, teip | innkjøp × (1 + svinn) |
 | 4 | Arbeid: plukk, vask, transport, forhåndsmontering, montering, demontering | personminutter / 60 × timekost × (1 + andel overtid × overtidstillegg × lønnsandel) |
 | 5 | Per ordre: startkost trykk, administrasjon, transport | fast, én gang per tilbud |
-| 6 | Høyde: over 3080 mm, der 5-trinns stige ikke rekker (en vegg til 3040 eller 3080 teller som 3 m, Bjørn 27.11.2026) | sakselift 4304 per time som ordrekost: monterings- og demonteringsminutter for arbeid over grensen × faktor, rundet opp til hele timer per ordre. Bare i kalkylen, aldri på tilbudet. En linje merker arbeid over grensen med `top` (i dag hevet vegg og vaier, senere høy tekstil og snekkervegg) |
+| 6 | Høyde: over 3080 mm, der 5-trinns stige ikke rekker (en vegg til 3040 eller 3080 teller som 3 m, Bjørn 27.11.2026) | monterings- og demonteringsminutter over grensen × faktor (de ekstra minuttene som egne arbeidsposter på linjen, `atHeight` i `calc/height.ts`, så kost, pris og arbeidsordre følger), og sakselift 4304 per time like lenge som det arbeidet, rundet opp til hele timer per ordre, som ordrekost. Liften står bare i kalkylen. En linje merker arbeid over grensen med `top` (i dag hevet vegg og vaier, senere høy tekstil og snekkervegg) |
 
 Regel 2 (spesialkapp) finnes i `model.ts` med tester, men kalkylen bruker den ikke ennå: tekstilrammer kappes alltid
 til mål og har i stedet egen slitasje (gruppen `frame`, under). Regel 6 (høyde) brukes for hevet vegg og vaier
-(`liftCost` i `calc/summary.ts`).
+(`atHeight` i `calc/height.ts`, `liftCost` i `calc/summary.ts`).
 
 `timekost = timelønn med sosiale kostnader × lønnsindeks fra basisåret / fakturerbar andel`
 

@@ -80,12 +80,13 @@ export function summary(c: CalcContext, lines: CalcLine[], organiserLines: CalcL
 
 /**
  * The lift (cost rule 6, Bjørn 27.11.2026): when work on the order reaches above the limit, a sakselift 4304 is rented by
- * the hour, its hours the montering and demontering minutes of that work × the factor, rounded up once per order. Cost
+ * the hour, its hours the montering and demontering minutes of that work (already × the factor, `atHeight`), rounded up
+ * once per order. Cost
  * only, never on the quote. Any line can mark its work as high with `top` (raised walls and their wires now; tall textile
  * and snekkervegger can do the same).
  */
 export function liftCost(lines: readonly CalcLine[], h: CostParams['height']): { id: string; name: string; cost: number } | undefined {
   const minutes = lines.filter((l) => l.top !== undefined && needsLift(l.top, h)).reduce((a, l) => a + (l.time.montering ?? 0) + (l.time.demontering ?? 0), 0);
-  const hours = liftHours(minutes, h);
+  const hours = liftHours(minutes);
   return hours ? { id: 'lift', name: `Sakselift ${hours} t`, cost: hours * h.liftPerHour } : undefined;
 }

@@ -11,6 +11,7 @@ import { raiseTop } from '../../rules/rules';
 import type { Use } from '../../pricing/model';
 import { countBy, toOrganiser, type CalcContext } from '../context';
 import type { CalcLine } from '../types';
+import { atHeight } from '../height';
 
 /** Wall in one colour: whole modules per metre, a shorter module (Byggeregel V1) per piece of its own product, priced as
  *  a whole metre (Bjørn 14.11.2026), its cut parts and the cutting in the cost. A module with a door or curtain is never
@@ -94,6 +95,7 @@ export function raiseLines(c: CalcContext): CalcLine[] {
       { id: ITEM.raiseModule, qty: mods.length },
     ];
     const lm = mods.reduce((a, m) => a + m.cc, 0);
-    return { ...c.line(`${id}-${len}`, lm, { ...c.built, meta: `+${len} mm` }, uses), top: raiseTop(len, c.rules) };
+    const top = raiseTop(len, c.rules);
+    return { ...c.line(`${id}-${len}`, lm, { ...c.built, meta: `+${len} mm` }, atHeight(c, uses, top)), top };
   });
 }

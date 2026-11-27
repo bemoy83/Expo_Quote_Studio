@@ -150,7 +150,7 @@ const PARAMS: Readonly<Record<string, ParamDef>> = {
   'carpet.minSeam': { label: 'Engangsteppe: skjøt', unit: 'min/lm', group: 'Engangsteppe (rangerer leggeforslag)', tab: 'arbeid' },
   'carpet.minTape': { label: 'Engangsteppe: teiping', unit: 'min/lm', group: 'Engangsteppe (rangerer leggeforslag)', tab: 'arbeid' },
   'height.limit': { label: 'Høyde der stige ikke rekker', unit: 'mm', group: 'Høyde og lift (regel 6)', tab: 'arbeid', rule: 6 },
-  'height.factor': { label: 'Lifttimer per montørtime over grensen', unit: '×', group: 'Høyde og lift (regel 6)', tab: 'arbeid', rule: 6 },
+  'height.factor': { label: 'Arbeid over grensen tar', unit: '×', group: 'Høyde og lift (regel 6)', tab: 'arbeid', rule: 6 },
   'height.liftPerHour': { label: 'Sakselift 4304 per time', unit: 'kr', group: 'Høyde og lift (regel 6)', tab: 'arbeid', rule: 6 },
   indirect: { label: 'Indirekte kost (admin, lokaler, lager, biler)', unit: '%', group: 'Påslag', tab: 'paslag' },
   'dg.utleie': { label: 'DG-mål utleie', unit: '%', group: 'DG-mål per gruppe (det motoren priser)', tab: 'paslag' },
