@@ -449,8 +449,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   rammer som henger utenpå én enkelt vegg, og full høyde 2540 for stendere. Lengdene ligger som data
   (`RECIPES.textileFrame.standard`). Standardlengder ligger på lager, plukkes bare og er leid ut per løpemeter som i dag
   (kostregel 1, ingen egen pris for en hel lengde). Alle andre lengder kappes til jobben og koster mer (kostregel 2):
-  materialet per meter med svinn og gjenbruk, i DG-gruppen for salg fordi biten stort sett brukes opp, og kappetiden per
-  kapp. Prisen per tekstilstørrelse stiger, uten egen linje på tilbudet, og «Slik er det regnet» viser kappet. En skinne
+  materialet per meter med svinn og gjenbruk, i DG-gruppen for salg fordi biten stort sett brukes opp, kappetiden per
+  kapp, og et fast kapptillegg per kappet ramme for å bestille, kappe, gjære og merke den (Bjørn 27.11.2026: gir
+  insentivet til standardlengder; 30 min i forhåndsmontering er plassholder). Prisen per tekstilstørrelse stiger, uten egen linje på tilbudet, og «Slik er det regnet» viser kappet. En skinne
   over 5 m skjøtes som nærmeste standardlengde og én skjøtebit, gjæret motsatt så den skjøtes på den ferdig gjærede
   lengden (Bjørn 27.11.2026). Skjøtebiten er alltid kapp, også når den har en standardlengdes mål, fordi to
   standardlengder ikke kan skjøtes på hverandre. Skjøten er gjæret, så standardlengder kan brukes i en skjøtt
@@ -465,7 +466,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   rammen kan bli standard: én skinne, uten 92LTX-hjørne.
   Mot en 92LTX kappes skinnen fortsatt (X7), også på systemvegg, til den kanskje får egen standard (Bjørn 21.11.2026);
   hjørnet sparer samtidig to stendere. Standard høyde er 2540; rammer kan skjøtes til om lag 5 m høyde.
-  *Bjørn 6.11.2026 og 27.11.2026 · `RECIPES.textileFrame.standard`, `ITEM.frameCutM`, `ITEM.frameCut` · kode `src/calc/textile/common.ts`, `src/calc/textile/lines.ts`, `src/calc/textile/standard.ts`, `src/cost/items.ts`, `src/ui/plan/pill/objects.tsx` · test `src/calc/freeFrames.test.ts`, `src/calc/textile/cutLengths.test.ts`*
+  *Bjørn 6.11.2026 og 27.11.2026 · `RECIPES.textileFrame.standard`, `ITEM.frameCutM`, `ITEM.frameCut`, `ITEM.frameCutSetup` · kode `src/calc/textile/common.ts`, `src/calc/textile/lines.ts`, `src/calc/textile/standard.ts`, `src/cost/items.ts`, `src/ui/plan/pill/objects.tsx` · test `src/calc/freeFrames.test.ts`, `src/calc/textile/cutLengths.test.ts`*
 
 - **X10 Rammer overlapper aldri.** Det regelen hindrer, er at to rammer tar samme plass (F1). Hver ramme har et
   volum i plan: langs veggen rammens egen bredde (X2), ut fra veggen rammedybden fra stolpens flate (inntil stolpen,

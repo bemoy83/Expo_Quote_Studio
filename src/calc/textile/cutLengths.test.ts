@@ -26,6 +26,7 @@ describe('Byggeregel X9: standard lengths and cuts', () => {
     expect(qty(u, ITEM.frameProfileM)).toBeCloseTo((2 * 2970 + 2 * 2540) / 1000);
     expect(qty(u, ITEM.frameCutM)).toBe(0);
     expect(qty(u, ITEM.frameCut)).toBe(0);
+    expect(qty(u, ITEM.frameCutSetup)).toBe(0);
   });
 
   it('a length outside the list is cut: its metres and one cut per piece', () => {
@@ -35,6 +36,8 @@ describe('Byggeregel X9: standard lengths and cuts', () => {
     expect(qty(u, ITEM.frameProfileM)).toBeCloseTo((2 * 4970 + 2 * 2540) / 1000);
     expect(qty(u, ITEM.frameCutM)).toBeCloseTo((2 * 1030) / 1000);
     expect(qty(u, ITEM.frameCut)).toBe(2);
+    // One kapptillegg per cut frame, however many cuts: the incentive to use standard lengths (Bjørn 27.11.2026)
+    expect(qty(u, ITEM.frameCutSetup)).toBe(1);
   });
 
   it('a splice piece is cut even at a standard length', () => {

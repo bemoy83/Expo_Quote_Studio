@@ -66,6 +66,7 @@ export function frameUses(p: FrameParts): Use[] {
     { id: ITEM.frameProfileM, qty: lm(std) },
     { id: ITEM.frameCutM, qty: lm(cut) },
     { id: ITEM.frameCut, qty: cut.reduce((a, [, q]) => a + q, 0) },
+    { id: ITEM.frameCutSetup, qty: cut.some(([, q]) => q > 0) ? 1 : 0 },
     ...p.loose.map(([code, qty]) => ({ id: LOOSE_ITEM[code] ?? code, qty })),
     { id: ITEM.braceM, qty: (p.braces.qty * p.braces.length) / 1000 },
     { id: ITEM.bracePiece, qty: p.braces.qty },

@@ -6962,7 +6962,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
       "sum": 180,
     },
     {
-      "cost": 12252.23562,
+      "cost": 12768.39562,
       "id": "prof",
       "lines": [
         {
@@ -7081,8 +7081,8 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         },
         {
           "artnr": "8000",
-          "cost": 1432.9512099999997,
-          "dg": 0.5707156351108449,
+          "cost": 1691.0312099999996,
+          "dg": 0.574797281870757,
           "drawn": [
             "ft1",
           ],
@@ -7091,7 +7091,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
           "name": "Tekstilramme, leie, 2500 × 2540 mm, på fotplater",
           "payer": "utstiller",
           "placeholder": false,
-          "price": 3338,
+          "price": 3977,
           "qty": 1,
           "quote": {
             "key": "tekstil:2500 × 2540 mm",
@@ -7099,9 +7099,10 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
             "name": "Tekstilvegg 2500 × 2540 mm",
           },
           "strategy": "sum",
-          "sum": 3338,
+          "sum": 3977,
           "time": {
             "demontering": 6,
+            "forhåndsmontering": 30,
             "montering": 12,
             "plukk": 4,
             "transport": 3,
@@ -7121,6 +7122,10 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
             {
               "id": "kapp-43TX",
               "qty": 2,
+            },
+            {
+              "id": "kapptillegg-ramme",
+              "qty": 1,
             },
             {
               "id": "617",
@@ -7154,8 +7159,8 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         },
         {
           "artnr": "8000",
-          "cost": 1003.2510100000001,
-          "dg": 0.6012515858505565,
+          "cost": 1261.3310099999999,
+          "dg": 0.6002120412044374,
           "drawn": [
             "ft2",
           ],
@@ -7164,7 +7169,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
           "name": "Tekstilramme, leie, 1500 × 2540 mm, på fotplater",
           "payer": "utstiller",
           "placeholder": false,
-          "price": 2516,
+          "price": 3155,
           "qty": 1,
           "quote": {
             "key": "tekstil:1500 × 2540 mm",
@@ -7172,9 +7177,10 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
             "name": "Tekstilvegg 1500 × 2540 mm",
           },
           "strategy": "sum",
-          "sum": 2516,
+          "sum": 3155,
           "time": {
             "demontering": 4,
+            "forhåndsmontering": 30,
             "montering": 8,
             "plukk": 3.5,
             "transport": 2.5,
@@ -7194,6 +7200,10 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
             {
               "id": "kapp-43TX",
               "qty": 2,
+            },
+            {
+              "id": "kapptillegg-ramme",
+              "qty": 1,
             },
             {
               "id": "617",
@@ -7436,7 +7446,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         },
       ],
       "name": "Profilering",
-      "sum": 27187.500000000004,
+      "sum": 28465.500000000004,
     },
   ],
   "hooks": [],
@@ -7463,6 +7473,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
     "textileM2": 32.5596,
     "time": {
       "demontering": 137.32,
+      "forhåndsmontering": 60,
       "montering": 274.34,
       "plukk": 14.16,
       "transport": 10.16,
@@ -7487,9 +7498,9 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
     "walls": [],
   },
   "margin": {
-    "cost": 13318.169659847998,
-    "db": 14049.330340152006,
-    "dg": 0.5133581927524254,
+    "cost": 13834.329659847997,
+    "db": 14811.170340152006,
+    "dg": 0.5170505084621321,
     "order": [
       {
         "cost": 527.5077279999999,
@@ -7513,7 +7524,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         "name": "Gange til og fra demontering",
       },
     ],
-    "sum": 27367.500000000004,
+    "sum": 28645.500000000004,
     "unknown": 0,
   },
   "organiser": {
@@ -8006,7 +8017,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
       },
     ],
   },
-  "sum": 27367.500000000004,
+  "sum": 28645.500000000004,
   "wallSupports": [],
 }
 `;
@@ -8617,7 +8628,7 @@ exports[`08-tekstil.json > variant A > quote lines 1`] = `
     "sum": 180,
   },
   {
-    "cost": 12252.23562,
+    "cost": 12768.39562,
     "id": "prof",
     "lines": [
       {
@@ -8740,8 +8751,8 @@ exports[`08-tekstil.json > variant A > quote lines 1`] = `
       },
       {
         "artnr": "8000+8040+8041",
-        "cost": 4395.91681,
-        "dg": 0.4927222486354248,
+        "cost": 4653.99681,
+        "dg": 0.49982301310090604,
         "drawn": [
           "ft1",
         ],
@@ -8751,7 +8762,7 @@ exports[`08-tekstil.json > variant A > quote lines 1`] = `
         "name": "Tekstilvegg 2500 × 2540 mm",
         "payer": "utstiller",
         "placeholder": false,
-        "price": 8665.7,
+        "price": 9304.7,
         "qty": 1,
         "quote": {
           "key": "tekstil:2500 × 2540 mm",
@@ -8759,10 +8770,11 @@ exports[`08-tekstil.json > variant A > quote lines 1`] = `
           "name": "Tekstilvegg 2500 × 2540 mm",
         },
         "strategy": "sum",
-        "sum": 8665.7,
+        "sum": 9304.7,
         "terms": "Leie av ramme, kjøp av tekstil",
         "time": {
           "demontering": 6,
+          "forhåndsmontering": 30,
           "montering": 12,
           "plukk": 4,
           "transport": 3,
@@ -8782,6 +8794,10 @@ exports[`08-tekstil.json > variant A > quote lines 1`] = `
           {
             "id": "kapp-43TX",
             "qty": 2,
+          },
+          {
+            "id": "kapptillegg-ramme",
+            "qty": 1,
           },
           {
             "id": "617",
@@ -8815,8 +8831,8 @@ exports[`08-tekstil.json > variant A > quote lines 1`] = `
       },
       {
         "artnr": "8000+8040+8042",
-        "cost": 2578.6126099999997,
-        "dg": 0.5427667547343783,
+        "cost": 2836.6926099999996,
+        "dg": 0.5481966346000701,
         "drawn": [
           "ft2",
         ],
@@ -8826,7 +8842,7 @@ exports[`08-tekstil.json > variant A > quote lines 1`] = `
         "name": "Tekstilvegg 1500 × 2540 mm",
         "payer": "utstiller",
         "placeholder": false,
-        "price": 5639.599999999999,
+        "price": 6278.599999999999,
         "qty": 1,
         "quote": {
           "key": "tekstil:1500 × 2540 mm",
@@ -8834,10 +8850,11 @@ exports[`08-tekstil.json > variant A > quote lines 1`] = `
           "name": "Tekstilvegg 1500 × 2540 mm",
         },
         "strategy": "sum",
-        "sum": 5639.599999999999,
+        "sum": 6278.599999999999,
         "terms": "Leie av ramme, kjøp av tekstil",
         "time": {
           "demontering": 4,
+          "forhåndsmontering": 30,
           "montering": 8,
           "plukk": 3.5,
           "transport": 2.5,
@@ -8857,6 +8874,10 @@ exports[`08-tekstil.json > variant A > quote lines 1`] = `
           {
             "id": "kapp-43TX",
             "qty": 2,
+          },
+          {
+            "id": "kapptillegg-ramme",
+            "qty": 1,
           },
           {
             "id": "617",
@@ -8882,7 +8903,7 @@ exports[`08-tekstil.json > variant A > quote lines 1`] = `
       },
     ],
     "name": "Profilering",
-    "sum": 27187.500000000004,
+    "sum": 28465.500000000004,
   },
 ]
 `;
@@ -14961,13 +14982,13 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
       "sum": 1650,
     },
     {
-      "cost": 23198.647299999997,
+      "cost": 25263.287299999996,
       "id": "prof",
       "lines": [
         {
           "artnr": "8000",
-          "cost": 3328.6170299999994,
-          "dg": 0.5652276606583073,
+          "cost": 4102.857029999999,
+          "dg": 0.5714136602945786,
           "drawn": [
             "t1",
             "t4",
@@ -14978,7 +14999,7 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
           "name": "Tekstilramme, leie, 1925 × 2540 mm, på vegg",
           "payer": "utstiller",
           "placeholder": false,
-          "price": 2552,
+          "price": 3191,
           "qty": 3,
           "quote": {
             "key": "tekstil:1925 × 2540 mm",
@@ -14986,9 +15007,10 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
             "name": "Tekstilvegg 1925 × 2540 mm",
           },
           "strategy": "sum",
-          "sum": 7656,
+          "sum": 9573,
           "time": {
             "demontering": 12,
+            "forhåndsmontering": 90,
             "montering": 24,
             "plukk": 9,
             "transport": 6,
@@ -15008,6 +15030,10 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
             {
               "id": "kapp-43TX",
               "qty": 6,
+            },
+            {
+              "id": "kapptillegg-ramme",
+              "qty": 3,
             },
             {
               "id": "617",
@@ -15033,8 +15059,8 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
         },
         {
           "artnr": "8000",
-          "cost": 1471.4982199999997,
-          "dg": 0.5307722512755103,
+          "cost": 1729.5782199999999,
+          "dg": 0.5418335841059603,
           "drawn": [
             "t2",
           ],
@@ -15043,7 +15069,7 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
           "name": "Tekstilramme, leie, 2880 × 2540 mm, på vegg",
           "payer": "utstiller",
           "placeholder": false,
-          "price": 3136,
+          "price": 3775,
           "qty": 1,
           "quote": {
             "key": "tekstil:2880 × 2540 mm",
@@ -15051,9 +15077,10 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
             "name": "Tekstilvegg 2880 × 2540 mm",
           },
           "strategy": "sum",
-          "sum": 3136,
+          "sum": 3775,
           "time": {
             "demontering": 6,
+            "forhåndsmontering": 30,
             "montering": 12,
             "plukk": 3.5,
             "transport": 2.5,
@@ -15069,6 +15096,10 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
             {
               "id": "kapp-43TX",
               "qty": 2,
+            },
+            {
+              "id": "kapptillegg-ramme",
+              "qty": 1,
             },
             {
               "id": "617",
@@ -15098,8 +15129,8 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
         },
         {
           "artnr": "8000",
-          "cost": 1049.95802,
-          "dg": 0.5485993035253655,
+          "cost": 1308.03802,
+          "dg": 0.5588404654300169,
           "drawn": [
             "t3",
           ],
@@ -15108,7 +15139,7 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
           "name": "Tekstilramme, leie, 1905 × 2540 mm, på vegg",
           "payer": "utstiller",
           "placeholder": false,
-          "price": 2326,
+          "price": 2965,
           "qty": 1,
           "quote": {
             "key": "tekstil:1905 × 2540 mm",
@@ -15116,9 +15147,10 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
             "name": "Tekstilvegg 1905 × 2540 mm",
           },
           "strategy": "sum",
-          "sum": 2326,
+          "sum": 2965,
           "time": {
             "demontering": 4,
+            "forhåndsmontering": 30,
             "montering": 8,
             "plukk": 3,
             "transport": 2,
@@ -15134,6 +15166,10 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
             {
               "id": "kapp-43TX",
               "qty": 2,
+            },
+            {
+              "id": "kapptillegg-ramme",
+              "qty": 1,
             },
             {
               "id": "617",
@@ -15155,8 +15191,8 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
         },
         {
           "artnr": "8000",
-          "cost": 791.2990100000001,
-          "dg": 0.6226518788745826,
+          "cost": 1049.37901,
+          "dg": 0.6164550402046783,
           "drawn": [
             "t6",
           ],
@@ -15165,7 +15201,7 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
           "name": "Tekstilramme, leie, 950 × 2540 mm, på vegg",
           "payer": "utstiller",
           "placeholder": false,
-          "price": 2097,
+          "price": 2736,
           "qty": 1,
           "quote": {
             "key": "tekstil:950 × 2540 mm",
@@ -15173,9 +15209,10 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
             "name": "Tekstilvegg 950 × 2540 mm",
           },
           "strategy": "sum",
-          "sum": 2097,
+          "sum": 2736,
           "time": {
             "demontering": 4,
+            "forhåndsmontering": 30,
             "montering": 8,
             "plukk": 3,
             "transport": 2,
@@ -15195,6 +15232,10 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
             {
               "id": "kapp-43TX",
               "qty": 2,
+            },
+            {
+              "id": "kapptillegg-ramme",
+              "qty": 1,
             },
             {
               "id": "617",
@@ -15220,8 +15261,8 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
         },
         {
           "artnr": "8000",
-          "cost": 2306.79002,
-          "dg": 0.577665686561699,
+          "cost": 2822.9500199999998,
+          "dg": 0.5810403650934995,
           "drawn": [
             "f1",
             "f2",
@@ -15231,7 +15272,7 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
           "name": "Tekstilramme, leie, 1960 × 2540 mm, på fotplater",
           "payer": "utstiller",
           "placeholder": false,
-          "price": 2731,
+          "price": 3369,
           "qty": 2,
           "quote": {
             "key": "tekstil:1960 × 2540 mm",
@@ -15239,9 +15280,10 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
             "name": "Tekstilvegg 1960 × 2540 mm",
           },
           "strategy": "sum",
-          "sum": 5462,
+          "sum": 6738,
           "time": {
             "demontering": 8,
+            "forhåndsmontering": 60,
             "montering": 16,
             "plukk": 7,
             "transport": 5,
@@ -15261,6 +15303,10 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
             {
               "id": "kapp-43TX",
               "qty": 4,
+            },
+            {
+              "id": "kapptillegg-ramme",
+              "qty": 2,
             },
             {
               "id": "617",
@@ -15471,7 +15517,7 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
         },
       ],
       "name": "Profilering",
-      "sum": 45868.8,
+      "sum": 50978.799999999996,
     },
   ],
   "hooks": [],
@@ -15498,6 +15544,7 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
     "textileM2": 50.955000000000005,
     "time": {
       "demontering": 221.84,
+      "forhåndsmontering": 240,
       "montering": 439.26,
       "plukk": 27.71,
       "transport": 19.71,
@@ -15507,9 +15554,9 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
     "wallSupports": 1,
   },
   "margin": {
-    "cost": 24699.681339847997,
-    "db": 22819.118660152,
-    "dg": 0.4802124350815256,
+    "cost": 26764.321339847997,
+    "db": 25864.478660152,
+    "dg": 0.4914510431579668,
     "order": [
       {
         "cost": 527.5077279999999,
@@ -15533,7 +15580,7 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
         "name": "Gange til og fra demontering",
       },
     ],
-    "sum": 47518.799999999996,
+    "sum": 52628.799999999996,
     "unknown": 0,
   },
   "organiser": {
@@ -16282,7 +16329,7 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
       },
     ],
   },
-  "sum": 47518.8,
+  "sum": 52628.799999999996,
   "wallSupports": [
     {
       "at": [
@@ -17335,13 +17382,13 @@ exports[`15-tekstilhjorner.json > variant A > quote lines 1`] = `
     "sum": 1650,
   },
   {
-    "cost": 23198.647299999997,
+    "cost": 25263.287299999996,
     "id": "prof",
     "lines": [
       {
         "artnr": "8000+8040",
-        "cost": 7586.036729999999,
-        "dg": 0.5003400825956371,
+        "cost": 8360.276729999998,
+        "dg": 0.5110777729043126,
         "drawn": [
           "t1",
           "t4",
@@ -17353,7 +17400,7 @@ exports[`15-tekstilhjorner.json > variant A > quote lines 1`] = `
         "name": "Tekstilvegg 1925 × 2540 mm",
         "payer": "utstiller",
         "placeholder": false,
-        "price": 5060.8,
+        "price": 5699.8,
         "qty": 3,
         "quote": {
           "key": "tekstil:1925 × 2540 mm",
@@ -17361,10 +17408,11 @@ exports[`15-tekstilhjorner.json > variant A > quote lines 1`] = `
           "name": "Tekstilvegg 1925 × 2540 mm",
         },
         "strategy": "sum",
-        "sum": 15182.4,
+        "sum": 17099.4,
         "terms": "Leie av ramme, kjøp av tekstil",
         "time": {
           "demontering": 12,
+          "forhåndsmontering": 90,
           "montering": 24,
           "plukk": 9,
           "transport": 6,
@@ -17384,6 +17432,10 @@ exports[`15-tekstilhjorner.json > variant A > quote lines 1`] = `
           {
             "id": "kapp-43TX",
             "qty": 6,
+          },
+          {
+            "id": "kapptillegg-ramme",
+            "qty": 3,
           },
           {
             "id": "617",
@@ -17409,8 +17461,8 @@ exports[`15-tekstilhjorner.json > variant A > quote lines 1`] = `
       },
       {
         "artnr": "8000+8040",
-        "cost": 3454.90942,
-        "dg": 0.4733128923578822,
+        "cost": 3712.98942,
+        "dg": 0.4842138969536166,
         "drawn": [
           "t2",
         ],
@@ -17420,7 +17472,7 @@ exports[`15-tekstilhjorner.json > variant A > quote lines 1`] = `
         "name": "Tekstilvegg 2880 × 2540 mm",
         "payer": "utstiller",
         "placeholder": false,
-        "price": 6559.7,
+        "price": 7198.7,
         "qty": 1,
         "quote": {
           "key": "tekstil:2880 × 2540 mm",
@@ -17428,10 +17480,11 @@ exports[`15-tekstilhjorner.json > variant A > quote lines 1`] = `
           "name": "Tekstilvegg 2880 × 2540 mm",
         },
         "strategy": "sum",
-        "sum": 6559.7,
+        "sum": 7198.7,
         "terms": "Leie av ramme, kjøp av tekstil",
         "time": {
           "demontering": 6,
+          "forhåndsmontering": 30,
           "montering": 12,
           "plukk": 3.5,
           "transport": 2.5,
@@ -17447,6 +17500,10 @@ exports[`15-tekstilhjorner.json > variant A > quote lines 1`] = `
           {
             "id": "kapp-43TX",
             "qty": 2,
+          },
+          {
+            "id": "kapptillegg-ramme",
+            "qty": 1,
           },
           {
             "id": "617",
@@ -17476,8 +17533,8 @@ exports[`15-tekstilhjorner.json > variant A > quote lines 1`] = `
       },
       {
         "artnr": "8000+8040",
-        "cost": 2457.2807199999997,
-        "dg": 0.48989439508428134,
+        "cost": 2715.3607199999997,
+        "dg": 0.5023348264359812,
         "drawn": [
           "t3",
         ],
@@ -17487,7 +17544,7 @@ exports[`15-tekstilhjorner.json > variant A > quote lines 1`] = `
         "name": "Tekstilvegg 1905 × 2540 mm",
         "payer": "utstiller",
         "placeholder": false,
-        "price": 4817.2,
+        "price": 5456.2,
         "qty": 1,
         "quote": {
           "key": "tekstil:1905 × 2540 mm",
@@ -17495,10 +17552,11 @@ exports[`15-tekstilhjorner.json > variant A > quote lines 1`] = `
           "name": "Tekstilvegg 1905 × 2540 mm",
         },
         "strategy": "sum",
-        "sum": 4817.2,
+        "sum": 5456.2,
         "terms": "Leie av ramme, kjøp av tekstil",
         "time": {
           "demontering": 4,
+          "forhåndsmontering": 30,
           "montering": 8,
           "plukk": 3,
           "transport": 2,
@@ -17514,6 +17572,10 @@ exports[`15-tekstilhjorner.json > variant A > quote lines 1`] = `
           {
             "id": "kapp-43TX",
             "qty": 2,
+          },
+          {
+            "id": "kapptillegg-ramme",
+            "qty": 1,
           },
           {
             "id": "617",
@@ -17535,8 +17597,8 @@ exports[`15-tekstilhjorner.json > variant A > quote lines 1`] = `
       },
       {
         "artnr": "8000+8040",
-        "cost": 1634.35041,
-        "dg": 0.5557140189202414,
+        "cost": 1892.43041,
+        "dg": 0.5616939017046508,
         "drawn": [
           "t6",
         ],
@@ -17546,7 +17608,7 @@ exports[`15-tekstilhjorner.json > variant A > quote lines 1`] = `
         "name": "Tekstilvegg 950 × 2540 mm",
         "payer": "utstiller",
         "placeholder": false,
-        "price": 3678.6,
+        "price": 4317.6,
         "qty": 1,
         "quote": {
           "key": "tekstil:950 × 2540 mm",
@@ -17554,10 +17616,11 @@ exports[`15-tekstilhjorner.json > variant A > quote lines 1`] = `
           "name": "Tekstilvegg 950 × 2540 mm",
         },
         "strategy": "sum",
-        "sum": 3678.6,
+        "sum": 4317.6,
         "terms": "Leie av ramme, kjøp av tekstil",
         "time": {
           "demontering": 4,
+          "forhåndsmontering": 30,
           "montering": 8,
           "plukk": 3,
           "transport": 2,
@@ -17577,6 +17640,10 @@ exports[`15-tekstilhjorner.json > variant A > quote lines 1`] = `
           {
             "id": "kapp-43TX",
             "qty": 2,
+          },
+          {
+            "id": "kapptillegg-ramme",
+            "qty": 1,
           },
           {
             "id": "617",
@@ -17602,8 +17669,8 @@ exports[`15-tekstilhjorner.json > variant A > quote lines 1`] = `
       },
       {
         "artnr": "8000+8040",
-        "cost": 8066.070019999999,
-        "dg": 0.48396637301754863,
+        "cost": 8582.230019999999,
+        "dg": 0.4923829903767102,
         "drawn": [
           "f1",
           "f2",
@@ -17614,7 +17681,7 @@ exports[`15-tekstilhjorner.json > variant A > quote lines 1`] = `
         "name": "Tekstilvegg 1960 × 2540 mm",
         "payer": "utstiller",
         "placeholder": false,
-        "price": 7815.45,
+        "price": 8453.45,
         "qty": 2,
         "quote": {
           "key": "tekstil:1960 × 2540 mm",
@@ -17622,10 +17689,11 @@ exports[`15-tekstilhjorner.json > variant A > quote lines 1`] = `
           "name": "Tekstilvegg 1960 × 2540 mm",
         },
         "strategy": "sum",
-        "sum": 15630.9,
+        "sum": 16906.9,
         "terms": "Leie av ramme, kjøp av tekstil",
         "time": {
           "demontering": 8,
+          "forhåndsmontering": 60,
           "montering": 16,
           "plukk": 7,
           "transport": 5,
@@ -17645,6 +17713,10 @@ exports[`15-tekstilhjorner.json > variant A > quote lines 1`] = `
           {
             "id": "kapp-43TX",
             "qty": 4,
+          },
+          {
+            "id": "kapptillegg-ramme",
+            "qty": 2,
           },
           {
             "id": "617",
@@ -17670,7 +17742,7 @@ exports[`15-tekstilhjorner.json > variant A > quote lines 1`] = `
       },
     ],
     "name": "Profilering",
-    "sum": 45868.8,
+    "sum": 50978.799999999996,
   },
 ]
 `;
