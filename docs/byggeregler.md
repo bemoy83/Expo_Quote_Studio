@@ -144,9 +144,17 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 - **V20 Øvre felt.** Lysåpningen mellom mellomskinnen og 292 er stykket − 80 (CC − 40, som i bredden), og platen er
   10 mm inn i hver skinne, som veggplaten (V5): 976 × (stykket − 60), smalere i en kort modul (V1). Med dagens mål:
   540 gir 976 × 480 og 2490 gir 976 × 2430. Platene i CC 250-størrelser er lagervarer og kostes som sin andel av en hel
-  plate etter flaten, uten kapp. Feltet har veggens egen farge. Det tar ikke hyller: H4 setter
-  øverste hylle til 2400, under mellomskinnen. Egen farge, print og dekal per øvre felt er ikke bygget ennå.
-  *Bjørn 27.11.2026 · `RECIPES.wall.raise.topRail`, `ITEM.raisePlate` · kode `src/foga/plates.ts`, `src/cost/itemDefs.ts` · test `src/calc/raisedWall.test.ts`*
+  plate etter flaten, uten kapp. Det tar ikke hyller: H4 setter øverste hylle til 2400, under mellomskinnen.
+  Det øvre feltet er en flate for seg, med egen adresse i dekorregisteret (`vegg@a-b/upper`, V15, V17), og velges i
+  veggrisset over mellomskinnen, også over en dør. Uten egen farge har det veggens, også når feltet under har sin egen.
+  Kosten og paletten farger eller printer det alene (siste strøk vinner, som på platen: farge på platen tar ikke
+  printen av det øvre feltet, og omvendt). Malerspannet og Fyll tar det med veggen, og malerspannet med print legger ett
+  bilde over hele høyden, der mellomskinnen skjuler sin stripe som stolpene gjør. En dekal blir i sitt bånd og krysser
+  aldri mellomskinnen. Endres høyden, beholdes farge og print (printen tilpasses feltet), og en dekal som ikke lenger
+  får plass går. Senkes veggen til 2540, går dekoren på de øvre feltene (angre tar den tilbake). En farget øvre plate
+  koster det samme i alle RAL, er alltid utstillerens og har ikke platebytte. Print på øvre felt prises etter flaten
+  (lysmålet), og printfila har det øvre feltets mål.
+  *Bjørn 27.11.2026 · `RECIPES.wall.raise.topRail`, `ITEM.raisePlate`, `Foil.upper` · kode `src/foga/plates.ts`, `src/cost/itemDefs.ts`, `src/domain/plateDecor.ts`, `src/domain/print.ts` · test `src/calc/raisedWall.test.ts`, `src/domain/upperFelt.test.ts`*
 - **V21 Trinn.** Der høyden skifter, står den høye delens stolpe skjøtt i stolpen under som ellers: en stolpe mellom to
   høyder får stykket til den høyeste, og det trengs ikke noe ekstra.
   *Bjørn 27.11.2026 · kode `src/domain/walls.ts` (`raisedPosts`) · test `src/calc/raisedWall.test.ts`*
@@ -966,14 +974,13 @@ Bestemt eller nevnt, men ikke i koden. Regelnummeret viser hvor det hører hjemm
 i regelen og strykes her.
 
 **Vegg og hevet vegg**
-- V20: egen farge, print og dekal per øvre felt.
 - V18: heve et roms sider, trinn i én vegg i skuffen (motoren regner høyden per modul), og høy vegg bygget fra bunnen
   (92 i bunn, uten fot, topp 3040).
 - V6: endre standvegg med nabogodkjenning.
 - V11: andre mål og diagonaler på standarealet.
-- V15: print, dekaler og diskfarger inn i dekorregisteret (trinn B1b og B2), venter på høydeadresse fra hevet vegg.
+- V15: print, dekaler og diskfarger inn i dekorregisteret (trinn B1b og B2). Høydeadressen finnes nå for fargen på øvre felt (`/upper`, V20); print og dekaler ligger fortsatt per modul, med `Foil.upper` for øvre felt.
 - Veggmål på arbeidsordren (`wallMeasures`) er slått av (Bjørn 14.11.2026).
-- Veggskuffen: velge flere felt samtidig, og velge felt ved klikk i plan eller 3D (parkert, se vegger.md).
+- Veggskuffen: velge flere felt samtidig, og velge felt (også øvre felt, V20) ved klikk i plan eller 3D (parkert, se vegger.md).
 - Snekret vegg som produkt.
 
 **Tekstil**
