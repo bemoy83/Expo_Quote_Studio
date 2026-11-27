@@ -2,6 +2,7 @@ import type { Foil, TextileFill, TextileWall, Variant, Wall } from '../../domain
 import { wallLabel } from '../../domain/walls';
 import { wallDirection } from '../../domain/grid';
 import { RECIPES } from '../../foga/recipes';
+import { railHeight } from '../../foga/plates';
 import type { InFrameParams, Rules } from '../../rules/rules';
 import { freeTrims, placeFrames } from './placement';
 import { onWallMount, wallPiece, type FramePiece } from './inFrame';
@@ -152,8 +153,11 @@ export function foilRows(v: Variant, plate: { width: number; height: number }, c
     const run = f.run ? runs.get(f.run) : undefined;
     const part = run && run.length > 1 ? ` · ${run.indexOf(f) + 1} av ${run.length}` : '';
     const door = doors.has(`${f.wallId}|${f.module}`) ? (f.door === 'header' ? ', overstykke' : f.door === 'leaf' ? ', dørblad' : ', dør') : '';
-    const size = { W: plate.width, H: plate.height };
-    return { pos, where: `${wallLabel(walls.get(f.wallId)!)}, plate ${f.module + 1}${door}${part}`, ...size, pw: size.W, ph: size.H, fill: 'print' as const, fileName: printFileName(customer, pos, size), foil: true };
+    // On an upper felt (V20) its plate: the 94 less the 292, plus what the plate goes into the rails
+    const w = walls.get(f.wallId)!;
+    const up = f.upper && w.raise ? w.raise - railHeight(RECIPES.wall.raise.topRail) + (RECIPES.wall.plate.h - plate.height) : 0;
+    const size = { W: plate.width, H: up || plate.height };
+    return { pos, where: `${wallLabel(w)}, ${up ? 'øvre felt' : 'plate'} ${f.module + 1}${up ? '' : door}${part}`, ...size, pw: size.W, ph: size.H, fill: 'print' as const, fileName: printFileName(customer, pos, size), foil: true };
   });
 }
 

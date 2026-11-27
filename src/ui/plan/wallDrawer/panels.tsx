@@ -262,6 +262,8 @@ export function FeltPanel(props: {
   w: Wall
   s: FaceSide
   m: number
+  /** The plate's upper felt over the middle rail, on a raised wall (Byggeregel V20). */
+  upper?: boolean
   mods: (BuiltModule | undefined)[]
   motifs: Motif[]
   pm: Motif | undefined
@@ -271,10 +273,10 @@ export function FeltPanel(props: {
   select: (x: Partial<PlanSelection>) => void
   onEdit: Edit
 }) {
-  const { v, w, s, m, mods, motifs, pm, setTool, pick, select, onEdit } = props
-  const plate = mods[m]!.plate
-  const printed = printsOn(v, w.id, s).find((f) => f.module === m)
-  const arrows = <FeltArrows m={m} s={s} mods={mods} select={select} />
+  const { v, w, s, m, upper, mods, motifs, pm, setTool, pick, select, onEdit } = props
+  const plate = upper ? mods[m]!.raise!.ral : mods[m]!.plate
+  const printed = printsOn(v, w.id, s).find((f) => f.module === m && !!f.upper === !!upper)
+  const arrows = <FeltArrows m={m} s={s} mods={mods} upper={upper} select={select} />
   /** The bucket or brush: the felt lets go and the wall is coloured as with nothing chosen. */
   const take = (t: PaintTool) => {
     setTool(t)
@@ -282,23 +284,25 @@ export function FeltPanel(props: {
   }
   return (
     <ColourSection
-      title={`Felt ${m + 1}`}
+      title={upper ? `Øvre felt ${m + 1}` : `Felt ${m + 1}`}
       value={printed ? PRINT : plate}
       motif={printed ? (findMotif(motifs, printed.motif) ?? pm) : pm}
       nav={arrows}
       tools={{ what: 'veggen', tool: null, onTool: take }}
       onPick={pick}
-      clear={clearOf(v, { kind: 'wall', wallId: w.id, side: s, module: m }, onEdit)}
+      clear={clearOf(v, { kind: 'wall', wallId: w.id, side: s, module: m, ...(upper && { upper }) }, onEdit)}
     />
   )
 }
 
 /** ‹ › to the felt beside, as seen from in front of the face (the modules run the other way on face −1), as ‹ › go to
  *  the part beside in the counter drawer; arrows move a thing (a shelf). Doors are no felts. */
-export function FeltArrows({ m, s, mods, select }: { m: number; s: FaceSide; mods: (BuiltModule | undefined)[]; select: (x: Partial<PlanSelection>) => void }) {
+export function FeltArrows({ m, s, mods, upper, select }: { m: number; s: FaceSide; mods: (BuiltModule | undefined)[]; upper?: boolean; select: (x: Partial<PlanSelection>) => void }) {
   const dir = s === 1 ? 1 : -1
+  // Upper felts (V20) go to the next raised one, over a door too
+  const takes = (x: BuiltModule | undefined) => (upper ? !!x?.raise : !!x && !x.opening)
   const step = (d: number) => {
-    for (let i = m + d; i >= 0 && i < mods.length; i += d) if (mods[i] && !mods[i]!.opening) return select({ felt: i })
+    for (let i = m + d; i >= 0 && i < mods.length; i += d) if (takes(mods[i])) return select({ felt: i, ...(upper && { upper }) })
   }
   return <PrevNext what="felt" onPrev={() => step(-dir)} onNext={() => step(dir)} />
 }

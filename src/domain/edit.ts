@@ -6,7 +6,7 @@ import { nextId } from './ids';
 import type { Point, Stand, Variant, Wall } from './types';
 import { addRoomGaps, clampRooms, roomOf, syncRooms } from './rooms';
 import { builtModules, closedSideAt, isStandWall, moduleKeys, standardWalls, standWallKeys, standWallSide } from './walls';
-import { ownPlate, uncolourPlates } from './plateDecor';
+import { ownPlate, uncolourPlates, uncolourUpper } from './plateDecor';
 import { replaceWalls } from './replaceWalls';
 import { alone, groupOf, moveGroupNear } from './joints';
 import { blocked, runLength } from './textile/free';
@@ -85,7 +85,9 @@ export function setWallPlate(v: Variant, wallId: string, ral: string): Variant {
   const room = roomOf(v, w);
   // The whole wall gets one colour: its plates coloured one by one take it too (not a plate another wall owns)
   const walls = new Set((room ? v.walls.filter((x) => x.room?.id === room.id) : w ? [w] : []).map((x) => x.id));
-  const plain = uncolourPlates(v, builtModules(v).filter((m) => walls.has(m.wallId)).map((m) => m.key));
+  const keys = builtModules(v).filter((m) => walls.has(m.wallId)).map((m) => m.key);
+  // The upper felts of a raised wall too (V20)
+  const plain = uncolourUpper(uncolourPlates(v, keys), keys);
   if (room) {
     const rooms = plain.rooms.map((r) => {
       if (r.id !== room.id) return r;

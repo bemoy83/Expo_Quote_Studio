@@ -23,7 +23,9 @@ export function buildDecor(c: BuildContext) {
     const tag: Tag = { layer: 'foil', pick: { wallId: w.id, foilId: f.id } }
     const blank = mat('foil', FABRIC, { roughness: 0.6, ...glow })
     const face = s * (rules.wall.profile.thickness / 2 + 0.002)
-    if (!f.full || (!f.crop && !doorAt.has(`${f.wallId}|${f.module}`))) {
+    // A print on the upper felt (V20) is over the door, not on it
+    const onDoor = !f.upper && doorAt.has(`${f.wallId}|${f.module}`)
+    if (!f.full || (!f.crop && !onDoor)) {
       const print = m ? printMaterial(m, f.width / f.height, opts.onLoad, glow) : blank
       along(pointAlong(w, c - f.width / 2), pointAlong(w, c + f.width / 2), f.width, f.height, 0.002, f.y - f.height / 2, print, tag, face)
       continue
@@ -37,7 +39,7 @@ export function buildDecor(c: BuildContext) {
       const print = m ? cropMaterial(m, cropWindow(crop, box, win), opts.onLoad, glow) : blank
       along(pointAlong(w, c - width / 2), pointAlong(w, c + width / 2), width, hi - lo, 0.002, lo, print, tag, off)
     }
-    if (!doorAt.has(`${f.wallId}|${f.module}`)) {
+    if (!onDoor) {
       band(y0, y1, f.width, face)
       continue
     }

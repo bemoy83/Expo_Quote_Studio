@@ -17,7 +17,7 @@ import { withSections } from './podiumSections';
 import { setWallPlate } from './edit';
 import type { FaceSide } from './faces';
 import { wallModules } from './grid';
-import { colourPlates, uncolourAll, uncolourPlates, wallRal } from './plateDecor';
+import { colourPlates, colourUpper, uncolourAll, uncolourPlates, uncolourUpper, wallRal } from './plateDecor';
 import { clearPrint, hiddenPlates, printsOn, uncolourHidden, withoutDoorPart } from './print';
 import { roomOf } from './rooms';
 import type { CounterSection, DoorSurface, PlacedObject, Variant, Wall } from './types';
@@ -88,7 +88,14 @@ export function paintPlate(v: Variant, wallId: string, s: FaceSide, module: numb
   const x = colourPlates(v, [key], ral, plateBase(v));
   // A door's header is a surface of its own: only its print comes off, the leaf keeps its share (Bjørn 18.11.2026)
   if (builtModules(v).some((m) => m.key === key && m.opening)) return withoutDoorPart(x, wallId, s, module, 'header');
-  return clearPrint(x, wallId, s, [module]);
+  return clearPrint(x, wallId, s, [module], false);
+}
+
+/** A colour on the upper felt of raised plate `key` (Byggeregel V20, the felt's palette): a plate of its own over the
+ *  middle rail, the last stroke wins, so its print on this face comes off. `ral` back to the wall's own colour drops
+ *  its own. */
+export function paintUpper(v: Variant, wallId: string, s: FaceSide, module: number, key: string, ral: string): Variant {
+  return clearPrint(colourUpper(v, [key], ral, plateBase(v)), wallId, s, [module], true);
 }
 
 /** A colour on a door leaf (the brush on the leaf, the door's pill): as a plate, its print on this face comes off; the
@@ -107,7 +114,7 @@ export function paintPlatesAlong(v: Variant, wallId: string, s: FaceSide, keys: 
   const set = new Set(keys);
   const mods = builtModules(v).filter((m) => set.has(m.key));
   const x = colourPlates(v, keys, ral, plateBase(v));
-  return clearPrint(x, wallId, s, mods.filter((m) => m.wallId === wallId).map((m) => m.index));
+  return clearPrint(x, wallId, s, mods.filter((m) => m.wallId === wallId).map((m) => m.index), false);
 }
 
 /** What Fyll does with the plates and doors that have print: leaves them as they are (the default), or colours them too
@@ -238,8 +245,9 @@ export function paintAllCounters(v: Variant, ral: string): Painted {
 
 /** What «Fjern farge og print» takes back to plain. */
 export type ClearAt =
-  /** A plate (`module`) of a wall, or with none the whole wall (a room wall: the whole room's colour). */
-  | { kind: 'wall'; wallId: string; side: FaceSide; module?: number }
+  /** A plate (`module`) of a wall, its upper felt with `upper` (V20), or with none the whole wall (a room wall: the
+   *  whole room's colour). */
+  | { kind: 'wall'; wallId: string; side: FaceSide; module?: number; upper?: boolean }
   /** A door's leaf or its header. */
   | { kind: 'door'; openingId: string; side: FaceSide; part: DoorSurface }
   /** The parts `keys` of a counter (the side shown), or light opening `light` of them. */
@@ -266,7 +274,8 @@ export function clearSurface(v: Variant, at: ClearAt): Variant {
     const key = wallModules(w)[at.module]?.key;
     if (!key) return v;
     const owned = builtModules(v).some((m) => m.key === key && m.wallId === w.id);
-    return same(clearPrint(owned ? uncolourPlates(v, [key]) : v, w.id, at.side, [at.module]), v);
+    if (at.upper) return same(clearPrint(uncolourUpper(v, [key]), w.id, at.side, [at.module], true), v);
+    return same(clearPrint(owned ? uncolourPlates(v, [key]) : v, w.id, at.side, [at.module], false), v);
   }
   // The whole wall in the stand's colour, its doors too (the door is part of the wall), the print off the face shown
   const walls = reach(v, w);

@@ -39,7 +39,7 @@ export function feltDecor(v: Variant, h: FaceHit, pen: MotifPen, ratio: number):
   if (pen.pen !== 'print') return addFoil(v, rules, h.w.id, h.module, h.s, pen.motif, ratio)
   const why = foilBlocked(v, rules, h.w.id, h.module, h.s, true)
   if (why) return { error: why }
-  if (printsOn(v, h.w.id, h.s).some((f) => f.module === h.module && f.motif === pen.motif && !f.run)) return { v }
+  if (printsOn(v, h.w.id, h.s).some((f) => f.module === h.module && !f.upper && f.motif === pen.motif && !f.run)) return { v }
   return { v: printPlate(v, rules, h.w.id, h.module, h.s, pen.motif) }
 }
 

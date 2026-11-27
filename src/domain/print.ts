@@ -9,8 +9,8 @@
 // Textile frames are skipped; doors take print on leaf and header; curtains and plates of another wall do not. The
 // bucket also leaves the stretch inside a bakrom that stands against the face; the brush can still print there.
 import type { Rules } from '../rules/rules';
-import { moduleCc, moduleStart, pointAlong, wallLength } from './grid';
-import { fitFoil, freeFelts } from './decor';
+import { moduleCc, moduleCount, moduleStart, pointAlong, wallLength } from './grid';
+import { fitFoil, foilBlocked, freeFelts, inBand } from './decor';
 import { uncolourPlates } from './plateDecor';
 import { roomAt, roomOf } from './rooms';
 import { builtModules } from './walls';
@@ -18,7 +18,7 @@ import { setWallPlate } from './edit';
 import type { DoorSurface, Foil, Variant, Wall } from './types';
 import { doorWindows } from './doors';
 import { nextId } from './ids';
-import { faceNormal, faces, type FaceSide, felt, sideOf } from './faces';
+import { faceNormal, faces, type FaceSide, felt, sideOf, upperFelt } from './faces';
 
 export type Crop = NonNullable<Foil['crop']>;
 
@@ -59,6 +59,11 @@ export const printPlates = (v: Variant, rules: Rules, w: Wall, s: FaceSide): num
 /** Plates the paint bucket fills: those that can take print, except where a bakrom stands against the face (Bjørn 2.11.2026). */
 export const fillPlates = (v: Variant, rules: Rules, w: Wall, s: FaceSide): number[] => printPlates(v, rules, w, s).filter((i) => !otherRoom(v, w, s, moduleStart(w, i) + moduleCc(w, i) / 2));
 
+/** Upper felts (module indices, V20) of a raised wall's face that the paint bucket prints with its plates: every raised
+ *  module, over a door too, except where a bakrom stands against the face. */
+export const fillUppers = (v: Variant, rules: Rules, w: Wall, s: FaceSide): number[] =>
+  w.raise ? Array.from({ length: moduleCount(w) }, (_, i) => i).filter((i) => !foilBlocked(v, rules, w.id, i, s, true, true) && !otherRoom(v, w, s, moduleStart(w, i) + moduleCc(w, i) / 2)) : [];
+
 /** A face's print: the foils covering whole plates on it. */
 export const printsOn = (v: Variant, wallId: string, s: FaceSide): Foil[] => v.foils.filter((f) => f.full && f.wallId === wallId && sideOf(v, f) === s);
 
@@ -86,11 +91,31 @@ export function stretchCrops(rules: Rules, w: Wall, s: FaceSide, modules: number
   return out;
 }
 
-const plateFoil = (id: string, w: Wall, module: number, s: FaceSide, motif: string): Foil => ({ id, wallId: w.id, module, side: s, full: true, width: 0, height: 0, x: 0, y: 0, motif });
+/**
+ * The parts of a motif on plates and upper felts when it is stretched over a raised wall's face (V20): one picture over
+ * the box from the lowest plate to the highest upper felt, the middle rail hiding its strip of it as the posts do. Keyed
+ * `module` for a plate, `module/upper` for an upper felt.
+ */
+export function stretchCropsHigh(rules: Rules, w: Wall, s: FaceSide, plates: number[], uppers: number[], ratio: number): Map<string, Crop> {
+  const L = wallLength(w);
+  const win = (k: string, f: { a: number; b: number; y0: number; y1: number }) => ({ k, x0: s === 1 ? f.a : L - f.b, x1: s === 1 ? f.b : L - f.a, y0: f.y0, y1: f.y1 });
+  const all = [
+    ...plates.map((i) => win(String(i), felt(rules, moduleStart(w, i), moduleCc(w, i)))),
+    ...uppers.map((i) => win(`${i}/upper`, upperFelt(rules, moduleStart(w, i), moduleCc(w, i), w.raise ?? 0))),
+  ];
+  const out = new Map<string, Crop>();
+  if (!all.length) return out;
+  const box = { x0: Math.min(...all.map((p) => p.x0)), x1: Math.max(...all.map((p) => p.x1)), y0: Math.min(...all.map((p) => p.y0)), y1: Math.max(...all.map((p) => p.y1)) };
+  const crop = coverCrop((box.x1 - box.x0) / (box.y1 - box.y0), ratio);
+  for (const p of all) out.set(p.k, cropWindow(crop, box, p).map(r4) as Crop);
+  return out;
+}
 
-/** Take all foil off these plates of a face, prints and decals: a print replaces them. */
-function strip(v: Variant, w: Wall, s: FaceSide, modules: ReadonlySet<number>): Foil[] {
-  return v.foils.filter((f) => !(f.wallId === w.id && sideOf(v, f) === s && modules.has(f.module)));
+const plateFoil = (id: string, w: Wall, module: number, s: FaceSide, motif: string, upper = false): Foil => ({ id, wallId: w.id, module, side: s, full: true, width: 0, height: 0, x: 0, y: 0, motif, ...(upper && { upper: true as const }) });
+
+/** Take all foil off these plates of a face, prints and decals: a print replaces them. `uppers`: the upper felts (V20). */
+function strip(v: Variant, w: Wall, s: FaceSide, modules: ReadonlySet<number>, uppers: ReadonlySet<number> = new Set()): Foil[] {
+  return v.foils.filter((f) => !(f.wallId === w.id && sideOf(v, f) === s && (f.upper ? uppers : modules).has(f.module)));
 }
 
 /**
@@ -102,19 +127,25 @@ export function printWall(v: Variant, rules: Rules, wallId: string, s: FaceSide,
   const w = v.walls.find((x) => x.id === wallId);
   if (!w) return v;
   const plates = fillPlates(v, rules, w, s);
-  if (!plates.length) return v;
+  // A raised wall: the upper felts too, one picture over the full height (V20)
+  const uppers = fillUppers(v, rules, w, s);
+  const all = [...plates.map((i) => ({ i, up: false })), ...uppers.map((i) => ({ i, up: true }))];
+  if (!all.length) return v;
   const on = printsOn(v, w.id, s);
-  const same = plates.every((i) => on.some((f) => f.module === i && f.motif === motif && (plates.length === 1 || f.run)));
-  const runs = new Set(on.filter((f) => plates.includes(f.module)).map((f) => f.run));
+  const has = (f: Foil) => all.some((p) => p.i === f.module && inBand(f, p.up));
+  const same = all.every((p) => on.some((f) => f.module === p.i && inBand(f, p.up) && f.motif === motif && (all.length === 1 || f.run)));
+  const runs = new Set(on.filter(has).map((f) => f.run));
   if (same && runs.size === 1) return v;
-  const kept = strip(v, w, s, new Set(plates));
+  const kept = strip(v, w, s, new Set(plates), new Set(uppers));
   const ids = kept.map((f) => f.id);
-  const run = plates.length > 1 ? nextId([...new Set(v.foils.map((f) => f.run).filter((x): x is string => !!x))], 'p') : undefined;
-  const crops = stretchCrops(rules, w, s, plates, ratio);
-  const added = plates.map((i) => {
+  const run = all.length > 1 ? nextId([...new Set(v.foils.map((f) => f.run).filter((x): x is string => !!x))], 'p') : undefined;
+  const low = uppers.length ? null : stretchCrops(rules, w, s, plates, ratio);
+  const high = uppers.length ? stretchCropsHigh(rules, w, s, plates, uppers, ratio) : null;
+  const added = all.map(({ i, up }) => {
     const id = nextId(ids, 'f');
     ids.push(id);
-    return fitFoil(v, { ...plateFoil(id, w, i, s, motif), ...(run ? { run, crop: crops.get(i) } : {}) }, rules, 0);
+    const crop = low ? low.get(i) : high!.get(up ? `${i}/upper` : String(i));
+    return fitFoil(v, { ...plateFoil(id, w, i, s, motif, up), ...(run ? { run, crop } : {}) }, rules, 0);
   });
   return uncolourHidden({ ...v, foils: [...kept, ...added] }, w.id);
 }
@@ -123,14 +154,16 @@ export function printWall(v: Variant, rules: Rules, wallId: string, s: FaceSide,
  * The brush with «Print» on one plate: the whole motif on it, replacing its print and decals. A plate that already
  * carries the whole of this motif is left as it is (Bjørn 18.11.2026); a part of a stretched print gets the whole motif.
  */
-export function printPlate(v: Variant, rules: Rules, wallId: string, module: number, s: FaceSide, motif: string): Variant {
+export function printPlate(v: Variant, rules: Rules, wallId: string, module: number, s: FaceSide, motif: string, upper = false): Variant {
   const w = v.walls.find((x) => x.id === wallId);
-  if (!w || !printPlates(v, rules, w, s).includes(module)) return v;
-  const cur = printsOn(v, w.id, s).find((f) => f.module === module);
+  // The upper felt of a raised plate (V20) is printed on its own, the plate under it left as it is
+  if (!w || (upper ? !!foilBlocked(v, rules, w.id, module, s, true, true) : !printPlates(v, rules, w, s).includes(module))) return v;
+  const cur = printsOn(v, w.id, s).find((f) => f.module === module && inBand(f, upper));
   if (cur?.motif === motif && !cur.run) return v;
-  const kept = strip(v, w, s, new Set([module]));
+  const one = new Set([module]);
+  const kept = upper ? strip(v, w, s, new Set(), one) : strip(v, w, s, one);
   const id = nextId(kept.map((f) => f.id), 'f');
-  return uncolourHidden({ ...v, foils: [...kept, fitFoil(v, plateFoil(id, w, module, s, motif), rules, 0)] }, w.id);
+  return uncolourHidden({ ...v, foils: [...kept, fitFoil(v, plateFoil(id, w, module, s, motif, upper), rules, 0)] }, w.id);
 }
 
 const OTHER: Record<DoorSurface, DoorSurface> = { header: 'leaf', leaf: 'header' };
@@ -145,14 +178,14 @@ export const onDoorPart = (f: Pick<Foil, 'door'>, part: DoorSurface) => !f.door 
 export function printDoorPart(v: Variant, rules: Rules, wallId: string, module: number, s: FaceSide, motif: string, part: DoorSurface): Variant {
   const w = v.walls.find((x) => x.id === wallId);
   if (!w || !printPlates(v, rules, w, s).includes(module)) return v;
-  const here = printsOn(v, w.id, s).filter((f) => f.module === module);
+  const here = printsOn(v, w.id, s).filter((f) => f.module === module && !f.upper);
   if (here.some((f) => f.door === part && f.motif === motif)) return v;
   const kept = withoutDoorPart(v, w.id, s, module, part).foils;
   const win = doorWindows(rules)[part];
   const id = nextId(v.foils.map((f) => f.id), 'f');
   const foil: Foil = { id, wallId: w.id, module, side: s, full: true, width: r4(win.w), height: r4(win.y1 - win.y0), x: 0, y: r4((win.y0 + win.y1) / 2), motif, door: part };
   // Decals on the door go, as on a plate
-  return { ...v, foils: [...kept.filter((f) => !(f.wallId === w.id && f.module === module && sideOf(v, f) === s && !f.full)), foil] };
+  return { ...v, foils: [...kept.filter((f) => !(f.wallId === w.id && f.module === module && sideOf(v, f) === s && !f.full && !f.upper)), foil] };
 }
 
 /**
@@ -162,7 +195,7 @@ export function printDoorPart(v: Variant, rules: Rules, wallId: string, module: 
 export function withoutDoorPart(v: Variant, wallId: string, s: FaceSide, module: number, part: DoorSurface): Variant {
   let changed = false;
   const foils = v.foils.flatMap((f) => {
-    if (!(f.full && f.wallId === wallId && f.module === module && sideOf(v, f) === s && onDoorPart(f, part))) return [f];
+    if (!(f.full && !f.upper && f.wallId === wallId && f.module === module && sideOf(v, f) === s && onDoorPart(f, part))) return [f];
     changed = true;
     return f.door ? [] : [{ ...f, door: OTHER[part] }];
   });
@@ -175,7 +208,8 @@ export function withoutDoorPart(v: Variant, wallId: string, s: FaceSide, module:
  * curtains are not plates.
  */
 export function hiddenPlates(v: Variant): Set<string> {
-  const printed = new Set(v.foils.filter((f) => f.full).map((f) => `${f.wallId}:${f.module}:${sideOf(v, f)}`));
+  // The plate's own print: one on the upper felt (V20) does not hide it
+  const printed = new Set(v.foils.filter((f) => f.full && !f.upper).map((f) => `${f.wallId}:${f.module}:${sideOf(v, f)}`));
   const byId = new Map(v.walls.map((w) => [w.id, w]));
   const out = new Set<string>();
   for (const m of builtModules(v)) {
@@ -201,12 +235,13 @@ export function uncolourHidden(v: Variant, wallId: string): Variant {
   return coloured && own.length && own.every((m) => hidden.has(m.key)) ? setWallPlate(next, w.id, next.defaultPlate) : next;
 }
 
-/** A colour painted on a face (all plates, or the given ones) takes the print off there. Decals stay. */
-export function clearPrint(v: Variant, wallId: string, s: FaceSide, modules?: Iterable<number>): Variant {
+/** A colour painted on a face (all plates, or the given ones) takes the print off there. Decals stay. `upper`: only
+ *  on the plates (false) or only on their upper felts (true, V20); none: both. */
+export function clearPrint(v: Variant, wallId: string, s: FaceSide, modules?: Iterable<number>, upper?: boolean): Variant {
   const w = v.walls.find((x) => x.id === wallId);
   if (!w) return v;
   const set = modules ? new Set(modules) : null;
-  const foils = v.foils.filter((f) => !(f.full && f.wallId === w.id && sideOf(v, f) === s && (!set || set.has(f.module))));
+  const foils = v.foils.filter((f) => !(f.full && f.wallId === w.id && sideOf(v, f) === s && (!set || set.has(f.module)) && (upper === undefined || inBand(f, upper))));
   return foils.length === v.foils.length ? v : { ...v, foils };
 }
 

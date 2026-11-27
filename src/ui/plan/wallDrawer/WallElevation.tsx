@@ -2,6 +2,8 @@
 // against it, textile frames and shelves (hylle 6311). Frames and decals are moved and resized here, shelves moved up,
 // down and sideways, motifs and frames dropped from the motif library (Profilering), and while a paint tool is out each plate is a
 // target for it.
+import { railHeight } from '../../../foga/plates'
+import { RECIPES } from '../../../foga/recipes'
 import { useEffect, useMemo, useRef, useState, type DragEvent as RDragEvent } from 'react'
 import { foilCenter, foilsOn } from '../../../domain/decor'
 import { doorLevels, doorRal, doorWindows } from '../../../domain/doors'
@@ -67,6 +69,8 @@ interface Props {
   shelfOnly?: boolean
   /** The chosen felt (module), when the wall's felt and nothing on it is chosen. */
   felt?: number
+  /** With `felt`: its upper felt is chosen (Byggeregel V20). */
+  upper?: boolean
   motifs: Motif[]
   label: string
   painting: boolean
@@ -74,7 +78,7 @@ interface Props {
   printing: boolean
   tool: PaintTool
   /** The chosen tool on plate `i`: `first` on press, then for each plate swept over (brush only). */
-  paintAt: (i: number, key: string, first: boolean, leaf?: boolean) => void
+  paintAt: (i: number, key: string, first: boolean, leaf?: boolean, upper?: boolean) => void
   /** The shelf brush is out (Hyller og heng): the drawing lays shelves where it is clicked. */
   shelfBrush?: boolean
   /** Esc with the shelf brush out and nothing pressed. */
@@ -149,7 +153,7 @@ export function WallElevation(p: Props) {
   const sc = planScale(1 / fr.u, {})
 
   /** Pointer handlers for a plate (or a door) in the drawing while a tool is out: click, or with the brush press and sweep. */
-  const paintOn = (i: number, key: string, leaf = false) => (painting ? sweep(tool, (first) => paintAt(i, key, first, leaf)) : {})
+  const paintOn = (i: number, key: string, leaf = false, upper = false) => (painting ? sweep(tool, (first) => paintAt(i, key, first, leaf, upper)) : {})
   /** A print over a door: its part of the picture on the header plate and on the leaf plate. */
   const doorPrint = (f: Foil, x: number, leafX: number) => {
     const m = findMotif(motifs, f.motif)
@@ -214,9 +218,15 @@ export function WallElevation(p: Props) {
             // A press on a plate (not on what lies on it) chooses its felt, a second press the wall again (Bjørn 9.11.2026)
             const m = svg.current?.getScreenCTM()
             const q = m ? new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse()) : null
-            const i = q && q.y >= 0 && q.y <= H ? Math.floor(s === 1 ? q.x : L - q.x) : -1
-            const plate = i >= 0 && i < L && !!mods[i] && !mods[i]!.opening
-            select(plate && p.felt !== i ? { felt: i } : {})
+            const i = q ? Math.floor(s === 1 ? q.x : L - q.x) : -1
+            const mod = i >= 0 && i < L ? mods[i] : undefined
+            // Over the middle rail of a raised plate: its upper felt (V20), over a door too
+            if (q && q.y < 0) {
+              const up = !!mod?.raise && q.y >= -mod.raise.len / 1000
+              return select(up && !(p.upper && p.felt === i) ? { felt: i, upper: true } : {})
+            }
+            const plate = !!q && q.y <= H && !!mod && !mod.opening
+            select(plate && (p.felt !== i || p.upper) ? { felt: i } : {})
           }}
           onDragOver={onDragOver}
           onDragLeave={() => setSpot(null)}
@@ -234,7 +244,7 @@ export function WallElevation(p: Props) {
               const hinge = u(o.hinge === -1 ? st(i) + 1 - k : st(i) + k)
               const free = u(o.hinge === -1 ? st(i) + k : st(i) + 1 - k)
               // Print on the door: one picture over header and leaf, or one on each surface (the brush)
-              const fps = door ? foils.filter((f) => f.full && f.module === i) : []
+              const fps = door ? foils.filter((f) => f.full && !f.upper && f.module === i) : []
               const parts = fps.map((f) => ({ f, at: doorPrint(f, x, Math.min(hinge, free)) }))
               const fp = fps.length > 0
               return (
@@ -290,6 +300,14 @@ export function WallElevation(p: Props) {
           })}
           <Posts xs={postsAt.map(u)} H={H} />
           {raise.felts.length > 0 && <Raise felts={raise.felts} posts={raise.posts} wires={raise.wires} x={spanX} />}
+          {/* The upper felts take the tools as the plates do (V20): a surface of their own for the brush */}
+          {painting &&
+            mods.map((m, i) => {
+              if (!m?.raise) return null
+              const f = felt(rules, st(i), ccOf(i))
+              const top = railHeight(RECIPES.wall.raise.topRail) / 1000
+              return <rect key={`up${i}`} x={spanX(f.a, f.b)} y={-m.raise.len / 1000 + top} width={f.w} height={m.raise.len / 1000 - top} fill="transparent" {...paintOn(i, m.key, false, true)} />
+            })}
           {/* The chosen door: marked, with its swing (the point of the triangle is the hinge side) */}
           {O &&
             O.wallId === w.id &&
@@ -315,7 +333,7 @@ export function WallElevation(p: Props) {
 
           {/* Foil decals */}
           {foils.map((f) => {
-            if (f.full && doorModules.has(f.module)) return null
+            if (f.full && !f.upper && doorModules.has(f.module)) return null
             const c = foilCenter(v, rules, f)
             const x = spanX(c - f.width / 2, c + f.width / 2)
             const m = findMotif(motifs, f.motif)
@@ -338,6 +356,11 @@ export function WallElevation(p: Props) {
           {/* The chosen felt: a tint over its plate, under the shelves */}
           {p.felt !== undefined && mods[p.felt] && (() => {
             const f = felt(rules, st(p.felt), ccOf(p.felt))
+            const r = mods[p.felt]!.raise
+            if (p.upper && r) {
+              const top = railHeight(RECIPES.wall.raise.topRail) / 1000
+              return <rect x={spanX(f.a, f.b)} y={-r.len / 1000 + top} width={f.w} height={r.len / 1000 - top} fill={INK} fillOpacity={0.1} pointerEvents="none" />
+            }
             return <rect x={spanX(f.a, f.b)} y={z(H)} width={f.w} height={H - rules.wall.feet} fill={INK} fillOpacity={0.1} pointerEvents="none" />
           })()}
 

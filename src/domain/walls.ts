@@ -1,5 +1,5 @@
 // Byggeregler V1, V6, V10, T6, D3, R6 (docs/byggeregler.md).
-import { makeModule, moduleKey, plateLocal, moduleSpans, onSpan, openSides, pointAlong, pointKey, SIDES, sideEnds, wallDirection, wallLength, wallModules, type Module } from './grid';
+import { makeModule, moduleKey, plateLocal, upperLocal, moduleSpans, onSpan, openSides, pointAlong, pointKey, SIDES, sideEnds, wallDirection, wallLength, wallModules, type Module } from './grid';
 import { gapKeys, OUTSIDE } from './roomKeys';
 import type { Rules } from '../rules/rules';
 import type { Opening, Point, Side, Stand, Variant, Wall } from './types';
@@ -24,7 +24,8 @@ export interface BuiltModule extends Module {
   opening: Opening | null;
   /** A part of a module another wall split (Byggeregel V10): the key of the whole module it was cut from. */
   whole?: string;
-  /** Raised (Byggeregel V18): the 94 joined onto its posts, mm, and the colour of the upper felt (the wall's own). */
+  /** Raised (Byggeregel V18): the 94 joined onto its posts, mm, and the colour of the upper felt (V20: its own, by
+   *  `upperLocal`, else the wall's, also when the felt below has its own). */
   raise?: { len: number; ral: string };
 }
 
@@ -57,7 +58,7 @@ export function builtModules(v: Variant): BuiltModule[] {
         if (existing) {
           if (!existing.opening && opening) existing.opening = opening;
           // Two walls on one module: the higher raise builds it (V18)
-          if (w.raise && w.raise > (existing.raise?.len ?? 0)) existing.raise = { len: w.raise, ral: own };
+          if (w.raise && w.raise > (existing.raise?.len ?? 0)) existing.raise = { len: w.raise, ral: v.decor?.[upperLocal(existing.local)]?.ral ?? own };
           continue;
         }
         // Only what no earlier wall covers (R6); a stretch cut short is a part of its module too
@@ -67,7 +68,7 @@ export function builtModules(v: Variant): BuiltModule[] {
           // A part keeps the colour of the module it was cut from, and is its own plate for colour and graphics
           const local = plateLocal(w, piece.a, piece.b);
           const plate = v.decor?.[local]?.ral ?? v.decor?.[plateLocal(w, m.a, m.b)]?.ral ?? own;
-          byKey.set(piece.key, { ...piece, wallId: w.id, index, local, plate, opening: piece === part ? opening : null, ...(piece.key !== m.key && { whole: m.key }), ...(w.raise && { raise: { len: w.raise, ral: own } }) });
+          byKey.set(piece.key, { ...piece, wallId: w.id, index, local, plate, opening: piece === part ? opening : null, ...(piece.key !== m.key && { whole: m.key }), ...(w.raise && { raise: { len: w.raise, ral: v.decor?.[upperLocal(local)]?.ral ?? own } }) });
           built.add(piece);
         }
       }
