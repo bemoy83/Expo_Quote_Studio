@@ -40,6 +40,7 @@ export function summary(c: CalcContext, lines: CalcLine[], organiserLines: CalcL
       wallLm: lm(walled),
       standWallLm: lm(walled.filter((m) => kindOf(m) === 'stand')),
       organiserWallLm: lm(theirs),
+      ...(c.mods.some((m) => m.raise) && { raisedLm: lm(c.mods.filter((m) => m.raise)) }),
       organiserBeamLm: organiserBeams ? c.lmOf(beams.standard) : 0,
       innerBeamLm: c.lmOf(beams.inner),
       beamHooks: beams.hooks.length,

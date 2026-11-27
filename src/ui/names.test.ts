@@ -14,6 +14,8 @@ describe('standScope', () => {
   })
   it('says uten takdrager only when there are none', () => {
     expect(standScope({ wallLm: 6, organiserWallLm: 0, beamLm: 0, organiserBeamLm: 0 })).toBe('6 lm vegg · uten takdrager')
+    // Byggeregler V18, V22: the raise is the exhibitor's, also on the organiser's stand wall
+    expect(standScope({ wallLm: 9, organiserWallLm: 8, beamLm: 8, organiserBeamLm: 8, raisedLm: 6 })).toBe('1 lm vegg · 6 lm hevet · fra arrangør: 8 lm standvegg, 8 m takdrager')
   })
   it('never names posts beside walls or takdrager', () => {
     expect(beamSummary({ beamLengths: 2 })).toBe('2 lengder')

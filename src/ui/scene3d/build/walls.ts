@@ -2,6 +2,7 @@
 // Byggeregel D2 (docs/byggeregler.md).
 import * as THREE from 'three'
 import type { Point } from '../../../domain/types'
+import { railHeight } from '../../../foga/plates'
 import { RECIPES } from '../../../foga/recipes'
 import { plateColor, productOf, rules } from '../../env'
 import { doorLevels } from '../../../domain/doors'
@@ -20,6 +21,14 @@ export function buildWalls(c: BuildContext) {
     const frame = mat('walls', ALU, ALU_FINISH)
     const len = m.cc - post
     rail(m.a, m.b, len, RECIPES.wall.topRail, H - prof.top / 2, frame, wallTag)
+    // Raised (Byggeregler V18, V20): over the old top rail, now the middle rail, the upper felt's plate in the wall's
+    // colour and its 292 top rail; the 94 joined onto the posts are with the posts (frame.ts)
+    if (m.raise) {
+      const up = m.raise.len / 1000
+      const top = railHeight(RECIPES.wall.raise.topRail) / 1000
+      rail(m.a, m.b, len, RECIPES.wall.raise.topRail, H + up - top / 2, frame, wallTag)
+      along(m.a, m.b, len + 0.016, up - top + 0.02, 0.003, H - 0.01, mat('walls', plateColor(m.raise.ral), selectGlow(selected)), wallTag)
+    }
     if (!m.opening) {
       rail(m.a, m.b, len, RECIPES.wall.bottomRail, feet + prof.bottom / 2, frame, wallTag, true)
       along(m.a, m.b, len + 0.016, H - prof.top - feet - prof.bottom + 0.02, 0.003, feet + prof.bottom - 0.01, plate, wallTag)

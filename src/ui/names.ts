@@ -19,10 +19,11 @@ export function fromOrganiser(k: Pick<KeyFigures, 'organiserWallLm' | 'organiser
 /** Work order stand line: what the exhibitor builds, then what the organiser delivers:
  *  '1 lm vegg · fra arrangør: 8 lm standvegg, 8 m takdrager'. Posts are part of the wall and the takdrager, never a
  *  separate item in text: only the picking list counts them. 'uten takdrager' only when there are none at all. */
-export function standScope(k: Pick<KeyFigures, 'wallLm' | 'organiserWallLm' | 'beamLm' | 'organiserBeamLm'>) {
+export function standScope(k: Pick<KeyFigures, 'wallLm' | 'organiserWallLm' | 'beamLm' | 'organiserBeamLm' | 'raisedLm'>) {
   const some = (n: number) => n > 1e-9
   const ownBeam = k.beamLm - k.organiserBeamLm
-  const own = [`${fmt(k.wallLm - k.organiserWallLm, 2)} lm vegg`, ...(some(ownBeam) ? [`${fmt(ownBeam)} m takdrager`] : some(k.beamLm) ? [] : ['uten takdrager'])]
+  // A raise is the exhibitor's, also on the organiser's stand wall (Byggeregler V18, V22)
+  const own = [`${fmt(k.wallLm - k.organiserWallLm, 2)} lm vegg`, ...(some(k.raisedLm ?? 0) ? [`${fmt(k.raisedLm!, 2)} lm hevet`] : []), ...(some(ownBeam) ? [`${fmt(ownBeam)} m takdrager`] : some(k.beamLm) ? [] : ['uten takdrager'])]
   const theirs = [
     ...(some(k.organiserWallLm) ? [`${fmt(k.organiserWallLm, 2)} lm standvegg`] : []),
     ...(some(k.organiserBeamLm) ? [`${fmt(k.organiserBeamLm)} m takdrager`] : []),

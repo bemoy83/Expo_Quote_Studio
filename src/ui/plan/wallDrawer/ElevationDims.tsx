@@ -23,7 +23,7 @@ import { elevationHeading } from './face'
 /** Heading size, screen px. */
 const HEAD_FONT = 11.5
 
-export function ElevationDims({ w, s, name, L, H, posts, items, leaders, top, width, right, sc, fields, fieldCc, shelves = [] }: { w: Wall; s: FaceSide; name: string; L: number; H: number; /** Post centres along the wall, when another wall split a module (V10); else every module's start. */ posts?: number[]; items: ElevationItem[]; leaders: Leader[]; top: number; width: number; /** The drawing's right edge, x: a leader text that would run past it goes to the left of its line. */ right: number; sc: PlanScale; /** Print being laid on the wall: where each plate field starts, for its lysmål. */ fields?: number[]; /** Each field's module c/c, m (a whole one where none). */ fieldCc?: number[]; /** Shelves on the face, a height chain per felt. */ shelves?: ShelfChain[] }) {
+export function ElevationDims({ w, s, name, L, H, posts, items, leaders, top, width, right, sc, fields, fieldCc, shelves = [], above = 0 }: { w: Wall; s: FaceSide; name: string; L: number; H: number; /** Post centres along the wall, when another wall split a module (V10); else every module's start. */ posts?: number[]; items: ElevationItem[]; leaders: Leader[]; top: number; width: number; /** The drawing's right edge, x: a leader text that would run past it goes to the left of its line. */ right: number; sc: PlanScale; /** Print being laid on the wall: where each plate field starts, for its lysmål. */ fields?: number[]; /** Each field's module c/c, m (a whole one where none). */ fieldCc?: number[]; /** Shelves on the face, a height chain per felt. */ shelves?: ShelfChain[]; /** How far a raise goes over the wall's top, m (V18): the height chain goes on to it. */ above?: number }) {
   const px = (n: number) => sizePx(sc, n)
   const head = elevationHeading(w, s, name)
   // Post centres, as seen from the face: whole metres from the wall's start, a shorter last module (Byggeregel V1),
@@ -61,7 +61,7 @@ export function ElevationDims({ w, s, name, L, H, posts, items, leaders, top, wi
       {mode === 'wall' && (
         <>
           <Chain sc={sc} axis="y" at={-px(NEAR)} ts={[0, wall]} dir={-1} suffix="vegg" />
-          <Chain sc={sc} axis="y" at={-px(TOTAL)} ts={[0, H]} dir={-1} suffix="med føtter" />
+          <Chain sc={sc} axis="y" at={-px(TOTAL)} ts={above ? [-above, 0, H] : [0, H]} dir={-1} suffix={above ? undefined : 'med føtter'} />
         </>
       )}
       {mode === 'lys' && (

@@ -22,7 +22,7 @@ import { fmt } from '../../format'
 import { findMotif } from '../../motifs'
 import { Handles, Print } from '../drawerParts'
 import { TXT } from '../drawerText'
-import { FaceRails, Opening as OpeningView, Plate, Posts, ShelfFront, TextileFace } from '../elevation'
+import { FaceRails, Opening as OpeningView, Plate, Posts, Raise, ShelfFront, TextileFace } from '../elevation'
 import { shelfFront } from '../shelfFront'
 import { type PlanSelection } from '../selection'
 import { RoomLabel } from '../RoomLabel'
@@ -140,7 +140,17 @@ export function WallElevation(p: Props) {
   const labels = !T && !F && !O && !painting ? elevationItems(rules, tex, foils, doorModules, u, pieceOf, v.walls) : []
   // One scale for the wall (Bjørn 17.11.2026): room for every frame, decal and print on both faces, whatever is chosen
   const steady = p.fs.map((f) => elevationItems(rules, textilesOn(v, w.id, f), foilsOn(v, w.id, f), doorModules, (t) => (f === 1 ? t : L - t), pieceOf, v.walls))
-  const fr = frame(size, L, H, items, { labels, steady })
+  // A raised wall (Byggeregel V18): each raised felt and part over its module, and the 94 joined onto its posts (a post
+  // between two heights with the higher, V21)
+  const raised = mods.flatMap((m, i) => {
+    const split = !m ? splitParts(p.parts, i) : []
+    return split.length ? split.filter((q) => q.mod.raise).map((q) => ({ at: q.at, cc: q.cc, r: q.mod.raise! })) : m?.raise ? [{ at: st(i), cc: ccOf(i), r: m.raise }] : []
+  })
+  const raiseFelts = raised.map((f) => ({ at: f.at, cc: f.cc, len: f.r.len / 1000, fill: plateColor(f.r.ral) }))
+  const raisePosts = new Map<number, number>()
+  for (const f of raiseFelts) for (const t of [f.at, f.at + f.cc]) raisePosts.set(Math.round(u(t) * 1000) / 1000, Math.max(raisePosts.get(Math.round(u(t) * 1000) / 1000) ?? 0, f.len))
+  const above = Math.max(0, ...raiseFelts.map((f) => f.len))
+  const fr = frame(size, L, H, items, { labels, steady, above })
   const sc = planScale(1 / fr.u, {})
 
   /** Pointer handlers for a plate (or a door) in the drawing while a tool is out: click, or with the brush press and sweep. */
@@ -284,6 +294,7 @@ export function WallElevation(p: Props) {
             return <Plate key={i} at={st(i)} cc={ccOf(i)} fill={plateColor(m?.plate ?? wallRal(v, w))} x={spanX} H={H} />
           })}
           <Posts xs={postsAt.map(u)} H={H} />
+          {raiseFelts.length > 0 && <Raise felts={raiseFelts} posts={[...raisePosts].map(([x, len]) => ({ x, len }))} x={spanX} />}
           {/* The chosen door: marked, with its swing (the point of the triangle is the hinge side) */}
           {O &&
             O.wallId === w.id &&
@@ -433,7 +444,7 @@ export function WallElevation(p: Props) {
             />
           )}
 
-          <ElevationDims w={w} s={s} name={name} L={L} H={H} posts={postsAt} items={items} leaders={fr.leaders} top={fr.top} width={fr.width} right={fr.right} sc={sc} fields={fields} fieldCc={fieldCc} shelves={shelfChains(rules, shelfStacks({ ...v, shelves: brush.shelves ?? shelves }), u, st)} />
+          <ElevationDims above={above} w={w} s={s} name={name} L={L} H={H} posts={postsAt} items={items} leaders={fr.leaders} top={fr.top} width={fr.width} right={fr.right} sc={sc} fields={fields} fieldCc={fieldCc} shelves={shelfChains(rules, shelfStacks({ ...v, shelves: brush.shelves ?? shelves }), u, st)} />
         </svg>
       </div>
     </div>

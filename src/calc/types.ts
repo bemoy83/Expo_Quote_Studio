@@ -84,6 +84,8 @@ export interface KeyFigures {
   standWallLm: number;
   /** Part of standWallLm the organiser pays: not on the exhibitor's quote, picking list or work order. */
   organiserWallLm: number;
+  /** Wall raised over 2540 (Byggeregel V18), m, doors included: always the exhibitor's. */
+  raisedLm?: number;
   /** Takdrager the organiser pays (the standard ones, or none), with the posts only they need. */
   organiserBeamLm: number;
   /** Part of beamLm in innvendige takdragere the customer draws: always the exhibitor's. */

@@ -134,8 +134,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   med 2 × 600 i hver ende, som en takdrager) lukker det øvre feltet. Veggen under er uendret, også dører, forheng og
   overstykker. Høyden velges per vegg i veggskuffen («Høyde»); en hevet bakvegg hever ikke et rom, og et roms sider
   heves ikke ennå. Motoren regner høyden per modul (`BuiltModule.raise`), så trinn i en vegg kan komme. Stolpeskjøten
-  plukkes som ferdig enhet (94 med 609). Å bygge en høy vegg fra bunnen (92 i bunn, uten fot, topp 3040) er ikke med nå.
-  *Bjørn 27.11.2026 · `rules.wall.raise`, `RECIPES.wall.raise` · kode `src/domain/raise.ts`, `src/domain/walls.ts`, `src/foga/fromVariant.ts`, `src/foga/engine.ts` · test `src/domain/raise.test.ts`, `src/calc/raisedWall.test.ts`*
+  plukkes som ferdig enhet (94 med 609). Veggrisset og 3D viser det øvre feltet, 292 og stolpeskjøtene, med
+  høydekjeden 2540 + stykket, og arbeidsordren sier hvor mange meter som er hevet. Å bygge en høy vegg fra bunnen (92 i bunn, uten fot, topp 3040) er ikke med nå.
+  *Bjørn 27.11.2026 · `rules.wall.raise`, `RECIPES.wall.raise` · kode `src/domain/raise.ts`, `src/domain/walls.ts`, `src/foga/fromVariant.ts`, `src/foga/engine.ts`, `src/ui/plan/elevation.tsx`, `src/ui/scene3d/build/walls.ts`, `src/ui/scene3d/build/frame.ts`, `src/ui/names.ts` · test `src/domain/raise.test.ts`, `src/calc/raisedWall.test.ts`, `src/ui/names.test.ts`*
 - **V19 Høyder.** Toppen er 2540 pluss lagerlengden på stykket som skjøtes på: 540 → 3080, 1040 → 3580, 1540 → 4080,
   2040 → 4580 og 2490 → 5030 (salgstrinnene 3–5 m, ikke bekreftet før bygging). Lengdene ligger som data. Lagerlengdene
   går i CC 250 (290, 540, 790 …), så flere kan legges til uten kode.
@@ -932,7 +933,7 @@ K22 standardvarene og K23 disker over en fotplate.
 
 ## Ikke bygget ennå
 
-Bestemt eller nevnt, men ikke i koden: hevet vegg (V18) i veggriss og 3D, farge og print per øvre felt, vaier fra
+Bestemt eller nevnt, men ikke i koden: farge, print og dekal per øvre felt (V20), vaier fra
 taket på hevede vegger (uten takdrager alle hevede, med takdrager de over 3 m, fordelt på hele veggen etter S3 og S4 der
 bare et hevet hjørne teller som støtte, V-oppheng 4300 med øyebolt M5 og 503 i toppskinnen, Bjørn 27.11.2026), lift i
 kalkylen over 3000 mm (sakselift 4304, 967 kr per time, regel 6), forslag om å heve veggen når tekstil tegnes over 2540, velge type hjørne der en frittstående tekstilvegg møter en ramme på vegg (Bjørn 20.11.2026: 92LTX er bedre enn å stoppe mot rammen etter X11, fordi alle profilkanalene for tekstil er tilgjengelige, mens en utenpåliggende ramme sperrer kanalene og må monteres etter tekstilen), flere høyder på frittstående tekstilvegg (over 2540 tas i egen utredning om høye vegger), støttevaier fra hallens tak i stedet for fotplater (samme regel som S3), tekstildør

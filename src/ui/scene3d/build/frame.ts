@@ -5,7 +5,7 @@ import { fogaPart } from '../../../foga/parts'
 import { RECIPES } from '../../../foga/recipes'
 import { onSpan, pointKey } from '../../../domain/grid'
 import type { Point } from '../../../domain/types'
-import { wallPoints } from '../../../domain/walls'
+import { raisedPosts, wallPoints } from '../../../domain/walls'
 import { rules } from '../../env'
 import { profile, shared, unitProfile } from './profiles'
 import { ALU, ALU_FINISH, BEAM, FOOT_PLATE, type BuildContext } from './context'
@@ -16,6 +16,14 @@ export function buildFrame(c: BuildContext) {
   const wallPts = wallPoints(mods)
   // A post over a foot plate is picked without its adjustable foot
   const onPlate = new Set(res.wallSupports.map((f) => pointKey(f.at)))
+  // Raised walls (Byggeregler V18, V21): a 94 joined on top of each of their posts, the higher at a step
+  for (const { at: p, len } of raisedPosts(mods).values()) {
+    const mesh = new THREE.Mesh(unitProfile('94'), mat('walls', ALU, ALU_FINISH))
+    mesh.scale.x = len / 1000
+    mesh.rotation.z = Math.PI / 2
+    mesh.position.copy(at(p, H + len / 2000))
+    add(mesh, { layer: 'walls' })
+  }
   for (const p of res.posts) {
     const onWall = wallPts.has(pointKey(p))
     const layer = onWall ? 'walls' : 'beams'

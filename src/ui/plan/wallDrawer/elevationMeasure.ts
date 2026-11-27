@@ -181,6 +181,8 @@ export interface FrameOpts {
    * and on either face (Bjørn 17.11.2026, as the counter drawer's one scale per counter).
    */
   steady?: ElevationItem[][]
+  /** How far a raised wall goes over the standard top, m (Byggeregel V18): drawn above y = 0, so the frame takes it in. */
+  above?: number
 }
 
 type Margins = ReturnType<typeof margins>
@@ -199,6 +201,9 @@ const widest = (ms: Margins[]): Margins => ({
  */
 export function frame(size: { w: number; h: number } | null, L: number, H: number, items: ElevationItem[], opts: FrameOpts = {}) {
   const labels = opts.labels ?? []
+  const above = opts.above ?? 0
+  /** The whole height drawn: the wall and what a raise puts over it. */
+  const Ht = H + above
   /** Lines of leader text for `list` at `k` px per m (one before the scale is known). */
   const levelsOf = (list: ElevationItem[], k: number | null) => (!list.length ? 0 : k === null ? 1 : Math.max(1, ...leaders(list, H, 1 / k).map((l) => l.level + 1)))
   const fit = (k0: number | null) => {
@@ -208,7 +213,7 @@ export function frame(size: { w: number; h: number } | null, L: number, H: numbe
       const named = margins([], Math.max(0, ...opts.steady.map((f) => levelsOf(f, k0))), { ...opts, labels: all })
       m = widest([m, named, ...(all.length ? [margins(all, 0, { ...opts, labels: [] })] : [])])
     }
-    const k = size ? Math.max(20, Math.min((size.w - m.left - m.right) / L, (size.h - m.top - m.bottom) / H)) : 60
+    const k = size ? Math.max(20, Math.min((size.w - m.left - m.right) / L, (size.h - m.top - m.bottom) / Ht)) : 60
     return { m, k }
   }
   let { m, k } = fit(null)
@@ -217,9 +222,9 @@ export function frame(size: { w: number; h: number } | null, L: number, H: numbe
   const ls = leaders(labels, H, u)
   // Centred in the svg like preserveAspectRatio meet would, with the margins kept
   const vbW = size ? size.w * u : L + (m.left + m.right) * u
-  const vbH = size ? size.h * u : H + (m.top + m.bottom) * u
+  const vbH = size ? size.h * u : Ht + (m.top + m.bottom) * u
   const x0 = -m.left * u - (vbW - L - (m.left + m.right) * u) / 2
-  const y0 = -m.top * u - (vbH - H - (m.top + m.bottom) * u) / 2
+  const y0 = -m.top * u - above - (vbH - Ht - (m.top + m.bottom) * u) / 2
   return { viewBox: `${x0} ${y0} ${vbW} ${vbH}`, u, leaders: ls, top: y0, width: vbW, right: x0 + vbW }
 }
 
