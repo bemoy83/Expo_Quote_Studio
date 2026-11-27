@@ -462,7 +462,7 @@ export function WallElevation(p: Props) {
             />
           )}
 
-          <ElevationDims above={above} w={w} s={s} name={name} L={L} H={H} posts={postsAt} items={items} leaders={fr.leaders} top={fr.top} width={fr.width} right={fr.right} sc={sc} fields={fields} fieldCc={fieldCc} shelves={shelfChains(rules, shelfStacks({ ...v, shelves: brush.shelves ?? shelves }), u, st)} />
+          <ElevationDims above={above} headroom={raise.headroom} w={w} s={s} name={name} L={L} H={H} posts={postsAt} items={items} leaders={fr.leaders} top={fr.top} width={fr.width} right={fr.right} sc={sc} fields={fields} fieldCc={fieldCc} shelves={shelfChains(rules, shelfStacks({ ...v, shelves: brush.shelves ?? shelves }), u, st)} />
         </svg>
       </div>
     </div>

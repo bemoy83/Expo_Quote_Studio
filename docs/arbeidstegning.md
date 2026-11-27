@@ -214,6 +214,10 @@ Veggskuffens tegning blir arbeidstegning for én vegg. Se bilde 3.
   hårstrek (0,6 px, `--ink-muted`) opp til en tekst i målskriften (mono 10,5 px): produkttypen, med nummeret foran
   når «Vis posisjoner» er på. Tekstene står på én linje over plasseringsraden. Linjene forskyves 13 px om de
   overlapper.
+  **Hevet vegg (V20, Bjørn 27.11.2026):** hver etasje navngir sitt eget, og ingen henvisningslinje krysser
+  mellomskinnen. Det som når over mellomskinnen (dekal på øvre felt, høy tekstilramme) står over hele veggen, over
+  vaiermerkene. Det som står under, får en egen rad rett under mellomskinnen, og raden forskyves nedover. Når toppen
+  av tingen når helt opp til skinnen (helplateprint), står teksten rett ved prikken.
 - Rommet bak veggen («Bakrom») står i en `--sunken` flate som i dag.
 - **Tekstilrammen slik den bygges** (Bjørn 8.11.2026, i planens oransje tekstilfarge, `TextileFace` i `plan/elevation.tsx`, mål i
   `wallDrawer/elevationMeasure.ts`): samme tegning på vegg og på fotplater. Rammen tegnes i fysisk mål (970 i et

@@ -23,7 +23,7 @@ import { elevationHeading } from './face'
 /** Heading size, screen px. */
 const HEAD_FONT = 11.5
 
-export function ElevationDims({ w, s, name, L, H, posts, items, leaders, top, width, right, sc, fields, fieldCc, shelves = [], above = 0 }: { w: Wall; s: FaceSide; name: string; L: number; H: number; /** Post centres along the wall, when another wall split a module (V10); else every module's start. */ posts?: number[]; items: ElevationItem[]; leaders: Leader[]; top: number; width: number; /** The drawing's right edge, x: a leader text that would run past it goes to the left of its line. */ right: number; sc: PlanScale; /** Print being laid on the wall: where each plate field starts, for its lysmål. */ fields?: number[]; /** Each field's module c/c, m (a whole one where none). */ fieldCc?: number[]; /** Shelves on the face, a height chain per felt. */ shelves?: ShelfChain[]; /** How far a raise goes over the wall's top, m (V18): the height chain goes on to it. */ above?: number }) {
+export function ElevationDims({ w, s, name, L, H, posts, items, leaders, top, width, right, sc, fields, fieldCc, shelves = [], above = 0, headroom = above }: { w: Wall; s: FaceSide; name: string; L: number; H: number; /** Post centres along the wall, when another wall split a module (V10); else every module's start. */ posts?: number[]; items: ElevationItem[]; leaders: Leader[]; top: number; width: number; /** The drawing's right edge, x: a leader text that would run past it goes to the left of its line. */ right: number; sc: PlanScale; /** Print being laid on the wall: where each plate field starts, for its lysmål. */ fields?: number[]; /** Each field's module c/c, m (a whole one where none). */ fieldCc?: number[]; /** Shelves on the face, a height chain per felt. */ shelves?: ShelfChain[]; /** How far a raise goes over the wall's top, m (V18): the height chain goes on to it. */ above?: number; /** Room drawn over the wall's top, m (the raise and its wire marks): the leaders over the wall stand over it. */ headroom?: number }) {
   const px = (n: number) => sizePx(sc, n)
   const head = elevationHeading(w, s, name)
   // Post centres, as seen from the face: whole metres from the wall's start, a shorter last module (Byggeregel V1),
@@ -39,8 +39,11 @@ export function ElevationDims({ w, s, name, L, H, posts, items, leaders, top, wi
   const lm = lysmal(rules, fields ?? [], H, fieldCc)
   const uprights = items.find((i) => i.uprights)?.uprights
   const rowY = -px(NEAR)
-  // Over the chain over a measured item, or straight over the wall
-  const textY = (l: Leader) => (mode === 'item' ? rowY - px(NEAR + 14) : -px(NEAR)) - l.level * px(LEADER_LINE)
+  // Over the chain over a measured item, or straight over the wall (over a raise and its wire marks); in a raised
+  // wall's lower felt, in its own row just under the middle rail (V20)
+  const railFoot = rules.wall.profile.top
+  const textY = (l: Leader) =>
+    l.under ? railFoot + px(4 + LEADER_FONT) + l.level * px(LEADER_LINE) : (mode === 'item' ? rowY - px(NEAR + 14) : -headroom - px(NEAR)) - l.level * px(LEADER_LINE)
   const mono = { font: `500 ${px(LEADER_FONT)}px var(--font-numeric)`, fill: INK_MUTED }
   // The heading as wide as the drawing allows: the ends alone on a narrow wall (the drawer's title names the wall)
   const ends = `← ${head.left}\u00a0\u00a0\u00a0${head.right} →`
@@ -93,9 +96,10 @@ export function ElevationDims({ w, s, name, L, H, posts, items, leaders, top, wi
         </g>
       ))}
 
-      {/* Names: the textile frames on the wall when the wall is chosen */}
+      {/* Names: the textile frames, decals and prints on the wall when the wall is chosen */}
       {leaders.map((l, i) => {
-        const y = textY(l)
+        // A thing reaching up to the middle rail has no room over it in its felt: the text beside its dot
+        const y = l.under ? Math.min(textY(l), l.y + px(3.5)) : textY(l)
         // To the left of its line when it would run past the drawing's right edge
         const flip = l.x + px(6 + textPx(l.text, LEADER_FONT)) > right
         const d = flip ? -1 : 1
