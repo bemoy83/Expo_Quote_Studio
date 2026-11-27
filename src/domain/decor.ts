@@ -2,7 +2,7 @@
 // wall panel (felt) between two posts and between top and bottom profile, never on an opening and never behind a
 // textile on the same face. Faces and felts: domain/faces.ts; textile walls: domain/textile/inFrame.ts (this file
 // imports from there, never the other way).
-import type { Rules } from '../rules/rules';
+import { wallHeight, type Rules } from '../rules/rules';
 import { faceNormal, faces, feltCc, wallFelt, wallUpperFelt, feltWall, sideOf, type FaceSide } from './faces';
 import { pointAlong, moduleAt, moduleCount, moduleStart, wallLength } from './grid';
 import { nextId } from './ids';
@@ -307,14 +307,21 @@ export function dropMotif(
   ratio: number,
   y?: number,
 ): { v: Variant; textileId?: string; foilId?: string } | { error: string } {
-  const tx = textileAt(v, wallId, s, t);
+  // Over the middle rail of a raised wall: the upper felt (V20), over every textile frame and door
+  const upper = aboveRail(v, rules, wallId, y);
+  const tx = upper ? undefined : textileAt(v, wallId, s, t);
   if (tx) return { v: updateTextile(v, rules, tx.id, { motif }), textileId: tx.id };
   const w = v.walls.find((x) => x.id === wallId);
   if (!w) return { error: 'Ingen vegg her' };
   const module = moduleAt(w, clamp(t, 0, wallLength(w)));
-  const r = addFoil(v, rules, wallId, module, s, motif, ratio);
+  const r = addFoil(v, rules, wallId, module, s, motif, ratio, upper);
   if ('error' in r) return r;
   const f = r.v.foils.find((x) => x.id === r.id)!;
   if (y === undefined || f.full) return { v: r.v, foilId: r.id };
   return { v: updateFoil(r.v, rules, r.id, { x: t - wallFelt(v, rules, wallId, module).center, y }, ratio), foilId: r.id };
+}
+
+/** Whether height `y` (m from the floor) on wall `wallId` is over its middle rail, on its upper felts (V20). */
+export function aboveRail(v: Pick<Variant, 'walls'>, rules: Rules, wallId: string, y: number | undefined): boolean {
+  return y !== undefined && !!v.walls.find((x) => x.id === wallId)?.raise && y >= wallHeight(rules);
 }

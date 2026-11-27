@@ -1,14 +1,14 @@
 // Drag and drop from the Profilering panel onto a wall, in the plan or the 3D view. What is being dragged is kept
 // here: browsers hide drag data until the drop, but the views need it while hovering to show where it would land.
 import type { DragEvent } from 'react'
-import { dropMotif, foilBlocked, updateFoil } from '../domain/decor'
+import { aboveRail, dropMotif, foilBlocked, updateFoil } from '../domain/decor'
 import type { Variant } from '../domain/types'
 import { moduleAt } from '../domain/grid'
 import { type PlanSelection } from './plan/selection'
 import { fmt } from './format'
 import { rules } from './env'
 import { addTextile, freeSpans, fullTextileHeight, textileAt, textileBox } from '../domain/textile/inFrame'
-import { type FaceSide, wallFelt } from '../domain/faces'
+import { type FaceSide, wallFelt, wallUpperFelt } from '../domain/faces'
 import { wallTextiles } from '../domain/textile/mounts'
 
 /** A textile frame (InFrame) or a motif from the graphics library. */
@@ -76,8 +76,8 @@ export function dropSpot(v: Variant, d: DecorDrag, h: FaceTarget): DropSpot | nu
     const b = textileBox(tx!, rules)
     return { on: 'textile', from: tx!.from, to: tx!.from + tx!.width, y0: b.bottom, y1: b.bottom + b.height, error }
   }
-  const onFelt = (module: number, error?: string): DropSpot => {
-    const f = wallFelt(v, rules, h.wallId, module)
+  const onFelt = (module: number, error?: string, upper = false): DropSpot => {
+    const f = (upper && wallUpperFelt(v, rules, h.wallId, module)) || wallFelt(v, rules, h.wallId, module)
     return { on: 'wall', from: f.a, to: f.b, y0: f.y0, y1: f.y1, error }
   }
   const w = v.walls.find((x) => x.id === h.wallId)
@@ -88,7 +88,9 @@ export function dropSpot(v: Variant, d: DecorDrag, h: FaceTarget): DropSpot | nu
     return sp ? { on: 'textile', from: sp[0], to: sp[1], y0: 0, y1: fullTextileHeight(rules) } : onFelt(module, 'Ingen ledig veggflate her')
   }
   const foil = h.foilId && v.foils.find((x) => x.id === h.foilId)
-  if (foil) return onFelt(foil.module)
+  if (foil) return onFelt(foil.module, undefined, !!foil.upper)
+  // Over the middle rail of a raised wall: its upper felt (V20)
+  if (aboveRail(v, rules, h.wallId, h.y)) return onFelt(module, foilBlocked(v, rules, h.wallId, module, h.s, false, true) ?? undefined, true)
   if (tx) return onTextile()
   return onFelt(module, foilBlocked(v, rules, h.wallId, module, h.s) ?? undefined)
 }

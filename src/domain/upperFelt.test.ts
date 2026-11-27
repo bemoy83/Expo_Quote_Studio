@@ -15,7 +15,7 @@ import { carryDecor, plateColours } from './plateDecor';
 import { setWallRaise } from './raise';
 import type { Variant } from './types';
 import { createVariant } from './variant';
-import { addFoil, fitDecor, foilFelt } from './decor';
+import { addFoil, dropMotif, fitDecor, foilFelt } from './decor';
 import { hiddenPlates, printPlate, printWall } from './print';
 import { foilAreas } from '../calc/lines/decor';
 import { builtModules } from './walls';
@@ -142,5 +142,19 @@ describe('V20 print and decals on the upper felt', () => {
     const f = ups(v)[0]!;
     expect(foilAreas({ v, rules: RULES } as Parameters<typeof foilAreas>[0]).full).toBeCloseTo(f.width * f.height);
   });
-});
 
+  it('a motif dropped over the middle rail becomes a decal on the upper felt, where it was dropped', () => {
+    const r = dropMotif(high, RULES, wall.id, 1, 1.5, 'a', 1, 2.95);
+    if ('error' in r) throw new Error(r.error);
+    const d = r.v.foils.find((f) => f.id === r.foilId)!;
+    expect(d).toMatchObject({ module: 1, upper: true, full: false });
+    expect(d.y).toBeCloseTo(2.95);
+    // Under the rail it is a decal on the plate, and on a wall not raised always on the plate
+    const low = dropMotif(high, RULES, wall.id, 1, 1.5, 'a', 1, 1.5);
+    if ('error' in low) throw new Error(low.error);
+    expect(low.v.foils[0]!.upper).toBeUndefined();
+    const flat = dropMotif(island, RULES, wall.id, 1, 1.5, 'a', 1, 3.2);
+    if ('error' in flat) throw new Error(flat.error);
+    expect(flat.v.foils[0]!.upper).toBeUndefined();
+  });
+});
