@@ -195,7 +195,8 @@ const products: Product[] = [
   // Profilering. Textile walls: the frame (rental) and the textile (sale, the customer can bring it back) are two lines
   // in the kalkyle and one on the quote (Bjørn 31.10.2026). One frame whatever it is mounted on, on a wall with 520
   // or on foot plates (Bjørn 7.11.2026), per piece by size (price per m² of B × H); textile per m² of visible face.
-  one('8000', 'Tekstilramme, leie', 'system', 'm²', 'prof.tekstil', 450, { dim: 'på vegg eller fotplater', pricing: 'sum', short: 'Tekstil' }),
+  // Per frame by size B × H, priced by the cost engine from what it is built of, never per m² (Bjørn 27.11.2026)
+  one('8000', 'Tekstilramme, leie', 'system', 'stk', 'prof.tekstil', 0, { dim: 'per ramme, B × H, på vegg eller fotplater', pricing: 'sum', engine: true, short: 'Tekstil' }),
   one('8040', 'Tekstil med trykk', 'system', 'm²', 'prof.tekstil', 650, { dim: 'silikonkant, montert', pricing: 'sum' }),
   one('8041', 'Tekstil hvit', 'system', 'm²', 'prof.tekstil', 420, { dim: 'uten grafikk, montert', pricing: 'sum' }),
   one('8042', 'Montering av kundens tekstil', 'system', 'm²', 'prof.tekstil', 170, { dim: 'duk i samme størrelse', pricing: 'sum' }),

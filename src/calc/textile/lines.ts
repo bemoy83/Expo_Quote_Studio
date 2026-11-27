@@ -77,7 +77,8 @@ export function frameUses(p: FrameParts): Use[] {
 
 /**
  * Textile frames per piece by size B × H and mounting. The frame is the same either way (its parts,
- * calc/textile/common.ts); on foot plates two frames that meet share a 92LTX (half to each). Fast price: m² rate × B × H.
+ * calc/textile/common.ts); on foot plates two frames that meet share a 92LTX (half to each). Priced by the cost engine
+ * only: a frame has no m² price (Bjørn 27.11.2026).
  */
 /** A frame's half of each 92LTX it shares with the run on the other side of a corner, m. */
 const postShare = (corners: number, H: number) => ({ id: ITEM.cornerPostM, qty: (corners * postHeight(H)) / 2 / 1000 });
@@ -105,10 +106,9 @@ export function frameLines(c: CalcContext): CalcLine[] {
     const { W, H, mount } = fs[0];
     const uses = new Map<string, number>();
     for (const u of fs.flatMap((f) => f.uses)) if (u.qty) uses.set(u.id, (uses.get(u.id) ?? 0) + u.qty);
-    const fast = Math.round((textile?.variant.price ?? 0) * ((W * H) / 1e6));
     const name = `${textile ? displayName(textile) : sys.textile}, ${W} × ${H} mm, ${MOUNT_NAME[mount]}`;
-    const line = c.line(sys.textile, fs.length, { ...c.built, quote: quoteOf(sizeOf(W, H), true) }, [...uses].map(([id, qty]) => ({ id, qty })), fast);
-    return { ...line, name, unit: 'stk' as const, drawn: [...new Set(fs.map((f) => f.textileId))] };
+    const line = c.line(sys.textile, fs.length, { ...c.built, quote: quoteOf(sizeOf(W, H), true) }, [...uses].map(([id, qty]) => ({ id, qty })));
+    return { ...line, name, drawn: [...new Set(fs.map((f) => f.textileId))] };
   });
 }
 

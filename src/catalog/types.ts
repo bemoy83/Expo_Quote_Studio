@@ -66,6 +66,9 @@ export interface Product {
   dim?: string;
   /** Level 2: an article the montør picks, part of a level 1 product. Never a line on the quote. */
   article?: true;
+  /** Priced by the cost engine only, from what is drawn (a textile frame by B × H): no list price, and none to fall back
+   *  on (Bjørn 27.11.2026: frames are never priced or shown per m²). */
+  engine?: true;
   /** Sum: priced as the sum of the articles actually built (pricing/model.ts). Otherwise the variant's own price. */
   pricing?: Strategy;
   /** Minutes per unit and handling step, from the OMS. For fast products; sum products take it from their items. */
