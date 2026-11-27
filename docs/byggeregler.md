@@ -947,5 +947,53 @@ K22 standardvarene og K23 disker over en fotplate.
 
 ## Ikke bygget ennå
 
-Bestemt eller nevnt, men ikke i koden: farge, print og dekal per øvre felt (V20), forslag om å heve veggen når tekstil tegnes over 2540 (kommer med høye tekstilvegger: tekstil på vegg kan ikke gå over 2540 i dag), velge type hjørne der en frittstående tekstilvegg møter en ramme på vegg (Bjørn 20.11.2026: 92LTX er bedre enn å stoppe mot rammen etter X11, fordi alle profilkanalene for tekstil er tilgjengelige, mens en utenpåliggende ramme sperrer kanalene og må monteres etter tekstilen), flere høyder på frittstående tekstilvegg (over 2540 tas i egen utredning om høye vegger), tekstildør
-med overstykke, høye tekstilvegger, heng (H6), og endring av standvegg med nabogodkjenning. Samba-duk foran LED (appen tegner ikke LED ennå).
+Bestemt eller nevnt, men ikke i koden. Regelnummeret viser hvor det hører hjemme. Når et punkt bygges, flyttes det inn
+i regelen og strykes her.
+
+**Vegg og hevet vegg**
+- V20: egen farge, print og dekal per øvre felt.
+- V18: heve et roms sider, trinn i én vegg i skuffen (motoren regner høyden per modul), og høy vegg bygget fra bunnen
+  (92 i bunn, uten fot, topp 3040).
+- V6: endre standvegg med nabogodkjenning.
+- V11: andre mål og diagonaler på standarealet.
+- V15: print, dekaler og diskfarger inn i dekorregisteret (trinn B1b og B2), venter på høydeadresse fra hevet vegg.
+- Veggmål på arbeidsordren (`wallMeasures`) er slått av (Bjørn 14.11.2026).
+- Veggskuffen: velge flere felt samtidig, og velge felt ved klikk i plan eller 3D (parkert, se vegger.md).
+- Snekret vegg som produkt.
+
+**Tekstil**
+- Forslag om å heve veggen når tekstil tegnes over 2540 (kommer med høye tekstilvegger: tekstil på vegg kan ikke gå
+  over 2540 i dag).
+- X5, M5: høye tekstilvegger og flere høyder på frittstående (låst til 2540), med vaier og gjennomgående øyebolt.
+- X11: velge type hjørne der en frittstående tekstilvegg møter en ramme på vegg (Bjørn 20.11.2026: 92LTX er bedre enn å
+  stoppe mot rammen, fordi alle profilkanalene for tekstil er tilgjengelige, mens en utenpåliggende ramme sperrer
+  kanalene og må monteres etter tekstilen).
+- X7: hjørne mellom rammer med ulik høyde (bare like høyder kobles, foreløpig), og tekstil i T (hoppet over for nå).
+- X9: forslag om standardlengde, pris for kapp og andre standardlengder. X10: pris for kapp når rammen kortes.
+- Tekstildør med overstykke, «Kun ramme» (ramme uten duk), og LED med Samba-duk foran (appen tegner ikke LED ennå).
+
+**Disk og podie**
+- K17: lås på skyvedør.
+- K9, K17, K19: tidene er plassholdere til de er målt.
+
+**Hylle og heng**
+- H6: heng (egen pensel, bare mellom stolper med ledig kanal).
+- H9: felt med hjørne i begge ender (1 m mellom to vegger).
+- H11: ensom hjørneplate foran på 91F i tvillingskinnen når et møtende par låser den (Bjørn vurderer).
+
+**Takdrager og støtte**
+- Hevede takdragere på hevet vegg (Bjørn 27.11.2026: senere).
+- F2: enveis fotplater om det trengs.
+
+**Kost og pris**
+- Kostregel 2 (spesialkapp) finnes i `model.ts`, men kalkylen bruker den ikke.
+- Plassholder-art.nr: øyebolt M5 (S9), korte moduler 6121–6123 (V1), forhøyning 6124 (V22).
+- Kuber (frittstående eller hengende fra taket), ikke et veggprodukt.
+- Fra OMS senere: standtype og kjøpt areal, arrangørens farge, lagerstatus, kunderabatter, ramme og trykk solgt hver
+  for seg.
+
+**Verktøy og visning**
+- Shift med trykk midt i draget omarbeides likt for alle penner.
+- Tøm i 3D.
+- Pillens hode er skjult under 820 px bredde.
+- Veggpillen på motsatt side av modulkjeden (A5 i arbeidstegning.md), og `Pos.` i kalkylepanelet.
