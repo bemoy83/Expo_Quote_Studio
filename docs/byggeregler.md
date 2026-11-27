@@ -185,9 +185,10 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 - **S8 Stolpe på plate.** En stolpe over en fotplate plukkes uten justeringsfot («Stolpe 94 uten fot»). Står platen
   under arrangørens stolpe, skrus foten ut på stedet.
   *Bjørn 1.11.2026 · kode `src/foga/engine.ts` · test `src/calc/wallSupports.test.ts`*
-- **S9 Vaier på hevet vegg.** En hevet vegg (V18) holdes av vaier fra hallens tak i stedet for fotplater. Uten takdrager
-  får alle hevede vegger vaier; med takdrager bare vegger over 3080 mm (`wall.raise.wireAbove`), fordi heving av drager
-  ikke følger veggen. En vegg til 3040 eller 3080 teller som 3 m (Bjørn 27.11.2026). Vaierne fordeles over hele veggen etter samme regel som fotplatene (S3, S4), men takdrager og
+- **S9 Vaier på hevet vegg.** En hevet vegg (V18) holdes av vaier fra hallens tak i stedet for fotplater. En vegg som er
+  koblet direkte til en takdrager (drageren ender på, ligger langs eller krysser en av stolpene) får vaier bare over
+  3080 mm (`wall.raise.wireAbove`): en vegg til 3040 eller 3080 teller som 3 m. Alle andre hevede vegger får vaier, også
+  en innervegg uten tilknytning til takdrager på en stand som har takdrager (Bjørn 27.11.2026). Vaierne fordeles over hele veggen etter samme regel som fotplatene (S3, S4), men takdrager og
   fotplater teller ikke som støtte, bare et hjørne der begge veggene er hevet. En stolpe med vaier får ingen fotplate.
   Hver vaier er en V fra veggtoppen til to punkter i taket, én på hver side. Tilbudet har én linje 4300 Vaieroppheng
   (1570 kr per stk, «Støttevaier for vegg»), alltid utstillerens. På oppriss er vaieren en sirkel med kryss over

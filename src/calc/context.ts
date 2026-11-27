@@ -205,8 +205,8 @@ export function calcContext(v: Variant, rules: Rules, catalog: Catalog, standWal
   // frame. The plates are the customer's choice (no beams), so the exhibitor's even under the organiser's walls.
   // A drawn takdrager's own posts stand on plates too, across the beam, unless a beam drawn the other way meets them.
   // A raised wall's wires take the place of its foot plates (Byggeregel S9)
-  const wires = wallWires(mods, all.segments.length > 0, rules);
-  const wiredPosts = wallPoints(wiredModules(mods, all.segments.length > 0, rules));
+  const wires = wallWires(mods, all.segments, rules);
+  const wiredPosts = wallPoints(wiredModules(mods, all.segments, rules));
   const freeWallFeet = freeWallSupports(mods, all, standard, kindOf).filter((f) => !wiredPosts.has(pointKey(f.at)));
   const wallFeet = [...freeWallFeet, ...inner.feet];
   const prod = production(v, rules, '');

@@ -37,6 +37,16 @@ describe('S9 where the wires go', () => {
     expect(wireLine(raise(corner, [back], 1040))!.qty).toBe(2);
   });
 
+  it('takdrager count only for a wall connected straight to one: a free inner wall gets wires anyway', () => {
+    const inner = paintWalls(corner, [1, 1], [2, 1]);
+    const id = inner.walls.find((w) => w.from[1] === 1 && w.to[1] === 1)!.id;
+    const res = run(raise(inner, [id], 540));
+    expect(res.beams.segments.length).toBeGreaterThan(0);
+    expect(wireLine(raise(inner, [id], 540))!.qty).toBe(2);
+    // The back wall, where the takdrager end, still needs none at 3080
+    expect(wireLine(raise(inner, [back], 540))).toBeUndefined();
+  });
+
   it('a corner holds only when both walls are raised; takdrager never do', () => {
     // Back alone: 4 m free at both ends for the raise, two wires; both raised: the corner holds each
     expect(wireLine(raise(corner, [back, left], 1040))!.qty).toBe(2);
