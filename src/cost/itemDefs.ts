@@ -40,6 +40,12 @@ export const ITEM = {
   braceM: 'stag-90-m',
   bracePiece: 'stag-90-stk',
   frameProfileM: '43TX',
+  /** 43TX cut for the job (Byggeregel X9, cost rule 2), per metre, and per cut. */
+  frameCutM: '43TX-kapp',
+  frameCut: 'kapp-43TX',
+  /** A frame with any 43TX cut for it (Byggeregel X9): ordering, cutting, mitring and marking it as a special, once
+   *  per frame (Bjørn 27.11.2026: the incentive to use standard lengths). */
+  frameCutSetup: 'kapptillegg-ramme',
   cornerPostM: '92LTX',
   corner: '617',
   splice: '609',
@@ -176,6 +182,9 @@ export const ITEM_DEFS: readonly ItemDef[] = [
   def(ITEM.bracePiece, 'Støttestag 90, kobling og håndtering per stk', 'stk'),
   // Level 3 picked directly (textile walls have no article)
   def(ITEM.frameProfileM, '43TX, per meter', 'm'),
+  def(ITEM.frameCutM, '43TX kappet til mål, per meter', 'm'),
+  def(ITEM.frameCut, 'Kapp av 43TX, per kapp', 'stk'),
+  def(ITEM.frameCutSetup, 'Kapptillegg per kappet ramme: bestille, kappe, gjære og merke', 'stk'),
   def(ITEM.cornerPostM, '92LTX hjørnestolpe, per meter', 'm'),
   def(ITEM.corner, '617 kobling i kanal (hjørner)', 'stk'),
   def(ITEM.splice, '609 skjøtekobling', 'stk'),
@@ -273,6 +282,8 @@ export const EXAMPLE_TIMES: Readonly<Record<string, Time>> = {
   [ITEM.beamLift]: { ...pvt(0.08, 0.08, 0.08), ...onSite(0.45, 0.3) },
   [ITEM.beamHalf]: { ...pvt(0.08, 0.08, 0.08), ...onSite(0.45, 0.3) },
   [ITEM.frame]: pvt(3, 2, 2),
+  // Placeholder until Bjørn has timed a special frame in the workshop
+  [ITEM.frameCutSetup]: { forhåndsmontering: 30 },
   [ITEM.frameCoupling]: onSite(2, 1),
   [ITEM.textileEdge]: onSite(4, 2),
   // Bjørn 10.11.2026: direct time per shelf 1,5 min up and 1 min down (also in corners); picking 10 min for the product
@@ -339,6 +350,10 @@ export const EXAMPLE_RECIPES: Readonly<Record<string, ItemRecipe>> = {
   [ITEM.beamHalf]: { parts: [['92', 0.08]], dg: 'utleie' },
   // Textile walls (kostmotor, tekstil): the frame parts rented out, the textile bought for the job, the work
   [ITEM.frameProfileM]: { parts: [['43TX', 1]], dg: 'utleie' },
+  // The cut piece is mostly used up on the job: the DG of what is sold, so a cut costs more by its cut, not threefold
+  [ITEM.frameCutM]: { cut: [['43TX', 1]], dg: 'salg' },
+  [ITEM.frameCut]: { cuts: 1, dg: 'arbeid' },
+  [ITEM.frameCutSetup]: work,
   [ITEM.cornerPostM]: { parts: [['92LTX', 1]], dg: 'utleie' },
   [ITEM.corner]: { parts: [['617', 1]], dg: 'utleie' },
   [ITEM.splice]: { parts: [['609', 1]], dg: 'utleie' },

@@ -216,6 +216,10 @@ export function CatalogPage({ onToast, onBasis }: { onToast: Toast; onBasis: () 
                         <span className="art-note" title="Det montøren plukker. Kunden kjøper vareslaget over, så artikkelen har ingen pris.">
                           Artikkel · plukkes, selges ikke
                         </span>
+                      ) : r.engine ? (
+                        <span className="art-note" title="Kostmotoren setter prisen per stk av det som er tegnet og bygget. Ingen listepris.">
+                          Prises av kostmotoren · per stk
+                        </span>
                       ) : (
                         <>
                           <span className="price-cell" title={r.sum ? 'Sum av artikler. Prisen her brukes bare hvis en artikkelpris mangler.' : undefined}>

@@ -11,6 +11,7 @@ import type { Use } from '../../pricing/model';
 import { count, type CalcContext } from '../context';
 import type { CalcLine } from '../types';
 import { postHeight, type FrameMount } from './common';
+import { cutPieces } from './standard';
 
 /** One quote line per frame size: frame and textile of that size, with its own price (Bjørn 7.11.2026). */
 const quoteOf = (size: string, lead: boolean) => ({ key: `tekstil:${size}`, name: `Tekstilvegg ${size}`, lead });
@@ -53,11 +54,20 @@ interface FrameBuild {
   uses: Use[];
 }
 
-/** A frame's parts as price items: the frame profile per metre, the loose parts, braces per metre and per piece, a
+/** A frame's parts as price items: the frame profile per metre (standard lengths rented, other lengths cut, X9), the loose parts, braces per metre and per piece, a
  *  mounting per coupling and the handling of the frame. */
-function frameUses(p: FrameParts): Use[] {
+export function frameUses(p: FrameParts): Use[] {
+  // Byggeregel X9: standard lengths are rented as metres of 43TX, any other length is cut for the job (cost rule 2)
+  // and a splice piece is always cut
+  const cutAt = new Map(cutPieces(p));
+  const cut = p.cuts.map(([l]) => [l, cutAt.get(l) ?? 0] as const);
+  const std = p.cuts.map(([l, q], i) => [l, q - cut[i][1]] as const);
+  const lm = (xs: readonly (readonly [number, number])[]) => xs.reduce((a, [l, q]) => a + l * q, 0) / 1000;
   return [
-    { id: ITEM.frameProfileM, qty: p.cuts.reduce((a, [l, q]) => a + l * q, 0) / 1000 },
+    { id: ITEM.frameProfileM, qty: lm(std) },
+    { id: ITEM.frameCutM, qty: lm(cut) },
+    { id: ITEM.frameCut, qty: cut.reduce((a, [, q]) => a + q, 0) },
+    { id: ITEM.frameCutSetup, qty: cut.some(([, q]) => q > 0) ? 1 : 0 },
     ...p.loose.map(([code, qty]) => ({ id: LOOSE_ITEM[code] ?? code, qty })),
     { id: ITEM.braceM, qty: (p.braces.qty * p.braces.length) / 1000 },
     { id: ITEM.bracePiece, qty: p.braces.qty },
@@ -68,7 +78,8 @@ function frameUses(p: FrameParts): Use[] {
 
 /**
  * Textile frames per piece by size B × H and mounting. The frame is the same either way (its parts,
- * calc/textile/common.ts); on foot plates two frames that meet share a 92LTX (half to each). Fast price: m² rate × B × H.
+ * calc/textile/common.ts); on foot plates two frames that meet share a 92LTX (half to each). Priced by the cost engine
+ * only: a frame has no m² price (Bjørn 27.11.2026).
  */
 /** A frame's half of each 92LTX it shares with the run on the other side of a corner, m. */
 const postShare = (corners: number, H: number) => ({ id: ITEM.cornerPostM, qty: (corners * postHeight(H)) / 2 / 1000 });
@@ -96,10 +107,9 @@ export function frameLines(c: CalcContext): CalcLine[] {
     const { W, H, mount } = fs[0];
     const uses = new Map<string, number>();
     for (const u of fs.flatMap((f) => f.uses)) if (u.qty) uses.set(u.id, (uses.get(u.id) ?? 0) + u.qty);
-    const fast = Math.round((textile?.variant.price ?? 0) * ((W * H) / 1e6));
     const name = `${textile ? displayName(textile) : sys.textile}, ${W} × ${H} mm, ${MOUNT_NAME[mount]}`;
-    const line = c.line(sys.textile, fs.length, { ...c.built, quote: quoteOf(sizeOf(W, H), true) }, [...uses].map(([id, qty]) => ({ id, qty })), fast);
-    return { ...line, name, unit: 'stk' as const, drawn: [...new Set(fs.map((f) => f.textileId))] };
+    const line = c.line(sys.textile, fs.length, { ...c.built, quote: quoteOf(sizeOf(W, H), true) }, [...uses].map(([id, qty]) => ({ id, qty })));
+    return { ...line, name, drawn: [...new Set(fs.map((f) => f.textileId))] };
   });
 }
 

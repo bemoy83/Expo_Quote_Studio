@@ -434,8 +434,8 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   - Skinnene stopper der 92LTX-ens ben slutter: benet regnes fra ytterhjørnet, en halv rammedybde utenfor senterlinjen
     (37 mm fra hjørnepunktet med dagens mål). Duken på utsiden av hjørnet er en halv rammedybde lengre og på innsiden
     like mye kortere per hjørne. Målene regnes av profilene, aldri som faste tall.
-  - En strek i forlengelsen blir samme vegg. 43TX er gjæret i rammens hjørner; mot en 92LTX og i en skinneskjøt (X6) er
-    enden butt. Plukklisten på arbeidsordren sier hvilke lengder som har butte ender.
+  - En strek i forlengelsen blir samme vegg. 43TX er gjæret i rammens hjørner; mot en 92LTX er
+    enden butt; en skinneskjøt er gjæret (X9, Bjørn 27.11.2026). Plukklisten på arbeidsordren sier hvilke lengder som har butte ender.
   *Bjørn 31.10.2026, 6.11.2026, 8.11.2026 og 21.11.2026 · `RECIPES.textileFrame` · kode `src/domain/textile/corners.ts`, `src/domain/textile/mounts.ts` (`coupleCorners`), `src/calc/textile/free.ts` · test `src/calc/freeFrames.test.ts`, `src/calc/textile/corners.test.ts`*
 - **X8 Føtter og stag.** Fotplate 740 under bunnskinnen etter S3 og S4; en 92LTX teller som støtte. Stagene er rammens
   egne (som X2) og står uavhengig av føttene: en fotplate har ikke stag.
@@ -444,14 +444,29 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   seksjoner. Ellers jevnt fordelt, så ingen stående (rammeende, 92LTX, stag) står mer enn 2000 fra hverandre.
   *Bjørn 1.11.2026, 3.11.2026 og 7.11.2026 · `rules.textile.inFrame.stag`, `RECIPES.textileFrame.spliceBrace` · `RECIPES.textileFrame.feet.support` · kode `src/calc/textile/free.ts`, `src/calc/supports.ts` · test `src/calc/freeFrames.test.ts`*
 
-- **X9 Standardlengder (veiledende).** Fordi systemveggene på messer er standardisert, har 43TX standardlengder som
-  passer på veggene: cc − 30, det vil si 970, 1970, 2970 og så videre (X2). I tillegg finnes noen andre, som 470, og
-  lengder for rammer som henger utenpå én enkelt vegg, med bruttomål over cc (for eksempel 1040). Standardlengder ligger
-  på lager og plukkes bare; andre lengder må kappes og skal koste mer. En skjøtt lengde er som regel én standardlengde
-  pluss ett kapp. Rammer på systemvegg bruker standardlengdene (X2). Frittstående tegnes fritt som før (X5), men appen
-  kan foreslå en standardlengde for å spare penger. Mot en 92LTX kappes skinnen fortsatt (X7), også på systemvegg, til
-  den kanskje får egen standard (Bjørn 21.11.2026). Standard høyde er 2540; rammer kan skjøtes til om lag 5 m høyde.
-  *Bjørn 6.11.2026 · ikke bygget: forslag om standardlengde, pris for kapp, andre standardlengder · kode `src/calc/textile/inFrame.ts` · test `src/calc/fabric.test.ts`*
+- **X9 Standardlengder.** Fordi systemveggene på messer er standardisert, har 43TX standardlengder som passer på
+  veggene: cc − 30, det vil si 970, 1970, 2970, 3970 og 4970 (X2). I tillegg 470, bruttomålene 1040, 2040 og 3040 for
+  rammer som henger utenpå én enkelt vegg, og full høyde 2540 for stendere. Lengdene ligger som data
+  (`RECIPES.textileFrame.standard`). Standardlengder ligger på lager, plukkes bare og er leid ut per løpemeter som i dag
+  (kostregel 1, ingen egen pris for en hel lengde). Alle andre lengder kappes til jobben og koster mer (kostregel 2):
+  materialet per meter med svinn og gjenbruk, i DG-gruppen for salg fordi biten stort sett brukes opp, kappetiden per
+  kapp, og et fast kapptillegg per kappet ramme for å bestille, kappe, gjære og merke den (Bjørn 27.11.2026: gir
+  insentivet til standardlengder; 30 min i forhåndsmontering er plassholder). Prisen per tekstilstørrelse stiger, uten egen linje på tilbudet, og «Slik er det regnet» viser kappet. En skinne
+  over 5 m skjøtes som nærmeste standardlengde og én skjøtebit, gjæret motsatt så den skjøtes på den ferdig gjærede
+  lengden (Bjørn 27.11.2026). Skjøtebiten er alltid kapp, også når den har en standardlengdes mål, fordi to
+  standardlengder ikke kan skjøtes på hverandre. Skjøten er gjæret, så standardlengder kan brukes i en skjøtt
+  skinne; bare enden mot en 92LTX er butt. Standardlengden er den lengste som lar skjøtebiten være minst 50 mm uten
+  gjæringene (`minSplice`, Bjørn 27.11.2026). En skjøtebit for kort for 609 skjøtes med 604, én på hver side i de
+  utvendige kanalene (`splice.threadMin`, 300 mm er plassholder). Lengre enn ett slikt par: like par, standard og
+  skjøtebit annenhver. Skjøten og stagene ved den (X8) følger. Rammer på
+  systemvegg bruker standardlengdene (X2). Frittstående tegnes fritt som før (X5), og en lengde utenfor listen blir kapp.
+  Derfor sier appen fra (Bjørn 27.11.2026): målet under tegning og draging av en frittstående ramme sier «standard»
+  eller «kapp», og pillen på en kappet ramme sier «kapp» og tilbyr nærmeste standardlengde på hver side, med hva det
+  gjør med tilbudet. Ett trykk flytter den frie enden; enden som stopper mot en ramme på vegg (X11), står. Bare der
+  rammen kan bli standard: én skinne, uten 92LTX-hjørne.
+  Mot en 92LTX kappes skinnen fortsatt (X7), også på systemvegg, til den kanskje får egen standard (Bjørn 21.11.2026);
+  hjørnet sparer samtidig to stendere. Standard høyde er 2540; rammer kan skjøtes til om lag 5 m høyde.
+  *Bjørn 6.11.2026 og 27.11.2026 · `RECIPES.textileFrame.standard`, `ITEM.frameCutM`, `ITEM.frameCut`, `ITEM.frameCutSetup` · kode `src/calc/textile/common.ts`, `src/calc/textile/lines.ts`, `src/calc/textile/standard.ts`, `src/cost/items.ts`, `src/ui/plan/pill/objects.tsx` · test `src/calc/freeFrames.test.ts`, `src/calc/textile/cutLengths.test.ts`*
 
 - **X10 Rammer overlapper aldri.** Det regelen hindrer, er at to rammer tar samme plass (F1). Hver ramme har et
   volum i plan: langs veggen rammens egen bredde (X2), ut fra veggen rammedybden fra stolpens flate (inntil stolpen,
@@ -466,7 +481,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   så langt de ellers ville overlappet. Går det forbi veggens ende eller en åpning, er det innenfor toleransen. En
   flyttet ramme går forbi stolpen, så en takdrager som hviler der heves (T13). Vil ikke kunden ha det, kan rammemålet
   settes kortere i veggskuffen; da blir det en kapplengde (X9).
-  *Bjørn 6.11.2026 og 21.11.2026 («det som skal unngås er overlapp av rammer») · ikke bygget: pris for kapp · `rules.textile.depth`, `rules.textile.inFrame` · kode `src/calc/textile/placement.ts` · test `src/calc/textile/placement.test.ts`*
+  *Bjørn 6.11.2026 og 21.11.2026 («det som skal unngås er overlapp av rammer») · `rules.textile.depth`, `rules.textile.inFrame` · kode `src/calc/textile/placement.ts` · test `src/calc/textile/placement.test.ts`*
 - **X11 Frittstående mot ramme.** En frittstående tekstilvegg som ender mot midten av en ramme på systemvegg (en T),
   stopper mot rammens flate (60 mm fra veggens senterlinje) og står ikke inntil systemveggen der. Den blir like mye
   kortere. Det er F1 for en ramme på vegg; uten ramme stopper den mot stolpene. Møter den en rammes ende i rett vinkel,
@@ -947,5 +962,51 @@ K22 standardvarene og K23 disker over en fotplate.
 
 ## Ikke bygget ennå
 
-Bestemt eller nevnt, men ikke i koden: farge, print og dekal per øvre felt (V20), forslag om å heve veggen når tekstil tegnes over 2540 (kommer med høye tekstilvegger: tekstil på vegg kan ikke gå over 2540 i dag), velge type hjørne der en frittstående tekstilvegg møter en ramme på vegg (Bjørn 20.11.2026: 92LTX er bedre enn å stoppe mot rammen etter X11, fordi alle profilkanalene for tekstil er tilgjengelige, mens en utenpåliggende ramme sperrer kanalene og må monteres etter tekstilen), flere høyder på frittstående tekstilvegg (over 2540 tas i egen utredning om høye vegger), tekstildør
-med overstykke, høye tekstilvegger, heng (H6), og endring av standvegg med nabogodkjenning. Samba-duk foran LED (appen tegner ikke LED ennå).
+Bestemt eller nevnt, men ikke i koden. Regelnummeret viser hvor det hører hjemme. Når et punkt bygges, flyttes det inn
+i regelen og strykes her.
+
+**Vegg og hevet vegg**
+- V20: egen farge, print og dekal per øvre felt.
+- V18: heve et roms sider, trinn i én vegg i skuffen (motoren regner høyden per modul), og høy vegg bygget fra bunnen
+  (92 i bunn, uten fot, topp 3040).
+- V6: endre standvegg med nabogodkjenning.
+- V11: andre mål og diagonaler på standarealet.
+- V15: print, dekaler og diskfarger inn i dekorregisteret (trinn B1b og B2), venter på høydeadresse fra hevet vegg.
+- Veggmål på arbeidsordren (`wallMeasures`) er slått av (Bjørn 14.11.2026).
+- Veggskuffen: velge flere felt samtidig, og velge felt ved klikk i plan eller 3D (parkert, se vegger.md).
+- Snekret vegg som produkt.
+
+**Tekstil**
+- Forslag om å heve veggen når tekstil tegnes over 2540 (kommer med høye tekstilvegger: tekstil på vegg kan ikke gå
+  over 2540 i dag).
+- X5, M5: høye tekstilvegger og flere høyder på frittstående (låst til 2540), med vaier og gjennomgående øyebolt.
+- X11: velge type hjørne der en frittstående tekstilvegg møter en ramme på vegg (Bjørn 20.11.2026: 92LTX er bedre enn å
+  stoppe mot rammen, fordi alle profilkanalene for tekstil er tilgjengelige, mens en utenpåliggende ramme sperrer
+  kanalene og må monteres etter tekstilen).
+- X7: hjørne mellom rammer med ulik høyde (bare like høyder kobles, foreløpig), og tekstil i T (hoppet over for nå).
+- Tekstildør med overstykke, «Kun ramme» (ramme uten duk), og LED med Samba-duk foran (appen tegner ikke LED ennå).
+
+**Disk og podie**
+- K17: lås på skyvedør.
+- K9, K17, K19: tidene er plassholdere til de er målt.
+
+**Hylle og heng**
+- H6: heng (egen pensel, bare mellom stolper med ledig kanal).
+- H9: felt med hjørne i begge ender (1 m mellom to vegger).
+- H11: ensom hjørneplate foran på 91F i tvillingskinnen når et møtende par låser den (Bjørn vurderer).
+
+**Takdrager og støtte**
+- Hevede takdragere på hevet vegg (Bjørn 27.11.2026: senere).
+- F2: enveis fotplater om det trengs.
+
+**Kost og pris**
+- Plassholder-art.nr: øyebolt M5 (S9), korte moduler 6121–6123 (V1), forhøyning 6124 (V22).
+- Kuber (frittstående eller hengende fra taket), ikke et veggprodukt.
+- Fra OMS senere: standtype og kjøpt areal, arrangørens farge, lagerstatus, kunderabatter, ramme og trykk solgt hver
+  for seg.
+
+**Verktøy og visning**
+- Shift med trykk midt i draget omarbeides likt for alle penner.
+- Tøm i 3D.
+- Pillens hode er skjult under 820 px bredde.
+- Veggpillen på motsatt side av modulkjeden (A5 i arbeidstegning.md), og `Pos.` i kalkylepanelet.

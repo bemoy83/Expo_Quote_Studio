@@ -23,14 +23,14 @@ describe('InFrame frame piece', () => {
   });
   it('past 5 m the rails are spliced with 609 and braced by the splice, as on foot plates (one product)', () => {
     const p = framePiece(6000, S);
-    expect(p).toMatchObject({ W: 5970, railCuts: [2985, 2985], braces: { qty: 4, length: 2460 } });
+    expect(p).toMatchObject({ W: 5970, railCuts: [4970, 1000], braces: { qty: 4, length: 2460 } });
     expect(p.parts.loose).toEqual([
       ['617', 4],
       ['609', 2],
       // Byggeregel X2: 520 by the foot plate rule, no more than 3 m apart
       ['520', 3],
     ]);
-    expect(p.braceAt).toEqual([1418, 2835, 3135, 4553]);
+    expect(p.braceAt).toEqual([1607, 3213, 4820, 5120]);
     expect(framePiece(4000, S)).toMatchObject({ railCuts: [3970], braceAt: [1985] });
     expect(framePiece(4000, S).parts.loose.map(([c]) => c)).toEqual(['617', '520']);
   });
@@ -50,23 +50,13 @@ describe('InFrame frame piece', () => {
   });
 });
 
-describe('butt ends (Bjørn 8.11.2026)', () => {
-  it('mitred frame corners, butt at a splice and at a 92LTX', () => {
+describe('butt ends (Bjørn 8.11.2026, splices mitred 27.11.2026)', () => {
+  it('mitred frame corners and splices, butt only at a 92LTX', () => {
     expect(buttEnds([3970])).toEqual([]);
-    expect(buttEnds([3000, 3000])).toEqual([
-      [3000, 1, 2],
-      [3000, 1, 2],
-    ]);
-    expect(buttEnds([2000, 2000, 2000])).toEqual([
-      [2000, 1, 2],
-      [2000, 2, 2],
-      [2000, 1, 2],
-    ]);
+    // Byggeregel X9: a splice is mitred, so a standard length can be used in a spliced rail
+    expect(buttEnds([4970, 1000])).toEqual([]);
     expect(buttEnds([2963], { from: false, to: true })).toEqual([[2963, 1, 2]]);
-    expect(buttEnds([2463, 2463], { from: true, to: false })).toEqual([
-      [2463, 2, 2],
-      [2463, 1, 2],
-    ]);
+    expect(buttEnds([2463, 2463], { from: true, to: false })).toEqual([[2463, 1, 2]]);
   });
 });
 

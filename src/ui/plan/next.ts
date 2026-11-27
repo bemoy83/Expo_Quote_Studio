@@ -3,6 +3,7 @@
 // the next variant through its own layers at preview strength (PlanView, nextArea.ts); this file only says what it is.
 // The key changes only when the target does (edge, module, cell, tile, spot), so the next variant and its calc are
 // worked out again only then.
+import { lengthKind } from '../../calc/textile/standard'
 import { freeFrames } from '../../calc/textile/free'
 import { DOOR_AIM_MIN, placeOpening } from '../../domain/doors'
 import { paintWalls } from '../../domain/edit'
@@ -323,7 +324,9 @@ function textilePill(r: Exclude<TextileResult, { error: string }>): Pill {
   }
   const t = freeTextiles(r.v).find((x) => x.id === r.free.id)!
   const f = freeFrames(r.v, RECIPES.textileFrame, rules.textile.inFrame, '').find((x) => x.textileId === t.id)
-  return { a: t.from, b: t.to, width: 'textile', text: mm(f ? f.length / 1000 : 0) }
+  // Byggeregel X9: whether the frame is a standard length or cut
+  const kind = f && lengthKind(f)
+  return { a: t.from, b: t.to, width: 'textile', text: `${mm(f ? f.length / 1000 : 0)}${kind ? ` · ${kind}` : ''}` }
 }
 
 const doorInvalid = (v: Variant, e: Module): NextOutcome => line({ hint: doorBlocked(v, e.a, e.b), invalid: { seg: [e.a, e.b], width: 'wall' } })

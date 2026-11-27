@@ -17,6 +17,7 @@ function howText(h: TraceHow): string {
   if (h.kind === 'owned')
     return `innkjøp i dag ${k2(h.buy)} kr × ((1 / ${fmt(h.lifetimeYears)} år + rente ${pct(h.interest)} / 2) / ${fmt(h.usesPerYear)} bruk i året + tap ${pct(h.lossPerUse)})`
   if (h.kind === 'bought') return `innkjøp i dag ${k2(h.buy)} kr × (1 + svinn ${pct(h.waste)})`
+  if (h.kind === 'cut') return `innkjøp i dag ${k2(h.buy)} kr × (1 + svinn ${pct(h.waste)}) × (1 − gjenbruk ${pct(h.reuse)})`
   return `timekost ${k2(h.hourly)} kr/t (${k2(h.baseRate)} i ${h.baseYear}, lønnsindeks til ${h.year}) / 60`
 }
 

@@ -203,9 +203,11 @@ export function runFrame(
   const freeEnds = 2 - nCorners;
   const braces = bracePoints(length, splices, s.stag, r.spliceBrace);
   // Held at both ends (corner posts, walls) there is no room to thread a splice: 604 in the channel
+  // or a splice piece too short for 609 (Byggeregel X9)
   const bothHeld = (corner.from || !!held?.from) && (corner.to || !!held?.to);
-  const spliceCode = bothHeld ? r.splice.slide.code : r.splice.thread;
-  const perSplice = 2 * (bothHeld ? r.splice.slide.perRail : 1);
+  const slide = bothHeld || (railCuts.length > 1 && Math.min(...railCuts.filter((_, i) => i % 2)) < r.splice.threadMin);
+  const spliceCode = slide ? r.splice.slide.code : r.splice.thread;
+  const perSplice = 2 * (slide ? r.splice.slide.perRail : 1);
   const braceLength = Math.max(0, H - 2 * s.prof);
   const parts = frameParts(
     r,

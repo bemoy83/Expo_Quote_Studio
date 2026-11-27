@@ -2,6 +2,9 @@
 // domain/grips.ts): each kind of thing says here where its grips stand and what a drag of one stores. The pointer
 // (pointer/grip.ts), the hits (pointer/hits.ts), the preview (next.ts) and the drawing (layers/Grips.tsx) go through
 // this file only. To give a new kind of thing grips: add it to GripOn, gripsOf, dragGrip and gripHint.
+import { lengthKind } from '../../calc/textile/standard'
+import { freeFrames } from '../../calc/textile/free'
+import { RECIPES } from '../../foga/recipes'
 import { furthest, stepsOf, turnOf, type GripKind, type RunEnd } from '../../domain/grips'
 import { wallGripEnds, stretchWall } from '../../domain/wallEnds'
 import { stretchInnerBeam } from '../../domain/innerBeams'
@@ -291,7 +294,10 @@ function dragEndGrip(v: Variant, on: Extract<GripOn, { type: 'end' }>, p0: Point
   if (!r || (n && !r.a)) return { error: why, key: `${why}:${n}` }
   const after = runOf(r.value, on)!
   const L = Math.hypot(after.to[0] - after.from[0], after.to[1] - after.from[1])
-  return { v: r.value, key: `${on.id}:${after.from}:${after.to}`, pill: { a: after.from, b: after.to, text: mm(L) } }
+  // Byggeregel X9: a free-standing frame says whether it is a standard length or cut
+  const f = on.what === 'textile' ? freeFrames(r.value, RECIPES.textileFrame, rules.textile.inFrame, '').find((x) => x.textileId === on.id) : undefined
+  const kind = f && lengthKind(f)
+  return { v: r.value, key: `${on.id}:${after.from}:${after.to}`, pill: { a: after.from, b: after.to, text: f ? `${mm(f.length / 1000)}${kind ? ` · ${kind}` : ''}` : mm(L) } }
 }
 
 /** A door's grip dragged along its wall (Byggeregel D8): whole metres from where it stands, 250 with Shift or Fin; the

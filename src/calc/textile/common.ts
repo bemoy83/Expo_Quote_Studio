@@ -18,23 +18,29 @@ export function frameParts(r: TextileFrameRecipe, railCuts: readonly number[], s
   const add = (len: number, qty: number) => qty && cuts.set(len, (cuts.get(len) ?? 0) + qty);
   for (const c of railCuts) add(c, 2);
   add(sides.length, sides.qty);
+  // Byggeregel X9: in a spliced rail every other piece (from the first) is a standard length, the ones between are
+  // splice pieces, cut for the job
+  const spliced = new Map<number, number>();
+  if (railCuts.length > 1) railCuts.forEach((c, i) => i % 2 && spliced.set(c, (spliced.get(c) ?? 0) + 2));
   const kept = loose.filter(([, q]) => q > 0);
   const connectors = new Set([r.corner, r.splice.thread, r.splice.slide.code]);
   return {
     cuts: [...cuts],
     ...(butt.length ? { butt } : {}),
+    ...(spliced.size ? { spliced: [...spliced] } : {}),
     braces,
     loose: kept,
     couplings: kept.filter(([c]) => connectors.has(c)).reduce((a, [, q]) => a + q, 0) + braces.qty * 2 * r.braceCoupling.perEnd,
   };
 }
 
-/** Rail pieces with butt ends, two rails (top and bottom) each: every end at a splice and every end at a 92LTX corner
- *  post is cut straight; the frame's own corners are mitred (Bjørn 8.11.2026). */
+/** Rail pieces with butt ends, two rails (top and bottom) each: every end at a 92LTX corner post is cut straight; the
+ *  frame's own corners are mitred (Bjørn 8.11.2026), and so is every splice, so a standard length can be used in a
+ *  spliced rail (Byggeregel X9, Bjørn 27.11.2026). */
 export function buttEnds(railCuts: readonly number[], corner: { from: boolean; to: boolean } = { from: false, to: false }): NonNullable<FrameParts['butt']> {
   const last = railCuts.length - 1;
   return railCuts.flatMap((len, j) => {
-    const ends = (j > 0 || corner.from ? 1 : 0) + (j < last || corner.to ? 1 : 0);
+    const ends = (j === 0 && corner.from ? 1 : 0) + (j === last && corner.to ? 1 : 0);
     return ends ? [[len, ends, 2] as const] : [];
   });
 }
@@ -60,12 +66,33 @@ export function printFileName(customer: string, pos: string, p: Pick<FramePiece,
   return `${name}_${pos}_${p.W}x${p.H}mm.pdf`;
 }
 
-/** `len` in the fewest equal pieces of at most `max` (the last takes the rounding). */
-export function splitRail(len: number, max: number): number[] {
-  const k = Math.max(1, Math.ceil(len / max - 1e-9));
-  const piece = Math.round(len / k);
-  return Array.from({ length: k }, (_, i) => (i < k - 1 ? piece : len - piece * (k - 1)));
+/**
+ * Byggeregel X9: a rail of `len` mm in pieces of at most `max`. Longer than `max`: a standard length and a splice piece
+ * cut for the job (Bjørn 27.11.2026: nearest standard whole length and a splice piece; two standard lengths cannot be
+ * spliced onto each other). Longer than one such pair: equal pairs, standard and splice piece in turn. The standard is
+ * the longest one that leaves the splice piece at least `minSplice`.
+ */
+export function splitRail(len: number, max: number, standard: readonly number[] = RECIPES.textileFrame.standard, minSplice: number = shortestSplice()): number[] {
+  if (len <= max + 1e-9) return [len];
+  const longest = Math.max(...standard.filter((x) => x <= max));
+  const pairs = Math.max(1, Math.ceil(len / (longest + max) - 1e-9));
+  const pair = len / pairs;
+  const s = [...standard].filter((x) => x <= max && pair - x >= minSplice && pair - x <= max).sort((a, b) => b - a)[0];
+  if (s === undefined) return Array.from({ length: 2 * pairs }, () => Math.round(len / (2 * pairs)));
+  const cut = Math.round(pair - s);
+  const out = Array.from({ length: pairs }, () => [s, cut]).flat();
+  out[out.length - 1] = len - out.slice(0, -1).reduce((a, x) => a + x, 0);
+  return out;
 }
+
+/** Byggeregel X9: the shortest splice piece, measured like every rail piece, over its two mitred ends: `minSplice`
+ *  without the mitres, plus one frame depth for each (Bjørn 27.11.2026: about 50 mm, not counting the mitre). */
+export function shortestSplice(r: TextileFrameRecipe = RECIPES.textileFrame): number {
+  return r.minSplice + 2 * (fogaPart(r.profile).section?.[0] ?? 40);
+}
+
+/** Byggeregel X9: a 43TX piece of this length is on the shelf; any other is cut for the job. */
+export const isStandardLength = (len: number, r: TextileFrameRecipe = RECIPES.textileFrame) => r.standard.includes(Math.round(len));
 
 /**
  * Upright braces along a run of `len` mm: `spliceBrace` from each side of every splice, and more evenly between so no

@@ -134,9 +134,9 @@ const PARAMS: Readonly<Record<string, ParamDef>> = {
   freightShare: { label: 'Frakt og toll på innkjøp', unit: '%', group: 'Valuta og frakt', tab: 'innkjop', rule: 1 },
   'owned.interest': { label: 'Rente på bundet kapital, per år', unit: '%', group: 'Rente og tap', tab: 'avskrivning', rule: 1 },
   'owned.lossPerUse': { label: 'Tap og knust per jobb', unit: '%', group: 'Rente og tap', tab: 'avskrivning', rule: 1 },
-  'cut.reuse': { label: 'Spesialkapp: andel som brukes igjen', unit: '%', group: 'Spesialkapp (regel 2)', tab: 'avskrivning', rule: 2, unused: true },
-  'cut.waste': { label: 'Spesialkapp: svinn', unit: '%', group: 'Spesialkapp (regel 2)', tab: 'avskrivning', rule: 2, unused: true },
-  'cut.minutes': { label: 'Spesialkapp: minutter per kapp', unit: 'personmin', group: 'Spesialkapp (regel 2)', tab: 'avskrivning', rule: 2, unused: true },
+  'cut.reuse': { label: 'Spesialkapp: andel som brukes igjen', unit: '%', group: 'Spesialkapp (regel 2)', tab: 'avskrivning', rule: 2 },
+  'cut.waste': { label: 'Spesialkapp: svinn', unit: '%', group: 'Spesialkapp (regel 2)', tab: 'avskrivning', rule: 2 },
+  'cut.minutes': { label: 'Spesialkapp: minutter per kapp', unit: 'personmin', group: 'Spesialkapp (regel 2)', tab: 'avskrivning', rule: 2 },
   boughtWaste: { label: 'Svinn på det som kjøpes til jobben (trykk)', unit: '%', group: 'Kjøpt til jobben', tab: 'avskrivning', rule: 3 },
   'labour.baseRate': { label: 'Timekost montør, inkl. sosiale kostnader', unit: 'kr/t', group: 'Montør', tab: 'arbeid', rule: 4 },
   'labour.baseYear': { label: 'Timekostens år', unit: 'år', group: 'Montør', tab: 'arbeid', rule: 4 },
@@ -290,12 +290,12 @@ export function basisFields(b: CostBasis): Field[] {
     const r = b.recipes[d.id];
     if (!r) continue;
     const own = !fromExample(b, `oppskrifter.${d.id}`);
-    const put = (key: 'parts' | 'own' | 'bought', i: number) => (file: Obj, v: number) => {
+    const put = (key: 'parts' | 'own' | 'bought' | 'cut', i: number) => (file: Obj, v: number) => {
       const rows = (r[key] ?? []).map((row, j) => (j === i ? [row[0], v, ...row.slice(2)] : [...row]));
       setAt(((file.oppskrifter ??= {}) as Obj), [d.id], { ...r, [key]: rows });
     };
     const group = `${d.name} (DG-gruppe ${r.dg})`;
-    for (const key of ['parts', 'own', 'bought'] as const)
+    for (const key of ['parts', 'own', 'bought', 'cut'] as const)
       (r[key] ?? []).forEach((row, i) =>
         add(`oppskrifter.${d.id}.${key}.${i}`, { tab: 'oppskrifter', group, ...partText(key, row[0], d.unit), value: row[1], put: put(key, i) }, own),
       );
@@ -304,7 +304,8 @@ export function basisFields(b: CostBasis): Field[] {
 }
 
 /** A recipe row's label and unit: the Foga part's name and its list unit (m for profiles and frames). */
-function partText(key: 'parts' | 'own' | 'bought', code: string, itemUnit: string): { label: string; unit: string } {
+function partText(key: 'parts' | 'own' | 'bought' | 'cut', code: string, itemUnit: string): { label: string; unit: string } {
+  if (key === 'cut') return { ...partText('parts', code, itemUnit), label: `${partText('parts', code, itemUnit).label} (kappet, regel 2)` };
   if (key !== 'parts') return { label: `${code}${key === 'bought' ? ' (kjøpt til jobben)' : ''}`, unit: key === 'bought' ? `per ${itemUnit}` : 'stk' };
   const part = FOGA_PARTS.find((x) => x.code === code);
   return { label: part ? `${code} ${part.name}` : code, unit: part && (part.kind === 'profile' || part.kind === 'frame') ? 'm' : 'stk' };

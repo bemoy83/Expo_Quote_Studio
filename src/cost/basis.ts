@@ -329,7 +329,14 @@ function readRecipe(x: unknown, at: string): ItemRecipe {
     if (!isStr(artnr) || !isQty(qty)) return fail(`${at}.bought: art.nr og mengde mangler.`);
     return [artnr, qty];
   });
-  return { ...(parts.length ? { parts } : {}), ...(own.length ? { own } : {}), ...(bought.length ? { bought } : {}), dg: x.dg as DgGroup };
+  const cut = rows('cut', 2).map(([code, qty]): readonly [string, number] => {
+    if (!isStr(code) || !PART_CODES.has(code)) return fail(`${at}.cut: ${String(code)} er ikke en Foga-del appen kjenner.`);
+    if (!isQty(qty)) return fail(`${at}.cut: mengden for ${code} må være et tall.`);
+    return [code, qty];
+  });
+  if (x.cuts !== undefined && !isQty(x.cuts)) return fail(`${at}.cuts må være et tall.`);
+  const cuts = x.cuts as number | undefined;
+  return { ...(parts.length ? { parts } : {}), ...(own.length ? { own } : {}), ...(bought.length ? { bought } : {}), ...(cut.length ? { cut } : {}), ...(cuts ? { cuts } : {}), dg: x.dg as DgGroup };
 }
 
 /** Per price item: the file's entry where it has one, else the example's, noted. A file without the part at all takes
