@@ -149,8 +149,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   veggrisset over mellomskinnen, også over en dør. Uten egen farge har det veggens, også når feltet under har sin egen.
   Kosten og paletten farger eller printer det alene (siste strøk vinner, som på platen: farge på platen tar ikke
   printen av det øvre feltet, og omvendt). Malerspannet og Fyll tar det med veggen, og malerspannet med print legger ett
-  bilde over hele høyden, der mellomskinnen skjuler sin stripe som stolpene gjør. En dekal blir i sitt bånd og krysser
-  aldri mellomskinnen. Endres høyden, beholdes farge og print (printen tilpasses feltet), og en dekal som ikke lenger
+  bilde over hele høyden, der mellomskinnen skjuler sin stripe som stolpene gjør. Et motiv sluppet over mellomskinnen
+  (i veggrisset eller i 3D) blir dekal på det øvre feltet der det slippes, også over en dør og over en tekstilramme; «+ Dekal»
+  med et øvre felt valgt legger den midt i feltet. En dekal blir i sitt bånd og krysser aldri mellomskinnen. Endres høyden, beholdes farge og print (printen tilpasses feltet), og en dekal som ikke lenger
   får plass går. Senkes veggen til 2540, går dekoren på de øvre feltene (angre tar den tilbake). En farget øvre plate
   koster det samme i alle RAL, er alltid utstillerens og har ikke platebytte. Print på øvre felt prises etter flaten
   (lysmålet), og printfila har det øvre feltets mål.
