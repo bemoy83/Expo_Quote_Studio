@@ -73,9 +73,10 @@ export function wallPaint({ v, w, s, built, mods, motifs, tool, paintSel, motifS
   }
   /**
    * The chosen tool on plate `i` (module key `key`): `first` on press, then for each plate swept over (brush only).
-   * `leaf`: the door leaf of a door module, which the brush colours on its own.
+   * `leaf`: the door leaf of a door module, which the brush colours on its own; `up`: the upper felt of a raised plate
+   * (V20), a surface of its own.
    */
-  const paintAt = (i: number, key: string, first: boolean, leaf = false) => strokeAt(deps, plate(i, key, leaf), first)
+  const paintAt = (i: number, key: string, first: boolean, leaf = false, up = false) => strokeAt(deps, up ? upper(i, key) : plate(i, key, leaf), first)
   /** A colour or «Print» picked on chosen plate `i` (the felt, or a door's leaf or header): the palette's way (pickOn). */
   const pickAt = (i: number, key: string, leaf = false) => (r: string, motif = pm?.id) => pickOn(plate(i, key, leaf), r, motif, onEdit, onToast)
   /** A colour picked on the upper felt of raised plate `i` (Byggeregel V20): a plate of its own over the middle rail. */
