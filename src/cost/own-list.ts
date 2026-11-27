@@ -26,6 +26,10 @@ const ROWS: Row[] = [
       .filter((d) => d <= w && !(w === 976 && d === 476) && !(w === 476 && d === 476))
       .map((d): Row => [`FIBRAPLAST6-${w}x${d}`, `MDF malingsmelamin Fibraplast H Barnizable hvit/hvit 6 × ${d} × ${w} mm`, 'Plater', 'stk', Math.max(10, Math.round((130 * w * d) / 1e6 / 10) * 10)]),
   ),
+  // Ceiling wire on a raised wall (Byggeregler S9, S10, Bjørn 27.11.2026): placeholders until the real price is in the
+  // kostgrunnlag
+  ['VAIER-V', 'Vaieroppheng, V med to takpunkter', 'Beslag', 'stk', 300],
+  ['OYEBOLT-M5', 'Øyebolt M5', 'Beslag', 'stk', 10],
   // Textile with silicone edge, per m² incl. bleed. Blackback is the default for print (Bjørn 7.11.2026); Samba goes in
   // front of LED, which the app does not draw yet
   ['TRYKK-BLACKBACK', 'Trykt tekstil Blackback med silikonkant', 'Tekstil', 'm²', 180],

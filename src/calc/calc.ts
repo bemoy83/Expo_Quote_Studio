@@ -10,7 +10,7 @@ import { calcContext } from './context';
 import { beamLiftLines, beamLines } from './lines/beams';
 import { decorLines } from './lines/decor';
 import { doorLines } from './lines/doors';
-import { footLines } from './lines/feet';
+import { footLines, wireLines } from './lines/feet';
 import { floorLines } from './lines/floor';
 import { looseLines, objectLines } from './lines/objects';
 import { swapLines } from './lines/swaps';
@@ -34,6 +34,7 @@ export function calc(v: Variant, rules: Rules, catalog: Catalog, standWalls: Sta
     ...wallLines(c),
     ...raiseLines(c),
     ...footLines(c),
+    ...wireLines(c),
     ...swapLines(c),
     ...beams.lines,
     ...beamLiftLines(c),

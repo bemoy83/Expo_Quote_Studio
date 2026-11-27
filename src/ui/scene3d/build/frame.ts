@@ -10,6 +10,9 @@ import { rules } from '../../env'
 import { profile, shared, unitProfile } from './profiles'
 import { ALU, ALU_FINISH, BEAM, FOOT_PLATE, type BuildContext } from './context'
 
+/** A ceiling wire's colour. */
+const WIRE = 0x6b6f75
+
 export function buildFrame(c: BuildContext) {
   const { res, H, at, mat, add, along, mods } = c
   // Posts: wall posts and beam posts, from the calc so plan, 3D and quote agree
@@ -23,6 +26,16 @@ export function buildFrame(c: BuildContext) {
     mesh.rotation.z = Math.PI / 2
     mesh.position.copy(at(p, H + len / 2000))
     add(mesh, { layer: 'walls' })
+  }
+  // Ceiling wires (Byggeregel S9, Bjørn 27.11.2026): a V from the eyebolt on the post's top to two points in the ceiling,
+  // one on each side of the wall (the ceiling's height is not known: drawn 1.5 m up, 1 m out)
+  const tops = raisedPosts(mods)
+  for (const f of res.wires ?? []) {
+    const top = H + (tops.get(pointKey(f.at))?.len ?? 0) / 1000
+    const [x, y] = f.at
+    const out: [Point, Point] = f.orientation === 'h' ? [[x, y - 1], [x, y + 1]] : [[x - 1, y], [x + 1, y]]
+    const pts = [at(out[0], top + 1.5), at(f.at, top), at(out[1], top + 1.5)]
+    add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: WIRE })), { layer: 'walls' })
   }
   for (const p of res.posts) {
     const onWall = wallPts.has(pointKey(p))

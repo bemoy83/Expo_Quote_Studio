@@ -32,7 +32,7 @@ export function Plate({ at, cc, fill, x, H }: { at: number; cc: number; fill: st
  * What a raise puts over the wall (Byggeregler V18, V20), above y = 0 (the top of the old top rail, now the middle
  * rail): each raised felt's plate and its 292 top rail, and the 94 joined onto the posts. Lengths in m.
  */
-export function Raise({ felts, posts, x }: { felts: { at: number; cc: number; len: number; fill: string }[]; posts: { x: number; len: number }[]; x: (a: number, b: number) => number }) {
+export function Raise({ felts, posts, wires = [], x }: { felts: { at: number; cc: number; len: number; fill: string }[]; posts: { x: number; len: number }[]; wires?: { x: number; len: number }[]; x: (a: number, b: number) => number }) {
   const { post } = rules.wall
   const top = railHeight(RECIPES.wall.raise.topRail) / 1000
   return (
@@ -49,9 +49,20 @@ export function Raise({ felts, posts, x }: { felts: { at: number; cc: number; le
       {posts.map((p) => (
         <rect key={p.x} x={p.x - post / 2} y={-p.len} width={post} height={p.len} fill={ALU_POST} />
       ))}
+      {/* A ceiling wire (Byggeregel S9, Bjørn 27.11.2026): a circle with a cross, the hanefot's gathering point over the
+          eyebolt in the top rail */}
+      {wires.map((p) => (
+        <g key={`w${p.x}`} stroke={INK} strokeWidth={0.012} fill="none">
+          <circle cx={p.x} cy={-p.len - WIRE_R} r={WIRE_R} fill={SURFACE} />
+          <path d={`M${p.x - WIRE_R * 0.7} ${-p.len - WIRE_R * 1.7}L${p.x + WIRE_R * 0.7} ${-p.len - WIRE_R * 0.3}M${p.x + WIRE_R * 0.7} ${-p.len - WIRE_R * 1.7}L${p.x - WIRE_R * 0.7} ${-p.len - WIRE_R * 0.3}`} />
+        </g>
+      ))}
     </g>
   )
 }
+
+/** The wire mark's radius, m. */
+const WIRE_R = 0.07
 
 export function Posts({ xs, H }: { xs: number[]; H: number }) {
   const { post, feet } = rules.wall

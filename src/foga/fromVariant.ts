@@ -38,6 +38,8 @@ export interface Derived {
   counters?: CounterParts;
   /** Inserts 700 under counters over a foot plate (domain/counters.ts counterInserts, K23). */
   counterInserts?: number;
+  /** Ceiling wires on raised walls (Byggeregel S10): an eyebolt with its 503 in the top rail for each. */
+  wires?: number;
   /** Every built module, the organiser's too: a raise is always the exhibitor's (Byggeregel V18). Defaults to `mods`. */
   all?: BuiltModule[];
 }
@@ -84,6 +86,7 @@ export function structureOf(d: Derived): FogaStructure {
     ...(d.counters ? { counters: d.counters } : {}),
     ...(d.counterInserts ? { counterInserts: d.counterInserts } : {}),
     ...(raises ? { raises } : {}),
+    ...(d.wires ? { wires: d.wires } : {}),
   };
 }
 

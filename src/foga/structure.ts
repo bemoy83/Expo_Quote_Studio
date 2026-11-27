@@ -90,6 +90,8 @@ export interface FogaStructure {
   /** Raised walls (Byggeregel V18): the upper felts, and the 94 pieces joined onto the posts by length. Always the
    *  exhibitor's, also over the organiser's stand walls. */
   raises?: { modules: RaiseSpec[]; posts: { len: number; qty: number }[] };
+  /** Ceiling wires on raised walls (Byggeregler S9, S10): each fixed in the top rail with an eyebolt and a 503. */
+  wires?: number;
 }
 
 /** A shelf board: standard 976 × 300, corner 960 × 290, 2/3 655 × 300 (Byggeregler H10–H13). */

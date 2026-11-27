@@ -65,6 +65,7 @@ export function summary(c: CalcContext, lines: CalcLine[], organiserLines: CalcL
     hooks: beams.hooks,
     posts: [...allPosts.values()],
     wallSupports: wallFeet,
+    ...(c.wires.length ? { wires: c.wires } : {}),
     ...(c.inserts.size ? { inserts: c.inserts } : {}),
     production: prod,
     foga,

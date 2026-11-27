@@ -21,8 +21,9 @@ export interface WallRecipe {
   support: { foot: FootPlate; pin: string; rule: SupportRule };
   /** A raised wall (Byggeregel V18, Bjørn 27.11.2026): a piece of `post` in stock length joined onto each post with
    *  `joint` inside, the old top rail stays as the middle rail, and a new `topRail` (292, 80 high) with `coupling` at
-   *  each end tops the upper felt. Stored mounted: the piece with its 609, and the rail with its couplings. */
-  raise: { joint: string; topRail: string; coupling: { code: string; perEnd: number } };
+   *  each end tops the upper felt. Stored mounted: the piece with its 609, and the rail with its couplings. `wire`: a
+   *  ceiling wire is fixed in the top rail's channel with an eyebolt in a bevel nut 503 (Byggeregel S10). */
+  raise: { joint: string; topRail: string; coupling: { code: string; perEnd: number }; wire: { eyebolt: string; nut: string } };
 }
 
 /** Foot plate, size along and across the wall it holds, mm. */
@@ -234,7 +235,7 @@ export const RECIPES: Recipes = {
     railCoupling: { code: '600', perEnd: 1 },
     plate: { code: 'HDF', w: 976, h: 2440 },
     support: { foot: { code: '750', along: 80, across: 500 }, pin: '795', rule: SUPPORT },
-    raise: { joint: '609', topRail: '292', coupling: { code: '600', perEnd: 2 } },
+    raise: { joint: '609', topRail: '292', coupling: { code: '600', perEnd: 2 }, wire: { eyebolt: 'Øyebolt M5', nut: '503' } },
   },
   textileFrame: {
     profile: '43TX',

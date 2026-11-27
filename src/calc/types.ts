@@ -149,6 +149,8 @@ export interface CalcResult {
   /** Støtteplater under free-standing system walls and drawn takdrager's own posts: always the exhibitor's, also under
    *  the organiser's stand walls. */
   wallSupports: WallSupport[];
+  /** Ceiling wires on raised walls, one per post (Byggeregel S9): 3D. */
+  wires?: WallSupport[];
   /** The uprights of each counter over a foot plate that stand on an insert 700, by counter id (Byggeregel K23): 3D. Only
    *  when there are any. */
   inserts?: ReadonlyMap<string, readonly CounterProfile[]>;

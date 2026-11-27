@@ -17,3 +17,13 @@ export function footLines(c: CalcContext): CalcLine[] {
     ]),
   ];
 }
+
+/** Ceiling wires on raised walls (Byggeregler S9, S10): per V, always the exhibitor's. */
+export function wireLines(c: CalcContext): CalcLine[] {
+  const n = c.wires.length;
+  if (!n || !c.sys.wallWire) return [];
+  return [c.line(c.sys.wallWire, n, { ...c.built, meta: 'hevet vegg' }, [
+    { id: ITEM.wire, qty: n },
+    { id: ITEM.wireMount, qty: n },
+  ])];
+}

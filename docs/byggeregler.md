@@ -185,6 +185,18 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 - **S8 Stolpe på plate.** En stolpe over en fotplate plukkes uten justeringsfot («Stolpe 94 uten fot»). Står platen
   under arrangørens stolpe, skrus foten ut på stedet.
   *Bjørn 1.11.2026 · kode `src/foga/engine.ts` · test `src/calc/wallSupports.test.ts`*
+- **S9 Vaier på hevet vegg.** En hevet vegg (V18) holdes av vaier fra hallens tak i stedet for fotplater. Uten takdrager
+  får alle hevede vegger vaier; med takdrager bare vegger over 3 m (`wall.raise.wireAbove`), fordi heving av drager ikke
+  følger veggen. Vaierne fordeles over hele veggen etter samme regel som fotplatene (S3, S4), men takdrager og
+  fotplater teller ikke som støtte, bare et hjørne der begge veggene er hevet. En stolpe med vaier får ingen fotplate.
+  Hver vaier er en V fra veggtoppen til to punkter i taket, én på hver side. Tilbudet har én linje 4300 Vaieroppheng
+  (1570 kr per stk, «Støttevaier for vegg»), alltid utstillerens. På oppriss er vaieren en sirkel med kryss over
+  stolpen (hanefotens samlepunkt), i 3D en V.
+  *Bjørn 27.11.2026 · kode `src/calc/wallWires.ts`, `src/calc/context.ts`, `src/calc/lines/feet.ts`, `src/catalog/defaultCatalog.ts`, `src/ui/plan/elevation.tsx`, `src/ui/scene3d/build/frame.ts` · test `src/calc/wallWires.test.ts`*
+- **S10 Feste for vaier.** Vaieren festes i en øyebolt M5 med 503 (876 503 95) i toppskinnen 292. Plukklisten har
+  «Vaieroppheng, V til taket» og «Øyebolt M5 med 503» per vaier (øyebolten er plassholder til artikkelen er kjent).
+  Kalkylen har V-en og øyebolten som egne innkjøp, 503 som Foga-del, og tid for å henge opp og ta ned.
+  *Bjørn 27.11.2026 · kode `src/foga/engine.ts`, `src/foga/recipes.ts`, `src/cost/itemDefs.ts`, `src/cost/own-list.ts` · test `src/calc/wallWires.test.ts`*
 
 ## T · Takdrager
 
@@ -933,8 +945,6 @@ K22 standardvarene og K23 disker over en fotplate.
 
 ## Ikke bygget ennå
 
-Bestemt eller nevnt, men ikke i koden: farge, print og dekal per øvre felt (V20), vaier fra
-taket på hevede vegger (uten takdrager alle hevede, med takdrager de over 3 m, fordelt på hele veggen etter S3 og S4 der
-bare et hevet hjørne teller som støtte, V-oppheng 4300 med øyebolt M5 og 503 i toppskinnen, Bjørn 27.11.2026), lift i
+Bestemt eller nevnt, men ikke i koden: farge, print og dekal per øvre felt (V20), lift i
 kalkylen over 3000 mm (sakselift 4304, 967 kr per time, regel 6), forslag om å heve veggen når tekstil tegnes over 2540, velge type hjørne der en frittstående tekstilvegg møter en ramme på vegg (Bjørn 20.11.2026: 92LTX er bedre enn å stoppe mot rammen etter X11, fordi alle profilkanalene for tekstil er tilgjengelige, mens en utenpåliggende ramme sperrer kanalene og må monteres etter tekstilen), flere høyder på frittstående tekstilvegg (over 2540 tas i egen utredning om høye vegger), støttevaier fra hallens tak i stedet for fotplater (samme regel som S3), tekstildør
 med overstykke, høye tekstilvegger, heng (H6), og endring av standvegg med nabogodkjenning. Samba-duk foran LED (appen tegner ikke LED ennå).
