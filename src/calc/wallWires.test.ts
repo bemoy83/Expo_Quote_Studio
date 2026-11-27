@@ -32,15 +32,15 @@ describe('S9 where the wires go', () => {
     expect(up.foga.wallFeet ?? 0).toBe(0);
   });
 
-  it('with takdrager only a wall over 3 m', () => {
-    expect(wireLine(raise(corner, [back], 290))).toBeUndefined();
-    expect(wireLine(raise(corner, [back], 540))!.qty).toBe(2);
+  it('with takdrager only a wall over 3 m, 3080 counting as 3 m', () => {
+    expect(wireLine(raise(corner, [back], 540))).toBeUndefined();
+    expect(wireLine(raise(corner, [back], 1040))!.qty).toBe(2);
   });
 
   it('a corner holds only when both walls are raised; takdrager never do', () => {
     // Back alone: 4 m free at both ends for the raise, two wires; both raised: the corner holds each
-    expect(wireLine(raise(corner, [back, left], 540))!.qty).toBe(2);
-    expect(run(raise(corner, [back, left], 540)).foga.wires).toBe(2);
+    expect(wireLine(raise(corner, [back, left], 1040))!.qty).toBe(2);
+    expect(run(raise(corner, [back, left], 1040)).foga.wires).toBe(2);
   });
 });
 

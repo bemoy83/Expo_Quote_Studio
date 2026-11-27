@@ -76,7 +76,7 @@ export const RULES: Rules = {
     post: 0.04,
     profile: { length: 0.96, top: 0.04, bottom: 0.03, thickness: 0.02 },
     plate: { width: 960, height: 2420 },
-    raise: { lengths: [540, 1040, 1540, 2040, 2490], wireAbove: 3000 },
+    raise: { lengths: [540, 1040, 1540, 2040, 2490], wireAbove: 3080 },
   },
   beam: { max: 6, height: 0.08, thickness: 0.02, supportSpan: 6 },
   textile: {

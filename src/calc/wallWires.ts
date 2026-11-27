@@ -1,6 +1,6 @@
 // Ceiling wires on raised walls (Byggeregler S9, S10, Bjørn 27.11.2026). A raised wall is held at the top by a V of wire
 // from its top rail to two points in the hall's ceiling, across the wall, instead of foot plates. Without takdrager
-// every raised wall gets them; with takdrager only those whose top is over 3 m (`rules.wall.raise.wireAbove`), and
+// every raised wall gets them; with takdrager only those whose top is over 3080 (`rules.wall.raise.wireAbove`: 3040 and 3080 count as 3 m), and
 // the takdrager do not count as holding it, since they stay at the standard height. The wires go on the posts by the
 // foot plates' rule (S3, S4) over each straight run of raised wall, where only a corner raised on both walls holds it:
 // the floor's plates and corners hold the wall below, not its raise.

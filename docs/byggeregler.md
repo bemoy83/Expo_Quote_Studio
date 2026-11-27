@@ -186,8 +186,8 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   under arrangørens stolpe, skrus foten ut på stedet.
   *Bjørn 1.11.2026 · kode `src/foga/engine.ts` · test `src/calc/wallSupports.test.ts`*
 - **S9 Vaier på hevet vegg.** En hevet vegg (V18) holdes av vaier fra hallens tak i stedet for fotplater. Uten takdrager
-  får alle hevede vegger vaier; med takdrager bare vegger over 3 m (`wall.raise.wireAbove`), fordi heving av drager ikke
-  følger veggen. Vaierne fordeles over hele veggen etter samme regel som fotplatene (S3, S4), men takdrager og
+  får alle hevede vegger vaier; med takdrager bare vegger over 3080 mm (`wall.raise.wireAbove`), fordi heving av drager
+  ikke følger veggen. En vegg til 3040 eller 3080 teller som 3 m (Bjørn 27.11.2026). Vaierne fordeles over hele veggen etter samme regel som fotplatene (S3, S4), men takdrager og
   fotplater teller ikke som støtte, bare et hjørne der begge veggene er hevet. En stolpe med vaier får ingen fotplate.
   Hver vaier er en V fra veggtoppen til to punkter i taket, én på hver side. Tilbudet har én linje 4300 Vaieroppheng
   (1570 kr per stk, «Støttevaier for vegg»), alltid utstillerens. På oppriss er vaieren en sirkel med kryss over
@@ -945,6 +945,5 @@ K22 standardvarene og K23 disker over en fotplate.
 
 ## Ikke bygget ennå
 
-Bestemt eller nevnt, men ikke i koden: farge, print og dekal per øvre felt (V20), lift i
-kalkylen over 3000 mm (sakselift 4304, 967 kr per time, regel 6), forslag om å heve veggen når tekstil tegnes over 2540, velge type hjørne der en frittstående tekstilvegg møter en ramme på vegg (Bjørn 20.11.2026: 92LTX er bedre enn å stoppe mot rammen etter X11, fordi alle profilkanalene for tekstil er tilgjengelige, mens en utenpåliggende ramme sperrer kanalene og må monteres etter tekstilen), flere høyder på frittstående tekstilvegg (over 2540 tas i egen utredning om høye vegger), støttevaier fra hallens tak i stedet for fotplater (samme regel som S3), tekstildør
+Bestemt eller nevnt, men ikke i koden: farge, print og dekal per øvre felt (V20), forslag om å heve veggen når tekstil tegnes over 2540, velge type hjørne der en frittstående tekstilvegg møter en ramme på vegg (Bjørn 20.11.2026: 92LTX er bedre enn å stoppe mot rammen etter X11, fordi alle profilkanalene for tekstil er tilgjengelige, mens en utenpåliggende ramme sperrer kanalene og må monteres etter tekstilen), flere høyder på frittstående tekstilvegg (over 2540 tas i egen utredning om høye vegger), tekstildør
 med overstykke, høye tekstilvegger, heng (H6), og endring av standvegg med nabogodkjenning. Samba-duk foran LED (appen tegner ikke LED ennå).

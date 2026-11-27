@@ -98,15 +98,16 @@ describe('V21 a step between two heights', () => {
 
 describe('cost rule 6: the lift', () => {
   it('a raised wall rents a sakselift by the hour, in the cost and never on the quote', () => {
-    const res = calc(raised, RULES, DEFAULT_CATALOG, EXHIBITOR);
-    const high = res.groups.flatMap((g) => g.lines).filter((l) => (l.top ?? 0) > 3000);
+    const res = calc(raise(island, () => true, 1040), RULES, DEFAULT_CATALOG, EXHIBITOR);
+    const high = res.groups.flatMap((g) => g.lines).filter((l) => (l.top ?? 0) > DEFAULT_PRICING.height.limit);
     const minutes = high.reduce((a, l) => a + (l.time.montering ?? 0) + (l.time.demontering ?? 0), 0);
     const hours = Math.ceil((minutes * DEFAULT_PRICING.height.factor) / 60);
     expect(res.margin.order.find((o) => o.id === 'lift')).toEqual({ id: 'lift', name: `Sakselift ${hours} t`, cost: hours * 967 });
     expect(res.groups.flatMap((g) => g.lines).some((l) => l.name.includes('lift'))).toBe(false);
   });
 
-  it('nothing above 3000 mm, no lift', () => {
+  it('nothing above 3080 mm, no lift: a wall to 3080 counts as 3 m (Bjørn 27.11.2026)', () => {
     expect(calc(island, RULES, DEFAULT_CATALOG, EXHIBITOR).margin.order.some((o) => o.id === 'lift')).toBe(false);
+    expect(calc(raised, RULES, DEFAULT_CATALOG, EXHIBITOR).margin.order.some((o) => o.id === 'lift')).toBe(false);
   });
 });

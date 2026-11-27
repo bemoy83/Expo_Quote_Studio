@@ -70,7 +70,7 @@ const EXAMPLE_NOTES: Readonly<Record<string, Required<Pick<FieldNote, 'status' |
   'parametere.labour.wageShare': { status: 'forslag', kilde: 'Startverdi' },
   'parametere.indirect': { status: 'Bjørn', kilde: 'Bjørn 7.11.2026: katalog = kalkulator + 10 % administrasjon' },
   'parametere.dg': { status: 'eksempel', kilde: 'Bjørns kalkulator (påslag 300 / 125 / 30 %)' },
-  'parametere.height.limit': { status: 'Bjørn', kilde: 'Bjørn 7.11.2026: over 3 m når ikke en 5-trinns stige' },
+  'parametere.height.limit': { status: 'Bjørn', kilde: 'Bjørn 7.11.2026: over 3 m når ikke en 5-trinns stige; 27.11.2026: 3040 og 3080 teller som 3 m' },
   'parametere.height': { status: 'forslag', kilde: 'Startverdi' },
   'parametere.carpet': { status: 'forslag', kilde: 'Startverdi, ikke godkjent' },
   ordrekost: { status: 'Bjørn', kilde: 'Bjørns kalkulator' },

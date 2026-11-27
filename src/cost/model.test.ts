@@ -84,9 +84,10 @@ describe('cost buckets', () => {
   it('per order: once per quote, kroner indexed and minutes as labour', () => {
     expect(orderCost(ORDER_COSTS, 2022, P)).toBeCloseTo(400 + (60 / 60) * 391.4);
   });
-  it('height: one limit at 3,0 m for lift and slower montering', () => {
-    expect(needsLift(3000, P)).toBe(false);
-    expect(needsLift(3020, P)).toBe(true);
+  it('height: one limit for lift and slower montering, a wall to 3040 or 3080 counting as 3 m', () => {
+    expect(needsLift(3040, P)).toBe(false);
+    expect(needsLift(3080, P)).toBe(false);
+    expect(needsLift(3580, P)).toBe(true);
     expect(heightMinutes(40, 2540, P)).toBe(40);
     expect(heightMinutes(40, 4000, P)).toBe(50);
   });
