@@ -6,8 +6,8 @@ import { useEffect, useMemo, useRef, useState, type DragEvent as RDragEvent } fr
 import { foilCenter, foilsOn } from '../../../domain/decor'
 import { doorLevels, doorRal, doorWindows } from '../../../domain/doors'
 import { felt, type FaceSide } from '../../../domain/faces'
-import { moduleCc, moduleStart, pointKey } from '../../../domain/grid'
-import { variantWires } from '../../../calc/wallWires'
+import { moduleCc, moduleStart } from '../../../domain/grid'
+import { raiseDrawing, wiredPosts } from '../raiseDrawing'
 import { cropWindow, onDoorPart, plateCrop } from '../../../domain/print'
 import { textileBox, textilesOn } from '../../../domain/textile/inFrame'
 import { cornerLayout } from '../../../domain/shelves/corners'
@@ -141,21 +141,11 @@ export function WallElevation(p: Props) {
   const labels = !T && !F && !O && !painting ? elevationItems(rules, tex, foils, doorModules, u, pieceOf, v.walls) : []
   // One scale for the wall (Bjørn 17.11.2026): room for every frame, decal and print on both faces, whatever is chosen
   const steady = p.fs.map((f) => elevationItems(rules, textilesOn(v, w.id, f), foilsOn(v, w.id, f), doorModules, (t) => (f === 1 ? t : L - t), pieceOf, v.walls))
-  // A raised wall (Byggeregel V18): each raised felt and part over its module, and the 94 joined onto its posts (a post
-  // between two heights with the higher, V21)
-  const raised = mods.flatMap((m, i) => {
-    const split = !m ? splitParts(p.parts, i) : []
-    return split.length ? split.filter((q) => q.mod.raise).map((q) => ({ at: q.at, cc: q.cc, r: q.mod.raise! })) : m?.raise ? [{ at: st(i), cc: ccOf(i), r: m.raise }] : []
-  })
-  const raiseFelts = raised.map((f) => ({ at: f.at, cc: f.cc, len: f.r.len / 1000, fill: plateColor(f.r.ral) }))
-  const raisePosts = new Map<number, number>()
-  for (const f of raiseFelts) for (const t of [f.at, f.at + f.cc]) raisePosts.set(Math.round(u(t) * 1000) / 1000, Math.max(raisePosts.get(Math.round(u(t) * 1000) / 1000) ?? 0, f.len))
-  // Its ceiling wires (S9), on the posts that have one
-  const wired = useMemo(() => new Set(variantWires(v, rules).map((f) => pointKey(f.at))), [v])
-  const along = (t: number): [number, number] => [w.from[0] + ((w.to[0] - w.from[0]) * t) / L, w.from[1] + ((w.to[1] - w.from[1]) * t) / L]
-  const wireMarks = wired.size ? postsAt.filter((t) => wired.has(pointKey(along(t)))).map((t) => ({ x: u(t), len: raisePosts.get(Math.round(u(t) * 1000) / 1000) ?? 0 })).filter((m) => m.len > 0) : []
-  const above = Math.max(0, ...raiseFelts.map((f) => f.len))
-  const fr = frame(size, L, H, items, { labels, steady, above: above + (wireMarks.length ? 0.16 : 0) })
+  // A raised wall (Byggeregler V18, V21) and its ceiling wires (S9)
+  const wired = useMemo(() => wiredPosts(v), [v])
+  const raise = raiseDrawing(w, mods, p.parts, u, wired)
+  const above = raise.above
+  const fr = frame(size, L, H, items, { labels, steady, above: raise.headroom })
   const sc = planScale(1 / fr.u, {})
 
   /** Pointer handlers for a plate (or a door) in the drawing while a tool is out: click, or with the brush press and sweep. */
@@ -299,7 +289,7 @@ export function WallElevation(p: Props) {
             return <Plate key={i} at={st(i)} cc={ccOf(i)} fill={plateColor(m?.plate ?? wallRal(v, w))} x={spanX} H={H} />
           })}
           <Posts xs={postsAt.map(u)} H={H} />
-          {raiseFelts.length > 0 && <Raise felts={raiseFelts} posts={[...raisePosts].map(([x, len]) => ({ x, len }))} wires={wireMarks} x={spanX} />}
+          {raise.felts.length > 0 && <Raise felts={raise.felts} posts={raise.posts} wires={raise.wires} x={spanX} />}
           {/* The chosen door: marked, with its swing (the point of the triangle is the hinge side) */}
           {O &&
             O.wallId === w.id &&

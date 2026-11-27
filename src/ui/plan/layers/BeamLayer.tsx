@@ -55,6 +55,10 @@ export function BeamLayer({ v, res, selection, dim, measured }: { v: Variant; re
         {res.posts.map((q) => (
           <rect key={`${q[0]},${q[1]}`} x={q[0] - ps / 2} y={q[1] - ps / 2} width={ps} height={ps} fill={SURFACE} stroke={INK} strokeWidth={linePx(sc, 1)} />
         ))}
+        {/* Ceiling wires on raised walls (Byggeregel S9): a circle with a cross over the post, as on the elevation */}
+        {(res.wires ?? []).map(({ at }) => (
+          <WireMark key={`w${at[0]},${at[1]}`} at={at} r={ps * 0.9} />
+        ))}
       </g>
     </g>
   )
@@ -107,6 +111,18 @@ function OffsetMeasures({ v, res, id }: { v: Variant; res: CalcResult; id?: stri
         const ts = [o.from[1 - k], o.to[1 - k]].sort((a, b) => a - b)
         return <Chain key={`${o.from}`} sc={sc} axis={axis} at={at + dir * clear} ts={ts} dir={dir} keep />
       })}
+    </g>
+  )
+}
+
+/** A ceiling wire's mark (Byggeregel S9, Bjørn 27.11.2026): a circle with a cross, the hanefot's gathering point. */
+export function WireMark({ at: [x, y], r }: { at: P; r: number }) {
+  const sc = usePlanScale()
+  const k = r * Math.SQRT1_2
+  return (
+    <g stroke={INK} strokeWidth={linePx(sc, 1)} fill="none">
+      <circle cx={x} cy={y} r={r} fill={SURFACE} />
+      <path d={`M${x - k} ${y - k}L${x + k} ${y + k}M${x + k} ${y - k}L${x - k} ${y + k}`} />
     </g>
   )
 }

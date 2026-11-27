@@ -10,7 +10,7 @@ import { idx, productOf, rules } from '../../env'
 import { EM, linePx, sizePx, textPx, usePlanScale } from '../planScale'
 import { beamBody, PLAN_MARGIN } from '../planStyle'
 import { DIM_NEAR, DIM_TOTAL, FRONT_NAME_DROP, sideNameOffset, totalSides } from '../dims'
-import { BeamStroke } from './BeamLayer'
+import { BeamStroke, WireMark } from './BeamLayer'
 import { RasterPattern, TextileStroke } from './TextileLayer'
 import { freeTextiles, wallTextiles } from '../../../domain/textile/mounts'
 
@@ -26,7 +26,7 @@ const TEXT = 9.5
 type Row =
   | { kind: 'eyebrow'; text: string }
   | { kind: 'floor'; colour: string | undefined; text: string }
-  | { kind: 'textile' | 'print' | 'beam'; text: string }
+  | { kind: 'textile' | 'print' | 'beam' | 'wire'; text: string }
   | { kind: 'head'; text: string }
   | { kind: 'scale'; m: number }
 
@@ -51,6 +51,7 @@ function legendBlocks(v: Variant, res: CalcResult, doc: boolean): { keys: Row[];
   if (textiles) keys.push({ kind: 'textile', text: `Tekstilvegg · ${textiles} stk` })
   if (v.foils.length) keys.push({ kind: 'print', text: 'Print og dekal' })
   if (k.beamLm > 1e-9) keys.push({ kind: 'beam', text: beamText(k) })
+  if (res.wires?.length) keys.push({ kind: 'wire', text: `Vaier fra tak · ${res.wires.length} stk` })
   return {
     keys: keys.length ? [{ kind: 'eyebrow', text: 'TEGNFORKLARING' }, ...keys] : [],
     head: [{ kind: 'eyebrow', text: 'TEGNING' }, { kind: 'head', text: doc ? `Variant ${v.name}` : `Variant ${v.name} · ${today()}` }, { kind: 'scale', m: doc ? 2 : 1 }],
@@ -150,6 +151,13 @@ export function Legend({ v, res, doc }: { v: Variant; res: CalcResult; doc: bool
               return (
                 <g key={`${c}-${n}`}>
                   <BeamStroke a={[x0, mid]} b={[x0 + sw, mid]} body={beamBody(sc, rules.beam.thickness)} />
+                  {text(r.text, { font: `400 ${px(TEXT)}px var(--font-ui)`, fill: INK_MUTED })}
+                </g>
+              )
+            case 'wire':
+              return (
+                <g key={`${c}-${n}`}>
+                  <WireMark at={[x0 + sw / 2, mid]} r={sw * 0.4} />
                   {text(r.text, { font: `400 ${px(TEXT)}px var(--font-ui)`, fill: INK_MUTED })}
                 </g>
               )

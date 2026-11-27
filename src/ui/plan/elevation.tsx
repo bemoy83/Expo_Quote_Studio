@@ -52,7 +52,7 @@ export function Raise({ felts, posts, wires = [], x }: { felts: { at: number; cc
       {/* A ceiling wire (Byggeregel S9, Bjørn 27.11.2026): a circle with a cross, the hanefot's gathering point over the
           eyebolt in the top rail */}
       {wires.map((p) => (
-        <g key={`w${p.x}`} stroke={INK} strokeWidth={0.012} fill="none">
+        <g key={`w${p.x}`} stroke={INK} strokeWidth={0.015} fill="none">
           <circle cx={p.x} cy={-p.len - WIRE_R} r={WIRE_R} fill={SURFACE} />
           <path d={`M${p.x - WIRE_R * 0.7} ${-p.len - WIRE_R * 1.7}L${p.x + WIRE_R * 0.7} ${-p.len - WIRE_R * 0.3}M${p.x + WIRE_R * 0.7} ${-p.len - WIRE_R * 1.7}L${p.x - WIRE_R * 0.7} ${-p.len - WIRE_R * 0.3}`} />
         </g>
@@ -62,7 +62,7 @@ export function Raise({ felts, posts, wires = [], x }: { felts: { at: number; cc
 }
 
 /** The wire mark's radius, m. */
-const WIRE_R = 0.07
+const WIRE_R = 0.1
 
 export function Posts({ xs, H }: { xs: number[]; H: number }) {
   const { post, feet } = rules.wall

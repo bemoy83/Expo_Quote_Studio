@@ -191,8 +191,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   fotplater teller ikke som støtte, bare et hjørne der begge veggene er hevet. En stolpe med vaier får ingen fotplate.
   Hver vaier er en V fra veggtoppen til to punkter i taket, én på hver side. Tilbudet har én linje 4300 Vaieroppheng
   (1570 kr per stk, «Støttevaier for vegg»), alltid utstillerens. På oppriss er vaieren en sirkel med kryss over
-  stolpen (hanefotens samlepunkt), i 3D en V.
-  *Bjørn 27.11.2026 · kode `src/calc/wallWires.ts`, `src/calc/context.ts`, `src/calc/lines/feet.ts`, `src/catalog/defaultCatalog.ts`, `src/ui/plan/elevation.tsx`, `src/ui/scene3d/build/frame.ts` · test `src/calc/wallWires.test.ts`*
+  stolpen (hanefotens samlepunkt), i plan en sirkel med kryss på stolpen, i 3D en V. Arbeidsordren tegner veggriss av
+  hver hevet vegg med vaierpunktene, og planen der viser dem (Bjørn 27.11.2026).
+  *Bjørn 27.11.2026 · kode `src/calc/wallWires.ts`, `src/calc/context.ts`, `src/calc/lines/feet.ts`, `src/catalog/defaultCatalog.ts`, `src/ui/plan/elevation.tsx`, `src/ui/plan/raiseDrawing.ts`, `src/ui/plan/layers/BeamLayer.tsx`, `src/ui/workorder/WorkOrderPage.tsx`, `src/ui/scene3d/build/frame.ts` · test `src/calc/wallWires.test.ts`*
 - **S10 Feste for vaier.** Vaieren festes i en øyebolt M5 med 503 (876 503 95) i toppskinnen 292. Plukklisten har
   «Vaieroppheng, V til taket» og «Øyebolt M5 med 503» per vaier (øyebolten er plassholder til artikkelen er kjent).
   Kalkylen har V-en og øyebolten som egne innkjøp, 503 som Foga-del, og tid for å henge opp og ta ned.
