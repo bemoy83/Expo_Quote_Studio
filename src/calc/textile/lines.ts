@@ -10,7 +10,8 @@ import { ITEM } from '../../pricing/data';
 import type { Use } from '../../pricing/model';
 import { count, type CalcContext } from '../context';
 import type { CalcLine } from '../types';
-import { isStandardLength, postHeight, type FrameMount } from './common';
+import { postHeight, type FrameMount } from './common';
+import { cutPieces } from './standard';
 
 /** One quote line per frame size: frame and textile of that size, with its own price (Bjørn 7.11.2026). */
 const quoteOf = (size: string, lead: boolean) => ({ key: `tekstil:${size}`, name: `Tekstilvegg ${size}`, lead });
@@ -58,8 +59,8 @@ interface FrameBuild {
 export function frameUses(p: FrameParts): Use[] {
   // Byggeregel X9: standard lengths are rented as metres of 43TX, any other length is cut for the job (cost rule 2)
   // and a splice piece is always cut
-  const spliced = new Map(p.spliced ?? []);
-  const cut = p.cuts.map(([l, q]) => [l, isStandardLength(l) ? (spliced.get(l) ?? 0) : q] as const);
+  const cutAt = new Map(cutPieces(p));
+  const cut = p.cuts.map(([l]) => [l, cutAt.get(l) ?? 0] as const);
   const std = p.cuts.map(([l, q], i) => [l, q - cut[i][1]] as const);
   const lm = (xs: readonly (readonly [number, number])[]) => xs.reduce((a, [l, q]) => a + l * q, 0) / 1000;
   return [

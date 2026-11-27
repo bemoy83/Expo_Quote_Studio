@@ -2,6 +2,7 @@
 // cut. Only for a frame whose rails could be a standard length: one rail, no 92LTX corner (a rail toward a corner post
 // is always cut, X7, and a spliced rail always has a cut splice piece).
 import { RECIPES, type TextileFrameRecipe } from '../../foga/recipes';
+import type { FrameParts } from '../../foga/structure';
 import { isStandardLength } from './common';
 
 interface FrameLike {
@@ -26,4 +27,11 @@ export function standardChoices(f: FrameLike, min: number, r: TextileFrameRecipe
   const below = ok.filter((x) => x < L).sort((a, b) => b - a)[0];
   const above = ok.filter((x) => x > L).sort((a, b) => a - b)[0];
   return [below, above].filter((x): x is number => x !== undefined);
+}
+
+/** The 43TX pieces of a frame cut for the job, length and qty (Byggeregel X9): a length outside the standard ones, and
+ *  every splice piece, also one at a standard length. */
+export function cutPieces(p: FrameParts, r: TextileFrameRecipe = RECIPES.textileFrame): [number, number][] {
+  const spliced = new Map(p.spliced ?? []);
+  return p.cuts.map(([l, q]): [number, number] => [l, isStandardLength(l, r) ? (spliced.get(l) ?? 0) : q]).filter(([, q]) => q > 0);
 }

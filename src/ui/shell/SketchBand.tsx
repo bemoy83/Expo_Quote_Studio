@@ -1,5 +1,6 @@
 // The band at the top of Standskisse: fold buttons for the panel and the calc, the variants, and the key figures with
 // the guiding sum (and how the other variants differ from it).
+import { cutPieces } from '../../calc/textile/standard'
 import { Copy, type LucideIcon, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Trash2 } from 'lucide-react'
 import type { CalcResult } from '../../calc/calc'
 import type { Variant } from '../../domain/types'
@@ -72,9 +73,11 @@ export function SketchBand({ variants, current, res, others, layout, fold, onSel
   )
 }
 
-/** InFrame frames and free-standing walls. */
+/** The frames, on a wall or on foot plates alike (one product, Bjørn 7.11.2026), and how many are cut (X9). */
 function textileSub(p: CalcResult['production']) {
-  return [p.pieces.length ? frameCount(p.pieces.length) : '', p.free.length ? `${p.free.length} frittstående` : ''].filter(Boolean).join(' · ')
+  const all = [...p.pieces, ...p.free]
+  const cut = all.filter((f) => cutPieces(f.parts).length > 0).length
+  return [all.length ? frameCount(all.length) : '', cut ? `${cut} kappet` : ''].filter(Boolean).join(' · ')
 }
 
 /** Stand walls apart from inner and room walls, and who pays them. */

@@ -226,7 +226,8 @@ alle tre innen 3 % på tid, og kosten gir DG 70 % på dagens pris (prisen er nå
 121 per meter takdrager). Tidene sjekkes i `src/calc/calc.test.ts`; prisene sjekkes utenfor repoet,
 fordi den ekte prislisten ikke publiseres.
 
-Fanen Referanser på siden Kostgrunnlag regner de tre standene og frittstående tekstilvegger på 3 til 6 m med
+Fanen Referanser på siden Kostgrunnlag regner de tre standene og frittstående tekstilvegger på 3 til 6 m, på
+standardlengdene 2970, 3970, 4970 og skjøtt 5970, pluss en kappet 3000 (3000 er ingen standard, Bjørn 27.11.2026), med
 kostgrunnlaget i bruk (`src/calc/referenceSet.ts`): pris, kost, DG og timer. Med endringer som ikke er lagret, viser den
 tallene med endringene og forskjellen fra nå, så et nytt tall kan sjekkes mot kalibreringen før det lagres som ny
 versjon.
