@@ -41,11 +41,12 @@ export function ElevationDims({ w, s, name, L, H, posts, items, leaders, top, wi
   const uprights = items.find((i) => i.uprights)?.uprights
   // Over the whole wall: over a raise and its wire marks (V20)
   const rowY = -headroom - px(NEAR)
-  // Over the chain over a measured item, or straight over the wall (over a raise and its wire marks); in a raised
-  // wall's lower felt, in its own row just under the middle rail (V20)
-  const railFoot = rules.wall.profile.top
+  // Over the chain over a measured item, or straight over the wall; in a raised wall's lower felt, in its own row just
+  // under the middle rail (V20), or beside its dot when the thing reaches up to the rail
   const textY = (l: Leader) =>
-    l.under ? railFoot + px(4 + LEADER_FONT) + l.level * px(LEADER_LINE) : (mode === 'item' ? rowY - px(NEAR + 14) : -headroom - px(NEAR)) - l.level * px(LEADER_LINE)
+    l.under
+      ? Math.min(rules.wall.profile.top + px(4 + LEADER_FONT) + l.level * px(LEADER_LINE), l.y + px(3.5))
+      : (mode === 'item' ? rowY - px(NEAR + 14) : rowY) - l.level * px(LEADER_LINE)
   const mono = { font: `500 ${px(LEADER_FONT)}px var(--font-numeric)`, fill: INK_MUTED }
   // The heading as wide as the drawing allows: the ends alone on a narrow wall (the drawer's title names the wall)
   const ends = `← ${head.left}\u00a0\u00a0\u00a0${head.right} →`
@@ -100,8 +101,7 @@ export function ElevationDims({ w, s, name, L, H, posts, items, leaders, top, wi
 
       {/* Names: the textile frames, decals and prints on the wall when the wall is chosen */}
       {leaders.map((l, i) => {
-        // A thing reaching up to the middle rail has no room over it in its felt: the text beside its dot
-        const y = l.under ? Math.min(textY(l), l.y + px(3.5)) : textY(l)
+        const y = textY(l)
         // To the left of its line when it would run past the drawing's right edge
         const flip = l.x + px(6 + textPx(l.text, LEADER_FONT)) > right
         const d = flip ? -1 : 1
