@@ -6,6 +6,7 @@ import {
   dgOfMarkup,
   fogaPartPerUse,
   heightMinutes,
+  liftHours,
   hourlyCost,
   indexFactor,
   labourCost,
@@ -88,6 +89,11 @@ describe('cost buckets', () => {
     expect(needsLift(3020, P)).toBe(true);
     expect(heightMinutes(40, 2540, P)).toBe(40);
     expect(heightMinutes(40, 4000, P)).toBe(50);
+  });
+  it('height: the lift’s hours are the minutes up there × the factor, whole hours per order', () => {
+    expect(liftHours(0, P.height)).toBe(0);
+    expect(liftHours(48, P.height)).toBe(1);
+    expect(liftHours(49, P.height)).toBe(2);
   });
 });
 

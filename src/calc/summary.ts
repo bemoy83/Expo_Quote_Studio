@@ -5,6 +5,8 @@ import { beamSpecs } from '../foga/fromVariant';
 import { bom } from '../foga/engine';
 import { RECIPES } from '../foga/recipes';
 import { dgOf } from '../pricing/model';
+import { liftHours } from '../cost/model';
+import type { CostParams } from '../cost/params';
 import { addTime, type Time } from '../cost/time';
 import type { CalcContext } from './context';
 import { foilAreas } from './lines/decor';
@@ -24,6 +26,8 @@ export function summary(c: CalcContext, lines: CalcLine[], organiserLines: CalcL
   // Once per quote, not per line or frame (Bjørn 7.11.2026: three motifs get one start, one picking, one delivery)
   const printed = c.prod.pieces.some((p) => p.fill === 'print') || c.prod.free.some((f) => f.faces.some((x) => x.fill === 'print'));
   const order = lines.length ? c.pricing.orderCosts.filter((o) => o.when !== 'trykk' || printed).map(({ id, name, cost, minutes }) => ({ id, name, cost, ...(minutes ? { minutes } : {}) })) : [];
+  const lift = liftCost(lines, c.pricing.height);
+  if (lift) order.push(lift);
   const knownCost = known.reduce((a, l) => a + l.cost!, 0) + order.reduce((a, o) => a + o.cost, 0);
   const { floor, floorTotal } = floorAreas(v);
   const foil = foilAreas(c);
@@ -72,4 +76,16 @@ export function summary(c: CalcContext, lines: CalcLine[], organiserLines: CalcL
     bom: bom(foga, RECIPES, c.sizes),
     organiser: { lines: organiserLines, sum: organiserLines.reduce((a, l) => a + l.sum, 0), cost: organiserLines.reduce((a, l) => a + (l.cost ?? 0), 0) },
   };
+}
+
+/**
+ * The lift (cost rule 6, Bjørn 27.11.2026): when work on the order reaches above the limit, a sakselift 4304 is rented by
+ * the hour, its hours the montering and demontering minutes of that work × the factor, rounded up once per order. Cost
+ * only, never on the quote. Any line can mark its work as high with `top` (raised walls and their wires now; tall textile
+ * and snekkervegger can do the same).
+ */
+export function liftCost(lines: readonly CalcLine[], h: CostParams['height']): { id: string; name: string; cost: number } | undefined {
+  const minutes = lines.filter((l) => (l.top ?? 0) > h.limit).reduce((a, l) => a + (l.time.montering ?? 0) + (l.time.demontering ?? 0), 0);
+  const hours = liftHours(minutes, h);
+  return hours ? { id: 'lift', name: `Sakselift ${hours} t`, cost: hours * h.liftPerHour } : undefined;
 }

@@ -7,6 +7,7 @@ import { fogaPart } from '../../foga/parts';
 import { raisePlate } from '../../foga/plates';
 import { RECIPES } from '../../foga/recipes';
 import { ITEM } from '../../pricing/data';
+import { raiseTop } from '../../rules/rules';
 import type { Use } from '../../pricing/model';
 import { countBy, toOrganiser, type CalcContext } from '../context';
 import type { CalcLine } from '../types';
@@ -93,6 +94,6 @@ export function raiseLines(c: CalcContext): CalcLine[] {
         { id: ITEM.raiseModule, qty: mods.length },
       ];
       const lm = mods.reduce((a, m) => a + m.cc, 0);
-      return c.line(`${id}-${len}`, lm, { ...c.built, meta: `+${len} mm` }, uses);
+      return { ...c.line(`${id}-${len}`, lm, { ...c.built, meta: `+${len} mm` }, uses), top: raiseTop(len, c.rules) };
     });
 }

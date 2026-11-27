@@ -90,7 +90,7 @@ DG regnes på direkte kost, og kalkylen viser hva som er igjen etter indirekte k
 | 3 | Kjøpt til jobben: trykt tekstil, folie, teip | innkjøp × (1 + svinn) |
 | 4 | Arbeid: plukk, vask, transport, forhåndsmontering, montering, demontering | personminutter / 60 × timekost × (1 + andel overtid × overtidstillegg × lønnsandel) |
 | 5 | Per ordre: startkost trykk, administrasjon, transport | fast, én gang per tilbud |
-| 6 | Høyde: over 3,0 m, der 5-trinns stige ikke rekker | lift per dag som egen kost, og monteringsminutter × faktor |
+| 6 | Høyde: over 3,0 m, der 5-trinns stige ikke rekker | sakselift 4304 per time som ordrekost: monterings- og demonteringsminutter for arbeid over grensen × faktor, rundet opp til hele timer per ordre. Bare i kalkylen, aldri på tilbudet. En linje merker arbeid over grensen med `top` (i dag hevet vegg og vaier, senere høy tekstil og snekkervegg) |
 
 Regel 2 (spesialkapp) og 6 (høyde) finnes i `model.ts` med tester, men kalkylen bruker dem ikke ennå: tekstilrammer
 kappes alltid til mål og har i stedet egen slitasje (gruppen `frame`, under), og appen tegner ikke over 3,0 m ennå.
@@ -191,7 +191,7 @@ eksempeltall til ekte tall finnes (7.11.2026). Motoren skal kunne få nye tall f
 | Frakt | 0 | Bjørn: kanskje 1 700 kr per bestilling, må sjekkes |
 | Spesialkapp: gjenbruk / svinn / kappetid | 25 % / 10 % / 5 personminutter | forslag |
 | Kjøpt til jobben: svinn | 5 % | forslag |
-| Høyde: grense / faktor / lift per dag | 3 000 mm / 1,25 / ikke kjent | Bjørn / forslag / ikke kjent |
+| Høyde: grense / faktor / sakselift per time | 3 000 mm / 1,25 / 967 kr | Bjørn / forslag / Bjørn 27.11.2026 (4304 timeleie uten fører) |
 | Startkost trykk | 400 kr, 2022, per tilbud med trykt tekstil | Bjørns kalkulator |
 | Administrasjon, transport | 20 personminutter hver, per tilbud | Bjørns kalkulator |
 
@@ -240,6 +240,5 @@ grunnlaget den nyeste versjonen erstattet.
 - Når kostgrunnlaget kan hentes fra OMS i stedet for fra fil.
 - Riktig kurs SEK–NOK og frakt per bestilling.
 - Bruk per år per artikkel, fra OMS når historikken finnes.
-- Pris på lift.
 - Ekte levetid, bruk per år, påslag for indirekte kost og lønnsindeks.
 - Om fortolling fra Sverige gir kost utover frakt (regnskap).

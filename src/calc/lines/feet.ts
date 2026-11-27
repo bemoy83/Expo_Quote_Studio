@@ -3,6 +3,7 @@
 import { fogaPart } from '../../foga/parts';
 import { RECIPES } from '../../foga/recipes';
 import { ITEM } from '../../pricing/data';
+import { raiseTop } from '../../rules/rules';
 import type { CalcContext } from '../context';
 import type { CalcLine } from '../types';
 
@@ -22,8 +23,11 @@ export function footLines(c: CalcContext): CalcLine[] {
 export function wireLines(c: CalcContext): CalcLine[] {
   const n = c.wires.length;
   if (!n || !c.sys.wallWire) return [];
-  return [c.line(c.sys.wallWire, n, { ...c.built, meta: 'hevet vegg' }, [
+  // Hung from the top of the highest raised wall: worked from the lift (cost rule 6)
+  const top = Math.max(...c.mods.map((m) => (m.raise ? raiseTop(m.raise.len, c.rules) : 0)));
+  const line = c.line(c.sys.wallWire, n, { ...c.built, meta: 'hevet vegg' }, [
     { id: ITEM.wire, qty: n },
     { id: ITEM.wireMount, qty: n },
-  ])];
+  ]);
+  return [{ ...line, top }];
 }

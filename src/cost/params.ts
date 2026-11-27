@@ -64,10 +64,10 @@ export interface CostParams {
   height: {
     /** Above this, mm, a 5-step ladder does not reach and a lift is needed (Bjørn 7.11.2026). */
     limit: number;
-    /** Montering minutes for what stands above the limit are multiplied by this. Forslag. */
+    /** The lift's hours: montering and demontering minutes of what reaches above the limit × this (Bjørn 27.11.2026). Forslag. */
     factor: number;
-    /** Lift rental per day, kr. Not known yet. */
-    liftPerDay: number;
+    /** Lift rental per hour, kr: sakselift 4304 timeleie uten fører (Bjørn 27.11.2026). */
+    liftPerHour: number;
   };
 }
 
@@ -135,7 +135,7 @@ export const DEFAULT_COST_PARAMS: CostParams = {
   indirect: 0.1,
   dg: { utleie: 3 / 4, arbeid: 1.25 / 2.25, salg: 0.3 / 1.3 },
   carpet: { material: 38, tapeMaterial: 3, minLay: 1.5, minCut: 0.5, minSeam: 1.5, minTape: 0.6 },
-  height: { limit: 3000, factor: 1.25, liftPerDay: 0 },
+  height: { limit: 3000, factor: 1.25, liftPerHour: 967 },
 };
 
 /** Per-order costs, counted once per quote (Bjørn 7.11.2026): start-up for printed textile, admin/picking at 10 minutes

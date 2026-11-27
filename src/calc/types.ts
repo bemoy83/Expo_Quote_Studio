@@ -14,6 +14,8 @@ import type { WallSupport } from './wallSupports';
 
 export interface CalcLine {
   name: string;
+  /** How high the work on the line reaches, mm, when above the walls' top: over the limit it needs a lift (cost rule 6). */
+  top?: number;
   meta?: string;
   qty: number;
   unit: Unit;
