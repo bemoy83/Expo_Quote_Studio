@@ -14,9 +14,6 @@ import { findMotif } from '../../motifs'
 import { PRINT } from '../drawerParts'
 import { pickOn, strokeAt, type PaintTool, type StrokePlate } from '../paintTools'
 
-/** Why the upper felt takes no print or decal yet (V20). */
-export const UPPER_PRINT = 'Print og dekal på øvre felt kommer snart'
-
 export interface PaintDeps {
   v: Variant
   w: Wall
@@ -46,7 +43,7 @@ export function wallPaint({ v, w, s, built, mods, motifs, tool, paintSel, motifS
   const paint = paintSel ?? ral
   const pm = findMotif(motifs, motifSel ?? undefined) ?? motifs[0]
   const printing = paint === PRINT
-  const printedAt = (x: Variant, i: number) => printsOn(x, w.id, s).find((f) => f.module === i)
+  const printedAt = (x: Variant, i: number) => printsOn(x, w.id, s).find((f) => f.module === i && !f.upper)
   const deps = { v, tool, paint, motif: pm?.id, kept: printKept, onEdit, onCheckpoint, onToast }
   /**
    * Plate `i` of the wall (module key `key`) for the one stroke rule (paintTools.strokeAt). `leaf`: the door leaf of a
@@ -83,13 +80,17 @@ export function wallPaint({ v, w, s, built, mods, motifs, tool, paintSel, motifS
   const pickAt = (i: number, key: string, leaf = false) => (r: string, motif = pm?.id) => pickOn(plate(i, key, leaf), r, motif, onEdit, onToast)
   /** A colour picked on the upper felt of raised plate `i` (Byggeregel V20): a plate of its own over the middle rail. */
   const pickUpper = (i: number, key: string) => (r: string, motif = pm?.id) => pickOn(upper(i, key), r, motif, onEdit, onToast)
-  /** The upper felt of raised plate `i` for the stroke rule: colour only, for now (print and decals come with V20 step 2). */
+  /** The upper felt of raised plate `i` for the stroke rule (V20): a surface of its own, colour and print. */
   const upper = (i: number, key: string): StrokePlate => ({
     ...plate(i, key, false),
-    noPrint: () => UPPER_PRINT,
-    printOne: () => null,
-    colour: () => ({ cur: mods[i]?.raise?.ral ?? base(key), base: base(key), printed: false }),
-    paintOne: (r) => (x) => paintUpper(x, key, r),
+    noPrint: () => foilBlocked(v, rules, w.id, i, s, true, true),
+    printOne: (m, first) => {
+      const cur = printsOn(v, w.id, s).find((f) => f.module === i && f.upper)
+      if (!first && cur?.motif === m) return null
+      return printPlate(v, rules, w.id, i, s, m, true) === v ? null : (x) => printPlate(x, rules, w.id, i, s, m, true)
+    },
+    colour: () => ({ cur: mods[i]?.raise?.ral ?? base(key), base: base(key), printed: printsOn(v, w.id, s).some((f) => f.module === i && f.upper) }),
+    paintOne: (r) => (x) => paintUpper(x, w.id, s, i, key, r),
   })
   return { painting, paint, printing, pm, paintAt, pickAt, pickUpper }
 }

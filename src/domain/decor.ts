@@ -3,7 +3,7 @@
 // textile on the same face. Faces and felts: domain/faces.ts; textile walls: domain/textile/inFrame.ts (this file
 // imports from there, never the other way).
 import type { Rules } from '../rules/rules';
-import { faceNormal, faces, feltCc, wallFelt, feltWall, sideOf, type FaceSide } from './faces';
+import { faceNormal, faces, feltCc, wallFelt, wallUpperFelt, feltWall, sideOf, type FaceSide } from './faces';
 import { pointAlong, moduleAt, moduleCount, moduleStart, wallLength } from './grid';
 import { nextId } from './ids';
 import { roomAt } from './rooms';
@@ -16,8 +16,13 @@ const r1 = (n: number) => Math.round(n * 10) / 10;
 const r3 = (n: number) => Math.round(n * 1000) / 1000;
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
 
-/** The felt a foil sits in, as long as its module (a shorter last module has a narrower panel, V1). */
-export const foilFelt = (v: Pick<Variant, 'walls'>, rules: Rules, f: Foil) => wallFelt(v, rules, f.wallId, f.module);
+/** The felt a foil sits in, as long as its module (a shorter last module has a narrower panel, V1): the upper felt of a
+ *  raised plate for one there (V20), while the wall is raised. */
+export const foilFelt = (v: Pick<Variant, 'walls'>, rules: Rules, f: Pick<Foil, 'wallId' | 'module' | 'upper'>) =>
+  (f.upper && wallUpperFelt(v, rules, f.wallId, f.module)) || wallFelt(v, rules, f.wallId, f.module);
+
+/** The band a foil is on, the plate or the upper felt over the middle rail (V20): `upper` true for the upper felt. */
+export const inBand = (f: Pick<Foil, 'upper'>, upper: boolean) => !!f.upper === upper;
 
 /** Centre of a foil along the wall, metres from the wall start. */
 export const foilCenter = (v: Pick<Variant, 'walls'>, rules: Rules, f: Foil) => foilFelt(v, rules, f).center + f.x;
@@ -34,9 +39,11 @@ export function foilSpan(v: Pick<Variant, 'walls'>, rules: Rules, f: Foil): [num
 }
 
 /** Why a felt cannot take foil, or null when it can. */
-export function foilBlocked(v: Variant, rules: Rules, wallId: string, module: number, s: FaceSide, full = false): string | null {
+export function foilBlocked(v: Variant, rules: Rules, wallId: string, module: number, s: FaceSide, full = false, upper = false): string | null {
   const at = feltWall(v, wallId, module);
   if (!at) return 'Ingen vegg her';
+  // The upper felt (V20) stands over a door too, and over every textile frame (they end at 2540)
+  if (upper) return at.w.raise ? null : 'Veggen er ikke hevet';
   const { blocked } = at;
   // A print over the whole plate may cover a door (leaf and header); a decal never sits on an opening
   if (blocked.openings.has(module) && !(full && blocked.doors.has(module))) return 'Folie kan ikke ligge på en åpning';
@@ -84,19 +91,22 @@ export function addFoil(
   s: FaceSide,
   motif: string | undefined,
   ratio: number,
+  upper = false,
 ): { v: Variant; id: string } | { error: string } {
-  const onFull = foilsOn(v, wallId, s).some((f) => f.module === module && f.full);
-  const why = foilBlocked(v, rules, wallId, module, s, onFull);
+  const here = foilsOn(v, wallId, s).filter((f) => f.module === module && inBand(f, upper));
+  const onFull = here.some((f) => f.full);
+  const why = foilBlocked(v, rules, wallId, module, s, onFull, upper);
   if (why) return { error: why };
-  const full = foilsOn(v, wallId, s).find((f) => f.module === module && f.full);
+  const full = here.find((f) => f.full);
   if (full) {
     // A new motif on a plate of a stretched print makes it a whole motif on that plate
     const { motif: _m, run: _r, crop: _c, ...rest } = full;
     return { v: { ...v, foils: v.foils.map((f) => (f.id === full.id ? { ...rest, ...(motif ? { motif } : {}) } : f)) }, id: full.id };
   }
   const id = nextId(v.foils.map((f) => f.id), 'f');
-  const fe = wallFelt(v, rules, wallId, module);
-  const f = fitFoil(v, { id, wallId, module, side: s, full: false, width: fe.w * 0.8, height: 0, x: 0, y: DECAL_Y, ...(motif ? { motif } : {}) }, rules, ratio);
+  const fe = foilFelt(v, rules, { wallId, module, ...(upper && { upper }) });
+  // On the upper felt (V20) in its middle, else at eye height
+  const f = fitFoil(v, { id, wallId, module, side: s, full: false, width: fe.w * 0.8, height: 0, x: 0, y: upper ? (fe.y0 + fe.y1) / 2 : DECAL_Y, ...(motif ? { motif } : {}), ...(upper && { upper: true as const }) }, rules, ratio);
   return { v: { ...v, foils: [...v.foils, f] }, id };
 }
 
@@ -120,7 +130,7 @@ export function updateFoil(v: Variant, rules: Rules, id: string, patch: FoilPatc
   const w = v.walls.find((x) => x.id === f.wallId);
   if (side !== sideOf(v, f) && (!w || !faces(v, w).includes(side))) return v;
   const full = patch.full ?? f.full;
-  if ((module !== f.module || side !== sideOf(v, f) || full !== f.full) && foilBlocked(v, rules, f.wallId, module, side, full)) return v;
+  if ((module !== f.module || side !== sideOf(v, f) || full !== f.full) && foilBlocked(v, rules, f.wallId, module, side, full, !!f.upper)) return v;
   const { motif: _m, run: _r, crop: _c, ...rest } = f;
   const motif = patch.motif === undefined ? f.motif : patch.motif ?? undefined;
   const wasFull = f.full;
@@ -134,13 +144,13 @@ export function updateFoil(v: Variant, rules: Rules, id: string, patch: FoilPatc
     width: patch.width ?? (wasFull && !full ? wallFelt(v, rules, f.wallId, module).w * 0.8 : f.width),
     height: f.height,
     x: patch.x ?? (wasFull && !full ? 0 : f.x),
-    y: patch.y ?? (wasFull && !full ? DECAL_Y : f.y),
+    y: patch.y ?? (wasFull && !full ? (f.upper ? f.y : DECAL_Y) : f.y),
     ...(motif ? { motif } : {}),
     ...(keepRun ? { run: f.run, ...(f.crop ? { crop: f.crop } : {}) } : {}),
   };
   const next = fitFoil(v, base, rules, ratio);
   // A full-felt foil replaces the other foils on that felt.
-  const drop = full ? new Set(foilsOn(v, f.wallId, side).filter((o) => o.module === module && o.id !== id).map((o) => o.id)) : new Set<string>();
+  const drop = full ? new Set(foilsOn(v, f.wallId, side).filter((o) => o.module === module && inBand(o, !!f.upper) && o.id !== id).map((o) => o.id)) : new Set<string>();
   return { ...v, foils: v.foils.filter((o) => !drop.has(o.id)).map((o) => (o.id === id ? next : o)) };
 }
 
@@ -230,7 +240,12 @@ export function fitDecor(v: Variant, rules: Rules, ratio: (motif: string | undef
   for (const f of v.foils) {
     const w = v.walls.find((x) => x.id === f.wallId);
     const s = w ? sideOf(v, f) : 1;
-    if (!w || !faces(v, w).includes(s) || foilBlocked(withTex, rules, f.wallId, f.module, s, f.full)) {
+    if (!w || !faces(v, w).includes(s) || foilBlocked(withTex, rules, f.wallId, f.module, s, f.full, !!f.upper)) {
+      changed = true;
+      continue;
+    }
+    // A decal on an upper felt made lower than it is goes (V20, Bjørn 27.11.2026): a print is fitted to the felt again
+    if (f.upper && !f.full && f.height > foilFelt(withTex, rules, f).h + EPS) {
       changed = true;
       continue;
     }

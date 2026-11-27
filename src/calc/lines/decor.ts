@@ -8,15 +8,16 @@ import type { CalcContext } from '../context';
 import type { CalcLine } from '../types';
 
 /** Foil m², decal and full plate, for the lines and the key figures. */
-export function foilAreas(c: CalcContext): { decal: number; full: number; fullCount: number } {
+export function foilAreas(c: CalcContext): { decal: number; full: number; fullCount: number; upperCount: number } {
   const { v, rules } = c;
   const wallIds = new Set(v.walls.map((w) => w.id));
   const fullFelt = (rules.wall.plate.width * rules.wall.plate.height) / 1e6;
   const foils = v.foils.filter((f) => wallIds.has(f.wallId));
   const fullCount = foils.filter((f) => f.full).length;
-  // A print on one surface of a door (its header or leaf, the brush) is that window of the plate; the rest a whole felt
-  const full = foils.filter((f) => f.full).reduce((a, f) => a + (f.door ? f.width * f.height : fullFelt), 0);
-  return { decal: foils.filter((f) => !f.full).reduce((a, f) => a + f.width * f.height, 0), full, fullCount };
+  // A print on one surface of a door (its header or leaf, the brush) is that window of the plate, one on an upper felt
+  // (V20) its light opening, by its area; the rest a whole felt
+  const full = foils.filter((f) => f.full).reduce((a, f) => a + (f.door || f.upper ? f.width * f.height : fullFelt), 0);
+  return { decal: foils.filter((f) => !f.full).reduce((a, f) => a + f.width * f.height, 0), full, fullCount, upperCount: foils.filter((f) => f.full && f.upper).length };
 }
 
 /** Print and decals on the counters of Disker og podier (K20). */
@@ -52,7 +53,8 @@ export function decorLines(c: CalcContext): CalcLine[] {
   const and = (s: string, extra: string | false) => [s, extra].filter(Boolean).join(' · ');
   return [
     c.line(sys.foil, r3(foil.decal + disk.decal), { meta: and(foil.decal > 0 || !disk.decal ? 'innenfor ett veggfelt' : '', disk.decal > 0 && 'dekal på disk') }),
-    c.line(sys.foilFull, r3(foil.full), { meta: foil.fullCount ? `${foil.fullCount} felt · ${plateSize}` : '' }),
+    // Upper felts of raised walls (V20) are their own size: counted apart
+    c.line(sys.foilFull, r3(foil.full), { meta: foil.fullCount ? and(foil.fullCount > foil.upperCount ? `${foil.fullCount - foil.upperCount} felt · ${plateSize}` : '', foil.upperCount > 0 && `${foil.upperCount} øvre felt`) : '' }),
     c.line(sys.foilCounter, r3(disk.full), { meta: diskSizes(disk.sizes) }),
     c.line(sys.printSetup, runs.length + disk.runs, { meta: [...runs.map((r) => `${r.length} plater`), ...(disk.runs ? [`${disk.runs} på disk`] : [])].join(' · ') }),
   ];

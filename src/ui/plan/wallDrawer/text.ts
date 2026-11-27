@@ -19,7 +19,7 @@ import type { PaintTool } from '../paintTools'
 export function wallTitle(v: Variant, w: Wall, T?: TextileWall, F?: Foil, S?: Shelf): string {
   if (T) return 'Tekstilvegg'
   if (S) return 'Hylle'
-  if (F) return F.full ? 'Print på hel plate' : 'Foliedekal'
+  if (F) return F.full ? (F.upper ? 'Print på øvre felt' : 'Print på hel plate') : 'Foliedekal'
   const room = w.room && v.rooms.find((r) => r.id === w.room!.id)
   if (room) return `${roomName(room)} ${roomSize(room)} · vegg`
   const label = wallLabel(w)
@@ -51,7 +51,7 @@ export function wallMeta(
       .filter(Boolean)
       .join(' · ')
   }
-  if (F) return `Felt ${F.module + 1} · ${mm(F.width)} × ${mm(F.height)} mm${F.run ? ` · del av print over ${v.foils.filter((y) => y.run === F.run).length} plater` : ''}`
+  if (F) return `${F.upper ? 'Øvre felt' : 'Felt'} ${F.module + 1} · ${mm(F.width)} × ${mm(F.height)} mm${F.run ? ` · del av print over ${v.foils.filter((y) => y.run === F.run).length} plater` : ''}`
   return [
     `${fmt(L, 2)} m`,
     count(plates ?? wallModules(w).length - openings.length, 'plate', 'plater') + (odd ? ` (${odd} i egen farge)` : ''),
@@ -107,15 +107,15 @@ export function wallWhy(
   rules: Rules,
   w: Wall,
   s: FaceSide,
-  x: { felt?: { m: number; page: 'decor' | 'extras' }; twoFaces: boolean; T?: TextileWall; F?: Foil; S?: Shelf; shelves: number },
+  x: { felt?: { m: number; page: 'decor' | 'extras'; upper?: boolean }; twoFaces: boolean; T?: TextileWall; F?: Foil; S?: Shelf; shelves: number },
 ): string | null {
   const { felt, T, F, S } = x
   if (felt) {
     if (felt.page === 'extras') return shelfBlocked(v, w.id, felt.m, s)
-    const printed = printsOn(v, w.id, s).some((f) => f.module === felt.m)
-    return foilBlocked(v, rules, w.id, felt.m, s, true) ?? (x.twoFaces && !printed ? 'Fargen gjelder platen på begge sider' : null)
+    const printed = printsOn(v, w.id, s).some((f) => f.module === felt.m && !!f.upper === !!felt.upper)
+    return foilBlocked(v, rules, w.id, felt.m, s, true, felt.upper) ?? (x.twoFaces && !printed ? 'Fargen gjelder platen på begge sider' : null)
   }
-  if (F?.full) return `Dekker hele platen, ${rules.wall.plate.width} × ${rules.wall.plate.height} mm`
+  if (F?.full) return F.upper ? `Dekker det øvre feltet, ${Math.round(F.width * 1000)} × ${Math.round(F.height * 1000)} mm lysmål` : `Dekker hele platen, ${rules.wall.plate.width} × ${rules.wall.plate.height} mm`
   if (T?.fill === 'reuse') return REUSE_NOTE
   if (S) return hintLine(tooHigh(rules, S.y) && highWarning(rules), x.shelves === 1 && offRow(v, S.id) && 'Avviker fra raden') || null
   return null

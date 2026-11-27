@@ -275,7 +275,7 @@ export function FeltPanel(props: {
 }) {
   const { v, w, s, m, upper, mods, motifs, pm, setTool, pick, select, onEdit } = props
   const plate = upper ? mods[m]!.raise!.ral : mods[m]!.plate
-  const printed = upper ? undefined : printsOn(v, w.id, s).find((f) => f.module === m)
+  const printed = printsOn(v, w.id, s).find((f) => f.module === m && !!f.upper === !!upper)
   const arrows = <FeltArrows m={m} s={s} mods={mods} upper={upper} select={select} />
   /** The bucket or brush: the felt lets go and the wall is coloured as with nothing chosen. */
   const take = (t: PaintTool) => {

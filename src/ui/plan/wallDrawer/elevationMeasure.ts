@@ -108,7 +108,7 @@ export function elevationItems(
       }
     }),
     ...foils
-      .filter((f) => !(f.full && doorModules.has(f.module)))
+      .filter((f) => !(f.full && !f.upper && doorModules.has(f.module)))
       .map((f): ElevationItem => {
         const c = foilCenter({ walls }, rules, f)
         const x0 = spanX(c - f.width / 2, c + f.width / 2)

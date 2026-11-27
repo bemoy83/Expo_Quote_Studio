@@ -281,6 +281,9 @@ export interface Foil {
    * surface's window of it shows. None: one picture over both (the paint bucket).
    */
   door?: DoorSurface;
+  /** On the upper felt of a raised plate (Byggeregel V20), a band of its own over the middle rail: `y` is still from the
+   *  floor. None: on the plate. */
+  upper?: true;
 }
 
 /** The two surfaces of a door module: the header plate (overstykke) and the door leaf. */

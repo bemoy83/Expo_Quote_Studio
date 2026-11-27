@@ -244,7 +244,7 @@ export function WallElevation(p: Props) {
               const hinge = u(o.hinge === -1 ? st(i) + 1 - k : st(i) + k)
               const free = u(o.hinge === -1 ? st(i) + k : st(i) + 1 - k)
               // Print on the door: one picture over header and leaf, or one on each surface (the brush)
-              const fps = door ? foils.filter((f) => f.full && f.module === i) : []
+              const fps = door ? foils.filter((f) => f.full && !f.upper && f.module === i) : []
               const parts = fps.map((f) => ({ f, at: doorPrint(f, x, Math.min(hinge, free)) }))
               const fp = fps.length > 0
               return (
@@ -325,7 +325,7 @@ export function WallElevation(p: Props) {
 
           {/* Foil decals */}
           {foils.map((f) => {
-            if (f.full && doorModules.has(f.module)) return null
+            if (f.full && !f.upper && doorModules.has(f.module)) return null
             const c = foilCenter(v, rules, f)
             const x = spanX(c - f.width / 2, c + f.width / 2)
             const m = findMotif(motifs, f.motif)

@@ -10,7 +10,7 @@
 // this file puts it together.
 import { AlignVerticalSpaceAround, DoorOpen, FlipHorizontal2, MoveHorizontal, Palette, Plus } from 'lucide-react'
 import { production } from '../../calc/textile/production'
-import { addFoil, foilBlocked, foilsOn, removeFoil, updateFoil } from '../../domain/decor'
+import { addFoil, foilBlocked, foilsOn, inBand, removeFoil, updateFoil } from '../../domain/decor'
 import { eraseWalls } from '../../domain/edit'
 import { wallRal } from '../../domain/plateDecor'
 import { printsOn } from '../../domain/print'
@@ -32,7 +32,7 @@ import { chosen, chosenShelves, isOnWall, type PlanSelection } from './selection
 import { addTextile, fillTextile, removeTextile, textilesOn, updateTextile } from '../../domain/textile/inFrame'
 import { faces, type FaceSide } from '../../domain/faces'
 import { faceName, roomsAgainst } from './wallDrawer/face'
-import { UPPER_PRINT, wallPaint } from './wallDrawer/paint'
+import { wallPaint } from './wallDrawer/paint'
 import { FeltFittings, ShelfPanel, WallFittings } from './wallDrawer/fittings'
 import { focusOf, layoutOf } from './wallDrawer/focus'
 import { useWallTools } from './wallDrawer/useWallTools'
@@ -101,11 +101,11 @@ export function WallDrawer(p: Props) {
   }
 
   /** Why the chosen felt takes no decal: blocked (an opening, a textile frame over it) or printed over the whole plate. */
-  const feltFoil = (m: number) => Up !== undefined ? UPPER_PRINT : foilBlocked(v, rules, w.id, m, s) ?? (printsOn(v, w.id, s).some((f) => f.module === m) ? 'Feltet har print' : null)
+  const feltFoil = (m: number) => foilBlocked(v, rules, w.id, m, s, false, Up !== undefined) ?? (printsOn(v, w.id, s).some((f) => f.module === m && inBand(f, Up !== undefined)) ? 'Feltet har print' : null)
   /** A decal in the middle of the chosen felt, with the motif chosen in Profilering; it is then chosen. */
   const addDecal = () => {
     if (Fe === undefined) return
-    const r = addFoil(v, rules, w.id, Fe, s, pm?.id, ratioOf(pm?.id))
+    const r = addFoil(v, rules, w.id, Fe, s, pm?.id, ratioOf(pm?.id), Up !== undefined)
     if ('error' in r) return p.onToast(r.error)
     p.onEdit(() => r.v)
     select({ foilId: r.id })
@@ -160,7 +160,7 @@ export function WallDrawer(p: Props) {
     t.setShelfBrush(on)
     if (on && Fe !== undefined) select({})
   }
-  const why = wallWhy(v, rules, w, s, { felt: focus === 'felt' && Fe !== undefined ? { m: Fe, page } : undefined, twoFaces: fs.length > 1, T, F, S, shelves: chosenShelves(v, sel).length })
+  const why = wallWhy(v, rules, w, s, { felt: focus === 'felt' && Fe !== undefined ? { m: Fe, page: ui.panel === 'felt-extras' ? 'extras' : 'decor', upper: Up !== undefined } : undefined, twoFaces: fs.length > 1, T, F, S, shelves: chosenShelves(v, sel).length })
   const hint0 = hintLine(why, wallHint({ O, door: !!O && doorModules.has(O.module), surface, painting, tool, printing, T, F, S, felt: focus === 'felt' ? ui.panel === 'felt-extras' ? 'extras' : 'decor' : undefined, upper: Up !== undefined, extras: ui.panel === 'wall-extras', w }))
 
   const hint = brushOn ? (t.brushHint ?? BRUSH_HINT) : hint0

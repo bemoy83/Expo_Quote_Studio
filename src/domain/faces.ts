@@ -2,7 +2,9 @@
 // (felt) inside a module, and the modules decor keeps off. A wall has two faces. `side` follows the door swing
 // convention: 1 = the wall's left normal (−dy, dx), −1 = the other. Perimeter walls only have the face toward the stand.
 import { CURTAIN } from '../catalog/defaultCatalog';
-import type { Rules } from '../rules/rules';
+import { railHeight } from '../foga/plates';
+import { RECIPES } from '../foga/recipes';
+import { wallHeight, type Rules } from '../rules/rules';
 import { moduleCc, moduleCount, pointAlong, wallDirection, wallModules, moduleStart } from './grid';
 import { OUTSIDE } from './roomKeys';
 import type { Point, Variant, Wall } from './types';
@@ -59,6 +61,24 @@ export function felt(rules: Rules, module: number, cc = rules.wall.cc) {
   const h = rules.wall.plate.height / 1000;
   const y0 = rules.wall.feet + rules.wall.profile.bottom;
   return { a: module + post / 2, b: module + post / 2 + w, w, y0, y1: y0 + h, h, center: module + cc / 2 };
+}
+
+/**
+ * The upper felt of a module raised with a 94 of `len` mm (Byggeregel V20): the light opening between the middle rail
+ * (the old top rail, its top at the wall's height) and the 292, as wide as the felt below. Heights from the floor, m.
+ */
+export function upperFelt(rules: Rules, module: number, cc: number, len: number) {
+  const f = felt(rules, module, cc);
+  const y0 = wallHeight(rules);
+  const h = (len - railHeight(RECIPES.wall.raise.topRail)) / 1000;
+  return { ...f, y0, y1: y0 + h, h };
+}
+
+/** The upper felt of module `module` of the wall `wallId` (V20), or null when the wall is not raised. */
+export function wallUpperFelt(v: Pick<Variant, 'walls'>, rules: Rules, wallId: string, module: number) {
+  const w = v.walls.find((x) => x.id === wallId);
+  if (!w?.raise || module >= moduleCount(w)) return null;
+  return upperFelt(rules, moduleStart(w, module), feltCc(v, rules, wallId, module), w.raise);
 }
 
 /** The panel of module `module` (an index) of the wall `wallId`, where the wall lays it (moduleStart, D8). */
