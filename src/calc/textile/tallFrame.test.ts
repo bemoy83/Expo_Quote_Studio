@@ -12,6 +12,12 @@ import { framePiece } from './inFrame';
 import { production, textileHeightMm } from './production';
 
 const S = RULES.textile.inFrame;
+/** A row stand with one textile on its back wall, t1. */
+const onWall = () => {
+  const r = addTextile(createVariant('A', { width: 6, depth: 3, type: 'row' }), RULES, 'side-back', 1, 1);
+  if (!r) throw new Error('no textile');
+  return r;
+};
 
 describe('X14 a tall textile on a wall', () => {
   it('is built to its own height over the wall top', () => {
@@ -19,8 +25,7 @@ describe('X14 a tall textile on a wall', () => {
   });
 
   it('keeps its height on the way to production, also when taller than full height', () => {
-    const v0 = addTextile(createVariant('A', { width: 6, depth: 3, type: 'row' }), RULES, 'side-back', 1, 1)!;
-    if ('error' in v0) throw new Error(v0.error);
+    const v0 = onWall();
     const v = updateTextile(v0.v, RULES, 't1', { height: 3.04 });
     expect(textileHeightMm(wallTextiles(v)[0], S)).toBe(3040);
     const p = production(v, RULES, 'Kunde');
@@ -45,8 +50,7 @@ describe('X14 a tall textile on a wall', () => {
   });
 
   it('cost rule 6: a frame reaching over the height limit takes the lift and the extra time up there', () => {
-    const v0 = addTextile(createVariant('A', { width: 6, depth: 3, type: 'row' }), RULES, 'side-back', 1, 1)!;
-    if ('error' in v0) throw new Error(v0.error);
+    const v0 = onWall();
     const tall = updateTextile(v0.v, RULES, 't1', { height: 3.54 });
     const line = (v: typeof tall) => calc(v, RULES, DEFAULT_CATALOG, { payer: 'utstiller', ral: '9010' }).groups.flatMap((g) => g.lines).find((l) => l.name.includes('mm, på vegg'))!;
     expect(line(tall).top).toBe(3540);
@@ -54,8 +58,7 @@ describe('X14 a tall textile on a wall', () => {
   });
 
   it('over its wall top a frame hangs from the ceiling: wires by the foot plate rule, through-eyebolt in the top rail', () => {
-    const v0 = addTextile(createVariant('A', { width: 6, depth: 3, type: 'row' }), RULES, 'side-back', 1, 1)!;
-    if ('error' in v0) throw new Error(v0.error);
+    const v0 = onWall();
     const tall = updateTextile(v0.v, RULES, 't1', { height: 3.04 });
     const res = calc(tall, RULES, DEFAULT_CATALOG, { payer: 'utstiller', ral: '9010' });
     const piece = res.production.pieces[0];

@@ -7,7 +7,7 @@ i [foga-system.md](foga-system.md), veggbegrepene i [vegger.md](vegger.md), pris
 ## Slik brukes registeret
 
 - **Nummeret er regelens navn.** Bokstaven er området (V vegg, S støtte, T takdrager, D dør, R rom, X tekstil, G gulv,
-  P plukk, B hvem bygger, H hylle, K disk, F fysisk volum, M magnet og kobling). Et nummer brukes aldri om igjen: en regel som faller bort, blir stående som «utgått».
+  P plukk, B hvem bygger, H hylle, K disk, F fysisk volum, M magnet og kobling, N nabo). Et nummer brukes aldri om igjen: en regel som faller bort, blir stående som «utgått».
 - **Én kilde per regel.** Regelen står her. Koden viser til nummeret («Byggeregel T7») i stedet for å gjenta teksten,
   og foga-system.md forklarer bakgrunnen.
 - **Verdier er data.** Mål, avstander og antall står i `src/rules/rules.ts` (mål i meter) og `src/foga/recipes.ts`
@@ -985,6 +985,21 @@ K22 standardvarene og K23 disker over en fotplate.
 - **B2 Alltid utstillerens.** Innvendige takdragere, fotplater (også under arrangørens vegger), skjøt over tekstilvegg,
   platebytte i en standvegg, forhøyning av vegg (V22) og vaier (S9) bygges og betales av utstilleren. En øy uten standvegger: utstilleren betaler takdragerne.
   *Bjørn 31.10.2026, 1.11.2026 og 6.11.2026 · kode `src/calc/context.ts`, `src/calc/lines/beams.ts` · test `src/calc/beams/innerBeams.test.ts`*
+
+## N · Nabo
+
+- **N1 Nabogodkjenning.** Messehusets regel: alt som er høyere enn standardveggen (2540), en hevet vegg (V18) eller
+  en høy tekstilvegg (X14), og som står nærmere enn 1000 mm fra en standgrense mot en nabo og parallelt med den,
+  krever godkjenning fra naboen, og siden mot naboen skal være nøytral. Nabogrensene er standens sider som ikke
+  ligger mot gangen; en øy har ingen. Avstanden måles fra nærmeste kant (stolpens eller rammens flate) til grensen
+  (`rules.neighbour.distance`). En vegg på tvers av grensen er ikke parallell, og enden teller ikke. Bare det naboen
+  ser, må være nøytralt: hvit tekstil, systemvegg eller en slett plate i arrangørens farge, uten annen farge, print
+  eller dekal om ikke annet er avtalt med naboen. En hevet systemvegg er nøytral og er ofte grunnen til at en vegg
+  heves; hvit duk er også nøytral, men ofte dyrere. En tekstilramme som når over veggen sin, viser baksiden mot
+  naboen og er ikke nøytral før veggen er hevet like høyt; da skjuler veggen den. Godkjenningen faller ikke bort med
+  en nøytral side (Bjørn 28.11.2026). Pillen og veggskuffens hint sier «Krever godkjenning fra nabo» (og «nøytral side
+  mot naboen» når den ikke er det), og tilbudet har det under forutsetningene.
+  *Bjørn 28.11.2026 · `rules.neighbour` · kode `src/domain/neighbour.ts`, `src/ui/plan/pill/wall.tsx`, `src/ui/plan/WallDrawer.tsx`, `src/ui/quote/QuotePage.tsx` · test `src/domain/neighbour.test.ts`*
 
 ## Ikke bygget ennå
 

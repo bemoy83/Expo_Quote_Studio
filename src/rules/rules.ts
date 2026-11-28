@@ -43,6 +43,9 @@ export interface Rules {
   /** `maxHeight`: the tallest a textile wall may be drawn, m (Byggeregel X14); the frame's splices, braces and wires
    *  are worked out from its height, so a new value needs no code. */
   textile: { depth: number; minWidth: number; grid: number; freeMin: number; maxHeight: number; inFrame: InFrameParams };
+  /** Byggeregel N1: over the standard wall top, closer than `distance` (m) to a parallel stand boundary with a neighbour,
+   *  needs the neighbour's approval and a neutral side toward them. */
+  neighbour: { distance: number };
   /** Door leaf: `swing` = leaf width = swing radius, `height` = clear height (the header panel fills the rest), m. */
   door: { swing: number; height: number };
   /** `cell`: the floor grid (byggeregel G1); `rollEnd`: extra roll length at each end of a lane (G3). */
@@ -90,6 +93,8 @@ export const RULES: Rules = {
     maxHeight: 5.03,
     inFrame: { side: 20, air: 10, wallH: 2490, feet: 50, bleed: 20, scale: 10, prof: 40, stag: 3000 },
   },
+  // Bjørn 28.11.2026: the hall's rule, 1000 mm from a parallel stand boundary
+  neighbour: { distance: 1 },
   door: { swing: 0.95, height: 2.0 },
   floor: { cell: 0.5, rollEnd: 0.1 },
   // Bjørn 8.11.2026: 100 to 2000 mm from the floor (the neighbour must not see goods over the wall), 100 mm clear between

@@ -1,5 +1,6 @@
 // The pill on a wall and on a frame or decal on it (docs/pille-og-skuff.md): the wall's colour, print and a textile wall;
 // the frame's motif and Fyll ledig vegg; the decal's motif. On a wall with textile walls one button steps between them.
+import { neighbourNotes, neighbourText, noteFor } from '../../../domain/neighbour'
 import { Image as ImageIcon, Layers, MoveHorizontal, Unlink } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { updateFoil } from '../../../domain/decor'
@@ -27,6 +28,12 @@ import { joinCorner, letGoCorner, wallCorners } from '../../../domain/textile/co
 
 type Of<K extends Chosen['kind']> = Extract<Chosen, { kind: K }>
 
+/** Byggeregel N1: a tall thing near a neighbour says so in its pill. */
+const withNeighbour = (v: Variant, id: string, meta: string) => {
+  const n = noteFor(neighbourNotes(v, rules), id)
+  return n ? `${meta} · ${neighbourText(n).toLowerCase()}` : meta
+}
+
 const ratioOf = (p: PillActions, id?: string | null) => findMotif(p.motifs, id ?? undefined)?.ratio ?? 0
 
 export function textilePill(p: PillActions, c: Of<'textile'>, remove: () => void): Content {
@@ -45,7 +52,7 @@ export function textilePill(p: PillActions, c: Of<'textile'>, remove: () => void
   }
   return {
     name: 'Tekstilvegg',
-    meta: `${fmt(T.width, 2)} × ${fmt(textileBox(T, rules).height, 2)} m`,
+    meta: withNeighbour(v, T.id, `${fmt(T.width, 2)} × ${fmt(textileBox(T, rules).height, 2)} m`),
     body: (
       <>
         {layerSwitch(v, c.wall, p.selection, T, p.onSelect)}
@@ -128,7 +135,7 @@ export function wallPill(p: PillActions, c: Of<'wall'>, graphics: SecondFace): C
   }
   return {
     name: room ? `${roomName(room)} · vegg` : stand ? `${label} · standvegg` : 'Innervegg',
-    meta: `${fmt(L, L % 1 ? 1 : 0)} m`,
+    meta: withNeighbour(v, w.id, `${fmt(L, L % 1 ? 1 : 0)} m`),
     body: graphics.on ? (
       <>
         <Motifs motifs={p.motifs} value={undefined} onPick={(m) => m && print(m)} />

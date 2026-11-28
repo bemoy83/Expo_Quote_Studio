@@ -8,6 +8,7 @@
 // (drag.ts), the paint bucket and brush (paint.ts), the face's name and rooms (face.ts) and the drawer's words (text.ts).
 // What to show for what is chosen is decided in focus.ts, and the tools kept between renders live in useWallTools.ts;
 // this file puts it together.
+import { neighbourNotes, neighbourText, noteFor } from '../../domain/neighbour'
 import { AlignVerticalSpaceAround, DoorOpen, FlipHorizontal2, MoveHorizontal, Palette, Plus } from 'lucide-react'
 import { production } from '../../calc/textile/production'
 import { addFoil, foilBlocked, foilsOn, inBand, removeFoil, updateFoil } from '../../domain/decor'
@@ -161,7 +162,9 @@ export function WallDrawer(p: Props) {
     if (on && Fe !== undefined) select({})
   }
   const why = wallWhy(v, rules, w, s, { felt: focus === 'felt' && Fe !== undefined ? { m: Fe, page: ui.panel === 'felt-extras' ? 'extras' : 'decor', upper: Up !== undefined } : undefined, twoFaces: fs.length > 1, T, F, S, shelves: chosenShelves(v, sel).length })
-  const hint0 = hintLine(why, wallHint({ O, door: !!O && doorModules.has(O.module), surface, painting, tool, printing, T, F, S, felt: focus === 'felt' ? ui.panel === 'felt-extras' ? 'extras' : 'decor' : undefined, upper: Up !== undefined, extras: ui.panel === 'wall-extras', w }))
+  // Byggeregel N1: the wall, or the textile chosen on it, near a neighbour over the standard top
+  const near = noteFor(neighbourNotes(v, rules), T?.id ?? w.id)
+  const hint0 = hintLine(near && neighbourText(near), why, wallHint({ O, door: !!O && doorModules.has(O.module), surface, painting, tool, printing, T, F, S, felt: focus === 'felt' ? ui.panel === 'felt-extras' ? 'extras' : 'decor' : undefined, upper: Up !== undefined, extras: ui.panel === 'wall-extras', w }))
 
   const hint = brushOn ? (t.brushHint ?? BRUSH_HINT) : hint0
 
