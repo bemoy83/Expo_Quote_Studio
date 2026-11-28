@@ -1,3 +1,4 @@
+// Checks Byggeregel X18 (docs/byggeregler.md) for textile walls: one selection whatever they stand on.
 import { describe, expect, it } from 'vitest'
 import { parse } from '../../persistence/file'
 import type { Variant } from '../../domain/types'
@@ -56,7 +57,7 @@ describe('Delete on the selection', () => {
 
   it('removes a free-standing textile wall, a room and a drawn beam', () => {
     const ft = first((v) => freeTextiles(v)[0])
-    expect(freeTextiles(deleteSelection(ft.v, { freeTextileId: ft.x.id })!.edit(ft.v)).map((t) => t.id)).not.toContain(ft.x.id)
+    expect(freeTextiles(deleteSelection(ft.v, { textileId: ft.x.id })!.edit(ft.v)).map((t) => t.id)).not.toContain(ft.x.id)
     const room = first((v) => v.rooms[0])
     expect(deleteSelection(room.v, { roomId: room.x.id })!.edit(room.v).rooms.map((r) => r.id)).not.toContain(room.x.id)
     const beam = first((v) => v.innerBeams?.[0])
@@ -74,7 +75,7 @@ describe('Selection key and drawer', () => {
   it('walls, doors, free textile walls and engangsteppe in the plan have a drawer; furniture, rooms and beams not', () => {
     expect(hasDrawer({ wallId: 'w' })).toBe(true)
     expect(hasDrawer({ openingId: 'd' })).toBe(true)
-    expect(hasDrawer({ freeTextileId: 'f' })).toBe(true)
+    expect(hasDrawer({ textileId: 'f' })).toBe(true)
     expect(hasDrawer({ fill: 'f' })).toBe(true)
     expect(hasDrawer({ fill: 'f' }, '3d')).toBe(false)
     expect(hasDrawer({ objectId: 'o' })).toBe(false)
@@ -111,6 +112,15 @@ describe('What is chosen', () => {
     expect(chosen(s.v, { wallId: s.x.wallId, shelfId: s.x.id })?.kind).toBe('shelf')
   })
 
+  it('X18: a textile wall is chosen by itself; where it stands says if it opens on its wall', () => {
+    const { v, x } = first((v) => wallTextiles(v)[0])
+    expect(chosen(v, { textileId: x.id })).toMatchObject({ kind: 'textile', textile: x, wall: { id: x.wallId } })
+    expect(hasDrawer({ textileId: x.id })).toBe(true)
+    const ft = first((v) => freeTextiles(v)[0])
+    expect(chosen(ft.v, { textileId: ft.x.id, face: 'b' })).toEqual({ kind: 'free', textile: ft.x, face: 'b' })
+    expect(deleteSelection(ft.v, { textileId: ft.x.id })?.select).toEqual({})
+  })
+
   it('a wall keeps the felt chosen in its drawer, and a face it does not have falls back to its first', () => {
     const { v, x } = first((v) => v.walls[0])
     const c = chosen(v, { wallId: x.id, side: 7 as never, felt: 2 })
@@ -125,7 +135,7 @@ describe('What is chosen', () => {
     const b = first((v) => v.innerBeams?.[0])
     expect(chosen(b.v, { beamId: b.x.id })).toEqual({ kind: 'beam', beam: b.x })
     const ft = first((v) => freeTextiles(v)[0])
-    expect(chosen(ft.v, { freeTextileId: ft.x.id })).toEqual({ kind: 'free', textile: ft.x, face: 'a' })
+    expect(chosen(ft.v, { textileId: ft.x.id })).toEqual({ kind: 'free', textile: ft.x, face: 'a' })
     const t = first((v) => v.floor.tiles.find((x) => x.fill))
     const c = chosen(t.v, { fill: t.x.fill })
     expect(c?.kind === 'fill' && c.tiles.every((x) => x.fill === t.x.fill)).toBe(true)

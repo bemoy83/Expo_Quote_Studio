@@ -53,7 +53,7 @@ export function textilePill(p: PillActions, c: Of<'textile'>, remove: () => void
     const r = loosenMounted(v, rules, T.id)
     if ('error' in r) return p.onToast(r.error)
     onEdit(() => r.v)
-    p.onSelect({ freeTextileId: r.id })
+    p.onSelect({ textileId: r.id })
     if (!r.heightKept) p.onToast(onFeetHeight(rules))
   }
   return {

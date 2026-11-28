@@ -45,7 +45,7 @@ describe('Profilering pens on the plan', () => {
   });
   it('Tekstil with a motif prints the textile clicked', () => {
     const u = textileUnder(v, hits, { x: 3, y: 0.1 });
-    expect(u).toEqual({ mounted: 't1' });
+    expect(u).toEqual({ id: 't1' });
     expect(wallTextiles(printTextile(v, u!, 'm')).find((t) => t.id === 't1')?.motif).toBe('m');
   });
 });

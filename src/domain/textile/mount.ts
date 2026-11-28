@@ -10,10 +10,11 @@ import { faceAt, faceNormal, sideOf, type FaceSide } from '../faces';
 import { crossingOn, moduleCount, moduleStart, pointAlong, wallDirection, wallLength } from '../grid';
 import { groupOf, groupSize, MAGNET } from '../joints';
 import type { FreeTextile, Point, TextileFace, TextileWall, Variant, Wall } from '../types';
-import { addFreeTextile, blocked, removeFreeTextile, runNormal, textileStep, wallClearance, type FaceKey } from './free';
+import { addFreeTextile, blocked, runNormal, textileStep, wallClearance, type FaceKey } from './free';
 import { addTextileSpan, fitsFace, fullTextileHeight } from './inFrame';
 import { MOUNT_OFFSET, freeTextiles, mountedOn, onLine, wallTextiles, withOnWall } from './mounts';
 import { cornerEnds, same } from './corners';
+import { removeTextile } from './edit';
 
 const EPS = 1e-6;
 
@@ -76,7 +77,7 @@ export function mountDrag(v: Variant, rules: Rules, id: string, dx: number, dy: 
 export function mountFree(v: Variant, rules: Rules, id: string, w: Wall, s: FaceSide, t0: number, t1: number): { v: Variant; id: string } | { error: string } {
   const t = freeTextiles(v).find((x) => x.id === id);
   if (!t) return { error: 'Tekstilveggen finnes ikke' };
-  const r = addTextileSpan(removeFreeTextile(v, id), rules, w.id, s, t0, t1);
+  const r = addTextileSpan(removeTextile(v, id), rules, w.id, s, t0, t1);
   if ('error' in r) return r;
   const key = outward(t, w, s);
   const out = t[key];

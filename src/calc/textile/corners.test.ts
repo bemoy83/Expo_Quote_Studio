@@ -12,7 +12,7 @@ import { DOOR } from '../../catalog/defaultCatalog';
 import { paintWalls } from '../../domain/edit';
 import { MOUNT_OFFSET, mountedOn, settleCorners, wallTextiles, withOnWall } from '../../domain/textile/mounts';
 import { joinCorner, letGoCorner, wallCorners } from '../../domain/textile/cornerJoin';
-import { fillTextile, removeTextile, stretchFrame } from '../../domain/textile/inFrame';
+import { fillTextile, stretchFrame } from '../../domain/textile/inFrame';
 import { cornerEnds } from '../../domain/textile/corners';
 import { RECIPES } from '../../foga/recipes';
 import { fogaPart } from '../../foga/parts';
@@ -20,6 +20,7 @@ import { RULES } from '../../rules/rules';
 import { production } from './production';
 import { overlaps, placeFrames, freeTrims } from './placement';
 import { cornerLeg } from './common';
+import { removeTextile } from '../../domain/textile/edit';
 
 const r3 = (x: number) => Math.round(x * 1000) / 1000;
 const CORNER: Stand = { width: 6, depth: 4, type: 'corner', cornerSide: 'right' };

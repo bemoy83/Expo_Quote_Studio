@@ -31,7 +31,7 @@ import { DrawerHead } from './drawerParts'
 import { clearOf, PRINT } from './paintTools'
 import { DoorMap } from './DoorMap'
 import { chosen, chosenShelves, isOnWall, type PlanSelection } from './selection'
-import { addTextile, fillTextile, removeTextile, textilesOn, updateTextile } from '../../domain/textile/inFrame'
+import { addTextile, fillTextile, textilesOn, updateTextile } from '../../domain/textile/inFrame'
 import { faces, type FaceSide } from '../../domain/faces'
 import { faceName, roomsAgainst } from './wallDrawer/face'
 import { wallPaint } from './wallDrawer/paint'
@@ -42,6 +42,7 @@ import { ColourPanel, DoorPanel, DoorSurfacePanel, FeltPanel, FoilPanel, Textile
 import { BRUSH_HINT, wallHint, wallMeta, wallTitle, wallWhy } from './wallDrawer/text'
 import { hintLine } from './drawerText'
 import { WallElevation } from './wallDrawer/WallElevation'
+import { removeTextile } from '../../domain/textile/edit'
 
 interface Props {
   v: Variant

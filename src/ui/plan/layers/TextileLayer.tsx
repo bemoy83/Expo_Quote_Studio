@@ -59,7 +59,7 @@ export function TextileLayer({ v, res, selection, dim }: { v: Variant; res: Calc
         {res.production.free.map((f) => {
           const t = freeTextiles(v).find((x) => x.id === f.textileId)
           if (!t) return null
-          const sel = selection.freeTextileId === t.id
+          const sel = selection.textileId === t.id
           const g = gone('textile', t.id)
           const motif = (['a', 'b'] as const).find((k) => gone('graphic', `${t.id}.${k}`))
           // The frame as it stands: an end up against a wall stops where the wall begins (Byggeregel F1)
@@ -76,7 +76,7 @@ export function TextileLayer({ v, res, selection, dim }: { v: Variant; res: Calc
               })}
               {sel && <Seg a={a} b={b} stroke={HALO} strokeOpacity={HALO_OPACITY} strokeWidth={haloWidth(sc, tw)} />}
               <TextileStroke a={a} b={b} sc={sc} />
-              {sel && selection.freeFace && <FaceMark t={t} face={selection.freeFace} sc={sc} />}
+              {sel && selection.face && <FaceMark t={t} face={selection.face} sc={sc} />}
               {g && <Seg a={a} b={b} stroke={hatch} strokeWidth={tw} />}
               {motif && <FaceMark t={t} face={motif} stroke={hatch} width={linePx(sc, 4)} sc={sc} />}
             </g>

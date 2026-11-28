@@ -56,7 +56,7 @@ export function useShortcuts(s: Shortcuts) {
           setSelection({ lane: { i: r.lane.i, j: r.lane.j } })
         }
       } else if (k === 'r' && selection.objectId && tools.tool === 'select') turnObject({ v, onEdit, onToast: s.onToast }, selection.objectId)
-      else if (k === 'r' && selection.freeTextileId && tools.tool === 'select') turnPart({ v, onEdit, onToast: s.onToast }, { kind: 'textile', id: selection.freeTextileId }, !!selection.loose)
+      else if (k === 'r' && selection.textileId && tools.tool === 'select') turnPart({ v, onEdit, onToast: s.onToast }, { kind: 'textile', id: selection.textileId }, !!selection.loose)
       else if (k === 'r' && turnableWall(v, selection) && tools.tool === 'select') turnPart({ v, onEdit, onToast: s.onToast }, { kind: 'wall', id: selection.wallId! }, !!selection.loose)
       else if (k === 'r' && tools.tool === 'brush' && tools.brush?.kind === 'podium' && turnApplies(tools.brush)) tools.pick(turned(tools.brush))
       else if (k === 'p' && tools.brush) {

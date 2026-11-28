@@ -13,7 +13,7 @@ import type { Layer } from '../../tools'
 export interface Tag {
   layer: Layer
   /** `roomId`: a room's see-through roof, the handle that moves the room. */
-  pick?: { beamId?: string; wallId?: string; objectId?: string; textileId?: string; foilId?: string; roomId?: string; freeTextileId?: string; openingId?: string; shelfId?: string; shelfOnly?: boolean }
+  pick?: { beamId?: string; wallId?: string; objectId?: string; textileId?: string; foilId?: string; roomId?: string; openingId?: string; shelfId?: string; shelfOnly?: boolean }
 }
 
 /** Colours of the build system. Product colours come from the catalog. */
@@ -44,7 +44,7 @@ export const NO_COLOR = '#999'
 export const ALU_FINISH = { metalness: 0.4, roughness: 0.5 }
 
 export interface BuildOptions {
-  selection?: { wallId?: string; objectId?: string; textileId?: string; foilId?: string; roomId?: string; freeTextileId?: string; openingId?: string; shelfId?: string; shelfOnly?: boolean }
+  selection?: { wallId?: string; objectId?: string; textileId?: string; foilId?: string; roomId?: string; openingId?: string; shelfId?: string; shelfOnly?: boolean }
   /** Flat text on the floor (dimensions, area). Needs a canvas, so tests turn it off. */
   labels?: boolean
   /** Motif library for prints on textiles and foils. Without it they are drawn blank. */

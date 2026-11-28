@@ -9,7 +9,7 @@ import { useMemo } from 'react'
 import { calc } from '../../../calc/calc'
 import { lengthKind, standardChoices } from '../../../calc/textile/standard'
 import type { FreeFrame } from '../../../calc/textile/free'
-import { stretchFreeTextile, updateFace } from '../../../domain/textile/free'
+import { stretchFreeTextile } from '../../../domain/textile/free'
 import type { Variant } from '../../../domain/types'
 import { DEFAULT_STAND_WALLS } from '../../../domain/variant'
 import { catalog, counterName, idx, place, pricing, rules } from '../../env'
@@ -19,6 +19,7 @@ import { FinBtn, QBtn, Sep, Sw } from '../quick/parts'
 import type { Chosen } from '../selection'
 import { turnObject } from '../turn'
 import { Colours, Motifs, MoveTools, type Content, type PillActions } from './parts'
+import { updateFace } from '../../../domain/textile/edit'
 
 type Of<K extends Chosen['kind']> = Extract<Chosen, { kind: K }>
 

@@ -10,7 +10,7 @@
 // Byggeregler X5, X7, F1, F2 (docs/byggeregler.md).
 import { tooShort } from './limits';
 import type { Rules } from '../../rules/rules';
-import type { FreeTextile, Point, TextileFace, Variant } from '../types';
+import type { FreeTextile, Point, Variant } from '../types';
 import { nextId } from '../ids';
 import { snapTo } from '../snapGrid';
 import { builtModules } from '../walls';
@@ -142,31 +142,6 @@ export function addFreeTextile(v: Variant, rules: Rules, a: Point, b: Point): { 
   const why = blocked(v, rules, run, rest);
   if (why) return { error: why };
   return { v: { ...v, textiles: [...v.textiles.filter((x) => mountedOn(v, x.id) || rest.includes(x)), run] }, id: run.id };
-}
-
-export const removeFreeTextile = (v: Variant, id: string): Variant => ({ ...v, textiles: v.textiles.filter((t) => t.id !== id) });
-
-/** Change one face: print, white or the customer's own textile, and the motif shown. The motif is kept when the face
- *  turns white or the customer's, so it comes back with print (Byggeregel V15, Bjørn 18.11.2026, as on a textile in a wall). */
-export function updateFace(v: Variant, id: string, face: FaceKey, patch: { fill?: TextileFace['fill']; motif?: string | null }): Variant {
-  return {
-    ...v,
-    textiles: v.textiles.map((t) => {
-      if (t.id !== id) return t;
-      const f: TextileFace = { ...t[face] };
-      if (patch.fill !== undefined) {
-        if (patch.fill === 'print') delete f.fill;
-        else f.fill = patch.fill;
-      }
-      if (patch.motif === null) delete f.motif;
-      else if (patch.motif !== undefined) f.motif = patch.motif;
-      // A motif picked is a print
-      if (patch.motif) delete f.fill;
-      const out: FreeTextile = { ...t, [face]: f };
-      if (!Object.keys(f).length) delete out[face];
-      return out;
-    }),
-  };
 }
 
 /** The run under q, within `within` metres. */

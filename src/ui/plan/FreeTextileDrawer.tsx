@@ -4,7 +4,7 @@
 import { FlipHorizontal2 } from 'lucide-react'
 import { useRef } from 'react'
 import type { FreeFrame } from '../../calc/textile/free'
-import { removeFreeTextile, resizeFreeTextile, updateFace, type FaceKey } from '../../domain/textile/free'
+import { resizeFreeTextile, type FaceKey } from '../../domain/textile/free'
 import type { Motif, Variant } from '../../domain/types'
 import { ALU_POST, BORDER_STRONG, FEET, LAYER_COLOR } from '../colors'
 import { Dim, IconButton, Section } from '../controls'
@@ -20,6 +20,7 @@ import { useElementSize } from '../useElementSize'
 import { FreeElevationDims } from './wallDrawer/ElevationDims'
 import { frame } from './wallDrawer/elevationMeasure'
 import { freeTextiles } from '../../domain/textile/mounts'
+import { removeTextile, updateFace } from '../../domain/textile/edit'
 
 interface Props {
   v: Variant
@@ -40,11 +41,11 @@ export function FreeTextileDrawer(p: Props) {
   const size = useElementSize(box, true)
   const t = freeTextiles(v).find((x) => x.id === f.textileId)
   if (!t) return null
-  const face: FaceKey = p.selection.freeFace ?? 'a'
+  const face: FaceKey = p.selection.face ?? 'a'
   const F = f.faces[face === 'a' ? 0 : 1]
   const m = F.fill === 'print' ? findMotif(motifs, F.motif ?? undefined) : undefined
   const remove = () => {
-    p.onEdit((x) => removeFreeTextile(x, t.id))
+    p.onEdit((x) => removeTextile(x, t.id))
     p.onClose()
   }
   const setLength = (n: number) => {
@@ -104,7 +105,7 @@ export function FreeTextileDrawer(p: Props) {
           <Section
             title="Side"
             aside={face.toUpperCase()}
-            tools={<IconButton icon={FlipHorizontal2} label={`Vis side ${face === 'a' ? 'B' : 'A'}`} size={15} onClick={() => p.onSelect({ freeTextileId: t.id, freeFace: face === 'a' ? 'b' : 'a' })} />}
+            tools={<IconButton icon={FlipHorizontal2} label={`Vis side ${face === 'a' ? 'B' : 'A'}`} size={15} onClick={() => p.onSelect({ textileId: t.id, face: face === 'a' ? 'b' : 'a' })} />}
           />
         </div>
       </div>

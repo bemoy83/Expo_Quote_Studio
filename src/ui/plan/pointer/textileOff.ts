@@ -33,7 +33,7 @@ export const textileOff: DragHandlers<'textileOff'> = {
   up(c, d) {
     if (!d.moved) return c.clickSelect(d.select)
     if (!d.freeId) return c.onSelect(d.select)
-    c.onSelect({ freeTextileId: d.freeId })
+    c.onSelect({ textileId: d.freeId })
     if (!d.heightKept) c.onToast(onFeetHeight(rules))
   },
 }

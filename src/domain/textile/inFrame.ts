@@ -214,10 +214,6 @@ function place(spans: Span[], from: number, width: number, min: number, mode: 'm
   return [f, w];
 }
 
-export function removeTextile(v: Variant, id: string): Variant {
-  return { ...v, textiles: v.textiles.filter((t) => t.id !== id) };
-}
-
 /** The textile on this face that covers offset t, if any. */
 export function textileAt(v: Variant, wallId: string, s: FaceSide, t: number): TextileWall | undefined {
   return textilesOn(v, wallId, s).find((x) => t >= x.from - EPS && t <= x.from + x.width + EPS);

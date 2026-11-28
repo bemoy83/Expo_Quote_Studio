@@ -600,6 +600,15 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   sidefradrag og luft (X2), så spennet er 30 mm lengre med dagens mål; det regnes av reglene. Laveste ramme er 0,5 m
   (`rules.textile.minHeight`).
   *Bjørn 28.11.2026 · `rules.textile.minLength`, `rules.textile.minHeight` · kode `src/domain/textile/limits.ts`, `src/rules/rules.ts` · test `src/domain/decor.test.ts`*
+- **X18 Ett valg og én redigering.** Tekstilveggen er ett produkt uavhengig av hvor og hvordan den står (X1, Bjørn
+  28.11.2026): den velges, endres og fjernes på samme måte, med samme kode. Bare hvordan den støttes og monteres er
+  ulikt (520 og vaier på vegg, føtter og vaier på fotplater). Et valg er tekstilveggen selv, og den forblir valgt når
+  den tas av eller settes på en vegg; hvor den står leses av plasseringen (X13). 43TX har alltid to sider, A og B;
+  plasseringen avgjør hvilke som er synlige: begge på fotplater, siden ut fra veggen når den er montert. Lengde er
+  rammens lengde fra ende til ende for alle; på vegg vokser den i spennet sitt (X2, X4), på fotplater fra enden den
+  startet i (F2). Høyden er fri innenfor de samme grensene (X14, X17); på fotplater står den alltid på gulvet. En
+  tekstilramme kan også henges fra taket som et skilt (ikke bygget).
+  *Bjørn 28.11.2026 · kode `src/domain/textile/edit.ts`, `src/ui/plan/selection.ts`, `src/ui/plan/pointer/decor.ts` · test `src/domain/textile/edit.test.ts`, `src/ui/plan/selection.test.ts`*
 
 ## M · Magnet og kobling
 

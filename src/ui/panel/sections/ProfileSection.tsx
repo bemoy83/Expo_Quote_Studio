@@ -64,7 +64,7 @@ export function ProfileSection({ v, res, brush, tool, pick, motifs, onUpload, on
         )
       })}
       {res.production.free.map((f) => (
-        <button key={f.textileId} type="button" className="trow" onClick={() => onSelect({ freeTextileId: f.textileId, freeFace: 'a' })}>
+        <button key={f.textileId} type="button" className="trow" onClick={() => onSelect({ textileId: f.textileId, face: 'a' })}>
           <span className="name">
             {f.pos} frittstående
             <span className="faint"> · {f.faces.map((x) => `${x.face.toUpperCase()} ${FILL_SHORT[x.fill]}`).join(', ')}</span>

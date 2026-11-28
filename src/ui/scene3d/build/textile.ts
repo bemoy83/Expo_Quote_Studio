@@ -63,7 +63,7 @@ export function buildTextile(c: BuildContext) {
   for (const f of res.production.free) {
     const t = freeTextiles(v).find((x) => x.id === f.textileId)
     if (!t) continue
-    const glow = selectGlow(sel.freeTextileId === t.id)
+    const glow = selectGlow(sel.textileId === t.id)
     const alu = mat('textile', ALU, { ...ALU_FINISH, ...glow })
     const L = f.length / 1000
     const h = f.H / 1000
@@ -73,7 +73,7 @@ export function buildTextile(c: BuildContext) {
       return x.fill === 'white' ? white(glow) : bare(x.fill, x.W / 1000, h, glow)
     }
     const foot = rules.wall.feet / 10
-    const tag: Tag = { layer: 'textile', pick: { freeTextileId: t.id } }
+    const tag: Tag = { layer: 'textile', pick: { textileId: t.id } }
     const g = frame(alongRun(t, 0, f), alongRun(t, f.length, f), 0)
     // Rails run between the uprights at free ends, or stop at a corner post's leg
     const railFrom = -L / 2 + f.railStart / 1000
@@ -163,7 +163,7 @@ function cornerPosts(c: BuildContext) {
     const view = wallTextiles(v).find((x) => x.id === p.textileId)
     if (view) stands.set(p.textileId, { h: p.H / 1000, y0: (p.top - p.H) / 1000, pick: { wallId: view.wallId, textileId: view.id } })
   }
-  for (const f of res.production.free) stands.set(f.textileId, { h: f.H / 1000, y0: foot, pick: { freeTextileId: f.textileId } })
+  for (const f of res.production.free) stands.set(f.textileId, { h: f.H / 1000, y0: foot, pick: { textileId: f.textileId } })
   for (const t of v.textiles) {
     const ends = corners.get(t.id)
     const st = stands.get(t.id)
@@ -179,7 +179,7 @@ function cornerPosts(c: BuildContext) {
       done.add(key)
       // The legs run along +x and −y of the outline; turn it so they follow the two runs, never mirrored
       const [a, b] = a0[0] * b0[1] - a0[1] * b0[0] < 0 ? [a0, b0] : [b0, a0]
-      const chosen = c.sel.freeTextileId === t.id || c.sel.textileId === t.id
+      const chosen = c.sel.textileId === t.id || c.sel.textileId === t.id
       const m = mat('textile', ALU, { ...ALU_FINISH, ...selectGlow(chosen) })
       const upright = (part: 'post' | 'cap', y: number, len: number) => {
         const mesh = new THREE.Mesh(cornerGeometry(part, a, b), m)
