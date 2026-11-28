@@ -31,8 +31,8 @@ import type { CounterProfile } from '../foga/counter';
 import type { SupportBeamLayout } from './beams/supportBeams';
 import type { CalcLine } from './types';
 import type { WallSupport } from './wallSupports';
-import { floorOf, freeWallSupports, type Floor } from './footPlates';
-import { wallWires, wiredModules } from './wallWires';
+import { floorOf, type Floor } from './footPlates';
+import { wallHolds } from './wallWires';
 
 export interface CalcContext {
   v: Variant;
@@ -207,10 +207,8 @@ export function calcContext(v: Variant, rules: Rules, catalog: Catalog, standWal
   // A wall stands free without the takdrager frame: foot plates on its posts. With beams the stand walls are in the
   // frame. The plates are the customer's choice (no beams), so the exhibitor's even under the organiser's walls.
   // A drawn takdrager's own posts stand on plates too, across the beam, unless a beam drawn the other way meets them.
-  // A raised wall's wires take the place of its foot plates (Byggeregel S9)
-  const wires = wallWires(mods, all.segments, rules);
-  const wiredPosts = wallPoints(wiredModules(mods, all.segments, rules));
-  const freeWallFeet = freeWallSupports(mods, all, standard, kindOf).filter((f) => !wiredPosts.has(pointKey(f.at)));
+  // A raised wall on foot plates, or over 3080, gets wires in their place (Byggeregel S9)
+  const { feet: freeWallFeet, wires } = wallHolds(v, mods, all, standard, rules);
   const wallFeet = [...freeWallFeet, ...inner.feet];
   const prod = production(v, rules, '');
   // Byggeregel V20: an upper plate in the customer's colour facing a neighbour gets the organiser's plate behind it
