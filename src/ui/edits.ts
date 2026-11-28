@@ -2,7 +2,7 @@
 // area turned into a room. App's onEdit stores it; the plan's preview (docs/forhandsvisning.md) shows the same thing
 // before the click, so the two never differ.
 import { fitDecor } from '../domain/decor'
-import { facesNeighbour, neighbourNotes, whiteToNeighbour } from '../domain/neighbour'
+import { facesNeighbour, neighbourDistance, neighbourNotes, whiteToNeighbour } from '../domain/neighbour'
 import { sideOf } from '../domain/faces'
 import { fitBreaks } from '../domain/replaceWalls'
 import { DOOR_NO_SWING, settleSwings, shutsDoor } from '../domain/doors'
@@ -83,7 +83,7 @@ export function neighbourNote(before: Variant, after: Variant): string | null {
   }).length
   const gone = before.foils.filter((f) => f.upper && facesNeighbour(after, rules, f.wallId, sideOf(before, f)) && !after.foils.some((g) => g.id === f.id)).length
   const parts = [white ? 'siden mot naboen blir hvit duk' : '', gone ? 'print og dekal mot naboen er tatt bort' : ''].filter(Boolean)
-  return parts.length ? `Nærmere naboen enn ${String(rules.neighbour.distance).replace('.', ',')} m: ${parts.join(', ')}` : null
+  return parts.length ? `Nærmere naboen enn ${neighbourDistance(rules)}: ${parts.join(', ')}` : null
 }
 
 /** Areas the walls of `after` close that `before` did not, made into rooms (null when there are none). */

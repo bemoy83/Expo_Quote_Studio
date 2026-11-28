@@ -20,13 +20,13 @@ import { wallRal } from '../../domain/plateDecor'
 import { printsOn } from '../../domain/print'
 import { moveShelves, removeShelves } from '../../domain/shelves/edit'
 import { shelvesOn } from '../../domain/shelves/model'
-import { pointAlong, pointKey, wallLength, wallModules } from '../../domain/grid'
+import { wallLength, wallModules } from '../../domain/grid'
 import type { DoorSurface, Motif, Variant } from '../../domain/types'
-import { builtModules, isStandWall, postOffsets, wallLabel, wallParts } from '../../domain/walls'
+import { builtModules, isStandWall, wallLabel, wallParts } from '../../domain/walls'
 import { setWallRaise } from '../../domain/raise'
 import { raiseTop, wallHeight } from '../../rules/rules'
 import { needsLift } from '../../cost/model'
-import { platedPosts, wiredPosts } from './raiseDrawing'
+import { wallHeld } from './raiseDrawing'
 import { INK_FAINT, LAYER_COLOR } from '../colors'
 import { Button, FlatChoice, IconButton, Section } from '../controls'
 import { pricing, productOf, rules } from '../env'
@@ -208,9 +208,7 @@ export function WallDrawer(p: Props) {
   }
 
   // How the wall is held, as the calc built it (Byggeregler S2, S9), and whether its top needs the lift (cost rule 6)
-  const posts = postOffsets(w, parts).map((t) => pointKey(pointAlong(w, t)))
-  const [plated, wired] = [platedPosts(p.res), wiredPosts(p.res)]
-  const held = { feet: posts.filter((k) => plated.has(k)).length, wires: posts.filter((k) => wired.has(k)).length, lift: !!w.raise && needsLift(raiseTop(w.raise, rules), pricing.height) }
+  const held = { ...wallHeld(w, parts, p.res), lift: !!w.raise && needsLift(raiseTop(w.raise, rules), pricing.height) }
   const title = wallTitle(v, w, T, F, S)
   return (
     <section className="wall-drawer drawer2" aria-label="Vegg sett forfra">

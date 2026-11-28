@@ -131,7 +131,10 @@ export function whiteToNeighbour(v: Variant, rules: Rules): { v: Variant; faces:
 }
 
 /** Why print and decals cannot go toward the neighbour (N1), for the hint and the toast. */
-export const neighbourPrint = (rules: Rules) => `Mot naboen: ingen print eller dekal nærmere standgrensen enn ${String(rules.neighbour.distance).replace('.', ',')} m`;
+/** The neighbour distance as said in a hint or toast: «1 m». */
+export const neighbourDistance = (rules: Rules) => `${String(rules.neighbour.distance).replace('.', ',')} m`;
+
+export const neighbourPrint = (rules: Rules) => `Mot naboen: ingen print eller dekal nærmere standgrensen enn ${neighbourDistance(rules)}`;
 
 /**
  * Byggeregler V20, N1: the raised modules whose upper plate, in another colour than the organiser's (`neutralRal`), would

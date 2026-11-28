@@ -5,7 +5,7 @@ import { calc } from '../../calc/calc'
 import { createVariant } from '../../domain/variant'
 import { builtModules, wallParts } from '../../domain/walls'
 import { RULES } from '../../rules/rules'
-import { footPlatesAt, platedPosts, wiredPosts } from './raiseDrawing'
+import { footPlatesAt, platedPosts, wallHeld, wiredPosts } from './raiseDrawing'
 import { wallMeta } from './wallDrawer/text'
 
 describe('foot plates and wires in the veggriss (S2, S9)', () => {
@@ -15,6 +15,7 @@ describe('foot plates and wires in the veggriss (S2, S9)', () => {
     const w = v.walls.find((x) => x.id === 'side-back')!
     const xs = footPlatesAt(w, wallParts(w, builtModules(v)), (t) => t, platedPosts(res))
     expect(xs).toHaveLength(2)
+    expect(wallHeld(w, wallParts(w, builtModules(v)), res)).toEqual({ feet: 2, wires: 0 })
     // No raised wall: no wires
     expect(wiredPosts(res).size).toBe(0)
     expect(wallMeta(v, w, { L: 6.5, openings: [], odd: 0, tex: [], rooms: [], held: { feet: xs.length, wires: 0, lift: false } })).toContain('2 fotplater')

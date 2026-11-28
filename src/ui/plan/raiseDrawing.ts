@@ -24,6 +24,13 @@ export const wiredPosts = (res: Pick<CalcResult, 'wires'>): Set<string> => new S
 /** The posts of a sketch standing on a foot plate (S2), by point. */
 export const platedPosts = (res: Pick<CalcResult, 'wallSupports'>): Set<string> => new Set(res.wallSupports.map((f) => pointKey(f.at)))
 
+/** How many of wall `w`'s posts stand on a foot plate (S2) and hang from a ceiling wire (S9), as the calc built them. */
+export function wallHeld(w: Wall, parts: readonly WallPart[], res: Pick<CalcResult, 'wires' | 'wallSupports'>): { feet: number; wires: number } {
+  const posts = postOffsets(w, parts).map((t) => pointKey(pointAlong(w, t)))
+  const [plated, wired] = [platedPosts(res), wiredPosts(res)]
+  return { feet: posts.filter((k) => plated.has(k)).length, wires: posts.filter((k) => wired.has(k)).length }
+}
+
 /** Where along the drawing wall `w`'s posts on a foot plate stand, x as drawn (`u`). */
 export const footPlatesAt = (w: Wall, parts: readonly WallPart[], u: (t: number) => number, plated: ReadonlySet<string>): number[] =>
   plated.size ? postOffsets(w, parts).filter((t) => plated.has(pointKey(pointAlong(w, t)))).map(u) : []
