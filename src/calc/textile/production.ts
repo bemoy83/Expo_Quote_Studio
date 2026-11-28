@@ -185,11 +185,13 @@ export const printFiles = (P: Production): TextileRow[] => textileRows(P).filter
 
 export const FILL_NAME: Record<TextileFill, string> = { print: 'Trykt tekstil', white: 'Hvit tekstil', reuse: 'Kundens tekstil' };
 
+/** In position order, T1, T2 …, on a wall and on foot plates alike (X16). */
 export function textileRows(P: Production): TextileRow[] {
+  const n = (pos: string) => parseInt(pos.slice(1), 10);
   return [
     ...P.pieces.map((p) => ({ pos: p.pos, where: p.wall, W: p.W, H: p.H, pw: p.pw, ph: p.ph, fw: p.fw, fh: p.fh, fill: p.fill, fileName: p.fileName })),
     ...P.free.flatMap((f) => f.faces.map((x) => ({ pos: x.pos, where: `${f.pos} frittstående, side ${x.face.toUpperCase()}`, W: x.W, H: x.H, pw: x.pw, ph: x.ph, fw: x.fw, fh: x.fh, fill: x.fill, fileName: x.fileName }))),
-  ];
+  ].sort((a, b) => n(a.pos) - n(b.pos));
 }
 
 /** A point on a wall line, ends included. */
@@ -212,4 +214,46 @@ function heldEnds(v: Variant, trims: ReadonlyMap<string, { from: number; to: num
     out.set(t.id, { from: at(t.from, trim?.from), to: at(t.to, trim?.to) });
   }
   return out;
+}
+
+/** Byggeregel X18: what the calc built for textile wall `id`, read the same way whatever it stands on: its position,
+ *  height, rails and the visible faces (one on a wall, two on foot plates). */
+export interface BuiltFrame {
+  pos: string;
+  textileId: string;
+  mount: 'vegg' | 'fotplater';
+  H: number;
+  /** The frame's top from the floor, mm. */
+  top: number;
+  nCorners: number;
+  railCuts: number[];
+  /** Run length, mm (the rails of a frame without corners). */
+  length: number;
+  /** Where the frame starts, mm from the drawn run's from end, when it stops short at a frame on a wall (X11). */
+  start?: number;
+  faces: { pos: string; W: number }[];
+  wires: number;
+}
+
+export function builtFrame(P: Production, id: string): BuiltFrame | undefined {
+  const p = P.pieces.find((x) => x.textileId === id);
+  if (p) {
+    const n = (p.corners.from ? 1 : 0) + (p.corners.to ? 1 : 0);
+    return { pos: p.pos, textileId: id, mount: 'vegg', H: p.H, top: p.top, nCorners: n, railCuts: p.railCuts, length: p.railCuts.reduce((a, x) => a + x, 0), faces: [{ pos: p.pos, W: p.W }], wires: p.wires ?? 0 };
+  }
+  const f = P.free.find((x) => x.textileId === id);
+  if (!f) return undefined;
+  return {
+    pos: f.pos,
+    textileId: id,
+    mount: 'fotplater',
+    H: f.H,
+    top: f.H,
+    nCorners: f.nCorners,
+    railCuts: f.railCuts,
+    length: f.length,
+    ...(f.start ? { start: f.start } : {}),
+    faces: f.faces.map((x) => ({ pos: x.pos, W: x.W })),
+    wires: 0,
+  };
 }

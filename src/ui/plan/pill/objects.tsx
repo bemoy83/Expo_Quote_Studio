@@ -5,21 +5,13 @@ import { roomName, roomSize } from '../../../domain/rooms'
 import { counterRal, loosenObject, objectFootprint, setMembers, setObjectProduct } from '../../../domain/objects'
 import { paintCounter } from '../../../domain/paint'
 import { podiumHeights } from '../../../domain/podiums'
-import { useMemo } from 'react'
-import { calc } from '../../../calc/calc'
-import { lengthKind, standardChoices } from '../../../calc/textile/standard'
-import type { FreeFrame } from '../../../calc/textile/free'
-import { stretchFreeTextile } from '../../../domain/textile/free'
-import type { Variant } from '../../../domain/types'
-import { DEFAULT_STAND_WALLS } from '../../../domain/variant'
-import { catalog, counterName, idx, place, pricing, rules } from '../../env'
-import { fmt, mm, signed } from '../../format'
+import { counterName, idx, place } from '../../env'
+import { mm } from '../../format'
 import { objectFamily } from '../../objectFamily'
 import { FinBtn, QBtn, Sep, Sw } from '../quick/parts'
 import type { Chosen } from '../selection'
 import { turnObject } from '../turn'
-import { Colours, Motifs, MoveTools, type Content, type PillActions } from './parts'
-import { updateFace } from '../../../domain/textile/edit'
+import { Colours, type Content, type PillActions } from './parts'
 
 type Of<K extends Chosen['kind']> = Extract<Chosen, { kind: K }>
 
@@ -111,66 +103,4 @@ export function objectPill(p: PillActions, c: Of<'object'>, remove: () => void):
     remove,
     ...(set > 1 && { removeLabel: 'Slett settet (Delete)' }),
   }
-}
-
-export function freePill(p: PillActions, c: Of<'free'>, remove: () => void): Content | null {
-  const { textile: t, face } = c
-  const frame = p.res.production.free.find((x) => x.textileId === t.id)
-  if (!frame) return null
-  return {
-    name: 'Frittstående tekstilvegg',
-    meta: `${frame.pos} · ${fmt(frame.length, 0)} × ${fmt(frame.H, 0)}${lengthKind(frame) === 'kapp' ? ' · kapp' : ''} · side ${face.toUpperCase()}`,
-    body: (
-      <>
-        <Motifs motifs={p.motifs} value={t[face]?.fill ? undefined : (t[face]?.motif ?? null)} onPick={(m) => p.onEdit((x) => updateFace(x, t.id, face, { motif: m }))} />
-        <MoveTools p={p} part={{ kind: 'textile', id: t.id }} />
-        <StandardLengths p={p} frame={frame} />
-      </>
-    ),
-    more: true,
-    remove,
-  }
-}
-
-/**
- * Byggeregel X9: a cut frame that could be a standard length gets the nearest standard length on each side, with what
- * it does to the quote. One tap moves the frame's free end (the one not stopped against a frame on a wall, X11); the
- * other stays. Bjørn 27.11.2026: so a drawn frame is not cut without the seller knowing our lengths.
- */
-function StandardLengths({ p, frame }: { p: PillActions; frame: FreeFrame }) {
-  const { v } = p
-  const choices = useMemo(() => {
-    const min = rules.textile.minLength * 1000
-    const sum = (x: Variant) => calc(x, rules, catalog, DEFAULT_STAND_WALLS, pricing).sum
-    const now = standardChoices(frame, min).length ? sum(v) : 0
-    return standardChoices(frame, min).flatMap((L) => {
-      const next = toLength(v, frame, L)
-      return next ? [{ L, next, diff: sum(next) - now }] : []
-    })
-  }, [v, frame])
-  if (!choices.length) return null
-  return (
-    <>
-      <Sep />
-      {choices.map((c) => (
-        <QBtn key={c.L} title={`Standardlengde ${mm(c.L / 1000)} mm, ikke kapp · ${signed(c.diff)} kr på tilbudet`} label={`Standardlengde ${mm(c.L / 1000)}`} onClick={() => p.onEdit(() => c.next)}>
-          <span className="q-std">
-            <b>{mm(c.L / 1000)}</b>
-            <small>{signed(c.diff)} kr</small>
-          </span>
-        </QBtn>
-      ))}
-    </>
-  )
-}
-
-/** The run with its frame `L` mm long: the free end moves, the end that stops at a frame on a wall (X11) stays. */
-function toLength(v: Variant, frame: FreeFrame, L: number): Variant | null {
-  const d = (L - frame.length) / 1000
-  const ends = frame.start ? (['to'] as const) : (['to', 'from'] as const)
-  for (const end of ends) {
-    const r = stretchFreeTextile(v, rules, frame.textileId, end, d)
-    if ('v' in r) return r.v
-  }
-  return null
 }

@@ -10,11 +10,12 @@ import { QBtn, QName, Sep } from '../quick/parts'
 import { chosen, deleteSelection } from '../selection'
 import { doorPill } from './door'
 import { fillPill, lanePill } from './floor'
-import { beamPill, freePill, objectPill, roomPill } from './objects'
+import { beamPill, objectPill, roomPill } from './objects'
 import type { Content, PillActions, SecondFace } from './parts'
 import { placePill, type PillPlace } from './pillAnchor'
 import { shelfPill } from './shelf'
-import { cornerPill, foilPill, textilePill, wallPill } from './wall'
+import { cornerPill, foilPill, wallPill } from './wall'
+import { textilePill } from './textile'
 
 export function SelectionPill(p: PillActions & { place: PillPlace }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -88,10 +89,10 @@ function content(p: PillActions, second: SecondFace): Content | null {
       return beamPill(p, c, del)
     case 'object':
       return objectPill(p, c, del)
-    case 'free':
-      return freePill(p, c, del)
     case 'opening':
       return doorPill(p, c, del)
+    // One pill for every textile wall, on a wall or on foot plates (X18)
+    case 'free':
     case 'textile':
       return textilePill(p, c, del)
     case 'foil':

@@ -1,5 +1,5 @@
 // The settings column of the wall drawer: one panel for what is chosen, and the motif library (Profilering) under it. A
-// textile frame, a decal or print, a door, a felt's colour, or nothing (the wall itself: colour and print with the paint
+// textile frame (TextileSettings, the same as on foot plates), a decal or print, a door, a felt's colour, or nothing (the wall itself: colour and print with the paint
 // bucket and brush). «Hyller og heng» and a chosen shelf are in fittings.tsx.
 import { DoorOpen, Palette, Repeat2 } from 'lucide-react'
 import type { Dispatch, ReactNode, SetStateAction } from 'react'
@@ -7,13 +7,12 @@ import { updateFoil } from '../../../domain/decor'
 import { onDoorPart, printsOn } from '../../../domain/print'
 import { doorRal, removeOpening } from '../../../domain/doors'
 import type { FaceSide } from '../../../domain/faces'
-import { textileBox, updateTextile } from '../../../domain/textile/inFrame'
-import type { DoorSurface, Foil, Motif, Opening, TextileWall, Variant, Wall } from '../../../domain/types'
+import type { DoorSurface, Foil, Motif, Opening, Variant, Wall } from '../../../domain/types'
 import type { BuiltModule } from '../../../domain/walls'
 import { Button, Dim, FlatChoice, IconButton, Section } from '../../controls'
 import { plateColor, productOf, rules } from '../../env'
 import { DoorSettings } from '../DoorSettings'
-import { ColourSection, DrawerHead, FabricSection, PrevNext, PRINT, Shelf } from '../drawerParts'
+import { ColourSection, DrawerHead, PrevNext, PRINT, Shelf } from '../drawerParts'
 import { findMotif } from '../../motifs'
 import { type PlanSelection } from '../selection'
 import { faceName } from './face'
@@ -21,30 +20,6 @@ import { clearOf, type PaintTool } from '../paintTools'
 import { motifAside } from '../drawerText'
 
 type Edit = (fn: (v: Variant) => Variant, history?: boolean) => void
-
-/** A chosen textile frame: its size, then its fabric and motif in one section. */
-export function TextilePanel({ T, motifs, onEdit, onUpload }: { T: TextileWall; motifs: Motif[]; onEdit: Edit; onUpload: (f: File) => void }) {
-  return (
-    <>
-      <Section title="Mål">
-        <div className="wd-dims">
-        <Dim big label="Bredde" value={T.width} onChange={(n) => onEdit((x) => updateTextile(x, rules, T.id, { width: n }))} />
-        <Dim big label="Høyde" value={textileBox(T, rules).height} decimals={2} onChange={(n) => onEdit((x) => updateTextile(x, rules, T.id, { height: n }))} />
-        <Dim big label="Fra gulv" value={textileBox(T, rules).bottom} onChange={(n) => onEdit((x) => updateTextile(x, rules, T.id, { bottom: n }))} />
-        </div>
-      </Section>
-      <hr className="set-rule" />
-      <FabricSection
-        value={T.fill ?? 'print'}
-        onChange={(f) => onEdit((x) => updateTextile(x, rules, T.id, { fill: f }))}
-        motifs={motifs}
-        motif={T.motif}
-        onPick={(m) => onEdit((x) => updateTextile(x, rules, T.id, { motif: m }))}
-        onUpload={onUpload}
-      />
-    </>
-  )
-}
 
 /** A chosen foil: a decal within its plate, or print over the whole plate. */
 export function FoilPanel({ F, ratioOf, onEdit }: { F: Foil; ratioOf: (id?: string) => number; onEdit: Edit }) {

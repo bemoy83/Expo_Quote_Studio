@@ -1,18 +1,18 @@
-// Drawer for a frittstående tekstilvegg: one face seen straight on, with the frame, feet, braces, splices and corner
+// Drawer for a textile wall on foot plates (its settings are TextileSettings, the same as on a wall, X18): one face seen straight on, with the frame, feet, braces, splices and corner
 // posts it is built with. Each face is printed, white or the customer's own textile. Laid out like the wall drawer:
 // settings with the graphics shelf under them · the face.
 import { FlipHorizontal2 } from 'lucide-react'
 import { useRef } from 'react'
 import type { FreeFrame } from '../../calc/textile/free'
-import { resizeFreeTextile, type FaceKey } from '../../domain/textile/free'
+import type { FaceKey } from '../../domain/textile/free'
 import type { Motif, Variant } from '../../domain/types'
 import { ALU_POST, BORDER_STRONG, FEET, LAYER_COLOR } from '../colors'
-import { Dim, IconButton, Section } from '../controls'
-import { rules } from '../env'
+import { IconButton, Section } from '../controls'
 import { count, fmt, mm } from '../format'
 import { findMotif } from '../motifs'
 import { type PlanSelection } from './selection'
-import { DrawerHead, FabricSection } from './drawerParts'
+import { TextileSettings } from './TextileSettings'
+import { DrawerHead } from './drawerParts'
 import { TextileFace } from './elevation'
 import { hintLine, REUSE_NOTE } from './drawerText'
 import { planScale } from './planScale'
@@ -20,7 +20,7 @@ import { useElementSize } from '../useElementSize'
 import { FreeElevationDims } from './wallDrawer/ElevationDims'
 import { frame } from './wallDrawer/elevationMeasure'
 import { freeTextiles } from '../../domain/textile/mounts'
-import { removeTextile, updateFace } from '../../domain/textile/edit'
+import { removeTextile } from '../../domain/textile/edit'
 
 interface Props {
   v: Variant
@@ -48,11 +48,6 @@ export function FreeTextileDrawer(p: Props) {
     p.onEdit((x) => removeTextile(x, t.id))
     p.onClose()
   }
-  const setLength = (n: number) => {
-    const next = resizeFreeTextile(v, rules, t.id, n)
-    if (!next) return p.onToast('Tekstilveggen får ikke plass med den lengden')
-    p.onEdit(() => next)
-  }
 
   // Elevation in metres: the face from its left end as seen from the front of this face
   const W = F.W / 1000
@@ -72,7 +67,7 @@ export function FreeTextileDrawer(p: Props) {
   return (
     <section className="wall-drawer drawer2" aria-label="Frittstående tekstilvegg sett forfra">
       <div className="wd-insp">
-        <DrawerHead dot={LAYER_COLOR.textile} title={`Frittstående vegg ${f.pos}`} remove={{ label: 'Fjern tekstilvegg (Delete)', onClick: remove }} onClose={p.onClose} />
+        <DrawerHead dot={LAYER_COLOR.textile} title={`Tekstilvegg ${f.pos}`} remove={{ label: 'Fjern tekstilvegg (Delete)', onClick: remove }} onClose={p.onClose} />
         <p className="wd-meta num">
           {[
             `${fmt(H, 2)} m høy`,
@@ -86,20 +81,8 @@ export function FreeTextileDrawer(p: Props) {
             .filter(Boolean)
             .join(' · ')}
         </p>
-        <Section title="Mål">
-          <div className="wd-dims">
-            <Dim big label="Lengde" value={f.length / 1000} decimals={2} onChange={setLength} />
-          </div>
-        </Section>
-        <hr className="set-rule" />
-        <FabricSection
-          value={F.fill}
-          onChange={(fill) => p.onEdit((x) => updateFace(x, t.id, face, { fill }))}
-          motifs={motifs}
-          motif={F.motif}
-          onPick={(mo) => p.onEdit((x) => updateFace(x, t.id, face, { motif: mo }))}
-          onUpload={p.onUpload}
-        />
+        {/* Byggeregel X18: the same settings as a frame on a wall; only «Fra gulv» is left out, it stands on the floor */}
+        <TextileSettings v={v} id={t.id} face={face} motifs={motifs} onEdit={p.onEdit} onUpload={p.onUpload} onToast={p.onToast} />
 
         <div className="wd-foot">
           <Section

@@ -201,7 +201,7 @@ export function QuotePage({ project, variants, current, onSelect, calcOf, motifs
                       {l.placeholder && <span className="mark"> *</span>}
                       {l.terms && <span className="muted"> · {l.terms}</span>}
                       {/* Byggeregel X16: a frame whose two faces differ, named per side under its one line */}
-                      {l.quote?.sides && <span className="muted qsides">Én ramme: {l.quote.sides.join(' · ')}</span>}
+                      {l.quote?.sides && <span className="muted qsides">Per ramme: {l.quote.sides.join(' · ')}</span>}
                     </span>
                     <span className="num muted">
                       {fmt(l.qty, l.unit === 'lm' ? 2 : 1)} {l.unit}

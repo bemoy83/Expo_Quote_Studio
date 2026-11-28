@@ -1,5 +1,6 @@
 // The wall drawer's words: the title, the line under it and the help line across the bottom, for what is chosen.
 import type { ProductionPiece } from '../../../calc/textile/production'
+import { textilePos } from '../../../calc/textile/free'
 import { wallModules } from '../../../domain/grid'
 import { roomName, roomSize } from '../../../domain/rooms'
 import { foilBlocked } from '../../../domain/decor'
@@ -17,7 +18,8 @@ import type { PaintTool } from '../paintTools'
 
 /** The drawer's title: the frame or decal chosen, else the wall (a room's wall, an inner wall or a stand wall). */
 export function wallTitle(v: Variant, w: Wall, T?: TextileWall, F?: Foil, S?: Shelf): string {
-  if (T) return 'Tekstilvegg'
+  // One name for every textile wall, with its position (X16)
+  if (T) return `Tekstilvegg ${textilePos(v, T.id)}`
   if (S) return 'Hylle'
   if (F) return F.full ? (F.upper ? 'Print på øvre felt' : 'Print på hel plate') : 'Foliedekal'
   const room = w.room && v.rooms.find((r) => r.id === w.room!.id)

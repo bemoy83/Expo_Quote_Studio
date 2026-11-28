@@ -8,6 +8,7 @@
 // (drag.ts), the paint bucket and brush (paint.ts), the face's name and rooms (face.ts) and the drawer's words (text.ts).
 // What to show for what is chosen is decided in focus.ts, and the tools kept between renders live in useWallTools.ts;
 // this file puts it together.
+import { TextileSettings } from './TextileSettings'
 import { neighbourNotes, neighbourText, noteFor } from '../../domain/neighbour'
 import { beamNote } from '../../calc/beams/beamLift'
 import { AlignVerticalSpaceAround, DoorOpen, FlipHorizontal2, MoveHorizontal, Palette, Plus } from 'lucide-react'
@@ -38,11 +39,11 @@ import { wallPaint } from './wallDrawer/paint'
 import { FeltFittings, ShelfPanel, WallFittings } from './wallDrawer/fittings'
 import { focusOf, layoutOf } from './wallDrawer/focus'
 import { useWallTools } from './wallDrawer/useWallTools'
-import { ColourPanel, DoorPanel, DoorSurfacePanel, FeltPanel, FoilPanel, TextilePanel, WallShelf } from './wallDrawer/panels'
+import { ColourPanel, DoorPanel, DoorSurfacePanel, FeltPanel, FoilPanel, WallShelf } from './wallDrawer/panels'
 import { BRUSH_HINT, wallHint, wallMeta, wallTitle, wallWhy } from './wallDrawer/text'
 import { hintLine } from './drawerText'
 import { WallElevation } from './wallDrawer/WallElevation'
-import { removeTextile } from '../../domain/textile/edit'
+import { removeTextile, seenFaces } from '../../domain/textile/edit'
 
 interface Props {
   v: Variant
@@ -248,7 +249,7 @@ export function WallDrawer(p: Props) {
               {wallMeta(v, w, { L, T, F, S, piece, openings, plates: parts.filter((q) => !q.mod.opening).length, odd, tex, rooms, shelves })}
             </p>
 
-            {T && <TextilePanel T={T} motifs={motifs} onEdit={p.onEdit} onUpload={p.onUpload} />}
+            {T && <TextileSettings v={v} id={T.id} face={seenFaces(v, T.id)[0]} motifs={motifs} onEdit={p.onEdit} onUpload={p.onUpload} onToast={p.onToast} />}
 
             {F && <FoilPanel F={F} ratioOf={ratioOf} onEdit={p.onEdit} />}
 

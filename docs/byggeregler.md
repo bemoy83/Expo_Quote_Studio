@@ -591,7 +591,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   fotplater heter T3A og T3B. F er dekor på hel plate. Målet på tilbudet er den synlige flaten, slik selger og kunde
   forstår produktet: duken uten bleed, rammens mål med hjørnetillegget (X7). På vegg er det én flate; på fotplater to.
   Har de to sidene ulik bredde (en frittstående i et 92LTX-hjørne, for eksempel 1940 og 1980), står rammen som én
-  linje på tilbudet, «Tekstilvegg 1940/1980 × 2540 mm», med «Én ramme: side A … · side B …» under, så den ikke leses
+  linje på tilbudet, «Tekstilvegg 1940/1980 × 2540 mm», med «Per ramme: side A … · side B …» under, så den ikke leses
   som to rammer. Tilbudets forutsetninger har ett punkt om tekstilvegger, med monteringen per størrelse, og
   nøkkeltallene teller rammer i stk for begge monteringer.
   *Bjørn 28.11.2026 · kode `src/calc/textile/free.ts` (`textilePos`), `src/calc/textile/lines.ts` (`sizeOf`, `frameSizes`), `src/ui/quote/QuotePage.tsx` · test `src/calc/textile/quoteSize.test.ts`, `src/calc/freeFrames.test.ts`*
@@ -608,7 +608,12 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   rammens lengde fra ende til ende for alle; på vegg vokser den i spennet sitt (X2, X4), på fotplater fra enden den
   startet i (F2). Høyden er fri innenfor de samme grensene (X14, X17); på fotplater står den alltid på gulvet. En
   tekstilramme kan også henges fra taket som et skilt (ikke bygget).
-  *Bjørn 28.11.2026 · kode `src/domain/textile/edit.ts`, `src/ui/plan/selection.ts`, `src/ui/plan/pointer/decor.ts` · test `src/domain/textile/edit.test.ts`, `src/ui/plan/selection.test.ts`*
+  Én pille og én skuff: pillen heter «Tekstilvegg» med posisjon og synlig mål (X16), motiv på siden som vises og
+  standardlengdene til en kappet ramme (X9), på vegg og på fotplater. Bare det monteringen gir, kommer i tillegg: på
+  vegg bytte til veggen, «Fyll ledig vegg», hjørnene (M5), «Hev veggen» (X15) og «Løsne» fra veggen; på fotplater
+  Roter og «Løsne» fra gruppen. Skuffen har de samme innstillingene, Lengde, Høyde og duk på siden som vises, og
+  «Fra gulv» bare på vegg. En ramme på vegg vises i veggens skuff, sammen med veggen den henger på.
+  *Bjørn 28.11.2026 · kode `src/domain/textile/edit.ts`, `src/ui/plan/selection.ts`, `src/ui/plan/pointer/decor.ts`, `src/ui/plan/pill/textile.tsx`, `src/ui/plan/TextileSettings.tsx` · test `src/domain/textile/edit.test.ts`, `src/ui/plan/selection.test.ts`*
 
 ## M · Magnet og kobling
 
