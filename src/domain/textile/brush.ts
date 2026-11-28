@@ -97,7 +97,7 @@ function longestFree(v: Variant, rules: Rules, a: Point, b: Point): TextileResul
   const step = rules.textile.grid;
   const ux = (b[0] - a[0]) / L;
   const uy = (b[1] - a[1]) / L;
-  for (let d = Math.round((L - step) / step) * step; d >= rules.textile.freeMin - EPS; d -= step) {
+  for (let d = Math.round((L - step) / step) * step; d >= rules.textile.minLength - EPS; d -= step) {
     const r = addFreeTextile(v, rules, a, [r3(a[0] + ux * d), r3(a[1] + uy * d)]);
     if (!('error' in r)) return { v: r.v, free: { id: r.id } };
   }

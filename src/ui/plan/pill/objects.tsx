@@ -139,7 +139,7 @@ export function freePill(p: PillActions, c: Of<'free'>, remove: () => void): Con
 function StandardLengths({ p, frame }: { p: PillActions; frame: FreeFrame }) {
   const { v } = p
   const choices = useMemo(() => {
-    const min = rules.textile.freeMin * 1000
+    const min = rules.textile.minLength * 1000
     const sum = (x: Variant) => calc(x, rules, catalog, DEFAULT_STAND_WALLS, pricing).sum
     const now = standardChoices(frame, min).length ? sum(v) : 0
     return standardChoices(frame, min).flatMap((L) => {

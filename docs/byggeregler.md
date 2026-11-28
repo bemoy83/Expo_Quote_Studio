@@ -433,7 +433,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   møtes i et 92LTX-hjørne (X7).
   *Bjørn 30.10.2026 og 21.11.2026 · kode `src/domain/textile/inFrame.ts` · test `src/domain/decor.test.ts`*
 - **X5 På fotplater (frittstående).** Samme ramme som X2, på fotplater, med tekstil på begge sider (trykt, hvit eller kundens egen), høyde 2540, minst
-  0,25 m. Tegnes med samme verktøy som veggen og disken (Bjørn 14.11.2026: ett tegneverktøy, alle pensler på samme
+  like lang som korteste ramme (X17). Tegnes med samme verktøy som veggen og disken (Bjørn 14.11.2026: ett tegneverktøy, alle pensler på samme
   grid): et klikk på gulvet setter 1 m, et drag vokser fra modulen du ser i hele meter, med Shift eller «Fin» er
   tegnestørrelsen 250 (som V1). Den kan stå overalt der volumet tillater det (F1, F2): langs en systemvegg, i T mot
   den, ende mot ende med den. Inntil en systemvegg uten å være montert står den bare der, den er ikke koblet (M1). Den
@@ -595,6 +595,11 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   som to rammer. Tilbudets forutsetninger har ett punkt om tekstilvegger, med monteringen per størrelse, og
   nøkkeltallene teller rammer i stk for begge monteringer.
   *Bjørn 28.11.2026 · kode `src/calc/textile/free.ts` (`textilePos`), `src/calc/textile/lines.ts` (`sizeOf`, `frameSizes`), `src/ui/quote/QuotePage.tsx` · test `src/calc/textile/quoteSize.test.ts`, `src/calc/freeFrames.test.ts`*
+- **X17 Korteste tekstilvegg.** Hvor kort en tekstilvegg kan være, følger byggesystemet og ikke hvor den står: én grense
+  for alle, på vegg og på fotplater, 0,25 m ramme (`rules.textile.minLength`). På vegg tegnes rammen i et spenn med
+  sidefradrag og luft (X2), så spennet er 30 mm lengre med dagens mål; det regnes av reglene. Laveste ramme er 0,5 m
+  (`rules.textile.minHeight`).
+  *Bjørn 28.11.2026 · `rules.textile.minLength`, `rules.textile.minHeight` · kode `src/domain/textile/limits.ts`, `src/rules/rules.ts` · test `src/domain/decor.test.ts`*
 
 ## M · Magnet og kobling
 

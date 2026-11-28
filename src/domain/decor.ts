@@ -2,6 +2,7 @@
 // wall panel (felt) between two posts and between top and bottom profile, never on an opening and never behind a
 // textile on the same face. Faces and felts: domain/faces.ts; textile walls: domain/textile/inFrame.ts (this file
 // imports from there, never the other way).
+import { minSpan } from './textile/limits';
 import { wallHeight, type Rules } from '../rules/rules';
 import { faceNormal, faces, feltCc, wallFelt, wallUpperFelt, feltWall, sideOf, type FaceSide } from './faces';
 import { pointAlong, moduleAt, moduleCount, moduleStart, wallLength } from './grid';
@@ -177,7 +178,7 @@ export function fitDecor(v: Variant, rules: Rules, ratio: (motif: string | undef
   const kept: TextileWall[] = [];
   // A textile on a wall may stand over the wall's top (Byggeregel X14)
   const full = rules.textile.maxHeight;
-  const min = rules.textile.minWidth;
+  const min = minSpan(rules);
   wallTextiles(v).forEach((t, ti) => {
     const w = v.walls.find((x) => x.id === t.wallId);
     if (!w) {

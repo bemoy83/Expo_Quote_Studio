@@ -1,4 +1,4 @@
-// Checks Byggeregel X4 (docs/byggeregler.md).
+// Checks Byggeregler X4 og X17 (docs/byggeregler.md).
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_CATALOG, DOOR } from '../catalog/defaultCatalog';
 import { placeContext } from '../catalog/lookup';
@@ -81,8 +81,9 @@ describe('textile walls', () => {
     expect(wallTextiles(v)[0]).toMatchObject({ from: 3.7, width: 2.3 });
     v = updateTextile(v, RULES, 't1', { width: 9 });
     expect(wallTextiles(v)[0]).toMatchObject({ from: 3.7, width: 2.3 });
+    // Byggeregel X17: the shortest frame, 0,25 m, as on foot plates; its span with side and air in 0,1 m steps
     v = updateTextile(v, RULES, 't1', { width: 0.1 });
-    expect(wallTextiles(v)[0].width).toBe(0.5);
+    expect(wallTextiles(v)[0].width).toBe(0.3);
   });
 
   it('X14: height and distance from the floor stay under the tallest textile, also over the wall top', () => {

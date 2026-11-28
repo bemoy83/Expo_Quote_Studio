@@ -8,6 +8,7 @@
 // against a wall (a T, or end to end) is fine, it only stands there, not coupled. A stroke along a wall becomes a
 // textile on that wall instead (brush.ts).
 // Byggeregler X5, X7, F1, F2 (docs/byggeregler.md).
+import { tooShort } from './limits';
 import type { Rules } from '../../rules/rules';
 import type { FreeTextile, Point, TextileFace, Variant } from '../types';
 import { nextId } from '../ids';
@@ -90,7 +91,7 @@ function parallelGap(a: Pick<FreeTextile, 'from' | 'to'>, b: Pick<FreeTextile, '
  * feet its foot plates would meet, another run.
  */
 export function blocked(v: Variant, rules: Rules, t: Pick<FreeTextile, 'from' | 'to'>, others: FreeTextile[]): string | null {
-  if (runLength(t) < rules.textile.freeMin - EPS) return `Tekstilveggen må være minst ${String(rules.textile.freeMin).replace('.', ',')} m`;
+  if (runLength(t) < rules.textile.minLength - EPS) return tooShort(rules);
   const clear = wallClearance(t);
   for (const m of builtModules(v)) {
     const seg = { from: m.a, to: m.b };
@@ -218,7 +219,7 @@ export function fitFreeTextiles(v: Variant, rules: Rules): Variant {
 export function resizeFreeTextile(v: Variant, rules: Rules, id: string, length: number): Variant | null {
   const t = freeTextiles(v).find((x) => x.id === id);
   if (!t) return null;
-  const L = Math.max(rules.textile.freeMin, snapTo(length, rules.textile.grid));
+  const L = Math.max(rules.textile.minLength, snapTo(length, rules.textile.grid));
   const [dx, dy] = runDirection(t);
   const to: Point = [t.from[0] + dx * L, t.from[1] + dy * L];
   if (to[0] < -EPS || to[1] < -EPS || to[0] > v.stand.width + EPS || to[1] > v.stand.depth + EPS) return null;
@@ -274,7 +275,7 @@ export function stretchFreeTextile(v: Variant, rules: Rules, id: string, end: Ru
   const run = { ...t, ...movedEnd(t, end, d) };
   const inside = (p: Point) => p[0] >= -EPS && p[1] >= -EPS && p[0] <= v.stand.width + EPS && p[1] <= v.stand.depth + EPS;
   if (!inside(run.from) || !inside(run.to)) return { error: 'Tekstilveggen må stå på standen' };
-  if (d < 0 && runLength(t) + d < rules.textile.freeMin - EPS) return { error: `Tekstilveggen må være minst ${String(rules.textile.freeMin).replace('.', ',')} m` };
+  if (d < 0 && runLength(t) + d < rules.textile.minLength - EPS) return { error: tooShort(rules) };
   const why = blocked(v, rules, run, freeTextiles(v).filter((x) => x.id !== id));
   if (why) return { error: why };
   return { v: { ...v, textiles: v.textiles.map((x) => (x.id === id ? run : x)) } };
