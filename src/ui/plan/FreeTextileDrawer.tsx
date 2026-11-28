@@ -13,7 +13,8 @@ import { findMotif } from '../motifs'
 import { type PlanSelection } from './selection'
 import { TextileSettings } from './TextileSettings'
 import { DrawerHead } from './drawerParts'
-import { TextileFace } from './elevation'
+import { Raise, TextileFace } from './elevation'
+import { WIRE_ROOM } from './raiseDrawing'
 import { hintLine, REUSE_NOTE } from './drawerText'
 import { planScale } from './planScale'
 import { useElementSize } from '../useElementSize'
@@ -57,8 +58,11 @@ export function FreeTextileDrawer(p: Props) {
   // Splices along the rails, from the frame start (the corner post's face when `from` is a corner)
   const splices = f.railCuts.slice(0, -1).reduce<number[]>((a, c) => [...a, (a[a.length - 1] ?? f.railStart) + c], [])
   const cornerAt = [f.corners.from ? x(0) : null, f.corners.to ? x(f.length) : null].filter((c): c is number => c !== null)
+  // Over the standard top it hangs in ceiling wires (Byggeregel X14, X18), a 92LTX corner in its own, over the top rail
+  const over = f.wireAt ?? []
+  const wires = (over.length ? [...over, ...(f.corners.from ? [0] : []), ...(f.corners.to ? [f.length] : [])] : []).map((a) => ({ x: Math.min(Math.max(x(a), 0), W), len: 0 }))
   const PAD = 0.18
-  const view = frame(size, W, H, [], { chainOver: true })
+  const view = frame(size, W, H, [], { chainOver: true, above: wires.length ? WIRE_ROOM : 0 })
   const sc = planScale(1 / view.u, {})
   // Where the feet stand along the face, for the chain under it
   const feet = f.supports.map(x).filter((t) => t > 1e-6 && t < W - 1e-6)
@@ -101,6 +105,7 @@ export function FreeTextileDrawer(p: Props) {
             {cornerAt.map((cx, i) => (
               <rect key={`c${i}`} x={Math.min(Math.max(cx - 0.03, 0), W - 0.06)} y={0} width={0.06} height={H} fill={ALU_POST} />
             ))}
+            {wires.length > 0 && <Raise felts={[]} posts={[]} wires={wires} x={() => 0} />}
             {/* Foot plates */}
             {f.supports.map((at, i) => (
               <rect key={`f${i}`} x={x(at) - f.foot.along / 2000} y={H} width={f.foot.along / 1000} height={0.03} fill={FEET} />

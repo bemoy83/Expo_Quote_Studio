@@ -616,7 +616,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   «Fra gulv» bare på vegg. En ramme på vegg vises i veggens skuff, sammen med veggen den henger på.
   Høyden følger rammen av og på veggen (X13), og en høy ramme på fotplater bygges som på vegg: skjøtte stendere,
   lift og vaier (X14). Nabogodkjenningen (N1) gjelder den også, med siden mot naboen (hvit duk er nøytral).
-  *Bjørn 28.11.2026 · kode `src/domain/textile/edit.ts`, `src/ui/plan/selection.ts`, `src/ui/plan/pointer/decor.ts`, `src/ui/plan/pill/textile.tsx`, `src/ui/plan/TextileSettings.tsx`, `src/domain/textile/mount.ts`, `src/domain/neighbour.ts` · test `src/domain/textile/edit.test.ts`, `src/ui/plan/selection.test.ts`, `src/calc/textile/tallFrame.test.ts`, `src/domain/neighbour.test.ts`*
+  *Bjørn 28.11.2026 · kode `src/domain/textile/edit.ts`, `src/ui/plan/selection.ts`, `src/ui/plan/pointer/decor.ts`, `src/ui/plan/pill/textile.tsx`, `src/ui/plan/TextileSettings.tsx`, `src/ui/plan/FreeTextileDrawer.tsx`, `src/domain/textile/mount.ts`, `src/domain/neighbour.ts` · test `src/domain/textile/edit.test.ts`, `src/ui/plan/selection.test.ts`, `src/calc/textile/tallFrame.test.ts`, `src/domain/neighbour.test.ts`*
 
 ## M · Magnet og kobling
 
