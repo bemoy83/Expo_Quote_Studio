@@ -11,7 +11,7 @@ import { profile, shared, unitProfile } from './profiles'
 import { ALU, ALU_FINISH, BEAM, FOOT_PLATE, type BuildContext } from './context'
 
 /** A ceiling wire's colour. */
-const WIRE = 0x6b6f75
+export const WIRE = 0x6b6f75
 
 export function buildFrame(c: BuildContext) {
   const { res, H, at, mat, add, along, mods } = c

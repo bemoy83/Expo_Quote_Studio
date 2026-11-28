@@ -32,6 +32,8 @@ export interface ProductionPiece extends FramePiece {
   fileName: string | null;
   /** Ceiling wires holding a frame that reaches over its wall's top (Byggeregel X14), by the foot plate rule. */
   wires?: number;
+  /** Where the wires are, mm along the frame from its start (as the braces). */
+  wireAt?: number[];
   /** The frame's top from the floor, mm. */
   top: number;
 }
@@ -88,7 +90,8 @@ export function production(v: Variant, rules: Rules, customer: string): Producti
     // plate rule along the frame (as S3, S9); a 92LTX corner holds that end
     const top = mm(t.bottom ?? 0) + H;
     const over = top > (m.wall.raise ? raiseTop(m.wall.raise, rules) : mm(wallHeight(rules)));
-    const wires = over ? supportPoints(x.length, r.feet.support, x.corners).length : 0;
+    const wireAt = over ? supportPoints(x.length, r.feet.support, x.corners) : [];
+    const wires = wireAt.length;
     pieces.push({
       ...wallPiece(x, mm(t.width)),
       pos,
@@ -103,7 +106,7 @@ export function production(v: Variant, rules: Rules, customer: string): Producti
       motif: f.motif,
       fileName: f.fileName,
       top,
-      ...(wires ? { wires } : {}),
+      ...(wires ? { wires, wireAt } : {}),
     });
   }
   // Free-standing runs stop at a frame on the wall they end at (byggeregel X11)
