@@ -7,7 +7,7 @@ import { faceNormal, faces, feltCc, wallFelt, wallUpperFelt, feltWall, sideOf, t
 import { pointAlong, moduleAt, moduleCount, moduleStart, wallLength } from './grid';
 import { nextId } from './ids';
 import { roomAt } from './rooms';
-import { freeSpans, fullTextileHeight, spanFor, textileAt, textileBox, textilesOn, updateTextile, type Span } from './textile/inFrame';
+import { freeSpans, spanFor, textileAt, textileBox, textilesOn, updateTextile, type Span } from './textile/inFrame';
 import type { Foil, TextileWall, Variant, Wall } from './types';
 import { SPAN_REACH, wallTextiles, withOnWall } from './textile/mounts';
 
@@ -175,7 +175,8 @@ export function fitDecor(v: Variant, rules: Rules, ratio: (motif: string | undef
   if (!wallTextiles(v).length && !v.foils.length) return v;
   let changed = false;
   const kept: TextileWall[] = [];
-  const full = fullTextileHeight(rules);
+  // A textile on a wall may stand over the wall's top (Byggeregel X14)
+  const full = rules.textile.maxHeight;
   const min = rules.textile.minWidth;
   wallTextiles(v).forEach((t, ti) => {
     const w = v.walls.find((x) => x.id === t.wallId);

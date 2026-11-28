@@ -149,7 +149,9 @@ export function WallElevation(p: Props) {
   const wired = useMemo(() => wiredPosts(v), [v])
   const raise = raiseDrawing(w, mods, p.parts, u, wired)
   const above = raise.above
-  const fr = frame(size, L, H, items, { labels, steady, above: raise.headroom })
+  // A textile frame may stand over the wall's top (Byggeregel X14): the drawing takes in the tallest on either face
+  const overTop = Math.max(0, ...p.fs.flatMap((f) => textilesOn(v, w.id, f).map((t) => { const b = textileBox(t, rules); return b.bottom + b.height - H })))
+  const fr = frame(size, L, H, items, { labels, steady, above: Math.max(raise.headroom, overTop) })
   const sc = planScale(1 / fr.u, {})
 
   /** Pointer handlers for a plate (or a door) in the drawing while a tool is out: click, or with the brush press and sweep. */

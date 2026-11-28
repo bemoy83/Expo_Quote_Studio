@@ -40,7 +40,9 @@ export interface Rules {
   /** `max`: longest beam length (byggeregel T2); `supportSpan`: a free stand-wall span this long gets a støttedrager (T7). */
   beam: { max: number; height: number; thickness: number; supportSpan: number };
   /** `grid`: free-standing textile walls are drawn and sized on this grid (the elevation grid), at least `freeMin`, m. */
-  textile: { depth: number; minWidth: number; grid: number; freeMin: number; inFrame: InFrameParams };
+  /** `maxHeight`: the tallest a textile wall may be drawn, m (Byggeregel X14); the frame's splices, braces and wires
+   *  are worked out from its height, so a new value needs no code. */
+  textile: { depth: number; minWidth: number; grid: number; freeMin: number; maxHeight: number; inFrame: InFrameParams };
   /** Door leaf: `swing` = leaf width = swing radius, `height` = clear height (the header panel fills the rest), m. */
   door: { swing: number; height: number };
   /** `cell`: the floor grid (byggeregel G1); `rollEnd`: extra roll length at each end of a lane (G3). */
@@ -84,6 +86,8 @@ export const RULES: Rules = {
     minWidth: 0.5,
     grid: 0.25,
     freeMin: 0.25,
+    // Bjørn 28.11.2026: 5030 for now, as the highest raised wall (V19)
+    maxHeight: 5.03,
     inFrame: { side: 20, air: 10, wallH: 2490, feet: 50, bleed: 20, scale: 10, prof: 40, stag: 2000 },
   },
   door: { swing: 0.95, height: 2.0 },

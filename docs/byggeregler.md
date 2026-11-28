@@ -550,6 +550,12 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   igjen som frittstående der veggen var, og hver tekstilvegg finnes én gang (Bjørn 22.11.2026). Skisser fra før filversjon 7, der en
   tekstilvegg på systemvegg hadde adresse på veggen, åpnes ikke (ingen bakoverkompatibilitet, Bjørn 21.11.2026).
   *Bjørn 20.11.2026 og 21.11.2026 · kode `src/domain/textile/mount.ts`, `src/domain/textile/mounts.ts`, `src/ui/plan/pointer/freeMove.ts`, `src/ui/plan/pointer/textileOff.ts`, `src/ui/plan/pill/wall.tsx` · test `src/domain/textile/mount.test.ts`, `src/domain/textile/mounts.test.ts`, `src/calc/textile/corners.test.ts`*
+- **X14 Høy tekstil.** En tekstilvegg på systemvegg er en egen enhet, ikke en del av veggen, og kan ha fri høyde,
+  også over veggens topp, opp til høyeste tekstil (`rules.textile.maxHeight`, 5030 for nå, som høyeste hevede vegg).
+  Den hever ikke veggen av seg selv. Rammens deler regnes av høyden, så et annet tak trenger ingen kode. Veggrisset
+  tegner rammen der den står, også over toppen. Frittstående står foreløpig i 2540 (X5); høy frittstående med vaier
+  kommer senere.
+  *Bjørn 28.11.2026 · `rules.textile.maxHeight` · kode `src/domain/textile/inFrame.ts`, `src/domain/decor.ts`, `src/calc/textile/production.ts`, `src/ui/plan/wallDrawer/WallElevation.tsx` · test `src/domain/decor.test.ts`, `src/calc/textile/tallFrame.test.ts`*
 
 ## M · Magnet og kobling
 
@@ -989,7 +995,7 @@ i regelen og strykes her.
 **Tekstil**
 - Forslag om å heve veggen når tekstil tegnes over 2540 (kommer med høye tekstilvegger: tekstil på vegg kan ikke gå
   over 2540 i dag).
-- X5, M5: høye tekstilvegger og flere høyder på frittstående (låst til 2540), med vaier og gjennomgående øyebolt.
+- X5, M5: høye frittstående tekstilvegger og flere høyder på frittstående (låst til 2540), med vaier og gjennomgående øyebolt. På systemvegg er høy tekstil bygget (X14).
 - X11: velge type hjørne der en frittstående tekstilvegg møter en ramme på vegg (Bjørn 20.11.2026: 92LTX er bedre enn å
   stoppe mot rammen, fordi alle profilkanalene for tekstil er tilgjengelige, mens en utenpåliggende ramme sperrer
   kanalene og må monteres etter tekstilen).

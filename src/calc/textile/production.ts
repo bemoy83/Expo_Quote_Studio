@@ -55,11 +55,12 @@ function alongWall(w: Wall, p: readonly [number, number]): number {
   return (p[0] - w.from[0]) * dx + (p[1] - w.from[1]) * dy;
 }
 
-/** Height in mm for the frame: the textile's own height when lower than the full wall, else full height. */
+/** Height in mm for the frame: the textile's own height when it has one other than full height (lower, or taller over
+ *  the wall's top, Byggeregel X14), else undefined for full height. */
 export function textileHeightMm(t: TextileWall, s: InFrameParams): number | undefined {
   if (t.height === undefined) return undefined;
   const h = mm(t.height);
-  return h < fullHeight(s) ? h : undefined;
+  return h !== fullHeight(s) ? h : undefined;
 }
 
 export function production(v: Variant, rules: Rules, customer: string): Production {
