@@ -1,57 +1,51 @@
-// Ceiling wires on raised walls (Byggeregler S9, S10, Bjørn 27.11.2026). A raised wall is held at the top by a V of wire
-// from its top rail to two points in the hall's ceiling, across the wall, instead of foot plates. A wall in a structure
-// held by a takdrager (a beam ends on, runs along or crosses one of the posts of the wall, or of a wall joined to it by
-// corners and T's, so a room or a U of stand walls counts as one) gets them only when its top is over 3080
-// (`rules.wall.raise.wireAbove`: 3040 and 3080 count as 3 m); every other raised wall gets them, also a loose inner
-// wall on a stand with takdrager elsewhere (Bjørn 27.11.2026, 28.11.2026). The takdrager do not count as holding the
-// raise, since they stay at the standard height. The wires go on the posts by the
-// foot plates' rule (S3, S4) over each straight run of raised wall, where only a corner raised on both walls holds it:
-// the floor's plates and corners hold the wall below, not its raise.
-import { onSpan, pointKey } from '../domain/grid';
-import type { Point, Variant } from '../domain/types';
-import { builtModules, wallPoints, type BuiltModule } from '../domain/walls';
+// Ceiling wires on raised walls (Byggeregler S9, S10, Bjørn 27.11.2026, 28.11.2026). A raised wall is held at the top
+// by a V of wire from its top rail to two points in the hall's ceiling, across the wall. Every support holds a wall
+// sideways up to a height: a foot plate the wall's own height, a corner or T the lower of the two walls, a takdrager
+// across it the top of the wall. A raise up to `rules.wall.raise.wireAbove` (3080: 3040 and 3080 count as 3 m) stands
+// where its wall is held at the top without foot plates (S1, S4, S5, S6); a wall standing on foot plates gets wires.
+// Over 3080 only a corner raised on both walls holds the raise, so the wires go on the posts by the foot plates'
+// rule (S3, S4) over each straight run of raised wall, the takdrager and the floor's plates and corners not counting.
+import { pointKey } from '../domain/grid';
+import type { Variant } from '../domain/types';
+import { builtModules, wallKind, wallPoints, type BuiltModule } from '../domain/walls';
 import { variantBeams } from './beams/beams';
+import type { BeamLayout } from './beams/beamSegments';
 import type { Rules } from '../rules/rules';
 import { raiseTop } from '../rules/rules';
 import { RECIPES } from '../foga/recipes';
-import { wallSupports, type WallSupport } from './wallSupports';
+import { freeWallSupports } from './footPlates';
+import { wallRuns, wallSupports, type WallSupport } from './wallSupports';
 
 const NO_BEAMS = { segments: [], posts: new Map(), lm: 0 };
 
 /**
- * The walls a takdrager holds: those it touches (it ends on, runs along or crosses one of their posts) and every wall
- * joined to one of them through shared posts, corners and T's (Bjørn 28.11.2026: a room joined to the beams stands).
+ * The raised modules that need wires: those topping out over `wireAbove`, and every raised module on a straight run
+ * that stands on foot plates (`plated`: the posts with a foot plate, before the wires take their place).
  */
-function beamHeld(mods: readonly BuiltModule[], beams: readonly Span[]): Set<string> {
-  const held = new Set(mods.filter((m) => beams.some((s) => onSpan(s.from, s.to, m.a) || onSpan(s.from, s.to, m.b))).map((m) => m.wallId));
-  const wallsAt = new Map<string, Set<string>>();
-  for (const m of mods) for (const p of [m.a, m.b]) wallsAt.set(pointKey(p), (wallsAt.get(pointKey(p)) ?? new Set()).add(m.wallId));
-  const postsOf = new Map<string, string[]>();
-  for (const m of mods) postsOf.set(m.wallId, [...(postsOf.get(m.wallId) ?? []), pointKey(m.a), pointKey(m.b)]);
-  const queue = [...held];
-  for (let id = queue.pop(); id !== undefined; id = queue.pop())
-    for (const k of postsOf.get(id) ?? []) for (const other of wallsAt.get(k) ?? []) if (!held.has(other)) (held.add(other), queue.push(other));
-  return held;
+export function wiredModules(mods: readonly BuiltModule[], plated: ReadonlySet<string>, rules: Rules): BuiltModule[] {
+  const onPlates = new Set(wallRuns(mods).flatMap((r) => (r.points.some((p) => plated.has(pointKey(p))) ? r.mods : [])));
+  return mods.filter((m) => m.raise && (onPlates.has(m) || raiseTop(m.raise.len, rules) > rules.wall.raise.wireAbove));
 }
 
-type Span = { from: Point; to: Point };
-
-/** The raised modules that need wires: on a wall held by a takdrager only those topping out over `wireAbove`, else all. */
-export function wiredModules(mods: readonly BuiltModule[], beams: readonly Span[], rules: Rules): BuiltModule[] {
-  const held = beamHeld(mods, beams);
-  return mods.filter((m) => m.raise && (!held.has(m.wallId) || raiseTop(m.raise.len, rules) > rules.wall.raise.wireAbove));
-}
-
-/** One wire per post the rule picks: its point on the wall and the wall's direction (the V spreads across it). */
-export function wallWires(mods: readonly BuiltModule[], beams: readonly Span[], rules: Rules): WallSupport[] {
-  const wired = wiredModules(mods, beams, rules);
+/** One wire per post the rule picks on the wired modules: its point on the wall and the wall's direction (the V spreads across it). */
+export function wallWires(wired: readonly BuiltModule[]): WallSupport[] {
   return wired.length ? wallSupports(wired, NO_BEAMS, RECIPES.wall.support.rule, () => false) : [];
+}
+
+/** The posts that would stand on a foot plate if no wall were raised (S2–S7). */
+export function platedPosts(v: Variant, mods: readonly BuiltModule[], all: BeamLayout, standard: BeamLayout): Set<string> {
+  const walls = new Map(v.walls.map((w) => [w.id, w]));
+  const kindOf = (m: BuiltModule) => {
+    const w = walls.get(m.wallId);
+    return w ? wallKind(w) : 'inner';
+  };
+  return new Set(freeWallSupports(mods, all, standard, kindOf).map((f) => pointKey(f.at)));
 }
 
 /** The wires of a sketch by itself, for the wall drawer (the calc has them as `wires`). */
 export function variantWires(v: Variant, rules: Rules): WallSupport[] {
   const mods = builtModules(v);
   if (!mods.some((m) => m.raise)) return [];
-  const { all } = variantBeams(v, mods, wallPoints(mods), rules.beam.max);
-  return wallWires(mods, all.segments, rules);
+  const { all, standard } = variantBeams(v, mods, wallPoints(mods), rules.beam.max);
+  return wallWires(wiredModules(mods, platedPosts(v, mods, all, standard), rules));
 }
