@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_CATALOG } from '../catalog/defaultCatalog';
 import { paintWalls } from '../domain/edit';
+import { addRoom, RECT_SIDE, syncRooms } from '../domain/rooms';
 import type { Variant } from '../domain/types';
 import { createVariant } from '../domain/variant';
 import { bom } from '../foga/engine';
@@ -37,7 +38,7 @@ describe('S9 where the wires go', () => {
     expect(wireLine(raise(corner, [back], 1040))!.qty).toBe(2);
   });
 
-  it('takdrager count only for a wall connected straight to one: a free inner wall gets wires anyway', () => {
+  it('a loose inner wall stands on foot plates: wires anyway, also on a stand with takdrager', () => {
     const inner = paintWalls(corner, [1, 1], [2, 1]);
     const id = inner.walls.find((w) => w.from[1] === 1 && w.to[1] === 1)!.id;
     const res = run(raise(inner, [id], 540));
@@ -45,6 +46,27 @@ describe('S9 where the wires go', () => {
     expect(wireLine(raise(inner, [id], 540))!.qty).toBe(2);
     // The back wall, where the takdrager end, still needs none at 3080
     expect(wireLine(raise(inner, [back], 540))).toBeUndefined();
+  });
+
+  it('a wall held at the top without foot plates holds 3080: a room side in a T, the back wall of a row stand', () => {
+    // A 2 × 2 room in the back left corner: its free right side is held by the T against the back wall and the corner
+    const room = addRoom(corner, { x: 0, y: 0, w: 2, d: 2 }, undefined, 'r')!;
+    const up = (len: number) => syncRooms({ ...room, rooms: room.rooms.map((r) => ({ ...r, raise: [{ side: RECT_SIDE.right, len }] })) });
+    expect(wireLine(up(540))).toBeUndefined();
+    expect(wireLine(up(1040))!.qty).toBe(2);
+    // A row stand: the takdrager hold the side walls, the side walls hold the back wall in the corners
+    const row = createVariant('A', { width: 6, depth: 4, type: 'row' });
+    const rowBack = row.walls.find((w) => w.from[1] === 0 && w.to[1] === 0)!.id;
+    expect(wireLine(raise(row, [rowBack], 540))).toBeUndefined();
+  });
+
+  it('a wall standing on foot plates gets wires however low the raise', () => {
+    // A 4 m inner wall in a T against the left stand wall, its free end on a foot plate (S3, S4)
+    const tee = paintWalls(createVariant('A', { width: 5, depth: 3, type: 'corner' }), [0, 1], [4, 1]);
+    const id = tee.walls.find((w) => w.from[1] === 1 && w.to[1] === 1)!.id;
+    expect(run(tee).foga.wallFeet).toBe(1);
+    expect(wireLine(raise(tee, [id], 540))!.qty).toBeGreaterThan(0);
+    expect(run(raise(tee, [id], 540)).foga.wallFeet ?? 0).toBe(0);
   });
 
   it('a corner holds only when both walls are raised; takdrager never do', () => {

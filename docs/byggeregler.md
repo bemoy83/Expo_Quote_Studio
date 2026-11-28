@@ -199,10 +199,15 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 - **S8 Stolpe på plate.** En stolpe over en fotplate plukkes uten justeringsfot («Stolpe 94 uten fot»). Står platen
   under arrangørens stolpe, skrus foten ut på stedet.
   *Bjørn 1.11.2026 · kode `src/foga/engine.ts` · test `src/calc/wallSupports.test.ts`*
-- **S9 Vaier på hevet vegg.** En hevet vegg (V18) holdes av vaier fra hallens tak i stedet for fotplater. En vegg som er
-  koblet direkte til en takdrager (drageren ender på, ligger langs eller krysser en av stolpene) får vaier bare over
-  3080 mm (`wall.raise.wireAbove`): en vegg til 3040 eller 3080 teller som 3 m. Alle andre hevede vegger får vaier, også
-  en innervegg uten tilknytning til takdrager på en stand som har takdrager (Bjørn 27.11.2026). Vaierne fordeles over hele veggen etter samme regel som fotplatene (S3, S4), men takdrager og
+- **S9 Vaier på hevet vegg.** Hver støtte holder veggen sideveis opp til en høyde: en fotplate veggens egen høyde
+  (2540), et hjørne eller en T den laveste av de to veggene, en takdrager på tvers toppen av veggen, en vaier hele
+  høyden. En rett vegg alene har ingen sideveis støtte. En takdrager som går videre i veggens linje fra enden holder som
+  på tvers; en drager langs oppå veggen legges ikke (dragerne stopper ved veggene). Derfor: en hevet vegg (V18) opp til
+  3080 mm (`wall.raise.wireAbove`, en vegg til 3040 eller 3080 teller som 3 m) får ingen vaier der veggen er holdt i
+  toppen uten fotplater (S1, S4, S5, S6): en romside i T mot standveggen, eller bakveggen på en radstand, som holdes av
+  hjørnene mot sideveggene, mens dragerne holder sideveggene. En rett strekning som står på fotplater (S2, S3), får vaier
+  på den hevede delen uansett høyde, i stedet for platene. Over 3080 får alle hevede vegger vaier (Bjørn 27.11.2026,
+  28.11.2026). Vaierne fordeles over den hevede veggen etter samme regel som fotplatene (S3, S4), men takdrager og
   fotplater teller ikke som støtte, bare et hjørne der begge veggene er hevet. En stolpe med vaier får ingen fotplate.
   Hver vaier er en V fra veggtoppen til to punkter i taket, én på hver side. Tilbudet har én linje 4300 Vaieroppheng
   (1570 kr per stk, «Støttevaier for vegg»), alltid utstillerens. På oppriss er vaieren en sirkel med kryss over
