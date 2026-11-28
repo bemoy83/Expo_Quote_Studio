@@ -7,9 +7,11 @@ import { addFreeTextile } from '../../../domain/textile/free'
 import { freeTextiles } from '../../../domain/textile/mounts'
 import { addShelfRow } from '../../../domain/shelves/edit'
 import { wallHeight } from '../../../rules/rules'
+import { calc } from '../../../calc/calc'
+import { setWallRaise } from '../../../domain/raise'
 import { sceneGrips } from '../grips'
 import { createVariant } from '../../../domain/variant'
-import { rules } from '../../env'
+import { catalog, rules } from '../../env'
 import type { PlanSelection } from '../../plan/selection'
 import { endDrag, moveDrag, podiumTopAt, startDrag, type Drag, type PointerProps } from './drag'
 import type { Hit, SceneHits } from './hits'
@@ -97,7 +99,7 @@ describe('grips in 3D (Bjørn 15.11.2026)', () => {
   const id = free.walls.find((w) => !w.id.startsWith('side'))!.id
 
   it('shows the grips of what is chosen at the height of what they move', () => {
-    const g = sceneGrips(free, { wallId: id })
+    const g = sceneGrips(free, calc(free, rules, catalog).built, { wallId: id })
     expect(g.map((x) => [x.at, x.y])).toEqual([
       [[3, 1], wallHeight(rules)],
       [[3, 3], wallHeight(rules)],
@@ -106,11 +108,17 @@ describe('grips in 3D (Bjørn 15.11.2026)', () => {
     ])
   })
 
+  it('on a raised wall the grips stand on its top as built, not at the wall height', () => {
+    const raised = setWallRaise(free, id, 500)
+    const g = sceneGrips(raised, calc(raised, rules, catalog).built, { wallId: id })
+    expect(g.map((x) => x.y)).toEqual([0, 0, 0].map(() => wallHeight(rules) + 0.5))
+  })
+
   it('a grip dragged stores the plan grip live, and the toast on release', () => {
     let after = free
     const P: PointerProps = { v: free, selection: { wallId: id }, onSelect: vi.fn(), onEdit: (fn) => (after = fn(after)), onCheckpoint: vi.fn(), onToast: vi.fn(), motifs: [], fine: false }
     const floor = (x: number, y: number) => ({ onFloor: () => ({ x, y }) }) as unknown as SceneHits
-    const grip = sceneGrips(free, { wallId: id })[1]
+    const grip = sceneGrips(free, calc(free, rules, catalog).built, { wallId: id })[1]
     const d = startDrag(P, floor(3, 3), null, {} as PointerEvent, grip)
     expect(d.kind).toBe('grip')
     moveDrag(P, floor(3, 3.9), d as Exclude<Drag, { kind: 'orbit' }>, { shiftKey: false } as PointerEvent)

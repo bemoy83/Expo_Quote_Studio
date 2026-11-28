@@ -1,4 +1,5 @@
 // What the calculation gives: the quote lines, their groups, the margin, the key figures and the rest of the result.
+import type { Built } from './built';
 import type { BeamHook } from './beams/beamHooks';
 import type { Unit } from '../catalog/types';
 import type { Payer, Point } from '../domain/types';
@@ -157,6 +158,8 @@ export interface CalcResult {
    *  when there are any. */
   inserts?: ReadonlyMap<string, readonly CounterProfile[]>;
   production: Production;
+  /** What is built, placed where it stands (calc/built.ts): 3D reads it and never works it out again. */
+  built: Built;
   /** What is built, in Foga terms: the quote counts from it and the picking list lists its parts. */
   foga: FogaStructure;
   /** Level 2 and 3: the Foga parts list of `foga`. The picking list and the kalkyle's articles show it. */

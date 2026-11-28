@@ -8,7 +8,6 @@ import type { Point, TextileFill } from '../../../domain/types'
 import { wallDirection } from '../../../domain/grid'
 import { rules } from '../../env'
 import { findMotif } from '../../motifs'
-import { textileBox } from '../../../domain/textile/inFrame'
 import { printMaterial } from './motifs'
 import { noteMaterial } from './note'
 import { WIRE } from './frame'
@@ -34,8 +33,8 @@ export function buildTextile(c: BuildContext) {
     const moved = (q: Point): Point => [q[0] + dx * shift, q[1] + dy * shift]
     const L = runLength(t)
     // The frame as the calc builds it (its height can be over the wall top, X14), never worked out again here
-    const { bottom } = textileBox(view, rules)
     const h = p.H / 1000
+    const bottom = p.top / 1000 - h
     const glow = selectGlow(sel.textileId === t.id)
     const alu = mat('textile', ALU, { ...ALU_FINISH, ...glow })
     const m = p.fill === 'print' ? findMotif(opts.motifs, p.motif ?? undefined) : undefined
@@ -163,7 +162,7 @@ function cornerPosts(c: BuildContext) {
   const stands = new Map<string, { h: number; y0: number; pick: Tag['pick'] }>()
   for (const p of res.production.pieces) {
     const view = wallTextiles(v).find((x) => x.id === p.textileId)
-    if (view) stands.set(p.textileId, { h: p.H / 1000, y0: textileBox(view, rules).bottom, pick: { wallId: view.wallId, textileId: view.id } })
+    if (view) stands.set(p.textileId, { h: p.H / 1000, y0: (p.top - p.H) / 1000, pick: { wallId: view.wallId, textileId: view.id } })
   }
   for (const f of res.production.free) stands.set(f.textileId, { h: f.H / 1000, y0: foot, pick: { freeTextileId: f.textileId } })
   for (const t of v.textiles) {

@@ -6,6 +6,8 @@ import * as THREE from 'three'
 import { objectFootprint } from '../../domain/objects'
 import type { Variant } from '../../domain/types'
 import { outerHeight } from '../../domain/podiums'
+import type { Built } from '../../calc/built'
+import type { Part } from '../../domain/joints'
 import { wallHeight } from '../../rules/rules'
 import { place, rules } from '../env'
 import { gripsOf, gripWith, type GripOn, type PlanGrip } from '../plan/grips'
@@ -21,18 +23,38 @@ export const GRIP_HIT_PX = 16
 /** A grip's size on screen, px. */
 const GRIP_PX = 14
 
-/** The grips of what is chosen, as Velg shows them (no move grip: the whole thing is one), each at its height. */
-export function sceneGrips(v: Variant, selection: PlanSelection): SceneGrip[] {
+/** The grips of what is chosen, as Velg shows them (no move grip: the whole thing is one), each at its height on what
+ *  is built (`built`, from the calc). */
+export function sceneGrips(v: Variant, built: Built, selection: PlanSelection): SceneGrip[] {
   return gripsOf(v, selection)
     .filter((g) => gripWith(g.on, 'select', null))
-    .map((g) => ({ ...g, y: gripHeight(v, g.on) }))
+    .map((g) => ({ ...g, y: gripHeight(v, built, g.on) }))
 }
 
-/** On top of what the grip moves: a room or a wall at the top of its walls, a counter on its top, furniture on its own. */
-function gripHeight(v: Variant, on: GripOn): number {
-  if (on.type === 'room' || on.type === 'end' || on.type === 'door' || on.type === 'corner' || on.type === 'turn' || (on.type === 'move' && (on.what === 'wall' || on.what === 'textile')))
-    return wallHeight(rules)
-  const o = v.objects.find((x) => x.id === on.id)
+/** On top of what the grip moves, as built: a room or a wall at the top of its walls (raised too), a textile frame on
+ *  its top (over the wall's when tall, X14), a counter on its top, furniture on its own. */
+function gripHeight(v: Variant, built: Built, on: GripOn): number {
+  const H = wallHeight(rules)
+  const part = (p: Part) => (p.kind === 'wall' ? built.wallTop : built.textileTop).get(p.id) ?? H
+  switch (on.type) {
+    case 'room':
+      return built.roomTop.get(on.id) ?? H
+    case 'door': {
+      const o = v.openings.find((x) => x.id === on.id)
+      return (o && built.wallTop.get(o.wallId)) ?? H
+    }
+    case 'corner':
+      return Math.max(part(on.h), part(on.v))
+    case 'turn':
+      return part(on.part)
+    case 'end':
+      if (on.what === 'beam') return H
+      return part({ kind: on.what === 'wall' ? 'wall' : 'textile', id: on.id })
+    case 'move':
+      if (on.what === 'room') return built.roomTop.get(on.id) ?? H
+      if (on.what !== 'object') return part({ kind: on.what, id: on.id })
+  }
+  const o = v.objects.find((x) => 'id' in on && x.id === on.id)
   if (!o) return 0
   if (o.sections) return outerHeight(Math.max(...o.sections.map((s) => s.h))) / 1000
   return objectFootprint(place, o)?.h ?? 0

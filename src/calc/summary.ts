@@ -8,6 +8,7 @@ import { dgOf } from '../pricing/model';
 import { liftHours, needsLift } from '../cost/model';
 import type { CostParams } from '../cost/params';
 import { addTime, type Time } from '../cost/time';
+import { builtOf } from './built';
 import type { CalcContext } from './context';
 import { foilAreas } from './lines/decor';
 import { floorAreas } from './lines/floor';
@@ -72,6 +73,7 @@ export function summary(c: CalcContext, lines: CalcLine[], organiserLines: CalcL
     ...(c.wires.length ? { wires: c.wires } : {}),
     ...(c.inserts.size ? { inserts: c.inserts } : {}),
     production: prod,
+    built: builtOf(v, c.rules, mods, prod, c.lift),
     foga,
     bom: bom(foga, RECIPES, c.sizes),
     organiser: { lines: organiserLines, sum: organiserLines.reduce((a, l) => a + l.sum, 0), cost: organiserLines.reduce((a, l) => a + (l.cost ?? 0), 0) },
