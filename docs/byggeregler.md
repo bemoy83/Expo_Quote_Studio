@@ -585,7 +585,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   (også en romside, V18) og lar rammen stå som den er; angre tar det tilbake. Mot en nabo (N1) skjuler den hevede
   veggen rammens bakside, så siden mot naboen blir nøytral; godkjenningen trengs fortsatt. Viser rammen duken sin
   mot naboen, tilbyr pillen hvit duk i stedet. Rammen hever aldri veggen av seg selv (X14).
-  *Bjørn 27.11.2026 og 28.11.2026 · kode `src/domain/raise.ts`, `src/ui/plan/pill/wall.tsx` · test `src/domain/raise.test.ts`*
+  *Bjørn 27.11.2026 og 28.11.2026 · kode `src/domain/raise.ts`, `src/ui/plan/pill/RaiseOffer.tsx` · test `src/domain/raise.test.ts`*
 
 ## M · Magnet og kobling
 
