@@ -39,6 +39,16 @@ describe('shelves in 3D', () => {
     expect(named('foga-91FF')).toHaveLength(1)
   })
 
+  it('draws the shelves and brackets the calc counts, and none on a module the wall lacks', () => {
+    const odd = { ...v, shelves: [...(v.shelves ?? []), { ...v.shelves![0], id: 'hx', module: 99 }] }
+    const res = calc(odd, rules, catalog)
+    const meshes: THREE.Mesh[] = []
+    build(odd, res).traverse((o) => meshes.push(o as THREE.Mesh))
+    const n = (x: string) => meshes.filter((m) => m.geometry?.name === x).length
+    expect(meshes.filter((m) => (m.userData as Tag).pick?.shelfId === 'hx')).toHaveLength(0)
+    expect([n('foga-91F'), n('foga-91FF')]).toEqual([res.foga.shelves!.end, res.foga.shelves!.twin])
+  })
+
   it('the brackets stand out 290 mm from the post face, under the board, with the flange in under the board', () => {
     for (const m of [...named('foga-91F'), ...named('foga-91FF')]) {
       const b = box(m)

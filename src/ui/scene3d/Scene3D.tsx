@@ -54,7 +54,7 @@ export function Scene3D(p: Props) {
   const view = useRef<View | null>(null)
   // «Fin» (ui/fine.tsx) for the drags, as Shift
   const { fine } = useFine()
-  const props = useRef<PointerProps>({ ...p, fine })
+  const props = useRef<PointerProps & { res: CalcResult }>({ ...p, fine })
   /** Draws the grips of what is chosen again (set up with the view). */
   const redrawGrips = useRef(() => {})
   /** The pill is placed again when the camera has come to rest, the scene is rebuilt or the view changes size. */
@@ -101,7 +101,7 @@ export function Scene3D(p: Props) {
       dropGrips(scene, gripGroup)
       gripGroup = null
       const P = props.current
-      const list = drag?.kind === 'grip' && drag.moved ? [] : sceneGrips(P.v, P.selection)
+      const list = drag?.kind === 'grip' && drag.moved ? [] : sceneGrips(P.v, P.res.built, P.selection)
       if (list.length) {
         gripGroup = gripSprites(P.v, list, camera, renderer.domElement.clientHeight, hot)
         scene.add(gripGroup)
@@ -111,7 +111,7 @@ export function Scene3D(p: Props) {
       drawGrips()
       v.render()
     }
-    const gripAt = (e: PointerEvent) => gripAtScreen(props.current.v, sceneGrips(props.current.v, props.current.selection), camera, renderer.domElement, e)
+    const gripAt = (e: PointerEvent) => gripAtScreen(props.current.v, sceneGrips(props.current.v, props.current.res.built, props.current.selection), camera, renderer.domElement, e)
 
     // Pointer: runs in the capture phase so a drag on furniture or a wall can switch off orbiting first.
     let drag: Drag | null = null

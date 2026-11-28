@@ -1,5 +1,21 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`01-hjorne-arrangor.json > variant A > built: tops 1`] = `
+{
+  "modules": 13,
+  "raisedPosts": 0,
+  "roomTop": {},
+  "textileTop": {},
+  "top": 2.54,
+  "wallTop": {
+    "side-back": 2.54,
+    "side-left": 2.54,
+    "w1": 2.54,
+    "w2": 2.54,
+  },
+}
+`;
+
 exports[`01-hjorne-arrangor.json > variant A > calculation 1`] = `
 {
   "beams": {
@@ -1119,6 +1135,24 @@ exports[`01-hjorne-arrangor.json > variant A > quote lines 1`] = `
 ]
 `;
 
+exports[`02-hjorne-utstiller.json > variant A > built: tops 1`] = `
+{
+  "modules": 14,
+  "raisedPosts": 0,
+  "roomTop": {
+    "bk": 2.54,
+  },
+  "textileTop": {},
+  "top": 2.54,
+  "wallTop": {
+    "bk.2": 2.54,
+    "bk.3": 2.54,
+    "side-back": 2.54,
+    "side-right": 2.54,
+  },
+}
+`;
+
 exports[`02-hjorne-utstiller.json > variant A > calculation 1`] = `
 {
   "beams": {
@@ -2100,6 +2134,20 @@ exports[`02-hjorne-utstiller.json > variant A > quote lines 1`] = `
 ]
 `;
 
+exports[`02-hjorne-utstiller.json > variant B > built: tops 1`] = `
+{
+  "modules": 10,
+  "raisedPosts": 0,
+  "roomTop": {},
+  "textileTop": {},
+  "top": 2.54,
+  "wallTop": {
+    "side-back": 2.54,
+    "side-right": 2.54,
+  },
+}
+`;
+
 exports[`02-hjorne-utstiller.json > variant B > calculation 1`] = `
 {
   "beams": {
@@ -2628,6 +2676,30 @@ exports[`02-hjorne-utstiller.json > variant B > quote lines 1`] = `
     "sum": 8010,
   },
 ]
+`;
+
+exports[`03-rom.json > variant A > built: tops 1`] = `
+{
+  "modules": 28,
+  "raisedPosts": 0,
+  "roomTop": {
+    "L": 2.54,
+    "rom1": 2.54,
+  },
+  "textileTop": {},
+  "top": 2.54,
+  "wallTop": {
+    "L.1": 2.54,
+    "L.2": 2.54,
+    "L.3": 2.54,
+    "L.4": 2.54,
+    "rom1.2": 2.54,
+    "rom1.3": 2.54,
+    "side-back": 2.54,
+    "side-left": 2.54,
+    "side-right": 2.54,
+  },
+}
 `;
 
 exports[`03-rom.json > variant A > calculation 1`] = `
@@ -3565,6 +3637,17 @@ exports[`03-rom.json > variant A > quote lines 1`] = `
 ]
 `;
 
+exports[`04-oy-takdrager.json > variant A > built: tops 1`] = `
+{
+  "modules": 0,
+  "raisedPosts": 0,
+  "roomTop": {},
+  "textileTop": {},
+  "top": 2.54,
+  "wallTop": {},
+}
+`;
+
 exports[`04-oy-takdrager.json > variant A > calculation 1`] = `
 {
   "beams": {
@@ -4342,6 +4425,22 @@ exports[`04-oy-takdrager.json > variant A > quote lines 1`] = `
     "sum": 4560,
   },
 ]
+`;
+
+exports[`05-takdrager-av.json > variant A > built: tops 1`] = `
+{
+  "modules": 15,
+  "raisedPosts": 0,
+  "roomTop": {},
+  "textileTop": {},
+  "top": 2.54,
+  "wallTop": {
+    "side-back": 2.54,
+    "side-left": 2.54,
+    "side-right": 2.54,
+    "w1": 2.54,
+  },
+}
 `;
 
 exports[`05-takdrager-av.json > variant A > calculation 1`] = `
@@ -5126,6 +5225,21 @@ exports[`05-takdrager-av.json > variant A > quote lines 1`] = `
 ]
 `;
 
+exports[`06-stottedrager.json > variant A > built: tops 1`] = `
+{
+  "modules": 22,
+  "raisedPosts": 0,
+  "roomTop": {},
+  "textileTop": {},
+  "top": 2.54,
+  "wallTop": {
+    "side-back": 2.54,
+    "side-left": 2.54,
+    "side-right": 2.54,
+  },
+}
+`;
+
 exports[`06-stottedrager.json > variant A > calculation 1`] = `
 {
   "beams": {
@@ -5551,6 +5665,19 @@ exports[`06-stottedrager.json > variant A > production: textile and print rows 1
 `;
 
 exports[`06-stottedrager.json > variant A > quote lines 1`] = `[]`;
+
+exports[`07-engangsteppe.json > variant A > built: tops 1`] = `
+{
+  "modules": 5,
+  "raisedPosts": 0,
+  "roomTop": {},
+  "textileTop": {},
+  "top": 2.54,
+  "wallTop": {
+    "side-back": 2.54,
+  },
+}
+`;
 
 exports[`07-engangsteppe.json > variant A > calculation 1`] = `
 {
@@ -6032,6 +6159,21 @@ exports[`07-engangsteppe.json > variant A > quote lines 1`] = `
     "sum": 1425,
   },
 ]
+`;
+
+exports[`07-engangsteppe.json > variant B > built: tops 1`] = `
+{
+  "modules": 16,
+  "raisedPosts": 0,
+  "roomTop": {},
+  "textileTop": {},
+  "top": 2.54,
+  "wallTop": {
+    "side-back": 2.54,
+    "side-left": 2.54,
+    "side-right": 2.54,
+  },
+}
 `;
 
 exports[`07-engangsteppe.json > variant B > calculation 1`] = `
@@ -6630,6 +6772,25 @@ exports[`07-engangsteppe.json > variant B > quote lines 1`] = `
     "sum": 2850,
   },
 ]
+`;
+
+exports[`08-tekstil.json > variant A > built: tops 1`] = `
+{
+  "modules": 11,
+  "raisedPosts": 0,
+  "roomTop": {},
+  "textileTop": {
+    "ft1": 2.54,
+    "ft2": 2.54,
+    "t1": 2.54,
+    "t2": 2.54,
+  },
+  "top": 2.62,
+  "wallTop": {
+    "side-back": 2.54,
+    "side-left": 2.54,
+  },
+}
 `;
 
 exports[`08-tekstil.json > variant A > calculation 1`] = `
@@ -8893,6 +9054,20 @@ exports[`08-tekstil.json > variant A > quote lines 1`] = `
 ]
 `;
 
+exports[`09-dekor.json > variant A > built: tops 1`] = `
+{
+  "modules": 8,
+  "raisedPosts": 0,
+  "roomTop": {},
+  "textileTop": {},
+  "top": 2.54,
+  "wallTop": {
+    "side-back": 2.54,
+    "side-left": 2.54,
+  },
+}
+`;
+
 exports[`09-dekor.json > variant A > calculation 1`] = `
 {
   "beams": {
@@ -9681,6 +9856,21 @@ exports[`09-dekor.json > variant A > quote lines 1`] = `
 ]
 `;
 
+exports[`10-mobler-utstyr.json > variant A > built: tops 1`] = `
+{
+  "modules": 10,
+  "raisedPosts": 0,
+  "roomTop": {},
+  "textileTop": {},
+  "top": 2.54,
+  "wallTop": {
+    "side-back": 2.54,
+    "side-left": 2.54,
+    "side-right": 2.54,
+  },
+}
+`;
+
 exports[`10-mobler-utstyr.json > variant A > calculation 1`] = `
 {
   "beams": {
@@ -10334,6 +10524,22 @@ exports[`10-mobler-utstyr.json > variant A > quote lines 1`] = `
     "sum": 4750,
   },
 ]
+`;
+
+exports[`11-hyller.json > variant A > built: tops 1`] = `
+{
+  "modules": 16,
+  "raisedPosts": 0,
+  "roomTop": {},
+  "textileTop": {},
+  "top": 2.54,
+  "wallTop": {
+    "side-back": 2.54,
+    "side-left": 2.54,
+    "side-right": 2.54,
+    "w1": 2.54,
+  },
+}
 `;
 
 exports[`11-hyller.json > variant A > calculation 1`] = `
@@ -11160,6 +11366,22 @@ exports[`11-hyller.json > variant A > quote lines 1`] = `
     "sum": 1976,
   },
 ]
+`;
+
+exports[`12-hjornehyller.json > variant A > built: tops 1`] = `
+{
+  "modules": 14,
+  "raisedPosts": 0,
+  "roomTop": {},
+  "textileTop": {},
+  "top": 2.54,
+  "wallTop": {
+    "side-back": 2.54,
+    "side-left": 2.54,
+    "side-right": 2.54,
+    "w1": 2.54,
+  },
+}
 `;
 
 exports[`12-hjornehyller.json > variant A > calculation 1`] = `
@@ -12142,6 +12364,17 @@ exports[`12-hjornehyller.json > variant A > quote lines 1`] = `
     "sum": 2223,
   },
 ]
+`;
+
+exports[`13-disker-og-podier.json > variant A > built: tops 1`] = `
+{
+  "modules": 0,
+  "raisedPosts": 0,
+  "roomTop": {},
+  "textileTop": {},
+  "top": 2.54,
+  "wallTop": {},
+}
 `;
 
 exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
@@ -13328,6 +13561,21 @@ exports[`13-disker-og-podier.json > variant A > quote lines 1`] = `
 ]
 `;
 
+exports[`14-halv-meter.json > variant A > built: tops 1`] = `
+{
+  "modules": 11,
+  "raisedPosts": 0,
+  "roomTop": {},
+  "textileTop": {},
+  "top": 2.54,
+  "wallTop": {
+    "side-back": 2.54,
+    "side-left": 2.54,
+    "w1": 2.54,
+  },
+}
+`;
+
 exports[`14-halv-meter.json > variant A > calculation 1`] = `
 {
   "beams": {
@@ -14419,6 +14667,30 @@ exports[`14-halv-meter.json > variant A > quote lines 1`] = `
     "sum": 2844,
   },
 ]
+`;
+
+exports[`15-tekstilhjorner.json > variant A > built: tops 1`] = `
+{
+  "modules": 12,
+  "raisedPosts": 0,
+  "roomTop": {},
+  "textileTop": {
+    "f1": 2.54,
+    "f2": 2.54,
+    "t1": 2.54,
+    "t2": 2.54,
+    "t3": 2.54,
+    "t4": 2.54,
+    "t5": 2.54,
+    "t6": 2.54,
+  },
+  "top": 2.54,
+  "wallTop": {
+    "side-back": 2.54,
+    "side-left": 2.54,
+    "w1": 2.54,
+  },
+}
 `;
 
 exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `

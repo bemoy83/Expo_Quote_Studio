@@ -8,6 +8,7 @@ import { dgOf } from '../pricing/model';
 import { liftHours, needsLift } from '../cost/model';
 import type { CostParams } from '../cost/params';
 import { addTime, type Time } from '../cost/time';
+import { builtOf } from './built';
 import type { CalcContext } from './context';
 import { foilAreas } from './lines/decor';
 import { floorAreas } from './lines/floor';
@@ -30,6 +31,8 @@ export function summary(c: CalcContext, lines: CalcLine[], organiserLines: CalcL
   if (lift) order.push(lift);
   const knownCost = known.reduce((a, l) => a + l.cost!, 0) + order.reduce((a, o) => a + o.cost, 0);
   const { floor, floorTotal } = floorAreas(v);
+  // The takdrager as laid, the lifted ones marked (calc/beams/beamLift.ts)
+  const laid = c.lift.segments.size ? { ...beams.all, segments: beams.all.segments.map((s) => (c.lift.segments.has(s) ? { ...s, lifted: true as const } : s)) } : beams.all;
   const foil = foilAreas(c);
 
   // Metres of wall: a shorter module (Byggeregel V1) counts its length
@@ -64,7 +67,7 @@ export function summary(c: CalcContext, lines: CalcLine[], organiserLines: CalcL
       foilM2: foil.full + foil.decal,
       time,
     },
-    beams: c.lift.segments.size ? { ...beams.all, segments: beams.all.segments.map((s) => (c.lift.segments.has(s) ? { ...s, lifted: true as const } : s)) } : beams.all,
+    beams: laid,
     ...(c.lift.segments.size ? { lift: { posts: c.lift.posts, hooks: c.lift.hooks, walls: c.lift.walls, length: c.lift.length } } : {}),
     hooks: beams.hooks,
     posts: [...allPosts.values()],
@@ -72,6 +75,7 @@ export function summary(c: CalcContext, lines: CalcLine[], organiserLines: CalcL
     ...(c.wires.length ? { wires: c.wires } : {}),
     ...(c.inserts.size ? { inserts: c.inserts } : {}),
     production: prod,
+    built: builtOf(v, c.rules, mods, prod, c.lift, laid.segments),
     foga,
     bom: bom(foga, RECIPES, c.sizes),
     organiser: { lines: organiserLines, sum: organiserLines.reduce((a, l) => a + l.sum, 0), cost: organiserLines.reduce((a, l) => a + (l.cost ?? 0), 0) },

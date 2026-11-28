@@ -8,7 +8,7 @@ import type { CalcResult } from '../../calc/calc'
 import { positionsOf } from '../../calc/positions'
 import { pointAlong } from '../../domain/grid'
 import type { Motif, Point, Variant } from '../../domain/types'
-import { catalog, rules } from '../env'
+import { catalog } from '../env'
 import { build, dispose } from './build'
 import { HOME } from './camera'
 import { addLights, aimSun } from './lights'
@@ -63,7 +63,7 @@ export function QuoteRender({ v, res, motifs }: { v: Variant; res: CalcResult; m
     }
     const g = build(v, res, { motifs, onLoad })
     scene.add(g)
-    fit(camera, W, D)
+    fit(camera, W, D, res.built.top)
     take()
     return () => {
       live = false
@@ -103,12 +103,12 @@ function textileChips(v: Variant, res: CalcResult): { pos: number; p: Point }[] 
   })
 }
 
-/** From the home angle, as close as the stand (floor to wall top) allows with a little air round it. */
-function fit(camera: THREE.PerspectiveCamera, W: number, D: number) {
+/** From the home angle, as close as the stand (floor to `top`, the highest thing built, m) allows with a little air round it. */
+function fit(camera: THREE.PerspectiveCamera, W: number, D: number, top: number) {
   const dir = new THREE.Vector3(Math.sin(HOME.az) * Math.cos(HOME.el), Math.sin(HOME.el), Math.cos(HOME.az) * Math.cos(HOME.el))
   const target = new THREE.Vector3(0, 1, 0)
-  // The stand's box: floor to the top of the walls, plus what stands outside it (a free textile, a foot plate)
-  const b = new THREE.Box3(new THREE.Vector3(-W / 2, 0, -D / 2), new THREE.Vector3(W / 2, rules.wall.height + rules.wall.feet + 0.05, D / 2))
+  // The stand's box: floor to the top of what is built (raised walls and tall textiles too, calc/built.ts), with a little air
+  const b = new THREE.Box3(new THREE.Vector3(-W / 2, 0, -D / 2), new THREE.Vector3(W / 2, top + 0.05, D / 2))
   b.getCenter(target)
   const corners = [0, 1, 2, 3, 4, 5, 6, 7].map((i) => new THREE.Vector3(i & 1 ? b.max.x : b.min.x, i & 2 ? b.max.y : b.min.y, i & 4 ? b.max.z : b.min.z))
   // Step in from far away until a corner leaves the picture's inner 90 %

@@ -34,7 +34,8 @@ export function buildOpening(c: BuildContext, m: BuiltModule, tag: Tag) {
   if (product?.opening !== 'door') {
     // Curtain: a folded sheet from the glider down to just above the floor
     const h = lv.header - 0.02
-    const geo = new THREE.PlaneGeometry(rules.wall.cc - post - 0.02, h, 24, 1)
+    // As wide as its module as built (a curtain in a shorter module is shorter)
+    const geo = new THREE.PlaneGeometry(m.cc - post - 0.02, h, 24, 1)
     const pos = geo.attributes.position
     for (let k = 0; k < pos.count; k++) pos.setZ(k, Math.sin((pos.getX(k) + 0.5) * Math.PI * 12) * 0.025)
     geo.computeVertexNormals()
