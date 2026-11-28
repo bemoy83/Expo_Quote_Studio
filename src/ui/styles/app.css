@@ -2906,7 +2906,9 @@ select.cin {
 /* Under the settings: the graphics shelf or the door's mini plan, only in the detail height */
 .wd-sec {
   flex: 1;
-  min-height: 0;
+  /* Never squeezed under the foot (a frame in two corners has four buttons there): its title, choice and one row of
+     motifs stay, the column scrolls for the rest */
+  min-height: 104px;
   display: flex;
   flex-direction: column;
   gap: 6px;

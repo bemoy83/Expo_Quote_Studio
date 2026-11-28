@@ -1,11 +1,12 @@
 // A raised wall seen straight on (Byggeregler V18, V21, S9): each raised felt and part over its module, the 94 joined
-// onto its posts (a post between two heights with the higher) and the ceiling wires on the posts that have one. Shared
-// by the wall drawer and the work order, so both draw the same.
-import { variantWires } from '../../calc/wallWires'
+// onto its posts (a post between two heights with the higher) and the ceiling wires on the posts that have one; and the
+// foot plates under a wall that stands free (S2, Bjørn 28.11.2026). Shared by the wall drawer and the work order, so
+// both draw the same, read from what the calc built (Bjørn 28.11.2026), never worked out again.
+import type { CalcResult } from '../../calc/calc'
 import { moduleCc, moduleStart, pointAlong, pointKey } from '../../domain/grid'
-import type { Variant, Wall } from '../../domain/types'
+import type { Wall } from '../../domain/types'
 import { postOffsets, splitParts, type BuiltModule, type WallPart } from '../../domain/walls'
-import { plateColor, rules } from '../env'
+import { plateColor } from '../env'
 
 export interface RaiseDrawing {
   felts: { at: number; cc: number; len: number; fill: string }[]
@@ -18,7 +19,14 @@ export interface RaiseDrawing {
 }
 
 /** The posts of a sketch that hang from a ceiling wire (S9), by point. */
-export const wiredPosts = (v: Variant): Set<string> => new Set(variantWires(v, rules).map((f) => pointKey(f.at)))
+export const wiredPosts = (res: Pick<CalcResult, 'wires'>): Set<string> => new Set((res.wires ?? []).map((f) => pointKey(f.at)))
+
+/** The posts of a sketch standing on a foot plate (S2), by point. */
+export const platedPosts = (res: Pick<CalcResult, 'wallSupports'>): Set<string> => new Set(res.wallSupports.map((f) => pointKey(f.at)))
+
+/** Where along the drawing wall `w`'s posts on a foot plate stand, x as drawn (`u`). */
+export const footPlatesAt = (w: Wall, parts: readonly WallPart[], u: (t: number) => number, plated: ReadonlySet<string>): number[] =>
+  plated.size ? postOffsets(w, parts).filter((t) => plated.has(pointKey(pointAlong(w, t)))).map(u) : []
 
 /** Room for the wire mark over the top, m (elevation.tsx draws its circle there). */
 export const WIRE_ROOM = 0.22

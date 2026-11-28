@@ -5,6 +5,7 @@ import { Link, RotateCw, Unlink } from 'lucide-react'
 import { joinCorner, letGoCorner, wallCorners } from '../../domain/textile/cornerJoin'
 import { loosenMounted, onFeetHeight } from '../../domain/textile/mount'
 import { mountedOn } from '../../domain/textile/mounts'
+import { wallDirection, wallLength } from '../../domain/grid'
 import type { Variant } from '../../domain/types'
 import { Button } from '../controls'
 import { rules } from '../env'
@@ -20,7 +21,17 @@ export function TextileActions(p: {
   onToast: (text: string) => void
 }) {
   const { v, id } = p
-  if (mountedOn(v, id)) {
+  const m = mountedOn(v, id)
+  if (m) {
+    const corners = wallCorners(v).filter((k) => k.ids.includes(id))
+    // Two corners: named by the side of the drawing they are on, the face seen straight on (x as in WallElevation)
+    const [dx, dy] = wallDirection(m.wall)
+    const x = (at: readonly [number, number]) => {
+      const t = (at[0] - m.wall.from[0]) * dx + (at[1] - m.wall.from[1]) * dy
+      return m.side === 1 ? t : wallLength(m.wall) - t
+    }
+    const mid = corners.reduce((a, k) => a + x(k.at), 0) / (corners.length || 1)
+    const where = (at: readonly [number, number]) => (corners.length < 2 ? '' : x(at) < mid ? ' til venstre' : ' til høyre')
     const loosen = () => {
       const r = loosenMounted(v, rules, id)
       if ('error' in r) return p.onToast(r.error)
@@ -30,9 +41,7 @@ export function TextileActions(p: {
     }
     return (
       <>
-        {wallCorners(v)
-          .filter((k) => k.ids.includes(id))
-          .map((k) => (
+        {corners.map((k) => (
             <Button
               key={`${k.at[0]},${k.at[1]}`}
               variant="ghost"
@@ -40,7 +49,7 @@ export function TextileActions(p: {
               title={k.joined ? 'Løs opp hjørnet · rammen på den korteste veggen flyttes inntil den andre, uten 92LTX' : 'Koble hjørnet · rammene møtes i en 92LTX'}
               onClick={() => p.onEdit((x) => (k.joined ? letGoCorner(x, k.at) : joinCorner(x, k.at)))}
             >
-              {k.joined ? 'Løs opp hjørnet' : 'Koble hjørnet'}
+              {(k.joined ? 'Løs opp hjørnet' : 'Koble hjørnet') + where(k.at)}
             </Button>
           ))}
         <Button variant="ghost" icon={Unlink} title="Løsne fra veggen · står fritt på fotplater foran veggen" onClick={loosen}>

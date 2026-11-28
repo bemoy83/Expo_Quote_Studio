@@ -38,6 +38,7 @@ export function Drawers({ v, res, view, selection, onSelect, onEdit, onCheckpoin
       {isOnWall(c) && (
         <WallDrawer
           v={v}
+          res={res}
           selection={selection}
           motifs={motifs}
           onUpload={onUpload}

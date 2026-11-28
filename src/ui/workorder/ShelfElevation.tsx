@@ -18,7 +18,7 @@ import { doorInset, wallHeight } from '../../rules/rules'
 import { BORDER_STRONG } from '../colors'
 import { plateColor, productOf, rules } from '../env'
 import { FaceRails, Opening as OpeningView, Plate, Posts, Raise, ShelfFront } from '../plan/elevation'
-import { raiseDrawing } from '../plan/raiseDrawing'
+import { footPlatesAt, raiseDrawing } from '../plan/raiseDrawing'
 import { shelfFront } from '../plan/shelfFront'
 import { planScale } from '../plan/planScale'
 import { ElevationDims } from '../plan/wallDrawer/ElevationDims'
@@ -27,7 +27,7 @@ import { frame, shelfChains } from '../plan/wallDrawer/elevationMeasure'
 /** The drawing's box on the page, px: wide as the work order's column, low enough for two on a page. */
 const SIZE = { w: 680, h: 250 }
 
-export function ShelfElevation({ v, wallId, s, shelves, layout, wired }: { v: Variant; wallId: string; s: FaceSide; shelves: Shelf[]; layout: CornerLayout; wired: ReadonlySet<string> }) {
+export function ShelfElevation({ v, wallId, s, shelves, layout, wired, plated }: { v: Variant; wallId: string; s: FaceSide; shelves: Shelf[]; layout: CornerLayout; wired: ReadonlySet<string>; plated: ReadonlySet<string> }) {
   const w = v.walls.find((x) => x.id === wallId)
   if (!w) return null
   const L = wallLength(w)
@@ -75,7 +75,7 @@ export function ShelfElevation({ v, wallId, s, shelves, layout, wired }: { v: Va
           )
         return <Plate key={i} at={at} cc={cc} fill={plateColor(m?.plate ?? wallRal(v, w))} x={spanX} H={H} />
       })}
-      <Posts xs={posts.map(u)} H={H} />
+      <Posts xs={posts.map(u)} H={H} plated={footPlatesAt(w, parts, u, plated)} />
       {raise.felts.length > 0 && <Raise felts={raise.felts} posts={raise.posts} wires={raise.wires} x={spanX} />}
       <line x1={-0.12} y1={H} x2={L + 0.12} y2={H} stroke={BORDER_STRONG} strokeWidth={0.01} />
       <FaceRails wallId={w.id} s={s} layout={layout} x={u} H={H} u={fr.u} />
