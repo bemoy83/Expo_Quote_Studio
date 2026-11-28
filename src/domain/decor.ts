@@ -11,6 +11,7 @@ import { roomAt } from './rooms';
 import { freeSpans, spanFor, textileAt, textileBox, textilesOn, updateTextile, type Span } from './textile/inFrame';
 import type { Foil, TextileWall, Variant, Wall } from './types';
 import { SPAN_REACH, wallTextiles, withOnWall } from './textile/mounts';
+import { facesNeighbour, neighbourPrint } from './neighbour';
 
 const EPS = 1e-6;
 const r1 = (n: number) => Math.round(n * 10) / 10;
@@ -44,7 +45,8 @@ export function foilBlocked(v: Variant, rules: Rules, wallId: string, module: nu
   const at = feltWall(v, wallId, module);
   if (!at) return 'Ingen vegg her';
   // The upper felt (V20) stands over a door too, and over every textile frame (they end at 2540)
-  if (upper) return at.w.raise ? null : 'Veggen er ikke hevet';
+  // Byggeregel N1: none on the upper felts toward a neighbour closer than 1 m
+  if (upper) return !at.w.raise ? 'Veggen er ikke hevet' : facesNeighbour(v, rules, wallId, s) ? neighbourPrint(rules) : null;
   const { blocked } = at;
   // A print over the whole plate may cover a door (leaf and header); a decal never sits on an opening
   if (blocked.openings.has(module) && !(full && blocked.doors.has(module))) return 'Folie kan ikke ligge på en åpning';

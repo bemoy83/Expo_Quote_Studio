@@ -2,6 +2,8 @@
 // area turned into a room. App's onEdit stores it; the plan's preview (docs/forhandsvisning.md) shows the same thing
 // before the click, so the two never differ.
 import { fitDecor } from '../domain/decor'
+import { facesNeighbour, neighbourDistance, neighbourNotes, whiteToNeighbour } from '../domain/neighbour'
+import { sideOf } from '../domain/faces'
 import { fitBreaks } from '../domain/replaceWalls'
 import { DOOR_NO_SWING, settleSwings, shutsDoor } from '../domain/doors'
 import { newFootClash } from '../calc/footPlates'
@@ -18,9 +20,9 @@ import { findMotif } from './motifs'
 /** A decal's width over height, by motif; 0 for an unknown motif. */
 export const ratioFor = (motifs: Motif[] | undefined) => (id: string | undefined) => findMotif(motifs, id)?.ratio ?? 0
 
-/** The change with walls laid out round their doors (D8), decor, frames in corners joined (X7) also with free-standing runs ending at them (X11), free-standing textile and shelves fitted to it, and doors turned to a side with free floor (D7). */
+/** The change with walls laid out round their doors (D8), decor, frames in corners joined (X7) also with free-standing runs ending at them (X11), free-standing textile and shelves fitted to it, textile faces toward a near neighbour white (N1), and doors turned to a side with free floor (D7). */
 export const settle = (x: Variant, ratio: (id: string | undefined) => number) =>
-  settleSwings(fitShelves(fitFreeTextiles(joinFreeToFrames(settleCorners(fitDecor(fitBreaks(x), rules, ratio))), rules), rules), place.swings, floorBoxes)
+  settleSwings(whiteToNeighbour(fitShelves(fitFreeTextiles(joinFreeToFrames(settleCorners(fitDecor(fitBreaks(x), rules, ratio))), rules), rules), rules).v, place.swings, floorBoxes)
 
 /** `fn` on v, the textile walls mounted on walls it moved taken along (Byggeregler X13, M1). */
 const edited = (v: Variant, fn: (v: Variant) => Variant) => carryTextiles(v, fn(v))
@@ -61,6 +63,27 @@ export function refused(v: Variant, fn: (v: Variant) => Variant, ratio: (id: str
   const after = settle(raw, ratio)
   if (shutsDoor(v, after, place.swings, floorBoxes)) return DOOR_NO_SWING
   return physical(v, raw, after)
+}
+
+/** Why `fn` on v is refused (`refused`), or else what Byggeregel N1 did to it on its own: textile faces toward a near
+ *  neighbour turned white, print and decals taken off upper felts facing one. Null when neither, for the toast. */
+export function editNote(v: Variant, fn: (v: Variant) => Variant, ratio: (id: string | undefined) => number): string | null {
+  const raw = edited(v, fn)
+  const after = settle(raw, ratio)
+  if (shutsDoor(v, after, place.swings, floorBoxes)) return DOOR_NO_SWING
+  return physical(v, raw, after) ?? (after === v ? null : neighbourNote(v, after))
+}
+
+/** What N1 changed from `before` to `after` by itself, said in a toast; null when nothing. */
+export function neighbourNote(before: Variant, after: Variant): string | null {
+  const white = neighbourNotes(after, rules).filter((n) => {
+    if (!n.face) return false
+    const t = before.textiles.find((x) => x.id === n.id)
+    return !!t && t[n.face]?.fill !== 'white'
+  }).length
+  const gone = before.foils.filter((f) => f.upper && facesNeighbour(after, rules, f.wallId, sideOf(before, f)) && !after.foils.some((g) => g.id === f.id)).length
+  const parts = [white ? 'siden mot naboen blir hvit duk' : '', gone ? 'print og dekal mot naboen er tatt bort' : ''].filter(Boolean)
+  return parts.length ? `Nærmere naboen enn ${neighbourDistance(rules)}: ${parts.join(', ')}` : null
 }
 
 /** Areas the walls of `after` close that `before` did not, made into rooms (null when there are none). */

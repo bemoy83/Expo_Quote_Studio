@@ -6,7 +6,9 @@
 // wall is hidden and needs nothing.
 import { inward, openSides, SIDES } from './grid';
 import { textileBox } from './textile/inFrame';
-import { freeTextiles, mountedOn, wallTextiles } from './textile/mounts';
+import { freeTextiles, mountedOn, outFace, wallTextiles } from './textile/mounts';
+import { updateFace } from './textile/edit';
+import type { FaceKey } from './textile/free';
 import type { Point, Side, Variant, Wall } from './types';
 import type { BuiltModule } from './walls';
 import { raiseTop, wallHeight, type Rules } from '../rules/rules';
@@ -23,6 +25,8 @@ export interface NeighbourNote {
   top: number;
   /** What the neighbour sees is neutral (organiser's colour, white textile, nothing printed). */
   neutral: boolean;
+  /** A textile's face the neighbour sees (none when it shows the frame's back over its wall). */
+  face?: FaceKey;
 }
 
 const EPS = 1e-6;
@@ -81,7 +85,7 @@ export function neighbourNotes(v: Variant, rules: Rules): NeighbourNote[] {
       const towards = faceToward(m.wall, side) === m.side;
       const wallTop = m.wall.raise ? raiseTop(m.wall.raise, rules) : std;
       const neutral = towards ? t.fill === 'white' : top <= wallTop;
-      out.push({ kind: 'textile', id: t.id, side, distance: d, top, neutral });
+      out.push({ kind: 'textile', id: t.id, side, distance: d, top, neutral, ...(towards && { face: outFace(run, m.wall, m.side) }) });
     }
   }
   // Byggeregel X18: a tall textile wall on foot plates the same way (one product); both its faces are seen, so the
@@ -93,11 +97,44 @@ export function neighbourNotes(v: Variant, rules: Rules): NeighbourNote[] {
       const d = parallelDistance(v, side, t.from, t.to, rules.textile.depth / 2);
       if (d === null || d >= distance - EPS) continue;
       const face = faceToward({ from: t.from, to: t.to }, side) === 1 ? 'a' : 'b';
-      out.push({ kind: 'textile', id: t.id, side, distance: d, top, neutral: t[face]?.fill === 'white' });
+      out.push({ kind: 'textile', id: t.id, side, distance: d, top, neutral: t[face]?.fill === 'white', face });
     }
   }
   return out;
 }
+
+/**
+ * Byggeregel N1 (Bjørn 28.11.2026): face `s` of raised wall `wallId` looks toward a neighbour closer than the neighbour
+ * distance. Print and decals are kept off its upper felts there; the wall must stand at least that far in to take them.
+ */
+export function facesNeighbour(v: Variant, rules: Rules, wallId: string, s: 1 | -1): boolean {
+  const w = v.walls.find((x) => x.id === wallId);
+  if (!w?.raise) return false;
+  return neighbourSides(v).some((side) => {
+    const d = parallelDistance(v, side, w.from, w.to, rules.wall.post / 2);
+    return d !== null && d < rules.neighbour.distance - EPS && faceToward(w, side) === s;
+  });
+}
+
+/**
+ * Byggeregel N1 (Bjørn 28.11.2026): print never faces a neighbour closer than the neighbour distance. Every textile face
+ * the neighbour sees there turns white, its motif kept for when it moves away; the upper felts' print and decals are
+ * kept off by `foilBlocked` (decor.ts). With the faces turned white, or v itself when none was.
+ */
+export function whiteToNeighbour(v: Variant, rules: Rules): { v: Variant; faces: { id: string; face: FaceKey }[] } {
+  const faces = neighbourNotes(v, rules).flatMap((n) => {
+    if (n.kind !== 'textile' || !n.face) return [];
+    const t = v.textiles.find((x) => x.id === n.id);
+    return t && t[n.face]?.fill !== 'white' ? [{ id: n.id, face: n.face }] : [];
+  });
+  return { v: faces.reduce((x, f) => updateFace(x, f.id, f.face, { fill: 'white' }), v), faces };
+}
+
+/** Why print and decals cannot go toward the neighbour (N1), for the hint and the toast. */
+/** The neighbour distance as said in a hint or toast: «1 m». */
+export const neighbourDistance = (rules: Rules) => `${String(rules.neighbour.distance).replace('.', ',')} m`;
+
+export const neighbourPrint = (rules: Rules) => `Mot naboen: ingen print eller dekal nærmere standgrensen enn ${neighbourDistance(rules)}`;
 
 /**
  * Byggeregler V20, N1: the raised modules whose upper plate, in another colour than the organiser's (`neutralRal`), would

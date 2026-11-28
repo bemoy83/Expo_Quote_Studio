@@ -7,7 +7,8 @@ import { freeTextiles } from '../domain/textile/mounts';
 import type { Point, Variant } from '../domain/types';
 import { createVariant } from '../domain/variant';
 import { rules } from './env';
-import { guarded, ratioFor, refused } from './edits';
+import { editNote, guarded, ratioFor, refused } from './edits';
+import { setTextileSize } from '../domain/textile/edit';
 
 const draw = (a: Point, b: Point) => (v: Variant) => {
   const r = addFreeTextile(v, rules, a, b);
@@ -44,5 +45,17 @@ describe('edits that would stand in something (F1, F2)', () => {
     expect(refused(one, put('5276', 3.3), ratio)).toMatch(/møbel/);
     expect(refused(one, put('5276', 4.5), ratio)).toBeNull();
     expect(refused(one, put('6571', 3.45, [{ x: [-500, 500], z: [-250, 250], h: 1000 }]), ratio)).toBeNull();
+  });
+});
+
+describe('what the neighbour rule does by itself (N1)', () => {
+  it('a textile raised over 2540 by a neighbour turns white toward them, and the toast says so', () => {
+    const v = draw([1, 0.5], [4, 0.5])(createVariant('A', { width: 6, depth: 3, type: 'row' }));
+    const id = freeTextiles(v)[0].id;
+    const tall = (x: Variant) => setTextileSize(x, rules, id, { height: 3.04 });
+    expect(editNote(v, tall, ratioFor([]))).toMatch(/hvit duk/);
+    expect(freeTextiles(guarded(v, tall, ratioFor([])))[0].b?.fill).toBe('white');
+    // At the standard height nothing changes by itself
+    expect(editNote(v, (x) => setTextileSize(x, rules, id, { height: 2.4 }), ratioFor([]))).toBeNull();
   });
 });

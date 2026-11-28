@@ -32,9 +32,9 @@ export function wallTitle(v: Variant, w: Wall, T?: TextileWall, F?: Foil, S?: Sh
 export function wallMeta(
   v: Variant,
   w: Wall,
-  x: { L: number; T?: TextileWall; F?: Foil; S?: Shelf; piece?: ProductionPiece; openings: Opening[]; /** Plates as built, a split module's parts each one (V10); else one per module. */ plates?: number; odd: number; tex: TextileWall[]; rooms: RoomRun[]; shelves?: Shelf[] },
+  x: { L: number; T?: TextileWall; F?: Foil; S?: Shelf; piece?: ProductionPiece; openings: Opening[]; /** Plates as built, a split module's parts each one (V10); else one per module. */ plates?: number; odd: number; tex: TextileWall[]; rooms: RoomRun[]; shelves?: Shelf[]; /** How the wall is held, as the calc built it (S2, S9): its foot plates and ceiling wires, and a lift for work over the height limit. */ held?: { feet: number; wires: number; lift: boolean } },
 ): string {
-  const { L, T, F, S, piece, openings, plates, odd, tex, rooms, shelves = [] } = x
+  const { L, T, F, S, piece, openings, plates, odd, tex, rooms, shelves = [], held } = x
   if (S) {
     const { w: width, d: depth } = RECIPES.shelf.board
     const n = shelves.filter((f) => f.module === S.module).length
@@ -60,6 +60,9 @@ export function wallMeta(
     openings.length && count(openings.length, 'åpning', 'åpninger'),
     tex.length && count(tex.length, 'tekstilvegg', 'tekstilvegger'),
     shelves.length && count(shelves.length, 'hylle', 'hyller'),
+    held?.feet && count(held.feet, 'fotplate', 'fotplater'),
+    held?.wires && count(held.wires, 'vaier', 'vaiere'),
+    held?.lift && 'lift',
     ...rooms.map((r) => `${r.b - r.a} m inn mot ${roomName(r.room).toLowerCase()}`),
   ]
     .filter(Boolean)

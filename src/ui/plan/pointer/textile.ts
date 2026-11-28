@@ -23,16 +23,17 @@ export function withPenMotif(r: TextileResult, motif: string | undefined): Texti
  *  pen's motif; next to a system wall the free part of that face fills; on free floor the module the pen shows (`m`,
  *  runDraw.shownModule) stands free on foot plates, as a click with Vegg lays one module. */
 export type TextileClick = { print: (v: Variant) => Variant } | TextileResult
-export function textileClick(v: Variant, hits: PlanHits, q: P, motif: string | undefined, m: Module): TextileClick {
+export function textileClick(v: Variant, hits: PlanHits, q: P, motif: string | undefined, m: Module, standard = false): TextileClick {
   const u = motif ? textileUnder(v, hits, q) : null
   if (u && motif) return { print: (x) => printTextile(x, u, motif) }
   const h = hits.faceHit(q)
   if (h) return withPenMotif(fillFace(v, rules, h.w.id, h.s, h.t), motif)
-  return withPenMotif(drawTextile(v, rules, m.a, m.b, q), motif)
+  return withPenMotif(drawTextile(v, rules, m.a, m.b, q, standard), motif)
 }
 
-/** A run drawn with the textile pen from a to b: on a system wall's line mounted on the face `at` is on, else free. */
-export const textileRun = (v: Variant, a: Point, b: Point, at: P, motif: string | undefined): TextileResult => withPenMotif(drawTextile(v, rules, a, b, at), motif)
+/** A run drawn with the textile pen from a to b: on a system wall's line mounted on the face `at` is on, else free.
+ *  `standard`: drawn without Fin, a free-standing one the standard length for its metres (X9). */
+export const textileRun = (v: Variant, a: Point, b: Point, at: P, motif: string | undefined, standard = false): TextileResult => withPenMotif(drawTextile(v, rules, a, b, at, standard), motif)
 
 /** What the plan says once a textile wall is laid. */
 export function textileToast(r: Exclude<TextileResult, { error: string }>): string {

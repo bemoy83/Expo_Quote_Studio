@@ -64,19 +64,33 @@ export function Raise({ felts, posts, wires = [], x }: { felts: { at: number; cc
 /** The wire mark's radius, m. */
 const WIRE_R = 0.1
 
-export function Posts({ xs, H }: { xs: number[]; H: number }) {
+/** System wall posts at each x, on an adjustable foot, or on a foot plate 750 where the wall stands free (`plated`,
+ *  Byggeregel S2): the plate seen end on across the wall, the post on its 795 without a foot. */
+export function Posts({ xs, H, plated = [] }: { xs: number[]; H: number; plated?: readonly number[] }) {
   const { post, feet } = rules.wall
+  const plate = RECIPES.wall.support.foot
+  const on = (x: number) => plated.some((p) => Math.abs(p - x) < 1e-6)
   return (
     <>
       {xs.map((x) => (
         <g key={x}>
           <rect x={x - post / 2} y={0} width={post} height={H - feet} fill={ALU_POST} />
-          <rect x={x - 0.012} y={H - feet} width={0.024} height={feet} fill={FEET} />
+          {on(x) ? (
+            <>
+              <rect x={x - 0.008} y={H - feet} width={0.016} height={feet - PLATE_H} fill={FEET} />
+              <rect x={x - plate.along / 2000} y={H - PLATE_H} width={plate.along / 1000} height={PLATE_H} fill={FEET} />
+            </>
+          ) : (
+            <rect x={x - 0.012} y={H - feet} width={0.024} height={feet} fill={FEET} />
+          )}
         </g>
       ))}
     </>
   )
 }
+
+/** A foot plate's drawn thickness, m: thicker than its 5 mm, so it shows at the drawing's scale. */
+const PLATE_H = 0.03
 
 /**
  * A door or curtain in the module from x to x + 1 (Byggeregler D2, D5), at the heights of D2: the header over it (a small wall,

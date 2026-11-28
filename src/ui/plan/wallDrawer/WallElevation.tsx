@@ -9,8 +9,8 @@ import { foilCenter, foilsOn } from '../../../domain/decor'
 import { doorLevels, doorRal, doorWindows } from '../../../domain/doors'
 import { felt, type FaceSide } from '../../../domain/faces'
 import { moduleCc, moduleStart } from '../../../domain/grid'
-import { raiseDrawing, wiredPosts, WIRE_ROOM } from '../raiseDrawing'
-import { production } from '../../../calc/textile/production'
+import { footPlatesAt, platedPosts, raiseDrawing, wiredPosts, WIRE_ROOM } from '../raiseDrawing'
+import type { CalcResult } from '../../../calc/calc'
 import { mountedOn } from '../../../domain/textile/mounts'
 import { cropWindow, onDoorPart, plateCrop } from '../../../domain/print'
 import { textileBox, textilesOn } from '../../../domain/textile/inFrame'
@@ -46,6 +46,8 @@ const EPS = 1e-6
 
 interface Props {
   v: Variant
+  /** The calc of `v`: the drawing shows the wires and foot plates it built (Bjørn 28.11.2026), never works them out again. */
+  res: CalcResult
   w: Wall
   s: FaceSide
   /** Faces the wall has. */
@@ -148,15 +150,18 @@ export function WallElevation(p: Props) {
   // One scale for the wall (Bjørn 17.11.2026): room for every frame, decal and print on both faces, whatever is chosen
   const steady = p.fs.map((f) => elevationItems(rules, textilesOn(v, w.id, f), foilsOn(v, w.id, f), doorModules, (t) => (f === 1 ? t : L - t), pieceOf, v.walls))
   // A raised wall (Byggeregler V18, V21) and its ceiling wires (S9)
-  const wired = useMemo(() => wiredPosts(v), [v])
+  const { res } = p
+  const wired = useMemo(() => wiredPosts(res), [res])
   const raise = raiseDrawing(w, mods, p.parts, u, wired)
+  // ...and the foot plates under a wall that stands free (S2)
+  const plated = useMemo(() => platedPosts(res), [res])
   const above = raise.above
   // A textile frame may stand over the wall's top (Byggeregel X14): the drawing takes in the tallest on either face
   const overTop = Math.max(0, ...p.fs.flatMap((f) => textilesOn(v, w.id, f).map((t) => { const b = textileBox(t, rules); return b.bottom + b.height - H })))
   // ...and the ceiling wires holding a frame over its wall's top (X14), over its top rail
   const textileWires = useMemo(
-    () => production(v, rules, '').pieces.filter((q) => q.wireAlong && mountedOn(v, q.textileId)?.wall.id === w.id).flatMap((q) => q.wireAlong!.map((a) => ({ x: s === 1 ? a / 1000 : L - a / 1000, len: q.top / 1000 - H }))),
-    [v, w.id, H, L, s],
+    () => res.production.pieces.filter((q) => q.wireAlong && mountedOn(v, q.textileId)?.wall.id === w.id).flatMap((q) => q.wireAlong!.map((a) => ({ x: s === 1 ? a / 1000 : L - a / 1000, len: q.top / 1000 - H }))),
+    [res, v, w.id, H, L, s],
   )
   const wires = [...raise.wires, ...textileWires]
   const fr = frame(size, L, H, items, { labels, steady, above: Math.max(raise.headroom, overTop + (textileWires.length ? WIRE_ROOM : 0)) })
@@ -308,7 +313,7 @@ export function WallElevation(p: Props) {
               )
             return <Plate key={i} at={st(i)} cc={ccOf(i)} fill={plateColor(m?.plate ?? wallRal(v, w))} x={spanX} H={H} />
           })}
-          <Posts xs={postsAt.map(u)} H={H} />
+          <Posts xs={postsAt.map(u)} H={H} plated={footPlatesAt(w, p.parts, u, plated)} />
           {(raise.felts.length > 0 || wires.length > 0) && <Raise felts={raise.felts} posts={raise.posts} wires={wires} x={spanX} />}
           {/* The upper felts take the tools as the plates do (V20): a surface of their own for the brush */}
           {painting &&

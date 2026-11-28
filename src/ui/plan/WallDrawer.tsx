@@ -9,10 +9,11 @@
 // What to show for what is chosen is decided in focus.ts, and the tools kept between renders live in useWallTools.ts;
 // this file puts it together.
 import { TextileSettings } from './TextileSettings'
+import { TextileActions } from './TextileActions'
 import { neighbourNotes, neighbourText, noteFor } from '../../domain/neighbour'
 import { beamNote } from '../../calc/beams/beamLift'
 import { AlignVerticalSpaceAround, DoorOpen, FlipHorizontal2, MoveHorizontal, Palette, Plus } from 'lucide-react'
-import { production } from '../../calc/textile/production'
+import type { CalcResult } from '../../calc/calc'
 import { addFoil, foilBlocked, foilsOn, inBand, removeFoil, updateFoil } from '../../domain/decor'
 import { eraseWalls } from '../../domain/edit'
 import { wallRal } from '../../domain/plateDecor'
@@ -24,9 +25,11 @@ import type { DoorSurface, Motif, Variant } from '../../domain/types'
 import { builtModules, isStandWall, wallLabel, wallParts } from '../../domain/walls'
 import { setWallRaise } from '../../domain/raise'
 import { raiseTop, wallHeight } from '../../rules/rules'
+import { needsLift } from '../../cost/model'
+import { wallHeld } from './raiseDrawing'
 import { INK_FAINT, LAYER_COLOR } from '../colors'
 import { Button, FlatChoice, IconButton, Section } from '../controls'
-import { productOf, rules } from '../env'
+import { pricing, productOf, rules } from '../env'
 import { findMotif } from '../motifs'
 import { DrawerHead } from './drawerParts'
 import { clearOf, PRINT } from './paintTools'
@@ -47,6 +50,8 @@ import { removeTextile, seenFaces } from '../../domain/textile/edit'
 
 interface Props {
   v: Variant
+  /** The calc of `v`: the frames as built, the wires and the foot plates. */
+  res: CalcResult
   selection: PlanSelection
   motifs: Motif[]
   onUpload: (f: File) => void
@@ -123,7 +128,7 @@ export function WallDrawer(p: Props) {
   }
 
   // The frames on walls as built: size, braces, rail splices and the move in an inner corner, for the text and the drawing
-  const pieces = production(v, rules, '').pieces
+  const pieces = p.res.production.pieces
   const pieceOf = (id: string) => pieces.find((x) => x.textileId === id)
   const piece = T ? pieceOf(T.id) : undefined
   const openings = v.openings.filter((o) => o.wallId === w.id)
@@ -202,6 +207,8 @@ export function WallDrawer(p: Props) {
     select({})
   }
 
+  // How the wall is held, as the calc built it (Byggeregler S2, S9), and whether its top needs the lift (cost rule 6)
+  const held = { ...wallHeld(w, parts, p.res), lift: !!w.raise && needsLift(raiseTop(w.raise, rules), pricing.height) }
   const title = wallTitle(v, w, T, F, S)
   return (
     <section className="wall-drawer drawer2" aria-label="Vegg sett forfra">
@@ -246,7 +253,7 @@ export function WallDrawer(p: Props) {
               onClose={p.onClose}
             />
             <p className="wd-meta num">
-              {wallMeta(v, w, { L, T, F, S, piece, openings, plates: parts.filter((q) => !q.mod.opening).length, odd, tex, rooms, shelves })}
+              {wallMeta(v, w, { L, T, F, S, piece, openings, plates: parts.filter((q) => !q.mod.opening).length, odd, tex, rooms, shelves, held })}
             </p>
 
             {T && <TextileSettings v={v} id={T.id} face={seenFaces(v, T.id)[0]} motifs={motifs} onEdit={p.onEdit} onUpload={p.onUpload} onToast={p.onToast} />}
@@ -317,6 +324,7 @@ export function WallDrawer(p: Props) {
                   Fyll ledig vegg
                 </Button>
               )}
+              {T && <TextileActions v={v} id={T.id} selection={sel} onEdit={p.onEdit} onSelect={p.onSelect} onToast={p.onToast} />}
               {/* A felt and the whole wall have two pages, switched here as a door's way back to the palette is (Bjørn
                   9.11.2026); a chosen shelf goes back to its felt's colour and profilering */}
               {ui.pageSwitch && (
@@ -349,6 +357,7 @@ export function WallDrawer(p: Props) {
 
       <WallElevation
         v={v}
+        res={p.res}
         w={w}
         s={s}
         fs={fs}

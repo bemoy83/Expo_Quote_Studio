@@ -53,6 +53,9 @@ export interface TextileFrameRecipe {
   /** Byggeregel X9: 43TX lengths on the shelf, mm (picked only). Any other length is cut for the job (cost rule 2). A
    *  rail longer than `maxRail` is one of these and a splice piece, always cut (`minSplice` at least). */
   standard: readonly number[];
+  /** A frame drawn in whole metres stands this much shorter, mm, so it is the standard length for that many metres c/c
+   *  (970, 1970 …), as a frame filling a 1 m span of a wall is (Byggeregel X9, Bjørn 28.11.2026). */
+  metreGap: number;
   /** Shortest splice piece, mm, not counting its mitres (Bjørn 27.11.2026: about 50). */
   minSplice: number;
   /** Upright brace, length H − 2 × frame profile, and its couplings: at most `rules.textile.inFrame.stag` mm apart (the
@@ -255,6 +258,7 @@ export const RECIPES: Recipes = {
     // Bjørn 27.11.2026: cc − 30 on the wall grid, 470, and gross lengths for a frame outside one wall; 2540 full height.
     // Bjørn 28.11.2026: tall frames follow Foga's CC without the adjusting foot: 3040, 3540, 4040, 4540 (X14)
     standard: [470, 970, 1040, 1970, 2040, 2540, 2970, 3040, 3540, 3970, 4040, 4540, 4970],
+    metreGap: 30,
     minSplice: 50,
     brace: '90',
     spliceBrace: 150,

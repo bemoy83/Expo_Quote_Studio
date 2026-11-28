@@ -489,14 +489,19 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   gjæringene (`minSplice`, Bjørn 27.11.2026). En skjøtebit for kort for 609 skjøtes med 604, én på hver side i de
   utvendige kanalene (`splice.threadMin`, 300 mm er plassholder). Lengre enn ett slikt par: like par, standard og
   skjøtebit annenhver. Skjøten og stagene ved den (X8) følger. Rammer på
-  systemvegg bruker standardlengdene (X2). Frittstående tegnes fritt som før (X5), og en lengde utenfor listen blir kapp.
+  systemvegg bruker standardlengdene (X2). Tekstilpennen tegner i standardlengder (Bjørn 28.11.2026): uten Fin i hele
+  meter c/c, og en frittstående ramme står da `metreGap` (30 mm) kortere i enden det ble tegnet mot, så 1 m blir 970
+  og 2 m 1970, som en ramme som fyller 1 m av en vegg. «Fin» er det fineste steget produktet bygges i: for
+  systemveggen 250, for tekstil, som kappes til ønsket lengde, 10 mm fra 250 (den korteste rammen) på 250-nettet,
+  på vegg og på fotplater; grepene i endene det samme (`runStep`, `TEXTILE_UNIT`). Andre lengder enn standard tas
+  altså bevisst med Fin og blir kapp.
   Derfor sier appen fra (Bjørn 27.11.2026): målet under tegning og draging av en frittstående ramme sier «standard»
   eller «kapp», og pillen på en kappet ramme sier «kapp» og tilbyr nærmeste standardlengde på hver side, med hva det
   gjør med tilbudet. Ett trykk flytter den frie enden; enden som stopper mot en ramme på vegg (X11), står. Bare der
   rammen kan bli standard: én skinne, uten 92LTX-hjørne.
   Mot en 92LTX kappes skinnen fortsatt (X7), også på systemvegg, til den kanskje får egen standard (Bjørn 21.11.2026);
   hjørnet sparer samtidig to stendere. Standard høyde er 2540; rammer kan skjøtes til om lag 5 m høyde.
-  *Bjørn 6.11.2026 og 27.11.2026 · `RECIPES.textileFrame.standard`, `ITEM.frameCutM`, `ITEM.frameCut`, `ITEM.frameCutSetup` · kode `src/calc/textile/common.ts`, `src/calc/textile/lines.ts`, `src/calc/textile/standard.ts`, `src/cost/items.ts`, `src/ui/plan/pill/objects.tsx` · test `src/calc/freeFrames.test.ts`, `src/calc/textile/cutLengths.test.ts`*
+  *Bjørn 6.11.2026 og 27.11.2026 · `RECIPES.textileFrame.standard`, `ITEM.frameCutM`, `ITEM.frameCut`, `ITEM.frameCutSetup` · kode `src/calc/textile/common.ts`, `src/calc/textile/lines.ts`, `src/calc/textile/standard.ts`, `src/cost/items.ts`, `src/ui/plan/pill/objects.tsx`, `src/domain/runDraw.ts`, `src/domain/textile/brush.ts`, `src/ui/plan/pointer/run.ts`, `src/ui/plan/grips.ts` · test `src/calc/freeFrames.test.ts`, `src/calc/textile/cutLengths.test.ts`, `src/domain/runDraw.test.ts`, `src/domain/textile/brush.test.ts`*
 
 - **X10 Rammer overlapper aldri.** Det regelen hindrer, er at to rammer tar samme plass (F1). Hver ramme har et
   volum i plan: langs veggen rammens egen bredde (X2), ut fra veggen rammedybden fra stolpens flate (inntil stolpen,
@@ -586,12 +591,12 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   etter fotplateregelen, fotplatene står som før. Et 92LTX-hjørne over toppen henger i sin egen vaier, både på vegg
   og på fotplater (Bjørn 28.11.2026), én for hjørnet, ved hjørnestolpen; ingen ende henger i et hjørne alene.
   *Bjørn 28.11.2026 · `rules.textile.maxHeight`, `RECIPES.textileFrame.standard`, `RECIPES.textileFrame.wire`, `ITEM.textileWire` · kode `src/calc/textile/free.ts`, `src/calc/textile/production.ts`, `src/calc/lines/feet.ts`, `src/foga/engine.ts`, `src/calc/textile/common.ts`, `src/calc/textile/lines.ts`, `src/domain/textile/inFrame.ts`, `src/domain/decor.ts`, `src/calc/textile/production.ts`, `src/ui/plan/wallDrawer/WallElevation.tsx` · test `src/domain/decor.test.ts`, `src/calc/textile/tallFrame.test.ts`*
-- **X15 Forslag om å heve veggen.** Når en ramme på vegg over veggens topp, tilbyr pillen å heve veggen til laveste
+- **X15 Forslag om å heve veggen.** Når en ramme på vegg over veggens topp, tilbyr pillen og skuffen (ved Høyde) å heve veggen til laveste
   høyde i V19 som tar rammen inn («Hev veggen til 3080»), med hva det gjør med tilbudet. Ett trykk hever hele veggen
   (også en romside, V18) og lar rammen stå som den er; angre tar det tilbake. Mot en nabo (N1) skjuler den hevede
   veggen rammens bakside, så siden mot naboen blir nøytral; godkjenningen trengs fortsatt. Viser rammen duken sin
-  mot naboen, tilbyr pillen hvit duk i stedet. Rammen hever aldri veggen av seg selv (X14).
-  *Bjørn 27.11.2026 og 28.11.2026 · kode `src/domain/raise.ts`, `src/ui/plan/pill/RaiseOffer.tsx` · test `src/domain/raise.test.ts`*
+  mot naboen, blir den hvit av seg selv (N1), så det tilbys ikke. Rammen hever aldri veggen av seg selv (X14).
+  *Bjørn 27.11.2026 og 28.11.2026 · kode `src/domain/raise.ts`, `src/ui/plan/raiseOffer.ts`, `src/ui/plan/pill/RaiseOffer.tsx`, `src/ui/plan/TextileSettings.tsx` · test `src/domain/raise.test.ts`*
 - **X16 Navn og mål på tilbudet.** En tekstilvegg er ett produkt uansett montering (X1), og den heter likt overalt.
   Alle tekstilvegger har én nummerserie, T1, T2 … i tegnerekkefølge, på vegg og på fotplater; sidene til en på
   fotplater heter T3A og T3B. F er dekor på hel plate. Målet på tilbudet er den synlige flaten, slik selger og kunde
@@ -618,10 +623,12 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   standardlengdene til en kappet ramme (X9), på vegg og på fotplater. Bare det monteringen gir, kommer i tillegg: på
   vegg bytte til veggen, «Fyll ledig vegg», hjørnene (M5), «Hev veggen» (X15) og «Løsne» fra veggen; på fotplater
   Roter og «Løsne» fra gruppen. Skuffen har de samme innstillingene, Lengde, Høyde og duk på siden som vises, og
-  «Fra gulv» bare på vegg. En ramme på vegg vises i veggens skuff, sammen med veggen den henger på.
+  «Fra gulv» bare på vegg, og det pillen gjør (Bjørn 28.11.2026, som prinsipp): «Hev veggen» ved Høyde, og i foten
+  hjørnene og «Løsne» på vegg, Roter og «Løsne» på fotplater (`TextileActions`). Standardlengdene står bare i pillen,
+  for plassens skyld; skuffen har Lengde. En ramme på vegg vises i veggens skuff, sammen med veggen den henger på.
   Høyden følger rammen av og på veggen (X13), og en høy ramme på fotplater bygges som på vegg: skjøtte stendere,
   lift og vaier (X14). Nabogodkjenningen (N1) gjelder den også, med siden mot naboen (hvit duk er nøytral).
-  *Bjørn 28.11.2026 · kode `src/domain/textile/edit.ts`, `src/ui/plan/selection.ts`, `src/ui/plan/pointer/decor.ts`, `src/ui/plan/pill/textile.tsx`, `src/ui/plan/TextileSettings.tsx`, `src/ui/plan/FreeTextileDrawer.tsx`, `src/domain/textile/mount.ts`, `src/domain/neighbour.ts` · test `src/domain/textile/edit.test.ts`, `src/ui/plan/selection.test.ts`, `src/calc/textile/tallFrame.test.ts`, `src/domain/neighbour.test.ts`*
+  *Bjørn 28.11.2026 · kode `src/domain/textile/edit.ts`, `src/ui/plan/selection.ts`, `src/ui/plan/pointer/decor.ts`, `src/ui/plan/pill/textile.tsx`, `src/ui/plan/TextileSettings.tsx`, `src/ui/plan/TextileActions.tsx`, `src/ui/plan/FreeTextileDrawer.tsx`, `src/domain/textile/mount.ts`, `src/domain/neighbour.ts` · test `src/domain/textile/edit.test.ts`, `src/ui/plan/selection.test.ts`, `src/calc/textile/tallFrame.test.ts`, `src/domain/neighbour.test.ts`*
 
 ## M · Magnet og kobling
 
@@ -1056,9 +1063,16 @@ K22 standardvarene og K23 disker over en fotplate.
   heves; hvit duk er også nøytral, men ofte dyrere. En tekstilramme som når over veggen sin, viser baksiden mot
   naboen og er ikke nøytral før veggen er hevet like høyt; da skjuler veggen den. Godkjenningen faller ikke bort med
   en nøytral side (Bjørn 28.11.2026). Pillen sier bare «nabogodkjenning» (den deler raden med paletten),
-  veggskuffens hint hele grunnen, «Krever godkjenning fra nabo» (og «nøytral side mot naboen» når den ikke er det), og
+  hintet i veggskuffen og i skuffen for frittstående tekstil hele grunnen, «Krever godkjenning fra nabo» (og «nøytral side mot naboen» når den ikke er det), og
   tilbudet har det under forutsetningene.
-  *Bjørn 28.11.2026 · `rules.neighbour` · kode `src/domain/neighbour.ts`, `src/ui/plan/pill/wall.tsx`, `src/ui/plan/WallDrawer.tsx`, `src/ui/quote/QuotePage.tsx` · test `src/domain/neighbour.test.ts`*
+  **Print mot naboen sperres** (Bjørn 28.11.2026): nærmere grensen enn avstanden får siden naboen ser, ikke print eller
+  dekal; veggen eller tekstilen må stå minst 1 m inn for det. Øvre felt mot naboen tar ikke print eller dekal
+  (`facesNeighbour`, sperret i `foilBlocked`, så det som lå der, tas bort når veggen heves eller flyttes inn). En tekstilside
+  naboen ser, blir hvit duk av seg selv, også når den heves, flyttes eller tegnes dit (`whiteToNeighbour`, i `settle`);
+  motivet huskes og kommer tilbake med print når den står lenger inn. En toast sier hva som ble gjort (`editNote`).
+  Farge på øvre felt løses fortsatt med arrangørens plate rygg i rygg (V20). Baksiden av en ramme over veggen sin
+  løses ved å heve veggen (X15).
+  *Bjørn 28.11.2026 · `rules.neighbour` · kode `src/domain/neighbour.ts`, `src/domain/decor.ts`, `src/ui/edits.ts`, `src/ui/plan/pill/wall.tsx`, `src/ui/plan/WallDrawer.tsx`, `src/ui/plan/FreeTextileDrawer.tsx`, `src/ui/quote/QuotePage.tsx` · test `src/domain/neighbour.test.ts`, `src/ui/edits.test.ts`*
 
 ## Ikke bygget ennå
 

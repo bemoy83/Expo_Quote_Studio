@@ -7,8 +7,7 @@
 // rule (S3, S4) over each straight run of raised wall, the takdrager and the floor's plates and corners not counting.
 import { pointKey } from '../domain/grid';
 import type { Variant } from '../domain/types';
-import { builtModules, wallKind, wallPoints, type BuiltModule } from '../domain/walls';
-import { variantBeams } from './beams/beams';
+import { wallKind, wallPoints, type BuiltModule } from '../domain/walls';
 import type { BeamLayout } from './beams/beamSegments';
 import type { Rules } from '../rules/rules';
 import { raiseTop } from '../rules/rules';
@@ -34,7 +33,7 @@ function wallWires(wired: readonly BuiltModule[]): WallSupport[] {
 
 /**
  * The free walls' foot plates and the raised walls' wires of a sketch, from its beams: the plates are laid out as if
- * no wall were raised (S2–S7), and a wired post keeps no plate (S9). Shared by the calc and the wall drawer.
+ * no wall were raised (S2–S7), and a wired post keeps no plate (S9). The drawings read them from the calc.
  */
 export function wallHolds(v: Variant, mods: readonly BuiltModule[], all: BeamLayout, standard: BeamLayout, rules: Rules): { feet: WallSupport[]; wires: WallSupport[] } {
   const walls = new Map(v.walls.map((w) => [w.id, w]));
@@ -46,12 +45,4 @@ export function wallHolds(v: Variant, mods: readonly BuiltModule[], all: BeamLay
   const wired = wiredModules(mods, new Set(plates.map((f) => pointKey(f.at))), rules);
   const wiredPosts = wallPoints(wired);
   return { feet: plates.filter((f) => !wiredPosts.has(pointKey(f.at))), wires: wallWires(wired) };
-}
-
-/** The wires of a sketch by itself, for the wall drawer (the calc has them as `wires`). */
-export function variantWires(v: Variant, rules: Rules): WallSupport[] {
-  const mods = builtModules(v);
-  if (!mods.some((m) => m.raise)) return [];
-  const { all, standard } = variantBeams(v, mods, wallPoints(mods), rules.beam.max);
-  return wallHolds(v, mods, all, standard, rules).wires;
 }
