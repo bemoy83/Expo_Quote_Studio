@@ -489,14 +489,19 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   gjæringene (`minSplice`, Bjørn 27.11.2026). En skjøtebit for kort for 609 skjøtes med 604, én på hver side i de
   utvendige kanalene (`splice.threadMin`, 300 mm er plassholder). Lengre enn ett slikt par: like par, standard og
   skjøtebit annenhver. Skjøten og stagene ved den (X8) følger. Rammer på
-  systemvegg bruker standardlengdene (X2). Frittstående tegnes fritt som før (X5), og en lengde utenfor listen blir kapp.
+  systemvegg bruker standardlengdene (X2). Tekstilpennen tegner i standardlengder (Bjørn 28.11.2026): uten Fin i hele
+  meter c/c, og en frittstående ramme står da `metreGap` (30 mm) kortere i enden det ble tegnet mot, så 1 m blir 970
+  og 2 m 1970, som en ramme som fyller 1 m av en vegg. «Fin» er det fineste steget produktet bygges i: for
+  systemveggen 250, for tekstil, som kappes til ønsket lengde, 10 mm fra 250 (den korteste rammen) på 250-nettet,
+  på vegg og på fotplater; grepene i endene det samme (`runStep`, `TEXTILE_UNIT`). Andre lengder enn standard tas
+  altså bevisst med Fin og blir kapp.
   Derfor sier appen fra (Bjørn 27.11.2026): målet under tegning og draging av en frittstående ramme sier «standard»
   eller «kapp», og pillen på en kappet ramme sier «kapp» og tilbyr nærmeste standardlengde på hver side, med hva det
   gjør med tilbudet. Ett trykk flytter den frie enden; enden som stopper mot en ramme på vegg (X11), står. Bare der
   rammen kan bli standard: én skinne, uten 92LTX-hjørne.
   Mot en 92LTX kappes skinnen fortsatt (X7), også på systemvegg, til den kanskje får egen standard (Bjørn 21.11.2026);
   hjørnet sparer samtidig to stendere. Standard høyde er 2540; rammer kan skjøtes til om lag 5 m høyde.
-  *Bjørn 6.11.2026 og 27.11.2026 · `RECIPES.textileFrame.standard`, `ITEM.frameCutM`, `ITEM.frameCut`, `ITEM.frameCutSetup` · kode `src/calc/textile/common.ts`, `src/calc/textile/lines.ts`, `src/calc/textile/standard.ts`, `src/cost/items.ts`, `src/ui/plan/pill/objects.tsx` · test `src/calc/freeFrames.test.ts`, `src/calc/textile/cutLengths.test.ts`*
+  *Bjørn 6.11.2026 og 27.11.2026 · `RECIPES.textileFrame.standard`, `ITEM.frameCutM`, `ITEM.frameCut`, `ITEM.frameCutSetup` · kode `src/calc/textile/common.ts`, `src/calc/textile/lines.ts`, `src/calc/textile/standard.ts`, `src/cost/items.ts`, `src/ui/plan/pill/objects.tsx`, `src/domain/runDraw.ts`, `src/domain/textile/brush.ts`, `src/ui/plan/pointer/run.ts`, `src/ui/plan/grips.ts` · test `src/calc/freeFrames.test.ts`, `src/calc/textile/cutLengths.test.ts`, `src/domain/runDraw.test.ts`, `src/domain/textile/brush.test.ts`*
 
 - **X10 Rammer overlapper aldri.** Det regelen hindrer, er at to rammer tar samme plass (F1). Hver ramme har et
   volum i plan: langs veggen rammens egen bredde (X2), ut fra veggen rammedybden fra stolpens flate (inntil stolpen,

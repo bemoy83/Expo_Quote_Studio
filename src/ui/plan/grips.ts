@@ -8,7 +8,7 @@ import { RECIPES } from '../../foga/recipes'
 import { furthest, stepsOf, turnOf, type GripKind, type RunEnd } from '../../domain/grips'
 import { wallGripEnds, stretchWall } from '../../domain/wallEnds'
 import { stretchInnerBeam } from '../../domain/innerBeams'
-import { BEAM_UNIT } from '../../domain/runDraw'
+import { BEAM_UNIT, TEXTILE_UNIT } from '../../domain/runDraw'
 import { standardRuns } from '../../calc/beams/beams'
 import { freeGripEnds, stretchFreeTextile } from '../../domain/textile/free'
 import { groupOf, type Part } from '../../domain/joints'
@@ -279,7 +279,8 @@ function dragEndGrip(v: Variant, on: Extract<GripOn, { type: 'end' }>, p0: Point
   const len = Math.hypot(run.to[0] - run.from[0], run.to[1] - run.from[1])
   const sign = on.end === 'to' ? 1 : -1
   const along = (sign * ((q[0] - p0[0]) * (run.to[0] - run.from[0]) + (q[1] - p0[1]) * (run.to[1] - run.from[1]))) / len
-  const step = fine ? (on.what === 'beam' ? BEAM_UNIT : CELL) : 1
+  // With Fin the finest step it is built in (Bjørn 28.11.2026): a textile frame in 10 mm, a takdrager in 500, a wall in 250
+  const step = fine ? (on.what === 'beam' ? BEAM_UNIT : on.what === 'textile' || on.what === 'frame' ? TEXTILE_UNIT : CELL) : 1
   let why = on.what === 'wall' ? NO_STRETCH : on.what === 'beam' ? NO_BEAM_STRETCH : ''
   const standard = on.what === 'beam' ? standardRuns(v, rules.beam.max) : []
   const at = (d: number): Variant | null => {

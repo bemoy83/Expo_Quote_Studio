@@ -11,6 +11,15 @@ import type { Point, Variant, Wall } from '../types';
 import { MAGNET } from '../joints';
 import { cornerEnds } from './corners';
 import { wallTextiles } from './mounts';
+import { RECIPES } from '../../foga/recipes';
+
+/** b moved `d` m toward a. */
+const shorter = (a: Point, b: Point, d: number): Point => {
+  const L = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  if (L <= d) return b;
+  const k = (L - d) / L;
+  return [Math.round((a[0] + (b[0] - a[0]) * k) * 1000) / 1000, Math.round((a[1] + (b[1] - a[1]) * k) * 1000) / 1000];
+};
 
 const EPS = 1e-6;
 
@@ -43,13 +52,16 @@ export function planTextile(v: Variant, a: Point, b: Point, at: { x: number; y: 
 
 export type TextileResult = { v: Variant; mounted: { id: string } } | { v: Variant; free: { id: string } } | { error: string };
 
-/** Place the stroke a → b, started at the pointer `at`: on the wall it lies along, or free-standing. */
-export function drawTextile(v: Variant, rules: Rules, a: Point, b: Point, at: { x: number; y: number }): TextileResult {
+/** Place the stroke a → b, started at the pointer `at`: on the wall it lies along, or free-standing. `standard`: drawn
+ *  in whole metres (no Fin), a free-standing one stands `metreGap` shorter at b, the end drawn to, so it is the standard
+ *  length for its metres c/c, as a frame filling 1 m of a wall is (Byggeregel X9, Bjørn 28.11.2026). */
+export function drawTextile(v: Variant, rules: Rules, a: Point, b: Point, at: { x: number; y: number }, standard = false): TextileResult {
   const plan = planTextile(v, a, b, at);
   if (plan.kind === 'mount') {
     const r = addTextileSpan(v, rules, plan.wall.id, plan.s, plan.t0, plan.t1);
     return 'error' in r ? r : { v: r.v, mounted: { id: r.id } };
   }
+  if (standard) b = shorter(a, b, RECIPES.textileFrame.metreGap / 1000);
   [a, b] = toFrameEnd(v, a, b);
   const r = addFreeTextile(v, rules, a, b);
   if (!('error' in r)) return { v: r.v, free: { id: r.id } };

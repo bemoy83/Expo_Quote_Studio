@@ -38,7 +38,7 @@ import type { PlanHits } from './pointer/hits'
 import { isDoor, openingEdge } from './pointer/opening'
 import type { Pens } from './pointer/pens'
 import { counterUnder, drawPodiumAt, podiumStart } from './pointer/podium'
-import { runOf, runUnit } from './pointer/run'
+import { runOf, runStep } from './pointer/run'
 import { gripDrawAt } from './pointer/grip'
 import { gripHint, gripWith, sameGrip, type GripDraw } from './grips'
 import { placeHolds, placeKey } from './pointer/place'
@@ -191,8 +191,10 @@ function targetOf(p: NextInput): NextTarget | null {
   if (running) {
     const [a, b] = runOf(running, hover ?? running.last)
     if (!pens.textileTool) return strokeTarget(a, b, true)
-    if (!running.moved) return target(`held:${textileClickKey(p, running.at, running.run.shown)}:${motif ?? ''}`, () => textileOutcome(textileClick(v, hits, running.at, motif, running.run.shown), null))
-    return target(`tline:${pt(a)}:${pt(b)}:${motif ?? ''}`, () => textileOutcome(textileRun(v, a, b, running.p0, motif), [a, b]))
+    // Without Fin a free-standing frame is the standard length for its metres (X9), as run.ts stores it
+    const standard = !running.run.fine
+    if (!running.moved) return target(`held:${textileClickKey(p, running.at, running.run.shown)}:${motif ?? ''}:${standard}`, () => textileOutcome(textileClick(v, hits, running.at, motif, running.run.shown, standard), null))
+    return target(`tline:${pt(a)}:${pt(b)}:${motif ?? ''}:${standard}`, () => textileOutcome(textileRun(v, a, b, running.p0, motif, standard), [a, b]))
   }
 
   // Door, motif and furniture pressed: what a release over the same target stores; dragged off it, nothing
@@ -259,7 +261,7 @@ function targetOf(p: NextInput): NextTarget | null {
   }
   // The drawing pens: what a click stores, 250 with Shift or Fin (500 for Takdrager)
   const at = hover
-  const shown = shownModule(v.stand, at, !!p.fine, runUnit(pens))
+  const shown = shownModule(v.stand, at, !!p.fine, runStep(pens).grid)
   if (pens.wallTool && wallRal) {
     const m = plateAt(p.mods, at)
     if (m) return target(`plate:${m.key}`, () => area({ edit: (x) => paintPlates(x, m.wallId, at, [m.key], wallRal), hint: null }))
@@ -270,7 +272,7 @@ function targetOf(p: NextInput): NextTarget | null {
   if (pens.textileTool) {
     // The same as a click (pointer/textile.ts); a drag starts from the module shown, also by a system wall
     if (!hits.onStand(at) && !hits.faceHit(at)) return null
-    return target(`${textileClickKey(p, at, shown)}:${motif ?? ''}`, () => textileOutcome(textileClick(v, hits, at, motif, shown), null))
+    return target(`${textileClickKey(p, at, shown)}:${motif ?? ''}:${!p.fine}`, () => textileOutcome(textileClick(v, hits, at, motif, shown, !p.fine), null))
   }
   if (pens.decorTool) return decorTarget(p, hover)
   if (pens.openingTool && brush?.kind === 'opening') {

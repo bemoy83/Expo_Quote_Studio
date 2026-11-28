@@ -52,7 +52,7 @@ export function hint(tool: Tool, brush: Brush | null, carpet = false): Hint {
     case 'textile':
       return h(
         'Klikk for en modul, dra for lengre · ved en vegg fylles den',
-        'Klikk ved en systemvegg for å fylle den, eller på gulvet for 1 m frittstående på fotplater · trykk og dra for lengre i hele meter, modulen du ser står fast · dra langs en systemvegg for tekstilvegg på veggen · hold Shift (Fin på iPad) for å tegne i 250 · start der en frittstående slutter for hjørne · motivet i pillen trykkes på tekstilen, og et klikk på en tekstilvegg gir den motivet',
+        'Klikk ved en systemvegg for å fylle den, eller på gulvet for 970 frittstående på fotplater · trykk og dra for lengre i standardlengder (hele meter − 30), modulen du ser står fast · dra langs en systemvegg for tekstilvegg på veggen · hold Shift (Fin på iPad) for fri lengde i 10 mm (kapp) · start der en frittstående slutter for hjørne · motivet i pillen trykkes på tekstilen, og et klikk på en tekstilvegg gir den motivet',
       )
     case 'motif':
       return brush?.kind === 'motif' && brush.pen === 'print'

@@ -5,7 +5,9 @@
 // Shift (or «Fin») changes the size the pen draws with to 250 (Bjørn 14.11.2026): it shows 250 under the pointer on
 // the nearest line of the 250 grid (Byggeregel V9), and a drag grows that in 250 steps; the takdrager pen in 500, as
 // takdragere are built in whole and half metres (T8). Shift pressed or let go during a drag goes on from what is drawn
-// (drawAxis.ts). One grid for every pen: the metre grid, the fine step (`unit`) with Shift or Fin. Pure, plan in m.
+// (drawAxis.ts). One grid for every pen: the metre grid, the fine step (`unit`) with Shift or Fin. «Fin» is the finest
+// step the product is built in (Bjørn 28.11.2026): a system wall in 250, a takdrager in 500, a textile wall, cut to any
+// length, in 10 mm, starting from 250 (its shortest frame) on the 250 grid. Pure, plan in m.
 import { axisSpan, rebaseAxis, type DrawAxis } from './drawAxis';
 import { nearestEdge, toEdge, type Module } from './grid';
 import type { Point, Stand } from './types';
@@ -14,6 +16,8 @@ import type { Point, Stand } from './types';
 export const RUN_UNIT = 0.25;
 /** The fine step of the takdrager pen, m: inner takdragere are built in whole and half metres (Byggeregel T8). */
 export const BEAM_UNIT = 0.5;
+/** The fine step of the textile pen, m: a frame is cut to the length wanted (Byggeregel X9, Bjørn 28.11.2026). */
+export const TEXTILE_UNIT = 0.01;
 
 /** The module a pen shows at q, and what a click there stores: the 1 m edge nearest, inside the stand; with Shift or
  *  Fin (`fine`) the 250 edge nearest on the 250 grid (V9). */
@@ -36,6 +40,8 @@ export interface RunDrag {
   fine: boolean;
   along: DrawAxis;
   locked?: { line: RunLine; axis: DrawAxis };
+  /** The shortest run with Shift or Fin, grid units: one, or for the textile pen its shortest frame. */
+  min: number;
 }
 
 const lineOf = (m: Module): RunLine => (m.orientation === 'h' ? { h: true, c: m.a[1] } : { h: false, c: m.a[0] });
@@ -46,11 +52,11 @@ const lengthOf = (stand: Stand, l: RunLine, u: number) => (l.h ? stand.width : s
 const coarseOf = (u: number) => Math.round(1 / u);
 
 /** A press at q on the module the pen shows: a drag grows it past its ends, in whole metres or with Shift in 250. */
-export function startRun(stand: Stand, shown: Module, q: Point, fine: boolean, unit = RUN_UNIT): RunDrag {
+export function startRun(stand: Stand, shown: Module, q: Point, fine: boolean, unit = RUN_UNIT, min = 1): RunDrag {
   const l = lineOf(shown);
   const [u] = coords(l, q, unit);
   const [lo, hi] = [Math.min(...(l.h ? [shown.a[0], shown.b[0]] : [shown.a[1], shown.b[1]])), Math.max(...(l.h ? [shown.a[0], shown.b[0]] : [shown.a[1], shown.b[1]]))].map((x) => Math.round(x / unit));
-  return { stand, unit, shown, p0: q, fine, along: { lo, hi, v0: u, g: 0 } };
+  return { stand, unit, shown, p0: q, fine, along: { lo, hi, v0: u, g: 0 }, min };
 }
 
 /** Dragged mostly across the module shown: the run turns at its end nearest the press, toward the pointer, starting at
@@ -64,7 +70,7 @@ function turnOf(d: RunDrag, q: Point): { line: RunLine; axis: DrawAxis } {
   const c0 = Math.round(l.c / u);
   const [, w] = coords(l, q, u);
   const dir = w >= c0 ? 1 : -1;
-  const n = d.fine ? 1 : coarseOf(u);
+  const n = d.fine ? d.min : coarseOf(u);
   const [lo, hi] = dir > 0 ? [c0, c0 + n] : [c0 - n, c0];
   // The corner stays at the node
   return { line, axis: { lo, hi, v0: dir > 0 ? hi : lo, g: 0, fix: (-dir) as -1 | 1 } };
@@ -85,10 +91,15 @@ export function runTo(d: RunDrag, q: Point): [Point, Point] {
   hi = Math.min(max, hi);
   // In whole metres the half metre at the stand's edge is the last step (Byggeregel V14)
   if (!d.fine) hi = toEdge(hi, v, max, coarseOf(u));
-  if (hi - lo < 1) [lo, hi] = lo === 0 ? [0, 1] : [max - 1, max];
   // The end that stood still: the one taken hold of moves, without Shift the one the pointer is past
   const fromHi = axis.g ? axis.g < 0 : axis.fix ? axis.fix > 0 : v < axis.lo;
-  const pt = (t: number): Point => (line.h ? [t * u, line.c] : [line.c, t * u]);
+  // Never shorter than the shortest run: the end that moves stops there
+  const least = d.fine ? d.min : 1;
+  if (hi - lo < least) [lo, hi] = fromHi ? [hi - least, hi] : [lo, lo + least];
+  if (lo < 0 || hi > max) [lo, hi] = lo < 0 ? [0, least] : [max - least, max];
+  // In mm, so a 10 mm step stays 1.23 and not 1.2300000000000002
+  const m = (x: number) => Math.round(x * 1000) / 1000;
+  const pt = (t: number): Point => (line.h ? [m(t * u), m(line.c)] : [m(line.c), m(t * u)]);
   return fromHi ? [pt(hi), pt(lo)] : [pt(lo), pt(hi)];
 }
 

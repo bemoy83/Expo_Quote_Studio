@@ -1,6 +1,6 @@
 // One drawing tool for straight runs (Bjørn 14.11.2026): the module shown stays put; with Shift it is 250 and grows in 250.
 import { describe, expect, it } from 'vitest';
-import { BEAM_UNIT, rebaseRun, runTo, shownModule, startRun } from './runDraw';
+import { BEAM_UNIT, RUN_UNIT, TEXTILE_UNIT, rebaseRun, runTo, shownModule, startRun } from './runDraw';
 import type { Point, Stand } from './types';
 
 const stand: Stand = { width: 6, depth: 3, type: 'row' };
@@ -75,5 +75,19 @@ describe('Takdrager in half metres (Byggeregel T8)', () => {
     const d = beamPress([2.6, 1.05], true);
     expect(runTo(d, [3.3, 1])).toEqual([[2.5, 1], [3.5, 1]]);
     expect(runTo(d, [4.8, 1])).toEqual([[2.5, 1], [5, 1]]);
+  });
+});
+
+describe('Byggeregel X9: the textile pen with Fin draws in 10 mm (Bjørn 28.11.2026)', () => {
+  // As pointer/run.ts: the module shown on the 250 grid, its shortest frame 250, the step 10 mm
+  const textile = (q: Point) => startRun(stand, shownModule(stand, { x: q[0], y: q[1] }, true, RUN_UNIT), q, true, TEXTILE_UNIT, 25);
+  it('X9 starts from 250 on the 250 grid and grows in 10 mm', () => {
+    const d = textile([2.6, 1.05]);
+    expect(runTo(d, [2.6, 1.05])).toEqual([[2.5, 1], [2.75, 1]]);
+    expect(runTo(d, [3.734, 1.05])).toEqual([[2.5, 1], [3.73, 1]]);
+  });
+  it('X9 never shorter than the shortest frame', () => {
+    const d = textile([2.6, 1.05]);
+    expect(runTo(d, [2.55, 1.05])).toEqual([[2.5, 1], [2.75, 1]]);
   });
 });

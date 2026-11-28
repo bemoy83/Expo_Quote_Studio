@@ -50,3 +50,20 @@ describe('one textile brush', () => {
     expect(t.to).toEqual([3, 2]);
   });
 });
+
+describe('Byggeregel X9: drawn in whole metres a free-standing frame is the standard length (Bjørn 28.11.2026)', () => {
+  it('X9 a stroke of 2 m on the floor stands 1970, from where it started; with Fin as drawn', () => {
+    const r = drawTextile(base(), RULES, [1, 2], [3, 2], { x: 1, y: 2 }, true);
+    if (!('free' in r)) throw new Error('expected free');
+    expect(freeTextiles(r.v)[0]).toMatchObject({ from: [1, 2], to: [2.97, 2] });
+    const f = drawTextile(base(), RULES, [1, 2], [3, 2], { x: 1, y: 2 }, false);
+    if (!('free' in f)) throw new Error('expected free');
+    expect(freeTextiles(f.v)[0]).toMatchObject({ from: [1, 2], to: [3, 2] });
+  });
+  it('X9 on a system wall the span decides, as before', () => {
+    const a = drawTextile(base(), RULES, [1, 0], [3, 0], { x: 1.1, y: 0.1 }, true);
+    const b = drawTextile(base(), RULES, [1, 0], [3, 0], { x: 1.1, y: 0.1 }, false);
+    if (!('mounted' in a) || !('mounted' in b)) throw new Error('expected mounted');
+    expect(wallTextiles(a.v)[0]).toEqual(wallTextiles(b.v)[0]);
+  });
+});
