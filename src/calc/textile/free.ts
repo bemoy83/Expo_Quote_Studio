@@ -27,7 +27,7 @@ export { bracePoints, splitRail };
 
 export interface FreeFace {
   face: FaceKey;
-  /** F1A, F1B … */
+  /** T1A, T1B … */
   pos: string;
   /** Visible textile, mm. */
   W: number;
@@ -53,7 +53,7 @@ export interface FreeFace {
 }
 
 export interface FreeFrame {
-  /** F1, F2 … */
+  /** T1, T2 …: one number series for all textile walls, whatever they stand on (X16). */
   pos: string;
   textileId: string;
   /** Run length, centre of the frame end or corner to the other, mm. Shorter than the drawn run where it stops at a
@@ -93,6 +93,9 @@ export interface FreeFrame {
 }
 
 const mm = (m: number) => Math.round(m * 1000);
+
+/** Byggeregel X16: a textile wall's position, T1, T2 … in drawing order, one series whatever it is mounted on. */
+export const textilePos = (v: Pick<Variant, 'textiles'>, id: string) => `T${v.textiles.findIndex((t) => t.id === id) + 1}`;
 
 /**
  * Where the feet stand along a run of `len` mm, measured from its `from` end. A corner post at an
@@ -261,8 +264,8 @@ export function freeFrames(
   const corners = cornerEnds(v);
   const f = r.feet;
   const H = fullHeight(s);
-  return freeTextiles(v).map((t, i) => {
-    const pos = `F${i + 1}`;
+  return freeTextiles(v).map((t) => {
+    const pos = textilePos(v, t.id);
     const trim = trims.get(t.id);
     const length = mm(runLength(t) - (trim ? trim.from + trim.to : 0));
     const foot = length < f.support.minFrom ? f.smallFoot : f.foot;

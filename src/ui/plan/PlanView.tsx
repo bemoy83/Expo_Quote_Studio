@@ -82,7 +82,7 @@ interface Props {
   floorFull?: boolean
   /** Position numbers (the quote's and the work order's small plan; never on the drawing surface). */
   positions?: boolean
-  /** Work order: textile walls show their textile labels (T1, F1A, F1B …) instead of the quote number. */
+  /** Work order: textile walls show their textile labels (T1, T3A, T3B …) instead of the quote number. */
   textileLabels?: boolean
   /** Work order: the mållinjer of every drawn beam off the grid, so the montør can measure it out (Byggeregel T15). */
   beamMeasures?: boolean

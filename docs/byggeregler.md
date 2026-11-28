@@ -586,6 +586,15 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   veggen rammens bakside, så siden mot naboen blir nøytral; godkjenningen trengs fortsatt. Viser rammen duken sin
   mot naboen, tilbyr pillen hvit duk i stedet. Rammen hever aldri veggen av seg selv (X14).
   *Bjørn 27.11.2026 og 28.11.2026 · kode `src/domain/raise.ts`, `src/ui/plan/pill/RaiseOffer.tsx` · test `src/domain/raise.test.ts`*
+- **X16 Navn og mål på tilbudet.** En tekstilvegg er ett produkt uansett montering (X1), og den heter likt overalt.
+  Alle tekstilvegger har én nummerserie, T1, T2 … i tegnerekkefølge, på vegg og på fotplater; sidene til en på
+  fotplater heter T3A og T3B. F er dekor på hel plate. Målet på tilbudet er den synlige flaten, slik selger og kunde
+  forstår produktet: duken uten bleed, rammens mål med hjørnetillegget (X7). På vegg er det én flate; på fotplater to.
+  Har de to sidene ulik bredde (en frittstående i et 92LTX-hjørne, for eksempel 1940 og 1980), står rammen som én
+  linje på tilbudet, «Tekstilvegg 1940/1980 × 2540 mm», med «Én ramme: side A … · side B …» under, så den ikke leses
+  som to rammer. Tilbudets forutsetninger har ett punkt om tekstilvegger, med monteringen per størrelse, og
+  nøkkeltallene teller rammer i stk for begge monteringer.
+  *Bjørn 28.11.2026 · kode `src/calc/textile/free.ts` (`textilePos`), `src/calc/textile/lines.ts` (`sizeOf`, `frameSizes`), `src/ui/quote/QuotePage.tsx` · test `src/calc/textile/quoteSize.test.ts`, `src/calc/freeFrames.test.ts`*
 
 ## M · Magnet og kobling
 

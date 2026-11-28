@@ -6,7 +6,7 @@ import { railHeight } from '../../foga/plates';
 import { raiseTop, wallHeight, type InFrameParams, type Rules } from '../../rules/rules';
 import { freeTrims, placeFrames } from './placement';
 import { onWallMount, wallPiece, type FramePiece } from './inFrame';
-import { cornerPosts, freeFrames, runFrame, supportPoints, type FreeFrame, type HeldEnds } from './free';
+import { cornerPosts, freeFrames, runFrame, supportPoints, textilePos, type FreeFrame, type HeldEnds } from './free';
 import { cornerEnds } from '../../domain/textile/free';
 import { fullHeight, partsLm, postPieces, printFileName } from './common';
 import { freeTextiles, mountedOn, outFace, wallTextiles } from '../../domain/textile/mounts';
@@ -84,7 +84,7 @@ export function production(v: Variant, rules: Rules, customer: string): Producti
     const m = mountedOn(v, t.id);
     const run = runs.get(t.id);
     if (!m || !run) continue;
-    const pos = `T${pieces.length + 1}`;
+    const pos = textilePos(v, t.id);
     const H = textileHeightMm(t, s) ?? fullHeight(s);
     const x = runFrame(run, onWallMount(r, outFace(run, m.wall, m.side), pos, H), r, s, customer, corners.get(t.id));
     const f = x.faces[0];
@@ -188,7 +188,7 @@ export const FILL_NAME: Record<TextileFill, string> = { print: 'Trykt tekstil', 
 export function textileRows(P: Production): TextileRow[] {
   return [
     ...P.pieces.map((p) => ({ pos: p.pos, where: p.wall, W: p.W, H: p.H, pw: p.pw, ph: p.ph, fw: p.fw, fh: p.fh, fill: p.fill, fileName: p.fileName })),
-    ...P.free.flatMap((f) => f.faces.map((x) => ({ pos: x.pos, where: `Frittstående ${f.pos}, side ${x.face.toUpperCase()}`, W: x.W, H: x.H, pw: x.pw, ph: x.ph, fw: x.fw, fh: x.fh, fill: x.fill, fileName: x.fileName }))),
+    ...P.free.flatMap((f) => f.faces.map((x) => ({ pos: x.pos, where: `${f.pos} frittstående, side ${x.face.toUpperCase()}`, W: x.W, H: x.H, pw: x.pw, ph: x.ph, fw: x.fw, fh: x.fh, fill: x.fill, fileName: x.fileName }))),
   ];
 }
 
