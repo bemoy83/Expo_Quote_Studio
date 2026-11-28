@@ -261,7 +261,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   *Bjørn 1.11.2026 · kode `src/calc/beams/innerBeams.ts`, `src/calc/beams/beams.ts` · test `src/calc/beams/innerBeams.test.ts`*
 - **T13 Over tekstilvegg.** En takdrager kan ikke kobles på en tekstilvegg (InFrame eller frittstående, begge 43TX).
   Tar drageren og en tekstilramme som når opp til dragerens underkant samme plass i plan, heves hele løpet (lengdene i
-  samme rette linje som møtes ende mot ende) 80 mm. Gjelder alle takdragere. Bare fysisk konflikt teller, ikke innsyn.
+  samme rette linje som møtes ende mot ende) 80 mm, eller mer over en høy ramme (T19). Gjelder alle takdragere. Bare fysisk konflikt teller, ikke innsyn.
   *Bjørn 6.11.2026 · `RECIPES.beam.lift` · kode `src/calc/beams/beamLift.ts` · test `src/calc/beams/beamLift.test.ts`*
 - **T14 Skjøt.** Hver stolpe et hevet løp hviler på, også en veggstolpe, får 94 × 80 med 609 ned i stolpen. Der en hevet
   drager henger på en som ikke er hevet, eller omvendt, står samme stykke med 600 mot den andre drageren, i høyden til
@@ -300,6 +300,16 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   på 80 mm: de 2 × 600 i enden av hver drager går inn i 92-stykket, som i en stolpe. Det står ingen stolpe i den
   skjøten. Tilbudet har samme meterpris (lm).
   *Bjørn 15.11.2026 · `RECIPES.beam.half` · kode `src/foga/fromVariant.ts`, `src/foga/engine.ts`, `src/calc/lines/beams.ts` · test `src/calc/beams/halfBeams.test.ts`*
+- **T19 Ingen hevet drager over 3 m.** En hevet takdrager (T13) går ikke høyere enn en hel 3040-stolpe på 40 mm
+  justeringsfot, topp 3080 (`rules.beam.maxTop`). Høyden løftet tar er det korteste 94-stykket som går klar av den
+  høyeste rammen under en hevet drager: 80 for en ramme i veggens høyde, ellers en av hevelengdene (V19), så toppen blir
+  2540 + lengden. Alle hevede dragere ligger i samme høyde (T16), og stykkene i T14 og T15 er like lange. En ramme som
+  når høyere enn en hevet drager går klar av (toppen minus dragerhøyden, 3000 i dag), tar drageren bort: lengdene over
+  den bygges ikke, med stolper og fotplater bare de trengte, og det samme gjelder dragere som henger på dem (T9).
+  Veggene drageren holdt får da støtte etter S-reglene, og kunden betaler den, også under arrangørens vegger (en
+  drager følger av standveggene, og den som fjerner den betaler støtten veggene da trenger). Hintet i veggskuffen sier
+  det, og pillen til tekstilen viser «takdrager tas bort». Grensen er utledet av regelverdien, ikke skrevet i koden.
+  *Bjørn 28.11.2026 · `rules.beam.maxTop`, `RECIPES.beam.lift`, `rules.wall.raise.lengths` · kode `src/calc/beams/beamLift.ts`, `src/calc/context.ts`, `src/foga/engine.ts`, `src/ui/scene3d/build/frame.ts` · test `src/calc/beams/tallLift.test.ts`*
 
 ## D · Dør og forheng
 

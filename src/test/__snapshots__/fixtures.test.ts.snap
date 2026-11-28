@@ -7481,6 +7481,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         5,
       ],
     ],
+    "length": 80,
     "posts": [
       [
         3,

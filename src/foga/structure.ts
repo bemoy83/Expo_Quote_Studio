@@ -70,8 +70,9 @@ export interface FogaStructure {
    *  (enveis) or two (toveis). */
   beamHooks?: { oneWay: number; twoWay: number };
   /** Takdrager lifted over a textile wall (calc/beams/beamLift.ts): posts extended under them, hook points between a lifted
-   *  beam and one that is not, and ends on a wall between its posts (T15). */
-  beamLift?: { posts: number; hooks: number; walls?: number };
+   *  beam and one that is not, and ends on a wall between its posts (T15); `length`: the 94 piece, mm, when not the
+   *  recipe's (T19). */
+  beamLift?: { posts: number; hooks: number; walls?: number; length?: number };
   /** Textile frames, on walls and on foot plates. */
   frames: FrameSpec[];
   /** 92LTX corner posts, each shared by the two runs meeting there, by length `H`. */

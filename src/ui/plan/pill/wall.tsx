@@ -3,6 +3,7 @@
 import { Image as ImageIcon, Layers, MoveHorizontal, Unlink } from 'lucide-react'
 import { useMemo, type ReactNode } from 'react'
 import { calc } from '../../../calc/calc'
+import { beamGone } from '../../../calc/beams/beamLift'
 import { updateFoil } from '../../../domain/decor'
 import { canMoveWall, eraseWalls } from '../../../domain/edit'
 import { faces, sideOf } from '../../../domain/faces'
@@ -71,6 +72,9 @@ const withNeighbour = (v: Variant, id: string, meta: string) => {
   return n ? `${meta} · ${neighbourText(n).toLowerCase()}` : meta
 }
 
+/** Byggeregel T19: a tall textile that takes the takdrager over it away says so in its pill (the reason is in the drawer). */
+const withBeams = (v: Variant, id: string, meta: string) => (beamGone(v, rules, id) ? `${meta} · takdrager tas bort` : meta)
+
 const ratioOf = (p: PillActions, id?: string | null) => findMotif(p.motifs, id ?? undefined)?.ratio ?? 0
 
 export function textilePill(p: PillActions, c: Of<'textile'>, remove: () => void): Content {
@@ -89,7 +93,7 @@ export function textilePill(p: PillActions, c: Of<'textile'>, remove: () => void
   }
   return {
     name: 'Tekstilvegg',
-    meta: withNeighbour(v, T.id, `${fmt(T.width, 2)} × ${fmt(textileBox(T, rules).height, 2)} m`),
+    meta: withBeams(v, T.id, withNeighbour(v, T.id, `${fmt(T.width, 2)} × ${fmt(textileBox(T, rules).height, 2)} m`)),
     body: (
       <>
         {layerSwitch(v, c.wall, p.selection, T, p.onSelect)}

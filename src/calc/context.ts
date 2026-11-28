@@ -19,7 +19,7 @@ import type { FogaStructure } from '../foga/structure';
 import { catalogOwn, ITEM, type PricingData } from '../pricing/data';
 import { priceLine, type Use } from '../pricing/model';
 import type { Rules } from '../rules/rules';
-import { liftBeams, withJoins, type BeamLift } from './beams/beamLift';
+import { liftBeams, liftCount, withJoins, type BeamLift } from './beams/beamLift';
 import { beamHooks, hookCount, type BeamHook } from './beams/beamHooks';
 import { variantBeams } from './beams/beams';
 import type { BeamLayout } from './beams/beamSegments';
@@ -216,7 +216,7 @@ export function calcContext(v: Variant, rules: Rules, catalog: Catalog, standWal
   const plates = [...floor.supports, ...floor.textile];
   const inserts = counterInserts(v, placeContext(rules, catalog), plates);
   // Foga structure of what the exhibitor orders: posts, walled modules, headers and beam lengths are counted from it
-  const foga = structureOf({ mods: ours, posts: ourPoints.size + (organiserBeams ? innerPosts : beamPosts), beams: ourBeams, hooks: hookCount(organiserBeams ? hooks.filter((h) => h.inner) : hooks), lift: { posts: lift.posts.length, hooks: lift.hooks.length, walls: lift.walls.length }, production: prod, swaps, wallFeet: wallFeet.length, barePosts: wallFeet.filter((f) => ourPoints.has(pointKey(f.at))).length + inner.feet.length, curtain: (a) => idx.byArtnr.get(a)?.product.opening === 'curtain', shelves: shelfBrackets(v, rules), counters: builtCounterParts(v), counterInserts: [...inserts.values()].reduce((a, n) => a + n.length, 0), all: mods, wires: wires.length });
+  const foga = structureOf({ mods: ours, posts: ourPoints.size + (organiserBeams ? innerPosts : beamPosts), beams: ourBeams, hooks: hookCount(organiserBeams ? hooks.filter((h) => h.inner) : hooks), lift: liftCount(lift), production: prod, swaps, wallFeet: wallFeet.length, barePosts: wallFeet.filter((f) => ourPoints.has(pointKey(f.at))).length + inner.feet.length, curtain: (a) => idx.byArtnr.get(a)?.product.opening === 'curtain', shelves: shelfBrackets(v, rules), counters: builtCounterParts(v), counterInserts: [...inserts.values()].reduce((a, n) => a + n.length, 0), all: mods, wires: wires.length });
   // Wall posts are shared between modules: each module (door and curtain included) carries an equal share of the
   // posts of its builder
   const share = (nPosts: number, nMods: number) => (nMods ? nPosts / nMods : 0);

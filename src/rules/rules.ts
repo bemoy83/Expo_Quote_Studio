@@ -37,8 +37,10 @@ export interface Rules {
      *  takdrager, a raised wall whose top is higher than this (mm) gets ceiling wires (Byggeregel S9). */
     raise: { lengths: number[]; wireAbove: number };
   };
-  /** `max`: longest beam length (byggeregel T2); `supportSpan`: a free stand-wall span this long gets a støttedrager (T7). */
-  beam: { max: number; height: number; thickness: number; supportSpan: number };
+  /** `max`: longest beam length (byggeregel T2); `supportSpan`: a free stand-wall span this long gets a støttedrager (T7);
+   *  `maxTop`: the highest a lifted beam's top goes, m (T19). A textile frame may reach `maxTop − height` under it; a
+   *  taller one takes the beam away. A new value needs no code. */
+  beam: { max: number; height: number; thickness: number; supportSpan: number; maxTop: number };
   /** `grid`: free-standing textile walls are drawn and sized on this grid (the elevation grid), at least `freeMin`, m. */
   /** `maxHeight`: the tallest a textile wall may be drawn, m (Byggeregel X14); the frame's splices, braces and wires
    *  are worked out from its height, so a new value needs no code. */
@@ -83,7 +85,8 @@ export const RULES: Rules = {
     plate: { width: 960, height: 2420 },
     raise: { lengths: [540, 1040, 1540, 2040, 2490], wireAbove: 3080 },
   },
-  beam: { max: 6, height: 0.08, thickness: 0.02, supportSpan: 6 },
+  // Bjørn 28.11.2026: a whole 3040 post on a 40 mm foot; beams are as a rule not lifted higher
+  beam: { max: 6, height: 0.08, thickness: 0.02, supportSpan: 6, maxTop: 3.08 },
   textile: {
     depth: 0.04,
     minWidth: 0.5,

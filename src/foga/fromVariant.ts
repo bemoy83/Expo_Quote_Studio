@@ -1,7 +1,7 @@
 // Stand sketch → Foga structure. Built from the same derivations as calc (built modules, beam layout, InFrame
 // sizes); calc passes its own so the quote, the picking list and the parts list count from one structure.
 // Byggeregel P3 (docs/byggeregler.md).
-import { liftBeams, withJoins } from '../calc/beams/beamLift';
+import { liftBeams, liftCount, withJoins } from '../calc/beams/beamLift';
 import { beamHooks, hookCount } from '../calc/beams/beamHooks';
 import { variantBeams } from '../calc/beams/beams';
 import type { BeamLayout } from '../calc/beams/beamSegments';
@@ -23,7 +23,7 @@ export interface Derived {
   /** Hooks a takdrager hangs on another beam or a wall's top rail with, by kind (calc/beams/beamHooks.ts). */
   hooks?: { oneWay: number; twoWay: number };
   /** Takdrager lifted over a textile wall: posts extended, mixed-level hook points and ends on a wall (T15). */
-  lift?: { posts: number; hooks: number; walls?: number };
+  lift?: { posts: number; hooks: number; walls?: number; length?: number };
   production: Production;
   /** Plates swapped into stand walls the organiser builds. */
   swaps?: string[];
@@ -81,7 +81,7 @@ export function structureOf(d: Derived): FogaStructure {
     frames: [...d.production.pieces, ...d.production.free].map((f) => ({ pos: f.pos, parts: f.parts })),
     ...(d.production.cornerPosts.length ? { cornerPosts: d.production.cornerPosts } : {}),
     ...(d.hooks && d.hooks.oneWay + d.hooks.twoWay ? { beamHooks: d.hooks } : {}),
-    ...(d.lift && d.lift.posts + d.lift.hooks + (d.lift.walls ?? 0) ? { beamLift: { posts: d.lift.posts, hooks: d.lift.hooks, ...(d.lift.walls ? { walls: d.lift.walls } : {}) } } : {}),
+    ...(d.lift && d.lift.posts + d.lift.hooks + (d.lift.walls ?? 0) ? { beamLift: { posts: d.lift.posts, hooks: d.lift.hooks, ...(d.lift.walls ? { walls: d.lift.walls } : {}), ...(d.lift.length ? { length: d.lift.length } : {}) } } : {}),
     ...(d.swaps?.length ? { swaps: d.swaps } : {}),
     ...(d.wallFeet ? { wallFeet: d.wallFeet } : {}),
     ...(d.barePosts ? { barePosts: d.barePosts } : {}),
@@ -99,11 +99,11 @@ export function fromVariant(v: Variant, rules: Rules): FogaStructure {
   const mods = builtModules(v);
   const points = wallPoints(mods);
   const { all: laid } = variantBeams(v, mods, points, rules.beam.max);
-  const posts = new Set([...points.keys(), ...laid.posts.keys()]).size;
   const lift = liftBeams(v, rules, laid, points, mods);
   const beams = withJoins(laid, lift);
+  const posts = new Set([...points.keys(), ...beams.posts.keys()]).size;
   const hooks = hookCount(beamHooks(beams, points, lift));
-  return structureOf({ mods, posts, beams, hooks, lift: { posts: lift.posts.length, hooks: lift.hooks.length, walls: lift.walls.length }, production: production(v, rules, ''), shelves: shelfBrackets(v, rules), counters: builtCounterParts(v) });
+  return structureOf({ mods, posts, beams, hooks, lift: liftCount(lift), production: production(v, rules, ''), shelves: shelfBrackets(v, rules), counters: builtCounterParts(v) });
 }
 
 /** Sizes from the rules, mm: post = system wall height without feet (2490), cc 1000. */
