@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_CATALOG } from '../catalog/defaultCatalog';
 import { paintWalls } from '../domain/edit';
+import { addRoom, RECT_SIDE, syncRooms } from '../domain/rooms';
 import type { Variant } from '../domain/types';
 import { createVariant } from '../domain/variant';
 import { bom } from '../foga/engine';
@@ -45,6 +46,18 @@ describe('S9 where the wires go', () => {
     expect(wireLine(raise(inner, [id], 540))!.qty).toBe(2);
     // The back wall, where the takdrager end, still needs none at 3080
     expect(wireLine(raise(inner, [back], 540))).toBeUndefined();
+  });
+
+  it('takdrager hold the whole structure joined to them: a room on the stand wall, the back wall of a row stand', () => {
+    // A 2 × 2 room in the back left corner: its free right side meets the back wall in a T, the back wall the takdrager
+    const room = addRoom(corner, { x: 0, y: 0, w: 2, d: 2 }, undefined, 'r')!;
+    const up = (len: number) => syncRooms({ ...room, rooms: room.rooms.map((r) => ({ ...r, raise: [{ side: RECT_SIDE.right, len }] })) });
+    expect(wireLine(up(540))).toBeUndefined();
+    expect(wireLine(up(1040))!.qty).toBe(2);
+    // A row stand: the takdrager end on the side walls, which hold the back wall
+    const row = createVariant('A', { width: 6, depth: 4, type: 'row' });
+    const rowBack = row.walls.find((w) => w.from[1] === 0 && w.to[1] === 0)!.id;
+    expect(wireLine(raise(row, [rowBack], 540))).toBeUndefined();
   });
 
   it('a corner holds only when both walls are raised; takdrager never do', () => {
