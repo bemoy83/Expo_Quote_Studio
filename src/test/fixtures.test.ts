@@ -1,5 +1,5 @@
 // Safety net for refactoring (docs/kodekart.md): the example sketches in fixtures/ are saved sketch files, read the way
-// the app reads them. For each, everything the app derives without React is kept as a snapshot: the calculation, the
+// the app reads them. For each, everything the app derives without React is kept as a snapshot: the calculation (what is built, placed, apart), the
 // quote lines, the picking list, the production rows and the engangsteppe cut list. A refactor that changes nothing
 // keeps every snapshot. Never update them (vitest -u) as part of a refactor: a difference is a bug until explained.
 // The work order and the drawings are covered by the screenshot script (scripts/shots.mjs).
@@ -43,7 +43,13 @@ describe.each(FILES.map((f) => [f.replace('./fixtures/', ''), f]))('%s', (_name,
     const customer = customerName(sketch.project);
 
     it('calculation', () => {
-      expect(res).toMatchSnapshot();
+      // What is built, placed (calc/built.ts), has its own snapshot below: its modules are builtModules as laid out
+      const { built: _built, ...rest } = res;
+      expect(rest).toMatchSnapshot();
+    });
+    it('built: tops', () => {
+      const { built } = res;
+      expect({ modules: built.mods.length, raisedPosts: built.raisedPosts.size, wallTop: Object.fromEntries(built.wallTop), textileTop: Object.fromEntries(built.textileTop), roomTop: Object.fromEntries(built.roomTop), top: built.top }).toMatchSnapshot();
     });
     it('quote lines', () => {
       expect(quoteGroups(res.groups)).toMatchSnapshot();

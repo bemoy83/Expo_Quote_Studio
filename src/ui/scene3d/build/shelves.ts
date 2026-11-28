@@ -7,8 +7,7 @@
 import * as THREE from 'three'
 import { cornerLayout, RAIL_T, RAIL_W, railT, shelfSpan } from '../../../domain/shelves/corners'
 import { faceNormal, sideOf } from '../../../domain/faces'
-import { pointAlong, pointKey, wallDirection } from '../../../domain/grid'
-import { shelvesOf } from '../../../domain/shelves/model'
+import { pointAlong } from '../../../domain/grid'
 import { chosenShelves } from '../../plan/selection'
 import type { Point } from '../../../domain/types'
 import { RECIPES } from '../../../foga/recipes'
@@ -35,16 +34,14 @@ export function buildShelves(c: BuildContext) {
   const face = rules.wall.post / 2
   // The board's inner edge on the rails' face, into the posts' inner corner (Bjørn 8.11.2026)
   const inner = rules.wall.profile.thickness / 2
-  /** The boards meeting at each bracket: post, face and height → the directions along the wall their boards lie in. */
-  const brackets = new Map<string, { p: Point; n: Point; y: number; dirs: number[]; wallId: string; dir: Point }>()
   // The chosen shelf glows with its row, or alone with shelfOnly
   const chosen = new Set(chosenShelves(v, sel))
   const layout = cornerLayout(v, rules)
-  for (const f of shelvesOf(v)) {
+  // The shelves as built (calc/built.ts): only those on a module their wall has
+  for (const f of c.res.built.shelves) {
     const w = v.walls.find((x) => x.id === f.wallId)
     if (!w) continue
     const s = sideOf(v, f)
-    const n = faceNormal(w, s)
     const on = chosen.has(f.id)
     const tag: Tag = { layer: 'objects', pick: { wallId: w.id, shelfId: f.id } }
     const span = shelfSpan(v, rules, f, layout)
@@ -60,18 +57,10 @@ export function buildShelves(c: BuildContext) {
     grip.visible = false
     grip.castShadow = false
     grip.receiveShadow = false
-    // Its two brackets: at the module's start the board lies ahead along the wall (+1), at its end behind (−1)
-    for (const [k, d, i] of [[span.at, 1, 0], [span.at + 1, -1, 1]] as const) {
-      // Not at the corner post: there the board rests on its rail's bracket (below)
-      if (span.corner?.corner.felt.end === i) continue
-      const p = pointAlong(w, k)
-      const key = `${pointKey(p)}|${Math.round(n[0])},${Math.round(n[1])}|${Math.round(f.y * 1000)}`
-      const b = brackets.get(key) ?? { p, n, y: f.y, dirs: [], wallId: w.id, dir: wallDirection(w) }
-      b.dirs.push(d)
-      brackets.set(key, b)
-    }
   }
-  for (const b of brackets.values()) {
+  // The brackets as the calc places and counts them (domain/shelves/brackets.ts): an end (91F) under one board, a twin
+  // (91FF) between two
+  for (const b of c.res.built.brackets) {
     const twin = b.dirs.length > 1
     const mesh = new THREE.Mesh(unitProfile(profile(twin ? r.twin : r.end)), mat('objects', ALU, ALU_FINISH))
     mesh.scale.x = out
@@ -104,7 +93,7 @@ export function buildShelves(c: BuildContext) {
     // The brackets in it: under each shelf it carries, a short 91 (alone) or a 91FF (meeting), out from the rail's face
     const n = faceNormal(w, rail.felt.s)
     for (const id of rail.carries) {
-      const f = shelvesOf(v).find((x) => x.id === id)
+      const f = c.res.built.shelves.find((x) => x.id === id)
       if (!f) continue
       const meet = rail.kind === 'meet'
       const out = (meet ? r.bracket : co.short) / 1000

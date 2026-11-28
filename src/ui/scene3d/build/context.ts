@@ -4,7 +4,7 @@
 import * as THREE from 'three'
 import type { CalcResult } from '../../../calc/calc'
 import type { Motif, Point, Variant } from '../../../domain/types'
-import { builtModules, type BuiltModule } from '../../../domain/walls'
+import type { BuiltModule } from '../../../domain/walls'
 import { wallHeight } from '../../../rules/rules'
 import { rules } from '../../env'
 import type { Layer } from '../../tools'
@@ -115,7 +115,8 @@ export function buildContext(v: Variant, res: CalcResult, opts: BuildOptions): B
     mesh.rotation.y = Math.atan2(-dz, dx)
     return add(mesh, tag)
   }
-  const mods = builtModules(v)
+  // The modules as the calc built them (calc/built.ts), never laid out again here
+  const mods = res.built.mods
   const sel = opts.selection ?? {}
   return { v, res, opts, W, D, H, post, feet, prof, root, at, mat, add, along, mods, sel }
 }
