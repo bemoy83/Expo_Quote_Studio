@@ -1,4 +1,5 @@
 // Dragging in the wall drawer's drawing: move a textile frame or a decal, or drag the edge or corner of one; move a shelf.
+import { minSpan } from '../../../domain/textile/limits'
 import { moduleMovedBy } from '../../../domain/grid'
 import type { PointerEvent as RPointerEvent, RefObject } from 'react'
 import { moveFoilBy, updateFoil } from '../../../domain/decor'
@@ -83,7 +84,7 @@ export function useDecorDrag({ svg, w, s, L, select, ratioOf, onEdit, onCheckpoi
       else b -= du
     }
     const sp = freeSpans(x, rules, w.id, s, textilesOn(x, w.id, s, t.id)).find(([p0, p1]) => t.from >= p0 - EPS && t.from + t.width <= p1 + EPS)
-    const min = rules.textile.minWidth
+    const min = minSpan(rules)
     if (a !== t.from) a = Math.min(b - min, Math.max(sp?.[0] ?? 0, a))
     if (b !== t.from + t.width) b = Math.max(a + min, Math.min(sp?.[1] ?? L, b))
     const box = textileBox(t, rules)

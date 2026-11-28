@@ -1,4 +1,4 @@
-// Checks Byggeregel N1 (docs/byggeregler.md): over the standard wall top, near a parallel neighbour boundary.
+// Checks Byggeregler N1 og X18 (docs/byggeregler.md): over the standard wall top, near a parallel neighbour boundary.
 import { describe, expect, it } from 'vitest';
 import { RULES } from '../rules/rules';
 import { paintWalls } from './edit';
@@ -6,10 +6,23 @@ import { neighbourNotes, neighbourSides, neighbourText } from './neighbour';
 import { setWallRaise } from './raise';
 import { addTextile, updateTextile } from './textile/inFrame';
 import { createVariant } from './variant';
+import { setTextileSize, updateFace } from './textile/edit';
+import { addFreeTextile } from './textile/free';
 
 const row = () => createVariant('A', { width: 6, depth: 3, type: 'row' });
 
 describe('N1 neighbour approval', () => {
+  it('Byggeregel X18: a tall textile wall on foot plates near a neighbour needs approval too, neutral when white toward them', () => {
+    const r = addFreeTextile(row(), RULES, [1, 0.5], [4, 0.5]);
+    if ('error' in r) throw new Error(r.error);
+    const tall = setTextileSize(r.v, RULES, r.id, { height: 3.04 });
+    // Run (1,0.5) → (4,0.5): face A is the left normal (0, 1), into the stand; face B looks toward the back neighbour
+    expect(neighbourNotes(tall, RULES).filter((n) => n.side === 'back')).toEqual([{ kind: 'textile', id: r.id, side: 'back', distance: 0.48, top: 3040, neutral: false }]);
+    expect(neighbourNotes(updateFace(tall, r.id, 'b', { fill: 'white' }), RULES).find((n) => n.side === 'back')?.neutral).toBe(true);
+    // At full height: nothing to approve
+    expect(neighbourNotes(r.v, RULES)).toEqual([]);
+  });
+
   it('the neighbours are the sides not on an aisle', () => {
     expect(neighbourSides(row())).toEqual(['back', 'left', 'right']);
     expect(neighbourSides(createVariant('A', { width: 6, depth: 6, type: 'island' }))).toEqual([]);

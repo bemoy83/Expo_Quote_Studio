@@ -1,8 +1,7 @@
 // The pill on a wall and on a frame or decal on it (docs/pille-og-skuff.md): the wall's colour, print and a textile wall;
 // the frame's motif and Fyll ledig vegg; the decal's motif. On a wall with textile walls one button steps between them.
-import { Image as ImageIcon, Layers, MoveHorizontal, Unlink } from 'lucide-react'
+import { Image as ImageIcon, Layers } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { beamGone } from '../../../calc/beams/beamLift'
 import { updateFoil } from '../../../domain/decor'
 import { canMoveWall, eraseWalls } from '../../../domain/edit'
 import { faces, sideOf } from '../../../domain/faces'
@@ -10,9 +9,8 @@ import { wallLength, wallModules } from '../../../domain/grid'
 import { wallRal } from '../../../domain/plateDecor'
 import { paintWallFace } from '../../../domain/paint'
 import { fillPlates, printWall } from '../../../domain/print'
-import { neighbourNotes, noteFor } from '../../../domain/neighbour'
 import { roomName } from '../../../domain/rooms'
-import { addTextile, fillTextile, textileBox, textilesOn, updateTextile } from '../../../domain/textile/inFrame'
+import { addTextile, textilesOn } from '../../../domain/textile/inFrame'
 import type { TextileWall, Variant, Wall } from '../../../domain/types'
 import { isStandWall, wallLabel } from '../../../domain/walls'
 import { rules } from '../../env'
@@ -20,80 +18,15 @@ import { fmt } from '../../format'
 import { printKept } from '../../fillKeeping'
 import { findMotif } from '../../motifs'
 import { QBtn, Sep } from '../quick/parts'
-import { RaiseOffer } from './RaiseOffer'
 import type { Chosen, PlanSelection } from '../selection'
 import { faceName } from '../wallDrawer/face'
+import { withNeighbour } from './notes'
 import { Colours, CornerButton, Motifs, MoveTools, type Content, type PillActions, type SecondFace } from './parts'
-import { wallTextiles } from '../../../domain/textile/mounts'
-import { loosenMounted, onFeetHeight } from '../../../domain/textile/mount'
-import { joinCorner, letGoCorner, wallCorners } from '../../../domain/textile/cornerJoin'
+import { joinCorner, letGoCorner } from '../../../domain/textile/cornerJoin'
 
 type Of<K extends Chosen['kind']> = Extract<Chosen, { kind: K }>
 
-/** Byggeregel N1: a tall thing near a neighbour says so in its pill. */
-const withNeighbour = (v: Variant, id: string, meta: string) => {
-  const n = noteFor(neighbourNotes(v, rules), id)
-  // Short in the pill, where it shares the row with the palette (Bjørn 28.11.2026); the whole reason is in the drawer's hint
-  return n ? `${meta} · nabogodkjenning` : meta
-}
-
-/** Byggeregel T19: a tall textile that takes the takdrager over it away says so in its pill (the reason is in the drawer). */
-const withBeams = (v: Variant, id: string, meta: string) => (beamGone(v, rules, id) ? `${meta} · uten takdrager` : meta)
-
 const ratioOf = (p: PillActions, id?: string | null) => findMotif(p.motifs, id ?? undefined)?.ratio ?? 0
-
-export function textilePill(p: PillActions, c: Of<'textile'>, remove: () => void): Content {
-  const { v, onEdit } = p
-  const T = c.textile
-  const filled = fillTextile(v, rules, T.id)
-  const fills = wallTextiles(filled).find((x) => x.id === T.id)?.width === T.width
-  const motif = T.fill === 'print' || T.fill === undefined ? (T.motif ?? null) : undefined
-  const corners = wallCorners(v).filter((k) => k.ids.includes(T.id))
-  const loosen = () => {
-    const r = loosenMounted(v, rules, T.id)
-    if ('error' in r) return p.onToast(r.error)
-    onEdit(() => r.v)
-    p.onSelect({ freeTextileId: r.id })
-    if (!r.heightKept) p.onToast(onFeetHeight(rules))
-  }
-  return {
-    name: 'Tekstilvegg',
-    meta: withBeams(v, T.id, withNeighbour(v, T.id, `${fmt(T.width, 2)} × ${fmt(textileBox(T, rules).height, 2)} m`)),
-    body: (
-      <>
-        {layerSwitch(v, c.wall, p.selection, T, p.onSelect)}
-        <Motifs motifs={p.motifs} value={motif} onPick={(m) => onEdit((x) => updateTextile(x, rules, T.id, { motif: m, fill: 'print' }))} />
-        {!fills && (
-          <>
-            <Sep />
-            <QBtn title="Fyll ledig vegg" onClick={() => onEdit(() => filled)}>
-              <MoveHorizontal size={15} />
-              Fyll ledig vegg
-            </QBtn>
-          </>
-        )}
-        {/* Byggeregel M5: a corner it is in, joined or let go, from its pill too */}
-        {corners.map((k) => (
-          <span key={`${k.at[0]},${k.at[1]}`} style={{ display: 'contents' }}>
-            <Sep />
-            <CornerButton joined={k.joined} onClick={() => onEdit((x) => (k.joined ? letGoCorner(x, k.at) : joinCorner(x, k.at)))} />
-          </span>
-        ))}
-        {/* Byggeregel X15: a frame over its wall's top offers to raise the wall (neutral toward a neighbour, N1), and
-            one facing a neighbour white textile */}
-        <RaiseOffer p={p} textileId={T.id} />
-        {/* Byggeregel X13: mounted is a coupling, so «Løsne» takes it off as it takes walls apart (Bjørn 21.11.2026) */}
-        <Sep />
-        <QBtn title="Løsne fra veggen · står fritt på fotplater foran veggen" label="Løsne" onClick={loosen}>
-          <Unlink size={15} />
-          Løsne
-        </QBtn>
-      </>
-    ),
-    more: true,
-    remove,
-  }
-}
 
 /** Byggeregler X7, X10, M5: the pill on a corner between two frames on system walls: «Løs opp hjørnet» lets the 92LTX
  *  go (the frame on the shorter wall moves against the other's face), «Koble hjørnet» joins them again. */
@@ -190,7 +123,7 @@ export function wallPill(p: PillActions, c: Of<'wall'>, graphics: SecondFace): C
  * is put right in one tap. The pill's name says which is chosen. Per face the textile over the selected one's middle,
  * else the face's first. Nothing on a wall without textile walls.
  */
-function layerSwitch(v: Variant, w: Wall, sel: PlanSelection, T: TextileWall | undefined, onSelect: (s: PlanSelection) => void): ReactNode {
+export function layerSwitch(v: Variant, w: Wall, sel: PlanSelection, T: TextileWall | undefined, onSelect: (s: PlanSelection) => void): ReactNode {
   const mid = T ? T.from + T.width / 2 : null
   const onFace = faces(v, w).flatMap((s) => {
     const on = textilesOn(v, w.id, s)

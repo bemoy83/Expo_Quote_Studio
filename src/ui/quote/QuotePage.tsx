@@ -5,6 +5,7 @@ import { Download, Printer } from 'lucide-react'
 import type { CalcResult } from '../../calc/calc'
 import { positionsOf } from '../../calc/positions'
 import { printFiles } from '../../calc/textile/production'
+import { frameSizes, mountName } from '../../calc/textile/lines'
 import { quoteGroups } from '../../calc/quoteLines'
 import type { Motif, Project, Room, Variant } from '../../domain/types'
 import { roomName, roomOpenings, roomSize } from '../../domain/rooms'
@@ -100,7 +101,7 @@ export function QuotePage({ project, variants, current, onSelect, calcOf, motifs
   if (P.pieces.length || P.free.length) {
     facts.push([
       `${fmt(k.textileM2)} m² tekstil`,
-      [P.pieces.length ? `${frameCount(P.pieces.length)} på systemvegg` : '', P.free.length ? `${fmt(P.freeLm, 2)} lm frittstående` : ''].filter(Boolean).join(' · '),
+      [P.pieces.length ? `${frameCount(P.pieces.length)} på systemvegg` : '', P.free.length ? `${frameCount(P.free.length)} på fotplater` : ''].filter(Boolean).join(' · '),
     ])
   }
 
@@ -199,6 +200,8 @@ export function QuotePage({ project, variants, current, onSelect, calcOf, motifs
                       {l.name}
                       {l.placeholder && <span className="mark"> *</span>}
                       {l.terms && <span className="muted"> · {l.terms}</span>}
+                      {/* Byggeregel X16: a frame whose two faces differ, named per side under its one line */}
+                      {l.quote?.sides && <span className="muted qsides">Per ramme: {l.quote.sides.join(' · ')}</span>}
                     </span>
                     <span className="num muted">
                       {fmt(l.qty, l.unit === 'lm' ? 2 : 1)} {l.unit}
@@ -276,16 +279,14 @@ export function QuotePage({ project, variants, current, onSelect, calcOf, motifs
                   {k.innerBeamLm > 0 && ' Innvendige takdragere henger på krok i andre takdragere, ellers på stolpe med fotplate.'}
                 </li>
               )}
-              {P.pieces.length > 0 && (
+              {/* Byggeregel X16: one sentence on textile walls, the mounting per size */}
+              {(P.pieces.length > 0 || P.free.length > 0) && (
                 <li>
-                  Tekstilvegger i InFrame montert utenpå standvegg: {P.pieces.map((p) => `${fmt(p.W, 0)} × ${fmt(p.H, 0)} mm`).join(', ')}.
-                  {files.length > 0 && ' Trykkfilene leveres som beskrevet over.'}
-                </li>
-              )}
-              {P.free.length > 0 && (
-                <li>
-                  Frittstående tekstilvegger på fotplater, tekstil på begge sider: {P.free.map((f) => `${fmt(f.length, 0)} × ${fmt(f.H, 0)} mm`).join(', ')}.
-                  {files.length > 0 && P.pieces.length === 0 && ' Trykkfilene leveres som beskrevet over.'}
+                  Tekstilvegger i InFrame, 43TX-ramme med duk, mål er synlig flate:{' '}
+                  {frameSizes(P)
+                    .map((x) => `${x.qty} stk ${x.size.name} ${mountName(x.mount)}${x.mount === 'fotplater' ? ' med duk på begge sider' : ''}`)
+                    .join(', ')}
+                  .{files.length > 0 && ' Trykkfilene leveres som beskrevet over.'}
                 </li>
               )}
               {/* Byggeregel N1: approval from the neighbour for what is tall near them */}

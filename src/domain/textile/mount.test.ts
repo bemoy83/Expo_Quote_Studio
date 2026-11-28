@@ -6,9 +6,10 @@ import { paintWalls } from '../edit';
 import { sideOf } from '../faces';
 import type { Point, Variant } from '../types';
 import { createVariant } from '../variant';
-import { addFreeTextile, updateFace } from './free';
+import { addFreeTextile } from './free';
 import { loosenMounted, mountDrag, unmountDrag } from './mount';
 import { freeTextiles, wallTextiles } from './mounts';
+import { updateFace } from './edit';
 
 const row = () => createVariant('A', { width: 8, depth: 6, type: 'row' });
 const free = (v: Variant, a: Point, b: Point) => {

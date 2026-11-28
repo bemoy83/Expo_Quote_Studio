@@ -42,8 +42,8 @@ export function startSelect(c: PointerCtx, q: P): Drag {
   if (corner) return { kind: 'click', select: { corner: corner.at } }
   const ft = freeTextileAt(v, q, 0.15)
   // «Løsne» (M5) stays on while the same textile wall is chosen
-  const looseFt = !!ft && !!selection.loose && selection.freeTextileId === ft.id
-  if (ft) return { kind: 'freeMove', id: ft.id, p0: q, v0: v, moved: false, loose: looseFt, select: { freeTextileId: ft.id, freeFace: faceOfPoint(ft, q), ...(looseFt && { loose: true }) } }
+  const looseFt = !!ft && !!selection.loose && selection.textileId === ft.id
+  if (ft) return { kind: 'freeMove', id: ft.id, p0: q, v0: v, moved: false, loose: looseFt, select: { textileId: ft.id, face: faceOfPoint(ft, q), ...(looseFt && { loose: true }) } }
   const o = hits.objectAt(q)
   // A counter of Disker og podier: the side clicked is the one its drawer shows (trinn 2)
   const side = o?.sections ? nearestSide(o, [q.x, q.y]) : undefined

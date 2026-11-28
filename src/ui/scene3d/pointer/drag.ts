@@ -113,11 +113,11 @@ export function startDrag(P: PointerProps, hits: SceneHits, hit: Hit | null, e: 
     const o = P.v.objects.find((x) => x.id === hit.objectId)
     const q = hits.onFloor(e)
     if (o && q) return { kind: 'object', id: o.id, start: { x: o.x, y: o.y }, off: { x: q.x - o.x, y: q.y - o.y }, moved: false }
-  } else if (hit?.freeTextileId) {
+  } else if (onFeet(P.v, hit)) {
     const q = hits.onFloor(e)
     // «Løsne» on it, or Alt held: alone, out of its group (M5), as in the plan
-    const loose = e.altKey || (!!P.selection.loose && P.selection.freeTextileId === hit.freeTextileId)
-    if (q) return { kind: 'free', id: hit.freeTextileId, p0: q, v0: P.v, moved: false, loose }
+    const loose = e.altKey || (!!P.selection.loose && P.selection.textileId === hit!.textileId)
+    if (q) return { kind: 'free', id: hit!.textileId!, p0: q, v0: P.v, moved: false, loose }
   } else if (hit?.beamId) {
     const b = P.v.innerBeams?.find((x) => x.id === hit.beamId)
     const y = hit.point.y
@@ -230,6 +230,9 @@ export function moveDrag(P: PointerProps, hits: SceneHits, drag: Exclude<Drag, {
   }
 }
 
+/** The textile wall on foot plates a hit is on: one pick for every textile wall, where it stands says how it moves. */
+const onFeet = (v: Variant, hit: Hit | null) => (hit?.textileId ? freeTextiles(v).find((x) => x.id === hit.textileId) : undefined)
+
 /** The release: drop what was dragged, or select what was pressed. `click`: let go within CLICK_PX of the press. */
 export function endDrag(P0: PointerProps, hits: SceneHits, d: Drag | null, hit: Hit | null, click: boolean) {
   // A click selects as in the plan: a second click on what is chosen lets go of it (click.ts)
@@ -239,7 +242,7 @@ export function endDrag(P0: PointerProps, hits: SceneHits, d: Drag | null, hit: 
   // Mounted on a wall by the drag: the selection follows it there when it was the one chosen (X13)
   if (d?.kind === 'free' && d.moved) {
     const t = d.mounted ? wallTextiles(P.v).find((x) => x.id === d.mounted) : undefined
-    if (t && P0.selection.freeTextileId === d.id) P0.onSelect({ wallId: t.wallId, side: sideOf(P.v, t), textileId: t.id })
+    if (t && P0.selection.textileId === d.id) P0.onSelect({ wallId: t.wallId, side: sideOf(P.v, t), textileId: t.id })
     return
   }
   if (d?.kind === 'grip') {
@@ -263,9 +266,9 @@ export function endDrag(P0: PointerProps, hits: SceneHits, d: Drag | null, hit: 
   }
   if (hit?.objectId) P.onSelect({ objectId: hit.objectId })
   else if (hit?.beamId) P.onSelect({ beamId: hit.beamId })
-  else if (hit?.freeTextileId) {
-    const t = freeTextiles(P.v).find((x) => x.id === hit.freeTextileId)
-    if (t) P.onSelect({ freeTextileId: t.id, freeFace: faceOfPoint(t, hits.toModel(hit.point)) })
+  else if (onFeet(P.v, hit)) {
+    const t = onFeet(P.v, hit)!
+    P.onSelect({ textileId: t.id, face: faceOfPoint(t, hits.toModel(hit!.point)) })
   } else if (hit?.openingId) P.onSelect({ openingId: hit.openingId })
   else if (hit?.roomId) P.onSelect({ roomId: hit.roomId })
   else if (hit?.wallId) P.onSelect({ wallId: hit.wallId, side: hits.faceOf(hit)?.s })
@@ -276,6 +279,6 @@ export function endDrag(P0: PointerProps, hits: SceneHits, d: Drag | null, hit: 
 export function hoverCursor(v: Variant, hit: Hit | null) {
   const w = hit?.wallId ? v.walls.find((x) => x.id === hit.wallId) : undefined
   if (podiumTopAt(v, hit)) return 'ns-resize'
-  const movable = hit?.beamId || hit?.objectId || hit?.freeTextileId || hit?.textileId || hit?.foilId || hit?.shelfId || hit?.roomId || (w && (w.room || canMoveWall(w)))
+  const movable = hit?.beamId || hit?.objectId || hit?.textileId || hit?.foilId || hit?.shelfId || hit?.roomId || (w && (w.room || canMoveWall(w)))
   return movable ? 'move' : hit ? 'pointer' : 'grab'
 }

@@ -244,7 +244,7 @@ export function slideTextile(v: Variant, rules: Rules, id: string, ox: number, o
     }
     return next;
   });
-  if (runs.some((o) => runLength(o) < rules.textile.freeMin - EPS)) return null;
+  if (runs.some((o) => runLength(o) < rules.textile.minLength - EPS)) return null;
   const next = withOnFeet(v, runs);
   return textilesStand(next, rules) ? next : null;
 }

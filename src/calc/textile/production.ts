@@ -1,4 +1,4 @@
-import type { Foil, TextileFill, TextileWall, Variant, Wall } from '../../domain/types';
+import type { Foil, Point, Textile, TextileFill, TextileWall, Variant, Wall } from '../../domain/types';
 import { wallLabel } from '../../domain/walls';
 import { wallDirection } from '../../domain/grid';
 import { RECIPES } from '../../foga/recipes';
@@ -6,10 +6,10 @@ import { railHeight } from '../../foga/plates';
 import { raiseTop, wallHeight, type InFrameParams, type Rules } from '../../rules/rules';
 import { freeTrims, placeFrames } from './placement';
 import { onWallMount, wallPiece, type FramePiece } from './inFrame';
-import { cornerPosts, freeFrames, runFrame, supportPoints, type FreeFrame, type HeldEnds } from './free';
-import { cornerEnds } from '../../domain/textile/free';
+import { alongRun, cornerPosts, freeFrames, runFrame, supportPoints, textilePos, type FreeFrame, type HeldEnds } from './free';
+import { cornerEnds, runDirection } from '../../domain/textile/free';
 import { fullHeight, partsLm, postPieces, printFileName } from './common';
-import { freeTextiles, mountedOn, outFace, wallTextiles } from '../../domain/textile/mounts';
+import { freeTextiles, mountedOn, onLine, outFace, wallTextiles } from '../../domain/textile/mounts';
 
 export interface ProductionPiece extends FramePiece {
   pos: string;
@@ -47,6 +47,10 @@ export interface Production {
   free: FreeFrame[];
   /** Their length in all, m. */
   freeLm: number;
+  /** Every ceiling wire holding a textile frame (Byggeregel X14, X18): on frames over their wall's top or, on foot
+   *  plates, over the standard wall top, and one at each 92LTX corner between them. Where it is in the plan, how high
+   *  it hangs from (mm) and the way the frame runs there, for the V across it. */
+  textileWires: { at: Point; top: number; dir: Point; textileId: string }[];
   /** 92LTX corner posts, each shared by the two runs meeting there (on walls or foot plates), by length `H` (mm). */
   cornerPosts: { qty: number; H: number }[];
   /** Textile to produce (printed and white, not the customer's own), including bleed, m². */
@@ -56,6 +60,9 @@ export interface Production {
 }
 
 const mm = (m: number) => Math.round(m * 1000);
+
+/** The point `along` mm from wall w's start on the centre line of a frame on face `side`. */
+const wallPoint = (w: Wall, side: 1 | -1, along: number): Point => onLine(w, side, along / 1000);
 
 /** How far along wall w point p lies, m from its start. */
 function alongWall(w: Wall, p: readonly [number, number]): number {
@@ -75,6 +82,16 @@ export function production(v: Variant, rules: Rules, customer: string): Producti
   const s = rules.textile.inFrame;
   const r = RECIPES.textileFrame;
   const pieces: ProductionPiece[] = [];
+  const wiresAt: Production['textileWires'] = [];
+  const cornerAt = new Map<string, Production['textileWires'][number]>();
+  /** Byggeregel X14: a 92LTX corner of a frame hung in wire gets its own, once for the frames meeting there. */
+  const cornerWire = (run: Textile, c: { from: boolean; to: boolean }, top: number) => {
+    const dir = runDirection(run);
+    for (const p of [...(c.from ? [run.from] : []), ...(c.to ? [run.to] : [])]) {
+      const k = `${Math.round(p[0] * 1000)},${Math.round(p[1] * 1000)}`;
+      if (!cornerAt.has(k)) cornerAt.set(k, { at: p, top, dir, textileId: run.id });
+    }
+  };
   const placed = placeFrames(v, rules);
   const shiftOf = new Map(placed.map((f) => [f.t.id, f.shift]));
   const corners = cornerEnds(v);
@@ -84,21 +101,26 @@ export function production(v: Variant, rules: Rules, customer: string): Producti
     const m = mountedOn(v, t.id);
     const run = runs.get(t.id);
     if (!m || !run) continue;
-    const pos = `T${pieces.length + 1}`;
+    const pos = textilePos(v, t.id);
     const H = textileHeightMm(t, s) ?? fullHeight(s);
     const x = runFrame(run, onWallMount(r, outFace(run, m.wall, m.side), pos, H), r, s, customer, corners.get(t.id));
     const f = x.faces[0];
     // Byggeregel X14: over the wall's top the posts do not hold it, a wire from the ceiling does, spread by the foot
-    // plate rule along the frame (as S3, S9); a 92LTX corner holds that end
+    // plate rule along the frame (as S3, S9); a 92LTX corner counts as a wire point and has its own wire (Bjørn
+    // 28.11.2026), counted once for the two frames (`cornerWires`)
     const top = mm(t.bottom ?? 0) + H;
     const over = top > (m.wall.raise ? raiseTop(m.wall.raise, rules) : mm(wallHeight(rules)));
     const wireAt = over ? supportPoints(x.length, r.feet.support, x.corners) : [];
     const wires = wireAt.length;
+    if (over) cornerWire(run, x.corners, top);
     // Along the wall: the run's start, the shift in an inner corner (X10), then along the run one way or the other
     const [wx, wy] = wallDirection(m.wall);
     const sign = (run.to[0] - run.from[0]) * wx + (run.to[1] - run.from[1]) * wy >= 0 ? 1 : -1;
     const start = mm(alongWall(m.wall, run.from)) + (shiftOf.get(t.id) ? mm(shiftOf.get(t.id)!) : 0);
-    const wireAlong = wireAt.map((a) => start + sign * a);
+    // In the elevation the corner's wire too, at the frame's end
+    const ends = [...(over && x.corners.from ? [0] : []), ...(over && x.corners.to ? [x.length] : [])];
+    const wireAlong = [...wireAt, ...ends].sort((a, b) => a - b).map((a) => start + sign * a);
+    for (const a of wireAt) wiresAt.push({ at: wallPoint(m.wall, m.side, start + sign * a), top, dir: [wx * sign, wy * sign], textileId: t.id });
     pieces.push({
       ...wallPiece(x, mm(t.width)),
       pos,
@@ -113,12 +135,21 @@ export function production(v: Variant, rules: Rules, customer: string): Producti
       motif: f.motif,
       fileName: f.fileName,
       top,
-      ...(wires ? { wires, wireAt, wireAlong } : {}),
+      ...(wires || ends.length ? { wires, wireAt, wireAlong } : {}),
     });
   }
   // Free-standing runs stop at a frame on the wall they end at (byggeregel X11)
   const trims = freeTrims(v, rules, placed);
-  const free = freeFrames(v, r, s, customer, trims, heldEnds(v, trims));
+  const free = freeFrames(v, r, s, customer, trims, heldEnds(v, trims)).map((f) => {
+    // Byggeregel X14, X18: on foot plates over the standard wall top it always hangs in wire, by the foot plate rule
+    // along the frame, its 92LTX corners with their own (Bjørn 28.11.2026: as on a wall, one product)
+    if (f.top <= mm(wallHeight(rules))) return f;
+    const run = runs.get(f.textileId)!;
+    const wireAt = supportPoints(f.length, r.feet.support, f.corners);
+    cornerWire(run, f.corners, f.top);
+    for (const a of wireAt) wiresAt.push({ at: alongRun(run, a, f), top: f.top, dir: runDirection(run), textileId: f.textileId });
+    return { ...f, wires: wireAt.length, wireAt };
+  });
   // The 92LTX stands on an end cap and has one on top, so it is cut shorter than the frames it joins
   const heights = new Map<number, number>();
   for (const p of cornerPosts(v)) for (const H of postPieces(p.H)) heights.set(H, (heights.get(H) ?? 0) + 1);
@@ -127,6 +158,7 @@ export function production(v: Variant, rules: Rules, customer: string): Producti
     pieces,
     free,
     freeLm: free.reduce((a, f) => a + f.length, 0) / 1000,
+    textileWires: [...wiresAt, ...cornerAt.values()],
     cornerPosts: posts,
     area:
       pieces.filter((p) => p.fill !== 'reuse').reduce((a, p) => a + p.area, 0) +
@@ -185,11 +217,13 @@ export const printFiles = (P: Production): TextileRow[] => textileRows(P).filter
 
 export const FILL_NAME: Record<TextileFill, string> = { print: 'Trykt tekstil', white: 'Hvit tekstil', reuse: 'Kundens tekstil' };
 
+/** In position order, T1, T2 …, on a wall and on foot plates alike (X16). */
 export function textileRows(P: Production): TextileRow[] {
+  const n = (pos: string) => parseInt(pos.slice(1), 10);
   return [
     ...P.pieces.map((p) => ({ pos: p.pos, where: p.wall, W: p.W, H: p.H, pw: p.pw, ph: p.ph, fw: p.fw, fh: p.fh, fill: p.fill, fileName: p.fileName })),
-    ...P.free.flatMap((f) => f.faces.map((x) => ({ pos: x.pos, where: `Frittstående ${f.pos}, side ${x.face.toUpperCase()}`, W: x.W, H: x.H, pw: x.pw, ph: x.ph, fw: x.fw, fh: x.fh, fill: x.fill, fileName: x.fileName }))),
-  ];
+    ...P.free.flatMap((f) => f.faces.map((x) => ({ pos: x.pos, where: `${f.pos} frittstående, side ${x.face.toUpperCase()}`, W: x.W, H: x.H, pw: x.pw, ph: x.ph, fw: x.fw, fh: x.fh, fill: x.fill, fileName: x.fileName }))),
+  ].sort((a, b) => n(a.pos) - n(b.pos));
 }
 
 /** A point on a wall line, ends included. */
@@ -212,4 +246,46 @@ function heldEnds(v: Variant, trims: ReadonlyMap<string, { from: number; to: num
     out.set(t.id, { from: at(t.from, trim?.from), to: at(t.to, trim?.to) });
   }
   return out;
+}
+
+/** Byggeregel X18: what the calc built for textile wall `id`, read the same way whatever it stands on: its position,
+ *  height, rails and the visible faces (one on a wall, two on foot plates). */
+export interface BuiltFrame {
+  pos: string;
+  textileId: string;
+  mount: 'vegg' | 'fotplater';
+  H: number;
+  /** The frame's top from the floor, mm. */
+  top: number;
+  nCorners: number;
+  railCuts: number[];
+  /** Run length, mm (the rails of a frame without corners). */
+  length: number;
+  /** Where the frame starts, mm from the drawn run's from end, when it stops short at a frame on a wall (X11). */
+  start?: number;
+  faces: { pos: string; W: number }[];
+  wires: number;
+}
+
+export function builtFrame(P: Production, id: string): BuiltFrame | undefined {
+  const p = P.pieces.find((x) => x.textileId === id);
+  if (p) {
+    const n = (p.corners.from ? 1 : 0) + (p.corners.to ? 1 : 0);
+    return { pos: p.pos, textileId: id, mount: 'vegg', H: p.H, top: p.top, nCorners: n, railCuts: p.railCuts, length: p.railCuts.reduce((a, x) => a + x, 0), faces: [{ pos: p.pos, W: p.W }], wires: p.wires ?? 0 };
+  }
+  const f = P.free.find((x) => x.textileId === id);
+  if (!f) return undefined;
+  return {
+    pos: f.pos,
+    textileId: id,
+    mount: 'fotplater',
+    H: f.H,
+    top: f.top,
+    nCorners: f.nCorners,
+    railCuts: f.railCuts,
+    length: f.length,
+    ...(f.start ? { start: f.start } : {}),
+    faces: f.faces.map((x) => ({ pos: x.pos, W: x.W })),
+    wires: f.wires ?? 0,
+  };
 }

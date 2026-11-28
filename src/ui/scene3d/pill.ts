@@ -19,7 +19,7 @@ function matcher(v: Variant, sel: PlanSelection): ((p: Pick) => boolean) | null 
     case 'room':
       return (p) => p.roomId === c.room.id && !p.objectId
     case 'free':
-      return (p) => p.freeTextileId === c.textile.id
+      return (p) => p.textileId === c.textile.id
     case 'opening':
       return (p) => p.openingId === c.opening.id
     case 'textile':

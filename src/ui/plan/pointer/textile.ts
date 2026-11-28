@@ -16,8 +16,7 @@ import { freeTextiles, wallTextiles } from '../../../domain/textile/mounts'
 /** The textile laid, with the pen's motif on it (both faces of a free-standing one). */
 export function withPenMotif(r: TextileResult, motif: string | undefined): TextileResult {
   if ('error' in r || !motif) return r
-  if ('mounted' in r) return { ...r, v: printTextile(r.v, { mounted: r.mounted.id }, motif) }
-  return { ...r, v: printTextile(printTextile(r.v, { free: r.free.id, face: 'a' }, motif), { free: r.free.id, face: 'b' }, motif) }
+  return { ...r, v: printTextile(r.v, { id: 'mounted' in r ? r.mounted.id : r.free.id }, motif) }
 }
 
 /** What a click with the textile pen at q stores (one drawing tool, Bjørn 14.11.2026): a textile wall under it gets the

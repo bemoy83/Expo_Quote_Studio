@@ -151,11 +151,11 @@ describe('a free-standing textile wall dragged in 3D, as in the plan (Bjørn 21.
   it('moves it on the floor, 250 with Fin, and a drag selects nothing', () => {
     let out = r.v
     const P: PointerProps = { v: r.v, selection: {}, onSelect: vi.fn(), onEdit: (fn) => (out = fn(out)), onCheckpoint: vi.fn(), onToast: vi.fn(), motifs: [], fine: true }
-    const d = startDrag(P, floor(2, 2), at({ freeTextileId: r.id }), { altKey: false } as PointerEvent)
+    const d = startDrag(P, floor(2, 2), at({ textileId: r.id }), { altKey: false } as PointerEvent)
     expect(d.kind).toBe('free')
     moveDrag(P, floor(2, 2.25), d as Exclude<Drag, { kind: 'orbit' }>, { shiftKey: false } as PointerEvent)
     expect(freeTextiles(out)[0].from).toEqual([1, 2.25])
-    endDrag(P, floor(2, 2.25), d, at({ freeTextileId: r.id }), false)
+    endDrag(P, floor(2, 2.25), d, at({ textileId: r.id }), false)
     expect(P.onSelect).not.toHaveBeenCalled()
   })
 })

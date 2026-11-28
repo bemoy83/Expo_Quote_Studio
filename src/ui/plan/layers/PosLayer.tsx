@@ -39,7 +39,7 @@ interface Chip {
 }
 
 /** Where each number stands. With `textileLabels` (the work order) textile walls show the labels their textiles are
- *  marked with instead of the quote number: T1, T2 … on a wall face, F1A and F1B on the two faces of a free-standing
+ *  marked with instead of the quote number: T1, T2 … on a wall face, T3A and T3B on the two faces of a free-standing
  *  one (Bjørn 7.11.2026: the sketch shows which textile goes where). */
 function chips(v: Variant, res: CalcResult, sc: PlanScale, textileLabels: boolean): Chip[] {
   const p = positionsOf(v, res, catalog)
@@ -93,7 +93,7 @@ function chips(v: Variant, res: CalcResult, sc: PlanScale, textileLabels: boolea
           const o = tw / 2 + half
           return [(t.from[0] + t.to[0]) / 2 + nx * o, (t.from[1] + t.to[1]) / 2 + ny * o]
         }
-        // The work order: each face's textile label (F1A, F1B), as the textiles are marked; the quote: the number on A
+        // The work order: each face's textile label (T3A, T3B), as the textiles are marked; the quote: the number on A
         if (textileLabels) for (const f of freeFaces.get(t.id) ?? []) out.push({ label: f.pos, at: beside(f.face), layer, along })
         else out.push({ label: String(i.pos), at: beside('a'), layer, along })
         break

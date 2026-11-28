@@ -1,8 +1,9 @@
 // Textile walls on system walls (InFrame): along one wall, on one face, never over an opening, never past a wall
 // meeting that face, never over another textile on the same face. Width and offset in 0,1 m steps, at least
-// `rules.textile.minWidth`. Where they may sit, and the edits that place them. fitDecor (domain/decor.ts) keeps them
+// `rules.textile.minLength` (X17, limits.ts). Where they may sit, and the edits that place them. fitDecor (domain/decor.ts) keeps them
 // valid after other edits.
 // Byggeregel X4 (docs/byggeregler.md).
+import { minSpan, tooShort } from './limits';
 import type { Rules } from '../../rules/rules';
 import { wallHeight } from '../../rules/rules';
 import { blockedModules, faceNormal, faces, sideOf, type FaceSide } from '../faces';
@@ -78,7 +79,7 @@ export function freeSpans(v: Variant, rules: Rules, wallId: string, s: FaceSide,
   for (const i of new Set([...openings, ...foreign])) spans = subtract(spans, [moduleStart(w, i), moduleEnd(w, i)]);
   for (const t of junctions(v, w, s)) spans = cut(spans, t);
   for (const t of others) spans = subtract(spans, [t.from, t.from + t.width]);
-  return spans.filter(([a, b]) => b - a >= rules.textile.minWidth - EPS);
+  return spans.filter(([a, b]) => b - a >= minSpan(rules) - EPS);
 }
 
 export function textilesOn(v: Variant, wallId: string, s: FaceSide, skipId?: string): TextileWall[] {
@@ -128,7 +129,7 @@ export function addTextileSpan(v: Variant, rules: Rules, wallId: string, s: Face
   if (!best) return { error: 'Ingen ledig veggflate her' };
   const from = r3(Math.max(lo, best[0]));
   const width = r3(Math.min(hi, best[1]) - from);
-  if (width < rules.textile.minWidth - EPS) return { error: `Tekstilvegg på systemvegg må være minst ${String(rules.textile.minWidth).replace('.', ',')} m` };
+  if (width < minSpan(rules) - EPS) return { error: tooShort(rules) };
   const fit = from <= best[0] + EPS && from + width >= best[1] - EPS;
   const id = nextId(v.textiles.map((t) => t.id), 't');
   const t: TextileWall = { id, wallId, side: s, from, width, ...(fit ? { fit: true } : {}) };
@@ -159,11 +160,11 @@ export function updateTextile(v: Variant, rules: Rules, id: string, patch: Texti
   const spans = freeSpans(v, rules, t.wallId, s, textilesOn(v, t.wallId, s, id));
   const from = patch.from ?? t.from;
   const width = patch.width ?? t.width;
-  const placed = place(spans, from, width, rules.textile.minWidth, mode);
+  const placed = place(spans, from, width, minSpan(rules), mode);
   if (!placed) return v;
   const full = fullTextileHeight(rules);
   const max = rules.textile.maxHeight;
-  const minH = rules.textile.minWidth;
+  const minH = rules.textile.minHeight;
   const cur = textileBox(t, rules);
   const bottom = r1(clamp(patch.bottom ?? cur.bottom, 0, max - minH));
   const height = r3(clamp(patch.height ?? cur.height, minH, max - bottom));
@@ -213,10 +214,6 @@ function place(spans: Span[], from: number, width: number, min: number, mode: 'm
   return [f, w];
 }
 
-export function removeTextile(v: Variant, id: string): Variant {
-  return { ...v, textiles: v.textiles.filter((t) => t.id !== id) };
-}
-
 /** The textile on this face that covers offset t, if any. */
 export function textileAt(v: Variant, wallId: string, s: FaceSide, t: number): TextileWall | undefined {
   return textilesOn(v, wallId, s).find((x) => t >= x.from - EPS && t <= x.from + x.width + EPS);
@@ -258,7 +255,7 @@ export function stretchFrame(v: Variant, rules: Rules, id: string, end: 'from' |
   if (!t || !e) return { error: 'Tekstilveggen finnes ikke' };
   if (!d) return { v };
   const want: Span = e === 'hi' ? [t.from, t.from + t.width + d] : [t.from - d, t.from + t.width];
-  if (want[1] - want[0] < rules.textile.minWidth - EPS) return { error: `Tekstilvegg på systemvegg må være minst ${String(rules.textile.minWidth).replace('.', ',')} m` };
+  if (want[1] - want[0] < minSpan(rules) - EPS) return { error: tooShort(rules) };
   if (!fitsFace(v, rules, { ...t, from: want[0], width: want[1] - want[0] })) return { error: NO_FRAME_STRETCH };
   const { fit: _f, ...rest } = t;
   return { v: putOnWall(v, { ...rest, from: r3(want[0]), width: r3(want[1] - want[0]) }) };
@@ -267,6 +264,6 @@ export function stretchFrame(v: Variant, rules: Rules, id: string, end: 'from' |
 /** Byggeregel X4: whether frame `t` stands in a free span of its face, clear of openings, walls meeting the face and
  *  the other frames there (`others`, by default those standing in `v`), at least the minimum width. */
 export function fitsFace(v: Variant, rules: Rules, t: TextileWall, others: TextileWall[] = textilesOn(v, t.wallId, sideOf(v, t), t.id)): boolean {
-  if (t.width < rules.textile.minWidth - EPS) return false;
+  if (t.width < minSpan(rules) - EPS) return false;
   return freeSpans(v, rules, t.wallId, sideOf(v, t), others).some(([a, b]) => t.from >= a - EPS && t.from + t.width <= b + EPS);
 }

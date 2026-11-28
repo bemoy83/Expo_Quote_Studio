@@ -3,8 +3,8 @@
 // drag and drop from Profilering, which does what a click with the textile or motif brush did (applyDrop).
 import { addFoil, foilBlocked } from '../../../domain/decor'
 import { printPlate, printsOn } from '../../../domain/print'
-import { faceOfPoint, freeTextileAt, updateFace } from '../../../domain/textile/free'
-import { textileAt, updateTextile } from '../../../domain/textile/inFrame'
+import { faceOfPoint, freeTextileAt, type FaceKey } from '../../../domain/textile/free'
+import { textileAt } from '../../../domain/textile/inFrame'
 import type { Motif, Variant } from '../../../domain/types'
 import { rules } from '../../env'
 import { findMotif } from '../../motifs'
@@ -12,23 +12,25 @@ import type { MotifPen } from '../../profilePen'
 import type { FaceHit } from '../layers/Previews'
 import type { PlanHits } from './hits'
 import type { P, PointerCtx } from './types'
+import { seenFaces, updateFace } from '../../../domain/textile/edit'
 
 export const ratioOf = (motifs: Motif[] | undefined) => (id: string) => findMotif(motifs, id)?.ratio ?? 1
 
-/** The textile wall at q: a free-standing one and the face clicked, else one mounted on the wall face hit. */
-export type TextileUnder = { free: string; face: 'a' | 'b' } | { mounted: string }
+/** The textile wall at q (Byggeregel X18, one product): a free-standing one with the face clicked, else one mounted on
+ *  the wall face hit (its one seen face). */
+export type TextileUnder = { id: string; face?: FaceKey }
 
 export function textileUnder(v: Variant, hits: Pick<PlanHits, 'faceHit'>, q: P): TextileUnder | null {
   const ft = freeTextileAt(v, q, 0.15)
-  if (ft) return { free: ft.id, face: faceOfPoint(ft, q) }
+  if (ft) return { id: ft.id, face: faceOfPoint(ft, q) }
   const h = hits.faceHit(q)
   const tx = h && textileAt(v, h.w.id, h.s, h.t)
-  return tx ? { mounted: tx.id } : null
+  return tx ? { id: tx.id } : null
 }
 
-/** The textile at `u` printed with the motif. */
+/** The textile at `u` printed with the motif: the face named, else every face that is seen (X18). */
 export const printTextile = (v: Variant, u: TextileUnder, motif: string): Variant =>
-  'free' in u ? updateFace(v, u.free, u.face, { motif }) : updateTextile(v, rules, u.mounted, { motif })
+  (u.face ? [u.face] : seenFaces(v, u.id)).reduce((x, f) => updateFace(x, u.id, f, { motif }), v)
 
 export const TEXTILE_NOT = 'Bytt til Tekstil for å trykke en tekstilvegg'
 

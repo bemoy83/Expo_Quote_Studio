@@ -236,7 +236,7 @@ export function slideWall(v: Variant, wallId: string, delta: number, along = 0, 
   // Plates coloured one by one go with it (plateDecor.ts carryDecor, after the edit). A textile wall it would cross,
   // or one that would get too short, stops it.
   const stands = freeTextiles(next).every(
-    (t) => runLength(t) >= rules.textile.freeMin - 1e-6 && !blocked(next, rules, t, freeTextiles(next).filter((o) => o.id !== t.id)),
+    (t) => runLength(t) >= rules.textile.minLength - 1e-6 && !blocked(next, rules, t, freeTextiles(next).filter((o) => o.id !== t.id)),
   );
   return stands ? next : v;
 }

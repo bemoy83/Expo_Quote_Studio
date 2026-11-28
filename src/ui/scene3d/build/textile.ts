@@ -49,21 +49,13 @@ export function buildTextile(c: BuildContext) {
     textile(g, -L / 2 + p.faceStart / 1000, W, h, bottom, print, outFace(t, on.wall, on.side) === 'a' ? 1 : -1, tag)
     // Upright braces (90) where the calc puts them, as on foot plates: by a splice and at most 2 m apart
     for (const at of p.braceAt) brace(g, -L / 2 + at / 1000, h, bottom, alu, tag)
-    // Byggeregel X14: over its wall's top the frame hangs in a V of wire from the top rail, as a raised wall (S9; the
-    // ceiling's height is not known: drawn 1.5 m up, 1 m out each side)
-    for (const at of p.wireAt ?? []) {
-      const x = -L / 2 + at / 1000
-      const top = bottom + h
-      const pts = [new THREE.Vector3(x, top + 1.5, -1), new THREE.Vector3(x, top, 0), new THREE.Vector3(x, top + 1.5, 1)]
-      add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: WIRE })), tag, g)
-    }
   }
 
   // Frittstående tekstilvegger: a frame with textile on both faces (face A toward side 1), on foot plates
   for (const f of res.production.free) {
     const t = freeTextiles(v).find((x) => x.id === f.textileId)
     if (!t) continue
-    const glow = selectGlow(sel.freeTextileId === t.id)
+    const glow = selectGlow(sel.textileId === t.id)
     const alu = mat('textile', ALU, { ...ALU_FINISH, ...glow })
     const L = f.length / 1000
     const h = f.H / 1000
@@ -73,7 +65,7 @@ export function buildTextile(c: BuildContext) {
       return x.fill === 'white' ? white(glow) : bare(x.fill, x.W / 1000, h, glow)
     }
     const foot = rules.wall.feet / 10
-    const tag: Tag = { layer: 'textile', pick: { freeTextileId: t.id } }
+    const tag: Tag = { layer: 'textile', pick: { textileId: t.id } }
     const g = frame(alongRun(t, 0, f), alongRun(t, f.length, f), 0)
     // Rails run between the uprights at free ends, or stop at a corner post's leg
     const railFrom = -L / 2 + f.railStart / 1000
@@ -87,6 +79,16 @@ export function buildTextile(c: BuildContext) {
       const half = f.foot.along / 2000
       along([x - dx * half, y - dy * half], [x + dx * half, y + dy * half], 2 * half, foot, f.foot.across / 1000, 0, mat('textile', ALU, ALU_FINISH), { layer: 'textile' })
     }
+  }
+
+  // Byggeregel X14, X18: a tall frame, on a wall or on foot plates, hangs in a V of wire from its top rail, and one at
+  // each 92LTX corner between such frames, as a raised wall (S9; the ceiling's height is not known: drawn 1.5 m up, 1 m
+  // out each side), where the calc hangs them
+  for (const x of res.production.textileWires) {
+    const top = x.top / 1000
+    const [nx, ny] = [-x.dir[1], x.dir[0]]
+    const pts = [at([x.at[0] - nx, x.at[1] - ny], top + 1.5), at(x.at, top), at([x.at[0] + nx, x.at[1] + ny], top + 1.5)]
+    add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: WIRE })), { layer: 'textile', pick: { textileId: x.textileId } })
   }
 
   cornerPosts(c)
@@ -163,7 +165,7 @@ function cornerPosts(c: BuildContext) {
     const view = wallTextiles(v).find((x) => x.id === p.textileId)
     if (view) stands.set(p.textileId, { h: p.H / 1000, y0: (p.top - p.H) / 1000, pick: { wallId: view.wallId, textileId: view.id } })
   }
-  for (const f of res.production.free) stands.set(f.textileId, { h: f.H / 1000, y0: foot, pick: { freeTextileId: f.textileId } })
+  for (const f of res.production.free) stands.set(f.textileId, { h: f.H / 1000, y0: foot, pick: { textileId: f.textileId } })
   for (const t of v.textiles) {
     const ends = corners.get(t.id)
     const st = stands.get(t.id)
@@ -179,7 +181,7 @@ function cornerPosts(c: BuildContext) {
       done.add(key)
       // The legs run along +x and −y of the outline; turn it so they follow the two runs, never mirrored
       const [a, b] = a0[0] * b0[1] - a0[1] * b0[0] < 0 ? [a0, b0] : [b0, a0]
-      const chosen = c.sel.freeTextileId === t.id || c.sel.textileId === t.id
+      const chosen = c.sel.textileId === t.id
       const m = mat('textile', ALU, { ...ALU_FINISH, ...selectGlow(chosen) })
       const upright = (part: 'post' | 'cap', y: number, len: number) => {
         const mesh = new THREE.Mesh(cornerGeometry(part, a, b), m)

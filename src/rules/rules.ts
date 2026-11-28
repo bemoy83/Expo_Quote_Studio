@@ -41,10 +41,11 @@ export interface Rules {
    *  `maxTop`: the highest a lifted beam's top goes, m (T19). A textile frame may reach `maxTop − height` under it; a
    *  taller one takes the beam away. A new value needs no code. */
   beam: { max: number; height: number; thickness: number; supportSpan: number; maxTop: number };
-  /** `grid`: free-standing textile walls are drawn and sized on this grid (the elevation grid), at least `freeMin`, m. */
-  /** `maxHeight`: the tallest a textile wall may be drawn, m (Byggeregel X14); the frame's splices, braces and wires
+  /** `grid`: free-standing textile walls are drawn and sized on this grid (the elevation grid). `minLength`: the
+   *  shortest frame of any textile wall, on a wall or on foot plates (Byggeregel X17), m; `minHeight` the lowest.
+   *  `maxHeight`: the tallest a textile wall may be drawn, m (Byggeregel X14); the frame's splices, braces and wires
    *  are worked out from its height, so a new value needs no code. */
-  textile: { depth: number; minWidth: number; grid: number; freeMin: number; maxHeight: number; inFrame: InFrameParams };
+  textile: { depth: number; minLength: number; minHeight: number; grid: number; maxHeight: number; inFrame: InFrameParams };
   /** Byggeregel N1: over the standard wall top, closer than `distance` (m) to a parallel stand boundary with a neighbour,
    *  needs the neighbour's approval and a neutral side toward them. */
   neighbour: { distance: number };
@@ -89,9 +90,10 @@ export const RULES: Rules = {
   beam: { max: 6, height: 0.08, thickness: 0.02, supportSpan: 6, maxTop: 3.08 },
   textile: {
     depth: 0.04,
-    minWidth: 0.5,
+    // Bjørn 28.11.2026: one shortest frame for every textile wall, from the build system, not where it stands (X17)
+    minLength: 0.25,
+    minHeight: 0.5,
     grid: 0.25,
-    freeMin: 0.25,
     // Bjørn 28.11.2026: 5030 for now, as the highest raised wall (V19)
     maxHeight: 5.03,
     inFrame: { side: 20, air: 10, wallH: 2490, feet: 50, bleed: 20, scale: 10, prof: 40, stag: 3000 },

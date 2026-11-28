@@ -46,7 +46,7 @@ export function PickLayer({ v, mods, picked, selection }: { v: Variant; mods: Bu
       const [a, b] = faceSegment(tw, sideOf(v, t), t.from, t.from + t.width, textileOffset(sc))
       return band(a, b, textileWidth(sc))
     }
-    const ft = picked.freeTextileId ? freeTextiles(v).find((x) => x.id === picked.freeTextileId) : undefined
+    const ft = picked.textileId ? freeTextiles(v).find((x) => x.id === picked.textileId) : undefined
     if (ft) return band(ft.from, ft.to, textileWidth(sc))
     const sh = picked.shelfId ? shelvesOf(v).find((x) => x.id === picked.shelfId) : undefined
     const sb = sh && shelfBox(v, rules, sh)

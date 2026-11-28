@@ -59,7 +59,7 @@ export function TextileLayer({ v, res, selection, dim }: { v: Variant; res: Calc
         {res.production.free.map((f) => {
           const t = freeTextiles(v).find((x) => x.id === f.textileId)
           if (!t) return null
-          const sel = selection.freeTextileId === t.id
+          const sel = selection.textileId === t.id
           const g = gone('textile', t.id)
           const motif = (['a', 'b'] as const).find((k) => gone('graphic', `${t.id}.${k}`))
           // The frame as it stands: an end up against a wall stops where the wall begins (Byggeregel F1)
@@ -76,7 +76,7 @@ export function TextileLayer({ v, res, selection, dim }: { v: Variant; res: Calc
               })}
               {sel && <Seg a={a} b={b} stroke={HALO} strokeOpacity={HALO_OPACITY} strokeWidth={haloWidth(sc, tw)} />}
               <TextileStroke a={a} b={b} sc={sc} />
-              {sel && selection.freeFace && <FaceMark t={t} face={selection.freeFace} sc={sc} />}
+              {sel && selection.face && <FaceMark t={t} face={selection.face} sc={sc} />}
               {g && <Seg a={a} b={b} stroke={hatch} strokeWidth={tw} />}
               {motif && <FaceMark t={t} face={motif} stroke={hatch} width={linePx(sc, 4)} sc={sc} />}
             </g>
@@ -112,17 +112,15 @@ export function TextileLayer({ v, res, selection, dim }: { v: Variant; res: Calc
             </g>
           )
         })}
-        {/* Ceiling wires on a frame over its wall's top (Byggeregel X14): on the frame as drawn, at the plan's offset, as
-            the raised wall's on its posts */}
-        {frames.flatMap(({ t }) => {
-          const w = v.walls.find((x) => x.id === t.wallId)
-          const along = res.production.pieces.find((p) => p.textileId === t.id)?.wireAlong ?? []
-          if (!w) return []
-          const side = sideOf(v, t)
-          return along.map((a) => {
-            const [at] = faceSegment(w, side, a / 1000, a / 1000, textileOffset(sc))
-            return <WireMark key={`w${t.id}${a}`} at={at} r={postSize(sc) * 0.9} />
-          })
+        {/* Ceiling wires on a tall frame, on a wall or on foot plates, and at its 92LTX corners (Byggeregel X14, X18):
+            where the calc hangs them, as the raised wall's on its posts */}
+        {res.production.textileWires.map((x) => {
+          // On a wall, at the plan's offset for frames, as the frame is drawn there
+          const m = mountedOn(v, x.textileId)
+          const [ux, uy] = m ? wallDirection(m.wall) : [0, 0]
+          const along = m ? (x.at[0] - m.wall.from[0]) * ux + (x.at[1] - m.wall.from[1]) * uy : 0
+          const at = m ? faceSegment(m.wall, m.side, along, along, textileOffset(sc))[0] : x.at
+          return <WireMark key={`w${x.at[0]},${x.at[1]}`} at={at} r={postSize(sc) * 0.9} />
         })}
       </g>
 

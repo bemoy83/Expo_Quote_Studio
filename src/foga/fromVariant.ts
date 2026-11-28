@@ -72,7 +72,7 @@ export const beamSpecs = (b: BeamLayout): BeamSpec[] =>
 const HALF_MM = 500;
 
 /** Byggeregel X14: the wires holding frames over their wall's top. */
-export const textileWires = (p: Production) => p.pieces.reduce((a, f) => a + (f.wires ?? 0), 0);
+export const textileWires = (p: Production) => p.textileWires.length;
 
 export function structureOf(d: Derived): FogaStructure {
   const raises = raisesOf(d.all ?? d.mods, d.back);

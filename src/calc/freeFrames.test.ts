@@ -1,4 +1,4 @@
-// Checks Byggeregler X6, X7, X8 og P2 (docs/byggeregler.md).
+// Checks Byggeregler X6, X7, X8, X16 og P2 (docs/byggeregler.md).
 import { describe, expect, it } from 'vitest';
 import { addFreeTextile } from '../domain/textile/free';
 import type { Point, Variant } from '../domain/types';
@@ -91,7 +91,7 @@ describe('free-standing frame', () => {
   it('a straight run: two free ends, textile both sides', () => {
     const [f] = frames(draw(island(), [1, 2], [7, 2]));
     // 6000 long, H = 2540. Rails 1 × 6000 is more than 5000: 4970 and a 1030 splice piece (X9)
-    expect(f).toMatchObject({ pos: 'F1', length: 6000, H: 2540, railCuts: [4970, 1030], uprights: 2, supports: [200, 3000, 5800], braceLength: 2460 });
+    expect(f).toMatchObject({ pos: 'T1', length: 6000, H: 2540, railCuts: [4970, 1030], uprights: 2, supports: [200, 3000, 5800], braceLength: 2460 });
     // The splice at 4970 gets a brace 150 each side; between, braces by the foot plate rule, none more than 3 m apart
     // (Bjørn 28.11.2026). The feet get none (Bjørn 7.11.2026)
     expect(f.braces).toEqual([2410, 4820, 5120]);
@@ -112,10 +112,10 @@ describe('free-standing frame', () => {
     ]);
     expect(f.parts.braces).toEqual({ qty: 3, length: 2460 });
     expect(f.faces.map((x) => [x.pos, x.W, x.pw, x.ph, x.fill])).toEqual([
-      ['F1A', 6000, 6040, 2580, 'print'],
-      ['F1B', 6000, 6040, 2580, 'print'],
+      ['T1A', 6000, 6040, 2580, 'print'],
+      ['T1B', 6000, 6040, 2580, 'print'],
     ]);
-    expect(f.faces[0].fileName).toBe('Firma_F1A_6000x2540mm.pdf');
+    expect(f.faces[0].fileName).toBe('Firma_T1A_6000x2540mm.pdf');
     expect(f.faces[0].perimeter).toBeCloseTo(2 * (6 + 2.54));
   });
   it('a splice between held ends is a 604 in the channel, not a threaded 609', () => {
@@ -151,8 +151,8 @@ describe('free-standing frame', () => {
     expect(f1.braces).toEqual([]);
     // Face A of (1,2) → (4,2) is the left normal (0, 1): the inner face, toward the other run
     expect(f1.faces.map((x) => [x.pos, x.W])).toEqual([
-      ['F1A', 2980],
-      ['F1B', 3020],
+      ['T1A', 2980],
+      ['T1B', 3020],
     ]);
     expect(f2.corners).toEqual({ from: true, to: false });
     expect(f2.railStart).toBe(37);

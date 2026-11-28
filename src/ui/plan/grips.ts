@@ -103,7 +103,7 @@ function endGrips(v: Variant, s: PlanSelection): PlanGrip[] | null {
   if (wall && !wall.room && !wall.id.startsWith('side'))
     return [...wallGripEnds(v, wall).map((end): PlanGrip => ({ on: { type: 'end', what: 'wall', id: wall.id, end }, kind: 'end', at: wall[end] })), ...groupGrips(v, { kind: 'wall', id: wall.id })]
   if (wall) return []
-  const t = s.freeTextileId ? freeTextiles(v).find((x) => x.id === s.freeTextileId) : undefined
+  const t = s.textileId ? freeTextiles(v).find((x) => x.id === s.textileId) : undefined
   if (t) return [...freeGripEnds(v, t).map((end): PlanGrip => ({ on: { type: 'end', what: 'textile', id: t.id, end }, kind: 'end', at: t[end] })), ...groupGrips(v, { kind: 'textile', id: t.id })]
   // A frame on a system wall: both ends, also one in a 92LTX corner, which a drag takes out of it (X12)
   const f = s.textileId && mountedOn(v, s.textileId) ? v.textiles.find((x) => x.id === s.textileId) : undefined
@@ -176,7 +176,7 @@ export function keptFor(selection: PlanSelection, b: Brush, v: Variant): PlanSel
   if (b.kind === 'wall' && selection.roomId) return { roomId: selection.roomId }
   if (b.kind === 'wall' && selection.wallId) return { wallId: selection.wallId }
   if (b.kind === 'opening' && selection.openingId) return { openingId: selection.openingId }
-  if (b.kind === 'textile' && selection.freeTextileId) return { freeTextileId: selection.freeTextileId }
+  if (b.kind === 'textile' && selection.textileId) return { textileId: selection.textileId }
   if (b.kind === 'textile' && selection.textileId && mountedOn(v, selection.textileId)) return { wallId: selection.wallId, textileId: selection.textileId }
   if (b.kind === 'beam' && selection.beamId) return { beamId: selection.beamId }
   if (b.kind === 'podium' && selection.objectId && v.objects.find((o) => o.id === selection.objectId)?.sections) return { objectId: selection.objectId }

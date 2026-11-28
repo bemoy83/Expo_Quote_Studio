@@ -3,7 +3,7 @@
 // the previews' state and drag and drop from Profilering.
 import { useCallback, useEffect, useRef, useState, type DragEvent as RDragEvent, type PointerEvent as RPointerEvent } from 'react'
 import type { Rect } from '../../../domain/floor/tiles'
-import { faceOfPoint, freeTextileAt, updateFace } from '../../../domain/textile/free'
+import { faceOfPoint, freeTextileAt } from '../../../domain/textile/free'
 import type { Point } from '../../../domain/types'
 import { applyDrop, decorDrag, endDecorDrag, type DecorDrag } from '../../dnd'
 import type { FaceHit } from '../layers/Previews'
@@ -30,6 +30,7 @@ import { grip, startGrip } from './grip'
 import { podiumLink, startPodiumLink } from './podiumLink'
 import type { Drag, DragHandlers, P, PointerCtx } from './types'
 import { wall } from './wall'
+import { updateFace } from '../../../domain/textile/edit'
 
 const DRAGS: { [K in Drag['kind']]: DragHandlers<K> } = { stroke, run, plates, floor, carpetFill, click, object, wall, beam, room, podium, grip, podiumLink, freeMove, textileOff, erase, shelf, shelfMove, place: placeDrag }
 const handlersOf = (d: Drag) => DRAGS[d.kind] as DragHandlers<Drag['kind']>
@@ -221,7 +222,7 @@ export function usePlanPointer(input: PlanPointerInput) {
     if (ft && d.kind === 'motif') {
       const face = faceOfPoint(ft, q)
       input.onEdit((x) => updateFace(x, ft.id, face, { motif: d.motif }))
-      return input.onSelect({ freeTextileId: ft.id, freeFace: face })
+      return input.onSelect({ textileId: ft.id, face: face })
     }
     const h = hits.faceHit(q)
     if (!h) return input.onToast(d.kind === 'textile' ? 'Slipp tekstilveggen ved en vegg, på siden rammen skal stå' : 'Slipp grafikken ved en vegg eller en tekstilvegg')

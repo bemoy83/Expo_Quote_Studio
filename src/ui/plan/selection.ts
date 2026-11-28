@@ -10,11 +10,12 @@ import { removeSet } from '../../domain/objects'
 import { removeRoom } from '../../domain/rooms'
 import { removeShelves } from '../../domain/shelves/edit'
 import { shelfRow, shelvesOf } from '../../domain/shelves/model'
-import { removeFreeTextile, type FaceKey } from '../../domain/textile/free'
-import { removeTextile } from '../../domain/textile/inFrame'
+import type { FaceKey } from '../../domain/textile/free'
+
 import type { FloorTile, Foil, FreeTextile, InnerBeam, Opening, PlacedObject, Point, Room, Shelf, TextileWall, Variant, Wall } from '../../domain/types'
 import { wallCorners, type WallCorner } from '../../domain/textile/cornerJoin'
-import { freeTextiles, wallTextiles } from '../../domain/textile/mounts'
+import { freeTextiles, mountedOn, wallTextiles } from '../../domain/textile/mounts'
+import { removeTextile } from '../../domain/textile/edit'
 
 export interface PlanSelection {
   wallId?: string
@@ -22,17 +23,18 @@ export interface PlanSelection {
   objectId?: string
   /** Wall face shown in the wall drawer. */
   side?: FaceSide
+  /** A textile wall, on a system wall or on foot plates: one product, one selection (Byggeregel X1, X18). Where it is
+   *  mounted is read from where it stands (chosen), so it stays chosen as it goes on or off a wall. */
   textileId?: string
+  /** With `textileId` on foot plates: the face shown in its drawer. */
+  face?: FaceKey
   foilId?: string
   /** A corner between two frames on system walls, joined by a 92LTX or let go (Byggeregel X7, M5): where their centre
    *  lines cross. */
   corner?: Point
-  /** A frittstående tekstilvegg, and the face shown in its drawer. */
-  freeTextileId?: string
   /** «Løsne» on the chosen inner wall or free-standing textile wall (Byggeregel M5): its drags move it alone, out of
    *  the group it is joined to. */
   loose?: boolean
-  freeFace?: FaceKey
   /** An innvendig takdrager. */
   beamId?: string
   /** A shelf (hylle 6311), chosen in the wall drawer of its wall, on its face. With it comes its row (the shelves beside it
@@ -68,7 +70,7 @@ export type DrawerState = 'closed' | 'compact' | 'detail'
 
 /** What a selection is about. The one order a selection is read in: the first field set says it (a selection made by a
  *  click sets only one of these, besides the wall and face a frame, decal or shelf is on). */
-export type Kind = 'corner' | 'fill' | 'lane' | 'textile' | 'foil' | 'shelf' | 'free' | 'beam' | 'opening' | 'object' | 'room' | 'wall'
+export type Kind = 'corner' | 'fill' | 'lane' | 'textile' | 'foil' | 'shelf' | 'beam' | 'opening' | 'object' | 'room' | 'wall'
 
 /** The kind and id of what a selection is about, without looking it up; null when nothing is selected. */
 export function kindOf(s: PlanSelection): { kind: Kind; id: string } | null {
@@ -78,7 +80,6 @@ export function kindOf(s: PlanSelection): { kind: Kind; id: string } | null {
   if (s.textileId) return { kind: 'textile', id: s.textileId }
   if (s.foilId) return { kind: 'foil', id: s.foilId }
   if (s.shelfId) return { kind: 'shelf', id: s.shelfId }
-  if (s.freeTextileId) return { kind: 'free', id: s.freeTextileId }
   if (s.beamId) return { kind: 'beam', id: s.beamId }
   if (s.openingId) return { kind: 'opening', id: s.openingId }
   if (s.objectId) return { kind: 'object', id: s.objectId }
@@ -88,7 +89,7 @@ export function kindOf(s: PlanSelection): { kind: Kind; id: string } | null {
 }
 
 /** The kinds that open in the wall drawer: the wall, and a door, frame, decal or shelf on it. */
-const ON_WALL: ReadonlySet<Kind> = new Set<Kind>(['opening', 'textile', 'foil', 'shelf', 'wall'])
+const ON_WALL: ReadonlySet<Chosen['kind']> = new Set<Chosen['kind']>(['opening', 'textile', 'foil', 'shelf', 'wall'])
 
 /** The object a selection is about, so a second click on it can be told apart: the face shown does not count. */
 export function selectionKey(s: PlanSelection): string {
@@ -96,13 +97,13 @@ export function selectionKey(s: PlanSelection): string {
   return k ? `${k.kind}:${k.id}` : ''
 }
 
-/** Whether the selection has a drawer: a wall with its doors, frames and decals, a free-standing textile wall, a counter
+/** Whether the selection has a drawer: a wall with its doors, frames and decals, a textile wall, a counter
  *  of Disker og podier (its sides, trinn 2), or engangsteppe (only under the plan). Other furniture, 6560, rooms and
  *  drawn takdragere have none. */
 export function hasDrawer(s: PlanSelection, view: 'plan' | '3d' = 'plan', v?: Variant): boolean {
   const k = kindOf(s)?.kind
   if (k === 'object') return !!v?.objects.find((o) => o.id === s.objectId)?.sections
-  return k === 'fill' || k === 'lane' ? view === 'plan' : k === 'free' || (!!k && ON_WALL.has(k))
+  return k === 'fill' || k === 'lane' ? view === 'plan' : !!k && (k === 'textile' || ON_WALL.has(k))
 }
 
 /** A wall and the face its drawer and pill act on, with what on it is chosen. */
@@ -164,9 +165,15 @@ export function chosen(v: Variant, sel: PlanSelection): Chosen | null {
       const object = v.objects.find((x) => x.id === k.id)
       return object ? { kind: 'object', object } : null
     }
-    case 'free': {
+    case 'textile': {
+      // One selection whatever it stands on: on a wall it opens on that wall's face, on foot plates on its own
       const textile = freeTextiles(v).find((x) => x.id === k.id)
-      return textile ? { kind: 'free', textile, face: sel.freeFace ?? 'a' } : null
+      if (textile) return { kind: 'free', textile, face: sel.face ?? 'a' }
+      const on = mountedOn(v, k.id)
+      const view = on && wallTextiles(v).find((x) => x.id === k.id)
+      if (on && view) return { kind: 'textile', wall: on.wall, side: on.side, textile: view }
+      // Gone (undone): the wall it was on stays chosen
+      break
     }
   }
   // A door is chosen without its wall: it stands in its own
@@ -177,8 +184,6 @@ export function chosen(v: Variant, sel: PlanSelection): Chosen | null {
   const want = sel.side ?? (opening && doorFace(v, wall, opening))
   const side = want && fs.includes(want) ? want : fs[0]
   if (opening) return { kind: 'opening', wall, side, opening }
-  const textile = sel.textileId ? wallTextiles(v).find((x) => x.id === sel.textileId && x.wallId === wall.id) : undefined
-  if (textile) return { kind: 'textile', wall, side, textile }
   const foil = sel.foilId ? v.foils.find((x) => x.id === sel.foilId && x.wallId === wall.id) : undefined
   if (foil) return { kind: 'foil', wall, side, foil }
   const shelf = sel.shelfId ? shelvesOf(v).find((x) => x.id === sel.shelfId && x.wallId === wall.id) : undefined
@@ -203,14 +208,15 @@ export function deleteSelection(v: Variant, sel: PlanSelection): { edit: (v: Var
       return { edit: (x) => removeFill(x, k.id), select: {} }
     case 'lane':
       return { edit: (x) => removeLane(x, sel.lane!), select: {} }
-    case 'textile':
-      return { edit: (x) => removeTextile(x, k.id), select: onFace }
+    // On a wall the wall drawer stays on its face; on foot plates nothing is left chosen
+    case 'textile': {
+      const on = mountedOn(v, k.id)
+      return { edit: (x) => removeTextile(x, k.id), select: on ? { wallId: on.wall.id, side: on.side } : {} }
+    }
     case 'foil':
       return { edit: (x) => removeFoil(x, k.id), select: onFace }
     case 'shelf':
       return { edit: (x) => removeShelves(x, chosenShelves(x, sel)), select: onFace }
-    case 'free':
-      return { edit: (x) => removeFreeTextile(x, k.id), select: {} }
     case 'beam':
       return { edit: (x) => removeInnerBeam(x, k.id), select: {} }
     case 'room':

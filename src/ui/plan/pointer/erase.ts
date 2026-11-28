@@ -10,8 +10,8 @@ import { removeInnerBeam } from '../../../domain/innerBeams'
 import { removeObject } from '../../../domain/objects'
 import { removeRoom, roomAt } from '../../../domain/rooms'
 import { removeShelves } from '../../../domain/shelves/edit'
-import { faceOfPoint, freeTextileAt, removeFreeTextile, updateFace } from '../../../domain/textile/free'
-import { removeTextile, textileAt, updateTextile } from '../../../domain/textile/inFrame'
+import { faceOfPoint, freeTextileAt } from '../../../domain/textile/free'
+import { textileAt, updateTextile } from '../../../domain/textile/inFrame'
 import { tileAt } from '../../../domain/floor/tiles'
 import type { Variant } from '../../../domain/types'
 import { rules } from '../../env'
@@ -19,6 +19,7 @@ import type { PlanHits } from './hits'
 import { startStroke } from './stroke'
 import type { Drag, DragHandlers, P, PointerCtx } from './types'
 import { goneFrom } from './moved'
+import { removeTextile, updateFace } from '../../../domain/textile/edit'
 
 /** What lies on top under the pointer. `group` is what a drag goes on erasing; `id` tells the things apart. */
 export interface EraseTarget {
@@ -42,7 +43,7 @@ export function eraseTargetAt(v: Variant, hits: PlanHits, standKeys: ReadonlySet
   if (ft) {
     const face = faceOfPoint(ft, q)
     if (ft[face]?.motif && !ft[face]?.fill) return { group: 'graphic', id: `${ft.id}.${face}`, erase: (x) => updateFace(x, ft.id, face, { motif: null }) }
-    return { group: 'textile', id: ft.id, erase: (x) => removeFreeTextile(x, ft.id) }
+    return { group: 'textile', id: ft.id, erase: (x) => removeTextile(x, ft.id) }
   }
   // Drawn takdrager (not where a wall is closer)
   const ib = hits.beamAt(q)

@@ -137,7 +137,7 @@ export function planDims(v: Variant, selection: PlanSelection, compact: boolean)
     const mid = hz ? v.stand.depth / 2 : v.stand.width / 2
     inner = { axis: hz ? 'x' : 'y', at, dir: at < mid ? 1 : -1, ts: moduleChain(wall), clear: 'wall' }
   }
-  const free = selection.freeTextileId ? freeTextiles(v).find((t) => t.id === selection.freeTextileId) : undefined
+  const free = selection.textileId ? freeTextiles(v).find((t) => t.id === selection.textileId) : undefined
   if (free) {
     const hz = horizontal(free)
     const k = hz ? 0 : 1
