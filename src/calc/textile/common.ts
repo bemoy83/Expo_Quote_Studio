@@ -13,15 +13,17 @@ export type { FrameParts };
 export type FrameMount = 'vegg' | 'fotplater';
 
 /** The frame's parts from its rails (each cut length once per rail), its sides or uprights, braces and loose parts. */
-export function frameParts(r: TextileFrameRecipe, railCuts: readonly number[], sides: { qty: number; length: number }, braces: FrameParts['braces'], loose: readonly (readonly [string, number])[], butt: NonNullable<FrameParts['butt']> = []): FrameParts {
+export function frameParts(r: TextileFrameRecipe, railCuts: readonly number[], sides: { qty: number; cuts: readonly number[] }, braces: FrameParts['braces'], loose: readonly (readonly [string, number])[], butt: NonNullable<FrameParts['butt']> = []): FrameParts {
   const cuts = new Map<number, number>();
   const add = (len: number, qty: number) => qty && cuts.set(len, (cuts.get(len) ?? 0) + qty);
   for (const c of railCuts) add(c, 2);
-  add(sides.length, sides.qty);
+  for (const c of sides.cuts) add(c, sides.qty);
   // Byggeregel X9: in a spliced rail every other piece (from the first) is a standard length, the ones between are
-  // splice pieces, cut for the job
+  // splice pieces, cut for the job; an upright taller than the longest piece is spliced the same way (X14)
   const spliced = new Map<number, number>();
-  if (railCuts.length > 1) railCuts.forEach((c, i) => i % 2 && spliced.set(c, (spliced.get(c) ?? 0) + 2));
+  const mark = (len: number, qty: number) => qty && spliced.set(len, (spliced.get(len) ?? 0) + qty);
+  if (railCuts.length > 1) railCuts.forEach((c, i) => i % 2 && mark(c, 2));
+  if (sides.cuts.length > 1) sides.cuts.forEach((c, i) => i % 2 && mark(c, sides.qty));
   const kept = loose.filter(([, q]) => q > 0);
   const connectors = new Set([r.corner, r.splice.thread, r.splice.slide.code]);
   return {
@@ -59,6 +61,13 @@ export function cornerLeg(r: TextileFrameRecipe = RECIPES.textileFrame): number 
 
 /** A 92LTX between frames `frameH` mm tall: it stands on an end cap and has one on top (X7). */
 export const postHeight = (frameH: number, r: TextileFrameRecipe = RECIPES.textileFrame) => frameH - 2 * r.feet.cornerPostCap;
+
+/** Byggeregel X7, X14: a 92LTX taller than the longest piece, in pieces joined butt to butt; its lengths are the 43TX
+ *  standard lengths less the end caps (Bjørn 28.11.2026). */
+export function postPieces(frameH: number, r: TextileFrameRecipe = RECIPES.textileFrame): number[] {
+  const caps = 2 * r.feet.cornerPostCap;
+  return splitRail(postHeight(frameH, r), r.maxRail - caps, r.standard.map((x) => x - caps));
+}
 
 /** `Kunde_T1_970x2540mm.pdf`. Strips everything but letters and digits from the customer name. */
 export function printFileName(customer: string, pos: string, p: Pick<FramePiece, 'W' | 'H'>): string {

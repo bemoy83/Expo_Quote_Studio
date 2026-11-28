@@ -8,7 +8,7 @@ import { freeTrims, placeFrames } from './placement';
 import { onWallMount, wallPiece, type FramePiece } from './inFrame';
 import { cornerPosts, freeFrames, runFrame, type FreeFrame, type HeldEnds } from './free';
 import { cornerEnds } from '../../domain/textile/free';
-import { fullHeight, partsLm, postHeight, printFileName } from './common';
+import { fullHeight, partsLm, postPieces, printFileName } from './common';
 import { freeTextiles, mountedOn, outFace, wallTextiles } from '../../domain/textile/mounts';
 
 export interface ProductionPiece extends FramePiece {
@@ -100,10 +100,7 @@ export function production(v: Variant, rules: Rules, customer: string): Producti
   const free = freeFrames(v, r, s, customer, trims, heldEnds(v, trims));
   // The 92LTX stands on an end cap and has one on top, so it is cut shorter than the frames it joins
   const heights = new Map<number, number>();
-  for (const p of cornerPosts(v)) {
-    const H = postHeight(p.H);
-    heights.set(H, (heights.get(H) ?? 0) + 1);
-  }
+  for (const p of cornerPosts(v)) for (const H of postPieces(p.H)) heights.set(H, (heights.get(H) ?? 0) + 1);
   const posts = [...heights].map(([H, qty]) => ({ qty, H }));
   return {
     pieces,

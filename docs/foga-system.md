@@ -336,7 +336,7 @@ systemveggen: den lager ikke rom og kan ikke ha dør (tekstildør med overstykke
   rammer på systemvegg, så det bare plukkes én type hjørnekobling.
 - **Hjørne**: to vegger som møtes ende mot ende i rett vinkel deler en **92LTX** hjørnestolpe (873 809 22), som
   erstatter begge veggenes stående 43TX der. Skinnene festes til stolpen med 617.
-- **Stag** som i rammen på systemvegg: stående **90** med 600 i hver ende, maks 2000 mm mellom to stående, og ved
+- **Stag** som i rammen på systemvegg: stående **90** med 600 i hver ende, maks 3000 mm mellom to stående (etter fotplateregelen, Bjørn 28.11.2026), og ved
   hver skjøt (X8). En fotplate har ikke stag (Bjørn 7.11.2026).
 - **Føtter**: fotplate **740** (876 740 92, 400 × 400 × 5) under bunnskinnen. En 92LTX i hjørnet teller som støtte, som en fotplate, i begge retninger. Minst 2 støtter (hjørnestolper
   medregnet) fra 1 m og oppover, ellers 1, og maks 3000 mm mellom to støtter. Foten står helst helt ute i en fri ende,

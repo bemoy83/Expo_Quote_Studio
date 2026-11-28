@@ -407,10 +407,10 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   står 20–60 mm ut fra veggens linje). Antall 520 følger fotplateregelen (S3, S4, X8): ingen mer enn 3 m fra hverandre,
   og en 92LTX teller som én (Bjørn 21.11.2026). Forskjellen fra fotplater: på vegg har rammen alltid minst to 520, også
   under 1 m, for én brakett holder den ikke oppreist slik én bred fotplate holder en kort ramme; i et koblet hjørne
-  faller én bort. Vi antar at en 520 alltid sitter på en stolpe. Stående stag i 90 maks 2000 fra hverandre
+  faller én bort. Vi antar at en 520 alltid sitter på en stolpe. Stående stag i 90 fordelt etter fotplateregelen (S3), maks 3000 fra hverandre
   (rammesidene teller), lengde H − 80, med 600 i hver ende: duken trekker mest på midten. Rammen regnes med samme
   funksjon som på fotplater (X1, `runFrame`); bare duk på én side og 520 i stedet for fotplater skiller.
-  *Bjørn 31.10.2026 (fabric.js er fasit), stag 2 m 7.11.2026, ingen luft mot stolpen og 520 etter fotplateregelen 21.11.2026 · `rules.textile.inFrame`, `RECIPES.textileFrame` · kode `src/calc/textile/inFrame.ts`, `src/calc/textile/free.ts` · test `src/calc/fabric.test.ts`, `src/calc/textile/corners.test.ts`*
+  *Bjørn 31.10.2026 (fabric.js er fasit), stag 7.11.2026, stag etter fotplateregelen i stedet for hver 2 m 28.11.2026, ingen luft mot stolpen og 520 etter fotplateregelen 21.11.2026 · `rules.textile.inFrame`, `RECIPES.textileFrame` · kode `src/calc/textile/inFrame.ts`, `src/calc/textile/free.ts` · test `src/calc/fabric.test.ts`, `src/calc/textile/corners.test.ts`*
 - **X3 Trykkfil.** Ramme + 2 × bleed (20), levert i 10 %. Tilbudet lister trykkfilene kunden leverer, med filmål og
   filnavn, og trykklisten kan lastes ned som CSV der. Bleed, filskala og de andre målene for rammen endres under Regler på
   Kostgrunnlag og gjelder også kalkylen.
@@ -452,12 +452,13 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   egne (som X2) og står uavhengig av føttene: en fotplate har ikke stag.
   En fot i en fri ende står i flukt med rammeenden (200 mm inn for 740), resten jevnt fordelt. Under 1 m: én 730 midt på.
   Ett stag 150 mm (100–200) fra hver side av en skinneskjøt, så det virker som rammeside når lange motiver monteres i
-  seksjoner. Ellers jevnt fordelt, så ingen stående (rammeende, 92LTX, stag) står mer enn 2000 fra hverandre.
+  seksjoner. Ellers jevnt fordelt etter fotplateregelen, så ingen stående (rammeende, 92LTX, stag) står mer enn 3000 fra hverandre (Bjørn 28.11.2026: «hver 2 m» er en gammel regel).
   *Bjørn 1.11.2026, 3.11.2026 og 7.11.2026 · `rules.textile.inFrame.stag`, `RECIPES.textileFrame.spliceBrace` · `RECIPES.textileFrame.feet.support` · kode `src/calc/textile/free.ts`, `src/calc/supports.ts` · test `src/calc/freeFrames.test.ts`*
 
 - **X9 Standardlengder.** Fordi systemveggene på messer er standardisert, har 43TX standardlengder som passer på
   veggene: cc − 30, det vil si 970, 1970, 2970, 3970 og 4970 (X2). I tillegg 470, bruttomålene 1040, 2040 og 3040 for
-  rammer som henger utenpå én enkelt vegg, og full høyde 2540 for stendere. Lengdene ligger som data
+  rammer som henger utenpå én enkelt vegg, full høyde 2540 for stendere, og stenderne til høye rammer 3540, 4040 og
+  4540 (X14). Alle er 43TX på lager og brukes også som skinnestykker. Lengdene ligger som data
   (`RECIPES.textileFrame.standard`). Standardlengder ligger på lager, plukkes bare og er leid ut per løpemeter som i dag
   (kostregel 1, ingen egen pris for en hel lengde). Alle andre lengder kappes til jobben og koster mer (kostregel 2):
   materialet per meter med svinn og gjenbruk, i DG-gruppen for salg fordi biten stort sett brukes opp, kappetiden per
@@ -553,9 +554,13 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 - **X14 Høy tekstil.** En tekstilvegg på systemvegg er en egen enhet, ikke en del av veggen, og kan ha fri høyde,
   også over veggens topp, opp til høyeste tekstil (`rules.textile.maxHeight`, 5030 for nå, som høyeste hevede vegg).
   Den hever ikke veggen av seg selv. Rammens deler regnes av høyden, så et annet tak trenger ingen kode. Veggrisset
-  tegner rammen der den står, også over toppen. Frittstående står foreløpig i 2540 (X5); høy frittstående med vaier
+  tegner rammen der den står, også over toppen. Standardhøydene følger Fogas CC uten justeringsfot: 2540, 3040,
+  3540, 4040 og 4540 (X9); en ramme på 3040 mot en vegg hevet til 3080 står 40 under toppen. En stående 43TX lengre
+  enn lengste stykke (5000) skjøtes som en skinne (X9), med 609 inni og ikke noe mer (stagene ved en skinneskjøt
+  gjelder skinnene). En 92LTX i et høyt hjørne har lengdene til 43TX minus endelokkene og skjøtes butt mot butt (X7).
+  Når rammen når over høydegrensen, går montering og demontering med lift (kostregel 6, `CalcLine.top`). Frittstående står foreløpig i 2540 (X5); høy frittstående med vaier
   kommer senere.
-  *Bjørn 28.11.2026 · `rules.textile.maxHeight` · kode `src/domain/textile/inFrame.ts`, `src/domain/decor.ts`, `src/calc/textile/production.ts`, `src/ui/plan/wallDrawer/WallElevation.tsx` · test `src/domain/decor.test.ts`, `src/calc/textile/tallFrame.test.ts`*
+  *Bjørn 28.11.2026 · `rules.textile.maxHeight`, `RECIPES.textileFrame.standard` · kode `src/calc/textile/free.ts`, `src/calc/textile/common.ts`, `src/calc/textile/lines.ts`, `src/domain/textile/inFrame.ts`, `src/domain/decor.ts`, `src/calc/textile/production.ts`, `src/ui/plan/wallDrawer/WallElevation.tsx` · test `src/domain/decor.test.ts`, `src/calc/textile/tallFrame.test.ts`*
 
 ## M · Magnet og kobling
 

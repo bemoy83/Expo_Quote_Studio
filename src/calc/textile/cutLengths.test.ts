@@ -21,7 +21,7 @@ describe('Byggeregel X9: standard lengths and cuts', () => {
   });
 
   it('a frame on standard lengths has no cut', () => {
-    const p = frameParts(R, [2970], { qty: 2, length: 2540 }, { qty: 1, length: 2460 }, []);
+    const p = frameParts(R, [2970], { qty: 2, cuts: [2540] }, { qty: 1, length: 2460 }, []);
     const u = frameUses(p);
     expect(qty(u, ITEM.frameProfileM)).toBeCloseTo((2 * 2970 + 2 * 2540) / 1000);
     expect(qty(u, ITEM.frameCutM)).toBe(0);
@@ -31,7 +31,7 @@ describe('Byggeregel X9: standard lengths and cuts', () => {
 
   it('a length outside the list is cut: its metres and one cut per piece', () => {
     // 6000 free-standing: 4970 + a 1030 splice piece in both rails, two uprights 2540
-    const p = frameParts(R, [4970, 1030], { qty: 2, length: 2540 }, { qty: 4, length: 2460 }, []);
+    const p = frameParts(R, [4970, 1030], { qty: 2, cuts: [2540] }, { qty: 4, length: 2460 }, []);
     const u = frameUses(p);
     expect(qty(u, ITEM.frameProfileM)).toBeCloseTo((2 * 4970 + 2 * 2540) / 1000);
     expect(qty(u, ITEM.frameCutM)).toBeCloseTo((2 * 1030) / 1000);
@@ -41,7 +41,7 @@ describe('Byggeregel X9: standard lengths and cuts', () => {
   });
 
   it('a splice piece is cut even at a standard length', () => {
-    const p = frameParts(R, [4970, 970], { qty: 2, length: 2540 }, { qty: 4, length: 2460 }, []);
+    const p = frameParts(R, [4970, 970], { qty: 2, cuts: [2540] }, { qty: 4, length: 2460 }, []);
     const u = frameUses(p);
     expect(qty(u, ITEM.frameProfileM)).toBeCloseTo((2 * 4970 + 2 * 2540) / 1000);
     expect(qty(u, ITEM.frameCutM)).toBeCloseTo((2 * 970) / 1000);

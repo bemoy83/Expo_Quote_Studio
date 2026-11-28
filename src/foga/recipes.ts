@@ -249,8 +249,9 @@ export const RECIPES: Recipes = {
     // threadMin: placeholder until Bjørn gives the shortest piece 609 fits
     splice: { thread: '609', slide: { code: '604', perRail: 2 }, threadMin: 300 },
     maxRail: 5000,
-    // Bjørn 27.11.2026: cc − 30 on the wall grid, 470, and gross lengths for a frame outside one wall; 2540 full height
-    standard: [470, 970, 1040, 1970, 2040, 2540, 2970, 3040, 3970, 4970],
+    // Bjørn 27.11.2026: cc − 30 on the wall grid, 470, and gross lengths for a frame outside one wall; 2540 full height.
+    // Bjørn 28.11.2026: tall frames follow Foga's CC without the adjusting foot: 3040, 3540, 4040, 4540 (X14)
+    standard: [470, 970, 1040, 1970, 2040, 2540, 2970, 3040, 3540, 3970, 4040, 4540, 4970],
     minSplice: 50,
     brace: '90',
     spliceBrace: 150,

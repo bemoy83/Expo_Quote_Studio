@@ -2,6 +2,8 @@
 // system wall with 520 or on foot plates). The frame (rental) and the textile (sale) are two kinds of line here and one
 // line per frame size on the quote (`quote`), each with its own price: frames by size and mounting, then the textile
 // by size and fill. What is built comes from calc/textile/production.ts.
+import { needsLift } from '../../cost/model';
+import { atHeight } from '../height';
 import { displayName } from '../../catalog/lookup';
 import type { TextileFill } from '../../domain/types';
 import { RECIPES } from '../../foga/recipes';
@@ -84,6 +86,8 @@ export function frameUses(p: FrameParts): Use[] {
 /** A frame's half of each 92LTX it shares with the run on the other side of a corner, m. */
 const postShare = (corners: number, H: number) => ({ id: ITEM.cornerPostM, qty: (corners * postHeight(H)) / 2 / 1000 });
 const nCorners = (c: { from: boolean; to: boolean }) => (c.from ? 1 : 0) + (c.to ? 1 : 0);
+/** How far up the wall a frame starts, mm. */
+const bottomOf = (c: CalcContext, id: string) => Math.round((c.v.textiles.find((t) => t.id === id)?.bottom ?? 0) * 1000);
 
 export function frameLines(c: CalcContext): CalcLine[] {
   const { prod, sys, idx } = c;
@@ -108,8 +112,10 @@ export function frameLines(c: CalcContext): CalcLine[] {
     const uses = new Map<string, number>();
     for (const u of fs.flatMap((f) => f.uses)) if (u.qty) uses.set(u.id, (uses.get(u.id) ?? 0) + u.qty);
     const name = `${textile ? displayName(textile) : sys.textile}, ${W} × ${H} mm, ${MOUNT_NAME[mount]}`;
-    const line = c.line(sys.textile, fs.length, { ...c.built, quote: quoteOf(sizeOf(W, H), true) }, [...uses].map(([id, qty]) => ({ id, qty })));
-    return { ...line, name, drawn: [...new Set(fs.map((f) => f.textileId))] };
+    // A tall frame is put up from a lift over the height limit (cost rule 6, Byggeregel X14): its top from the floor
+    const top = Math.max(...fs.map((f) => H + bottomOf(c, f.textileId)));
+    const line = c.line(sys.textile, fs.length, { ...c.built, quote: quoteOf(sizeOf(W, H), true) }, atHeight(c, [...uses].map(([id, qty]) => ({ id, qty })), top));
+    return { ...line, name, drawn: [...new Set(fs.map((f) => f.textileId))], ...(needsLift(top, c.pricing.height) ? { top } : {}) };
   });
 }
 

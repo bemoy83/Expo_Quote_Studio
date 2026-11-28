@@ -88,7 +88,7 @@ export const RULES: Rules = {
     freeMin: 0.25,
     // Bjørn 28.11.2026: 5030 for now, as the highest raised wall (V19)
     maxHeight: 5.03,
-    inFrame: { side: 20, air: 10, wallH: 2490, feet: 50, bleed: 20, scale: 10, prof: 40, stag: 2000 },
+    inFrame: { side: 20, air: 10, wallH: 2490, feet: 50, bleed: 20, scale: 10, prof: 40, stag: 3000 },
   },
   door: { swing: 0.95, height: 2.0 },
   floor: { cell: 0.5, rollEnd: 0.1 },
