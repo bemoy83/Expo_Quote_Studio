@@ -81,6 +81,9 @@ describe('X14 a tall textile on a wall', () => {
     // The frame on the back wall from 0 to 6 m (the frame ends 15 inside the run's ends)
     expect(piece.wireAt).toHaveLength(3);
     expect(piece.wireAlong!.map((a) => Math.round(a))).toEqual(piece.wireAt!.map((a) => Math.round(a + piece.runAt + (piece.shift ?? 0))));
-    expect(piece.wirePoints!.map(([x, y]) => [Math.round(x * 1000), y])).toEqual(piece.wireAlong!.map((a) => [Math.round(a), 0]));
+    // In the plan on the frame's line, out from the wall's face (Bjørn 28.11.2026), not on the wall's line
+    const runY = v0.v.textiles[0].from[1];
+    expect(runY).toBeGreaterThan(0);
+    expect(piece.wirePoints!.map(([x, y]) => [Math.round(x * 1000), y])).toEqual(piece.wireAlong!.map((a) => [Math.round(a), runY]));
   });
 });
