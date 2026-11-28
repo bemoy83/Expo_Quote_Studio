@@ -4,6 +4,9 @@
 // so the customer sees what they pay for. Byggeregel B2 (docs/byggeregler.md).
 import { beamSpecs } from '../../foga/fromVariant';
 import { ITEM } from '../../pricing/data';
+import { RECIPES } from '../../foga/recipes';
+import { raiseTop } from '../../rules/rules';
+import { atHeight } from '../height';
 import type { Use } from '../../pricing/model';
 import type { BeamLayout } from '../beams/beamSegments';
 import { count, toOrganiser, type CalcContext } from '../context';
@@ -38,8 +41,13 @@ export function beamLiftLines(c: CalcContext): CalcLine[] {
     ...(hooks.length ? [count(hooks.length, 'krok', 'kroker')] : []),
     ...(walls.length ? [`${walls.length} oppå vegg`] : []),
   ];
-  const meta = parts.join(' + ') + ' skjøtet opp';
-  return [c.line(c.sys.beamLift, n, { ...c.built, meta }, [{ id: ITEM.beamLift, qty: n }])];
+  // Byggeregel T19: lifted higher than 80, each piece is a 94 in a raise length with its 609, as on a raised wall, and
+  // the work is up at the beam's top (cost rule 6)
+  const { length } = c.lift;
+  if (length === RECIPES.beam.lift.length) return [c.line(c.sys.beamLift, n, { ...c.built, meta: parts.join(' + ') + ' skjøtet opp' }, [{ id: ITEM.beamLift, qty: n }])];
+  const top = raiseTop(length, c.rules);
+  const meta = `${parts.join(' + ')} skjøtet opp ${length} mm`;
+  return [{ ...c.line(c.sys.beamLift, n, { ...c.built, meta }, atHeight(c, [{ id: ITEM.raisePost(length), qty: n }], top)), top }];
 }
 
 /** The exhibitor's takdrager, and the organiser's when it pays the standard ones. */

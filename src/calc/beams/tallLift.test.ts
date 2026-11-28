@@ -11,6 +11,7 @@ import { variantBeams } from './beams';
 import { calc } from '../calc';
 import { DEFAULT_CATALOG } from '../../catalog/defaultCatalog';
 import { withTextiles } from '../../test/textiles';
+import { ITEM } from '../../pricing/data';
 
 const ROW: Stand = { width: 6, depth: 4, type: 'row' };
 const beam = (id: string, from: Point, to: Point): InnerBeam => ({ id, from, to });
@@ -80,6 +81,10 @@ describe('Byggeregel T19: takdrager mot høy tekstil', () => {
     const lifted = at(3.0);
     expect(lifted.lift?.length).toBe(540);
     expect(lifted.bom.lines.some((b) => b.name.includes('94, 540 mm'))).toBe(true);
+    // Priced as the raise's 94 with 609, worked up at the beam's top
+    const line = lifted.groups.flatMap((g) => g.lines).find((l) => l.meta?.includes('skjøtet opp 540 mm'))!;
+    expect(line.uses?.some((u) => u.id === ITEM.raisePost(540))).toBe(true);
+    expect(line.top).toBe(3080);
     const gone = at(3.04);
     expect(gone.beams.segments.some((s) => s.inner)).toBe(false);
   });

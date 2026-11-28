@@ -107,7 +107,7 @@ som siste steg med `toEdge` (pensler i `runDraw.ts`, Tøm i `snapGrid.ts`). Stø
 - Støttedrager på lange standvegger: `calc/beams/supportBeams.ts`
 - Vegger hvor som helst i 250-rasteret mot dragerne (vegg langs, kryss i stolpe eller mellom stolper, T4, T11, T17): `calc/beams/wallLines.ts`
 - Kroker i 01, enveis og toveis (der en drager henger på en annen, eller på en vegg mellom stolpene, T15): `calc/beams/beamHooks.ts`, plukk i `foga/engine.ts`, 3D i `scene3d/build/frame.ts`
-- Hevet over tekstilvegg eller over en vegg uten stolpe (skjøtet stolpe og krok, hel lengde over et annet nivå T16, T17): `calc/beams/beamLift.ts` (`withJoins`), linjen `beamLiftLines` i `calc/lines/beams.ts`, 3D i `scene3d/build/frame.ts`
+- Hevet over tekstilvegg eller over en vegg uten stolpe (skjøtet stolpe og krok, hel lengde over et annet nivå T16, T17; høyden og tatt bort over høy tekstil T19, `BeamLift.length`/`removed`): `calc/beams/beamLift.ts` (`withJoins`), linjen `beamLiftLines` i `calc/lines/beams.ts`, 3D i `scene3d/build/frame.ts`
 - Linjen og hvem som betaler: `calc/lines/beams.ts` · `calc/context.ts` (`organiserBeams`)
 - Plan og 3D: `plan/layers/BeamLayer.tsx`, tegne `plan/pointer/run.ts`, dra `pointer/beam.ts` · `scene3d/build/frame.ts` (en tegnet drager er valgbar som `pick.beamId`), dra i 3D `scene3d/pointer/drag.ts`
 
@@ -153,6 +153,15 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
   `cornerPill` i `plan/pill/wall.tsx`, knappen `CornerButton` i `pill/parts.tsx`, valget `corner` i `selection.ts`
 - InFrame på systemvegg: `domain/textile/inFrame.ts` (ledige spenn, legge til, endre, flytte, `stretchFrame` for
   endegrepene, X12)
+- Høy tekstil (X14, X15): høyden opp til `rules.textile.maxHeight` i `updateTextile`; rammen i høyden (skjøtet stolpe,
+  stag, 92LTX `postPieces`) i `calc/textile/common.ts` og `free.ts`; vaier over veggtoppen `ProductionPiece.wires`
+  (`calc/textile/production.ts`), plukket via `textileWires` (`foga/fromVariant.ts`) og linjen `wireLines`
+  (`calc/lines/feet.ts`); forslaget «Hev veggen til …» `raiseFor`/`raiseUnder` i `domain/raise.ts` og `RaiseOffer` i
+  `plan/pill/wall.tsx`; takdrageren over (T19) `liftLength`, `liftClear`, `beamNote` og `beamGone` i
+  `calc/beams/beamLift.ts`
+- Nabo (N1, V20): `domain/neighbour.ts` (`neighbourNotes` for hevet vegg og høy tekstil nær en parallell nabogrense,
+  `backToBack` for øvre plater i kundens farge mot nabo, brukt i `calc/context.ts` og `raiseLines`), vist i pillen
+  (`withNeighbour` i `plan/pill/wall.tsx`), veggskuffens hint og tilbudets forutsetninger (`quote/QuotePage.tsx`)
 - Frittstående: `domain/textile/free.ts`; enden tas inn på en rammeende av `toFrameEnd` (`brush.ts`) og `magnet`
   (`domain/joints.ts`), X11, M4
 - Grupper i 92LTX-hjørner og systemvegg (X13, M4), i `domain/textile/mount.ts`: `groupMountDrag` (magneten tar en
