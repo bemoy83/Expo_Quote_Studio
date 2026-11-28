@@ -17,7 +17,7 @@ import { CAP_92LTX, CAP_THICKNESS, CORNER_92LTX, OUTLINES, mitredProfile, shared
 import { freeTextiles, mountedOn, outFace, wallTextiles } from '../../../domain/textile/mounts'
 
 export function buildTextile(c: BuildContext) {
-  const { v, res, opts, H, at, mat, add, along, sel } = c
+  const { v, res, opts, at, mat, add, along, sel } = c
   const depth = rules.textile.depth
   // Textile walls (InFrame): a 43TX frame with textile over both faces, standing in front of its wall face. The motif is
   // printed on the front.
@@ -32,8 +32,9 @@ export function buildTextile(c: BuildContext) {
     const shift = (p.shift ?? 0) / 1000
     const moved = (q: Point): Point => [q[0] + dx * shift, q[1] + dy * shift]
     const L = runLength(t)
-    const { bottom, height } = textileBox(view, rules)
-    const h = Math.min(height, H - bottom)
+    // The frame as the calc builds it (its height can be over the wall top, X14), never worked out again here
+    const { bottom } = textileBox(view, rules)
+    const h = p.H / 1000
     const glow = selectGlow(sel.textileId === t.id)
     const alu = mat('textile', ALU, { ...ALU_FINISH, ...glow })
     const m = p.fill === 'print' ? findMotif(opts.motifs, p.motif ?? undefined) : undefined
