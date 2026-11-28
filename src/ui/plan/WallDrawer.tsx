@@ -8,6 +8,8 @@
 // (drag.ts), the paint bucket and brush (paint.ts), the face's name and rooms (face.ts) and the drawer's words (text.ts).
 // What to show for what is chosen is decided in focus.ts, and the tools kept between renders live in useWallTools.ts;
 // this file puts it together.
+import { neighbourNotes, neighbourText, noteFor } from '../../domain/neighbour'
+import { beamNote } from '../../calc/beams/beamLift'
 import { AlignVerticalSpaceAround, DoorOpen, FlipHorizontal2, MoveHorizontal, Palette, Plus } from 'lucide-react'
 import { production } from '../../calc/textile/production'
 import { addFoil, foilBlocked, foilsOn, inBand, removeFoil, updateFoil } from '../../domain/decor'
@@ -19,7 +21,7 @@ import { shelvesOn } from '../../domain/shelves/model'
 import { wallLength, wallModules } from '../../domain/grid'
 import type { DoorSurface, Motif, Variant } from '../../domain/types'
 import { builtModules, isStandWall, wallLabel, wallParts } from '../../domain/walls'
-import { canRaise, setWallRaise } from '../../domain/raise'
+import { setWallRaise } from '../../domain/raise'
 import { raiseTop, wallHeight } from '../../rules/rules'
 import { INK_FAINT, LAYER_COLOR } from '../colors'
 import { Button, FlatChoice, IconButton, Section } from '../controls'
@@ -161,7 +163,11 @@ export function WallDrawer(p: Props) {
     if (on && Fe !== undefined) select({})
   }
   const why = wallWhy(v, rules, w, s, { felt: focus === 'felt' && Fe !== undefined ? { m: Fe, page: ui.panel === 'felt-extras' ? 'extras' : 'decor', upper: Up !== undefined } : undefined, twoFaces: fs.length > 1, T, F, S, shelves: chosenShelves(v, sel).length })
-  const hint0 = hintLine(why, wallHint({ O, door: !!O && doorModules.has(O.module), surface, painting, tool, printing, T, F, S, felt: focus === 'felt' ? ui.panel === 'felt-extras' ? 'extras' : 'decor' : undefined, upper: Up !== undefined, extras: ui.panel === 'wall-extras', w }))
+  // Byggeregel N1: the wall, or the textile chosen on it, near a neighbour over the standard top
+  const near = noteFor(neighbourNotes(v, rules), T?.id ?? w.id)
+  // Byggeregel T19: a tall textile lifts the takdrager over it higher, or takes it away
+  const beams = T ? beamNote(v, rules, T.id) : null
+  const hint0 = hintLine(near && neighbourText(near), beams, why, wallHint({ O, door: !!O && doorModules.has(O.module), surface, painting, tool, printing, T, F, S, felt: focus === 'felt' ? ui.panel === 'felt-extras' ? 'extras' : 'decor' : undefined, upper: Up !== undefined, extras: ui.panel === 'wall-extras', w }))
 
   const hint = brushOn ? (t.brushHint ?? BRUSH_HINT) : hint0
 
@@ -256,7 +262,7 @@ export function WallDrawer(p: Props) {
             {ui.panel === 'wall-extras' && <WallFittings v={v} w={w} s={s} brush={brushOn} onBrush={takeBrush} onEdit={p.onEdit} onToast={p.onToast} />}
 
             {/* V18: the whole wall raised with a 94 joined onto its posts, or the standard 2540 */}
-            {(ui.panel === 'wall-decor' || ui.panel === 'wall-extras') && canRaise(w) && (
+            {(ui.panel === 'wall-decor' || ui.panel === 'wall-extras') && (
               <Section title="Høyde" aside={`${w.raise ? raiseTop(w.raise, rules) : Math.round(H * 1000)} mm`}>
                 <FlatChoice<number>
                   label="Veggens høyde"

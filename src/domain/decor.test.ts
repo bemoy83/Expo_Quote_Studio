@@ -85,15 +85,22 @@ describe('textile walls', () => {
     expect(wallTextiles(v)[0].width).toBe(0.5);
   });
 
-  it('height and distance from the floor stay inside the wall height', () => {
+  it('X14: height and distance from the floor stay under the tallest textile, also over the wall top', () => {
     let v = ok(addTextile(row(), RULES, 'side-back', 1, 1)).v;
     expect(textileBox(wallTextiles(v)[0], RULES)).toEqual({ bottom: 0, height: 2.54 });
     v = updateTextile(v, RULES, 't1', { height: 1.5 });
     v = updateTextile(v, RULES, 't1', { bottom: 1.5 });
-    expect(textileBox(wallTextiles(v)[0], RULES)).toEqual({ bottom: 1.5, height: 1.04 });
-    v = updateTextile(v, RULES, 't1', { bottom: 0 });
+    // Over the 2540 wall top is allowed: the textile is its own unit
+    expect(textileBox(wallTextiles(v)[0], RULES)).toEqual({ bottom: 1.5, height: 1.5 });
+    v = updateTextile(v, RULES, 't1', { bottom: 0, height: 3.04 });
+    expect(textileBox(wallTextiles(v)[0], RULES)).toEqual({ bottom: 0, height: 3.04 });
     v = updateTextile(v, RULES, 't1', { height: 9 });
+    expect(wallTextiles(v)[0].height).toBe(RULES.textile.maxHeight);
+    v = updateTextile(v, RULES, 't1', { height: 2.54 });
     expect(wallTextiles(v)[0].height).toBeUndefined();
+    // The limit is a value: another one needs no code
+    const lower = { ...RULES, textile: { ...RULES.textile, maxHeight: 4 } };
+    expect(wallTextiles(updateTextile(v, lower, 't1', { height: 9 }))[0].height).toBe(4);
   });
 
   it('an opening put under a textile clips it, removing the wall removes it', () => {
@@ -213,7 +220,8 @@ describe('drag and drop on a wall (3D)', () => {
     v = updateTextile(v, RULES, 't1', { width: 2, height: 1.5 });
     const start = wallTextiles(v)[0];
     expect(wallTextiles(moveTextileBy(v, RULES, start, 1.04, 0.5))[0]).toMatchObject({ from: 1, width: 2, bottom: 0.5 });
-    expect(wallTextiles(moveTextileBy(v, RULES, start, 9, 9))[0]).toMatchObject({ from: 4, width: 2, bottom: 1 });
+    // Up to the tallest textile, over the wall top (X14)
+    expect(wallTextiles(moveTextileBy(v, RULES, start, 9, 9))[0]).toMatchObject({ from: 4, width: 2, bottom: 3.5 });
   });
 
   it('dragging a decal moves it to the felt under it, never onto an opening', () => {

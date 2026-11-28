@@ -30,6 +30,8 @@ const ROWS: Row[] = [
   // kostgrunnlag
   ['VAIER-V', 'Vaieroppheng, V med to takpunkter', 'Beslag', 'stk', 300],
   ['OYEBOLT-M5', 'Øyebolt M5', 'Beslag', 'stk', 10],
+  // A tall textile frame's wire (Byggeregel X14, Bjørn 28.11.2026): placeholder
+  ['OYEBOLT-GJENNOM', 'Gjennomgående øyebolt for 43TX', 'Beslag', 'stk', 15],
   // Textile with silicone edge, per m² incl. bleed. Blackback is the default for print (Bjørn 7.11.2026); Samba goes in
   // front of LED, which the app does not draw yet
   ['TRYKK-BLACKBACK', 'Trykt tekstil Blackback med silikonkant', 'Tekstil', 'm²', 180],

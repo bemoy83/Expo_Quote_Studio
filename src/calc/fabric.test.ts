@@ -15,27 +15,28 @@ describe('InFrame frame piece', () => {
     expect(p.area).toBeCloseTo(1.01 * 2.58);
   });
   it('braces when the width passes the max brace distance', () => {
-    // At most 2 m between braces, the frame sides count as braces (Bjørn 7.11.2026)
+    // Spread by the foot plate rule, at most 3 m between uprights, the frame sides count (Bjørn 28.11.2026: «hver 2 m» is
+    // an old rule)
     expect(framePiece(2000, S).braces).toBeNull();
-    expect(framePiece(3000, S).braces).toEqual({ qty: 1, length: 2460 });
+    expect(framePiece(3000, S).braces).toBeNull();
     expect(framePiece(4000, S).braces).toEqual({ qty: 1, length: 2460 });
-    expect(framePiece(5000, S).braces).toEqual({ qty: 2, length: 2460 });
+    expect(framePiece(5000, S).braces).toEqual({ qty: 1, length: 2460 });
   });
   it('past 5 m the rails are spliced with 609 and braced by the splice, as on foot plates (one product)', () => {
     const p = framePiece(6000, S);
-    expect(p).toMatchObject({ W: 5970, railCuts: [4970, 1000], braces: { qty: 4, length: 2460 } });
+    expect(p).toMatchObject({ W: 5970, railCuts: [4970, 1000], braces: { qty: 3, length: 2460 } });
     expect(p.parts.loose).toEqual([
       ['617', 4],
       ['609', 2],
       // Byggeregel X2: 520 by the foot plate rule, no more than 3 m apart
       ['520', 3],
     ]);
-    expect(p.braceAt).toEqual([1607, 3213, 4820, 5120]);
+    expect(p.braceAt).toEqual([2410, 4820, 5120]);
     expect(framePiece(4000, S)).toMatchObject({ railCuts: [3970], braceAt: [1985] });
     expect(framePiece(4000, S).parts.loose.map(([c]) => c)).toEqual(['617', '520']);
   });
   it('a lower textile wall uses its own height', () => {
-    const p = framePiece(3000, S, 1500);
+    const p = framePiece(4000, S, 1500);
     expect(p).toMatchObject({ H: 1500, ph: 1540, braces: { qty: 1, length: 1420 } });
   });
   it('file size at scale with bleed', () => {

@@ -3,12 +3,12 @@ import { wallLabel } from '../../domain/walls';
 import { wallDirection } from '../../domain/grid';
 import { RECIPES } from '../../foga/recipes';
 import { railHeight } from '../../foga/plates';
-import type { InFrameParams, Rules } from '../../rules/rules';
+import { raiseTop, wallHeight, type InFrameParams, type Rules } from '../../rules/rules';
 import { freeTrims, placeFrames } from './placement';
 import { onWallMount, wallPiece, type FramePiece } from './inFrame';
-import { cornerPosts, freeFrames, runFrame, type FreeFrame, type HeldEnds } from './free';
+import { cornerPosts, freeFrames, runFrame, supportPoints, type FreeFrame, type HeldEnds } from './free';
 import { cornerEnds } from '../../domain/textile/free';
-import { fullHeight, partsLm, postHeight, printFileName } from './common';
+import { fullHeight, partsLm, postPieces, printFileName } from './common';
 import { freeTextiles, mountedOn, outFace, wallTextiles } from '../../domain/textile/mounts';
 
 export interface ProductionPiece extends FramePiece {
@@ -30,6 +30,14 @@ export interface ProductionPiece extends FramePiece {
   motif: string | null;
   /** Print file name, for a printed textile only. */
   fileName: string | null;
+  /** Ceiling wires holding a frame that reaches over its wall's top (Byggeregel X14), by the foot plate rule. */
+  wires?: number;
+  /** Where the wires are, mm along the frame from its start (as the braces). */
+  wireAt?: number[];
+  /** The same, mm along its wall from the wall's start: for the plan and the elevation. */
+  wireAlong?: number[];
+  /** The frame's top from the floor, mm. */
+  top: number;
 }
 
 export interface Production {
@@ -55,11 +63,12 @@ function alongWall(w: Wall, p: readonly [number, number]): number {
   return (p[0] - w.from[0]) * dx + (p[1] - w.from[1]) * dy;
 }
 
-/** Height in mm for the frame: the textile's own height when lower than the full wall, else full height. */
+/** Height in mm for the frame: the textile's own height when it has one other than full height (lower, or taller over
+ *  the wall's top, Byggeregel X14), else undefined for full height. */
 export function textileHeightMm(t: TextileWall, s: InFrameParams): number | undefined {
   if (t.height === undefined) return undefined;
   const h = mm(t.height);
-  return h < fullHeight(s) ? h : undefined;
+  return h !== fullHeight(s) ? h : undefined;
 }
 
 export function production(v: Variant, rules: Rules, customer: string): Production {
@@ -79,6 +88,17 @@ export function production(v: Variant, rules: Rules, customer: string): Producti
     const H = textileHeightMm(t, s) ?? fullHeight(s);
     const x = runFrame(run, onWallMount(r, outFace(run, m.wall, m.side), pos, H), r, s, customer, corners.get(t.id));
     const f = x.faces[0];
+    // Byggeregel X14: over the wall's top the posts do not hold it, a wire from the ceiling does, spread by the foot
+    // plate rule along the frame (as S3, S9); a 92LTX corner holds that end
+    const top = mm(t.bottom ?? 0) + H;
+    const over = top > (m.wall.raise ? raiseTop(m.wall.raise, rules) : mm(wallHeight(rules)));
+    const wireAt = over ? supportPoints(x.length, r.feet.support, x.corners) : [];
+    const wires = wireAt.length;
+    // Along the wall: the run's start, the shift in an inner corner (X10), then along the run one way or the other
+    const [wx, wy] = wallDirection(m.wall);
+    const sign = (run.to[0] - run.from[0]) * wx + (run.to[1] - run.from[1]) * wy >= 0 ? 1 : -1;
+    const start = mm(alongWall(m.wall, run.from)) + (shiftOf.get(t.id) ? mm(shiftOf.get(t.id)!) : 0);
+    const wireAlong = wireAt.map((a) => start + sign * a);
     pieces.push({
       ...wallPiece(x, mm(t.width)),
       pos,
@@ -92,6 +112,8 @@ export function production(v: Variant, rules: Rules, customer: string): Producti
       fill: f.fill,
       motif: f.motif,
       fileName: f.fileName,
+      top,
+      ...(wires ? { wires, wireAt, wireAlong } : {}),
     });
   }
   // Free-standing runs stop at a frame on the wall they end at (byggeregel X11)
@@ -99,10 +121,7 @@ export function production(v: Variant, rules: Rules, customer: string): Producti
   const free = freeFrames(v, r, s, customer, trims, heldEnds(v, trims));
   // The 92LTX stands on an end cap and has one on top, so it is cut shorter than the frames it joins
   const heights = new Map<number, number>();
-  for (const p of cornerPosts(v)) {
-    const H = postHeight(p.H);
-    heights.set(H, (heights.get(H) ?? 0) + 1);
-  }
+  for (const p of cornerPosts(v)) for (const H of postPieces(p.H)) heights.set(H, (heights.get(H) ?? 0) + 1);
   const posts = [...heights].map(([H, qty]) => ({ qty, H }));
   return {
     pieces,

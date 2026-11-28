@@ -147,7 +147,8 @@ export interface TextilePatch {
 
 /**
  * Change a textile. `mode` decides how a move past a limit is handled: 'move' keeps the width and stops at the edge,
- * 'size' keeps the start and clips the width. Height and bottom are kept inside the wall height.
+ * 'size' keeps the start and clips the width. Height and bottom are kept under the tallest textile (Byggeregel X14):
+ * a textile on a wall is its own unit and may stand over the wall's top.
  */
 export function updateTextile(v: Variant, rules: Rules, id: string, patch: TextilePatch, mode: 'move' | 'size' = 'size'): Variant {
   const t = wallTextiles(v).find((x) => x.id === id);
@@ -161,10 +162,11 @@ export function updateTextile(v: Variant, rules: Rules, id: string, patch: Texti
   const placed = place(spans, from, width, rules.textile.minWidth, mode);
   if (!placed) return v;
   const full = fullTextileHeight(rules);
+  const max = rules.textile.maxHeight;
   const minH = rules.textile.minWidth;
   const cur = textileBox(t, rules);
-  const bottom = r1(clamp(patch.bottom ?? cur.bottom, 0, full - minH));
-  const height = r3(clamp(patch.height ?? cur.height, minH, full - bottom));
+  const bottom = r1(clamp(patch.bottom ?? cur.bottom, 0, max - minH));
+  const height = r3(clamp(patch.height ?? cur.height, minH, max - bottom));
   const { motif: _m, height: _h, bottom: _b, fill: _fl, ...rest } = t;
   const motif = patch.motif === undefined ? t.motif : patch.motif ?? undefined;
   // A motif is a print: setting one makes the textile printed again
@@ -179,7 +181,7 @@ export function updateTextile(v: Variant, rules: Rules, id: string, patch: Texti
     from: placed[0],
     width: placed[1],
     ...(bottom > EPS ? { bottom } : {}),
-    ...(bottom > EPS || height < full - EPS ? { height } : {}),
+    ...(bottom > EPS || Math.abs(height - full) > EPS ? { height } : {}),
     ...(motif ? { motif } : {}),
     ...(fill !== 'print' ? { fill } : {}),
   };
@@ -222,12 +224,13 @@ export function textileAt(v: Variant, wallId: string, s: FaceSide, t: number): T
 
 /**
  * Drag a textile along its face: `dt` metres along the wall, `dh` metres up, both from `start` (the textile when the
- * drag began). Width and height are kept; it stops at openings, junctions, other frames, the floor and the wall top.
+ * drag began). Width and height are kept; it stops at openings, junctions, other frames, the floor and the tallest a
+ * textile may reach (X14).
  */
 export function moveTextileBy(v: Variant, rules: Rules, start: TextileWall, dt: number, dh: number): Variant {
   const moved = updateTextile(v, rules, start.id, { from: start.from + dt }, 'move');
   const { bottom, height } = textileBox(start, rules);
-  const top = Math.floor((fullTextileHeight(rules) - height + EPS) * 10) / 10;
+  const top = Math.floor((rules.textile.maxHeight - height + EPS) * 10) / 10;
   return updateTextile(moved, rules, start.id, { bottom: clamp(bottom + dh, 0, Math.max(0, top)) });
 }
 

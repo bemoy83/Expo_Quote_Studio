@@ -67,7 +67,7 @@ describe('tekstilvegger', () => {
   /** A frame on a wall: rails in these cuts, two sides, 4 × 617, 609 top and bottom per splice, 2 × 520. */
   const onWall = (pos: string, railCuts: number[], braces = { qty: 0, length: 0 }) => ({
     pos,
-    parts: frameParts(RECIPES.textileFrame, railCuts, { qty: 2, length: 2540 }, braces, [
+    parts: frameParts(RECIPES.textileFrame, railCuts, { qty: 2, cuts: [2540] }, braces, [
       ['617', 4],
       ['609', 2 * (railCuts.length - 1)],
       ['520', 2],

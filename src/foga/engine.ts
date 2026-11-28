@@ -186,7 +186,11 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   const raisedCc = new Map<number, number>();
   for (const m of s.raises?.modules ?? []) raisedCc.set(m.cc ?? z.cc, (raisedCc.get(m.cc ?? z.cc) ?? 0) + 1);
   for (const [cc, n] of [...raisedCc].sort(([a], [b]) => b - a)) unit(BOM_GROUP.rails, 'Toppskinne', rz.topRail, between(cc), rz.coupling, n, 'hevet vegg');
-  for (const m of s.raises?.modules ?? []) putPlate(raisePlate(m, r, z));
+  for (const m of s.raises?.modules ?? []) {
+    putPlate(raisePlate(m, r, z));
+    // Byggeregel V20: back to back with it, toward the neighbour, a plate in the organiser's colour
+    if (m.back) putPlate({ ...raisePlate({ ...m, plate: m.back }, r, z), note: ' · øvre felt, mot nabo' });
+  }
   // Byggeregel S10: a ceiling wire (V-oppheng 4300) on a raised wall, fixed in the top rail's channel with an eyebolt
   // M5 in a 503; the eyebolt has no art.nr yet (placeholder)
   const wire = rz.wire;
@@ -197,6 +201,11 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
     { artnr: '', name: `${wire.eyebolt} med ${wire.nut}`, detail: `${wire.eyebolt} (plassholder, uten art.nr) · 1 × ${wire.nut} (${fogaPart(wire.nut).artnr}) · i toppskinnens kanal`, note: 'feste for vaier', preassembled: true },
     s.wires ?? 0,
   );
+  // Byggeregel X14: a textile frame over its wall's top hangs from the same V, fixed with a through-eyebolt in the
+  // frame's top rail (placeholder, no art.nr)
+  const tw = r.textileFrame.wire;
+  put(BOM_GROUP.posts, 'wire-textile', { artnr: '', name: 'Vaieroppheng, V til taket', detail: 'to punkter i taket på tvers av rammen, ett i rammens toppskinne', note: 'støttevaier for høy tekstil', preassembled: true }, s.textileWires ?? 0);
+  put(BOM_GROUP.posts, 'wire-textile-eyebolt', { artnr: '', name: tw.eyebolt, detail: `${tw.eyebolt} (plassholder, uten art.nr) · gjennom rammens toppskinne`, note: 'feste for vaier', preassembled: true }, s.textileWires ?? 0);
 
   // Takdrager: 292 between the posts with two 600 in each end, one piece per length
   for (const b of s.beams) unit(BOM_GROUP.beams, 'Takdrager', r.beam.profile, between(b.lengthMm), r.beam.coupling, 1);
@@ -235,7 +244,7 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   hookUnit('hook-two', 'toveis', 2, s.beamHooks?.twoWay ?? 0);
   // Lifted over a textile wall: a piece of 94 on top of each post under the beam (609 down into the post), and at a hook
   // point between a lifted beam and one that is not, the same piece coupled to the other beam with a 600
-  const lift = r.beam.lift;
+  const lift = { ...r.beam.lift, length: s.beamLift?.length ?? r.beam.lift.length };
   const liftPiece = (key: string, coupling: string, note: string, qty: number) =>
     put(
       BOM_GROUP.beams,
@@ -243,10 +252,12 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
       { artnr: '', name: `Skjøt ${lift.profile}, ${lift.length} mm, med ${coupling}`, detail: `${lift.profile} × ${lift.length} mm · 1 × ${coupling} (${fogaPart(coupling).artnr}) · ${note}`, note, preassembled: true },
       qty,
     );
-  liftPiece('lift-post', lift.post, 'på stolpe, takdrager over tekstilvegg', s.beamLift?.posts ?? 0);
-  liftPiece('lift-hook', lift.hook, 'oppå tverrgående takdrager, takdrager over tekstilvegg', s.beamLift?.hooks ?? 0);
+  // Byggeregel T19: the piece is as long as the lift, one key per length
+  const liftKey = (k: string) => (lift.length === r.beam.lift.length ? k : `${k}-${lift.length}`);
+  liftPiece(liftKey('lift-post'), lift.post, 'på stolpe, takdrager over tekstilvegg', s.beamLift?.posts ?? 0);
+  liftPiece(liftKey('lift-hook'), lift.hook, 'oppå tverrgående takdrager, takdrager over tekstilvegg', s.beamLift?.hooks ?? 0);
   // Byggeregel T15: a lifted beam ending on a wall between its posts, the same piece on top of the wall
-  liftPiece('lift-wall', lift.hook, 'oppå vegg, takdrager over tekstilvegg', s.beamLift?.walls ?? 0);
+  liftPiece(liftKey('lift-wall'), lift.hook, 'oppå vegg, takdrager over tekstilvegg', s.beamLift?.walls ?? 0);
 
   // Tekstilvegger, one frame on a wall or on foot plates (Bjørn 7.11.2026), each counted once in its parts
   // (calc/textile/common.ts): 43TX per cut length in one line, a 92LTX post per corner, the upright braces in 90 with

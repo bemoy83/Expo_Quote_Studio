@@ -1,7 +1,7 @@
 // Stand sketch → Foga structure. Built from the same derivations as calc (built modules, beam layout, InFrame
 // sizes); calc passes its own so the quote, the picking list and the parts list count from one structure.
 // Byggeregel P3 (docs/byggeregler.md).
-import { liftBeams, withJoins } from '../calc/beams/beamLift';
+import { liftBeams, liftCount, withJoins } from '../calc/beams/beamLift';
 import { beamHooks, hookCount } from '../calc/beams/beamHooks';
 import { variantBeams } from '../calc/beams/beams';
 import type { BeamLayout } from '../calc/beams/beamSegments';
@@ -23,7 +23,7 @@ export interface Derived {
   /** Hooks a takdrager hangs on another beam or a wall's top rail with, by kind (calc/beams/beamHooks.ts). */
   hooks?: { oneWay: number; twoWay: number };
   /** Takdrager lifted over a textile wall: posts extended, mixed-level hook points and ends on a wall (T15). */
-  lift?: { posts: number; hooks: number; walls?: number };
+  lift?: { posts: number; hooks: number; walls?: number; length?: number };
   production: Production;
   /** Plates swapped into stand walls the organiser builds. */
   swaps?: string[];
@@ -42,16 +42,18 @@ export interface Derived {
   wires?: number;
   /** Every built module, the organiser's too: a raise is always the exhibitor's (Byggeregel V18). Defaults to `mods`. */
   all?: BuiltModule[];
+  /** Raised modules with a second upper plate back to back toward a neighbour, and its RAL (Byggeregel V20). */
+  back?: ReadonlyMap<BuiltModule, string>;
 }
 
 /** The raised modules and the 94 joined onto their posts (Byggeregel V18). */
-export function raisesOf(mods: readonly BuiltModule[]): FogaStructure['raises'] | undefined {
+export function raisesOf(mods: readonly BuiltModule[], back: ReadonlyMap<BuiltModule, string> = new Map()): FogaStructure['raises'] | undefined {
   const raised = mods.filter((m) => m.raise);
   if (!raised.length) return undefined;
   const byLen = new Map<number, number>();
   for (const { len } of raisedPosts(raised).values()) byLen.set(len, (byLen.get(len) ?? 0) + 1);
   return {
-    modules: raised.map((m) => ({ plate: m.raise!.ral, len: m.raise!.len, ...(m.cc < 1 - 1e-6 && { cc: Math.round(m.cc * 1000) }) })),
+    modules: raised.map((m) => ({ plate: m.raise!.ral, len: m.raise!.len, ...(m.cc < 1 - 1e-6 && { cc: Math.round(m.cc * 1000) }), ...(back.has(m) && { back: back.get(m) }) })),
     posts: [...byLen].sort(([a], [b]) => b - a).map(([len, qty]) => ({ len, qty })),
   };
 }
@@ -69,8 +71,11 @@ export const beamSpecs = (b: BeamLayout): BeamSpec[] =>
 /** The half metre of a takdrager, centres, mm (Byggeregel T18). */
 const HALF_MM = 500;
 
+/** Byggeregel X14: the wires holding frames over their wall's top. */
+export const textileWires = (p: Production) => p.pieces.reduce((a, f) => a + (f.wires ?? 0), 0);
+
 export function structureOf(d: Derived): FogaStructure {
-  const raises = raisesOf(d.all ?? d.mods);
+  const raises = raisesOf(d.all ?? d.mods, d.back);
   return {
     posts: d.posts,
     modules: d.mods.map((m) => ({ plate: m.plate, opening: !!m.opening, ...(m.opening && d.curtain?.(m.opening.product) && { curtain: true }), ...(m.cc < 1 - 1e-6 && { cc: Math.round(m.cc * 1000) }) })),
@@ -78,7 +83,7 @@ export function structureOf(d: Derived): FogaStructure {
     frames: [...d.production.pieces, ...d.production.free].map((f) => ({ pos: f.pos, parts: f.parts })),
     ...(d.production.cornerPosts.length ? { cornerPosts: d.production.cornerPosts } : {}),
     ...(d.hooks && d.hooks.oneWay + d.hooks.twoWay ? { beamHooks: d.hooks } : {}),
-    ...(d.lift && d.lift.posts + d.lift.hooks + (d.lift.walls ?? 0) ? { beamLift: { posts: d.lift.posts, hooks: d.lift.hooks, ...(d.lift.walls ? { walls: d.lift.walls } : {}) } } : {}),
+    ...(d.lift && d.lift.posts + d.lift.hooks + (d.lift.walls ?? 0) ? { beamLift: { posts: d.lift.posts, hooks: d.lift.hooks, ...(d.lift.walls ? { walls: d.lift.walls } : {}), ...(d.lift.length ? { length: d.lift.length } : {}) } } : {}),
     ...(d.swaps?.length ? { swaps: d.swaps } : {}),
     ...(d.wallFeet ? { wallFeet: d.wallFeet } : {}),
     ...(d.barePosts ? { barePosts: d.barePosts } : {}),
@@ -87,6 +92,7 @@ export function structureOf(d: Derived): FogaStructure {
     ...(d.counterInserts ? { counterInserts: d.counterInserts } : {}),
     ...(raises ? { raises } : {}),
     ...(d.wires ? { wires: d.wires } : {}),
+    ...(textileWires(d.production) ? { textileWires: textileWires(d.production) } : {}),
   };
 }
 
@@ -95,11 +101,11 @@ export function fromVariant(v: Variant, rules: Rules): FogaStructure {
   const mods = builtModules(v);
   const points = wallPoints(mods);
   const { all: laid } = variantBeams(v, mods, points, rules.beam.max);
-  const posts = new Set([...points.keys(), ...laid.posts.keys()]).size;
   const lift = liftBeams(v, rules, laid, points, mods);
   const beams = withJoins(laid, lift);
+  const posts = new Set([...points.keys(), ...beams.posts.keys()]).size;
   const hooks = hookCount(beamHooks(beams, points, lift));
-  return structureOf({ mods, posts, beams, hooks, lift: { posts: lift.posts.length, hooks: lift.hooks.length, walls: lift.walls.length }, production: production(v, rules, ''), shelves: shelfBrackets(v, rules), counters: builtCounterParts(v) });
+  return structureOf({ mods, posts, beams, hooks, lift: liftCount(lift), production: production(v, rules, ''), shelves: shelfBrackets(v, rules), counters: builtCounterParts(v) });
 }
 
 /** Sizes from the rules, mm: post = system wall height without feet (2490), cc 1000. */

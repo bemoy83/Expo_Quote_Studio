@@ -9,7 +9,9 @@ import { foilCenter, foilsOn } from '../../../domain/decor'
 import { doorLevels, doorRal, doorWindows } from '../../../domain/doors'
 import { felt, type FaceSide } from '../../../domain/faces'
 import { moduleCc, moduleStart } from '../../../domain/grid'
-import { raiseDrawing, wiredPosts } from '../raiseDrawing'
+import { raiseDrawing, wiredPosts, WIRE_ROOM } from '../raiseDrawing'
+import { production } from '../../../calc/textile/production'
+import { mountedOn } from '../../../domain/textile/mounts'
 import { cropWindow, onDoorPart, plateCrop } from '../../../domain/print'
 import { textileBox, textilesOn } from '../../../domain/textile/inFrame'
 import { cornerLayout } from '../../../domain/shelves/corners'
@@ -149,7 +151,15 @@ export function WallElevation(p: Props) {
   const wired = useMemo(() => wiredPosts(v), [v])
   const raise = raiseDrawing(w, mods, p.parts, u, wired)
   const above = raise.above
-  const fr = frame(size, L, H, items, { labels, steady, above: raise.headroom })
+  // A textile frame may stand over the wall's top (Byggeregel X14): the drawing takes in the tallest on either face
+  const overTop = Math.max(0, ...p.fs.flatMap((f) => textilesOn(v, w.id, f).map((t) => { const b = textileBox(t, rules); return b.bottom + b.height - H })))
+  // ...and the ceiling wires holding a frame over its wall's top (X14), over its top rail
+  const textileWires = useMemo(
+    () => production(v, rules, '').pieces.filter((q) => q.wireAlong && mountedOn(v, q.textileId)?.wall.id === w.id).flatMap((q) => q.wireAlong!.map((a) => ({ x: s === 1 ? a / 1000 : L - a / 1000, len: q.top / 1000 - H }))),
+    [v, w.id, H, L, s],
+  )
+  const wires = [...raise.wires, ...textileWires]
+  const fr = frame(size, L, H, items, { labels, steady, above: Math.max(raise.headroom, overTop + (textileWires.length ? WIRE_ROOM : 0)) })
   const sc = planScale(1 / fr.u, {})
 
   /** Pointer handlers for a plate (or a door) in the drawing while a tool is out: click, or with the brush press and sweep. */
@@ -299,7 +309,7 @@ export function WallElevation(p: Props) {
             return <Plate key={i} at={st(i)} cc={ccOf(i)} fill={plateColor(m?.plate ?? wallRal(v, w))} x={spanX} H={H} />
           })}
           <Posts xs={postsAt.map(u)} H={H} />
-          {raise.felts.length > 0 && <Raise felts={raise.felts} posts={raise.posts} wires={raise.wires} x={spanX} />}
+          {(raise.felts.length > 0 || wires.length > 0) && <Raise felts={raise.felts} posts={raise.posts} wires={wires} x={spanX} />}
           {/* The upper felts take the tools as the plates do (V20): a surface of their own for the brush */}
           {painting &&
             mods.map((m, i) => {

@@ -2,11 +2,16 @@
 // the posts extended under them and the hook points between levels. Byggeregler T13–T17 (docs/byggeregler.md). A clash is the beam's own box (between
 // the posts' faces, its width across) overlapping a frame's box in plan, for a frame that reaches the beam's underside.
 // A lifted beam lies one beam height over the others, so where it crosses an unlifted beam, or a wall between its posts,
-// the lengths meeting there are joined into one whole length, up to the max length (T16).
+// the lengths meeting there are joined into one whole length, up to the max length (T16). A lifted beam goes no higher
+// than `rules.beam.maxTop` (T19): a frame reaching past what a beam that high clears takes the beam away, and the walls
+// it held get their support by the S rules.
 import { pointKey, type Module } from '../../domain/grid';
+import { builtModules, wallPoints } from '../../domain/walls';
+import { variantBeams } from './beams';
 import { runDirection } from '../../domain/textile/free';
 import type { Point, Variant } from '../../domain/types';
 import { wallHeight, type Rules } from '../../rules/rules';
+import { RECIPES } from '../../foga/recipes';
 import type { BeamLayout, BeamSegment } from './beamSegments';
 import { onSegment } from './beamSegments';
 import { boxOf, overlaps, placement, type Box } from '../textile/placement';
@@ -24,27 +29,63 @@ export interface BeamLift {
   walls: Point[];
   /** Lengths joined into one whole length (Byggeregel T16): each old length → the one replacing it. */
   joined: ReadonlyMap<BeamSegment, BeamSegment>;
+  /** How far the lifted beams go up, mm: the 94 piece on each post is this long (T13, T19). All lifted beams lie at one
+   *  height (T16). */
+  length: number;
+  /** Lengths taken away under a frame too tall to lift over, and the ones hanging on them (Byggeregel T19). */
+  removed: ReadonlySet<BeamSegment>;
+  /** The textile runs that lift a beam, and those that take one away. */
+  by: { lifted: ReadonlySet<string>; removed: ReadonlySet<string> };
 }
 
-export const NO_LIFT: BeamLift = { segments: new Set(), posts: [], hooks: [], walls: [], joined: new Map() };
+export const NO_LIFT: BeamLift = { segments: new Set(), posts: [], hooks: [], walls: [], joined: new Map(), length: RECIPES.beam.lift.length, removed: new Set(), by: { lifted: new Set(), removed: new Set() } };
 
-/** A layout with the lengths the lift joined (Byggeregel T16) replaced by the whole lengths. */
-export function withJoins<L extends BeamLayout>(layout: L, lift: Pick<BeamLift, 'joined'>): L {
-  if (!lift.joined.size) return layout;
-  const segments = [...new Set(layout.segments.map((s) => lift.joined.get(s) ?? s))];
-  return { ...layout, segments };
+/** What the lift takes, counted for the structure: the 94 pieces, and their length when not the recipe's (T19). */
+export function liftCount(lift: BeamLift): { posts: number; hooks: number; walls: number; length?: number } {
+  const n = { posts: lift.posts.length, hooks: lift.hooks.length, walls: lift.walls.length };
+  return lift.length === RECIPES.beam.lift.length ? n : { ...n, length: lift.length };
+}
+
+/**
+ * A layout with the lengths the lift took away (Byggeregel T19) left out, with the posts and foot plates only they
+ * needed, and the lengths it joined (T16) replaced by the whole lengths.
+ */
+export function withJoins<L extends BeamLayout & { feet?: readonly { at: Point }[] }>(layout: L, lift: Pick<BeamLift, 'joined'> & Partial<Pick<BeamLift, 'removed'>>): L {
+  const removed = lift.removed ?? new Set();
+  if (!lift.joined.size && !removed.size) return layout;
+  const kept = layout.segments.filter((s) => !removed.has(s));
+  const segments = [...new Set(kept.map((s) => lift.joined.get(s) ?? s))];
+  if (!removed.size) return { ...layout, segments };
+  const ends = new Set(kept.flatMap((s) => [pointKey(s.from), pointKey(s.to)]));
+  const gone = new Set([...layout.segments].filter((s) => removed.has(s)).flatMap((s) => [pointKey(s.from), pointKey(s.to)]).filter((k) => !ends.has(k)));
+  const posts = new Map([...layout.posts].filter(([k]) => !gone.has(k)));
+  return {
+    ...layout,
+    segments,
+    posts,
+    lm: segments.reduce((a, s) => a + s.length, 0),
+    ...(layout.feet ? { feet: layout.feet.filter((f) => !gone.has(pointKey(f.at))) } : {}),
+  };
 }
 
 const EPS = 1e-6;
 
+/** A frame that reaches up into the beams: its plan box, the run, and how high it goes, m. */
+export interface Footprint {
+  box: Box;
+  id: string;
+  top: number;
+}
+
 /** Plan footprints of the textile frames that reach up into the beams, where they stand (calc/textile/placement.ts). */
-export function textileFootprints(v: Variant, rules: Rules): Box[] {
+export function textileFootprints(v: Variant, rules: Rules): Footprint[] {
   const depth = rules.textile.depth;
   const underside = wallHeight(rules) - rules.beam.height;
   const { frames, trims } = placement(v, rules);
-  const out = frames.filter((f) => f.top > underside + EPS).map((f) => f.box);
-  // Free-standing frames are full height
+  const out: Footprint[] = frames.filter((f) => f.top > underside + EPS).map((f) => ({ box: f.box, id: f.t.id, top: f.top }));
   for (const t of freeTextiles(v)) {
+    const top = (t.bottom ?? 0) + (t.height ?? wallHeight(rules) - (t.bottom ?? 0));
+    if (top <= underside + EPS) continue;
     const [dx, dy] = runDirection(t);
     const trim = trims.get(t.id);
     // A 92LTX corner reaches a little past the run's end: let the box run half a frame depth further at a free end
@@ -52,10 +93,23 @@ export function textileFootprints(v: Variant, rules: Rules): Box[] {
     const b0 = trim?.to ? trim.to : -depth / 2;
     const a: Point = [t.from[0] + dx * a0, t.from[1] + dy * a0];
     const b: Point = [t.to[0] - dx * b0, t.to[1] - dy * b0];
-    out.push(boxOf(a, b, -depth / 2, depth / 2));
+    out.push({ box: boxOf(a, b, -depth / 2, depth / 2), id: t.id, top });
   }
   return out;
 }
+
+/**
+ * The 94 lengths a lifted beam can stand on (Byggeregel T19), mm: the lift piece, then the raise lengths (V19), as far as
+ * a beam top of `rules.beam.maxTop`. The shortest that clears `need` mm, or null.
+ */
+export function liftLength(rules: Rules, need: number): number | null {
+  const max = Math.round((rules.beam.maxTop - wallHeight(rules)) * 1000);
+  const steps = [RECIPES.beam.lift.length, ...rules.wall.raise.lengths].filter((l) => l <= max).sort((a, b) => a - b);
+  return steps.find((l) => l >= need - 0.5) ?? null;
+}
+
+/** The highest a textile frame may reach under a lifted beam (Byggeregel T19): the beam's top limit less its height, m. */
+export const liftClear = (rules: Rules) => rules.beam.maxTop - rules.beam.height;
 
 const horizontal = (s: BeamSegment) => Math.abs(s.from[1] - s.to[1]) < EPS;
 
@@ -92,30 +146,57 @@ export function liftBeams(v: Variant, rules: Rules, all: BeamLayout, wallPosts: 
   const frames = wallTextiles(v).length || freeTextiles(v).length ? textileFootprints(v, rules) : [];
   const half = rules.wall.post / 2;
   const t = rules.beam.thickness / 2;
-  // The beam between the posts' faces (cut centres − 40), its width across
-  const overTextile = (s: BeamSegment) => {
+  const underside = wallHeight(rules) - rules.beam.height;
+  // The beam between the posts' faces (cut centres − 40), its width across: the frames under it
+  const under = (s: BeamSegment) => {
     const L = s.length;
     const d: Point = [(s.to[0] - s.from[0]) / L, (s.to[1] - s.from[1]) / L];
     const a: Point = [s.from[0] + d[0] * half, s.from[1] + d[1] * half];
     const b: Point = [s.to[0] - d[0] * half, s.to[1] - d[1] * half];
     const box = boxOf(a, b, -t, t);
-    return frames.some((f) => overlaps(box, f));
+    return frames.filter((f) => overlaps(box, f.box));
   };
+  const frameTop = new Map(all.segments.map((s) => [s, under(s)]));
+  const top = (s: BeamSegment) => Math.max(0, ...frameTop.get(s)!.map((f) => f.top));
+  // Byggeregel T19: over a frame higher than a lifted beam clears, the length is taken away, and with it every length
+  // hanging on it (T9), on and on
+  const clear = liftClear(rules);
+  const removed = new Set(all.segments.filter((s) => top(s) > clear + EPS));
+  const onPost = (k: string) => all.posts.has(k) || wallPosts.has(k);
+  for (let grew = removed.size > 0; grew; ) {
+    grew = false;
+    for (const s of all.segments) {
+      if (removed.has(s)) continue;
+      const hangsOnRemoved = [s.from, s.to].some((p) => !onPost(pointKey(p)) && [...removed].some((r) => onSegment(r, p)));
+      if (hangsOnRemoved) {
+        removed.add(s);
+        grew = true;
+      }
+    }
+  }
+  const kept = all.segments.filter((s) => !removed.has(s));
   // A wall across the length between its posts, with no post, hook or joint there to rest on (T17)
   const overWall = (s: BeamSegment) => {
     const r: Ray = { o: s.from, d: [(s.to[0] - s.from[0]) / s.length, (s.to[1] - s.from[1]) / s.length] };
     return wallCrossings(r, mods, wallPosts).some((c) => !c.post && c.t > EPS && c.t < s.length - EPS);
   };
+  const overTextile = (s: BeamSegment) => top(s) > underside + EPS;
   const clashes = (s: BeamSegment) => overTextile(s) || overWall(s);
   const raised = new Set<BeamSegment>();
-  const runs = runsOf(all.segments);
+  const runs = runsOf(kept);
   for (const run of runs) if (run.some(clashes)) run.forEach((s) => raised.add(s));
-  if (!raised.size) return NO_LIFT;
+  const by = {
+    lifted: new Set([...raised].flatMap((s) => frameTop.get(s)!.map((f) => f.id))),
+    removed: new Set(all.segments.filter((s) => top(s) > clear + EPS).flatMap((s) => frameTop.get(s)!.filter((f) => f.top > clear + EPS).map((f) => f.id))),
+  };
+  // One height for every lifted beam (T16): the shortest 94 that clears the tallest frame under one (T19)
+  const need = Math.round(Math.max(0, ...[...raised].map((s) => top(s) - underside)) * 1000);
+  const length = liftLength(rules, need) ?? RECIPES.beam.lift.length;
+  if (!raised.size) return { ...NO_LIFT, removed, by };
 
-  const onPost = (k: string) => all.posts.has(k) || wallPosts.has(k);
-  const joined = joinWhole(all.segments, runs, raised, onPost, rules.beam.max);
+  const joined = joinWhole(kept, runs, raised, onPost, rules.beam.max);
   const segments = new Set([...raised].map((s) => joined.get(s) ?? s));
-  return { ...liftPoints(withJoins(all, { joined }), segments, onPost), joined };
+  return { ...liftPoints(withJoins({ ...all, segments: kept }, { joined }), segments, onPost), joined, length, removed, by };
 }
 
 /**
@@ -168,7 +249,7 @@ function joinWhole(all: readonly BeamSegment[], runs: BeamSegment[][], lifted: R
 }
 
 /** The posts a lifted beam rests on and the points where lifted and unlifted beams meet (Byggeregler T14, T15). */
-function liftPoints(all: BeamLayout, segments: Set<BeamSegment>, onPost: (k: string) => boolean): Omit<BeamLift, 'joined'> {
+function liftPoints(all: BeamLayout, segments: Set<BeamSegment>, onPost: (k: string) => boolean): Pick<BeamLift, 'segments' | 'posts' | 'hooks' | 'walls'> {
   const posts = new Map<string, Point>();
   const hookEnds = new Map<string, Point>();
   for (const s of all.segments) {
@@ -192,4 +273,30 @@ function liftPoints(all: BeamLayout, segments: Set<BeamSegment>, onPost: (k: str
     } else if (lifted.some(Boolean) && !lifted.every(Boolean)) hooks.push(p);
   }
   return { segments, posts: [...posts.values()], hooks, walls };
+}
+
+/** The lift of the sketch's takdrager, or null with none. */
+function sketchLift(v: Variant, rules: Rules): BeamLift | null {
+  const mods = builtModules(v);
+  const points = wallPoints(mods);
+  const { all } = variantBeams(v, mods, points, rules.beam.max);
+  return all.segments.length ? liftBeams(v, rules, all, points, mods) : null;
+}
+
+/** A textile run takes a takdrager away (Byggeregel T19). */
+export const beamGone = (v: Variant, rules: Rules, textileId: string) => !!sketchLift(v, rules)?.by.removed.has(textileId);
+
+const metres = (m: number) => m.toFixed(2).replace('.', ',');
+
+/**
+ * What a textile run does to the takdrager over it (Byggeregel T19), as a hint: taken away when it reaches higher than
+ * a lifted beam clears, lifted higher than the standard 94 × 80 when it reaches over the wall top. Else null.
+ */
+export function beamNote(v: Variant, rules: Rules, textileId: string): string | null {
+  const lift = sketchLift(v, rules);
+  if (!lift) return null;
+  const clear = metres(liftClear(rules));
+  if (lift.by.removed.has(textileId)) return `Takdrageren over tas bort: ingen hevet drager over ${clear} m. Veggene får fotplater i stedet, på kundens regning`;
+  if (lift.by.lifted.has(textileId) && lift.length > RECIPES.beam.lift.length) return `Takdrageren heves til ${metres(wallHeight(rules) + lift.length / 1000)} m. Høyere enn ${clear} m tas den bort`;
+  return null;
 }

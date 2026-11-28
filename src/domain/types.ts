@@ -66,6 +66,8 @@ export interface Room {
   plate?: string;
   /** Modules taken out with the eraser: open, no wall and no product. */
   gaps?: { side: number; module: number }[];
+  /** Sides raised (Byggeregel V18): the length of the 94 joined onto the posts of that side, as `Wall.raise`. */
+  raise?: { side: number; len: number }[];
 }
 
 /** A door or curtain in one wall module. The header panel (overstykke) is implicit. */

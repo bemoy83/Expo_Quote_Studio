@@ -7,7 +7,7 @@ i [foga-system.md](foga-system.md), veggbegrepene i [vegger.md](vegger.md), pris
 ## Slik brukes registeret
 
 - **Nummeret er regelens navn.** Bokstaven er området (V vegg, S støtte, T takdrager, D dør, R rom, X tekstil, G gulv,
-  P plukk, B hvem bygger, H hylle, K disk, F fysisk volum, M magnet og kobling). Et nummer brukes aldri om igjen: en regel som faller bort, blir stående som «utgått».
+  P plukk, B hvem bygger, H hylle, K disk, F fysisk volum, M magnet og kobling, N nabo). Et nummer brukes aldri om igjen: en regel som faller bort, blir stående som «utgått».
 - **Én kilde per regel.** Regelen står her. Koden viser til nummeret («Byggeregel T7») i stedet for å gjenta teksten,
   og foga-system.md forklarer bakgrunnen.
 - **Verdier er data.** Mål, avstander og antall står i `src/rules/rules.ts` (mål i meter) og `src/foga/recipes.ts`
@@ -132,11 +132,13 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 - **V18 Hevet vegg.** En systemvegg heves ved å bygge opp fra veggen som står: en 94 i lagerlengde skjøtes oppå hver
   stolpe med 609 inni som avstiving, den gamle toppskinnen 92 blir mellomskinne, og en ny toppskinne 292 (80 høy, CC − 40
   lang med 2 × 600 i hver ende, som en takdrager) lukker det øvre feltet. Veggen under er uendret, også dører, forheng og
-  overstykker. Høyden velges per vegg i veggskuffen («Høyde»); en hevet bakvegg hever ikke et rom, og et roms sider
-  heves ikke ennå. Motoren regner høyden per modul (`BuiltModule.raise`), så trinn i en vegg kan komme. Stolpeskjøten
+  overstykker. Høyden velges per vegg i veggskuffen («Høyde»); en hevet bakvegg hever ikke et rom. Et roms side er en vegg
+  som alle andre og heves på samme måte (Bjørn 28.11.2026: «en vegg er en vegg»): høyden står på rommet per side
+  (`Room.raise`), følger siden når rommet flyttes eller endrer størrelse, og blir med når rommet gjøres om til vanlige
+  vegger. Motoren regner høyden per modul (`BuiltModule.raise`), så trinn i en vegg kan komme. Stolpeskjøten
   plukkes som ferdig enhet (94 med 609). Veggrisset og 3D viser det øvre feltet, 292 og stolpeskjøtene, med
   høydekjeden 2540 + stykket. Arbeidsordren sier hvor mange meter som er hevet og tegner veggriss av hver hevet vegg. Å bygge en høy vegg fra bunnen (92 i bunn, uten fot, topp 3040) er ikke med nå.
-  *Bjørn 27.11.2026 · `rules.wall.raise`, `RECIPES.wall.raise` · kode `src/domain/raise.ts`, `src/domain/walls.ts`, `src/foga/fromVariant.ts`, `src/foga/engine.ts`, `src/ui/plan/elevation.tsx`, `src/ui/scene3d/build/walls.ts`, `src/ui/scene3d/build/frame.ts`, `src/ui/names.ts` · test `src/domain/raise.test.ts`, `src/calc/raisedWall.test.ts`, `src/ui/names.test.ts`*
+  *Bjørn 27.11.2026 · `rules.wall.raise`, `RECIPES.wall.raise` · kode `src/domain/raise.ts`, `src/domain/rooms.ts`, `src/domain/walls.ts`, `src/foga/fromVariant.ts`, `src/foga/engine.ts`, `src/ui/plan/elevation.tsx`, `src/ui/scene3d/build/walls.ts`, `src/ui/scene3d/build/frame.ts`, `src/ui/names.ts` · test `src/domain/raise.test.ts`, `src/calc/raisedWall.test.ts`, `src/ui/names.test.ts`*
 - **V19 Høyder.** Toppen er 2540 pluss lagerlengden på stykket som skjøtes på: 540 → 3080, 1040 → 3580, 1540 → 4080,
   2040 → 4580 og 2490 → 5030 (salgstrinnene 3–5 m). Lengdene ligger som data. Lagerlengdene
   går i CC 250 (290, 540, 790 …), så flere kan legges til uten kode.
@@ -153,9 +155,12 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   (i veggrisset eller i 3D) blir dekal på det øvre feltet der det slippes, også over en dør og over en tekstilramme; «+ Dekal»
   med et øvre felt valgt legger den midt i feltet. En dekal blir i sitt bånd og krysser aldri mellomskinnen. Endres høyden, beholdes farge og print (printen tilpasses feltet), og en dekal som ikke lenger
   får plass går. Senkes veggen til 2540, går dekoren på de øvre feltene (angre tar den tilbake). En farget øvre plate
-  koster det samme i alle RAL, er alltid utstillerens og har ikke platebytte. Print på øvre felt prises etter flaten
-  (lysmålet), og printfila har det øvre feltets mål.
-  *Bjørn 27.11.2026 · `RECIPES.wall.raise.topRail`, `ITEM.raisePlate`, `Foil.upper` · kode `src/foga/plates.ts`, `src/cost/itemDefs.ts`, `src/domain/plateDecor.ts`, `src/domain/print.ts` · test `src/calc/raisedWall.test.ts`, `src/domain/upperFelt.test.ts`*
+  koster det samme i alle RAL, er alltid utstillerens og har ikke platebytte, unntatt mot en nabo: en plate er farget på
+  begge sider, så vender det øvre feltet mot en nabo (N1) i en annen farge enn arrangørens, står en plate i arrangørens
+  farge rygg i rygg med den, mot naboen. I praksis er det et platebytte: arrangørens plate blir stående mot naboen, og
+  bare kundens side byttes. Kalkylen tar med den andre platen og ett platebytte per felt, og plukklisten har platen
+  «mot nabo» (Bjørn 28.11.2026). Print på øvre felt prises etter flaten (lysmålet), og printfila har det øvre feltets mål.
+  *Bjørn 27.11.2026 og 28.11.2026 · `RECIPES.wall.raise.topRail`, `ITEM.raisePlate`, `ITEM.plateSwap`, `Foil.upper` · kode `src/foga/plates.ts`, `src/cost/itemDefs.ts`, `src/domain/plateDecor.ts`, `src/domain/print.ts`, `src/domain/neighbour.ts`, `src/calc/lines/walls.ts` · test `src/calc/raisedWall.test.ts`, `src/domain/upperFelt.test.ts`, `src/domain/neighbour.test.ts`*
 - **V21 Trinn.** Der høyden skifter, står den høye delens stolpe skjøtt i stolpen under som ellers: en stolpe mellom to
   høyder får stykket til den høyeste, og det trengs ikke noe ekstra.
   *Bjørn 27.11.2026 · kode `src/domain/walls.ts` (`raisedPosts`) · test `src/calc/raisedWall.test.ts`*
@@ -259,7 +264,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   *Bjørn 1.11.2026 · kode `src/calc/beams/innerBeams.ts`, `src/calc/beams/beams.ts` · test `src/calc/beams/innerBeams.test.ts`*
 - **T13 Over tekstilvegg.** En takdrager kan ikke kobles på en tekstilvegg (InFrame eller frittstående, begge 43TX).
   Tar drageren og en tekstilramme som når opp til dragerens underkant samme plass i plan, heves hele løpet (lengdene i
-  samme rette linje som møtes ende mot ende) 80 mm. Gjelder alle takdragere. Bare fysisk konflikt teller, ikke innsyn.
+  samme rette linje som møtes ende mot ende) 80 mm, eller mer over en høy ramme (T19). Gjelder alle takdragere. Bare fysisk konflikt teller, ikke innsyn.
   *Bjørn 6.11.2026 · `RECIPES.beam.lift` · kode `src/calc/beams/beamLift.ts` · test `src/calc/beams/beamLift.test.ts`*
 - **T14 Skjøt.** Hver stolpe et hevet løp hviler på, også en veggstolpe, får 94 × 80 med 609 ned i stolpen. Der en hevet
   drager henger på en som ikke er hevet, eller omvendt, står samme stykke med 600 mot den andre drageren, i høyden til
@@ -298,6 +303,16 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   på 80 mm: de 2 × 600 i enden av hver drager går inn i 92-stykket, som i en stolpe. Det står ingen stolpe i den
   skjøten. Tilbudet har samme meterpris (lm).
   *Bjørn 15.11.2026 · `RECIPES.beam.half` · kode `src/foga/fromVariant.ts`, `src/foga/engine.ts`, `src/calc/lines/beams.ts` · test `src/calc/beams/halfBeams.test.ts`*
+- **T19 Ingen hevet drager over 3 m.** En hevet takdrager (T13) går ikke høyere enn en hel 3040-stolpe på 40 mm
+  justeringsfot, topp 3080 (`rules.beam.maxTop`). Høyden løftet tar er det korteste 94-stykket som går klar av den
+  høyeste rammen under en hevet drager: 80 for en ramme i veggens høyde, ellers en av hevelengdene (V19), så toppen blir
+  2540 + lengden. Alle hevede dragere ligger i samme høyde (T16), og stykkene i T14 og T15 er like lange. En ramme som
+  når høyere enn en hevet drager går klar av (toppen minus dragerhøyden, 3000 i dag), tar drageren bort: lengdene over
+  den bygges ikke, med stolper og fotplater bare de trengte, og det samme gjelder dragere som henger på dem (T9).
+  Veggene drageren holdt får da støtte etter S-reglene, og kunden betaler den, også under arrangørens vegger (en
+  drager følger av standveggene, og den som fjerner den betaler støtten veggene da trenger). Hintet i veggskuffen sier
+  det, og pillen til tekstilen viser «uten takdrager». Grensen er utledet av regelverdien, ikke skrevet i koden.
+  *Bjørn 28.11.2026 · `rules.beam.maxTop`, `RECIPES.beam.lift`, `rules.wall.raise.lengths` · kode `src/calc/beams/beamLift.ts`, `src/calc/context.ts`, `src/foga/engine.ts`, `src/ui/scene3d/build/frame.ts` · test `src/calc/beams/tallLift.test.ts`*
 
 ## D · Dør og forheng
 
@@ -405,10 +420,10 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   står 20–60 mm ut fra veggens linje). Antall 520 følger fotplateregelen (S3, S4, X8): ingen mer enn 3 m fra hverandre,
   og en 92LTX teller som én (Bjørn 21.11.2026). Forskjellen fra fotplater: på vegg har rammen alltid minst to 520, også
   under 1 m, for én brakett holder den ikke oppreist slik én bred fotplate holder en kort ramme; i et koblet hjørne
-  faller én bort. Vi antar at en 520 alltid sitter på en stolpe. Stående stag i 90 maks 2000 fra hverandre
+  faller én bort. Vi antar at en 520 alltid sitter på en stolpe. Stående stag i 90 fordelt etter fotplateregelen (S3), maks 3000 fra hverandre
   (rammesidene teller), lengde H − 80, med 600 i hver ende: duken trekker mest på midten. Rammen regnes med samme
   funksjon som på fotplater (X1, `runFrame`); bare duk på én side og 520 i stedet for fotplater skiller.
-  *Bjørn 31.10.2026 (fabric.js er fasit), stag 2 m 7.11.2026, ingen luft mot stolpen og 520 etter fotplateregelen 21.11.2026 · `rules.textile.inFrame`, `RECIPES.textileFrame` · kode `src/calc/textile/inFrame.ts`, `src/calc/textile/free.ts` · test `src/calc/fabric.test.ts`, `src/calc/textile/corners.test.ts`*
+  *Bjørn 31.10.2026 (fabric.js er fasit), stag 7.11.2026, stag etter fotplateregelen i stedet for hver 2 m 28.11.2026, ingen luft mot stolpen og 520 etter fotplateregelen 21.11.2026 · `rules.textile.inFrame`, `RECIPES.textileFrame` · kode `src/calc/textile/inFrame.ts`, `src/calc/textile/free.ts` · test `src/calc/fabric.test.ts`, `src/calc/textile/corners.test.ts`*
 - **X3 Trykkfil.** Ramme + 2 × bleed (20), levert i 10 %. Tilbudet lister trykkfilene kunden leverer, med filmål og
   filnavn, og trykklisten kan lastes ned som CSV der. Bleed, filskala og de andre målene for rammen endres under Regler på
   Kostgrunnlag og gjelder også kalkylen.
@@ -450,12 +465,13 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   egne (som X2) og står uavhengig av føttene: en fotplate har ikke stag.
   En fot i en fri ende står i flukt med rammeenden (200 mm inn for 740), resten jevnt fordelt. Under 1 m: én 730 midt på.
   Ett stag 150 mm (100–200) fra hver side av en skinneskjøt, så det virker som rammeside når lange motiver monteres i
-  seksjoner. Ellers jevnt fordelt, så ingen stående (rammeende, 92LTX, stag) står mer enn 2000 fra hverandre.
+  seksjoner. Ellers jevnt fordelt etter fotplateregelen, så ingen stående (rammeende, 92LTX, stag) står mer enn 3000 fra hverandre (Bjørn 28.11.2026: «hver 2 m» er en gammel regel).
   *Bjørn 1.11.2026, 3.11.2026 og 7.11.2026 · `rules.textile.inFrame.stag`, `RECIPES.textileFrame.spliceBrace` · `RECIPES.textileFrame.feet.support` · kode `src/calc/textile/free.ts`, `src/calc/supports.ts` · test `src/calc/freeFrames.test.ts`*
 
 - **X9 Standardlengder.** Fordi systemveggene på messer er standardisert, har 43TX standardlengder som passer på
   veggene: cc − 30, det vil si 970, 1970, 2970, 3970 og 4970 (X2). I tillegg 470, bruttomålene 1040, 2040 og 3040 for
-  rammer som henger utenpå én enkelt vegg, og full høyde 2540 for stendere. Lengdene ligger som data
+  rammer som henger utenpå én enkelt vegg, full høyde 2540 for stendere, og stenderne til høye rammer 3540, 4040 og
+  4540 (X14). Alle er 43TX på lager og brukes også som skinnestykker. Lengdene ligger som data
   (`RECIPES.textileFrame.standard`). Standardlengder ligger på lager, plukkes bare og er leid ut per løpemeter som i dag
   (kostregel 1, ingen egen pris for en hel lengde). Alle andre lengder kappes til jobben og koster mer (kostregel 2):
   materialet per meter med svinn og gjenbruk, i DG-gruppen for salg fordi biten stort sett brukes opp, kappetiden per
@@ -548,6 +564,28 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   igjen som frittstående der veggen var, og hver tekstilvegg finnes én gang (Bjørn 22.11.2026). Skisser fra før filversjon 7, der en
   tekstilvegg på systemvegg hadde adresse på veggen, åpnes ikke (ingen bakoverkompatibilitet, Bjørn 21.11.2026).
   *Bjørn 20.11.2026 og 21.11.2026 · kode `src/domain/textile/mount.ts`, `src/domain/textile/mounts.ts`, `src/ui/plan/pointer/freeMove.ts`, `src/ui/plan/pointer/textileOff.ts`, `src/ui/plan/pill/wall.tsx` · test `src/domain/textile/mount.test.ts`, `src/domain/textile/mounts.test.ts`, `src/calc/textile/corners.test.ts`*
+- **X14 Høy tekstil.** En tekstilvegg på systemvegg er en egen enhet, ikke en del av veggen, og kan ha fri høyde,
+  også over veggens topp, opp til høyeste tekstil (`rules.textile.maxHeight`, 5030 for nå, som høyeste hevede vegg).
+  Den hever ikke veggen av seg selv. Rammens deler regnes av høyden, så et annet tak trenger ingen kode. Veggrisset
+  tegner rammen der den står, også over toppen. Standardhøydene følger Fogas CC uten justeringsfot: 2540, 3040,
+  3540, 4040 og 4540 (X9); en ramme på 3040 mot en vegg hevet til 3080 står 40 under toppen. En stående 43TX lengre
+  enn lengste stykke (5000) skjøtes som en skinne (X9), med 609 inni og ikke noe mer (stagene ved en skinneskjøt
+  gjelder skinnene). En 92LTX i et høyt hjørne har lengdene til 43TX minus endelokkene og skjøtes butt mot butt (X7).
+  Når rammen når over høydegrensen, går montering og demontering med lift (kostregel 6, `CalcLine.top`).
+  Når over veggens topp (2540, eller toppen til en hevet vegg), holder ikke stolpene den der oppe: den henger i vaier
+  fra taket, fordelt langs rammen etter fotplateregelen (S3; et 92LTX-hjørne holder den enden), festet med en
+  gjennomgående øyebolt i rammens toppskinne (plassholder uten art.nr). Vaierne står på samme linje 4300 som vaierne
+  på hevet vegg (S9), alltid utstillerens. Står rammen innenfor en hevet vegg, holder veggen den; senkes veggen igjen,
+  får rammen vaierne tilbake. Vaierne vises som på hevet vegg: sirkel med kryss i planen og over rammens toppskinne i
+  veggrisset, og som en V i 3D. Frittstående står foreløpig i 2540 (X5); høy frittstående med vaier
+  kommer senere.
+  *Bjørn 28.11.2026 · `rules.textile.maxHeight`, `RECIPES.textileFrame.standard`, `RECIPES.textileFrame.wire`, `ITEM.textileWire` · kode `src/calc/textile/free.ts`, `src/calc/textile/production.ts`, `src/calc/lines/feet.ts`, `src/foga/engine.ts`, `src/calc/textile/common.ts`, `src/calc/textile/lines.ts`, `src/domain/textile/inFrame.ts`, `src/domain/decor.ts`, `src/calc/textile/production.ts`, `src/ui/plan/wallDrawer/WallElevation.tsx` · test `src/domain/decor.test.ts`, `src/calc/textile/tallFrame.test.ts`*
+- **X15 Forslag om å heve veggen.** Når en ramme på vegg over veggens topp, tilbyr pillen å heve veggen til laveste
+  høyde i V19 som tar rammen inn («Hev veggen til 3080»), med hva det gjør med tilbudet. Ett trykk hever hele veggen
+  (også en romside, V18) og lar rammen stå som den er; angre tar det tilbake. Mot en nabo (N1) skjuler den hevede
+  veggen rammens bakside, så siden mot naboen blir nøytral; godkjenningen trengs fortsatt. Viser rammen duken sin
+  mot naboen, tilbyr pillen hvit duk i stedet. Rammen hever aldri veggen av seg selv (X14).
+  *Bjørn 27.11.2026 og 28.11.2026 · kode `src/domain/raise.ts`, `src/ui/plan/pill/RaiseOffer.tsx` · test `src/domain/raise.test.ts`*
 
 ## M · Magnet og kobling
 
@@ -969,13 +1007,30 @@ K22 standardvarene og K23 disker over en fotplate.
   platebytte i en standvegg, forhøyning av vegg (V22) og vaier (S9) bygges og betales av utstilleren. En øy uten standvegger: utstilleren betaler takdragerne.
   *Bjørn 31.10.2026, 1.11.2026 og 6.11.2026 · kode `src/calc/context.ts`, `src/calc/lines/beams.ts` · test `src/calc/beams/innerBeams.test.ts`*
 
+## N · Nabo
+
+- **N1 Nabogodkjenning.** Messehusets regel: alt som er høyere enn standardveggen (2540), en hevet vegg (V18) eller
+  en høy tekstilvegg (X14), og som står nærmere enn 1000 mm fra en standgrense mot en nabo og parallelt med den,
+  krever godkjenning fra naboen, og siden mot naboen skal være nøytral. Nabogrensene er standens sider som ikke
+  ligger mot gangen; en øy har ingen. Avstanden måles fra nærmeste kant (stolpens eller rammens flate) til grensen
+  (`rules.neighbour.distance`). En vegg på tvers av grensen er ikke parallell, og enden teller ikke. Bare det naboen
+  ser, må være nøytralt: hvit tekstil, systemvegg eller en slett plate i arrangørens farge, uten annen farge, print
+  eller dekal om ikke annet er avtalt med naboen. Et farget øvre felt får arrangørens plate rygg i rygg mot naboen (V20)
+  og er derfor nøytralt; print og dekal på den siden er det ikke. En hevet systemvegg er nøytral og er ofte grunnen til at en vegg
+  heves; hvit duk er også nøytral, men ofte dyrere. En tekstilramme som når over veggen sin, viser baksiden mot
+  naboen og er ikke nøytral før veggen er hevet like høyt; da skjuler veggen den. Godkjenningen faller ikke bort med
+  en nøytral side (Bjørn 28.11.2026). Pillen sier bare «nabogodkjenning» (den deler raden med paletten),
+  veggskuffens hint hele grunnen, «Krever godkjenning fra nabo» (og «nøytral side mot naboen» når den ikke er det), og
+  tilbudet har det under forutsetningene.
+  *Bjørn 28.11.2026 · `rules.neighbour` · kode `src/domain/neighbour.ts`, `src/ui/plan/pill/wall.tsx`, `src/ui/plan/WallDrawer.tsx`, `src/ui/quote/QuotePage.tsx` · test `src/domain/neighbour.test.ts`*
+
 ## Ikke bygget ennå
 
 Bestemt eller nevnt, men ikke i koden. Regelnummeret viser hvor det hører hjemme. Når et punkt bygges, flyttes det inn
 i regelen og strykes her.
 
 **Vegg og hevet vegg**
-- V18: heve et roms sider, trinn i én vegg i skuffen (motoren regner høyden per modul), og høy vegg bygget fra bunnen
+- V18: trinn i én vegg i skuffen (motoren regner høyden per modul), og høy vegg bygget fra bunnen
   (92 i bunn, uten fot, topp 3040).
 - V6: endre standvegg med nabogodkjenning.
 - V11: andre mål og diagonaler på standarealet.
@@ -985,9 +1040,7 @@ i regelen og strykes her.
 - Snekret vegg som produkt.
 
 **Tekstil**
-- Forslag om å heve veggen når tekstil tegnes over 2540 (kommer med høye tekstilvegger: tekstil på vegg kan ikke gå
-  over 2540 i dag).
-- X5, M5: høye tekstilvegger og flere høyder på frittstående (låst til 2540), med vaier og gjennomgående øyebolt.
+- X5, M5: høye frittstående tekstilvegger og flere høyder på frittstående (låst til 2540), med vaier og gjennomgående øyebolt. På systemvegg er høy tekstil bygget (X14).
 - X11: velge type hjørne der en frittstående tekstilvegg møter en ramme på vegg (Bjørn 20.11.2026: 92LTX er bedre enn å
   stoppe mot rammen, fordi alle profilkanalene for tekstil er tilgjengelige, mens en utenpåliggende ramme sperrer
   kanalene og må monteres etter tekstilen).
@@ -1008,7 +1061,7 @@ i regelen og strykes her.
 - F2: enveis fotplater om det trengs.
 
 **Kost og pris**
-- Plassholder-art.nr: øyebolt M5 (S9), korte moduler 6121–6123 (V1), forhøyning 6124 (V22).
+- Plassholder-art.nr: øyebolt M5 (S9), gjennomgående øyebolt for 43TX (X14), korte moduler 6121–6123 (V1), forhøyning 6124 (V22).
 - Kuber (frittstående eller hengende fra taket), ikke et veggprodukt.
 - Fra OMS senere: standtype og kjøpt areal, arrangørens farge, lagerstatus, kunderabatter, ramme og trykk solgt hver
   for seg.

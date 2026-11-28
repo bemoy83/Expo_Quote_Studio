@@ -94,8 +94,16 @@ export function raiseLines(c: CalcContext): CalcLine[] {
       }),
       { id: ITEM.raiseModule, qty: mods.length },
     ];
+    // Byggeregel V20: toward a neighbour, the organiser's plate back to back with a coloured one, a plate swap each
+    const back = mods.filter((m) => c.back.has(m));
+    for (const m of back) {
+      const plate = raisePlate({ plate: '', len, cc: Math.round(m.cc * 1000) }, RECIPES, c.sizes);
+      uses.push({ id: ITEM.raisePlate(plate.w, plate.h), qty: 1 });
+    }
+    if (back.length) uses.push({ id: ITEM.plateSwap, qty: back.length });
     const lm = mods.reduce((a, m) => a + m.cc, 0);
     const top = raiseTop(len, c.rules);
-    return { ...c.line(`${id}-${len}`, lm, { ...c.built, meta: `+${len} mm` }, atHeight(c, uses, top)), top };
+    const meta = back.length ? `+${len} mm · ${back.length} felt rygg i rygg mot nabo` : `+${len} mm`;
+    return { ...c.line(`${id}-${len}`, lm, { ...c.built, meta }, atHeight(c, uses, top)), top };
   });
 }

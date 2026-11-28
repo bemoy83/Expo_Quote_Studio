@@ -80,7 +80,8 @@ describe('rails', () => {
     // The splice piece is at least minSplice (50) over its two mitres (2 × 40): 4970 leaves 230, 5040 would leave 30
     expect(splitRail(5200, 5000)).toEqual([4970, 230]);
     expect(splitRail(5100, 5000)).toEqual([4970, 130]);
-    expect(splitRail(5090, 5000)).toEqual([3970, 1120]);
+    // The next standard down is 4540, a tall frame's upright (X14), and fits as a rail piece too
+    expect(splitRail(5090, 5000)).toEqual([4540, 550]);
     // Past one pair: equal pairs, standard and splice piece in turn, never two standard lengths side by side
     expect(splitRail(10250, 5000)).toEqual([4970, 155, 4970, 155]);
   });
@@ -91,13 +92,13 @@ describe('free-standing frame', () => {
     const [f] = frames(draw(island(), [1, 2], [7, 2]));
     // 6000 long, H = 2540. Rails 1 × 6000 is more than 5000: 4970 and a 1030 splice piece (X9)
     expect(f).toMatchObject({ pos: 'F1', length: 6000, H: 2540, railCuts: [4970, 1030], uprights: 2, supports: [200, 3000, 5800], braceLength: 2460 });
-    // The splice at 4970 gets a brace 150 each side; between, braces so none are more than 2 m apart. The feet get
-    // none (Bjørn 7.11.2026)
-    expect(f.braces).toEqual([1607, 3213, 4820, 5120]);
+    // The splice at 4970 gets a brace 150 each side; between, braces by the foot plate rule, none more than 3 m apart
+    // (Bjørn 28.11.2026). The feet get none (Bjørn 7.11.2026)
+    expect(f.braces).toEqual([2410, 4820, 5120]);
     // Both ends free: the splice is threaded with 609
     expect(f.spliceCode).toBe('609');
-    // Couplings: 2 × 2 corner 617 + 4 braces × 2 × 600 + 2 × 609
-    expect(f.parts.couplings).toBe(4 + 8 + 2);
+    // Couplings: 2 × 2 corner 617 + 3 braces × 2 × 600 + 2 × 609
+    expect(f.parts.couplings).toBe(4 + 6 + 2);
     expect(f.parts.loose).toEqual([
       ['617', 4],
       ['609', 2],
@@ -109,7 +110,7 @@ describe('free-standing frame', () => {
       [1030, 2],
       [2540, 2],
     ]);
-    expect(f.parts.braces).toEqual({ qty: 4, length: 2460 });
+    expect(f.parts.braces).toEqual({ qty: 3, length: 2460 });
     expect(f.faces.map((x) => [x.pos, x.W, x.pw, x.ph, x.fill])).toEqual([
       ['F1A', 6000, 6040, 2580, 'print'],
       ['F1B', 6000, 6040, 2580, 'print'],
@@ -146,8 +147,8 @@ describe('free-standing frame', () => {
     expect(f1.parts.butt).toEqual([[2963, 1, 2]]);
     // The post is the support at the corner: one foot, flush with the free end
     expect(f1.supports).toEqual([200]);
-    // 3 m from the free end to the corner post: one brace between
-    expect(f1.braces).toEqual([1500]);
+    // Under 3 m from the free end to the corner post: no brace between (foot plate rule, Bjørn 28.11.2026)
+    expect(f1.braces).toEqual([]);
     // Face A of (1,2) → (4,2) is the left normal (0, 1): the inner face, toward the other run
     expect(f1.faces.map((x) => [x.pos, x.W])).toEqual([
       ['F1A', 2980],
@@ -158,9 +159,9 @@ describe('free-standing frame', () => {
     // Run (4,2) → (4,5): face A is the left normal (−1, 0), toward where the first run comes from: inner
     expect(f2.faces.map((x) => x.W)).toEqual([2980, 3020]);
     expect(f2.supports).toEqual([2800]);
-    expect(f2.braces).toEqual([1500]);
-    // 617 into the post top and bottom, plus at the free end; one brace
-    expect(f2.parts.couplings).toBe(2 + 2 + 2);
+    expect(f2.braces).toEqual([]);
+    // 617 into the post top and bottom, plus at the free end; no brace under 3 m
+    expect(f2.parts.couplings).toBe(2 + 2);
   });
   it('a short wall stands on one small foot plate', () => {
     const [f] = frames(draw(island(), [1, 2], [1.5, 2]));

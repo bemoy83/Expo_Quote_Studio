@@ -11,7 +11,7 @@ import { profile, shared, unitProfile } from './profiles'
 import { ALU, ALU_FINISH, BEAM, FOOT_PLATE, type BuildContext } from './context'
 
 /** A ceiling wire's colour. */
-const WIRE = 0x6b6f75
+export const WIRE = 0x6b6f75
 
 export function buildFrame(c: BuildContext) {
   const { res, H, at, mat, add, along, mods } = c
@@ -71,8 +71,8 @@ export function buildFrame(c: BuildContext) {
   }
 
   // Beams (takdrager) in 292, top flush with the walls, cut between the posts (centres − 40). A beam lifted over a
-  // textile wall (calc/beams/beamLift.ts) is one piece of 94 higher
-  const lift = RECIPES.beam.lift.length / 1000
+  // textile wall (calc/beams/beamLift.ts) is one piece of 94 higher, as long as the lift (T19)
+  const lift = (res.lift?.length ?? RECIPES.beam.lift.length) / 1000
   // A drawn one is picked as its beam (Byggeregel T8): the pill and grips as in the plan
   const drawnOf = (s: (typeof res.beams.segments)[number]) => (s.inner ? c.v.innerBeams?.find((x) => onSpan(x.from, x.to, s.from) && onSpan(x.from, x.to, s.to))?.id : undefined)
   for (const s of res.beams.segments) {

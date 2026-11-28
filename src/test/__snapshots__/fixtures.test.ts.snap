@@ -6738,12 +6738,12 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
       },
       {
         "artnr": "",
-        "detail": "90 × 2460 mm · 2 × 600 (871 003 92) · til T1, F1",
+        "detail": "90 × 2460 mm · 2 × 600 (871 003 92) · til T1",
         "group": "prof.tekstil",
         "name": "Støttestag 90, 2460 mm, med 600",
-        "note": "til T1, F1",
+        "note": "til T1",
         "preassembled": true,
-        "qty": 2,
+        "qty": 1,
       },
       {
         "artnr": "871 045 92",
@@ -6847,8 +6847,8 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
       {
         "parts": {
           "braces": {
-            "length": 2460,
-            "qty": 1,
+            "length": 0,
+            "qty": 0,
           },
           "butt": [
             [
@@ -6857,7 +6857,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
               2,
             ],
           ],
-          "couplings": 6,
+          "couplings": 4,
           "cuts": [
             [
               2463,
@@ -6962,7 +6962,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
       "sum": 180,
     },
     {
-      "cost": 12768.39562,
+      "cost": 12665.095419999998,
       "id": "prof",
       "lines": [
         {
@@ -7081,8 +7081,8 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         },
         {
           "artnr": "8000",
-          "cost": 1691.0312099999996,
-          "dg": 0.574797281870757,
+          "cost": 1587.7310099999997,
+          "dg": 0.5615214001657002,
           "drawn": [
             "ft1",
           ],
@@ -7091,7 +7091,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
           "name": "Tekstilramme, leie, 2500 × 2540 mm, på fotplater",
           "payer": "utstiller",
           "placeholder": false,
-          "price": 3977,
+          "price": 3621,
           "qty": 1,
           "quote": {
             "key": "tekstil:2500 × 2540 mm",
@@ -7099,14 +7099,14 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
             "name": "Tekstilvegg 2500 × 2540 mm",
           },
           "strategy": "sum",
-          "sum": 3977,
+          "sum": 3621,
           "time": {
-            "demontering": 6,
+            "demontering": 4,
             "forhåndsmontering": 30,
-            "montering": 12,
-            "plukk": 4,
-            "transport": 3,
-            "vask": 3,
+            "montering": 8,
+            "plukk": 3.5,
+            "transport": 2.5,
+            "vask": 2.5,
           },
           "transfer": "leie",
           "unit": "stk",
@@ -7136,16 +7136,8 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
               "qty": 1,
             },
             {
-              "id": "stag-90-m",
-              "qty": 2.46,
-            },
-            {
-              "id": "stag-90-stk",
-              "qty": 1,
-            },
-            {
               "id": "montering-ramme-kobling",
-              "qty": 6,
+              "qty": 4,
             },
             {
               "id": "handtering-ramme",
@@ -7446,7 +7438,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         },
       ],
       "name": "Profilering",
-      "sum": 28465.500000000004,
+      "sum": 28109.500000000004,
     },
   ],
   "hooks": [],
@@ -7472,12 +7464,12 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
     "swapLm": 0,
     "textileM2": 32.5596,
     "time": {
-      "demontering": 137.32,
+      "demontering": 135.32,
       "forhåndsmontering": 60,
-      "montering": 274.34,
-      "plukk": 14.16,
-      "transport": 10.16,
-      "vask": 10.16,
+      "montering": 270.34,
+      "plukk": 13.66,
+      "transport": 9.66,
+      "vask": 9.66,
     },
     "wallLm": 11,
     "wallSupports": 0,
@@ -7489,6 +7481,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         5,
       ],
     ],
+    "length": 80,
     "posts": [
       [
         3,
@@ -7498,9 +7491,9 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
     "walls": [],
   },
   "margin": {
-    "cost": 13834.329659847997,
-    "db": 14811.170340152006,
-    "dg": 0.5170505084621321,
+    "cost": 13731.029459848,
+    "db": 14558.470540152004,
+    "dg": 0.5146245264197671,
     "order": [
       {
         "cost": 527.5077279999999,
@@ -7524,7 +7517,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         "name": "Gange til og fra demontering",
       },
     ],
-    "sum": 28645.500000000004,
+    "sum": 28289.500000000004,
     "unknown": 0,
   },
   "organiser": {
@@ -7695,9 +7688,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
       {
         "H": 2540,
         "braceLength": 2460,
-        "braces": [
-          1250,
-        ],
+        "braces": [],
         "corners": {
           "from": true,
           "to": false,
@@ -7748,8 +7739,8 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         "nCorners": 1,
         "parts": {
           "braces": {
-            "length": 2460,
-            "qty": 1,
+            "length": 0,
+            "qty": 0,
           },
           "butt": [
             [
@@ -7758,7 +7749,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
               2,
             ],
           ],
-          "couplings": 6,
+          "couplings": 4,
           "cuts": [
             [
               2463,
@@ -7892,7 +7883,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
       },
     ],
     "freeLm": 4,
-    "lm": 42.41799999999999,
+    "lm": 39.958,
     "pieces": [
       {
         "H": 2540,
@@ -7955,6 +7946,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         "runAt": 1015,
         "span": 4000,
         "textileId": "t1",
+        "top": 2540,
         "wall": "Bak",
       },
       {
@@ -8013,11 +8005,12 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         "runAt": 1015,
         "span": 2000,
         "textileId": "t2",
+        "top": 2540,
         "wall": "Venstre",
       },
     ],
   },
-  "sum": 28645.500000000004,
+  "sum": 28289.500000000004,
   "wallSupports": [],
 }
 `;
@@ -8076,14 +8069,14 @@ exports[`08-tekstil.json > variant A > picking list 1`] = `
   },
   {
     "code": "",
-    "detail": "90 × 2460 mm · 2 × 600 (871 003 92) · til T1, F1",
+    "detail": "90 × 2460 mm · 2 × 600 (871 003 92) · til T1",
     "group": "prof.tekstil",
-    "key": "Støttestag 90, 2460 mm, med 600|90 × 2460 mm · 2 × 600 (871 003 92) · til T1, F1",
+    "key": "Støttestag 90, 2460 mm, med 600|90 × 2460 mm · 2 × 600 (871 003 92) · til T1",
     "lm": undefined,
     "nobb": false,
-    "note": "til T1, F1",
+    "note": "til T1",
     "preassembled": true,
-    "qty": "2 stk",
+    "qty": "1 stk",
     "title": "Støttestag 90, 2460 mm, med 600",
   },
   {
@@ -8188,9 +8181,7 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
       {
         "H": 2540,
         "braceLength": 2460,
-        "braces": [
-          1250,
-        ],
+        "braces": [],
         "corners": {
           "from": true,
           "to": false,
@@ -8241,8 +8232,8 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
         "nCorners": 1,
         "parts": {
           "braces": {
-            "length": 2460,
-            "qty": 1,
+            "length": 0,
+            "qty": 0,
           },
           "butt": [
             [
@@ -8251,7 +8242,7 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
               2,
             ],
           ],
-          "couplings": 6,
+          "couplings": 4,
           "cuts": [
             [
               2463,
@@ -8385,7 +8376,7 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
       },
     ],
     "freeLm": 4,
-    "lm": 42.41799999999999,
+    "lm": 39.958,
     "pieces": [
       {
         "H": 2540,
@@ -8448,6 +8439,7 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
         "runAt": 1015,
         "span": 4000,
         "textileId": "t1",
+        "top": 2540,
         "wall": "Bak",
       },
       {
@@ -8506,6 +8498,7 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
         "runAt": 1015,
         "span": 2000,
         "textileId": "t2",
+        "top": 2540,
         "wall": "Venstre",
       },
     ],
@@ -8628,7 +8621,7 @@ exports[`08-tekstil.json > variant A > quote lines 1`] = `
     "sum": 180,
   },
   {
-    "cost": 12768.39562,
+    "cost": 12665.095419999998,
     "id": "prof",
     "lines": [
       {
@@ -8751,8 +8744,8 @@ exports[`08-tekstil.json > variant A > quote lines 1`] = `
       },
       {
         "artnr": "8000+8040+8041",
-        "cost": 4653.99681,
-        "dg": 0.49982301310090604,
+        "cost": 4550.69661,
+        "dg": 0.49146841328908114,
         "drawn": [
           "ft1",
         ],
@@ -8762,7 +8755,7 @@ exports[`08-tekstil.json > variant A > quote lines 1`] = `
         "name": "Tekstilvegg 2500 × 2540 mm",
         "payer": "utstiller",
         "placeholder": false,
-        "price": 9304.7,
+        "price": 8948.7,
         "qty": 1,
         "quote": {
           "key": "tekstil:2500 × 2540 mm",
@@ -8770,15 +8763,15 @@ exports[`08-tekstil.json > variant A > quote lines 1`] = `
           "name": "Tekstilvegg 2500 × 2540 mm",
         },
         "strategy": "sum",
-        "sum": 9304.7,
+        "sum": 8948.7,
         "terms": "Leie av ramme, kjøp av tekstil",
         "time": {
-          "demontering": 6,
+          "demontering": 4,
           "forhåndsmontering": 30,
-          "montering": 12,
-          "plukk": 4,
-          "transport": 3,
-          "vask": 3,
+          "montering": 8,
+          "plukk": 3.5,
+          "transport": 2.5,
+          "vask": 2.5,
         },
         "transfer": "leie",
         "unit": "stk",
@@ -8808,16 +8801,8 @@ exports[`08-tekstil.json > variant A > quote lines 1`] = `
             "qty": 1,
           },
           {
-            "id": "stag-90-m",
-            "qty": 2.46,
-          },
-          {
-            "id": "stag-90-stk",
-            "qty": 1,
-          },
-          {
             "id": "montering-ramme-kobling",
-            "qty": 6,
+            "qty": 4,
           },
           {
             "id": "handtering-ramme",
@@ -8903,7 +8888,7 @@ exports[`08-tekstil.json > variant A > quote lines 1`] = `
       },
     ],
     "name": "Profilering",
-    "sum": 28465.500000000004,
+    "sum": 28109.500000000004,
   },
 ]
 `;
@@ -14554,15 +14539,6 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
         "qty": 5,
       },
       {
-        "artnr": "",
-        "detail": "90 × 2460 mm · 2 × 600 (871 003 92) · til T2",
-        "group": "prof.tekstil",
-        "name": "Støttestag 90, 2460 mm, med 600",
-        "note": "til T2",
-        "preassembled": true,
-        "qty": 1,
-      },
-      {
         "artnr": "871 045 92",
         "detail": "",
         "group": "prof.tekstil",
@@ -14638,8 +14614,8 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
       {
         "parts": {
           "braces": {
-            "length": 2460,
-            "qty": 1,
+            "length": 0,
+            "qty": 0,
           },
           "butt": [
             [
@@ -14648,7 +14624,7 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
               2,
             ],
           ],
-          "couplings": 6,
+          "couplings": 4,
           "cuts": [
             [
               2846,
@@ -14982,7 +14958,7 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
       "sum": 1650,
     },
     {
-      "cost": 25263.287299999996,
+      "cost": 25159.9871,
       "id": "prof",
       "lines": [
         {
@@ -15059,8 +15035,8 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
         },
         {
           "artnr": "8000",
-          "cost": 1729.5782199999999,
-          "dg": 0.5418335841059603,
+          "cost": 1626.27802,
+          "dg": 0.5244801111111111,
           "drawn": [
             "t2",
           ],
@@ -15069,7 +15045,7 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
           "name": "Tekstilramme, leie, 2880 × 2540 mm, på vegg",
           "payer": "utstiller",
           "placeholder": false,
-          "price": 3775,
+          "price": 3420,
           "qty": 1,
           "quote": {
             "key": "tekstil:2880 × 2540 mm",
@@ -15077,14 +15053,14 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
             "name": "Tekstilvegg 2880 × 2540 mm",
           },
           "strategy": "sum",
-          "sum": 3775,
+          "sum": 3420,
           "time": {
-            "demontering": 6,
+            "demontering": 4,
             "forhåndsmontering": 30,
-            "montering": 12,
-            "plukk": 3.5,
-            "transport": 2.5,
-            "vask": 2.5,
+            "montering": 8,
+            "plukk": 3,
+            "transport": 2,
+            "vask": 2,
           },
           "transfer": "leie",
           "unit": "stk",
@@ -15106,16 +15082,8 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
               "qty": 4,
             },
             {
-              "id": "stag-90-m",
-              "qty": 2.46,
-            },
-            {
-              "id": "stag-90-stk",
-              "qty": 1,
-            },
-            {
               "id": "montering-ramme-kobling",
-              "qty": 6,
+              "qty": 4,
             },
             {
               "id": "handtering-ramme",
@@ -15517,7 +15485,7 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
         },
       ],
       "name": "Profilering",
-      "sum": 50978.799999999996,
+      "sum": 50623.799999999996,
     },
   ],
   "hooks": [],
@@ -15543,20 +15511,20 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
     "swapLm": 0,
     "textileM2": 50.955000000000005,
     "time": {
-      "demontering": 221.84,
+      "demontering": 219.84,
       "forhåndsmontering": 240,
-      "montering": 439.26,
-      "plukk": 27.71,
-      "transport": 19.71,
-      "vask": 21.07,
+      "montering": 435.26,
+      "plukk": 27.21,
+      "transport": 19.21,
+      "vask": 20.57,
     },
     "wallLm": 12,
     "wallSupports": 1,
   },
   "margin": {
-    "cost": 26764.321339847997,
-    "db": 25864.478660152,
-    "dg": 0.4914510431579668,
+    "cost": 26661.021139847995,
+    "db": 25612.778860152,
+    "dg": 0.4899735404763381,
     "order": [
       {
         "cost": 527.5077279999999,
@@ -15580,7 +15548,7 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
         "name": "Gange til og fra demontering",
       },
     ],
-    "sum": 52628.799999999996,
+    "sum": 52273.799999999996,
     "unknown": 0,
   },
   "organiser": {
@@ -15946,7 +15914,7 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
       },
     ],
     "freeLm": 3.92,
-    "lm": 60.77,
+    "lm": 58.31,
     "pieces": [
       {
         "H": 2540,
@@ -16011,6 +15979,7 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
         "runAt": 40,
         "span": 2000,
         "textileId": "t1",
+        "top": 2540,
         "wall": "Venstre",
       },
       {
@@ -16018,13 +15987,8 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
         "W": 2880,
         "area": 7.5336,
         "at": 0,
-        "braceAt": [
-          1460,
-        ],
-        "braces": {
-          "length": 2460,
-          "qty": 1,
-        },
+        "braceAt": [],
+        "braces": null,
         "corners": {
           "from": true,
           "to": true,
@@ -16034,13 +15998,13 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
         "fileName": "Firma_T2_2880x2540mm.pdf",
         "fill": "print",
         "fw": 292,
-        "lm": 8.152,
+        "lm": 5.692,
         "motif": null,
         "mount": "vegg",
         "parts": {
           "braces": {
-            "length": 2460,
-            "qty": 1,
+            "length": 0,
+            "qty": 0,
           },
           "butt": [
             [
@@ -16049,7 +16013,7 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
               2,
             ],
           ],
-          "couplings": 6,
+          "couplings": 4,
           "cuts": [
             [
               2846,
@@ -16073,6 +16037,7 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
         "runAt": 40,
         "span": 3000,
         "textileId": "t2",
+        "top": 2540,
         "wall": "Bak",
       },
       {
@@ -16130,6 +16095,7 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
         "runAt": 3040,
         "span": 2000,
         "textileId": "t3",
+        "top": 2540,
         "wall": "Bak",
       },
       {
@@ -16195,6 +16161,7 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
         "runAt": 40,
         "span": 2000,
         "textileId": "t4",
+        "top": 2540,
         "wall": "Innervegg",
       },
       {
@@ -16260,6 +16227,7 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
         "runAt": 40,
         "span": 2000,
         "textileId": "t5",
+        "top": 2540,
         "wall": "Innervegg",
       },
       {
@@ -16325,11 +16293,12 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
         "runAt": 3015,
         "span": 1000,
         "textileId": "t6",
+        "top": 2540,
         "wall": "Venstre",
       },
     ],
   },
-  "sum": 52628.799999999996,
+  "sum": 52273.799999999996,
   "wallSupports": [
     {
       "at": [
@@ -16441,18 +16410,6 @@ exports[`15-tekstilhjorner.json > variant A > picking list 1`] = `
     "preassembled": false,
     "qty": "5 stk",
     "title": "92LTX · Tekstilprofil, hjørne",
-  },
-  {
-    "code": "",
-    "detail": "90 × 2460 mm · 2 × 600 (871 003 92) · til T2",
-    "group": "prof.tekstil",
-    "key": "Støttestag 90, 2460 mm, med 600|90 × 2460 mm · 2 × 600 (871 003 92) · til T2",
-    "lm": undefined,
-    "nobb": false,
-    "note": "til T2",
-    "preassembled": true,
-    "qty": "1 stk",
-    "title": "Støttestag 90, 2460 mm, med 600",
   },
   {
     "code": "871 045 92",
@@ -16783,7 +16740,7 @@ exports[`15-tekstilhjorner.json > variant A > production: textile and print rows
       },
     ],
     "freeLm": 3.92,
-    "lm": 60.77,
+    "lm": 58.31,
     "pieces": [
       {
         "H": 2540,
@@ -16848,6 +16805,7 @@ exports[`15-tekstilhjorner.json > variant A > production: textile and print rows
         "runAt": 40,
         "span": 2000,
         "textileId": "t1",
+        "top": 2540,
         "wall": "Venstre",
       },
       {
@@ -16855,13 +16813,8 @@ exports[`15-tekstilhjorner.json > variant A > production: textile and print rows
         "W": 2880,
         "area": 7.5336,
         "at": 0,
-        "braceAt": [
-          1460,
-        ],
-        "braces": {
-          "length": 2460,
-          "qty": 1,
-        },
+        "braceAt": [],
+        "braces": null,
         "corners": {
           "from": true,
           "to": true,
@@ -16871,13 +16824,13 @@ exports[`15-tekstilhjorner.json > variant A > production: textile and print rows
         "fileName": "TekstilAS_T2_2880x2540mm.pdf",
         "fill": "print",
         "fw": 292,
-        "lm": 8.152,
+        "lm": 5.692,
         "motif": null,
         "mount": "vegg",
         "parts": {
           "braces": {
-            "length": 2460,
-            "qty": 1,
+            "length": 0,
+            "qty": 0,
           },
           "butt": [
             [
@@ -16886,7 +16839,7 @@ exports[`15-tekstilhjorner.json > variant A > production: textile and print rows
               2,
             ],
           ],
-          "couplings": 6,
+          "couplings": 4,
           "cuts": [
             [
               2846,
@@ -16910,6 +16863,7 @@ exports[`15-tekstilhjorner.json > variant A > production: textile and print rows
         "runAt": 40,
         "span": 3000,
         "textileId": "t2",
+        "top": 2540,
         "wall": "Bak",
       },
       {
@@ -16967,6 +16921,7 @@ exports[`15-tekstilhjorner.json > variant A > production: textile and print rows
         "runAt": 3040,
         "span": 2000,
         "textileId": "t3",
+        "top": 2540,
         "wall": "Bak",
       },
       {
@@ -17032,6 +16987,7 @@ exports[`15-tekstilhjorner.json > variant A > production: textile and print rows
         "runAt": 40,
         "span": 2000,
         "textileId": "t4",
+        "top": 2540,
         "wall": "Innervegg",
       },
       {
@@ -17097,6 +17053,7 @@ exports[`15-tekstilhjorner.json > variant A > production: textile and print rows
         "runAt": 40,
         "span": 2000,
         "textileId": "t5",
+        "top": 2540,
         "wall": "Innervegg",
       },
       {
@@ -17162,6 +17119,7 @@ exports[`15-tekstilhjorner.json > variant A > production: textile and print rows
         "runAt": 3015,
         "span": 1000,
         "textileId": "t6",
+        "top": 2540,
         "wall": "Venstre",
       },
     ],
@@ -17382,7 +17340,7 @@ exports[`15-tekstilhjorner.json > variant A > quote lines 1`] = `
     "sum": 1650,
   },
   {
-    "cost": 25263.287299999996,
+    "cost": 25159.9871,
     "id": "prof",
     "lines": [
       {
@@ -17461,8 +17419,8 @@ exports[`15-tekstilhjorner.json > variant A > quote lines 1`] = `
       },
       {
         "artnr": "8000+8040",
-        "cost": 3712.98942,
-        "dg": 0.4842138969536166,
+        "cost": 3609.68922,
+        "dg": 0.47255297280710723,
         "drawn": [
           "t2",
         ],
@@ -17472,7 +17430,7 @@ exports[`15-tekstilhjorner.json > variant A > quote lines 1`] = `
         "name": "Tekstilvegg 2880 × 2540 mm",
         "payer": "utstiller",
         "placeholder": false,
-        "price": 7198.7,
+        "price": 6843.7,
         "qty": 1,
         "quote": {
           "key": "tekstil:2880 × 2540 mm",
@@ -17480,15 +17438,15 @@ exports[`15-tekstilhjorner.json > variant A > quote lines 1`] = `
           "name": "Tekstilvegg 2880 × 2540 mm",
         },
         "strategy": "sum",
-        "sum": 7198.7,
+        "sum": 6843.7,
         "terms": "Leie av ramme, kjøp av tekstil",
         "time": {
-          "demontering": 6,
+          "demontering": 4,
           "forhåndsmontering": 30,
-          "montering": 12,
-          "plukk": 3.5,
-          "transport": 2.5,
-          "vask": 2.5,
+          "montering": 8,
+          "plukk": 3,
+          "transport": 2,
+          "vask": 2,
         },
         "transfer": "leie",
         "unit": "stk",
@@ -17510,16 +17468,8 @@ exports[`15-tekstilhjorner.json > variant A > quote lines 1`] = `
             "qty": 4,
           },
           {
-            "id": "stag-90-m",
-            "qty": 2.46,
-          },
-          {
-            "id": "stag-90-stk",
-            "qty": 1,
-          },
-          {
             "id": "montering-ramme-kobling",
-            "qty": 6,
+            "qty": 4,
           },
           {
             "id": "handtering-ramme",
@@ -17742,7 +17692,7 @@ exports[`15-tekstilhjorner.json > variant A > quote lines 1`] = `
       },
     ],
     "name": "Profilering",
-    "sum": 50978.799999999996,
+    "sum": 50623.799999999996,
   },
 ]
 `;

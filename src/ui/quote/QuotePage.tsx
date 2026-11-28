@@ -1,4 +1,5 @@
 // Tilbud: an A4 document built from the calc. Printing from the browser gives the PDF.
+import { neighbourNotes } from '../../domain/neighbour'
 import { lazy, Suspense, useState } from 'react'
 import { Download, Printer } from 'lucide-react'
 import type { CalcResult } from '../../calc/calc'
@@ -104,6 +105,7 @@ export function QuotePage({ project, variants, current, onSelect, calcOf, motifs
   }
 
   const unpriced = v.loose.filter((l) => !l.price)
+  const neighbour = neighbourNotes(v, rules)
   // Stand walls and takdrager the organiser pays: not the exhibitor's lines, only named
   const organiser = fromOrganiser(k, plateName(standWallTerms(project).ral))
 
@@ -284,6 +286,13 @@ export function QuotePage({ project, variants, current, onSelect, calcOf, motifs
                 <li>
                   Frittstående tekstilvegger på fotplater, tekstil på begge sider: {P.free.map((f) => `${fmt(f.length, 0)} × ${fmt(f.H, 0)} mm`).join(', ')}.
                   {files.length > 0 && P.pieces.length === 0 && ' Trykkfilene leveres som beskrevet over.'}
+                </li>
+              )}
+              {/* Byggeregel N1: approval from the neighbour for what is tall near them */}
+              {neighbour.length > 0 && (
+                <li>
+                  Over {mm(rules.wall.height + rules.wall.feet)} mm nærmere enn {mm(rules.neighbour.distance)} mm fra nabostand ({[...new Set(neighbour.map((n) => (n.kind === 'wall' ? 'hevet vegg' : 'høy tekstilvegg')))].join(' og ')}): krever godkjenning fra nabo, og siden mot naboen skal være nøytral (hvit tekstil, systemvegg eller
+                  slett plate i arrangørens farge, uten print eller dekal) om ikke annet er avtalt med naboen.
                 </li>
               )}
               {k.floorTotal > 0 && <li>Gulv ferdig lagt{v.floor.protection ? ' med monteringsbeskyttelse' : ''}.</li>}

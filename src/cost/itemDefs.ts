@@ -31,6 +31,8 @@ export const ITEM = {
   /** A ceiling wire on a raised wall (Byggeregler S9, S10): the V, its eyebolt and 503, and hanging it. */
   wire: 'vaieroppheng',
   wireMount: 'montering-vaier',
+  /** A ceiling wire on a textile frame over its wall's top (Byggeregel X14): the V and its through-eyebolt. */
+  textileWire: 'vaieroppheng-tekstil',
   /** One person-minute of montering or demontering more, for work above the height limit (cost rule 6). */
   heightMontering: 'hoyde-montering',
   heightDemontering: 'hoyde-demontering',
@@ -172,6 +174,7 @@ export const ITEM_DEFS: readonly ItemDef[] = [
   def(ITEM.raiseModule, 'Montering per øvre felt, hevet vegg', 'stk'),
   def(ITEM.wire, 'Vaieroppheng med øyebolt M5 og 503', 'stk'),
   def(ITEM.wireMount, 'Montering av vaieroppheng', 'stk'),
+  def(ITEM.textileWire, 'Vaieroppheng med gjennomgående øyebolt, tekstilramme', 'stk'),
   def(ITEM.heightMontering, 'Arbeid i høyden, montering, per minutt', 'stk'),
   def(ITEM.heightDemontering, 'Arbeid i høyden, demontering, per minutt', 'stk'),
   def(ITEM.door, 'Dør 292 med lås 410', 'stk'),
@@ -264,6 +267,7 @@ export const EXAMPLE_TIMES: Readonly<Record<string, Time>> = {
   [ITEM.raiseModule]: onSite(6.12, 4.08),
   // A ceiling wire (S9, S10), placeholders: picked and carried as a small part, 10 min up and 5 down
   [ITEM.wire]: pvt(0.5, 0.5, 0.5),
+  [ITEM.textileWire]: pvt(0.5, 0.5, 0.5),
   [ITEM.wireMount]: onSite(10, 5),
   [ITEM.heightMontering]: onSite(1, 0),
   [ITEM.heightDemontering]: onSite(0, 1),
@@ -339,6 +343,7 @@ export const EXAMPLE_RECIPES: Readonly<Record<string, ItemRecipe>> = {
   [ITEM.raiseModule]: work,
   // The V of wire and the eyebolt are own purchases (placeholders), the 503 Foga's
   [ITEM.wire]: { own: [['VAIER-V', 1, 'accessory'], ['OYEBOLT-M5', 1, 'accessory']], parts: [['503', 1]], dg: 'utleie' },
+  [ITEM.textileWire]: { own: [['VAIER-V', 1, 'accessory'], ['OYEBOLT-GJENNOM', 1, 'accessory']], dg: 'utleie' },
   [ITEM.wireMount]: work,
   [ITEM.heightMontering]: work,
   [ITEM.heightDemontering]: work,

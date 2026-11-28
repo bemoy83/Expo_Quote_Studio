@@ -21,7 +21,7 @@ export interface RaiseDrawing {
 export const wiredPosts = (v: Variant): Set<string> => new Set(variantWires(v, rules).map((f) => pointKey(f.at)))
 
 /** Room for the wire mark over the top, m (elevation.tsx draws its circle there). */
-const WIRE_ROOM = 0.22
+export const WIRE_ROOM = 0.22
 
 export function raiseDrawing(w: Wall, mods: readonly (BuiltModule | undefined)[], parts: readonly WallPart[], u: (t: number) => number, wired: ReadonlySet<string>): RaiseDrawing {
   const raised = mods.flatMap((m, i) => {

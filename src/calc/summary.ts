@@ -65,7 +65,7 @@ export function summary(c: CalcContext, lines: CalcLine[], organiserLines: CalcL
       time,
     },
     beams: c.lift.segments.size ? { ...beams.all, segments: beams.all.segments.map((s) => (c.lift.segments.has(s) ? { ...s, lifted: true as const } : s)) } : beams.all,
-    ...(c.lift.segments.size ? { lift: { posts: c.lift.posts, hooks: c.lift.hooks, walls: c.lift.walls } } : {}),
+    ...(c.lift.segments.size ? { lift: { posts: c.lift.posts, hooks: c.lift.hooks, walls: c.lift.walls, length: c.lift.length } } : {}),
     hooks: beams.hooks,
     posts: [...allPosts.values()],
     wallSupports: wallFeet,

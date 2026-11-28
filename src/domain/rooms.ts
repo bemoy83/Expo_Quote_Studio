@@ -69,7 +69,14 @@ export function roomWalls(r: Room): Wall[] {
     to,
     room: { id: r.id, side },
     ...(r.plate ? { plate: r.plate } : {}),
+    ...raiseOf(r, side),
   }));
+}
+
+/** A room side's height (Byggeregel V18): a room side is a wall like any other, raised the same way. */
+function raiseOf(r: Room, side: number): { raise?: number } {
+  const len = r.raise?.find((x) => x.side === side)?.len;
+  return len ? { raise: len } : {};
 }
 
 /** True when side `side` of the room runs left–right in the plan. */
@@ -212,6 +219,10 @@ function reshape(v: Variant, r: Room, outline: Point[], shift?: (i: number) => P
   const room: Room = { ...r, outline };
   if (gaps.length) room.gaps = gaps;
   else delete room.gaps;
+  // A raised side stays raised where it went (V18)
+  const raise = (r.raise ?? []).flatMap((x) => (match[x.side] ? [{ side: match[x.side]!.side, len: x.len }] : []));
+  if (raise.length) room.raise = raise;
+  else delete room.raise;
   // Frames on its sides keep their place on the side (X13)
   const frames = wallTextiles(v).flatMap((t) => {
     if (!isRoomWallId(t.wallId, r.id)) return [];
@@ -449,7 +460,7 @@ export function dissolveRoom(v: Variant, id: string): Variant {
   for (const w of v.walls.filter((x) => x.room?.id === id)) {
     for (const [i, e] of runs(moduleCount(w), (t) => ownAt.has(`${w.id}#${t}`))) {
       const wid = nextId([...ids, ...parts.map((x) => x.id)], 'w');
-      parts.push({ id: wid, from: pointAlong(w, moduleStart(w, i)), to: pointAlong(w, moduleEnd(w, e - 1)), ...ownPlate(v, r.plate) });
+      parts.push({ id: wid, from: pointAlong(w, moduleStart(w, i)), to: pointAlong(w, moduleEnd(w, e - 1)), ...ownPlate(v, r.plate), ...(w.raise ? { raise: w.raise } : {}) });
     }
   }
   return { ...replaceWalls(v, [...stored, ...parts, ...others]), rooms: v.rooms.filter((x) => x.id !== id) };

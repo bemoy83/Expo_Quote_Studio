@@ -60,6 +60,9 @@ export interface TextileFrameRecipe {
    *  motifs go up in sections (Bjørn 7.11.2026: 100–200 mm). Not at the feet. Stored mounted, brace + couplings. */
   brace: string;
   spliceBrace: number;
+  /** A frame reaching over the wall it hangs on is held from the ceiling (Byggeregel X14): a wire per support, fixed
+   *  in the top rail with a through-eyebolt (placeholder until the article is known). */
+  wire: { eyebolt: string };
   braceCoupling: { code: string; perEnd: number };
   /** On a system wall: brackets fixing the frame to the wall post (one side in 43TX, the other in 94). Supplied with
    *  screw and 503. As many as foot plates by the same rule (Bjørn 21.11.2026), except that a frame on a wall always
@@ -249,11 +252,13 @@ export const RECIPES: Recipes = {
     // threadMin: placeholder until Bjørn gives the shortest piece 609 fits
     splice: { thread: '609', slide: { code: '604', perRail: 2 }, threadMin: 300 },
     maxRail: 5000,
-    // Bjørn 27.11.2026: cc − 30 on the wall grid, 470, and gross lengths for a frame outside one wall; 2540 full height
-    standard: [470, 970, 1040, 1970, 2040, 2540, 2970, 3040, 3970, 4970],
+    // Bjørn 27.11.2026: cc − 30 on the wall grid, 470, and gross lengths for a frame outside one wall; 2540 full height.
+    // Bjørn 28.11.2026: tall frames follow Foga's CC without the adjusting foot: 3040, 3540, 4040, 4540 (X14)
+    standard: [470, 970, 1040, 1970, 2040, 2540, 2970, 3040, 3540, 3970, 4040, 4540, 4970],
     minSplice: 50,
     brace: '90',
     spliceBrace: 150,
+    wire: { eyebolt: 'Gjennomgående øyebolt' },
     braceCoupling: { code: '600', perEnd: 1 },
     wall: { fixing: { code: '520', support: { ...SUPPORT, minFrom: 0 } } },
     feet: {

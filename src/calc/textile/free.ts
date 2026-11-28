@@ -209,14 +209,26 @@ export function runFrame(
   const spliceCode = slide ? r.splice.slide.code : r.splice.thread;
   const perSplice = 2 * (slide ? r.splice.slide.perRail : 1);
   const braceLength = Math.max(0, H - 2 * s.prof);
+  // Byggeregel X14: an upright taller than the longest piece is spliced like a rail, with 609 threaded inside
+  // (Bjørn 28.11.2026: nothing more; the brace at a rail splice is for the rails)
+  const uprightCuts = splitRail(H, r.maxRail);
+  const uprightSplices = freeEnds * (uprightCuts.length - 1);
+  const loose: [string, number][] = [
+    [r.corner, 2 * (freeEnds + nCorners)],
+    [spliceCode, perSplice * splices.length],
+  ];
+  if (uprightSplices) {
+    const at = loose.find(([c]) => c === r.splice.thread);
+    if (at) at[1] += uprightSplices;
+    else loose.push([r.splice.thread, uprightSplices]);
+  }
   const parts = frameParts(
     r,
     railCuts,
-    { qty: freeEnds, length: H },
+    { qty: freeEnds, cuts: uprightCuts },
     { qty: braces.length, length: braces.length ? braceLength : 0 },
     [
-      [r.corner, 2 * (freeEnds + nCorners)],
-      [spliceCode, perSplice * splices.length],
+      ...loose,
       [mount.supportCode, supports.length],
     ],
     buttEnds(railCuts, corner),
@@ -277,7 +289,8 @@ export function cornerPosts(v: Pick<Variant, 'textiles'>, full = fullHeight(RULE
   const corners = cornerEnds(v);
   for (const t of v.textiles) {
     const e = corners.get(t.id);
-    const H = t.height !== undefined ? Math.min(full, mm(t.height)) : full;
+    // A frame on a wall may be taller than the wall (Byggeregel X14): the post goes its height
+    const H = t.height !== undefined ? mm(t.height) : full;
     if (e?.from) out.set(`${t.from[0]},${t.from[1]}`, { p: t.from, H });
     if (e?.to) out.set(`${t.to[0]},${t.to[1]}`, { p: t.to, H });
   }

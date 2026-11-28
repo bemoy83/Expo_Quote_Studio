@@ -37,10 +37,17 @@ export interface Rules {
      *  takdrager, a raised wall whose top is higher than this (mm) gets ceiling wires (Byggeregel S9). */
     raise: { lengths: number[]; wireAbove: number };
   };
-  /** `max`: longest beam length (byggeregel T2); `supportSpan`: a free stand-wall span this long gets a støttedrager (T7). */
-  beam: { max: number; height: number; thickness: number; supportSpan: number };
+  /** `max`: longest beam length (byggeregel T2); `supportSpan`: a free stand-wall span this long gets a støttedrager (T7);
+   *  `maxTop`: the highest a lifted beam's top goes, m (T19). A textile frame may reach `maxTop − height` under it; a
+   *  taller one takes the beam away. A new value needs no code. */
+  beam: { max: number; height: number; thickness: number; supportSpan: number; maxTop: number };
   /** `grid`: free-standing textile walls are drawn and sized on this grid (the elevation grid), at least `freeMin`, m. */
-  textile: { depth: number; minWidth: number; grid: number; freeMin: number; inFrame: InFrameParams };
+  /** `maxHeight`: the tallest a textile wall may be drawn, m (Byggeregel X14); the frame's splices, braces and wires
+   *  are worked out from its height, so a new value needs no code. */
+  textile: { depth: number; minWidth: number; grid: number; freeMin: number; maxHeight: number; inFrame: InFrameParams };
+  /** Byggeregel N1: over the standard wall top, closer than `distance` (m) to a parallel stand boundary with a neighbour,
+   *  needs the neighbour's approval and a neutral side toward them. */
+  neighbour: { distance: number };
   /** Door leaf: `swing` = leaf width = swing radius, `height` = clear height (the header panel fills the rest), m. */
   door: { swing: number; height: number };
   /** `cell`: the floor grid (byggeregel G1); `rollEnd`: extra roll length at each end of a lane (G3). */
@@ -78,14 +85,19 @@ export const RULES: Rules = {
     plate: { width: 960, height: 2420 },
     raise: { lengths: [540, 1040, 1540, 2040, 2490], wireAbove: 3080 },
   },
-  beam: { max: 6, height: 0.08, thickness: 0.02, supportSpan: 6 },
+  // Bjørn 28.11.2026: a whole 3040 post on a 40 mm foot; beams are as a rule not lifted higher
+  beam: { max: 6, height: 0.08, thickness: 0.02, supportSpan: 6, maxTop: 3.08 },
   textile: {
     depth: 0.04,
     minWidth: 0.5,
     grid: 0.25,
     freeMin: 0.25,
-    inFrame: { side: 20, air: 10, wallH: 2490, feet: 50, bleed: 20, scale: 10, prof: 40, stag: 2000 },
+    // Bjørn 28.11.2026: 5030 for now, as the highest raised wall (V19)
+    maxHeight: 5.03,
+    inFrame: { side: 20, air: 10, wallH: 2490, feet: 50, bleed: 20, scale: 10, prof: 40, stag: 3000 },
   },
+  // Bjørn 28.11.2026: the hall's rule, 1000 mm from a parallel stand boundary
+  neighbour: { distance: 1 },
   door: { swing: 0.95, height: 2.0 },
   floor: { cell: 0.5, rollEnd: 0.1 },
   // Bjørn 8.11.2026: 100 to 2000 mm from the floor (the neighbour must not see goods over the wall), 100 mm clear between

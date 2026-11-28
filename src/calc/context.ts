@@ -19,7 +19,8 @@ import type { FogaStructure } from '../foga/structure';
 import { catalogOwn, ITEM, type PricingData } from '../pricing/data';
 import { priceLine, type Use } from '../pricing/model';
 import type { Rules } from '../rules/rules';
-import { liftBeams, withJoins, type BeamLift } from './beams/beamLift';
+import { backToBack } from '../domain/neighbour';
+import { liftBeams, liftCount, withJoins, type BeamLift } from './beams/beamLift';
 import { beamHooks, hookCount, type BeamHook } from './beams/beamHooks';
 import { variantBeams } from './beams/beams';
 import type { BeamLayout } from './beams/beamSegments';
@@ -71,6 +72,8 @@ export interface CalcContext {
   swaps: string[];
   /** Ceiling wires on raised walls (Byggeregler S9, S10), one per post they hang from. */
   wires: WallSupport[];
+  /** Raised modules with a second upper plate back to back toward a neighbour, and its RAL (Byggeregel V20). */
+  back: ReadonlyMap<BuiltModule, string>;
   /** Foot plates under walls that stand free, and all of them (with those under drawn takdrager's own posts). */
   freeWallFeet: WallSupport[];
   wallFeet: WallSupport[];
@@ -210,13 +213,15 @@ export function calcContext(v: Variant, rules: Rules, catalog: Catalog, standWal
   const freeWallFeet = freeWallSupports(mods, all, standard, kindOf).filter((f) => !wiredPosts.has(pointKey(f.at)));
   const wallFeet = [...freeWallFeet, ...inner.feet];
   const prod = production(v, rules, '');
+  // Byggeregel V20: an upper plate in the customer's colour facing a neighbour gets the organiser's plate behind it
+  const back = backToBack(v, rules, mods, standWalls.ral);
   // K23: a counter over a foot plate stands on inserts 700
   // (under walls and takdrager posts, S2 and T12, and under free-standing textile walls, X8)
   const floor = floorOf(wallFeet, allPosts.values(), textileFootRects(v, prod.free));
   const plates = [...floor.supports, ...floor.textile];
   const inserts = counterInserts(v, placeContext(rules, catalog), plates);
   // Foga structure of what the exhibitor orders: posts, walled modules, headers and beam lengths are counted from it
-  const foga = structureOf({ mods: ours, posts: ourPoints.size + (organiserBeams ? innerPosts : beamPosts), beams: ourBeams, hooks: hookCount(organiserBeams ? hooks.filter((h) => h.inner) : hooks), lift: { posts: lift.posts.length, hooks: lift.hooks.length, walls: lift.walls.length }, production: prod, swaps, wallFeet: wallFeet.length, barePosts: wallFeet.filter((f) => ourPoints.has(pointKey(f.at))).length + inner.feet.length, curtain: (a) => idx.byArtnr.get(a)?.product.opening === 'curtain', shelves: shelfBrackets(v, rules), counters: builtCounterParts(v), counterInserts: [...inserts.values()].reduce((a, n) => a + n.length, 0), all: mods, wires: wires.length });
+  const foga = structureOf({ mods: ours, posts: ourPoints.size + (organiserBeams ? innerPosts : beamPosts), beams: ourBeams, hooks: hookCount(organiserBeams ? hooks.filter((h) => h.inner) : hooks), lift: liftCount(lift), production: prod, swaps, wallFeet: wallFeet.length, barePosts: wallFeet.filter((f) => ourPoints.has(pointKey(f.at))).length + inner.feet.length, curtain: (a) => idx.byArtnr.get(a)?.product.opening === 'curtain', shelves: shelfBrackets(v, rules), counters: builtCounterParts(v), counterInserts: [...inserts.values()].reduce((a, n) => a + n.length, 0), all: mods, wires: wires.length, back });
   // Wall posts are shared between modules: each module (door and curtain included) carries an equal share of the
   // posts of its builder
   const share = (nPosts: number, nMods: number) => (nMods ? nPosts / nMods : 0);
@@ -276,6 +281,7 @@ export function calcContext(v: Variant, rules: Rules, catalog: Catalog, standWal
     organiserBeams,
     swaps,
     wires,
+    back,
     freeWallFeet,
     wallFeet,
     inserts,

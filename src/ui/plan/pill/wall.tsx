@@ -2,6 +2,7 @@
 // the frame's motif and Fyll ledig vegg; the decal's motif. On a wall with textile walls one button steps between them.
 import { Image as ImageIcon, Layers, MoveHorizontal, Unlink } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { beamGone } from '../../../calc/beams/beamLift'
 import { updateFoil } from '../../../domain/decor'
 import { canMoveWall, eraseWalls } from '../../../domain/edit'
 import { faces, sideOf } from '../../../domain/faces'
@@ -9,6 +10,7 @@ import { wallLength, wallModules } from '../../../domain/grid'
 import { wallRal } from '../../../domain/plateDecor'
 import { paintWallFace } from '../../../domain/paint'
 import { fillPlates, printWall } from '../../../domain/print'
+import { neighbourNotes, noteFor } from '../../../domain/neighbour'
 import { roomName } from '../../../domain/rooms'
 import { addTextile, fillTextile, textileBox, textilesOn, updateTextile } from '../../../domain/textile/inFrame'
 import type { TextileWall, Variant, Wall } from '../../../domain/types'
@@ -18,6 +20,7 @@ import { fmt } from '../../format'
 import { printKept } from '../../fillKeeping'
 import { findMotif } from '../../motifs'
 import { QBtn, Sep } from '../quick/parts'
+import { RaiseOffer } from './RaiseOffer'
 import type { Chosen, PlanSelection } from '../selection'
 import { faceName } from '../wallDrawer/face'
 import { Colours, CornerButton, Motifs, MoveTools, type Content, type PillActions, type SecondFace } from './parts'
@@ -26,6 +29,16 @@ import { loosenMounted, onFeetHeight } from '../../../domain/textile/mount'
 import { joinCorner, letGoCorner, wallCorners } from '../../../domain/textile/cornerJoin'
 
 type Of<K extends Chosen['kind']> = Extract<Chosen, { kind: K }>
+
+/** Byggeregel N1: a tall thing near a neighbour says so in its pill. */
+const withNeighbour = (v: Variant, id: string, meta: string) => {
+  const n = noteFor(neighbourNotes(v, rules), id)
+  // Short in the pill, where it shares the row with the palette (Bjørn 28.11.2026); the whole reason is in the drawer's hint
+  return n ? `${meta} · nabogodkjenning` : meta
+}
+
+/** Byggeregel T19: a tall textile that takes the takdrager over it away says so in its pill (the reason is in the drawer). */
+const withBeams = (v: Variant, id: string, meta: string) => (beamGone(v, rules, id) ? `${meta} · uten takdrager` : meta)
 
 const ratioOf = (p: PillActions, id?: string | null) => findMotif(p.motifs, id ?? undefined)?.ratio ?? 0
 
@@ -45,7 +58,7 @@ export function textilePill(p: PillActions, c: Of<'textile'>, remove: () => void
   }
   return {
     name: 'Tekstilvegg',
-    meta: `${fmt(T.width, 2)} × ${fmt(textileBox(T, rules).height, 2)} m`,
+    meta: withBeams(v, T.id, withNeighbour(v, T.id, `${fmt(T.width, 2)} × ${fmt(textileBox(T, rules).height, 2)} m`)),
     body: (
       <>
         {layerSwitch(v, c.wall, p.selection, T, p.onSelect)}
@@ -66,6 +79,9 @@ export function textilePill(p: PillActions, c: Of<'textile'>, remove: () => void
             <CornerButton joined={k.joined} onClick={() => onEdit((x) => (k.joined ? letGoCorner(x, k.at) : joinCorner(x, k.at)))} />
           </span>
         ))}
+        {/* Byggeregel X15: a frame over its wall's top offers to raise the wall (neutral toward a neighbour, N1), and
+            one facing a neighbour white textile */}
+        <RaiseOffer p={p} textileId={T.id} />
         {/* Byggeregel X13: mounted is a coupling, so «Løsne» takes it off as it takes walls apart (Bjørn 21.11.2026) */}
         <Sep />
         <QBtn title="Løsne fra veggen · står fritt på fotplater foran veggen" label="Løsne" onClick={loosen}>
@@ -128,7 +144,7 @@ export function wallPill(p: PillActions, c: Of<'wall'>, graphics: SecondFace): C
   }
   return {
     name: room ? `${roomName(room)} · vegg` : stand ? `${label} · standvegg` : 'Innervegg',
-    meta: `${fmt(L, L % 1 ? 1 : 0)} m`,
+    meta: withNeighbour(v, w.id, `${fmt(L, L % 1 ? 1 : 0)} m`),
     body: graphics.on ? (
       <>
         <Motifs motifs={p.motifs} value={undefined} onPick={(m) => m && print(m)} />

@@ -22,6 +22,8 @@ export interface RaiseSpec {
   len: number;
   /** Length c/c, mm, of a shorter module; omitted for a whole one. */
   cc?: number;
+  /** A second upper plate back to back with it, in this RAL, toward a neighbour (Byggeregel V20). */
+  back?: string;
 }
 
 /** One length of takdrager, post centre to post centre. */
@@ -70,8 +72,9 @@ export interface FogaStructure {
    *  (enveis) or two (toveis). */
   beamHooks?: { oneWay: number; twoWay: number };
   /** Takdrager lifted over a textile wall (calc/beams/beamLift.ts): posts extended under them, hook points between a lifted
-   *  beam and one that is not, and ends on a wall between its posts (T15). */
-  beamLift?: { posts: number; hooks: number; walls?: number };
+   *  beam and one that is not, and ends on a wall between its posts (T15); `length`: the 94 piece, mm, when not the
+   *  recipe's (T19). */
+  beamLift?: { posts: number; hooks: number; walls?: number; length?: number };
   /** Textile frames, on walls and on foot plates. */
   frames: FrameSpec[];
   /** 92LTX corner posts, each shared by the two runs meeting there, by length `H`. */
@@ -95,6 +98,9 @@ export interface FogaStructure {
   raises?: { modules: RaiseSpec[]; posts: { len: number; qty: number }[] };
   /** Ceiling wires on raised walls (Byggeregler S9, S10): each fixed in the top rail with an eyebolt and a 503. */
   wires?: number;
+  /** Ceiling wires on textile frames reaching over their wall's top (Byggeregel X14): each fixed in the frame's top
+   *  rail with a through-eyebolt. */
+  textileWires?: number;
 }
 
 /** A shelf board: standard 976 × 300, corner 960 × 290, 2/3 655 × 300 (Byggeregler H10–H13). */
