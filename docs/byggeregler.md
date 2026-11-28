@@ -1080,6 +1080,9 @@ i regelen og strykes her.
   stoppe mot rammen, fordi alle profilkanalene for tekstil er tilgjengelige, mens en utenpåliggende ramme sperrer
   kanalene og må monteres etter tekstilen).
 - X7: hjørne mellom rammer med ulik høyde (bare like høyder kobles, foreløpig), og tekstil i T (hoppet over for nå).
+- X14, X18: velge høyde når tekstilveggen tegnes, og hurtigvalg for standardhøydene (3040, 3540, 4040, 4540) i pillen.
+  I dag tegnes den i 2540, og høyden settes i skuffen.
+- X18: tekstilramme hengt fra taket som et skilt (Bjørn 28.11.2026).
 - Tekstildør med overstykke, «Kun ramme» (ramme uten duk), og LED med Samba-duk foran (appen tegner ikke LED ennå).
 
 **Disk og podie**

@@ -181,7 +181,7 @@ function cornerPosts(c: BuildContext) {
       done.add(key)
       // The legs run along +x and −y of the outline; turn it so they follow the two runs, never mirrored
       const [a, b] = a0[0] * b0[1] - a0[1] * b0[0] < 0 ? [a0, b0] : [b0, a0]
-      const chosen = c.sel.textileId === t.id || c.sel.textileId === t.id
+      const chosen = c.sel.textileId === t.id
       const m = mat('textile', ALU, { ...ALU_FINISH, ...selectGlow(chosen) })
       const upright = (part: 'post' | 'cap', y: number, len: number) => {
         const mesh = new THREE.Mesh(cornerGeometry(part, a, b), m)
