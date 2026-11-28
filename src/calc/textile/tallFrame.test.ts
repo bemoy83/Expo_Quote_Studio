@@ -1,4 +1,4 @@
-// Checks Byggeregel X14 (docs/byggeregler.md): a textile on a wall is its own unit, built to its own height, also over
+// Checks Byggeregler X14 og X18 (docs/byggeregler.md): a textile on a wall is its own unit, built to its own height, also over
 // the wall's top.
 import { describe, expect, it } from 'vitest';
 import { createVariant } from '../../domain/variant';
@@ -11,6 +11,10 @@ import { postPieces } from './common';
 import { framePiece } from './inFrame';
 import { production, textileHeightMm } from './production';
 import { setWallRaise } from '../../domain/raise';
+import { addFreeTextile } from '../../domain/textile/free';
+import { setTextileSize } from '../../domain/textile/edit';
+import { settleCorners, withOnWall } from '../../domain/textile/mounts';
+import type { Point, Variant } from '../../domain/types';
 
 const S = RULES.textile.inFrame;
 /** A row stand with one textile on its back wall, t1. */
@@ -81,5 +85,68 @@ describe('X14 a tall textile on a wall', () => {
     // The frame on the back wall from 0 to 6 m (the frame ends 15 inside the run's ends)
     expect(piece.wireAt).toHaveLength(3);
     expect(piece.wireAlong!.map((a) => Math.round(a))).toEqual(piece.wireAt!.map((a) => Math.round(a + piece.runAt + (piece.shift ?? 0))));
+  });
+});
+
+// Byggeregel X18 (Bjørn 28.11.2026): one product, so free height on a wall is free height on foot plates too, with no
+// code of its own; only the support differs. Over 2540 on foot plates it always hangs in wire, and a 92LTX corner has a
+// wire of its own, on a wall too (X14).
+describe('X18 a tall textile wall on foot plates', () => {
+  const island = () => createVariant('A', { width: 10, depth: 8, type: 'island' });
+  const draw = (v: Variant, a: Point, b: Point) => {
+    const r = addFreeTextile(v, RULES, a, b);
+    if ('error' in r) throw new Error(r.error);
+    return r;
+  };
+  const run = (v: Variant) => calc(v, RULES, DEFAULT_CATALOG, { payer: 'utstiller', ral: '9010' });
+
+  it('is built to its own height, its uprights spliced like one on a wall, and hangs in wires by the foot plate rule', () => {
+    const r = draw(island(), [1, 2], [7, 2]);
+    const v = setTextileSize(r.v, RULES, r.id, { height: 5.03 });
+    const res = run(v);
+    const [f] = res.production.free;
+    expect(f).toMatchObject({ H: 5030, top: 5030, wires: 3, wireAt: [0, 3000, 6000] });
+    // Uprights over 5000 are spliced with 609 inside (X14)
+    expect(f.parts.cuts).toEqual(expect.arrayContaining([[4540, 2], [490, 2]]));
+    expect(res.production.textileWires).toHaveLength(3);
+    // The textile is printed at its own height, on both faces
+    expect(f.faces.map((x) => x.H)).toEqual([5030, 5030]);
+    // One wire line, worked from the lift (cost rule 6)
+    expect(res.groups.flatMap((g) => g.lines).find((l) => l.artnr === '4300')).toMatchObject({ qty: 3, top: 5030 });
+  });
+
+  it('at full height it stands on its feet alone', () => {
+    const r = draw(island(), [1, 2], [7, 2]);
+    expect(run(r.v).production.textileWires).toEqual([]);
+  });
+
+  it('a 92LTX corner between tall frames has its own wire, once for both', () => {
+    let v = draw(island(), [1, 2], [4, 2]).v;
+    v = draw(v, [4, 2], [4, 5]).v;
+    for (const t of v.textiles) v = setTextileSize(v, RULES, t.id, { height: 3.04 });
+    const P = run(v).production;
+    // Each arm 3 m with the corner as a wire point: one at its free end, and the corner's own
+    expect(P.free.map((f) => f.wires)).toEqual([1, 1]);
+    expect(P.textileWires.map((w) => w.at)).toContainEqual([4, 2]);
+    expect(P.textileWires).toHaveLength(3);
+  });
+
+  it('X14: a 92LTX corner between tall frames on walls has its own wire too', () => {
+    const v0 = createVariant('A', { width: 4, depth: 3, type: 'corner' });
+    const back = v0.walls.find((w) => w.from[1] === 0 && w.to[1] === 0)!;
+    const left = v0.walls.find((w) => w.from[0] === 0 && w.to[0] === 0)!;
+    // Both drawn into the inside corner, onto the other wall's line: they meet in a 92LTX
+    const v = settleCorners(
+      withOnWall(v0, [
+        { id: 'a', wallId: back.id, side: 1, from: 0, width: 2, height: 3.04 },
+        { id: 'b', wallId: left.id, side: -1, from: 0, width: 2, height: 3.04 },
+      ]),
+    );
+    const P = production(v, RULES, '');
+    expect(P.pieces.map((p) => p.corners.from || p.corners.to)).toEqual([true, true]);
+    // The corner no longer holds the frames' ends: it hangs in its own wire, counted once
+    expect(P.textileWires.length).toBe(P.pieces.reduce((a, p) => a + (p.wires ?? 0), 0) + 1);
+    // The elevation shows it at each frame's end
+    expect(P.pieces.every((p) => p.wireAlong!.length === (p.wires ?? 0) + 1)).toBe(true);
   });
 });

@@ -86,14 +86,16 @@ export function mountFree(v: Variant, rules: Rules, id: string, w: Wall, s: Face
   if (out?.fill) m.fill = out.fill;
   if (out?.motif) m.motif = out.motif;
   if (hasFace(back)) m.back = back;
+  // One product (X18): its height goes on the wall with it
+  if (t.height !== undefined) m.height = t.height;
   return { v: withOnWall(r.v, wallTextiles(r.v).map((x) => (x.id === r.id ? m : x))), id };
 }
 
 /**
  * Byggeregel X13: the mounted textile wall `id` taken off its wall and moved by (dx, dy) on the textile grid, standing
  * free on foot plates where it is let go, the same length. It must come out past the magnet (M4, 300 mm) on its own
- * face; closer, the magnet holds it on the wall. `heightKept` is false when it had a height or a place up the wall a
- * free-standing one cannot have yet (2540 from the floor, X5). Null when it does not come out that far.
+ * face; closer, the magnet holds it on the wall. It keeps its height (X18); `heightKept` is false when it stood up the
+ * wall, as on foot plates it stands on the floor. Null when it does not come out that far.
  */
 export function unmountDrag(v: Variant, rules: Rules, id: string, dx: number, dy: number): Unmounted | { error: string } | null {
   const t = wallTextiles(v).find((x) => x.id === id);
@@ -161,9 +163,9 @@ export function moveCornerGroup(v: Variant, rules: Rules, id: string, ox: number
       if (!corners.get(tid)?.to) to = onLine(m.wall, m.side, out(t.to));
     }
     if (!m || off.has(tid)) {
-      heightKept &&= onFeetFits(t, rules);
+      heightKept &&= onFeetFits(t);
       const { fit: _f, height: _h, bottom: _b, ...free } = t;
-      rest = free;
+      rest = { ...free, ...onFeet(t, rules) };
     }
     const shift = (p: Point): Point => [r3(p[0] + mx), r3(p[1] + my)];
     return { ...rest, from: shift(from), to: shift(to) };
@@ -191,12 +193,19 @@ export function loosenMounted(v: Variant, rules: Rules, id: string): Unmounted |
   return takeOff(v, rules, id, n[0] * out, n[1] * out);
 }
 
-/** Said when a textile wall taken off its wall had a height or place up the wall that foot plates cannot have yet (X5, X13). */
-export const onFeetHeight = (rules: Rules) =>
-  `Tekstilveggen står nå på fotplater i full høyde, ${Math.round(fullTextileHeight(rules) * 1000)}: andre høyder på fotplater kommer senere`;
+/** Said when a textile wall taken off its wall stood up the wall: on foot plates it stands on the floor (X5, X18). */
+export const onFeetHeight = () => 'Tekstilveggen står nå på gulvet, på fotplater, med samme høyde'
 
-/** Whether a textile wall keeps its height on foot plates: on the floor, full height (X5). */
-const onFeetFits = (t: { height?: number; bottom?: number }, rules: Rules) => !t.bottom && (t.height === undefined || Math.abs(t.height - fullTextileHeight(rules)) < EPS);
+/** Byggeregel X18: whether a textile wall stays where it was in height on foot plates: it stood on the floor. Its height
+ *  goes with it whatever it is (one product, Bjørn 28.11.2026). */
+const onFeetFits = (t: { bottom?: number }) => !t.bottom;
+
+/** Byggeregel X18: the height a textile wall keeps on foot plates, on the floor: the frame's own, nothing at full height. */
+function onFeet(t: { height?: number; bottom?: number }, rules: Rules): { height?: number } {
+  const full = fullTextileHeight(rules);
+  const h = t.height ?? full - (t.bottom ?? 0);
+  return Math.abs(h - full) > EPS ? { height: h } : {};
+}
 
 export interface Unmounted {
   v: Variant;
@@ -225,7 +234,8 @@ function takeOff(v: Variant, rules: Rules, id: string, ox: number, oy: number): 
   delete placed.b;
   if (hasFace(out)) placed[key] = out;
   if (hasFace(t.back)) placed[other(key)] = t.back;
-  const heightKept = onFeetFits(t, rules);
+  Object.assign(placed, onFeet(t, rules));
+  const heightKept = onFeetFits(t);
   const textiles = fresh ? v.textiles.map((x) => (x.id === id ? placed : x)) : r.v.textiles.map((x) => (x.id === r.id ? placed : x));
   return { v: { ...r.v, textiles }, id: placed.id, heightKept };
 }

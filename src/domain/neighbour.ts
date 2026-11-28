@@ -6,7 +6,7 @@
 // wall is hidden and needs nothing.
 import { inward, openSides, SIDES } from './grid';
 import { textileBox } from './textile/inFrame';
-import { mountedOn, wallTextiles } from './textile/mounts';
+import { freeTextiles, mountedOn, wallTextiles } from './textile/mounts';
 import type { Point, Side, Variant, Wall } from './types';
 import type { BuiltModule } from './walls';
 import { raiseTop, wallHeight, type Rules } from '../rules/rules';
@@ -84,6 +84,18 @@ export function neighbourNotes(v: Variant, rules: Rules): NeighbourNote[] {
       out.push({ kind: 'textile', id: t.id, side, distance: d, top, neutral });
     }
   }
+  // Byggeregel X18: a tall textile wall on foot plates the same way (one product); both its faces are seen, so the
+  // one toward the neighbour must be white
+  for (const t of freeTextiles(v)) {
+    const top = Math.round((t.height ?? wallHeight(rules)) * 1000);
+    if (top <= std) continue;
+    for (const side of sides) {
+      const d = parallelDistance(v, side, t.from, t.to, rules.textile.depth / 2);
+      if (d === null || d >= distance - EPS) continue;
+      const face = faceToward({ from: t.from, to: t.to }, side) === 1 ? 'a' : 'b';
+      out.push({ kind: 'textile', id: t.id, side, distance: d, top, neutral: t[face]?.fill === 'white' });
+    }
+  }
   return out;
 }
 
@@ -99,7 +111,7 @@ export function backToBack(v: Variant, rules: Rules, mods: readonly BuiltModule[
 }
 
 /** The face of a wall (1 or −1) that looks toward a stand side. */
-function faceToward(w: Wall, side: Side): 1 | -1 {
+function faceToward(w: Pick<Wall, 'from' | 'to'>, side: Side): 1 | -1 {
   const [dx, dy] = [w.to[0] - w.from[0], w.to[1] - w.from[1]];
   const len = Math.hypot(dx, dy) || 1;
   // Face 1 is the left normal (−dy, dx), as the textile's side A

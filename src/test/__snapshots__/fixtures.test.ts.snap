@@ -680,6 +680,7 @@ exports[`01-hjorne-arrangor.json > variant A > calculation 1`] = `
     "freeLm": 0,
     "lm": 0,
     "pieces": [],
+    "textileWires": [],
   },
   "sum": 10990,
   "wallSupports": [
@@ -864,6 +865,7 @@ exports[`01-hjorne-arrangor.json > variant A > production: textile and print row
     "freeLm": 0,
     "lm": 0,
     "pieces": [],
+    "textileWires": [],
   },
   "textile": [],
 }
@@ -1733,6 +1735,7 @@ exports[`02-hjorne-utstiller.json > variant A > calculation 1`] = `
     "freeLm": 0,
     "lm": 0,
     "pieces": [],
+    "textileWires": [],
   },
   "sum": 13775,
   "wallSupports": [],
@@ -1883,6 +1886,7 @@ exports[`02-hjorne-utstiller.json > variant A > production: textile and print ro
     "freeLm": 0,
     "lm": 0,
     "pieces": [],
+    "textileWires": [],
   },
   "textile": [],
 }
@@ -2463,6 +2467,7 @@ exports[`02-hjorne-utstiller.json > variant B > calculation 1`] = `
     "freeLm": 0,
     "lm": 0,
     "pieces": [],
+    "textileWires": [],
   },
   "sum": 8010,
   "wallSupports": [
@@ -2580,6 +2585,7 @@ exports[`02-hjorne-utstiller.json > variant B > production: textile and print ro
     "freeLm": 0,
     "lm": 0,
     "pieces": [],
+    "textileWires": [],
   },
   "textile": [],
 }
@@ -3330,6 +3336,7 @@ exports[`03-rom.json > variant A > calculation 1`] = `
     "freeLm": 0,
     "lm": 0,
     "pieces": [],
+    "textileWires": [],
   },
   "sum": 9610,
   "wallSupports": [],
@@ -3475,6 +3482,7 @@ exports[`03-rom.json > variant A > production: textile and print rows 1`] = `
     "freeLm": 0,
     "lm": 0,
     "pieces": [],
+    "textileWires": [],
   },
   "textile": [],
 }
@@ -4161,6 +4169,7 @@ exports[`04-oy-takdrager.json > variant A > calculation 1`] = `
     "freeLm": 0,
     "lm": 0,
     "pieces": [],
+    "textileWires": [],
   },
   "sum": 9642,
   "wallSupports": [],
@@ -4280,6 +4289,7 @@ exports[`04-oy-takdrager.json > variant A > production: textile and print rows 1
     "freeLm": 0,
     "lm": 0,
     "pieces": [],
+    "textileWires": [],
   },
   "textile": [],
 }
@@ -4918,6 +4928,7 @@ exports[`05-takdrager-av.json > variant A > calculation 1`] = `
     "freeLm": 0,
     "lm": 0,
     "pieces": [],
+    "textileWires": [],
   },
   "sum": 12077,
   "wallSupports": [
@@ -5047,6 +5058,7 @@ exports[`05-takdrager-av.json > variant A > production: textile and print rows 1
     "freeLm": 0,
     "lm": 0,
     "pieces": [],
+    "textileWires": [],
   },
   "textile": [],
 }
@@ -5639,6 +5651,7 @@ exports[`06-stottedrager.json > variant A > calculation 1`] = `
     "freeLm": 0,
     "lm": 0,
     "pieces": [],
+    "textileWires": [],
   },
   "sum": 0,
   "wallSupports": [],
@@ -5659,6 +5672,7 @@ exports[`06-stottedrager.json > variant A > production: textile and print rows 1
     "freeLm": 0,
     "lm": 0,
     "pieces": [],
+    "textileWires": [],
   },
   "textile": [],
 }
@@ -6026,6 +6040,7 @@ exports[`07-engangsteppe.json > variant A > calculation 1`] = `
     "freeLm": 0,
     "lm": 0,
     "pieces": [],
+    "textileWires": [],
   },
   "sum": 1425,
   "wallSupports": [],
@@ -6081,6 +6096,7 @@ exports[`07-engangsteppe.json > variant A > production: textile and print rows 1
     "freeLm": 0,
     "lm": 0,
     "pieces": [],
+    "textileWires": [],
   },
   "textile": [],
 }
@@ -6578,6 +6594,7 @@ exports[`07-engangsteppe.json > variant B > calculation 1`] = `
     "freeLm": 0,
     "lm": 0,
     "pieces": [],
+    "textileWires": [],
   },
   "sum": 2850,
   "wallSupports": [],
@@ -6662,6 +6679,7 @@ exports[`07-engangsteppe.json > variant B > production: textile and print rows 1
     "freeLm": 0,
     "lm": 0,
     "pieces": [],
+    "textileWires": [],
   },
   "textile": [],
 }
@@ -7966,6 +7984,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
           2300,
         ],
         "textileId": "ft1",
+        "top": 2540,
         "uprights": 1,
       },
       {
@@ -8064,6 +8083,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
           1300,
         ],
         "textileId": "ft2",
+        "top": 2540,
         "uprights": 1,
       },
     ],
@@ -8194,6 +8214,7 @@ exports[`08-tekstil.json > variant A > calculation 1`] = `
         "wall": "Venstre",
       },
     ],
+    "textileWires": [],
   },
   "sum": 28289.500000000004,
   "wallSupports": [],
@@ -8459,6 +8480,7 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
           2300,
         ],
         "textileId": "ft1",
+        "top": 2540,
         "uprights": 1,
       },
       {
@@ -8557,6 +8579,7 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
           1300,
         ],
         "textileId": "ft2",
+        "top": 2540,
         "uprights": 1,
       },
     ],
@@ -8687,6 +8710,7 @@ exports[`08-tekstil.json > variant A > production: textile and print rows 1`] = 
         "wall": "Venstre",
       },
     ],
+    "textileWires": [],
   },
   "textile": [
     {
@@ -9527,6 +9551,7 @@ exports[`09-dekor.json > variant A > calculation 1`] = `
     "freeLm": 0,
     "lm": 0,
     "pieces": [],
+    "textileWires": [],
   },
   "sum": 15078,
   "wallSupports": [],
@@ -9710,6 +9735,7 @@ exports[`09-dekor.json > variant A > production: textile and print rows 1`] = `
     "freeLm": 0,
     "lm": 0,
     "pieces": [],
+    "textileWires": [],
   },
   "textile": [],
 }
@@ -10315,6 +10341,7 @@ exports[`10-mobler-utstyr.json > variant A > calculation 1`] = `
     "freeLm": 0,
     "lm": 0,
     "pieces": [],
+    "textileWires": [],
   },
   "sum": 9970,
   "wallSupports": [],
@@ -10373,6 +10400,7 @@ exports[`10-mobler-utstyr.json > variant A > production: textile and print rows 
     "freeLm": 0,
     "lm": 0,
     "pieces": [],
+    "textileWires": [],
   },
   "textile": [],
 }
@@ -11105,6 +11133,7 @@ exports[`11-hyller.json > variant A > calculation 1`] = `
     "freeLm": 0,
     "lm": 0,
     "pieces": [],
+    "textileWires": [],
   },
   "sum": 5276,
   "wallSupports": [
@@ -11251,6 +11280,7 @@ exports[`11-hyller.json > variant A > production: textile and print rows 1`] = `
     "freeLm": 0,
     "lm": 0,
     "pieces": [],
+    "textileWires": [],
   },
   "textile": [],
 }
@@ -11998,6 +12028,7 @@ exports[`12-hjornehyller.json > variant A > calculation 1`] = `
     "freeLm": 0,
     "lm": 0,
     "pieces": [],
+    "textileWires": [],
   },
   "sum": 3873,
   "wallSupports": [
@@ -12221,6 +12252,7 @@ exports[`12-hjornehyller.json > variant A > production: textile and print rows 1
     "freeLm": 0,
     "lm": 0,
     "pieces": [],
+    "textileWires": [],
   },
   "textile": [],
 }
@@ -12998,6 +13030,7 @@ exports[`13-disker-og-podier.json > variant A > calculation 1`] = `
     "freeLm": 0,
     "lm": 0,
     "pieces": [],
+    "textileWires": [],
   },
   "sum": 10225,
   "wallSupports": [],
@@ -13282,6 +13315,7 @@ exports[`13-disker-og-podier.json > variant A > production: textile and print ro
     "freeLm": 0,
     "lm": 0,
     "pieces": [],
+    "textileWires": [],
   },
   "textile": [],
 }
@@ -14264,6 +14298,7 @@ exports[`14-halv-meter.json > variant A > calculation 1`] = `
     "freeLm": 0,
     "lm": 0,
     "pieces": [],
+    "textileWires": [],
   },
   "sum": 5414,
   "wallSupports": [
@@ -14450,6 +14485,7 @@ exports[`14-halv-meter.json > variant A > production: textile and print rows 1`]
     "freeLm": 0,
     "lm": 0,
     "pieces": [],
+    "textileWires": [],
   },
   "textile": [],
 }
@@ -16124,6 +16160,7 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
           1760,
         ],
         "textileId": "f1",
+        "top": 2540,
         "uprights": 1,
       },
       {
@@ -16222,6 +16259,7 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
           1760,
         ],
         "textileId": "f2",
+        "top": 2540,
         "uprights": 1,
       },
     ],
@@ -16609,6 +16647,7 @@ exports[`15-tekstilhjorner.json > variant A > calculation 1`] = `
         "wall": "Venstre",
       },
     ],
+    "textileWires": [],
   },
   "sum": 52273.799999999996,
   "wallSupports": [
@@ -16950,6 +16989,7 @@ exports[`15-tekstilhjorner.json > variant A > production: textile and print rows
           1760,
         ],
         "textileId": "f1",
+        "top": 2540,
         "uprights": 1,
       },
       {
@@ -17048,6 +17088,7 @@ exports[`15-tekstilhjorner.json > variant A > production: textile and print rows
           1760,
         ],
         "textileId": "f2",
+        "top": 2540,
         "uprights": 1,
       },
     ],
@@ -17435,6 +17476,7 @@ exports[`15-tekstilhjorner.json > variant A > production: textile and print rows
         "wall": "Venstre",
       },
     ],
+    "textileWires": [],
   },
   "textile": [
     {

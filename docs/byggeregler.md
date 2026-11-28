@@ -432,7 +432,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   innsiden, innervegg og romvegg begge. To rammer på samme flate kobles ikke sammen; to rammer på vegger i rett vinkel
   møtes i et 92LTX-hjørne (X7).
   *Bjørn 30.10.2026 og 21.11.2026 · kode `src/domain/textile/inFrame.ts` · test `src/domain/decor.test.ts`*
-- **X5 På fotplater (frittstående).** Samme ramme som X2, på fotplater, med tekstil på begge sider (trykt, hvit eller kundens egen), høyde 2540, minst
+- **X5 På fotplater (frittstående).** Samme ramme som X2, på fotplater, med tekstil på begge sider (trykt, hvit eller kundens egen), høyde fri som på vegg (X14, X18), minst
   like lang som korteste ramme (X17). Tegnes med samme verktøy som veggen og disken (Bjørn 14.11.2026: ett tegneverktøy, alle pensler på samme
   grid): et klikk på gulvet setter 1 m, et drag vokser fra modulen du ser i hele meter, med Shift eller «Fin» er
   tegnestørrelsen 250 (som V1). Den kan stå overalt der volumet tillater det (F1, F2): langs en systemvegg, i T mot
@@ -536,8 +536,8 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   - *Av:* dras en tekstilvegg på systemvegg ut forbi magneten på sin egen side, står den fritt på fotplater der den
     slippes, like lang; nærmere holder magneten den på veggen, og langs veggen flyttes den langs flaten.
   - Siden som vender ut beholder duk og motiv. Siden mot veggen huskes og kommer tilbake når den tas av igjen. En
-    tekstilvegg i et 92LTX-hjørne (M1) monteres ikke alene, bare med Løsne (M5). På fotplater er høyden foreløpig 2540
-    fra gulvet (X5): har den en annen høyde eller står høyere på veggen, sier en melding det.
+    tekstilvegg i et 92LTX-hjørne (M1) monteres ikke alene, bare med Løsne (M5). Høyden følger med av og på veggen (X18);
+    på fotplater står den alltid på gulvet, så en ramme som står høyere på veggen settes ned, og en melding sier det.
   - *En gruppe:* frittstående tekstilvegger koblet i 92LTX-hjørner (uten innervegger i gruppen) dras sammen. Ligger en
     av dem parallelt med en systemvegg innenfor magneten, tar magneten hele gruppen på tvers inn til veggflaten, og
     hver tekstilvegg som da står langs en vegg monteres der; inn i et hjørne av systemvegger monteres begge armene. En
@@ -573,12 +573,13 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   gjelder skinnene). En 92LTX i et høyt hjørne har lengdene til 43TX minus endelokkene og skjøtes butt mot butt (X7).
   Når rammen når over høydegrensen, går montering og demontering med lift (kostregel 6, `CalcLine.top`).
   Når over veggens topp (2540, eller toppen til en hevet vegg), holder ikke stolpene den der oppe: den henger i vaier
-  fra taket, fordelt langs rammen etter fotplateregelen (S3; et 92LTX-hjørne holder den enden), festet med en
+  fra taket, fordelt langs rammen etter fotplateregelen (S3), festet med en
   gjennomgående øyebolt i rammens toppskinne (plassholder uten art.nr). Vaierne står på samme linje 4300 som vaierne
   på hevet vegg (S9), alltid utstillerens. Står rammen innenfor en hevet vegg, holder veggen den; senkes veggen igjen,
   får rammen vaierne tilbake. Vaierne vises som på hevet vegg: sirkel med kryss i planen og over rammens toppskinne i
-  veggrisset, og som en V i 3D. Frittstående står foreløpig i 2540 (X5); høy frittstående med vaier
-  kommer senere.
+  veggrisset, og som en V i 3D. Det samme gjelder på fotplater (X18): over 2540 henger rammen i vaier fordelt
+  etter fotplateregelen, fotplatene står som før. Et 92LTX-hjørne over toppen henger i sin egen vaier, både på vegg
+  og på fotplater (Bjørn 28.11.2026), én for hjørnet, ved hjørnestolpen; ingen ende henger i et hjørne alene.
   *Bjørn 28.11.2026 · `rules.textile.maxHeight`, `RECIPES.textileFrame.standard`, `RECIPES.textileFrame.wire`, `ITEM.textileWire` · kode `src/calc/textile/free.ts`, `src/calc/textile/production.ts`, `src/calc/lines/feet.ts`, `src/foga/engine.ts`, `src/calc/textile/common.ts`, `src/calc/textile/lines.ts`, `src/domain/textile/inFrame.ts`, `src/domain/decor.ts`, `src/calc/textile/production.ts`, `src/ui/plan/wallDrawer/WallElevation.tsx` · test `src/domain/decor.test.ts`, `src/calc/textile/tallFrame.test.ts`*
 - **X15 Forslag om å heve veggen.** Når en ramme på vegg over veggens topp, tilbyr pillen å heve veggen til laveste
   høyde i V19 som tar rammen inn («Hev veggen til 3080»), med hva det gjør med tilbudet. Ett trykk hever hele veggen
@@ -613,7 +614,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   vegg bytte til veggen, «Fyll ledig vegg», hjørnene (M5), «Hev veggen» (X15) og «Løsne» fra veggen; på fotplater
   Roter og «Løsne» fra gruppen. Skuffen har de samme innstillingene, Lengde, Høyde og duk på siden som vises, og
   «Fra gulv» bare på vegg. En ramme på vegg vises i veggens skuff, sammen med veggen den henger på.
-  *Bjørn 28.11.2026 · kode `src/domain/textile/edit.ts`, `src/ui/plan/selection.ts`, `src/ui/plan/pointer/decor.ts`, `src/ui/plan/pill/textile.tsx`, `src/ui/plan/TextileSettings.tsx` · test `src/domain/textile/edit.test.ts`, `src/ui/plan/selection.test.ts`*
+  Høyden følger rammen av og på veggen (X13), og en høy ramme på fotplater bygges som på vegg: skjøtte stendere,
+  lift og vaier (X14). Nabogodkjenningen (N1) gjelder den også, med siden mot naboen (hvit duk er nøytral).
+  *Bjørn 28.11.2026 · kode `src/domain/textile/edit.ts`, `src/ui/plan/selection.ts`, `src/ui/plan/pointer/decor.ts`, `src/ui/plan/pill/textile.tsx`, `src/ui/plan/TextileSettings.tsx`, `src/domain/textile/mount.ts`, `src/domain/neighbour.ts` · test `src/domain/textile/edit.test.ts`, `src/ui/plan/selection.test.ts`, `src/calc/textile/tallFrame.test.ts`, `src/domain/neighbour.test.ts`*
 
 ## M · Magnet og kobling
 
@@ -1038,7 +1041,7 @@ K22 standardvarene og K23 disker over en fotplate.
 ## N · Nabo
 
 - **N1 Nabogodkjenning.** Messehusets regel: alt som er høyere enn standardveggen (2540), en hevet vegg (V18) eller
-  en høy tekstilvegg (X14), og som står nærmere enn 1000 mm fra en standgrense mot en nabo og parallelt med den,
+  en høy tekstilvegg (X14, også på fotplater, X18), og som står nærmere enn 1000 mm fra en standgrense mot en nabo og parallelt med den,
   krever godkjenning fra naboen, og siden mot naboen skal være nøytral. Nabogrensene er standens sider som ikke
   ligger mot gangen; en øy har ingen. Avstanden måles fra nærmeste kant (stolpens eller rammens flate) til grensen
   (`rules.neighbour.distance`). En vegg på tvers av grensen er ikke parallell, og enden teller ikke. Bare det naboen
@@ -1068,7 +1071,6 @@ i regelen og strykes her.
 - Snekret vegg som produkt.
 
 **Tekstil**
-- X5, M5: høye frittstående tekstilvegger og flere høyder på frittstående (låst til 2540), med vaier og gjennomgående øyebolt. På systemvegg er høy tekstil bygget (X14).
 - X11: velge type hjørne der en frittstående tekstilvegg møter en ramme på vegg (Bjørn 20.11.2026: 92LTX er bedre enn å
   stoppe mot rammen, fordi alle profilkanalene for tekstil er tilgjengelige, mens en utenpåliggende ramme sperrer
   kanalene og må monteres etter tekstilen).

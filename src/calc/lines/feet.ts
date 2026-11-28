@@ -22,12 +22,12 @@ export function footLines(c: CalcContext): CalcLine[] {
   ];
 }
 
-/** Ceiling wires on raised walls (Byggeregler S9, S10) and on textile frames over their wall's top (X14): per V, one
- *  line, always the exhibitor's. */
+/** Ceiling wires on raised walls (Byggeregler S9, S10) and on tall textile frames, on a wall or on foot plates, with
+ *  their 92LTX corners (X14, X18): per V, one line, always the exhibitor's. */
 export function wireLines(c: CalcContext): CalcLine[] {
-  const frames = c.prod.pieces.filter((p) => p.wires);
+  const frames = c.prod.textileWires;
   const nWall = c.wires.length;
-  const nTextile = frames.reduce((a, p) => a + (p.wires ?? 0), 0);
+  const nTextile = frames.length;
   const n = nWall + nTextile;
   if (!n || !c.sys.wallWire) return [];
   // Hung from the top of what they hold, the highest one: worked from the lift above the limit (cost rule 6)

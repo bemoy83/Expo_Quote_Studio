@@ -86,6 +86,12 @@ export interface FreeFrame {
   spliceCode: string;
   faces: [FreeFace, FreeFace];
   mount: 'fotplater';
+  /** The frame's top from the floor, mm: on foot plates it stands on the floor. */
+  top: number;
+  /** Ceiling wires holding a frame over the standard wall top (Byggeregel X14, X18), by the foot plate rule, and where,
+   *  mm along the frame from its start. A 92LTX corner has its own wire (Production.textileWires). */
+  wires?: number;
+  wireAt?: number[];
   /** What it is built of: 43TX rails and uprights, 617 top and bottom at every free end and into every corner post,
    *  the splice connector (`spliceCode`) top and bottom in every rail splice, a foot plate at every support, braces.
    *  The corner posts are shared and counted in calc/textile/production.ts. */
@@ -263,8 +269,10 @@ export function freeFrames(
 ): FreeFrame[] {
   const corners = cornerEnds(v);
   const f = r.feet;
-  const H = fullHeight(s);
+  const full = fullHeight(s);
   return freeTextiles(v).map((t) => {
+    // Byggeregel X18: the frame's own height, as on a wall (one product); on foot plates it stands on the floor
+    const H = t.height !== undefined ? mm(t.height) : full;
     const pos = textilePos(v, t.id);
     const trim = trims.get(t.id);
     const length = mm(runLength(t) - (trim ? trim.from + trim.to : 0));
@@ -281,6 +289,7 @@ export function freeFrames(
       uprights: 2 - x.nCorners,
       faces: x.faces as [FreeFace, FreeFace],
       mount: 'fotplater',
+      top: H,
     };
   });
 }

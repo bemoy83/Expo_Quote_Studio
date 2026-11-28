@@ -95,7 +95,7 @@ function OffWall({ p, id }: { p: PillActions; id: string }) {
     if ('error' in r) return p.onToast(r.error)
     p.onEdit(() => r.v)
     p.onSelect({ textileId: r.id })
-    if (!r.heightKept) p.onToast(onFeetHeight(rules))
+    if (!r.heightKept) p.onToast(onFeetHeight())
   }
   return (
     <>

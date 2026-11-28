@@ -49,14 +49,6 @@ export function buildTextile(c: BuildContext) {
     textile(g, -L / 2 + p.faceStart / 1000, W, h, bottom, print, outFace(t, on.wall, on.side) === 'a' ? 1 : -1, tag)
     // Upright braces (90) where the calc puts them, as on foot plates: by a splice and at most 2 m apart
     for (const at of p.braceAt) brace(g, -L / 2 + at / 1000, h, bottom, alu, tag)
-    // Byggeregel X14: over its wall's top the frame hangs in a V of wire from the top rail, as a raised wall (S9; the
-    // ceiling's height is not known: drawn 1.5 m up, 1 m out each side)
-    for (const at of p.wireAt ?? []) {
-      const x = -L / 2 + at / 1000
-      const top = bottom + h
-      const pts = [new THREE.Vector3(x, top + 1.5, -1), new THREE.Vector3(x, top, 0), new THREE.Vector3(x, top + 1.5, 1)]
-      add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: WIRE })), tag, g)
-    }
   }
 
   // Frittstående tekstilvegger: a frame with textile on both faces (face A toward side 1), on foot plates
@@ -87,6 +79,16 @@ export function buildTextile(c: BuildContext) {
       const half = f.foot.along / 2000
       along([x - dx * half, y - dy * half], [x + dx * half, y + dy * half], 2 * half, foot, f.foot.across / 1000, 0, mat('textile', ALU, ALU_FINISH), { layer: 'textile' })
     }
+  }
+
+  // Byggeregel X14, X18: a tall frame, on a wall or on foot plates, hangs in a V of wire from its top rail, and one at
+  // each 92LTX corner between such frames, as a raised wall (S9; the ceiling's height is not known: drawn 1.5 m up, 1 m
+  // out each side), where the calc hangs them
+  for (const x of res.production.textileWires) {
+    const top = x.top / 1000
+    const [nx, ny] = [-x.dir[1], x.dir[0]]
+    const pts = [at([x.at[0] - nx, x.at[1] - ny], top + 1.5), at(x.at, top), at([x.at[0] + nx, x.at[1] + ny], top + 1.5)]
+    add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: WIRE })), { layer: 'textile', pick: { textileId: x.textileId } })
   }
 
   cornerPosts(c)
