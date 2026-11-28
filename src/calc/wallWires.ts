@@ -22,24 +22,30 @@ const NO_BEAMS = { segments: [], posts: new Map(), lm: 0 };
  * The raised modules that need wires: those topping out over `wireAbove`, and every raised module on a straight run
  * that stands on foot plates (`plated`: the posts with a foot plate, before the wires take their place).
  */
-export function wiredModules(mods: readonly BuiltModule[], plated: ReadonlySet<string>, rules: Rules): BuiltModule[] {
+function wiredModules(mods: readonly BuiltModule[], plated: ReadonlySet<string>, rules: Rules): BuiltModule[] {
   const onPlates = new Set(wallRuns(mods).flatMap((r) => (r.points.some((p) => plated.has(pointKey(p))) ? r.mods : [])));
   return mods.filter((m) => m.raise && (onPlates.has(m) || raiseTop(m.raise.len, rules) > rules.wall.raise.wireAbove));
 }
 
 /** One wire per post the rule picks on the wired modules: its point on the wall and the wall's direction (the V spreads across it). */
-export function wallWires(wired: readonly BuiltModule[]): WallSupport[] {
+function wallWires(wired: readonly BuiltModule[]): WallSupport[] {
   return wired.length ? wallSupports(wired, NO_BEAMS, RECIPES.wall.support.rule, () => false) : [];
 }
 
-/** The posts that would stand on a foot plate if no wall were raised (S2–S7). */
-export function platedPosts(v: Variant, mods: readonly BuiltModule[], all: BeamLayout, standard: BeamLayout): Set<string> {
+/**
+ * The free walls' foot plates and the raised walls' wires of a sketch, from its beams: the plates are laid out as if
+ * no wall were raised (S2–S7), and a wired post keeps no plate (S9). Shared by the calc and the wall drawer.
+ */
+export function wallHolds(v: Variant, mods: readonly BuiltModule[], all: BeamLayout, standard: BeamLayout, rules: Rules): { feet: WallSupport[]; wires: WallSupport[] } {
   const walls = new Map(v.walls.map((w) => [w.id, w]));
   const kindOf = (m: BuiltModule) => {
     const w = walls.get(m.wallId);
     return w ? wallKind(w) : 'inner';
   };
-  return new Set(freeWallSupports(mods, all, standard, kindOf).map((f) => pointKey(f.at)));
+  const plates = freeWallSupports(mods, all, standard, kindOf);
+  const wired = wiredModules(mods, new Set(plates.map((f) => pointKey(f.at))), rules);
+  const wiredPosts = wallPoints(wired);
+  return { feet: plates.filter((f) => !wiredPosts.has(pointKey(f.at))), wires: wallWires(wired) };
 }
 
 /** The wires of a sketch by itself, for the wall drawer (the calc has them as `wires`). */
@@ -47,5 +53,5 @@ export function variantWires(v: Variant, rules: Rules): WallSupport[] {
   const mods = builtModules(v);
   if (!mods.some((m) => m.raise)) return [];
   const { all, standard } = variantBeams(v, mods, wallPoints(mods), rules.beam.max);
-  return wallWires(wiredModules(mods, platedPosts(v, mods, all, standard), rules));
+  return wallHolds(v, mods, all, standard, rules).wires;
 }
