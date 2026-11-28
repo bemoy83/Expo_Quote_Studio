@@ -44,7 +44,7 @@ describe.each(FILES.map((f) => [f.replace('./fixtures/', ''), f]))('%s', (_name,
 
     it('calculation', () => {
       // What is built, placed (calc/built.ts), has its own snapshot below: its modules are builtModules as laid out
-      const { built, ...rest } = res;
+      const { built: _built, ...rest } = res;
       expect(rest).toMatchSnapshot();
     });
     it('built: tops', () => {
