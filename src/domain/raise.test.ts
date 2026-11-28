@@ -1,7 +1,10 @@
 // Byggeregel V18: the height is chosen per wall, a room's sides too (a wall is a wall).
 import { describe, expect, it } from 'vitest';
 import { paintWalls } from './edit';
-import { setWallRaise } from './raise';
+import { raiseFor, raiseUnder, setWallRaise } from './raise';
+import { RULES } from '../rules/rules';
+import { addTextile, updateTextile } from './textile/inFrame';
+import { wallTextiles } from './textile/mounts';
 import { addRoom, dissolveRoom, moveRoom, resizeRoom } from './rooms';
 import { createVariant } from './variant';
 
@@ -46,5 +49,30 @@ describe('V18 raising a wall', () => {
     const up = setWallRaise(room, room.walls.find((w) => w.room?.side === 1)!.id, 540);
     const plain = dissolveRoom(up, up.rooms[0].id);
     expect(plain.walls.filter((w) => w.raise).length).toBe(1);
+  });
+});
+
+describe('X15 offering to raise the wall under a tall textile', () => {
+  const tall = (h: number) => {
+    const r = addTextile(createVariant('C', { width: 6, depth: 3, type: 'row' }), RULES, 'side-back', 1, 1)!;
+    return { v: updateTextile(r.v, RULES, r.id, { height: h }), id: r.id };
+  };
+
+  it('the lowest raise that takes the frame in', () => {
+    const { v, id } = tall(3.04);
+    expect(raiseFor(v, RULES, id)).toBe(540);
+    expect(raiseFor(tall(3.2).v, RULES, id)).toBe(1040);
+    // Inside the wall: nothing to offer
+    expect(raiseFor(tall(2.54).v, RULES, id)).toBeNull();
+    // Higher than any raise: none
+    expect(raiseFor({ ...v, textiles: v.textiles.map((t) => ({ ...t, height: 5.03, bottom: 0.5 })) }, RULES, id)).toBeNull();
+  });
+
+  it('raises the wall and keeps the frame as it was', () => {
+    const { v, id } = tall(3.54);
+    const up = raiseUnder(v, RULES, id);
+    expect(up.walls.find((w) => w.id === 'side-back')!.raise).toBe(1040);
+    expect(wallTextiles(up)[0].height).toBe(3.54);
+    expect(raiseFor(up, RULES, id)).toBeNull();
   });
 });

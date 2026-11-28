@@ -1,8 +1,8 @@
 // The pill on a wall and on a frame or decal on it (docs/pille-og-skuff.md): the wall's colour, print and a textile wall;
 // the frame's motif and Fyll ledig vegg; the decal's motif. On a wall with textile walls one button steps between them.
-import { neighbourNotes, neighbourText, noteFor } from '../../../domain/neighbour'
 import { Image as ImageIcon, Layers, MoveHorizontal, Unlink } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { useMemo, type ReactNode } from 'react'
+import { calc } from '../../../calc/calc'
 import { updateFoil } from '../../../domain/decor'
 import { canMoveWall, eraseWalls } from '../../../domain/edit'
 import { faces, sideOf } from '../../../domain/faces'
@@ -10,23 +10,60 @@ import { wallLength, wallModules } from '../../../domain/grid'
 import { wallRal } from '../../../domain/plateDecor'
 import { paintWallFace } from '../../../domain/paint'
 import { fillPlates, printWall } from '../../../domain/print'
+import { neighbourNotes, neighbourText, noteFor } from '../../../domain/neighbour'
+import { raiseFor, raiseUnder } from '../../../domain/raise'
 import { roomName } from '../../../domain/rooms'
 import { addTextile, fillTextile, textileBox, textilesOn, updateTextile } from '../../../domain/textile/inFrame'
 import type { TextileWall, Variant, Wall } from '../../../domain/types'
+import { DEFAULT_STAND_WALLS } from '../../../domain/variant'
 import { isStandWall, wallLabel } from '../../../domain/walls'
-import { rules } from '../../env'
-import { fmt } from '../../format'
+import { raiseTop } from '../../../rules/rules'
+import { catalog, pricing, rules } from '../../env'
+import { fmt, mm, signed } from '../../format'
 import { printKept } from '../../fillKeeping'
 import { findMotif } from '../../motifs'
 import { QBtn, Sep } from '../quick/parts'
 import type { Chosen, PlanSelection } from '../selection'
 import { faceName } from '../wallDrawer/face'
 import { Colours, CornerButton, Motifs, MoveTools, type Content, type PillActions, type SecondFace } from './parts'
-import { wallTextiles } from '../../../domain/textile/mounts'
+import { mountedOn, wallTextiles } from '../../../domain/textile/mounts'
 import { loosenMounted, onFeetHeight } from '../../../domain/textile/mount'
 import { joinCorner, letGoCorner, wallCorners } from '../../../domain/textile/cornerJoin'
 
 type Of<K extends Chosen['kind']> = Extract<Chosen, { kind: K }>
+
+/** Byggeregel X15: «Hev veggen til N» for a frame over its wall's top, and «Hvit duk» for one showing its textile to a
+ *  neighbour (N1), each with what it does to the quote. */
+function RaiseOffer({ p, textileId }: { p: PillActions; textileId: string }) {
+  const { v } = p
+  const offers = useMemo(() => {
+    const sum = (x: Variant) => calc(x, rules, catalog, DEFAULT_STAND_WALLS, pricing).sum
+    const len = raiseFor(v, rules, textileId)
+    const note = noteFor(neighbourNotes(v, rules), textileId)
+    const t = wallTextiles(v).find((x) => x.id === textileId)
+    const white = note && !note.neutral && t?.fill !== 'white' && mountedOn(v, textileId) ? updateTextile(v, rules, textileId, { fill: 'white' }) : null
+    const raised = len ? raiseUnder(v, rules, textileId) : null
+    const now = raised || white ? sum(v) : 0
+    return [
+      ...(raised && len ? [{ key: 'raise', label: `Hev veggen til ${mm(raiseTop(len, rules) / 1000)}`, title: 'Hever veggen så den tar rammen, og skjuler baksiden mot naboen', next: raised, diff: sum(raised) - now }] : []),
+      ...(white && !raised ? [{ key: 'white', label: 'Hvit duk', title: 'Hvit duk er nøytral mot naboen', next: white, diff: sum(white) - now }] : []),
+    ]
+  }, [v, textileId])
+  if (!offers.length) return null
+  return (
+    <>
+      <Sep />
+      {offers.map((o) => (
+        <QBtn key={o.key} title={`${o.title} · ${signed(o.diff)} kr på tilbudet`} label={o.label} onClick={() => p.onEdit(() => o.next)}>
+          <span className="q-std">
+            <b>{o.label}</b>
+            <small>{signed(o.diff)} kr</small>
+          </span>
+        </QBtn>
+      ))}
+    </>
+  )
+}
 
 /** Byggeregel N1: a tall thing near a neighbour says so in its pill. */
 const withNeighbour = (v: Variant, id: string, meta: string) => {
@@ -73,6 +110,9 @@ export function textilePill(p: PillActions, c: Of<'textile'>, remove: () => void
             <CornerButton joined={k.joined} onClick={() => onEdit((x) => (k.joined ? letGoCorner(x, k.at) : joinCorner(x, k.at)))} />
           </span>
         ))}
+        {/* Byggeregel X15: a frame over its wall's top offers to raise the wall (neutral toward a neighbour, N1), and
+            one facing a neighbour white textile */}
+        <RaiseOffer p={p} textileId={T.id} />
         {/* Byggeregel X13: mounted is a coupling, so «Løsne» takes it off as it takes walls apart (Bjørn 21.11.2026) */}
         <Sep />
         <QBtn title="Løsne fra veggen · står fritt på fotplater foran veggen" label="Løsne" onClick={loosen}>

@@ -565,6 +565,12 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   på hevet vegg (S9), alltid utstillerens. Står rammen innenfor en hevet vegg, holder veggen den. Frittstående står foreløpig i 2540 (X5); høy frittstående med vaier
   kommer senere.
   *Bjørn 28.11.2026 · `rules.textile.maxHeight`, `RECIPES.textileFrame.standard`, `RECIPES.textileFrame.wire`, `ITEM.textileWire` · kode `src/calc/textile/free.ts`, `src/calc/textile/production.ts`, `src/calc/lines/feet.ts`, `src/foga/engine.ts`, `src/calc/textile/common.ts`, `src/calc/textile/lines.ts`, `src/domain/textile/inFrame.ts`, `src/domain/decor.ts`, `src/calc/textile/production.ts`, `src/ui/plan/wallDrawer/WallElevation.tsx` · test `src/domain/decor.test.ts`, `src/calc/textile/tallFrame.test.ts`*
+- **X15 Forslag om å heve veggen.** Når en ramme på vegg over veggens topp, tilbyr pillen å heve veggen til laveste
+  høyde i V19 som tar rammen inn («Hev veggen til 3080»), med hva det gjør med tilbudet. Ett trykk hever hele veggen
+  (også en romside, V18) og lar rammen stå som den er; angre tar det tilbake. Mot en nabo (N1) skjuler den hevede
+  veggen rammens bakside, så siden mot naboen blir nøytral; godkjenningen trengs fortsatt. Viser rammen duken sin
+  mot naboen, tilbyr pillen hvit duk i stedet. Rammen hever aldri veggen av seg selv (X14).
+  *Bjørn 27.11.2026 og 28.11.2026 · kode `src/domain/raise.ts`, `src/ui/plan/pill/wall.tsx` · test `src/domain/raise.test.ts`*
 
 ## M · Magnet og kobling
 
@@ -1017,8 +1023,6 @@ i regelen og strykes her.
 - Snekret vegg som produkt.
 
 **Tekstil**
-- Forslag om å heve veggen når tekstil tegnes over 2540 (kommer med høye tekstilvegger: tekstil på vegg kan ikke gå
-  over 2540 i dag).
 - X5, M5: høye frittstående tekstilvegger og flere høyder på frittstående (låst til 2540), med vaier og gjennomgående øyebolt. På systemvegg er høy tekstil bygget (X14).
 - X11: velge type hjørne der en frittstående tekstilvegg møter en ramme på vegg (Bjørn 20.11.2026: 92LTX er bedre enn å
   stoppe mot rammen, fordi alle profilkanalene for tekstil er tilgjengelige, mens en utenpåliggende ramme sperrer
