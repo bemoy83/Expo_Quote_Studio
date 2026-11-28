@@ -31,6 +31,7 @@ import {
   TUSJ_TEXTILE,
 } from '../planStyle'
 import { Seg } from './Seg'
+import { WireMark } from './BeamLayer'
 import { GONE, useErasing } from './erasing'
 import { frameCorners, freeTextiles, mountedOn, wallTextiles } from '../../../domain/textile/mounts'
 
@@ -110,6 +111,18 @@ export function TextileLayer({ v, res, selection, dim }: { v: Variant; res: Calc
               {c.hi && <CornerPost p={b} sc={sc} />}
             </g>
           )
+        })}
+        {/* Ceiling wires on a frame over its wall's top (Byggeregel X14): on the frame as drawn, at the plan's offset, as
+            the raised wall's on its posts */}
+        {frames.flatMap(({ t }) => {
+          const w = v.walls.find((x) => x.id === t.wallId)
+          const along = res.production.pieces.find((p) => p.textileId === t.id)?.wireAlong ?? []
+          if (!w) return []
+          const side = sideOf(v, t)
+          return along.map((a) => {
+            const [at] = faceSegment(w, side, a / 1000, a / 1000, textileOffset(sc))
+            return <WireMark key={`w${t.id}${a}`} at={at} r={postSize(sc) * 0.9} />
+          })
         })}
       </g>
 

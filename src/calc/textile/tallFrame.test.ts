@@ -75,15 +75,11 @@ describe('X14 a tall textile on a wall', () => {
     expect(calc(setWallRaise(raised, 'side-back', 0), RULES, DEFAULT_CATALOG, { payer: 'utstiller', ral: '9010' }).production.pieces[0].wires).toBe(3);
   });
 
-  it('where the wires hang: along the frame, along its wall and in the plan, for the plan, elevation and 3D', () => {
+  it('where the wires hang: along the frame (3D) and along its wall (plan and elevation)', () => {
     const v0 = onWall();
     const piece = production(updateTextile(v0.v, RULES, 't1', { height: 3.04 }), RULES, 'Kunde').pieces[0];
     // The frame on the back wall from 0 to 6 m (the frame ends 15 inside the run's ends)
     expect(piece.wireAt).toHaveLength(3);
     expect(piece.wireAlong!.map((a) => Math.round(a))).toEqual(piece.wireAt!.map((a) => Math.round(a + piece.runAt + (piece.shift ?? 0))));
-    // In the plan on the frame's line, out from the wall's face (Bjørn 28.11.2026), not on the wall's line
-    const runY = v0.v.textiles[0].from[1];
-    expect(runY).toBeGreaterThan(0);
-    expect(piece.wirePoints!.map(([x, y]) => [Math.round(x * 1000), y])).toEqual(piece.wireAlong!.map((a) => [Math.round(a), runY]));
   });
 });

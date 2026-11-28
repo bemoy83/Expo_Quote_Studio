@@ -59,10 +59,6 @@ export function BeamLayer({ v, res, selection, dim, measured }: { v: Variant; re
         {(res.wires ?? []).map(({ at }) => (
           <WireMark key={`w${at[0]},${at[1]}`} at={at} r={ps * 0.9} />
         ))}
-        {/* And on textile frames over their wall's top (Byggeregel X14), over the frame's top rail */}
-        {res.production.pieces.flatMap((p) => p.wirePoints ?? []).map((at) => (
-          <WireMark key={`tw${at[0]},${at[1]}`} at={at} r={ps * 0.9} />
-        ))}
       </g>
     </g>
   )

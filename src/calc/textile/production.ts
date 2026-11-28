@@ -1,6 +1,6 @@
-import type { Foil, Point, TextileFill, TextileWall, Variant, Wall } from '../../domain/types';
+import type { Foil, TextileFill, TextileWall, Variant, Wall } from '../../domain/types';
 import { wallLabel } from '../../domain/walls';
-import { pointAlong, wallDirection } from '../../domain/grid';
+import { wallDirection } from '../../domain/grid';
 import { RECIPES } from '../../foga/recipes';
 import { railHeight } from '../../foga/plates';
 import { raiseTop, wallHeight, type InFrameParams, type Rules } from '../../rules/rules';
@@ -36,8 +36,6 @@ export interface ProductionPiece extends FramePiece {
   wireAt?: number[];
   /** The same, mm along its wall from the wall's start: for the plan and the elevation. */
   wireAlong?: number[];
-  /** The same in the plan, on the frame's line (out from the wall), m. */
-  wirePoints?: Point[];
   /** The frame's top from the floor, mm. */
   top: number;
 }
@@ -101,12 +99,6 @@ export function production(v: Variant, rules: Rules, customer: string): Producti
     const sign = (run.to[0] - run.from[0]) * wx + (run.to[1] - run.from[1]) * wy >= 0 ? 1 : -1;
     const start = mm(alongWall(m.wall, run.from)) + (shiftOf.get(t.id) ? mm(shiftOf.get(t.id)!) : 0);
     const wireAlong = wireAt.map((a) => start + sign * a);
-    // In the plan on the frame's line, where it hangs: as far out from the wall as the run
-    const base = pointAlong(m.wall, alongWall(m.wall, run.from));
-    const onRun = (t: number): Point => {
-      const p = pointAlong(m.wall, t);
-      return [p[0] + run.from[0] - base[0], p[1] + run.from[1] - base[1]];
-    };
     pieces.push({
       ...wallPiece(x, mm(t.width)),
       pos,
@@ -121,7 +113,7 @@ export function production(v: Variant, rules: Rules, customer: string): Producti
       motif: f.motif,
       fileName: f.fileName,
       top,
-      ...(wires ? { wires, wireAt, wireAlong, wirePoints: wireAlong.map((a) => onRun(a / 1000)) } : {}),
+      ...(wires ? { wires, wireAt, wireAlong } : {}),
     });
   }
   // Free-standing runs stop at a frame on the wall they end at (byggeregel X11)
