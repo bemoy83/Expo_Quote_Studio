@@ -4,6 +4,8 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_CATALOG } from '../catalog/defaultCatalog';
 import { paintWalls } from '../domain/edit';
+import { setWallRaise } from '../domain/raise';
+import { addRoom } from '../domain/rooms';
 import type { StandWallTerms, Variant } from '../domain/types';
 import { createVariant } from '../domain/variant';
 import { BOM_GROUP, bom } from '../foga/engine';
@@ -120,5 +122,13 @@ describe('cost rule 6: the lift', () => {
   it('nothing above 3080 mm, no lift: a wall to 3080 counts as 3 m (Bjørn 27.11.2026)', () => {
     expect(calc(island, RULES, DEFAULT_CATALOG, EXHIBITOR).margin.order.some((o) => o.id === 'lift')).toBe(false);
     expect(calc(raised, RULES, DEFAULT_CATALOG, EXHIBITOR).margin.order.some((o) => o.id === 'lift')).toBe(false);
+  });
+});
+
+describe('V18 a room side is raised like any other wall', () => {
+  it('gets its own raise line, priced as a wall', () => {
+    const room = addRoom(createVariant('B', { width: 6, depth: 6, type: 'island' }), { x: 1, y: 1, w: 3, d: 2 })!;
+    const up = setWallRaise(room, room.walls.find((w) => w.room?.side === 0)!.id, 540);
+    expect(lines(up).find((l) => l.artnr === '6124-540')!.qty).toBeCloseTo(3);
   });
 });

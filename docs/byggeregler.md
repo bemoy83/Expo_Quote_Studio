@@ -132,11 +132,13 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
 - **V18 Hevet vegg.** En systemvegg heves ved å bygge opp fra veggen som står: en 94 i lagerlengde skjøtes oppå hver
   stolpe med 609 inni som avstiving, den gamle toppskinnen 92 blir mellomskinne, og en ny toppskinne 292 (80 høy, CC − 40
   lang med 2 × 600 i hver ende, som en takdrager) lukker det øvre feltet. Veggen under er uendret, også dører, forheng og
-  overstykker. Høyden velges per vegg i veggskuffen («Høyde»); en hevet bakvegg hever ikke et rom, og et roms sider
-  heves ikke ennå. Motoren regner høyden per modul (`BuiltModule.raise`), så trinn i en vegg kan komme. Stolpeskjøten
+  overstykker. Høyden velges per vegg i veggskuffen («Høyde»); en hevet bakvegg hever ikke et rom. Et roms side er en vegg
+  som alle andre og heves på samme måte (Bjørn 28.11.2026: «en vegg er en vegg»): høyden står på rommet per side
+  (`Room.raise`), følger siden når rommet flyttes eller endrer størrelse, og blir med når rommet gjøres om til vanlige
+  vegger. Motoren regner høyden per modul (`BuiltModule.raise`), så trinn i en vegg kan komme. Stolpeskjøten
   plukkes som ferdig enhet (94 med 609). Veggrisset og 3D viser det øvre feltet, 292 og stolpeskjøtene, med
   høydekjeden 2540 + stykket. Arbeidsordren sier hvor mange meter som er hevet og tegner veggriss av hver hevet vegg. Å bygge en høy vegg fra bunnen (92 i bunn, uten fot, topp 3040) er ikke med nå.
-  *Bjørn 27.11.2026 · `rules.wall.raise`, `RECIPES.wall.raise` · kode `src/domain/raise.ts`, `src/domain/walls.ts`, `src/foga/fromVariant.ts`, `src/foga/engine.ts`, `src/ui/plan/elevation.tsx`, `src/ui/scene3d/build/walls.ts`, `src/ui/scene3d/build/frame.ts`, `src/ui/names.ts` · test `src/domain/raise.test.ts`, `src/calc/raisedWall.test.ts`, `src/ui/names.test.ts`*
+  *Bjørn 27.11.2026 · `rules.wall.raise`, `RECIPES.wall.raise` · kode `src/domain/raise.ts`, `src/domain/rooms.ts`, `src/domain/walls.ts`, `src/foga/fromVariant.ts`, `src/foga/engine.ts`, `src/ui/plan/elevation.tsx`, `src/ui/scene3d/build/walls.ts`, `src/ui/scene3d/build/frame.ts`, `src/ui/names.ts` · test `src/domain/raise.test.ts`, `src/calc/raisedWall.test.ts`, `src/ui/names.test.ts`*
 - **V19 Høyder.** Toppen er 2540 pluss lagerlengden på stykket som skjøtes på: 540 → 3080, 1040 → 3580, 1540 → 4080,
   2040 → 4580 og 2490 → 5030 (salgstrinnene 3–5 m). Lengdene ligger som data. Lagerlengdene
   går i CC 250 (290, 540, 790 …), så flere kan legges til uten kode.
@@ -975,7 +977,7 @@ Bestemt eller nevnt, men ikke i koden. Regelnummeret viser hvor det hører hjemm
 i regelen og strykes her.
 
 **Vegg og hevet vegg**
-- V18: heve et roms sider, trinn i én vegg i skuffen (motoren regner høyden per modul), og høy vegg bygget fra bunnen
+- V18: trinn i én vegg i skuffen (motoren regner høyden per modul), og høy vegg bygget fra bunnen
   (92 i bunn, uten fot, topp 3040).
 - V6: endre standvegg med nabogodkjenning.
 - V11: andre mål og diagonaler på standarealet.
