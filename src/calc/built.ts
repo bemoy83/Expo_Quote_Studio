@@ -1,8 +1,9 @@
 // What is built, placed where it stands: made once by the calc, read by everything that draws the stand (3D first).
 // Bjørn 28.11.2026: the stand is built once and 3D only shows what was built, never works a rule out again.
 import { onSpan, pointKey } from '../domain/grid';
+import { placedBrackets, type PlacedBracket } from '../domain/shelves/brackets';
 import { raisedPosts, wallPoints, type BuiltModule } from '../domain/walls';
-import type { Point, Variant } from '../domain/types';
+import type { Point, Shelf, Variant } from '../domain/types';
 import { wallHeight, type Rules } from '../rules/rules';
 import type { BeamLift } from './beams/beamLift';
 import type { BeamSegment } from './beams/beamSegments';
@@ -27,6 +28,9 @@ export interface Built {
   beamJoints: BuiltJoint[];
   /** The 94 pieces that lift takdrager (T13, T15, T19): on posts, on a wall between its posts, and at hook points. */
   liftPieces: { at: Point; bottom: number; length: number; onWall: boolean }[];
+  /** The shelves that are built (on a module their wall has), and the brackets in their posts, placed (H2, H3). */
+  shelves: Shelf[];
+  brackets: PlacedBracket[];
 }
 
 /** One 292 of a takdrager: centre to centre `from` → `to`, plan m; `cut` the piece's length, m; `top` its top, m. */
@@ -62,7 +66,7 @@ export function builtOf(v: Variant, rules: Rules, mods: BuiltModule[], prod: Pro
   const beams = lift.segments.size ? H + lift.length / 1000 : H;
   const top = Math.max(H, beams, ...wallTop.values(), ...textileTop.values());
   const pieces = beamPieces(v, rules, segments, lift);
-  return { mods, raisedPosts: raisedPosts(mods), wallTop, textileTop, roomTop, top, ...pieces, liftPieces: liftPieces(rules, mods, segments, lift) };
+  return { mods, raisedPosts: raisedPosts(mods), wallTop, textileTop, roomTop, top, ...pieces, liftPieces: liftPieces(rules, mods, segments, lift), ...placedBrackets(v, rules) };
 }
 
 /** Half a metre of takdrager, centres, m (Byggeregel T18). */
