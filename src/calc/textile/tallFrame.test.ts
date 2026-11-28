@@ -10,6 +10,7 @@ import { calc } from '../calc';
 import { postPieces } from './common';
 import { framePiece } from './inFrame';
 import { production, textileHeightMm } from './production';
+import { setWallRaise } from '../../domain/raise';
 
 const S = RULES.textile.inFrame;
 /** A row stand with one textile on its back wall, t1. */
@@ -70,5 +71,16 @@ describe('X14 a tall textile on a wall', () => {
     // Inside a wall raised past it, the wall holds it
     const raised = { ...tall, walls: tall.walls.map((w) => (w.id === 'side-back' ? { ...w, raise: 540 } : w)) };
     expect(calc(raised, RULES, DEFAULT_CATALOG, { payer: 'utstiller', ral: '9010' }).production.pieces[0].wires).toBeUndefined();
+    // Lowered again, the wires are back (Bjørn 28.11.2026)
+    expect(calc(setWallRaise(raised, 'side-back', 0), RULES, DEFAULT_CATALOG, { payer: 'utstiller', ral: '9010' }).production.pieces[0].wires).toBe(3);
+  });
+
+  it('where the wires hang: along the frame, along its wall and in the plan, for the plan, elevation and 3D', () => {
+    const v0 = onWall();
+    const piece = production(updateTextile(v0.v, RULES, 't1', { height: 3.04 }), RULES, 'Kunde').pieces[0];
+    // The frame on the back wall from 0 to 6 m (the frame ends 15 inside the run's ends)
+    expect(piece.wireAt).toHaveLength(3);
+    expect(piece.wireAlong!.map((a) => Math.round(a))).toEqual(piece.wireAt!.map((a) => Math.round(a + piece.runAt + (piece.shift ?? 0))));
+    expect(piece.wirePoints!.map(([x, y]) => [Math.round(x * 1000), y])).toEqual(piece.wireAlong!.map((a) => [Math.round(a), 0]));
   });
 });

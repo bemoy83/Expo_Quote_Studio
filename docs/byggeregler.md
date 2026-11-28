@@ -311,7 +311,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   den bygges ikke, med stolper og fotplater bare de trengte, og det samme gjelder dragere som henger på dem (T9).
   Veggene drageren holdt får da støtte etter S-reglene, og kunden betaler den, også under arrangørens vegger (en
   drager følger av standveggene, og den som fjerner den betaler støtten veggene da trenger). Hintet i veggskuffen sier
-  det, og pillen til tekstilen viser «takdrager tas bort». Grensen er utledet av regelverdien, ikke skrevet i koden.
+  det, og pillen til tekstilen viser «uten takdrager». Grensen er utledet av regelverdien, ikke skrevet i koden.
   *Bjørn 28.11.2026 · `rules.beam.maxTop`, `RECIPES.beam.lift`, `rules.wall.raise.lengths` · kode `src/calc/beams/beamLift.ts`, `src/calc/context.ts`, `src/foga/engine.ts`, `src/ui/scene3d/build/frame.ts` · test `src/calc/beams/tallLift.test.ts`*
 
 ## D · Dør og forheng
@@ -575,7 +575,9 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   Når over veggens topp (2540, eller toppen til en hevet vegg), holder ikke stolpene den der oppe: den henger i vaier
   fra taket, fordelt langs rammen etter fotplateregelen (S3; et 92LTX-hjørne holder den enden), festet med en
   gjennomgående øyebolt i rammens toppskinne (plassholder uten art.nr). Vaierne står på samme linje 4300 som vaierne
-  på hevet vegg (S9), alltid utstillerens. Står rammen innenfor en hevet vegg, holder veggen den. Frittstående står foreløpig i 2540 (X5); høy frittstående med vaier
+  på hevet vegg (S9), alltid utstillerens. Står rammen innenfor en hevet vegg, holder veggen den; senkes veggen igjen,
+  får rammen vaierne tilbake. Vaierne vises som på hevet vegg: sirkel med kryss i planen og over rammens toppskinne i
+  veggrisset, og som en V i 3D. Frittstående står foreløpig i 2540 (X5); høy frittstående med vaier
   kommer senere.
   *Bjørn 28.11.2026 · `rules.textile.maxHeight`, `RECIPES.textileFrame.standard`, `RECIPES.textileFrame.wire`, `ITEM.textileWire` · kode `src/calc/textile/free.ts`, `src/calc/textile/production.ts`, `src/calc/lines/feet.ts`, `src/foga/engine.ts`, `src/calc/textile/common.ts`, `src/calc/textile/lines.ts`, `src/domain/textile/inFrame.ts`, `src/domain/decor.ts`, `src/calc/textile/production.ts`, `src/ui/plan/wallDrawer/WallElevation.tsx` · test `src/domain/decor.test.ts`, `src/calc/textile/tallFrame.test.ts`*
 - **X15 Forslag om å heve veggen.** Når en ramme på vegg over veggens topp, tilbyr pillen å heve veggen til laveste
@@ -1017,8 +1019,9 @@ K22 standardvarene og K23 disker over en fotplate.
   og er derfor nøytralt; print og dekal på den siden er det ikke. En hevet systemvegg er nøytral og er ofte grunnen til at en vegg
   heves; hvit duk er også nøytral, men ofte dyrere. En tekstilramme som når over veggen sin, viser baksiden mot
   naboen og er ikke nøytral før veggen er hevet like høyt; da skjuler veggen den. Godkjenningen faller ikke bort med
-  en nøytral side (Bjørn 28.11.2026). Pillen og veggskuffens hint sier «Krever godkjenning fra nabo» (og «nøytral side
-  mot naboen» når den ikke er det), og tilbudet har det under forutsetningene.
+  en nøytral side (Bjørn 28.11.2026). Pillen sier bare «nabogodkjenning» (den deler raden med paletten),
+  veggskuffens hint hele grunnen, «Krever godkjenning fra nabo» (og «nøytral side mot naboen» når den ikke er det), og
+  tilbudet har det under forutsetningene.
   *Bjørn 28.11.2026 · `rules.neighbour` · kode `src/domain/neighbour.ts`, `src/ui/plan/pill/wall.tsx`, `src/ui/plan/WallDrawer.tsx`, `src/ui/quote/QuotePage.tsx` · test `src/domain/neighbour.test.ts`*
 
 ## Ikke bygget ennå

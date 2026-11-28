@@ -11,7 +11,7 @@ import { wallLength, wallModules } from '../../../domain/grid'
 import { wallRal } from '../../../domain/plateDecor'
 import { paintWallFace } from '../../../domain/paint'
 import { fillPlates, printWall } from '../../../domain/print'
-import { neighbourNotes, neighbourText, noteFor } from '../../../domain/neighbour'
+import { neighbourNotes, noteFor } from '../../../domain/neighbour'
 import { raiseFor, raiseUnder } from '../../../domain/raise'
 import { roomName } from '../../../domain/rooms'
 import { addTextile, fillTextile, textileBox, textilesOn, updateTextile } from '../../../domain/textile/inFrame'
@@ -69,11 +69,12 @@ function RaiseOffer({ p, textileId }: { p: PillActions; textileId: string }) {
 /** Byggeregel N1: a tall thing near a neighbour says so in its pill. */
 const withNeighbour = (v: Variant, id: string, meta: string) => {
   const n = noteFor(neighbourNotes(v, rules), id)
-  return n ? `${meta} · ${neighbourText(n).toLowerCase()}` : meta
+  // Short in the pill, where it shares the row with the palette (Bjørn 28.11.2026); the whole reason is in the drawer's hint
+  return n ? `${meta} · nabogodkjenning` : meta
 }
 
 /** Byggeregel T19: a tall textile that takes the takdrager over it away says so in its pill (the reason is in the drawer). */
-const withBeams = (v: Variant, id: string, meta: string) => (beamGone(v, rules, id) ? `${meta} · takdrager tas bort` : meta)
+const withBeams = (v: Variant, id: string, meta: string) => (beamGone(v, rules, id) ? `${meta} · uten takdrager` : meta)
 
 const ratioOf = (p: PillActions, id?: string | null) => findMotif(p.motifs, id ?? undefined)?.ratio ?? 0
 

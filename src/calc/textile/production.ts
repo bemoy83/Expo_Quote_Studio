@@ -1,6 +1,6 @@
-import type { Foil, TextileFill, TextileWall, Variant, Wall } from '../../domain/types';
+import type { Foil, Point, TextileFill, TextileWall, Variant, Wall } from '../../domain/types';
 import { wallLabel } from '../../domain/walls';
-import { wallDirection } from '../../domain/grid';
+import { pointAlong, wallDirection } from '../../domain/grid';
 import { RECIPES } from '../../foga/recipes';
 import { railHeight } from '../../foga/plates';
 import { raiseTop, wallHeight, type InFrameParams, type Rules } from '../../rules/rules';
@@ -34,6 +34,10 @@ export interface ProductionPiece extends FramePiece {
   wires?: number;
   /** Where the wires are, mm along the frame from its start (as the braces). */
   wireAt?: number[];
+  /** The same, mm along its wall from the wall's start: for the plan and the elevation. */
+  wireAlong?: number[];
+  /** The same in the plan, m. */
+  wirePoints?: Point[];
   /** The frame's top from the floor, mm. */
   top: number;
 }
@@ -92,6 +96,11 @@ export function production(v: Variant, rules: Rules, customer: string): Producti
     const over = top > (m.wall.raise ? raiseTop(m.wall.raise, rules) : mm(wallHeight(rules)));
     const wireAt = over ? supportPoints(x.length, r.feet.support, x.corners) : [];
     const wires = wireAt.length;
+    // Along the wall: the run's start, the shift in an inner corner (X10), then along the run one way or the other
+    const [wx, wy] = wallDirection(m.wall);
+    const sign = (run.to[0] - run.from[0]) * wx + (run.to[1] - run.from[1]) * wy >= 0 ? 1 : -1;
+    const start = mm(alongWall(m.wall, run.from)) + (shiftOf.get(t.id) ? mm(shiftOf.get(t.id)!) : 0);
+    const wireAlong = wireAt.map((a) => start + sign * a);
     pieces.push({
       ...wallPiece(x, mm(t.width)),
       pos,
@@ -106,7 +115,7 @@ export function production(v: Variant, rules: Rules, customer: string): Producti
       motif: f.motif,
       fileName: f.fileName,
       top,
-      ...(wires ? { wires, wireAt } : {}),
+      ...(wires ? { wires, wireAt, wireAlong, wirePoints: wireAlong.map((a) => pointAlong(m.wall, a / 1000)) } : {}),
     });
   }
   // Free-standing runs stop at a frame on the wall they end at (byggeregel X11)
