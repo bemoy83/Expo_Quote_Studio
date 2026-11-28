@@ -558,9 +558,13 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   3540, 4040 og 4540 (X9); en ramme på 3040 mot en vegg hevet til 3080 står 40 under toppen. En stående 43TX lengre
   enn lengste stykke (5000) skjøtes som en skinne (X9), med 609 inni og ikke noe mer (stagene ved en skinneskjøt
   gjelder skinnene). En 92LTX i et høyt hjørne har lengdene til 43TX minus endelokkene og skjøtes butt mot butt (X7).
-  Når rammen når over høydegrensen, går montering og demontering med lift (kostregel 6, `CalcLine.top`). Frittstående står foreløpig i 2540 (X5); høy frittstående med vaier
+  Når rammen når over høydegrensen, går montering og demontering med lift (kostregel 6, `CalcLine.top`).
+  Når over veggens topp (2540, eller toppen til en hevet vegg), holder ikke stolpene den der oppe: den henger i vaier
+  fra taket, fordelt langs rammen etter fotplateregelen (S3; et 92LTX-hjørne holder den enden), festet med en
+  gjennomgående øyebolt i rammens toppskinne (plassholder uten art.nr). Vaierne står på samme linje 4300 som vaierne
+  på hevet vegg (S9), alltid utstillerens. Står rammen innenfor en hevet vegg, holder veggen den. Frittstående står foreløpig i 2540 (X5); høy frittstående med vaier
   kommer senere.
-  *Bjørn 28.11.2026 · `rules.textile.maxHeight`, `RECIPES.textileFrame.standard` · kode `src/calc/textile/free.ts`, `src/calc/textile/common.ts`, `src/calc/textile/lines.ts`, `src/domain/textile/inFrame.ts`, `src/domain/decor.ts`, `src/calc/textile/production.ts`, `src/ui/plan/wallDrawer/WallElevation.tsx` · test `src/domain/decor.test.ts`, `src/calc/textile/tallFrame.test.ts`*
+  *Bjørn 28.11.2026 · `rules.textile.maxHeight`, `RECIPES.textileFrame.standard`, `RECIPES.textileFrame.wire`, `ITEM.textileWire` · kode `src/calc/textile/free.ts`, `src/calc/textile/production.ts`, `src/calc/lines/feet.ts`, `src/foga/engine.ts`, `src/calc/textile/common.ts`, `src/calc/textile/lines.ts`, `src/domain/textile/inFrame.ts`, `src/domain/decor.ts`, `src/calc/textile/production.ts`, `src/ui/plan/wallDrawer/WallElevation.tsx` · test `src/domain/decor.test.ts`, `src/calc/textile/tallFrame.test.ts`*
 
 ## M · Magnet og kobling
 
@@ -1021,7 +1025,7 @@ i regelen og strykes her.
 - F2: enveis fotplater om det trengs.
 
 **Kost og pris**
-- Plassholder-art.nr: øyebolt M5 (S9), korte moduler 6121–6123 (V1), forhøyning 6124 (V22).
+- Plassholder-art.nr: øyebolt M5 (S9), gjennomgående øyebolt for 43TX (X14), korte moduler 6121–6123 (V1), forhøyning 6124 (V22).
 - Kuber (frittstående eller hengende fra taket), ikke et veggprodukt.
 - Fra OMS senere: standtype og kjøpt areal, arrangørens farge, lagerstatus, kunderabatter, ramme og trykk solgt hver
   for seg.

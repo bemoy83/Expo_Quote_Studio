@@ -22,17 +22,23 @@ export function footLines(c: CalcContext): CalcLine[] {
   ];
 }
 
-/** Ceiling wires on raised walls (Byggeregler S9, S10): per V, always the exhibitor's. */
+/** Ceiling wires on raised walls (Byggeregler S9, S10) and on textile frames over their wall's top (X14): per V, one
+ *  line, always the exhibitor's. */
 export function wireLines(c: CalcContext): CalcLine[] {
-  const n = c.wires.length;
+  const frames = c.prod.pieces.filter((p) => p.wires);
+  const nWall = c.wires.length;
+  const nTextile = frames.reduce((a, p) => a + (p.wires ?? 0), 0);
+  const n = nWall + nTextile;
   if (!n || !c.sys.wallWire) return [];
-  // Hung from the top of the posts they hang from, the highest one: worked from the lift above the limit (cost rule 6)
+  // Hung from the top of what they hold, the highest one: worked from the lift above the limit (cost rule 6)
   const posts = raisedPosts(c.mods);
-  const top = Math.max(...c.wires.map((w) => raiseTop(posts.get(pointKey(w.at))?.len ?? 0, c.rules)));
+  const top = Math.max(...c.wires.map((w) => raiseTop(posts.get(pointKey(w.at))?.len ?? 0, c.rules)), ...frames.map((p) => p.top));
   const uses = [
-    { id: ITEM.wire, qty: n },
+    { id: ITEM.wire, qty: nWall },
+    { id: ITEM.textileWire, qty: nTextile },
     { id: ITEM.wireMount, qty: n },
-  ];
-  const line = c.line(c.sys.wallWire, n, { ...c.built, meta: 'hevet vegg' }, atHeight(c, uses, top));
+  ].filter((u) => u.qty);
+  const meta = [...(nWall ? ['hevet vegg'] : []), ...(nTextile ? ['høy tekstil'] : [])].join(' og ');
+  const line = c.line(c.sys.wallWire, n, { ...c.built, meta }, atHeight(c, uses, top));
   return [{ ...line, top }];
 }

@@ -95,6 +95,9 @@ export interface FogaStructure {
   raises?: { modules: RaiseSpec[]; posts: { len: number; qty: number }[] };
   /** Ceiling wires on raised walls (Byggeregler S9, S10): each fixed in the top rail with an eyebolt and a 503. */
   wires?: number;
+  /** Ceiling wires on textile frames reaching over their wall's top (Byggeregel X14): each fixed in the frame's top
+   *  rail with a through-eyebolt. */
+  textileWires?: number;
 }
 
 /** A shelf board: standard 976 × 300, corner 960 × 290, 2/3 655 × 300 (Byggeregler H10–H13). */

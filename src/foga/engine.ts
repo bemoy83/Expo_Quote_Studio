@@ -197,6 +197,11 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
     { artnr: '', name: `${wire.eyebolt} med ${wire.nut}`, detail: `${wire.eyebolt} (plassholder, uten art.nr) · 1 × ${wire.nut} (${fogaPart(wire.nut).artnr}) · i toppskinnens kanal`, note: 'feste for vaier', preassembled: true },
     s.wires ?? 0,
   );
+  // Byggeregel X14: a textile frame over its wall's top hangs from the same V, fixed with a through-eyebolt in the
+  // frame's top rail (placeholder, no art.nr)
+  const tw = r.textileFrame.wire;
+  put(BOM_GROUP.posts, 'wire-textile', { artnr: '', name: 'Vaieroppheng, V til taket', detail: 'to punkter i taket på tvers av rammen, ett i rammens toppskinne', note: 'støttevaier for høy tekstil', preassembled: true }, s.textileWires ?? 0);
+  put(BOM_GROUP.posts, 'wire-textile-eyebolt', { artnr: '', name: tw.eyebolt, detail: `${tw.eyebolt} (plassholder, uten art.nr) · gjennom rammens toppskinne`, note: 'feste for vaier', preassembled: true }, s.textileWires ?? 0);
 
   // Takdrager: 292 between the posts with two 600 in each end, one piece per length
   for (const b of s.beams) unit(BOM_GROUP.beams, 'Takdrager', r.beam.profile, between(b.lengthMm), r.beam.coupling, 1);

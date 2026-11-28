@@ -60,6 +60,9 @@ export interface TextileFrameRecipe {
    *  motifs go up in sections (Bjørn 7.11.2026: 100–200 mm). Not at the feet. Stored mounted, brace + couplings. */
   brace: string;
   spliceBrace: number;
+  /** A frame reaching over the wall it hangs on is held from the ceiling (Byggeregel X14): a wire per support, fixed
+   *  in the top rail with a through-eyebolt (placeholder until the article is known). */
+  wire: { eyebolt: string };
   braceCoupling: { code: string; perEnd: number };
   /** On a system wall: brackets fixing the frame to the wall post (one side in 43TX, the other in 94). Supplied with
    *  screw and 503. As many as foot plates by the same rule (Bjørn 21.11.2026), except that a frame on a wall always
@@ -255,6 +258,7 @@ export const RECIPES: Recipes = {
     minSplice: 50,
     brace: '90',
     spliceBrace: 150,
+    wire: { eyebolt: 'Gjennomgående øyebolt' },
     braceCoupling: { code: '600', perEnd: 1 },
     wall: { fixing: { code: '520', support: { ...SUPPORT, minFrom: 0 } } },
     feet: {

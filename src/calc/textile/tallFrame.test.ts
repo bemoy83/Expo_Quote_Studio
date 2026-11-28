@@ -52,4 +52,20 @@ describe('X14 a tall textile on a wall', () => {
     expect(line(tall).top).toBe(3540);
     expect(line(v0.v).top).toBeUndefined();
   });
+
+  it('over its wall top a frame hangs from the ceiling: wires by the foot plate rule, through-eyebolt in the top rail', () => {
+    const v0 = addTextile(createVariant('A', { width: 6, depth: 3, type: 'row' }), RULES, 'side-back', 1, 1)!;
+    if ('error' in v0) throw new Error(v0.error);
+    const tall = updateTextile(v0.v, RULES, 't1', { height: 3.04 });
+    const res = calc(tall, RULES, DEFAULT_CATALOG, { payer: 'utstiller', ral: '9010' });
+    const piece = res.production.pieces[0];
+    // 6 m wide, free at both ends: the ends and one between, no more than 3 m apart (S3)
+    expect(piece.wires).toBe(3);
+    const wire = res.groups.flatMap((g) => g.lines).find((l) => l.artnr === '4300')!;
+    expect(wire).toMatchObject({ qty: 3, top: 3040 });
+    expect(res.bom.lines.find((l) => l.name === 'Gjennomgående øyebolt')!.qty).toBe(3);
+    // Inside a wall raised past it, the wall holds it
+    const raised = { ...tall, walls: tall.walls.map((w) => (w.id === 'side-back' ? { ...w, raise: 540 } : w)) };
+    expect(calc(raised, RULES, DEFAULT_CATALOG, { payer: 'utstiller', ral: '9010' }).production.pieces[0].wires).toBeUndefined();
+  });
 });

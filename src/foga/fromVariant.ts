@@ -69,6 +69,9 @@ export const beamSpecs = (b: BeamLayout): BeamSpec[] =>
 /** The half metre of a takdrager, centres, mm (Byggeregel T18). */
 const HALF_MM = 500;
 
+/** Byggeregel X14: the wires holding frames over their wall's top. */
+export const textileWires = (p: Production) => p.pieces.reduce((a, f) => a + (f.wires ?? 0), 0);
+
 export function structureOf(d: Derived): FogaStructure {
   const raises = raisesOf(d.all ?? d.mods);
   return {
@@ -87,6 +90,7 @@ export function structureOf(d: Derived): FogaStructure {
     ...(d.counterInserts ? { counterInserts: d.counterInserts } : {}),
     ...(raises ? { raises } : {}),
     ...(d.wires ? { wires: d.wires } : {}),
+    ...(textileWires(d.production) ? { textileWires: textileWires(d.production) } : {}),
   };
 }
 

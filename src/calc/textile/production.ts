@@ -3,10 +3,10 @@ import { wallLabel } from '../../domain/walls';
 import { wallDirection } from '../../domain/grid';
 import { RECIPES } from '../../foga/recipes';
 import { railHeight } from '../../foga/plates';
-import type { InFrameParams, Rules } from '../../rules/rules';
+import { raiseTop, wallHeight, type InFrameParams, type Rules } from '../../rules/rules';
 import { freeTrims, placeFrames } from './placement';
 import { onWallMount, wallPiece, type FramePiece } from './inFrame';
-import { cornerPosts, freeFrames, runFrame, type FreeFrame, type HeldEnds } from './free';
+import { cornerPosts, freeFrames, runFrame, supportPoints, type FreeFrame, type HeldEnds } from './free';
 import { cornerEnds } from '../../domain/textile/free';
 import { fullHeight, partsLm, postPieces, printFileName } from './common';
 import { freeTextiles, mountedOn, outFace, wallTextiles } from '../../domain/textile/mounts';
@@ -30,6 +30,10 @@ export interface ProductionPiece extends FramePiece {
   motif: string | null;
   /** Print file name, for a printed textile only. */
   fileName: string | null;
+  /** Ceiling wires holding a frame that reaches over its wall's top (Byggeregel X14), by the foot plate rule. */
+  wires?: number;
+  /** The frame's top from the floor, mm. */
+  top: number;
 }
 
 export interface Production {
@@ -80,6 +84,11 @@ export function production(v: Variant, rules: Rules, customer: string): Producti
     const H = textileHeightMm(t, s) ?? fullHeight(s);
     const x = runFrame(run, onWallMount(r, outFace(run, m.wall, m.side), pos, H), r, s, customer, corners.get(t.id));
     const f = x.faces[0];
+    // Byggeregel X14: over the wall's top the posts do not hold it, a wire from the ceiling does, spread by the foot
+    // plate rule along the frame (as S3, S9); a 92LTX corner holds that end
+    const top = mm(t.bottom ?? 0) + H;
+    const over = top > (m.wall.raise ? raiseTop(m.wall.raise, rules) : mm(wallHeight(rules)));
+    const wires = over ? supportPoints(x.length, r.feet.support, x.corners).length : 0;
     pieces.push({
       ...wallPiece(x, mm(t.width)),
       pos,
@@ -93,6 +102,8 @@ export function production(v: Variant, rules: Rules, customer: string): Producti
       fill: f.fill,
       motif: f.motif,
       fileName: f.fileName,
+      top,
+      ...(wires ? { wires } : {}),
     });
   }
   // Free-standing runs stop at a frame on the wall they end at (byggeregel X11)
