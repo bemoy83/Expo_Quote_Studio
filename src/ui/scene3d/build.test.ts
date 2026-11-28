@@ -95,8 +95,12 @@ describe('drawn takdrager in 3D (Byggeregel T8)', () => {
     const res = calc(v, rules, catalog)
     const beams = meshes(build(v, res)).filter((o) => (o as THREE.Mesh).geometry?.name === 'foga-292')
     const picked = beams.filter((o) => (o.userData as Tag).pick?.beamId === 'td1')
-    expect(picked).toHaveLength(res.beams.segments.filter((x) => x.inner).length)
+    // Its pieces as built: the half metre at the end its own 292, joined on with a standing 92 (T18)
+    expect(picked).toHaveLength(res.built.beams.filter((x) => x.drawn === 'td1').length)
+    expect(picked.length).toBeGreaterThan(res.beams.segments.filter((x) => x.inner).length)
     expect(beams.length).toBeGreaterThan(picked.length)
+    const joints = meshes(build(v, res)).filter((o) => (o as THREE.Mesh).geometry?.name === 'foga-92' && (o.userData as Tag).pick?.beamId === 'td1')
+    expect(joints).toHaveLength(1)
   })
 })
 

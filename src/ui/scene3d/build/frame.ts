@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { fogaPart } from '../../../foga/parts'
 import { RECIPES } from '../../../foga/recipes'
-import { onSpan, pointKey } from '../../../domain/grid'
+import { pointKey } from '../../../domain/grid'
 import type { Point } from '../../../domain/types'
 import { wallPoints } from '../../../domain/walls'
 import { rules } from '../../env'
@@ -70,19 +70,26 @@ export function buildFrame(c: BuildContext) {
     add(pin, { layer: 'walls' })
   }
 
-  // Beams (takdrager) in 292, top flush with the walls, cut between the posts (centres − 40). A beam lifted over a
-  // textile wall (calc/beams/beamLift.ts) is one piece of 94 higher, as long as the lift (T19)
+  // Beams (takdrager) in 292, each piece as the calc builds it (calc/built.ts): top flush with the walls or lifted over a
+  // textile wall (T13, T19), cut between centres − 40, and the standing 92 a half metre is joined on with (T18). A drawn one
+  // is picked as its beam (Byggeregel T8): the pill and grips as in the plan
   const lift = (res.lift?.length ?? RECIPES.beam.lift.length) / 1000
-  // A drawn one is picked as its beam (Byggeregel T8): the pill and grips as in the plan
-  const drawnOf = (s: (typeof res.beams.segments)[number]) => (s.inner ? c.v.innerBeams?.find((x) => onSpan(x.from, x.to, s.from) && onSpan(x.from, x.to, s.to))?.id : undefined)
-  for (const s of res.beams.segments) {
-    const [a, b] = [s.from, s.to]
-    const beamId = drawnOf(s)
+  const beamH = rules.beam.height
+  for (const b of res.built.beams) {
     const mesh = new THREE.Mesh(unitProfile('292'), mat('beams', BEAM, ALU_FINISH))
-    mesh.scale.x = Math.max(0.001, Math.hypot(b[0] - a[0], b[1] - a[1]) - rules.wall.post)
-    mesh.position.copy(at([(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], H - rules.beam.height / 2 + (s.lifted ? lift : 0)))
-    mesh.rotation.y = Math.atan2(-(b[1] - a[1]), b[0] - a[0])
-    add(mesh, { layer: 'beams', ...(beamId && { pick: { beamId } }) })
+    mesh.scale.x = b.cut
+    mesh.position.copy(at([(b.from[0] + b.to[0]) / 2, (b.from[1] + b.to[1]) / 2], b.top - beamH / 2))
+    mesh.rotation.y = Math.atan2(-(b.to[1] - b.from[1]), b.to[0] - b.from[0])
+    add(mesh, { layer: 'beams', ...(b.drawn && { pick: { beamId: b.drawn } }) })
+  }
+  const half = RECIPES.beam.half
+  for (const j of res.built.beamJoints) {
+    const mesh = new THREE.Mesh(unitProfile(profile(half.profile)), mat('beams', ALU, ALU_FINISH))
+    mesh.scale.x = half.length / 1000
+    // Upright, its 40 face along the beam
+    mesh.rotation.set(0, Math.atan2(-j.dir[1], j.dir[0]), Math.PI / 2, 'YXZ')
+    mesh.position.copy(at(j.at, j.top - half.length / 2000))
+    add(mesh, { layer: 'beams', ...(j.drawn && { pick: { beamId: j.drawn } }) })
   }
   // Hooks in 01 where a beam hangs on another (calc/beams/beamHooks.ts): set as a T over the beam it hangs on, a 20 mm piece
   // lying on top with its channel up, and an 80 mm leg down the side each hanging beam comes from, channel out to it
@@ -110,24 +117,15 @@ export function buildFrame(c: BuildContext) {
     }
   }
 
-  // The 94 pieces that lift them: on top of each post under a lifted beam, and at a hook point between a lifted beam and
-  // one that is not, at the level of the beam hanging there
-  if (res.lift) {
-    const piece = (p: Point, bottom: number, layer: 'walls' | 'beams') => {
-      const mesh = new THREE.Mesh(unitProfile('94'), mat(layer, ALU, ALU_FINISH))
-      mesh.scale.x = lift
-      mesh.rotation.z = Math.PI / 2
-      mesh.position.copy(at(p, bottom + lift / 2))
-      add(mesh, { layer })
-    }
-    for (const p of res.lift.posts) piece(p, H, wallPts.has(pointKey(p)) ? 'walls' : 'beams')
-    // A lifted beam ending on a wall between its posts (Byggeregel T15): the piece on top of the wall
-    for (const p of res.lift.walls ?? []) piece(p, H, 'beams')
-    for (const p of res.lift.hooks) {
-      const k = pointKey(p)
-      const hanging = res.beams.segments.filter((s) => pointKey(s.from) === k || pointKey(s.to) === k)
-      piece(p, hanging.some((s) => s.lifted) ? H : H - rules.beam.height, 'beams')
-    }
+  // The 94 pieces that lift them (calc/built.ts): on top of each post under a lifted beam, on a wall a lifted beam ends on,
+  // and at a hook point between a lifted beam and one that is not
+  for (const p of res.built.liftPieces) {
+    const layer = p.onWall ? 'walls' : 'beams'
+    const mesh = new THREE.Mesh(unitProfile('94'), mat(layer, ALU, ALU_FINISH))
+    mesh.scale.x = p.length
+    mesh.rotation.z = Math.PI / 2
+    mesh.position.copy(at(p.at, p.bottom + p.length / 2))
+    add(mesh, { layer })
   }
 }
 

@@ -28,4 +28,16 @@ describe('built', () => {
     // The 94 joined on top of each of its posts
     expect([...up.raisedPosts.values()].map((p) => p.len)).toEqual([500, 500, 500])
   })
+
+  it('lays a takdrager out as its 292 pieces, a half metre joined on with a standing 92 on the metre line (T18)', () => {
+    const b = calc({ ...v, innerBeams: [{ id: 'td1', from: [4, 1], to: [4, 3.5] }] }, rules, catalog).built
+    const drawn = b.beams.filter((x) => x.drawn === 'td1').map((x) => Math.round(x.cut * 1000))
+    expect(drawn.filter((c) => c === 460)).toHaveLength(1)
+    expect(b.beamJoints.filter((j) => j.drawn === 'td1').map((j) => j.at)).toEqual([[4, 3]])
+  })
+
+  it('a half metre at the start of a run is joined where the whole metres begin', () => {
+    const b = calc({ ...v, innerBeams: [{ id: 'td1', from: [4, 0.5], to: [4, 2] }] }, rules, catalog).built
+    expect(b.beamJoints.filter((j) => j.drawn === 'td1').map((j) => j.at)).toEqual([[4, 1]])
+  })
 })
