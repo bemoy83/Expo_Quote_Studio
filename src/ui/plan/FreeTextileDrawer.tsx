@@ -22,6 +22,9 @@ import { FreeElevationDims } from './wallDrawer/ElevationDims'
 import { frame } from './wallDrawer/elevationMeasure'
 import { freeTextiles } from '../../domain/textile/mounts'
 import { removeTextile } from '../../domain/textile/edit'
+import { neighbourNotes, neighbourText, noteFor } from '../../domain/neighbour'
+import { beamNote } from '../../calc/beams/beamLift'
+import { rules } from '../env'
 
 interface Props {
   v: Variant
@@ -67,6 +70,9 @@ export function FreeTextileDrawer(p: Props) {
   // Where the feet stand along the face, for the chain under it
   const feet = f.supports.map(x).filter((t) => t > 1e-6 && t < W - 1e-6)
   const braces = f.braces.map(x)
+  // As in the wall drawer: the neighbour's approval (Byggeregel N1) and the takdrager over it (T19) lead the hint
+  const near = noteFor(neighbourNotes(v, rules), t.id)
+  const beams = beamNote(v, rules, t.id)
 
   return (
     <section className="wall-drawer drawer2" aria-label="Frittstående tekstilvegg sett forfra">
@@ -116,7 +122,7 @@ export function FreeTextileDrawer(p: Props) {
           </svg>
         </div>
       </div>
-      <div className="wd-hint">{hintLine(F.fill === 'reuse' && REUSE_NOTE, 'Dra veggen i planen for å flytte den', 'målene under viser hvor føttene står', 'Delete fjerner')}</div>
+      <div className="wd-hint">{hintLine(near && neighbourText(near), beams, F.fill === 'reuse' && REUSE_NOTE, 'Dra veggen i planen for å flytte den', 'målene under viser hvor føttene står', 'Delete fjerner')}</div>
     </section>
   )
 }
