@@ -8,7 +8,7 @@ import { inward, openSides, SIDES } from './grid';
 import { textileBox } from './textile/inFrame';
 import { mountedOn, wallTextiles } from './textile/mounts';
 import type { Point, Side, Variant, Wall } from './types';
-import { builtModules } from './walls';
+import type { BuiltModule } from './walls';
 import { raiseTop, wallHeight, type Rules } from '../rules/rules';
 
 export interface NeighbourNote {
@@ -44,26 +44,26 @@ function parallelDistance(v: Pick<Variant, 'stand'>, side: Side, a: Point, b: Po
 
 /**
  * Everything over the standard wall top closer than the neighbour distance to a parallel neighbour boundary
- * (Byggeregel N1), with whether the side the neighbour sees is neutral. `neutralRal` is the organiser's wall colour.
+ * (Byggeregel N1), with whether the side the neighbour sees is neutral.
  */
-export function neighbourNotes(v: Variant, rules: Rules, neutralRal = v.defaultPlate): NeighbourNote[] {
+export function neighbourNotes(v: Variant, rules: Rules): NeighbourNote[] {
   const sides = neighbourSides(v);
   if (!sides.length) return [];
   const { distance } = rules.neighbour;
   const std = Math.round(wallHeight(rules) * 1000);
   const out: NeighbourNote[] = [];
-  const mods = builtModules(v);
   for (const w of v.walls) {
     if (!w.raise) continue;
     const top = raiseTop(w.raise, rules);
     for (const side of sides) {
       const d = parallelDistance(v, side, w.from, w.to, rules.wall.post / 2);
       if (d === null || d >= distance - EPS) continue;
-      // The upper felts face the neighbour on the face away from the stand: the organiser's colour, nothing printed on it
-      const own = mods.filter((m) => m.wallId === w.id && m.raise);
+      // The upper felts face the neighbour on the face away from the stand. A colour is no matter: a plate in the
+      // organiser's colour stands back to back with it, toward the neighbour (Byggeregel V20, `backToBack`). Print and
+      // decals on that face are
       const face = faceToward(w, side);
       const printed = v.foils.some((f) => f.wallId === w.id && f.upper && (f.side ?? 1) === face);
-      out.push({ kind: 'wall', id: w.id, side, distance: d, top, neutral: !printed && own.every((m) => m.raise!.ral === neutralRal) });
+      out.push({ kind: 'wall', id: w.id, side, distance: d, top, neutral: !printed });
     }
   }
   for (const t of wallTextiles(v)) {
@@ -85,6 +85,17 @@ export function neighbourNotes(v: Variant, rules: Rules, neutralRal = v.defaultP
     }
   }
   return out;
+}
+
+/**
+ * Byggeregler V20, N1: the raised modules whose upper plate, in another colour than the organiser's (`neutralRal`), would
+ * face a neighbour. A plate is coloured on both sides, so a second plate in the organiser's colour stands back to back
+ * with it toward the neighbour: in practice a plate swap, the organiser's plate left facing the neighbour and only the
+ * customer's side changed (Bjørn 28.11.2026). Each → the colour of that second plate.
+ */
+export function backToBack(v: Variant, rules: Rules, mods: readonly BuiltModule[], neutralRal: string): Map<BuiltModule, string> {
+  const walls = new Set(neighbourNotes(v, rules).filter((n) => n.kind === 'wall').map((n) => n.id));
+  return new Map(mods.filter((m) => m.raise && walls.has(m.wallId) && m.raise.ral !== neutralRal).map((m) => [m, neutralRal]));
 }
 
 /** The face of a wall (1 or −1) that looks toward a stand side. */

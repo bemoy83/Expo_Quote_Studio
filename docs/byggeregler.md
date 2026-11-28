@@ -155,9 +155,12 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   (i veggrisset eller i 3D) blir dekal på det øvre feltet der det slippes, også over en dør og over en tekstilramme; «+ Dekal»
   med et øvre felt valgt legger den midt i feltet. En dekal blir i sitt bånd og krysser aldri mellomskinnen. Endres høyden, beholdes farge og print (printen tilpasses feltet), og en dekal som ikke lenger
   får plass går. Senkes veggen til 2540, går dekoren på de øvre feltene (angre tar den tilbake). En farget øvre plate
-  koster det samme i alle RAL, er alltid utstillerens og har ikke platebytte. Print på øvre felt prises etter flaten
-  (lysmålet), og printfila har det øvre feltets mål.
-  *Bjørn 27.11.2026 · `RECIPES.wall.raise.topRail`, `ITEM.raisePlate`, `Foil.upper` · kode `src/foga/plates.ts`, `src/cost/itemDefs.ts`, `src/domain/plateDecor.ts`, `src/domain/print.ts` · test `src/calc/raisedWall.test.ts`, `src/domain/upperFelt.test.ts`*
+  koster det samme i alle RAL, er alltid utstillerens og har ikke platebytte, unntatt mot en nabo: en plate er farget på
+  begge sider, så vender det øvre feltet mot en nabo (N1) i en annen farge enn arrangørens, står en plate i arrangørens
+  farge rygg i rygg med den, mot naboen. I praksis er det et platebytte: arrangørens plate blir stående mot naboen, og
+  bare kundens side byttes. Kalkylen tar med den andre platen og ett platebytte per felt, og plukklisten har platen
+  «mot nabo» (Bjørn 28.11.2026). Print på øvre felt prises etter flaten (lysmålet), og printfila har det øvre feltets mål.
+  *Bjørn 27.11.2026 og 28.11.2026 · `RECIPES.wall.raise.topRail`, `ITEM.raisePlate`, `ITEM.plateSwap`, `Foil.upper` · kode `src/foga/plates.ts`, `src/cost/itemDefs.ts`, `src/domain/plateDecor.ts`, `src/domain/print.ts`, `src/domain/neighbour.ts`, `src/calc/lines/walls.ts` · test `src/calc/raisedWall.test.ts`, `src/domain/upperFelt.test.ts`, `src/domain/neighbour.test.ts`*
 - **V21 Trinn.** Der høyden skifter, står den høye delens stolpe skjøtt i stolpen under som ellers: en stolpe mellom to
   høyder får stykket til den høyeste, og det trengs ikke noe ekstra.
   *Bjørn 27.11.2026 · kode `src/domain/walls.ts` (`raisedPosts`) · test `src/calc/raisedWall.test.ts`*
@@ -1010,7 +1013,8 @@ K22 standardvarene og K23 disker over en fotplate.
   ligger mot gangen; en øy har ingen. Avstanden måles fra nærmeste kant (stolpens eller rammens flate) til grensen
   (`rules.neighbour.distance`). En vegg på tvers av grensen er ikke parallell, og enden teller ikke. Bare det naboen
   ser, må være nøytralt: hvit tekstil, systemvegg eller en slett plate i arrangørens farge, uten annen farge, print
-  eller dekal om ikke annet er avtalt med naboen. En hevet systemvegg er nøytral og er ofte grunnen til at en vegg
+  eller dekal om ikke annet er avtalt med naboen. Et farget øvre felt får arrangørens plate rygg i rygg mot naboen (V20)
+  og er derfor nøytralt; print og dekal på den siden er det ikke. En hevet systemvegg er nøytral og er ofte grunnen til at en vegg
   heves; hvit duk er også nøytral, men ofte dyrere. En tekstilramme som når over veggen sin, viser baksiden mot
   naboen og er ikke nøytral før veggen er hevet like høyt; da skjuler veggen den. Godkjenningen faller ikke bort med
   en nøytral side (Bjørn 28.11.2026). Pillen og veggskuffens hint sier «Krever godkjenning fra nabo» (og «nøytral side

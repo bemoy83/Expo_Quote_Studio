@@ -132,3 +132,38 @@ describe('V18 a room side is raised like any other wall', () => {
     expect(lines(up).find((l) => l.artnr === '6124-540')!.qty).toBeCloseTo(3);
   });
 });
+
+describe('V20 a coloured upper plate toward a neighbour', () => {
+  // Row 6 × 3: the back stand wall is on the neighbour's boundary (N1)
+  const row = createVariant('A', { width: 6, depth: 3, type: 'row' });
+  const back = (v: Variant, plate?: string) => {
+    const r = setWallRaise(v, 'side-back', 540);
+    return plate ? { ...r, walls: r.walls.map((w) => (w.id === 'side-back' ? { ...w, plate } : w)) } : r;
+  };
+  const raiseLine = (v: Variant) => lines(v).find((l) => l.artnr === '6124-540')!;
+  const upper = (v: Variant) => bom(calc(v, RULES, DEFAULT_CATALOG, EXHIBITOR).foga, RECIPES, bomSizes(RULES)).lines.filter((l) => l.detail.includes('øvre felt'));
+  const qty = (ls: ReturnType<typeof upper>) => ls.reduce((a, l) => a + l.qty, 0);
+
+  it('in the organiser’s colour: one plate per felt, no swap', () => {
+    const v = back(row);
+    expect(qty(upper(v))).toBe(6);
+    expect(raiseLine(v).meta).toBe('+540 mm');
+    expect(raiseLine(v).uses?.some((u) => u.id === ITEM.plateSwap)).toBe(false);
+  });
+
+  it('in another colour: the organiser’s plate back to back with it toward the neighbour, a plate swap each', () => {
+    const v = back(row, '3020');
+    const ls = upper(v);
+    expect(qty(ls)).toBe(12);
+    expect(qty(ls.filter((l) => l.ral === '9010'))).toBe(6);
+    expect(qty(ls.filter((l) => l.ral === '3020'))).toBe(6);
+    expect(raiseLine(v).meta).toBe('+540 mm · 6 felt rygg i rygg mot nabo');
+    expect(raiseLine(v).uses?.find((u) => u.id === ITEM.plateSwap)?.qty).toBe(6);
+  });
+
+  it('an inner wall far from the boundary keeps its one coloured plate', () => {
+    const v = setWallRaise({ ...paintWalls(row, [1, 2], [4, 2]) }, paintWalls(row, [1, 2], [4, 2]).walls.at(-1)!.id, 540);
+    const coloured = { ...v, walls: v.walls.map((w) => (w.raise ? { ...w, plate: '3020' } : w)) };
+    expect(raiseLine(coloured).uses?.some((u) => u.id === ITEM.plateSwap)).toBe(false);
+  });
+});

@@ -42,16 +42,18 @@ export interface Derived {
   wires?: number;
   /** Every built module, the organiser's too: a raise is always the exhibitor's (Byggeregel V18). Defaults to `mods`. */
   all?: BuiltModule[];
+  /** Raised modules with a second upper plate back to back toward a neighbour, and its RAL (Byggeregel V20). */
+  back?: ReadonlyMap<BuiltModule, string>;
 }
 
 /** The raised modules and the 94 joined onto their posts (Byggeregel V18). */
-export function raisesOf(mods: readonly BuiltModule[]): FogaStructure['raises'] | undefined {
+export function raisesOf(mods: readonly BuiltModule[], back: ReadonlyMap<BuiltModule, string> = new Map()): FogaStructure['raises'] | undefined {
   const raised = mods.filter((m) => m.raise);
   if (!raised.length) return undefined;
   const byLen = new Map<number, number>();
   for (const { len } of raisedPosts(raised).values()) byLen.set(len, (byLen.get(len) ?? 0) + 1);
   return {
-    modules: raised.map((m) => ({ plate: m.raise!.ral, len: m.raise!.len, ...(m.cc < 1 - 1e-6 && { cc: Math.round(m.cc * 1000) }) })),
+    modules: raised.map((m) => ({ plate: m.raise!.ral, len: m.raise!.len, ...(m.cc < 1 - 1e-6 && { cc: Math.round(m.cc * 1000) }), ...(back.has(m) && { back: back.get(m) }) })),
     posts: [...byLen].sort(([a], [b]) => b - a).map(([len, qty]) => ({ len, qty })),
   };
 }
@@ -73,7 +75,7 @@ const HALF_MM = 500;
 export const textileWires = (p: Production) => p.pieces.reduce((a, f) => a + (f.wires ?? 0), 0);
 
 export function structureOf(d: Derived): FogaStructure {
-  const raises = raisesOf(d.all ?? d.mods);
+  const raises = raisesOf(d.all ?? d.mods, d.back);
   return {
     posts: d.posts,
     modules: d.mods.map((m) => ({ plate: m.plate, opening: !!m.opening, ...(m.opening && d.curtain?.(m.opening.product) && { curtain: true }), ...(m.cc < 1 - 1e-6 && { cc: Math.round(m.cc * 1000) }) })),

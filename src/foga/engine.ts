@@ -186,7 +186,11 @@ export function bom(s: FogaStructure, r: Recipes, z: BomSizes): Bom {
   const raisedCc = new Map<number, number>();
   for (const m of s.raises?.modules ?? []) raisedCc.set(m.cc ?? z.cc, (raisedCc.get(m.cc ?? z.cc) ?? 0) + 1);
   for (const [cc, n] of [...raisedCc].sort(([a], [b]) => b - a)) unit(BOM_GROUP.rails, 'Toppskinne', rz.topRail, between(cc), rz.coupling, n, 'hevet vegg');
-  for (const m of s.raises?.modules ?? []) putPlate(raisePlate(m, r, z));
+  for (const m of s.raises?.modules ?? []) {
+    putPlate(raisePlate(m, r, z));
+    // Byggeregel V20: back to back with it, toward the neighbour, a plate in the organiser's colour
+    if (m.back) putPlate({ ...raisePlate({ ...m, plate: m.back }, r, z), note: ' · øvre felt, mot nabo' });
+  }
   // Byggeregel S10: a ceiling wire (V-oppheng 4300) on a raised wall, fixed in the top rail's channel with an eyebolt
   // M5 in a 503; the eyebolt has no art.nr yet (placeholder)
   const wire = rz.wire;

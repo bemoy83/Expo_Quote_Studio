@@ -105,7 +105,7 @@ export function QuotePage({ project, variants, current, onSelect, calcOf, motifs
   }
 
   const unpriced = v.loose.filter((l) => !l.price)
-  const neighbour = neighbourNotes(v, rules, project.standWalls?.ral ?? v.defaultPlate)
+  const neighbour = neighbourNotes(v, rules)
   // Stand walls and takdrager the organiser pays: not the exhibitor's lines, only named
   const organiser = fromOrganiser(k, plateName(standWallTerms(project).ral))
 

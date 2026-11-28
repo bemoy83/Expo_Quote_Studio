@@ -22,6 +22,8 @@ export interface RaiseSpec {
   len: number;
   /** Length c/c, mm, of a shorter module; omitted for a whole one. */
   cc?: number;
+  /** A second upper plate back to back with it, in this RAL, toward a neighbour (Byggeregel V20). */
+  back?: string;
 }
 
 /** One length of takdrager, post centre to post centre. */

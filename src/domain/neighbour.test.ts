@@ -24,6 +24,12 @@ describe('N1 neighbour approval', () => {
     expect(neighbourNotes(row(), RULES)).toEqual([]);
   });
 
+  it('Byggeregel V20: a coloured upper felt stays neutral, the organiser’s plate stands back to back with it', () => {
+    const v = setWallRaise(row(), 'side-back', 540);
+    const coloured = { ...v, walls: v.walls.map((w) => (w.id === 'side-back' ? { ...w, plate: '3020' } : w)) };
+    expect(neighbourNotes(coloured, RULES)[0]).toMatchObject({ neutral: true });
+  });
+
   it('only closer than the distance, and only parallel to the boundary', () => {
     const near = paintWalls(row(), [1, 0.5], [4, 0.5]);
     const far = paintWalls(row(), [1, 2], [4, 2]);
