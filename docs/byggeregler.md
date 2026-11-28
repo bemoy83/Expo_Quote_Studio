@@ -1056,9 +1056,16 @@ K22 standardvarene og K23 disker over en fotplate.
   heves; hvit duk er også nøytral, men ofte dyrere. En tekstilramme som når over veggen sin, viser baksiden mot
   naboen og er ikke nøytral før veggen er hevet like høyt; da skjuler veggen den. Godkjenningen faller ikke bort med
   en nøytral side (Bjørn 28.11.2026). Pillen sier bare «nabogodkjenning» (den deler raden med paletten),
-  veggskuffens hint hele grunnen, «Krever godkjenning fra nabo» (og «nøytral side mot naboen» når den ikke er det), og
+  hintet i veggskuffen og i skuffen for frittstående tekstil hele grunnen, «Krever godkjenning fra nabo» (og «nøytral side mot naboen» når den ikke er det), og
   tilbudet har det under forutsetningene.
-  *Bjørn 28.11.2026 · `rules.neighbour` · kode `src/domain/neighbour.ts`, `src/ui/plan/pill/wall.tsx`, `src/ui/plan/WallDrawer.tsx`, `src/ui/quote/QuotePage.tsx` · test `src/domain/neighbour.test.ts`*
+  **Print mot naboen sperres** (Bjørn 28.11.2026): nærmere grensen enn avstanden får siden naboen ser, ikke print eller
+  dekal; veggen eller tekstilen må stå minst 1 m inn for det. Øvre felt mot naboen tar ikke print eller dekal
+  (`facesNeighbour`, sperret i `foilBlocked`, så det som lå der, tas bort når veggen heves eller flyttes inn). En tekstilside
+  naboen ser, blir hvit duk av seg selv, også når den heves, flyttes eller tegnes dit (`whiteToNeighbour`, i `settle`);
+  motivet huskes og kommer tilbake med print når den står lenger inn. En toast sier hva som ble gjort (`editNote`).
+  Farge på øvre felt løses fortsatt med arrangørens plate rygg i rygg (V20). Baksiden av en ramme over veggen sin
+  løses ved å heve veggen (X15).
+  *Bjørn 28.11.2026 · `rules.neighbour` · kode `src/domain/neighbour.ts`, `src/domain/decor.ts`, `src/ui/edits.ts`, `src/ui/plan/pill/wall.tsx`, `src/ui/plan/WallDrawer.tsx`, `src/ui/plan/FreeTextileDrawer.tsx`, `src/ui/quote/QuotePage.tsx` · test `src/domain/neighbour.test.ts`, `src/ui/edits.test.ts`*
 
 ## Ikke bygget ennå
 

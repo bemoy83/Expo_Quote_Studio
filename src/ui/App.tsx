@@ -15,7 +15,7 @@ import { KEYS, loadJson, loadSketch, saveJson, saveSketch } from '../persistence
 import { initState, reduce } from '../state/history'
 import { CalcPanel } from './calc/CalcPanel'
 import { calcOf } from './calcCache'
-import { editResult, guarded, ratioFor, refused } from './edits'
+import { editNote, editResult, guarded, ratioFor, refused } from './edits'
 import { CatalogPage } from './catalog/CatalogPage'
 import { CostBasisPage } from './costbasis/CostBasisPage'
 import { BASIS_EVENT } from './costbasis/link'
@@ -142,8 +142,8 @@ export default function App() {
     (fn: (v: Variant) => Variant, history = true) => {
       const apply = (x: Variant) => guarded(x, fn, ratio)
       // A door left with no free floor on either side refuses the edit (Byggeregel D7), and so do foot plates that would
-      // meet a plate or foot on the floor (F2)
-      const no = refused(vRef.current, fn, ratio)
+      // meet a plate or foot on the floor (F2); else what the neighbour rule did by itself (N1)
+      const no = (history ? editNote : refused)(vRef.current, fn, ratio)
       if (no) showToast({ text: no })
       dispatch({ type: 'edit', fn: apply, history })
       if (!history) return

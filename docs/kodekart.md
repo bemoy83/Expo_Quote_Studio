@@ -161,7 +161,9 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
   `calc/beams/beamLift.ts`
 - Nabo (N1, V20): `domain/neighbour.ts` (`neighbourNotes` for hevet vegg og høy tekstil nær en parallell nabogrense,
   `backToBack` for øvre plater i kundens farge mot nabo, brukt i `calc/context.ts` og `raiseLines`), vist i pillen
-  (`withNeighbour` i `plan/pill/wall.tsx`), veggskuffens hint og tilbudets forutsetninger (`quote/QuotePage.tsx`)
+  (`withNeighbour` i `plan/pill/wall.tsx`), hintet i vegg- og frittstående tekstilskuff og tilbudets forutsetninger (`quote/QuotePage.tsx`).
+  Ikke print mot naboen: `facesNeighbour` sperrer øvre felt i `foilBlocked` (`domain/decor.ts`), `whiteToNeighbour` gjør
+  tekstilsiden hvit i `settle` (`ui/edits.ts`), og `editNote` gir toasten i App
 - Frittstående: `domain/textile/free.ts`; enden tas inn på en rammeende av `toFrameEnd` (`brush.ts`) og `magnet`
   (`domain/joints.ts`), X11, M4
 - Grupper i 92LTX-hjørner og systemvegg (X13, M4), i `domain/textile/mount.ts`: `groupMountDrag` (magneten tar en
