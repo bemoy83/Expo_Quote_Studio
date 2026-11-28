@@ -8,7 +8,6 @@ import * as THREE from 'three'
 import { cornerLayout, RAIL_T, RAIL_W, railT, shelfSpan } from '../../../domain/shelves/corners'
 import { faceNormal, sideOf } from '../../../domain/faces'
 import { pointAlong } from '../../../domain/grid'
-import { shelvesOf } from '../../../domain/shelves/model'
 import { chosenShelves } from '../../plan/selection'
 import type { Point } from '../../../domain/types'
 import { RECIPES } from '../../../foga/recipes'
@@ -94,7 +93,7 @@ export function buildShelves(c: BuildContext) {
     // The brackets in it: under each shelf it carries, a short 91 (alone) or a 91FF (meeting), out from the rail's face
     const n = faceNormal(w, rail.felt.s)
     for (const id of rail.carries) {
-      const f = shelvesOf(v).find((x) => x.id === id)
+      const f = c.res.built.shelves.find((x) => x.id === id)
       if (!f) continue
       const meet = rail.kind === 'meet'
       const out = (meet ? r.bracket : co.short) / 1000

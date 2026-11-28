@@ -20,8 +20,8 @@ export function buildFrame(c: BuildContext) {
   // A post over a foot plate is picked without its adjustable foot
   const onPlate = new Set(res.wallSupports.map((f) => pointKey(f.at)))
   // Raised walls (Byggeregler V18, V21): a 94 joined on top of each of their posts, the higher at a step
-  const tops = res.built.raisedPosts
-  for (const { at: p, len } of tops.values()) {
+  const raised = res.built.raisedPosts
+  for (const { at: p, len } of raised.values()) {
     const mesh = new THREE.Mesh(unitProfile('94'), mat('walls', ALU, ALU_FINISH))
     mesh.scale.x = len / 1000
     mesh.rotation.z = Math.PI / 2
@@ -31,7 +31,7 @@ export function buildFrame(c: BuildContext) {
   // Ceiling wires (Byggeregel S9, Bjørn 27.11.2026): a V from the eyebolt on the post's top to two points in the ceiling,
   // one on each side of the wall (the ceiling's height is not known: drawn 1.5 m up, 1 m out)
   for (const f of res.wires ?? []) {
-    const top = H + (tops.get(pointKey(f.at))?.len ?? 0) / 1000
+    const top = H + (raised.get(pointKey(f.at))?.len ?? 0) / 1000
     const [x, y] = f.at
     const out: [Point, Point] = f.orientation === 'h' ? [[x, y - 1], [x, y + 1]] : [[x - 1, y], [x + 1, y]]
     const pts = [at(out[0], top + 1.5), at(f.at, top), at(out[1], top + 1.5)]

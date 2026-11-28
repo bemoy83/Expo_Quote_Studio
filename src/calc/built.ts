@@ -63,8 +63,8 @@ export function builtOf(v: Variant, rules: Rules, mods: BuiltModule[], prod: Pro
     if (!w.room) continue;
     roomTop.set(w.room.id, Math.max(roomTop.get(w.room.id) ?? H, wallTop.get(w.id) ?? H));
   }
-  const beams = lift.segments.size ? H + lift.length / 1000 : H;
-  const top = Math.max(H, beams, ...wallTop.values(), ...textileTop.values());
+  const lifted = lift.segments.size ? H + lift.length / 1000 : H;
+  const top = Math.max(H, lifted, ...wallTop.values(), ...textileTop.values());
   const pieces = beamPieces(v, rules, segments, lift);
   return { mods, raisedPosts: raisedPosts(mods), wallTop, textileTop, roomTop, top, ...pieces, liftPieces: liftPieces(rules, mods, segments, lift), ...placedBrackets(v, rules) };
 }

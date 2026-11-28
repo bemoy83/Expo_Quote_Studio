@@ -32,7 +32,7 @@ export function sceneGrips(v: Variant, built: Built, selection: PlanSelection): 
 }
 
 /** On top of what the grip moves, as built: a room or a wall at the top of its walls (raised too), a textile frame on
- *  its top (over the wall's when tall, X14), a counter on its top, furniture on its own. */
+ *  its top (over the wall's when tall, X14), a takdrager on its top, a counter on its top, furniture on its own. */
 function gripHeight(v: Variant, built: Built, on: GripOn): number {
   const H = wallHeight(rules)
   const part = (p: Part) => (p.kind === 'wall' ? built.wallTop : built.textileTop).get(p.id) ?? H
@@ -48,13 +48,22 @@ function gripHeight(v: Variant, built: Built, on: GripOn): number {
     case 'turn':
       return part(on.part)
     case 'end':
-      if (on.what === 'beam') return H
+      // A drawn takdrager on its top, lifted or not (T13)
+      if (on.what === 'beam') return Math.max(H, ...built.beams.filter((b) => b.drawn === on.id).map((b) => b.top))
       return part({ kind: on.what === 'wall' ? 'wall' : 'textile', id: on.id })
     case 'move':
       if (on.what === 'room') return built.roomTop.get(on.id) ?? H
       if (on.what !== 'object') return part({ kind: on.what, id: on.id })
+      return objectTop(v, on.id)
+    case 'podium':
+    case 'rotate':
+      return objectTop(v, on.id)
   }
-  const o = v.objects.find((x) => 'id' in on && x.id === on.id)
+}
+
+/** A counter on its top, furniture on its own, m. */
+function objectTop(v: Variant, id: string): number {
+  const o = v.objects.find((x) => x.id === id)
   if (!o) return 0
   if (o.sections) return outerHeight(Math.max(...o.sections.map((s) => s.h))) / 1000
   return objectFootprint(place, o)?.h ?? 0

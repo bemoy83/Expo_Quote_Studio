@@ -24,8 +24,7 @@ export function buildTextile(c: BuildContext) {
   for (const p of res.production.pieces) {
     const t = v.textiles.find((x) => x.id === p.textileId)
     const on = mountedOn(v, p.textileId)
-    const view = wallTextiles(v).find((x) => x.id === p.textileId)
-    if (!t || !on || !view) continue
+    if (!t || !on) continue
     // Where it stands: its run, against the posts' face (20–60 mm out from the wall line, X2), moved in an inner corner
     // where two frames would clash (X10)
     const [dx, dy] = wallDirection(on.wall)

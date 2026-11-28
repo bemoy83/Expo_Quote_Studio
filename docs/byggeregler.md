@@ -302,7 +302,7 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   hel lengde og en 500 (kappet 460, med 2 × 600 i hver ende som alle lengder, T1) skjøtet ende mot ende med en stående 92
   på 80 mm: de 2 × 600 i enden av hver drager går inn i 92-stykket, som i en stolpe. Det står ingen stolpe i den
   skjøten. Tilbudet har samme meterpris (lm).
-  *Bjørn 15.11.2026 · `RECIPES.beam.half` · kode `src/foga/fromVariant.ts`, `src/foga/engine.ts`, `src/calc/lines/beams.ts` · test `src/calc/beams/halfBeams.test.ts`*
+  *Bjørn 15.11.2026 · `RECIPES.beam.half` · kode `src/foga/fromVariant.ts`, `src/foga/engine.ts`, `src/calc/lines/beams.ts`, 3D `src/calc/built.ts` (`beamJoints`) · test `src/calc/beams/halfBeams.test.ts`, `src/calc/built.test.ts`*
 - **T19 Ingen hevet drager over 3 m.** En hevet takdrager (T13) går ikke høyere enn en hel 3040-stolpe på 40 mm
   justeringsfot, topp 3080 (`rules.beam.maxTop`). Høyden løftet tar er det korteste 94-stykket som går klar av den
   høyeste rammen under en hevet drager: 80 for en ramme i veggens høyde, ellers en av hevelengdene (V19), så toppen blir
