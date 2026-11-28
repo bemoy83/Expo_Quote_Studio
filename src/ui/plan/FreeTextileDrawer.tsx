@@ -12,6 +12,7 @@ import { count, fmt, mm } from '../format'
 import { findMotif } from '../motifs'
 import { type PlanSelection } from './selection'
 import { TextileSettings } from './TextileSettings'
+import { TextileActions } from './TextileActions'
 import { DrawerHead } from './drawerParts'
 import { Raise, TextileFace } from './elevation'
 import { WIRE_ROOM } from './raiseDrawing'
@@ -100,6 +101,9 @@ export function FreeTextileDrawer(p: Props) {
             aside={face.toUpperCase()}
             tools={<IconButton icon={FlipHorizontal2} label={`Vis side ${face === 'a' ? 'B' : 'A'}`} size={15} onClick={() => p.onSelect({ textileId: t.id, face: face === 'a' ? 'b' : 'a' })} />}
           />
+          <div className="wd-actions">
+            <TextileActions v={v} id={t.id} selection={p.selection} onEdit={p.onEdit} onSelect={p.onSelect} onToast={p.onToast} />
+          </div>
         </div>
       </div>
 

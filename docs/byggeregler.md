@@ -586,12 +586,12 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   etter fotplateregelen, fotplatene står som før. Et 92LTX-hjørne over toppen henger i sin egen vaier, både på vegg
   og på fotplater (Bjørn 28.11.2026), én for hjørnet, ved hjørnestolpen; ingen ende henger i et hjørne alene.
   *Bjørn 28.11.2026 · `rules.textile.maxHeight`, `RECIPES.textileFrame.standard`, `RECIPES.textileFrame.wire`, `ITEM.textileWire` · kode `src/calc/textile/free.ts`, `src/calc/textile/production.ts`, `src/calc/lines/feet.ts`, `src/foga/engine.ts`, `src/calc/textile/common.ts`, `src/calc/textile/lines.ts`, `src/domain/textile/inFrame.ts`, `src/domain/decor.ts`, `src/calc/textile/production.ts`, `src/ui/plan/wallDrawer/WallElevation.tsx` · test `src/domain/decor.test.ts`, `src/calc/textile/tallFrame.test.ts`*
-- **X15 Forslag om å heve veggen.** Når en ramme på vegg over veggens topp, tilbyr pillen å heve veggen til laveste
+- **X15 Forslag om å heve veggen.** Når en ramme på vegg over veggens topp, tilbyr pillen og skuffen (ved Høyde) å heve veggen til laveste
   høyde i V19 som tar rammen inn («Hev veggen til 3080»), med hva det gjør med tilbudet. Ett trykk hever hele veggen
   (også en romside, V18) og lar rammen stå som den er; angre tar det tilbake. Mot en nabo (N1) skjuler den hevede
   veggen rammens bakside, så siden mot naboen blir nøytral; godkjenningen trengs fortsatt. Viser rammen duken sin
-  mot naboen, tilbyr pillen hvit duk i stedet. Rammen hever aldri veggen av seg selv (X14).
-  *Bjørn 27.11.2026 og 28.11.2026 · kode `src/domain/raise.ts`, `src/ui/plan/pill/RaiseOffer.tsx` · test `src/domain/raise.test.ts`*
+  mot naboen, blir den hvit av seg selv (N1), så det tilbys ikke. Rammen hever aldri veggen av seg selv (X14).
+  *Bjørn 27.11.2026 og 28.11.2026 · kode `src/domain/raise.ts`, `src/ui/plan/raiseOffer.ts`, `src/ui/plan/pill/RaiseOffer.tsx`, `src/ui/plan/TextileSettings.tsx` · test `src/domain/raise.test.ts`*
 - **X16 Navn og mål på tilbudet.** En tekstilvegg er ett produkt uansett montering (X1), og den heter likt overalt.
   Alle tekstilvegger har én nummerserie, T1, T2 … i tegnerekkefølge, på vegg og på fotplater; sidene til en på
   fotplater heter T3A og T3B. F er dekor på hel plate. Målet på tilbudet er den synlige flaten, slik selger og kunde
@@ -618,10 +618,12 @@ Er en del av regelen bestemt, men ikke i koden ennå, står det «ikke bygget» 
   standardlengdene til en kappet ramme (X9), på vegg og på fotplater. Bare det monteringen gir, kommer i tillegg: på
   vegg bytte til veggen, «Fyll ledig vegg», hjørnene (M5), «Hev veggen» (X15) og «Løsne» fra veggen; på fotplater
   Roter og «Løsne» fra gruppen. Skuffen har de samme innstillingene, Lengde, Høyde og duk på siden som vises, og
-  «Fra gulv» bare på vegg. En ramme på vegg vises i veggens skuff, sammen med veggen den henger på.
+  «Fra gulv» bare på vegg, og det pillen gjør (Bjørn 28.11.2026, som prinsipp): «Hev veggen» ved Høyde, og i foten
+  hjørnene og «Løsne» på vegg, Roter og «Løsne» på fotplater (`TextileActions`). Standardlengdene står bare i pillen,
+  for plassens skyld; skuffen har Lengde. En ramme på vegg vises i veggens skuff, sammen med veggen den henger på.
   Høyden følger rammen av og på veggen (X13), og en høy ramme på fotplater bygges som på vegg: skjøtte stendere,
   lift og vaier (X14). Nabogodkjenningen (N1) gjelder den også, med siden mot naboen (hvit duk er nøytral).
-  *Bjørn 28.11.2026 · kode `src/domain/textile/edit.ts`, `src/ui/plan/selection.ts`, `src/ui/plan/pointer/decor.ts`, `src/ui/plan/pill/textile.tsx`, `src/ui/plan/TextileSettings.tsx`, `src/ui/plan/FreeTextileDrawer.tsx`, `src/domain/textile/mount.ts`, `src/domain/neighbour.ts` · test `src/domain/textile/edit.test.ts`, `src/ui/plan/selection.test.ts`, `src/calc/textile/tallFrame.test.ts`, `src/domain/neighbour.test.ts`*
+  *Bjørn 28.11.2026 · kode `src/domain/textile/edit.ts`, `src/ui/plan/selection.ts`, `src/ui/plan/pointer/decor.ts`, `src/ui/plan/pill/textile.tsx`, `src/ui/plan/TextileSettings.tsx`, `src/ui/plan/TextileActions.tsx`, `src/ui/plan/FreeTextileDrawer.tsx`, `src/domain/textile/mount.ts`, `src/domain/neighbour.ts` · test `src/domain/textile/edit.test.ts`, `src/ui/plan/selection.test.ts`, `src/calc/textile/tallFrame.test.ts`, `src/domain/neighbour.test.ts`*
 
 ## M · Magnet og kobling
 

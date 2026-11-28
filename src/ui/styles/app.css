@@ -103,6 +103,11 @@ kbd {
   background: var(--rest);
   color: rgb(var(--ink-muted));
 }
+/* A setting kept while chosen (Løsne in the drawer): the same chosen fill as a flat choice */
+.btn.ghost[aria-pressed='true'] {
+  --rest: var(--chosen);
+  color: rgb(var(--ink));
+}
 
 .icon-btn {
   flex: none;

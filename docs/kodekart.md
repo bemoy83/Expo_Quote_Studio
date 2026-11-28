@@ -156,8 +156,8 @@ Alt tekstil ligger i to mapper: `domain/textile/` og `calc/textile/`.
 - Høy tekstil (X14, X15): høyden opp til `rules.textile.maxHeight` i `updateTextile`; rammen i høyden (skjøtet stolpe,
   stag, 92LTX `postPieces`) i `calc/textile/common.ts` og `free.ts`; vaier over veggtoppen `ProductionPiece.wires`
   (`calc/textile/production.ts`), plukket via `textileWires` (`foga/fromVariant.ts`) og linjen `wireLines`
-  (`calc/lines/feet.ts`); forslaget «Hev veggen til …» `raiseFor`/`raiseUnder` i `domain/raise.ts` og `RaiseOffer` i
-  `plan/pill/RaiseOffer.tsx`; takdrageren over (T19) `liftLength`, `liftClear`, `beamNote` og `beamGone` i
+  (`calc/lines/feet.ts`); forslaget «Hev veggen til …» `raiseFor`/`raiseUnder` i `domain/raise.ts`, regnet ut én gang i `useRaiseOffer`
+  (`plan/raiseOffer.ts`) og vist av `RaiseOffer` (`plan/pill/RaiseOffer.tsx`) og `TextileSettings`; det pillen ellers gjør med en tekstilvegg, i skuffens fot: `plan/TextileActions.tsx`; takdrageren over (T19) `liftLength`, `liftClear`, `beamNote` og `beamGone` i
   `calc/beams/beamLift.ts`
 - Nabo (N1, V20): `domain/neighbour.ts` (`neighbourNotes` for hevet vegg og høy tekstil nær en parallell nabogrense,
   `backToBack` for øvre plater i kundens farge mot nabo, brukt i `calc/context.ts` og `raiseLines`), vist i pillen

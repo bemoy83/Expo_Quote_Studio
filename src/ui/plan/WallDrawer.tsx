@@ -9,6 +9,7 @@
 // What to show for what is chosen is decided in focus.ts, and the tools kept between renders live in useWallTools.ts;
 // this file puts it together.
 import { TextileSettings } from './TextileSettings'
+import { TextileActions } from './TextileActions'
 import { neighbourNotes, neighbourText, noteFor } from '../../domain/neighbour'
 import { beamNote } from '../../calc/beams/beamLift'
 import { AlignVerticalSpaceAround, DoorOpen, FlipHorizontal2, MoveHorizontal, Palette, Plus } from 'lucide-react'
@@ -317,6 +318,7 @@ export function WallDrawer(p: Props) {
                   Fyll ledig vegg
                 </Button>
               )}
+              {T && <TextileActions v={v} id={T.id} selection={sel} onEdit={p.onEdit} onSelect={p.onSelect} onToast={p.onToast} />}
               {/* A felt and the whole wall have two pages, switched here as a door's way back to the palette is (Bjørn
                   9.11.2026); a chosen shelf goes back to its felt's colour and profilering */}
               {ui.pageSwitch && (

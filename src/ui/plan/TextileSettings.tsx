@@ -5,7 +5,10 @@ import { frameLength, resizeTextile, setTextileSize, textileSize, updateFace } f
 import type { FaceKey } from '../../domain/textile/free'
 import { mountedOn } from '../../domain/textile/mounts'
 import type { Motif, Variant } from '../../domain/types'
-import { Dim, Section } from '../controls'
+import { Button, Dim, Section } from '../controls'
+import { signed } from '../format'
+import { useRaiseOffer } from './raiseOffer'
+import { ArrowUpToLine } from 'lucide-react'
 import { rules } from '../env'
 import { FabricSection } from './drawerParts'
 
@@ -19,6 +22,8 @@ export function TextileSettings(p: {
   onToast: (text: string) => void
 }) {
   const { v, id, face } = p
+  // Byggeregel X15: a frame over its wall's top offers to raise the wall, beside the height that put it there
+  const raise = useRaiseOffer(v, id)
   const t = v.textiles.find((x) => x.id === id)
   if (!t) return null
   const size = textileSize(v, rules, id)
@@ -37,6 +42,11 @@ export function TextileSettings(p: {
           <Dim big label="Høyde" value={size.height} decimals={2} min={rules.textile.minHeight} max={rules.textile.maxHeight} onChange={(n) => p.onEdit((x) => setTextileSize(x, rules, id, { height: n }))} />
           {onWall && <Dim big label="Fra gulv" value={size.bottom} onChange={(n) => p.onEdit((x) => setTextileSize(x, rules, id, { bottom: n }))} />}
         </div>
+        {raise && (
+          <Button variant="ghost" icon={ArrowUpToLine} title={`${raise.title} · ${signed(raise.diff)} kr på tilbudet`} onClick={() => p.onEdit(() => raise.next)}>
+            {raise.label} · {signed(raise.diff)} kr
+          </Button>
+        )}
       </Section>
       <hr className="set-rule" />
       <FabricSection
